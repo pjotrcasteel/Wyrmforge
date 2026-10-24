@@ -1,0 +1,67 @@
+{
+  "title": "Hollowed versus Ashling, in-context audio A/B candidates",
+  "type": "staged mix of real checked-in WyrmForge recordings; not a live gameplay capture",
+  "forestSource": "wet-forest-bed.ogg",
+  "recordings": [
+    {
+      "file": "hollow-approach-ab.mp3",
+      "sha256": "4dc799131c54563ca47d396f3add7db23f271c04c01415345db399bc5e49e548",
+      "seconds": 8
+    },
+    {
+      "file": "hollow-hit-ab.mp3",
+      "sha256": "93cef091d3f049ef4ab221a3c4bd96d7635e76476dcdc0a0f2390f1e2d9cc255",
+      "seconds": 8
+    },
+    {
+      "file": "hollow-death-ab.mp3",
+      "sha256": "3b9d2e2c5dc8eb91434f4364f58885c6bfabd9b368139dd952e0bc292bec3ad1",
+      "seconds": 8
+    },
+    {
+      "file": "hollow-encounter-1.mp3",
+      "sha256": "163058b96eae0e3e8c0ba1869159f8f877d8b995d2e2299a68855ec693154171",
+      "seconds": 19
+    },
+    {
+      "file": "hollow-encounter-2.mp3",
+      "sha256": "b333914b9e21a925922883d6462f020463821d1c499e09cdb80216a7ba3cff1f",
+      "seconds": 19
+    },
+    {
+      "file": "ashling-approach-ab.mp3",
+      "sha256": "9784d7407060ea08f46e2ec9baceb8d6ed76580a36dab901c28da92eb0735274",
+      "seconds": 8
+    },
+    {
+      "file": "ashling-hit-ab.mp3",
+      "sha256": "50322c12ce099ef682cfa4a483acf8329d7f90e580b51a4bf402ad118c2e1c73",
+      "seconds": 8
+    },
+    {
+      "file": "ashling-death-ab.mp3",
+      "sha256": "8489fd22ca3bcdd352a215458d196c6a959db5340771798bcfdf1a1fabb0a294",
+      "seconds": 8
+    },
+    {
+      "file": "ashling-encounter-1.mp3",
+      "sha256": "e414e2fa88318d23ac801c8e0f1d075fc3aa764c5e9fa09ff68f4da10f58b2b0",
+      "seconds": 19
+    },
+    {
+      "file": "ashling-encounter-2.mp3",
+      "sha256": "c3bba2845e691f7d8ea417205d518929bbf7069051cd6353e0934c9ae4798bcb",
+      "seconds": 19
+    }
+  ],
+  "sceneTimelineSeconds": {
+    "footstep": 1.1,
+    "approach": 3.2,
+    "fireball": 6.2,
+    "hit": 6.8,
+    "finalFireball": 10.8,
+    "death": 11.45
+  },
+  "mix": "low background wind and Cave Theme; real footstep, Fireball cast, impact and two creature takes",
+  "listeningNote": "Do not approve without actual iPhone speaker and in-game run; judge identity and repetitiveness."
+}
