@@ -151,7 +151,7 @@ for index in range(FRAMES+1):
     # leg stance, neck movement, shoulder girdle and pelvis for every frame.
     for bone in ordered_bones:
         for channel in ("location","rotation_quaternion","scale"):
-            bone.keyframe_insert(channel,frame=index+1,group=name)
+            bone.keyframe_insert(channel,frame=index+1,group=bone.name)
     records.append(evidence)
 
 # In Blender the action channels must remain cyclic; avoid auto handles that
