@@ -7,7 +7,7 @@ Status: **Worn Vellum chosen for ordinary UI; old Weathered Stone retired; Codex
 - **Worn Vellum (initial default):** two distinct leather/handling recordings `handleSmallLeather.ogg` and `handleSmallLeather2.ogg` from Kenney's RPG Audio. Short, soft, no note/chime.
 - **Cold Iron:** Kenney's `metalClick.ogg`, dry and mechanical.
 
-The archived PR originally explored complete menu/action presets. **Worn Vellum is now the selected default, and only one contextual interaction—the Codex opening—is changing in this checkpoint**. Hunt exit/arena entry, other Town doors, upgrade, music and combat SFX stay as on current main, and the existing global handler continues to suppress double audio when the Sound Atelier itself is clicked.
+The archived PR originally explored complete menu/action presets. Legacy Weathered Stone is retired, not reused. **Worn Vellum is now the selected default, and only one contextual interaction—the Codex opening—is changing in this checkpoint**. Hunt exit/arena entry, other Town doors, upgrade, music and combat SFX stay as on current main, and the existing global handler continues to suppress double audio when the Sound Atelier itself is clicked.
 
 The selectable material is stored in `wyrmforge.audio.ui.material.v1` and played through the existing Web Audio `ui` category, volume preference, effect envelope and limiter. The original semantic event remains `ui`; later iOS/Android players can consume the same manifest data. Raw Ogg recordings are copied unchanged by their verified Git object SHA. Material source attribution is in `manifest.json`.
 

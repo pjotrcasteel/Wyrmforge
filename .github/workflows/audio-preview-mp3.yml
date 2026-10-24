@@ -11,7 +11,6 @@ on:
       - src/Wyrmforge.Presentation.Web/wwwroot/audio/recorded/menu-bookOpen.ogg
       - src/Wyrmforge.Presentation.Web/wwwroot/audio/recorded/manifest.json
       - src/Wyrmforge.Presentation.Web/wwwroot/audio/recorded/wet-forest-bed.ogg
-      - src/Wyrmforge.Presentation.Web/wwwroot/audio/recorded/ui.ogg
   workflow_dispatch:
 
 permissions:
@@ -37,7 +36,6 @@ jobs:
           dest=docs/audio/previews
           mkdir -p "$dest"
           ffmpeg -y -hide_banner -loglevel error -i "$src/menu-handleSmallLeather.ogg" -ar 44100 -c:a libmp3lame -q:a 3 "$dest/worn-vellum.mp3"
-          ffmpeg -y -hide_banner -loglevel error -i "$src/ui.ogg" -ar 44100 -c:a libmp3lame -q:a 3 "$dest/weathered-stone.mp3"
           ffmpeg -y -hide_banner -loglevel error -i "$src/menu-metalClick.ogg" -ar 44100 -c:a libmp3lame -q:a 3 "$dest/cold-iron.mp3"
           # Codex demo: physical book opening + delayed, quieter leather body.
           ffmpeg -y -hide_banner -loglevel error -i "$src/menu-bookOpen.ogg" -i "$src/menu-handleSmallLeather.ogg" \

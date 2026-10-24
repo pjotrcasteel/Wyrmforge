@@ -269,7 +269,7 @@
         identity: 'Ancient Resonance',
         palette,
         render,
-        previewNames: ['arcane', 'fire', 'frost', 'lightning', 'arcane-impact', 'fire-impact', 'frost-impact', 'lightning-impact', 'hurt',
-            'upgrade-open', 'upgrade-choice', 'power-burst', 'reward', 'wyrm', 'victory', 'death'],
+        // Only show newly-authored replacement audio for review. Older sounds are unfinished placeholders.
+        previewNames: ['fire', 'fire-impact'],
     });
 })();
