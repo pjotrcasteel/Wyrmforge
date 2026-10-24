@@ -1,0 +1,51 @@
+{
+  "characterId": "player-wizard",
+  "revision": "visual-direction-and-export-contract-v1",
+  "status": "work-in-progress; not an approved sprite atlas",
+  "authority": [
+    "docs/canon/art-and-animation.md",
+    "docs/canon/magic-and-combat.md",
+    "docs/design/arena-real-geometry-light-engine.md"
+  ],
+  "referenceActors": [
+    "src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/hollow-rigged/manifest.json",
+    "src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/ashling-rigged/manifest.json"
+  ],
+  "lightingReference": "PR #332 feat/universal-gpu-lighting-g0-g1 (in progress, not merged)",
+  "origin": "Original WyrmForge wizard; elderly staff-bearing wanderer. Gandalf the Grey is mood/silhouette inspiration only; no copied likeness, costume details or IP asset.",
+  "sourceRoute": "One editable textured 3D wizard rig + authored motions; six school-controlled material/staff variations of that SAME rig; atlas export per school",
+  "sourceRig": null,
+  "sourcePoseArchive": null,
+  "sourceRigChecksum": null,
+  "stageA": {
+    "status": "design candidate",
+    "artisticApproval": false
+  },
+  "stageB": {
+    "status": "pending",
+    "description": "Editable sculpt, UV textures, weighted body/beard/robes, six staff meshes and clean silhouette checks"
+  },
+  "stageC": {
+    "status": "pending",
+    "description": "One true looped 16-frame walk in South direction, planted feet, sway/hand contact, mobile Sprite Lab review"
+  },
+  "stageD": {
+    "status": "pending",
+    "description": "Eight unique directions; idle, walk, cast, hurt, death; six variants derived from same animation rig"
+  },
+  "stageE": {
+    "status": "pending",
+    "description": "Pose-aligned authored normals, height/occluder, roughness, caster and real shared LitSprite test on PR #332"
+  },
+  "runtimeIntegrated": false,
+  "lightingIntegrated": false,
+  "ownerApproved": false,
+  "constraints": [
+    "Do not alter Hollowed or Ashling.",
+    "Do not alter PR #332 renderer.",
+    "Do not replace current arena-mage.js until visual/technical/mobile approval.",
+    "Neutral non-emissive albedo, school magic registered as emitter only by scene snapshot.",
+    "C# authority remains unchanged."
+  ],
+  "files": "See export-profile.json, animation-profile.json, design-brief.md and tools/sprite-lab/wizard-atlas.mjs"
+}

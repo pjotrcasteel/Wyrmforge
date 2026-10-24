@@ -75,5 +75,8 @@ export function createRiggedSpriteRenderer({kind,base,fallbackProfile}){
         for(const c of state.corpses.values()){const age=state.clock-c.at;draw(ctx,'death',reducedMotion?spec.frames-1:Math.min(spec.frames-1,Math.floor(age*spec.fps)),c.direction,c.x,c.y,c.radius,age<3?1:4-age);}
     }
     function diagnostics(state){return{ready:ready(),entities:[...state.entities].map(([entityId,p])=>({entityId,clip:p.clip,frame:p.frame,direction:p.direction,baseFrame:p.baseFrame,phase:p.animation.phase,layered:p.layered,drawX:p.drawX,drawY:p.drawY,x:p.x,y:p.y})),corpses:[...state.corpses.values()].map(c=>({entityId:c.entityId,direction:c.direction,age:state.clock-c.at,frame:Math.min(profile.actions.death.frames-1,Math.floor((state.clock-c.at)*profile.actions.death.fps))}))};}
-    return{preload,ready,createState,update,drawEnemy,drawCorpses,diagnostics};
+    // Shared atlas drawing and decoded manifest are usable by the player too.
+    // Existing enemy behavior is unchanged; no wizard-specific Canvas renderer.
+    return{preload,ready,createState,update,drawEnemy,drawCorpses,diagnostics,
+        drawFrame:draw,getManifest:()=>manifest,getAnimationProfile:()=>profile};
 }

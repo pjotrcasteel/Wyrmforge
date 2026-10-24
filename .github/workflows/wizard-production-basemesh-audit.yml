@@ -1,0 +1,55 @@
+name: Wizard professional anatomy reference audit
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'tools/sprite-lab/audit_production_basemesh.py'
+      - '.github/workflows/wizard-production-basemesh-audit.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  inspect-official-human-base:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install verified official Blender 4.5
+        shell: bash
+        run: |
+          set -euo pipefail
+          base='https://download.blender.org/release/Blender4.5'
+          archive='blender-4.5.15-linux-x64.tar.xz'
+          curl --fail --location --retry 3 --retry-delay 3 "$base/$archive" -o "$RUNNER_TEMP/$archive"
+          curl --fail --location --retry 3 --retry-delay 3 "$base/blender-4.5.15.sha256" -o "$RUNNER_TEMP/checksums.sha256"
+          (cd "$RUNNER_TEMP" && grep " $archive$" checksums.sha256 | sha256sum --check)
+          tar -xf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/blender-4.5.15-linux-x64" >> "$GITHUB_PATH"
+      - name: Obtain Blender Studio's original CC0 human base meshes
+        shell: bash
+        run: |
+          set -euo pipefail
+          url='https://download.blender.org/demo/asset-bundles/human-base-meshes/human-base-meshes-bundle-v1.4.1.zip'
+          mkdir -p artifacts/wizard-basemesh/source
+          curl --fail --location --retry 3 --retry-delay 5 "$url" -o "$RUNNER_TEMP/human-bases.zip"
+          sha256sum "$RUNNER_TEMP/human-bases.zip" > artifacts/wizard-basemesh/asset-archive.sha256
+          unzip -q "$RUNNER_TEMP/human-bases.zip" -d artifacts/wizard-basemesh/source
+      - name: Inspect topology and source files with Blender itself
+        shell: bash
+        run: |
+          blender --background --factory-startup --threads 2 \
+            --python tools/sprite-lab/audit_production_basemesh.py -- \
+            --source-root artifacts/wizard-basemesh/source \
+            --output artifacts/wizard-basemesh
+      - name: Save evidence without calling it finished wizard art
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wizard-human-base-source-audit
+          path: |
+            artifacts/wizard-basemesh/basemesh-audit.json
+            artifacts/wizard-basemesh/asset-archive.sha256
+          if-no-files-found: warn
+          retention-days: 30

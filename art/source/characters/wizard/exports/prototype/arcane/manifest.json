@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "fps": 16,
+  "directions": [
+    "N",
+    "NE",
+    "E",
+    "SE",
+    "S",
+    "SW",
+    "W",
+    "NW"
+  ],
+  "clips": {
+    "walk": {
+      "image": "walk.png",
+      "hash": "b1966308e0df",
+      "frames": 16,
+      "cell": 128,
+      "anchor": [
+        64,
+        106
+      ],
+      "worldSize": 72
+    }
+  }
+}

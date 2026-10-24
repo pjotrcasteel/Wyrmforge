@@ -1,0 +1,43 @@
+{
+  "visualId": "gothic-grey-wizard-2026-10-24",
+  "ownerApprovedReference": true,
+  "originalReference": {
+    "name": "oude_tovenaar_met_vurige_staf.png",
+    "width": 1254,
+    "height": 1254,
+    "sha256": "5d8cb8565c4b4cd04e0d4942e0135f927641e493c2415dd9b3ecc356d6e82bba",
+    "note": "Full-resolution owner-approved image supplied in the conversation; not an animation atlas"
+  },
+  "inRepositoryPreview": {
+    "path": "art/source/characters/wizard/reference/approved-gothic-wizard.webp",
+    "width": 160,
+    "height": 160,
+    "sha256": "3731f1e49ae7fb2859acfa8c0f063c35140fe715c76b4454b5aff5c708e87bd3",
+    "note": "Unaltered composition, proportionally downsampled for attribution/visual review; NOT a player sprite"
+  },
+  "keep": [
+    "bent weathered wide-brim wizard hat",
+    "elderly dignified white split beard",
+    "layered near-charcoal indigo robes with worn hems",
+    "readable actual boots/leg articulation",
+    "dark leather strap and brass buckle",
+    "dark carved staff with explicit school-specific glowing socket",
+    "2.5D pixel-art night setting"
+  ],
+  "remove": [
+    "clay/figurine/plastic-looking skin or robe",
+    "oversized cylindrical body",
+    "stiff straight legs or 90-degree boot twist",
+    "baked orange cast onto entire costume",
+    "background pixels baked into character atlases"
+  ],
+  "pending": [
+    "editable approved native source rig",
+    "real eight-way character animation",
+    "five complete actions",
+    "six staff/trim variants",
+    "lit materials and occluders",
+    "mobile and artist validation"
+  ],
+  "currentLivePlayerSwitched": false
+}

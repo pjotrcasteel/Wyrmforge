@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "maxDeltaSeconds": 0.1,
+  "facing": {
+    "directions": [
+      "E",
+      "SE",
+      "S",
+      "SW",
+      "W",
+      "NW",
+      "N",
+      "NE"
+    ],
+    "degreesPerSecond": 720,
+    "hysteresisDegrees": 3
+  },
+  "locomotion": {
+    "clip": "walk",
+    "frames": 16,
+    "stride": 18
+  },
+  "actions": {
+    "cast": {
+      "clip": "cast",
+      "frames": 20,
+      "fps": 20,
+      "priority": 10,
+      "mode": "fullBody",
+      "reducedFrame": 10
+    },
+    "hurt": {
+      "clip": "hurt",
+      "frames": 10,
+      "fps": 18,
+      "priority": 30,
+      "mode": "fullBody",
+      "reducedFrame": 5
+    },
+    "death": {
+      "clip": "death",
+      "frames": 24,
+      "fps": 12,
+      "priority": 100,
+      "mode": "fullBody",
+      "hold": true,
+      "reducedFrame": 23
+    }
+  },
+  "idle": {
+    "clip": "idle",
+    "frames": 12,
+    "fps": 12,
+    "mode": "fullBody",
+    "note": "Current shared sprite-animation.js uses walk frame zero when stopped; idle looping requires a generic shared sampler enhancement at integration, NOT wizard-specific renderer."
+  }
+}

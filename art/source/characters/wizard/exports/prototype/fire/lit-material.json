@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "school": "fire",
+  "clips": {
+    "walk": {
+      "albedo": {
+        "image": "walk.png",
+        "sha256": "e5ef0858279229e2e88b2ff668e60c35ee512ccc74dd3b3aa26d91818a038238"
+      },
+      "normal": {
+        "image": "walk-normal.png",
+        "sha256": "d0400524a8b6b8182516966303daea3535f4650f52ad1aa1839866af36ddbed8"
+      },
+      "roughness": {
+        "image": "walk-roughness.png",
+        "sha256": "e9e27e6c2ac08ddb22341dc3f54c8e48c88b0dd3298d18686d888abe23f05289"
+      },
+      "height": {
+        "image": "walk-height.png",
+        "sha256": "a0494990174ebb7d83021aa7adf1b25caae95b22a47da155d3f588b0aada56f2"
+      },
+      "caster": {
+        "image": "walk-caster.png",
+        "sha256": "5fdfb357a31edf6d0d4fd2da6c340d17157b47204e5113d189ef1a56bf51fb8c"
+      }
+    }
+  },
+  "note": "Pose-synchronous passes; alpha silhouette casters only, no volume caster geometry authored yet."
+}
