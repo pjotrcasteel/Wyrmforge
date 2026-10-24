@@ -1802,12 +1802,11 @@ public sealed class WyrmforgeBrowserTests : PageTest
         var musicDetails = await Page.EvaluateAsync<int>("() => window.wyrmforgeAudio.diagnostics().musicTracks.length");
         Assert.AreEqual(2, musicDetails, "Both menu and hunt tracks must be primed during the trusted tap.");
 
-        await Expect(atelier.GetByRole(AriaRole.Button, new() { Name = "Preview upgrade-open sound" })).ToBeVisibleAsync();
-        await Expect(atelier.GetByRole(AriaRole.Button, new() { Name = "Preview upgrade-choice sound" })).ToBeVisibleAsync();
-        await atelier.GetByRole(AriaRole.Button, new() { Name = "Preview upgrade-open sound" }).ClickAsync();
-        await atelier.GetByRole(AriaRole.Button, new() { Name = "Preview upgrade-choice sound" }).ClickAsync();
-        await Expect(atelier.GetByRole(AriaRole.Button, new() { Name = "Preview arcane sound" })).ToBeVisibleAsync();
-        await atelier.GetByRole(AriaRole.Button, new() { Name = "Preview arcane sound" }).ClickAsync();
+        // Sound Atelier intentionally hides old placeholder previews.
+        await Expect(atelier.GetByRole(AriaRole.Button, new() { Name = "Preview fire sound" })).ToBeVisibleAsync();
+        await Expect(atelier.GetByRole(AriaRole.Button, new() { Name = "Preview fire-impact sound" })).ToBeVisibleAsync();
+        await atelier.GetByRole(AriaRole.Button, new() { Name = "Preview fire sound" }).ClickAsync();
+        await atelier.GetByRole(AriaRole.Button, new() { Name = "Preview fire-impact sound" }).ClickAsync();
         Assert.AreEqual("Recorded Dark Fantasy", await Page.EvaluateAsync<string>("() => window.wyrmforgeAudio.diagnostics().identity"));
 
         var combat = atelier.GetByRole(AriaRole.Slider, new() { Name = "Combat volume" });

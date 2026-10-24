@@ -32,6 +32,7 @@ jobs:
           set -euo pipefail
           src=src/Wyrmforge.Presentation.Web/wwwroot/audio/recorded
           ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1 docs/audio/previews/fireball-r1-ab-comparison.mp3
+          ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1 docs/audio/previews/fireball-r1-six-take-reel.mp3
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add "$src/manifest.json" "$src"/fireball-r1-*.ogg

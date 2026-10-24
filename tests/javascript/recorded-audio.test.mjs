@@ -36,19 +36,21 @@ test('new Fireball R1 does not reuse any legacy cast, impact or buildup recordin
     assert.equal(manifest.version, 2);
     const fire = manifest.cues.fire;
     assert.equal(fire.license, 'Original');
-    assert.equal(fire.variants.length, 2);
-    assert.equal(fire.hitVariants.length, 2);
+    assert.equal(fire.variants.length, 6);
+    assert.equal(fire.hitVariants.length, 6);
     assert.equal(fire.buildup, undefined);
     const entries = [...fire.variants, ...fire.hitVariants];
-    assert.equal(new Set(entries.map(entry => entry.sha256)).size, 4);
+    assert.equal(new Set(entries.map(entry => entry.sha256)).size, 12);
     for (const entry of entries) {
-        assert.match(entry.file, /^fireball-r1-(cast|hit)-[12]\.ogg$/);
+        assert.match(entry.file, /^fireball-r1-(cast|hit)-[1-6]\.ogg$/);
         assert.equal(entry.license, 'Original');
         assert.equal(entry.source, 'tools/audio/build_fireball_r1.py');
         const bytes = readFileSync(new URL(entry.file, directory));
         assert.equal(bytes.subarray(0, 4).toString(), 'OggS');
         assert.equal(sha256(bytes), entry.sha256);
     }
+    assert.equal(manifest.authoredFireballStages.R1.flight.length, 6);
+    assert.equal(manifest.authoredFireballStages.R1.burn.length, 6);
     assert.equal(manifest.authoredFireballStages.R1.oldAudioSourceUsed, false);
     assert.equal(manifest.authoredFireballStages.R1.approved, false);
 });

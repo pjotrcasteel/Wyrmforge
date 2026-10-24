@@ -95,6 +95,21 @@ def design(take):
             (.52 + .12 * np.sin(2 * np.pi * .83 * t) +
              .12 * np.sin(2 * np.pi * 1.63 * t + .7)) +
             cinders(r, d, 110, .035) * fading)
+    # First two takes remain identical to the already-liked R1 A/B recordings.
+    # Additional physical textures vary their spectral body, pressure and ember density
+    # beyond the independently seeded non-repeating noise and cinder impulses.
+    if take >= 3:
+        profile = {
+            3: (5200, 1.07, 0.88, 0.81),
+            4: (4400, 0.92, 1.12, 1.17),
+            5: (6800, 1.12, 1.03, 0.93),
+            6: (5700, 0.96, 1.16, 1.06),
+        }[take]
+        cutoff, ignition_weight, impact_weight, ember_weight = profile
+        cast = sosfilt(butter(2, cutoff, btype="lowpass", fs=RATE, output="sos"), cast) * ignition_weight
+        flight = sosfilt(butter(2, min(6500, cutoff + 320), btype="lowpass", fs=RATE, output="sos"), flight)
+        hit *= impact_weight
+        burn *= ember_weight
     return {"cast": cast, "flight": flight, "hit": hit, "burn": burn}
 
 
@@ -129,7 +144,8 @@ def main():
     manifest = json.loads(manifest_path.read_text())
     designed = {}
     comparison = blank(12.6)
-    for take in (1, 2):
+    six_reel = blank(6 * 6.45)
+    for take in range(1, 7):
         parts = design(take)
         for phase, samples in parts.items():
             name = f"fireball-r1-{phase}-{take}"
@@ -141,30 +157,36 @@ def main():
                                       ("hit", 1.36, 1.1), ("burn", 1.52, .37)]:
             place(full, parts[phase], position, gain)
         encode(f"fireball-r1-full-{take}", full, PREVIEWS)
-        place(comparison, full, .25 if take == 1 else 6.45, .85)
+        if take <= 2:
+            place(comparison, full, .25 if take == 1 else 6.45, .85)
+        place(six_reel, full, (take - 1) * 6.45 + .25, .85)
     encode("fireball-r1-ab-comparison", comparison, PREVIEWS)
+    encode("fireball-r1-six-take-reel", six_reel, PREVIEWS)
     origin = {"author": "WyrmForge original audio", "license": "Original",
               "source": "tools/audio/build_fireball_r1.py"}
     def make(phase, take, gain):
         item = designed[f"fireball-r1-{phase}-{take}"]
         return {**item, **origin, "mix": {"gain": gain, "lowpassHz": 4700,
                                           "attackSeconds": .006, "releaseSeconds": .18}}
-    casts = [make("cast", n, .72) for n in (1, 2)]
-    hits = [make("hit", n, .82) for n in (1, 2)]
+    casts = [make("cast", n, .72) for n in range(1, 7)]
+    hits = [make("hit", n, .82) for n in range(1, 7)]
     manifest["cues"]["fire"] = {**origin, "file": casts[0]["file"], "sha256": casts[0]["sha256"],
                                  "variants": casts, "hitVariants": hits}
     manifest.setdefault("authoredFireballStages", {})["R1"] = {
         "approved": False, "oldAudioSourceUsed": False,
-        "flight": [designed[f"fireball-r1-flight-{n}"] for n in (1, 2)],
-        "burn": [designed[f"fireball-r1-burn-{n}"] for n in (1, 2)]}
+        "flight": [designed[f"fireball-r1-flight-{n}"] for n in range(1, 7)],
+        "burn": [designed[f"fireball-r1-burn-{n}"] for n in range(1, 7)]}
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
     (PREVIEWS / "fireball-r1-audition.json").write_text(json.dumps({
         "approved": False, "oldAudioUsed": False,
         "origin": "new authored offline physical-noise design",
         "stages": ["ignition", "flight", "impact", "burning ground"],
-        "note": "Cast and hit new Oggs mapped in draft game; flight/burn require authoritative game events."
+        "takeCount": 6,
+        "comparison": "fireball-r1-six-take-reel.mp3",
+        "firstTwoPreserved": True,
+        "note": "Six independent takes per stage; cast/hit mapped in game. Flight/burn require authoritative gameplay events."
     }, indent=2) + "\n")
-    print("Original Fireball R1 exported: never loaded an existing game audio file")
+    print("Original Fireball R1: six independent takes per stage, 24 original Oggs; no legacy audio used")
 
 
 if __name__ == "__main__":

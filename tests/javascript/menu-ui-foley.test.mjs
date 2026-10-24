@@ -36,7 +36,7 @@ test('ordinary presses use persistent selectable real recordings without replaci
     assert.match(audio, /play\('ui', true\)/);
     assert.match(audio, /button\.closest\('\.wyrmforge-sound-controls'\)/);
     assert.match(audio, /source\.playbackRate\.value = \[0\.99, 1, 1\.01\]/);
-    assert.equal(manifest.cues.fire.variants.length, 2);
+    assert.equal(manifest.cues.fire.variants.length, 6);
     assert.equal(manifest.cues.fire.license, 'Original');
     assert.match(manifest.cues.fire.file, /^fireball-r1-cast-1\.ogg$/);
     assert.ok(manifest.music.menu && manifest.music.hunt);

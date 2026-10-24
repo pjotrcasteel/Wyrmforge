@@ -13,6 +13,29 @@
     const volumes = { ui: 0.32, combat: 0.36, moment: 0.69, music: 0.66, ambience: 0.48 };
     const lastCue = new Map();
     const variants = new Map();
+    const fireballShuffleBags = new Map();
+
+    function nextFireballTake(key, count) {
+        if (count <= 1) return 0;
+        let bag = fireballShuffleBags.get(key);
+        if (!bag || bag.count !== count || bag.pending.length === 0) {
+            const pending = Array.from({ length: count }, (_, i) => i);
+            for (let i = count - 1; i > 0; --i) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [pending[i], pending[j]] = [pending[j], pending[i]];
+            }
+            if (bag?.last !== undefined && pending[count - 1] === bag.last) {
+                // The first take of the next bag must differ from the last heard one.
+                const j = pending.findIndex(index => index !== bag.last);
+                [pending[count - 1], pending[j]] = [pending[j], pending[count - 1]];
+            }
+            bag = { count, pending, last: bag?.last };
+            fireballShuffleBags.set(key, bag);
+        }
+        const index = bag.pending.pop();
+        bag.last = index;
+        return index;
+    }
     const buffers = new Map();
     const voices = { ui: 0, combat: 0, moment: 0 };
     const activeVoices = { ui: [], combat: [], moment: [] };
@@ -313,7 +336,8 @@
         if (!options?.length) return false;
         const count = variants.get(school + '-hit') ?? 0;
         variants.set(school + '-hit', count + 1);
-        return playRecordedEntry(options[count % options.length], sound, school + '-hit', count, preview ? 0.62 : 0.53);
+        const index = school === 'fire' ? nextFireballTake('fire-hit', options.length) : count % options.length;
+        return playRecordedEntry(options[index], sound, school + '-hit', count, preview ? 0.62 : 0.53);
     }
 
     function playRecorded(name, sound, preview, now) {
@@ -332,7 +356,10 @@
             lastCue.set(name, now);
             return true;
         }
-        const entry = recordedEntry(name, 'cast', count);
+        const castIndex = name === 'fire'
+            ? nextFireballTake('fire-cast', recordedManifest?.cues?.fire?.variants?.length ?? 1)
+            : count;
+        const entry = recordedEntry(name, 'cast', castIndex);
         if (!entry) return false;
         if (!playRecordedEntry(entry, sound, name, count, isSpell ? 0.72 : 1)) return false;
         // The departure gesture is one semantic event made from physical sound layers.
