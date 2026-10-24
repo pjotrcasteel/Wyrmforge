@@ -34,10 +34,15 @@ export function collectSoundEvents(tracker, snapshot, now) {
     const previousImpacts = tracker.activeImpacts;
     const matched = new Set();
     const freshImpacts = impacts.filter(impact => {
-        const index = previousImpacts.findIndex((past, i) => !matched.has(i) &&
-            past.spell === impact.spell && Math.abs(past.x - impact.x) < 0.5 &&
-            Math.abs(past.y - impact.y) < 0.5 &&
-            impact.progress + 0.02 >= past.progress);
+        const index = previousImpacts.findIndex((past, i) => {
+            const samePlace = Number.isFinite(past.x) && Number.isFinite(past.y) &&
+                Number.isFinite(impact.x) && Number.isFinite(impact.y)
+                ? Math.abs(past.x - impact.x) < 0.5 && Math.abs(past.y - impact.y) < 0.5
+                : !Number.isFinite(past.x) && !Number.isFinite(impact.x);
+            const sameLife = !Number.isFinite(past.progress) || !Number.isFinite(impact.progress) ||
+                impact.progress + 0.02 >= past.progress;
+            return !matched.has(i) && past.spell === impact.spell && samePlace && sameLife;
+        });
         if (index < 0) return true;
         matched.add(index);
         return false;
