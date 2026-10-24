@@ -1,0 +1,28 @@
+name: Hollowed leg review integrity
+on:
+  push:
+    branches: [feat/actor-lit-sprite-production]
+    paths:
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/hollow-sprites.js'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/hollow-leg-review.js'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/hollow-rigged/review/**'
+      - 'tests/javascript/hollow-leg-review.test.mjs'
+      - 'tests/javascript/hollow-sprites.test.mjs'
+      - '.github/workflows/hollow-leg-live-preview.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify original and opt-in Hollowed playback
+        run: |
+          node --check src/Wyrmforge.Presentation.Web/wwwroot/js/hollow-sprites.js
+          node --check src/Wyrmforge.Presentation.Web/wwwroot/js/hollow-leg-review.js
+          node --test tests/javascript/hollow-sprites.test.mjs tests/javascript/hollow-arm-variants.test.mjs tests/javascript/hollow-leg-review.test.mjs
