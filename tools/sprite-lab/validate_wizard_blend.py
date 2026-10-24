@@ -33,6 +33,19 @@ def run(output,render):
         verify(len(coll)==1 and len(coll[0].all_objects)>0,"empty or missing staff "+school)
         staffs.append(coll[0])
     verify(sum(not x.hide_render for x in staffs)==1,"multiple school staffs rendered")
+    grip=bpy.data.objects.get("StaffGripControl")
+    verify(grip is not None and grip.animation_data and grip.animation_data.action,
+           "missing keyframed independent staff grip")
+    for coll in staffs:
+        for mesh in coll.objects:
+            verify(mesh.parent==grip,"staff mesh not attached to shared grip "+mesh.name)
+    scene.frame_set(49)
+    axis=grip.matrix_world.to_quaternion() @ __import__('mathutils').Vector((0,0,1))
+    tilt=math.acos(max(-1,min(1,axis.z)))
+    verify(tilt < .4,"cast staff is falling sideways / nearly horizontal")
+    right=bpy.data.objects.get("IK hand.R")
+    verify(right is not None and math.dist(tuple(grip.matrix_world.translation),tuple(right.matrix_world.translation)) < .11,
+           "cast grip no longer follows player hand")
     cloth=[]
     for obj in bpy.data.objects:
         if any(mod.type=="CLOTH" for mod in obj.modifiers):
