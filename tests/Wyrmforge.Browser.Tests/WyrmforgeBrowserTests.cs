@@ -2070,6 +2070,16 @@ public sealed class WyrmforgeBrowserTests : PageTest
         try
         {
             await OpenAsync();
+            if (Environment.GetEnvironmentVariable("WYRMFORGE_CHECK_DEPLOYED_VERSION") == "true")
+            {
+                var expectedVersion = Environment.GetEnvironmentVariable("WYRMFORGE_EXPECTED_VERSION");
+                var expectedCommit = Environment.GetEnvironmentVariable("WYRMFORGE_EXPECTED_COMMIT");
+                Assert.IsFalse(string.IsNullOrWhiteSpace(expectedVersion), "Published Pages smoke requires an expected release version.");
+                Assert.IsTrue(expectedCommit is { Length: >= 7 }, "Published Pages smoke requires a commit SHA.");
+                var versionBadge = Page.Locator("[data-game-version]");
+                await Expect(versionBadge).ToHaveAttributeAsync("data-game-version", expectedVersion!);
+                await Expect(versionBadge).ToContainTextAsync(expectedCommit![..7]);
+            }
             await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN HUNT", Exact = true })).ToBeVisibleAsync();
             await ScreenshotAsync("desktop-home.png");
 
