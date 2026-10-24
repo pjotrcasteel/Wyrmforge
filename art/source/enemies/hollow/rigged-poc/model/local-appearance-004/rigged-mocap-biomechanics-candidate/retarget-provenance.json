@@ -1,0 +1,39 @@
+{
+  "status": "UNAPPROVED biomechanics revision: no production atlas replacement",
+  "source": "CMU Graphics Lab, Subject 09, Motion 01 RUN",
+  "sourceUrl": "https://github.com/una-dinosauria/cmu-mocap/blob/master/data/009/09_01.bvh",
+  "sourceSha256": "90641ccca814b9d8d59f63576a548bb5612477364462d142a9f741268fbe3b78",
+  "license": "CMU dataset free for all uses; Bruce Hahne BVH conversion",
+  "authoringRig": "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-pixel-v3/hollow-rigged.blend",
+  "loop": {
+    "firstActualMotionIndex": 5,
+    "periodSourceFrames": 88,
+    "fitError": 0.004042674987953383,
+    "rawSamplingHz": 120
+  },
+  "output": {
+    "frames": 16,
+    "fps": 22,
+    "directions": "preview only, not 8-way exported"
+  },
+  "axis": {
+    "right": [
+      0.9999980926513672,
+      0.0,
+      0.0019524565432220697
+    ],
+    "forward": [
+      -0.0019524566596373916,
+      0.0,
+      0.999998152256012
+    ],
+    "travel": [
+      -0.001952458987943828,
+      0.0,
+      0.9999980330467224
+    ]
+  },
+  "biomechanics": "captured shoulder yaw/roll, pelvis counterturn and shoulder-girdle translation; 120Hz hips-relative marker denoising",
+  "noRecoloring": true,
+  "noNewShaders": true
+}
