@@ -67,10 +67,14 @@ internal sealed class ArenaGroundFireState(HuntArenaGenerator.WetForestRecipe re
         var dy = Math.Abs(center.Y - at.Y);
         var rx = patch.RadiusX * width;
         var ry = patch.RadiusY * height;
-        // Conservative ellipse/circle test. This intentionally under-ignites
-        // narrow corners instead of scorching material the spell never touched.
-        var scale = Math.Min(rx, ry);
-        return scale > 0 && Math.Sqrt(Math.Pow(dx / rx, 2) + Math.Pow(dy / ry, 2)) <= 1 + radius / scale;
+        // A point inside the ellipse is obviously exposed. Outside, measure
+        // to a real point on the ellipse along the radial line. This conservative
+        // test cannot ignite pixels farther away than the fire-zone radius.
+        if (rx <= 0 || ry <= 0) return false;
+        var normalizedDistance = Math.Sqrt(Math.Pow(dx / rx, 2) + Math.Pow(dy / ry, 2));
+        if (normalizedDistance <= 1) return true;
+        var outwardFraction = 1 - 1 / normalizedDistance;
+        return Math.Sqrt(Math.Pow(dx * outwardFraction, 2) + Math.Pow(dy * outwardFraction, 2)) <= radius;
     }
 
     private static bool Covers(Vector2D world, HuntArenaGenerator.GroundPatch patch, double width, double height)
