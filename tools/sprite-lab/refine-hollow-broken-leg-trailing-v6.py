@@ -180,7 +180,10 @@ for i in range(17):
             "toe":xyz(ankle+toe_dir*lengths["foot."+side]),
             "interiorKneeDegrees":real_interior_knee(hip,knee,ankle)
         })
-        assert (ankle-poses[src]["feet"][side]["ankle"]).length<1e-5
+        # Only the airborne broken foot is allowed to trail; every
+        # planted source contact and the healthy right foot remain fixed.
+        if side=="R" or drag<1e-8:
+            assert (ankle-poses[src]["feet"][side]["ankle"]).length<1e-5
 
     # Update diagnostics to real evaluated skeleton, not stale source.
     for side in ("L","R"):
@@ -202,7 +205,7 @@ for i in range(17):
         "extraThoraxCounterRollDegrees":math.degrees(twist),
         "extraThoraxPitchDegrees":math.degrees(pitch),
         "crookedKneePoleShift":.095*pain_impact,
-        "bothSourceFootContactsLocked":True,
+        "plantedSourceFootContactsLocked":True,
         "legBoneLengthsUnchanged":True,
         "sourceFrame":src
     }
