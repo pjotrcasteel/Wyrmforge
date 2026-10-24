@@ -71,3 +71,27 @@ test('Worn Vellum preference is classified rather than leaking into save-state i
     const layout = readFileSync(new URL('../../src/Wyrmforge.Application/Persistence/SaveLayout.cs', import.meta.url), 'utf8');
     assert.match(layout, /\["wyrmforge\.audio\.ui\.material\.v1"\] = SaveDomain\.Preferences/);
 });
+
+
+test('Wet Forest ambient sound is region-scoped, muted separately and activated only in a user gesture', () => {
+    const arena = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/Features/Arena/ArenaView.razor', import.meta.url), 'utf8');
+    assert.match(arena, /Region == RegionCatalog.CinderFrontierId \? "wet-forest" : "none"/);
+    assert.match(audio, /\.game-screen\[data-ambient-biome="wet-forest"\]/);
+    assert.match(audio, /function startForestFromGesture\(\)/);
+    assert.match(audio, /startForestFromGesture\(\);/);
+    assert.match(audio, /forestPlayer\?\.player\.pause\(\)/);
+    assert.match(audio, /makeVolumeControl\('ambience', 'Wet Forest'\)/);
+    const layout = readFileSync(new URL('../../src/Wyrmforge.Application/Persistence/SaveLayout.cs', import.meta.url), 'utf8');
+    assert.match(layout, /\["wyrmforge\.audio\.ambience\.v1"\] = SaveDomain\.Preferences/);
+});
+
+test('Wet Forest carries transparent offline-source provenance when the recorded pack is built', () => {
+    // Assets are installed by the soundscape build action before this PR can merge.
+    assert.equal(manifest.ambience?.wetForest?.license, 'CC0');
+    assert.equal(manifest.ambience.wetForest.file, 'wet-forest-bed.ogg');
+    const bytes = readFileSync(new URL(manifest.ambience.wetForest.file, assetDir));
+    assert.equal(bytes.subarray(0, 4).toString(), 'OggS');
+    assert.equal(createHash('sha256').update(bytes).digest('hex'), manifest.ambience.wetForest.sha256);
+    const sources = new Set(manifest.sources.map(source => source.key));
+    for (const key of manifest.ambience.wetForest.sourceKeys) assert.ok(sources.has(key));
+});

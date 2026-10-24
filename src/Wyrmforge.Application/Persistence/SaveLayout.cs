@@ -59,6 +59,7 @@ public static class SaveLayout
         ["wyrmforge.audio.moment.v1"] = SaveDomain.Preferences,
         ["wyrmforge.audio.music.v1"] = SaveDomain.Preferences,
         ["wyrmforge.audio.ui.v1"] = SaveDomain.Preferences,
+        ["wyrmforge.audio.ambience.v1"] = SaveDomain.Preferences,
         ["wyrmforge.player-name.v1"] = SaveDomain.Preferences,
         ["wyrmforge_player_name"] = SaveDomain.Preferences,
         ["wyrmforge.playtest.v1"] = SaveDomain.Telemetry,

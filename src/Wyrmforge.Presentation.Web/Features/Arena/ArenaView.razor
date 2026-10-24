@@ -1,7 +1,7 @@
 @using Wyrmforge.Application.Runs.Navigation
 @using Wyrmforge.Application.Runs.Simulation
 @using Wyrmforge.Domain.Progression.Signature
-<main class="game-screen">
+<main class="game-screen" data-ambient-biome="@(Region is null || Region == RegionCatalog.CinderFrontierId ? "wet-forest" : "none")">
     <canvas @ref="canvas" class="game-canvas" aria-label="Wyrmforge combat arena"></canvas>
     <RealmInfluenceView Influences="CurrentRealmInfluences" />
     <button class="leave-run" title="Retreat — abandon this run" aria-label="Abandon run" @onclick="AbandonRunAsync">

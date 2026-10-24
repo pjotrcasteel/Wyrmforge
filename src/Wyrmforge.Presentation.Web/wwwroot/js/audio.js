@@ -10,8 +10,8 @@
         { id: 'stone', label: 'Weathered Stone' },
         { id: 'iron', label: 'Cold Iron' },
     ]);
-    const volumeKeys = { ui: 'wyrmforge.audio.ui.v1', combat: 'wyrmforge.audio.combat.v1', moment: 'wyrmforge.audio.moment.v1', music: 'wyrmforge.audio.music.v1' };
-    const volumes = { ui: 0.32, combat: 0.36, moment: 0.69, music: 0.66 };
+    const volumeKeys = { ui: 'wyrmforge.audio.ui.v1', combat: 'wyrmforge.audio.combat.v1', moment: 'wyrmforge.audio.moment.v1', music: 'wyrmforge.audio.music.v1', ambience: 'wyrmforge.audio.ambience.v1' };
+    const volumes = { ui: 0.32, combat: 0.36, moment: 0.69, music: 0.66, ambience: 0.48 };
     const lastCue = new Map();
     const variants = new Map();
     const buffers = new Map();
@@ -33,6 +33,10 @@
     let recordedManifest = null;
     const recordedBuffers = new Map();
     const musicPlayers = new Map();
+    let forestPlayer = null;
+    let forestLevel = 0;
+    let forestTarget = null;
+    let forestFadeGeneration = 0;
     let currentMusic = null;
     let fadeGeneration = 0;
     let wantedMusic = null;
@@ -336,6 +340,7 @@
 
     function startMusicFromGesture() {
         if (!recordedManifest || !enabled || !context || !unlocked || document.hidden) return;
+        startForestFromGesture();
         for (const kind of ['menu', 'hunt']) {
             const track = musicTrack(kind);
             if (!track || !track.player.paused || track.starting) continue;
@@ -358,7 +363,83 @@
         }
     }
 
+    // One quiet streamed field recording, not a generated oscillator or a combat voice.
+    // The element is started silently in the same trusted gesture as the soundtrack
+    // for iOS Safari. No Hunt state machine or per-frame audio allocation is needed.
+    function createForestTrack() {
+        const definition = recordedManifest?.ambience?.wetForest;
+        if (!definition?.file || !context || typeof window.Audio !== 'function') return null;
+        if (forestPlayer) return forestPlayer;
+        const player = new window.Audio(assetUrl(definition.file));
+        player.loop = true;
+        player.preload = 'auto';
+        let gain = null;
+        if (typeof context.createMediaElementSource === 'function') {
+            const source = context.createMediaElementSource(player);
+            gain = context.createGain();
+            gain.gain.value = 0;
+            source.connect(gain);
+            gain.connect(buses.ambience);
+        } else {
+            player.volume = 0;
+        }
+        forestPlayer = { player, gain, starting: false };
+        return forestPlayer;
+    }
+
+    function setForestLevel(value) {
+        forestLevel = Math.max(0, Math.min(1, value));
+        if (!forestPlayer) return;
+        if (forestPlayer.gain) forestPlayer.gain.gain.value = forestLevel;
+        else forestPlayer.player.volume = forestLevel * volumes.ambience;
+    }
+
+    function syncForest() {
+        if (!recordedManifest?.ambience?.wetForest || !enabled || !unlocked || document.hidden || !context) return;
+        const active = Boolean(document.querySelector?.('.game-screen[data-ambient-biome="wet-forest"]'));
+        if (active === forestTarget) return;
+        forestTarget = active;
+        const generation = ++forestFadeGeneration;
+        const from = forestLevel, to = active ? 0.86 : 0;
+        const started = performance.now(), duration = active ? 2600 : 1700;
+        const frame = now => {
+            if (generation !== forestFadeGeneration || !enabled || document.hidden) return;
+            const fraction = Math.max(0, Math.min(1, (now - started) / duration));
+            const eased = fraction * fraction * (3 - 2 * fraction);
+            setForestLevel(from + (to - from) * eased);
+            if (fraction < 1 && typeof window.requestAnimationFrame === 'function') {
+                window.requestAnimationFrame(frame);
+            }
+        };
+        if (typeof window.requestAnimationFrame === 'function') window.requestAnimationFrame(frame);
+        else setForestLevel(to);
+    }
+
+    function startForestFromGesture() {
+        const track = createForestTrack();
+        if (!track || !enabled || !unlocked || document.hidden || !track.player.paused || track.starting) return;
+        track.starting = true;
+        try {
+            // Invoke play() before returning from the user gesture, not from a Promise.
+            const promise = track.player.play();
+            Promise.resolve(promise).then(() => {
+                track.starting = false;
+                syncForest();
+            }).catch(error => {
+                track.starting = false;
+                console.debug('Wet Forest ambience awaits another gesture', error);
+            });
+        } catch (error) {
+            track.starting = false;
+            console.debug('Wet Forest ambience could not start', error);
+        }
+    }
+
     function fadeMusicOut(duration = 500) {
+        ++forestFadeGeneration;
+        forestTarget = null;
+        setForestLevel(0);
+        forestPlayer?.player.pause();
         const generation = ++fadeGeneration;
         const tracks = [...musicPlayers.values()];
         const from = tracks.map(t => t.level);
@@ -386,6 +467,7 @@
 
     function syncMusic() {
         if (!recordedManifest || !enabled || !unlocked || document.hidden || !context) return;
+        syncForest();
         const desired = document.querySelector?.('.game-screen') ? 'hunt' : 'menu';
         if (desired === currentMusic && musicIsPlaying(desired)) return;
         const previous = currentMusic;
@@ -415,7 +497,7 @@
         const observer = new MutationObserver(() => {
             if (!recordedManifest || !unlocked || !enabled) return;
             const desired = document.querySelector?.('.game-screen') ? 'hunt' : 'menu';
-            if (desired !== currentMusic) syncMusic();
+            if (desired !== currentMusic || Boolean(document.querySelector?.('.game-screen[data-ambient-biome="wet-forest"]')) !== forestTarget) syncMusic();
         });
         observer.observe(document.body, { childList: true, subtree: true });
     }
@@ -506,6 +588,11 @@
         const next = Math.max(0, Math.min(1, Number(value) || 0));
         volumes[group] = next;
         savePreference(volumeKeys[group], next);
+        if (group === 'ambience') {
+            if (buses?.ambience) buses.ambience.gain.value = next;
+            if (forestPlayer && !forestPlayer.gain) setForestLevel(forestLevel);
+            return;
+        }
         if (group === 'music') {
             if (buses?.music) buses.music.gain.value = next;
             for (const track of musicPlayers.values()) if (!track.gain) setMusicLevel(track, track.level);
@@ -664,7 +751,7 @@
         });
         const levels = document.createElement('div');
         levels.className = 'wyrmforge-sound-levels';
-        levels.append(makeVolumeControl('ui', 'Interface'), makeVolumeControl('combat', 'Combat'), makeVolumeControl('moment', 'Moments'), makeVolumeControl('music', 'Music'));
+        levels.append(makeVolumeControl('ui', 'Interface'), makeVolumeControl('combat', 'Combat'), makeVolumeControl('moment', 'Moments'), makeVolumeControl('music', 'Music'), makeVolumeControl('ambience', 'Wet Forest'));
         const close = makeButton('CLOSE', 'wyrmforge-sound-close', 'Close Sound Atelier', toggleLab);
         const credit = document.createElement('p');
         credit.textContent = 'UI Foley: Kenney (CC0). Recorded music: Brandon Morris (CC0). Spell effects: JC Sounds (CC BY 4.0) and rubberduck (CC0).';
@@ -714,6 +801,10 @@
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
             for (const track of musicPlayers.values()) track.player.pause();
+            forestPlayer?.player.pause();
+            ++forestFadeGeneration;
+            forestTarget = null;
+            setForestLevel(0);
             fadeGeneration++;
             currentMusic = null;
         } else if (enabled) {
@@ -743,6 +834,6 @@
         diagnostics: () => ({ enabled, state: context?.state ?? 'uninitialized', session: navigator.audioSession?.type ?? 'unsupported',
             identity: recordedManifest ? 'Recorded Dark Fantasy' : 'recordings-loading', audioRevision, uiMaterial, music: currentMusic,
             musicPlaying: currentMusic ? musicIsPlaying(currentMusic) : false, musicTracks: [...musicPlayers.values()].map(track => ({ kind: track.kind, paused: track.player.paused, level: track.level })),
-            recorded: Boolean(recordedManifest), voices: { ...voices } }),
+            recorded: Boolean(recordedManifest), forest: { playing: Boolean(forestPlayer && !forestPlayer.player.paused), target: forestTarget, level: forestLevel }, voices: { ...voices } }),
     };
 })();

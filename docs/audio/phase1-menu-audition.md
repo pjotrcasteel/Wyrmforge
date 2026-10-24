@@ -46,6 +46,12 @@ The new preference `wyrmforge.audio.ui.material.v1` is registered as `SaveDomain
 - FMOD Studio *Working with Instruments*: multi-instrument shuffle/variants reduce obviously artificial repetition.
   https://www.fmod.com/resources/documentation-studio?page=working-with-instruments.html&version=1.10
 
+## Next milestone — Wet Forest soundscape
+
+The field-based ambience is a dedicated **Cinder Frontier-only** environment layer, not the existing Cave Theme or another music track. It uses original CC0 wind, water/drips and sparse wood creak recordings, composed offline into a 36-second compressed Ogg. A phone-compatible 36-second MP3, production Ogg hashes, source links and attribution accompany it. Browser media playback starts inside the already-established user gesture, loops silently when out of biome and respects backgrounding, mute and separate ambience volume.
+
+Listening acceptance: listen to the MP3 first, then test one complete fire Hunt on real iPhone speaker and headphones. Do not approve if the loop is recognisable every 36 seconds, causes listener fatigue or competes with attacks.
+
 ## Next sound
 
 Next: separately audition meaningful confirmation/back cues without replacing the existing upgrade resonance; then environmental ambience/creature deaths. Do not couple this with mage, Fireball, lighting, or Hollowed/Ashling art PRs.

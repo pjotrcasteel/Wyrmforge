@@ -18,6 +18,14 @@ The ordinary interface press has a deliberately narrow, non-tonal recorded-Foley
 
 On an iPhone speaker, compare the three at moderate volume, repeat the ordinary press at least twenty times, then navigate menus for five minutes. Check immediate tap feedback, low fatigue, no extra bells or double-clicks, mute, saved selection and headphones. Record keep/revise/replace. Do not merge on CI alone. Source recordings and Git blob provenance are in the recorded audio manifest. This focused change rebases the earlier Phase-1 candidate onto the current universal-lighting-era `main` without changing combat or music.
 
+### Wet Forest audio pass — draft (24 October 2026)
+
+The Cinder Frontier/Wet Forest gets a **separate, quiet, streamed environmental loop** beneath Hunt music and combat: filtered physical wind, damp water/drips, and two distant tree creaks. Three explicit CC0 audio sources are rendered into a compressed, self-hosted 36-second Ogg with an accompanying iPhone-playable MP3 audition. All original source URLs, author and SHA-256 hashes are recorded in the manifest and `docs/audio/previews/wet-forest-provenance.json`; production playback never fetches external media.
+
+Sound remains optional. The ambience uses its own saved volume control (`wyrmforge.audio.ambience.v1`, Preferences), starts silently during a trusted audio gesture for mobile autoplay rules, and fades when entering or leaving the Cinder Frontier. **Never run the Wet Forest ambience in Frost, Town or on background tabs.** Browser game-state detection is through `.game-screen[data-ambient-biome]`, not random runtime heuristics. No per-frame audio allocation; music remains separate and retains its crossfades.
+
+**Listening gate:** iPhone speaker + headphones, ambient-only and full Hunt mixing; check faint texture is still audible but never masks Fireball or warning cues. Inspect continuous looping for clicks and recognisable repetition, first gesture after return, and performance in portrait/mobile. Source-quality inspection and listening remain required before merge. Actual component usage and audio asset presence are independently tested.
+
 ## Recorded audio inventory and required attribution
 
 First imported playback prototype: **0.0.109**. Enhanced recorded mage spell layers: **0.0.110**.
