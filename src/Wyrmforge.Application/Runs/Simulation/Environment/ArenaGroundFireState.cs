@@ -111,14 +111,36 @@ internal sealed class ArenaGroundFireState(HuntArenaGenerator.WetForestRecipe re
         var dy = Math.Abs(center.Y - at.Y);
         var rx = patch.RadiusX * width;
         var ry = patch.RadiusY * height;
-        // A point inside the ellipse is obviously exposed. Outside, measure
-        // to a real point on the ellipse along the radial line. This conservative
-        // test cannot ignite pixels farther away than the fire-zone radius.
         if (rx <= 0 || ry <= 0) return false;
-        var normalizedDistance = Math.Sqrt(Math.Pow(dx / rx, 2) + Math.Pow(dy / ry, 2));
-        if (normalizedDistance <= 1) return true;
-        var outwardFraction = 1 - 1 / normalizedDistance;
-        return Math.Sqrt(Math.Pow(dx * outwardFraction, 2) + Math.Pow(dy * outwardFraction, 2)) <= radius;
+        var nx = dx / rx;
+        var ny = dy / ry;
+        if (nx * nx + ny * ny <= 1) return true;
+
+        // Distance to an eccentric ellipse is NOT the distance along the
+        // centre-to-fire ray. That shortcut misses real grazing contacts with
+        // narrow leafbeds. Project onto the closest boundary via the monotone
+        // ellipse Lagrange multiplier; 48 deterministic steps, no simulation RNG.
+        var lower = 0d;
+        var upper = Math.Max(rx * dx, ry * dy) + rx * rx + ry * ry;
+        while (EllipseConstraint(upper, dx, dy, rx, ry) > 1) upper *= 2;
+        for (var i = 0; i < 48; i++)
+        {
+            var middle = (lower + upper) * .5;
+            if (EllipseConstraint(middle, dx, dy, rx, ry) > 1) lower = middle;
+            else upper = middle;
+        }
+        var nearestX = rx * rx * dx / (rx * rx + upper);
+        var nearestY = ry * ry * dy / (ry * ry + upper);
+        var errorX = dx - nearestX;
+        var errorY = dy - nearestY;
+        return errorX * errorX + errorY * errorY <= radius * radius;
+    }
+
+    private static double EllipseConstraint(double multiplier, double dx, double dy, double rx, double ry)
+    {
+        var x = rx * dx / (rx * rx + multiplier);
+        var y = ry * dy / (ry * ry + multiplier);
+        return x * x + y * y;
     }
 
     private static bool Covers(Vector2D world, HuntArenaGenerator.GroundPatch patch, double width, double height)
