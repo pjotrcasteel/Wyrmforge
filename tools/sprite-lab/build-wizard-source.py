@@ -11,6 +11,7 @@ from pathlib import Path
 from PIL import Image,ImageDraw,ImageFont
 import numpy as np
 import trimesh
+from wizard_quality_pass import refine_wizard
 
 CELL=128; ANCHOR=(64,106); SCALE=38
 DIRECTIONS=['N','NE','E','SE','S','SW','W','NW']
@@ -284,6 +285,7 @@ def create_pose(school='fire',clip='walk',frame=0):
   for dx in (-1,1):
    m.tube([xyz(*(top+[dx*.065,0,.15])),xyz(*(top+[dx*.12,0,.28])),xyz(*(top+[dx*.18,.01,.31]))],.022,COLORS['wood'],'wood','antler')
  m.school=school
+ refine_wizard(m,xyz,COLORS,color,phase,clip,frame)
  return m
 
 def project(mesh,direction):
