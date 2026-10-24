@@ -103,6 +103,7 @@ public sealed class UniversalLightingBrowserTests : PageTest
     private async Task VerifyReceiversAsync(ILocator canvas, int width)
     {
         await ConfigureAsync(canvas, new { lighting = "neutral-key", view = "lit", progress = .25, frame = 0, fireball = false, torch = false, spot = false });
+        var comparisons = new List<object>();
         foreach (var id in new[] { "hollowed", "ashling", "npc-binding-proxy", "wall", "roof", "foreground-post", "oak-0", "oak-1" })
         {
             var focus = id == "foreground-post" ? "water" : id.StartsWith("oak-") ? "oak" : id is "hollowed" or "ashling" ? "actors" : "town";
@@ -112,12 +113,16 @@ public sealed class UniversalLightingBrowserTests : PageTest
             if (id is "hollowed" or "ashling")
             {
                 await ConfigureAsync(canvas, new { normals = false });
-                Assert.IsGreaterThan(5, await ReceiverChangedPixelsAsync(canvas), $"{id} authored normals must change its own visible pixels.");
+                var changed = await ReceiverChangedPixelsAsync(canvas);
+                comparisons.Add(new { receiver = id, comparison = "authored-normal-versus-flat", changedPixels = changed });
+                Assert.IsGreaterThan(5, changed, $"{id} authored normals must change its own visible pixels.");
                 await CaptureAsync(width, $"key-{id}-flat");
                 await ConfigureAsync(canvas, new { normals = true });
             }
             await ConfigureAsync(canvas, new { receivesLight = false });
-            Assert.IsGreaterThan(5, await ReceiverChangedPixelsAsync(canvas), $"{id} must receive the registered key.");
+            var receiptChanged = await ReceiverChangedPixelsAsync(canvas);
+            comparisons.Add(new { receiver = id, comparison = "receives-light", changedPixels = receiptChanged });
+            Assert.IsGreaterThan(5, receiptChanged, $"{id} must receive the registered key.");
             await CaptureAsync(width, $"key-{id}-no-receipt");
             await ConfigureAsync(canvas, new { receivesLight = true });
             Assert.AreEqual(0, await ReceiverChangedPixelsAsync(canvas), $"{id} must restore exactly.");
@@ -130,16 +135,39 @@ public sealed class UniversalLightingBrowserTests : PageTest
             await SaveReceiverBaselineAsync(canvas);
             await CaptureAsync(width, $"water-key-{position}-specular");
             await ConfigureAsync(canvas, new { reflections = false });
-            Assert.IsGreaterThan(5, await ReceiverChangedPixelsAsync(canvas), "Specular A/B must change water pixels, not just other surfaces.");
+            var specularChanged = await ReceiverChangedPixelsAsync(canvas);
+            comparisons.Add(new { receiver = "puddle", comparison = "specular-on-off", position, changedPixels = specularChanged });
+            Assert.IsGreaterThan(5, specularChanged, "Specular A/B must change water pixels, not just other surfaces.");
             centers.Add(await canvas.EvaluateAsync<double>(
                 "c => { const p=gpuProof.proofPixels(c), e=window.receiverEvidence; let sum=0,x=0; for(const i of e.indices) { const d=Math.max(0,e.pixels[i]+e.pixels[i+1]+e.pixels[i+2]-p[i]-p[i+1]-p[i+2]); sum+=d; x+=(i/4%c.width)*d; } return sum ? x/sum : -1; }"));
             await CaptureAsync(width, $"water-key-{position}-diffuse");
         }
+        comparisons.Add(new { receiver = "puddle", comparison = "specular-centroid", xPixels = centers });
+        var directory = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-gpu-proof");
+        await File.WriteAllTextAsync(Path.Combine(directory, $"gpu-{width}-receiver-comparisons.json"),
+            System.Text.Json.JsonSerializer.Serialize(comparisons, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
         Assert.IsGreaterThan(1.0, Math.Abs(centers[1] - centers[0]), "Water's specular contribution must move with the source.");
         await ConfigureAsync(canvas, new { reflections = true, profile = "zero" });
         Assert.IsTrue(await canvas.EvaluateAsync<bool>("c => gpuProof.proofPixels(c).every((v,i) => i%4===3 || v===0)"),
             "Zero must disable the explicit inspection key too.");
         await CaptureAsync(width, "inspection-key-zero");
+        await VerifyPoseShadowsAsync(canvas, width);
+    }
+
+    private async Task VerifyPoseShadowsAsync(ILocator canvas, int width)
+    {
+        await ConfigureAsync(canvas, new { profile = "night", focus = "actors", inspectObject = "approved-ground", behind = false, progress = .5, frame = 0 });
+        await SaveReceiverBaselineAsync(canvas);
+        await ConfigureAsync(canvas, new { view = "shadow-visibility" });
+        await canvas.EvaluateAsync("c => { window.receiverEvidence.pixels=gpuProof.proofPixels(c); }");
+        await CaptureAsync(width, "ground-shadow-pose0");
+        await ConfigureAsync(canvas, new { frame = 8, view = "object-mask" });
+        // Intersect visible ground at both poses: actor silhouette movement itself cannot pass this check.
+        await canvas.EvaluateAsync("c => { const p=gpuProof.proofPixels(c); window.receiverEvidence.indices=window.receiverEvidence.indices.filter(i => p[i]===255); }");
+        await ConfigureAsync(canvas, new { view = "shadow-visibility" });
+        var changed = await ReceiverChangedPixelsAsync(canvas);
+        Assert.IsGreaterThan(5, changed, "Pose changes must alter actual shadow visibility on ground visible in both poses.");
+        await CaptureAsync(width, "ground-shadow-pose8");
     }
 
     private async Task SaveReceiverBaselineAsync(ILocator canvas)

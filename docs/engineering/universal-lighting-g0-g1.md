@@ -271,3 +271,23 @@ and alpha clipping, so browser A/B tests measure only visible receiver pixels.
 Expanded tests cover each actor's normal response; wall/roof/post/NPC and oak
 receipt; and water-only specular contribution at two source positions. This is
 pending GPU CI/visual inspection, not a passed G1 gate or a new night art baseline.
+
+
+`2f801f7` passed published-app GPU workflow 40109174573, Validate and WebKit.
+Artifact 12566291304 was downloaded and inspected. All eight receiver checks,
+both actors' normal A/B checks, water-only specular A/B and moving-highlight
+centroid assertions passed at both viewport sizes. Neutral-key screenshots show
+clearer actor proportions and material detail; original night composition is
+still not artistically accepted. The key-lit oak visibly contains leaf shadows,
+but neither a synthetic mask nor a passing pixel difference grants art approval.
+
+Browser smoke failed the unchanged roaming-world test at initial height 600.
+The simulation starts with an 800x600 snapshot before its first tick; the test
+previously waited only for non-null world/player. It now waits for measured
+simulation activity before asserting world size, preserving all existing size,
+movement and page-scroll assertions. No production gameplay code changed.
+
+Next evidence slice adds durable receiver changed-pixel counts and water highlight
+centroids, plus a pose-shadow comparison restricted to the intersection of visible
+ground in both poses. Moving actor silhouettes cannot themselves satisfy that
+shadow check. These added checks require their own published-app CI run.

@@ -211,6 +211,7 @@ float proofShadowVisibility() {
             lights: this.selected?.map(l => ({ id: l.id, ownerId: l.ownerId, type: l.type, position: l.position, intensity: l.intensity, shadow: l.shadow, views: l.shadowViews })),
             drawCalls: this.renderer.info.render.calls, triangles: this.renderer.info.render.triangles,
             textures: this.renderer.info.memory.textures, geometries: this.renderer.info.memory.geometries,
+            inspectedReceiver: this.snapshot?.objects.find(o => o.id === this.inspectionObject) ?? null,
             productionPathsMigrated: 0 };
     }
     dispose() {

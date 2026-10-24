@@ -2479,7 +2479,9 @@ public sealed class WyrmforgeBrowserTests : PageTest
         }");
         await Page.WaitForFunctionAsync(@"() => {
             const state = window.__roamingState?.(document.querySelector('canvas.game-canvas'));
-            return Boolean(state?.world && state.player);
+            // The initial snapshot still has the simulation's 800x600 defaults.
+            // Wait for an actual tick before asserting the roaming world's dimensions.
+            return Boolean(state?.world && state.player && state.performance?.simulationHz > 0);
         }");
         var initial = await Page.EvaluateAsync<System.Text.Json.JsonElement>(@"() => {
             const state = window.__roamingState(document.querySelector('canvas.game-canvas'));
