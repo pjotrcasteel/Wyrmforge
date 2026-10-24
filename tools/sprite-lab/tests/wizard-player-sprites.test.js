@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createWizardPlayerSprites,isApprovedWizardManifest,WIZARD_DIRECTIONS,WIZARD_VISUAL_ID,WIZARD_CLIPS} from '../wizard-player-sprites.js';
+import {createWizardPlayerSprites,isApprovedWizardManifest,WIZARD_DIRECTIONS,WIZARD_VISUAL_ID,WIZARD_CLIPS} from '../../../src/Wyrmforge.Presentation.Web/wwwroot/js/wizard-player-sprites.js';
 
 const goodManifest=()=>({
     schemaVersion:1,directions:[...WIZARD_DIRECTIONS],
