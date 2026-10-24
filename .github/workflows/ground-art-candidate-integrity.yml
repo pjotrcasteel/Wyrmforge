@@ -5,6 +5,7 @@ on:
       - 'user_handover_files/concepts/arena-v2/wet-forest/ground-materials/v1/**'
       - 'tools/art/verify_ground_candidate_collection.mjs'
       - 'tools/art/build_ground_material_probe.py'
+      - 'tools/art/audit_ground_source_art.py'
       - 'tools/art/tests/test_ground_material_probe.py'
       - '.github/workflows/ground-art-candidate-integrity.yml'
   workflow_dispatch:
@@ -34,7 +35,9 @@ jobs:
         run: python -m unittest discover -s tools/art/tests -p test_ground_material_probe.py -v
       - name: Build 12 Ground/Moss and Wet Mud repeat comparisons
         run: python tools/art/build_ground_material_probe.py --output "$RUNNER_TEMP/ground-material-probes" --tile-px 240
-      - name: Upload twelve before/after 3x3 review comparisons
+      - name: Audit all 36 source images for border/matte warnings
+        run: python tools/art/audit_ground_source_art.py --output "$RUNNER_TEMP/ground-material-probes"
+      - name: Upload twelve seam studies and the 36-image source audit
         uses: actions/upload-artifact@v4
         with:
           name: wet-forest-grass-mud-repeat-studies
