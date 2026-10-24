@@ -168,9 +168,12 @@ def animate(arm):
         t=i/FRAMES
         frame=i+1
         # A 0.8% body-height vertical bob, not a squat/kick cycle.
-        hip=arm.pose.bones["Hips"]
-        hip.location=Vector((.012*math.sin(2*math.pi*t),0.,-.055+.008*math.cos(4*math.pi*t)))
-        hip.keyframe_insert(data_path="location",frame=frame)
+        # Animated ACTOR ROOT is the authoritative pelvis bob/sway. A
+        # PoseBone.local location key produced NO evaluated movement in prior
+        # Blender test. Root object key moves the body; world IK foot
+        # controls remain planted independently.
+        arm.location=Vector((.012*math.sin(2*math.pi*t),0.,-.055+.008*math.cos(4*math.pi*t)))
+        arm.keyframe_insert(data_path="location",frame=frame)
         for side,sign in (("Left",-1.),("Right",1.)):
             phase=(t+(0 if side=="Left" else .5))%1.
             y,z,stance=foot_trajectory(phase)
