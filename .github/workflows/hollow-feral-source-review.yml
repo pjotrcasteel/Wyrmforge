@@ -1,0 +1,40 @@
+name: Hollowed feral motion source review
+
+on:
+  push:
+    branches: [feat/actor-lit-sprite-production]
+    paths:
+      - 'tools/sprite-lab/build-hollow-feral-candidate.py'
+      - 'tools/sprite-lab/render-hollow-feral-review.py'
+      - '.github/workflows/hollow-feral-source-review.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  authored-motion-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install CPU Blender 4.5 and Pillow
+        run: python -m pip install 'bpy==4.5.3' 'numpy>=1.26,<3' 'pillow>=10,<13'
+      - name: Author genuinely new 16-pose feral locomotion in a separate .blend
+        run: python tools/sprite-lab/build-hollow-feral-candidate.py
+      - name: Evaluate real skinned mesh poses (not stretched sprite frames)
+        run: |
+          python tools/sprite-lab/sample-hollow-rig.py -- art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-feral-v1-candidate
+      - name: Render source-rig review GIF and contact poses
+        run: python tools/sprite-lab/render-hollow-feral-review.py
+      - name: Preserve editable .blend, sampled geometry and actual review frames
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hollowed-feral-v1-unapproved-${{ github.sha }}
+          path: |
+            art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-feral-v1-candidate/
+            artifacts/hollow-feral-review/
+          if-no-files-found: warn
+          retention-days: 30
