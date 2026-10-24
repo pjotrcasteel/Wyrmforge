@@ -36,10 +36,10 @@ SCHOOLS = {
     'arcane': '#79648C', 'necromancer': '#6C805C', 'summoner': '#90744E',
 }
 NEUTRALS = {
-    'robe': '#4D4B4D', 'robe_shadow': '#302F34', 'robe_raised': '#58545A',
-    'linen': '#827A71', 'leather': '#3C302A', 'leather_edge': '#675548',
-    'skin': '#B5A18E', 'skin_shadow': '#75685F', 'hair': '#A9A396',
-    'hair_shadow': '#77736E', 'metal': '#6A625A', 'boot': '#28272A',
+    'robe': '#414044', 'robe_shadow': '#28282D', 'robe_raised': '#575359',
+    'linen': '#756E66', 'leather': '#342C29', 'leather_edge': '#635043',
+    'skin': '#A38E7B', 'skin_shadow': '#6A5C52', 'hair': '#A39F95',
+    'hair_shadow': '#696764', 'metal': '#665F58', 'boot': '#242328',
 }
 
 
@@ -69,15 +69,31 @@ def material(name, hex_color, roughness=.89, bump=.08, woven=False):
     bsdf.inputs['Base Color'].default_value = (*color, 1)
     bsdf.inputs['Roughness'].default_value = roughness
     if woven:
-        tex = nodes.new('ShaderNodeTexNoise')
-        tex.inputs['Scale'].default_value = 115
-        tex.inputs['Detail'].default_value = 2.1
+        # Actual neutral fabric color breakup; no painted torch or camera lighting.
+        # Separate large worn-dye and tiny yarn-scale noise to preserve readability
+        # at the mobile sprite size after orthographic sampling.
+        wear = nodes.new('ShaderNodeTexNoise')
+        wear.name = 'Undyed wool / worn dye irregularity'
+        wear.inputs['Scale'].default_value = 6.5
+        wear.inputs['Detail'].default_value = 3.2
+        wear.inputs['Roughness'].default_value = .72
+        variation = nodes.new('ShaderNodeValToRGB')
+        variation.name = 'Dark Gothic wool / neutral albedo'
+        variation.color_ramp.elements[0].position = .20
+        variation.color_ramp.elements[0].color = (*tuple(max(0,v*.68) for v in color),1)
+        variation.color_ramp.elements[1].position = .81
+        variation.color_ramp.elements[1].color = (*tuple(min(1,v*1.13) for v in color),1)
+        mat.node_tree.links.new(wear.outputs['Fac'], variation.inputs['Fac'])
+        mat.node_tree.links.new(variation.outputs['Color'],bsdf.inputs['Base Color'])
+        yarn = nodes.new('ShaderNodeTexNoise')
+        yarn.name = 'Fine wool grain / normal response only'
+        yarn.inputs['Scale'].default_value = 110
+        yarn.inputs['Detail'].default_value = 2.3
         bump_node = nodes.new('ShaderNodeBump')
         bump_node.inputs['Strength'].default_value = bump
-        bump_node.inputs['Distance'].default_value = .005
-        mat.node_tree.links.new(tex.outputs['Fac'], bump_node.inputs['Height'])
+        bump_node.inputs['Distance'].default_value = .0035
+        mat.node_tree.links.new(yarn.outputs['Fac'], bump_node.inputs['Height'])
         mat.node_tree.links.new(bump_node.outputs['Normal'], bsdf.inputs['Normal'])
-        # The noise affects geometric normal detail, NOT a painted key light.
     mat.diffuse_color = (*color, 1)
     return mat
 
@@ -101,6 +117,7 @@ class WizardBuilder:
         self.arm = self.armature()
         self.make_body()
         self.make_garments()
+        self.make_gothic_accessories()
         self.make_staffs()
         self.staff_control = self.create_staff_grip_control()
         self.ik_targets = self.create_ik()
@@ -247,35 +264,38 @@ class WizardBuilder:
                     self.pal['metal'],'pelvis',segments=12,rings=8)
 
     def make_beard(self):
-        for index in range(7):
-            x=(index-3)*.041
-            length=.37+.17*math.cos(index*.8)
-            width=.047 if abs(index-3)<2 else .037
-            rows=12
+        # Eleven individually UV-authored layers; tips are genuinely skinned to
+        # the same original beard bones. No pasted white silhouette decal.
+        for index in range(11):
+            x=(index-5)*.030
+            length=.34+.20*math.cos(index*.54)+.035*math.sin(index*1.87)
+            width=.032 if abs(index-5)<4 else .027
+            rows=16
             verts=[];uvs=[]
             for j in range(rows):
                 t=j/(rows-1)
-                z=1.675-length*t
-                y=-.242-.06*t
-                xoffset=x+(.01*math.sin(2*math.pi*t+index))
-                half=width*(1-.85*t)
-                verts.extend([(xoffset-half,y,z),(xoffset+half,y,z)])
+                z=1.673-length*t
+                y=-.243-.070*t-.012*math.sin(math.pi*t+index*.35)
+                xoffset=x+(.014*math.sin(2.4*math.pi*t+index*.61))*t
+                half=width*(1-.86*t)
+                verts.extend([(xoffset-half,y-.004,z),(xoffset+half,y+.004,z)])
                 uvs.extend([(0,t),(1,t)])
             faces=[(j*2,j*2+1,j*2+3,j*2+2) for j in range(rows-1)]
-            ob=self.mesh('Weighted beard strand %02d'%index,verts,faces,
-                         self.pal['hair'] if index%3 else self.pal['hair_shadow'],self.body,uvs)
+            material_name='hair' if index%4 else 'hair_shadow'
+            ob=self.mesh('Weighted original beard lock %02d'%index,verts,faces,
+                         self.pal[material_name],self.body,uvs)
             root=ob.vertex_groups.new(name='beard.root')
             tip=ob.vertex_groups.new(name='beard.tip')
             for j in range(rows):
-                w=min(1,max(0,(j/(rows-1)-.25)/.65))
+                weight=min(1,max(0,(j/(rows-1)-.24)/.67))
                 for offset in (0,1):
-                    if w<1:root.add([j*2+offset],max(.001,1-w),'REPLACE')
-                    if w>0:tip.add([j*2+offset],w,'REPLACE')
-            modifier=ob.modifiers.new('Beard bone deformations','ARMATURE')
+                    if weight<1: root.add([j*2+offset],max(.001,1-weight),'REPLACE')
+                    if weight>0: tip.add([j*2+offset],weight,'REPLACE')
+            modifier=ob.modifiers.new('Weighted secondary beard bones','ARMATURE')
             modifier.object=self.arm
         for sign in (-1,1):
             self.sphere('Grey sideburn '+str(sign),(sign*.174,-.13,1.725),
-                        (.045,.05,.20),self.pal['hair'],'head',segments=16,rings=10)
+                        (.043,.050,.19),self.pal['hair_shadow'],'head',segments=16,rings=10)
 
     def make_hat(self):
         # Bent, broad but restrained felt brim, different from licensed film costume.
@@ -349,9 +369,10 @@ class WizardBuilder:
             ydepth=.19+.15*(t**1.5)
             for i in range(n):
                 a=start+(end-start)*i/(n-1)
-                pleat=.012*math.cos(a*13)*(t*t)
+                pleat=.024*math.cos(a*13+.2)*(t*t)+.008*math.sin(a*5.4)*(t**3)
                 r=width+pleat
-                verts.append((r*math.cos(a),ydepth*math.sin(a),1.07-.96*t))
+                hem=.027*math.cos(a*8.2+.4)*(t**4)
+                verts.append((r*math.cos(a),ydepth*math.sin(a),1.07-.96*t+hem))
                 uv.append((i/(n-1),t))
                 if i<n-1 and j<rows-1:
                     p=j*n+i
@@ -380,6 +401,39 @@ class WizardBuilder:
         # A thick broad belt gives readably separated torso and coat at pixel scale.
         self.sphere('Weathered leather cinch',(0,-.004,1.045),
                     (.30,.217,.058),self.pal['leather'],'pelvis')
+        # Sew a darker, irregular edge into the same dynamic coat mesh. Material
+        # indexing remains attached to the cloth vertices during simulation.
+        coat=bpy.data.objects['Open-front weighty coat / continuous physics']
+        coat.data.materials.append(self.pal['robe_shadow'])
+        for polygon in coat.data.polygons:
+            lower=max(coat.data.vertices[index].co.z for index in polygon.vertices)
+            if lower < .21 and polygon.index % 7 != 0:
+                polygon.material_index=1
+
+    def make_gothic_accessories(self):
+        """Body-weighted field-worn layers, not a second floating costume shell."""
+        # Shoulder strap follows torso motion; an offset silhouette on the LEFT
+        # shoulder reads more strongly than micro ornaments at gameplay scale.
+        self.cylinder_between('Crossbody leather strap / upper',(-.31,-.205,1.48),
+                              (-.08,-.282,1.24),.023,self.pal['leather_edge'],'chest',vertices=10)
+        self.cylinder_between('Crossbody leather strap / lower',(-.08,-.282,1.24),
+                              (.18,-.215,1.075),.023,self.pal['leather'],'chest',vertices=10)
+        self.sphere('Antique clasp with low-sheen bronze',(-.09,-.285,1.23),
+                    (.043,.027,.045),self.pal['metal'],'chest',segments=14,rings=8)
+        # Distinct overlapping lapels show the coat depth and keep the beard
+        # free of a bright front-facing flat panel.
+        for side in (-1,1):
+            x=side*.18
+            self.cylinder_between('Folded collar hem '+str(side),(x,-.212,1.54),
+                                  (side*.10,-.270,1.24),.023,
+                                  self.pal['robe_raised' if side<0 else 'robe_shadow'],
+                                  'chest',vertices=8)
+        # Small weathered cuff edges stay with arms, not simulated robe vertices.
+        for side in ('L','R'):
+            x=-.32 if side=='L' else .50
+            z=1.04 if side=='L' else 1.16
+            self.sphere('Turned wool cuff '+side,(x,-.27,z+.047),(.092,.080,.038),
+                        self.pal['robe_shadow'],'forearm.'+side,segments=18,rings=8)
 
     def make_staffs(self):
         # No wizard-only renderer: these are authentic independently authored objects.
