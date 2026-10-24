@@ -187,36 +187,53 @@ def isolate_left_right_leg_weights(body,arm):
 
 
 def verify_deformed_leg_lanes(body,arm):
-    """Check the rendered, SKINNED foot geometry, not merely source ankle IK."""
-    lhip=arm.matrix_world@arm.pose.bones["LeftUpLeg"].head
-    rhip=arm.matrix_world@arm.pose.bones["RightUpLeg"].head
-    axis=rhip-lhip
+    """Measure actually deformed foot geometry and preserve full failure evidence.
+
+    A zero/sparse Foot group is a real binding defect, NOT proof of midline
+    crossing. Never silently infer approval from the correct IK bone alone.
+    """
+    left=arm.matrix_world @ arm.pose.bones["LeftUpLeg"].head
+    right=arm.matrix_world @ arm.pose.bones["RightUpLeg"].head
+    axis=right-left
     axis.z=0
     width=axis.length
     insist(width>.1,"bad evaluated pelvis width")
     axis.normalize()
-    center=(rhip+lhip)*.5
-    out={}
+    center=(right+left)*.5
+    result={"footLaneValid":True}
     evaluated=body.evaluated_get(bpy.context.evaluated_depsgraph_get())
     mesh=evaluated.to_mesh()
     try:
-        insist(len(mesh.vertices)==len(body.data.vertices),"deformed topology remapped foot indices")
+        insist(len(mesh.vertices)==len(body.data.vertices),"deformed topology remapped")
+        group_lookup={group.name:group.index for group in body.vertex_groups}
         for side,sign in (("Left",-1),("Right",1)):
-            group=body.vertex_groups.get(side+"Foot")
-            insist(group is not None,"no geometric foot group "+side)
-            ids=[]
-            for v in body.data.vertices:
-                try:weight=group.weight(v.index)
-                except RuntimeError:continue
-                if weight>=.35:ids.append(v.index)
-            insist(len(ids)>=10,"too few weighted foot mesh vertices "+side)
-            point=sum((evaluated.matrix_world@mesh.vertices[i].co for i in ids),Vector((0.,0.,0.)))/len(ids)
+            group_id=group_lookup.get(side+"Foot")
+            # Compare only vertices that actually participate in ankle/foot
+            # skinning. A lower threshold is diagnostic, not acceptance.
+            entries=[]
+            for vertex in body.data.vertices:
+                weight=max((g.weight for g in vertex.groups if g.group==group_id),default=0.)
+                if weight>.02:entries.append((vertex.index,weight))
+            result[side.lower()+"FootVertexCount"]=len(entries)
+            result[side.lower()+"FootStrongCount"]=sum(1 for _,w in entries if w>=.35)
+            if len(entries)<10:
+                result[side.lower()+"FootLane"]=None
+                result["footLaneValid"]=False
+                result[side.lower()+"FootReason"]="insufficient skin weights; not a motion result"
+                continue
+            # Weight the actual evaluated skin to avoid counting tiny
+            # incidental bone-heat influences as though they were whole feet.
+            total=sum(w for _,w in entries)
+            point=sum((evaluated.matrix_world@mesh.vertices[i].co*w for i,w in entries),
+                      Vector((0.,0.,0.)))/total
             clearance=sign*(point-center).dot(axis)/width
-            insist(clearance>.04,side+" DEFORMED foot crosses anatomical midline: "+str(round(clearance,3)))
-            out[side.lower()+"FootLane"]=round(clearance,4)
+            result[side.lower()+"FootLane"]=round(clearance,4)
+            if clearance<=.04:
+                result["footLaneValid"]=False
+                result[side.lower()+"FootReason"]="deformed foot geometry crosses hip-relative lane"
     finally:
         evaluated.to_mesh_clear()
-    return out
+    return result
 
 
 def studio_scene(body,arm,output):
@@ -284,7 +301,11 @@ def inspect_motion(body,arm,output):
         insist((left-right).length>.01,"feet collapsed into the same point")
         foot_lanes=verify_deformed_leg_lanes(body,arm)
         for side in ("left","right"):
-            minimum_foot_lane[side]=min(minimum_foot_lane[side],foot_lanes[side+"FootLane"])
+            lane=foot_lanes.get(side+"FootLane")
+            if lane is not None:
+                minimum_foot_lane[side]=min(minimum_foot_lane[side],lane)
+            else:
+                minimum_foot_lane[side]=None
         evaluated=body.evaluated_get(bpy.context.evaluated_depsgraph_get())
         evaluated_mesh=evaluated.to_mesh()
         try:
@@ -338,6 +359,15 @@ def main(opts):
     scene["CapturedBVHSource"]="CMU 07_04 / Bruce Hahne conversion"
     scene["ArtistApproved"]=False
     scene["ProductionReady"]=False
+    # Reject the result based on deformed geometry while retaining all 16
+    # original review renders, 3/4 poses and editable Blender source.
+    gait_failures=[
+        {"frame":pose["sourceFrame"],"reasons":[
+            pose["deformedFootLanes"].get(side+"FootReason")
+            for side in ("left","right")
+            if pose["deformedFootLanes"].get(side+"FootReason")
+        ]} for pose in report_data if not pose["deformedFootLanes"]["footLaneValid"]
+    ]
     save=output/"cmu-realistic-male-retarget-source.blend"
     bpy.ops.wm.save_as_mainfile(filepath=str(save))
     report={"source":"Official Blender Studio CC0 realistic male / CMU subject 07_04",
@@ -347,12 +377,16 @@ def main(opts):
             "lowerLegWeightIsolation":isolation,"minDeformedFootLane":foot_lanes,
             "mocapFrameSamples":SAMPLES,
             "evaluatedBodyVertexDisplacement":round(displacement,5),
+            "footLaneFailures":gait_failures,"footLanesPassed":not gait_failures,
             "poses":report_data,
             "gothicWizardSourceComplete":False,"robed":False,"beardModeled":False,
             "retargetAcceptance":False,"productionAtlasComplete":False,
             "lightingApproved":False,"replacesTemporaryPlayer":False}
     (output/"native-retarget-validation.json").write_text(json.dumps(report,indent=2)+"\n")
-    print(json.dumps({k:v for k,v in report.items() if k!="poses"},indent=2))
+    print(json.dumps({k:v for k,v in report.items() if k!="poses"},indent=2),flush=True)
+    if gait_failures:
+        raise RuntimeError("REJECTED: deformed foot lanes/weights fail on "+
+                           str(len(gait_failures))+" captured walk poses; inspect saved review")
 
 if __name__=="__main__":
     args=sys.argv[sys.argv.index("--")+1:] if "--" in sys.argv else []
