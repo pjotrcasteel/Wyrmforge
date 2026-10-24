@@ -37,6 +37,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg >/dev/null
           ffmpeg -hide_banner -loglevel error -y -framerate 12 \
             -i artifacts/wizard-captured-motion/frame-%02d.png \
             -filter_complex 'loop=loop=3:size=16:start=0' \
