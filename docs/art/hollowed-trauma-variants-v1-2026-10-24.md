@@ -171,3 +171,55 @@ passes have been generated for these exact posed meshes; never reuse
 the previous walk atlas passes. 96px in-Hunt screenshots, gameplay travel
 speed/contact, attacks/deaths matching the new reach and approved relightable
 source geometry remain separate acceptance gates.
+
+## V7 — Unequal painful contact timing, source-faithful (24 October)
+
+The owner found the V3–V6 broken-left-leg motion still insufficiently
+injured-looking at original 96px mobile game scale. The visually examined
+V6 source genuinely moved the trailing ankle posteriorly and outwards,
+with a crooked knee and painful hip collapse, but played its healthy and
+damaged contact/recovery phases at near-identical cadence.
+
+**V7 is a wholly separate, editable cape-free candidate** stored in
+`rigged-hollow-broken-leg-asymmetric-v7/`. It retimes the **complete
+original V6 full-body source action at fractional Blender frames**. Its
+painful injured-left contact now occupies approximately **9 of 16
+sampled frames with damaged support over 50%**, versus **6 of 16** in
+the measured V6 source. Healthy-right stride accelerates after the
+painful contact; the source-mocap injured foot drag and visible buckling
+survive intact. This is a hand-authored time map using measured poses,
+**not procedural limb jitter or independent sine/cosine wrists**.
+
+A full 16-frame/25fps authentic skinned Blender cycle, eight directions
+(128 separate original 96px poses), 32 animated original-and-4× GIFs, a
+new editable original-provenance `.blend`, 34 contact samples, and two
+**synthetic native-scale traveling-field preview GIFs** are exported by
+`tools/sprite-lab/retime-hollow-broken-leg-gait-v7.py` and
+`tools/sprite-lab/render-hollow-broken-leg-asymmetric-v7.py`.
+
+Review V6 on left / V7 on right:
+- [East 96px GIF](evidence/hollowed-broken-leg-asymmetric-v7/compare-e-native-96px.gif)
+  and [East 4× GIF](evidence/hollowed-broken-leg-asymmetric-v7/compare-e-zoom-4x.gif)
+- [Southeast 4× GIF](evidence/hollowed-broken-leg-asymmetric-v7/compare-se-zoom-4x.gif)
+- [Northwest 4× GIF](evidence/hollowed-broken-leg-asymmetric-v7/compare-nw-zoom-4x.gif)
+- [Moving field at TRUE 96px: East](evidence/hollowed-broken-leg-asymmetric-v7/moving-field-e-native.gif)
+  and [Southeast](evidence/hollowed-broken-leg-asymmetric-v7/moving-field-se-native.gif)
+- [All eight directions, 128-frame atlas, tests](evidence/hollowed-broken-leg-asymmetric-v7/)
+
+**Passed Blender/CI**: [V7 captured whole-body retiming, geometry,
+16-key closure, 17 sampled frame source provenance and 96px GIF validation](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40118350903).
+
+**Art judgment:** actual 128-frame atlas, four enlarged GIF sets and native
+96px travel/compare previews were reviewed. V7 is a better test of *cadence*
+rather than yet another arbitrarily extreme pose. It keeps the user's
+approved-direction outstretched zombie arms and recognizable no-cape
+silhouette while creating an uneven painful-contact rhythm. It is still
+**NOT approved production animation**. The moving field is a synthetic,
+controlled preview (two lanes with the same average travel distance);
+it is NOT a live Hunt capture. Actual in-Hunt speed/footslide,
+owner inspection on iPhone/Android, corresponding source-derived normals,
+depth, shadow-caster and emissive passes, and attack/death transitions
+remain gates before the PR can be considered merge-ready.
+
+V1–V6 originals, Ashling, material atlases, shared PR #332 GPU lighting,
+and runtime combat/movement remain unchanged. No cutover or merge.
