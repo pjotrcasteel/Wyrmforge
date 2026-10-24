@@ -4,6 +4,7 @@ import { LightingEngine } from './engine.js';
 import { environmentProfile } from './registry.js';
 import { createSpriteAnimationState, updateSpriteAnimation } from '../sprite-animation.js';
 import { spriteFrame, spritePlaneGeometry } from './lit-sprite.js';
+import { buildWetForestOakAsset } from './wet-forest-oak-asset.js';
 import { GROUND_ATLAS_URL, buildGroundQuiltAtlas, drawReferenceGroundBoard, drawGroundMaterialTransitions } from '../arena-materials.js';
 import { groundFoundationBoard, FOUNDATION_COLUMNS, FOUNDATION_ROWS, FOUNDATION_WIDTH, FOUNDATION_HEIGHT } from '../arena-ground-foundation.js';
 
@@ -160,17 +161,23 @@ export function disposeProof(canvas) {
 
 async function originalOak(engine) {
     const base = new URL('../../art/lighting-proof/', import.meta.url);
-    const meta = await (await fetch(new URL('oak.json', base))).json();
-    const bytes = await (await fetch(new URL('oak.bin', base))).arrayBuffer();
-    const objects = [], materials = [];
+    const [metadataResponse, packetResponse, binaryResponse] = await Promise.all([
+        fetch(new URL('oak.json', base)), fetch(new URL('wet-forest-oak.asset.json', base)),
+        fetch(new URL('oak.bin', base)),
+    ]);
+    if (![metadataResponse, packetResponse, binaryResponse].every(response => response.ok))
+        throw new Error('Original oak asset packet is incomplete');
+    const [meta, packet, bytes] = await Promise.all([
+        metadataResponse.json(), packetResponse.json(), binaryResponse.arrayBuffer(),
+    ]);
+    // Source group membership, byte lengths and surface declarations are checked before registration.
+    const descriptors = buildWetForestOakAsset(meta, packet, bytes.byteLength);
     for (const group of meta.groups) {
         const geometry = new T.BufferGeometry();
         const data = new T.InterleavedBuffer(new Float32Array(bytes, group.byteOffset, group.vertexCount * 6), 6);
         geometry.setAttribute('position', new T.InterleavedBufferAttribute(data, 3, 0));
         geometry.setAttribute('normal', new T.InterleavedBufferAttribute(data, 3, 3));
         engine.registerGeometry(group.id, geometry);
-        materials.push(material(group.id, group.color, .94));
-        objects.push(object(group.id, group.id, group.id, [2.3, 3.4, 0], [.48, .48, .48]));
     }
-    return { objects, materials };
+    return descriptors;
 }
