@@ -132,12 +132,18 @@ def isolate_left_right_leg_weights(body,arm):
     lknee=arm.data.bones["LeftLeg"].head_local
     rknee=arm.data.bones["RightLeg"].head_local
     axis=rhip-lhip
-    axis.z=0
     width=axis.length
     insist(width>.1,"invalid anatomical hip width")
     axis.normalize()
     hip_center=(lhip+rhip)*.5
-    midpoint=(hip_center.z+(lknee.z+rknee.z)*.5)*.5
+    # BVH import may retain Y-up ARMATURE-LOCAL coordinates even when the
+    # evaluated character is world Z-up. Never assume local .z is height.
+    knee_mid=(lknee+rknee)*.5
+    thigh_down=knee_mid-hip_center
+    thigh_down-=axis*thigh_down.dot(axis)
+    thigh_length=thigh_down.length
+    insist(thigh_length>.5,"invalid anatomical thigh direction")
+    thigh_down.normalize()
     to_rig=arm.matrix_world.inverted()@body.matrix_world
     group_by_index={group.index:group.name for group in body.vertex_groups}
     swaps=0
@@ -146,8 +152,9 @@ def isolate_left_right_leg_weights(body,arm):
     corrected=[]
     for vertex in body.data.vertices:
         coord=to_rig @ vertex.co
-        # Only below the middle of the upper leg; keep pelvis and groin intact.
-        if coord.z>midpoint:continue
+        # Bone-derived anatomical downward direction, not hardcoded .z.
+        # Only below mid-thigh; never touch pelvis and groin vertices.
+        if (coord-hip_center).dot(thigh_down)<thigh_length*.5:continue
         side=(coord-hip_center).dot(axis)
         if abs(side)<width*.18:continue
         wrong=right if side<0 else left
