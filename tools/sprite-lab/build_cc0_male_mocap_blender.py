@@ -60,9 +60,13 @@ def fit_mocap_rest_legs_to_anatomy(raw_arm):
     target.name="CC0 Male fitted deform rig | CMU captured movement"
     target.data.name="Male gait anatomically fitted source skeleton"
     if raw_arm.animation_data and raw_arm.animation_data.action:
+        # A copied object keeps its original Action slot in Blender 4.5.
+        # Sharing the original READ-ONLY F-curves avoids losing motion slots
+        # through a new layered Action. We edit only target REST bones.
         target.animation_data_create()
-        target.animation_data.action=raw_arm.animation_data.action.copy()
-        target.animation_data.action.name="CC0 male captured walk | fitted rest"
+        target.animation_data.action=raw_arm.animation_data.action
+        if raw_arm.animation_data.action_slot:
+            target.animation_data.action_slot=raw_arm.animation_data.action_slot
     raw_arm.name="Original CMU BVH 07_04 | PROVENANCE | do not skin"
     raw_arm.hide_render=True
     raw_arm.hide_set(True)
