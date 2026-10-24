@@ -12,6 +12,9 @@ public sealed partial class RunSimulation
 
     private int preparedFireballLevel = 1;
     private IReadOnlySet<FireballMutationId> preparedFireballMutations = new HashSet<FireballMutationId>();
+    // This immutable representation changes only during pre-Hunt preparation.
+    // Creating 60 render snapshots per second must not allocate a new recipe.
+    private FireballVisualRecipe preparedFireballVisual = FireballVisualRecipe.Resolve(1, []);
 
     public int PreparedFireballLevel => preparedFireballLevel;
     public double PreparedFireballDamageMultiplier => FireballCoreCatalog.DamageMultiplier(preparedFireballLevel);
@@ -22,6 +25,7 @@ public sealed partial class RunSimulation
     {
         if (build.Spells.IsPrimaryCommitted || elapsed > 0) return;
         preparedFireballLevel = Math.Clamp(level, 1, 5);
+        RebuildPreparedFireballVisual();
     }
 
     public void PrepareFireballMutations(IEnumerable<FireballMutationId> mutations)
@@ -31,6 +35,7 @@ public sealed partial class RunSimulation
         // One recipe owns one Fireball. This never creates independent automatically firing spells.
         preparedFireballMutations = mutations.Where(id => FireballCoreCatalog.Mutations.Any(known => known.Id == id && known.Playable))
             .Distinct().Take(5).ToHashSet();
+        RebuildPreparedFireballVisual();
         RebuildFireballAmplification();
     }
 
@@ -41,6 +46,9 @@ public sealed partial class RunSimulation
         mutationAmplifiers.Restore(assignments);
         RebuildFireballAmplification();
     }
+
+    private void RebuildPreparedFireballVisual() =>
+        preparedFireballVisual = FireballVisualRecipe.Resolve(preparedFireballLevel, preparedFireballMutations);
 
     private void RebuildFireballAmplification()
     {

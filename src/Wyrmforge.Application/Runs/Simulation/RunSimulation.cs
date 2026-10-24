@@ -375,7 +375,7 @@ public sealed partial class RunSimulation
             ExperienceShards: experienceShards.Shards.Select(shard => new ExperienceShardRenderSnapshot(shard.Position.X, shard.Position.Y, shard.Value)).ToArray(),
             ExperiencePickups: experiencePickupPulses.Select(pulse => new ExperiencePickupRenderSnapshot(pulse.Position.X, pulse.Position.Y, pulse.Value, pulse.Progress)).ToArray())
         {
-            FireballVisual = FireballVisualRecipe.Resolve(preparedFireballLevel, preparedFireballMutations),
+            FireballVisual = preparedFireballVisual,
             BurningGrounds = CreateBurningGroundSnapshots(),
             Trail = CreateTrailSnapshot(),
             PowerBurst = CreatePowerBurstSnapshot(),

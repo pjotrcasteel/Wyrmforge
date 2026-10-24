@@ -11,16 +11,8 @@ public sealed record FireballVisualRecipe(int Version, int Level, int MutationMa
     public bool Has(FireballMutationId mutation) =>
         Enum.IsDefined(mutation) && (MutationMask & (1 << ((int)mutation - 1))) != 0;
 
-    // C# resolves the physical anatomy once. Render adapters only interpret these
-    // supported visual descriptors; they cannot grant an unearned effect.
-    public string CoreShape => (Has(FireballMutationId.MeteorHeart), Has(FireballMutationId.CinderNeedle)) switch
-    {
-        (true, true) => "molten-spine",
-        (true, false) => "meteor",
-        (false, true) => "needle",
-        _ => "flame",
-    };
-
+    // No visual shape or material is chosen here: production art is not approved.
+    // A future authored renderer can interpret only the effects actually present.
     public bool Detonation => Has(FireballMutationId.Detonation);
     public bool ScorchedEarth => Has(FireballMutationId.ScorchedEarth);
 
@@ -37,8 +29,10 @@ public sealed record FireballVisualRecipe(int Version, int Level, int MutationMa
         ArgumentNullException.ThrowIfNull(equipped);
         var allowed = Math.Clamp(level, 1, 5);
         var mask = 0;
-        // The caller owns equipped capacity and research. Only supported effects may be represented.
-        // Bit positions are the existing stable enum values; socket order never changes art identity.
+        // The caller owns actual equipped capacity and research; a prepared Hunt
+        // can also be loaded directly by test/legacy callers. Never silently drop
+        // an active gameplay effect merely because a visual level is lower.
+        // Bit positions use stable enum values, independent of socket ordering.
         foreach (var mutation in equipped.Distinct().Take(5))
         {
             if (!FireballCoreCatalog.Mutations.Any(item => item.Id == mutation && item.Playable)) continue;

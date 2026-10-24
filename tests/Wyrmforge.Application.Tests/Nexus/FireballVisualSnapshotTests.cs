@@ -26,11 +26,38 @@ public sealed class FireballVisualSnapshotTests
 
         Assert.IsNotNull(snapshot.FireballVisual);
         Assert.AreEqual(3, snapshot.FireballVisual.Level);
-        Assert.AreEqual("meteor", snapshot.FireballVisual.CoreShape);
+        Assert.IsTrue(snapshot.FireballVisual.Has(FireballMutationId.MeteorHeart));
         Assert.IsTrue(snapshot.FireballVisual.Detonation);
         Assert.IsTrue(snapshot.FireballVisual.ScorchedEarth);
+        Assert.AreSame(snapshot.FireballVisual, simulation.CreateSnapshot().FireballVisual,
+            "An immutable prepared recipe should not be reallocated on each render snapshot.");
         simulation.PrepareFireballMutations([FireballMutationId.CinderNeedle]);
-        Assert.AreEqual(snapshot.FireballVisual, simulation.CreateSnapshot().FireballVisual);
+        Assert.AreSame(snapshot.FireballVisual, simulation.CreateSnapshot().FireballVisual);
+    }
+
+    [TestMethod]
+    public void CreateSnapshot_PreparationChange_RebuildsRecipeOnlyBeforePrimaryCommit()
+    {
+        var random = new FirstRandomSource();
+        var simulation = new RunSimulation(new HashSet<string>(), new LevelChoiceService(random), random);
+        var initial = simulation.CreateSnapshot().FireballVisual;
+        simulation.PrepareFireballCoreLevel(3);
+        var levelThree = simulation.CreateSnapshot().FireballVisual;
+        simulation.PrepareFireballMutations([FireballMutationId.Detonation]);
+        var mutated = simulation.CreateSnapshot().FireballVisual;
+
+        Assert.IsNotNull(initial);
+        Assert.IsNotNull(levelThree);
+        Assert.IsNotNull(mutated);
+        Assert.AreEqual(1, initial.Level);
+        Assert.AreEqual(3, levelThree.Level);
+        Assert.AreNotSame(initial, levelThree);
+        Assert.AreNotSame(levelThree, mutated);
+        Assert.IsTrue(mutated.Has(FireballMutationId.Detonation));
+        Assert.AreSame(mutated, simulation.CreateSnapshot().FireballVisual);
+        Assert.IsTrue(simulation.ChoosePrimary(SpellId.FireBolt));
+        simulation.PrepareFireballCoreLevel(5);
+        Assert.AreSame(mutated, simulation.CreateSnapshot().FireballVisual);
     }
 
     [TestMethod]

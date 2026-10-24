@@ -16,7 +16,6 @@ public sealed class FireballVisualRecipeTests
 
         Assert.AreEqual(original, reordered);
         Assert.AreEqual("fireball-v1-l3-m007", original.CacheKey);
-        Assert.AreEqual("meteor", original.CoreShape);
         Assert.IsTrue(original.Detonation);
         Assert.IsTrue(original.ScorchedEarth);
         Assert.IsTrue(original.Has(FireballMutationId.MeteorHeart));
@@ -35,17 +34,29 @@ public sealed class FireballVisualRecipeTests
         Assert.AreEqual(1 << ((int)FireballMutationId.Detonation - 1), recipe.MutationMask);
         Assert.IsFalse(recipe.Has(FireballMutationId.Wildfire));
         Assert.IsFalse(recipe.Has(FireballMutationId.PhoenixVolley));
-        Assert.AreEqual("flame", recipe.CoreShape);
     }
 
     [TestMethod]
-    public void Resolve_ConflictingPhysicalForms_MaintainsVisibleIdentityForBothImplementedEffects()
+    public void Resolve_TwoActiveForms_PreservesBothMechanicalIdentitiesWithoutChoosingArt()
     {
         var recipe = FireballVisualRecipe.Resolve(2,
             [FireballMutationId.MeteorHeart, FireballMutationId.CinderNeedle]);
-        Assert.AreEqual("molten-spine", recipe.CoreShape);
         Assert.IsTrue(recipe.Has(FireballMutationId.MeteorHeart));
         Assert.IsTrue(recipe.Has(FireballMutationId.CinderNeedle));
+    }
+
+    [TestMethod]
+    public void Resolve_LegacyPreparedCombination_NeverHidesAnActualActiveEffect()
+    {
+        // The visual recipe is a projection, not a second loadout validator.
+        // Capacity/discovery are enforced at the Arcane Nexus save boundary.
+        var recipe = FireballVisualRecipe.Resolve(1, [FireballMutationId.MeteorHeart,
+            FireballMutationId.Detonation, FireballMutationId.ScorchedEarth]);
+
+        Assert.AreEqual(1, recipe.Level);
+        Assert.IsTrue(recipe.Has(FireballMutationId.MeteorHeart));
+        Assert.IsTrue(recipe.Has(FireballMutationId.Detonation));
+        Assert.IsTrue(recipe.Has(FireballMutationId.ScorchedEarth));
     }
 
     [TestMethod]
