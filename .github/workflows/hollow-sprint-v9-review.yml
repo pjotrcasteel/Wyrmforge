@@ -1,0 +1,122 @@
+name: Hollowed feral sprint v9 source and animated review
+on:
+  push:
+    branches: [feat/actor-lit-sprite-production]
+    paths:
+      - 'tools/sprite-lab/build-hollow-sprint-v9.py'
+      - 'tools/sprite-lab/render-hollow-sprint-v9.py'
+      - '.github/workflows/hollow-sprint-v9-review.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  original-skeletal-sprint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Blender 4.5 LTS plus image/pose tooling
+        run: python -m pip install 'bpy==4.5.3' 'numpy>=1.26,<3' 'pillow>=10,<13'
+      - name: Build independent v9 pursuit from original skinned Hollowed rig
+        run: |
+          if [ -e art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-sprint-v9-candidate/hollow-rigged.blend ]; then
+            echo "Existing editable candidate preserved"
+          else
+            python tools/sprite-lab/build-hollow-sprint-v9.py
+          fi
+      - name: Sample actual mesh poses and footprint diagnostics (not sprite image tweens)
+        run: |
+          source=art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-sprint-v9-candidate
+          if [ -f "$source/sampled-walk.npz" ]; then
+            echo "Existing source samples preserved"
+          else
+            python tools/sprite-lab/sample-hollow-rig.py -- "$source"
+          fi
+      - name: Validate locomotion signature
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-sprint-v9-candidate')
+          profile=json.loads((p/'candidate-profile.json').read_text())
+          poses=json.loads((p/'gait-diagnostics.json').read_text())
+          assert profile['fps']==22 and len(poses)==17
+          from math import acos, degrees
+          def flex(a,k,b):
+            a=[x-y for x,y in zip(a,k)]
+            b=[x-y for x,y in zip(b,k)]
+            dot=sum(x*y for x,y in zip(a,b))
+            norm=(sum(x*x for x in a)*sum(x*x for x in b))**.5
+            return 180-degrees(acos(max(-1,min(1,dot/norm))))
+          for side in ('L','R'):
+            stance=[]
+            swing=[]
+            arm=[]
+            for f in poses[:16]:
+              leg=f['feet'][side]
+              (stance if leg['stance'] else swing).append(flex(leg['hip'],leg['knee'],leg['ankle']))
+              bones=f['arms'][side]
+              arm.append(flex(bones['shoulder'],bones['elbow'],bones['wrist']))
+            assert max(swing)>=108, (side,'not enough knee recovery',swing)
+            assert min(stance)>=15, (side,'locked stance knee',stance)
+            assert min(arm)>=48 and max(arm)<=125, (side,'unstable elbows',arm)
+            assert max(arm)-min(arm)>=28, (side,'insufficient elbow bend change',arm)
+            for f in poses[:16]:
+              a=f['arms'][side]; u=a['elbow'][1]-a['shoulder'][1]; v=a['wrist'][1]-a['elbow'][1]
+              if a['drive']>.8: assert u>0 and v<0,('rear arm not folding into the hip',side,f['frame'])
+              if a['drive']<-.8: assert u<0 and v<0 and a['wrist'][2]>a['elbow'][2],('front forearm not lifting',side,f['frame'])
+              fvec=[a['wrist'][k]-a['elbow'][k] for k in range(3)]
+              hvec=[a['hand'][k]-a['wrist'][k] for k in range(3)]
+              cosw=sum(x*y for x,y in zip(fvec,hvec))/(sum(x*x for x in fvec)*sum(y*y for y in hvec))**.5
+              wrist_angle=degrees(acos(max(-1,min(1,cosw))))
+              assert wrist_angle < 8,('hand flops independent of forearm',side,f['frame'],wrist_angle)
+            print(side, 'knee stance',min(stance),max(stance),'swing',min(swing),max(swing),'elbow',min(arm),max(arm))
+          assert .24<=profile['footSweepModelUnits']<=.27 and profile['recoveryLiftModelUnits']>=.21
+          assert abs(profile['expectedRuntimePlaybackFramesPerSecondAtBaseSpeed']-profile['fps'])<1.5
+          assert 35 < profile['locomotionDistanceWorldUnitsPerCycle'] < 40
+          assert any(x['doubleFlight'] for x in poses[:16])
+          assert sum(x['feet']['L']['stance'] for x in poses[:16])<=7
+          assert sum(x['feet']['R']['stance'] for x in poses[:16])<=7
+          assert (p/'sampled-walk.npz').is_file()
+          for f in poses:
+            for side in ('L','R'):
+              a=f['arms'][side]
+              assert a['elbow'][2] <= a['shoulder'][2]-.02
+              assert a['wrist'][2] <= a['shoulder'][2]+.005
+          print('Source sprint pose diagnostics pass')
+          PY
+      - name: Render 16-frame native animation and four diagnostic azimuth views
+        run: python tools/sprite-lab/render-hollow-sprint-v9.py
+      - name: Preserve separate v9 blend, sampled poses and preview evidence in the PR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/feat/actor-lit-sprite-production'
+        run: |
+          mkdir -p docs/art/evidence/hollowed-sprint-v9-2026-10-24
+          cp artifacts/hollow-sprint-v9-review/feral-sprint-v9.gif docs/art/evidence/hollowed-sprint-v9-2026-10-24/
+          cp artifacts/hollow-sprint-v9-review/sprint-v9-16-poses.png docs/art/evidence/hollowed-sprint-v9-2026-10-24/
+          cp artifacts/hollow-sprint-v9-review/sprint-v9-four-view-pose-review.png docs/art/evidence/hollowed-sprint-v9-2026-10-24/
+          cp artifacts/hollow-sprint-v9-review/anatomy-kinematics-v9.png docs/art/evidence/hollowed-sprint-v9-2026-10-24/
+          cp artifacts/hollow-sprint-v9-review/anatomy-kinematics-v9.gif docs/art/evidence/hollowed-sprint-v9-2026-10-24/
+          cp artifacts/hollow-sprint-v9-review/sprint-v9-review.json docs/art/evidence/hollowed-sprint-v9-2026-10-24/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-sprint-v9-candidate/
+          git add docs/art/evidence/hollowed-sprint-v9-2026-10-24/
+          if ! git diff --cached --quiet; then
+            git commit -m "Preserve unapproved feral sprint v9 rig, sampled poses and motion evidence"
+            git push origin HEAD:feat/actor-lit-sprite-production
+          fi
+      - name: Preserve generated asset evidence for inspection
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hollowed-sprint-v9-unapproved-${{ github.sha }}
+          path: |
+            art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-sprint-v9-candidate/
+            artifacts/hollow-sprint-v9-review/
+          if-no-files-found: warn
+          retention-days: 30
