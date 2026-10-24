@@ -91,3 +91,71 @@ Owner direction: **remove the long cape from the Hollowed.** The cape was part o
 - Actual visual inspection revealed leftover ragged rear fabric because the original 55,573-vertex textured mesh contains 1,244 disconnected mesh islands. Rather than indiscriminately deleting torso polygons, the subsequent [island-based source edit](../../tools/sprite-lab/build-hollow-no-cape-islands.py) removes **73 complete, rearward-hanging cape mesh islands (10,137 triangles)** with explicit protection for leg/torso-dominated geometry. Original authored rigs, CMU source and earlier no-cape candidate are all preserved.
 - Full eight-direction 96px atlas and GIFs are in [new no-cape visual evidence](evidence/hollowed-no-cape-islands-2026-10-24/) with a [before/after comparison](evidence/hollowed-no-cape-islands-2026-10-24/partial-vs-complete-removal-eight-directions.png). [CI run 40095099076](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40095099076) passed, including source-derived geometry sampling and 128 frame alpha/anchor checks.
 - This satisfies a **source-geometry review of long cape removal**, not production integration or approval of the overall run. A few short torn-cloth costume details may remain. Never use changed candidate poses with original normal/depth/caster atlases. After owner confirms visual direction, carry cape-free geometry through **walk, attack and death together** with exactly matching regenerated albedo, normals, depth, shadow-caster and manifests. Do not change Ashling or the shared #332 GPU engine.
+
+## Cape-free continuation: rig and visual QA (24 October, later checkpoint)
+
+**PR #333 remains DRAFT. No sprint candidate or hand-proportion variant is
+artistically accepted. Do not replace runtime walk pixels or reuse old walk
+normals/depth/caster passes with altered poses or topology.**
+
+### Accepted technical groundwork, not an animation acceptance
+
+The independently editable `rigged-mocap-no-cape-islands-candidate`
+removed **73 rear cape mesh islands / 10,137 genuine source triangles**
+without deleting the running legs, losing UVs or replacing Ashling assets.
+This was rendered across eight facings at native 96px:
+[no-cape 128 frames](evidence/hollowed-no-cape-islands-2026-10-24/candidate-walk-eight-directions.png),
+[frame-by-frame comparisons](evidence/hollowed-no-cape-islands-2026-10-24/partial-vs-complete-removal-eight-directions.png).
+GitHub Actions [passed](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40095099076).
+
+### Why the next animation was NOT promoted
+
+A new
+[CMU shoulder-led source variant](../../tools/sprite-lab/refine-hollow-no-cape-sprint-anatomy.py)
+restored anterior/posterior upper-arm motion and preserved all 16 source
+pelvis/leg poses. The first actual skinned review exposed hands and forearms
+lifted into a cartoonish boxing guard. The candidate is **rejected on visual
+grounds**, regardless of automated joint checks:
+[complete A/B eight-direction atlas](evidence/hollowed-no-cape-anatomy-2026-10-24/no-cape-before-vs-shoulder-run-eight-directions.png).
+
+The
+[constrained low-arm version](../../tools/sprite-lab/refine-hollow-no-cape-sprint-guarded.py)
+passed Blender render and source-provenance checks
+([CI run](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40096437419)).
+Its hands sit lower, but side/three-quarter running GIFs still produce a
+repeated forward **C-shaped claw/forearm silhouette**, not authoritative
+professional sprinting anatomy. **Reject it too.** Avoid further arbitrary
+wrist keyframes, bone-sine animations, or stiffening the hands to hide the defect.
+
+The original model's hand control is 0.11006 units versus a 0.16680-unit
+forearm, an exaggerated ratio. A
+[separate mesh-weighted 23% distal geometry reduction](../../tools/sprite-lab/refine-hollow-no-cape-hand-proportions.py)
+changed 3,373 left and 3,177 right hand-influenced source vertices
+with maximum ~0.030 units displacement, keeping 48,950 vertices,
+68,380 triangles and all authored UVs. The
+[all-eight-directions GIF evidence](evidence/hollowed-short-claws-2026-10-24/)
+shows only a modest native-pixel improvement: **arm choreography is the
+primary remaining issue**; shorter claws alone are insufficient.
+[CI passed](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40096948043),
+including a geometric comparison confirming original pelvis/leg sampling,
+foot-contact markers at 17 frames × 2 feet, and unchanged non-hand geometry.
+
+### Required continuation (not yet delivered)
+
+A convincing running action now needs genuine shoulder/torso driven sprint
+coordination and proper *forearm following* throughout the complete stride,
+with no elbow extension reversal and no hooked hand/cross-body loops.
+Respect the leg contact / compression / takeoff / recovery phases and
+the original CMU motion-capture timing; validate real travel speed against
+the actual Hunt movement rather than merely showing a centered sprite GIF.
+Audit weighted shoulder, elbow and hand surface deformation in enlarged
+front/back/side/three-quarter motion and all eight native-pixel loops.
+Keep the long cape absent in all final clips; if the costume change is
+adopted, attack/death must be regenerated from the **same edited mesh**,
+not from old cape-containing geometry.
+
+Nothing gets called `production ready` before motion and 96px Hunt-size
+mobile captures are actually accepted. On acceptance, source-derived
+walk/attack/death geometry, normals, depth and shadow casters must be
+exported and hash-verified atomically; never put novel colours or material
+passes over older body poses. PR #332 still owns the shared GPU renderer.
