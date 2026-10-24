@@ -141,3 +141,32 @@ test('unknown SpellId retains generic physical impact and kills do not double th
         frame({ hud: { health: 100, maxHealth: 100, kills: 1 },
             elementalImpacts: [{ spell: 1 }] }), 450), ['enemy-down']);
 });
+
+
+test('same-length impact replacement is recognized and persistent animation is not replayed', () => {
+    const tracker = createSoundEventTracker();
+    const first = frame({ elementalImpacts: [{ x: 12, y: 30, spell: 1, progress: 0.04 }] });
+    assert.deepEqual(collectSoundEvents(tracker, first, 0), []);
+    assert.deepEqual(collectSoundEvents(tracker,
+        frame({ elementalImpacts: [{ x: 12, y: 30, spell: 1, progress: 0.24 }] }), 100), []);
+    const second = frame({ elementalImpacts: [{ x: 12, y: 30, spell: 2, progress: 0.03 }] });
+    assert.deepEqual(collectSoundEvents(tracker, second, 380), ['frost-impact']);
+    assert.deepEqual(collectSoundEvents(tracker, second, 420), []);
+    const reset = frame({ elementalImpacts: [{ x: 12, y: 30, spell: 2, progress: 0.01 }] });
+    assert.deepEqual(collectSoundEvents(tracker, reset, 620), ['frost-impact']);
+});
+
+test('simultaneous different elemental impact records are kept distinct', () => {
+    const tracker = createSoundEventTracker();
+    collectSoundEvents(tracker, frame(), 0);
+    const simultaneous = frame({ elementalImpacts: [
+        { x: 10, y: 15, spell: 1, progress: 0.02 },
+        { x: 40, y: 15, spell: 3, progress: 0.05 },
+    ] });
+    assert.deepEqual(collectSoundEvents(tracker, simultaneous, 250), ['fire-impact', 'lightning-impact']);
+    assert.deepEqual(collectSoundEvents(tracker,
+        frame({ elementalImpacts: [
+            { x: 10, y: 15, spell: 1, progress: 0.2 },
+            { x: 40, y: 15, spell: 3, progress: 0.2 },
+        ] }), 300), []);
+});
