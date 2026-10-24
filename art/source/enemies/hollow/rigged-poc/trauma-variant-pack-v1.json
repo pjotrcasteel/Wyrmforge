@@ -42,6 +42,14 @@
         "evidence": "hollowed-trauma-attack-v1/standard",
         "strikeArm": "R",
         "runtimeDamageChange": false
+      },
+      "reachV3": {
+        "reviewOnly": true,
+        "approved": false,
+        "model": "rigged-hollow-zombie-reach-v3-standard",
+        "evidence": "hollowed-zombie-reach-v3/standard",
+        "design": "Both healthy arms stretched ahead of the shoulder",
+        "lightingMaterialCutover": false
       }
     },
     {
@@ -64,6 +72,14 @@
         "status": "unapproved contact-driven weight transfer",
         "model": "rigged-hollow-trauma-broken-leg-weight-transfer-v2",
         "evidence": "hollowed-trauma-v2/broken-leg-left"
+      },
+      "reachV3": {
+        "reviewOnly": true,
+        "approved": false,
+        "model": "rigged-hollow-zombie-reach-v3-broken-leg-left",
+        "evidence": "hollowed-zombie-reach-v3/broken-leg-left",
+        "design": "Both healthy arms stretched; strong shortened injured-leg swing, additional hip drop, ankle IK preservation",
+        "lightingMaterialCutover": false
       }
     },
     {
@@ -83,6 +99,14 @@
         "evidence": "hollowed-trauma-attack-v1/broken-arm-right",
         "strikeArm": "L",
         "runtimeDamageChange": false
+      },
+      "reachV3": {
+        "reviewOnly": true,
+        "approved": false,
+        "model": "rigged-hollow-zombie-reach-v3-broken-arm-right",
+        "evidence": "hollowed-zombie-reach-v3/broken-arm-right",
+        "design": "Only healthy LEFT arm reaches forward; damaged right stays constrained",
+        "lightingMaterialCutover": false
       }
     },
     {
@@ -102,6 +126,14 @@
         "evidence": "hollowed-trauma-attack-v1/one-arm-left",
         "strikeArm": "R",
         "runtimeDamageChange": false
+      },
+      "reachV3": {
+        "reviewOnly": true,
+        "approved": false,
+        "model": "rigged-hollow-zombie-reach-v3-one-arm-left",
+        "evidence": "hollowed-zombie-reach-v3/one-arm-left",
+        "design": "Only healthy RIGHT arm reaches forward; damaged left stays constrained",
+        "lightingMaterialCutover": false
       }
     }
   ],
@@ -111,6 +143,7 @@
     "Both original .blend source and lighting-material contracts must be preserved.",
     "All variants require owner review at native Hunt pixel scale and source-derived walk/attack/death materials before shipping.",
     "Do not pair changed geometry with old atlas normals/depth/caster.",
-    "Attack preview variants mirror an EXISTING authored right-arm 16-key attack to a usable left side only when the right arm is injured. These are not gameplay cutovers."
+    "Attack preview variants mirror an EXISTING authored right-arm 16-key attack to a usable left side only when the right arm is injured. These are not gameplay cutovers.",
+    "V3 (24 Oct 2026) is a separately editable, source-derived candidate with genuine 96px GIF review. Owner approval and full lighting/material work are still required before any runtime adoption."
   ]
 }
