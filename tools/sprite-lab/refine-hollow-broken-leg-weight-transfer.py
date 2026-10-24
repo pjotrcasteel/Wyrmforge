@@ -158,7 +158,8 @@ for i in range(FRAMES+1):
     old_spine=spine.matrix.copy()
     counterlean_degrees=5.5*healthy_support-3.5*injured_support
     neck_roll=Matrix.Rotation(math.radians(counterlean_degrees),4,"Y")
-    spine.matrix=neck_roll @ old_spine
+    pivot=old_spine.translation.copy()
+    spine.matrix=Matrix.Translation(pivot) @ neck_roll @ Matrix.Translation(-pivot) @ old_spine
     bpy.context.view_layer.update()
 
     # IK both legs to their ORIGINAL world-space ankle targets: this is
