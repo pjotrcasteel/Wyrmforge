@@ -10,7 +10,7 @@
 ## Retained technical foundation
 - `FireballVisualRecipe` projects the actual equipped playable mutations into a deterministic, versioned identifier, explicit physical shape and flags. Does not change saved state, economy, cast timing, damage or hit rules.
 - `RunRenderSnapshot.FireballVisual` exposes the prepared visual recipe without modifying existing snapshot consumers.
-- `BurningGroundRenderSnapshot` reports the authoritative C# zone radius, position and remaining lifetime.
+- `BurningGroundRenderSnapshot` reports authoritative C# zone radius, position and remaining lifetime **additively**, while the existing `CreateFieryAreaSnapshots` presentation remains byte-for-byte unchanged to preserve legacy burning-ground appearance.
 - `ElementalImpactRenderSnapshot.SplashRadius` carries real C# projectile blast radius; non-damaging wall contacts do not invent splash.
 - Domain and Application regressions for composition and hazard identity remain.
 

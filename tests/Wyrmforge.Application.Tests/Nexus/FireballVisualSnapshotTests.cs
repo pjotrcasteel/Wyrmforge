@@ -47,7 +47,10 @@ public sealed class FireballVisualSnapshotTests
         Assert.AreEqual(1, snapshot.BurningGrounds.Count);
         Assert.AreEqual(ground.EffectiveRadius, snapshot.BurningGrounds[0].Radius, .00001);
         Assert.AreEqual(ground.RemainingSeconds, snapshot.BurningGrounds[0].RemainingSeconds, .00001);
-        Assert.AreEqual(0, snapshot.EssenceBursts.Count, "A real hazard should not be disguised as a short-lived essence burst.");
+        Assert.AreEqual(1, snapshot.EssenceBursts.Count,
+            "Retain existing production burning-ground VFX while richer authored rendering is not approved.");
+        Assert.AreEqual(ground.EffectiveRadius, snapshot.EssenceBursts[0].Radius, .00001);
+        Assert.AreEqual(Math.Min(.2, ground.RemainingSeconds), snapshot.EssenceBursts[0].Life, .00001);
     }
 
     [TestMethod]
