@@ -94,9 +94,9 @@
 .fireball-ritual button:not(:disabled):active{filter:brightness(1.14)}
 @media(min-width:550px){.fireball-altar{height:353px}.fireball-chamber{padding-top:80px}}
 @media(max-width:390px){.fireball-chamber{padding-top:77px}.fireball-altar{height:clamp(285px,78vw,315px)}.fireball-socket{min-width:54px}.fireball-socket-art{height:34px}.fireball-socket-caption{font-size:.62rem;padding:2px 4px}.fireball-center{min-width:100px}.fireball-body{width:clamp(108px,32vw,130px)}.fireball-context{padding:11px}.fireball-level-comparison{gap:5px}.fireball-materials{grid-template-columns:repeat(auto-fit,minmax(82px,1fr))}}
-@media(prefers-reduced-motion:no-preference){.fireball-hero-art{animation:fireball-rite-breathe 3s ease-in-out infinite alternate}}
+@media(prefers-reduced-motion:no-preference){.fireball-hero-art,.fireball-hero-canvas{animation:fireball-rite-breathe 3s ease-in-out infinite alternate}}
 @keyframes fireball-rite-breathe{to{transform:translateY(-3px) scale(1.025)}}
-@media(prefers-reduced-motion:reduce){.fireball-hero-art{animation:none}}
+@media(prefers-reduced-motion:reduce){.fireball-hero-art,.fireball-hero-canvas{animation:none}}
 
 /* Pixel-authored, asset-backed Gothic room. The SVG contains no fake buttons, names,
    sockets or upgrade data: all interactive elements remain independent Blazor controls. */

@@ -339,7 +339,7 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
-            previewModule = await JS.InvokeAsync<IJSObjectReference>("import", "./js/fireball-morphology.js");
+            previewModule = await JS.InvokeAsync<IJSObjectReference>("import", "./js/fireball-morphology.js?v=1");
         if (previewModule is not null)
             await previewModule.InvokeVoidAsync("drawFireballNexusPreview", fireballCanvas, FireballVisualRecipe.Resolve(Core));
         if (!focusContext) return;

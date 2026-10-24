@@ -13,10 +13,11 @@ Status: **draft PR #336**, not shipped. Authority: [canonical Magic & Combat](..
 - `RunRenderSnapshot.FireballVisual`: one recipe for prepared Fireball identity. Existing per-projectile and per-impact C# positions, angles, ranks, and real collisions remain authoritative. Cinder Needle's legacy standalone `SpellId.CinderNeedle` must **not** inherit Fireball's unrelated equipped mutations.
 - `fireball-morphology.js`: **same** pixel-art drawing for Nexus core and Fireball projectiles. Meteor Heart forms fractured volcanic rock, Cinder Needle condenses flame, both together get an explicit dense molten-spine shape; Detonation adds pre-impact fissures and fragments, while Scorched Earth visibly sheds molten bits. No independent extra casts.
 - `BurningGroundRenderSnapshot`: actual hazard radius and remaining seconds from C# instead of collapsing ground fire into fake 0.2-second `EssenceBurst` pulses. Paints jagged, bounded ground fractures while the field really exists.
+- `ElementalImpactRenderSnapshot.SplashRadius`: passes exact projectile splash geometry into Fireball impact composition; walls keep 0 and never claim splash damage.
 
 ## Deliberate non-goals and risks
 - The **combat execution pipeline has not been rewritten** as a generic interpreter: existing C# mutation arithmetic remains the truth. This PR connects one presentation projection to it.
-- Impact fracture size is art guidance; actual Detonation/AoE radii are authoritative only in C#. A later snapshot extension will be needed if we render exact explosion perimeter/telegraphs.
+- Projectile impacts now carry the **actual C# splash radius**; damaging enemy-hit Detonation uses it for bounded fragment travel. Non-damaging wall contacts have splash radius 0 and cannot invent a real explosion. Other cosmetic shock shapes and existing splash telegraphs remain distinct from authoritative collision.
 - New Fireball art is a **procedural draft**, not owner-approved animation/source art. Review the actual live Nexus, gameplay and 320/390px captures before replacing the art canon.
 - This PR does not implement Phoenix Volley, Piercing Ember, Seeker Ember, Wildfire, Ash Harvest, Ember Recall, or any hybrid. It never renders them as usable.
 - The generic GPU lighting engine is being developed in **PR #332**. This PR touches no GPU shaders, scene light registries, G0–G1 validation geometry or actor atlas assets. Adding gameplay-sourced burning-ground emitters to that engine belongs to **G2**, after integration with #332. Do not create a new `FireballLightingEngine`.
