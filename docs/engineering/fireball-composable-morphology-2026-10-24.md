@@ -68,3 +68,22 @@ The unapproved `fireball-morphology.js`, `fireball-preview.js`, and accompanying
 - A real C# ground burn can ignite such a patch in world coordinates; leaves continue burning independently and retain a charred state after fuel runs out. `ArenaEnvironmentRenderSnapshot.GroundScorches` exposes source patch IDs and material footprint for future approved visuals, without new Canvas drawing.
 - This bridge is deliberately enabled **only for the existing Wet Forest generator lab**, where the seeded physical material recipe actually exists. Ordinary Hunt scenery does not yet share a full C# terrain material map, so do not claim every grass pixel ignites or draw invented scorch under a mismatched backdrop.
 - The future unified renderer (#332) must match each approved albedo/material patch, cutout/normal/roughness map, fuel contact/char state and real emitter, proving wet puddle remains unlit/nonflammable and dry leaves burn and extinguish at 320/390px in-engine.
+
+## Fourth checkpoint — restore playable Fireball mutation focus (24 October 2026)
+
+This checkpoint returns the PR to the **four currently playable** Tier-I mutations after the material/ignition branch work. The six remaining candidates are still research previews only.
+
+| Equipped mutation | C# gameplay source | Art/phase handoff |
+| --- | --- | --- |
+| Meteor Heart | Firebolt speed ×0.75, body/collision radius ×1.45, direct damage ×1.15 | Frozen projectile mutation mask; approved heavy-body art remains to be authored |
+| Cinder Needle | Firebolt speed ×1.4, body/collision radius ×0.72, direct damage ×0.70 | Frozen projectile mutation mask; legacy separate `SpellId.CinderNeedle` stays unaffected |
+| Detonation | Actual C# splash with independently amplified radius; no persistent damage zone created at Rank I | Real impact event carries exact projectile mutation mask and authoritative `SplashRadius` |
+| Scorched Earth | Persistent damaging C# ground fire at Rank I; independently affects ground fuel and flammable world props | Actual `BurningGroundRenderSnapshot` carries original mutation mask and real radius/lifetime |
+
+**Important mechanical fix:** Scorched Earth's former invented radius-`8` miniature damage splash has been removed. The ground field now uses its own authorization; combinations with Detonation retain Detonation's real AoE. At Rank II+, an unrelated baseline Fireball ground field still occurs only when an actual qualifying splash is present. No changes to research, cast budget, elemental synergies, permanent socket progression, save IDs, or existing art paths.
+
+**Immutable event provenance:** Each generated Firebolt projectile freezes its prepared 4-bit mask. The authoritative hit, world-wall impact and persistent hazard inherit **that particular projectile's mask**, rather than inferring current HUD loadout after the fact. Other spell identities use mask `0`. The versioned global `FireballVisualRecipe` remains available but is not a substitute for phase-local provenance.
+
+**Regression gate:** `FireballMutatorCompositionTests` casts all 16 possible combinations of the four playable effects, asserting one signature projectile (no extra attack stream), multiplicative mechanical form tradeoffs, splash only with a real Detonation effect, Rank-I fire only with Scorched Earth, and the same mutation mask across projectile → impact → hazard. The standalone legacy Cinder Needle test verifies it does not inherit Fireball mutations. Older passive Web amplification and high-rank mastery tests remain authoritative.
+
+**Visual approval remains outstanding.** These are mechanics and event descriptors, not replacement VFX. No rejected square/circle-based compositor has been restored. After the owner approves authored Gothic material/animation assets, connect these event-specific descriptors through universal GPU lighting PR #332 and record genuine 320px/390px game GIFs for all mutator variants.
