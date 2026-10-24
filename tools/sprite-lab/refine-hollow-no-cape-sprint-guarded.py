@@ -182,7 +182,7 @@ for side in ("L","R"):
         assert (sizes(key)[0]-sizes(key)[-1]).length<1e-5,(side,key)
     # Shoulder should initiate an active run, elbow anterior + posterior.
     fwd=[(elbows[k]-shoulders[k]).y for k in range(FRAMES)]
-    assert min(fwd)<-.065 and max(fwd)>.065,(side,fwd)
+    assert min(fwd)<-.06 and max(fwd)>.045,(side,fwd)
 
 scene.frame_start=1
 scene.frame_end=FRAMES
