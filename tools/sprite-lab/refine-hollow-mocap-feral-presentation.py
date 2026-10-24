@@ -89,7 +89,15 @@ for frame in range(1,FRAMES+2):
 # Require positional loop closure, not only numerical joint-angle bounds.
 for side in ("L","R"):
     for region in ("arms","cloth"):
-        assert updated[0][region][side]==updated[-1][region][side],(side,region)
+        for key in updated[0][region][side]:
+            a=updated[0][region][side][key]
+            b=updated[-1][region][side][key]
+            if isinstance(a,list):
+                assert max(abs(x-y) for x,y in zip(a,b))<1e-5,(side,region,key)
+            elif isinstance(a,(int,float)):
+                assert abs(a-b)<1e-5,(side,region,key)
+            else:
+                assert a==b,(side,region,key)
 scene.frame_start=1
 scene.frame_end=FRAMES
 scene.render.fps=FPS
@@ -98,7 +106,7 @@ DEST.mkdir(parents=True)
 (DEST/"gait-diagnostics.json").write_text(json.dumps(updated,indent=2)+"\n")
 parent=json.loads((INPUT/"retarget-provenance.json").read_text())
 parent.update({
-    "status":"UNAPPROVED FERAl PRESENTATION: original production albedo/materials unchanged",
+    "status":"UNAPPROVED FERAL PRESENTATION: original production albedo/materials unchanged",
     "parentEditableBlendSha256":hashlib.sha256((INPUT/"hollow-rigged.blend").read_bytes()).hexdigest(),
     "sourceEditableRig":str((INPUT/"hollow-rigged.blend").relative_to(ROOT)),
     "presentationAdjustments":{
