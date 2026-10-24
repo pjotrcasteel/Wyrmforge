@@ -340,10 +340,19 @@ class WizardBuilder:
         for j in range(row_count):
             for i in range(width_count):
                 idx=j*width_count+i
+                # Every vertex follows the body part in the PRE-cloth source.
+                # Previously only 3 waistband rows followed the animated
+                # pelvis/chest: the rest stayed in world space and folded back
+                # through the moving legs when simulation began.
+                g.add([idx],1.0,'REPLACE')
                 if j<3:
-                    weight=1.0 if j==0 else (.86 if j==1 else .35)
-                    g.add([idx],weight,'REPLACE')
-                    pin.add([idx],weight,'REPLACE')
+                    pin_weight=1.0 if j==0 else (.92 if j==1 else .48)
+                    pin.add([idx],pin_weight,'REPLACE')
+                elif 'coat' in name.lower():
+                    # Weighted secondary spring anchors maintain the open-front
+                    # skirt silhouette. Cloth is still free to bend/lag below.
+                    t=j/max(1,row_count-1)
+                    pin.add([idx],max(.08,.28*(1.0-t)**2),'REPLACE')
         ar=ob.modifiers.new('Armature carries sewn waistband','ARMATURE')
         ar.object=self.arm
         cloth=ob.modifiers.new('Dynamic cloth | body collision','CLOTH')
