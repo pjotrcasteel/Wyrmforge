@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "unit": "source rig authored in metres; output worldSize in current renderer game pixels",
+  "pixelSampling": "nearest, binary alpha, transparent background, no baked shadows, no full-bright emissive stroke",
+  "directions": [
+    "N",
+    "NE",
+    "E",
+    "SE",
+    "S",
+    "SW",
+    "W",
+    "NW"
+  ],
+  "cell": 128,
+  "anchor": [
+    64,
+    106
+  ],
+  "worldSize": 72,
+  "sourceCamera": {
+    "projection": "fixed orthographic 2.5D; one camera for every clip and school",
+    "groundRoot": [
+      0,
+      0,
+      0
+    ],
+    "screenFootAnchor": [
+      64,
+      106
+    ],
+    "noMirroring": true
+  },
+  "clips": {
+    "idle": {
+      "frames": 12,
+      "fps": 12,
+      "loop": true
+    },
+    "walk": {
+      "frames": 16,
+      "fps": 16,
+      "loop": true
+    },
+    "cast": {
+      "frames": 20,
+      "fps": 20,
+      "loop": false
+    },
+    "hurt": {
+      "frames": 10,
+      "fps": 18,
+      "loop": false
+    },
+    "death": {
+      "frames": 24,
+      "fps": 12,
+      "loop": false,
+      "hold": true
+    }
+  },
+  "schools": {
+    "fire": {
+      "accent": "#92503a",
+      "staff": "charred wood, iron ember fork; albedo ember unlit unless explicit emission"
+    },
+    "frost": {
+      "accent": "#779ba7",
+      "staff": "blue-grey frost-carved haft and angular crystalline crown"
+    },
+    "storm": {
+      "accent": "#a99549",
+      "staff": "blackened bronze conductive prongs, fine restrained brass bands"
+    },
+    "arcane": {
+      "accent": "#74628d",
+      "staff": "weathered silver astral cage and inset violet stone"
+    },
+    "necromancer": {
+      "accent": "#6a7860",
+      "staff": "dark bone-carved collar, runic iron and tarnished green stone"
+    },
+    "summoner": {
+      "accent": "#827254",
+      "staff": "gnarled wood, animal-carved totem and bound natural cord"
+    }
+  },
+  "framePath": "<sourceRoot>/<school>/<clip>/<direction>/<zero-based-3-digit-frame>.png",
+  "materialPasses": [
+    "albedo",
+    "normal",
+    "roughness",
+    "height",
+    "caster"
+  ],
+  "materialPassPolicy": "Author normal/height/caster from exact same pose and source geometry, never RGB/brightness guessed normals. Albedo alpha defines silhouette; caster silhouette is synchronized and separate from gameplay collision.",
+  "outputPath": "art/source/characters/wizard/exports/<revision>/<school>/",
+  "integration": "Once approved, copy atlas bundles under wwwroot/art/characters/wizard/<school>/ and use existing shared spriteFrame binding from PR #332; do not add a mage-specific shader",
+  "review": {
+    "mobileWidths": [
+      320,
+      390
+    ],
+    "required": [
+      "8-view silhouette",
+      "walk foot plants and looping gait",
+      "cast staff-hand contact",
+      "hit transition",
+      "held death",
+      "six staffs distinct at gameplay scale",
+      "zero-light black except declared emission",
+      "alpha/normal/caster alignment"
+    ]
+  }
+}
