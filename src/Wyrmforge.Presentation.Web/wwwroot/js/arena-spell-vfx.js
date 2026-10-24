@@ -96,14 +96,14 @@ export function drawSpellCastMotion(ctx, cast, reducedMotion = false) {
     ctx.restore();
 }
 
-export function drawSpellProjectile(ctx, projectile, reducedMotion = false) {
+export function drawSpellProjectile(ctx, projectile, reducedMotion = false, fireballVisual = null) {
     const family = spellFamily(projectile.spell, projectile.combination);
     const radius = Math.max(2, projectile.radius);
     ctx.save();
     ctx.translate(projectile.x, projectile.y);
     ctx.rotate(Number(projectile.angle) || 0);
     if (family === 'fire') {
-        drawFirePixelProjectile(ctx, projectile, reducedMotion);
+        drawFirePixelProjectile(ctx, projectile, reducedMotion, fireballVisual);
         ctx.restore();
         return;
     }
@@ -225,7 +225,7 @@ function impactRay(ctx, angle, inner, outer, kink = 0) {
     ctx.lineTo(x * outer, y * outer);
 }
 
-export function drawSpellImpact(ctx, impact, reducedMotion = false) {
+export function drawSpellImpact(ctx, impact, reducedMotion = false, fireballVisual = null) {
     if (!impact) return;
     const { family, rank, progress, radius, alpha, surge } = impactMotionProfile(impact);
     if (alpha <= 0) return;
@@ -233,7 +233,7 @@ export function drawSpellImpact(ctx, impact, reducedMotion = false) {
     ctx.save();
     ctx.translate(impact.x, impact.y);
     if (family === 'fire') {
-        drawFirePixelImpact(ctx, impact, reducedMotion);
+        drawFirePixelImpact(ctx, impact, reducedMotion, fireballVisual);
         ctx.restore();
         return;
     }
