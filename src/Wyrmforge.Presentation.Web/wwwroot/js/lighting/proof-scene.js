@@ -142,6 +142,7 @@ export function configureProof(canvas, options) {
     if (!p.animate) state.lastTime = null;
 }
 export function proofPixels(canvas) { const e = states.get(canvas).engine; e.render(); return [...e.pixels()]; }
+export function proofOptions(canvas) { return structuredClone(states.get(canvas).options); }
 export function proofDiagnostics(canvas) { return states.get(canvas).engine.diagnostics(); }
 export function disposeProof(canvas) {
     const state = states.get(canvas); if (!state) return;

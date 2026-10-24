@@ -51,7 +51,7 @@ public sealed class UniversalLightingBrowserTests : PageTest
         await ConfigureAsync(canvas, new { profile = "day" });
         await CaptureAsync(width, "day");
         await ConfigureAsync(canvas, new { profile = "night", progress = .25, frame = 0 });
-        foreach (var view in new[] { "albedo", "normals", "geometry", "shadow-visibility" })
+        foreach (var view in new[] { "albedo", "normals", "geometry", "shadow-visibility", "light-depth", "light-bounds" })
         {
             await ConfigureAsync(canvas, new { view });
             Assert.AreNotEqual(lit, await PixelHashAsync(canvas), $"{view} must be a real diagnostic pass.");
@@ -94,8 +94,31 @@ public sealed class UniversalLightingBrowserTests : PageTest
         Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
     }
 
-    private static Task ConfigureAsync(ILocator canvas, object options) =>
-        canvas.EvaluateAsync("(c, options) => gpuProof.configureProof(c, options)", options);
+    private async Task ConfigureAsync(ILocator canvas, object options)
+    {
+        var labels = new Dictionary<string, string>
+        {
+            ["profile"] = "Environment", ["view"] = "Diagnostic", ["focus"] = "Camera",
+            ["fireball"] = "Fireball", ["torch"] = "Torch", ["spot"] = "Spot", ["rune"] = "Register rune",
+            ["shadows"] = "Shadows", ["reflections"] = "Direct specular", ["normals"] = "Authored normals",
+            ["progress"] = "Light position", ["frame"] = "Walk frame", ["animate"] = "Animate walk",
+            ["inspectObject"] = "Inspect object", ["castsShadow"] = "Casts shadow",
+            ["receivesShadow"] = "Receives shadow", ["receivesLight"] = "Receives light"
+        };
+        var values = System.Text.Json.JsonSerializer.SerializeToElement(options);
+        foreach (var property in values.EnumerateObject())
+        {
+            var control = Page.GetByLabel(labels[property.Name], new() { Exact = true });
+            if (property.Value.ValueKind is System.Text.Json.JsonValueKind.True or System.Text.Json.JsonValueKind.False)
+                await control.SetCheckedAsync(property.Value.GetBoolean());
+            else if (property.Value.ValueKind == System.Text.Json.JsonValueKind.Number)
+                await control.EvaluateAsync("(input,value) => { input.value=value; input.dispatchEvent(new Event('input',{bubbles:true})); }",
+                    property.Value.GetDouble() * (property.Name == "progress" ? 100 : 1));
+            else await control.SelectOptionAsync(property.Value.GetString()!);
+            await Page.WaitForFunctionAsync("([key,value]) => { const c=document.querySelector('.gpu-proof canvas'); return gpuProof.proofOptions(c)[key]===value; }",
+                new object[] { property.Name, property.Value });
+        }
+    }
 
     private static Task<string> PixelHashAsync(ILocator canvas) => canvas.EvaluateAsync<string>(
         "c => { let hash=2166136261; for(const x of gpuProof.proofPixels(c)) hash=Math.imul(hash^x,16777619); return String(hash>>>0); }");

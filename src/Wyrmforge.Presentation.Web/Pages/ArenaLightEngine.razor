@@ -8,7 +8,7 @@
     <p>G0–G1 isolated GPU proof. Town and Hunts are unchanged. Original oak geometry and exported walk-pose normals are under review. Production adoption remains pending.</p>
     <nav aria-label="Light inspection">
         <label>Camera <select @bind="focus" @bind:after="Sync"><option>overview</option><option>actors</option><option>oak</option><option>town</option><option>water</option></select></label>
-        <label>Diagnostic <select @bind="view" @bind:after="Sync"><option>lit</option><option>albedo</option><option>normals</option><option>geometry</option><option value="shadow-visibility">Point shadow visibility</option></select></label>
+        <label>Diagnostic <select @bind="view" @bind:after="Sync"><option>lit</option><option>albedo</option><option>normals</option><option>geometry</option><option value="shadow-visibility">Point shadow visibility</option><option value="light-depth">Light depth atlas</option><option value="light-bounds">Light bounds</option></select></label>
         <label>Environment <select @bind="profile" @bind:after="Sync"><option>night</option><option>day</option><option>auto</option><option>zero</option></select></label>
         <label><input type="checkbox" @bind="fireball" @bind:after="Sync" /> Fireball</label>
         <label><input type="checkbox" @bind="torch" @bind:after="Sync" /> Torch</label>

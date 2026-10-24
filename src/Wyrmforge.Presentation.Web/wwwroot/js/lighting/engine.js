@@ -1,4 +1,5 @@
 import * as T from './vendor/three.module.js';
+import { LightingInspection } from './inspection.js';
 import { validateSnapshot, selectLights } from './registry.js';
 
 /** Shared GPU adapter; accepts resource IDs and descriptors, never entity kinds. */
@@ -25,6 +26,7 @@ export class LightingEngine {
         this.alive = true;
         this.debugView = 'lit';
         this.halfWidth = 5;
+        this.inspection = new LightingInspection();
     }
     registerGeometry(id, geometry) {
         if (this.geometries.has(id)) throw new Error(`Duplicate geometry ${id}`);
@@ -137,7 +139,7 @@ export class LightingEngine {
     }
     /** Explicit inspection passes, never world illumination. */
     setDebugView(view) {
-        if (!['lit', 'albedo', 'normals', 'geometry', 'shadow-visibility'].includes(view)) throw new RangeError('Unknown diagnostic view');
+        if (!['lit', 'albedo', 'normals', 'geometry', 'shadow-visibility', 'light-depth', 'light-bounds'].includes(view)) throw new RangeError('Unknown diagnostic view');
         this.debugView = view;
     }
     debugMaterial(object) {
@@ -175,9 +177,15 @@ float proofShadowVisibility() {
         this.camera.left = -this.halfWidth; this.camera.right = this.halfWidth;
         this.camera.top = this.halfWidth * h / w; this.camera.bottom = -this.halfWidth * h / w;
         this.camera.updateProjectionMatrix();
+        if (this.debugView === 'light-depth') {
+            const source = this.selected?.find(l => l.shadow);
+            this.inspection.depth(this.renderer, this.lights.get(source?.id));
+            return;
+        }
+        const removeBounds = this.debugView === 'light-bounds' ? this.inspection.bounds(this.scene, this.lights.values()) : () => {};
         const originals = [], shadowUpdate = this.renderer.shadowMap.autoUpdate;
         try {
-            if (this.debugView !== 'lit') {
+            if (!['lit', 'light-bounds'].includes(this.debugView)) {
                 // The preceding lit render owns the actual depth maps, including animated alpha.
                 this.renderer.shadowMap.autoUpdate = false;
                 for (const object of this.objects.values()) {
@@ -189,6 +197,7 @@ float proofShadowVisibility() {
         } finally {
             for (const [mesh, material] of originals) mesh.material = material;
             this.renderer.shadowMap.autoUpdate = shadowUpdate;
+            removeBounds();
         }
     }
     pixels() {
@@ -197,7 +206,7 @@ float proofShadowVisibility() {
         return data;
     }
     diagnostics() {
-        return { backend: 'WebGL2 / Three 0.186.1', view: this.debugView, framebuffer: [this.canvas.width, this.canvas.height], objects: this.objects.size,
+        return { backend: 'WebGL2 / Three 0.186.1', view: this.debugView, depthSource: this.selected?.find(l => l.shadow)?.id ?? null, framebuffer: [this.canvas.width, this.canvas.height], objects: this.objects.size,
             lights: this.selected?.map(l => ({ id: l.id, ownerId: l.ownerId, type: l.type, position: l.position, intensity: l.intensity, shadow: l.shadow, views: l.shadowViews })),
             drawCalls: this.renderer.info.render.calls, triangles: this.renderer.info.render.triangles,
             textures: this.renderer.info.memory.textures, geometries: this.renderer.info.memory.geometries,
@@ -209,6 +218,7 @@ float proofShadowVisibility() {
         for (const id of this.lights.keys()) this.removeLight(id);
         for (const geometry of this.geometries.values()) geometry.dispose();
         for (const texture of this.textures.values()) texture.dispose();
+        this.inspection.dispose();
         this.renderer.dispose();
     }
 }

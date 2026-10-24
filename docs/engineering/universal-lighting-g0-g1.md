@@ -171,3 +171,22 @@ inspection was selected before zero. These controls are diagnostic-only.
 The replacement execution environment blocks local Chromium sockets; new captures
 must come from the dedicated published-app CI, not from a claim of a local run.
 Light-space depth/bounds and deeper object-specific acceptance remain pending.
+
+
+### Diagnostic checkpoint and control-driven evidence
+
+`1c438ca` passed the dedicated published-app GPU workflow
+[40086634050](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40086634050).
+Its downloaded normal and shadow-visibility screenshots were inspected. They show
+real wall/actor/post/foliage occlusion after the emitter-core fix; this overview
+alone does not establish detailed leaf-on-leaf artistic acceptance.
+
+`daa61c7` checkpoints close-up cameras and independent receiver controls.
+Added a depth-atlas view of the first budgeted shadow light's actual GPU texture
+and bounds helpers using actual point ranges/spot cones/directional direction.
+Depth values are raw normalized shadow depth, not a shaded scene or a distance
+in metres. No allocated shadow map gives a blank diagnostic. These inspection
+resources are disposed with the renderer and never used for production visibility.
+Browser comparisons now drive the visible Blazor controls and await the actual
+applied options, preventing screenshot controls from contradicting their scene.
+Fresh CI is required for these additions.
