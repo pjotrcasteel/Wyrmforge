@@ -41,7 +41,7 @@ jobs:
       - name: Validate all colour/normal/depth/caster/emissive frames
         run: python tools/art/validate-lit-actor-materials.py
       - name: Test generic shared actor binding
-        run: node --test tests/javascript/actor-lit-assets.test.mjs tests/javascript/universal-lighting.test.mjs
+        run: node --test tests/javascript/actor-lit-assets.test.mjs tests/javascript/actor-shadow-mask.test.mjs tests/javascript/universal-lighting.test.mjs
       - name: Commit reproducible material atlases back to THIS branch
         if: github.event_name == 'push' && github.ref == 'refs/heads/feat/actor-lit-sprite-production'
         env:
