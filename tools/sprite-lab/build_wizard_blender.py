@@ -386,7 +386,9 @@ class WizardBuilder:
                 uv.append((i/(n-1),t))
                 if i<n-1 and j<rows-1:
                     p=j*n+i
-                    faces.append((p,p+1,p+1+n,p+n))
+                    # Outer cloth normal follows +radial direction (away from legs).
+                    # Previous angular->downward winding pointed INWARD.
+                    faces.append((p,p+n,p+n+1,p+1))
         self.make_cloth_panel('Open-front weighty coat / continuous physics',verts,faces,uv,
                               self.pal['robe'], 'pelvis', rows,n)
         # A second loose cape, pinned to shoulders and ending behind the boots.
