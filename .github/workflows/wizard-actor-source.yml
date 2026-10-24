@@ -21,4 +21,6 @@ jobs:
         run: python -m py_compile tools/sprite-lab/build_wizard_blender.py tools/sprite-lab/wizard_motion.py
       - name: Check six wizard source and planted-foot motion invariants
         working-directory: tools/sprite-lab
-        run: python -m unittest discover -s tests -p 'test_wizard_*.py' -v
+        run: |
+          python -m unittest discover -s tests -p 'test_wizard_motion.py' -v
+          python -m unittest discover -s tests -p 'test_wizard_blender_source.py' -v
