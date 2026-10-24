@@ -80,6 +80,18 @@
         "evidence": "hollowed-zombie-reach-v3/broken-leg-left",
         "design": "Both healthy arms stretched; strong shortened injured-leg swing, additional hip drop, ankle IK preservation",
         "lightingMaterialCutover": false
+      },
+      "locomotionV7": {
+        "status": "Full real Blender eight-direction render passed, owner review pending",
+        "model": "rigged-hollow-broken-leg-asymmetric-v7",
+        "evidence": "hollowed-broken-leg-asymmetric-v7",
+        "fps": 25,
+        "framesPerDirection": 16,
+        "reviewOnly": true,
+        "actualHuntCapture": false,
+        "retimedFrom": "rigged-hollow-broken-leg-trailing-v6",
+        "difference": "Captured whole-body source retiming; 9 of 16 frames painful support versus 6 of 16 in V6; accelerated healthy stride; preserves exact prior rig/silhouette. Native travel GIF is synthetic review field, not gameplay.",
+        "lightingMaterialCutover": false
       }
     },
     {
