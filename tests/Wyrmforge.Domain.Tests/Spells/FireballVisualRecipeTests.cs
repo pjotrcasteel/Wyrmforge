@@ -37,6 +37,19 @@ public sealed class FireballVisualRecipeTests
     }
 
     [TestMethod]
+    public void Resolve_PlannedMutationsBeforeImplementedOnes_DoNotConsumeVisualCapacity()
+    {
+        var recipe = FireballVisualRecipe.Resolve(5,
+            [FireballMutationId.Wildfire, FireballMutationId.PhoenixVolley, FireballMutationId.SeekerEmber,
+                FireballMutationId.AshHarvest, FireballMutationId.EmberRecall,
+                FireballMutationId.MeteorHeart, FireballMutationId.Detonation]);
+
+        Assert.IsTrue(recipe.Has(FireballMutationId.MeteorHeart));
+        Assert.IsTrue(recipe.Has(FireballMutationId.Detonation));
+        Assert.IsFalse(recipe.Has(FireballMutationId.Wildfire));
+    }
+
+    [TestMethod]
     public void Resolve_TwoActiveForms_PreservesBothMechanicalIdentitiesWithoutChoosingArt()
     {
         var recipe = FireballVisualRecipe.Resolve(2,

@@ -33,9 +33,10 @@ public sealed record FireballVisualRecipe(int Version, int Level, int MutationMa
         // can also be loaded directly by test/legacy callers. Never silently drop
         // an active gameplay effect merely because a visual level is lower.
         // Bit positions use stable enum values, independent of socket ordering.
-        foreach (var mutation in equipped.Distinct().Take(5))
+        foreach (var mutation in equipped
+            .Where(id => FireballCoreCatalog.Mutations.Any(item => item.Id == id && item.Playable))
+            .Distinct().Take(5))
         {
-            if (!FireballCoreCatalog.Mutations.Any(item => item.Id == mutation && item.Playable)) continue;
             mask |= 1 << ((int)mutation - 1);
         }
         return new(CurrentVersion, allowed, mask);
