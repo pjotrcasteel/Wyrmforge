@@ -87,3 +87,22 @@ This checkpoint returns the PR to the **four currently playable** Tier-I mutatio
 **Regression gate:** `FireballMutatorCompositionTests` casts all 16 possible combinations of the four playable effects, asserting one signature projectile (no extra attack stream), multiplicative mechanical form tradeoffs, splash only with a real Detonation effect, Rank-I fire only with Scorched Earth, and the same mutation mask across projectile → impact → hazard. The standalone legacy Cinder Needle test verifies it does not inherit Fireball mutations. Older passive Web amplification and high-rank mastery tests remain authoritative.
 
 **Visual approval remains outstanding.** These are mechanics and event descriptors, not replacement VFX. No rejected square/circle-based compositor has been restored. After the owner approves authored Gothic material/animation assets, connect these event-specific descriptors through universal GPU lighting PR #332 and record genuine 320px/390px game GIFs for all mutator variants.
+
+## Fifth checkpoint — authored composition and physical Fireball source continuity (24 October)
+
+This pass adds immutable **per-projectile** `FireballSourceId` alongside the already-frozen `FireballMutationMask`. A C# cast increments a deterministic counter for each *physical Fireball projectile*. Existing spell IDs (including standalone Cinder Needle) carry source `0`. Impact and persistent burning-ground records inherit their real projectile source ID, with no invented second cast, splash or lingering field. It is permissible for a legitimately piercing projectile to produce multiple impacts sharing its original source ID.
+
+**Why this matters to art:** an approved renderer can now preserve the same blackened crust, ember fragments and casting identity across one projectile's actual travel, explosion and real fuel aftereffects, including in Hunts with overlapping spells. The visual effect must follow the authoritative source/location/time; it may not synthesize a collision or hazard because a pretty sprite suggests one. Tests check all 16 legal subsets of the four playable mutations and verify *two independent Fireballs* retain separate impact and burning-ground provenance.
+
+**24 October conceptual art review reference (not production):** one non-runnable Gothic pixel-art sheet was presented in chat, showing basic Fireball, the heavy molten Meteor Heart, the compact Cinder Needle, an impact event and fuel burning underneath nearby objects, as well as the composed Meteor → impact → ground sequence. This is a **visual direction proposal, not existing WyrmForge source art, actual screenshot, sprite frame, licensing permission or owner approval**. Do not commit it as a working runtime atlas or claim the game already resembles it.
+
+**Original external technique references (style must remain WyrmForge's):**
+- Noita, documented at https://80.lv/articles/noita-a-game-based-on-falling-sand-simulation/ — physical material response at the impact point; don't copy its falling-sand visuals or gameplay model.
+- Dead Cells oil-and-fire combat screenshots, https://steamcommunity.com/sharedfiles/filedetails/?id=1187351360 — terrain and object fire is visible where it occurs; don't copy its effects, characters or sprites.
+- WyrmForge canonical approved art takes precedence. Use PR #332 for lighting, normals, shadows and emitter visibility; no new light engine or Canvas geometry-overlay substitute.
+
+### Art ownership and next implementation gate
+- Baseline source: `src/Wyrmforge.Presentation.Web/wwwroot/art/fireball-ritual-hero.png`; legacy Hunt VFX remain intact.
+- Awaiting **approved edited source**: velocity-aligned Fireball body animations in a consistent coordinate frame; Meteor heavy body / Cinder needle body; impact fragment motions that inherit the projectile material; actual burned-ground tiles and flammable prop state skins; separate relightable albedo, emissive, normal, depth/height and cutout material channels where applicable.
+- An exporter can adapt from the existing `art/source` and `tools/sprite-lab` workflows; every art variant needs source version, explicit loop/frames/anchors, material channels and validation against real 320px/390px Hunt gameplay. A high-resolution contact sheet is **never** a substitute for low-resolution real-device test evidence.
+- **No production renderer modified in this checkpoint.** The concept sheet is not checked into the branch as an art asset. Owner approval and truthful real-in-game animated GIFs remain gates.
