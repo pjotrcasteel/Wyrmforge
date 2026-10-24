@@ -234,6 +234,11 @@ public sealed partial class RunSimulation
             Rank = source.Rank,
             Surge = source.Surge,
             AdditionalStatuses = source.AdditionalStatuses,
+            // A chained projectile is a new physical fire body, not a new cast
+            // or an invented effect. Preserve the source's mutation recipe but
+            // assign distinct lineage for independent hit/ground animation.
+            FireballMutationMask = source.FireballMutationMask,
+            FireballSourceId = source.Spell == SpellId.FireBolt ? ++fireballSourceSequence : 0,
         };
         spawned.Add(new ProjectileState(position, direction * speed, Math.Max(4, source.Radius - 1), source.Damage * 0.82, source.Spell, effects));
     }
