@@ -159,3 +159,53 @@ mobile captures are actually accepted. On acceptance, source-derived
 walk/attack/death geometry, normals, depth and shadow casters must be
 exported and hash-verified atomically; never put novel colours or material
 passes over older body poses. PR #332 still owns the shared GPU renderer.
+
+## 24 October — captured-chain correction and full GIF review gate
+
+**User-facing review media requirement:** every future visually reviewable
+Hollowed milestone MUST include genuine animated footage, not only pose sheets:
+all eight 96px direction GIFs, synchronized A/B clips at native 96px and
+nearest-neighbour 4× enlargements, and eventually true moving Hunt/device
+captures. Always **view the actual GIFs before asking for owner acceptance**.
+
+The independent [source-measured 3D whole-arm-chain correction](../../tools/sprite-lab/refine-hollow-no-cape-captured-arm-chain.py)
+fixes the previous broken retargeting approach that independently forced
+forearm/wrist heights. It rotates shoulder–elbow, elbow–wrist and wrist–hand
+as **one coupled captured 3D chain**, with one constant orientation calibration
+derived from mean measured humerus pose. It preserves original elbow angle
+and all 16 lower-body poses exactly; no procedural limb oscillation.
+An editable .blend and 8×16 96px atlas were generated in
+`rigged-mocap-no-cape-captured-chain-candidate/`.
+[CI and full render succeeded](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40097778715).
+[Four-view sheet](evidence/hollowed-no-cape-captured-chain-2026-10-24/mocap-run-four-view.png);
+[all 8 direction GIFs](evidence/hollowed-no-cape-captured-chain-2026-10-24/);
+[actual side-view A/B GIF at 96px](evidence/hollowed-no-cape-captured-chain-2026-10-24/compare-e-native-96px.gif);
+[4× comparison](evidence/hollowed-no-cape-captured-chain-2026-10-24/compare-e-zoom-4x.gif).
+
+**Personal moving-image review: not visually accepted.** The arm chain is
+mechanically coherent, but the long distal claw flips upward in swing
+recovery. Particularly west-facing motion still resembles a boxing hook.
+
+A second [separate captured-chain + anatomically relaxed hand candidate](../../tools/sprite-lab/refine-hollow-no-cape-captured-chain-hands.py)
+starts from the previously tested *real shorter-claw weighted mesh*, uses
+the same complete 3D measured arm chain, but keeps wrist-to-hand direction
+near the measured forearm with a small fixed relaxed bend instead of an
+independent wrist-wave. **This does not freeze the arm**, and captured elbow
+angles/leg action remain intact. Again a separate original-editable .blend,
+provenance, eight 16-frame 96px direction GIFs, and 6 directional
+old/new/native/4× examples were generated:
+[passing render/validation run](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40098058638).
+[Side native GIF](evidence/hollowed-no-cape-captured-hands-2026-10-24/compare-e-native-96px.gif),
+[side 4× GIF](evidence/hollowed-no-cape-captured-hands-2026-10-24/compare-e-zoom-4x.gif),
+[rear 4× GIF](evidence/hollowed-no-cape-captured-hands-2026-10-24/compare-w-zoom-4x.gif),
+[diagonal 4× GIF](evidence/hollowed-no-cape-captured-hands-2026-10-24/compare-sw-zoom-4x.gif).
+
+**Latest visual judgment: hand silhouette is somewhat cleaner but the difference
+is limited at native 96px; it is NOT yet the aggressive convincing sprint.**
+The leading remaining issue is the original rig/capture retarget and surface
+deformation for upper-arm/forearm coordination in the actual moving silhouette,
+not missing automation or the absence of a cosmetic cape. Do not misrepresent
+passing CI as artistic approval. The owner's approval is required *before*
+cutting over either unapproved trial. Do not touch Ashling, #332 light engine,
+Town, wizard, or runtime C# behavior. Keep all rejected/source candidates out
+of production material atlases and retain both originals and diffs.
