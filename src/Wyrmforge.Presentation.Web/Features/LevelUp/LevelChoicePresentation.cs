@@ -37,7 +37,9 @@ public static class LevelChoicePresentation
 
     public static string Rank(LevelChoice choice)
     {
-        if (choice.Kind == LevelChoiceKind.Refinement) return $"{Roman(choice.CurrentRank)} → {Roman(choice.CurrentRank + choice.RankStep)} / {Roman(choice.MaxRank)}";
+        if (choice.Kind == LevelChoiceKind.Refinement) return $"SMALL BOOST {choice.CurrentRank + choice.RankStep}/{choice.MaxRank}";
+        if (choice.Kind == LevelChoiceKind.Rune) return choice.CurrentRank == 0
+            ? "NEW HUNT POWER" : $"HUNT POWER {choice.CurrentRank + 1}/{choice.MaxRank}";
         if (choice.Kind == LevelChoiceKind.SpellFocus) return $"KNOWN RANK {Roman(choice.CurrentRank)}";
         if (choice.Kind == LevelChoiceKind.SchoolPower) return $"+{(choice.CurrentRank + 1) * 10}% SCHOOL DAMAGE";
         if (choice.Kind == LevelChoiceKind.Synergy) return "NEW INTERACTION";

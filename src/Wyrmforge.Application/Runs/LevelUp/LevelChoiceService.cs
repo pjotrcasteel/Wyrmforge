@@ -32,29 +32,17 @@ public sealed class LevelChoiceService(
     public IReadOnlyList<LevelChoice> Roll(RunBuildState build, SpellSchool preferredSchool, IReadOnlyList<RunResonanceEntry> resonance, int count = 3) =>
         RollInternal(build, preferredSchool, resonance, count);
 
-    // All real run rewards enter through this path. Legacy Roll/Apply remain for
-    // deterministic standalone catalogue tests and developer-owned simulations.
+    // Hunt rewards never upgrade the permanent Main Spell or teach research mutations.
+    // The Nexus owns Fireball levels, mutation slots and crafting. Between
+    // breakthroughs the hunt offers small temporary refinements; every five levels
+    // it offers temporary, build-defining runes and attunement.
     public IReadOnlyList<LevelChoice> RollForProgression(RunBuildState build, int rewardLevel, bool trailReward,
         SpellSchool? preferredSchool = null, IReadOnlyList<RunResonanceEntry>? resonance = null, int count = 3)
     {
         if (count <= 0) return Array.Empty<LevelChoice>();
         if (!trailReward && PowerMilestoneProfile.IsMajorLevel(rewardLevel))
         {
-            var primary = build.Spells.ActiveSpell;
-            if (PowerMilestoneProfile.CanEvolve(rewardLevel, build.Spells[primary]))
-            {
-                var evolutions = CreateEvolutionDraft(build, primary);
-                if (evolutions.Count > 0) return evolutions;
-            }
-            var major = CreatePool(build).Where(choice => PowerMilestoneProfile.IsMajorChoice(build, choice, rewardLevel)).ToList();
-            // The first meaningful mastery is guaranteed, not a trap choice next to a
-            // flashier rune: everybody reaches Rank II at their level-five breakthrough.
-            if (rewardLevel == 5 && build.Spells[primary] == 1)
-            {
-                var rankTwo = major.SingleOrDefault(choice => choice.Id == $"spell:{primary}");
-                if (rankTwo is not null) return [rankTwo with { Role = LevelChoiceDraftRole.Converge,
-                    Hint = "YOUR FIRST BREAKTHROUGH • Rank II is earned before choosing alternate build directions." }];
-            }
+            var major = CreateMajorPool(build);
             if (major.Count > 0) return DraftMilestone(major, build, rewardLevel, resonance, count);
         }
 
@@ -71,8 +59,9 @@ public sealed class LevelChoiceService(
             return true;
         }
 
-        if (trailReward || !PowerMilestoneProfile.IsMajorLevel(rewardLevel) ||
-            !PowerMilestoneProfile.IsMajorChoice(build, choice, rewardLevel)) return false;
+        // Reject old/forged spell-rank and evolution cards even when a
+        // stale client attempts to submit them directly.
+        if (trailReward || !PowerMilestoneProfile.IsMajorChoice(build, choice, rewardLevel)) return false;
         return Apply(build, choice);
     }
 
@@ -133,23 +122,28 @@ public sealed class LevelChoiceService(
         return candidates.Where(choice => choice.Rarity > replaced.Rarity).Select(choice => choice with { Gilded = true }).ToList();
     }
 
-    /// <summary>The exact pool <see cref="RollForProgression"/> draws this round from, without consuming any randomness.</summary>
-    private List<LevelChoice> DraftPool(RunBuildState build, int rewardLevel, bool trailReward)
+    /// <summary>The exact legal pool used by hunt drafts and Fateweave rerolls.</summary>
+    private List<LevelChoice> DraftPool(RunBuildState build, int rewardLevel, bool trailReward) =>
+        !trailReward && PowerMilestoneProfile.IsMajorLevel(rewardLevel) && CreateMajorPool(build) is { Count: > 0 } major
+            ? major : RefinementPool(build);
+
+    // Never include spell ranks, new active spells, spell evolutions or school
+    // combinations as Hunt cards. These are owned by the Nexus and Research.
+    private static List<LevelChoice> CreateMajorPool(RunBuildState build)
     {
-        if (!trailReward && PowerMilestoneProfile.IsMajorLevel(rewardLevel))
-        {
-            var primary = build.Spells.ActiveSpell;
-            if (PowerMilestoneProfile.CanEvolve(rewardLevel, build.Spells[primary]))
-            {
-                var evolutions = CreateEvolutionDraft(build, primary);
-                if (evolutions.Count > 0) return evolutions.ToList();
-            }
-            var major = CreatePool(build).Where(choice => PowerMilestoneProfile.IsMajorChoice(build, choice, rewardLevel)).ToList();
-            if (rewardLevel == 5 && build.Spells[primary] == 1 && major.Any(choice => choice.Id == $"spell:{primary}"))
-                return major.Where(choice => choice.Id == $"spell:{primary}").ToList();
-            if (major.Count > 0) return major;
-        }
-        return RefinementPool(build);
+        var school = SpellCatalog.Get(build.Spells.ActiveSpell).School;
+        var major = RunUpgradeCatalog.All
+            .Where(upgrade => PowerMilestoneProfile.IsMajorRune(upgrade.Id)
+                && build.RunUpgrades[upgrade.Id] < upgrade.MaxRank
+                && (Telemetry.ChoiceSchools.RuneSchool(upgrade.Id) is not { } affinity || affinity == school))
+            .Select(upgrade => new LevelChoice(
+                $"rune:{upgrade.Id}", LevelChoiceKind.Rune, upgrade.Name, upgrade.Description, upgrade.Icon,
+                build.RunUpgrades[upgrade.Id], upgrade.MaxRank, RuneRarity(upgrade.Id))).ToList();
+
+        major.Add(new LevelChoice($"power:{school}", LevelChoiceKind.SchoolPower, $"{school} Attunement",
+            $"+10% {school} spell damage during this hunt.", "✦", build.SchoolPower(school),
+            int.MaxValue, RewardRarity.Uncommon));
+        return major;
     }
 
     private static List<LevelChoice> RefinementPool(RunBuildState build) =>
@@ -157,16 +151,10 @@ public sealed class LevelChoiceService(
             .Select(item => new LevelChoice($"refine:{item.Id}", LevelChoiceKind.Refinement, item.Name, item.Description, item.Icon,
                 build.Refinements[item.Id], RunRefinementDefinition.MaxRank)).ToList();
 
-    private static string? ReweaveHint(RunBuildState build, LevelChoice selected, LevelChoice replaced, int rewardLevel)
-    {
-        if (selected.Kind == replaced.Kind && selected.Kind is LevelChoiceKind.Refinement or LevelChoiceKind.Evolution) return replaced.Hint;
-        return selected.Kind switch
-        {
-            LevelChoiceKind.SpellUpgrade => $"LEVEL {rewardLevel} BREAKTHROUGH • permanently strengthens your chosen primary for this hunt.",
-            LevelChoiceKind.Synergy => "Fuse your committed primary with a supporting element, without losing existing ranks.",
-            _ => "A rare, build-defining ability earned at a five-level breakthrough.",
-        };
-    }
+    private static string? ReweaveHint(RunBuildState build, LevelChoice selected, LevelChoice replaced, int rewardLevel) =>
+        selected.Kind == LevelChoiceKind.Refinement && replaced.Kind == LevelChoiceKind.Refinement
+            ? replaced.Hint
+            : $"LEVEL {rewardLevel} BREAKTHROUGH • a temporary power for this hunt.";
 
     private IReadOnlyList<LevelChoice> DraftRefinements(RunBuildState build, SpellSchool? school,
         IReadOnlyList<RunResonanceEntry>? resonance, int count)
@@ -181,23 +169,14 @@ public sealed class LevelChoiceService(
         IReadOnlyList<RunResonanceEntry>? resonance, int count)
     {
         var result = new List<LevelChoice>(Math.Min(count, pool.Count));
-        var primaryUpgrade = pool.Where(choice => choice.Kind == LevelChoiceKind.SpellUpgrade && choice.Id == $"spell:{build.Spells.ActiveSpell}").ToList();
-        if (primaryUpgrade.Count > 0)
-            TakeInto(result, pool, primaryUpgrade, resonance, LevelChoiceDraftRole.Converge,
-                _ => $"LEVEL {level} BREAKTHROUGH • permanently strengthens your chosen primary for this hunt.");
-        // Keep an earned elemental combination visible alongside Rank III, instead of
-        // letting two unrelated rare runes exhaust the 3-card breakthrough draft.
-        var availableSynergies = pool.Where(choice => choice.Kind == LevelChoiceKind.Synergy).ToList();
-        if (availableSynergies.Count > 0 && result.Count < count)
-            TakeInto(result, pool, availableSynergies, resonance, LevelChoiceDraftRole.Venture,
-                _ => "Fuse your committed primary with a supporting element, without losing existing ranks.");
-        var roles = new[] { LevelChoiceDraftRole.Reinforce, LevelChoiceDraftRole.Venture };
+        var roles = new[] { LevelChoiceDraftRole.Converge, LevelChoiceDraftRole.Reinforce, LevelChoiceDraftRole.Venture };
         while (result.Count < count && pool.Count > 0)
         {
-            var role = roles[Math.Min(result.Count == 0 ? 0 : result.Count - 1, roles.Length - 1)];
+            var role = roles[Math.Min(result.Count, roles.Length - 1)];
             TakeInto(result, pool, pool.ToList(), resonance, role,
-                choice => choice.Kind == LevelChoiceKind.Synergy ? "Combine schools without changing your primary cast."
-                    : "A rare, build-defining ability earned at a five-level breakthrough.");
+                choice => choice.Kind == LevelChoiceKind.SchoolPower
+                    ? $"LEVEL {level} BREAKTHROUGH • strengthen your committed school for this hunt."
+                    : $"LEVEL {level} BREAKTHROUGH • a powerful new combat rule for this hunt.");
         }
         RememberDraft(result);
         return result;
@@ -582,7 +561,7 @@ public sealed class LevelChoiceService(
     private static RewardRarity RuneRarity(RunUpgradeId id) => id switch
     {
         RunUpgradeId.Multicast or RunUpgradeId.FrostTouch or RunUpgradeId.ChainSpark or RunUpgradeId.ArcaneEcho or RunUpgradeId.Emberbrand or RunUpgradeId.StaticCharge => RewardRarity.Rare,
-        RunUpgradeId.Quickening or RunUpgradeId.Fleetfoot or RunUpgradeId.Bulwark or RunUpgradeId.Velocity => RewardRarity.Uncommon,
+        RunUpgradeId.Potency or RunUpgradeId.Quickening or RunUpgradeId.Fleetfoot or RunUpgradeId.Bulwark or RunUpgradeId.Velocity => RewardRarity.Uncommon,
         _ => RewardRarity.Common,
     };
 

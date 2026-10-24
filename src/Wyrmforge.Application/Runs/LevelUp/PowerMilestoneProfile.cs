@@ -13,23 +13,21 @@ public static class PowerMilestoneProfile
     public static bool IsMajorChoice(RunBuildState build, LevelChoice choice, int level)
     {
         if (!IsMajorLevel(level)) return false;
+        var activeSchool = SpellCatalog.Get(build.Spells.ActiveSpell).School;
         return choice.Kind switch
         {
-            LevelChoiceKind.SpellUpgrade => choice.Id == $"spell:{build.Spells.ActiveSpell}"
-                && build.Spells[build.Spells.ActiveSpell] > 0
-                && build.Spells[build.Spells.ActiveSpell] < SpellCatalog.Get(build.Spells.ActiveSpell).MaxRank
-                && level >= build.Spells[build.Spells.ActiveSpell] * 5,
-            LevelChoiceKind.Synergy => level >= 10 && build.Spells[build.Spells.ActiveSpell] >= 2,
-            LevelChoiceKind.Evolution => CanEvolve(level, build.Spells[build.Spells.ActiveSpell])
-                && choice.Id.StartsWith("evolution:", StringComparison.Ordinal),
+            // The Nexus owns spell ranks, evolutions and school combinations.
+            // Temporary major powers are the only legal Hunt breakthroughs.
+            LevelChoiceKind.SchoolPower => choice.Id == $"power:{activeSchool}",
             LevelChoiceKind.Rune => choice.Id.StartsWith("rune:", StringComparison.Ordinal)
                 && Enum.TryParse<RunUpgradeId>(choice.Id.AsSpan("rune:".Length), out var rune)
-                && IsMajorRune(rune),
+                && IsMajorRune(rune)
+                && (Telemetry.ChoiceSchools.RuneSchool(rune) is not { } affinity || affinity == activeSchool),
             _ => false,
         };
     }
 
     public static bool IsMajorRune(RunUpgradeId id) => id is
-        RunUpgradeId.Multicast or RunUpgradeId.ArcaneEcho or RunUpgradeId.FrostTouch or RunUpgradeId.ChainSpark
+        RunUpgradeId.Potency or RunUpgradeId.Multicast or RunUpgradeId.ArcaneEcho or RunUpgradeId.FrostTouch or RunUpgradeId.ChainSpark
         or RunUpgradeId.Emberbrand or RunUpgradeId.StaticCharge;
 }
