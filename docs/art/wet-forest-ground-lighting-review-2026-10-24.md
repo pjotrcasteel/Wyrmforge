@@ -50,3 +50,16 @@ paving, scorch, mixed material boundaries, props, actors, collision, fake normal
 Tests: `node --test tests/javascript/arena-ground-gpu-review.test.mjs` and the
 `ArenaGroundLightReviewBrowserTests` browser matrix in the shared GPU workflow.
 A passing visual pipeline is **not** owner approval of the art.
+
+## Milestone 2 — One grounded route / guaranteed primary exit
+
+The owner requires a **single visual path** in the current Wet Forest prototype: it may be straight or curving, but must always terminate at one explicit exit. Do not scatter disconnected roads, branches, cobblestone lanes or props. Rare/optional second exits belong to a later separately approved gameplay milestone.
+
+- `wwwroot/js/arena-single-road.js` is a portable, deterministic recipe returning a `board` of material IDs, separate `roadMask`, per-row `spine`, a northern `entrance`, and exactly one southern `exit`. The mask rather than painting indicates the route. This is **not** C# authoritative game navigation yet.
+- The route owns just two portal coordinates. Seed `1205` demonstrates straight; `1441`, `2803` and `4026` demonstrate different curves. Production can accept arbitrary integer seeds once its C# producer and scene camera are integrated; these four debug presets bound current texture/GPU memory.
+- A **single albedo plane** is composed through `buildGroundQuiltAtlas` + `drawReferenceGroundBoard` + `drawGroundMaterialTransitions`, uploading the composed output as a standard texture to **the same G1 renderer**. No unlit UI decals, procedural fake light, separate Canvas overlay, shadow-pass shortcuts or geometry blockers.
+- The review page `/arena-ground-light-review` opens in road mode and offers the 4 debug seeds plus fire/moon/neutral/zero profiles; grass/mud/dirt/marsh comparisons remain accessible. No old scenery.
+- Deterministic tests compare seeded output and require flood-fill of **all** semantic road-mask cells from entry, then check the sole exit and permitted material indices (0/1/3/5). Browser CI captures both mobile viewports for every road seed.
+- The visual route is not yet a navigable physical corridor, contains no character, and the south exit is **data**, not an interactive object. No actual C# Hunt exit rules were changed.
+
+Upcoming: inspect actual 320/390px GPU capture quality; adapt ground color, tile frequency, route edge blending and material detail as needed. Then produce native-friendly authored material maps and a scene data contract for the future C# arena generator. Add a second exit only after the one-route gameplay loop is complete.
