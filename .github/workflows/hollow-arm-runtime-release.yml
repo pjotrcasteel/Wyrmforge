@@ -8,6 +8,7 @@ on:
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/hollow-arm-variants.js'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/hollow-sprites.js'
       - 'tests/javascript/hollow-arm-variants.test.mjs'
+      - 'tests/javascript/hollow-sprites.test.mjs'
       - '.github/workflows/hollow-arm-runtime-release.yml'
   workflow_dispatch:
 
