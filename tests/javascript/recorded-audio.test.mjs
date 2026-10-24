@@ -180,7 +180,7 @@ test('creature preview buttons play separate approach, hurt and death without re
 
 test('Sound Atelier auditions each creature action with alternating recorded A/B takes', () => {
     const js = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/audio.js', import.meta.url), 'utf8');
-    assert.match(js, /family \+ ' — ' \+ action\.toUpperCase\(\) \+ ' \(A\/B\)'/);
+    assert.match(js, /family\.toUpperCase\(\) \+ ' — ' \+ action\.toUpperCase\(\) \+ ' \(A\/B\)'/);
     assert.match(js, /play\(family \+ '-' \+ action, true\)/);
     assert.match(js, /function prewarmCreaturesInHunt\(\)/);
     assert.match(js, /if \(desired === 'hunt'\) prewarmCreaturesInHunt\(\)/);
