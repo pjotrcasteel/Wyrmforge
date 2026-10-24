@@ -31,10 +31,10 @@ class SourceQuiltTests(unittest.TestCase):
         ]
         before = [x.copy() for x in sources]
         image_a, variants_a = STUDY.patch_quilt(
-            sources, seed=9, width=96, patch_size=40, overlap=10, candidates=5
+            sources, seed=9, width=96, patch_size=40, overlap=10, candidates=6
         )
         image_b, variants_b = STUDY.patch_quilt(
-            sources, seed=9, width=96, patch_size=40, overlap=10, candidates=5
+            sources, seed=9, width=96, patch_size=40, overlap=10, candidates=6
         )
         self.assertTrue(np.array_equal(image_a, image_b))
         self.assertEqual(variants_a, variants_b)
@@ -42,6 +42,27 @@ class SourceQuiltTests(unittest.TestCase):
         self.assertTrue(np.any(image_a != 0))
         for old, new in zip(before, sources):
             self.assertTrue(np.array_equal(old, new))
+
+    def test_balances_all_six_when_sources_have_comparable_overlap(self):
+        # Six equally compatible source textures should not silently collapse to one.
+        base = np.random.default_rng(23).integers(30, 80, (96, 96, 3), dtype=np.uint8)
+        samples = [np.clip(base.astype(np.int16) + i, 0, 255).astype(np.uint8) for i in range(6)]
+        quilt, variants = STUDY.patch_quilt(
+            samples, seed=17, width=96, patch_size=40, overlap=10, candidates=12
+        )
+        self.assertEqual(quilt.shape, (96, 96, 3))
+        self.assertEqual(set(variants), set(range(6)))
+        self.assertLessEqual(max(variants.count(i) for i in range(6)) -
+                             min(variants.count(i) for i in range(6)), 3)
+
+    def test_diversity_strength_range_and_candidate_floor(self):
+        samples = [np.zeros((80, 80, 3), dtype=np.uint8) for _ in range(6)]
+        with self.assertRaises(ValueError):
+            STUDY.patch_quilt(samples, width=80, patch_size=30, overlap=8, candidates=5)
+        with self.assertRaises(ValueError):
+            STUDY.patch_quilt(samples, width=80, patch_size=30, overlap=8, diversity_strength=-0.1)
+        with self.assertRaises(ValueError):
+            STUDY.patch_quilt(samples, width=80, patch_size=30, overlap=8, diversity_strength=1.1)
 
     def test_synthetic_manifest_and_all_art_originals_remain_untouched(self):
         with tempfile.TemporaryDirectory() as path:
