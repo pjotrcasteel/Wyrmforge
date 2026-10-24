@@ -356,6 +356,12 @@ class WizardBuilder:
                     # High but nonrigid pins retain the authored silhouette;
                     # the secondary cloth motion is left to the loose hem.
                     pin.add([idx],.72+.16*(1.0-t)**2,'REPLACE')
+                else:
+                    # Keep the cloak behind the shoulders; lower panels still
+                    # respond with delayed, damped motion but cannot freely
+                    # whip up over the face during the 16-pose gait.
+                    t=j/max(1,row_count-1)
+                    pin.add([idx],.30+.43*(1.0-t)**2,'REPLACE')
         ar=ob.modifiers.new('Armature carries sewn waistband','ARMATURE')
         ar.object=self.arm
         if not simulate:
@@ -371,8 +377,8 @@ class WizardBuilder:
         for name_,value in [('tension_stiffness',28 if is_coat else 23),
                             ('compression_stiffness',26 if is_coat else 22),
                             ('shear_stiffness',19 if is_coat else 15),
-                            ('bending_stiffness',1.65 if is_coat else .95),
-                            ('air_damping',3.0 if is_coat else 2.3)]:
+                            ('bending_stiffness',1.65 if is_coat else 2.25),
+                            ('air_damping',3.0 if is_coat else 5.0)]:
             if hasattr(cloth.settings,name_):
                 setattr(cloth.settings,name_,value)
         if hasattr(cloth.collision_settings,'use_self_collision'):
@@ -415,9 +421,9 @@ class WizardBuilder:
                 t=j/(fr-1)
                 for i in range(cols):
                     u=i/(cols-1)
-                    x=side*(.115+(.17+.045*t)*u)
+                    x=side*(.155+(.18+.055*t)*u)
                     y=-.165-.185*t+.018*math.sin(u*2*math.pi)*(t*t)
-                    z=1.045-.795*t+.027*math.sin(u*math.pi*3)*(t*t)
+                    z=1.045-.695*t+.027*math.sin(u*math.pi*3)*(t*t)
                     flap_verts.append((x,y,z))
                     flap_uv.append((u,t))
                     if i<cols-1 and j<fr-1:
