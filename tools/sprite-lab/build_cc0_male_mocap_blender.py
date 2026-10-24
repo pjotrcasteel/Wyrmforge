@@ -54,13 +54,20 @@ def append_male_source(bundle):
            "body mesh missing original geometry or UVs")
     for modifier in list(body.modifiers):
         body.modifiers.remove(modifier)
-    # Original bundle arranges ~380 demo variants in a showroom grid.
-    # Center ONLY this original mesh, not the entire source file.
+    # Original bundle arranges demo variants in a showroom grid. The
+    # imported BVH bones are in ARMATURE-LOCAL coordinates, possibly with a
+    # non-identity object transform from axis conversion. Match that basis.
+    # Previously the mesh had identity world transform while its vertex
+    # coordinates were re-centered against local BVH bone locations: bone heat
+    # then saw misaligned legs and distributed tiny wrong-side weights.
     body.parent=None
     body.matrix_world.identity()
     return body
 
 def normalize_body(body,arm):
+    # All computed source vertices are in the same LOCAL space as edit bones.
+    # They enter world space via exactly ONE matching armature object basis.
+    body.matrix_world=arm.matrix_world.copy()
     vertices=[v.co.copy() for v in body.data.vertices]
     mins=Vector(tuple(min(v[k] for v in vertices) for k in range(3)))
     maxs=Vector(tuple(max(v[k] for v in vertices) for k in range(3)))
@@ -114,6 +121,31 @@ def bind_skin(body,arm):
     insist(uncovered<len(body.data.vertices)*.04,
            f"excess unweighted body vertices: {uncovered}")
     return count
+
+def audit_rest_binding(body,arm):
+    """Inspect actual rest-world alignment, never silently approve it."""
+    names=("LeftUpLeg","RightUpLeg","LeftLeg","RightLeg","LeftFoot","RightFoot")
+    points={name:arm.matrix_world@arm.data.bones[name].head_local for name in names}
+    vertices=[body.matrix_world@v.co for v in body.data.vertices]
+    groups={g.name:g.index for g in body.vertex_groups}
+    data={"armatureTransform":[[round(float(x),5) for x in row] for row in arm.matrix_world],
+          "bodyTransform":[[round(float(x),5) for x in row] for row in body.matrix_world],
+          "boneWorld":{name:[round(float(v),4) for v in p] for name,p in points.items()},
+          "weights":{}}
+    for name in ("LeftFoot","RightFoot","LeftLeg","RightLeg"):
+        idx=groups.get(name)
+        weights=[(v.index,max((item.weight for item in v.groups if item.group==idx),default=0.))
+                 for v in body.data.vertices]
+        active=[(i,w) for i,w in weights if w>.02]
+        total=sum(w for _,w in active)
+        world=sum((vertices[i]*w for i,w in active),Vector((0.,0.,0.)))/total if total>.001 else None
+        data["weights"][name]={"nonzero":len(active),
+            "strong":sum(1 for _,w in active if w>=.35),
+            "max":round(max((w for _,w in active),default=0.),4),
+            "weightedWorldCentroid":[round(float(c),4) for c in world] if world else None,
+            "restBoneDistance":round(min(((points[name]-p).length for p in vertices),default=1e6),4)}
+    return data
+
 
 def isolate_left_right_leg_weights(body,arm):
     """Prevent opposite-leg bone heat influences pulling the LOWER legs across.
@@ -337,7 +369,9 @@ def main(opts):
     body=append_male_source(opts.bundle.resolve())
     scale=normalize_body(body,arm)
     bound=bind_skin(body,arm)
+    binding_before=audit_rest_binding(body,arm)
     isolation=isolate_left_right_leg_weights(body,arm)
+    binding_after=audit_rest_binding(body,arm)
     studio_scene(body,arm,output)
     report_data,displacement,foot_lanes=inspect_motion(body,arm,output)
     scene=bpy.context.scene
@@ -375,6 +409,8 @@ def main(opts):
             "sourceBones":len(arm.data.bones),"weightedBones":bound,"skinningMethod":"Blender bone-heat automatic armature weights",
             "nativeBlend":save.name,"heightScale":round(scale,6),
             "lowerLegWeightIsolation":isolation,"minDeformedFootLane":foot_lanes,
+            "restBindingBeforeIsolation":binding_before,
+            "restBindingAfterIsolation":binding_after,
             "mocapFrameSamples":SAMPLES,
             "evaluatedBodyVertexDisplacement":round(displacement,5),
             "footLaneFailures":gait_failures,"footLanesPassed":not gait_failures,
