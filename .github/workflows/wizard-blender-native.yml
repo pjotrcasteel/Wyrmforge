@@ -8,6 +8,8 @@ on:
       - 'tools/sprite-lab/character_pipeline/**'
       - 'tools/sprite-lab/validate_wizard_blend.py'
       - '.github/workflows/wizard-blender-native.yml'
+      - 'tools/sprite-lab/actor_motion_review.py'
+      - 'tools/sprite-lab/tests/test_actor_motion_review.py'
   workflow_dispatch:
 
 permissions:
@@ -44,6 +46,16 @@ jobs:
         run: |
           blender --background artifacts/wizard-native/wizard-editable.blend --threads 2 \
             --python tools/sprite-lab/validate_wizard_blend.py -- --output artifacts/wizard-native --render --walk-sequence
+      - name: Validate reusable rendered-motion review tool
+        run: |
+          python3 -m pip install 'Pillow>=10,<14'
+          python3 -m unittest discover -s tools/sprite-lab/tests -p 'test_actor_motion_review.py' -v
+      - name: Produce original 16-frame GIF and evidence contact sheet
+        run: |
+          python3 tools/sprite-lab/actor_motion_review.py \
+            --source artifacts/wizard-native/walk-16 \
+            --output artifacts/wizard-native/walk-review \
+            --frames 16 --fps 12
       - name: Upload editable source, validation report and art review stills
         if: always()
         uses: actions/upload-artifact@v4
