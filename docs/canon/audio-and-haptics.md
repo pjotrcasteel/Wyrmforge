@@ -3,6 +3,14 @@
 > **Canonical WyrmForge specification · updated 20 October 2026.** Physical Gothic sound identity, author/asset credits and future mobile feedback.
 > [Canonical index](README.md) · Only explicitly marked **LOCKED/approved** requirements are commitments. Proposed values, old milestones and drafts are not evidence of shipped code. Verify current `main`, PRs and tests.
 
+### Non-negotiable recording replacement policy — 24 October 2026
+
+**Old sound recordings are placeholders and must not be reused as source material** in any new WyrmForge sound, comparison, contextual mix or marketing preview. This specifically includes the previous `fire.ogg`, `impact.ogg`, `enemy-down.ogg`, legacy elemental cast/hit recordings, and the Cave Theme when used as a placeholder soundtrack. A sample created by combining old assets is **not new sound design**. Old preview files using these sources have been withdrawn.
+
+Replacement process: author genuinely new recordings/sound design, publish independently playable MP3 A/B examples, obtain listening approval, then wire the new Oggs to precise gameplay events. In-progress draft production may retain old references temporarily to preserve current-main compatibility, but **no final PR may merge with unapproved placeholder cue mappings**. Worn Vellum, new Codex/Wet Forest, and the new Hollowed/Ashling candidate recordings are independent newly approved directions; an accepted direction is not blanket approval for every eventual recording.
+
+Fireball R1 begins with newly authored deterministic offline combustion/wind/pressure/cinder textures; there is no import or resample of any legacy sound. Cast/hit will replace `cues.fire` after new assets are generated. Flight and burning ground require verified gameplay event timing. The sound remains subject to iPhone listening and quality review.
+
 ## Approved sonic priorities and limits
 
 - **Order of work:** (1) distinguish menu presses, Hunt launch and town doors (no generic intrusive bell); (2) environmental ambience and convincing monster deaths; (3) distinct Fire/Frost/Storm/Arcane magic impact and tails; (4) restrained phone haptics; (5) mix polish and additional moments. Prioritize auditions *in the real game* on phone speakers.
