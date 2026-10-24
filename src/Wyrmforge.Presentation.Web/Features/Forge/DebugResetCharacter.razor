@@ -1,0 +1,67 @@
+@using Microsoft.JSInterop
+@using Wyrmforge.Domain.Progression.PassiveTree
+@implements IAsyncDisposable
+@inject IJSRuntime JavaScript
+
+<section class="debug-reset-settings" aria-label="Debug settings">
+    <h3>Debug</h3>
+    <label class="debug-nexus-label" for="debug-nexus-palette">Nexus building palette</label>
+    <select id="debug-nexus-palette" value="@(NexusPreviewSchool?.ToString() ?? string.Empty)"
+            aria-label="Preview Arcane Nexus magic school" @onchange="SelectNexusPaletteAsync">
+        <option value="">Auto — character school</option>
+        @foreach (var school in Enum.GetValues<PassiveSchool>())
+        {
+            <option value="@school">@school</option>
+        }
+    </select>
+    <p class="debug-nexus-description">Visual-only preview. Return to Refuge to switch colors instantly; no school, unlock or progress is changed.</p>
+    <button type="button" @onclick="OpenAsync">Reset character</button>
+    <dialog @ref="resetDialog" aria-labelledby="debug-reset-title">
+        <h2 id="debug-reset-title">Reset this character?</h2>
+        <p>Deletes this device’s character, progress, inventory, saved builds and settings. Returns to the start screen.</p>
+        @if (error is not null) { <p role="alert">@error</p> }
+        <div class="reset-actions">
+            <button type="button" class="cancel-reset" disabled="@busy" @onclick="CloseAsync">Cancel</button>
+            <button type="button" class="confirm-reset" disabled="@busy" @onclick="ConfirmAsync">@(busy ? "Resetting…" : "Reset everything")</button>
+        </div>
+    </dialog>
+</section>
+
+@code {
+    [Parameter] public EventCallback OnReset { get; set; }
+    [Parameter] public PassiveSchool? NexusPreviewSchool { get; set; }
+    [Parameter] public EventCallback<PassiveSchool?> OnNexusPreviewChanged { get; set; }
+
+    private Task SelectNexusPaletteAsync(ChangeEventArgs args)
+    {
+        var choice = args.Value?.ToString();
+        PassiveSchool? school = Enum.TryParse<PassiveSchool>(choice, true, out var parsed) &&
+            Enum.IsDefined(parsed) ? parsed : null;
+        return OnNexusPreviewChanged.InvokeAsync(school);
+    }
+    private ElementReference resetDialog;
+    private IJSObjectReference? module;
+    private bool busy;
+    private string? error;
+    private async Task OpenAsync()
+    {
+        error = null;
+        module ??= await JavaScript.InvokeAsync<IJSObjectReference>("import", "./js/character-reset.js");
+        await module.InvokeVoidAsync("openResetDialog", resetDialog);
+    }
+    private async Task CloseAsync()
+    {
+        if (module is not null) await module.InvokeVoidAsync("closeResetDialog", resetDialog);
+    }
+    private async Task ConfirmAsync()
+    {
+        if (busy) return;
+        busy = true;
+        try { await OnReset.InvokeAsync(); }
+        catch (JSException) { error = "Reset could not finish. Check that this browser allows game storage, then try again."; busy = false; }
+    }
+    public async ValueTask DisposeAsync()
+    {
+        if (module is not null) await module.DisposeAsync();
+    }
+}

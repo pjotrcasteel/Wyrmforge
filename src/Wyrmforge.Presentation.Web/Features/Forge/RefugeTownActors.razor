@@ -1,0 +1,185 @@
+@using Wyrmforge.Application.World
+@using Microsoft.JSInterop
+@using System.Diagnostics
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+@* Keep the constantly moving citizens in their own render subtree. The approved
+   panorama, vacant layers, hotspots and static geometry no longer rerender at 10 Hz. *@
+<div class="refuge-town-crowd" aria-hidden="true">
+    @foreach (var person in Crowd.Citizens)
+    {
+        @if (person.IsPresent)
+        {
+            <span @key="person.Id" class="refuge-town-citizen" data-town-citizen-id="@person.Id"
+                  data-town-feet-y="@person.Position.Y"
+                  data-town-citizen-state="@CitizenState(person)"
+                  data-town-work-building="@person.WorkBuildingId"
+                  style="@CitizenStyle(person)"></span>
+        }
+    }
+</div>
+@if (ShowGeometry)
+{
+    <svg class="refuge-town-geometry-feet-layer" viewBox="0 0 1672 941"
+         preserveAspectRatio="none" aria-hidden="true">
+        @foreach (var person in Crowd.Citizens)
+        {
+            @if (person.IsPresent)
+            {
+                <circle @key="person.Id" class="refuge-town-geometry-feet"
+                        data-town-feet="@person.Id" cx="@person.Position.X"
+                        cy="@person.Position.Y" r="@Crowd.Navigation.FootRadius" />
+            }
+        }
+    </svg>
+}
+
+@if (ShowRoutes && Crowd.InspectActiveRoute(RouteCitizenId) is { } route)
+{
+    <svg class="refuge-town-route-debug" viewBox="0 0 1672 941"
+         preserveAspectRatio="none" aria-hidden="true"
+         data-town-route="true" data-town-route-citizen="@route.CitizenId">
+        <polyline class="refuge-town-route-line" points="@RoutePoints(route)" />
+        <circle class="refuge-town-route-start" cx="@route.Feet.X" cy="@route.Feet.Y" r="8" />
+        <circle class="refuge-town-route-end" cx="@route.Waypoints[^1].X"
+                cy="@route.Waypoints[^1].Y" r="7" />
+    </svg>
+}
+
+@code {
+    [Parameter, EditorRequired] public TownCrowd Crowd { get; set; } = null!;
+    [Parameter] public bool ShowGeometry { get; set; }
+    [Parameter] public bool ShowRoutes { get; set; }
+    [Parameter] public int? RouteCitizenId { get; set; }
+    [Parameter] public bool ShowMetrics { get; set; }
+    [Parameter] public EventCallback GeometryChanged { get; set; }
+
+    private readonly CancellationTokenSource crowdStop = new();
+    private IJSObjectReference? performanceModule;
+    private IJSObjectReference? performanceMonitor;
+    private Task? animationTask;
+    private int lastGeometryRevision;
+    private int measuredTicks;
+    private double measuredTotalMilliseconds;
+    private double measuredMaxMilliseconds;
+    private int lastPathCount;
+    private double lastPathMilliseconds;
+
+    protected override void OnInitialized()
+    {
+        lastGeometryRevision = Crowd.Navigation.Revision;
+        animationTask = AnimateCrowdAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || !ShowMetrics) return;
+        try
+        {
+            performanceModule = await JS.InvokeAsync<IJSObjectReference>(
+                "import", "./js/refuge-performance.js");
+            performanceMonitor = await performanceModule.InvokeAsync<IJSObjectReference>(
+                "startRefugePerformance", "#refuge-town-performance");
+        }
+        catch (JSException) { /* Debug monitor is optional: town must continue normally. */ }
+    }
+
+    private async Task AnimateCrowdAsync()
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(100));
+        try
+        {
+            while (await timer.WaitForNextTickAsync(crowdStop.Token))
+            {
+                await InvokeAsync(() =>
+                {
+                    var began = ShowMetrics ? Stopwatch.GetTimestamp() : 0L;
+                    Crowd.Step(TimeSpan.FromMilliseconds(100));
+                    if (ShowMetrics)
+                    {
+                        var spent = Stopwatch.GetElapsedTime(began).TotalMilliseconds;
+                        measuredTicks++;
+                        measuredTotalMilliseconds += spent;
+                        // Keep the high-water mark for the lifetime of this town session.
+                        measuredMaxMilliseconds = Math.Max(measuredMaxMilliseconds, spent);
+                    }
+                    StateHasChanged();
+                });
+                if (ShowMetrics && measuredTicks >= 10 && performanceMonitor is not null)
+                    await PublishMetricsAsync();
+
+                if (!ShowGeometry || lastGeometryRevision == Crowd.Navigation.Revision) continue;
+                lastGeometryRevision = Crowd.Navigation.Revision;
+                await GeometryChanged.InvokeAsync();
+            }
+        }
+        catch (OperationCanceledException) { /* The town actor layer was disposed. */ }
+        catch (JSDisconnectedException) { /* Navigating away interrupts the optional debug monitor. */ }
+    }
+
+    private async Task PublishMetricsAsync()
+    {
+        var ticks = measuredTicks;
+        var paths = Crowd.PathfindCount;
+        var milliseconds = Crowd.PathfindTotalMilliseconds;
+        var data = new
+        {
+            total = Crowd.Citizens.Count,
+            present = Crowd.PresentCitizens,
+            away = Crowd.AwayCitizens,
+            workers = Crowd.AssignedWorkers,
+            working = Crowd.ActiveWorkers,
+            stepAvg = measuredTotalMilliseconds / ticks,
+            stepMax = measuredMaxMilliseconds,
+            updates = ticks,
+            pathCount = paths - lastPathCount,
+            pathMs = milliseconds - lastPathMilliseconds
+        };
+        measuredTicks = 0;
+        measuredTotalMilliseconds = 0;
+        lastPathCount = paths;
+        lastPathMilliseconds = milliseconds;
+        try { await performanceMonitor!.InvokeVoidAsync("update", data); }
+        catch (JSException) { /* The optional debug overlay must not stop citizens. */ }
+    }
+
+    private static string RoutePoints(TownRoutePreview route) =>
+        string.Join(" ", new[] { route.Feet }.Concat(route.Waypoints)
+            .Select(point => FormattableString.Invariant($"{point.X:0.##},{point.Y:0.##}")));
+
+    private static string CitizenState(TownCitizen citizen) =>
+        citizen.IsWorking ? "working" : citizen.IsWalking ? "walking" : "idling";
+
+    // Every present citizen stays visible; only the painted foreground geometry
+    // can cover the parts of its body behind a real wall, well roof or stone rim.
+    // Never promote or conceal the entire actor based on approximate body coverage.
+    private static string CitizenStyle(TownCitizen citizen) =>
+        FormattableString.Invariant(
+            $"left:{citizen.XPercent:0.###}%;top:{citizen.YPercent:0.###}%;z-index:{(int)MathF.Floor(citizen.Position.Y * 10f) + 1}");
+
+    public async ValueTask DisposeAsync()
+    {
+        await crowdStop.CancelAsync();
+        if (animationTask is not null)
+        {
+            try { await animationTask; }
+            catch (OperationCanceledException) { /* Expected during navigation. */ }
+        }
+        if (performanceMonitor is not null)
+        {
+            try
+            {
+                await performanceMonitor.InvokeVoidAsync("dispose");
+                await performanceMonitor.DisposeAsync();
+            }
+            catch (JSDisconnectedException) { /* The page has already changed. */ }
+        }
+        if (performanceModule is not null)
+        {
+            try { await performanceModule.DisposeAsync(); }
+            catch (JSDisconnectedException) { /* The page has already changed. */ }
+        }
+        crowdStop.Dispose();
+    }
+}

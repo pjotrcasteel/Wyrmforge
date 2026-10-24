@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { createTerrainPlan, drawArenaEnvironment, habitatTint } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js';
+import { createTerrainPlan, drawArenaEnvironment, habitatTint, createDestructibleLayers } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js';
+import { createTerritoryStoryPlan } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-territory-art.js';
 
 const scene = { seed: 1204, biome: 'Ashen caldera', element: 'fire', stage: 6, landmark: 'The dragon\'s scorched approach',
     supplies: [{ kind: 'health', x: .83, y: .61, open: true }] };
@@ -68,4 +69,40 @@ test('habitats carry a distinct restrained wash, and the plan keeps the habitat'
     assert.equal(habitatTint('Outskirts'), null);
     assert.equal(habitatTint(undefined), null);
     assert.equal(createTerrainPlan({ ...scene, habitat: 'WetForest' }, 390, 700).habitat, 'WetForest');
+});
+
+test('forest recipes preserve wide play space and use C# Wyrm corruption', () => {
+    const early = createTerritoryStoryPlan({ ...scene, habitat: 'WetForest', corruption: 0 }, 950, 1550);
+    const late = createTerritoryStoryPlan({ ...scene, habitat: 'WetForest', corruption: 1 }, 950, 1550);
+    const earlyTerrain = createTerrainPlan({ ...scene, habitat: 'WetForest', corruption: 0 }, 950, 1550);
+    const lateTerrain = createTerrainPlan({ ...scene, habitat: 'WetForest', corruption: 1 }, 950, 1550);
+    assert.equal(early.habitat, 'WetForest');
+    assert.equal(early.corruption, 0);
+    assert.ok(late.wounds.length > early.wounds.length);
+    assert.ok(lateTerrain.scars.length > earlyTerrain.scars.length);
+    assert.ok(earlyTerrain.trailWidth < 950 / 2, 'terrain must not be one narrow closed corridor');
+});
+
+test('authoritative props become depth-sorted actors without mutating scenery', () => {
+    const props = [{ id: 1, kind: 'barrel', x: .8, y: .42, radius: 13, healthFraction: 1 }];
+    const sceneWithProps = { ...scene, props };
+    const layers = createDestructibleLayers(sceneWithProps, 950, 1550);
+    assert.equal(layers.length, 1);
+    assert.equal(layers[0].kind, 'masonry');
+    assert.equal(layers[0].style, 'destructible');
+    assert.equal(layers[0].depth, .42 * 1550);
+    assert.equal(sceneWithProps.props[0].healthFraction, 1);
+    assert.deepEqual(createDestructibleLayers({ ...scene, props: [] }, 950, 1550), []);
+});
+
+test('woodland tree props use atlas-backed authored tree silhouettes and world feet', () => {
+    const source = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js', import.meta.url), 'utf8');
+    assert.match(source, /prop\.pine\.a/);
+    assert.match(source, /prop\.pine\.snow\.a/);
+    assert.match(source, /prop\.deadtree\.a/);
+    assert.match(source, /treeName && drawArtFrame\(ctx, 'environment', treeName, x, y/);
+    const layers = createDestructibleLayers({ props: [{ id: 7, kind: 'dead-tree', x: .2, y: .44,
+        radius: 12, healthFraction: 1 }] }, 950, 1550);
+    assert.equal(layers[0].depth, .44 * 1550);
+    assert.equal(layers[0].prop.kind, 'dead-tree');
 });

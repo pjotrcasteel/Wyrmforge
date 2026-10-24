@@ -1,0 +1,38 @@
+name: Repair Refuge vacant artwork
+on:
+  push:
+    branches:
+      - fix/refuge-vacancy-artifacts-20261020
+    paths:
+      - tools/art/repair_refuge_vacancy.py
+      - .github/workflows/repair-refuge-art.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  rebuild-art:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install artwork dependencies
+        run: python -m pip install --disable-pip-version-check 'numpy>=1.26,<3' 'pillow>=10,<13' 'opencv-python-headless>=4.9,<5'
+      - name: Rebuild the eight sparse registered vacancy paintings
+        run: |
+          python tools/art/repair_refuge_vacancy.py
+          python tools/art/repair_refuge_vacancy.py --verify
+      - name: Commit real game assets to this fix branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/Wyrmforge.Presentation.Web/wwwroot/art/town/day-vacant-* src/Wyrmforge.Presentation.Web/wwwroot/art/town/night-vacant-*
+          git add docs/art/previews/refuge-day-all-vacant.webp docs/art/previews/refuge-night-all-vacant.webp
+          if ! git diff --cached --quiet; then
+            git commit -m "fix(town): publish repaired day/night vacant painting layers"
+            git push
+          fi

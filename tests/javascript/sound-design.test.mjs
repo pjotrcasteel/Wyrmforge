@@ -9,8 +9,8 @@ runInNewContext(source, scope);
 const design = scope.window.WyrmforgeSoundDesign;
 
 test('all gameplay event names have a working authored sample and declared mix role', () => {
-    const names = ['ui', 'ui-back', 'ui-open', 'ui-confirm', 'arcane', 'fire', 'frost', 'lightning', 'impact', 'enemy-down', 'hurt',
-        'hunt-start', 'upgrade-open', 'upgrade-choice', 'power-burst', 'trail-clear', 'wyrm', 'reward', 'victory', 'death'];
+    const names = ['ui', 'building-open', 'arcane', 'fire', 'frost', 'lightning', 'impact', 'enemy-down', 'hurt',
+        'hunt-start', 'trail-enter', 'threat-reveal', 'upgrade-open', 'upgrade-choice', 'power-burst', 'trail-clear', 'wyrm', 'reward', 'victory', 'death'];
     assert.deepEqual(Object.keys(design.palette), names);
     for (const name of names) {
         const spec = design.palette[name];

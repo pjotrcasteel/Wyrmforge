@@ -1,0 +1,325 @@
+using System.Globalization;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
+using Wyrmforge.Domain.Progression.Laboratory;
+using Wyrmforge.Domain.Progression.Loadouts;
+using Wyrmforge.Domain.Progression.PassiveTree;
+using Wyrmforge.Domain.Progression.Signature;
+using Wyrmforge.Domain.Spells;
+
+namespace Wyrmforge.Presentation.Web.Features.Forge;
+
+public partial class BuildView : IAsyncDisposable
+{
+    [Parameter, EditorRequired] public PassiveTreeSelection Selection { get; set; } = null!;
+    [Parameter] public DivineArchetype CharacterSchool { get; set; } = DivineArchetype.Pyromancer;
+    [Parameter] public FireballCoreState? FireballCore { get; set; }
+    [Parameter] public MutationAmplifierSockets MutationAmplifiers { get; set; } = MutationAmplifierCatalog.CreateSockets();
+    [Parameter] public Func<string, FireballMutationId?, Task<bool>> OnAssignFireballAmplifier { get; set; } = (_, _) => Task.FromResult(false);
+
+
+    private PassiveSchool ActiveSchool => ArcaneSchoolCatalog.For(CharacterSchool);
+
+    protected override void OnParametersSet()
+    {
+        Selection.SetActiveSchool(ActiveSchool);
+        Selection.SetKnownFireballMutations(FireballCore?.Discovered ?? new HashSet<FireballMutationId>());
+    }
+    [Parameter] public EventCallback OnSelectionChanged { get; set; }
+    [Parameter] public EventCallback OnQuests { get; set; }
+    [Parameter] public HuntLoadoutBook? Loadouts { get; set; }
+    [Parameter] public Func<int, Task> SaveLoadout { get; set; } = _ => Task.CompletedTask;
+    [Parameter] public Func<int, Task<HuntLoadoutApplyResult?>> ApplyLoadout { get; set; } = _ => Task.FromResult<HuntLoadoutApplyResult?>(null);
+    [Parameter] public Func<int, Task> ClearLoadout { get; set; } = _ => Task.CompletedTask;
+
+    [Parameter] public string? FocusNodeId { get; set; }
+
+    // Specialize currently edits learned Web nodes only. Research/crafting stays
+    // in its own facet; socket-node integration can return as a separate slice.
+    private static string NodeAriaLabel(PassiveNodeDefinition node) => $"{node.Name}. {node.Description}";
+
+    private Task FocusNodeAsync(string nodeId) => InspectNode(PassiveTreeCatalog.Get(nodeId));
+
+    private enum LoadoutAction { None, Overwrite, Clear }
+    private int? openLoadout;
+    private LoadoutAction pendingAction;
+    private string? loadoutMessage;
+
+    private static string RomanFor(int index) => HuntLoadoutBook.DefaultName(index)["Loadout ".Length..];
+
+    private static string LoadoutSummary(HuntLoadout loadout)
+    {
+        var mutations = loadout.Slots.Count == 0 ? "no mutations"
+            : string.Join(" + ", loadout.Slots.OrderBy(pair => pair.Key).Select(pair => LaboratoryCatalog.Get(pair.Value).Name));
+        var parts = new List<string> { $"{loadout.Nodes.Count} nodes", mutations };
+        if (loadout.Primary is { } primary) parts.Add(Wyrmforge.Domain.Spells.SpellCatalog.Get(primary).Name);
+        if (loadout.Offering is { } offering) parts.Add($"offers {Wyrmforge.Domain.Progression.DragonEssences.DragonEssenceCatalog.Get(offering).Name}");
+        return string.Join(" · ", parts);
+    }
+
+    private void ToggleLoadout(int index)
+    {
+        openLoadout = openLoadout == index ? null : index;
+        pendingAction = LoadoutAction.None;
+        loadoutMessage = null;
+    }
+
+    private async Task ConfirmOrRun(LoadoutAction action, Func<Task> run)
+    {
+        if (pendingAction != action) { pendingAction = action; return; }
+        pendingAction = LoadoutAction.None;
+        await run();
+        loadoutMessage = action == LoadoutAction.Clear ? "Loadout cleared." : "Loadout overwritten with the current setup.";
+    }
+
+    private async Task SaveLoadoutAsync(int index)
+    {
+        await SaveLoadout(index);
+        loadoutMessage = $"Saved {Loadouts?[index]?.Name}.";
+    }
+
+    private async Task ClearLoadoutAsync(int index) => await ClearLoadout(index);
+
+    private async Task ApplyLoadoutAsync(int index)
+    {
+        pendingAction = LoadoutAction.None;
+        if (await ApplyLoadout(index) is not { } result) return;
+        focusedId = PassiveTreeCatalog.OriginId;
+        inspectorOpen = false;
+        var parts = new List<string> { $"Applied {Loadouts?[index]?.Name}: {result.NodesRestored} nodes" };
+        if (result.Equipped.Count > 0) parts.Add(string.Join(" + ", result.Equipped.Select(id => LaboratoryCatalog.Get(id).Name)) + " equipped");
+        if (result.NodesSkipped > 0) parts.Add($"{result.NodesSkipped} nodes could not be reached");
+        if (result.Skipped.Count > 0) parts.Add($"{string.Join(" + ", result.Skipped.Select(id => LaboratoryCatalog.Get(id).Name))} not equipped");
+        loadoutMessage = string.Join(" · ", parts) + ".";
+    }
+
+    private ElementReference viewport;
+    private ElementReference inspectorRef;
+    private bool revealInspector;
+    private string focusedId = PassiveTreeCatalog.OriginId;
+    private bool inspectorOpen;
+    private int PointsLeft => Selection.AvailablePoints;
+    private PassiveNodeDefinition FocusedNode => PassiveTreeCatalog.Get(focusedId);
+    private MutationAmplifierDefinition? FocusedAmplifier =>
+        MutationAmplifierCatalog.All.FirstOrDefault(item => item.NodeId == focusedId);
+
+    private string AssignedFireballMutation =>
+        MutationAmplifiers.Assignments.FirstOrDefault(item => item.NodeId == focusedId)?.MutationId ?? string.Empty;
+
+    private IReadOnlyList<FireballMutationId> CompatibleFireballMutations => FocusedAmplifier is not { } socket || FireballCore is null
+        ? Array.Empty<FireballMutationId>()
+        : FireballCore.Equipped.Where(id => MutationAmplifierCatalog.ForFireball(id)?.Capabilities.Contains(socket.Capability) == true).ToArray();
+
+    private async Task AssignFocusedAmplifierAsync(ChangeEventArgs args)
+    {
+        var value = args.Value?.ToString();
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            await OnAssignFireballAmplifier(focusedId, null);
+            return;
+        }
+
+        if (Enum.TryParse<FireballMutationId>(value, out var mutation) && Enum.IsDefined(mutation))
+            await OnAssignFireballAmplifier(focusedId, mutation);
+    }
+
+    private PassiveTreeRoutePlan? FocusedPlan => PassiveTreePlanner.Plan(Selection, focusedId);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.initialize", viewport);
+            if (FocusNodeId is { } focus && PassiveTreeCatalog.All.Any(node => node.Id == focus))
+            {
+                await FocusNodeAsync(focus);
+                StateHasChanged();
+            }
+        }
+
+        if (showRefundDialog)
+        {
+            showRefundDialog = false;
+            await JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.openRefundDialog", refundDialog);
+        }
+
+        if (revealInspector && inspectorOpen)
+        {
+            revealInspector = false;
+            await JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.revealInspector", inspectorRef);
+        }
+    }
+
+    private bool IsSelected(PassiveNodeDefinition node) => node.Kind == PassiveNodeKind.Origin || Selection.Selected.Contains(node.Id);
+
+    private async Task InspectNode(PassiveNodeDefinition node)
+    {
+        focusedId = node.Id;
+        inspectorOpen = true;
+        revealInspector = true;
+        var point = ArcaneWheelLayout.Position(node, ActiveSchool);
+        await JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.focus", viewport, point.X, point.Y);
+    }
+
+    private async Task AllocateFocusedRoute()
+    {
+        var plan = FocusedPlan;
+        if (plan is null || plan.AdditionalCost > PointsLeft) return;
+        if (Selection.SelectPath(plan.NodeIds)) await OnSelectionChanged.InvokeAsync();
+    }
+
+    private async Task RefundFocused()
+    {
+        if (!Selection.CanRemove(focusedId)) return;
+        if (!refundWarningAccepted && ArcaneSchoolCatalog.Owner(FocusedNode) != ActiveSchool)
+        {
+            pendingRefundId = focusedId;
+            showRefundDialog = true;
+            return;
+        }
+        if (Selection.Remove(focusedId)) await OnSelectionChanged.InvokeAsync();
+    }
+    private void CloseInspector() => inspectorOpen = false;
+
+    private string NodeClass(PassiveNodeDefinition node)
+    {
+        var classes = new List<string> { "web-node", $"kind-{node.Kind.ToString().ToLowerInvariant()}", $"tier-{PassiveNodeTiers.For(node).ToString().ToLowerInvariant()}" };
+        if (node.School is { } school) classes.Add($"school-{school.ToString().ToLowerInvariant()}");
+        else classes.Add("school-hybrid");
+
+        if (ArcaneSchoolCatalog.Owner(node) != ActiveSchool && node.Kind != PassiveNodeKind.Origin) classes.Add("study-locked");
+        if (node.Requirement is not null) classes.Add("mutation-enhancer");
+        if (IsSelected(node)) classes.Add("selected");
+        else if (IsPreviewNode(node.Id)) classes.Add("preview");
+        else if (Selection.CanSelect(node.Id)) classes.Add("available");
+        else classes.Add("locked");
+
+        if (focusedId == node.Id && inspectorOpen) classes.Add("focused");
+        return string.Join(' ', classes);
+    }
+
+    private string ConnectionClass(PassiveTreeConnection connection)
+    {
+        var fromAllocated = IsAllocated(connection.From);
+        var toAllocated = IsAllocated(connection.To);
+        if (fromAllocated && toAllocated) return "web-edge active";
+        if (IsPreviewConnection(connection)) return "web-edge preview";
+        if ((fromAllocated && CanAllocate(connection.To)) || (toAllocated && CanAllocate(connection.From))) return "web-edge available";
+        return "web-edge";
+    }
+
+    private bool IsPreviewNode(string id) => FocusedPlan?.NodeIds.Contains(id) == true;
+
+    private bool IsPreviewConnection(PassiveTreeConnection connection)
+    {
+        var plan = FocusedPlan;
+        if (!inspectorOpen || plan is null || plan.NodeIds.Count == 0) return false;
+        var route = new HashSet<string>(plan.NodeIds, StringComparer.Ordinal) { plan.AnchorId };
+        return route.Contains(connection.From) && route.Contains(connection.To);
+    }
+
+    private IReadOnlyList<ArcaneStatBadge> RouteMinorBonuses(PassiveTreeRoutePlan plan) =>
+        ArcaneNodePresentation.AggregateMinorBonuses(plan.NodeIds.Select(PassiveTreeCatalog.Get));
+
+    private static IReadOnlyList<PassiveNodeDefinition> RouteLandmarks(PassiveTreeRoutePlan plan) =>
+        plan.NodeIds.Select(PassiveTreeCatalog.Get).Where(node => node.Kind != PassiveNodeKind.Travel).ToArray();
+
+    private bool IsAllocated(string id) => id == PassiveTreeCatalog.OriginId || Selection.Selected.Contains(id);
+    private bool CanAllocate(string id) => id != PassiveTreeCatalog.OriginId && Selection.CanSelect(id);
+    private string NodeStyle(PassiveNodeDefinition node) => PointStyle(ArcaneWheelLayout.Position(node, ActiveSchool));
+    private static string PointStyle(ArcaneWheelLayout.Point point) => FormattableString.Invariant($"left:{point.X:0.##}px;top:{point.Y:0.##}px;");
+    private string RefundHelp => Selection.CanRemove(focusedId) ? "Refunding it keeps every other travelled route connected." : "Another travelled route depends on this node, so refund that branch first.";
+
+    private string RouteSummaryCopy(PassiveTreeRoutePlan plan)
+    {
+        if (plan.NodeIds.Count == 1) return "This node touches your current route and can be claimed directly.";
+        var destination = PassiveTreeCatalog.Get(plan.NodeIds[^1]);
+        return $"{plan.NodeIds.Count} new nodes connect your current build to {destination.Name}. Minor gains are combined below.";
+    }
+
+    private static string CompactValue(string value) => value.StartsWith('+') ? value[1..] : value;
+    private static string Coordinate(double value) => value.ToString("0.##", CultureInfo.InvariantCulture);
+
+    private static string NodeGlyph(PassiveNodeDefinition node) => node.Kind switch
+    {
+        PassiveNodeKind.Origin => "W",
+        PassiveNodeKind.Travel => ArcaneNodePresentation.MinorBonuses(node).FirstOrDefault()?.Icon ?? "•",
+        _ => ArcaneNodePresentation.SchoolIcon(node),
+    };
+
+    private static string KindLabel(PassiveNodeDefinition node) => node.Kind switch
+    {
+        PassiveNodeKind.Origin => "ORIGIN",
+        PassiveNodeKind.Travel => "MINOR · PASSIVE BONUS",
+        PassiveNodeKind.Notable => node.Cost == 1 ? "MINOR · MUTATION SPECIALIZATION" : "MEDIUM · SPECIALIZATION",
+        PassiveNodeKind.Mastery => "MEDIUM · MASTERY CHOICE",
+        _ => "MAJOR · KEYSTONE",
+    };
+
+    private string NodeState(PassiveNodeDefinition node)
+    {
+        if (node.Kind == PassiveNodeKind.Origin) return "ROOTED";
+        if (Selection.Selected.Contains(node.Id)) return "TRAVERSED";
+        if (!Selection.CanLearn(node)) return ArcaneSchoolCatalog.Owner(node) == ActiveSchool ? "NEEDS MUTATION" : "OTHER SCHOOL";
+        if (IsPreviewNode(node.Id)) return "PLANNED";
+        if (Selection.CanSelect(node.Id)) return "REACHABLE";
+        if (node.MasteryGroup is { } group && Selection.Selected.Any(id => PassiveTreeCatalog.Get(id).MasteryGroup == group)) return "CHOICE LOCKED";
+        return "UNCHARTED";
+    }
+
+    private string NodeStateClass(PassiveNodeDefinition node) => NodeState(node).ToLowerInvariant().Replace(' ', '-');
+    private static string SchoolLabel(PassiveNodeDefinition node) => ArcaneSchoolCatalog.Owner(node) is { } school ? ArcaneSchoolCatalog.Get(school).Name : "The mage’s learned knowledge";
+
+    private async Task Reset()
+    {
+        if (!refundWarningAccepted && Selection.Selected.Any(id => ArcaneSchoolCatalog.Owner(PassiveTreeCatalog.Get(id)) != ActiveSchool))
+        {
+            pendingReset = true;
+            showRefundDialog = true;
+            return;
+        }
+        Selection.Reset();
+        await OnSelectionChanged.InvokeAsync();
+        focusedId = PassiveTreeCatalog.OriginId;
+        inspectorOpen = false;
+    }
+
+    private async Task ZoomAsync(double delta) => await JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.zoom", viewport, delta);
+    private async Task ResetViewAsync() => await JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.reset", viewport);
+    private async Task ShowOverviewAsync() => await JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.overview", viewport);
+
+    private async Task FocusSchoolAsync(PassiveSchool school)
+    {
+        var point = ArcaneWheelLayout.Anchor(school, ActiveSchool, 740);
+        inspectorOpen = false;
+        await JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.focusSchool", viewport, point.X, point.Y);
+    }
+
+    private bool refundWarningAccepted;
+    private string? pendingRefundId;
+    private bool pendingReset;
+    private bool showRefundDialog;
+    private ElementReference refundDialog;
+
+    private void CancelRefund() { pendingRefundId = null; pendingReset = false; }
+    private void RefundDialogKey(KeyboardEventArgs args) { if (args.Key == "Escape") CancelRefund(); }
+
+    private async Task ConfirmRefundAsync()
+    {
+        var id = pendingRefundId;
+        var reset = pendingReset;
+        CancelRefund();
+        refundWarningAccepted = true;
+        if (reset) await Reset();
+        else if (id is not null && Selection.Remove(id)) await OnSelectionChanged.InvokeAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try { await JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.dispose", viewport); }
+        catch (JSException) { }
+        catch (TaskCanceledException) { }
+    }
+}
+

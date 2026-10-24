@@ -4,8 +4,12 @@
     const design = window.WyrmforgeSoundDesign;
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
     const savedEnabledKey = 'wyrmforge.audio.enabled.v1';
-    const menuPaletteKey = 'wyrmforge.audio.menuPalette.v1';
-    const menuPaletteNames = ['vellum', 'stone', 'iron'];
+    const uiMaterialKey = 'wyrmforge.audio.ui.material.v1';
+    const uiMaterialChoices = Object.freeze([
+        { id: 'vellum', label: 'Worn Vellum' },
+        { id: 'stone', label: 'Weathered Stone' },
+        { id: 'iron', label: 'Cold Iron' },
+    ]);
     const volumeKeys = { ui: 'wyrmforge.audio.ui.v1', combat: 'wyrmforge.audio.combat.v1', moment: 'wyrmforge.audio.moment.v1', music: 'wyrmforge.audio.music.v1' };
     const volumes = { ui: 0.32, combat: 0.36, moment: 0.69, music: 0.66 };
     const lastCue = new Map();
@@ -15,6 +19,7 @@
     const activeVoices = { ui: [], combat: [], moment: [] };
     const maxVoices = { ui: 2, combat: 5, moment: 3 };
     let enabled = true;
+    let uiMaterial = 'vellum';
     let unlocked = false;
     let context = null;
     let master = null;
@@ -32,7 +37,6 @@
     let fadeGeneration = 0;
     let wantedMusic = null;
     let recentSpell = null;
-    let menuPalette = menuPaletteNames.includes(loadPreference(menuPaletteKey)) ? loadPreference(menuPaletteKey) : 'vellum';
     const spellSchools = new Set(['arcane', 'fire', 'frost', 'lightning']);
 
     function loadPreference(key) {
@@ -42,6 +46,8 @@
         try { window.localStorage.setItem(key, String(value)); } catch { /* Private browsing may disable storage. */ }
     }
     enabled = loadPreference(savedEnabledKey) !== 'false';
+    const savedUiMaterial = loadPreference(uiMaterialKey);
+    if (uiMaterialChoices.some(choice => choice.id === savedUiMaterial)) uiMaterial = savedUiMaterial;
     for (const group of Object.keys(volumes)) {
         const saved = Number(loadPreference(volumeKeys[group]));
         if (loadPreference(volumeKeys[group]) !== null && Number.isFinite(saved)) volumes[group] = Math.max(0, Math.min(1, saved));
@@ -92,6 +98,7 @@
         if (!enabled) return;
         unlocked = true;
         ensureContext();
+        prewarmTransitions();
         startMusicFromGesture();
         syncMusic();
     }
@@ -123,9 +130,10 @@
             return response.json();
         }).then(manifest => {
             if (manifest.version !== 2 || !manifest.cues?.arcane?.variants?.length || !manifest.cues?.fire?.variants?.length || !manifest.cues?.frost?.variants?.length || !manifest.cues?.lightning?.variants?.length ||
-                !manifest.music?.menu || !manifest.music?.hunt) throw new Error('Incomplete recorded fantasy audio manifest');
+                !manifest.music?.menu || !manifest.music?.hunt || !uiMaterialChoices.every(choice => manifest.uiMaterials?.[choice.id]?.variants?.length))
+                throw new Error('Incomplete recorded fantasy audio manifest');
             recordedManifest = manifest;
-            prewarmMenu(); // Fetch/decode the most frequent tiny Foley files before the next navigation.
+            prewarmTransitions();
             if (status) status.textContent = 'RECORDED AUDIO READY';
             startMusicFromGesture(); // May be blocked outside a gesture; the next tap retries both tracks.
             syncMusic();
@@ -150,27 +158,28 @@
         return pending;
     }
 
-    // Semantic event -> physical recording. The same declarative menu manifest can be read by native adapters.
-    function menuEntry(name, variation) {
-        const mapping = recordedManifest?.menuPalettes?.[menuPalette]?.cues?.[name];
-        if (!mapping) return null;
-        const assetKey = mapping.variants?.[variation % mapping.variants.length] ?? mapping.asset;
-        const source = recordedManifest?.menuAssets?.[assetKey];
-        return source ? { ...source, mix: { ...source.mix, ...mapping.mix } } : null;
-    }
-
-    function prewarmMenu() {
-        if (!context || !recordedManifest || !enabled) return;
-        for (const name of ['ui', 'ui-back', 'ui-open', 'hunt-start']) {
-            const entry = menuEntry(name, 0);
-            if (entry) void loadRecordedBuffer(entry).catch(() => {}); // Optional audio must remain non-blocking.
+    // These shared semantic events can be implemented by a Web Audio or future native mobile adapter.
+    // Preload compact, often-used transitions; never block navigation if a recording is unavailable.
+    function prewarmTransitions() {
+        if (!recordedManifest || !context || !enabled) return;
+        for (const name of ['building-open', 'hunt-start', 'trail-enter', 'threat-reveal']) {
+            const cue = recordedManifest.cues?.[name];
+            for (const entry of cue ? [cue, ...(cue.layers ?? [])] : []) {
+                void loadRecordedBuffer(entry).catch(() => {});
+            }
+        }
+        // Tiny files: decode all UI candidates after unlock so A/B changes respond immediately.
+        for (const material of Object.values(recordedManifest.uiMaterials ?? {})) {
+            for (const entry of material.variants ?? []) void loadRecordedBuffer(entry).catch(() => {});
         }
     }
 
     function recordedEntry(name, type, variation) {
-        if (type === 'cast') {
-            const menuSound = menuEntry(name, variation);
-            if (menuSound) return menuSound;
+        if (name === 'ui' && type === 'cast') {
+            const material = recordedManifest?.uiMaterials?.[uiMaterial];
+            if (material?.variants?.length) {
+                return { ...material.variants[variation % material.variants.length], mix: material.mix };
+            }
         }
         const definition = recordedManifest?.cues?.[name];
         if (!definition) return null;
@@ -262,6 +271,13 @@
         const entry = recordedEntry(name, 'cast', count);
         if (!entry) return false;
         if (!playRecordedEntry(entry, sound, name, count, isSpell ? 0.72 : 1)) return false;
+        // The departure gesture is one semantic event made from physical sound layers.
+        // Distinct delay and gain profiles are declared in the portable manifest.
+        if (entry.layers?.length) {
+            for (const layer of entry.layers) {
+                playRecordedEntry(layer, sound, name + '-layer', count, layer.gainScale ?? 1, layer.delaySeconds ?? 0);
+            }
+        }
         variants.set(name, count + 1);
         lastCue.set(name, now);
         if (isSpell) {
@@ -423,7 +439,7 @@
         const now = performance.now();
         if (!preview && now - (lastCue.get(name) ?? -Infinity) < sound.cooldown) return false;
         if (recordedManifest) {
-            if (!recordedManifest.cues[name] && !menuEntry(name, 0)) return false;
+            if (!recordedManifest.cues[name]) return false;
             return playRecorded(name, sound, preview, now);
         }
         if (typeof fetch === 'function') return false; // Never play synthetic fallback in the real browser.
@@ -483,14 +499,6 @@
             console.warn('WyrmForge sound cue failed:', name, error);
             return false; // Gameplay must remain independent from sound.
         }
-    }
-
-    function setMenuPalette(name) {
-        if (!menuPaletteNames.includes(name)) return false;
-        menuPalette = name;
-        savePreference(menuPaletteKey, name);
-        prewarmMenu();
-        return true;
     }
 
     function updateVolume(group, value) {
@@ -559,6 +567,17 @@
         return button;
     }
 
+    function selectUiMaterial(value) {
+        if (!uiMaterialChoices.some(choice => choice.id === value)) return false;
+        uiMaterial = value;
+        savePreference(uiMaterialKey, value);
+        for (const button of lab?.querySelectorAll('.wyrmforge-ui-material') ?? []) {
+            button.setAttribute('aria-pressed', String(button.dataset.uiMaterial === value));
+        }
+        unlock();
+        return play('ui', true);
+    }
+
     function makeVolumeControl(group, label) {
         const row = document.createElement('label');
         row.className = 'wyrmforge-sound-volume';
@@ -608,33 +627,22 @@
         const heading = document.createElement('h3');
         heading.textContent = 'SOUND ATELIER';
         const desc = document.createElement('p');
-        desc.textContent = 'Audition physical menu sounds before approval; effects and music remain unchanged.';
-        const paletteHeading = document.createElement('p');
-        paletteHeading.textContent = 'MENU SOUND MATERIAL';
-        const paletteChoices = document.createElement('div');
-        paletteChoices.className = 'wyrmforge-sound-samples';
-        const paletteButtons = new Map();
-        for (const name of menuPaletteNames) {
-            const label = { vellum: 'WORN VELLUM', stone: 'WEATHERED STONE', iron: 'COLD IRON' }[name];
-            const button = makeButton(label, 'wyrmforge-sound-sample', `Select and preview ${label} menu sounds`, () => {
-                if (!setMenuPalette(name)) return;
-                for (const [key, item] of paletteButtons) item.setAttribute('aria-pressed', String(key === name));
-                play('ui', true);
-                if (status) status.textContent = `${label} PREVIEW`;
-            });
-            button.setAttribute('aria-pressed', String(menuPalette === name));
-            paletteButtons.set(name, button);
-            paletteChoices.appendChild(button);
+        desc.textContent = 'Recorded dark fantasy · layered spells, natural tails and a continuous soundtrack';
+        const materialHeading = document.createElement('p');
+        materialHeading.textContent = 'INTERFACE PRESS — audition the same action, repeat it 20 times';
+        const materials = document.createElement('div');
+        materials.className = 'wyrmforge-sound-samples';
+        for (const choice of uiMaterialChoices) {
+            const button = makeButton(choice.label, 'wyrmforge-sound-sample wyrmforge-ui-material',
+                `Select and preview ${choice.label} button material`, () => selectUiMaterial(choice.id));
+            button.dataset.uiMaterial = choice.id;
+            button.setAttribute('aria-pressed', String(uiMaterial === choice.id));
+            materials.appendChild(button);
         }
-        const menuAudition = document.createElement('div');
-        menuAudition.className = 'wyrmforge-sound-samples';
-        for (const [name, label] of [['ui', 'Button'], ['ui-back', 'Back'], ['ui-open', 'Open'], ['ui-confirm', 'Confirm'],
-            ['hunt-start', 'Enter hunt'], ['upgrade-open', 'Reveal'], ['upgrade-choice', 'Choose'], ['trail-clear', 'Clear trail']]) {
-            menuAudition.appendChild(makeButton(label, 'wyrmforge-sound-sample', `Preview ${label} in the selected material`, () => {
-                unlock();
-                play(name, true);
-            }));
-        }
+        materials.appendChild(makeButton('REPEAT BUTTON PRESS', 'wyrmforge-sound-sample', 'Repeat selected button sound', () => {
+            unlock();
+            play('ui', true);
+        }));
         const samples = document.createElement('div');
         samples.className = 'wyrmforge-sound-samples';
         for (const name of design?.previewNames ?? []) {
@@ -655,14 +663,14 @@
         levels.append(makeVolumeControl('ui', 'Interface'), makeVolumeControl('combat', 'Combat'), makeVolumeControl('moment', 'Moments'), makeVolumeControl('music', 'Music'));
         const close = makeButton('CLOSE', 'wyrmforge-sound-close', 'Close Sound Atelier', toggleLab);
         const credit = document.createElement('p');
-        credit.textContent = 'Menu Foley: Kenney (CC0). Recorded music: Brandon Morris (CC0). Spell effects: JC Sounds (CC BY 4.0) and rubberduck (CC0).';
+        credit.textContent = 'UI Foley: Kenney (CC0). Recorded music: Brandon Morris (CC0). Spell effects: JC Sounds (CC BY 4.0) and rubberduck (CC0).';
         const creditLink = document.createElement('a');
         creditLink.textContent = 'Asset credits & licenses';
         creditLink.href = 'https://opengameart.org/content/jc-sounds-fantasy-sfx-pack-vol-1';
         creditLink.target = '_blank';
         creditLink.rel = 'noopener noreferrer';
         credit.append(' ', creditLink);
-        lab.append(heading, desc, paletteHeading, paletteChoices, menuAudition, hearMusic, samples, levels, credit, close);
+        lab.append(heading, desc, materialHeading, materials, hearMusic, samples, levels, credit, close);
 
         status = document.createElement('span');
         status.className = 'wyrmforge-sound-status';
@@ -712,10 +720,13 @@
     });
     document.addEventListener('click', event => {
         if (!event.target?.closest || document.querySelector('.game-screen')) return;
-        const control = event.target.closest('button, [role="button"]');
-        if (!control || control.closest('.wyrmforge-sound-controls') || control.disabled || control.getAttribute('aria-disabled') === 'true') return;
-        const cue = control.getAttribute('data-sound-cue') ?? 'ui';
-        if (cue !== 'none') play(design?.palette[cue] ? cue : 'ui');
+        const button = event.target.closest('button');
+        if (!button || button.disabled || button.getAttribute('aria-disabled') === 'true') return;
+        if (button.closest('.wyrmforge-sound-controls') || button.getAttribute('data-sound-cue') === 'none') return;
+        // Hunt entry already emits 'hunt-start' from Blazor. Never stack an unrelated menu click on it.
+        if (button.matches('.town-door--gate, .refuge-town-spot--gate, .refuge-canonical-gate-action, .enter-realm, .gate-cta')) return;
+        const cue = button.getAttribute('data-sound-cue');
+        play(cue && design?.palette[cue] ? cue : 'ui');
     });
     document.addEventListener('keydown', event => {
         if (event.key === 'Escape' && lab && !lab.hidden) toggleLab();
@@ -724,10 +735,10 @@
     else mountControls();
 
     window.wyrmforgeAudio = {
-        play, setEnabled, testSound, isEnabled: () => enabled, updateVolume, setMenuPalette, getMenuPalette: () => menuPalette,
+        play, setEnabled, testSound, isEnabled: () => enabled, updateVolume, setUiMaterial: selectUiMaterial,
         diagnostics: () => ({ enabled, state: context?.state ?? 'uninitialized', session: navigator.audioSession?.type ?? 'unsupported',
-            identity: recordedManifest ? 'Recorded Dark Fantasy' : 'recordings-loading', audioRevision, music: currentMusic,
+            identity: recordedManifest ? 'Recorded Dark Fantasy' : 'recordings-loading', audioRevision, uiMaterial, music: currentMusic,
             musicPlaying: currentMusic ? musicIsPlaying(currentMusic) : false, musicTracks: [...musicPlayers.values()].map(track => ({ kind: track.kind, paused: track.player.paused, level: track.level })),
-            recorded: Boolean(recordedManifest), menuPalette, voices: { ...voices } }),
+            recorded: Boolean(recordedManifest), voices: { ...voices } }),
     };
 })();

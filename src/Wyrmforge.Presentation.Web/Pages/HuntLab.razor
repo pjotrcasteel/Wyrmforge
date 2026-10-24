@@ -17,7 +17,7 @@
             <h1>Watch the Great Hunt fight itself.</h1>
             <p>The actual combat renderer, deterministic simulation and movement agent. No account progress, loot or playtest report is credited.</p>
         </div>
-        <div class="hunt-lab-actions"><button @onclick="Restart">↻ Restart encounter</button><button @onclick="Pause">@(paused ? "▶ Resume" : "Ⅱ Pause")</button><a href="balance-lab">← Balance Lab</a></div>
+        <div class="hunt-lab-actions"><button @onclick="Restart">↻ Restart encounter</button><button @onclick="Pause">@(paused ? "▶ Resume" : "Ⅱ Pause")</button><a href="balance-lab">← Balance Lab</a><a href="arena-lab">Arena Lab</a></div>
     </header>
     <section class="hunt-lab-settings">
         <label>Wyrm
@@ -93,7 +93,7 @@
     }
 
     [JSInvokable]
-    public Task<RunRenderSnapshot> Frame(double delta, double width, double height, double movementX, double movementY)
+    public Task<RunRenderSnapshot> Frame(double delta, double width, double height, double movementX, double movementY, double aimX = 0, double aimY = 0)
     {
         if (simulation is null) CreateEncounter(width, height);
         var current = simulation!;

@@ -72,9 +72,25 @@ test('original place language is integrated into existing cached world texture a
     assert.equal(plan.story.width, width);
     assert.equal(plan.story.height, height);
     const script = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js', import.meta.url), 'utf8');
-    assert.match(script, /drawTerritoryGround\(ctx, plan\.story\)/);
+    assert.match(script, /drawTerritoryGround\(ctx, plan\.story, approvedAtlas\)/);
     assert.match(script, /drawTerritoryLandmarks\(ctx, plan\.story\)/);
     assert.match(script, /drawTerritoryMotes\(ctx, environment/);
     assert.match(script, /for \(const barrier of environment\.barriers/);
     assert.match(script, /for \(const supply of environment\.supplies/);
+});
+
+test('Wet Forest follows an authoritative location recipe with no cloned old landmarks', () => {
+    const wetForest = { site: 'forgotten-graves', siteX: .34, siteY: .45,
+        trail: Array.from({length: 9}, (_, i) => ({x:.31 + .04*Math.sin(i), y:i/8, width:.13})),
+        ground: [{kind:'puddle',x:.21,y:.28,radiusX:.04,radiusY:.02}] };
+    const env = { ...landscape, habitat: 'WetForest', generatorPreview: true, corruption: 0, wetForest };
+    const plan = createTerritoryStoryPlan(env, width, height);
+    assert.equal(plan.wetForest.site, 'forgotten-graves');
+    assert.equal(plan.landmarks.length, 0);
+    assert.equal(plan.cloister, null);
+    assert.equal(plan.patches.length, 0);
+    assert.equal(plan.wounds.length, 0);
+    assert.deepEqual(plan, createTerritoryStoryPlan(env, width, height));
+    assert.notDeepEqual(plan, createTerritoryStoryPlan({...env,
+        wetForest: {...wetForest, site:'abandoned-camp'}}, width, height));
 });

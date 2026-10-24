@@ -56,11 +56,21 @@ public sealed partial class RunSimulation
         }
         // The Reliquary's road carries no elite: one rare threat per road.
         if (IsReliquaryNode || IsBellWardenNode) return;
-        if (node.Type != WyrmrealmNodeType.Combat || node.Stage < EliteFirstEligibleStage || WyrmrealmHabitatCatalog.IsOpening(node.Habitat)) return;
-        if (elitesThisMap >= MaxElitesPerMap) return;
-        var random = new Random(EliteRollSeed(mapState.Seed, depthState.Depth, node.Id));
-        if (random.NextDouble() >= EliteChance) return;
-        eliteSpawnIndex = random.Next(EliteEarliestSpawn, EliteLatestSpawn + 1);
+        if (elitesThisMap >= MaxElitesPerMap || !RollsElite(mapState.Seed, depthState.Depth, node)) return;
+        // A watchtower-confirmed elite arrives early, so the report can never be outrun by the road's kill quota.
+        eliteSpawnIndex = IsScoutedElite(node) ? EliteEarliestSpawn : EliteSpawnRoll(mapState.Seed, depthState.Depth, node.Id);
+    }
+
+    /// <summary>The node's own seeded roll; the watchtower replays exactly this to scout a fork.</summary>
+    private static bool RollsElite(int seed, int depth, WyrmrealmMapNode node) =>
+        node.Type == WyrmrealmNodeType.Combat && node.Stage >= EliteFirstEligibleStage && !WyrmrealmHabitatCatalog.IsOpening(node.Habitat)
+        && new Random(EliteRollSeed(seed, depth, node.Id)).NextDouble() < EliteChance;
+
+    private static int EliteSpawnRoll(int seed, int depth, string nodeId)
+    {
+        var random = new Random(EliteRollSeed(seed, depth, nodeId));
+        random.NextDouble();
+        return random.Next(EliteEarliestSpawn, EliteLatestSpawn + 1);
     }
 
     internal static int EliteRollSeed(int seed, int depth, string nodeId)

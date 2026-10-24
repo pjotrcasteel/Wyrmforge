@@ -1,0 +1,21 @@
+# Hollow runtime integration — 20 October 2026
+
+Implementation checkpoint: the owner accepted all three eight-direction art exports and authorized runtime integration, push, merge and GitHub Pages deployment. Current main was merged into the task branch, preserving concurrent town and Divine magic changes.
+
+Runtime assets are exact approved atlas bytes under `wwwroot/art/enemies/hollow-rigged/`, with a small hashed manifest. Editable Blender sources, individual frames, authoring scripts and historical candidates remain under `art/source/enemies/hollow/rigged-poc/`.
+
+`hollow-sprites.js` adapts only enemy kind 0. Actual displacement advances the 16-frame walk by its authored stride distance. Eight facings use real source rows with small heading hysteresis. Contact with the player starts the 16-frame claw, locks its visual facing and recovers; this is presentation only. No new damage events, cooldown, movement, collision, simulation states or save changes are introduced. The existing C# contact-damage behavior remains authoritative.
+
+Real identity-bearing death bursts create a 24-frame collapse, then a held corpse. The death lasts two seconds, holds until age three, and fades by age four; the corpse cache is capped at 96 and stale living state is pruned. No disappearance/despawn can create a corpse. Death takes precedence over attack. Pause and freeze stop clip time; reduced motion uses static representative frames. Enemy Lab now exposes its pause to the renderer correctly. Loading failures retain existing painted/native fallback art and other enemy kinds are unchanged.
+
+The 96px walk cell draws at 93 world units and pivot 48,72. Padded 128px attack/death cells draw at 124 units and pivot 64,88, preserving identical pixel density. Canvas smoothing is disabled. Frozen/hit flashes tint the same geometry without fabricating a missing hurt clip.
+
+Local validation: all **213 JavaScript tests**, **333 Domain tests**, **511 Application tests**, and the new actual-combat **Hollow browser test** passed. Release web publish and browser-test compilation succeeded. The committed browser test runs in the existing Browser smoke workflow.
+
+[Mobile evidence](evidence/hollow-runtime-2026-10-20/browser-report.json) records successful decoding of all three hashed atlases, real C# movement, contact attack, collapse and held frame 23 at age two, plus a stable animation clock while paused. Screenshots were captured after the startup veil disappeared: [walk](evidence/hollow-runtime-2026-10-20/hollow-walk-390.png), [attack](evidence/hollow-runtime-2026-10-20/hollow-attack-390.png), [collapse](evidence/hollow-runtime-2026-10-20/hollow-collapse-390.png), [held corpse](evidence/hollow-runtime-2026-10-20/hollow-held-corpse-390.png). No save data was written by the practice encounter and no renderer errors occurred. This is desktop Edge at a 390px viewport, not a physical iPhone acceptance claim.
+
+Release coordination: [PR #156](https://github.com/pjotrcasteel/Wyrmforge/pull/156) contains source preservation, art acceptance and this runtime adapter. Merge is gated on the final Validate Wyrmforge and Browser smoke runs. On merge, the existing [Pages workflow](../../.github/workflows/pages.yml) builds/tests/publishes the exact main revision and deploys to [the game](https://pjotrcasteel.github.io/Wyrmforge/), followed by its deployed smoke test. PR CI and Pages status are reported on their actual runs; this document does not predeclare a successful deployment.
+
+PR #156 merged as `378ad3c99bdd9620f0143f844a4caaa7f32c82e8` after [Validate #563](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/39423738722) and [Browser smoke #612](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/39423738728) passed. Pages run [39424704123](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/39424704123) is the first release build.
+
+A pre-existing post-deployment collector probe failed in the preceding two releases: Cloudflare returns HTTP 403 / error 1010 for `Python-urllib/3.12`, but the identical public health endpoint returns 200 to `Wyrmforge-Pages-Smoke/1.0`. The follow-up smoke-client fix identifies the automated client explicitly; health, CORS and consent-rejection checks remain intact. No Cloudflare security setting or feedback data is changed.

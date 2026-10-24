@@ -1,0 +1,83 @@
+[
+  {
+    "frame": 1,
+    "minZ": -0.4999997913837433,
+    "maxZ": 0.34732770919799805,
+    "belowFloorByGroup": {}
+  },
+  {
+    "frame": 9,
+    "minZ": -0.6358785033226013,
+    "maxZ": 0.11999986320734024,
+    "belowFloorByGroup": {
+      "forearm.R": 365,
+      "foot.R": 266,
+      "neck": 2421,
+      "chest": 58,
+      "head": 542,
+      "foot.L": 62
+    }
+  },
+  {
+    "frame": 13,
+    "minZ": -0.9547582268714905,
+    "maxZ": 0.12492243200540543,
+    "belowFloorByGroup": {
+      "upper_arm.R": 1813,
+      "clavicle.R": 2416,
+      "forearm.R": 849,
+      "foot.R": 270,
+      "pelvis": 442,
+      "thigh.L": 752,
+      "spine": 954,
+      "chest": 2771,
+      "neck": 5978,
+      "clavicle.L": 1685,
+      "upper_arm.L": 1652,
+      "head": 4625,
+      "foot.L": 58
+    }
+  },
+  {
+    "frame": 19,
+    "minZ": -0.9125621914863586,
+    "maxZ": 0.08907601237297058,
+    "belowFloorByGroup": {
+      "upper_arm.R": 36,
+      "clavicle.R": 786,
+      "forearm.R": 603,
+      "foot.R": 270,
+      "pelvis": 424,
+      "thigh.L": 1193,
+      "spine": 823,
+      "chest": 2487,
+      "neck": 5978,
+      "clavicle.L": 1648,
+      "upper_arm.L": 1901,
+      "head": 4625,
+      "foot.L": 58,
+      "forearm.L": 28
+    }
+  },
+  {
+    "frame": 28,
+    "minZ": -0.9091933369636536,
+    "maxZ": 0.08537057042121887,
+    "belowFloorByGroup": {
+      "upper_arm.R": 22,
+      "clavicle.R": 738,
+      "forearm.R": 584,
+      "foot.R": 270,
+      "pelvis": 423,
+      "thigh.L": 1210,
+      "spine": 816,
+      "chest": 2471,
+      "neck": 5978,
+      "clavicle.L": 1643,
+      "upper_arm.L": 1921,
+      "head": 4625,
+      "foot.L": 58,
+      "forearm.L": 35
+    }
+  }
+]

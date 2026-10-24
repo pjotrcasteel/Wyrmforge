@@ -1,0 +1,50 @@
+@using Wyrmforge.Domain.Spells
+
+<section class="signature-foundation @SchoolStyle" aria-label="@($"{SignatureName} signature spell")">
+    <div class="signature-stage">
+        <h2>@SignatureName</h2>
+        <div class="signature-emblem" aria-hidden="true">
+            <i class="px-icon px-lg @SchoolIcon"></i>
+        </div>
+        <span class="signature-school">@SchoolName</span>
+    </div>
+    <section class="signature-description">
+        <h3>Signature core</h3>
+        @if (Signature is { } spell)
+        {
+            <p>@spell.Description</p>
+        }
+        <p class="signature-unavailable">Core upgrades and mutator sockets are not available for this school yet.</p>
+    </section>
+</section>
+
+@code {
+    [Parameter] public DivineArchetype? School { get; set; }
+
+    private DivineArchetypeDefinition? SchoolDefinition =>
+        School is { } school ? DivineArchetypeCatalog.Get(school) : null;
+
+    private SpellDefinition? Signature => SchoolDefinition?.ExistingSignature is { } id
+        ? SpellCatalog.Get(id)
+        : null;
+
+    private string SignatureName => Signature?.Name ?? "Signature spell";
+    private string SchoolName => SchoolDefinition?.Name ?? "Unchosen school";
+
+    private string SchoolStyle => School switch
+    {
+        DivineArchetype.Cryomancer => "signature-frost",
+        DivineArchetype.Stormcaller => "signature-storm",
+        DivineArchetype.Arcanist => "signature-arcane",
+        _ => "signature-unassigned",
+    };
+
+    private string SchoolIcon => School switch
+    {
+        DivineArchetype.Cryomancer => "px-frost",
+        DivineArchetype.Stormcaller => "px-storm",
+        DivineArchetype.Arcanist => "px-rune",
+        DivineArchetype.Necromancer => "px-skull",
+        _ => "px-crystal",
+    };
+}

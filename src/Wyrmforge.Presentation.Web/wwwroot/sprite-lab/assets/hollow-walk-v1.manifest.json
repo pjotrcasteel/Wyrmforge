@@ -1,0 +1,952 @@
+{
+  "schemaVersion": "1.0",
+  "name": "hollow-walk-v1.png",
+  "animation": "walk",
+  "source": "art/source/enemies/hollow/walk/hollow-walk-v1-rejected.png",
+  "playback": {
+    "fps": 8,
+    "loop": true
+  },
+  "coordinateSystem": "screen-x-right-y-down",
+  "directions": {
+    "N": {
+      "row": 0,
+      "flipX": false
+    },
+    "NE": {
+      "row": 1,
+      "flipX": false
+    },
+    "E": {
+      "row": 2,
+      "flipX": false
+    },
+    "SE": {
+      "row": 3,
+      "flipX": false
+    },
+    "S": {
+      "row": 4,
+      "flipX": false
+    },
+    "SW": {
+      "row": 5,
+      "flipX": false
+    },
+    "W": {
+      "row": 6,
+      "flipX": false
+    },
+    "NW": {
+      "row": 7,
+      "flipX": false
+    }
+  },
+  "notes": "All eight directions have unique source rows.",
+  "pivot": {
+    "x": 0.5,
+    "y": 0.8645833333333334
+  },
+  "status": "candidate",
+  "visualAccepted": false,
+  "processing": "Integer translation and equal-cell packing only; no resampling, pose synthesis or mirroring.",
+  "review": "Inspect alternating leg support, cloth consistency and loop seam. Format checks do not establish motion quality.",
+  "frames": [
+    {
+      "direction": "N",
+      "frame": 0,
+      "sourceRect": [
+        0,
+        0,
+        157,
+        160
+      ],
+      "translation": [
+        14,
+        14
+      ]
+    },
+    {
+      "direction": "N",
+      "frame": 1,
+      "sourceRect": [
+        157,
+        0,
+        157,
+        160
+      ],
+      "translation": [
+        14,
+        14
+      ]
+    },
+    {
+      "direction": "N",
+      "frame": 2,
+      "sourceRect": [
+        314,
+        0,
+        156,
+        160
+      ],
+      "translation": [
+        17,
+        14
+      ]
+    },
+    {
+      "direction": "N",
+      "frame": 3,
+      "sourceRect": [
+        470,
+        0,
+        157,
+        160
+      ],
+      "translation": [
+        15,
+        14
+      ]
+    },
+    {
+      "direction": "N",
+      "frame": 4,
+      "sourceRect": [
+        627,
+        0,
+        157,
+        160
+      ],
+      "translation": [
+        18,
+        14
+      ]
+    },
+    {
+      "direction": "N",
+      "frame": 5,
+      "sourceRect": [
+        784,
+        0,
+        157,
+        160
+      ],
+      "translation": [
+        20,
+        14
+      ]
+    },
+    {
+      "direction": "N",
+      "frame": 6,
+      "sourceRect": [
+        941,
+        0,
+        156,
+        160
+      ],
+      "translation": [
+        22,
+        14
+      ]
+    },
+    {
+      "direction": "N",
+      "frame": 7,
+      "sourceRect": [
+        1097,
+        0,
+        157,
+        160
+      ],
+      "translation": [
+        20,
+        14
+      ]
+    },
+    {
+      "direction": "NE",
+      "frame": 0,
+      "sourceRect": [
+        0,
+        160,
+        157,
+        160
+      ],
+      "translation": [
+        19,
+        13
+      ]
+    },
+    {
+      "direction": "NE",
+      "frame": 1,
+      "sourceRect": [
+        157,
+        160,
+        157,
+        160
+      ],
+      "translation": [
+        17,
+        13
+      ]
+    },
+    {
+      "direction": "NE",
+      "frame": 2,
+      "sourceRect": [
+        314,
+        160,
+        156,
+        160
+      ],
+      "translation": [
+        21,
+        13
+      ]
+    },
+    {
+      "direction": "NE",
+      "frame": 3,
+      "sourceRect": [
+        470,
+        160,
+        157,
+        160
+      ],
+      "translation": [
+        21,
+        13
+      ]
+    },
+    {
+      "direction": "NE",
+      "frame": 4,
+      "sourceRect": [
+        627,
+        160,
+        157,
+        160
+      ],
+      "translation": [
+        19,
+        13
+      ]
+    },
+    {
+      "direction": "NE",
+      "frame": 5,
+      "sourceRect": [
+        784,
+        160,
+        157,
+        160
+      ],
+      "translation": [
+        23,
+        13
+      ]
+    },
+    {
+      "direction": "NE",
+      "frame": 6,
+      "sourceRect": [
+        941,
+        160,
+        156,
+        160
+      ],
+      "translation": [
+        23,
+        13
+      ]
+    },
+    {
+      "direction": "NE",
+      "frame": 7,
+      "sourceRect": [
+        1097,
+        160,
+        157,
+        160
+      ],
+      "translation": [
+        22,
+        13
+      ]
+    },
+    {
+      "direction": "E",
+      "frame": 0,
+      "sourceRect": [
+        0,
+        320,
+        157,
+        154
+      ],
+      "translation": [
+        23,
+        20
+      ]
+    },
+    {
+      "direction": "E",
+      "frame": 1,
+      "sourceRect": [
+        157,
+        320,
+        157,
+        154
+      ],
+      "translation": [
+        28,
+        20
+      ]
+    },
+    {
+      "direction": "E",
+      "frame": 2,
+      "sourceRect": [
+        314,
+        320,
+        156,
+        154
+      ],
+      "translation": [
+        27,
+        20
+      ]
+    },
+    {
+      "direction": "E",
+      "frame": 3,
+      "sourceRect": [
+        470,
+        320,
+        157,
+        154
+      ],
+      "translation": [
+        26,
+        20
+      ]
+    },
+    {
+      "direction": "E",
+      "frame": 4,
+      "sourceRect": [
+        627,
+        320,
+        157,
+        154
+      ],
+      "translation": [
+        27,
+        20
+      ]
+    },
+    {
+      "direction": "E",
+      "frame": 5,
+      "sourceRect": [
+        784,
+        320,
+        157,
+        154
+      ],
+      "translation": [
+        27,
+        20
+      ]
+    },
+    {
+      "direction": "E",
+      "frame": 6,
+      "sourceRect": [
+        941,
+        320,
+        156,
+        154
+      ],
+      "translation": [
+        26,
+        20
+      ]
+    },
+    {
+      "direction": "E",
+      "frame": 7,
+      "sourceRect": [
+        1097,
+        320,
+        157,
+        154
+      ],
+      "translation": [
+        27,
+        20
+      ]
+    },
+    {
+      "direction": "SE",
+      "frame": 0,
+      "sourceRect": [
+        0,
+        474,
+        157,
+        158
+      ],
+      "translation": [
+        23,
+        15
+      ]
+    },
+    {
+      "direction": "SE",
+      "frame": 1,
+      "sourceRect": [
+        157,
+        474,
+        157,
+        158
+      ],
+      "translation": [
+        27,
+        15
+      ]
+    },
+    {
+      "direction": "SE",
+      "frame": 2,
+      "sourceRect": [
+        314,
+        474,
+        156,
+        158
+      ],
+      "translation": [
+        26,
+        15
+      ]
+    },
+    {
+      "direction": "SE",
+      "frame": 3,
+      "sourceRect": [
+        470,
+        474,
+        157,
+        158
+      ],
+      "translation": [
+        27,
+        15
+      ]
+    },
+    {
+      "direction": "SE",
+      "frame": 4,
+      "sourceRect": [
+        627,
+        474,
+        157,
+        158
+      ],
+      "translation": [
+        26,
+        15
+      ]
+    },
+    {
+      "direction": "SE",
+      "frame": 5,
+      "sourceRect": [
+        784,
+        474,
+        157,
+        158
+      ],
+      "translation": [
+        26,
+        15
+      ]
+    },
+    {
+      "direction": "SE",
+      "frame": 6,
+      "sourceRect": [
+        941,
+        474,
+        156,
+        158
+      ],
+      "translation": [
+        26,
+        15
+      ]
+    },
+    {
+      "direction": "SE",
+      "frame": 7,
+      "sourceRect": [
+        1097,
+        474,
+        157,
+        158
+      ],
+      "translation": [
+        25,
+        15
+      ]
+    },
+    {
+      "direction": "S",
+      "frame": 0,
+      "sourceRect": [
+        0,
+        632,
+        157,
+        156
+      ],
+      "translation": [
+        17,
+        18
+      ]
+    },
+    {
+      "direction": "S",
+      "frame": 1,
+      "sourceRect": [
+        157,
+        632,
+        157,
+        156
+      ],
+      "translation": [
+        18,
+        18
+      ]
+    },
+    {
+      "direction": "S",
+      "frame": 2,
+      "sourceRect": [
+        314,
+        632,
+        156,
+        156
+      ],
+      "translation": [
+        18,
+        18
+      ]
+    },
+    {
+      "direction": "S",
+      "frame": 3,
+      "sourceRect": [
+        470,
+        632,
+        157,
+        156
+      ],
+      "translation": [
+        17,
+        18
+      ]
+    },
+    {
+      "direction": "S",
+      "frame": 4,
+      "sourceRect": [
+        627,
+        632,
+        157,
+        156
+      ],
+      "translation": [
+        19,
+        18
+      ]
+    },
+    {
+      "direction": "S",
+      "frame": 5,
+      "sourceRect": [
+        784,
+        632,
+        157,
+        156
+      ],
+      "translation": [
+        20,
+        18
+      ]
+    },
+    {
+      "direction": "S",
+      "frame": 6,
+      "sourceRect": [
+        941,
+        632,
+        156,
+        156
+      ],
+      "translation": [
+        21,
+        18
+      ]
+    },
+    {
+      "direction": "S",
+      "frame": 7,
+      "sourceRect": [
+        1097,
+        632,
+        157,
+        156
+      ],
+      "translation": [
+        17,
+        18
+      ]
+    },
+    {
+      "direction": "SW",
+      "frame": 0,
+      "sourceRect": [
+        0,
+        788,
+        157,
+        156
+      ],
+      "translation": [
+        3,
+        18
+      ]
+    },
+    {
+      "direction": "SW",
+      "frame": 1,
+      "sourceRect": [
+        157,
+        788,
+        157,
+        156
+      ],
+      "translation": [
+        3,
+        18
+      ]
+    },
+    {
+      "direction": "SW",
+      "frame": 2,
+      "sourceRect": [
+        314,
+        788,
+        156,
+        156
+      ],
+      "translation": [
+        2,
+        18
+      ]
+    },
+    {
+      "direction": "SW",
+      "frame": 3,
+      "sourceRect": [
+        470,
+        788,
+        157,
+        156
+      ],
+      "translation": [
+        3,
+        18
+      ]
+    },
+    {
+      "direction": "SW",
+      "frame": 4,
+      "sourceRect": [
+        627,
+        788,
+        157,
+        156
+      ],
+      "translation": [
+        0,
+        18
+      ]
+    },
+    {
+      "direction": "SW",
+      "frame": 5,
+      "sourceRect": [
+        784,
+        788,
+        157,
+        156
+      ],
+      "translation": [
+        4,
+        18
+      ]
+    },
+    {
+      "direction": "SW",
+      "frame": 6,
+      "sourceRect": [
+        941,
+        788,
+        156,
+        156
+      ],
+      "translation": [
+        3,
+        18
+      ]
+    },
+    {
+      "direction": "SW",
+      "frame": 7,
+      "sourceRect": [
+        1097,
+        788,
+        157,
+        156
+      ],
+      "translation": [
+        5,
+        18
+      ]
+    },
+    {
+      "direction": "W",
+      "frame": 0,
+      "sourceRect": [
+        0,
+        944,
+        157,
+        149
+      ],
+      "translation": [
+        10,
+        23
+      ]
+    },
+    {
+      "direction": "W",
+      "frame": 1,
+      "sourceRect": [
+        157,
+        944,
+        157,
+        149
+      ],
+      "translation": [
+        10,
+        23
+      ]
+    },
+    {
+      "direction": "W",
+      "frame": 2,
+      "sourceRect": [
+        314,
+        944,
+        156,
+        149
+      ],
+      "translation": [
+        10,
+        23
+      ]
+    },
+    {
+      "direction": "W",
+      "frame": 3,
+      "sourceRect": [
+        470,
+        944,
+        157,
+        149
+      ],
+      "translation": [
+        8,
+        23
+      ]
+    },
+    {
+      "direction": "W",
+      "frame": 4,
+      "sourceRect": [
+        627,
+        944,
+        157,
+        149
+      ],
+      "translation": [
+        10,
+        23
+      ]
+    },
+    {
+      "direction": "W",
+      "frame": 5,
+      "sourceRect": [
+        784,
+        944,
+        157,
+        149
+      ],
+      "translation": [
+        13,
+        23
+      ]
+    },
+    {
+      "direction": "W",
+      "frame": 6,
+      "sourceRect": [
+        941,
+        944,
+        156,
+        149
+      ],
+      "translation": [
+        9,
+        23
+      ]
+    },
+    {
+      "direction": "W",
+      "frame": 7,
+      "sourceRect": [
+        1097,
+        944,
+        157,
+        149
+      ],
+      "translation": [
+        11,
+        23
+      ]
+    },
+    {
+      "direction": "NW",
+      "frame": 0,
+      "sourceRect": [
+        0,
+        1093,
+        157,
+        161
+      ],
+      "translation": [
+        8,
+        20
+      ]
+    },
+    {
+      "direction": "NW",
+      "frame": 1,
+      "sourceRect": [
+        157,
+        1093,
+        157,
+        161
+      ],
+      "translation": [
+        10,
+        20
+      ]
+    },
+    {
+      "direction": "NW",
+      "frame": 2,
+      "sourceRect": [
+        314,
+        1093,
+        156,
+        161
+      ],
+      "translation": [
+        10,
+        20
+      ]
+    },
+    {
+      "direction": "NW",
+      "frame": 3,
+      "sourceRect": [
+        470,
+        1093,
+        157,
+        161
+      ],
+      "translation": [
+        10,
+        20
+      ]
+    },
+    {
+      "direction": "NW",
+      "frame": 4,
+      "sourceRect": [
+        627,
+        1093,
+        157,
+        161
+      ],
+      "translation": [
+        12,
+        20
+      ]
+    },
+    {
+      "direction": "NW",
+      "frame": 5,
+      "sourceRect": [
+        784,
+        1093,
+        157,
+        161
+      ],
+      "translation": [
+        13,
+        20
+      ]
+    },
+    {
+      "direction": "NW",
+      "frame": 6,
+      "sourceRect": [
+        941,
+        1093,
+        156,
+        161
+      ],
+      "translation": [
+        18,
+        20
+      ]
+    },
+    {
+      "direction": "NW",
+      "frame": 7,
+      "sourceRect": [
+        1097,
+        1093,
+        157,
+        161
+      ],
+      "translation": [
+        14,
+        20
+      ]
+    }
+  ]
+}

@@ -1,0 +1,363 @@
+@using Wyrmforge.Domain.Progression.Signature
+@using Wyrmforge.Domain.Progression.DragonEssences
+
+<section class="fireball-ritual" aria-label="Fireball spellcraft">
+    <header class="fireball-heading">
+        <h2>Fireball <span>Lv @Core.Level</span></h2>
+        <div class="fireball-level-pips" role="img" aria-label="Fireball level @Core.Level of 5">
+            @for (var level = 1; level <= 5; level++)
+            {
+                <span class="@(level <= Core.Level ? "lit" : "dark")" aria-hidden="true"></span>
+            }
+        </div>
+    </header>
+
+    <div class="fireball-chamber">
+        <div class="fireball-altar" aria-label="Fireball core and mutation sockets">
+            <button type="button" class="fireball-center @(selectedSlot is null ? "selected" : "") @(Has(FireballMutationId.MeteorHeart) ? "heavy" : "") @(Has(FireballMutationId.Detonation) ? "explosive" : "") @(Has(FireballMutationId.ScorchedEarth) ? "scorched" : "")"
+                    aria-label="Fireball core, level @Core.Level. View upgrade requirements"
+                    aria-pressed="@(selectedSlot is null)" @onclick="SelectCore">
+                <span class="fireball-body" aria-hidden="true">
+                    <img class="fireball-hero-art" src="art/fireball-ritual-hero.png" alt="" draggable="false" loading="eager" />
+                    <span class="fireball-impact" aria-hidden="true"></span>
+                    <span class="fireball-ground" aria-hidden="true"></span>
+                </span>
+                <span class="fireball-center-label">Fireball core</span>
+            </button>
+            @for (var i = 0; i < 5; i++)
+            {
+                var slot = i;
+                var unlocked = slot < Core.Level;
+                var mutation = Core.Slots[slot];
+                <button type="button" class="fireball-socket fireball-socket--@(slot + 1) @(selectedSlot == slot ? "selected" : "") @(inspectedLockedSlot == slot ? "inspected" : "") @(!unlocked ? "sealed" : mutation is null ? "empty" : "filled")"
+                        aria-label="@SlotLabel(slot)"
+                        aria-pressed="@(selectedSlot == slot)"
+                        @onclick="() => SelectSlot(slot)">
+                    <span class="fireball-socket-art" aria-hidden="true">
+                        @if (!unlocked)
+                        {
+                            <span class="fireball-padlock"></span>
+                        }
+                        else if (mutation is { } equipped)
+                        {
+                            @if (MutationArtwork(equipped) is { } artwork)
+                            {
+                                <img class="fireball-mutation-art" src="@artwork" alt="" draggable="false" loading="eager" />
+                            }
+                            else
+                            {
+                                <i class="px-icon px-lg @MutationIcon(equipped)"></i>
+                            }
+                        }
+                        else
+                        {
+                            <b>+</b>
+                        }
+                    </span>
+                    <span class="fireball-socket-caption">@SlotCaption(slot)</span>
+                </button>
+            }
+        </div>
+    </div>
+
+    <section class="fireball-context" aria-live="polite" aria-label="Fireball actions" tabindex="-1" @ref="contextElement">
+        @if (selectedSlot is null)
+        {
+            <div class="fireball-panel-heading">
+                <span class="fireball-school-icon" aria-hidden="true"></span>
+                <div>
+                    <h3>Upgrade Fireball</h3>
+                    <p>Increase base damage and unlock another mutator socket.</p>
+                    <p class="fireball-progression-help">Mutators are discovered in Research and equipped into unlocked sockets.</p>
+                </div>
+            </div>
+            @if (inspectedLockedSlot is { } sealedSlot)
+            {
+                <div class="fireball-locked-explainer" role="status">
+                    <strong>Socket @(sealedSlot + 1) is sealed</strong>
+                    <span>Unlocks at Fireball Lv @(sealedSlot + 1). Upgrade the core one level at a time, then equip a researched mutator.</span>
+                </div>
+            }
+            @if (Core.Level == 5)
+            {
+                <p>Fireball has reached level 5. All five mutation sockets are available.</p>
+            }
+            else
+            {
+                <div class="fireball-level-comparison" aria-label="Fireball level upgrade">
+                    <div><strong>Lv @Core.Level</strong><span class="fireball-mini-pips" role="img" aria-label="Current level @Core.Level of 5">@for (var pip = 1; pip <= 5; pip++) { <i class="@(pip <= Core.Level ? "lit" : "dark")" aria-hidden="true"></i> }</span></div>
+                    <span aria-hidden="true">➜</span>
+                    <div><strong>Lv @(Core.Level + 1)</strong><span class="fireball-mini-pips" role="img" aria-label="Next level @(Core.Level + 1) of 5">@for (var pip = 1; pip <= 5; pip++) { <i class="@(pip <= Core.Level + 1 ? "lit" : "dark")" aria-hidden="true"></i> }</span></div>
+                </div>
+                <p class="fireball-damage-growth" aria-label="Core base damage upgrade">
+                    Base damage: +@((int)Math.Round((FireballCoreCatalog.DamageMultiplier(Core.Level) - 1) * 100))%
+                    → +@((int)Math.Round((FireballCoreCatalog.DamageMultiplier(Core.Level + 1) - 1) * 100))%
+                </p>
+                <h4>Required Materials</h4>
+                <div class="fireball-materials" aria-label="Required materials">
+                    @foreach (var need in FireballCoreCatalog.UpgradeTo(Core.Level + 1))
+                    {
+                        var material = DragonEssenceCatalog.Get(need.Material);
+                        var owned = Vault.Count(need.Material);
+                        <div class="fireball-material @(owned >= need.Required ? "ready" : "missing")">
+                            <i class="px-icon px-lg @MaterialIcon(need.Material)" aria-hidden="true"></i>
+                            <span><b>@material.Name</b><small>@owned / @need.Required · @EssenceGradeText(need.Material)</small></span>
+                        </div>
+                    }
+                    @foreach (var need in FireballCoreCatalog.UpgradeMaterialsTo(Core.Level + 1))
+                    {
+                        var owned = Materials.Count(need.Material);
+                        var rarity = HuntMaterialCatalog.Rarity(need.Material);
+                        <div class="fireball-material @(owned >= need.Required ? "ready" : "missing") @LootRarityPresentation.Class(rarity)">
+                            <i class="px-icon px-lg px-crystal" aria-hidden="true"></i>
+                            <span><b>@HuntMaterialCatalog.Name(need.Material)</b><small><span class="loot-rarity-label">@LootRarityPresentation.Label(rarity)</span> · @owned / @need.Required</small><small class="fireball-material-source">@HuntMaterialCatalog.Source(need.Material)</small></span>
+                        </div>
+                    }
+                </div>
+                <button type="button" class="fireball-action" disabled="@(!Core.CanUpgrade(Vault, Materials))" @onclick="UpgradeAsync">
+                    Upgrade to Lv @(Core.Level + 1)
+                </button>
+            }
+        }
+        else
+        {
+            var slot = selectedSlot.Value;
+            var learnedMutators = Core.Discovered;
+            <h3>Slot @(slot + 1) <small>Select a mutator</small></h3>
+            @if (learnedMutators.Count == 0 && Core.Slots[slot] is null)
+            {
+                <div class="fireball-first-mutator" role="status">
+                    <strong>No mutators unlocked yet</strong>
+                    <p>Hunt Ashlings or Ash Slingers for Ember Residue. Break barrels and crates for Charred Scrap. Extract to keep your materials.</p>
+                    <div class="fireball-first-materials" aria-label="Cinder Needle crafting materials">
+                        @foreach (var need in HuntMaterialCatalog.CinderNeedleRecipe)
+                        {
+                            var owned = Materials.Count(need.Material);
+                            <span class="@(owned >= need.Required ? "ready" : "missing")">
+                                <b>@HuntMaterialCatalog.Name(need.Material)</b><small>@owned / @need.Required</small>
+                            </span>
+                        }
+                    </div>
+                    @if (Core.CanCraftCinderNeedle(Materials))
+                    {
+                        <button type="button" class="fireball-first-action" @onclick="CraftCinderNeedleAsync">Craft Cinder Needle</button>
+                    }
+                    else
+                    {
+                        <button type="button" class="fireball-first-action" @onclick="() => OnOpenWorldGate.InvokeAsync()">Open World Gate</button>
+                    }
+                    <small>Stronger mutators come from secured Ashfang Essences. Their sources are listed below.</small>
+                </div>
+            }
+            <div class="fireball-mutator-list" aria-label="Researched Fireball mutations">
+                @foreach (var mutation in FireballCoreCatalog.Mutations.OrderByDescending(mutation => (int)MutationStatusFor(mutation)))
+                {
+                    var status = MutationStatusFor(mutation);
+                    var learned = status is MutationStatus.Owned or MutationStatus.Equipped;
+                    var current = Core.Slots[slot] == mutation.Id;
+                    var inAnotherSlot = Core.Equipped.Contains(mutation.Id) && !current;
+                    var statusClass = status.ToString().ToLowerInvariant();
+                    <div class="fireball-mutator-entry @statusClass">
+                        <button type="button" class="fireball-mutator @statusClass" disabled="@(!learned || inAnotherSlot)" @onclick="() => EquipAsync(slot, mutation.Id)">
+                            <span class="mutation-symbol" aria-hidden="true">
+                                @if (MutationArtwork(mutation.Id) is { } artwork)
+                                {
+                                    <img class="fireball-mutation-art" src="@artwork" alt="" draggable="false" loading="lazy" />
+                                }
+                                else
+                                {
+                                    <i class="px-icon px-lg @MutationIcon(mutation.Id)"></i>
+                                }
+                                @if (status == MutationStatus.Unknown)
+                                {
+                                    <span class="mutation-unknown-mark">?</span>
+                                }
+                            </span>
+                            <span class="mutation-description"><b>@mutation.Name</b><small>@mutation.Description</small></span>
+                            <span class="mutation-state" aria-label="@MutationStatusAccessibleLabel(status, inAnotherSlot)">@MutationStatusLabel(status)</span>
+                        </button>
+                        @if (mutation is { Playable: true, ResearchSample: { } sample })
+                        {
+                            var essence = DragonEssenceCatalog.Get(sample);
+                            <details class="fireball-source-details">
+                                <summary>Find: @essence.Source · @essence.Name</summary>
+                                <div class="fireball-source-description">
+                                    <p>Secure @essence.Name from an @essence.Source Hunt to unlock this mutator permanently.</p>
+                                    <p>No crafting required. Secured in vault: @Vault.Count(sample). @(learned ? "Already unlocked." : "Not yet unlocked.")</p>
+                                </div>
+                            </details>
+                        }
+                        else if (mutation.Id == FireballMutationId.CinderNeedle)
+                        {
+                            <details class="fireball-source-details fireball-common-source">
+                                <summary>Craft: common Hunt materials</summary>
+                                <div class="fireball-source-description">
+                                    <p>Find Ember Residue on Ashlings or Ash Slingers. Break barrels and crates for Charred Scrap.</p>
+                                    <div class="fireball-common-recipe" aria-label="Cinder Needle crafting ingredients">
+                                        @foreach (var need in HuntMaterialCatalog.CinderNeedleRecipe)
+                                        {
+                                            <span class="@(Materials.Count(need.Material) >= need.Required ? "ready" : "missing")">
+                                                @HuntMaterialCatalog.Name(need.Material): @Materials.Count(need.Material) / @need.Required
+                                            </span>
+                                        }
+                                    </div>
+                                    <p>Extract safely to secure collected materials. Craft once, then equip in any unlocked socket.</p>
+                                    @if (learned)
+                                    {
+                                        <strong class="fireball-crafted">Already crafted</strong>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="fireball-craft-action" disabled="@(!Core.CanCraftCinderNeedle(Materials))"
+                                                @onclick="CraftCinderNeedleAsync">Craft Cinder Needle</button>
+                                    }
+                                </div>
+                            </details>
+                        }
+                        else
+                        {
+                            <span class="fireball-source-unavailable">Source not available yet</span>
+                        }
+                    </div>
+                }
+            </div>
+            @if (Core.Slots[slot] is not null)
+            {
+                <button type="button" class="fireball-remove" @onclick="() => EquipAsync(slot, null)">Remove mutator</button>
+            }
+            <p class="fireball-help">Secure Ashfang Essences for powerful mutators, or craft Cinder Needle from ordinary Hunt materials.</p>
+        }
+        @if (!string.IsNullOrWhiteSpace(notice))
+        {
+            <p class="fireball-message" role="status">@notice</p>
+        }
+    </section>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public FireballCoreState Core { get; set; } = null!;
+    [Parameter, EditorRequired] public DragonEssenceVault Vault { get; set; } = null!;
+    [Parameter] public HuntMaterialSatchel Materials { get; set; } = new();
+    [Parameter] public Func<Task<bool>>? OnCraftCinderNeedle { get; set; }
+    [Parameter] public Func<Task<bool>>? OnUpgrade { get; set; }
+    [Parameter] public Func<int, FireballMutationId?, Task<bool>>? OnEquip { get; set; }
+    [Parameter] public EventCallback OnOpenWorldGate { get; set; }
+
+    private int? selectedSlot;
+    private int? inspectedLockedSlot;
+    private string? notice;
+    private ElementReference contextElement;
+    private bool focusContext;
+
+    private bool Has(FireballMutationId mutation) => Core.Equipped.Contains(mutation);
+
+    // e.g. "Rare ×2, Epic ×1"; the lowest grade is spent first.
+    private string EssenceGradeText(DragonEssenceId id)
+    {
+        var grades = Enum.GetValues<LootRarity>().Where(rarity => Vault.Count(id, rarity) > 0)
+            .Select(rarity => $"{LootRarityPresentation.Label(rarity)} ×{Vault.Count(id, rarity)}").ToArray();
+        return grades.Length == 0 ? "none secured" : string.Join(", ", grades);
+    }
+
+    private enum MutationStatus { Planned, Unknown, Uncrafted, Craftable, Owned, Equipped }
+
+    private MutationStatus MutationStatusFor(FireballMutationDefinition mutation)
+    {
+        if (!mutation.Playable) return MutationStatus.Planned;
+        if (Core.Equipped.Contains(mutation.Id)) return MutationStatus.Equipped;
+        if (Core.Discovered.Contains(mutation.Id)) return MutationStatus.Owned;
+        if (mutation.Id != FireballMutationId.CinderNeedle) return MutationStatus.Unknown;
+        return Core.CanCraftCinderNeedle(Materials) ? MutationStatus.Craftable : MutationStatus.Uncrafted;
+    }
+
+    private static string MutationStatusLabel(MutationStatus status) => status switch
+    {
+        MutationStatus.Uncrafted => "Uncrafted",
+        MutationStatus.Craftable => "Craftable now",
+        _ => status.ToString(),
+    };
+
+    private static string MutationStatusAccessibleLabel(MutationStatus status, bool equippedElsewhere) => status switch
+    {
+        MutationStatus.Uncrafted => "Known, not yet crafted",
+        MutationStatus.Unknown => "Unknown, not yet discovered",
+        MutationStatus.Craftable => "Craftable now, open recipe below to craft",
+        MutationStatus.Owned => "Owned, available to equip",
+        MutationStatus.Equipped when equippedElsewhere => "Equipped in another socket",
+        MutationStatus.Equipped => "Equipped in this socket",
+        _ => "Planned, not available in the game yet",
+    };
+
+    private static string MaterialIcon(DragonEssenceId material) => material switch
+    {
+        DragonEssenceId.CinderHeart => "px-heart",
+        DragonEssenceId.MoltenFang => "px-fang",
+        DragonEssenceId.AshenWing => "px-wing",
+        _ => "px-crystal",
+    };
+
+    private static string? MutationArtwork(FireballMutationId mutation) => mutation switch
+    {
+        FireballMutationId.MeteorHeart => "art/arcane-nexus/meteor-heart.svg",
+        FireballMutationId.Detonation => "art/arcane-nexus/detonation.svg",
+        FireballMutationId.ScorchedEarth => "art/arcane-nexus/scorched-earth.svg",
+        _ => null,
+    };
+
+    private static string MutationIcon(FireballMutationId mutation) => mutation switch
+    {
+        FireballMutationId.MeteorHeart => "px-crystal",
+        FireballMutationId.Detonation => "px-star",
+        FireballMutationId.ScorchedEarth => "px-campfire",
+        FireballMutationId.CinderNeedle => "px-arrow",
+        FireballMutationId.PhoenixVolley => "px-wing",
+        FireballMutationId.PiercingEmber => "px-sword",
+        FireballMutationId.SeekerEmber => "px-rune",
+        FireballMutationId.Wildfire => "px-fire",
+        FireballMutationId.AshHarvest => "px-skull",
+        FireballMutationId.EmberRecall => "px-cycle",
+        _ => "px-fire",
+    };
+    private string SlotCaption(int slot) => slot >= Core.Level ? $"Lv {slot + 1}"
+        : Core.Slots[slot] is { } mutation ? FireballCoreCatalog.Get(mutation).Name : "Empty";
+
+    private string SlotLabel(int slot) => slot >= Core.Level ? $"Slot {slot + 1}: locked until Fireball level {slot + 1}"
+        : Core.Slots[slot] is { } mutation ? $"Slot {slot + 1}: {FireballCoreCatalog.Get(mutation).Name}"
+        : $"Slot {slot + 1}: empty, choose mutator";
+
+    private void SelectCore() { selectedSlot = null; inspectedLockedSlot = null; notice = null; focusContext = true; }
+    private void SelectSlot(int slot)
+    {
+        notice = null;
+        focusContext = true;
+        if (slot < Core.Level) { selectedSlot = slot; inspectedLockedSlot = null; }
+        else { selectedSlot = null; inspectedLockedSlot = slot; }
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!focusContext) return;
+        focusContext = false;
+        await contextElement.FocusAsync();
+    }
+
+    private async Task UpgradeAsync()
+    {
+        if (OnUpgrade is null || !await OnUpgrade()) { notice = "Fireball cannot be upgraded yet."; return; }
+        notice = $"Fireball strengthened to level {Core.Level}. A new socket is open.";
+    }
+    private async Task CraftCinderNeedleAsync()
+    {
+        if (OnCraftCinderNeedle is null || !await OnCraftCinderNeedle())
+        {
+            notice = "Find and secure the missing common materials first.";
+            return;
+        }
+        notice = "Cinder Needle crafted. Select it to equip in this socket.";
+    }
+
+    private async Task EquipAsync(int slot, FireballMutationId? mutation)
+    {
+        if (OnEquip is null || !await OnEquip(slot, mutation)) { notice = "That mutation cannot be equipped."; return; }
+        notice = mutation is { } id ? $"{FireballCoreCatalog.Get(id).Name} equipped." : "Mutator removed.";
+    }
+}

@@ -14,6 +14,7 @@ using Wyrmforge.Domain.Progression.Quests;
 using Wyrmforge.Domain.Progression.Experience;
 using Wyrmforge.Domain.Progression.Onboarding;
 using Wyrmforge.Domain.Progression.SpellMastery;
+using Wyrmforge.Domain.Progression.Signature;
 using Wyrmforge.Domain.Spells.Evolutions;
 using Wyrmforge.Domain.Spells.Synergies;
 
@@ -25,12 +26,15 @@ public partial class Home
     private const string ArcaneBuildKey = "wyrmforge.arcaneBuild.v1";
     private const string BestScoreKey = "wyrmforge.bestScore";
     private const string EssenceVaultKey = "wyrmforge.essenceVault";
+    private const string EssenceGradesKey = "wyrmforge.essenceGrades.v1";
+    private const string HuntMaterialsKey = "wyrmforge.huntMaterials.v1";
     private const string ArcaneCodexKey = "wyrmforge.arcaneCodex";
     private const string ForgeProgressionKey = "wyrmforge.forgeProgression";
     private const string ForgeMasteryKey = "wyrmforge.forgeMastery";
     private const string SpellMasteryKey = "wyrmforge.spellMastery.v1";
     private const string GreatHuntKey = "wyrmforge.greatHunt.v1";
     private readonly PassiveTreeSelection selection = new(1);
+    private readonly MutationAmplifierSockets mutationAmplifiers = MutationAmplifierCatalog.CreateSockets();
     private readonly FirstHuntProgress firstHunt = new();
     private readonly HuntQuestState quests = new();
     private readonly HunterProgress hunter = new();
@@ -38,6 +42,7 @@ public partial class Home
     private bool questsOpen;
     private bool activeRewardCache;
     private readonly DragonEssenceVault essenceVault = new();
+    private readonly HuntMaterialSatchel huntMaterials = new();
     private readonly ArcaneCodex arcaneCodex = new();
     private readonly ForgeProgressionState forgeProgression = new();
     private readonly SpellMasteryState spellMastery = new();
@@ -57,6 +62,7 @@ public partial class Home
     private int bestScore;
     private int runNumber;
     private bool runActive;
+    private bool awaitingPrimaryConfirmation;
     private bool tutorialCinematic;
     private bool unlockCinematic;
     private bool leaderboardOpen;
@@ -115,6 +121,7 @@ public partial class Home
         catch (JSException) { }
         bestScore = await TryGetBestScoreAsync();
         await TryLoadEssenceVaultAsync();
+        await TryLoadHuntMaterialsAsync();
         await TryLoadForgeProgressionAsync();
         await TryLoadForgeMasteryAsync();
         await TryLoadSpellMasteryAsync();
@@ -130,6 +137,7 @@ public partial class Home
         await TryLoadWorldAsync();
         await TryLoadChroniclesAsync();
         await TryLoadLaboratoryAsync();
+        await TryLoadFireballCoreAsync();
         await TryLoadLoadoutsAsync();
         laboratoryNotice = laboratory.ReconcileSocket(selection.Selected);
         if (laboratoryNotice is not null) await TrySetLaboratoryAsync();
@@ -161,8 +169,14 @@ public partial class Home
     private void SelectAscendant(DragonId? selected) =>
         selectedAscendant = selected is { } wyrm && AscendantRiteCatalog.IsAvailable(wyrm) && greatHunt.IsSealed(wyrm, spellMastery) ? selected : null;
 
-    private async Task StartRunAsync()
+    private Task StartRunAsync() => BeginRunAsync(
+        CurrentRegion.Id == Wyrmforge.Application.World.RegionCatalog.CinderFrontierId && selectedAscendant is null
+            ? Wyrmforge.Application.Runs.Hunts.HuntSelection.FireTierOne : null);
+
+    private async Task BeginRunAsync(Wyrmforge.Application.Runs.Hunts.HuntSelection? hunt)
     {
+        // Character creation owns magical affinity; Hunts never prompt for a new primary.
+        if (characterSchool is null || preferredPrimary is null) return;
         await TryPlayAudioAsync("hunt-start");
         hunterGain = null;
         newlyUnlockedLineages = [];
@@ -171,30 +185,50 @@ public partial class Home
         newlySealedOaths = [];
         newlyConqueredAscendants = [];
         bestiaryDiscoveries = null;
-        activeAscendant = selectedAscendant is { } wyrm && greatHunt.IsSealed(wyrm, spellMastery) ? wyrm : null;
+        activeHunt = hunt;
+        activeAscendant = hunt is null && selectedAscendant is { } wyrm && greatHunt.IsSealed(wyrm, spellMastery) ? wyrm : null;
         summary = null;
-        activeRewardCache = !firstHunt.TutorialRun && quests.ConsumeCache();
-        activeOffering = null;
+        // The character's signature is committed automatically before combat begins.
+        // No consumables or discoveries are charged until Arena confirms that commitment.
+        activeRewardCache = !firstHunt.TutorialRun && quests.Caches > 0;
+        activeOffering = selectedOffering is { } offering && forgeProgression.UnlocksOffering(offering) && essenceVault.Count(offering) > 0
+            ? offering : null;
         activeRunSeed = null;
-        if (selectedOffering is { } offering && forgeProgression.UnlocksOffering(offering) && essenceVault.Consume(offering))
-        {
-            activeOffering = offering;
-            await TrySetEssenceVaultAsync();
-        }
-        selectedOffering = null;
         PrepareLaboratoryRun();
         PrepareRegionRun();
-        await DiscoverCurrentRegionAsync();
-        await SaveArcaneBuildAsync();
         runNumber++;
         runActive = true;
+        awaitingPrimaryConfirmation = true;
+    }
+
+    private async Task ConfirmPrimaryAsync(Wyrmforge.Domain.Spells.SpellId id)
+    {
+        await SetPreferredPrimaryAsync(id);
+        if (!awaitingPrimaryConfirmation) return;
+        awaitingPrimaryConfirmation = false;
+
+        if (activeRewardCache) quests.ConsumeCache();
+        if (activeOffering is { } offering && essenceVault.Consume(offering))
+            await TrySetEssenceVaultAsync();
+
+        selectedOffering = null;
+        await DiscoverCurrentRegionAsync();
+        await SaveArcaneBuildAsync();
         await TryRecordPlaytestStartAsync();
+    }
+
+    private void CancelRunStart()
+    {
+        if (!runActive) return;
+        // Before confirmation no rewards, Essence, discovery or playtest run have changed.
+        ReturnToForge();
     }
 
     private async Task HandleGameOverAsync(RunSummary value)
     {
         if (lastCreditedRunNumber == runNumber) return;
         lastCreditedRunNumber = runNumber;
+        await RecordHuntClearedAsync(value);
         if (value.Outcome is RunOutcome.Defeated or RunOutcome.Extracted) await TryPlayAudioAsync(value.Outcome == RunOutcome.Extracted ? "victory" : "death");
         var previouslyConquered = AscendantRiteCatalog.All.Where(rite => greatHunt.Get(rite.Wyrm).AscendantDefeated).Select(rite => rite.Wyrm).ToHashSet();
         var oldSeals = GreatHuntCatalog.All.Where(oath => greatHunt.IsSealed(oath.Wyrm, spellMastery)).Select(oath => oath.Wyrm).ToHashSet();
@@ -258,9 +292,15 @@ public partial class Home
 
         if (value.EssenceIds.Count > 0)
         {
-            foreach (var essenceId in value.EssenceIds) essenceVault.Store(essenceId);
+            foreach (var essenceId in value.EssenceIds) essenceVault.Store(essenceId, value.EssenceRarity);
+            await RecordFireballDiscoveriesAsync(value.EssenceIds);
             await TrySetEssenceVaultAsync();
             if (forgeProgression.Discover(ForgeDiscoveryContext.FromEssences(value.EssenceIds)).Count > 0) await TrySetForgeProgressionAsync();
+        }
+        if (value.SecuredMaterials.Count > 0)
+        {
+            foreach (var material in value.SecuredMaterials) huntMaterials.Store(material);
+            await TrySetHuntMaterialsAsync();
         }
         await RefreshResearchPromptAsync(activeResearchLead is not null && value.Outcome != RunOutcome.Abandoned);
         if (value.Score <= bestScore) return;
@@ -273,6 +313,12 @@ public partial class Home
         if (summary is null) return;
         await TryPlayAudioAsync("hunt-start");
         activeRunSeed = summary.Seed;
+        activeHunt = summary.Hunt;
+        if (activeHunt is { } replayHunt)
+        {
+            activeRegion = replayHunt.Region;
+            activeAscendant = null;
+        }
         PrepareLaboratoryRun();
         activeRewardCache = false;
         summary = null;
@@ -304,6 +350,7 @@ public partial class Home
 
     private void ReturnToForge()
     {
+        awaitingPrimaryConfirmation = false;
         summary = null;
         reviewPromptOpen = false;
         openLaboratoryOnReturn = false;
@@ -361,6 +408,8 @@ public partial class Home
             if (state is null) return;
             selection.RestoreBudget(state.Budget);
             selection.RestoreNodes(state.Nodes ?? []);
+            selection.RestoreReserved(state.Reserved);
+            mutationAmplifiers.Restore(state.Amplifiers);
             hunter.Restore(state.HunterExperience);
             selection.RestoreBudget(Math.Max(selection.PointBudget, hunter.AtlasBudget));
             quests.Restore(state.Quests, hunter.EarnedCaches);
@@ -373,13 +422,15 @@ public partial class Home
     {
         try
         {
-            var state = new ArcaneBuildSave(selection.PointBudget, selection.Selected.ToArray(), quests.Snapshot(), hunter.TotalExperience);
+            var state = new ArcaneBuildSave(selection.PointBudget, selection.Selected.ToArray(), quests.Snapshot(), hunter.TotalExperience, selection.Reserved,
+                mutationAmplifiers.ToSave().ToArray());
             await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, ArcaneBuildKey, JsonSerializer.Serialize(state));
         }
         catch (JSException) { }
     }
 
-    private sealed record ArcaneBuildSave(int Budget, string[] Nodes, HuntQuestSave? Quests = null, long? HunterExperience = null);
+    private sealed record ArcaneBuildSave(int Budget, string[] Nodes, HuntQuestSave? Quests = null, long? HunterExperience = null,
+        IReadOnlyDictionary<PassiveSchool, int>? Reserved = null, MutationAmplifierAssignment[]? Amplifiers = null);
 
     private HunterExperienceGain CreditHunterExperience(int experience)
     {
@@ -467,10 +518,32 @@ public partial class Home
             if (storedEssences is null) return;
             var essenceIds = new List<DragonEssenceId>();
             foreach (var storedEssence in storedEssences) if (Enum.TryParse<DragonEssenceId>(storedEssence, out var essenceId)) essenceIds.Add(essenceId);
-            essenceVault.Restore(essenceIds);
+            essenceVault.Restore(essenceIds, await TryLoadEssenceGradesAsync());
         }
         catch (JSException) { }
         catch (JsonException) { }
+    }
+
+    // Graded (non-Rare) Essence copies live beside the plain id list, so older builds still read the vault.
+    private async Task<IReadOnlyDictionary<DragonEssenceId, IReadOnlyDictionary<Wyrmforge.Domain.Progression.Loot.LootRarity, int>>?> TryLoadEssenceGradesAsync()
+    {
+        try
+        {
+            var stored = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, EssenceGradesKey);
+            if (string.IsNullOrWhiteSpace(stored)) return null;
+            var raw = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, int>>>(stored) ?? [];
+            var grades = new Dictionary<DragonEssenceId, IReadOnlyDictionary<Wyrmforge.Domain.Progression.Loot.LootRarity, int>>();
+            foreach (var (id, counts) in raw)
+            {
+                if (!Enum.TryParse<DragonEssenceId>(id, out var essence) || !Enum.IsDefined(essence)) continue;
+                grades[essence] = counts
+                    .Select(pair => (Ok: Enum.TryParse<Wyrmforge.Domain.Progression.Loot.LootRarity>(pair.Key, out var rarity) && Enum.IsDefined(rarity), Rarity: rarity, pair.Value))
+                    .Where(pair => pair.Ok).ToDictionary(pair => pair.Rarity, pair => pair.Value);
+            }
+            return grades;
+        }
+        catch (JSException) { return null; }
+        catch (JsonException) { return null; }
     }
 
     private async Task TryLoadForgeProgressionAsync()
@@ -567,12 +640,39 @@ public partial class Home
         catch (JsonException) { }
     }
 
+    private async Task TryLoadHuntMaterialsAsync()
+    {
+        try
+        {
+            var stored = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, HuntMaterialsKey);
+            if (string.IsNullOrWhiteSpace(stored)) return;
+            var items = JsonSerializer.Deserialize<string[]>(stored) ?? [];
+            huntMaterials.Restore(items.Select(value => Enum.TryParse<HuntMaterialId>(value, out var id)
+                ? (HuntMaterialId?)id : null).OfType<HuntMaterialId>());
+        }
+        catch (JSException) { }
+        catch (JsonException) { }
+    }
+
+    private async Task TrySetHuntMaterialsAsync()
+    {
+        try
+        {
+            await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, HuntMaterialsKey,
+                JsonSerializer.Serialize(huntMaterials.Items.Select(id => id.ToString()).ToArray()));
+        }
+        catch (JSException) { }
+    }
+
     private async Task TrySetEssenceVaultAsync()
     {
         try
         {
             var storedEssences = essenceVault.SecuredEssences.Select(essence => essence.ToString()).ToArray();
             await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, EssenceVaultKey, JsonSerializer.Serialize(storedEssences));
+            var grades = essenceVault.Grades().ToDictionary(pair => pair.Key.ToString(),
+                pair => pair.Value.ToDictionary(grade => grade.Key.ToString(), grade => grade.Value));
+            await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, EssenceGradesKey, JsonSerializer.Serialize(grades));
         }
         catch (JSException) { }
     }

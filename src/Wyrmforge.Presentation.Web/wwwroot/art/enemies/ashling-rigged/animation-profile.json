@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "maxDeltaSeconds": 0.1,
+  "facing": {
+    "directions": [
+      "E",
+      "SE",
+      "S",
+      "SW",
+      "W",
+      "NW",
+      "N",
+      "NE"
+    ],
+    "degreesPerSecond": 720,
+    "hysteresisDegrees": 3
+  },
+  "locomotion": {
+    "clip": "walk",
+    "frames": 16,
+    "stride": 17.28
+  },
+  "actions": {
+    "attack": {
+      "clip": "attack",
+      "frames": 22,
+      "fps": 24,
+      "priority": 10,
+      "mode": "fullBody",
+      "reducedFrame": 9,
+      "motionWindows": [
+        [
+          8,
+          11
+        ],
+        [
+          17,
+          21
+        ]
+      ]
+    },
+    "death": {
+      "clip": "death",
+      "frames": 28,
+      "fps": 24,
+      "priority": 100,
+      "mode": "fullBody",
+      "hold": true,
+      "reducedFrame": 27
+    }
+  }
+}

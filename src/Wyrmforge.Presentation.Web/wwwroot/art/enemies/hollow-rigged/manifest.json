@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "fps": 12,
+  "directions": [
+    "N",
+    "NE",
+    "E",
+    "SE",
+    "S",
+    "SW",
+    "W",
+    "NW"
+  ],
+  "clips": {
+    "attack": {
+      "hash": "810243b7fd42",
+      "worldSize": 124.0,
+      "image": "attack.png",
+      "anchor": [
+        64,
+        88
+      ],
+      "cell": 128,
+      "frames": 16
+    },
+    "death": {
+      "hash": "04ab219f6122",
+      "worldSize": 124.0,
+      "image": "death.png",
+      "anchor": [
+        64,
+        88
+      ],
+      "cell": 128,
+      "frames": 24
+    },
+    "walk": {
+      "hash": "efa6ac701a7b",
+      "worldSize": 93,
+      "image": "walk.png",
+      "anchor": [
+        48,
+        72
+      ],
+      "cell": 96,
+      "frames": 16
+    }
+  }
+}

@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/mnt/c/Wyrmforge/tools/sprite-lab/hollow-reconstruct-trellis1.py", line 78, in <module>
+    means=gaussian.get_xyz.cpu().numpy(),
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: Can't call numpy() on Tensor that requires grad. Use tensor.detach().numpy() instead.

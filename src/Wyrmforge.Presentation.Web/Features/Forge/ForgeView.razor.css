@@ -75,13 +75,16 @@
 .forge-lab-entry:hover { background:#24304a; }
 .forge-lab-entry i.px-icon { width:16px; }
 /* Arcane Nexus facets: one place, two questions. Web = where a power lives; Spellcraft = what elements become. */
-.nexus-facets { display:grid; grid-template-columns:1fr 1fr; gap:0; width:min(520px,100%); margin:0 auto 10px; border:1px solid #403346; border-radius:6px; overflow:hidden; }
-.nexus-facets button { display:grid; gap:2px; min-height:48px; padding:6px 10px; border:0; background:#120e18; color:#b7aaba; font:inherit; cursor:pointer; -webkit-tap-highlight-color:transparent; }
-.nexus-facets button + button { border-left:1px solid #403346; }
-.nexus-facets b { font:500 .95rem/1.1 Georgia,serif; }
-.nexus-facets small { overflow:hidden; font-size:.64rem; letter-spacing:.04em; white-space:nowrap; text-overflow:ellipsis; }
-.nexus-facets button.active { background:linear-gradient(180deg,#2a2034,#1a1422); color:#fff2d0; box-shadow:inset 0 -2px 0 #cead74; }
-.nexus-facets button:focus-visible { outline:2px solid #cead74; outline-offset:-3px; }
+/* Secondary Nexus destinations: compact navigation, not three giant webpage tiles. */
+.nexus-facets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;width:min(480px,100%);margin:0 auto 5px;border:0;background:transparent}
+.nexus-facets button{display:grid;align-content:center;justify-items:center;gap:3px;min-height:52px;padding:7px 4px;border:1px solid #5a4236;background:#1b131a;color:#c6af9e;cursor:pointer;text-align:center}
+.nexus-facets b{font:600 clamp(.76rem,2.9vw,.9rem)/1.2 Georgia,serif}
+.nexus-facets small{font:500 clamp(.62rem,2.45vw,.68rem)/1.15 system-ui,sans-serif;letter-spacing:.02em;color:#b5a29a}
+.nexus-facets button.active{border-color:#b68651;background:#2b1e22;color:#f0d4ac;box-shadow:inset 0 -2px #d5a667}
+.nexus-facets button.active small{color:#e4bd8b}
+.nexus-facets button:focus-visible{outline:2px solid #edc18a;outline-offset:-2px}
+.nexus-facets button:disabled{opacity:.55;cursor:not-allowed}
+@media(max-width:360px){.nexus-facets button{min-height:50px;padding:5px 3px}.nexus-facets b{font-size:.73rem}.nexus-facets small{font-size:.6rem}}
 
 /* Game entry and diegetic town navigation. The existing pixel city and mage atlas are game assets,
    not a dashboard backdrop. 44px+ destinations stay tappable on small phones. */
@@ -490,7 +493,8 @@
   padding:0;
 }
 .arrival-home .hub-backdrop::before {
-  background-position:center 54%;
+  /* Bias toward the foreground mage: centered cover clips him off the left edge. */
+  background-position:40% 54%;
   background-size:cover;
   filter:blur(12px) brightness(.62);
   opacity:.65;
@@ -498,7 +502,7 @@
 .arrival-home .hub-backdrop::after {
   background:
     linear-gradient(180deg,rgba(6,8,13,.53) 0%,transparent 28%,transparent 66%,rgba(6,7,11,.49) 100%),
-    url('art/refuge-scene.png') center 54% / cover no-repeat;
+    url('art/refuge-scene.png') 40% 54% / cover no-repeat;
   -webkit-mask-image:none;
   mask-image:none;
 }
@@ -507,36 +511,38 @@
   width:100%;
   height:100%;
   min-height:0;
-  gap:12px;
-  padding:clamp(42px,7dvh,90px) max(14px,env(safe-area-inset-right)) max(30px,env(safe-area-inset-bottom));
+  gap:8px;
+  padding:clamp(42px,7dvh,90px) max(14px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom));
 }
 .arrival-home .title-scene h1 {
   max-width:100%;
   font-size:clamp(1.7rem,8vw,3.6rem);
 }
-/* A carved, gold-inlaid RPG control rather than a flat web CTA. */
+/* Keep the button a compact, legible fantasy emblem rather than a wide, dark web bar. */
 .arrival-home .title-scene .title-start {
   position:relative;
   isolation:isolate;
   display:grid;
-  grid-template-columns:minmax(0,1fr) 42px;
+  grid-template-columns:minmax(0,1fr) 36px;
   align-items:center;
   flex:0 0 auto;
   margin-top:auto;
-  width:min(380px,90%);
-  min-height:70px;
-  padding:9px 12px 9px 18px;
-  border:2px solid #dbad62;
-  border-radius:8px;
-  clip-path:polygon(0 21%,3% 21%,6% 0,94% 0,97% 21%,100% 21%,100% 79%,97% 79%,94% 100%,6% 100%,3% 79%,0 79%);
+  align-self:flex-end; /* Keep the foreground mage visible instead of covering him. */
+  margin-right:12px;
+  width:min(250px,72%);
+  min-height:64px;
+  padding:8px 16px 8px 20px;
+  border:2px solid #e7bc75;
+  border-radius:3px;
+  clip-path:polygon(0 50%,7% 0,93% 0,100% 50%,93% 100%,7% 100%);
   background:
-    linear-gradient(140deg,transparent 38%,rgba(255,221,153,.11) 50%,transparent 61%),
-    linear-gradient(180deg,#785329 0%,#493019 18%,#231913 54%,#42291a 84%,#79502b 100%);
+    linear-gradient(140deg,transparent 35%,rgba(255,224,166,.12) 50%,transparent 65%),
+    linear-gradient(180deg,#9c713b 0%,#553a25 15%,#241a17 48%,#3d2b20 78%,#926333 100%);
   box-shadow:inset 0 2px 0 #ffe2a17a,inset 0 -3px 0 #090808b5,0 8px 26px #000a;
-  color:#f8dda5;
-  font:600 clamp(.91rem,3.7vw,1.13rem)/1.1 Georgia,serif;
+  color:#fff1d6;
+  font:700 clamp(.95rem,3.8vw,1.1rem)/1.1 Georgia,serif;
   letter-spacing:.16em;
-  text-shadow:0 2px 2px #100d0a,0 0 15px #edb96166;
+  text-shadow:0 2px 3px #090807,0 0 9px #e5bc7977;
   cursor:pointer;
   -webkit-tap-highlight-color:transparent;
   transition:filter .18s ease,transform .12s ease;
@@ -546,7 +552,8 @@
   position:absolute;
   inset:5px;
   border:1px solid #e7bf7d91;
-  border-radius:3px;
+  border-radius:2px;
+  clip-path:polygon(0 50%,7% 0,93% 0,100% 50%,93% 100%,7% 100%);
   box-shadow:inset 0 0 0 1px #100c09aa;
   pointer-events:none;
 }
@@ -561,11 +568,14 @@
   text-shadow:0 1px #241207,0 0 8px #ecb55e;
   pointer-events:none;
 }
-.arrival-home .title-start-label {
+.arrival-home .title-scene .title-start .title-start-label {
   position:relative;
   z-index:1;
   min-width:0;
-  padding-left:8px;
+  padding-left:4px;
+  color:#fff1d6; /* Explicitly overrides the old dark .arrival-home .title-start span rule. */
+  font:700 clamp(.95rem,3.8vw,1.1rem)/1.1 Georgia,serif;
+  text-shadow:0 2px 3px #090807,0 0 9px #e5bc7977;
   white-space:nowrap;
 }
 .arrival-home .title-scene .title-start .title-start-arrow {
@@ -586,8 +596,232 @@
 .arrival-home .title-start:focus-visible { outline:3px solid #ffe2aa; outline-offset:4px; }
 @media (orientation:landscape) and (max-height:560px) {
   .arrival-home .title-scene { padding:18px 14px 12px; gap:5px; }
-  .arrival-home .title-scene .title-start { min-height:54px; }
+  .arrival-home .title-scene .title-start { min-height:54px; width:min(270px,78%); }
 }
 @media (prefers-reduced-motion:reduce) {
   .arrival-home .title-start { transition:none; }
+}
+
+
+/* Exact approved portrait welcome artwork (not a CSS reconstruction).
+   The frame and hit targets share the artwork's natural coordinate system,
+   keeping the interactive regions aligned with the painted controls. */
+.arrival-home.menu-home {
+  width:100%;
+  height:100dvh;
+  min-height:100dvh;
+  padding:0;
+  overflow:hidden;
+}
+.arrival-home .hub-backdrop { display:none; }
+.arrival-home .shell-content {
+  width:100%;
+  max-width:none;
+  height:100%;
+  min-height:0;
+  margin:0;
+  padding:0;
+  overflow:hidden;
+}
+.arrival-home .title-scene.arrival-reference {
+  position:relative;
+  display:block;
+  box-sizing:border-box;
+  width:100%;
+  height:100%;
+  min-height:0;
+  margin:0;
+  padding:0;
+  overflow:hidden;
+  background:#101117;
+}
+.arrival-home .title-scene.arrival-reference::before { content:none; display:none; }
+.arrival-reference-frame {
+  position:absolute;
+  top:50%;
+  left:50%;
+  width:max(100%, calc(100dvh * 864 / 1222));
+  height:auto;
+  aspect-ratio:864 / 1222;
+  transform:translate(-50%,-50%);
+  overflow:hidden;
+}
+.arrival-reference-art {
+  position:absolute;
+  inset:0;
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  user-select:none;
+  -webkit-user-drag:none;
+  pointer-events:none;
+}
+.arrival-accessible-title,
+.arrival-screen-reader-only {
+  position:absolute!important;
+  width:1px!important;
+  height:1px!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+  white-space:nowrap!important;
+  clip-path:inset(50%)!important;
+}
+.arrival-hitbox {
+  position:absolute;
+  z-index:3;
+  display:block;
+  margin:0;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  color:transparent;
+  cursor:pointer;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+/* Percentages measured from the approved 864x1222 artwork, including ornamented edges. */
+.arrival-hitbox--start { left:10.8%; top:77.1%; width:78.5%; height:11.2%; }
+.arrival-hitbox--settings { left:37.4%; top:90.1%; width:25.2%; height:6.4%; }
+.arrival-hitbox:focus-visible {
+  outline:3px solid #fff2c5;
+  outline-offset:3px;
+  box-shadow:0 0 0 5px #000b,0 0 16px #ffdc87;
+}
+@media (orientation:landscape) and (max-height:560px) {
+  .arrival-reference-frame { width:max(100%, calc(100dvh * 864 / 1222)); }
+}
+
+/* Vacant buildings remain illustrated as dormant, but tapping them explains the unlock.
+   The notice sits outside the scrolling artwork and does not obstruct the town hotspots. */
+.refuge-home .town-square .town-hotspot[data-town-state="vacant"] {
+  cursor:help;
+}
+.refuge-home .town-square .town-hotspot[data-town-state="vacant"]:hover,
+.refuge-home .town-square .town-hotspot[data-town-state="vacant"]:active {
+  background:transparent;
+  box-shadow:none;
+}
+.refuge-home .town-square .town-lock-notice {
+  position:absolute;
+  z-index:80;
+  left:50%;
+  bottom:max(58px,calc(env(safe-area-inset-bottom) + 46px));
+  transform:translateX(-50%);
+  box-sizing:border-box;
+  display:grid;
+  grid-template-columns:18px minmax(0,1fr) 40px;
+  align-items:center;
+  gap:10px;
+  width:min(360px,calc(100% - 24px));
+  padding:10px 7px 10px 13px;
+  border:1px solid #96744a;
+  border-radius:4px;
+  background:linear-gradient(145deg,#2a2029f7,#110f17f5);
+  box-shadow:inset 0 0 0 1px #241a1a,0 10px 32px #000c;
+  color:#efe0c5;
+  text-align:left;
+  pointer-events:auto;
+}
+.refuge-home .town-lock-symbol {
+  color:#bf9869;
+  font:700 .85rem/1 Georgia,serif;
+}
+.refuge-home .town-lock-copy {
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  gap:4px;
+}
+.refuge-home .town-lock-copy strong {
+  color:#dfba87;
+  font:700 .76rem/1.2 Georgia,serif;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+.refuge-home .town-lock-copy span {
+  color:#ddd0c0;
+  font:500 .76rem/1.35 system-ui,sans-serif;
+}
+.refuge-home .town-lock-dismiss {
+  display:grid;
+  place-items:center;
+  width:40px;
+  min-width:40px;
+  min-height:44px;
+  padding:0;
+  border:0;
+  border-radius:3px;
+  background:transparent;
+  color:#e3c8a5;
+  font:400 1.5rem/1 system-ui,sans-serif;
+  cursor:pointer;
+}
+.refuge-home .town-lock-dismiss:active { background:#ffffff14; }
+.refuge-home .town-lock-dismiss:focus-visible { outline:2px solid #e3c8a5; outline-offset:1px; }
+@media(max-width:360px) {
+  .refuge-home .town-square .town-lock-notice { gap:7px; padding-left:10px; }
+  .refuge-home .town-lock-copy span { font-size:.70rem; }
+}
+
+
+/* Character creation owns the one-time Divine Wyrm school choice.
+   Emblems come from the approved pixel-art sheet, not recolored glyphs. */
+.character-creation {
+  display:grid;
+  gap:12px;
+  width:min(100%,460px);
+  margin:20px auto;
+  padding:20px 14px;
+  border:1px solid #66523f;
+  border-radius:6px;
+  background:linear-gradient(180deg,#211c29,#100f19);
+  color:#efe4d4;
+  text-align:center;
+  box-shadow:0 15px 35px #000a;
+}
+.character-creation-eyebrow { color:#cfac77; font:600 .72rem/1.2 Georgia,serif; letter-spacing:.23em; }
+.character-creation h1 { margin:0; font:500 clamp(1.35rem,5vw,1.85rem)/1.15 Georgia,serif; }
+.character-creation p { margin:0; font:400 .84rem/1.4 Georgia,serif; color:#bfb2b0; }
+.character-creation-name {
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  min-height:44px; border:1px solid #544959; background:#13121c; color:#ead7c4; cursor:pointer;
+  font:500 1rem/1.3 Georgia,serif;
+}
+.character-creation-name small { font:.6rem/1.2 system-ui,sans-serif; color:#caaa76; letter-spacing:.1em; }
+.character-school-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
+.character-school {
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+  min-width:0; min-height:114px; border:1px solid #68594e; padding:6px;
+  background:#0d0c15; color:#e9decf; cursor:pointer;
+  font:500 .75rem/1.2 Georgia,serif; letter-spacing:.04em;
+}
+.character-school:focus-visible { outline:2px solid #dfbe82; outline-offset:2px; }
+.character-school:not(:disabled):active { transform:translateY(1px); }
+.character-school:disabled { cursor:not-allowed; border-color:#332e38; color:#807782; }
+.character-school-icon {
+  display:block; width:76px; height:76px;
+  background-image:url('art/divine-lineage-sigils.webp?v=134');
+  background-size:300% 200%; background-repeat:no-repeat;
+  image-rendering:pixelated;
+  /* Hide the baked lettering and hard square edges of the source crop;
+     only the approved central painting remains visible. */
+  -webkit-mask-image:radial-gradient(ellipse 48% 44% at 50% 40%,#000 52%,transparent 95%);
+  mask-image:radial-gradient(ellipse 48% 44% at 50% 40%,#000 52%,transparent 95%);
+}
+.character-school--pyromancer .character-school-icon { background-position:0 0; }
+.character-school--cryomancer .character-school-icon { background-position:50% 0; }
+.character-school--stormcaller .character-school-icon { background-position:100% 0; }
+.character-school--arcanist .character-school-icon { background-position:0 100%; }
+.character-school--necromancer .character-school-icon { background-position:50% 100%; }
+.character-school--summoner .character-school-icon { background-position:100% 100%; }
+.character-school:disabled .character-school-icon { filter:grayscale(.9) brightness(.43); }
+.character-school small { color:#aa9b91; font:.65rem/1.2 system-ui,sans-serif; }
+.character-creation-note { color:#ae9f95; font:.67rem/1.4 Georgia,serif; }
+@media(max-width:350px) {
+  .character-creation { gap:8px; padding:14px 9px; }
+  .character-school { min-height:104px; }
+  .character-school-icon { width:64px; height:64px; }
 }

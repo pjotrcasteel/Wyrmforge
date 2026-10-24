@@ -1,0 +1,153 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createWetForestDressingPlan, createWetForestRuinTraces, createWetForestCastShadowPlan,
+    createWetForestFirelightPlan, appendWetForestFootprint } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-wet-forest-dressing.js';
+
+const props = [{ id: 1, kind: 'pine', x: .21, y: .36, radius: 12 },
+    { id: 2, kind: 'fallen-log', x: .72, y: .66, radius: 39 }];
+
+test('gritty forest decoration is deterministic and entirely independent of combat RNG', () => {
+    const first = createWetForestDressingPlan(1441, props);
+    const repeated = createWetForestDressingPlan(1441, props);
+    const another = createWetForestDressingPlan(1442, props);
+    assert.deepEqual(first, repeated);
+    assert.notDeepEqual(first, another);
+    assert.equal(first.roots.length, 2);
+    assert.deepEqual(first.roots.map(r => r.kind), ['pine', 'fallen-log']);
+    assert.ok(first.litter.length > 550 && first.litter.length < 1900);
+});
+
+test('changing physical prop positions only changes the grounded root marks', () => {
+    const relocated = props.map(p => ({ ...p, x: p.x + .08 }));
+    const before = createWetForestDressingPlan(1441, props);
+    const after = createWetForestDressingPlan(1441, relocated);
+    assert.deepEqual(before.litter, after.litter);
+    assert.notDeepEqual(before.roots, after.roots);
+    assert.equal(after.roots[0].x, Math.round(relocated[0].x * 950 / 2) * 2);
+});
+
+test('Wet Forest rigs remain in the actual game, never the new phase-1 ground foundation', () => {
+    const legacy = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-lab.js', import.meta.url), 'utf8');
+    const ground = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-ground-foundation.js', import.meta.url), 'utf8');
+    const page = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/Pages/ArenaLab.razor', import.meta.url), 'utf8');
+    assert.match(legacy, /updateEnemyMotions\(state\.enemyMotion/);
+    assert.match(legacy, /enemyFacing\(state\.enemyMotion, mob\.id\)/);
+    assert.doesNotMatch(legacy, /Math\.floor\(state\.clock \* 6\) % 4/);
+    assert.doesNotMatch(ground, /updateEnemyMotions|drawEnemy|drawMage|drawWetForestActorContact/);
+    assert.doesNotMatch(page, /new LabMob|Pathing mobs|Hollow and Ashling/);
+});
+
+test('ground dressing is baked, contact detail remains below actors, and no fake collision is created', () => {
+    const renderer = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js', import.meta.url), 'utf8');
+    const dressing = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-wet-forest-dressing.js', import.meta.url), 'utf8');
+    assert.match(renderer, /if \(plan\.story\.wetForest\) drawWetForestDressing\(ctx, plan\.story, plan\.forestProps/);
+    assert.match(dressing, /Baked ground texture is deterministic/);
+    assert.doesNotMatch(dressing, /RestrictMovement|DamagePropsInRadius|TryDamageProp|SetPhase/);
+});
+
+test('wet footprint stamps require real movement and remain bounded in long mobile sessions', () => {
+    const tracks = [];
+    appendWetForestFootprint(tracks, 1, 400, 300, 0, 0);
+    appendWetForestFootprint(tracks, 1, 405, 302, .02, 0);
+    assert.equal(tracks.length, 1, 'Do not stamp while barely moving or idling.');
+    appendWetForestFootprint(tracks, 1, 420, 302, .3, 0);
+    assert.equal(tracks.length, 2);
+    for (let i = 0; i < 200; i++)
+        appendWetForestFootprint(tracks, 2, 100 + 20 * i, 400, 1 + i * .07, 2);
+    assert.ok(tracks.length <= 64);
+    assert.ok(tracks.every(track => 1 + 199 * .07 - track.time <= 3.2));
+    assert.equal(tracks.at(-1).variant, 2, 'Ashling traces use the same earth-tone vocabulary.');
+});
+
+test('stone and charred timber traces belong only to real physical ruin feet', () => {
+    const ruins = [
+        { id: 20, kind: 'camp-remains', x: .24, y: .35, radius: 42 },
+        { id: 21, kind: 'grave-marker', x: .52, y: .62, radius: 19 },
+        { id: 22, kind: 'waystone', x: .62, y: .41, radius: 17 },
+        { id: 23, kind: 'broken-cart', x: .78, y: .74, radius: 53 },
+        { id: 24, kind: 'fallen-log', x: .43, y: .74, radius: 39 },
+        { id: 25, kind: 'pine', x: .33, y: .24, radius: 12 },
+    ];
+    const marks = createWetForestRuinTraces(1204, ruins, 950, 1550);
+    assert.ok(marks.length >= 55 && marks.length <= 75);
+    assert.deepEqual(marks, createWetForestRuinTraces(1204, ruins, 950, 1550));
+    assert.notDeepEqual(marks, createWetForestRuinTraces(1205, ruins, 950, 1550));
+    assert.equal(new Set(marks.map(m => m.id)).size, 5, 'Trees must not make independent ruin debris');
+    assert.ok(marks.every(m => m.width <= 10 && m.width >= 4 &&
+        m.x % 2 === 0 && m.y % 2 === 0 && m.x >= 0 && m.y >= 0 &&
+        m.x + m.width <= 950 && m.y + 2 <= 1550));
+    const empty = createWetForestRuinTraces(1204, [], 950, 1550);
+    assert.deepEqual(empty, []);
+    const before = createWetForestDressingPlan(1204, ruins);
+    assert.deepEqual(before.ruinTraces, marks);
+    assert.deepEqual(ruins, structuredClone(ruins), 'Rendering may not mutate authoritative object IDs');
+});
+
+test('upright forest props cast seeded directional ground shadows without phantom obstacles', () => {
+    const physical = [
+        { id: 11, kind: 'pine', x: .28, y: .37, radius: 12 },
+        { id: 12, kind: 'dead-tree', x: .62, y: .51, radius: 12 },
+        { id: 13, kind: 'moss-rock', x: .76, y: .61, radius: 15 },
+        { id: 14, kind: 'waystone', x: .57, y: .72, radius: 19 },
+        { id: 15, kind: 'barrel', x: .18, y: .58, radius: 10 },
+    ];
+    const before = structuredClone(physical);
+    const shadows = createWetForestCastShadowPlan(1441, physical);
+    assert.deepEqual(shadows, createWetForestCastShadowPlan(1441, physical));
+    assert.notDeepEqual(shadows, createWetForestCastShadowPlan(1442, physical));
+    assert.deepEqual(physical, before, 'Art must not mutate canonical physics props');
+    const ids = new Set(shadows.map(s => s.id));
+    assert.deepEqual([...ids].sort(), [11, 12, 13, 14]);
+    assert.equal(shadows.length, 8, 'Tree branches add relief only to real tree positions');
+    assert.ok(shadows.every(s => s.alpha > 0 && s.alpha <= .3 &&
+        s.points.length >= 4 && s.points.every(p => p.length === 2 &&
+            p.every(n => Number.isFinite(n) && n % 2 === 0))));
+    const withoutTree = physical.filter(p => p.id !== 11);
+    assert.ok(createWetForestCastShadowPlan(1441, withoutTree)
+        .every(shadow => shadow.id !== 11), 'Destroyed props must not keep baked shadows');
+    assert.deepEqual(createWetForestCastShadowPlan(1441, []), []);
+});
+
+test('the Lab draws current-prop shadows under actors, without global lighting effects', () => {
+    const env = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js', import.meta.url), 'utf8');
+    assert.match(env, /environment\.generatorPreview === true && environment\.habitat === 'WetForest'/);
+    assert.match(env, /drawWetForestCastShadows\(ctx, environment\.seed, environment\.props \?\? \[\]/);
+    assert.ok(env.indexOf('drawWetForestCastShadows(ctx, environment.seed') >
+        env.indexOf('ctx.drawImage(texture.image, 0, 0, width, height)'));
+    assert.doesNotMatch(env, /drawWetForestCastShadows\(ctx,.*?frame\.mobs/);
+});
+
+test('late Fire node gets localized warm light only from actual burning C# trees', () => {
+    const physical = Array.from({ length: 48 }, (_, i) => ({
+        id: i + 1, kind: i % 3 === 0 ? 'dead-tree' : 'pine',
+        x: .12 + ((i * 31) % 77) / 100, y: .10 + ((i * 17) % 79) / 100,
+        radius: 12,
+    }));
+    const environment = { generatorPreview: true, habitat: 'WetForest', element: 'fire',
+        corruption: 1, seed: 1441, props: physical };
+    const lights = createWetForestFirelightPlan(environment, 950, 1550);
+    assert.ok(lights.length >= 6 && lights.length <= 24);
+    assert.deepEqual(lights, createWetForestFirelightPlan(environment, 950, 1550));
+    assert.deepEqual(lights.map(l => l.id), [...new Set(lights.map(l => l.id))]);
+    assert.ok(lights.every(l => physical.some(p => p.id === l.id &&
+        Math.abs(l.x - p.x * 950) < 2 && Math.abs(l.y - p.y * 1550) < 2)));
+    assert.ok(lights.every(l => l.radius >= 78 && l.radius <= 124 && l.intensity <= .30));
+    assert.deepEqual(createWetForestFirelightPlan({ ...environment, props: [] }, 950, 1550), []);
+    assert.deepEqual(createWetForestFirelightPlan({ ...environment, element: 'frost' }, 950, 1550), []);
+    assert.deepEqual(createWetForestFirelightPlan({ ...environment, generatorPreview: false }, 950, 1550), []);
+    assert.deepEqual(createWetForestFirelightPlan({ ...environment, corruption: 0 }, 950, 1550), []);
+    const withoutFirst = createWetForestFirelightPlan({
+        ...environment, props: physical.filter(p => p.id !== lights[0].id),
+    }, 950, 1550);
+    assert.ok(withoutFirst.every(l => l.id !== lights[0].id), 'Destroyed fire must stop lighting the soil');
+});
+
+test('firelight is a canvas-only layer between physical shadows and sorted sprites', () => {
+    const env = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js', import.meta.url), 'utf8');
+    assert.match(env, /drawWetForestFirelight\(ctx, environment, width, height, elapsedSeconds\)/);
+    assert.ok(env.indexOf('drawWetForestFirelight(ctx, environment') >
+        env.indexOf('drawWetForestCastShadows(ctx, environment'));
+    assert.ok(env.indexOf('drawWetForestFirelight(ctx, environment') <
+        env.lastIndexOf('const cloister = texture.cloister'));
+});

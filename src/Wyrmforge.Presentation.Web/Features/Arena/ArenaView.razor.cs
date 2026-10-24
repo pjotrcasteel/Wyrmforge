@@ -14,6 +14,7 @@ using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
 using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Progression.Forge;
+using Wyrmforge.Domain.Progression.PassiveTree;
 using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Progression.Relics;
 using Wyrmforge.Domain.Progression.SpellMastery;
@@ -38,6 +39,7 @@ public partial class ArenaView : IAsyncDisposable
     [Parameter] public SpellMasteryState? Masteries { get; set; }
     [Parameter] public DragonEssenceId? RunOffering { get; set; }
     [Parameter] public int? RunSeed { get; set; }
+    [Parameter] public Wyrmforge.Application.Runs.Hunts.HuntSelection? Hunt { get; set; }
     [Parameter] public bool AscendantAshfang { get; set; }
     [Parameter] public DragonId? AscendantWyrm { get; set; }
     [Parameter] public bool FirstHunt { get; set; }
@@ -46,16 +48,20 @@ public partial class ArenaView : IAsyncDisposable
     [Parameter] public bool ContextualSpell { get; set; }
     [Parameter] public bool RewardCache { get; set; }
     [Parameter] public IReadOnlyList<LaboratoryMutationId> PreparedMutations { get; set; } = [];
+    [Parameter] public IReadOnlyList<Wyrmforge.Domain.Progression.Signature.FireballMutationId> FireballMutations { get; set; } = [];
+    [Parameter] public int FireballLevel { get; set; } = 1;
+    [Parameter] public IReadOnlyList<MutationAmplifierAssignment> MutationAmplifierAssignments { get; set; } = [];
     [Parameter] public DragonId? ResearchLead { get; set; }
     [Parameter] public DragonEssenceId? ResearchSpecimen { get; set; }
     [Parameter] public SpellId? PreferredPrimary { get; set; }
     [Parameter] public EventCallback<SpellId> OnPrimaryChosen { get; set; }
+    [Parameter] public EventCallback OnCancelStart { get; set; }
     [Parameter] public EventCallback<RunSummary> OnGameOver { get; set; }
 
     private LaboratoryMutationDefinition? PreparedMutationFor(SpellId spell) =>
         PreparedMutations.Select(LaboratoryCatalog.Get).FirstOrDefault(mutation => mutation.Foundation == spell);
     private static string MutationIcon(LaboratoryMutationDefinition mutation) => mutation.SpecimenWyrm == DragonId.Stormcoil ? "storm" : "frost";
-    private IReadOnlyList<SpellDefinition> PrimaryChoices => simulation?.PrimaryChoices ?? Array.Empty<SpellDefinition>();
+
     private IReadOnlyList<LevelChoice> CurrentChoices => simulation?.PendingChoices ?? Array.Empty<LevelChoice>();
     private IReadOnlyList<DragonEssenceDefinition> CurrentEssenceChoices => simulation?.PendingDragonEssenceChoices ?? Array.Empty<DragonEssenceDefinition>();
     private IReadOnlyList<RelicDefinition> CurrentRelicChoices => simulation?.PendingRelicChoices ?? Array.Empty<RelicDefinition>();
@@ -65,6 +71,7 @@ public partial class ArenaView : IAsyncDisposable
     private IReadOnlyList<WyrmrealmMapNode> MapNodes => simulation?.MapNodes ?? Array.Empty<WyrmrealmMapNode>();
     private IReadOnlyList<WyrmrealmMapNode> AvailableMapNodes => simulation?.AvailableMapNodes ?? Array.Empty<WyrmrealmMapNode>();
     private IReadOnlyList<WyrmrealmMapNode> CompletedMapNodes => simulation?.CompletedMapNodes ?? Array.Empty<WyrmrealmMapNode>();
+    private IReadOnlyDictionary<string, TrailScoutReport> ScoutReports => simulation?.ScoutReports ?? new Dictionary<string, TrailScoutReport>();
     private IReadOnlyList<RunResonanceEntry> CurrentResonance => simulation?.Resonance ?? Array.Empty<RunResonanceEntry>();
     private IReadOnlyList<DragonSign> CurrentDragonSigns => simulation?.DragonSigns ?? Array.Empty<DragonSign>();
     private IReadOnlyList<RealmInfluenceCue> CurrentRealmInfluences => simulation?.RealmInfluences ?? Array.Empty<RealmInfluenceCue>();
@@ -91,7 +98,7 @@ public partial class ArenaView : IAsyncDisposable
 
     protected override void OnInitialized()
     {
-        simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt, researchLead: ResearchLead, preparedMutations: PreparedMutations, contextualSpell: ContextualSpell, region: Region, regionOpening: RegionOpening);
+        simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt, researchLead: ResearchLead, preparedMutations: PreparedMutations, fireballMutations: FireballMutations, contextualSpell: ContextualSpell, region: Region, regionOpening: RegionOpening, hunt: Hunt, amplifierAssignments: MutationAmplifierAssignments, fireballLevel: FireballLevel);
         if (RewardCache) simulation.OpenRewardCache();
     }
 
@@ -101,10 +108,13 @@ public partial class ArenaView : IAsyncDisposable
         arenaModule = await JavaScript.InvokeAsync<IJSObjectReference>("import", CancellationToken.None, $"./js/arena-performance.js?v={AppBuildInfo.Version}");
         dotNetReference = DotNetObjectReference.Create(this);
         await arenaModule.InvokeVoidAsync("initializeArena", CancellationToken.None, canvas, dotNetReference);
+        // Character creation already chose the Divine school. Commit its signature without a Hunt overlay.
+        if (PreferredPrimary is { } signature && ChoosingPrimary)
+            await ChoosePrimaryAsync(signature);
     }
 
     [JSInvokable]
-    public async Task<RunRenderSnapshot> Frame(double delta, double width, double height, double movementX, double movementY)
+    public async Task<RunRenderSnapshot> Frame(double delta, double width, double height, double movementX, double movementY, double aimX = 0, double aimY = 0)
     {
         var frameStarted = Stopwatch.GetTimestamp();
         var current = simulation ?? throw new InvalidOperationException("Arena simulation has not been initialized.");
@@ -130,7 +140,8 @@ public partial class ArenaView : IAsyncDisposable
         var previousBellCracks = current.BellWardenCracks;
         var previousWinterRimes = current.WinterBellRimes;
         var bellWardenWasSlain = current.BellWardenDefeat is not null;
-        var snapshot = current.Tick(delta, new MovementInput(movementX, movementY), width, height);
+        var previousRefugeReturns = current.RefugeReturns;
+        var snapshot = current.Tick(delta, new MovementInput(movementX, movementY, aimX, aimY), width, height);
         var simulationMilliseconds = Stopwatch.GetElapsedTime(frameStarted).TotalMilliseconds;
         var stateChanged = hadChoices != current.PendingChoices.Count > 0
             || hadEssenceChoices != current.PendingDragonEssenceChoices.Count > 0
@@ -144,7 +155,8 @@ public partial class ArenaView : IAsyncDisposable
             || current.EvacuationActive && previousEvacuationSecond != (int)Math.Ceiling(current.EvacuationRemainingSeconds);
         if (previousEvacuation && !current.EvacuationActive && current.AtCheckpoint && !wasAtCheckpoint) ShowEssenceSecuredMoment();
         if (!wasAtCheckpoint && current.AtCheckpoint) await TryRecordPlaytestMilestoneAsync("refuge_reached");
-        if (!hadMapChoice && current.PendingMapChoice && current.CompletedMapNodes.Count > 0 && !snapshot.Ended)
+        // A fall caught by the refuge reopens the map without a "trail cleared" beat.
+        if (!hadMapChoice && current.PendingMapChoice && current.CompletedMapNodes.Count > 0 && !snapshot.Ended && current.RefugeReturns == previousRefugeReturns)
         {
             ShowTrailTransition();
             await TryPlayAudioAsync("trail-clear");
@@ -163,7 +175,7 @@ public partial class ArenaView : IAsyncDisposable
         if (current.ReliquarySightings != previousReliquarySightings)
         {
             ShowReliquarySighted();
-            await TryPlayAudioAsync("hunt-start");
+            await TryPlayAudioAsync("threat-reveal");
             stateChanged = true;
         }
         else if (current.ReliquaryShifts != previousReliquaryShifts)
@@ -190,7 +202,7 @@ public partial class ArenaView : IAsyncDisposable
         if (current.BellWardenArrivals != previousBellArrivals)
         {
             ShowBellWardenArrived();
-            await TryPlayAudioAsync("hunt-start");
+            await TryPlayAudioAsync("threat-reveal");
             stateChanged = true;
         }
         else if (current.BellWardenCracks != previousBellCracks)
@@ -219,6 +231,8 @@ public partial class ArenaView : IAsyncDisposable
         }
         return snapshot with { SimulationMilliseconds = simulationMilliseconds };
     }
+
+    private Task CancelStartAsync() => ChoosingPrimary && !gameOverSent ? OnCancelStart.InvokeAsync() : Task.CompletedTask;
 
     private async Task ChoosePrimaryAsync(SpellId id)
     {
@@ -269,7 +283,7 @@ public partial class ArenaView : IAsyncDisposable
         var node = MapNodes.SingleOrDefault(candidate => candidate.Id == id);
         if (node is null || simulation?.ChooseMapNode(id) != true) return;
         ShowMapMoment(node);
-        await TryPlayAudioAsync(node.Type == WyrmrealmNodeType.Dragon ? "wyrm" : "hunt-start");
+        await TryPlayAudioAsync(node.Type == WyrmrealmNodeType.Dragon ? "wyrm" : "trail-enter");
         await TryRecordPlaytestMilestoneAsync(node.Type == WyrmrealmNodeType.Dragon ? "wyrm_entered" : "trail_entered");
         await InvokeAsync(StateHasChanged);
     }
@@ -279,7 +293,7 @@ public partial class ArenaView : IAsyncDisposable
         if (simulation?.UseCheckpointAction(id) != true) return;
         ShowCheckpointMoment(id);
         if (id == RunCheckpointActionId.MendWounds) await TryPlayAudioAsync("reward");
-        if (id == RunCheckpointActionId.Descend) await TryPlayAudioAsync("hunt-start");
+        if (id == RunCheckpointActionId.Descend) await TryPlayAudioAsync("trail-enter");
         if (id == RunCheckpointActionId.Descend) await TryRecordPlaytestMilestoneAsync("descended");
         if (id == RunCheckpointActionId.LeaveRealm) await TryRecordPlaytestMilestoneAsync("extracted");
         await InvokeAsync(StateHasChanged);

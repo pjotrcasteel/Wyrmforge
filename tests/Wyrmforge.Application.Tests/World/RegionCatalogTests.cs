@@ -37,20 +37,20 @@ public sealed class RegionCatalogTests
     }
 
     [TestMethod]
-    public void OnlyTheStartingRegionIsOpenToANewcomer()
+    public void FireAndFrostAreOpenToANewcomer()
     {
         Assert.IsTrue(RegionCatalog.Starting.IsOpen(Newcomer));
-        Assert.AreEqual(1, RegionCatalog.All.Count(region => region.IsOpen(Newcomer)));
+        Assert.AreEqual(2, RegionCatalog.All.Count(region => region.IsOpen(Newcomer)));
         var veteran = new RegionAccessContext(true, 99, Enum.GetValues<DragonId>().ToHashSet());
         Assert.AreEqual(2, RegionCatalog.All.Count(region => region.IsOpen(veteran)), "Planned regions stay closed until authored.");
     }
 
     [TestMethod]
-    public void FrostOpensOnlyOnceAshfangHasFallen()
+    public void FrostCanBeChosenBeforeDefeatingAshfang()
     {
         var frost = RegionCatalog.Get(RegionCatalog.FrostRegionId);
         Assert.AreEqual(RegionStatus.Playable, frost.Status);
-        Assert.IsFalse(frost.IsOpen(new RegionAccessContext(true, 99, new HashSet<DragonId> { DragonId.Rimeclaw })));
+        Assert.IsTrue(frost.IsOpen(Newcomer));
         Assert.IsTrue(frost.IsOpen(Newcomer with { WyrmsSlain = new HashSet<DragonId> { DragonId.Ashfang } }));
         Assert.AreEqual(DragonId.Rimeclaw, frost.HomeLineage);
         CollectionAssert.Contains(frost.AbsentLineages.ToList(), DragonId.Ashfang);

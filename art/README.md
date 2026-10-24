@@ -1,5 +1,8 @@
 # WyrmForge art direction
 
+> **Historical / supporting document (not canonical).** For current rules use [WyrmForge canonical documentation](../docs/canon/README.md). This file preserves dated research, assets, implementation evidence or prior proposals; do not treat its status or plan as present-day product authority.
+
+
 ## Approved world concept — 14 October 2026
 
 ![Protected city and abandoned outskirts](world/protected-city-outskirts-v1.png)
@@ -47,6 +50,12 @@ Approved gameplay-view environment study: an open forest clearing, ruined monast
 Generated with OpenAI image generation and iteratively art-directed with Pjotr; approved after the character contrast revision.
 
 ## Artwork workflow
+
+For new animated creatures derived from art cards, follow the detailed
+[card-to-spritesheet production algorithm](../docs/art/card-to-spritesheet-production.md).
+It uses a persistent editable character and reviewed motion, with rendered sheets
+as exports. The existing code-authored pipeline below describes legacy/current
+assets; it is not the production method for the new detailed monster animations.
 
 Before every new artwork, research relevant real-world or game references and inspect the approved GitHub artwork. Preserve the mage's established slate-blue cloak, pale collar and staff silhouette. Use reference images directly; do not guess character colours from memory.
 
@@ -112,7 +121,8 @@ Preserve the artistic principles and gameplay decisions in the [Battlemage sourc
 
 ## Runtime pixel-art pipeline (code-authored)
 
-Production sprites are authored as deterministic code. They are not image-model output.
+The existing code-authored sprites are deterministic code outputs. This section
+documents that pipeline, not all future character art or the new rigged-source procedure.
 
 - **Source.** Modules live in `tools/art/sprites/*.mjs`: actors, wyrms, tiles, environment and ui. Shared helpers (palette, canvas and PNG encoder) are in `tools/art/lib/`.
 - **Build.** `node tools/art/build-art.mjs` writes the atlases, `manifest.json` and `icons.css` to `src/Wyrmforge.Presentation.Web/wwwroot/art/`, and preview sheets to `docs/art/previews/`.

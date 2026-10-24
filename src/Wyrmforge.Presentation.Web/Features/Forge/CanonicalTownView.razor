@@ -1,0 +1,434 @@
+@using Wyrmforge.Application.World
+@using System.Net.Http
+@using System.Text.Json
+@using Microsoft.JSInterop
+@using Wyrmforge.Domain.Progression.PassiveTree
+@inject NavigationManager Navigation
+@inject ILogger<CanonicalTownView> Logger
+@inject IJSRuntime JS
+@implements IDisposable
+@* Night town vacancy follows actual game progress, not a local preview toggle. *@
+<div class="refuge-canonical-viewport" role="region" tabindex="0"
+     aria-label="Refuge town: swipe between West, World Gate and East">
+    <div class="refuge-canonical-scene" aria-label="Night-time Refuge town square"
+         data-nexus-school="@(DisplayNexusSchool?.ToString().ToLowerInvariant() ?? "none")"
+         data-nexus-mastery-points="@NexusMasteryPoints">
+        <img class="refuge-town-night-base" src="art/town/night-active.webp?v=140"
+             alt="" draggable="false" fetchpriority="high" />
+
+        @* Exactly registered building paintings with one shared alpha silhouette.
+           All six use Arcane architectural landmarks and the same 560x450 atlas
+           coordinates; other building layers and collision remain unchanged. *@
+        @if (NexusArtworkUnlocked && DisplayNexusSchool is { } artworkSchool)
+        {
+            var schoolName = artworkSchool.ToString().ToLowerInvariant();
+            var painting = $"art/town/nexus-approved/{schoolName}.webp?v=2";
+            <img class="refuge-town-nexus-school-art" data-nexus-school-art="true"
+                 data-nexus-school="@schoolName" src="@painting"
+                 width="560" height="450" alt="" aria-hidden="true" draggable="false" />
+            @if (NexusMasteryPoints > 0)
+            {
+                <img class="refuge-town-nexus-school-art refuge-town-nexus-school-art--mastery"
+                     data-nexus-school-mastery="true" data-nexus-school="@schoolName"
+                     src="@painting" width="560" height="450"
+                     style="@TownNexusRadiance.Style(NexusMasteryPoints)"
+                     alt="" aria-hidden="true" draggable="false" />
+            }
+        }
+
+        @if (!NexusArtworkUnlocked)
+        {
+            <img class="refuge-town-vacant-layer" src="art/town/night-vacant-ArcaneNexus.png?v=140"
+                 style="left:0%;top:0%;width:36.9617%;height:61.8491%" alt="" draggable="false" />
+        }
+        @if (!ForgeUnlocked)
+        {
+            <img class="refuge-town-vacant-layer" src="art/town/night-vacant-Blacksmith.png?v=140"
+                 style="left:0%;top:37.5133%;width:37.8589%;height:62.4867%" alt="" draggable="false" />
+        }
+        @if (!CodexUnlocked)
+        {
+            <img class="refuge-town-vacant-layer" src="art/town/night-vacant-Codex.png?v=140"
+                 style="left:58.7321%;top:0%;width:41.2679%;height:58.2359%" alt="" draggable="false" />
+        }
+        @if (!HallUnlocked)
+        {
+            <img class="refuge-town-vacant-layer" src="art/town/night-vacant-HallOfFame.png?v=140"
+                 style="left:51.7943%;top:35.3880%;width:48.2057%;height:64.6120%" alt="" draggable="false" />
+        }
+
+        @if (showTownV2)
+        {
+            <canvas class="refuge-town-v2-canvas" data-town-v2-canvas="true"
+                    width="1672" height="941" aria-label="Town V2 single NPC mask navigation test"></canvas>
+        }
+        @if (crowd is not null && !showTownV2)
+        {
+            <RefugeTownActors Crowd="crowd" ShowGeometry="showTownGeometry"
+                              ShowRoutes="@(showTownGeometry && geometryLayer == TownGeometryLayer.Route)"
+                              RouteCitizenId="selectedRouteCitizenId"
+                              ShowMetrics="showTownMetrics" GeometryChanged="OnGeometryChanged" />
+        }
+
+        @* Reuse small, clipped regions of the approved panorama. Only the painted
+           object—not its surrounding pavement—can cover a citizen behind it. *@
+        @if (crowd is not null && !showTownV2)
+        {
+            @foreach (var foreground in crowd.Navigation.Occluders)
+            {
+                // Do not replay broad painted floor polygons over walking citizens.
+                // Physical structures use one-time alpha silhouettes at feet depth.
+                if (foreground.Id is "well-foreground" or "noticeboard-foreground" or
+                    "nexus-terrace-bushes-foreground" or "nexus-stairs-shrubs-foreground" or
+                    "nexus-low-terrace-railing-foreground") continue;
+                var minX = foreground.Clip.Min(point => point.X) - 1;
+                var minY = foreground.Clip.Min(point => point.Y) - 1;
+                var maxX = foreground.Clip.Max(point => point.X) + 1;
+                var maxY = foreground.Clip.Max(point => point.Y) + 1;
+                var bounds = FormattableString.Invariant(
+                    $"{minX:0.##} {minY:0.##} {maxX - minX:0.##} {maxY - minY:0.##}");
+                var foregroundStyle =
+                    FormattableString.Invariant(
+                        $"left:{minX / crowd.Navigation.Width * 100:0.###}%;top:{minY / crowd.Navigation.Height * 100:0.###}%;") +
+                    FormattableString.Invariant(
+                        $"width:{(maxX - minX) / crowd.Navigation.Width * 100:0.###}%;") +
+                    FormattableString.Invariant(
+                        $"height:{(maxY - minY) / crowd.Navigation.Height * 100:0.###}%;") +
+                    FormattableString.Invariant($"z-index:{(int)MathF.Floor(foreground.DepthY * 10f)}");
+                var maskId = $"refuge-foreground-{foreground.Id}";
+                <svg @key="foreground.Id" class="refuge-town-scenery-foreground"
+                     data-town-foreground-layer="@foreground.Id"
+                     viewBox="@bounds" style="@foregroundStyle"
+                     preserveAspectRatio="none" aria-hidden="true">
+                    <defs>
+                        <clipPath id="@maskId" clipPathUnits="userSpaceOnUse">
+                            <polygon points="@GeometryPoints(foreground.Clip)" />
+                        </clipPath>
+                    </defs>
+                    <image x="0" y="0" width="@crowd.Navigation.Width" height="@crowd.Navigation.Height"
+                           preserveAspectRatio="none" href="@foreground.Artwork"
+                           clip-path="@($"url(#{maskId})")" />
+                </svg>
+            }
+        }
+
+        @* One-time PNGs cut directly from the approved panorama. Each physical part
+           has its own foot-depth: roof, supports and masonry cannot hide an entire NPC. *@
+        @if (crowd is not null && !showTownV2)
+        {
+            @foreach (var cutout in TownForegroundCutouts)
+            {
+                <img @key="cutout.Id" class="refuge-town-scenery-foreground refuge-town-png-cutout"
+                     data-town-cutout="@cutout.Id" data-town-foreground-layer="@cutout.Id"
+                     alt="" draggable="false" aria-hidden="true"
+                     style="@FormattableString.Invariant($"left:{cutout.X / 1672f * 100:0.###}%;top:{cutout.Y / 941f * 100:0.###}%;width:{cutout.Width / 1672f * 100:0.###}%;height:{cutout.Height / 941f * 100:0.###}%;z-index:{cutout.DepthY * 10};")" />
+            }
+        }
+
+        @* Optional foot-radius scan exposes the navigation model over the actual artwork. *@
+        @if (showTownWalkScan && !string.IsNullOrEmpty(walkScanPath))
+        {
+            <svg class="refuge-town-walk-scan" viewBox="0 0 1672 941"
+                 preserveAspectRatio="none" aria-hidden="true" data-town-walk-scan="true">
+                <path d="@walkScanPath" />
+            </svg>
+        }
+
+        @* Developer-only overlay. The red shapes are the exact colliders used by pathfinding. *@
+        @if (showTownGeometry && crowd is not null && !showTownV2)
+        {
+            <div class="refuge-town-geometry-debug" data-town-geometry-debug="true" data-town-geometry-layer="@geometryLayer" aria-hidden="true">
+                <svg viewBox="0 0 1672 941" preserveAspectRatio="none" class="refuge-town-geometry-map">
+                    @if (geometryLayer is TownGeometryLayer.All or TownGeometryLayer.Walkable)
+                    {
+                        @* Walkable pavement excludes ground obstructions in BOTH the All and Walk views. *@
+                        <defs>
+                            <mask id="refuge-town-unblocked-mask" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse"
+                                  x="0" y="0" width="1672" height="941">
+                                <rect x="0" y="0" width="1672" height="941" fill="white" />
+                                @foreach (var obstacle in crowd.Navigation.Obstacles)
+                                {
+                                    <polygon fill="black" points="@GeometryPoints(obstacle.Footprint)" />
+                                }
+                            </mask>
+                        </defs>
+                    }
+                    @if (geometryLayer is TownGeometryLayer.All or TownGeometryLayer.Walkable)
+                    {
+                        <g mask="url(#refuge-town-unblocked-mask)">
+                            @foreach (var floor in crowd.Navigation.Walkable)
+                            {
+                                <polygon class="refuge-town-geometry-walkable" data-town-floor="@floor.Id"
+                                         points="@GeometryPoints(floor.Points)" />
+                            }
+                        </g>
+                    }
+                    @if (geometryLayer is TownGeometryLayer.All or TownGeometryLayer.Blocked)
+                    {
+                        @foreach (var obstacle in crowd.Navigation.Obstacles)
+                        {
+                            <polygon @key="obstacle.Id" class="refuge-town-geometry-solid"
+                                     data-town-obstacle="@obstacle.Id" points="@GeometryPoints(obstacle.Footprint)" />
+                        }
+                    }
+                    @if (geometryLayer is TownGeometryLayer.All or TownGeometryLayer.Occlusion)
+                    {
+                        @foreach (var foreground in crowd.Navigation.Occluders)
+                        {
+                            <polygon @key="foreground.Id" class="refuge-town-geometry-visual"
+                                     data-town-foreground="@foreground.Id" points="@GeometryPoints(foreground.Clip)" />
+                        }
+                    }
+                </svg>
+            </div>
+        }
+
+        <button type="button" class="refuge-town-spot refuge-town-spot--nexus"
+                data-town-building="build" data-town-state="@(TownBuildingVisuals.StateName(NexusUnlocked))"
+                data-sound-cue="@(NexusUnlocked ? "building-open" : "none")" title="@BuildingLabel("Arcane Nexus", NexusUnlocked)"
+                aria-label="@BuildingLabel("Arcane Nexus", NexusUnlocked)" @onclick='() => OnBuilding.InvokeAsync("build")'></button>
+        <button type="button" class="refuge-town-spot refuge-town-spot--blacksmith"
+                data-town-building="forge" data-town-state="@(TownBuildingVisuals.StateName(ForgeUnlocked))"
+                data-sound-cue="@(ForgeUnlocked ? "building-open" : "none")" title="@BuildingLabel("Blacksmith", ForgeUnlocked)"
+                aria-label="@BuildingLabel("Blacksmith", ForgeUnlocked)" @onclick='() => OnBuilding.InvokeAsync("forge")'></button>
+        <button type="button" class="refuge-town-spot refuge-town-spot--codex"
+                data-town-building="codex" data-town-state="@(TownBuildingVisuals.StateName(CodexUnlocked))"
+                data-sound-cue="@(CodexUnlocked ? "building-open" : "none")" title="@BuildingLabel("Codex", CodexUnlocked)"
+                aria-label="@BuildingLabel("Codex", CodexUnlocked)" @onclick='() => OnBuilding.InvokeAsync("codex")'></button>
+        <button type="button" class="refuge-town-spot refuge-town-spot--hall"
+                data-town-building="legends" data-town-state="@(TownBuildingVisuals.StateName(HallUnlocked))"
+                data-sound-cue="@(HallUnlocked ? "building-open" : "none")" title="@BuildingLabel("Hall of Fame", HallUnlocked)"
+                aria-label="@BuildingLabel("Hall of Fame", HallUnlocked)" @onclick='() => OnBuilding.InvokeAsync("legends")'></button>
+
+        <button type="button" class="refuge-town-spot refuge-town-spot--gate"
+                data-sound-cue="none" aria-label="@GateLabel" title="Enter the World Gate"
+                @onclick="() => OnGate.InvokeAsync()"></button>
+    </div>
+    @if (NexusPreviewSchool is not null)
+    {
+        <div class="refuge-town-nexus-preview-controls" role="group" aria-label="Debug Nexus building palette">
+            <button type="button" data-nexus-preview-school="auto"
+                    @onclick="() => OnNexusPreviewChanged.InvokeAsync(null)">Auto</button>
+            @foreach (var school in Enum.GetValues<PassiveSchool>())
+            {
+                <button type="button" @key="school" data-nexus-preview-school="@school.ToString().ToLowerInvariant()"
+                        aria-pressed="@(NexusPreviewSchool == school ? "true" : "false")"
+                        @onclick="() => OnNexusPreviewChanged.InvokeAsync(school)">@school</button>
+            }
+        </div>
+    }
+    @if (showTownMetrics)
+    {
+        <output id="refuge-town-performance" class="refuge-town-performance"
+                data-town-performance="true" aria-label="Refuge performance measurements"></output>
+    }
+    @if (showTownV2)
+    {
+        <div class="refuge-town-v2-toolbar" role="group" aria-label="V2 ground and foreground mask controls">
+            <button type="button" data-town-v2-mask-toggle="true" aria-pressed="true" aria-label="Show ground walk mask">Mask</button>
+            <button type="button" data-town-v2-depth-toggle="true" aria-pressed="true" aria-label="Show shrub foreground depth">Depth</button>
+            <output data-town-v2-status="true" aria-live="off">Loading independent masks…</output>
+        </div>
+    }
+    @if (showTownGeometry && !showTownV2)
+    {
+        <div class="refuge-town-geometry-toolbar" role="group" aria-label="Town debug geometry layers">
+            <button type="button" data-town-layer-select="All" aria-pressed="@(geometryLayer == TownGeometryLayer.All ? "true" : "false")"
+                    @onclick="() => ShowLayer(TownGeometryLayer.All)">All</button>
+            <button type="button" data-town-layer-select="Walkable" aria-pressed="@(geometryLayer == TownGeometryLayer.Walkable ? "true" : "false")"
+                    @onclick="() => ShowLayer(TownGeometryLayer.Walkable)">Walk</button>
+            <button type="button" data-town-layer-select="Blocked" aria-pressed="@(geometryLayer == TownGeometryLayer.Blocked ? "true" : "false")"
+                    @onclick="() => ShowLayer(TownGeometryLayer.Blocked)">Block</button>
+            <button type="button" data-town-layer-select="Occlusion" aria-pressed="@(geometryLayer == TownGeometryLayer.Occlusion ? "true" : "false")"
+                    @onclick="() => ShowLayer(TownGeometryLayer.Occlusion)">Cover</button>
+            <button type="button" data-town-layer-select="Route" aria-pressed="@(geometryLayer == TownGeometryLayer.Route ? "true" : "false")"
+                    @onclick="() => ShowLayer(TownGeometryLayer.Route)">Route</button>
+            @if (geometryLayer == TownGeometryLayer.Route)
+            {
+                <button type="button" data-town-route-next="true" aria-label="Show next moving NPC route"
+                        @onclick="SelectNextRoute">Next</button>
+            }
+        </div>
+        <output class="refuge-town-geometry-selection" data-town-geometry-selection="true"
+                aria-live="polite">Tap town to inspect</output>
+    }
+</div>
+
+@code {
+    private TownCrowd? crowd;
+    private readonly CancellationTokenSource loadingStop = new();
+    private IJSObjectReference? foregroundModule;
+    private DotNetObjectReference<CanonicalTownView>? routeClickReference;
+    private bool foregroundMounted;
+    private bool showTownV2;
+    private IJSObjectReference? townV2Module;
+    private bool townV2Mounted;
+
+    private sealed record TownCutout(string Id, float X, float Y, float Width, float Height, int DepthY);
+    private static readonly TownCutout[] TownForegroundCutouts =
+    [
+        new("noticeboard-panel", 712, 412, 101, 100, 477),
+        new("noticeboard-supports", 724, 475, 78, 74, 519),
+        new("well-roof", 806, 384, 132, 87, 472),
+        new("well-supports", 815, 445, 107, 84, 520),
+        new("well-front-rim", 698, 491, 252, 78, 567),
+        new("nexus-terrace-parapet", 39, 397, 289, 73, 458),
+        new("nexus-terrace-bushes", 335, 420, 147, 61, 477),
+        new("nexus-stairs-shrubs", 497, 411, 49, 53, 466)
+    ];
+
+    private bool showTownGeometry;
+    private bool showTownMetrics;
+    private bool showTownWalkScan;
+    private string? walkScanPath;
+    private TownGeometryLayer geometryLayer = TownGeometryLayer.All;
+    private int? selectedRouteCitizenId;
+
+    private enum TownGeometryLayer { All, Walkable, Blocked, Occlusion, Route }
+
+    private void ShowLayer(TownGeometryLayer layer)
+    {
+        geometryLayer = layer;
+        if (layer == TownGeometryLayer.Route)
+            selectedRouteCitizenId = crowd?.InspectNextWalkingCitizenId(null);
+    }
+
+    private void SelectNextRoute() =>
+        selectedRouteCitizenId = crowd?.InspectNextWalkingCitizenId(selectedRouteCitizenId);
+
+    [JSInvokable]
+    public Task SelectTownRouteCitizen(int id)
+    {
+        if (!showTownGeometry || geometryLayer != TownGeometryLayer.Route ||
+            crowd?.InspectActiveRoute(id) is null)
+            return Task.CompletedTask;
+
+        selectedRouteCitizenId = id;
+        return InvokeAsync(StateHasChanged);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (showTownV2)
+        {
+            if (townV2Mounted) return;
+            townV2Mounted = true;
+            try
+            {
+                townV2Module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/town-v2-nexus.js?v=0.0.176");
+                await townV2Module.InvokeVoidAsync("mountTownV2Nexus",
+                    ".refuge-canonical-scene", "[data-town-v2-mask-toggle]",
+                    "[data-town-v2-depth-toggle]", "[data-town-v2-status]");
+            }
+            catch (JSException exception)
+            {
+                Logger.LogWarning(exception, "Isolated Town V2 diagnostic unavailable.");
+            }
+            return;
+        }
+        if (foregroundMounted || crowd is null) return;
+        foregroundMounted = true;
+        try
+        {
+            foregroundModule = await JS.InvokeAsync<IJSObjectReference>(
+                "import", "./js/refuge-foreground-cutouts.js");
+            routeClickReference = DotNetObjectReference.Create(this);
+            await foregroundModule.InvokeVoidAsync("mountTownCutoutsAndRouteSelection", routeClickReference);
+        }
+        catch (JSException exception)
+        {
+            Logger.LogWarning(exception, "Optional town PNG foregrounds could not initialize.");
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var query = new Uri(Navigation.Uri).Query.TrimStart('?')
+            .Split('&', StringSplitOptions.RemoveEmptyEntries);
+        showTownV2 = query.Any(parameter =>
+            string.Equals(parameter, "townV2=1", StringComparison.OrdinalIgnoreCase));
+        showTownGeometry = query.Any(parameter =>
+            string.Equals(parameter, "townGeometry=1", StringComparison.OrdinalIgnoreCase));
+        showTownMetrics = query.Any(parameter =>
+            string.Equals(parameter, "townMetrics=1", StringComparison.OrdinalIgnoreCase));
+        showTownWalkScan = query.Any(parameter =>
+            string.Equals(parameter, "townWalkScan=1", StringComparison.OrdinalIgnoreCase));
+        // Explicit, bounded stress-test override; the normal population is unchanged.
+        var countOverride = query.FirstOrDefault(parameter =>
+            parameter.StartsWith("townNpcCount=", StringComparison.OrdinalIgnoreCase));
+        var citizenCount = countOverride is not null &&
+            int.TryParse(countOverride["townNpcCount=".Length..], out var requestedCount) &&
+            requestedCount is >= 7 and <= 14 ? requestedCount : 7;
+
+        try
+        {
+            using var http = new HttpClient();
+            var json = await http.GetStringAsync(Navigation.ToAbsoluteUri($"art/town/night-navigation.json?v={AppBuildInfo.Version}"), loadingStop.Token);
+            if (loadingStop.IsCancellationRequested) return;
+            crowd = new TownCrowd(TownNavigationMap.FromJson(json), seed: 205, citizenCount: citizenCount,
+                openBuildings: OpenBuildings());
+            if (showTownWalkScan) walkScanPath = crowd.Navigation.DebugWalkabilityScanPath();
+        }
+        catch (OperationCanceledException) { /* Town was left before navigation loaded. */ }
+        catch (Exception exception) when (exception is HttpRequestException or JsonException or ArgumentException)
+        {
+            Logger.LogWarning(exception, "Refuge navigation unavailable. Leave the painted town intact without pedestrians.");
+        }
+    }
+
+    protected override void OnParametersSet() => crowd?.SetOpenBuildings(OpenBuildings());
+
+    private IEnumerable<string> OpenBuildings()
+    {
+        if (NexusUnlocked) yield return "build";
+        if (ForgeUnlocked) yield return "forge";
+        if (CodexUnlocked) yield return "codex";
+        if (HallUnlocked) yield return "legends";
+    }
+
+    private void OnGeometryChanged()
+    {
+        if (showTownWalkScan && crowd is not null)
+            walkScanPath = crowd.Navigation.DebugWalkabilityScanPath();
+        StateHasChanged();
+    }
+
+    private static string GeometryPoints(IReadOnlyList<TownPoint> points) =>
+        string.Join(" ", points.Select(point => FormattableString.Invariant($"{point.X:0.##},{point.Y:0.##}")));
+
+    public void Dispose()
+    {
+        loadingStop.Cancel();
+        loadingStop.Dispose();
+        // A disposed instance must not receive route-click callbacks.
+        // The JS mount listens only while this viewport remains in the DOM.
+        routeClickReference?.Dispose();
+        if (townV2Module is not null)
+            _ = townV2Module.InvokeVoidAsync("disposeTownV2Nexus", ".refuge-canonical-scene");
+        if (townV2Module is not null)
+            _ = townV2Module.DisposeAsync();
+        if (foregroundModule is not null)
+            _ = foregroundModule.DisposeAsync();
+    }
+
+    [Parameter] public bool NexusUnlocked { get; set; }
+    [Parameter] public PassiveSchool? NexusSchool { get; set; }
+    [Parameter] public PassiveSchool? NexusPreviewSchool { get; set; }
+    [Parameter] public EventCallback<PassiveSchool?> OnNexusPreviewChanged { get; set; }
+    private PassiveSchool? DisplayNexusSchool => NexusPreviewSchool ?? NexusSchool;
+    private bool NexusArtworkUnlocked => NexusUnlocked || NexusPreviewSchool is not null;
+    [Parameter] public int NexusMasteryPoints { get; set; }
+    [Parameter] public bool ForgeUnlocked { get; set; }
+    [Parameter] public bool CodexUnlocked { get; set; }
+    [Parameter] public bool HallUnlocked { get; set; }
+    [Parameter] public bool FirstHunt { get; set; }
+    [Parameter] public bool NexusPointsAvailable { get; set; }
+    [Parameter] public EventCallback OnGate { get; set; }
+    [Parameter] public EventCallback<string> OnBuilding { get; set; }
+
+    private string GateLabel => FirstHunt ? "BEGIN FIRST HUNT" : "BEGIN HUNT";
+
+    private static string BuildingLabel(string name, bool unlocked) => unlocked
+        ? $"Enter {name}"
+        : $"{name} locked. Tap for unlock requirements.";
+}

@@ -1,3 +1,4 @@
+@using Wyrmforge.Domain.Progression.Signature
 @using Wyrmforge.Domain.Combat.Dragons
 @using Wyrmforge.Domain.Progression.DragonEssences
 @using Wyrmforge.Domain.Progression.Forge
@@ -18,6 +19,14 @@
             <span class="eyebrow">@OutcomeLabel</span>
             <h2>@Summary.Score.ToString("N0") <small>score</small></h2>
             <p>@Summary.Kills kills · @Summary.CompletedRouteNodes trails · @Summary.Seconds s</p>
+            @if (Summary.Hunt is not null)
+            {
+                <p>@HuntResultText(Summary.Hunt)</p>
+                @if (Summary.RefugeReturns > 0)
+                {
+                    <p>The refuge caught @(Summary.RefugeReturns == 1 ? "1 fall" : $"{Summary.RefugeReturns} falls").</p>
+                }
+            }
         </header>
 
         <section class="hunter-run-progress" aria-label="Hunter XP earned">
@@ -246,10 +255,24 @@
                         @foreach (var essenceId in Summary.EssenceIds)
                         {
                             var essence = DragonEssenceCatalog.Get(essenceId);
-                            <b><GameIcon Glyph="@(essence.Icon)" Size="sm" /> @essence.Name</b>
+                            <b class="@LootRarityPresentation.Class(Summary.EssenceRarity)"><GameIcon Glyph="@(essence.Icon)" Size="sm" /> @essence.Name <em class="loot-rarity-label">@LootRarityPresentation.Label(Summary.EssenceRarity)</em></b>
                         }
                     </div>
                 }
+            </div>
+        }
+
+        @if (Summary.SecuredMaterials.Count > 0)
+        {
+            <div class="run-report-section">
+                <span>SALVAGE SECURED</span>
+                <div class="run-report-chips">
+                    @foreach (var stack in Summary.SecuredMaterials.GroupBy(material => material).OrderBy(group => group.Key))
+                    {
+                        var rarity = HuntMaterialCatalog.Rarity(stack.Key);
+                        <b class="@LootRarityPresentation.Class(rarity)">@HuntMaterialCatalog.Name(stack.Key) ×@stack.Count() <em class="loot-rarity-label">@LootRarityPresentation.Label(rarity)</em></b>
+                    }
+                </div>
             </div>
         }
 
@@ -270,6 +293,17 @@
     [Parameter, EditorRequired] public DragonEssenceVault Vault { get; set; } = null!;
     [Parameter] public SpellMasteryState Masteries { get; set; } = new();
     [Parameter] public GreatHuntState Hunt { get; set; } = new();
+
+    private string HuntResultText(Wyrmforge.Application.Runs.Hunts.HuntSelection hunt)
+    {
+        var target = hunt.TargetName;
+        if (Summary.Outcome != Wyrmforge.Application.Runs.EndRun.RunOutcome.Extracted || !Summary.DragonIds.Contains(hunt.Target))
+            return $"Fire Tier {hunt.TierNumber}. Defeat {target} and extract to secure an Essence.";
+        var next = hunt.TierNumber + 1;
+        return Wyrmforge.Application.Runs.Hunts.HuntLadder.IsAuthored(hunt.Region, (Wyrmforge.Domain.Combat.Dragons.WyrmTier)hunt.TierNumber)
+            ? $"Fire Tier {hunt.TierNumber} cleared. Tier {next} is open at the World Gate."
+            : $"Fire Tier {hunt.TierNumber} cleared. Use your secured Essence at the Arcane Nexus. Tier {next} is in development.";
+    }
     [Parameter] public IReadOnlyList<DragonId> AdvancedOaths { get; set; } = [];
     [Parameter] public IReadOnlyList<DragonId> NewSeals { get; set; } = [];
     [Parameter] public IReadOnlyList<DragonId> NewAscendantVictories { get; set; } = [];

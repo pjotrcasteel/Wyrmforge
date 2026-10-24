@@ -7,6 +7,7 @@ on:
       - 'src/**'
       - 'services/playtest-collector/**'
       - 'tools/playtesting/**'
+      - 'tools/sprite-lab/**'
       - 'tests/**'
       - 'Wyrmforge.slnx'
       - 'Directory.Build.props'
@@ -31,6 +32,14 @@ jobs:
       - name: Restore
         run: dotnet restore Wyrmforge.slnx
 
+      - name: Verify reproducible sprite atlases
+        run: |
+          python3 -m pip install -r tools/art/painted-requirements.txt
+          node tools/art/build-art.mjs --check
+          python3 tools/art/build-painted-enemies.py --check
+          python3 tools/art/build-nexus-school-assets.py
+          git diff --exit-code -- src/Wyrmforge.Presentation.Web/wwwroot/art/town/nexus-schools/
+
       - name: Check playtest and collector JavaScript
         run: |
           node --test tests/javascript/*.test.mjs
@@ -38,6 +47,15 @@ jobs:
           node --check services/playtest-collector/src/index.js
           node --check services/playtest-collector/scripts/configure.mjs
           node --test services/playtest-collector/test/*.test.mjs
+
+      - name: Verify Sprite Lab walking mechanics
+        run: |
+          node --test tools/sprite-lab/tests/*.test.js
+          node --check src/Wyrmforge.Presentation.Web/wwwroot/sprite-lab/src/lab-app.js
+          node --check src/Wyrmforge.Presentation.Web/wwwroot/sprite-lab/buildings/src/building-core.js
+          node --check src/Wyrmforge.Presentation.Web/wwwroot/sprite-lab/buildings/src/building-app.js
+          node tools/sprite-lab/build-hollow-rig.mjs
+          git diff --exit-code -- src/Wyrmforge.Presentation.Web/wwwroot/sprite-lab/assets/hollow-walk-rig-v2.png src/Wyrmforge.Presentation.Web/wwwroot/sprite-lab/assets/hollow-walk-rig-v2.manifest.json
 
       - name: Test playtest report analysis
         run: python3 -m unittest discover -s tools/playtesting -p 'test_*.py'

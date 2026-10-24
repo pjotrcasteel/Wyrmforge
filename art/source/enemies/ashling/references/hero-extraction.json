@@ -1,0 +1,12 @@
+{
+  "source": "user_handover_files/concepts/Fire/02-ashlings.png",
+  "sourceSha256": "37b216d902b965182fe53b106fbecd18b75850f415cc1d949bd90443b865612b",
+  "crop": [
+    35,
+    180,
+    680,
+    735
+  ],
+  "method": "local polygon-guided OpenCV GrabCut; original card pixels",
+  "ownerAccepted": false
+}

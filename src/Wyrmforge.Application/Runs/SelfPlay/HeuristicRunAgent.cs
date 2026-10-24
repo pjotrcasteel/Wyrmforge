@@ -115,7 +115,7 @@ public sealed class HeuristicRunAgent(RunAgentPersonality personality, int seed,
 
     public RelicId ChooseRelic(RunAgentObservation observation) => PickBest(observation.RelicChoices, relic =>
     {
-        var score = relic.Rarity == RelicRarity.Rare ? 2.5 : 0.5;
+        var score = relic.Rarity >= Wyrmforge.Domain.Progression.Loot.LootRarity.Rare ? 2.5 : 0.5;
         if (ContainsAny(relic.Description, "damage", "projectile", "cast")) score += personality == RunAgentPersonality.Greedy ? 2 : 0.7;
         if (ContainsAny(relic.Description, "vitality", "health", "damage taken", "barrier")) score += personality is RunAgentPersonality.Casual or RunAgentPersonality.Kiter ? 2 : 0.4;
         return score;

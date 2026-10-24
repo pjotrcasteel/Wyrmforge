@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941">
+  <!-- V2 independent 8px-foot-disc navigation. Corrected from the 22 October
+       iPhone screenshot: the former broad white band ran onto staircase SIDE
+       masonry at (530,432), not just the visible stair treads.
+       White is actual trial pavement/treads; black is solid or unvalidated.
+       Only the Nexus landing and stair-to-lane slice is authored here. -->
+  <rect width="1672" height="941" fill="#000"/>
+  <!-- Narrow landing on the right of the purple Nexus entrance.
+       Do not paint the raised foreground garden as walkable. -->
+  <path d="M 436 401 C 451 398 463 402 475 413"
+        fill="none" stroke="#fff" stroke-width="38" stroke-linecap="round"/>
+  <!-- Diagonal CENTER of the visible stone staircase, followed by the
+       adjoining cobbled lane. Sidewall and garden remain outside the mask. -->
+  <path d="M 475 413 C 487 425 497 438 510 451
+           C 523 465 540 482 575 492"
+        fill="none" stroke="#fff" stroke-width="27"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Root/plant bed touching the left side of the lower treads. -->
+  <path d="M 417 434 L 428 431 L 448 433 L 463 432
+           L 470 449 L 451 462 L 422 455 Z" fill="#000"/>
+  <!-- Phase 3, still one NPC: the unoccluded west-of-well cobbled lane.
+       Starts at the approved stair foot, turns southeast on open stone,
+       and STOPS before the noticeboard, central well and garden furniture.
+       No V1 navigation polygons or automatically inferred walkable area. -->
+  <path d="M 575 492 C 609 510 627 536 645 558
+           C 661 580 670 605 681 623"
+        fill="none" stroke="#fff" stroke-width="36"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Phase 4 correction: iPhone at x822,y624 was ~60px BELOW the well.
+       This narrower lane now hugs the actual FRONT edge (y~582).
+       A foot disc of 8px still clears the well's painted masonry base ending
+       at y563; the character's upper body should visually overlap its front. -->
+  <path d="M 681 623 C 703 606 717 590 742 585
+           C 776 579 805 581 852 582
+           C 891 583 924 584 944 591
+           C 958 597 968 608 974 614"
+        fill="none" stroke="#fff" stroke-width="30"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Well and noticeboard independently authored V2 physical keep-outs.
+       Neither V1 polygon models nor occluder layers are read at runtime. -->
+  <path d="M 727 511 L 745 497 L 906 497 L 934 511
+           L 943 541 L 920 563 L 726 563 L 703 542 L 708 521 Z"
+        fill="#000"/>
+  <path d="M 746 462 L 773 462 L 783 492 L 792 508
+           L 774 522 L 744 512 Z" fill="#000"/>
+  <!-- Phase 5 is an opt-in REAR test route, separately branched from the
+       APPROVED Nexus exit. This does not move a single Phase 1-4 pavement pixel.
+       Rear approach puts the walking NPC BEHIND the board and its right post, then stops
+       behind the well's painted timber roof. 8px foot-disc erosion is applied
+       at runtime; this branch is deliberately narrow and bounded. -->
+  <path d="M 575 492 C 610 492 651 486 680 469
+           C 705 450 722 438 747 440
+           C 776 443 797 446 818 451
+           C 837 447 845 452 852 452"
+        fill="none" stroke="#fff" stroke-width="32"
+        stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

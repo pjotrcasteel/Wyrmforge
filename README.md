@@ -1,8 +1,220 @@
 # Wyrmforge
 
-## Current continuation and handover (15 October 2026)
+## Prototype 0.0.175 — Pyromancer combat coherence
 
-Start with the [canonical project, art, game-UX and GitHub backlog handover](docs/handover/2026-10-15-project-art-and-backlog.md). It preserves **approved/rejected artwork**, the correct staff and monastery 2.5D rules, focused spell identity, mobile picture-first design, and reviewed PRs/issues. The [approved image references](art/README.md) and [visual-first Magic Lab/Battlemage research](docs/design/visual-first-magic-ui-rfc.md) are complementary. Research designs are not automatically playable features; inspect current source and PR/CI before continuing.
+- All three systems work together: Fireball core leveling grows permanent base damage (+8% per level) and opens mutation slots; Research unlocks compatible mutations; Arcane Web adds stat bonuses and socketable mutation amplification.
+- Conflagration area bonuses and Immolation duration bonuses now affect actual hit areas / burn ground lifetime, not just labels. Burn tick damage is the separate `BurnDamage` bonus.
+- Four legacy Fireball-specific one-point Web enhancements are now generic Fire minor nodes, with stable node IDs and save compatibility. Major socket bindings remain mutation-specific.
+- [Fire-only implementation and acceptance requirements](docs/playtesting/2026-10-22-pyromancer-combat-coherence.md).
+
+
+## Prototype 0.0.174 — Pyromancer Immolation causes real burning damage
+
+- Four Immolation minor nodes now grant **burning-ground damage**, distinct from generic direct spell damage and mutation duration.
+- Burning-ground ticks apply the same additive build-stat pipeline as all other passives, so the bonus is authoritative in combat and remains relevant across school switches when a Fire burn is active.
+- Domain tests verify additive +14% burn damage from the four nodes without increasing other spell damage or duration. Fireball mutations and amplification retain their independent rules.
+
+
+
+
+## Prototype 0.0.173 — Socket an equipped mutation into a Web amplifier
+
+- Conflagration's Crown of Ash amplifies the **Detonation explosion radius** by ×1.20; Immolation's Furnace enhances **Scorched Earth burning duration** by ×1.25, only when the mutation is equipped.
+- The Web inspector assigns an already equipped compatible mutation to an unlocked major node; it never researches a mutation or unlocks a Main Spell mutation slot.
+- Amplifier assignments persist with the character and saved hunt loadouts. Hunts snapshot assignments at start and the simulation applies them to the assigned mutation's effect only, with a generic ×1.50 cap and no recursive processing.
+- State, deterministic-effect scope, UI persistence and hunt preparation are covered by dedicated tests. Both prior and new saved builds/loadouts remain readable.
+- [Implementation contract and validation criteria](docs/playtesting/2026-10-22-mutation-amplifier-sockets.md).
+
+
+
+
+
+## Prototype 0.0.172 — Grand Arcane Web: Pyromancer expansion
+
+- Three visual and mechanical point tiers: minor (1), medium (2), major (3); inherited point costs and saves are preserved.
+- Pyromancer gains 12 playable Conflagration/Immolation nodes, diverging area and sustained-pressure paths, alternate links to prior Fire landmarks, and imposing Major nodes.
+- No separate points header or Pyromancer map toolbar; points and zoom/recenter controls float within the map. Six outer school emblems and node spacing remain.
+- [Product contract, precise implementation boundary, and acceptance checklist](docs/playtesting/2026-10-22-grand-arcane-web-tiers.md). Generic mutation amplifier sockets are the next working slice, not placeholders in this release.
+
+
+## Prototype 0.0.168 — Routed Arcane paths and debug character reset
+
+- Arcane Web uses school stems, branching milestones and curved connections between schools, with no decorative spokes through skills. Stable progression and saved builds retain their rules.
+- Phone gestures use one touch stream, stable map height and cancellation-safe taps. Wheel/trackpad scrolling pans; Ctrl/pinch and buttons zoom.
+- Settings → Debug → Reset character clears this device’s Wyrmforge saves and settings after confirmation, then returns to the welcome screen. Other projects on the same origin are preserved.
+- [Implementation and verification receipt](docs/playtesting/2026-10-22-web-paths-and-debug-reset.md).
+
+## Prototype 0.0.166 — Readable, pannable specialization map
+
+- Specialize opens on the active school at reading scale, with wider node/cluster spacing and drag/pinch navigation from nodes or empty space. Whole-Web overview is optional.
+- Removed the extra school strip and crafted-spell panel; research/crafting actions are disconnected from Web node details for now. Saved builds sit beneath the map. Learning, bonuses, reservations and old saves retain their rules.
+- [Navigation correction and verification receipt](docs/playtesting/2026-10-22-specialize-navigation.md).
+
+## Prototype 0.0.159 — Six-school Arcane Web construction
+
+- Six school sectors surround the Wyrmheart, with the active school north and camera shortcuts for inspection.
+- Learn only in the active school; previously learned stats continue contributing. Inactive-school refunds warn once per visit and reserve their points until returning to that school.
+- Four Fireball mutation enhancement nodes affect their matching equipped mutation in real combat. Initial numbers remain tunable.
+- Legacy builds and saved schools are preserved. Death/Binding content and school-switching UI remain future work. [Construction and validation receipt](docs/playtesting/2026-10-22-arcane-school-wheel.md).
+
+## Prototype 0.0.157 — One visual language for the Arcane Nexus
+
+- Research and Arcane Web inherit the approved Fireball chamber's bronze frames, warm lettering, dark masonry and metal sockets, consistent with Refuge's materials.
+- Research uses the original Divine pixel emblems in its tray and live circle. Its actions stay below the research rather than covering it. Fireball's artwork stays specific to Fireball.
+- Phone Web controls, sockets, loadouts and node details share the same treatment. Skill graph, progression, saves and town paintings are preserved.
+- [Implementation, actual phone-size captures and validation](docs/playtesting/nexus-style-cohesion-2026-10-22.md): 321 JavaScript, 950 .NET and 104 browser checks pass. Physical Safari review remains separate.
+
+## Prototype 0.0.141 — Animated Ashling
+
+- Ashling now hops in eight directions, launches into fire-infused claw attacks, and collapses into a held corpse. Small fiery eyes fade during death.
+- Shared full-body motion windows preserve planted attack poses while facing and gait phase continue. Simulation movement, damage and death authority remain unchanged.
+- [Integration and validation evidence](docs/art/ashling-runtime-integration-2026-10-20.md).
+
+## Hotfix 0.0.140 — Night-only Refuge, rollback of damaged v0.0.139 images
+
+- Reverted all eight v0.0.139 daytime and nighttime vacancy image changes **byte-for-byte** to the previous v0.0.138 artwork. No new generation, image processing, or redesign.
+- Temporarily removed the Day/Auto/Night preference controls; the town always uses the original night panorama and original nighttime vacancy layers, regardless of local browser clock or saved choice. Daytime assets remain in the repo but cannot load in the live town.
+- Gameplay unlock conditions, hit targets, the World Gate, NPC plans, and the eight approved canonical building source images are unchanged.
+- Further visual repairs require explicitly approved per-building artwork, one at a time. This hotfix intentionally does not claim to improve the old art.
+
+
+## Prototype 0.0.139 — Repair vacant Refuge artwork
+
+- Replace independently regenerated vacancy patches with pixel-registered corrections of the current day/night panorama. Each locked building retains its exact geometry and working interaction while its powered fixtures are dimmed, chimney plumes are removed, and the Hall entrance is repaired from same-scene wood.
+- No modifications to the eight owner-approved canonical source building PNGs. Shared environment and the World Gate remain unchanged. Reproducible art generation and visual proof in `tools/art/repair_refuge_vacancy.py` and `docs/art/previews/refuge-{day,night}-all-vacant.webp`.
+- Full real-device iPhone Safari acceptance remains separate from GitHub CI.
+
+
+**Canonical product documentation:** [docs/canon/](docs/canon/README.md). Intended gameplay, art, audio, UX, modes and engineering rules each have one current topic home. The prototype changelog below is historical delivery evidence, not a second design specification.
+
+## Prototype 0.0.139 — Faster first launch and stable cache reuse
+
+- Slow first launches no longer trigger a forced reload after 9 seconds. The initial WASM download continues normally, with a clear slow-start notice; a manual **Try Again** remains for actual failures.
+- Blazor boot resources use their .NET-provided SHA-256 integrity hash as a stable URL cache key, so unchanged DLL/WASM assets can be reused across releases. Unhashed resources remain deployment-versioned.
+- Record the startup duration as a browser performance measure `wyrmforge:boot`. JS regression tests check the boot-resource and retry contracts.
+
+## Prototype 0.0.138 — Refuge Day / Night / Auto lighting
+
+- Settings now provides **Auto / Day / Night**. Auto follows the browser/device local time (day 07:00–18:59); the override persists and does not change gameplay progress or building vacancy rules.
+- Uses the approved matching daylight panorama and authored daylight vacancy layers; preserves the canonical nighttime art.
+- Implemented and tested in [the town lighting record](docs/art/town-day-night-device-clock-2026-10-20.md).
+
+
+## Prototype 0.0.138 — Fire-first character creation
+
+- Choose your magic: **Fire is the only available new-character school** until its Tier-I signature and mutation gameplay are fully implemented and accepted. Frost, Storm, Arcane, Necromancer and Summoner remain visible and locked.
+- Character creation removes the long lore explanation and speculative respec instructions. Only the direct choice and character name remain.
+- Existing non-Fire characters remain intact; the gate is for **new** characters only. The World Gate still independently chooses Hunt region.
+- Six-school mutation canon is documented in the authoritative design §3.0.
+
+## Prototype 0.0.137 — Gameplay night town and swipe-only navigation
+
+- The accepted night panorama now uses the player's persistent building unlocks, opens real destinations, and explains locked buildings without toggling game state.
+- WEST / GATE / EAST preview controls, temporary building switches, and Settings preview shortcuts are removed. Swipe, desktop drag and accessible keyboard navigation remain.
+- World Gate, author-approved images and all Divine school creation behavior from v0.0.136 are preserved. [Night town integration](docs/art/refuge-night-panorama-preview-2026-10-20.md).
+
+
+## Prototype 0.0.136 — Character school creation and elemental icon cleanup
+
+- Choose a permanent Divine magic school once during character creation, before entering Refuge. Four schools have working signatures; Necromancer and Summoner remain reserved.
+- Arena uses the character's saved signature automatically, without an additional First Oath after launching each Hunt. Existing preferred-primary saves migrate safely, and loadouts never respec the Divine school.
+- World Gate reuses the approved pixel paintings with hard square cutoffs and baked labels masked away; each tile has just one accessible label.
+- Wyrm lineage and Hunt tier remain independent from the character school. Full respec remains intentionally locked/TBD.
+- [Compatibility and QA](docs/handover/2026-10-20-character-school-and-sigil-fix.md).
+
+## Prototype 0.0.135 — Moving attacks and directional sprite layers
+
+- Hollow attacks retain their walking support animation while pursuing the player, and turn through existing directional views without restarting either clip.
+- Shared profiles control locomotion stride, action regions, priorities and turning speed; the accepted sprite PNGs remain unchanged. Other enemies retain their current presentation until their anatomy profiles are validated.
+- [Implementation and validation evidence](docs/art/shared-sprite-animation-layers-2026-10-20.md).
+
+## Prototype 0.0.134 — Animated Hollow in combat
+
+- The accepted Hollow now uses eight real directions for its pixel walk, claw attack and death in ordinary hunts and Enemy Lab.
+- Movement follows travelled distance; contact shows the one-shot claw and recovery while C# retains damage authority. Actual death events play the full collapse, hold the corpse, then fade it.
+- [Integration and validation status](docs/art/hollow-runtime-integration-2026-10-20.md).
+
+## Prototype 0.0.133 — Canonical six-school pixel icons in the real World Gate
+
+- The actual approved Fire, Frost, **yellow Storm**, Arcane, Necromancy and **bear Summoner** pixel illustrations now power the six World Gate choices. No Unicode placeholder icons, AI redraws or separate HTML mockups.
+- Runtime uses a real **192×128 WebP atlas** (6×64×64 icons), nearest-neighbour rendering and readable HTML labels. Fire and Frost launch existing Tier-I Hunts; the four remaining lineages show their icon/name in a dark disabled state without pretending their regions are playable.
+- The selected Fire/Frost artwork also appears in the Wyrm-tier header. Real gameplay, saves, Wyrm encounters and the character-school-selection roadmap are unchanged.
+- Mobile regression tests verify six glyphs, the atlas's actual decoded size, disabled states, navigation and 320/390px views. [Asset provenance and validation status](docs/art/divine-lineage-pixel-icons-2026-10-20.md). Real iPhone Safari visual acceptance is still separate from Chromium CI.
+
+## Prototype 0.0.132 — Six-lineage World Gate and Divine magic foundations
+
+- World Gate presents **six** Wyrm lineage choices (Fire/Frost enabled, four anonymous disabled) in two rows of three, rather than twelve empty lineages. This is a **Hunt lineage/region** choice, not the character's permanent school affinity.
+- Hunt tiers I–V are derived from the existing WyrmTier contract; **only Tier I is playable**. Five future mutation-mastery tiers are a separate domain concept and must not affect currently earned spell ranks.
+- The six Divine magic schools and their signature/mutation direction are defined in the [single authoritative design](docs/canon/magic-and-combat.md#30-divine-magical-archetypes-signatures-mutations-and-tiers--locked-20-october-2026). The existing four spell/lesser-Wyrm pairs remain unchanged; Necromancer and Summoner are reserved.
+- **Not shipped:** new character creation or school-respec flows, Fireball rework, ten playable mutations per school, and higher-tier encounters. [Implementation checkpoint](docs/handover/2026-10-20-divine-magic-foundation-status.md).
+
+## Prototype 0.0.132 — Unified night Refuge town preview (draft)
+
+- Use **one 1672×941 authored nighttime plaza panorama**, navigated as three West / Gate / East camera views on portrait phones, instead of stacked isolated building cards.
+- Tap Arcane Nexus, Blacksmith, Codex and Hall of Fame to independently toggle **Active / Vacant** artwork inside the same town; this is a temporary, non-persistent visual preview and **does not open building menus or change progression**. The World Gate still opens its normal flow.
+- Five approved night-overview source compositions are archived in `user_handover_files/concepts/town/night/` (high-quality WebP) separately from the eight immutable building concept PNGs. Four derived RGBA layers permit all 16 vacancy combinations with no CSS blackout overlays.
+- Old building menus remain accessible for regression through Settings > Town preview destinations. Runtime and source night assets have been pushed directly to GitHub; [implementation notes and QA plan](docs/art/refuge-night-panorama-preview-2026-10-20.md).
+- **Status:** release candidate awaiting CI and mobile visual acceptance before GitHub Pages deployment.
+
+
+## Prototype 0.0.131 — Canonical Refuge town screen
+
+- Town now renders the owner's **eight approved active/vacant building paintings** for Blacksmith, Arcane Nexus, Codex and Hall of Fame directly in the real game. Each first-party runtime asset is an exact copy of the canonical approved PNG.
+- Desktop shows west buildings, the original central World Gate, and east buildings as a single art-led screen. Phones swipe through three full-height districts and have accessible district navigation. No painted static NPCs or black CSS vacancy overlays.
+- Existing unlock predicates, vacant lock notices, click audio rules, Hall of Fame leaderboards and World Gate's Free Play/Campaign flow are preserved.
+- [Implementation and validation record](docs/art/refuge-canonical-buildings-game-screen-2026-10-20.md). Physical iPhone visual acceptance is still required.
+
+
+## Prototype 0.0.130 — Unified active and vacant town buildings
+
+- All locked buildings use the same `Active / Vacant` rendering contract driven by their existing progression unlocks. Blacksmith, Nexus, Codex and Hall of Fame switch independently.
+- The painted dormant-art generator now suppresses cyan/blue magic alongside white, violet and warm lamps/windows; people and powered props are removed from individual building layers, **never via a CSS black haze**.
+- The World Gate remains permanently active; tapping a vacant building still explains the unlock requirement without opening it.
+- [Art pipeline and acceptance notes](docs/art/shared-building-states-2026-10-19.md). Physical iPhone Safari acceptance is still required.
+
+## Prototype 0.0.129 — Vacant building interaction feedback
+
+- Vacant Arcane Nexus, Blacksmith, Codex and Hall of Fame buildings still use their authentic dark, unoccupied paintings.
+- Tapping a locked building shows a compact, dismissible in-world notice explaining the actual unlock requirement. Locked locations do not navigate or trigger the opening-door sound.
+- The Hall of Fame correctly requires **two completed hunts**; Arcane Nexus and Codex require one, while the Blacksmith requires a secured Essence.
+- Mobile browser regression coverage taps all four dormant locations and confirms that the player remains in Refuge. The new branch requires GitHub CI and physical iPhone Safari confirmation before visual acceptance.
+
+## Prototype 0.0.128 — Mobile World Gate and Wyrm selection
+
+- Town World Gate now opens the original twin-arch Free Play / grayscale Campaign scene instead of immediately launching combat.
+- Free Play leads through New Hunt (Endless Hunt/Arena visible but disabled), Fire/Frost element selection, and Tier 1. Ten dark anonymous sigils reserve room for future lineages; higher Wyrm tiers are locked rather than presenting unimplemented encounters as playable.
+- Both Fire and Frost can be selected from the first hunt; the existing region and Wyrm combat simulation remain authoritative. The choice is persisted before launching the run.
+- Portrait 320px/390px flow coverage and corrected legacy run-start browser tests. See [World Gate implementation and validation](docs/art/world-gate-mobile-2026-10-19.md).
+
+## Prototype 0.0.127 — Vacant building light-source fidelity
+
+- Refine each authored dormant building plate to extinguish lit windows, purple magic, and stall lighting in the artwork itself instead of dimming the town with CSS.
+- Keep blacksmith vacancy, permanently open World Gate, and independent building unlock states unchanged. The new asset version prevents browsers retaining old town artwork.
+- [Before/after implementation and visual QA](docs/art/town-vacancy-correction-2026-10-19.md). Phone Safari acceptance remains a separate device check.
+
+## Prototype 0.0.126 — Town building black-wash regression correction
+
+- Remove the black CSS overlays entirely; replace them with three **real transparent artwork plates** for the locked Arcane Nexus, Codex and Hall of Fame. Vacant plates eliminate painted pedestrians and suppress their warm/violet building lights while preserving stonework.
+- Keep the correctly vacant blacksmith and its original populated/lit unlock artwork intact. Each other building independently returns to the original lively painting on unlock, with the same hit-target rules.
+- Building patches are generated reproducibly from the original 2172×724 panorama by `tools/art/build_town_vacancy.py`. [Art implementation and full-town visual proof](docs/art/town-vacancy-correction-2026-10-19.md). Physical iPhone Safari review is still an outstanding device QA check, not an omitted game feature.
+
+## Prototype 0.0.125 — Combat recovery and longer hunts
+
+- Automatic targeting remains the default. Held mouse/right-touch/gamepad aim takes temporary precedence; tap-to-aim expires after 350 ms, then automatic targeting resumes. A small ground rune shows the direction.
+- Hunt route budgets scale by difficulty depth: shortest legal routes contain 6/8/10/12 battles before the Wyrm. Optional branches retain protected rewards and existing capped refinements.
+- Mire Hound and Whitefang gain eight travel-driven canine trot frames and distinct pounce/recoil/recovery poses. Recovered painted Hollow, Mire Hound and Ashfang sheets are integrated with native-art fallback.
+- `/enemy-lab` runs every implemented Fire/Frost enemy through the actual simulation and renderer without saving progress. [Seeded hunt evidence](docs/playtesting/hunt-length/README.md) and [aim rules](docs/playtesting/hybrid-aim-2026-10-19.md).
+- **Art milestone remains partial:** other generated enemy sheets and earlier recordings were lost before publication. Those enemies retain their native art; this version does not claim the full all-roster card-quality overhaul.
+
+## Authoritative product design and development continuation
+
+**Canonical topic index (single source of truth):** [WyrmForge Unified Authoritative Product & Technical Design — 18 October 2026, v1.2](docs/canon/README.md).
+
+The living canonical documents are now split by topic in `docs/canon/`, including the [priorities](docs/canon/roadmap.md). The former combined handover is [archived](docs/archive/2026-10-20-unified-master-design-v1.3.md). Agents must follow the topic documents, not layer dated handovers.
+
+**Animated character production:** follow the [art-card-to-spritesheet production algorithm](docs/art/card-to-spritesheet-production.md) for source preparation, rigging, walking/attack/hurt/death, transitions, rendering, export, visual acceptance and integration. This is a documented procedure; its new rigged-character pipeline is not yet implemented or proven with an accepted Hollow asset.
+
+**Implementation/status evidence, not additional product specifications:** [dated project, art, UX and GitHub handover](docs/handover/2026-10-15-project-art-and-backlog.md), [17 October design reconciliation record](docs/design/design-amendment-2026-10-17-reconciliation.md), the existing [historical gameplay roadmap](docs/roadmap/wyrmforge-gameplay-next-level.md), [approved image references](art/README.md), and current GitHub branches, PRs, CI and code. Verify progress against today's repository; do not restart completed work or interpret old status snapshots as current design decisions.
 
 
 ## Prototype 0.0.117 — Health clarity and unmistakably different territories

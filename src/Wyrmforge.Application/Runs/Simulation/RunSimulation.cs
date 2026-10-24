@@ -1,4 +1,4 @@
-﻿using Wyrmforge.Application.Abstractions.Randomness;
+using Wyrmforge.Application.Abstractions.Randomness;
 using Wyrmforge.Application.Runs.Checkpoint;
 using Wyrmforge.Application.Runs.Depth;
 using Wyrmforge.Application.Runs.EndRun;
@@ -15,6 +15,7 @@ using Wyrmforge.Domain.Combat.Stats;
 using Wyrmforge.Domain.Combat.Statuses;
 using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Progression.Experience;
+using Wyrmforge.Domain.Progression.Signature;
 using Wyrmforge.Domain.Spells;
 using Wyrmforge.Domain.Spells.Contextual;
 using Wyrmforge.Domain.Spells.Evolutions;
@@ -38,6 +39,7 @@ public sealed partial class RunSimulation
     private readonly RunDepthTrialState depthTrialState = new();
     private readonly RunExtractionState extractionState = new();
     private readonly RunEssenceCargoState essenceCargoState = new();
+    private readonly RunMaterialCargoState materialCargoState = new();
     private readonly RunCheckpointState checkpointState = new();
     private readonly ExperienceShardField experienceShards = new();
     private readonly PlayerState player = new();
@@ -83,6 +85,7 @@ public sealed partial class RunSimulation
         this.randomSource = randomSource;
         Offering = offering;
         mapState = new WyrmrealmMapState();
+        learnedPassiveNodeIds = selectedNodes.ToHashSet(StringComparer.Ordinal);
         passiveProfile = PassiveCombatProfile.Create(selectedNodes);
         ApplyOffering();
         RefreshBuildHud();
@@ -117,7 +120,7 @@ public sealed partial class RunSimulation
     public DragonId? HuntTarget => AttractedDragon;
     public bool PendingMapChoice => mapState.DecisionPending && !dragonEncounterStarted && !trailExitPending;
     public bool AtCheckpoint => checkpointState.IsOpen;
-    public bool CanPushDeeper => depthState.CanPushDeeper;
+    public bool CanPushDeeper => SelectedHunt is null && depthState.CanPushDeeper;
     public bool DepthTrialActive => depthTrialState.IsActive;
     public bool EvacuationActive => extractionState.IsActive;
     public double EvacuationRemainingSeconds => extractionState.RemainingSeconds;
@@ -147,12 +150,19 @@ public sealed partial class RunSimulation
         width = arenaWidth;
         height = arenaHeight;
         EnsurePlayerPosition(width, height);
-        if (IsEnded || (!developmentHunt && (HasPendingRunChoice || AtCheckpoint || PendingMapChoice))) return CreateSnapshot();
+        if (IsEnded || (!developmentHunt && (HasPendingRunChoice || AtCheckpoint || PendingMapChoice)))
+        {
+            // A paused choice/map is an input boundary, not a latched manual heading.
+            manualAimEngaged = false;
+            automaticTargetId = null;
+            return CreateSnapshot();
+        }
         if (trailExitPending)
         {
             delta = Math.Clamp(delta, 0, 0.05);
             elapsed += delta;
             UpdatePlayer(delta, movement, width, height);
+            UpdateAim(movement);
             CollectEnvironmentSupplies(width, height);
             TryReachTrailExit();
             return CreateSnapshot();
@@ -172,6 +182,7 @@ public sealed partial class RunSimulation
         enemies.RemoveAll(enemy => enemy.Health <= 0);
         UpdateDragonEncounter(delta, width, height);
         UpdateSpawn(delta, width, height);
+        UpdateAim(movement);
         UpdateSpellcasting(delta, movement.IsMoving);
         UpdateContextualEffects(delta);
         // The Reliquary's hush: one held breath in which nothing hostile moves or strikes.
@@ -188,7 +199,9 @@ public sealed partial class RunSimulation
         if (player.Health <= 0)
         {
             if (extractionState.IsActive) DeathsDuringExtraction++;
+            if (TryReturnToRefuge()) return CreateSnapshot();
             essenceCargoState.LosePending();
+            materialCargoState.LosePending();
             extractionState.Cancel();
             outcome = RunOutcome.Defeated;
             IsEnded = true;
@@ -197,8 +210,14 @@ public sealed partial class RunSimulation
         {
             ExtractionRitualsCompleted++;
             essenceCargoState.SecurePending();
+            materialCargoState.SecurePending();
             ClearMapEncounterField();
-            checkpointState.Enter();
+            if (SelectedHunt is not null)
+            {
+                outcome = RunOutcome.Extracted;
+                IsEnded = true;
+            }
+            else checkpointState.Enter();
         }
         return CreateSnapshot();
     }
@@ -246,7 +265,7 @@ public sealed partial class RunSimulation
 
     public bool PushDeeper()
     {
-        if (!AtCheckpoint || !depthState.CanPushDeeper || !checkpointState.TryUse(RunCheckpointActionId.Descend)) return false;
+        if (!AtCheckpoint || !CanPushDeeper || !checkpointState.TryUse(RunCheckpointActionId.Descend)) return false;
         if (!depthState.PushDeeper()) return false;
         mapState = CreateSeededMapState(depthState.Depth);
         depthTrialState.Start(depthState.Difficulty);
@@ -272,6 +291,7 @@ public sealed partial class RunSimulation
     public RunSummary AbandonRun()
     {
         essenceCargoState.LosePending();
+        materialCargoState.LosePending();
         extractionState.Cancel();
         outcome = RunOutcome.Abandoned;
         IsEnded = true;
@@ -283,6 +303,9 @@ public sealed partial class RunSimulation
     public RunSummary CreateSummary() => new(score, kills, dragonsSlain, essenceCargoState.SecuredCount, essenceCargoState.Secured, (int)elapsed, level, choiceCount,
         build.Spells.LearnedCount, build.Synergies.Count, depthState.Depth, outcome)
     {
+        Hunt = SelectedHunt,
+        EssenceRarity = EssenceRarity,
+        RefugeReturns = RefugeReturns,
         SynergyIds = build.Synergies.Snapshot().ToArray(),
         ExperienceEarned = experienceEarned,
         PreparedMutation = activeLaboratoryMutation,
@@ -293,6 +316,7 @@ public sealed partial class RunSimulation
         Draft = DraftTelemetry,
         Control = ControlTelemetry,
         ContextualCasts = ContextualCasts,
+        SecuredMaterials = materialCargoState.Secured,
     };
 
     public RunRenderSnapshot CreateSnapshot()
@@ -301,6 +325,9 @@ public sealed partial class RunSimulation
         return new RunRenderSnapshot(
             new PlayerRenderSnapshot(player.Position.X, player.Position.Y, player.Radius, player.Barrier || player.WinterShellGuardRemaining > 0)
             {
+                AimAngle = Math.Atan2(effectiveAim.Y, effectiveAim.X),
+                ManualAim = manualAimEngaged,
+                AimTargetId = automaticTargetId,
                 FocusCharge = primaryCastCounts[build.Spells.ActiveSpell] % FocusedSurgeProfile.CastInterval,
                 WardCharge = WardCharge,
                 Chill = player.Chill.Stacks,
@@ -328,7 +355,7 @@ public sealed partial class RunSimulation
                 Combination = impact.Combination,
                 Surge = impact.Surge,
             }).ToArray(),
-            deathBursts.Select(burst => new DeathBurstRenderSnapshot(burst.Position.X, burst.Position.Y, burst.Radius, burst.Progress, burst.Intensity)).ToArray(),
+            deathBursts.Select(burst => new DeathBurstRenderSnapshot(burst.Position.X, burst.Position.Y, burst.Radius, burst.Progress, burst.Intensity, burst.Kind, burst.EntityId, burst.BodyRadius)).ToArray(),
             CreateFieryAreaSnapshots(),
             essenceBolts.Select(bolt => new EssenceBoltRenderSnapshot(bolt.From.X, bolt.From.Y, bolt.To.X, bolt.To.Y, bolt.Life)).ToArray(),
             projectiles.Select(projectile => new ProjectileRenderSnapshot(projectile.Position.X, projectile.Position.Y, projectile.Radius, projectile.Spell, projectile.Inferno)
@@ -397,7 +424,7 @@ public sealed partial class RunSimulation
     [
         new(RunCheckpointActionId.MendWounds, checkpointState.CanUse(RunCheckpointActionId.MendWounds) && player.Health < player.MaxHealth,
             checkpointState.HasUsed(RunCheckpointActionId.MendWounds)),
-        new(RunCheckpointActionId.Descend, depthState.CanPushDeeper),
+        new(RunCheckpointActionId.Descend, CanPushDeeper),
         new(RunCheckpointActionId.LeaveRealm, true),
     ];
 

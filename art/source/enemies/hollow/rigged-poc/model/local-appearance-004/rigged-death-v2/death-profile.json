@@ -1,0 +1,227 @@
+{
+  "frames": 24,
+  "fps": 12,
+  "loop": false,
+  "finalPoseHold": true,
+  "phases": {
+    "recoil": [
+      0,
+      3
+    ],
+    "buckle": [
+      4,
+      7
+    ],
+    "fall": [
+      8,
+      11
+    ],
+    "impact": 12,
+    "settle": [
+      13,
+      19
+    ],
+    "hold": [
+      20,
+      23
+    ]
+  },
+  "floor": -0.5,
+  "preCorrectiveMinimumZ": [
+    -0.5002828240394592,
+    -0.5002828240394592,
+    -0.500282883644104,
+    -0.500282883644104,
+    -0.5079924464225769,
+    -0.5557078719139099,
+    -0.5799369215965271,
+    -0.5782663822174072,
+    -0.5604488253593445,
+    -0.5810258984565735,
+    -0.5861039161682129,
+    -0.5834622383117676,
+    -0.5735629200935364,
+    -0.5638879537582397,
+    -0.5486458539962769,
+    -0.5377150177955627,
+    -0.5258899331092834,
+    -0.525438666343689,
+    -0.526879608631134,
+    -0.526879608631134,
+    -0.526879608631134,
+    -0.526879608631134,
+    -0.526879608631134,
+    -0.526879608631134
+  ],
+  "maximumFloorCorrection": 0.08610391616821289,
+  "poses": [
+    {
+      "frame": 0,
+      "pelvisHeight": -0.06,
+      "bodyPitch": 10,
+      "headPitch": 10,
+      "forwardTranslation": 0.0
+    },
+    {
+      "frame": 1,
+      "pelvisHeight": -0.06518518518518518,
+      "bodyPitch": 4.296296296296297,
+      "headPitch": 1.7037037037037042,
+      "forwardTranslation": 0.0038888888888888883
+    },
+    {
+      "frame": 2,
+      "pelvisHeight": -0.07481481481481482,
+      "bodyPitch": -6.296296296296294,
+      "headPitch": -13.703703703703702,
+      "forwardTranslation": 0.01111111111111111
+    },
+    {
+      "frame": 3,
+      "pelvisHeight": -0.08,
+      "bodyPitch": -12,
+      "headPitch": -22,
+      "forwardTranslation": 0.015
+    },
+    {
+      "frame": 4,
+      "pelvisHeight": -0.11888888888888889,
+      "bodyPitch": -2.4074074074074083,
+      "headPitch": -16.0625,
+      "forwardTranslation": 0.002037037037037037
+    },
+    {
+      "frame": 5,
+      "pelvisHeight": -0.19111111111111112,
+      "bodyPitch": 15.407407407407405,
+      "headPitch": -3.0,
+      "forwardTranslation": -0.022037037037037036
+    },
+    {
+      "frame": 6,
+      "pelvisHeight": -0.23000000000000004,
+      "bodyPitch": 25,
+      "headPitch": 10.0625,
+      "forwardTranslation": -0.035
+    },
+    {
+      "frame": 7,
+      "pelvisHeight": -0.25851851851851854,
+      "bodyPitch": 34.592592592592595,
+      "headPitch": 16,
+      "forwardTranslation": -0.05185185185185186
+    },
+    {
+      "frame": 8,
+      "pelvisHeight": -0.31148148148148147,
+      "bodyPitch": 52.407407407407405,
+      "headPitch": 25.375,
+      "forwardTranslation": -0.08314814814814815
+    },
+    {
+      "frame": 9,
+      "pelvisHeight": -0.34,
+      "bodyPitch": 62,
+      "headPitch": 46.0,
+      "forwardTranslation": -0.1
+    },
+    {
+      "frame": 10,
+      "pelvisHeight": -0.3573703703703704,
+      "bodyPitch": 70.03703703703704,
+      "headPitch": 66.625,
+      "forwardTranslation": -0.11555555555555556
+    },
+    {
+      "frame": 11,
+      "pelvisHeight": -0.3896296296296296,
+      "bodyPitch": 84.96296296296296,
+      "headPitch": 76,
+      "forwardTranslation": -0.14444444444444443
+    },
+    {
+      "frame": 12,
+      "pelvisHeight": -0.407,
+      "bodyPitch": 93,
+      "headPitch": 90.5,
+      "forwardTranslation": -0.16
+    },
+    {
+      "frame": 13,
+      "pelvisHeight": -0.39849999999999997,
+      "bodyPitch": 90.0,
+      "headPitch": 105,
+      "forwardTranslation": -0.16148148148148148
+    },
+    {
+      "frame": 14,
+      "pelvisHeight": -0.39,
+      "bodyPitch": 87,
+      "headPitch": 99.5,
+      "forwardTranslation": -0.16518518518518518
+    },
+    {
+      "frame": 15,
+      "pelvisHeight": -0.39296875000000003,
+      "bodyPitch": 87.78125,
+      "headPitch": 94,
+      "forwardTranslation": -0.16999999999999998
+    },
+    {
+      "frame": 16,
+      "pelvisHeight": -0.39949999999999997,
+      "bodyPitch": 89.5,
+      "headPitch": 94.78125,
+      "forwardTranslation": -0.1748148148148148
+    },
+    {
+      "frame": 17,
+      "pelvisHeight": -0.40603124999999995,
+      "bodyPitch": 91.21875,
+      "headPitch": 96.5,
+      "forwardTranslation": -0.17851851851851852
+    },
+    {
+      "frame": 18,
+      "pelvisHeight": -0.409,
+      "bodyPitch": 92,
+      "headPitch": 98.21875,
+      "forwardTranslation": -0.18
+    },
+    {
+      "frame": 19,
+      "pelvisHeight": -0.409,
+      "bodyPitch": 92.0,
+      "headPitch": 99,
+      "forwardTranslation": -0.18
+    },
+    {
+      "frame": 20,
+      "pelvisHeight": -0.409,
+      "bodyPitch": 92.0,
+      "headPitch": 99.0,
+      "forwardTranslation": -0.18
+    },
+    {
+      "frame": 21,
+      "pelvisHeight": -0.409,
+      "bodyPitch": 92.0,
+      "headPitch": 99.0,
+      "forwardTranslation": -0.18
+    },
+    {
+      "frame": 22,
+      "pelvisHeight": -0.409,
+      "bodyPitch": 92.0,
+      "headPitch": 99.0,
+      "forwardTranslation": -0.18
+    },
+    {
+      "frame": 23,
+      "pelvisHeight": -0.409,
+      "bodyPitch": 92,
+      "headPitch": 99,
+      "forwardTranslation": -0.18
+    }
+  ]
+}

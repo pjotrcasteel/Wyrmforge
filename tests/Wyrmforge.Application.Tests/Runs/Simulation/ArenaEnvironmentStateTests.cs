@@ -71,6 +71,216 @@ public sealed class ArenaEnvironmentStateTests
         Assert.IsNotNull(terrain.TryCollect(position, 390, 700, 10, true));
     }
 
+
+    [TestMethod]
+    public void Create_NormalHunt_GetsOnlySmallPhysicalSalvagePropsNotLabGeography()
+    {
+        var map = new WyrmrealmMapState(seed: 1204);
+        var normal = ArenaEnvironmentState.Create(map.Seed, map.AvailableNodes[0]).Snapshot();
+        var again = ArenaEnvironmentState.Create(map.Seed, map.AvailableNodes[0]).Snapshot();
+        var lab = ArenaEnvironmentState.Create(map.Seed, map.AvailableNodes[0], generatorPreview: true).Snapshot();
+        Assert.IsFalse(normal.GeneratorPreview);
+        Assert.IsGreaterThan(0, normal.Props.Count);
+        Assert.IsLessThanOrEqualTo(6, normal.Props.Count);
+        Assert.IsTrue(normal.Props.All(prop => prop.Kind is "barrel" or "crate"));
+        CollectionAssert.AreEqual(normal.Props.ToArray(), again.Props.ToArray());
+        Assert.IsTrue(lab.GeneratorPreview);
+        Assert.IsGreaterThan(normal.Props.Count, lab.Props.Count);
+    }
+
+    [TestMethod]
+    public void NormalHunt_BreakBarrel_DropsSinglePhysicalCharredScrapPickup()
+    {
+        const int width = 950, height = 1550;
+        var map = new WyrmrealmMapState(seed: 1204);
+        var environment = ArenaEnvironmentState.Create(map.Seed, map.AvailableNodes[0]);
+        var prop = environment.Snapshot().Props[0];
+        var at = new Vector2D(prop.X * width, prop.Y * height);
+        Assert.IsTrue(environment.TryDamageProp(at, width, height, 2, 500));
+        Assert.IsFalse(environment.TryDamageProp(at, width, height, 2, 500));
+        var drop = environment.Snapshot().Supplies.Single(s => s.Kind == "material:CharredScrap");
+        var location = new Vector2D(drop.X * width, drop.Y * height);
+        Assert.AreEqual("material:CharredScrap", environment.TryCollect(location, width, height, 10, true)?.Kind);
+        Assert.IsNull(environment.TryCollect(location, width, height, 10, true));
+    }
+
+    [TestMethod]
+    public void EnemyMaterialPickup_IsCollectedExactlyOnce()
+    {
+        const int width = 950, height = 1550;
+        var map = new WyrmrealmMapState(seed: 1204);
+        var environment = ArenaEnvironmentState.Create(map.Seed, map.AvailableNodes[0]);
+        var location = new Vector2D(760, 720);
+        environment.SpawnMaterialPickup(location, width, height, "EmberResidue");
+        Assert.AreEqual("material:EmberResidue", environment.TryCollect(location, width, height, 10, true)?.Kind);
+        Assert.IsNull(environment.TryCollect(location, width, height, 10, true));
+    }
+
+    [TestMethod]
+    public void Generate_SameHuntAndNode_StablePropsButDifferentSeedChangesArrangement()
+    {
+        var firstMap = new WyrmrealmMapState(seed: 1204);
+        var secondMap = new WyrmrealmMapState(seed: 1205);
+        var first = ArenaEnvironmentState.Create(firstMap.Seed, firstMap.AvailableNodes[0], generatorPreview: true).Snapshot();
+        var again = ArenaEnvironmentState.Create(firstMap.Seed, firstMap.AvailableNodes[0], generatorPreview: true).Snapshot();
+        var different = ArenaEnvironmentState.Create(secondMap.Seed, secondMap.AvailableNodes[0], generatorPreview: true).Snapshot();
+
+        CollectionAssert.AreEqual(first.Props.ToArray(), again.Props.ToArray());
+        Assert.IsGreaterThan(0, first.Props.Count);
+        Assert.IsFalse(first.Props.SequenceEqual(different.Props));
+        Assert.IsTrue(first.Props.All(prop => Vector2D.Distance(
+            new Vector2D(prop.X * 950, prop.Y * 1550), new Vector2D(475, 775)) > prop.Radius + 85));
+    }
+
+    [TestMethod]
+    public void WetForest_GeneratesNaturalReachableSitesWithoutForcedCrossings()
+    {
+        var sites = new HashSet<string>();
+        var trailCenters = new HashSet<double>();
+        var allProps = new List<ArenaPropRenderSnapshot>();
+        for (var seed = 1204; seed < 1212; seed++)
+        {
+            var map = new WyrmrealmMapState(seed: seed);
+            var node = map.AvailableNodes[0] with { Habitat = WyrmrealmHabitat.WetForest };
+            var scene = ArenaEnvironmentState.Create(seed, node, generatorPreview: true).Snapshot();
+            Assert.IsEmpty(scene.Barriers, "The lab must not impose horizontal walls or gated combat crossings.");
+            Assert.IsNotNull(scene.WetForest);
+            var repeated = HuntArenaGenerator.GenerateWetForest(scene.Seed);
+            Assert.AreEqual(repeated.Site, scene.WetForest.Site);
+            CollectionAssert.AreEqual(repeated.Trail.ToArray(), scene.WetForest.Trail.ToArray());
+            CollectionAssert.AreEqual(repeated.Ground.ToArray(), scene.WetForest.Ground.ToArray());
+            Assert.HasCount(9, scene.WetForest.Trail);
+            Assert.IsGreaterThanOrEqualTo(40, scene.Props.Count,
+                "A natural forest needs visible thickets without turning the map into a corridor.");
+            sites.Add(scene.WetForest.Site);
+            trailCenters.Add(scene.WetForest.Trail[4].X);
+            allProps.AddRange(scene.Props);
+        }
+        Assert.IsGreaterThan(1, sites.Count);
+        Assert.IsGreaterThan(1, trailCenters.Count);
+        Assert.IsTrue(allProps.Any(p => p.X > .32 && p.X < .68),
+            "The former forced vertical gap must not constrain prop placement.");
+        Assert.IsTrue(allProps.Any(p => p.Y > .39 && p.Y < .61),
+            "The former forced horizontal gap must not constrain prop placement.");
+    }
+
+    [TestMethod]
+    public void WetForest_GenerateWideHordeGlades_LeavesFourOrMoreRealFightingOrbits()
+    {
+        const double width = 950, height = 1550;
+        for (var seed = 1204; seed < 1220; seed++)
+        {
+            var recipe = HuntArenaGenerator.GenerateWetForest(seed);
+            var repeated = HuntArenaGenerator.GenerateWetForest(seed);
+            var clearings = recipe.Ground.Where(patch => patch.Kind == "clearing" && patch.RadiusX >= .15).ToArray();
+            Assert.HasCount(5, clearings);
+            CollectionAssert.AreEqual(recipe.Ground.ToArray(), repeated.Ground.ToArray());
+            var props = HuntArenaGenerator.Generate(seed, WyrmrealmHabitat.WetForest, 1, false);
+            Assert.IsGreaterThanOrEqualTo(40, props.Count, "Forest detail must not disappear to buy playability.");
+            var playable = clearings.Count(clearing => props.All(prop =>
+                Math.Pow((prop.X - clearing.X) * width, 2) +
+                Math.Pow((prop.Y - clearing.Y) * height, 2) >= Math.Pow(100 + prop.Radius, 2)));
+            Assert.IsGreaterThanOrEqualTo(4, playable,
+                $"Seed {seed} must have at least four sizeable, unblocked 200px-diameter fighting orbits.");
+            Assert.IsTrue(props.Any(p => p.Kind is "pine" or "dead-tree"),
+                "Do not replace wilderness with a featureless empty combat rectangle.");
+            var map = new WyrmrealmMapState(seed: seed);
+            var node = map.AvailableNodes.First(candidate => candidate.Type == WyrmrealmNodeType.Combat) with
+            {
+                Habitat = WyrmrealmHabitat.WetForest,
+            };
+            var environment = ArenaEnvironmentState.Create(seed, node, generatorPreview: true);
+            var snapshot = environment.Snapshot();
+            Assert.IsEmpty(snapshot.Barriers);
+            Assert.IsTrue(snapshot.Props.Count >= 40);
+        }
+    }
+
+    [TestMethod]
+    public void WyrmInfluence_ProgressesTowardLairAndKeepsRewardSchoolIndependent()
+    {
+        Assert.AreEqual(0, HuntArenaGenerator.WyrmInfluence(1, false));
+        Assert.IsGreaterThan(HuntArenaGenerator.WyrmInfluence(1, false), HuntArenaGenerator.WyrmInfluence(3, false));
+        Assert.IsGreaterThan(HuntArenaGenerator.WyrmInfluence(6, false), HuntArenaGenerator.WyrmInfluence(6, true));
+        Assert.AreEqual(1, HuntArenaGenerator.WyrmInfluence(8, true));
+        var first = new WyrmrealmMapState(seed: 1220);
+        var snapshot = ArenaEnvironmentState.Create(first.Seed, first.AvailableNodes[0], generatorPreview: true).Snapshot();
+        Assert.AreEqual("fire", snapshot.Element);
+    }
+
+    [TestMethod]
+    public void ProjectileBreaksPhysicalProp_AndLootCanOnlyBeCollectedOnce()
+    {
+        const int width = 950, height = 1550;
+        var map = new WyrmrealmMapState(seed: 311);
+        var environment = ArenaEnvironmentState.Create(map.Seed, map.AvailableNodes[0], generatorPreview: true);
+        var prop = environment.Snapshot().Props.First(prop => prop.Kind is "barrel" or "crate" or "stump" or "urn" or "ember-urn");
+        var center = new Vector2D(prop.X * width, prop.Y * height);
+        Assert.IsTrue(environment.IsBlocked(center, width, height, 1));
+        Assert.IsTrue(environment.TryDamageProp(center, width, height, 3, 1000));
+        Assert.IsFalse(environment.IsBlocked(center, width, height, 1));
+        Assert.IsFalse(environment.TryDamageProp(center, width, height, 3, 1000));
+        Assert.IsFalse(environment.Snapshot().Props.Any(item => item.Id == prop.Id));
+
+        var awarded = environment.Snapshot().Supplies.Where(supply => supply.Open).ToArray();
+        Assert.IsLessThanOrEqualTo(1, awarded.Length);
+        if (awarded.Length == 1)
+        {
+            var pickup = new Vector2D(awarded[0].X * width, awarded[0].Y * height);
+            Assert.IsNotNull(environment.TryCollect(pickup, width, height, 10, true));
+            Assert.IsNull(environment.TryCollect(pickup, width, height, 10, true));
+        }
+    }
+    [TestMethod]
+    public void EnemyNavigationTarget_ApproachesHunterAroundSolidProps()
+    {
+        const double width = 950, height = 1550;
+        var map = new WyrmrealmMapState(seed: 1204);
+        var terrain = ArenaEnvironmentState.Create(map.Seed, map.AvailableNodes[0], generatorPreview: true);
+        foreach (var prop in terrain.Snapshot().Props)
+        {
+            var center = new Vector2D(prop.X * width, prop.Y * height);
+            var from = center + new Vector2D(-90, 0);
+            var hunter = center + new Vector2D(90, 0);
+            // Pick a clear approach where it is specifically the prop that blocks
+            // the direct route, not a sealed crossing or another environment feature.
+            if (terrain.IsBlocked(from, width, height, 9) || terrain.IsBlocked(hunter, width, height, 9)) continue;
+            if (!terrain.BlocksSegment(from, hunter, width, height, 9)) continue;
+            var target = terrain.EnemyNavigationTarget(from, hunter, width, height, 9);
+            if (target == hunter) continue;
+            Assert.IsFalse(terrain.IsBlocked(target, width, height, 9));
+            Assert.IsFalse(terrain.BlocksSegment(from, target, width, height, 9));
+
+            var position = from;
+            for (var step = 0; step < 110; step++)
+            {
+                var next = terrain.EnemyNavigationTarget(position, hunter, width, height, 9);
+                var proposed = position + Vector2D.DirectionTo(position, next) * 4;
+                position = terrain.RestrictMovement(position, proposed, width, height, 9);
+                Assert.IsFalse(terrain.IsBlocked(position, width, height, 9));
+            }
+            Assert.IsLessThan(55, Vector2D.Distance(position, hunter), "An enemy must actually reach the hunter around a crate.");
+            return;
+        }
+        Assert.Fail("Expected at least one unobstructed approach to a generated physical prop.");
+    }
+
+    [TestMethod]
+    public void DamagePropsInRadius_DestroysOnlyNearbyPropsAndNeverCreatesDuplicateLoot()
+    {
+        const double width = 950, height = 1550;
+        var map = new WyrmrealmMapState(seed: 1204);
+        var terrain = ArenaEnvironmentState.Create(map.Seed, map.AvailableNodes[0], generatorPreview: true);
+        var prop = terrain.Snapshot().Props[0];
+        var center = new Vector2D(prop.X * width, prop.Y * height);
+        var before = terrain.Snapshot().Props.Count;
+        Assert.IsGreaterThan(0, terrain.DamagePropsInRadius(center, width, height, 8, 500));
+        Assert.IsFalse(terrain.Snapshot().Props.Any(p => p.Id == prop.Id));
+        Assert.IsLessThan(before, terrain.Snapshot().Props.Count);
+        Assert.AreEqual(0, terrain.DamagePropsInRadius(center, width, height, 0, 500));
+        Assert.AreEqual(0, terrain.DamagePropsInRadius(center, width, height, 8, 0));
+    }
+
     [TestMethod]
     public void CompleteTrail_WalkingIntoVisibleExit_RevealsNextMapDecision()
     {

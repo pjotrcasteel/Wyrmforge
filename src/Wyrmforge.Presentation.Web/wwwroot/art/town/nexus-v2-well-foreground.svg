@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941">
+  <!-- V2 photographed architectural foreground, NOT an occlusion rectangle.
+       22 October visual correction from the approved town well detail: the
+       previous roof polygon painted background cobbles, and the bottom polygon
+       copied foreground flowerbeds. This version includes only roof tiles,
+       narrow timber posts and the small circular well's masonry.
+       Garden walls, planters, flowers, and all paving stay transparent.
+       Physical collision is a separate V2 foot-safe walk mask. -->
+  <!-- Pitched tiled roof, following outer eaves rather than nearby pavement. -->
+  <path fill="#fff" d="M818 439 L823 426 L830 411 L832 401 L841 400
+    L854 404 L871 408 L888 412 L905 417 L916 418 L927 433
+    L931 441 L926 448 L917 444 L906 466 L898 463 L884 456
+    L867 448 L852 445 L833 440 Z"/>
+  <!-- Two narrow structural timber legs. -->
+  <path fill="#fff" d="M833 444 L839 447 L838 507 L831 508 L831 455 Z"/>
+  <path fill="#fff" d="M890 458 L896 460 L896 512 L888 514 L887 470 Z"/>
+  <!-- Small lintel under roof; no painted town floor. -->
+  <path fill="#fff" d="M829 474 L834 468 L888 481 L895 487 L894 493
+    L887 488 L836 482 Z"/>
+  <!-- Actual small well's round masonry ring, not the large garden wall. -->
+  <path fill="#fff" d="M819 508 L831 501 L844 503 L866 503 L884 505
+    L898 510 L907 519 L909 528 L905 537 L895 541 L851 544
+    L826 540 L818 533 L816 520 Z"/>
+</svg>

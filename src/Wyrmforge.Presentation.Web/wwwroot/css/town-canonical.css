@@ -1,0 +1,289 @@
+/* Refuge Night Panorama (gameplay unlock wiring).
+   One coherent 1672x941 scene. The two independent districts are camera views,
+   not stacked art cards. Vacant layers are alpha PNGs, never CSS darkness filters. */
+.game-shell.refuge-home .refuge-canonical-viewport {
+    position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;
+    width:100%;height:100%;overflow:hidden;box-sizing:border-box;
+    background:#101824;scrollbar-width:none;-webkit-overflow-scrolling:touch;
+    touch-action:pan-x;overscroll-behavior-x:contain;
+}
+.game-shell.refuge-home .refuge-canonical-viewport::-webkit-scrollbar {display:none}
+.game-shell.refuge-home .refuge-canonical-viewport:focus-visible {
+    outline:2px solid #dbc099;outline-offset:-3px;
+}
+.game-shell.refuge-home .refuge-canonical-scene {
+    position:relative;flex:none;width:max(100%,177.6833dvh);
+    aspect-ratio:1672/941;margin:0;overflow:hidden;isolation:isolate;
+    background:#131926;
+}
+.game-shell.refuge-home .refuge-town-night-base {
+    width:100%;height:100%;display:block;pointer-events:none;object-fit:fill;
+    user-select:none;-webkit-user-drag:none;
+}
+.game-shell.refuge-home .refuge-town-vacant-layer {
+    position:absolute;z-index:1;display:block;object-fit:fill;
+    pointer-events:none;user-select:none;-webkit-user-drag:none;
+}
+.game-shell.refuge-home .refuge-town-spot {
+    position:absolute;z-index:2;border:0;border-radius:0;
+    background:transparent;cursor:pointer;padding:0;margin:0;
+    -webkit-tap-highlight-color:transparent;touch-action:pan-x;
+}
+.game-shell.refuge-home .refuge-town-spot:hover::after,
+.game-shell.refuge-home .refuge-town-spot:focus-visible::after {
+    content:"";position:absolute;inset:8px;border:2px solid #eac78da9;
+    border-radius:16px;box-shadow:0 0 12px #dfb87972;
+    pointer-events:none;
+}
+.game-shell.refuge-home .refuge-town-spot:focus-visible {
+    outline:3px solid #f1d499;outline-offset:-3px;
+}
+.game-shell.refuge-home .refuge-town-spot--nexus {
+    left:1%;top:6%;width:30%;height:40%;
+}
+.game-shell.refuge-home .refuge-town-spot--blacksmith {
+    left:0;top:48%;width:30%;height:42%;
+}
+.game-shell.refuge-home .refuge-town-spot--codex {
+    left:65%;top:5%;width:35%;height:42%;
+}
+.game-shell.refuge-home .refuge-town-spot--hall {
+    left:62%;top:48%;width:38%;height:48%;
+}
+.game-shell.refuge-home .refuge-town-spot--gate {
+    left:37%;top:8%;width:26%;height:30%;
+}
+.game-shell.refuge-home .refuge-town-spot--gate:hover::after,
+.game-shell.refuge-home .refuge-town-spot--gate:focus-visible::after {
+    border-color:#f1d69a;
+}
+@media (max-width:900px) and (orientation:portrait) {
+    .game-shell.refuge-home .refuge-canonical-viewport {
+        align-items:stretch;justify-content:flex-start;overflow-x:auto;overflow-y:hidden;
+        scroll-snap-type:x proximity;
+    }
+    .game-shell.refuge-home .refuge-canonical-scene {
+        margin:0;width:177.6833dvh;height:100%;
+        max-width:none;aspect-ratio:1672/941;
+    }
+    .game-shell.refuge-home .refuge-town-spot:hover::after {display:none}
+    .game-shell.refuge-home .refuge-town-spot:focus-visible::after {display:block}
+}
+
+@media (max-width:900px) and (orientation:landscape) {
+    .game-shell.refuge-home .refuge-canonical-scene {width:100%;height:auto}
+}
+@media (prefers-reduced-motion:reduce) {
+    .game-shell.refuge-home .refuge-canonical-viewport {scroll-behavior:auto}
+}
+
+/* No actor stacking context: each NPC sorts against cropped painted props
+   by foot coordinate, not arbitrary front/back scene buckets. */
+.game-shell.refuge-home .refuge-town-crowd {
+    position:absolute;inset:0;z-index:auto;pointer-events:none;user-select:none;
+}
+.game-shell.refuge-home .refuge-town-scenery-foreground {
+    position:absolute;display:block;pointer-events:none;user-select:none;
+}
+.game-shell.refuge-home .refuge-town-citizen {
+    position:absolute;display:block;box-sizing:border-box;
+    width:0.957%;height:3.188%;
+    transform:translate(-50%,-100%);border:1px solid #251e24;
+    background:#cb9975;box-shadow:1px 2px 0 #080a0ba8;
+    pointer-events:none;
+}
+.game-shell.refuge-home .refuge-town-citizen:nth-child(3n+2) {background:#8d9eaa}
+.game-shell.refuge-home .refuge-town-citizen:nth-child(3n) {background:#c1b28e}
+.game-shell.refuge-home .refuge-town-spot {z-index:11002}
+@media (prefers-reduced-motion:reduce) {
+    .game-shell.refuge-home .refuge-town-crowd {display:none}
+}
+
+/* Optional (?townWalkScan=1): sampled centres where an NPC foot disc can stand.
+   Single SVG path is computed once per geometry revision, not on NPC ticks. */
+.game-shell.refuge-home .refuge-town-walk-scan {
+    position:absolute;inset:0;width:100%;height:100%;z-index:10999;
+    pointer-events:none;user-select:none;
+}
+.game-shell.refuge-home .refuge-town-walk-scan path {
+    fill:rgba(30,236,167,.36);stroke:none;pointer-events:none;
+}
+
+/* Developer-only overlay (?townGeometry=1). These are real nav colliders,
+   not a CSS filter over the game artwork or a new building-unlock preview. */
+.game-shell.refuge-home .refuge-town-geometry-debug {
+    position:absolute;inset:0;z-index:11000;pointer-events:none;user-select:none;
+}
+.game-shell.refuge-home .refuge-town-geometry-map {
+    display:block;width:100%;height:100%;pointer-events:none;
+}
+.game-shell.refuge-home .refuge-town-geometry-feet-layer {
+    position:absolute;inset:0;z-index:11001;display:block;width:100%;height:100%;
+    pointer-events:none;user-select:none;
+}
+.game-shell.refuge-home .refuge-town-geometry-solid {
+    fill:rgba(235,36,40,.32);stroke:#ff5252;stroke-width:2;
+    vector-effect:non-scaling-stroke;pointer-events:none;
+}
+.game-shell.refuge-home .refuge-town-geometry-walkable {
+    fill:rgba(0,200,191,.05);stroke:rgba(54,236,225,.92);stroke-width:2;
+    stroke-dasharray:8 5;vector-effect:non-scaling-stroke;pointer-events:none;
+}
+.game-shell.refuge-home .refuge-town-geometry-visual {
+    fill:rgba(255,165,0,.06);stroke:rgba(255,182,52,.8);stroke-width:1.5;
+    stroke-dasharray:5 6;vector-effect:non-scaling-stroke;pointer-events:none;
+}
+.game-shell.refuge-home .refuge-town-geometry-feet {
+    fill:rgba(255,255,255,.18);stroke:#fff;stroke-width:2;
+    vector-effect:non-scaling-stroke;pointer-events:none;
+}
+
+/* Opt-in measurements live in the viewport, not the scrolling panorama.
+   A single text node is updated once/sec by requestAnimationFrame; no Blazor
+   overlay render loop and no hit-testing cost for town swiping. */
+.game-shell.refuge-home .refuge-town-performance {
+    position:absolute;left:10px;bottom:12px;z-index:11;
+    display:block;width:max-content;max-width:min(92vw,360px);
+    padding:6px 8px;border:1px solid #b0c5d060;border-radius:5px;
+    background:#0b1523e8;color:#e4f4f0;
+    font:600 clamp(10px,1.25dvh,12px)/1.45 ui-monospace,monospace;
+    white-space:pre-wrap;font-variant-numeric:tabular-nums;
+    pointer-events:none;user-select:none;contain:layout paint style;
+}
+
+/* Phase 1: read-only geometry inspector in the existing town debug instance.
+   Fixed to the phone viewport, not the horizontally swipeable panorama. */
+.game-shell.refuge-home .refuge-town-geometry-toolbar {
+    position:fixed;right:10px;bottom:calc(76px + env(safe-area-inset-bottom, 0px));
+    z-index:12050;display:flex;gap:4px;padding:5px;
+    max-width:calc(100vw - 20px);border:1px solid #d7c29d8c;border-radius:7px;
+    background:#101824ec;box-shadow:0 2px 12px #000b;
+    pointer-events:auto;touch-action:manipulation;
+}
+.game-shell.refuge-home .refuge-town-geometry-toolbar button {
+    min-width:44px;min-height:38px;padding:5px 7px;border:1px solid #aab8c65e;
+    border-radius:4px;background:#263242;color:#eef3f4;cursor:pointer;
+    font:600 12px/1 ui-monospace,monospace;touch-action:manipulation;
+}
+.game-shell.refuge-home .refuge-town-geometry-toolbar button[aria-pressed="true"] {
+    background:#c9ab78;color:#101824;border-color:#f3d49b;
+}
+.game-shell.refuge-home .refuge-town-geometry-toolbar button:focus-visible {
+    outline:2px solid #fff;outline-offset:2px;
+}
+.game-shell.refuge-home .refuge-town-geometry-debug[data-town-geometry-layer="Walkable"] .refuge-town-geometry-walkable {
+    fill:rgba(0,200,191,.20);
+}
+.game-shell.refuge-home .refuge-town-geometry-debug[data-town-geometry-layer="Occlusion"] .refuge-town-geometry-visual {
+    fill:rgba(255,165,0,.22);
+}
+
+/* Developer Route view: one real NPC's remaining A* waypoints.
+   Passive SVG sits over the same panorama coordinates and never captures swipes. */
+.game-shell.refuge-home .refuge-town-route-debug {
+    position:absolute;inset:0;z-index:11001;width:100%;height:100%;
+    pointer-events:none;user-select:none;overflow:visible;
+}
+.game-shell.refuge-home .refuge-town-route-line {
+    fill:none;stroke:#f4d365;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;
+    vector-effect:non-scaling-stroke;pointer-events:none;
+}
+.game-shell.refuge-home .refuge-town-route-start {
+    fill:#1b3340;stroke:#f4d365;stroke-width:2;vector-effect:non-scaling-stroke;
+}
+.game-shell.refuge-home .refuge-town-route-end {
+    fill:#f4d365;stroke:#1b3340;stroke-width:2;vector-effect:non-scaling-stroke;
+}
+
+/* Pixel-accurate alpha cutouts are generated once from the canonical town painting.
+   Individual support/roof/rim depths ensure pavement walkers stay visible. */
+.game-shell.refuge-home .refuge-town-png-cutout {
+    visibility:hidden;object-fit:fill;max-width:none;image-rendering:auto;
+    pointer-events:none;user-select:none;
+}
+.game-shell.refuge-home .refuge-town-png-cutout[data-town-png-ready="true"] {
+    visibility:visible;
+}
+
+/* Tap-to-inspect stays compact and read-only; it never traps touch pan. */
+.game-shell.refuge-home .refuge-town-geometry-selection {
+    position:fixed;right:10px;bottom:calc(131px + env(safe-area-inset-bottom, 0px));
+    z-index:12049;max-width:min(78vw,330px);overflow:hidden;text-overflow:ellipsis;
+    padding:5px 8px;border-radius:5px;border:1px solid #d7c29d70;
+    background:#101824df;color:#f2dfb7;font:600 11px/1.3 ui-monospace,monospace;
+    pointer-events:none;white-space:nowrap;
+}
+.game-shell.refuge-home .refuge-town-geometry-map polygon[data-town-selected="true"] {
+    stroke:#fff;stroke-width:3.5;vector-effect:non-scaling-stroke;
+}
+
+/* Separate V2 experiment: uses its own 1672x941 pixel mask and a canvas actor.
+   Never inherits legacy NPC stacking, red polygons or cutout occlusion. */
+.game-shell.refuge-home .refuge-town-v2-canvas {
+    position:absolute;inset:0;width:100%;height:100%;z-index:11001;
+    display:block;pointer-events:none;user-select:none;
+}
+.game-shell.refuge-home .refuge-town-v2-toolbar {
+    position:fixed;bottom:calc(76px + env(safe-area-inset-bottom, 0px));right:10px;
+    z-index:12050;display:flex;align-items:center;gap:8px;max-width:calc(100vw - 20px);
+    padding:6px;background:#101824ee;border:1px solid #d7c29d8c;border-radius:7px;
+    color:#f2dfb7;font:600 11px/1.3 ui-monospace,monospace;pointer-events:auto;
+}
+.game-shell.refuge-home .refuge-town-v2-toolbar button {
+    background:#c9ab78;color:#101824;border:0;border-radius:4px;
+    font:inherit;min-height:38px;padding:6px 9px;cursor:pointer;touch-action:manipulation;
+}
+.game-shell.refuge-home .refuge-town-v2-toolbar output {max-width:150px;overflow-wrap:anywhere}
+
+
+/* Six independently painted, user-approved Nexus building variants.
+   Alpha plate pixels are in the left 560 x 450 of the authoritative 1672 x 941
+   night town panorama. Other buildings, vacant artwork and navigation are untouched. */
+.game-shell.refuge-home .refuge-town-nexus-school-art {
+    position:absolute;left:0;top:0;z-index:1;
+    display:block;width:33.49282%;height:47.82147%;
+    object-fit:fill;pointer-events:none;user-select:none;-webkit-user-drag:none;
+}
+.game-shell.refuge-home .refuge-town-nexus-school-art--mastery {
+    opacity:calc(var(--nexus-radiance-strength, .16) * .20);
+    mix-blend-mode:screen;
+    /* Illuminate only existing magical crystals, portals and runes—not roofs,
+       masonry, other buildings or the ground. These are lighting masks, not
+       color filters; all six source paintings are already different artwork. */
+    -webkit-mask-image:
+        radial-gradient(ellipse 8% 10% at 55% 28%,#000 48%,transparent 100%),
+        radial-gradient(ellipse 7% 12% at 76% 65%,#000 48%,transparent 100%),
+        radial-gradient(ellipse 7% 8% at 42% 83%,#000 46%,transparent 100%),
+        radial-gradient(ellipse 5% 6% at 11% 75%,#000 43%,transparent 100%);
+    mask-image:
+        radial-gradient(ellipse 8% 10% at 55% 28%,#000 48%,transparent 100%),
+        radial-gradient(ellipse 7% 12% at 76% 65%,#000 48%,transparent 100%),
+        radial-gradient(ellipse 7% 8% at 42% 83%,#000 46%,transparent 100%),
+        radial-gradient(ellipse 5% 6% at 11% 75%,#000 43%,transparent 100%);
+}
+@media (prefers-reduced-motion:reduce) {
+    .game-shell.refuge-home .refuge-town-nexus-school-art--mastery {animation:none;}
+}
+
+/* Only when Settings > Debug selects a preview. Never changes game/unlock hitboxes. */
+.game-shell.refuge-home .refuge-town-nexus-preview-controls {
+    position:fixed;left:8px;bottom:calc(73px + env(safe-area-inset-bottom, 0px));
+    z-index:12051;display:flex;flex-wrap:wrap;gap:4px;
+    max-width:min(355px,calc(100vw - 16px));padding:5px;
+    border:1px solid #d1af8a9c;border-radius:7px;
+    background:#101824f2;box-shadow:0 4px 16px #0008;
+    pointer-events:auto;touch-action:manipulation;
+}
+.game-shell.refuge-home .refuge-town-nexus-preview-controls button {
+    min-height:42px;padding:6px 9px;border:1px solid #aa9578a0;
+    border-radius:4px;background:#283240;color:#f3e5cc;
+    font:600 11px/1.2 system-ui,sans-serif;cursor:pointer;
+    touch-action:manipulation;
+}
+.game-shell.refuge-home .refuge-town-nexus-preview-controls button[aria-pressed="true"] {
+    border-color:#fff;background:#a1815b;color:#101824;
+}
+.game-shell.refuge-home .refuge-town-nexus-preview-controls button:focus-visible {
+    outline:2px solid #fff;outline-offset:2px;
+}
+

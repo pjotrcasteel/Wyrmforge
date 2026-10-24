@@ -1,0 +1,72 @@
+{
+  "creatureId": "hollow",
+  "revision": "core-walk-attack-death-v1",
+  "procedure": "docs/art/card-to-spritesheet-production.md",
+  "reference": {
+    "path": "user_handover_files/concepts/Fire/01-the-hollow.png",
+    "sha256": "ee4497045eea58f8171436a58ed3851a657ffc8cdf04d3fa8d89184159a08178"
+  },
+  "route": "textured-3d-to-rendered-sprites",
+  "scope": "eight directions: 16 walk, 16 attack and 24 death frames per facing",
+  "stages": {
+    "A": "self-reviewed; neutral modeling reference generated and inspected",
+    "B": "Textured source self-reviewed at intended mobile pixel scale; initial coarse mesh remains historical rejected evidence",
+    "C": "22-bone weighted source; walk-pose deformation self-reviewed after lower-limb/cloth weight correction; broader attack/death pose tests remain out of scope",
+    "D": "448 total frames: accepted walk/death and self-reviewed attack; local source, asset and mobile browser checks passed. Runtime integration pending."
+  },
+  "visualStatus": "Owner accepted all three directional clips and explicitly authorized runtime integration, merge and Pages deployment.",
+  "ownerAccepted": true,
+  "runtimeIntegrated": true,
+  "notes": [
+    "Existing generated v1 and rigid cutout v2 remain rejected.",
+    "A neutral-pose reference may be generated from the card as modeling input, never as independently generated animation frames.",
+    "No paid service or new subscription is authorized by this record."
+  ],
+  "referencePreparation": {
+    "file": "references/hollow-neutral-reference.png",
+    "method": "built-in image generation, approved card as identity reference",
+    "status": "Static modeling reference preserved; derived textured mesh, editable rig and one-view pixel walk now exist",
+    "visualNotes": [
+      "Gaunt rib cage and elongated hands retained.",
+      "Neutral separated limbs prepared for reconstruction.",
+      "Hidden geometry remains inferred, not verified."
+    ],
+    "sha256": "f46322788dcdb3d2756548764a83263755bd2fc953ebaaa65163b2a0ea660f89"
+  },
+  "externalProcessing": {
+    "destination": "https://huggingface.co/spaces/microsoft/TRELLIS.2",
+    "asset": "references/hollow-neutral-reference.png",
+    "approval": "Owner explicitly approved Microsoft TRELLIS.2 in chat on 20 October 2026.",
+    "execution": "Historical approval only. Superseded by owner local-only generation instruction on 20 October 2026; no current hosted generation permitted."
+  },
+  "localRenderPrerequisite": {
+    "python": "3.11.17",
+    "bpy": "4.5.3 LTS",
+    "engine": "Cycles CPU",
+    "test": "64x64 sphere render with true RGBA transparency passed",
+    "characterRendered": false
+  },
+  "authentication": {
+    "secureBrowserAttempt": "submission returned CloudFront 403 Request blocked; fresh homepage remains signed out",
+    "configuredApiCredential": false
+  },
+  "localReconstruction": {
+    "method": "TRELLIS 1 + DINOv2; Hugging Face offline",
+    "weightsSource": "ModelScope AI-ModelScope/TRELLIS-image-large; Meta direct DINOv2",
+    "candidate": "model/local-appearance-004/textured-rgb-v2/hollow-textured.glb",
+    "editableSource": "model/local-appearance-004/rigged-pixel-v3/hollow-rigged.blend",
+    "peakAllocatedMiB": 14969.2470703125,
+    "review": "exports/pixel-walk-poc-v1/README.md",
+    "hardwareSettingsChanged": false
+  },
+  "currentExport": "exports/hollow-core-sprite-set.json",
+  "gaitOwnerAccepted": true,
+  "movementOwnerAccepted": true,
+  "deathOwnerAccepted": true,
+  "deathEditableSource": "model/local-appearance-004/rigged-death-v5/hollow-death.blend",
+  "deathReview": "exports/death-eight-directions-v4/README.md",
+  "attackOwnerAccepted": true,
+  "attackEditableSource": "model/local-appearance-004/rigged-attack-v2/hollow-attack.blend",
+  "attackReview": "exports/attack-eight-directions-v2/README.md",
+  "runtimeReview": "docs/art/hollow-runtime-integration-2026-10-20.md"
+}

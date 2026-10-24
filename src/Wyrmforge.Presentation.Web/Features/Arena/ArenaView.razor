@@ -1,5 +1,6 @@
 @using Wyrmforge.Application.Runs.Navigation
 @using Wyrmforge.Application.Runs.Simulation
+@using Wyrmforge.Domain.Progression.Signature
 <main class="game-screen">
     <canvas @ref="canvas" class="game-canvas" aria-label="Wyrmforge combat arena"></canvas>
     <RealmInfluenceView Influences="CurrentRealmInfluences" />
@@ -16,8 +17,26 @@
         <div class="trail-clear-transition" role="dialog" aria-modal="true" aria-label="Trail cleared">
             <div class="trail-power-burst" aria-hidden="true"></div>
             <strong>TRAIL CLEARED</strong>
-            <p>XP collected</p>
-            <button @onclick="ContinueAfterTrail">CONTINUE</button>
+            <section class="trail-gathered" aria-label="Collected on this trail">
+                <span class="trail-gathered-title">GATHERED</span>
+                <div class="trail-gathered-items">
+                    <span class="trail-gathered-xp">+@trailGatheredExperience XP</span>
+                    @foreach (var stack in trailGatheredMaterials.GroupBy(material => material).OrderBy(group => group.Key))
+                    {
+                        var rarity = HuntMaterialCatalog.Rarity(stack.Key);
+                        <span class="trail-gathered-item @LootRarityPresentation.Class(rarity)" title="@LootRarityPresentation.Label(rarity)">@HuntMaterialCatalog.Name(stack.Key) ×@stack.Count()@if (rarity > LootRarity.Common) {<em class="loot-rarity-label"> · @LootRarityPresentation.Label(rarity)</em>}</span>
+                    }
+                </div>
+                @if (trailGatheredMaterials.Count > 0)
+                {
+                    <small>Materials carried · secure at Refuge to keep them</small>
+                }
+                else
+                {
+                    <small>No crafting materials collected</small>
+                }
+            </section>
+            <button type="button" @onclick="ContinueAfterTrail">CONTINUE</button>
         </div>
     }
     @if (runMoment is { } moment)
@@ -126,36 +145,7 @@
         </details>
     }
 
-    @if (ChoosingPrimary)
-    {
-        <div class="primary-choice-overlay" role="dialog" aria-modal="true" aria-label="Choose your primary magic">
-            <section class="primary-choice-panel">
-                <span class="primary-choice-eyebrow">THE FIRST OATH</span>
-                <h2>Choose your primary magic</h2>
-                <p>Your choice stays for this entire hunt. Upgrades strengthen it; other elements are earned through combinations.</p>
-                <div class="primary-choice-grid">
-                    @foreach (var spell in PrimaryChoices)
-                    {
-                        <button class="primary-choice primary-@spell.School.ToString().ToLowerInvariant() @(spell.Id == PreferredPrimary ? "preferred" : string.Empty)" aria-describedby="@(spell.Id == PreferredPrimary ? "primary-preferred-note" : null)" @onclick="() => ChoosePrimaryAsync(spell.Id)">
-                            <span class="primary-choice-icon px-icon px-lg px-@spell.School.ToString().ToLowerInvariant()" aria-hidden="true"></span>
-                            <strong>@spell.Name</strong>
-                            <small>@spell.School</small>
-                            @if (spell.Id == PreferredPrimary)
-                            {
-                                <span class="primary-preferred-badge" id="primary-preferred-note">LAST OATH</span>
-                            }
-                            @if (PreparedMutationFor(spell.Id) is { } mutation)
-                            {
-                                <span class="primary-mutation-badge"><i class="px-icon px-sm px-@MutationIcon(mutation)" aria-hidden="true"></i>@mutation.Name</span>
-                            }
-                        </button>
-                    }
-                </div>
-                <span class="primary-choice-footer">ONE PRIMARY • ONE HUNT • NO MID-RUN SWITCHING</span>
-            </section>
-        </div>
-    }
-    else if (!trailTransition && CurrentEssenceChoices.Count > 0)
+    @if (!trailTransition && CurrentEssenceChoices.Count > 0)
     {
         <DragonHarvestOverlay Choices="CurrentEssenceChoices" OnChoose="ChooseEssenceAsync" ResearchSpecimen="ResearchSpecimen" />
     }
@@ -176,7 +166,8 @@
     }
     else if (PendingMapChoice && !trailTransition)
     {
-        <WyrmrealmMapView Depth="CurrentDepth" Nodes="MapNodes" AvailableNodes="AvailableMapNodes" CompletedNodes="CompletedMapNodes" Resonance="CurrentResonance"
-            Signs="CurrentDragonSigns" OnChoose="ChooseMapNodeAsync" />
+        <WyrmrealmMapView Depth="CurrentDepth" Hunt="Hunt" Nodes="MapNodes" AvailableNodes="AvailableMapNodes" CompletedNodes="CompletedMapNodes" Resonance="CurrentResonance"
+            Signs="CurrentDragonSigns" OnChoose="ChooseMapNodeAsync" RefugeReturns="simulation?.RefugeReturns ?? 0" LastRefugeLoss="simulation?.LastRefugeLoss ?? 0"
+            ScoutReports="ScoutReports" />
     }
 </main>

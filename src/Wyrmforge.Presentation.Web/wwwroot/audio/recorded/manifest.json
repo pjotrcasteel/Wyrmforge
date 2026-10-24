@@ -365,11 +365,54 @@
     },
     "hunt-start": {
       "file": "hunt-start.ogg",
-      "source": "Fantasy SFX Pack Vol 1/Single_Fantasy SFX Pack Vol 1_Magic Shield_Activation_01.wav",
-      "library": "fantasy",
-      "author": "JC Sounds",
-      "license": "CC-BY-4.0",
-      "sha256": "24c37851adeb55a07d78cbac7c05c74175fd21fbb07422d04191b26023bc9d3e"
+      "source": "footstep00.ogg",
+      "library": "kenney-rpg",
+      "author": "Kenney",
+      "license": "CC0",
+      "sha256": "6fe61ef1fc3bcf0e253bf2eb64759db6cb69e2fe452f4d88cc597ecf78a3d601",
+      "intent": "A hunter leaves the Refuge: boots, traveling cloak, a committed second step; neither a door nor a magic chime.",
+      "mix": {
+        "gain": 0.72,
+        "lowpassHz": 4600,
+        "attackSeconds": 0.003,
+        "releaseSeconds": 0.085
+      },
+      "layers": [
+        {
+          "file": "hunt-cloak.ogg",
+          "source": "cloth1.ogg",
+          "library": "kenney-rpg",
+          "author": "Kenney",
+          "license": "CC0",
+          "sha256": "ddb93a3671233f95da0e0b10367f082f7eb42fa6caaddcf776410aa8833c747d",
+          "intent": "Traveling cloak moving with the hunter",
+          "mix": {
+            "gain": 0.35,
+            "lowpassHz": 3700,
+            "attackSeconds": 0.003,
+            "releaseSeconds": 0.09
+          },
+          "gainScale": 0.48,
+          "delaySeconds": 0.07
+        },
+        {
+          "file": "hunt-stride.ogg",
+          "source": "footstep02.ogg",
+          "library": "kenney-rpg",
+          "author": "Kenney",
+          "license": "CC0",
+          "sha256": "2d9575b7dead6e1217ca113991fc5229e9b6d998ea0726ebbb277e7398ab888f",
+          "intent": "Committed second stride on departure",
+          "mix": {
+            "gain": 0.55,
+            "lowpassHz": 4300,
+            "attackSeconds": 0.003,
+            "releaseSeconds": 0.075
+          },
+          "gainScale": 0.67,
+          "delaySeconds": 0.2
+        }
+      ]
     },
     "victory": {
       "file": "victory.ogg",
@@ -386,6 +429,51 @@
       "author": "rubberduck",
       "license": "CC0",
       "sha256": "7d5b37cc3659833e9a476298423049f6a52ab0aa27c09b571dd2716943df8673"
+    },
+    "building-open": {
+      "file": "building-open.ogg",
+      "source": "doorOpen_1.ogg",
+      "library": "kenney-rpg",
+      "author": "Kenney",
+      "license": "CC0",
+      "sha256": "4ab93bab96522d8eb109ff96dc57cb6765deb02448fe14c10472084be5bb2a0b",
+      "intent": "A physical occupied town building opens",
+      "mix": {
+        "gain": 0.4,
+        "lowpassHz": 3350,
+        "attackSeconds": 0.013,
+        "releaseSeconds": 0.18
+      }
+    },
+    "trail-enter": {
+      "file": "hunt-stride.ogg",
+      "source": "footstep02.ogg",
+      "library": "kenney-rpg",
+      "author": "Kenney",
+      "license": "CC0",
+      "sha256": "2d9575b7dead6e1217ca113991fc5229e9b6d998ea0726ebbb277e7398ab888f",
+      "intent": "Advancing to a connected trail: single quieter step rather than restarting an entire hunt",
+      "mix": {
+        "gain": 0.56,
+        "lowpassHz": 4100,
+        "attackSeconds": 0.004,
+        "releaseSeconds": 0.085
+      }
+    },
+    "threat-reveal": {
+      "file": "threat-reveal.ogg",
+      "source": "creak1.ogg",
+      "library": "kenney-rpg",
+      "author": "Kenney",
+      "license": "CC0",
+      "sha256": "8a346186fd297254248cab8e8117060a52a5cf2a84f603153a762108550ea95e",
+      "intent": "Threat approaching: ominous grounded wood movement, not a door/hunt start",
+      "mix": {
+        "gain": 0.46,
+        "lowpassHz": 2400,
+        "attackSeconds": 0.025,
+        "releaseSeconds": 0.16
+      }
     }
   },
   "sources": [
@@ -420,337 +508,112 @@
       "author": "rubberduck",
       "license": "CC0",
       "originalSha256": "1c2f06ff4e8563b5b8b745b23cf213c1474142a69bb82bd8f5e10d9b3f7a7bbd"
+    },
+    {
+      "key": "kenney-rpg",
+      "url": "https://kenney.nl/assets/rpg-audio",
+      "sourcePage": "https://kenney.nl/assets/rpg-audio",
+      "author": "Kenney",
+      "license": "CC0",
+      "originalSha256": "4ab93bab96522d8eb109ff96dc57cb6765deb02448fe14c10472084be5bb2a0b",
+      "sourceFile": "doorOpen_1.ogg",
+      "mirror": "https://github.com/Mcamento8/open-game-sfx-index/blob/main/audio/rpg-audio/doorOpen_1.ogg",
+      "gitBlobSha": "7df28265312494fc053380002e551b001dea89ad"
     }
   ],
   "attribution": "JC Sounds · CC BY 4.0 · https://opengameart.org/content/jc-sounds-fantasy-sfx-pack-vol-1 (edited: trimmed, filtered, resampled and converted)",
   "mixVersion": "0.0.110",
-  "menuSoundSchema": 1,
-  "menuAssets": {
-    "bookOpen": {
-      "file": "menu-bookOpen.ogg",
-      "source": "bookOpen.ogg",
-      "library": "kenney-rpg",
-      "author": "Kenney",
-      "license": "CC0",
-      "sourcePage": "https://kenney.nl/assets/rpg-audio",
-      "upstream": "https://github.com/Mcamento8/open-game-sfx-index/blob/main/audio/rpg-audio/bookOpen.ogg",
-      "gitBlobSha": "acdd2721f125f5254e43cd6d169f7177672a02f5"
-    },
-    "bookClose": {
-      "file": "menu-bookClose.ogg",
-      "source": "bookClose.ogg",
-      "library": "kenney-rpg",
-      "author": "Kenney",
-      "license": "CC0",
-      "sourcePage": "https://kenney.nl/assets/rpg-audio",
-      "upstream": "https://github.com/Mcamento8/open-game-sfx-index/blob/main/audio/rpg-audio/bookClose.ogg",
-      "gitBlobSha": "c52092880893760b90a473c4c894b486da63bdbc"
-    },
-    "bookPlace1": {
-      "file": "menu-bookPlace1.ogg",
-      "source": "bookPlace1.ogg",
-      "library": "kenney-rpg",
-      "author": "Kenney",
-      "license": "CC0",
-      "sourcePage": "https://kenney.nl/assets/rpg-audio",
-      "upstream": "https://github.com/Mcamento8/open-game-sfx-index/blob/main/audio/rpg-audio/bookPlace1.ogg",
-      "gitBlobSha": "49f10a39e35280703e2b8847c4256462debd6e57"
-    },
-    "bookPlace2": {
-      "file": "menu-bookPlace2.ogg",
-      "source": "bookPlace2.ogg",
-      "library": "kenney-rpg",
-      "author": "Kenney",
-      "license": "CC0",
-      "sourcePage": "https://kenney.nl/assets/rpg-audio",
-      "upstream": "https://github.com/Mcamento8/open-game-sfx-index/blob/main/audio/rpg-audio/bookPlace2.ogg",
-      "gitBlobSha": "6636f8a66fb66792951c82c17c512aacf93e03bc"
-    },
-    "handleSmallLeather": {
-      "file": "menu-handleSmallLeather.ogg",
-      "source": "handleSmallLeather.ogg",
-      "library": "kenney-rpg",
-      "author": "Kenney",
-      "license": "CC0",
-      "sourcePage": "https://kenney.nl/assets/rpg-audio",
-      "upstream": "https://github.com/Mcamento8/open-game-sfx-index/blob/main/audio/rpg-audio/handleSmallLeather.ogg",
-      "gitBlobSha": "d98f77bed3120196c0d8b97dd875af98868762f6"
-    },
-    "handleSmallLeather2": {
-      "file": "menu-handleSmallLeather2.ogg",
-      "source": "handleSmallLeather2.ogg",
-      "library": "kenney-rpg",
-      "author": "Kenney",
-      "license": "CC0",
-      "sourcePage": "https://kenney.nl/assets/rpg-audio",
-      "upstream": "https://github.com/Mcamento8/open-game-sfx-index/blob/main/audio/rpg-audio/handleSmallLeather2.ogg",
-      "gitBlobSha": "80aa47044d213e1889fc00c446b735b10062c055"
-    },
-    "metalClick": {
-      "file": "menu-metalClick.ogg",
-      "source": "metalClick.ogg",
-      "library": "kenney-rpg",
-      "author": "Kenney",
-      "license": "CC0",
-      "sourcePage": "https://kenney.nl/assets/rpg-audio",
-      "upstream": "https://github.com/Mcamento8/open-game-sfx-index/blob/main/audio/rpg-audio/metalClick.ogg",
-      "gitBlobSha": "1a9ee4bd7384ab493b89df0ff10ee142959490be"
-    },
-    "metalLatch": {
-      "file": "menu-metalLatch.ogg",
-      "source": "metalLatch.ogg",
-      "library": "kenney-rpg",
-      "author": "Kenney",
-      "license": "CC0",
-      "sourcePage": "https://kenney.nl/assets/rpg-audio",
-      "upstream": "https://github.com/Mcamento8/open-game-sfx-index/blob/main/audio/rpg-audio/metalLatch.ogg",
-      "gitBlobSha": "509c68f75a53b3b1fa7954be8cc854101c76802d"
-    },
-    "creak1": {
-      "file": "menu-creak1.ogg",
-      "source": "creak1.ogg",
-      "library": "kenney-rpg",
-      "author": "Kenney",
-      "license": "CC0",
-      "sourcePage": "https://kenney.nl/assets/rpg-audio",
-      "upstream": "https://github.com/Mcamento8/open-game-sfx-index/blob/main/audio/rpg-audio/creak1.ogg",
-      "gitBlobSha": "4f6de6f87f75d9fef18123886f3b908cbad2fe93"
-    },
-    "doorOpen_1": {
-      "file": "menu-doorOpen_1.ogg",
-      "source": "doorOpen_1.ogg",
-      "library": "kenney-rpg",
-      "author": "Kenney",
-      "license": "CC0",
-      "sourcePage": "https://kenney.nl/assets/rpg-audio",
-      "upstream": "https://github.com/Mcamento8/open-game-sfx-index/blob/main/audio/rpg-audio/doorOpen_1.ogg",
-      "gitBlobSha": "7df28265312494fc053380002e551b001dea89ad"
-    },
-    "doorOpen_2": {
-      "file": "menu-doorOpen_2.ogg",
-      "source": "doorOpen_2.ogg",
-      "library": "kenney-rpg",
-      "author": "Kenney",
-      "license": "CC0",
-      "sourcePage": "https://kenney.nl/assets/rpg-audio",
-      "upstream": "https://github.com/Mcamento8/open-game-sfx-index/blob/main/audio/rpg-audio/doorOpen_2.ogg",
-      "gitBlobSha": "d57087c1cf53578237ac12e4c2acfa6a15f32332"
-    },
-    "doorClose_1": {
-      "file": "menu-doorClose_1.ogg",
-      "source": "doorClose_1.ogg",
-      "library": "kenney-rpg",
-      "author": "Kenney",
-      "license": "CC0",
-      "sourcePage": "https://kenney.nl/assets/rpg-audio",
-      "upstream": "https://github.com/Mcamento8/open-game-sfx-index/blob/main/audio/rpg-audio/doorClose_1.ogg",
-      "gitBlobSha": "21021c5f8c13c2fbc74e83de8c5fce5d8709b70b"
-    },
-    "stone": {
-      "file": "ui.ogg",
-      "source": "item_stone_01.ogg",
-      "library": "rpg",
-      "author": "rubberduck",
-      "license": "CC0",
-      "sha256": "7147c88577bd60afa19b9b5898ff3e4c8ab5eb933edce666b23dfc3d640ae25c",
-      "sourcePage": "https://opengameart.org/content/80-cc0-rpg-sfx",
-      "description": "Existing stone tap from rubberduck's CC0 RPG recordings"
+  "transitionDesign": {
+    "schemaVersion": 1,
+    "goal": "Each action has a distinctive acoustic meaning across browser, iOS and Android.",
+    "events": {
+      "building-open": {
+        "action": "Enter a town building",
+        "material": "old door"
+      },
+      "hunt-start": {
+        "action": "Start a new expedition",
+        "material": "boots and cloak",
+        "layers": 3
+      },
+      "trail-enter": {
+        "action": "Begin next arena/map node",
+        "material": "single footstep",
+        "layers": 1
+      },
+      "threat-reveal": {
+        "action": "Special enemy approaches",
+        "material": "ominous creaking",
+        "layers": 1
+      },
+      "wyrm": {
+        "action": "Encounter the Wyrm",
+        "material": "creature roar"
+      }
     }
   },
-  "menuPalettes": {
+  "uiMaterials": {
     "vellum": {
       "label": "Worn Vellum",
-      "description": "Soft leather, parchment and weighty book movement",
-      "cues": {
-        "ui": {
-          "variants": [
-            "handleSmallLeather",
-            "handleSmallLeather2"
-          ],
-          "mix": {
-            "gain": 0.42,
-            "lowpassHz": 3400
-          }
+      "description": "Worn leather handling and two authentic short takes; no tonal bell",
+      "mix": {
+        "gain": 0.65,
+        "lowpassHz": 3400
+      },
+      "variants": [
+        {
+          "file": "menu-handleSmallLeather.ogg",
+          "source": "handleSmallLeather.ogg",
+          "library": "kenney-rpg",
+          "author": "Kenney",
+          "license": "CC0",
+          "gitBlobSha": "d98f77bed3120196c0d8b97dd875af98868762f6"
         },
-        "ui-back": {
-          "asset": "bookClose",
-          "mix": {
-            "gain": 0.36,
-            "lowpassHz": 3000
-          }
-        },
-        "ui-open": {
-          "asset": "bookOpen",
-          "mix": {
-            "gain": 0.36,
-            "lowpassHz": 3100
-          }
-        },
-        "ui-confirm": {
-          "variants": [
-            "bookPlace1",
-            "bookPlace2"
-          ],
-          "mix": {
-            "gain": 0.42,
-            "lowpassHz": 3400
-          }
-        },
-        "hunt-start": {
-          "asset": "doorOpen_1",
-          "mix": {
-            "gain": 0.43,
-            "lowpassHz": 3300,
-            "attackSeconds": 0.015,
-            "releaseSeconds": 0.18
-          }
-        },
-        "upgrade-open": {
-          "asset": "bookOpen",
-          "mix": {
-            "gain": 0.38,
-            "lowpassHz": 3200
-          }
-        },
-        "upgrade-choice": {
-          "asset": "bookPlace2",
-          "mix": {
-            "gain": 0.43,
-            "lowpassHz": 3300
-          }
-        },
-        "trail-clear": {
-          "asset": "doorClose_1",
-          "mix": {
-            "gain": 0.3,
-            "lowpassHz": 2800
-          }
+        {
+          "file": "menu-handleSmallLeather2.ogg",
+          "source": "handleSmallLeather2.ogg",
+          "library": "kenney-rpg",
+          "author": "Kenney",
+          "license": "CC0",
+          "gitBlobSha": "80aa47044d213e1889fc00c446b735b10062c055"
         }
-      }
+      ]
     },
     "stone": {
       "label": "Weathered Stone",
-      "description": "Stone, old hinges and worn masonry",
-      "cues": {
-        "ui": {
-          "asset": "stone",
-          "mix": {
-            "gain": 0.56,
-            "lowpassHz": 3000
-          }
-        },
-        "ui-back": {
-          "asset": "bookClose",
-          "mix": {
-            "gain": 0.32,
-            "lowpassHz": 2500
-          }
-        },
-        "ui-open": {
-          "asset": "creak1",
-          "mix": {
-            "gain": 0.35,
-            "lowpassHz": 3200
-          }
-        },
-        "ui-confirm": {
-          "asset": "bookPlace1",
-          "mix": {
-            "gain": 0.46,
-            "lowpassHz": 2800
-          }
-        },
-        "hunt-start": {
-          "asset": "doorOpen_2",
-          "mix": {
-            "gain": 0.4,
-            "lowpassHz": 3400
-          }
-        },
-        "upgrade-open": {
-          "asset": "bookOpen",
-          "mix": {
-            "gain": 0.36,
-            "lowpassHz": 3000
-          }
-        },
-        "upgrade-choice": {
-          "asset": "metalLatch",
-          "mix": {
-            "gain": 0.26,
-            "lowpassHz": 2400
-          }
-        },
-        "trail-clear": {
-          "asset": "doorClose_1",
-          "mix": {
-            "gain": 0.29,
-            "lowpassHz": 2900
-          }
+      "description": "Existing rubberduck stone tap, retained as fallback and alternative",
+      "mix": {
+        "gain": 0.55,
+        "lowpassHz": 3100
+      },
+      "variants": [
+        {
+          "file": "ui.ogg",
+          "source": "item_stone_01.ogg",
+          "library": "rpg",
+          "author": "rubberduck",
+          "license": "CC0",
+          "sha256": "7147c88577bd60afa19b9b5898ff3e4c8ab5eb933edce666b23dfc3d640ae25c"
         }
-      }
+      ]
     },
     "iron": {
       "label": "Cold Iron",
-      "description": "Dry iron catches, mechanical weight and restrained creaks",
-      "cues": {
-        "ui": {
-          "asset": "metalClick",
-          "mix": {
-            "gain": 0.29,
-            "lowpassHz": 2600
-          }
-        },
-        "ui-back": {
-          "asset": "metalLatch",
-          "mix": {
-            "gain": 0.24,
-            "lowpassHz": 2300
-          }
-        },
-        "ui-open": {
-          "asset": "creak1",
-          "mix": {
-            "gain": 0.37,
-            "lowpassHz": 3000
-          }
-        },
-        "ui-confirm": {
-          "asset": "metalLatch",
-          "mix": {
-            "gain": 0.32,
-            "lowpassHz": 2500
-          }
-        },
-        "hunt-start": {
-          "asset": "doorOpen_1",
-          "mix": {
-            "gain": 0.44,
-            "lowpassHz": 3300
-          }
-        },
-        "upgrade-open": {
-          "asset": "bookOpen",
-          "mix": {
-            "gain": 0.33,
-            "lowpassHz": 2900
-          }
-        },
-        "upgrade-choice": {
-          "asset": "metalClick",
-          "mix": {
-            "gain": 0.34,
-            "lowpassHz": 2700
-          }
-        },
-        "trail-clear": {
-          "asset": "doorClose_1",
-          "mix": {
-            "gain": 0.34,
-            "lowpassHz": 2700
-          }
+      "description": "Subdued mechanical metal click; candidate for future heavy confirmations",
+      "mix": {
+        "gain": 0.48,
+        "lowpassHz": 3000
+      },
+      "variants": [
+        {
+          "file": "menu-metalClick.ogg",
+          "source": "metalClick.ogg",
+          "library": "kenney-rpg",
+          "author": "Kenney",
+          "license": "CC0",
+          "gitBlobSha": "1a9ee4bd7384ab493b89df0ff10ee142959490be"
         }
-      }
+      ]
     }
   }
 }

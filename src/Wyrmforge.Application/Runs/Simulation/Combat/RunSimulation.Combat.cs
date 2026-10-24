@@ -15,7 +15,22 @@ public sealed partial class RunSimulation
 {
     private void UpdateProjectiles(double delta, double width, double height)
     {
-        foreach (var projectile in projectiles) projectile.Position += projectile.Velocity * delta;
+        for (var index = projectiles.Count - 1; index >= 0; index--)
+        {
+            var projectile = projectiles[index];
+            var destination = projectile.Position + projectile.Velocity * delta;
+            if (arenaEnvironment is not null && arenaEnvironment.TryProjectileCollision(projectile.Position, destination,
+                width, height, projectile.Radius, out var contact))
+            {
+                // A wall contact is visual feedback only: no enemy hit, damage, status,
+                // chain, splash, experience or reward can be fabricated by this branch.
+                arenaEnvironment.TryDamageProp(contact, width, height, projectile.Radius, projectile.Damage);
+                RegisterElementalImpact(contact, projectile.Spell, projectile.Rank, projectile.Combination, projectile.Surge);
+                projectiles.RemoveAt(index);
+                continue;
+            }
+            projectile.Position = destination;
+        }
         projectiles.RemoveAll(projectile => !IsOnScreen(projectile.Position, width, height, 80));
     }
 
@@ -165,6 +180,17 @@ public sealed partial class RunSimulation
                 score += (int)(baseScore * depthState.ScoreMultiplier);
                 // A raised Ashling already paid out and counted toward the node; its second death is worth nothing extra.
                 if (defeatedEnemy.Revived) break;
+                // Normal Fire-region foes occasionally leave physical minor crafting loot.
+                // The enemy id is stable: this does not perturb the combat spawn/random stream.
+                if (mapState.EncounterActive && defeatedEnemy.Kind is EnemyKind.Ashling or EnemyKind.AshSlinger &&
+                    defeatedEnemy.Id % 3 == 0)
+                    arenaEnvironment?.SpawnMaterialPickup(defeatedEnemy.Position, arenaWidth, arenaHeight, "EmberResidue");
+                // Elites carry Rare salvage only where the Hunt tier allows Rare drops (Fire Tier 2 and up).
+                if (mapState.EncounterActive && defeatedEnemy.IsElite && HuntDrops(Wyrmforge.Domain.Progression.Loot.LootRarity.Rare))
+                    arenaEnvironment?.SpawnMaterialPickup(defeatedEnemy.Position, arenaWidth, arenaHeight, "Emberglass");
+                // From Fire Tier 3 an elite also carries Epic Wyrmcinder; the watchtower shows which roads hide one.
+                if (mapState.EncounterActive && defeatedEnemy.IsElite && HuntDrops(Wyrmforge.Domain.Progression.Loot.LootRarity.Epic))
+                    arenaEnvironment?.SpawnMaterialPickup(defeatedEnemy.Position + new Vector2D(14, 6), arenaWidth, arenaHeight, "Wyrmcinder");
                 experienceShards.Drop(defeatedEnemy.Position, ResolveEliteDefeat(defeatedEnemy, EnemyCatalog.Get(defeatedEnemy.Kind).ThreatCost));
                 RegisterMapEncounterKill();
                 RegisterDepthTrialKill();
@@ -186,6 +212,7 @@ public sealed partial class RunSimulation
         RegisterSplashPulse(position, radius);
         combatSpatialIndex.CollectWithinRadius(position, radius, ignoreId, spatialQueryBuffer);
         foreach (var target in spatialQueryBuffer) DamageTarget(target, damage * ShieldMultiplier(target, position, damage));
+        arenaEnvironment?.DamagePropsInRadius(position, arenaWidth, arenaHeight, radius, damage);
     }
 
     private void Shatter(Vector2D position, double damage, int ignoreId)

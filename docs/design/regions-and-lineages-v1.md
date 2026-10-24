@@ -42,7 +42,7 @@ Region names are working titles until the product owner names them (§14). The t
 
 ## Start paths: the World Gate
 
-- **World Gate** (main menu, unlocked after the first hunt): two equal roads. *Free Exploration* shows the current region, its home Wyrm, regions charted and the "Road to the Conclave" checklist, and enters a hunt. *Campaign* shows Book I as **In preparation** with its chapter outline. BEGIN HUNT still starts directly; the gate is a choice screen, not a toll.
+- **World Gate** (main menu, unlocked after the first hunt): a "Choose your hunt" list of every mode. *Free Exploration* is the only playable one and shows the current region, its home Wyrm, regions charted and the "Road to the Conclave" checklist, and enters a hunt. *Campaign* (Book I), *Targeted Wyrm Hunt* (needs more lineages than Fire and Frost), *Endless Hunt* and *Endless Arena* are listed greyscaled, disabled and marked **Coming later**, so the player sees the world is larger without being able to pick an unbuilt mode. BEGIN HUNT still starts directly; the gate is a choice screen, not a toll.
 - The art (`wwwroot/art/world-gate.jpg`) is a crop of product-owner concept art (`user_handover_files/concepts/Menus/choice.jpg`), not code-generated, so it is not in the generated-art manifest.
 - Free Exploration lists every region: open ones are tappable (school colour, home Wyrm, "New: your first hunt here ends at …"), locked ones say what opens them ("Slay Ashfang to open"), planned ones read *Uncharted*.
 

@@ -1,0 +1,70 @@
+name: Pyromancer progression acceptance
+
+on:
+  pull_request:
+    paths:
+      - 'src/Wyrmforge.Application/Runs/SelfPlay/FireProgressionCohorts.cs'
+      - 'src/Wyrmforge.BalanceLab/**'
+      - 'tests/Wyrmforge.Application.Tests/Runs/SelfPlay/FireProgressionCohortsTests.cs'
+      - '.github/workflows/pyromancer-progression.yml'
+  workflow_dispatch:
+    inputs:
+      runs_per_combination:
+        description: 'Seeds per Fire cohort/personality (increase for detailed balancing)'
+        required: true
+        default: '10'
+        type: string
+      maximum_seconds:
+        description: 'Maximum simulated seconds per run'
+        required: true
+        default: '420'
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  fire-self-play:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore Wyrmforge.slnx
+
+      - name: Build
+        run: dotnet build src/Wyrmforge.BalanceLab/Wyrmforge.BalanceLab.csproj -c Release --no-restore
+
+      - name: Fire progression acceptance study
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            RUNS="${{ inputs.runs_per_combination }}"
+            SECONDS="${{ inputs.maximum_seconds }}"
+          else
+            # Eight matched seeds across four agents and four real Fire builds:
+            # 128 observations. Keep the horizon long enough to reach first Wyrms.
+            RUNS="8"
+            SECONDS="420"
+          fi
+          dotnet run --project src/Wyrmforge.BalanceLab/Wyrmforge.BalanceLab.csproj -c Release --no-build -- \
+            --fire-progression --runs-per-combination "$RUNS" --max-seconds "$SECONDS" \
+            --seed-start 20261023 --output artifacts/pyromancer
+          test -s artifacts/pyromancer/pyromancer-progression-runs.json
+          test -s artifacts/pyromancer/pyromancer-progression-report.md
+          cat artifacts/pyromancer/pyromancer-progression-report.md
+
+      - name: Upload Fire progression evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: wyrmforge-pyromancer-progression-${{ github.sha }}
+          path: artifacts/pyromancer
+          if-no-files-found: error
+          retention-days: 30

@@ -4,10 +4,8 @@
 // In a later release these recipes may be replaced by recordings without changing the game event contract.
 (() => {
     const palette = Object.freeze({
-        ui: { label: 'Menu — tactile selection', bus: 'ui', volume: 0.32, cooldown: 100, duration: 0.12, priority: 1 },
-        'ui-back': { label: 'Menu — return', bus: 'ui', volume: 0.34, cooldown: 100, duration: 0.20, priority: 1 },
-        'ui-open': { label: 'Menu — open', bus: 'ui', volume: 0.38, cooldown: 160, duration: 0.28, priority: 1 },
-        'ui-confirm': { label: 'Menu — confirm', bus: 'ui', volume: 0.40, cooldown: 180, duration: 0.25, priority: 2 },
+        ui: { label: 'Stone / vellum', bus: 'ui', volume: 0.25, cooldown: 110, duration: 0.12, priority: 1 },
+        'building-open': { label: 'Town building — wood and hinge', bus: 'ui', volume: 0.45, cooldown: 210, duration: 0.30, priority: 2 },
         arcane: { label: 'Arcane — woven aether', bus: 'combat', volume: 0.35, cooldown: 550, duration: 0.40, priority: 1 },
         fire: { label: 'Ember — breath and cinder', bus: 'combat', volume: 0.42, cooldown: 590, duration: 0.38, priority: 1 },
         frost: { label: 'Frost — glass and snow', bus: 'combat', volume: 0.37, cooldown: 620, duration: 0.47, priority: 1 },
@@ -15,7 +13,9 @@
         impact: { label: 'Impact — stone and cloth', bus: 'combat', volume: 0.27, cooldown: 420, duration: 0.23, priority: 1 },
         'enemy-down': { label: 'Enemy down — fading ember', bus: 'combat', volume: 0.24, cooldown: 1100, duration: 0.34, priority: 1 },
         hurt: { label: 'Hurt — grounded warning', bus: 'combat', volume: 0.62, cooldown: 850, duration: 0.43, priority: 2 },
-        'hunt-start': { label: 'Entering the hunt', bus: 'moment', volume: 0.57, cooldown: 800, duration: 0.93, priority: 3 },
+        'hunt-start': { label: 'Expedition departure — boots and traveling cloak', bus: 'moment', volume: 0.57, cooldown: 800, duration: 0.93, priority: 3 },
+        'trail-enter': { label: 'Advance to next arena', bus: 'moment', volume: 0.36, cooldown: 360, duration: 0.34, priority: 2 },
+        'threat-reveal': { label: 'Danger arrives', bus: 'moment', volume: 0.58, cooldown: 1000, duration: 0.86, priority: 4 },
         'upgrade-open': { label: 'Discovery — a gentle glimmer', bus: 'moment', volume: 0.44, cooldown: 700, duration: 0.79, priority: 3 },
         'upgrade-choice': { label: 'Upgrade chosen — warm resonance', bus: 'moment', volume: 0.60, cooldown: 420, duration: 1.08, priority: 4 },
         'power-burst': { label: 'Power unleashed', bus: 'moment', volume: 0.82, cooldown: 1000, duration: 1.04, priority: 4 },
@@ -109,11 +109,12 @@
 
         switch (name) {
             case 'ui':
-            case 'ui-back':
-            case 'ui-open':
-            case 'ui-confirm':
                 strike(0, 238, 0.42, 0.11, 'stone');
                 air(0, 0.07, 430, 210, 0.09, 0.003);
+                break;
+            case 'building-open':
+                weight(0, 0.30, 0.19, 215, 124);
+                air(0, 0.12, 490, 250, 0.18, 0.013);
                 break;
             case 'arcane':
                 air(0, 0.30, 820, 320, 0.24);
@@ -149,9 +150,17 @@
                 body(0.10, 0.25, 139, 104, 0.15, 0.028, 3.6);
                 break;
             case 'hunt-start':
-                air(0.02, 0.75, 360, 640, 0.32, 0.22);
-                body(0.07, 0.77, 110, 146.83, 0.33, 0.20, 1.65);
-                strike(0.49, 220, 0.22, 0.39, 'stone');
+                weight(0.005, 0.35, 0.20, 175, 100);
+                air(0.045, 0.38, 610, 300, 0.27, 0.06, 'soft');
+                weight(0.22, 0.31, 0.18, 165, 92);
+                break;
+            case 'trail-enter':
+                weight(0, 0.28, 0.17, 195, 113);
+                air(0.01, 0.14, 420, 250, 0.12, 0.006);
+                break;
+            case 'threat-reveal':
+                body(0.05, 0.62, 130, 80, 0.28, 0.16, 2.1);
+                air(0.08, 0.60, 330, 195, 0.32, 0.15);
                 break;
             case 'upgrade-open':
                 body(0.02, 0.65, 293.66, 349.23, 0.23, 0.13, 2.0);

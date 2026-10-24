@@ -1,0 +1,82 @@
+{
+  "base": "http://127.0.0.1:4190",
+  "errors": [],
+  "assets": [
+    "/art/enemies/ashling-rigged/manifest.json",
+    "/art/enemies/ashling-rigged/animation-profile.json",
+    "/art/enemies/ashling-rigged/walk.png",
+    "/art/enemies/ashling-rigged/attack.png",
+    "/art/enemies/ashling-rigged/death.png"
+  ],
+  "walk": {
+    "ready": true,
+    "entities": [
+      {
+        "entityId": 1,
+        "clip": "walk",
+        "frame": 4,
+        "direction": "SE",
+        "baseFrame": 4,
+        "phase": 0.30907754629628825,
+        "layered": false,
+        "drawX": 227.16593998321207,
+        "drawY": 259.0718284140531,
+        "x": 227.16593998321207,
+        "y": 259.0718284140531
+      }
+    ],
+    "corpses": []
+  },
+  "attack": {
+    "ready": true,
+    "entities": [
+      {
+        "entityId": 1,
+        "clip": "attack",
+        "frame": 15,
+        "direction": "S",
+        "baseFrame": 12,
+        "phase": 0.7995266203704228,
+        "layered": false,
+        "drawX": 183.9572857135665,
+        "drawY": 243.96152438959106,
+        "x": 183.96347506310468,
+        "y": 243.93200630103013
+      }
+    ],
+    "corpses": []
+  },
+  "collapse": {
+    "ready": true,
+    "entities": [],
+    "corpses": [
+      {
+        "entityId": 1,
+        "direction": "S",
+        "age": 0.2516000000238421,
+        "frame": 6
+      }
+    ]
+  },
+  "held": {
+    "ready": true,
+    "entities": [],
+    "corpses": [
+      {
+        "entityId": 1,
+        "direction": "S",
+        "age": 2.0018000000715257,
+        "frame": 27
+      }
+    ]
+  },
+  "pauseStable": true,
+  "renderingFailed": false,
+  "performance": {
+    "fps": 239,
+    "simulationHz": 212,
+    "simulationMilliseconds": 0,
+    "bridgeMilliseconds": 2.4610062822605827
+  },
+  "passed": true
+}

@@ -1,11 +1,14 @@
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
-import { attachArenaInput, getArenaMovement } from './arena-input.js';
+import { attachArenaInput, getArenaMovement, getArenaAim } from './arena-input.js';
 import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, drawArenaCloisterElevation } from './arena-environment.js';
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
 import { drawRecoveryGuide } from './arena-recovery.js';
 import { drawSpellCastMotion, drawSpellProjectile, drawSpellImpact } from './arena-spell-vfx.js';
 import { drawMage, updateMageWalk } from './arena-mage.js';
 import { drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions, enemyFacing } from './arena-enemy-art.js';
+import { preloadPaintedEnemies, drawPaintedEnemy, drawPaintedWyrm, updatePaintedCorpses, drawPaintedCorpses, mireHoundPixelPreviewEnabled } from './painted-enemies.js';
+import { preloadHollowSprites, hollowSpritesReady, createHollowState, updateHollowSprites, drawHollowEnemy, drawHollowCorpses, hollowDiagnostics } from './hollow-sprites.js';
+import { ashlingSprites } from './ashling-sprites.js';
 import { drawEnemyTelegraph, drawHostileProjectileGround, drawHostileProjectileEmber, drawShieldGuard, drawAshRemains, drawWraithRipple } from './arena-enemy-telegraphs.js';
 import { drawReliquaryGround, drawReliquaryEmergence, drawReliquaryHushVeil, drawReliquaryBar } from './arena-reliquary-vfx.js';
 import { drawBellWardenGround, drawBellWardenEntrance, drawBellWardenBar } from './arena-bellwarden-vfx.js';
@@ -13,6 +16,8 @@ import { drawWinterBellGround, drawWinterBellAir } from './arena-winterbell-vfx.
 import { drawGlassReliquaryGround, drawGlassReliquaryAir } from './arena-glass-reliquary-vfx.js';
 import { loadArt, artReady, hasArtFrame, drawArtFrame } from './art-atlas.js';
 import { buildSpellLights, drawSpellLightSpill, sampleSpellLight } from './arena-spell-lighting.js';
+import { gothicNightLightSources, gothicNightPlan, drawGothicNight, GOTHIC_NIGHT } from './arena-night-lighting.js';
+import { createWetForestFirelightPlan } from './arena-wet-forest-dressing.js';
 import { resolveArenaCamera, drawExitGuide } from './arena-camera.js';
 import { drawEliteGround, drawEliteCrest } from './arena-elite-vfx.js';
 import { drawLightningTrace } from './arena-lightning-vfx.js';
@@ -24,6 +29,9 @@ export function initializeArena(canvas, dotNetReference) {
     disposeArena(canvas);
     // Atlases stream in; until they decode, every layer uses its code-painted fallback.
     loadArt(new URL('../art/', import.meta.url).href);
+    preloadPaintedEnemies();
+    preloadHollowSprites();
+    ashlingSprites.preload();
     const state = createState(canvas, dotNetReference);
     arenas.set(canvas, state);
     state.detachInput = attachArenaInput(state);
@@ -40,12 +48,23 @@ export function readArenaDiagnostics(canvas) {
     return {
         active: state.active,
         movement: getArenaMovement(state),
+        aim: getArenaAim(state),
+        projectiles: state.latestSnapshot?.projectiles ?? [],
+        castMotion: state.latestSnapshot?.castMotion ?? null,
         pointerId: state.pointerId,
         touchId: state.touchId,
         player: state.latestSnapshot?.player ?? null,
         world: state.latestSnapshot?.world ?? null,
         exit: state.latestSnapshot?.exit ?? null,
+        enemies: state.latestSnapshot?.enemies ?? [],
+        deathBursts: state.latestSnapshot?.deathBursts ?? [],
+        hollow: hollowDiagnostics(state.hollow),
+        ashling: ashlingSprites.diagnostics(state.ashling),
+        dragon: state.latestSnapshot?.dragon ?? null,
+        dragonBreath: state.latestSnapshot?.dragonBreath ?? null,
+        performance: { fps:state.displayFps, simulationHz:state.displaySimulationHz, simulationMilliseconds:state.displaySimulationMilliseconds, bridgeMilliseconds:state.displayBridgeMilliseconds },
         renderingFailed: Boolean(state.renderingFailed),
+        lighting: { mode: 'night', darkness: GOTHIC_NIGHT.darkness, source: 'authoritative-csharp-snapshot' },
     };
 }
 
@@ -62,6 +81,7 @@ function createState(canvas, dotNetReference) {
     return {
         canvas,
         context: canvas.getContext('2d'),
+        nightMask: document.createElement('canvas'),
         dotNetReference,
         active: true,
         simulationBusy: false,
@@ -69,6 +89,9 @@ function createState(canvas, dotNetReference) {
         playerDanger: createPlayerDangerState(),
         mageWalk: { x: null, y: null, lastMove: Number.NEGATIVE_INFINITY },
         enemyMotion: createEnemyMotionState(),
+        paintedCorpses: {},
+        hollow: createHollowState(),
+        ashling: ashlingSprites.createState(),
         reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)'),
         keys: new Set(),
         pointerId: null,
@@ -117,12 +140,14 @@ function startSimulationFrame(state, timestamp, rect) {
     const delta = Math.min((timestamp - state.lastSimulationTimestamp) / 1000, 0.05);
     state.lastSimulationTimestamp = timestamp;
     const movement = getArenaMovement(state);
+    const aim = getArenaAim(state);
     const bridgeStarted = performance.now();
 
-    state.dotNetReference.invokeMethodAsync('Frame', delta, rect.width, rect.height, movement.x, movement.y)
+    state.dotNetReference.invokeMethodAsync('Frame', delta, rect.width, rect.height, movement.x, movement.y, aim.x, aim.y)
         .then(snapshot => {
             if (!state.active) return;
             updatePlayerDanger(state.playerDanger, snapshot, performance.now());
+            if (snapshot.paused) state.resetInput?.();
             state.latestSnapshot = snapshot;
             state.simulationFrameCount++;
             state.simulationMillisecondsTotal += snapshot.simulationMilliseconds ?? 0;
@@ -219,9 +244,22 @@ function draw(state, snapshot, width, height) {
     for (const shard of snapshot.experienceShards ?? []) drawExperienceShard(ctx, shard);
     if (snapshot.dragonBreath) drawDragonBreath(ctx, snapshot.dragonBreath, snapshot.dragon?.school ?? snapshot.hunt?.school);
     for (const pulse of snapshot.splashPulses) drawSplashPulse(ctx, pulse, snapshot.dragon?.school);
+    drawAimRune(ctx, snapshot.player);
     drawWardReadiness(ctx, snapshot.player, visualSeconds, state.reducedMotion.matches);
     if (snapshot.wardPulse) drawWardPulse(ctx, snapshot.wardPulse, state.reducedMotion.matches);
+    updatePaintedCorpses(state.paintedCorpses, snapshot.deathBursts, state.enemyMotion, visualSeconds);
     const enemyPoses = updateEnemyMotions(state.enemyMotion, snapshot.enemies, visualSeconds, state.reducedMotion.matches);
+    updateHollowSprites(state.hollow,snapshot,visualSeconds,state.reducedMotion.matches);
+    ashlingSprites.update(state.ashling,snapshot,visualSeconds,state.reducedMotion.matches);
+    drawPaintedCorpses(ctx, state.paintedCorpses, visualSeconds,hollowSpritesReady(),ashlingSprites.ready());
+    drawHollowCorpses(ctx,state.hollow,state.reducedMotion.matches);
+    ashlingSprites.drawCorpses(ctx,state.ashling,state.reducedMotion.matches);
+    // The Mire Hound now uses authored pixel poses, including a real collapse.
+    // Only C# identity-bearing death bursts create these bodies.
+    for (const corpse of state.paintedCorpses.corpses?.values() ?? [])
+        if (Number(corpse.kind) === 1 && mireHoundPixelPreviewEnabled())
+            drawEnemyPixelArt(ctx, { ...corpse, opacity: Math.max(0, 1 - (visualSeconds - corpse.at) / .8) },
+                null, 7, corpse.facing);
     // Correct 2.5D ordering by WORLD foot position. A mage/enemy walking north of
     // a ruined wall goes behind its facade; walking south brings it forward.
     const depthLayers = [
@@ -235,7 +273,7 @@ function draw(state, snapshot, width, height) {
         } else if (layer.kind === 'enemy') {
             const enemy = layer.enemy;
             drawEnemy(ctx, enemy, sampleSpellLight(spellLights, enemy.x, enemy.y),
-                enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId));
+                enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId),state.hollow,state.ashling);
             drawEliteCrest(ctx, enemy, visualSeconds, state.reducedMotion.matches);
         } else {
             drawMage(ctx, snapshot.player, snapshot.castMotion, danger.hit, state.reducedMotion.matches,
@@ -260,8 +298,20 @@ function draw(state, snapshot, width, height) {
         ctx.restore();
     }
     const entranceOmen = snapshot.hunt?.stage === 1 && snapshot.hunt?.entranceBeat === 1;
-    if (snapshot.dragon && !entranceOmen) drawDragon(ctx, snapshot.dragon, state.reducedMotion.matches);
-    // A second weaker pass tints nearby monster silhouettes without washing out their attacks.
+    if (snapshot.dragon && !entranceOmen) drawDragon(ctx, snapshot.dragon, state.reducedMotion.matches, snapshot.dragonBreath);
+    // The WORLD is always at night. Render the SAME darkness across ground,
+    // physical scenery, enemies, mage and Wyrm. Real fire/elemental cast,
+    // impacts, burning trees and Fire Wyrm breath cut light into all layers.
+    // Keep high-priority attack tells and magical VFX ABOVE the veil.
+    const realFires = createWetForestFirelightPlan(snapshot.environment, worldWidth, worldHeight);
+    const nightSources = gothicNightLightSources(snapshot, spellLights, worldWidth, worldHeight, realFires);
+    drawGothicNight(ctx, gothicNightPlan(snapshot.player, nightSources, lightViewport), state.nightMask);
+    // Tactical telegraphs must remain readable even when the ground is nearly
+    // black. They are presentation cues, not physical light emitters.
+    for (const enemy of snapshot.enemies) drawEnemyTelegraph(ctx, enemy);
+    if (snapshot.dragonBreath) drawDragonBreath(ctx, snapshot.dragonBreath,
+        snapshot.dragon?.school ?? snapshot.hunt?.school);
+    // A second weaker pass colors nearby silhouettes without whitening shadows.
     drawSpellLightSpill(ctx, spellLights, lightViewport, 'actors');
     for (const impact of snapshot.elementalImpacts) drawSpellImpact(ctx, impact, state.reducedMotion.matches);
     for (const death of snapshot.deathBursts) drawDeathBurst(ctx, death);
@@ -763,8 +813,8 @@ function drawPerformanceCounter(state, ctx, snapshot, width, height) {
     ctx.restore();
 }
 
-function drawEnemy(ctx, enemy, lighting = null, walkPhase = 0, facing = 1) {
-    drawEnemyPixelArt(ctx, enemy, lighting, walkPhase, facing);
+function drawEnemy(ctx, enemy, lighting = null, walkPhase = 0, facing = 1, hollow = null, ashling = null) {
+    if (!(ashling&&ashlingSprites.drawEnemy(ctx,enemy,ashling))&&!(hollow&&drawHollowEnemy(ctx,enemy,hollow))&&!drawPaintedEnemy(ctx, enemy, walkPhase, facing)) drawEnemyPixelArt(ctx, enemy, lighting, walkPhase, facing);
     drawRimeArmor(ctx, enemy);
     if (enemy.frozen || enemy.hitFlash || enemy.healthRatio >= 0.72) return;
     const damage = 1 - enemy.healthRatio;
@@ -979,7 +1029,7 @@ function drawDragonBreath(ctx, breath, school) {
     ctx.stroke();
 }
 
-function drawDragon(ctx, dragon, reducedMotion = false) {
+function drawDragon(ctx, dragon, reducedMotion = false, breath = null) {
     const palette = schoolPalette(dragon.school);
     ctx.save();
     ctx.translate(dragon.x, dragon.y);
@@ -1004,7 +1054,9 @@ function drawDragon(ctx, dragon, reducedMotion = false) {
     }
 
     const art = artReady() ? `wyrm.${dragon.school}.${dragon.frozen ? 'frozen' : `p${dragon.phase === 2 ? 2 : 1}.f${reducedMotion ? 0 : Math.floor(performance.now() / 280) % 2}`}` : null;
-    if (art && hasArtFrame('wyrms', art)) {
+    if (drawPaintedWyrm(ctx, dragon, breath ? 3 : 0)) {
+        // Canonical breath telegraph and phase/ascendant crests remain separate from the bitmap.
+    } else if (art && hasArtFrame('wyrms', art)) {
         // Authored wyrm sprite scaled to the canonical C# radius; flapping is presentation only.
         ctx.fillStyle = 'rgba(4,6,9,.34)';
         ctx.beginPath();
@@ -1233,4 +1285,19 @@ function drawPolygon(ctx, x, y, radius, sides, rotation) {
 function roundRect(ctx, x, y, width, height, radius) {
     ctx.beginPath();
     ctx.roundRect(x, y, width, height, radius);
+}
+
+// Snapshot direction is the same C# direction used to launch the primary spell.
+function drawAimRune(ctx, player) {
+    if (!Number.isFinite(player.aimAngle) || (!player.manualAim && player.aimTargetId == null)) return;
+    ctx.save();
+    ctx.translate(player.x, player.y + 7);
+    ctx.rotate(player.aimAngle);
+    ctx.strokeStyle = player.manualAim ? 'rgba(225,204,159,.72)' : 'rgba(162,176,195,.36)';
+    ctx.lineWidth = 1.25;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 29, 20, 0, -.4, .4);
+    ctx.moveTo(34, 0); ctx.lineTo(38, -3); ctx.lineTo(42, 0); ctx.lineTo(38, 3); ctx.closePath();
+    ctx.stroke();
+    ctx.restore();
 }

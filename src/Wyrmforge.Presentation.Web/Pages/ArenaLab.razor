@@ -1,0 +1,144 @@
+@page "/arena-lab"
+@implements IAsyncDisposable
+@using Microsoft.AspNetCore.Components
+@using Microsoft.JSInterop
+
+<main class="arena-lab">
+    <header>
+        <div class="heading">
+            <span>WYRMFORGE / ARENA REBUILD / PHASE 2</span>
+            <h1>Natural Terrain & Forest Trails</h1>
+            <p>Step 2: a connected forest trail and natural clearings, painted only with the approved ground materials. No legacy assets, cobblestones, enemies or collision.</p>
+        </div>
+    </header>
+
+    <section class="arena-controls" aria-label="Ground foundation controls">
+        <label>Ground seed
+            <input aria-label="Ground seed" type="number" @bind="seed" />
+        </label>
+        <button type="button" @onclick="ApplySeed">Generate ground</button>
+        <button type="button" class="secondary" @onclick="NextSeed">Different ground ↻</button>
+    </section>
+
+    <section class="arena-tools" aria-label="Ground preview modes">
+        <span>STEP 2 · GROUND ONLY</span>
+        <button type="button" class="@(mode == "trails" ? "selected" : "secondary")"
+                aria-pressed="@(mode == "trails" ? "true" : "false")"
+                @onclick="ShowTrails">Forest trails</button>
+        <button type="button" class="@(mode == "natural" ? "selected" : "secondary")"
+                aria-pressed="@(mode == "natural" ? "true" : "false")"
+                @onclick="ShowNatural">Natural ground</button>
+        <button type="button" class="@(mode == "grass" ? "selected" : "secondary")"
+                aria-pressed="@(mode == "grass" ? "true" : "false")"
+                @onclick="ShowGrass">All grass</button>
+        <button type="button" class="secondary" @onclick="CopyLink">Copy seed link</button>
+    </section>
+
+    <div class="arena-layout">
+        <section class="arena-stage">
+            <canvas @ref="canvas" aria-label="Ground foundation without scenery" tabindex="0"></canvas>
+            <div class="arena-tip">Drag to pan · only natural ground materials</div>
+            <div class="arena-readout">Seed @seed · @(mode == "trails" ? "Forest trails" : mode == "natural" ? "Natural ground" : "All grass")</div>
+            <div class="arena-badge">TERRAIN ONLY · NO OLD ASSETS</div>
+        </section>
+        <aside class="arena-inspector">
+            <h2>Step 2 — Terrain</h2>
+            <dl>
+                <dt>Approved artwork</dt><dd>Six base materials</dd>
+                <dt>Visible scene</dt><dd>Ground only</dd>
+                <dt>Forest trail</dt><dd>@(mode == "trails" ? "Connected" : "Hidden")</dd>
+                <dt>Clearings</dt><dd>@(mode == "trails" ? "2, linked to trail" : "Hidden")</dd>
+                <dt>Old trees and structures</dt><dd>0</dd>
+                <dt>Roads and cobblestones</dt><dd>0</dd>
+                <dt>Enemies and characters</dt><dd>0</dd>
+                <dt>Collision obstacles</dt><dd>0</dd>
+                <dt>World</dt><dd>960 × 1536</dd>
+            </dl>
+            <h3>Rebuild order</h3>
+            <p><strong>Step 1:</strong> the approved ground, unchanged in Natural ground mode. <strong>Step 2:</strong> one winding dirt trail, two connected clearings and wet borders. Inspect continuity and blending before adding any new objects.</p>
+            <p>This browser page is a visual development laboratory. The eventual game targets iOS and Android; the approved textures and material rules must remain portable.</p>
+            <p><a href="arena-lighting">Inspect experimental shared lighting (L0/L1)</a> — separate preview, no gameplay changes.</p>
+        </aside>
+    </div>
+</main>
+
+@code {
+    [Inject] private IJSRuntime JavaScript { get; set; } = null!;
+    [Inject] private NavigationManager Navigation { get; set; } = null!;
+
+    [Parameter, SupplyParameterFromQuery(Name = "seed")] public string? SeedQuery { get; set; }
+
+    private ElementReference canvas;
+    private IJSObjectReference? module;
+    private int seed = 1204;
+    private string mode = "trails";
+
+    protected override void OnParametersSet()
+    {
+        if (int.TryParse(SeedQuery, System.Globalization.NumberStyles.Integer,
+                System.Globalization.CultureInfo.InvariantCulture, out var requestedSeed))
+            seed = requestedSeed;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        module = await JavaScript.InvokeAsync<IJSObjectReference>(
+            "import", "./js/arena-ground-foundation.js?v=20261022-forest-trails-1");
+        await module.InvokeVoidAsync("initializeGroundFoundation", canvas, seed, mode);
+    }
+
+    private async Task ShowTrails()
+    {
+        mode = "trails";
+        await SyncGround();
+    }
+
+    private async Task ShowNatural()
+    {
+        mode = "natural";
+        await SyncGround();
+    }
+
+    private async Task ShowGrass()
+    {
+        mode = "grass";
+        await SyncGround();
+    }
+
+    private async Task ApplySeed()
+    {
+        UpdateLink();
+        await SyncGround();
+    }
+
+    private async Task NextSeed()
+    {
+        seed = unchecked(seed + 1);
+        UpdateLink();
+        await SyncGround();
+    }
+
+    private Task SyncGround() => module is null
+        ? Task.CompletedTask
+        : module.InvokeVoidAsync("configureGroundFoundation", canvas, seed, mode).AsTask();
+
+    private void UpdateLink() =>
+        Navigation.NavigateTo(Navigation.GetUriWithQueryParameters(
+            new Dictionary<string, object?> { ["seed"] = seed }), replace: true);
+
+    private async Task CopyLink()
+    {
+        UpdateLink();
+        await JavaScript.InvokeVoidAsync("navigator.clipboard.writeText",
+            Navigation.GetUriWithQueryParameter("seed", seed));
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (module is null) return;
+        try { await module.InvokeVoidAsync("disposeGroundFoundation", canvas); }
+        catch (JSDisconnectedException) { }
+        await module.DisposeAsync();
+    }
+}

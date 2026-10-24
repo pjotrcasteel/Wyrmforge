@@ -21,7 +21,7 @@ public sealed class RunResonanceState(IReadOnlySet<string> selectedNodes)
         foreach (var nodeId in selectedNodeIds)
         {
             var node = PassiveTreeCatalog.Get(nodeId);
-            if (node.School is { } school) values[ToSpellSchool(school)] += node.Cost;
+            if (node.School is { } school && ToSpellSchool(school) is { } spellSchool) values[spellSchool] += node.Cost;
         }
 
         foreach (var spell in SpellCatalog.All)
@@ -43,11 +43,12 @@ public sealed class RunResonanceState(IReadOnlySet<string> selectedNodes)
         return Enum.GetValues<SpellSchool>().Select(school => new RunResonanceEntry(school, values[school])).ToArray();
     }
 
-    private static SpellSchool ToSpellSchool(PassiveSchool school) => school switch
+    private static SpellSchool? ToSpellSchool(PassiveSchool school) => school switch
     {
         PassiveSchool.Fire => SpellSchool.Fire,
         PassiveSchool.Frost => SpellSchool.Frost,
         PassiveSchool.Storm => SpellSchool.Storm,
-        _ => SpellSchool.Arcane,
+        PassiveSchool.Arcane => SpellSchool.Arcane,
+        _ => null,
     };
 }

@@ -1,0 +1,372 @@
+{
+  "frames": [
+    {
+      "frame": 0,
+      "sourceEvaluationError": 0.0,
+      "minimumRawZ": -0.5002828240394592,
+      "lowestGroups": [
+        "foot.L"
+      ],
+      "correctedVerticesByGroup": {},
+      "maxBoneLengthError": 1.7881393432617188e-07
+    },
+    {
+      "frame": 1,
+      "sourceEvaluationError": 0.0,
+      "minimumRawZ": -0.5002828240394592,
+      "lowestGroups": [
+        "foot.L"
+      ],
+      "correctedVerticesByGroup": {},
+      "maxBoneLengthError": 3.2782554626464844e-07
+    },
+    {
+      "frame": 2,
+      "sourceEvaluationError": 0.0,
+      "minimumRawZ": -0.500282883644104,
+      "lowestGroups": [
+        "foot.L"
+      ],
+      "correctedVerticesByGroup": {},
+      "maxBoneLengthError": 1.341104507446289e-07
+    },
+    {
+      "frame": 3,
+      "sourceEvaluationError": 0.0,
+      "minimumRawZ": -0.500282883644104,
+      "lowestGroups": [
+        "foot.L"
+      ],
+      "correctedVerticesByGroup": {},
+      "maxBoneLengthError": 1.043081283569336e-07
+    },
+    {
+      "frame": 4,
+      "sourceEvaluationError": 0.0,
+      "minimumRawZ": -0.5002828240394592,
+      "lowestGroups": [
+        "foot.L"
+      ],
+      "correctedVerticesByGroup": {},
+      "maxBoneLengthError": 7.450580596923828e-08
+    },
+    {
+      "frame": 5,
+      "sourceEvaluationError": 0.0,
+      "minimumRawZ": -0.5002829432487488,
+      "lowestGroups": [
+        "foot.L"
+      ],
+      "correctedVerticesByGroup": {},
+      "maxBoneLengthError": 1.341104507446289e-07
+    },
+    {
+      "frame": 6,
+      "sourceEvaluationError": 0.0,
+      "minimumRawZ": -0.5002830028533936,
+      "lowestGroups": [
+        "foot.L"
+      ],
+      "correctedVerticesByGroup": {},
+      "maxBoneLengthError": 1.7881393432617188e-07
+    },
+    {
+      "frame": 7,
+      "sourceEvaluationError": 0.0,
+      "minimumRawZ": -0.5002829432487488,
+      "lowestGroups": [
+        "foot.L"
+      ],
+      "correctedVerticesByGroup": {},
+      "maxBoneLengthError": 2.2351741790771484e-07
+    },
+    {
+      "frame": 8,
+      "sourceEvaluationError": 0.0,
+      "minimumRawZ": -0.5319703817367554,
+      "lowestGroups": [
+        "hand.R"
+      ],
+      "correctedVerticesByGroup": {
+        "hand.R": 660,
+        "hand.L": 507
+      },
+      "maxBoneLengthError": 1.1920928955078125e-07
+    },
+    {
+      "frame": 9,
+      "sourceEvaluationError": 0.0,
+      "minimumRawZ": -0.549770712852478,
+      "lowestGroups": [
+        "hand.R"
+      ],
+      "correctedVerticesByGroup": {
+        "hand.R": 934,
+        "hand.L": 214
+      },
+      "maxBoneLengthError": 2.384185791015625e-07
+    },
+    {
+      "frame": 10,
+      "sourceEvaluationError": 0.0,
+      "minimumRawZ": -0.543379008769989,
+      "lowestGroups": [
+        "foot.L"
+      ],
+      "correctedVerticesByGroup": {
+        "hand.R": 278,
+        "foot.R": 25,
+        "foot.L": 27
+      },
+      "maxBoneLengthError": 1.1920928955078125e-07
+    },
+    {
+      "frame": 11,
+      "sourceEvaluationError": 0.0,
+      "minimumRawZ": -0.5834622979164124,
+      "lowestGroups": [
+        "foot.L"
+      ],
+      "correctedVerticesByGroup": {
+        "foot.R": 25,
+        "foot.L": 27
+      },
+      "maxBoneLengthError": 2.682209014892578e-07
+    },
+    {
+      "frame": 12,
+      "sourceEvaluationError": 0.0,
+      "minimumRawZ": -0.5715427398681641,
+      "lowestGroups": [
+        "foot.R"
+      ],
+      "correctedVerticesByGroup": {
+        "clavicle.R": 68,
+        "clavicle.L": 83,
+        "shin.R": 5,
+        "upper_arm.R": 14,
+        "foot.R": 25,
+        "chest": 7,
+        "foot.L": 27,
+        "head": 71,
+        "upper_arm.L": 187,
+        "shin.L": 4
+      },
+      "maxBoneLengthError": 1.4901161193847656e-07
+    },
+    {
+      "frame": 13,
+      "sourceEvaluationError": 0.0,
+      "minimumRawZ": -0.5249810814857483,
+      "lowestGroups": [
+        "foot.L"
+      ],
+      "correctedVerticesByGroup": {
+        "shin.R": 6,
+        "foot.R": 25,
+        "foot.L": 27,
+        "upper_arm.L": 29,
+        "shin.L": 2
+      },
+      "maxBoneLengthError": 1.1920928955078125e-07
+    },
+    {
+      "frame": 14,
+      "sourceEvaluationError": 0.0,
+      "minimumRawZ": -0.5018972158432007,
+      "lowestGroups": [
+        "shin.R",
+        "foot.R"
+      ],
+      "correctedVerticesByGroup": {
+        "shin.R": 4,
+        "shin.L": 3
+      },
+      "maxBoneLengthError": 1.4901161193847656e-07
+    },
+    {
+      "frame": 15,
+      "sourceEvaluationError": 0.0,
+      "minimumRawZ": -0.502178966999054,
+      "lowestGroups": [
+        "thigh.R",
+        "shin.R"
+      ],
+      "correctedVerticesByGroup": {
+        "shin.R": 2,
+        "thigh.R": 7,
+        "thigh.L": 2,
+        "shin.L": 3
+      },
+      "maxBoneLengthError": 2.384185791015625e-07
+    },
+    {
+      "frame": 16,
+      "sourceEvaluationError": 0.0,
+      "minimumRawZ": -0.5044436454772949,
+      "lowestGroups": [
+        "thigh.R",
+        "shin.R"
+      ],
+      "correctedVerticesByGroup": {
+        "shin.R": 16,
+        "thigh.R": 19,
+        "thigh.L": 17,
+        "shin.L": 10,
+        "foot.L": 5
+      },
+      "maxBoneLengthError": 1.1920928955078125e-07
+    },
+    {
+      "frame": 17,
+      "sourceEvaluationError": 0.0,
+      "minimumRawZ": -0.5254386067390442,
+      "lowestGroups": [
+        "foot.L"
+      ],
+      "correctedVerticesByGroup": {
+        "shin.R": 43,
+        "foot.R": 506,
+        "clavicle.R": 24,
+        "clavicle.L": 39,
+        "thigh.R": 36,
+        "chest": 3,
+        "thigh.L": 27,
+        "upper_arm.L": 63,
+        "shin.L": 30,
+        "foot.L": 677
+      },
+      "maxBoneLengthError": 1.9371509552001953e-07
+    },
+    {
+      "frame": 18,
+      "sourceEvaluationError": 0.0,
+      "minimumRawZ": -0.526879608631134,
+      "lowestGroups": [
+        "foot.L"
+      ],
+      "correctedVerticesByGroup": {
+        "clavicle.R": 55,
+        "clavicle.L": 66,
+        "thigh.R": 16,
+        "foot.R": 25,
+        "upper_arm.R": 2,
+        "chest": 6,
+        "head": 69,
+        "foot.L": 27,
+        "thigh.L": 12,
+        "upper_arm.L": 103
+      },
+      "maxBoneLengthError": 1.341104507446289e-07
+    },
+    {
+      "frame": 19,
+      "sourceEvaluationError": 0.0,
+      "minimumRawZ": -0.526879608631134,
+      "lowestGroups": [
+        "foot.L"
+      ],
+      "correctedVerticesByGroup": {
+        "clavicle.R": 55,
+        "clavicle.L": 66,
+        "thigh.R": 16,
+        "foot.R": 25,
+        "upper_arm.R": 2,
+        "chest": 6,
+        "head": 82,
+        "foot.L": 27,
+        "thigh.L": 12,
+        "upper_arm.L": 103
+      },
+      "maxBoneLengthError": 2.980232238769531e-07
+    },
+    {
+      "frame": 20,
+      "sourceEvaluationError": 0.0,
+      "minimumRawZ": -0.526879608631134,
+      "lowestGroups": [
+        "foot.L"
+      ],
+      "correctedVerticesByGroup": {
+        "clavicle.R": 55,
+        "clavicle.L": 66,
+        "thigh.R": 16,
+        "foot.R": 25,
+        "upper_arm.R": 2,
+        "chest": 6,
+        "head": 82,
+        "foot.L": 27,
+        "thigh.L": 12,
+        "upper_arm.L": 103
+      },
+      "maxBoneLengthError": 2.980232238769531e-07
+    },
+    {
+      "frame": 21,
+      "sourceEvaluationError": 0.0,
+      "minimumRawZ": -0.526879608631134,
+      "lowestGroups": [
+        "foot.L"
+      ],
+      "correctedVerticesByGroup": {
+        "clavicle.R": 55,
+        "clavicle.L": 66,
+        "thigh.R": 16,
+        "foot.R": 25,
+        "upper_arm.R": 2,
+        "chest": 6,
+        "head": 82,
+        "foot.L": 27,
+        "thigh.L": 12,
+        "upper_arm.L": 103
+      },
+      "maxBoneLengthError": 2.980232238769531e-07
+    },
+    {
+      "frame": 22,
+      "sourceEvaluationError": 0.0,
+      "minimumRawZ": -0.526879608631134,
+      "lowestGroups": [
+        "foot.L"
+      ],
+      "correctedVerticesByGroup": {
+        "clavicle.R": 55,
+        "clavicle.L": 66,
+        "thigh.R": 16,
+        "foot.R": 25,
+        "upper_arm.R": 2,
+        "chest": 6,
+        "head": 82,
+        "foot.L": 27,
+        "thigh.L": 12,
+        "upper_arm.L": 103
+      },
+      "maxBoneLengthError": 2.980232238769531e-07
+    },
+    {
+      "frame": 23,
+      "sourceEvaluationError": 0.0,
+      "minimumRawZ": -0.526879608631134,
+      "lowestGroups": [
+        "foot.L"
+      ],
+      "correctedVerticesByGroup": {
+        "clavicle.R": 55,
+        "clavicle.L": 66,
+        "thigh.R": 16,
+        "foot.R": 25,
+        "upper_arm.R": 2,
+        "chest": 6,
+        "head": 82,
+        "foot.L": 27,
+        "thigh.L": 12,
+        "upper_arm.L": 103
+      },
+      "maxBoneLengthError": 2.980232238769531e-07
+    }
+  ],
+  "maxSourceEvaluationError": 0.0,
+  "maxBoneLengthError": 3.2782554626464844e-07,
+  "minimumExportedZ": -0.5,
+  "finalHoldError": 0.0
+}

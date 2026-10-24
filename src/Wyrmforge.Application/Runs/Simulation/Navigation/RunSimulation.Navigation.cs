@@ -1,4 +1,4 @@
-﻿using Wyrmforge.Application.Runs.Navigation;
+using Wyrmforge.Application.Runs.Navigation;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
 using Wyrmforge.Domain.Spells;
 
@@ -11,6 +11,9 @@ public sealed partial class RunSimulation
     private ArenaEnvironmentState? arenaEnvironment;
     private WyrmrealmEncounterModifierSet encounterModifiers = WyrmrealmEncounterModifierSet.Empty;
     private bool mapEncounterCleanupPending;
+    private int trailExperienceAtEntry;
+    public int TrailExperienceEarned => Math.Max(0, experienceEarned - trailExperienceAtEntry);
+    public IReadOnlyList<Wyrmforge.Domain.Progression.Signature.HuntMaterialId> TrailGatheredMaterials => materialCargoState.TrailCollected;
     private double entryGraceRemaining;
     public double EntryGraceRemaining => entryGraceRemaining;
 
@@ -49,6 +52,8 @@ public sealed partial class RunSimulation
         var node = mapState.Choose(id);
         if (node is null) return false;
         ClearMapEncounterField();
+        trailExperienceAtEntry = experienceEarned;
+        materialCargoState.BeginTrail();
         playerPositionInitialized = false;
         arenaEnvironment = ArenaEnvironmentState.Create(mapState.Seed, node);
         PrepareBellWardenNode(node);
@@ -95,7 +100,10 @@ public sealed partial class RunSimulation
         WithdrawReliquary();
         trailExitPending = true;
         RefreshBuildModifiers(true);
-        ApplyRouteReward(completedNode.Route?.Reward);
+        // A trail walked again after a return to the refuge pays its route reward only once.
+        if (rewardedRouteNodeIds.Add(completedNode.Id)) ApplyRouteReward(completedNode.Route?.Reward);
+        TrySecureRefuge(completedNode);
+        TryScoutFromWatchtower(completedNode);
         if (completedNode.Stage == WyrmrealmMapState.CombatStages) ResolveDragonAttraction();
         mapEncounterCleanupPending = true;
     }

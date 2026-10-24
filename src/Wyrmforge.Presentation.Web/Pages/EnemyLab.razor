@@ -1,0 +1,137 @@
+@page "/enemy-lab"
+@implements IAsyncDisposable
+@using Microsoft.AspNetCore.Components
+@using Microsoft.JSInterop
+@using Wyrmforge.Application.Abstractions.Randomness
+@using Wyrmforge.Application.Runs.Development
+@using Wyrmforge.Application.Runs.SelfPlay
+@using Wyrmforge.Application.Runs.Simulation
+@using Wyrmforge.Application.Runs.Simulation.Snapshots
+@using Wyrmforge.Domain.Combat.Enemies
+
+<main class="enemy-lab">
+    <header><span>WYRMFORGE • DEVELOPER INSPECTION</span><h1>Fire & Frost enemy lab</h1>
+        <p>The real combat simulation and canvas renderer. This practice encounter never saves progress.</p></header>
+    <section class="settings">
+        <label>Monster
+            <select aria-label="Monster to inspect" @bind="kind" @bind:after="LoadSelectedEnemy">
+                <optgroup label="Fire">
+                    @foreach (var value in Enum.GetValues<EnemyKind>().Where(value => (int)value < (int)EnemyKind.FrostlingPackling))
+                    {
+                        <option value="@value">@value</option>
+                    }
+                </optgroup>
+                <optgroup label="Frost">
+                    @foreach (var value in Enum.GetValues<EnemyKind>().Where(value => (int)value >= (int)EnemyKind.FrostlingPackling))
+                    {
+                        <option value="@value">@value</option>
+                    }
+                </optgroup>
+            </select>
+        </label>
+        <label>Mire Hound art
+            <select aria-label="Mire Hound art style" @bind="mireStyle" @bind:after="SwitchMireStyle" disabled="@(kind != EnemyKind.MireHound)">
+                <option value="painted">Current art</option>
+                <option value="pixel">Pixel preview</option>
+            </select>
+        </label>
+        <label>Seed<input type="number" @bind="seed" @bind:after="Restart" /></label>
+        <label><input type="checkbox" @bind="autoplay" /> Movement agent</label>
+        <label><input type="checkbox" @bind="casting" @bind:after="Restart" /> Autocast</label>
+        <button @onclick="Restart">Reload monster</button><button @onclick="TogglePause">@(paused ? "Resume" : "Pause")</button><a href="combat-lab">Combat lab</a><a href="hunt-lab">Wyrm lab</a><a href="arena-lab">Arena lab</a>
+    </section>
+    <section class="enemy-lab-surface"><canvas @ref="canvas" aria-label="Live enemy encounter"></canvas>
+        <div class="status">@kind • @(paused ? "PAUSED" : autoplay ? "AGENT" : "MANUAL") • @(kind == EnemyKind.MireHound && mireStyle == "pixel" ? "PIXEL ART PREVIEW" : "PUBLISHED ART") • INVULNERABLE • NO PROGRESS</div>
+    </section>
+    <p class="note">Selecting a monster immediately reloads the actual C# encounter in the production renderer, alongside the mage. For Mire Hound, switch between current art and the opt-in pixel preview at the same viewport and seed; ordinary hunts are unchanged. Turn off Autocast to inspect movement and attacks without killing the target. Ritual objects appear with their actual caster; doubles naturally expire. No saves or player progress are changed.</p>
+</main>
+
+@code {
+    [Inject] private IJSRuntime JavaScript { get; set; } = null!;
+    [Inject] private NavigationManager Navigation { get; set; } = null!;
+    [Parameter, SupplyParameterFromQuery(Name = "kind")] public string? KindQuery { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "seed")] public int? SeedQuery { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "autoplay")] public bool? AutoplayQuery { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "cast")] public bool? CastQuery { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "paused")] public bool? PausedQuery { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "seconds")] public double? SecondsQuery { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "mireStyle")] public string? MireStyleQuery { get; set; }
+    private ElementReference canvas;
+    private IJSObjectReference? module;
+    private DotNetObjectReference<EnemyLab>? reference;
+    private RunSimulation? simulation;
+    private HeuristicRunAgent? agent;
+    private EnemyKind kind = EnemyKind.MireHound;
+    private int seed = 42;
+    private bool autoplay = true;
+    private bool casting;
+    private string mireStyle = "painted";
+    private bool paused;
+    private double simulationSeconds;
+
+    protected override void OnParametersSet()
+    {
+        if (Enum.TryParse<EnemyKind>(KindQuery, true, out var parsed) && Enum.IsDefined(parsed)) kind = parsed;
+        if (SeedQuery is { } value) seed = value;
+        if (AutoplayQuery is { } auto) autoplay = auto;
+        if (CastQuery is { } cast) casting = cast;
+        if (PausedQuery is { } pause) paused = pause;
+        mireStyle = MireStyleQuery == "pixel" ? "pixel" : "painted";
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        module = await JavaScript.InvokeAsync<IJSObjectReference>("import", "./js/arena.js");
+        reference = DotNetObjectReference.Create(this);
+        await module.InvokeVoidAsync("initializeArena", canvas, reference);
+    }
+    [JSInvokable]
+    public Task<RunRenderSnapshot> Frame(double delta, double width, double height, double movementX, double movementY, double aimX = 0, double aimY = 0)
+    {
+        if (simulation is null)
+        {
+            var build = SelfPlayBuildCatalog.All.First();
+            simulation = new RunSimulationFactory(new SeededRandomSource(1)).CreateDevelopmentEnemy(build.SelectedNodes,
+                new DevelopmentEnemySetup(kind, seed, Math.Clamp(width, 240, 2560), Math.Clamp(height, 240, 2560), casting));
+            agent = new HeuristicRunAgent(RunAgentPersonality.Kiter, seed, build.PreferredSchool);
+        }
+        var snapshot = simulation.CreateSnapshot();
+        if (paused || simulation.IsEnded) return Task.FromResult(snapshot with { Paused = paused });
+        if (SecondsQuery is { } limit && double.IsFinite(limit) && simulationSeconds >= Math.Max(0, limit)) return Task.FromResult(snapshot with { Paused = true });
+        var movement = autoplay
+            ? agent!.ChooseMovement(new RunAgentObservation(snapshot, [], [], [], [], [], simulation.Depth, 0, false))
+            : new MovementInput(movementX, movementY, aimX, aimY);
+        simulationSeconds += Math.Clamp(delta, 0, .05);
+        return Task.FromResult(simulation.Tick(delta, movement, width, height));
+    }
+    private void LoadSelectedEnemy()
+    {
+        Restart();
+        // Shareable kind links allow before/after capture with the same actor and seed.
+        var url = Navigation.GetUriWithQueryParameters(new Dictionary<string, object?>
+        {
+            ["kind"] = kind.ToString(),
+            ["seed"] = seed,
+            ["autoplay"] = autoplay,
+            ["cast"] = casting
+        });
+        Navigation.NavigateTo(url, replace: true);
+    }
+    private void SwitchMireStyle()
+    {
+        // Full reload is deliberate: the texture loader must choose precisely
+        // one source for this animal, not retain an outdated decoded image.
+        Navigation.NavigateTo(Navigation.GetUriWithQueryParameter("mireStyle", mireStyle), forceLoad: true, replace: true);
+    }
+    private void Restart() { simulation = null; agent = null; simulationSeconds = 0; paused = false; }
+    private void TogglePause() => paused = !paused;
+    public async ValueTask DisposeAsync()
+    {
+        if (module is not null)
+        {
+            try { await module.InvokeVoidAsync("disposeArena", canvas); } catch (JSDisconnectedException) { }
+            await module.DisposeAsync();
+        }
+        reference?.Dispose();
+    }
+}

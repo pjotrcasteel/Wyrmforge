@@ -1,5 +1,8 @@
 # WyrmForge — Gameplay Next Level (roadmap)
 
+> **Historical / supporting document (not canonical).** For current rules use [WyrmForge canonical documentation](../canon/README.md). This file preserves dated research, assets, implementation evidence or prior proposals; do not treat its status or plan as present-day product authority.
+
+
 Status: proposal, written after the art/UX pass on branch `art/runtime-pixel-pipeline-v1`.
 Companion evidence: [`docs/art/asset-and-screen-audit.md`](../art/asset-and-screen-audit.md), screenshots in `docs/art/screens/`.
 

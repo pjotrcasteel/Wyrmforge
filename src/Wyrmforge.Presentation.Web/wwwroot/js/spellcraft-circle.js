@@ -81,66 +81,22 @@ function glow(ctx, x, y, radius, color, alpha) {
     ctx.fill();
 }
 
-// Small emblem per element, drawn in strokes so it scales crisply at any seat size.
-export function drawEmblem(ctx, element, x, y, size, alpha = 1) {
-    const palette = elementOf(element);
-    if (!palette) return;
+// The same owner-approved pixel paintings used by Divine school selection.
+// Load once; the existing animation loop paints them as soon as decoding finishes.
+export const EMBLEM_CELLS = Object.freeze({ fire: [0, 0], frost: [64, 0], storm: [128, 0], arcane: [0, 64] });
+const emblemAtlas = typeof Image === 'function' ? new Image() : null;
+if (emblemAtlas) emblemAtlas.src = new URL('../art/divine-lineage-sigils.webp', import.meta.url).href;
+
+export function drawEmblem(ctx, element, x, y, size, alpha = 1, atlas = emblemAtlas) {
+    const cell = EMBLEM_CELLS[String(element).toLowerCase()];
+    if (!cell || !atlas?.complete || !atlas.naturalWidth) return;
     ctx.save();
-    ctx.translate(x, y);
     ctx.globalAlpha *= alpha;
-    ctx.strokeStyle = palette.core;
-    ctx.fillStyle = rgba(palette.glow, 0.35);
-    ctx.lineWidth = Math.max(1.4, size * 0.09);
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    const s = size / 2;
+    ctx.imageSmoothingEnabled = false;
     ctx.beginPath();
-    switch (String(element).toLowerCase()) {
-        case 'fire':
-            ctx.moveTo(0, -s);
-            ctx.bezierCurveTo(s * 0.7, -s * 0.2, s * 0.75, s * 0.55, 0, s * 0.85);
-            ctx.bezierCurveTo(-s * 0.75, s * 0.55, -s * 0.55, -s * 0.05, -s * 0.12, -s * 0.25);
-            ctx.bezierCurveTo(-s * 0.1, s * 0.15, s * 0.1, s * 0.25, 0, -s);
-            ctx.fill();
-            ctx.stroke();
-            break;
-        case 'frost':
-            for (let arm = 0; arm < 6; arm++) {
-                const a = arm * Math.PI / 3;
-                const cx = Math.cos(a), cy = Math.sin(a);
-                ctx.moveTo(0, 0);
-                ctx.lineTo(cx * s, cy * s);
-                const bx = cx * s * 0.55, by = cy * s * 0.55;
-                ctx.moveTo(bx, by);
-                ctx.lineTo(bx + Math.cos(a + 0.7) * s * 0.28, by + Math.sin(a + 0.7) * s * 0.28);
-                ctx.moveTo(bx, by);
-                ctx.lineTo(bx + Math.cos(a - 0.7) * s * 0.28, by + Math.sin(a - 0.7) * s * 0.28);
-            }
-            ctx.stroke();
-            break;
-        case 'storm':
-            ctx.moveTo(s * 0.25, -s);
-            ctx.lineTo(-s * 0.35, s * 0.08);
-            ctx.lineTo(s * 0.08, s * 0.08);
-            ctx.lineTo(-s * 0.2, s);
-            ctx.lineTo(s * 0.45, -s * 0.18);
-            ctx.lineTo(0, -s * 0.18);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-            break;
-        default:
-            for (let point = 0; point < 4; point++) {
-                const a = point * Math.PI / 2 - Math.PI / 2;
-                const b = a + Math.PI / 4;
-                ctx.lineTo(Math.cos(a) * s, Math.sin(a) * s);
-                ctx.lineTo(Math.cos(b) * s * 0.3, Math.sin(b) * s * 0.3);
-            }
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-            ring(ctx, 0, 0, s * 0.62, rgba(palette.core, 0.6), Math.max(1, size * 0.04));
-    }
+    ctx.arc(x, y, size / 2, 0, TAU);
+    ctx.clip();
+    ctx.drawImage(atlas, cell[0], cell[1], 64, 64, x - size / 2, y - size / 2, size, size);
     ctx.restore();
 }
 
@@ -176,7 +132,8 @@ function drawSeat(ctx, view, seat, time) {
     const palette = elementOf(element);
     ctx.save();
     if (seat === 'third') {
-        ring(ctx, point.x, point.y, radius, 'rgba(120, 112, 98, 0.55)', 1.5, [3, 4]);
+        ring(ctx, point.x, point.y, radius, '#53474b', 5);
+        ring(ctx, point.x, point.y, radius * 1.13, '#806b57', 1.5);
         ctx.strokeStyle = 'rgba(150, 140, 120, 0.6)';
         ctx.lineWidth = 1.5;
         ctx.beginPath();
@@ -188,14 +145,16 @@ function drawSeat(ctx, view, seat, time) {
         return;
     }
     const breathe = view.reduced ? 1 : 0.85 + Math.sin(time * 2.1 + (seat === 'infusion' ? 1.4 : 0)) * 0.15;
-    if (palette) glow(ctx, point.x, point.y, radius * 2.4, palette.glow, 0.32 * breathe);
+    if (palette) glow(ctx, point.x, point.y, radius * 1.7, palette.glow, 0.14 * breathe);
     ctx.fillStyle = 'rgba(10, 9, 14, 0.78)';
     ctx.beginPath();
     ctx.arc(point.x, point.y, radius, 0, TAU);
     ctx.fill();
-    ring(ctx, point.x, point.y, radius, palette ? palette.glow : GOLD_SOFT + '0.55)', palette ? 2.4 : 1.5, palette ? undefined : [4, 4]);
-    ring(ctx, point.x, point.y, radius * 1.18, GOLD_SOFT + '0.35)', 1);
-    if (palette) drawEmblem(ctx, element, point.x, point.y, radius * 1.05);
+    ring(ctx, point.x, point.y, radius, '#171019', 8);
+    ring(ctx, point.x, point.y, radius, '#9b7250', 3);
+    ring(ctx, point.x, point.y, radius * 1.15, '#584039', 2);
+    ring(ctx, point.x, point.y, radius * 0.84, palette ? rgba(palette.glow, 0.7) : '#6e5543', 1);
+    if (palette) drawEmblem(ctx, element, point.x, point.y, radius * 1.55);
     ctx.restore();
 }
 

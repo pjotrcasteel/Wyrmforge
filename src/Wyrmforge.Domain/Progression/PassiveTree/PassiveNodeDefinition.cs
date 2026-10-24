@@ -12,4 +12,6 @@ public sealed record PassiveNodeDefinition(
     double X,
     double Y,
     BuildModifierProfile Modifiers,
-    string? MasteryGroup = null);
+    string? MasteryGroup = null,
+    PassiveSchool? LearningSchool = null,
+    PassiveEffectRequirement? Requirement = null);

@@ -1,5 +1,8 @@
 # WyrmForge — Recorded Audio Asset Credits
 
+> **Historical / supporting document (not canonical).** For current rules use [WyrmForge canonical documentation](../canon/README.md). This file preserves dated research, assets, implementation evidence or prior proposals; do not treat its status or plan as present-day product authority.
+
+
 First imported playback prototype: **0.0.109**. Enhanced recorded mage spell layers: **0.0.110**.
 
 All audio in `src/Wyrmforge.Presentation.Web/wwwroot/audio/recorded/` consists of human-produced music and sound effects obtained from the source distribution pages below. The build records source SHA-256 checksums and the complete processed-cue mapping in `audio/recorded/manifest.json`.
@@ -50,19 +53,46 @@ For each of Arcane, Fire, Frost and Lightning, v0.0.110 additionally imports thr
 
 The **upgrade revealed** cue now points to rubberduck's existing CC0 `item_gem_01.ogg` recording (also used for the normal relic pickup); it no longer uses JC Sounds' Magic Shield activation. The **upgrade chosen** cue retains JC Sounds' CC BY 4.0 `Healing Chime_01.wav` source with new runtime mix adjustments. Both are played at reduced relative gain, with gentle low-pass filtering and dedicated envelope releases. No new third-party asset or license was introduced.
 
-## Phase 1 menu Foley candidates — CC0 (unapproved listening prototypes)
 
-**Kenney RPG Audio** by **Kenney**; official publisher source: https://kenney.nl/assets/rpg-audio
-License: CC0 1.0 (commercial use and adaptation permitted). Attribution is appreciated, not required.
+## Hunt entry bell removal (19 October 2026)
 
-Twelve original Ogg recordings (`bookOpen`, `bookClose`, `bookPlace1`, `bookPlace2`,
-`handleSmallLeather`, `handleSmallLeather2`, `metalClick`, `metalLatch`, `creak1`,
-`doorOpen_1`, `doorOpen_2` and `doorClose_1`) were sourced from the independently maintained
-https://github.com/Mcamento8/open-game-sfx-index/tree/main/audio/rpg-audio mirror of Kenney's CC0 pack.
+The recorded `hunt-start` cue previously used JC Sounds' `Magic Shield_Activation_01.wav`, producing a repeated bell-like sound when entering from the town gate and when choosing ordinary arena map nodes.
 
-The source files are preserved byte-for-byte as `menu-*.ogg`; `manifest.json` records per-file
-Git blob checksums to verify exact provenance. Runtime playback may apply gain, envelope and low-pass filtering.
-The existing rubberduck CC0 stone recording is reused in the Stone preview preset.
+It now uses **Kenney — RPG Audio**, `doorOpen_1.ogg` (CC0), a physical door-opening recording.
+Official source: https://kenney.nl/assets/rpg-audio
+Verified Ogg mirror: https://github.com/Mcamento8/open-game-sfx-index/blob/main/audio/rpg-audio/doorOpen_1.ogg
+SHA-256 of the original and deployed Ogg: `4ab93bab96522d8eb109ff96dc57cb6765deb02448fe14c10472084be5bb2a0b`.
 
-These are **audition candidates, not quality-approved replacements**. Compare all three material palettes
-on real phones before production merge; see [Phase 1 audition and portable event contract](phase1-menu-audition.md).
+Playback applies reduced gain, a low-pass filter and short fades. The game event name stays `hunt-start`, so both browser and future native mobile adapters can keep the same semantic trigger. The generic menu click is suppressed on hunt entry controls to prevent double playback.
+
+This is a narrow regression fix; the broader three-palette audition remains in draft PR #128 for human listening approval.
+
+
+## Semantic transition redesign — 19 October 2026
+
+Following listening feedback, we no longer map a *door* sound to `hunt-start`. Physical doors have the distinct `building-open` event; the hunt signals a hunter leaving the Refuge, followed by separate `trail-enter` events for successive arena nodes and `threat-reveal` for rare dangerous arrivals.
+
+**Research** supporting this decision:
+- FMOD's event-based design separates *gameplay intent* from sample selection and sound output: https://www.fmod.com/docs/2.04/studio/authoring-events.html
+- *Diablo II* sound designers used grounded Foley and precise material details to support world credibility: https://www.gamedeveloper.com/audio/how-audio-design-enhances-diablo-2
+- Power Up Audio's GDC talk on *TUNIC* stresses deriving sounds from actual gameplay and defining creative direction before choosing samples: https://www.gdcvault.com/play/1029369/The-TUNIC-Audio
+- Real smartphone speakers need their own review, particularly as low-frequency weight may be inaudible: https://aes.org/publications/elibrary/elibrary-page/?id=13399
+- Wwise documents layered composition (Blend Containers) and sample variation via Shuffle/Random Containers: https://www.audiokinetic.com/en/public-library/2024.1.4_8780/?id=creating_random_container&source=Help
+- Gaetan Troutet's game-audio lecture on restraint cautions that every extra sound consumes the listener's attention: https://blogs.napier.ac.uk/sounddesign/2026/04/20/gaetan-troutet-game-audio-sound-design/
+
+**New portable semantic events (candidate mixes, subject to listening on real devices):**
+
+| Event | Physical recordings | Meaning |
+| --- | --- | --- |
+| `building-open` | Kenney `doorOpen_1.ogg` | Enter a town building |
+| `hunt-start` | Kenney `footstep00.ogg`, `cloth1.ogg` and `footstep02.ogg` | Commit to a new expedition |
+| `trail-enter` | Kenney `footstep02.ogg` | Move into the next arena node |
+| `threat-reveal` | Kenney `creak1.ogg` | Dangerous encounter or elite reveal |
+| `wyrm` | Existing rubberduck creature roar | Wyrm entry; unchanged |
+
+The recordings are from **Kenney RPG Audio (CC0)**, official source https://kenney.nl/assets/rpg-audio,
+with exact Ogg bytes from https://github.com/Mcamento8/open-game-sfx-index/tree/main/audio/rpg-audio .
+Their individual SHA-256 hashes are in `audio/recorded/manifest.json`, which is the portable semantic contract.
+No third-party recordings are streamed at runtime. Different Foley layers are delayed and mixed through Web Audio today; native iOS/Android implementations can consume the same manifest without depending on browser APIs.
+
+A sound is not artistically approved just because hash/semantic tests pass. In-game listening must confirm the player's impression is `departing into danger`, rather than `opening a door` or `clicking an icon`. Reject and rework the candidate if it is too weak through a phone speaker.

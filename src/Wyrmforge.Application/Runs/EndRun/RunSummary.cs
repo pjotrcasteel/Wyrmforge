@@ -2,9 +2,11 @@
 using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Combat.Enemies;
 using Wyrmforge.Domain.Progression.DragonEssences;
+using Wyrmforge.Domain.Progression.Signature;
 using Wyrmforge.Domain.Progression.Laboratory;
 using Wyrmforge.Domain.Spells.Synergies;
 using Wyrmforge.Domain.Spells;
+using Wyrmforge.Application.Runs.Hunts;
 
 namespace Wyrmforge.Application.Runs.EndRun;
 
@@ -22,6 +24,12 @@ public sealed record RunSummary(
     int Depth,
     RunOutcome Outcome)
 {
+    public HuntSelection? Hunt { get; init; }
+    /// <summary>Falls caught by a reclaimed refuge during this Hunt.</summary>
+    public int RefugeReturns { get; init; }
+    /// <summary>Grade of every Essence secured this run, set by the selected Hunt tier.</summary>
+    public Wyrmforge.Domain.Progression.Loot.LootRarity EssenceRarity { get; init; } = Wyrmforge.Domain.Progression.DragonEssences.DragonEssenceVault.UngradedRarity;
+    public IReadOnlyList<HuntMaterialId> SecuredMaterials { get; init; } = [];
     public int Seed { get; init; }
     public int ExperienceEarned { get; init; }
     public int CompletedRouteNodes { get; init; }

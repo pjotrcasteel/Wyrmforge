@@ -1,0 +1,90 @@
+[
+  {
+    "region": "Fire",
+    "Depth": 1,
+    "seed": 42,
+    "combatNodes": 13,
+    "shortestPathCombatEncounters": 6,
+    "longestPathCombatEncounters": 8,
+    "optionalCombatEncounters": 2,
+    "decisionPoints": 6,
+    "legalPaths": 24
+  },
+  {
+    "region": "Fire",
+    "Depth": 2,
+    "seed": 42,
+    "combatNodes": 22,
+    "shortestPathCombatEncounters": 8,
+    "longestPathCombatEncounters": 12,
+    "optionalCombatEncounters": 4,
+    "decisionPoints": 7,
+    "legalPaths": 32
+  },
+  {
+    "region": "Fire",
+    "Depth": 3,
+    "seed": 42,
+    "combatNodes": 22,
+    "shortestPathCombatEncounters": 10,
+    "longestPathCombatEncounters": 13,
+    "optionalCombatEncounters": 3,
+    "decisionPoints": 8,
+    "legalPaths": 32
+  },
+  {
+    "region": "Fire",
+    "Depth": 4,
+    "seed": 42,
+    "combatNodes": 26,
+    "shortestPathCombatEncounters": 12,
+    "longestPathCombatEncounters": 14,
+    "optionalCombatEncounters": 2,
+    "decisionPoints": 8,
+    "legalPaths": 50
+  },
+  {
+    "region": "Frost",
+    "Depth": 1,
+    "seed": 42,
+    "combatNodes": 13,
+    "shortestPathCombatEncounters": 6,
+    "longestPathCombatEncounters": 8,
+    "optionalCombatEncounters": 2,
+    "decisionPoints": 6,
+    "legalPaths": 24
+  },
+  {
+    "region": "Frost",
+    "Depth": 2,
+    "seed": 42,
+    "combatNodes": 22,
+    "shortestPathCombatEncounters": 8,
+    "longestPathCombatEncounters": 12,
+    "optionalCombatEncounters": 4,
+    "decisionPoints": 7,
+    "legalPaths": 32
+  },
+  {
+    "region": "Frost",
+    "Depth": 3,
+    "seed": 42,
+    "combatNodes": 22,
+    "shortestPathCombatEncounters": 10,
+    "longestPathCombatEncounters": 13,
+    "optionalCombatEncounters": 3,
+    "decisionPoints": 8,
+    "legalPaths": 32
+  },
+  {
+    "region": "Frost",
+    "Depth": 4,
+    "seed": 42,
+    "combatNodes": 26,
+    "shortestPathCombatEncounters": 12,
+    "longestPathCombatEncounters": 14,
+    "optionalCombatEncounters": 2,
+    "decisionPoints": 8,
+    "legalPaths": 50
+  }
+]

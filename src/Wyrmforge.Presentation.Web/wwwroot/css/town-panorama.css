@@ -29,12 +29,13 @@
   pointer-events:auto;-webkit-tap-highlight-color:transparent;
   transition:background-color 120ms ease-out,filter 120ms ease-out;
 }
-.game-shell.refuge-home .town-hotspot:hover:not(:disabled),
-.game-shell.refuge-home .town-hotspot:focus-visible {
+.game-shell.refuge-home .town-hotspot[data-town-state="active"]:hover,
+.game-shell.refuge-home .town-hotspot[data-town-state="active"]:focus-visible {
   background:rgba(242,184,97,.15);filter:drop-shadow(0 0 10px rgba(242,185,102,.85));
 }
 .game-shell.refuge-home .town-hotspot:focus-visible{outline:3px solid #f1c683;outline-offset:-2px}
-.game-shell.refuge-home .town-hotspot:disabled{cursor:default;pointer-events:none}
+.game-shell.refuge-home .town-hotspot[data-town-state="vacant"]{cursor:help}
+.game-shell.refuge-home .town-hotspot[data-town-state="vacant"]:focus-visible{background:transparent;filter:none}
 /* Architecture-shaped hotspots rather than labels placed over the road. */
 .game-shell.refuge-home .town-hotspot--build {
   left:.7%;top:0;width:31.6%;height:45%;
@@ -173,5 +174,22 @@ html:has(.refuge-home), body:has(.refuge-home) {
 .game-shell.refuge-home .town-snap {
   scroll-snap-align:center!important;
 }
+/* The reopened Forge restores the lit, populated original painting. Identical
+   3:1 dimensions keep alignment exact while the corrected vacant version remains the base. */
+/* One renderer for every building. Asset content, not CSS darkening, controls
+   powered/unpowered lights, people, windows and props. Native 3:1 alignment is
+   identical in both states. Only the Blacksmith needs an active replacement
+   because the base panorama already contains its painted vacant appearance. */
+.game-shell.refuge-home .town-building-layer {
+  position:absolute;inset:0;display:block;width:100%;height:100%;
+  object-fit:contain;image-rendering:auto;pointer-events:none;-webkit-user-drag:none;
+  filter:none;backdrop-filter:none;
+}
+.game-shell.refuge-home .town-building-layer[data-building-state="vacant"] { z-index:1; }
+.game-shell.refuge-home .town-building-layer[data-building-state="active"] { z-index:2; }
+.game-shell.refuge-home .town-panorama-open-forge {
+  clip-path:polygon(0 42%,33% 42%,33% 100%,0 100%);
+}
+.game-shell.refuge-home .town-square::after {display:none!important}
 /* Touch can pan across the authentic image; overlays retain their own fixed positions. */
 .game-shell.refuge-home .town-panorama-viewport {scroll-padding-inline:0!important}

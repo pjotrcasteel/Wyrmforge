@@ -1,4 +1,4 @@
-﻿using Wyrmforge.Application.Runs.Simulation.Snapshots;
+using Wyrmforge.Application.Runs.Simulation.Snapshots;
 using Wyrmforge.Domain.Combat.Abilities;
 using Wyrmforge.Domain.Combat.Geometry;
 using Wyrmforge.Domain.Combat.Modifiers;
@@ -6,6 +6,8 @@ using Wyrmforge.Domain.Combat.Projectiles;
 using Wyrmforge.Domain.Combat.Stats;
 using Wyrmforge.Domain.Combat.Targets;
 using Wyrmforge.Domain.Progression.DragonEssences;
+using Wyrmforge.Domain.Progression.Signature;
+using Wyrmforge.Domain.Progression.PassiveTree;
 using Wyrmforge.Domain.Spells;
 using Wyrmforge.Domain.Spells.Evolutions;
 using Wyrmforge.Domain.Spells.Synergies;
@@ -22,7 +24,7 @@ public sealed partial class RunSimulation
         spellCooldowns[spell.Id] -= delta;
         // The contextual spell is judged every tick so a defence is never starved by the primary, but it spends the primary's cast.
         if (TryCastContextualSpell(delta, spell, rank, moving)) return;
-        if (spellCooldowns[spell.Id] > 0 || !HasCombatTargets) return;
+        if (spellCooldowns[spell.Id] > 0 || (!manualAimEngaged && PrimaryTarget(player.Position) is null)) return;
         CastSpell(spell, rank, FocusedCastProfile.For(spell.Id, rank).DamageMultiplier, false);
         spellCooldowns[spell.Id] = GetSpellCooldown(spell, rank, moving);
     }
@@ -43,8 +45,7 @@ public sealed partial class RunSimulation
             primaryCastCounts[spell.Id]++;
             surge = FocusedSurgeProfile.For(primaryCastCounts[spell.Id], rank);
             if (surge.IsSurge) FocusedSurgesCast++;
-            var target = NearestTarget(player.Position);
-            var direction = target is null ? 0 : Math.Atan2(target.Position.Y - player.Position.Y, target.Position.X - player.Position.X);
+            var direction = Math.Atan2(effectiveAim.Y, effectiveAim.X);
             lastCastMotion = new CastMotionRenderSnapshot(player.Position.X, player.Position.Y, spell.Id, rank,
                 SpellCombinationResolver.ActiveFor(spell.Id, build.Spells, build.Synergies), direction, 0) { Surge = surge.IsSurge };
             lastCastMotionStartedAt = elapsed;
@@ -62,7 +63,7 @@ public sealed partial class RunSimulation
             case ChainAbilityProfile chain:
                 var focusedChain = chain with { BaseJumpsAtRankOne = chain.BaseJumpsAtRankOne + FocusedCastProfile.For(spell.Id, rank).BonusChains };
                 CastChainSpell(spell, focusedChain, rank, player.Position, focusedDamageScale,
-                    combination: SpellCombinationResolver.ActiveFor(spell.Id, build.Spells, build.Synergies), surge: surge);
+                    combination: SpellCombinationResolver.ActiveFor(spell.Id, build.Spells, build.Synergies), surge: surge, primary: true);
                 break;
             default:
                 throw new InvalidOperationException($"Unsupported delivery profile {spell.Ability.Delivery.GetType().Name} for {spell.Id}.");
@@ -84,8 +85,8 @@ public sealed partial class RunSimulation
 
     private void CastProjectileSpell(SpellDefinition spell, ProjectileAbilityProfile profile, int rank, double damageScale, FocusedSurgeProfile surge)
     {
-        var target = NearestTarget(player.Position);
-        if (target is null) return;
+        var target = PrimaryTarget(player.Position);
+        if (target is null && !manualAimEngaged) return;
         var id = spell.Id;
         var focused = FocusedCastProfile.For(id, rank);
         var evolution = EvolutionProfile(id);
@@ -93,12 +94,15 @@ public sealed partial class RunSimulation
         var prismatic = passiveProfile.Prismatic && projectileCastCount > 0 && projectileCastCount % 5 == 0;
         var baseCount = prismatic ? passiveProfile.AstralBarrage ? 5 : 3 : 1;
         var count = baseCount + buildModifiers.ApplyInt(BuildStatId.ExtraProjectiles) + evolution.ExtraProjectiles;
-        var volleyTargets = prismatic ? NearestTargets(player.Position, count) : Array.Empty<ICombatTarget>();
-        var baseDirection = Vector2D.DirectionTo(player.Position, target.Position);
+        var volleyTargets = prismatic && !manualAimEngaged ? NearestTargets(player.Position, count) : Array.Empty<ICombatTarget>();
+        var baseDirection = effectiveAim;
+        var meteorHeart = id == SpellId.FireBolt && HasFireballMutation(FireballMutationId.MeteorHeart);
+        var cinderNeedle = id == SpellId.FireBolt && HasFireballMutation(FireballMutationId.CinderNeedle);
         var baseSpeed = profile.CalculateSpeed(rank) * passiveProfile.ProjectileSpeedMultiplier * evolution.ProjectileSpeedMultiplier;
-        var speed = buildModifiers.Apply(BuildStatId.ProjectileSpeed, baseSpeed);
-        var baseDamage = spell.Ability.CalculateDamage(rank) * passiveProfile.DamageMultiplier * evolution.DamageMultiplier;
-        var damage = buildModifiers.Apply(BuildStatId.Damage, baseDamage) * damageScale * build.SchoolDamageMultiplier(spell.School);
+        var speed = buildModifiers.Apply(BuildStatId.ProjectileSpeed, baseSpeed) * (meteorHeart ? 0.75 : 1) * (cinderNeedle ? 1.4 : 1);
+        var baseDamage = spell.Ability.CalculateDamage(rank) * passiveProfile.DamageMultiplier * evolution.DamageMultiplier
+            * (id == SpellId.FireBolt ? PreparedFireballDamageMultiplier : 1);
+        var damage = buildModifiers.Apply(BuildStatId.Damage, baseDamage) * damageScale * build.SchoolDamageMultiplier(spell.School) * (meteorHeart ? 1.15 : 1) * (cinderNeedle ? 0.70 : 1);
         var chains = (passiveProfile.LivingStorm ? 4 : passiveProfile.Chainstorm ? 1 : 0) + buildModifiers.ApplyInt(BuildStatId.BonusChains);
         var piercingArcaneOrb = id == SpellId.ArcaneOrb && rank >= 2;
         var masteredArcaneOrb = id == SpellId.ArcaneOrb && rank >= spell.MaxRank;
@@ -109,17 +113,24 @@ public sealed partial class RunSimulation
         {
             var volleyTarget = volleyTargets.Count > 0 ? volleyTargets[index % volleyTargets.Count] : target;
             var offset = prismatic || count == 1 ? 0 : (index - (count - 1) / 2d) * 0.16;
-            var aimedDirection = Vector2D.DirectionTo(player.Position, volleyTarget.Position);
+            var aimedDirection = manualAimEngaged || volleyTarget is null ? baseDirection : Vector2D.DirectionTo(player.Position, volleyTarget.Position);
             var direction = Vector2D.Rotate(prismatic ? aimedDirection : baseDirection, offset);
             var baseRadius = inferno ? 9 : masteredArcaneOrb ? 7 : profile.Radius;
-            var radius = baseRadius * evolution.ProjectileRadiusMultiplier * focused.RadiusMultiplier * surge.RadiusMultiplier;
+            var radius = baseRadius * evolution.ProjectileRadiusMultiplier * focused.RadiusMultiplier * surge.RadiusMultiplier * (meteorHeart ? 1.45 : 1) * (cinderNeedle ? 0.72 : 1);
             var pierces = (piercingArcaneOrb ? 1 : 0) + (passiveProfile.ArcaneReservoir ? 1 : 0) + evolution.BonusPierces + focused.BonusPierces + surge.BonusPierces;
             var masterySplash = id == SpellId.FireBolt && rank >= spell.MaxRank ? 56 : 0;
             var masteryNova = masteredFrostShard ? FrostShardMastery.NovaRadius : 0;
+            // Mutation amplification is applied to Detonation's own explosion before
+            // combining it with spell mastery, surges and other independent effects.
+            var detonationRadius = 46 * FireballEffectFactor(FireballMutationId.Detonation, MutationEffectCapability.Area);
+            var mutationSplash = id != SpellId.FireBolt ? 0 :
+                HasFireballMutation(FireballMutationId.Detonation) ? buildModifiers.Apply(BuildStatId.MutationRadius, detonationRadius) :
+                HasFireballMutation(FireballMutationId.ScorchedEarth) ? 8 : 0;
+            var splashRadius = Math.Max(mutationSplash, Math.Max(surge.SplashRadius, Math.Max(focused.SplashRadius, Math.Max(masterySplash, evolution.SplashRadius))));
             var effects = new ProjectileEffects(
                 inferno,
                 chains + evolution.BonusChains,
-                Math.Max(surge.SplashRadius, Math.Max(focused.SplashRadius, Math.Max(masterySplash, evolution.SplashRadius))),
+                splashRadius,
                 status,
                 pierces,
                 Math.Max(masteryNova, evolution.FrostNovaRadius))
@@ -141,7 +152,7 @@ public sealed partial class RunSimulation
     }
 
     private void CastChainSpell(SpellDefinition spell, ChainAbilityProfile profile, int rank, Vector2D origin, double damageScale,
-        int bonusJumps = 0, SynergyId? combination = null, FocusedSurgeProfile? surge = null)
+        int bonusJumps = 0, SynergyId? combination = null, FocusedSurgeProfile? surge = null, bool primary = false)
     {
         var current = origin;
         var surgeProfile = surge ?? FocusedSurgeProfile.Identity;
@@ -156,7 +167,7 @@ public sealed partial class RunSimulation
 
         for (var jump = 0; jump < jumps; jump++)
         {
-            var target = NearestTarget(current, hit);
+            var target = jump == 0 && primary ? PrimaryTarget(current, manualAimEngaged) : NearestTarget(current, hit);
             if (target is null) break;
             hit.Add(target.Id);
             hitCount++;

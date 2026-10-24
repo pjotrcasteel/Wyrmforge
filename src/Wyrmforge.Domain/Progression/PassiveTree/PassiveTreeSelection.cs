@@ -4,6 +4,41 @@ public sealed class PassiveTreeSelection
 {
     private readonly HashSet<string> selected = [];
     private int pointBudget;
+    private readonly Dictionary<PassiveSchool, int> reserved = [];
+    private IReadOnlySet<Wyrmforge.Domain.Progression.Signature.FireballMutationId>? knownMutations;
+
+    // Null is the legacy catalogue/import authoring context. The character editor
+    // always binds its actual school before allowing player allocation or loadouts.
+    public PassiveSchool? ActiveSchool { get; private set; }
+    public int ReservedPoints => reserved.Values.Sum();
+    public IReadOnlyDictionary<PassiveSchool, int> Reserved => new Dictionary<PassiveSchool, int>(reserved);
+    public int AvailablePoints => Math.Max(0, PointBudget - SpentPoints - ReservedPoints);
+
+    public void SetActiveSchool(PassiveSchool school)
+    {
+        ArgumentOutOfRangeException.ThrowIfEqual(Enum.IsDefined(school), false);
+        ActiveSchool = school;
+        reserved.Remove(school);
+    }
+
+    public void SetKnownFireballMutations(IEnumerable<Wyrmforge.Domain.Progression.Signature.FireballMutationId> mutations) =>
+        knownMutations = mutations.ToHashSet();
+
+    public bool CanLearn(PassiveNodeDefinition node) =>
+        (ActiveSchool is null || ArcaneSchoolCatalog.Owner(node) == ActiveSchool) &&
+        (node.Requirement?.FireballMutation is not { } mutation || knownMutations is null || knownMutations.Contains(mutation));
+
+    public void RestoreReserved(IReadOnlyDictionary<PassiveSchool, int>? saved)
+    {
+        reserved.Clear();
+        foreach (var (school, value) in (saved ?? new Dictionary<PassiveSchool, int>()).OrderBy(pair => pair.Key))
+        {
+            if (!Enum.IsDefined(school)) continue;
+            var points = Math.Clamp(value, 0, Math.Max(0, PointBudget - SpentPoints - ReservedPoints));
+            if (points > 0) reserved[school] = points;
+        }
+        if (ActiveSchool is { } active) reserved.Remove(active);
+    }
 
     public PassiveTreeSelection(int pointBudget = PassiveTreeCatalog.TotalPoints)
     {
@@ -17,7 +52,7 @@ public sealed class PassiveTreeSelection
 
     public void GrantPoints(int count) => pointBudget = Math.Clamp(pointBudget + Math.Max(0, count), 1, PassiveTreeCatalog.TotalPoints);
 
-    public void RestoreBudget(int budget) => pointBudget = Math.Clamp(Math.Max(budget, SpentPoints), 1, PassiveTreeCatalog.TotalPoints);
+    public void RestoreBudget(int budget) => pointBudget = Math.Clamp(Math.Max(budget, SpentPoints + ReservedPoints), 1, PassiveTreeCatalog.TotalPoints);
 
     public IReadOnlySet<string> Selected => new HashSet<string>(selected);
 
@@ -25,7 +60,7 @@ public sealed class PassiveTreeSelection
     {
         if (id == PassiveTreeCatalog.OriginId || selected.Contains(id)) return false;
         var node = PassiveTreeCatalog.Get(id);
-        if (SpentPoints + node.Cost > pointBudget) return false;
+        if (!CanLearn(node) || node.Cost > AvailablePoints) return false;
         if (node.MasteryGroup is { } group && selected.Any(selectedId => PassiveTreeCatalog.Get(selectedId).MasteryGroup == group)) return false;
         return PassiveTreeCatalog.Neighbors(id).Any(IsConnectedAnchor);
     }
@@ -60,6 +95,7 @@ public sealed class PassiveTreeSelection
     public bool Remove(string id)
     {
         if (!CanRemove(id)) return false;
+        ReserveInactive(PassiveTreeCatalog.Get(id));
         return selected.Remove(id);
     }
 
@@ -87,14 +123,53 @@ public sealed class PassiveTreeSelection
         var remaining = ids.Where(id => id != PassiveTreeCatalog.OriginId && PassiveTreeCatalog.All.Any(node => node.Id == id)).ToHashSet();
         while (remaining.Count > 0)
         {
-            var next = remaining.FirstOrDefault(CanSelect);
+            var next = remaining.FirstOrDefault(CanRestore);
             if (next is null) break;
-            Select(next);
+            selected.Add(next);
             remaining.Remove(next);
         }
     }
 
-    public void Reset() => selected.Clear();
+    public void Reset()
+    {
+        foreach (var id in selected) ReserveInactive(PassiveTreeCatalog.Get(id));
+        selected.Clear();
+    }
+
+    // Loadouts are edits, not save restoration. They cannot teach another school,
+    // erase its learned nodes, or route around the inactive-refund reservation.
+    public void ReallocateNodes(IEnumerable<string> ids)
+    {
+        if (ActiveSchool is null) { RestoreNodes(ids); return; }
+        var requested = ids.Where(id => PassiveTreeCatalog.All.Any(node => node.Id == id)).ToHashSet(StringComparer.Ordinal);
+        var removals = selected.Where(id => !requested.Contains(id) && ArcaneSchoolCatalog.Owner(PassiveTreeCatalog.Get(id)) == ActiveSchool).ToHashSet();
+        while (removals.FirstOrDefault(CanRemove) is { } removable)
+        {
+            Remove(removable);
+            removals.Remove(removable);
+        }
+        var additions = requested.Where(id => !selected.Contains(id)).ToHashSet();
+        while (additions.FirstOrDefault(CanSelect) is { } next)
+        {
+            Select(next);
+            additions.Remove(next);
+        }
+    }
+
+    private bool CanRestore(string id)
+    {
+        var node = PassiveTreeCatalog.Get(id);
+        return node.Cost <= AvailablePoints && !HasMasteryConflict(node) && PassiveTreeCatalog.Neighbors(id).Any(IsConnectedAnchor);
+    }
+
+    private bool HasMasteryConflict(PassiveNodeDefinition node) => node.MasteryGroup is { } group &&
+        selected.Any(id => PassiveTreeCatalog.Get(id).MasteryGroup == group);
+
+    private void ReserveInactive(PassiveNodeDefinition node)
+    {
+        if (ActiveSchool is null || ArcaneSchoolCatalog.Owner(node) is not { } owner || owner == ActiveSchool) return;
+        reserved[owner] = reserved.GetValueOrDefault(owner) + node.Cost;
+    }
 
     private bool IsConnectedAnchor(string id) => id == PassiveTreeCatalog.OriginId || selected.Contains(id);
 }

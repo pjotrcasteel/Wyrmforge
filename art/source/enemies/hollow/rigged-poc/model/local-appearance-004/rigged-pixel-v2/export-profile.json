@@ -1,0 +1,18 @@
+{
+  "cell": [
+    96,
+    96
+  ],
+  "frames": 16,
+  "fps": 12,
+  "cycleSeconds": 1.3333333333333333,
+  "stanceFraction": 0.62,
+  "sweepModelUnits": 0.19,
+  "travelModelUnitsPerCycle": 0.3064516129032258,
+  "actorWorldHeight": 60,
+  "travelWorldUnitsPerCycle": 18.387096774193548,
+  "direction": "three-quarter front",
+  "pixelSampling": "native 96px camera; fixed-palette export",
+  "ownerAccepted": false,
+  "runtimeIntegrated": false
+}

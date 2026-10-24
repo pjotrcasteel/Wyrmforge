@@ -1,52 +1,35 @@
-# WyrmForge — Phase 1: Menu/action Foley audition
+# WyrmForge — Sound audition 1: ordinary interface press
 
-Status: **candidate / listening gate; not approved for production**.
-Roadmap: menu/action sounds → ambient & monsters → spells → phone haptics → remaining polish.
-This slice deliberately changes **no combat mechanics, music tracks, ambient layers or haptics**.
+Status: **draft, requires listening approval**. This revision integrates useful source recordings from original draft PR #128 into current `main` without restoring stale audio.js files or replacing the semantic Hunt and building sound design.
 
-## What changed
+## Candidate presets (all physically recorded, licensed CC0)
 
-- Three switchable, deliberately restrained physical-material palettes in the Settings **Sound Atelier**:
-  - **Worn Vellum** (default): leather, book movement and a wooden/door presence.
-  - **Weathered Stone**: stone tap, old hinges and physical book/door cues.
-  - **Cold Iron**: quiet metal clicks and latches, plus creaking doors.
-- Audition the same eight **semantic** events in each material: ordinary button, back, open, confirm, enter hunt, reveal upgrade, choose upgrade, clear trail.
-- Runtime playback resolves semantic event → selected palette → licensed Ogg asset. Selection persists locally; each palette can be replaced without modifying game simulation.
-- Common UI interactions resolve from `data-sound-cue`, with a plain `ui` fallback for unannotated buttons. Hunt-entry actions already playing `hunt-start` from C# opt out of the extra global click, avoiding stacked clicks.
-- Existing sound engine, audio-session unlock, category volumes and music crossfade remain intact.
-- A future iOS/Android adapter should consume the same semantic event and palette manifest with native playback/haptic APIs. Never call WebAudio directly from simulation/game logic.
+- **Worn Vellum (initial default):** two distinct leather/handling recordings `handleSmallLeather.ogg` and `handleSmallLeather2.ogg` from Kenney's RPG Audio. Short, soft, no note/chime.
+- **Weathered Stone:** the existing `ui.ogg` derived from rubberduck's `item_stone_01.ogg`. Remains accessible as an alternative/fallback.
+- **Cold Iron:** Kenney's `metalClick.ogg`, dry and mechanical.
 
-## Recordings and license provenance
+The archived PR originally explored complete menu/action presets. **Only the ordinary UI press is changing in this checkpoint**. Hunt exit/arena entry, door, upgrade, music and combat SFX stay as on current main, and the existing global handler continues to suppress double audio when the Sound Atelier itself is clicked.
 
-12 original Ogg recordings come from **Kenney RPG Audio**, published as Creative Commons Zero (CC0).
-Official source: https://kenney.nl/assets/rpg-audio
-Secondary redistribution: https://github.com/Mcamento8/open-game-sfx-index/tree/main/audio/rpg-audio
-Each asset in `wwwroot/audio/recorded/menu-*.ogg` preserves its original upstream Ogg bytes.
-`manifest.json` has the original filename, official source page, author, license, mirrored source path and Git blob SHA for each asset.
-The existing rubberduck stone tap is reused for Weathered Stone without copying its bytes.
+The selectable material is stored in `wyrmforge.audio.ui.material.v1` and played through the existing Web Audio `ui` category, volume preference, effect envelope and limiter. The original semantic event remains `ui`; later iOS/Android players can consume the same manifest data. Raw Ogg recordings are copied unchanged by their verified Git object SHA. Material source attribution is in `manifest.json`.
 
-No audio from copyrighted reference games was imported.
-Web runtime may filter, envelope and attenuate the sourced recordings; originals are preserved for future native transcoding.
+## Human listening gate before merge
 
-## Listening gate: do not merge merely because CI passes
+1. In Settings → Sound Atelier, tap each of Worn Vellum, Weathered Stone and Cold Iron at a realistic phone-speaker volume.
+2. Repeat each at least 20 times. Reject sharp, delayed, or annoying sounds rather than choosing by the loudest.
+3. Navigate Town, Arcane Nexus and Settings for five minutes. Test explicit button actions and no double taps/chimes.
+4. Repeat on headphones and iPhone speaker; verify first tap/gesture, mute, background return and persisted material selection.
+5. Rate comfort/fatigue, tactile character, mobile clarity and Gothic fit 1–5, then record KEEP / REVISE / REPLACE.
+6. Keep the PR draft until the actual game is auditioned. Tests prove licenses, assets and event mappings, **not subjective sound quality**.
 
-1. In Settings → Sounds, listen to **Button**, **Back**, **Open**, **Confirm**, **Enter hunt**, **Reveal**, **Choose** and **Clear trail** in each material.
-2. Repeat the Button cue 30 times and navigate the town/Nexus/settings for 5 minutes; reject fatigue, ringing, excessive creaking or slow response.
-3. Enter/leave at least three hunts and confirm only **one meaningful** entrance sound. Verify no magic-shield burst or healing bell from phase-1 menu actions.
-4. Compare a moderate-volume iPhone speaker with headphones and a recent Android phone; verify first tap, silent-mode behavior, mute, restoration after backgrounding and saved palette.
-5. Confirm disabled controls do not play, actions already generating a semantic event do not double-trigger, and audio problems never block navigation.
-6. Human reviewer records **keep / revise / replace** and rates **tactility, fit to Gothic world, clarity, repetition fatigue and mobile translation** (1–5). No preset is canon until approved.
+## Research basis
 
-## Known limitations
+- Matt Uelmen, *Audio Content for Diablo and Diablo 2* (2001): live/source-recorded instrumentation and distinctive feedback; especially repeated skill effects must avoid becoming annoying.
+  https://www.gamedeveloper.com/audio/audio-content-for-i-diablo-i-and-i-diablo-2-i-tools-teams-and-products
+- Kevin Regamey, GDC 2023 *The TUNIC Audio Talk*: define direction from actual mechanics and audition in-game.
+  https://www.gdcvault.com/play/1029369/The-TUNIC-Audio
+- FMOD Studio *Working with Instruments*: multi-instrument shuffle/variants reduce obviously artificial repetition.
+  https://www.fmod.com/resources/documentation-studio?page=working-with-instruments.html&version=1.10
 
-- This is a **selection of source recordings**, not a commissioned final soundscape. Their exact perceptual quality and mixes are intentionally unapproved until listening.
-- A few selected recordings are too long for possible future very rapid interactions; the review will determine which recordings require carefully authored shorter exports. Do not blindly pitch-shift or synthesize to solve this.
-- Semantic `data-sound-cue` coverage is currently limited to the principal town/menu/hunt entry points. Complete explicit tagging of other settings, inventory and Nexus controls after the palette has been selected.
-- Safari browser cannot supply reliable native iOS haptics. The eventual native mobile app uses the same semantic event stream with Core Haptics/Android APIs behind a platform adapter; phase 4 will implement this.
-- Do not market these as exclusively custom-recorded or professionally final. They are Kenney's CC0 source recordings adapted through playback processing.
+## Next sound
 
-## Tests
-
-`node --test tests/javascript/menu-audio-palettes.test.mjs tests/javascript/audio-session.test.mjs tests/javascript/recorded-audio.test.mjs`
-
-The first test confirms profile coverage, authentic Ogg headers, source Git-blob integrity, CC0 metadata and absence of the previous chime/shield files in the candidate profiles. It does **not** stand in for a subjective listening test.
+Once the everyday press is approved: separately audition `ui-confirm`/back and major menu interactions, then revisit environmental/monster death audio. Do not couple this with mage, Fireball, lighting, or Hollowed/Ashling art PRs.
