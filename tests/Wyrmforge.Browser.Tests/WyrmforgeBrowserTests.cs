@@ -1634,12 +1634,16 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await OpenTownBuildingAsync("Arcane Nexus");
 
         await Expect(Page.Locator(".fireball-ritual")).ToBeVisibleAsync();
-        await Expect(Page.Locator(".fireball-hero-art")).ToBeVisibleAsync();
+        await Expect(Page.Locator(".fireball-hero-canvas")).ToBeVisibleAsync();
         Assert.IsTrue(await Page.Locator(".fireball-chamber").EvaluateAsync<bool>(
             "element => getComputedStyle(element).backgroundImage.includes('arcane-nexus/ritual-chamber.svg')"),
             "The live Nexus must load its independent Gothic chamber layer.");
-        Assert.IsTrue(await Page.Locator(".fireball-hero-art").EvaluateAsync<bool>("img => img.complete && img.naturalWidth > 0"),
-            "The approved Fireball artwork must actually load, rather than silently falling back to CSS.");
+        await Page.WaitForFunctionAsync(@"() => {
+            const canvas = document.querySelector('.fireball-hero-canvas');
+            if (!canvas || canvas.width !== 192 || canvas.height !== 192) return false;
+            const pixels = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
+            return pixels.some((value, index) => index % 4 === 3 && value > 0);
+        }");
         Assert.IsTrue(await Page.EvaluateAsync<bool>("() => document.documentElement.scrollWidth <= window.innerWidth + 2"),
             "The Arcane Nexus must not overflow a 390px portrait viewport.");
         await Expect(Page.Locator(".fireball-context h3")).ToHaveTextAsync("Upgrade Fireball");
