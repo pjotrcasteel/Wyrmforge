@@ -64,7 +64,7 @@ jobs:
               arm.append(flex(bones['shoulder'],bones['elbow'],bones['wrist']))
             assert max(swing)>=108, (side,'not enough knee recovery',swing)
             assert min(stance)>=15, (side,'locked stance knee',stance)
-            assert min(arm)>=22 and max(arm)<=85, (side,'unstable elbows',arm)
+            assert min(arm)>=40 and max(arm)<=115, (side,'unstable elbows',arm)
             print(side, 'knee stance',min(stance),max(stance),'swing',min(swing),max(swing),'elbow',min(arm),max(arm))
           assert .24<=profile['footSweepModelUnits']<=.27 and profile['recoveryLiftModelUnits']>=.21
           assert abs(profile['expectedRuntimePlaybackFramesPerSecondAtBaseSpeed']-profile['fps'])<1.5
@@ -102,7 +102,7 @@ jobs:
           fi
       - name: Preserve generated asset evidence for inspection
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: hollowed-sprint-v7-unapproved-${{ github.sha }}
           path: |
