@@ -11,7 +11,7 @@ const schoolFromSpell = spell => spell === 1 || spell === 4 ? 'fire'
     : spell === 0 || spell === 7 ? 'arcane' : null;
 
 export function createSoundEventTracker() {
-    return { previous: null, lastPlayed: new Map(), activeHits: new Set(), activeDeaths: new Set() };
+    return { previous: null, lastPlayed: new Map(), activeHits: new Set(), activeDeaths: new Set(), activeImpacts: [] };
 }
 
 export function collectSoundEvents(tracker, snapshot, now) {
@@ -27,6 +27,25 @@ export function collectSoundEvents(tracker, snapshot, now) {
     tracker.activeHits = activeHits;
     tracker.activeDeaths = activeDeaths;
 
+    // Elemental impacts have SpellId/position/progress, but no event ID. Match the
+    // previous frame's living effects rather than using collection-length deltas:
+    // two impacts can swap on the same tick without changing the array length.
+    const impacts = snapshot?.elementalImpacts ?? [];
+    const previousImpacts = tracker.activeImpacts;
+    const matched = new Set();
+    const freshImpacts = impacts.filter(impact => {
+        const index = previousImpacts.findIndex((past, i) => !matched.has(i) &&
+            past.spell === impact.spell && Math.abs(past.x - impact.x) < 0.5 &&
+            Math.abs(past.y - impact.y) < 0.5 &&
+            impact.progress + 0.02 >= past.progress);
+        if (index < 0) return true;
+        matched.add(index);
+        return false;
+    });
+    tracker.activeImpacts = impacts.map(impact => ({
+        x: impact.x, y: impact.y, spell: impact.spell, progress: impact.progress,
+    }));
+
     const current = {
         health: snapshot?.hud?.health ?? 0,
         maxHealth: snapshot?.hud?.maxHealth ?? 0,
@@ -34,8 +53,7 @@ export function collectSoundEvents(tracker, snapshot, now) {
         projectiles: snapshot?.projectiles?.length ?? 0,
         projectileSpell: snapshot?.projectiles?.at(-1)?.spell ?? 0,
         lightning: snapshot?.lightning?.length ?? 0,
-        impacts: snapshot?.elementalImpacts?.length ?? 0,
-        impactSpell: snapshot?.elementalImpacts?.at(-1)?.spell ?? null,
+        impacts: impacts.length,
         powerBurst: Boolean(snapshot?.powerBurst),
         dragon: Boolean(snapshot?.dragon),
         paused: Boolean(snapshot?.paused || snapshot?.ended),
@@ -90,9 +108,11 @@ export function collectSoundEvents(tracker, snapshot, now) {
         const name = current.projectileSpell === 1 ? 'fire' : current.projectileSpell === 2 ? 'frost' : current.projectileSpell === 3 ? 'lightning' : 'arcane';
         emit(name, 230);
     }
-    if (current.impacts > previous.impacts && current.kills === previous.kills) {
-        const school = schoolFromSpell(current.impactSpell);
-        emit(school ? school + '-impact' : 'impact', 180);
+    if (current.kills === previous.kills) {
+        for (const impact of freshImpacts) {
+            const school = schoolFromSpell(impact.spell);
+            emit(school ? school + '-impact' : 'impact', 180);
+        }
     }
     return result;
 }
