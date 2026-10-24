@@ -340,20 +340,23 @@ class WizardBuilder:
         ar=ob.modifiers.new('Armature carries sewn waistband','ARMATURE')
         ar.object=self.arm
         cloth=ob.modifiers.new('Dynamic cloth | body collision','CLOTH')
-        cloth.settings.quality=8
-        cloth.settings.mass=.47
+        cloth.settings.quality=12
+        is_coat='coat' in name.lower()
+        cloth.settings.mass=.62 if is_coat else .35
         if hasattr(cloth.settings,'vertex_group_mass'):
             cloth.settings.vertex_group_mass='ClothPins'
-        for name_,value in [('tension_stiffness',18),('compression_stiffness',18),
-                            ('shear_stiffness',12),('bending_stiffness',.3),
-                            ('air_damping',1.0)]:
+        for name_,value in [('tension_stiffness',28 if is_coat else 23),
+                            ('compression_stiffness',26 if is_coat else 22),
+                            ('shear_stiffness',19 if is_coat else 15),
+                            ('bending_stiffness',1.65 if is_coat else .95),
+                            ('air_damping',3.0 if is_coat else 2.3)]:
             if hasattr(cloth.settings,name_):
                 setattr(cloth.settings,name_,value)
         if hasattr(cloth.collision_settings,'use_self_collision'):
             cloth.collision_settings.use_self_collision=True
         if hasattr(cloth.collision_settings,'distance_min'):
             cloth.collision_settings.distance_min=.015
-        cloth.point_cache.frame_start=1
+        cloth.point_cache.frame_start=-31
         cloth.point_cache.frame_end=200
         # UV authored first, simulation geometry retained; do not apply the cloth modifier.
         return ob
@@ -559,6 +562,22 @@ class WizardBuilder:
         self.staff_control.animation_data_create()
         self.staff_control.animation_data.action=bpy.data.actions.new('Staff prop socket | source actions')
         self.staff_control.animation_data.action.use_fake_user=True
+        # Two complete authoring-only pre-roll loops let cloth settle before
+        # exported walk begins at frame 1. Negative keys are NOT gameplay clips.
+        # The full source loop remains frames 1..17 with frame 17 == frame 1.
+        for frame in range(-31,1):
+            local_index=(frame-1) % WALK_FRAMES
+            scene.frame_set(frame)
+            self.pose_frame('walk',local_index,WALK_FRAMES+1)
+            for name in ('pelvis','spine','chest','head','beard.root','beard.tip'):
+                bone=self.arm.pose.bones[name]
+                bone.keyframe_insert(data_path='location',frame=frame)
+                bone.keyframe_insert(data_path='rotation_euler',frame=frame)
+            for target in self.ik_targets.values():
+                target.keyframe_insert(data_path='location',frame=frame)
+            self.staff_control.keyframe_insert(data_path='location',frame=frame)
+            self.staff_control.keyframe_insert(data_path='rotation_euler',frame=frame)
+        scene['WizardClothWarmupFrames']=32
         for clip,(first,last) in ranges.items():
             length=last-first+1
             for local_index,f in enumerate(range(first,last+1)):
