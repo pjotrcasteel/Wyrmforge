@@ -91,7 +91,7 @@ export async function packActorAtlas({source,output,actorId='actor',variant,clip
                     const index=(row*cell+y)*width+frame*cell+x;
                     const alpha=tile[(y*cell+x)*4+3];
                     if(pass==='albedo')referenceAlpha[index]=alpha;
-                    else if(alpha!==referenceAlpha[index])throw Error('Material alpha not aligned with albedo: '+path);
+                    else if(alpha!==referenceAlpha[index])throw Error('material alpha not aligned with albedo: '+path);
                 }
                 tileCopy(atlas,tile,width,cell,frame,row);
                 report.frameFilesValidated++;
