@@ -156,6 +156,25 @@ def render(source:Path,destination:Path):
         "genuineCapturedMotion":True,"nativeGameRecording":False,
         "retargetedToWizard":False,"approvedAnimation":False,"approvedCharacterArt":False}
     (destination/"motion-metadata.json").write_text(json.dumps(report,indent=2)+"\n")
+    # Source-format-independent control points for subsequent real rig retarget.
+    # CMU is Y-up; game authoring is X/Y horizontal and Z-up.
+    names={"pelvis":"Hips","spine":"Spine1","head":"Head",
+        "thigh.L":"LeftUpLeg","knee.L":"LeftLeg","ankle.L":"LeftFoot","toe.L":"LeftToeBase",
+        "thigh.R":"RightUpLeg","knee.R":"RightLeg","ankle.R":"RightFoot","toe.R":"RightToeBase",
+        "elbow.L":"LeftForeArm","hand.L":"LeftHand",
+        "elbow.R":"RightForeArm","hand.R":"RightHand"}
+    anchors={"schemaVersion":1,"source":"CMU 07_04","normalizedBy":"captured body height",
+        "sourceFrames":selection,"retargeted":False,"poses":[]}
+    for frame,p in zip(selection,poses):
+        root=p["Hips"]
+        joints={}
+        for target,origin in names.items():
+            if origin not in p:continue
+            delta=(p[origin]-root)/h
+            joints[target]=[round(float(delta[0]),6),
+                round(float(-delta[2]),6),round(float(delta[1]),6)]
+        anchors["poses"].append({"sourceFrame":frame,"joints":joints})
+    (destination/"retarget-anchors.json").write_text(json.dumps(anchors,indent=2)+"\n")
     return report
 
 if __name__=="__main__":
