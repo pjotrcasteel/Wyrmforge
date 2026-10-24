@@ -309,18 +309,25 @@
         return true;
     }
 
-    function playSpellImpact(school, preview = false) {
+    function playSpellImpact(school, preview = false, sound = design.palette.impact) {
         const options = recordedManifest?.cues?.[school]?.hitVariants;
         if (!options?.length) return false;
         const count = variants.get(school + '-hit') ?? 0;
         variants.set(school + '-hit', count + 1);
-        const sound = design.palette.impact;
         return playRecordedEntry(options[count % options.length], sound, school + '-hit', count, preview ? 0.62 : 0.53);
     }
 
     function playRecorded(name, sound, preview, now) {
         const count = variants.get(name) ?? 0;
         const isSpell = spellSchools.has(name);
+        // Prefer the impact's actual SpellId over whichever spell was cast most recently.
+        // The old generic path remains for impacts lacking a known SpellId.
+        const impactSchool = name.endsWith('-impact') ? name.slice(0, -7) : null;
+        if (impactSchool && spellSchools.has(impactSchool)) {
+            const played = playSpellImpact(impactSchool, preview, sound);
+            if (played) lastCue.set(name, now);
+            return played;
+        }
         if (name === 'impact' && recentSpell && now - recentSpell.at < 1250 &&
             playSpellImpact(recentSpell.name, preview)) {
             lastCue.set(name, now);

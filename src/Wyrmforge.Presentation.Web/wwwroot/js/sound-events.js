@@ -3,6 +3,13 @@
 const creatureFamily = kind => kind === 0 || kind === 'Hollow' ? 'hollow'
     : kind === 2 || kind === 'Ashling' ? 'ashling' : null;
 
+// Match C# SpellId: ArcaneOrb, FireBolt, FrostShard, ChainLightning,
+// CinderNeedle, IceLance, BallLightning, AetherDart. No last-cast guessing.
+const schoolFromSpell = spell => spell === 1 || spell === 4 ? 'fire'
+    : spell === 2 || spell === 5 ? 'frost'
+    : spell === 3 || spell === 6 ? 'lightning'
+    : spell === 0 || spell === 7 ? 'arcane' : null;
+
 export function createSoundEventTracker() {
     return { previous: null, lastPlayed: new Map(), activeHits: new Set(), activeDeaths: new Set() };
 }
@@ -28,6 +35,7 @@ export function collectSoundEvents(tracker, snapshot, now) {
         projectileSpell: snapshot?.projectiles?.at(-1)?.spell ?? 0,
         lightning: snapshot?.lightning?.length ?? 0,
         impacts: snapshot?.elementalImpacts?.length ?? 0,
+        impactSpell: snapshot?.elementalImpacts?.at(-1)?.spell ?? null,
         powerBurst: Boolean(snapshot?.powerBurst),
         dragon: Boolean(snapshot?.dragon),
         paused: Boolean(snapshot?.paused || snapshot?.ended),
@@ -82,6 +90,9 @@ export function collectSoundEvents(tracker, snapshot, now) {
         const name = current.projectileSpell === 1 ? 'fire' : current.projectileSpell === 2 ? 'frost' : current.projectileSpell === 3 ? 'lightning' : 'arcane';
         emit(name, 230);
     }
-    if (current.impacts > previous.impacts && current.kills === previous.kills) emit('impact', 180);
+    if (current.impacts > previous.impacts && current.kills === previous.kills) {
+        const school = schoolFromSpell(current.impactSpell);
+        emit(school ? school + '-impact' : 'impact', 180);
+    }
     return result;
 }

@@ -118,3 +118,26 @@ test('scripted or revived Ashling death still emits when the kill counter is unc
     assert.deepEqual(collectSoundEvents(tracker, dying, 220), []);
     assert.deepEqual(collectSoundEvents(tracker, frame({ hud: { health: 100, maxHealth: 100, kills: 7 } }), 260), []);
 });
+
+
+test('elemental impact snapshots trigger the correct spell recording independent of recent casts', () => {
+    for (const [spell, expected] of [[0, 'arcane'], [1, 'fire'], [2, 'frost'], [3, 'lightning'],
+        [4, 'fire'], [5, 'frost'], [6, 'lightning'], [7, 'arcane']]) {
+        const tracker = createSoundEventTracker();
+        collectSoundEvents(tracker, frame({ projectiles: [{ spell: 3 }] }), 0);
+        const impact = frame({ elementalImpacts: [{ x: 50, y: 51, spell, progress: .05 }] });
+        assert.deepEqual(collectSoundEvents(tracker, impact, 500), [expected + '-impact'],
+            'SpellId ' + spell + ' should use its own impact, not the preceding Lightning cast');
+    }
+});
+
+test('unknown SpellId retains generic physical impact and kills do not double the sound', () => {
+    const tracker = createSoundEventTracker();
+    collectSoundEvents(tracker, frame(), 0);
+    assert.deepEqual(collectSoundEvents(tracker,
+        frame({ elementalImpacts: [{ spell: 99 }] }), 100), ['impact']);
+    collectSoundEvents(tracker, frame(), 220);
+    assert.deepEqual(collectSoundEvents(tracker,
+        frame({ hud: { health: 100, maxHealth: 100, kills: 1 },
+            elementalImpacts: [{ spell: 1 }] }), 450), ['enemy-down']);
+});

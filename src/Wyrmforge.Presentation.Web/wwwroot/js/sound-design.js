@@ -12,6 +12,10 @@
         frost: { label: 'Frost — glass and snow', bus: 'combat', volume: 0.37, cooldown: 620, duration: 0.47, priority: 1 },
         lightning: { label: 'Storm — restrained discharge', bus: 'combat', volume: 0.35, cooldown: 650, duration: 0.34, priority: 1 },
         impact: { label: 'Impact — stone and cloth', bus: 'combat', volume: 0.27, cooldown: 420, duration: 0.23, priority: 1 },
+        'arcane-impact': { label: 'Arcane impact — folded aether', bus: 'combat', volume: 0.27, cooldown: 180, duration: 0.30, priority: 2 },
+        'fire-impact': { label: 'Fire impact — ember and rupture', bus: 'combat', volume: 0.29, cooldown: 180, duration: 0.29, priority: 2 },
+        'frost-impact': { label: 'Frost impact — brittle collapse', bus: 'combat', volume: 0.28, cooldown: 180, duration: 0.32, priority: 2 },
+        'lightning-impact': { label: 'Storm impact — crack and discharge', bus: 'combat', volume: 0.27, cooldown: 180, duration: 0.26, priority: 2 },
         'enemy-down': { label: 'Enemy down — fading ember', bus: 'combat', volume: 0.24, cooldown: 1100, duration: 0.34, priority: 1 },
         'hollow-approach': { label: 'Hollowed — ragged undead breath', bus: 'combat', volume: 0.22, cooldown: 6500, duration: 0.62, priority: 0 },
         'hollow-hit': { label: 'Hollowed — damaged flesh', bus: 'combat', volume: 0.25, cooldown: 480, duration: 0.26, priority: 1 },
@@ -147,6 +151,10 @@
                 weight(0.011, 0.34, 0.16, 223, 116);
                 strike(0.054, 392, 0.13, 0.19, 'stone');
                 break;
+            case 'arcane-impact':
+            case 'fire-impact':
+            case 'frost-impact':
+            case 'lightning-impact':
             case 'impact':
                 weight(0, 0.48, 0.17, 210, 102);
                 air(0, 0.17, 880, 180, 0.28, 0.005, 'soft');
@@ -261,7 +269,7 @@
         identity: 'Ancient Resonance',
         palette,
         render,
-        previewNames: ['arcane', 'fire', 'frost', 'lightning', 'impact', 'hurt',
+        previewNames: ['arcane', 'fire', 'frost', 'lightning', 'arcane-impact', 'fire-impact', 'frost-impact', 'lightning-impact', 'hurt',
             'upgrade-open', 'upgrade-choice', 'power-burst', 'reward', 'wyrm', 'victory', 'death'],
     });
 })();

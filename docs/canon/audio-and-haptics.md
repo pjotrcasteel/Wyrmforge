@@ -26,6 +26,12 @@ Sound remains optional. The ambience uses its own saved volume control (`wyrmfor
 
 **Listening gate:** iPhone speaker + headphones, ambient-only and full Hunt mixing; check faint texture is still audible but never masks Fireball or warning cues. Inspect continuous looping for clicks and recognisable repetition, first gesture after return, and performance in portrait/mobile. Source-quality inspection and listening remain required before merge. Actual component usage and audio asset presence are independently tested.
 
+### Elemental-impact identity — draft sound slice
+
+Elemental hit recordings must follow the actual `ElementalImpactRenderSnapshot.Spell` (C# `SpellId`), **not the last spell cast**. The event tracker now distinguishes arcane/fire/frost/storm at the impact snapshot, including non-primary spells CinderNeedle, IceLance, BallLightning and AetherDart. Each maps to the existing recorded school-specific `hitVariants` (JC Sounds, CC BY 4.0) and existing combat category; no extra new third-party samples are added. Unknown SpellId preserves the generic `impact` fallback. Impacts suppressed on a kill frame remain suppressed to avoid layering a death and impact over one hit.
+
+The Sound Atelier has individual preview buttons for the four impact families; the compact Safari MP3 export supplies a side-by-side demonstration of the real recorded samples. This is a **candidate audio change**, and must still pass mobile listening plus CI on the final PR head. No Fireball mutator behavior or game simulation data is changed.
+
 ## Recorded audio inventory and required attribution
 
 First imported playback prototype: **0.0.109**. Enhanced recorded mage spell layers: **0.0.110**.
