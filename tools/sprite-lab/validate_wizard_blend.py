@@ -56,6 +56,22 @@ def run(output,render,walk_sequence):
             verify("ClothPins" in obj.vertex_groups,"cloth has no pinned vertex group")
             verify(len(obj.data.vertices)>10,"empty cloth mesh")
     verify(len(cloth)>=2,"expected robe and cape cloth surfaces")
+    coat=bpy.data.objects.get("Open-front weighty coat / continuous physics")
+    verify(coat is not None and coat.type=="MESH","original robe mesh absent")
+    outward=0
+    tested=0
+    # Mesh-space radial normal check guards against collision-inverting winding.
+    # Do not apply to the cape: its correct outside normal is toward +Y.
+    for polygon in coat.data.polygons:
+        center=polygon.center
+        radial=math.hypot(center.x,center.y)
+        if radial<.18: continue
+        tested+=1
+        dot=polygon.normal.x*center.x+polygon.normal.y*center.y
+        if dot>0: outward+=1
+    verify(tested>300 and outward/tested>.95,
+           "robe has inward collision normals: "+str(outward)+"/"+str(tested))
+
     for name in ("IK foot.L","IK foot.R","IK hand.L","IK hand.R"):
         target=bpy.data.objects.get(name)
         verify(target is not None and target.animation_data and target.animation_data.action,
@@ -183,6 +199,7 @@ def run(output,render,walk_sequence):
         "status":"validated source; art/mobile/lighting NOT approved",
         "artApproved":False,"clothBakedAndReviewed":False,"runtimeIntegrated":False,
         "clothWarmupFrames":scene.get("WizardClothWarmupFrames"),
+        "robeOutwardFaces":{"checked":tested,"outward":outward},
         "clothBakeRequiredForProduction":True}
     (output/"wizard-blender-validation.json").write_text(json.dumps(report,indent=2)+"\n")
     print(json.dumps(report,indent=2))
