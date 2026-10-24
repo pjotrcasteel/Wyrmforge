@@ -34,16 +34,25 @@ test('requires entire original eight-facing production set and three approvals',
     assert.equal(isApprovedWizardManifest({...m,acceptance:{...m.acceptance,nativeGameplayReviewed:false}}),false);
     assert.equal(isApprovedWizardManifest(null),false);
 });
+test('live gameplay does not request or activate an absent wizard atlas',async()=>{
+    let calls=0;
+    const drawing={ready:()=>true,preload:async()=>{calls++;return true;},
+        getManifest:goodManifest,getAnimationProfile:()=>profile,drawFrame:()=>true};
+    const sprites=createWizardPlayerSprites({renderer:drawing});
+    assert.equal(await sprites.preload(),false);
+    assert.equal(calls,0);
+    assert.equal(sprites.draw({},player(),null,0,sprites.createState()),false);
+});
 test('missing or rejected sprites fail closed; no fake still-frame replacement',async()=>{
     for(const manifest of [null,{...goodManifest(),acceptance:{ownerApproved:false}}]){
-        const drawing=renderer(manifest),sprites=createWizardPlayerSprites({renderer:drawing});
+        const drawing=renderer(manifest),sprites=createWizardPlayerSprites({renderer:drawing,enabled:true});
         assert.equal(await sprites.preload(),false);
         assert.equal(sprites.draw({},player(),null,0,sprites.createState()),false);
         assert.equal(drawing.frames.length,0);
     }
 });
 test('accepted 8-view frames render via shared atlas path at actual player feet',async()=>{
-    const drawing=renderer(goodManifest()),sprites=createWizardPlayerSprites({renderer:drawing});
+    const drawing=renderer(goodManifest()),sprites=createWizardPlayerSprites({renderer:drawing,enabled:true});
     assert.equal(await sprites.preload(),true);
     const state=sprites.createState();
     assert.equal(sprites.draw({},player(),null,0,state),true);
@@ -56,7 +65,7 @@ test('accepted 8-view frames render via shared atlas path at actual player feet'
     assert.equal(drawing.frames.at(-1)[5],150);
 });
 test('teleport does not advance locomotion phase; paused casts hold rather than mutate C#',async()=>{
-    const drawing=renderer(goodManifest()),sprites=createWizardPlayerSprites({renderer:drawing});
+    const drawing=renderer(goodManifest()),sprites=createWizardPlayerSprites({renderer:drawing,enabled:true});
     await sprites.preload();const state=sprites.createState();
     sprites.draw({},player(),null,0,state);
     sprites.draw({},player(300,150),null,.1,state);
