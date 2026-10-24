@@ -120,3 +120,54 @@ and weapon contact are not reverified for the reflected attack, and the
 approved old attack atlas is not replaced. The new attack albedo and derived
 normal/depth/caster/emission must be generated from accepted exact geometry
 in lockstep before adoption. No changes in PR #332.
+
+## V3 — Stretched zombie running arms and stronger left-leg injury (24 October, user-requested)
+
+**Implementation: complete original-editable review pass, NOT shipped.** Existing draft PR
+#333 and its lighting-engine parent #332 remain intact. The source rig is
+the cape-free CMU 09_01-derived actor. The preceding standard, injured arm,
+and injured leg candidate .blend files remain available unchanged.
+
+User-facing correction: previously half-flexed, boxer-like arms should be
+**stretched forward like a reaching zombie**, with exactly **one stretched
+healthy arm when the other arm is broken**; the previous injured-leg limp was
+too weak at mobile pixel scale.
+
+The new `tools/sprite-lab/build-hollow-zombie-reach-v3.py` exports four
+source-editable no-cape rigs:
+
+| Candidate | Art action | Native GIF / zoom comparison |
+| --- | --- | --- |
+| `rigged-hollow-zombie-reach-v3-standard` | Both healthy arms in a reaching posture; original CMU shoulder motion survives; elbows have ~160–165° interior angles | [E native](evidence/hollowed-zombie-reach-v3/standard/compare-e-native-96px.gif) / [E zoom](evidence/hollowed-zombie-reach-v3/standard/compare-e-zoom-4x.gif) |
+| `rigged-hollow-zombie-reach-v3-broken-arm-right` | Healthy LEFT arm fully reaching; injured right remains constrained in its original damaged rig | [E zoom](evidence/hollowed-zombie-reach-v3/broken-arm-right/compare-e-zoom-4x.gif) / [W zoom](evidence/hollowed-zombie-reach-v3/broken-arm-right/compare-w-zoom-4x.gif) |
+| `rigged-hollow-zombie-reach-v3-one-arm-left` | Healthy RIGHT arm reaching; unusable left hangs as authored | [W zoom](evidence/hollowed-zombie-reach-v3/one-arm-left/compare-w-zoom-4x.gif) / [E native](evidence/hollowed-zombie-reach-v3/one-arm-left/compare-e-native-96px.gif) |
+| `rigged-hollow-zombie-reach-v3-broken-leg-left` | Both arms stretching, injured left foot swings ~0.10 Blender units lower and travels ~0.21 less forward at maximum swing, added ~0.015 injured-stance hip compression and torso counter-lean, length-preserving knee IK | [E zoom](evidence/hollowed-zombie-reach-v3/broken-leg-left/compare-e-zoom-4x.gif) / [SE zoom](evidence/hollowed-zombie-reach-v3/broken-leg-left/compare-se-zoom-4x.gif) |
+
+The actual Blender rigs keep the same geometry/UV/cape-free Hollowed source
+and 17 keys for 16 looping frames. Real 25fps 96px 128-frame eight-direction
+render atlases and **32 animated GIFs per variant** were built in
+`tools/sprite-lab/render-hollow-zombie-reach-v3.py`. GIFs pair previous
+candidate LEFT and new V3 RIGHT, in native 96px and 4× nearest-neighbour.
+They are located under `docs/art/evidence/hollowed-zombie-reach-v3/<variant>/`.
+
+[Full 4-variant Blender and GIF CI run passed](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40108661540)
+after correction of joint-angle interpretation and tolerance-sensitive 3D
+Blender contact comparisons. Four parallel builds/render validation jobs and
+the final source-preservation job all passed. Original CMU data, base rig,
+previous candidates, Ashling, Town, wizard, C# combat behavior and GPU engine
+are unchanged.
+
+**Personal visual inspection of full eight-direction sprite atlases and
+E/W/SE animated 4× comparisons:** v3 has a distinctly clearer outstretched
+zombie silhouette than the half-flexed boxer/sprinter arm. Broken-arm
+variants visibly retain one functioning extended arm. Broken-leg drag is
+stronger and hip movement more asymmetric, but should still be validated
+at *actual Hunt travel speed on mobile*, not pronounced production-ready on
+a loop alone. The reaching arms may need a final subtle secondary action
+pass if they appear too rigid during live movement.
+
+**Do not merge/cut over yet.** No new normal/depth/caster/emissive material
+passes have been generated for these exact posed meshes; never reuse
+the previous walk atlas passes. 96px in-Hunt screenshots, gameplay travel
+speed/contact, attacks/deaths matching the new reach and approved relightable
+source geometry remain separate acceptance gates.
