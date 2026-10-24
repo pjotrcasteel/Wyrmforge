@@ -95,6 +95,8 @@ def generate(source_root: Path, output: Path, tile_px: int = 240) -> list[dict]:
     selected = [family for family in manifest["families"] if family["id"] in SUPPORTED]
     if [family["id"] for family in selected] != list(SUPPORTED):
         raise ValueError("Required first-pass families missing or reordered")
+    if output.resolve() == source_root.resolve() or source_root.resolve() in output.resolve().parents:
+        raise ValueError("Review output must be outside the immutable source-art directory")
     output.mkdir(parents=True, exist_ok=True)
     observations = []
     for family in selected:
