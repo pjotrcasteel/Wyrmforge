@@ -302,7 +302,7 @@ def inspect_motion(body,arm,output):
         foot_lanes=verify_deformed_leg_lanes(body,arm)
         for side in ("left","right"):
             lane=foot_lanes.get(side+"FootLane")
-            if lane is not None:
+            if lane is not None and minimum_foot_lane[side] is not None:
                 minimum_foot_lane[side]=min(minimum_foot_lane[side],lane)
             else:
                 minimum_foot_lane[side]=None
