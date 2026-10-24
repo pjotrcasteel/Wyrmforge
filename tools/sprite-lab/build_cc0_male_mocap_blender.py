@@ -465,6 +465,34 @@ def studio_scene(body,arm,output):
     scene.render.filepath=str(output/"frame-00.png")
     return camera
 
+def evaluate_humanoid_pose(arm):
+    """Reject implausible full-body poses even when skin triangles stay intact.
+
+    This captures the old failure where a deformed model bent forward and
+    crossed knees yet had intact surface connectivity and correctly
+    positioned ankle centroids.
+    """
+    def pt(name):
+        return arm.matrix_world @ arm.pose.bones[name].head
+    left=pt("LeftUpLeg");right=pt("RightUpLeg")
+    center=(left+right)*.5
+    lateral=right-left
+    lateral.z=0.
+    width=lateral.length
+    insist(width>.1,"cannot measure humanoid hip width")
+    lateral.normalize()
+    head=pt("Head")
+    lanes={}
+    for side,sign in (("Left",-1),("Right",1)):
+        knee=pt(side+"Leg")
+        lane=sign*(knee-center).dot(lateral)/width
+        lanes[side.lower()+"KneeLane"]=round(lane,4)
+    height=(head-center).z/width
+    lanes["headHeightInHipWidths"]=round(height,4)
+    lanes["poseValid"]=all(v>-.04 for k,v in lanes.items() if k.endswith("KneeLane")) and height>1.3
+    return lanes
+
+
 def evaluate_torso_edge_integrity(body,evaluated_mesh,hip_z):
     """Measure deformed waist/upper-leg edge stretching against source topology.
 
@@ -523,6 +551,7 @@ def inspect_motion(body,arm,output):
         right=arm.matrix_world @ arm.pose.bones["RightFoot"].head
         insist((left-right).length>.01,"feet collapsed into the same point")
         foot_lanes=verify_deformed_leg_lanes(body,arm)
+        anatomical_pose=evaluate_humanoid_pose(arm)
         for side in ("left","right"):
             lane=foot_lanes.get(side+"FootLane")
             if lane is not None and minimum_foot_lane[side] is not None:
@@ -550,7 +579,8 @@ def inspect_motion(body,arm,output):
             "rightFoot":[round(float(x),4) for x in right],
             "evaluatedVertex":[round(float(x),4) for x in point],
             "deformedFootLanes":foot_lanes,
-            "torsoEdgeIntegrity":torso})
+            "torsoEdgeIntegrity":torso,
+            "anatomicalPose":anatomical_pose})
     displacement=max(math.dist(data[0]["evaluatedVertex"],x["evaluatedVertex"]) for x in data[1:])
     insist(displacement>.02,"retargeted UV body remains static despite captured movement")
     return data,displacement,minimum_foot_lane
@@ -592,6 +622,10 @@ def main(opts):
     scene["ProductionReady"]=False
     # Reject the result based on deformed geometry while retaining all 16
     # original review renders, 3/4 poses and editable Blender source.
+    joint_failures=[{"frame":pose["sourceFrame"],
+                     "metrics":pose["anatomicalPose"]}
+                    for pose in report_data
+                    if not pose["anatomicalPose"]["poseValid"]]
     torso_failures=[{"frame":pose["sourceFrame"],
                      "stats":pose["torsoEdgeIntegrity"]}
                     for pose in report_data
@@ -620,16 +654,19 @@ def main(opts):
             "footLaneFailures":gait_failures,"footLanesPassed":not gait_failures,
             "pelvisSurfaceFailures":torso_failures,
             "pelvisSurfacePassed":not torso_failures,
+            "humanoidPoseFailures":joint_failures,
+            "humanoidPosePassed":not joint_failures,
             "poses":report_data,
             "gothicWizardSourceComplete":False,"robed":False,"beardModeled":False,
             "retargetAcceptance":False,"productionAtlasComplete":False,
             "lightingApproved":False,"replacesTemporaryPlayer":False}
     (output/"native-retarget-validation.json").write_text(json.dumps(report,indent=2)+"\n")
     print(json.dumps({k:v for k,v in report.items() if k!="poses"},indent=2),flush=True)
-    if gait_failures or torso_failures:
+    if gait_failures or torso_failures or joint_failures:
         raise RuntimeError("REJECTED: "+str(len(gait_failures))+
                            " foot-lane failures, "+str(len(torso_failures))+
-                           " pelvis deformation failures; inspect saved native review")
+                           " pelvis deformation failures, "+str(len(joint_failures))+
+                           " anatomical pose failures; inspect saved native review")
 
 if __name__=="__main__":
     args=sys.argv[sys.argv.index("--")+1:] if "--" in sys.argv else []
