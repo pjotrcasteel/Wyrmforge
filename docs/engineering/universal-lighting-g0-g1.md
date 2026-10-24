@@ -5,13 +5,53 @@ Authority: [design and acceptance matrix](../design/arena-real-geometry-light-en
 [art](../canon/art-and-animation.md), [architecture](../canon/architecture-and-quality.md),
 [town](../canon/town-and-ux.md), [roadmap](../canon/roadmap.md).
 
+## Current verified checkpoint — 24 October 2026
+
+Code/tests: `eb5cb966f58018829393160a854569798c481222`.
+[Published-app GPU run](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40133138866)
+passed. [Durable original screenshots and numeric evidence](evidence/universal-lighting/eb5cb96/README.md)
+are checked in; the complete CI artifact is 12575776916 (expires 23 November).
+All 386 local JavaScript tests pass. Validate passed on this checkpoint.
+Full Browser smoke passed `a0d379e`, including the startup-race fix; the newest
+full smoke/WebKit runs were pending when this record was saved.
+
+| Verified behavior | 320px viewport | 390px viewport |
+| --- | ---: | ---: |
+| Hollowed authored normals: changed visible actor pixels | 1,402 | 2,108 |
+| Ashling authored normals: changed visible actor pixels | 744 | 1,185 |
+| Pose-aware shadows: changed ground pixels, excluding actor silhouettes | 2,077 | 3,217 |
+| Original oak: one foliage group shadows another, changed leaf pixels | 533 | 838 |
+| Alpha-card upper layer casting: changed lower-leaf pixels | 2,461 | 3,756 |
+| Cutout holes versus opaque upper quad: changed lower-leaf pixels | 2,115 | 3,235 |
+| Water specular A/B, source at 15% / 40%: changed water pixels | 9,147 / 6,663 | 13,666 / 10,004 |
+| Water highlight centroid movement, framebuffer pixels | 51.64 | 64.02 |
+| Entire-frame zero-light captures (including key and cutouts) | 7, all RGB zero | 7, all RGB zero |
+
+Wall, roof, post, NPC proxy, bark and foliage receipt also pass independent
+visible-receiver comparisons. Albedo/normals/wireframe/shadow visibility/native
+cube depth/light bounds/object masks, source lifecycle and frozen restoration
+are covered. Screenshots were inspected; numeric changes alone do not establish
+artistic quality. Tests use an RGB difference >3 for changed-pixel counts;
+zero-light checks require every RGB channel to equal zero exactly.
+
+**G1 remains incomplete:** final Gothic-night readability/palette and complete
+artistic acceptance, additional Town fixture/school/vacancy cases, actor
+volumetric/depth representation and broader clip binding, and real iOS/Android
+budgets are not established. Original color atlases remain baked source artwork;
+neutral inspection lighting is not a hidden gameplay brightness correction.
+Water is direct specular only. Town is diagnostic geometry. No production world
+path is migrated, and PR #332 remains draft.
+
 ## Source reconciliation
 
 PR #307 remains open at `8c963f8351a758b0fb468fd1340088ff7b904abf`.
 Its editable oak source generator and Blender artifacts are the required tree source;
 no old forest substitutes are approved. PR #327 remains a separate open Canvas
 normal/alpha projection experiment, not a GPU backend. Neither is merged here.
-Concurrent Town coverage (#312) and Ashfang (#299) work stays separate.
+Concurrent Town coverage (#312), Ashfang (#299), actor materials/motion (#333,
+#334) and wizard (#335) work stays separate. On recheck, main remains the baseline
+above. This proof still binds the exact original walk/color/normal pairs; newer
+actor exports require explicit provenance reconciliation before adoption.
 
 ## Actual renderer inventory and cutover seams
 
@@ -54,8 +94,10 @@ nothing. Priority then stable ID determines bounded shadow allocation, never
 entity kind. Point shadows cost six views; spot/directional one.
 
 Coordinates: right-handed X right, Y ground depth, Z up; one unit = one metre in
-this proof. Feet lie at Z=0. Orthographic fixed camera; sprites are vertical
-planes, no camera-facing rotation per frame. Existing game pixel coordinates
+this proof. Feet anchors lie at Z=0. Orthographic fixed camera; sprite planes
+use its right/up/toward basis so already-projected art is not skewed a second
+time. No camera-facing rotation is performed per frame; a future rotating-camera
+adapter must update the same basis together with its authored facing selection. Existing game pixel coordinates
 need an explicit G2 conversion (not a change to C# collision). Demo sprites use
 manifest anchor and worldSize/48. Color inputs are sRGB hex/textures, non-color
 normal/roughness maps remain linear data; Three accumulates linear radiance and
