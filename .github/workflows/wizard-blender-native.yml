@@ -43,7 +43,7 @@ jobs:
         shell: bash
         run: |
           blender --background artifacts/wizard-native/wizard-editable.blend --threads 2 \
-            --python tools/sprite-lab/validate_wizard_blend.py -- --output artifacts/wizard-native --render
+            --python tools/sprite-lab/validate_wizard_blend.py -- --output artifacts/wizard-native --render --walk-sequence
       - name: Upload editable source, validation report and art review stills
         if: always()
         uses: actions/upload-artifact@v4
