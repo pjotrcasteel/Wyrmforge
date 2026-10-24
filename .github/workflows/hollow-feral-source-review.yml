@@ -9,13 +9,15 @@ on:
       - '.github/workflows/hollow-feral-source-review.yml'
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   authored-motion-preview:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: true
       - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
@@ -28,6 +30,19 @@ jobs:
           python tools/sprite-lab/sample-hollow-rig.py -- art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-feral-v1-candidate
       - name: Render source-rig review GIF and contact poses
         run: python tools/sprite-lab/render-hollow-feral-review.py
+      - name: Preserve the new editable rig and review GIF in the PR branch
+        if: github.event_name == 'push' && github.ref == 'refs/heads/feat/actor-lit-sprite-production'
+        run: |
+          mkdir -p docs/art/evidence/hollowed-feral-v1-2026-10-24
+          cp artifacts/hollow-feral-review/feral-movement-review.gif docs/art/evidence/hollowed-feral-v1-2026-10-24/
+          cp artifacts/hollow-feral-review/16-poses-contact.png docs/art/evidence/hollowed-feral-v1-2026-10-24/
+          cp artifacts/hollow-feral-review/candidate-review.json docs/art/evidence/hollowed-feral-v1-2026-10-24/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-feral-v1-candidate/
+          git add docs/art/evidence/hollowed-feral-v1-2026-10-24/
+          git commit -m "Preserve unapproved editable feral Hollowed rig and source motion evidence"
+          git push origin HEAD:feat/actor-lit-sprite-production
       - name: Preserve editable .blend, sampled geometry and actual review frames
         if: always()
         uses: actions/upload-artifact@v4
