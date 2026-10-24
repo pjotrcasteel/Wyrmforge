@@ -12,7 +12,8 @@ import {
 export const GROUND_REVIEW_COLUMNS = 24;
 export const GROUND_REVIEW_ROWS = 24;
 export const GROUND_REVIEW_SEED = 1441;
-const METRES = 8;
+// Show a continuous playable-scale ground field, not a tiny isolated diamond. Camera/GPU engine unchanged.
+const METRES = 24;
 const allowedMaterials = Object.freeze({
     grass: { index: 0, roughness: .94, specular: .12 },
     mud: { index: 1, roughness: .78, specular: .30 },
