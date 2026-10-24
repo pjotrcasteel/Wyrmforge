@@ -99,14 +99,29 @@ public sealed class ProjectileBarrierTests
     {
         var (simulation, _, _, enemy) = Scene();
         var player = Field<PlayerState>(simulation, "player");
+        // Intentionally give this one real Fireball the complete
+        // Meteor + Detonation + Scorched loadout. Wall contact is still
+        // non-damaging; the impact may present debris but cannot fake AoE
+        // or burn a field on the other side of solid masonry.
         Projectiles(simulation).Add(new ProjectileState(player.Position,
             (enemy.Position - player.Position) * 20, 4, 100, SpellId.FireBolt,
-            new ProjectileEffects(false, 0, 0, null, 0, 0)));
+            new ProjectileEffects(false, 0, 46, null, 0, 0)
+            {
+                FireballMutationMask = 7,
+                FireballSourceId = 123,
+            }));
         Invoke(simulation, "RebuildCombatSpatialIndex");
         Invoke(simulation, "UpdateProjectiles", .05, Width, Height);
         Invoke(simulation, "ResolveProjectileHits");
         Assert.AreEqual(0, Projectiles(simulation).Count);
         Assert.AreEqual(enemy.MaxHealth, enemy.Health);
+        var snapshot = simulation.CreateSnapshot();
+        var contact = snapshot.ElementalImpacts.Single();
+        Assert.AreEqual(SpellId.FireBolt, contact.Spell);
+        Assert.AreEqual(7, contact.FireballMutationMask);
+        Assert.AreEqual(123, contact.FireballSourceId);
+        Assert.AreEqual(0d, contact.SplashRadius, .00001, "A wall is never a damaging Detonation hit.");
+        Assert.AreEqual(0, snapshot.BurningGrounds.Count, "Wall contact cannot fabricate burning ground.");
     }
 
     private static (ArenaEnvironmentState Terrain, ArenaBarrierRenderSnapshot Gate) Terrain()
