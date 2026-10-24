@@ -41,7 +41,7 @@ test('all 16 masks require deterministic roles, with no invented extra spell', (
     assert.deepEqual(requiredFireballRoles(7).impact,
         ['impact-original', 'impact-detonation-fragments']);
     assert.deepEqual(requiredFireballRoles(7).aftermath, ['material-char-and-flame']);
-    assert.deepEqual(requiredFireballRoles(3).aftermath, []);
+    assert.deepEqual(requiredFireballRoles(3).aftermath, ['material-char-and-flame']);
     assert.throws(() => requiredFireballRoles(16), RangeError);
 });
 
@@ -91,6 +91,23 @@ test('cast and physical source ownership use actual C# events, no virtual hazard
     assert.equal(result.aftermath[0].sourceId,2);
     assert.equal(result.aftermath.length,1);
     assert.deepEqual(inspectFireballLineage({}), {cast:null,flight:[],impact:[],aftermath:[]});
+});
+
+test('wall contacts cannot visually invent Detonation, and real baseline fire still burns', () => {
+    const wall = inspectFireballLineage({elementalImpacts:[
+        {spell:1,fireballSourceId:3,fireballMutationMask:7,splashRadius:0},
+    ]});
+    assert.deepEqual(wall.impact[0].roles, ['impact-original']);
+    assert.deepEqual(wall.aftermath, []);
+    const enemyHit = inspectFireballLineage({elementalImpacts:[
+        {spell:1,fireballSourceId:3,fireballMutationMask:7,splashRadius:46},
+    ]});
+    assert.deepEqual(enemyHit.impact[0].roles,
+        ['impact-original','impact-detonation-fragments']);
+    const rankTwoGround = inspectFireballLineage({burningGrounds:[
+        {fireballSourceId:4,fireballMutationMask:0,radius:68,remainingSeconds:1.2},
+    ]});
+    assert.deepEqual(rankTwoGround.aftermath[0].roles, ['material-char-and-flame']);
 });
 
 test('reject an impossible mutation switch on the same physical projectile', () => {
