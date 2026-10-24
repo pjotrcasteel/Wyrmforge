@@ -6,6 +6,7 @@ on:
       - 'art/source/enemies/hollow/reference/**'
       - 'tools/sprite-lab/build-hollow-mocap-run.py'
       - 'tools/sprite-lab/render-hollow-mocap-run.py'
+      - 'tools/sprite-lab/render-hollow-mocap-directions.py'
       - '.github/workflows/hollow-mocap-run-review.yml'
   workflow_dispatch:
 permissions:
@@ -62,6 +63,29 @@ jobs:
           PY
       - name: Render skinned 96px running motion, joints, 4 camera directions
         run: python tools/sprite-lab/render-hollow-mocap-run.py
+      - name: Render all 8 authorized 2.5D orientations (16 frames each)
+        run: python tools/sprite-lab/render-hollow-mocap-directions.py
+      - name: Verify 128 review-only directional frames and atlas alpha
+        run: |
+          python - <<'PY'
+          import json
+          import numpy as np
+          from PIL import Image
+          from pathlib import Path
+          p=Path('artifacts/hollow-mocap-run-v1-eight-directions')
+          atlas=np.asarray(Image.open(p/'candidate-walk-eight-directions.png').convert('RGBA'))
+          m=json.loads((p/'candidate-manifest.json').read_text())
+          assert m['artApproval'] is False and m['anchor']==[48,72]
+          assert atlas.shape==(8*96,16*96,4)
+          for row,direction in enumerate(m['directions']):
+            assert (p/f"{direction['direction'].lower()}-animation.gif").exists()
+            for frame in range(16):
+              cell=atlas[row*96:(row+1)*96,frame*96:(frame+1)*96,3]
+              assert cell.max()==255 and (cell>0).sum()>100,(direction,frame)
+              assert not cell[0,:].any() and not cell[-1,:].any()
+              assert not cell[:,0].any() and not cell[:,-1].any()
+          print('128 original-rig CMU running frames have registered cell bounds')
+          PY
       - name: Preserve new editable blend and 3D skinned review in draft PR
         if: github.event_name == 'push' && github.ref == 'refs/heads/feat/actor-lit-sprite-production'
         run: |
@@ -69,6 +93,9 @@ jobs:
           cp artifacts/hollow-mocap-run-v1-review/*.gif docs/art/evidence/hollowed-mocap-run-v1-2026-10-24/
           cp artifacts/hollow-mocap-run-v1-review/*.png docs/art/evidence/hollowed-mocap-run-v1-2026-10-24/
           cp artifacts/hollow-mocap-run-v1-review/review.json docs/art/evidence/hollowed-mocap-run-v1-2026-10-24/
+          cp artifacts/hollow-mocap-run-v1-eight-directions/candidate-manifest.json docs/art/evidence/hollowed-mocap-run-v1-2026-10-24/
+          cp artifacts/hollow-mocap-run-v1-eight-directions/candidate-walk-eight-directions.png docs/art/evidence/hollowed-mocap-run-v1-2026-10-24/
+          cp artifacts/hollow-mocap-run-v1-eight-directions/*-animation.gif docs/art/evidence/hollowed-mocap-run-v1-2026-10-24/
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-mocap-run-v1-candidate/
@@ -84,5 +111,6 @@ jobs:
           path: |
             art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-mocap-run-v1-candidate/
             artifacts/hollow-mocap-run-v1-review/
+            artifacts/hollow-mocap-run-v1-eight-directions/
           retention-days: 30
           if-no-files-found: warn
