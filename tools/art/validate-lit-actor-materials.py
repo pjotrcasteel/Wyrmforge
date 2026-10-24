@@ -55,7 +55,13 @@ def main():
             original_alpha = color[..., 3]
             normal_alpha = normals[..., 3]
             assert not np.any((normal_alpha > 0) & (original_alpha == 0))
-            assert np.array_equal(caster, normal_alpha)
+            if clip == "walk":
+                # #332 preserved the entire color-alpha silhouette, including raster-edge pixels.
+                # Geometry-only casters must be a SUBSET; never overwrite its existing normals.
+                assert np.array_equal(normal_alpha, original_alpha)
+                assert not np.any((caster > 0) & (normal_alpha == 0))
+            else:
+                assert np.array_equal(caster, normal_alpha)
             assert np.array_equal(depth > 0, caster > 0)
             assert len(layer["sourcePoseSha256"]) == 64
             for row in range(8):
