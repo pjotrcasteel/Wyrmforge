@@ -197,7 +197,10 @@ for i in range(F+1):
         orient("upper_arm."+side,shoulder,elbow)
         orient("forearm."+side,elbow,wrist)
         orient("hand."+side,wrist,tip)
-        degrees=flex(shoulder,elbow,wrist)
+        # Interior elbow angle: almost-straight zombie reach ~160 deg.
+        # flex() reports the complementary bend amount (about 20 deg),
+        # which is correct for kneeFlexDegrees, but NOT an elbow angle.
+        degrees=180-flex(shoulder,elbow,wrist)
         assert 142<degrees<178,(variant,side,i,degrees)
         assert wrist.y<shoulder.y-.23
         frame["arms"][side].update({
