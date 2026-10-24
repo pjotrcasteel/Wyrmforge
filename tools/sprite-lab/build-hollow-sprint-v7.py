@@ -134,14 +134,14 @@ for index in range(FRAMES + 1):
         upper_axis.normalize()
         elbow = shoulder + upper_axis * lengths["upper_arm." + side]
         fore_axis = Vector((sign * .07,
-                           .80 * drive + .35 * math.sin(math.tau * p), -.23))
+                           .80 * drive + .35 * math.sin(math.tau * p), .04))
         fore_axis.normalize()
         wrist = elbow + fore_axis * lengths["forearm." + side]
         segment("upper_arm." + side, shoulder, elbow)
         segment("forearm." + side, elbow, wrist)
         palm_direction = Vector((sign * .04, .14 * drive, -.5))
         palm_direction.normalize()
-        segment("hand." + side, wrist + Vector((0,0,0)), wrist + palm_direction * lengths["hand." + side])
+        segment("hand." + side, wrist, wrist + palm_direction * lengths["hand." + side])
         cloth_head = point(heads["cloth." + side])
         cloth_axis = tails["cloth." + side] - heads["cloth." + side]
         cloth_lag = Quaternion((1, 0, 0), -.11 + .075 * math.sin(math.tau * (p - .22)))
@@ -185,7 +185,7 @@ for side in ("L", "R"):
     assert max(swing) >= 108, (side, "missing rapid heel-to-glute recovery", swing)
     assert min(swing) >= 35, (side, "swing leg collapses backwards")
     assert 15 <= min(stance) <= 80, (side, "no bent-knee loading and compression")
-    assert min(arms) >= 22 and max(arms) <= 85, (side, "elbow too straight or hooked; revise authored FK", arms)
+    assert min(arms) >= 40 and max(arms) <= 115, (side, "elbow too straight or hooked; revise authored FK", arms)
 for record in diagnostics:
     for side in ("L", "R"):
         arm = record["arms"][side]
@@ -210,7 +210,7 @@ profile = {
     "bodyPitchDegrees": [29, 37], "originalSourceRig": str(SOURCE.relative_to(ROOT)),
     "anatomySource": "published sprint biomechanics: discrete stance/flight, swing knee retraction, opposed arm action",
     "kneeFlexionPassCriteria": {"swingMaxAtLeastDegrees":108, "stanceMinimumDegrees":15},
-    "elbowFlexionRangeDegrees": [22,85],
+    "elbowFlexionRangeDegrees": [40,115],
     "scapularRotationAmplitudeDegrees": 5,
     "armSwingModelUnits": .206,
     "armKinematics": "FK bone-length-preserving shoulder -> upper arm -> elbow -> wrist",
