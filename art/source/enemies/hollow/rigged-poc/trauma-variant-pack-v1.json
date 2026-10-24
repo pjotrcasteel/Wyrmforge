@@ -35,7 +35,14 @@
       ],
       "damage": "none",
       "motion": "captured standard sprint, unapproved",
-      "evidence": "hollowed-trauma-v1/standard"
+      "evidence": "hollowed-trauma-v1/standard",
+      "attackPreview": {
+        "status": "unapproved authored 16-key attack transferred to no-cape rig; visual only",
+        "model": "rigged-hollow-no-cape-attack-standard-preview",
+        "evidence": "hollowed-trauma-attack-v1/standard",
+        "strikeArm": "R",
+        "runtimeDamageChange": false
+      }
     },
     {
       "id": "hollowed-broken-leg-left",
@@ -48,7 +55,16 @@
       ],
       "damage": "left leg impaired; preserved planted foot + source-driven reduced swing clearance and reach",
       "motion": "asymmetric sprint / right leg compensates",
-      "evidence": "hollowed-trauma-v1/broken-leg-left"
+      "evidence": "hollowed-trauma-v1/broken-leg-left",
+      "attackPreview": {
+        "status": "not yet authored with broken-leg-specific stance; retain separate v1 runtime attack unchanged",
+        "runtimeDamageChange": false
+      },
+      "locomotionV2": {
+        "status": "unapproved contact-driven weight transfer",
+        "model": "rigged-hollow-trauma-broken-leg-weight-transfer-v2",
+        "evidence": "hollowed-trauma-v2/broken-leg-left"
+      }
     },
     {
       "id": "hollowed-broken-arm-right",
@@ -60,7 +76,14 @@
       ],
       "damage": "right arm guarded near ribs and contributes little to stride; left arm functional",
       "motion": "single functional arm sprint",
-      "evidence": "hollowed-trauma-v1/broken-arm-right"
+      "evidence": "hollowed-trauma-v1/broken-arm-right",
+      "attackPreview": {
+        "status": "unapproved authored 16-key attack transferred to no-cape rig; visual only",
+        "model": "rigged-hollow-no-cape-attack-broken-arm-right-preview",
+        "evidence": "hollowed-trauma-attack-v1/broken-arm-right",
+        "strikeArm": "L",
+        "runtimeDamageChange": false
+      }
     },
     {
       "id": "hollowed-one-arm-left",
@@ -72,7 +95,14 @@
       ],
       "damage": "left arm present but effectively unusable, pendulous with bounded torso follow",
       "motion": "right arm compensates in sprint",
-      "evidence": "hollowed-trauma-v1/one-arm-left"
+      "evidence": "hollowed-trauma-v1/one-arm-left",
+      "attackPreview": {
+        "status": "unapproved authored 16-key attack transferred to no-cape rig; visual only",
+        "model": "rigged-hollow-no-cape-attack-one-arm-left-preview",
+        "evidence": "hollowed-trauma-attack-v1/one-arm-left",
+        "strikeArm": "R",
+        "runtimeDamageChange": false
+      }
     }
   ],
   "notes": [
@@ -80,6 +110,7 @@
     "Two separate arm-disabled variants intentionally differ in silhouette; no runtime attack animation suppression is claimed.",
     "Both original .blend source and lighting-material contracts must be preserved.",
     "All variants require owner review at native Hunt pixel scale and source-derived walk/attack/death materials before shipping.",
-    "Do not pair changed geometry with old atlas normals/depth/caster."
+    "Do not pair changed geometry with old atlas normals/depth/caster.",
+    "Attack preview variants mirror an EXISTING authored right-arm 16-key attack to a usable left side only when the right arm is injured. These are not gameplay cutovers."
   ]
 }
