@@ -136,8 +136,8 @@ for i in range(F+1):
         # Strong visually distinguishable dragged swing. Zero at stance:
         # no kick, no planted foot slide. Direction comes from captured foot.
         desired=source_ankle.copy()
-        desired.z-=.11*fraction
-        desired.y+=.08*fraction
+        desired.z-=.10*fraction
+        desired.y-=.21*fraction
         desired.x+=.028*fraction
         # Keep hip from v2, but drop on the painful LEFT loading phase.
         injured=frame["weightTransfer"]["damagedLeftSupport"]
@@ -247,7 +247,7 @@ parent.update({
  "design":{
   "healthyArms":"shoulder-led near full forward extension; elbow flex typically 150-170 degrees",
   "injuredArm":"only undamaged side reaches forward; damaged side retains original authored v1 injury",
-  "brokenLeg":"injured foot 0.11m lower, 0.08m shorter swing reach at maximum; source-contact-driven extra hip drop, compensatory lean",
+  "brokenLeg":"injured foot 0.10m lower and 0.21m shortened forward swing at maximum; source-contact-driven extra hip drop, compensatory lean",
   "legs":"original right-foot contacts; affected left swing only, no new motion oscillator"
  },
  "output":{"frames":F,"fps":25,"directions":8},
