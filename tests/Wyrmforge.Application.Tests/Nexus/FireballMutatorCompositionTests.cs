@@ -120,6 +120,40 @@ public sealed class FireballMutatorCompositionTests
         Assert.AreEqual(0, afterSecond.Projectiles.Count);
     }
 
+    [TestMethod]
+    public void ChainFireball_ChildKeepsMutatorsButGetsIndependentPhysicalSource()
+    {
+        var (simulation, original, hit) = Cast([
+            FireballMutationId.MeteorHeart, FireballMutationId.Detonation, FireballMutationId.ScorchedEarth,
+        ]);
+        var other = new EnemyState(2, new Vector2D(220, 160), 10, 100000, 0);
+        Field<List<EnemyState>>(simulation, "enemies").Add(other);
+        Invoke(simulation, "RebuildCombatSpatialIndex");
+        var parent = new ProjectileState(original.Position, original.Velocity, original.Radius,
+            original.Damage, original.Spell, new ProjectileEffects(false, 1, original.SplashRadius, null, 0, 0)
+            {
+                FireballMutationMask = original.FireballMutationMask,
+                FireballSourceId = original.FireballSourceId,
+            });
+        var children = new List<ProjectileState>();
+
+        Invoke(simulation, "ChainFrom", hit.Position, parent, children);
+
+        var child = children.Single();
+        Assert.AreEqual(parent.FireballMutationMask, child.FireballMutationMask);
+        Assert.AreNotEqual(parent.FireballSourceId, child.FireballSourceId);
+        Assert.IsGreaterThan(child.FireballSourceId, 0);
+        Projectiles(simulation).Clear();
+        Projectiles(simulation).Add(child);
+        child.Position = other.Position;
+        Invoke(simulation, "ResolveProjectileHits");
+
+        var snapshot = simulation.CreateSnapshot();
+        Assert.AreEqual(child.FireballSourceId, snapshot.ElementalImpacts.Single().FireballSourceId);
+        Assert.AreEqual(child.FireballSourceId, snapshot.BurningGrounds.Single().FireballSourceId);
+        Assert.AreEqual(parent.FireballMutationMask, snapshot.BurningGrounds.Single().FireballMutationMask);
+    }
+
     private static (RunSimulation Simulation, ProjectileState Projectile, EnemyState Target) Cast(
         FireballMutationId[] equipped)
     {
