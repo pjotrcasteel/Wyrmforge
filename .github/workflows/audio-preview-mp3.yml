@@ -8,6 +8,8 @@ on:
       - .github/workflows/audio-preview-mp3.yml
       - src/Wyrmforge.Presentation.Web/wwwroot/audio/recorded/menu-handleSmallLeather.ogg
       - src/Wyrmforge.Presentation.Web/wwwroot/audio/recorded/menu-metalClick.ogg
+      - src/Wyrmforge.Presentation.Web/wwwroot/audio/recorded/menu-bookOpen.ogg
+      - src/Wyrmforge.Presentation.Web/wwwroot/audio/recorded/manifest.json
       - src/Wyrmforge.Presentation.Web/wwwroot/audio/recorded/ui.ogg
   workflow_dispatch:
 
@@ -36,6 +38,10 @@ jobs:
           ffmpeg -y -hide_banner -loglevel error -i "$src/menu-handleSmallLeather.ogg" -ar 44100 -c:a libmp3lame -q:a 3 "$dest/worn-vellum.mp3"
           ffmpeg -y -hide_banner -loglevel error -i "$src/ui.ogg" -ar 44100 -c:a libmp3lame -q:a 3 "$dest/weathered-stone.mp3"
           ffmpeg -y -hide_banner -loglevel error -i "$src/menu-metalClick.ogg" -ar 44100 -c:a libmp3lame -q:a 3 "$dest/cold-iron.mp3"
+          # Codex demo: physical book opening + delayed, quieter leather body.
+          ffmpeg -y -hide_banner -loglevel error -i "$src/menu-bookOpen.ogg" -i "$src/menu-handleSmallLeather.ogg" \
+            -filter_complex "[0:a]volume=0.38,lowpass=f=3450[book];[1:a]volume=0.093,lowpass=f=2700,adelay=120[leather];[book][leather]amix=inputs=2:duration=longest:normalize=0,alimiter=limit=0.95[out]" \
+            -map "[out]" -ar 44100 -c:a libmp3lame -q:a 3 "$dest/codex-open.mp3"
           for preview in "$dest"/*.mp3; do
             ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1 "$preview"
           done

@@ -162,7 +162,7 @@
     // Preload compact, often-used transitions; never block navigation if a recording is unavailable.
     function prewarmTransitions() {
         if (!recordedManifest || !context || !enabled) return;
-        for (const name of ['building-open', 'hunt-start', 'trail-enter', 'threat-reveal']) {
+        for (const name of ['building-open', 'codex-open', 'hunt-start', 'trail-enter', 'threat-reveal']) {
             const cue = recordedManifest.cues?.[name];
             for (const entry of cue ? [cue, ...(cue.layers ?? [])] : []) {
                 void loadRecordedBuffer(entry).catch(() => {});
@@ -629,7 +629,7 @@
         const desc = document.createElement('p');
         desc.textContent = 'Recorded dark fantasy · layered spells, natural tails and a continuous soundtrack';
         const materialHeading = document.createElement('p');
-        materialHeading.textContent = 'INTERFACE PRESS — audition the same action, repeat it 20 times';
+        materialHeading.textContent = 'INTERFACE PRESS — Worn Vellum chosen, alternatives kept for comparison';
         const materials = document.createElement('div');
         materials.className = 'wyrmforge-sound-samples';
         for (const choice of uiMaterialChoices) {
@@ -643,6 +643,10 @@
             unlock();
             play('ui', true);
         }));
+        const openCodexPreview = makeButton('HEAR CODEX OPEN', 'wyrmforge-sound-sample', 'Hear the layered Codex opening', () => {
+            unlock();
+            play('codex-open', true);
+        });
         const samples = document.createElement('div');
         samples.className = 'wyrmforge-sound-samples';
         for (const name of design?.previewNames ?? []) {
@@ -670,7 +674,7 @@
         creditLink.target = '_blank';
         creditLink.rel = 'noopener noreferrer';
         credit.append(' ', creditLink);
-        lab.append(heading, desc, materialHeading, materials, hearMusic, samples, levels, credit, close);
+        lab.append(heading, desc, materialHeading, materials, openCodexPreview, hearMusic, samples, levels, credit, close);
 
         status = document.createElement('span');
         status.className = 'wyrmforge-sound-status';

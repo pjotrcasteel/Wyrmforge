@@ -6,6 +6,7 @@
     const palette = Object.freeze({
         ui: { label: 'Stone / vellum', bus: 'ui', volume: 0.25, cooldown: 110, duration: 0.12, priority: 1 },
         'building-open': { label: 'Town building — wood and hinge', bus: 'ui', volume: 0.45, cooldown: 210, duration: 0.30, priority: 2 },
+        'codex-open': { label: 'Codex — old book and worn leather', bus: 'ui', volume: 0.53, cooldown: 420, duration: 0.52, priority: 2 },
         arcane: { label: 'Arcane — woven aether', bus: 'combat', volume: 0.35, cooldown: 550, duration: 0.40, priority: 1 },
         fire: { label: 'Ember — breath and cinder', bus: 'combat', volume: 0.42, cooldown: 590, duration: 0.38, priority: 1 },
         frost: { label: 'Frost — glass and snow', bus: 'combat', volume: 0.37, cooldown: 620, duration: 0.47, priority: 1 },
@@ -111,6 +112,10 @@
             case 'ui':
                 strike(0, 238, 0.42, 0.11, 'stone');
                 air(0, 0.07, 430, 210, 0.09, 0.003);
+                break;
+            case 'codex-open':
+                air(0, 0.42, 750, 170, 0.25, 0.016);
+                weight(0.07, 0.22, 0.15, 160, 105);
                 break;
             case 'building-open':
                 weight(0, 0.30, 0.19, 215, 124);

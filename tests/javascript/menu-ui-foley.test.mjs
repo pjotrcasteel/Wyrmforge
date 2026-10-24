@@ -39,3 +39,35 @@ test('ordinary presses use persistent selectable real recordings without replaci
     assert.equal(manifest.cues.fire.variants.length, 3);
     assert.ok(manifest.music.menu && manifest.music.hunt);
 });
+
+
+test('Codex opens with a deliberate two-layer book-and-leather interaction, not the generic Town door', () => {
+    const codex = manifest.cues['codex-open'];
+    const open = readFileSync(new URL(codex.file, assetDir));
+    assert.equal(open.subarray(0, 4).toString(), 'OggS');
+    assert.equal(codex.source, 'bookOpen.ogg');
+    assert.equal(codex.library, 'kenney-rpg');
+    assert.equal(codex.license, 'CC0');
+    assert.equal(codex.layers.length, 1);
+    const leather = codex.layers[0];
+    assert.equal(leather.file, 'menu-handleSmallLeather.ogg');
+    assert.equal(leather.license, 'CC0');
+    assert.equal(leather.delaySeconds, 0.12);
+    assert.ok(leather.gainScale > 0 && leather.gainScale < 0.5);
+    for (const entry of [codex, leather]) {
+        const bytes = readFileSync(new URL(entry.file, assetDir));
+        const sha = createHash('sha1').update('blob ' + bytes.length + '\0').update(bytes).digest('hex');
+        assert.equal(sha, entry.gitBlobSha);
+    }
+    assert.notEqual(codex.file, manifest.cues['building-open'].file);
+    const town = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/Features/Forge/CanonicalTownView.razor', import.meta.url), 'utf8');
+    assert.match(town, /CodexUnlocked \? "codex-open" : "none"/);
+    assert.match(town, /NexusUnlocked \? "building-open" : "none"/);
+    assert.match(audio, /'building-open', 'codex-open', 'hunt-start'/);
+    assert.match(audio, /play\('codex-open', true\)/);
+});
+
+test('Worn Vellum preference is classified rather than leaking into save-state invariants', () => {
+    const layout = readFileSync(new URL('../../src/Wyrmforge.Application/Persistence/SaveLayout.cs', import.meta.url), 'utf8');
+    assert.match(layout, /\["wyrmforge\.audio\.ui\.material\.v1"\] = SaveDomain\.Preferences/);
+});

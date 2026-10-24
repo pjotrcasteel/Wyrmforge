@@ -14,7 +14,7 @@
 
 ### First UI Foley audition (24 October 2026, draft PR #128)
 
-The ordinary interface press has a deliberately narrow, non-tonal recorded-Foley audition. The initial candidate is **Worn Vellum** (two different Kenney CC0 leather-handling recordings), with **Weathered Stone** (existing rubberduck CC0) and **Cold Iron** (Kenney CC0) selectable in Settings → Sound Atelier. Selection persists on the device. These are candidate source recordings, **not approved final sound design**. They are not the sounds for Hunt departure, occupied buildings, unlocks, or spell impacts; those retain separate event identities.
+The ordinary interface press has a deliberately narrow, non-tonal recorded-Foley audition. The chosen routine navigation sound is **Worn Vellum** (two different Kenney CC0 leather-handling recordings), with **Weathered Stone** (existing rubberduck CC0) and **Cold Iron** (Kenney CC0) selectable in Settings → Sound Atelier. Selection persists on the device. These are candidate source recordings, **not approved final sound design**. They are not the sounds for Hunt departure, most occupied buildings, unlocks, or spell impacts; those retain separate event identities.
 
 On an iPhone speaker, compare the three at moderate volume, repeat the ordinary press at least twenty times, then navigate menus for five minutes. Check immediate tap feedback, low fatigue, no extra bells or double-clicks, mute, saved selection and headphones. Record keep/revise/replace. Do not merge on CI alone. Source recordings and Git blob provenance are in the recorded audio manifest. This focused change rebases the earlier Phase-1 candidate onto the current universal-lighting-era `main` without changing combat or music.
 

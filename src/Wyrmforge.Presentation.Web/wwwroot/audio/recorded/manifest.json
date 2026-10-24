@@ -474,6 +474,40 @@
         "attackSeconds": 0.025,
         "releaseSeconds": 0.16
       }
+    },
+    "codex-open": {
+      "file": "menu-bookOpen.ogg",
+      "source": "bookOpen.ogg",
+      "library": "kenney-rpg",
+      "author": "Kenney",
+      "license": "CC0",
+      "gitBlobSha": "acdd2721f125f5254e43cd6d169f7177672a02f5",
+      "mix": {
+        "gain": 0.72,
+        "lowpassHz": 3450,
+        "attackSeconds": 0.008,
+        "releaseSeconds": 0.12
+      },
+      "intent": "One weathered Codex opens. Distinct from the doors of other Town buildings.",
+      "layers": [
+        {
+          "file": "menu-handleSmallLeather.ogg",
+          "source": "handleSmallLeather.ogg",
+          "library": "kenney-rpg",
+          "author": "Kenney",
+          "license": "CC0",
+          "gitBlobSha": "d98f77bed3120196c0d8b97dd875af98868762f6",
+          "mix": {
+            "gain": 0.55,
+            "lowpassHz": 2700,
+            "attackSeconds": 0.012,
+            "releaseSeconds": 0.1
+          },
+          "gainScale": 0.32,
+          "delaySeconds": 0.12,
+          "intent": "Quiet leather binding/body under book opening"
+        }
+      ]
     }
   },
   "sources": [

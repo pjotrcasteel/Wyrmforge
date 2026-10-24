@@ -193,7 +193,7 @@
                 aria-label="@BuildingLabel("Blacksmith", ForgeUnlocked)" @onclick='() => OnBuilding.InvokeAsync("forge")'></button>
         <button type="button" class="refuge-town-spot refuge-town-spot--codex"
                 data-town-building="codex" data-town-state="@(TownBuildingVisuals.StateName(CodexUnlocked))"
-                data-sound-cue="@(CodexUnlocked ? "building-open" : "none")" title="@BuildingLabel("Codex", CodexUnlocked)"
+                data-sound-cue="@(CodexUnlocked ? "codex-open" : "none")" title="@BuildingLabel("Codex", CodexUnlocked)"
                 aria-label="@BuildingLabel("Codex", CodexUnlocked)" @onclick='() => OnBuilding.InvokeAsync("codex")'></button>
         <button type="button" class="refuge-town-spot refuge-town-spot--hall"
                 data-town-building="legends" data-town-state="@(TownBuildingVisuals.StateName(HallUnlocked))"
