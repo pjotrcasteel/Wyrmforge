@@ -37,7 +37,7 @@ jobs:
         run: |
           python -m pip install 'numpy>=1.26,<3' 'pillow>=10,<13'
           python tools/art/validate-lit-actor-materials.py
-          node --test tests/javascript/actor-lit-assets.test.mjs
+          node --test tests/javascript/actor-lit-assets.test.mjs tests/javascript/actor-shadow-mask.test.mjs
       - name: Build browser tests and production app
         run: |
           dotnet build tests/Wyrmforge.Browser.Tests -c Release
