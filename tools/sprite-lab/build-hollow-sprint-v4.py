@@ -13,7 +13,7 @@ from mathutils import Vector, Quaternion
 
 ROOT = Path(__file__).resolve().parents[2]
 MODEL = ROOT / "art/source/enemies/hollow/rigged-poc/model/local-appearance-004"
-SOURCE = MODEL / "rigged-pixel-v4/hollow-rigged.blend"
+SOURCE = MODEL / "rigged-pixel-v3/hollow-rigged.blend"
 DEST = MODEL / "rigged-sprint-v4-candidate"
 if DEST.exists():
     raise FileExistsError(f"Do not replace existing editable sprint candidate: {DEST}")
