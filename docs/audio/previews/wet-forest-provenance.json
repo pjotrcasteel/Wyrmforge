@@ -1,0 +1,30 @@
+{
+  "sha256": "5d33e87a21a90ee45a2445661dbe5a4efb6386d5f6ed30e07e3fa4996b49e324",
+  "rms": 0.03634645634644738,
+  "sources": [
+    {
+      "key": "forest-wind",
+      "url": "https://opengameart.org/sites/default/files/wind%20woosh%20loop.ogg",
+      "sourcePage": "https://opengameart.org/content/wind-whoosh-loop",
+      "author": "SketchMan3",
+      "license": "CC0",
+      "originalSha256": "0cfdbd3f21ed449689a9024264edf267d0037a6495813a7010827672ec191dac"
+    },
+    {
+      "key": "forest-drips",
+      "url": "https://opengameart.org/sites/default/files/dungeon_ambient_1_0.ogg",
+      "sourcePage": "https://opengameart.org/content/loopable-dungeon-ambience",
+      "author": "JaggedStone",
+      "license": "CC0",
+      "originalSha256": "df491823e4877371c34dbda4e9321cd83a4a14fa7573cee0ebca1ae423b70e6e"
+    },
+    {
+      "key": "forest-creak",
+      "url": "https://opengameart.org/sites/default/files/tree_creak_0.ogg",
+      "sourcePage": "https://opengameart.org/content/tree-creaking",
+      "author": "AntumDeluge / Department64",
+      "license": "CC0",
+      "originalSha256": "465356e0e32e71a5c29fda529a0ac23af7791c62e3bd862e8cb2961eb104e1b1"
+    }
+  ]
+}
