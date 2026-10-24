@@ -1640,7 +1640,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
             "The live Nexus must load its independent Gothic chamber layer.");
         await Page.WaitForFunctionAsync(@"() => {
             const canvas = document.querySelector('.fireball-hero-canvas');
-            if (!canvas || canvas.width !== 192 || canvas.height !== 192) return false;
+            if (!canvas || canvas.dataset.artwork !== 'canonical' || canvas.width !== 192 || canvas.height !== 192) return false;
             const pixels = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
             return pixels.some((value, index) => index % 4 === 3 && value > 0);
         }");
@@ -1720,6 +1720,10 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.Locator(".fireball-sequence > summary").ClickAsync();
         var canvas = Page.Locator(".fireball-sequence-canvas");
         await Expect(canvas).ToBeVisibleAsync();
+        await Page.WaitForFunctionAsync(@"async () => {
+            const module = await import('./js/fireball-morphology.js');
+            return module.fireballArtworkReady();
+        }");
         Assert.IsTrue(await Page.EvaluateAsync<bool>("() => document.documentElement.scrollWidth <= innerWidth + 2"),
             "The combined preview must fit a portrait phone without horizontal overflow.");
 

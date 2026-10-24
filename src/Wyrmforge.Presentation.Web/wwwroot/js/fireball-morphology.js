@@ -30,6 +30,7 @@ export function fireballMorphology(recipe) {
 // layers belong to the universal lighting engine's later migration.
 const fireballArtwork = typeof Image === 'function' ? new Image() : null;
 const awaitingNexus = new Set();
+export function fireballArtworkReady() { return artworkReady; }
 let artworkReady = false;
 if (fireballArtwork) {
     fireballArtwork.onload = () => {
@@ -234,5 +235,6 @@ export function drawFireballNexusPreview(canvas, recipe) {
     ctx.scale(scale, scale);
     drawComposedFireProjectile(ctx, { radius: 17, rank: 1 }, recipe, true);
     ctx.restore();
+    canvas.dataset.artwork = artworkReady ? 'canonical' : 'fallback';
     if (!artworkReady && fireballArtwork) awaitingNexus.add({ canvas, recipe });
 }
