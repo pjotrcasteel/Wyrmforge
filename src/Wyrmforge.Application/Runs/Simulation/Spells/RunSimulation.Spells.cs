@@ -16,6 +16,8 @@ namespace Wyrmforge.Application.Runs.Simulation;
 
 public sealed partial class RunSimulation
 {
+    private int fireballSourceSequence;
+
     private void UpdateSpellcasting(double delta, bool moving)
     {
         // Only the focused spell owns a cast clock. Learned spells are combination knowledge.
@@ -141,6 +143,7 @@ public sealed partial class RunSimulation
                 Surge = surge.IsSurge,
                 AdditionalStatuses = SpellCombinationResolver.Resolve(id, build.Spells, build.Synergies),
                 FireballMutationMask = id == SpellId.FireBolt ? preparedFireballSet.Mask : 0,
+                FireballSourceId = id == SpellId.FireBolt ? ++fireballSourceSequence : 0,
             };
             projectiles.Add(new ProjectileState(player.Position, direction * speed, radius, damage * (inferno ? 4 : 1), id, effects));
         }

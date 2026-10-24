@@ -19,6 +19,7 @@ public sealed class ProjectileState(Vector2D position, Vector2D velocity, double
     public int Rank => effects.Rank;
     public bool Surge => effects.Surge;
     public int FireballMutationMask => effects.FireballMutationMask;
+    public int FireballSourceId => effects.FireballSourceId;
     public IReadOnlyList<ProjectileStatusEffect> AdditionalStatuses => effects.AdditionalStatuses ?? [];
     public double FrostNovaRadius => effects.FrostNovaRadius;
     public int PiercesRemaining { get; private set; } = effects.Pierces;
