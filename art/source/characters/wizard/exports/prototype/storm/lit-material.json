@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "school": "storm",
+  "clips": {
+    "walk": {
+      "albedo": {
+        "image": "walk.png",
+        "sha256": "b7b3ef65410096cbb642377745168a319f8f652f128f8d5cc4b75cca89905848"
+      },
+      "normal": {
+        "image": "walk-normal.png",
+        "sha256": "3d4ffa55c4d8acf33e2b2f817e243f4eb13846642bb1406fe38abf0bc169ebf8"
+      },
+      "roughness": {
+        "image": "walk-roughness.png",
+        "sha256": "706a5e298cdbc32c0a2b4d83832ac837e352f8c701231402fa8ad49bbf23a7ef"
+      },
+      "height": {
+        "image": "walk-height.png",
+        "sha256": "c595713304337360463bf5c6157bf4a2b2a37cceee3e80bcedd1ed8f9e19377f"
+      },
+      "caster": {
+        "image": "walk-caster.png",
+        "sha256": "2aca2da42d105d345c05f2c0fd3ff98e6b788f56b49474e3fc17d7f735d2703b"
+      }
+    }
+  },
+  "note": "Pose-synchronous passes; alpha silhouette casters only, no volume caster geometry authored yet."
+}

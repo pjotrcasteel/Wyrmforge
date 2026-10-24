@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "school": "arcane",
+  "clips": {
+    "walk": {
+      "albedo": {
+        "image": "walk.png",
+        "sha256": "b1966308e0dfbe32855716b67ab5350b213d33b19d278ff97c31ee0ff1935909"
+      },
+      "normal": {
+        "image": "walk-normal.png",
+        "sha256": "68c3516c901f2b7d55b94c33b2d4e8341d2b0110335844a3a4a77b6e8da628c6"
+      },
+      "roughness": {
+        "image": "walk-roughness.png",
+        "sha256": "d990931f2c8fcd3a10e21a84207e03619e35affd385df36494b13c0ea29a220f"
+      },
+      "height": {
+        "image": "walk-height.png",
+        "sha256": "2fa6afc192ba97a1656d1f62deb0f1674efe8045f9a9a9b53dbedeb6f603d9a2"
+      },
+      "caster": {
+        "image": "walk-caster.png",
+        "sha256": "5f36b0b4e216729245ec4cca4b684eb5e1b1af46062732bea0da547911c240eb"
+      }
+    }
+  },
+  "note": "Pose-synchronous passes; alpha silhouette casters only, no volume caster geometry authored yet."
+}

@@ -1,0 +1,224 @@
+{
+  "schools": {
+    "fire": {
+      "frames": 128,
+      "atlas": [
+        2048,
+        1024
+      ],
+      "sourceMeshTriangles": 3002,
+      "files": {
+        "albedo": {
+          "sha256": "e5ef0858279229e2e88b2ff668e60c35ee512ccc74dd3b3aa26d91818a038238",
+          "size": 155838
+        },
+        "normal": {
+          "sha256": "d0400524a8b6b8182516966303daea3535f4650f52ad1aa1839866af36ddbed8",
+          "size": 265000
+        },
+        "height": {
+          "sha256": "a0494990174ebb7d83021aa7adf1b25caae95b22a47da155d3f588b0aada56f2",
+          "size": 198332
+        },
+        "roughness": {
+          "sha256": "e9e27e6c2ac08ddb22341dc3f54c8e48c88b0dd3298d18686d888abe23f05289",
+          "size": 49795
+        },
+        "caster": {
+          "sha256": "5fdfb357a31edf6d0d4fd2da6c340d17157b47204e5113d189ef1a56bf51fb8c",
+          "size": 30509
+        }
+      },
+      "empty": 0,
+      "clipped": 0,
+      "uniqueDirectionalFrameHashes": 128,
+      "alphaAligned": true,
+      "meshGeometryObjects": 33,
+      "passesVerified": true
+    },
+    "frost": {
+      "frames": 128,
+      "atlas": [
+        2048,
+        1024
+      ],
+      "sourceMeshTriangles": 2972,
+      "files": {
+        "albedo": {
+          "sha256": "8886aaeedc60ad0715098284e92646cf449655a2a002a4d5b26ab0055a20183f",
+          "size": 158581
+        },
+        "normal": {
+          "sha256": "ae7548a118a5f6f0a43b538518904bed9b920a03ffaf0969c1b48b9727605972",
+          "size": 267267
+        },
+        "height": {
+          "sha256": "8b395179347d1d50ae4146af972e9ae9668230e0afc1369bc0636254d0e959e1",
+          "size": 200935
+        },
+        "roughness": {
+          "sha256": "4438419795299a9287d0dfc8e1b39df95de5dc431bd83b7cd0ad3bd3980f72e9",
+          "size": 50427
+        },
+        "caster": {
+          "sha256": "8e186586c2bc157eb50cbb0a23c74e62a85a325651c8612001d23ab922e9fe3c",
+          "size": 30959
+        }
+      },
+      "empty": 0,
+      "clipped": 0,
+      "uniqueDirectionalFrameHashes": 128,
+      "alphaAligned": true,
+      "meshGeometryObjects": 33,
+      "passesVerified": true
+    },
+    "storm": {
+      "frames": 128,
+      "atlas": [
+        2048,
+        1024
+      ],
+      "sourceMeshTriangles": 2940,
+      "files": {
+        "albedo": {
+          "sha256": "b7b3ef65410096cbb642377745168a319f8f652f128f8d5cc4b75cca89905848",
+          "size": 157561
+        },
+        "normal": {
+          "sha256": "3d4ffa55c4d8acf33e2b2f817e243f4eb13846642bb1406fe38abf0bc169ebf8",
+          "size": 267879
+        },
+        "height": {
+          "sha256": "c595713304337360463bf5c6157bf4a2b2a37cceee3e80bcedd1ed8f9e19377f",
+          "size": 198661
+        },
+        "roughness": {
+          "sha256": "706a5e298cdbc32c0a2b4d83832ac837e352f8c701231402fa8ad49bbf23a7ef",
+          "size": 51185
+        },
+        "caster": {
+          "sha256": "2aca2da42d105d345c05f2c0fd3ff98e6b788f56b49474e3fc17d7f735d2703b",
+          "size": 31752
+        }
+      },
+      "empty": 0,
+      "clipped": 0,
+      "uniqueDirectionalFrameHashes": 128,
+      "alphaAligned": true,
+      "meshGeometryObjects": 32,
+      "passesVerified": true
+    },
+    "arcane": {
+      "frames": 128,
+      "atlas": [
+        2048,
+        1024
+      ],
+      "sourceMeshTriangles": 3128,
+      "files": {
+        "albedo": {
+          "sha256": "b1966308e0dfbe32855716b67ab5350b213d33b19d278ff97c31ee0ff1935909",
+          "size": 158887
+        },
+        "normal": {
+          "sha256": "68c3516c901f2b7d55b94c33b2d4e8341d2b0110335844a3a4a77b6e8da628c6",
+          "size": 271150
+        },
+        "height": {
+          "sha256": "2fa6afc192ba97a1656d1f62deb0f1674efe8045f9a9a9b53dbedeb6f603d9a2",
+          "size": 200949
+        },
+        "roughness": {
+          "sha256": "d990931f2c8fcd3a10e21a84207e03619e35affd385df36494b13c0ea29a220f",
+          "size": 50459
+        },
+        "caster": {
+          "sha256": "5f36b0b4e216729245ec4cca4b684eb5e1b1af46062732bea0da547911c240eb",
+          "size": 31292
+        }
+      },
+      "empty": 0,
+      "clipped": 0,
+      "uniqueDirectionalFrameHashes": 128,
+      "alphaAligned": true,
+      "meshGeometryObjects": 33,
+      "passesVerified": true
+    },
+    "necromancer": {
+      "frames": 128,
+      "atlas": [
+        2048,
+        1024
+      ],
+      "sourceMeshTriangles": 3088,
+      "files": {
+        "albedo": {
+          "sha256": "336ad089e85a1c63b22637ea229bcd49c6a8feb7ade8fd440fee33423a8c523d",
+          "size": 157744
+        },
+        "normal": {
+          "sha256": "007b0b0a41c2125b7173872f3d9ce44effa36d57c9f1085fdb178d2419c849a3",
+          "size": 268624
+        },
+        "height": {
+          "sha256": "6061322bd08208e67d895e995bae0e307286f39728df116681f47766898c920d",
+          "size": 201035
+        },
+        "roughness": {
+          "sha256": "62269b81a2903f190e721c573d077be7255199abf9af7f9e6af0aa7bef5c8ffa",
+          "size": 50382
+        },
+        "caster": {
+          "sha256": "9b18e4d9657a25c6e93a40c333b5b59d5eb201b1d40765e91d08ed0f589f5874",
+          "size": 31205
+        }
+      },
+      "empty": 0,
+      "clipped": 0,
+      "uniqueDirectionalFrameHashes": 128,
+      "alphaAligned": true,
+      "meshGeometryObjects": 34,
+      "passesVerified": true
+    },
+    "summoner": {
+      "frames": 128,
+      "atlas": [
+        2048,
+        1024
+      ],
+      "sourceMeshTriangles": 3020,
+      "files": {
+        "albedo": {
+          "sha256": "556068899aa4c1c27a1fb895db7b277d049cc8e5b1941a31fc66c4a3b7a1b3d1",
+          "size": 159470
+        },
+        "normal": {
+          "sha256": "6dc793d28d43cce640edef6c3dc2311d64b45dbd79d7e3b40f9aae47052c61eb",
+          "size": 270508
+        },
+        "height": {
+          "sha256": "d40a34674e986d48554663caafc45ed71300d480b0177f7486fe101a9face41e",
+          "size": 200569
+        },
+        "roughness": {
+          "sha256": "ee8735180572399317e90d1ac0c1cadf5c90cd8f5fb13e506e0a9b18fa83ef3a",
+          "size": 51267
+        },
+        "caster": {
+          "sha256": "579a54948346fa1666b89a1e3eb1cf1ebff8a4d75008193ef09c518d729a0afb",
+          "size": 32282
+        }
+      },
+      "empty": 0,
+      "clipped": 0,
+      "uniqueDirectionalFrameHashes": 128,
+      "alphaAligned": true,
+      "meshGeometryObjects": 33,
+      "passesVerified": true
+    }
+  },
+  "allPass": true,
+  "runtimeIntegrated": false,
+  "ownerApproved": false,
+  "physicalPhoneChecked": false
+}

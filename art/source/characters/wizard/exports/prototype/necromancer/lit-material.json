@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "school": "necromancer",
+  "clips": {
+    "walk": {
+      "albedo": {
+        "image": "walk.png",
+        "sha256": "336ad089e85a1c63b22637ea229bcd49c6a8feb7ade8fd440fee33423a8c523d"
+      },
+      "normal": {
+        "image": "walk-normal.png",
+        "sha256": "007b0b0a41c2125b7173872f3d9ce44effa36d57c9f1085fdb178d2419c849a3"
+      },
+      "roughness": {
+        "image": "walk-roughness.png",
+        "sha256": "62269b81a2903f190e721c573d077be7255199abf9af7f9e6af0aa7bef5c8ffa"
+      },
+      "height": {
+        "image": "walk-height.png",
+        "sha256": "6061322bd08208e67d895e995bae0e307286f39728df116681f47766898c920d"
+      },
+      "caster": {
+        "image": "walk-caster.png",
+        "sha256": "9b18e4d9657a25c6e93a40c333b5b59d5eb201b1d40765e91d08ed0f589f5874"
+      }
+    }
+  },
+  "note": "Pose-synchronous passes; alpha silhouette casters only, no volume caster geometry authored yet."
+}

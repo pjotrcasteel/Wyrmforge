@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "school": "summoner",
+  "clips": {
+    "walk": {
+      "albedo": {
+        "image": "walk.png",
+        "sha256": "556068899aa4c1c27a1fb895db7b277d049cc8e5b1941a31fc66c4a3b7a1b3d1"
+      },
+      "normal": {
+        "image": "walk-normal.png",
+        "sha256": "6dc793d28d43cce640edef6c3dc2311d64b45dbd79d7e3b40f9aae47052c61eb"
+      },
+      "roughness": {
+        "image": "walk-roughness.png",
+        "sha256": "ee8735180572399317e90d1ac0c1cadf5c90cd8f5fb13e506e0a9b18fa83ef3a"
+      },
+      "height": {
+        "image": "walk-height.png",
+        "sha256": "d40a34674e986d48554663caafc45ed71300d480b0177f7486fe101a9face41e"
+      },
+      "caster": {
+        "image": "walk-caster.png",
+        "sha256": "579a54948346fa1666b89a1e3eb1cf1ebff8a4d75008193ef09c518d729a0afb"
+      }
+    }
+  },
+  "note": "Pose-synchronous passes; alpha silhouette casters only, no volume caster geometry authored yet."
+}

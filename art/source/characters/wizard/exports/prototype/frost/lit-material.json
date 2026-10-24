@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "school": "frost",
+  "clips": {
+    "walk": {
+      "albedo": {
+        "image": "walk.png",
+        "sha256": "8886aaeedc60ad0715098284e92646cf449655a2a002a4d5b26ab0055a20183f"
+      },
+      "normal": {
+        "image": "walk-normal.png",
+        "sha256": "ae7548a118a5f6f0a43b538518904bed9b920a03ffaf0969c1b48b9727605972"
+      },
+      "roughness": {
+        "image": "walk-roughness.png",
+        "sha256": "4438419795299a9287d0dfc8e1b39df95de5dc431bd83b7cd0ad3bd3980f72e9"
+      },
+      "height": {
+        "image": "walk-height.png",
+        "sha256": "8b395179347d1d50ae4146af972e9ae9668230e0afc1369bc0636254d0e959e1"
+      },
+      "caster": {
+        "image": "walk-caster.png",
+        "sha256": "8e186586c2bc157eb50cbb0a23c74e62a85a325651c8612001d23ab922e9fe3c"
+      }
+    }
+  },
+  "note": "Pose-synchronous passes; alpha silhouette casters only, no volume caster geometry authored yet."
+}
