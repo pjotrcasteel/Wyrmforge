@@ -77,7 +77,7 @@ def rasterize(vertices, vertex_normals, faces, size):
     return normal, depth
 
 
-def geometry_for_frame(positions, faces, mvp, degrees, root, cell):
+def geometry_for_frame(positions, faces, mvp, degrees, root, cell, eye_vertex_weights=None):
     angle = math.radians(degrees)
     rotation = np.array([[math.cos(angle), -math.sin(angle), 0],
                          [math.sin(angle), math.cos(angle), 0], [0, 0, 1]])
@@ -98,7 +98,11 @@ def geometry_for_frame(positions, faces, mvp, degrees, root, cell):
     clip = np.column_stack((points, np.ones(len(points))))@mvp.T
     ndc = clip[:, :3]/clip[:, 3:]
     screen = np.column_stack(((ndc[:, 0]+1)*cell/2, (1-ndc[:, 1])*cell/2, ndc[:, 2]))
-    return rasterize(screen, normals, faces, cell)
+    normals_out, depth = rasterize(screen, normals, faces, cell)
+    if eye_vertex_weights is None:
+        return normals_out, depth, None
+    eye_values, _ = rasterize(screen, eye_vertex_weights, faces, cell)
+    return normals_out, depth, eye_values[:, :, 0]
 
 
 def write_clip(actor, clip_name, cfg, runtime_manifest, strict):
@@ -145,11 +149,23 @@ def write_clip(actor, clip_name, cfg, runtime_manifest, strict):
     depth_atlas = np.zeros(atlas.shape[:2], dtype=np.uint16)
     metrics = []
     depth_ranges = []
+    eye_weights = None
+    eye_atlas = None
+    eye_source = source_manifest_path.parent / "eye-source.npz"
+    if actor == "ashling":
+        if not eye_source.is_file():
+            raise FileNotFoundError(f"{actor}/{clip_name}: original surface-bound eye source missing")
+        with np.load(eye_source) as source_eyes:
+            weights = source_eyes["vertexWeights"].astype(np.float64)
+        if len(weights) != positions.shape[1]:
+            raise ValueError(f"{actor}/{clip_name}: source eye vertices do not match mesh")
+        eye_weights = np.repeat(weights[:, None], 3, axis=1)
+        eye_atlas = np.zeros(atlas.shape[:2], dtype=np.uint8)
     for row, orient in enumerate(source_manifest["orientations"]):
         if orient["direction"] != DIRECTIONS[row] or orient.get("flipX", False):
             raise ValueError(f"{actor}/{clip_name}: mirrored or shuffled source orientation")
         for frame in range(count):
-            values, depth = geometry_for_frame(positions[frame], faces, mvp, orient["rotationDegrees"], root, cell)
+            values, depth, eye_values = geometry_for_frame(positions[frame], faces, mvp, orient["rotationDegrees"], root, cell, eye_weights)
             ys = slice(row*cell, (row+1)*cell)
             xs = slice(frame*cell, (frame+1)*cell)
             color_alpha = atlas[ys, xs, 3] > 0
@@ -173,6 +189,12 @@ def write_clip(actor, clip_name, cfg, runtime_manifest, strict):
             clipped = np.clip((depth[covered]+1)/2, 0, 1)
             patch_depth[covered] = 1+np.rint(clipped*65534).astype(np.uint16)
             depth_atlas[ys, xs] = patch_depth
+            if eye_atlas is not None:
+                strength = (float(np.interp(frame, [0,3,8,13,count-1], [1,1,.45,0,0]))
+                            if clip_name == "death" else 1.0)
+                level = np.clip(eye_values*strength, 0, 1)
+                active = (level > .12) & color_alpha & covered
+                eye_atlas[ys, xs] = np.where(active, np.rint(level*255), 0).astype(np.uint8)
             depth_ranges.append([float(depth[covered].min()), float(depth[covered].max())])
             metrics.append(iou)
         print(f"{actor}/{clip_name}/{DIRECTIONS[row]}: {count} source frames", flush=True)
@@ -193,6 +215,10 @@ def write_clip(actor, clip_name, cfg, runtime_manifest, strict):
         Image.fromarray(depth_atlas).save(runtime_dir / depth_file)
         Image.fromarray(alpha_caster, mode="L").save(runtime_dir / caster_file)
         normal_file = f"../../lighting-proof/{actor}-walk-normal.png"
+    emissive_file = None
+    if eye_atlas is not None:
+        emissive_file = f"{clip_name}-eye-emissive.png"
+        Image.fromarray(eye_atlas).save(runtime_dir / emissive_file)
     if strict and min(metrics) < .985:
         raise ValueError(f"{actor}/{clip_name}: strict geometry/albedo agreement failed")
     return {
@@ -212,7 +238,12 @@ def write_clip(actor, clip_name, cfg, runtime_manifest, strict):
         "minimumMeshColorSilhouetteIoU": round(min(metrics), 6),
         "depthSpace": "source camera normalized device depth; 0 means no geometry",
         "casterMode": "original mesh screen-space alpha silhouette, NOT volumetric self-shadowing",
-        "nonMeshPixels": "excluded from normal/depth/caster; retained in original albedo"
+        "nonMeshPixels": "excluded from normal/depth/caster; retained in original albedo",
+        "emissiveMask": emissive_file,
+        "emissiveMaskSha256": sha256(runtime_dir / emissive_file) if emissive_file else None,
+        "emissiveSource": str(eye_source.relative_to(ROOT)) if emissive_file else None,
+        "emissiveSourceSha256": sha256(eye_source) if emissive_file else None,
+        "emissiveMaskSpace": "linear grayscale, surface-bound original posed mesh; engine sampling pending" if emissive_file else None
     }
 
 
