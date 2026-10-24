@@ -92,3 +92,10 @@ from the accepted rig after motion approval.
 5. Review whether authored idle/hurt clips become necessary under confirmed gameplay animation signals. Current contract has no fake idle or hurt.
 
 Do **not** merge as production art until the required acceptance gates are complete.
+
+## 24 October continuation: isolated CMU biomechanics and garment review
+
+- Diagnosed original fixed shoulders and disproportionate hand-height excursions from the actual 16-frame source measurements; did **not** reintroduce rejected procedural hand/wrist/ankle sinusoids.
+- Preserved the original approved Hollowed/Ashling materials and all previously authored clips. Added editable separately named CMU retarget and feral-presentation candidates, a 55,573-vertex 16-pose skinning audit, before/after full-direction evidence and source provenance. Final feral review: [128-frame candidate](evidence/hollowed-mocap-feral-2026-10-24/candidate-walk-eight-directions.png), [side-by-side eight-direction comparison](evidence/hollowed-mocap-feral-2026-10-24/biomechanics-vs-feral-eight-directions.png), [passing authored motion CI](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40093916838).
+- Native-scale comparison is **not sufficiently improved for final art acceptance**; dramatic propulsion, natural arm pumping, real-Hunt speed/feet anchor validation and owner playback review are still blocked. Do **not** promote either candidate to production or regenerate normal/depth/caster passes prematurely.
+- Independent G1 light-depth failure reproduces on PR #332 itself; notified #332 and made no renderer edits.
