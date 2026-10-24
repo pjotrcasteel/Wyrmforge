@@ -16,6 +16,9 @@ def run(output,render,walk_sequence):
     arm=bpy.data.objects.get("WizardRig")
     verify(arm is not None and arm.type=="ARMATURE","missing editable character armature")
     verify(len(arm.data.bones)==22,"unexpected skeleton")
+    for side in ("L","R"):
+        verify(not arm.data.bones["foot."+side].use_inherit_rotation,
+               "foot "+side+" inherits rotating shin IK; boot may turn sideways")
     pivot=bpy.data.objects.get("WizardActorDirectionPivot")
     verify(pivot is not None,"missing direction pivot")
     verify(scene.camera is not None and scene.camera.data.type=="ORTHO","missing camera")
@@ -77,6 +80,52 @@ def run(output,render,walk_sequence):
         travel=sum(math.dist(frames[i][0],frames[i+1][0]) for i in range(16))
         verify(travel>.05,"static foot animation")
         gait[direction]={"frames":len(frames),"leftFootTravel":round(travel,4)}
+
+    # Compare ACTUALLY DEFORMED boot geometry, not just IK target coordinates:
+    # the original regression was a boot turning roughly 90 degrees despite
+    # the ankle target looking fine. Evaluate the shoe's heel and toe after
+    # all armature constraints, using the actor's LOCAL forward axis.
+    from mathutils import Vector
+    def centroid(name):
+        original=bpy.data.objects.get(name)
+        verify(original is not None,"missing deformable shoe mesh "+name)
+        evaluated=original.evaluated_get(bpy.context.evaluated_depsgraph_get())
+        mesh=evaluated.to_mesh()
+        try:
+            verify(mesh is not None and len(mesh.vertices)>0,"empty shoe geometry")
+            world=evaluated.matrix_world
+            total=Vector((0.0,0.0,0.0))
+            for vertex in mesh.vertices:
+                total+=world @ vertex.co
+            return total/len(mesh.vertices)
+        finally:
+            evaluated.to_mesh_clear()
+    shoe_angles=[]
+    review_angles={"S":0,"SE":45,"E":90,"NE":135,
+                   "N":180,"NW":225,"W":270,"SW":315}
+    for facing,angle in review_angles.items():
+        pivot.rotation_euler.z=math.radians(angle)
+        samples=range(1,17) if facing=="S" else (5,13)
+        for frame in samples:
+            scene.frame_set(frame)
+            local=pivot.matrix_world.inverted()
+            for side in ("L","R"):
+                heel=local @ centroid("Boot heel "+side)
+                toe=local @ centroid("Boot toe "+side)
+                diff=toe-heel
+                # Boots must face the character's forward (-Y) axis.
+                # Do not mistake a sideways or vertically dangling boot
+                # for correct just because IK foot TARGET is planted.
+                yaw=math.degrees(math.atan2(diff.x,-diff.y))
+                pitch=math.degrees(math.atan2(diff.z,max(1e-6,math.hypot(diff.x,diff.y))))
+                verify(diff.y < -.055 and abs(yaw)<=30,
+                       "90-degree twisted boot: "+side+" "+facing+" frame "+
+                       str(frame)+" yaw="+str(round(yaw,1)))
+                verify(abs(pitch)<=32,
+                       "boot pitched vertically: "+side+" "+facing+" frame "+
+                       str(frame)+" pitch="+str(round(pitch,1)))
+                shoe_angles.append({"side":side,"facing":facing,"frame":frame,
+                                    "yaw":round(yaw,2),"pitch":round(pitch,2)})
     pivot.rotation_euler=root_rotation
     scene.frame_set(1)
     wool=bpy.data.materials.get("robe")
@@ -128,7 +177,9 @@ def run(output,render,walk_sequence):
             images.append(str(path.relative_to(output)))
     report={"blender":bpy.app.version_string,"source":bpy.data.filepath,
         "bones":len(arm.data.bones),"staffVariants":len(schools),"directions":len(directions),
-        "clips":clips,"clothMeshes":cloth,"gait":gait,"reviewImages":images,
+        "clips":clips,"clothMeshes":cloth,"gait":gait,"bootOrientation":{"maxYaw":max(abs(x["yaw"]) for x in shoe_angles),
+        "maxPitch":max(abs(x["pitch"]) for x in shoe_angles),"samples":len(shoe_angles)},
+        "reviewImages":images,
         "status":"validated source; art/mobile/lighting NOT approved",
         "artApproved":False,"clothBakedAndReviewed":False,"runtimeIntegrated":False,
         "clothWarmupFrames":scene.get("WizardClothWarmupFrames"),
