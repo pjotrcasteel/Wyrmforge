@@ -33,3 +33,31 @@ Do not mistake the green CI checks for a good-looking walk. The original-like si
 - full export from same source camera with geometry normals, roughness, height, caster and animated emission through the universal lighting engine.
 
 The reference-lit inspection GIF/frames are NOT production pixel-art material atlases and the new `.blend` remains review-only. No temporary mage replacement. Keep PR draft.
+
+## Hybrid rigged/physics garment revision (after the failed full-coat tests)
+
+The freely simulated full robe was replaced by three deliberately isolated
+Blender Cloth surfaces: the left and right front hems and the rear cape.
+The inner open-front coat is now **skinned to the pelvis**, not simulated;
+it maintains the Gothic silhouette and cannot collapse into a knot over
+the knees. The hem sections and cape remain physically simulated, UV-authored,
+attached and pre-warmed for two complete walking cycles.
+
+The centre-front opening is widened to preserve clearance for visible
+alternating feet. After inspecting the 16-frame render, the cape secondary
+motion was constrained and damped to stop it flipping over the wizard's hat.
+
+Verified native Blender 4.5.15 run 40095091384:
+- 22 editable skeleton bones, six staffs, eight-direction source;
+- 60 deformed boot orientation checks, max yaw 0°, pitch 19.2°;
+- 629/629 outward-facing coat foundation faces;
+- three independently simulated cape/front-hem objects;
+- all 16 original South-facing walk frames rendered from the reopened .blend.
+
+**Quality verdict:** the severe robe collision/wrapping is materially reduced,
+and the staff and feet now keep their shape. However the walking silhouette
+still changes too little at real gameplay scale, knee bending/hip weight is weak,
+and garment motion is still a prototype. DO NOT present as completed character
+animation or cut over the temporary mage. The next milestone is a hand-reviewed
+full walking performance, especially readable alternating foot plants, knees,
+hip rotation and a restrained physical trailing cape, before 8-direction exports.
