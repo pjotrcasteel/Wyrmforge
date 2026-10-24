@@ -36,7 +36,7 @@ internal sealed class ArenaGroundFireState(HuntArenaGenerator.WetForestRecipe re
             // puddle or mud layer that covers this exact leafbed centre must
             // remain the topmost material, not a secret fireable leaf texture.
             var center = new Vector2D(leaf.Patch.X * worldWidth, leaf.Patch.Y * worldHeight);
-            var covered = recipe.Ground.Skip(leaf.Index + 1)
+            var covered = Recipe.Ground.Skip(leaf.Index + 1)
                 .Any(patch => Covers(center, patch, worldWidth, worldHeight));
             if (covered) continue;
             leaf.Charred = true;
