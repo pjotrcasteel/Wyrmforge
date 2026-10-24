@@ -50,6 +50,12 @@ export function readArenaDiagnostics(canvas) {
         movement: getArenaMovement(state),
         aim: getArenaAim(state),
         projectiles: state.latestSnapshot?.projectiles ?? [],
+        // Read-only visual provenance for real-Hunt evidence captures.
+        // These never modify the original scene, C# simulation, or VFX renderer.
+        fireballVisual: state.latestSnapshot?.fireballVisual ?? null,
+        elementalImpacts: state.latestSnapshot?.elementalImpacts ?? [],
+        burningGrounds: state.latestSnapshot?.burningGrounds ?? [],
+        essenceBursts: state.latestSnapshot?.essenceBursts ?? [],
         castMotion: state.latestSnapshot?.castMotion ?? null,
         pointerId: state.pointerId,
         touchId: state.touchId,
