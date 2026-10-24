@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "id": "wet-forest/ancient-oak",
+  "approval": "original-candidate-not-approved",
+  "stage": "isolated-g1-proof-only",
+  "source": {
+    "model": "art/source/environment/lighting-proof/ancient-oak.blend",
+    "exporter": "tools/art/export-lighting-oak.py",
+    "reference": "PR #307 8c963f8351a758b0fb468fd1340088ff7b904abf"
+  },
+  "resources": {
+    "geometry": "oak.json",
+    "vertices": "oak.bin"
+  },
+  "coordinates": {
+    "handedness": "right",
+    "up": "Z",
+    "groundAxes": [
+      "X",
+      "Y"
+    ],
+    "unit": "metre",
+    "anchor": [
+      0,
+      0,
+      0
+    ]
+  },
+  "parts": [
+    {
+      "id": "oak-0",
+      "surface": "fissured bark",
+      "roughness": 0.94,
+      "specular": 0.16
+    },
+    {
+      "id": "oak-1",
+      "surface": "living foliage A",
+      "roughness": 0.84,
+      "specular": 0.12
+    },
+    {
+      "id": "oak-2",
+      "surface": "living foliage B",
+      "roughness": 0.86,
+      "specular": 0.12
+    },
+    {
+      "id": "oak-3",
+      "surface": "living foliage C",
+      "roughness": 0.85,
+      "specular": 0.12
+    },
+    {
+      "id": "oak-4",
+      "surface": "living foliage D",
+      "roughness": 0.87,
+      "specular": 0.12
+    },
+    {
+      "id": "oak-5",
+      "surface": "woodland moss",
+      "roughness": 0.97,
+      "specular": 0.1
+    }
+  ],
+  "limitations": [
+    "Colors are source-ramp neutral midpoints, not finished authored albedo textures.",
+    "Leaf geometry is polygon mesh foliage, not validated alpha-card foliage.",
+    "No bark texture/roughness texture/ambient-occlusion bake or final color variation is included.",
+    "Lighting-proof world scale is provisional and is not an authoritative gameplay collider.",
+    "No runtime Arena/Town or C# gameplay path uses this candidate."
+  ]
+}
