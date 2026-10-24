@@ -302,3 +302,24 @@ The same material/alpha-cutoff path casts and receives on both layers. Browser
 checks compare upper casting on/off on visible lower-layer pixels, then alpha
 holes versus an opaque upper quad while excluding pixels the quad newly covers.
 Zero-light includes both layers. Engine shader dispatch has no foliage branch.
+
+
+`a0d379e` passed published-app GPU run 40132704223 (artifact 12575093934).
+The visible-ground intersection test now verifies pose-aware cast-shadow changes.
+At the 390 viewport, authored-normal A/B changes 2,108 Hollowed pixels and 1,185
+Ashling pixels; receipt changes 13,237 wall, 31,512 roof and 1,650 post pixels.
+These are measurements of material response, not artistic-approval scores.
+The water evidence exposed a weak second sample: only 10 specular-changed pixels
+remained at light position 0.8 (8 at the smaller viewport). Although the earlier
+centroid assertion passed, that near-off-puddle comparison is insufficient for a
+strong moving-highlight claim. The next run uses positions 0.15/0.4 and requires
+more than 100 affected water pixels at each, while retaining source-centroid
+movement and the specular-off control. Pose/cutout changed-pixel metrics are also
+preserved as JSON rather than only assertions.
+
+
+The next receiver-isolated shadow check also uses the original oak itself:
+mask visible leaves in group `oak-2`, then toggle only `oak-1` casting. Both groups
+have the same root, so the inspection source stays stationary. Only changed
+shadow visibility on the other leaf group's pixels counts; ground shadows and
+surface-color differences cannot satisfy the assertion. This is pending CI.

@@ -129,7 +129,7 @@ public sealed class UniversalLightingBrowserTests : PageTest
         }
         await ConfigureAsync(canvas, new { focus = "water", inspectObject = "puddle", behind = true });
         var centers = new List<double>();
-        foreach (var position in new[] { .2, .8 })
+        foreach (var position in new[] { .15, .4 })
         {
             await ConfigureAsync(canvas, new { progress = position, reflections = true });
             await SaveReceiverBaselineAsync(canvas);
@@ -137,7 +137,7 @@ public sealed class UniversalLightingBrowserTests : PageTest
             await ConfigureAsync(canvas, new { reflections = false });
             var specularChanged = await ReceiverChangedPixelsAsync(canvas);
             comparisons.Add(new { receiver = "puddle", comparison = "specular-on-off", position, changedPixels = specularChanged });
-            Assert.IsGreaterThan(5, specularChanged, "Specular A/B must change water pixels, not just other surfaces.");
+            Assert.IsGreaterThan(100, specularChanged, "Specular A/B must change water pixels, not just other surfaces.");
             centers.Add(await canvas.EvaluateAsync<double>(
                 "c => { const p=gpuProof.proofPixels(c), e=window.receiverEvidence; let sum=0,x=0; for(const i of e.indices) { const d=Math.max(0,e.pixels[i]+e.pixels[i+1]+e.pixels[i+2]-p[i]-p[i+1]-p[i+2]); sum+=d; x+=(i/4%c.width)*d; } return sum ? x/sum : -1; }"));
             await CaptureAsync(width, $"water-key-{position}-diffuse");
@@ -153,6 +153,7 @@ public sealed class UniversalLightingBrowserTests : PageTest
         await CaptureAsync(width, "inspection-key-zero");
         await VerifyPoseShadowsAsync(canvas, width);
         await VerifyCutoutShadowsAsync(canvas, width);
+        await VerifyOakLayerShadowsAsync(canvas, width);
     }
 
     private async Task VerifyPoseShadowsAsync(ILocator canvas, int width)
@@ -169,6 +170,7 @@ public sealed class UniversalLightingBrowserTests : PageTest
         var changed = await ReceiverChangedPixelsAsync(canvas);
         Assert.IsGreaterThan(5, changed, "Pose changes must alter actual shadow visibility on ground visible in both poses.");
         await CaptureAsync(width, "ground-shadow-pose8");
+        await RecordComparisonAsync(width, "pose-shadow", new { changedGroundPixels = changed, excludedActorSilhouettes = true });
     }
 
     private async Task VerifyCutoutShadowsAsync(ILocator canvas, int width)
@@ -180,19 +182,46 @@ public sealed class UniversalLightingBrowserTests : PageTest
         await canvas.EvaluateAsync("c => { window.receiverEvidence.pixels=gpuProof.proofPixels(c); }");
         await CaptureAsync(width, "cutout-leaf-shadows");
         await ConfigureAsync(canvas, new { castsShadow = false });
-        Assert.IsGreaterThan(5, await ReceiverChangedPixelsAsync(canvas), "Upper alpha leaves must shadow visible lower leaves.");
+        var castChanged = await ReceiverChangedPixelsAsync(canvas);
+        Assert.IsGreaterThan(5, castChanged, "Upper alpha leaves must shadow visible lower leaves.");
         await CaptureAsync(width, "cutout-no-cast");
         await ConfigureAsync(canvas, new { castsShadow = true, cutoutAlpha = false, inspectObject = "cutout-lower", view = "object-mask" });
         // Exclude pixels newly covered by the opaque control quad.
         await canvas.EvaluateAsync("c => { const p=gpuProof.proofPixels(c); window.receiverEvidence.indices=window.receiverEvidence.indices.filter(i => p[i]===255); }");
         await ConfigureAsync(canvas, new { inspectObject = "cutout-upper", view = "shadow-visibility" });
-        Assert.IsGreaterThan(5, await ReceiverChangedPixelsAsync(canvas), "Alpha holes must transmit light that a solid quad blocks.");
+        var holesChanged = await ReceiverChangedPixelsAsync(canvas);
+        Assert.IsGreaterThan(5, holesChanged, "Alpha holes must transmit light that a solid quad blocks.");
+        await RecordComparisonAsync(width, "cutout-shadow", new { castChangedPixels = castChanged, alphaHolesChangedPixels = holesChanged });
         await CaptureAsync(width, "cutout-solid-control");
         await ConfigureAsync(canvas, new { cutoutAlpha = true, view = "lit" });
         await CaptureAsync(width, "cutout-lit");
         await ConfigureAsync(canvas, new { profile = "zero" });
         Assert.IsTrue(await canvas.EvaluateAsync<bool>("c => gpuProof.proofPixels(c).every((v,i) => i%4===3 || v===0)"));
         await CaptureAsync(width, "cutout-zero");
+    }
+
+    private async Task VerifyOakLayerShadowsAsync(ILocator canvas, int width)
+    {
+        await ConfigureAsync(canvas, new { profile = "night", cutouts = false, focus = "oak", inspectObject = "oak-2", progress = .5 });
+        await SaveReceiverBaselineAsync(canvas);
+        // Oak groups share the same root, so selecting the caster leaves the key stationary.
+        await ConfigureAsync(canvas, new { inspectObject = "oak-1", view = "shadow-visibility" });
+        await canvas.EvaluateAsync("c => { window.receiverEvidence.pixels=gpuProof.proofPixels(c); }");
+        await CaptureAsync(width, "oak-leaf-receiver-shadowed");
+        await ConfigureAsync(canvas, new { castsShadow = false });
+        var changed = await ReceiverChangedPixelsAsync(canvas);
+        Assert.IsGreaterThan(5, changed, "Original oak leaf geometry must shadow another visible foliage group, not only the ground.");
+        await RecordComparisonAsync(width, "oak-leaf-shadow", new { caster = "oak-1", receiver = "oak-2", changedLeafPixels = changed });
+        await CaptureAsync(width, "oak-leaf-caster-off");
+        await ConfigureAsync(canvas, new { castsShadow = true });
+        Assert.AreEqual(0, await ReceiverChangedPixelsAsync(canvas));
+    }
+
+    private static async Task RecordComparisonAsync(int width, string name, object evidence)
+    {
+        var directory = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-gpu-proof");
+        await File.WriteAllTextAsync(Path.Combine(directory, $"gpu-{width}-{name}-comparison.json"),
+            System.Text.Json.JsonSerializer.Serialize(evidence, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
     }
 
     private async Task SaveReceiverBaselineAsync(ILocator canvas)
