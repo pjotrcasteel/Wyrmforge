@@ -294,3 +294,36 @@ Do not promote the prototype to main solely because build and browser CI pass. S
 This was an **initial research candidate / listening plan** in PR #94. That PR's docs were later merged for provenance, but actual **recorded licensed** music and sound entered the game independently in 0.0.109 and 0.0.110. Many tracks and SFX listed here as candidates have since shipped; therefore the historical unreviewed/not-downloaded fields of `licensed-audio-candidates.json` are **not** an up-to-date asset inventory, license approval, or permission to download/reuse those entries.
 
 For actual shipped sources, attribution, modifications and hashes, see [recorded audio credits](../audio/recorded-audio-credits.md), the real `wwwroot/audio/recorded/manifest.json`, and the current browser audio code. New assets still require licensing evidence and listening approval. General direction remains original, mature Diablo/StarCraft-era atmosphere, without copying copyrighted Blizzard audio. Other art/backlog decisions: [handover](../handover/2026-10-15-project-art-and-backlog.md).
+
+### Hollowed and Ashling creature audio identity — draft bank (24 October 2026)
+
+Use the **existing, authoritative snapshot identity**, not guessed recent-kill context:
+`DeathBurstRenderSnapshot.Kind` and `EntityId` identify the creature that died;
+`EnemyRenderSnapshot.HitFlash` with `EntityId` identifies a new wound. The lightweight
+`sound-events.js` tracker detects rising hit edges, new death bursts, and a single
+nearby enemy within 230 world units. Repeat events are throttled; never make one
+vocalization per animation frame or per simultaneous enemy. All unrelated kinds
+keep the existing generic `enemy-down` fallback.
+
+Two distinct human-produced takes each are used for **approach / hit / death**:
+- **Hollowed:** undead human zombie vocal performances from artisticdude,
+  [Zombies Sound Pack](https://opengameart.org/content/zombies-sound-pack), CC0.
+  Thin, interrupted breath; rough pain; one last exhausted death voice.
+- **Ashling:** snarling creature performances from Ogrebane,
+  [Monster Sound Effects Pack](https://opengameart.org/content/monster-sound-effects-pack), CC0,
+  with restrained real fire crackling from AntumDeluge,
+  [Fire Crackling](https://opengameart.org/content/fire-crackling), CC0.
+  The fire texture belongs only to the ash creature; it is not a Fireball spell.
+- Sources are pinned to their SHA256s in `tools/audio/build_creature_voices.py`;
+  game assets are offline-processed mono Ogg recordings listed in the manifest.
+  Raw CC0 ZIP downloads do not happen in the game and are not included in the app.
+
+Mobile listening controls in Settings → Sound Atelier allow previewing each family.
+`docs/audio/previews/hollowed-ashling-voices.mp3` gives a 12-recording
+comparison of the two takes for each of the three actions. **Not creatively approved**:
+audio and performance review are still required, particularly to ensure voices
+sound wounded or terrifying rather than like cheerful/cartoon monsters.
+
+The first approach event is a sparse **nearby presence cue**, not synchronized
+footsteps. Per-footstep Foley, 2D distance attenuation and attack-vocal timings
+require authoritative animation/combat events; do not claim those are shipped.

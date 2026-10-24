@@ -142,3 +142,37 @@ test('built-in browser playback can layer physical departure Foley without chang
     assert.ok(manifest.transitionDesign.events['trail-enter']);
     assert.ok(manifest.transitionDesign.events['threat-reveal']);
 });
+
+
+test('Hollowed and Ashling each have two distinct checked-in CC0 performances per action', () => {
+    const names = ['hollow-approach', 'hollow-hit', 'hollow-death', 'ashling-approach', 'ashling-hit', 'ashling-death'];
+    for (const name of names) {
+        const cue = manifest.cues[name];
+        assert.equal(cue.license, 'CC0', name);
+        assert.equal(cue.variants.length, 2, name);
+        const shas = new Set();
+        for (const take of cue.variants) {
+            assert.equal(take.license, 'CC0');
+            assert.ok(take.sourceKeys.includes(name.startsWith('ashling') ? 'monsters-cc0' : 'zombies-cc0'));
+            const bytes = readFileSync(new URL(take.file, directory));
+            assert.equal(bytes.subarray(0, 4).toString(), 'OggS');
+            assert.equal(sha256(bytes), take.sha256);
+            assert.ok(take.mix.gain > 0 && take.mix.gain < 1);
+            shas.add(take.sha256);
+        }
+        assert.equal(shas.size, 2, name + ' must have human-recorded variation rather than duplicated bytes');
+    }
+    assert.ok(manifest.cues['ashling-death'].variants[0].sourceKeys.includes('ash-fire-cc0'));
+    const allKeys = manifest.sources.map(item => item.key);
+    assert.ok(['zombies-cc0', 'monsters-cc0', 'ash-fire-cc0'].every(key => allKeys.includes(key)));
+});
+
+test('creature preview buttons play separate approach, hurt and death without rewriting game sprites', () => {
+    const audio = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/audio.js', import.meta.url), 'utf8');
+    const events = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/sound-events.js', import.meta.url), 'utf8');
+    assert.match(audio, /play\(family \+ '-approach', true\)/);
+    assert.match(audio, /play\(family \+ '-hit', true\)/);
+    assert.match(audio, /play\(family \+ '-death', true\)/);
+    assert.match(events, /burst\.entityId/);
+    assert.match(events, /burst\.kind/);
+});

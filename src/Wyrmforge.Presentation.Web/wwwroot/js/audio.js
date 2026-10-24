@@ -743,6 +743,19 @@
             });
             samples.appendChild(item);
         }
+        const creatureHeading = document.createElement('p');
+        creatureHeading.textContent = 'CREATURE VOICES — two recorded species, three distinct actions';
+        const creatures = document.createElement('div');
+        creatures.className = 'wyrmforge-sound-samples';
+        for (const family of ['hollow', 'ashling']) {
+            creatures.appendChild(makeButton('HEAR ' + family.toUpperCase(), 'wyrmforge-sound-sample',
+                'Preview ' + family + ' approach, pain and death', () => {
+                    unlock();
+                    play(family + '-approach', true);
+                    window.setTimeout(() => play(family + '-hit', true), 1350);
+                    window.setTimeout(() => play(family + '-death', true), 2130);
+                }));
+        }
         const hearMusic = makeButton('HEAR SOUNDTRACK', 'wyrmforge-sound-close', 'Start and preview soundtrack', () => {
             unlock();
             startMusicFromGesture();
@@ -754,14 +767,14 @@
         levels.append(makeVolumeControl('ui', 'Interface'), makeVolumeControl('combat', 'Combat'), makeVolumeControl('moment', 'Moments'), makeVolumeControl('music', 'Music'), makeVolumeControl('ambience', 'Wet Forest'));
         const close = makeButton('CLOSE', 'wyrmforge-sound-close', 'Close Sound Atelier', toggleLab);
         const credit = document.createElement('p');
-        credit.textContent = 'UI Foley: Kenney (CC0). Recorded music: Brandon Morris (CC0). Spell effects: JC Sounds (CC BY 4.0) and rubberduck (CC0).';
+        credit.textContent = 'UI: Kenney (CC0). Creature voices: artisticdude and Ogrebane, ember fire: AntumDeluge (CC0). Music: Brandon Morris (CC0). Magic: JC Sounds (CC BY 4.0) and rubberduck (CC0).';
         const creditLink = document.createElement('a');
         creditLink.textContent = 'Asset credits & licenses';
         creditLink.href = 'https://opengameart.org/content/jc-sounds-fantasy-sfx-pack-vol-1';
         creditLink.target = '_blank';
         creditLink.rel = 'noopener noreferrer';
         credit.append(' ', creditLink);
-        lab.append(heading, desc, materialHeading, materials, openCodexPreview, hearMusic, samples, levels, credit, close);
+        lab.append(heading, desc, materialHeading, materials, openCodexPreview, creatureHeading, creatures, hearMusic, samples, levels, credit, close);
 
         status = document.createElement('span');
         status.className = 'wyrmforge-sound-status';
