@@ -21,8 +21,8 @@ FRAMES=16
 GROUND_Z=.06
 HIP_Z=.96
 LEG_LENGTH=.88
-STRIDE=.28
-STANCE_FRACTION=.60
+STRIDE=.38
+STANCE_FRACTION=.62
 
 
 def check(value,message):
@@ -92,6 +92,8 @@ def create_anatomical_armature():
         bone.head=head
         bone.tail=tail
         bone.use_connect=False
+        if name.endswith("Foot"):
+            bone.use_inherit_rotation=False
     for name,(_,_,parent) in bone_specs.items():
         if parent:
             data.edit_bones[name].parent=data.edit_bones[parent]
@@ -139,7 +141,7 @@ def foot_trajectory(phase):
         u=t/STANCE_FRACTION
         return STRIDE*(.5-u),GROUND_Z,True
     u=(t-STANCE_FRACTION)/(1.-STANCE_FRACTION)
-    return -STRIDE*.5+STRIDE*smoothstep(u),GROUND_Z+.10*math.sin(math.pi*u),False
+    return -STRIDE*.5+STRIDE*smoothstep(u),GROUND_Z+.13*math.sin(math.pi*u),False
 
 
 def animate(arm):
@@ -167,7 +169,7 @@ def animate(arm):
         frame=i+1
         # A 0.8% body-height vertical bob, not a squat/kick cycle.
         hip=arm.pose.bones["Hips"]
-        hip.location=Vector((0.,0.,-.042+.008*math.cos(4*math.pi*t)))
+        hip.location=Vector((.012*math.sin(2*math.pi*t),0.,-.055+.008*math.cos(4*math.pi*t)))
         hip.keyframe_insert(data_path="location",frame=frame)
         for side,sign in (("Left",-1.),("Right",1.)):
             phase=(t+(0 if side=="Left" else .5))%1.
@@ -184,7 +186,7 @@ def animate(arm):
             # Shoulders oppose stepping leg; a staff hand can override later.
             arm_bone.rotation_mode="QUATERNION"
             forearm.rotation_mode="QUATERNION"
-            swing=math.radians(12)*math.sin(2*math.pi*t+(0 if side=="Left" else math.pi))
+            swing=math.radians(18)*math.sin(2*math.pi*t+(0 if side=="Left" else math.pi))
             arm_bone.rotation_quaternion=Quaternion((1,0,0),swing)
             forearm.rotation_quaternion=Quaternion((1,0,0),math.radians(5)+swing*.18)
             arm_bone.keyframe_insert(data_path="rotation_quaternion",frame=frame)
@@ -220,11 +222,11 @@ def prepare_scene(body,arm,output):
     cd=bpy.data.cameras.new("3-4 game-scale gait camera")
     cam=bpy.data.objects.new("3-4 game-scale gait camera",cd)
     scene.collection.objects.link(cam)
-    cam.location=(2.75,-5.7,3.5)
+    cam.location=(2.9,-4.4,4.15)
     look=Vector((0,0,1.02))
     cam.rotation_euler=(look-cam.location).to_track_quat("-Z","Y").to_euler()
     cd.type="ORTHO"
-    cd.ortho_scale=3.0
+    cd.ortho_scale=2.65
     scene.camera=cam
     scene["reviewOnly"]=True
     scene["artApproved"]=False
@@ -237,8 +239,11 @@ def inspect_and_render(body,arm,out,samples):
     metrics=[]
     for i in range(FRAMES):
         scene.frame_set(i+1)
-        hip=arm.matrix_world@arm.pose.bones["Hips"].head
-        head=arm.matrix_world@arm.pose.bones["Head"].head
+        # Evaluated matrices are authoritative; inspecting only bone.head
+        # previously recorded a constant 0.96 even with keyed pelvis motion.
+        evaluated_arm=arm.evaluated_get(bpy.context.evaluated_depsgraph_get())
+        hip=arm.matrix_world@evaluated_arm.pose.bones["Hips"].matrix.translation
+        head=arm.matrix_world@evaluated_arm.pose.bones["Head"].matrix.translation
         knees={}
         foot={}
         for side in ("Left","Right"):
@@ -264,8 +269,14 @@ def inspect_and_render(body,arm,out,samples):
                         "headZ":round(head.z,4),
                         "footLateralSeparation":round(lateral,4),
                         "worldFeet":{k:[round(float(v),4) for v in p] for k,p in foot.items()}})
-    check(max(x["pelvisZ"] for x in metrics)-min(x["pelvisZ"] for x in metrics)<.05,
-          "animated pelvis bob exceeds normal walking")
+    hip_range=max(x["pelvisZ"] for x in metrics)-min(x["pelvisZ"] for x in metrics)
+    check(.006<hip_range<.06,
+          "evaluated pelvis fails small vertical weight transfer: "+str(hip_range))
+    left_steps=[p["worldFeet"]["Left"][1] for p in metrics]
+    right_steps=[p["worldFeet"]["Right"][1] for p in metrics]
+    check(max(left_steps)-min(left_steps)>.22 and
+          max(right_steps)-min(right_steps)>.22,
+          "evaluated feet barely stride despite authored IK targets")
     scene.frame_set(1)
     filename=out/"clean-human-walk-source.blend"
     bpy.ops.wm.save_as_mainfile(filepath=str(filename))
@@ -274,7 +285,9 @@ def inspect_and_render(body,arm,out,samples):
             "originalRecordedBVHModified":False,
             "rejectedLegacyRigUsed":False,
             "frames":FRAMES,"feetNeverCross":True,
-            "hipVerticalRange":round(max(x["pelvisZ"] for x in metrics)-min(x["pelvisZ"] for x in metrics),5),
+            "hipVerticalRange":round(hip_range,5),
+            "leftFootForwardTravel":round(max(left_steps)-min(left_steps),4),
+            "rightFootForwardTravel":round(max(right_steps)-min(right_steps),4),
             "samples":samples,"poses":metrics,
             "approvedGothicArtwork":False,
             "productionSpriteAtlas":False,
