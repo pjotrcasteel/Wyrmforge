@@ -39,9 +39,12 @@ jobs:
       - name: Animate REAL CC0 male mesh from recorded human walk
         shell: bash
         run: |
+          set -euo pipefail
+          bundle="$(find "$RUNNER_TEMP/human-sources" -type f -name 'human_base_meshes_bundle.blend' -print -quit)"
+          test -f "$bundle"
           blender --background --factory-startup --threads 2 \
             --python tools/sprite-lab/build_cc0_male_mocap_blender.py -- \
-            --bundle "$RUNNER_TEMP/human-sources/human_base_meshes_bundle.blend" \
+            --bundle "$bundle" \
             --bvh "$RUNNER_TEMP/07_04.bvh" \
             --output artifacts/human-retarget
       - name: Produce source-recording GIF and contact sheet
