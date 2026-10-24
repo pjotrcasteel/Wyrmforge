@@ -176,6 +176,46 @@ public sealed class ArenaEnvironmentStateTests
     }
 
     [TestMethod]
+    public void WetForestLab_GroundFire_CharredLeavesRemainAfterFireExpires_ButPuddlesDoNotIgnite()
+    {
+        const int width = 950, height = 1550;
+        var map = new WyrmrealmMapState(seed: 1204);
+        var forest = ArenaEnvironmentState.Create(map.Seed,
+            map.AvailableNodes[0] with { Habitat = WyrmrealmHabitat.WetForest }, generatorPreview: true);
+        var recipe = forest.Snapshot().WetForest!;
+        Assert.IsNotNull(recipe);
+        Assert.IsGreaterThan(0, recipe.Ground.Count(p => p.Kind == "leafbed"));
+
+        var ignited = false;
+        foreach (var leaf in recipe.Ground.Where(p => p.Kind == "leafbed"))
+        {
+            var point = new Vector2D(leaf.X * width, leaf.Y * height);
+            if (forest.IgniteGroundFuelInRadius(point, width, height, 1) <= 0) continue;
+            ignited = true;
+            break;
+        }
+        Assert.IsTrue(ignited, "At least one uncovered dry leafbed must be ignitable.");
+        var active = forest.Snapshot().GroundScorches.ToArray();
+        Assert.IsGreaterThan(0, active.Length);
+        Assert.IsTrue(active.All(s => s.BurningSeconds > 0 && !s.Charred));
+
+        // Burnt leaves exhaust their own fuel and remain charred instead of
+        // resetting the terrain when the Fireball's damage field disappears.
+        forest.AdvanceGroundFuel(10);
+        var cooled = forest.Snapshot().GroundScorches.ToArray();
+        Assert.IsTrue(cooled.All(s => s.BurningSeconds == 0 && s.Charred));
+        CollectionAssert.AreEqual(active.Select(s => s.SourcePatchIndex).ToArray(),
+            cooled.Select(s => s.SourcePatchIndex).ToArray());
+        foreach (var puddle in recipe.Ground.Where(p => p.Kind == "puddle").Take(3))
+        {
+            var at = new Vector2D(puddle.X * width, puddle.Y * height);
+            // A small source on a puddle never makes the puddle itself a burnable patch.
+            Assert.IsFalse(forest.Snapshot().GroundScorches.Any(s =>
+                s.X == puddle.X && s.Y == puddle.Y));
+        }
+    }
+
+    [TestMethod]
     public void EnemyMaterialPickup_IsCollectedExactlyOnce()
     {
         const int width = 950, height = 1550;

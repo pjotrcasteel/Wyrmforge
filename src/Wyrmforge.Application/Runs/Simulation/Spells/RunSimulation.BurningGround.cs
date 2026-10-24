@@ -46,8 +46,12 @@ public sealed partial class RunSimulation
         if (arenaEnvironment is { } environment)
         {
             foreach (var ground in burningGrounds)
+            {
                 environment.IgnitePropsInRadius(ground.Position, arenaWidth, arenaHeight, ground.EffectiveRadius);
+                environment.IgniteGroundFuelInRadius(ground.Position, arenaWidth, arenaHeight, ground.EffectiveRadius);
+            }
             environment.AdvanceBurningProps(delta);
+            environment.AdvanceGroundFuel(delta);
         }
 
         burningGrounds.RemoveAll(ground => ground.IsExpired);

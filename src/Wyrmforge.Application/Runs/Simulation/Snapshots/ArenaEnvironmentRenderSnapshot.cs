@@ -28,4 +28,5 @@ public sealed record ArenaEnvironmentRenderSnapshot(
     public bool GeneratorPreview { get; init; }
     public HuntArenaGenerator.WetForestRecipe? WetForest { get; init; }
     public IReadOnlyList<ArenaPropRenderSnapshot> Props { get; init; } = [];
+    public IReadOnlyList<ArenaGroundScorchRenderSnapshot> GroundScorches { get; init; } = [];
 }

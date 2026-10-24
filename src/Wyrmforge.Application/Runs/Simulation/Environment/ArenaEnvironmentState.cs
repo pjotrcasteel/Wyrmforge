@@ -12,6 +12,7 @@ public sealed class ArenaEnvironmentState
     private readonly List<Supply> supplies = [];
     private readonly List<Barrier> barriers = [];
     private readonly List<DestructibleProp> destructibles = [];
+    private ArenaGroundFireState? groundFire;
     private readonly int seed;
     private readonly string biome;
     private readonly string element;
@@ -83,6 +84,8 @@ public sealed class ArenaEnvironmentState
         var habitat = node.Habitat.ToString();
         var environment = new ArenaEnvironmentState(seed, biome, element, stage, landmark, district, habitat, node.PreLair, generatorPreview);
         if (node.Type != WyrmrealmNodeType.Combat) return environment;
+        if (generatorPreview && node.Habitat == WyrmrealmHabitat.WetForest)
+            environment.groundFire = new ArenaGroundFireState(HuntArenaGenerator.GenerateWetForest(seed));
 
         // The old fixed gated encounter remains part of current Hunts ONLY.
         // Arena Lab previews have natural continuous ground: no synthetic cross-walls or wave checkpoints.
@@ -127,8 +130,8 @@ public sealed class ArenaEnvironmentState
     {
         Corruption = HuntArenaGenerator.WyrmInfluence(stage, generatorPreview && preLair),
         GeneratorPreview = generatorPreview,
-        WetForest = generatorPreview && habitat == nameof(WyrmrealmHabitat.WetForest)
-            ? HuntArenaGenerator.GenerateWetForest(seed) : null,
+        WetForest = groundFire?.Recipe,
+        GroundScorches = groundFire?.Snapshot() ?? [],
         Props = destructibles.Where(prop => prop.Health > 0)
             .Select(prop => new ArenaPropRenderSnapshot(prop.Spec.Id, prop.Spec.Kind, prop.Spec.X, prop.Spec.Y, prop.Spec.Radius,
                 prop.Health / prop.Spec.Health) { BurningSeconds = prop.BurningSeconds }).ToArray(),
@@ -416,6 +419,13 @@ public sealed class ArenaEnvironmentState
         }
         return hit;
     }
+
+    /// <summary>Lab-only material contact for actual deterministic dry-leaf patches.</summary>
+    public int IgniteGroundFuelInRadius(Vector2D center, double width, double height, double radius) =>
+        groundFire?.Ignite(center, width, height, radius) ?? 0;
+
+    /// <summary>Advances real ground fuel independently of spell sprite lifetime.</summary>
+    public void AdvanceGroundFuel(double delta) => groundFire?.Advance(delta);
 
     /// <summary>
     /// Ignite only live, flammable physical props touched by an actual C# burning-ground field.
