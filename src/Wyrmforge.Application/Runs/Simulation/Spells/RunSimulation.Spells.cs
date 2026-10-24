@@ -49,7 +49,11 @@ public sealed partial class RunSimulation
             if (surge.IsSurge) FocusedSurgesCast++;
             var direction = Math.Atan2(effectiveAim.Y, effectiveAim.X);
             lastCastMotion = new CastMotionRenderSnapshot(player.Position.X, player.Position.Y, spell.Id, rank,
-                SpellCombinationResolver.ActiveFor(spell.Id, build.Spells, build.Synergies), direction, 0) { Surge = surge.IsSurge };
+                SpellCombinationResolver.ActiveFor(spell.Id, build.Spells, build.Synergies), direction, 0)
+            {
+                Surge = surge.IsSurge,
+                FireballMutationMask = spell.Id == SpellId.FireBolt ? preparedFireballSet.Mask : 0,
+            };
             lastCastMotionStartedAt = elapsed;
             castCount++;
             if (spell.Ability.Delivery is ProjectileAbilityProfile) projectileCastCount++;

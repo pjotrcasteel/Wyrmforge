@@ -33,6 +33,8 @@ public sealed class FireballMutatorCompositionTests
             Assert.IsGreaterThan(0, projectile.FireballSourceId, $"Each physical Fireball needs a stable source ({mask}).");
             Assert.AreEqual(1, Projectiles(simulation).Count,
                 $"Equipping {mask} must transform the one signature, not add free casts.");
+            Assert.AreEqual(mask, simulation.CreateSnapshot().CastMotion!.FireballMutationMask,
+                "The staff cast and its physical projectile must show the same prepared mutators.");
             Assert.AreEqual(mask, simulation.CreateSnapshot().Projectiles.Single().FireballMutationMask);
             Assert.AreEqual(projectile.FireballSourceId, simulation.CreateSnapshot().Projectiles.Single().FireballSourceId);
 
@@ -84,6 +86,8 @@ public sealed class FireballMutatorCompositionTests
         Assert.AreEqual(SpellId.CinderNeedle, projectile.Spell);
         Assert.AreEqual(0, projectile.FireballMutationMask);
         Assert.AreEqual(0, projectile.FireballSourceId);
+        Assert.AreEqual(0, simulation.CreateSnapshot().CastMotion!.FireballMutationMask,
+            "A standalone Cinder Needle cast must not show Fireball's equipped mutation materials.");
         Assert.AreEqual(0, simulation.CreateSnapshot().Projectiles.Single().FireballMutationMask);
         Assert.AreEqual(0, simulation.CreateSnapshot().Projectiles.Single().FireballSourceId);
     }
