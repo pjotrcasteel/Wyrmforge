@@ -81,27 +81,39 @@ def normalize_body(body,arm):
     return scale
 
 def bind_skin(body,arm):
-    # Explicit source-bound linear skin weights are deterministic. Bone heat
-    # frequently fails on imported BVH joints (zero-length hip placeholders).
+    """Use Blender's geometry-aware automatic weights, NOT nearest-bone guesses.
+
+    A wrong nearest-segment assignment pulled real mesh chest, shoulders and
+    crossing legs apart. Bone heat considers the original continuous surface
+    when distributing humanoid skin weights.
+    """
     height=max(v.co.z for v in body.data.vertices)-min(v.co.z for v in body.data.vertices)
-    bones=[b for b in arm.data.bones if b.length>height*.016 and
-           b.name not in {"Hips","LHipJoint","RHipJoint"}]
-    insist(len(bones)>=15,"not enough usable source deform segments")
-    groups={b.name:body.vertex_groups.new(name=b.name) for b in bones}
+    deform_bones=[]
+    for b in arm.data.bones:
+        b.use_deform=b.length>height*.016 and b.name not in {"Hips","LHipJoint","RHipJoint"}
+        if b.use_deform:
+            deform_bones.append(b.name)
+    insist(len(deform_bones)>=15,"insufficient meaningful deform bones")
+    bpy.ops.object.mode_set(mode="OBJECT") if bpy.context.object and bpy.context.object.mode!="OBJECT" else None
+    bpy.ops.object.select_all(action="DESELECT")
+    body.select_set(True);arm.select_set(True)
+    bpy.context.view_layer.objects.active=arm
+    bpy.ops.object.parent_set(type="ARMATURE_AUTO",keep_transform=True)
+    insist(body.parent==arm,"automatic heat solver failed to parent actual male mesh")
+    mods=[m for m in body.modifiers if m.type=="ARMATURE" and m.object==arm]
+    insist(len(mods)>0,"no evaluated deform modifier")
+    for m in mods:
+        m.use_deform_preserve_volume=True
+    count=sum(1 for name in deform_bones if body.vertex_groups.get(name) is not None)
+    insist(count>=15,"automatic heat weights failed to cover deform skeleton")
+    uncovered=0
+    group_ids={v.index for v in body.vertex_groups}
     for vertex in body.data.vertices:
-        dists=sorted(((closest_distance(vertex.co,b.head_local,b.tail_local),b.name) for b in bones),
-                     key=lambda pair:pair[0])[:4]
-        weights=[1/(max(d,height*.013)**4) for d,_ in dists]
-        denom=sum(weights)
-        for (dist,name),weight in zip(dists,weights):
-            groups[name].add([vertex.index],float(weight/denom),"REPLACE")
-    body.parent=arm
-    body.matrix_parent_inverse.identity()
-    deform=body.modifiers.new("Real CMU skeleton / weighted male UV anatomy","ARMATURE")
-    deform.object=arm
-    deform.use_deform_preserve_volume=True
-    insist(any(m.type=="ARMATURE" and m.object==arm for m in body.modifiers),"skinning failed")
-    return len(bones)
+        if not any(group.group in group_ids and group.weight>.0001 for group in vertex.groups):
+            uncovered+=1
+    insist(uncovered<len(body.data.vertices)*.04,
+           f"excess unweighted body vertices: {uncovered}")
+    return count
 
 def studio_scene(body,arm,output):
     scene=bpy.context.scene
@@ -207,7 +219,7 @@ def main(opts):
     bpy.ops.wm.save_as_mainfile(filepath=str(save))
     report={"source":"Official Blender Studio CC0 realistic male / CMU subject 07_04",
             "maleMeshVertices":len(body.data.vertices),"uvLayers":len(body.data.uv_layers),
-            "sourceBones":len(arm.data.bones),"weightedBones":bound,
+            "sourceBones":len(arm.data.bones),"weightedBones":bound,"skinningMethod":"Blender bone-heat automatic armature weights",
             "nativeBlend":save.name,"heightScale":round(scale,6),
             "mocapFrameSamples":SAMPLES,
             "evaluatedBodyVertexDisplacement":round(displacement,5),
