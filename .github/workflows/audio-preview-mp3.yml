@@ -42,6 +42,11 @@ jobs:
           ffmpeg -y -hide_banner -loglevel error -i "$src/menu-bookOpen.ogg" -i "$src/menu-handleSmallLeather.ogg" \
             -filter_complex "[0:a]volume=0.38,lowpass=f=3450[book];[1:a]volume=0.093,lowpass=f=2700,adelay=120[leather];[book][leather]amix=inputs=2:duration=longest:normalize=0,alimiter=limit=0.95[out]" \
             -map "[out]" -ar 44100 -c:a libmp3lame -q:a 3 "$dest/codex-open.mp3"
+          # Single tap-friendly playthrough: Worn Vellum, then the layered Codex opening twice.
+          # Silence is encoded into one standard MP3, so opening it does not require a ZIP download.
+          ffmpeg -y -hide_banner -loglevel error -i "$dest/worn-vellum.mp3" -i "$dest/codex-open.mp3" \
+            -filter_complex "[0:a]adelay=350:all=1[vellum];[1:a]asplit=2[x][y];[x]adelay=1600:all=1[codex1];[y]adelay=2700:all=1[codex2];[vellum][codex1][codex2]amix=inputs=3:duration=longest:normalize=0,alimiter=limit=0.95[out]" \
+            -map "[out]" -ar 44100 -c:a libmp3lame -q:a 3 "$dest/worn-vellum-and-codex-demo.mp3"
           for preview in "$dest"/*.mp3; do
             ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1 "$preview"
           done
