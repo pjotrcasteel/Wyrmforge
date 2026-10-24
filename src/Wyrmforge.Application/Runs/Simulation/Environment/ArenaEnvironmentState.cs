@@ -38,7 +38,17 @@ public sealed class ArenaEnvironmentState
     {
         public HuntArenaGenerator.Prop Spec { get; } = spec;
         public double Health { get; set; } = spec.Health;
+        public double BurningSeconds { get; set; }
+        public bool EverIgnited { get; set; }
     }
+
+    // Conservative first slice: existing wooden props can burn; rock, stone,
+    // snow-covered trees, magical urns and bare ground are not automatically fuel.
+    private const double PropBurnDurationSeconds = 4.2;
+    private const double PropBurnDamagePerSecond = 20;
+
+    private static bool CanIgnite(string kind) =>
+        kind is "barrel" or "crate" or "stump" or "fallen-log" or "dead-tree" or "pine" or "broken-cart";
 
     private ArenaEnvironmentState(int seed, string biome, string element, int stage, string landmark, string district, string habitat, bool preLair, bool generatorPreview)
     {
@@ -121,7 +131,7 @@ public sealed class ArenaEnvironmentState
             ? HuntArenaGenerator.GenerateWetForest(seed) : null,
         Props = destructibles.Where(prop => prop.Health > 0)
             .Select(prop => new ArenaPropRenderSnapshot(prop.Spec.Id, prop.Spec.Kind, prop.Spec.X, prop.Spec.Y, prop.Spec.Radius,
-                prop.Health / prop.Spec.Health)).ToArray(),
+                prop.Health / prop.Spec.Health) { BurningSeconds = prop.BurningSeconds }).ToArray(),
     };
 
     public Vector2D RestrictMovement(Vector2D previous, Vector2D proposed, double width, double height, double radius = 0)
@@ -405,6 +415,52 @@ public sealed class ArenaEnvironmentState
             hit++;
         }
         return hit;
+    }
+
+    /// <summary>
+    /// Ignite only live, flammable physical props touched by an actual C# burning-ground field.
+    /// Walls block exposure; touching a puddle/stone or a visual-only fire ring never ignites anything.
+    /// </summary>
+    public int IgnitePropsInRadius(Vector2D center, double width, double height, double radius)
+    {
+        if (radius <= 0 || width <= 0 || height <= 0) return 0;
+        var ignited = 0;
+        foreach (var prop in destructibles)
+        {
+            if (prop.Health <= 0 || prop.EverIgnited || !CanIgnite(prop.Spec.Kind)) continue;
+            var position = new Vector2D(prop.Spec.X * width, prop.Spec.Y * height);
+            if (Vector2D.Distance(center, position) > radius + prop.Spec.Radius) continue;
+            if (barriers.Any(barrier => !IsOpen(barrier) &&
+                SegmentIntersectsBarrier(center, position, barrier, width, height))) continue;
+            prop.EverIgnited = true;
+            prop.BurningSeconds = PropBurnDurationSeconds;
+            ignited++;
+        }
+        return ignited;
+    }
+
+    /// <summary>
+    /// Ignite once; a burning object continues to consume its own fuel after the initial
+    /// ground spell disappears. Damage uses delta seconds, not visual frames or RNG.
+    /// Existing physical-prop drop ownership remains unchanged.
+    /// </summary>
+    public int AdvanceBurningProps(double delta)
+    {
+        if (delta <= 0) return 0;
+        var destroyed = 0;
+        foreach (var prop in destructibles)
+        {
+            if (prop.Health <= 0 || prop.BurningSeconds <= 0) continue;
+            var activeDelta = Math.Min(delta, prop.BurningSeconds);
+            prop.BurningSeconds = Math.Max(0, prop.BurningSeconds - activeDelta);
+            prop.Health -= activeDelta * PropBurnDamagePerSecond;
+            if (prop.Health > 0) continue;
+            prop.BurningSeconds = 0;
+            if (prop.Spec.DropKind is { } kind)
+                supplies.Add(new Supply(kind, prop.Spec.X, prop.Spec.Y, EncounterPhase.Pressure));
+            destroyed++;
+        }
+        return destroyed;
     }
 
     private static bool SegmentIntersectsBarrier(Vector2D start, Vector2D end, Barrier barrier, double width, double height) =>

@@ -6,7 +6,12 @@ public sealed record ArenaSupplyRenderSnapshot(string Kind, double X, double Y, 
 
 public sealed record ArenaBarrierRenderSnapshot(double X, double Y, double Width, double Height, bool Open, string Kind);
 
-public sealed record ArenaPropRenderSnapshot(int Id, string Kind, double X, double Y, double Radius, double HealthFraction);
+public sealed record ArenaPropRenderSnapshot(int Id, string Kind, double X, double Y, double Radius, double HealthFraction)
+{
+    // Additive, authoritative ignition signal for a future approved material/light pass.
+    // Existing clients can ignore it; it is not an instruction to draw procedural orange rings.
+    public double BurningSeconds { get; init; }
+}
 
 public sealed record ArenaEnvironmentRenderSnapshot(
     int Seed,

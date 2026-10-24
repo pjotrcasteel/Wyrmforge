@@ -40,6 +40,16 @@ public sealed partial class RunSimulation
             }
         }
 
+        // Ground fire follows actual prop geometry, not a decorative overlay.
+        // A wooden object retains its own fire once ignited, even after the
+        // originating C# ground zone has expired.
+        if (arenaEnvironment is { } environment)
+        {
+            foreach (var ground in burningGrounds)
+                environment.IgnitePropsInRadius(ground.Position, arenaWidth, arenaHeight, ground.EffectiveRadius);
+            environment.AdvanceBurningProps(delta);
+        }
+
         burningGrounds.RemoveAll(ground => ground.IsExpired);
     }
 

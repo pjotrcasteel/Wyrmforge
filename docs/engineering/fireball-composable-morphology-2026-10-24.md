@@ -46,3 +46,19 @@ The unapproved `fireball-morphology.js`, `fireball-preview.js`, and accompanying
 1. Find or author editable source sheets for baseline Fireball body at in-world scale, matching approved Gothic materials and the existing mage's actual cast anchor, plus explicit separate source frames for impact and persistent hazard. If absent, record missing editable source rather than generating new unapproved materials.
 2. Author separate diffuse/emissive/normal/depth/cutout sheets for each **approved and playable** mutation, not color overlays; ensure combined forms read as one body. Asset authoring stays isolated and requires user art review.
 3. After the GPU engine supports spell emitters and receivers, record unedited real in-engine GIFs from 320/390px **Hunt** against real Hollowed/Ashling and nearby ground; separately verify Nexus at the same size. Approve base before composite. Do not wire any new art into live rendering before signoff.
+
+## Third technical checkpoint — authoritative ignition for things under ground fire
+
+**New owner requirement (24 October):** the orange ground circle is an interim visualization, not the desired effect. A burning area must interact with the physical ground/objects UNDER its footprint and ignite suitable materials. A future renderer must depict actual scorched/ignited materials, not paint a circle above them.
+
+### First implemented gameplay slice: existing world props
+- `RunSimulation.UpdateBurningGrounds` asks the actual `ArenaEnvironmentState` to ignite props overlapping each currently active C# zone, using the simulation's world units (not the 320/390 viewport scale).
+- Ignition only applies to already-existing flammable prop kinds (`barrel`, `crate`, `stump`, `fallen-log`, `dead-tree`, `pine`, `broken-cart`), rejects solid stone/frozen props/other decoration and respects existing sealed world barriers.
+- Ignited objects own their remaining burning time/damage progression, even after the Fireball ground zone expires. They are not re-lit every frame; no random number or new loot mechanism is introduced. Destroyed barrels/crates use the **same existing** physical salvage drops once.
+- `ArenaPropRenderSnapshot.BurningSeconds` is additive and allows a future *approved* material-layer painter and single GPU light to show the burning object correctly. This checkpoint does NOT overlay orange rings, add fire sprites, or alter the existing screen renderer.
+- Verified with deterministic application tests for ignition, propagation-free fuel progression, existing single-drop ownership, unlit stone and distant props.
+
+### Deliberate remaining gaps
+- The live game does not yet have C#-authoritative surface/material polygons for every existing ground pixel; WetForest ground patches are currently generated for the lab and include puddles, leafbeds, moss, mud and clearings. Do **not** invent fire on random floor swatches. Next, establish typed world-space flammable ground surface IDs/coverage and material transitions, and prove water/stone stop burning while dry leafbed catches.
+- Fire should not spread without limit or through sealed obstacles. Prop-to-prop spread, vegetation fuel exhaustion, aftermath/decal persistence and physical iPhone frame budgets are later bounded simulation/visual slices, not claimed now.
+- Integration of burning object emission and physically coherent environmental illumination waits for the universal GPU light engine PR #332. No new bespoke lighting renderer is permitted.

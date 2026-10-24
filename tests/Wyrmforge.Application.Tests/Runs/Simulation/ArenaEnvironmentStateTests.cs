@@ -105,6 +105,59 @@ public sealed class ArenaEnvironmentStateTests
     }
 
     [TestMethod]
+    public void IgnitePropsInRadius_RealGroundFireIgnitesWoodAndBurnsAfterTheZoneDisappears()
+    {
+        const int width = 950, height = 1550;
+        var map = new WyrmrealmMapState(seed: 1204);
+        var environment = ArenaEnvironmentState.Create(map.Seed, map.AvailableNodes[0]);
+        var first = environment.Snapshot().Props.First(prop => prop.Kind is "barrel" or "crate");
+        var point = new Vector2D(first.X * width, first.Y * height);
+
+        Assert.AreEqual(1, environment.IgnitePropsInRadius(point, width, height, 1));
+        Assert.AreEqual(0, environment.IgnitePropsInRadius(point, width, height, 1),
+            "One fire zone must not repeatedly restart the same prop's burn.");
+        Assert.IsGreaterThan(0, environment.Snapshot().Props.Single(prop => prop.Id == first.Id).BurningSeconds);
+
+        // The original ground patch is gone; the prop still owns fire and its
+        // existing Charred Scrap pickup is created exactly once on destruction.
+        Assert.AreEqual(0, environment.AdvanceBurningProps(.4));
+        Assert.IsGreaterThan(0, environment.Snapshot().Props.Single(prop => prop.Id == first.Id).BurningSeconds);
+        Assert.AreEqual(1, environment.AdvanceBurningProps(3));
+        Assert.IsFalse(environment.Snapshot().Props.Any(prop => prop.Id == first.Id));
+        Assert.AreEqual(1, environment.Snapshot().Supplies.Count(supply => supply.Kind == "material:CharredScrap"));
+        environment.AdvanceBurningProps(3);
+        Assert.AreEqual(1, environment.Snapshot().Supplies.Count(supply => supply.Kind == "material:CharredScrap"));
+    }
+
+    [TestMethod]
+    public void IgnitePropsInRadius_ForestStoneAndSnowWoodDoNotIgnite()
+    {
+        const int width = 950, height = 1550;
+        var map = new WyrmrealmMapState(seed: 1204);
+        var forest = ArenaEnvironmentState.Create(map.Seed,
+            map.AvailableNodes[0] with { Habitat = WyrmrealmHabitat.WetForest }, generatorPreview: true);
+        var stone = forest.Snapshot().Props.First(prop => prop.Kind is "moss-rock" or "grave-marker" or "waystone");
+        var point = new Vector2D(stone.X * width, stone.Y * height);
+
+        Assert.AreEqual(0, forest.IgnitePropsInRadius(point, width, height, 0.1));
+        Assert.AreEqual(0d, forest.Snapshot().Props.Single(prop => prop.Id == stone.Id).BurningSeconds, .00001);
+    }
+
+    [TestMethod]
+    public void IgnitePropsInRadius_DistantObjectsAndNonexistentFireHaveNoEffect()
+    {
+        const int width = 950, height = 1550;
+        var map = new WyrmrealmMapState(seed: 1204);
+        var environment = ArenaEnvironmentState.Create(map.Seed, map.AvailableNodes[0]);
+        var original = environment.Snapshot().Props.ToArray();
+
+        Assert.AreEqual(0, environment.IgnitePropsInRadius(new Vector2D(0, 0), width, height, 0));
+        Assert.AreEqual(0, environment.IgnitePropsInRadius(new Vector2D(-10000, -10000), width, height, 68));
+        Assert.AreEqual(0, environment.AdvanceBurningProps(4.2));
+        CollectionAssert.AreEqual(original, environment.Snapshot().Props.ToArray());
+    }
+
+    [TestMethod]
     public void EnemyMaterialPickup_IsCollectedExactlyOnce()
     {
         const int width = 950, height = 1550;
