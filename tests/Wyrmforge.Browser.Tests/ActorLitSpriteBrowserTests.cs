@@ -71,11 +71,12 @@ public sealed class ActorLitSpriteBrowserTests : PageTest
 
         var before = await HashAsync();
         await Page.EvaluateAsync("() => window.actorLitReview.render({lightX: -4})");
-        Assert.AreNotEqual(before, await HashAsync(), "Moving light must change posed actor illumination and shadows.");
+        var movedLight = await HashAsync();
+        Assert.AreNotEqual(before, movedLight, "Moving light must change posed actor illumination and shadows.");
         await CaptureAsync(width, height, "light-moved");
 
         await Page.EvaluateAsync("() => window.actorLitReview.render({shadows: false})");
-        Assert.AreNotEqual(await HashAsync(), before, "Actor and stage illumination must be recomputed when shadow policy changes.");
+        Assert.AreNotEqual(movedLight, await HashAsync(), "Disabling shadow casters must change illumination at a fixed light position.");
         await CaptureAsync(width, height, "shadow-disabled");
 
         await Page.EvaluateAsync("() => window.actorLitReview.render({zero: true})");
