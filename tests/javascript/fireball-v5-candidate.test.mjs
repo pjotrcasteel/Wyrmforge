@@ -13,14 +13,17 @@ test('unapproved base V5 source is present but never promoted into runtime artwo
     assert.equal(candidate?.status, 'direction-accepted-not-owner-approved');
     assert.equal(candidate.runtimeEnabled, false);
     assert.equal(candidate.sourceIncluded, true);
-    assert.equal(candidate.rendersIncluded, false);
+    assert.equal(candidate.rendersIncluded, true);
+    assert.equal(candidate.integrationBlockedOn, 'shared-gpu-lighting-pr-332-complete-merged-and-validated');
     assert.equal(candidate.frames, 16);
     assert.deepEqual(candidate.frameSize, [120, 72]);
     assert.deepEqual(candidate.anchor, [87, 36]);
     assert.equal(candidate.worldSize, 'pending-gameplay-scale-review');
     assert.equal(existsSync(new URL(candidate.sourceGenerator, root)), true);
     assert.equal(Object.keys(candidate.generatedChannels).length, 5);
+    assert.equal(existsSync(new URL(candidate.generatedEditableSheet, root)), true);
     for (const channel of ['albedo', 'emissive', 'normal', 'height', 'cutout']) {
         assert.match(candidate.generatedChannels[channel], /\.png$/);
+        assert.equal(existsSync(new URL(candidate.generatedChannels[channel], root)), true);
     }
 });
