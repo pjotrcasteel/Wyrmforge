@@ -1,0 +1,20 @@
+name: Wet Forest ground concept integrity
+on:
+  pull_request:
+    paths:
+      - 'user_handover_files/concepts/arena-v2/wet-forest/ground-materials/v1/**'
+      - 'tools/art/verify_ground_candidate_collection.mjs'
+      - '.github/workflows/ground-art-candidate-integrity.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate all 36 candidate image hashes and source metadata
+        run: node tools/art/verify_ground_candidate_collection.mjs
