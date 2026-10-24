@@ -359,7 +359,9 @@ def retarget_captured_feet_with_ik(source,target,start,end):
     bpy.context.scene.frame_set(start+1)
     source_rotation_zero={name:source.pose.bones[name].matrix_basis.to_quaternion().copy()
                           for name in upper}
-    source_root_zero=source.pose.bones["Hips"].matrix.translation.copy()
+    # Never feed evaluated source matrix.translation into a pose-bone
+    # .location channel: those live in different coordinate systems.
+    source_root_zero=source.pose.bones["Hips"].location.copy()
     for name in upper:
         dst=target.pose.bones[name]
         dst.rotation_mode="QUATERNION"
@@ -369,7 +371,7 @@ def retarget_captured_feet_with_ik(source,target,start,end):
     for frame in range(start,end+1):
         bpy.context.scene.frame_set(frame+1)
         r={"frame":frame+1}
-        r["rootDelta"]=(source.pose.bones["Hips"].matrix.translation-source_root_zero).copy()
+        r["rootDelta"]=(source.pose.bones["Hips"].location-source_root_zero).copy()
         r["upper"]={
             name:(source.pose.bones[name].matrix_basis.to_quaternion()@
                   source_rotation_zero[name].inverted()).normalized()
@@ -396,14 +398,9 @@ def retarget_captured_feet_with_ik(source,target,start,end):
     # same normalized character scale to target hips and two ankle controls.
     root_displacement=max((row["rootDelta"].length for row in poses),default=0.)
     insist(root_displacement>.05,"captured walk root never translates")
-    # BVH's traversal coordinate in THIS recording comes through the import
-    # as world Z. Treating it as character height previously lowered the
-    # entire humanoid by 18+ scene units in a single walk, creating a squat.
-    # Map source walking Z -> Blender ground-plane Y and source Y -> height.
-    # Keep a fixed transform throughout the clip; no framewise recentering.
-    walk_delta=poses[-1]["rootDelta"]
-    insist(abs(walk_delta.z)>3*max(1.,abs(walk_delta.y)),
-           "BVH traversal axis no longer matches verified 07_04 source")
+    # Both armatures descend from the same original root rest bone, so local
+    # pose LOCATION deltas are transferable directly. Blender handles the
+    # bone and armature matrices. Explicit XYZ -> XZY previously mixed spaces.
     root_scale=sum(scales.values())/len(scales)
     controls={}
     for side in ("Left","Right"):
@@ -414,8 +411,7 @@ def retarget_captured_feet_with_ik(source,target,start,end):
         foot.empty_display_size=.22;knee.empty_display_size=.22
         controls[side]=(foot,knee)
     for row in poses:
-        motion=row["rootDelta"]
-        root_step=Vector((motion.x,motion.z,motion.y))*root_scale
+        root_step=row["rootDelta"]*root_scale
         for name in upper:
             dst=target.pose.bones[name]
             dst.rotation_quaternion=row["upper"][name]
@@ -461,7 +457,7 @@ def retarget_captured_feet_with_ik(source,target,start,end):
         "upperBodyChannelsRetargeted":list(upper),
         "rootTranslationRetargeted":True,
         "capturedRootTravel":round(root_displacement,5),
-        "rootMapping":"source XYZ -> character XZY; walking stays ground-plane",
+        "rootMapping":"captured pose Hips.location -> identical fitted root rest bone",
         "targetRootScale":round(root_scale,5),
         "targetVerticalDrift":round(max(abs(p["rootDelta"].y*root_scale)
                                       for p in poses),5),
