@@ -45,7 +45,12 @@
       "minimumMeshColorSilhouetteIoU": 0.985294,
       "depthSpace": "source camera normalized device depth; 0 means no geometry",
       "casterMode": "original mesh screen-space alpha silhouette, NOT volumetric self-shadowing",
-      "nonMeshPixels": "excluded from normal/depth/caster; retained in original albedo"
+      "nonMeshPixels": "excluded from normal/depth/caster; retained in original albedo",
+      "emissiveMask": "walk-eye-emissive.png",
+      "emissiveMaskSha256": "6ca5c214f2d945b02bd4458f6b733929de42875b09098e78e9d6d4ddccb0efc2",
+      "emissiveSource": "art/source/enemies/ashling/exports/movement-fiery-eyes-v1/eye-source.npz",
+      "emissiveSourceSha256": "ee08f3758661360e9b1671507e11adb051c433d9fec3289795330a0920b65536",
+      "emissiveMaskSpace": "linear grayscale, surface-bound original posed mesh; engine sampling pending"
     },
     "attack": {
       "albedo": "attack.png",
@@ -71,7 +76,12 @@
       "minimumMeshColorSilhouetteIoU": 0.968062,
       "depthSpace": "source camera normalized device depth; 0 means no geometry",
       "casterMode": "original mesh screen-space alpha silhouette, NOT volumetric self-shadowing",
-      "nonMeshPixels": "excluded from normal/depth/caster; retained in original albedo"
+      "nonMeshPixels": "excluded from normal/depth/caster; retained in original albedo",
+      "emissiveMask": "attack-eye-emissive.png",
+      "emissiveMaskSha256": "d1f8ffda6bd90407bb54d6c3503f9e92a42f87fcd0e708def4ceb453b89260d1",
+      "emissiveSource": "art/source/enemies/ashling/exports/attack-fiery-eyes-v1/eye-source.npz",
+      "emissiveSourceSha256": "ee08f3758661360e9b1671507e11adb051c433d9fec3289795330a0920b65536",
+      "emissiveMaskSpace": "linear grayscale, surface-bound original posed mesh; engine sampling pending"
     },
     "death": {
       "albedo": "death.png",
@@ -97,7 +107,12 @@
       "minimumMeshColorSilhouetteIoU": 0.985089,
       "depthSpace": "source camera normalized device depth; 0 means no geometry",
       "casterMode": "original mesh screen-space alpha silhouette, NOT volumetric self-shadowing",
-      "nonMeshPixels": "excluded from normal/depth/caster; retained in original albedo"
+      "nonMeshPixels": "excluded from normal/depth/caster; retained in original albedo",
+      "emissiveMask": "death-eye-emissive.png",
+      "emissiveMaskSha256": "c090ee15fc8760170c61fb3f75e43ef31835f9c174621e6085ed22a8bcf06e1a",
+      "emissiveSource": "art/source/enemies/ashling/exports/death-fiery-eyes-v1/eye-source.npz",
+      "emissiveSourceSha256": "ee08f3758661360e9b1671507e11adb051c433d9fec3289795330a0920b65536",
+      "emissiveMaskSpace": "linear grayscale, surface-bound original posed mesh; engine sampling pending"
     }
   }
 }

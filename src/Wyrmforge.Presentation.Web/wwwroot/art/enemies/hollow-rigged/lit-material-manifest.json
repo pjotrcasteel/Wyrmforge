@@ -45,7 +45,12 @@
       "minimumMeshColorSilhouetteIoU": 0.985696,
       "depthSpace": "source camera normalized device depth; 0 means no geometry",
       "casterMode": "original mesh screen-space alpha silhouette, NOT volumetric self-shadowing",
-      "nonMeshPixels": "excluded from normal/depth/caster; retained in original albedo"
+      "nonMeshPixels": "excluded from normal/depth/caster; retained in original albedo",
+      "emissiveMask": null,
+      "emissiveMaskSha256": null,
+      "emissiveSource": null,
+      "emissiveSourceSha256": null,
+      "emissiveMaskSpace": null
     },
     "attack": {
       "albedo": "attack.png",
@@ -71,7 +76,12 @@
       "minimumMeshColorSilhouetteIoU": 0.987465,
       "depthSpace": "source camera normalized device depth; 0 means no geometry",
       "casterMode": "original mesh screen-space alpha silhouette, NOT volumetric self-shadowing",
-      "nonMeshPixels": "excluded from normal/depth/caster; retained in original albedo"
+      "nonMeshPixels": "excluded from normal/depth/caster; retained in original albedo",
+      "emissiveMask": null,
+      "emissiveMaskSha256": null,
+      "emissiveSource": null,
+      "emissiveSourceSha256": null,
+      "emissiveMaskSpace": null
     },
     "death": {
       "albedo": "death.png",
@@ -97,7 +107,12 @@
       "minimumMeshColorSilhouetteIoU": 0.984195,
       "depthSpace": "source camera normalized device depth; 0 means no geometry",
       "casterMode": "original mesh screen-space alpha silhouette, NOT volumetric self-shadowing",
-      "nonMeshPixels": "excluded from normal/depth/caster; retained in original albedo"
+      "nonMeshPixels": "excluded from normal/depth/caster; retained in original albedo",
+      "emissiveMask": null,
+      "emissiveMaskSha256": null,
+      "emissiveSource": null,
+      "emissiveSourceSha256": null,
+      "emissiveMaskSpace": null
     }
   }
 }
