@@ -4,6 +4,7 @@ import * as T from './vendor/three.module.js';
 import { LightingEngine } from './engine.js';
 import { spritePlaneGeometry } from './lit-sprite.js';
 import { litActorSample } from './actor-asset-contract.js';
+import { planarCasterGeometry } from './actor-shadow-mask.js';
 import { environmentProfile } from './registry.js';
 
 const actors = [
@@ -33,6 +34,7 @@ async function fetchJson(url) {
 export async function initializeActorReview(canvas) {
     if (states.has(canvas)) return;
     const engine = new LightingEngine(canvas, { shadowViews: 8, maxLights: 3 });
+    engine.camera.zoom = 2.0; // tighter REVIEW framing; no change to global GPU renderer
     const state = { engine, canvas, ready: false, stamp: 0,
         config: { hollowed: 'walk', ashling: 'walk', frame: 0, zero: false,
             lightX: -.5, shadows: true, animate: false }, actors: {}, lastTime: 0 };
@@ -53,7 +55,19 @@ export async function initializeActorReview(canvas) {
                 engine.registerTexture(`${actor.id}-${clip}-normal`, normal, false);
                 engine.registerGeometry(`${actor.id}-${clip}`, spritePlaneGeometry(T, c));
             }
-            state.actors[actor.id] = { sprite, lit };
+            const masks = {};
+            for (const [clip, data] of Object.entries(lit.clips)) {
+                const bitmap = new Image();
+                bitmap.src = new URL(data.caster, base).href;
+                await bitmap.decode();
+                const plane = document.createElement('canvas');
+                plane.width = bitmap.naturalWidth;
+                plane.height = bitmap.naturalHeight;
+                const context = plane.getContext('2d', { willReadFrequently: true });
+                context.drawImage(bitmap, 0, 0);
+                masks[clip] = context;
+            }
+            state.actors[actor.id] = { sprite, lit, masks };
         }
         state.ready = true;
         state.observer = new ResizeObserver(() => redrawActorReview(canvas));
@@ -76,7 +90,7 @@ export function redrawActorReview(canvas, change = {}) {
     const objects = [object('floor', 'floor', 'floor', [0, 0, -.035],
         { castsShadow: false })];
     for (const actor of actors) {
-        const { sprite, lit } = state.actors[actor.id];
+        const { sprite, lit, masks } = state.actors[actor.id];
         const clip = c[actor.id];
         const frame = Math.max(0, Math.min(sprite.clips[clip].frames - 1, Math.trunc(c.frame)));
         const sample = litActorSample(sprite, lit, { clip, frame, direction: 'S' });
@@ -84,11 +98,19 @@ export function redrawActorReview(canvas, change = {}) {
         materials.push(material(id, '#ffffff', { roughness: sample.material.roughness,
             metalness: sample.material.metalness, specular: sample.material.specular,
             albedo: `${id}-albedo`, normal: `${id}-normal` }));
+        const row = sprite.directions.indexOf('S');
+        const casterId = `${actor.id}-${clip}-caster-${row}-${frame}`;
+        if (!state.engine.geometries.has(casterId)) {
+            const pixels = masks[clip].getImageData(frame * sample.cell, row * sample.cell,
+                sample.cell, sample.cell).data;
+            state.engine.registerGeometry(casterId, planarCasterGeometry(T, pixels, sample.cell,
+                sample.anchor, sample.worldSize));
+        }
         objects.push(object(actor.id, id, id, actor.position,
             { castsShadow: sample.castShadow && c.shadows, receivesShadow: sample.receiveShadow,
-                frame: sample.frame }));
+                occluderGeometry: casterId, frame: sample.frame }));
     }
-    const lamps = [light('fireball', [c.lightX * 4, -2, 2.5], '#ff9c55', 38, 3),
+    const lamps = [light('fireball', [c.lightX * 2.7, -1.7, 2.6], '#ff9c55', 58, 3),
         light('blue-rim', [3, -1, 3], '#8ca9ec', 9, 1)];
     for (const l of lamps) { l.enabled = !c.zero; l.castsShadow &&= c.shadows; }
     state.engine.apply({ version: 1, time: 0, lights: lamps, materials, objects, environment });
