@@ -1,0 +1,149 @@
+name: Hollowed captured arm-chain / real 96px GIF review (unapproved)
+on:
+  push:
+    branches: [feat/actor-lit-sprite-production]
+    paths:
+      - 'art/source/enemies/hollow/reference/**'
+      - 'tools/sprite-lab/refine-hollow-no-cape-captured-arm-chain.py'
+      - 'tools/sprite-lab/render-hollow-no-cape-captured-chain.py'
+      - 'tools/sprite-lab/render-hollow-no-cape-captured-chain-directions.py'
+      - '.github/workflows/hollow-no-cape-captured-chain-review.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  real-reference-run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install Blender 4.5 and render dependencies
+        run: python -m pip install 'bpy==4.5.3' 'numpy>=1.26,<3' 'pillow>=10,<13'
+      - name: Apply measured shoulder-led arm mechanics to skinned no-cape Hollowed
+        run: |
+          source=art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-mocap-no-cape-captured-chain-candidate
+          if test -f "$source/hollow-rigged.blend"; then
+            echo "Existing editable source model kept unchanged"
+          else
+            python tools/sprite-lab/refine-hollow-no-cape-captured-arm-chain.py
+          fi
+      - name: Sample posed original surface geometry
+        run: |
+          source=art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-mocap-no-cape-captured-chain-candidate
+          if ! test -f "$source/sampled-walk.npz"; then
+            python tools/sprite-lab/sample-hollow-rig.py -- "$source"
+          fi
+      - name: Check source-recorded 3D elbow bend / 16-frame loop and unchanged leg geometry
+        run: |
+          python - <<'PY'
+          import json
+          import hashlib
+          from pathlib import Path
+          root=Path('art/source/enemies/hollow')
+          source=root/'reference/CMU-09_01-run.bvh'
+          candidate=root/'rigged-poc/model/local-appearance-004/rigged-mocap-no-cape-captured-chain-candidate'
+          audit=json.loads((candidate/'retarget-provenance.json').read_text())
+          poses=json.loads((candidate/'gait-diagnostics.json').read_text())
+          assert audit['sourceSha256']==hashlib.sha256(source.read_bytes()).hexdigest()
+          assert len(poses)==17 and audit['output']['frames']==16
+          assert audit['loop']['periodSourceFrames']>=52
+          assert audit['output']['fps']==25
+          assert audit['artApproval'] is False
+          assert audit['capeRemoved'] is True
+          base=candidate.parent/'rigged-mocap-no-cape-islands-candidate'
+          mesh=json.loads((base/'no-cape-audit.json').read_text())
+          assert mesh['capeIslandsDeleted']>=3 and mesh['facesDeleted']>=10000
+          assert mesh['UVsRetained'] and mesh['sourceAnimationsRetained']
+          assert audit['parentEditableBlendSha256']==hashlib.sha256((base/'hollow-rigged.blend').read_bytes()).hexdigest()
+          assert audit['anatomicalRepair']['method'].startswith('one source-measured')
+          assert (candidate/'sampled-walk.npz').is_file()
+          for side in ('L','R'):
+            knees=[x['feet'][side]['kneeFlexDegrees'] for x in poses[:16]]
+            elbows=[x['arms'][side]['elbowFlexDegrees'] for x in poses[:16]]
+            assert min(knees)>-0.01 and max(knees)<160 and max(knees)-min(knees)>25,(side,knees)
+            assert min(elbows)>10 and max(elbows)<165,(side,elbows)
+            shoulders=[x['arms'][side]['shoulder'] for x in poses[:16]]
+            arm_motion=sum(max(p[k] for p in shoulders)-min(p[k] for p in shoulders)
+                           for k in range(3))
+            assert arm_motion>0.001,(side,'fixed shoulder',arm_motion)
+            print(side,'captured torso-coupled shoulder travel',round(arm_motion,5),
+                  'source-motion knee range',min(knees),max(knees),
+                  'elbow range',min(elbows),max(elbows))
+          assert len(poses)==17 and poses[0]['arms']==poses[-1]['arms']
+          assert poses[0]['feet']==poses[-1]['feet']
+          assert max(abs(x['shoulderYawDegrees']) for x in poses)>0
+          print('Closure and source-coupled shoulder movement validated, visual approval STILL required')
+          PY
+      - name: Render skinned 96px running motion, joints, 4 camera directions
+        run: python tools/sprite-lab/render-hollow-no-cape-captured-chain.py
+      - name: Render all 8 authorized 2.5D orientations (16 frames each)
+        run: python tools/sprite-lab/render-hollow-no-cape-captured-chain-directions.py
+      - name: Verify 128 review-only directional frames and atlas alpha
+        run: |
+          python - <<'PY'
+          import json
+          import numpy as np
+          from PIL import Image
+          from pathlib import Path
+          p=Path('artifacts/hollow-no-cape-captured-chain-eight-directions')
+          atlas=np.asarray(Image.open(p/'candidate-walk-eight-directions.png').convert('RGBA'))
+          m=json.loads((p/'candidate-manifest.json').read_text())
+          assert m['artApproval'] is False and m['anchor']==[48,72]
+          assert atlas.shape==(8*96,16*96,4)
+          for row,direction in enumerate(m['directions']):
+            assert (p/f"{direction['direction'].lower()}-animation.gif").exists()
+            for frame in range(16):
+              cell=atlas[row*96:(row+1)*96,frame*96:(frame+1)*96,3]
+              assert cell.max()==255 and (cell>0).sum()>100,(direction,frame)
+              assert not cell[0,:].any() and not cell[-1,:].any()
+              assert not cell[:,0].any() and not cell[:,-1].any()
+          assert (p/'guarded-vs-captured-chain-eight-directions.png').is_file()
+          for facing in ('e','w','ne','sw','n','s'):
+            assert (p/f'compare-{facing}-native-96px.gif').is_file()
+            assert (p/f'compare-{facing}-zoom-4x.gif').is_file()
+          for side in ('L','R'):
+            for f in poses[:16]:
+              a=f['arms'][side]
+              assert abs(a['elbowFlexDegrees']-a['originalElbowFlexDegrees'])<1e-6
+          print('Unaltered sampled elbow flexion in every running pose, no independent wrist curve')
+
+          old=np.asarray(Image.open('docs/art/evidence/hollowed-no-cape-guarded-2026-10-24/candidate-walk-eight-directions.png').convert('RGBA'))
+          removed=np.count_nonzero((old[:,:,3]>0)&(atlas[:,:,3]==0))
+          assert removed>150, f'No meaningful change in running-pose silhouette: {removed}'
+          print('128 captured sprint frames differ from the original no-cape run in',removed,'visible pixels. VISUAL ACCEPTANCE STILL REQUIRED.')
+          PY
+      - name: Preserve new editable blend and 3D skinned review in draft PR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/feat/actor-lit-sprite-production'
+        run: |
+          mkdir -p docs/art/evidence/hollowed-no-cape-captured-chain-2026-10-24
+          cp artifacts/hollow-no-cape-captured-chain-review/*.gif docs/art/evidence/hollowed-no-cape-captured-chain-2026-10-24/
+          cp artifacts/hollow-no-cape-captured-chain-review/*.png docs/art/evidence/hollowed-no-cape-captured-chain-2026-10-24/
+          cp artifacts/hollow-no-cape-captured-chain-eight-directions/guarded-vs-captured-chain-eight-directions.png docs/art/evidence/hollowed-no-cape-captured-chain-2026-10-24/
+          cp artifacts/hollow-no-cape-captured-chain-review/review.json docs/art/evidence/hollowed-no-cape-captured-chain-2026-10-24/
+          cp artifacts/hollow-no-cape-captured-chain-eight-directions/candidate-manifest.json docs/art/evidence/hollowed-no-cape-captured-chain-2026-10-24/
+          cp artifacts/hollow-no-cape-captured-chain-eight-directions/candidate-walk-eight-directions.png docs/art/evidence/hollowed-no-cape-captured-chain-2026-10-24/
+          cp artifacts/hollow-no-cape-captured-chain-eight-directions/*-animation.gif docs/art/evidence/hollowed-no-cape-captured-chain-2026-10-24/
+          cp artifacts/hollow-no-cape-captured-chain-eight-directions/compare-*.gif docs/art/evidence/hollowed-no-cape-captured-chain-2026-10-24/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-mocap-no-cape-captured-chain-candidate/
+          git add docs/art/evidence/hollowed-no-cape-captured-chain-2026-10-24/
+          if ! git diff --cached --quiet; then
+            git commit -m "Save no-cape whole source-measured arm chain and 96px owner GIF comparisons"
+            git push origin HEAD:feat/actor-lit-sprite-production
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hollowed-no-cape-captured-chain-UNAPPROVED-${{ github.sha }}
+          path: |
+            art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-mocap-no-cape-captured-chain-candidate/
+            artifacts/hollow-no-cape-captured-chain-review/
+            artifacts/hollow-no-cape-captured-chain-eight-directions/
+          retention-days: 30
+          if-no-files-found: warn
