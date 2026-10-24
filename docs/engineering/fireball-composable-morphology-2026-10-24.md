@@ -139,3 +139,9 @@ This pass adds immutable **per-projectile** `FireballSourceId` alongside the alr
 - The previous ray-based ellipse/circle test missed genuine near-tangential hits against long, narrow dry-leaf patches. It used radial distance from the ellipse centre rather than closest-boundary distance, a false-negative that made small Fireball hazards visibly fail to ignite nearby exposed fuel.
 - The Wet Forest lab now uses deterministic closest-point projection to the mathematical ellipse. New tests cover a grazing 160×12 world-radius leafbed and a clearly distant contact, while the existing draw-order coverage/char regression tests remain.
 - No visual asset or renderer has been approved or installed by this change; normal Hunts still need the canonical material map and PR #332 shared lighting integration. This PR stays draft pending real game GIF review.
+
+## V5 base Fireball source preservation (24 October 2026)
+
+- After the owner's feedback "better" for V4, the V5 source study retains its broken fire curls, dark core, cinders and 16-frame loop. An earlier V5 version was discarded for resembling smooth ribbon/flame shapes.
+- Committed reproducible Python authoring source in `art/source/spells/fireball/candidates/base-v5`; the script exports 16 aligned Aseprite frames, five material PNG strips and an off-game GIF. Local output was byte-identical to the owner-visible ZIP. **Binary exports themselves are not checked into the PR yet.**
+- Unapproved candidate metadata is separate from the release-approved `assets` map, which remains empty. World scale, cast/impact/afterburn, owner art approval and actual in-game lighting QA remain pending. No production renderer, gameplay effect or shader was changed.

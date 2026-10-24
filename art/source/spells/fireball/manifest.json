@@ -13,5 +13,35 @@
     "cutout"
   ],
   "assets": {},
-  "notice": "Not a runtime atlas. No artwork is owner-approved for composited mutation roles yet."
+  "notice": "Not a runtime atlas. No artwork is owner-approved for composited mutation roles yet.",
+  "candidates": {
+    "core-original": {
+      "status": "direction-accepted-not-owner-approved",
+      "version": "v5",
+      "sourceGenerator": "art/source/spells/fireball/candidates/base-v5/author-fireball-v5.py",
+      "sourceType": "reproducible-editable-pixel-material-study",
+      "generatedEditableSheet": "art/source/spells/fireball/candidates/base-v5/base-fireball-v5.aseprite",
+      "generatedChannels": {
+        "albedo": "art/source/spells/fireball/candidates/base-v5/albedo.png",
+        "emissive": "art/source/spells/fireball/candidates/base-v5/emissive.png",
+        "normal": "art/source/spells/fireball/candidates/base-v5/normal.png",
+        "height": "art/source/spells/fireball/candidates/base-v5/height.png",
+        "cutout": "art/source/spells/fireball/candidates/base-v5/cutout.png"
+      },
+      "frames": 16,
+      "frameSize": [
+        120,
+        72
+      ],
+      "anchor": [
+        87,
+        36
+      ],
+      "cadenceMilliseconds": 83,
+      "worldSize": "pending-gameplay-scale-review",
+      "runtimeEnabled": false,
+      "sourceIncluded": true,
+      "rendersIncluded": false
+    }
+  }
 }

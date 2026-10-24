@@ -13,3 +13,9 @@ The four playable mutations produce **16 mechanical combinations**. This area ha
 - Tests: `node --test tests/javascript/fireball-authoring-contract.test.mjs` plus existing `tests/javascript/*.test.mjs`.
 
 Actual art acceptance: review each approved base role against Hollowed/Ashling and the new mage in a real 320px and 390px Hunt, produce real frame-captured GIFs, confirm cast/flight/impact/afterburn, mobile performance and universal real lighting/occlusion. **Do not merge until those happen.**
+
+## Base Fireball V5 candidate source — preserved in GitHub
+
+- The 16-frame V5 direction is now versioned under [candidates/base-v5](candidates/base-v5/README.md), with editable reproducible Python pixel-authoring source. It is a **candidate, not approved artwork**.
+- Build locally to export the native layered Aseprite source and five channel sheets. The derived binary sheets are *not* checked in at this checkpoint: manifest `candidates.core-original.rendersIncluded=false` makes that explicit. Do not confuse a generator with production-ready art.
+- Keep the production `assets` map empty and `awaiting-authored-source` until final approved gameplay animation and actual lighting integration.
