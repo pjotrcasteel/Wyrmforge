@@ -4,8 +4,10 @@ on:
     paths:
       - 'tools/sprite-lab/build_wizard_blender.py'
       - 'tools/sprite-lab/wizard_motion.py'
+      - 'tools/sprite-lab/character_pipeline/**'
       - 'tools/sprite-lab/review_gait.py'
       - 'tools/sprite-lab/tests/test_wizard_*.py'
+      - 'tools/sprite-lab/tests/test_biped_reuse.py'
       - 'art/source/characters/wizard/BLENDER-SOURCE.md'
       - '.github/workflows/wizard-actor-source.yml'
   workflow_dispatch:
@@ -23,4 +25,5 @@ jobs:
         working-directory: tools/sprite-lab
         run: |
           python -m unittest discover -s tests -p 'test_wizard_motion.py' -v
+          python -m unittest discover -s tests -p 'test_biped_reuse.py' -v
           python -m unittest discover -s tests -p 'test_wizard_blender_source.py' -v

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from math import cos, pi, sin
+from character_pipeline.biped import BipedGait, sample_foot, smoothstep
 
 
 WALK_FRAMES = 16
@@ -17,10 +18,9 @@ ANKLE_HEIGHT = 0.14
 SWING_CLEARANCE = 0.19
 
 
-def smoothstep(value: float) -> float:
-    t = max(0.0, min(1.0, value))
-    return t * t * (3.0 - 2.0 * t)
-
+# Shared biped solver preserves this actor's public foot trajectory API.
+_WIZARD_GAIT = BipedGait(stride=STRIDE_METRES,stance_fraction=STANCE_FRACTION,
+                         ankle_height=ANKLE_HEIGHT,swing_clearance=SWING_CLEARANCE)
 
 @dataclass(frozen=True)
 class FootPosition:
@@ -31,26 +31,8 @@ class FootPosition:
     planted: bool
     cycle: float
 
-
 def foot_position(phase: float, side: str) -> FootPosition:
-    """Contact/swing trajectory. Left/right are 180 degrees out of phase.
-
-    On the contact interval the foot is at ground height and travels backward
-    relative to the translating character. During swing it clears the ground
-    and travels forward; the contact-end positions meet continuously.
-    """
-    if side not in ("L", "R"):
-        raise ValueError("Expected L or R")
-    t = (phase + (0.0 if side == "L" else 0.5)) % 1.0
-    x = (-0.185 if side == "L" else 0.185)
-    if t < STANCE_FRACTION:
-        u = t / STANCE_FRACTION
-        y = -STRIDE_METRES / 2 + STRIDE_METRES * u
-        return FootPosition(side, x, y, ANKLE_HEIGHT, True, t)
-    u = (t - STANCE_FRACTION) / (1 - STANCE_FRACTION)
-    y = STRIDE_METRES / 2 - STRIDE_METRES * smoothstep(u)
-    z = ANKLE_HEIGHT + SWING_CLEARANCE * sin(pi * u)
-    return FootPosition(side, x, y, z, False, t)
+    return FootPosition(**vars(sample_foot(phase,side,_WIZARD_GAIT)))
 
 
 @dataclass(frozen=True)
