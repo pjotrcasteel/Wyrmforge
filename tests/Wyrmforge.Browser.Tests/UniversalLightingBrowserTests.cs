@@ -45,8 +45,12 @@ public sealed class UniversalLightingBrowserTests : PageTest
         await ConfigureAsync(canvas, new { shadows = true, reflections = false });
         Assert.AreNotEqual(lit, await PixelHashAsync(canvas));
         await CaptureAsync(width, "specular-off");
-        await ConfigureAsync(canvas, new { reflections = true, progress = .85, frame = 8 });
-        Assert.AreNotEqual(lit, await PixelHashAsync(canvas));
+        await ConfigureAsync(canvas, new { reflections = true, frame = 8 });
+        var posed = await PixelHashAsync(canvas);
+        Assert.AreNotEqual(lit, posed, "A pose change must affect rendering independently of source movement.");
+        await CaptureAsync(width, "left-pose8");
+        await ConfigureAsync(canvas, new { progress = .85 });
+        Assert.AreNotEqual(posed, await PixelHashAsync(canvas), "Moving only the light must change illumination.");
         await CaptureAsync(width, "right-pose8");
         await ConfigureAsync(canvas, new { profile = "day" });
         await CaptureAsync(width, "day");
@@ -134,6 +138,20 @@ public sealed class UniversalLightingBrowserTests : PageTest
     {
         var directory = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-gpu-proof");
         Directory.CreateDirectory(directory);
+        var measurements = await Page.Locator(".gpu-proof canvas").EvaluateAsync<string>(
+            """
+            c => {
+                const pixels = gpuProof.proofPixels(c); let maxRgb=0, nonzeroPixels=0, hash=2166136261;
+                for(let i=0;i<pixels.length;i++) hash=Math.imul(hash^pixels[i],16777619);
+                for(let i=0;i<pixels.length;i+=4) {
+                    const maximum=Math.max(pixels[i],pixels[i+1],pixels[i+2]);
+                    maxRgb=Math.max(maxRgb,maximum); if(maximum>0) nonzeroPixels++;
+                }
+                return JSON.stringify({ framebuffer:[c.width,c.height], rgbChannels:pixels.length/4*3,
+                    maxRgb,nonzeroPixels,hash:hash>>>0,options:gpuProof.proofOptions(c),diagnostics:gpuProof.proofDiagnostics(c) },null,2);
+            }
+            """);
+        await File.WriteAllTextAsync(Path.Combine(directory, $"gpu-{width}-{name}.json"), measurements);
         await Page.ScreenshotAsync(new() { Path = Path.Combine(directory, $"gpu-{width}-{name}.png"), FullPage = true });
     }
 }

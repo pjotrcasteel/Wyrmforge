@@ -208,3 +208,12 @@ comparison samplers. Six point faces are arranged in a 3×2 diagnostic, and a
 Perspective values display light-camera axis distance divided by far distance;
 directional values remain normalized orthographic depth. This is inspection
 precision, not production lighting, and needs the next GPU run for validation.
+
+
+Evidence capture now writes a JSON sidecar for each screenshot: actual framebuffer
+dimensions, RGB channel count, maximum RGB, number of nonblack pixels, hash,
+applied options and selected-emitter diagnostics. Pose-only and light-only
+comparisons are separate, so a single changing hash no longer conflates them.
+The local replacement checkout initially lacked fixtures for the full JS suite;
+that incomplete run is not treated as a renderer regression or a passing run.
+The focused lighting registry/sprite tests pass; full assets are being restored.
