@@ -396,6 +396,14 @@ def retarget_captured_feet_with_ik(source,target,start,end):
     # same normalized character scale to target hips and two ankle controls.
     root_displacement=max((row["rootDelta"].length for row in poses),default=0.)
     insist(root_displacement>.05,"captured walk root never translates")
+    # BVH's traversal coordinate in THIS recording comes through the import
+    # as world Z. Treating it as character height previously lowered the
+    # entire humanoid by 18+ scene units in a single walk, creating a squat.
+    # Map source walking Z -> Blender ground-plane Y and source Y -> height.
+    # Keep a fixed transform throughout the clip; no framewise recentering.
+    walk_delta=poses[-1]["rootDelta"]
+    insist(abs(walk_delta.z)>3*max(1.,abs(walk_delta.y)),
+           "BVH traversal axis no longer matches verified 07_04 source")
     root_scale=sum(scales.values())/len(scales)
     controls={}
     for side in ("Left","Right"):
@@ -406,7 +414,8 @@ def retarget_captured_feet_with_ik(source,target,start,end):
         foot.empty_display_size=.22;knee.empty_display_size=.22
         controls[side]=(foot,knee)
     for row in poses:
-        root_step=row["rootDelta"]*root_scale
+        motion=row["rootDelta"]
+        root_step=Vector((motion.x,motion.z,motion.y))*root_scale
         for name in upper:
             dst=target.pose.bones[name]
             dst.rotation_quaternion=row["upper"][name]
@@ -452,7 +461,10 @@ def retarget_captured_feet_with_ik(source,target,start,end):
         "upperBodyChannelsRetargeted":list(upper),
         "rootTranslationRetargeted":True,
         "capturedRootTravel":round(root_displacement,5),
+        "rootMapping":"source XYZ -> character XZY; walking stays ground-plane",
         "targetRootScale":round(root_scale,5),
+        "targetVerticalDrift":round(max(abs(p["rootDelta"].y*root_scale)
+                                      for p in poses),5),
         "footIKControls":len(controls),
         "captureFramesTransferred":len(poses),
         "perLegConstantMotionScale":{k:round(v,5) for k,v in scales.items()},
