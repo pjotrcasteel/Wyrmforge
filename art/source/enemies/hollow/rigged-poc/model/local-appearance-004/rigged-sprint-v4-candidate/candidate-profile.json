@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "name": "Hollowed_FeralSprint_v4_UNAPPROVED",
+  "clip": "walk",
+  "framesPerDirection": 16,
+  "fps": 22,
+  "directions": 8,
+  "stanceFraction": 0.4,
+  "footSweepModelUnits": 0.25,
+  "recoveryLiftModelUnits": 0.128,
+  "locomotionDistanceModelUnitsPerCycle": 0.625,
+  "locomotionDistanceWorldUnitsPerCycle": 37.5,
+  "simulatedHuntBaseSpeedWorldUnitsPerSecond": 52,
+  "expectedRuntimePlaybackFramesPerSecondAtBaseSpeed": 22.186666666666667,
+  "bodyPitchDegrees": [
+    36,
+    46
+  ],
+  "originalSourceRig": "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-pixel-v3/hollow-rigged.blend",
+  "status": "VISUAL CANDIDATE ONLY; source accepted gait and walk normals unchanged",
+  "constraints": "root displacement is authoritative game movement, material/lighting remains shared"
+}
