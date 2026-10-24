@@ -116,10 +116,18 @@ def studio_scene(body,arm,output):
     material=bpy.data.materials.new("Neutral CC0 anatomy only | NOT Gothic art")
     material.diffuse_color=(.50,.47,.43,1)
     body.data.materials.clear();body.data.materials.append(material)
-    # Bounds give a deterministic orthographic camera despite imported scale.
-    coords=[v.co for v in body.data.vertices]
-    bb_min=Vector(tuple(min(v[i] for v in coords) for i in range(3)))
-    bb_max=Vector(tuple(max(v[i] for v in coords) for i in range(3)))
+    # Camera framing MUST use evaluated animated world geometry. The original
+    # mesh's undeformed local bounds caused a cropped walk contact sheet.
+    scene.frame_set(SAMPLES[0]+1)
+    evaluated=body.evaluated_get(bpy.context.evaluated_depsgraph_get())
+    live=evaluated.to_mesh()
+    try:
+        insist(len(live.vertices)>=10000,"could not evaluate retargeted male topology")
+        coords=[evaluated.matrix_world@v.co for v in live.vertices]
+        bb_min=Vector(tuple(min(v[i] for v in coords) for i in range(3)))
+        bb_max=Vector(tuple(max(v[i] for v in coords) for i in range(3)))
+    finally:
+        evaluated.to_mesh_clear()
     center=(bb_min+bb_max)*.5
     camera_data=bpy.data.cameras.new("Anatomy motion inspection camera")
     camera=bpy.data.objects.new("Anatomy motion inspection camera",camera_data)
@@ -128,7 +136,9 @@ def studio_scene(body,arm,output):
     target=center+Vector((0,0,-.08*(bb_max.z-bb_min.z)))
     direction=target-camera.location
     camera.rotation_euler=direction.to_track_quat("-Z","Y").to_euler()
-    camera_data.type="ORTHO";camera_data.ortho_scale=(bb_max.z-bb_min.z)*1.52
+    camera_data.type="ORTHO"
+    camera_data.ortho_scale=max(bb_max.z-bb_min.z,bb_max.x-bb_min.x)*1.56
+    scene["RetargetReviewCameraSource"]="evaluated animated UV mesh world bounds"
     scene.camera=camera
     scene.frame_start=SAMPLES[0]+1
     scene.frame_end=SAMPLES[-1]+1
