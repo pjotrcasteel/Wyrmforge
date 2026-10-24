@@ -40,7 +40,7 @@ export function collectSoundEvents(tracker, snapshot, now) {
                 ? Math.abs(past.x - impact.x) < 0.5 && Math.abs(past.y - impact.y) < 0.5
                 : !Number.isFinite(past.x) && !Number.isFinite(impact.x);
             const sameLife = !Number.isFinite(past.progress) || !Number.isFinite(impact.progress) ||
-                impact.progress + 0.02 >= past.progress;
+                impact.progress + 0.001 >= past.progress;
             return !matched.has(i) && past.spell === impact.spell && samePlace && sameLife;
         });
         if (index < 0) return true;
