@@ -31,12 +31,30 @@ public sealed class ArenaGroundLightReviewBrowserTests : PageTest
             Timeout = 90000,
         });
         Assert.AreEqual("1", await canvas.GetAttributeAsync("data-objects"), "No old trees or props in this scene.");
-        Assert.AreEqual("grass", await canvas.GetAttributeAsync("data-material"));
+        Assert.AreEqual("road", await canvas.GetAttributeAsync("data-material"));
+        Assert.AreEqual("1", await canvas.GetAttributeAsync("data-road-exits"), "One exit only in the roadmap preview.");
+        Assert.AreEqual("south", await canvas.GetAttributeAsync("data-exit"));
 
         await Page.EvaluateAsync("async () => { window.groundProof = await import('./js/lighting/ground-only-review.js'); }");
         Assert.IsTrue(await canvas.EvaluateAsync<bool>(
             "c => groundProof.groundReviewPixels(c).some((v,i) => i%4!==3 && v>0)"),
             "Actual shared GPU renderer must light the original ground albedo.");
+        await CaptureAsync(canvas, width, "road-1441-winding");
+        foreach (var (seed, shape) in new[] { ("1205", "straight"), ("2803", "winding"), ("4026", "winding") })
+        {
+            await Page.GetByLabel("Road seed", new() { Exact = true }).SelectOptionAsync(seed);
+            await Expect(canvas).ToHaveAttributeAsync("data-seed", seed);
+            Assert.AreEqual(shape, await canvas.GetAttributeAsync("data-road-style"));
+            Assert.AreEqual("1", await canvas.GetAttributeAsync("data-road-exits"));
+            await CaptureAsync(canvas, width, $"road-{seed}-{shape}");
+        }
+
+        await Page.GetByLabel("Light", new() { Exact = true }).SelectOptionAsync("fire");
+        await Expect(canvas).ToHaveAttributeAsync("data-lighting", "fire");
+        await CaptureAsync(canvas, width, "road-4026-fire");
+        await Page.GetByLabel("Ground", new() { Exact = true }).SelectOptionAsync("grass");
+        await Expect(canvas).ToHaveAttributeAsync("data-material", "grass");
+        Assert.AreEqual("0", await canvas.GetAttributeAsync("data-road-exits"));
         await CaptureAsync(canvas, width, "grass-fire");
 
         await Page.GetByLabel("Ground", new() { Exact = true }).SelectOptionAsync("mud");
