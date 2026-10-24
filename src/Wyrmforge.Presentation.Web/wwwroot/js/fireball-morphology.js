@@ -172,54 +172,111 @@ export function drawComposedFireProjectile(ctx, event, recipe, reducedMotion = f
 export function drawComposedFireImpact(ctx, event, recipe, reducedMotion = false) {
     if (!event) return;
     const morph = fireballMorphology(recipe);
-    const t = bounded(event.progress, 0, 1);
-    if (t >= 1) return;
+    const progress = Math.max(0, Math.min(1, Number(event.progress) || 0));
+    if (progress >= 1) return;
     const rank = bounded(event.rank, 1, 3);
     const actualExplosion = morph.detonation && Number(event.splashRadius) > 0;
-    // Only real enemy hits carry C# splash geometry. Wall impacts provide
-    // feedback but cannot pretend to have damaged an area.
-    const radius = actualExplosion
-        ? bounded(event.splashRadius, 1, 400) * (.42 + .58 * t)
-        : (11 + rank * 6) * (.45 + t * .84) * (event.surge ? 1.36 : 1);
-    const count = reducedMotion ? 5 : actualExplosion ? 12 : 6;
-    const fragment = Math.max(2, Math.round(radius * .12));
+    // Real enemy impacts carry the actual simulation radius. Wall contacts
+    // remain cosmetic, with NO pretend damaging explosion.
+    const maxRadius = actualExplosion
+        ? bounded(event.splashRadius, 1, 400)
+        : (11 + rank * 6) * (event.surge ? 1.36 : 1);
+    const radius = maxRadius * (.34 + .66 * progress);
+    const fragments = reducedMotion ? 6 : actualExplosion ? 16 : 9;
+    const stone = morph.body === 'meteor' || morph.body === 'molten-spine';
+    const unit = Math.max(2, Math.round(maxRadius / 17));
+    const fade = Math.pow(1 - progress, .65);
     ctx.save();
-    ctx.globalAlpha *= 1 - t;
-    ctx.fillStyle = morph.body === 'meteor' || morph.body === 'molten-spine' ? '#3a2829' : '#d26033';
-    ctx.fillRect(-radius * .22, -radius * .22, radius * .44, radius * .44);
-    ctx.fillStyle = '#ffba6c';
-    ctx.fillRect(-radius * .1, -radius * .1, radius * .2, radius * .2);
-    for (let i = 0; i < count; i++) {
-        const angle = i * Math.PI * 2 / count + .19;
-        const distance = radius * (.43 + (i % 3) * .16);
-        ctx.fillStyle = morph.body === 'meteor' || morph.body === 'molten-spine'
-            ? i % 3 === 0 ? '#35272a' : '#ed7e39'
-            : i % 3 === 0 ? '#ffe2a0' : '#c15e33';
-        ctx.fillRect(Math.round(Math.cos(angle) * distance), Math.round(Math.sin(angle) * distance),
-            fragment, fragment);
+    ctx.globalAlpha *= fade;
+    // Fireball collapses into one hot, fractured center, not multiple fake shots.
+    const fill = (color, x, y, w, h) => {
+        ctx.fillStyle = color;
+        ctx.fillRect(Math.round(x), Math.round(y), Math.max(1, Math.round(w)), Math.max(1, Math.round(h)));
+    };
+    const core = Math.max(6, radius * .22);
+    if (!reducedMotion && progress < .42) {
+        const flash = .42 - progress;
+        ctx.globalAlpha *= .75 + flash;
+        fill('#6f3124', -core * 1.4, -core * 1.2, core * 2.8, core * 2.4);
+    }
+    fill(stone ? '#282229' : '#9a402a', -core, -core, core * 2, core * 2);
+    fill('#b94f2b', -core * .7, -core * .6, core * 1.5, core * 1.1);
+    fill('#faac55', -core * .4, -core * .4, core * .85, core * .8);
+    fill('#ffe1a0', -core * .13, -core * .2, core * .35, core * .35);
+
+    // Reproducible, angular fragments inherit the volcanic/fire materials.
+    // No random state and no particle allocations per frame.
+    for (let i = 0; i < fragments; i++) {
+        const angle = i * Math.PI * 2 / fragments + .23;
+        const distance = radius * (.64 + (i % 4) * .085);
+        const x = Math.cos(angle) * distance;
+        const y = Math.sin(angle) * distance;
+        const size = Math.max(2, Math.round(unit * (i % 3 === 0 ? 1.6 : 1)));
+        fill(stone && i % 3 === 0 ? '#33252a' : i % 3 === 1 ? '#f7a052' : '#c65b31', x, y, size, size);
+        if (i % 3 === 0) fill('#ffcf78', x + size, y - 1, Math.max(2, size * .55), Math.max(2, size * .55));
+    }
+    // An irregular rupture across the SAME C# blast area. Never a perfect
+    // neon circle around the projectile or a second damage event.
+    if (actualExplosion) {
+        ctx.lineWidth = Math.max(2, maxRadius * .065);
+        ctx.strokeStyle = '#f48e3c';
+        for (let i = 0; i < (reducedMotion ? 4 : 7); i++) {
+            const angle = i * Math.PI * 2 / 7 + .19;
+            const kink = radius * .12;
+            ctx.beginPath();
+            ctx.moveTo(Math.cos(angle) * core, Math.sin(angle) * core);
+            ctx.lineTo(Math.cos(angle + .14) * radius * .55 + kink, Math.sin(angle + .14) * radius * .55);
+            ctx.lineTo(Math.cos(angle) * radius * .92, Math.sin(angle) * radius * .92);
+            ctx.stroke();
+        }
     }
     ctx.restore();
 }
 
 export function drawBurningGround(ctx, ground, reducedMotion = false) {
     if (!ground || !(ground.remainingSeconds > 0) || !(ground.radius > 0)) return;
-    // Every fracture lies INSIDE the C# authoritative burning-ground radius.
+    // The actual C# hazard owns radius, position and lifetime. There is exactly
+    // one charred patch for one real damaging field, never a simulated extra hit.
     const radius = bounded(ground.radius, 1, 400);
-    const alpha = Math.min(.9, ground.remainingSeconds / .45);
+    const alpha = Math.min(.95, ground.remainingSeconds / .55);
+    const count = reducedMotion ? 6 : 11;
+    const seed = (Math.abs(Math.floor(ground.x * 7 + ground.y * 11)) % 13) * .029;
     ctx.save();
     ctx.translate(ground.x, ground.y);
     ctx.globalAlpha *= alpha;
+    const fill = (color, x, y, w, h) => {
+        ctx.fillStyle = color;
+        ctx.fillRect(Math.round(x), Math.round(y), Math.max(1, Math.round(w)), Math.max(1, Math.round(h)));
+    };
+    const emberSize = Math.max(2, Math.min(6, Math.round(radius * .065)));
+    // Deep scorched irregular patches preserve the rock/material identity.
+    for (let i = 0; i < count; i++) {
+        const angle = i * Math.PI * 2 / count + seed;
+        const r = radius * (.2 + (i % 5) * .14);
+        const x = Math.cos(angle) * r;
+        const y = Math.sin(angle) * r;
+        fill(i % 2 ? '#3b2926' : '#432b29', x - emberSize * 1.3, y - emberSize,
+            emberSize * (i % 3 + 2.5), emberSize * 1.7);
+        if (i % 3 !== 0) fill(i % 2 ? '#c45d2d' : '#ee8b3d', x, y, emberSize, Math.max(2, emberSize * .5));
+    }
     ctx.lineCap = 'square';
-    ctx.lineWidth = Math.max(2, radius / 25);
-    const cracks = reducedMotion ? 4 : 7;
-    for (let i = 0; i < cracks; i++) {
-        const a = i * Math.PI * 2 / cracks + .23;
-        ctx.strokeStyle = i % 2 ? '#bd4b26' : '#f69840';
+    ctx.lineJoin = 'miter';
+    for (let i = 0; i < count; i++) {
+        const angle = i * Math.PI * 2 / count + seed;
+        const wave = (i % 3) * .08;
+        const start = radius * (.12 + (i % 2) * .09);
+        const end = radius * (.68 + wave);
+        ctx.strokeStyle = i % 4 === 0 ? '#ffbd61' : i % 2 === 0 ? '#d96b30' : '#a94a2b';
+        ctx.lineWidth = Math.max(2, radius / (i % 4 === 0 ? 30 : 40));
         ctx.beginPath();
-        ctx.moveTo(Math.cos(a) * radius * .12, Math.sin(a) * radius * .12);
-        ctx.lineTo(Math.cos(a + .1) * radius * .47, Math.sin(a + .1) * radius * .47);
-        ctx.lineTo(Math.cos(a - .07) * radius * .83, Math.sin(a - .07) * radius * .83);
+        ctx.moveTo(Math.cos(angle) * start, Math.sin(angle) * start);
+        ctx.lineTo(Math.cos(angle + .22) * radius * .43, Math.sin(angle + .22) * radius * .43);
+        ctx.lineTo(Math.cos(angle - .09) * end, Math.sin(angle - .09) * end);
         ctx.stroke();
+        if (i % 2 === 0) {
+            fill('#ffc078', Math.cos(angle) * end - 1, Math.sin(angle) * end - 1,
+                emberSize * .55, emberSize * .55);
+        }
     }
     ctx.restore();
 }
