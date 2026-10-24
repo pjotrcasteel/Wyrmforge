@@ -43,19 +43,11 @@ public sealed partial class RunSimulation
         burningGrounds.RemoveAll(ground => ground.IsExpired);
     }
 
-    private IReadOnlyList<EssenceBurstRenderSnapshot> CreateFieryAreaSnapshots()
-    {
-        var snapshots = new EssenceBurstRenderSnapshot[essenceBursts.Count + burningGrounds.Count];
-        var index = 0;
-        foreach (var burst in essenceBursts) snapshots[index++] = new EssenceBurstRenderSnapshot(burst.Position.X, burst.Position.Y, burst.Radius, burst.Life);
-        foreach (var ground in burningGrounds)
-        {
-            snapshots[index++] = new EssenceBurstRenderSnapshot(
-                ground.Position.X,
-                ground.Position.Y,
-                ground.EffectiveRadius,
-                Math.Min(0.2, ground.RemainingSeconds));
-        }
-        return snapshots;
-    }
+    private IReadOnlyList<BurningGroundRenderSnapshot> CreateBurningGroundSnapshots() =>
+        burningGrounds.Select(ground => new BurningGroundRenderSnapshot(
+            ground.Position.X, ground.Position.Y, ground.EffectiveRadius, ground.RemainingSeconds)).ToArray();
+
+    private IReadOnlyList<EssenceBurstRenderSnapshot> CreateFieryAreaSnapshots() =>
+        essenceBursts.Select(burst => new EssenceBurstRenderSnapshot(
+            burst.Position.X, burst.Position.Y, burst.Radius, burst.Life)).ToArray();
 }

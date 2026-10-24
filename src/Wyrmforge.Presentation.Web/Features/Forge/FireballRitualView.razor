@@ -1,5 +1,8 @@
 @using Wyrmforge.Domain.Progression.Signature
 @using Wyrmforge.Domain.Progression.DragonEssences
+@using Microsoft.JSInterop
+@inject IJSRuntime JS
+@implements IAsyncDisposable
 
 <section class="fireball-ritual" aria-label="Fireball spellcraft">
     <header class="fireball-heading">
@@ -14,13 +17,11 @@
 
     <div class="fireball-chamber">
         <div class="fireball-altar" aria-label="Fireball core and mutation sockets">
-            <button type="button" class="fireball-center @(selectedSlot is null ? "selected" : "") @(Has(FireballMutationId.MeteorHeart) ? "heavy" : "") @(Has(FireballMutationId.Detonation) ? "explosive" : "") @(Has(FireballMutationId.ScorchedEarth) ? "scorched" : "")"
+            <button type="button" class="fireball-center @(selectedSlot is null ? "selected" : "")"
                     aria-label="Fireball core, level @Core.Level. View upgrade requirements"
                     aria-pressed="@(selectedSlot is null)" @onclick="SelectCore">
                 <span class="fireball-body" aria-hidden="true">
-                    <img class="fireball-hero-art" src="art/fireball-ritual-hero.png" alt="" draggable="false" loading="eager" />
-                    <span class="fireball-impact" aria-hidden="true"></span>
-                    <span class="fireball-ground" aria-hidden="true"></span>
+                    <canvas class="fireball-hero-canvas" width="192" height="192" @ref="fireballCanvas" aria-hidden="true"></canvas>
                 </span>
                 <span class="fireball-center-label">Fireball core</span>
             </button>
@@ -247,6 +248,8 @@
     private int? inspectedLockedSlot;
     private string? notice;
     private ElementReference contextElement;
+    private ElementReference fireballCanvas;
+    private IJSObjectReference? previewModule;
     private bool focusContext;
 
     private bool Has(FireballMutationId mutation) => Core.Equipped.Contains(mutation);
@@ -335,9 +338,20 @@
     }
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (firstRender)
+            previewModule = await JS.InvokeAsync<IJSObjectReference>("import", "./js/fireball-morphology.js");
+        if (previewModule is not null)
+            await previewModule.InvokeVoidAsync("drawFireballNexusPreview", fireballCanvas, FireballVisualRecipe.Resolve(Core));
         if (!focusContext) return;
         focusContext = false;
         await contextElement.FocusAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (previewModule is null) return;
+        try { await previewModule.DisposeAsync(); }
+        catch (JSDisconnectedException) { /* Navigation disconnected the preview; no gameplay state is affected. */ }
     }
 
     private async Task UpgradeAsync()

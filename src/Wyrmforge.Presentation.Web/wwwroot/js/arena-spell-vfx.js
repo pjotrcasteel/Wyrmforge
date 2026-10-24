@@ -103,7 +103,7 @@ export function drawSpellProjectile(ctx, projectile, reducedMotion = false, fire
     ctx.translate(projectile.x, projectile.y);
     ctx.rotate(Number(projectile.angle) || 0);
     if (family === 'fire') {
-        drawFirePixelProjectile(ctx, projectile, reducedMotion, fireballVisual);
+        drawFirePixelProjectile(ctx, projectile, reducedMotion, projectile.spell === 1 ? fireballVisual : null);
         ctx.restore();
         return;
     }
@@ -233,7 +233,7 @@ export function drawSpellImpact(ctx, impact, reducedMotion = false, fireballVisu
     ctx.save();
     ctx.translate(impact.x, impact.y);
     if (family === 'fire') {
-        drawFirePixelImpact(ctx, impact, reducedMotion, fireballVisual);
+        drawFirePixelImpact(ctx, impact, reducedMotion, impact.spell === 1 ? fireballVisual : null);
         ctx.restore();
         return;
     }

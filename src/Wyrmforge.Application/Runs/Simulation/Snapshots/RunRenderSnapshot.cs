@@ -25,6 +25,7 @@ public sealed record RunRenderSnapshot(
     IReadOnlyList<ExperiencePickupRenderSnapshot>? ExperiencePickups = null)
 {
     public FireballVisualRecipe? FireballVisual { get; init; }
+    public IReadOnlyList<BurningGroundRenderSnapshot> BurningGrounds { get; init; } = [];
     public SplashPulseRenderSnapshot? PowerBurst { get; init; }
     public TrailRenderSnapshot? Trail { get; init; }
     public ArenaEnvironmentRenderSnapshot? Environment { get; init; }

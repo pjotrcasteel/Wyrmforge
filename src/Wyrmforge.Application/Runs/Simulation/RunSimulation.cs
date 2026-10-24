@@ -375,6 +375,7 @@ public sealed partial class RunSimulation
             ExperiencePickups: experiencePickupPulses.Select(pulse => new ExperiencePickupRenderSnapshot(pulse.Position.X, pulse.Position.Y, pulse.Value, pulse.Progress)).ToArray())
         {
             FireballVisual = FireballVisualRecipe.Resolve(preparedFireballLevel, preparedFireballMutations),
+            BurningGrounds = CreateBurningGroundSnapshots(),
             Trail = CreateTrailSnapshot(),
             PowerBurst = CreatePowerBurstSnapshot(),
             Environment = arenaEnvironment?.Snapshot(),
