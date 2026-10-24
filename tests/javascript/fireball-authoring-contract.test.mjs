@@ -3,16 +3,31 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
     allFireballRecipes, requiredFireballRoles, validateFireballArtManifest,
-    inspectFireballLineage, FIREBALL_MATERIAL_CHANNELS,
+    inspectFireballLineage, FIREBALL_MATERIAL_CHANNELS, FIREBALL_MUTATIONS,
 } from '../../tools/art/fireball/authoring-contract.mjs';
 
 const manifest = JSON.parse(readFileSync(
     new URL('../../art/source/spells/fireball/manifest.json', import.meta.url), 'utf8'));
+const mechanicalEnum = readFileSync(
+    new URL('../../src/Wyrmforge.Domain/Progression/Signature/FireballCoreState.cs', import.meta.url), 'utf8');
 const source = (role) => ({
     sheet: `art/source/spells/fireball/${role}/source.aseprite`, frames: 8,
     anchor: [48, 48], worldSize: 32, reviewStatus: 'approved',
     channels: Object.fromEntries(FIREBALL_MATERIAL_CHANNELS.map(c =>
         [c, `art/source/spells/fireball/${role}/${c}.png`])),
+});
+
+test('art-role mask bits match C# FireballMutationId, never a second playable catalog', () => {
+    const mechanicalValues = {
+        meteorHeart: ['MeteorHeart', 1], detonation: ['Detonation', 2],
+        scorchedEarth: ['ScorchedEarth', 3], cinderNeedle: ['CinderNeedle', 4],
+    };
+    for (const [name, [domainName, id]] of Object.entries(mechanicalValues)) {
+        assert.match(mechanicalEnum, new RegExp(`\\b${domainName}\\s*=\\s*${id}\\b`));
+        const expectedMask = 1 << (id - 1);
+        assert.equal(FIREBALL_MUTATIONS[name], expectedMask,
+            `${name} must follow the C# enum instead of authoring a new gameplay ID`);
+    }
 });
 
 test('all 16 masks require deterministic roles, with no invented extra spell', () => {
