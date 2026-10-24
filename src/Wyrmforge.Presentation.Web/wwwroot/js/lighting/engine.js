@@ -23,6 +23,7 @@ export class LightingEngine {
         this.geometries = new Map(); this.textures = new Map();
         this.shadowViews = shadowViews; this.maxLights = maxLights;
         this.alive = true;
+        this.debugView = 'lit';
     }
     registerGeometry(id, geometry) {
         if (this.geometries.has(id)) throw new Error(`Duplicate geometry ${id}`);
@@ -55,6 +56,7 @@ export class LightingEngine {
         this.scene.remove(o.mesh);
         if (o.caster) this.scene.remove(o.caster);
         for (const map of [o.mesh.material.map, o.mesh.material.normalMap, o.mesh.material.roughnessMap]) map?.dispose();
+        for (const material of o.debugMaterials?.values() ?? []) material.dispose();
         o.mesh.material.dispose(); o.caster?.material.dispose();
         this.objects.delete(id);
     }
@@ -125,6 +127,38 @@ export class LightingEngine {
         this.renderer.toneMappingExposure = s.environment.exposure;
         this.snapshot = s; this.selected = selected;
     }
+    /** Explicit inspection passes, never world illumination. */
+    setDebugView(view) {
+        if (!['lit', 'albedo', 'normals', 'geometry', 'shadow-visibility'].includes(view)) throw new RangeError('Unknown diagnostic view');
+        this.debugView = view;
+    }
+    debugMaterial(object) {
+        object.debugMaterials ??= new Map();
+        if (object.debugMaterials.has(this.debugView)) return object.debugMaterials.get(this.debugView);
+        const view = this.debugView, material = object.mesh.material.clone();
+        material.wireframe = view === 'geometry';
+        material.toneMapped = false;
+        material.onBeforeCompile = shader => {
+            if (view === 'shadow-visibility') shader.fragmentShader = shader.fragmentShader.replace(
+                '#include <shadowmap_pars_fragment>', `#include <shadowmap_pars_fragment>
+float proofShadowVisibility() {
+#if NUM_POINT_LIGHT_SHADOWS > 0 && defined(USE_SHADOWMAP)
+    PointLightShadow light = pointLightShadows[0];
+    return receiveShadow ? getPointShadow(pointShadowMap[0], light.shadowMapSize, light.shadowIntensity,
+        light.shadowBias, light.shadowRadius, vPointShadowCoord[0], light.shadowCameraNear, light.shadowCameraFar) : 1.0;
+#else
+    return 1.0;
+#endif
+}`);
+            const output = { albedo: 'diffuseColor.rgb', normals: 'normal * 0.5 + 0.5',
+                geometry: 'vec3(0.65, 0.85, 0.75)', 'shadow-visibility': 'vec3(proofShadowVisibility())' }[view];
+            shader.fragmentShader = shader.fragmentShader.replace('#include <opaque_fragment>',
+                `outgoingLight = ${output};\n#include <opaque_fragment>`);
+        };
+        material.customProgramCacheKey = () => `lighting-inspection-${view}`;
+        object.debugMaterials.set(view, material);
+        return material;
+    }
     render(width = this.canvas.clientWidth, height = this.canvas.clientHeight) {
         if (!this.alive) return;
         // One world sample per CSS pixel at 390px, bounded regardless of device DPR.
@@ -133,7 +167,21 @@ export class LightingEngine {
         this.camera.left = -5; this.camera.right = 5;
         this.camera.top = 5 * h / w; this.camera.bottom = -5 * h / w;
         this.camera.updateProjectionMatrix();
-        this.renderer.render(this.scene, this.camera);
+        const originals = [], shadowUpdate = this.renderer.shadowMap.autoUpdate;
+        try {
+            if (this.debugView !== 'lit') {
+                // The preceding lit render owns the actual depth maps, including animated alpha.
+                this.renderer.shadowMap.autoUpdate = false;
+                for (const object of this.objects.values()) {
+                    originals.push([object.mesh, object.mesh.material]);
+                    object.mesh.material = this.debugMaterial(object);
+                }
+            }
+            this.renderer.render(this.scene, this.camera);
+        } finally {
+            for (const [mesh, material] of originals) mesh.material = material;
+            this.renderer.shadowMap.autoUpdate = shadowUpdate;
+        }
     }
     pixels() {
         const gl = this.renderer.getContext(), data = new Uint8Array(this.canvas.width * this.canvas.height * 4);
@@ -141,8 +189,8 @@ export class LightingEngine {
         return data;
     }
     diagnostics() {
-        return { backend: 'WebGL2 / Three 0.186.1', objects: this.objects.size,
-            lights: this.selected?.map(l => ({ id: l.id, shadow: l.shadow, views: l.shadowViews })),
+        return { backend: 'WebGL2 / Three 0.186.1', view: this.debugView, framebuffer: [this.canvas.width, this.canvas.height], objects: this.objects.size,
+            lights: this.selected?.map(l => ({ id: l.id, ownerId: l.ownerId, type: l.type, position: l.position, intensity: l.intensity, shadow: l.shadow, views: l.shadowViews })),
             drawCalls: this.renderer.info.render.calls, triangles: this.renderer.info.render.triangles,
             textures: this.renderer.info.memory.textures, geometries: this.renderer.info.memory.geometries,
             productionPathsMigrated: 0 };

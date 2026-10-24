@@ -47,7 +47,7 @@ export async function initializeProof(canvas) {
     if (states.has(canvas)) return;
     const engine = new LightingEngine(canvas);
     const state = { engine, alive: true, options: { profile: 'night', fireball: true, torch: true, spot: true,
-        rune: false, shadows: true, reflections: true, progress: .25, frame: 0, animate: false }, manifests: {}, animation: {}, samples: {} };
+        rune: false, shadows: true, reflections: true, progress: .25, frame: 0, animate: false, view: 'lit' }, manifests: {}, animation: {}, samples: {} };
     states.set(canvas, state);
     try {
         engine.registerGeometry('box', new T.BoxGeometry(1, 1, 1));
@@ -114,7 +114,10 @@ export function configureProof(canvas, options) {
     // Disabling a fixture extinguishes its source surface too.
     if (!p.torch) objects.splice(objects.findIndex(o => o.id === 'lantern-core'), 1);
     state.engine.apply({ version: 1, time: 0, lights, materials, objects, environment });
+    state.engine.setDebugView('lit');
     state.engine.render();
+    state.engine.setDebugView(zero ? 'lit' : p.view);
+    if (state.engine.debugView !== 'lit') state.engine.render();
     canvas.dataset.diagnostics = JSON.stringify(state.engine.diagnostics());
     if (p.animate && !state.pending && !document.hidden) {
         state.pending = requestAnimationFrame(time => {

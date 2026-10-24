@@ -124,3 +124,35 @@ Local JavaScript suite: 384 passing tests. The initial GPU framebuffer check
 was black; full-frame 320/390px checks and published-app CI are added here.
 Physical iOS/Android profiling, full diagnostic views and G1 artistic acceptance
 remain pending. This PR must remain draft until its remaining gates are met.
+
+### Recovery and GPU verification — 24 October 2026
+
+Recovery `4f2fc024670a57e8b01cf3ed8c92a43d6df3609a` attaches all four binary
+blobs, scene and CI to PR #332; remote hashes verified. All 384 JavaScript tests
+passed. Validate, Browser smoke, Arcane WebKit and the dedicated
+[GPU CI](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40060280997) passed.
+The published Blazor route passed full-frame exact-zero RGB and frozen restoration
+at 320×568 and 390×844, plus source removal, shadow and specular toggles.
+Downloaded CI screenshots were visually inspected; these are viewport captures,
+not physical-phone profiling or production-wide visibility verification.
+
+Inspection found an opaque Fireball core enclosing its point source and casting
+shadows in every direction. Fix `0bdbd87292874569957b6b290a817db203ad1965`
+declares Fireball/lantern luminous cores non-casting through descriptors. Ordinary
+solids still cast. The environment was replaced again after that inspection;
+recovered assets were already remote and did not require regeneration.
+
+Added explicit albedo, mapped view-space normals, wireframe and first shadowed
+point-light visibility inspection. The latter shows actual depth comparison,
+white visible/black blocked; without a point shadow it is white. Zero profile
+always forces lit output, so inspection colors cannot violate the black-world
+check. The prior local GPU run verified all four shaders and restoration after
+fixing the luminous-core occlusion; the restored changes require fresh CI.
+Browser tests reject blank diagnostics and shader/page errors.
+
+G1 remains incomplete: close-up per-object evidence, light-space depth/bounds,
+independent cast/receive controls, alpha-card foliage, attack/death normal/depth,
+Town fixture/school scenarios and physical-device/artistic acceptance remain.
+The current oak crowds the right edge and actor readability needs close-up
+assessment. Water is direct BRDF specular only. Town is diagnostic geometry with
+an actor proxy. All production rendering paths and approved artwork are unchanged.
