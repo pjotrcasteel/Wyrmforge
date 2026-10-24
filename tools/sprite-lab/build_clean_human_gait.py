@@ -130,18 +130,51 @@ def smoothstep(u):
 
 
 def foot_trajectory(phase):
-    """In-place gait: stance foot fixed on ground; swung foot clears it.
+    """South-facing gait, where forward in the Blender world is NEGATIVE Y.
 
-    Locomotion translates the actor in the GAME, not by drifting the atlas.
-    Stance travels backward in actor-local coordinates at constant speed,
-    relative to the moving pelvis, as it would on a treadmill.
+    During stance the avatar advances in -Y, so a planted world foot must move
+    in +Y *relative to the avatar*. The previous version had the sign wrong:
+    its stance foot travelled forward and visibly skated with player movement.
+
+    The return value is an ANKLE/IK target, not an image-space foot proxy.
+    The slight terminal heel lift is paired with a real foot-bone rocker.
     """
     t=phase%1.
     if t<STANCE_FRACTION:
         u=t/STANCE_FRACTION
-        return STRIDE*(.5-u),GROUND_Z,True
+        heel_lift=.031*smoothstep(max(0.,(u-.76)/.24))
+        return STRIDE*(u-.5),GROUND_Z+heel_lift,True
     u=(t-STANCE_FRACTION)/(1.-STANCE_FRACTION)
-    return -STRIDE*.5+STRIDE*smoothstep(u),GROUND_Z+.13*math.sin(math.pi*u),False
+    return STRIDE*(.5-smoothstep(u)),GROUND_Z+.13*math.sin(math.pi*u),False
+
+
+def foot_rock_angle(phase):
+    """A small heel-first contact, planted midstance, and toe-off.
+
+    Negative X-rotation raises the toe in the South (-Y) direction.
+    Late stance plantarflexion is balanced by the heel rise above.
+    The angular boundary at phase 1 exactly matches the next contact.
+    """
+    t=phase%1.
+    if t<STANCE_FRACTION:
+        u=t/STANCE_FRACTION
+        if u<.18:
+            return math.radians(-6.*(1.-smoothstep(u/.18)))
+        return math.radians(13.*smoothstep(max(0.,(u-.76)/.24)))
+    u=(t-STANCE_FRACTION)/(1.-STANCE_FRACTION)
+    return math.radians(13.-19.*smoothstep(u))
+
+
+def world_rotation_basis(bone,axis,angle):
+    """Rotate a rest-oriented deform bone about a specified WORLD-space axis.
+
+    Bone-local X is not necessarily actor-right; applying raw Quaternion(X)
+    to arm bones used to produce outward arm flapping rather than natural
+    forward/back shoulder swing.
+    """
+    rest=bone.bone.matrix_local.to_3x3()
+    rotation=Quaternion(Vector(axis),angle).to_matrix()
+    return (rest.inverted() @ rotation @ rest).to_quaternion()
 
 
 def animate(arm):
@@ -172,7 +205,10 @@ def animate(arm):
         # PoseBone.local location key produced NO evaluated movement in prior
         # Blender test. Root object key moves the body; world IK foot
         # controls remain planted independently.
-        arm.location=Vector((.012*math.sin(2*math.pi*t),0.,-.055+.008*math.cos(4*math.pi*t)))
+        # Center of mass moves toward the supporting leg, then across on the
+        # next step. Small double-frequency pelvis rise/fall avoids squatting.
+        arm.location=Vector((-.029*math.cos(2*math.pi*t),0.,
+                             -.055+.007*math.cos(4*math.pi*(t-.34))))
         arm.keyframe_insert(data_path="location",frame=frame)
         for side,sign in (("Left",-1.),("Right",1.)):
             phase=(t+(0 if side=="Left" else .5))%1.
@@ -184,23 +220,43 @@ def animate(arm):
             pole.location=(x,-.65,.53)
             foot.keyframe_insert(data_path="location",frame=frame)
             pole.keyframe_insert(data_path="location",frame=frame)
+            # Foot roll is keyed on the actual deform foot. The ankle control
+            # remains a ground-space IK target; toe/heel action is not faked
+            # with a 2D sprite offset.
+            foot_bone=arm.pose.bones[side+"Foot"]
+            foot_bone.rotation_mode="QUATERNION"
+            foot_bone.rotation_quaternion=world_rotation_basis(
+                foot_bone,(1.,0.,0.),foot_rock_angle(phase))
+            foot_bone.keyframe_insert(data_path="rotation_quaternion",frame=frame)
+
             arm_bone=arm.pose.bones[side+"Arm"]
             forearm=arm.pose.bones[side+"ForeArm"]
-            # Shoulders oppose stepping leg; a staff hand can override later.
             arm_bone.rotation_mode="QUATERNION"
             forearm.rotation_mode="QUATERNION"
-            swing=math.radians(18)*math.sin(2*math.pi*t+(0 if side=="Left" else math.pi))
-            arm_bone.rotation_quaternion=Quaternion((1,0,0),swing)
-            forearm.rotation_quaternion=Quaternion((1,0,0),math.radians(5)+swing*.18)
+            # Leading left leg -> leading RIGHT hand. The rest-bone orientation
+            # is accounted for; this is sagittal counter-swing, not flapping.
+            swing=math.radians(16)*sign*-math.cos(2*math.pi*t)
+            arm_bone.rotation_quaternion=world_rotation_basis(
+                arm_bone,(1.,0.,0.),swing)
+            forearm.rotation_quaternion=world_rotation_basis(
+                forearm,(1.,0.,0.),math.radians(-6)+swing*.16)
             arm_bone.keyframe_insert(data_path="rotation_quaternion",frame=frame)
             forearm.keyframe_insert(data_path="rotation_quaternion",frame=frame)
             if i<FRAMES:
                 samples.append({"frame":frame,"side":side,"phase":round(phase,4),
                     "footControl":[round(x,4),round(y,4),round(z,4)],
                     "stance":stance})
+        # Pelvis roll and opposing upper-body yaw are tightly bounded.
+        # They add supported weight transfer without an artificial deep bob.
+        hips=arm.pose.bones["Hips"]
+        hips.rotation_mode="QUATERNION"
+        hips.rotation_quaternion=world_rotation_basis(
+            hips,(0.,1.,0.),math.radians(1.4)*math.sin(2*math.pi*t))
+        hips.keyframe_insert(data_path="rotation_quaternion",frame=frame)
         spine=arm.pose.bones["Spine"]
         spine.rotation_mode="QUATERNION"
-        spine.rotation_quaternion=Quaternion((0,0,1),math.radians(1.5)*math.sin(2*math.pi*t))
+        spine.rotation_quaternion=world_rotation_basis(
+            spine,(0.,0.,1.),math.radians(-2.5)*math.sin(2*math.pi*t))
         spine.keyframe_insert(data_path="rotation_quaternion",frame=frame)
     bpy.context.scene.frame_start=1
     bpy.context.scene.frame_end=FRAMES+1
@@ -272,6 +328,21 @@ def inspect_and_render(body,arm,out,samples):
                         "headZ":round(head.z,4),
                         "footLateralSeparation":round(lateral,4),
                         "worldFeet":{k:[round(float(v),4) for v in p] for k,p in foot.items()}})
+    # Contact-space test: a support foot must counteract the SAME linear
+    # forward (negative Y) velocity as the in-game actor. Checking only
+    # leg separation and reach previously allowed skating feet to pass.
+    support_steps=0
+    for side in ("Left","Right"):
+        for i in range(FRAMES-1):
+            first=next(x for x in samples if x["frame"]==i+1 and x["side"]==side)
+            second=next(x for x in samples if x["frame"]==i+2 and x["side"]==side)
+            if first["stance"] and second["stance"] and second["phase"]>first["phase"]:
+                actor_delta=-STRIDE/STANCE_FRACTION/FRAMES
+                foot_delta=second["footControl"][1]-first["footControl"][1]
+                check(abs(actor_delta+foot_delta)<.0003,
+                      f"{side} planted foot slides in world-space between {i+1} and {i+2}")
+                support_steps+=1
+    check(support_steps>=12,"insufficient measured planted-foot segments")
     hip_range=max(x["pelvisZ"] for x in metrics)-min(x["pelvisZ"] for x in metrics)
     check(.006<hip_range<.06,
           "evaluated pelvis fails small vertical weight transfer: "+str(hip_range))
@@ -288,6 +359,9 @@ def inspect_and_render(body,arm,out,samples):
             "originalRecordedBVHModified":False,
             "rejectedLegacyRigUsed":False,
             "frames":FRAMES,"feetNeverCross":True,
+            "supportIntervalsVerified":support_steps,
+            "southForwardIsNegativeY":True,
+            "heelToeBoneRotation":True,
             "hipVerticalRange":round(hip_range,5),
             "leftFootForwardTravel":round(max(left_steps)-min(left_steps),4),
             "rightFootForwardTravel":round(max(right_steps)-min(right_steps),4),
