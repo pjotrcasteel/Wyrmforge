@@ -44,11 +44,14 @@ export function updateSpriteAnimation(state,profile,input){
     }
     const moving=Boolean(input.moving);
     if(!stopped)state.supportFrame=moving?Math.floor(state.phase*profile.locomotion.frames)%profile.locomotion.frames:0;
-    const baseFrame=input.reducedMotion?0:state.supportFrame;
+    const idle=profile.idle;
+    const useIdle=!moving && !state.action && idle?.clip && idle?.frames>0;
+    const baseFrame=input.reducedMotion?0:
+        useIdle?Math.floor(state.time*(idle.fps??12))%idle.frames:state.supportFrame;
     if(input.reducedMotion&&actionSpec)actionFrame=actionSpec.reducedFrame??0;
     const layered=Boolean(actionSpec?.mode==='regions'&&moving&&!input.reducedMotion);
-    state.sample={baseClip:profile.locomotion.clip,baseFrame,phase:state.phase,
-        clip:actionSpec?.clip??profile.locomotion.clip,frame:actionSpec?actionFrame:baseFrame,
+    state.sample={baseClip:useIdle?idle.clip:profile.locomotion.clip,baseFrame,phase:state.phase,
+        clip:actionSpec?.clip??(useIdle?idle.clip:profile.locomotion.clip),frame:actionSpec?actionFrame:baseFrame,
         direction:resolveFacing(state,profile,input,dt,stopped),layered,baseRegion:actionSpec?.supportRegion,actionRegion:actionSpec?.region,
         useBasePose:layered&&(actionFrame===(actionSpec.entryFrame??-1)||actionFrame===(actionSpec.exitFrame??-1))};
     return state.sample;

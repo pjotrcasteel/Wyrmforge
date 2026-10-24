@@ -5,6 +5,7 @@ import { sortSceneDepthLayers } from './arena-cloister-art.js';
 import { drawRecoveryGuide } from './arena-recovery.js';
 import { drawSpellCastMotion, drawSpellProjectile, drawSpellImpact } from './arena-spell-vfx.js';
 import { drawMage, updateMageWalk } from './arena-mage.js';
+import { createWizardPlayerSprites } from './wizard-player-sprites.js';
 import { drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions, enemyFacing } from './arena-enemy-art.js';
 import { preloadPaintedEnemies, drawPaintedEnemy, drawPaintedWyrm, updatePaintedCorpses, drawPaintedCorpses, mireHoundPixelPreviewEnabled } from './painted-enemies.js';
 import { preloadHollowSprites, hollowSpritesReady, createHollowState, updateHollowSprites, drawHollowEnemy, drawHollowCorpses, hollowDiagnostics } from './hollow-sprites.js';
@@ -33,6 +34,9 @@ export function initializeArena(canvas, dotNetReference) {
     preloadHollowSprites();
     ashlingSprites.preload();
     const state = createState(canvas, dotNetReference);
+    state.wizardSprites=createWizardPlayerSprites();
+    state.wizardSpriteState=state.wizardSprites.createState();
+    state.wizardSprites.preload();
     arenas.set(canvas, state);
     state.detachInput = attachArenaInput(state);
     const now = performance.now();
@@ -60,6 +64,7 @@ export function readArenaDiagnostics(canvas) {
         deathBursts: state.latestSnapshot?.deathBursts ?? [],
         hollow: hollowDiagnostics(state.hollow),
         ashling: ashlingSprites.diagnostics(state.ashling),
+        wizard: {approvedAtlasReady: Boolean(state.wizardSprites?.ready())},
         dragon: state.latestSnapshot?.dragon ?? null,
         dragonBreath: state.latestSnapshot?.dragonBreath ?? null,
         performance: { fps:state.displayFps, simulationHz:state.displaySimulationHz, simulationMilliseconds:state.displaySimulationMilliseconds, bridgeMilliseconds:state.displayBridgeMilliseconds },
@@ -276,10 +281,17 @@ function draw(state, snapshot, width, height) {
                 enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId),state.hollow,state.ashling);
             drawEliteCrest(ctx, enemy, visualSeconds, state.reducedMotion.matches);
         } else {
-            drawMage(ctx, snapshot.player, snapshot.castMotion, danger.hit, state.reducedMotion.matches,
-                sampleSpellLight(spellLights, snapshot.player.x, snapshot.player.y),
-                updateMageWalk(state.mageWalk, snapshot.player, visualSeconds, state.reducedMotion.matches),
-                state.mageWalk.facing);
+            // Read-only actor playback uses the SAME atlas frame drawing as
+            // Hollowed/Ashling. Until a fully approved bundle exists, preserve
+            // the current player (no pasted concept still or fabricated gait).
+            const step=updateMageWalk(state.mageWalk,snapshot.player,visualSeconds,state.reducedMotion.matches);
+            if(!state.wizardSprites.draw(ctx,snapshot.player,snapshot.castMotion,visualSeconds,
+                state.wizardSpriteState,{paused:snapshot.paused||snapshot.ended,reducedMotion:state.reducedMotion.matches,
+                    hit:danger.hit})){
+                drawMage(ctx, snapshot.player, snapshot.castMotion, danger.hit, state.reducedMotion.matches,
+                    sampleSpellLight(spellLights, snapshot.player.x, snapshot.player.y),
+                    step,state.mageWalk.facing);
+            }
         }
     }
     drawReliquaryEmergence(ctx, snapshot.reliquary);
