@@ -192,13 +192,25 @@
         return clips?.length ? clips[variation % clips.length] : (type === 'cast' ? definition : null);
     }
 
+    function lowestRecordedVoice(bus) {
+        return activeVoices[bus].reduce((lowest, voice) =>
+            !lowest || voice.priority < lowest.priority ? voice : lowest, null);
+    }
+
+    function canPlayRecordedVoice(bus, priority) {
+        if (voices[bus] < maxVoices[bus]) return true;
+        const lowest = lowestRecordedVoice(bus);
+        return Boolean(lowest && lowest.priority < priority);
+    }
+
     function playRecordedEntry(entry, sound, name, variation, gainScale = 1, delay = 0) {
         if (!entry || !enabled || !context) return false;
         const bus = sound.bus;
-        // Hard limit on simultaneous sounds; the music soundtrack is independent of these limits.
-        if (voices[bus] >= maxVoices[bus]) return false;
+        // Music and continuous environmental ambience have independent mixers.
+        // Low-priority proximity voices must never starve direct player feedback.
+        if (!canPlayRecordedVoice(bus, sound.priority)) return false;
         void loadRecordedBuffer(entry).then(buffer => {
-            if (!enabled || !context || context.state === 'closed' || voices[bus] >= maxVoices[bus]) return;
+            if (!enabled || !context || context.state === 'closed' || !canPlayRecordedVoice(bus, sound.priority)) return;
             const source = context.createBufferSource();
             const gain = context.createGain();
             source.buffer = buffer;
@@ -232,13 +244,35 @@
             } else {
                 gain.connect(buses[bus]);
             }
-            voices[bus]++;
-            source.onended = () => {
-                voices[bus] = Math.max(0, voices[bus] - 1);
-                source.disconnect();
-                gain.disconnect();
-                filter?.disconnect();
+            if (voices[bus] >= maxVoices[bus]) {
+                const lowest = lowestRecordedVoice(bus);
+                if (!lowest || lowest.priority >= sound.priority) {
+                    source.disconnect();
+                    gain.disconnect();
+                    filter?.disconnect();
+                    return;
+                }
+                try { lowest.source.stop(); } catch { /* A voice may already have ended. */ }
+                lowest.release();
+            }
+            let released = false;
+            const voice = {
+                source,
+                priority: sound.priority,
+                release() {
+                    if (released) return;
+                    released = true;
+                    voices[bus] = Math.max(0, voices[bus] - 1);
+                    const index = activeVoices[bus].indexOf(voice);
+                    if (index !== -1) activeVoices[bus].splice(index, 1);
+                    source.disconnect();
+                    gain.disconnect();
+                    filter?.disconnect();
+                },
             };
+            voices[bus]++;
+            activeVoices[bus].push(voice);
+            source.onended = voice.release;
             if (bus === 'moment') {
                 const parameter = buses.combat.gain;
                 if (parameter.setTargetAtTime) {
@@ -247,7 +281,12 @@
                     parameter.setTargetAtTime(volumes.combat, at + Math.max(0.4, duration * 0.67), 0.20);
                 }
             }
-            source.start(at);
+            try {
+                source.start(at);
+            } catch (error) {
+                voice.release();
+                throw error;
+            }
         }).catch(error => {
             console.warn('Recorded WyrmForge cue could not load:', name, error);
             if (status) status.textContent = 'SOUND COULD NOT LOAD: ' + name.toUpperCase();
