@@ -242,7 +242,7 @@ profile = {
     "kneeFlexionPassCriteria": {"swingMaxAtLeastDegrees":108, "stanceMinimumDegrees":15},
     "elbowFlexionRangeDegrees": [48,125],
     "scapularRotationAmplitudeDegrees": 5,
-    "armSwingModelUnits": "shoulder-angle driven, not wrist distance"
+    "armSwingModelUnits": "shoulder-angle driven, not wrist distance",
     "armKinematics": "coupled shoulder swing and flexing elbow; forearm forward/back not co-directional with upper arm",
     "clavicleKeepsBoneLength": True,
     "status": "VISUAL CANDIDATE ONLY; source accepted gait and walk normals unchanged",
