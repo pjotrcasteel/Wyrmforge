@@ -9,7 +9,7 @@
 - The liked wizard design board contains invented Hollowed/Ashling figures; **never compare against those**. Use the ACTUAL repo atlases as visual references.
 
 ## Candidate work produced in this separate session
-A deterministic **CPU model/render study** created an original grey-robed, long-bearded wizard in six accent/staff variants from one procedural 3D source, preserving neutral GLB geometry per school. The candidate outputs are external conversation artifacts, **not yet committed to this PR**. Export tooling and technical-source format are in this PR; the generated source file and PNG/GLB review assets must be brought into the branch before any production merge.
+A deterministic **CPU model/render study** created an original grey-robed, long-bearded wizard in six accent/staff variants from one procedural 3D source, preserving neutral GLB geometry per school. The deterministic Python **source generator is committed** at `tools/sprite-lab/build-wizard-source.py`. It recreates editable per-school GLB meshes and atlas studies using local Python/Pillow/NumPy/trimesh. Generated GLB/PNG review binaries are separate conversation artifacts and are **not committed**; keep them as candidate evidence, not production runtime assets.
 
 Source generator SHA-256: `353c5e0b82e35202073590fe22ba2ef4fd5b227f2600279310094b05702e28f1`.
 - Render scope: walk, 16 frames x 8 directions x 6 school variants; geometry-derived albedo, normal, roughness, height, alpha caster passes, 128 px frames.
@@ -27,4 +27,4 @@ The 3D geometry is intentionally coarse. Locomotion still needs more convincing 
 4. Compare 320/390px actual mobile scenes under shared GPU lighting from PR #332 when integrated.
 5. Only with owner visual approval and CI/device proof replace the temporary player. Do not merge this draft earlier.
 
-The prior PR CI passed, but that does not validate any new uncommitted renders or source rig.
+The first PR checkpoint passed CI. The committed Python geometry generator has not yet been exercised by PR CI; independent local export validation passed all 6 x 8 x 16 WALK frames with aligned RGBA normal/roughness/height/caster masks. This does not validate artistry, Blender rigging or production compatibility.
