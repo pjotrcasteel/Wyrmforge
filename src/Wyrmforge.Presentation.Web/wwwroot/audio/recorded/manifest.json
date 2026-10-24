@@ -66,72 +66,71 @@
       }
     },
     "fire": {
-      "file": "fire.ogg",
-      "source": "Fantasy SFX Pack Vol 1/Single_Fantasy SFX Pack Vol 1_Fireball Launch_01.wav",
-      "library": "fantasy",
-      "author": "JC Sounds",
-      "license": "CC-BY-4.0",
-      "sha256": "0b1a9e86fa6cc1080b1dc2412051abcc157b0500bb15f3abfe2416785a75ac63",
+      "author": "WyrmForge original audio",
+      "license": "Original",
+      "source": "tools/audio/build_fireball_r1.py",
+      "file": "fireball-r1-cast-1.ogg",
+      "sha256": "f8cb0af88a93fc3e7977a70f00d94bde2c3bff7c9f021c473ac15e0205cbf5cb",
       "variants": [
         {
-          "file": "fire-cast-1.ogg",
-          "source": "Single_Fantasy SFX Pack Vol 1_Fireball Launch_01.wav",
-          "library": "fantasy",
-          "author": "JC Sounds",
-          "license": "CC-BY-4.0",
-          "sha256": "fce112916897142c749fc39baa162f0cfb904e0ecd53d58bd42a6a8e83704e2d"
+          "file": "fireball-r1-cast-1.ogg",
+          "sha256": "f8cb0af88a93fc3e7977a70f00d94bde2c3bff7c9f021c473ac15e0205cbf5cb",
+          "seconds": 0.75,
+          "author": "WyrmForge original audio",
+          "license": "Original",
+          "source": "tools/audio/build_fireball_r1.py",
+          "mix": {
+            "gain": 0.72,
+            "lowpassHz": 4700,
+            "attackSeconds": 0.006,
+            "releaseSeconds": 0.18
+          }
         },
         {
-          "file": "fire-cast-2.ogg",
-          "source": "Single_Fantasy SFX Pack Vol 1_Fireball Launch_02.wav",
-          "library": "fantasy",
-          "author": "JC Sounds",
-          "license": "CC-BY-4.0",
-          "sha256": "ea75d2c22816219ec4105cbf97aeba351974ef33644af101ceaaf2a94d14af26"
-        },
-        {
-          "file": "fire-cast-3.ogg",
-          "source": "Single_Fantasy SFX Pack Vol 1_Fireball Launch_03.wav",
-          "library": "fantasy",
-          "author": "JC Sounds",
-          "license": "CC-BY-4.0",
-          "sha256": "2e68f61849f8eee86e38ab2942dc1b985e0c0c8629e83091d4549306ff25532f"
+          "file": "fireball-r1-cast-2.ogg",
+          "sha256": "59e4e0ac11779c4ebe684e8e29e66f998c7d9924f829e5b89ff7bc9efd69a400",
+          "seconds": 0.75,
+          "author": "WyrmForge original audio",
+          "license": "Original",
+          "source": "tools/audio/build_fireball_r1.py",
+          "mix": {
+            "gain": 0.72,
+            "lowpassHz": 4700,
+            "attackSeconds": 0.006,
+            "releaseSeconds": 0.18
+          }
         }
       ],
       "hitVariants": [
         {
-          "file": "fire-hit-1.ogg",
-          "source": "Single_Fantasy SFX Pack Vol 1_Fireball Impact_01.wav",
-          "library": "fantasy",
-          "author": "JC Sounds",
-          "license": "CC-BY-4.0",
-          "sha256": "ae2c965a1b641529304e6c5449b183e11ff3e46581b9ec5094b756602e02df93"
+          "file": "fireball-r1-hit-1.ogg",
+          "sha256": "f7a55bbd7e03275632fd1201e4c93ef6cc801f0127ab20b36ce6f99cc7a700ac",
+          "seconds": 1.55,
+          "author": "WyrmForge original audio",
+          "license": "Original",
+          "source": "tools/audio/build_fireball_r1.py",
+          "mix": {
+            "gain": 0.82,
+            "lowpassHz": 4700,
+            "attackSeconds": 0.006,
+            "releaseSeconds": 0.18
+          }
         },
         {
-          "file": "fire-hit-2.ogg",
-          "source": "Single_Fantasy SFX Pack Vol 1_Fireball Impact_02.wav",
-          "library": "fantasy",
-          "author": "JC Sounds",
-          "license": "CC-BY-4.0",
-          "sha256": "10f83bccb053e252730a75026b70e88e2941f6121005bb52431dbea6310d8fbb"
-        },
-        {
-          "file": "fire-hit-3.ogg",
-          "source": "Single_Fantasy SFX Pack Vol 1_Fireball Impact_03.wav",
-          "library": "fantasy",
-          "author": "JC Sounds",
-          "license": "CC-BY-4.0",
-          "sha256": "ec8a9652bb5e9c721b047d6ae59834cd2edba22a502ff5eb0eba3b1fdc2ded1d"
+          "file": "fireball-r1-hit-2.ogg",
+          "sha256": "9dd049bb84f2b7bc6068050a0736027da95604aa5558e5651952a15c92395e1a",
+          "seconds": 1.55,
+          "author": "WyrmForge original audio",
+          "license": "Original",
+          "source": "tools/audio/build_fireball_r1.py",
+          "mix": {
+            "gain": 0.82,
+            "lowpassHz": 4700,
+            "attackSeconds": 0.006,
+            "releaseSeconds": 0.18
+          }
         }
-      ],
-      "buildup": {
-        "file": "fire-buildup.ogg",
-        "source": "Single_Fantasy SFX Pack Vol 1_Fireball_Buildup.wav",
-        "library": "fantasy",
-        "author": "JC Sounds",
-        "license": "CC-BY-4.0",
-        "sha256": "1e3d75340d7241bb7c30e005edd753389cc538ec21001bded36dd3e6252a9361"
-      }
+      ]
     },
     "frost": {
       "file": "frost.ogg",
@@ -986,6 +985,36 @@
       ],
       "durationSeconds": 36,
       "intent": "Quiet Wet Forest wind/drips and two sparse timber creaks, below Hunt music and combat"
+    }
+  },
+  "authoredFireballStages": {
+    "R1": {
+      "approved": false,
+      "oldAudioSourceUsed": false,
+      "flight": [
+        {
+          "file": "fireball-r1-flight-1.ogg",
+          "sha256": "08cd90876c75108f190bbfcef89989e591e68849cb95ff477c4c1c9f17ebe244",
+          "seconds": 0.83
+        },
+        {
+          "file": "fireball-r1-flight-2.ogg",
+          "sha256": "b559141ea74f9889b82329bdb8d61575d9f8f98c3ac019deff33fde4a3433bd4",
+          "seconds": 0.83
+        }
+      ],
+      "burn": [
+        {
+          "file": "fireball-r1-burn-1.ogg",
+          "sha256": "9fe46254e04318988c3eb00ac30502ab58ff9b4ee9a59e0f120aa35692e39c5f",
+          "seconds": 3.9
+        },
+        {
+          "file": "fireball-r1-burn-2.ogg",
+          "sha256": "bdafe904b5781da6cdb0de31f2d096076461a02f98d1a3c10ed9be1a5cc6b214",
+          "seconds": 3.9
+        }
+      ]
     }
   }
 }

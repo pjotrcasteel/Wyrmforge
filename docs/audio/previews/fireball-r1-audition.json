@@ -1,0 +1,12 @@
+{
+  "approved": false,
+  "oldAudioUsed": false,
+  "origin": "new authored offline physical-noise design",
+  "stages": [
+    "ignition",
+    "flight",
+    "impact",
+    "burning ground"
+  ],
+  "note": "Cast and hit new Oggs mapped in draft game; flight/burn require authoritative game events."
+}
