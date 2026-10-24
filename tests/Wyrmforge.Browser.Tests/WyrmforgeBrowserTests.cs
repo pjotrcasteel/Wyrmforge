@@ -3608,6 +3608,47 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator("body > canvas")).ToHaveCountAsync(0);
     }
 
+    [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
+    public async Task Fireball_SourceArtCapture_RecordsActualPyromancerHuntAtPhoneScale(int width, int height)
+    {
+        // Evidence-only capture from the ORIGINAL running Hunt, not the rejected
+        // standalone storyboard. No changes to simulation, source art or renderer.
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.AddInitScriptAsync(@"localStorage.setItem('wyrmforge.fireballCore.v1',
+            JSON.stringify({Level:3,Discovered:[1,2,3],Slots:[1,2,3,null,null]}));");
+        await OpenAsync("Pyromancer");
+        await EnterFirstTrailAsync();
+        var canvas = Page.Locator("canvas.game-canvas");
+        await Expect(canvas).ToBeVisibleAsync();
+
+        var frames = Path.Combine(ArtifactDirectory, $"fireball-actual-hunt-{width}x{height}");
+        Directory.CreateDirectory(frames);
+        var hashes = new HashSet<uint>();
+        for (var frame = 0; frame < 40; frame++)
+        {
+            await canvas.ScreenshotAsync(new LocatorScreenshotOptions
+            {
+                Path = Path.Combine(frames, $"frame-{frame:D2}.png"),
+            });
+            if (frame % 8 == 0)
+            {
+                hashes.Add(await canvas.EvaluateAsync<uint>(@"canvas => {
+                    const pixels = canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data;
+                    let hash = 2166136261;
+                    for (let i = 0; i < pixels.length; i += 64)
+                        hash = Math.imul(hash ^ pixels[i], 16777619) >>> 0;
+                    return hash >>> 0;
+                }"));
+            }
+            await Task.Delay(85);
+        }
+
+        Assert.IsGreaterThan(1, hashes.Count,
+            "Capture must show real changing in-game pixels, not an animated still/mockup.");
+    }
+
     private Task ScreenshotAsync(string name) => Page.ScreenshotAsync(new PageScreenshotOptions
     {
         Path = Path.Combine(ArtifactDirectory, name),
