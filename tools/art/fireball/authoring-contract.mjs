@@ -21,7 +21,10 @@ export function requiredFireballRoles(mask) {
         cast: ['staff-fireball'],
         flight: [silhouette],
         impact: ['impact-original', ...(mask & FIREBALL_MUTATIONS.detonation ? ['impact-detonation-fragments'] : [])],
-        aftermath: mask & FIREBALL_MUTATIONS.scorchedEarth ? ['material-char-and-flame'] : [],
+        // Rank-II+ baseline Fireball can also create REAL ground fire, so
+        // the authored surface material is needed even for a mask without Scorched.
+        // Whether a patch actually exists comes only from C# event snapshots.
+        aftermath: ['material-char-and-flame'],
     };
 }
 
@@ -96,15 +99,27 @@ export function inspectFireballLineage(snapshot) {
     const cast = snapshot?.castMotion?.spell === 1 ? snapshot.castMotion : null;
     if (cast) requiredFireballRoles(cast.fireballMutationMask);
     return {
-        cast: cast ? { mutationMask: cast.fireballMutationMask, sourceId: null } : null,
-        flight: shots.map(x => ({ sourceId: x.fireballSourceId, mutationMask: x.fireballMutationMask })),
+        cast: cast ? {
+            mutationMask: cast.fireballMutationMask, sourceId: null,
+            roles: requiredFireballRoles(cast.fireballMutationMask).cast,
+        } : null,
+        flight: shots.map(x => ({
+            sourceId: x.fireballSourceId, mutationMask: x.fireballMutationMask,
+            roles: requiredFireballRoles(x.fireballMutationMask).flight,
+        })),
         impact: impacts.map(x => ({
             sourceId: x.fireballSourceId, mutationMask: x.fireballMutationMask,
             actualSplashRadius: x.splashRadius ?? 0,
+            // World-wall contact is an impact but never a *Detonation explosion*.
+            roles: ['impact-original', ...(
+                (x.fireballMutationMask & FIREBALL_MUTATIONS.detonation) && x.splashRadius > 0
+                    ? ['impact-detonation-fragments'] : [])],
         })),
         aftermath: ground.map(x => ({
             sourceId: x.fireballSourceId, mutationMask: x.fireballMutationMask,
             actualRadius: x.radius, remainingSeconds: x.remainingSeconds,
+            // Even a Rank-II baseline Fireball may own actual C# ground fire.
+            roles: ['material-char-and-flame'],
         })),
     };
 }
