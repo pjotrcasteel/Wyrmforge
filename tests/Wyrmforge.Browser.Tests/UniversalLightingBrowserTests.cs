@@ -115,8 +115,14 @@ public sealed class UniversalLightingBrowserTests : PageTest
                 await control.EvaluateAsync("(input,value) => { input.value=value; input.dispatchEvent(new Event('input',{bubbles:true})); }",
                     property.Value.GetDouble() * (property.Name == "progress" ? 100 : 1));
             else await control.SelectOptionAsync(property.Value.GetString()!);
+            object expected = property.Value.ValueKind switch
+            {
+                System.Text.Json.JsonValueKind.True or System.Text.Json.JsonValueKind.False => property.Value.GetBoolean(),
+                System.Text.Json.JsonValueKind.Number => property.Value.GetDouble(),
+                _ => property.Value.GetString()!
+            };
             await Page.WaitForFunctionAsync("([key,value]) => { const c=document.querySelector('.gpu-proof canvas'); return gpuProof.proofOptions(c)[key]===value; }",
-                new object[] { property.Name, property.Value });
+                new object[] { property.Name, expected });
         }
     }
 

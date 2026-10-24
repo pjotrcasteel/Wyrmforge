@@ -7,23 +7,23 @@
     <h1>Shared light engine</h1>
     <p>G0–G1 isolated GPU proof. Town and Hunts are unchanged. Original oak geometry and exported walk-pose normals are under review. Production adoption remains pending.</p>
     <nav aria-label="Light inspection">
-        <label>Camera <select @bind="focus" @bind:after="Sync"><option>overview</option><option>actors</option><option>oak</option><option>town</option><option>water</option></select></label>
-        <label>Diagnostic <select @bind="view" @bind:after="Sync"><option>lit</option><option>albedo</option><option>normals</option><option>geometry</option><option value="shadow-visibility">Point shadow visibility</option><option value="light-depth">Light depth atlas</option><option value="light-bounds">Light bounds</option></select></label>
-        <label>Environment <select @bind="profile" @bind:after="Sync"><option>night</option><option>day</option><option>auto</option><option>zero</option></select></label>
-        <label><input type="checkbox" @bind="fireball" @bind:after="Sync" /> Fireball</label>
-        <label><input type="checkbox" @bind="torch" @bind:after="Sync" /> Torch</label>
-        <label><input type="checkbox" @bind="spot" @bind:after="Sync" /> Spot</label>
-        <label><input type="checkbox" @bind="rune" @bind:after="Sync" /> Register rune</label>
-        <label><input type="checkbox" @bind="shadows" @bind:after="Sync" /> Shadows</label>
-        <label><input type="checkbox" @bind="reflections" @bind:after="Sync" /> Direct specular</label>
-        <label>Light position <input type="range" min="0" max="100" @bind="progress" @bind:event="oninput" @bind:after="Sync" /></label>
-        <label><input type="checkbox" @bind="animate" @bind:after="Sync" /> Animate walk</label>
-        <label><input type="checkbox" @bind="normals" @bind:after="Sync" /> Authored normals</label>
-        <label>Inspect object <select @bind="inspectObject" @bind:after="Sync"><option>hollowed</option><option>ashling</option><option>npc-binding-proxy</option><option>roof</option><option>foreground-post</option><option>rock</option></select></label>
-        <label><input type="checkbox" @bind="castsShadow" @bind:after="Sync" /> Casts shadow</label>
-        <label><input type="checkbox" @bind="receivesShadow" @bind:after="Sync" /> Receives shadow</label>
-        <label><input type="checkbox" @bind="receivesLight" @bind:after="Sync" /> Receives light</label>
-        <label>Walk frame <input type="range" min="0" max="15" @bind="frame" @bind:event="oninput" @bind:after="Sync" /></label>
+        <label>Camera <select aria-label="Camera" @bind="focus" @bind:after="Sync"><option>overview</option><option>actors</option><option>oak</option><option>town</option><option>water</option></select></label>
+        <label>Diagnostic <select aria-label="Diagnostic" @bind="view" @bind:after="Sync"><option>lit</option><option>albedo</option><option>normals</option><option>geometry</option><option value="shadow-visibility">Point shadow visibility</option><option value="light-depth">Light depth atlas</option><option value="light-bounds">Light bounds</option></select></label>
+        <label>Environment <select aria-label="Environment" @bind="profile" @bind:after="Sync"><option>night</option><option>day</option><option>auto</option><option>zero</option></select></label>
+        <label><input aria-label="Fireball" type="checkbox" @bind="fireball" @bind:after="Sync" /> Fireball</label>
+        <label><input aria-label="Torch" type="checkbox" @bind="torch" @bind:after="Sync" /> Torch</label>
+        <label><input aria-label="Spot" type="checkbox" @bind="spot" @bind:after="Sync" /> Spot</label>
+        <label><input aria-label="Register rune" type="checkbox" @bind="rune" @bind:after="Sync" /> Register rune</label>
+        <label><input aria-label="Shadows" type="checkbox" @bind="shadows" @bind:after="Sync" /> Shadows</label>
+        <label><input aria-label="Direct specular" type="checkbox" @bind="reflections" @bind:after="Sync" /> Direct specular</label>
+        <label>Light position <input aria-label="Light position" type="range" min="0" max="100" @bind="progress" @bind:event="oninput" @bind:after="Sync" /></label>
+        <label><input aria-label="Animate walk" type="checkbox" @bind="animate" @bind:after="Sync" /> Animate walk</label>
+        <label><input aria-label="Authored normals" type="checkbox" @bind="normals" @bind:after="Sync" /> Authored normals</label>
+        <label>Inspect object <select aria-label="Inspect object" @bind="inspectObject" @bind:after="Sync"><option>hollowed</option><option>ashling</option><option>npc-binding-proxy</option><option>roof</option><option>foreground-post</option><option>rock</option></select></label>
+        <label><input aria-label="Casts shadow" type="checkbox" @bind="castsShadow" @bind:after="Sync" /> Casts shadow</label>
+        <label><input aria-label="Receives shadow" type="checkbox" @bind="receivesShadow" @bind:after="Sync" /> Receives shadow</label>
+        <label><input aria-label="Receives light" type="checkbox" @bind="receivesLight" @bind:after="Sync" /> Receives light</label>
+        <label>Walk frame <input aria-label="Walk frame" type="range" min="0" max="15" @bind="frame" @bind:event="oninput" @bind:after="Sync" /></label>
     </nav>
     @if (error is not null) { <p role="alert">@error</p> }
     <canvas @ref="canvas" aria-label="Shared GPU world lighting proof"></canvas>

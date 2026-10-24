@@ -190,3 +190,10 @@ resources are disposed with the renderer and never used for production visibilit
 Browser comparisons now drive the visible Blazor controls and await the actual
 applied options, preventing screenshot controls from contradicting their scene.
 Fresh CI is required for these additions.
+
+
+The first UI-driven run (`62f4a2f`, workflow 40086956550) failed before changing
+the environment: wrapped select labels included option text, so exact accessible
+name lookup could not find “Environment”. All controls now have explicit matching
+accessible names; test synchronization sends primitive values to Playwright.
+The failure does not validate the new depth/bounds views; rerun remains required.
