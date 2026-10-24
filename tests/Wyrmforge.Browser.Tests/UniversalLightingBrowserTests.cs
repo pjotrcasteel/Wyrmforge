@@ -152,6 +152,7 @@ public sealed class UniversalLightingBrowserTests : PageTest
             "Zero must disable the explicit inspection key too.");
         await CaptureAsync(width, "inspection-key-zero");
         await VerifyPoseShadowsAsync(canvas, width);
+        await VerifyCutoutShadowsAsync(canvas, width);
     }
 
     private async Task VerifyPoseShadowsAsync(ILocator canvas, int width)
@@ -170,6 +171,30 @@ public sealed class UniversalLightingBrowserTests : PageTest
         await CaptureAsync(width, "ground-shadow-pose8");
     }
 
+    private async Task VerifyCutoutShadowsAsync(ILocator canvas, int width)
+    {
+        await ConfigureAsync(canvas, new { cutouts = true, focus = "cutouts", inspectObject = "cutout-lower", frame = 0 });
+        await SaveReceiverBaselineAsync(canvas);
+        // Hold the key at the upper layer throughout cast/alpha comparisons.
+        await ConfigureAsync(canvas, new { inspectObject = "cutout-upper", view = "shadow-visibility" });
+        await canvas.EvaluateAsync("c => { window.receiverEvidence.pixels=gpuProof.proofPixels(c); }");
+        await CaptureAsync(width, "cutout-leaf-shadows");
+        await ConfigureAsync(canvas, new { castsShadow = false });
+        Assert.IsGreaterThan(5, await ReceiverChangedPixelsAsync(canvas), "Upper alpha leaves must shadow visible lower leaves.");
+        await CaptureAsync(width, "cutout-no-cast");
+        await ConfigureAsync(canvas, new { castsShadow = true, cutoutAlpha = false, inspectObject = "cutout-lower", view = "object-mask" });
+        // Exclude pixels newly covered by the opaque control quad.
+        await canvas.EvaluateAsync("c => { const p=gpuProof.proofPixels(c); window.receiverEvidence.indices=window.receiverEvidence.indices.filter(i => p[i]===255); }");
+        await ConfigureAsync(canvas, new { inspectObject = "cutout-upper", view = "shadow-visibility" });
+        Assert.IsGreaterThan(5, await ReceiverChangedPixelsAsync(canvas), "Alpha holes must transmit light that a solid quad blocks.");
+        await CaptureAsync(width, "cutout-solid-control");
+        await ConfigureAsync(canvas, new { cutoutAlpha = true, view = "lit" });
+        await CaptureAsync(width, "cutout-lit");
+        await ConfigureAsync(canvas, new { profile = "zero" });
+        Assert.IsTrue(await canvas.EvaluateAsync<bool>("c => gpuProof.proofPixels(c).every((v,i) => i%4===3 || v===0)"));
+        await CaptureAsync(width, "cutout-zero");
+    }
+
     private async Task SaveReceiverBaselineAsync(ILocator canvas)
     {
         await ConfigureAsync(canvas, new { view = "object-mask" });
@@ -186,7 +211,7 @@ public sealed class UniversalLightingBrowserTests : PageTest
     {
         var labels = new Dictionary<string, string>
         {
-            ["lighting"] = "Lighting rig", ["behind"] = "Light behind receiver", ["profile"] = "Environment", ["view"] = "Diagnostic", ["focus"] = "Camera",
+            ["cutouts"] = "Cutout test fixture", ["cutoutAlpha"] = "Cutout alpha", ["lighting"] = "Lighting rig", ["behind"] = "Light behind receiver", ["profile"] = "Environment", ["view"] = "Diagnostic", ["focus"] = "Camera",
             ["fireball"] = "Fireball", ["torch"] = "Torch", ["spot"] = "Spot", ["rune"] = "Register rune",
             ["shadows"] = "Shadows", ["reflections"] = "Direct specular", ["normals"] = "Authored normals",
             ["progress"] = "Light position", ["frame"] = "Walk frame", ["animate"] = "Animate walk",

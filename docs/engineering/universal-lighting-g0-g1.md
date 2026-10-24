@@ -291,3 +291,14 @@ Next evidence slice adds durable receiver changed-pixel counts and water highlig
 centroids, plus a pose-shadow comparison restricted to the intersection of visible
 ground in both poses. Moving actor silhouettes cannot themselves satisfy that
 shadow check. These added checks require their own published-app CI run.
+
+
+### Alpha-card fixture — isolated diagnostic, pending GPU evidence
+
+An optional two-layer binary-alpha leaf fixture now exercises the path that the
+original geometric oak does not use. Its tiny code-authored mask is diagnostic
+geometry, not a tree asset, new forest art or a replacement for the original oak.
+The same material/alpha-cutoff path casts and receives on both layers. Browser
+checks compare upper casting on/off on visible lower-layer pixels, then alpha
+holes versus an opaque upper quad while excluding pixels the quad newly covers.
+Zero-light includes both layers. Engine shader dispatch has no foliage branch.

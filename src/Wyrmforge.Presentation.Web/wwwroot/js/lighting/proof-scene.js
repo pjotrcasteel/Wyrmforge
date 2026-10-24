@@ -1,5 +1,6 @@
 // Isolated test fixture only. No RunSimulation, saves, collision or production imports.
 import * as T from './vendor/three.module.js';
+import { cutoutLeafPixels } from './cutout-fixture.js';
 import { LightingEngine } from './engine.js';
 import { environmentProfile } from './registry.js';
 import { createSpriteAnimationState, updateSpriteAnimation } from '../sprite-animation.js';
@@ -47,11 +48,12 @@ export async function initializeProof(canvas) {
     if (states.has(canvas)) return;
     const engine = new LightingEngine(canvas);
     const state = { engine, alive: true, options: { profile: 'night', fireball: true, torch: true, spot: true,
-        lighting: 'scene', behind: false, rune: false, shadows: true, reflections: true, progress: .25, frame: 0, animate: false, view: 'lit', focus: 'overview', inspectObject: 'hollowed', castsShadow: true, receivesShadow: true, receivesLight: true, normals: true }, manifests: {}, animation: {}, samples: {} };
+        lighting: 'scene', behind: false, cutouts: false, cutoutAlpha: true, rune: false, shadows: true, reflections: true, progress: .25, frame: 0, animate: false, view: 'lit', focus: 'overview', inspectObject: 'hollowed', castsShadow: true, receivesShadow: true, receivesLight: true, normals: true }, manifests: {}, animation: {}, samples: {} };
     states.set(canvas, state);
     try {
         engine.registerGeometry('box', new T.BoxGeometry(1, 1, 1));
         engine.registerGeometry('plane', new T.PlaneGeometry(1, 1));
+        engine.registerTexture('cutout-test', new T.DataTexture(cutoutLeafPixels(), 64, 64));
         const water = new T.PlaneGeometry(1, 1, 40, 32);
         const vertices = water.attributes.position;
         for (let i = 0; i < vertices.count; i++) vertices.setZ(i, .007 * Math.sin(vertices.getX(i) * 42 + vertices.getY(i) * 24));
@@ -62,7 +64,8 @@ export async function initializeProof(canvas) {
             { state.manifests[id] = await actorResources(engine, id, folder); state.animation[id] = createSpriteAnimationState(); }
         if (!state.alive) { engine.dispose(); return; }
         state.materials = [material('terrain', '#ffffff', .9, { albedo: 'ground' }), material('stone', '#777b80'),
-            material('wood', '#68503a'), material('water', '#1a3034', .11, { specular: 1 }),
+            material('cutout-upper', '#ffffff', .9, { albedo: 'cutout-test' }),
+            material('cutout-lower', '#ffffff', .9, { albedo: 'cutout-test' }), material('wood', '#68503a'), material('water', '#1a3034', .11, { specular: 1 }),
             material('hollowed', '#ffffff', .8, { albedo: 'hollowed', normal: 'hollowed-normal' }), material('ashling', '#ffffff', .9, { albedo: 'ashling', normal: 'ashling-normal' }),
             material('flame', '#321200', .7, { emission: '#ff792d', emissionIntensity: 2 }),
             material('rune', '#124138', .6, { emission: '#35edbc', emissionIntensity: 1 })];
@@ -92,13 +95,17 @@ export function configureProof(canvas, options) {
     const state = states.get(canvas); if (!state?.materials || !state.alive) return;
     Object.assign(state.options, options);
     const cameras = { overview: [[0, 0, 1], 5], actors: [[0, 0, .8], 2],
-        oak: [[2.3, 3.4, 2], 2.5], town: [[-2, 1.8, 1.2], 2.5], water: [[1.2, -1.4, .1], 2] };
+        cutouts: [[-4, -3, .8], 2], oak: [[2.3, 3.4, 2], 2.5], town: [[-2, 1.8, 1.2], 2.5], water: [[1.2, -1.4, .1], 2] };
     const camera = cameras[state.options.focus];
     if (!camera) throw new RangeError('Unknown inspection camera');
     state.engine.setCamera(...camera);
     const p = state.options, zero = p.profile === 'zero';
     const firePosition = [-3.5 + p.progress * 7, p.behind ? 4 : -1.6, p.behind ? 3.6 : 2.4];
     const environment = environmentProfile(p.profile);
+    const objects = structuredClone(state.objects);
+    if (p.cutouts) objects.push(
+        object('cutout-lower', 'plane', 'cutout-lower', [-4, -3, .55], [2.4, 2.4, 1]),
+        object('cutout-upper', 'plane', 'cutout-upper', [-4, -3, 1.25], [2, 2, 1], { rotation: [.1, .15, .25] }));
     let lights = [light('fireball', firePosition, '#ff8d42', 32, 'point', 10),
         light('torch', [-2, 1.4, 1.7], '#ffc27a', 10, 'point', 5),
         light('lantern-beam', [3, -1, 3.5], '#adc3e9', 16, 'spot', 8),
@@ -108,14 +115,12 @@ export function configureProof(canvas, options) {
     if (p.rune) lights.push(light('rune', [2, -2, .7], '#48ffd1', 8, 'point', 2));
     if (p.lighting === 'neutral-key') {
         // Explicit inspection source, never a hidden actor boost or ambient veil.
-        const receiver = state.objects.find(o => o.id === p.inspectObject);
-        if (!receiver) throw new RangeError('Unknown inspection receiver');
-        const [x, y, z] = receiver.position;
+        const receiver = objects.find(o => o.id === p.inspectObject);
+        const [x, y, z] = receiver?.position ?? [-4, -3, .55];
         lights = [light('inspection-key', [x - 1.8 + p.progress * 3.6, y + (p.behind ? 2 : -2), z + 2.4], '#ffffff', 24, 'point', 10)];
         environment.ambient = 0; environment.emission = false;
     } else if (p.lighting !== 'scene') throw new RangeError('Unknown lighting rig');
     for (const l of lights) { l.enabled &&= !zero; l.castsShadow &&= p.shadows; }
-    const objects = structuredClone(state.objects);
     if (p.fireball) objects.push(object('fireball-core', 'sphere', 'flame', firePosition, [1, 1, 1], { castsShadow: false }));
     if (p.rune) objects.push(object('rune-prop', 'box', 'rune', [2, -2, .25], [.35, .35, .5]));
     for (const o of objects) {
@@ -125,7 +130,7 @@ export function configureProof(canvas, options) {
         const id = o.id === 'npc-binding-proxy' ? 'hollowed' : o.id;
         if (state.manifests[id]) o.frame = spriteFrame(state.manifests[id], { clip: 'walk', frame: p.animate ? state.samples[id]?.frame ?? 0 : p.frame % 16, direction: 'S' });
     }
-    const materials = state.materials.map(m => ({ ...m, normal: p.normals ? m.normal : undefined, reflection: p.reflections ? m.reflection : 'off',
+    const materials = state.materials.map(m => ({ ...m, alphaCutoff: m.id === 'cutout-upper' && !p.cutoutAlpha ? 0 : m.alphaCutoff, normal: p.normals ? m.normal : undefined, reflection: p.reflections ? m.reflection : 'off',
         emissionIntensity: m.id === 'flame' && !p.torch && !p.fireball ? 0 : m.emissionIntensity }));
     // Disabling a fixture extinguishes its source surface too.
     if (!p.torch) objects.splice(objects.findIndex(o => o.id === 'lantern-core'), 1);

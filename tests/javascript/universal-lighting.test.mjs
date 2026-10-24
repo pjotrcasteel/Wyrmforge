@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { cutoutLeafPixels } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/cutout-fixture.js';
 import assert from 'node:assert/strict';
 import { validateSnapshot, selectLights, environmentProfile } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/registry.js';
 import * as T from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/vendor/three.module.js';
@@ -57,4 +58,15 @@ test('sprite projection preserves authored aspect, foot pivot and tangent normal
     assert.ok(normal.dot(camera.position.clone().normalize()) > .99999, 'Neutral tangent normal must point toward the camera');
     geometry.dispose();
     assert.throws(() => spritePlaneGeometry(T, clip, 1 / 48, [0, 0, 1]), RangeError);
+});
+
+test('cutout diagnostic supplies opaque leaves and genuine holes, not a full quad', () => {
+    const pixels = cutoutLeafPixels();
+    const alpha = pixels.filter((_, i) => i % 4 === 3);
+    assert.equal(alpha.length, 64 * 64);
+    assert.ok(alpha.every(a => a === 0 || a === 255));
+    const coverage = alpha.filter(a => a === 255).length / alpha.length;
+    assert.ok(coverage > .2 && coverage < .6);
+    assert.equal(alpha[0], 0);
+    assert.equal(alpha[16 * 64 + 16], 255);
 });
