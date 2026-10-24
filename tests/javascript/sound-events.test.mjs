@@ -61,3 +61,48 @@ test('defeat, pause and resume do not replay combat sounds', () => {
     assert.deepEqual(collectSoundEvents(tracker, frame({ paused: true }), 300), []);
     assert.deepEqual(collectSoundEvents(tracker, frame(), 400), []);
 });
+
+
+test('Hollowed and Ashling deaths come from exact Kind and EntityId, not generic kill guesses', () => {
+    const tracker = createSoundEventTracker();
+    const kill = (kills, deathBursts) => frame({ hud: { health: 100, maxHealth: 100, kills }, deathBursts });
+    assert.deepEqual(collectSoundEvents(tracker, kill(0, []), 0), []);
+    const hollow = { entityId: 51, kind: 0, progress: 0.1 };
+    assert.deepEqual(collectSoundEvents(tracker, kill(1, [hollow]), 100), ['hollow-death']);
+    assert.deepEqual(collectSoundEvents(tracker, kill(1, [hollow]), 150), []);
+    assert.deepEqual(collectSoundEvents(tracker, kill(1, []), 240), []);
+    const ashling = { entityId: 52, kind: 2, progress: 0.02 };
+    assert.deepEqual(collectSoundEvents(tracker, kill(2, [ashling]), 800), ['ashling-death']);
+    const other = { entityId: 53, kind: 1 };
+    assert.deepEqual(collectSoundEvents(tracker, kill(3, [other]), 1500), ['enemy-down']);
+});
+
+test('hit flashes make one restrained grunt per impact, not an endless sound every frame', () => {
+    const tracker = createSoundEventTracker();
+    const make = (hitFlash, kind = 0, id = 71) => frame({
+        enemies: [{ entityId: id, kind, x: 400, y: 400, hitFlash }],
+    });
+    assert.deepEqual(collectSoundEvents(tracker, make(false), 0), []);
+    assert.deepEqual(collectSoundEvents(tracker, make(true), 120), ['hollow-hit']);
+    assert.deepEqual(collectSoundEvents(tracker, make(true), 220), []);
+    assert.deepEqual(collectSoundEvents(tracker, make(false), 300), []);
+    assert.deepEqual(collectSoundEvents(tracker, make(true), 800), ['hollow-hit']);
+    assert.deepEqual(collectSoundEvents(tracker, make(false, 2), 1100), []);
+    assert.deepEqual(collectSoundEvents(tracker, make(true, 2), 1200), ['ashling-hit']);
+});
+
+test('only nearby creatures occasionally vocalize; pauses and offscreen packs remain silent', () => {
+    const tracker = createSoundEventTracker();
+    const proximity = (x, kind = 0, paused = false) => frame({
+        player: { x: 10, y: 10 },
+        enemies: [{ entityId: 3, kind, x, y: 10, hitFlash: false }],
+        paused,
+    });
+    assert.deepEqual(collectSoundEvents(tracker, proximity(55), 0), []);
+    assert.deepEqual(collectSoundEvents(tracker, proximity(55), 100), ['hollow-approach']);
+    assert.deepEqual(collectSoundEvents(tracker, proximity(55), 400), []);
+    assert.deepEqual(collectSoundEvents(tracker, proximity(900), 8000), []);
+    assert.deepEqual(collectSoundEvents(tracker, proximity(55, 2, true), 8200), []);
+    assert.deepEqual(collectSoundEvents(tracker, proximity(55, 2), 8300), []);
+    assert.deepEqual(collectSoundEvents(tracker, proximity(55, 2), 9000), ['ashling-approach']);
+});
