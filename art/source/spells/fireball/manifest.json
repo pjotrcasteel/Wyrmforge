@@ -41,7 +41,8 @@
       "worldSize": "pending-gameplay-scale-review",
       "runtimeEnabled": false,
       "sourceIncluded": true,
-      "rendersIncluded": false
+      "rendersIncluded": true,
+      "integrationBlockedOn": "shared-gpu-lighting-pr-332-complete-merged-and-validated"
     }
   }
 }
