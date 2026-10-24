@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "actorId": "ashling",
+  "directions": [
+    "N",
+    "NE",
+    "E",
+    "SE",
+    "S",
+    "SW",
+    "W",
+    "NW"
+  ],
+  "source": "authored skinned triangle positions and face normals; existing colour immutable",
+  "shadowQuality": "alpha-clipped, pose-synchronous planar silhouette (NO volumetric self-shadowing)",
+  "castsShadow": true,
+  "receivesShadow": true,
+  "material": {
+    "roughness": 0.89,
+    "metalness": 0,
+    "specular": 0.16
+  },
+  "clips": {
+    "walk": {
+      "albedo": "walk.png",
+      "normal": "../../lighting-proof/ashling-walk-normal.png",
+      "depth": "materials/walk-depth.png",
+      "caster": "materials/walk-caster.png",
+      "emissive": "materials/walk-emissive.png",
+      "frames": 16,
+      "cell": 96,
+      "anchor": [
+        48,
+        70
+      ],
+      "worldSize": 81.6,
+      "castShadow": true,
+      "receiveShadow": true,
+      "shadowQuality": "planar-mask-only",
+      "source": {
+        "sourceRig": "art/source/enemies/ashling/model/local-appearance-002/rigged-block-v4a/ashling-rigged.blend",
+        "sourcePose": "art/source/enemies/ashling/model/local-appearance-002/rigged-block-v4a/sampled-walk.npz",
+        "sourcePoseSha256": "a1db8e543f460fa95491a9c32d23c4e50951d1d1a8ba827783beab68657c8f07",
+        "albedoSha256": "b81916287a5cf3a58f82f6ecee29975a833b39d67adc4787af210ee12191d770",
+        "framesPerDirection": 16,
+        "cell": 96,
+        "anchor": [
+          48,
+          70
+        ],
+        "fps": 20,
+        "normalSpace": "authored camera right/up/toward (sprite tangent)",
+        "depthEncoding": "16-bit unsigned normalized source camera NDC z; zero=transparent",
+        "caster": "author's posed mesh alpha clipped to original visible body, planar only",
+        "emission": "authored eye vertex weights and depth-tested flame mesh; no RGB thresholding",
+        "preservedWalkNormalSha256": "90b01a162622e92c05f563c112a54547a5bebd862a6126f0a264ff2e3767c605",
+        "depthSha256": "e26b3d479d7c704b7635aec8b74db61e699877655c76c828fe7cb2d9c7d0fd4d",
+        "casterSha256": "c23af5d8c24ae2f581191e14a3d823a8b7f61841a9e19fccae45e2c234f8c539",
+        "emissiveSha256": "6ca5c214f2d945b02bd4458f6b733929de42875b09098e78e9d6d4ddccb0efc2"
+      },
+      "minimumSourceMeshIoU": 0.9852941176470589
+    },
+    "attack": {
+      "albedo": "attack.png",
+      "normal": "materials/attack-normal.png",
+      "depth": "materials/attack-depth.png",
+      "caster": "materials/attack-caster.png",
+      "emissive": "materials/attack-emissive.png",
+      "frames": 22,
+      "cell": 128,
+      "anchor": [
+        64,
+        86
+      ],
+      "worldSize": 108.8,
+      "castShadow": true,
+      "receiveShadow": true,
+      "shadowQuality": "planar-mask-only",
+      "source": {
+        "sourceRig": "art/source/enemies/ashling/model/local-appearance-002/rigged-attack-launch-v3/ashling-attack.blend",
+        "sourcePose": "art/source/enemies/ashling/model/local-appearance-002/rigged-attack-launch-v3/attack-samples.npz",
+        "sourcePoseSha256": "177392abc84005e45390489e1c911c6e88a5d0abe75e6576bb065bded075028c",
+        "albedoSha256": "25eee48424793dad9206495a31726baa8eb66a7ba05fbf2a53a62a07a7b4f2ed",
+        "framesPerDirection": 22,
+        "cell": 128,
+        "anchor": [
+          64,
+          86
+        ],
+        "fps": 24,
+        "normalSpace": "authored camera right/up/toward (sprite tangent)",
+        "depthEncoding": "16-bit unsigned normalized source camera NDC z; zero=transparent",
+        "caster": "author's posed mesh alpha clipped to original visible body, planar only",
+        "emission": "authored eye vertex weights and depth-tested flame mesh; no RGB thresholding",
+        "normalSha256": "b327cdf161fb350334da307937fbdfc27f586d0b2602fc31755d07901af297da",
+        "depthSha256": "72c10057e981f3dd3cd3513775d0de1c84214a4d004845c1e59d59079174a8fa",
+        "casterSha256": "f251a2bdd166b38ad19499d5b5b3c49669314acb12b4e5b2f56905a8883842ee",
+        "emissiveSha256": "119ec22b3d7b3a8384dc2c721dbe4fb660bae85e822d902ddd50b29ecea5fe51"
+      },
+      "minimumSourceMeshIoU": 0.9680616740088106
+    },
+    "death": {
+      "albedo": "death.png",
+      "normal": "materials/death-normal.png",
+      "depth": "materials/death-depth.png",
+      "caster": "materials/death-caster.png",
+      "emissive": "materials/death-emissive.png",
+      "frames": 28,
+      "cell": 128,
+      "anchor": [
+        64,
+        86
+      ],
+      "worldSize": 108.8,
+      "castShadow": true,
+      "receiveShadow": true,
+      "shadowQuality": "planar-mask-only",
+      "source": {
+        "sourceRig": "art/source/enemies/ashling/model/local-appearance-002/rigged-death-v3/ashling-death.blend",
+        "sourcePose": "art/source/enemies/ashling/model/local-appearance-002/rigged-death-v3/death-samples.npz",
+        "sourcePoseSha256": "5e8fcb03b6948ce9fb8c4729e5a06b38dcb23c1e10a3106ae6895f5d5a34f593",
+        "albedoSha256": "95a3b3da7bbb30f1b929dafd98a044ca0c27657d25787b2779c6fa4aaccc06f8",
+        "framesPerDirection": 28,
+        "cell": 128,
+        "anchor": [
+          64,
+          86
+        ],
+        "fps": 24,
+        "normalSpace": "authored camera right/up/toward (sprite tangent)",
+        "depthEncoding": "16-bit unsigned normalized source camera NDC z; zero=transparent",
+        "caster": "author's posed mesh alpha clipped to original visible body, planar only",
+        "emission": "authored eye vertex weights and depth-tested flame mesh; no RGB thresholding",
+        "normalSha256": "226e4f72a4afc54703dbddc10987793ea364585a6a5d0777003ec598a8f0d945",
+        "depthSha256": "ddf8c6744e09c8fbd8b94fd8cabfb4d5fb99d683f0ab99788190b012ce05ec1e",
+        "casterSha256": "352d75efba2254761019fc86e35e4cdbaef3135a560192da5050826242633eed",
+        "emissiveSha256": "f1e861e8aa5db7c19da6b0adf8c87b31d3ef0584f5f433c0f46b535fcaab4439"
+      },
+      "minimumSourceMeshIoU": 0.9850894632206759
+    }
+  }
+}
