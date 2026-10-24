@@ -59,14 +59,11 @@ def fit_mocap_rest_legs_to_anatomy(raw_arm):
     bpy.context.scene.collection.objects.link(target)
     target.name="CC0 Male fitted deform rig | CMU captured movement"
     target.data.name="Male gait anatomically fitted source skeleton"
-    if raw_arm.animation_data and raw_arm.animation_data.action:
-        # A copied object keeps its original Action slot in Blender 4.5.
-        # Sharing the original READ-ONLY F-curves avoids losing motion slots
-        # through a new layered Action. We edit only target REST bones.
-        target.animation_data_create()
-        target.animation_data.action=raw_arm.animation_data.action
-        if raw_arm.animation_data.action_slot:
-            target.animation_data.action_slot=raw_arm.animation_data.action_slot
+    # NEVER play raw BVH rotation F-curves on a different rest skeleton:
+    # even with constrained ankles that doubles rotations at hips/chest.
+    # Only explicit transferred target motion is allowed on this armature.
+    target.animation_data_clear()
+    insist(target.animation_data is None,"target retained incompatible BVH action")
     raw_arm.name="Original CMU BVH 07_04 | PROVENANCE | do not skin"
     raw_arm.hide_render=True
     raw_arm.hide_set(True)
@@ -331,85 +328,99 @@ def verify_deformed_leg_lanes(body,arm):
     return result
 
 
-def retarget_captured_feet_with_ik(source, target, start, end):
-    """Actual motion retarget: raw captured ankles -> fitted human leg IK.
+def retarget_captured_feet_with_ik(source,target,start,end):
+    """Transfer captured feet relative to the CAPTURED hips into a fitted rig.
 
-    Reusing CMU pose ROTATION curves directly on a changed bone REST angle
-    inverted the legs. This transfers SOURCE WORLD JOINT POSITIONS instead.
-    Only a constant lateral clearance correction is allowed over the whole
-    clip, so the original foot-contact trajectory has no new sideways jitter.
-    The raw BVH object and action remain unchanged for provenance.
+    Key design rule: the BVH source animation and converted rest skeleton
+    ARE DIFFERENT ANATOMIES. Do not copy bone Euler angles or absolute ankle
+    coordinates. Sample the source motion in each leg's moving hip-local
+    frame and transfer just the DIFFERENCE from the first sample into a
+    properly bound male's unchanged rest pose. Feet and poles are per-frame
+    keyed on the target leg controls, not on the source animation rig.
     """
+    insist(target.animation_data is None,"raw BVH action still drives fitted rig")
+    rest={}
+    for side in ("Left","Right"):
+        hip=target.matrix_world@target.data.bones[side+"UpLeg"].head_local
+        knee=target.matrix_world@target.data.bones[side+"Leg"].head_local
+        ankle=target.matrix_world@target.data.bones[side+"Foot"].head_local
+        length=(hip-knee).length+(knee-ankle).length
+        insist(length>1.,"target fitted leg length invalid")
+        rest[side]={"hip":hip,"knee":knee,"ankle":ankle,"length":length}
     poses=[]
-    maximum={"Left":0.,"Right":0.}
-    min_original={"Left":float("inf"),"Right":float("inf")}
+    minima={"Left":float("inf"),"Right":float("inf")}
     for frame in range(start,end+1):
         bpy.context.scene.frame_set(frame+1)
-        hip_l=source.matrix_world@source.pose.bones["LeftUpLeg"].head
-        hip_r=source.matrix_world@source.pose.bones["RightUpLeg"].head
-        axis=hip_r-hip_l
-        axis.z=0.
-        width=axis.length
-        insist(width>.1,"captured human hip width invalid")
-        axis.normalize()
-        middle=(hip_l+hip_r)*.5
-        row={"frame":frame+1,"axis":axis.copy(),"width":width,
-             "foot":{},"knee":{}}
-        for side,sgn in (("Left",-1),("Right",1)):
-            ankle=source.matrix_world@source.pose.bones[side+"Foot"].head
-            knee=source.matrix_world@source.pose.bones[side+"Leg"].head
-            clearance=sgn*(ankle-middle).dot(axis)
-            min_original[side]=min(min_original[side],clearance/width)
-            maximum[side]=max(maximum[side],max(0.,width*.38-clearance))
-            row["foot"][side]=ankle.copy()
-            row["knee"][side]=knee.copy()
-        poses.append(row)
-    # Bounded displacement: if the source is a completely different walking
-    # direction, FAIL rather than force a huge stride or hide bad source data.
-    typical=sorted(x["width"] for x in poses)[len(poses)//2]
-    insist(all(x<=typical*.6 for x in maximum.values()),
-           "source walk requires excessive lateral offsets for fitted rig")
+        r={"frame":frame+1}
+        for side in ("Left","Right"):
+            h=source.matrix_world@source.pose.bones[side+"UpLeg"].head
+            k=source.matrix_world@source.pose.bones[side+"Leg"].head
+            f=source.matrix_world@source.pose.bones[side+"Foot"].head
+            r[side]={"hip":h.copy(),"kneeRelative":(k-h).copy(),
+                     "footRelative":(f-h).copy()}
+        poses.append(r)
+    initial=poses[0]
+    # Single constant motion scale (not framewise warping), preserving the
+    # original recorded swing and foot-contact timing. Cap overly long reach.
+    scales={}
+    for side in ("Left","Right"):
+        source_r=initial[side]
+        source_length=source_r["kneeRelative"].length+(
+            source_r["footRelative"]-source_r["kneeRelative"]).length
+        insist(source_length>.1,"original motion source leg degenerate")
+        scales[side]=min(.8,rest[side]["length"]/source_length)
     controls={}
-    for side,sign in (("Left",-1),("Right",1)):
-        foot=bpy.data.objects.new("Captured ankle / "+side+" | fitted IK",None)
-        knee=bpy.data.objects.new("Captured knee pole / "+side+" | fitted IK",None)
+    for side in ("Left","Right"):
+        foot=bpy.data.objects.new("Fitted captured foot target "+side,None)
+        knee=bpy.data.objects.new("Fitted captured knee pole "+side,None)
         bpy.context.scene.collection.objects.link(foot)
         bpy.context.scene.collection.objects.link(knee)
-        foot.empty_display_size=.24
-        knee.empty_display_size=.24
+        foot.empty_display_size=.22;knee.empty_display_size=.22
         controls[side]=(foot,knee)
     for row in poses:
-        for side,sign in (("Left",-1),("Right",1)):
+        for side in ("Left","Right"):
             foot,pole=controls[side]
-            corrected=row["foot"][side]+row["axis"]*(sign*maximum[side])
-            # Respect the original captured knee plane. The former 0.8x-hip
-            # pole push overrotated the thigh and tore the pelvis surface.
-            # A small separation offset avoids a degenerate straight chain
-            # without forcing the knee outward several Blender units.
-            pole_pos=row["knee"][side]+row["axis"]*(sign*row["width"]*.2)
-            foot.location=corrected
-            pole.location=pole_pos
+            original=row[side]
+            baseline=initial[side]
+            delta_foot=(original["footRelative"]-baseline["footRelative"])*scales[side]
+            delta_knee=(original["kneeRelative"]-baseline["kneeRelative"])*scales[side]
+            target_foot=rest[side]["ankle"]+delta_foot
+            # Pole starts on the anatomically fitted knee's outside arc.
+            # Constraining the pole to the source knee motion, not forcing
+            # arbitrary hip-width flares, protects groin and knee bending.
+            target_pole=rest[side]["knee"]+delta_knee
+            pole_bias=(rest[side]["knee"]-rest[side]["hip"]).cross(
+                rest[side]["ankle"]-rest[side]["hip"])
+            if pole_bias.length<1e-4:
+                pole_bias=target.matrix_world.to_quaternion()@Vector((0.,-1.,0.))
+            pole_bias.normalize()
+            target_pole+=pole_bias*rest[side]["length"]*.12
+            foot.location=target_foot;pole.location=target_pole
             foot.keyframe_insert(data_path="location",frame=row["frame"])
             pole.keyframe_insert(data_path="location",frame=row["frame"])
     for side in ("Left","Right"):
         foot,pole=controls[side]
         shin=target.pose.bones[side+"Leg"]
-        constraint=shin.constraints.new("IK")
-        constraint.name="Fitted human captured-foot reach"
-        constraint.target=foot
-        constraint.pole_target=pole
-        constraint.chain_count=2
-        constraint.pole_angle=0.
-        constraint.use_stretch=False
-        # A near-root control is still inside the original data's bone chain.
         insist(shin.parent and shin.parent.name==side+"UpLeg",
-               "foot IK chain is not the expected anatomical two-bone leg")
+               "expected two-bone leg chain missing")
+        constraint=shin.constraints.new("IK")
+        constraint.name="Hip-relative CMU recorded leg swing"
+        constraint.target=foot;constraint.pole_target=pole
+        constraint.chain_count=2;constraint.pole_angle=0.
+        constraint.use_stretch=False
     bpy.context.scene.frame_set(start+1)
-    return {"source":"original CMU evaluated world ankles and knees",
-            "footIKControls":len(controls),"captureFramesTransferred":len(poses),
-            "minimumSourceLaneRatios":{k:round(v,4) for k,v in min_original.items()},
-            "constantLateralOffsets":{k:round(v,4) for k,v in maximum.items()},
-            "preservesOriginalBVH":True,"skinReviewAccepted":False}
+    return {
+        "source":"captured hip-relative CMU 07_04 ankle/knee trajectories",
+        "sourceActionPreserved":True,
+        "targetSourceActionRemoved":True,
+        "footIKControls":len(controls),
+        "captureFramesTransferred":len(poses),
+        "perLegConstantMotionScale":{k:round(v,5) for k,v in scales.items()},
+        "targetFootTargetAtFirstFrame":{
+            k:[round(float(v),4) for v in controls[k][0].location]
+            for k in controls},
+        "nativeMotionReviewed":False,
+    }
 
 
 def studio_scene(body,arm,output):
