@@ -92,7 +92,7 @@ atlas.save(OUT/"candidate-walk-eight-directions.png")
 contact_sheet = Image.new("RGBA",(atlas.width,atlas.height*2),(0,0,0,0))
 contact_sheet.alpha_composite(before,(0,0))
 contact_sheet.alpha_composite(atlas,(0,atlas.height))
-contact_sheet.save(OUT/"v7-vs-contact-gait-all-directions.png")
+contact_sheet.save(OUT/"dragged-vs-ground-safe-all-directions.png")
 first_atlas = ROOT/"docs/art/evidence/hollowed-broken-leg-contact-authored/candidate-walk-eight-directions.png"
 if first_atlas.is_file():
     first = Image.open(first_atlas).convert("RGBA")
