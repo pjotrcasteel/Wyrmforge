@@ -33,3 +33,30 @@ jobs:
         run: |
           dotnet restore src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj
           dotnet publish src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -c Release --no-restore -o artifacts/hollow-leg-web
+      - name: Install Chromium browser preview
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Serve original published game
+        run: |
+          python3 tools/development/spa_server.py --port 4175 --directory ./artifacts/hollow-leg-web/wwwroot > ./artifacts/hollow-leg-spa.log 2>&1 &
+          for attempt in {1..40}; do
+            if curl --fail --silent http://127.0.0.1:4175/ > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat ./artifacts/hollow-leg-spa.log
+          exit 1
+      - name: Record 320px and 390px actual Arena Canvas
+        run: node tools/sprite-lab/capture-hollow-leg-hunt.cjs artifacts/hollow-leg-live-review http://127.0.0.1:4175
+      - name: Preserve phone-sized runtime capture and evidence
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hollowed-leg-arena-review
+          path: |
+            artifacts/hollow-leg-live-review/
+            artifacts/hollow-leg-spa.log
+          retention-days: 21
+          if-no-files-found: warn
