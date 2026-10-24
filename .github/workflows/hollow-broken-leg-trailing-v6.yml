@@ -51,11 +51,11 @@ jobs:
           assert collapse['extraPelvisOffset'][2]<-.05
           assert max(f['limpV6']['leftFootTrailDistance'] for f in frames[:16])>.11
           assert max(f['limpV6']['leftFootTrailDelta'][1] for f in frames[:16])>.08
-          assert all(f['limpV6']['bothSourceFootContactsLocked'] for f in frames[:16])
+          assert all(f['limpV6']['plantedSourceFootContactsLocked'] for f in frames[:16])
           assert collapse['crookedKneePoleShift']>.09
           assert collapse['extraThoraxCounterRollDegrees']< -8.5
           assert max(f['limpV6']['extraThoraxPitchDegrees'] for f in frames[:16])>5.5
-          assert all(f['limpV6']['bothSourceFootContactsLocked'] for f in frames)
+          assert all(f['limpV6']['plantedSourceFootContactsLocked'] for f in frames)
           for i in range(17):
             for side in ('L','R'):
               old_ankle=source[i]['feet'][side]['ankle']
