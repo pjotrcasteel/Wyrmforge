@@ -32,7 +32,13 @@ const ids=['hollowed','ashling','frame','lightX','zero','shadows','animate'];
 function values(){return Object.fromEntries(ids.map(id=>{const e=document.getElementById(id);return [id,e.type==='checkbox'?e.checked:e.type==='range'?Number(e.value):e.value]}));}
 try {
     await initializeActorReview(canvas);
-    window.actorLitReview={redraw:changes=>redrawActorReview(canvas,changes),pixels:()=>actorReviewPixels(canvas),canvas};
+    window.actorLitReview={redraw:changes=>{
+        for(const [id,value] of Object.entries(changes)) {
+            const control=document.getElementById(id);
+            if(control) { if(control.type==='checkbox') control.checked=value; else control.value=value; }
+        }
+        redrawActorReview(canvas,changes);
+    },pixels:()=>actorReviewPixels(canvas),canvas};
     for(const id of ids)document.getElementById(id).addEventListener('input',()=>redrawActorReview(canvas,values()));
     status.textContent='Ready — inspect movement/attack/death from identical light snapshots; zero diagnostics are strict.';
 }catch(e){status.textContent='GPU review error: '+e.message;console.error(e)}
