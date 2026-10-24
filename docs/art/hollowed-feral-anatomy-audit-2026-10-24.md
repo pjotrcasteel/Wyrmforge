@@ -56,3 +56,36 @@ Unapproved evidence, generated from the actual skinned surface and anatomy diagn
 - Motion needs stance-foot drift and toe-off continuity checked with actual authoritative root displacement, especially on slopes or while changing directions and interrupting for attack.
 - A 16-frame 3/4 view and four camera azimuth checks **are not** accepted eight-direction production sprite exports. The new walking normal/depth/caster/emissive assets must be regenerated from the new rig/pose if this candidate becomes approved.
 - Nothing replaces the currently approved Hollowed or Ashling production assets. No game or engine code changed.
+
+
+## 11:46 user rejection: the arms still visibly flail (v7)
+
+Do **not** infer an approved run from bone-length or elbow-angle tests. The v7
+upper-arm and forearm Y trajectories were both driven by the same leg phase.
+In 24 of 32 sampled side/frame combinations, the upper arm and forearm had
+the same front/back travel direction; the arm often unfolded into a long tentacle.
+
+V8 separates the coupled upper/forearm trajectories: forward swing now raises
+the bent elbow's hand and back swing sends the hand back toward the hip.
+The v8 preview exposed a second problem: the independent hand bone
+pointed downward while the front forearm pointed up, creating an obvious
+hooked wrist/claw.
+
+V9 keeps the wrist oriented continuously with its parent forearm. A strict
+wrist-angle gate verifies 0° relative discontinuity at all 16 frames and both
+arms, and the Blender/source-sample workflow passed. Evidence is stored in
+`docs/art/evidence/hollowed-sprint-v9-2026-10-24/` with the editable
+`rigged-sprint-v9-candidate/hollow-rigged.blend`.
+
+**Still visually UNAPPROVED**: v9 is more mechanically continuous, but the
+full-body actor still reads as a procedural, exaggerated zombie wave when
+seen at 96px or side-on. The original rig has unusually long arm/hand chains
+and automatically distance-weighted mesh deformation. No amount of wrist
+angle assertions proves the running animation is acceptable.
+
+The next artistic approach must be to build and retarget from credible sprint
+reference with edited contact/toe-off/fold/arm-pump key poses, then review the
+real skinned model in 3D before 8-direction pixel export. Do NOT promote
+the v9 trial to the production `walk.png` or pair it with the approved
+G1 walking normals. Leave Ashling and the shared GPU renderer unchanged.
+
