@@ -52,31 +52,93 @@ for bone in rig.pose.bones:
 if rig.animation_data and rig.animation_data.action:
     rig.animation_data.action.use_fake_user = True
 
-before = set(bpy.data.objects)
-if hasattr(bpy.ops.wm, "bvh_import"):
-    bpy.ops.wm.bvh_import(filepath=str(BVH), target="ARMATURE", rotate_mode="NATIVE",
-                          axis_forward="-Z", axis_up="Y", global_scale=1.0)
-else:
-    bpy.ops.import_anim.bvh(filepath=str(BVH), target="ARMATURE",
-                            rotate_mode="NATIVE", axis_forward="-Z",
-                            axis_up="Y", global_scale=1.0)
-new_armatures = [obj for obj in bpy.data.objects if obj not in before and obj.type == "ARMATURE"]
-if len(new_armatures) != 1:
-    raise RuntimeError(f"Expected exactly one newly imported mocap armature: {new_armatures}")
-mocap = new_armatures[0]
-missing = set(JOINTS) - set(mocap.pose.bones)
+# Blender 4.5 embedded Python does not consistently ship io_anim_bvh;
+# parse this small canonical CMU BVH ourselves rather than depending on an
+# uninstalled addon. Read ALL original 120-Hz source samples unchanged.
+def load_bvh(source_file):
+    import re
+    from mathutils import Quaternion
+    lines=[line.strip() for line in source_file.read_text().splitlines()]
+    motion=lines.index("MOTION")
+    channels=0
+    nodes=[]
+    stack=[]
+    pending=None
+    for line in lines[1:motion]:
+        parts=line.split()
+        if not parts:
+            continue
+        if parts[0] in ("ROOT","JOINT"):
+            name=parts[1]
+            parent=stack[-1] if stack else None
+            pending={"name":name,"parent":parent,
+                     "offset":Vector((0,0,0)),"channels":[],"start":channels}
+            nodes.append(pending)
+        elif line=="End Site":
+            pending={"name":"#end"}
+        elif line=="{":
+            stack.append(None if pending and pending["name"]=="#end" else len(nodes)-1)
+            pending=None
+        elif line=="}":
+            stack.pop()
+        elif parts[0]=="OFFSET" and stack and stack[-1] is not None:
+            nodes[stack[-1]]["offset"]=Vector(map(float,parts[1:4]))
+        elif parts[0]=="CHANNELS" and stack and stack[-1] is not None:
+            current=nodes[stack[-1]]
+            current["channels"]=parts[2:]
+            current["start"]=channels
+            assert len(current["channels"])==int(parts[1])
+            channels+=len(current["channels"])
+    assert not stack
+    assert nodes[0]["name"]=="Hips"
+    assert len(nodes)>20 and channels>80,(len(nodes),channels)
+    framecount=int(lines[motion+1].split(":")[1])
+    dt=float(lines[motion+2].split(":")[1])
+    assert framecount>=120 and abs(dt-1/120)<1e-4,(framecount,dt)
+    source_rows=[list(map(float,line.split())) for line in lines[motion+3:] if line]
+    assert len(source_rows)==framecount,(len(source_rows),framecount)
+    axes={"Xrotation":Vector((1,0,0)),"Yrotation":Vector((0,1,0)),
+          "Zrotation":Vector((0,0,1))}
+    samples=[]
+    identity=Quaternion((1,0,0,0))
+    for row in source_rows:
+        assert len(row)==channels,(len(row),channels)
+        positions=[]
+        world_rots=[]
+        result={}
+        for node in nodes:
+            rot=identity.copy()
+            translation=node["offset"].copy()
+            for i,channel in enumerate(node["channels"]):
+                number=row[node["start"]+i]
+                if channel.endswith("rotation"):
+                    rot=rot@Quaternion(axes[channel],math.radians(number))
+                elif channel.endswith("position"):
+                    axis=Vector((int(channel[0]=="X"),int(channel[0]=="Y"),int(channel[0]=="Z")))
+                    translation+=axis*number
+                else:
+                    raise ValueError("Unsupported BVH channel "+channel)
+            parent=node["parent"]
+            if parent is None:
+                pos=translation
+                quat=rot
+            else:
+                pos=positions[parent]+world_rots[parent]@translation
+                quat=world_rots[parent]@rot
+            positions.append(pos)
+            world_rots.append(quat)
+            result[node["name"]]=pos
+        samples.append(result)
+    return samples, dt
+
+# BVH original data is Y-up, whereas Blender target source rig is Z-up.
+all_frames, source_timestep=load_bvh(BVH)
+missing=set(JOINTS)-set(all_frames[0])
 if missing:
-    raise RuntimeError(f"CMU source skeleton unexpectedly missing joints {sorted(missing)}")
-if bpy.context.scene.frame_end < 70:
-    raise RuntimeError("CMU run is too short for one complete gait cycle")
-
-def sample_source(frame):
-    bpy.context.scene.frame_set(frame)
-    bpy.context.view_layer.update()
-    return {name: mocap.matrix_world @ mocap.pose.bones[name].head for name in JOINTS}
-
-raw = [sample_source(frame) for frame in range(2, bpy.context.scene.frame_end + 1)]
-n = len(raw)
+    raise RuntimeError("Missing original measured mocap joints: "+str(sorted(missing)))
+raw=all_frames[1:]  # first frame is T-pose calibration, not a running key
+n=len(raw)
+print("Loaded",n,"real CMU captured running poses at",1/source_timestep,"Hz",flush=True)
 def normalized(v):
     if v.length <= 1e-8:
         raise ValueError("Degenerate mocap anatomical vector")
@@ -119,12 +181,12 @@ print("Mocap authentic chosen cycle", first, period, "source frames",score,flush
 # RIGHT is the anatomical left/right hip line, not a guessed camera direction.
 start_hips = raw[first]["Hips"]
 end_hips = raw[first+period]["Hips"]
-up = Vector((0,0,1))
+up = Vector((0,1,0))
 travel = end_hips - start_hips
-travel.z = 0
+travel.y = 0
 travel = normalized(travel)
 cross_hips = raw[first]["LeftUpLeg"] - raw[first]["RightUpLeg"]
-cross_hips.z = 0
+cross_hips.y = 0
 right = normalized(cross_hips - travel * cross_hips.dot(travel))
 forward = normalized(up.cross(right))
 if forward.dot(travel)<0:
@@ -135,7 +197,7 @@ if forward.dot(travel)<0:
 assert abs(right.dot(forward))<1e-4
 def direction(vector):
     # Original source is forward relative to real travel, Blender model forward -Y.
-    return Vector((vector.dot(right),-vector.dot(forward),vector.z))
+    return Vector((vector.dot(right),-vector.dot(forward),vector.dot(up)))
 def lerp_source(t):
     index = first + t * period
     low = int(math.floor(index))
@@ -170,7 +232,7 @@ for index in range(FRAMES+1):
     scale=(lengths["thigh.L"]+lengths["shin.L"])/(
         (sample["LeftUpLeg"]-sample["LeftLeg"]).length+
         (sample["LeftLeg"]-sample["LeftFoot"]).length)
-    root_z=(sample["Hips"].z - raw[first]["Hips"].z)*scale
+    root_z=(sample["Hips"].dot(up)-raw[first]["Hips"].dot(up))*scale
     root_offset=Vector((0,-.015,max(-.035,min(.035,root_z))-.025))
     origin=heads["pelvis"]
     # Reference torso has its own lean/roll/turn. Apply it to the ORIGINAL
@@ -232,7 +294,7 @@ scene.render.fps=FPS
 scene.frame_set(1)
 # Delete imported reference armature; actual animated character rig and original
 # skinned editable mesh are preserved in the saved Blender project.
-bpy.data.objects.remove(mocap,do_unlink=True)
+# Imported samples are pure data; original Blender rig stays editable.
 src_sha=hashlib.sha256(BVH.read_bytes()).hexdigest()
 (DEST/"retarget-provenance.json").write_text(json.dumps({
     "status":"UNAPPROVED: no production atlas replacement",
