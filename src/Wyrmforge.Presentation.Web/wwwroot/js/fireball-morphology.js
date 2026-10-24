@@ -104,8 +104,13 @@ export function drawComposedFireImpact(ctx, event, recipe, reducedMotion = false
     const t = bounded(event.progress, 0, 1);
     if (t >= 1) return;
     const rank = bounded(event.rank, 1, 3);
-    const radius = (11 + rank * 6) * (.45 + t * .84) * (event.surge ? 1.36 : 1);
-    const count = reducedMotion ? 5 : morph.detonation ? 12 : 6;
+    const actualExplosion = morph.detonation && Number(event.splashRadius) > 0;
+    // Only real enemy hits carry C# splash geometry. Wall impacts provide
+    // feedback but cannot pretend to have damaged an area.
+    const radius = actualExplosion
+        ? bounded(event.splashRadius, 1, 400) * (.42 + .58 * t)
+        : (11 + rank * 6) * (.45 + t * .84) * (event.surge ? 1.36 : 1);
+    const count = reducedMotion ? 5 : actualExplosion ? 12 : 6;
     const fragment = Math.max(2, Math.round(radius * .12));
     ctx.save();
     ctx.globalAlpha *= 1 - t;

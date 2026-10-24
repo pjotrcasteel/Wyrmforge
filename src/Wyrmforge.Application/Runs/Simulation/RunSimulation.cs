@@ -354,6 +354,7 @@ public sealed partial class RunSimulation
                 Rank = impact.Rank,
                 Combination = impact.Combination,
                 Surge = impact.Surge,
+                SplashRadius = impact.SplashRadius,
             }).ToArray(),
             deathBursts.Select(burst => new DeathBurstRenderSnapshot(burst.Position.X, burst.Position.Y, burst.Radius, burst.Progress, burst.Intensity, burst.Kind, burst.EntityId, burst.BodyRadius)).ToArray(),
             CreateFieryAreaSnapshots(),

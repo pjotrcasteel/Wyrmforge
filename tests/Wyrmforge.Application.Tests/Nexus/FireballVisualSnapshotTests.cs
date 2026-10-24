@@ -49,4 +49,17 @@ public sealed class FireballVisualSnapshotTests
         Assert.AreEqual(ground.RemainingSeconds, snapshot.BurningGrounds[0].RemainingSeconds, .00001);
         Assert.AreEqual(0, snapshot.EssenceBursts.Count, "A real hazard should not be disguised as a short-lived essence burst.");
     }
+
+    [TestMethod]
+    public void CreateSnapshot_ProjectileImpact_UsesActualSplashRadiusFromCombat()
+    {
+        var random = new FirstRandomSource();
+        var simulation = new RunSimulation(new HashSet<string>(), new LevelChoiceService(random), random);
+        var register = typeof(RunSimulation).GetMethod("RegisterElementalImpact", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        register.Invoke(simulation, [new Vector2D(20, 30), SpellId.FireBolt, 1, null, false, 46d]);
+
+        var impact = simulation.CreateSnapshot().ElementalImpacts.Single();
+        Assert.AreEqual(46d, impact.SplashRadius, .00001);
+        Assert.AreEqual(SpellId.FireBolt, impact.Spell);
+    }
 }

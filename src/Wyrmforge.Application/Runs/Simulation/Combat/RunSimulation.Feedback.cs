@@ -44,9 +44,9 @@ public sealed partial class RunSimulation
 
     private void RegisterSplashPulse(Vector2D position, double radius, double duration = SplashPulseSeconds) => splashPulses.Add(new SplashPulseState(position, radius, duration));
 
-    private void RegisterElementalImpact(Vector2D position, SpellId spell, int rank = 1, SynergyId? combination = null, bool surged = false) =>
+    private void RegisterElementalImpact(Vector2D position, SpellId spell, int rank = 1, SynergyId? combination = null, bool surged = false, double splashRadius = 0) =>
         elementalImpacts.Add(new ElementalImpactState(position, spell, ElementalImpactSeconds + .05 * Math.Clamp(rank - 1, 0, 2),
-            rank, combination, surged));
+            rank, combination, surged, splashRadius));
 
     private void RegisterEnemyDeath(EnemyState enemy)
     {
@@ -73,7 +73,7 @@ public sealed partial class RunSimulation
         public double Progress => 1 - Math.Clamp(Life / Duration, 0, 1);
     }
 
-    private sealed class ElementalImpactState(Vector2D position, SpellId spell, double duration, int rank, SynergyId? combination, bool surged)
+    private sealed class ElementalImpactState(Vector2D position, SpellId spell, double duration, int rank, SynergyId? combination, bool surged, double splashRadius)
     {
         public Vector2D Position { get; } = position;
 
@@ -84,6 +84,8 @@ public sealed partial class RunSimulation
         public SynergyId? Combination { get; } = combination;
 
         public bool Surge { get; } = surged;
+
+        public double SplashRadius { get; } = splashRadius;
 
         public double Duration { get; } = duration;
 

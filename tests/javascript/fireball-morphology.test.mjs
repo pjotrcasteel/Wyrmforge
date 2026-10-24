@@ -31,6 +31,9 @@ test('one drawable projectile changes its body and impact rather than spawning e
     drawComposedFireImpact(hit, { rank: 1, progress: .3 }, recipe(7));
     assert.ok(hit.rectangles > 0);
     assert.doesNotThrow(() => drawComposedFireImpact(hit, { rank: 1, progress: 1 }, recipe(7)));
+    const damageRadius = fakeCtx();
+    drawComposedFireImpact(damageRadius, { rank: 1, progress: .4, splashRadius: 46 }, recipe(7));
+    assert.ok(damageRadius.rectangles >= hit.rectangles / 2);
 });
 
 test('Nexus uses the same projectile morphology and ground fire needs a real C# instance', () => {
