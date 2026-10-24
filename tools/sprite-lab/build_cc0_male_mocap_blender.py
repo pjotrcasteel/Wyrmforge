@@ -347,11 +347,34 @@ def retarget_captured_feet_with_ik(source,target,start,end):
         length=(hip-knee).length+(knee-ankle).length
         insist(length>1.,"target fitted leg length invalid")
         rest[side]={"hip":hip,"knee":knee,"ankle":ankle,"length":length}
+    # Capture torso/arm rotations in each bone's LOCAL coordinate frame.
+    # Relative quaternions preserve the CMU performance without transplanting
+    # incompatible absolute BVH rotations onto the CC0 fitted rest geometry.
+    upper=("Hips","LowerBack","Spine","Spine1","Neck","Neck1","Head",
+           "LeftShoulder","LeftArm","LeftForeArm","LeftHand",
+           "RightShoulder","RightArm","RightForeArm","RightHand")
+    upper=tuple(name for name in upper if name in source.pose.bones and
+                name in target.pose.bones)
+    insist(len(upper)>=12,"cannot retarget articulated shoulders/spine")
+    bpy.context.scene.frame_set(start+1)
+    source_rotation_zero={name:source.pose.bones[name].matrix_basis.to_quaternion().copy()
+                          for name in upper}
+    source_root_zero=source.pose.bones["Hips"].matrix.translation.copy()
+    for name in upper:
+        dst=target.pose.bones[name]
+        dst.rotation_mode="QUATERNION"
+        dst.rotation_quaternion=(1.,0.,0.,0.)
+        dst.location=(0.,0.,0.)
     poses=[]
-    minima={"Left":float("inf"),"Right":float("inf")}
     for frame in range(start,end+1):
         bpy.context.scene.frame_set(frame+1)
         r={"frame":frame+1}
+        r["rootDelta"]=(source.pose.bones["Hips"].matrix.translation-source_root_zero).copy()
+        r["upper"]={
+            name:(source.pose.bones[name].matrix_basis.to_quaternion()@
+                  source_rotation_zero[name].inverted()).normalized()
+            for name in upper
+        }
         for side in ("Left","Right"):
             h=source.matrix_world@source.pose.bones[side+"UpLeg"].head
             k=source.matrix_world@source.pose.bones[side+"Leg"].head
@@ -369,6 +392,11 @@ def retarget_captured_feet_with_ik(source,target,start,end):
             source_r["footRelative"]-source_r["kneeRelative"]).length
         insist(source_length>.1,"original motion source leg degenerate")
         scales[side]=min(.8,rest[side]["length"]/source_length)
+    # Source/root displacement is a distinct channel from swing. Apply the
+    # same normalized character scale to target hips and two ankle controls.
+    root_displacement=max((row["rootDelta"].length for row in poses),default=0.)
+    insist(root_displacement>.05,"captured walk root never translates")
+    root_scale=sum(scales.values())/len(scales)
     controls={}
     for side in ("Left","Right"):
         foot=bpy.data.objects.new("Fitted captured foot target "+side,None)
@@ -378,17 +406,25 @@ def retarget_captured_feet_with_ik(source,target,start,end):
         foot.empty_display_size=.22;knee.empty_display_size=.22
         controls[side]=(foot,knee)
     for row in poses:
+        root_step=row["rootDelta"]*root_scale
+        for name in upper:
+            dst=target.pose.bones[name]
+            dst.rotation_quaternion=row["upper"][name]
+            dst.keyframe_insert(data_path="rotation_quaternion",frame=row["frame"])
+        pelvis=target.pose.bones["Hips"]
+        pelvis.location=root_step
+        pelvis.keyframe_insert(data_path="location",frame=row["frame"])
         for side in ("Left","Right"):
             foot,pole=controls[side]
             original=row[side]
             baseline=initial[side]
             delta_foot=(original["footRelative"]-baseline["footRelative"])*scales[side]
             delta_knee=(original["kneeRelative"]-baseline["kneeRelative"])*scales[side]
-            target_foot=rest[side]["ankle"]+delta_foot
+            target_foot=rest[side]["ankle"]+delta_foot+root_step
             # Pole starts on the anatomically fitted knee's outside arc.
             # Constraining the pole to the source knee motion, not forcing
             # arbitrary hip-width flares, protects groin and knee bending.
-            target_pole=rest[side]["knee"]+delta_knee
+            target_pole=rest[side]["knee"]+delta_knee+root_step
             pole_bias=(rest[side]["knee"]-rest[side]["hip"]).cross(
                 rest[side]["ankle"]-rest[side]["hip"])
             if pole_bias.length<1e-4:
@@ -413,6 +449,10 @@ def retarget_captured_feet_with_ik(source,target,start,end):
         "source":"captured hip-relative CMU 07_04 ankle/knee trajectories",
         "sourceActionPreserved":True,
         "targetSourceActionRemoved":True,
+        "upperBodyChannelsRetargeted":list(upper),
+        "rootTranslationRetargeted":True,
+        "capturedRootTravel":round(root_displacement,5),
+        "targetRootScale":round(root_scale,5),
         "footIKControls":len(controls),
         "captureFramesTransferred":len(poses),
         "perLegConstantMotionScale":{k:round(v,5) for k,v in scales.items()},
