@@ -32,11 +32,11 @@ export function allFireballRecipes() {
 function sourceIsWithinFireballArt(path) {
     return typeof path === 'string' &&
         path.startsWith('art/source/spells/fireball/') &&
-        !path.split('/').includes('..') && !path.includes('\\\\');
+        !path.split('/').includes('..') && !path.includes('\\');
 }
 
 function validateFrames(source, path) {
-    if (!sourceIsWithinFireballArt(source?.sheet) || !/\\.(?:aseprite|ase|blend)$/.test(source.sheet))
+    if (!sourceIsWithinFireballArt(source?.sheet) || !/\.(?:aseprite|ase|blend)$/.test(source.sheet))
         throw new Error(`${path}: missing editable source-sheet provenance`);
     if (!Number.isInteger(source.frames) || source.frames < 2 || source.frames > 256)
         throw new Error(`${path}: must have real authored animation frames`);
