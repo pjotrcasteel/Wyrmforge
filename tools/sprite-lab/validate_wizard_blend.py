@@ -11,7 +11,7 @@ CLIPS={"walk":(1,17),"idle":(21,33),"cast":(41,60),"hurt":(71,80),"death":(91,11
 def verify(ok,message):
     if not ok: raise RuntimeError("WyrmForge wizard: "+message)
 
-def run(output,render):
+def run(output,render,walk_sequence):
     scene=bpy.context.scene
     arm=bpy.data.objects.get("WizardRig")
     verify(arm is not None and arm.type=="ARMATURE","missing editable character armature")
@@ -77,9 +77,16 @@ def run(output,render):
         gait[direction]={"frames":len(frames),"leftFootTravel":round(travel,4)}
     pivot.rotation_euler=root_rotation
     scene.frame_set(1)
+    wool=bpy.data.materials.get("robe")
+    verify(wool is not None and wool.use_nodes,"missing editable neutral wool")
+    bsdf=wool.node_tree.nodes.get("Principled BSDF")
+    verify(bsdf is not None and bsdf.inputs["Base Color"].is_linked,
+           "wool dye variation missing; returning to flat preview materials")
+    locks=[obj for obj in bpy.data.objects if obj.name.startswith("Weighted original beard lock")]
+    verify(len(locks)>=11,"beard returned to sparse prototype strands")
     output.mkdir(parents=True,exist_ok=True)
     images=[]
-    if render:
+    if render or walk_sequence:
         scene.render.engine="CYCLES"
         scene.cycles.samples=8
         scene.render.resolution_x=256
@@ -88,7 +95,7 @@ def run(output,render):
         scene.render.film_transparent=True
         scene.render.image_settings.file_format="PNG"
         scene.render.image_settings.color_mode="RGBA"
-        for direction,f,label in (("S",5,"walk-a"),("S",13,"walk-b"),("S",49,"cast"),("N",5,"walk-north")):
+        for direction,f,label in ((("S",5,"walk-a"),("S",13,"walk-b"),("S",49,"cast"),("N",5,"walk-north")) if render else ()):
             pivot.rotation_euler.z=0 if direction=="S" else math.pi
             scene.frame_set(f)
             path=output/("wizard-"+direction+"-"+label+".png")
@@ -96,6 +103,22 @@ def run(output,render):
             bpy.ops.render.render(write_still=True)
             verify(path.is_file() and path.stat().st_size>1000,"missing render "+str(path))
             images.append(path.name)
+    if walk_sequence:
+        scene.cycles.samples=5
+        scene.render.resolution_x=256
+        scene.render.resolution_y=256
+        folder=output/"walk-16"
+        folder.mkdir(exist_ok=True)
+        pivot.rotation_euler.z=0
+        # Sequentially evaluate gait and cloth rather than cherry-pick frames.
+        # These lit inspection stills must NEVER become source albedo atlases.
+        for frame in range(1,17):
+            scene.frame_set(frame)
+            scene.render.filepath=str(folder/("frame-"+str(frame-1).zfill(2)+".png"))
+            bpy.ops.render.render(write_still=True)
+            path=Path(scene.render.filepath)
+            verify(path.is_file() and path.stat().st_size>1200,"missing 16-phase walk render")
+            images.append(str(path.relative_to(output)))
     report={"blender":bpy.app.version_string,"source":bpy.data.filepath,
         "bones":len(arm.data.bones),"staffVariants":len(schools),"directions":len(directions),
         "clips":clips,"clothMeshes":cloth,"gait":gait,"reviewImages":images,
@@ -108,5 +131,6 @@ if __name__=="__main__":
     parser=argparse.ArgumentParser()
     parser.add_argument("--output",required=True)
     parser.add_argument("--render",action="store_true")
+    parser.add_argument("--walk-sequence",action="store_true")
     opts=parser.parse_args(sys.argv[sys.argv.index("--")+1:] if "--" in sys.argv else [])
-    run(Path(opts.output),opts.render)
+    run(Path(opts.output),opts.render,opts.walk_sequence)
