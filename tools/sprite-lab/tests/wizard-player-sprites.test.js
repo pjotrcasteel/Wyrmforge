@@ -52,8 +52,8 @@ test('accepted 8-view frames render via shared atlas path at actual player feet'
     assert.equal(drawing.frames.at(-1)[1],'walk');
     sprites.draw({},player(104,150),{progress:.3,angle:0},.17,state);
     assert.equal(drawing.frames.at(-1)[1],'cast');
-    assert.equal(drawing.frames.at(-1)[5],104);
-    assert.equal(drawing.frames.at(-1)[6],150);
+    assert.equal(drawing.frames.at(-1)[4],104);
+    assert.equal(drawing.frames.at(-1)[5],150);
 });
 test('teleport does not advance locomotion phase; paused casts hold rather than mutate C#',async()=>{
     const drawing=renderer(goodManifest()),sprites=createWizardPlayerSprites({renderer:drawing});
