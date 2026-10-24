@@ -44,7 +44,7 @@ class GroundMaterialProbeTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             PROBE.feather_opposite_edges(Image.new("RGB", (6, 6)), fraction=0.1)
         with self.assertRaises(ValueError):
-            PROBE.repeated(self.noisy_image(), 0) if False else PROBE.generate(Path("missing"), Path("missing"), tile_px=12)
+            PROBE.generate(Path("missing"), Path("unused"), tile_px=12)
 
     def test_synthetic_archive_makes_twelve_studies_without_writing_sources(self):
         with tempfile.TemporaryDirectory() as tmp:
