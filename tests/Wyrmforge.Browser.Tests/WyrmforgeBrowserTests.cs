@@ -3623,9 +3623,17 @@ public sealed class WyrmforgeBrowserTests : PageTest
         var canvas = Page.Locator("canvas.game-canvas");
         await Expect(canvas).ToBeVisibleAsync();
 
+        // Confirm the captured scene really uses the intended three-mutation
+        // C# recipe. A screenshot of generic arena fire is not proof of Fireball.
+        await Page.WaitForFunctionAsync(@"async () => {
+            const arena = await import(new URL('js/arena.js', document.baseURI).href);
+            return arena.readArenaDiagnostics(document.querySelector('canvas.game-canvas'))?.fireballVisual?.mutationMask === 7;
+        }");
+
         var frames = Path.Combine(ArtifactDirectory, $"fireball-actual-hunt-{width}x{height}");
         Directory.CreateDirectory(frames);
         var hashes = new HashSet<uint>();
+        var snapshots = new List<string>();
         for (var frame = 0; frame < 40; frame++)
         {
             await canvas.ScreenshotAsync(new LocatorScreenshotOptions
@@ -3642,11 +3650,29 @@ public sealed class WyrmforgeBrowserTests : PageTest
                     return hash >>> 0;
                 }"));
             }
+            // Attribute visual events to REAL gameplay snapshot types. In particular
+            // legacy orange rings can originate in EssenceBursts (also ground fire),
+            // not necessarily the player projectile's Detonation.
+            var observation = await Page.EvaluateAsync<JsonElement>(@"async () => {
+                const arena = await import(new URL('js/arena.js', document.baseURI).href);
+                const data = arena.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
+                return {
+                    mutationMask: data?.fireballVisual?.mutationMask ?? null,
+                    fireboltProjectiles: (data?.projectiles ?? []).filter(p => p.spell === 1).length,
+                    fireboltImpacts: (data?.elementalImpacts ?? []).filter(p => p.spell === 1).length,
+                    burningGrounds: data?.burningGrounds?.length ?? 0,
+                    legacyEssenceBursts: data?.essenceBursts?.length ?? 0,
+                };
+            }");
+            snapshots.Add(observation.GetRawText());
             await Task.Delay(85);
         }
 
+        await File.WriteAllLinesAsync(Path.Combine(frames, "snapshot-provenance.jsonl"), snapshots);
         Assert.IsGreaterThan(1, hashes.Count,
             "Capture must show real changing in-game pixels, not an animated still/mockup.");
+        Assert.IsTrue(snapshots.All(line => JsonDocument.Parse(line).RootElement.GetProperty("mutationMask").GetInt32() == 7),
+            "The actual in-Hunt Fireball recipe must remain prepared throughout this recording.");
     }
 
     private Task ScreenshotAsync(string name) => Page.ScreenshotAsync(new PageScreenshotOptions
