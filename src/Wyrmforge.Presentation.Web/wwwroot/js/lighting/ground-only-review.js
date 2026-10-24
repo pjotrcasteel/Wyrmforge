@@ -6,12 +6,16 @@ import { LightingEngine } from './engine.js';
 import { environmentProfile } from './registry.js';
 import {
     GROUND_ATLAS_URL, CELL, MATERIALS,
-    buildGroundQuiltAtlas, drawReferenceGroundBoard,
+    buildGroundQuiltAtlas, drawReferenceGroundBoard, drawGroundMaterialTransitions,
 } from '../arena-materials.js';
+import { composeSingleRoadGround } from '../arena-single-road.js';
 
 export const GROUND_REVIEW_COLUMNS = 24;
 export const GROUND_REVIEW_ROWS = 24;
 export const GROUND_REVIEW_SEED = 1441;
+export const ROAD_REVIEW_SEEDS = Object.freeze([1205, 1441, 2803, 4026]);
+export const ROAD_REVIEW_COLUMNS = 48;
+export const ROAD_REVIEW_ROWS = 72;
 // Show a continuous playable-scale ground field, not a tiny isolated diamond. Camera/GPU engine unchanged.
 const METRES = 24;
 const allowedMaterials = Object.freeze({
@@ -31,11 +35,13 @@ export function singleMaterialGroundBoard(key, columns = GROUND_REVIEW_COLUMNS, 
 
 // Descriptors are exactly the portable G1 contract; light remains the sole world visibility source.
 // Roughness/specular are provisional knobs for the art review, NOT painted surface normals.
-export function groundReviewSnapshot(key = 'grass', lighting = 'fire', position = .5) {
-    if (!(key in allowedMaterials) || !['fire', 'moon', 'neutral', 'zero'].includes(lighting) ||
-        !Number.isFinite(position) || position < 0 || position > 1)
+export function groundReviewSnapshot(key = 'grass', lighting = 'fire', position = .5, seed = ROAD_REVIEW_SEEDS[1]) {
+    if (!(key in allowedMaterials) && key !== 'road' || !['fire', 'moon', 'neutral', 'zero'].includes(lighting) ||
+        !Number.isFinite(position) || position < 0 || position > 1 ||
+        key === 'road' && !ROAD_REVIEW_SEEDS.includes(seed))
         throw new RangeError('Invalid ground-only lighting request');
-    const config = allowedMaterials[key];
+    const config = key === 'road' ? { roughness: .89, specular: .17 } : allowedMaterials[key];
+    const albedo = key === 'road' ? 'wet-forest-road-'+seed : 'wet-forest-'+key;
     const neutral = lighting === 'neutral';
     const zero = lighting === 'zero';
     const environment = zero ? environmentProfile('zero') :
@@ -56,7 +62,7 @@ export function groundReviewSnapshot(key = 'grass', lighting = 'fire', position 
     return {
         version: 1, time: 0, lights, environment,
         materials: [{
-            id: 'wet-forest-ground', color: '#ffffff', albedo: 'wet-forest-'+key,
+            id: 'wet-forest-ground', color: '#ffffff', albedo,
             roughness: config.roughness, metalness: 0, specular: config.specular,
             reflection: 'direct', emission: '#000000', emissionIntensity: 0,
             alphaCutoff: 0, doubleSided: false,
@@ -64,7 +70,8 @@ export function groundReviewSnapshot(key = 'grass', lighting = 'fire', position 
         objects: [{
             id: 'ground', ownerId: 'wet-forest-ground-review', geometry: 'ground-plane',
             material: 'wet-forest-ground', position: [0, 0, 0], rotation: [0, 0, 0],
-            scale: [METRES, METRES, 1], castsShadow: false, receivesShadow: true, receivesLight: true,
+            scale: key === 'road' ? [18, 27, 1] : [METRES, METRES, 1],
+            castsShadow: false, receivesShadow: true, receivesLight: true,
         }],
     };
 }
@@ -87,18 +94,30 @@ async function prepareGround(engine, canvas) {
         // Source albedo is uploaded unlit into G1; the shared shader supplies illumination.
         engine.registerTexture('wet-forest-'+key, new T.CanvasTexture(textureCanvas));
     }
+    for (const seed of ROAD_REVIEW_SEEDS) {
+        const result = composeSingleRoadGround(seed, ROAD_REVIEW_COLUMNS, ROAD_REVIEW_ROWS);
+        if (!result || result.plan.exits !== 1) throw new Error('Invalid single-road recipe');
+        const textureCanvas = document.createElement('canvas');
+        textureCanvas.width = ROAD_REVIEW_COLUMNS * CELL;
+        textureCanvas.height = ROAD_REVIEW_ROWS * CELL;
+        const ctx = textureCanvas.getContext('2d');
+        if (!ctx || !drawReferenceGroundBoard(ctx, result.board, atlas, ROAD_REVIEW_COLUMNS, ROAD_REVIEW_ROWS, seed) ||
+            !drawGroundMaterialTransitions(ctx, result.board, atlas, ROAD_REVIEW_COLUMNS, ROAD_REVIEW_ROWS, seed))
+            throw new Error('Failed to compose and blend a seeded road: '+seed);
+        engine.registerTexture('wet-forest-road-'+seed, new T.CanvasTexture(textureCanvas));
+    }
 }
 
 export async function initializeGroundReview(canvas) {
     if (scenes.has(canvas)) return;
     const engine = new LightingEngine(canvas);
-    const state = { engine, alive: true, material: 'grass', lighting: 'fire', position: .5 };
+    const state = { engine, alive: true, material: 'road', lighting: 'neutral', position: .5, seed: ROAD_REVIEW_SEEDS[1] };
     scenes.set(canvas, state);
     try {
         engine.registerGeometry('ground-plane', new T.PlaneGeometry(1, 1));
         await prepareGround(engine, canvas);
         if (!state.alive) return;
-        engine.setCamera([0, 0, 0], 4.6);
+        engine.setCamera([0, 0, 0], 11);
         state.resizer = new ResizeObserver(() => { if (state.alive) engine.render(); });
         state.resizer.observe(canvas);
         configureGroundReview(canvas, {});
@@ -117,8 +136,10 @@ export function configureGroundReview(canvas, options = {}) {
     const material = options.material ?? state.material;
     const lighting = options.lighting ?? state.lighting;
     const position = options.position ?? state.position;
-    const snapshot = groundReviewSnapshot(material, lighting, position);
-    state.material = material; state.lighting = lighting; state.position = position;
+    const seed = options.seed ?? state.seed;
+    const snapshot = groundReviewSnapshot(material, lighting, position, seed);
+    state.material = material; state.lighting = lighting; state.position = position; state.seed = seed;
+    state.engine.setCamera([0, 0, 0], material === 'road' ? 11 : 4.6);
     state.engine.apply(snapshot);
     state.engine.setDebugView('lit');
     state.engine.render();
@@ -126,6 +147,17 @@ export function configureGroundReview(canvas, options = {}) {
     canvas.dataset.lighting = lighting;
     canvas.dataset.objects = String(snapshot.objects.length);
     canvas.dataset.lights = String(snapshot.lights.length);
+    canvas.dataset.seed = String(seed);
+    if (material === 'road') {
+        const recipe = composeSingleRoadGround(seed, ROAD_REVIEW_COLUMNS, ROAD_REVIEW_ROWS);
+        canvas.dataset.roadStyle = recipe.plan.style;
+        canvas.dataset.roadExits = String(recipe.plan.exits);
+        canvas.dataset.exit = recipe.plan.exit.edge;
+    } else {
+        canvas.dataset.roadStyle = 'none';
+        canvas.dataset.roadExits = '0';
+        canvas.dataset.exit = 'none';
+    }
 }
 
 export function groundReviewPixels(canvas) {
