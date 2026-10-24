@@ -106,6 +106,7 @@ jobs:
           for facing in ('e','w','ne','sw','n','s'):
             assert (p/f'compare-{facing}-native-96px.gif').is_file()
             assert (p/f'compare-{facing}-zoom-4x.gif').is_file()
+          poses=json.loads((Path('art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-mocap-no-cape-captured-chain-candidate')/'gait-diagnostics.json').read_text())
           for side in ('L','R'):
             for f in poses[:16]:
               a=f['arms'][side]
