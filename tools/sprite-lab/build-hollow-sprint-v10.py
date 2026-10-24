@@ -172,8 +172,13 @@ EXPECTED_AT_HUNT_SPEED = 16 * 52 / (SWEEP / STANCE * 60)
 assert abs(EXPECTED_AT_HUNT_SPEED-FPS) < 1.5, (
     "Preview FPS mismatches actual Hunt playback; do not ship fake quick GIF")
 assert any(f["doubleFlight"] for f in diagnostics), "No airborne recovery"
-assert abs(diagnostics[0]["arms"]["L"]["wrist"][1] -
-           diagnostics[0]["arms"]["R"]["wrist"][1]) > .18, "Arms not counter-pumping"
+# The opposite shoulders move modestly in antiphase; avoid demanding a
+# huge hand excursion, which directly caused the visible floppy arms.
+left = diagnostics[0]["arms"]["L"]
+right = diagnostics[0]["arms"]["R"]
+left_upper_y = left["elbow"][1] - left["shoulder"][1]
+right_upper_y = right["elbow"][1] - right["shoulder"][1]
+assert left_upper_y * right_upper_y < 0, "Missing contralateral shoulder motion"
 def flexion(a, joint, b):
     incoming, outgoing = Vector(a) - Vector(joint), Vector(b) - Vector(joint)
     return 180 - math.degrees(incoming.angle(outgoing))
