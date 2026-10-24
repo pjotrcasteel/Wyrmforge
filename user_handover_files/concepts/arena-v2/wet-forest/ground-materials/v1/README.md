@@ -7,6 +7,12 @@ Original source images were generated in ChatGPT in October 2026 and are preserv
 as full-resolution, quality-92 WebP versions. Their original PNG SHA-256 digests and filenames are recorded
 in `manifest.json`; the 36 original PNGs were additionally packaged in a conversation backup archive.
 
+## Visual review
+
+![All 36 Wet Forest material candidates, six variants per family](review-contact.jpg)
+
+Inspect the individual `variant-01.webp` … `variant-06.webp` files inside each family folder at original resolution before deciding which paintings to approve. See the [production-readiness audit](PRODUCTION-READINESS.md) for the observed black-matte borders, baked lighting/reflections, material separation work, and GPU/arena acceptance gates. The contact sheet and artwork remain **review-only**; neither is a game texture atlas.
+
 ## Families
 1. `grass-moss` — normal wet forest substrate
 2. `wet-mud` — damp soil
