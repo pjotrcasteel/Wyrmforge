@@ -43,6 +43,17 @@ jobs:
           LIBGL_ALWAYS_SOFTWARE=1 blender --background --factory-startup --threads 2 --python-exit-code 1 \
             --python tools/sprite-lab/build_clean_human_gait.py -- \
             --bundle "$bundle" --output artifacts/wizard-clean-gait
+      - name: Publish original frames and editable source before optional video encoding
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wizard-clean-gait-original-frames
+          path: |
+            artifacts/wizard-clean-gait/frame-*.png
+            artifacts/wizard-clean-gait/clean-human-walk-source.blend
+            artifacts/wizard-clean-gait/clean-gait-metrics.json
+          if-no-files-found: warn
+          retention-days: 30
       - name: Encode original animation and inspect all 16 poses
         if: always()
         shell: bash
