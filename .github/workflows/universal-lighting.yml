@@ -7,6 +7,7 @@ on:
       - 'src/Wyrmforge.Presentation.Web/Pages/ArenaLightEngine*'
       - 'tests/Wyrmforge.Browser.Tests/UniversalLightingBrowserTests.cs'
       - 'tests/javascript/universal-lighting.test.mjs'
+      - 'tests/javascript/wet-forest-lit-oak-asset.test.mjs'
       - '.github/workflows/universal-lighting.yml'
   workflow_dispatch:
 permissions:
@@ -21,7 +22,7 @@ jobs:
         with:
           dotnet-version: '10.0.x'
       - name: Registry and sprite binding regression tests
-        run: node --test tests/javascript/universal-lighting.test.mjs
+        run: node --test tests/javascript/universal-lighting.test.mjs tests/javascript/wet-forest-lit-oak-asset.test.mjs
       - name: Build tests and publish actual application
         run: |
           dotnet build tests/Wyrmforge.Browser.Tests -c Release
