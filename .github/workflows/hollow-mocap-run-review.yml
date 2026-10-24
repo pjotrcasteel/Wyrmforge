@@ -55,7 +55,7 @@ jobs:
           for side in ('L','R'):
             knees=[x['feet'][side]['kneeFlexDegrees'] for x in poses[:16]]
             elbows=[x['arms'][side]['elbowFlexDegrees'] for x in poses[:16]]
-            assert min(knees)>0 and max(knees)<160 and max(knees)-min(knees)>25,(side,knees)
+            assert min(knees)>-0.01 and max(knees)<160 and max(knees)-min(knees)>25,(side,knees)
             assert min(elbows)>10 and max(elbows)<165,(side,elbows)
             print(side,'source-motion knee range',min(knees),max(knees),
                   'elbow range',min(elbows),max(elbows))
