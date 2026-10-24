@@ -1,0 +1,72 @@
+{
+  "status": "UNAPPROVED v3 user-directed stretched zombie arm / emphatic limp review",
+  "source": "CMU Graphics Lab, Subject 09, Motion 01 RUN",
+  "sourceUrl": "https://github.com/una-dinosauria/cmu-mocap/blob/master/data/009/09_01.bvh",
+  "sourceSha256": "90641ccca814b9d8d59f63576a548bb5612477364462d142a9f741268fbe3b78",
+  "license": "CMU dataset free for all uses; Bruce Hahne BVH conversion",
+  "authoringRig": "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-pixel-v3/hollow-rigged.blend",
+  "loop": {
+    "firstActualMotionIndex": 5,
+    "periodSourceFrames": 88,
+    "fitError": 0.004042674987953383,
+    "rawSamplingHz": 120
+  },
+  "output": {
+    "frames": 16,
+    "fps": 25,
+    "directions": 8
+  },
+  "axis": {
+    "right": [
+      0.9999980926513672,
+      0.0,
+      0.0019524565432220697
+    ],
+    "forward": [
+      -0.0019524566596373916,
+      0.0,
+      0.999998152256012
+    ],
+    "travel": [
+      -0.001952458987943828,
+      0.0,
+      0.9999980330467224
+    ]
+  },
+  "biomechanics": "captured shoulder yaw/roll, pelvis counterturn and shoulder-girdle translation; 120Hz hips-relative marker denoising",
+  "noRecoloring": true,
+  "noNewShaders": true,
+  "parentEditableBlendSha256": "0ea3dd808405463deb84b6895ffc390a433928ac1023e652ccb8cfc1aeadaa59",
+  "sourceEditableRig": "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-mocap-no-cape-captured-hands-candidate/hollow-rigged.blend",
+  "presentationAdjustments": {
+    "wrist": "rest anatomical hand-to-forearm orientation transported by measured forearm rotation",
+    "cloth": "rearward slipstream and source-thigh-following cloth root, no mesh or weight replacement",
+    "timing": "16 source poses at 25fps; accelerated measured CMU 88/120-second stride",
+    "sourcePositionSampling": "unchanged captured CMU gait"
+  },
+  "artApproval": false,
+  "capeRemoved": true,
+  "handGeometryCorrection": 0.23,
+  "anatomicalRepair": {
+    "method": "one source-measured mean-humerus correction per arm; rotate WHOLE arm chain about captured moving shoulder",
+    "shoulderCalibrationDegrees": {
+      "L": 27.659226704370987,
+      "R": 31.62723534797365
+    },
+    "elbow": "retains full captured 3D elbow angle and frame-to-frame changes exactly",
+    "wrist": "no authored standalone trajectory; preserved 3D elbow->wrist offset",
+    "hand": "captured hand pose blended into anatomical forearm continuation with fixed relaxation; no standalone wrist keyframes",
+    "claws": "source mesh correction is real weighted 23-percent distal claw reduction",
+    "legs": "all original 16 CMU leg/hip/contact source keys unchanged",
+    "costume": "verified real mesh cape deleted (73 islands)"
+  },
+  "variant": "standard",
+  "design": {
+    "healthyArms": "shoulder-led near full forward extension; elbow flex typically 150-170 degrees",
+    "injuredArm": "only undamaged side reaches forward; damaged side retains original authored v1 injury",
+    "brokenLeg": "injured foot 0.10m lower and 0.21m shortened forward swing at maximum; source-contact-driven extra hip drop, compensatory lean",
+    "legs": "original right-foot contacts; affected left swing only, no new motion oscillator"
+  },
+  "runtimeCutover": false,
+  "attackDeathReexported": false
+}
