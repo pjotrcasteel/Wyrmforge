@@ -143,6 +143,13 @@ class WizardBuilder:
             if name == 'root':
                 b.use_deform=False
         bpy.ops.object.mode_set(mode='OBJECT')
+        # Rig requirement: a planted boot retains the actor's forward axis.
+        # The shin may pitch/yaw under two-bone IK, but must NOT twist the
+        # weighted whole boot 90 degrees along with it. Preserve the authored
+        # ankle-to-toe rest orientation, including when the whole actor turns.
+        for side in ('L','R'):
+            foot=data.bones['foot.'+side]
+            foot.use_inherit_rotation=False
         obj.show_in_front=True
         obj.display_type='WIRE'
         obj.select_set(False)
