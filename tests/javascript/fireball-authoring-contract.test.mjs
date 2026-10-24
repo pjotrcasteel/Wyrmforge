@@ -65,6 +65,20 @@ test('production gate requires all authored roles with real five-channel assets'
     assert.throws(() => validateFireballArtManifest(approved, () => true), /not owner-reviewed/);
 });
 
+test('source-art gate rejects escaped file paths and unrelated image formats', () => {
+    const roles = [...new Set(allFireballRecipes().flatMap(x => Object.values(x.required).flat()))];
+    const approved = {...manifest, status:'owner-approved',
+        assets: Object.fromEntries(roles.map(r => [r,source(r)]))};
+    approved.assets['core-original'].sheet = 'art/source/spells/fireball/../other/source.aseprite';
+    assert.throws(() => validateFireballArtManifest(approved, () => true), /editable source-sheet/);
+    approved.assets['core-original'] = source('core-original');
+    approved.assets['core-original'].channels.normal = 'art/source/spells/fireball/../other/normal.png';
+    assert.throws(() => validateFireballArtManifest(approved, () => true), /normal/);
+    approved.assets['core-original'] = source('core-original');
+    approved.assets['core-original'].sheet = 'art/source/spells/fireball/core-original/source.png';
+    assert.throws(() => validateFireballArtManifest(approved, () => true), /editable source-sheet/);
+});
+
 test('cast and physical source ownership use actual C# events, no virtual hazards', () => {
     const snapshot = {castMotion:{spell:1, fireballMutationMask:7},
         projectiles:[{spell:1,fireballSourceId:1,fireballMutationMask:7}],
