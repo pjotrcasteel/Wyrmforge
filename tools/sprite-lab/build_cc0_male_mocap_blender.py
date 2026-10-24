@@ -454,11 +454,47 @@ def studio_scene(body,arm,output):
     scene.render.filepath=str(output/"frame-00.png")
     return camera
 
+def evaluate_torso_edge_integrity(body,evaluated_mesh,hip_z):
+    """Measure deformed waist/upper-leg edge stretching against source topology.
+
+    A foot may sit on the correct side while the groin and belly tear apart.
+    Check evaluated ORIGINAL mesh edge connectivity so technical 'success'
+    cannot automatically approve a visibly broken torso.
+    """
+    waist_ratios=[]
+    all_ratios=[]
+    verts=body.data.vertices
+    deformed=evaluated_mesh.vertices
+    for edge in body.data.edges:
+        i,j=edge.vertices
+        original=(verts[i].co-verts[j].co).length
+        if original<1e-5:continue
+        ratio=(deformed[i].co-deformed[j].co).length/original
+        all_ratios.append(ratio)
+        mid_z=(verts[i].co.z+verts[j].co.z)*.5
+        if hip_z-3.2<=mid_z<=hip_z+2.8:
+            waist_ratios.append(ratio)
+    insist(len(waist_ratios)>150,"too few stable topology edges at pelvis")
+    waist_ratios.sort()
+    all_ratios.sort()
+    percentile=lambda values,q:values[min(len(values)-1,int((len(values)-1)*q))]
+    result={"waistEdges":len(waist_ratios),
+            "waistP99Stretch":round(percentile(waist_ratios,.99),3),
+            "waistMaxStretch":round(waist_ratios[-1],3),
+            "wholeMeshP99Stretch":round(percentile(all_ratios,.99),3),
+            "waistFractionOver2x":round(sum(x>2. for x in waist_ratios)/len(waist_ratios),5)}
+    result["surfaceValid"]=(result["waistP99Stretch"]<2.6 and
+                            result["waistFractionOver2x"]<.02)
+    return result
+
+
 def inspect_motion(body,arm,output):
     scene=bpy.context.scene
     data=[]
     root_initial=None
     minimum_foot_lane={"left":float("inf"),"right":float("inf")}
+    hip_z=(arm.data.bones["LeftUpLeg"].head_local.z+
+           arm.data.bones["RightUpLeg"].head_local.z)*.5
     # The import preserves the captured 120fps movement timeline. For review
     # the camera follows root translation, not by erasing true foot coordinates.
     camera=scene.camera
@@ -490,6 +526,7 @@ def inspect_motion(body,arm,output):
             # Blender's armature bones and not a fabricated sprite.
             selected=evaluated_mesh.vertices[1024].co.copy()
             point=(evaluated.matrix_world @ selected)
+            torso=evaluate_torso_edge_integrity(body,evaluated_mesh,hip_z)
         finally:
             evaluated.to_mesh_clear()
         filename=output/f"frame-{i:02d}.png"
@@ -501,7 +538,8 @@ def inspect_motion(body,arm,output):
             "leftFoot":[round(float(x),4) for x in left],
             "rightFoot":[round(float(x),4) for x in right],
             "evaluatedVertex":[round(float(x),4) for x in point],
-            "deformedFootLanes":foot_lanes})
+            "deformedFootLanes":foot_lanes,
+            "torsoEdgeIntegrity":torso})
     displacement=max(math.dist(data[0]["evaluatedVertex"],x["evaluatedVertex"]) for x in data[1:])
     insist(displacement>.02,"retargeted UV body remains static despite captured movement")
     return data,displacement,minimum_foot_lane
@@ -543,6 +581,10 @@ def main(opts):
     scene["ProductionReady"]=False
     # Reject the result based on deformed geometry while retaining all 16
     # original review renders, 3/4 poses and editable Blender source.
+    torso_failures=[{"frame":pose["sourceFrame"],
+                     "stats":pose["torsoEdgeIntegrity"]}
+                    for pose in report_data
+                    if not pose["torsoEdgeIntegrity"]["surfaceValid"]]
     gait_failures=[
         {"frame":pose["sourceFrame"],"reasons":[
             pose["deformedFootLanes"].get(side+"FootReason")
@@ -565,15 +607,18 @@ def main(opts):
             "mocapFrameSamples":SAMPLES,
             "evaluatedBodyVertexDisplacement":round(displacement,5),
             "footLaneFailures":gait_failures,"footLanesPassed":not gait_failures,
+            "pelvisSurfaceFailures":torso_failures,
+            "pelvisSurfacePassed":not torso_failures,
             "poses":report_data,
             "gothicWizardSourceComplete":False,"robed":False,"beardModeled":False,
             "retargetAcceptance":False,"productionAtlasComplete":False,
             "lightingApproved":False,"replacesTemporaryPlayer":False}
     (output/"native-retarget-validation.json").write_text(json.dumps(report,indent=2)+"\n")
     print(json.dumps({k:v for k,v in report.items() if k!="poses"},indent=2),flush=True)
-    if gait_failures:
-        raise RuntimeError("REJECTED: deformed foot lanes/weights fail on "+
-                           str(len(gait_failures))+" captured walk poses; inspect saved review")
+    if gait_failures or torso_failures:
+        raise RuntimeError("REJECTED: "+str(len(gait_failures))+
+                           " foot-lane failures, "+str(len(torso_failures))+
+                           " pelvis deformation failures; inspect saved native review")
 
 if __name__=="__main__":
     args=sys.argv[sys.argv.index("--")+1:] if "--" in sys.argv else []
