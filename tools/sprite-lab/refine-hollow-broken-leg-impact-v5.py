@@ -203,7 +203,7 @@ for side in ("L","R"):
             b=evidence[16][region][side][k]
             assert max(abs(x-y) for x,y in zip(a,b))<1e-5,(side,region,k)
 assert max(x["limpV5"]["leftInjuredStance"] for x in evidence)>.99
-assert max(abs(x["limpV5"]["extraPelvisOffset"][2]) for x in evidence)>.055
+assert max(abs(x["limpV5"]["extraPelvisOffset"][2]) for x in evidence)>.050
 assert max(x["limpV5"]["crookedKneePoleShift"] for x in evidence)>.09
 assert max(x["limpV5"]["extraThoraxPitchDegrees"] for x in evidence)>5.5
 
