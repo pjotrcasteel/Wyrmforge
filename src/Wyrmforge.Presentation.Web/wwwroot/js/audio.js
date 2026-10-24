@@ -213,6 +213,12 @@
                 for (const take of entry?.variants ?? []) void loadRecordedBuffer(take).catch(() => {});
             }
         }
+        // Six small original Fireball casts/hits are needed on the first actual
+        // encounter, not downloaded while a projectile is already on screen.
+        const fireball = recordedManifest.cues?.fire;
+        for (const take of [...(fireball?.variants ?? []), ...(fireball?.hitVariants ?? [])]) {
+            void loadRecordedBuffer(take).catch(() => {});
+        }
     }
 
     function recordedEntry(name, type, variation) {
