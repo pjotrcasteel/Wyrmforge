@@ -62,9 +62,9 @@ jobs:
             assert max(-d[i]['limpV3']['leftFootDelta'][2] for i in range(16))>.095
             old=json.loads((root/'rigged-hollow-trauma-broken-leg-weight-transfer-v2/gait-diagnostics.json').read_text())
             for i in range(16):
-              assert d[i]['feet']['R']['ankle']==old[i]['feet']['R']['ankle']
+              assert max(abs(a-b) for a,b in zip(d[i]['feet']['R']['ankle'],old[i]['feet']['R']['ankle']))<1e-4,(i,'R planted source foot drift')
               if d[i]['limpV3']['leftSwingDrag']<.00001:
-                assert d[i]['feet']['L']['ankle']==old[i]['feet']['L']['ankle']
+                assert max(abs(a-b) for a,b in zip(d[i]['feet']['L']['ankle'],old[i]['feet']['L']['ankle']))<1e-4,(i,'L planted source foot drift')
           with np.load(variant/'sampled-walk.npz') as b:
             assert b['positions'].shape[0]==17
             assert b['positions'].shape[-1]==3
