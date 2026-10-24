@@ -28,17 +28,8 @@ public sealed record FireballVisualRecipe(int Version, int Level, int MutationMa
     {
         ArgumentNullException.ThrowIfNull(equipped);
         var allowed = Math.Clamp(level, 1, 5);
-        var mask = 0;
-        // The caller owns actual equipped capacity and research; a prepared Hunt
-        // can also be loaded directly by test/legacy callers. Never silently drop
-        // an active gameplay effect merely because a visual level is lower.
-        // Bit positions use stable enum values, independent of socket ordering.
-        foreach (var mutation in equipped
-            .Where(id => FireballCoreCatalog.Mutations.Any(item => item.Id == id && item.Playable))
-            .Distinct().Take(5))
-        {
-            mask |= 1 << ((int)mutation - 1);
-        }
-        return new(CurrentVersion, allowed, mask);
+        // Mechanical composition is resolved before presentation. No renderer
+        // or art descriptor may decide which gameplay mutation is active.
+        return new(CurrentVersion, allowed, FireballMutationSet.Resolve(equipped).Mask);
     }
 }

@@ -14,6 +14,7 @@ public sealed partial class RunSimulation
     private IReadOnlySet<FireballMutationId> preparedFireballMutations = new HashSet<FireballMutationId>();
     // This immutable representation changes only during pre-Hunt preparation.
     // Creating 60 render snapshots per second must not allocate a new recipe.
+    private FireballMutationSet preparedFireballSet;
     private FireballVisualRecipe preparedFireballVisual = FireballVisualRecipe.Resolve(1, []);
 
     public int PreparedFireballLevel => preparedFireballLevel;
@@ -47,8 +48,12 @@ public sealed partial class RunSimulation
         RebuildFireballAmplification();
     }
 
-    private void RebuildPreparedFireballVisual() =>
-        preparedFireballVisual = FireballVisualRecipe.Resolve(preparedFireballLevel, preparedFireballMutations);
+    private void RebuildPreparedFireballVisual()
+    {
+        preparedFireballSet = FireballMutationSet.Resolve(preparedFireballMutations);
+        preparedFireballVisual = new FireballVisualRecipe(
+            FireballVisualRecipe.CurrentVersion, preparedFireballLevel, preparedFireballSet.Mask);
+    }
 
     private void RebuildFireballAmplification()
     {
@@ -69,5 +74,5 @@ public sealed partial class RunSimulation
         fireballAmplification.GetValueOrDefault((mutation, capability), 1);
 
     private bool HasFireballMutation(FireballMutationId id) =>
-        build.Spells.ActiveSpell == Domain.Spells.SpellId.FireBolt && preparedFireballMutations.Contains(id);
+        build.Spells.ActiveSpell == Domain.Spells.SpellId.FireBolt && preparedFireballSet.Has(id);
 }

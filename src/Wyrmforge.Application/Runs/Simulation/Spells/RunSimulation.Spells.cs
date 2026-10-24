@@ -140,7 +140,7 @@ public sealed partial class RunSimulation
                 Rank = rank,
                 Surge = surge.IsSurge,
                 AdditionalStatuses = SpellCombinationResolver.Resolve(id, build.Spells, build.Synergies),
-                FireballMutationMask = id == SpellId.FireBolt ? preparedFireballVisual.MutationMask : 0,
+                FireballMutationMask = id == SpellId.FireBolt ? preparedFireballSet.Mask : 0,
             };
             projectiles.Add(new ProjectileState(player.Position, direction * speed, radius, damage * (inferno ? 4 : 1), id, effects));
         }
