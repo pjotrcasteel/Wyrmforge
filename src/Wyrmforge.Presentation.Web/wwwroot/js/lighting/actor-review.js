@@ -23,7 +23,7 @@ const object = (id, geometry, mat, position, extras = {}) => ({
 const light = (id, position, color, intensity, priority) => ({
     id, ownerId: id, type: 'point', enabled: true, position,
     direction: [0, 0, -1], color, intensity, range: 18,
-    coneAngle: .6, penumbra: .3, castsShadow: true, priority,
+    coneAngle: .6, penumbra: .3, castsShadow: true, priority, range: 8,
 });
 
 async function fetchJson(url) {
@@ -36,7 +36,7 @@ export async function initializeActorReview(canvas) {
     const engine = new LightingEngine(canvas, { shadowViews: 8, maxLights: 3 });
     engine.camera.zoom = 2.0; // tighter REVIEW framing; no change to global GPU renderer
     const state = { engine, canvas, ready: false, stamp: 0,
-        config: { hollowed: 'walk', ashling: 'walk', frame: 0, zero: false,
+        config: { hollowed: 'walk', ashling: 'walk', frame: 0, direction: 'S', zero: false,
             lightX: -.5, shadows: true, animate: false }, actors: {}, lastTime: 0 };
     states.set(canvas, state);
     try {
@@ -93,12 +93,12 @@ export function redrawActorReview(canvas, change = {}) {
         const { sprite, lit, masks } = state.actors[actor.id];
         const clip = c[actor.id];
         const frame = Math.max(0, Math.min(sprite.clips[clip].frames - 1, Math.trunc(c.frame)));
-        const sample = litActorSample(sprite, lit, { clip, frame, direction: 'S' });
+        const sample = litActorSample(sprite, lit, { clip, frame, direction: c.direction });
         const id = `${actor.id}-${clip}`;
         materials.push(material(id, '#ffffff', { roughness: sample.material.roughness,
             metalness: sample.material.metalness, specular: sample.material.specular,
             albedo: `${id}-albedo`, normal: `${id}-normal` }));
-        const row = sprite.directions.indexOf('S');
+        const row = sprite.directions.indexOf(c.direction);
         const casterId = `${actor.id}-${clip}-caster-${row}-${frame}`;
         if (!state.engine.geometries.has(casterId)) {
             const pixels = masks[clip].getImageData(frame * sample.cell, row * sample.cell,
@@ -110,7 +110,7 @@ export function redrawActorReview(canvas, change = {}) {
             { castsShadow: sample.castShadow && c.shadows, receivesShadow: sample.receiveShadow,
                 occluderGeometry: casterId, frame: sample.frame }));
     }
-    const lamps = [light('fireball', [c.lightX * 2.7, -1.7, 2.6], '#ff9c55', 58, 3),
+    const lamps = [light('fireball', [c.lightX * 2.7, -1.7, 3.4], '#ff9c55', 64, 3),
         light('blue-rim', [3, -1, 3], '#8ca9ec', 9, 1)];
     for (const l of lamps) { l.enabled = !c.zero; l.castsShadow &&= c.shadows; }
     state.engine.apply({ version: 1, time: 0, lights: lamps, materials, objects, environment });
