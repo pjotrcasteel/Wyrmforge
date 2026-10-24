@@ -71,3 +71,15 @@ Local checks:
     cd tools/sprite-lab
     python -m unittest discover -s tests -p 'test_biped_reuse.py'
     python -m unittest discover -s tests -p 'test_wizard_motion.py'
+
+## Shared humanoid Blender skeleton (source only)
+
+The character_pipeline/humanoid_rig.py module supplies the original wizard's
+22 edit-bone specifications through parameterized height, width and depth
+scales. Beard bones are optional, allowing an undead or armoured humanoid to
+reuse standardized root, pelvis, spine, neck, legs, arms and hand attachments
+without inheriting the wizard's hair, costume or staff. build_wizard_blender.py
+is now the first real consumer, using the unchanged original coordinates.
+The pure-Python regression checks the baseline rig and alternative scales;
+actual Blender bpy creation, skinning and motion remain unverified here.
+Quadrupeds and Wyrms keep their own bone topology and gait adapters.
