@@ -106,3 +106,15 @@ test('only nearby creatures occasionally vocalize; pauses and offscreen packs re
     assert.deepEqual(collectSoundEvents(tracker, proximity(55, 2), 8300), []);
     assert.deepEqual(collectSoundEvents(tracker, proximity(55, 2), 9000), ['ashling-approach']);
 });
+
+
+test('scripted or revived Ashling death still emits when the kill counter is unchanged', () => {
+    const tracker = createSoundEventTracker();
+    const initial = frame({ hud: { health: 100, maxHealth: 100, kills: 7 } });
+    assert.deepEqual(collectSoundEvents(tracker, initial, 0), []);
+    const ashling = { entityId: 901, kind: 2, progress: 0.03 };
+    const dying = frame({ hud: { health: 100, maxHealth: 100, kills: 7 }, deathBursts: [ashling] });
+    assert.deepEqual(collectSoundEvents(tracker, dying, 180), ['ashling-death']);
+    assert.deepEqual(collectSoundEvents(tracker, dying, 220), []);
+    assert.deepEqual(collectSoundEvents(tracker, frame({ hud: { health: 100, maxHealth: 100, kills: 7 } }), 260), []);
+});

@@ -49,11 +49,12 @@ export function collectSoundEvents(tracker, snapshot, now) {
     // Spawned corpses have a stable EntityId and Kind. Prefer that direct identity to
     // guessing the last creature killed from a total kill counter. Treat old/unknown
     // creature kinds with the existing generic event, and avoid stacking two deaths.
-    if (current.kills > previous.kills) {
-        const kinds = new Set(freshDeaths.map(burst => creatureFamily(burst.kind)).filter(Boolean));
-        for (const family of kinds) emit(family + '-death', 480);
-        if (!freshDeaths.length || freshDeaths.some(burst => !creatureFamily(burst.kind))) emit('enemy-down', 260);
-    }
+    const kinds = new Set(freshDeaths.map(burst => creatureFamily(burst.kind)).filter(Boolean));
+    for (const family of kinds) emit(family + '-death', 480);
+    // Revived or scripted creature deaths may not increment a reward-bearing kill
+    // counter in the same snapshot. Only unknown kinds still rely on the counter.
+    if (current.kills > previous.kills &&
+        (!freshDeaths.length || freshDeaths.some(burst => !creatureFamily(burst.kind)))) emit('enemy-down', 260);
 
     // HitFlash survives several frames. Rising edges + stable entity IDs prevent
     // the same wound from playing an extra grunt every render/simulation update.
