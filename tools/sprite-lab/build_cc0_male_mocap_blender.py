@@ -42,6 +42,65 @@ def import_source(bvh):
            "missing actual human skeleton")
     return arm
 
+def fit_mocap_rest_legs_to_anatomy(raw_arm):
+    """Preserve source BVH, fit an independently animated target armature.
+
+    The source BVH's rest knees/feet flare more than 3x a realistic male
+    stance: foot bones sit several bone units OUTSIDE the CC0 legs. No
+    automatic skin weighting algorithm can compensate for bad rest geometry.
+
+    Retain source keyed motion unchanged. Duplicate it into a separate
+    deform rig, compress only the outward rest-leg displacement, preserving
+    full captured bone rotation keys, durations and all upper-body anatomy.
+    This is a source RETARGET, not a six-school special-case shader/renderer.
+    """
+    target=raw_arm.copy()
+    target.data=raw_arm.data.copy()
+    bpy.context.scene.collection.objects.link(target)
+    target.name="CC0 Male fitted deform rig | CMU captured movement"
+    target.data.name="Male gait anatomically fitted source skeleton"
+    if raw_arm.animation_data and raw_arm.animation_data.action:
+        target.animation_data_create()
+        target.animation_data.action=raw_arm.animation_data.action.copy()
+        target.animation_data.action.name="CC0 male captured walk | fitted rest"
+    raw_arm.name="Original CMU BVH 07_04 | PROVENANCE | do not skin"
+    raw_arm.hide_render=True
+    raw_arm.hide_set(True)
+    bpy.ops.object.select_all(action="DESELECT")
+    target.select_set(True)
+    bpy.context.view_layer.objects.active=target
+    bpy.ops.object.mode_set(mode="EDIT")
+    rest=target.data.edit_bones
+    compression=.15
+    metrics={}
+    for side in ("Left","Right"):
+        hip=rest[side+"UpLeg"].head.copy()
+        names=[side+"UpLeg",side+"Leg",side+"Foot",side+"ToeBase"]
+        original={}
+        for name in names:
+            insist(name in rest,"captured foot anatomy lacks "+name)
+            bone=rest[name]
+            original[name]=(bone.head.copy(),bone.tail.copy())
+        # Modify every joint/segment in consistent source-local coordinates.
+        # Z (height), Y (forward) and all source animation channels are kept.
+        # Edit bones ordered parent->child; connected segments share endpoints.
+        for name in names:
+            bone=rest[name]
+            h,t=original[name]
+            h.x=hip.x+(h.x-hip.x)*compression
+            t.x=hip.x+(t.x-hip.x)*compression
+            bone.head=h;bone.tail=t
+        metrics[side]={
+            "hipX":round(float(hip.x),4),
+            "sourceAnkleX":round(float(original[side+"Foot"][0].x),4),
+            "fittedAnkleX":round(float(rest[side+"Foot"].head.x),4)}
+    bpy.ops.object.mode_set(mode="OBJECT")
+    target["OriginalBVHSourceUnmodified"]=True
+    target["RetargetRestLegLateralScale"]=compression
+    target["AuthorApproved"]=False
+    return target,metrics
+
+
 def append_male_source(bundle):
     with bpy.data.libraries.load(str(bundle),link=False) as (src,dst):
         insist(TARGET in src.objects,"No realistic male CC0 base mesh in bundle")
@@ -365,7 +424,8 @@ def inspect_motion(body,arm,output):
 def main(opts):
     output=opts.output.resolve();output.mkdir(parents=True,exist_ok=True)
     bpy.ops.object.select_all(action="SELECT");bpy.ops.object.delete(use_global=False)
-    arm=import_source(opts.bvh.resolve())
+    original_arm=import_source(opts.bvh.resolve())
+    arm,rest_fitting=fit_mocap_rest_legs_to_anatomy(original_arm)
     body=append_male_source(opts.bundle.resolve())
     scale=normalize_body(body,arm)
     bound=bind_skin(body,arm)
@@ -408,6 +468,8 @@ def main(opts):
             "maleMeshVertices":len(body.data.vertices),"uvLayers":len(body.data.uv_layers),
             "sourceBones":len(arm.data.bones),"weightedBones":bound,"skinningMethod":"Blender bone-heat automatic armature weights",
             "nativeBlend":save.name,"heightScale":round(scale,6),
+            "sourceRestAnatomyFitting":rest_fitting,
+            "sourceAnimationPreserved":True,
             "lowerLegWeightIsolation":isolation,"minDeformedFootLane":foot_lanes,
             "restBindingBeforeIsolation":binding_before,
             "restBindingAfterIsolation":binding_after,
