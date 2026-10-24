@@ -36,9 +36,9 @@ SCHOOLS = {
     'arcane': '#79648C', 'necromancer': '#6C805C', 'summoner': '#90744E',
 }
 NEUTRALS = {
-    'robe': '#4D4B4D', 'robe_shadow': '#302F34', 'robe_raised': '#676367',
-    'linen': '#9A9285', 'leather': '#3C302A', 'leather_edge': '#675548',
-    'skin': '#B5A18E', 'skin_shadow': '#75685F', 'hair': '#C2BCAB',
+    'robe': '#4D4B4D', 'robe_shadow': '#302F34', 'robe_raised': '#58545A',
+    'linen': '#827A71', 'leather': '#3C302A', 'leather_edge': '#675548',
+    'skin': '#B5A18E', 'skin_shadow': '#75685F', 'hair': '#A9A396',
     'hair_shadow': '#77736E', 'metal': '#6A625A', 'boot': '#28272A',
 }
 
@@ -102,6 +102,7 @@ class WizardBuilder:
         self.make_body()
         self.make_garments()
         self.make_staffs()
+        self.staff_control = self.create_staff_grip_control()
         self.ik_targets = self.create_ik()
         self.make_actions()
         self.animate_staff_emission()
@@ -386,54 +387,74 @@ class WizardBuilder:
             col=create_collection(school+' staff / school selectable',self.staves)
             a=(.55,-.32,.115);b=(.55,-.32,2.49)
             shaft=self.cylinder_between(school+' tinted wood shaft',a,b,.045,
-                                        self.school_mats[school],'hand.R')
+                                        self.school_mats[school],'root')
             move_to_collection(shaft,col)
             for ring_z in (.58,1.32,1.85,2.37):
                 ring=self.sphere(school+' iron binding %.2f'%ring_z,(.55,-.32,ring_z),
-                                 (.052,.052,.027),self.pal['metal'],'hand.R',segments=14,rings=8)
+                                 (.052,.052,.027),self.pal['metal'],'root',segments=14,rings=8)
                 move_to_collection(ring,col)
             # The full shaft is a visible school pigment, not an opaque neon emissive tube.
             if school=='fire':
                 for dx in (-.13,.10):
                     ob=self.cylinder_between('Scorched iron fork',(.55,-.32,2.47),
-                                             (.55+dx,-.31,2.74),.033,self.pal['metal'],'hand.R')
+                                             (.55+dx,-.31,2.74),.033,self.pal['metal'],'root')
                     move_to_collection(ob,col)
                 ob=self.sphere('Furnace ember | material mask',(.55,-.32,2.60),
-                               (.083,.081,.09),self.staff_emit[school],'hand.R')
+                               (.083,.081,.09),self.staff_emit[school],'root')
             elif school=='frost':
                 ob=self.sphere('Rime crystal crown | material mask',(.55,-.32,2.61),
-                               (.085,.07,.17),self.staff_emit[school],'hand.R')
+                               (.085,.07,.17),self.staff_emit[school],'root')
             elif school=='storm':
                 for dx in (-.11,.11):
                     ob=self.cylinder_between('Lightning conductive fork',(.55,-.32,2.47),
-                                              (.55+dx,-.32,2.75),.026,self.staff_emit[school],'hand.R')
+                                              (.55+dx,-.32,2.75),.026,self.staff_emit[school],'root')
                     move_to_collection(ob,col)
                 ob=self.sphere('Conductor core | material mask',(.55,-.32,2.55),
-                               (.07,.065,.078),self.staff_emit[school],'hand.R')
+                               (.07,.065,.078),self.staff_emit[school],'root')
             elif school=='arcane':
                 ob=self.sphere('Astral cage stone | material mask',(.55,-.32,2.61),
-                               (.085,.085,.085),self.staff_emit[school],'hand.R')
+                               (.085,.085,.085),self.staff_emit[school],'root')
                 for dx in (-.115,.115):
                     ring=self.cylinder_between('Enclosing astrolabe',(.55+dx,-.32,2.51),
-                                               (.55+dx,-.32,2.71),.018,self.pal['metal'],'hand.R')
+                                               (.55+dx,-.32,2.71),.018,self.pal['metal'],'root')
                     move_to_collection(ring,col)
             elif school=='necromancer':
                 ob=self.sphere('Bone reliquary | material mask',(.55,-.32,2.60),
-                               (.115,.08,.101),self.staff_emit[school],'hand.R')
+                               (.115,.08,.101),self.staff_emit[school],'root')
                 for dx in (-.044,.044):
                     dark=self.sphere('Hollow eye socket',(.55+dx,-.40,2.62),
-                                     (.024,.018,.024),self.pal['robe_shadow'],'hand.R',segments=12,rings=8)
+                                     (.024,.018,.024),self.pal['robe_shadow'],'root',segments=12,rings=8)
                     move_to_collection(dark,col)
             else:
                 ob=self.sphere('Bound animal totem | material mask',(.55,-.32,2.58),
-                               (.1,.09,.11),self.staff_emit[school],'hand.R')
+                               (.1,.09,.11),self.staff_emit[school],'root')
                 for dx in (-.15,.15):
                     horn=self.cylinder_between('Natural totem antler',(.55+dx*.45,-.32,2.65),
-                                               (.55+dx,-.31,2.77),.018,self.pal['leather_edge'],'hand.R')
+                                               (.55+dx,-.31,2.77),.018,self.pal['leather_edge'],'root')
                     move_to_collection(horn,col)
             move_to_collection(ob,col)
             col.hide_render = school!=self.school
             col.hide_viewport = school!=self.school
+
+    def create_staff_grip_control(self):
+        """Separate authored prop socket: staff stays upright when the wrist bends.
+
+        Child staff geometry remains skinned to non-moving root rather than
+        the rotating wrist bone. One keyframed socket follows the right hand.
+        The existing universal renderer still owns all world illumination.
+        """
+        pivot=bpy.data.objects.new('StaffGripControl',None)
+        self.controls.objects.link(pivot)
+        pivot.empty_display_type='ARROWS'
+        pivot.empty_display_size=.13
+        pivot.location=(.55,-.32,1.16)
+        bpy.context.view_layer.update()
+        for collection in self.staves.children:
+            for ob in tuple(collection.objects):
+                world=ob.matrix_world.copy()
+                ob.parent=pivot
+                ob.matrix_world=world
+        return pivot
 
     def create_ik(self):
         targets={}
@@ -481,6 +502,9 @@ class WizardBuilder:
             ob.animation_data_create()
             ob.animation_data.action=bpy.data.actions.new(ob.name+' | source actions')
             ob.animation_data.action.use_fake_user=True
+        self.staff_control.animation_data_create()
+        self.staff_control.animation_data.action=bpy.data.actions.new('Staff prop socket | source actions')
+        self.staff_control.animation_data.action.use_fake_user=True
         for clip,(first,last) in ranges.items():
             length=last-first+1
             for local_index,f in enumerate(range(first,last+1)):
@@ -492,6 +516,8 @@ class WizardBuilder:
                     pb.keyframe_insert(data_path='rotation_euler',frame=f)
                 for target in self.ik_targets.values():
                     target.keyframe_insert(data_path='location',frame=f)
+                self.staff_control.keyframe_insert(data_path='location',frame=f)
+                self.staff_control.keyframe_insert(data_path='rotation_euler',frame=f)
         scene.frame_start=1
         scene.frame_end=114
         scene.frame_set(1)
@@ -555,6 +581,11 @@ class WizardBuilder:
         for name,position in [('foot.L',foot_l),('foot.R',foot_r),
                                ('hand.L',grip_l),('hand.R',grip_r)]:
             self.ik_targets[name].location=position
+        # Keep a weighted, near-vertical staff in the actual grip across all
+        # actions. Pose-controlled tilt is restrained to 0.22 rad, never 90°.
+        self.staff_control.location=(grip_r[0]+.05,grip_r[1]-.03,grip_r[2])
+        charge_brace=math.sin(min(1.0,i/max(1,length-1)) * math.pi) if clip=='cast' else 0.0
+        self.staff_control.rotation_euler=(.22*charge_brace,0,0)
 
     def animate_staff_emission(self):
         """Authoring preview material. The real scene LightEmitter belongs to PR #332.
@@ -611,7 +642,7 @@ class WizardBuilder:
         world=bpy.data.worlds.new('Neutral charcoal authoring studio')
         world.use_nodes=True
         world.node_tree.nodes.get('Background').inputs['Color'].default_value=(.12,.13,.15,1)
-        world.node_tree.nodes.get('Background').inputs['Strength'].default_value=.42
+        world.node_tree.nodes.get('Background').inputs['Strength'].default_value=.27
         scene.world=world
         cam_data=bpy.data.cameras.new('Shared 2.5D orthographic rig camera')
         cam=bpy.data.objects.new('Same camera / all 8 directions',cam_data)
@@ -623,8 +654,8 @@ class WizardBuilder:
         cam.data.ortho_scale=3.65
         scene.camera=cam
         for name,pos,power,color,size in [
-            ('Neutral soft key',(-3,-4,5),400,(1,.93,.86),4),
-            ('Cool edge',(2,2,3),320,(.72,.84,1),3),
+            ('Neutral soft key',(-3,-4,5),165,(1,.93,.86),4),
+            ('Cool edge',(2,2,3),110,(.72,.84,1),3),
         ]:
             data=bpy.data.lights.new(name,'AREA')
             ob=bpy.data.objects.new(name,data)
