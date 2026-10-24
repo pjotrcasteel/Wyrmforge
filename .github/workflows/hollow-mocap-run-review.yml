@@ -1,0 +1,88 @@
+name: CMU retargeted Hollowed source-motion review
+on:
+  push:
+    branches: [feat/actor-lit-sprite-production]
+    paths:
+      - 'art/source/enemies/hollow/reference/**'
+      - 'tools/sprite-lab/build-hollow-mocap-run.py'
+      - 'tools/sprite-lab/render-hollow-mocap-run.py'
+      - '.github/workflows/hollow-mocap-run-review.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  real-reference-run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install Blender 4.5 and render dependencies
+        run: python -m pip install 'bpy==4.5.3' 'numpy>=1.26,<3' 'pillow>=10,<13'
+      - name: Retarget physical 120Hz CMU running poses to skinned Hollowed
+        run: |
+          source=art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-mocap-run-v1-candidate
+          if test -f "$source/hollow-rigged.blend"; then
+            echo "Existing editable source model kept unchanged"
+          else
+            python tools/sprite-lab/build-hollow-mocap-run.py
+          fi
+      - name: Sample posed original surface geometry
+        run: |
+          source=art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-mocap-run-v1-candidate
+          if ! test -f "$source/sampled-walk.npz"; then
+            python tools/sprite-lab/sample-hollow-rig.py -- "$source"
+          fi
+      - name: Check full-cycle matching, provenance and actual joints
+        run: |
+          python - <<'PY'
+          import json
+          import hashlib
+          from pathlib import Path
+          root=Path('art/source/enemies/hollow')
+          source=root/'reference/CMU-09_01-run.bvh'
+          candidate=root/'rigged-poc/model/local-appearance-004/rigged-mocap-run-v1-candidate'
+          audit=json.loads((candidate/'retarget-provenance.json').read_text())
+          poses=json.loads((candidate/'gait-diagnostics.json').read_text())
+          assert audit['sourceSha256']==hashlib.sha256(source.read_bytes()).hexdigest()
+          assert len(poses)==17 and audit['output']['frames']==16
+          assert audit['loop']['periodSourceFrames']>=52
+          assert (candidate/'sampled-walk.npz').is_file()
+          for side in ('L','R'):
+            knees=[x['feet'][side]['kneeFlexDegrees'] for x in poses[:16]]
+            elbows=[x['arms'][side]['elbowFlexDegrees'] for x in poses[:16]]
+            assert min(knees)>0 and max(knees)<160 and max(knees)-min(knees)>25,(side,knees)
+            assert min(elbows)>10 and max(elbows)<165,(side,elbows)
+            print(side,'source-motion knee range',min(knees),max(knees),
+                  'elbow range',min(elbows),max(elbows))
+          PY
+      - name: Render skinned 96px running motion, joints, 4 camera directions
+        run: python tools/sprite-lab/render-hollow-mocap-run.py
+      - name: Preserve new editable blend and 3D skinned review in draft PR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/feat/actor-lit-sprite-production'
+        run: |
+          mkdir -p docs/art/evidence/hollowed-mocap-run-v1-2026-10-24
+          cp artifacts/hollow-mocap-run-v1-review/*.gif docs/art/evidence/hollowed-mocap-run-v1-2026-10-24/
+          cp artifacts/hollow-mocap-run-v1-review/*.png docs/art/evidence/hollowed-mocap-run-v1-2026-10-24/
+          cp artifacts/hollow-mocap-run-v1-review/review.json docs/art/evidence/hollowed-mocap-run-v1-2026-10-24/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-mocap-run-v1-candidate/
+          git add docs/art/evidence/hollowed-mocap-run-v1-2026-10-24/
+          if ! git diff --cached --quiet; then
+            git commit -m "Save retargeted CMU run in editable Hollowed rig with real-motion review GIF"
+            git push origin HEAD:feat/actor-lit-sprite-production
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hollowed-real-cmu-run-unapproved-${{ github.sha }}
+          path: |
+            art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-mocap-run-v1-candidate/
+            artifacts/hollow-mocap-run-v1-review/
+          retention-days: 30
+          if-no-files-found: warn
