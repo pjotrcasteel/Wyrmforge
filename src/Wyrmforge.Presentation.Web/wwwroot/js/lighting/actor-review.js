@@ -22,8 +22,8 @@ const object = (id, geometry, mat, position, extras = {}) => ({
 });
 const light = (id, position, color, intensity, priority) => ({
     id, ownerId: id, type: 'point', enabled: true, position,
-    direction: [0, 0, -1], color, intensity, range: 18,
-    coneAngle: .6, penumbra: .3, castsShadow: true, priority, range: 8,
+    direction: [0, 0, -1], color, intensity, range: 8,
+    coneAngle: .6, penumbra: .3, castsShadow: true, priority,
 });
 
 async function fetchJson(url) {
