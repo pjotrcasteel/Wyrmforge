@@ -61,6 +61,18 @@
         </div>
     </div>
 
+    <details class="fireball-sequence" aria-label="Fireball visual sequence">
+        <summary>Preview Fireball animation</summary>
+        <div class="fireball-sequence-content">
+            <canvas class="fireball-sequence-canvas" width="320" height="160" @ref="sequenceCanvas"
+                    role="img" aria-label="Illustrative Fireball cast, travel, impact and aftermath"></canvas>
+            <button type="button" class="fireball-sequence-replay" @onclick="ReplaySequenceAsync">
+                Replay Cast → Travel → Impact → Aftermath
+            </button>
+            <p>This is a visual demonstration. Real collisions, blast radius and burning-ground lifetime are controlled by the Hunt simulation.</p>
+        </div>
+    </details>
+
     <section class="fireball-context" aria-live="polite" aria-label="Fireball actions" tabindex="-1" @ref="contextElement">
         @if (selectedSlot is null)
         {
@@ -249,7 +261,9 @@
     private string? notice;
     private ElementReference contextElement;
     private ElementReference fireballCanvas;
+    private ElementReference sequenceCanvas;
     private IJSObjectReference? previewModule;
+    private IJSObjectReference? sequenceModule;
     private bool focusContext;
 
     private bool Has(FireballMutationId mutation) => Core.Equipped.Contains(mutation);
@@ -339,19 +353,38 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
+        {
             previewModule = await JS.InvokeAsync<IJSObjectReference>("import", "./js/fireball-morphology.js?v=1");
+            sequenceModule = await JS.InvokeAsync<IJSObjectReference>("import", "./js/fireball-preview.js?v=1");
+        }
+        var recipe = FireballVisualRecipe.Resolve(Core);
         if (previewModule is not null)
-            await previewModule.InvokeVoidAsync("drawFireballNexusPreview", fireballCanvas, FireballVisualRecipe.Resolve(Core));
+            await previewModule.InvokeVoidAsync("drawFireballNexusPreview", fireballCanvas, recipe);
+        if (sequenceModule is not null)
+            await sequenceModule.InvokeVoidAsync("syncFireballSequencePreview", sequenceCanvas, recipe);
         if (!focusContext) return;
         focusContext = false;
         await contextElement.FocusAsync();
     }
 
+    private async Task ReplaySequenceAsync()
+    {
+        if (sequenceModule is null) return;
+        await sequenceModule.InvokeVoidAsync("playFireballSequencePreview", sequenceCanvas, FireballVisualRecipe.Resolve(Core));
+    }
+
     public async ValueTask DisposeAsync()
     {
-        if (previewModule is null) return;
-        try { await previewModule.DisposeAsync(); }
-        catch (JSDisconnectedException) { /* Navigation disconnected the preview; no gameplay state is affected. */ }
+        try
+        {
+            if (sequenceModule is not null)
+            {
+                await sequenceModule.InvokeVoidAsync("disposeFireballSequencePreview", sequenceCanvas);
+                await sequenceModule.DisposeAsync();
+            }
+            if (previewModule is not null) await previewModule.DisposeAsync();
+        }
+        catch (JSDisconnectedException) { /* Navigation may detach the editor during disposal. */ }
     }
 
     private async Task UpgradeAsync()
