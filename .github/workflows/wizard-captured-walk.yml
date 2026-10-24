@@ -1,0 +1,64 @@
+name: Wizard captured walking study
+on:
+  pull_request:
+    paths:
+      - 'tools/sprite-lab/cmu_bvh_walk_review.py'
+      - 'tools/sprite-lab/tests/test_cmu_bvh_walk_review.py'
+      - '.github/workflows/wizard-captured-walk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  genuine-captured-motion-review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download pinned licensed CMU slow walk
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/wizard-captured-motion
+          curl --fail --location --retry 3 \
+            'https://raw.githubusercontent.com/una-dinosauria/cmu-mocap/09a07f54f3bbb58797325f009282d0b2048a2871/data/007/07_04.bvh' \
+            -o "$RUNNER_TEMP/07_04.bvh"
+          test "$(git hash-object "$RUNNER_TEMP/07_04.bvh")" = "380e2c7994cfa1d2ac1705f2955bad1a43b805ff"
+      - name: Parse and record true human-captured walk
+        shell: bash
+        run: |
+          python3 -m pip install 'numpy>=1.26,<3' 'Pillow>=10,<14'
+          python3 -m unittest discover -s tools/sprite-lab/tests -p 'test_cmu_bvh_walk_review.py' -v
+          python3 tools/sprite-lab/cmu_bvh_walk_review.py \
+            --bvh "$RUNNER_TEMP/07_04.bvh" \
+            --output artifacts/wizard-captured-motion
+      - name: Encode recorded review and retain source provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          ffmpeg -hide_banner -loglevel error -y -framerate 12 \
+            -i artifacts/wizard-captured-motion/frame-%02d.png \
+            -filter_complex 'loop=loop=3:size=16:start=0' \
+            -c:v libx264 -pix_fmt yuv420p \
+            artifacts/wizard-captured-motion/captured-walk-reference.mp4
+          cp art/source/characters/wizard/reference/approved-gothic-wizard.webp \
+            artifacts/wizard-captured-motion/approved-visual-reference.webp
+          cat > artifacts/wizard-captured-motion/README.txt << 'DOC'
+          REAL CMU SLOW-WALK REFERENCE - NOT A GOTHIC WIZARD SPRITESHEET
+          CMU Graphics Lab, 07_04.bvh, Bruce Hahne conversion.
+          Game animation currently remains unchanged / disabled.
+          This archive contains motion preview, source provenance and
+          owner-approved art reference as SEPARATE inputs for retargeting.
+          DOC
+          (cd artifacts/wizard-captured-motion &&
+            zip -q -r WyrmForge_Wizard_Captured_Walk_Review.zip \
+              captured-walk-reference.mp4 capture-walk.gif \
+              contact-sheet.png motion-metadata.json \
+              approved-visual-reference.webp README.txt)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wizard-captured-walk-recorded-review
+          path: artifacts/wizard-captured-motion/WyrmForge_Wizard_Captured_Walk_Review.zip
+          if-no-files-found: error
+          retention-days: 30
