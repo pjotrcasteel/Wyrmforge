@@ -1,0 +1,4082 @@
+[
+  {
+    "frame": 0,
+    "sourceFraction": 0.0,
+    "feet": {
+      "L": {
+        "hip": [
+          0.25698980689048767,
+          -0.0011869703885167837,
+          -0.24100008606910706
+        ],
+        "knee": [
+          0.17861545085906982,
+          -0.12950697541236877,
+          -0.39682185649871826
+        ],
+        "ankle": [
+          0.03161461651325226,
+          0.01938048005104065,
+          -0.4501071572303772
+        ],
+        "kneeFlexDegrees": 58.63723731749484,
+        "swingInfluence": 0.0,
+        "toe": [
+          0.018800269812345505,
+          -0.10603722929954529,
+          -0.49760696291923523
+        ],
+        "pelvisCompensation": true,
+        "interiorKneeDegrees": 90.88111739797732
+      },
+      "R": {
+        "hip": [
+          0.11901022493839264,
+          0.0011869652662426233,
+          -0.2409999668598175
+        ],
+        "knee": [
+          -0.08134905993938446,
+          -0.02817852422595024,
+          -0.31769946217536926
+        ],
+        "ankle": [
+          -0.06816878914833069,
+          0.1784217804670334,
+          -0.2563914656639099
+        ],
+        "kneeFlexDegrees": 108.56049014989789,
+        "pelvisCompensation": true,
+        "toe": [
+          -0.08089865744113922,
+          0.2625456154346466,
+          -0.36084794998168945
+        ],
+        "interiorKneeDegrees": 73.33173862757327
+      }
+    },
+    "arms": {
+      "L": {
+        "shoulder": [
+          0.16690653562545776,
+          -0.21278280019760132,
+          0.02127395011484623
+        ],
+        "elbow": [
+          0.24330180883407593,
+          -0.363785058259964,
+          -0.06908152252435684
+        ],
+        "wrist": [
+          0.26493552327156067,
+          -0.5207158923149109,
+          -0.12128984928131104
+        ],
+        "hand": [
+          0.2837817668914795,
+          -0.6211411952972412,
+          -0.16218633949756622
+        ],
+        "elbowFlexDegrees": 159.99305587329,
+        "calibrationDegrees": 27.659226704370987,
+        "originalElbowFlexDegrees": 109.28004374876956,
+        "fullyFunctional": true,
+        "stretchReach": true
+      },
+      "R": {
+        "shoulder": [
+          0.0027258326299488544,
+          -0.1945406198501587,
+          -0.09266594797372818
+        ],
+        "elbow": [
+          0.03389580920338631,
+          -0.3400995135307312,
+          -0.21367445588111877
+        ],
+        "wrist": [
+          0.05335649102926254,
+          -0.4914770722389221,
+          -0.2809584140777588
+        ],
+        "hand": [
+          0.06961571425199509,
+          -0.5877242088317871,
+          -0.3318026065826416
+        ],
+        "elbowFlexDegrees": 164.15959421040284,
+        "calibrationDegrees": 31.62723534797365,
+        "originalElbowFlexDegrees": 74.81406225342813,
+        "fullyFunctional": true,
+        "stretchReach": true
+      }
+    },
+    "pelvisVertical": -0.02500000037252903,
+    "forwardLeanDegrees": 27.244318290596294,
+    "shoulderYawDegrees": -2.342236452203444,
+    "shoulderRollDegrees": -5.153201409309975,
+    "pelvisYawDegrees": -0.9856690979382362,
+    "cloth": {
+      "L": {
+        "root": [
+          0.05821573734283447,
+          0.03766008839011192,
+          -0.03442296385765076
+        ],
+        "hem": [
+          0.0832669734954834,
+          0.09923848509788513,
+          -0.34435123205184937
+        ],
+        "rearwardBias": 0.115,
+        "sourceFrame": 15
+      },
+      "R": {
+        "root": [
+          -0.05124811828136444,
+          0.04213744029402733,
+          -0.024542856961488724
+        ],
+        "hem": [
+          -0.07625687122344971,
+          0.10632072389125824,
+          -0.333945631980896
+        ],
+        "rearwardBias": 0.12354426242411137,
+        "sourceFrame": 15
+      }
+    },
+    "fps": 25,
+    "armMethod": "single source-derived shoulder-space calibration rotating complete captured 3D arm chain",
+    "variant": "broken-leg-left",
+    "weightTransfer": {
+      "healthyRightSupport": 0.0,
+      "damagedLeftSupport": 1.0,
+      "pelvisOffset": [
+        0.013000000268220901,
+        -0.0,
+        -0.012000000104308128
+      ],
+      "thoracicCounterleanDegrees": -3.5,
+      "bothAnklesAnchored": true,
+      "sourceFrame": 0
+    },
+    "reachStyle": "shoulder-driven mostly extended zombie arms, not half-flexed boxer running",
+    "limpV3": {
+      "leftSwingDrag": 0.0,
+      "leftFootDelta": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "extraHipDrop": 0.015,
+      "torsoCompensationDegrees": -7.0,
+      "rightFootPlantedOnOriginalTrajectory": true
+    },
+    "limpV4": {
+      "leftInjuredStance": 1.0,
+      "rightHealthyStance": 0.0,
+      "leftSwingDrag": 0.0,
+      "extraPelvisOffset": [
+        0.054999999701976776,
+        0.0,
+        -0.05999999865889549
+      ],
+      "extraThoraxCounterRollDegrees": -12.000000000000002,
+      "crookedKneePoleShift": 0.105,
+      "droopingToeSwing": 0.0,
+      "bothSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 0
+    },
+    "limpV5": {
+      "leftInjuredStance": 1.0,
+      "rightHealthyStance": 0.0,
+      "painImpact": 1.0,
+      "leftSwingDrag": 0.0,
+      "extraPelvisOffset": [
+        0.05999999865889549,
+        0.0,
+        -0.052000001072883606
+      ],
+      "extraThoraxCounterRollDegrees": -9.0,
+      "extraThoraxPitchDegrees": 6.000000000000001,
+      "crookedKneePoleShift": 0.095,
+      "bothSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 0
+    },
+    "limpV6": {
+      "leftInjuredStance": 1.0,
+      "rightHealthyStance": 0.0,
+      "painImpact": 1.0,
+      "leftSwingDrag": 0.0,
+      "leftFootTrailDelta": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "leftFootTrailDistance": 0.0,
+      "extraPelvisOffset": [
+        0.05999999865889549,
+        0.0,
+        -0.052000001072883606
+      ],
+      "extraThoraxCounterRollDegrees": -9.0,
+      "extraThoraxPitchDegrees": 6.000000000000001,
+      "crookedKneePoleShift": 0.095,
+      "plantedSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 0
+    },
+    "temporalAsymmetry": {
+      "sourceFrame": 0.0,
+      "leftPainfulContact": 1.0,
+      "rightHealthyPropulsion": 0.0,
+      "sourceFrameAdvance": 0.45,
+      "authoredSourceRetiming": true,
+      "preservesFullCapturedJointChain": true,
+      "authoritativeInWorldVelocity": false
+    }
+  },
+  {
+    "frame": 1,
+    "sourceFraction": 0.0,
+    "feet": {
+      "L": {
+        "hip": [
+          0.2566108703613281,
+          -0.0014926283620297909,
+          -0.24049590528011322
+        ],
+        "knee": [
+          0.1756245493888855,
+          -0.11266065388917923,
+          -0.40774381160736084
+        ],
+        "ankle": [
+          0.026526883244514465,
+          0.03792387992143631,
+          -0.44909873604774475
+        ],
+        "kneeFlexDegrees": 58.63723731749484,
+        "swingInfluence": 0.0,
+        "toe": [
+          0.017342768609523773,
+          -0.08530870079994202,
+          -0.5027589201927185
+        ],
+        "pelvisCompensation": true,
+        "interiorKneeDegrees": 90.88111739797732
+      },
+      "R": {
+        "hip": [
+          0.11863714456558228,
+          0.0014919864479452372,
+          -0.24049586057662964
+        ],
+        "knee": [
+          -0.07967182993888855,
+          -0.05071321874856949,
+          -0.3100455403327942
+        ],
+        "ankle": [
+          -0.07066761702299118,
+          0.1594673991203308,
+          -0.2614750266075134
+        ],
+        "kneeFlexDegrees": 108.56049014989789,
+        "pelvisCompensation": true,
+        "toe": [
+          -0.08087130635976791,
+          0.23634666204452515,
+          -0.37163621187210083
+        ],
+        "interiorKneeDegrees": 73.33173862757327
+      }
+    },
+    "arms": {
+      "L": {
+        "shoulder": [
+          0.16897998750209808,
+          -0.2134144902229309,
+          0.022191671654582024
+        ],
+        "elbow": [
+          0.24441292881965637,
+          -0.36536312103271484,
+          -0.06738246232271194
+        ],
+        "wrist": [
+          0.26485198736190796,
+          -0.5224804878234863,
+          -0.1195112019777298
+        ],
+        "hand": [
+          0.28295713663101196,
+          -0.6230625510215759,
+          -0.16035723686218262
+        ],
+        "elbowFlexDegrees": 159.99305587329,
+        "calibrationDegrees": 27.659226704370987,
+        "originalElbowFlexDegrees": 109.28004374876956,
+        "fullyFunctional": true,
+        "stretchReach": true
+      },
+      "R": {
+        "shoulder": [
+          0.004895185120403767,
+          -0.19583946466445923,
+          -0.09200771152973175
+        ],
+        "elbow": [
+          0.03664634749293327,
+          -0.3411332964897156,
+          -0.21318349242210388
+        ],
+        "wrist": [
+          0.055772311985492706,
+          -0.491818904876709,
+          -0.2820967435836792
+        ],
+        "hand": [
+          0.07182537764310837,
+          -0.5875678658485413,
+          -0.33393722772598267
+        ],
+        "elbowFlexDegrees": 164.15959421040284,
+        "calibrationDegrees": 31.62723534797365,
+        "originalElbowFlexDegrees": 74.81406225342813,
+        "fullyFunctional": true,
+        "stretchReach": true
+      }
+    },
+    "pelvisVertical": -0.02500000037252903,
+    "forwardLeanDegrees": 27.244318290596294,
+    "shoulderYawDegrees": -2.342236452203444,
+    "shoulderRollDegrees": -5.153201409309975,
+    "pelvisYawDegrees": -0.9856690979382362,
+    "cloth": {
+      "L": {
+        "root": [
+          0.05821573734283447,
+          0.03766008839011192,
+          -0.03442296385765076
+        ],
+        "hem": [
+          0.0832669734954834,
+          0.09923848509788513,
+          -0.34435123205184937
+        ],
+        "rearwardBias": 0.115,
+        "sourceFrame": 15
+      },
+      "R": {
+        "root": [
+          -0.05124811828136444,
+          0.04213744029402733,
+          -0.024542856961488724
+        ],
+        "hem": [
+          -0.07625687122344971,
+          0.10632072389125824,
+          -0.333945631980896
+        ],
+        "rearwardBias": 0.12354426242411137,
+        "sourceFrame": 15
+      }
+    },
+    "fps": 25,
+    "armMethod": "single source-derived shoulder-space calibration rotating complete captured 3D arm chain",
+    "variant": "broken-leg-left",
+    "weightTransfer": {
+      "healthyRightSupport": 0.00012169650593446904,
+      "damagedLeftSupport": 0.9813075669717877,
+      "pelvisOffset": [
+        0.013000000268220901,
+        -0.0,
+        -0.012000000104308128
+      ],
+      "thoracicCounterleanDegrees": -3.5,
+      "bothAnklesAnchored": true,
+      "sourceFrame": 0
+    },
+    "reachStyle": "shoulder-driven mostly extended zombie arms, not half-flexed boxer running",
+    "limpV3": {
+      "leftSwingDrag": 0.0,
+      "leftFootDelta": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "extraHipDrop": 0.015,
+      "torsoCompensationDegrees": -7.0,
+      "rightFootPlantedOnOriginalTrajectory": true
+    },
+    "limpV4": {
+      "leftInjuredStance": 1.0,
+      "rightHealthyStance": 0.0,
+      "leftSwingDrag": 0.0,
+      "extraPelvisOffset": [
+        0.054999999701976776,
+        0.0,
+        -0.05999999865889549
+      ],
+      "extraThoraxCounterRollDegrees": -12.000000000000002,
+      "crookedKneePoleShift": 0.105,
+      "droopingToeSwing": 0.0,
+      "bothSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 0
+    },
+    "limpV5": {
+      "leftInjuredStance": 1.0,
+      "rightHealthyStance": 0.0,
+      "painImpact": 1.0,
+      "leftSwingDrag": 0.0,
+      "extraPelvisOffset": [
+        0.05999999865889549,
+        0.0,
+        -0.052000001072883606
+      ],
+      "extraThoraxCounterRollDegrees": -9.0,
+      "extraThoraxPitchDegrees": 6.000000000000001,
+      "crookedKneePoleShift": 0.095,
+      "bothSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 0
+    },
+    "limpV6": {
+      "leftInjuredStance": 1.0,
+      "rightHealthyStance": 0.0,
+      "painImpact": 1.0,
+      "leftSwingDrag": 0.0,
+      "leftFootTrailDelta": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "leftFootTrailDistance": 0.0,
+      "extraPelvisOffset": [
+        0.05999999865889549,
+        0.0,
+        -0.052000001072883606
+      ],
+      "extraThoraxCounterRollDegrees": -9.0,
+      "extraThoraxPitchDegrees": 6.000000000000001,
+      "crookedKneePoleShift": 0.095,
+      "plantedSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 0
+    },
+    "temporalAsymmetry": {
+      "sourceFrame": 0.45,
+      "leftPainfulContact": 0.9813075669717877,
+      "rightHealthyPropulsion": 0.00012169650593446904,
+      "sourceFrameAdvance": 0.49999999999999994,
+      "authoredSourceRetiming": true,
+      "preservesFullCapturedJointChain": true,
+      "authoritativeInWorldVelocity": false
+    }
+  },
+  {
+    "frame": 2,
+    "sourceFraction": 0.0,
+    "feet": {
+      "L": {
+        "hip": [
+          0.25341710448265076,
+          -0.0025284814182668924,
+          -0.2362566590309143
+        ],
+        "knee": [
+          0.17138823866844177,
+          -0.07261615246534348,
+          -0.4240010976791382
+        ],
+        "ankle": [
+          0.02514594793319702,
+          0.08493360877037048,
+          -0.4441826045513153
+        ],
+        "kneeFlexDegrees": 58.63723731749484,
+        "swingInfluence": 0.0,
+        "toe": [
+          0.015497611835598946,
+          -0.033184073865413666,
+          -0.5082540512084961
+        ],
+        "pelvisCompensation": true,
+        "interiorKneeDegrees": 90.88111739797732
+      },
+      "R": {
+        "hip": [
+          0.1155078113079071,
+          0.0025224490091204643,
+          -0.2362566739320755
+        ],
+        "knee": [
+          -0.07184299826622009,
+          -0.09423520416021347,
+          -0.2855176031589508
+        ],
+        "ankle": [
+          -0.07254758477210999,
+          0.12144024670124054,
+          -0.2755356729030609
+        ],
+        "kneeFlexDegrees": 108.56049014989789,
+        "pelvisCompensation": true,
+        "toe": [
+          -0.08166977018117905,
+          0.17301607131958008,
+          -0.39965957403182983
+        ],
+        "interiorKneeDegrees": 73.33173862757327
+      }
+    },
+    "arms": {
+      "L": {
+        "shoulder": [
+          0.17644141614437103,
+          -0.21314336359500885,
+          0.029553525149822235
+        ],
+        "elbow": [
+          0.24982011318206787,
+          -0.366703599691391,
+          -0.05897248536348343
+        ],
+        "wrist": [
+          0.2682764530181885,
+          -0.5242071747779846,
+          -0.11067372560501099
+        ],
+        "hand": [
+          0.2850433588027954,
+          -0.6250993609428406,
+          -0.15132573246955872
+        ],
+        "elbowFlexDegrees": 159.99305587329,
+        "calibrationDegrees": 27.659226704370987,
+        "originalElbowFlexDegrees": 109.28004374876956,
+        "fullyFunctional": true,
+        "stretchReach": true
+      },
+      "R": {
+        "shoulder": [
+          0.01049435418099165,
+          -0.19948317110538483,
+          -0.082491435110569
+        ],
+        "elbow": [
+          0.04262520745396614,
+          -0.34444159269332886,
+          -0.2039686143398285
+        ],
+        "wrist": [
+          0.061212778091430664,
+          -0.49408864974975586,
+          -0.2752515971660614
+        ],
+        "hand": [
+          0.07681894302368164,
+          -0.5890927910804749,
+          -0.32857757806777954
+        ],
+        "elbowFlexDegrees": 164.15959421040284,
+        "calibrationDegrees": 31.62723534797365,
+        "originalElbowFlexDegrees": 74.81406225342813,
+        "fullyFunctional": true,
+        "stretchReach": true
+      }
+    },
+    "pelvisVertical": -0.02500000037252903,
+    "forwardLeanDegrees": 27.244318290596294,
+    "shoulderYawDegrees": -2.342236452203444,
+    "shoulderRollDegrees": -5.153201409309975,
+    "pelvisYawDegrees": -0.9856690979382362,
+    "cloth": {
+      "L": {
+        "root": [
+          0.05821573734283447,
+          0.03766008839011192,
+          -0.03442296385765076
+        ],
+        "hem": [
+          0.0832669734954834,
+          0.09923848509788513,
+          -0.34435123205184937
+        ],
+        "rearwardBias": 0.115,
+        "sourceFrame": 15
+      },
+      "R": {
+        "root": [
+          -0.05124811828136444,
+          0.04213744029402733,
+          -0.024542856961488724
+        ],
+        "hem": [
+          -0.07625687122344971,
+          0.10632072389125824,
+          -0.333945631980896
+        ],
+        "rearwardBias": 0.12354426242411137,
+        "sourceFrame": 15
+      }
+    },
+    "fps": 25,
+    "armMethod": "single source-derived shoulder-space calibration rotating complete captured 3D arm chain",
+    "variant": "broken-leg-left",
+    "weightTransfer": {
+      "healthyRightSupport": 0.00025691484586165683,
+      "damagedLeftSupport": 0.9605381969404405,
+      "pelvisOffset": [
+        0.013000000268220901,
+        -0.0,
+        -0.012000000104308128
+      ],
+      "thoracicCounterleanDegrees": -3.5,
+      "bothAnklesAnchored": true,
+      "sourceFrame": 0
+    },
+    "reachStyle": "shoulder-driven mostly extended zombie arms, not half-flexed boxer running",
+    "limpV3": {
+      "leftSwingDrag": 0.0,
+      "leftFootDelta": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "extraHipDrop": 0.015,
+      "torsoCompensationDegrees": -7.0,
+      "rightFootPlantedOnOriginalTrajectory": true
+    },
+    "limpV4": {
+      "leftInjuredStance": 1.0,
+      "rightHealthyStance": 0.0,
+      "leftSwingDrag": 0.0,
+      "extraPelvisOffset": [
+        0.054999999701976776,
+        0.0,
+        -0.05999999865889549
+      ],
+      "extraThoraxCounterRollDegrees": -12.000000000000002,
+      "crookedKneePoleShift": 0.105,
+      "droopingToeSwing": 0.0,
+      "bothSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 0
+    },
+    "limpV5": {
+      "leftInjuredStance": 1.0,
+      "rightHealthyStance": 0.0,
+      "painImpact": 1.0,
+      "leftSwingDrag": 0.0,
+      "extraPelvisOffset": [
+        0.05999999865889549,
+        0.0,
+        -0.052000001072883606
+      ],
+      "extraThoraxCounterRollDegrees": -9.0,
+      "extraThoraxPitchDegrees": 6.000000000000001,
+      "crookedKneePoleShift": 0.095,
+      "bothSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 0
+    },
+    "limpV6": {
+      "leftInjuredStance": 1.0,
+      "rightHealthyStance": 0.0,
+      "painImpact": 1.0,
+      "leftSwingDrag": 0.0,
+      "leftFootTrailDelta": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "leftFootTrailDistance": 0.0,
+      "extraPelvisOffset": [
+        0.05999999865889549,
+        0.0,
+        -0.052000001072883606
+      ],
+      "extraThoraxCounterRollDegrees": -9.0,
+      "extraThoraxPitchDegrees": 6.000000000000001,
+      "crookedKneePoleShift": 0.095,
+      "plantedSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 0
+    },
+    "temporalAsymmetry": {
+      "sourceFrame": 0.95,
+      "leftPainfulContact": 0.9605381969404405,
+      "rightHealthyPropulsion": 0.00025691484586165683,
+      "sourceFrameAdvance": 0.75,
+      "authoredSourceRetiming": true,
+      "preservesFullCapturedJointChain": true,
+      "authoritativeInWorldVelocity": false
+    }
+  },
+  {
+    "frame": 3,
+    "sourceFraction": 0.0625,
+    "feet": {
+      "L": {
+        "hip": [
+          0.21508541703224182,
+          -0.004966735374182463,
+          -0.191391721367836
+        ],
+        "knee": [
+          0.17771127820014954,
+          -0.03145904839038849,
+          -0.4030289649963379
+        ],
+        "ankle": [
+          0.050395667552948,
+          0.1389060616493225,
+          -0.44021058082580566
+        ],
+        "kneeFlexDegrees": 54.97054588422186,
+        "swingInfluence": 0.003467418596539266,
+        "toe": [
+          0.030843505635857582,
+          0.03761995583772659,
+          -0.5268641114234924
+        ],
+        "pelvisCompensation": true,
+        "interiorKneeDegrees": 96.0057127095895
+      },
+      "R": {
+        "hip": [
+          0.07741671055555344,
+          0.004501153249293566,
+          -0.19139167666435242
+        ],
+        "knee": [
+          -0.08035454899072647,
+          -0.1308669149875641,
+          -0.2519945204257965
+        ],
+        "ankle": [
+          -0.0767471119761467,
+          0.07826103270053864,
+          -0.30555281043052673
+        ],
+        "kneeFlexDegrees": 114.57104978931993,
+        "pelvisCompensation": true,
+        "toe": [
+          -0.08789680153131485,
+          0.0784061849117279,
+          -0.4398125410079956
+        ],
+        "interiorKneeDegrees": 62.451097015581226
+      }
+    },
+    "arms": {
+      "L": {
+        "shoulder": [
+          0.1735573709011078,
+          -0.2001228928565979,
+          0.08768314868211746
+        ],
+        "elbow": [
+          0.23685184121131897,
+          -0.35882171988487244,
+          0.0004449188709259033
+        ],
+        "wrist": [
+          0.24891631305217743,
+          -0.51884925365448,
+          -0.045015670359134674
+        ],
+        "hand": [
+          0.2607493996620178,
+          -0.6217679381370544,
+          -0.08217348158359528
+        ],
+        "elbowFlexDegrees": 160.27142706310303,
+        "calibrationDegrees": 27.659226704370987,
+        "originalElbowFlexDegrees": 110.58129040830536,
+        "fullyFunctional": true,
+        "stretchReach": true
+      },
+      "R": {
+        "shoulder": [
+          -0.004963547457009554,
+          -0.19767290353775024,
+          -0.003927819896489382
+        ],
+        "elbow": [
+          0.015177251771092415,
+          -0.3475200831890106,
+          -0.1220049262046814
+        ],
+        "wrist": [
+          0.026260975748300552,
+          -0.4998902678489685,
+          -0.18894869089126587
+        ],
+        "hand": [
+          0.03620284050703049,
+          -0.596965491771698,
+          -0.23984572291374207
+        ],
+        "elbowFlexDegrees": 165.31265308570605,
+        "calibrationDegrees": 31.62723534797365,
+        "originalElbowFlexDegrees": 68.93829639727629,
+        "fullyFunctional": true,
+        "stretchReach": true
+      }
+    },
+    "pelvisVertical": -0.02419883757829666,
+    "forwardLeanDegrees": 28.0,
+    "shoulderYawDegrees": 1.3887831570318903,
+    "shoulderRollDegrees": -5.218284289811583,
+    "pelvisYawDegrees": -2.2156518899775173,
+    "cloth": {
+      "L": {
+        "root": [
+          0.05571385473012924,
+          0.04109501093626022,
+          -0.0331624336540699
+        ],
+        "hem": [
+          0.08076508343219757,
+          0.10267341136932373,
+          -0.3430907130241394
+        ],
+        "rearwardBias": 0.115,
+        "sourceFrame": 0
+      },
+      "R": {
+        "root": [
+          -0.05379805341362953,
+          0.038440052419900894,
+          -0.023157915100455284
+        ],
+        "hem": [
+          -0.07884928584098816,
+          0.1000184565782547,
+          -0.33308619260787964
+        ],
+        "rearwardBias": 0.115,
+        "sourceFrame": 0
+      }
+    },
+    "fps": 25,
+    "armMethod": "single source-derived shoulder-space calibration rotating complete captured 3D arm chain",
+    "variant": "broken-leg-left",
+    "weightTransfer": {
+      "healthyRightSupport": 0.014337637238429542,
+      "damagedLeftSupport": 0.776140374413224,
+      "pelvisOffset": [
+        0.012449990026652813,
+        -3.515676780807553e-06,
+        -0.011502617038786411
+      ],
+      "thoracicCounterleanDegrees": -3.353127008041371,
+      "bothAnklesAnchored": true,
+      "sourceFrame": 1
+    },
+    "reachStyle": "shoulder-driven mostly extended zombie arms, not half-flexed boxer running",
+    "limpV3": {
+      "leftSwingDrag": 0.00799850380416428,
+      "leftFootDelta": [
+        0.00022395886480808258,
+        -0.0016796886920928955,
+        -0.0007998645305633545
+      ],
+      "extraHipDrop": 0.014376918899059586,
+      "torsoCompensationDegrees": -6.707876636161869,
+      "rightFootPlantedOnOriginalTrajectory": true
+    },
+    "limpV4": {
+      "leftInjuredStance": 0.9584612599373058,
+      "rightHealthyStance": 0.00027043667985437563,
+      "leftSwingDrag": 0.00799850380416428,
+      "extraPelvisOffset": [
+        0.052712664008140564,
+        0.0,
+        -0.057506054639816284
+      ],
+      "extraThoraxCounterRollDegrees": -11.500453372528252,
+      "crookedKneePoleShift": 0.10063843229341711,
+      "droopingToeSwing": 0.006238832967248139,
+      "bothSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 1
+    },
+    "limpV5": {
+      "leftInjuredStance": 0.9584612599373058,
+      "rightHealthyStance": 0.00027043667985437563,
+      "painImpact": 0.9892612549461234,
+      "leftSwingDrag": 0.00799850380416428,
+      "extraPelvisOffset": [
+        0.05935567617416382,
+        0.0,
+        -0.051441583782434464
+      ],
+      "extraThoraxCounterRollDegrees": -8.90335129451511,
+      "extraThoraxPitchDegrees": 5.9355675296767405,
+      "crookedKneePoleShift": 0.09397981921988172,
+      "bothSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 1
+    },
+    "limpV6": {
+      "leftInjuredStance": 0.9584612599373058,
+      "rightHealthyStance": 0.00027043667985437563,
+      "painImpact": 0.9892612549461234,
+      "leftSwingDrag": 0.00799850380416428,
+      "leftFootTrailDelta": [
+        0.000759858638048172,
+        0.001519717276096344,
+        -0.00011998414993286133
+      ],
+      "leftFootTrailDistance": 0.0017033267309780253,
+      "extraPelvisOffset": [
+        0.05935567617416382,
+        0.0,
+        -0.051441583782434464
+      ],
+      "extraThoraxCounterRollDegrees": -8.90335129451511,
+      "extraThoraxPitchDegrees": 5.9355675296767405,
+      "crookedKneePoleShift": 0.09397981921988172,
+      "plantedSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 1
+    },
+    "temporalAsymmetry": {
+      "sourceFrame": 1.7,
+      "leftPainfulContact": 0.776140374413224,
+      "rightHealthyPropulsion": 0.014337637238429542,
+      "sourceFrameAdvance": 1.2,
+      "authoredSourceRetiming": true,
+      "preservesFullCapturedJointChain": true,
+      "authoritativeInWorldVelocity": false
+    }
+  },
+  {
+    "frame": 4,
+    "sourceFraction": 0.125,
+    "feet": {
+      "L": {
+        "hip": [
+          0.0880383774638176,
+          -0.005771662574261427,
+          -0.056238431483507156
+        ],
+        "knee": [
+          0.0837114080786705,
+          0.06228943541646004,
+          -0.2617571949958801
+        ],
+        "ankle": [
+          0.07292816787958145,
+          0.18529751896858215,
+          -0.4388694763183594
+        ],
+        "kneeFlexDegrees": 41.095467377826196,
+        "swingInfluence": 0.047249692989152645,
+        "toe": [
+          0.07286792993545532,
+          0.14144352078437805,
+          -0.5662540197372437
+        ],
+        "pelvisCompensation": true,
+        "interiorKneeDegrees": 107.69678358736026
+      },
+      "R": {
+        "hip": [
+          -0.04971441999077797,
+          0.00249594752676785,
+          -0.0562380850315094
+        ],
+        "knee": [
+          -0.07119247317314148,
+          -0.15267229080200195,
+          -0.20573891699314117
+        ],
+        "ankle": [
+          -0.06829708069562912,
+          -0.0008335411548614502,
+          -0.35920751094818115
+        ],
+        "kneeFlexDegrees": 103.56399503616929,
+        "pelvisCompensation": true,
+        "toe": [
+          -0.07356838881969452,
+          -0.0699772983789444,
+          -0.4747122824192047
+        ],
+        "interiorKneeDegrees": 57.212041393857966
+      }
+    },
+    "arms": {
+      "L": {
+        "shoulder": [
+          0.14339061081409454,
+          -0.16295868158340454,
+          0.22057273983955383
+        ],
+        "elbow": [
+          0.17724797129631042,
+          -0.33509576320648193,
+          0.14295485615730286
+        ],
+        "wrist": [
+          0.17650370299816132,
+          -0.5005332827568054,
+          0.1217205822467804
+        ],
+        "hand": [
+          0.17727604508399963,
+          -0.6082878708839417,
+          0.0993298888206482
+        ],
+        "elbowFlexDegrees": 160.27090796872614,
+        "calibrationDegrees": 27.659226704370987,
+        "originalElbowFlexDegrees": 114.44842740315069,
+        "fullyFunctional": true,
+        "stretchReach": true
+      },
+      "R": {
+        "shoulder": [
+          -0.056472133845090866,
+          -0.17555978894233704,
+          0.20936553180217743
+        ],
+        "elbow": [
+          -0.07477462291717529,
+          -0.3413253128528595,
+          0.11455611884593964
+        ],
+        "wrist": [
+          -0.08488515019416809,
+          -0.5020482540130615,
+          0.07111687958240509
+        ],
+        "hand": [
+          -0.0913059338927269,
+          -0.605751633644104,
+          0.03482161834836006
+        ],
+        "elbowFlexDegrees": 165.33520637034545,
+        "calibrationDegrees": 31.62723534797365,
+        "originalElbowFlexDegrees": 71.48844314654893,
+        "fullyFunctional": true,
+        "stretchReach": true
+      }
+    },
+    "pelvisVertical": -0.012050182558596134,
+    "forwardLeanDegrees": 28.0,
+    "shoulderYawDegrees": 6.867712978369637,
+    "shoulderRollDegrees": -3.946697820244684,
+    "pelvisYawDegrees": -4.21317648751715,
+    "cloth": {
+      "L": {
+        "root": [
+          0.05116839334368706,
+          0.046182580292224884,
+          -0.01975962705910206
+        ],
+        "hem": [
+          0.07621962577104568,
+          0.10776098072528839,
+          -0.3296878933906555
+        ],
+        "rearwardBias": 0.115,
+        "sourceFrame": 1
+      },
+      "R": {
+        "root": [
+          -0.0577833391726017,
+          0.033060263842344284,
+          -0.012188490480184555
+        ],
+        "hem": [
+          -0.08283457159996033,
+          0.09463866055011749,
+          -0.32211676239967346
+        ],
+        "rearwardBias": 0.115,
+        "sourceFrame": 1
+      }
+    },
+    "fps": 25,
+    "armMethod": "single source-derived shoulder-space calibration rotating complete captured 3D arm chain",
+    "variant": "broken-leg-left",
+    "weightTransfer": {
+      "healthyRightSupport": 0.16184135155423296,
+      "damagedLeftSupport": 0.3322825673543237,
+      "pelvisOffset": [
+        0.008320478722453117,
+        -0.00026476368657313287,
+        -0.00845749955624342
+      ],
+      "thoracicCounterleanDegrees": -2.330994576032157,
+      "bothAnklesAnchored": true,
+      "sourceFrame": 2
+    },
+    "reachStyle": "shoulder-driven mostly extended zombie arms, not half-flexed boxer running",
+    "limpV3": {
+      "leftSwingDrag": 0.08626065978787957,
+      "leftFootDelta": [
+        0.002415299415588379,
+        -0.018114745616912842,
+        -0.008626073598861694
+      ],
+      "extraHipDrop": 0.010470042780686403,
+      "torsoCompensationDegrees": -4.784187776931228,
+      "rightFootPlantedOnOriginalTrajectory": true
+    },
+    "limpV4": {
+      "leftInjuredStance": 0.6980028520457603,
+      "rightHealthyStance": 0.0203664374778189,
+      "leftSwingDrag": 0.08626065978787957,
+      "extraPelvisOffset": [
+        0.03818649426102638,
+        0.0,
+        -0.0417579710483551
+      ],
+      "extraThoraxCounterRollDegrees": -8.294568474637847,
+      "crookedKneePoleShift": 0.07329029946480482,
+      "droopingToeSwing": 0.06728331463454607,
+      "bothSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 2
+    },
+    "limpV5": {
+      "leftInjuredStance": 0.6980028520457603,
+      "rightHealthyStance": 0.0203664374778189,
+      "painImpact": 0.5834807190965303,
+      "leftSwingDrag": 0.08626065978787957,
+      "extraPelvisOffset": [
+        0.03500884398818016,
+        0.0,
+        -0.030340997502207756
+      ],
+      "extraThoraxCounterRollDegrees": -5.251326471868774,
+      "extraThoraxPitchDegrees": 3.500884314579182,
+      "crookedKneePoleShift": 0.05543066831417038,
+      "bothSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 2
+    },
+    "limpV6": {
+      "leftInjuredStance": 0.6980028520457603,
+      "rightHealthyStance": 0.0203664374778189,
+      "painImpact": 0.5834807190965303,
+      "leftSwingDrag": 0.08626065978787957,
+      "leftFootTrailDelta": [
+        0.008194763213396072,
+        0.016389518976211548,
+        -0.0012938976287841797
+      ],
+      "leftFootTrailDistance": 0.018369666525734282,
+      "extraPelvisOffset": [
+        0.03500884398818016,
+        0.0,
+        -0.030340997502207756
+      ],
+      "extraThoraxCounterRollDegrees": -5.251326471868774,
+      "extraThoraxPitchDegrees": 3.500884314579182,
+      "crookedKneePoleShift": 0.05543066831417038,
+      "plantedSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 2
+    },
+    "temporalAsymmetry": {
+      "sourceFrame": 2.9,
+      "leftPainfulContact": 0.3322825673543237,
+      "rightHealthyPropulsion": 0.16184135155423296,
+      "sourceFrameAdvance": 1.5500000000000003,
+      "authoredSourceRetiming": true,
+      "preservesFullCapturedJointChain": true,
+      "authoritativeInWorldVelocity": false
+    }
+  },
+  {
+    "frame": 5,
+    "sourceFraction": 0.25,
+    "feet": {
+      "L": {
+        "hip": [
+          0.04982464760541916,
+          -0.007118141278624535,
+          -0.01818571798503399
+        ],
+        "knee": [
+          0.06236393749713898,
+          0.08424443006515503,
+          -0.2141057550907135
+        ],
+        "ankle": [
+          0.11824578046798706,
+          0.19355550408363342,
+          -0.39171290397644043
+        ],
+        "kneeFlexDegrees": 18.238635471350364,
+        "swingInfluence": 0.33464386298100474,
+        "toe": [
+          0.1227559968829155,
+          0.15772347152233124,
+          -0.5215039253234863
+        ],
+        "pelvisCompensation": true,
+        "interiorKneeDegrees": 166.494385095145
+      },
+      "R": {
+        "hip": [
+          -0.08817986398935318,
+          -0.005805621389299631,
+          -0.018185561522841454
+        ],
+        "knee": [
+          -0.05979897826910019,
+          -0.13041292130947113,
+          -0.19298987090587616
+        ],
+        "ankle": [
+          -0.06788089871406555,
+          -0.11045712232589722,
+          -0.4078211188316345
+        ],
+        "kneeFlexDegrees": 52.019139181589324,
+        "pelvisCompensation": true,
+        "toe": [
+          -0.07153492420911789,
+          -0.23672786355018616,
+          -0.45464351773262024
+        ],
+        "interiorKneeDegrees": 126.84401681219708
+      }
+    },
+    "arms": {
+      "L": {
+        "shoulder": [
+          0.14112646877765656,
+          -0.1598951816558838,
+          0.23900575935840607
+        ],
+        "elbow": [
+          0.16765931248664856,
+          -0.3315790891647339,
+          0.1576259434223175
+        ],
+        "wrist": [
+          0.16450293362140656,
+          -0.4970419406890869,
+          0.13681477308273315
+        ],
+        "hand": [
+          0.1629241406917572,
+          -0.6048301458358765,
+          0.11462929099798203
+        ],
+        "elbowFlexDegrees": 159.95426039880434,
+        "calibrationDegrees": 27.659226704370987,
+        "originalElbowFlexDegrees": 119.9004824741408,
+        "fullyFunctional": true,
+        "stretchReach": true
+      },
+      "R": {
+        "shoulder": [
+          -0.0572802796959877,
+          -0.17457039654254913,
+          0.2642987072467804
+        ],
+        "elbow": [
+          -0.08555973321199417,
+          -0.3402397930622101,
+          0.17180031538009644
+        ],
+        "wrist": [
+          -0.10155366361141205,
+          -0.5010539293289185,
+          0.13052009046077728
+        ],
+        "hand": [
+          -0.11249378323554993,
+          -0.6048628687858582,
+          0.09563416242599487
+        ],
+        "elbowFlexDegrees": 165.12911224232948,
+        "calibrationDegrees": 31.62723534797365,
+        "originalElbowFlexDegrees": 77.0003853161817,
+        "fullyFunctional": true,
+        "stretchReach": true
+      }
+    },
+    "pelvisVertical": 0.009999999776482582,
+    "forwardLeanDegrees": 26.625653860162554,
+    "shoulderYawDegrees": 12.07037190595116,
+    "shoulderRollDegrees": -1.4390224864139964,
+    "pelvisYawDegrees": -0.9167174311436338,
+    "cloth": {
+      "L": {
+        "root": [
+          0.04585015028715134,
+          0.05094202607870102,
+          0.0037795845419168472
+        ],
+        "hem": [
+          0.07077911496162415,
+          0.11974126100540161,
+          -0.30463603138923645
+        ],
+        "rearwardBias": 0.1387959972023964,
+        "sourceFrame": 3
+      },
+      "R": {
+        "root": [
+          -0.061683978885412216,
+          0.027946852147579193,
+          0.006542019546031952
+        ],
+        "hem": [
+          -0.08673521131277084,
+          0.0895252525806427,
+          -0.30338624119758606
+        ],
+        "rearwardBias": 0.115,
+        "sourceFrame": 3
+      }
+    },
+    "fps": 25,
+    "armMethod": "single source-derived shoulder-space calibration rotating complete captured 3D arm chain",
+    "variant": "broken-leg-left",
+    "weightTransfer": {
+      "healthyRightSupport": 0.5031914562862638,
+      "damagedLeftSupport": 0.05664425244332798,
+      "pelvisOffset": [
+        -0.015645531937479973,
+        -0.005851573310792446,
+        -0.0027318191714584827
+      ],
+      "thoracicCounterleanDegrees": 2.2040262756675157,
+      "bothAnklesAnchored": true,
+      "sourceFrame": 4
+    },
+    "reachStyle": "shoulder-driven mostly extended zombie arms, not half-flexed boxer running",
+    "limpV3": {
+      "leftSwingDrag": 0.5419465894160962,
+      "leftFootDelta": [
+        0.0151745043694973,
+        -0.1138087809085846,
+        -0.05419465899467468
+      ],
+      "extraHipDrop": 0.001164168819111187,
+      "torsoCompensationDegrees": 1.7073263693785306,
+      "rightFootPlantedOnOriginalTrajectory": true
+    },
+    "limpV4": {
+      "leftInjuredStance": 0.07761125460741247,
+      "rightHealthyStance": 0.4501210303260835,
+      "leftSwingDrag": 0.5419465894160962,
+      "extraPelvisOffset": [
+        -0.00023259129375219345,
+        0.0,
+        -0.001955949002876878
+      ],
+      "extraThoraxCounterRollDegrees": 0.8691490660153844,
+      "crookedKneePoleShift": 0.008149181733778309,
+      "droopingToeSwing": 0.422718339744555,
+      "bothSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 4
+    },
+    "limpV5": {
+      "leftInjuredStance": 0.07761125460741247,
+      "rightHealthyStance": 0.4501210303260835,
+      "painImpact": 0.0,
+      "leftSwingDrag": 0.5419465894160962,
+      "extraPelvisOffset": [
+        0.0,
+        0.0,
+        -0.0
+      ],
+      "extraThoraxCounterRollDegrees": -0.0,
+      "extraThoraxPitchDegrees": 0.0,
+      "crookedKneePoleShift": 0.0,
+      "bothSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 4
+    },
+    "limpV6": {
+      "leftInjuredStance": 0.07761125460741247,
+      "rightHealthyStance": 0.4501210303260835,
+      "painImpact": 0.0,
+      "leftSwingDrag": 0.5419465894160962,
+      "leftFootTrailDelta": [
+        0.04523053020238876,
+        0.08233746141195297,
+        0.03242325782775879
+      ],
+      "leftFootTrailDistance": 0.09938071221752558,
+      "extraPelvisOffset": [
+        0.0,
+        0.0,
+        -0.0
+      ],
+      "extraThoraxCounterRollDegrees": -0.0,
+      "extraThoraxPitchDegrees": 0.0,
+      "crookedKneePoleShift": 0.0,
+      "plantedSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 4
+    },
+    "temporalAsymmetry": {
+      "sourceFrame": 4.45,
+      "leftPainfulContact": 0.05664425244332798,
+      "rightHealthyPropulsion": 0.5031914562862638,
+      "sourceFrameAdvance": 1.7999999999999998,
+      "authoredSourceRetiming": true,
+      "preservesFullCapturedJointChain": true,
+      "authoritativeInWorldVelocity": false
+    }
+  },
+  {
+    "frame": 6,
+    "sourceFraction": 0.375,
+    "feet": {
+      "L": {
+        "hip": [
+          0.027809621766209602,
+          -0.008765086531639099,
+          -0.02011038549244404
+        ],
+        "knee": [
+          0.07929958403110504,
+          0.06812606006860733,
+          -0.21587947010993958
+        ],
+        "ankle": [
+          0.16613203287124634,
+          0.1675294190645218,
+          -0.38674524426460266
+        ],
+        "kneeFlexDegrees": 35.498673768134324,
+        "swingInfluence": 0.8961053023937267,
+        "toe": [
+          0.17301873862743378,
+          0.1278018355369568,
+          -0.5152920484542847
+        ],
+        "pelvisCompensation": true,
+        "interiorKneeDegrees": 166.494385095145
+      },
+      "R": {
+        "hip": [
+          -0.11008981615304947,
+          -0.014086617156863213,
+          -0.020110344514250755
+        ],
+        "knee": [
+          -0.059649012982845306,
+          -0.08074824512004852,
+          -0.21986256539821625
+        ],
+        "ankle": [
+          -0.040554650127887726,
+          -0.0977395623922348,
+          -0.43425166606903076
+        ],
+        "kneeFlexDegrees": 24.052629096648616,
+        "pelvisCompensation": true,
+        "toe": [
+          -0.049163129180669785,
+          -0.22697031497955322,
+          -0.4713370203971863
+        ],
+        "interiorKneeDegrees": 164.4962952157278
+      }
+    },
+    "arms": {
+      "L": {
+        "shoulder": [
+          0.1294195055961609,
+          -0.1628866046667099,
+          0.22707349061965942
+        ],
+        "elbow": [
+          0.15131723880767822,
+          -0.332366406917572,
+          0.1399005651473999
+        ],
+        "wrist": [
+          0.14861728250980377,
+          -0.4973819851875305,
+          0.11574292182922363
+        ],
+        "hand": [
+          0.1469963788986206,
+          -0.6047155857086182,
+          0.09145563840866089
+        ],
+        "elbowFlexDegrees": 159.6055519209185,
+        "calibrationDegrees": 27.659226704370987,
+        "originalElbowFlexDegrees": 112.98089978827093,
+        "fullyFunctional": true,
+        "stretchReach": true
+      },
+      "R": {
+        "shoulder": [
+          -0.06657358258962631,
+          -0.17807859182357788,
+          0.2667611837387085
+        ],
+        "elbow": [
+          -0.1015995591878891,
+          -0.3441241383552551,
+          0.17729562520980835
+        ],
+        "wrist": [
+          -0.11863122880458832,
+          -0.5058298707008362,
+          0.14011737704277039
+        ],
+        "hand": [
+          -0.13058796525001526,
+          -0.6103612184524536,
+          0.1078183725476265
+        ],
+        "elbowFlexDegrees": 164.3711115086198,
+        "calibrationDegrees": 31.62723534797365,
+        "originalElbowFlexDegrees": 79.39964635649959,
+        "fullyFunctional": true,
+        "stretchReach": true
+      }
+    },
+    "pelvisVertical": 0.005620240233838558,
+    "forwardLeanDegrees": 25.68844006307614,
+    "shoulderYawDegrees": 13.039280105479301,
+    "shoulderRollDegrees": 1.0988350696975493,
+    "pelvisYawDegrees": 1.634174500095337,
+    "cloth": {
+      "L": {
+        "root": [
+          0.0440581738948822,
+          0.05182915925979614,
+          0.0011778753250837326
+        ],
+        "hem": [
+          0.06894109398126602,
+          0.12315042316913605,
+          -0.3066680431365967
+        ],
+        "rearwardBias": 0.14719275042414665,
+        "sourceFrame": 5
+      },
+      "R": {
+        "root": [
+          -0.06308583915233612,
+          0.027015618979930878,
+          -0.0009316187351942062
+        ],
+        "hem": [
+          -0.08813707530498505,
+          0.08859401941299438,
+          -0.31085988879203796
+        ],
+        "rearwardBias": 0.115,
+        "sourceFrame": 5
+      }
+    },
+    "fps": 25,
+    "armMethod": "single source-derived shoulder-space calibration rotating complete captured 3D arm chain",
+    "variant": "broken-leg-left",
+    "weightTransfer": {
+      "healthyRightSupport": 0.8586151953674733,
+      "damagedLeftSupport": 0.0032719274741326862,
+      "pelvisOffset": [
+        -0.03007180243730545,
+        -0.010585685260593891,
+        -0.003309461288154125
+      ],
+      "thoracicCounterleanDegrees": 4.4632972538309055,
+      "bothAnklesAnchored": true,
+      "sourceFrame": 6
+    },
+    "reachStyle": "shoulder-driven mostly extended zombie arms, not half-flexed boxer running",
+    "limpV3": {
+      "leftSwingDrag": 0.8366108734701663,
+      "leftFootDelta": [
+        0.02342510223388672,
+        -0.17568828165531158,
+        -0.08366107940673828
+      ],
+      "extraHipDrop": 6.540892306327058e-05,
+      "torsoCompensationDegrees": 4.040893413975627,
+      "rightFootPlantedOnOriginalTrajectory": true
+    },
+    "limpV4": {
+      "leftInjuredStance": 0.004360594870884705,
+      "rightHealthyStance": 0.814283515614364,
+      "leftSwingDrag": 0.8366108734701663,
+      "extraPelvisOffset": [
+        -0.007903002202510834,
+        0.0,
+        0.004624065477401018
+      ],
+      "extraThoraxCounterRollDegrees": 3.2048069240068395,
+      "crookedKneePoleShift": 0.00045786246144289406,
+      "droopingToeSwing": 0.6525564813067297,
+      "bothSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 6
+    },
+    "limpV5": {
+      "leftInjuredStance": 0.004360594870884705,
+      "rightHealthyStance": 0.814283515614364,
+      "painImpact": 0.0,
+      "leftSwingDrag": 0.8366108734701663,
+      "extraPelvisOffset": [
+        0.0,
+        0.0,
+        -0.0
+      ],
+      "extraThoraxCounterRollDegrees": -0.0,
+      "extraThoraxPitchDegrees": 0.0,
+      "crookedKneePoleShift": 0.0,
+      "bothSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 6
+    },
+    "limpV6": {
+      "leftInjuredStance": 0.004360594870884705,
+      "rightHealthyStance": 0.814283515614364,
+      "painImpact": 0.0,
+      "leftSwingDrag": 0.8366108734701663,
+      "leftFootTrailDelta": [
+        0.06477297097444534,
+        0.13736724853515625,
+        0.042829662561416626
+      ],
+      "leftFootTrailDistance": 0.15779632199805554,
+      "extraPelvisOffset": [
+        0.0,
+        0.0,
+        -0.0
+      ],
+      "extraThoraxCounterRollDegrees": -0.0,
+      "extraThoraxPitchDegrees": 0.0,
+      "crookedKneePoleShift": 0.0,
+      "plantedSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 6
+    },
+    "temporalAsymmetry": {
+      "sourceFrame": 6.25,
+      "leftPainfulContact": 0.0032719274741326862,
+      "rightHealthyPropulsion": 0.8586151953674733,
+      "sourceFrameAdvance": 1.9499999999999993,
+      "authoredSourceRetiming": true,
+      "preservesFullCapturedJointChain": true,
+      "authoritativeInWorldVelocity": false
+    }
+  },
+  {
+    "frame": 7,
+    "sourceFraction": 0.5,
+    "feet": {
+      "L": {
+        "hip": [
+          0.02185867726802826,
+          -0.007329306565225124,
+          -0.04770425334572792
+        ],
+        "knee": [
+          0.12284555286169052,
+          0.032035887241363525,
+          -0.2351636439561844
+        ],
+        "ankle": [
+          0.2031659185886383,
+          0.11724825948476791,
+          -0.41655683517456055
+        ],
+        "kneeFlexDegrees": 62.865698149623,
+        "swingInfluence": 1.0,
+        "toe": [
+          0.2084079533815384,
+          0.07670679688453674,
+          -0.5449271202087402
+        ],
+        "pelvisCompensation": true,
+        "interiorKneeDegrees": 166.49441241590165
+      },
+      "R": {
+        "hip": [
+          -0.11567153036594391,
+          -0.01859855279326439,
+          -0.04770432412624359
+        ],
+        "knee": [
+          -0.04571133106946945,
+          -0.048754625022411346,
+          -0.2503991425037384
+        ],
+        "ankle": [
+          -0.017903195694088936,
+          0.033015407621860504,
+          -0.44827884435653687
+        ],
+        "kneeFlexDegrees": 39.3390432516224,
+        "pelvisCompensation": true,
+        "toe": [
+          -0.029122181236743927,
+          -0.08880051970481873,
+          -0.5047147274017334
+        ],
+        "interiorKneeDegrees": 147.63309090972157
+      }
+    },
+    "arms": {
+      "L": {
+        "shoulder": [
+          0.12017443031072617,
+          -0.17890305817127228,
+          0.1881285309791565
+        ],
+        "elbow": [
+          0.1391391009092331,
+          -0.34579724073410034,
+          0.09545309841632843
+        ],
+        "wrist": [
+          0.13966186344623566,
+          -0.5095048546791077,
+          0.06350789964199066
+        ],
+        "hand": [
+          0.14000488817691803,
+          -0.6156317591667175,
+          0.034353628754615784
+        ],
+        "elbowFlexDegrees": 161.06631081833078,
+        "calibrationDegrees": 27.659226704370987,
+        "originalElbowFlexDegrees": 99.01168078454495,
+        "fullyFunctional": true,
+        "stretchReach": true
+      },
+      "R": {
+        "shoulder": [
+          -0.07442621141672134,
+          -0.18932883441448212,
+          0.23580361902713776
+        ],
+        "elbow": [
+          -0.11270808428525925,
+          -0.35833901166915894,
+          0.15351107716560364
+        ],
+        "wrist": [
+          -0.12403465062379837,
+          -0.5223981738090515,
+          0.1256309151649475
+        ],
+        "hand": [
+          -0.13249552249908447,
+          -0.6288816332817078,
+          0.09912240505218506
+        ],
+        "elbowFlexDegrees": 162.27925679227667,
+        "calibrationDegrees": 31.62723534797365,
+        "originalElbowFlexDegrees": 88.7369998953381,
+        "fullyFunctional": true,
+        "stretchReach": true
+      }
+    },
+    "pelvisVertical": -0.024424264207482338,
+    "forwardLeanDegrees": 27.825847870911886,
+    "shoulderYawDegrees": 9.03224687604807,
+    "shoulderRollDegrees": 0.7127670992459996,
+    "pelvisYawDegrees": 4.899038473683455,
+    "cloth": {
+      "L": {
+        "root": [
+          0.047808051109313965,
+          0.04789596423506737,
+          -0.027736341580748558
+        ],
+        "hem": [
+          0.0728197991847992,
+          0.11189885437488556,
+          -0.3371761739253998
+        ],
+        "rearwardBias": 0.12295120559632779,
+        "sourceFrame": 7
+      },
+      "R": {
+        "root": [
+          -0.06081955507397652,
+          0.030628379434347153,
+          -0.029104730114340782
+        ],
+        "hem": [
+          -0.08587078750133514,
+          0.09220677614212036,
+          -0.33903300762176514
+        ],
+        "rearwardBias": 0.115,
+        "sourceFrame": 7
+      }
+    },
+    "fps": 25,
+    "armMethod": "single source-derived shoulder-space calibration rotating complete captured 3D arm chain",
+    "variant": "broken-leg-left",
+    "weightTransfer": {
+      "healthyRightSupport": 0.9865330405844832,
+      "damagedLeftSupport": 5.616107805887902e-05,
+      "pelvisOffset": [
+        -0.03700000047683716,
+        -0.013000000268220901,
+        -0.004000000189989805
+      ],
+      "thoracicCounterleanDegrees": 5.5,
+      "bothAnklesAnchored": true,
+      "sourceFrame": 8
+    },
+    "reachStyle": "shoulder-driven mostly extended zombie arms, not half-flexed boxer running",
+    "limpV3": {
+      "leftSwingDrag": 1.0,
+      "leftFootDelta": [
+        0.02799999713897705,
+        -0.21000000834465027,
+        -0.09999999403953552
+      ],
+      "extraHipDrop": 0.0,
+      "torsoCompensationDegrees": 5.0,
+      "rightFootPlantedOnOriginalTrajectory": true
+    },
+    "limpV4": {
+      "leftInjuredStance": 0.0,
+      "rightHealthyStance": 1.0,
+      "leftSwingDrag": 1.0,
+      "extraPelvisOffset": [
+        -0.009999999776482582,
+        0.0,
+        0.006000000052154064
+      ],
+      "extraThoraxCounterRollDegrees": 4.0,
+      "crookedKneePoleShift": 0.0,
+      "droopingToeSwing": 0.78,
+      "bothSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 8
+    },
+    "limpV5": {
+      "leftInjuredStance": 0.0,
+      "rightHealthyStance": 1.0,
+      "painImpact": 0.0,
+      "leftSwingDrag": 1.0,
+      "extraPelvisOffset": [
+        0.0,
+        0.0,
+        -0.0
+      ],
+      "extraThoraxCounterRollDegrees": -0.0,
+      "extraThoraxPitchDegrees": 0.0,
+      "crookedKneePoleShift": 0.0,
+      "bothSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 8
+    },
+    "limpV6": {
+      "leftInjuredStance": 0.0,
+      "rightHealthyStance": 1.0,
+      "painImpact": 0.0,
+      "leftSwingDrag": 1.0,
+      "leftFootTrailDelta": [
+        0.09060463309288025,
+        0.1868707239627838,
+        -0.006076395511627197
+      ],
+      "leftFootTrailDistance": 0.20776618731936544,
+      "extraPelvisOffset": [
+        0.0,
+        0.0,
+        -0.0
+      ],
+      "extraThoraxCounterRollDegrees": -0.0,
+      "extraThoraxPitchDegrees": 0.0,
+      "crookedKneePoleShift": 0.0,
+      "plantedSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 8
+    },
+    "temporalAsymmetry": {
+      "sourceFrame": 8.2,
+      "leftPainfulContact": 5.616107805887902e-05,
+      "rightHealthyPropulsion": 0.9865330405844832,
+      "sourceFrameAdvance": 1.8000000000000007,
+      "authoredSourceRetiming": true,
+      "preservesFullCapturedJointChain": true,
+      "authoritativeInWorldVelocity": false
+    }
+  },
+  {
+    "frame": 8,
+    "sourceFraction": 0.625,
+    "feet": {
+      "L": {
+        "hip": [
+          0.03816946968436241,
+          -0.0020598769187927246,
+          -0.03873308002948761
+        ],
+        "knee": [
+          0.10633185505867004,
+          -0.01552986167371273,
+          -0.2438219040632248
+        ],
+        "ankle": [
+          0.17343392968177795,
+          0.06632311642169952,
+          -0.4320064187049866
+        ],
+        "kneeFlexDegrees": 45.248427298869046,
+        "swingInfluence": 0.789321322059735,
+        "toe": [
+          0.17702801525592804,
+          0.02625010907649994,
+          -0.5605802536010742
+        ],
+        "pelvisCompensation": true,
+        "interiorKneeDegrees": 154.12646979138265
+      },
+      "R": {
+        "hip": [
+          -0.09917380660772324,
+          -0.015507280826568604,
+          -0.038733065128326416
+        ],
+        "knee": [
+          -0.04792686551809311,
+          0.03956343233585358,
+          -0.2417847067117691
+        ],
+        "ankle": [
+          -0.021664511412382126,
+          0.16065484285354614,
+          -0.41859859228134155
+        ],
+        "kneeFlexDegrees": 24.99740818340146,
+        "pelvisCompensation": true,
+        "toe": [
+          -0.018645286560058594,
+          0.06564812362194061,
+          -0.5140690207481384
+        ],
+        "interiorKneeDegrees": 159.94282666213374
+      }
+    },
+    "arms": {
+      "L": {
+        "shoulder": [
+          0.09499727934598923,
+          -0.1774582713842392,
+          0.21552185714244843
+        ],
+        "elbow": [
+          0.11650633066892624,
+          -0.34344255924224854,
+          0.12177441269159317
+        ],
+        "wrist": [
+          0.12016643583774567,
+          -0.5066400766372681,
+          0.08750808238983154
+        ],
+        "hand": [
+          0.12274210155010223,
+          -0.6123315691947937,
+          0.056919995695352554
+        ],
+        "elbowFlexDegrees": 161.69808965617864,
+        "calibrationDegrees": 27.659226704370987,
+        "originalElbowFlexDegrees": 99.70768389115842,
+        "fullyFunctional": true,
+        "stretchReach": true
+      },
+      "R": {
+        "shoulder": [
+          -0.10322462767362595,
+          -0.1763557642698288,
+          0.24673551321029663
+        ],
+        "elbow": [
+          -0.13810265064239502,
+          -0.34746235609054565,
+          0.1673121154308319
+        ],
+        "wrist": [
+          -0.14312423765659332,
+          -0.5126045942306519,
+          0.14442476630210876
+        ],
+        "hand": [
+          -0.14734849333763123,
+          -0.6200586557388306,
+          0.12099845707416534
+        ],
+        "elbowFlexDegrees": 160.973515868267,
+        "calibrationDegrees": 31.62723534797365,
+        "originalElbowFlexDegrees": 101.90209389788929,
+        "fullyFunctional": true,
+        "stretchReach": true
+      }
+    },
+    "pelvisVertical": -0.013480142690241337,
+    "forwardLeanDegrees": 27.125101881043076,
+    "shoulderYawDegrees": -0.8863491231959011,
+    "shoulderRollDegrees": 0.48197317713435117,
+    "pelvisYawDegrees": 5.592057633052613,
+    "cloth": {
+      "L": {
+        "root": [
+          0.05543845519423485,
+          0.03919769823551178,
+          -0.017501138150691986
+        ],
+        "hem": [
+          0.08048968762159348,
+          0.10077609866857529,
+          -0.3274294137954712
+        ],
+        "rearwardBias": 0.115,
+        "sourceFrame": 9
+      },
+      "R": {
+        "root": [
+          -0.054544493556022644,
+          0.04089924693107605,
+          -0.01842646673321724
+        ],
+        "hem": [
+          -0.07959572970867157,
+          0.10247764736413956,
+          -0.32835474610328674
+        ],
+        "rearwardBias": 0.115,
+        "sourceFrame": 9
+      }
+    },
+    "fps": 25,
+    "armMethod": "single source-derived shoulder-space calibration rotating complete captured 3D arm chain",
+    "variant": "broken-leg-left",
+    "weightTransfer": {
+      "healthyRightSupport": 0.6756584191467448,
+      "damagedLeftSupport": 0.01843901245968826,
+      "pelvisOffset": [
+        -0.024759653955698013,
+        -0.008783559314906597,
+        -0.002923901891335845
+      ],
+      "thoracicCounterleanDegrees": 3.651584761698188,
+      "bothAnklesAnchored": true,
+      "sourceFrame": 10
+    },
+    "reachStyle": "shoulder-driven mostly extended zombie arms, not half-flexed boxer running",
+    "limpV3": {
+      "leftSwingDrag": 0.7240353338534956,
+      "leftFootDelta": [
+        0.02027299255132675,
+        -0.15204742550849915,
+        -0.07240352034568787
+      ],
+      "extraHipDrop": 0.0002765851868953239,
+      "torsoCompensationDegrees": 3.2492190085159063,
+      "rightFootPlantedOnOriginalTrajectory": true
+    },
+    "limpV4": {
+      "leftInjuredStance": 0.01843901245968826,
+      "rightHealthyStance": 0.6756584191467448,
+      "leftSwingDrag": 0.7240353338534956,
+      "extraPelvisOffset": [
+        -0.005742438603192568,
+        0.0,
+        0.0029476098716259003
+      ],
+      "extraThoraxCounterRollDegrees": 2.4813655270707207,
+      "crookedKneePoleShift": 0.0019360963082672674,
+      "droopingToeSwing": 0.5647475604057266,
+      "bothSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 10
+    },
+    "limpV5": {
+      "leftInjuredStance": 0.01843901245968826,
+      "rightHealthyStance": 0.6756584191467448,
+      "painImpact": 0.0,
+      "leftSwingDrag": 0.7240353338534956,
+      "extraPelvisOffset": [
+        0.0,
+        0.0,
+        -0.0
+      ],
+      "extraThoraxCounterRollDegrees": -0.0,
+      "extraThoraxPitchDegrees": 0.0,
+      "crookedKneePoleShift": 0.0,
+      "bothSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 10
+    },
+    "limpV6": {
+      "leftInjuredStance": 0.01843901245968826,
+      "rightHealthyStance": 0.6756584191467448,
+      "painImpact": 0.0,
+      "leftSwingDrag": 0.7240353338534956,
+      "leftFootTrailDelta": [
+        0.06878335028886795,
+        0.1375667154788971,
+        -0.001918792724609375
+      ],
+      "leftFootTrailDistance": 0.15381622981424384,
+      "extraPelvisOffset": [
+        0.0,
+        0.0,
+        -0.0
+      ],
+      "extraThoraxCounterRollDegrees": -0.0,
+      "extraThoraxPitchDegrees": 0.0,
+      "crookedKneePoleShift": 0.0,
+      "plantedSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 10
+    },
+    "temporalAsymmetry": {
+      "sourceFrame": 10.0,
+      "leftPainfulContact": 0.01843901245968826,
+      "rightHealthyPropulsion": 0.6756584191467448,
+      "sourceFrameAdvance": 1.1999999999999993,
+      "authoredSourceRetiming": true,
+      "preservesFullCapturedJointChain": true,
+      "authoritativeInWorldVelocity": false
+    }
+  },
+  {
+    "frame": 9,
+    "sourceFraction": 0.6875,
+    "feet": {
+      "L": {
+        "hip": [
+          0.0628272294998169,
+          -0.0020257344003766775,
+          -0.0355280339717865
+        ],
+        "knee": [
+          0.09151237457990646,
+          -0.07582151889801025,
+          -0.23707294464111328
+        ],
+        "ankle": [
+          0.13011284172534943,
+          0.0002132132649421692,
+          -0.43542808294296265
+        ],
+        "kneeFlexDegrees": 40.06895824746496,
+        "swingInfluence": 0.4496449037799001,
+        "toe": [
+          0.1279437392950058,
+          -0.053071606904268265,
+          -0.5591455698013306
+        ],
+        "pelvisCompensation": true,
+        "interiorKneeDegrees": 141.4658262401719
+      },
+      "R": {
+        "hip": [
+          -0.0751388743519783,
+          -0.006234179250895977,
+          -0.03552742674946785
+        ],
+        "knee": [
+          -0.041480690240859985,
+          0.07751530408859253,
+          -0.2323576658964157
+        ],
+        "ankle": [
+          -0.036855198442935944,
+          0.2258172631263733,
+          -0.3892051875591278
+        ],
+        "kneeFlexDegrees": 13.069316081052932,
+        "pelvisCompensation": true,
+        "toe": [
+          -0.023619234561920166,
+          0.18835337460041046,
+          -0.5179346799850464
+        ],
+        "interiorKneeDegrees": 159.33219408995626
+      }
+    },
+    "arms": {
+      "L": {
+        "shoulder": [
+          0.08958660066127777,
+          -0.16199001669883728,
+          0.24065208435058594
+        ],
+        "elbow": [
+          0.11612172424793243,
+          -0.3275659680366516,
+          0.1474720984697342
+        ],
+        "wrist": [
+          0.12379253655672073,
+          -0.4906195104122162,
+          0.1131839007139206
+        ],
+        "hand": [
+          0.1293400675058365,
+          -0.5962013006210327,
+          0.08261122554540634
+        ],
+        "elbowFlexDegrees": 161.83071826948193,
+        "calibrationDegrees": 27.659226704370987,
+        "originalElbowFlexDegrees": 102.19307361691017,
+        "fullyFunctional": true,
+        "stretchReach": true
+      },
+      "R": {
+        "shoulder": [
+          -0.11088413745164871,
+          -0.15661783516407013,
+          0.2478991448879242
+        ],
+        "elbow": [
+          -0.140756756067276,
+          -0.32798439264297485,
+          0.1670093685388565
+        ],
+        "wrist": [
+          -0.14262086153030396,
+          -0.4932718276977539,
+          0.14470267295837402
+        ],
+        "hand": [
+          -0.14440175890922546,
+          -0.6008633375167847,
+          0.1215963363647461
+        ],
+        "elbowFlexDegrees": 160.67136195976397,
+        "calibrationDegrees": 31.62723534797365,
+        "originalElbowFlexDegrees": 105.70310100119056,
+        "fullyFunctional": true,
+        "stretchReach": true
+      }
+    },
+    "pelvisVertical": -0.001222766819410026,
+    "forwardLeanDegrees": 24.887379934853453,
+    "shoulderYawDegrees": -3.940574109982355,
+    "shoulderRollDegrees": -0.38673814113761756,
+    "pelvisYawDegrees": 2.336753738339433,
+    "cloth": {
+      "L": {
+        "root": [
+          0.057801537215709686,
+          0.03693625330924988,
+          -0.007656823843717575
+        ],
+        "hem": [
+          0.08285276591777802,
+          0.09851465374231339,
+          -0.3175850808620453
+        ],
+        "rearwardBias": 0.115,
+        "sourceFrame": 10
+      },
+      "R": {
+        "root": [
+          -0.05193590000271797,
+          0.044495463371276855,
+          -0.0069143399596214294
+        ],
+        "hem": [
+          -0.0769377052783966,
+          0.10909447073936462,
+          -0.3162311017513275
+        ],
+        "rearwardBias": 0.12491196170449258,
+        "sourceFrame": 10
+      }
+    },
+    "fps": 25,
+    "armMethod": "single source-derived shoulder-space calibration rotating complete captured 3D arm chain",
+    "variant": "broken-leg-left",
+    "weightTransfer": {
+      "healthyRightSupport": 0.31758049430222673,
+      "damagedLeftSupport": 0.16340993946896915,
+      "pelvisOffset": [
+        -0.01200172770768404,
+        -0.004741632379591465,
+        -0.0028377524577081203
+      ],
+      "thoracicCounterleanDegrees": 1.6039285383073463,
+      "bothAnklesAnchored": true,
+      "sourceFrame": 11
+    },
+    "reachStyle": "shoulder-driven mostly extended zombie arms, not half-flexed boxer running",
+    "limpV3": {
+      "leftSwingDrag": 0.46434295927217584,
+      "leftFootDelta": [
+        0.013001605868339539,
+        -0.09751202166080475,
+        -0.04643428325653076
+      ],
+      "extraHipDrop": 0.0017234856986678912,
+      "torsoCompensationDegrees": 1.0194114024366696,
+      "rightFootPlantedOnOriginalTrajectory": true
+    },
+    "limpV4": {
+      "leftInjuredStance": 0.11489904657785942,
+      "rightHealthyStance": 0.3647409456963371,
+      "leftSwingDrag": 0.46434295927217584,
+      "extraPelvisOffset": [
+        0.0026720380410552025,
+        0.0,
+        -0.004705497063696384
+      ],
+      "extraThoraxCounterRollDegrees": 0.08017522385103537,
+      "crookedKneePoleShift": 0.012064399890675238,
+      "droopingToeSwing": 0.3621875082322972,
+      "bothSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 11
+    },
+    "limpV5": {
+      "leftInjuredStance": 0.11489904657785942,
+      "rightHealthyStance": 0.3647409456963371,
+      "painImpact": 0.0,
+      "leftSwingDrag": 0.46434295927217584,
+      "extraPelvisOffset": [
+        0.0,
+        0.0,
+        -0.0
+      ],
+      "extraThoraxCounterRollDegrees": -0.0,
+      "extraThoraxPitchDegrees": 0.0,
+      "crookedKneePoleShift": 0.0,
+      "bothSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 11
+    },
+    "limpV6": {
+      "leftInjuredStance": 0.11489904657785942,
+      "rightHealthyStance": 0.3647409456963371,
+      "painImpact": 0.0,
+      "leftSwingDrag": 0.46434295927217584,
+      "leftFootTrailDelta": [
+        0.04411257803440094,
+        0.08822516351938248,
+        -0.006965130567550659
+      ],
+      "leftFootTrailDistance": 0.09888433609878708,
+      "extraPelvisOffset": [
+        0.0,
+        0.0,
+        -0.0
+      ],
+      "extraThoraxCounterRollDegrees": -0.0,
+      "extraThoraxPitchDegrees": 0.0,
+      "crookedKneePoleShift": 0.0,
+      "plantedSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 11
+    },
+    "temporalAsymmetry": {
+      "sourceFrame": 11.2,
+      "leftPainfulContact": 0.16340993946896915,
+      "rightHealthyPropulsion": 0.31758049430222673,
+      "sourceFrameAdvance": 0.8000000000000007,
+      "authoredSourceRetiming": true,
+      "preservesFullCapturedJointChain": true,
+      "authoritativeInWorldVelocity": false
+    }
+  },
+  {
+    "frame": 10,
+    "sourceFraction": 0.75,
+    "feet": {
+      "L": {
+        "hip": [
+          0.08829454332590103,
+          -0.0009122134651988745,
+          -0.04802420735359192
+        ],
+        "knee": [
+          0.1054060235619545,
+          -0.12330876290798187,
+          -0.2258310616016388
+        ],
+        "ankle": [
+          0.10446634143590927,
+          -0.06155284121632576,
+          -0.43271586298942566
+        ],
+        "kneeFlexDegrees": 30.915261665218935,
+        "swingInfluence": 0.17820236931037736,
+        "toe": [
+          0.09199157357215881,
+          -0.14131705462932587,
+          -0.5405678153038025
+        ],
+        "pelvisCompensation": true,
+        "interiorKneeDegrees": 128.66736313188866
+      },
+      "R": {
+        "hip": [
+          -0.04969704523682594,
+          -0.002440211595967412,
+          -0.04802419990301132
+        ],
+        "knee": [
+          -0.03990325704216957,
+          0.07894375920295715,
+          -0.24844807386398315
+        ],
+        "ankle": [
+          -0.05230983719229698,
+          0.26568007469177246,
+          -0.356112539768219
+        ],
+        "kneeFlexDegrees": 20.90287370051891,
+        "pelvisCompensation": true,
+        "toe": [
+          -0.03458719700574875,
+          0.2725856900215149,
+          -0.489484965801239
+        ],
+        "interiorKneeDegrees": 141.62938195003704
+      }
+    },
+    "arms": {
+      "L": {
+        "shoulder": [
+          0.09048520773649216,
+          -0.15486130118370056,
+          0.24060623347759247
+        ],
+        "elbow": [
+          0.12366430461406708,
+          -0.3201724886894226,
+          0.14909978210926056
+        ],
+        "wrist": [
+          0.13457682728767395,
+          -0.4832099676132202,
+          0.11562339216470718
+        ],
+        "hand": [
+          0.14274105429649353,
+          -0.5887842774391174,
+          0.08561623841524124
+        ],
+        "elbowFlexDegrees": 161.68635539118455,
+        "calibrationDegrees": 27.659226704370987,
+        "originalElbowFlexDegrees": 105.06183503058557,
+        "fullyFunctional": true,
+        "stretchReach": true
+      },
+      "R": {
+        "shoulder": [
+          -0.10946882516145706,
+          -0.14723414182662964,
+          0.22570756077766418
+        ],
+        "elbow": [
+          -0.1332007795572281,
+          -0.3183053135871887,
+          0.14220020174980164
+        ],
+        "wrist": [
+          -0.13293613493442535,
+          -0.48354607820510864,
+          0.11947542428970337
+        ],
+        "hand": [
+          -0.1327963024377823,
+          -0.5910899639129639,
+          0.09608049690723419
+        ],
+        "elbowFlexDegrees": 160.48249356883477,
+        "calibrationDegrees": 31.62723534797365,
+        "originalElbowFlexDegrees": 107.38014466886047,
+        "fullyFunctional": true,
+        "stretchReach": true
+      }
+    },
+    "pelvisVertical": 0.008728154003620148,
+    "forwardLeanDegrees": 23.06847329523364,
+    "shoulderYawDegrees": -6.2772111666010915,
+    "shoulderRollDegrees": -2.0340938615744966,
+    "pelvisYawDegrees": 0.6344105944921519,
+    "cloth": {
+      "L": {
+        "root": [
+          0.059784721583127975,
+          0.03507516160607338,
+          -0.0006027482450008392
+        ],
+        "hem": [
+          0.0848359540104866,
+          0.09665356576442719,
+          -0.31053102016448975
+        ],
+        "rearwardBias": 0.115,
+        "sourceFrame": 11
+      },
+      "R": {
+        "root": [
+          -0.04948687553405762,
+          0.047094881534576416,
+          0.0033016186207532883
+        ],
+        "hem": [
+          -0.07439382374286652,
+          0.1171116977930069,
+          -0.30484163761138916
+        ],
+        "rearwardBias": 0.14284395307302475,
+        "sourceFrame": 11
+      }
+    },
+    "fps": 25,
+    "armMethod": "single source-derived shoulder-space calibration rotating complete captured 3D arm chain",
+    "variant": "broken-leg-left",
+    "weightTransfer": {
+      "healthyRightSupport": 0.12893868872578448,
+      "damagedLeftSupport": 0.35745351103340894,
+      "pelvisOffset": [
+        -0.00012383583816699684,
+        -0.0016762029845267534,
+        -0.004805197007954121
+      ],
+      "thoracicCounterleanDegrees": -0.5419245006251167,
+      "bothAnklesAnchored": true,
+      "sourceFrame": 12
+    },
+    "reachStyle": "shoulder-driven mostly extended zombie arms, not half-flexed boxer running",
+    "limpV3": {
+      "leftSwingDrag": 0.24482185378254612,
+      "leftFootDelta": [
+        0.006855010986328125,
+        -0.051412589848041534,
+        -0.02448219060897827
+      ],
+      "extraHipDrop": 0.005361802665501134,
+      "torsoCompensationDegrees": -1.8574811336049402,
+      "rightFootPlantedOnOriginalTrajectory": true
+    },
+    "limpV4": {
+      "leftInjuredStance": 0.35745351103340894,
+      "rightHealthyStance": 0.12893868872578448,
+      "leftSwingDrag": 0.24482185378254612,
+      "extraPelvisOffset": [
+        0.018370555713772774,
+        0.0,
+        -0.02067357860505581
+      ],
+      "extraThoraxCounterRollDegrees": -3.7736873774977693,
+      "crookedKneePoleShift": 0.03753261865850794,
+      "droopingToeSwing": 0.190961045950386,
+      "bothSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 12
+    },
+    "limpV5": {
+      "leftInjuredStance": 0.35745351103340894,
+      "rightHealthyStance": 0.12893868872578448,
+      "painImpact": 0.008766806850415072,
+      "leftSwingDrag": 0.24482185378254612,
+      "extraPelvisOffset": [
+        0.0005260084290057421,
+        0.0,
+        -0.0004558739601634443
+      ],
+      "extraThoraxCounterRollDegrees": -0.07890126165373565,
+      "extraThoraxPitchDegrees": 0.05260084110249043,
+      "crookedKneePoleShift": 0.0008328466507894318,
+      "bothSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 12
+    },
+    "limpV6": {
+      "leftInjuredStance": 0.35745351103340894,
+      "rightHealthyStance": 0.12893868872578448,
+      "painImpact": 0.008766806850415072,
+      "leftSwingDrag": 0.24482185378254612,
+      "leftFootTrailDelta": [
+        0.02325807511806488,
+        0.04651615396142006,
+        -0.0036723315715789795
+      ],
+      "leftFootTrailDistance": 0.05213613673509357,
+      "extraPelvisOffset": [
+        0.0005260084290057421,
+        0.0,
+        -0.0004558739601634443
+      ],
+      "extraThoraxCounterRollDegrees": -0.07890126165373565,
+      "extraThoraxPitchDegrees": 0.05260084110249043,
+      "crookedKneePoleShift": 0.0008328466507894318,
+      "plantedSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 12
+    },
+    "temporalAsymmetry": {
+      "sourceFrame": 12.0,
+      "leftPainfulContact": 0.35745351103340894,
+      "rightHealthyPropulsion": 0.12893868872578448,
+      "sourceFrameAdvance": 0.75,
+      "authoredSourceRetiming": true,
+      "preservesFullCapturedJointChain": true,
+      "authoritativeInWorldVelocity": false
+    }
+  },
+  {
+    "frame": 11,
+    "sourceFraction": 0.75,
+    "feet": {
+      "L": {
+        "hip": [
+          0.15504992008209229,
+          -0.0005279085598886013,
+          -0.10910052061080933
+        ],
+        "knee": [
+          0.17417596280574799,
+          -0.1662590056657791,
+          -0.2471453845500946
+        ],
+        "ankle": [
+          0.07705522328615189,
+          -0.10840170830488205,
+          -0.4310912787914276
+        ],
+        "kneeFlexDegrees": 30.915261665218935,
+        "swingInfluence": 0.17820236931037736,
+        "toe": [
+          0.053818151354789734,
+          -0.21533448994159698,
+          -0.5096750259399414
+        ],
+        "pelvisCompensation": true,
+        "interiorKneeDegrees": 128.66736313188866
+      },
+      "R": {
+        "hip": [
+          0.01705794222652912,
+          -0.0002361446531722322,
+          -0.1091005802154541
+        ],
+        "knee": [
+          -0.05653271824121475,
+          0.07677239924669266,
+          -0.29762935638427734
+        ],
+        "ankle": [
+          -0.06081749126315117,
+          0.29077479243278503,
+          -0.3259241282939911
+        ],
+        "kneeFlexDegrees": 20.90287370051891,
+        "pelvisCompensation": true,
+        "toe": [
+          -0.042125485837459564,
+          0.3191962242126465,
+          -0.45628058910369873
+        ],
+        "interiorKneeDegrees": 141.62938195003704
+      }
+    },
+    "arms": {
+      "L": {
+        "shoulder": [
+          0.11004196107387543,
+          -0.1700170487165451,
+          0.18164676427841187
+        ],
+        "elbow": [
+          0.16064995527267456,
+          -0.3282838761806488,
+          0.08576926589012146
+        ],
+        "wrist": [
+          0.1784304678440094,
+          -0.48867812752723694,
+          0.0435967817902565
+        ],
+        "hand": [
+          0.19248420000076294,
+          -0.5919619798660278,
+          0.008270353078842163
+        ],
+        "elbowFlexDegrees": 161.68635539118455,
+        "calibrationDegrees": 27.659226704370987,
+        "originalElbowFlexDegrees": 105.06183503058557,
+        "fullyFunctional": true,
+        "stretchReach": true
+      },
+      "R": {
+        "shoulder": [
+          -0.08156641572713852,
+          -0.15871724486351013,
+          0.1231653168797493
+        ],
+        "elbow": [
+          -0.08774330466985703,
+          -0.32252609729766846,
+          0.02351311594247818
+        ],
+        "wrist": [
+          -0.0821077898144722,
+          -0.485446572303772,
+          -0.011788541451096535
+        ],
+        "hand": [
+          -0.07697512954473495,
+          -0.5908036231994629,
+          -0.04319802671670914
+        ],
+        "elbowFlexDegrees": 160.48249356883477,
+        "calibrationDegrees": 31.62723534797365,
+        "originalElbowFlexDegrees": 107.38014466886047,
+        "fullyFunctional": true,
+        "stretchReach": true
+      }
+    },
+    "pelvisVertical": 0.008728154003620148,
+    "forwardLeanDegrees": 23.06847329523364,
+    "shoulderYawDegrees": -6.2772111666010915,
+    "shoulderRollDegrees": -2.0340938615744966,
+    "pelvisYawDegrees": 0.6344105944921519,
+    "cloth": {
+      "L": {
+        "root": [
+          0.059784721583127975,
+          0.03507516160607338,
+          -0.0006027482450008392
+        ],
+        "hem": [
+          0.0848359540104866,
+          0.09665356576442719,
+          -0.31053102016448975
+        ],
+        "rearwardBias": 0.115,
+        "sourceFrame": 11
+      },
+      "R": {
+        "root": [
+          -0.04948687553405762,
+          0.047094881534576416,
+          0.0033016186207532883
+        ],
+        "hem": [
+          -0.07439382374286652,
+          0.1171116977930069,
+          -0.30484163761138916
+        ],
+        "rearwardBias": 0.14284395307302475,
+        "sourceFrame": 11
+      }
+    },
+    "fps": 25,
+    "armMethod": "single source-derived shoulder-space calibration rotating complete captured 3D arm chain",
+    "variant": "broken-leg-left",
+    "weightTransfer": {
+      "healthyRightSupport": 0.05151870272044911,
+      "damagedLeftSupport": 0.6017199552453001,
+      "pelvisOffset": [
+        -0.00012383583816699684,
+        -0.0016762029845267534,
+        -0.004805197007954121
+      ],
+      "thoracicCounterleanDegrees": -0.5419245006251167,
+      "bothAnklesAnchored": true,
+      "sourceFrame": 12
+    },
+    "reachStyle": "shoulder-driven mostly extended zombie arms, not half-flexed boxer running",
+    "limpV3": {
+      "leftSwingDrag": 0.24482185378254612,
+      "leftFootDelta": [
+        0.006855010986328125,
+        -0.051412589848041534,
+        -0.02448219060897827
+      ],
+      "extraHipDrop": 0.005361802665501134,
+      "torsoCompensationDegrees": -1.8574811336049402,
+      "rightFootPlantedOnOriginalTrajectory": true
+    },
+    "limpV4": {
+      "leftInjuredStance": 0.35745351103340894,
+      "rightHealthyStance": 0.12893868872578448,
+      "leftSwingDrag": 0.24482185378254612,
+      "extraPelvisOffset": [
+        0.018370555713772774,
+        0.0,
+        -0.02067357860505581
+      ],
+      "extraThoraxCounterRollDegrees": -3.7736873774977693,
+      "crookedKneePoleShift": 0.03753261865850794,
+      "droopingToeSwing": 0.190961045950386,
+      "bothSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 12
+    },
+    "limpV5": {
+      "leftInjuredStance": 0.35745351103340894,
+      "rightHealthyStance": 0.12893868872578448,
+      "painImpact": 0.008766806850415072,
+      "leftSwingDrag": 0.24482185378254612,
+      "extraPelvisOffset": [
+        0.0005260084290057421,
+        0.0,
+        -0.0004558739601634443
+      ],
+      "extraThoraxCounterRollDegrees": -0.07890126165373565,
+      "extraThoraxPitchDegrees": 0.05260084110249043,
+      "crookedKneePoleShift": 0.0008328466507894318,
+      "bothSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 12
+    },
+    "limpV6": {
+      "leftInjuredStance": 0.35745351103340894,
+      "rightHealthyStance": 0.12893868872578448,
+      "painImpact": 0.008766806850415072,
+      "leftSwingDrag": 0.24482185378254612,
+      "leftFootTrailDelta": [
+        0.02325807511806488,
+        0.04651615396142006,
+        -0.0036723315715789795
+      ],
+      "leftFootTrailDistance": 0.05213613673509357,
+      "extraPelvisOffset": [
+        0.0005260084290057421,
+        0.0,
+        -0.0004558739601634443
+      ],
+      "extraThoraxCounterRollDegrees": -0.07890126165373565,
+      "extraThoraxPitchDegrees": 0.05260084110249043,
+      "crookedKneePoleShift": 0.0008328466507894318,
+      "plantedSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 12
+    },
+    "temporalAsymmetry": {
+      "sourceFrame": 12.75,
+      "leftPainfulContact": 0.6017199552453001,
+      "rightHealthyPropulsion": 0.05151870272044911,
+      "sourceFrameAdvance": 0.5999999999999996,
+      "authoredSourceRetiming": true,
+      "preservesFullCapturedJointChain": true,
+      "authoritativeInWorldVelocity": false
+    }
+  },
+  {
+    "frame": 12,
+    "sourceFraction": 0.8125,
+    "feet": {
+      "L": {
+        "hip": [
+          0.21202272176742554,
+          -0.00067004410084337,
+          -0.16677379608154297
+        ],
+        "knee": [
+          0.2196163684129715,
+          -0.1858769953250885,
+          -0.27871015667915344
+        ],
+        "ankle": [
+          0.08809506893157959,
+          -0.12784484028816223,
+          -0.4398014545440674
+        ],
+        "kneeFlexDegrees": 28.346536801403857,
+        "swingInfluence": 0.06404480583063984,
+        "toe": [
+          0.07672759890556335,
+          -0.2486685812473297,
+          -0.4983025789260864
+        ],
+        "pelvisCompensation": true,
+        "interiorKneeDegrees": 101.81613414595185
+      },
+      "R": {
+        "hip": [
+          0.07402116805315018,
+          0.00020194628450553864,
+          -0.16677385568618774
+        ],
+        "knee": [
+          -0.06196007877588272,
+          0.07360422611236572,
+          -0.318464994430542
+        ],
+        "ankle": [
+          -0.05893516167998314,
+          0.2890244722366333,
+          -0.3042886257171631
+        ],
+        "kneeFlexDegrees": 41.95781974167531,
+        "pelvisCompensation": true,
+        "toe": [
+          -0.04071982204914093,
+          0.33809784054756165,
+          -0.42842569947242737
+        ],
+        "interiorKneeDegrees": 111.65938613623486
+      }
+    },
+    "arms": {
+      "L": {
+        "shoulder": [
+          0.12918321788311005,
+          -0.18765518069267273,
+          0.11370943486690521
+        ],
+        "elbow": [
+          0.1963181048631668,
+          -0.3380170166492462,
+          0.01529056578874588
+        ],
+        "wrist": [
+          0.22122222185134888,
+          -0.49488651752471924,
+          -0.035628363490104675
+        ],
+        "hand": [
+          0.24115270376205444,
+          -0.5952911972999573,
+          -0.07605980336666107
+        ],
+        "elbowFlexDegrees": 161.26844343662813,
+        "calibrationDegrees": 27.659226704370987,
+        "originalElbowFlexDegrees": 106.39144063555527,
+        "fullyFunctional": true,
+        "stretchReach": true
+      },
+      "R": {
+        "shoulder": [
+          -0.04798276722431183,
+          -0.16965432465076447,
+          0.021229887381196022
+        ],
+        "elbow": [
+          -0.035631559789180756,
+          -0.3239828944206238,
+          -0.09204920381307602
+        ],
+        "wrist": [
+          -0.023079831153154373,
+          -0.4829758405685425,
+          -0.14088284969329834
+        ],
+        "hand": [
+          -0.012132329866290092,
+          -0.5850222706794739,
+          -0.18062788248062134
+        ],
+        "elbowFlexDegrees": 160.6339735042473,
+        "calibrationDegrees": 31.62723534797365,
+        "originalElbowFlexDegrees": 104.59555167632715,
+        "fullyFunctional": true,
+        "stretchReach": true
+      }
+    },
+    "pelvisVertical": 0.0067937662824988365,
+    "forwardLeanDegrees": 23.113436883128422,
+    "shoulderYawDegrees": -6.701998131681452,
+    "shoulderRollDegrees": -2.8613161616392278,
+    "pelvisYawDegrees": -0.27943699175113307,
+    "cloth": {
+      "L": {
+        "root": [
+          0.06026201695203781,
+          0.03459129482507706,
+          -0.0033089034259319305
+        ],
+        "hem": [
+          0.08531324565410614,
+          0.09616969525814056,
+          -0.31323716044425964
+        ],
+        "rearwardBias": 0.115,
+        "sourceFrame": 12
+      },
+      "R": {
+        "root": [
+          -0.04885009676218033,
+          0.04741288721561432,
+          0.002182150259613991
+        ],
+        "hem": [
+          -0.0736989974975586,
+          0.12053859978914261,
+          -0.3052428960800171
+        ],
+        "rearwardBias": 0.15322949588298798,
+        "sourceFrame": 12
+      }
+    },
+    "fps": 25,
+    "armMethod": "single source-derived shoulder-space calibration rotating complete captured 3D arm chain",
+    "variant": "broken-leg-left",
+    "weightTransfer": {
+      "healthyRightSupport": 0.01715122945479418,
+      "damagedLeftSupport": 0.769121704651471,
+      "pelvisOffset": [
+        0.007929502055048943,
+        -0.0003342565323691815,
+        -0.00830055307596922
+      ],
+      "thoracicCounterleanDegrees": -2.2495811376530677,
+      "bothAnklesAnchored": true,
+      "sourceFrame": 13
+    },
+    "reachStyle": "shoulder-driven mostly extended zombie arms, not half-flexed boxer running",
+    "limpV3": {
+      "leftSwingDrag": 0.11106420477492408,
+      "leftFootDelta": [
+        0.0031097978353500366,
+        -0.023323483765125275,
+        -0.011106431484222412
+      ],
+      "extraHipDrop": 0.010247131549738955,
+      "torsoCompensationDegrees": -4.65343451961816,
+      "rightFootPlantedOnOriginalTrajectory": true
+    },
+    "limpV4": {
+      "leftInjuredStance": 0.6831421033159304,
+      "rightHealthyStance": 0.025712040718670653,
+      "leftSwingDrag": 0.11106420477492408,
+      "extraPelvisOffset": [
+        0.037315696477890015,
+        0.0,
+        -0.04083425551652908
+      ],
+      "extraThoraxCounterRollDegrees": -8.094857076916483,
+      "crookedKneePoleShift": 0.07172992084817269,
+      "droopingToeSwing": 0.08663007972444078,
+      "bothSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 13
+    },
+    "limpV5": {
+      "leftInjuredStance": 0.6831421033159304,
+      "rightHealthyStance": 0.025712040718670653,
+      "painImpact": 0.5509699236451214,
+      "leftSwingDrag": 0.11106420477492408,
+      "extraPelvisOffset": [
+        0.03305819630622864,
+        0.0,
+        -0.0286504365503788
+      ],
+      "extraThoraxCounterRollDegrees": -4.958729312806093,
+      "extraThoraxPitchDegrees": 3.3058195418707284,
+      "crookedKneePoleShift": 0.052342142746286534,
+      "bothSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 13
+    },
+    "limpV6": {
+      "leftInjuredStance": 0.6831421033159304,
+      "rightHealthyStance": 0.025712040718670653,
+      "painImpact": 0.5509699236451214,
+      "leftSwingDrag": 0.11106420477492408,
+      "leftFootTrailDelta": [
+        0.010551102459430695,
+        0.021102197468280792,
+        -0.001665949821472168
+      ],
+      "leftFootTrailDistance": 0.023651720859486376,
+      "extraPelvisOffset": [
+        0.03305819630622864,
+        0.0,
+        -0.0286504365503788
+      ],
+      "extraThoraxCounterRollDegrees": -4.958729312806093,
+      "extraThoraxPitchDegrees": 3.3058195418707284,
+      "crookedKneePoleShift": 0.052342142746286534,
+      "plantedSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 13
+    },
+    "temporalAsymmetry": {
+      "sourceFrame": 13.35,
+      "leftPainfulContact": 0.769121704651471,
+      "rightHealthyPropulsion": 0.01715122945479418,
+      "sourceFrameAdvance": 0.5999999999999996,
+      "authoredSourceRetiming": true,
+      "preservesFullCapturedJointChain": true,
+      "authoritativeInWorldVelocity": false
+    }
+  },
+  {
+    "frame": 13,
+    "sourceFraction": 0.8125,
+    "feet": {
+      "L": {
+        "hip": [
+          0.24700438976287842,
+          -0.000791101367212832,
+          -0.2061121016740799
+        ],
+        "knee": [
+          0.22050060331821442,
+          -0.18935617804527283,
+          -0.30921292304992676
+        ],
+        "ankle": [
+          0.06441770493984222,
+          -0.11635013669729233,
+          -0.43930619955062866
+        ],
+        "kneeFlexDegrees": 28.346536801403857,
+        "swingInfluence": 0.06404480583063984,
+        "toe": [
+          0.052283406257629395,
+          -0.2423005998134613,
+          -0.48555788397789
+        ],
+        "pelvisCompensation": true,
+        "interiorKneeDegrees": 101.81613414595185
+      },
+      "R": {
+        "hip": [
+          0.10901276767253876,
+          0.0007354170083999634,
+          -0.2061121016740799
+        ],
+        "knee": [
+          -0.060962408781051636,
+          0.0706324651837349,
+          -0.3206190764904022
+        ],
+        "ankle": [
+          -0.061350759118795395,
+          0.28316137194633484,
+          -0.28257521986961365
+        ],
+        "kneeFlexDegrees": 41.95781974167531,
+        "pelvisCompensation": true,
+        "toe": [
+          -0.05575373023748398,
+          0.3538089692592621,
+          -0.39715099334716797
+        ],
+        "interiorKneeDegrees": 111.65938613623486
+      }
+    },
+    "arms": {
+      "L": {
+        "shoulder": [
+          0.14549575746059418,
+          -0.19597876071929932,
+          0.06579764187335968
+        ],
+        "elbow": [
+          0.2222217172384262,
+          -0.34268683195114136,
+          -0.031114235520362854
+        ],
+        "wrist": [
+          0.25089019536972046,
+          -0.4977876543998718,
+          -0.08536279946565628
+        ],
+        "hand": [
+          0.27394965291023254,
+          -0.5967890024185181,
+          -0.12755315005779266
+        ],
+        "elbowFlexDegrees": 161.26844343662813,
+        "calibrationDegrees": 27.659226704370987,
+        "originalElbowFlexDegrees": 106.39144063555527,
+        "fullyFunctional": true,
+        "stretchReach": true
+      },
+      "R": {
+        "shoulder": [
+          -0.020907660946249962,
+          -0.17395637929439545,
+          -0.04415294528007507
+        ],
+        "elbow": [
+          0.0034433286637067795,
+          -0.32286596298217773,
+          -0.16262224316596985
+        ],
+        "wrist": [
+          0.021072838455438614,
+          -0.47904545068740845,
+          -0.21846285462379456
+        ],
+        "hand": [
+          0.03602378070354462,
+          -0.5788601636886597,
+          -0.2623545825481415
+        ],
+        "elbowFlexDegrees": 160.6339735042473,
+        "calibrationDegrees": 31.62723534797365,
+        "originalElbowFlexDegrees": 104.59555167632715,
+        "fullyFunctional": true,
+        "stretchReach": true
+      }
+    },
+    "pelvisVertical": 0.0067937662824988365,
+    "forwardLeanDegrees": 23.113436883128422,
+    "shoulderYawDegrees": -6.701998131681452,
+    "shoulderRollDegrees": -2.8613161616392278,
+    "pelvisYawDegrees": -0.27943699175113307,
+    "cloth": {
+      "L": {
+        "root": [
+          0.06026201695203781,
+          0.03459129482507706,
+          -0.0033089034259319305
+        ],
+        "hem": [
+          0.08531324565410614,
+          0.09616969525814056,
+          -0.31323716044425964
+        ],
+        "rearwardBias": 0.115,
+        "sourceFrame": 12
+      },
+      "R": {
+        "root": [
+          -0.04885009676218033,
+          0.04741288721561432,
+          0.002182150259613991
+        ],
+        "hem": [
+          -0.0736989974975586,
+          0.12053859978914261,
+          -0.3052428960800171
+        ],
+        "rearwardBias": 0.15322949588298798,
+        "sourceFrame": 12
+      }
+    },
+    "fps": 25,
+    "armMethod": "single source-derived shoulder-space calibration rotating complete captured 3D arm chain",
+    "variant": "broken-leg-left",
+    "weightTransfer": {
+      "healthyRightSupport": 0.0024755530024344963,
+      "damagedLeftSupport": 0.9165153069409693,
+      "pelvisOffset": [
+        0.007929502055048943,
+        -0.0003342565323691815,
+        -0.00830055307596922
+      ],
+      "thoracicCounterleanDegrees": -2.2495811376530677,
+      "bothAnklesAnchored": true,
+      "sourceFrame": 13
+    },
+    "reachStyle": "shoulder-driven mostly extended zombie arms, not half-flexed boxer running",
+    "limpV3": {
+      "leftSwingDrag": 0.11106420477492408,
+      "leftFootDelta": [
+        0.0031097978353500366,
+        -0.023323483765125275,
+        -0.011106431484222412
+      ],
+      "extraHipDrop": 0.010247131549738955,
+      "torsoCompensationDegrees": -4.65343451961816,
+      "rightFootPlantedOnOriginalTrajectory": true
+    },
+    "limpV4": {
+      "leftInjuredStance": 0.6831421033159304,
+      "rightHealthyStance": 0.025712040718670653,
+      "leftSwingDrag": 0.11106420477492408,
+      "extraPelvisOffset": [
+        0.037315696477890015,
+        0.0,
+        -0.04083425551652908
+      ],
+      "extraThoraxCounterRollDegrees": -8.094857076916483,
+      "crookedKneePoleShift": 0.07172992084817269,
+      "droopingToeSwing": 0.08663007972444078,
+      "bothSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 13
+    },
+    "limpV5": {
+      "leftInjuredStance": 0.6831421033159304,
+      "rightHealthyStance": 0.025712040718670653,
+      "painImpact": 0.5509699236451214,
+      "leftSwingDrag": 0.11106420477492408,
+      "extraPelvisOffset": [
+        0.03305819630622864,
+        0.0,
+        -0.0286504365503788
+      ],
+      "extraThoraxCounterRollDegrees": -4.958729312806093,
+      "extraThoraxPitchDegrees": 3.3058195418707284,
+      "crookedKneePoleShift": 0.052342142746286534,
+      "bothSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 13
+    },
+    "limpV6": {
+      "leftInjuredStance": 0.6831421033159304,
+      "rightHealthyStance": 0.025712040718670653,
+      "painImpact": 0.5509699236451214,
+      "leftSwingDrag": 0.11106420477492408,
+      "leftFootTrailDelta": [
+        0.010551102459430695,
+        0.021102197468280792,
+        -0.001665949821472168
+      ],
+      "leftFootTrailDistance": 0.023651720859486376,
+      "extraPelvisOffset": [
+        0.03305819630622864,
+        0.0,
+        -0.0286504365503788
+      ],
+      "extraThoraxCounterRollDegrees": -4.958729312806093,
+      "extraThoraxPitchDegrees": 3.3058195418707284,
+      "crookedKneePoleShift": 0.052342142746286534,
+      "plantedSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 13
+    },
+    "temporalAsymmetry": {
+      "sourceFrame": 13.95,
+      "leftPainfulContact": 0.9165153069409693,
+      "rightHealthyPropulsion": 0.0024755530024344963,
+      "sourceFrameAdvance": 0.7000000000000011,
+      "authoredSourceRetiming": true,
+      "preservesFullCapturedJointChain": true,
+      "authoritativeInWorldVelocity": false
+    }
+  },
+  {
+    "frame": 14,
+    "sourceFraction": 0.875,
+    "feet": {
+      "L": {
+        "hip": [
+          0.25656452775001526,
+          -0.00270159263163805,
+          -0.22704824805259705
+        ],
+        "knee": [
+          0.2081606388092041,
+          -0.1807592213153839,
+          -0.3403688371181488
+        ],
+        "ankle": [
+          0.04795628786087036,
+          -0.07960433512926102,
+          -0.4438978135585785
+        ],
+        "kneeFlexDegrees": 40.88374517393413,
+        "swingInfluence": 0.013161746484351785,
+        "toe": [
+          0.03086756356060505,
+          -0.20699191093444824,
+          -0.4842761754989624
+        ],
+        "pelvisCompensation": true,
+        "interiorKneeDegrees": 94.43599863453719
+      },
+      "R": {
+        "hip": [
+          0.11868293583393097,
+          0.002738760784268379,
+          -0.22704817354679108
+        ],
+        "knee": [
+          -0.06575842201709747,
+          0.06139494478702545,
+          -0.32415544986724854
+        ],
+        "ankle": [
+          -0.06054064631462097,
+          0.26759061217308044,
+          -0.26034194231033325
+        ],
+        "kneeFlexDegrees": 65.85245108121038,
+        "pelvisCompensation": true,
+        "toe": [
+          -0.07380551099777222,
+          0.353432297706604,
+          -0.36332374811172485
+        ],
+        "interiorKneeDegrees": 102.7841427060719
+      }
+    },
+    "arms": {
+      "L": {
+        "shoulder": [
+          0.15423989295959473,
+          -0.19664767384529114,
+          0.04444560781121254
+        ],
+        "elbow": [
+          0.23250094056129456,
+          -0.3438471555709839,
+          -0.050473082810640335
+        ],
+        "wrist": [
+          0.25952357053756714,
+          -0.4994368553161621,
+          -0.10416343808174133
+        ],
+        "hand": [
+          0.28168657422065735,
+          -0.5988067388534546,
+          -0.145966038107872
+        ],
+        "elbowFlexDegrees": 160.73037479419287,
+        "calibrationDegrees": 27.659226704370987,
+        "originalElbowFlexDegrees": 106.5564989870378,
+        "fullyFunctional": true,
+        "stretchReach": true
+      },
+      "R": {
+        "shoulder": [
+          -0.009860440157353878,
+          -0.17503085732460022,
+          -0.0690101757645607
+        ],
+        "elbow": [
+          0.017507173120975494,
+          -0.32295870780944824,
+          -0.18804967403411865
+        ],
+        "wrist": [
+          0.03601731359958649,
+          -0.47814035415649414,
+          -0.24633413553237915
+        ],
+        "hand": [
+          0.05165413022041321,
+          -0.5771973133087158,
+          -0.2916795015335083
+        ],
+        "elbowFlexDegrees": 161.2927589100734,
+        "calibrationDegrees": 31.62723534797365,
+        "originalElbowFlexDegrees": 97.13016174369237,
+        "fullyFunctional": true,
+        "stretchReach": true
+      }
+    },
+    "pelvisVertical": -0.0018055893015116453,
+    "forwardLeanDegrees": 23.22467435426706,
+    "shoulderYawDegrees": -6.188412770145555,
+    "shoulderRollDegrees": -3.9356007066999226,
+    "pelvisYawDegrees": -0.6915171421253878,
+    "cloth": {
+      "L": {
+        "root": [
+          0.060219231992959976,
+          0.035066261887550354,
+          -0.012877169996500015
+        ],
+        "hem": [
+          0.0852704644203186,
+          0.09664466232061386,
+          -0.3228054344654083
+        ],
+        "rearwardBias": 0.115,
+        "sourceFrame": 13
+      },
+      "R": {
+        "root": [
+          -0.048881884664297104,
+          0.04689610004425049,
+          -0.005327304825186729
+        ],
+        "hem": [
+          -0.073767751455307,
+          0.1180586963891983,
+          -0.3132097125053406
+        ],
+        "rearwardBias": 0.14666308879852297,
+        "sourceFrame": 13
+      }
+    },
+    "fps": 25,
+    "armMethod": "single source-derived shoulder-space calibration rotating complete captured 3D arm chain",
+    "variant": "broken-leg-left",
+    "weightTransfer": {
+      "healthyRightSupport": 0.0004384034970804102,
+      "damagedLeftSupport": 0.9750037531145115,
+      "pelvisOffset": [
+        0.01202803011983633,
+        -1.6283540389849804e-05,
+        -0.011150587350130081
+      ],
+      "thoracicCounterleanDegrees": -3.243904185155105,
+      "bothAnklesAnchored": true,
+      "sourceFrame": 14
+    },
+    "reachStyle": "shoulder-driven mostly extended zombie arms, not half-flexed boxer running",
+    "limpV3": {
+      "leftSwingDrag": 0.02849215691722382,
+      "leftFootDelta": [
+        0.0007977820932865143,
+        -0.0059833526611328125,
+        -0.0028492212295532227
+      ],
+      "extraHipDrop": 0.013931971606976413,
+      "torsoCompensationDegrees": -6.495323850098638,
+      "rightFootPlantedOnOriginalTrajectory": true
+    },
+    "limpV4": {
+      "leftInjuredStance": 0.9287981071317609,
+      "rightHealthyStance": 0.0012525799647378384,
+      "leftSwingDrag": 0.02849215691722382,
+      "extraPelvisOffset": [
+        0.051071371883153915,
+        0.0,
+        -0.05572037026286125
+      ],
+      "extraThoraxCounterRollDegrees": -11.14056696572218,
+      "crookedKneePoleShift": 0.09752380124883489,
+      "droopingToeSwing": 0.022223882395434578,
+      "bothSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 14
+    },
+    "limpV5": {
+      "leftInjuredStance": 0.9287981071317609,
+      "rightHealthyStance": 0.0012525799647378384,
+      "painImpact": 0.9694043174812399,
+      "leftSwingDrag": 0.02849215691722382,
+      "extraPelvisOffset": [
+        0.05816425755620003,
+        0.0,
+        -0.050409022718667984
+      ],
+      "extraThoraxCounterRollDegrees": -8.72463885733116,
+      "extraThoraxPitchDegrees": 5.81642590488744,
+      "crookedKneePoleShift": 0.09209341016071779,
+      "bothSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 14
+    },
+    "limpV6": {
+      "leftInjuredStance": 0.9287981071317609,
+      "rightHealthyStance": 0.0012525799647378384,
+      "painImpact": 0.9694043174812399,
+      "leftSwingDrag": 0.02849215691722382,
+      "leftFootTrailDelta": [
+        0.0027067549526691437,
+        0.005413509905338287,
+        -0.0004273951053619385
+      ],
+      "leftFootTrailDistance": 0.006067559498196727,
+      "extraPelvisOffset": [
+        0.05816425755620003,
+        0.0,
+        -0.050409022718667984
+      ],
+      "extraThoraxCounterRollDegrees": -8.72463885733116,
+      "extraThoraxPitchDegrees": 5.81642590488744,
+      "crookedKneePoleShift": 0.09209341016071779,
+      "plantedSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 14
+    },
+    "temporalAsymmetry": {
+      "sourceFrame": 14.65,
+      "leftPainfulContact": 0.9750037531145115,
+      "rightHealthyPropulsion": 0.0004384034970804102,
+      "sourceFrameAdvance": 0.8499999999999996,
+      "authoredSourceRetiming": true,
+      "preservesFullCapturedJointChain": true,
+      "authoritativeInWorldVelocity": false
+    }
+  },
+  {
+    "frame": 15,
+    "sourceFraction": 0.9375,
+    "feet": {
+      "L": {
+        "hip": [
+          0.2569524049758911,
+          -0.0022464387584477663,
+          -0.2382182627916336
+        ],
+        "knee": [
+          0.18649446964263916,
+          -0.14491021633148193,
+          -0.3850913643836975
+        ],
+        "ankle": [
+          0.03556305170059204,
+          -0.005798310041427612,
+          -0.4520513117313385
+        ],
+        "kneeFlexDegrees": 53.44312434051025,
+        "swingInfluence": 4.371745954385018e-05,
+        "toe": [
+          0.020824680104851723,
+          -0.13197796046733856,
+          -0.49690118432044983
+        ],
+        "pelvisCompensation": true,
+        "interiorKneeDegrees": 90.96723242303284
+      },
+      "R": {
+        "hip": [
+          0.11904120445251465,
+          0.002236081985756755,
+          -0.23821821808815002
+        ],
+        "knee": [
+          -0.07971975207328796,
+          -0.0017248874064534903,
+          -0.3240516781806946
+        ],
+        "ankle": [
+          -0.06686519831418991,
+          0.20330120623111725,
+          -0.25760549306869507
+        ],
+        "kneeFlexDegrees": 88.89721564269908,
+        "pelvisCompensation": true,
+        "toe": [
+          -0.08009041845798492,
+          0.29037028551101685,
+          -0.3595568537712097
+        ],
+        "interiorKneeDegrees": 89.71855089934945
+      }
+    },
+    "arms": {
+      "L": {
+        "shoulder": [
+          0.16133978962898254,
+          -0.20550383627414703,
+          0.02859453111886978
+        ],
+        "elbow": [
+          0.2390250265598297,
+          -0.35532882809638977,
+          -0.06261676549911499
+        ],
+        "wrist": [
+          0.2623448371887207,
+          -0.5119043588638306,
+          -0.11516465246677399
+        ],
+        "hand": [
+          0.28228721022605896,
+          -0.6120455265045166,
+          -0.15623821318149567
+        ],
+        "elbowFlexDegrees": 160.04693240546305,
+        "calibrationDegrees": 27.659226704370987,
+        "originalElbowFlexDegrees": 108.54708248855715,
+        "fullyFunctional": true,
+        "stretchReach": true
+      },
+      "R": {
+        "shoulder": [
+          -0.002008545445278287,
+          -0.18611280620098114,
+          -0.0863535925745964
+        ],
+        "elbow": [
+          0.02891821414232254,
+          -0.3319471478462219,
+          -0.20709264278411865
+        ],
+        "wrist": [
+          0.04850844666361809,
+          -0.48423096537590027,
+          -0.27226075530052185
+        ],
+        "hand": [
+          0.064901202917099,
+          -0.5811338424682617,
+          -0.3217995762825012
+        ],
+        "elbowFlexDegrees": 162.36239385485408,
+        "calibrationDegrees": 31.62723534797365,
+        "originalElbowFlexDegrees": 87.79355269547341,
+        "fullyFunctional": true,
+        "stretchReach": true
+      }
+    },
+    "pelvisVertical": -0.016133803874254227,
+    "forwardLeanDegrees": 23.320219001545635,
+    "shoulderYawDegrees": -4.509411287290253,
+    "shoulderRollDegrees": -4.620000137355586,
+    "pelvisYawDegrees": -2.737587468743784,
+    "cloth": {
+      "L": {
+        "root": [
+          0.059331014752388,
+          0.03677285462617874,
+          -0.027807630598545074
+        ],
+        "hem": [
+          0.08438225090503693,
+          0.09835125505924225,
+          -0.3377358913421631
+        ],
+        "rearwardBias": 0.115,
+        "sourceFrame": 14
+      },
+      "R": {
+        "root": [
+          -0.049972161650657654,
+          0.04539327323436737,
+          -0.018947485834360123
+        ],
+        "hem": [
+          -0.07491213083267212,
+          0.11357542872428894,
+          -0.3274992108345032
+        ],
+        "rearwardBias": 0.13674850419163703,
+        "sourceFrame": 14
+      }
+    },
+    "fps": 25,
+    "armMethod": "single source-derived shoulder-space calibration rotating complete captured 3D arm chain",
+    "variant": "broken-leg-left",
+    "weightTransfer": {
+      "healthyRightSupport": 3.918632055558256e-10,
+      "damagedLeftSupport": 0.9999418581679963,
+      "pelvisOffset": [
+        0.0129984887316823,
+        -1.0188442971237333e-11,
+        -0.011998604983091354
+      ],
+      "thoracicCounterleanDegrees": -3.499593002865479,
+      "bothAnklesAnchored": true,
+      "sourceFrame": 15
+    },
+    "reachStyle": "shoulder-driven mostly extended zombie arms, not half-flexed boxer running",
+    "limpV3": {
+      "leftSwingDrag": 0.00010910081233687418,
+      "leftFootDelta": [
+        3.0547380447387695e-06,
+        -2.291053533554077e-05,
+        -1.0907649993896484e-05
+      ],
+      "extraHipDrop": 0.014998255745039888,
+      "torsoCompensationDegrees": -6.999186010433316,
+      "rightFootPlantedOnOriginalTrajectory": true
+    },
+    "limpV4": {
+      "leftInjuredStance": 0.9998837163359926,
+      "rightHealthyStance": 7.837264111116512e-10,
+      "leftSwingDrag": 0.00010910081233687418,
+      "extraPelvisOffset": [
+        0.05499360337853432,
+        0.0,
+        -0.05999302119016647
+      ],
+      "extraThoraxCounterRollDegrees": -11.998604592897005,
+      "crookedKneePoleShift": 0.10498779021527922,
+      "droopingToeSwing": 8.509863362276186e-05,
+      "bothSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 15
+    },
+    "limpV5": {
+      "leftInjuredStance": 0.9998837163359926,
+      "rightHealthyStance": 7.837264111116512e-10,
+      "painImpact": 0.9999999122814729,
+      "leftSwingDrag": 0.00010910081233687418,
+      "extraPelvisOffset": [
+        0.059999994933605194,
+        0.0,
+        -0.05199999362230301
+      ],
+      "extraThoraxCounterRollDegrees": -8.999999210533256,
+      "extraThoraxPitchDegrees": 5.999999473688837,
+      "crookedKneePoleShift": 0.09499999166673992,
+      "bothSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 15
+    },
+    "limpV6": {
+      "leftInjuredStance": 0.9998837163359926,
+      "rightHealthyStance": 7.837264111116512e-10,
+      "painImpact": 0.9999999122814729,
+      "leftSwingDrag": 0.00010910081233687418,
+      "leftFootTrailDelta": [
+        1.0363757610321045e-05,
+        2.072751522064209e-05,
+        -1.6391277313232422e-06
+      ],
+      "leftFootTrailDistance": 2.3231962869009363e-05,
+      "extraPelvisOffset": [
+        0.059999994933605194,
+        0.0,
+        -0.05199999362230301
+      ],
+      "extraThoraxCounterRollDegrees": -8.999999210533256,
+      "extraThoraxPitchDegrees": 5.999999473688837,
+      "crookedKneePoleShift": 0.09499999166673992,
+      "plantedSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 15
+    },
+    "temporalAsymmetry": {
+      "sourceFrame": 15.5,
+      "leftPainfulContact": 0.9999418581679963,
+      "rightHealthyPropulsion": 3.918632055558256e-10,
+      "sourceFrameAdvance": 0.5,
+      "authoredSourceRetiming": true,
+      "preservesFullCapturedJointChain": true,
+      "authoritativeInWorldVelocity": false
+    }
+  },
+  {
+    "frame": 16,
+    "sourceFraction": 0.0,
+    "feet": {
+      "L": {
+        "hip": [
+          0.25698980689048767,
+          -0.0011869703885167837,
+          -0.24100008606910706
+        ],
+        "knee": [
+          0.17861545085906982,
+          -0.12950697541236877,
+          -0.39682185649871826
+        ],
+        "ankle": [
+          0.03161461651325226,
+          0.01938048005104065,
+          -0.4501071572303772
+        ],
+        "kneeFlexDegrees": 58.63723731749484,
+        "swingInfluence": 0.0,
+        "toe": [
+          0.018800269812345505,
+          -0.10603722929954529,
+          -0.49760696291923523
+        ],
+        "pelvisCompensation": true,
+        "interiorKneeDegrees": 90.88111739797732
+      },
+      "R": {
+        "hip": [
+          0.11901022493839264,
+          0.0011869652662426233,
+          -0.2409999668598175
+        ],
+        "knee": [
+          -0.08134905993938446,
+          -0.02817852422595024,
+          -0.31769946217536926
+        ],
+        "ankle": [
+          -0.06816878914833069,
+          0.1784217804670334,
+          -0.2563914656639099
+        ],
+        "kneeFlexDegrees": 108.56049014989789,
+        "pelvisCompensation": true,
+        "toe": [
+          -0.08089865744113922,
+          0.2625456154346466,
+          -0.36084794998168945
+        ],
+        "interiorKneeDegrees": 73.33173862757327
+      }
+    },
+    "arms": {
+      "L": {
+        "shoulder": [
+          0.16690653562545776,
+          -0.21278280019760132,
+          0.02127395011484623
+        ],
+        "elbow": [
+          0.24330180883407593,
+          -0.363785058259964,
+          -0.06908152252435684
+        ],
+        "wrist": [
+          0.26493552327156067,
+          -0.5207158923149109,
+          -0.12128984928131104
+        ],
+        "hand": [
+          0.2837817668914795,
+          -0.6211411952972412,
+          -0.16218633949756622
+        ],
+        "elbowFlexDegrees": 159.99305587329,
+        "calibrationDegrees": 27.659226704370987,
+        "originalElbowFlexDegrees": 109.28004374876956,
+        "fullyFunctional": true,
+        "stretchReach": true
+      },
+      "R": {
+        "shoulder": [
+          0.0027258326299488544,
+          -0.1945406198501587,
+          -0.09266594797372818
+        ],
+        "elbow": [
+          0.03389580920338631,
+          -0.3400995135307312,
+          -0.21367445588111877
+        ],
+        "wrist": [
+          0.05335649102926254,
+          -0.4914770722389221,
+          -0.2809584140777588
+        ],
+        "hand": [
+          0.06961571425199509,
+          -0.5877242088317871,
+          -0.3318026065826416
+        ],
+        "elbowFlexDegrees": 164.15959421040284,
+        "calibrationDegrees": 31.62723534797365,
+        "originalElbowFlexDegrees": 74.81406225342813,
+        "fullyFunctional": true,
+        "stretchReach": true
+      }
+    },
+    "pelvisVertical": -0.02500000037252903,
+    "forwardLeanDegrees": 27.244318290596294,
+    "shoulderYawDegrees": -2.342236452203444,
+    "shoulderRollDegrees": -5.153201409309975,
+    "pelvisYawDegrees": -0.9856690979382362,
+    "cloth": {
+      "L": {
+        "root": [
+          0.05821573734283447,
+          0.03766008839011192,
+          -0.03442296385765076
+        ],
+        "hem": [
+          0.0832669734954834,
+          0.09923848509788513,
+          -0.34435123205184937
+        ],
+        "rearwardBias": 0.115,
+        "sourceFrame": 15
+      },
+      "R": {
+        "root": [
+          -0.05124811828136444,
+          0.04213744029402733,
+          -0.024542856961488724
+        ],
+        "hem": [
+          -0.07625687122344971,
+          0.10632072389125824,
+          -0.333945631980896
+        ],
+        "rearwardBias": 0.12354426242411137,
+        "sourceFrame": 15
+      }
+    },
+    "fps": 25,
+    "armMethod": "single source-derived shoulder-space calibration rotating complete captured 3D arm chain",
+    "variant": "broken-leg-left",
+    "weightTransfer": {
+      "healthyRightSupport": 0.0,
+      "damagedLeftSupport": 1.0,
+      "pelvisOffset": [
+        0.013000000268220901,
+        -0.0,
+        -0.012000000104308128
+      ],
+      "thoracicCounterleanDegrees": -3.5,
+      "bothAnklesAnchored": true,
+      "sourceFrame": 0
+    },
+    "reachStyle": "shoulder-driven mostly extended zombie arms, not half-flexed boxer running",
+    "limpV3": {
+      "leftSwingDrag": 0.0,
+      "leftFootDelta": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "extraHipDrop": 0.015,
+      "torsoCompensationDegrees": -7.0,
+      "rightFootPlantedOnOriginalTrajectory": true
+    },
+    "limpV4": {
+      "leftInjuredStance": 1.0,
+      "rightHealthyStance": 0.0,
+      "leftSwingDrag": 0.0,
+      "extraPelvisOffset": [
+        0.054999999701976776,
+        0.0,
+        -0.05999999865889549
+      ],
+      "extraThoraxCounterRollDegrees": -12.000000000000002,
+      "crookedKneePoleShift": 0.105,
+      "droopingToeSwing": 0.0,
+      "bothSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 0
+    },
+    "limpV5": {
+      "leftInjuredStance": 1.0,
+      "rightHealthyStance": 0.0,
+      "painImpact": 1.0,
+      "leftSwingDrag": 0.0,
+      "extraPelvisOffset": [
+        0.05999999865889549,
+        0.0,
+        -0.052000001072883606
+      ],
+      "extraThoraxCounterRollDegrees": -9.0,
+      "extraThoraxPitchDegrees": 6.000000000000001,
+      "crookedKneePoleShift": 0.095,
+      "bothSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 0
+    },
+    "limpV6": {
+      "leftInjuredStance": 1.0,
+      "rightHealthyStance": 0.0,
+      "painImpact": 1.0,
+      "leftSwingDrag": 0.0,
+      "leftFootTrailDelta": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "leftFootTrailDistance": 0.0,
+      "extraPelvisOffset": [
+        0.05999999865889549,
+        0.0,
+        -0.052000001072883606
+      ],
+      "extraThoraxCounterRollDegrees": -9.0,
+      "extraThoraxPitchDegrees": 6.000000000000001,
+      "crookedKneePoleShift": 0.095,
+      "plantedSourceFootContactsLocked": true,
+      "legBoneLengthsUnchanged": true,
+      "sourceFrame": 0
+    },
+    "temporalAsymmetry": {
+      "sourceFrame": 0.0,
+      "leftPainfulContact": 1.0,
+      "rightHealthyPropulsion": 0.0,
+      "sourceFrameAdvance": 0.45,
+      "authoredSourceRetiming": true,
+      "preservesFullCapturedJointChain": true,
+      "authoritativeInWorldVelocity": false
+    }
+  }
+]
