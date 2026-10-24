@@ -156,7 +156,7 @@ for index in range(FRAMES + 1):
                       "wrist": list(wrist),
                       "hand": list(hand),
                       "drive": drive,
-                      "shoulderSagittal": shoulder_sagittal}
+                      }
     for bone in rig.pose.bones:
         for prop in ("location", "rotation_quaternion", "scale"):
             bone.keyframe_insert(prop, frame=index + 1, group=bone.name)
