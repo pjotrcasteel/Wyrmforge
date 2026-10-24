@@ -7,6 +7,8 @@ on:
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/hollow-leg-review.js'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/hollow-rigged/review/**'
       - 'tests/javascript/hollow-leg-review.test.mjs'
+      - 'tests/javascript/hollow-arm-variants.test.mjs'
+      - 'tools/sprite-lab/capture-hollow-leg-hunt.cjs'
       - 'tests/javascript/hollow-sprites.test.mjs'
       - '.github/workflows/hollow-leg-live-preview.yml'
   workflow_dispatch:
