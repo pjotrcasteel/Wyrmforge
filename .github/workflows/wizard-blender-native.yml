@@ -9,6 +9,7 @@ on:
       - 'tools/sprite-lab/validate_wizard_blend.py'
       - '.github/workflows/wizard-blender-native.yml'
       - 'tools/sprite-lab/actor_motion_review.py'
+      - 'tools/sprite-lab/package_wizard_recording.py'
       - 'tools/sprite-lab/tests/test_actor_motion_review.py'
   workflow_dispatch:
 
@@ -56,6 +57,20 @@ jobs:
             --source artifacts/wizard-native/walk-16 \
             --output artifacts/wizard-native/walk-review \
             --frames 16 --fps 12
+      - name: Record genuine 16-frame source walk and package ZIP
+        run: |
+          python3 tools/sprite-lab/package_wizard_recording.py \
+            --source artifacts/wizard-native \
+            --destination artifacts/wizard-native/WyrmForge_Wizard_Recorded_Review.zip \
+            --reference art/source/characters/wizard/reference/approved-gothic-wizard.webp \
+            --revision "${{ github.sha }}"
+      - name: Upload standalone recorded ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: wizard-recorded-review
+          path: artifacts/wizard-native/WyrmForge_Wizard_Recorded_Review.zip
+          if-no-files-found: error
+          retention-days: 30
       - name: Upload editable source, validation report and art review stills
         if: always()
         uses: actions/upload-artifact@v4
