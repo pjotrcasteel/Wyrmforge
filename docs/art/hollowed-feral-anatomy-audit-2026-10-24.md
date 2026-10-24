@@ -209,3 +209,46 @@ passing CI as artistic approval. The owner's approval is required *before*
 cutting over either unapproved trial. Do not touch Ashling, #332 light engine,
 Town, wizard, or runtime C# behavior. Keep all rejected/source candidates out
 of production material atlases and retain both originals and diffs.
+
+## Broken LEFT leg — contact authored and opt-in Arena playback review (25 October)
+
+**Still a distinct UNAPPROVED art candidate in draft PR #333.** The owner
+reported that the dragged recovery looked better, not that the atlas/material
+cutover or mobile Hunt transitions were approved.
+
+- V1–V7 remain rejected historical attempts. The initial separate
+  `rigged-hollow-broken-leg-contact-authored` candidate passed Blender
+  sampling/render but was visually rejected for looking too healthy.
+- The next source `rigged-hollow-broken-leg-dragged-recovery` preserves the
+  source cape-free mesh, normal healthy-arm reach and 16 source pose cycle,
+  while independently authoring both feet, weight-bearing failure and a
+  toe-down lateral left-foot recovery. It was built with
+  `tools/sprite-lab/author-hollow-broken-leg-dragged-recovery.py`.
+- [True 8-direction 96px GIFs and moving comparisons](evidence/hollowed-broken-leg-dragged-recovery)
+  come from the *actual Blender skinned geometry*. The second render
+  [passed CI](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40135413094).
+  Rendering success is not biomechanical or owner acceptance.
+- The original 1536×768 PNG is copied **byte-identically** into
+  `wwwroot/art/enemies/hollow-rigged/review/broken-leg-left/walk.png`
+  with an explicit rejected/unapproved runtime manifest. Git source blob
+  SHA: `de61a7961418b9d9c5abb53899c2edf2ba3c7933`.
+- A real Canvas runtime review is wired by `hollow-leg-review.js` and
+  `hollow-sprites.js`. Opt in using
+  `/enemy-lab?kind=Hollow&seed=42&autoplay=true&cast=false&hollowLegReview=dragged`
+  on the **PR build**. The original bundled actor is the default on every
+  ordinary URL. Even in preview mode, **ONLY the standard Hollowed's
+  walking atlas changes**; neither damaged-arm variant, attack/death,
+  shared lighting engine nor C# simulation is modified.
+- Original and review-render source hashes, frame boundaries, atlas anchors,
+  enable/disable behavior and safe fallback are checked by
+  `tests/javascript/hollow-leg-review.test.mjs`. Dedicated CI:
+  `.github/workflows/hollow-leg-live-preview.yml`; Chromium snapshots
+  from the original `/enemy-lab` at 320/390px are NOT a substitute for
+  actual physical mobile performance testing.
+- **No material cutover:** the matching pose-derived normal/depth/caster
+  atlases must be generated from the accepted final geometry before
+  adoption by #332's shared GPU renderer. Also require injured pose to
+  remain physically coherent across runtime walking/turning, attack entry
+  and exit, death, actual travel speed and foot sliding. Preview may
+  show a visual transition back to standard attack and does not claim
+  to resolve that animation boundary.
