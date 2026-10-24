@@ -158,6 +158,24 @@ public sealed class ArenaEnvironmentStateTests
     }
 
     [TestMethod]
+    public void IgnitePropsInRadius_ProjectileDestroysBurningBarrel_StillDropsOnlyOneSalvage()
+    {
+        const int width = 950, height = 1550;
+        var map = new WyrmrealmMapState(seed: 1204);
+        var environment = ArenaEnvironmentState.Create(map.Seed, map.AvailableNodes[0]);
+        var barrel = environment.Snapshot().Props.First(prop => prop.Kind is "barrel" or "crate");
+        var at = new Vector2D(barrel.X * width, barrel.Y * height);
+
+        Assert.AreEqual(1, environment.IgnitePropsInRadius(at, width, height, 1));
+        Assert.AreEqual(0, environment.AdvanceBurningProps(.1));
+        Assert.IsTrue(environment.TryDamageProp(at, width, height, 1, 1000));
+        Assert.IsFalse(environment.TryDamageProp(at, width, height, 1, 1000));
+        Assert.AreEqual(0, environment.AdvanceBurningProps(10),
+            "A destroyed object must never burn down a second time.");
+        Assert.AreEqual(1, environment.Snapshot().Supplies.Count(s => s.Kind == "material:CharredScrap"));
+    }
+
+    [TestMethod]
     public void EnemyMaterialPickup_IsCollectedExactlyOnce()
     {
         const int width = 950, height = 1550;
