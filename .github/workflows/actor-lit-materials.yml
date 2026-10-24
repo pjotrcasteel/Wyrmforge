@@ -55,6 +55,7 @@ jobs:
           git add src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/ashling-rigged/*normal.png
           git add src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/ashling-rigged/*depth.png
           git add src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/ashling-rigged/*caster.png
+          git add src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/ashling-rigged/*eye-emissive.png
           git add src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/ashling-rigged/lit-material-manifest.json
           git diff --cached --check
           if ! git diff --cached --quiet; then
