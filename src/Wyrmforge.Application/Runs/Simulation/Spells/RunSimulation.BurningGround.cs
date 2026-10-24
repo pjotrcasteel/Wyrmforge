@@ -43,6 +43,10 @@ public sealed partial class RunSimulation
         burningGrounds.RemoveAll(ground => ground.IsExpired);
     }
 
+    private IReadOnlyList<BurningGroundRenderSnapshot> CreateBurningGroundSnapshots() =>
+        burningGrounds.Select(ground => new BurningGroundRenderSnapshot(
+            ground.Position.X, ground.Position.Y, ground.EffectiveRadius, ground.RemainingSeconds)).ToArray();
+
     private IReadOnlyList<EssenceBurstRenderSnapshot> CreateFieryAreaSnapshots()
     {
         var snapshots = new EssenceBurstRenderSnapshot[essenceBursts.Count + burningGrounds.Count];
