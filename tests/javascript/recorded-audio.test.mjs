@@ -44,7 +44,7 @@ test('new Fireball R1 does not reuse any legacy cast, impact or buildup recordin
     for (const entry of entries) {
         assert.match(entry.file, /^fireball-r1-(cast|hit)-[12]\.ogg$/);
         assert.equal(entry.license, 'Original');
-        assert.match(entry.source, /offline-authored/);
+        assert.equal(entry.source, 'tools/audio/build_fireball_r1.py');
         const bytes = readFileSync(new URL(entry.file, directory));
         assert.equal(bytes.subarray(0, 4).toString(), 'OggS');
         assert.equal(sha256(bytes), entry.sha256);
