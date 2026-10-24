@@ -57,6 +57,7 @@ public sealed partial class RunSimulation
         RegisterElementalImpact(position, projectile.Spell, projectile.Rank, projectile.Combination, projectile.Surge,
             enemyHit ? projectile.SplashRadius : 0);
         elementalImpacts[^1].FireballMutationMask = projectile.FireballMutationMask;
+        elementalImpacts[^1].FireballSourceId = projectile.FireballSourceId;
     }
 
     private void RegisterEnemyDeath(EnemyState enemy)
@@ -98,6 +99,7 @@ public sealed partial class RunSimulation
 
         public double SplashRadius { get; } = splashRadius;
         public int FireballMutationMask { get; set; }
+        public int FireballSourceId { get; set; }
 
         public double Duration { get; } = duration;
 

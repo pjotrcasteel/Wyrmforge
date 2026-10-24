@@ -15,6 +15,7 @@ internal sealed class BurningGroundState(Vector2D position, double damagePerTick
 
     public Vector2D Position { get; } = position;
     public int FireballMutationMask { get; init; }
+    public int FireballSourceId { get; init; }
 
     public double DamagePerTick { get; } = damagePerTick;
 

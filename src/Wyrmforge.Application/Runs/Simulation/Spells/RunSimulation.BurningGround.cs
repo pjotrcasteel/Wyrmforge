@@ -30,6 +30,7 @@ public sealed partial class RunSimulation
         burningGrounds.Add(new BurningGroundState(position, damagePerTick, duration, radius)
         {
             FireballMutationMask = projectile.FireballMutationMask,
+            FireballSourceId = projectile.FireballSourceId,
         });
     }
 
@@ -67,6 +68,7 @@ public sealed partial class RunSimulation
             ground.Position.X, ground.Position.Y, ground.EffectiveRadius, ground.RemainingSeconds)
         {
             FireballMutationMask = ground.FireballMutationMask,
+            FireballSourceId = ground.FireballSourceId,
         }).ToArray();
 
     private IReadOnlyList<EssenceBurstRenderSnapshot> CreateFieryAreaSnapshots()

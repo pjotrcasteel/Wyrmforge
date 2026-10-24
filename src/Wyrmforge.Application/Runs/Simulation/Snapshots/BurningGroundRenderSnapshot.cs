@@ -7,4 +7,5 @@ namespace Wyrmforge.Application.Runs.Simulation.Snapshots;
 public sealed record BurningGroundRenderSnapshot(double X, double Y, double Radius, double RemainingSeconds)
 {
     public int FireballMutationMask { get; init; }
+    public int FireballSourceId { get; init; }
 }
