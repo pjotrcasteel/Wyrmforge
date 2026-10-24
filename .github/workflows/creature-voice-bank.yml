@@ -1,0 +1,63 @@
+name: Creature voice bank — CC0 audition
+
+on:
+  push:
+    branches: [audio/phase1-menu-foley-audition]
+    paths:
+      - .github/workflows/creature-voice-bank.yml
+      - tools/audio/build_creature_voices.py
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  produce:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Install offline audio tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg unzip
+      - name: Download and verify original CC0 audio libraries
+        shell: bash
+        run: |
+          set -euo pipefail
+          path=tools/audio/creature-sources
+          mkdir -p "$path"
+          curl -fLsS --retry 3 --max-time 120 https://opengameart.org/sites/default/files/zombies.zip -o "$path/zombies.zip"
+          curl -fLsS --retry 3 --max-time 120 https://opengameart.org/sites/default/files/monster_sfx_pack.zip -o "$path/monsters.zip"
+          curl -fLsS --retry 3 --max-time 120 https://opengameart.org/sites/default/files/fire-1_0.ogg -o "$path/fire.ogg"
+          printf '%s  %s\n' \
+            '8096ceeb4dac35d9eef9bfe0cc6649778d1eebf141b208d394ac338b9e5be314' "$path/zombies.zip" \
+            'f39c5ae356b1fc01284057ee48e35ec1a52fcc84bfa959b77d0a696adc8459e4' "$path/monsters.zip" \
+            'f922929805bc6afdf0a35727fa3998033db544c1b6f62ed3aeab94341ed6ddeb' "$path/fire.ogg" | sha256sum -c -
+          unzip -q "$path/zombies.zip" 'zombies/*.wav' -d "$path"
+          unzip -q "$path/monsters.zip" 'monster_sfx_pack/*.wav' -d "$path"
+      - name: Render authored audio candidates with original source provenance
+        run: python3 tools/audio/build_creature_voices.py
+      - name: Check in the draft game OGGs and iPhone preview together
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/Wyrmforge.Presentation.Web/wwwroot/audio/recorded/manifest.json
+          git add src/Wyrmforge.Presentation.Web/wwwroot/audio/recorded/hollow-*.ogg
+          git add src/Wyrmforge.Presentation.Web/wwwroot/audio/recorded/ashling-*.ogg
+          git add docs/audio/previews/hollowed-ashling-voices.mp3 docs/audio/previews/hollowed-ashling-audition.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(audio): bundle CC0 Hollowed and Ashling sound auditions"
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
+      - name: Store audition clips for portable review
+        uses: actions/upload-artifact@v4
+        with:
+          name: wyrmforge-creature-audition
+          path: |
+            docs/audio/previews/hollowed-ashling-voices.mp3
+            docs/audio/previews/hollowed-ashling-audition.json
+          if-no-files-found: error
