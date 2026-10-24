@@ -24,10 +24,19 @@ jobs:
       - name: Install CPU Blender 4.5 and Pillow
         run: python -m pip install 'bpy==4.5.3' 'numpy>=1.26,<3' 'pillow>=10,<13'
       - name: Author genuinely new 16-pose feral locomotion in a separate .blend
-        run: python tools/sprite-lab/build-hollow-feral-candidate.py
+        run: |
+          if test -f art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-feral-v1-candidate/hollow-rigged.blend; then
+            echo "Preserving existing candidate .blend; source authoring is already committed."
+          else
+            python tools/sprite-lab/build-hollow-feral-candidate.py
+          fi
       - name: Evaluate real skinned mesh poses (not stretched sprite frames)
         run: |
-          python tools/sprite-lab/sample-hollow-rig.py -- art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-feral-v1-candidate
+          if test -f art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-feral-v1-candidate/sampled-walk.npz; then
+            echo "Preserving existing exact sampled .npz."
+          else
+            python tools/sprite-lab/sample-hollow-rig.py -- art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-feral-v1-candidate
+          fi
       - name: Render source-rig review GIF and contact poses
         run: python tools/sprite-lab/render-hollow-feral-review.py
       - name: Preserve the new editable rig and review GIF in the PR branch
@@ -41,8 +50,10 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-feral-v1-candidate/
           git add docs/art/evidence/hollowed-feral-v1-2026-10-24/
-          git commit -m "Preserve unapproved editable feral Hollowed rig and source motion evidence"
-          git push origin HEAD:feat/actor-lit-sprite-production
+          if ! git diff --cached --quiet; then
+            git commit -m "Preserve unapproved editable feral Hollowed rig and source motion evidence"
+            git push origin HEAD:feat/actor-lit-sprite-production
+          fi
       - name: Preserve editable .blend, sampled geometry and actual review frames
         if: always()
         uses: actions/upload-artifact@v4
