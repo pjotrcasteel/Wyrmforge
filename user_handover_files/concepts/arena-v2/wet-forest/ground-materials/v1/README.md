@@ -46,6 +46,16 @@ The **first twelve** Grass/Moss and Wet Mud source paintings now have a non-dest
 - GitHub Actions' **Wet Forest ground concept integrity** workflow uploads the `wet-forest-grass-mud-repeat-studies` review artifact for each successful PR run (30-day retention). The review pages must still be checked by a human.
 - Actual relightable albedo, independent puddle masks, physically meaningful reflection/roughness/normal maps, authored transition/geometry masks, and representative mobile shots must wait for the unified lighting interface in PR #332 and owner approval.
 
+## Verified original-source audit and seam-cut research (25 October 2026)
+
+**All 36 original source PNG SHA-256 digests matched the archive manifest**, and locally re-encoding each original at WebP quality 92 with Pillow method 6 reproduced all 36 committed WebP checksums exactly. The source evidence and per-family border screening are in [SOURCE-AUDIT-RESULTS.md](SOURCE-AUDIT-RESULTS.md).
+
+- 22/36 candidates have a **possible black-matte boundary**, based on a conservative brightness/edge screening rule; this means they need patch/path/shoreline handling rather than raw rectangular repetition. It is not a user art rejection.
+- The **six** Grass/Moss and **six** Wet Mud paintings are full-bleed, but lack proven seamless boundaries or light-neutral color.
+- `tools/art/quilt_ground_material_study.py` is an optional, deterministic **research-only** six-source seam-cut compositor. It compares naive repetition, periodic edge feathering, and seam-cut quilting for Grass/Moss and Wet Mud. It never writes to the source archive, modifies canonical game materials, certifies seamlessness, or implements lighting.
+- Local first-pass review suggests seam-cut sampling reduces obvious repeated landmarks relative to simple 2×2 repeats; future gameplay-scale inspection is still required.
+- GitHub Actions `visual-review` now includes unit tests, all-36 source diagnostics, the twelve earlier repeat-probe studies, and the two quilting comparisons in the same downloadable artifact. **Latest CI has not yet been verified green.**
+
 ## Approval/locking protocol
 **Do not rename this folder CANONICAL or update runtime references until the owner explicitly accepts
 these 36 images.** After approval, record approved image hashes in an immutable manifest
