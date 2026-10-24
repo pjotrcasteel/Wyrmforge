@@ -1,0 +1,54 @@
+name: Wizard Blender native review
+
+on:
+  pull_request:
+    paths:
+      - 'tools/sprite-lab/build_wizard_blender.py'
+      - 'tools/sprite-lab/wizard_motion.py'
+      - 'tools/sprite-lab/character_pipeline/**'
+      - 'tools/sprite-lab/validate_wizard_blend.py'
+      - '.github/workflows/wizard-blender-native.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-blend-and-preview:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download and verify official Blender 4.5 LTS
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://download.blender.org/release/Blender4.5"
+          archive="blender-4.5.15-linux-x64.tar.xz"
+          curl --fail --location --retry 3 --retry-delay 3 "$base/$archive" -o "$RUNNER_TEMP/$archive"
+          curl --fail --location --retry 3 --retry-delay 3 "$base/blender-4.5.15.sha256" -o "$RUNNER_TEMP/checksums.sha256"
+          cd "$RUNNER_TEMP"
+          grep " $archive$" checksums.sha256 | sha256sum --check
+          tar -xf "$archive"
+          echo "$RUNNER_TEMP/blender-4.5.15-linux-x64" >> "$GITHUB_PATH"
+      - name: Check Blender interpreter
+        run: blender --background --factory-startup --python-expr "import bpy; assert bpy.app.version[:2] == (4, 5)"
+      - name: Build native editable wizard source
+        shell: bash
+        run: |
+          mkdir -p artifacts/wizard-native
+          blender --background --factory-startup --threads 2 --python tools/sprite-lab/build_wizard_blender.py -- \
+            --output "$GITHUB_WORKSPACE/artifacts/wizard-native/wizard-editable.blend" --school fire
+      - name: Reopen and inspect rig and 4 actual Blender renders
+        shell: bash
+        run: |
+          blender --background artifacts/wizard-native/wizard-editable.blend --threads 2 \
+            --python tools/sprite-lab/validate_wizard_blend.py -- --output artifacts/wizard-native --render
+      - name: Upload editable source, validation report and art review stills
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wizard-blender-native
+          path: artifacts/wizard-native/
+          if-no-files-found: warn
+          retention-days: 30
