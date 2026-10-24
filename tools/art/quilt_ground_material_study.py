@@ -73,18 +73,22 @@ def mismatch(existing: np.ndarray, candidate: np.ndarray, top: bool, left: bool,
 def patch_quilt(
     images: list[np.ndarray], *, seed: int = 17, width: int = 720,
     patch_size: int = 180, overlap: int = 44, candidates: int = 36,
+    diversity_strength: float = 0.15,
 ) -> tuple[np.ndarray, list[int]]:
     if len(images) != 6 or any(i.shape != images[0].shape or i.ndim != 3 or i.shape[-1] != 3 for i in images):
         raise ValueError("Exactly six equal RGB sources are required")
     if not 4 <= overlap < patch_size // 2 or width < patch_size or any(min(i.shape[:2]) < patch_size for i in images):
         raise ValueError("Invalid quilt patch size/overlap")
-    if candidates <= 0:
-        raise ValueError("At least one candidate is required")
+    if candidates < len(images):
+        raise ValueError("Each source variant requires at least one candidate per patch")
+    if not 0 <= diversity_strength <= 1:
+        raise ValueError("Diversity strength must be between 0 and 1")
     canvas = np.zeros((width, width, 3), dtype=np.uint8)
     rng = np.random.default_rng(seed)
     step = patch_size - overlap
     grid = (width - patch_size + step - 1) // step + 1
     chosen = []
+    source_usage = np.zeros(len(images), dtype=np.int32)
     for row in range(grid):
         for col in range(grid):
             y, x = row * step, col * step
@@ -93,17 +97,30 @@ def patch_quilt(
                 continue
             target = canvas[y:y + height, x:x + span]
             top, left = row > 0, col > 0
-            best = None
-            for _ in range(candidates):
-                which = int(rng.integers(0, len(images)))
+            options = []
+            for attempt in range(candidates):
+                # Always offer at least one crop of every artwork before random samples.
+                which = attempt if attempt < len(images) else int(rng.integers(0, len(images)))
                 sample = images[which]
                 yy = int(rng.integers(0, sample.shape[0] - height + 1))
                 xx = int(rng.integers(0, sample.shape[1] - span + 1))
                 patch = sample[yy:yy + height, xx:xx + span]
                 cost = mismatch(target, patch, top, left, overlap)
-                if best is None or cost < best[0]:
-                    best = (cost, which, patch)
+                options.append((cost, which, patch))
+            if top or left:
+                absolute_best = min(option[0] for option in options)
+                # Avoid sacrificing an arbitrarily bad visible seam just to balance usage.
+                candidates_in_budget = [option for option in options
+                    if option[0] <= absolute_best * 1.45 + 100.0]
+                best = min(candidates_in_budget, key=lambda option: (
+                    option[0] + max(absolute_best, 100.0) * diversity_strength * source_usage[option[1]],
+                    option[0], option[1],
+                ))
+            else:
+                # No existing pixels to match for the first patch; choose by seeded RNG.
+                best = options[int(rng.integers(0, len(options)))]
             _, variant, patch = best
+            source_usage[variant] += 1
             chosen.append(variant)
             new_pixel = np.ones((height, span), dtype=bool)
             if top:
@@ -155,7 +172,18 @@ def comparison(images: list[np.ndarray], seed: int, family: str) -> tuple[Image.
         page.paste(Image.fromarray(content).resize((sample_px, sample_px), Image.Resampling.BOX), (x, 60))
         label.text((x, 21), text, fill="#efe8df")
     label.text((15, 489), f"{family}: unapproved research, not physically neutral albedo, not a gameplay capture", fill="#d0c5b6")
-    return page, {"family": family, "seed": seed, "selectedSourceIndices": variants, "sourceCount": 6, "approved": False}
+    usage = {f"{index + 1:02d}": variants.count(index) for index in range(len(images))}
+    return page, {
+        "family": family,
+        "seed": seed,
+        "selectedSourceIndices": variants,
+        "sourceCount": len(images),
+        "selectedSourceUsage": usage,
+        "sourcesRepresented": sum(count > 0 for count in usage.values()),
+        "quiltPolicy": "bounded-overlap-error-with-usage-penalty",
+        "diversityStrength": 0.15,
+        "approved": False,
+    }
 
 
 def create(source_root: Path, output: Path, seed: int = 17) -> None:
