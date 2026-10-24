@@ -85,7 +85,7 @@
       "staff": "gnarled wood, animal-carved totem and bound natural cord"
     }
   },
-  "framePath": "<sourceRoot>/<school>/<clip>/<direction>/<zero-based-3-digit-frame>.png",
+  "framePath": "art/source/characters/wizard/frames/<school>/<pass>/<clip>/<direction>/<zero-based-3-digit-frame>.png",
   "materialPasses": [
     "albedo",
     "normal",
@@ -111,5 +111,6 @@
       "zero-light black except declared emission",
       "alpha/normal/caster alignment"
     ]
-  }
+  },
+  "reviewStatus": "reference visual direction liked; no actual mage rig or runtime sprite frame artist-approved"
 }
