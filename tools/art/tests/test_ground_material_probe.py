@@ -102,5 +102,72 @@ class GroundMaterialProbeTests(unittest.TestCase):
                 PROBE.generate(root, root / "review", tile_px=64)
 
 
+
+AUDIT_PATH = Path(__file__).resolve().parents[1] / "audit_ground_source_art.py"
+AUDIT_SPEC = importlib.util.spec_from_file_location("audit_ground_source_art", AUDIT_PATH)
+AUDIT = importlib.util.module_from_spec(AUDIT_SPEC)
+AUDIT_SPEC.loader.exec_module(AUDIT)
+
+
+class GroundFullSourceAuditTests(unittest.TestCase):
+    def test_detects_bordered_black_islands_as_warnings_not_certification(self):
+        image = Image.new("RGB", (96, 96), (9, 11, 12))
+        from PIL import ImageDraw
+        draw = ImageDraw.Draw(image)
+        draw.rectangle((21, 21, 74, 74), fill=(108, 63, 35))
+        result = AUDIT.analyze_image(image)
+        self.assertTrue(result["possibleIsolatedPatchBlackMatte"])
+        self.assertGreater(result["nearBlackFrameFraction"], result["nearBlackCenterFraction"])
+        self.assertEqual(result["sourceHorizontalMeanRgbEdgeGap"], 0)
+        self.assertEqual(result["sourceVerticalMeanRgbEdgeGap"], 0)
+
+    def test_full_bleed_uniform_art_does_not_trigger_island_warning(self):
+        image = Image.new("RGB", (96, 96), (72, 45, 23))
+        result = AUDIT.analyze_image(image)
+        self.assertFalse(result["possibleIsolatedPatchBlackMatte"])
+        self.assertEqual(result["nearBlackFrameFraction"], 0)
+        self.assertEqual(result["sourceHorizontalMeanRgbEdgeGap"], 0)
+
+    def test_full_archive_is_immutable_and_hash_guarded(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / "source"
+            dest = Path(temp) / "output"
+            root.mkdir()
+            families = []
+            for fid in AUDIT.FAMILIES:
+                variants = []
+                for idx in range(1, 7):
+                    path = root / fid / f"variant-{idx:02d}.webp"
+                    path.parent.mkdir(exist_ok=True)
+                    Image.new("RGB", (64, 64), (80, 60, 40)).save(path, "WEBP", quality=92)
+                    variants.append({
+                        "id": f"{fid}-{idx:02d}", "file": f"{fid}/variant-{idx:02d}.webp",
+                        "size": [64, 64], "approval": "unreviewed",
+                        "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+                    })
+                families.append({"id": fid, "variants": variants})
+            (root / "manifest.json").write_text(json.dumps({
+                "status": "review-only-not-approved", "families": families,
+            }), encoding="utf-8")
+            originals = {str(p.relative_to(root)): hashlib.sha256(p.read_bytes()).hexdigest()
+                         for p in root.rglob("*") if p.is_file()}
+            report = AUDIT.audit(root, dest)
+            self.assertEqual(len(report["variants"]), 36)
+            self.assertEqual(report["sourceApproval"], "none")
+            self.assertEqual(report["runtimeMaterialsCreated"], 0)
+            self.assertTrue((dest / "source-audit.md").is_file())
+            self.assertTrue((dest / "source-audit.json").is_file())
+            self.assertEqual(
+                originals,
+                {str(p.relative_to(root)): hashlib.sha256(p.read_bytes()).hexdigest()
+                 for p in root.rglob("*") if p.is_file()},
+            )
+            with self.assertRaises(ValueError):
+                AUDIT.audit(root, root / "wrong-location")
+            corrupted = root / "grass-moss" / "variant-01.webp"
+            corrupted.write_bytes(b"CORRUPTED")
+            with self.assertRaises(ValueError):
+                AUDIT.audit(root, dest)
+
 if __name__ == "__main__":
     unittest.main()
