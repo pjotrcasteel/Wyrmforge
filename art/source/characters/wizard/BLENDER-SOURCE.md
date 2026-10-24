@@ -70,3 +70,5 @@ atlas manifests and shared `LitSprite` contract under PR #332.
 The eight-direction review rotates the rig, all IK controls, cape, beard and staff
 **together**; source images use a reference-lit authoring camera and are NOT
 production albedo or normal-map atlases.
+
+The Blender staff-head materials now animate a **preview-only** emission strength during wind-up, release and recovery. The game light illuminating robe, enemies and terrain still belongs to PR #332, not a mage-only renderer.

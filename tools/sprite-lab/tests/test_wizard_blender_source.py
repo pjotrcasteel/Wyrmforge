@@ -11,7 +11,7 @@ class BlenderSourceContractTests(unittest.TestCase):
         for feature in ['WizardRig','Armature','CLOTH','IK','vertex_group_mass',
                         'use_self_collision','source actions','bpy.ops.wm.save_as_mainfile',
                         'Same camera / all 8 directions','Six school staffs',
-                        'World-anchored','Weighty coat','WizardActorDirectionPivot','eight-review','head','beard.root','beard.tip']:
+                        'World-anchored','Weighty coat','WizardActorDirectionPivot','eight-review','Emission Strength','animate_staff_emission','head','beard.root','beard.tip']:
             self.assertIn(feature.lower(),source.lower(),feature)
     def test_never_stand_alone_mage_renderer(self):
         source=SOURCE.read_text()

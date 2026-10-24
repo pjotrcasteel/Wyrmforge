@@ -103,6 +103,7 @@ class WizardBuilder:
         self.make_staffs()
         self.ik_targets = self.create_ik()
         self.make_actions()
+        self.animate_staff_emission()
         self.make_direction_pivot()
         self.make_preview_scene()
 
@@ -576,6 +577,26 @@ class WizardBuilder:
         for name,position in [('foot.L',foot_l),('foot.R',foot_r),
                                ('hand.L',grip_l),('hand.R',grip_r)]:
             self.ik_targets[name].location=position
+
+    def animate_staff_emission(self):
+        """Authoring preview material. The real scene LightEmitter belongs to PR #332.
+
+        Only staff-head/rune materials emit. All normal world albedo remains neutral.
+        The material charge starts on cast windup, peaks at release and returns to
+        zero through recovery; this is not a working runtime GPU-lighting integration.
+        """
+        ranges=json.loads(bpy.context.scene['WyrmForgeWizardClipRanges'])
+        for school,mat in self.staff_emit.items():
+            bsdf=mat.node_tree.nodes.get('Principled BSDF')
+            color=rgb(SCHOOLS[school])
+            bsdf.inputs['Emission Color'].default_value=(*color,1)
+            emission=bsdf.inputs['Emission Strength']
+            for clip, (first,last) in ranges.items():
+                for index,frame in enumerate(range(first,last+1)):
+                    charge=cast_progress(index)[2] if clip=='cast' else 0.0
+                    emission.default_value=charge*1.6
+                    emission.keyframe_insert(data_path='default_value',frame=frame)
+            emission.default_value=0.0
 
     def make_direction_pivot(self):
         """Rotate body, cloth, props and ALL IK targets as one authored character.
