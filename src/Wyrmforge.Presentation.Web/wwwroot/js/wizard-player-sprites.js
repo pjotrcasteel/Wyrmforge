@@ -25,10 +25,14 @@ export function isApprovedWizardManifest(manifest) {
 export function createWizardPlayerSprites({
     base=new URL('../art/characters/wizard/fire/',import.meta.url),
     renderer=createRiggedSpriteRenderer({kind:-1,base,fallbackProfile:{}}),
+    // The approved native bundle does not exist yet. Opt-in ONLY after adding
+    // the complete reviewed image/material set, preventing 404s in real Hunts.
+    enabled=false,
 }={}) {
     let approved=false;
     const ready=()=>approved&&renderer.ready();
     const preload=async()=>{
+        if(!enabled)return false;
         try {
             const loaded=await renderer.preload();
             approved=Boolean(loaded && isApprovedWizardManifest(renderer.getManifest()));
