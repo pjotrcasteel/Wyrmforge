@@ -333,7 +333,7 @@ class WizardBuilder:
         self.sphere('Old hat leather band',(0,0,2.11),(.248,.168,.031),
                     self.pal['leather'],'head',segments=36,rings=6)
 
-    def make_cloth_panel(self, name, verts, faces, uvs, mat, anchor_bone, row_count, width_count):
+    def make_cloth_panel(self, name, verts, faces, uvs, mat, anchor_bone, row_count, width_count, simulate=True):
         ob=self.mesh(name,verts,faces,mat,self.garment,uvs)
         g=ob.vertex_groups.new(name=anchor_bone)
         pin=ob.vertex_groups.new(name='ClothPins')
@@ -358,6 +358,10 @@ class WizardBuilder:
                     pin.add([idx],.72+.16*(1.0-t)**2,'REPLACE')
         ar=ob.modifiers.new('Armature carries sewn waistband','ARMATURE')
         ar.object=self.arm
+        if not simulate:
+            # Inner robe remains body-skinned and visually stable. Only detached
+            # hem flaps and the separate rear cape receive free cloth dynamics.
+            return ob
         cloth=ob.modifiers.new('Dynamic cloth | body collision','CLOTH')
         cloth.settings.quality=12
         is_coat='coat' in name.lower()
@@ -401,8 +405,29 @@ class WizardBuilder:
                     # Outer cloth normal follows +radial direction (away from legs).
                     # Previous angular->downward winding pointed INWARD.
                     faces.append((p,p+n,p+n+1,p+1))
-        self.make_cloth_panel('Open-front weighty coat / continuous physics',verts,faces,uv,
-                              self.pal['robe'], 'pelvis', rows,n)
+        self.make_cloth_panel('Open-front weighty coat / skinned foundation',verts,faces,uv,
+                              self.pal['robe'], 'pelvis', rows,n,simulate=False)
+        # Two independent light hem flaps carry the secondary physics; their
+        # motion cannot collapse the entire torso/leg silhouette.
+        for side in (-1,1):
+            cols=10;fr=14;flap_verts=[];flap_uv=[];flap_faces=[]
+            for j in range(fr):
+                t=j/(fr-1)
+                for i in range(cols):
+                    u=i/(cols-1)
+                    x=side*(.115+(.17+.045*t)*u)
+                    y=-.165-.185*t+.018*math.sin(u*2*math.pi)*(t*t)
+                    z=1.045-.795*t+.027*math.sin(u*math.pi*3)*(t*t)
+                    flap_verts.append((x,y,z))
+                    flap_uv.append((u,t))
+                    if i<cols-1 and j<fr-1:
+                        k=j*cols+i
+                        flap_faces.append((k,k+cols,k+cols+1,k+1) if side>0 else
+                                          (k,k+1,k+cols+1,k+cols))
+            self.make_cloth_panel('Weighty coat hem panel '+('L' if side<0 else 'R'),
+                                  flap_verts,flap_faces,flap_uv,
+                                  self.pal['robe_raised' if side<0 else 'robe_shadow'],
+                                  'pelvis',fr,cols)
         # A second loose cape, pinned to shoulders and ending behind the boots.
         cols=26; cr=16;verts=[];uv=[];faces=[]
         for j in range(cr):
@@ -427,7 +452,7 @@ class WizardBuilder:
                     (.30,.217,.058),self.pal['leather'],'pelvis')
         # Sew a darker, irregular edge into the same dynamic coat mesh. Material
         # indexing remains attached to the cloth vertices during simulation.
-        coat=bpy.data.objects['Open-front weighty coat / continuous physics']
+        coat=bpy.data.objects['Open-front weighty coat / skinned foundation']
         coat.data.materials.append(self.pal['robe_shadow'])
         for polygon in coat.data.polygons:
             lower=max(coat.data.vertices[index].co.z for index in polygon.vertices)
