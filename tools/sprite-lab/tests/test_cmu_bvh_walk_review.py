@@ -1,6 +1,8 @@
 import unittest
 import tempfile
 from pathlib import Path
+import sys
+sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from cmu_bvh_walk_review import load_bvh,pose,render
 
 class MotionTests(unittest.TestCase):
