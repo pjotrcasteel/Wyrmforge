@@ -5,7 +5,7 @@
 
 <main class="gpu-proof">
     <h1>Shared light engine</h1>
-    <p>G0–G1 isolated GPU proof. Town and Hunts are unchanged. Actor normal/depth exports and original oak validation remain pending.</p>
+    <p>G0–G1 isolated GPU proof. Town and Hunts are unchanged. Original oak geometry and exported walk-pose normals are under review. Production adoption remains pending.</p>
     <nav aria-label="Light inspection">
         <label>Environment <select @bind="profile" @bind:after="Sync"><option>night</option><option>day</option><option>auto</option><option>zero</option></select></label>
         <label><input type="checkbox" @bind="fireball" @bind:after="Sync" /> Fireball</label>
@@ -15,6 +15,7 @@
         <label><input type="checkbox" @bind="shadows" @bind:after="Sync" /> Shadows</label>
         <label><input type="checkbox" @bind="reflections" @bind:after="Sync" /> Direct specular</label>
         <label>Light position <input type="range" min="0" max="100" @bind="progress" @bind:event="oninput" @bind:after="Sync" /></label>
+        <label><input type="checkbox" @bind="animate" @bind:after="Sync" /> Animate walk</label>
         <label>Walk frame <input type="range" min="0" max="15" @bind="frame" @bind:event="oninput" @bind:after="Sync" /></label>
     </nav>
     @if (error is not null) { <p role="alert">@error</p> }
@@ -28,6 +29,7 @@
     private string profile = "night";
     private string? error;
     private bool fireball = true, torch = true, spot = true, rune, shadows = true, reflections = true;
+    private bool animate;
     private int progress = 25, frame;
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -42,7 +44,7 @@
     private async Task Sync()
     {
         if (module is not null) await module.InvokeVoidAsync("configureProof", canvas,
-            new { profile, fireball, torch, spot, rune, shadows, reflections, progress = progress / 100.0, frame });
+            new { profile, animate, fireball, torch, spot, rune, shadows, reflections, progress = progress / 100.0, frame });
     }
     public async ValueTask DisposeAsync()
     {

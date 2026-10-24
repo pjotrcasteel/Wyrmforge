@@ -2,6 +2,7 @@
 import * as T from './vendor/three.module.js';
 import { LightingEngine } from './engine.js';
 import { environmentProfile } from './registry.js';
+import { createSpriteAnimationState, updateSpriteAnimation } from '../sprite-animation.js';
 import { spriteFrame, spritePlaneGeometry } from './lit-sprite.js';
 import { GROUND_ATLAS_URL, buildGroundQuiltAtlas, drawReferenceGroundBoard, drawGroundMaterialTransitions } from '../arena-materials.js';
 import { groundFoundationBoard, FOUNDATION_COLUMNS, FOUNDATION_ROWS, FOUNDATION_WIDTH, FOUNDATION_HEIGHT } from '../arena-ground-foundation.js';
@@ -36,30 +37,37 @@ async function actorResources(engine, id, folder) {
     const clip = manifest.clips.walk;
     const texture = await new T.TextureLoader().loadAsync(new URL(clip.image, base).href);
     engine.registerTexture(id, texture);
+    const normal = await new T.TextureLoader().loadAsync(new URL(`../../art/lighting-proof/${id}-walk-normal.png`, import.meta.url).href);
+    engine.registerTexture(`${id}-normal`, normal, false);
     engine.registerGeometry(id, spritePlaneGeometry(T, clip));
+    manifest.animationProfile = await (await fetch(new URL('animation-profile.json', base))).json();
     return manifest;
 }
 export async function initializeProof(canvas) {
     if (states.has(canvas)) return;
     const engine = new LightingEngine(canvas);
     const state = { engine, alive: true, options: { profile: 'night', fireball: true, torch: true, spot: true,
-        rune: false, shadows: true, reflections: true, progress: .25, frame: 0 }, manifests: {} };
+        rune: false, shadows: true, reflections: true, progress: .25, frame: 0, animate: false }, manifests: {}, animation: {}, samples: {} };
     states.set(canvas, state);
     try {
         engine.registerGeometry('box', new T.BoxGeometry(1, 1, 1));
         engine.registerGeometry('plane', new T.PlaneGeometry(1, 1));
+        const water = new T.PlaneGeometry(1, 1, 40, 32);
+        const vertices = water.attributes.position;
+        for (let i = 0; i < vertices.count; i++) vertices.setZ(i, .007 * Math.sin(vertices.getX(i) * 42 + vertices.getY(i) * 24));
+        water.computeVertexNormals(); engine.registerGeometry('water', water);
         engine.registerGeometry('sphere', new T.SphereGeometry(.12, 8, 6));
         engine.registerTexture('ground', await approvedGround());
         for (const [id, folder] of [['hollowed', 'hollow-rigged'], ['ashling', 'ashling-rigged']])
-            state.manifests[id] = await actorResources(engine, id, folder);
+            { state.manifests[id] = await actorResources(engine, id, folder); state.animation[id] = createSpriteAnimationState(); }
         if (!state.alive) { engine.dispose(); return; }
         state.materials = [material('terrain', '#ffffff', .9, { albedo: 'ground' }), material('stone', '#777b80'),
             material('wood', '#68503a'), material('water', '#1a3034', .11, { specular: 1 }),
-            material('hollowed', '#ffffff', .8, { albedo: 'hollowed' }), material('ashling', '#ffffff', .9, { albedo: 'ashling' }),
+            material('hollowed', '#ffffff', .8, { albedo: 'hollowed', normal: 'hollowed-normal' }), material('ashling', '#ffffff', .9, { albedo: 'ashling', normal: 'ashling-normal' }),
             material('flame', '#321200', .7, { emission: '#ff792d', emissionIntensity: 2 }),
             material('rune', '#124138', .6, { emission: '#35edbc', emissionIntensity: 1 })];
         state.objects = [object('approved-ground', 'plane', 'terrain', [0, 0, 0], [16, 20, 1]),
-            object('puddle', 'plane', 'water', [1.2, -1.4, .015], [3.3, 2.7, 1]),
+            object('puddle', 'water', 'water', [1.2, -1.4, .015], [3.3, 2.7, 1]),
             object('wall', 'box', 'stone', [-2, 2.5, 1.1], [3.8, .35, 2.2]),
             object('roof', 'box', 'wood', [-2, 2.4, 2.3], [4.2, 1.8, .2], { rotation: [.13, 0, 0] }),
             object('foreground-post', 'box', 'wood', [2.5, 0, .9], [.16, .16, 1.8]),
@@ -69,6 +77,11 @@ export async function initializeProof(canvas) {
             // Existing actor reused to test the Town receiver seam, not proposed NPC artwork.
             object('npc-binding-proxy', 'hollowed', 'hollowed', [-2.2, 1.5, 0], [.7, .7, .7]),
             object('lantern-core', 'sphere', 'flame', [-2, 1.5, 1.7])];
+        const oak = await originalOak(engine);
+        if (!state.alive) { engine.dispose(); return; }
+        state.objects.push(...oak.objects); state.materials.push(...oak.materials);
+        state.resize = new ResizeObserver(() => { if (state.alive) state.engine.render(); });
+        state.resize.observe(canvas);
         canvas.dataset.ready = 'true';
         configureProof(canvas, {});
     } catch (error) {
@@ -79,11 +92,12 @@ export function configureProof(canvas, options) {
     const state = states.get(canvas); if (!state?.materials || !state.alive) return;
     Object.assign(state.options, options);
     const p = state.options, zero = p.profile === 'zero';
-    const firePosition = [-3.5 + p.progress * 7, -2, 1.8];
-    const lights = [light('fireball', firePosition, '#ff8d42', 16, 'point', 10),
+    const firePosition = [-3.5 + p.progress * 7, p.behind ? 4 : -1.6, p.behind ? 3.6 : 2.4];
+    const environment = environmentProfile(p.profile);
+    const lights = [light('fireball', firePosition, '#ff8d42', 32, 'point', 10),
         light('torch', [-2, 1.4, 1.7], '#ffc27a', 10, 'point', 5),
         light('lantern-beam', [3, -1, 3.5], '#adc3e9', 16, 'spot', 8),
-        light('moon', [-4, -3, 8], '#99b4dc', p.profile === 'day' ? 1.2 : .035, 'directional', 1)];
+        light('moon', [-4, -3, 8], '#99b4dc', environment.ambient > .1 ? 1.2 : .035, 'directional', 1)];
     lights[0].enabled = p.fireball; lights[1].enabled = p.torch; lights[2].enabled = p.spot;
     // New emitter/prop requires descriptor data only; engine source never mentions rune.
     if (p.rune) lights.push(light('rune', [2, -2, .7], '#48ffd1', 8, 'point', 2));
@@ -93,19 +107,49 @@ export function configureProof(canvas, options) {
     if (p.rune) objects.push(object('rune-prop', 'box', 'rune', [2, -2, .25], [.35, .35, .5]));
     for (const o of objects) {
         const id = o.id === 'npc-binding-proxy' ? 'hollowed' : o.id;
-        if (state.manifests[id]) o.frame = spriteFrame(state.manifests[id], { clip: 'walk', frame: p.frame % 16, direction: 'S' });
+        if (state.manifests[id]) o.frame = spriteFrame(state.manifests[id], { clip: 'walk', frame: p.animate ? state.samples[id]?.frame ?? 0 : p.frame % 16, direction: 'S' });
     }
     const materials = state.materials.map(m => ({ ...m, reflection: p.reflections ? m.reflection : 'off',
         emissionIntensity: m.id === 'flame' && !p.torch && !p.fireball ? 0 : m.emissionIntensity }));
     // Disabling a fixture extinguishes its source surface too.
     if (!p.torch) objects.splice(objects.findIndex(o => o.id === 'lantern-core'), 1);
-    state.engine.apply({ version: 1, time: 0, lights, materials, objects, environment: environmentProfile(p.profile) });
+    state.engine.apply({ version: 1, time: 0, lights, materials, objects, environment });
     state.engine.render();
     canvas.dataset.diagnostics = JSON.stringify(state.engine.diagnostics());
+    if (p.animate && !state.pending && !document.hidden) {
+        state.pending = requestAnimationFrame(time => {
+            state.pending = 0;
+            if (!state.alive) return;
+            const delta = Math.min(.1, Math.max(0, (time - (state.lastTime ?? time)) / 1000));
+            state.lastTime = time;
+            for (const [id, manifest] of Object.entries(state.manifests)) state.samples[id] = updateSpriteAnimation(
+                state.animation[id], manifest.animationProfile, { deltaSeconds: delta,
+                    distance: delta * manifest.animationProfile.locomotion.stride * .75, moving: true, direction: 'S' });
+            configureProof(canvas, {});
+        });
+    }
+    if (!p.animate) state.lastTime = null;
 }
 export function proofPixels(canvas) { const e = states.get(canvas).engine; e.render(); return [...e.pixels()]; }
 export function proofDiagnostics(canvas) { return states.get(canvas).engine.diagnostics(); }
 export function disposeProof(canvas) {
     const state = states.get(canvas); if (!state) return;
-    state.alive = false; state.engine.dispose(); states.delete(canvas);
+    state.alive = false; cancelAnimationFrame(state.pending); state.resize?.disconnect(); state.engine.dispose(); states.delete(canvas);
+}
+
+async function originalOak(engine) {
+    const base = new URL('../../art/lighting-proof/', import.meta.url);
+    const meta = await (await fetch(new URL('oak.json', base))).json();
+    const bytes = await (await fetch(new URL('oak.bin', base))).arrayBuffer();
+    const objects = [], materials = [];
+    for (const group of meta.groups) {
+        const geometry = new T.BufferGeometry();
+        const data = new T.InterleavedBuffer(new Float32Array(bytes, group.byteOffset, group.vertexCount * 6), 6);
+        geometry.setAttribute('position', new T.InterleavedBufferAttribute(data, 3, 0));
+        geometry.setAttribute('normal', new T.InterleavedBufferAttribute(data, 3, 3));
+        engine.registerGeometry(group.id, geometry);
+        materials.push(material(group.id, group.color, .94));
+        objects.push(object(group.id, group.id, group.id, [2.3, 3.4, 0], [.48, .48, .48]));
+    }
+    return { objects, materials };
 }

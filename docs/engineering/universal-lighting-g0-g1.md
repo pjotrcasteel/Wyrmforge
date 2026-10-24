@@ -99,3 +99,28 @@ incomplete until original oak leaf-on-leaf shadows, authored actor material
 passes and every required diagnostic/mobile comparison have passed. Physical
 iOS/Android profiling and artistic approval cannot be inferred from CI or
 software-rendered Chromium screenshots.
+
+### G1 first geometry/material checkpoint
+
+Original #307 oak geometry now has six material groups and a preserved editable
+.blend. Leaf polygons cast real depth shadows, not ground silhouette projections.
+The source uses bent geometric leaves; alpha-card foliage remains an additional
+acceptance test. Procedural bark colors currently use authored ramp midpoints.
+
+Both actors have 128 walking normal frames exported from exact hash-checked
+original sampled poses. Original color/alpha remain immutable. Normal silhouettes
+match with minimum IoU 0.9857 Hollowed / 0.9853 Ashling; edge disagreements use
+neutral normals and the exact original alpha. Their shared alpha-clipped casters
+follow the same frame as albedo/normals, but are not volumetric body meshes.
+Attack/death material exports remain pending. Opt-in animation uses the existing
+shared `sprite-animation.js` sampler, not a new actor-specific renderer.
+
+Water has rippled geometric normals and shared direct-light specular. This is
+not a scene reflection capture. Town corner is diagnostic wall/roof/post plus
+an existing actor proxy, not replacement Town art. No production scene migrated.
+
+Prior checkpoint: Validate Wyrmforge and Browser smoke passed on 0ad9a5ed.
+Local JavaScript suite: 384 passing tests. The initial GPU framebuffer check
+was black; full-frame 320/390px checks and published-app CI are added here.
+Physical iOS/Android profiling, full diagnostic views and G1 artistic acceptance
+remain pending. This PR must remain draft until its remaining gates are met.
