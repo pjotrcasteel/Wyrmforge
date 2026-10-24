@@ -45,19 +45,49 @@ The [actor-material export workflow](../../.github/workflows/actor-lit-materials
 
 The actor-review adapter takes `litActorSample` from `lighting/actor-asset-contract.js`; it reuses #332's unchanged `LightingEngine`, not a creature-specific shader. Alpha masks are converted to planar geometry by `actor-shadow-mask.js`, avoiding shadow-casting transparent bounding rectangles. Future actor/wizard adoption requires the same atlas/clip/pivot/UV contract. Note that G1 still owns final emission mask sampling, authored depth usage and scene-wide integration.
 
-## Hollowed creative movement candidate — **not approved**
+## Hollowed running locomotion — physical motion capture candidate (UNAPPROVED)
 
-The existing Hollowed shuffle does not convey the intended relentless feral infected. The **separate** source script `tools/sprite-lab/build-hollow-feral-candidate.py` takes the existing weighted mesh and authors a stronger stooped, head-led stride with running legs and controlled arms-back pressure. The original `rigged-pixel-v3` source and all current runtime atlases remain untouched. Its new `.blend`, skinned samples, 16-pose contact sheet and original-rig animated GIF are review evidence, not production. The source script's companion renderer and [CI review workflow](../../.github/workflows/hollow-feral-source-review.yml) preserve and reproduce these.
+The accepted `rigged-pixel-v3` original shuffle and all shipping runtime
+`walk.png` images remain unchanged. The deliberately attempted procedural
+feral arm swings (versions 1–10) were rejected: they created puppet elbows,
+floppy wrists, awkward knee recovery or excessively rigid arms. Their history
+is preserved in Git under commit `5ec8a40aac7cea61e8c8c002b8e20277a71c64dc`;
+rejected files are absent from the current PR diff to keep it focused.
 
-**Creative movement research:** production discussions of [World War Z's motion capture and keyframing](https://www.postmagazine.com/publications/2013/july-1-2013/vfx-creating-a-zombie-apocalypse-for-world-war-z/) and [infected silhouette/arms-back physicality](https://www.fxguide.com/fxfeatured/zombie-warfare-world-war-z/) inform the *motion principles*, not copying characters, images or animation.
+The new physically captured reference is **CMU Graphics Lab subject 09 motion
+01: run**, imported from the original unmodified 120 Hz BVH source in
+`art/source/enemies/hollow/reference/CMU-09_01-run.bvh`.
+The Blender retargeter is `tools/sprite-lab/build-hollow-mocap-run.py`, and
+preserves the existing original model's joint lengths, mesh and authored bone
+weights. It selects an actual 88-frame source gait period (fit error ≈0.004)
+and retargets it into **16 cyclic 22fps keyed poses** using real marker
+trajectories, not arm-wrist/ankle oscillation formulas.
 
-Owner must inspect the GIF and corresponding native pixel/gameplay-speed motion before adoption. The proposed gait's foot contact, full eight directions and action-to-locomotion compatibility must be individually verified with production pixels. This artistic change is intentionally segregated so Ashling remains untouched.
+The **separate** editable result and sampled pose data are in
+`art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-mocap-run-v1-candidate/`.
+The originally approved .blend files and all #332 original-source normal maps
+are left untouched.
+
+- Native visual evidence: `docs/art/evidence/hollowed-mocap-run-v1-2026-10-24/`.
+- Full 8-direction 128-frame candidate atlas: `candidate-walk-eight-directions.png`.
+- The review-only GIFs for all eight compass directions are `n-animation.gif`
+  through `nw-animation.gif` at the same location.
+- Reproducible `tools/sprite-lab/render-hollow-mocap-run.py` and
+  `render-hollow-mocap-directions.py` reproduce the 3D source motion and
+  pixel sheets. `hollow-mocap-run-review.yml` verifies source provenance,
+  all frames, alpha margins, knee/elbow motion and 8-way images.
+
+Source license and attribution are documented next to the BVH. Artistic
+sign-off remains outstanding. No new run animation is in the actual Hunt,
+and **do not apply the original G1 walk normal atlas to this differently
+posed candidate**. Export new source-synchronous normals/depth/caster data
+from the accepted rig after motion approval.
 
 ## Final acceptance blockers
 
 1. Shared G1 renderer must bind the sourced emissive mask and height/depth when those capabilities land **in #332**, then prove synchronized source changes on **attack and death**, not just walk.
 2. Inspect actual clips and masks, no drift/teleport or animation timing discontinuity, plus 320/390 review pictures, zero-world and moving source/shadow with accepted pixel scale.
-3. Review Hollowed feral candidate (and its eight-direction full render) before *any* substitution. Existing owner-approved silhouettes and colours remain the baseline.
+3. Review the physically retargeted CMU Hollowed candidate, all 16 frames in all eight directions, before *any* substitution. Existing owner-approved silhouettes and colours remain the baseline.
 4. Verify real Hunt integration, real device sampling, shadows/occlusion under the full scene, and accessibility of attack telegraphs. G1 lab tests alone are not final production proof.
 5. Review whether authored idle/hurt clips become necessary under confirmed gameplay animation signals. Current contract has no fake idle or hurt.
 
