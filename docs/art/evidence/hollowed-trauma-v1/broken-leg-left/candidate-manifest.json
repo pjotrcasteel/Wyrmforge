@@ -1,0 +1,65 @@
+{
+  "source": "CMU-09_01-run.bvh",
+  "variant": "broken-leg-left",
+  "frames": 16,
+  "fps": 25,
+  "directions": [
+    {
+      "direction": "N",
+      "row": 0,
+      "rotationDegrees": 214.5085229876684,
+      "flipX": false
+    },
+    {
+      "direction": "NE",
+      "row": 1,
+      "rotationDegrees": 169.5085229876684,
+      "flipX": false
+    },
+    {
+      "direction": "E",
+      "row": 2,
+      "rotationDegrees": 124.50852298766841,
+      "flipX": false
+    },
+    {
+      "direction": "SE",
+      "row": 3,
+      "rotationDegrees": 79.50852298766841,
+      "flipX": false
+    },
+    {
+      "direction": "S",
+      "row": 4,
+      "rotationDegrees": 34.508522987668414,
+      "flipX": false
+    },
+    {
+      "direction": "SW",
+      "row": 5,
+      "rotationDegrees": -10.491477012331586,
+      "flipX": false
+    },
+    {
+      "direction": "W",
+      "row": 6,
+      "rotationDegrees": -55.491477012331586,
+      "flipX": false
+    },
+    {
+      "direction": "NW",
+      "row": 7,
+      "rotationDegrees": -100.49147701233159,
+      "flipX": false
+    }
+  ],
+  "anchor": [
+    48,
+    72
+  ],
+  "cell": 96,
+  "artApproval": false,
+  "lightingTexturesApproval": false,
+  "runtimeAtlasReplaced": false,
+  "status": "UNAPPROVED genuine edited rig/mesh. Original source and game preserved."
+}
