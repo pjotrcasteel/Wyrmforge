@@ -44,5 +44,8 @@ test('Nexus uses the same projectile morphology and ground fire needs a real C# 
     drawBurningGround(ctx, { x: 5, y: 5, radius: 68, remainingSeconds: 0 });
     assert.equal(ctx.rectangles, before);
     drawBurningGround(ctx, { x: 5, y: 5, radius: 68, remainingSeconds: 2.4 });
-    assert.equal(ctx.rectangles, before);
+    assert.ok(ctx.rectangles > before, 'A live C# hazard must have visible burnt material and ember pixels.');
+    const after = ctx.rectangles;
+    drawBurningGround(ctx, { x: 5, y: 5, radius: 68, remainingSeconds: 0 });
+    assert.equal(ctx.rectangles, after, 'Expired ground never draws a phantom burning area.');
 });
