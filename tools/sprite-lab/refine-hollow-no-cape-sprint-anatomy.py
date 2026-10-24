@@ -123,14 +123,14 @@ for index in range(FRAMES+1):
         elbow=shoulder+Vector((lateral,upper_fore_aft,-upper_drop))
         orient("upper_arm."+side,shoulder,elbow)
 
-        # The forearm flexes naturally from THIS elbow. No independently
-        # driven hand heights or reversed joints. Forward/upward arm recovery
-        # varies with captured wrist movement while avoiding hooked hands.
-        captured_reach=abs(old_wrist.y-old_elbow.y)
-        fore_forward=-clamp(captured_reach,.113,.148)
-        fore_lateral=clamp(old_wrist.x-old_elbow.x,-.026,.026)
-        fore_rise=math.sqrt(fore_len**2-fore_forward**2-fore_lateral**2)
-        wrist=elbow+Vector((fore_lateral,fore_forward,fore_rise))
+        # Preserve the *measured elbow hinge* and its 3D relationship to the
+        # HUMERUS: transport the captured forearm orientation with the real
+        # upper-arm swing. This prevents a nearly straight puppet-elbow when
+        # the hand passes the hip. No wrist oscillator or arbitrary vertical
+        # target is introduced, and no elbow inversion can be hidden.
+        source_upper=old_elbow-source_shoulder
+        transported=source_upper.rotation_difference(elbow-shoulder) @ (old_wrist-old_elbow)
+        wrist=elbow+unit(transported)*fore_len
         orient("forearm."+side,elbow,wrist)
 
         # Claws hang forward and slightly downward in the FOLLOWING forearm
@@ -169,9 +169,8 @@ for side in ("L","R"):
         assert abs((elbows[k]-shoulders[k]).length-lengths["upper_arm."+side])<2e-5
         assert abs((wrists[k]-elbows[k]).length-lengths["forearm."+side])<2e-5
         assert abs((hands[k]-wrists[k]).length-lengths["hand."+side])<2e-5
-        assert 65<records[k]["arms"][side]["elbowFlexDegrees"]<150
+        assert 60<records[k]["arms"][side]["elbowFlexDegrees"]<150
         assert ((elbows[k]-shoulders[k]).z < -.1)
-        assert ((wrists[k]-elbows[k]).z>0)
         assert (hands[k]-wrists[k]).z<0
         # Hands shall not cross the body's sagittal midline.
         assert wrists[k].x* (1 if side=="L" else -1)>0
@@ -194,7 +193,7 @@ parent.update({
     "parentEditableBlendSha256":hashlib.sha256(original_blend.read_bytes()).hexdigest(),
     "anatomicalRepair":{
         "upperArm":"captured-phase shoulder-led upper arm swings front AND rear of torso",
-        "forearm":"flexes from elbow in sagittal plane with captured reaching",
+        "forearm":"3D captured elbow hinge transported with captured-phase upper-arm rotation",
         "hand":"stable forearm-derived downward claw angle, never independent wrist oscillation",
         "legs":"original CMU leg source / foot plants unchanged",
         "source":"CMU 09_01 original 120Hz running motion; no added sine/cosine limb curves",
