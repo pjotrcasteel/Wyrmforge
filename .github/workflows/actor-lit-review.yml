@@ -1,0 +1,67 @@
+name: Lit actor mobile animation review
+
+on:
+  push:
+    branches: [feat/actor-lit-sprite-production]
+    paths:
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/actor-lit-review/**'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/actor-review.js'
+      - 'tests/Wyrmforge.Browser.Tests/LitActorBrowserTests.cs'
+      - '.github/workflows/actor-lit-review.yml'
+  pull_request:
+    branches: [feat/universal-gpu-lighting-g0-g1, main]
+    paths:
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/actor-lit-review/**'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/actor-review.js'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/**/materials/**'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/**/lit-materials.json'
+      - 'tests/Wyrmforge.Browser.Tests/LitActorBrowserTests.cs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mobile-actor-animation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Validate source-derived frame atlases
+        run: |
+          python -m pip install 'numpy>=1.26,<3' 'pillow>=10,<13'
+          python tools/art/validate-lit-actor-materials.py
+          node --test tests/javascript/actor-lit-assets.test.mjs
+      - name: Build browser tests and production app
+        run: |
+          dotnet build tests/Wyrmforge.Browser.Tests -c Release
+          dotnet publish src/Wyrmforge.Presentation.Web -c Release -o artifacts/web
+      - name: Install Chromium
+        run: pwsh tests/Wyrmforge.Browser.Tests/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
+      - name: Capture actual 320x568 and 390x844 actor sequences using shared GPU
+        env:
+          WYRMFORGE_BASE_URL: http://127.0.0.1:4173/
+          WYRMFORGE_BROWSER_ARTIFACTS: ${{ github.workspace }}/artifacts/lit-actors
+        run: |
+          python3 tools/development/spa_server.py --port 4173 --directory artifacts/web/wwwroot > artifacts/actor-server.log 2>&1 &
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then break; fi
+            sleep 1
+          done
+          dotnet test tests/Wyrmforge.Browser.Tests -c Release --no-build --filter FullyQualifiedName~LitActorBrowserTests
+      - name: Upload real animated clip review captures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: actors-gpu-320-390-${{ github.sha }}
+          path: |
+            artifacts/lit-actors/
+            artifacts/actor-server.log
+          if-no-files-found: warn
+          retention-days: 30
