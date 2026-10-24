@@ -1,11 +1,10 @@
 # WyrmForge — Sound audition 1: ordinary interface press
 
-Status: **Worn Vellum chosen for the normal UI press; richer Codex opener remains a draft listening candidate**. This revision integrates useful source recordings from original draft PR #128 into current `main` without restoring stale audio.js files or replacing the semantic Hunt and building sound design.
+Status: **Worn Vellum chosen for ordinary UI; old Weathered Stone retired; Codex opener remains a draft candidate**. This revision integrates useful source recordings from original draft PR #128 into current `main` without restoring stale audio.js files or replacing the semantic Hunt and building sound design.
 
-## Candidate presets (all physically recorded, licensed CC0)
+## Newly selected recorded UI materials (CC0)
 
 - **Worn Vellum (initial default):** two distinct leather/handling recordings `handleSmallLeather.ogg` and `handleSmallLeather2.ogg` from Kenney's RPG Audio. Short, soft, no note/chime.
-- **Weathered Stone:** the existing `ui.ogg` derived from rubberduck's `item_stone_01.ogg`. Remains accessible as an alternative/fallback.
 - **Cold Iron:** Kenney's `metalClick.ogg`, dry and mechanical.
 
 The archived PR originally explored complete menu/action presets. **Worn Vellum is now the selected default, and only one contextual interaction—the Codex opening—is changing in this checkpoint**. Hunt exit/arena entry, other Town doors, upgrade, music and combat SFX stay as on current main, and the existing global handler continues to suppress double audio when the Sound Atelier itself is clicked.

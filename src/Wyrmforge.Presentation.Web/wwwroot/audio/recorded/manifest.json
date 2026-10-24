@@ -878,7 +878,7 @@
       "originalSha256": "f922929805bc6afdf0a35727fa3998033db544c1b6f62ed3aeab94341ed6ddeb"
     }
   ],
-  "attribution": "JC Sounds \u00b7 CC BY 4.0 \u00b7 https://opengameart.org/content/jc-sounds-fantasy-sfx-pack-vol-1 (edited: trimmed, filtered, resampled and converted)",
+  "attribution": "JC Sounds · CC BY 4.0 · https://opengameart.org/content/jc-sounds-fantasy-sfx-pack-vol-1 (edited: trimmed, filtered, resampled and converted)",
   "mixVersion": "0.0.110",
   "transitionDesign": {
     "schemaVersion": 1,
@@ -933,24 +933,6 @@
           "author": "Kenney",
           "license": "CC0",
           "gitBlobSha": "80aa47044d213e1889fc00c446b735b10062c055"
-        }
-      ]
-    },
-    "stone": {
-      "label": "Weathered Stone",
-      "description": "Existing rubberduck stone tap, retained as fallback and alternative",
-      "mix": {
-        "gain": 0.55,
-        "lowpassHz": 3100
-      },
-      "variants": [
-        {
-          "file": "ui.ogg",
-          "source": "item_stone_01.ogg",
-          "library": "rpg",
-          "author": "rubberduck",
-          "license": "CC0",
-          "sha256": "7147c88577bd60afa19b9b5898ff3e4c8ab5eb933edce666b23dfc3d640ae25c"
         }
       ]
     },

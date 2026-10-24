@@ -7,7 +7,6 @@
     const uiMaterialKey = 'wyrmforge.audio.ui.material.v1';
     const uiMaterialChoices = Object.freeze([
         { id: 'vellum', label: 'Worn Vellum' },
-        { id: 'stone', label: 'Weathered Stone' },
         { id: 'iron', label: 'Cold Iron' },
     ]);
     const volumeKeys = { ui: 'wyrmforge.audio.ui.v1', combat: 'wyrmforge.audio.combat.v1', moment: 'wyrmforge.audio.moment.v1', music: 'wyrmforge.audio.music.v1', ambience: 'wyrmforge.audio.ambience.v1' };

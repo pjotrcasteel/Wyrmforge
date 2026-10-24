@@ -7,8 +7,8 @@ const assetDir = new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/audio/rec
 const manifest = JSON.parse(readFileSync(new URL('manifest.json', assetDir), 'utf8'));
 const audio = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/audio.js', import.meta.url), 'utf8');
 
-test('all three ordinary interface material auditions have real CC0 Ogg recordings', () => {
-    assert.deepEqual(Object.keys(manifest.uiMaterials).sort(), ['iron', 'stone', 'vellum']);
+test('new ordinary interface materials have verified CC0 Ogg recordings, not legacy stone', () => {
+    assert.deepEqual(Object.keys(manifest.uiMaterials).sort(), ['iron', 'vellum']);
     for (const [key, material] of Object.entries(manifest.uiMaterials)) {
         assert.ok(material.variants.length >= 1, key);
         assert.ok(material.mix.gain > 0 && material.mix.gain <= 1, key);
@@ -36,7 +36,9 @@ test('ordinary presses use persistent selectable real recordings without replaci
     assert.match(audio, /play\('ui', true\)/);
     assert.match(audio, /button\.closest\('\.wyrmforge-sound-controls'\)/);
     assert.match(audio, /source\.playbackRate\.value = \[0\.99, 1, 1\.01\]/);
-    assert.equal(manifest.cues.fire.variants.length, 3);
+    assert.equal(manifest.cues.fire.variants.length, 2);
+    assert.equal(manifest.cues.fire.license, 'Original');
+    assert.match(manifest.cues.fire.file, /^fireball-r1-cast-1\.ogg$/);
     assert.ok(manifest.music.menu && manifest.music.hunt);
 });
 

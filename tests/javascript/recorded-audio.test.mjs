@@ -22,7 +22,7 @@ test('all spell schools and high-value cues use real checked-in recordings', () 
     for (const name of ['arcane', 'fire', 'frost', 'lightning', 'hurt', 'wyrm', 'power-burst', 'upgrade-choice']) {
         const entry = manifest.cues[name];
         assert.ok(entry, name + ' was not imported');
-        assert.ok(['CC0', 'CC-BY-4.0'].includes(entry.license));
+        assert.ok(['CC0', 'CC-BY-4.0', 'Original'].includes(entry.license));
         const bytes = readFileSync(new URL(entry.file, directory));
         assert.equal(bytes.subarray(0, 4).toString(), 'OggS');
         assert.ok(bytes.length > 1000);
@@ -32,19 +32,38 @@ test('all spell schools and high-value cues use real checked-in recordings', () 
     assert.equal(new Set(elemental).size, 4, 'the four spell schools must sound physically different');
 });
 
-test('every mage school has multiple real cast takes, impact takes and a separately licensed buildup', () => {
+test('new Fireball R1 does not reuse any legacy cast, impact or buildup recording', () => {
     assert.equal(manifest.version, 2);
-    for (const school of ['arcane', 'fire', 'frost', 'lightning']) {
+    const fire = manifest.cues.fire;
+    assert.equal(fire.license, 'Original');
+    assert.equal(fire.variants.length, 2);
+    assert.equal(fire.hitVariants.length, 2);
+    assert.equal(fire.buildup, undefined);
+    const entries = [...fire.variants, ...fire.hitVariants];
+    assert.equal(new Set(entries.map(entry => entry.sha256)).size, 4);
+    for (const entry of entries) {
+        assert.match(entry.file, /^fireball-r1-(cast|hit)-[12]\.ogg$/);
+        assert.equal(entry.license, 'Original');
+        assert.match(entry.source, /offline-authored/);
+        const bytes = readFileSync(new URL(entry.file, directory));
+        assert.equal(bytes.subarray(0, 4).toString(), 'OggS');
+        assert.equal(sha256(bytes), entry.sha256);
+    }
+    assert.equal(manifest.authoredFireballStages.R1.oldAudioSourceUsed, false);
+    assert.equal(manifest.authoredFireballStages.R1.approved, false);
+});
+
+test('remaining elemental recordings are integrity checked but remain legacy placeholders', () => {
+    for (const school of ['arcane', 'frost', 'lightning']) {
         const cue = manifest.cues[school];
-        assert.ok(cue.variants.length >= 3, school + ' has no recorded cast variations');
-        assert.ok(cue.hitVariants.length >= 2, school + ' has no recorded hit variations');
+        assert.ok(cue.variants.length >= 3);
+        assert.ok(cue.hitVariants.length >= 2);
         const entries = [...cue.variants, ...cue.hitVariants, cue.buildup];
-        assert.equal(new Set(entries.map(entry => entry.sha256)).size, entries.length, school + ' reuses the same sample');
+        assert.equal(new Set(entries.map(entry => entry.sha256)).size, entries.length);
         for (const entry of entries) {
             assert.equal(entry.library, 'fantasy');
             assert.equal(entry.author, 'JC Sounds');
             assert.equal(entry.license, 'CC-BY-4.0');
-            assert.ok(entry.file.endsWith('.ogg'));
             const bytes = readFileSync(new URL(entry.file, directory));
             assert.equal(bytes.subarray(0, 4).toString(), 'OggS');
             assert.equal(sha256(bytes), entry.sha256);
@@ -81,6 +100,10 @@ test('every bundled file can be traced to verified CC0 or CC BY source records',
         assert.ok(source.originalSha256.match(/^[a-f0-9]{64}$/));
     }
     for (const entry of Object.values(manifest.cues)) {
+        if (entry.license === 'Original') {
+            assert.equal(entry.source, 'tools/audio/build_fireball_r1.py');
+            continue;
+        }
         assert.ok(sources.has(entry.library));
         assert.equal(entry.license, sources.get(entry.library).license);
     }
