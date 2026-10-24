@@ -9,6 +9,17 @@ on:
       - tools/art/validate-lit-actor-materials.py
       - .github/workflows/actor-lit-materials.yml
   workflow_dispatch:
+  pull_request:
+    branches:
+      - feat/universal-gpu-lighting-g0-g1
+    paths:
+      - tools/art/**
+      - src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/hollow-rigged/**
+      - src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/ashling-rigged/**
+      - src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/actor-*.js
+      - tests/javascript/actor-lit-materials.test.mjs
+      - tests/Wyrmforge.Browser.Tests/ActorLitSpriteBrowserTests.cs
+      - .github/workflows/actor-lit-materials.yml
 
 permissions:
   contents: write
@@ -19,7 +30,7 @@ concurrency:
 
 jobs:
   export:
-    if: github.repository == 'pjotrcasteel/Wyrmforge'
+    if: github.event_name != 'pull_request' && github.repository == 'pjotrcasteel/Wyrmforge'
     runs-on: ubuntu-latest
     timeout-minutes: 50
     steps:
@@ -52,3 +63,43 @@ jobs:
             git commit -m "build(actors): export geometry-derived lit material atlases"
             git push origin HEAD:feat/actor-lit-hollowed-ashling
           fi
+
+  review:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+      - name: Validate common sprite-frame contract
+        run: node --test tests/javascript/actor-lit-materials.test.mjs tests/javascript/universal-lighting.test.mjs
+      - name: Build actual browser test and app
+        run: |
+          dotnet build tests/Wyrmforge.Browser.Tests -c Release
+          dotnet publish src/Wyrmforge.Presentation.Web -c Release -o artifacts/web
+      - name: Install Chromium
+        run: pwsh tests/Wyrmforge.Browser.Tests/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
+      - name: Run 976-frame shared GPU animation review at both mobile viewports
+        env:
+          WYRMFORGE_BASE_URL: http://127.0.0.1:4173/
+          WYRMFORGE_BROWSER_ARTIFACTS: ${{ github.workspace }}/artifacts/lit-actors
+        run: |
+          python3 tools/development/spa_server.py --port 4173 --directory artifacts/web/wwwroot > artifacts/actor-server.log 2>&1 &
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then break; fi
+            sleep 1
+          done
+          dotnet test tests/Wyrmforge.Browser.Tests -c Release --no-build --filter FullyQualifiedName~ActorLitSpriteBrowserTests
+      - name: Preserve review screenshots and server logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hollowed-ashling-lit-review-${{ github.sha }}
+          path: |
+            artifacts/lit-actors/
+            artifacts/actor-server.log
+          retention-days: 30
