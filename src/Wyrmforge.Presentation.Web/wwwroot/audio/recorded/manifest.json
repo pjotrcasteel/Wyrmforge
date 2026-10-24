@@ -70,11 +70,11 @@
       "license": "Original",
       "source": "tools/audio/build_fireball_r1.py",
       "file": "fireball-r1-cast-1.ogg",
-      "sha256": "f8cb0af88a93fc3e7977a70f00d94bde2c3bff7c9f021c473ac15e0205cbf5cb",
+      "sha256": "d6f513aa06f585d8e77aa872916cc9574f7cf6ebc4f70294642935a08543d6a8",
       "variants": [
         {
           "file": "fireball-r1-cast-1.ogg",
-          "sha256": "f8cb0af88a93fc3e7977a70f00d94bde2c3bff7c9f021c473ac15e0205cbf5cb",
+          "sha256": "d6f513aa06f585d8e77aa872916cc9574f7cf6ebc4f70294642935a08543d6a8",
           "seconds": 0.75,
           "author": "WyrmForge original audio",
           "license": "Original",
@@ -88,7 +88,63 @@
         },
         {
           "file": "fireball-r1-cast-2.ogg",
-          "sha256": "59e4e0ac11779c4ebe684e8e29e66f998c7d9924f829e5b89ff7bc9efd69a400",
+          "sha256": "5deb3fb0a4fe72c7c28e2b72d96fa09bb0b34e43f66462a409e2f62783ad4da7",
+          "seconds": 0.75,
+          "author": "WyrmForge original audio",
+          "license": "Original",
+          "source": "tools/audio/build_fireball_r1.py",
+          "mix": {
+            "gain": 0.72,
+            "lowpassHz": 4700,
+            "attackSeconds": 0.006,
+            "releaseSeconds": 0.18
+          }
+        },
+        {
+          "file": "fireball-r1-cast-3.ogg",
+          "sha256": "5bc50a7b7b7de6dc3c71420a6d56bcb15b5d44ffed1982b2df650db4f031aed1",
+          "seconds": 0.75,
+          "author": "WyrmForge original audio",
+          "license": "Original",
+          "source": "tools/audio/build_fireball_r1.py",
+          "mix": {
+            "gain": 0.72,
+            "lowpassHz": 4700,
+            "attackSeconds": 0.006,
+            "releaseSeconds": 0.18
+          }
+        },
+        {
+          "file": "fireball-r1-cast-4.ogg",
+          "sha256": "9bc226236483307542df4b9b59dca562770795cd5a2cbb7fcd08cafad22e1842",
+          "seconds": 0.75,
+          "author": "WyrmForge original audio",
+          "license": "Original",
+          "source": "tools/audio/build_fireball_r1.py",
+          "mix": {
+            "gain": 0.72,
+            "lowpassHz": 4700,
+            "attackSeconds": 0.006,
+            "releaseSeconds": 0.18
+          }
+        },
+        {
+          "file": "fireball-r1-cast-5.ogg",
+          "sha256": "7dafd0f25250a2a83e9d45d326f7e73cb3cc0d2d835c26dcadef635399d3daf0",
+          "seconds": 0.75,
+          "author": "WyrmForge original audio",
+          "license": "Original",
+          "source": "tools/audio/build_fireball_r1.py",
+          "mix": {
+            "gain": 0.72,
+            "lowpassHz": 4700,
+            "attackSeconds": 0.006,
+            "releaseSeconds": 0.18
+          }
+        },
+        {
+          "file": "fireball-r1-cast-6.ogg",
+          "sha256": "22e25cce1bee78d714cf7f4ae71ecee93690909c8fdf89219e05a747d39cc2de",
           "seconds": 0.75,
           "author": "WyrmForge original audio",
           "license": "Original",
@@ -104,7 +160,7 @@
       "hitVariants": [
         {
           "file": "fireball-r1-hit-1.ogg",
-          "sha256": "f7a55bbd7e03275632fd1201e4c93ef6cc801f0127ab20b36ce6f99cc7a700ac",
+          "sha256": "b587eb786a8b4b596790786560ab691b096782926d5703fb770d4ce471e2a687",
           "seconds": 1.55,
           "author": "WyrmForge original audio",
           "license": "Original",
@@ -118,7 +174,63 @@
         },
         {
           "file": "fireball-r1-hit-2.ogg",
-          "sha256": "9dd049bb84f2b7bc6068050a0736027da95604aa5558e5651952a15c92395e1a",
+          "sha256": "bf78152a486c2a70bb8aee88a56e4938499828a6e806f76b694c75a038ab6c3b",
+          "seconds": 1.55,
+          "author": "WyrmForge original audio",
+          "license": "Original",
+          "source": "tools/audio/build_fireball_r1.py",
+          "mix": {
+            "gain": 0.82,
+            "lowpassHz": 4700,
+            "attackSeconds": 0.006,
+            "releaseSeconds": 0.18
+          }
+        },
+        {
+          "file": "fireball-r1-hit-3.ogg",
+          "sha256": "4ba042a3ae960113459ed7e685cdd7117a3e4d201f28dc91efbc1f10c180664e",
+          "seconds": 1.55,
+          "author": "WyrmForge original audio",
+          "license": "Original",
+          "source": "tools/audio/build_fireball_r1.py",
+          "mix": {
+            "gain": 0.82,
+            "lowpassHz": 4700,
+            "attackSeconds": 0.006,
+            "releaseSeconds": 0.18
+          }
+        },
+        {
+          "file": "fireball-r1-hit-4.ogg",
+          "sha256": "5c527d571e725c8891e201480d97b2a2125b656fceefc29f1b8d21ddb7206374",
+          "seconds": 1.55,
+          "author": "WyrmForge original audio",
+          "license": "Original",
+          "source": "tools/audio/build_fireball_r1.py",
+          "mix": {
+            "gain": 0.82,
+            "lowpassHz": 4700,
+            "attackSeconds": 0.006,
+            "releaseSeconds": 0.18
+          }
+        },
+        {
+          "file": "fireball-r1-hit-5.ogg",
+          "sha256": "cf11821b6efe590d4fa9b4e68fc9b2b3824e8a0f56adcf86aecf0a36a955bfa2",
+          "seconds": 1.55,
+          "author": "WyrmForge original audio",
+          "license": "Original",
+          "source": "tools/audio/build_fireball_r1.py",
+          "mix": {
+            "gain": 0.82,
+            "lowpassHz": 4700,
+            "attackSeconds": 0.006,
+            "releaseSeconds": 0.18
+          }
+        },
+        {
+          "file": "fireball-r1-hit-6.ogg",
+          "sha256": "8cbf0f5246db12e14371f0cdf3581806f5e51dd779b107628f316efbcf2f6b55",
           "seconds": 1.55,
           "author": "WyrmForge original audio",
           "license": "Original",
@@ -878,7 +990,7 @@
       "originalSha256": "f922929805bc6afdf0a35727fa3998033db544c1b6f62ed3aeab94341ed6ddeb"
     }
   ],
-  "attribution": "JC Sounds · CC BY 4.0 · https://opengameart.org/content/jc-sounds-fantasy-sfx-pack-vol-1 (edited: trimmed, filtered, resampled and converted)",
+  "attribution": "JC Sounds \u00b7 CC BY 4.0 \u00b7 https://opengameart.org/content/jc-sounds-fantasy-sfx-pack-vol-1 (edited: trimmed, filtered, resampled and converted)",
   "mixVersion": "0.0.110",
   "transitionDesign": {
     "schemaVersion": 1,
@@ -976,24 +1088,64 @@
       "flight": [
         {
           "file": "fireball-r1-flight-1.ogg",
-          "sha256": "08cd90876c75108f190bbfcef89989e591e68849cb95ff477c4c1c9f17ebe244",
+          "sha256": "0d9e1cef22a973a93cdcada1d17f3253fa13b8c7729d604dd2d1293249b76528",
           "seconds": 0.83
         },
         {
           "file": "fireball-r1-flight-2.ogg",
-          "sha256": "b559141ea74f9889b82329bdb8d61575d9f8f98c3ac019deff33fde4a3433bd4",
+          "sha256": "a4e07893dd9680268aa3cdd193e8358a507100c4b506110855d391306ca5bf16",
+          "seconds": 0.83
+        },
+        {
+          "file": "fireball-r1-flight-3.ogg",
+          "sha256": "ccf7fd4e3816b584b477f23d607ea977022f862b5362913698b6e3a5eff81967",
+          "seconds": 0.83
+        },
+        {
+          "file": "fireball-r1-flight-4.ogg",
+          "sha256": "795f0ecf19ea3eb7173ffea37f65306a16ab09e92fed93ebd465ead5a8c9f74e",
+          "seconds": 0.83
+        },
+        {
+          "file": "fireball-r1-flight-5.ogg",
+          "sha256": "732a2548577112b9fa99dbadcb425e3b9071e340820733e3b815899f0c128eb7",
+          "seconds": 0.83
+        },
+        {
+          "file": "fireball-r1-flight-6.ogg",
+          "sha256": "54e8fa54c979bb25f7c10420bff09c4ad6cbbd1c27c0f55491685f475e2fa534",
           "seconds": 0.83
         }
       ],
       "burn": [
         {
           "file": "fireball-r1-burn-1.ogg",
-          "sha256": "9fe46254e04318988c3eb00ac30502ab58ff9b4ee9a59e0f120aa35692e39c5f",
+          "sha256": "9ae0ae64180a546c4432ff2e9dac44b04bd5377013a213dd2fcd47553a1620e8",
           "seconds": 3.9
         },
         {
           "file": "fireball-r1-burn-2.ogg",
-          "sha256": "bdafe904b5781da6cdb0de31f2d096076461a02f98d1a3c10ed9be1a5cc6b214",
+          "sha256": "6b4ad70831cb74c87b16e890cf0dc4b43c9fbcd55f88941b7190be42cb4c0c27",
+          "seconds": 3.9
+        },
+        {
+          "file": "fireball-r1-burn-3.ogg",
+          "sha256": "071bbdb021bbcd9b0e5aa79dcf1e40626c89b8ad95d8d83b0493369a36214410",
+          "seconds": 3.9
+        },
+        {
+          "file": "fireball-r1-burn-4.ogg",
+          "sha256": "4a9b28d57b47211da78a68b02c31cf01e8a2e57cf470b72ab102de397a7ca7d8",
+          "seconds": 3.9
+        },
+        {
+          "file": "fireball-r1-burn-5.ogg",
+          "sha256": "a14a64972c6d0cb6f35fc344ad95e71804074504b7e858e821b6c13b080b9a92",
+          "seconds": 3.9
+        },
+        {
+          "file": "fireball-r1-burn-6.ogg",
+          "sha256": "06e6957d23346184eb2dc29700e9f0561d991dafee4c893a35fc2336b6280a39",
           "seconds": 3.9
         }
       ]
