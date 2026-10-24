@@ -1,0 +1,10 @@
+.ground-review { max-width: 850px; margin: auto; padding: 14px; color: #e1d7c4; background: #111519; }
+.eyebrow { font-size: .7rem; letter-spacing: .12em; color: #9aa8a6; }
+h1 { margin: .4rem 0; font-size: 1.5rem; }
+p { font-size: .85rem; line-height: 1.5; }
+.controls { display: flex; flex-wrap: wrap; align-items: end; gap: 14px; margin: 18px 0; }
+label { display: flex; flex-direction: column; gap: 6px; min-width: 130px; font-size: .8rem; }
+select, input { padding: 6px; color: #eadfcc; background: #24282d; border: 1px solid #5a6467; }
+.stage { background: #000; border: 1px solid #46515b; }
+canvas { width: 100%; height: min(65vh, 600px); display: block; image-rendering: pixelated; }
+.notes { color: #b5aaa0; }
