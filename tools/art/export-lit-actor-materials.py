@@ -181,7 +181,7 @@ def write_clip(actor, clip_name, cfg, runtime_manifest, strict):
     caster_file = f"{clip_name}-caster.png"
     if clip_name != "walk":
         Image.fromarray(normal_atlas).save(runtime_dir / normal_file)
-        Image.fromarray(depth_atlas, mode="I;16").save(runtime_dir / depth_file)
+        Image.fromarray(depth_atlas).save(runtime_dir / depth_file)
         Image.fromarray(alpha_caster, mode="L").save(runtime_dir / caster_file)
     else:
         # Owner of existing walk normals: #332. Do not touch their original bytes.
@@ -190,7 +190,7 @@ def write_clip(actor, clip_name, cfg, runtime_manifest, strict):
         if not np.array_equal(existing[:, :, 3], atlas[:, :, 3]):
             raise ValueError(f"{actor}: existing #332 walk normals differ from albedo alpha")
         # Walk caster/depth may be generated here without touching already approved normals.
-        Image.fromarray(depth_atlas, mode="I;16").save(runtime_dir / depth_file)
+        Image.fromarray(depth_atlas).save(runtime_dir / depth_file)
         Image.fromarray(alpha_caster, mode="L").save(runtime_dir / caster_file)
         normal_file = f"../../lighting-proof/{actor}-walk-normal.png"
     if strict and min(metrics) < .985:
