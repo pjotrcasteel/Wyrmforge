@@ -29,7 +29,7 @@ test('off by default; only an explicit dragged preview token enables it',async()
 
 test('review manifest and PNG are byte-identical to unapproved full-body 8-way evidence',()=>{
     const png=readFileSync(new URL(manifest.image,dir));
-    const original=readFileSync(new URL('../../../../../../docs/art/evidence/hollowed-broken-leg-dragged-recovery/candidate-walk-eight-directions.png',root));
+    const original=readFileSync(new URL('../../../docs/art/evidence/hollowed-broken-leg-dragged-recovery/candidate-walk-eight-directions.png',root));
     assert.deepEqual(png,original);
     const hash=createHash('sha1').update(Buffer.from('blob '+png.length+'\0')).update(png).digest('hex');
     assert.equal(hash,manifest.sourceBlobSha);
@@ -68,8 +68,8 @@ test('enabled review loads exact atlas and draws standard WALK with exact 96px p
         assert.ok(imageCall);
         assert.equal(imageCall[2],5*96);
         assert.equal(imageCall[3],6*96);
-        assert.equal(imageCall[7],200-48/96*93);
-        assert.equal(imageCall[8],180-72/96*93);
+        assert.equal(imageCall[6],200-48/96*93);
+        assert.equal(imageCall[7],180-72/96*93);
         assert.equal(ctx.imageSmoothingEnabled,false);
         const count=calls.length;
         for(const [variant,clip] of [['broken-arm-right','walk'],['one-arm-left','walk'],
