@@ -1,0 +1,10 @@
+{
+  "clip": "walk",
+  "frames": 16,
+  "directions": 8,
+  "stanceFraction": 0.57,
+  "travelModelUnitsPerCycle": 0.33333333333333337,
+  "sourceRig": "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-pixel-v3/hollow-rigged.blend",
+  "style": "feral head-first pursuit",
+  "status": "unreviewed candidate; production walk and linked normals unchanged"
+}
