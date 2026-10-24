@@ -46,6 +46,12 @@ class GroundMaterialProbeTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             PROBE.generate(Path("missing"), Path("unused"), tile_px=12)
 
+    def test_review_output_cannot_land_in_source_archive(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            with self.assertRaises(ValueError):
+                PROBE.generate(root, root / "subfolder", tile_px=64)
+
     def test_synthetic_archive_makes_twelve_studies_without_writing_sources(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "source"
