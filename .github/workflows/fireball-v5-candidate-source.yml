@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   export-and-review:
@@ -61,3 +61,23 @@ jobs:
             art/source/spells/fireball/candidates/base-v5/*.gif
             art/source/spells/fireball/candidates/base-v5/*.py
             art/source/spells/fireball/candidates/base-v5/README.md
+      - name: Version the generated unapproved sheets and editable source in the existing PR
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A art/source/spells/fireball/candidates/base-v5
+          if git diff --cached --quiet; then
+            echo "Source outputs are byte-identical to the tracked candidate files"
+            exit 0
+          fi
+          git commit -m "art(fireball): checkpoint unapproved V5 Aseprite and material frames"
+          # This branch is shared with other PR work. Never force-push. Rebase
+          # the generated output checkpoint onto a newer remote if necessary.
+          git fetch origin
+          git rebase origin/feat/fireball-composite-visual-recipes
+          git push origin HEAD:feat/fireball-composite-visual-recipes
+          remote_sha="$(git ls-remote origin refs/heads/feat/fireball-composite-visual-recipes | cut -f1)"
+          test "$remote_sha" = "$(git rev-parse HEAD)"
+          echo "Verified remote V5 material checkpoint: $remote_sha"
