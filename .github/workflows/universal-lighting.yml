@@ -3,6 +3,8 @@ on:
   pull_request:
     paths:
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/**'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/arena-single-road.js'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/arena-materials.js'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/art/lighting-proof/**'
       - 'src/Wyrmforge.Presentation.Web/Pages/ArenaLightEngine*'
       - 'src/Wyrmforge.Presentation.Web/Pages/ArenaGroundLightReview*'
