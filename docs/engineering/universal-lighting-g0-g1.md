@@ -156,3 +156,18 @@ Town fixture/school scenarios and physical-device/artistic acceptance remain.
 The current oak crowds the right edge and actor readability needs close-up
 assessment. Water is direct BRDF specular only. Town is diagnostic geometry with
 an actor proxy. All production rendering paths and approved artwork are unchanged.
+
+
+### Focused inspection controls (pending fresh GPU CI)
+
+Fixed overview/actor/oak/Town/water camera presets now share the same scene and
+renderer. Selected renderables expose independent cast, shadow receipt and light
+receipt controls. Authored-normal A/B retains original albedo/alpha. The route
+shows the actual selected emitter registry, priorities' resulting shadow budgets,
+framebuffer size and renderer counters. Browser CI records focused comparisons
+and checks the entire framebuffer black in each camera, including when normals
+inspection was selected before zero. These controls are diagnostic-only.
+
+The replacement execution environment blocks local Chromium sockets; new captures
+must come from the dedicated published-app CI, not from a claim of a local run.
+Light-space depth/bounds and deeper object-specific acceptance remain pending.

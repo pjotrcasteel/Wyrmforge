@@ -24,6 +24,7 @@ export class LightingEngine {
         this.shadowViews = shadowViews; this.maxLights = maxLights;
         this.alive = true;
         this.debugView = 'lit';
+        this.halfWidth = 5;
     }
     registerGeometry(id, geometry) {
         if (this.geometries.has(id)) throw new Error(`Duplicate geometry ${id}`);
@@ -127,6 +128,13 @@ export class LightingEngine {
         this.renderer.toneMappingExposure = s.environment.exposure;
         this.snapshot = s; this.selected = selected;
     }
+    setCamera(target, halfWidth = 5) {
+        if (target.length !== 3 || target.some(n => !Number.isFinite(n)) || !Number.isFinite(halfWidth) || halfWidth <= 0)
+            throw new RangeError('Invalid inspection camera');
+        this.halfWidth = halfWidth;
+        this.camera.position.set(target[0] + 8, target[1] - 12, target[2] + 12);
+        this.camera.lookAt(...target);
+    }
     /** Explicit inspection passes, never world illumination. */
     setDebugView(view) {
         if (!['lit', 'albedo', 'normals', 'geometry', 'shadow-visibility'].includes(view)) throw new RangeError('Unknown diagnostic view');
@@ -164,8 +172,8 @@ float proofShadowVisibility() {
         // One world sample per CSS pixel at 390px, bounded regardless of device DPR.
         const w = Math.max(1, Math.min(390, Math.round(width))), h = Math.max(1, Math.round(height * w / width));
         if (this.canvas.width !== w || this.canvas.height !== h) this.renderer.setSize(w, h, false);
-        this.camera.left = -5; this.camera.right = 5;
-        this.camera.top = 5 * h / w; this.camera.bottom = -5 * h / w;
+        this.camera.left = -this.halfWidth; this.camera.right = this.halfWidth;
+        this.camera.top = this.halfWidth * h / w; this.camera.bottom = -this.halfWidth * h / w;
         this.camera.updateProjectionMatrix();
         const originals = [], shadowUpdate = this.renderer.shadowMap.autoUpdate;
         try {

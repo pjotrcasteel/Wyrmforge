@@ -61,6 +61,36 @@ public sealed class UniversalLightingBrowserTests : PageTest
         }
         await ConfigureAsync(canvas, new { view = "lit" });
         Assert.AreEqual(lit, await PixelHashAsync(canvas), "Inspection must not mutate the lit scene.");
+        foreach (var focus in new[] { "actors", "oak", "town", "water" })
+        {
+            await ConfigureAsync(canvas, new { focus, profile = "night", view = "lit" });
+            var focused = await PixelHashAsync(canvas);
+            await CaptureAsync(width, $"close-{focus}");
+            await ConfigureAsync(canvas, new { profile = "zero", view = "normals" });
+            Assert.IsTrue(await canvas.EvaluateAsync<bool>("c => gpuProof.proofPixels(c).every((v,i) => i%4===3 || v===0)"),
+                $"Every RGB channel must be black in the {focus} camera, even when an inspection pass was selected.");
+            await CaptureAsync(width, $"close-{focus}-zero");
+            await ConfigureAsync(canvas, new { profile = "night", view = "lit" });
+            Assert.AreEqual(focused, await PixelHashAsync(canvas));
+        }
+        await ConfigureAsync(canvas, new { focus = "actors" });
+        var actors = await PixelHashAsync(canvas);
+        await ConfigureAsync(canvas, new { normals = false });
+        Assert.AreNotEqual(actors, await PixelHashAsync(canvas), "Authored pose normals must affect actual actor shading.");
+        await CaptureAsync(width, "actors-without-normals");
+        await ConfigureAsync(canvas, new { normals = true, inspectObject = "hollowed", receivesLight = false });
+        Assert.AreNotEqual(actors, await PixelHashAsync(canvas), "Light receipt must be independently configurable.");
+        await CaptureAsync(width, "hollowed-no-receive-light");
+        await ConfigureAsync(canvas, new { receivesLight = true, castsShadow = false });
+        await CaptureAsync(width, "hollowed-no-cast");
+        await ConfigureAsync(canvas, new { castsShadow = true, receivesShadow = false });
+        await CaptureAsync(width, "hollowed-no-receive-shadow");
+        await ConfigureAsync(canvas, new { receivesShadow = true });
+        Assert.AreEqual(actors, await PixelHashAsync(canvas));
+        await ConfigureAsync(canvas, new { focus = "oak", progress = .85, view = "shadow-visibility" });
+        await CaptureAsync(width, "oak-point-visibility-right");
+        await ConfigureAsync(canvas, new { progress = .15 });
+        await CaptureAsync(width, "oak-point-visibility-left");
         Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
     }
 

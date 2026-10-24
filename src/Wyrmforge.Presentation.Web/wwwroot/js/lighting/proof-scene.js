@@ -47,7 +47,7 @@ export async function initializeProof(canvas) {
     if (states.has(canvas)) return;
     const engine = new LightingEngine(canvas);
     const state = { engine, alive: true, options: { profile: 'night', fireball: true, torch: true, spot: true,
-        rune: false, shadows: true, reflections: true, progress: .25, frame: 0, animate: false, view: 'lit' }, manifests: {}, animation: {}, samples: {} };
+        rune: false, shadows: true, reflections: true, progress: .25, frame: 0, animate: false, view: 'lit', focus: 'overview', inspectObject: 'hollowed', castsShadow: true, receivesShadow: true, receivesLight: true, normals: true }, manifests: {}, animation: {}, samples: {} };
     states.set(canvas, state);
     try {
         engine.registerGeometry('box', new T.BoxGeometry(1, 1, 1));
@@ -91,6 +91,11 @@ export async function initializeProof(canvas) {
 export function configureProof(canvas, options) {
     const state = states.get(canvas); if (!state?.materials || !state.alive) return;
     Object.assign(state.options, options);
+    const cameras = { overview: [[0, 0, 1], 5], actors: [[0, 0, .8], 2],
+        oak: [[2.3, 3.4, 2], 2.5], town: [[-2, 1.8, 1.2], 2.5], water: [[1.2, -1.4, .1], 2] };
+    const camera = cameras[state.options.focus];
+    if (!camera) throw new RangeError('Unknown inspection camera');
+    state.engine.setCamera(...camera);
     const p = state.options, zero = p.profile === 'zero';
     const firePosition = [-3.5 + p.progress * 7, p.behind ? 4 : -1.6, p.behind ? 3.6 : 2.4];
     const environment = environmentProfile(p.profile);
@@ -106,10 +111,13 @@ export function configureProof(canvas, options) {
     if (p.fireball) objects.push(object('fireball-core', 'sphere', 'flame', firePosition, [1, 1, 1], { castsShadow: false }));
     if (p.rune) objects.push(object('rune-prop', 'box', 'rune', [2, -2, .25], [.35, .35, .5]));
     for (const o of objects) {
+        if (o.id === p.inspectObject) {
+            o.castsShadow = p.castsShadow; o.receivesShadow = p.receivesShadow; o.receivesLight = p.receivesLight;
+        }
         const id = o.id === 'npc-binding-proxy' ? 'hollowed' : o.id;
         if (state.manifests[id]) o.frame = spriteFrame(state.manifests[id], { clip: 'walk', frame: p.animate ? state.samples[id]?.frame ?? 0 : p.frame % 16, direction: 'S' });
     }
-    const materials = state.materials.map(m => ({ ...m, reflection: p.reflections ? m.reflection : 'off',
+    const materials = state.materials.map(m => ({ ...m, normal: p.normals ? m.normal : undefined, reflection: p.reflections ? m.reflection : 'off',
         emissionIntensity: m.id === 'flame' && !p.torch && !p.fireball ? 0 : m.emissionIntensity }));
     // Disabling a fixture extinguishes its source surface too.
     if (!p.torch) objects.splice(objects.findIndex(o => o.id === 'lantern-core'), 1);
