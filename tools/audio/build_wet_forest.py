@@ -18,6 +18,12 @@ SOURCES = ROOT / "tools/audio/wet-forest-sources"
 AUDIO = ROOT / "src/Wyrmforge.Presentation.Web/wwwroot/audio/recorded"
 PREVIEWS = ROOT / "docs/audio/previews"
 RATE, DURATION = 24000, 36
+# Pinned to the exact human-reviewed CC0 source bytes; reject silent upstream changes.
+PINNED_SOURCE_SHA256 = {
+    "wind": "0cfdbd3f21ed449689a9024264edf267d0037a6495813a7010827672ec191dac",
+    "drips": "df491823e4877371c34dbda4e9321cd83a4a14fa7573cee0ebca1ae423b70e6e",
+    "creak": "465356e0e32e71a5c29fda529a0ac23af7791c62e3bd862e8cb2961eb104e1b1",
+}
 RECORDINGS = (
     ("wind", "SketchMan3", "https://opengameart.org/content/wind-whoosh-loop",
      "https://opengameart.org/sites/default/files/wind%20woosh%20loop.ogg"),
@@ -85,6 +91,8 @@ def main():
         payload = source.read_bytes()
         if not payload.startswith(b"OggS"):
             raise ValueError(f"CC0 source not Ogg: {source}")
+        if sha(payload) != PINNED_SOURCE_SHA256[key]:
+            raise ValueError(f"Source changed since approval: {key}")
         provenance.append({"key": f"forest-{key}", "url": url, "sourcePage": source_page,
                            "author": author, "license": "CC0", "originalSha256": sha(payload)})
         records[key] = decode(source)
