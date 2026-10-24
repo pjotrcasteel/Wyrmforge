@@ -6,7 +6,9 @@ on:
       - 'tools/art/verify_ground_candidate_collection.mjs'
       - 'tools/art/build_ground_material_probe.py'
       - 'tools/art/audit_ground_source_art.py'
+      - 'tools/art/quilt_ground_material_study.py'
       - 'tools/art/tests/test_ground_material_probe.py'
+      - 'tools/art/tests/test_ground_quilt_study.py'
       - '.github/workflows/ground-art-candidate-integrity.yml'
   workflow_dispatch:
 permissions:
@@ -30,14 +32,16 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install pinned image decoding dependency
-        run: python -m pip install Pillow==12.0.0
+        run: python -m pip install Pillow==12.0.0 numpy==2.2.6
       - name: Test non-destructive material preparation
-        run: python -m unittest discover -s tools/art/tests -p test_ground_material_probe.py -v
+        run: python -m unittest discover -s tools/art/tests -p 'test_ground*.py' -v
       - name: Build 12 Ground/Moss and Wet Mud repeat comparisons
         run: python tools/art/build_ground_material_probe.py --output "$RUNNER_TEMP/ground-material-probes" --tile-px 240
       - name: Audit all 36 source images for border/matte warnings
         run: python tools/art/audit_ground_source_art.py --output "$RUNNER_TEMP/ground-material-probes"
-      - name: Upload twelve seam studies and the 36-image source audit
+      - name: Create two source-only six-variant seam-cut quilting comparisons
+        run: python tools/art/quilt_ground_material_study.py --output "$RUNNER_TEMP/ground-material-probes"
+      - name: Upload twelve seam studies, full source audit, and two quilting studies
         uses: actions/upload-artifact@v4
         with:
           name: wet-forest-grass-mud-repeat-studies
