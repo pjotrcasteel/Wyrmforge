@@ -32,8 +32,12 @@ def inspect(source_root, output):
             assets.append({"blendFile":path.name,"meshes":meshes})
         except Exception as exc:
             errors.append({"file":path.name,"error":str(exc)})
-    best=max((m for a in assets for m in a["meshes"]),
-             key=lambda m:m["vertices"],default=None)
+    # WyrmForge wizard needs realistic MALE anatomy. A stylized female
+    # happens to have more vertices; raw count is not our design decision.
+    male=next((m for a in assets for m in a["meshes"]
+               if m["name"]=="GEO-body_male_realistic"),None)
+    best=male or max((m for a in assets for m in a["meshes"]),
+                     key=lambda m:m["vertices"],default=None)
     report={
         "provider":"Blender Studio","source":"Human Base Meshes v1.4.1",
         "assetLicense":"CC0-1.0, official Blender demo-files source",
