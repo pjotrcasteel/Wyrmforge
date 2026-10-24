@@ -1,0 +1,264 @@
+{
+  "status": "UNAPPROVED exact 3D authored source attack on cape-free actor with injury-usable-arm constraints",
+  "variant": "standard",
+  "frames": 16,
+  "fps": 12,
+  "contactFrames": [
+    7,
+    8
+  ],
+  "loop": false,
+  "sourceAttackBlend": "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-attack-v2/hollow-attack.blend",
+  "sourceAttackSha256": "47bf79a9ee0fbe0b3924307a9545db72afcee207aaeebe35653dbece46c36955",
+  "sourceNoCapeBlend": "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-mocap-no-cape-captured-hands-candidate/hollow-rigged.blend",
+  "sourceNoCapeSha256": "0ea3dd808405463deb84b6895ffc390a433928ac1023e652ccb8cfc1aeadaa59",
+  "visualContactOnly": true,
+  "runtimeDamageChanged": false,
+  "materialPassesReexported": false,
+  "artApproval": false,
+  "sourceOriginalAttackTransferred": true,
+  "impairedArm": null,
+  "activeArm": "R",
+  "poses": [
+    {
+      "frame": 0,
+      "activeArm": "R",
+      "impairedArm": null,
+      "rootAdvance": [
+        0.012000000104308128,
+        0.014999999664723873,
+        -0.05299999937415123
+      ],
+      "strikeWrist": [
+        -0.16334043443202972,
+        -0.08185779303312302,
+        -0.10499288141727448
+      ]
+    },
+    {
+      "frame": 1,
+      "activeArm": "R",
+      "impairedArm": null,
+      "rootAdvance": [
+        0.012000000104308128,
+        0.015935998409986496,
+        -0.052375998347997665
+      ],
+      "strikeWrist": [
+        -0.17551776766777039,
+        -0.06952987611293793,
+        -0.07237976044416428
+      ]
+    },
+    {
+      "frame": 2,
+      "activeArm": "R",
+      "impairedArm": null,
+      "rootAdvance": [
+        0.012000000104308128,
+        0.02133600041270256,
+        -0.04877599701285362
+      ],
+      "strikeWrist": [
+        -0.2349400818347931,
+        -0.006407557055354118,
+        0.11352039873600006
+      ]
+    },
+    {
+      "frame": 3,
+      "activeArm": "R",
+      "impairedArm": null,
+      "rootAdvance": [
+        0.012000000104308128,
+        0.026664000004529953,
+        -0.04522400349378586
+      ],
+      "strikeWrist": [
+        -0.2599998712539673,
+        0.020000051707029343,
+        0.18999995291233063
+      ]
+    },
+    {
+      "frame": 4,
+      "activeArm": "R",
+      "impairedArm": null,
+      "rootAdvance": [
+        0.012000000104308128,
+        0.03112800046801567,
+        -0.04224800318479538
+      ],
+      "strikeWrist": [
+        -0.2750000059604645,
+        0.022500023245811462,
+        0.32499995827674866
+      ]
+    },
+    {
+      "frame": 5,
+      "activeArm": "R",
+      "impairedArm": null,
+      "rootAdvance": [
+        0.012000000104308128,
+        0.032999999821186066,
+        -0.040999993681907654
+      ],
+      "strikeWrist": [
+        -0.2900000512599945,
+        0.024999961256980896,
+        0.4600001275539398
+      ]
+    },
+    {
+      "frame": 6,
+      "activeArm": "R",
+      "impairedArm": null,
+      "rootAdvance": [
+        0.012000000104308128,
+        -0.008499995805323124,
+        -0.053999997675418854
+      ],
+      "strikeWrist": [
+        -0.18999996781349182,
+        -0.1574999988079071,
+        0.33500003814697266
+      ]
+    },
+    {
+      "frame": 7,
+      "activeArm": "R",
+      "impairedArm": null,
+      "rootAdvance": [
+        0.012000000104308128,
+        -0.04999999701976776,
+        -0.06700000166893005
+      ],
+      "strikeWrist": [
+        -0.09000001847743988,
+        -0.3399999737739563,
+        0.20999999344348907
+      ]
+    },
+    {
+      "frame": 8,
+      "activeArm": "R",
+      "impairedArm": null,
+      "rootAdvance": [
+        0.012000000104308128,
+        -0.054999999701976776,
+        -0.0689999908208847
+      ],
+      "strikeWrist": [
+        0.11000000685453415,
+        -0.33000001311302185,
+        0.03999998793005943
+      ]
+    },
+    {
+      "frame": 9,
+      "activeArm": "R",
+      "impairedArm": null,
+      "rootAdvance": [
+        0.012000000104308128,
+        -0.06000000238418579,
+        -0.07099997997283936
+      ],
+      "strikeWrist": [
+        0.1650000363588333,
+        -0.244999960064888,
+        -0.0050000352784991264
+      ]
+    },
+    {
+      "frame": 10,
+      "activeArm": "R",
+      "impairedArm": null,
+      "rootAdvance": [
+        0.012000000104308128,
+        -0.05444444715976715,
+        -0.06966666877269745
+      ],
+      "strikeWrist": [
+        0.2199999988079071,
+        -0.1600000113248825,
+        -0.049999915063381195
+      ]
+    },
+    {
+      "frame": 11,
+      "activeArm": "R",
+      "impairedArm": null,
+      "rootAdvance": [
+        0.012000000104308128,
+        -0.040555551648139954,
+        -0.06633332371711731
+      ],
+      "strikeWrist": [
+        0.18013253808021545,
+        -0.15187321603298187,
+        -0.055719248950481415
+      ]
+    },
+    {
+      "frame": 12,
+      "activeArm": "R",
+      "impairedArm": null,
+      "rootAdvance": [
+        0.012000000104308128,
+        -0.022499997168779373,
+        -0.06199999153614044
+      ],
+      "strikeWrist": [
+        0.08506421744823456,
+        -0.13249392807483673,
+        -0.06935739517211914
+      ]
+    },
+    {
+      "frame": 13,
+      "activeArm": "R",
+      "impairedArm": null,
+      "rootAdvance": [
+        0.012000000104308128,
+        0.0005967095494270325,
+        -0.0564567893743515
+      ],
+      "strikeWrist": [
+        -0.06038298457860947,
+        -0.10349760949611664,
+        -0.10101310908794403
+      ]
+    },
+    {
+      "frame": 14,
+      "activeArm": "R",
+      "impairedArm": null,
+      "rootAdvance": [
+        0.012000000104308128,
+        0.013559671118855476,
+        -0.053345687687397
+      ],
+      "strikeWrist": [
+        -0.15307731926441193,
+        -0.08431952446699142,
+        -0.10632844269275665
+      ]
+    },
+    {
+      "frame": 15,
+      "activeArm": "R",
+      "impairedArm": null,
+      "rootAdvance": [
+        0.012000000104308128,
+        0.014999999664723873,
+        -0.05299999937415123
+      ],
+      "strikeWrist": [
+        -0.16334043443202972,
+        -0.08185779303312302,
+        -0.10499288141727448
+      ]
+    }
+  ]
+}
