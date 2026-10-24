@@ -61,7 +61,7 @@ export async function packActorAtlas({source,output,actorId='actor',variant,clip
     if(!names.length||names.some(x=>!safeName(x))) throw Error('Invalid authored clip names');
     clips=selection(clips??names,names,'clip');
     passes=selection(passes,MATERIAL_PASSES,'material pass');
-    requiredClips=selection(requiredClips??names,names,'required clip');
+    requiredClips=selection(requiredClips??names,requiredClips??names,'required clip');
     requiredPasses=selection(requiredPasses??MATERIAL_PASSES,MATERIAL_PASSES,'required pass');
     if(!passes.includes('albedo')) throw Error('Albedo is mandatory');
     const ordered=['albedo',...passes.filter(x=>x!=='albedo')];
