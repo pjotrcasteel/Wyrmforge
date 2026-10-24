@@ -9,7 +9,7 @@ import {decodePng,encodePng} from '../art/lib/png.mjs';
 
 export const DIRECTION_ROWS=Object.freeze(['N','NE','E','SE','S','SW','W','NW']);
 const CLIPS=['idle','walk','cast','hurt','death'];
-const PASSES=['albedo','normal','roughness','height','caster'];
+const PASSES=['albedo','normal','roughness','height','caster','emission'];
 const SCHOOLS=['fire','frost','storm','arcane','necromancer','summoner'];
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
 
@@ -101,7 +101,7 @@ export async function packWizardAtlas({source,output,school,clips,passes}) {
                     frames:spec.frames,cell,anchor,worldSize};
         }
     }
-    report.atlasExportComplete=clips.length===CLIPS.length&&passes.length===PASSES.length;
+    report.atlasExportComplete=clips.length===CLIPS.length&&passes.every(x=>PASSES.includes(x))&&['albedo','normal','roughness','height','caster','emission'].every(x=>passes.includes(x));
     const directory=join(output,school);
     await mkdir(directory,{recursive:true});
     for (const [name,png] of outputs) await writeFile(join(directory,name),png);
