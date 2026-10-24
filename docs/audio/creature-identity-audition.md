@@ -17,3 +17,7 @@ Listen on phone speaker and headphones, then in-game while Fireball, impacts and
 ## Preservation
 
 The new events use `EnemyKind.Hollow=0` and `EnemyKind.Ashling=2`, with fallback `enemy-down` for other kinds. Unrelated rendering, physics, Town, music, Fireball and game loop update cadence are unchanged. The engine still supports sound-off play and the established mobile audio unlock.
+
+## In-game action-by-action audition
+
+Settings → Sound Atelier now exposes **six individual creature action buttons**. Tap a button twice to hear its two real recorded takes; the variants alternate through the existing recorded sound system. Separate per-species SEQUENCE buttons still audition approach → hit → death. Small Ogg files are prefetched only after entering a Hunt, not in Town.

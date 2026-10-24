@@ -32,6 +32,7 @@
     let statusTimer = 0;
     let recordedManifest = null;
     const recordedBuffers = new Map();
+    let creaturesPrefetched = false;
     const musicPlayers = new Map();
     let forestPlayer = null;
     let forestLevel = 0;
@@ -175,6 +176,20 @@
         // Tiny files: decode all UI candidates after unlock so A/B changes respond immediately.
         for (const material of Object.values(recordedManifest.uiMaterials ?? {})) {
             for (const entry of material.variants ?? []) void loadRecordedBuffer(entry).catch(() => {});
+        }
+    }
+
+    function prewarmCreaturesInHunt() {
+        // The opening encounter should not wait for its first hit/voice Ogg download.
+        // Reserve this small (<200 KB) set for Hunts, not Town or menu screens.
+        if (creaturesPrefetched || !unlocked || !context || !recordedManifest ||
+            !document.querySelector?.('.game-screen')) return;
+        creaturesPrefetched = true;
+        for (const family of ['hollow', 'ashling']) {
+            for (const action of ['approach', 'hit', 'death']) {
+                const entry = recordedManifest.cues?.[family + '-' + action];
+                for (const take of entry?.variants ?? []) void loadRecordedBuffer(take).catch(() => {});
+            }
         }
     }
 
@@ -508,6 +523,7 @@
         if (!recordedManifest || !enabled || !unlocked || document.hidden || !context) return;
         syncForest();
         const desired = document.querySelector?.('.game-screen') ? 'hunt' : 'menu';
+        if (desired === 'hunt') prewarmCreaturesInHunt();
         if (desired === currentMusic && musicIsPlaying(desired)) return;
         const previous = currentMusic;
         currentMusic = desired;
@@ -787,8 +803,14 @@
         const creatures = document.createElement('div');
         creatures.className = 'wyrmforge-sound-samples';
         for (const family of ['hollow', 'ashling']) {
-            creatures.appendChild(makeButton('HEAR ' + family.toUpperCase(), 'wyrmforge-sound-sample',
-                'Preview ' + family + ' approach, pain and death', () => {
+            for (const action of ['approach', 'hit', 'death']) {
+                creatures.appendChild(makeButton(
+                    family.toUpperCase() + ' — ' + action.toUpperCase() + ' (A/B)',
+                    'wyrmforge-sound-sample', 'Repeat to compare two original recordings',
+                    () => { unlock(); play(family + '-' + action, true); }));
+            }
+            creatures.appendChild(makeButton('HEAR ' + family.toUpperCase() + ' SEQUENCE',
+                'wyrmforge-sound-sample', 'Preview approach, hit and death as one short scene', () => {
                     unlock();
                     play(family + '-approach', true);
                     window.setTimeout(() => play(family + '-hit', true), 1350);
