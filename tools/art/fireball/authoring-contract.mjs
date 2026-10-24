@@ -29,8 +29,14 @@ export function allFireballRecipes() {
     return Array.from({ length: 16 }, (_, mask) => ({ mask, required: requiredFireballRoles(mask) }));
 }
 
+function sourceIsWithinFireballArt(path) {
+    return typeof path === 'string' &&
+        path.startsWith('art/source/spells/fireball/') &&
+        !path.split('/').includes('..') && !path.includes('\\\\');
+}
+
 function validateFrames(source, path) {
-    if (typeof source?.sheet !== 'string' || !source.sheet.startsWith('art/source/spells/fireball/'))
+    if (!sourceIsWithinFireballArt(source?.sheet) || !/\\.(?:aseprite|ase|blend)$/.test(source.sheet))
         throw new Error(`${path}: missing editable source-sheet provenance`);
     if (!Number.isInteger(source.frames) || source.frames < 2 || source.frames > 256)
         throw new Error(`${path}: must have real authored animation frames`);
@@ -39,7 +45,7 @@ function validateFrames(source, path) {
     if (!(source.worldSize > 0) || !Number.isFinite(source.worldSize))
         throw new Error(`${path}: missing game-world size`);
     for (const channel of FIREBALL_MATERIAL_CHANNELS)
-        if (typeof source.channels?.[channel] !== 'string' || !source.channels[channel].endsWith('.png'))
+        if (!sourceIsWithinFireballArt(source.channels?.[channel]) || !source.channels[channel].endsWith('.png'))
             throw new Error(`${path}: required ${channel} authoring channel is missing`);
     return true;
 }
