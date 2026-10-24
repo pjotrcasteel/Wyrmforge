@@ -51,6 +51,10 @@ jobs:
           git add docs/audio/previews/hollowed-ashling-voices.mp3 docs/audio/previews/hollowed-ashling-audition.json
           if ! git diff --cached --quiet; then
             git commit -m "chore(audio): bundle CC0 Hollowed and Ashling sound auditions"
+            # Other work may advance this same draft PR while rendering. Preserve those
+            # commits instead of force-pushing stale asset output.
+            git fetch origin "${GITHUB_REF_NAME}"
+            git rebase "origin/${GITHUB_REF_NAME}"
             git push origin HEAD:${GITHUB_REF_NAME}
           fi
       - name: Store audition clips for portable review
