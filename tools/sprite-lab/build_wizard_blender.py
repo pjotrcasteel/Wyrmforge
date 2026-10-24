@@ -103,6 +103,7 @@ class WizardBuilder:
         self.make_staffs()
         self.ik_targets = self.create_ik()
         self.make_actions()
+        self.make_direction_pivot()
         self.make_preview_scene()
 
     def armature(self):
@@ -576,6 +577,34 @@ class WizardBuilder:
                                ('hand.L',grip_l),('hand.R',grip_r)]:
             self.ik_targets[name].location=position
 
+    def make_direction_pivot(self):
+        """Rotate body, cloth, props and ALL IK targets as one authored character.
+
+        Rotating the armature alone would leave world-space IK targets behind;
+        the neutral pose would look fine and the eight-facing walks would break.
+        This root controls views ONLY, not authoritative C# player positions.
+        """
+        self.directions = {
+            'S':0,'SE':45,'E':90,'NE':135,'N':180,'NW':225,'W':270,'SW':315,
+        }
+        pivot=bpy.data.objects.new('WizardActorDirectionPivot',None)
+        self.root.objects.link(pivot)
+        pivot.empty_display_type='CIRCLE'
+        pivot.empty_display_size=.45
+        for collection in (self.body,self.garment,self.staves,self.controls):
+            for ob in tuple(collection.objects):
+                world=ob.matrix_world.copy()
+                ob.parent=pivot
+                ob.matrix_world=world
+        self.pivot=pivot
+        return pivot
+
+    def set_direction(self,direction):
+        if direction not in self.directions:
+            raise ValueError('Unsupported original 8-direction view: '+direction)
+        self.pivot.rotation_euler[2]=math.radians(self.directions[direction])
+        bpy.context.view_layer.update()
+
     def make_preview_scene(self):
         # Reference lighting is strictly for offline material/silhouette reviews.
         # Never bake these light sources into the game's source albedo textures.
@@ -627,6 +656,7 @@ def main():
     parser.add_argument('--output',required=True)
     parser.add_argument('--school',choices=list(SCHOOLS),default='fire')
     parser.add_argument('--preview',action='store_true',help='Render one 512px review still; not a game atlas')
+    parser.add_argument('--eight-review',action='store_true',help='Render eight direction stills for ART REVIEW ONLY')
     options=parser.parse_args(args)
     builder=WizardBuilder(options.school)
     output=Path(options.output)
@@ -636,6 +666,16 @@ def main():
         bpy.context.scene.frame_set(5)
         bpy.context.scene.render.filepath=str(output.with_name(output.stem+'-preview.png'))
         bpy.ops.render.render(write_still=True)
+        bpy.ops.wm.save_as_mainfile(filepath=str(output),compress=True)
+    if options.eight_review:
+        folder=output.with_name(output.stem+'-eight-direction-review')
+        folder.mkdir(exist_ok=True,parents=True)
+        bpy.context.scene.frame_set(5)
+        for direction in ('N','NE','E','SE','S','SW','W','NW'):
+            builder.set_direction(direction)
+            bpy.context.scene.render.filepath=str(folder/('wizard-'+options.school+'-'+direction+'.png'))
+            bpy.ops.render.render(write_still=True)
+        builder.set_direction('S')
         bpy.ops.wm.save_as_mainfile(filepath=str(output),compress=True)
     print(json.dumps({'blend':str(output),'school':options.school,'editable':True,
                       'bones':len(builder.arm.data.bones),

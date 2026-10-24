@@ -24,10 +24,11 @@ earlier concept board. No creature or renderer files are modified by this bundle
 
 ## Run and preserve source
 
-Run tests from tools/sprite-lab (tests are in its tests/ folder), using Python 3.10+:
+Run tests from tools/sprite-lab (the tests live in its tests/ folder), on any Python 3.10+:
 
 ```bash
-python -m unittest discover -s tests -p 'test_wizard_*.py' -v
+python -m unittest discover -s tests -p 'test_wizard_motion.py' -v
+python -m unittest discover -s tests -p 'test_wizard_blender_source.py' -v
 python review_gait.py
 ```
 
@@ -35,7 +36,7 @@ Run with Blender **4.5 LTS or newer** locally:
 
 ```bash
 blender --background --python build_wizard_blender.py -- \
-  --output /path/to/wizard-production-source.blend --school fire --preview
+  --output /path/to/wizard-production-source.blend --school fire --preview --eight-review
 ```
 
 Retain the native `.blend`, editable meshes/materials/weights/animations and the
@@ -65,3 +66,7 @@ until these gates pass.**
 Engineering references: Blender 4.5 Python `ClothSettings` / `ClothCollisionSettings`
 API, WyrmForge canonical art/animation requirements, existing Hollowed/Ashling
 atlas manifests and shared `LitSprite` contract under PR #332.
+
+The eight-direction review rotates the rig, all IK controls, cape, beard and staff
+**together**; source images use a reference-lit authoring camera and are NOT
+production albedo or normal-map atlases.
