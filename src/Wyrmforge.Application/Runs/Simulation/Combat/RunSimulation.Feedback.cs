@@ -48,6 +48,17 @@ public sealed partial class RunSimulation
         elementalImpacts.Add(new ElementalImpactState(position, spell, ElementalImpactSeconds + .05 * Math.Clamp(rank - 1, 0, 2),
             rank, combination, surged, splashRadius));
 
+    private void RegisterProjectileImpact(Vector2D position, Wyrmforge.Domain.Combat.Projectiles.ProjectileState projectile,
+        bool enemyHit)
+    {
+        // Keep the generic impact API and its reflection/test callers untouched.
+        // A wall gets no fabricated explosion radius; each event retains the
+        // exact mutations of the physical projectile that produced it.
+        RegisterElementalImpact(position, projectile.Spell, projectile.Rank, projectile.Combination, projectile.Surge,
+            enemyHit ? projectile.SplashRadius : 0);
+        elementalImpacts[^1].FireballMutationMask = projectile.FireballMutationMask;
+    }
+
     private void RegisterEnemyDeath(EnemyState enemy)
     {
         var intensity = EnemyCatalog.Get(enemy.Kind).ThreatCost;
@@ -86,6 +97,7 @@ public sealed partial class RunSimulation
         public bool Surge { get; } = surged;
 
         public double SplashRadius { get; } = splashRadius;
+        public int FireballMutationMask { get; set; }
 
         public double Duration { get; } = duration;
 

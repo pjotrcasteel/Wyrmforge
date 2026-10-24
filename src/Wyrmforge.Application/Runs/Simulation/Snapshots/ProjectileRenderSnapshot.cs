@@ -9,4 +9,5 @@ public sealed record ProjectileRenderSnapshot(double X, double Y, double Radius,
     public double Angle { get; init; }
     public int Rank { get; init; } = 1;
     public bool Surge { get; init; }
+    public int FireballMutationMask { get; init; }
 }
