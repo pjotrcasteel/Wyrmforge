@@ -30,9 +30,11 @@ public sealed class FireballMutatorCompositionTests
             var (simulation, projectile, target) = Cast(equipped);
 
             Assert.AreEqual(mask, projectile.FireballMutationMask, $"Cast mask {mask}.");
+            Assert.IsGreaterThan(0, projectile.FireballSourceId, $"Each physical Fireball needs a stable source ({mask}).");
             Assert.AreEqual(1, Projectiles(simulation).Count,
                 $"Equipping {mask} must transform the one signature, not add free casts.");
             Assert.AreEqual(mask, simulation.CreateSnapshot().Projectiles.Single().FireballMutationMask);
+            Assert.AreEqual(projectile.FireballSourceId, simulation.CreateSnapshot().Projectiles.Single().FireballSourceId);
 
             var meteor = (mask & 1) != 0;
             var detonation = (mask & 2) != 0;
@@ -54,6 +56,7 @@ public sealed class FireballMutatorCompositionTests
             Assert.AreEqual(0, snapshot.Projectiles.Count, "One spent Fireball does not make a second shot.");
             var impact = snapshot.ElementalImpacts.Single();
             Assert.AreEqual(mask, impact.FireballMutationMask);
+            Assert.AreEqual(projectile.FireballSourceId, impact.FireballSourceId);
             Assert.AreEqual(projectile.SplashRadius, impact.SplashRadius, .000001);
             Assert.AreEqual(scorched ? 1 : 0, snapshot.BurningGrounds.Count,
                 $"Rank-I Scorched Earth persistence for {mask}.");
@@ -61,6 +64,7 @@ public sealed class FireballMutatorCompositionTests
             {
                 var ground = snapshot.BurningGrounds.Single();
                 Assert.AreEqual(mask, ground.FireballMutationMask);
+                Assert.AreEqual(projectile.FireballSourceId, ground.FireballSourceId);
                 Assert.IsGreaterThan(0d, ground.RemainingSeconds);
             }
             Assert.AreEqual(mask, snapshot.FireballVisual!.MutationMask);
@@ -79,7 +83,41 @@ public sealed class FireballMutatorCompositionTests
         var projectile = Projectiles(simulation).Single();
         Assert.AreEqual(SpellId.CinderNeedle, projectile.Spell);
         Assert.AreEqual(0, projectile.FireballMutationMask);
+        Assert.AreEqual(0, projectile.FireballSourceId);
         Assert.AreEqual(0, simulation.CreateSnapshot().Projectiles.Single().FireballMutationMask);
+        Assert.AreEqual(0, simulation.CreateSnapshot().Projectiles.Single().FireballSourceId);
+    }
+
+    [TestMethod]
+    public void Hit_TwoIndependentFireballs_KeepTheirOwnMutationIdentityThroughSeparateAftermaths()
+    {
+        var (simulation, first, target) = Cast([
+            FireballMutationId.MeteorHeart, FireballMutationId.Detonation, FireballMutationId.ScorchedEarth,
+        ]);
+        Invoke(simulation, "CastSpell", SpellCatalog.Get(SpellId.FireBolt), 1, 1d, false);
+        var second = Projectiles(simulation).Single(shot => !ReferenceEquals(shot, first));
+
+        Assert.AreNotEqual(first.FireballSourceId, second.FireballSourceId);
+        Assert.IsGreaterThan(first.FireballSourceId, 0);
+        Assert.IsGreaterThan(second.FireballSourceId, 0);
+        Assert.AreEqual(first.FireballMutationMask, second.FireballMutationMask);
+
+        first.Position = target.Position;
+        Invoke(simulation, "ResolveProjectileHits");
+        var afterFirst = simulation.CreateSnapshot();
+
+        Assert.AreEqual(first.FireballSourceId, afterFirst.ElementalImpacts.Single().FireballSourceId);
+        Assert.AreEqual(first.FireballSourceId, afterFirst.BurningGrounds.Single().FireballSourceId);
+        Assert.AreEqual(second.FireballSourceId, afterFirst.Projectiles.Single().FireballSourceId);
+
+        second.Position = target.Position;
+        Invoke(simulation, "ResolveProjectileHits");
+        var afterSecond = simulation.CreateSnapshot();
+        CollectionAssert.AreEquivalent(new[] { first.FireballSourceId, second.FireballSourceId },
+            afterSecond.ElementalImpacts.Select(impact => impact.FireballSourceId).ToArray());
+        CollectionAssert.AreEquivalent(new[] { first.FireballSourceId, second.FireballSourceId },
+            afterSecond.BurningGrounds.Select(field => field.FireballSourceId).ToArray());
+        Assert.AreEqual(0, afterSecond.Projectiles.Count);
     }
 
     private static (RunSimulation Simulation, ProjectileState Projectile, EnemyState Target) Cast(
