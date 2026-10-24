@@ -217,3 +217,39 @@ comparisons are separate, so a single changing hash no longer conflates them.
 The local replacement checkout initially lacked fixtures for the full JS suite;
 that incomplete run is not treated as a renderer regression or a passing run.
 The focused lighting registry/sprite tests pass; full assets are being restored.
+
+
+### Verified evidence checkpoint — 2026-10-24
+
+Code/test checkpoint `f894fd0e9e447af47bb06aa7f99c559de2e7cc98` passed
+[published-app GPU workflow 40108114018](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40108114018).
+Artifact `12565566800` contains 56 screenshots and 56 JSON metric sidecars
+(expiring 2026-11-23). These are Chromium CI mobile viewport captures, not physical
+phone profiling. All 384 local JavaScript tests passed after restoring sparse
+checkout fixtures.
+
+All ten zero captures (overview, actors, oak, Town and water at both viewport
+sizes) have `maxRgb=0`, `nonzeroPixels=0` and an empty applied light registry.
+The 320×568 viewport renders a 296×409 framebuffer (363,192 RGB channels);
+390×844 renders 366×608 (667,584 RGB channels). Every channel was checked;
+viewport dimensions are not framebuffer dimensions. UI remains readable.
+Frozen restoration, source lifecycle, separate pose-only/source-position-only
+changes and diagnostic nonblank assertions passed.
+
+Downloaded screenshots were inspected: depth inspection displays native cube
+faces; oak point visibility contains foliage occlusion and cast ground shadows;
+Town wall receives illumination and the actor-proxy silhouette; water has a
+direct-light highlight. These demonstrate mechanisms, not final artistic
+acceptance. Night actors/oak remain too dark and difficult to read. Detailed
+leaf-on-leaf quality, per-actor normal orientation and moving-water highlight
+comparisons still require acceptance-focused evidence. Alpha-card foliage,
+attack/death material exports, completed Town decomposition and physical-device
+budgets remain open. No production rendering path has migrated.
+
+Validate Wyrmforge (40108114036) and Arcane WebKit (40108114019) passed this
+checkpoint. Browser smoke (40108113997) was still running when recorded.
+The preceding `48dc4dd` Validate failure was in unchanged
+`ContextualSpellTests.Crowd_IsShovedOutward_AndThePulseSpendsThePrimaryCast`
+(actual 113.333 versus required >140); the same application suite passed on
+`f894fd0`. No gameplay code was changed to mask this intermittent failure.
+PR #332 remains draft and G1 remains incomplete.
