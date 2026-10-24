@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "actor": "hollowed",
+  "directions": [
+    "N",
+    "NE",
+    "E",
+    "SE",
+    "S",
+    "SW",
+    "W",
+    "NW"
+  ],
+  "roughness": 0.82,
+  "specular": 0.18,
+  "metalness": 0,
+  "alphaCutoff": 0.5,
+  "castsShadow": true,
+  "receivesShadow": true,
+  "receivesLight": true,
+  "emissive": null,
+  "emissiveStatus": "Not enabled: emissive subregions require separate source-mask acceptance",
+  "clips": {
+    "walk": {
+      "albedo": "walk.png",
+      "normal": "../../lighting-proof/hollowed-walk-normal.png",
+      "depth": "walk-depth.png",
+      "caster": "walk-caster.png",
+      "frames": 16,
+      "cell": 96,
+      "anchor": [
+        48,
+        72
+      ],
+      "worldSize": 93,
+      "fps": null,
+      "sourceRig": "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-pixel-v3/hollow-rigged.blend",
+      "sourcePose": "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-pixel-v3/sampled-walk.npz",
+      "sourcePoseSha256": "a033ebe51fcd95c7e5d82f42d432c2a86ad4f5afdc2b376a150137c12829f8e9",
+      "albedoSha256": "efa6ac701a7b7030288fb6b4cc2ba9c23500f552b6ffba55873d995460f6e165",
+      "normalSha256": "6f37307450b7dc8cf18490803f542349d7bf08892fc4bd4bc1223df2fff3d2a8",
+      "depthSha256": "c088672a2f2cc96346dcfc99cf486c5612128d7f1122d11f6d263600a3d3ab77",
+      "casterSha256": "01ef694908ff8b36d4a1fcd9e44918435f41a468adef80b47dc56cda211deef1",
+      "normalSource": "original pose triangulated surface, same camera and direction as albedo",
+      "minimumMeshColorSilhouetteIoU": 0.985696,
+      "depthSpace": "source camera normalized device depth; 0 means no geometry",
+      "casterMode": "original mesh screen-space alpha silhouette, NOT volumetric self-shadowing",
+      "nonMeshPixels": "excluded from normal/depth/caster; retained in original albedo"
+    },
+    "attack": {
+      "albedo": "attack.png",
+      "normal": "attack-normal.png",
+      "depth": "attack-depth.png",
+      "caster": "attack-caster.png",
+      "frames": 16,
+      "cell": 128,
+      "anchor": [
+        64,
+        88
+      ],
+      "worldSize": 124.0,
+      "fps": 12,
+      "sourceRig": "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-attack-v2/hollow-attack.blend",
+      "sourcePose": "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-attack-v2/sampled-attack.npz",
+      "sourcePoseSha256": "9bdde1f0970930e182a261f11435e525dce60b2269774bca28bb14fd919ae895",
+      "albedoSha256": "810243b7fd42edbffe253409fda6bd5efd0808f9846f996ad068f2f2d6fc6ef9",
+      "normalSha256": "cbb0363ac6a527aa64d3f56bd283fbe5f2267cf6a7c88bc872c0fc2ce3840858",
+      "depthSha256": "82bcc182e66ab42d819c6efb1792428673184e3e9e52dd5d20227c747a1dc788",
+      "casterSha256": "a006edb70fe496f8429427326369dd298b65b728783d1b6256e495b299d1c0f1",
+      "normalSource": "original pose triangulated surface, same camera and direction as albedo",
+      "minimumMeshColorSilhouetteIoU": 0.987465,
+      "depthSpace": "source camera normalized device depth; 0 means no geometry",
+      "casterMode": "original mesh screen-space alpha silhouette, NOT volumetric self-shadowing",
+      "nonMeshPixels": "excluded from normal/depth/caster; retained in original albedo"
+    },
+    "death": {
+      "albedo": "death.png",
+      "normal": "death-normal.png",
+      "depth": "death-depth.png",
+      "caster": "death-caster.png",
+      "frames": 24,
+      "cell": 128,
+      "anchor": [
+        64,
+        88
+      ],
+      "worldSize": 124.0,
+      "fps": 12,
+      "sourceRig": "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-death-v5/hollow-death.blend",
+      "sourcePose": "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-death-v5/sampled-death.npz",
+      "sourcePoseSha256": "1025c4ac05d48620ce2ee5b86f9042d91267a06d1ee1185368306f4e309e79ef",
+      "albedoSha256": "04ab219f6122d4e902a635ebd1566b33fb04328122691c9205f67d78db42c8f4",
+      "normalSha256": "7be65942bc6535a66ec5533b92431e5c414a45e71cd2a722511f0773343ee7e8",
+      "depthSha256": "6a1262afc0f37a91945fe0f82fdd20848c22c660a0d4a1e0deb37e7cb470707e",
+      "casterSha256": "dbb3799616df093f5eeb94cceb50437678c7ecbb22086e60ab57ae90df78e0df",
+      "normalSource": "original pose triangulated surface, same camera and direction as albedo",
+      "minimumMeshColorSilhouetteIoU": 0.984195,
+      "depthSpace": "source camera normalized device depth; 0 means no geometry",
+      "casterMode": "original mesh screen-space alpha silhouette, NOT volumetric self-shadowing",
+      "nonMeshPixels": "excluded from normal/depth/caster; retained in original albedo"
+    }
+  }
+}
