@@ -211,7 +211,7 @@ for record in diagnostics:
         upper = Vector(arm["elbow"]) - Vector(arm["shoulder"])
         fore = Vector(arm["wrist"]) - Vector(arm["elbow"])
         wrist = Vector(arm["wrist"])
-        assert (Vector(arm["elbow"]) - Vector(arm["shoulder"])).length - lengths["upper_arm." + side] < 1e-5
+        assert abs(upper.length - lengths["upper_arm." + side]) < 1e-5
         assert abs(fore.length - lengths["forearm." + side]) < 1e-5
         if drive > .8:
             assert upper.y > 0 and fore.y < 0, ("back swing must fold toward the hip", side, record["frame"])
