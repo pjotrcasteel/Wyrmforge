@@ -13,6 +13,8 @@ export function validateActorMaterialManifest(sprite, material) {
         if (pass.frames !== clip.frames || pass.cell !== clip.cell ||
             pass.worldSize !== clip.worldSize || JSON.stringify(pass.anchor) !== JSON.stringify(clip.anchor))
             throw new RangeError(`Color/material atlas mismatch: ${name}`);
+        if (pass.emissiveMask && (!pass.emissiveSourceSha256 || !pass.emissiveMaskSha256))
+            throw new Error(`Unverified emissive source: ${name}`);
         if (pass.albedo !== clip.image)
             throw new RangeError(`Original albedo not preserved: ${name}`);
         if (!/^[a-f0-9]{64}$/.test(pass.sourcePoseSha256) || !/^[a-f0-9]{64}$/.test(pass.albedoSha256))
@@ -33,6 +35,7 @@ export function actorMaterialSample(sprite, material, sample) {
         textures: {
             albedo: selected.albedo, normal: selected.normal,
             depth: selected.depth, caster: selected.caster,
+            emissiveMask: selected.emissiveMask ?? null,
         },
         sourcePoseSha256: selected.sourcePoseSha256,
         anchor: [...selected.anchor], worldSize: selected.worldSize,
