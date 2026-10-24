@@ -68,8 +68,16 @@ def run(output,render,walk_sequence):
         verify(unweighted==0,name+" has "+str(unweighted)+
                " source vertices stranded when pelvis/torso moves")
 
-    coat=bpy.data.objects.get("Open-front weighty coat / continuous physics")
+    coat=bpy.data.objects.get("Open-front weighty coat / skinned foundation")
     verify(coat is not None and coat.type=="MESH","original robe mesh absent")
+    verify(not any(m.type=="CLOTH" for m in coat.modifiers),
+           "core coat must be stable skinned geometry, not free simulated cloth")
+    for name in ("Weighty coat hem panel L","Weighty coat hem panel R",
+                 "Asymmetric rear cape with physical lag"):
+        ob=bpy.data.objects.get(name)
+        verify(ob is not None and any(m.type=="CLOTH" for m in ob.modifiers),
+               "missing distinct simulated wizard hem/cape "+name)
+
     outward=0
     tested=0
     # Mesh-space radial normal check guards against collision-inverting winding.
