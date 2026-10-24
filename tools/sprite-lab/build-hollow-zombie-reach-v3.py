@@ -95,7 +95,7 @@ assert clearance>.14
 action=bpy.data.actions.new("Hollow_CMU_ZombieReach_v3_"+variant.replace("-","_")+"_UNAPPROVED")
 rig.animation_data.action=action
 
-def exact_ik_leg(side,ankle,original_knee,toe):
+def exact_ik_leg(side,ankle,original_knee,toe,source_ankle):
     hip=rig.pose.bones["thigh."+side].head.copy()
     length1=lengths["thigh."+side]
     length2=lengths["shin."+side]
@@ -115,7 +115,7 @@ def exact_ik_leg(side,ankle,original_knee,toe):
     knee=hip+axis*along+unit(pole)*lift
     orient("thigh."+side,hip,knee)
     orient("shin."+side,knee,ankle)
-    orient("foot."+side,ankle,ankle+unit(toe-samples[0]["legs"][side]["ankle"])*lengths["foot."+side])
+    orient("foot."+side,ankle,ankle+unit(toe-source_ankle)*lengths["foot."+side])
     return hip,knee
 
 records=[]
@@ -156,9 +156,9 @@ for i in range(F+1):
         bpy.context.view_layer.update()
         # Stance feet retain EXACT previous source position, both resolved
         # against relocated pelvis. Only injured foot during swing drags.
-        left_hip,left_knee=exact_ik_leg("L",desired,leg["knee"],leg["toe"])
+        left_hip,left_knee=exact_ik_leg("L",desired,leg["knee"],leg["toe"],source_ankle)
         right=samples[j]["legs"]["R"]
-        right_hip,right_knee=exact_ik_leg("R",right["ankle"],right["knee"],right["toe"])
+        right_hip,right_knee=exact_ik_leg("R",right["ankle"],right["knee"],right["toe"],right["ankle"])
         for side,hip,knee,ankle in (
             ("L",left_hip,left_knee,desired),("R",right_hip,right_knee,right["ankle"])
         ):
