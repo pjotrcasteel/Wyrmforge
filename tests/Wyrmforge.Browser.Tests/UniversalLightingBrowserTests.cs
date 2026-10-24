@@ -96,14 +96,69 @@ public sealed class UniversalLightingBrowserTests : PageTest
         await CaptureAsync(width, "oak-point-visibility-right");
         await ConfigureAsync(canvas, new { progress = .15 });
         await CaptureAsync(width, "oak-point-visibility-left");
+        await VerifyReceiversAsync(canvas, width);
         Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
     }
+
+    private async Task VerifyReceiversAsync(ILocator canvas, int width)
+    {
+        await ConfigureAsync(canvas, new { lighting = "neutral-key", view = "lit", progress = .25, frame = 0, fireball = false, torch = false, spot = false });
+        foreach (var id in new[] { "hollowed", "ashling", "npc-binding-proxy", "wall", "roof", "foreground-post", "oak-0", "oak-1" })
+        {
+            var focus = id == "foreground-post" ? "water" : id.StartsWith("oak-") ? "oak" : id is "hollowed" or "ashling" ? "actors" : "town";
+            await ConfigureAsync(canvas, new { inspectObject = id, focus });
+            await SaveReceiverBaselineAsync(canvas);
+            await CaptureAsync(width, $"key-{id}");
+            if (id is "hollowed" or "ashling")
+            {
+                await ConfigureAsync(canvas, new { normals = false });
+                Assert.IsGreaterThan(5, await ReceiverChangedPixelsAsync(canvas), $"{id} authored normals must change its own visible pixels.");
+                await CaptureAsync(width, $"key-{id}-flat");
+                await ConfigureAsync(canvas, new { normals = true });
+            }
+            await ConfigureAsync(canvas, new { receivesLight = false });
+            Assert.IsGreaterThan(5, await ReceiverChangedPixelsAsync(canvas), $"{id} must receive the registered key.");
+            await CaptureAsync(width, $"key-{id}-no-receipt");
+            await ConfigureAsync(canvas, new { receivesLight = true });
+            Assert.AreEqual(0, await ReceiverChangedPixelsAsync(canvas), $"{id} must restore exactly.");
+        }
+        await ConfigureAsync(canvas, new { focus = "water", inspectObject = "puddle", behind = true });
+        var centers = new List<double>();
+        foreach (var position in new[] { .2, .8 })
+        {
+            await ConfigureAsync(canvas, new { progress = position, reflections = true });
+            await SaveReceiverBaselineAsync(canvas);
+            await CaptureAsync(width, $"water-key-{position}-specular");
+            await ConfigureAsync(canvas, new { reflections = false });
+            Assert.IsGreaterThan(5, await ReceiverChangedPixelsAsync(canvas), "Specular A/B must change water pixels, not just other surfaces.");
+            centers.Add(await canvas.EvaluateAsync<double>(
+                "c => { const p=gpuProof.proofPixels(c), e=window.receiverEvidence; let sum=0,x=0; for(const i of e.indices) { const d=Math.max(0,e.pixels[i]+e.pixels[i+1]+e.pixels[i+2]-p[i]-p[i+1]-p[i+2]); sum+=d; x+=(i/4%c.width)*d; } return sum ? x/sum : -1; }"));
+            await CaptureAsync(width, $"water-key-{position}-diffuse");
+        }
+        Assert.IsGreaterThan(1.0, Math.Abs(centers[1] - centers[0]), "Water's specular contribution must move with the source.");
+        await ConfigureAsync(canvas, new { reflections = true, profile = "zero" });
+        Assert.IsTrue(await canvas.EvaluateAsync<bool>("c => gpuProof.proofPixels(c).every((v,i) => i%4===3 || v===0)"),
+            "Zero must disable the explicit inspection key too.");
+        await CaptureAsync(width, "inspection-key-zero");
+    }
+
+    private async Task SaveReceiverBaselineAsync(ILocator canvas)
+    {
+        await ConfigureAsync(canvas, new { view = "object-mask" });
+        var count = await canvas.EvaluateAsync<int>("c => { const p=gpuProof.proofPixels(c), indices=[]; for(let i=0;i<p.length;i+=4) if(p[i]===255) indices.push(i); window.receiverEvidence={indices}; return indices.length; }");
+        Assert.IsGreaterThan(20, count, "Receiver must have enough visible pixels for a meaningful comparison.");
+        await ConfigureAsync(canvas, new { view = "lit" });
+        await canvas.EvaluateAsync("c => { window.receiverEvidence.pixels=gpuProof.proofPixels(c); }");
+    }
+
+    private static Task<int> ReceiverChangedPixelsAsync(ILocator canvas) => canvas.EvaluateAsync<int>(
+        "c => { const p=gpuProof.proofPixels(c), e=window.receiverEvidence; return e.indices.filter(i => Math.abs(p[i]-e.pixels[i])+Math.abs(p[i+1]-e.pixels[i+1])+Math.abs(p[i+2]-e.pixels[i+2])>3).length; }");
 
     private async Task ConfigureAsync(ILocator canvas, object options)
     {
         var labels = new Dictionary<string, string>
         {
-            ["profile"] = "Environment", ["view"] = "Diagnostic", ["focus"] = "Camera",
+            ["lighting"] = "Lighting rig", ["behind"] = "Light behind receiver", ["profile"] = "Environment", ["view"] = "Diagnostic", ["focus"] = "Camera",
             ["fireball"] = "Fireball", ["torch"] = "Torch", ["spot"] = "Spot", ["rune"] = "Register rune",
             ["shadows"] = "Shadows", ["reflections"] = "Direct specular", ["normals"] = "Authored normals",
             ["progress"] = "Light position", ["frame"] = "Walk frame", ["animate"] = "Animate walk",

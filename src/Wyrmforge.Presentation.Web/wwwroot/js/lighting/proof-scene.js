@@ -39,7 +39,7 @@ async function actorResources(engine, id, folder) {
     engine.registerTexture(id, texture);
     const normal = await new T.TextureLoader().loadAsync(new URL(`../../art/lighting-proof/${id}-walk-normal.png`, import.meta.url).href);
     engine.registerTexture(`${id}-normal`, normal, false);
-    engine.registerGeometry(id, spritePlaneGeometry(T, clip));
+    engine.registerGeometry(id, spritePlaneGeometry(T, clip, 1 / 48, engine.camera.getWorldDirection(new T.Vector3()).negate().toArray()));
     manifest.animationProfile = await (await fetch(new URL('animation-profile.json', base))).json();
     return manifest;
 }
@@ -47,7 +47,7 @@ export async function initializeProof(canvas) {
     if (states.has(canvas)) return;
     const engine = new LightingEngine(canvas);
     const state = { engine, alive: true, options: { profile: 'night', fireball: true, torch: true, spot: true,
-        rune: false, shadows: true, reflections: true, progress: .25, frame: 0, animate: false, view: 'lit', focus: 'overview', inspectObject: 'hollowed', castsShadow: true, receivesShadow: true, receivesLight: true, normals: true }, manifests: {}, animation: {}, samples: {} };
+        lighting: 'scene', behind: false, rune: false, shadows: true, reflections: true, progress: .25, frame: 0, animate: false, view: 'lit', focus: 'overview', inspectObject: 'hollowed', castsShadow: true, receivesShadow: true, receivesLight: true, normals: true }, manifests: {}, animation: {}, samples: {} };
     states.set(canvas, state);
     try {
         engine.registerGeometry('box', new T.BoxGeometry(1, 1, 1));
@@ -99,13 +99,21 @@ export function configureProof(canvas, options) {
     const p = state.options, zero = p.profile === 'zero';
     const firePosition = [-3.5 + p.progress * 7, p.behind ? 4 : -1.6, p.behind ? 3.6 : 2.4];
     const environment = environmentProfile(p.profile);
-    const lights = [light('fireball', firePosition, '#ff8d42', 32, 'point', 10),
+    let lights = [light('fireball', firePosition, '#ff8d42', 32, 'point', 10),
         light('torch', [-2, 1.4, 1.7], '#ffc27a', 10, 'point', 5),
         light('lantern-beam', [3, -1, 3.5], '#adc3e9', 16, 'spot', 8),
         light('moon', [-4, -3, 8], '#99b4dc', environment.ambient > .1 ? 1.2 : .035, 'directional', 1)];
     lights[0].enabled = p.fireball; lights[1].enabled = p.torch; lights[2].enabled = p.spot;
     // New emitter/prop requires descriptor data only; engine source never mentions rune.
     if (p.rune) lights.push(light('rune', [2, -2, .7], '#48ffd1', 8, 'point', 2));
+    if (p.lighting === 'neutral-key') {
+        // Explicit inspection source, never a hidden actor boost or ambient veil.
+        const receiver = state.objects.find(o => o.id === p.inspectObject);
+        if (!receiver) throw new RangeError('Unknown inspection receiver');
+        const [x, y, z] = receiver.position;
+        lights = [light('inspection-key', [x - 1.8 + p.progress * 3.6, y + (p.behind ? 2 : -2), z + 2.4], '#ffffff', 24, 'point', 10)];
+        environment.ambient = 0; environment.emission = false;
+    } else if (p.lighting !== 'scene') throw new RangeError('Unknown lighting rig');
     for (const l of lights) { l.enabled &&= !zero; l.castsShadow &&= p.shadows; }
     const objects = structuredClone(state.objects);
     if (p.fireball) objects.push(object('fireball-core', 'sphere', 'flame', firePosition, [1, 1, 1], { castsShadow: false }));
@@ -124,6 +132,7 @@ export function configureProof(canvas, options) {
     state.engine.apply({ version: 1, time: 0, lights, materials, objects, environment });
     state.engine.setDebugView('lit');
     state.engine.render();
+    state.engine.inspectionObject = p.inspectObject;
     state.engine.setDebugView(zero ? 'lit' : p.view);
     if (state.engine.debugView !== 'lit') state.engine.render();
     canvas.dataset.diagnostics = JSON.stringify(state.engine.diagnostics());

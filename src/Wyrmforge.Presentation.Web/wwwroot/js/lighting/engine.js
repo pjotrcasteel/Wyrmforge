@@ -113,7 +113,7 @@ export class LightingEngine {
                     caster = new T.Mesh(this.geometries.get(d.occluderGeometry), hidden);
                     this.scene.add(caster);
                 }
-                object = { mesh, caster, signature }; this.objects.set(d.id, object); this.scene.add(mesh);
+                object = { id: d.id, mesh, caster, signature }; this.objects.set(d.id, object); this.scene.add(mesh);
             }
             for (const mesh of [object.mesh, object.caster].filter(Boolean)) {
                 mesh.position.fromArray(d.position); mesh.rotation.set(...d.rotation); mesh.scale.fromArray(d.scale);
@@ -139,12 +139,13 @@ export class LightingEngine {
     }
     /** Explicit inspection passes, never world illumination. */
     setDebugView(view) {
-        if (!['lit', 'albedo', 'normals', 'geometry', 'shadow-visibility', 'light-depth', 'light-bounds'].includes(view)) throw new RangeError('Unknown diagnostic view');
+        if (!['lit', 'albedo', 'normals', 'geometry', 'shadow-visibility', 'light-depth', 'light-bounds', 'object-mask'].includes(view)) throw new RangeError('Unknown diagnostic view');
         this.debugView = view;
     }
     debugMaterial(object) {
         object.debugMaterials ??= new Map();
-        if (object.debugMaterials.has(this.debugView)) return object.debugMaterials.get(this.debugView);
+        const key = `${this.debugView}-${object.id === this.inspectionObject}`;
+        if (object.debugMaterials.has(key)) return object.debugMaterials.get(key);
         const view = this.debugView, material = object.mesh.material.clone();
         material.wireframe = view === 'geometry';
         material.toneMapped = false;
@@ -161,12 +162,12 @@ float proofShadowVisibility() {
 #endif
 }`);
             const output = { albedo: 'diffuseColor.rgb', normals: 'normal * 0.5 + 0.5',
-                geometry: 'vec3(0.65, 0.85, 0.75)', 'shadow-visibility': 'vec3(proofShadowVisibility())' }[view];
+                geometry: 'vec3(0.65, 0.85, 0.75)', 'object-mask': object.id === this.inspectionObject ? 'vec3(1.0)' : 'vec3(0.0)', 'shadow-visibility': 'vec3(proofShadowVisibility())' }[view];
             shader.fragmentShader = shader.fragmentShader.replace('#include <opaque_fragment>',
                 `outgoingLight = ${output};\n#include <opaque_fragment>`);
         };
-        material.customProgramCacheKey = () => `lighting-inspection-${view}`;
-        object.debugMaterials.set(view, material);
+        material.customProgramCacheKey = () => `lighting-inspection-${key}`;
+        object.debugMaterials.set(key, material);
         return material;
     }
     render(width = this.canvas.clientWidth, height = this.canvas.clientHeight) {

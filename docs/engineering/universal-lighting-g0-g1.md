@@ -253,3 +253,21 @@ The preceding `48dc4dd` Validate failure was in unchanged
 (actual 113.333 versus required >140); the same application suite passed on
 `f894fd0`. No gameplay code was changed to mask this intermittent failure.
 PR #332 remains draft and G1 remains incomplete.
+
+
+### Camera-aligned actors and receiver-isolated comparisons — candidate
+
+The shared sprite plane now uses camera right/up/toward with its authored foot
+anchor at the world origin. Previously a vertical X/Z card projected an already
+projected sprite again, compressing/skewing its silhouette under the oblique
+camera. A projection regression verifies square cell aspect, horizontal atlas
+rows, foot registration and neutral tangent orientation. Original color/normal
+atlases remain unchanged; this does not supply volumetric actor depth.
+
+An explicit neutral inspection key and receiver-mask diagnostic separate material
+response from the warm scene rig. The key is a regular point descriptor, listed
+in diagnostics and disabled by zero-light mode. The mask retains actual depth
+and alpha clipping, so browser A/B tests measure only visible receiver pixels.
+Expanded tests cover each actor's normal response; wall/roof/post/NPC and oak
+receipt; and water-only specular contribution at two source positions. This is
+pending GPU CI/visual inspection, not a passed G1 gate or a new night art baseline.

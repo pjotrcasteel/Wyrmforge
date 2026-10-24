@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { validateSnapshot, selectLights, environmentProfile } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/registry.js';
-import { spriteFrame } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/lit-sprite.js';
+import * as T from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/vendor/three.module.js';
+import { spriteFrame, spritePlaneGeometry } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/lit-sprite.js';
 const emitter = (id, extra = {}) => ({ id, ownerId: id, type: 'point', enabled: true, position: [0, 0, 1],
     direction: [0, 0, -1], color: '#ff7722', intensity: 10, range: 8, coneAngle: .5, penumbra: .2,
     priority: 1, castsShadow: true, ...extra });
@@ -37,4 +38,23 @@ test('common sprite sample shares exact UV cell across normal/albedo/shadow maps
     const manifest = { directions: ['N', 'S'], clips: { walk: { frames: 16 } } };
     assert.deepEqual(spriteFrame(manifest, { clip: 'walk', frame: 4, direction: 'S' }), { offset: [.25, 0], repeat: [1 / 16, .5] });
     assert.throws(() => spriteFrame(manifest, { clip: 'walk', frame: 16, direction: 'S' }));
+});
+
+// Test projected geometry, not a duplicate of the geometry construction algorithm.
+test('sprite projection preserves authored aspect, foot pivot and tangent normal orientation', () => {
+    const clip = { cell: 96, worldSize: 96, anchor: [42, 72] };
+    const geometry = spritePlaneGeometry(T, clip, 1 / 48, [8, -12, 12]);
+    const camera = new T.OrthographicCamera(-2, 2, 2, -2, .1, 80);
+    camera.up.set(0, 0, 1); camera.position.set(8, -12, 12); camera.lookAt(0, 0, 0); camera.updateMatrixWorld();
+    const positions = geometry.attributes.position;
+    const points = Array.from({ length: positions.count }, (_, i) => new T.Vector3().fromBufferAttribute(positions, i).project(camera));
+    const width = points[1].x - points[0].x, height = points[0].y - points[2].y;
+    assert.ok(Math.abs(width - height) < 1e-6, 'Square atlas cells must remain square on screen');
+    assert.ok(Math.abs(points[0].y - points[1].y) < 1e-6, 'Atlas rows must remain screen-horizontal');
+    assert.ok(Math.abs(points[0].x + width * clip.anchor[0] / clip.cell) < 1e-6, 'Authored foot X must project to origin');
+    assert.ok(Math.abs(points[0].y - height * clip.anchor[1] / clip.cell) < 1e-6, 'Authored foot Y must project to origin');
+    const normal = new T.Vector3().fromBufferAttribute(geometry.attributes.normal, 0);
+    assert.ok(normal.dot(camera.position.clone().normalize()) > .99999, 'Neutral tangent normal must point toward the camera');
+    geometry.dispose();
+    assert.throws(() => spritePlaneGeometry(T, clip, 1 / 48, [0, 0, 1]), RangeError);
 });
