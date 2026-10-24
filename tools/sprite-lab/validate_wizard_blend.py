@@ -59,6 +59,8 @@ def run(output,render,walk_sequence):
                "missing keyframed IK "+name)
     verify(arm.animation_data and arm.animation_data.action,"missing skeleton action")
     root_rotation=pivot.rotation_euler.copy()
+    verify(scene.get("WizardClothWarmupFrames")==32,
+           "missing two authored pre-roll loops for predictable cloth")
     gait={}
     for direction,angle in (("S",0),("N",math.pi)):
         pivot.rotation_euler.z=angle
@@ -104,6 +106,11 @@ def run(output,render,walk_sequence):
             verify(path.is_file() and path.stat().st_size>1000,"missing render "+str(path))
             images.append(path.name)
     if walk_sequence:
+        # Simulate every pre-roll frame IN ORDER before first exported walk pose.
+        # Avoid a cold-start cape and coat falling into position across the walk.
+        scene.frame_set(-31)
+        for warm_frame in range(-30,1):
+            scene.frame_set(warm_frame)
         scene.cycles.samples=5
         scene.render.resolution_x=256
         scene.render.resolution_y=256
@@ -123,7 +130,9 @@ def run(output,render,walk_sequence):
         "bones":len(arm.data.bones),"staffVariants":len(schools),"directions":len(directions),
         "clips":clips,"clothMeshes":cloth,"gait":gait,"reviewImages":images,
         "status":"validated source; art/mobile/lighting NOT approved",
-        "artApproved":False,"clothBakedAndReviewed":False,"runtimeIntegrated":False}
+        "artApproved":False,"clothBakedAndReviewed":False,"runtimeIntegrated":False,
+        "clothWarmupFrames":scene.get("WizardClothWarmupFrames"),
+        "clothBakeRequiredForProduction":True}
     (output/"wizard-blender-validation.json").write_text(json.dumps(report,indent=2)+"\n")
     print(json.dumps(report,indent=2))
 
