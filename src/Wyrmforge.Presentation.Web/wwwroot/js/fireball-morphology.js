@@ -235,6 +235,6 @@ export function drawFireballNexusPreview(canvas, recipe) {
     ctx.scale(scale, scale);
     drawComposedFireProjectile(ctx, { radius: 17, rank: 1 }, recipe, true);
     ctx.restore();
-    canvas.dataset.artwork = artworkReady ? 'canonical' : 'fallback';
+    if (canvas.dataset) canvas.dataset.artwork = artworkReady ? 'canonical' : 'fallback';
     if (!artworkReady && fireballArtwork) awaitingNexus.add({ canvas, recipe });
 }
