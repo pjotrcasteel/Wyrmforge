@@ -1,0 +1,71 @@
+name: Actor sprite materials and provenance
+
+on:
+  push:
+    branches: [feat/actor-lit-sprite-production]
+    paths:
+      - 'tools/art/export-lit-actor-materials.py'
+      - 'tools/art/validate-lit-actor-materials.py'
+      - '.github/workflows/actor-lit-materials.yml'
+  pull_request:
+    branches: [feat/universal-gpu-lighting-g0-g1, main]
+    paths:
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/hollow-rigged/**'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/ashling-rigged/**'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/actor-asset-contract.js'
+      - 'tools/art/export-lit-actor-materials.py'
+      - 'tools/art/validate-lit-actor-materials.py'
+      - 'tests/javascript/actor-lit-assets.test.mjs'
+      - '.github/workflows/actor-lit-materials.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  actor-materials:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install numeric source rasterizer
+        run: python -m pip install 'numpy>=1.26,<3' 'pillow>=10,<13' 'numba>=0.60,<1'
+      - name: Generate material passes from exact authored poses (push only)
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        run: python tools/art/export-lit-actor-materials.py
+      - name: Validate all colour/normal/depth/caster/emissive frames
+        run: python tools/art/validate-lit-actor-materials.py
+      - name: Test generic shared actor binding
+        run: node --test tests/javascript/actor-lit-assets.test.mjs tests/javascript/actor-shadow-mask.test.mjs tests/javascript/universal-lighting.test.mjs
+      - name: Commit reproducible material atlases back to THIS branch
+        if: github.event_name == 'push' && github.ref == 'refs/heads/feat/actor-lit-sprite-production'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/hollow-rigged/materials/
+          git add src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/ashling-rigged/materials/
+          git add src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/hollow-rigged/lit-materials.json
+          git add src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/ashling-rigged/lit-materials.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Generate exact-pose actor material atlases for all production clips"
+            git push origin HEAD:feat/actor-lit-sprite-production
+          fi
+      - name: Preserve validation-ready actor exports for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: actor-lit-assets-${{ github.sha }}
+          path: |
+            src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/hollow-rigged/materials/
+            src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/ashling-rigged/materials/
+            src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/hollow-rigged/lit-materials.json
+            src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/ashling-rigged/lit-materials.json
+          retention-days: 30
+          if-no-files-found: warn

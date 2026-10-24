@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "actorId": "hollowed",
+  "directions": [
+    "N",
+    "NE",
+    "E",
+    "SE",
+    "S",
+    "SW",
+    "W",
+    "NW"
+  ],
+  "source": "authored skinned triangle positions and face normals; existing colour immutable",
+  "shadowQuality": "alpha-clipped, pose-synchronous planar silhouette (NO volumetric self-shadowing)",
+  "castsShadow": true,
+  "receivesShadow": true,
+  "material": {
+    "roughness": 0.92,
+    "metalness": 0,
+    "specular": 0.12
+  },
+  "clips": {
+    "walk": {
+      "albedo": "walk.png",
+      "normal": "../../lighting-proof/hollowed-walk-normal.png",
+      "depth": "materials/walk-depth.png",
+      "caster": "materials/walk-caster.png",
+      "emissive": "materials/walk-emissive.png",
+      "frames": 16,
+      "cell": 96,
+      "anchor": [
+        48,
+        72
+      ],
+      "worldSize": 93,
+      "castShadow": true,
+      "receiveShadow": true,
+      "shadowQuality": "planar-mask-only",
+      "source": {
+        "sourceRig": "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-pixel-v3/hollow-rigged.blend",
+        "sourcePose": "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-pixel-v3/sampled-walk.npz",
+        "sourcePoseSha256": "a033ebe51fcd95c7e5d82f42d432c2a86ad4f5afdc2b376a150137c12829f8e9",
+        "albedoSha256": "efa6ac701a7b7030288fb6b4cc2ba9c23500f552b6ffba55873d995460f6e165",
+        "framesPerDirection": 16,
+        "cell": 96,
+        "anchor": [
+          48,
+          72
+        ],
+        "fps": 12,
+        "normalSpace": "authored camera right/up/toward (sprite tangent)",
+        "depthEncoding": "16-bit unsigned normalized source camera NDC z; zero=transparent",
+        "caster": "author's posed mesh alpha clipped to original visible body, planar only",
+        "emission": "authored eye vertex weights and depth-tested flame mesh; no RGB thresholding",
+        "preservedWalkNormalSha256": "6f37307450b7dc8cf18490803f542349d7bf08892fc4bd4bc1223df2fff3d2a8",
+        "depthSha256": "b9bad5a144914c9e1f75315b4274b8a181a72b758130019cb1b95bf4db78c1c5",
+        "casterSha256": "01ef694908ff8b36d4a1fcd9e44918435f41a468adef80b47dc56cda211deef1",
+        "emissiveSha256": "8b3ecc09b33adf093c4db6f63d1dc96e2a04903148f954d6b4498e65f5f4dc15"
+      },
+      "minimumSourceMeshIoU": 0.9856957087126138
+    },
+    "attack": {
+      "albedo": "attack.png",
+      "normal": "materials/attack-normal.png",
+      "depth": "materials/attack-depth.png",
+      "caster": "materials/attack-caster.png",
+      "emissive": "materials/attack-emissive.png",
+      "frames": 16,
+      "cell": 128,
+      "anchor": [
+        64,
+        88
+      ],
+      "worldSize": 124.0,
+      "castShadow": true,
+      "receiveShadow": true,
+      "shadowQuality": "planar-mask-only",
+      "source": {
+        "sourceRig": "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-attack-v2/hollow-attack.blend",
+        "sourcePose": "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-attack-v2/sampled-attack.npz",
+        "sourcePoseSha256": "9bdde1f0970930e182a261f11435e525dce60b2269774bca28bb14fd919ae895",
+        "albedoSha256": "810243b7fd42edbffe253409fda6bd5efd0808f9846f996ad068f2f2d6fc6ef9",
+        "framesPerDirection": 16,
+        "cell": 128,
+        "anchor": [
+          64,
+          88
+        ],
+        "fps": 12,
+        "normalSpace": "authored camera right/up/toward (sprite tangent)",
+        "depthEncoding": "16-bit unsigned normalized source camera NDC z; zero=transparent",
+        "caster": "author's posed mesh alpha clipped to original visible body, planar only",
+        "emission": "authored eye vertex weights and depth-tested flame mesh; no RGB thresholding",
+        "normalSha256": "1b4ddd9666079546cc80bbe5de1d500ac4b67a53437dfa00326419398cb2a4ce",
+        "depthSha256": "655883d047a99687e42610d851c2ae679e9032ead7cab93ffa7c4d385c5c74ab",
+        "casterSha256": "a006edb70fe496f8429427326369dd298b65b728783d1b6256e495b299d1c0f1",
+        "emissiveSha256": "d6873b9e1728fdc4137760e6d4d9e1bf382448fb46e7367dfde344fb17809ce0"
+      },
+      "minimumSourceMeshIoU": 0.9874651810584958
+    },
+    "death": {
+      "albedo": "death.png",
+      "normal": "materials/death-normal.png",
+      "depth": "materials/death-depth.png",
+      "caster": "materials/death-caster.png",
+      "emissive": "materials/death-emissive.png",
+      "frames": 24,
+      "cell": 128,
+      "anchor": [
+        64,
+        88
+      ],
+      "worldSize": 124.0,
+      "castShadow": true,
+      "receiveShadow": true,
+      "shadowQuality": "planar-mask-only",
+      "source": {
+        "sourceRig": "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-death-v5/hollow-death.blend",
+        "sourcePose": "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-death-v5/sampled-death.npz",
+        "sourcePoseSha256": "1025c4ac05d48620ce2ee5b86f9042d91267a06d1ee1185368306f4e309e79ef",
+        "albedoSha256": "04ab219f6122d4e902a635ebd1566b33fb04328122691c9205f67d78db42c8f4",
+        "framesPerDirection": 24,
+        "cell": 128,
+        "anchor": [
+          64,
+          88
+        ],
+        "fps": 12,
+        "normalSpace": "authored camera right/up/toward (sprite tangent)",
+        "depthEncoding": "16-bit unsigned normalized source camera NDC z; zero=transparent",
+        "caster": "author's posed mesh alpha clipped to original visible body, planar only",
+        "emission": "authored eye vertex weights and depth-tested flame mesh; no RGB thresholding",
+        "normalSha256": "9157de853479bea275580b716bda5d70ced84d33582f84bea37ab19236b0c46d",
+        "depthSha256": "08d483c992ff429a287bd1309ec30f18a27cc7c1eb9c12662a849319d7d930e2",
+        "casterSha256": "dbb3799616df093f5eeb94cceb50437678c7ecbb22086e60ab57ae90df78e0df",
+        "emissiveSha256": "0a163af4f3ed7d2467398a47bd914fdc58f8bab48365a642749804e95a7d2875"
+      },
+      "minimumSourceMeshIoU": 0.9841954022988506
+    }
+  }
+}

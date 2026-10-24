@@ -1,0 +1,30 @@
+{
+  "status": "UNAPPROVED real mesh/rig source geometry proportional correction",
+  "preservedRig": "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-mocap-no-cape-islands-candidate/hollow-rigged.blend",
+  "preservedRigSha256": "fc856134b3fa89a2f6e480eff95c26180db986522c1c50c617512b47db7b3f17",
+  "animationActionUnchanged": "Hollowed_CMU_Run_09_01_Retarget_UNAPPROVED",
+  "faceCountPreserved": 68380,
+  "vertexCountPreserved": 48950,
+  "uvLayersPreserved": [
+    "AppearanceUV"
+  ],
+  "preservesCapeDeletion": true,
+  "originalHandBoneLength": {
+    "L": 0.11005905270576477,
+    "R": 0.11005905270576477
+  },
+  "originalForearmBoneLength": {
+    "L": 0.16679631173610687,
+    "R": 0.16679631173610687
+  },
+  "distalWeightedClawShorteningFraction": 0.23,
+  "affectedVertices": {
+    "L": 3373,
+    "R": 3177
+  },
+  "maxRestVertexDisplacement": {
+    "R": 0.03024710398677125,
+    "L": 0.03004061901733835
+  },
+  "noProductionAtlasChange": true
+}

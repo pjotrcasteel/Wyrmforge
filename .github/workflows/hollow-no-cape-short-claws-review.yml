@@ -1,0 +1,162 @@
+name: Hollowed cape-free anatomical hand-scale review (unapproved)
+on:
+  push:
+    branches: [feat/actor-lit-sprite-production]
+    paths:
+      - 'art/source/enemies/hollow/reference/**'
+      - 'tools/sprite-lab/refine-hollow-no-cape-hand-proportions.py'
+      - 'tools/sprite-lab/render-hollow-no-cape-short-claws.py'
+      - 'tools/sprite-lab/render-hollow-no-cape-short-claws-directions.py'
+      - '.github/workflows/hollow-no-cape-short-claws-review.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  real-reference-run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install Blender 4.5 and render dependencies
+        run: python -m pip install 'bpy==4.5.3' 'numpy>=1.26,<3' 'pillow>=10,<13'
+      - name: Retarget physical 120Hz CMU running poses to skinned Hollowed
+        run: |
+          source=art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-mocap-no-cape-short-claws-candidate
+          if test -f "$source/hollow-rigged.blend"; then
+            echo "Existing editable source model kept unchanged"
+          else
+            python tools/sprite-lab/refine-hollow-no-cape-hand-proportions.py
+          fi
+      - name: Sample posed original surface geometry
+        run: |
+          source=art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-mocap-no-cape-short-claws-candidate
+          if ! test -f "$source/sampled-walk.npz"; then
+            python tools/sprite-lab/sample-hollow-rig.py -- "$source"
+          fi
+      - name: Verify lower-body pose sampling and foot contacts are unchanged
+        run: |
+          python - <<'PY'
+          import json
+          import numpy as np
+          from pathlib import Path
+          base=Path('art/source/enemies/hollow/rigged-poc/model/local-appearance-004')
+          original=base/'rigged-mocap-no-cape-islands-candidate'
+          candidate=base/'rigged-mocap-no-cape-short-claws-candidate'
+          with np.load(original/'sampled-walk.npz') as a, np.load(candidate/'sampled-walk.npz') as b:
+            assert np.array_equal(a['faces'],b['faces']), 'Unexpected topology change'
+            assert a['positions'].shape==b['positions'].shape
+            delta=np.max(np.abs(a['positions']-b['positions']),axis=(0,2))
+            untouched=float(np.mean(delta<1e-6))
+            assert untouched>.70, f'Non-hand geometry unexpectedly moved: untouched={untouched:.3f}'
+          feet_a=json.loads((original/'actual-foot-markers.json').read_text())
+          feet_b=json.loads((candidate/'actual-foot-markers.json').read_text())
+          assert len(feet_a)==len(feet_b)==34
+          for a,b in zip(feet_a,feet_b):
+            assert a['frame']==b['frame'] and a['side']==b['side']
+            assert max(abs(x-y) for x,y in zip(a['contact'],b['contact']))<1e-6
+          print('Real running feet/leg action unchanged for 17 frames, non-hand mesh unchanged:',untouched)
+          PY
+      - name: Check full-cycle matching, provenance and actual joints
+        run: |
+          python - <<'PY'
+          import json
+          import hashlib
+          from pathlib import Path
+          root=Path('art/source/enemies/hollow')
+          source=root/'reference/CMU-09_01-run.bvh'
+          candidate=root/'rigged-poc/model/local-appearance-004/rigged-mocap-no-cape-short-claws-candidate'
+          audit=json.loads((candidate/'retarget-provenance.json').read_text())
+          poses=json.loads((candidate/'gait-diagnostics.json').read_text())
+          assert audit['sourceSha256']==hashlib.sha256(source.read_bytes()).hexdigest()
+          assert len(poses)==17 and audit['output']['frames']==16
+          assert audit['loop']['periodSourceFrames']>=52
+          assert audit['output']['fps']==25
+          assert audit['artApproval'] is False
+          assert audit['capeRemoved'] is True
+          mesh=json.loads((candidate/'hand-proportion-audit.json').read_text())
+          assert mesh['faceCountPreserved']>60000
+          assert mesh['preservesCapeDeletion'] is True
+          assert mesh['distalWeightedClawShorteningFraction']==0.23
+          assert all(v>1000 for v in mesh['affectedVertices'].values())
+          assert audit['parentEditableBlendSha256']==mesh['preservedRigSha256']
+          assert (candidate/'sampled-walk.npz').is_file()
+          for side in ('L','R'):
+            knees=[x['feet'][side]['kneeFlexDegrees'] for x in poses[:16]]
+            elbows=[x['arms'][side]['elbowFlexDegrees'] for x in poses[:16]]
+            assert min(knees)>-0.01 and max(knees)<160 and max(knees)-min(knees)>25,(side,knees)
+            assert min(elbows)>10 and max(elbows)<165,(side,elbows)
+            shoulders=[x['arms'][side]['shoulder'] for x in poses[:16]]
+            arm_motion=sum(max(p[k] for p in shoulders)-min(p[k] for p in shoulders)
+                           for k in range(3))
+            assert arm_motion>0.001,(side,'fixed shoulder',arm_motion)
+            print(side,'captured torso-coupled shoulder travel',round(arm_motion,5),
+                  'source-motion knee range',min(knees),max(knees),
+                  'elbow range',min(elbows),max(elbows))
+          assert len(poses)==17 and poses[0]['arms']==poses[-1]['arms']
+          assert poses[0]['feet']==poses[-1]['feet']
+          assert max(abs(x['shoulderYawDegrees']) for x in poses)>0
+          print('Closure and source-coupled shoulder movement validated, visual approval STILL required')
+          PY
+      - name: Render skinned 96px running motion, joints, 4 camera directions
+        run: python tools/sprite-lab/render-hollow-no-cape-short-claws.py
+      - name: Render all 8 authorized 2.5D orientations (16 frames each)
+        run: python tools/sprite-lab/render-hollow-no-cape-short-claws-directions.py
+      - name: Verify 128 review-only directional frames and atlas alpha
+        run: |
+          python - <<'PY'
+          import json
+          import numpy as np
+          from PIL import Image
+          from pathlib import Path
+          p=Path('artifacts/hollow-no-cape-short-claws-eight-directions')
+          atlas=np.asarray(Image.open(p/'candidate-walk-eight-directions.png').convert('RGBA'))
+          m=json.loads((p/'candidate-manifest.json').read_text())
+          assert m['artApproval'] is False and m['anchor']==[48,72]
+          assert atlas.shape==(8*96,16*96,4)
+          for row,direction in enumerate(m['directions']):
+            assert (p/f"{direction['direction'].lower()}-animation.gif").exists()
+            for frame in range(16):
+              cell=atlas[row*96:(row+1)*96,frame*96:(frame+1)*96,3]
+              assert cell.max()==255 and (cell>0).sum()>100,(direction,frame)
+              assert not cell[0,:].any() and not cell[-1,:].any()
+              assert not cell[:,0].any() and not cell[:,-1].any()
+          assert (p/'full-claws-vs-short-claws-eight-directions.png').is_file()
+          old=np.asarray(Image.open('docs/art/evidence/hollowed-no-cape-islands-2026-10-24/candidate-walk-eight-directions.png').convert('RGBA'))
+          removed=np.count_nonzero((old[:,:,3]>0)&(atlas[:,:,3]==0))
+          assert removed>50, f'Shorted hands did not change visible alpha: {removed}'
+          print('128 hand-proportion-corrected frames differ from source in',removed,'visible pixels. VISUAL ACCEPTANCE STILL REQUIRED.')
+          PY
+      - name: Preserve new editable blend and 3D skinned review in draft PR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/feat/actor-lit-sprite-production'
+        run: |
+          mkdir -p docs/art/evidence/hollowed-short-claws-2026-10-24
+          cp artifacts/hollow-no-cape-short-claws-review/*.gif docs/art/evidence/hollowed-short-claws-2026-10-24/
+          cp artifacts/hollow-no-cape-short-claws-review/*.png docs/art/evidence/hollowed-short-claws-2026-10-24/
+          cp artifacts/hollow-no-cape-short-claws-eight-directions/full-claws-vs-short-claws-eight-directions.png docs/art/evidence/hollowed-short-claws-2026-10-24/
+          cp artifacts/hollow-no-cape-short-claws-review/review.json docs/art/evidence/hollowed-short-claws-2026-10-24/
+          cp artifacts/hollow-no-cape-short-claws-eight-directions/candidate-manifest.json docs/art/evidence/hollowed-short-claws-2026-10-24/
+          cp artifacts/hollow-no-cape-short-claws-eight-directions/candidate-walk-eight-directions.png docs/art/evidence/hollowed-short-claws-2026-10-24/
+          cp artifacts/hollow-no-cape-short-claws-eight-directions/*-animation.gif docs/art/evidence/hollowed-short-claws-2026-10-24/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-mocap-no-cape-short-claws-candidate/
+          git add docs/art/evidence/hollowed-short-claws-2026-10-24/
+          if ! git diff --cached --quiet; then
+            git commit -m "Save unapproved cape-free Hollowed short-claw source and 8-way visual evidence"
+            git push origin HEAD:feat/actor-lit-sprite-production
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hollowed-short-claws-UNAPPROVED-${{ github.sha }}
+          path: |
+            art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-mocap-no-cape-short-claws-candidate/
+            artifacts/hollow-no-cape-short-claws-review/
+            artifacts/hollow-no-cape-short-claws-eight-directions/
+          retention-days: 30
+          if-no-files-found: warn

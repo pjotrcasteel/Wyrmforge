@@ -1,0 +1,17 @@
+{
+  "approval": "UNAPPROVED candidate; no production atlas or material replacement",
+  "originalSource": "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-mocap-feral-presentation-candidate/hollow-rigged.blend",
+  "originalSourceSha256": "338005d0e16d9a98b1baea5efce6ad4512654361346d6a59f2cdc8998c4baad9",
+  "sourceAsset": "Hollow skinned character",
+  "criterion": "Whole disconnected rear hanging cloth islands, cloth-weight majority, minimal leg skinning, below waist",
+  "capeIslandsDeleted": 73,
+  "meshConnectedIslands": 1244,
+  "facesOriginal": 78517,
+  "facesDeleted": 10137,
+  "facesRetained": 68380,
+  "verticesOriginal": 55573,
+  "verticesRetained": 48950,
+  "UVsRetained": true,
+  "sourceAnimationsRetained": true,
+  "capeRemovalMethod": "deleted original triangles and unused vertices in an editable Blender mesh"
+}

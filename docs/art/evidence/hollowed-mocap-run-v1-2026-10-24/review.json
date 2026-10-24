@@ -1,0 +1,13 @@
+{
+  "approved": false,
+  "rig": "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-mocap-run-v1-candidate/hollow-rigged.blend",
+  "poses": 16,
+  "mocap": "CMU 09_01",
+  "angles": [
+    0,
+    90,
+    180,
+    270
+  ],
+  "status": "PREVIEW only, not a canonical eight-direction export"
+}

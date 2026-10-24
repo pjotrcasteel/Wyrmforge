@@ -1,0 +1,27 @@
+name: Inspect Hollowed cape source geometry
+on:
+  push:
+    branches: [feat/actor-lit-sprite-production]
+    paths:
+      - 'tools/sprite-lab/audit-hollow-cape-geometry.py'
+      - '.github/workflows/hollow-cape-geometry-audit.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - run: python -m pip install 'bpy==4.5.3'
+      - run: python tools/sprite-lab/audit-hollow-cape-geometry.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hollowed-cape-geometry-${{ github.sha }}
+          path: artifacts/hollow-cape-geometry.json
+          retention-days: 30

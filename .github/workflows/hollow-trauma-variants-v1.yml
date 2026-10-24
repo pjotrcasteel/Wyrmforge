@@ -1,0 +1,148 @@
+name: Hollowed four injury silhouettes — real Blender and GIF review (UNAPPROVED)
+
+on:
+  push:
+    branches: [feat/actor-lit-sprite-production]
+    paths:
+      - 'tools/sprite-lab/build-hollow-trauma-variant.py'
+      - 'tools/sprite-lab/render-hollow-trauma-variant.py'
+      - '.github/workflows/hollow-trauma-variants-v1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  render-variant:
+    name: Render ${{ matrix.variant }} 8-direction CMU run
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [broken-leg-left, broken-arm-right, one-arm-left]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install Blender 4.5 and image dependencies
+        run: python -m pip install 'bpy==4.5.3' 'numpy>=1.26,<3' 'pillow>=10,<13'
+      - name: Author complete original-editable damaged skeleton from CMU source
+        run: python tools/sprite-lab/build-hollow-trauma-variant.py --variant ${{ matrix.variant }}
+      - name: Sample every real skinned-frame triangle and both foot markers
+        run: |
+          python tools/sprite-lab/sample-hollow-rig.py -- \
+            art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-trauma-${{ matrix.variant }}
+      - name: Inspect source/pose invariants and injuries
+        run: |
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          import numpy as np
+          base=Path('art/source/enemies/hollow/rigged-poc/model/local-appearance-004')
+          variant='${{ matrix.variant }}'
+          dest=base/('rigged-hollow-trauma-'+variant)
+          original=base/'rigged-mocap-no-cape-captured-hands-candidate'
+          p=json.loads((dest/'retarget-provenance.json').read_text())
+          data=json.loads((dest/'gait-diagnostics.json').read_text())
+          src=json.loads((original/'gait-diagnostics.json').read_text())
+          assert p['artApproval'] is False and p['runtimeCutover'] is False
+          assert p['variant']==variant and p['attackDeathReexported'] is False
+          assert p['parentEditableBlendSha256']==hashlib.sha256((original/'hollow-rigged.blend').read_bytes()).hexdigest()
+          assert len(data)==17
+          with np.load(dest/'sampled-walk.npz') as a, np.load(original/'sampled-walk.npz') as b:
+            assert a['positions'].shape==b['positions'].shape
+            assert np.array_equal(a['faces'],b['faces'])
+            assert np.array_equal(a['uv'],b['uv'])
+            assert a['positions'].shape[0]==17
+            assert np.max(abs(a['positions']-b['positions']))>.01, 'No visible skinned motion variation'
+          if variant=='broken-leg-left':
+            assert all(data[i]['feet']['R']==src[i]['feet']['R'] for i in range(16))
+            assert any(data[i]['feet']['L']['swingInfluence']>.5 for i in range(16))
+          else:
+            assert all(data[i]['feet']==src[i]['feet'] for i in range(16))
+            side=p['damage']['impairedArm']
+            assert side in ('L','R') and len(p['damage']['attackingArms'])==1
+            assert any(data[i]['arms'][side]['injuryConstrained'] for i in range(16))
+          for side in ('L','R'):
+            for region in ('arms','feet'):
+              for key in (('shoulder','elbow','wrist','hand') if region=='arms' else ('hip','knee','ankle')):
+                assert max(abs(a-b) for a,b in zip(data[0][region][side][key],data[-1][region][side][key]))<1e-5
+          markers=json.loads((dest/'actual-foot-markers.json').read_text())
+          assert len(markers)==34
+          print(variant,'original mesh preserved, 16+closure poses, 2 genuine foot contacts, damage constraints validated')
+          PY
+      - name: Render 128 genuine 96px skinned poses and four-way animated review
+        run: python tools/sprite-lab/render-hollow-trauma-variant.py --variant ${{ matrix.variant }}
+      - name: Check each original-pixel and enlarged looping GIF
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          variant='${{ matrix.variant }}'
+          p=Path('artifacts')/('hollow-trauma-'+variant)
+          a=Image.open(p/'candidate-walk-eight-directions.png')
+          assert a.size==(1536,768)
+          for d in ('n','ne','e','se','s','sw','w','nw'):
+            for suffix in ('-animation.gif','-zoom-4x.gif'):
+              g=Image.open(p/(d+suffix))
+              assert g.n_frames==16,(variant,d,suffix,g.n_frames)
+            for suffix in ('-native-96px.gif','-zoom-4x.gif'):
+              g=Image.open(p/('compare-'+d+suffix))
+              assert g.n_frames==16,(variant,d,suffix,g.n_frames)
+          print(variant,'128 reviewed candidate frames + 32 full-cycle GIFs; artistic approval still required')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hollow-trauma-v1-${{ matrix.variant }}
+          path: |
+            art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-trauma-${{ matrix.variant }}/
+            artifacts/hollow-trauma-${{ matrix.variant }}/
+          retention-days: 30
+          if-no-files-found: warn
+
+  preserve-all-variants:
+    needs: render-variant
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/feat/actor-lit-sprite-production'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: feat/actor-lit-sprite-production
+          persist-credentials: true
+      - name: Synchronize branch before writing (no force push)
+        run: git pull --ff-only origin feat/actor-lit-sprite-production
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: hollow-trauma-v1-*
+          merge-multiple: true
+          path: .
+      - name: Preserve all 4 sources and 3 new review sets together
+        run: |
+          set -euo pipefail
+          mkdir -p docs/art/evidence/hollowed-trauma-v1/standard
+          src=docs/art/evidence/hollowed-no-cape-captured-hands-2026-10-24
+          cp "$src"/candidate-walk-eight-directions.png docs/art/evidence/hollowed-trauma-v1/standard/
+          cp "$src"/*-animation.gif docs/art/evidence/hollowed-trauma-v1/standard/
+          for variant in broken-leg-left broken-arm-right one-arm-left; do
+            dest=docs/art/evidence/hollowed-trauma-v1/$variant
+            mkdir -p "$dest"
+            cp artifacts/hollow-trauma-$variant/*.gif "$dest"/
+            cp artifacts/hollow-trauma-$variant/*.png "$dest"/
+            cp artifacts/hollow-trauma-$variant/candidate-manifest.json "$dest"/
+          done
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/art/evidence/hollowed-trauma-v1/
+          git add art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-trauma-*/
+          if ! git diff --cached --quiet; then
+            git commit -m "Save four authored cape-free Hollowed damage types and 96px 8-way review GIFs"
+            git push origin HEAD:feat/actor-lit-sprite-production
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hollow-trauma-v1-all-review-sheets
+          path: docs/art/evidence/hollowed-trauma-v1/
+          retention-days: 30

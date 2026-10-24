@@ -1,0 +1,44 @@
+name: Hollowed skinned rig anatomy audit (no asset cutover)
+on:
+  push:
+    branches: [feat/actor-lit-sprite-production]
+    paths:
+      - 'tools/sprite-lab/audit-hollow-mocap-skinning.py'
+      - '.github/workflows/hollow-mocap-skinning-audit.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  rig-weight-diagnostics:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install 4.5 Blender Python
+        run: python -m pip install 'bpy==4.5.3'
+      - name: Verify source rig and inspect skinning over all 16 authored frames
+        run: |
+          test -f art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-mocap-biomechanics-candidate/hollow-rigged.blend
+          python tools/sprite-lab/audit-hollow-mocap-skinning.py
+      - name: Commit only weight diagnostic JSON
+        if: github.event_name == 'push' && github.ref == 'refs/heads/feat/actor-lit-sprite-production'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/art/evidence/hollowed-mocap-biomechanics-2026-10-24/skin-and-rig-audit.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Record Hollowed editable rig and skinning diagnostic data"
+            git push origin HEAD:feat/actor-lit-sprite-production
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hollowed-skinning-audit-${{ github.sha }}
+          path: docs/art/evidence/hollowed-mocap-biomechanics-2026-10-24/skin-and-rig-audit.json
+          retention-days: 30
+          if-no-files-found: warn
