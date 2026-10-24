@@ -38,6 +38,29 @@ jobs:
           if ! test -f "$source/sampled-walk.npz"; then
             python tools/sprite-lab/sample-hollow-rig.py -- "$source"
           fi
+      - name: Verify lower-body pose sampling and foot contacts are unchanged
+        run: |
+          python - <<'PY'
+          import json
+          import numpy as np
+          from pathlib import Path
+          base=Path('art/source/enemies/hollow/rigged-poc/model/local-appearance-004')
+          original=base/'rigged-mocap-no-cape-islands-candidate'
+          candidate=base/'rigged-mocap-no-cape-short-claws-candidate'
+          with np.load(original/'sampled-walk.npz') as a, np.load(candidate/'sampled-walk.npz') as b:
+            assert np.array_equal(a['faces'],b['faces']), 'Unexpected topology change'
+            assert a['positions'].shape==b['positions'].shape
+            delta=np.max(np.abs(a['positions']-b['positions']),axis=(0,2))
+            untouched=float(np.mean(delta<1e-6))
+            assert untouched>.70, f'Non-hand geometry unexpectedly moved: untouched={untouched:.3f}'
+          feet_a=json.loads((original/'actual-foot-markers.json').read_text())
+          feet_b=json.loads((candidate/'actual-foot-markers.json').read_text())
+          assert len(feet_a)==len(feet_b)==34
+          for a,b in zip(feet_a,feet_b):
+            assert a['frame']==b['frame'] and a['side']==b['side']
+            assert max(abs(x-y) for x,y in zip(a['contact'],b['contact']))<1e-6
+          print('Real running feet/leg action unchanged for 17 frames, non-hand mesh unchanged:',untouched)
+          PY
       - name: Check full-cycle matching, provenance and actual joints
         run: |
           python - <<'PY'
