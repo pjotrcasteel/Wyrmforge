@@ -76,7 +76,7 @@ export async function initializeProof(canvas) {
             object('ashling', 'ashling', 'ashling', [1.1, .7, 0]),
             // Existing actor reused to test the Town receiver seam, not proposed NPC artwork.
             object('npc-binding-proxy', 'hollowed', 'hollowed', [-2.2, 1.5, 0], [.7, .7, .7]),
-            object('lantern-core', 'sphere', 'flame', [-2, 1.5, 1.7])];
+            object('lantern-core', 'sphere', 'flame', [-2, 1.5, 1.7], [1, 1, 1], { castsShadow: false })];
         const oak = await originalOak(engine);
         if (!state.alive) { engine.dispose(); return; }
         state.objects.push(...oak.objects); state.materials.push(...oak.materials);
@@ -103,7 +103,7 @@ export function configureProof(canvas, options) {
     if (p.rune) lights.push(light('rune', [2, -2, .7], '#48ffd1', 8, 'point', 2));
     for (const l of lights) { l.enabled &&= !zero; l.castsShadow &&= p.shadows; }
     const objects = structuredClone(state.objects);
-    if (p.fireball) objects.push(object('fireball-core', 'sphere', 'flame', firePosition));
+    if (p.fireball) objects.push(object('fireball-core', 'sphere', 'flame', firePosition, [1, 1, 1], { castsShadow: false }));
     if (p.rune) objects.push(object('rune-prop', 'box', 'rune', [2, -2, .25], [.35, .35, .5]));
     for (const o of objects) {
         const id = o.id === 'npc-binding-proxy' ? 'hollowed' : o.id;
