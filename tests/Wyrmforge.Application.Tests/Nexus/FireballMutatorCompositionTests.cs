@@ -98,8 +98,8 @@ public sealed class FireballMutatorCompositionTests
         var second = Projectiles(simulation).Single(shot => !ReferenceEquals(shot, first));
 
         Assert.AreNotEqual(first.FireballSourceId, second.FireballSourceId);
-        Assert.IsGreaterThan(first.FireballSourceId, 0);
-        Assert.IsGreaterThan(second.FireballSourceId, 0);
+        Assert.IsGreaterThan(0, first.FireballSourceId);
+        Assert.IsGreaterThan(0, second.FireballSourceId);
         Assert.AreEqual(first.FireballMutationMask, second.FireballMutationMask);
 
         first.Position = target.Position;
@@ -142,7 +142,7 @@ public sealed class FireballMutatorCompositionTests
         var child = children.Single();
         Assert.AreEqual(parent.FireballMutationMask, child.FireballMutationMask);
         Assert.AreNotEqual(parent.FireballSourceId, child.FireballSourceId);
-        Assert.IsGreaterThan(child.FireballSourceId, 0);
+        Assert.IsGreaterThan(0, child.FireballSourceId);
         Projectiles(simulation).Clear();
         Projectiles(simulation).Add(child);
         child.Position = other.Position;
