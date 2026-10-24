@@ -252,3 +252,28 @@ cutover or mobile Hunt transitions were approved.
   and exit, death, actual travel speed and foot sliding. Preview may
   show a visual transition back to standard attack and does not claim
   to resolve that animation boundary.
+
+### Toe-floor diagnosis and corrective source
+
+Inspecting the first dragged-leg candidate's **actual 3D gait diagnostics** found
+foot-**bone tip** positions down to Z = -0.488m against the authored
+Z = -0.435m reference ground plane (5.3cm below the plane). This is not
+an acceptable proof of non-penetration; full skinned-mesh floor contact
+still requires a separate physical/render test.
+
+The independent `rigged-hollow-broken-leg-ground-safe` candidate reauthors
+the ORIGINAL standard-rig source with the SAME contact events and intact
+reach, constraining each toe bone to Z >= -0.445m while keeping original
+foot-bone length and independent leg IK. The right-leg support schedule and
+C# world movement are unchanged. The parent dragged-leg .blend, eight
+directions and failed versions are preserved.
+
+Source: `tools/sprite-lab/author-hollow-broken-leg-ground-safe.py`.
+Eight-direction real-skin comparison:
+`tools/sprite-lab/render-hollow-broken-leg-ground-safe.py`.
+Dedicated render/test workflow:
+`.github/workflows/hollow-broken-leg-ground-safe.yml`.
+**Only the next inspected GIFs, not the arithmetic constraint alone, can
+establish whether this looks physically credible.** The current opt-in
+runtime still loads the prior dragged-leg image until a render actually
+passes and its movement is inspected and approved for the review slot.
