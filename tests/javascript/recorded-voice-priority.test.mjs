@@ -7,7 +7,7 @@ import { runInNewContext } from 'node:vm';
 // manifest load. This tests the production voice policy, not a copied policy.
 const original = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/audio.js', import.meta.url), 'utf8');
 const soundDesign = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/sound-design.js', import.meta.url), 'utf8');
-const boot = "if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mountControls, { once: true });";
+const boot = "if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mountControls, { once: true });\\n    else mountControls();";
 assert.ok(original.includes(boot), 'The harness must track the real game startup');
 const playable = original.replace(boot, 'loadManifest();');
 
