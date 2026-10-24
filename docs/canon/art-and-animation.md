@@ -18,6 +18,13 @@
 
 **Why now:** The original tree renders looked pasted over the approved ground. This is partly because temporary mobile review compositions repeat raw 112-pixel source swatches and do **not** exercise the Arena Materials Lab's actual seamless-material compositor. Even in the real arena, uncoordinated ambient color, direction, contact shadow, wet-surface response and depth will cause disconnected objects. A lighting system **cannot fix** incorrect perspective, tree silhouettes, feet/anchors, tree scale, alpha quality or material painting; those remain separate art acceptance gates.
 
+### Ground fire is a physically grounded material effect — LOCKED, 24 October 2026
+
+- The orange rings currently drawn for Fireball burning-ground `essenceBursts` are temporary gameplay placeholders, **not approved final spell art**.
+- A persistent fire patch must contact actual terrain, props and other world surfaces at their real world-space coordinates. Fire spreads or consumes fuel **only where a C# material/flammability contact says it can**; wooden salvage can burn, while wet ground/stone and genuinely blocked objects do not spontaneously ignite.
+- Represent burning, charring, extinguishing and spent fuel with authored surface/material and animation layers. Burning objects own their lifecycle and can glow/illuminate surrounding pixels through the existing shared GPU engine; do not add another Canvas glow mask, CSS recoloring, or fake circular screen-space burn.
+- Preserve deterministic gameplay damage and current accepted Hunt visuals while developing and approving new material layers; record actual 320/390px in-game GIFs showing the material underneath being affected before migrating production rendering.
+
 ### Arena-night identity — LOCKED, 23 October 2026
 
 **All arenas and Hunts take place at night.** The mood is Gothic high contrast: shadows should visually approach **true black** and fire is the dominant warm illumination, not broad daylight or a generic orange screen wash. Keep an intentionally small, neutral player-readability halo and render enemy attack warnings above the darkness; a black environment is **not** permission for invisible projectiles, unreadable enemies or inaccessible play on mobile.
