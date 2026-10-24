@@ -392,8 +392,8 @@ class WizardBuilder:
 
     def make_garments(self):
         n=38;rows=18
-        start=-math.pi/2+.22
-        end=3*math.pi/2-.22
+        start=-math.pi/2+.48
+        end=3*math.pi/2-.48
         verts=[];uv=[];faces=[]
         for j in range(rows):
             t=j/(rows-1)
@@ -421,7 +421,7 @@ class WizardBuilder:
                 t=j/(fr-1)
                 for i in range(cols):
                     u=i/(cols-1)
-                    x=side*(.155+(.18+.055*t)*u)
+                    x=side*(.225+(.16+.045*t)*u)
                     y=-.165-.185*t+.018*math.sin(u*2*math.pi)*(t*t)
                     z=1.045-.695*t+.027*math.sin(u*math.pi*3)*(t*t)
                     flap_verts.append((x,y,z))
