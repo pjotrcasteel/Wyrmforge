@@ -1,0 +1,38 @@
+{
+  "title": "WyrmForge four elemental sound identities",
+  "sampleOrder": [
+    "fire",
+    "frost",
+    "lightning",
+    "arcane"
+  ],
+  "provenance": "Existing manifest-checked JC Sounds CC BY 4.0 cast and hit OGG recordings",
+  "note": "Each school has two cast+impact variations over a quiet Wet Forest soundbed, not live gameplay",
+  "reviews": [
+    {
+      "file": "fire-spell-impact.mp3",
+      "size": 56235,
+      "sha256": "c341364b2607d18a2fa1965a249d716917c73834db381aae6f8a5ef709089461"
+    },
+    {
+      "file": "frost-spell-impact.mp3",
+      "size": 60675,
+      "sha256": "2a511afc1d016a5208cc60fc1351bcc461f78b6af1c4f209ad8c85518c3ce4ab"
+    },
+    {
+      "file": "lightning-spell-impact.mp3",
+      "size": 56064,
+      "sha256": "22e95aa04a0cbc3a821bf8f74476d9ee9dfe300b6176606a9ea2d806bc771e4b"
+    },
+    {
+      "file": "arcane-spell-impact.mp3",
+      "size": 56597,
+      "sha256": "5977fb4f4d3e1ec3eab8bbf09e190e549c2b0bde3f22a97c9df1c2b7bb799c68"
+    },
+    {
+      "file": "four-school-impact-comparison.mp3",
+      "size": 238052,
+      "sha256": "8cf667749307f0c944e24d5444ef45966f415a9d3e5e06385049a9728d9adb5c"
+    }
+  ]
+}
