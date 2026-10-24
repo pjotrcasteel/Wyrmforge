@@ -16,6 +16,7 @@ aside{font-size:12px;color:#c5c3cd}
 <div class="controls">
 <label>Hollowed <select id="hollowed"><option>walk</option><option>attack</option><option>death</option></select></label>
 <label>Ashling <select id="ashling"><option>walk</option><option>attack</option><option>death</option></select></label>
+<label>Facing <select id="direction"><option>N</option><option>NE</option><option>E</option><option>SE</option><option selected>S</option><option>SW</option><option>W</option><option>NW</option></select></label>
 <label>Frame <input id="frame" type="range" min="0" max="27" value="0"></label>
 <label>Fire position <input id="lightX" type="range" min="-1" max="1" step=".1" value="-.5"></label>
 <label>Zero light + zero emission <input id="zero" type="checkbox"></label>
@@ -28,7 +29,7 @@ aside{font-size:12px;color:#c5c3cd}
 <script type="module">
 import { initializeActorReview, redrawActorReview, actorReviewPixels } from '../js/lighting/actor-review.js';
 const canvas=document.querySelector('canvas'),status=document.querySelector('#status');
-const ids=['hollowed','ashling','frame','lightX','zero','shadows','animate'];
+const ids=['hollowed','ashling','direction','frame','lightX','zero','shadows','animate'];
 function values(){return Object.fromEntries(ids.map(id=>{const e=document.getElementById(id);return [id,e.type==='checkbox'?e.checked:e.type==='range'?Number(e.value):e.value]}));}
 try {
     await initializeActorReview(canvas);
