@@ -53,7 +53,7 @@ for vertex in character.data.vertices:
         w=weights[0]
         # Keep wrist transition at rest; shorten primarily *distal* claws,
         # preserving skin weights and topology (no artificial detached gap).
-        distance=clamp=min(extent[side]*1.8,max(0,(pt-head[side]).dot(axis[side])))
+        distance=min(extent[side]*1.8,max(0,(pt-head[side]).dot(axis[side])))
         movement=axis[side]*distance*FRACTION*w
         total_delta+=movement
         affected[side]+=1
