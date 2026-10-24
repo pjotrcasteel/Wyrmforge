@@ -54,7 +54,7 @@ jobs:
           (cd artifacts/wizard-captured-motion &&
             zip -q -r WyrmForge_Wizard_Captured_Walk_Review.zip \
               captured-walk-reference.mp4 capture-walk.gif \
-              contact-sheet.png motion-metadata.json \
+              contact-sheet.png motion-metadata.json retarget-anchors.json \
               approved-visual-reference.webp README.txt)
       - uses: actions/upload-artifact@v4
         with:
