@@ -19,10 +19,6 @@ ROOT = Path(__file__).resolve().parents[2]
 ENEMIES = ROOT / "src/Wyrmforge.Presentation.Web/wwwroot/art/enemies"
 PROOF = ROOT / "src/Wyrmforge.Presentation.Web/wwwroot/art/lighting-proof"
 DIRECTIONS = ("N", "NE", "E", "SE", "S", "SW", "W", "NW")
-WALK_NORMAL_HASHES = {
-    "hollowed": "0",
-    "ashling": "0",
-}
 SPECS = {
     "hollowed": {
         "folder": "hollow-rigged",
@@ -216,6 +212,7 @@ def export_actor(actor, spec):
                 region = np.zeros((cell, cell, 4), dtype=np.uint8)
                 region[:, :, :3] = np.rint((normal * .5 + .5) * 255).astype(np.uint8)
                 region[:, :, 3] = source_alpha.astype(np.uint8) * 255
+                region[~source_alpha] = 0
                 sy, sx = slice(row * cell, (row + 1) * cell), slice(index * cell, (index + 1) * cell)
                 # Existing authored walking normals are immutable; only check silhouettes here.
                 if clip != "walk":
@@ -250,7 +247,7 @@ def export_actor(actor, spec):
                 exact = np.asarray(Image.open(external).convert("RGBA"))
                 if not np.array_equal(exact[:, :, 3], alpha):
                     raise ValueError(f"G1 walk normal/albedo alpha differs for {actor}")
-                names[key] = str(external.relative_to(runtime.parent.parent)).replace("\\", "/")
+                names[key] = "../../lighting-proof/" + external.name
                 provenance["preservedWalkNormalSha256"] = digest(external)
                 continue
             name = f"{clip}-{key}.png"
