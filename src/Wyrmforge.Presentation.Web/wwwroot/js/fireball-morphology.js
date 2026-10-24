@@ -24,6 +24,76 @@ export function fireballMorphology(recipe) {
     };
 }
 
+
+// Reuse the owner's canonical source Fireball painting in both Nexus and Hunts.
+// The painting is a TEMPORARY emissive UI/VFX source; real GPU albedo/normal/depth
+// layers belong to the universal lighting engine's later migration.
+const fireballArtwork = typeof Image === 'function' ? new Image() : null;
+const awaitingNexus = new Set();
+let artworkReady = false;
+if (fireballArtwork) {
+    fireballArtwork.onload = () => {
+        artworkReady = true;
+        for (const item of awaitingNexus) drawFireballNexusPreview(item.canvas, item.recipe);
+        awaitingNexus.clear();
+    };
+    fireballArtwork.src = new URL('../art/fireball-ritual-hero.png', import.meta.url).href;
+}
+
+function drawAuthoredCore(ctx, radius, morphology, reducedMotion) {
+    if (!artworkReady || typeof ctx.drawImage !== 'function') return false;
+    const size = Math.max(12, Math.round(radius * 2.6));
+    const r = Math.max(2, radius);
+    const u = Math.max(1, r / 9);
+    const needle = morphology.body === 'needle' || morphology.body === 'molten-spine';
+    const meteor = morphology.body === 'meteor' || morphology.body === 'molten-spine';
+    ctx.save();
+    if (needle) {
+        // Cinder Needle keeps Fireball's real molten texture, but reshapes
+        // its BODY into a projectile rather than putting a filter over it.
+        ctx.beginPath();
+        ctx.moveTo(-r * 1.35, -r * .48);
+        ctx.lineTo(r * .42, -r * .65);
+        ctx.lineTo(r * 1.5, 0);
+        ctx.lineTo(r * .42, r * .65);
+        ctx.lineTo(-r * 1.35, r * .48);
+        ctx.closePath();
+        ctx.clip();
+    }
+    ctx.drawImage(fireballArtwork, -size / 2, -size / 2, size, size);
+    ctx.restore();
+    if (meteor) {
+        // Heavy matte basalt plates interrupt the actual fiery surface.
+        ctx.fillStyle = '#2c2529';
+        for (const [x, y, w, h] of [
+            [-7,-4,4,3],[-4,-7,6,2],[3,-6,4,3],
+            [-9,0,3,4],[6,-2,3,5],[-6,5,5,2],[1,6,5,2],
+        ]) ctx.fillRect(x * u, y * u, w * u, h * u);
+        ctx.fillStyle = '#f7af57';
+        ctx.fillRect(-2 * u, -5 * u, u, 4 * u);
+        ctx.fillRect(-3 * u, -u, 7 * u, u);
+        ctx.fillRect(2 * u, u, u, 4 * u);
+    }
+    if (needle) {
+        ctx.fillStyle = '#ffd99a';
+        ctx.fillRect(3 * u, -u, 7 * u, 2 * u);
+        ctx.fillStyle = '#e66f31';
+        ctx.fillRect(-7 * u, -u, 6 * u, 2 * u);
+    }
+    if (morphology.detonation) {
+        ctx.fillStyle = '#ffe1a3';
+        ctx.fillRect(-3 * u, -4 * u, 2 * u, u);
+        ctx.fillRect(2 * u, 3 * u, 2 * u, u);
+        if (!reducedMotion) ctx.fillRect(5 * u, -3 * u, u, u);
+    }
+    if (morphology.scorchedEarth && !reducedMotion) {
+        ctx.fillStyle = '#ed8036';
+        ctx.fillRect(-6 * u, 7 * u, 2 * u, u);
+        ctx.fillRect(4 * u, 8 * u, 2 * u, u);
+    }
+    return true;
+}
+
 function drawBody(ctx, radius, morphology, reducedMotion) {
     const u = Math.max(1, Math.round(bounded(radius, 2, 80) / 9));
     const fill = (color, x, y, w, h) => {
@@ -94,7 +164,7 @@ export function drawComposedFireProjectile(ctx, event, recipe, reducedMotion = f
             ctx.fillRect(-10 * u, -4 * u, 2 * u, 2 * u);
         }
     }
-    drawBody(ctx, radius, morph, reducedMotion);
+    if (!drawAuthoredCore(ctx, radius, morph, reducedMotion)) drawBody(ctx, radius, morph, reducedMotion);
     ctx.restore();
 }
 
@@ -164,4 +234,5 @@ export function drawFireballNexusPreview(canvas, recipe) {
     ctx.scale(scale, scale);
     drawComposedFireProjectile(ctx, { radius: 17, rank: 1 }, recipe, true);
     ctx.restore();
+    if (!artworkReady && fireballArtwork) awaitingNexus.add({ canvas, recipe });
 }

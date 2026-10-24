@@ -21,6 +21,15 @@ function drawScene(ctx) {
     // Neutral stone surface for legibility, not a duplicate Town/Hunt rendering path.
     ctx.fillStyle = '#141016';
     ctx.fillRect(0, 0, 320, 160);
+    // An understated Gothic stone training bay: no generic neon arena.
+    ctx.fillStyle = '#251c23';
+    ctx.fillRect(0, 17, 320, 4);
+    ctx.fillStyle = '#30232a';
+    for (let column = 0; column < 9; column++) {
+        const x = 6 + column * 37;
+        ctx.fillRect(x, 25 + column % 3 * 6, 25, 3);
+        ctx.fillRect(x + 8, 49 + column % 2 * 7, 17, 2);
+    }
     ctx.fillStyle = '#272026';
     ctx.fillRect(0, 118, 320, 42);
     ctx.fillStyle = '#433336';
@@ -28,16 +37,24 @@ function drawScene(ctx) {
         const x = index * 37 + (index % 2) * 9;
         ctx.fillRect(x, 127 + index % 3 * 6, 22, 3);
     }
-    ctx.fillStyle = '#594039';
-    ctx.fillRect(217, 92, 5, 26);
-    ctx.fillRect(213, 91, 14, 5);
-    ctx.fillStyle = '#2b262d';
-    ctx.fillRect(217, 88, 7, 6);
+    // One inert stone target; the example is NOT a simulated enemy hit.
+    ctx.fillStyle = '#17151b';
+    ctx.fillRect(210, 80, 29, 38);
+    ctx.fillStyle = '#665252';
+    ctx.fillRect(211, 78, 23, 5);
+    ctx.fillRect(216, 66, 14, 15);
+    ctx.fillStyle = '#322930';
+    ctx.fillRect(218, 69, 10, 10);
+    ctx.fillRect(213, 87, 21, 27);
+    ctx.fillStyle = '#8f6a57';
+    ctx.fillRect(219, 71, 3, 3);
+    ctx.fillRect(232, 86, 3, 18);
+    ctx.fillRect(209, 112, 27, 6);
 }
 
 function drawProjectile(ctx, x, y, recipe, scale, reducedMotion) {
     ctx.save();
-    ctx.translate(x, y);
+    ctx.translate(Math.round(x), Math.round(y));
     ctx.scale(scale, scale);
     // This calls exactly the same C#-recipe-driven pixel composer as Hunts.
     drawComposedFireProjectile(ctx, { radius: 11, rank: 1 }, recipe, reducedMotion);
@@ -56,10 +73,10 @@ export function drawFireballSequenceFrame(canvas, recipe, normalizedTime, reduce
 
     if (name === 'Cast') {
         const charge = .65 + progress * .35;
-        drawProjectile(ctx, 44, 83, recipe, charge * 1.5, reducedMotion);
+        drawProjectile(ctx, 54, 83, recipe, charge * 2.4, reducedMotion);
     } else if (name === 'Travel') {
         const x = 47 + 168 * progress;
-        drawProjectile(ctx, x, 83 - Math.sin(progress * Math.PI) * 6, recipe, 1.25, reducedMotion);
+        drawProjectile(ctx, x, 83 - Math.sin(progress * Math.PI) * 6, recipe, 2.1, reducedMotion);
     } else if (name === 'Impact') {
         ctx.save();
         ctx.translate(220, 89);
