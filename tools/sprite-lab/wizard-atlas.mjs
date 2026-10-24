@@ -10,8 +10,13 @@ const SCHOOLS=['fire','frost','storm','arcane','necromancer','summoner'];
 
 export async function packWizardAtlas({source,output,school,clips=CLIPS,passes=['albedo']}) {
     if(!SCHOOLS.includes(school))throw Error('Invalid school');
-    return packActorAtlas({source,output,actorId:'player-wizard',variant:school,clips,passes,
-        requiredClips:CLIPS,requiredPasses:PASSES});
+    try {
+        return await packActorAtlas({source,output,actorId:'player-wizard',variant:school,clips,passes,
+            requiredClips:CLIPS,requiredPasses:PASSES});
+    } catch (error) {
+        if (error.message.startsWith('player-wizard/')) throw Error(error.message.replace('player-wizard/','Wizard '));
+        throw error;
+    }
 }
 
 function parseArgs(argv){
