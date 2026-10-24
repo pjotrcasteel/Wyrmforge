@@ -8,4 +8,7 @@ public sealed record ElementalImpactRenderSnapshot(double X, double Y, SpellId S
     public int Rank { get; init; } = 1;
     public SynergyId? Combination { get; init; }
     public bool Surge { get; init; }
+    public double SplashRadius { get; init; }
+    public int FireballMutationMask { get; init; }
+    public int FireballSourceId { get; init; }
 }

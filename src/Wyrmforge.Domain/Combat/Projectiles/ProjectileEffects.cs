@@ -7,5 +7,9 @@ public readonly record struct ProjectileEffects(bool Inferno, int ChainsLeft, do
     public SynergyId? Combination { get; init; }
     public int Rank { get; init; } = 1;
     public bool Surge { get; init; }
+    // Immutable cast identity; other spell IDs carry zero.
+    public int FireballMutationMask { get; init; }
+    // Each physical Fireball owns one deterministic visual event lineage.
+    public int FireballSourceId { get; init; }
     public IReadOnlyList<ProjectileStatusEffect> AdditionalStatuses { get; init; } = [];
 }

@@ -1,0 +1,35 @@
+namespace Wyrmforge.Domain.Progression.Signature;
+
+/// <summary>
+/// Versioned, presentation-only projection of the already validated Fireball loadout.
+/// This never authorizes a mutation or changes damage, targets, collision or unlocks.
+/// </summary>
+public sealed record FireballVisualRecipe(int Version, int Level, int MutationMask)
+{
+    public const int CurrentVersion = 1;
+
+    public bool Has(FireballMutationId mutation) =>
+        Enum.IsDefined(mutation) && (MutationMask & (1 << ((int)mutation - 1))) != 0;
+
+    // No visual shape or material is chosen here: production art is not approved.
+    // A future authored renderer can interpret only the effects actually present.
+    public bool Detonation => Has(FireballMutationId.Detonation);
+    public bool ScorchedEarth => Has(FireballMutationId.ScorchedEarth);
+
+    public string CacheKey => $"fireball-v{Version}-l{Level}-m{MutationMask:x3}";
+
+    public static FireballVisualRecipe Resolve(FireballCoreState core)
+    {
+        ArgumentNullException.ThrowIfNull(core);
+        return Resolve(core.Level, core.Equipped);
+    }
+
+    public static FireballVisualRecipe Resolve(int level, IEnumerable<FireballMutationId> equipped)
+    {
+        ArgumentNullException.ThrowIfNull(equipped);
+        var allowed = Math.Clamp(level, 1, 5);
+        // Mechanical composition is resolved before presentation. No renderer
+        // or art descriptor may decide which gameplay mutation is active.
+        return new(CurrentVersion, allowed, FireballMutationSet.Resolve(equipped).Mask);
+    }
+}

@@ -1,0 +1,83 @@
+name: Fireball V5 source export (unapproved)
+
+on:
+  push:
+    branches: [feat/fireball-composite-visual-recipes]
+    paths:
+      - 'art/source/spells/fireball/candidates/base-v5/**'
+      - 'art/source/spells/fireball/manifest.json'
+      - '.github/workflows/fireball-v5-candidate-source.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  export-and-review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Install pixel-art source exporter
+        run: python -m pip install Pillow==11.3.0
+      - name: Regenerate source sheets and editable Aseprite
+        run: python art/source/spells/fireball/candidates/base-v5/author-fireball-v5.py
+      - name: Validate source dimensions and five-channel correspondence
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          import struct
+          root = Path('art/source/spells/fireball/candidates/base-v5')
+          channels = ['albedo','emissive','normal','height','cutout']
+          images = {channel:Image.open(root/f'{channel}.png').convert('RGBA') for channel in channels}
+          assert all(image.size == (16 * 120, 72) for image in images.values()), 'all five source sheets must align'
+          ase = (root/'base-fireball-v5.aseprite').read_bytes()
+          assert len(ase) == struct.unpack_from('<I', ase, 0)[0], 'incorrect native source length'
+          assert struct.unpack_from('<H', ase, 4)[0] == 0xA5E0, 'not an Aseprite source'
+          assert struct.unpack_from('<H', ase, 6)[0] == 16, 'wrong Aseprite frame count'
+          for index in range(16):
+              left = index * 120
+              region = (left, 0, left+120, 72)
+              albedo = images['albedo'].crop(region).getchannel('A')
+              emissive = images['emissive'].crop(region).getchannel('A')
+              cutout = images['cutout'].crop(region).getchannel('A')
+              assert cutout.getbbox() is not None, f'no cutout in frame {index}'
+              for a,e,c in zip(albedo.getdata(), emissive.getdata(), cutout.getdata()):
+                  assert (c>0) == (a>0 or e>0), f'cutout mismatch in frame {index}'
+          print('Unapproved V5 source: 16 frames, aligned 5 channels, cutout valid; NOT in-game proof')
+          PY
+      - name: Upload unapproved candidate source (NOT a gameplay capture)
+        uses: actions/upload-artifact@v4
+        with:
+          name: fireball-v5-unapproved-source-NOT-GAMEPLAY
+          retention-days: 14
+          path: |
+            art/source/spells/fireball/candidates/base-v5/*.png
+            art/source/spells/fireball/candidates/base-v5/*.aseprite
+            art/source/spells/fireball/candidates/base-v5/*.gif
+            art/source/spells/fireball/candidates/base-v5/*.py
+            art/source/spells/fireball/candidates/base-v5/README.md
+      - name: Version the generated unapproved sheets and editable source in the existing PR
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A art/source/spells/fireball/candidates/base-v5
+          if git diff --cached --quiet; then
+            echo "Source outputs are byte-identical to the tracked candidate files"
+            exit 0
+          fi
+          git commit -m "art(fireball): checkpoint unapproved V5 Aseprite and material frames"
+          # This branch is shared with other PR work. Never force-push. Rebase
+          # the generated output checkpoint onto a newer remote if necessary.
+          git fetch origin
+          git rebase origin/feat/fireball-composite-visual-recipes
+          git push origin HEAD:feat/fireball-composite-visual-recipes
+          remote_sha="$(git ls-remote origin refs/heads/feat/fireball-composite-visual-recipes | cut -f1)"
+          test "$remote_sha" = "$(git rev-parse HEAD)"
+          echo "Verified remote V5 material checkpoint: $remote_sha"

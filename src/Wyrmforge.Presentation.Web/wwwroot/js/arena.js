@@ -1,3 +1,4 @@
+import { preloadFireballV5 } from './arena-fireball-v5.js';
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
 import { attachArenaInput, getArenaMovement, getArenaAim } from './arena-input.js';
 import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, drawArenaCloisterElevation } from './arena-environment.js';
@@ -29,6 +30,7 @@ export function initializeArena(canvas, dotNetReference) {
     disposeArena(canvas);
     // Atlases stream in; until they decode, every layer uses its code-painted fallback.
     loadArt(new URL('../art/', import.meta.url).href);
+    preloadFireballV5();
     preloadPaintedEnemies();
     preloadHollowSprites();
     ashlingSprites.preload();
@@ -50,6 +52,12 @@ export function readArenaDiagnostics(canvas) {
         movement: getArenaMovement(state),
         aim: getArenaAim(state),
         projectiles: state.latestSnapshot?.projectiles ?? [],
+        // Read-only visual provenance for real-Hunt evidence captures.
+        // These never modify the original scene, C# simulation, or VFX renderer.
+        fireballVisual: state.latestSnapshot?.fireballVisual ?? null,
+        elementalImpacts: state.latestSnapshot?.elementalImpacts ?? [],
+        burningGrounds: state.latestSnapshot?.burningGrounds ?? [],
+        essenceBursts: state.latestSnapshot?.essenceBursts ?? [],
         castMotion: state.latestSnapshot?.castMotion ?? null,
         pointerId: state.pointerId,
         touchId: state.touchId,
@@ -321,7 +329,7 @@ function draw(state, snapshot, width, height) {
     drawWinterBellAir(ctx, snapshot);
     drawGlassReliquaryAir(ctx, snapshot, state.reducedMotion.matches ? 0 : visualSeconds);
     for (const cloud of snapshot.snowClouds ?? []) drawSnowCloud(ctx, cloud, state.reducedMotion.matches ? 0 : visualSeconds);
-    for (const projectile of snapshot.projectiles) drawSpellProjectile(ctx, projectile, state.reducedMotion.matches);
+    for (const projectile of snapshot.projectiles) drawSpellProjectile(ctx, projectile, state.reducedMotion.matches, visualSeconds);
 
     for (const trace of snapshot.lightning) drawLightningTrace(ctx, trace, visualSeconds, state.reducedMotion.matches);
 

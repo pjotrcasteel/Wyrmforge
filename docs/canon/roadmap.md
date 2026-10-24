@@ -103,6 +103,25 @@ or rewrite current gameplay before the engine exists.
 [Canonical art and visibility](art-and-animation.md#one-engine-controls-visibility-in-every-world-scene--locked-23-october-2026) ·
 [Town Square preservation and relighting migration](town-and-ux.md#future-town-square-presentation-migration--one-universal-lighting-engine-locked-23-october-2026).
 
+**World-art development dependency — REVISED, 25 October 2026 (LOCKED):** **Normal WyrmForge development must not wait for PR #332.** Continue gameplay, enemies, characters, arenas, sound, Nexus, art/animation, UI, C# material simulation, CI and ordinary in-engine visual improvements using *existing* renderers. New art may use a small, replaceable legacy draw adapter without creating a new light engine or disrupting existing world lighting. **Only new universal lighting, dynamic real shadows/occlusion, world-wide material illumination/reflections and their eventual renderer migration depend on PR #332.** Preserve engine-agnostic source materials and avoid bespoke new illumination code. Original 24 October all-art visual freeze is **superseded** by this narrower owner decision.
+
+### Fireball V5 in-game first; full universal lighting afterward — LOCKED, 25 October 2026
+
+**Owner priority: see the new Fireball in Hunts as soon as practical**, without waiting for the complete shared engine. [Draft PR #336](https://github.com/pjotrcasteel/Wyrmforge/pull/336) now contains a **legacy Canvas image-strip adapter** for the current base Fireball projectile only, using its existing C#-authorized position, angle, size and source identity. It reuses the existing Hunt renderer and lighting baseline: **no new lights, custom shadows, illumination masks, gameplay projectiles or fire spread**. Other spells and the existing fallback remain unchanged. Draft integration is not a shipped feature or visual acceptance.
+
+**TODO / acceptance sequence:**
+
+- [x] Preserve V5 editable 16-frame source, albedo and emissive sheets alongside future normal/height/cutout materials.
+- [x] Put V5's base projectile in the **existing Hunt rendering path** behind safe load/fallback behavior in draft PR #336 (not yet merged or approved).
+- [ ] Run complete CI and capture **real** 320px/390px in-game video/GIF from draft PR #336. Inspect projectile scale, sprite clarity, 16-frame loop, actual movement, color against Gothic terrain, reduced motion and mobile frame cost. Rework if necessary.
+- [ ] Obtain owner visual approval before merging the early **base-art-only** Fireball improvement. No claim of complete mutation appearance.
+- [ ] Independently finish cast, hit, aftermath, Meteor Heart, Detonation, Scorched Earth, Cinder Needle and legal combined-form artwork; connect through the **existing** game renderer only where source art is reviewed and behavior is already authorized by C#.
+- [ ] **BLOCKED only on completed/merged/validated PR #332:** migrate all Fireball/world surfaces to unified GPU albedo/emissive/normal/height/occlusion, actual dynamic spell lights, reflected water and responsive shared shadows. Remove temporary legacy drawing when the common renderer fully replaces it; test zero-light world darkness.
+
+**Hard prohibition:** no second lighting engine, new CSS/Canvas glow system, fake environmental shadows, visual-only damage event or scene-wide relighting hack. Early sprite playback **is not** completion of universal-lighting acceptance.
+
+[Fireball authoring assets](../../art/source/spells/fireball/README.md) · [Technical checkpoints](../engineering/fireball-composable-morphology-2026-10-24.md) · [Shared lighting PR #332](https://github.com/pjotrcasteel/Wyrmforge/pull/332).
+
 **Continuing compatible work in parallel:** The unified Arcane Nexus, minor/major upgrade pacing, Fateweave card-by-card reroll, research-to-spell proof and the future **3–4 intelligent spell scheduler** remain binding. If one of these is the active workstream, do not pause it merely to force P1; finish a safe checkpoint first. Otherwise plan them as **small dependency-conscious slices alongside P1–P5**, not as a massive replacement of the working Forge/Web/SpellBook system. Expand spell loadouts only after the auto-target/manual-override arbitration and shared cast scheduling are reliably tested.
 
 **Critical dependency order:** Real routes before painted roads; physical obstacles/telegraphs before VFX; aim authority before presentation indicator; persistent save/identity before published ranked records; independently verified evidence before leaderboards and prize/season claims. For every creative area or combat presentation, research **at least two relevant independent external sources and approved internal art**, explaining the transferable principles and why the result remains within established WyrmForge style; no copied layouts/assets or unreviewed high-fantasy redesign. At no point should a polished concept illustration substitute for playable, mobile-tested functionality.

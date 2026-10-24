@@ -25,7 +25,7 @@ public sealed partial class RunSimulation
                 // A wall contact is visual feedback only: no enemy hit, damage, status,
                 // chain, splash, experience or reward can be fabricated by this branch.
                 arenaEnvironment.TryDamageProp(contact, width, height, projectile.Radius, projectile.Damage);
-                RegisterElementalImpact(contact, projectile.Spell, projectile.Rank, projectile.Combination, projectile.Surge);
+                RegisterProjectileImpact(contact, projectile, enemyHit: false);
                 projectiles.RemoveAt(index);
                 continue;
             }
@@ -57,7 +57,7 @@ public sealed partial class RunSimulation
             if (detonation is not null) damage *= detonation.DamageMultiplier;
             if (passiveProfile.AbsoluteZero && target.Statuses.Has(CombatStatusId.Frozen)) damage *= PassiveEffectResolver.AbsoluteZeroDamageMultiplier;
 
-            RegisterElementalImpact(target.Position, projectile.Spell, projectile.Rank, projectile.Combination, projectile.Surge);
+            RegisterProjectileImpact(target.Position, projectile, enemyHit: true);
             RegisterBurningGround(projectile, target.Position);
             RegisterFrostNova(projectile, target.Position, target.Id);
             var spawnedForHit = projectile.ChainsLeft > 0 ? spawned ??= [] : null;
@@ -234,6 +234,11 @@ public sealed partial class RunSimulation
             Rank = source.Rank,
             Surge = source.Surge,
             AdditionalStatuses = source.AdditionalStatuses,
+            // A chained projectile is a new physical fire body, not a new cast
+            // or an invented effect. Preserve the source's mutation recipe but
+            // assign distinct lineage for independent hit/ground animation.
+            FireballMutationMask = source.FireballMutationMask,
+            FireballSourceId = source.Spell == SpellId.FireBolt ? ++fireballSourceSequence : 0,
         };
         spawned.Add(new ProjectileState(position, direction * speed, Math.Max(4, source.Radius - 1), source.Damage * 0.82, source.Spell, effects));
     }

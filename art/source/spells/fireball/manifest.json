@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "spell": "FireBolt",
+  "status": "awaiting-authored-source",
+  "sourceReference": "src/Wyrmforge.Presentation.Web/wwwroot/art/fireball-ritual-hero.png",
+  "intendedBackend": "universal-gpu-lighting-pr-332",
+  "rolePolicy": "one physical body; externally validated four-phase material and animation sources",
+  "materialChannels": [
+    "albedo",
+    "emissive",
+    "normal",
+    "height",
+    "cutout"
+  ],
+  "assets": {},
+  "notice": "Full multi-phase Fireball art is not approved. V5 base projectile is enabled only in draft PR #336 via legacy Hunt Canvas, without additional lighting or new gameplay effects.",
+  "candidates": {
+    "core-original": {
+      "status": "direction-accepted-not-owner-approved",
+      "version": "v5",
+      "sourceGenerator": "art/source/spells/fireball/candidates/base-v5/author-fireball-v5.py",
+      "sourceType": "reproducible-editable-pixel-material-study",
+      "generatedEditableSheet": "art/source/spells/fireball/candidates/base-v5/base-fireball-v5.aseprite",
+      "generatedChannels": {
+        "albedo": "art/source/spells/fireball/candidates/base-v5/albedo.png",
+        "emissive": "art/source/spells/fireball/candidates/base-v5/emissive.png",
+        "normal": "art/source/spells/fireball/candidates/base-v5/normal.png",
+        "height": "art/source/spells/fireball/candidates/base-v5/height.png",
+        "cutout": "art/source/spells/fireball/candidates/base-v5/cutout.png"
+      },
+      "frames": 16,
+      "frameSize": [
+        120,
+        72
+      ],
+      "anchor": [
+        87,
+        36
+      ],
+      "cadenceMilliseconds": 83,
+      "worldSize": "pending-gameplay-scale-review",
+      "runtimeEnabled": true,
+      "sourceIncluded": true,
+      "rendersIncluded": true,
+      "integrationMode": "legacy-hunt-canvas-sprite-only-draft-pr",
+      "previewStatus": "in-draft-pr-awaiting-real-320-390-gameplay-review",
+      "universalLightingBlockedOn": "shared-gpu-lighting-pr-332-complete-merged-and-validated"
+    }
+  }
+}

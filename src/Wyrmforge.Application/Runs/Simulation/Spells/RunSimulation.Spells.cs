@@ -16,6 +16,8 @@ namespace Wyrmforge.Application.Runs.Simulation;
 
 public sealed partial class RunSimulation
 {
+    private int fireballSourceSequence;
+
     private void UpdateSpellcasting(double delta, bool moving)
     {
         // Only the focused spell owns a cast clock. Learned spells are combination knowledge.
@@ -47,7 +49,11 @@ public sealed partial class RunSimulation
             if (surge.IsSurge) FocusedSurgesCast++;
             var direction = Math.Atan2(effectiveAim.Y, effectiveAim.X);
             lastCastMotion = new CastMotionRenderSnapshot(player.Position.X, player.Position.Y, spell.Id, rank,
-                SpellCombinationResolver.ActiveFor(spell.Id, build.Spells, build.Synergies), direction, 0) { Surge = surge.IsSurge };
+                SpellCombinationResolver.ActiveFor(spell.Id, build.Spells, build.Synergies), direction, 0)
+            {
+                Surge = surge.IsSurge,
+                FireballMutationMask = spell.Id == SpellId.FireBolt ? preparedFireballSet.Mask : 0,
+            };
             lastCastMotionStartedAt = elapsed;
             castCount++;
             if (spell.Ability.Delivery is ProjectileAbilityProfile) projectileCastCount++;
@@ -123,9 +129,10 @@ public sealed partial class RunSimulation
             // Mutation amplification is applied to Detonation's own explosion before
             // combining it with spell mastery, surges and other independent effects.
             var detonationRadius = 46 * FireballEffectFactor(FireballMutationId.Detonation, MutationEffectCapability.Area);
-            var mutationSplash = id != SpellId.FireBolt ? 0 :
-                HasFireballMutation(FireballMutationId.Detonation) ? buildModifiers.Apply(BuildStatId.MutationRadius, detonationRadius) :
-                HasFireballMutation(FireballMutationId.ScorchedEarth) ? 8 : 0;
+            // Scorched Earth owns persistent fire; it must not create a cosmetic
+            // mini-explosion with real unintended splash damage.
+            var mutationSplash = id == SpellId.FireBolt && HasFireballMutation(FireballMutationId.Detonation)
+                ? buildModifiers.Apply(BuildStatId.MutationRadius, detonationRadius) : 0;
             var splashRadius = Math.Max(mutationSplash, Math.Max(surge.SplashRadius, Math.Max(focused.SplashRadius, Math.Max(masterySplash, evolution.SplashRadius))));
             var effects = new ProjectileEffects(
                 inferno,
@@ -139,6 +146,8 @@ public sealed partial class RunSimulation
                 Rank = rank,
                 Surge = surge.IsSurge,
                 AdditionalStatuses = SpellCombinationResolver.Resolve(id, build.Spells, build.Synergies),
+                FireballMutationMask = id == SpellId.FireBolt ? preparedFireballSet.Mask : 0,
+                FireballSourceId = id == SpellId.FireBolt ? ++fireballSourceSequence : 0,
             };
             projectiles.Add(new ProjectileState(player.Position, direction * speed, radius, damage * (inferno ? 4 : 1), id, effects));
         }

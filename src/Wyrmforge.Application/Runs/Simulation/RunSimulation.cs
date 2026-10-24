@@ -354,6 +354,9 @@ public sealed partial class RunSimulation
                 Rank = impact.Rank,
                 Combination = impact.Combination,
                 Surge = impact.Surge,
+                SplashRadius = impact.SplashRadius,
+                FireballMutationMask = impact.FireballMutationMask,
+                FireballSourceId = impact.FireballSourceId,
             }).ToArray(),
             deathBursts.Select(burst => new DeathBurstRenderSnapshot(burst.Position.X, burst.Position.Y, burst.Radius, burst.Progress, burst.Intensity, burst.Kind, burst.EntityId, burst.BodyRadius)).ToArray(),
             CreateFieryAreaSnapshots(),
@@ -364,6 +367,8 @@ public sealed partial class RunSimulation
                 Angle = Math.Atan2(projectile.Velocity.Y, projectile.Velocity.X),
                 Rank = projectile.Rank,
                 Surge = projectile.Surge,
+                FireballMutationMask = projectile.FireballMutationMask,
+                FireballSourceId = projectile.FireballSourceId,
             }).ToArray(),
             lightning.Select(trace => new LightningRenderSnapshot(trace.From.X, trace.From.Y, trace.To.X, trace.To.Y, trace.Life)).ToArray(),
             hud,
@@ -374,6 +379,8 @@ public sealed partial class RunSimulation
             ExperienceShards: experienceShards.Shards.Select(shard => new ExperienceShardRenderSnapshot(shard.Position.X, shard.Position.Y, shard.Value)).ToArray(),
             ExperiencePickups: experiencePickupPulses.Select(pulse => new ExperiencePickupRenderSnapshot(pulse.Position.X, pulse.Position.Y, pulse.Value, pulse.Progress)).ToArray())
         {
+            FireballVisual = preparedFireballVisual,
+            BurningGrounds = CreateBurningGroundSnapshots(),
             Trail = CreateTrailSnapshot(),
             PowerBurst = CreatePowerBurstSnapshot(),
             Environment = arenaEnvironment?.Snapshot(),
