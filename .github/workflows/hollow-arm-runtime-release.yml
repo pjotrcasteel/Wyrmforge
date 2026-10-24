@@ -1,0 +1,98 @@
+name: Hollowed arm-only runtime cutover — exact 3D art and code verification
+
+on:
+  push:
+    branches: [feat/actor-lit-sprite-production]
+    paths:
+      - 'tools/art/build-hollow-arm-pack.py'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/hollow-arm-variants.js'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/hollow-sprites.js'
+      - 'tests/javascript/hollow-arm-variants.test.mjs'
+      - '.github/workflows/hollow-arm-runtime-release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  arm-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Check JS variants and original Hollowed playback
+        run: |
+          node --test tests/javascript/hollow-arm-variants.test.mjs tests/javascript/hollow-sprites.test.mjs
+          node --check src/Wyrmforge.Presentation.Web/wwwroot/js/hollow-sprites.js
+          node --check src/Wyrmforge.Presentation.Web/wwwroot/js/hollow-arm-variants.js
+      - name: Install editable Blender source and accurate triangle rasterizer
+        run: python -m pip install 'bpy==4.5.3' 'numpy>=1.26,<3' 'pillow>=10,<13' 'numba>=0.60,<1'
+      - name: Sample exact authored attack poses for standard and arm injuries
+        run: |
+          set -euo pipefail
+          for variant in standard broken-arm-right one-arm-left; do
+            folder=art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-no-cape-attack-$variant-preview
+            test -f "$folder/hollow-rigged.blend"
+            python tools/sprite-lab/sample-hollow-rig.py -- "$folder"
+          done
+      - name: Build three 96px arm-only actor atlases with exact source-derived G1 material passes
+        run: python tools/art/build-hollow-arm-pack.py
+      - name: Validate source hashes, all alpha channels, no broken leg, and runtime playback
+        run: |
+          python - <<'PY'
+          import json,hashlib
+          import numpy as np
+          from PIL import Image
+          from pathlib import Path
+          path=Path('src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/hollow-rigged/variants')
+          m=json.loads((path/'manifest.json').read_text())
+          assert m['variants']==['standard','broken-arm-right','one-arm-left']
+          assert m['brokenLegShipped'] is False and m['runtimeGameplayChanged'] is False
+          assert m['death']=='original approved source only'
+          for variant in m['variants']:
+            for clip in ('walk','attack'):
+              a=m['clips'][variant][clip]
+              rgb=np.asarray(Image.open(path/a['image']).convert('RGBA'))
+              assert rgb.shape==(768,1536,4)
+              assert hashlib.sha256((path/a['image']).read_bytes()).hexdigest()==a['sha256']
+              assert a['sourcePoseSha256']==hashlib.sha256(Path(a['sourcePose']).read_bytes()).hexdigest()
+              assert a['minimumMeshIoU']>=.90,(variant,clip,a['minimumMeshIoU'])
+              for key in ('normal','depth','caster','emissive'):
+                item=a['materials'][key]
+                data=np.asarray(Image.open(path/item['image']))
+                assert hashlib.sha256((path/item['image']).read_bytes()).hexdigest()==item['sha256']
+                assert data.shape[:2]==rgb.shape[:2]
+                if key=='normal':
+                  assert np.array_equal(data[:,:,3],rgb[:,:,3])
+                if key=='caster':
+                  assert np.all((data>0)<= (rgb[:,:,3]>0))
+              print('Validated',variant,clip,'16x8 frames, four exact-pose material passes')
+          PY
+          node --test tests/javascript/hollow-arm-variants.test.mjs tests/javascript/hollow-sprites.test.mjs tests/javascript/actor-lit-assets.test.mjs
+      - name: Commit only matched 3-variant assets (never leg or legacy materials)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/feat/actor-lit-sprite-production'
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/hollow-rigged/variants/
+          if ! git diff --cached --quiet; then
+            git commit -m "art(hollowed): install three no-cape arm variants and synchronized lighting maps"
+            git pull --rebase origin feat/actor-lit-sprite-production
+            git push origin HEAD:feat/actor-lit-sprite-production
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hollowed-arm-only-runtime-${{ github.sha }}
+          path: src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/hollow-rigged/variants/
+          retention-days: 30
+          if-no-files-found: warn
