@@ -89,14 +89,14 @@ def comparison(original: Image.Image, studied: Image.Image, tile_px: int, label:
 def generate(source_root: Path, output: Path, tile_px: int = 240) -> list[dict]:
     if not 64 <= tile_px <= 512:
         raise ValueError("Review tile_px must be between 64 and 512")
+    if output.resolve() == source_root.resolve() or source_root.resolve() in output.resolve().parents:
+        raise ValueError("Review output must be outside the immutable source-art directory")
     manifest = json.loads((source_root / "manifest.json").read_text(encoding="utf-8"))
     if manifest["status"] != "review-only-not-approved":
         raise ValueError("This diagnostic accepts only the unapproved source archive")
     selected = [family for family in manifest["families"] if family["id"] in SUPPORTED]
     if [family["id"] for family in selected] != list(SUPPORTED):
         raise ValueError("Required first-pass families missing or reordered")
-    if output.resolve() == source_root.resolve() or source_root.resolve() in output.resolve().parents:
-        raise ValueError("Review output must be outside the immutable source-art directory")
     output.mkdir(parents=True, exist_ok=True)
     observations = []
     for family in selected:
