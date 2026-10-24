@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "spell": "FireBolt",
+  "status": "awaiting-authored-source",
+  "sourceReference": "src/Wyrmforge.Presentation.Web/wwwroot/art/fireball-ritual-hero.png",
+  "intendedBackend": "universal-gpu-lighting-pr-332",
+  "rolePolicy": "one physical body; externally validated four-phase material and animation sources",
+  "materialChannels": [
+    "albedo",
+    "emissive",
+    "normal",
+    "height",
+    "cutout"
+  ],
+  "assets": {},
+  "notice": "Not a runtime atlas. No artwork is owner-approved for composited mutation roles yet."
+}
