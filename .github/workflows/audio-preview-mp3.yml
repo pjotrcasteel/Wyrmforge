@@ -1,0 +1,54 @@
+name: iPhone-compatible audio audition previews
+
+on:
+  push:
+    branches:
+      - audio/phase1-menu-foley-audition
+    paths:
+      - .github/workflows/audio-preview-mp3.yml
+      - src/Wyrmforge.Presentation.Web/wwwroot/audio/recorded/menu-handleSmallLeather.ogg
+      - src/Wyrmforge.Presentation.Web/wwwroot/audio/recorded/menu-metalClick.ogg
+      - src/Wyrmforge.Presentation.Web/wwwroot/audio/recorded/ui.ogg
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  create-audition-files:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout this branch
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Convert the exact recorded candidates to MP3 for iPhone
+        shell: bash
+        run: |
+          set -euo pipefail
+          src=src/Wyrmforge.Presentation.Web/wwwroot/audio/recorded
+          dest=docs/audio/previews
+          mkdir -p "$dest"
+          ffmpeg -y -hide_banner -loglevel error -i "$src/menu-handleSmallLeather.ogg" -ar 44100 -c:a libmp3lame -q:a 3 "$dest/worn-vellum.mp3"
+          ffmpeg -y -hide_banner -loglevel error -i "$src/ui.ogg" -ar 44100 -c:a libmp3lame -q:a 3 "$dest/weathered-stone.mp3"
+          ffmpeg -y -hide_banner -loglevel error -i "$src/menu-metalClick.ogg" -ar 44100 -c:a libmp3lame -q:a 3 "$dest/cold-iron.mp3"
+          for preview in "$dest"/*.mp3; do
+            ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1 "$preview"
+          done
+      - name: Publish audio reviews as MP3 in this draft branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/audio/previews/*.mp3
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(audio): add iPhone-compatible MP3 audition previews"
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
+      - name: Also bundle the previews for local listening
+        uses: actions/upload-artifact@v4
+        with:
+          name: wyrmforge-audition-mp3
+          path: docs/audio/previews/*.mp3
+          if-no-files-found: error
