@@ -1,0 +1,123 @@
+name: Hollowed broken left leg V4 — buckle, limp and eight-way GIF review
+on:
+  push:
+    branches: [feat/actor-lit-sprite-production]
+    paths:
+      - 'tools/sprite-lab/refine-hollow-broken-leg-buckling-v4.py'
+      - 'tools/sprite-lab/render-hollow-broken-leg-buckling-v4.py'
+      - '.github/workflows/hollow-broken-leg-buckling-v4.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+
+jobs:
+  build-render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install Blender 4.5 and image/geometry dependencies
+        run: python -m pip install 'bpy==4.5.3' 'numpy>=1.26,<3' 'pillow>=10,<13'
+      - name: Author separate no-cape broken-leg V4 editable animation
+        run: python tools/sprite-lab/refine-hollow-broken-leg-buckling-v4.py
+      - name: Sample 17 actual 3D skinned poses and foot marker contacts
+        run: |
+          python tools/sprite-lab/sample-hollow-rig.py -- \
+            art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-broken-leg-buckling-v4
+      - name: Verify weight-bearing injury, actual anatomy, source geometry and planted feet
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,json
+          import numpy as np
+          base=Path('art/source/enemies/hollow/rigged-poc/model/local-appearance-004')
+          old=base/'rigged-hollow-zombie-reach-v3-broken-leg-left'
+          new=base/'rigged-hollow-broken-leg-buckling-v4'
+          frames=json.loads((new/'gait-diagnostics.json').read_text())
+          source=json.loads((old/'gait-diagnostics.json').read_text())
+          p=json.loads((new/'retarget-provenance.json').read_text())
+          assert len(frames)==len(source)==17
+          assert p['artApproval'] is False and p['runtimeCutover'] is False
+          assert p['attackDeathReexported'] is False
+          assert p['parentEditableBlendSha256']==hashlib.sha256((old/'hollow-rigged.blend').read_bytes()).hexdigest()
+          leftload=[f['limpV4']['leftInjuredStance'] for f in frames[:16]]
+          max_idx=max(range(16),key=lambda i:leftload[i])
+          collapse=frames[max_idx]['limpV4']
+          assert collapse['extraPelvisOffset'][2]<-.055
+          assert collapse['crookedKneePoleShift']>.10
+          assert collapse['extraThoraxCounterRollDegrees']< -11
+          assert max(f['limpV4']['droopingToeSwing'] for f in frames[:16])>.75
+          assert all(f['limpV4']['bothSourceFootContactsLocked'] for f in frames)
+          for i in range(17):
+            for side in ('L','R'):
+              old_ankle=source[i]['feet'][side]['ankle']
+              new_ankle=frames[i]['feet'][side]['ankle']
+              assert np.linalg.norm(np.array(old_ankle)-np.array(new_ankle))<1e-5,(i,side,'foot contact')
+              original_reach=source[i]['arms'][side]['elbowFlexDegrees']
+              actual_reach=frames[i]['arms'][side]['elbowFlexDegrees']
+              assert abs(original_reach-actual_reach)<1e-6
+              assert frames[i]['arms'][side]['stretchReach'] is True
+          with np.load(old/'sampled-walk.npz') as a,np.load(new/'sampled-walk.npz') as b:
+            assert a['positions'].shape==b['positions'].shape
+            assert np.array_equal(a['faces'],b['faces'])
+            assert np.array_equal(a['uv'],b['uv'])
+            assert np.max(np.abs(a['positions']-b['positions']))>.02,'no strong body change'
+          markers=json.loads((new/'actual-foot-markers.json').read_text())
+          assert len(markers)==34
+          for side in ('L','R'):
+            for section,joints in [('arms',('shoulder','elbow','wrist','hand')),
+                                   ('feet',('hip','knee','ankle','toe'))]:
+              for k in joints:
+                assert max(abs(a-b) for a,b in zip(frames[0][section][side][k],frames[16][section][side][k]))<1e-5
+          print('V4 mechanical injury verified, 34 source foot contacts anchored, 16+closure frames')
+          PY
+      - name: Render actual 128 native 96px skinned frames, all eight directions
+        run: python tools/sprite-lab/render-hollow-broken-leg-buckling-v4.py
+      - name: Verify 32 complete animations and pixel-size comparisons
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from PIL import Image
+          out=Path('artifacts/hollow-trauma-broken-leg-left-buckling-v4')
+          assert Image.open(out/'candidate-walk-eight-directions.png').size==(1536,768)
+          for face in ('n','ne','e','se','s','sw','w','nw'):
+            for name in (f'{face}-animation.gif',f'{face}-zoom-4x.gif',
+                         f'compare-{face}-native-96px.gif',f'compare-{face}-zoom-4x.gif'):
+              g=Image.open(out/name)
+              assert g.n_frames==16,(name,g.n_frames)
+          assert not json.loads((out/'candidate-manifest.json').read_text())['runtimeAtlasReplaced']
+          print('All V4 true native and enlarged sixteen-frame eight-direction GIFs checked')
+          PY
+      - name: Preserve new source, previous V3 and owner review GIFs in draft PR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/feat/actor-lit-sprite-production'
+        run: |
+          set -euo pipefail
+          dest=docs/art/evidence/hollowed-broken-leg-buckling-v4
+          mkdir -p "$dest"
+          cp artifacts/hollow-trauma-broken-leg-left-buckling-v4/*.gif "$dest"/
+          cp artifacts/hollow-trauma-broken-leg-left-buckling-v4/*.png "$dest"/
+          cp artifacts/hollow-trauma-broken-leg-left-buckling-v4/candidate-manifest.json "$dest"/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$dest"
+          git add art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-broken-leg-buckling-v4/
+          if ! git diff --cached --quiet; then
+            git commit -m "art(hollowed): preserve injury load/buckle V4 and 96px review animations"
+            git pull --rebase origin feat/actor-lit-sprite-production
+            git push origin HEAD:feat/actor-lit-sprite-production
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hollowed-broken-leg-v4-${{ github.sha }}
+          path: |
+            art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-broken-leg-buckling-v4/
+            artifacts/hollow-trauma-broken-leg-left-buckling-v4/
+          retention-days: 30
+          if-no-files-found: warn
