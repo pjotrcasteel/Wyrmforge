@@ -36,11 +36,15 @@ test('shared actor contract uses one synchronous frame for all material passes',
                     assert.equal(sample.receivesShadow, true);
                     assert.equal(sample.receivesLight, true);
                     assert.equal(sample.emissive, null);
+                    assert.equal(Boolean(sample.textures.emissiveMask), folder === 'ashling-rigged');
                     total++;
                 }
             }
             assert.throws(() => actorMaterialSample(runtime, material, { clip, direction: 'S', frame: count }), RangeError);
         }
+        const densities = Object.keys(clips).map(clip => runtime.clips[clip].worldSize/runtime.clips[clip].cell);
+        assert.ok(densities.every(density => Math.abs(density-densities[0]) < 1e-9),
+            'Walk/attack/death must keep exactly the same world-pixel scale across transitions');
         assert.equal(total, Object.values(clips).reduce((a,b) => a+b, 0)*8);
     }
 });
