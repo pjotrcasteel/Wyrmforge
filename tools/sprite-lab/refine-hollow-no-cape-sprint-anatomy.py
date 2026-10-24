@@ -75,13 +75,32 @@ for side in ("L","R"):
     centers[side]=sum((before[side,"elbow"][i].y-before[side,"shoulder"][i].y)
                       for i in range(FRAMES))/FRAMES
 
-rig.animation_data.action.use_fake_user=True
+# Capture all ORIGINAL source pose matrices before assigning a new action.
+# Otherwise scene.frame_set() on an empty action would silently freeze the
+# pelvis, knees, shoulders and 120Hz-derived running motion in frame 1.
+# Parent-order application preserves exact known source geometry/stance.
+def depth(bone):
+    value=0
+    while bone.parent:
+        value+=1
+        bone=bone.parent
+    return value
+ordered_bones=sorted(list(rig.pose.bones),key=depth)
+original_action=rig.animation_data.action
+original_action.use_fake_user=True
+source_poses=[]
+for frame in range(FRAMES):
+    scene.frame_set(frame+1)
+    source_poses.append({bone.name:bone.matrix.copy() for bone in ordered_bones})
 action=bpy.data.actions.new("Hollowed_CMU_ShoulderLedSprint_NO_CAPE_UNAPPROVED")
 rig.animation_data.action=action
 records=[]
 for index in range(FRAMES+1):
     source_frame=index%FRAMES
     scene.frame_set(index+1)
+    for bone in ordered_bones:
+        bone.matrix=source_poses[source_frame][bone.name].copy()
+        bpy.context.view_layer.update()
     evidence=json.loads(json.dumps(source[source_frame]))
     evidence["frame"]=index
     evidence["description"]="CMU-measured shoulder/elbow reciprocal phase, rigid anatomical segments, no hand oscillators"
@@ -128,8 +147,9 @@ for index in range(FRAMES+1):
             "sourceElbowForeAft":raw_fore_aft,
             "retargetedElbowForeAft":upper_fore_aft
         }
-    for name in ("upper_arm.L","upper_arm.R","forearm.L","forearm.R","hand.L","hand.R"):
-        bone=rig.pose.bones[name]
+    # Key ALL pose bones, not just six arms: preserve the actual CMU source
+    # leg stance, neck movement, shoulder girdle and pelvis for every frame.
+    for bone in ordered_bones:
         for channel in ("location","rotation_quaternion","scale"):
             bone.keyframe_insert(channel,frame=index+1,group=name)
     records.append(evidence)
