@@ -177,6 +177,54 @@ def world_rotation_basis(bone,axis,angle):
     return (rest.inverted() @ rotation @ rest).to_quaternion()
 
 
+def add_staff_grip_source():
+    """Independent original walking staff; not the rejected clay wizard.
+
+    A neutral Gothic prop verifies a true hand-held asset on the anatomical
+    rig. Its future six heads/emission belong to the approved art/GPU stages.
+    """
+    control=bpy.data.objects.new("Wizard gait | RIGHT hand staff grip",None)
+    bpy.context.scene.collection.objects.link(control)
+    control.empty_display_type="SPHERE"
+    control.empty_display_size=.045
+    curve=bpy.data.curves.new("Weathered carved-wood staff centerline","CURVE")
+    curve.dimensions="3D"
+    curve.resolution_u=16
+    curve.bevel_depth=.012
+    curve.bevel_resolution=3
+    path=curve.splines.new("POLY")
+    coords=[
+        (.009,.003,-1.01),(.014,.001,-.72),(.011,-.006,-.43),
+        (.003,-.009,-.17),(0,0,0),(.003,.006,.19),
+        (.018,.014,.37),(.006,.018,.53),(-.013,.019,.64)]
+    path.points.add(len(coords)-1)
+    for point,xyz in zip(path.points,coords):
+        point.co=(*xyz,1.)
+    staff=bpy.data.objects.new("Wizard walking-staff | grip-linked geometry",curve)
+    bpy.context.scene.collection.objects.link(staff)
+    staff.parent=control
+    wood=bpy.data.materials.new("Dark, worn walnut | neutral staff preview")
+    wood.diffuse_color=(.19,.13,.09,1.)
+    curve.materials.append(wood)
+    return control
+
+
+def animate_staff_grip(arm,control):
+    """Key the actual evaluated hand position, not a timed floating prop."""
+    for i in range(FRAMES+1):
+        frame=i+1
+        bpy.context.scene.frame_set(frame)
+        depsgraph=bpy.context.evaluated_depsgraph_get()
+        hand=arm.evaluated_get(depsgraph).pose.bones["RightHand"].tail
+        target=arm.matrix_world@hand
+        control.location=target+Vector((.013,-.023,0.))
+        control.rotation_euler=(math.radians(2.5)*math.sin(2*math.pi*i/FRAMES),
+                                math.radians(2.)*math.sin(2*math.pi*i/FRAMES),0.)
+        control.keyframe_insert(data_path="location",frame=frame)
+        control.keyframe_insert(data_path="rotation_euler",frame=frame)
+    bpy.context.scene.frame_set(1)
+
+
 def animate(arm):
     bpy.context.view_layer.objects.active=arm
     controls={}
@@ -272,6 +320,14 @@ def prepare_scene(body,arm,output):
     scene.render.resolution_percentage=100
     scene.render.image_settings.file_format="PNG"
     scene.render.film_transparent=False
+    # An actual floor makes airborne feet and skating visually obvious.
+    # It is evidence geometry only, not a substitute for GPU world lighting.
+    bpy.ops.mesh.primitive_plane_add(size=7,location=(0,0,-.025))
+    floor=bpy.context.object
+    floor.name="Review floor | absolute contact plane"
+    floor_material=bpy.data.materials.new("Gothic motion-review slate")
+    floor_material.diffuse_color=(.115,.12,.13,1.)
+    floor.data.materials.append(floor_material)
     scene.display.shading.light="STUDIO"
     scene.display.shading.color_type="MATERIAL"
     material=bpy.data.materials.new("NEUTRAL motion inspection only")
@@ -308,6 +364,13 @@ def inspect_and_render(body,arm,out,samples):
         for side in ("Left","Right"):
             knees[side]=arm.matrix_world@arm.pose.bones[side+"Leg"].head
             foot[side]=arm.matrix_world@arm.pose.bones[side+"Foot"].head
+        # A staff actually attached to the moving evaluated right hand is
+        # checked in every rendered pose, not merely in the rest frame.
+        grip=bpy.data.objects.get("Wizard gait | RIGHT hand staff grip")
+        check(grip is not None,"missing right-hand staff grip controller")
+        hand=arm.matrix_world@evaluated_arm.pose.bones["RightHand"].tail
+        check((grip.location-hand).length<.06,
+              f"staff detached from hand on frame {i+1}")
         lateral=foot["Right"].x-foot["Left"].x
         check(lateral>.10,f"actual feet crossed on frame {i+1}: {lateral:.3f}")
         check(head.z>hip.z+.40,f"body squatting on frame {i+1}")
@@ -362,6 +425,8 @@ def inspect_and_render(body,arm,out,samples):
             "supportIntervalsVerified":support_steps,
             "southForwardIsNegativeY":True,
             "heelToeBoneRotation":True,
+            "animatedGripProp":True,
+            "staffLightEmitterConnected":False,
             "hipVerticalRange":round(hip_range,5),
             "leftFootForwardTravel":round(max(left_steps)-min(left_steps),4),
             "rightFootForwardTravel":round(max(right_steps)-min(right_steps),4),
@@ -384,6 +449,8 @@ def main():
     arm=create_anatomical_armature()
     coverage=bind_anatomical_skin(body,arm)
     samples=animate(arm)
+    staff=add_staff_grip_source()
+    animate_staff_grip(arm,staff)
     prepare_scene(body,arm,output)
     report=inspect_and_render(body,arm,output,samples)
     report["skinCoverage"]=coverage
