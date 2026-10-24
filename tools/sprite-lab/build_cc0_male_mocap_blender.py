@@ -382,7 +382,11 @@ def retarget_captured_feet_with_ik(source, target, start, end):
         for side,sign in (("Left",-1),("Right",1)):
             foot,pole=controls[side]
             corrected=row["foot"][side]+row["axis"]*(sign*maximum[side])
-            pole_pos=row["knee"][side]+row["axis"]*(sign*row["width"]*.8)
+            # Respect the original captured knee plane. The former 0.8x-hip
+            # pole push overrotated the thigh and tore the pelvis surface.
+            # A small separation offset avoids a degenerate straight chain
+            # without forcing the knee outward several Blender units.
+            pole_pos=row["knee"][side]+row["axis"]*(sign*row["width"]*.2)
             foot.location=corrected
             pole.location=pole_pos
             foot.keyframe_insert(data_path="location",frame=row["frame"])
