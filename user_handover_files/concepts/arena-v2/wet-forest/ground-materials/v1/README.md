@@ -56,6 +56,12 @@ The **first twelve** Grass/Moss and Wet Mud source paintings now have a non-dest
 - Local first-pass review suggests seam-cut sampling reduces obvious repeated landmarks relative to simple 2×2 repeats; future gameplay-scale inspection is still required.
 - GitHub Actions `visual-review` now includes unit tests, all-36 source diagnostics, the twelve earlier repeat-probe studies, and the two quilting comparisons in the same downloadable artifact. **Latest CI has not yet been verified green.**
 
+## Diversity-controlled source quilting — research-only checkpoint
+
+The first seam-cut quilt disproportionately reused individual sources (13/25 Grass/Moss patches from one artwork; 16/25 Wet Mud patches from another), despite all six paintings being available. The experimental sampler now attempts each of the six source artworks per patch, then applies a small, deterministic usage penalty (`diversityStrength=0.15`) among visually plausible candidate overlaps. A candidate outside the bounded overlap-error budget (best error ×1.45 + 100 mean-squared RGB units) cannot win solely for variety.
+
+The repeat-study JSON reports `selectedSourceUsage`, `sourcesRepresented` and the actual selection sequence. This improves coverage *without guaranteeing artistic quality or an exact six-of-six result for every seed*. It retains all six original image hashes, any baked highlights, no authored water masks and **no** production materials. The visual-review job and unit tests verify the code; real device screenshots and shared GPU shading remain separate future gates.
+
 ## Approval/locking protocol
 **Do not rename this folder CANONICAL or update runtime references until the owner explicitly accepts
 these 36 images.** After approval, record approved image hashes in an immutable manifest
