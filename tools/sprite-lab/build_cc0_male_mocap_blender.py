@@ -331,6 +331,83 @@ def verify_deformed_leg_lanes(body,arm):
     return result
 
 
+def retarget_captured_feet_with_ik(source, target, start, end):
+    """Actual motion retarget: raw captured ankles -> fitted human leg IK.
+
+    Reusing CMU pose ROTATION curves directly on a changed bone REST angle
+    inverted the legs. This transfers SOURCE WORLD JOINT POSITIONS instead.
+    Only a constant lateral clearance correction is allowed over the whole
+    clip, so the original foot-contact trajectory has no new sideways jitter.
+    The raw BVH object and action remain unchanged for provenance.
+    """
+    poses=[]
+    maximum={"Left":0.,"Right":0.}
+    min_original={"Left":float("inf"),"Right":float("inf")}
+    for frame in range(start,end+1):
+        bpy.context.scene.frame_set(frame+1)
+        hip_l=source.matrix_world@source.pose.bones["LeftUpLeg"].head
+        hip_r=source.matrix_world@source.pose.bones["RightUpLeg"].head
+        axis=hip_r-hip_l
+        axis.z=0.
+        width=axis.length
+        insist(width>.1,"captured human hip width invalid")
+        axis.normalize()
+        middle=(hip_l+hip_r)*.5
+        row={"frame":frame+1,"axis":axis.copy(),"width":width,
+             "foot":{},"knee":{}}
+        for side,sgn in (("Left",-1),("Right",1)):
+            ankle=source.matrix_world@source.pose.bones[side+"Foot"].head
+            knee=source.matrix_world@source.pose.bones[side+"Leg"].head
+            clearance=sgn*(ankle-middle).dot(axis)
+            min_original[side]=min(min_original[side],clearance/width)
+            maximum[side]=max(maximum[side],max(0.,width*.38-clearance))
+            row["foot"][side]=ankle.copy()
+            row["knee"][side]=knee.copy()
+        poses.append(row)
+    # Bounded displacement: if the source is a completely different walking
+    # direction, FAIL rather than force a huge stride or hide bad source data.
+    typical=sorted(x["width"] for x in poses)[len(poses)//2]
+    insist(all(x<=typical*.6 for x in maximum.values()),
+           "source walk requires excessive lateral offsets for fitted rig")
+    controls={}
+    for side,sign in (("Left",-1),("Right",1)):
+        foot=bpy.data.objects.new("Captured ankle / "+side+" | fitted IK",None)
+        knee=bpy.data.objects.new("Captured knee pole / "+side+" | fitted IK",None)
+        bpy.context.scene.collection.objects.link(foot)
+        bpy.context.scene.collection.objects.link(knee)
+        foot.empty_display_size=.24
+        knee.empty_display_size=.24
+        controls[side]=(foot,knee)
+    for row in poses:
+        for side,sign in (("Left",-1),("Right",1)):
+            foot,pole=controls[side]
+            corrected=row["foot"][side]+row["axis"]*(sign*maximum[side])
+            pole_pos=row["knee"][side]+row["axis"]*(sign*row["width"]*.8)
+            foot.location=corrected
+            pole.location=pole_pos
+            foot.keyframe_insert(data_path="location",frame=row["frame"])
+            pole.keyframe_insert(data_path="location",frame=row["frame"])
+    for side in ("Left","Right"):
+        foot,pole=controls[side]
+        shin=target.pose.bones[side+"Leg"]
+        constraint=shin.constraints.new("IK")
+        constraint.name="Fitted human captured-foot reach"
+        constraint.target=foot
+        constraint.pole_target=pole
+        constraint.chain_count=2
+        constraint.pole_angle=0.
+        constraint.use_stretch=False
+        # A near-root control is still inside the original data's bone chain.
+        insist(shin.parent and shin.parent.name==side+"UpLeg",
+               "foot IK chain is not the expected anatomical two-bone leg")
+    bpy.context.scene.frame_set(start+1)
+    return {"source":"original CMU evaluated world ankles and knees",
+            "footIKControls":len(controls),"captureFramesTransferred":len(poses),
+            "minimumSourceLaneRatios":{k:round(v,4) for k,v in min_original.items()},
+            "constantLateralOffsets":{k:round(v,4) for k,v in maximum.items()},
+            "preservesOriginalBVH":True,"skinReviewAccepted":False}
+
+
 def studio_scene(body,arm,output):
     scene=bpy.context.scene
     scene.render.engine="BLENDER_WORKBENCH"
@@ -436,6 +513,9 @@ def main(opts):
     binding_before=audit_rest_binding(body,arm)
     isolation=isolate_left_right_leg_weights(body,arm)
     binding_after=audit_rest_binding(body,arm)
+    # After rest-anatomy skinning, transfer ACTUAL captured source ankle
+    # trajectories to the independently fitted humanoid with two-bone IK.
+    transfer=retarget_captured_feet_with_ik(original_arm,arm,STUDY_START,STUDY_END)
     studio_scene(body,arm,output)
     report_data,displacement,foot_lanes=inspect_motion(body,arm,output)
     scene=bpy.context.scene
@@ -474,6 +554,7 @@ def main(opts):
             "nativeBlend":save.name,"heightScale":round(scale,6),
             "sourceRestAnatomyFitting":rest_fitting,
             "sourceAnimationPreserved":True,
+            "capturedFootIKRetarget":transfer,
             "lowerLegWeightIsolation":isolation,"minDeformedFootLane":foot_lanes,
             "restBindingBeforeIsolation":binding_before,
             "restBindingAfterIsolation":binding_after,
