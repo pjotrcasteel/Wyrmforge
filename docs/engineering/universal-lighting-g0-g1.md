@@ -197,3 +197,14 @@ the environment: wrapped select labels included option text, so exact accessible
 name lookup could not find “Environment”. All controls now have explicit matching
 accessible names; test synchronization sends primitive values to Playwright.
 The failure does not validate the new depth/bounds views; rerun remains required.
+
+
+`124c325` reached the new depth view through the real controls, then correctly
+failed its nonblank assertion. Root cause: pinned Three 0.186.1 PCF shadows use
+native `CubeDepthTexture`/`DepthTexture` comparison samplers, not an RGBA color
+atlas. The inspector now reads the actual depth texture with matching cube/2D
+comparison samplers. Six point faces are arranged in a 3×2 diagnostic, and a
+16-step comparison search reconstructs depth without changing live sampler state.
+Perspective values display light-camera axis distance divided by far distance;
+directional values remain normalized orthographic depth. This is inspection
+precision, not production lighting, and needs the next GPU run for validation.

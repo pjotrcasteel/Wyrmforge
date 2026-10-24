@@ -54,6 +54,7 @@ public sealed class UniversalLightingBrowserTests : PageTest
         foreach (var view in new[] { "albedo", "normals", "geometry", "shadow-visibility", "light-depth", "light-bounds" })
         {
             await ConfigureAsync(canvas, new { view });
+            Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
             Assert.AreNotEqual(lit, await PixelHashAsync(canvas), $"{view} must be a real diagnostic pass.");
             Assert.IsTrue(await canvas.EvaluateAsync<bool>("c => gpuProof.proofPixels(c).some((v,i) => i%4!==3 && v>0)"),
                 $"{view} must render; blank output can conceal shader errors or a light trapped inside its caster.");
