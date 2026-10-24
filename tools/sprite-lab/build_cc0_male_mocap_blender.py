@@ -678,6 +678,14 @@ def main(opts):
                      "metrics":pose["anatomicalPose"]}
                     for pose in report_data
                     if not pose["anatomicalPose"]["poseValid"]]
+    # A previous 'walking' pass actually animated the root 18+ Blender units
+    # vertically while moving almost nowhere across the floor. Detect that
+    # coordinate-space failure independently of IK, mesh and joint metrics.
+    initial=Vector(report_data[0]["hip"])
+    root_deltas=[Vector(pose["hip"])-initial for pose in report_data]
+    planar_travel=max(math.hypot(d.x,d.y) for d in root_deltas)
+    vertical_drift=max(abs(d.z) for d in root_deltas)
+    root_grounded=planar_travel>1. and vertical_drift<planar_travel*.12
     torso_failures=[{"frame":pose["sourceFrame"],
                      "stats":pose["torsoEdgeIntegrity"]}
                     for pose in report_data
@@ -708,17 +716,21 @@ def main(opts):
             "pelvisSurfacePassed":not torso_failures,
             "humanoidPoseFailures":joint_failures,
             "humanoidPosePassed":not joint_failures,
+            "rootMotionGrounded":root_grounded,
+            "rootMotionPlanarTravel":round(planar_travel,4),
+            "rootMotionVerticalDrift":round(vertical_drift,4),
             "poses":report_data,
             "gothicWizardSourceComplete":False,"robed":False,"beardModeled":False,
             "retargetAcceptance":False,"productionAtlasComplete":False,
             "lightingApproved":False,"replacesTemporaryPlayer":False}
     (output/"native-retarget-validation.json").write_text(json.dumps(report,indent=2)+"\n")
     print(json.dumps({k:v for k,v in report.items() if k!="poses"},indent=2),flush=True)
-    if gait_failures or torso_failures or joint_failures:
+    if gait_failures or torso_failures or joint_failures or not root_grounded:
         raise RuntimeError("REJECTED: "+str(len(gait_failures))+
                            " foot-lane failures, "+str(len(torso_failures))+
                            " pelvis deformation failures, "+str(len(joint_failures))+
-                           " anatomical pose failures; inspect saved native review")
+                           " anatomical pose failures, grounded root="+str(root_grounded)+
+                           "; inspect saved native review")
 
 if __name__=="__main__":
     args=sys.argv[sys.argv.index("--")+1:] if "--" in sys.argv else []
