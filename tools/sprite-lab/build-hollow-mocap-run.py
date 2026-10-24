@@ -188,12 +188,11 @@ travel = normalized(travel)
 cross_hips = raw[first]["LeftUpLeg"] - raw[first]["RightUpLeg"]
 cross_hips.y = 0
 right = normalized(cross_hips - travel * cross_hips.dot(travel))
-forward = normalized(up.cross(right))
-if forward.dot(travel)<0:
-    # The subject's body orientation determines the sign; ensure the original
-    # recorded run direction remains forward after mapping.
-    forward = -forward
-    right = -right
+forward = normalized(travel - right * travel.dot(right))
+# Preserve original anatomy: flipping the right-axis when the subject runs
+# opposite the BVH convention would swap LeftArm and RightArm on the model.
+# Anatomical left must ALWAYS map to Hollowed +X irrespective of travel.
+assert right.dot(cross_hips)>0 and forward.dot(travel)>0
 assert abs(right.dot(forward))<1e-4
 def direction(vector):
     # Original source is forward relative to real travel, Blender model forward -Y.
