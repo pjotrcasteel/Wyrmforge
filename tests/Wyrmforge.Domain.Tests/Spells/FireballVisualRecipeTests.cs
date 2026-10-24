@@ -16,6 +16,9 @@ public sealed class FireballVisualRecipeTests
 
         Assert.AreEqual(original, reordered);
         Assert.AreEqual("fireball-v1-l3-m007", original.CacheKey);
+        Assert.AreEqual("meteor", original.CoreShape);
+        Assert.IsTrue(original.Detonation);
+        Assert.IsTrue(original.ScorchedEarth);
         Assert.IsTrue(original.Has(FireballMutationId.MeteorHeart));
         Assert.IsTrue(original.Has(FireballMutationId.Detonation));
         Assert.IsTrue(original.Has(FireballMutationId.ScorchedEarth));
@@ -32,6 +35,17 @@ public sealed class FireballVisualRecipeTests
         Assert.AreEqual(1 << ((int)FireballMutationId.Detonation - 1), recipe.MutationMask);
         Assert.IsFalse(recipe.Has(FireballMutationId.Wildfire));
         Assert.IsFalse(recipe.Has(FireballMutationId.PhoenixVolley));
+        Assert.AreEqual("flame", recipe.CoreShape);
+    }
+
+    [TestMethod]
+    public void Resolve_ConflictingPhysicalForms_MaintainsVisibleIdentityForBothImplementedEffects()
+    {
+        var recipe = FireballVisualRecipe.Resolve(2,
+            [FireballMutationId.MeteorHeart, FireballMutationId.CinderNeedle]);
+        Assert.AreEqual("molten-spine", recipe.CoreShape);
+        Assert.IsTrue(recipe.Has(FireballMutationId.MeteorHeart));
+        Assert.IsTrue(recipe.Has(FireballMutationId.CinderNeedle));
     }
 
     [TestMethod]

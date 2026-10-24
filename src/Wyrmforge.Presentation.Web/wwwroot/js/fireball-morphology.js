@@ -11,10 +11,16 @@ export function fireballMorphology(recipe) {
     const mask = recipe?.version === 1 && Number.isInteger(recipe.mutationMask) ? recipe.mutationMask : 0;
     const meteor = (mask & bit(FireballMutation.MeteorHeart)) !== 0;
     const needle = (mask & bit(FireballMutation.CinderNeedle)) !== 0;
+    const fallbackShape = meteor && needle ? 'molten-spine' : meteor ? 'meteor' : needle ? 'needle' : 'flame';
+    const validShapes = ['flame', 'meteor', 'needle', 'molten-spine'];
+    // Prefer the already-resolved C# anatomy; old snapshots may have only the mask.
+    const body = recipe?.version === 1 && validShapes.includes(recipe.coreShape) ? recipe.coreShape : fallbackShape;
     return {
-        body: meteor && needle ? 'molten-spine' : meteor ? 'meteor' : needle ? 'needle' : 'flame',
-        detonation: (mask & bit(FireballMutation.Detonation)) !== 0,
-        scorchedEarth: (mask & bit(FireballMutation.ScorchedEarth)) !== 0,
+        body,
+        detonation: recipe?.version === 1 && typeof recipe.detonation === 'boolean'
+            ? recipe.detonation : (mask & bit(FireballMutation.Detonation)) !== 0,
+        scorchedEarth: recipe?.version === 1 && typeof recipe.scorchedEarth === 'boolean'
+            ? recipe.scorchedEarth : (mask & bit(FireballMutation.ScorchedEarth)) !== 0,
     };
 }
 

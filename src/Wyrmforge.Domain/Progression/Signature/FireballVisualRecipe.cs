@@ -11,6 +11,19 @@ public sealed record FireballVisualRecipe(int Version, int Level, int MutationMa
     public bool Has(FireballMutationId mutation) =>
         Enum.IsDefined(mutation) && (MutationMask & (1 << ((int)mutation - 1))) != 0;
 
+    // C# resolves the physical anatomy once. Render adapters only interpret these
+    // supported visual descriptors; they cannot grant an unearned effect.
+    public string CoreShape => (Has(FireballMutationId.MeteorHeart), Has(FireballMutationId.CinderNeedle)) switch
+    {
+        (true, true) => "molten-spine",
+        (true, false) => "meteor",
+        (false, true) => "needle",
+        _ => "flame",
+    };
+
+    public bool Detonation => Has(FireballMutationId.Detonation);
+    public bool ScorchedEarth => Has(FireballMutationId.ScorchedEarth);
+
     public string CacheKey => $"fireball-v{Version}-l{Level}-m{MutationMask:x3}";
 
     public static FireballVisualRecipe Resolve(FireballCoreState core)
