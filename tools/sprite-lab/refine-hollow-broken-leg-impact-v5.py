@@ -127,7 +127,7 @@ for i in range(17):
     frame["frame"]=i
     injured=frame["weightTransfer"]["damagedLeftSupport"]
     healthy=frame["weightTransfer"]["healthyRightSupport"]
-    drag=frame["limpV5"]["leftSwingDrag"]
+    drag=frame["limpV4"]["leftSwingDrag"]
     # A sharp, physical impact event from actual source captured stance,
     # not a periodic keyframe wave or independently animated shin.
     pain_impact=clamp((injured-.32)/.68,0.,1.)
