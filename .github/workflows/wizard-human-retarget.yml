@@ -77,6 +77,7 @@ jobs:
           zip -q -r WyrmForge_Wizard_RealHuman_Retarget_Review.zip \
             cmu-realistic-male-retarget-source.blend \
             native-retarget-validation.json captured-human-anatomy.mp4 \
+            quarter-view-04.png quarter-view-12.png \
             review/motion-contact-sheet.png review/motion-loop.gif \
             review/motion-review.json approved-visual-reference.webp README.txt
       - uses: actions/upload-artifact@v4

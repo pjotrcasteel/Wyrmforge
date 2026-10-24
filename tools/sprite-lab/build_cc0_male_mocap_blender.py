@@ -203,7 +203,7 @@ def verify_deformed_leg_lanes(body,arm):
                 except RuntimeError:continue
                 if weight>=.35:ids.append(v.index)
             insist(len(ids)>=10,"too few weighted foot mesh vertices "+side)
-            point=sum((evaluated.matrix_world@mesh.vertices[i].co for i in ids),Vector())/len(ids)
+            point=sum((evaluated.matrix_world@mesh.vertices[i].co for i in ids),Vector((0.,0.,0.)))/len(ids)
             clearance=sign*(point-center).dot(axis)/width
             insist(clearance>.04,side+" DEFORMED foot crosses anatomical midline: "+str(round(clearance,3)))
             out[side.lower()+"FootLane"]=round(clearance,4)
