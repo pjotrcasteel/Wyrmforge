@@ -43,8 +43,8 @@ test('load all six exact clip atlases atomically and render direction/frame offs
         assert.equal(pack.draw(ctx,'broken-arm-right','walk',7,'SW',100,100,11),true);
         assert.equal(calls[0][1],7*96);
         assert.equal(calls[0][2],5*96);
-        assert.equal(calls[0][6],100-48/96*93);
-        assert.equal(calls[0][7],100-72/96*93);
+        assert.equal(calls[0][5],100-48/96*93);
+        assert.equal(calls[0][6],100-72/96*93);
         assert.equal(pack.draw(ctx,'one-arm-left','attack',15,'NE',100,100,11),true);
         assert.equal(calls[1][1],15*96);
         assert.equal(calls[1][2],1*96);
