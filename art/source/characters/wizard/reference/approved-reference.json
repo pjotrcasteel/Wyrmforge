@@ -12,8 +12,14 @@
     "path": "art/source/characters/wizard/reference/approved-gothic-wizard.webp",
     "width": 160,
     "height": 160,
-    "sha256": "3731f1e49ae7fb2859acfa8c0f063c35140fe715c76b4454b5aff5c708e87bd3",
-    "note": "Unaltered composition, proportionally downsampled for attribution/visual review; NOT a player sprite"
+    "sha256": "cf3c9c49365bec5782751e234774ec5a183213564e067bd824a926a20a21c5de",
+    "note": "Unaltered composition, proportionally downsampled for attribution/visual review; NOT a player sprite",
+    "decoderRepair": {
+      "reason": "Preview RIFF header declares 3370 bytes but the checked-in preview blob contained only 3363; a conforming decoder failed.",
+      "repair": "Appended seven missing zero pad bytes to the preview container, preserving the 160x160 decoded composition.",
+      "previousMalformedSha256": "9ace844084d9fb3e2605abaaf4949feb45aaddab1903dfac70245e0f65116fd9",
+      "originalFullResolutionUnmodified": true
+    }
   },
   "keep": [
     "bent weathered wide-brim wizard hat",
