@@ -23,6 +23,13 @@ public sealed class ArenaGroundLightReviewBrowserTests : PageTest
         await Page.GotoAsync(root.TrimEnd('/') + "/arena-ground-light-review");
         var canvas = Page.Locator(".ground-review canvas");
         await Expect(canvas).ToHaveAttributeAsync("data-ready", "true", new() { Timeout = 90000 });
+        // Canvas can be GPU-ready before the global WASM ignition overlay has finished fading.
+        // Never publish "in-game" evidence while the startup screen is still over the world.
+        await Page.Locator("#wyrmforge-ignition").WaitForAsync(new()
+        {
+            State = WaitForSelectorState.Detached,
+            Timeout = 90000,
+        });
         Assert.AreEqual("1", await canvas.GetAttributeAsync("data-objects"), "No old trees or props in this scene.");
         Assert.AreEqual("grass", await canvas.GetAttributeAsync("data-material"));
 
