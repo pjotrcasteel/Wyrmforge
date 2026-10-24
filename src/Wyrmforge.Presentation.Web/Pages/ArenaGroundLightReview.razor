@@ -1,0 +1,92 @@
+@page "/arena-ground-light-review"
+@implements IAsyncDisposable
+@using Microsoft.JSInterop
+@inject IJSRuntime JavaScript
+
+<main class="ground-review">
+    <header>
+        <span class="eyebrow">WYRMFORGE / WET FOREST / FOUNDATION 01</span>
+        <h1>Ground material review</h1>
+        <p>One ground material at a time. Original approved paintings, no trees or props.
+            All illumination comes from the universal GPU lighting engine.</p>
+    </header>
+
+    <section class="controls" aria-label="Ground material lighting inspection">
+        <label>Ground
+            <select aria-label="Ground" @bind="material" @bind:after="Sync">
+                <option value="grass">Moss / grass</option>
+                <option value="mud">Wet mud</option>
+                <option value="dirt">Forest soil</option>
+                <option value="marsh">Marsh</option>
+            </select>
+        </label>
+        <label>Light
+            <select aria-label="Light" @bind="lighting" @bind:after="Sync">
+                <option value="fire">Moving Fireball</option>
+                <option value="moon">Moonlight</option>
+                <option value="neutral">Neutral art inspection</option>
+                <option value="zero">All world lighting off</option>
+            </select>
+        </label>
+        <label>Fireball position
+            <input type="range" aria-label="Fireball position" min="0" max="100"
+                   disabled="@(lighting != "fire")" @bind="position" @bind:event="oninput" @bind:after="Sync"/>
+        </label>
+    </section>
+
+    @if (error is not null) { <p role="alert">@error</p> }
+
+    <section class="stage">
+        <canvas @ref="canvas" aria-label="Single physical ground plane lit by shared GPU engine"></canvas>
+    </section>
+    <p class="notes">Stage 1 only: flat surface, no collision, no foliage, no fake normal maps, no painted glow.
+        Provisional roughness is for comparison; source-quality material painting is the next visual acceptance gate.
+        Town, Hunts and the production Arena Lab are unchanged.</p>
+</main>
+
+@code {
+    private ElementReference canvas;
+    private IJSObjectReference? module;
+    private string material = "grass", lighting = "fire";
+    private int position = 50;
+    private string? error;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        try
+        {
+            module = await JavaScript.InvokeAsync<IJSObjectReference>(
+                "import", "./js/lighting/ground-only-review.js");
+            await module.InvokeVoidAsync("initializeGroundReview", canvas);
+        }
+        catch (JSException exception)
+        {
+            error = exception.Message;
+            StateHasChanged();
+        }
+    }
+
+    private async Task Sync()
+    {
+        if (module is null) return;
+        try
+        {
+            await module.InvokeVoidAsync("configureGroundReview", canvas,
+                new { material, lighting, position = position / 100.0 });
+        }
+        catch (JSException exception)
+        {
+            error = exception.Message;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (module is null) return;
+        try { await module.InvokeVoidAsync("disposeGroundReview", canvas); }
+        catch (JSDisconnectedException) { }
+        try { await module.DisposeAsync(); }
+        catch (JSDisconnectedException) { }
+    }
+}
