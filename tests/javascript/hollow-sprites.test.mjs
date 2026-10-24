@@ -7,7 +7,8 @@ const moduleUri=name=>'data:text/javascript;base64,'+Buffer.from(readFileSync(ne
 const source=readFileSync(new URL('js/hollow-sprites.js',root),'utf8').replace("new URL('../art/enemies/hollow-rigged/', import.meta.url)","new URL('https://example.test/art/enemies/hollow-rigged/')")
  .replace("'./sprite-animation.js'",JSON.stringify(moduleUri('sprite-animation.js')))
  .replace("'./sprite-layer-compositor.js'",JSON.stringify(moduleUri('sprite-layer-compositor.js')))
- .replace("'./hollow-arm-variants.js'",JSON.stringify(moduleUri('hollow-arm-variants.js')));
+ .replace("'./hollow-arm-variants.js'",JSON.stringify(moduleUri('hollow-arm-variants.js')))
+ .replace("'./hollow-leg-review.js'",JSON.stringify(moduleUri('hollow-leg-review.js')));
 const mod=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
 const enemy=(values={})=>({entityId:7,kind:0,x:20,y:20,radius:11,...values});
 const snapshot=(values={})=>({enemies:[enemy()],player:{x:200,y:200,radius:9},deathBursts:[],...values});
@@ -78,5 +79,6 @@ test('nearest-neighbor renderer selects an actual direction row and original piv
   assert.equal(mod.drawHollowEnemy(ctx,enemy(),state),true);assert.equal(ctx.imageSmoothingEnabled,false);
   assert.equal(calls[0][2],96*7);assert.equal(calls[0][6],20-72/96*93);
   assert.equal(mod.drawHollowEnemy(ctx,enemy({kind:1}),state),false);
+  assert.deepEqual(mod.hollowDiagnostics(state).legReview,{requested:false,ready:false});
  }finally{globalThis.fetch=originalFetch;globalThis.Image=originalImage;}
 });
