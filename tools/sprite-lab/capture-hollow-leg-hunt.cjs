@@ -35,7 +35,7 @@ const path=require('node:path');
                 const result=globalThis.__hollowArenaPreview?.readArenaDiagnostics(canvas);
                 return result?.hollow?.legReview?.ready&&result.hollow.entities.some(e=>e.legPreview&&!e.layered&&e.frame>0)
                     &&!result.renderingFailed;
-            },{timeout:60000});
+            },null,{timeout:60000});
             const frames=[],canvas=page.locator('.enemy-lab canvas');
             for(let i=0;i<8;i++){
                 const status=await page.evaluate(()=>{
