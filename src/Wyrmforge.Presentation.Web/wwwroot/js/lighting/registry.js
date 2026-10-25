@@ -58,6 +58,14 @@ export function validateSnapshot(input) {
     }
     finite(s.environment.ambient, 'ambient', 0); finite(s.environment.exposure, 'exposure', .01, 10);
     color(s.environment.color);
+    if (s.environment.fog !== undefined) {
+        const fog = s.environment.fog;
+        if (!fog || typeof fog !== 'object') throw new TypeError('Invalid fog');
+        color(fog.color);
+        finite(fog.near, 'fog near', 0);
+        finite(fog.far, 'fog far', 0);
+        if (fog.far <= fog.near) throw new TypeError('Fog far must exceed near');
+    }
     if (typeof s.environment.emission !== 'boolean') throw new TypeError('Invalid emission switch');
     return s;
 }
