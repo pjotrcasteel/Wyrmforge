@@ -8,7 +8,9 @@ export interface LightEmitter {
 }
 export interface LitMaterial {
     id: string; color: string; albedo?: string; normal?: string; roughnessMap?: string;
-    roughness: number; metalness: number; specular: number; reflection: 'off' | 'direct';
+    roughness: number; metalness: number; specular: number; reflection: 'off' | 'direct' | 'probe';
+    /** Registered cube texture for probe tier; no probe is generated implicitly. */
+    reflectionProbe?: string;
     /** G3 optional maps and controls; existing G1/G2 snapshots remain valid. */
     aoMap?: string; aoIntensity?: number; emissiveMap?: string;
     normalScale?: number; foliageTransmission?: number;
