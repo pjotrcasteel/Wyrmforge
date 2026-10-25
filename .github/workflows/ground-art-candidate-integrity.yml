@@ -11,12 +11,14 @@ on:
       - 'tools/art/review_ground_semantic_mask.py'
       - 'tools/art/ground_family_footprint_review.py'
       - 'tools/art/review_ground_feature_motifs.py'
+      - 'tools/art/build_grass_moss_art_candidates.py'
       - 'tools/art/tests/test_ground_material_probe.py'
       - 'tools/art/tests/test_ground_quilt_study.py'
       - 'tools/art/tests/test_ground_transition_study.py'
       - 'tools/art/tests/test_ground_semantic_mask.py'
       - 'tools/art/tests/test_ground_family_footprint_review.py'
       - 'tools/art/tests/test_ground_feature_motifs.py'
+      - 'tools/art/tests/test_grass_moss_art_candidates.py'
       - '.github/workflows/ground-art-candidate-integrity.yml'
   workflow_dispatch:
 permissions:
@@ -46,7 +48,7 @@ jobs:
       - name: Install pinned image decoding dependency
         run: python -m pip install Pillow==12.0.0 numpy==2.2.6
       - name: Test non-destructive material preparation
-        run: python -m unittest discover -s tools/art/tests -p 'test_ground*.py' -v
+        run: python -m unittest discover -s tools/art/tests -p 'test_*.py' -v
       - name: Build 12 Ground/Moss and Wet Mud repeat comparisons
         run: python tools/art/build_ground_material_probe.py --output "$RUNNER_TEMP/ground-material-probes" --tile-px 240
       - name: Audit all 36 source images for border/matte warnings
@@ -61,7 +63,9 @@ jobs:
         run: python tools/art/ground_family_footprint_review.py --output "$RUNNER_TEMP/ground-material-probes"
       - name: Review explicitly outlined road, scorch, and marsh source motifs
         run: python tools/art/review_ground_feature_motifs.py --output "$RUNNER_TEMP/ground-material-probes"
-      - name: Upload six families and road, scorch, marsh authoring studies
+      - name: Synthesize six edge-continuous Grass and Moss art candidates (no runtime)
+        run: python tools/art/build_grass_moss_art_candidates.py --output "$RUNNER_TEMP/ground-material-probes/grass-moss-art-candidates"
+      - name: Upload Grass/Moss art candidates and previous source studies
         uses: actions/upload-artifact@v4
         with:
           name: wet-forest-grass-mud-repeat-studies
