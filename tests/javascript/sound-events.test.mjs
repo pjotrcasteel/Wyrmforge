@@ -170,3 +170,27 @@ test('simultaneous different elemental impact records are kept distinct', () => 
             { x: 40, y: 15, spell: 3, progress: 0.2 },
         ] }), 300), []);
 });
+
+
+test('real Fireball projectile launch triggers one flight cue without a timeout', () => {
+    const results = track([[0, frame()], [300, frame({ projectiles: [{ spell: 1 }] })],
+        [320, frame({ projectiles: [{ spell: 1 }] })], [400, frame({ projectiles: [] })],
+        [760, frame({ projectiles: [{ spell: 1 }] })]]);
+    assert.deepEqual(results, [[], ['fire', 'fire-flight'], [], [], ['fire', 'fire-flight']]);
+});
+
+test('registered ground-fire creates one audio onset per stable patch ID, not per frame', () => {
+    const tracker = createSoundEventTracker();
+    assert.deepEqual(collectSoundEvents(tracker, frame({ essenceBursts: [{ x: 3, y: 9 }] }), 0), []);
+    assert.deepEqual(collectSoundEvents(tracker, frame({ burningGrounds: [{ id: 11 }] }), 100), ['fire-burning']);
+    assert.deepEqual(collectSoundEvents(tracker, frame({ burningGrounds: [{ id: 11 }] }), 400), []);
+    assert.deepEqual(collectSoundEvents(tracker, frame({ burningGrounds: [] }), 600), []);
+    assert.deepEqual(collectSoundEvents(tracker, frame({ burningGrounds: [{ id: 12 }] }), 1000), ['fire-burning']);
+});
+
+test('pause and resume never re-trigger a ground patch that already exists', () => {
+    const tracker = createSoundEventTracker();
+    collectSoundEvents(tracker, frame(), 0);
+    collectSoundEvents(tracker, frame({ paused: true, burningGrounds: [{ id: 20 }] }), 100);
+    assert.deepEqual(collectSoundEvents(tracker, frame({ burningGrounds: [{ id: 20 }] }), 400), []);
+});

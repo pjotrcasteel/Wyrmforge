@@ -11,7 +11,8 @@ const schoolFromSpell = spell => spell === 1 || spell === 4 ? 'fire'
     : spell === 0 || spell === 7 ? 'arcane' : null;
 
 export function createSoundEventTracker() {
-    return { previous: null, lastPlayed: new Map(), activeHits: new Set(), activeDeaths: new Set(), activeImpacts: [] };
+    return { previous: null, lastPlayed: new Map(), activeHits: new Set(), activeDeaths: new Set(),
+        activeImpacts: [], activeBurningGrounds: new Set() };
 }
 
 export function collectSoundEvents(tracker, snapshot, now) {
@@ -50,6 +51,11 @@ export function collectSoundEvents(tracker, snapshot, now) {
     tracker.activeImpacts = impacts.map(impact => ({
         x: impact.x, y: impact.y, spell: impact.spell, progress: impact.progress,
     }));
+    // Only true registered ground-fire patches carry these stable IDs.
+    const groundIds = new Set((snapshot?.burningGrounds ?? [])
+        .map(ground => ground.id).filter(id => Number.isSafeInteger(id) && id > 0));
+    const freshGroundIds = [...groundIds].filter(id => !tracker.activeBurningGrounds.has(id));
+    tracker.activeBurningGrounds = groundIds;
 
     const current = {
         health: snapshot?.hud?.health ?? 0,
@@ -112,7 +118,9 @@ export function collectSoundEvents(tracker, snapshot, now) {
     if (current.projectiles > previous.projectiles) {
         const name = current.projectileSpell === 1 ? 'fire' : current.projectileSpell === 2 ? 'frost' : current.projectileSpell === 3 ? 'lightning' : 'arcane';
         emit(name, 230);
+        if (name === 'fire') emit('fire-flight', 320);
     }
+    if (freshGroundIds.length) emit('fire-burning', 750);
     if (current.kills === previous.kills) {
         for (const impact of freshImpacts) {
             const school = schoolFromSpell(impact.spell);

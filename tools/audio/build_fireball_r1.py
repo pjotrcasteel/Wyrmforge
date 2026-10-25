@@ -172,6 +172,9 @@ def main():
     hits = [make("hit", n, .82) for n in range(1, 7)]
     manifest["cues"]["fire"] = {**origin, "file": casts[0]["file"], "sha256": casts[0]["sha256"],
                                  "variants": casts, "hitVariants": hits}
+    for phase, cue_name, gain in [("flight", "fire-flight", .30), ("burn", "fire-burning", .25)]:
+        takes = [make(phase, n, gain) for n in range(1, 7)]
+        manifest["cues"][cue_name] = {**origin, "file": takes[0]["file"], "sha256": takes[0]["sha256"], "variants": takes}
     manifest.setdefault("authoredFireballStages", {})["R1"] = {
         "approved": False, "oldAudioSourceUsed": False,
         "flight": [designed[f"fireball-r1-flight-{n}"] for n in range(1, 7)],

@@ -9,6 +9,8 @@
         'codex-open': { label: 'Codex — old book and worn leather', bus: 'ui', volume: 0.53, cooldown: 420, duration: 0.52, priority: 2 },
         arcane: { label: 'Arcane — woven aether', bus: 'combat', volume: 0.35, cooldown: 550, duration: 0.40, priority: 1 },
         fire: { label: 'Ember — breath and cinder', bus: 'combat', volume: 0.42, cooldown: 590, duration: 0.38, priority: 1 },
+        'fire-flight': { label: 'Fireball — hot wind in flight', bus: 'combat', volume: 0.22, cooldown: 320, duration: 0.83, priority: 0 },
+        'fire-burning': { label: 'Fireball — burning ground', bus: 'combat', volume: 0.20, cooldown: 750, duration: 3.90, priority: 0 },
         frost: { label: 'Frost — glass and snow', bus: 'combat', volume: 0.37, cooldown: 620, duration: 0.47, priority: 1 },
         lightning: { label: 'Storm — restrained discharge', bus: 'combat', volume: 0.35, cooldown: 650, duration: 0.34, priority: 1 },
         impact: { label: 'Impact — stone and cloth', bus: 'combat', volume: 0.27, cooldown: 420, duration: 0.23, priority: 1 },
@@ -152,6 +154,8 @@
                 strike(0.054, 392, 0.13, 0.19, 'stone');
                 break;
             case 'arcane-impact':
+            case 'fire-flight':
+            case 'fire-burning':
             case 'fire-impact':
             case 'frost-impact':
             case 'lightning-impact':
