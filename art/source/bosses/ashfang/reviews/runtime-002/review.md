@@ -42,3 +42,14 @@ Inspected final fire, rain, landing, enrage and death captures. Removed duplicat
 Validation: 645 Application, 376 Domain and 406 JavaScript tests pass; web build has zero warnings/errors. Browser receipt has no runtime/render/atlas errors. Console HTTP 404s were identified as `/favicon.ico` only; these are not missing boss assets. Minimum sampled desktop-headless FPS was 50, not a physical-device performance claim. No save schema or reward changes. Native character sources and atlas hashes are unchanged; prior independent LFS backup receipt still applies.
 
 Remote checkpoints were pushed and verified throughout. PR #299 stays draft. At code-head check, GitHub Validate/browser/material comparison were running and WebKit queued; do not infer CI success from local passes. Remaining: full G5 universal scene adoption, exact-pose Ashfang relightable material pack, physical iOS/Android profiling, owner visual/play-feel acceptance and remaining optional source-action conversion. No merge or production deployment.
+
+
+## Release checks — 25 October, owner accepted latest appearance
+
+Owner says the current result looks good and requests finishing/merging Tier I before reviewing general enemy AI, with balance tuning allowed afterward. This is visual acceptance of the current boss candidate; it does not certify physical iOS/Android profiling or completion of the separately gated universal lighting migration.
+
+Diagnosed all five failed browser cases on `7368ec2c`: four were real deep-link routing failures, because the new static `arena-lab/ashfang/` directory caused the Python published-app server to list its parent instead of serving Blazor at `/arena-lab`. One was a stale Hunt Lab heading assertion. Fixed route handling while preserving real index pages/assets and 404 responses; all five previously failing cases pass against a Release publish. HTTP regression tests cover shared route/asset prefixes, queries, the preserved proof index, atlas requests and missing assets.
+
+Found a separate release packaging defect: CI checkout did not hydrate runtime Git LFS PNGs. Browser/WebKit/lighting/GPU/Pages workflows now download only `wwwroot/**`, excluding large source archives, and reject any unresolved web pointer before publishing. Added a guard regression. The shipped native atlas files remain unchanged.
+
+A new published-app Tier-I browser smoke verifies real image decoding, approved 448.53076140099125 world cell, rank-I/non-evolved default, boss surviving opening volleys, shared C# lighting wire, normal damage option, pause, clean JS/renderer and no Great Hunt save write. Passes at 390x844; actual screenshot preserved as `browser/ashfang-release-tier1-390.png`. Full merged JavaScript suite passes 409 tests. Full remote CI on the latest release-check commit is pending; PR stays draft until it passes. G4 #346 and other actor/art work remain separate. Balance and physical device/G5 migration evidence stay explicit follow-ups.
