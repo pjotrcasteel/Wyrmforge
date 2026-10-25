@@ -371,9 +371,10 @@
                 stopBurningGround(id);
                 continue;
             }
+            if (type !== 'start' && type !== 'update') continue;
             burningGroundActiveIds.add(id);
             // Retry on update if the initial start arrived before the manifest or audio unlock.
-            if ((type !== 'start' && type !== 'update') || burningGroundVoices.has(id) || burningGroundPending.has(id)) continue;
+            if (burningGroundVoices.has(id) || burningGroundPending.has(id)) continue;
             if (!recordedManifest || !unlocked || !context || context.state !== 'running') continue;
             // Cap overlapping loops on mobile; new patches remain visually authoritative.
             if (burningGroundVoices.size + burningGroundPending.size >= 3) continue;
