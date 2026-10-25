@@ -90,6 +90,18 @@ def to_world(x, y, depth):
         up * ((H / 2 - y) / PX_PER_METRE) + toward * depth
 
 
+def calibrated_depth(x, y):
+    base = source_depth(x, y)
+    px, py = (x - W / 2) / PX_PER_METRE, (H / 2 - y) / PX_PER_METRE
+    if abs(toward.z) < .001:
+        raise RuntimeError("Town camera cannot resolve level 3D paving")
+    ground_depth = -(right.z * px + up.z * py) / toward.z
+    left_building = rect(x, y, 0, 300, 475, 820, 38) * (1 - smooth(475, 600, x))
+    right_building = rect(x, y, 1250, 280, 1672, 820, 38) * smooth(1050, 1250, x)
+    weight = smooth(250, 620, y) * (1 - .96 * left_building) * (1 - .96 * right_building)
+    return base * (1 - weight) + ground_depth * weight
+
+
 painting = bpy.data.images.load(str(ASSETS / "night-active.webp"), check_existing=True)
 material = bpy.data.materials.new("APPROVED_TOWN_NIGHT_CANONICAL_PIXELS")
 material.use_nodes = True
@@ -128,7 +140,7 @@ source_pixels = []
 for row in range(ROWS + 1):
     for column in range(COLS + 1):
         x, y = W * column / COLS, H * row / ROWS
-        vertices.append(to_world(x, y, source_depth(x, y)))
+        vertices.append(to_world(x, y, calibrated_depth(x, y)))
         source_pixels.append((x, y))
 faces = []
 for row in range(ROWS):
