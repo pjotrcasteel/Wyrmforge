@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createSoundEventTracker, collectSoundEvents } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/sound-events.js';
+import { createSoundEventTracker, collectSoundEvents, collectBurningGroundTransitions } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/sound-events.js';
 
 const frame = (overrides = {}) => ({
     hud: { health: 100, maxHealth: 100, kills: 0 },
@@ -209,4 +209,21 @@ test('stable projectile IDs detect a launch despite a decreasing projectile coun
     collectSoundEvents(tracker, frame({ projectiles: [{ id: 1, spell: 2 }, { id: 2, spell: 2 }] }), 0);
     assert.deepEqual(collectSoundEvents(tracker, frame({ projectiles: [{ id: 3, spell: 1 }] }), 400),
         ['fire', 'fire-flight']);
+});
+
+
+test('burning ground lifecycle follows real patch identity and remaining duration', () => {
+    const tracker = createSoundEventTracker();
+    assert.deepEqual(collectBurningGroundTransitions(tracker, frame()), []);
+    assert.deepEqual(collectBurningGroundTransitions(tracker,
+        frame({ burningGrounds: [{ id: 12, remainingSeconds: 3.4 }] })),
+        [{ type: 'start', id: 12, remainingSeconds: 3.4 }]);
+    assert.deepEqual(collectBurningGroundTransitions(tracker,
+        frame({ burningGrounds: [{ id: 12, remainingSeconds: 0.8 }, { id: 13, remainingSeconds: 2 }] })),
+        [{ type: 'update', id: 12, remainingSeconds: 0.8 }, { type: 'start', id: 13, remainingSeconds: 2 }]);
+    assert.deepEqual(collectBurningGroundTransitions(tracker,
+        frame({ burningGrounds: [{ id: 13, remainingSeconds: 1.5 }] })),
+        [{ type: 'update', id: 13, remainingSeconds: 1.5 }, { type: 'stop', id: 12, remainingSeconds: 0 }]);
+    assert.deepEqual(collectBurningGroundTransitions(tracker, frame()),
+        [{ type: 'stop', id: 13, remainingSeconds: 0 }]);
 });
