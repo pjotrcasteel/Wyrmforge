@@ -363,7 +363,8 @@
                 stopBurningGround(id);
                 continue;
             }
-            if (type !== 'start' || burningGroundVoices.has(id) || burningGroundPending.has(id)) continue;
+            // Retry on update if the initial start arrived before the manifest or audio unlock.
+            if ((type !== 'start' && type !== 'update') || burningGroundVoices.has(id) || burningGroundPending.has(id)) continue;
             if (!recordedManifest || !unlocked || !context || context.state === 'closed') continue;
             // Cap overlapping loops on mobile; new patches remain visually authoritative.
             if (burningGroundVoices.size + burningGroundPending.size >= 3) continue;
@@ -379,6 +380,11 @@
                 const gain = context.createGain();
                 source.buffer = buffer;
                 source.loop = true;
+                // Skip the attack and tail of the recorded onset when repeating its steady texture.
+                if (buffer.duration > 0.6) {
+                    source.loopStart = Math.min(0.2, buffer.duration * 0.12);
+                    source.loopEnd = buffer.duration - Math.min(0.22, buffer.duration * 0.12);
+                }
                 gain.gain.value = 0.0001;
                 source.connect(gain);
                 gain.connect(buses.combat);
