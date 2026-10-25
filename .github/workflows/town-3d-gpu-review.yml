@@ -1,0 +1,82 @@
+name: Town T2 standalone GPU review
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/town/**'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/art/town/geometry/**'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/town3d-review.html'
+      - 'tools/development/town-*.test.mjs'
+      - '.github/workflows/town-3d-gpu-review.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  town3d-chromium:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check syntax and semantic scene/mesh contracts without .NET
+        run: |
+          node --test tools/development/town-*.test.mjs
+          node --input-type=module --check < src/Wyrmforge.Presentation.Web/wwwroot/js/town/town-3d-review.js
+
+      - name: Run standalone shared GPU engine preview and capture real pixels
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/town-3d
+          python3 -m http.server 4173 --bind 127.0.0.1 \
+            --directory src/Wyrmforge.Presentation.Web/wwwroot \
+            > artifacts/town-3d/server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" || true' EXIT
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:4173/town3d-review.html >/dev/null; then break; fi
+            sleep 1
+          done
+          chrome=$(command -v google-chrome || command -v chromium || command -v chromium-browser)
+          "$chrome" --version
+          for spec in \
+            '390x844:night:behind-well' \
+            '390x844:day:behind-well' \
+            '390x844:zero:behind-well' \
+            '390x844:night:behind-noticeboard' \
+            '320x568:night:behind-well'; do
+            size="${spec%%:*}"
+            state="${spec#*:}"
+            mode="${state%%:*}"
+            actor="${state#*:}"
+            width="${size%x*}"
+            height="${size#*x}"
+            name="town-t2-${size}-${mode}-${actor}"
+            "$chrome" --headless=new --no-sandbox --disable-dev-shm-usage \
+              --enable-webgl --enable-unsafe-swiftshader \
+              --use-gl=angle --use-angle=swiftshader \
+              --window-size="${width},${height}" --virtual-time-budget=8000 \
+              --screenshot="artifacts/town-3d/${name}.png" \
+              --dump-dom \
+              "http://127.0.0.1:4173/town3d-review.html?mode=${mode}&actor=${actor}" \
+              >"artifacts/town-3d/${name}.html" 2>"artifacts/town-3d/${name}.log"
+            test -s "artifacts/town-3d/${name}.png"
+            grep -q '15 scene nodes' "artifacts/town-3d/${name}.html"
+            grep -q 'data-town3d-peak-rgb=' "artifacts/town-3d/${name}.html"
+            if [[ "$mode" == zero ]]; then
+              peak=$(grep -o 'data-town3d-peak-rgb="[0-9]*"' "artifacts/town-3d/${name}.html" | head -1 | grep -o '[0-9]*')
+              test "$peak" -le 1
+            fi
+          done
+
+      - name: Publish GPU PNGs and diagnostic DOM for T2 owner review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: town-t2-gpu-review-${{ github.sha }}
+          path: artifacts/town-3d
+          retention-days: 14
+          if-no-files-found: warn
