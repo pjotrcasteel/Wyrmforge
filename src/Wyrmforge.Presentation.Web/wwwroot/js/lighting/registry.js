@@ -44,6 +44,7 @@ export function validateSnapshot(input) {
             if (m[field] !== undefined && (typeof m[field] !== 'string' || !m[field].trim()))
                 throw new TypeError(`Invalid ${field}`);
         if (!['off', 'direct', 'probe'].includes(m.reflection)) throw new TypeError('Unsupported reflection tier');
+        if (m.reflection === 'probe' && !m.reflectionProbe) throw new TypeError('Probe reflection requires a texture ID');
     }
     for (const o of s.objects) {
         if (!materials.has(o.material) || !o.geometry || !o.ownerId) throw new TypeError('Unresolved renderable');
