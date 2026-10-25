@@ -26,10 +26,26 @@ export function selectLightBudget(lights, camera, settings) {
     return dx <= finiteNonNegative(camera.halfWidth) + range &&
       dy <= finiteNonNegative(camera.halfHeight) + range;
   });
-  visible.sort((a, b) => (finiteNonNegative(b.priority) - finiteNonNegative(a.priority)) ||
-    String(a.id).localeCompare(String(b.id)));
+  // Keep only the best K candidates; avoid sorting thousands of distant
+  // emitters when a mobile quality profile permits only a small active set.
+  const compare = (a, b) => (finiteNonNegative(b.priority) - finiteNonNegative(a.priority)) ||
+    String(a.id).localeCompare(String(b.id));
+  const selected = [];
+  for (const light of visible) {
+    if (maxLights === 0) break;
+    let lo = 0;
+    let hi = selected.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >>> 1;
+      if (compare(light, selected[mid]) < 0) hi = mid;
+      else lo = mid + 1;
+    }
+    if (lo >= maxLights) continue;
+    selected.splice(lo, 0, light);
+    if (selected.length > maxLights) selected.pop();
+  }
   let remaining = maxShadowCost;
-  return visible.slice(0, maxLights).map(light => {
+  return selected.map(light => {
     const cost = shadowCost(light.type);
     const castShadow = Boolean(light.castShadow) && remaining >= cost;
     if (castShadow) remaining -= cost;
