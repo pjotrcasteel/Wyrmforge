@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "description": "Gothic detail pass for T2 visual approval: real 3D cobblestone paving, pointed arch, banners, lantern fixtures, well roof and flowerbeds. Nonproduction until owner approves.",
+  "description": "T2 Gothic vertical slice: real masonry facade, vaulted gate passage, cuboid brick surfaces, banners, well and paving. Visual approval pending.",
   "worldAxes": {
     "east": "+x",
     "north": "+y",
@@ -903,6 +903,275 @@
       },
       "meshId": "art/town/geometry/t2-central-square-gothic.obj#town.center.courtyard-blooms",
       "materialId": "flowers"
+    },
+    {
+      "id": "town.center.gate-walls",
+      "parentId": "town.center",
+      "roles": [
+        "visual",
+        "occluder"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t2-central-square-gothic.obj#town.center.gate-walls",
+      "materialId": "gate_stone"
+    },
+    {
+      "id": "town.center.gate-wall-masonry",
+      "parentId": "town.center",
+      "roles": [
+        "visual",
+        "occluder"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t2-central-square-gothic.obj#town.center.gate-wall-masonry",
+      "materialId": "stone_cobble_light"
+    },
+    {
+      "id": "town.center.gate-battlements",
+      "parentId": "town.center",
+      "roles": [
+        "visual",
+        "occluder"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t2-central-square-gothic.obj#town.center.gate-battlements",
+      "materialId": "gate_stone"
+    },
+    {
+      "id": "town.center.gate-hallway-floor",
+      "parentId": "town.center",
+      "roles": [
+        "visual",
+        "occluder"
+      ],
+      "tags": [
+        "terrain"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t2-central-square-gothic.obj#town.center.gate-hallway-floor",
+      "materialId": "stone_cobble_mid"
+    },
+    {
+      "id": "town.center.gate-hallway-walls",
+      "parentId": "town.center",
+      "roles": [
+        "visual",
+        "occluder"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t2-central-square-gothic.obj#town.center.gate-hallway-walls",
+      "materialId": "dark_stone"
+    },
+    {
+      "id": "town.center.gate-hallway-arches",
+      "parentId": "town.center",
+      "roles": [
+        "visual",
+        "occluder"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t2-central-square-gothic.obj#town.center.gate-hallway-arches",
+      "materialId": "stone_well"
+    },
+    {
+      "id": "town.center.gate-hallway-glow",
+      "parentId": "town.center",
+      "roles": [
+        "visual",
+        "emitter"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t2-central-square-gothic.obj#town.center.gate-hallway-glow",
+      "materialId": "portal_glow"
+    },
+    {
+      "id": "town.center.gate-tower-windows",
+      "parentId": "town.center",
+      "roles": [
+        "visual",
+        "emitter"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t2-central-square-gothic.obj#town.center.gate-tower-windows",
+      "materialId": "window"
+    },
+    {
+      "id": "town.center.gate-wall-vines",
+      "parentId": "town.center",
+      "roles": [
+        "visual"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t2-central-square-gothic.obj#town.center.gate-wall-vines",
+      "materialId": "foliage"
     }
   ]
 }
