@@ -155,9 +155,12 @@ function startSimulationFrame(state, timestamp, rect) {
                 if (cue !== 'fire-burning') window.wyrmforgeAudio?.play?.(cue);
             }
             const groundTransitions = collectBurningGroundTransitions(state.soundTracker, snapshot);
-            window.wyrmforgeAudio?.syncBurningGround?.(snapshot.paused || snapshot.ended
-                ? [...groundTransitions, ...[...(state.soundTracker.audioGrounds?.keys() ?? [])].map(id => ({ type: 'stop', id, remainingSeconds: 0 }))]
-                : groundTransitions);
+            if (snapshot.paused || snapshot.ended) {
+                window.wyrmforgeAudio?.stopAllBurningGround?.();
+                state.soundTracker.audioGrounds = new Map();
+            } else {
+                window.wyrmforgeAudio?.syncBurningGround?.(groundTransitions);
+            }
             if (snapshot.paused) state.resetInput?.();
             state.latestSnapshot = snapshot;
             state.simulationFrameCount++;
