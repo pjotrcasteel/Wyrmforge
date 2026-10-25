@@ -20,6 +20,12 @@
     #town3d-status { font-family:ui-monospace,monospace; font-size:12px; color:#a5c8ca; min-height:1.5em; }
     #town3d-status[data-error=true] { color:#ff9c9c; }
     a { color:#adcbf1; }
+    .step-controls { display:grid; grid-template-columns:repeat(3,44px); grid-template-rows:repeat(2,40px);
+                     gap:4px; align-content:center; justify-content:center; padding:10px 0; }
+    .step-controls button { background:#25374b; color:#eaf3ff; border:1px solid #7a8da4; border-radius:6px;
+                            font-size:20px; cursor:pointer; }
+    .step-controls button:active { background:#4b6685; }
+    .step-controls button:focus-visible, canvas:focus-visible { outline:2px solid #aacaf8; }
   </style>
 </head>
 <body>
@@ -28,7 +34,7 @@
     <p><strong>Nonproduction T2 preview.</strong> Uses the existing shared GPU lighting engine with actual
       3D paving, well, canopy, noticeboard and lantern geometry. The blue actor is a temporary
       footpoint/occlusion probe, <em>not</em> final NPC artwork or AI.</p>
-    <canvas id="town3d-canvas" width="640" height="400" aria-label="GPU-rendered 3D Town central-square prototype"></canvas>
+    <canvas id="town3d-canvas" width="640" height="400" tabindex="0" aria-label="GPU-rendered 3D Town central-square prototype"></canvas>
     <div class="controls">
       <label>Lighting
         <select id="town3d-mode"><option value="night">Gothic night</option><option value="day">Day</option>
@@ -44,6 +50,14 @@
           <option value="normals">Normals</option><option value="albedo">Albedo</option></select>
       </label>
     </div>
+    <div class="step-controls" role="group" aria-label="Move temporary collision test actor">
+      <button type="button" style="grid-column:2;grid-row:1" data-step-x="0" data-step-y="0.25" aria-label="Move north">↑</button>
+      <button type="button" style="grid-column:1;grid-row:2" data-step-x="-0.25" data-step-y="0" aria-label="Move west">←</button>
+      <button type="button" style="grid-column:2;grid-row:2" data-step-x="0" data-step-y="-0.25" aria-label="Move south">↓</button>
+      <button type="button" style="grid-column:3;grid-row:2" data-step-x="0.25" data-step-y="0" aria-label="Move east">→</button>
+    </div>
+    <p><small>Use the directional buttons or focus the canvas and use arrow keys to test real collision clearance.
+      These controls do not implement NPC intelligence.</small></p>
     <output id="town3d-status" role="status">Loading 3D Town scene…</output>
     <p><small>The production Town, saved game data, NPC simulation and G4 branch are unchanged.
       This is a milestone review route, not a production renderer cutover.</small></p>
