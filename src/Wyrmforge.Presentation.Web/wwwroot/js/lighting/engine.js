@@ -63,10 +63,7 @@ export class LightingEngine {
             emissive: descriptor.emission, emissiveIntensity: descriptor.emissionIntensity,
             alphaTest: descriptor.alphaCutoff, side: descriptor.doubleSided ? T.DoubleSide : T.FrontSide,
         });
-        if (descriptor.reflection === 'probe' && receivesLight) {
-            material.envMapIntensity = descriptor.specular;
-            material.envMap.mapping = T.CubeReflectionMapping;
-        }
+        if (descriptor.reflection === 'probe' && receivesLight) material.envMapIntensity = descriptor.specular;
         if (descriptor.normalScale !== undefined) material.normalScale.setScalar(descriptor.normalScale);
         // An emissive map modulates the emission color; a black base would suppress it entirely.
         if (descriptor.emissiveMap && descriptor.emission === '#000000') material.emissive.set('#ffffff');
