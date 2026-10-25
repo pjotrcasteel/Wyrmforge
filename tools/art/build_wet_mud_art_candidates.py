@@ -35,7 +35,9 @@ def create(
     if (side < 96 or side > 2048 or source_px < patch_size or border < 8
         or border > side // 8):
         raise ValueError("Invalid artwork dimension/edge-band configuration")
-    if family not in ("wet-mud", "trampled-earth"):\n        raise ValueError("Unsupported source-art family")\n    sources = load_family(source_root, family, source_px=source_px)
+    if family not in ("wet-mud", "trampled-earth"):
+        raise ValueError("Unsupported source-art family")
+    sources = load_family(source_root, family, source_px=source_px)
     if len(sources) != 6:
         raise ValueError("Six source paintings are required")
 
