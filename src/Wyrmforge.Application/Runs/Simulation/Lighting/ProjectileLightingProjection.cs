@@ -67,13 +67,8 @@ public static class ProjectileLightingProjection
         IEnumerable<(string StableId, ProjectileState Projectile)> projectiles,
         LightingEnvironment environment)
     {
-        var emitters = projectiles
-            .Select(source => FromProjectile(source.Projectile, source.StableId))
-            .OfType<LightingEmitter>()
-            .OrderBy(source => source.Id, StringComparer.Ordinal)
-            .ToArray();
-        var snapshot = new LightingSnapshot(LightingSnapshot.CurrentSchemaVersion, simulationTick, sceneId, environment, emitters);
-        snapshot.Validate();
-        return snapshot;
+        return LightingSceneComposer.Compose(sceneId, simulationTick, environment,
+            projectiles.Select(source => FromProjectile(source.Projectile, source.StableId))
+                .OfType<LightingEmitter>());
     }
 }
