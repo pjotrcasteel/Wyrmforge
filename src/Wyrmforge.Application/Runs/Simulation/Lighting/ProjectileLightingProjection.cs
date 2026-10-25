@@ -46,6 +46,14 @@ public static class ProjectileLightingProjection
     public static LightingSnapshot Capture(
         string sceneId,
         long simulationTick,
+        IEnumerable<ProjectileState> projectiles,
+        ProjectileLightIdentityRegistry identities,
+        LightingEnvironment environment) =>
+        Capture(sceneId, simulationTick, projectiles.Select(projectile => (identities.GetId(projectile), projectile)), environment);
+
+    public static LightingSnapshot Capture(
+        string sceneId,
+        long simulationTick,
         IEnumerable<(string StableId, ProjectileState Projectile)> projectiles,
         LightingEnvironment environment)
     {
