@@ -4,15 +4,21 @@
 //
 // This renderer uses the REAL Arena Canvas draw path but is *not* a production
 // lighting material cutover. All eight poses are original Blender-skinned art.
+// Keep both versions reviewable; no old candidate is silently replaced.
 export const HOLLOW_LEG_REVIEW_TOKEN = 'dragged';
+export const HOLLOW_LEG_EVEN_TOKEN = 'even';
 export const HOLLOW_LEG_REVIEW_DIRECTIONS = Object.freeze(['N','NE','E','SE','S','SW','W','NW']);
 
-export function hollowLegReviewRequested(search=globalThis.location?.search??'') {
+export function hollowLegReviewMode(search=globalThis.location?.search??'') {
     try {
-        return new URLSearchParams(search).get('hollowLegReview')===HOLLOW_LEG_REVIEW_TOKEN;
+        const mode=new URLSearchParams(search).get('hollowLegReview');
+        return mode===HOLLOW_LEG_REVIEW_TOKEN||mode===HOLLOW_LEG_EVEN_TOKEN?mode:null;
     } catch {
-        return false;
+        return null;
     }
+}
+export function hollowLegReviewRequested(search=globalThis.location?.search??'') {
+    return hollowLegReviewMode(search)!==null;
 }
 
 export function createHollowLegReview(baseUrl, requested=hollowLegReviewRequested()) {
