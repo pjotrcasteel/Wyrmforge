@@ -13,6 +13,8 @@ const materialPalette = Object.freeze({
     timber: ["#513725", .92],
     slate_roof: ["#242d43", .72],
     board: ["#75543b", .88],
+    gate_stone: ["#5b606e", .88],
+    foliage: ["#294e39", .94],
     lantern: ["#d9a35f", .33]
 });
 const positions = Object.freeze({
@@ -103,7 +105,7 @@ export async function initializeTown3DReview(canvas, status) {
     const redraw = () => {
         if (!alive) return;
         engine.apply(previewSnapshot(scene, mode, actorPosition));
-        engine.setCamera([0, 0, 1], 4.7);
+        engine.setCamera([0, 1.20, 1.55], 5.7);
         engine.setDebugView(view);
         engine.render();
         status.textContent = `${scene.nodes.length} scene nodes · ${parsed.triangleCount} triangles · ${mode} · ${actorPosition}`;
