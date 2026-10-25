@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "kind": "hollowed",
+  "variant": "broken-leg-left",
+  "directions": [
+    "N",
+    "NE",
+    "E",
+    "SE",
+    "S",
+    "SW",
+    "W",
+    "NW"
+  ],
+  "sourcePR": 333,
+  "sourceBranch": "feat/actor-lit-sprite-production",
+  "sourceBlend": "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-broken-leg-even-cadence/hollow-rigged.blend",
+  "sourceStatus": "owner-approved even-cadence WALK; no-cape reach ATTACK temporary",
+  "clips": {
+    "walk": {
+      "image": "broken-leg-left-walk.png",
+      "gitBlobSha": "5b8b28dcb30ae83b699226b3dff3b532cc6c2f01",
+      "frames": 16,
+      "cell": 96,
+      "worldSize": 93,
+      "anchor": [
+        48,
+        72
+      ],
+      "sourceEvidence": "docs/art/evidence/hollowed-broken-leg-even-cadence/candidate-walk-eight-directions.png"
+    },
+    "attack": {
+      "image": "broken-leg-left-attack.png",
+      "gitBlobSha": "01fee2334b1800f256cea42fb51d06d2a12858e2",
+      "frames": 16,
+      "cell": 96,
+      "worldSize": 93,
+      "anchor": [
+        48,
+        72
+      ],
+      "sourceEvidence": "docs/art/evidence/hollowed-trauma-attack-v1/standard/candidate-attack-eight-directions.png"
+    }
+  },
+  "fullBodyAttack": true,
+  "death": "legacy approved Hollowed death",
+  "gameplayAuthority": "C#",
+  "lightingIntegration": "pending universal GPU renderer #332; no synthetic normal maps",
+  "mobileAcceptance": false
+}
