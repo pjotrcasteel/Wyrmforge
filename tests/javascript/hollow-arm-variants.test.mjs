@@ -7,7 +7,7 @@ import {HOLLOW_ARM_VARIANTS,selectHollowArmVariant,createHollowVariantAssets}
 
 const base=new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/hollow-rigged/arms/',import.meta.url);
 const manifest=JSON.parse(readFileSync(new URL('manifest.json',base),'utf8'));
-const gitBlobSha=bytes=>createHash('sha1').update(Buffer.from('blob '+bytes.length+'\\0')).update(bytes).digest('hex');
+const gitBlobSha=bytes=>createHash('sha1').update(Buffer.concat([Buffer.from('blob '+bytes.length),Buffer.from([0])])).update(bytes).digest('hex');
 
 test('every Hollowed has a stable cape-free standard or approved arm injury',()=>{
     const counts=new Map(HOLLOW_ARM_VARIANTS.map(v=>[v,0]));
