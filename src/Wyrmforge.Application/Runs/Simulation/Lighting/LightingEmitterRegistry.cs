@@ -6,8 +6,9 @@ public sealed class LightingEmitterRegistry
 
     public void Upsert(LightingEmitter emitter)
     {
-        ArgumentNullException.ThrowIfNull(emitter);
-        if (string.IsNullOrWhiteSpace(emitter.Id)) throw new ArgumentException("Emitter ID is required.", nameof(emitter));
+        ValidateEmitter(emitter);
+        if (emitters.TryGetValue(emitter.Id, out var existing) && existing.OwnerId != emitter.OwnerId)
+            throw new ArgumentException("An emitter ID cannot change ownership.", nameof(emitter));
         emitters[emitter.Id] = emitter;
     }
 
@@ -41,8 +42,18 @@ public sealed class LightingEmitterRegistry
             throw new ArgumentException("Replacement emitter IDs must be unique and nonempty.", nameof(replacement));
         if (next.Any(light => emitters.TryGetValue(light.Id, out var existing) && existing.OwnerId != ownerId))
             throw new ArgumentException("Replacement emitter ID conflicts with another owner.", nameof(replacement));
+        foreach (var light in next) ValidateEmitter(light);
         RemoveOwner(ownerId);
         foreach (var light in next) Upsert(light);
+    }
+
+    private static void ValidateEmitter(LightingEmitter emitter)
+    {
+        ArgumentNullException.ThrowIfNull(emitter);
+        if (string.IsNullOrWhiteSpace(emitter.Id) || string.IsNullOrWhiteSpace(emitter.OwnerId))
+            throw new ArgumentException("Emitter identity and owner are required.", nameof(emitter));
+        var probe = new LightingSnapshot(1, 0, "validation", new LightingEnvironment("zero", "#000000", 0), [emitter]);
+        probe.Validate();
     }
 
     public void Clear() => emitters.Clear();
