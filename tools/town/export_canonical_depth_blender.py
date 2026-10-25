@@ -14,7 +14,6 @@ import ast
 import re
 import bpy
 from mathutils import Vector
-from mathutils.geometry import tessellate_polygon
 
 ROOT = Path(__file__).resolve().parents[2]
 ASSETS = ROOT / "src/Wyrmforge.Presentation.Web/wwwroot/art/town"
@@ -145,10 +144,10 @@ for name, depth, thickness, points in masks_from_canonical_js():
     vertices = [to_world(x, y, depth) for x, y in points]
     vertices += [to_world(x, y, depth - thickness) for x, y in points]
     source_pixels = list(points) + list(points)
-    planar = [Vector((x, -y, 0)) for x, y in points]
-    face_indices = tessellate_polygon([planar])
-    faces = [tuple(i for i in tri) for tri in face_indices]
-    faces.extend(tuple(i + n for i in reversed(tri)) for tri in face_indices)
+    # Blender mesh faces reference vertex INDICES; tessellate_polygon returns
+    # Vector coordinates and cannot be used directly as from_pydata indices.
+    # Preserve authored concave perimeter as an ngon; Blender triangulates it.
+    faces = [tuple(range(n)), tuple(i + n for i in reversed(range(n)))]
     faces.extend((i, (i + 1) % n, (i + 1) % n + n, i + n) for i in range(n))
     obj = make_object("Town_3D_" + name, vertices, faces, source_pixels)
     obj["town.semanticId"] = "town." + name
