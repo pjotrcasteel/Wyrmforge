@@ -10,9 +10,9 @@ test("real central-square OBJ produces distinct stable meshes and valid triangle
     const text = await readFile(new URL("art/town/geometry/t1-central-square-preview.obj", root), "utf8");
     const graph = JSON.parse(await readFile(new URL("art/town/geometry/t1-central-square.scene.json", root), "utf8"));
     const parsed = parseTownObj(text);
-    assert.equal(parsed.vertices.length, 150);
-    assert.equal(parsed.triangleCount, 252);
-    assert.equal(parsed.groups.size, 8);
+    assert.equal(parsed.vertices.length, 240);
+    assert.equal(parsed.triangleCount, 384);
+    assert.equal(parsed.groups.size, 12);
     for (const node of graph.nodes.filter(n => n.meshId)) {
         const group = parsed.groups.get(node.meshId.split("#")[1]);
         assert.ok(group, node.id);
