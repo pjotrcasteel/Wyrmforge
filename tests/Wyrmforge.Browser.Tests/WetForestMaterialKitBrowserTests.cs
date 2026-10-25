@@ -32,7 +32,7 @@ public sealed class WetForestMaterialKitBrowserTests : PageTest
             new LocatorAssertionsToHaveAttributeOptions { Timeout = 90000 });
         await Expect(canvas).ToHaveAttributeAsync("data-material-review-seed", "1204");
         await Expect(canvas).ToHaveAttributeAsync("data-material-review-profile", "night");
-        Assert.IsGreaterThan(0, (await CanvasStatsAsync(canvas))[2],
+        Assert.IsGreaterThan(0L, (await CanvasStatsAsync(canvas))[2],
             "Registered world lights must reveal real material pixels.");
 
         await SaveAsync(canvas, $"wet-forest-material-kit-night-{width}.png");
