@@ -28,6 +28,7 @@ export class LightingEngine {
         this.halfWidth = 5;
         this.inspection = new LightingInspection();
         this.materialBudget = { maps: 0, transmissive: 0, ao: 0 };
+        this.textureVariants = new Map();
     }
     registerGeometry(id, geometry) {
         if (this.geometries.has(id)) throw new Error(`Duplicate geometry ${id}`);
@@ -43,8 +44,10 @@ export class LightingEngine {
     material(descriptor, receivesLight) {
         const texture = (id, colorData = false) => {
             if (!id) return null;
-            const map = this.textures.get(id)?.clone();
-            if (map) map.colorSpace = colorData ? T.SRGBColorSpace : T.NoColorSpace;
+            const source = this.textures.get(id);
+            if (!source) return null;
+            const map = source.clone();
+            map.colorSpace = colorData ? T.SRGBColorSpace : T.NoColorSpace;
             return map;
         };
         const material = new T.MeshPhysicalMaterial({
@@ -58,6 +61,8 @@ export class LightingEngine {
             alphaTest: descriptor.alphaCutoff, side: descriptor.doubleSided ? T.DoubleSide : T.FrontSide,
         });
         if (descriptor.normalScale !== undefined) material.normalScale.setScalar(descriptor.normalScale);
+        // An emissive map modulates the emission color; a black base would suppress it entirely.
+        if (descriptor.emissiveMap && descriptor.emission === '#000000') material.emissive.set('#ffffff');
         // Generic thin-surface transmission; never registers a light source.
         if (receivesLight && descriptor.foliageTransmission > 0) {
             material.transmission = descriptor.foliageTransmission;
@@ -250,6 +255,7 @@ float proofShadowVisibility() {
         for (const geometry of this.geometries.values()) geometry.dispose();
         for (const texture of this.textures.values()) texture.dispose();
         this.inspection.dispose();
+        this.textureVariants.clear();
         this.renderer.dispose();
     }
 }
