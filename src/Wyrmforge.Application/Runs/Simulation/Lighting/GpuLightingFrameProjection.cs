@@ -69,7 +69,7 @@ public static class GpuLightingFrameProjection
 
         return new GpuLightingFrame(
             1, simulationTime,
-            snapshot.Emitters.Select(light => new GpuLightEmitter(
+            snapshot.Emitters.Where(light => !light.ExpiresAtTick.HasValue || light.ExpiresAtTick.Value > snapshot.SimulationTick).Select(light => new GpuLightEmitter(
                 light.Id, light.OwnerId, light.Type, light.Enabled,
                 [light.X, light.Y, light.Z],
                 [light.DirectionX, light.DirectionY, light.DirectionZ],
