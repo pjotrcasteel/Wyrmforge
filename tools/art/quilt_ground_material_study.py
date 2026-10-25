@@ -12,7 +12,7 @@ from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCES = ROOT / "user_handover_files/concepts/arena-v2/wet-forest/ground-materials/v1"
-FAMILIES = ("grass-moss", "wet-mud", "trampled-earth", "old-paving")
+FAMILIES = ("grass-moss", "wet-mud", "trampled-earth", "old-paving", "scorched-ground")
 
 
 def load_family(source_root: Path, family_id: str, source_px: int = 600) -> list[np.ndarray]:
