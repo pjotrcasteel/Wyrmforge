@@ -12,12 +12,12 @@ from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCES = ROOT / "user_handover_files/concepts/arena-v2/wet-forest/ground-materials/v1"
-FAMILIES = ("grass-moss", "wet-mud")
+FAMILIES = ("grass-moss", "wet-mud", "trampled-earth")
 
 
 def load_family(source_root: Path, family_id: str, source_px: int = 600) -> list[np.ndarray]:
     if family_id not in FAMILIES:
-        raise ValueError("Only Grass/Moss and Wet Mud are valid continuous-source research families")
+        raise ValueError("Only explicitly supported source-art families are allowed; Trampled Earth remains semantic path artwork, not a continuous terrain substrate")
     manifest = json.loads((source_root / "manifest.json").read_text(encoding="utf-8"))
     if manifest["status"] != "review-only-not-approved":
         raise ValueError("Research requires unapproved source-only artwork")
