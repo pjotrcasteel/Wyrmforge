@@ -61,7 +61,7 @@ export function collectSoundEvents(tracker, snapshot, now) {
     // Keep count-based compatibility until every producer exposes stable projectile IDs.
     const projectiles = snapshot?.projectiles ?? [];
     const projectileIds = new Set(projectiles.map(p => p.id).filter(id => Number.isSafeInteger(id) && id > 0));
-    const hasProjectileIdentity = projectiles.length > 0 && projectileIds.size === projectiles.length;
+    const hasProjectileIdentity = projectiles.length === 0 || projectileIds.size === projectiles.length;
     const freshProjectiles = hasProjectileIdentity
         ? projectiles.filter(p => !tracker.activeProjectileIds.has(p.id)) : [];
     tracker.activeProjectileIds = projectileIds;
