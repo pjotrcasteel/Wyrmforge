@@ -28,3 +28,16 @@ test("T1 rejects missing parents, duplicate IDs, cycles, bad roles and invalid t
     check([{...node("town.well"), transform: {...node("town.well").transform, scale: [0, 1, 1]}}]);
     check([{...node("town.well"), transform: {...node("town.well").transform, position: [NaN, 0, 0]}}]);
 });
+
+test("T1 imported central-square scene has stable mesh groups and a gate anchor", async () => {
+    const json = await readFile(new URL("../../src/Wyrmforge.Presentation.Web/wwwroot/art/town/geometry/t1-central-square.scene.json", import.meta.url), "utf8");
+    const scene = JSON.parse(json);
+    assert.equal(validateTownScene(scene), scene);
+    assert.deepEqual(scene.worldAxes, TOWN_WORLD_AXES);
+    const ids = new Set(scene.nodes.map(n => n.id));
+    for (const id of ["town.center.well", "town.center.well-canopy", "town.center.noticeboard", "town.center.world-gate"])
+        assert.ok(ids.has(id), id);
+    const gate = scene.nodes.find(n => n.id === "town.center.world-gate");
+    assert.deepEqual(gate.transform.position, [0, 186 / 64, 0]);
+    assert.ok(scene.nodes.filter(n => n.meshId).every(n => n.meshId.includes(".obj#town.center.")));
+});
