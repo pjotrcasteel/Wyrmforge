@@ -226,10 +226,13 @@ float proofShadowVisibility() {
         // One world sample per CSS pixel at 390px, bounded regardless of device DPR.
         const safeWidth = Number.isFinite(width) && width > 0 ? width : 1;
         const safeHeight = Number.isFinite(height) && height > 0 ? height : 1;
-        const maxDimension = Math.min(390, this.qualitySettings.maxRenderTargetSize);
-        const scale = Math.min(1, maxDimension / Math.max(safeWidth, safeHeight));
-        const w = Math.max(1, Math.round(safeWidth * scale));
-        const h = Math.max(1, Math.round(safeHeight * scale));
+        // Preserve G1's 390-pixel width sampling; cap height only if the
+        // selected profile's render-target limit would otherwise be exceeded.
+        const widthPixels = Math.max(1, Math.min(390, Math.round(safeWidth)));
+        const heightPixels = Math.max(1, Math.round(safeHeight * widthPixels / safeWidth));
+        const scale = Math.min(1, this.qualitySettings.maxRenderTargetSize / Math.max(widthPixels, heightPixels));
+        const w = Math.max(1, Math.round(widthPixels * scale));
+        const h = Math.max(1, Math.round(heightPixels * scale));
         if (this.canvas.width !== w || this.canvas.height !== h) this.renderer.setSize(w, h, false);
         this.camera.left = -this.halfWidth; this.camera.right = this.halfWidth;
         this.camera.top = this.halfWidth * h / w; this.camera.bottom = -this.halfWidth * h / w;
