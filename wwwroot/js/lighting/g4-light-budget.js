@@ -16,23 +16,20 @@ const shadowCost = type => type === 'point' ? 6 : type === 'directional' ? 4 : 1
 export function selectLightBudget(lights, camera, settings) {
   const maxLights = budget(settings.maxLights);
   const maxShadowCost = budget(settings.maxShadowCost);
-  const visible = lights.filter(light => {
-    if (!light.enabled || !Number.isFinite(light.intensity) || light.intensity <= 0) return false;
-    if (light.type === 'directional') return true;
-    if (!light.position || !Number.isFinite(light.position.x) || !Number.isFinite(light.position.y)) return false;
-    const range = finiteNonNegative(light.range);
-    const dx = Math.abs(light.position.x - camera.x);
-    const dy = Math.abs(light.position.y - camera.y);
-    return dx <= finiteNonNegative(camera.halfWidth) + range &&
-      dy <= finiteNonNegative(camera.halfHeight) + range;
-  });
-  // Keep only the best K candidates; avoid sorting thousands of distant
-  // emitters when a mobile quality profile permits only a small active set.
+  const selected = [];
   const compare = (a, b) => (finiteNonNegative(b.priority) - finiteNonNegative(a.priority)) ||
     String(a.id).localeCompare(String(b.id));
-  const selected = [];
-  for (const light of visible) {
+  for (const light of lights) {
     if (maxLights === 0) break;
+    if (!light.enabled || !Number.isFinite(light.intensity) || light.intensity <= 0) continue;
+    if (light.type !== 'directional') {
+      if (!light.position || !Number.isFinite(light.position.x) || !Number.isFinite(light.position.y)) continue;
+      const range = finiteNonNegative(light.range);
+      const dx = Math.abs(light.position.x - camera.x);
+      const dy = Math.abs(light.position.y - camera.y);
+      if (dx > finiteNonNegative(camera.halfWidth) + range ||
+          dy > finiteNonNegative(camera.halfHeight) + range) continue;
+    }
     let lo = 0;
     let hi = selected.length;
     while (lo < hi) {
