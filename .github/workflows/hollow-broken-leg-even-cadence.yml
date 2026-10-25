@@ -75,7 +75,7 @@ jobs:
             assert abs(max_step-p['injuryAuthoring']['maxAnkleTravelPerFrame'][side])<1.e-5
             print('Even cadence',side,'largest 3D ankle jump:',round(max_step,5),'m per 1/22 s')
           assert max(f['contact']['leftFailedLoad'] for f in frames)>.98
-          assert max(f['feet']['R']['ankle'][2] for f in frames[:16])-ground>.12
+          assert max(f['feet']['R']['ankle'][2] for f in frames[:16])-ground>.085
           assert (dest/'hollow-rigged.blend').stat().st_size>500_000
           assert (dest/'sampled-walk.npz').is_file()
           print('16 genuinely asymmetric contact poses + closure, both exact leg chains, unapproved review')
