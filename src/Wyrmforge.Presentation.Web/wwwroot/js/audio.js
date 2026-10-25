@@ -409,7 +409,7 @@
     }
 
     function stopAllBurningGround() {
-        for (const id of [...burningGroundVoices.keys(), ...burningGroundPending]) stopBurningGround(id);
+        for (const id of new Set([...burningGroundVoices.keys(), ...burningGroundPending])) stopBurningGround(id);
     }
 
     function playSpellImpact(school, preview = false, sound = design.palette.impact) {
