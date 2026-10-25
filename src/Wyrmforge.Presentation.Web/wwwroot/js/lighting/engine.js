@@ -96,7 +96,7 @@ export class LightingEngine {
         const light = this.lights.get(id);
         if (!light) return;
         this.scene.remove(light, light.target);
-        light.shadow?.map?.dispose(); light.dispose?.();
+        light.shadow?.map?.dispose(); light.shadow?.mapPass?.dispose(); light.dispose?.();
         this.lights.delete(id);
     }
     /** Whole authoritative visual snapshot; validate all resource references before mutation. */
