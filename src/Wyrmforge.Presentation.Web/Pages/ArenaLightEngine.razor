@@ -5,7 +5,8 @@
 
 <main class="gpu-proof">
     <h1>Shared light engine</h1>
-    <p>G0–G1 isolated GPU proof. Town and Hunts are unchanged. Original oak geometry and exported walk-pose normals are under review. Production adoption remains pending.</p>
+    <p>Universal GPU lighting inspection scene (G1–G4 development). This is a diagnostic fixture, not the playable Town or Hunt renderer.</p>
+    <p role="status" aria-live="polite">@renderStatus</p>
     @if (error is not null) { <p role="alert">@error</p> }
     <div class="world-frame">
         <canvas @ref="canvas" aria-label="Shared GPU world lighting proof"></canvas>
@@ -59,6 +60,7 @@
     private int mastery;
     private double panPixels;
     private string? error;
+    private string renderStatus = "Loading GPU scene and textures…";
     private bool fireball = true, torch = true, spot = true, rune, shadows = true, reflections = true;
     private bool warningCue;
     private bool animate, behind, cutouts, cutoutAlpha = true;
@@ -71,9 +73,10 @@
             module = await JavaScript.InvokeAsync<IJSObjectReference>("import", "./js/lighting/proof-scene.js");
             await module.InvokeVoidAsync("initializeProof", canvas);
             await ReadDiagnostics();
+            renderStatus = "Scene initialized. If the canvas is black, open diagnostics below and report the values.";
             StateHasChanged();
         }
-        catch (JSException exception) { error = exception.Message; StateHasChanged(); }
+        catch (Exception exception) { error = $"GPU scene failed: {exception.Message}"; renderStatus = "Scene initialization failed."; StateHasChanged(); }
     }
     private async Task Sync()
     {
