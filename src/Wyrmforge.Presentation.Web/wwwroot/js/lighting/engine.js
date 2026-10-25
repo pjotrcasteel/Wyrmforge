@@ -53,7 +53,7 @@ export class LightingEngine {
         });
         if (descriptor.normalScale !== undefined) material.normalScale.setScalar(descriptor.normalScale);
         // Generic thin-surface transmission; never registers a light source.
-        if (descriptor.foliageTransmission > 0) {
+        if (receivesLight && descriptor.foliageTransmission > 0) {
             material.transmission = descriptor.foliageTransmission;
             material.thickness = 0;
         }
