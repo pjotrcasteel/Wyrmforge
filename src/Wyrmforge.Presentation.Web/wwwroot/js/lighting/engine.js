@@ -147,6 +147,9 @@ export class LightingEngine {
             if (object.caster) object.caster.castShadow = d.castsShadow;
             object.mesh.receiveShadow = d.receivesShadow;
             object.mesh.material.emissiveIntensity = s.environment.emission ? md.emissionIntensity : 0;
+            // Environment probes contain prelit radiance; disable them for the absolute darkness diagnostic.
+            object.mesh.material.envMapIntensity = s.environment.ambient === 0 && selected.length === 0
+                ? 0 : md.reflection === 'probe' ? md.specular : 0;
             if (d.frame) for (const map of [object.mesh.material.map, object.mesh.material.normalMap, object.mesh.material.roughnessMap, object.mesh.material.aoMap, object.mesh.material.emissiveMap]) if (map) {
                 map.offset.fromArray(d.frame.offset); map.repeat.fromArray(d.frame.repeat); map.updateMatrix();
             }
