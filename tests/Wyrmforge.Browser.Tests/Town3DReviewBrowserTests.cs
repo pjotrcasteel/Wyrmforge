@@ -37,14 +37,23 @@ public sealed class Town3DReviewBrowserTests : PageTest
             "() => window.__town3dReview.getState().depthMax - window.__town3dReview.getState().depthMin"), 6d);
         Assert.IsGreaterThan(await Page.EvaluateAsync<int>(
             "() => window.__town3dReview.getState().peakRgb"), 150);
+        Assert.IsTrue(await Page.EvaluateAsync<double>(
+            "() => window.__town3dReview.getState().referenceMae") < 14,
+            "The shared GPU render must closely match the approved original Town painting");
         await CaptureAsync($"t2-canonical-night-center-{width}x{height}.png", artifacts);
 
         await Page.EvaluateAsync("() => window.__town3dReview.setMode('day')");
+        Assert.IsTrue(await Page.EvaluateAsync<double>(
+            "() => window.__town3dReview.getState().referenceMae") < 14,
+            "Daytime Town must use the exact approved canonical daytime art");
         await CaptureAsync($"t2-canonical-day-center-{width}x{height}.png", artifacts);
 
         foreach (var district in new[] { "west", "east" })
         {
             await Page.EvaluateAsync("(district) => window.__town3dReview.setDistrict(district)", district);
+            Assert.IsTrue(await Page.EvaluateAsync<double>(
+                "() => window.__town3dReview.getState().referenceMae") < 14,
+                $"3D {district} camera does not match the canonical painting");
             await CaptureAsync($"t2-canonical-day-{district}-{width}x{height}.png", artifacts);
             await Page.EvaluateAsync("() => window.__town3dReview.setMode('night')");
             await CaptureAsync($"t2-canonical-night-{district}-{width}x{height}.png", artifacts);
