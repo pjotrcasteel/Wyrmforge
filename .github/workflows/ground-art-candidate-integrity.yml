@@ -14,6 +14,8 @@ on:
       - 'tools/art/build_grass_moss_art_candidates.py'
       - 'tools/art/build_grass_moss_compatible_bank.py'
       - 'tools/art/build_wet_mud_art_candidates.py'
+      - 'tools/art/build_trampled_earth_art_candidates.py'
+      - 'tools/art/tests/test_trampled_earth_art_candidates.py'
       - 'tools/art/tests/test_ground_material_probe.py'
       - 'tools/art/tests/test_ground_quilt_study.py'
       - 'tools/art/tests/test_ground_transition_study.py'
@@ -73,7 +75,9 @@ jobs:
         run: python tools/art/build_grass_moss_compatible_bank.py --output "$RUNNER_TEMP/ground-material-probes/grass-moss-compatible-bank"
       - name: Author six Wet Mud variants and six compatible Wet Mud art candidates
         run: python tools/art/build_wet_mud_art_candidates.py --output "$RUNNER_TEMP/ground-material-probes/wet-mud-art-candidates"
-      - name: Upload Grass/Moss, Wet Mud, and original source-art evidence
+      - name: Author six Trampled Earth variants and six compatible Trampled Earth art candidates
+        run: python tools/art/build_trampled_earth_art_candidates.py --output "$RUNNER_TEMP/ground-material-probes/trampled-earth-art-candidates"
+      - name: Upload Grass/Moss, Wet Mud, Trampled Earth and original source-art evidence
         uses: actions/upload-artifact@v4
         with:
           name: wet-forest-grass-mud-repeat-studies
