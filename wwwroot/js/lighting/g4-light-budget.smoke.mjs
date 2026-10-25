@@ -1,0 +1,25 @@
+import { selectLightBudget } from './g4-light-budget.js';
+
+const camera = { x: 0, y: 0, halfWidth: 10, halfHeight: 10 };
+const settings = { maxLights: 3, maxShadowCost: 6 };
+const light = (id, type, priority = 0, x = 0) => ({
+  id, type, priority, enabled: true, intensity: 1, position: { x, y: 0 },
+  range: 5, castShadow: true
+});
+function assert(condition, message) {
+  if (!condition) throw new Error(message);
+}
+const result = selectLightBudget([
+  light('offscreen', 'point', 100, 100),
+  light('b', 'spot', 2),
+  light('a', 'point', 2),
+  light('c', 'directional', 1),
+  light('d', 'spot', 0)
+], camera, settings);
+assert(result.map(x => x.id).join(',') === 'a,b,c', 'stable priority and viewport culling');
+assert(result[0].castShadow && !result[1].castShadow && !result[2].castShadow,
+  'shadow budget must preserve unshadowed illumination');
+assert(result.every(x => x.intensity === 1), 'illumination remains intact');
+assert(selectLightBudget([light('a', 'point')], camera, { maxLights: 0, maxShadowCost: 6 }).length === 0,
+  'zero active light budget');
+console.log('G4 light budget smoke tests passed');
