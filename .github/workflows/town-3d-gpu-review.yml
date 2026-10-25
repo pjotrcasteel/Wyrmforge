@@ -25,6 +25,8 @@ jobs:
         run: |
           node --test tools/development/town-*.test.mjs
           node --input-type=module --check < src/Wyrmforge.Presentation.Web/wwwroot/js/town/town-3d-review.js
+          node --input-type=module --check < src/Wyrmforge.Presentation.Web/wwwroot/js/town/town-canonical-projection.js
+          node --input-type=module --check < src/Wyrmforge.Presentation.Web/wwwroot/js/town/town-canonical-review.js
 
       - name: Capture shared-GPU 3D rendering against approved painting
         shell: bash
@@ -72,15 +74,15 @@ jobs:
             grep -q '52704' "artifacts/town-3d/${name}.html"
             if [[ "$mode" != zero ]]; then
               python3 - "artifacts/town-3d/${name}.html" <<'PY'
-import re,sys
-text=open(sys.argv[1]).read()
-match=re.search(r'&quot;referenceMae&quot;:(\d+(?:\.\d+)?)',text)
-if not match:
-    match=re.search(r'"referenceMae":(\d+(?:\.\d+)?)',text)
-assert match, "Canonical art pixel comparison missing"
-assert float(match.group(1)) < 14, f"Town projection drift: MAE={match.group(1)}"
-print("Canonical pixel MAE:",match.group(1))
-PY
+          import re,sys
+          text=open(sys.argv[1]).read()
+          match=re.search(r'&quot;referenceMae&quot;:(\d+(?:\.\d+)?)',text)
+          if not match:
+              match=re.search(r'"referenceMae":(\d+(?:\.\d+)?)',text)
+          assert match, "Canonical art pixel comparison missing"
+          assert float(match.group(1)) < 14, f"Town projection drift: MAE={match.group(1)}"
+          print("Canonical pixel MAE:",match.group(1))
+          PY
             fi
             if [[ "$mode" == zero ]]; then
               peak=$(grep -o 'data-town3d-peak-rgb="[0-9]*"' "artifacts/town-3d/${name}.html" | head -1 | grep -o '[0-9]*')
