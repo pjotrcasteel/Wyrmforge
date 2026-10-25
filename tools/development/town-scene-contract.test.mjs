@@ -1,8 +1,8 @@
-import {
-    LEGACY_TOWN_FRAME, TOWN_DISTRICTS, TOWN_SCENE_IDS,
-    legacyTownToNormalized, normalizedToLegacyTown,
-    townDistrictFromNormalizedU, townDistrictIndex
-} from "../../src/Wyrmforge.Presentation.Web/wwwroot/js/town/town-scene-contract.js";
+import {readFile} from "node:fs/promises";
+const source = await readFile(new URL("../../src/Wyrmforge.Presentation.Web/wwwroot/js/town/town-scene-contract.js", import.meta.url), "utf8");
+const {LEGACY_TOWN_FRAME, TOWN_DISTRICTS, TOWN_SCENE_IDS, legacyTownToNormalized,
+    normalizedToLegacyTown, townDistrictFromNormalizedU, townDistrictIndex} =
+    await import("data:text/javascript;base64," + Buffer.from(source).toString("base64"));
 import assert from "node:assert/strict";
 import test from "node:test";
 
