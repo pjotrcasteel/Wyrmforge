@@ -7,20 +7,23 @@ Authority: [design and acceptance matrix](../design/arena-real-geometry-light-en
 
 ## Current verified checkpoint — 25 October 2026
 
-Code/tests: `7253c6b`; durable evidence checkpoint `519603f` passed all four
-workflows: GPU 40165546229, Browser smoke 40165546259, Validate 40165546290,
-and WebKit 40165546225. All 386 JavaScript tests passed.
-[Actor approach/overlap/extinction evidence](evidence/universal-lighting/7253c6b/README.md)
-includes 18 complete black framebuffers and original captures.
-[Earlier receiver, foliage and water evidence](evidence/universal-lighting/eb5cb96/README.md)
-is retained below; the table's counts belong to that earlier checkpoint.
+Code/tests: `4eb49f6`, [published-app GPU run 40167497344](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40167497344)
+passed at both phone sizes; WebKit 40167497356 passed. All 387 JavaScript tests
+pass. Validate and full Browser smoke are pending at record time.
+[Town fixture and roof evidence](evidence/universal-lighting/4eb49f6/README.md)
+includes six schools/mastery, vacancy/restoration, day/night geometry parity,
+roof-to-wall shadows and all 20 complete black framebuffers.
+The previous evidence checkpoint `519603f` passed all four workflows.
+[Actor lifecycle evidence](evidence/universal-lighting/7253c6b/README.md) and
+[earlier receiver/foliage/water evidence](evidence/universal-lighting/eb5cb96/README.md)
+remain preserved. The table below retains its earlier checkpoint's counts.
 
 ### Milestone position
 
 | Gate | Status / next acceptance |
 | --- | --- |
 | G0 | Inventory and shared contracts implemented; audit expands before any production cutover. |
-| G1 — current | Mechanisms verified for actor illumination, source lifecycle, leaf-on-leaf/cutout shadows, water direct specular and zero-light. Next: Town fixture school/mastery/vacancy, then outstanding occlusion/readability/temporal comparisons and visual acceptance. |
+| G1 — current | Mechanisms verified for actor illumination, source lifecycle, leaf-on-leaf/cutout shadows, water direct specular and zero-light. Town school/mastery/vacancy and roof blocking now pass GPU comparisons. Next: Gothic-night readability and temporal stability, remaining representative occlusion comparisons, and visual acceptance. |
 | G2 | Authoritative C# scene bridge pending; do not connect gameplay before G1 acceptance. |
 | G3 | Advanced reflection/indirect/transmission tiers pending; direct specular is not reflected scenery. |
 | G4 | Physical iOS/Android profiling, scale and quality tiers pending. Browser phone viewports are not device evidence. |
@@ -46,7 +49,7 @@ artistic quality. Tests use an RGB difference >3 for changed-pixel counts;
 zero-light checks require every RGB channel to equal zero exactly.
 
 **G1 remains incomplete:** final Gothic-night readability/palette and complete
-artistic acceptance, additional Town fixture/school/vacancy cases, actor
+artistic acceptance, temporal stability and broader Town foreground parity, actor
 volumetric/depth representation and broader clip binding, and real iOS/Android
 budgets are not established. Original color atlases remain baked source artwork;
 neutral inspection lighting is not a hidden gameplay brightness correction.
@@ -60,8 +63,8 @@ Its editable oak source generator and Blender artifacts are the required tree so
 no old forest substitutes are approved. PR #327 remains a separate open Canvas
 normal/alpha projection experiment, not a GPU backend. Neither is merged here.
 Concurrent Town coverage (#312), Ashfang (#299), actor materials/motion (#333,
-#334) and wizard (#335) work stays separate. On recheck, main remains the baseline
-above. This proof still binds the exact original walk/color/normal pairs; newer
+#334) and wizard (#335) work stays separate. Main recheck is `93ce11e8` (Fireball V5 and release versioning); neither
+change is integrated into this isolated proof. This proof still binds the exact original walk/color/normal pairs; newer
 actor exports require explicit provenance reconciliation before adoption.
 
 ## Actual renderer inventory and cutover seams
@@ -417,7 +420,9 @@ The active fixture illuminates the existing wall and NPC proxy; vacancy removes
 its source, emissive core and occupant. Day/night use the same geometry and
 materials. New published-app tests compare low/high mastery on each visible
 receiver for all six schools, unique school output, vacancy/restoration, day/night
-receiver masks and full-frame zero with the fixture active. New slice CI pending.
+receiver masks and full-frame zero with the fixture active. These pass GPU CI
+on `4eb49f6`; the roof comparison changes 11,123 / 17,038 visible wall pixels
+at 320 / 390 respectively, with exact restoration.
 Wizard #335 and actor-art #333 remain untouched. Physical mobile, owner night
 art acceptance, broader clips/depth integration and remaining G1 comparisons
 remain open; the actual Town paintings/layout/navigation are preserved.
