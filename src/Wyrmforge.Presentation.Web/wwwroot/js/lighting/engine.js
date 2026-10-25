@@ -49,12 +49,14 @@ export class LightingEngine {
             map.colorSpace = colorData ? T.SRGBColorSpace : T.NoColorSpace;
             return map;
         };
+        const wetness = descriptor.wetness ?? 0;
+        const wetRoughness = descriptor.roughness * (1 - wetness) + Math.min(descriptor.roughness, .08) * wetness;
         const material = new T.MeshPhysicalMaterial({
             color: receivesLight ? descriptor.color : '#000000', map: texture(descriptor.albedo, true),
             normalMap: texture(descriptor.normal), roughnessMap: texture(descriptor.roughnessMap),
             aoMap: texture(descriptor.aoMap), aoMapIntensity: descriptor.aoIntensity ?? 1,
             emissiveMap: texture(descriptor.emissiveMap, true),
-            roughness: descriptor.roughness, metalness: receivesLight && descriptor.reflection !== 'off' ? descriptor.metalness : 0,
+            roughness: wetRoughness, metalness: receivesLight && descriptor.reflection !== 'off' ? descriptor.metalness : 0,
             specularIntensity: receivesLight && descriptor.reflection !== 'off' ? descriptor.specular : 0,
             emissive: descriptor.emission, emissiveIntensity: descriptor.emissionIntensity,
             alphaTest: descriptor.alphaCutoff, side: descriptor.doubleSided ? T.DoubleSide : T.FrontSide,
