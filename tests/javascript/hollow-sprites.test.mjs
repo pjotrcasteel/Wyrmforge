@@ -131,7 +131,7 @@ test('every Hollowed uses a source-derived no-cape atlas for walk/attack and the
     queueMicrotask(()=>this.onload());
    }
   };
-  const isolated=await import('data:text/javascript;base64,'+Buffer.from(source+'\\n// no-cape regression').toString('base64'));
+  const isolated=await import('data:text/javascript;base64,'+Buffer.from(source+String.fromCharCode(10)+'// no-cape regression').toString('base64'));
   assert.equal(await isolated.preloadHollowSprites(),true);
   assert.equal(isolated.hollowDiagnostics(isolated.createHollowState()).capeFreeReady,true);
   for(let id=0;id<12;id++){
@@ -142,13 +142,13 @@ test('every Hollowed uses a source-derived no-cape atlas for walk/attack and the
    const ctx={globalAlpha:1,save(){},restore(){},translate(){},rotate(){},drawImage(...args){calls.push(args);}};
    assert.equal(isolated.drawHollowEnemy(ctx,e,state),true);
    assert.equal(calls.length,1);
-   assert.match(calls[0][0].url,/\\/(arms|injuries)\\//,'caped base atlases must never render');
+   assert.ok(calls[0][0].url.includes('/arms/')||calls[0][0].url.includes('/injuries/'),'caped base atlas used');
    state.entities.get(id).clip='attack';
    assert.equal(isolated.drawHollowEnemy(ctx,e,state),true);
-   assert.match(calls[1][0].url,/\\/(arms|injuries)\\//);
+   assert.ok(calls[1][0].url.includes('/arms/')||calls[1][0].url.includes('/injuries/'),'caped base attack used');
    isolated.updateHollowSprites(state,snapshot({enemies:[],deathBursts:[{entityId:id,kind:0,x:20,y:20,bodyRadius:11}]}),.1);
    isolated.drawHollowCorpses(ctx,state);
-   assert.match(calls[2][0].url,/\\/arms\\//,'corpses must never render the cape');
+   assert.ok(calls[2][0].url.includes('/arms/'),'caped death atlas used');
   }
  } finally {globalThis.fetch=originals.fetch;globalThis.Image=originals.Image;}
 });
