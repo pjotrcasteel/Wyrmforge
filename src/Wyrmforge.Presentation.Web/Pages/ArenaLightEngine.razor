@@ -1,0 +1,97 @@
+@page "/arena-light-engine"
+@implements IAsyncDisposable
+@using Microsoft.JSInterop
+@inject IJSRuntime JavaScript
+
+<main class="gpu-proof">
+    <h1>Shared light engine</h1>
+    <p>G0–G1 isolated GPU proof. Town and Hunts are unchanged. Original oak geometry and exported walk-pose normals are under review. Production adoption remains pending.</p>
+    @if (error is not null) { <p role="alert">@error</p> }
+    <div class="world-frame">
+        <canvas @ref="canvas" aria-label="Shared GPU world lighting proof"></canvas>
+        @if (warningCue)
+        {
+            <div class="readability-cue" role="status" aria-live="polite">LAB WARNING · Incoming attack</div>
+        }
+    </div>
+    <nav aria-label="Light inspection">
+        <label><input aria-label="Screen-space warning" type="checkbox" @bind="warningCue" /> Screen-space warning (lab)</label>
+        <label>Camera <select aria-label="Camera" @bind="focus" @bind:after="Sync"><option>overview</option><option>actors</option><option>oak</option><option>town</option><option>water</option><option>cutouts</option></select></label>
+        <label>Camera pan (pixels) <input aria-label="Camera pan" type="range" min="-8" max="8" step="0.25" @bind="panPixels" @bind:event="oninput" @bind:after="Sync" /></label>
+        <label>Diagnostic <select aria-label="Diagnostic" @bind="view" @bind:after="Sync"><option>lit</option><option>albedo</option><option>normals</option><option>geometry</option><option value="object-mask">Selected receiver mask</option><option value="shadow-visibility">Point shadow visibility</option><option value="light-depth">Light depth atlas</option><option value="light-bounds">Light bounds</option></select></label>
+        <label><input aria-label="Cutout test fixture" type="checkbox" @bind="cutouts" @bind:after="Sync" /> Cutout test fixture</label>
+        <label><input aria-label="Cutout alpha" type="checkbox" @bind="cutoutAlpha" @bind:after="Sync" /> Cutout alpha</label>
+        <label>Lighting rig <select aria-label="Lighting rig" @bind="lighting" @bind:after="Sync"><option value="scene">Scene sources</option><option value="neutral-key">Neutral inspection key</option><option value="source-lifecycle">Source approach / overlap test</option><option value="town-fixture">Town fixture test</option></select></label>
+        <label><input aria-label="Town active" type="checkbox" @bind="townActive" @bind:after="Sync" /> Town active (lab)</label>
+        <label><input aria-label="Fixture above roof" type="checkbox" @bind="aboveRoof" @bind:after="Sync" /> Fixture above roof (lab)</label>
+        <label>Fixture school <select aria-label="Fixture school" @bind="school" @bind:after="Sync"><option>fire</option><option>frost</option><option>storm</option><option>arcane</option><option>death</option><option>binding</option></select></label>
+        <label>Fixture mastery <input aria-label="Fixture mastery" type="range" min="0" max="100" @bind="mastery" @bind:event="oninput" @bind:after="Sync" /></label>
+        <label>Environment <select aria-label="Environment" @bind="profile" @bind:after="Sync"><option>night</option><option>day</option><option>auto</option><option>zero</option></select></label>
+        <label><input aria-label="Fireball" type="checkbox" @bind="fireball" @bind:after="Sync" /> Fireball</label>
+        <label><input aria-label="Torch" type="checkbox" @bind="torch" @bind:after="Sync" /> Torch</label>
+        <label><input aria-label="Spot" type="checkbox" @bind="spot" @bind:after="Sync" /> Spot</label>
+        <label><input aria-label="Register rune" type="checkbox" @bind="rune" @bind:after="Sync" /> Register rune</label>
+        <label><input aria-label="Shadows" type="checkbox" @bind="shadows" @bind:after="Sync" /> Shadows</label>
+        <label><input aria-label="Direct specular" type="checkbox" @bind="reflections" @bind:after="Sync" /> Direct specular</label>
+        <label><input aria-label="Light behind receiver" type="checkbox" @bind="behind" @bind:after="Sync" /> Light behind receiver</label>
+        <label>Source distance <input aria-label="Source distance" type="range" min="2" max="24" @bind="sourceDistance" @bind:event="oninput" @bind:after="Sync" /></label>
+        <label>Light position <input aria-label="Light position" type="range" min="0" max="100" @bind="progress" @bind:event="oninput" @bind:after="Sync" /></label>
+        <label><input aria-label="Animate walk" type="checkbox" @bind="animate" @bind:after="Sync" /> Animate walk</label>
+        <label><input aria-label="Authored normals" type="checkbox" @bind="normals" @bind:after="Sync" /> Authored normals</label>
+        <label>Inspect object <select aria-label="Inspect object" @bind="inspectObject" @bind:after="Sync"><option>hollowed</option><option>ashling</option><option>npc-binding-proxy</option><option value="oak-0">Oak bark</option><option value="oak-1">Oak foliage</option><option value="oak-2">Oak foliage receiver</option><option value="approved-ground">Ground</option><option>puddle</option><option>wall</option><option>roof</option><option>foreground-post</option><option>cutout-upper</option><option>cutout-lower</option><option>rock</option></select></label>
+        <label><input aria-label="Casts shadow" type="checkbox" @bind="castsShadow" @bind:after="Sync" /> Casts shadow</label>
+        <label><input aria-label="Receives shadow" type="checkbox" @bind="receivesShadow" @bind:after="Sync" /> Receives shadow</label>
+        <label><input aria-label="Receives light" type="checkbox" @bind="receivesLight" @bind:after="Sync" /> Receives light</label>
+        <label>Walk frame <input aria-label="Walk frame" type="range" min="0" max="15" @bind="frame" @bind:event="oninput" @bind:after="Sync" /></label>
+    </nav>
+    <details><summary>Emitter registry and GPU diagnostics</summary><pre>@diagnostics</pre></details>
+    <p>Screen-space readability remains visible even with all world light and emission off. The Town corner is diagnostic geometry, not replacement Town artwork.</p>
+</main>
+
+@code {
+    private ElementReference canvas;
+    private IJSObjectReference? module;
+    private string focus = "overview", inspectObject = "hollowed", diagnostics = "";
+    private bool normals = true, castsShadow = true, receivesShadow = true, receivesLight = true;
+    private string view = "lit", lighting = "scene";
+    private string profile = "night", school = "arcane";
+    private bool townActive = true, aboveRoof;
+    private int mastery;
+    private double panPixels;
+    private string? error;
+    private bool fireball = true, torch = true, spot = true, rune, shadows = true, reflections = true;
+    private bool warningCue;
+    private bool animate, behind, cutouts, cutoutAlpha = true;
+    private int progress = 25, sourceDistance = 2, frame;
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        try
+        {
+            module = await JavaScript.InvokeAsync<IJSObjectReference>("import", "./js/lighting/proof-scene.js");
+            await module.InvokeVoidAsync("initializeProof", canvas);
+            await ReadDiagnostics();
+            StateHasChanged();
+        }
+        catch (JSException exception) { error = exception.Message; StateHasChanged(); }
+    }
+    private async Task Sync()
+    {
+        if (module is not null) await module.InvokeVoidAsync("configureProof", canvas,
+            new { profile, view, lighting, panPixels, townActive, aboveRoof, school, mastery = mastery / 100.0, sourceDistance, behind, cutouts, cutoutAlpha, focus, inspectObject, normals, castsShadow, receivesShadow, receivesLight, animate, fireball, torch, spot, rune, shadows, reflections, progress = progress / 100.0, frame });
+        await ReadDiagnostics();
+    }
+    private async Task ReadDiagnostics()
+    {
+        if (module is not null) diagnostics = System.Text.Json.JsonSerializer.Serialize(
+            await module.InvokeAsync<System.Text.Json.JsonElement>("proofDiagnostics", canvas),
+            new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+    }
+    public async ValueTask DisposeAsync()
+    {
+        if (module is null) return;
+        try { await module.InvokeVoidAsync("disposeProof", canvas); }
+        catch (JSDisconnectedException) { }
+        await module.DisposeAsync();
+    }
+}

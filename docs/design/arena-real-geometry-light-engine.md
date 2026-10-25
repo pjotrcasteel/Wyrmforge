@@ -542,6 +542,16 @@ generic light + receiver + actual shadow proof until it works; **do
 not expand scenery or ship mass art** to compensate for missing engine
 behavior.
 
+### G5 merge follow-up: real Hollowed injury and appearance materials
+
+[The canonical roadmap](../canon/roadmap.md#once-g5-has-merged--integrate-hollowed-injuries-and-future-appearances-25-october-2026) schedules this **immediately after the final G5 milestone is merged into `main`**. The approved even-cadence `broken-leg-left` gameplay art is already merged through [#343](https://github.com/pjotrcasteel/Wyrmforge/pull/343); editable source and future appearance work live in [#333](https://github.com/pjotrcasteel/Wyrmforge/pull/333). This is an **asset-to-shared-renderer compatibility task**, not a reason to hold other gameplay or add a special Hollowed lighting renderer.
+
+**Source binding and map correctness:** for every *shipped* variant and `walk`, `attack`, and `death` clip, resolve the actual source rig/pose and accepted atlas; export correctly aligned normals, depth, shadow-casting occlusion/geometry, albedo, and applicable material/emissive maps. Lock `direction × frame × clip × variant` to the same geometry and atlas anchor/alpha, retaining source hashes, revisions, world size and load-failure provenance. Standard, broken-left-leg and later approved arm/one-arm/other variants must not silently share mismatched normals/casters, reuse full-bright RGB, or substitute painted fake shadows.
+
+**Behavioral parity:** the preexisting healthy-support reach attack and legacy death fallback remain distinct documented art-transition work until matching injury-specific sources are accepted; renderer integration alone cannot fix the silhouette. In-game C# movement/attack/death, stable appearance selection, hit flashes, collision and save data must remain unchanged. Preserve the owner-approved smooth limp without 3 m/s frame spikes. If maps are missing, use an explicitly valid **fully lit** fallback pair, never a full-bright bypass.
+
+**Gate/acceptance:** G5's mainline migration must already feed *all active world actors* through the unified lighting/occlusion pass. The post-merge follow-up builds/validates the **new injury-specific** source geometry and materials: eight facings, animation sync, motion-to-attack-to-death, changing source positions, actor self/ground shadow, light-off zero-black and near-black Gothic readability; record 320px/390px and physical iOS/Android results. Require an independently reviewable PR and explicit art signoff. The material refresh is **not automatically done** by merging G5.
+
 ## Non-goals and invariants
 
 - **Not** implementing Unreal Engine, Lumen, global illumination, fully

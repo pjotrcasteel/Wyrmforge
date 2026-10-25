@@ -1,0 +1,29 @@
+{
+  "commit": "eb5cb966f58018829393160a854569798c481222",
+  "run": 40133138866,
+  "artifact": 12575776916,
+  "artifactDigest": "sha256:08d7646eed598fb0501e6bd95ff494d57a6b248f7190adaa8e4a678248dfa8dd",
+  "captures": [
+    {
+      "file": "gpu-390-key-hollowed.png",
+      "sha256": "dabdbfb4fde90981c21d17ec1a78da34a5c1223af5f97152be871b585548a632"
+    },
+    {
+      "file": "gpu-390-water-key-0.15-specular.png",
+      "sha256": "ff108aa1ae48afb2d2fafc065a0965f703ba79783894d947ec4e8f8170226dda"
+    },
+    {
+      "file": "gpu-390-water-key-0.4-specular.png",
+      "sha256": "f164f32fafec3a433ca68c6b3fa5a7b4aac93678432cee5c354020e28a3bd4cc"
+    },
+    {
+      "file": "gpu-390-oak-leaf-receiver-shadowed.png",
+      "sha256": "88a59f0fec48aaeb428ce3c5cd0e2dc4b46d300c444f8e08c9b588cc5a840ddf"
+    },
+    {
+      "file": "gpu-390-oak-leaf-caster-off.png",
+      "sha256": "0d20266a71b15fc3d7f043a7010bae5fc87c48fdeb8fd7e060bc73bf34c9609f"
+    }
+  ],
+  "scope": "Published Blazor route in CI Chromium. Mobile viewports, not physical iOS/Android. Original unedited screenshots. No artistic approval or production adoption."
+}

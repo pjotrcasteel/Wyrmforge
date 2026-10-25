@@ -1,0 +1,72 @@
+[
+  {
+    "receiver": "hollowed",
+    "comparison": "authored-normal-versus-flat",
+    "changedPixels": 2108
+  },
+  {
+    "receiver": "hollowed",
+    "comparison": "receives-light",
+    "changedPixels": 2287
+  },
+  {
+    "receiver": "ashling",
+    "comparison": "authored-normal-versus-flat",
+    "changedPixels": 1185
+  },
+  {
+    "receiver": "ashling",
+    "comparison": "receives-light",
+    "changedPixels": 1370
+  },
+  {
+    "receiver": "npc-binding-proxy",
+    "comparison": "receives-light",
+    "changedPixels": 728
+  },
+  {
+    "receiver": "wall",
+    "comparison": "receives-light",
+    "changedPixels": 13237
+  },
+  {
+    "receiver": "roof",
+    "comparison": "receives-light",
+    "changedPixels": 31512
+  },
+  {
+    "receiver": "foreground-post",
+    "comparison": "receives-light",
+    "changedPixels": 1650
+  },
+  {
+    "receiver": "oak-0",
+    "comparison": "receives-light",
+    "changedPixels": 2887
+  },
+  {
+    "receiver": "oak-1",
+    "comparison": "receives-light",
+    "changedPixels": 1931
+  },
+  {
+    "receiver": "puddle",
+    "comparison": "specular-on-off",
+    "position": 0.15,
+    "changedPixels": 13666
+  },
+  {
+    "receiver": "puddle",
+    "comparison": "specular-on-off",
+    "position": 0.4,
+    "changedPixels": 10004
+  },
+  {
+    "receiver": "puddle",
+    "comparison": "specular-centroid",
+    "xPixels": [
+      188.78038084950546,
+      252.7977903056491
+    ]
+  }
+]

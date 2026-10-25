@@ -1,0 +1,92 @@
+{
+  "framebuffer": [
+    366,
+    608
+  ],
+  "rgbChannels": 667584,
+  "maxRgb": 7,
+  "nonzeroPixels": 95887,
+  "hash": 1835447309,
+  "options": {
+    "profile": "night",
+    "fireball": false,
+    "torch": false,
+    "spot": false,
+    "lighting": "town-fixture",
+    "townActive": false,
+    "aboveRoof": false,
+    "school": "arcane",
+    "mastery": 1,
+    "sourceDistance": 24,
+    "behind": false,
+    "cutouts": false,
+    "cutoutAlpha": true,
+    "rune": false,
+    "shadows": true,
+    "reflections": true,
+    "progress": 0.5,
+    "frame": 0,
+    "animate": false,
+    "view": "lit",
+    "focus": "town",
+    "inspectObject": "wall",
+    "castsShadow": true,
+    "receivesShadow": true,
+    "receivesLight": true,
+    "normals": true
+  },
+  "diagnostics": {
+    "backend": "WebGL2 / Three 0.186.1",
+    "view": "lit",
+    "depthSource": "moon",
+    "framebuffer": [
+      366,
+      608
+    ],
+    "objects": 14,
+    "lights": [
+      {
+        "id": "moon",
+        "ownerId": "moon",
+        "type": "directional",
+        "position": [
+          -4,
+          -3,
+          8
+        ],
+        "intensity": 0.035,
+        "shadow": true,
+        "views": 1
+      }
+    ],
+    "drawCalls": 27,
+    "triangles": 70992,
+    "textures": 8,
+    "geometries": 13,
+    "inspectedReceiver": {
+      "id": "wall",
+      "ownerId": "wall",
+      "geometry": "box",
+      "material": "stone",
+      "position": [
+        -2,
+        2.5,
+        1.1
+      ],
+      "scale": [
+        3.8,
+        0.35,
+        2.2
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "receivesLight": true,
+      "receivesShadow": true,
+      "castsShadow": true
+    },
+    "productionPathsMigrated": 0
+  }
+}
