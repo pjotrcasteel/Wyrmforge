@@ -1,0 +1,30 @@
+[
+  {
+    "receiver": "hollowed",
+    "distances": [
+      24,
+      8,
+      2
+    ],
+    "meanRgb": [
+      0,
+      5.796689360566012,
+      27.91042584434655
+    ],
+    "overlapMeanRgb": 35.15818982779335
+  },
+  {
+    "receiver": "ashling",
+    "distances": [
+      24,
+      8,
+      2
+    ],
+    "meanRgb": [
+      0,
+      2.94301013578122,
+      20.284566838783707
+    ],
+    "overlapMeanRgb": 24.8659399502773
+  }
+]

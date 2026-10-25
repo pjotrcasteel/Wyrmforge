@@ -382,7 +382,10 @@ second source, exact framebuffer restoration after its removal, and full-frame
 black with both sources disabled. Ambient and emission are explicitly off in
 this diagnostic rig; this is not the normal Gothic-night environment.
 
-Validation of this new slice is pending published-app CI. Phone viewport captures
+Code checkpoint `7253c6b` passed published-app GPU run 40165163066 and WebKit
+40165163049. All 386 JavaScript tests pass. Validate and full Browser smoke
+remain pending at record time. [Original captures, metrics and provenance](evidence/universal-lighting/7253c6b/README.md)
+are preserved, including all 18 full-frame zero results. Phone viewport captures
 are browser evidence, not physical iOS/Android performance or artistic acceptance.
 
 Main recheck: `93ce11e8` adds production Fireball V5 and release versioning.
