@@ -83,6 +83,7 @@ universal adoption. G5 must close every row, including secondary dispatch paths.
 | `arena-materials.js`, `arena-ground-{foundation,trails}.js`, `arena-approved-ground-preview.js` | Approved six-material quilt/blending and trail recipe | Preserve paintings/recipe; upload composed albedo; eventual native adapter |
 | `arena-mage.js`, `arena-mage-frames.js` | Temporary procedural/sprite actor | Replace art using shared rigged LitSprite binding; do not polish temporary art |
 | `hollow-sprites.js`, `ashling-sprites.js`, `rigged-sprites.js`, `sprite-animation.js`, `sprite-layer-compositor.js` | Existing atlas/frame/anchor/animation; Canvas filter effects | Same animation samples; matching per-pose normal/depth/caster exports needed |
+| `hollow-injury-variants.js`, `wwwroot/art/enemies/hollow-rigged/injuries/` (main, #343) | Live deterministic `broken-leg-left` 16×8 walk with transitional no-cape attack and original death | G5 shared actor-renderer routing; post-G5 matched injury-frame albedo/normal/depth/caster + interruption QA, no full-bright fallback |
 | `painted-enemies.js`, `arena-enemy-art.js`, `art-atlas.js` | Other creatures, Wyrms and corpses with fallbacks | All fallback and death paths must become lit renderables |
 | `arena-spell-vfx.js`, `arena-fire-pixels.js`, `arena-lightning-vfx.js`, `arena-frost-vfx.js` | Projectiles, impacts, trails, spell particles | Explicit emissive/lit materials and emitter lifecycle, no full-bright bypass |
 | `arena-{elite,reliquary,bellwarden,winterbell,glass-reliquary}-vfx.js`, `arena-enemy-telegraphs.js` | Mixed bodies, ground FX and warnings | Separate world surfaces from declared screen-space threat/readability channels |
@@ -95,6 +96,18 @@ universal adoption. G5 must close every row, including secondary dispatch paths.
 | `spellcraft-circle.js`, `bestiary-portraits.js`, Forge cards, HUD/menus | UI illustrations/canvases | Explicit screen-space exemption; never reused as full-bright world art |
 | `arena-lab.js`, `arena-lighting-lab.js`, sprite/building labs | Isolated historical review tools | Label as legacy; not gameplay adoption evidence |
 | Future interiors/biomes | No implemented shared scene adapter | Require same contracts from introduction |
+
+## Post-G5 dependency — existing in-Hunt broken-leg Hollowed and new variations (25 October 2026)
+
+**Checkpoint:** [#343](https://github.com/pjotrcasteel/Wyrmforge/pull/343) is merged into `main`: one in four Hollowed currently selects the `broken-leg-left` appearance deterministically for presentation. The owner accepted the **even-cadence walk** (16 frames × 8 directions × 96px) from [#333](https://github.com/pjotrcasteel/Wyrmforge/pull/333). The in-game `injuries/manifest.json` names the actual `broken-leg-left-walk.png`, a standard no-cape reach `broken-leg-left-attack.png`, and the legacy corpse/death fallback. **They do not yet have matching GPU normal/depth/caster passes**; the isolated G1 actor proof uses older geometry. Do not imply lighting compatibility from the successful walk GIF or ship G1's mismatched pose maps.
+
+**On merging G5 into main**, open a focused integration child PR (not a second light engine) that:
+1. Reconciles the merged C#-driven `hollow-sprites.js`, `hollow-injury-variants.js`, `sprite-animation.js` and `wwwroot/art/enemies/hollow-rigged/injuries/manifest.json` with the final shared actor registry. Preserve the existing appearance selector and authoritative C# physics/combat.
+2. Exports/validates pose-specific albedo, normals, depth, shadow-caster geometry/masks and material descriptors for `standard` and `broken-leg-left`, plus each *actually approved* future broken-arm/one-arm/other Hollowed variation. Bind exactly the source `.blend`/`sampled-walk.npz` pose identity, direction order, cell/frame counts, pivots, world size, alpha and hashes. Never reuse a healthy pose's normals/caster on the injured leg or derive convincing-looking fake 3D data from RGB.
+3. Keeps the walk/attack/death visual continuity (the initial attack currently uses the no-cape healthy-leg reach, death the original source). Treat a newly authored injury-specific attack/death as separate art-production work, **not** a generic G1 shader fix. On incomplete/missing material passes, use a complete, correctly lit fallback rather than an unlit Canvas overlay or mismatched texture pair.
+4. Validates both in the actual Hunt at 320/390px and on physical iOS/Android: moving point/spot/directional light, dynamic self/ground shadows and lighting through all eight facings, walking and interruption into attack/death, toe contact, near-black night, zero-light world-black, frame/memory budgets. No lights/emitters may be added solely to reveal the injured actor. Record screenshots and source/hash evidence; require visual acceptance.
+
+**G5 invariant versus post-merge scheduling:** G5's scene adapter must already route all *active* actors through the one world-light/visibility pass with no full-bright bypass. Source-accurate regenerated passes for the newly merged injury variants are a separately tracked **immediate post-G5 adoption task** and are not complete merely because G5's generic code is merged. New variants introduced later inherit the same LitSprite contract without changes to the engine.
 
 ## Backend and portable contracts
 
