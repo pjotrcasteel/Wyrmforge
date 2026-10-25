@@ -83,6 +83,7 @@ class FeatureMotifSourceTests(unittest.TestCase):
                 self.assertFalse(item["cropIsRuntimeAlpha"])
                 self.assertFalse(item["annotatedIsolationPreviewIsRuntimeAsset"])
                 self.assertFalse(item["paintedFeatureCompositionIsRuntimeAsset"])
+                self.assertTrue(item["paintedMotifPixelsPreservedExactly"])
                 self.assertFalse(item["mobileReviewIsGameScreenshot"])
                 with Image.open(place / "review" / item["mobileFeatureReviewFile"]) as mobile:
                     self.assertEqual(mobile.size, (240, 240))
