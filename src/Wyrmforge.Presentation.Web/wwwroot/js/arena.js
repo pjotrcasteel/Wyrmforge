@@ -169,6 +169,7 @@ function startSimulationFrame(state, timestamp, rect) {
         })
         .catch(error => {
             console.error('Wyrmforge arena frame failed.', error);
+            window.wyrmforgeAudio?.stopAllBurningGround?.();
             state.active = false;
         })
         .finally(() => state.simulationBusy = false);
