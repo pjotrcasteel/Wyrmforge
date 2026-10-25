@@ -1,4 +1,4 @@
-import { selectLightBudget } from './g4-light-budget.js';
+import { selectLightBudget, G4_QUALITY_PROFILES } from './g4-light-budget.js';
 
 const camera = { x: 0, y: 0, halfWidth: 10, halfHeight: 10 };
 const settings = { maxLights: 3, maxShadowCost: 6 };
@@ -23,3 +23,18 @@ assert(result.every(x => x.intensity === 1), 'illumination remains intact');
 assert(selectLightBudget([light('a', 'point')], camera, { maxLights: 0, maxShadowCost: 6 }).length === 0,
   'zero active light budget');
 console.log('G4 light budget smoke tests passed');
+
+for (const [name, profile] of Object.entries(G4_QUALITY_PROFILES)) {
+  assert(Object.isFrozen(profile), name + ' profile must be immutable');
+  assert(profile.maxLights > 0 && profile.maxShadowCost > 0, name + ' has valid budgets');
+}
+const invalid = selectLightBudget([
+  { ...light('invalid', 'spot'), intensity: NaN },
+  { ...light('valid', 'spot'), priority: Infinity },
+  { ...light('missing-position', 'spot'), position: null }
+], camera, { maxLights: Infinity, maxShadowCost: NaN });
+assert(invalid.length === 0, 'non-finite limits must fail closed');
+const noShadow = selectLightBudget([light('point', 'point')], camera, {
+  maxLights: 1, maxShadowCost: 0
+});
+assert(noShadow.length === 1 && !noShadow[0].castShadow, 'light survives zero shadow budget');
