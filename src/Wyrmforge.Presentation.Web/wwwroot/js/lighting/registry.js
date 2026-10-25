@@ -70,12 +70,27 @@ export function validateSnapshot(input) {
     if (typeof s.environment.emission !== 'boolean') throw new TypeError('Invalid emission switch');
     return s;
 }
+// Keep legacy G1/G2 call signature; use bounded selection for large scenes.
 export function selectLights(snapshot, shadowViews = 8, maxLights = 8) {
-    const active = snapshot.lights.filter(l => l.enabled && l.intensity > 0 &&
-        (l.expiresAt === undefined || l.expiresAt > snapshot.time))
-        .sort((a, b) => b.priority - a.priority || a.id.localeCompare(b.id));
-    let remaining = shadowViews;
-    return active.slice(0, maxLights).map(light => {
+    const selected = [];
+    const limit = Math.max(0, Math.floor(Number.isFinite(maxLights) ? maxLights : 0));
+    const compare = (a, b) => b.priority - a.priority || a.id.localeCompare(b.id);
+    for (const light of snapshot.lights) {
+        if (!light.enabled || light.intensity <= 0 ||
+            (light.expiresAt !== undefined && light.expiresAt <= snapshot.time)) continue;
+        if (limit === 0) break;
+        let lo = 0, hi = selected.length;
+        while (lo < hi) {
+            const mid = (lo + hi) >>> 1;
+            if (compare(light, selected[mid]) < 0) hi = mid;
+            else lo = mid + 1;
+        }
+        if (lo >= limit) continue;
+        selected.splice(lo, 0, light);
+        if (selected.length > limit) selected.pop();
+    }
+    let remaining = Math.max(0, Math.floor(Number.isFinite(shadowViews) ? shadowViews : 0));
+    return selected.map(light => {
         const cost = light.type === 'point' ? 6 : 1;
         const shadow = light.castsShadow && cost <= remaining;
         if (shadow) remaining -= cost;
