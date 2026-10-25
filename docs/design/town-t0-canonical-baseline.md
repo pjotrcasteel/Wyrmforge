@@ -1,9 +1,9 @@
 # WyrmForge — T0 Canonical Town Baseline and Acceptance Matrix
 
-**Status:** IN PROGRESS — source audit recorded; screenshots, runtime observations and owner approval outstanding.
-**Workstream:** [Town T0–T6](town-3d-rebuild-milestones.md), G4 PR #346.
+**Status:** IN PROGRESS — nine real runtime district screenshots captured and inspected; state, occlusion, performance and owner approval outstanding.
+**Workstream:** [Town T0–T6](town-3d-rebuild-milestones.md), isolated PR #349 (`feat/town-3d-rebuild-t0-t6`); G4 PR #346 is paused.
 **Reference:** current production `main` Town, not a redesigned mockup.
-**Important:** This document records **verified source facts**, not claimed runtime or visual QA. No in-game screenshots have been inspected for this T0 pass.
+**Important:** This document distinguishes verified source facts from captured runtime evidence and unapproved visual acceptance.
 
 ## 1. Canonical asset inventory (verified in main)
 
@@ -41,9 +41,9 @@ The eleven occluders are: `noticeboard-foreground`, `well-foreground`, `west-gat
 
 `tests/Wyrmforge.Browser.Tests/WyrmforgeBrowserTests.cs` already provides valuable **real-browser Town screenshot automation**. It contains mobile Arcane Nexus mastery captures (`nexus-fire-baked-unlearned-{width}.png`, `nexus-fire-baked-invested-{width}.png`), per-school 390px captures (`nexus-school-{key}-390.png`), debug school captures, vacancy assertions, and an optional `/?townGeometry=1&townV2=1` NPC test. These are **test capture definitions, not evidence that the latest captures were downloaded or visually approved**.
 
-The existing tests initialize game state through `localStorage` keys `wyrmforge.firstHunt.v1`, `wyrmforge.characterSchool.v1` and `wyrmforge.arcaneBuild.v1`; enter Town using the test helper; and select the central district with `window.wyrmforgeTown.show(0, false)`. Preserve these reproducible setup paths for T0 rather than introducing a competing screenshot mechanism.
+The existing tests initialize game state through `localStorage` keys `wyrmforge.firstHunt.v1`, `wyrmforge.characterSchool.v1` and `wyrmforge.arcaneBuild.v1`; enter Town using the test helper; and select the central district with `window.wyrmforgeTown.show(1, false)` (west=0, center=1, east=2). Preserve these reproducible setup paths for T0 rather than introducing a competing screenshot mechanism.
 
-**Next execution tasks:** run existing browser Town tests against a known `main` deployment, retain their actual PNG artifacts, add explicit west/east and occlusion frame captures where absent, and inspect the images against the matrix. A green test alone does not mark any visual case approved.
+**Next execution tasks:** expand active/vacant, occlusion and Town V2 runtime captures and measure baseline costs; owner approval remains mandatory. A green test alone does not mark visual cases approved.
 
 ## 3. Visual capture matrix — required real in-game evidence
 
@@ -51,9 +51,9 @@ Capture screenshots using identical gameplay state and camera position for both 
 
 | Case | Viewports | Expected subject | Evidence status |
 | --- | --- | --- | --- |
-| C01 | 320×568, 390×844, desktop | Central district, default camera | PENDING |
-| C02 | 320×568, 390×844, desktop | West district and both buildings | PENDING |
-| C03 | 320×568, 390×844, desktop | East district and both buildings | PENDING |
+| C01 | 320×568, 390×844, desktop | Central district, default camera | CAPTURED / INSPECTED; awaiting owner approval |
+| C02 | 320×568, 390×844, desktop | West district and both buildings | CAPTURED / INSPECTED; awaiting owner approval |
+| C03 | 320×568, 390×844, desktop | East district and both buildings | CAPTURED / INSPECTED; awaiting owner approval |
 | C04 | 390×844 | Four buildings active and each vacant state | PENDING |
 | C05 | 390×844 | Six Nexus schools, representative mastery states | PENDING |
 | C06 | 390×844 | Day/night state or existing actual day/night behavior | PENDING — confirm runtime availability |
@@ -61,6 +61,16 @@ Capture screenshots using identical gameplay state and camera position for both 
 | C08 | 390×844 | NPCs entering/exiting screen, walking, waiting, feet-depth masks | PENDING |
 | C09 | 390×844 | Gate and four building hotspots in unlocked/locked states | PENDING |
 | C10 | 320×568, 390×844 | Debug navigation/geometry and optional `townV2=1` | PENDING |
+
+## 3a. First actual browser evidence — October 25, 2026
+
+- Successful [Browser smoke run #40220067444](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40220067444), Town branch commit `3e3149f` (GitHub PR workflow checkout was based on the commit's merge ref).
+- Browser artifact ID **12608874361** (`wyrmforge-browser-9763cd57ba2fae4a16faf6cd26740b13acf5add5`), retention until **2026-11-08**.
+- Extracted and visually inspected all nine `browser/t0-town-{west,center,east}-{320x568,390x844,1280x800}.png` real runtime captures.
+- **320px / 390px:** correct left, central and right composition, well/noticeboard and building artwork. **1280px desktop:** all three district captures show effectively the same full-width panorama, which is expected when the full panorama fits on screen; do not use them to claim independent district camera states.
+- **Observed baseline hazard:** actors appear as simple colored vertical rectangles in these captures. They must **not** be mistaken for final NPC art or approved NPC masking. Identify whether this is the production actor's expected interim rendering or a regression before acceptance.
+- The same browser artifact contains Nexus school and unlearned/invested screenshots from pre-existing browser tests; those **do not yet cover the entire C05 acceptance matrix**.
+- **Missing:** active/vacant capture set, day-mode behavior, full C07/C08 feet occlusion playback, debug geometry and TownV2 snapshots, performance numbers, explicit owner sign-off.
 
 ## 4. Behavior and spatial regression checklist
 
@@ -79,4 +89,4 @@ Capture screenshots using identical gameplay state and camera position for both 
 
 T0 is **NOT DONE** until: (1) screenshot matrix C01–C10 is captured from the running game, (2) behavior and performance baseline is recorded, (3) differences between raster, JSON and runtime navigation are documented, and (4) the owner approves the canonical reference set.
 
-**No 3D replacement meshes or changed production art are authorized by this audit.** Start T1 only after T0 evidence and review are available. AI agent implementation is outside this workstream; see [AI0–AI6](unified-agent-ai-milestones.md).
+**Keep production art untouched until T0 approval.** Independent, nonproduction T1 schema/calibration and sample geometry may proceed on the isolated Town branch without activating a renderer switch. AI agent implementation is outside this workstream; see [AI0–AI6](unified-agent-ai-milestones.md).
