@@ -194,6 +194,7 @@ public sealed partial class RunSimulation
 
     private void UpdateEnemies(double delta)
     {
+        PruneEnemyAgents();
         encounterSeconds += delta;
         rangedStaggerRemaining = Math.Max(0, rangedStaggerRemaining - delta);
         var committedCap = EnemyStagePressure.CommittedThreatCap(mapState.CurrentNode?.Stage ?? 1);
@@ -206,10 +207,15 @@ public sealed partial class RunSimulation
         for (int index = 0, count = enemies.Count; index < count; index++)
         {
             var enemy = enemies[index];
+            var agent = FindEnemyAgent(enemy);
             enemy.Statuses.Tick(delta);
             var statusTimeScale = enemy.Statuses.TimeScale(false);
             RecordEnemyControl(enemy, delta, statusTimeScale);
-            if (statusTimeScale <= 0) continue;
+            if (statusTimeScale <= 0)
+            {
+                agent?.Runtime.Pause();
+                continue;
+            }
 
             var scaledDelta = delta * statusTimeScale;
             var target = mapState.EncounterActive && arenaEnvironment is not null
@@ -235,9 +241,17 @@ public sealed partial class RunSimulation
             else if (enemy.WinterBell is { } winter) (direction, speed) = UpdateWinterBell(enemy, winter, scaledDelta, crossing, direction, speed);
             else if (enemy.RoutedRemaining > 0)
             {
+                agent?.Runtime.Pause();
                 // Morale break: flee the hunter, then re-engage once the timer ends. Bounded, so it never soft-locks a node.
                 enemy.RoutedRemaining = Math.Max(0, enemy.RoutedRemaining - scaledDelta);
                 if (!crossing) direction = Vector2D.DirectionTo(player.Position, enemy.Position);
+            }
+            else if (agent is not null)
+            {
+                var result = agent.Step(scaledDelta, player.Position, target, speed, !crossing && committed < committedCap);
+                direction = result.Direction;
+                speed = result.Speed;
+                if (result.Committed) committed++;
             }
             else if (enemy.AshPriest is { } priest)
                 (direction, speed) = UpdateAshPriest(enemy, priest, scaledDelta, crossing, direction, speed);

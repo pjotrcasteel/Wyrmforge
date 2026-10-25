@@ -3,7 +3,7 @@ using Wyrmforge.Domain.Combat.Enemies;
 namespace Wyrmforge.Application.Runs.Development;
 
 /// <summary>Isolated renderer inspection: this entry point never reads or writes saved progression.</summary>
-public sealed record DevelopmentEnemySetup(EnemyKind Kind, int Seed, double Width, double Height, bool Casting = false)
+public sealed record DevelopmentEnemySetup(EnemyKind Kind, int Seed, double Width, double Height, bool Casting = false, bool AgentFoundation = false)
 {
     public void Validate()
     {
