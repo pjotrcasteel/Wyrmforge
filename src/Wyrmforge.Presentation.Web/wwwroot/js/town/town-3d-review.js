@@ -22,6 +22,9 @@ const materialPalette = Object.freeze({
     parchment: ["#b9a287", .92],
     banner: ["#173c6b", .92],
     flowers: ["#b570b5", .68],
+    dark_stone: ["#303542", .91],
+    portal_glow: ["#884c26", .62],
+    window: ["#e6ac5d", .47],
     lantern: ["#d9a35f", .33]
 });
 const positions = Object.freeze({
@@ -39,9 +42,11 @@ const standardMaterial = (id, color, roughness, options = {}) => ({
 function previewSnapshot(scene, mode, actorFootpoint) {
     const zero = mode === "zero", day = mode === "day";
     const materials = Object.entries(materialPalette).map(([id, [color, roughness]]) =>
-        standardMaterial(id, color, roughness, id === "lantern" ? {
-            emission: "#ffb45e", emissionIntensity: 1.8
-        } : {}));
+        standardMaterial(id, color, roughness,
+            ["lantern", "window", "portal_glow"].includes(id) ? {
+                emission: id === "window" ? "#ffd88b" : "#ffb45e",
+                emissionIntensity: id === "lantern" ? 1.8 : id === "window" ? 1.35 : .95
+            } : {}));
     materials.push(standardMaterial("npc-proxy", "#718caa", .8));
 
     const objects = scene.nodes.filter(n => n.roles.includes("visual") && n.meshId).map(node => {
@@ -75,7 +80,9 @@ function previewSnapshot(scene, mode, actorFootpoint) {
             ...[[0, 3.4, 1.8], [-1.7, .2, 1.6], [1.7, .2, 1.6]].map((position, i) => ({
                 ...light(`town.review.torch-${i}`, "point", position, "#ffb266", day ? 3.5 : 12, 8 - i),
                 castsShadow: false
-            }))
+            })),
+            {...light("town.review.gate-interior", "point", [0, 6.7, 1.65],
+                "#ffc176", day ? 5 : 16, 7), castsShadow: false}
         ],
         environment: {
             ambient: zero ? 0 : day ? .56 : .14,
