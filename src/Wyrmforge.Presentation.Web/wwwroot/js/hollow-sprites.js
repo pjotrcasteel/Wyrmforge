@@ -3,12 +3,16 @@ import { createSpriteAnimationState, updateSpriteAnimation } from './sprite-anim
 import { createSpriteLayerCompositor } from './sprite-layer-compositor.js';
 import { createHollowInjuryAssets, selectHollowInjuryVariant, hollowInjuryLabReview } from './hollow-injury-variants.js';
 import { createHollowVariantAssets, selectHollowArmVariant } from './hollow-arm-variants.js';
+import { createHollowDeathAssets } from './hollow-death.js';
 const base = new URL('../art/enemies/hollow-rigged/', import.meta.url);
 const rows = ['N','NE','E','SE','S','SW','W','NW'];
 const headings = ['E','SE','S','SW','W','NW','N','NE'];
 const textures = new Map();
 const injuries=createHollowInjuryAssets(new URL('injuries/',base));
 const arms=createHollowVariantAssets(new URL('arms/',base));
+const skeletalDeath=createHollowDeathAssets(new URL('death/',base));
+const deathPreview=Boolean(globalThis.location?.pathname?.includes('/enemy-lab')&&
+    new URLSearchParams(globalThis.location.search).get('hollowDeath')==='rigged');
 const injuryLabReview=hollowInjuryLabReview();
 let manifest, loading, profile, compositor;
 export function preloadHollowSprites() {
@@ -16,7 +20,7 @@ export function preloadHollowSprites() {
 }
 async function loadHollowSprites() {
     // Load cape-free actors independently: caped legacy atlas failures must not block them.
-    const variants=Promise.all([injuries.preload(),arms.preload()]);
+    const variants=Promise.all([injuries.preload(),arms.preload(),deathPreview?skeletalDeath.preload():Promise.resolve(false)]);
     try {
         await loadLegacyHollowSprites();
     } catch {
@@ -141,6 +145,8 @@ export function drawHollowEnemy(ctx,enemy,state){
 export function drawHollowCorpses(ctx,state,reducedMotion=false){
     for(const corpse of state.corpses.values()){
         const age=state.clock-corpse.at;
+        if(deathPreview&&skeletalDeath.draw(ctx,reducedMotion?23:Math.min(23,Math.floor(age*12)),
+            corpse.direction,corpse.x,corpse.y,corpse.radius,age<3?1:Math.max(0,4-age)))continue;
         if(arms.ready()) {
             // Temporary no-cape collapse until the rigged death atlas is authored.
             // Never resurrect the cape for a corpse after a cape-free encounter.
@@ -159,7 +165,7 @@ export function drawHollowCorpses(ctx,state,reducedMotion=false){
     }
 }
 export function hollowDiagnostics(state){
-    return {ready:hollowSpritesReady(),capeFreeReady:arms.ready(),injuriesReady:injuries.ready(),armsReady:arms.ready(),injuryLabReview,layers:compositor?{...compositor.stats,estimatedBytes:compositor.estimatedBytes()}:null,entities:[...state.entities].map(([entityId,p])=>({entityId,injuryVariant:p.injuryVariant,armVariant:p.armVariant,injuryDrawn:injuries.ready()&&p.injuryVariant==='broken-leg-left'&&(p.clip==='walk'||p.clip==='attack'),clip:p.clip,frame:p.frame,direction:p.direction,baseFrame:p.baseFrame,phase:p.animation?.phase,layered:p.layered})),
+    return {ready:hollowSpritesReady(),capeFreeReady:arms.ready(),skeletalDeathPreview:deathPreview,skeletalDeathReady:skeletalDeath.ready(),injuriesReady:injuries.ready(),armsReady:arms.ready(),injuryLabReview,layers:compositor?{...compositor.stats,estimatedBytes:compositor.estimatedBytes()}:null,entities:[...state.entities].map(([entityId,p])=>({entityId,injuryVariant:p.injuryVariant,armVariant:p.armVariant,injuryDrawn:injuries.ready()&&p.injuryVariant==='broken-leg-left'&&(p.clip==='walk'||p.clip==='attack'),clip:p.clip,frame:p.frame,direction:p.direction,baseFrame:p.baseFrame,phase:p.animation?.phase,layered:p.layered})),
         corpses:[...state.corpses.values()].map(p=>({entityId:p.entityId,direction:p.direction,age:state.clock-p.at,frame:Math.min(23,Math.floor((state.clock-p.at)*12))}))};
 }
 // Preserve playback/fallback diagnostics while the asset bundle is loading.
