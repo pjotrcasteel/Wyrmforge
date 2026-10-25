@@ -157,6 +157,23 @@ def build(root: Path, annotation_file: Path, output: Path, preview_size: int = 4
         preview_name = f"{name}-SOURCE-REVIEW-UNAPPROVED.jpg"
         mask.save(output / mask_name)
         preview(image, polygons, item["layer"], preview_size).save(output / preview_name, quality=91, subsampling=0)
+        # Preserve actual brushwork as an unmodified RGB source crop, not a
+        # synthesized tile or runtime alpha layer. The mask remains separate.
+        bounds = mask.getbbox()
+        if bounds is None:
+            raise ValueError("Hand-annotated motif has no visible pixels")
+        margin = max(4, round(min(image.size) * .025))
+        left = max(0, bounds[0] - margin)
+        top = max(0, bounds[1] - margin)
+        right = min(image.width, bounds[2] + margin)
+        bottom = min(image.height, bounds[3] + margin)
+        crop_name = f"{name}-PAINTED-MOTIF-RGB-CROP-UNAPPROVED.png"
+        crop = image.crop((left, top, right, bottom))
+        crop.save(output / crop_name)
+        # Pixel-exact crop comparison prevents accidental paint recoloring.
+        with Image.open(output / crop_name) as saved:
+            if saved.convert("RGB").tobytes() != crop.tobytes():
+                raise AssertionError("Original painted motif pixels changed during export")
         reports.append({
             "assetId": name,
             "semanticLayer": item["layer"],
@@ -165,6 +182,11 @@ def build(root: Path, annotation_file: Path, output: Path, preview_size: int = 4
             "maskFile": mask_name,
             "maskSha256": hashlib.sha256((output / mask_name).read_bytes()).hexdigest(),
             "previewFile": preview_name,
+            "sourceRgbCropFile": crop_name,
+            "sourceRgbCropBounds": [left, top, right, bottom],
+            "sourceRgbCropSha256": hashlib.sha256((output / crop_name).read_bytes()).hexdigest(),
+            "sourceRgbCropPixelsUnchanged": True,
+            "cropIsTileable": False, "cropIsRuntimeAlpha": False,
             "runtimeEligible": False, "authoritativeCsharpGeometry": False,
             "emissionAuthored": False, "lightingUsed": False, "ownerApproved": False,
         })
