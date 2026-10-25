@@ -35,13 +35,11 @@ jobs:
       - name: Verify T1 mesh geometry without .NET
         run: python3 -m unittest tools.development.test_town_t1_mesh
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v5
-        with:
-          # The 10.0.403 latest-channel download currently returns HTTP 409 on runners.
-          # Pin a released .NET 10 SDK for this independent Town preview workflow.
-          dotnet-version: '10.0.100'
-
+      - name: Use preinstalled .NET 10 SDK
+        run: |
+          dotnet --list-sdks
+          dotnet --list-sdks | grep -Eq '^10\.0\.' || { echo "::error::Runner does not have the .NET 10 SDK"; exit 1; }
+          dotnet --version
       - name: Verify deep-link preview routing
         run: python3 -m unittest discover -s tools/development -p 'test_*.py'
 
