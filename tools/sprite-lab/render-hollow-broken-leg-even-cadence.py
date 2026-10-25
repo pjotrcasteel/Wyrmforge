@@ -80,7 +80,7 @@ for row, direction in enumerate(directions):
         pair.alpha_composite(sprite,(108,0))
         compare.append(pair.convert("RGB"))
         enlarged = pair.resize((816,384),Image.Resampling.NEAREST)
-        ImageDraw.Draw(enlarged).text((6,4),"REJECTED V7  /  NEW CONTACT GAIT",fill=(239,228,203))
+        ImageDraw.Draw(enlarged).text((6,4),"PRIOR FAST STEP  /  NEW EVEN CADENCE",fill=(239,228,203))
         compare_zoom.append(enlarged.convert("RGB"))
     gif(native, OUT/f"{face.lower()}-animation.gif")
     gif(zoom, OUT/f"{face.lower()}-zoom-4x.gif")
