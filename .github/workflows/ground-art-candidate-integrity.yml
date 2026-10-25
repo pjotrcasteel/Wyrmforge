@@ -7,8 +7,10 @@ on:
       - 'tools/art/build_ground_material_probe.py'
       - 'tools/art/audit_ground_source_art.py'
       - 'tools/art/quilt_ground_material_study.py'
+      - 'tools/art/ground_transition_study.py'
       - 'tools/art/tests/test_ground_material_probe.py'
       - 'tools/art/tests/test_ground_quilt_study.py'
+      - 'tools/art/tests/test_ground_transition_study.py'
       - '.github/workflows/ground-art-candidate-integrity.yml'
   workflow_dispatch:
 permissions:
@@ -41,7 +43,9 @@ jobs:
         run: python tools/art/audit_ground_source_art.py --output "$RUNNER_TEMP/ground-material-probes"
       - name: Create two source-only six-variant seam-cut quilting comparisons
         run: python tools/art/quilt_ground_material_study.py --output "$RUNNER_TEMP/ground-material-probes"
-      - name: Upload twelve seam studies, full source audit, and two quilting studies
+      - name: Create source-only material transition comparisons at mobile viewport sizes
+        run: python tools/art/ground_transition_study.py --output "$RUNNER_TEMP/ground-material-probes"
+      - name: Upload twelve seams, 36-source audit, quilts, and portrait transition studies
         uses: actions/upload-artifact@v4
         with:
           name: wet-forest-grass-mud-repeat-studies
