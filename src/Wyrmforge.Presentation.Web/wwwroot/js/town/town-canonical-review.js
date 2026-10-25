@@ -96,8 +96,29 @@ export async function initializeTown3DReview(canvas,status,options={}) {
     engine.render();
     let peak=0;const pixels=engine.pixels();
     for(let i=0;i<pixels.length;i+=4)peak=Math.max(peak,pixels[i],pixels[i+1],pixels[i+2]);
+    // Pixel-accuracy acceptance uses the official source painting, not a redrawn mock-up.
+    // gl.readPixels is bottom-up; the canonical image canvas is top-down.
+    let referenceMae=null;
+    if(!relit&&!zero&&!orbit&&canvas.width&&canvas.height){
+      const source=textures[mode].image;
+      const expected=document.createElement('canvas');
+      expected.width=canvas.width;expected.height=canvas.height;
+      const context=expected.getContext('2d',{willReadFrequently:true});
+      context.imageSmoothingEnabled=true;
+      context.drawImage(source,centerX-visibleSourceWidth/2,0,visibleSourceWidth,FRAME.height,
+        0,0,canvas.width,canvas.height);
+      const reference=context.getImageData(0,0,canvas.width,canvas.height).data;
+      let total=0;
+      for(let y=0;y<canvas.height;y++)for(let x=0;x<canvas.width;x++){
+        const sourceIndex=(y*canvas.width+x)*4;
+        const gpuIndex=((canvas.height-1-y)*canvas.width+x)*4;
+        for(let channel=0;channel<3;channel++)
+          total+=Math.abs(reference[sourceIndex+channel]-pixels[gpuIndex+channel]);
+      }
+      referenceMae=total/(canvas.width*canvas.height*3);
+    }
     lastGeometry={...projection.stats,mode,district,orbit,framebuffer:[canvas.width,canvas.height],
-      peakRgb:peak,objectCount:projection.volumes.length+1,
+      peakRgb:peak,referenceMae,objectCount:projection.volumes.length+1,
       drawCalls:engine.diagnostics().drawCalls,selectedCameraSourceWidth:visibleSourceWidth,
       renderer:engine.diagnostics().backend};
     status.textContent=JSON.stringify(lastGeometry);
