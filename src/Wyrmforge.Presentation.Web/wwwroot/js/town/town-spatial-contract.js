@@ -88,7 +88,7 @@ export function buildTownSpatialIndex(scene, parsed, {cellSize = .25, standingHe
         for (const [index, vertices] of shells.entries()) {
             const minZ = Math.min(...vertices.map(v => v[2]));
             const maxZ = Math.max(...vertices.map(v => v[2]));
-            if (maxZ <= 0) continue;
+            if (maxZ < 0) continue;
             const hull = convexHull(vertices.map(([x, y]) => [x, y]));
             if (node.tags.includes("navigation")) {
                 walkable.push({id: `${node.id}#${index}`, footprint: hull});
