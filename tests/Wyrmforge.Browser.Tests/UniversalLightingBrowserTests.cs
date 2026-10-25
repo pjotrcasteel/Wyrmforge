@@ -167,7 +167,38 @@ public sealed class UniversalLightingBrowserTests : PageTest
         await VerifyOakLayerShadowsAsync(canvas, width);
         await VerifyActorSourceLifecycleAsync(canvas, width);
         await VerifyTownFixturesAsync(canvas, width);
+        await VerifyNightVisibilityAsync(canvas, width);
         await VerifyTemporalStabilityAsync(canvas, width);
+    }
+
+    private async Task VerifyNightVisibilityAsync(ILocator canvas, int width)
+    {
+        // The night review must use real framebuffer pixels, not a CSS brightness or overlay proxy.
+        // Capture each camera under the same frozen geometry with night, day and no illumination.
+        var comparisons = new List<object>();
+        foreach (var focus in new[] { "actors", "oak", "town", "water" })
+        {
+            await ConfigureAsync(canvas, new { lighting = "default", focus, profile = "night", view = "lit",
+                fireball = true, torch = true, spot = true, rune = false, frame = 0, progress = .25 });
+            var night = await PixelHashAsync(canvas);
+            var nightPixels = await canvas.EvaluateAsync<int>(
+                "c => { const p=gpuProof.proofPixels(c); let n=0; for(let i=0;i<p.length;i+=4) if(p[i]||p[i+1]||p[i+2]) n++; return n; }");
+            Assert.IsGreaterThan(0, nightPixels, $"{focus} night must expose at least some world geometry to inspection.");
+            await CaptureAsync(width, $"night-review-{focus}");
+            await ConfigureAsync(canvas, new { profile = "day" });
+            var day = await PixelHashAsync(canvas);
+            Assert.AreNotEqual(night, day, $"{focus} must actually respond to the day/night environment.");
+            await CaptureAsync(width, $"day-review-{focus}");
+            await ConfigureAsync(canvas, new { profile = "zero" });
+            Assert.IsTrue(await canvas.EvaluateAsync<bool>(
+                "c => gpuProof.proofPixels(c).every((v,i) => i%4===3 || v===0)"),
+                $"{focus} zero-light reference must be completely black.");
+            await ConfigureAsync(canvas, new { profile = "night" });
+            Assert.AreEqual(night, await PixelHashAsync(canvas),
+                $"{focus} night must restore the same frozen framebuffer after day/zero inspection.");
+            comparisons.Add(new { focus, nightVisiblePixels = nightPixels, dayDiffers = true, zeroIsBlack = true });
+        }
+        await RecordComparisonAsync(width, "night-visibility-review", comparisons);
     }
 
     private async Task VerifyPoseShadowsAsync(ILocator canvas, int width)
