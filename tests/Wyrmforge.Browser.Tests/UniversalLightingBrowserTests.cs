@@ -613,5 +613,9 @@ public sealed class UniversalLightingBrowserTests : PageTest
             """);
         await File.WriteAllTextAsync(Path.Combine(directory, $"gpu-{width}-{name}.json"), measurements);
         await Page.ScreenshotAsync(new() { Path = Path.Combine(directory, $"gpu-{width}-{name}.png"), FullPage = true });
+        await Page.Locator(".gpu-proof canvas").ScreenshotAsync(new()
+        {
+            Path = Path.Combine(directory, $"gpu-{width}-{name}-canvas.png")
+        });
     }
 }
