@@ -73,7 +73,8 @@ def mismatch(existing: np.ndarray, candidate: np.ndarray, top: bool, left: bool,
 def patch_quilt(
     images: list[np.ndarray], *, seed: int = 17, width: int = 720,
     patch_size: int = 180, overlap: int = 44, candidates: int = 36,
-    diversity_strength: float = 0.15,
+    diversity_strength: float = 0.15, preferred_source: int | None = None,
+    preference_weight: float = 0.0,
 ) -> tuple[np.ndarray, list[int]]:
     if len(images) != 6 or any(i.shape != images[0].shape or i.ndim != 3 or i.shape[-1] != 3 for i in images):
         raise ValueError("Exactly six equal RGB sources are required")
@@ -83,6 +84,8 @@ def patch_quilt(
         raise ValueError("Each source variant requires at least one candidate per patch")
     if not 0 <= diversity_strength <= 1:
         raise ValueError("Diversity strength must be between 0 and 1")
+    if (preferred_source is not None and not 0 <= preferred_source < len(images)) or not 0 <= preference_weight <= 1:
+        raise ValueError("Invalid source preference")
     canvas = np.zeros((width, width, 3), dtype=np.uint8)
     rng = np.random.default_rng(seed)
     step = patch_size - overlap
@@ -113,7 +116,8 @@ def patch_quilt(
                 candidates_in_budget = [option for option in options
                     if option[0] <= absolute_best * 1.45 + 100.0]
                 best = min(candidates_in_budget, key=lambda option: (
-                    option[0] + max(absolute_best, 100.0) * diversity_strength * source_usage[option[1]],
+                    option[0] + max(absolute_best, 100.0) * diversity_strength * source_usage[option[1]]
+                    + (max(absolute_best, 100.0) * preference_weight if preferred_source is not None and option[1] != preferred_source else 0),
                     option[0], option[1],
                 ))
             else:
