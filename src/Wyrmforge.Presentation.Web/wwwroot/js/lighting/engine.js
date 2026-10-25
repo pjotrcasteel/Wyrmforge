@@ -26,8 +26,9 @@ export class LightingEngine {
         this.scene.add(this.ambient);
         this.objects = new Map(); this.lights = new Map();
         this.geometries = new Map(); this.textures = new Map();
-        this.shadowViews = shadowViews ?? this.qualitySettings.maxShadowCost;
-        this.maxLights = maxLights ?? this.qualitySettings.maxLights;
+        // Preserve the established G1 default until an explicit mobile profile is selected.
+        this.shadowViews = shadowViews ?? (quality === 'medium' ? 8 : this.qualitySettings.maxShadowCost);
+        this.maxLights = maxLights ?? (quality === 'medium' ? 8 : this.qualitySettings.maxLights);
         this.alive = true;
         this.debugView = 'lit';
         this.halfWidth = 5;
@@ -253,8 +254,26 @@ float proofShadowVisibility() {
         gl.readPixels(0, 0, this.canvas.width, this.canvas.height, gl.RGBA, gl.UNSIGNED_BYTE, data);
         return data;
     }
+    setQuality(quality) {
+        if (!Object.hasOwn(G4_QUALITY_PROFILES, quality)) throw new RangeError('Unknown GPU quality profile');
+        if (quality === this.quality) return;
+        this.quality = quality;
+        this.qualitySettings = G4_QUALITY_PROFILES[quality];
+        this.maxLights = this.qualitySettings.maxLights;
+        this.shadowViews = this.qualitySettings.maxShadowCost;
+        for (const light of this.lights.values()) {
+            if (!light.shadow) continue;
+            const resolution = this.qualitySettings.shadowResolution;
+            if (light.shadow.mapSize.x === resolution && light.shadow.mapSize.y === resolution) continue;
+            light.shadow.map?.dispose();
+            light.shadow.map = null;
+            light.shadow.mapSize.set(resolution, resolution);
+            light.shadow.needsUpdate = true;
+        }
+    }
     diagnostics() {
-        return { backend: 'WebGL2 / Three 0.186.1', view: this.debugView, depthSource: this.selected?.find(l => l.shadow)?.id ?? null, framebuffer: [this.canvas.width, this.canvas.height], objects: this.objects.size,
+        return { quality: this.quality, shadowResolution: this.qualitySettings.shadowResolution,
+            maxLights: this.maxLights, shadowViews: this.shadowViews, backend: 'WebGL2 / Three 0.186.1', view: this.debugView, depthSource: this.selected?.find(l => l.shadow)?.id ?? null, framebuffer: [this.canvas.width, this.canvas.height], objects: this.objects.size,
             lights: this.selected?.map(l => ({ id: l.id, ownerId: l.ownerId, type: l.type, position: l.position, intensity: l.intensity, shadow: l.shadow, views: l.shadowViews })),
             drawCalls: this.renderer.info.render.calls, triangles: this.renderer.info.render.triangles,
             textures: this.renderer.info.memory.textures, geometries: this.renderer.info.memory.geometries,
