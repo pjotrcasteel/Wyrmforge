@@ -561,6 +561,36 @@ public sealed class UniversalLightingBrowserTests : PageTest
         }
     }
 
+    [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
+    public async Task SharedGpu_QualityProfiles_KeepLitSceneVisibleAndBoundFramebuffer(int width, int height)
+    {
+        var root = Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL");
+        if (string.IsNullOrWhiteSpace(root)) { Assert.Inconclusive("Requires the published Blazor application."); return; }
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.GotoAsync(root.TrimEnd('/') + "/arena-light-engine");
+        var canvas = Page.Locator(".gpu-proof canvas");
+        await Expect(canvas).ToHaveAttributeAsync("data-ready", "true", new() { Timeout = 90000 });
+        await Page.EvaluateAsync("async () => { window.gpuProof = await import('./js/lighting/proof-scene.js'); }");
+        foreach (var quality in new[] { "low", "medium", "high", "diagnostic" })
+        {
+            await Page.GetByLabel("GPU quality").SelectOptionAsync(quality);
+            await Expect(canvas).ToHaveAttributeAsync("data-quality", quality);
+            var visible = await canvas.EvaluateAsync<bool>("c => gpuProof.proofPixels(c).some((v,i) => i%4!==3 && v>0)");
+            Assert.IsTrue(visible, $"The {quality} GPU quality profile must preserve a lit scene.");
+            var bounds = await canvas.EvaluateAsync<int[]>("c => [c.width,c.height]");
+            Assert.IsGreaterThan(bounds[0], 0);
+            Assert.IsGreaterThan(bounds[1], 0);
+            await CaptureAsync(width, $"quality-{quality}");
+        }
+        await Page.GetByLabel("GPU quality").SelectOptionAsync("medium");
+        await Page.GetByLabel("Adaptive GPU quality").SetCheckedAsync(true);
+        await Page.WaitForFunctionAsync("() => gpuProof.proofDiagnostics(document.querySelector('.gpu-proof canvas')).adaptive === true");
+        await Page.GetByLabel("Adaptive GPU quality").SetCheckedAsync(false);
+        await Page.WaitForFunctionAsync("() => gpuProof.proofDiagnostics(document.querySelector('.gpu-proof canvas')).adaptive === false");
+    }
+
     private static Task<string> PixelHashAsync(ILocator canvas) => canvas.EvaluateAsync<string>(
         "c => { let hash=2166136261; for(const x of gpuProof.proofPixels(c)) hash=Math.imul(hash^x,16777619); return String(hash>>>0); }");
 
