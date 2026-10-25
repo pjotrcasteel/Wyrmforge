@@ -38,3 +38,13 @@ Only original-preserving source-art tools, review derivatives, integrity tests a
 3. Repeat/contact sheets visibly support review; passing seam checks alone is insufficient.
 4. Owner approves appearance and semantic identity before any separate downstream integration.
 5. Downstream lighting, physical material and mobile scene acceptance are external dependencies, never claimed by this PR.
+
+## Production reset — Trampled Earth visual acceptance first (25 October 2026)
+
+The six quilted Trampled Earth candidates are **not** six completed role-specific artworks. Their role labels are review intents only. Do not call them finished paths, cart ruts or accepted assets merely because the generator passes seam and hash tests.
+
+**Freeze additional generic texture-generation features.** The next deliverable is six *artistically distinct* Trampled Earth PNGs with unmistakable silhouettes: (1) narrow soft footpath, (2) broad compacted path, (3) paired longitudinal cart ruts, (4) visibly wetter worn soil, (5) irregular grass-invaded path edge, and (6) fragmented chaotic trampling. Preserve the source paintings and make art-only derivatives in a separately named review output; no gameplay road authority or C# geometry.
+
+Acceptance is visual, not numerical: present six full-resolution PNGs and a single side-by-side sheet, plus mobile-scale and 2×2 repetition comparisons. Specifically reject indistinguishable quilt candidates, mirrored landmarks, central stamped shapes, unnatural border bands and any candidate whose named silhouette is absent. The owner chooses which to keep or repaint. No promotion to runtime or material channels before visual sign-off.
+
+**Roadmap checkpoint:** source preservation and candidate infrastructure done; semantic identity and visual quality not achieved; no family approved; no relightable material production or game integration in this PR. Avoid expanding diagnostic tools instead of producing the six artworks.
