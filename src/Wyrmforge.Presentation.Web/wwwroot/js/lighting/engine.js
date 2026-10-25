@@ -28,7 +28,6 @@ export class LightingEngine {
         this.halfWidth = 5;
         this.inspection = new LightingInspection();
         this.materialBudget = { maps: 0, transmissive: 0, ao: 0 };
-        this.textureVariants = new Map();
     }
     registerGeometry(id, geometry) {
         if (this.geometries.has(id)) throw new Error(`Duplicate geometry ${id}`);
@@ -255,7 +254,6 @@ float proofShadowVisibility() {
         for (const geometry of this.geometries.values()) geometry.dispose();
         for (const texture of this.textures.values()) texture.dispose();
         this.inspection.dispose();
-        this.textureVariants.clear();
         this.renderer.dispose();
     }
 }
