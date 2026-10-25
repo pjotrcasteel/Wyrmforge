@@ -121,16 +121,20 @@ export function configureProof(canvas, options) {
         environment.ambient = 0; environment.emission = false;
     } else if (p.lighting === 'source-lifecycle') {
         // Diagnostic descriptors only: same receivers, BRDF, attenuation and shadow budget.
-        const [x, y, z] = objects.find(o => o.id === p.inspectObject).position;
+        const [x, y, z] = objects.find(o => o.id === p.inspectObject)?.position ?? [-4, -3, .55];
         lights = [light('fireball', [x - 1, y - p.sourceDistance, z + 2.4], '#ff8d42', 32, 'point', 10),
             light('torch', [x + 1, y - 2, z + 2.4], '#ffc27a', 10, 'point', 5)];
         lights[0].enabled = p.fireball; lights[1].enabled = p.torch;
         for (const source of lights) source.range = 12;
         environment.ambient = 0; environment.emission = false;
     } else if (p.lighting !== 'scene') throw new RangeError('Unknown lighting rig');
+    if (p.lighting !== 'scene') {
+        // Scene fixture cores would falsely mark different source positions in inspection rigs.
+        objects.splice(objects.findIndex(o => o.id === 'lantern-core'), 1);
+    }
     for (const l of lights) { l.enabled &&= !zero; l.castsShadow &&= p.shadows; }
-    if (p.fireball) objects.push(object('fireball-core', 'sphere', 'flame', firePosition, [1, 1, 1], { castsShadow: false }));
-    if (p.rune) objects.push(object('rune-prop', 'box', 'rune', [2, -2, .25], [.35, .35, .5]));
+    if (p.fireball && p.lighting === 'scene') objects.push(object('fireball-core', 'sphere', 'flame', firePosition, [1, 1, 1], { castsShadow: false }));
+    if (p.rune && p.lighting === 'scene') objects.push(object('rune-prop', 'box', 'rune', [2, -2, .25], [.35, .35, .5]));
     for (const o of objects) {
         if (o.id === p.inspectObject) {
             o.castsShadow = p.castsShadow; o.receivesShadow = p.receivesShadow; o.receivesLight = p.receivesLight;
@@ -141,7 +145,7 @@ export function configureProof(canvas, options) {
     const materials = state.materials.map(m => ({ ...m, alphaCutoff: m.id === 'cutout-upper' && !p.cutoutAlpha ? 0 : m.alphaCutoff, normal: p.normals ? m.normal : undefined, reflection: p.reflections ? m.reflection : 'off',
         emissionIntensity: m.id === 'flame' && !p.torch && !p.fireball ? 0 : m.emissionIntensity }));
     // Disabling a fixture extinguishes its source surface too.
-    if (!p.torch) objects.splice(objects.findIndex(o => o.id === 'lantern-core'), 1);
+    if (!p.torch && p.lighting === 'scene') objects.splice(objects.findIndex(o => o.id === 'lantern-core'), 1);
     state.engine.apply({ version: 1, time: 0, lights, materials, objects, environment });
     state.engine.setDebugView('lit');
     state.engine.render();

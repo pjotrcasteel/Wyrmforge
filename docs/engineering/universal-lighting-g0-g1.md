@@ -384,3 +384,9 @@ this diagnostic rig; this is not the normal Gothic-night environment.
 
 Validation of this new slice is pending published-app CI. Phone viewport captures
 are browser evidence, not physical iOS/Android performance or artistic acceptance.
+
+Main recheck: `93ce11e8` adds production Fireball V5 and release versioning.
+Those changes are left on main; this proof does not integrate their visual assets.
+Inspection rigs hide the scene's flame cores, which otherwise mark unrelated
+positions despite having emission disabled. Selecting an absent optional cutout
+uses the same explicit fallback anchor as the neutral-key rig.
