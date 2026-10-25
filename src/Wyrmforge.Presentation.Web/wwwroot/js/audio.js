@@ -14,6 +14,8 @@
     const lastCue = new Map();
     const variants = new Map();
     const fireballShuffleBags = new Map();
+    const burningGroundVoices = new Map();
+    const burningGroundPending = new Set();
 
     function nextFireballTake(key, count) {
         if (count <= 1) return 0;
@@ -338,6 +340,64 @@
             if (status) status.textContent = 'SOUND COULD NOT LOAD: ' + name.toUpperCase();
         });
         return true;
+    }
+
+
+    // The simulation owns patch lifetime. Looped original recordings are faded out when
+    // the corresponding registered patch expires, rather than playing a fixed 3.9s tail.
+    function stopBurningGround(id) {
+        burningGroundPending.delete(id);
+        const voice = burningGroundVoices.get(id);
+        if (!voice) return;
+        burningGroundVoices.delete(id);
+        const at = context?.currentTime ?? 0;
+        voice.gain.gain.cancelScheduledValues(at);
+        voice.gain.gain.setTargetAtTime(0.0001, at, 0.06);
+        try { voice.source.stop(at + 0.25); } catch { /* Already stopped. */ }
+    }
+
+    function syncBurningGround(transitions) {
+        for (const transition of transitions ?? []) {
+            const { id, type, remainingSeconds } = transition;
+            if (type === 'stop' || remainingSeconds <= 0 || !enabled || document.hidden) {
+                stopBurningGround(id);
+                continue;
+            }
+            if (type !== 'start' || burningGroundVoices.has(id) || burningGroundPending.has(id)) continue;
+            if (!recordedManifest || !unlocked || !context || context.state === 'closed') continue;
+            // Cap overlapping loops on mobile; new patches remain visually authoritative.
+            if (burningGroundVoices.size + burningGroundPending.size >= 3) continue;
+            const definition = recordedManifest.cues?.['fire-burning'];
+            const options = definition?.variants;
+            if (!options?.length) continue;
+            const index = nextFireballTake('fire-burning-loop', options.length);
+            const entry = options[index];
+            burningGroundPending.add(id);
+            void loadRecordedBuffer(entry).then(buffer => {
+                if (!burningGroundPending.has(id) || !enabled || document.hidden || !context || context.state === 'closed') return;
+                const source = context.createBufferSource();
+                const gain = context.createGain();
+                source.buffer = buffer;
+                source.loop = true;
+                gain.gain.value = 0.0001;
+                source.connect(gain);
+                gain.connect(buses.combat);
+                const at = context.currentTime;
+                gain.gain.setTargetAtTime(Math.min(0.12, design.palette['fire-burning'].volume * 0.45), at, 0.07);
+                burningGroundVoices.set(id, { source, gain });
+                source.onended = () => {
+                    if (burningGroundVoices.get(id)?.source === source) burningGroundVoices.delete(id);
+                    source.disconnect();
+                    gain.disconnect();
+                };
+                source.start(at);
+            }).catch(error => console.warn('Burning ground recording unavailable:', error))
+                .finally(() => burningGroundPending.delete(id));
+        }
+    }
+
+    function stopAllBurningGround() {
+        for (const id of [...burningGroundVoices.keys(), ...burningGroundPending]) stopBurningGround(id);
     }
 
     function playSpellImpact(school, preview = false, sound = design.palette.impact) {
@@ -724,6 +784,7 @@
             unlock();
             play('ui', true);
         } else {
+            stopAllBurningGround();
             fadeMusicOut(420);
         }
         if (status) status.textContent = enabled ? '' : 'SFX MUTED';
@@ -917,6 +978,7 @@
     document.addEventListener('keydown', unlock, { capture: true });
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
+            stopAllBurningGround();
             for (const track of musicPlayers.values()) track.player.pause();
             forestPlayer?.player.pause();
             ++forestFadeGeneration;
@@ -947,7 +1009,7 @@
     else mountControls();
 
     window.wyrmforgeAudio = {
-        play, setEnabled, testSound, isEnabled: () => enabled, updateVolume, setUiMaterial: selectUiMaterial,
+        play, syncBurningGround, stopAllBurningGround, setEnabled, testSound, isEnabled: () => enabled, updateVolume, setUiMaterial: selectUiMaterial,
         diagnostics: () => ({ enabled, state: context?.state ?? 'uninitialized', session: navigator.audioSession?.type ?? 'unsupported',
             identity: recordedManifest ? 'Recorded Dark Fantasy' : 'recordings-loading', audioRevision, uiMaterial, music: currentMusic,
             musicPlaying: currentMusic ? musicIsPlaying(currentMusic) : false, musicTracks: [...musicPlayers.values()].map(track => ({ kind: track.kind, paused: track.player.paused, level: track.level })),
