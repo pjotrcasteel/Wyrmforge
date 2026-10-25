@@ -30,3 +30,22 @@ test("Town parser refuses invalid vertex references, duplicate semantic IDs and 
     assert.throws(() => parseTownObj(valid + "g town.test\nusemtl stone\nf 1 2 3\n"), TypeError);
     assert.throws(() => parseTownObj(prefix.replace("g town.test", "g ../outside") + "f 1 2 3\n"), TypeError);
 });
+
+test("Gothic T2 mesh includes 27 material-bound 3D groups and 30 validated semantic nodes", async () => {
+    const obj = await readFile(new URL("art/town/geometry/t2-central-square-gothic.obj", root), "utf8");
+    const scene = JSON.parse(await readFile(new URL("art/town/geometry/t2-central-square-gothic.scene.json", root), "utf8"));
+    const parsed = parseTownObj(obj);
+    assert.equal(parsed.vertices.length, 3882);
+    assert.equal(parsed.triangleCount, 3250);
+    assert.equal(parsed.groups.size, 27);
+    assert.equal(scene.nodes.length, 30);
+    for (const node of scene.nodes.filter(n => n.meshId)) {
+        const group = parsed.groups.get(node.meshId.split("#")[1]);
+        assert.ok(group, node.id);
+        assert.equal(group.materialId, node.materialId);
+    }
+    for (const id of ["town.center.world-gate-masonry", "town.center.world-gate-banners",
+                      "town.center.well-brickwork", "town.center.well-roof-tiles",
+                      "town.center.noticeboard-parchment", "town.center.paving-cobbles-mid"])
+        assert.ok(parsed.groups.has(id), id);
+});
