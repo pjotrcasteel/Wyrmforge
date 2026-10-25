@@ -6,6 +6,7 @@ namespace Wyrmforge.Domain.Combat.Projectiles;
 
 public sealed class ProjectileState(Vector2D position, Vector2D velocity, double radius, double damage, SpellId spell, ProjectileEffects effects)
 {
+    public long Id { get; internal set; }
     public Vector2D Position { get; set; } = position;
     public Vector2D Velocity { get; } = velocity;
     public double Radius { get; } = radius;
