@@ -1,6 +1,7 @@
 // Presentation only: C# remains authoritative for movement, contact damage and death.
 import { createSpriteAnimationState, updateSpriteAnimation } from './sprite-animation.js';
 import { createSpriteLayerCompositor } from './sprite-layer-compositor.js';
+import { HOLLOW_RUN, sampleHollowRun } from './hollow-motion.js';
 import { createHollowInjuryAssets, selectHollowInjuryVariant, hollowInjuryLabReview } from './hollow-injury-variants.js';
 import { createHollowVariantAssets, selectHollowArmVariant } from './hollow-arm-variants.js';
 const base = new URL('../art/enemies/hollow-rigged/', import.meta.url);
@@ -73,17 +74,17 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
         if(Number(enemy.kind)!==0)continue;
         const id=enemy.entityId;present.add(id);
         let pose=state.entities.get(id);
-        if(!pose){pose={x:enemy.x,y:enemy.y,distance:0,direction:'S',clip:'walk',frame:0,injuryVariant:selectHollowInjuryVariant(id,injuryLabReview),armVariant:selectHollowArmVariant(id),attackAt:null,age:0,lastMove:-1,animation:createSpriteAnimationState()};state.entities.set(id,pose);}
+        if(!pose){pose={x:enemy.x,y:enemy.y,distance:0,visualDistance:0,runSpeed:null,lastSampleAge:null,direction:'S',clip:'walk',frame:0,injuryVariant:selectHollowInjuryVariant(id,injuryLabReview),armVariant:selectHollowArmVariant(id),attackAt:null,age:0,lastMove:-1,animation:createSpriteAnimationState()};state.entities.set(id,pose);}
         const dx=enemy.x-pose.x,dy=enemy.y-pose.y,distance=Math.hypot(dx,dy);
         const advancing=!snapshot.paused&&!snapshot.ended&&!enemy.frozen;
         if(advancing)pose.age+=dt;
         if(advancing&&distance>.001&&distance<64){
-            pose.distance+=distance;
-            pose.lastMove=pose.age;
             pose.direction=hollowDirection(dx,dy,pose.direction);
         }
-        if(distance>=64){pose.distance=0;pose.attackAt=null;pose.animation=createSpriteAnimationState();}
+        if(distance>=64){pose.distance=0;pose.visualDistance=0;pose.runSpeed=null;pose.lastSampleAge=null;
+            pose.lastMove=-1;pose.attackAt=null;pose.animation=createSpriteAnimationState();}
         pose.x=enemy.x;pose.y=enemy.y;
+        const locomotion=sampleHollowRun(pose,distance,dt,advancing);
         if(pose.attackAt!=null&&pose.age-pose.attackAt>=16/12)pose.attackAt=null;
         const player=snapshot.player;
         const touching=player&&Math.hypot(enemy.x-player.x,enemy.y-player.y)<=(Number(enemy.radius)||11)+(Number(player.radius)||0);
@@ -97,7 +98,7 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
         // to this creature adapter. Profile data owns stride, regions and clips.
         const config=profile??fallbackProfile;
         const sample=updateSpriteAnimation(pose.animation,config,{deltaSeconds:dt,
-            distance:advancing&&distance<64?distance:0,moving:pose.age-pose.lastMove<.12,
+            distance:locomotion.distance,moving:locomotion.moving,
             paused:snapshot.paused||snapshot.ended,frozen:enemy.frozen,reducedMotion,direction:pose.direction,
             action:pose.attackAt==null?null:{name:'attack',token:pose.attackAt}});
         pose.direction=sample.direction;pose.clip=sample.clip;pose.frame=sample.frame;pose.baseFrame=sample.baseFrame;pose.layered=sample.layered;
@@ -159,8 +160,8 @@ export function drawHollowCorpses(ctx,state,reducedMotion=false){
     }
 }
 export function hollowDiagnostics(state){
-    return {ready:hollowSpritesReady(),capeFreeReady:arms.ready(),injuriesReady:injuries.ready(),armsReady:arms.ready(),injuryLabReview,layers:compositor?{...compositor.stats,estimatedBytes:compositor.estimatedBytes()}:null,entities:[...state.entities].map(([entityId,p])=>({entityId,injuryVariant:p.injuryVariant,armVariant:p.armVariant,injuryDrawn:injuries.ready()&&p.injuryVariant==='broken-leg-left'&&(p.clip==='walk'||p.clip==='attack'),clip:p.clip,frame:p.frame,direction:p.direction,baseFrame:p.baseFrame,phase:p.animation?.phase,layered:p.layered})),
+    return {ready:hollowSpritesReady(),capeFreeReady:arms.ready(),injuriesReady:injuries.ready(),armsReady:arms.ready(),injuryLabReview,layers:compositor?{...compositor.stats,estimatedBytes:compositor.estimatedBytes()}:null,entities:[...state.entities].map(([entityId,p])=>({entityId,injuryVariant:p.injuryVariant,armVariant:p.armVariant,runSpeed:p.runSpeed,observedDistance:p.distance,visualDistance:p.visualDistance,injuryDrawn:injuries.ready()&&p.injuryVariant==='broken-leg-left'&&(p.clip==='walk'||p.clip==='attack'),clip:p.clip,frame:p.frame,direction:p.direction,baseFrame:p.baseFrame,phase:p.animation?.phase,layered:p.layered})),
         corpses:[...state.corpses.values()].map(p=>({entityId:p.entityId,direction:p.direction,age:state.clock-p.at,frame:Math.min(23,Math.floor((state.clock-p.at)*12))}))};
 }
 // Preserve playback/fallback diagnostics while the asset bundle is loading.
-const fallbackProfile={locomotion:{clip:'walk',frames:16,stride:18.387096774193548},actions:{attack:{clip:'attack',frames:16,fps:12,mode:'fullBody',reducedFrame:7}}};
+const fallbackProfile={locomotion:{clip:'walk',frames:HOLLOW_RUN.frames,stride:HOLLOW_RUN.stride},actions:{attack:{clip:'attack',frames:16,fps:12,mode:'fullBody',reducedFrame:7}}};
