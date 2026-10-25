@@ -110,7 +110,8 @@ export class LightingEngine {
         for (const o of s.objects) for (const key of ['geometry', 'occluderGeometry'])
             if (o[key] && !this.geometries.has(o[key])) throw new Error(`Missing geometry ${o[key]}`);
         const selected = selectLights(s, this.shadowViews, this.maxLights);
-        for (const id of this.lights.keys()) if (!selected.some(l => l.id === id)) this.removeLight(id);
+        const selectedIds = new Set(selected.map(light => light.id));
+        for (const id of this.lights.keys()) if (!selectedIds.has(id)) this.removeLight(id);
         for (const d of selected) {
             let light = this.lights.get(d.id);
             if (light && light.userData.type !== d.type) { this.removeLight(d.id); light = null; }
@@ -130,7 +131,8 @@ export class LightingEngine {
             if (light.isSpotLight) { light.angle = d.coneAngle; light.penumbra = d.penumbra; }
         }
         const materialById = new Map(s.materials.map(m => [m.id, m]));
-        for (const id of this.objects.keys()) if (!s.objects.some(o => o.id === id)) this.removeObject(id);
+        const objectIds = new Set(s.objects.map(object => object.id));
+        for (const id of this.objects.keys()) if (!objectIds.has(id)) this.removeObject(id);
         for (const d of s.objects) {
             const md = materialById.get(d.material);
             const signature = JSON.stringify([d.geometry, d.occluderGeometry, md, d.receivesLight]);
