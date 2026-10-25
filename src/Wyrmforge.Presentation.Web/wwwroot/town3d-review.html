@@ -12,7 +12,7 @@
     h1 { font-size:clamp(18px,3vw,25px); margin:0 0 8px; }
     p { line-height:1.45; max-width:72ch; }
     small { color:#bbc4d2; }
-    canvas { display:block; width:100%; height:auto; aspect-ratio:16/10; image-rendering:pixelated;
+    canvas { display:block; width:100%; height:auto; aspect-ratio:11/15; image-rendering:pixelated;
              background:#000; border:1px solid #475364; }
     .controls { display:flex; flex-wrap:wrap; gap:12px; padding:15px 0; }
     label { display:grid; gap:5px; font-size:13px; }
@@ -20,13 +20,14 @@
     #town3d-status { font-family:ui-monospace,monospace; font-size:12px; color:#a5c8ca; min-height:1.5em; }
     #town3d-status[data-error=true] { color:#ff9c9c; }
     a { color:#adcbf1; }
+    @media (min-width: 700px) { canvas { aspect-ratio:16/10; } }
   </style>
 </head>
 <body>
   <main>
     <h1>WyrmForge — 3D Town central-square review</h1>
     <p><strong>Nonproduction T2 preview.</strong> Uses the existing shared GPU lighting engine with actual
-      3D paving, well, canopy, noticeboard and lantern geometry. The blue actor is a temporary
+      3D cobbled paving, stone well, roof shingles, Gothic World Gate, banners, noticeboard, foliage and lantern geometry. The blue actor is a temporary
       footpoint/occlusion probe, <em>not</em> final NPC artwork or AI.</p>
     <canvas id="town3d-canvas" width="640" height="400" aria-label="GPU-rendered 3D Town central-square prototype"></canvas>
     <div class="controls">
