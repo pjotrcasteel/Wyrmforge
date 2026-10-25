@@ -5,6 +5,7 @@ import * as T from "../lighting/vendor/three.module.js";
 import {LightingEngine} from "../lighting/engine.js";
 import {validateTownScene} from "./town-scene-schema.js";
 import {parseTownObj} from "./town-obj-parser.js";
+import {buildTownSpatialIndex} from "./town-spatial-contract.js";
 
 const base = new URL("../../art/town/geometry/", import.meta.url);
 const materialPalette = Object.freeze({
@@ -18,7 +19,7 @@ const materialPalette = Object.freeze({
     lantern: ["#d9a35f", .33]
 });
 const positions = Object.freeze({
-    "behind-well": [0, .50, .60],
+    "behind-well": [0, 1.45, .60],
     "behind-noticeboard": [-1.57, 1.04, .60],
     "in-front": [-1.57, -.75, .60]
 });
@@ -84,6 +85,10 @@ export async function initializeTown3DReview(canvas, status) {
     const [obj, scene] = await Promise.all([response[0].text(), response[1].json()]);
     validateTownScene(scene);
     const parsed = parseTownObj(obj);
+    const spatial = buildTownSpatialIndex(scene, parsed);
+    for (const [name, position] of Object.entries(positions))
+        if (!spatial.isWalkable(position[0], position[1], .16))
+            throw new Error(`Invalid 3D Town actor footpoint: ${name}`);
 
     const engine = new LightingEngine(canvas);
     for (const group of parsed.groups.values()) {
@@ -115,7 +120,8 @@ export async function initializeTown3DReview(canvas, status) {
     const api = {
         getState() {
             return {ready: true, sceneNodes: scene.nodes.length, triangles: parsed.triangleCount,
-                groups: [...parsed.groups.keys()], mode, actorPosition, view};
+                groups: [...parsed.groups.keys()], colliders: spatial.colliders.length,
+                walkableRegions: spatial.walkable.length, mode, actorPosition, view};
         },
         setMode(next) {
             if (!["day", "night", "zero"].includes(next)) throw new RangeError("Invalid environment");
