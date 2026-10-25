@@ -122,3 +122,17 @@ test('G4 bounded production selector matches full-sort reference for crowded sce
     assert.deepEqual(selectLights(snapshot(lights), 8, 8).map(l => l.id), expected);
     assert.deepEqual(selectLights(snapshot(lights), 8, 0), []);
 });
+
+test('G4 production selector preserves illumination when shadow views are exhausted', () => {
+    const lights = [emitter('spot', { type: 'spot', priority: 3 }),
+        emitter('point', { priority: 2 }), emitter('second', { priority: 1 })];
+    const result = selectLights(snapshot(lights), 1, 3);
+    assert.deepEqual(result.map(l => [l.id, l.shadow, l.shadowViews]),
+        [['spot', true, 1], ['point', false, 0], ['second', false, 0]]);
+    assert.equal(result.length, 3);
+});
+test('G4 production selector rejects nonfinite budgets without unbounded allocations', () => {
+    const s = snapshot([emitter('a'), emitter('b')]);
+    assert.deepEqual(selectLights(s, Infinity, NaN), []);
+    assert.deepEqual(selectLights(s, -1, 1).map(l => l.shadow), [false]);
+});
