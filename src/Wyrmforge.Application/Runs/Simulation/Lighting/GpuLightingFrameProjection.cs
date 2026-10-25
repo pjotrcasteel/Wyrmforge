@@ -71,6 +71,7 @@ public static class GpuLightingFrameProjection
             1, simulationTime,
             snapshot.Emitters
                 .Where(light => !light.ExpiresAtTick.HasValue || light.ExpiresAtTick.Value > snapshot.SimulationTick)
+                .OrderBy(light => light.Id, StringComparer.Ordinal)
                 .Select(light => new GpuLightEmitter(
                 light.Id, light.OwnerId, light.Type, light.Enabled,
                 [light.X, light.Y, light.Z],
