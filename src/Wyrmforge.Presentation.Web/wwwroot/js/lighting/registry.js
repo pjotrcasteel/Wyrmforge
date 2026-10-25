@@ -38,7 +38,7 @@ export function validateSnapshot(input) {
         for (const field of ['roughness', 'metalness', 'specular', 'alphaCutoff']) finite(m[field], field, 0, 1);
         finite(m.emissionIntensity, 'emissionIntensity', 0);
         // G3 optional physically motivated material controls; omitted fields retain G1 behavior.
-        for (const field of ['aoIntensity', 'normalScale', 'foliageTransmission'])
+        for (const field of ['aoIntensity', 'normalScale', 'foliageTransmission', 'wetness'])
             if (m[field] !== undefined) finite(m[field], field, 0, field === 'normalScale' ? 4 : 1);
         for (const field of ['aoMap', 'emissiveMap'])
             if (m[field] !== undefined && (typeof m[field] !== 'string' || !m[field].trim()))
