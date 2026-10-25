@@ -6,7 +6,7 @@ const out='art/source/bosses/ashfang/reviews/runtime-002/browser';fs.mkdirSync(o
  try{
   const page=await browser.newPage({viewport:{width:402,height:874},deviceScaleFactor:2});const errors=[];
   page.on('response',r=>{if(r.status()>=400)console.log('HTTP_ERROR',r.status(),r.url());});
-  page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error'){console.log('PAGE_ERROR',m.text());if(m.text().includes('arena drawing failed'))errors.push(m.text());}});page.on('requestfailed',r=>{if(r.url().includes('/ashfang/'))console.log('ASSET_FAILED',r.url(),r.failure());});
+  page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error'){console.log('PAGE_ERROR',m.text(),JSON.stringify(m.location()));if(m.text().includes('arena drawing failed'))errors.push(m.text());}});page.on('requestfailed',r=>{if(r.url().includes('/ashfang/'))console.log('ASSET_FAILED',r.url(),r.failure());});
   await page.goto('http://127.0.0.1:8880/hunt-lab?wyrm=Ashfang&ascendant=false&play=true&cast=true&invulnerable=true');
   await page.evaluate(async()=>{
    window.arena=await import('/js/arena.js');window.samples=[];window.captured={};window.pendingCapture=null;
@@ -38,7 +38,7 @@ const out='art/source/bosses/ashfang/reviews/runtime-002/browser';fs.mkdirSync(o
    if(key==='failure'){fs.writeFileSync(path.join(out,'failure-samples.json'),JSON.stringify(d,null,2));throw Error('Live failure: '+JSON.stringify({images:d.ashfang.errors,render:d.renderingFailed}));}
    await page.locator('.hunt-lab-surface').screenshot({path:path.join(out,key+'-phone.png')});
    if(key==='fire'){
-    assert.equal(d.ashfangVfx.fireStage,'strike');const before=JSON.stringify({pose:d.ashfang.entity,effects:d.ashfangEffects});await page.waitForTimeout(300);const still=await page.evaluate(()=>window.readFight());assert.equal(JSON.stringify({pose:still.ashfang.entity,effects:still.ashfangEffects}),before,'pause freezes sprite and effect progress');
+    assert.equal(d.ashfangVfx.fireStage,'strike');assert(d.sharedLighting.lights.some(l=>l.ownerId.startsWith('ashfang:')&&l.intensity>0),'live C# breath emitter reaches shared lighting snapshot');captures[key].sharedLights=d.sharedLighting.lights;const before=JSON.stringify({pose:d.ashfang.entity,effects:d.ashfangEffects});await page.waitForTimeout(300);const still=await page.evaluate(()=>window.readFight());assert.equal(JSON.stringify({pose:still.ashfang.entity,effects:still.ashfangEffects}),before,'pause freezes sprite and effect progress');
     await page.screenshot({path:path.join(out,'live-boss-phone.png'),fullPage:true});
    }
    if(key==='fire'&&process.argv.includes('--quick-fire')){console.log('QUICK_FIRE_CAPTURE');return;}
