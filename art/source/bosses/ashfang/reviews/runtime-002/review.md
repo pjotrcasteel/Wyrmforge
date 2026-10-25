@@ -1,4 +1,4 @@
-# Ashfang boss iteration 002 — in progress
+# Ashfang boss iteration 002 — locally validated branch candidate
 
 Owner rejected the brief four-hit fight and thin/missing VFX. Baseline deterministic studies reproduce victory in7.3–7.95s with the old forced max-rank evolved loadout, before any flyover. A real rank-I un-evolved hunter against the same1100hp survives51s in invulnerable standing-fire measurement, sees two flyovers and three grounded actions. The default preview must use that TierI loadout; keep the overpowered loadout explicitly labelled for stress testing. Do not globally nerf the player's spell or inflate every enemy's health to conceal the setup error.
 
@@ -31,3 +31,14 @@ Ashfang breath preparation/release and resolved meteor/cinder impacts now publis
 Preserved approved character scale, animation, source and atlases. Future shared LitSprite adoption requires exact-pose source-rendered albedo, normals, roughness, height/caster and ember-emission maps; never derive normals from current RGB or reuse another pose. Current native-pixel RGB atlases are transitional, not relightable material evidence. G3 engine work and Town/environment artwork remain owned by their current workstreams.
 
 Integration caught and repaired an upstream C# attribute syntax error in `GpuLightingFrameProjection` (repeated `property:` inside one attribute list). Build: zero warnings/errors; focused C# boss/shared lighting: 16 passed; merged JavaScript suite: 406 passed. Full fight raster-flame capture and broader C# regression are still pending on this checkpoint.
+
+
+## Final local receipt — 25 October 2026
+
+Code checkpoint `3dadd1a5` completes the revised pixel plume and shared-emitter integration. Actual Edge/C# replay passed with 1,571 samples and a 52-second invulnerable standing-fire Tier-I victory; six states captured (claw, fire, shadow-only rain, landing, enrage, early death). Fire capture explicitly verifies live C# shared-emitter descriptors. Pause freezes sprites/effects; reduced-motion passes; 320/390/402/844 widths have no horizontal overflow. Default manual mode is rank I, no evolution, no invulnerability: standing still loses while Ashfang survives. These numbers characterize this test loadout, not all real player builds or human balance.
+
+Inspected final fire, rain, landing, enrage and death captures. Removed duplicate legacy night screen tint that bleached the charcoal skin. Damage warnings now compose once above darkness; flame remains inside the marked cone and uses distinct native pixel ramps. The existing busy lair floor remains a separate environment-art limitation. Rain shadow visibility in dark terrain and broader human play feel still need owner/device review. Early-death capture proves entry to the source death sequence, not final cooled-frame art acceptance.
+
+Validation: 645 Application, 376 Domain and 406 JavaScript tests pass; web build has zero warnings/errors. Browser receipt has no runtime/render/atlas errors. Console HTTP 404s were identified as `/favicon.ico` only; these are not missing boss assets. Minimum sampled desktop-headless FPS was 50, not a physical-device performance claim. No save schema or reward changes. Native character sources and atlas hashes are unchanged; prior independent LFS backup receipt still applies.
+
+Remote checkpoints were pushed and verified throughout. PR #299 stays draft. At code-head check, GitHub Validate/browser/material comparison were running and WebKit queued; do not infer CI success from local passes. Remaining: full G5 universal scene adoption, exact-pose Ashfang relightable material pack, physical iOS/Android profiling, owner visual/play-feel acceptance and remaining optional source-action conversion. No merge or production deployment.

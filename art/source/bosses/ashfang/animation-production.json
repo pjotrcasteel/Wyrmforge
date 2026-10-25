@@ -1,6 +1,6 @@
 {
-  "status": "Foundation003 complete source/export candidate and verified remote backup; owner review/game integration remain",
-  "scope": "Reusable same-rig action library and eight-direction alpha sprite exports; no live gameplay replacement",
+  "status": "Foundation003 source preserved; runtime iteration002 locally validated on draft PR299, not deployed",
+  "scope": "Reusable source library plus 18-clip native-pixel live AI/VFX integration; shared C# emitter bridge, GPU material cutover pending",
   "rig": "Zahmatorah_Skeleton",
   "deformBones": 112,
   "source": "archive/tier-I-skin-010-packed/ashfang-tier-I.blend",
@@ -177,7 +177,7 @@
     "remoteVerified": true
   },
   "runtimeIntegration": {
-    "status": "locally-validated-playable-branch",
+    "status": "iteration002-locally-validated-playable-branch",
     "manifest": "exports/runtime-001/manifest.json",
     "clips": 18,
     "frames": 3272,
@@ -187,13 +187,14 @@
     "renderer": "src/Wyrmforge.Presentation.Web/wwwroot/js/ashfang-sprites.js",
     "notes": "RUNTIME-INTEGRATION.md",
     "deployed": false,
-    "browserReceipt": "reviews/runtime-001/browser-report.json",
+    "browserReceipt": "reviews/runtime-002/browser/browser-report.json",
     "remoteReceipt": "reviews/runtime-001/remote-receipt.json",
     "tests": {
-      "application": 629,
-      "domain": 375,
-      "javascript": 365
+      "application": 645,
+      "domain": 376,
+      "javascript": 406
     },
-    "physicalPhoneAcceptance": false
+    "physicalPhoneAcceptance": false,
+    "lighting": "shared C# emitter descriptors; legacy Canvas until G5; exact-pose material exports pending"
   }
 }
