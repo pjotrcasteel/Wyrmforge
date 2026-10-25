@@ -60,6 +60,6 @@ public sealed partial class RunSimulation
     private IEnumerable<ICombatTarget> PrimaryCandidates()
     {
         foreach (var enemy in enemies) yield return enemy;
-        if (dragonHuntState.CanTargetDragon && dragon is { Health: > 0 } activeDragon) yield return activeDragon;
+        if (CanTargetActiveDragon && dragon is { Health: > 0 } activeDragon) yield return activeDragon;
     }
 }

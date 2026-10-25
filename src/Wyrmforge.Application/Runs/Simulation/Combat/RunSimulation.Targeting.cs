@@ -19,7 +19,7 @@ public sealed partial class RunSimulation
                 if (enemy.Health > 0) return true;
             }
 
-            return dragonHuntState.CanTargetDragon && dragon is { Health: > 0 };
+            return CanTargetActiveDragon && dragon is { Health: > 0 };
         }
     }
 
@@ -39,7 +39,7 @@ public sealed partial class RunSimulation
             nearestDistance = distance;
         }
 
-        if (!dragonHuntState.CanTargetDragon || dragon is not { Health: > 0 } activeDragon || excludedIds?.Contains(activeDragon.Id) == true) return nearest;
+        if (!CanTargetActiveDragon || dragon is not { Health: > 0 } activeDragon || excludedIds?.Contains(activeDragon.Id) == true) return nearest;
         var dragonDistance = Vector2D.Distance(position, activeDragon.Position);
         if (dragonDistance <= minimumDistance || dragonDistance >= nearestDistance) return nearest;
         return activeDragon;
@@ -54,7 +54,7 @@ public sealed partial class RunSimulation
             .Cast<ICombatTarget>()
             .ToList();
 
-        if (dragonHuntState.CanTargetDragon && dragon is { Health: > 0 } activeDragon) candidates.Add(activeDragon);
+        if (CanTargetActiveDragon && dragon is { Health: > 0 } activeDragon) candidates.Add(activeDragon);
 
         return candidates
             .OrderBy(target => Vector2D.Distance(position, target.Position))
@@ -63,7 +63,7 @@ public sealed partial class RunSimulation
             .ToArray();
     }
 
-    private void RebuildCombatSpatialIndex() => combatSpatialIndex.Rebuild(enemies, dragonHuntState.CanTargetDragon ? dragon : null);
+    private void RebuildCombatSpatialIndex() => combatSpatialIndex.Rebuild(enemies, CanTargetActiveDragon ? dragon : null);
 
     private static void ApplyStatus(ICombatTarget target, CombatStatusId status, double duration)
     {

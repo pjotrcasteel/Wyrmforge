@@ -11,7 +11,12 @@ class SpaHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
         relative = unquote(urlsplit(self.path).path).lstrip("/")
         target = Path(self.directory) / relative
-        if not target.is_file() and not target.is_dir() and not Path(relative).suffix:
+        # Asset folders can share a SPA route prefix (for example arena-lab/ashfang).
+        # Only folders with an actual index are documents; never leak a listing
+        # in place of an extensionless application deep link.
+        has_index = target.is_dir() and any((target / name).is_file()
+                                               for name in ("index.html", "index.htm"))
+        if not target.is_file() and not has_index and not Path(relative).suffix:
             self.path = "/index.html"
         super().do_GET()
 

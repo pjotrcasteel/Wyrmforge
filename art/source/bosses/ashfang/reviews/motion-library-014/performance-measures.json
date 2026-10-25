@@ -1,0 +1,411 @@
+{
+  "comparison": "foundation 001 vs aggressive foundation 002; landmark measures are presentation evidence, not artistic acceptance",
+  "clips": {
+    "claw_left": {
+      "previous": {
+        "duration": 1.6666666666666667,
+        "travelPerSecond": 0.0,
+        "Head": {
+          "maxExcursion": 0.5480848390714165,
+          "peakSpeed": 1.2982521433884895,
+          "forwardReachFromFirstPose": 0.0,
+          "maximumHeight": 3.3291819095611572
+        },
+        "Arm_l": {
+          "maxExcursion": 1.2636965150500103,
+          "peakSpeed": 10.62572806102089,
+          "forwardReachFromFirstPose": 1.0816006660461426,
+          "maximumHeight": 1.9444526433944702
+        },
+        "Arm_r": {
+          "maxExcursion": 0.06907996508799201,
+          "peakSpeed": 0.1564668636627467,
+          "forwardReachFromFirstPose": 0.05725753307342529,
+          "maximumHeight": 1.1355777978897095
+        },
+        "Spine03": {
+          "maxExcursion": 0.02500009536743171,
+          "peakSpeed": 0.09385871887207062,
+          "forwardReachFromFirstPose": 0.0,
+          "maximumHeight": 2.4051427841186523
+        }
+      },
+      "aggressive": {
+        "duration": 1.6666666666666667,
+        "travelPerSecond": 0.0,
+        "Head": {
+          "maxExcursion": 1.9048691943536233,
+          "peakSpeed": 24.631411341969365,
+          "forwardReachFromFirstPose": 0.276902437210083,
+          "maximumHeight": 3.3179917335510254
+        },
+        "Arm_l": {
+          "maxExcursion": 2.5198862208380075,
+          "peakSpeed": 35.15097707433093,
+          "forwardReachFromFirstPose": 1.5536916255950928,
+          "maximumHeight": 2.6383254528045654
+        },
+        "Arm_r": {
+          "maxExcursion": 0.24193544521787314,
+          "peakSpeed": 3.6555864716559094,
+          "forwardReachFromFirstPose": 0.14238178730010986,
+          "maximumHeight": 1.1678727865219116
+        },
+        "Spine03": {
+          "maxExcursion": 0.36437954143924856,
+          "peakSpeed": 2.2024981286394145,
+          "forwardReachFromFirstPose": 0.34956860542297363,
+          "maximumHeight": 2.393953323364258
+        }
+      }
+    },
+    "claw_right": {
+      "previous": {
+        "duration": 1.6666666666666667,
+        "travelPerSecond": 0.0,
+        "Head": {
+          "maxExcursion": 0.5480851919499581,
+          "peakSpeed": 1.2982462623776194,
+          "forwardReachFromFirstPose": 0.0,
+          "maximumHeight": 3.329181432723999
+        },
+        "Arm_l": {
+          "maxExcursion": 0.06989319178654692,
+          "peakSpeed": 0.15832249259562822,
+          "forwardReachFromFirstPose": 0.05723249912261963,
+          "maximumHeight": 1.1359589099884033
+        },
+        "Arm_r": {
+          "maxExcursion": 1.2640515973943,
+          "peakSpeed": 10.62490937714877,
+          "forwardReachFromFirstPose": 1.0813895463943481,
+          "maximumHeight": 1.944915771484375
+        },
+        "Spine03": {
+          "maxExcursion": 0.02500009536743171,
+          "peakSpeed": 0.09385871887207062,
+          "forwardReachFromFirstPose": 0.0,
+          "maximumHeight": 2.4051427841186523
+        }
+      },
+      "aggressive": {
+        "duration": 1.6666666666666667,
+        "travelPerSecond": 0.0,
+        "Head": {
+          "maxExcursion": 1.9048700815126873,
+          "peakSpeed": 24.63141585836635,
+          "forwardReachFromFirstPose": 0.276902437210083,
+          "maximumHeight": 3.3179917335510254
+        },
+        "Arm_l": {
+          "maxExcursion": 0.24605410873342995,
+          "peakSpeed": 3.6934210492901283,
+          "forwardReachFromFirstPose": 0.1421194076538086,
+          "maximumHeight": 1.1686935424804688
+        },
+        "Arm_r": {
+          "maxExcursion": 2.519559554019196,
+          "peakSpeed": 35.181051071276585,
+          "forwardReachFromFirstPose": 1.5549496412277222,
+          "maximumHeight": 2.6386752128601074
+        },
+        "Spine03": {
+          "maxExcursion": 0.36437954143924856,
+          "peakSpeed": 2.2024981286394145,
+          "forwardReachFromFirstPose": 0.34956860542297363,
+          "maximumHeight": 2.393953323364258
+        }
+      }
+    },
+    "bite": {
+      "previous": {
+        "duration": 1.6666666666666667,
+        "travelPerSecond": 0.0,
+        "Head": {
+          "maxExcursion": 0.46175614119911124,
+          "peakSpeed": 0.995890747790831,
+          "forwardReachFromFirstPose": 0.3263885974884033,
+          "maximumHeight": 3.3113555908203125
+        },
+        "Arm_l": {
+          "maxExcursion": 0.08546868206075656,
+          "peakSpeed": 0.18061248871638344,
+          "forwardReachFromFirstPose": 0.07733345031738281,
+          "maximumHeight": 1.1324796676635742
+        },
+        "Arm_r": {
+          "maxExcursion": 0.08546837396579954,
+          "peakSpeed": 0.1806018162338386,
+          "forwardReachFromFirstPose": 0.07733285427093506,
+          "maximumHeight": 1.1324801445007324
+        },
+        "Spine03": {
+          "maxExcursion": 0.27963809475577195,
+          "peakSpeed": 0.5972155649939667,
+          "forwardReachFromFirstPose": 0.2795313596725464,
+          "maximumHeight": 2.4051427841186523
+        }
+      },
+      "aggressive": {
+        "duration": 1.6666666666666667,
+        "travelPerSecond": 0.0,
+        "Head": {
+          "maxExcursion": 1.8912560922563586,
+          "peakSpeed": 22.544412998039462,
+          "forwardReachFromFirstPose": 1.4205291271209717,
+          "maximumHeight": 4.619945049285889
+        },
+        "Arm_l": {
+          "maxExcursion": 0.48553114506432504,
+          "peakSpeed": 3.652381563592648,
+          "forwardReachFromFirstPose": 0.4730945825576782,
+          "maximumHeight": 1.1758167743682861
+        },
+        "Arm_r": {
+          "maxExcursion": 0.5120339277791333,
+          "peakSpeed": 3.656694144584348,
+          "forwardReachFromFirstPose": 0.5013464689254761,
+          "maximumHeight": 1.1759848594665527
+        },
+        "Spine03": {
+          "maxExcursion": 1.3599912326457204,
+          "peakSpeed": 10.754176483072595,
+          "forwardReachFromFirstPose": 1.3499999046325684,
+          "maximumHeight": 2.430142641067505
+        }
+      }
+    },
+    "roar": {
+      "previous": {
+        "duration": 2.6666666666666665,
+        "travelPerSecond": 0.0,
+        "Head": {
+          "maxExcursion": 0.7424612484615767,
+          "peakSpeed": 1.1517140172887903,
+          "forwardReachFromFirstPose": 0.0,
+          "maximumHeight": 3.9389917850494385
+        },
+        "Arm_l": {
+          "maxExcursion": 0.05396480336162523,
+          "peakSpeed": 0.08208917444390734,
+          "forwardReachFromFirstPose": 0.0013829469680786133,
+          "maximumHeight": 1.107607126235962
+        },
+        "Arm_r": {
+          "maxExcursion": 0.05396478902945078,
+          "peakSpeed": 0.08211080786889141,
+          "forwardReachFromFirstPose": 0.0013834238052368164,
+          "maximumHeight": 1.1076079607009888
+        },
+        "Spine03": {
+          "maxExcursion": 0.17250515220804635,
+          "peakSpeed": 0.2641865440897226,
+          "forwardReachFromFirstPose": 0.0,
+          "maximumHeight": 2.4669950008392334
+        }
+      },
+      "aggressive": {
+        "duration": 3.3333333333333335,
+        "travelPerSecond": 0.0,
+        "Head": {
+          "maxExcursion": 2.6986827015906627,
+          "peakSpeed": 9.420428328594348,
+          "forwardReachFromFirstPose": 0.0,
+          "maximumHeight": 5.649089336395264
+        },
+        "Arm_l": {
+          "maxExcursion": 1.0564189192310538,
+          "peakSpeed": 3.827005000408529,
+          "forwardReachFromFirstPose": 0.0,
+          "maximumHeight": 2.1926403045654297
+        },
+        "Arm_r": {
+          "maxExcursion": 1.05517728580021,
+          "peakSpeed": 3.8205754997758428,
+          "forwardReachFromFirstPose": 0.0,
+          "maximumHeight": 2.191026210784912
+        },
+        "Spine03": {
+          "maxExcursion": 0.40458350298436346,
+          "peakSpeed": 2.6290504234364205,
+          "forwardReachFromFirstPose": 0.21954727172851562,
+          "maximumHeight": 2.7199761867523193
+        }
+      }
+    },
+    "takeoff": {
+      "previous": {
+        "duration": 2.0,
+        "travelPerSecond": 0.0,
+        "Head": {
+          "maxExcursion": 4.174595127481388,
+          "peakSpeed": 8.698108380046374,
+          "forwardReachFromFirstPose": 0.0,
+          "maximumHeight": 7.327125072479248
+        },
+        "Arm_l": {
+          "maxExcursion": 5.863637594916149,
+          "peakSpeed": 8.064592621864712,
+          "forwardReachFromFirstPose": 0.0,
+          "maximumHeight": 6.678339958190918
+        },
+        "Arm_r": {
+          "maxExcursion": 6.119152189915776,
+          "peakSpeed": 8.198872634407799,
+          "forwardReachFromFirstPose": 0.0,
+          "maximumHeight": 7.046477317810059
+        },
+        "Spine03": {
+          "maxExcursion": 3.9291586875915954,
+          "peakSpeed": 8.29155349731446,
+          "forwardReachFromFirstPose": 0.0,
+          "maximumHeight": 6.309301376342773
+        }
+      },
+      "aggressive": {
+        "duration": 2.3333333333333335,
+        "travelPerSecond": 0.0,
+        "Head": {
+          "maxExcursion": 5.954496911577703,
+          "peakSpeed": 24.15636769981161,
+          "forwardReachFromFirstPose": 0.0,
+          "maximumHeight": 9.024332046508789
+        },
+        "Arm_l": {
+          "maxExcursion": 7.896408498724746,
+          "peakSpeed": 38.9591845244898,
+          "forwardReachFromFirstPose": 0.0,
+          "maximumHeight": 8.806198120117188
+        },
+        "Arm_r": {
+          "maxExcursion": 8.156834721443133,
+          "peakSpeed": 40.70496018095895,
+          "forwardReachFromFirstPose": 0.0,
+          "maximumHeight": 9.146081924438477
+        },
+        "Spine03": {
+          "maxExcursion": 4.999999523162921,
+          "peakSpeed": 26.341725482520545,
+          "forwardReachFromFirstPose": 0.0,
+          "maximumHeight": 7.3801422119140625
+        }
+      }
+    },
+    "run": {
+      "previous": {
+        "duration": 1.3333333333333333,
+        "travelPerSecond": 2.5500000000000003,
+        "Head": {
+          "maxExcursion": 0.2266555587386884,
+          "peakSpeed": 1.0142343439796302,
+          "forwardReachFromFirstPose": 0.0,
+          "maximumHeight": 3.4241809844970703
+        },
+        "Arm_l": {
+          "maxExcursion": 1.488036960484146,
+          "peakSpeed": 4.332437500584486,
+          "forwardReachFromFirstPose": 0.0,
+          "maximumHeight": 1.7134718894958496
+        },
+        "Arm_r": {
+          "maxExcursion": 1.1315953588730079,
+          "peakSpeed": 4.23259050318395,
+          "forwardReachFromFirstPose": 0.30807411670684814,
+          "maximumHeight": 1.7057397365570068
+        },
+        "Spine03": {
+          "maxExcursion": 0.22499990463256886,
+          "peakSpeed": 1.0093574523925828,
+          "forwardReachFromFirstPose": 0.0,
+          "maximumHeight": 2.5001425743103027
+        }
+      },
+      "aggressive": {
+        "duration": 1.1666666666666667,
+        "travelPerSecond": 4.628571428571429,
+        "Head": {
+          "maxExcursion": 0.6729559565872881,
+          "peakSpeed": 3.6511005131682928,
+          "forwardReachFromFirstPose": 0.007627010345458984,
+          "maximumHeight": 3.3552534580230713
+        },
+        "Arm_l": {
+          "maxExcursion": 1.7647754592365303,
+          "peakSpeed": 6.429900491357346,
+          "forwardReachFromFirstPose": 0.0,
+          "maximumHeight": 2.307995557785034
+        },
+        "Arm_r": {
+          "maxExcursion": 1.5290921319386788,
+          "peakSpeed": 5.572271350400272,
+          "forwardReachFromFirstPose": 0.20536720752716064,
+          "maximumHeight": 2.296781539916992
+        },
+        "Spine03": {
+          "maxExcursion": 0.6499998569488543,
+          "peakSpeed": 3.394311904907238,
+          "forwardReachFromFirstPose": 0.0,
+          "maximumHeight": 2.7001426219940186
+        }
+      }
+    },
+    "pounce": {
+      "previous": {
+        "duration": 2.0,
+        "travelPerSecond": 2.75,
+        "Head": {
+          "maxExcursion": 1.9430753751138874,
+          "peakSpeed": 10.957842866205327,
+          "forwardReachFromFirstPose": 0.08104562759399414,
+          "maximumHeight": 5.241014003753662
+        },
+        "Arm_l": {
+          "maxExcursion": 2.0894160920525886,
+          "peakSpeed": 9.884864400150077,
+          "forwardReachFromFirstPose": 0.4018080234527588,
+          "maximumHeight": 3.154317855834961
+        },
+        "Arm_r": {
+          "maxExcursion": 2.083106577406543,
+          "peakSpeed": 9.855632361260245,
+          "forwardReachFromFirstPose": 0.4022972583770752,
+          "maximumHeight": 3.1477890014648438
+        },
+        "Spine03": {
+          "maxExcursion": 1.4474511146545441,
+          "peakSpeed": 7.185344696044931,
+          "forwardReachFromFirstPose": 0.0,
+          "maximumHeight": 3.8275938034057617
+        }
+      },
+      "aggressive": {
+        "duration": 2.0,
+        "travelPerSecond": 4.0,
+        "Head": {
+          "maxExcursion": 2.791031621469139,
+          "peakSpeed": 16.369528240106323,
+          "forwardReachFromFirstPose": 0.10167288780212402,
+          "maximumHeight": 6.090870380401611
+        },
+        "Arm_l": {
+          "maxExcursion": 2.927715801522337,
+          "peakSpeed": 13.89713245200959,
+          "forwardReachFromFirstPose": 0.4018080234527588,
+          "maximumHeight": 4.004174709320068
+        },
+        "Arm_r": {
+          "maxExcursion": 2.9213161406487567,
+          "peakSpeed": 13.86765470455435,
+          "forwardReachFromFirstPose": 0.4022972583770752,
+          "maximumHeight": 3.9976444244384766
+        },
+        "Spine03": {
+          "maxExcursion": 2.297307491302556,
+          "peakSpeed": 10.798233032226578,
+          "forwardReachFromFirstPose": 0.0,
+          "maximumHeight": 4.677450180053711
+        }
+      }
+    }
+  }
+}

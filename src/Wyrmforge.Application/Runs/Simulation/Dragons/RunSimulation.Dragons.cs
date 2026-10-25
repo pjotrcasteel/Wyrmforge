@@ -28,6 +28,9 @@ public sealed partial class RunSimulation
     // First Hunt it is a full hunt with harvest, refuge and extraction.
     private bool regionOpening;
     internal void EnableRegionOpening(bool enabled) => regionOpening = enabled;
+    private int dragonAttackSequence;
+    private double dragonLastAttackAt = -1;
+    private DragonRenderSnapshot? dragonDefeat;
     private bool dragonPending;
     private bool dragonEncounterStarted;
 
@@ -67,7 +70,7 @@ public sealed partial class RunSimulation
         UpdateDragonCombat(activeDragon, scaledDelta);
 
         var contactDamage = activeDragon.Definition.Combat.ContactDamagePerSecond * depthState.DragonDamageMultiplier;
-        if (delta > 0 && Vector2D.Distance(activeDragon.Position, player.Position) <= activeDragon.Radius + player.Radius) DamagePlayerContact(contactDamage);
+        if (CanTargetActiveDragon && !ashfangFlight.Active && delta > 0 && Vector2D.Distance(activeDragon.Position, player.Position) <= activeDragon.Radius + player.Radius) DamagePlayerContact(contactDamage);
     }
 
     private void UpdateDragonEntrance(DragonState activeDragon, double delta, double width, double height)
@@ -89,6 +92,9 @@ public sealed partial class RunSimulation
 
     private void BeginDragonPhaseBreak(DragonState activeDragon)
     {
+        ashfangFlight.Reset();
+        ashfangBehavior.Interrupt();
+        if (activeDragon.Definition.Id == DragonId.Ashfang) RegisterAshfangEffect("roar", activeDragon.Position, activeDragon.Radius * 2);
         activeDragon.TelegraphRemaining = 0;
         activeDragon.AttackCooldown = 1;
         dragonHuntHazards.Clear();
@@ -114,6 +120,7 @@ public sealed partial class RunSimulation
             dragonHuntHazards.RemoveAt(index);
         }
 
+        if (activeDragon.Definition.Id == DragonId.Ashfang && ashfangFlight.Active) return;
         if (!dragonHuntState.TickPressure(delta, activeDragon.Phase)) return;
         ScheduleDragonHuntPressure(activeDragon, width, height);
     }
@@ -134,6 +141,7 @@ public sealed partial class RunSimulation
 
     private void UpdateDragonHuntSignature(double delta, DragonState activeDragon, double width, double height)
     {
+        if (activeDragon.Definition.Id == DragonId.Ashfang && ashfangFlight.Active) return;
         if (!dragonHuntState.TickSignature(delta, activeDragon.Phase)) return;
         var signature = dragonHuntState.Profile?.Signature ?? throw new InvalidOperationException("Active dragon hunt requires a signature profile.");
         var radius = signature.Radius.For(activeDragon.Phase);
@@ -167,12 +175,15 @@ public sealed partial class RunSimulation
 
     private void ResolveDragonHuntHazard(DragonHuntHazardState hazard)
     {
-        RegisterElementalImpact(hazard.Position, hazard.VisualSpell);
+        if (dragon?.Definition.Id == DragonId.Ashfang)
+            RegisterAshfangEffect(hazard.EffectKind ?? (hazard.FromAbove ? "meteor" : "cinder"), hazard.Position, hazard.Radius);
+        else RegisterElementalImpact(hazard.Position, hazard.VisualSpell);
         if (Vector2D.Distance(player.Position, hazard.Position) <= hazard.Radius) DamagePlayer(hazard.Damage);
     }
 
     private void UpdateDragonCombat(DragonState activeDragon, double delta)
     {
+        if (activeDragon.Definition.Id == DragonId.Ashfang) { if (!UpdateAshfangFlight(activeDragon, delta)) UpdateAshfangCombat(activeDragon, delta); return; }
         if (activeDragon.IsTelegraphing)
         {
             activeDragon.TelegraphRemaining -= delta;
@@ -187,6 +198,12 @@ public sealed partial class RunSimulation
 
     private void SpawnDragon(DragonDefinition definition, double width, double height)
     {
+        ashfangFlight.Reset();
+        ashfangBehavior.Reset();
+        ashfangEffects.Clear();
+        dragonAttackSequence = 0;
+        dragonLastAttackAt = -1;
+        dragonDefeat = null;
         dragonEncounterStarted = true;
         dragonPending = false;
         enemies.Clear();
@@ -254,6 +271,7 @@ public sealed partial class RunSimulation
     private void StartDragonAttack(DragonState activeDragon)
     {
         var attack = activeDragon.Definition.Combat.Attack;
+        dragonAttackSequence++;
         activeDragon.TelegraphRemaining = attack.TelegraphSeconds.For(activeDragon.Phase);
         switch (attack.Pattern)
         {
@@ -276,6 +294,7 @@ public sealed partial class RunSimulation
     {
         var attack = activeDragon.Definition.Combat.Attack;
         activeDragon.TelegraphRemaining = 0;
+        dragonLastAttackAt = elapsed;
         activeDragon.AttackCooldown = attack.CooldownSeconds.For(activeDragon.Phase);
         switch (attack.Pattern)
         {
@@ -315,6 +334,7 @@ public sealed partial class RunSimulation
     private void DefeatDragon(DragonState defeatedDragon)
     {
         if (!ReferenceEquals(dragon, defeatedDragon)) return;
+        dragonDefeat = CreateDragonBodySnapshot(defeatedDragon);
         dragonsSlain++;
         var definition = defeatedDragon.Definition;
         defeatedDragonIds.Add(definition.Id);
@@ -347,6 +367,10 @@ public sealed partial class RunSimulation
 
     private void ResetDragonHunt()
     {
+        ashfangFlight.Reset();
+        ashfangBehavior.Reset();
+        dragonDefeat = null;
+        ashfangEffects.Clear();
         dragonHuntHazards.Clear();
         dragonHuntState.Reset();
     }
@@ -354,6 +378,11 @@ public sealed partial class RunSimulation
     private DragonRenderSnapshot? CreateDragonSnapshot()
     {
         if (dragon is not { Health: > 0 } activeDragon) return null;
+        return CreateDragonBodySnapshot(activeDragon);
+    }
+
+    private DragonRenderSnapshot CreateDragonBodySnapshot(DragonState activeDragon)
+    {
         var definition = activeDragon.Definition;
         // Only the invoked rite carries its trophy title; a ladder Ascendant or Elder is named for its tier.
         var rite = ascendantActive && SelectedHunt is null ? AscendantRiteCatalog.Get(definition.Id) : null;
@@ -366,16 +395,33 @@ public sealed partial class RunSimulation
         return new DragonRenderSnapshot(name, rite is null ? definition.Title : $"The {rite.Trophy}",
             definition.School, activeDragon.Position.X, activeDragon.Position.Y, activeDragon.Radius, activeDragon.Health, activeDragon.MaxHealth,
             activeDragon.Phase, activeDragon.Statuses.Has(CombatStatusId.Frozen), CreateStatusSnapshots(activeDragon.Statuses))
-        { IsAscendant = ascendantActive, Tier = activeDragon.Tier };
+        {
+            IsAscendant = ascendantActive, Tier = activeDragon.Tier, EntityId = activeDragon.Id,
+            AttackSequence = dragonAttackSequence,
+            HitFlash = hitFlashRemaining.ContainsKey(activeDragon.Id),
+            FlightStage = definition.Id == DragonId.Ashfang ? ashfangFlight.Stage : null,
+            FlightProgress = ashfangFlight.Progress,
+            Targetable = CanTargetActiveDragon,
+            Action = definition.Id == DragonId.Ashfang ? ashfangBehavior.Action : null,
+            ActionPhase = definition.Id == DragonId.Ashfang ? ashfangBehavior.Phase : null,
+            ActionProgress = ashfangBehavior.Progress,
+            AttackTargetX = ashfangBehavior.Target.X, AttackTargetY = ashfangBehavior.Target.Y,
+            AttackElapsed = dragonLastAttackAt < 0 ? -1 : elapsed - dragonLastAttackAt,
+            TelegraphProgress = activeDragon.IsTelegraphing ? Math.Clamp(1 - activeDragon.TelegraphRemaining / definition.Combat.Attack.TelegraphSeconds.For(activeDragon.Phase), 0, 1) : 0,
+            DirectionX = activeDragon.BreathDirection.X, DirectionY = activeDragon.BreathDirection.Y,
+        };
     }
 
     private DragonBreathRenderSnapshot? CreateDragonBreathSnapshot()
     {
-        if (dragon is not { IsTelegraphing: true } activeDragon || !dragonHuntState.CanDragonAct) return null;
+        if (dragon is not { Health: > 0 } activeDragon || !dragonHuntState.CanDragonAct) return null;
+        var releasing = activeDragon.Definition.Id == DragonId.Ashfang && ashfangBehavior.Action == "breath" && ashfangBehavior.Phase == "strike";
+        if (!activeDragon.IsTelegraphing && !releasing) return null;
         var attack = activeDragon.Definition.Combat.Attack;
         if (attack.Pattern != DragonAttackPattern.Cone) return null;
         return new DragonBreathRenderSnapshot(activeDragon.Position.X, activeDragon.Position.Y, activeDragon.BreathDirection.X, activeDragon.BreathDirection.Y,
-            attack.Geometry.Range, attack.Geometry.HalfAngle);
+            activeDragon.Definition.Id == DragonId.Ashfang ? ashfangBehavior.Range : attack.Geometry.Range,
+            activeDragon.Definition.Id == DragonId.Ashfang ? ashfangBehavior.HalfAngle : attack.Geometry.HalfAngle) { Active = releasing };
     }
 
     private DragonHuntRenderSnapshot? CreateDragonHuntSnapshot()
@@ -387,7 +433,7 @@ public sealed partial class RunSimulation
 
     private IReadOnlyList<DragonHuntHazardRenderSnapshot> CreateDragonHuntHazardSnapshots() => dragonHuntHazards
         .Select(hazard => new DragonHuntHazardRenderSnapshot(hazard.Position.X, hazard.Position.Y, hazard.Radius, hazard.Progress, hazard.School, hazard.Signature,
-            hazard.DelayRemaining <= 0))
+            hazard.DelayRemaining <= 0) { FromAbove = hazard.FromAbove, EffectKind = hazard.EffectKind })
         .ToArray();
 
     private static Vector2D ArenaPoint(DragonHuntPoint point, double width, double height) => new(point.X * width, point.Y * height);
@@ -406,8 +452,10 @@ public sealed partial class RunSimulation
         double delaySeconds,
         SpellId visualSpell,
         SpellSchool school,
-        DragonHuntSignatureKind? signature)
+        DragonHuntSignatureKind? signature, bool fromAbove = false, string? effectKind = null)
     {
+        public string? EffectKind { get; } = effectKind;
+        public bool FromAbove { get; } = fromAbove;
         public Vector2D Position { get; } = position;
         public double Radius { get; } = radius;
         public double Damage { get; } = damage;
@@ -421,3 +469,4 @@ public sealed partial class RunSimulation
         public double Progress => 1 - Math.Clamp(Remaining / Duration, 0, 1);
     }
 }
+

@@ -1,0 +1,77 @@
+{
+  "modelScale": 2,
+  "source": "C:\\Wyrmforge\\ashfang-zagmatorah\\art\\source\\bosses\\ashfang\\archive\\motion-foundation-001-packed\\ashfang-animation-foundation.blend",
+  "clips": {
+    "idle": [
+      {
+        "sourceFrame": 1,
+        "meanPixelChannelDifference": 0.0135650634765625,
+        "pivotPixelError": 0.0,
+        "attachmentPixelError": 0.0,
+        "rootTravelError": 0.0
+      },
+      {
+        "sourceFrame": 25,
+        "meanPixelChannelDifference": 0.014047622680664062,
+        "pivotPixelError": 0.0,
+        "attachmentPixelError": 0.0,
+        "rootTravelError": 0.0
+      },
+      {
+        "sourceFrame": 49,
+        "meanPixelChannelDifference": 0.013566970825195312,
+        "pivotPixelError": 0.0,
+        "attachmentPixelError": 0.0,
+        "rootTravelError": 0.0
+      }
+    ],
+    "fly": [
+      {
+        "sourceFrame": 1,
+        "meanPixelChannelDifference": 0.02078723907470703,
+        "pivotPixelError": 0.0,
+        "attachmentPixelError": 0.0,
+        "rootTravelError": 0.0
+      },
+      {
+        "sourceFrame": 17,
+        "meanPixelChannelDifference": 0.022255897521972656,
+        "pivotPixelError": 0.0,
+        "attachmentPixelError": 0.0,
+        "rootTravelError": 0.0
+      },
+      {
+        "sourceFrame": 33,
+        "meanPixelChannelDifference": 0.02078723907470703,
+        "pivotPixelError": 0.0,
+        "attachmentPixelError": 0.0,
+        "rootTravelError": 0.0
+      }
+    ],
+    "walk": [
+      {
+        "sourceFrame": 1,
+        "meanPixelChannelDifference": 0.012875556945800781,
+        "pivotPixelError": 0.0,
+        "attachmentPixelError": 0.0,
+        "rootTravelError": 0.0
+      },
+      {
+        "sourceFrame": 25,
+        "meanPixelChannelDifference": 0.014357566833496094,
+        "pivotPixelError": 0.0,
+        "attachmentPixelError": 0.0,
+        "rootTravelError": 0.0
+      },
+      {
+        "sourceFrame": 49,
+        "meanPixelChannelDifference": 0.012875556945800781,
+        "pivotPixelError": 0.0,
+        "attachmentPixelError": 0.0,
+        "rootTravelError": 0.0
+      }
+    ]
+  },
+  "allExpectedClipsAvailable": true,
+  "pass": true
+}

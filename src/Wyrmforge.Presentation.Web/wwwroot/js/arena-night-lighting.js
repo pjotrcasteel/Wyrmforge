@@ -37,7 +37,7 @@ export function gothicNightLightSources(snapshot, spellLights = [], width = 0, h
             color: warmFire, kind: 'burning-tree' });
     }
     const breath = snapshot?.dragonBreath;
-    if (isPoint(breath) && (snapshot?.dragon?.school ?? snapshot?.hunt?.school) === 1) {
+    if (!snapshot?.lighting && isPoint(breath) && (snapshot?.dragon?.school ?? snapshot?.hunt?.school) === 1) {
         const dx = Number(breath.directionX) || 0;
         const dy = Number(breath.directionY) || 0;
         const reach = clamp(Number(breath.range) || 0, 0, 420);
@@ -103,21 +103,9 @@ export function drawGothicNight(ctx, plan, maskCanvas) {
 
     ctx.save();
     ctx.drawImage(maskCanvas, view.x, view.y, width, height);
-    // Subtle real fire color on the illuminated terrain, trunks and actors,
-    // never a global orange filter. Bright VFX still render above this pass.
-    ctx.globalCompositeOperation = 'screen';
-    for (const light of plan.sources) {
-        if (!light.color || light.relief < .04) continue;
-        const [r, g, b] = light.color, radius = light.radius;
-        const gradient = ctx.createRadialGradient(light.x, light.y, 0, light.x, light.y, radius);
-        const strength = clamp(light.relief * (light.kind === 'fire' || light.kind === 'wyrm-breath' ||
-            light.kind === 'burning-tree' ? .47 : .24), 0, .48);
-        gradient.addColorStop(0, `rgba(${r},${g},${b},${strength.toFixed(3)})`);
-        gradient.addColorStop(.35, `rgba(${r},${g},${b},${(strength * .45).toFixed(3)})`);
-        gradient.addColorStop(1, `rgba(${r},${g},${b},0)`);
-        ctx.fillStyle = gradient;
-        ctx.fillRect(light.x - radius, light.y - radius, radius * 2, radius * 2);
-    }
+    // Light spill already supplies source color in the caller. A second screen
+    // blend here bleaches charcoal actors when several sources overlap.
+    // This mask remains a legacy visibility pass pending the shared GPU cutover.
     ctx.restore();
     return true;
 }

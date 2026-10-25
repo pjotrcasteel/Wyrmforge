@@ -71,3 +71,14 @@ test('staff-tip light grows through windup, peaks on release, and fades through 
     assert.ok(released.strength > finishing.strength);
     assert.notEqual(winding.x, released.x, 'Light follows the actual authored staff grip.');
 });
+
+test('boss adapter uses authoritative shared descriptors, filters invalid sources and removes expired lights',()=>{
+    const source={id:'ashfang:1:breath:2',ownerId:'ashfang:1',enabled:true,position:[100,150,38],range:135,intensity:.32,color:'#f8a368'};
+    const lights=buildSpellLights({lighting:{lights:[source]}});
+    assert.equal(lights.length,1);assert.equal(lights[0].x,100);assert.equal(lights[0].strength,.32);
+    assert.deepEqual(lights[0].center,[248,163,104]);
+    assert.deepEqual(buildSpellLights({lighting:{lights:[]}}),[]);
+    assert.deepEqual(buildSpellLights({lighting:{lights:[{...source,enabled:false}]}}),[]);
+    assert.deepEqual(buildSpellLights({lighting:{lights:[{...source,intensity:NaN}]}}),[]);
+    assert.deepEqual(buildSpellLights({dragon:{school:1,action:'breath',actionPhase:'strike',flightStage:'ground'}}),[]);
+});

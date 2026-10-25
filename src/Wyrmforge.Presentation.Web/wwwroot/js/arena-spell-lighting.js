@@ -64,9 +64,19 @@ export function buildSpellLights(snapshot, elapsed = 0, reducedMotion = false, v
     for (const impact of snapshot.elementalImpacts ?? [])
         add(impact, 'impact', .8 * (1 - clamp(Number(impact.progress) || 0, 0, 1)), 106);
 
+    // Transitional Canvas adapter only. Boss lifecycle/positions come from the same
+    // C# descriptors as the universal GPU engine, never a second light simulation.
+    for (const source of snapshot.lighting?.lights ?? []) {
+        if (!source.ownerId?.startsWith('ashfang:') && !source.ownerId?.startsWith('ashfang-effect:')) continue;
+        if (!source.enabled || !/^#[0-9a-f]{6}$/i.test(source.color)) continue;
+        const center = [1, 3, 5].map(i => parseInt(source.color.slice(i, i + 2), 16));
+        candidates.push({ x: source.position?.[0], y: source.position?.[1], radius: source.range,
+            strength: source.intensity, type: 'boss-source', surge: false,
+            family: 'fire', center, edge: palette.fire.edge });
+    }
     // Bound the worst-case cost when several projectiles and impacts overlap on mobile.
     // Impact gets priority over an older projectile only when it is visibly brighter.
-    return candidates.filter(light => !viewport ||
+    return candidates.filter(light => Number.isFinite(light.x)&&Number.isFinite(light.y)&&Number.isFinite(light.radius)&&Number.isFinite(light.strength)&&light.radius>0).filter(light => !viewport ||
         (light.x + light.radius >= viewport.x && light.x - light.radius <= viewport.x + viewport.width &&
          light.y + light.radius >= viewport.y && light.y - light.radius <= viewport.y + viewport.height))
         .sort((a, b) => b.strength - a.strength).slice(0, maximumLights);

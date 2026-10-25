@@ -1,3 +1,15 @@
 # Generated art must stay byte-identical to tools/art/build-art.mjs output (--check).
 src/Wyrmforge.Presentation.Web/wwwroot/art/** -text
 docs/art/previews/** -text
+art/source/bosses/ashfang/archive/**/*.blend filter=lfs diff=lfs merge=lfs -text
+art/source/bosses/ashfang/archive/**/*.png filter=lfs diff=lfs merge=lfs -text
+art/source/bosses/ashfang/archive/**/*.fbx filter=lfs diff=lfs merge=lfs -text
+art/source/bosses/ashfang/archive/**/*.zip filter=lfs diff=lfs merge=lfs -text
+art/source/bosses/ashfang/exports/**/*.png filter=lfs diff=lfs merge=lfs -text
+art/source/bosses/ashfang/reviews/**/*.gif filter=lfs diff=lfs merge=lfs -text
+
+# Bounded opt-in Ashfang pixel style proof; preserve generated source/export bytes.
+src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-001/**/*.png filter=lfs diff=lfs merge=lfs -text
+
+src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/**/*.png filter=lfs diff=lfs merge=lfs -text
+src/Wyrmforge.Presentation.Web/wwwroot/art/ashfang/**/*.png filter=lfs diff=lfs merge=lfs -text

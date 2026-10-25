@@ -1,0 +1,23 @@
+{
+  "codeHead": "3dadd1a50a5da8ceb301f6582ac59115e247688b",
+  "mainReconciled": "5e1936d0",
+  "capture": "actual live C# encounter in Edge, 402x874 DPR2",
+  "files": {
+    "browser-report.json": "deb8fb73c3926f8938ea0af60d964d3767f85f88806b1c4a1e2a77861e21e3bc",
+    "claw-phone.png": "48971cf14f8085001f2f374687df49eab561c1350d332566e62309b729f398ee",
+    "death-phone.png": "1830f8d7d624f391e424a1465d26eb9bf996a4e925d59440d9a960d503bdc98a",
+    "enrage-phone.png": "fd828f85d4ba81fb07c9cd83d957a2d9c675ac98b98ba3c80626ea35b05a85a8",
+    "fire-phone.png": "01fbd3c06e3e414703fdfbb9bdd275d94b0e1d743fcc12a23a51f7a5869e81c6",
+    "fire-reduced-motion.png": "f4f81e155ceffc0785ce6a7dcfbc6f8f1c65a540daf29a88fc07eab974b26d70",
+    "landing-phone.png": "fc91d4197f698e477600d9e7d63ddf3dc740a2cd1044553989306e2da0445dda",
+    "live-boss-phone.png": "358aaa4eb2c79831db0da8e14536d24cca5178bce7350ef77eba8d634e783689",
+    "rain-phone.png": "70144212cb3c3438ba1425c3e33aa1854409d99fd5979bd65107eab399a0dc63"
+  },
+  "tests": {
+    "application": 645,
+    "domain": 376,
+    "javascript": 406
+  },
+  "physicalDevice": false,
+  "gpuSceneCutover": false
+}

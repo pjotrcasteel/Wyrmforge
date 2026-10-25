@@ -23,6 +23,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Restore runtime Git LFS art (exclude large source archives)
+        run: |
+          git lfs pull --include="src/Wyrmforge.Presentation.Web/wwwroot/**" --exclude=""
+          python3 tools/development/verify_web_assets.py
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
         with:

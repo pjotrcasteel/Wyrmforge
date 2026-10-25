@@ -10,4 +10,8 @@ public sealed record DragonHuntHazardRenderSnapshot(
     double Progress,
     SpellSchool School,
     DragonHuntSignatureKind? Signature = null,
-    bool Armed = true);
+    bool Armed = true)
+{
+    public string? EffectKind { get; init; }
+    public bool FromAbove { get; init; }
+}

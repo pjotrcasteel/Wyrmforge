@@ -1,0 +1,12 @@
+{
+  "source": "C:\\Wyrmforge\\ashfang-zagmatorah\\art\\source\\bosses\\ashfang\\archive\\M0-001\\master\\ashfang-master-working.blend",
+  "sourceSha256": "2b7504c26b3cbe44ea908fb8e5dd0d53355f1d92494d1d5dcbcdfafbcd084463",
+  "removedFanVertices": 201,
+  "preservedSourceVertices": 19841,
+  "visibleVertices": 19640,
+  "method": "Reversible vertex-group mask covering distal membrane and lateral fan struts; central tail retained",
+  "ownerRequest": "Remove flipper part of tail",
+  "originalImportUntouched": true,
+  "rigBonesRemoved": 0,
+  "sha256": "81e0bb96e05b15b43478ca6e033b8a67097ac66546409dc42509b841616ce98c"
+}

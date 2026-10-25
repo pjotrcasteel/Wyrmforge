@@ -1,0 +1,332 @@
+{
+  "pass": true,
+  "actualCSharpCombat": true,
+  "loadout": "Tier I rank1 no evolution",
+  "health": 1100,
+  "victory": true,
+  "captures": {
+    "claw": {
+      "imageErrors": [],
+      "renderingFailed": false,
+      "time": 4,
+      "boss": 1040,
+      "fx": {
+        "fireStage": null,
+        "effects": 1,
+        "rainWarnings": 0,
+        "landingWarnings": 0
+      },
+      "effects": [
+        {
+          "id": 1,
+          "kind": "claw_right",
+          "x": 190,
+          "y": 299.2827999999997,
+          "directionX": 0,
+          "directionY": 1,
+          "radius": 155,
+          "progress": 0.20805555555555688
+        }
+      ],
+      "pose": {
+        "clip": "claw_right",
+        "frame": 11,
+        "direction": "S",
+        "worldCell": 448.53076140099125
+      }
+    },
+    "fire": {
+      "imageErrors": [],
+      "renderingFailed": false,
+      "time": 9,
+      "boss": 870.5,
+      "fx": {
+        "fireStage": "strike",
+        "effects": 1,
+        "rainWarnings": 0,
+        "landingWarnings": 0
+      },
+      "effects": [
+        {
+          "id": 7,
+          "kind": "cinder",
+          "x": 190,
+          "y": 313.5,
+          "directionX": 0,
+          "directionY": 0,
+          "radius": 82,
+          "progress": 0.6667187500000009
+        }
+      ],
+      "pose": {
+        "clip": "breath_loop",
+        "frame": 6,
+        "direction": "S",
+        "worldCell": 448.53076140099125
+      }
+    },
+    "rain": {
+      "imageErrors": [],
+      "renderingFailed": false,
+      "time": 13,
+      "boss": 821,
+      "fx": {
+        "fireStage": null,
+        "effects": 0,
+        "rainWarnings": 2,
+        "landingWarnings": 0
+      },
+      "effects": [],
+      "pose": {
+        "clip": "fly",
+        "frame": 7,
+        "direction": "S",
+        "worldCell": 448.53076140099125
+      }
+    },
+    "landing": {
+      "imageErrors": [],
+      "renderingFailed": false,
+      "time": 18,
+      "boss": 791,
+      "fx": {
+        "fireStage": null,
+        "effects": 9,
+        "rainWarnings": 0,
+        "landingWarnings": 0
+      },
+      "effects": [
+        {
+          "id": 12,
+          "kind": "meteor",
+          "x": 190,
+          "y": 313.5,
+          "directionX": 0,
+          "directionY": 0,
+          "radius": 45.1,
+          "progress": 0.8737499999999976
+        },
+        {
+          "id": 13,
+          "kind": "meteor",
+          "x": 276.91818054431036,
+          "y": 543.9943664748661,
+          "directionX": 0,
+          "directionY": 0,
+          "radius": 45.1,
+          "progress": 0.8424687499999989
+        },
+        {
+          "id": 14,
+          "kind": "meteor",
+          "x": 190,
+          "y": 313.5,
+          "directionX": 0,
+          "directionY": 0,
+          "radius": 45.1,
+          "progress": 0.6080937499999988
+        },
+        {
+          "id": 15,
+          "kind": "meteor",
+          "x": 306.19769605784575,
+          "y": 160.36759797840733,
+          "directionX": 0,
+          "directionY": 0,
+          "radius": 45.1,
+          "progress": 0.5768437499999985
+        },
+        {
+          "id": 16,
+          "kind": "meteor",
+          "x": 190,
+          "y": 313.5,
+          "directionX": 0,
+          "directionY": 0,
+          "radius": 45.1,
+          "progress": 0.34243749999999706
+        },
+        {
+          "id": 17,
+          "kind": "meteor",
+          "x": 161.26430887177787,
+          "y": 210.29614028334436,
+          "directionX": 0,
+          "directionY": 0,
+          "radius": 45.1,
+          "progress": 0.3111874999999972
+        },
+        {
+          "id": 18,
+          "kind": "meteor",
+          "x": 190,
+          "y": 313.5,
+          "directionX": 0,
+          "directionY": 0,
+          "radius": 45.1,
+          "progress": 0.0768125000000004
+        },
+        {
+          "id": 19,
+          "kind": "meteor",
+          "x": 139.39789977301746,
+          "y": 204.58997510182203,
+          "directionX": 0,
+          "directionY": 0,
+          "radius": 45.1,
+          "progress": 0.04556250000000095
+        },
+        {
+          "id": 20,
+          "kind": "landing",
+          "x": 190,
+          "y": 313.5,
+          "directionX": 0,
+          "directionY": 0,
+          "radius": 99,
+          "progress": 0.04154545454545444
+        }
+      ],
+      "pose": {
+        "clip": "land",
+        "frame": 17,
+        "direction": "S",
+        "worldCell": 448.53076140099125
+      }
+    },
+    "enrage": {
+      "imageErrors": [],
+      "renderingFailed": false,
+      "time": 26,
+      "boss": 550,
+      "fx": {
+        "fireStage": null,
+        "effects": 7,
+        "rainWarnings": 0,
+        "landingWarnings": 0
+      },
+      "effects": [
+        {
+          "id": 24,
+          "kind": "cinder",
+          "x": 190,
+          "y": 147.45000000000002,
+          "directionX": 0,
+          "directionY": 0,
+          "radius": 54,
+          "progress": 0.7083749999999933
+        },
+        {
+          "id": 25,
+          "kind": "cinder",
+          "x": 190,
+          "y": 258.15,
+          "directionX": 0,
+          "directionY": 0,
+          "radius": 54,
+          "progress": 0.6575937499999928
+        },
+        {
+          "id": 26,
+          "kind": "cinder",
+          "x": 190,
+          "y": 368.85,
+          "directionX": 0,
+          "directionY": 0,
+          "radius": 54,
+          "progress": 0.6080937499999934
+        },
+        {
+          "id": 27,
+          "kind": "cinder",
+          "x": 190,
+          "y": 479.54999999999995,
+          "directionX": 0,
+          "directionY": 0,
+          "radius": 54,
+          "progress": 0.5573437499999933
+        },
+        {
+          "id": 28,
+          "kind": "cinder",
+          "x": 190,
+          "y": 313.5,
+          "directionX": 0,
+          "directionY": 0,
+          "radius": 82,
+          "progress": 0.46746874999999577
+        },
+        {
+          "id": 29,
+          "kind": "claw_right",
+          "x": 190,
+          "y": 313.5,
+          "directionX": 0,
+          "directionY": 0,
+          "radius": 155,
+          "progress": 0.7061111111111127
+        },
+        {
+          "id": 30,
+          "kind": "roar",
+          "x": 190,
+          "y": 313.5,
+          "directionX": 0,
+          "directionY": 0,
+          "radius": 120,
+          "progress": 0.05561904761904857
+        }
+      ],
+      "pose": {
+        "clip": "roar",
+        "frame": 1,
+        "direction": "S",
+        "worldCell": 448.53076140099125
+      }
+    },
+    "death": {
+      "imageErrors": [],
+      "renderingFailed": false,
+      "time": 52,
+      "boss": 0,
+      "fx": {
+        "fireStage": null,
+        "effects": 1,
+        "rainWarnings": 0,
+        "landingWarnings": 0
+      },
+      "effects": [
+        {
+          "id": 69,
+          "kind": "cinder",
+          "x": 190,
+          "y": 313.5,
+          "directionX": 0,
+          "directionY": 0,
+          "radius": 108,
+          "progress": 0.3580937499999942
+        }
+      ],
+      "pose": {
+        "clip": "death",
+        "frame": 6,
+        "direction": "S",
+        "worldCell": 448.53076140099125
+      }
+    }
+  },
+  "simulationSeconds": 52,
+  "samples": 1590,
+  "layouts": [
+    320,
+    390,
+    402,
+    844
+  ],
+  "reducedMotion": true,
+  "pauseFreezesEffects": true,
+  "manualDefaultFullDamage": true,
+  "standingStillLoses": true,
+  "physicalPhoneAcceptance": false,
+  "errors": []
+}

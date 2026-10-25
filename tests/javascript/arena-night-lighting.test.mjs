@@ -84,7 +84,7 @@ test('nightmask draws black first, cuts holes, then restores canvas composition'
     assert.equal(canvas.height, 680);
     assert.ok(mask.ops.some(x => x[0] === 'composition' && x[1] === 'destination-out'));
     assert.ok(mask.ops.some(x => x[0] === 'color' && x[1] === 'rgba(0,0,0,0.900)'));
-    assert.ok(painted.ops.some(x => x[0] === 'composition' && x[1] === 'screen'));
+    assert.ok(!painted.ops.some(x => x[0] === 'composition' && x[1] === 'screen'), 'Visibility must not duplicate source color spill.');
     assert.equal(mask.ops.at(-1), 'restore');
     assert.equal(painted.ops.at(-1), 'restore');
     assert.equal(drawGothicNight(painted, null, canvas), false);

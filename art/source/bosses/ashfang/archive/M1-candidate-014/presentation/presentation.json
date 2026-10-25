@@ -1,0 +1,9 @@
+{
+  "source": "C:\\Wyrmforge\\ashfang-zagmatorah\\artifacts\\ashfang\\M1-candidate-014\\ashfang-master-working.blend",
+  "camera": "Perspective 48mm static hero presentation; not gameplay camera",
+  "renderer": "Cycles OptiX",
+  "samples": 80,
+  "completed": true,
+  "ownerAccepted": false,
+  "missingDependencies": []
+}
