@@ -22,6 +22,20 @@ const object = (id, geometry, materialId, position, scale = [1, 1, 1], extra = {
     id, ownerId: id, geometry, material: materialId, position, scale, rotation: [0, 0, 0],
     receivesLight: true, receivesShadow: true, castsShadow: true, ...extra,
 });
+function fallbackTexture(color = '#4c5848') {
+    const pixels = new Uint8Array(16 * 16 * 4);
+    const base = new T.Color(color);
+    for (let i = 0; i < 256; i++) {
+        const shade = (i * 13 % 17) / 128 + .8;
+        pixels[i * 4] = Math.round(base.r * shade * 255);
+        pixels[i * 4 + 1] = Math.round(base.g * shade * 255);
+        pixels[i * 4 + 2] = Math.round(base.b * shade * 255);
+        pixels[i * 4 + 3] = 255;
+    }
+    const texture = new T.DataTexture(pixels, 16, 16);
+    texture.needsUpdate = true;
+    return texture;
+}
 async function approvedGround() {
     const source = new Image(); source.src = GROUND_ATLAS_URL; await source.decode();
     const atlas = buildGroundQuiltAtlas(source, 1204, undefined, false);
@@ -40,8 +54,12 @@ async function actorResources(engine, id, folder) {
     const clip = manifest.clips.walk;
     const texture = await new T.TextureLoader().loadAsync(new URL(clip.image, base).href);
     engine.registerTexture(id, texture);
-    const normal = await new T.TextureLoader().loadAsync(new URL(`../../art/lighting-proof/${id}-walk-normal.png`, import.meta.url).href);
-    engine.registerTexture(`${id}-normal`, normal, false);
+    try {
+        const normal = await new T.TextureLoader().loadAsync(new URL(`../../art/lighting-proof/${id}-walk-normal.png`, import.meta.url).href);
+        engine.registerTexture(`${id}-normal`, normal, false);
+    } catch (error) {
+        console.warn(`Optional ${id} normal map unavailable`, error);
+    }
     engine.registerGeometry(id, spritePlaneGeometry(T, clip, 1 / 48, engine.camera.getWorldDirection(new T.Vector3()).negate().toArray()));
     manifest.animationProfile = await (await fetch(new URL('animation-profile.json', base))).json();
     return manifest;
