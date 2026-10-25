@@ -1,0 +1,604 @@
+[
+  {
+    "Identity": {
+      "Id": 1,
+      "Archetype": "MireHound",
+      "Faction": "hostile"
+    },
+    "Seed": 42,
+    "DecisionIntervalTicks": 6,
+    "Lifecycle": 0,
+    "Tick": 178,
+    "NextDecisionTick": 183,
+    "Sequence": 31,
+    "Observations": [
+      {
+        "Key": "target",
+        "Value": "184,243.7578125",
+        "ObservedTick": 178,
+        "Source": "legacy-exact-target/world-units"
+      },
+      {
+        "Key": "navigation",
+        "Value": "184,243.7578125",
+        "ObservedTick": 178,
+        "Source": "existing-hunt-navigation"
+      },
+      {
+        "Key": "phase",
+        "Value": "Retreat",
+        "ObservedTick": 178,
+        "Source": "authoritative-executor"
+      },
+      {
+        "Key": "cooldown",
+        "Value": "2.6",
+        "ObservedTick": 178,
+        "Source": "authoritative-executor"
+      },
+      {
+        "Key": "may-commit",
+        "Value": "True",
+        "ObservedTick": 178,
+        "Source": "existing-pressure-budget"
+      }
+    ],
+    "Memory": [
+      {
+        "Key": "cooldown",
+        "Value": "2.6",
+        "ObservedTick": 178,
+        "Source": "authoritative-executor"
+      },
+      {
+        "Key": "may-commit",
+        "Value": "True",
+        "ObservedTick": 178,
+        "Source": "existing-pressure-budget"
+      },
+      {
+        "Key": "navigation",
+        "Value": "184,243.7578125",
+        "ObservedTick": 178,
+        "Source": "existing-hunt-navigation"
+      },
+      {
+        "Key": "phase",
+        "Value": "Retreat",
+        "ObservedTick": 178,
+        "Source": "authoritative-executor"
+      },
+      {
+        "Key": "target",
+        "Value": "184,243.7578125",
+        "ObservedTick": 178,
+        "Source": "legacy-exact-target/world-units"
+      }
+    ],
+    "CurrentAction": {
+      "Sequence": 31,
+      "Goal": "flank-and-pounce",
+      "Action": "hound-cycle",
+      "Reason": "executor-owns-lane-cooldown-and-pressure"
+    },
+    "LastResult": {
+      "Sequence": 31,
+      "Status": 0,
+      "Reason": "Retreat"
+    },
+    "Trace": [
+      {
+        "Tick": 87,
+        "Alternatives": [
+          {
+            "Goal": "pursue",
+            "Action": "chase",
+            "Score": 1,
+            "Allowed": false,
+            "Reason": "hound-retains-authored-cycle"
+          },
+          {
+            "Goal": "flank-and-pounce",
+            "Action": "hound-cycle",
+            "Score": 1,
+            "Allowed": true,
+            "Reason": "executor-owns-lane-cooldown-and-pressure"
+          },
+          {
+            "Goal": "idle",
+            "Action": "wait",
+            "Score": 0,
+            "Allowed": true,
+            "Reason": "fallback-only"
+          }
+        ],
+        "Chosen": {
+          "Sequence": 16,
+          "Goal": "flank-and-pounce",
+          "Action": "hound-cycle",
+          "Reason": "executor-owns-lane-cooldown-and-pressure"
+        }
+      },
+      {
+        "Tick": 93,
+        "Alternatives": [
+          {
+            "Goal": "pursue",
+            "Action": "chase",
+            "Score": 1,
+            "Allowed": false,
+            "Reason": "hound-retains-authored-cycle"
+          },
+          {
+            "Goal": "flank-and-pounce",
+            "Action": "hound-cycle",
+            "Score": 1,
+            "Allowed": true,
+            "Reason": "executor-owns-lane-cooldown-and-pressure"
+          },
+          {
+            "Goal": "idle",
+            "Action": "wait",
+            "Score": 0,
+            "Allowed": true,
+            "Reason": "fallback-only"
+          }
+        ],
+        "Chosen": {
+          "Sequence": 17,
+          "Goal": "flank-and-pounce",
+          "Action": "hound-cycle",
+          "Reason": "executor-owns-lane-cooldown-and-pressure"
+        }
+      },
+      {
+        "Tick": 99,
+        "Alternatives": [
+          {
+            "Goal": "pursue",
+            "Action": "chase",
+            "Score": 1,
+            "Allowed": false,
+            "Reason": "hound-retains-authored-cycle"
+          },
+          {
+            "Goal": "flank-and-pounce",
+            "Action": "hound-cycle",
+            "Score": 1,
+            "Allowed": true,
+            "Reason": "executor-owns-lane-cooldown-and-pressure"
+          },
+          {
+            "Goal": "idle",
+            "Action": "wait",
+            "Score": 0,
+            "Allowed": true,
+            "Reason": "fallback-only"
+          }
+        ],
+        "Chosen": {
+          "Sequence": 18,
+          "Goal": "flank-and-pounce",
+          "Action": "hound-cycle",
+          "Reason": "executor-owns-lane-cooldown-and-pressure"
+        }
+      },
+      {
+        "Tick": 105,
+        "Alternatives": [
+          {
+            "Goal": "pursue",
+            "Action": "chase",
+            "Score": 1,
+            "Allowed": false,
+            "Reason": "hound-retains-authored-cycle"
+          },
+          {
+            "Goal": "flank-and-pounce",
+            "Action": "hound-cycle",
+            "Score": 1,
+            "Allowed": true,
+            "Reason": "executor-owns-lane-cooldown-and-pressure"
+          },
+          {
+            "Goal": "idle",
+            "Action": "wait",
+            "Score": 0,
+            "Allowed": true,
+            "Reason": "fallback-only"
+          }
+        ],
+        "Chosen": {
+          "Sequence": 19,
+          "Goal": "flank-and-pounce",
+          "Action": "hound-cycle",
+          "Reason": "executor-owns-lane-cooldown-and-pressure"
+        }
+      },
+      {
+        "Tick": 111,
+        "Alternatives": [
+          {
+            "Goal": "pursue",
+            "Action": "chase",
+            "Score": 1,
+            "Allowed": false,
+            "Reason": "hound-retains-authored-cycle"
+          },
+          {
+            "Goal": "flank-and-pounce",
+            "Action": "hound-cycle",
+            "Score": 1,
+            "Allowed": true,
+            "Reason": "executor-owns-lane-cooldown-and-pressure"
+          },
+          {
+            "Goal": "idle",
+            "Action": "wait",
+            "Score": 0,
+            "Allowed": true,
+            "Reason": "fallback-only"
+          }
+        ],
+        "Chosen": {
+          "Sequence": 20,
+          "Goal": "flank-and-pounce",
+          "Action": "hound-cycle",
+          "Reason": "executor-owns-lane-cooldown-and-pressure"
+        }
+      },
+      {
+        "Tick": 117,
+        "Alternatives": [
+          {
+            "Goal": "pursue",
+            "Action": "chase",
+            "Score": 1,
+            "Allowed": false,
+            "Reason": "hound-retains-authored-cycle"
+          },
+          {
+            "Goal": "flank-and-pounce",
+            "Action": "hound-cycle",
+            "Score": 1,
+            "Allowed": true,
+            "Reason": "executor-owns-lane-cooldown-and-pressure"
+          },
+          {
+            "Goal": "idle",
+            "Action": "wait",
+            "Score": 0,
+            "Allowed": true,
+            "Reason": "fallback-only"
+          }
+        ],
+        "Chosen": {
+          "Sequence": 21,
+          "Goal": "flank-and-pounce",
+          "Action": "hound-cycle",
+          "Reason": "executor-owns-lane-cooldown-and-pressure"
+        }
+      },
+      {
+        "Tick": 123,
+        "Alternatives": [
+          {
+            "Goal": "pursue",
+            "Action": "chase",
+            "Score": 1,
+            "Allowed": false,
+            "Reason": "hound-retains-authored-cycle"
+          },
+          {
+            "Goal": "flank-and-pounce",
+            "Action": "hound-cycle",
+            "Score": 1,
+            "Allowed": true,
+            "Reason": "executor-owns-lane-cooldown-and-pressure"
+          },
+          {
+            "Goal": "idle",
+            "Action": "wait",
+            "Score": 0,
+            "Allowed": true,
+            "Reason": "fallback-only"
+          }
+        ],
+        "Chosen": {
+          "Sequence": 22,
+          "Goal": "flank-and-pounce",
+          "Action": "hound-cycle",
+          "Reason": "executor-owns-lane-cooldown-and-pressure"
+        }
+      },
+      {
+        "Tick": 129,
+        "Alternatives": [
+          {
+            "Goal": "pursue",
+            "Action": "chase",
+            "Score": 1,
+            "Allowed": false,
+            "Reason": "hound-retains-authored-cycle"
+          },
+          {
+            "Goal": "flank-and-pounce",
+            "Action": "hound-cycle",
+            "Score": 1,
+            "Allowed": true,
+            "Reason": "executor-owns-lane-cooldown-and-pressure"
+          },
+          {
+            "Goal": "idle",
+            "Action": "wait",
+            "Score": 0,
+            "Allowed": true,
+            "Reason": "fallback-only"
+          }
+        ],
+        "Chosen": {
+          "Sequence": 23,
+          "Goal": "flank-and-pounce",
+          "Action": "hound-cycle",
+          "Reason": "executor-owns-lane-cooldown-and-pressure"
+        }
+      },
+      {
+        "Tick": 135,
+        "Alternatives": [
+          {
+            "Goal": "pursue",
+            "Action": "chase",
+            "Score": 1,
+            "Allowed": false,
+            "Reason": "hound-retains-authored-cycle"
+          },
+          {
+            "Goal": "flank-and-pounce",
+            "Action": "hound-cycle",
+            "Score": 1,
+            "Allowed": true,
+            "Reason": "executor-owns-lane-cooldown-and-pressure"
+          },
+          {
+            "Goal": "idle",
+            "Action": "wait",
+            "Score": 0,
+            "Allowed": true,
+            "Reason": "fallback-only"
+          }
+        ],
+        "Chosen": {
+          "Sequence": 24,
+          "Goal": "flank-and-pounce",
+          "Action": "hound-cycle",
+          "Reason": "executor-owns-lane-cooldown-and-pressure"
+        }
+      },
+      {
+        "Tick": 141,
+        "Alternatives": [
+          {
+            "Goal": "pursue",
+            "Action": "chase",
+            "Score": 1,
+            "Allowed": false,
+            "Reason": "hound-retains-authored-cycle"
+          },
+          {
+            "Goal": "flank-and-pounce",
+            "Action": "hound-cycle",
+            "Score": 1,
+            "Allowed": true,
+            "Reason": "executor-owns-lane-cooldown-and-pressure"
+          },
+          {
+            "Goal": "idle",
+            "Action": "wait",
+            "Score": 0,
+            "Allowed": true,
+            "Reason": "fallback-only"
+          }
+        ],
+        "Chosen": {
+          "Sequence": 25,
+          "Goal": "flank-and-pounce",
+          "Action": "hound-cycle",
+          "Reason": "executor-owns-lane-cooldown-and-pressure"
+        }
+      },
+      {
+        "Tick": 147,
+        "Alternatives": [
+          {
+            "Goal": "pursue",
+            "Action": "chase",
+            "Score": 1,
+            "Allowed": false,
+            "Reason": "hound-retains-authored-cycle"
+          },
+          {
+            "Goal": "flank-and-pounce",
+            "Action": "hound-cycle",
+            "Score": 1,
+            "Allowed": true,
+            "Reason": "executor-owns-lane-cooldown-and-pressure"
+          },
+          {
+            "Goal": "idle",
+            "Action": "wait",
+            "Score": 0,
+            "Allowed": true,
+            "Reason": "fallback-only"
+          }
+        ],
+        "Chosen": {
+          "Sequence": 26,
+          "Goal": "flank-and-pounce",
+          "Action": "hound-cycle",
+          "Reason": "executor-owns-lane-cooldown-and-pressure"
+        }
+      },
+      {
+        "Tick": 153,
+        "Alternatives": [
+          {
+            "Goal": "pursue",
+            "Action": "chase",
+            "Score": 1,
+            "Allowed": false,
+            "Reason": "hound-retains-authored-cycle"
+          },
+          {
+            "Goal": "flank-and-pounce",
+            "Action": "hound-cycle",
+            "Score": 1,
+            "Allowed": true,
+            "Reason": "executor-owns-lane-cooldown-and-pressure"
+          },
+          {
+            "Goal": "idle",
+            "Action": "wait",
+            "Score": 0,
+            "Allowed": true,
+            "Reason": "fallback-only"
+          }
+        ],
+        "Chosen": {
+          "Sequence": 27,
+          "Goal": "flank-and-pounce",
+          "Action": "hound-cycle",
+          "Reason": "executor-owns-lane-cooldown-and-pressure"
+        }
+      },
+      {
+        "Tick": 159,
+        "Alternatives": [
+          {
+            "Goal": "pursue",
+            "Action": "chase",
+            "Score": 1,
+            "Allowed": false,
+            "Reason": "hound-retains-authored-cycle"
+          },
+          {
+            "Goal": "flank-and-pounce",
+            "Action": "hound-cycle",
+            "Score": 1,
+            "Allowed": true,
+            "Reason": "executor-owns-lane-cooldown-and-pressure"
+          },
+          {
+            "Goal": "idle",
+            "Action": "wait",
+            "Score": 0,
+            "Allowed": true,
+            "Reason": "fallback-only"
+          }
+        ],
+        "Chosen": {
+          "Sequence": 28,
+          "Goal": "flank-and-pounce",
+          "Action": "hound-cycle",
+          "Reason": "executor-owns-lane-cooldown-and-pressure"
+        }
+      },
+      {
+        "Tick": 165,
+        "Alternatives": [
+          {
+            "Goal": "pursue",
+            "Action": "chase",
+            "Score": 1,
+            "Allowed": false,
+            "Reason": "hound-retains-authored-cycle"
+          },
+          {
+            "Goal": "flank-and-pounce",
+            "Action": "hound-cycle",
+            "Score": 1,
+            "Allowed": true,
+            "Reason": "executor-owns-lane-cooldown-and-pressure"
+          },
+          {
+            "Goal": "idle",
+            "Action": "wait",
+            "Score": 0,
+            "Allowed": true,
+            "Reason": "fallback-only"
+          }
+        ],
+        "Chosen": {
+          "Sequence": 29,
+          "Goal": "flank-and-pounce",
+          "Action": "hound-cycle",
+          "Reason": "executor-owns-lane-cooldown-and-pressure"
+        }
+      },
+      {
+        "Tick": 171,
+        "Alternatives": [
+          {
+            "Goal": "pursue",
+            "Action": "chase",
+            "Score": 1,
+            "Allowed": false,
+            "Reason": "hound-retains-authored-cycle"
+          },
+          {
+            "Goal": "flank-and-pounce",
+            "Action": "hound-cycle",
+            "Score": 1,
+            "Allowed": true,
+            "Reason": "executor-owns-lane-cooldown-and-pressure"
+          },
+          {
+            "Goal": "idle",
+            "Action": "wait",
+            "Score": 0,
+            "Allowed": true,
+            "Reason": "fallback-only"
+          }
+        ],
+        "Chosen": {
+          "Sequence": 30,
+          "Goal": "flank-and-pounce",
+          "Action": "hound-cycle",
+          "Reason": "executor-owns-lane-cooldown-and-pressure"
+        }
+      },
+      {
+        "Tick": 177,
+        "Alternatives": [
+          {
+            "Goal": "pursue",
+            "Action": "chase",
+            "Score": 1,
+            "Allowed": false,
+            "Reason": "hound-retains-authored-cycle"
+          },
+          {
+            "Goal": "flank-and-pounce",
+            "Action": "hound-cycle",
+            "Score": 1,
+            "Allowed": true,
+            "Reason": "executor-owns-lane-cooldown-and-pressure"
+          },
+          {
+            "Goal": "idle",
+            "Action": "wait",
+            "Score": 0,
+            "Allowed": true,
+            "Reason": "fallback-only"
+          }
+        ],
+        "Chosen": {
+          "Sequence": 31,
+          "Goal": "flank-and-pounce",
+          "Action": "hound-cycle",
+          "Reason": "executor-owns-lane-cooldown-and-pressure"
+        }
+      }
+    ]
+  }
+]

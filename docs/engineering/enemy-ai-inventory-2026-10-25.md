@@ -2,6 +2,8 @@
 
 Implementation inventory and review evidence at main `1831893613f91b2c74cd4143cdd5623d7dc2939f`, 25 October 2026. This is not a replacement design specification and does not implement the shared agent framework.
 
+Subsequent AI0 implementation status and validation live in [AI0 foundation](ai0-foundation.md). The inventory below preserves the pre-implementation audit.
+
 Authority: [canonical creatures](../canon/creatures-and-encounters.md#reactive-creature-decisions--owner-direction-23-october-2026), [architecture](../canon/architecture-and-quality.md), and the [AI0–AI6 milestone plan](../design/unified-agent-ai-milestones.md) added by merged #347. The owner requested this review after Ashfang #299 merged, with encounter balance permitted afterward. Town G4/Town spatial work and actor-art PRs remain separate.
 
 ## Ashfang prerequisite: verified merge
