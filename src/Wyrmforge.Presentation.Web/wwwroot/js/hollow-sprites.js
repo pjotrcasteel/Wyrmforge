@@ -162,16 +162,11 @@ export function drawHollowCorpses(ctx,state,reducedMotion=false){
             corpse.direction,corpse.x,corpse.y,corpse.radius*corpse.visualScale,
             age<3?1:Math.max(0,4-age)))continue;
         if(arms.ready()) {
-            // Device-only safety fallback when source death art cannot decode.
-            // Never resurrect the cape for a corpse after a cape-free encounter.
-            const progress=reducedMotion?1:Math.min(1,age*3);
-            ctx.save();
-            ctx.translate(corpse.x,corpse.y);
-            ctx.rotate(progress*Math.PI/2);
-            ctx.translate(-corpse.x,-corpse.y);
-            arms.draw(ctx,corpse.armVariant,'walk',0,corpse.direction,
-                corpse.x,corpse.y,corpse.radius*corpse.visualScale,age<3?1:Math.max(0,4-age));
-            ctx.restore();
+            // Missing 3D death art must never resurrect the cape or recreate the
+            // rejected 2D spinning-corpse animation. Briefly fade the last actor.
+            const opacity=Math.max(0,1-age/.3);
+            if(opacity>0)arms.draw(ctx,corpse.armVariant,'walk',0,corpse.direction,
+                corpse.x,corpse.y,corpse.radius*corpse.visualScale,opacity);
         } else {
             draw(ctx,'death',reducedMotion?23:Math.min(23,Math.floor(age*12)),corpse.direction,
                 corpse.x,corpse.y,corpse.radius*corpse.visualScale,age<3?1:4-age);
