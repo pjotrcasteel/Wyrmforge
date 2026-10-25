@@ -89,6 +89,15 @@ public sealed class GpuLightingFrameProjectionTests
             LightingSceneComposer.Compose("scene", 5, Environment, [torch], [torch]));
     }
 
+    [TestMethod]
+    public void Registry_ExpiredLight_IsRemoved()
+    {
+        var registry = new LightingEmitterRegistry();
+        registry.Upsert(new LightingEmitter("spark", "effect", "point", 0, 0, 0, "#ffffff", 1, 3, ExpiresAtTick: 5));
+        Assert.AreEqual(1, registry.Capture("hunt", 4, Environment).Emitters.Count);
+        Assert.AreEqual(0, registry.Capture("hunt", 5, Environment).Emitters.Count);
+    }
+
     private static LightingSnapshot CreateSnapshot(long tick, params LightingEmitter[] lights) =>
         new(LightingSnapshot.CurrentSchemaVersion, tick, "test", Environment, lights);
 }
