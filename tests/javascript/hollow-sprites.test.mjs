@@ -179,7 +179,7 @@ test('a real Hollow death renders authored 3D frames, not a rotated walking spri
     const path=this.url;
     const clips=path.includes('/arms/')?Object.values(arms.clips).flatMap(x=>Object.values(x)):
      path.includes('/injuries/')?Object.values(injury.clips):
-     path.includes('/death/')?[death]:Object.values(base.clips);
+     path.includes('/death/')?Object.values(death.clips).map(c=>({...c,cell:death.cell,frames:death.frames})):Object.values(base.clips);
     const clip=clips.find(c=>path.includes('/'+c.image+'?'));
     assert.ok(clip,'unexpected clip URL: '+path);
     this.naturalWidth=clip.cell*clip.frames;
@@ -204,7 +204,8 @@ test('a real Hollow death renders authored 3D frames, not a rotated walking spri
     drawImage(...values){calls.push(values);}};
    isolated.drawHollowCorpses(ctx,state);
    assert.equal(calls.length,1);
-   assert.ok(calls[0][0].url.includes('/death/death.png?'),'should render rigged 3D death image');
+   assert.ok(calls[0][0].url.includes('/death/'+death.clips[isolated.hollowDiagnostics(state).corpses[0].deathVariant].image+'?'),
+    'must draw selected 3D death clip');
    assert.equal(calls[0][1],0);
    assert.equal(calls[0][2],death.directions.indexOf(facing)*128);
    isolated.updateHollowSprites(state,{...dead,deathBursts:[]},1.05);
