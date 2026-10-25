@@ -62,6 +62,25 @@ class SegmentBankTests(unittest.TestCase):
             y, x = 12, 43
             self.assertTrue(np.array_equal(sample[y,x].astype("uint8"),
                                             source[(y+128//3+2*13)%128,(x+2*17)%128]))
+            # The final section uses a different integer-aligned source crop
+            # and remains pixel-exact away from the narrow organic seam.
+            final_source = np.asarray(Image.open(directories[0] / "grass-moss-ART-CANDIDATE-05.png"))
+            y, x = 315, 43
+            uy = (y + 128//3 + 2*13 + 128*61//100) % 128
+            vx = (x + 2*17 + 128*13//100) % 128
+            self.assertTrue(np.array_equal(sample[y,x].astype("uint8"), final_source[uy,vx]))
+            # A controlled palette proves muddy wear actually selects Wet Mud
+            # pixels and is materially distinct from the heavy-wear silhouette.
+            dry_green = [Image.new("RGB", (128,128), (25,80,28)) for _ in range(6)]
+            dry_soil = [Image.new("RGB", (128,128), (149,99,63)) for _ in range(6)]
+            wet_mud = [Image.new("RGB", (128,128), (53,41,37)) for _ in range(6)]
+            heavy = np.asarray(tool._make_strip(dry_green,dry_soil,wet_mud,1,128,320))
+            muddy = np.asarray(tool._make_strip(dry_green,dry_soil,wet_mud,3,128,320))
+            inside = slice(25,103)
+            heavy_wet_fraction = np.mean((heavy[:,inside,0] < 100) & (heavy[:,inside,1] < 70))
+            muddy_wet_fraction = np.mean((muddy[:,inside,0] < 100) & (muddy[:,inside,1] < 70))
+            self.assertGreater(muddy_wet_fraction, heavy_wet_fraction + .18)
+
             with self.assertRaises(ValueError):
                 tool.build(*directories,directories[1]/"illegal",side=128,height=320,overlap=32)
             (directories[1]/"trampled-earth-INDEPENDENT-ART-CANDIDATE-01.png").write_bytes(b"tampered")

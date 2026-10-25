@@ -63,9 +63,16 @@ def _sample(images: list[Image.Image], index: int, side: int, height: int, seed:
     yy, xx = np.indices((height, side), dtype=np.int32)
     variants = [np.asarray(images[(index + shift) % 6].resize((side, side), Image.Resampling.BOX)) for shift in (0, 2, 4)]
     start = side // 3 + seed * 13
+    # Each section samples a different integer-aligned source crop.
+    # This reduces repeated stones and footprints at identical UV locations
+    # without inventing new painted pixels or modifying source paintings.
     u = (yy + start) % side
     v = (xx + index * 37 + seed * 17) % side
-    rgb = variants[0][u, v].astype(np.float32)
+    offsets = ((0, 0), (side * 29 // 100, side * 37 // 100),
+               (side * 61 // 100, side * 13 // 100))
+    sampled = [source[(u + oy) % side, (v + ox) % side].astype(np.float32)
+               for source, (oy, ox) in zip(variants, offsets)]
+    rgb = sampled[0]
     # Preserve leaf, stone and soil pixels on both sides of continuous organic
     # source-art boundaries. Only a four-pixel antialias zone crossfades RGB;
     # broad fades double landmarks and turn detailed vegetation into ghosts.
@@ -75,7 +82,7 @@ def _sample(images: list[Image.Image], index: int, side: int, height: int, seed:
         boundary = (seam + side * .080 * np.sin(xx_float / side * 7.3 + seed * .61 + k)
                     + side * .026 * np.cos(xx_float / side * 16.4 - seed * .27 + 2 * k))
         coverage = np.clip((yy.astype(np.float32) - boundary + 2.0) / 4.0, 0, 1)[..., None]
-        rgb = rgb * (1 - coverage) + variants[k + 1][u, v] * coverage
+        rgb = rgb * (1 - coverage) + sampled[k + 1] * coverage
     return rgb
 
 
@@ -101,8 +108,15 @@ def _make_strip(grass: list[Image.Image], earth: list[Image.Image], mud: list[Im
     elif role == 3:
         shape = _smoothstep((.25 + coarse*2 - dist) / .06)
         mm = _sample(mud, role, side, height, 3)
-        damp = _smoothstep((np.sin(u*19+v*1.45) * np.sin(u*4.5-v*3.1) - .13) / .6)
-        soil = soil * (1 - damp[..., None] * .76) + mm * (damp[..., None] * .76)
+        # Distinct contiguous wet-soil patches are selected from the
+        # actual Wet Mud source art, not synthetic darkening or 76% RGB
+        # crossfades. This is painterly reference only, not a water mask,
+        # reflective material, physical wetness or world geometry.
+        broad = (.62 * np.sin(v * 3.0 + u * 10.2)
+                 + .33 * np.cos(v * 5.1 - u * 7.4)
+                 + .22 * np.sin(v * 1.7 + u * 19.3))
+        wet = _smoothstep((broad + .09) / .14) * _smoothstep((.285 - dist) / .065)
+        soil = soil * (1 - wet[..., None]) + mm * wet[..., None]
     elif role == 4:
         broken = .24 + .085 * np.sin(v*3.2+role) + .055 * np.sin(v*6.3+u*7)
         shape = _smoothstep((broken + coarse - dist) / .06)
