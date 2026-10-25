@@ -81,6 +81,12 @@ class FeatureMotifSourceTests(unittest.TestCase):
                 self.assertTrue(item["sourceRgbCropPixelsUnchanged"])
                 self.assertFalse(item["cropIsTileable"])
                 self.assertFalse(item["cropIsRuntimeAlpha"])
+                self.assertFalse(item["annotatedIsolationPreviewIsRuntimeAsset"])
+                with Image.open(place / "review" / item["annotatedIsolationPreviewFile"]) as isolation:
+                    self.assertEqual(isolation.mode, "RGB")
+                    with Image.open(place / "review" / item["sourceRgbCropFile"]) as crop_check:
+                        self.assertEqual(isolation.size, crop_check.size)
+                        self.assertNotEqual(isolation.getpixel((0, 0)), crop_check.getpixel((0, 0)))
                 with Image.open(place / "review" / item["sourceRgbCropFile"]) as crop:
                     self.assertEqual(crop.mode, "RGB")
                     self.assertGreater(crop.width, 0)
