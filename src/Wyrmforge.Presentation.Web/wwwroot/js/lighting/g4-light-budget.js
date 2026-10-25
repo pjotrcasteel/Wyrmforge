@@ -49,3 +49,28 @@ export function selectLightBudget(lights, camera, settings) {
     return { ...light, castShadow };
   });
 }
+
+/** Fit a pixel-art framebuffer within both the legacy width cap and GPU limits. */
+export function computeFramebufferSize(width, height, maxSize = 2048) {
+  const safeWidth = Number.isFinite(width) && width > 0 ? width : 1;
+  const safeHeight = Number.isFinite(height) && height > 0 ? height : 1;
+  const limit = Number.isFinite(maxSize) && maxSize > 0 ? Math.max(1, Math.floor(maxSize)) : 2048;
+  const baseWidth = Math.max(1, Math.min(390, Math.round(safeWidth)));
+  const baseHeight = Math.max(1, Math.round(safeHeight * baseWidth / safeWidth));
+  const scale = Math.min(1, limit / Math.max(baseWidth, baseHeight));
+  return { width: Math.max(1, Math.round(baseWidth * scale)),
+    height: Math.max(1, Math.round(baseHeight * scale)) };
+}
+
+/** Hysteretic adaptive controller. Diagnostics never auto-selects itself. */
+export function nextAdaptiveQuality(current, averageFrameMs, slowSamples = 0, fastSamples = 0) {
+  const levels = ['low', 'medium', 'high'];
+  const index = levels.indexOf(current);
+  if (index < 0 || !Number.isFinite(averageFrameMs) || averageFrameMs < 0)
+    return { quality: current, slowSamples: 0, fastSamples: 0 };
+  const slow = averageFrameMs > 24 ? slowSamples + 1 : 0;
+  const fast = averageFrameMs < 11 ? fastSamples + 1 : 0;
+  if (slow >= 3 && index > 0) return { quality: levels[index - 1], slowSamples: 0, fastSamples: 0 };
+  if (fast >= 12 && index < 2) return { quality: levels[index + 1], slowSamples: 0, fastSamples: 0 };
+  return { quality: current, slowSamples: slow, fastSamples: fast };
+}
