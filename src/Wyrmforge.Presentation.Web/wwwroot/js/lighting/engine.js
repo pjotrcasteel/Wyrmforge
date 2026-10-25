@@ -35,6 +35,7 @@ export class LightingEngine {
     }
     registerTexture(id, texture, colorData = true) {
         if (this.textures.has(id)) throw new Error(`Duplicate texture ${id}`);
+        if (texture.isCubeTexture) colorData = true;
         texture.colorSpace = colorData ? T.SRGBColorSpace : T.NoColorSpace;
         texture.magFilter = texture.minFilter = T.NearestFilter;
         texture.generateMipmaps = false;
@@ -97,6 +98,8 @@ export class LightingEngine {
         const s = validateSnapshot(input);
         for (const m of s.materials) for (const key of ['albedo', 'normal', 'roughnessMap', 'aoMap', 'emissiveMap', 'reflectionProbe'])
             if (m[key] && !this.textures.has(m[key])) throw new Error(`Missing texture ${m[key]}`);
+        for (const m of s.materials) if (m.reflection === 'probe' && !this.textures.get(m.reflectionProbe)?.isCubeTexture)
+            throw new TypeError(`Reflection probe ${m.reflectionProbe} must be a cube texture`);
         for (const o of s.objects) for (const key of ['geometry', 'occluderGeometry'])
             if (o[key] && !this.geometries.has(o[key])) throw new Error(`Missing geometry ${o[key]}`);
         const selected = selectLights(s, this.shadowViews, this.maxLights);
