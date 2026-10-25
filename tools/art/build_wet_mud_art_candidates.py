@@ -57,8 +57,9 @@ def create(
         )
         if family == "wet-mud" and set(choices) != set(range(6)):
             raise AssertionError("Wet Mud trials must consume all six source artworks")
-        if family in ("trampled-earth", "old-paving", "scorched-ground", "marsh-wet-bank") and number - 1 not in choices:
-            raise AssertionError(f"{family} candidate must use its designated original painting")
+        if family in ("trampled-earth", "old-paving", "scorched-ground", "marsh-wet-bank"):
+            if choices.count(number - 1) <= max(choices.count(j) for j in range(6) if j != number - 1):
+                raise AssertionError(f"{family} candidate {number} must have a uniquely dominant source painting")
         finished = periodic_component(raw)
         metrics = seam_metrics(finished)
         if metrics["meanRgbGapLeftRight"] or metrics["meanRgbGapTopBottom"]:
