@@ -14,6 +14,8 @@ public sealed class LightingEmitterRegistry
 
     public bool Remove(string id) => emitters.Remove(id);
 
+    public int Count => emitters.Count;
+
     public int RemoveOwner(string ownerId)
     {
         var ids = emitters.Values.Where(emitter => emitter.OwnerId == ownerId)
