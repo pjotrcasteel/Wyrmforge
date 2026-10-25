@@ -27,14 +27,18 @@ jobs:
         run: |
           set -euo pipefail
           for v in broken-leg-right broken-leg-left-broken-arm-right; do
-            python tools/sprite-lab/author-hollow-additional-trauma-v1.py --variant "$v"
             if [ "$v" = broken-leg-right ]; then
               folder=rigged-hollow-broken-leg-right-even-cadence
             else
               folder=rigged-hollow-broken-arm-right-leg-left-even-cadence
             fi
-            python tools/sprite-lab/sample-hollow-rig.py -- \
-              "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/$folder"
+            source_path="art/source/enemies/hollow/rigged-poc/model/local-appearance-004/$folder"
+            if [ ! -f "$source_path/hollow-rigged.blend" ]; then
+              python tools/sprite-lab/author-hollow-additional-trauma-v1.py --variant "$v"
+            fi
+            if [ ! -f "$source_path/sampled-walk.npz" ]; then
+              python tools/sprite-lab/sample-hollow-rig.py -- "$source_path"
+            fi
             python tools/sprite-lab/render-hollow-additional-trauma-v1.py --variant "$v"
           done
       - name: Verify source geometry, asymmetric contact and two complete 96px atlases
