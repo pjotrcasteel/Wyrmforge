@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
 import {createHollowDeathAssets,HOLLOW_DEATH_DIRECTIONS,HOLLOW_DEATH_VARIANTS,selectHollowDeathVariant}
     from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/hollow-death.js';
 
@@ -75,4 +77,22 @@ test('different Hollowed receive stable forward and braced 3D skeletal deaths',(
     assert.ok([...counts.values()].every(count=>count>=400&&count<=600));
     assert.equal(selectHollowDeathVariant(-1),'collapse-forward');
     assert.equal(selectHollowDeathVariant(NaN),'collapse-forward');
+});
+
+test('both published 3D death atlases have authentic manifest hashes and distinct poses',()=>{
+    const root=new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/hollow-rigged/death/',import.meta.url);
+    const source=JSON.parse(readFileSync(new URL('manifest.json',root)));
+    assert.equal(source.schemaVersion,2);
+    assert.equal(source.renderedFrom3D,true);
+    assert.deepEqual(source.variants,HOLLOW_DEATH_VARIANTS);
+    const fingerprints=new Set();
+    for(const variant of HOLLOW_DEATH_VARIANTS){
+        const item=source.clips[variant];
+        const bytes=readFileSync(new URL(item.image,root));
+        assert.equal(bytes.readUInt32BE(16),128*24);
+        assert.equal(bytes.readUInt32BE(20),128*8);
+        assert.equal(createHash('sha256').update(bytes).digest('hex'),item.sha256);
+        fingerprints.add(item.sha256);
+    }
+    assert.equal(fingerprints.size,2,'both death variants need independently authored pixels');
 });
