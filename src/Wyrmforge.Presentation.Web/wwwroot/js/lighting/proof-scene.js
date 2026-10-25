@@ -71,8 +71,8 @@ export async function initializeProof(canvas) {
             try { state.manifests[id] = await actorResources(engine, id, folder); }
             catch (error) {
                 console.warn(`Lighting proof ${id} art unavailable; showing diagnostic proxy`, error);
-                engine.registerGeometry(id, new T.PlaneGeometry(1, 1));
-                engine.registerTexture(id, fallbackTexture(id === 'hollowed' ? '#8d9597' : '#b16d4b'));
+                if (!engine.geometries.has(id)) engine.registerGeometry(id, new T.PlaneGeometry(1, 1));
+                if (!engine.textures.has(id)) engine.registerTexture(id, fallbackTexture(id === 'hollowed' ? '#8d9597' : '#b16d4b'));
                 state.warnings = [...(state.warnings ?? []), `${id}: ${error.message}`];
             }
             state.animation[id] = createSpriteAnimationState();
