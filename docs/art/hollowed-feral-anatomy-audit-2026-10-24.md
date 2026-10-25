@@ -316,3 +316,33 @@ Leave all V1–V7, previous dragged recovery, ground-safe source and actual
 runtime opt-in atlas intact until the latest rendered GIFs have been
 inspected and movement is approved. No new lighting normal/depth/caster
 material maps or shipping Hollowed replacement is authorized.
+
+#### Even-cadence 8-direction source export — completed authoring validation
+
+The Blender build and native 96px 128-pose renders have passed
+[the first completed even-cadence workflow](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40167564774).
+Measured maximum ankle advances per 1/22-second pose:
+**left 0.071838m** (~1.58 m/s) and
+**right 0.075829m** (~1.67 m/s).
+Compared with the prior 0.149/0.161m outliers, both peak
+frame-to-frame displacements are reduced by roughly half.
+
+The actual rendered GIF evidence is at
+[eight-direction moving comparisons](evidence/hollowed-broken-leg-even-cadence)
+and the new `candidate-walk-eight-directions.png` retains 16×8 real 96px
+skinned Blender frames. The separate independent editable
+`rigged-hollow-broken-leg-even-cadence/hollow-rigged.blend` was archived.
+Older ground-safe and dragged-recovery source/export remain available.
+
+**Review integration only:** choose
+`/enemy-lab?kind=Hollow&seed=42&autoplay=true&cast=false&hollowLegReview=even`
+on a PR branch build. The earlier
+`?hollowLegReview=dragged` still selects the unmodified older version;
+without either flag the production actor is unchanged. The new version
+ships inside its own *review-only* manifest, retaining false
+`runtimeCutover` and `materialsRegenerated` flags.
+
+**Still open:** real Arena browser capture at 320/390, injury
+contact/readability at actual Hunt scale, turning/attack interruption,
+physical device testing, owner review, and matching true-pose normals,
+depth and caster atlases before any default runtime conversion.
