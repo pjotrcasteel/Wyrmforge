@@ -114,7 +114,7 @@ def build_board(role: dict, variants: list[Image.Image], view: tuple[int, int]) 
 
     footer_top = top + row_height * 3 + 6
     pen.text((pad, footer_top), "2x2 RAW REPEAT (shows matte & recognisable seams)", fill="#d6ba91")
-    repeat_side = 60 if width == 320 else 82
+    repeat_side = 59 if width == 320 else 82
     for col, idx in enumerate((0, 3)):
         x = pad + col * (col_width + pad)
         thumb = four_repeats(variants[idx], repeat_side)
