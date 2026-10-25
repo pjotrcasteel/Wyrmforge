@@ -277,3 +277,42 @@ Dedicated render/test workflow:
 establish whether this looks physically credible.** The current opt-in
 runtime still loads the prior dragged-leg image until a render actually
 passes and its movement is inspected and approved for the review slot.
+
+### 25 October — abrupt-step velocity defect and new independent gait (pending visual signoff)
+
+The owner reported a mechanically unnatural **fast step** in the new
+ground-safe Hollowed's animated walk. Diagnosis from the actual 17-key
+Blender gait diagnostics at **22 fps**:
+
+- Broken **left ankle** advances as far as ~0.149 m in a single frame,
+  equivalent to ~3.28 m/s, particularly around authored frames 9→10.
+- Healthy **right ankle** advances as far as ~0.161 m in a single frame,
+  ~3.55 m/s, particularly around frames 10→11.
+- The damaged foot's +Y→−Y→+Y excursion was crammed into roughly
+  3–4 keyed frames; the healthy lifted recovery was also compressed.
+  Artificially lowering FPS is **not** the fix because the game's shared
+  sprite sampler ties locomotion to simulation-travelled distance.
+
+**Corrective implementation:** new isolated
+`tools/sprite-lab/author-hollow-broken-leg-even-cadence.py` and
+`rigged-hollow-broken-leg-even-cadence` editable Blender output;
+`render-hollow-broken-leg-even-cadence.py` supplies the 16×8 original
+skin-mesh native-resolution moving comparison to previous ground-safe art.
+New independently authored left and right contact trajectories shorten
+each step while distributing swing/recovery over more of the *same*
+16-frame cycle. Preserve the left failed-weight-bearing sequence,
+toe-ground safeguard, anatomical IK chain and the standard forward zombie
+arm pose. **C# movement speed and normal game animation playback
+are unchanged**.
+
+Both source authoring and CI reject frame-to-frame **3D** ankle travel
+>= 0.080 m at 22 fps (equivalent 1.76 m/s), including loop closure.
+The earlier candidate's 0.149/0.161 m snapping positions must now fail
+that regression. This is a gait-trajectory constraint, **not** proof
+that the rendered sprite looks right. CI:
+`.github/workflows/hollow-broken-leg-even-cadence.yml`.
+
+Leave all V1–V7, previous dragged recovery, ground-safe source and actual
+runtime opt-in atlas intact until the latest rendered GIFs have been
+inspected and movement is approved. No new lighting normal/depth/caster
+material maps or shipping Hollowed replacement is authorized.
