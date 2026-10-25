@@ -30,7 +30,7 @@ const standardMaterial = (id, color, roughness, options = {}) => ({
     doubleSided: true, ...options
 });
 
-function previewSnapshot(scene, mode, actorPosition) {
+function previewSnapshot(scene, mode, actorFootpoint) {
     const zero = mode === "zero", day = mode === "day";
     const materials = Object.entries(materialPalette).map(([id, [color, roughness]]) =>
         standardMaterial(id, color, roughness, id === "lantern" ? {
@@ -50,7 +50,7 @@ function previewSnapshot(scene, mode, actorPosition) {
     objects.push({
         id: "town.review.actor-proxy", ownerId: "town.review.actor-proxy",
         geometry: "town.review.actor-proxy", material: "npc-proxy",
-        position: positions[actorPosition], rotation: [Math.PI / 2, 0, 0], scale: [1, 1, 1],
+        position: actorFootpoint, rotation: [Math.PI / 2, 0, 0], scale: [1, 1, 1],
         receivesLight: true, receivesShadow: true, castsShadow: true
     });
 
@@ -105,11 +105,12 @@ export async function initializeTown3DReview(canvas, status) {
     }
     const actor = new T.CylinderGeometry(.18, .22, 1.2, 10);
     engine.registerGeometry("town.review.actor-proxy", actor);
-    let mode = "night", actorPosition = "behind-well", view = "lit", alive = true;
+    let mode = "night", actorPosition = "behind-well", actorFootpoint = [...positions["behind-well"]],
+        view = "lit", alive = true;
 
     const redraw = () => {
         if (!alive) return;
-        engine.apply(previewSnapshot(scene, mode, actorPosition));
+        engine.apply(previewSnapshot(scene, mode, actorFootpoint));
         engine.setCamera([0, 1.20, 1.55], 5.7);
         engine.setDebugView(view);
         engine.render();
@@ -121,7 +122,8 @@ export async function initializeTown3DReview(canvas, status) {
         getState() {
             return {ready: true, sceneNodes: scene.nodes.length, triangles: parsed.triangleCount,
                 groups: [...parsed.groups.keys()], colliders: spatial.colliders.length,
-                walkableRegions: spatial.walkable.length, mode, actorPosition, view};
+                walkableRegions: spatial.walkable.length, mode, actorPosition,
+                actorFootpoint: [...actorFootpoint], view};
         },
         setMode(next) {
             if (!["day", "night", "zero"].includes(next)) throw new RangeError("Invalid environment");
@@ -129,7 +131,19 @@ export async function initializeTown3DReview(canvas, status) {
         },
         setActorPosition(next) {
             if (!Object.hasOwn(positions, next)) throw new RangeError("Invalid preview actor position");
-            actorPosition = next; redraw();
+            actorPosition = next;
+            actorFootpoint = [...positions[next]];
+            redraw();
+        },
+        moveActor(dx, dy) {
+            if (![dx, dy].every(Number.isFinite) || Math.max(Math.abs(dx), Math.abs(dy)) > .5)
+                throw new RangeError("Actor step exceeds the Town preview movement budget");
+            const x = actorFootpoint[0] + dx, y = actorFootpoint[1] + dy;
+            if (!spatial.isWalkable(x, y, .16)) return false;
+            actorFootpoint = [x, y, actorFootpoint[2]];
+            actorPosition = "manual";
+            redraw();
+            return true;
         },
         setView(next) {
             if (!["lit", "geometry", "normals", "albedo"].includes(next)) throw new RangeError("Invalid diagnostic");
@@ -175,6 +189,17 @@ export async function mountTown3DReview() {
             ["town3d-actor", "setActorPosition"],
             ["town3d-view", "setView"]
         ]) document.getElementById(id).addEventListener("change", event => api[method](event.target.value));
+        // Manual movement only: collider-gated keyboard/touch inspection, not agent AI.
+        for (const button of document.querySelectorAll("[data-step-x][data-step-y]"))
+            button.addEventListener("click", () => api.moveActor(
+                Number(button.dataset.stepX), Number(button.dataset.stepY)));
+        canvas.addEventListener("keydown", event => {
+            const step = {ArrowLeft: [-.25, 0], ArrowRight: [.25, 0],
+                ArrowUp: [0, .25], ArrowDown: [0, -.25]}[event.key];
+            if (!step) return;
+            event.preventDefault();
+            api.moveActor(...step);
+        });
         window.addEventListener("pagehide", () => api.dispose(), {once: true});
     } catch (error) {
         status.textContent = `Town 3D review error: ${error.message}`;
