@@ -14,14 +14,15 @@
   "cell": 96,
   "frames": 16,
   "variants": [
+    "standard",
     "broken-arm-right",
     "one-arm-left"
   ],
   "clips": {
-    "broken-arm-right": {
+    "standard": {
       "walk": {
-        "image": "broken-arm-right-walk.png",
-        "sha256": "cab4c7f49bf0394540088a76c0d3c6efc75c8818",
+        "image": "standard-walk.png",
+        "gitBlobSha": "740d9d3e6a1687781b5788f00c5b0d57d9c37895",
         "frames": 16,
         "cell": 96,
         "anchor": [
@@ -31,8 +32,8 @@
         "worldSize": 93
       },
       "attack": {
-        "image": "broken-arm-right-attack.png",
-        "sha256": "72b3cf2ac389727991bc6a5341860bfc78da293c",
+        "image": "standard-attack.png",
+        "gitBlobSha": "01fee2334b1800f256cea42fb51d06d2a12858e2",
         "frames": 16,
         "cell": 96,
         "anchor": [
@@ -42,29 +43,54 @@
         "worldSize": 93
       }
     },
+    "broken-arm-right": {
+      "walk": {
+        "image": "broken-arm-right-walk.png",
+        "frames": 16,
+        "cell": 96,
+        "anchor": [
+          48,
+          72
+        ],
+        "worldSize": 93,
+        "gitBlobSha": "cab4c7f49bf0394540088a76c0d3c6efc75c8818"
+      },
+      "attack": {
+        "image": "broken-arm-right-attack.png",
+        "frames": 16,
+        "cell": 96,
+        "anchor": [
+          48,
+          72
+        ],
+        "worldSize": 93,
+        "gitBlobSha": "72b3cf2ac389727991bc6a5341860bfc78da293c"
+      }
+    },
     "one-arm-left": {
       "walk": {
         "image": "one-arm-left-walk.png",
-        "sha256": "96f36ce0eaa22e721fbfaafe434033444bfe16a8",
         "frames": 16,
         "cell": 96,
         "anchor": [
           48,
           72
         ],
-        "worldSize": 93
+        "worldSize": 93,
+        "gitBlobSha": "96f36ce0eaa22e721fbfaafe434033444bfe16a8"
       },
       "attack": {
         "image": "one-arm-left-attack.png",
-        "sha256": "74427c2da5deea14d9a6fe3b6ec8a566957e08ab",
         "frames": 16,
         "cell": 96,
         "anchor": [
           48,
           72
         ],
-        "worldSize": 93
+        "worldSize": 93,
+        "gitBlobSha": "74427c2da5deea14d9a6fe3b6ec8a566957e08ab"
       }
     }
-  }
+  },
+  "source": "Source-derived no-cape Hollowed Blender atlas exports; presentation-only; original gameplay preserved"
 }
