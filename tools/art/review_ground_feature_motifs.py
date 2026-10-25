@@ -146,6 +146,7 @@ def build(root: Path, annotation_file: Path, output: Path, preview_size: int = 4
     studies = load_studies(root, annotation_file.resolve())
     output.mkdir(parents=True, exist_ok=True)
     reports = []
+    composition_panels = []
     for item, image, polygons in studies:
         mask = rasterize(image.size, polygons)
         count = sum(1 for v in mask.getdata() if v == 255)
@@ -170,6 +171,16 @@ def build(root: Path, annotation_file: Path, output: Path, preview_size: int = 4
         crop_name = f"{name}-PAINTED-MOTIF-RGB-CROP-UNAPPROVED.png"
         crop = image.crop((left, top, right, bottom))
         crop.save(output / crop_name)
+        # A readable, intentionally non-tileable composition board preserves
+        # the painted feature at a common visual scale for art direction.
+        panel = Image.new("RGB", (preview_size * 2, preview_size + 52), "#17191b")
+        label = f"{item['layer']} | {name} | SOURCE PAINT ONLY"
+        ImageDraw.Draw(panel).text((12, 12), label, fill="#f0e8dc")
+        source_thumb = ImageOps.contain(image, (preview_size - 20, preview_size - 20), Image.Resampling.LANCZOS)
+        motif_thumb = ImageOps.contain(crop, (preview_size - 20, preview_size - 20), Image.Resampling.LANCZOS)
+        panel.paste(source_thumb, ((preview_size - source_thumb.width) // 2, 42))
+        panel.paste(motif_thumb, (preview_size + (preview_size - motif_thumb.width) // 2, 42))
+        composition_panels.append(panel)
         # Pixel-exact crop comparison prevents accidental paint recoloring.
         with Image.open(output / crop_name) as saved:
             if saved.convert("RGB").tobytes() != crop.tobytes():
@@ -190,7 +201,16 @@ def build(root: Path, annotation_file: Path, output: Path, preview_size: int = 4
             "runtimeEligible": False, "authoritativeCsharpGeometry": False,
             "emissionAuthored": False, "lightingUsed": False, "ownerApproved": False,
         })
+    # One contact sheet, not a scene or inferred spatial relationship between motifs.
+    board_name = "PAINTED-MOTIF-COMPOSITION-REVIEW-UNAPPROVED.jpg"
+    board = Image.new("RGB", (preview_size * 2, (preview_size + 52) * len(composition_panels)), "#17191b")
+    for index, panel in enumerate(composition_panels):
+        board.paste(panel, (0, index * (preview_size + 52)))
+    board.save(output / board_name, quality=91, subsampling=0)
     (output / "SOURCE-MOTIF-STUDY.json").write_text(json.dumps({
+        "compositionReview": board_name,
+        "compositionReviewIsGameScene": False,
+        "compositionReviewIsTileable": False,
         "stage": "unapproved-artwork-feature-annotation",
         "sourceArtUnchanged": True,
         "allSourcePaintingHashesChecked": True,
