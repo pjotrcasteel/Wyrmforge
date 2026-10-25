@@ -1,57 +1,58 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>WyrmForge | Town 3D Geometry Review (T2)</title>
-  <style>
-    :root { color-scheme: dark; font-family: system-ui, sans-serif; background:#11151c; color:#d8dee8; }
-    * { box-sizing: border-box; }
-    body { margin: 0; min-height: 100vh; display:grid; justify-content:center; align-content:start; }
-    main { width:min(100vw,950px); padding:clamp(10px,2vw,24px); }
-    h1 { font-size:clamp(18px,3vw,25px); margin:0 0 8px; }
-    p { line-height:1.45; max-width:72ch; }
-    small { color:#bbc4d2; }
-    canvas { display:block; width:100%; height:auto; aspect-ratio:11/15; image-rendering:pixelated;
-             background:#000; border:1px solid #475364; }
-    .controls { display:flex; flex-wrap:wrap; gap:12px; padding:15px 0; }
-    label { display:grid; gap:5px; font-size:13px; }
-    select { background:#202b39; color:#e5ebf5; padding:9px; border:1px solid #738299; border-radius:5px; }
-    #town3d-status { font-family:ui-monospace,monospace; font-size:12px; color:#a5c8ca; min-height:1.5em; }
-    #town3d-status[data-error=true] { color:#ff9c9c; }
-    a { color:#adcbf1; }
-    @media (min-width: 700px) { canvas { aspect-ratio:16/10; } }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>WyrmForge — T1/T2 Canonical 3D Town Visual Review</title>
+<style>
+:root{color-scheme:dark;background:#080b10;color:#e5e9f0;font:14px system-ui,sans-serif}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+main{max-width:960px;margin:0 auto}
+h1{font-size:17px;margin:10px 12px}
+p{margin:8px 12px;color:#bbc5d0;line-height:1.4}
+#town3d-canvas{width:100%;height:100svh;display:block;image-rendering:pixelated;background:#000}
+.controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center;padding:14px;background:#111923}
+label{display:grid;gap:5px}
+select,input{background:#223244;color:#f1f3f7;border:1px solid #63768c;border-radius:5px;padding:8px}
+#town3d-status{display:block;white-space:pre-wrap;overflow-wrap:anywhere;font:11px ui-monospace,monospace;padding:10px}
+#town3d-status[data-error=true]{color:#f5a0a0}
+@media(min-width:700px){#town3d-canvas{height:min(72vh,800px)}}
+html[data-review-clean=true] .controls,html[data-review-clean=true] #town3d-status,
+html[data-review-clean=true] h1,html[data-review-clean=true] p{display:none}
+html[data-review-clean=true] #town3d-canvas{height:100svh}
+</style>
 </head>
 <body>
-  <main>
-    <h1>WyrmForge — 3D Town central-square review</h1>
-    <p><strong>Nonproduction T2 preview.</strong> Uses the existing shared GPU lighting engine with actual
-      3D cobbled paving, stone well, roof shingles, Gothic World Gate, banners, noticeboard, foliage and lantern geometry. The blue actor is a temporary
-      footpoint/occlusion probe, <em>not</em> final NPC artwork or AI.</p>
-    <canvas id="town3d-canvas" width="640" height="400" aria-label="GPU-rendered 3D Town central-square prototype"></canvas>
-    <div class="controls">
-      <label>Lighting
-        <select id="town3d-mode"><option value="night">Gothic night</option><option value="day">Day</option>
-          <option value="zero">Zero-light proof</option></select>
-      </label>
-      <label>Actor footpoint
-        <select id="town3d-actor"><option value="behind-well">Behind well</option>
-          <option value="behind-noticeboard">Behind noticeboard</option>
-          <option value="in-front">In front of noticeboard</option></select>
-      </label>
-      <label>Debug view
-        <select id="town3d-view"><option value="lit">Lit</option><option value="geometry">Wireframe</option>
-          <option value="normals">Normals</option><option value="albedo">Albedo</option></select>
-      </label>
-    </div>
-    <output id="town3d-status" role="status">Loading 3D Town scene…</output>
-    <p><small>The production Town, saved game data, NPC simulation and G4 branch are unchanged.
-      This is a milestone review route, not a production renderer cutover.</small></p>
-  </main>
-  <script type="module">
-    import {mountTown3DReview} from "./js/town/town-3d-review.js";
-    mountTown3DReview();
-  </script>
-</body>
-</html>
+<main>
+<h1>WyrmForge — T1/T2 3D reconstruction review</h1>
+<p>Single-view reconstruction from the approved Town painting, on a real 3D mesh
+with volumetric gate, buildings, well and noticeboard. The canonical camera is
+the art acceptance reference; off-axis orbit exposes limitations for review.
+No production cutover, AI or G4 changes.</p>
+<canvas id="town3d-canvas" width="390" height="844" aria-label="Town rendered on shared GPU 3D geometry"></canvas>
+<div class="controls">
+<label>District<select id="town3d-district">
+<option value="west">West</option><option value="center" selected>Center</option>
+<option value="east">East</option></select></label>
+<label>Lighting<select id="town3d-mode">
+<option value="night" selected>Approved night artwork</option>
+<option value="day">Approved day artwork</option>
+<option value="zero">Zero light</option>
+<option value="relight">Physical lighting diagnostic</option></select></label>
+<label>Diagnostics<select id="town3d-view">
+<option value="lit">Color</option><option value="geometry">3D wireframe</option>
+<option value="normals">Normals</option><option value="albedo">Albedo</option></select></label>
+<label>Review-only camera orbit<input id="town3d-orbit" type="range" min="-2" max="2" step=".1" value="0"></label>
+</div>
+<output id="town3d-status" role="status">Loading canonical geometry…</output>
+</main>
+<script>
+document.documentElement.dataset.reviewClean=
+    new URLSearchParams(location.search).get('clean')==='1'?'true':'false';
+</script>
+<script type="module">
+import {mountTown3DReview} from './js/town/town-canonical-review.js';
+mountTown3DReview();
+</script>
+</body></html>
