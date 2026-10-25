@@ -69,13 +69,15 @@ public static class GpuLightingFrameProjection
 
         return new GpuLightingFrame(
             1, simulationTime,
-            snapshot.Emitters.Where(light => !light.ExpiresAtTick.HasValue || light.ExpiresAtTick.Value > snapshot.SimulationTick).Select(light => new GpuLightEmitter(
+            snapshot.Emitters
+                .Where(light => !light.ExpiresAtTick.HasValue || light.ExpiresAtTick.Value > snapshot.SimulationTick)
+                .Select(light => new GpuLightEmitter(
                 light.Id, light.OwnerId, light.Type, light.Enabled,
                 [light.X, light.Y, light.Z],
                 [light.DirectionX, light.DirectionY, light.DirectionZ],
                 light.Color, light.Intensity, light.Radius,
                 Math.PI / 4, 0, light.CastsShadows, 0,
-                null)); // Tick-based expiry is enforced by the authoritative snapshot producer; do not compare ticks to seconds.)).ToArray(),
+                null)).ToArray(),
             materials ?? [], objects ?? [],
             new GpuLightingEnvironment(snapshot.Environment.AmbientIntensity,
                 snapshot.Environment.AmbientColor, 1, true));
