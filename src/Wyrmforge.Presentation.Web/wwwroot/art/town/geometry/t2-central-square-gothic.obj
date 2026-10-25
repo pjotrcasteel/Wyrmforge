@@ -1,5 +1,5 @@
 # WyrmForge T1 nonproduction 3D geometry; units metres; +X east, +Y north, +Z up
-mtllib t1-central-square-preview.mtl
+mtllib t2-central-square-gothic.mtl
 
 v -4.5 -4 -0.12
 v 4.5 -4 -0.12
