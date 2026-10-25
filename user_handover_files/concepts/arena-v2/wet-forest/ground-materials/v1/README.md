@@ -136,6 +136,29 @@ No lighting milestone code, tests, documents or integration paths were changed.
 This task remains strictly material **art creation** while G1–G5 ownership stays
 with separate Work sessions. Keep this PR draft.
 
+## Cross-variant Grass/Moss art bank — interchangeable edges, still under artistic review
+
+The initial six candidate PNGs are individually periodic, but unlike variants
+still need a compatible border. The **art-only**
+`tools/art/build_grass_moss_compatible_bank.py` builds an *additional*
+six-PNG bank, retaining the existing six independent samples for comparison.
+
+Each compatible bank image uses the first source-backed candidate's exact outer
+perimeter as a shared **32-pixel transition reference**. The remaining
+interior retains its different Grass/Moss composite. This creates **72 exact
+pairwise horizontal/vertical edge matches** (all ordered pairs of six variants).
+An art-only 3×3 layout made of unlike variants is exported for review. No
+C# scene geometry, road or lighting engine is touched.
+
+**Artistic warning:** repeated shared-border motifs can produce a perceptible
+grid even when the seam pixel measurements are zero. The narrow 32px band was
+preferred in a source-only comparison to a much wider band, which produced
+soft/stamped-looking edges. This is an intermediate **trial art set**, not
+the final production atlas, no guarantee of non-repeating visual rhythm and
+no relightable or neutral albedo. The two banks can be compared and revised
+without discarding originals or triggering integration. Genuine game-scale
+art review is still required.
+
 ## Approval/locking protocol
 **Do not rename this folder CANONICAL or update runtime references until the owner explicitly accepts
 these 36 images.** After approval, record approved image hashes in an immutable manifest
