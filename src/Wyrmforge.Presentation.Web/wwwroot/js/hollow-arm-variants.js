@@ -1,14 +1,15 @@
 // Hollowed no-cape arm pack. C# owns all movement/attacks/damage.
 // Only three visually accepted-direction silhouettes ship in this slice.
 // The unapproved broken-leg variants are intentionally absent.
-export const HOLLOW_ARM_VARIANTS = Object.freeze(['standard','broken-arm-right','one-arm-left']);
+export const HOLLOW_ARM_VARIANTS = Object.freeze(['broken-arm-right','one-arm-left']);
 
 // Stable per-entity appearance: independent of render time, camera, and
 // repeated snapshots. No gameplay randomization or variant-specific damage.
 export function selectHollowArmVariant(entityId) {
     const id=Number(entityId);
     if(!Number.isSafeInteger(id)||id<0)return 'standard';
-    return HOLLOW_ARM_VARIANTS[(Math.imul(id,1597334677)>>>0)%3];
+    const roll=(Math.imul(id,1597334677)>>>0)%4;
+    return roll<2?HOLLOW_ARM_VARIANTS[roll]:'standard';
 }
 
 export function createHollowVariantAssets(baseUrl) {
@@ -62,6 +63,6 @@ export function createHollowVariantAssets(baseUrl) {
         ctx.restore();
         return true;
     }
-    return {preload,ready:()=>Boolean(metadata&&assets.size===6),draw,
+    return {preload,ready:()=>Boolean(metadata&&assets.size===4),draw,
         get manifest(){return metadata;}};
 }
