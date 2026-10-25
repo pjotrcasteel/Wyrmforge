@@ -75,7 +75,7 @@ public static class GpuLightingFrameProjection
                 [light.DirectionX, light.DirectionY, light.DirectionZ],
                 light.Color, light.Intensity, light.Radius,
                 Math.PI / 4, 0, light.CastsShadows, 0,
-                light.ExpiresAtTick.HasValue ? (double)light.ExpiresAtTick.Value : null)).ToArray(),
+                null)); // Tick-based expiry is enforced by the authoritative snapshot producer; do not compare ticks to seconds.)).ToArray(),
             materials ?? [], objects ?? [],
             new GpuLightingEnvironment(snapshot.Environment.AmbientIntensity,
                 snapshot.Environment.AmbientColor, 1, true));
