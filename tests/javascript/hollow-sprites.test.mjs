@@ -8,7 +8,8 @@ const source=readFileSync(new URL('js/hollow-sprites.js',root),'utf8').replace("
  .replace("'./sprite-animation.js'",JSON.stringify(moduleUri('sprite-animation.js'))).replace("'./sprite-layer-compositor.js'",JSON.stringify(moduleUri('sprite-layer-compositor.js')))
  .replace("'./hollow-injury-variants.js'",JSON.stringify(moduleUri('hollow-injury-variants.js')))
  .replace("'./hollow-arm-variants.js'",JSON.stringify(moduleUri('hollow-arm-variants.js')))
- .replace("'./hollow-motion.js'",JSON.stringify(moduleUri('hollow-motion.js')));
+ .replace("'./hollow-motion.js'",JSON.stringify(moduleUri('hollow-motion.js')))
+ .replace("'./hollow-variation.js'",JSON.stringify(moduleUri('hollow-variation.js')));
 const mod=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
 const enemy=(values={})=>({entityId:7,kind:0,x:20,y:20,radius:11,...values});
 const snapshot=(values={})=>({enemies:[enemy()],player:{x:200,y:200,radius:9},deathBursts:[],...values});
@@ -25,7 +26,7 @@ test('walk follows travelled distance and survives duplicate render snapshots',(
  const moved=snapshot({enemies:[enemy({x:25})]});mod.updateHollowSprites(state,moved,.05);
  const frame=state.entities.get(7).frame;assert.ok(frame>0);
  mod.updateHollowSprites(state,moved,.066);assert.equal(state.entities.get(7).frame,frame);
- advance(state,moved,.1,.3);assert.equal(state.entities.get(7).frame,0);
+ advance(state,moved,.1,.3);assert.equal(state.entities.get(7).frame,state.entities.get(7).idleFrame);
  mod.updateHollowSprites(state,snapshot({enemies:[]}),.35);assert.equal(state.entities.size,0);assert.equal(state.corpses.size,0);
 });
 test('contact only drives presentation; attack freezes and recovers',()=>{
@@ -100,7 +101,7 @@ test('nearest-neighbor renderer selects an actual direction row and original piv
   const state=mod.createHollowState();mod.updateHollowSprites(state,snapshot(),0);state.entities.get(7).direction='NW';
   const calls=[];const ctx={globalAlpha:1,save(){},restore(){},drawImage(...args){calls.push(args);}};
   assert.equal(mod.drawHollowEnemy(ctx,enemy(),state),true);assert.equal(ctx.imageSmoothingEnabled,false);
-  assert.equal(calls[0][2],96*7);assert.equal(calls[0][6],20-72/96*93);
+  assert.equal(calls[0][2],96*7);assert.ok(Math.abs(calls[0][6]-(20-72/96*93*state.entities.get(7).visualScale))<1e-9);
   assert.equal(mod.drawHollowEnemy(ctx,enemy({kind:1}),state),false);
  }finally{globalThis.fetch=originalFetch;globalThis.Image=originalImage;}
 });
