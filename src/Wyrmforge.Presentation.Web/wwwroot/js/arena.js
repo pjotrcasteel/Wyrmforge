@@ -1,3 +1,4 @@
+import { preloadFireballV5 } from './arena-fireball-v5.js';
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
 import { attachArenaInput, getArenaMovement, getArenaAim } from './arena-input.js';
 import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, drawArenaCloisterElevation } from './arena-environment.js';
@@ -18,6 +19,8 @@ import { drawWinterBellGround, drawWinterBellAir } from './arena-winterbell-vfx.
 import { drawGlassReliquaryGround, drawGlassReliquaryAir } from './arena-glass-reliquary-vfx.js';
 import { loadArt, artReady, hasArtFrame, drawArtFrame } from './art-atlas.js';
 import { buildSpellLights, drawSpellLightSpill, sampleSpellLight } from './arena-spell-lighting.js';
+import { gothicNightLightSources, gothicNightPlan, drawGothicNight, GOTHIC_NIGHT } from './arena-night-lighting.js';
+import { createWetForestFirelightPlan } from './arena-wet-forest-dressing.js';
 import { resolveArenaCamera, drawExitGuide } from './arena-camera.js';
 import { drawEliteGround, drawEliteCrest } from './arena-elite-vfx.js';
 import { drawLightningTrace } from './arena-lightning-vfx.js';
@@ -29,6 +32,7 @@ export function initializeArena(canvas, dotNetReference) {
     disposeArena(canvas);
     // Atlases stream in; until they decode, every layer uses its code-painted fallback.
     loadArt(new URL('../art/', import.meta.url).href);
+    preloadFireballV5();
     preloadPaintedEnemies();
     preloadHollowSprites();
     ashlingSprites.preload();
@@ -54,6 +58,12 @@ export function readArenaDiagnostics(canvas) {
         movement: getArenaMovement(state),
         aim: getArenaAim(state),
         projectiles: state.latestSnapshot?.projectiles ?? [],
+        // Read-only visual provenance for real-Hunt evidence captures.
+        // These never modify the original scene, C# simulation, or VFX renderer.
+        fireballVisual: state.latestSnapshot?.fireballVisual ?? null,
+        elementalImpacts: state.latestSnapshot?.elementalImpacts ?? [],
+        burningGrounds: state.latestSnapshot?.burningGrounds ?? [],
+        essenceBursts: state.latestSnapshot?.essenceBursts ?? [],
         castMotion: state.latestSnapshot?.castMotion ?? null,
         pointerId: state.pointerId,
         touchId: state.touchId,
@@ -73,6 +83,7 @@ export function readArenaDiagnostics(canvas) {
         hunt: state.latestSnapshot?.hunt ?? null,
         performance: { fps:state.displayFps, simulationHz:state.displaySimulationHz, simulationMilliseconds:state.displaySimulationMilliseconds, bridgeMilliseconds:state.displayBridgeMilliseconds },
         renderingFailed: Boolean(state.renderingFailed),
+        lighting: { mode: 'night', darkness: GOTHIC_NIGHT.darkness, source: 'authoritative-csharp-snapshot' },
     };
 }
 
@@ -89,6 +100,7 @@ function createState(canvas, dotNetReference) {
     return {
         canvas,
         context: canvas.getContext('2d'),
+        nightMask: document.createElement('canvas'),
         dotNetReference,
         active: true,
         simulationBusy: false,
@@ -321,8 +333,20 @@ function draw(state, snapshot, width, height) {
         ctx.stroke();
         ctx.restore();
     }
+    // The WORLD is always at night. Render the SAME darkness across ground,
+    // physical scenery, enemies, mage and Wyrm. Real fire/elemental cast,
+    // impacts, burning trees and Fire Wyrm breath cut light into all layers.
+    // Keep high-priority attack tells and magical VFX ABOVE the veil.
+    const realFires = createWetForestFirelightPlan(snapshot.environment, worldWidth, worldHeight);
+    const nightSources = gothicNightLightSources(snapshot, spellLights, worldWidth, worldHeight, realFires);
+    drawGothicNight(ctx, gothicNightPlan(snapshot.player, nightSources, lightViewport), state.nightMask);
+    // Tactical telegraphs must remain readable even when the ground is nearly
+    // black. They are presentation cues, not physical light emitters.
+    for (const enemy of snapshot.enemies) drawEnemyTelegraph(ctx, enemy);
+    if (snapshot.dragonBreath) drawDragonBreath(ctx, snapshot.dragonBreath,
+        snapshot.dragon?.school ?? snapshot.hunt?.school);
+    // A second weaker pass colors nearby silhouettes without whitening shadows.
     drawAshfangAirEffects(ctx,snapshot,ashfangSockets(state.ashfang),state.reducedMotion.matches);
-    // A second weaker pass tints nearby monster silhouettes without washing out their attacks.
     drawSpellLightSpill(ctx, spellLights, lightViewport, 'actors');
     for (const impact of snapshot.elementalImpacts) drawSpellImpact(ctx, impact, state.reducedMotion.matches);
     for (const death of snapshot.deathBursts) drawDeathBurst(ctx, death);
@@ -332,7 +356,7 @@ function draw(state, snapshot, width, height) {
     drawWinterBellAir(ctx, snapshot);
     drawGlassReliquaryAir(ctx, snapshot, state.reducedMotion.matches ? 0 : visualSeconds);
     for (const cloud of snapshot.snowClouds ?? []) drawSnowCloud(ctx, cloud, state.reducedMotion.matches ? 0 : visualSeconds);
-    for (const projectile of snapshot.projectiles) drawSpellProjectile(ctx, projectile, state.reducedMotion.matches);
+    for (const projectile of snapshot.projectiles) drawSpellProjectile(ctx, projectile, state.reducedMotion.matches, visualSeconds);
 
     for (const trace of snapshot.lightning) drawLightningTrace(ctx, trace, visualSeconds, state.reducedMotion.matches);
 

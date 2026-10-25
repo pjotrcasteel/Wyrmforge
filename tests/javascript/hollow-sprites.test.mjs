@@ -5,7 +5,8 @@ import {createHash} from 'node:crypto';
 const root=new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/',import.meta.url);
 const moduleUri=name=>'data:text/javascript;base64,'+Buffer.from(readFileSync(new URL('js/'+name,root),'utf8')).toString('base64');
 const source=readFileSync(new URL('js/hollow-sprites.js',root),'utf8').replace("new URL('../art/enemies/hollow-rigged/', import.meta.url)","new URL('https://example.test/art/enemies/hollow-rigged/')")
- .replace("'./sprite-animation.js'",JSON.stringify(moduleUri('sprite-animation.js'))).replace("'./sprite-layer-compositor.js'",JSON.stringify(moduleUri('sprite-layer-compositor.js')));
+ .replace("'./sprite-animation.js'",JSON.stringify(moduleUri('sprite-animation.js'))).replace("'./sprite-layer-compositor.js'",JSON.stringify(moduleUri('sprite-layer-compositor.js')))
+ .replace("'./hollow-injury-variants.js'",JSON.stringify(moduleUri('hollow-injury-variants.js')));
 const mod=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
 const enemy=(values={})=>({entityId:7,kind:0,x:20,y:20,radius:11,...values});
 const snapshot=(values={})=>({enemies:[enemy()],player:{x:200,y:200,radius:9},deathBursts:[],...values});
@@ -64,6 +65,29 @@ test('packed runtime assets preserve approved source bytes and cache hashes',()=
   assert.equal(c.worldSize/c.cell,93/96);
  }
 });
+test('stable injury appearance is presentation-only and survives attack, death and pause',()=>{
+ const state=mod.createHollowState();
+ const injury=enemy({entityId:4});
+ mod.updateHollowSprites(state,snapshot({enemies:[injury]}),0);
+ assert.equal(state.entities.get(4).injuryVariant,'broken-leg-left');
+ const position={x:injury.x,y:injury.y,radius:injury.radius};
+ const contact=snapshot({enemies:[injury],player:{x:38,y:20,radius:9}});
+ mod.updateHollowSprites(state,contact,.05);
+ assert.equal(state.entities.get(4).clip,'attack');
+ assert.equal(state.entities.get(4).injuryVariant,'broken-leg-left');
+ advance(state,contact,.1,.4);
+ const p=state.entities.get(4);
+ const frame=p.frame;
+ mod.updateHollowSprites(state,{...contact,enemies:[{...injury,frozen:true}]},.45);
+ assert.equal(p.frame,frame);
+ advance(state,snapshot({enemies:[injury]}),.5,2);
+ assert.equal(p.clip,'walk');
+ assert.deepEqual(position,{x:20,y:20,radius:11});
+ const killed=snapshot({enemies:[],deathBursts:[{entityId:4,kind:0,x:20,y:20,bodyRadius:11}]});
+ mod.updateHollowSprites(state,killed,2.05);
+ assert.equal(mod.hollowDiagnostics(state).corpses.length,1);
+});
+
 test('nearest-neighbor renderer selects an actual direction row and original pivot',async()=>{
  const m=JSON.parse(readFileSync(new URL('art/enemies/hollow-rigged/manifest.json',root)));
  const originalFetch=globalThis.fetch,originalImage=globalThis.Image;

@@ -1,0 +1,50 @@
+{
+  "source": "#307 @ 8c963f8351a758b0fb468fd1340088ff7b904abf",
+  "approval": "original-candidate-not-approved",
+  "geometry": "original layered leaf meshes (not alpha cards)",
+  "stride": 6,
+  "groups": [
+    {
+      "id": "oak-0",
+      "sourceMaterial": "Old wet fissured bark \u00b7 longitudinal striations",
+      "byteOffset": 0,
+      "vertexCount": 38958,
+      "color": "#5f5447"
+    },
+    {
+      "id": "oak-1",
+      "sourceMaterial": "Oak foliage 1",
+      "byteOffset": 934992,
+      "vertexCount": 14184,
+      "color": "#59663c"
+    },
+    {
+      "id": "oak-2",
+      "sourceMaterial": "Oak foliage 3",
+      "byteOffset": 1275408,
+      "vertexCount": 14124,
+      "color": "#646d40"
+    },
+    {
+      "id": "oak-3",
+      "sourceMaterial": "Oak foliage 2",
+      "byteOffset": 1614384,
+      "vertexCount": 13992,
+      "color": "#5f693e"
+    },
+    {
+      "id": "oak-4",
+      "sourceMaterial": "Oak foliage 0",
+      "byteOffset": 1950192,
+      "vertexCount": 14388,
+      "color": "#536339"
+    },
+    {
+      "id": "oak-5",
+      "sourceMaterial": "Original woodland moss",
+      "byteOffset": 2295504,
+      "vertexCount": 6000,
+      "color": "#667844"
+    }
+  ]
+}

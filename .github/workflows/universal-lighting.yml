@@ -1,0 +1,50 @@
+name: Shared GPU lighting proof
+on:
+  pull_request:
+    paths:
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/**'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/art/lighting-proof/**'
+      - 'src/Wyrmforge.Presentation.Web/Pages/ArenaLightEngine*'
+      - 'tests/Wyrmforge.Browser.Tests/UniversalLightingBrowserTests.cs'
+      - 'tests/javascript/universal-lighting.test.mjs'
+      - '.github/workflows/universal-lighting.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gpu-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+      - name: Registry and sprite binding regression tests
+        run: node --test tests/javascript/universal-lighting.test.mjs
+      - name: Build tests and publish actual application
+        run: |
+          dotnet build tests/Wyrmforge.Browser.Tests -c Release
+          dotnet publish src/Wyrmforge.Presentation.Web -c Release -o artifacts/web
+      - name: Install Chromium
+        run: pwsh tests/Wyrmforge.Browser.Tests/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
+      - name: Serve app and verify complete black framebuffer and source lifecycle
+        env:
+          WYRMFORGE_BASE_URL: http://127.0.0.1:4173/
+          WYRMFORGE_BROWSER_ARTIFACTS: ${{ github.workspace }}/artifacts/gpu-proof
+        run: |
+          python3 tools/development/spa_server.py --port 4173 --directory artifacts/web/wwwroot > artifacts/gpu-server.log 2>&1 &
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then break; fi
+            sleep 1
+          done
+          dotnet test tests/Wyrmforge.Browser.Tests -c Release --no-build --filter FullyQualifiedName~UniversalLightingBrowserTests
+      - name: Preserve mobile viewport captures (not physical-device evidence)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shared-gpu-lighting-mobile-${{ github.sha }}
+          path: |
+            artifacts/gpu-proof/
+            artifacts/gpu-server.log
+          retention-days: 30

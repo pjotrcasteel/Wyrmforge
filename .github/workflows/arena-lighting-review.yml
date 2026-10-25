@@ -1,0 +1,90 @@
+name: Arena V2 Gothic Night L3 Fireball Review
+
+on:
+  pull_request:
+    paths:
+      - 'src/Wyrmforge.Presentation.Web/Pages/ArenaLightingLab.razor'
+      - 'src/Wyrmforge.Presentation.Web/Pages/ArenaLightingLab.razor.css'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/arena-lighting-lab.js'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/arena-scene-lighting.js'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/arena-night-lighting.js'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/arena-lighting-calibration.js'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/arena-l3-material-atmosphere.js'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/arena.js'
+      - 'tests/Wyrmforge.Browser.Tests/ArenaLightingBrowserTests.cs'
+      - '.github/workflows/arena-lighting-review.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  lighting-mobile-review:
+    name: Gothic night, frozen Fireball and torch 320/390px A/B
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+      - name: Restore and build browser tests
+        run: |
+          dotnet restore tests/Wyrmforge.Browser.Tests/Wyrmforge.Browser.Tests.csproj
+          dotnet build tests/Wyrmforge.Browser.Tests/Wyrmforge.Browser.Tests.csproj -c Release --no-restore
+      - name: Install Chromium
+        run: pwsh tests/Wyrmforge.Browser.Tests/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
+      - name: Restore and publish actual app
+        run: |
+          dotnet restore src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj
+          dotnet publish src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -c Release --no-restore -o ./artifacts/web
+      - name: Start WyrmForge locally
+        run: |
+          python3 tools/development/spa_server.py --port 4173 --directory ./artifacts/web/wwwroot > ./artifacts/browser-server.log 2>&1 &
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat ./artifacts/browser-server.log
+          exit 1
+      - name: Retrieve original unapproved candidate renders from source-only Step 3 CI
+        # The immutable source run is an optional ART REVIEW dependency. After
+        # GitHub's artifact retention expires, normal ground-only tests still
+        # pass; this does not silently turn tree art into production assets.
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: arena-step3-original-wet-forest-candidates
+          run-id: 39959218973
+          repository: pjotrcasteel/Wyrmforge
+          github-token: ${{ github.token }}
+          path: artifacts/tree-candidates
+      - name: Show candidate-art availability
+        run: |
+          if test -f artifacts/tree-candidates/ancient_oak/ancient_oak-candidate.png &&
+             test -f artifacts/tree-candidates/dead_elm/dead_elm-candidate.png; then
+            echo "Exact original oak and elm candidates available for visual browser test."
+          else
+            echo "::warning::Unapproved candidate art not available; tree-composite tests will report a skip."
+          fi
+      - name: Verify L3 Fireball night contrast, optional original trees and ground restoration
+        env:
+          WYRMFORGE_BASE_URL: http://127.0.0.1:4173/
+          WYRMFORGE_BROWSER_ARTIFACTS: ${{ github.workspace }}/artifacts/lighting
+          WYRMFORGE_STEP3_ASSETS: ${{ github.workspace }}/artifacts/tree-candidates
+        run: >
+          dotnet test tests/Wyrmforge.Browser.Tests/Wyrmforge.Browser.Tests.csproj
+          -c Release --no-build --filter "FullyQualifiedName~ArenaLightingBrowserTests"
+      - name: Preserve actual 320/390px screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arena-l3-fireball-night-mobile-evidence
+          path: |
+            artifacts/lighting/
+            artifacts/browser-server.log
+          if-no-files-found: warn
+          retention-days: 14

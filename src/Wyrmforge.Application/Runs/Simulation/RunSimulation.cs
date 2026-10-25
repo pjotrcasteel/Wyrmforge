@@ -7,6 +7,7 @@ using Wyrmforge.Application.Runs.LevelUp;
 using Wyrmforge.Application.Runs.Navigation;
 using Wyrmforge.Application.Runs.Offerings;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
+using Wyrmforge.Application.Runs.Simulation.Lighting;
 using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Combat.Enemies;
 using Wyrmforge.Domain.Combat.Player;
@@ -45,6 +46,8 @@ public sealed partial class RunSimulation
     private readonly PlayerState player = new();
     private readonly List<EnemyState> enemies = [];
     private readonly List<ProjectileState> projectiles = [];
+    private readonly ProjectileLightIdentityRegistry projectileLightIdentities = new();
+    private long lightingSnapshotTick;
     private readonly List<LightningTrace> lightning = [];
     private readonly List<EssenceBurstState> essenceBursts = [];
     private readonly List<EssenceBoltState> essenceBolts = [];
@@ -401,7 +404,16 @@ public sealed partial class RunSimulation
             SnowClouds = CreateSnowCloudSnapshots(),
             RimeHusks = CreateRimeHuskSnapshots(),
             AvalancheRings = CreateAvalancheRingSnapshots(),
+            Lighting = CreateLightingFrame(),
         };
+    }
+
+    private GpuLightingFrame CreateLightingFrame()
+    {
+        var snapshot = ProjectileLightingProjection.Capture(
+            "hunt", lightingSnapshotTick++, projectiles, projectileLightIdentities,
+            new LightingEnvironment("gothic-night", "#8c9cbb", 0.012));
+        return GpuLightingFrameProjection.FromSnapshot(snapshot, elapsed);
     }
 
     private CastMotionRenderSnapshot? CreateCastMotionSnapshot()

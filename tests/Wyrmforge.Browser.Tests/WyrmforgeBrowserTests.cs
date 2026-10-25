@@ -99,6 +99,55 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    public async Task Mobile_NexusSchoolAssets_HaveIdenticalRegistrationAndTransparency()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.AddInitScriptAsync(@"localStorage.setItem('wyrmforge.firstHunt.v1','3');
+            localStorage.setItem('wyrmforge.characterSchool.v1','Pyromancer');");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+
+        var scene = Page.Locator(".refuge-canonical-scene");
+        var result = await scene.EvaluateAsync<JsonElement>(@"async scene => {
+            const schools = ['arcane','fire','frost','storm','death','binding'];
+            const result = [];
+            for (const school of schools) {
+                const image = new Image();
+                image.src = 'art/town/nexus-approved/' + school + '.webp?v=2';
+                await image.decode();
+                if (image.naturalWidth !== 560 || image.naturalHeight !== 450)
+                    return { pass:false, reason:'dimensions ' + school };
+                const canvas = document.createElement('canvas');
+                canvas.width=560; canvas.height=450;
+                const ctx=canvas.getContext('2d', {willReadFrequently:true});
+                ctx.drawImage(image,0,0);
+                const data=ctx.getImageData(0,0,560,450).data;
+                const alpha = new Uint8Array(560*450);
+                for (let i=0;i<alpha.length;i++) alpha[i]=data[i*4+3];
+                result.push(alpha);
+            }
+            const reference=result[0];
+            for (let index=1;index<result.length;index++)
+                for (let pixel=0;pixel<reference.length;pixel++)
+                    if (reference[pixel] !== result[index][pixel])
+                        return {pass:false,reason:'alpha mismatch: ' + schools[index] + ' at ' + pixel};
+            // All plates must be clear outside the Nexus, with no rectangular edges.
+            if (reference[0] !== 0 || reference[559] !== 0 ||
+                reference[449*560+559] !== 0 || reference[449*560] !== 0)
+                return {pass:false,reason:'non-transparent atlas corners'};
+            const actual=scene.querySelector('[data-nexus-school-art]');
+            const rect=actual.getBoundingClientRect();
+            const root=scene.getBoundingClientRect();
+            const positionOk=Math.abs((rect.left-root.left))<.5 &&
+                Math.abs((rect.top-root.top))<.5 &&
+                Math.abs(rect.width/root.width-560/1672)<.0005 &&
+                Math.abs(rect.height/root.height-450/941)<.0005;
+            return {pass:positionOk,reason:positionOk?'ok':'display registration'};
+        }");
+        Assert.IsTrue(result.GetProperty("pass").GetBoolean(), result.GetProperty("reason").GetString());
+    }
+
+    [TestMethod]
     public async Task Mobile_NexusDebugSelector_PreviewsSixImageAssetsWithoutChangingCharacter()
     {
         await Page.SetViewportSizeAsync(390, 844);
@@ -2021,6 +2070,16 @@ public sealed class WyrmforgeBrowserTests : PageTest
         try
         {
             await OpenAsync();
+            if (Environment.GetEnvironmentVariable("WYRMFORGE_CHECK_DEPLOYED_VERSION") == "true")
+            {
+                var expectedVersion = Environment.GetEnvironmentVariable("WYRMFORGE_EXPECTED_VERSION");
+                var expectedCommit = Environment.GetEnvironmentVariable("WYRMFORGE_EXPECTED_COMMIT");
+                Assert.IsFalse(string.IsNullOrWhiteSpace(expectedVersion), "Published Pages smoke requires an expected release version.");
+                Assert.IsTrue(expectedCommit is { Length: >= 7 }, "Published Pages smoke requires a commit SHA.");
+                var versionBadge = Page.Locator("[data-game-version]");
+                await Expect(versionBadge).ToHaveAttributeAsync("data-game-version", expectedVersion!);
+                await Expect(versionBadge).ToContainTextAsync(expectedCommit![..7]);
+            }
             await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN HUNT", Exact = true })).ToBeVisibleAsync();
             await ScreenshotAsync("desktop-home.png");
 
@@ -2430,7 +2489,9 @@ public sealed class WyrmforgeBrowserTests : PageTest
         }");
         await Page.WaitForFunctionAsync(@"() => {
             const state = window.__roamingState?.(document.querySelector('canvas.game-canvas'));
-            return Boolean(state?.world && state.player);
+            // The initial snapshot still has the simulation's 800x600 defaults.
+            // Wait for an actual tick before asserting the roaming world's dimensions.
+            return Boolean(state?.world && state.player && state.performance?.simulationHz > 0);
         }");
         var initial = await Page.EvaluateAsync<System.Text.Json.JsonElement>(@"() => {
             const state = window.__roamingState(document.querySelector('canvas.game-canvas'));
