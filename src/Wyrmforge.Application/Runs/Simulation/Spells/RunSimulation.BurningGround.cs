@@ -9,6 +9,7 @@ public sealed partial class RunSimulation
 {
     private const double BurningGroundDamageFraction = 0.12;
     private readonly List<BurningGroundState> burningGrounds = [];
+    private long nextBurningGroundId;
 
     private void RegisterBurningGround(ProjectileState projectile, Vector2D position)
     {
@@ -25,7 +26,7 @@ public sealed partial class RunSimulation
             ? buildModifiers.Apply(Wyrmforge.Domain.Combat.Modifiers.BuildStatId.MutationRadius, 1) : 1;
         var damagePerTick = buildModifiers.Apply(Wyrmforge.Domain.Combat.Modifiers.BuildStatId.BurnDamage,
             projectile.Damage * BurningGroundDamageFraction);
-        burningGrounds.Add(new BurningGroundState(position, damagePerTick, duration, radius));
+        burningGrounds.Add(new BurningGroundState(position, damagePerTick, duration, radius, ++nextBurningGroundId));
     }
 
     private void UpdateBurningGrounds(double delta)
@@ -42,6 +43,10 @@ public sealed partial class RunSimulation
 
         burningGrounds.RemoveAll(ground => ground.IsExpired);
     }
+
+    private IReadOnlyList<BurningGroundRenderSnapshot> CreateBurningGroundSnapshots() =>
+        burningGrounds.Select(ground => new BurningGroundRenderSnapshot(
+            ground.Id, ground.Position.X, ground.Position.Y, ground.EffectiveRadius, ground.RemainingSeconds)).ToArray();
 
     private IReadOnlyList<EssenceBurstRenderSnapshot> CreateFieryAreaSnapshots()
     {

@@ -3,6 +3,14 @@
 > **Canonical WyrmForge specification · updated 20 October 2026.** Physical Gothic sound identity, author/asset credits and future mobile feedback.
 > [Canonical index](README.md) · Only explicitly marked **LOCKED/approved** requirements are commitments. Proposed values, old milestones and drafts are not evidence of shipped code. Verify current `main`, PRs and tests.
 
+### Non-negotiable recording replacement policy — 24 October 2026
+
+**Old sound recordings are placeholders and must not be reused as source material** in any new WyrmForge sound, comparison, contextual mix or marketing preview. This specifically includes the previous `fire.ogg`, `impact.ogg`, `enemy-down.ogg`, legacy elemental cast/hit recordings, and the Cave Theme when used as a placeholder soundtrack. A sample created by combining old assets is **not new sound design**. Old preview files using these sources have been withdrawn.
+
+Replacement process: author genuinely new recordings/sound design, publish independently playable MP3 A/B examples, obtain listening approval, then wire the new Oggs to precise gameplay events. In-progress draft production may retain old references temporarily to preserve current-main compatibility, but **no final PR may merge with unapproved placeholder cue mappings**. Worn Vellum, new Codex/Wet Forest, and the new Hollowed/Ashling candidate recordings are independent newly approved directions; an accepted direction is not blanket approval for every eventual recording.
+
+Fireball R1 begins with newly authored deterministic offline combustion/wind/pressure/cinder textures; there is no import or resample of any legacy sound. Cast/hit will replace `cues.fire` after new assets are generated. Flight and burning ground require verified gameplay event timing. The sound remains subject to iPhone listening and quality review.
+
 ## Approved sonic priorities and limits
 
 - **Order of work:** (1) distinguish menu presses, Hunt launch and town doors (no generic intrusive bell); (2) environmental ambience and convincing monster deaths; (3) distinct Fire/Frost/Storm/Arcane magic impact and tails; (4) restrained phone haptics; (5) mix polish and additional moments. Prioritize auditions *in the real game* on phone speakers.
@@ -10,6 +18,27 @@
 - No ear-fatiguing button bell for World Gate, arena launch or every confirmation. Town doors sound like opening doors; starting a Hunt needs its own meaningful transition. Playback respects browser gesture rules, interruption, mute, category volume and a continuous music crossfade.
 - **Haptics are additive and optional:** a short UI confirmation, restrained spell-impact feedback and meaningful event cues; never every damage tick. Respect device setting, OS reduced-motion/feedback, power and possible WebView/native platform adapters. Sound and haptics cannot be the only way to understand gameplay.
 - Only approved recordings with clear license are included. **Preserve attribution in the shipped product** where required and the checked-in source/manifest checksums. This is not permission to adopt unauditioned candidate tracks. Phase-1 proposed Foley remains pending [PR #128](https://github.com/pjotrcasteel/Wyrmforge/pull/128).
+
+
+### First UI Foley audition (24 October 2026, draft PR #128)
+
+The ordinary interface press has a deliberately narrow, non-tonal recorded-Foley audition. The chosen routine navigation sound is **Worn Vellum** (two different Kenney CC0 leather-handling recordings), with **Weathered Stone** (existing rubberduck CC0) and **Cold Iron** (Kenney CC0) selectable in Settings → Sound Atelier. Selection persists on the device. These are candidate source recordings, **not approved final sound design**. They are not the sounds for Hunt departure, most occupied buildings, unlocks, or spell impacts; those retain separate event identities.
+
+On an iPhone speaker, compare the three at moderate volume, repeat the ordinary press at least twenty times, then navigate menus for five minutes. Check immediate tap feedback, low fatigue, no extra bells or double-clicks, mute, saved selection and headphones. Record keep/revise/replace. Do not merge on CI alone. Source recordings and Git blob provenance are in the recorded audio manifest. This focused change rebases the earlier Phase-1 candidate onto the current universal-lighting-era `main` without changing combat or music.
+
+### Wet Forest audio pass — draft (24 October 2026)
+
+The Cinder Frontier/Wet Forest gets a **separate, quiet, streamed environmental loop** beneath Hunt music and combat: filtered physical wind, damp water/drips, and two distant tree creaks. Three explicit CC0 audio sources are rendered into a compressed, self-hosted 36-second Ogg with an accompanying iPhone-playable MP3 audition. All original source URLs, author and SHA-256 hashes are recorded in the manifest and `docs/audio/previews/wet-forest-provenance.json`; production playback never fetches external media.
+
+Sound remains optional. The ambience uses its own saved volume control (`wyrmforge.audio.ambience.v1`, Preferences), starts silently during a trusted audio gesture for mobile autoplay rules, and fades when entering or leaving the Cinder Frontier. **Never run the Wet Forest ambience in Frost, Town or on background tabs.** Browser game-state detection is through `.game-screen[data-ambient-biome]`, not random runtime heuristics. No per-frame audio allocation; music remains separate and retains its crossfades.
+
+**Listening gate:** iPhone speaker + headphones, ambient-only and full Hunt mixing; check faint texture is still audible but never masks Fireball or warning cues. Inspect continuous looping for clicks and recognisable repetition, first gesture after return, and performance in portrait/mobile. Source-quality inspection and listening remain required before merge. Actual component usage and audio asset presence are independently tested.
+
+### Elemental-impact identity — draft sound slice
+
+Elemental hit recordings must follow the actual `ElementalImpactRenderSnapshot.Spell` (C# `SpellId`), **not the last spell cast**. The event tracker now distinguishes arcane/fire/frost/storm at the impact snapshot, including non-primary spells CinderNeedle, IceLance, BallLightning and AetherDart. Each maps to the existing recorded school-specific `hitVariants` (JC Sounds, CC BY 4.0) and existing combat category; no extra new third-party samples are added. Unknown SpellId preserves the generic `impact` fallback. Impacts suppressed on a kill frame remain suppressed to avoid layering a death and impact over one hit.
+
+The Sound Atelier has individual preview buttons for the four impact families; the compact Safari MP3 export supplies a side-by-side demonstration of the real recorded samples. This is a **candidate audio change**, and must still pass mobile listening plus CI on the final PR head. No Fireball mutator behavior or game simulation data is changed.
 
 ## Recorded audio inventory and required attribution
 
@@ -279,3 +308,36 @@ Do not promote the prototype to main solely because build and browser CI pass. S
 This was an **initial research candidate / listening plan** in PR #94. That PR's docs were later merged for provenance, but actual **recorded licensed** music and sound entered the game independently in 0.0.109 and 0.0.110. Many tracks and SFX listed here as candidates have since shipped; therefore the historical unreviewed/not-downloaded fields of `licensed-audio-candidates.json` are **not** an up-to-date asset inventory, license approval, or permission to download/reuse those entries.
 
 For actual shipped sources, attribution, modifications and hashes, see [recorded audio credits](../audio/recorded-audio-credits.md), the real `wwwroot/audio/recorded/manifest.json`, and the current browser audio code. New assets still require licensing evidence and listening approval. General direction remains original, mature Diablo/StarCraft-era atmosphere, without copying copyrighted Blizzard audio. Other art/backlog decisions: [handover](../handover/2026-10-15-project-art-and-backlog.md).
+
+### Hollowed and Ashling creature audio identity — draft bank (24 October 2026)
+
+Use the **existing, authoritative snapshot identity**, not guessed recent-kill context:
+`DeathBurstRenderSnapshot.Kind` and `EntityId` identify the creature that died;
+`EnemyRenderSnapshot.HitFlash` with `EntityId` identifies a new wound. The lightweight
+`sound-events.js` tracker detects rising hit edges, new death bursts, and a single
+nearby enemy within 230 world units. Repeat events are throttled; never make one
+vocalization per animation frame or per simultaneous enemy. All unrelated kinds
+keep the existing generic `enemy-down` fallback.
+
+Two distinct human-produced takes each are used for **approach / hit / death**:
+- **Hollowed:** undead human zombie vocal performances from artisticdude,
+  [Zombies Sound Pack](https://opengameart.org/content/zombies-sound-pack), CC0.
+  Thin, interrupted breath; rough pain; one last exhausted death voice.
+- **Ashling:** snarling creature performances from Ogrebane,
+  [Monster Sound Effects Pack](https://opengameart.org/content/monster-sound-effects-pack), CC0,
+  with restrained real fire crackling from AntumDeluge,
+  [Fire Crackling](https://opengameart.org/content/fire-crackling), CC0.
+  The fire texture belongs only to the ash creature; it is not a Fireball spell.
+- Sources are pinned to their SHA256s in `tools/audio/build_creature_voices.py`;
+  game assets are offline-processed mono Ogg recordings listed in the manifest.
+  Raw CC0 ZIP downloads do not happen in the game and are not included in the app.
+
+Mobile listening controls in Settings → Sound Atelier allow previewing each family.
+`docs/audio/previews/hollowed-ashling-voices.mp3` gives a 12-recording
+comparison of the two takes for each of the three actions. **Not creatively approved**:
+audio and performance review are still required, particularly to ensure voices
+sound wounded or terrifying rather than like cheerful/cartoon monsters.
+
+The first approach event is a sparse **nearby presence cue**, not synchronized
+footsteps. Per-footstep Foley, 2D distance attenuation and attack-vocal timings
+require authoritative animation/combat events; do not claim those are shipped.

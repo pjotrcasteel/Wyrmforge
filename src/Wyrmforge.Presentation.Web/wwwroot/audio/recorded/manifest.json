@@ -66,72 +66,183 @@
       }
     },
     "fire": {
-      "file": "fire.ogg",
-      "source": "Fantasy SFX Pack Vol 1/Single_Fantasy SFX Pack Vol 1_Fireball Launch_01.wav",
-      "library": "fantasy",
-      "author": "JC Sounds",
-      "license": "CC-BY-4.0",
-      "sha256": "0b1a9e86fa6cc1080b1dc2412051abcc157b0500bb15f3abfe2416785a75ac63",
+      "author": "WyrmForge original audio",
+      "license": "Original",
+      "source": "tools/audio/build_fireball_r1.py",
+      "file": "fireball-r1-cast-1.ogg",
+      "sha256": "6faa623d7581d4e9aa66215054e5f42545c13913ae83e5083ee41c072ee4fe72",
       "variants": [
         {
-          "file": "fire-cast-1.ogg",
-          "source": "Single_Fantasy SFX Pack Vol 1_Fireball Launch_01.wav",
-          "library": "fantasy",
-          "author": "JC Sounds",
-          "license": "CC-BY-4.0",
-          "sha256": "fce112916897142c749fc39baa162f0cfb904e0ecd53d58bd42a6a8e83704e2d"
+          "file": "fireball-r1-cast-1.ogg",
+          "sha256": "6faa623d7581d4e9aa66215054e5f42545c13913ae83e5083ee41c072ee4fe72",
+          "seconds": 0.75,
+          "author": "WyrmForge original audio",
+          "license": "Original",
+          "source": "tools/audio/build_fireball_r1.py",
+          "mix": {
+            "gain": 0.72,
+            "lowpassHz": 4700,
+            "attackSeconds": 0.006,
+            "releaseSeconds": 0.18
+          }
         },
         {
-          "file": "fire-cast-2.ogg",
-          "source": "Single_Fantasy SFX Pack Vol 1_Fireball Launch_02.wav",
-          "library": "fantasy",
-          "author": "JC Sounds",
-          "license": "CC-BY-4.0",
-          "sha256": "ea75d2c22816219ec4105cbf97aeba351974ef33644af101ceaaf2a94d14af26"
+          "file": "fireball-r1-cast-2.ogg",
+          "sha256": "93fe2c5898859e4872b9a219100b977e9227a0fae7860019e32ad8fb8ccdb998",
+          "seconds": 0.75,
+          "author": "WyrmForge original audio",
+          "license": "Original",
+          "source": "tools/audio/build_fireball_r1.py",
+          "mix": {
+            "gain": 0.72,
+            "lowpassHz": 4700,
+            "attackSeconds": 0.006,
+            "releaseSeconds": 0.18
+          }
         },
         {
-          "file": "fire-cast-3.ogg",
-          "source": "Single_Fantasy SFX Pack Vol 1_Fireball Launch_03.wav",
-          "library": "fantasy",
-          "author": "JC Sounds",
-          "license": "CC-BY-4.0",
-          "sha256": "2e68f61849f8eee86e38ab2942dc1b985e0c0c8629e83091d4549306ff25532f"
+          "file": "fireball-r1-cast-3.ogg",
+          "sha256": "42359a2909f5c75504abc323e867ad149a4641c83fc772a48694681558b5d14d",
+          "seconds": 0.75,
+          "author": "WyrmForge original audio",
+          "license": "Original",
+          "source": "tools/audio/build_fireball_r1.py",
+          "mix": {
+            "gain": 0.72,
+            "lowpassHz": 4700,
+            "attackSeconds": 0.006,
+            "releaseSeconds": 0.18
+          }
+        },
+        {
+          "file": "fireball-r1-cast-4.ogg",
+          "sha256": "f071c9cc9708485299e50f718f7677de594ff8b7d2b33431f37353e2ad229c5d",
+          "seconds": 0.75,
+          "author": "WyrmForge original audio",
+          "license": "Original",
+          "source": "tools/audio/build_fireball_r1.py",
+          "mix": {
+            "gain": 0.72,
+            "lowpassHz": 4700,
+            "attackSeconds": 0.006,
+            "releaseSeconds": 0.18
+          }
+        },
+        {
+          "file": "fireball-r1-cast-5.ogg",
+          "sha256": "c5e96dd1528958ddbcd4e8612cf3c62e612dd4272c6b5c5f5183de291f1ce492",
+          "seconds": 0.75,
+          "author": "WyrmForge original audio",
+          "license": "Original",
+          "source": "tools/audio/build_fireball_r1.py",
+          "mix": {
+            "gain": 0.72,
+            "lowpassHz": 4700,
+            "attackSeconds": 0.006,
+            "releaseSeconds": 0.18
+          }
+        },
+        {
+          "file": "fireball-r1-cast-6.ogg",
+          "sha256": "1d9807c003b4b84791e14a8c453d9edc723c352a303483a3644ce3b528b51b17",
+          "seconds": 0.75,
+          "author": "WyrmForge original audio",
+          "license": "Original",
+          "source": "tools/audio/build_fireball_r1.py",
+          "mix": {
+            "gain": 0.72,
+            "lowpassHz": 4700,
+            "attackSeconds": 0.006,
+            "releaseSeconds": 0.18
+          }
         }
       ],
       "hitVariants": [
         {
-          "file": "fire-hit-1.ogg",
-          "source": "Single_Fantasy SFX Pack Vol 1_Fireball Impact_01.wav",
-          "library": "fantasy",
-          "author": "JC Sounds",
-          "license": "CC-BY-4.0",
-          "sha256": "ae2c965a1b641529304e6c5449b183e11ff3e46581b9ec5094b756602e02df93"
+          "file": "fireball-r1-hit-1.ogg",
+          "sha256": "86f8210ad49667912a7234d0a863c2d212f006303607b4deca05977d2330ca60",
+          "seconds": 1.55,
+          "author": "WyrmForge original audio",
+          "license": "Original",
+          "source": "tools/audio/build_fireball_r1.py",
+          "mix": {
+            "gain": 0.82,
+            "lowpassHz": 4700,
+            "attackSeconds": 0.006,
+            "releaseSeconds": 0.18
+          }
         },
         {
-          "file": "fire-hit-2.ogg",
-          "source": "Single_Fantasy SFX Pack Vol 1_Fireball Impact_02.wav",
-          "library": "fantasy",
-          "author": "JC Sounds",
-          "license": "CC-BY-4.0",
-          "sha256": "10f83bccb053e252730a75026b70e88e2941f6121005bb52431dbea6310d8fbb"
+          "file": "fireball-r1-hit-2.ogg",
+          "sha256": "3615fc5db7363dc95d8030208824816e934cfb874249793212e92217e53c94fa",
+          "seconds": 1.55,
+          "author": "WyrmForge original audio",
+          "license": "Original",
+          "source": "tools/audio/build_fireball_r1.py",
+          "mix": {
+            "gain": 0.82,
+            "lowpassHz": 4700,
+            "attackSeconds": 0.006,
+            "releaseSeconds": 0.18
+          }
         },
         {
-          "file": "fire-hit-3.ogg",
-          "source": "Single_Fantasy SFX Pack Vol 1_Fireball Impact_03.wav",
-          "library": "fantasy",
-          "author": "JC Sounds",
-          "license": "CC-BY-4.0",
-          "sha256": "ec8a9652bb5e9c721b047d6ae59834cd2edba22a502ff5eb0eba3b1fdc2ded1d"
+          "file": "fireball-r1-hit-3.ogg",
+          "sha256": "84e304a808ddf2aa41e0745071e68ea9a3f82c66c6b19c206b11c6e934154f8e",
+          "seconds": 1.55,
+          "author": "WyrmForge original audio",
+          "license": "Original",
+          "source": "tools/audio/build_fireball_r1.py",
+          "mix": {
+            "gain": 0.82,
+            "lowpassHz": 4700,
+            "attackSeconds": 0.006,
+            "releaseSeconds": 0.18
+          }
+        },
+        {
+          "file": "fireball-r1-hit-4.ogg",
+          "sha256": "d4aedc2eb1a2d5bbcf192065fbc9e592586aa5ad67c72a8969e3b7ae7ed269e7",
+          "seconds": 1.55,
+          "author": "WyrmForge original audio",
+          "license": "Original",
+          "source": "tools/audio/build_fireball_r1.py",
+          "mix": {
+            "gain": 0.82,
+            "lowpassHz": 4700,
+            "attackSeconds": 0.006,
+            "releaseSeconds": 0.18
+          }
+        },
+        {
+          "file": "fireball-r1-hit-5.ogg",
+          "sha256": "d7890fb5ba1bf94e3d26cc95e396630e5091df8067dbdd1ff1bb095abfd570ad",
+          "seconds": 1.55,
+          "author": "WyrmForge original audio",
+          "license": "Original",
+          "source": "tools/audio/build_fireball_r1.py",
+          "mix": {
+            "gain": 0.82,
+            "lowpassHz": 4700,
+            "attackSeconds": 0.006,
+            "releaseSeconds": 0.18
+          }
+        },
+        {
+          "file": "fireball-r1-hit-6.ogg",
+          "sha256": "819540e7f9dc3a3b21b748c46050a953a77c7b1c41e2583c9bd28ffb2b09a696",
+          "seconds": 1.55,
+          "author": "WyrmForge original audio",
+          "license": "Original",
+          "source": "tools/audio/build_fireball_r1.py",
+          "mix": {
+            "gain": 0.82,
+            "lowpassHz": 4700,
+            "attackSeconds": 0.006,
+            "releaseSeconds": 0.18
+          }
         }
-      ],
-      "buildup": {
-        "file": "fire-buildup.ogg",
-        "source": "Single_Fantasy SFX Pack Vol 1_Fireball_Buildup.wav",
-        "library": "fantasy",
-        "author": "JC Sounds",
-        "license": "CC-BY-4.0",
-        "sha256": "1e3d75340d7241bb7c30e005edd753389cc538ec21001bded36dd3e6252a9361"
-      }
+      ]
     },
     "frost": {
       "file": "frost.ogg",
@@ -474,6 +585,502 @@
         "attackSeconds": 0.025,
         "releaseSeconds": 0.16
       }
+    },
+    "codex-open": {
+      "file": "menu-bookOpen.ogg",
+      "source": "bookOpen.ogg",
+      "library": "kenney-rpg",
+      "author": "Kenney",
+      "license": "CC0",
+      "gitBlobSha": "acdd2721f125f5254e43cd6d169f7177672a02f5",
+      "mix": {
+        "gain": 0.72,
+        "lowpassHz": 3450,
+        "attackSeconds": 0.008,
+        "releaseSeconds": 0.12
+      },
+      "intent": "One weathered Codex opens. Distinct from the doors of other Town buildings.",
+      "layers": [
+        {
+          "file": "menu-handleSmallLeather.ogg",
+          "source": "handleSmallLeather.ogg",
+          "library": "kenney-rpg",
+          "author": "Kenney",
+          "license": "CC0",
+          "gitBlobSha": "d98f77bed3120196c0d8b97dd875af98868762f6",
+          "mix": {
+            "gain": 0.55,
+            "lowpassHz": 2700,
+            "attackSeconds": 0.012,
+            "releaseSeconds": 0.1
+          },
+          "gainScale": 0.32,
+          "delaySeconds": 0.12,
+          "intent": "Quiet leather binding/body under book opening"
+        }
+      ]
+    },
+    "hollow-approach": {
+      "file": "hollow-approach-1.ogg",
+      "source": "zombies/zombie-1.wav",
+      "library": "zombies-cc0",
+      "author": "artisticdude",
+      "license": "CC0",
+      "sha256": "cf54f2cf8033b98a68de240828dbcc641a1a912205a061eba581fa6d39e777b8",
+      "variants": [
+        {
+          "file": "hollow-approach-1.ogg",
+          "source": "zombies/zombie-1.wav",
+          "library": "zombies-cc0",
+          "author": "artisticdude",
+          "license": "CC0",
+          "sha256": "cf54f2cf8033b98a68de240828dbcc641a1a912205a061eba581fa6d39e777b8",
+          "sourceKeys": [
+            "zombies-cc0"
+          ],
+          "mix": {
+            "gain": 0.57,
+            "lowpassHz": 2600,
+            "attackSeconds": 0.02,
+            "releaseSeconds": 0.22
+          }
+        },
+        {
+          "file": "hollow-approach-2.ogg",
+          "source": "zombies/zombie-2.wav",
+          "library": "zombies-cc0",
+          "author": "artisticdude",
+          "license": "CC0",
+          "sha256": "ac5b1cda9bf0fa86832b429d52adde544c0c815103642fb1e3c61d5fe6d5fcc6",
+          "sourceKeys": [
+            "zombies-cc0"
+          ],
+          "mix": {
+            "gain": 0.57,
+            "lowpassHz": 2600,
+            "attackSeconds": 0.02,
+            "releaseSeconds": 0.22
+          }
+        }
+      ],
+      "intent": "Audition candidate for hollow-approach; sparse and non-intrusive with two different CC0 performances."
+    },
+    "hollow-hit": {
+      "file": "hollow-hit-1.ogg",
+      "source": "zombies/zombie-8.wav",
+      "library": "zombies-cc0",
+      "author": "artisticdude",
+      "license": "CC0",
+      "sha256": "ad8e049efc141767ca3b82916566ef57ce454456b9d70f4c380e38b8b82faf5a",
+      "variants": [
+        {
+          "file": "hollow-hit-1.ogg",
+          "source": "zombies/zombie-8.wav",
+          "library": "zombies-cc0",
+          "author": "artisticdude",
+          "license": "CC0",
+          "sha256": "ad8e049efc141767ca3b82916566ef57ce454456b9d70f4c380e38b8b82faf5a",
+          "sourceKeys": [
+            "zombies-cc0"
+          ],
+          "mix": {
+            "gain": 0.66,
+            "lowpassHz": 3200,
+            "attackSeconds": 0.008,
+            "releaseSeconds": 0.12
+          }
+        },
+        {
+          "file": "hollow-hit-2.ogg",
+          "source": "zombies/zombie-9.wav",
+          "library": "zombies-cc0",
+          "author": "artisticdude",
+          "license": "CC0",
+          "sha256": "9a027c5ad3b6ae35eccd9d2220e6e45fb4e6ba26221ef3fdeaf610c6f7924d06",
+          "sourceKeys": [
+            "zombies-cc0"
+          ],
+          "mix": {
+            "gain": 0.66,
+            "lowpassHz": 3200,
+            "attackSeconds": 0.008,
+            "releaseSeconds": 0.12
+          }
+        }
+      ],
+      "intent": "Audition candidate for hollow-hit; sparse and non-intrusive with two different CC0 performances."
+    },
+    "hollow-death": {
+      "file": "hollow-death-1.ogg",
+      "source": "zombies/zombie-21.wav",
+      "library": "zombies-cc0",
+      "author": "artisticdude",
+      "license": "CC0",
+      "sha256": "2d4bc8e240efe233249b538b18772d585359955f34d63c2e020fd9f823af4b1c",
+      "variants": [
+        {
+          "file": "hollow-death-1.ogg",
+          "source": "zombies/zombie-21.wav",
+          "library": "zombies-cc0",
+          "author": "artisticdude",
+          "license": "CC0",
+          "sha256": "2d4bc8e240efe233249b538b18772d585359955f34d63c2e020fd9f823af4b1c",
+          "sourceKeys": [
+            "zombies-cc0"
+          ],
+          "mix": {
+            "gain": 0.7,
+            "lowpassHz": 2800,
+            "attackSeconds": 0.018,
+            "releaseSeconds": 0.24
+          }
+        },
+        {
+          "file": "hollow-death-2.ogg",
+          "source": "zombies/zombie-22.wav",
+          "library": "zombies-cc0",
+          "author": "artisticdude",
+          "license": "CC0",
+          "sha256": "9db63a9a1dc0c1e0fe80e5030bf094b6d955b84aa15169329054bb588d18eb07",
+          "sourceKeys": [
+            "zombies-cc0"
+          ],
+          "mix": {
+            "gain": 0.7,
+            "lowpassHz": 2800,
+            "attackSeconds": 0.018,
+            "releaseSeconds": 0.24
+          }
+        }
+      ],
+      "intent": "Audition candidate for hollow-death; sparse and non-intrusive with two different CC0 performances."
+    },
+    "ashling-approach": {
+      "file": "ashling-approach-1.ogg",
+      "source": "monster_sfx_pack/monster-1.wav",
+      "library": "monsters-cc0",
+      "author": "Ogrebane",
+      "license": "CC0",
+      "sha256": "3a453d2dda99c160fca5918f8589fa1ecaf13083ea953e2906f9af5a831e8356",
+      "variants": [
+        {
+          "file": "ashling-approach-1.ogg",
+          "source": "monster_sfx_pack/monster-1.wav",
+          "library": "monsters-cc0",
+          "author": "Ogrebane",
+          "license": "CC0",
+          "sha256": "3a453d2dda99c160fca5918f8589fa1ecaf13083ea953e2906f9af5a831e8356",
+          "sourceKeys": [
+            "monsters-cc0",
+            "ash-fire-cc0"
+          ],
+          "mix": {
+            "gain": 0.57,
+            "lowpassHz": 2600,
+            "attackSeconds": 0.02,
+            "releaseSeconds": 0.22
+          }
+        },
+        {
+          "file": "ashling-approach-2.ogg",
+          "source": "monster_sfx_pack/monster-2.wav",
+          "library": "monsters-cc0",
+          "author": "Ogrebane",
+          "license": "CC0",
+          "sha256": "2e62c3787062d0a84dcfb5bd86c93668fa777e19854093747a5544d49b8347b8",
+          "sourceKeys": [
+            "monsters-cc0",
+            "ash-fire-cc0"
+          ],
+          "mix": {
+            "gain": 0.57,
+            "lowpassHz": 2600,
+            "attackSeconds": 0.02,
+            "releaseSeconds": 0.22
+          }
+        }
+      ],
+      "intent": "Audition candidate for ashling-approach; sparse and non-intrusive with two different CC0 performances."
+    },
+    "ashling-hit": {
+      "file": "ashling-hit-1.ogg",
+      "source": "monster_sfx_pack/monster-4.wav",
+      "library": "monsters-cc0",
+      "author": "Ogrebane",
+      "license": "CC0",
+      "sha256": "1491d5ac97b1c321705f96cba6b75dd590c56c3dead3d7632784ebd45b123332",
+      "variants": [
+        {
+          "file": "ashling-hit-1.ogg",
+          "source": "monster_sfx_pack/monster-4.wav",
+          "library": "monsters-cc0",
+          "author": "Ogrebane",
+          "license": "CC0",
+          "sha256": "1491d5ac97b1c321705f96cba6b75dd590c56c3dead3d7632784ebd45b123332",
+          "sourceKeys": [
+            "monsters-cc0",
+            "ash-fire-cc0"
+          ],
+          "mix": {
+            "gain": 0.66,
+            "lowpassHz": 3200,
+            "attackSeconds": 0.008,
+            "releaseSeconds": 0.12
+          }
+        },
+        {
+          "file": "ashling-hit-2.ogg",
+          "source": "monster_sfx_pack/monster-5.wav",
+          "library": "monsters-cc0",
+          "author": "Ogrebane",
+          "license": "CC0",
+          "sha256": "542d5d86c472d5fcbea132a97ebe695e1aed6d21654a774156624fb84517d1df",
+          "sourceKeys": [
+            "monsters-cc0",
+            "ash-fire-cc0"
+          ],
+          "mix": {
+            "gain": 0.66,
+            "lowpassHz": 3200,
+            "attackSeconds": 0.008,
+            "releaseSeconds": 0.12
+          }
+        }
+      ],
+      "intent": "Audition candidate for ashling-hit; sparse and non-intrusive with two different CC0 performances."
+    },
+    "ashling-death": {
+      "file": "ashling-death-1.ogg",
+      "source": "monster_sfx_pack/monster-8.wav",
+      "library": "monsters-cc0",
+      "author": "Ogrebane",
+      "license": "CC0",
+      "sha256": "471e241477a1c2b771fe48dca3956f3549b5c83d3f35c913c95843023d9bbbb1",
+      "variants": [
+        {
+          "file": "ashling-death-1.ogg",
+          "source": "monster_sfx_pack/monster-8.wav",
+          "library": "monsters-cc0",
+          "author": "Ogrebane",
+          "license": "CC0",
+          "sha256": "471e241477a1c2b771fe48dca3956f3549b5c83d3f35c913c95843023d9bbbb1",
+          "sourceKeys": [
+            "monsters-cc0",
+            "ash-fire-cc0"
+          ],
+          "mix": {
+            "gain": 0.7,
+            "lowpassHz": 2800,
+            "attackSeconds": 0.018,
+            "releaseSeconds": 0.24
+          }
+        },
+        {
+          "file": "ashling-death-2.ogg",
+          "source": "monster_sfx_pack/monster-10.wav",
+          "library": "monsters-cc0",
+          "author": "Ogrebane",
+          "license": "CC0",
+          "sha256": "2ed74acae335f86151fdc68206178624e0ead8a8c473425fed3d3393488d48ec",
+          "sourceKeys": [
+            "monsters-cc0",
+            "ash-fire-cc0"
+          ],
+          "mix": {
+            "gain": 0.7,
+            "lowpassHz": 2800,
+            "attackSeconds": 0.018,
+            "releaseSeconds": 0.24
+          }
+        }
+      ],
+      "intent": "Audition candidate for ashling-death; sparse and non-intrusive with two different CC0 performances."
+    },
+    "fire-flight": {
+      "author": "WyrmForge original audio",
+      "license": "Original",
+      "source": "tools/audio/build_fireball_r1.py",
+      "file": "fireball-r1-flight-1.ogg",
+      "sha256": "e89f44d9b9334756552bc350f1b802e9a2b562c394fae795bada74dea06ee226",
+      "variants": [
+        {
+          "file": "fireball-r1-flight-1.ogg",
+          "sha256": "e89f44d9b9334756552bc350f1b802e9a2b562c394fae795bada74dea06ee226",
+          "seconds": 0.83,
+          "author": "WyrmForge original audio",
+          "license": "Original",
+          "source": "tools/audio/build_fireball_r1.py",
+          "mix": {
+            "gain": 0.3,
+            "lowpassHz": 4700,
+            "attackSeconds": 0.006,
+            "releaseSeconds": 0.18
+          }
+        },
+        {
+          "file": "fireball-r1-flight-2.ogg",
+          "sha256": "ca6292e0e9ae38b6d48c61e385b75eedd4cdc202e03726b4614857b7898f6310",
+          "seconds": 0.83,
+          "author": "WyrmForge original audio",
+          "license": "Original",
+          "source": "tools/audio/build_fireball_r1.py",
+          "mix": {
+            "gain": 0.3,
+            "lowpassHz": 4700,
+            "attackSeconds": 0.006,
+            "releaseSeconds": 0.18
+          }
+        },
+        {
+          "file": "fireball-r1-flight-3.ogg",
+          "sha256": "7e22ff2208be7445882f1ab8fabd6a5fa50eb0b44f55ce0f5e383aaacba1f59e",
+          "seconds": 0.83,
+          "author": "WyrmForge original audio",
+          "license": "Original",
+          "source": "tools/audio/build_fireball_r1.py",
+          "mix": {
+            "gain": 0.3,
+            "lowpassHz": 4700,
+            "attackSeconds": 0.006,
+            "releaseSeconds": 0.18
+          }
+        },
+        {
+          "file": "fireball-r1-flight-4.ogg",
+          "sha256": "8eee3fb25f86bdb6c11336cda4ce6d3b4dec87c4b2d507220fa3cb72072b38ff",
+          "seconds": 0.83,
+          "author": "WyrmForge original audio",
+          "license": "Original",
+          "source": "tools/audio/build_fireball_r1.py",
+          "mix": {
+            "gain": 0.3,
+            "lowpassHz": 4700,
+            "attackSeconds": 0.006,
+            "releaseSeconds": 0.18
+          }
+        },
+        {
+          "file": "fireball-r1-flight-5.ogg",
+          "sha256": "580214829298184f12b922fc675754680fcf3dbe791ec17077678871cfc441bb",
+          "seconds": 0.83,
+          "author": "WyrmForge original audio",
+          "license": "Original",
+          "source": "tools/audio/build_fireball_r1.py",
+          "mix": {
+            "gain": 0.3,
+            "lowpassHz": 4700,
+            "attackSeconds": 0.006,
+            "releaseSeconds": 0.18
+          }
+        },
+        {
+          "file": "fireball-r1-flight-6.ogg",
+          "sha256": "4a8fd9c4702cbdc761317e79faed1cfdaa87a280b940fef1f6af217f82a7e9c1",
+          "seconds": 0.83,
+          "author": "WyrmForge original audio",
+          "license": "Original",
+          "source": "tools/audio/build_fireball_r1.py",
+          "mix": {
+            "gain": 0.3,
+            "lowpassHz": 4700,
+            "attackSeconds": 0.006,
+            "releaseSeconds": 0.18
+          }
+        }
+      ]
+    },
+    "fire-burning": {
+      "author": "WyrmForge original audio",
+      "license": "Original",
+      "source": "tools/audio/build_fireball_r1.py",
+      "file": "fireball-r1-burn-1.ogg",
+      "sha256": "af406269c5823fac26ed73549e2002a2b58dccbd2dd65efdb8937d6e73f7aada",
+      "variants": [
+        {
+          "file": "fireball-r1-burn-1.ogg",
+          "sha256": "af406269c5823fac26ed73549e2002a2b58dccbd2dd65efdb8937d6e73f7aada",
+          "seconds": 3.9,
+          "author": "WyrmForge original audio",
+          "license": "Original",
+          "source": "tools/audio/build_fireball_r1.py",
+          "mix": {
+            "gain": 0.25,
+            "lowpassHz": 4700,
+            "attackSeconds": 0.006,
+            "releaseSeconds": 0.18
+          }
+        },
+        {
+          "file": "fireball-r1-burn-2.ogg",
+          "sha256": "a78e6438a4bd11f4acb16f4ec162fc83f1826a2213c92acd3f3b643a13d83357",
+          "seconds": 3.9,
+          "author": "WyrmForge original audio",
+          "license": "Original",
+          "source": "tools/audio/build_fireball_r1.py",
+          "mix": {
+            "gain": 0.25,
+            "lowpassHz": 4700,
+            "attackSeconds": 0.006,
+            "releaseSeconds": 0.18
+          }
+        },
+        {
+          "file": "fireball-r1-burn-3.ogg",
+          "sha256": "08554967c06a24c9869c21cf4ab1dd05b04f571b4808157db4aa71c0174fab8a",
+          "seconds": 3.9,
+          "author": "WyrmForge original audio",
+          "license": "Original",
+          "source": "tools/audio/build_fireball_r1.py",
+          "mix": {
+            "gain": 0.25,
+            "lowpassHz": 4700,
+            "attackSeconds": 0.006,
+            "releaseSeconds": 0.18
+          }
+        },
+        {
+          "file": "fireball-r1-burn-4.ogg",
+          "sha256": "db4391e1555a1118d5e50d6ce5f7475d5a2dd718098f74a8c7a6a7021e68e0b4",
+          "seconds": 3.9,
+          "author": "WyrmForge original audio",
+          "license": "Original",
+          "source": "tools/audio/build_fireball_r1.py",
+          "mix": {
+            "gain": 0.25,
+            "lowpassHz": 4700,
+            "attackSeconds": 0.006,
+            "releaseSeconds": 0.18
+          }
+        },
+        {
+          "file": "fireball-r1-burn-5.ogg",
+          "sha256": "b1fb8fac86d6941350b38eb5bff5d57a319c68b6274bf3a66e5154726c4bcf8b",
+          "seconds": 3.9,
+          "author": "WyrmForge original audio",
+          "license": "Original",
+          "source": "tools/audio/build_fireball_r1.py",
+          "mix": {
+            "gain": 0.25,
+            "lowpassHz": 4700,
+            "attackSeconds": 0.006,
+            "releaseSeconds": 0.18
+          }
+        },
+        {
+          "file": "fireball-r1-burn-6.ogg",
+          "sha256": "a8ffec121f994adff59509a6c1f78941af5d6d7591b5e6560e93458bc52a9378",
+          "seconds": 3.9,
+          "author": "WyrmForge original audio",
+          "license": "Original",
+          "source": "tools/audio/build_fireball_r1.py",
+          "mix": {
+            "gain": 0.25,
+            "lowpassHz": 4700,
+            "attackSeconds": 0.006,
+            "releaseSeconds": 0.18
+          }
+        }
+      ]
     }
   },
   "sources": [
@@ -519,9 +1126,57 @@
       "sourceFile": "doorOpen_1.ogg",
       "mirror": "https://github.com/Mcamento8/open-game-sfx-index/blob/main/audio/rpg-audio/doorOpen_1.ogg",
       "gitBlobSha": "7df28265312494fc053380002e551b001dea89ad"
+    },
+    {
+      "key": "forest-wind",
+      "url": "https://opengameart.org/sites/default/files/wind%20woosh%20loop.ogg",
+      "sourcePage": "https://opengameart.org/content/wind-whoosh-loop",
+      "author": "SketchMan3",
+      "license": "CC0",
+      "originalSha256": "0cfdbd3f21ed449689a9024264edf267d0037a6495813a7010827672ec191dac"
+    },
+    {
+      "key": "forest-drips",
+      "url": "https://opengameart.org/sites/default/files/dungeon_ambient_1_0.ogg",
+      "sourcePage": "https://opengameart.org/content/loopable-dungeon-ambience",
+      "author": "JaggedStone",
+      "license": "CC0",
+      "originalSha256": "df491823e4877371c34dbda4e9321cd83a4a14fa7573cee0ebca1ae423b70e6e"
+    },
+    {
+      "key": "forest-creak",
+      "url": "https://opengameart.org/sites/default/files/tree_creak_0.ogg",
+      "sourcePage": "https://opengameart.org/content/tree-creaking",
+      "author": "AntumDeluge / Department64",
+      "license": "CC0",
+      "originalSha256": "465356e0e32e71a5c29fda529a0ac23af7791c62e3bd862e8cb2961eb104e1b1"
+    },
+    {
+      "key": "zombies-cc0",
+      "url": "https://opengameart.org/sites/default/files/zombies.zip",
+      "sourcePage": "https://opengameart.org/content/zombies-sound-pack",
+      "author": "artisticdude",
+      "license": "CC0",
+      "originalSha256": "8096ceeb4dac35d9eef9bfe0cc6649778d1eebf141b208d394ac338b9e5be314"
+    },
+    {
+      "key": "monsters-cc0",
+      "url": "https://opengameart.org/sites/default/files/monster_sfx_pack.zip",
+      "sourcePage": "https://opengameart.org/content/monster-sound-effects-pack",
+      "author": "Ogrebane",
+      "license": "CC0",
+      "originalSha256": "f39c5ae356b1fc01284057ee48e35ec1a52fcc84bfa959b77d0a696adc8459e4"
+    },
+    {
+      "key": "ash-fire-cc0",
+      "url": "https://opengameart.org/sites/default/files/fire-1_0.ogg",
+      "sourcePage": "https://opengameart.org/content/fire-crackling",
+      "author": "AntumDeluge",
+      "license": "CC0",
+      "originalSha256": "f922929805bc6afdf0a35727fa3998033db544c1b6f62ed3aeab94341ed6ddeb"
     }
   ],
-  "attribution": "JC Sounds · CC BY 4.0 · https://opengameart.org/content/jc-sounds-fantasy-sfx-pack-vol-1 (edited: trimmed, filtered, resampled and converted)",
+  "attribution": "JC Sounds \u00b7 CC BY 4.0 \u00b7 https://opengameart.org/content/jc-sounds-fantasy-sfx-pack-vol-1 (edited: trimmed, filtered, resampled and converted)",
   "mixVersion": "0.0.110",
   "transitionDesign": {
     "schemaVersion": 1,
@@ -550,6 +1205,136 @@
         "action": "Encounter the Wyrm",
         "material": "creature roar"
       }
+    }
+  },
+  "uiMaterials": {
+    "vellum": {
+      "label": "Worn Vellum",
+      "description": "Worn leather handling and two authentic short takes; no tonal bell",
+      "mix": {
+        "gain": 0.65,
+        "lowpassHz": 3400
+      },
+      "variants": [
+        {
+          "file": "menu-handleSmallLeather.ogg",
+          "source": "handleSmallLeather.ogg",
+          "library": "kenney-rpg",
+          "author": "Kenney",
+          "license": "CC0",
+          "gitBlobSha": "d98f77bed3120196c0d8b97dd875af98868762f6"
+        },
+        {
+          "file": "menu-handleSmallLeather2.ogg",
+          "source": "handleSmallLeather2.ogg",
+          "library": "kenney-rpg",
+          "author": "Kenney",
+          "license": "CC0",
+          "gitBlobSha": "80aa47044d213e1889fc00c446b735b10062c055"
+        }
+      ]
+    },
+    "iron": {
+      "label": "Cold Iron",
+      "description": "Subdued mechanical metal click; candidate for future heavy confirmations",
+      "mix": {
+        "gain": 0.48,
+        "lowpassHz": 3000
+      },
+      "variants": [
+        {
+          "file": "menu-metalClick.ogg",
+          "source": "metalClick.ogg",
+          "library": "kenney-rpg",
+          "author": "Kenney",
+          "license": "CC0",
+          "gitBlobSha": "1a9ee4bd7384ab493b89df0ff10ee142959490be"
+        }
+      ]
+    }
+  },
+  "ambience": {
+    "wetForest": {
+      "file": "wet-forest-bed.ogg",
+      "sha256": "5d33e87a21a90ee45a2445661dbe5a4efb6386d5f6ed30e07e3fa4996b49e324",
+      "license": "CC0",
+      "sourceKeys": [
+        "forest-wind",
+        "forest-drips",
+        "forest-creak"
+      ],
+      "durationSeconds": 36,
+      "intent": "Quiet Wet Forest wind/drips and two sparse timber creaks, below Hunt music and combat"
+    }
+  },
+  "authoredFireballStages": {
+    "R1": {
+      "approved": false,
+      "oldAudioSourceUsed": false,
+      "flight": [
+        {
+          "file": "fireball-r1-flight-1.ogg",
+          "sha256": "e89f44d9b9334756552bc350f1b802e9a2b562c394fae795bada74dea06ee226",
+          "seconds": 0.83
+        },
+        {
+          "file": "fireball-r1-flight-2.ogg",
+          "sha256": "ca6292e0e9ae38b6d48c61e385b75eedd4cdc202e03726b4614857b7898f6310",
+          "seconds": 0.83
+        },
+        {
+          "file": "fireball-r1-flight-3.ogg",
+          "sha256": "7e22ff2208be7445882f1ab8fabd6a5fa50eb0b44f55ce0f5e383aaacba1f59e",
+          "seconds": 0.83
+        },
+        {
+          "file": "fireball-r1-flight-4.ogg",
+          "sha256": "8eee3fb25f86bdb6c11336cda4ce6d3b4dec87c4b2d507220fa3cb72072b38ff",
+          "seconds": 0.83
+        },
+        {
+          "file": "fireball-r1-flight-5.ogg",
+          "sha256": "580214829298184f12b922fc675754680fcf3dbe791ec17077678871cfc441bb",
+          "seconds": 0.83
+        },
+        {
+          "file": "fireball-r1-flight-6.ogg",
+          "sha256": "4a8fd9c4702cbdc761317e79faed1cfdaa87a280b940fef1f6af217f82a7e9c1",
+          "seconds": 0.83
+        }
+      ],
+      "burn": [
+        {
+          "file": "fireball-r1-burn-1.ogg",
+          "sha256": "af406269c5823fac26ed73549e2002a2b58dccbd2dd65efdb8937d6e73f7aada",
+          "seconds": 3.9
+        },
+        {
+          "file": "fireball-r1-burn-2.ogg",
+          "sha256": "a78e6438a4bd11f4acb16f4ec162fc83f1826a2213c92acd3f3b643a13d83357",
+          "seconds": 3.9
+        },
+        {
+          "file": "fireball-r1-burn-3.ogg",
+          "sha256": "08554967c06a24c9869c21cf4ab1dd05b04f571b4808157db4aa71c0174fab8a",
+          "seconds": 3.9
+        },
+        {
+          "file": "fireball-r1-burn-4.ogg",
+          "sha256": "db4391e1555a1118d5e50d6ce5f7475d5a2dd718098f74a8c7a6a7021e68e0b4",
+          "seconds": 3.9
+        },
+        {
+          "file": "fireball-r1-burn-5.ogg",
+          "sha256": "b1fb8fac86d6941350b38eb5bff5d57a319c68b6274bf3a66e5154726c4bcf8b",
+          "seconds": 3.9
+        },
+        {
+          "file": "fireball-r1-burn-6.ogg",
+          "sha256": "a8ffec121f994adff59509a6c1f78941af5d6d7591b5e6560e93458bc52a9378",
+          "seconds": 3.9
+        }
+      ]
     }
   }
 }

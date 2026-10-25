@@ -2,10 +2,12 @@ using Wyrmforge.Domain.Combat.Geometry;
 
 namespace Wyrmforge.Application.Runs.Simulation;
 
-internal sealed class BurningGroundState(Vector2D position, double damagePerTick, double durationMultiplier = 1, double radiusMultiplier = 1)
+internal sealed class BurningGroundState(Vector2D position, double damagePerTick, double durationMultiplier = 1, double radiusMultiplier = 1, long id = 0)
 {
     private const double TickEpsilon = 0.000000001;
     private double tickRemaining = TickIntervalSeconds;
+
+    public long Id { get; } = id;
 
     public const double Radius = 68;
 

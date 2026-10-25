@@ -1,0 +1,52 @@
+name: Original Fireball R1 audition
+
+on:
+  push:
+    branches: [audio/phase1-menu-foley-audition]
+    paths:
+      - tools/audio/build_fireball_r1.py
+      - .github/workflows/original-fireball-r1.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 64
+          persist-credentials: true
+      - name: Install original audio authoring tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg
+          python3 -m pip install --break-system-packages --disable-pip-version-check numpy scipy
+      - name: Build from new physical textures, never old sound recordings
+        run: python3 tools/audio/build_fireball_r1.py
+      - name: Commit new Fireball Ogg assets and MP3 listening samples
+        shell: bash
+        run: |
+          set -euo pipefail
+          src=src/Wyrmforge.Presentation.Web/wwwroot/audio/recorded
+          ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1 docs/audio/previews/fireball-r1-ab-comparison.mp3
+          ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1 docs/audio/previews/fireball-r1-six-take-reel.mp3
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$src/manifest.json" "$src"/fireball-r1-*.ogg
+          git add docs/audio/previews/fireball-r1-*.mp3 docs/audio/previews/fireball-r1-audition.json
+          if ! git diff --cached --quiet; then
+            git commit -m "audio: check in new original Fireball R1 game Oggs and phone previews"
+            git fetch origin "$GITHUB_REF_NAME"
+            git rebase "origin/$GITHUB_REF_NAME"
+            git push origin "HEAD:$GITHUB_REF_NAME"
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wyrmforge-original-fireball-r1
+          path: |
+            docs/audio/previews/fireball-r1-*.mp3
+            docs/audio/previews/fireball-r1-audition.json
+          if-no-files-found: error

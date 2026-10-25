@@ -4,15 +4,44 @@
     const design = window.WyrmforgeSoundDesign;
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
     const savedEnabledKey = 'wyrmforge.audio.enabled.v1';
-    const volumeKeys = { ui: 'wyrmforge.audio.ui.v1', combat: 'wyrmforge.audio.combat.v1', moment: 'wyrmforge.audio.moment.v1', music: 'wyrmforge.audio.music.v1' };
-    const volumes = { ui: 0.32, combat: 0.36, moment: 0.69, music: 0.66 };
+    const uiMaterialKey = 'wyrmforge.audio.ui.material.v1';
+    const uiMaterialChoices = Object.freeze([
+        { id: 'vellum', label: 'Worn Vellum' },
+        { id: 'iron', label: 'Cold Iron' },
+    ]);
+    const volumeKeys = { ui: 'wyrmforge.audio.ui.v1', combat: 'wyrmforge.audio.combat.v1', moment: 'wyrmforge.audio.moment.v1', music: 'wyrmforge.audio.music.v1', ambience: 'wyrmforge.audio.ambience.v1' };
+    const volumes = { ui: 0.32, combat: 0.36, moment: 0.69, music: 0.66, ambience: 0.48 };
     const lastCue = new Map();
     const variants = new Map();
+    const fireballShuffleBags = new Map();
+
+    function nextFireballTake(key, count) {
+        if (count <= 1) return 0;
+        let bag = fireballShuffleBags.get(key);
+        if (!bag || bag.count !== count || bag.pending.length === 0) {
+            const pending = Array.from({ length: count }, (_, i) => i);
+            for (let i = count - 1; i > 0; --i) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [pending[i], pending[j]] = [pending[j], pending[i]];
+            }
+            if (bag?.last !== undefined && pending[count - 1] === bag.last) {
+                // The first take of the next bag must differ from the last heard one.
+                const j = pending.findIndex(index => index !== bag.last);
+                [pending[count - 1], pending[j]] = [pending[j], pending[count - 1]];
+            }
+            bag = { count, pending, last: bag?.last };
+            fireballShuffleBags.set(key, bag);
+        }
+        const index = bag.pending.pop();
+        bag.last = index;
+        return index;
+    }
     const buffers = new Map();
     const voices = { ui: 0, combat: 0, moment: 0 };
     const activeVoices = { ui: [], combat: [], moment: [] };
     const maxVoices = { ui: 2, combat: 5, moment: 3 };
     let enabled = true;
+    let uiMaterial = 'vellum';
     let unlocked = false;
     let context = null;
     let master = null;
@@ -25,7 +54,12 @@
     let statusTimer = 0;
     let recordedManifest = null;
     const recordedBuffers = new Map();
+    let creaturesPrefetched = false;
     const musicPlayers = new Map();
+    let forestPlayer = null;
+    let forestLevel = 0;
+    let forestTarget = null;
+    let forestFadeGeneration = 0;
     let currentMusic = null;
     let fadeGeneration = 0;
     let wantedMusic = null;
@@ -39,6 +73,8 @@
         try { window.localStorage.setItem(key, String(value)); } catch { /* Private browsing may disable storage. */ }
     }
     enabled = loadPreference(savedEnabledKey) !== 'false';
+    const savedUiMaterial = loadPreference(uiMaterialKey);
+    if (uiMaterialChoices.some(choice => choice.id === savedUiMaterial)) uiMaterial = savedUiMaterial;
     for (const group of Object.keys(volumes)) {
         const saved = Number(loadPreference(volumeKeys[group]));
         if (loadPreference(volumeKeys[group]) !== null && Number.isFinite(saved)) volumes[group] = Math.max(0, Math.min(1, saved));
@@ -121,7 +157,8 @@
             return response.json();
         }).then(manifest => {
             if (manifest.version !== 2 || !manifest.cues?.arcane?.variants?.length || !manifest.cues?.fire?.variants?.length || !manifest.cues?.frost?.variants?.length || !manifest.cues?.lightning?.variants?.length ||
-                !manifest.music?.menu || !manifest.music?.hunt) throw new Error('Incomplete recorded fantasy audio manifest');
+                !manifest.music?.menu || !manifest.music?.hunt || !uiMaterialChoices.every(choice => manifest.uiMaterials?.[choice.id]?.variants?.length))
+                throw new Error('Incomplete recorded fantasy audio manifest');
             recordedManifest = manifest;
             prewarmTransitions();
             if (status) status.textContent = 'RECORDED AUDIO READY';
@@ -152,15 +189,48 @@
     // Preload compact, often-used transitions; never block navigation if a recording is unavailable.
     function prewarmTransitions() {
         if (!recordedManifest || !context || !enabled) return;
-        for (const name of ['building-open', 'hunt-start', 'trail-enter', 'threat-reveal']) {
+        for (const name of ['building-open', 'codex-open', 'hunt-start', 'trail-enter', 'threat-reveal']) {
             const cue = recordedManifest.cues?.[name];
             for (const entry of cue ? [cue, ...(cue.layers ?? [])] : []) {
                 void loadRecordedBuffer(entry).catch(() => {});
             }
         }
+        // Tiny files: decode all UI candidates after unlock so A/B changes respond immediately.
+        for (const material of Object.values(recordedManifest.uiMaterials ?? {})) {
+            for (const entry of material.variants ?? []) void loadRecordedBuffer(entry).catch(() => {});
+        }
+    }
+
+    function prewarmCreaturesInHunt() {
+        // The opening encounter should not wait for its first hit/voice Ogg download.
+        // Reserve this small (<200 KB) set for Hunts, not Town or menu screens.
+        if (creaturesPrefetched || !unlocked || !context || !recordedManifest ||
+            !document.querySelector?.('.game-screen')) return;
+        creaturesPrefetched = true;
+        for (const family of ['hollow', 'ashling']) {
+            for (const action of ['approach', 'hit', 'death']) {
+                const entry = recordedManifest.cues?.[family + '-' + action];
+                for (const take of entry?.variants ?? []) void loadRecordedBuffer(take).catch(() => {});
+            }
+        }
+        // Six small original Fireball casts/hits are needed on the first actual
+        // encounter, not downloaded while a projectile is already on screen.
+        const fireball = recordedManifest.cues?.fire;
+        const flight = recordedManifest.cues?.['fire-flight'];
+        const burning = recordedManifest.cues?.['fire-burning'];
+        for (const take of [...(fireball?.variants ?? []), ...(fireball?.hitVariants ?? []),
+            ...(flight?.variants ?? []), ...(burning?.variants ?? [])]) {
+            void loadRecordedBuffer(take).catch(() => {});
+        }
     }
 
     function recordedEntry(name, type, variation) {
+        if (name === 'ui' && type === 'cast') {
+            const material = recordedManifest?.uiMaterials?.[uiMaterial];
+            if (material?.variants?.length) {
+                return { ...material.variants[variation % material.variants.length], mix: material.mix };
+            }
+        }
         const definition = recordedManifest?.cues?.[name];
         if (!definition) return null;
         const clips = type === 'hit' ? definition.hitVariants : definition.variants;
@@ -168,13 +238,25 @@
         return clips?.length ? clips[variation % clips.length] : (type === 'cast' ? definition : null);
     }
 
+    function lowestRecordedVoice(bus) {
+        return activeVoices[bus].reduce((lowest, voice) =>
+            !lowest || voice.priority < lowest.priority ? voice : lowest, null);
+    }
+
+    function canPlayRecordedVoice(bus, priority) {
+        if (voices[bus] < maxVoices[bus]) return true;
+        const lowest = lowestRecordedVoice(bus);
+        return Boolean(lowest && lowest.priority < priority);
+    }
+
     function playRecordedEntry(entry, sound, name, variation, gainScale = 1, delay = 0) {
         if (!entry || !enabled || !context) return false;
         const bus = sound.bus;
-        // Hard limit on simultaneous sounds; the music soundtrack is independent of these limits.
-        if (voices[bus] >= maxVoices[bus]) return false;
+        // Music and continuous environmental ambience have independent mixers.
+        // Low-priority proximity voices must never starve direct player feedback.
+        if (!canPlayRecordedVoice(bus, sound.priority)) return false;
         void loadRecordedBuffer(entry).then(buffer => {
-            if (!enabled || !context || context.state === 'closed' || voices[bus] >= maxVoices[bus]) return;
+            if (!enabled || !context || context.state === 'closed' || !canPlayRecordedVoice(bus, sound.priority)) return;
             const source = context.createBufferSource();
             const gain = context.createGain();
             source.buffer = buffer;
@@ -208,13 +290,35 @@
             } else {
                 gain.connect(buses[bus]);
             }
-            voices[bus]++;
-            source.onended = () => {
-                voices[bus] = Math.max(0, voices[bus] - 1);
-                source.disconnect();
-                gain.disconnect();
-                filter?.disconnect();
+            if (voices[bus] >= maxVoices[bus]) {
+                const lowest = lowestRecordedVoice(bus);
+                if (!lowest || lowest.priority >= sound.priority) {
+                    source.disconnect();
+                    gain.disconnect();
+                    filter?.disconnect();
+                    return;
+                }
+                try { lowest.source.stop(); } catch { /* A voice may already have ended. */ }
+                lowest.release();
+            }
+            let released = false;
+            const voice = {
+                source,
+                priority: sound.priority,
+                release() {
+                    if (released) return;
+                    released = true;
+                    voices[bus] = Math.max(0, voices[bus] - 1);
+                    const index = activeVoices[bus].indexOf(voice);
+                    if (index !== -1) activeVoices[bus].splice(index, 1);
+                    source.disconnect();
+                    gain.disconnect();
+                    filter?.disconnect();
+                },
             };
+            voices[bus]++;
+            activeVoices[bus].push(voice);
+            source.onended = voice.release;
             if (bus === 'moment') {
                 const parameter = buses.combat.gain;
                 if (parameter.setTargetAtTime) {
@@ -223,7 +327,12 @@
                     parameter.setTargetAtTime(volumes.combat, at + Math.max(0.4, duration * 0.67), 0.20);
                 }
             }
-            source.start(at);
+            try {
+                source.start(at);
+            } catch (error) {
+                voice.release();
+                throw error;
+            }
         }).catch(error => {
             console.warn('Recorded WyrmForge cue could not load:', name, error);
             if (status) status.textContent = 'SOUND COULD NOT LOAD: ' + name.toUpperCase();
@@ -231,24 +340,36 @@
         return true;
     }
 
-    function playSpellImpact(school, preview = false) {
+    function playSpellImpact(school, preview = false, sound = design.palette.impact) {
         const options = recordedManifest?.cues?.[school]?.hitVariants;
         if (!options?.length) return false;
         const count = variants.get(school + '-hit') ?? 0;
         variants.set(school + '-hit', count + 1);
-        const sound = design.palette.impact;
-        return playRecordedEntry(options[count % options.length], sound, school + '-hit', count, preview ? 0.62 : 0.53);
+        const index = school === 'fire' ? nextFireballTake('fire-hit', options.length) : count % options.length;
+        return playRecordedEntry(options[index], sound, school + '-hit', count, preview ? 0.62 : 0.53);
     }
 
     function playRecorded(name, sound, preview, now) {
         const count = variants.get(name) ?? 0;
         const isSpell = spellSchools.has(name);
+        // Prefer the impact's actual SpellId over whichever spell was cast most recently.
+        // The old generic path remains for impacts lacking a known SpellId.
+        const impactSchool = name.endsWith('-impact') ? name.slice(0, -7) : null;
+        if (impactSchool && spellSchools.has(impactSchool)) {
+            const played = playSpellImpact(impactSchool, preview, sound);
+            if (played) lastCue.set(name, now);
+            return played;
+        }
         if (name === 'impact' && recentSpell && now - recentSpell.at < 1250 &&
             playSpellImpact(recentSpell.name, preview)) {
             lastCue.set(name, now);
             return true;
         }
-        const entry = recordedEntry(name, 'cast', count);
+        const isOriginalFireball = name === 'fire' || name === 'fire-flight' || name === 'fire-burning';
+        const castIndex = isOriginalFireball
+            ? nextFireballTake(name === 'fire' ? 'fire-cast' : name, recordedManifest?.cues?.[name]?.variants?.length ?? 1)
+            : count;
+        const entry = recordedEntry(name, 'cast', castIndex);
         if (!entry) return false;
         if (!playRecordedEntry(entry, sound, name, count, isSpell ? 0.72 : 1)) return false;
         // The departure gesture is one semantic event made from physical sound layers.
@@ -316,6 +437,7 @@
 
     function startMusicFromGesture() {
         if (!recordedManifest || !enabled || !context || !unlocked || document.hidden) return;
+        startForestFromGesture();
         for (const kind of ['menu', 'hunt']) {
             const track = musicTrack(kind);
             if (!track || !track.player.paused || track.starting) continue;
@@ -338,7 +460,83 @@
         }
     }
 
+    // One quiet streamed field recording, not a generated oscillator or a combat voice.
+    // The element is started silently in the same trusted gesture as the soundtrack
+    // for iOS Safari. No Hunt state machine or per-frame audio allocation is needed.
+    function createForestTrack() {
+        const definition = recordedManifest?.ambience?.wetForest;
+        if (!definition?.file || !context || typeof window.Audio !== 'function') return null;
+        if (forestPlayer) return forestPlayer;
+        const player = new window.Audio(assetUrl(definition.file));
+        player.loop = true;
+        player.preload = 'auto';
+        let gain = null;
+        if (typeof context.createMediaElementSource === 'function') {
+            const source = context.createMediaElementSource(player);
+            gain = context.createGain();
+            gain.gain.value = 0;
+            source.connect(gain);
+            gain.connect(buses.ambience);
+        } else {
+            player.volume = 0;
+        }
+        forestPlayer = { player, gain, starting: false };
+        return forestPlayer;
+    }
+
+    function setForestLevel(value) {
+        forestLevel = Math.max(0, Math.min(1, value));
+        if (!forestPlayer) return;
+        if (forestPlayer.gain) forestPlayer.gain.gain.value = forestLevel;
+        else forestPlayer.player.volume = forestLevel * volumes.ambience;
+    }
+
+    function syncForest() {
+        if (!recordedManifest?.ambience?.wetForest || !enabled || !unlocked || document.hidden || !context) return;
+        const active = Boolean(document.querySelector?.('.game-screen[data-ambient-biome="wet-forest"]'));
+        if (active === forestTarget) return;
+        forestTarget = active;
+        const generation = ++forestFadeGeneration;
+        const from = forestLevel, to = active ? 0.86 : 0;
+        const started = performance.now(), duration = active ? 2600 : 1700;
+        const frame = now => {
+            if (generation !== forestFadeGeneration || !enabled || document.hidden) return;
+            const fraction = Math.max(0, Math.min(1, (now - started) / duration));
+            const eased = fraction * fraction * (3 - 2 * fraction);
+            setForestLevel(from + (to - from) * eased);
+            if (fraction < 1 && typeof window.requestAnimationFrame === 'function') {
+                window.requestAnimationFrame(frame);
+            }
+        };
+        if (typeof window.requestAnimationFrame === 'function') window.requestAnimationFrame(frame);
+        else setForestLevel(to);
+    }
+
+    function startForestFromGesture() {
+        const track = createForestTrack();
+        if (!track || !enabled || !unlocked || document.hidden || !track.player.paused || track.starting) return;
+        track.starting = true;
+        try {
+            // Invoke play() before returning from the user gesture, not from a Promise.
+            const promise = track.player.play();
+            Promise.resolve(promise).then(() => {
+                track.starting = false;
+                syncForest();
+            }).catch(error => {
+                track.starting = false;
+                console.debug('Wet Forest ambience awaits another gesture', error);
+            });
+        } catch (error) {
+            track.starting = false;
+            console.debug('Wet Forest ambience could not start', error);
+        }
+    }
+
     function fadeMusicOut(duration = 500) {
+        ++forestFadeGeneration;
+        forestTarget = null;
+        setForestLevel(0);
+        forestPlayer?.player.pause();
         const generation = ++fadeGeneration;
         const tracks = [...musicPlayers.values()];
         const from = tracks.map(t => t.level);
@@ -366,7 +564,9 @@
 
     function syncMusic() {
         if (!recordedManifest || !enabled || !unlocked || document.hidden || !context) return;
+        syncForest();
         const desired = document.querySelector?.('.game-screen') ? 'hunt' : 'menu';
+        if (desired === 'hunt') prewarmCreaturesInHunt();
         if (desired === currentMusic && musicIsPlaying(desired)) return;
         const previous = currentMusic;
         currentMusic = desired;
@@ -395,7 +595,7 @@
         const observer = new MutationObserver(() => {
             if (!recordedManifest || !unlocked || !enabled) return;
             const desired = document.querySelector?.('.game-screen') ? 'hunt' : 'menu';
-            if (desired !== currentMusic) syncMusic();
+            if (desired !== currentMusic || Boolean(document.querySelector?.('.game-screen[data-ambient-biome="wet-forest"]')) !== forestTarget) syncMusic();
         });
         observer.observe(document.body, { childList: true, subtree: true });
     }
@@ -486,6 +686,11 @@
         const next = Math.max(0, Math.min(1, Number(value) || 0));
         volumes[group] = next;
         savePreference(volumeKeys[group], next);
+        if (group === 'ambience') {
+            if (buses?.ambience) buses.ambience.gain.value = next;
+            if (forestPlayer && !forestPlayer.gain) setForestLevel(forestLevel);
+            return;
+        }
         if (group === 'music') {
             if (buses?.music) buses.music.gain.value = next;
             for (const track of musicPlayers.values()) if (!track.gain) setMusicLevel(track, track.level);
@@ -547,6 +752,17 @@
         return button;
     }
 
+    function selectUiMaterial(value) {
+        if (!uiMaterialChoices.some(choice => choice.id === value)) return false;
+        uiMaterial = value;
+        savePreference(uiMaterialKey, value);
+        for (const button of lab?.querySelectorAll('.wyrmforge-ui-material') ?? []) {
+            button.setAttribute('aria-pressed', String(button.dataset.uiMaterial === value));
+        }
+        unlock();
+        return play('ui', true);
+    }
+
     function makeVolumeControl(group, label) {
         const row = document.createElement('label');
         row.className = 'wyrmforge-sound-volume';
@@ -597,6 +813,25 @@
         heading.textContent = 'SOUND ATELIER';
         const desc = document.createElement('p');
         desc.textContent = 'Recorded dark fantasy · layered spells, natural tails and a continuous soundtrack';
+        const materialHeading = document.createElement('p');
+        materialHeading.textContent = 'INTERFACE PRESS — Worn Vellum chosen, alternatives kept for comparison';
+        const materials = document.createElement('div');
+        materials.className = 'wyrmforge-sound-samples';
+        for (const choice of uiMaterialChoices) {
+            const button = makeButton(choice.label, 'wyrmforge-sound-sample wyrmforge-ui-material',
+                `Select and preview ${choice.label} button material`, () => selectUiMaterial(choice.id));
+            button.dataset.uiMaterial = choice.id;
+            button.setAttribute('aria-pressed', String(uiMaterial === choice.id));
+            materials.appendChild(button);
+        }
+        materials.appendChild(makeButton('REPEAT BUTTON PRESS', 'wyrmforge-sound-sample', 'Repeat selected button sound', () => {
+            unlock();
+            play('ui', true);
+        }));
+        const openCodexPreview = makeButton('HEAR CODEX OPEN', 'wyrmforge-sound-sample', 'Hear the layered Codex opening', () => {
+            unlock();
+            play('codex-open', true);
+        });
         const samples = document.createElement('div');
         samples.className = 'wyrmforge-sound-samples';
         for (const name of design?.previewNames ?? []) {
@@ -606,6 +841,25 @@
             });
             samples.appendChild(item);
         }
+        const creatureHeading = document.createElement('p');
+        creatureHeading.textContent = 'CREATURE VOICES — two recorded species, three distinct actions';
+        const creatures = document.createElement('div');
+        creatures.className = 'wyrmforge-sound-samples';
+        for (const family of ['hollow', 'ashling']) {
+            for (const action of ['approach', 'hit', 'death']) {
+                creatures.appendChild(makeButton(
+                    family.toUpperCase() + ' — ' + action.toUpperCase() + ' (A/B)',
+                    'wyrmforge-sound-sample', 'Repeat to compare two original recordings',
+                    () => { unlock(); play(family + '-' + action, true); }));
+            }
+            creatures.appendChild(makeButton('HEAR ' + family.toUpperCase() + ' SEQUENCE',
+                'wyrmforge-sound-sample', 'Preview approach, hit and death as one short scene', () => {
+                    unlock();
+                    play(family + '-approach', true);
+                    window.setTimeout(() => play(family + '-hit', true), 1350);
+                    window.setTimeout(() => play(family + '-death', true), 2130);
+                }));
+        }
         const hearMusic = makeButton('HEAR SOUNDTRACK', 'wyrmforge-sound-close', 'Start and preview soundtrack', () => {
             unlock();
             startMusicFromGesture();
@@ -614,17 +868,17 @@
         });
         const levels = document.createElement('div');
         levels.className = 'wyrmforge-sound-levels';
-        levels.append(makeVolumeControl('ui', 'Interface'), makeVolumeControl('combat', 'Combat'), makeVolumeControl('moment', 'Moments'), makeVolumeControl('music', 'Music'));
+        levels.append(makeVolumeControl('ui', 'Interface'), makeVolumeControl('combat', 'Combat'), makeVolumeControl('moment', 'Moments'), makeVolumeControl('music', 'Music'), makeVolumeControl('ambience', 'Wet Forest'));
         const close = makeButton('CLOSE', 'wyrmforge-sound-close', 'Close Sound Atelier', toggleLab);
         const credit = document.createElement('p');
-        credit.textContent = 'Recorded music: Brandon Morris (CC0). Spell effects: JC Sounds (CC BY 4.0) and rubberduck (CC0).';
+        credit.textContent = 'UI: Kenney (CC0). Creature voices: artisticdude and Ogrebane, ember fire: AntumDeluge (CC0). Music: Brandon Morris (CC0). Magic: JC Sounds (CC BY 4.0) and rubberduck (CC0).';
         const creditLink = document.createElement('a');
         creditLink.textContent = 'Asset credits & licenses';
         creditLink.href = 'https://opengameart.org/content/jc-sounds-fantasy-sfx-pack-vol-1';
         creditLink.target = '_blank';
         creditLink.rel = 'noopener noreferrer';
         credit.append(' ', creditLink);
-        lab.append(heading, desc, hearMusic, samples, levels, credit, close);
+        lab.append(heading, desc, materialHeading, materials, openCodexPreview, creatureHeading, creatures, hearMusic, samples, levels, credit, close);
 
         status = document.createElement('span');
         status.className = 'wyrmforge-sound-status';
@@ -664,6 +918,10 @@
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
             for (const track of musicPlayers.values()) track.player.pause();
+            forestPlayer?.player.pause();
+            ++forestFadeGeneration;
+            forestTarget = null;
+            setForestLevel(0);
             fadeGeneration++;
             currentMusic = null;
         } else if (enabled) {
@@ -689,10 +947,10 @@
     else mountControls();
 
     window.wyrmforgeAudio = {
-        play, setEnabled, testSound, isEnabled: () => enabled, updateVolume,
+        play, setEnabled, testSound, isEnabled: () => enabled, updateVolume, setUiMaterial: selectUiMaterial,
         diagnostics: () => ({ enabled, state: context?.state ?? 'uninitialized', session: navigator.audioSession?.type ?? 'unsupported',
-            identity: recordedManifest ? 'Recorded Dark Fantasy' : 'recordings-loading', audioRevision, music: currentMusic,
+            identity: recordedManifest ? 'Recorded Dark Fantasy' : 'recordings-loading', audioRevision, uiMaterial, music: currentMusic,
             musicPlaying: currentMusic ? musicIsPlaying(currentMusic) : false, musicTracks: [...musicPlayers.values()].map(track => ({ kind: track.kind, paused: track.player.paused, level: track.level })),
-            recorded: Boolean(recordedManifest), voices: { ...voices } }),
+            recorded: Boolean(recordedManifest), forest: { playing: Boolean(forestPlayer && !forestPlayer.player.paused), target: forestTarget, level: forestLevel }, voices: { ...voices } }),
     };
 })();

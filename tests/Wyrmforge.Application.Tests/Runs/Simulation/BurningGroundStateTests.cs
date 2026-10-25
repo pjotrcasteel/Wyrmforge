@@ -19,6 +19,17 @@ public sealed class BurningGroundStateTests
     }
 
     [TestMethod]
+    public void Id_WithExplicitAudioIdentity_IsStableDuringLifetime()
+    {
+        var ground = new BurningGroundState(new Vector2D(10, 20), 8, id: 42);
+
+        ground.Advance(1);
+
+        Assert.AreEqual(42L, ground.Id);
+        Assert.IsTrue(ground.RemainingSeconds > 0);
+    }
+
+    [TestMethod]
     public void Advance_AtTickInterval_ProducesOneDamageTick()
     {
         var ground = new BurningGroundState(new Vector2D(10, 20), 8);

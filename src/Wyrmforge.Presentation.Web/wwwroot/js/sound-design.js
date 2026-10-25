@@ -6,12 +6,25 @@
     const palette = Object.freeze({
         ui: { label: 'Stone / vellum', bus: 'ui', volume: 0.25, cooldown: 110, duration: 0.12, priority: 1 },
         'building-open': { label: 'Town building — wood and hinge', bus: 'ui', volume: 0.45, cooldown: 210, duration: 0.30, priority: 2 },
+        'codex-open': { label: 'Codex — old book and worn leather', bus: 'ui', volume: 0.53, cooldown: 420, duration: 0.52, priority: 2 },
         arcane: { label: 'Arcane — woven aether', bus: 'combat', volume: 0.35, cooldown: 550, duration: 0.40, priority: 1 },
         fire: { label: 'Ember — breath and cinder', bus: 'combat', volume: 0.42, cooldown: 590, duration: 0.38, priority: 1 },
+        'fire-flight': { label: 'Fireball — hot wind in flight', bus: 'combat', volume: 0.22, cooldown: 320, duration: 0.83, priority: 0 },
+        'fire-burning': { label: 'Fireball — burning ground', bus: 'combat', volume: 0.20, cooldown: 750, duration: 3.90, priority: 0 },
         frost: { label: 'Frost — glass and snow', bus: 'combat', volume: 0.37, cooldown: 620, duration: 0.47, priority: 1 },
         lightning: { label: 'Storm — restrained discharge', bus: 'combat', volume: 0.35, cooldown: 650, duration: 0.34, priority: 1 },
         impact: { label: 'Impact — stone and cloth', bus: 'combat', volume: 0.27, cooldown: 420, duration: 0.23, priority: 1 },
+        'arcane-impact': { label: 'Arcane impact — folded aether', bus: 'combat', volume: 0.27, cooldown: 180, duration: 0.30, priority: 2 },
+        'fire-impact': { label: 'Fire impact — ember and rupture', bus: 'combat', volume: 0.29, cooldown: 180, duration: 0.29, priority: 2 },
+        'frost-impact': { label: 'Frost impact — brittle collapse', bus: 'combat', volume: 0.28, cooldown: 180, duration: 0.32, priority: 2 },
+        'lightning-impact': { label: 'Storm impact — crack and discharge', bus: 'combat', volume: 0.27, cooldown: 180, duration: 0.26, priority: 2 },
         'enemy-down': { label: 'Enemy down — fading ember', bus: 'combat', volume: 0.24, cooldown: 1100, duration: 0.34, priority: 1 },
+        'hollow-approach': { label: 'Hollowed — ragged undead breath', bus: 'combat', volume: 0.22, cooldown: 6500, duration: 0.62, priority: 0 },
+        'hollow-hit': { label: 'Hollowed — damaged flesh', bus: 'combat', volume: 0.25, cooldown: 480, duration: 0.26, priority: 1 },
+        'hollow-death': { label: 'Hollowed — fading final breath', bus: 'combat', volume: 0.30, cooldown: 480, duration: 0.70, priority: 2 },
+        'ashling-approach': { label: 'Ashling — furnace-throat rasp', bus: 'combat', volume: 0.21, cooldown: 6500, duration: 0.65, priority: 0 },
+        'ashling-hit': { label: 'Ashling — fractured ember body', bus: 'combat', volume: 0.25, cooldown: 480, duration: 0.26, priority: 1 },
+        'ashling-death': { label: 'Ashling — cinder breath expires', bus: 'combat', volume: 0.31, cooldown: 480, duration: 0.70, priority: 2 },
         hurt: { label: 'Hurt — grounded warning', bus: 'combat', volume: 0.62, cooldown: 850, duration: 0.43, priority: 2 },
         'hunt-start': { label: 'Expedition departure — boots and traveling cloak', bus: 'moment', volume: 0.57, cooldown: 800, duration: 0.93, priority: 3 },
         'trail-enter': { label: 'Advance to next arena', bus: 'moment', volume: 0.36, cooldown: 360, duration: 0.34, priority: 2 },
@@ -112,6 +125,10 @@
                 strike(0, 238, 0.42, 0.11, 'stone');
                 air(0, 0.07, 430, 210, 0.09, 0.003);
                 break;
+            case 'codex-open':
+                air(0, 0.42, 750, 170, 0.25, 0.016);
+                weight(0.07, 0.22, 0.15, 160, 105);
+                break;
             case 'building-open':
                 weight(0, 0.30, 0.19, 215, 124);
                 air(0, 0.12, 490, 250, 0.18, 0.013);
@@ -136,9 +153,30 @@
                 weight(0.011, 0.34, 0.16, 223, 116);
                 strike(0.054, 392, 0.13, 0.19, 'stone');
                 break;
+            case 'arcane-impact':
+            case 'fire-flight':
+            case 'fire-burning':
+            case 'fire-impact':
+            case 'frost-impact':
+            case 'lightning-impact':
             case 'impact':
                 weight(0, 0.48, 0.17, 210, 102);
                 air(0, 0.17, 880, 180, 0.28, 0.005, 'soft');
+                break;
+            case 'hollow-approach':
+            case 'ashling-approach':
+                air(0.015, 0.53, 520, 180, 0.24, 0.07);
+                body(0.05, 0.36, 105, 78, 0.20, 0.04);
+                break;
+            case 'hollow-hit':
+            case 'ashling-hit':
+                air(0.00, 0.22, 850, 225, 0.22, 0.005);
+                weight(0.0, 0.17, 0.14, 160, 100);
+                break;
+            case 'hollow-death':
+            case 'ashling-death':
+                air(0.0, 0.57, 480, 115, 0.30, 0.05);
+                weight(0.04, 0.25, 0.3, 170, 68);
                 break;
             case 'enemy-down':
                 air(0.005, 0.23, 630, 170, 0.26);
@@ -235,7 +273,7 @@
         identity: 'Ancient Resonance',
         palette,
         render,
-        previewNames: ['arcane', 'fire', 'frost', 'lightning', 'impact', 'hurt',
-            'upgrade-open', 'upgrade-choice', 'power-burst', 'reward', 'wyrm', 'victory', 'death'],
+        // Only show newly-authored replacement audio for review. Older sounds are unfinished placeholders.
+        previewNames: ['fire', 'fire-impact'],
     });
 })();

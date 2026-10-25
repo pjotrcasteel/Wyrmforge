@@ -1,0 +1,316 @@
+{
+  "order": [
+    "hollow-approach",
+    "hollow-hit",
+    "hollow-death",
+    "ashling-approach",
+    "ashling-hit",
+    "ashling-death"
+  ],
+  "variantsPerCue": 2,
+  "sources": [
+    {
+      "key": "zombies-cc0",
+      "url": "https://opengameart.org/sites/default/files/zombies.zip",
+      "sourcePage": "https://opengameart.org/content/zombies-sound-pack",
+      "author": "artisticdude",
+      "license": "CC0",
+      "originalSha256": "8096ceeb4dac35d9eef9bfe0cc6649778d1eebf141b208d394ac338b9e5be314"
+    },
+    {
+      "key": "monsters-cc0",
+      "url": "https://opengameart.org/sites/default/files/monster_sfx_pack.zip",
+      "sourcePage": "https://opengameart.org/content/monster-sound-effects-pack",
+      "author": "Ogrebane",
+      "license": "CC0",
+      "originalSha256": "f39c5ae356b1fc01284057ee48e35ec1a52fcc84bfa959b77d0a696adc8459e4"
+    },
+    {
+      "key": "ash-fire-cc0",
+      "url": "https://opengameart.org/sites/default/files/fire-1_0.ogg",
+      "sourcePage": "https://opengameart.org/content/fire-crackling",
+      "author": "AntumDeluge",
+      "license": "CC0",
+      "originalSha256": "f922929805bc6afdf0a35727fa3998033db544c1b6f62ed3aeab94341ed6ddeb"
+    }
+  ],
+  "preview": "hollowed-ashling-voices.mp3",
+  "cues": {
+    "hollow-approach": {
+      "file": "hollow-approach-1.ogg",
+      "source": "zombies/zombie-1.wav",
+      "library": "zombies-cc0",
+      "author": "artisticdude",
+      "license": "CC0",
+      "sha256": "cf54f2cf8033b98a68de240828dbcc641a1a912205a061eba581fa6d39e777b8",
+      "variants": [
+        {
+          "file": "hollow-approach-1.ogg",
+          "source": "zombies/zombie-1.wav",
+          "library": "zombies-cc0",
+          "author": "artisticdude",
+          "license": "CC0",
+          "sha256": "cf54f2cf8033b98a68de240828dbcc641a1a912205a061eba581fa6d39e777b8",
+          "sourceKeys": [
+            "zombies-cc0"
+          ],
+          "mix": {
+            "gain": 0.57,
+            "lowpassHz": 2600,
+            "attackSeconds": 0.02,
+            "releaseSeconds": 0.22
+          }
+        },
+        {
+          "file": "hollow-approach-2.ogg",
+          "source": "zombies/zombie-2.wav",
+          "library": "zombies-cc0",
+          "author": "artisticdude",
+          "license": "CC0",
+          "sha256": "ac5b1cda9bf0fa86832b429d52adde544c0c815103642fb1e3c61d5fe6d5fcc6",
+          "sourceKeys": [
+            "zombies-cc0"
+          ],
+          "mix": {
+            "gain": 0.57,
+            "lowpassHz": 2600,
+            "attackSeconds": 0.02,
+            "releaseSeconds": 0.22
+          }
+        }
+      ],
+      "intent": "Audition candidate for hollow-approach; sparse and non-intrusive with two different CC0 performances."
+    },
+    "hollow-hit": {
+      "file": "hollow-hit-1.ogg",
+      "source": "zombies/zombie-8.wav",
+      "library": "zombies-cc0",
+      "author": "artisticdude",
+      "license": "CC0",
+      "sha256": "ad8e049efc141767ca3b82916566ef57ce454456b9d70f4c380e38b8b82faf5a",
+      "variants": [
+        {
+          "file": "hollow-hit-1.ogg",
+          "source": "zombies/zombie-8.wav",
+          "library": "zombies-cc0",
+          "author": "artisticdude",
+          "license": "CC0",
+          "sha256": "ad8e049efc141767ca3b82916566ef57ce454456b9d70f4c380e38b8b82faf5a",
+          "sourceKeys": [
+            "zombies-cc0"
+          ],
+          "mix": {
+            "gain": 0.66,
+            "lowpassHz": 3200,
+            "attackSeconds": 0.008,
+            "releaseSeconds": 0.12
+          }
+        },
+        {
+          "file": "hollow-hit-2.ogg",
+          "source": "zombies/zombie-9.wav",
+          "library": "zombies-cc0",
+          "author": "artisticdude",
+          "license": "CC0",
+          "sha256": "9a027c5ad3b6ae35eccd9d2220e6e45fb4e6ba26221ef3fdeaf610c6f7924d06",
+          "sourceKeys": [
+            "zombies-cc0"
+          ],
+          "mix": {
+            "gain": 0.66,
+            "lowpassHz": 3200,
+            "attackSeconds": 0.008,
+            "releaseSeconds": 0.12
+          }
+        }
+      ],
+      "intent": "Audition candidate for hollow-hit; sparse and non-intrusive with two different CC0 performances."
+    },
+    "hollow-death": {
+      "file": "hollow-death-1.ogg",
+      "source": "zombies/zombie-21.wav",
+      "library": "zombies-cc0",
+      "author": "artisticdude",
+      "license": "CC0",
+      "sha256": "2d4bc8e240efe233249b538b18772d585359955f34d63c2e020fd9f823af4b1c",
+      "variants": [
+        {
+          "file": "hollow-death-1.ogg",
+          "source": "zombies/zombie-21.wav",
+          "library": "zombies-cc0",
+          "author": "artisticdude",
+          "license": "CC0",
+          "sha256": "2d4bc8e240efe233249b538b18772d585359955f34d63c2e020fd9f823af4b1c",
+          "sourceKeys": [
+            "zombies-cc0"
+          ],
+          "mix": {
+            "gain": 0.7,
+            "lowpassHz": 2800,
+            "attackSeconds": 0.018,
+            "releaseSeconds": 0.24
+          }
+        },
+        {
+          "file": "hollow-death-2.ogg",
+          "source": "zombies/zombie-22.wav",
+          "library": "zombies-cc0",
+          "author": "artisticdude",
+          "license": "CC0",
+          "sha256": "9db63a9a1dc0c1e0fe80e5030bf094b6d955b84aa15169329054bb588d18eb07",
+          "sourceKeys": [
+            "zombies-cc0"
+          ],
+          "mix": {
+            "gain": 0.7,
+            "lowpassHz": 2800,
+            "attackSeconds": 0.018,
+            "releaseSeconds": 0.24
+          }
+        }
+      ],
+      "intent": "Audition candidate for hollow-death; sparse and non-intrusive with two different CC0 performances."
+    },
+    "ashling-approach": {
+      "file": "ashling-approach-1.ogg",
+      "source": "monster_sfx_pack/monster-1.wav",
+      "library": "monsters-cc0",
+      "author": "Ogrebane",
+      "license": "CC0",
+      "sha256": "3a453d2dda99c160fca5918f8589fa1ecaf13083ea953e2906f9af5a831e8356",
+      "variants": [
+        {
+          "file": "ashling-approach-1.ogg",
+          "source": "monster_sfx_pack/monster-1.wav",
+          "library": "monsters-cc0",
+          "author": "Ogrebane",
+          "license": "CC0",
+          "sha256": "3a453d2dda99c160fca5918f8589fa1ecaf13083ea953e2906f9af5a831e8356",
+          "sourceKeys": [
+            "monsters-cc0",
+            "ash-fire-cc0"
+          ],
+          "mix": {
+            "gain": 0.57,
+            "lowpassHz": 2600,
+            "attackSeconds": 0.02,
+            "releaseSeconds": 0.22
+          }
+        },
+        {
+          "file": "ashling-approach-2.ogg",
+          "source": "monster_sfx_pack/monster-2.wav",
+          "library": "monsters-cc0",
+          "author": "Ogrebane",
+          "license": "CC0",
+          "sha256": "2e62c3787062d0a84dcfb5bd86c93668fa777e19854093747a5544d49b8347b8",
+          "sourceKeys": [
+            "monsters-cc0",
+            "ash-fire-cc0"
+          ],
+          "mix": {
+            "gain": 0.57,
+            "lowpassHz": 2600,
+            "attackSeconds": 0.02,
+            "releaseSeconds": 0.22
+          }
+        }
+      ],
+      "intent": "Audition candidate for ashling-approach; sparse and non-intrusive with two different CC0 performances."
+    },
+    "ashling-hit": {
+      "file": "ashling-hit-1.ogg",
+      "source": "monster_sfx_pack/monster-4.wav",
+      "library": "monsters-cc0",
+      "author": "Ogrebane",
+      "license": "CC0",
+      "sha256": "1491d5ac97b1c321705f96cba6b75dd590c56c3dead3d7632784ebd45b123332",
+      "variants": [
+        {
+          "file": "ashling-hit-1.ogg",
+          "source": "monster_sfx_pack/monster-4.wav",
+          "library": "monsters-cc0",
+          "author": "Ogrebane",
+          "license": "CC0",
+          "sha256": "1491d5ac97b1c321705f96cba6b75dd590c56c3dead3d7632784ebd45b123332",
+          "sourceKeys": [
+            "monsters-cc0",
+            "ash-fire-cc0"
+          ],
+          "mix": {
+            "gain": 0.66,
+            "lowpassHz": 3200,
+            "attackSeconds": 0.008,
+            "releaseSeconds": 0.12
+          }
+        },
+        {
+          "file": "ashling-hit-2.ogg",
+          "source": "monster_sfx_pack/monster-5.wav",
+          "library": "monsters-cc0",
+          "author": "Ogrebane",
+          "license": "CC0",
+          "sha256": "542d5d86c472d5fcbea132a97ebe695e1aed6d21654a774156624fb84517d1df",
+          "sourceKeys": [
+            "monsters-cc0",
+            "ash-fire-cc0"
+          ],
+          "mix": {
+            "gain": 0.66,
+            "lowpassHz": 3200,
+            "attackSeconds": 0.008,
+            "releaseSeconds": 0.12
+          }
+        }
+      ],
+      "intent": "Audition candidate for ashling-hit; sparse and non-intrusive with two different CC0 performances."
+    },
+    "ashling-death": {
+      "file": "ashling-death-1.ogg",
+      "source": "monster_sfx_pack/monster-8.wav",
+      "library": "monsters-cc0",
+      "author": "Ogrebane",
+      "license": "CC0",
+      "sha256": "471e241477a1c2b771fe48dca3956f3549b5c83d3f35c913c95843023d9bbbb1",
+      "variants": [
+        {
+          "file": "ashling-death-1.ogg",
+          "source": "monster_sfx_pack/monster-8.wav",
+          "library": "monsters-cc0",
+          "author": "Ogrebane",
+          "license": "CC0",
+          "sha256": "471e241477a1c2b771fe48dca3956f3549b5c83d3f35c913c95843023d9bbbb1",
+          "sourceKeys": [
+            "monsters-cc0",
+            "ash-fire-cc0"
+          ],
+          "mix": {
+            "gain": 0.7,
+            "lowpassHz": 2800,
+            "attackSeconds": 0.018,
+            "releaseSeconds": 0.24
+          }
+        },
+        {
+          "file": "ashling-death-2.ogg",
+          "source": "monster_sfx_pack/monster-10.wav",
+          "library": "monsters-cc0",
+          "author": "Ogrebane",
+          "license": "CC0",
+          "sha256": "2ed74acae335f86151fdc68206178624e0ead8a8c473425fed3d3393488d48ec",
+          "sourceKeys": [
+            "monsters-cc0",
+            "ash-fire-cc0"
+          ],
+          "mix": {
+            "gain": 0.7,
+            "lowpassHz": 2800,
+            "attackSeconds": 0.018,
+            "releaseSeconds": 0.24
+          }
+        }
+      ],
+      "intent": "Audition candidate for ashling-death; sparse and non-intrusive with two different CC0 performances."
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "approved": false,
+  "oldAudioUsed": false,
+  "origin": "new authored offline physical-noise design",
+  "stages": [
+    "ignition",
+    "flight",
+    "impact",
+    "burning ground"
+  ],
+  "takeCount": 6,
+  "comparison": "fireball-r1-six-take-reel.mp3",
+  "firstTwoPreserved": true,
+  "note": "Six independent takes per stage; cast/hit mapped in game. Flight/burn require authoritative gameplay events."
+}

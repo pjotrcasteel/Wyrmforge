@@ -376,6 +376,7 @@ public sealed partial class RunSimulation
         {
             Trail = CreateTrailSnapshot(),
             PowerBurst = CreatePowerBurstSnapshot(),
+            BurningGrounds = CreateBurningGroundSnapshots(),
             Environment = arenaEnvironment?.Snapshot(),
             Exit = CreateTrailExitSnapshot(),
             World = arenaEnvironment is not null && (mapState.EncounterActive || trailExitPending) ? new ArenaWorldRenderSnapshot(arenaWidth, arenaHeight) : null,
