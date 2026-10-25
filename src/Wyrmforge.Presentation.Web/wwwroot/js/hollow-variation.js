@@ -16,10 +16,11 @@ function mixEntityId(entityId) {
 
 export function selectHollowAppearance(entityId,forcedInjury=false) {
     const seed=mixEntityId(entityId);
+    const valid=Number.isSafeInteger(Number(entityId))&&Number(entityId)>=0;
     // 25% of Hollowed still use the already-authored full-body leg injury.
     // The remaining population reuses three independently modelled/rendered
     // no-cape walk+attack silhouette pairs; there is NO CSS recolouring.
-    const injuryVariant=forcedInjury||(Math.imul(entityId|0,1597334677)>>>0)%4===0?
+    const injuryVariant=forcedInjury||(valid&&(Math.imul(Number(entityId)|0,1597334677)>>>0)%4===0)?
         'broken-leg-left':'standard';
     const armVariant=ACTION_POSE_VARIANTS[(seed>>>3)%ACTION_POSE_VARIANTS.length];
     return Object.freeze({
