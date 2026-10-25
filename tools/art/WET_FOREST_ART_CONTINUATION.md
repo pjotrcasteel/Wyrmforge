@@ -59,3 +59,13 @@ Art-only PR #340 now has actual CI exporters, not just locally generated review 
 - New unittest coverage checks unapproved-only inputs, immutable hashes, 160px overlap, deterministic PNGs, original RGB preservation away from transition boundaries, and no runtime claim.
 
 Status: visual review pending; neither isolated strip nor transition is necessarily tileable or relightable. Repeated painted landmarks and baked illumination remain. Do not promote to in-game materials or mark complete without visual owner approval.
+
+## V11 Trampled Earth visual identity checkpoint (25 October 2026)
+
+Six source-backed strips and their 18 overlapping art segments remain **unapproved** and art-only. V11 specifically responds to the latest visual review:
+
+- Along each strip, the three independently selected source paintings now use deliberately different integer UV crop offsets. No RGB is fabricated by the offsets, and the narrow organic joins retain detail; repeated rocks and footprints at the same local coordinates should be less obvious. Repetition remains a visual-review gate, not a proven pass.
+- Muddy Wear now selects broad, coherent regions from the hash-verified Wet Mud painting bank rather than weakly crossfading small islands. This makes wet soil visibly different from Heavy Wear; bright painted puddle reflections are still embedded in the source art and **do not** become water geometry or reflection channels.
+- Automated tests require a different third-section crop and a clear synthetic palette separation between Muddy Wear and Heavy Wear. Hash-locked sources and segment overlap remain unchanged.
+
+**Next acceptance gate:** inspect full resolution and 240px mobile strips and all cross-variant joins for stamped/repeated landmarks, abrupt soil-versus-mud composition, painterly baked highlights and insufficient role identity. Do not promote any of these review candidates to neutral albedo, physically meaningful material channels or the C# arena until visual owner approval and separate lighting/road integration.
