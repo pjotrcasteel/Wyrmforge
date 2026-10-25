@@ -40,3 +40,8 @@ The initial preview's forced evolved stress build killed Tier I in about eight s
 Full current evidence: [runtime-002 review](reviews/runtime-002/review.md) and [browser receipt](reviews/runtime-002/browser/browser-report.json). Local 645 Application / 376 Domain / 406 JavaScript tests pass, zero-warning build; actual phone-sized C# replay lasts 52 seconds and passes pause, reduced motion, default legal damage and responsive-layout checks. Owner approval and physical-phone acceptance remain open.
 
 Lighting roadmap checked against merged main `5e1936d0` (G1 #332, G2 #344). Breath and resolved impacts publish through the shared C# lighting composer; legacy Canvas consumes those descriptors until G5 cutover. This does **not** make current RGB character atlases GPU-relightable. Exact-pose authored albedo/normal/roughness/height/caster/emission passes and common LitSprite adoption remain mandatory. Preserve source model, rig, approved scale and all native exports; do not create a dragon-only lighting engine.
+
+
+## Verified merged checkpoint — 25 October 2026
+
+Owner approved the latest appearance. PR #299 merged as `1831893613f91b2c74cd4143cdd5623d7dc2939f` after all six final-head CI checks passed on `fb03c30c`; full browser suite passes143/143, general validation645 Application/376 Domain, merged JS409. Published SPA routing and web-only Git LFS hydration are fixed and guarded. Source and atlas backups remain intact. The next authorized work is the AI0–AI6 enemy/shared-agent review; see `docs/engineering/enemy-ai-inventory-2026-10-25.md`. Balance and physical-device/G5 material migration remain tracked follow-ups.
