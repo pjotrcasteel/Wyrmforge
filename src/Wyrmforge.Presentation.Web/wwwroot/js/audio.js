@@ -365,6 +365,7 @@
 
     function syncBurningGround(transitions) {
         for (const transition of transitions ?? []) {
+            if (!transition || typeof transition !== 'object') continue;
             const { id, type, remainingSeconds } = transition;
             if (!Number.isSafeInteger(id) || id <= 0) continue;
             if (type === 'stop' || !Number.isFinite(remainingSeconds) || remainingSeconds <= 0 || !enabled || document.hidden) {
