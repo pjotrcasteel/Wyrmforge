@@ -354,6 +354,22 @@ public sealed class UniversalLightingBrowserTests : PageTest
             await CaptureAsync(width, $"temporal-{focus}-pan1");
             await ConfigureAsync(canvas, new { panPixels = 0 });
             Assert.AreEqual(original, await PixelHashAsync(canvas), "Returning the camera must restore the exact image.");
+            var fractional = new Dictionary<double, string>();
+            foreach (var pan in new[] { .25, .5, .75, .75, .5, .25 })
+            {
+                await ConfigureAsync(canvas, new { panPixels = pan });
+                var hash = await PixelHashAsync(canvas);
+                Assert.AreNotEqual(original, hash, "Fractional motion must move the camera rather than silently snap to the origin.");
+                if (fractional.TryGetValue(pan, out var previous)) Assert.AreEqual(previous, hash, "Returning to a fractional offset must reproduce the exact frame.");
+                else
+                {
+                    fractional.Add(pan, hash);
+                    comparisons.Add(new { focus, fractionalPanPixels = pan, hash });
+                    if (pan == .5) await CaptureAsync(width, $"temporal-{focus}-half-pixel");
+                }
+            }
+            await ConfigureAsync(canvas, new { panPixels = 0 });
+            Assert.AreEqual(original, await PixelHashAsync(canvas));
         }
         await ConfigureAsync(canvas, new { focus = "actors" });
         var expected = new List<string>();
@@ -378,7 +394,22 @@ public sealed class UniversalLightingBrowserTests : PageTest
         await Page.WaitForFunctionAsync("() => { const c=document.querySelector('.gpu-proof canvas'); return c.width===Math.min(390,Math.round(c.clientWidth)); }");
         Assert.AreEqual(beforeResize, await PixelHashAsync(canvas), "Resize/restore must preserve the frozen scene.");
         Assert.AreEqual(resources, await canvas.EvaluateAsync<string>("c => { const d=gpuProof.proofDiagnostics(c); return JSON.stringify([d.textures,d.geometries,d.lights]); }"));
-        await RecordComparisonAsync(width, "temporal", new { camera = comparisons, replayHashes = expected, exactReplay = true, exactResizeRestore = true });
+        var stoppedTicks = await canvas.EvaluateAsync<int>("c => gpuProof.proofDiagnostics(c).animation.ticks");
+        await ConfigureAsync(canvas, new { animate = true });
+        await Page.WaitForFunctionAsync("start => { const d=gpuProof.proofDiagnostics(document.querySelector('.gpu-proof canvas')); return d.animation.ticks>start+2 && d.animation.frames.hollowed>0 && d.animation.frames.ashling>0; }", stoppedTicks);
+        var playback = await canvas.EvaluateAsync<System.Text.Json.JsonElement>("c => gpuProof.proofDiagnostics(c).animation");
+        await ConfigureAsync(canvas, new { animate = false });
+        Assert.AreEqual(beforeResize, await PixelHashAsync(canvas), "Stopping playback returns to the selected manual pose.");
+        var stopped = await canvas.EvaluateAsync<int>("c => gpuProof.proofDiagnostics(c).animation.ticks");
+        await Page.EvaluateAsync("() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))");
+        Assert.AreEqual(stopped, await canvas.EvaluateAsync<int>("c => gpuProof.proofDiagnostics(c).animation.ticks"), "Stopped playback must not retain a queued update.");
+        Assert.IsFalse(await canvas.EvaluateAsync<bool>("c => gpuProof.proofDiagnostics(c).animation.scheduled"));
+        await ConfigureAsync(canvas, new { animate = true });
+        await Page.WaitForFunctionAsync("start => gpuProof.proofDiagnostics(document.querySelector('.gpu-proof canvas')).animation.ticks>start+2", stopped);
+        await ConfigureAsync(canvas, new { animate = false });
+        Assert.AreEqual(beforeResize, await PixelHashAsync(canvas));
+        await RecordComparisonAsync(width, "temporal", new { camera = comparisons, replayHashes = expected,
+            exactReplay = true, exactResizeRestore = true, playback, stoppedWithoutQueuedUpdates = true, resumedPlayback = true });
     }
 
     private static Task<double> ReceiverMeanRgbAsync(ILocator canvas) => canvas.EvaluateAsync<double>(

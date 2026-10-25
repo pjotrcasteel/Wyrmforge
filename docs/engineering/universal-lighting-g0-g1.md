@@ -467,3 +467,21 @@ actors and a very dark oak; close-up illumination is localized and warm. No
 ambient boost or art approval is implied. The lab now places its canvas above
 controls, making the actual world visible on the first phone screen. This changes
 inspection layout only, not framebuffer sizing, source parameters or gameplay.
+
+## G1 live playback and fractional-motion slice — 25 October 2026
+
+Review found a lab scheduling bug: animation enabled while hidden did not
+restart on visibility return, and disabling it left a callback queued. A small
+presentation-only frame loop now cancels paused/hidden/disposed work, resumes
+on visibility change without hidden-time catch-up, caps stalls at 100 ms and
+prevents duplicate callbacks during reentrant render configuration. The existing
+sprite-animation sampler and every actor asset remain unchanged. Unit tests
+exercise hidden/visible, stop/restart, long stalls and disposal with a controlled
+scheduler; physical browser background transitions are not yet device-tested.
+
+GPU tests now enable actual requestAnimationFrame playback, observe both actors
+advance, stop without queued pose updates, resume, and restore the manual frame.
+Quarter-pixel camera samples (.25/.5/.75) must visibly change the framebuffer and
+reproduce exact hashes when revisited. Half-pixel captures are retained for visual
+review; deterministic fractional samples do not prove absence of visible shimmer.
+New slice CI pending; no production rendering or C# simulation is changed.

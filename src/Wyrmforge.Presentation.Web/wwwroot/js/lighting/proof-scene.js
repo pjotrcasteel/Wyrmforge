@@ -1,5 +1,6 @@
 // Isolated test fixture only. No RunSimulation, saves, collision or production imports.
 import * as T from './vendor/three.module.js';
+import { createFrameLoop } from './frame-loop.js';
 import { townFixture } from './town-fixture.js';
 import { cutoutLeafPixels } from './cutout-fixture.js';
 import { LightingEngine } from './engine.js';
@@ -84,12 +85,23 @@ export async function initializeProof(canvas) {
         const oak = await originalOak(engine);
         if (!state.alive) { engine.dispose(); return; }
         state.objects.push(...oak.objects); state.materials.push(...oak.materials);
+        state.animationTicks = 0;
+        state.loop = createFrameLoop(delta => {
+            for (const [id, manifest] of Object.entries(state.manifests)) state.samples[id] = updateSpriteAnimation(
+                state.animation[id], manifest.animationProfile, { deltaSeconds: delta,
+                    distance: delta * manifest.animationProfile.locomotion.stride * .75, moving: true, direction: 'S' });
+            state.animationTicks++;
+            configureProof(canvas, {});
+        });
+        state.visibility = () => state.loop.setVisible(!document.hidden);
+        document.addEventListener('visibilitychange', state.visibility);
+        state.visibility();
         state.resize = new ResizeObserver(() => { if (state.alive) configureProof(canvas, {}); });
         state.resize.observe(canvas);
         canvas.dataset.ready = 'true';
         configureProof(canvas, {});
     } catch (error) {
-        engine.dispose(); states.delete(canvas); canvas.dataset.error = error.message; throw error;
+        disposeProof(canvas); canvas.dataset.error = error.message; throw error;
     }
 }
 export function configureProof(canvas, options) {
@@ -169,26 +181,19 @@ export function configureProof(canvas, options) {
     state.engine.setDebugView(zero ? 'lit' : p.view);
     if (state.engine.debugView !== 'lit') state.engine.render();
     canvas.dataset.diagnostics = JSON.stringify(state.engine.diagnostics());
-    if (p.animate && !state.pending && !document.hidden) {
-        state.pending = requestAnimationFrame(time => {
-            state.pending = 0;
-            if (!state.alive) return;
-            const delta = Math.min(.1, Math.max(0, (time - (state.lastTime ?? time)) / 1000));
-            state.lastTime = time;
-            for (const [id, manifest] of Object.entries(state.manifests)) state.samples[id] = updateSpriteAnimation(
-                state.animation[id], manifest.animationProfile, { deltaSeconds: delta,
-                    distance: delta * manifest.animationProfile.locomotion.stride * .75, moving: true, direction: 'S' });
-            configureProof(canvas, {});
-        });
-    }
-    if (!p.animate) state.lastTime = null;
+    state.loop.setActive(p.animate);
 }
 export function proofPixels(canvas) { const e = states.get(canvas).engine; e.render(); return [...e.pixels()]; }
 export function proofOptions(canvas) { return structuredClone(states.get(canvas).options); }
-export function proofDiagnostics(canvas) { return states.get(canvas).engine.diagnostics(); }
+export function proofDiagnostics(canvas) {
+    const state = states.get(canvas);
+    return { ...state.engine.diagnostics(), animation: { ticks: state.animationTicks,
+        scheduled: state.loop.scheduled, frames: Object.fromEntries(Object.entries(state.samples).map(([id, sample]) => [id, sample.frame])) } };
+}
 export function disposeProof(canvas) {
     const state = states.get(canvas); if (!state) return;
-    state.alive = false; cancelAnimationFrame(state.pending); state.resize?.disconnect(); state.engine.dispose(); states.delete(canvas);
+    state.alive = false; state.loop?.dispose();
+    if (state.visibility) document.removeEventListener('visibilitychange', state.visibility); state.resize?.disconnect(); state.engine.dispose(); states.delete(canvas);
 }
 
 async function originalOak(engine) {

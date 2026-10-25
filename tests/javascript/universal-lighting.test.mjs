@@ -88,3 +88,24 @@ test('Town fixture state registers six schools, stable identity, bounded mastery
     for (const mastery of [-1, 2, NaN]) assert.throws(() => townFixture({ active: true, school: 'fire', mastery }));
     assert.throws(() => townFixture({ active: true, school: 'unknown', mastery: 0 }));
 });
+
+
+test('presentation loop stops, resumes visibility without catch-up and disposes without callbacks', async () => {
+    const { createFrameLoop } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/frame-loop.js');
+    const queued = new Map(), deltas = []; let nextId = 0;
+    const loop = createFrameLoop(delta => { deltas.push(delta); loop.setActive(true); }, {
+        requestFrame: callback => { queued.set(++nextId, callback); return nextId; },
+        cancelFrame: id => queued.delete(id),
+    });
+    const advance = time => { const [id, callback] = queued.entries().next().value; queued.delete(id); callback(time); };
+    loop.setVisible(false); loop.setActive(true); assert.equal(queued.size, 0);
+    loop.setVisible(true); assert.equal(queued.size, 1);
+    advance(100); advance(116); assert.deepEqual(deltas, [0, .016]);
+    assert.equal(queued.size, 1, 'Reentrant render configuration must not schedule duplicate frames');
+    loop.setVisible(false); assert.equal(queued.size, 0);
+    loop.setVisible(true); advance(10000); assert.equal(deltas.at(-1), 0);
+    advance(10500); assert.equal(deltas.at(-1), .1, 'Long stalls must be capped');
+    loop.setActive(false); assert.equal(loop.scheduled, false); assert.equal(queued.size, 0);
+    loop.setActive(true); advance(20000); assert.equal(deltas.at(-1), 0);
+    loop.dispose(); loop.setActive(true); loop.setVisible(true); assert.equal(queued.size, 0);
+});

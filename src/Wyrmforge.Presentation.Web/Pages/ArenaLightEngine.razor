@@ -10,7 +10,7 @@
     <canvas @ref="canvas" aria-label="Shared GPU world lighting proof"></canvas>
     <nav aria-label="Light inspection">
         <label>Camera <select aria-label="Camera" @bind="focus" @bind:after="Sync"><option>overview</option><option>actors</option><option>oak</option><option>town</option><option>water</option><option>cutouts</option></select></label>
-        <label>Camera pan (pixels) <input aria-label="Camera pan" type="range" min="-8" max="8" @bind="panPixels" @bind:event="oninput" @bind:after="Sync" /></label>
+        <label>Camera pan (pixels) <input aria-label="Camera pan" type="range" min="-8" max="8" step="0.25" @bind="panPixels" @bind:event="oninput" @bind:after="Sync" /></label>
         <label>Diagnostic <select aria-label="Diagnostic" @bind="view" @bind:after="Sync"><option>lit</option><option>albedo</option><option>normals</option><option>geometry</option><option value="object-mask">Selected receiver mask</option><option value="shadow-visibility">Point shadow visibility</option><option value="light-depth">Light depth atlas</option><option value="light-bounds">Light bounds</option></select></label>
         <label><input aria-label="Cutout test fixture" type="checkbox" @bind="cutouts" @bind:after="Sync" /> Cutout test fixture</label>
         <label><input aria-label="Cutout alpha" type="checkbox" @bind="cutoutAlpha" @bind:after="Sync" /> Cutout alpha</label>
@@ -49,7 +49,8 @@
     private string view = "lit", lighting = "scene";
     private string profile = "night", school = "arcane";
     private bool townActive = true, aboveRoof;
-    private int mastery, panPixels;
+    private int mastery;
+    private double panPixels;
     private string? error;
     private bool fireball = true, torch = true, spot = true, rune, shadows = true, reflections = true;
     private bool animate, behind, cutouts, cutoutAlpha = true;
