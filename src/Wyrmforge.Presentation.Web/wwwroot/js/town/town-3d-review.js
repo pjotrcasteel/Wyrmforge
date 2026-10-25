@@ -15,6 +15,13 @@ const materialPalette = Object.freeze({
     board: ["#75543b", .88],
     gate_stone: ["#5b606e", .88],
     foliage: ["#294e39", .94],
+    stone_cobble_light: ["#8a817c", .87],
+    stone_cobble_mid: ["#766d6e", .91],
+    stone_cobble_dark: ["#524b50", .96],
+    gold: ["#c99b48", .48],
+    parchment: ["#b9a287", .92],
+    banner: ["#173c6b", .92],
+    flowers: ["#b570b5", .68],
     lantern: ["#d9a35f", .33]
 });
 const positions = Object.freeze({
@@ -61,13 +68,17 @@ function previewSnapshot(scene, mode, actorFootpoint) {
     return {
         version: 1, time: 0, objects, materials,
         lights: zero ? [] : [
-            light("town.review.sky", "directional", [-4, -5, 9], day ? "#f8ddbd" : "#8eaacb",
-                day ? 1.8 : .45, 10),
+            light("town.review.sky", "directional", [-4, -5, 9], day ? "#f8ddbd" : "#a5b2da",
+                day ? 1.65 : .8, 10),
             light("town.review.lantern", "point", [2.65, -1.5, 1.83],
-                "#ff9a4c", day ? 6 : 15, 9)
+                "#ff9a4c", day ? 7 : 18, 9),
+            ...[[0, 3.4, 1.8], [-1.7, .2, 1.6], [1.7, .2, 1.6]].map((position, i) => ({
+                ...light(`town.review.torch-${i}`, "point", position, "#ffb266", day ? 3.5 : 12, 8 - i),
+                castsShadow: false
+            }))
         ],
         environment: {
-            ambient: zero ? 0 : day ? .46 : .045,
+            ambient: zero ? 0 : day ? .56 : .14,
             color: day ? "#e2e0d8" : "#8196b9",
             exposure: 1, emission: !zero
         }
@@ -77,8 +88,8 @@ function previewSnapshot(scene, mode, actorFootpoint) {
 export async function initializeTown3DReview(canvas, status) {
     if (!(canvas instanceof HTMLCanvasElement)) throw new TypeError("Town review canvas is required");
     const response = await Promise.all([
-        fetch(new URL("t1-central-square-preview.obj", base)),
-        fetch(new URL("t1-central-square.scene.json", base))
+        fetch(new URL("t2-central-square-gothic.obj", base)),
+        fetch(new URL("t2-central-square-gothic.scene.json", base))
     ]);
     for (const r of response) if (!r.ok) throw new Error(`Town geometry load failed: HTTP ${r.status}`);
     const [obj, scene] = await Promise.all([response[0].text(), response[1].json()]);
@@ -106,10 +117,10 @@ export async function initializeTown3DReview(canvas, status) {
     const redraw = () => {
         if (!alive) return;
         engine.apply(previewSnapshot(scene, mode, actorFootpoint));
-        engine.setCamera([0, 1.20, 1.55], 5.7);
+        engine.setCamera([0, 1.40, 1.5], 4.7);
         engine.setDebugView(view);
         engine.render();
-        status.textContent = `${scene.nodes.length} scene nodes · ${parsed.triangleCount} triangles · ${mode} · ${actorPosition}`;
+        status.textContent = `${scene.nodes.length} authored nodes · ${parsed.triangleCount} triangles · ${mode} · ${actorPosition}`;
     };
     const resize = new ResizeObserver(() => redraw());
     resize.observe(canvas);
