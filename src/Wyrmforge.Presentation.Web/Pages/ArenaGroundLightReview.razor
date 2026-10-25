@@ -1,0 +1,105 @@
+@page "/arena-ground-light-review"
+@implements IAsyncDisposable
+@using Microsoft.JSInterop
+@inject IJSRuntime JavaScript
+
+<main class="ground-review">
+    <header>
+        <span class="eyebrow">WYRMFORGE / WET FOREST / FOUNDATION 02</span>
+        <h1>Connected road + ground materials</h1>
+        <p>Exactly one seeded footpath from the north entrance to the south exit. The approved grass, mud, dirt and marsh
+            are blended into one ground surface and lit by the same universal GPU engine.</p>
+    </header>
+
+    <section class="controls" aria-label="Ground material lighting inspection">
+        <label>Ground
+            <select aria-label="Ground" @bind="material" @bind:after="Sync">
+                <option value="road">One connected forest road</option>
+                <option value="grass">Moss / grass</option>
+                <option value="mud">Wet mud</option>
+                <option value="dirt">Forest soil</option>
+                <option value="marsh">Marsh</option>
+            </select>
+        </label>
+        @if (material == "road")
+        {
+            <label>Road seed
+                <select aria-label="Road seed" @bind="seed" @bind:after="Sync">
+                    <option value="1205">1205 — straight</option>
+                    <option value="1441">1441 — winding A</option>
+                    <option value="2803">2803 — winding B</option>
+                    <option value="4026">4026 — winding C</option>
+                </select>
+            </label>
+        }
+        <label>Light
+            <select aria-label="Light" @bind="lighting" @bind:after="Sync">
+                <option value="fire">Moving Fireball</option>
+                <option value="moon">Moonlight</option>
+                <option value="neutral">Neutral art inspection</option>
+                <option value="zero">All world lighting off</option>
+            </select>
+        </label>
+        <label>Fireball position
+            <input type="range" aria-label="Fireball position" min="0" max="100"
+                   disabled="@(lighting != "fire")" @bind="position" @bind:event="oninput" @bind:after="Sync"/>
+        </label>
+    </section>
+
+    @if (error is not null) { <p role="alert">@error</p> }
+
+    <section class="stage">
+        <canvas @ref="canvas" aria-label="One blended forest road with one south exit, lit by the shared GPU engine"></canvas>
+    </section>
+    <p class="notes">Entrance: north center → Exit: south center. One continuous seeded road; no side branch or rare second exit yet.
+        This is a flat ground-only visual recipe, NOT an implemented gameplay exit or verified C# navigation.
+        All edges use the existing approved quilt and material-transition compositor; no trees, props or collisions.
+        Town, Hunts and the production Arena Lab are unchanged.</p>
+</main>
+
+@code {
+    private ElementReference canvas;
+    private IJSObjectReference? module;
+    private string material = "road", lighting = "neutral";
+    private int position = 50, seed = 1441;
+    private string? error;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        try
+        {
+            module = await JavaScript.InvokeAsync<IJSObjectReference>(
+                "import", "./js/lighting/ground-only-review.js");
+            await module.InvokeVoidAsync("initializeGroundReview", canvas);
+        }
+        catch (JSException exception)
+        {
+            error = exception.Message;
+            StateHasChanged();
+        }
+    }
+
+    private async Task Sync()
+    {
+        if (module is null) return;
+        try
+        {
+            await module.InvokeVoidAsync("configureGroundReview", canvas,
+                new { material, lighting, seed, position = position / 100.0 });
+        }
+        catch (JSException exception)
+        {
+            error = exception.Message;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (module is null) return;
+        try { await module.InvokeVoidAsync("disposeGroundReview", canvas); }
+        catch (JSDisconnectedException) { }
+        try { await module.DisposeAsync(); }
+        catch (JSDisconnectedException) { }
+    }
+}

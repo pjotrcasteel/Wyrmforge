@@ -3,10 +3,15 @@ on:
   pull_request:
     paths:
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/**'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/arena-single-road.js'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/arena-materials.js'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/art/lighting-proof/**'
       - 'src/Wyrmforge.Presentation.Web/Pages/ArenaLightEngine*'
+      - 'src/Wyrmforge.Presentation.Web/Pages/ArenaGroundLightReview*'
       - 'tests/Wyrmforge.Browser.Tests/UniversalLightingBrowserTests.cs'
+      - 'tests/Wyrmforge.Browser.Tests/ArenaGroundLightReviewBrowserTests.cs'
       - 'tests/javascript/universal-lighting.test.mjs'
+      - 'tests/javascript/arena-ground-gpu-review.test.mjs'
       - '.github/workflows/universal-lighting.yml'
   workflow_dispatch:
 permissions:
@@ -21,7 +26,7 @@ jobs:
         with:
           dotnet-version: '10.0.x'
       - name: Registry and sprite binding regression tests
-        run: node --test tests/javascript/universal-lighting.test.mjs
+        run: node --test tests/javascript/universal-lighting.test.mjs tests/javascript/arena-ground-gpu-review.test.mjs
       - name: Build tests and publish actual application
         run: |
           dotnet build tests/Wyrmforge.Browser.Tests -c Release
@@ -38,7 +43,7 @@ jobs:
             if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then break; fi
             sleep 1
           done
-          dotnet test tests/Wyrmforge.Browser.Tests -c Release --no-build --filter FullyQualifiedName~UniversalLightingBrowserTests
+          dotnet test tests/Wyrmforge.Browser.Tests -c Release --no-build --filter 'FullyQualifiedName~UniversalLightingBrowserTests|FullyQualifiedName~ArenaGroundLightReviewBrowserTests'
       - name: Preserve mobile viewport captures (not physical-device evidence)
         if: always()
         uses: actions/upload-artifact@v4
