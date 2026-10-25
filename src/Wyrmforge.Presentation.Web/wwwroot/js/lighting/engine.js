@@ -259,6 +259,8 @@ float proofShadowVisibility() {
                 this.frameStats.lastMs = elapsed;
                 this.frameStats.maxMs = Math.max(this.frameStats.maxMs, elapsed);
                 this.frameStats.frames++;
+                // Render CPU time is only a proxy for GPU cost; avoid escalating quality
+                // when the main thread is already saturated by unrelated work.
                 if (this.adaptive && this.debugView === 'lit') {
                     this.frameWindow.totalMs += elapsed;
                     this.frameWindow.count++;
