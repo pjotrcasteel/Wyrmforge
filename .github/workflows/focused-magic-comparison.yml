@@ -23,10 +23,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: '10.0.x'
+      - name: Use preinstalled .NET 10 SDK
+        run: |
+          dotnet --list-sdks
+          dotnet --list-sdks | grep -Eq '^10\.0\.' || { echo "::error::Runner does not have the .NET 10 SDK"; exit 1; }
+          dotnet --version
 
       - name: Checkout last green focused control
         run: git worktree add --detach "$RUNNER_TEMP/focused-control" 8cb011f351f9b090bee3e30687f457603134a28c

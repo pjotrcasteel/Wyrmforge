@@ -223,8 +223,9 @@ public sealed partial class RunSimulation
         };
         dragonHuntState.Start(hunt);
         dragonHuntHazards.Clear();
-        dragon = new DragonState(++enemyId, definition, ArenaPoint(hunt.Entrance.Start, width, height),
-            depthState.DragonHealthMultiplier * DragonTierHealth(tier), tier);
+        var healthMultiplier = depthState.DragonHealthMultiplier * DragonTierHealth(tier);
+        if (IsFireTierOneHunt && definition.Id == DragonId.Ashfang) healthMultiplier *= FireTierOneAshfangDurability;
+        dragon = new DragonState(++enemyId, definition, ArenaPoint(hunt.Entrance.Start, width, height), healthMultiplier, tier);
     }
 
     private static double DragonTierHealth(WyrmTier tier) => tier switch
