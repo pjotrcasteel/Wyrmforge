@@ -66,6 +66,7 @@ public sealed partial class RunSimulation
     private CastMotionRenderSnapshot? lastCastMotion;
     private double lastCastMotionStartedAt;
     private int projectileCastCount;
+    private long nextProjectileAudioId;
     private int hitCount;
     private int arcaneHitCount;
     private int enemyId;
@@ -360,6 +361,7 @@ public sealed partial class RunSimulation
             essenceBolts.Select(bolt => new EssenceBoltRenderSnapshot(bolt.From.X, bolt.From.Y, bolt.To.X, bolt.To.Y, bolt.Life)).ToArray(),
             projectiles.Select(projectile => new ProjectileRenderSnapshot(projectile.Position.X, projectile.Position.Y, projectile.Radius, projectile.Spell, projectile.Inferno)
             {
+                Id = projectile.Id,
                 Combination = projectile.Combination,
                 Angle = Math.Atan2(projectile.Velocity.Y, projectile.Velocity.X),
                 Rank = projectile.Rank,
