@@ -71,6 +71,15 @@ class FeatureMotifSourceTests(unittest.TestCase):
                     self.assertEqual(set(m.getdata()), {0,255})
                     self.assertEqual(m.size, (96,96))
                 self.assertTrue((place / "review" / item["previewFile"]).is_file())
+                self.assertTrue(item["sourceRgbCropPixelsUnchanged"])
+                self.assertFalse(item["cropIsTileable"])
+                self.assertFalse(item["cropIsRuntimeAlpha"])
+                with Image.open(place / "review" / item["sourceRgbCropFile"]) as crop:
+                    self.assertEqual(crop.mode, "RGB")
+                    self.assertGreater(crop.width, 0)
+                    self.assertGreater(crop.height, 0)
+                    original = Image.open(source / item["semanticLayer"].replace("painted-trail-motif", "trampled-earth").replace("painted-charred-motif", "scorched-ground").replace("painted-marshland-motif", "marsh-wet-bank") / "variant-01.webp").convert("RGB")
+                    self.assertEqual(crop.tobytes(), original.crop(tuple(item["sourceRgbCropBounds"])).tobytes())
             self.assertEqual({name: Path(name).read_bytes() for name in originals}, originals)
             self.assertEqual(json.loads(annotation.read_text()), data)
 
