@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { townRelightableContract } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/town-relightable-contract.js';
+import { townRelightableContract, buildTownLightingSnapshot } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/town-relightable-contract.js';
 
 const triangle = [{x:0,y:0},{x:10,y:0},{x:0,y:10}];
 const navigation = () => ({
@@ -32,4 +32,27 @@ test('town migration rejects malformed and duplicate navigation polygons', () =>
     invalid.obstacles.pop();
     invalid.occluders[0].clip=[{x:0,y:0}];
     assert.throws(()=>townRelightableContract(invalid),/Invalid town polygon/);
+});
+
+test('authored Town surfaces and lights compile to generic engine descriptors', () => {
+    const contract = townRelightableContract(navigation());
+    const surface = { id:'well-stone', geometry:'well-mesh', material:{id:'stone',color:'#888888'},
+        position:[1,2,3], castsShadow:true };
+    const emitter = { id:'well-lantern',type:'point',position:[1,2,4],intensity:3 };
+    const result = buildTownLightingSnapshot(contract,[surface],[emitter],{ambient:.03});
+    assert.equal(result.objects[0].geometry,'well-mesh');
+    assert.equal(result.objects[0].material,'stone');
+    assert.equal(result.objects[0].castsShadow,true);
+    assert.equal(result.lights[0].id,'well-lantern');
+    assert.equal(result.environment.ambient,.03);
+    assert.equal(result.materials.length,1);
+    assert.equal(contract.lightingGeometry.length,0);
+});
+
+test('Town scene compilation rejects duplicate layers and conflicting materials', () => {
+    const contract = townRelightableContract(navigation());
+    const layer = {id:'wall',geometry:'box',material:{id:'stone',color:'#777777'},position:[0,0,1]};
+    assert.throws(()=>buildTownLightingSnapshot(contract,[layer,layer]),/duplicate/);
+    assert.throws(()=>buildTownLightingSnapshot(contract,[layer,{...layer,id:'roof',
+        material:{id:'stone',color:'#333333'}}]),/Conflicting/);
 });
