@@ -62,6 +62,18 @@ The first seam-cut quilt disproportionately reused individual sources (13/25 Gra
 
 The repeat-study JSON reports `selectedSourceUsage`, `sourcesRepresented` and the actual selection sequence. This improves coverage *without guaranteeing artistic quality or an exact six-of-six result for every seed*. It retains all six original image hashes, any baked highlights, no authored water masks and **no** production materials. The visual-review job and unit tests verify the code; real device screenshots and shared GPU shading remain separate future gates.
 
+## Portrait-size Grass/Moss ↔ Wet Mud material-boundary QA
+
+A standalone `tools/art/ground_transition_study.py` research tool builds four **source-only portrait comparison boards** at **320×568** and **390×844**, using two deterministic seeds. Each board tests the same Grass/Moss and Wet Mud six-source quilts across three *visual-only* transition modes:
+
+- **Hard boundary:** sharp family switch, exposing disconnected material detail.
+- **Soft crossfade:** source RGB mixing, exposing blur and muddy/ghosted detail.
+- **4×4 ordered coverage dither:** alternating untouched source pixels in the boundary band, preserving the source pixel colors and helping reveal whether the transition remains readable at small sizes.
+
+The wavering test boundary is explicitly **not** a C# `WetForestRecipe`, road shape, puddle distribution, hazard, collision rule, reflection, or procedural gameplay plan. There is deliberately no simulated Fireball, player, material geometry, GPU lighting or baked night overlay in these comparisons. The `transition-study.json` report records seeds, source usage and content hashes. The original paintings and existing game atlas remain unchanged.
+
+Generate from the repository root with `python tools/art/ground_transition_study.py --output /tmp/wyrmforest-ground-source-review`, after installing the pinned visual-review dependencies in the workflow. The draft PR's **Wet Forest ground concept integrity** artifact also contains the preview boards once CI succeeds. These boards are **not** a substitute for the shared GPU-lighting integration, actual iOS/Android inspection, or user approval.
+
 ## Approval/locking protocol
 **Do not rename this folder CANONICAL or update runtime references until the owner explicitly accepts
 these 36 images.** After approval, record approved image hashes in an immutable manifest
