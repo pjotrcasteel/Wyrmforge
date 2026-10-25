@@ -536,6 +536,13 @@ public sealed class UniversalLightingBrowserTests : PageTest
         var values = System.Text.Json.JsonSerializer.SerializeToElement(options);
         foreach (var property in values.EnumerateObject())
         {
+            if (property.Name is "wetness" or "fog")
+            {
+                await canvas.EvaluateAsync("(c,setting) => gpuProof.configureProof(c, setting)",
+                    new Dictionary<string, object> { [property.Name] = property.Value.ValueKind == System.Text.Json.JsonValueKind.Number
+                        ? property.Value.GetDouble() : property.Value.GetBoolean() });
+                continue;
+            }
             var control = Page.GetByLabel(labels[property.Name], new() { Exact = true });
             if (property.Value.ValueKind is System.Text.Json.JsonValueKind.True or System.Text.Json.JsonValueKind.False)
                 await control.SetCheckedAsync(property.Value.GetBoolean());
