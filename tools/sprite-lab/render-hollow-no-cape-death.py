@@ -14,6 +14,7 @@ import math
 from pathlib import Path
 
 import bpy
+from mathutils import Vector
 from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -62,6 +63,70 @@ for curve in action.fcurves:
         curve_names.add(curve.data_path.split('pose.bones["', 1)[1].split('"]', 1)[0])
 assert {"pelvis", "spine", "chest", "head", "thigh.L", "shin.L", "thigh.R", "shin.R"}.issubset(curve_names)
 assert curve_names.issubset(bone_names), sorted(curve_names - bone_names)
+
+# Source v5's last pose was authored under a long cape. Without the cape, its
+# splayed forearms read as a spider. Make a separate keyed no-cape death action:
+# arms buckle in toward the skull and settle palms-down under the shoulders.
+# Keep the real authored pelvis, spine, leg and head trajectories unchanged.
+adjusted = action.copy()
+adjusted.name = "Hollow_Death_No_Cape_Grounded_v2"
+rig.animation_data.action = adjusted
+for bone in rig.pose.bones:
+    bone.rotation_mode = "QUATERNION"
+rest_heads = {b.name:b.head_local.copy() for b in rig.data.bones}
+rest_tails = {b.name:b.tail_local.copy() for b in rig.data.bones}
+rest_matrices = {b.name:b.matrix_local.copy() for b in rig.data.bones}
+bone_lengths = {b.name:b.length for b in rig.data.bones}
+
+def smoothstep(t):
+    t = max(0.0, min(1.0, t))
+    return t*t*(3-2*t)
+
+def ik_joint(start, end, length1, length2, pole):
+    delta=end-start
+    total=max(1e-5,min(delta.length,length1+length2-1e-4))
+    aim=delta.normalized()
+    along=(length1*length1-length2*length2+total*total)/(2*total)
+    lateral=Vector(pole)-aim*Vector(pole).dot(aim)
+    lateral.normalize()
+    elbow=start+aim*along+lateral*math.sqrt(max(0,length1*length1-along*along))
+    return elbow,start+aim*total
+
+def pose_segment(name, start, end):
+    direction = end-start
+    if direction.length < 1e-6:
+        return
+    direction_rotation = (rest_tails[name]-rest_heads[name]).rotation_difference(direction)
+    transform = (direction_rotation.to_matrix() @ rest_matrices[name].to_3x3()).to_4x4()
+    transform.translation = start
+    rig.pose.bones[name].matrix = transform
+    bpy.context.view_layer.update()
+
+for frame in range(1, FRAMES+1):
+    scene.frame_set(frame)
+    strength=smoothstep((frame-5)/8)
+    if strength < 1e-5:
+        continue
+    for side,sign in (("L",1),("R",-1)):
+        shoulder=rig.pose.bones["upper_arm."+side].head.copy()
+        original_wrist=rig.pose.bones["forearm."+side].tail.copy()
+        # Keep the hand near the fall line rather than bending the arms out
+        # into a symmetric crab/starfish silhouette.
+        settled=Vector((sign*.17,-.51,-.45))
+        wrist=original_wrist.lerp(settled,strength)
+        elbow,wrist=ik_joint(shoulder,wrist,bone_lengths["upper_arm."+side],
+                            bone_lengths["forearm."+side],(sign*.12,.6,.12))
+        pose_segment("upper_arm."+side,shoulder,elbow)
+        pose_segment("forearm."+side,elbow,wrist)
+        tip=wrist+Vector((sign*.015,-.06,-.015)).normalized()*bone_lengths["hand."+side]
+        pose_segment("hand."+side,wrist,tip)
+        for name in ("upper_arm."+side,"forearm."+side,"hand."+side):
+            bone=rig.pose.bones[name]
+            bone.keyframe_insert("location",frame=frame,group=name)
+            bone.keyframe_insert("rotation_quaternion",frame=frame,group=name)
+            bone.keyframe_insert("scale",frame=frame,group=name)
+    bpy.context.view_layer.update()
+scene.frame_set(1)
 
 # The authored collapse carried an after-skin floor-contact corrective in the
 # old mesh. Rebuild its same Z-floor cap on the no-cape skin, after Armature.
