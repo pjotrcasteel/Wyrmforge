@@ -265,3 +265,13 @@ test('ground-fire transition updates preserve independent overlapping patch IDs'
         { type: 'stop', id: 1, remainingSeconds: 0 },
     ]);
 });
+
+test('paused snapshots update the baseline without replaying accumulated damage on resume', () => {
+    const tracker = createSoundEventTracker();
+    const healthy = frame({ hud: { health: 100, maxHealth: 100, kills: 0 } });
+    const paused = frame({ paused: true, hud: { health: 25, maxHealth: 100, kills: 4 } });
+    const resumed = frame({ hud: { health: 25, maxHealth: 100, kills: 4 } });
+    assert.deepEqual(collectSoundEvents(tracker, healthy, 0), []);
+    assert.deepEqual(collectSoundEvents(tracker, paused, 100), []);
+    assert.deepEqual(collectSoundEvents(tracker, resumed, 200), []);
+});
