@@ -485,3 +485,11 @@ Quarter-pixel camera samples (.25/.5/.75) must visibly change the framebuffer an
 reproduce exact hashes when revisited. Half-pixel captures are retained for visual
 review; deterministic fractional samples do not prove absence of visible shimmer.
 New slice CI pending; no production rendering or C# simulation is changed.
+
+The lab also exposes an explicitly labelled screen-space attack-warning sample.
+It is a DOM overlay over the world canvas, not an emitter/material and not live
+combat UI. The GPU test requires it to remain visible over a completely black
+world, and requires identical world framebuffer hashes before/after showing and
+removing it. This validates the separate readability channel only; final warning
+appearance, direction, timing and C# threat integration remain separate acceptance
+work. No hidden world brightness or authoritative client combat is introduced.

@@ -7,8 +7,15 @@
     <h1>Shared light engine</h1>
     <p>G0–G1 isolated GPU proof. Town and Hunts are unchanged. Original oak geometry and exported walk-pose normals are under review. Production adoption remains pending.</p>
     @if (error is not null) { <p role="alert">@error</p> }
-    <canvas @ref="canvas" aria-label="Shared GPU world lighting proof"></canvas>
+    <div class="world-frame">
+        <canvas @ref="canvas" aria-label="Shared GPU world lighting proof"></canvas>
+        @if (warningCue)
+        {
+            <div class="readability-cue" role="status" aria-live="polite">LAB WARNING · Incoming attack</div>
+        }
+    </div>
     <nav aria-label="Light inspection">
+        <label><input aria-label="Screen-space warning" type="checkbox" @bind="warningCue" /> Screen-space warning (lab)</label>
         <label>Camera <select aria-label="Camera" @bind="focus" @bind:after="Sync"><option>overview</option><option>actors</option><option>oak</option><option>town</option><option>water</option><option>cutouts</option></select></label>
         <label>Camera pan (pixels) <input aria-label="Camera pan" type="range" min="-8" max="8" step="0.25" @bind="panPixels" @bind:event="oninput" @bind:after="Sync" /></label>
         <label>Diagnostic <select aria-label="Diagnostic" @bind="view" @bind:after="Sync"><option>lit</option><option>albedo</option><option>normals</option><option>geometry</option><option value="object-mask">Selected receiver mask</option><option value="shadow-visibility">Point shadow visibility</option><option value="light-depth">Light depth atlas</option><option value="light-bounds">Light bounds</option></select></label>
@@ -53,6 +60,7 @@
     private double panPixels;
     private string? error;
     private bool fireball = true, torch = true, spot = true, rune, shadows = true, reflections = true;
+    private bool warningCue;
     private bool animate, behind, cutouts, cutoutAlpha = true;
     private int progress = 25, sourceDistance = 2, frame;
     protected override async Task OnAfterRenderAsync(bool firstRender)

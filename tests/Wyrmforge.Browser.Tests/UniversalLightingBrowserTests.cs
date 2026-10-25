@@ -32,6 +32,17 @@ public sealed class UniversalLightingBrowserTests : PageTest
         Assert.AreEqual(0, maximum, "Every world framebuffer RGB channel must be exactly black, including source surfaces.");
         await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Shared light engine" })).ToBeVisibleAsync();
         await CaptureAsync(width, "zero");
+        var blackWorld = await PixelHashAsync(canvas);
+        var warning = Page.GetByLabel("Screen-space warning", new() { Exact = true });
+        await warning.SetCheckedAsync(true);
+        await Expect(Page.GetByRole(AriaRole.Status)).ToHaveTextAsync("LAB WARNING · Incoming attack");
+        await Expect(Page.GetByRole(AriaRole.Status)).ToBeVisibleAsync();
+        Assert.AreEqual(blackWorld, await PixelHashAsync(canvas), "A screen-space warning must never illuminate world pixels.");
+        await CaptureAsync(width, "zero-with-warning");
+        await warning.SetCheckedAsync(false);
+        await Expect(Page.GetByRole(AriaRole.Status)).ToHaveCountAsync(0);
+        Assert.AreEqual(blackWorld, await PixelHashAsync(canvas));
+
         await ConfigureAsync(canvas, new { profile = "night", rune = false });
         Assert.AreEqual(lit, await PixelHashAsync(canvas), "Restoring a frozen snapshot must restore the exact output.");
         await ConfigureAsync(canvas, new { rune = true });

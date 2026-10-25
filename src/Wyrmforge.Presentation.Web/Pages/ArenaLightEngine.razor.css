@@ -6,3 +6,10 @@ canvas { width: 100%; height: min(72vh, 640px); display: block; image-rendering:
 select { color: #eee; background: #262c2e; padding: 6px; }
 
 pre { max-height: 16rem; overflow: auto; font-size: .75rem; }
+
+.world-frame { position: relative; }
+.readability-cue {
+    position: absolute; top: 12px; left: 12px; right: 12px; padding: 8px;
+    color: #ffe49b; background: #171b20; border: 2px solid #ffe49b;
+    font-size: .8rem; font-weight: 700; line-height: 1.35; pointer-events: none;
+}
