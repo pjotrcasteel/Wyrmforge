@@ -82,6 +82,11 @@ class FeatureMotifSourceTests(unittest.TestCase):
                 self.assertFalse(item["cropIsTileable"])
                 self.assertFalse(item["cropIsRuntimeAlpha"])
                 self.assertFalse(item["annotatedIsolationPreviewIsRuntimeAsset"])
+                self.assertFalse(item["paintedFeatureCompositionIsRuntimeAsset"])
+                self.assertFalse(item["paintedFeatureCompositionIsTileable"])
+                with Image.open(place / "review" / item["paintedFeatureCompositionFile"]) as composed:
+                    self.assertEqual(composed.mode, "RGB")
+                    self.assertEqual(composed.size, (96, 96))
                 with Image.open(place / "review" / item["paintedFeatureArtDirectionReview"]) as art_direction:
                     self.assertEqual(art_direction.size, (960, 388))
                 with Image.open(place / "review" / item["annotatedIsolationPreviewFile"]) as isolation:
