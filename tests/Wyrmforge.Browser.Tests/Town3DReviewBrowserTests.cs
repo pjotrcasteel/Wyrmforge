@@ -4,58 +4,68 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Wyrmforge.Browser.Tests;
 
-/// <summary>T2 opt-in production-engine proof. Does NOT replace the original Town.</summary>
+/// <summary>T1/T2 fixed-camera art-faithful 3D acceptance. No T3 agent/navigation code.</summary>
 [TestClass]
 public sealed class Town3DReviewBrowserTests : PageTest
 {
     [TestMethod]
-    [DataRow(320, 568)]
     [DataRow(390, 844)]
-    public async Task TownT2_RealGeometry_SharedGpuLightingAndZeroLightAreValid(int width, int height)
+    [DataRow(320, 568)]
+    public async Task TownT2_CanonicalArt_UsesRealDepthAndStaysBlackWhenAllLightsAreOff(int width, int height)
     {
         var root = Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL");
-        if (string.IsNullOrWhiteSpace(root)) { Assert.Inconclusive("Requires a running WyrmForge app."); return; }
+        if (string.IsNullOrWhiteSpace(root))
+        {
+            Assert.Inconclusive("Requires the running WyrmForge app.");
+            return;
+        }
+
         var artifacts = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS")
             ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
         Directory.CreateDirectory(artifacts);
         await Page.SetViewportSizeAsync(width, height);
-        await Page.GotoAsync(root.TrimEnd('/') + "/town3d-review.html",
+        await Page.GotoAsync(root.TrimEnd('/') + "/town3d-review.html?clean=1&district=center&mode=night",
             new() { WaitUntil = WaitUntilState.NetworkIdle });
         await Page.WaitForFunctionAsync("() => window.__town3dReview?.getState().ready === true");
 
-        var count = await Page.EvaluateAsync<int>("() => window.__town3dReview.getState().triangles");
-        Assert.AreEqual(5074, count, "The reviewer must render the real authored OBJ, including Gothic architectural details, not 2D scenery");
-        var nightPeak = await PeakRgbAsync();
-        Assert.IsGreaterThan(nightPeak, 8, "Night must show illuminated geometry and working fixtures");
-        await CaptureAsync($"t2-town-night-{width}x{height}.png", artifacts);
+        Assert.IsGreaterThan(
+            await Page.EvaluateAsync<int>("() => window.__town3dReview.getState().triangles"), 50000,
+            "Town must use a dense nonplanar 3D scene, not a painted cube");
+        Assert.AreEqual(23, await Page.EvaluateAsync<int>(
+            "() => window.__town3dReview.getState().volumeCount"));
+        Assert.IsGreaterThan(await Page.EvaluateAsync<double>(
+            "() => window.__town3dReview.getState().depthMax - window.__town3dReview.getState().depthMin"), 6d);
+        Assert.IsGreaterThan(await Page.EvaluateAsync<int>(
+            "() => window.__town3dReview.getState().peakRgb"), 150);
+        await CaptureAsync($"t2-canonical-night-center-{width}x{height}.png", artifacts);
 
-        await Page.Locator("#town3d-actor").SelectOptionAsync("behind-noticeboard");
-        await CaptureAsync($"t2-town-behind-noticeboard-{width}x{height}.png", artifacts);
-        await Page.Locator("#town3d-actor").SelectOptionAsync("in-front");
-        await CaptureAsync($"t2-town-front-noticeboard-{width}x{height}.png", artifacts);
+        await Page.EvaluateAsync("() => window.__town3dReview.setMode('day')");
+        await CaptureAsync($"t2-canonical-day-center-{width}x{height}.png", artifacts);
 
-        await Page.Locator("#town3d-mode").SelectOptionAsync("day");
-        await CaptureAsync($"t2-town-day-{width}x{height}.png", artifacts);
+        foreach (var district in new[] { "west", "east" })
+        {
+            await Page.EvaluateAsync("(district) => window.__town3dReview.setDistrict(district)", district);
+            await CaptureAsync($"t2-canonical-day-{district}-{width}x{height}.png", artifacts);
+            await Page.EvaluateAsync("() => window.__town3dReview.setMode('night')");
+            await CaptureAsync($"t2-canonical-night-{district}-{width}x{height}.png", artifacts);
+            await Page.EvaluateAsync("() => window.__town3dReview.setMode('day')");
+        }
 
-        await Page.Locator("#town3d-mode").SelectOptionAsync("zero");
-        var zeroPeak = await PeakRgbAsync();
-        Assert.IsLessThanOrEqualTo(zeroPeak, 1, "Zero-light must render world pixels black");
-        await CaptureAsync($"t2-town-zero-{width}x{height}.png", artifacts);
-        await Page.Locator("#town3d-view").SelectOptionAsync("geometry");
-        await CaptureAsync($"t2-town-wireframe-{width}x{height}.png", artifacts);
+        await Page.EvaluateAsync("() => window.__town3dReview.setDistrict('center')");
+        await Page.EvaluateAsync("() => window.__town3dReview.setMode('zero')");
+        Assert.AreEqual(0, await Page.EvaluateAsync<int>(
+            "() => window.__town3dReview.getState().peakRgb"),
+            "Every Town world pixel must be black without any illumination or emission");
+        await CaptureAsync($"t2-canonical-zero-{width}x{height}.png", artifacts);
+
+        await Page.EvaluateAsync("() => window.__town3dReview.setMode('night')");
+        await Page.EvaluateAsync("() => window.__town3dReview.setView('geometry')");
+        await CaptureAsync($"t2-canonical-3d-wireframe-{width}x{height}.png", artifacts);
     }
 
-    private Task<int> PeakRgbAsync() => Page.EvaluateAsync<int>(@"() => {
-        const bytes = window.__town3dReview.pixelSample();
-        let max = 0;
-        for (let i = 0; i < bytes.length; i += 4)
-            max = Math.max(max, bytes[i], bytes[i+1], bytes[i+2]);
-        return max;
-    }");
-
-    private Task CaptureAsync(string name, string artifacts) => Page.ScreenshotAsync(new()
+    private Task CaptureAsync(string filename, string folder) => Page.ScreenshotAsync(new()
     {
-        Path = Path.Combine(artifacts, name),
+        Path = Path.Combine(folder, filename),
         FullPage = true
     });
 }
