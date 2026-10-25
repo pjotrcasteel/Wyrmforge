@@ -130,6 +130,14 @@ export async function initializeTown3DReview(canvas, status) {
             view = next; redraw();
         },
         pixelSample() { engine.render(); return [...engine.pixels()]; },
+        pixelPeak() {
+            engine.render();
+            const bytes = engine.pixels();
+            let peak = 0;
+            for (let i = 0; i < bytes.length; i += 4)
+                peak = Math.max(peak, bytes[i], bytes[i + 1], bytes[i + 2]);
+            return peak;
+        },
         dispose() { alive = false; resize.disconnect(); engine.dispose(); }
     };
     redraw();
@@ -155,6 +163,7 @@ export async function mountTown3DReview() {
                 api[method](value);
             }
         }
+        document.documentElement.dataset.town3dPeakRgb = String(api.pixelPeak());
         for (const [id, method] of [
             ["town3d-mode", "setMode"],
             ["town3d-actor", "setActorPosition"],
