@@ -11,6 +11,13 @@ Replacement process: author genuinely new recordings/sound design, publish indep
 
 Fireball R1 begins with newly authored deterministic offline combustion/wind/pressure/cinder textures; there is no import or resample of any legacy sound. Cast/hit will replace `cues.fire` after new assets are generated. Flight and burning ground require verified gameplay event timing. The sound remains subject to iPhone listening and quality review.
 
+
+### Implementation checkpoint — 25 October 2026 (draft PR #128, not released)
+
+The audio branch now assigns monotonic IDs to player projectiles and exposes them in C# render snapshots. The arena forwards each authoritative snapshot to the sound-event tracker. Fireball launches are identified by ID even when another projectile disappears in the same frame. Registered burning-ground patches already expose ID and remaining seconds; the Web Audio adapter loops newly authored fire textures for active patches, fades on expiration, and stops on pause, Hunt end, mute, page hiding and arena disposal. Concurrent fire loops are capped at three on mobile. New JavaScript regression tests cover same-count projectile replacement and fire-patch lifecycle transitions.
+
+**Acceptance remains blocked:** no successful full test/build run or iPhone listening evidence has been recorded for these latest changes. PR #128 is draft and GitHub currently reports conflicts with main. Do not merge, mark as shipped or reuse old placeholder recordings. Validate in a real Hunt and reconcile the branch against current main before acceptance.
+
 ## Approved sonic priorities and limits
 
 - **Order of work:** (1) distinguish menu presses, Hunt launch and town doors (no generic intrusive bell); (2) environmental ambience and convincing monster deaths; (3) distinct Fire/Frost/Storm/Arcane magic impact and tails; (4) restrained phone haptics; (5) mix polish and additional moments. Prioritize auditions *in the real game* on phone speakers.
