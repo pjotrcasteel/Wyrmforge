@@ -46,7 +46,8 @@ with bpy.data.libraries.load(str(DEATH_ACTION_SOURCE), link=False) as (available
     names = [name for name in available.actions if name.startswith("Hollow_Death_Collapse")]
     assert len(names) == 1, f"Missing or ambiguous old skeletal death action: {names}"
     selected.actions = names
-action = bpy.data.actions.get(names[0])
+# Blender 4.5 library loading resolves selected.actions to Action datablocks, not names.
+action = selected.actions[0]
 assert action is not None
 if rig.animation_data is None:
     rig.animation_data_create()
