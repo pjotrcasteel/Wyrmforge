@@ -20,11 +20,13 @@ if not SOURCE.is_file():
 
 bpy.ops.object.select_all(action="SELECT")
 bpy.ops.object.delete(use_global=False)
-bpy.ops.wm.obj_import(filepath=str(SOURCE))
+bpy.ops.wm.obj_import(filepath=str(SOURCE), forward_axis='Y', up_axis='Z',\n                      use_split_objects=True, use_split_groups=True)
 
 meshes = [obj for obj in bpy.context.scene.objects if obj.type == "MESH"]
 if not meshes:
     raise RuntimeError("T1 OBJ importer returned no 3D mesh")
+if len(meshes) < 5:
+    raise RuntimeError("T1 OBJ groups were not preserved as separate semantic meshes")
 
 # Mesh stays in real metric coordinates. Blender Z-up is converted to glTF Y-up
 # by the glTF exporter, leaving the game's scene-schema axes as documented.
