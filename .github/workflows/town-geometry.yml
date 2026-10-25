@@ -1,4 +1,4 @@
-name: Town T1 3D geometry export
+name: Town T1/T2 3D geometry exports
 
 on:
   pull_request:
@@ -32,36 +32,46 @@ jobs:
           blender --version
           blender --background --factory-startup --python-expr 'import numpy; print(numpy.__version__)'
 
-      - name: Rebuild editable Blender scene, glTF binary, and reference PNG
+      - name: Export editable T1 and T2 Blender scenes, glTF and review PNGs
+        shell: bash
         run: |
-          mkdir -p artifacts/town-t1
-          blender --background --factory-startup --python tools/town/t1_import_export_blender.py             2>&1 | tee artifacts/town-t1/blender.log
-          test ${PIPESTATUS[0]} -eq 0
-          test -s src/Wyrmforge.Presentation.Web/wwwroot/art/town/geometry/t1-central-square-preview.blend
-          test -s src/Wyrmforge.Presentation.Web/wwwroot/art/town/geometry/t1-central-square-preview.glb
-          test -s src/Wyrmforge.Presentation.Web/wwwroot/art/town/geometry/t1-central-square-preview.png
+          set -euo pipefail
+          mkdir -p artifacts/town-t1-t2
+          for variant in t1 t2; do
+            echo "Exporting ${variant}..."
+            TOWN_GEOMETRY_VARIANT="${variant}" blender --background --factory-startup \
+              --python tools/town/t1_import_export_blender.py \
+              2>&1 | tee "artifacts/town-t1-t2/${variant}-blender.log"
+          done
+          for prefix in t1-central-square-preview t2-central-square-gothic; do
+            for ext in blend glb png; do
+              test -s "src/Wyrmforge.Presentation.Web/wwwroot/art/town/geometry/${prefix}.${ext}"
+            done
+          done
 
       - name: Verify GLB header and file length
         run: |
           python3 - <<'PY'
           import struct
           from pathlib import Path
-          path = Path("src/Wyrmforge.Presentation.Web/wwwroot/art/town/geometry/t1-central-square-preview.glb")
-          data = path.read_bytes()
-          magic, version, total = struct.unpack_from("<4sII", data)
-          assert magic == b"glTF" and version == 2 and total == len(data)
-          print(f"Validated glTF 2.0 binary: {len(data)} bytes")
+          root = Path("src/Wyrmforge.Presentation.Web/wwwroot/art/town/geometry")
+          for prefix in ["t1-central-square-preview", "t2-central-square-gothic"]:
+              path = root / f"{prefix}.glb"
+              data = path.read_bytes()
+              magic, version, total = struct.unpack_from("<4sII", data)
+              assert magic == b"glTF" and version == 2 and total == len(data)
+              print(f"Validated {prefix} glTF 2.0 binary: {len(data)} bytes")
           PY
 
       - name: Upload visual QC and editable Blender geometry
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: town-t1-blender-geometry-${{ github.sha }}
+          name: town-t1-t2-blender-geometry-${{ github.sha }}
           path: |
-            artifacts/town-t1/blender.log
-            src/Wyrmforge.Presentation.Web/wwwroot/art/town/geometry/t1-central-square-preview.blend
-            src/Wyrmforge.Presentation.Web/wwwroot/art/town/geometry/t1-central-square-preview.glb
-            src/Wyrmforge.Presentation.Web/wwwroot/art/town/geometry/t1-central-square-preview.png
+            artifacts/town-t1-t2
+            src/Wyrmforge.Presentation.Web/wwwroot/art/town/geometry/*.blend
+            src/Wyrmforge.Presentation.Web/wwwroot/art/town/geometry/*.glb
+            src/Wyrmforge.Presentation.Web/wwwroot/art/town/geometry/*.png
           if-no-files-found: warn
           retention-days: 14
