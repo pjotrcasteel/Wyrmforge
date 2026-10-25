@@ -23,7 +23,7 @@ const path=require('node:path');
                 if(response.url().includes('/hollow-rigged/review/')&&!response.ok())
                     failedResponses.push({status:response.status(),url:response.url()});
             });
-            await page.goto(base+'/enemy-lab?kind=Hollow&seed=42&autoplay=true&cast=false&hollowLegReview=dragged',
+            await page.goto(base+'/enemy-lab?kind=Hollow&seed=42&autoplay=true&cast=false&hollowLegReview=even',
                 {waitUntil:'domcontentloaded'});
             await page.locator('.enemy-lab canvas').waitFor({state:'visible',timeout:60000});
             await page.locator('#wyrmforge-ignition').waitFor({state:'hidden',timeout:60000});
@@ -33,7 +33,7 @@ const path=require('node:path');
             await page.waitForFunction(()=>{
                 const canvas=document.querySelector('.enemy-lab canvas');
                 const result=globalThis.__hollowArenaPreview?.readArenaDiagnostics(canvas);
-                return result?.hollow?.legReview?.ready&&result.hollow.entities.some(e=>e.legPreview&&!e.layered&&e.frame>0)
+                return result?.hollow?.legReview?.ready&&result.hollow.legReview.mode==='even'&&result.hollow.entities.some(e=>e.legPreview&&!e.layered&&e.frame>0)
                     &&!result.renderingFailed;
             },null,{timeout:60000});
             const frames=[],canvas=page.locator('.enemy-lab canvas');
