@@ -29,6 +29,9 @@ class TrampledEarthArtTests(unittest.TestCase):
             self.assertFalse(result["runtimeUse"])
             self.assertFalse(result["rendererIntegration"])
             self.assertEqual(len(list(output.glob("*.png"))), 12)
+            self.assertTrue((output / result["semanticRoleReview"]).is_file())
+            self.assertEqual(len({v["reviewIntent"] for v in result["variants"]}), 6)
+            self.assertTrue(all(v["visualRoleVerified"] is False for v in result["variants"]))
             self.assertTrue((output / "trampled-earth-art-candidates.json").is_file())
 
 
