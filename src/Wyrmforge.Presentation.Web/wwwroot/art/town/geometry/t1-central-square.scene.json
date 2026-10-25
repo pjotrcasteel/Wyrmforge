@@ -1,0 +1,472 @@
+{
+  "version": 1,
+  "description": "Nonproduction T1/T2 geometry scene (well, noticeboard, lantern, World Gate and foliage); geometry preview, not approved Town replacement",
+  "worldAxes": {
+    "east": "+x",
+    "north": "+y",
+    "up": "+z",
+    "units": "m"
+  },
+  "calibration": {
+    "originLegacy": [
+      836,
+      536
+    ],
+    "pixelsPerMetre": 64,
+    "approval": "provisional"
+  },
+  "nodes": [
+    {
+      "id": "town.center",
+      "parentId": null,
+      "roles": [
+        "anchor"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "id": "town.center.paving",
+      "parentId": "town.center",
+      "roles": [
+        "visual",
+        "collider"
+      ],
+      "tags": [
+        "terrain",
+        "navigation"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t1-central-square-preview.obj#town.center.paving",
+      "materialId": "stone_paving"
+    },
+    {
+      "id": "town.center.well",
+      "parentId": "town.center",
+      "roles": [
+        "visual",
+        "collider",
+        "occluder"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t1-central-square-preview.obj#town.center.well",
+      "materialId": "stone_well"
+    },
+    {
+      "id": "town.center.well-supports",
+      "parentId": "town.center.well",
+      "roles": [
+        "visual",
+        "collider",
+        "occluder"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t1-central-square-preview.obj#town.center.well-supports",
+      "materialId": "timber"
+    },
+    {
+      "id": "town.center.well-canopy",
+      "parentId": "town.center.well",
+      "roles": [
+        "visual",
+        "occluder"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t1-central-square-preview.obj#town.center.well-canopy",
+      "materialId": "slate_roof"
+    },
+    {
+      "id": "town.center.noticeboard",
+      "parentId": "town.center",
+      "roles": [
+        "anchor"
+      ],
+      "tags": [
+        "landmark",
+        "interaction"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "id": "town.center.noticeboard-posts",
+      "parentId": "town.center.noticeboard",
+      "roles": [
+        "visual",
+        "collider",
+        "occluder"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t1-central-square-preview.obj#town.center.noticeboard-posts",
+      "materialId": "timber"
+    },
+    {
+      "id": "town.center.noticeboard-panel",
+      "parentId": "town.center.noticeboard",
+      "roles": [
+        "visual",
+        "occluder"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t1-central-square-preview.obj#town.center.noticeboard-panel",
+      "materialId": "board"
+    },
+    {
+      "id": "town.center.lantern-pillar",
+      "parentId": "town.center",
+      "roles": [
+        "visual",
+        "collider",
+        "occluder"
+      ],
+      "tags": [
+        "fixture"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t1-central-square-preview.obj#town.center.lantern-pillar",
+      "materialId": "stone_well"
+    },
+    {
+      "id": "town.center.lantern-fixture",
+      "parentId": "town.center",
+      "roles": [
+        "visual",
+        "emitter"
+      ],
+      "tags": [
+        "fixture"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t1-central-square-preview.obj#town.center.lantern-fixture",
+      "materialId": "lantern"
+    },
+    {
+      "id": "town.center.world-gate",
+      "parentId": "town.center",
+      "roles": [
+        "anchor"
+      ],
+      "tags": [
+        "entrance",
+        "navigation"
+      ],
+      "transform": {
+        "position": [
+          0,
+          2.90625,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "id": "town.center.gate-stairs",
+      "parentId": "town.center",
+      "roles": [
+        "visual",
+        "collider"
+      ],
+      "tags": [
+        "terrain",
+        "navigation"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t1-central-square-preview.obj#town.center.gate-stairs",
+      "materialId": "stone_paving"
+    },
+    {
+      "id": "town.center.world-gate-masonry",
+      "parentId": "town.center",
+      "roles": [
+        "visual",
+        "collider",
+        "occluder"
+      ],
+      "tags": [
+        "landmark",
+        "entrance"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t1-central-square-preview.obj#town.center.world-gate-masonry",
+      "materialId": "gate_stone"
+    },
+    {
+      "id": "town.center.foliage-trunks",
+      "parentId": "town.center",
+      "roles": [
+        "visual",
+        "collider",
+        "occluder"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t1-central-square-preview.obj#town.center.foliage-trunks",
+      "materialId": "timber"
+    },
+    {
+      "id": "town.center.foliage-crowns",
+      "parentId": "town.center",
+      "roles": [
+        "visual",
+        "occluder"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t1-central-square-preview.obj#town.center.foliage-crowns",
+      "materialId": "foliage"
+    }
+  ]
+}
