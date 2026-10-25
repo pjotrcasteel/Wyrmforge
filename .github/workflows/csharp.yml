@@ -24,10 +24,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: '10.0.x'
+      - name: Use preinstalled .NET 10 SDK
+        run: |
+          dotnet --list-sdks
+          dotnet --list-sdks | grep -Eq '^10\.0\.' || { echo "::error::Runner does not have the .NET 10 SDK"; exit 1; }
+          dotnet --version
 
       - name: Restore
         run: dotnet restore Wyrmforge.slnx
