@@ -15,6 +15,8 @@ on:
       - 'tools/art/build_grass_moss_compatible_bank.py'
       - 'tools/art/build_wet_mud_art_candidates.py'
       - 'tools/art/build_trampled_earth_art_candidates.py'
+      - 'tools/art/build_old_paving_art_candidates.py'
+      - 'tools/art/tests/test_old_paving_art_candidates.py'
       - 'tools/art/tests/test_trampled_earth_art_candidates.py'
       - 'tools/art/tests/test_ground_material_probe.py'
       - 'tools/art/tests/test_ground_quilt_study.py'
@@ -77,7 +79,9 @@ jobs:
         run: python tools/art/build_wet_mud_art_candidates.py --output "$RUNNER_TEMP/ground-material-probes/wet-mud-art-candidates"
       - name: Author six Trampled Earth variants and six compatible Trampled Earth art candidates
         run: python tools/art/build_trampled_earth_art_candidates.py --output "$RUNNER_TEMP/ground-material-probes/trampled-earth-art-candidates"
-      - name: Upload Grass/Moss, Wet Mud, Trampled Earth and original source-art evidence
+      - name: Export six Old Paving historic-site art trials and six compatible review tiles
+        run: python tools/art/build_old_paving_art_candidates.py --output "$RUNNER_TEMP/ground-material-probes/old-paving-art-candidates"
+      - name: Upload all unapproved Wet Forest ground art evidence
         uses: actions/upload-artifact@v4
         with:
           name: wet-forest-grass-mud-repeat-studies

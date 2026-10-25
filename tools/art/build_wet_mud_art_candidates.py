@@ -39,7 +39,7 @@ def create(
     if (side < 96 or side > 2048 or source_px < patch_size or border < 8
         or border > side // 8):
         raise ValueError("Invalid artwork dimension/edge-band configuration")
-    if family not in ("wet-mud", "trampled-earth"):
+    if family not in ("wet-mud", "trampled-earth", "old-paving"):
         raise ValueError("Unsupported source-art family")
     sources = load_family(source_root, family, source_px=source_px)
     if len(sources) != 6:
@@ -52,12 +52,12 @@ def create(
             sources, seed=seed, width=side, patch_size=patch_size,
             overlap=overlap, candidates=candidates,
             diversity_strength=.15 if family == "wet-mud" else .06,
-            preferred_source=number - 1 if family == "trampled-earth" else None,
-            preference_weight=.75 if family == "trampled-earth" else 0.0,
+            preferred_source=number - 1 if family in ("trampled-earth", "old-paving") else None,
+            preference_weight=.75 if family in ("trampled-earth", "old-paving") else 0.0,
         )
         if family == "wet-mud" and set(choices) != set(range(6)):
             raise AssertionError("Wet Mud trials must consume all six source artworks")
-        if family == "trampled-earth" and number - 1 not in choices:
+        if family in ("trampled-earth", "old-paving") and number - 1 not in choices:
             raise AssertionError("Trampled Earth candidate must use its designated original painting")
         finished = periodic_component(raw)
         metrics = seam_metrics(finished)
@@ -68,9 +68,9 @@ def create(
         independent.append(finished)
         records.append({
             "candidate": number, "seed": seed, "size": [side, side],
-            "reviewIntent": TRAMPLED_REVIEW_ROLES[number - 1] if family == "trampled-earth" else "wet-mud-variation",
+            "reviewIntent": TRAMPLED_REVIEW_ROLES[number - 1] if family == "trampled-earth" else ("historic-stone-study" if family == "old-paving" else "wet-mud-variation"),
             "visualRoleVerified": False,
-            "dominantSourceIntent": number if family == "trampled-earth" else None,
+            "dominantSourceIntent": number if family in ("trampled-earth", "old-paving") else None,
             "sourceUsage": {f"{j + 1:02d}": choices.count(j) for j in range(6)},
             "independentSeam": metrics,
             "approved": False,
