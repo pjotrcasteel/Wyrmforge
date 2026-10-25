@@ -99,7 +99,7 @@ def create(
 
     repeated = f"{family}-six-independent-2x2-UNAPPROVED.jpg"
     mixed = f"{family}-six-variants-3x3-UNAPPROVED.jpg"
-    build_preview([Image.fromarray(art) for art in independent]).save(output / repeated, quality=91)
+    build_preview([Image.fromarray(art) for art in independent], family_label=family.replace("-", " ").title()).save(output / repeated, quality=91)
     bank_contact(compatible).save(output / mixed, quality=91, subsampling=0)
     role_review = None
     if family == "trampled-earth":

@@ -87,7 +87,7 @@ def repeat2(image: Image.Image) -> Image.Image:
     return result
 
 
-def build_preview(tiles: list[Image.Image]) -> Image.Image:
+def build_preview(tiles: list[Image.Image], family_label: str = "Grass/Moss") -> Image.Image:
     if len(tiles) != 6:
         raise ValueError("Six candidates required for comparison")
     board = Image.new("RGB", (1410, 950), "#151719")
@@ -96,7 +96,7 @@ def build_preview(tiles: list[Image.Image]) -> Image.Image:
         x, y = n % 3 * 470, n // 3 * 475
         preview = repeat2(tile).resize((450, 450), Image.Resampling.BOX)
         board.paste(preview, (x + 8, y + 23))
-        pencil.text((x + 8, y + 5), f"Grass/Moss candidate {n+1:02d} | 2x2 repeat", fill="#ede8d9")
+        pencil.text((x + 8, y + 5), f"{family_label} candidate {n+1:02d} | 2x2 repeat", fill="#ede8d9")
     return board
 
 

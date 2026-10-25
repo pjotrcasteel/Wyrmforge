@@ -19,6 +19,8 @@ class OldPavingArtTests(unittest.TestCase):
             self.assertEqual(report["family"], "old-paving")
             self.assertEqual(len(list(output.glob("*.png"))), 12)
             self.assertEqual(report["compatibleEdgeMeanRgbGap"], 0)
+            self.assertTrue((output / report["independentReview"]).is_file())
+            self.assertTrue((output / report["mixedVariantReview"]).is_file())
             self.assertFalse(report["runtimeUse"])
             self.assertFalse(report["rendererIntegration"])
             self.assertEqual([x["dominantSourceIntent"] for x in report["variants"]], list(range(1, 7)))
