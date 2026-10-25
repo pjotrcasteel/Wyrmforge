@@ -109,6 +109,16 @@ public sealed class GpuLightingFrameProjectionTests
         CollectionAssert.AreEqual(new[] { "gate", "new" }, ids);
     }
 
+    [TestMethod]
+    public void Registry_ReplaceOwner_InvalidReplacement_DoesNotLoseExistingLights()
+    {
+        var registry = new LightingEmitterRegistry();
+        registry.Upsert(new LightingEmitter("old", "wizard", "point", 0, 0, 1, "#ffffff", 1, 3));
+        var invalid = new LightingEmitter("bad", "wizard", "point", 0, 0, 1, "invalid", 1, 3);
+        Assert.ThrowsExactly<ArgumentException>(() => registry.ReplaceOwner("wizard", [invalid]));
+        Assert.AreEqual("old", registry.Capture("hunt", 1, Environment).Emitters.Single().Id);
+    }
+
     private static LightingSnapshot CreateSnapshot(long tick, params LightingEmitter[] lights) =>
         new(LightingSnapshot.CurrentSchemaVersion, tick, "test", Environment, lights);
 }
