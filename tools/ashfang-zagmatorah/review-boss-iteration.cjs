@@ -5,6 +5,7 @@ const out='art/source/bosses/ashfang/reviews/runtime-002/browser';fs.mkdirSync(o
  const browser=await chromium.launch({channel:'msedge',headless:true});
  try{
   const page=await browser.newPage({viewport:{width:402,height:874},deviceScaleFactor:2});const errors=[];
+  page.on('response',r=>{if(r.status()>=400)console.log('HTTP_ERROR',r.status(),r.url());});
   page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error'){console.log('PAGE_ERROR',m.text());if(m.text().includes('arena drawing failed'))errors.push(m.text());}});page.on('requestfailed',r=>{if(r.url().includes('/ashfang/'))console.log('ASSET_FAILED',r.url(),r.failure());});
   await page.goto('http://127.0.0.1:8880/hunt-lab?wyrm=Ashfang&ascendant=false&play=true&cast=true&invulnerable=true');
   await page.evaluate(async()=>{

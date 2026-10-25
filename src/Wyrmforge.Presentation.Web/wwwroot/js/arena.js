@@ -247,10 +247,6 @@ function draw(state, snapshot, width, height) {
     drawRecoveryGuide(ctx, snapshot, camera, width, height, visualSeconds, state.reducedMotion.matches);
 
     drawAshfangGroundEffects(ctx,snapshot,state.reducedMotion.matches);
-    for (const hazard of snapshot.huntHazards ?? []) {
-        if(Number(snapshot.dragon?.school)===1)drawAshfangWarning(ctx,hazard,state.reducedMotion.matches);
-        else drawHuntHazard(ctx,hazard);
-    }
     for (const remains of snapshot.ashRemains ?? []) drawAshRemains(ctx, remains);
     for (const ripple of snapshot.wraithRipples ?? []) drawWraithRipple(ctx, ripple, visualSeconds);
     for (const patch of snapshot.blackIce ?? []) drawBlackIce(ctx, patch, state.reducedMotion.matches ? 0 : visualSeconds);
@@ -263,14 +259,12 @@ function draw(state, snapshot, width, height) {
     for (const enemy of snapshot.enemies) {
         drawEliteGround(ctx, enemy, visualSeconds, state.reducedMotion.matches);
         drawShieldGuard(ctx, enemy);
-        drawEnemyTelegraph(ctx, enemy);
     }
     for (const ember of snapshot.hostileProjectiles ?? []) drawHostileProjectileGround(ctx, ember);
     for (const bloom of snapshot.splinterBlooms ?? []) drawSplinterBloom(ctx, bloom);
     for (const wave of snapshot.avalancheRings ?? []) drawAvalancheWave(ctx, wave);
     drawPlayerChill(ctx, snapshot.player, state.reducedMotion.matches ? 0 : visualSeconds);
     for (const shard of snapshot.experienceShards ?? []) drawExperienceShard(ctx, shard);
-    if (snapshot.dragonBreath) drawDragonBreath(ctx, snapshot.dragonBreath, snapshot.dragon?.school ?? snapshot.hunt?.school, snapshot.dragon);
     for (const pulse of snapshot.splashPulses) drawSplashPulse(ctx, pulse, snapshot.dragon?.school);
     drawAimRune(ctx, snapshot.player);
     drawWardReadiness(ctx, snapshot.player, visualSeconds, state.reducedMotion.matches);
@@ -342,9 +336,13 @@ function draw(state, snapshot, width, height) {
     drawGothicNight(ctx, gothicNightPlan(snapshot.player, nightSources, lightViewport), state.nightMask);
     // Tactical telegraphs must remain readable even when the ground is nearly
     // black. They are presentation cues, not physical light emitters.
+    for (const hazard of snapshot.huntHazards ?? []) {
+        if(Number(snapshot.dragon?.school)===1)drawAshfangWarning(ctx,hazard,state.reducedMotion.matches);
+        else drawHuntHazard(ctx,hazard);
+    }
     for (const enemy of snapshot.enemies) drawEnemyTelegraph(ctx, enemy);
     if (snapshot.dragonBreath) drawDragonBreath(ctx, snapshot.dragonBreath,
-        snapshot.dragon?.school ?? snapshot.hunt?.school);
+        snapshot.dragon?.school ?? snapshot.hunt?.school, snapshot.dragon);
     // A second weaker pass colors nearby silhouettes without whitening shadows.
     drawAshfangAirEffects(ctx,snapshot,ashfangSockets(state.ashfang),state.reducedMotion.matches);
     drawSpellLightSpill(ctx, spellLights, lightViewport, 'actors');
