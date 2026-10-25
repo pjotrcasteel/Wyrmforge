@@ -25,7 +25,7 @@ remain preserved. The table below retains its earlier checkpoint's counts.
 | Gate | Status / next acceptance |
 | --- | --- |
 | G0 | Inventory and shared contracts implemented; audit expands before any production cutover. |
-| G1 — current | Mechanisms verified for actor illumination, source lifecycle, leaf-on-leaf/cutout shadows, water direct specular and zero-light. Town school/mastery/vacancy and roof blocking now pass GPU comparisons. Whole-pixel pans, deterministic pose/light replay and resize restoration now pass. Next: Gothic-night readability/telegraph acceptance, fractional/realtime motion review, remaining representative occlusion comparisons and visual acceptance. |
+| G1 — isolated proof accepted | Renderer and automated GPU acceptance passed on `bacf6c7`; owner accepted current Gothic-night visuals for now. Production adoption and final gameplay telegraph parity remain G5. |
 | G2 | Authoritative C# scene bridge pending; do not connect gameplay before G1 acceptance. |
 | G3 | Advanced reflection/indirect/transmission tiers pending; direct specular is not reflected scenery. |
 | G4 | Physical iOS/Android profiling, scale and quality tiers pending. Browser phone viewports are not device evidence. |
@@ -50,13 +50,47 @@ are covered. Screenshots were inspected; numeric changes alone do not establish
 artistic quality. Tests use an RGB difference >3 for changed-pixel counts;
 zero-light checks require every RGB channel to equal zero exactly.
 
-**G1 remains incomplete:** final Gothic-night readability/palette and complete
-artistic acceptance, fractional/realtime motion and broader Town foreground parity, actor
-volumetric/depth representation and broader clip binding, and real iOS/Android
-budgets are not established. Original color atlases remain baked source artwork;
+**G1 isolated proof is accepted for now:** production Gothic-night palette tuning,
+full gameplay telegraph and Town foreground parity, actor volumetric/depth representation
+and broader clip binding, and real iOS/Android budgets remain future-milestone work. Original color atlases remain baked source artwork;
 neutral inspection lighting is not a hidden gameplay brightness correction.
 Water is direct specular only. Town is diagnostic geometry. No production world
 path is migrated, and PR #332 remains draft.
+
+## G1 acceptance checkpoint — 25 October 2026
+
+**G1 isolated universal GPU proof accepted for now by the owner.** The owner reviewed the actual
+390px Gothic-night actor/oak/Town/water contact sheet and explicitly accepted the current darkness,
+with brightness/material/shadow fine-tuning deferred to a developer Lighting Control Center **after G5**.
+This is an acceptance of the **G1 proof's present visual direction**, not a claim that foliage/water
+legibility is optimal or that production Town/Hunts are migrated.
+
+**Verified PR #332 head:** `bacf6c71ea6059bc37661d87248f69c36d1f930f`.
+All four GitHub Actions workflows succeeded:
+
+| Gate | Run | Result |
+| --- | --- | --- |
+| Shared GPU lighting proof (320px/390px browser tests) | [40173733194](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40173733194) | Passed |
+| Browser smoke | [40173733183](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40173733183) | Passed |
+| Validate Wyrmforge | [40173733163](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40173733163) | Passed |
+| Arcane WebKit compatibility | [40173733165](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40173733165) | Passed |
+
+The GPU proof workflow preserves its 320/390px mobile-viewport PNGs and JSON under
+`shared-gpu-lighting-mobile-*` (GitHub Actions artifact). Automated comparisons cover
+zero-light black, lit day/night restoration, actual cutout/leaf/roof shadows, actor normals,
+water specular, fractional camera pan, pose/light replay and realtime animation scheduling.
+The owner accepted the reviewed 390px night contact sheet; the 320px screenshots are
+automated evidence, **not a separately documented owner visual signoff**.
+
+**Scope boundary:** G1 is a finished **isolated renderer proof** only. `productionPathsMigrated: 0`
+remains true. G2 owns authoritative C# snapshots; G3 advanced reflection; G4 real-device
+performance; G5 production adoption and full Town art decomposition. Physical iOS/Android
+performance, full attack/death pose passes, and final production combat telegraph parity are
+**not G1-verified**. Do not relabel those future gates as complete.
+
+**Deferred post-G5 tuning:** implement one developer-only Lighting Control Center consuming
+data-driven environment/light/material/shadow profiles with live adjustments, preset persistence
+and export. No new UI or sliders are required for G1.
 
 ## Source reconciliation
 
