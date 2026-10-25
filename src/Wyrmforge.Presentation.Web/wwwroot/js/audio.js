@@ -17,6 +17,7 @@
     const burningGroundVoices = new Map();
     const burningGroundPending = new Set();
     const burningGroundGenerations = new Map();
+    const burningGroundActiveIds = new Set();
 
     function nextFireballTake(key, count) {
         if (count <= 1) return 0;
@@ -347,6 +348,7 @@
     // The simulation owns patch lifetime. Looped original recordings are faded out when
     // the corresponding registered patch expires, rather than playing a fixed 3.9s tail.
     function stopBurningGround(id) {
+        burningGroundActiveIds.delete(id);
         burningGroundGenerations.set(id, (burningGroundGenerations.get(id) ?? 0) + 1);
         burningGroundPending.delete(id);
         const voice = burningGroundVoices.get(id);
@@ -365,6 +367,7 @@
                 stopBurningGround(id);
                 continue;
             }
+            burningGroundActiveIds.add(id);
             // Retry on update if the initial start arrived before the manifest or audio unlock.
             if ((type !== 'start' && type !== 'update') || burningGroundVoices.has(id) || burningGroundPending.has(id)) continue;
             if (!recordedManifest || !unlocked || !context || context.state === 'closed') continue;
@@ -379,7 +382,7 @@
             const generation = (burningGroundGenerations.get(id) ?? 0) + 1;
             burningGroundGenerations.set(id, generation);
             void loadRecordedBuffer(entry).then(buffer => {
-                if (burningGroundGenerations.get(id) !== generation || !burningGroundPending.has(id) || !enabled || document.hidden || !context || context.state === 'closed') return;
+                if (burningGroundGenerations.get(id) !== generation || !burningGroundActiveIds.has(id) || !burningGroundPending.has(id) || !enabled || document.hidden || !context || context.state === 'closed') return;
                 const source = context.createBufferSource();
                 const gain = context.createGain();
                 source.buffer = buffer;
@@ -409,7 +412,7 @@
     }
 
     function stopAllBurningGround() {
-        for (const id of new Set([...burningGroundVoices.keys(), ...burningGroundPending])) stopBurningGround(id);
+        for (const id of new Set([...burningGroundActiveIds, ...burningGroundVoices.keys(), ...burningGroundPending])) stopBurningGround(id);
     }
 
     function playSpellImpact(school, preview = false, sound = design.palette.impact) {
