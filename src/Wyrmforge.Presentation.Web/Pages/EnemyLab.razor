@@ -41,6 +41,13 @@
         <label><input type="checkbox" @bind="agentFoundation" @bind:after="Restart" /> AI0 foundation (Hollow / Mire Hound)</label>
         <button @onclick="Restart">Reload monster</button><button @onclick="TogglePause">@(paused ? "Resume" : "Pause")</button><a href="combat-lab">Combat lab</a><a href="hunt-lab">Wyrm lab</a><a href="arena-lab">Arena lab</a>
     </section>
+    @if (startupError is not null)
+    {
+        <section class="note" role="alert">
+            <p>The encounter could not start: @startupError</p>
+            <button @onclick="RetryStartup">Retry encounter startup</button>
+        </section>
+    }
     <section class="enemy-lab-surface"><canvas @ref="canvas" aria-label="Live enemy encounter"></canvas>
         <div class="status">@kind • @(paused ? "PAUSED" : autoplay ? "AGENT" : "MANUAL") • @(kind == EnemyKind.MireHound && mireStyle == "pixel" ? "PIXEL ART PREVIEW" : "PUBLISHED ART") • INVULNERABLE • NO PROGRESS</div>
     </section>
@@ -82,6 +89,7 @@
     private string mireStyle = "painted";
     private bool paused;
     private double simulationSeconds;
+    private string? startupError;
 
     protected override void OnParametersSet()
     {
@@ -96,9 +104,30 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
-        module = await JavaScript.InvokeAsync<IJSObjectReference>("import", "./js/arena.js");
-        reference = DotNetObjectReference.Create(this);
-        await module.InvokeVoidAsync("initializeArena", canvas, reference);
+        await StartArena();
+    }
+    private async Task StartArena(bool retry = false)
+    {
+        try
+        {
+            // Browsers cache rejected module imports. An explicit retry uses a fresh URL;
+            // successful initialization still disposes the previous canvas session.
+            module ??= await JavaScript.InvokeAsync<IJSObjectReference>("import",
+                retry ? $"./js/arena.js?retry={Guid.NewGuid():N}" : "./js/arena.js");
+            reference ??= DotNetObjectReference.Create(this);
+            await module.InvokeVoidAsync("initializeArena", canvas, reference);
+            startupError = null;
+        }
+        catch (JSException)
+        {
+            startupError = "The arena renderer could not load. Retry, or reload the page if the local server was restarting.";
+        }
+        StateHasChanged();
+    }
+    private async Task RetryStartup()
+    {
+        Restart();
+        await StartArena(retry: true);
     }
     [JSInvokable]
     public Task<RunRenderSnapshot> Frame(double delta, double width, double height, double movementX, double movementY, double aimX = 0, double aimY = 0)

@@ -10,6 +10,20 @@ namespace Wyrmforge.Browser.Tests;
 public sealed class AgentFoundationBrowserTests : PageTest
 {
     [TestMethod]
+    public async Task FailedArenaImport_ShowsErrorAndCanRetryWithoutReloading()
+    {
+        var baseUrl = Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/";
+        await Page.RouteAsync("**/js/arena.js", route => route.AbortAsync());
+        await Page.GotoAsync(baseUrl.TrimEnd('/') + "/enemy-lab?kind=MireHound&ai0=true&autoplay=false&cast=false");
+        await Expect(Page.GetByRole(AriaRole.Alert)).ToContainTextAsync("arena renderer could not load");
+        await Page.UnrouteAsync("**/js/arena.js");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Retry encounter startup" }).ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Alert)).ToHaveCountAsync(0);
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Refresh AI inspector" }).ClickAsync();
+        await Expect(Page.GetByTestId("agent-inspector")).ToContainTextAsync("hound-cycle");
+    }
+
+    [TestMethod]
     [DataRow("Hollow", "chase")]
     [DataRow("MireHound", "hound-cycle")]
     public async Task RealEnemyLab_ExposesBoundedReadOnlyInspector_AndFallback(string kind, string action)
