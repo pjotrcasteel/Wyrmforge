@@ -406,7 +406,14 @@
                     source.disconnect();
                     gain.disconnect();
                 };
-                source.start(at);
+                try {
+                    source.start(at);
+                } catch (error) {
+                    if (burningGroundVoices.get(id)?.source === source) burningGroundVoices.delete(id);
+                    source.disconnect();
+                    gain.disconnect();
+                    throw error;
+                }
             }).catch(error => console.warn('Burning ground recording unavailable:', error))
                 .finally(() => {
                     if (burningGroundGenerations.get(id) === generation) burningGroundPending.delete(id);
