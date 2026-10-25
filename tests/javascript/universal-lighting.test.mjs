@@ -109,3 +109,16 @@ test('presentation loop stops, resumes visibility without catch-up and disposes 
     loop.setActive(true); advance(20000); assert.equal(deltas.at(-1), 0);
     loop.dispose(); loop.setActive(true); loop.setVisible(true); assert.equal(queued.size, 0);
 });
+
+test('G4 bounded production selector matches full-sort reference for crowded scenes', () => {
+    const lights = Array.from({ length: 300 }, (_, i) => emitter(String(i).padStart(3, '0'), {
+        priority: i % 19, enabled: i % 11 !== 0, expiresAt: i % 13 === 0 ? 3 : undefined,
+        type: i % 5 === 0 ? 'spot' : 'point'
+    }));
+    const expected = lights.filter(l => l.enabled && l.intensity > 0 &&
+        (l.expiresAt === undefined || l.expiresAt > 3))
+        .sort((a, b) => b.priority - a.priority || a.id.localeCompare(b.id))
+        .slice(0, 8).map(l => l.id);
+    assert.deepEqual(selectLights(snapshot(lights), 8, 8).map(l => l.id), expected);
+    assert.deepEqual(selectLights(snapshot(lights), 8, 0), []);
+});
