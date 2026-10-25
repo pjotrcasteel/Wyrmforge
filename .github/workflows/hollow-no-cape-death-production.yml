@@ -52,6 +52,10 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -f "$atlas/death.png" "$atlas/manifest.json" "$reviews/death-contact-sheet.png" "$reviews/death-south-review.gif" "$editable/hollow-death.blend"
           git commit -m "art(hollowed): generate 3D no-cape death source, atlas, and QC evidence [skip ci]"
+          # Other art/renderer commits may land while Blender is rendering.
+          # Replay this artifact-only commit on the newest branch head; never force push.
+          git fetch origin art/hollow-no-cape-death-3d-production
+          git rebase origin/art/hollow-no-cape-death-3d-production
           git push origin "HEAD:refs/heads/art/hollow-no-cape-death-3d-production"
       - uses: actions/upload-artifact@v4
         if: always()
