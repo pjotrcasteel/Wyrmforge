@@ -189,6 +189,20 @@ def build(root: Path, annotation_file: Path, output: Path, preview_size: int = 4
         panel.paste(source_thumb, ((preview_size - source_thumb.width) // 2, 42))
         panel.paste(motif_thumb, (preview_size + (preview_size - motif_thumb.width) // 2, 42))
         composition_panels.append(panel)
+        # Source-faithful art-direction study: show a complete painted
+        # environment beside a larger isolated motif, never a seamless tile.
+        showcase = Image.new("RGB", (preview_size * 3, preview_size + 68), "#17191b")
+        draw = ImageDraw.Draw(showcase)
+        draw.text((12, 12), f"{name} | SOURCE-PAINTED FEATURE STUDY | UNAPPROVED", fill="#f0e8dc")
+        draw.text((12, 35), "Full source painting", fill="#c4c9c0")
+        draw.text((preview_size + 12, 35), "Hand-annotated motif", fill="#c4c9c0")
+        draw.text((preview_size * 2 + 12, 35), "Original RGB crop", fill="#c4c9c0")
+        showcase.paste(source_thumb, ((preview_size - source_thumb.width) // 2, 65))
+        showcase.paste(motif_thumb, (preview_size + (preview_size - motif_thumb.width) // 2, 65))
+        crop_thumb = ImageOps.contain(crop, (preview_size - 20, preview_size - 20), Image.Resampling.LANCZOS)
+        showcase.paste(crop_thumb, (preview_size * 2 + (preview_size - crop_thumb.width) // 2, 65))
+        showcase_name = f"{name}-PAINTED-FEATURE-ART-DIRECTION-UNAPPROVED.jpg"
+        showcase.save(output / showcase_name, quality=93, subsampling=0)
         # Pixel-exact crop comparison prevents accidental paint recoloring.
         with Image.open(output / crop_name) as saved:
             if saved.convert("RGB").tobytes() != crop.tobytes():
@@ -203,6 +217,7 @@ def build(root: Path, annotation_file: Path, output: Path, preview_size: int = 4
             "previewFile": preview_name,
             "sourceRgbCropFile": crop_name,
             "annotatedIsolationPreviewFile": isolated_name,
+            "paintedFeatureArtDirectionReview": showcase_name,
             "annotatedIsolationPreviewIsRuntimeAsset": False,
             "sourceRgbCropBounds": [left, top, right, bottom],
             "sourceRgbCropSha256": hashlib.sha256((output / crop_name).read_bytes()).hexdigest(),
