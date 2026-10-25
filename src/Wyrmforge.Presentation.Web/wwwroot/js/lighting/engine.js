@@ -52,6 +52,11 @@ export class LightingEngine {
             alphaTest: descriptor.alphaCutoff, side: descriptor.doubleSided ? T.DoubleSide : T.FrontSide,
         });
         if (descriptor.normalScale !== undefined) material.normalScale.setScalar(descriptor.normalScale);
+        // Generic thin-surface transmission; never registers a light source.
+        if (descriptor.foliageTransmission > 0) {
+            material.transmission = descriptor.foliageTransmission;
+            material.thickness = 0;
+        }
         material.shadowSide = descriptor.doubleSided ? T.DoubleSide : T.FrontSide;
         for (const map of [material.map, material.normalMap, material.roughnessMap, material.aoMap, material.emissiveMap]) if (map) map.needsUpdate = true;
         return material;
