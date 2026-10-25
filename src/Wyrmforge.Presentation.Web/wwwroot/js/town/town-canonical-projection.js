@@ -58,7 +58,18 @@ export function createTownProjection(T,basis) {
   const columns=FRAME.columns,rows=FRAME.rows;
   let min=Infinity,max=-Infinity;
   for(let j=0;j<=rows;j++)for(let i=0;i<=columns;i++){
-    const x=i/columns*FRAME.width,y=j/rows*FRAME.height,d=townPaintedDepth(x,y);
+    const x=i/columns*FRAME.width,y=j/rows*FRAME.height;
+    const painted=townPaintedDepth(x,y);
+    // Unlike a flat billboard, cobblestone paving is a real world-Z=0
+    // ground plane. Blend physically grounded paving into the authored
+    // architectural depth relief, avoiding a rectangle of floating stones.
+    const pixelX=(x-originX)*scale,pixelY=(originY-y)*scale;
+    if(Math.abs(toward.z)<.001)throw new RangeError('Town camera cannot resolve ground-plane depth');
+    const groundDepth=-(right.z*pixelX+up.z*pixelY)/toward.z;
+    const leftBuilding=rect(x,y,0,300,475,820,38)*(1-smooth(475,600,x));
+    const rightBuilding=rect(x,y,1250,280,1672,820,38)*smooth(1050,1250,x);
+    const groundWeight=smooth(250,620,y)*(1-.96*leftBuilding)*(1-.96*rightBuilding);
+    const d=painted*(1-groundWeight)+groundDepth*groundWeight;
     min=Math.min(d,min);max=Math.max(d,max);
     position.push(...point(x,y,d).toArray());uv.push(x/FRAME.width,1-y/FRAME.height);
   }
@@ -90,6 +101,6 @@ export function createTownProjection(T,basis) {
     return {id:'town.canonical.'+mask.id,geometry,thickness:mask.thickness,depth:mask.depth};
   });
   return {base,volumes,stats:Object.freeze({sourcePixels:[FRAME.width,FRAME.height],
-    vertices:position.length/3,triangles:index.length/3,depthMin:min,depthMax:max,
+    vertices:position.length/3,triangles:index.length/3,depthMin:min,depthMax:max,groundPlane:'world-z-zero',
     volumeCount:volumes.length,nonPlanar:true})};
 }
