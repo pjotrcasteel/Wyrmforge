@@ -365,8 +365,9 @@
             lastCue.set(name, now);
             return true;
         }
-        const castIndex = name === 'fire'
-            ? nextFireballTake('fire-cast', recordedManifest?.cues?.fire?.variants?.length ?? 1)
+        const isOriginalFireball = name === 'fire' || name === 'fire-flight' || name === 'fire-burning';
+        const castIndex = isOriginalFireball
+            ? nextFireballTake(name === 'fire' ? 'fire-cast' : name, recordedManifest?.cues?.[name]?.variants?.length ?? 1)
             : count;
         const entry = recordedEntry(name, 'cast', castIndex);
         if (!entry) return false;

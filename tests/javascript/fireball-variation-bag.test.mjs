@@ -69,3 +69,16 @@ test('gameplay actually uses the shuffle bag for both Fireball casting and spell
     assert.match(source, /playRecordedEntry\(options\[index\]/);
     assert.match(source, /for \(const take of \[\.\.\.\(fireball\?\.variants/);
 });
+
+
+test('new Fireball flight and burning phases also shuffle their six unique original recordings', () => {
+    const next = createPicker();
+    for (const family of ['fire-flight', 'fire-burning']) {
+        const values = Array.from({ length: 36 }, () => next(family, 6));
+        for (let i = 0; i < values.length; i += 6) {
+            assert.deepEqual(values.slice(i, i + 6).sort(), [0, 1, 2, 3, 4, 5]);
+        }
+        for (let i = 1; i < values.length; i++) assert.notEqual(values[i], values[i - 1]);
+    }
+    assert.match(source, /name === 'fire-flight' \|\| name === 'fire-burning'/);
+});

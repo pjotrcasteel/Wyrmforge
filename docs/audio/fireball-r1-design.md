@@ -14,3 +14,6 @@ Main review: `docs/audio/previews/fireball-r1-six-take-reel.mp3` with all six fu
 A FireBolt projectile spawning now triggers its newly authored hot-wind flight sound directly from the simulation snapshot, not a preview-only fixed timer. Persistent fire is tracked through its own read-only `BurningGroundRenderSnapshot`, with a stable ID assigned only when the existing Rank II+/Scorched Earth logic actually registers burning ground. The sound tracker emits one burning-ground onset per fresh patch ID and never triggers from unrelated essence visuals, repeated frames or pause/resume. No combat damage or duration rule changes.
 
 **Limitation:** the onset of the 3.9-second combustion tail follows the real patch; a future pass must fade/stop it at the precise ground lifetime boundary, especially for duration mutators. The PR remains a draft, and no old recorded source is reused.
+
+
+The user considers all six current recordings acceptable and deliberately cohesive: do not make further cosmetic variations merely to increase perceptible difference. Casts, impacts, flight and ground-fire cues all use separate six-item non-repeating shuffle bags. Accurate in-game playback and remaining placeholder replacement now take priority over additional audio takes.
