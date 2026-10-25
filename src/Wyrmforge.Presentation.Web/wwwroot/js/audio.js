@@ -185,7 +185,9 @@
             return response.arrayBuffer();
         }).then(bytes => context.decodeAudioData(bytes));
         recordedBuffers.set(entry.file, pending);
-        pending.catch(() => recordedBuffers.delete(entry.file));
+        pending.catch(() => {
+            if (recordedBuffers.get(entry.file) === pending) recordedBuffers.delete(entry.file);
+        });
         return pending;
     }
 
@@ -363,7 +365,8 @@
     function syncBurningGround(transitions) {
         for (const transition of transitions ?? []) {
             const { id, type, remainingSeconds } = transition;
-            if (type === 'stop' || remainingSeconds <= 0 || !enabled || document.hidden) {
+            if (!Number.isSafeInteger(id) || id <= 0) continue;
+            if (type === 'stop' || !Number.isFinite(remainingSeconds) || remainingSeconds <= 0 || !enabled || document.hidden) {
                 stopBurningGround(id);
                 continue;
             }
@@ -382,7 +385,7 @@
             const generation = (burningGroundGenerations.get(id) ?? 0) + 1;
             burningGroundGenerations.set(id, generation);
             void loadRecordedBuffer(entry).then(buffer => {
-                if (burningGroundGenerations.get(id) !== generation || !burningGroundActiveIds.has(id) || !burningGroundPending.has(id) || !enabled || document.hidden || !context || context.state === 'closed') return;
+                if (burningGroundGenerations.get(id) !== generation || !burningGroundActiveIds.has(id) || !burningGroundPending.has(id) || !enabled || document.hidden || !context || context.state !== 'running') return;
                 const source = context.createBufferSource();
                 const gain = context.createGain();
                 source.buffer = buffer;
