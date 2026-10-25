@@ -8,9 +8,11 @@ on:
       - 'tools/art/audit_ground_source_art.py'
       - 'tools/art/quilt_ground_material_study.py'
       - 'tools/art/ground_transition_study.py'
+      - 'tools/art/review_ground_semantic_mask.py'
       - 'tools/art/tests/test_ground_material_probe.py'
       - 'tools/art/tests/test_ground_quilt_study.py'
       - 'tools/art/tests/test_ground_transition_study.py'
+      - 'tools/art/tests/test_ground_semantic_mask.py'
       - '.github/workflows/ground-art-candidate-integrity.yml'
   workflow_dispatch:
 permissions:
@@ -45,7 +47,9 @@ jobs:
         run: python tools/art/quilt_ground_material_study.py --output "$RUNNER_TEMP/ground-material-probes"
       - name: Create source-only material transition comparisons at mobile viewport sizes
         run: python tools/art/ground_transition_study.py --output "$RUNNER_TEMP/ground-material-probes"
-      - name: Upload twelve seams, 36-source audit, quilts, and portrait transition studies
+      - name: Generate review-only manually authored wet-mud-01 water regions
+        run: python tools/art/review_ground_semantic_mask.py --output "$RUNNER_TEMP/ground-material-probes"
+      - name: Upload 36-source QA, portraits, and manual puddle annotation review
         uses: actions/upload-artifact@v4
         with:
           name: wet-forest-grass-mud-repeat-studies
