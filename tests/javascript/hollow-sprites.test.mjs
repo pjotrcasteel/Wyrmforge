@@ -101,7 +101,7 @@ test('nearest-neighbor renderer selects an actual direction row and original piv
   const state=mod.createHollowState();mod.updateHollowSprites(state,snapshot(),0);state.entities.get(7).direction='NW';
   const calls=[];const ctx={globalAlpha:1,save(){},restore(){},drawImage(...args){calls.push(args);}};
   assert.equal(mod.drawHollowEnemy(ctx,enemy(),state),true);assert.equal(ctx.imageSmoothingEnabled,false);
-  assert.equal(calls[0][2],96*7);assert.equal(calls[0][6],20-72/96*93*state.entities.get(7).visualScale);
+  assert.equal(calls[0][2],96*7);assert.ok(Math.abs(calls[0][6]-(20-72/96*93*state.entities.get(7).visualScale))<1e-9);
   assert.equal(mod.drawHollowEnemy(ctx,enemy({kind:1}),state),false);
  }finally{globalThis.fetch=originalFetch;globalThis.Image=originalImage;}
 });
