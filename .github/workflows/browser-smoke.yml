@@ -30,9 +30,11 @@ jobs:
           python3 tools/development/verify_web_assets.py
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
+          check-latest: false
+          skip-lts-prepass: true
 
       - name: Verify deep-link preview routing
         run: python3 -m unittest discover -s tools/development -p 'test_*.py'
