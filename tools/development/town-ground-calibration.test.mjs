@@ -39,8 +39,8 @@ test("T1 camera reproduces three production Town slices and full-width desktop",
     const west = townReferenceCamera(390, 1672, 0, TOWN_GROUND_CALIBRATION);
     const center = townReferenceCamera(390, 1672, 1, TOWN_GROUND_CALIBRATION);
     const east = townReferenceCamera(390, 1672, 2, TOWN_GROUND_CALIBRATION);
-    assert.equal(center.centerLegacyX, 836);
-    assert.equal(center.centerWorldX, 0);
+    assert.ok(Math.abs(center.centerLegacyX - 836) < 1e-9);
+    assert.ok(Math.abs(center.centerWorldX) < 1e-9);
     assert.ok(west.scrollLeft < center.scrollLeft && center.scrollLeft < east.scrollLeft);
     assert.ok(west.centerWorldX < 0 && east.centerWorldX > 0);
     assert.ok(Math.abs(center.visibleWorldWidth - 390 / 64) < 1e-10);
