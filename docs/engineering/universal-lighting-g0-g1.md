@@ -163,6 +163,16 @@ membership derives from existing unlocks; school/mastery alters real emitters.
 G5 compares identical camera/state across day/night/zero, interaction and route
 regressions and physical devices. No production Town asset is changed in G0–G1.
 
+## G1 closeout execution checklist — 25 October 2026
+
+This is a live gate record, not a claim of completion. Preserve all prior GPU evidence; do not rerun accepted mechanism comparisons unless code affecting them changes.
+
+1. **Current branch gate:** `cf262570` has passed Shared GPU lighting proof and Arcane WebKit. Validate and Browser smoke were still running at last inspection; check their final conclusions before declaring CI green.
+2. **Night legibility:** inspect actual 320×568 and 390×844 captured lit-night actor, oak, water and Town fixture images. Record visible actor silhouettes, occluded threats, telegraph contrast, foliage separation and whether night remains convincingly dark. Automated changed-pixel metrics alone are insufficient for this gate. Correct only evidenced failures.
+3. **Motion:** fractional .25/.5/.75 pixel pan, exact camera restoration, pose/light replay, realtime start/stop and resize restoration are now exercised by `UniversalLightingBrowserTests.VerifyTemporalStabilityAsync`. Preserve original captures and review their latest CI result before repeating experiments. Physical-device pacing is unverified.
+4. **Representative occlusion:** reuse oak leaf-on-leaf, cutout, wall, roof, post and actor shadow evidence; inspect any remaining visibly wrong foreground layering without expanding to production Town/Hunt migrations.
+5. **Closure:** record latest successful run IDs, screenshots inspected, explicit owner visual signoff and native-device limitations. Keep PR draft until the required automated and artistic gates are met. G2 owns authoritative C# snapshot integration; G3/G4/G5 are not part of this PR.
+
 ## Validation status
 
 Implementation and evidence are tracked below as work progresses. G1 remains
