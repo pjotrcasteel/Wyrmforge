@@ -193,7 +193,11 @@ def build(root: Path, annotation_file: Path, output: Path, preview_size: int = 4
         # the hand-drawn feature while softly blending its outer edge into a
         # second copy of the same original painting. This is an art-only
         # arrangement, not terrain geometry, a road, or a tileable material.
-        background = ImageOps.mirror(image).convert("RGB")
+        # Avoid a mirrored landmark: translate source brushwork instead.
+        shift = max(1, image.width // 2)
+        background = Image.new("RGB", image.size)
+        background.paste(image.crop((shift, 0, image.width, image.height)), (0, 0))
+        background.paste(image.crop((0, 0, shift, image.height)), (image.width - shift, 0))
         feather_px = max(2, round(min(image.size) * .018))
         soft_mask = mask.filter(ImageFilter.GaussianBlur(radius=feather_px))
         composed = Image.composite(image, background, soft_mask)
@@ -252,6 +256,7 @@ def build(root: Path, annotation_file: Path, output: Path, preview_size: int = 4
             "paintedFeatureArtDirectionReview": showcase_name,
             "paintedFeatureCompositionFile": composed_name,
             "paintedMotifPixelsPreservedExactly": True,
+            "compositionBackgroundMethod": "half-width-source-translation",
             "mobileFeatureReviewFile": mobile_name,
             "mobileComparisonReviewFile": mobile_board_name,
             "mobileReviewIsGameScreenshot": False,
