@@ -50,7 +50,7 @@ export async function initializeProof(canvas) {
     if (states.has(canvas)) return;
     const engine = new LightingEngine(canvas);
     const state = { engine, alive: true, options: { profile: 'night', fireball: true, torch: true, spot: true,
-        lighting: 'scene', panPixels: 0, townActive: true, aboveRoof: false, school: 'arcane', mastery: 0, sourceDistance: 2, behind: false, cutouts: false, cutoutAlpha: true, rune: false, shadows: true, reflections: true, progress: .25, frame: 0, animate: false, view: 'lit', focus: 'overview', inspectObject: 'hollowed', castsShadow: true, receivesShadow: true, receivesLight: true, normals: true }, manifests: {}, animation: {}, samples: {} };
+        lighting: 'scene', panPixels: 0, townActive: true, aboveRoof: false, school: 'arcane', mastery: 0, sourceDistance: 2, behind: false, cutouts: false, cutoutAlpha: true, rune: false, shadows: true, reflections: true, progress: .25, frame: 0, animate: false, view: 'lit', focus: 'overview', inspectObject: 'hollowed', castsShadow: true, receivesShadow: true, receivesLight: true, normals: true, wetness: 0, fog: false }, manifests: {}, animation: {}, samples: {} };
     states.set(canvas, state);
     try {
         engine.registerGeometry('box', new T.BoxGeometry(1, 1, 1));
@@ -119,6 +119,7 @@ export function configureProof(canvas, options) {
     const p = state.options, zero = p.profile === 'zero';
     const firePosition = [-3.5 + p.progress * 7, p.behind ? 4 : -1.6, p.behind ? 3.6 : 2.4];
     const environment = environmentProfile(p.profile);
+    if (p.fog) environment.fog = { color: '#343b4a', near: 3, far: 18 };
     const objects = structuredClone(state.objects);
     if (p.cutouts) objects.push(
         object('cutout-lower', 'plane', 'cutout-lower', [-4, -3, .55], [2.4, 2.4, 1]),
@@ -166,7 +167,9 @@ export function configureProof(canvas, options) {
         const id = o.id === 'npc-binding-proxy' ? 'hollowed' : o.id;
         if (state.manifests[id]) o.frame = spriteFrame(state.manifests[id], { clip: 'walk', frame: p.animate ? state.samples[id]?.frame ?? 0 : p.frame % 16, direction: 'S' });
     }
-    const materials = state.materials.map(m => ({ ...m, alphaCutoff: m.id === 'cutout-upper' && !p.cutoutAlpha ? 0 : m.alphaCutoff, normal: p.normals ? m.normal : undefined, reflection: p.reflections ? m.reflection : 'off',
+    const materials = state.materials.map(m => ({ ...m, alphaCutoff: m.id === 'cutout-upper' && !p.cutoutAlpha ? 0 : m.alphaCutoff, normal: p.normals ? m.normal : undefined,
+        wetness: m.id === 'terrain' || m.id === 'stone' ? p.wetness : m.wetness,
+        reflection: p.reflections ? m.reflection : 'off',
         emissionIntensity: m.id === 'flame' && !p.torch && !p.fireball ? 0 : m.emissionIntensity }));
     if (p.lighting === 'town-fixture' && p.townActive) {
         const fixture = townFixture({ active: p.townActive, school: p.school, mastery: p.mastery, aboveRoof: p.aboveRoof });

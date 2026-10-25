@@ -37,7 +37,14 @@ export function validateSnapshot(input) {
         color(m.color); color(m.emission);
         for (const field of ['roughness', 'metalness', 'specular', 'alphaCutoff']) finite(m[field], field, 0, 1);
         finite(m.emissionIntensity, 'emissionIntensity', 0);
-        if (!['off', 'direct'].includes(m.reflection)) throw new TypeError('Unsupported reflection tier');
+        // G3 optional physically motivated material controls; omitted fields retain G1 behavior.
+        for (const field of ['aoIntensity', 'normalScale', 'foliageTransmission', 'wetness'])
+            if (m[field] !== undefined) finite(m[field], field, 0, field === 'normalScale' ? 4 : 1);
+        for (const field of ['albedo', 'normal', 'roughnessMap', 'aoMap', 'emissiveMap', 'reflectionProbe'])
+            if (m[field] !== undefined && (typeof m[field] !== 'string' || !m[field].trim()))
+                throw new TypeError(`Invalid ${field}`);
+        if (!['off', 'direct', 'probe'].includes(m.reflection)) throw new TypeError('Unsupported reflection tier');
+        if (m.reflection === 'probe' && !m.reflectionProbe) throw new TypeError('Probe reflection requires a texture ID');
     }
     for (const o of s.objects) {
         if (!materials.has(o.material) || !o.geometry || !o.ownerId) throw new TypeError('Unresolved renderable');
@@ -52,6 +59,14 @@ export function validateSnapshot(input) {
     }
     finite(s.environment.ambient, 'ambient', 0); finite(s.environment.exposure, 'exposure', .01, 10);
     color(s.environment.color);
+    if (s.environment.fog !== undefined) {
+        const fog = s.environment.fog;
+        if (!fog || typeof fog !== 'object') throw new TypeError('Invalid fog');
+        color(fog.color);
+        finite(fog.near, 'fog near', 0);
+        finite(fog.far, 'fog far', 0);
+        if (fog.far <= fog.near) throw new TypeError('Fog far must exceed near');
+    }
     if (typeof s.environment.emission !== 'boolean') throw new TypeError('Invalid emission switch');
     return s;
 }
