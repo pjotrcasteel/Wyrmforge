@@ -33,7 +33,7 @@ public sealed class TownT0BaselineBrowserTests : PageTest
         await Expect(Page.Locator(".refuge-canonical-scene .refuge-town-night-base")).ToBeVisibleAsync();
         await Page.Locator(".refuge-town-night-base").EvaluateAsync("img => img.decode()");
         var view = Page.Locator(".refuge-canonical-viewport");
-        foreach (var (district, index) in new[] { ("west", -1), ("center", 0), ("east", 1) })
+        foreach (var (district, index) in new[] { ("west", 0), ("center", 1), ("east", 2) })
         {
             await view.EvaluateAsync("(el, district) => window.wyrmforgeTown.show(district, false)", index);
             await Page.ScreenshotAsync(new()
