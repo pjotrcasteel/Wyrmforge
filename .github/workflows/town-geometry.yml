@@ -1,0 +1,66 @@
+name: Town T1 3D geometry export
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/town/**'
+      - 'tools/development/test_town_t1_mesh.py'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/art/town/geometry/**'
+      - '.github/workflows/town-geometry.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  blender-export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          lfs: false
+
+      - name: Validate the authored OBJ and MTL without external dependencies
+        run: python3 -m unittest tools.development.test_town_t1_mesh
+
+      - name: Install headless Blender from Ubuntu packages
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y blender
+          blender --version
+
+      - name: Rebuild editable Blender scene, glTF binary, and reference PNG
+        run: |
+          mkdir -p artifacts/town-t1
+          blender --background --factory-startup --python tools/town/t1_import_export_blender.py             2>&1 | tee artifacts/town-t1/blender.log
+          test ${PIPESTATUS[0]} -eq 0
+          test -s src/Wyrmforge.Presentation.Web/wwwroot/art/town/geometry/t1-central-square-preview.blend
+          test -s src/Wyrmforge.Presentation.Web/wwwroot/art/town/geometry/t1-central-square-preview.glb
+          test -s src/Wyrmforge.Presentation.Web/wwwroot/art/town/geometry/t1-central-square-preview.png
+
+      - name: Verify GLB header and file length
+        run: |
+          python3 - <<'PY'
+          import struct
+          from pathlib import Path
+          path = Path("src/Wyrmforge.Presentation.Web/wwwroot/art/town/geometry/t1-central-square-preview.glb")
+          data = path.read_bytes()
+          magic, version, total = struct.unpack_from("<4sII", data)
+          assert magic == b"glTF" and version == 2 and total == len(data)
+          print(f"Validated glTF 2.0 binary: {len(data)} bytes")
+          PY
+
+      - name: Upload visual QC and editable Blender geometry
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: town-t1-blender-geometry-${{ github.sha }}
+          path: |
+            artifacts/town-t1/blender.log
+            src/Wyrmforge.Presentation.Web/wwwroot/art/town/geometry/t1-central-square-preview.blend
+            src/Wyrmforge.Presentation.Web/wwwroot/art/town/geometry/t1-central-square-preview.glb
+            src/Wyrmforge.Presentation.Web/wwwroot/art/town/geometry/t1-central-square-preview.png
+          if-no-files-found: warn
+          retention-days: 14
