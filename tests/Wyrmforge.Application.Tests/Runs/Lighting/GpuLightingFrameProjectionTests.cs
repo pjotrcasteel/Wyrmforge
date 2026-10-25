@@ -56,6 +56,27 @@ public sealed class GpuLightingFrameProjectionTests
         Assert.AreEqual("lantern", snapshot.Emitters[0].Id);
     }
 
+    [TestMethod]
+    public void ProjectileIdentityRegistry_RemovalAndReordering_PreservesOtherIds()
+    {
+        var identities = new ProjectileLightIdentityRegistry();
+        var first = new Wyrmforge.Domain.Combat.Projectiles.ProjectileState(
+            new Wyrmforge.Domain.Combat.Geometry.Vector2D(0, 0),
+            new Wyrmforge.Domain.Combat.Geometry.Vector2D(1, 0),
+            1, 1, default, default!);
+        var second = new Wyrmforge.Domain.Combat.Projectiles.ProjectileState(
+            new Wyrmforge.Domain.Combat.Geometry.Vector2D(1, 0),
+            new Wyrmforge.Domain.Combat.Geometry.Vector2D(1, 0),
+            1, 1, default, default!);
+        var firstId = identities.GetId(first);
+        var secondId = identities.GetId(second);
+
+        identities.Retain([second]);
+
+        Assert.AreEqual(secondId, identities.GetId(second));
+        Assert.AreNotEqual(firstId, identities.GetId(first));
+    }
+
     private static LightingSnapshot CreateSnapshot(long tick, params LightingEmitter[] lights) =>
         new(LightingSnapshot.CurrentSchemaVersion, tick, "test", Environment, lights);
 }
