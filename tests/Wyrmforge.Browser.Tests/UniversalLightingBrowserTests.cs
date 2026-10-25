@@ -178,7 +178,7 @@ public sealed class UniversalLightingBrowserTests : PageTest
         var comparisons = new List<object>();
         foreach (var focus in new[] { "actors", "oak", "town", "water" })
         {
-            await ConfigureAsync(canvas, new { lighting = "default", focus, profile = "night", view = "lit",
+            await ConfigureAsync(canvas, new { lighting = "scene", focus, profile = "night", view = "lit",
                 fireball = true, torch = true, spot = true, rune = false, frame = 0, progress = .25 });
             var night = await PixelHashAsync(canvas);
             var nightPixels = await canvas.EvaluateAsync<int>(
