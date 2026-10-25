@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "description": "Nonproduction T1 calibration scene: reference geometry only, not approved production Town",
+  "description": "Nonproduction T1/T2 geometry scene (well, noticeboard, lantern, World Gate and foliage); geometry preview, not approved Town replacement",
   "worldAxes": {
     "east": "+x",
     "north": "+y",
@@ -343,6 +343,130 @@
           1
         ]
       }
+    },
+    {
+      "id": "town.center.gate-stairs",
+      "parentId": "town.center",
+      "roles": [
+        "visual",
+        "collider"
+      ],
+      "tags": [
+        "terrain",
+        "navigation"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t1-central-square-preview.obj#town.center.gate-stairs",
+      "materialId": "stone_paving"
+    },
+    {
+      "id": "town.center.world-gate-masonry",
+      "parentId": "town.center",
+      "roles": [
+        "visual",
+        "collider",
+        "occluder"
+      ],
+      "tags": [
+        "landmark",
+        "entrance"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t1-central-square-preview.obj#town.center.world-gate-masonry",
+      "materialId": "gate_stone"
+    },
+    {
+      "id": "town.center.foliage-trunks",
+      "parentId": "town.center",
+      "roles": [
+        "visual",
+        "collider",
+        "occluder"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t1-central-square-preview.obj#town.center.foliage-trunks",
+      "materialId": "timber"
+    },
+    {
+      "id": "town.center.foliage-crowns",
+      "parentId": "town.center",
+      "roles": [
+        "visual",
+        "occluder"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t1-central-square-preview.obj#town.center.foliage-crowns",
+      "materialId": "foliage"
     }
   ]
 }
