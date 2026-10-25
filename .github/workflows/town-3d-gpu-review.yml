@@ -1,4 +1,4 @@
-name: Town T2 standalone GPU review
+name: Town T2 canonical art / 3D GPU acceptance
 
 on:
   pull_request:
@@ -26,7 +26,7 @@ jobs:
           node --test tools/development/town-*.test.mjs
           node --input-type=module --check < src/Wyrmforge.Presentation.Web/wwwroot/js/town/town-3d-review.js
 
-      - name: Run standalone shared GPU engine preview and capture real pixels
+      - name: Capture shared-GPU 3D rendering against approved painting
         shell: bash
         run: |
           set -euo pipefail
@@ -43,36 +43,52 @@ jobs:
           chrome=$(command -v google-chrome || command -v chromium || command -v chromium-browser)
           "$chrome" --version
           for spec in \
-            '390x844:night:behind-well' \
-            '390x844:day:behind-well' \
-            '390x844:zero:behind-well' \
-            '390x844:night:behind-noticeboard' \
-            '320x568:night:behind-well'; do
+            '390x844:night:center' \
+            '390x844:day:center' \
+            '390x844:zero:center' \
+            '390x844:night:west' \
+            '390x844:night:east' \
+            '390x844:day:west' \
+            '390x844:day:east' \
+            '320x568:night:center'; do
             size="${spec%%:*}"
             state="${spec#*:}"
             mode="${state%%:*}"
-            actor="${state#*:}"
+            district="${state#*:}"
             width="${size%x*}"
             height="${size#*x}"
-            name="town-t2-${size}-${mode}-${actor}"
+            name="town-t2-${size}-${mode}-${district}"
             "$chrome" --headless=new --no-sandbox --disable-dev-shm-usage \
               --enable-webgl --enable-unsafe-swiftshader \
               --use-gl=angle --use-angle=swiftshader \
               --window-size="${width},${height}" --virtual-time-budget=8000 \
               --screenshot="artifacts/town-3d/${name}.png" \
               --dump-dom \
-              "http://127.0.0.1:4173/town3d-review.html?mode=${mode}&actor=${actor}" \
+              "http://127.0.0.1:4173/town3d-review.html?clean=1&mode=${mode}&district=${district}" \
               >"artifacts/town-3d/${name}.html" 2>"artifacts/town-3d/${name}.log"
             test -s "artifacts/town-3d/${name}.png"
-            grep -q '39 authored nodes' "artifacts/town-3d/${name}.html"
+            grep -q 'data-town3d-ready="true"' "artifacts/town-3d/${name}.html"
             grep -q 'data-town3d-peak-rgb=' "artifacts/town-3d/${name}.html"
+            grep -q '52704' "artifacts/town-3d/${name}.html"
+            if [[ "$mode" != zero ]]; then
+              python3 - "artifacts/town-3d/${name}.html" <<'PY'
+import re,sys
+text=open(sys.argv[1]).read()
+match=re.search(r'&quot;referenceMae&quot;:(\d+(?:\.\d+)?)',text)
+if not match:
+    match=re.search(r'"referenceMae":(\d+(?:\.\d+)?)',text)
+assert match, "Canonical art pixel comparison missing"
+assert float(match.group(1)) < 14, f"Town projection drift: MAE={match.group(1)}"
+print("Canonical pixel MAE:",match.group(1))
+PY
+            fi
             if [[ "$mode" == zero ]]; then
               peak=$(grep -o 'data-town3d-peak-rgb="[0-9]*"' "artifacts/town-3d/${name}.html" | head -1 | grep -o '[0-9]*')
               test "$peak" -le 1
             fi
           done
 
-      - name: Publish GPU PNGs and diagnostic DOM for T2 owner review
+      - name: Publish canonical art comparisons and 3D GPU proof
         if: always()
         uses: actions/upload-artifact@v4
         with:
