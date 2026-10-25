@@ -1,0 +1,135 @@
+name: Hollowed — even-cadence broken leg
+on:
+  push:
+    branches: [feat/actor-lit-sprite-production]
+    paths:
+      - 'tools/sprite-lab/author-hollow-broken-leg-even-cadence.py'
+      - 'tools/sprite-lab/render-hollow-broken-leg-even-cadence.py'
+      - '.github/workflows/hollow-broken-leg-even-cadence.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+
+jobs:
+  author-and-render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install Blender and image validation dependencies
+        run: python -m pip install 'bpy==4.5.3' 'numpy>=1.26,<3' 'pillow>=10,<13'
+      - name: Create original 16-key asymmetrical limp with toe-down damaged leg
+        run: python tools/sprite-lab/author-hollow-broken-leg-even-cadence.py
+      - name: Verify real skinned rig pose samples
+        run: |
+          python tools/sprite-lab/sample-hollow-rig.py -- \
+            art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-broken-leg-even-cadence
+      - name: Validate physically distinct gait before rendering
+        run: |
+          python - <<'PY'
+          import hashlib,json,math
+          from pathlib import Path
+          base=Path('art/source/enemies/hollow/rigged-poc/model/local-appearance-004')
+          src=base/'rigged-hollow-zombie-reach-v3-standard'
+          dest=base/'rigged-hollow-broken-leg-even-cadence'
+          frames=json.loads((dest/'gait-diagnostics.json').read_text())
+          p=json.loads((dest/'retarget-provenance.json').read_text())
+          assert len(frames)==17 and p['artApproval'] is False
+          assert p['runtimeCutover'] is False and p['lightingMaterialsRegenerated'] is False
+          assert p['sourceEditableRig']==str((src/'hollow-rigged.blend').as_posix())
+          assert p['parentEditableBlendSha256']==hashlib.sha256((src/'hollow-rigged.blend').read_bytes()).hexdigest()
+          for f in frames:
+            assert f['sourceLegTrajectoryRetained'] is False
+            assert f['authoredFootContactEvents'] is True
+            for side in ('L','R'):
+              foot=f['feet'][side]
+              a,b,c=([float(x) for x in foot[j]] for j in ('hip','knee','ankle'))
+              upper=math.dist(a,b);lower=math.dist(b,c)
+              assert .15<upper<.27 and .15<lower<.27,(f['frame'],side,upper,lower)
+              assert 0<foot['flexDegrees']<150,(f['frame'],side,foot['flexDegrees'])
+              for q in f['arms'][side].values():
+                assert q is True or len(q)==3
+          for side in ('L','R'):
+            for region,keys in (('feet',('hip','knee','ankle','toe')),
+                                ('arms',('shoulder','elbow','wrist','hand'))):
+              for key in keys:
+                assert math.dist(frames[0][region][side][key],frames[-1][region][side][key])<.0001
+          ground=-.435
+          right=sum(f['contact']['rightAnkleGround'] for f in frames[:16])
+          left=sum(f['contact']['leftAnkleGround'] for f in frames[:16])
+          assert right>=10 and left<=3,(right,left)
+          assert all(f['feet'][side]['toe'][2]>=ground-.01001
+                     for f in frames for side in ('L','R')),'toe passed through the floor'
+          # Actual 3D ankle displacements at 22fps, including loop closure:
+          # prior 0.149/0.161m snaps must be impossible to reintroduce.
+          for side in ('L','R'):
+            travel=[math.dist(a['feet'][side]['ankle'],b['feet'][side]['ankle'])
+                    for a,b in zip(frames,frames[1:])]
+            max_step=max(travel)
+            assert max_step<.080,(side,'one-frame snap',max_step)
+            assert abs(max_step-p['injuryAuthoring']['maxAnkleTravelPerFrame'][side])<1.e-5
+            print('Even cadence',side,'largest 3D ankle jump:',round(max_step,5),'m per 1/22 s')
+          assert max(f['contact']['leftFailedLoad'] for f in frames)>.98
+          assert max(f['feet']['R']['ankle'][2] for f in frames[:16])-ground>.12
+          assert (dest/'hollow-rigged.blend').stat().st_size>500_000
+          assert (dest/'sampled-walk.npz').is_file()
+          print('16 genuinely asymmetric contact poses + closure, both exact leg chains, unapproved review')
+          PY
+      - name: Render 128 Blender-skinned poses in eight directions
+        run: python tools/sprite-lab/render-hollow-broken-leg-even-cadence.py
+      - name: Validate native/zoom, old-versus-new, moving animated GIFs
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from PIL import Image
+          out=Path('artifacts/hollow-broken-leg-even-cadence')
+          assert Image.open(out/'candidate-walk-eight-directions.png').size==(1536,768)
+          assert Image.open(out/'ground-safe-vs-even-cadence-all-directions.png').size==(1536,1536)
+          for face in ('n','ne','e','se','s','sw','w','nw'):
+            for file in (f'{face}-animation.gif',f'{face}-zoom-4x.gif',
+                         f'compare-{face}-native-96px.gif',f'compare-{face}-zoom-4x.gif'):
+              im=Image.open(out/file)
+              assert im.n_frames==16,(file,im.n_frames)
+          for face in ('e','se','s'):
+            im=Image.open(out/f'moving-field-{face}-native.gif')
+            assert im.size==(400,240) and im.n_frames==32
+          manifest=json.loads((out/'candidate-manifest.json').read_text())
+          assert not manifest['runtimeAtlasReplaced']
+          assert not manifest['realMobileHuntCaptured']
+          assert max(manifest['maximumAnkleTravelPerFrame'].values())<.080
+          assert not manifest['artApproval']
+          print('All rendered GIFs and source review manifest present (artist approval PENDING)')
+          PY
+      - name: Preserve editable .blend and evidence on same draft branch
+        if: github.event_name == 'push' && github.ref == 'refs/heads/feat/actor-lit-sprite-production'
+        run: |
+          set -euo pipefail
+          destination=docs/art/evidence/hollowed-broken-leg-even-cadence
+          mkdir -p "$destination"
+          cp artifacts/hollow-broken-leg-even-cadence/*.gif "$destination"/
+          cp artifacts/hollow-broken-leg-even-cadence/*.png "$destination"/
+          cp artifacts/hollow-broken-leg-even-cadence/candidate-manifest.json "$destination"/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$destination"
+          git add art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-broken-leg-even-cadence/
+          if ! git diff --cached --quiet; then
+            git commit -m "art(hollowed): preserve even-cadence broken-leg injury rig and eight-direction review GIFs"
+            git pull --rebase origin feat/actor-lit-sprite-production
+            git push origin HEAD:feat/actor-lit-sprite-production
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hollowed-broken-leg-even-cadence-${{ github.sha }}
+          path: |
+            art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-broken-leg-even-cadence/
+            artifacts/hollow-broken-leg-even-cadence/
+          retention-days: 30
+          if-no-files-found: warn
