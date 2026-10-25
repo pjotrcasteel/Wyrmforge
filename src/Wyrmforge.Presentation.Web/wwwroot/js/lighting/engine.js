@@ -44,13 +44,16 @@ export class LightingEngine {
         const material = new T.MeshPhysicalMaterial({
             color: receivesLight ? descriptor.color : '#000000', map: texture(descriptor.albedo),
             normalMap: texture(descriptor.normal), roughnessMap: texture(descriptor.roughnessMap),
+            aoMap: texture(descriptor.aoMap), aoMapIntensity: descriptor.aoIntensity ?? 1,
+            emissiveMap: texture(descriptor.emissiveMap),
             roughness: descriptor.roughness, metalness: receivesLight ? descriptor.metalness : 0,
             specularIntensity: receivesLight && descriptor.reflection !== 'off' ? descriptor.specular : 0,
             emissive: descriptor.emission, emissiveIntensity: descriptor.emissionIntensity,
             alphaTest: descriptor.alphaCutoff, side: descriptor.doubleSided ? T.DoubleSide : T.FrontSide,
         });
+        if (descriptor.normalScale !== undefined) material.normalScale.setScalar(descriptor.normalScale);
         material.shadowSide = descriptor.doubleSided ? T.DoubleSide : T.FrontSide;
-        for (const map of [material.map, material.normalMap, material.roughnessMap]) if (map) map.needsUpdate = true;
+        for (const map of [material.map, material.normalMap, material.roughnessMap, material.aoMap, material.emissiveMap]) if (map) map.needsUpdate = true;
         return material;
     }
     removeObject(id) {
@@ -58,7 +61,7 @@ export class LightingEngine {
         if (!o) return;
         this.scene.remove(o.mesh);
         if (o.caster) this.scene.remove(o.caster);
-        for (const map of [o.mesh.material.map, o.mesh.material.normalMap, o.mesh.material.roughnessMap]) map?.dispose();
+        for (const map of [o.mesh.material.map, o.mesh.material.normalMap, o.mesh.material.roughnessMap, o.mesh.material.aoMap, o.mesh.material.emissiveMap]) map?.dispose();
         for (const material of o.debugMaterials?.values() ?? []) material.dispose();
         o.mesh.material.dispose(); o.caster?.material.dispose();
         this.objects.delete(id);
@@ -73,7 +76,7 @@ export class LightingEngine {
     /** Whole authoritative visual snapshot; validate all resource references before mutation. */
     apply(input) {
         const s = validateSnapshot(input);
-        for (const m of s.materials) for (const key of ['albedo', 'normal', 'roughnessMap'])
+        for (const m of s.materials) for (const key of ['albedo', 'normal', 'roughnessMap', 'aoMap', 'emissiveMap'])
             if (m[key] && !this.textures.has(m[key])) throw new Error(`Missing texture ${m[key]}`);
         for (const o of s.objects) for (const key of ['geometry', 'occluderGeometry'])
             if (o[key] && !this.geometries.has(o[key])) throw new Error(`Missing geometry ${o[key]}`);
@@ -122,7 +125,7 @@ export class LightingEngine {
             if (object.caster) object.caster.castShadow = d.castsShadow;
             object.mesh.receiveShadow = d.receivesShadow;
             object.mesh.material.emissiveIntensity = s.environment.emission ? md.emissionIntensity : 0;
-            if (d.frame) for (const map of [object.mesh.material.map, object.mesh.material.normalMap]) if (map) {
+            if (d.frame) for (const map of [object.mesh.material.map, object.mesh.material.normalMap, object.mesh.material.roughnessMap, object.mesh.material.aoMap, object.mesh.material.emissiveMap]) if (map) {
                 map.offset.fromArray(d.frame.offset); map.repeat.fromArray(d.frame.repeat); map.updateMatrix();
             }
         }
