@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createHollowDeathAssets,HOLLOW_DEATH_DIRECTIONS,HOLLOW_DEATH_VARIANTS}
+import {createHollowDeathAssets,HOLLOW_DEATH_DIRECTIONS,HOLLOW_DEATH_VARIANTS,selectHollowDeathVariant}
     from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/hollow-death.js';
 
 const base=new URL('https://example.test/hollow/death/');
@@ -63,4 +63,16 @@ test('missing or partially loaded variant cannot become production art',async()=
         assert.equal(await packet.preload(),false);
         assert.equal(packet.ready(),false);
     }finally{globalThis.fetch=oldFetch;globalThis.Image=oldImage;}
+});
+
+test('different Hollowed receive stable forward and braced 3D skeletal deaths',()=>{
+    const counts=new Map(HOLLOW_DEATH_VARIANTS.map(name=>[name,0]));
+    for(let entityId=0;entityId<1000;entityId++){
+        const chosen=selectHollowDeathVariant(entityId);
+        assert.equal(chosen,selectHollowDeathVariant(entityId));
+        counts.set(chosen,counts.get(chosen)+1);
+    }
+    assert.ok([...counts.values()].every(count=>count>=400&&count<=600));
+    assert.equal(selectHollowDeathVariant(-1),'collapse-forward');
+    assert.equal(selectHollowDeathVariant(NaN),'collapse-forward');
 });
