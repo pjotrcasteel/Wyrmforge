@@ -34,6 +34,7 @@ export class LightingEngine {
         this.halfWidth = 5;
         this.inspection = new LightingInspection();
         this.materialBudget = { maps: 0, transmissive: 0, ao: 0 };
+        this.frameStats = { lastMs: 0, maxMs: 0, frames: 0 };
     }
     registerGeometry(id, geometry) {
         if (this.geometries.has(id)) throw new Error(`Duplicate geometry ${id}`);
@@ -221,7 +222,12 @@ float proofShadowVisibility() {
     render(width = this.canvas.clientWidth, height = this.canvas.clientHeight) {
         if (!this.alive) return;
         // One world sample per CSS pixel at 390px, bounded regardless of device DPR.
-        const w = Math.max(1, Math.min(390, Math.round(width))), h = Math.max(1, Math.round(height * w / width));
+        const safeWidth = Number.isFinite(width) && width > 0 ? width : 1;
+        const safeHeight = Number.isFinite(height) && height > 0 ? height : 1;
+        const maxDimension = Math.min(390, this.qualitySettings.maxRenderTargetSize);
+        const scale = Math.min(1, maxDimension / Math.max(safeWidth, safeHeight));
+        const w = Math.max(1, Math.round(safeWidth * scale));
+        const h = Math.max(1, Math.round(safeHeight * scale));
         if (this.canvas.width !== w || this.canvas.height !== h) this.renderer.setSize(w, h, false);
         this.camera.left = -this.halfWidth; this.camera.right = this.halfWidth;
         this.camera.top = this.halfWidth * h / w; this.camera.bottom = -this.halfWidth * h / w;
@@ -231,6 +237,7 @@ float proofShadowVisibility() {
             this.inspection.depth(this.renderer, this.lights.get(source?.id));
             return;
         }
+        const frameStart = globalThis.performance?.now?.();
         const removeBounds = this.debugView === 'light-bounds' ? this.inspection.bounds(this.scene, this.lights.values()) : () => {};
         const originals = [], shadowUpdate = this.renderer.shadowMap.autoUpdate;
         try {
@@ -247,6 +254,12 @@ float proofShadowVisibility() {
             for (const [mesh, material] of originals) mesh.material = material;
             this.renderer.shadowMap.autoUpdate = shadowUpdate;
             removeBounds();
+            if (frameStart !== undefined) {
+                const elapsed = globalThis.performance.now() - frameStart;
+                this.frameStats.lastMs = elapsed;
+                this.frameStats.maxMs = Math.max(this.frameStats.maxMs, elapsed);
+                this.frameStats.frames++;
+            }
         }
     }
     pixels() {
@@ -277,7 +290,7 @@ float proofShadowVisibility() {
         if (this.snapshot) this.apply(this.snapshot);
     }
     diagnostics() {
-        return { quality: this.quality, shadowResolution: this.qualitySettings.shadowResolution,
+        return { frameStats: { ...this.frameStats }, quality: this.quality, shadowResolution: this.qualitySettings.shadowResolution,
             maxLights: this.maxLights, shadowViews: this.shadowViews, backend: 'WebGL2 / Three 0.186.1', view: this.debugView, depthSource: this.selected?.find(l => l.shadow)?.id ?? null, framebuffer: [this.canvas.width, this.canvas.height], objects: this.objects.size,
             lights: this.selected?.map(l => ({ id: l.id, ownerId: l.ownerId, type: l.type, position: l.position, intensity: l.intensity, shadow: l.shadow, views: l.shadowViews })),
             drawCalls: this.renderer.info.render.calls, triangles: this.renderer.info.render.triangles,
