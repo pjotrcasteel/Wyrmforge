@@ -45,7 +45,7 @@
         <label><input aria-label="Receives light" type="checkbox" @bind="receivesLight" @bind:after="Sync" /> Receives light</label>
         <label>Walk frame <input aria-label="Walk frame" type="range" min="0" max="15" @bind="frame" @bind:event="oninput" @bind:after="Sync" /></label>
     </nav>
-    <details><summary>Emitter registry and GPU diagnostics</summary><pre>@diagnostics</pre></details>
+    <details open><summary>Emitter registry and GPU diagnostics</summary><pre>@diagnostics</pre></details>
     <p>Screen-space readability remains visible even with all world light and emission off. The Town corner is diagnostic geometry, not replacement Town artwork.</p>
 </main>
 
