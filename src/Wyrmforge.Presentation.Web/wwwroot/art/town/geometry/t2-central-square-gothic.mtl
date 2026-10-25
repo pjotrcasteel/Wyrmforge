@@ -1,0 +1,75 @@
+# Placeholder physical materials for T1 geometry inspection; not baked lighting.
+newmtl stone_paving
+Kd 0.28 0.27 0.29
+Ka 0.05 0.05 0.05
+Ns 35
+
+newmtl stone_well
+Kd 0.38 0.36 0.34
+Ka 0.05 0.05 0.05
+Ns 40
+
+newmtl timber
+Kd 0.22 0.15 0.10
+Ka 0.02 0.02 0.02
+Ns 15
+
+newmtl slate_roof
+Kd 0.11 0.15 0.23
+Ka 0.02 0.02 0.04
+Ns 40
+
+newmtl board
+Kd 0.33 0.23 0.14
+Ka 0.03 0.02 0.01
+Ns 15
+
+newmtl lantern
+Kd 0.85 0.55 0.20
+Ka 0.05 0.03 0.01
+Ns 10
+
+newmtl gate_stone
+Kd 0.30 0.31 0.38
+Ka 0.03 0.03 0.04
+Ns 40
+
+newmtl foliage
+Kd 0.12 0.25 0.17
+Ka 0.01 0.03 0.02
+Ns 22
+
+newmtl stone_cobble_light
+Kd 0.54 0.50 0.48
+Ka 0.05 0.04 0.04
+Ns 35
+
+newmtl stone_cobble_mid
+Kd 0.46 0.42 0.43
+Ka 0.04 0.03 0.03
+Ns 35
+
+newmtl stone_cobble_dark
+Kd 0.32 0.29 0.31
+Ka 0.03 0.03 0.03
+Ns 25
+
+newmtl parchment
+Kd 0.74 0.64 0.53
+Ka 0.04 0.04 0.03
+Ns 15
+
+newmtl gold
+Kd 0.78 0.59 0.29
+Ka 0.05 0.04 0.02
+Ns 65
+
+newmtl banner
+Kd 0.09 0.24 0.43
+Ka 0.02 0.03 0.06
+Ns 12
+
+newmtl flowers
+Kd 0.70 0.44 0.71
+Ka 0.06 0.02 0.04
+Ns 35
