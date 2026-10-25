@@ -28,8 +28,9 @@ jobs:
       - name: Install headless Blender from Ubuntu packages
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y blender
+          sudo apt-get install -y blender python3-numpy
           blender --version
+          blender --background --factory-startup --python-expr 'import numpy; print(numpy.__version__)'
 
       - name: Rebuild editable Blender scene, glTF binary, and reference PNG
         run: |
