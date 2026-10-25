@@ -48,3 +48,14 @@ The six quilted Trampled Earth candidates are **not** six completed role-specifi
 Acceptance is visual, not numerical: present six full-resolution PNGs and a single side-by-side sheet, plus mobile-scale and 2×2 repetition comparisons. Specifically reject indistinguishable quilt candidates, mirrored landmarks, central stamped shapes, unnatural border bands and any candidate whose named silhouette is absent. The owner chooses which to keep or repaint. No promotion to runtime or material channels before visual sign-off.
 
 **Roadmap checkpoint:** source preservation and candidate infrastructure done; semantic identity and visual quality not achieved; no family approved; no relightable material production or game integration in this PR. Avoid expanding diagnostic tools instead of producing the six artworks.
+
+## Reproducible source-backed segmented Trampled Earth and organic transitions
+
+Art-only PR #340 now has actual CI exporters, not just locally generated review images.
+
+- build_trampled_segment_art_bank.py reads six per-family, hash-verified, unapproved Grass/Moss, Trampled Earth and Wet Mud candidate PNGs. It produces six 640x1600 RGB source-backed path studies and 18 overlapping 640x640 segment PNGs. Each 160px overlap comes from the same underlying strip, so join pixels match exactly.
+- build_trampled_organic_transitions.py creates six transitions between neighboring roles. A broad, curved boundary preserves actual pixels from the two painted source strips, except for approximately two pixels of antialiasing along that boundary. It does not generate scene masks or routes.
+- The Wet Forest ground concept integrity workflow now runs both scripts and publishes full-size transition PNGs, mobile previews, comparison sheets, manually inspectable art boundary QA and SHA-256 provenance in the workflow artifact.
+- New unittest coverage checks unapproved-only inputs, immutable hashes, 160px overlap, deterministic PNGs, original RGB preservation away from transition boundaries, and no runtime claim.
+
+Status: visual review pending; neither isolated strip nor transition is necessarily tileable or relightable. Repeated painted landmarks and baked illumination remain. Do not promote to in-game materials or mark complete without visual owner approval.
