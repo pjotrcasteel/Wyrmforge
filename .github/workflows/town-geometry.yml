@@ -49,13 +49,24 @@ jobs:
             done
           done
 
+      - name: Export editable canonical-art 3D Town and PNG (T1/T2 approval)
+        shell: bash
+        run: |
+          set -euo pipefail
+          blender --background --factory-startup \
+            --python tools/town/export_canonical_depth_blender.py \
+            2>&1 | tee artifacts/town-t1-t2/canonical-blender.log
+          for ext in blend glb png; do
+            test -s "src/Wyrmforge.Presentation.Web/wwwroot/art/town/geometry/t2-canonical-projected-3d.${ext}"
+          done
+
       - name: Verify GLB header and file length
         run: |
           python3 - <<'PY'
           import struct
           from pathlib import Path
           root = Path("src/Wyrmforge.Presentation.Web/wwwroot/art/town/geometry")
-          for prefix in ["t1-central-square-preview", "t2-central-square-gothic"]:
+          for prefix in ["t1-central-square-preview", "t2-central-square-gothic", "t2-canonical-projected-3d"]:
               path = root / f"{prefix}.glb"
               data = path.read_bytes()
               magic, version, total = struct.unpack_from("<4sII", data)
