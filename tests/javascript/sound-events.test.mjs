@@ -240,3 +240,28 @@ test('burning-ground transitions ignore invalid and expired patches', () => {
         { id: 6, remainingSeconds: 0 },
     ] })), [{ type: 'stop', id: 6, remainingSeconds: 0 }]);
 });
+
+
+test('ground-fire lifecycle after pause requires an explicit fresh start', () => {
+    const tracker = createSoundEventTracker();
+    const burning = frame({ burningGrounds: [{ id: 81, remainingSeconds: 4 }] });
+    assert.deepEqual(collectBurningGroundTransitions(tracker, burning),
+        [{ type: 'start', id: 81, remainingSeconds: 4 }]);
+    // The arena stops every voice on pause and clears the lifecycle baseline.
+    tracker.audioGrounds = new Map();
+    assert.deepEqual(collectBurningGroundTransitions(tracker,
+        frame({ burningGrounds: [{ id: 81, remainingSeconds: 2 }] })),
+        [{ type: 'start', id: 81, remainingSeconds: 2 }]);
+});
+
+test('ground-fire transition updates preserve independent overlapping patch IDs', () => {
+    const tracker = createSoundEventTracker();
+    const patch = (id, remainingSeconds) => ({ id, remainingSeconds });
+    collectBurningGroundTransitions(tracker, frame({ burningGrounds: [patch(1, 3), patch(2, 5)] }));
+    assert.deepEqual(collectBurningGroundTransitions(tracker,
+        frame({ burningGrounds: [patch(2, 4), patch(3, 2)] })), [
+        { type: 'update', id: 2, remainingSeconds: 4 },
+        { type: 'start', id: 3, remainingSeconds: 2 },
+        { type: 'stop', id: 1, remainingSeconds: 0 },
+    ]);
+});
