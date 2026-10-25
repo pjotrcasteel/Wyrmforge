@@ -98,6 +98,17 @@ public sealed class GpuLightingFrameProjectionTests
         Assert.AreEqual(0, registry.Capture("hunt", 5, Environment).Emitters.Count);
     }
 
+    [TestMethod]
+    public void Registry_ReplaceOwner_DoesNotRemoveUnrelatedLights()
+    {
+        var registry = new LightingEmitterRegistry();
+        registry.Upsert(new LightingEmitter("old", "wizard", "point", 0, 0, 1, "#ffffff", 1, 3));
+        registry.Upsert(new LightingEmitter("gate", "town", "point", 1, 0, 1, "#ffffff", 1, 3));
+        registry.ReplaceOwner("wizard", [new LightingEmitter("new", "wizard", "point", 2, 0, 1, "#ff7835", 2, 4)]);
+        var ids = registry.Capture("town", 3, Environment).Emitters.Select(light => light.Id).ToArray();
+        CollectionAssert.AreEqual(new[] { "gate", "new" }, ids);
+    }
+
     private static LightingSnapshot CreateSnapshot(long tick, params LightingEmitter[] lights) =>
         new(LightingSnapshot.CurrentSchemaVersion, tick, "test", Environment, lights);
 }
