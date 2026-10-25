@@ -1,9 +1,19 @@
 # WyrmForge — Full 3D Town Rebuild Milestones (T0–T6)
 
-**Status:** Approved architectural direction; implementation pending visual gates.
-**Workstream:** G4 Town reconstruction, independent of AI agent implementation.
+**Status:** T0 evidence and T1–T3 isolated implementations IN PROGRESS; no visual cutover authorized.
+**Workstream:** [Town PR #349](https://github.com/pjotrcasteel/Wyrmforge/pull/349), separate from PAUSED G4 PR #346 and AI milestones owned by Work.
 **Rendering:** Existing universal GPU lighting engine (G1–G3), not a second Town renderer.
 **Sources of truth:** [Universal lighting contract](arena-real-geometry-light-engine.md), canonical art/gameplay documentation, and the existing production Town runtime.
+
+## Implementation snapshot (2026-10-25; acceptance gates remain enforced)
+
+- **T0:** nine real runtime district screenshots and six school palettes/two mastery references inspected. Active/vacant, NPC masking and performance capture tests now exist but need CI artifacts; owner approval outstanding.
+- **T1:** metric coordinate/camera mapping, validated scene hierarchy, real mesh with well, gate, noticeboard, lamp and foliage, Blender .blend/glTF/PNG export pipeline and independent Node/Python tests. An early Blender run produced an editable .blend but glTF failed due to missing NumPy; workflow dependency repaired, current export unverified.
+- **T2 (preview only):** `wwwroot/town3d-review.html` imports real OBJ mesh groups using the EXISTING universal GPU LightingEngine. Night/day/zero lighting, shadow-casting geometry and occlusion probe with manual collider-gated movement implemented. Independent GitHub workflow captures Chromium screenshots at 320/390; **no actual GPU screenshot or owner-approved visual comparison for this preview has been obtained yet**.
+- **T3 (contracts only):** renderer-independent 3D collider-shell extraction, separated gate-post footprints, no-corner-cut pathfinding, clearance queries, dynamic blockers and 14 independent route probes implemented. **Does not implement AI decisions** or replace Town's production NPC pathing.
+- **T4–T6:** not started. **G4 stays paused until T0–T6 complete and accepted**.
+
+The snapshot is not a milestone completion statement. Keep production art/camera/interaction behavior unchanged until T6 controlled cutover.
 
 ## Locked scope and principles
 
