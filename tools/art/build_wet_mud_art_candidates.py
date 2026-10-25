@@ -28,6 +28,16 @@ TRAMPLED_REVIEW_ROLES = (
 )
 
 
+
+def visual_difference_matrix(tiles: list[np.ndarray], sample_size: int = 24) -> list[list[float]]:
+    """Low-frequency RGB difference for visual triage, not proof of artistic quality."""
+    if len(tiles) != 6 or sample_size < 4:
+        raise ValueError("Expected six candidate tiles and a useful preview resolution")
+    previews = [np.asarray(Image.fromarray(tile).resize((sample_size, sample_size), Image.Resampling.BOX), dtype=np.float32)
+                for tile in tiles]
+    return [[round(float(np.mean(np.abs(a - b))), 3) for b in previews] for a in previews]
+
+
 def create(
     source_root: Path, output: Path, *,
     side: int = SIDE, source_px: int = 576, patch_size: int = PATCH,
@@ -117,7 +127,15 @@ def create(
         role_review = "trampled-earth-six-visual-roles-UNAPPROVED.jpg"
         sheet.save(output / role_review, quality=92, subsampling=0)
 
+    differences = visual_difference_matrix(independent)
+    for index, record in enumerate(records):
+        difference, nearest = min((differences[index][other], other + 1)
+                                  for other in range(6) if other != index)
+        record["nearestVisualCandidate"] = nearest
+        record["nearestVisualDifferenceRgb"] = difference
     report = {
+        "visualDifferenceMethod": "mean absolute RGB difference at 24x24 BOX downsample; diagnostic only",
+        "visualDifferenceMatrix": differences,
         "schemaVersion": 1,
         "family": family,
         "status": "unapproved-artwork",
