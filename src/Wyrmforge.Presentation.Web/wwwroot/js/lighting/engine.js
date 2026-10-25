@@ -1,10 +1,14 @@
 import * as T from './vendor/three.module.js';
 import { LightingInspection } from './inspection.js';
 import { validateSnapshot, selectLights } from './registry.js';
+import { G4_QUALITY_PROFILES } from './g4-light-budget.js';
 
 /** Shared GPU adapter; accepts resource IDs and descriptors, never entity kinds. */
 export class LightingEngine {
-    constructor(canvas, { shadowViews = 8, maxLights = 8 } = {}) {
+    constructor(canvas, { shadowViews, maxLights, quality = 'medium' } = {}) {
+        if (!Object.hasOwn(G4_QUALITY_PROFILES, quality)) throw new RangeError('Unknown GPU quality profile');
+        this.quality = quality;
+        this.qualitySettings = G4_QUALITY_PROFILES[quality];
         this.canvas = canvas;
         this.renderer = new T.WebGLRenderer({ canvas, antialias: false, alpha: false, preserveDrawingBuffer: true });
         this.renderer.outputColorSpace = T.SRGBColorSpace;
@@ -22,7 +26,8 @@ export class LightingEngine {
         this.scene.add(this.ambient);
         this.objects = new Map(); this.lights = new Map();
         this.geometries = new Map(); this.textures = new Map();
-        this.shadowViews = shadowViews; this.maxLights = maxLights;
+        this.shadowViews = shadowViews ?? this.qualitySettings.maxShadowCost;
+        this.maxLights = maxLights ?? this.qualitySettings.maxLights;
         this.alive = true;
         this.debugView = 'lit';
         this.halfWidth = 5;
@@ -110,7 +115,7 @@ export class LightingEngine {
             if (!light) {
                 const constructors = { point: T.PointLight, spot: T.SpotLight, directional: T.DirectionalLight };
                 light = new constructors[d.type](); light.userData.type = d.type;
-                light.shadow.mapSize.set(512, 512); light.shadow.bias = -.00015; light.shadow.normalBias = .025;
+                light.shadow.mapSize.set(this.qualitySettings.shadowResolution, this.qualitySettings.shadowResolution); light.shadow.bias = -.00015; light.shadow.normalBias = .025;
                 light.shadow.camera.near = .05;
                 if (d.type === 'directional') Object.assign(light.shadow.camera, { left: -9, right: 9, top: 9, bottom: -9 });
                 this.scene.add(light); if (light.target) this.scene.add(light.target);
