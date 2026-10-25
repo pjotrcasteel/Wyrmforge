@@ -77,6 +77,18 @@ public sealed class GpuLightingFrameProjectionTests
         Assert.AreNotEqual(firstId, identities.GetId(first));
     }
 
+    [TestMethod]
+    public void Compose_MixedSceneSources_OrdersLightsAndRejectsDuplicateIds()
+    {
+        var torch = new LightingEmitter("torch", "town", "point", 0, 0, 1, "#ff7835", 2, 4);
+        var spell = new LightingEmitter("spell", "player", "point", 2, 1, 1, "#ffffff", 1, 3);
+        var snapshot = LightingSceneComposer.Compose("scene", 5, Environment, [torch], [spell]);
+
+        CollectionAssert.AreEqual(new[] { "spell", "torch" }, snapshot.Emitters.Select(light => light.Id).ToArray());
+        Assert.ThrowsExactly<ArgumentException>(() =>
+            LightingSceneComposer.Compose("scene", 5, Environment, [torch], [torch]));
+    }
+
     private static LightingSnapshot CreateSnapshot(long tick, params LightingEmitter[] lights) =>
         new(LightingSnapshot.CurrentSchemaVersion, tick, "test", Environment, lights);
 }
