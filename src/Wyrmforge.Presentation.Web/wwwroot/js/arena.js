@@ -152,9 +152,12 @@ function startSimulationFrame(state, timestamp, rect) {
             updatePlayerDanger(state.playerDanger, snapshot, performance.now());
             const soundNow = performance.now();
             for (const cue of collectSoundEvents(state.soundTracker, snapshot, soundNow)) {
-                window.wyrmforgeAudio?.play?.(cue);
+                if (cue !== 'fire-burning') window.wyrmforgeAudio?.play?.(cue);
             }
-            window.wyrmforgeAudio?.syncBurningGround?.(collectBurningGroundTransitions(state.soundTracker, snapshot));
+            const groundTransitions = collectBurningGroundTransitions(state.soundTracker, snapshot);
+            window.wyrmforgeAudio?.syncBurningGround?.(snapshot.paused || snapshot.ended
+                ? [...groundTransitions, ...[...(state.soundTracker.audioGrounds?.keys() ?? [])].map(id => ({ type: 'stop', id, remainingSeconds: 0 }))]
+                : groundTransitions);
             if (snapshot.paused) state.resetInput?.();
             state.latestSnapshot = snapshot;
             state.simulationFrameCount++;
