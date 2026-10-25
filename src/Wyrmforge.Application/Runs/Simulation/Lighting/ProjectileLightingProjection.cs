@@ -49,7 +49,17 @@ public static class ProjectileLightingProjection
         IEnumerable<ProjectileState> projectiles,
         ProjectileLightIdentityRegistry identities,
         LightingEnvironment environment) =>
-        Capture(sceneId, simulationTick, projectiles.Select(projectile => (identities.GetId(projectile), projectile)), environment);
+        CaptureWithIdentities(sceneId, simulationTick, projectiles, identities, environment);
+
+    private static LightingSnapshot CaptureWithIdentities(
+        string sceneId, long simulationTick, IEnumerable<ProjectileState> projectiles,
+        ProjectileLightIdentityRegistry identities, LightingEnvironment environment)
+    {
+        var active = projectiles.ToArray();
+        identities.Retain(active);
+        return Capture(sceneId, simulationTick,
+            active.Select(projectile => (identities.GetId(projectile), projectile)), environment);
+    }
 
     public static LightingSnapshot Capture(
         string sceneId,
