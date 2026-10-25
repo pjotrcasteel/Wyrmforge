@@ -22,6 +22,10 @@ from build_grass_moss_art_candidates import (
 from build_grass_moss_compatible_bank import shared_edge_bank, edge_pair_error, bank_contact
 
 FAMILY = "wet-mud"
+TRAMPLED_REVIEW_ROLES = (
+    "subtle-footpath", "heavily-worn", "cart-ruts",
+    "muddier-wear", "broken-edge", "chaotic-wear",
+)
 
 
 def create(
@@ -59,6 +63,8 @@ def create(
         independent.append(finished)
         records.append({
             "candidate": number, "seed": seed, "size": [side, side],
+            "reviewIntent": TRAMPLED_REVIEW_ROLES[number - 1] if family == "trampled-earth" else "wet-mud-variation",
+            "visualRoleVerified": False,
             "sourceUsage": {f"{j + 1:02d}": choices.count(j) for j in range(6)},
             "independentSeam": metrics,
             "approved": False,
