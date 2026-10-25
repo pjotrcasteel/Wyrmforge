@@ -30,6 +30,11 @@ public sealed class Town3DReviewBrowserTests : PageTest
         var nightPeak = await PeakRgbAsync();
         Assert.IsGreaterThan(nightPeak, 8, "Night must show illuminated geometry and working fixtures");
         await CaptureAsync($"t2-town-night-{width}x{height}.png", artifacts);
+        Assert.IsFalse(await Page.EvaluateAsync<bool>("() => window.__town3dReview.moveActor(0, -.5)"),
+            "Manual actor movement may not enter the collidable stone well");
+        Assert.IsTrue(await Page.EvaluateAsync<bool>("() => window.__town3dReview.moveActor(-.25, 0)"),
+            "The nearby walkable square must remain traversable");
+        await CaptureAsync($"t2-town-manual-clearance-{width}x{height}.png", artifacts);
 
         await Page.Locator("#town3d-actor").SelectOptionAsync("behind-noticeboard");
         await CaptureAsync($"t2-town-behind-noticeboard-{width}x{height}.png", artifacts);
