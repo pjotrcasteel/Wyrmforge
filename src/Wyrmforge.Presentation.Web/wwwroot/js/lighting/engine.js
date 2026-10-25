@@ -266,10 +266,15 @@ float proofShadowVisibility() {
             const resolution = this.qualitySettings.shadowResolution;
             if (light.shadow.mapSize.x === resolution && light.shadow.mapSize.y === resolution) continue;
             light.shadow.map?.dispose();
+            light.shadow.mapPass?.dispose();
             light.shadow.map = null;
+            light.shadow.mapPass = null;
             light.shadow.mapSize.set(resolution, resolution);
             light.shadow.needsUpdate = true;
         }
+        // Reconcile the active Three.js lights immediately; otherwise a lower
+        // profile keeps rendering the previous profile's extra light objects.
+        if (this.snapshot) this.apply(this.snapshot);
     }
     diagnostics() {
         return { quality: this.quality, shadowResolution: this.qualitySettings.shadowResolution,
