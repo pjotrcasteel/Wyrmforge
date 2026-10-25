@@ -54,6 +54,14 @@ class SegmentBankTests(unittest.TestCase):
                 self.assertFalse(entry["approved"])
                 self.assertFalse(entry["gameIntegration"])
             self.assertTrue(all(p.read_bytes()==raw for p,raw in snapshots.items()))
+            # Outside the two narrow organic source-selection joins the
+            # generator must preserve the RGB of the selected source exactly.
+            sample = tool._sample([Image.open(directories[0] / f"grass-moss-ART-CANDIDATE-{i:02d}.png")
+                                  for i in range(1,7)], 0, 128, 320, 2)
+            source = np.asarray(Image.open(directories[0] / "grass-moss-ART-CANDIDATE-01.png"))
+            y, x = 12, 43
+            self.assertTrue(np.array_equal(sample[y,x].astype("uint8"),
+                                            source[(y+128//3+2*13)%128,(x+2*17)%128]))
             with self.assertRaises(ValueError):
                 tool.build(*directories,directories[1]/"illegal",side=128,height=320,overlap=32)
             (directories[1]/"trampled-earth-INDEPENDENT-ART-CANDIDATE-01.png").write_bytes(b"tampered")

@@ -47,6 +47,9 @@ def load_unapproved(source: Path) -> tuple[list[Image.Image], list[dict]]:
                 or entry.get("approved") is not False or entry.get("gameIntegration") is not False):
             raise ValueError(f"Invalid unapproved role/strip: {role}")
         data = _data(source, expected)
+        digest = hashlib.sha256(data).hexdigest()
+        if entry.get("sha256") != digest:
+            raise ValueError("Source-backed review art hash does not match its bank manifest")
         with Image.open(io.BytesIO(data)) as opened:
             if opened.mode != "RGB":
                 raise ValueError("RGB source-backed strips required")
@@ -57,7 +60,7 @@ def load_unapproved(source: Path) -> tuple[list[Image.Image], list[dict]]:
             raise ValueError("All six strips must share dimensions")
         dimensions = art.size
         images.append(art)
-        origins.append({"role": role, "file": expected, "sha256": hashlib.sha256(data).hexdigest(), "size": list(art.size)})
+        origins.append({"role": role, "file": expected, "sha256": digest, "size": list(art.size)})
     return images, origins
 
 

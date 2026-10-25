@@ -58,18 +58,24 @@ def _smoothstep(t: np.ndarray) -> np.ndarray:
 
 
 def _sample(images: list[Image.Image], index: int, side: int, height: int, seed: int) -> np.ndarray:
-    # Continuous y sampling across consecutive source-backed paintings. Changes
-    # occur only across broad bands, never abruptly at segment cut positions.
+    # Sample three distinct, hash-checked source paintings with continuous UVs;
+    # selection changes along softly contoured narrow joins, not crop positions.
     yy, xx = np.indices((height, side), dtype=np.int32)
     variants = [np.asarray(images[(index + shift) % 6].resize((side, side), Image.Resampling.BOX)) for shift in (0, 2, 4)]
     start = side // 3 + seed * 13
     u = (yy + start) % side
     v = (xx + index * 37 + seed * 17) % side
     rgb = variants[0][u, v].astype(np.float32)
-    joins = (height / 3.0, height * 2 / 3.0)
-    for k, seam in enumerate(joins):
-        weight = _smoothstep((yy.astype(np.float32) - (seam - side * .19)) / (side * .38))[..., None]
-        rgb = rgb * (1 - weight) + variants[k+1][u, v] * weight
+    # Preserve leaf, stone and soil pixels on both sides of continuous organic
+    # source-art boundaries. Only a four-pixel antialias zone crossfades RGB;
+    # broad fades double landmarks and turn detailed vegetation into ghosts.
+    # This is offline artwork selection, not authored game road geometry.
+    xx_float = xx.astype(np.float32)
+    for k, seam in enumerate((height / 3.0, height * 2 / 3.0)):
+        boundary = (seam + side * .080 * np.sin(xx_float / side * 7.3 + seed * .61 + k)
+                    + side * .026 * np.cos(xx_float / side * 16.4 - seed * .27 + 2 * k))
+        coverage = np.clip((yy.astype(np.float32) - boundary + 2.0) / 4.0, 0, 1)[..., None]
+        rgb = rgb * (1 - coverage) + variants[k + 1][u, v] * coverage
     return rgb
 
 

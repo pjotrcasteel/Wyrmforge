@@ -1,4 +1,5 @@
 """Deterministic art-only organic Trampled Earth transition tests."""
+import hashlib
 import importlib.util
 import json
 import tempfile
@@ -27,7 +28,7 @@ class OrganicTransitionTests(unittest.TestCase):
                                    (xx + yy + number*7)%256), axis=-1).astype("uint8")
                 name = f"{number:02d}-{role}-three-segment-strip.png"
                 Image.fromarray(pixels).save(bank / name)
-                rows.append({"role": role, "strip": name, "approved": False, "gameIntegration": False})
+                rows.append({"role": role, "strip": name, "sha256": hashlib.sha256((bank / name).read_bytes()).hexdigest(), "approved": False, "gameIntegration": False})
             (bank / "manifest.json").write_text(json.dumps({"status": "unapproved-art-study", "variants": rows}))
             receipt = tool.build(bank, home / "first")
             self.assertEqual(len(receipt["transitions"]), 6)
@@ -47,6 +48,12 @@ class OrganicTransitionTests(unittest.TestCase):
                 self.assertEqual((home/"first"/item["file"]).read_bytes(), (home/"second"/item["file"]).read_bytes())
             with self.assertRaises(ValueError):
                 tool.build(bank, bank / "illegal")
+            filename = bank / rows[0]["strip"]
+            unchanged = filename.read_bytes()
+            filename.write_bytes(unchanged + b"altered")
+            with self.assertRaises(ValueError):
+                tool.build(bank, home / "tampered")
+            filename.write_bytes(unchanged)
             rows[0]["approved"] = True
             (bank/"manifest.json").write_text(json.dumps({"status": "unapproved-art-study", "variants": rows}))
             with self.assertRaises(ValueError):
