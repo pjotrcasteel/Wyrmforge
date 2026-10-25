@@ -61,9 +61,22 @@ export async function initializeProof(canvas) {
         for (let i = 0; i < vertices.count; i++) vertices.setZ(i, .007 * Math.sin(vertices.getX(i) * 42 + vertices.getY(i) * 24));
         water.computeVertexNormals(); engine.registerGeometry('water', water);
         engine.registerGeometry('sphere', new T.SphereGeometry(.12, 8, 6));
-        engine.registerTexture('ground', await approvedGround());
-        for (const [id, folder] of [['hollowed', 'hollow-rigged'], ['ashling', 'ashling-rigged']])
-            { state.manifests[id] = await actorResources(engine, id, folder); state.animation[id] = createSpriteAnimationState(); }
+        try { engine.registerTexture('ground', await approvedGround()); }
+        catch (error) {
+            console.warn('Lighting proof ground atlas unavailable; showing fallback ground', error);
+            engine.registerTexture('ground', fallbackTexture());
+            state.warnings = [...(state.warnings ?? []), `Ground atlas: ${error.message}`];
+        }
+        for (const [id, folder] of [['hollowed', 'hollow-rigged'], ['ashling', 'ashling-rigged']]) {
+            try { state.manifests[id] = await actorResources(engine, id, folder); }
+            catch (error) {
+                console.warn(`Lighting proof ${id} art unavailable; showing diagnostic proxy`, error);
+                engine.registerGeometry(id, new T.PlaneGeometry(1, 1));
+                engine.registerTexture(id, fallbackTexture(id === 'hollowed' ? '#8d9597' : '#b16d4b'));
+                state.warnings = [...(state.warnings ?? []), `${id}: ${error.message}`];
+            }
+            state.animation[id] = createSpriteAnimationState();
+        }
         if (!state.alive) { engine.dispose(); return; }
         state.materials = [material('terrain', '#ffffff', .9, { albedo: 'ground' }), material('stone', '#777b80'),
             material('cutout-upper', '#ffffff', .9, { albedo: 'cutout-test' }),
@@ -82,7 +95,12 @@ export async function initializeProof(canvas) {
             // Existing actor reused to test the Town receiver seam, not proposed NPC artwork.
             object('npc-binding-proxy', 'hollowed', 'hollowed', [-2.2, 1.5, 0], [.7, .7, .7]),
             object('lantern-core', 'sphere', 'flame', [-2, 1.5, 1.7], [1, 1, 1], { castsShadow: false })];
-        const oak = await originalOak(engine);
+        let oak = { objects: [], materials: [] };
+        try { oak = await originalOak(engine); }
+        catch (error) {
+            console.warn('Lighting proof oak geometry unavailable', error);
+            state.warnings = [...(state.warnings ?? []), `Oak: ${error.message}`];
+        }
         if (!state.alive) { engine.dispose(); return; }
         state.objects.push(...oak.objects); state.materials.push(...oak.materials);
         state.animationTicks = 0;
@@ -190,7 +208,7 @@ export function proofPixels(canvas) { const e = states.get(canvas).engine; e.ren
 export function proofOptions(canvas) { return structuredClone(states.get(canvas).options); }
 export function proofDiagnostics(canvas) {
     const state = states.get(canvas);
-    return { ...state.engine.diagnostics(), animation: { ticks: state.animationTicks,
+    return { ...state.engine.diagnostics(), resourceWarnings: state.warnings ?? [], animation: { ticks: state.animationTicks,
         scheduled: state.loop.scheduled, frames: Object.fromEntries(Object.entries(state.samples).map(([id, sample]) => [id, sample.frame])) } };
 }
 export function disposeProof(canvas) {
