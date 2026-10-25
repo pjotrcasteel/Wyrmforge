@@ -5,7 +5,6 @@ import * as T from "../lighting/vendor/three.module.js";
 import {LightingEngine} from "../lighting/engine.js";
 import {validateTownScene} from "./town-scene-schema.js";
 import {parseTownObj} from "./town-obj-parser.js";
-import {buildTownSpatialIndex} from "./town-spatial-contract.js";
 
 const base = new URL("../../art/town/geometry/", import.meta.url);
 const materialPalette = Object.freeze({
@@ -85,10 +84,6 @@ export async function initializeTown3DReview(canvas, status) {
     const [obj, scene] = await Promise.all([response[0].text(), response[1].json()]);
     validateTownScene(scene);
     const parsed = parseTownObj(obj);
-    const spatial = buildTownSpatialIndex(scene, parsed);
-    for (const [name, position] of Object.entries(positions))
-        if (!spatial.isWalkable(position[0], position[1], .16))
-            throw new Error(`Invalid 3D Town actor footpoint: ${name}`);
 
     const engine = new LightingEngine(canvas);
     for (const group of parsed.groups.values()) {
@@ -121,8 +116,7 @@ export async function initializeTown3DReview(canvas, status) {
     const api = {
         getState() {
             return {ready: true, sceneNodes: scene.nodes.length, triangles: parsed.triangleCount,
-                groups: [...parsed.groups.keys()], colliders: spatial.colliders.length,
-                walkableRegions: spatial.walkable.length, mode, actorPosition,
+                groups: [...parsed.groups.keys()], mode, actorPosition,
                 actorFootpoint: [...actorFootpoint], view};
         },
         setMode(next) {
@@ -134,16 +128,6 @@ export async function initializeTown3DReview(canvas, status) {
             actorPosition = next;
             actorFootpoint = [...positions[next]];
             redraw();
-        },
-        moveActor(dx, dy) {
-            if (![dx, dy].every(Number.isFinite) || Math.max(Math.abs(dx), Math.abs(dy)) > .5)
-                throw new RangeError("Actor step exceeds the Town preview movement budget");
-            const x = actorFootpoint[0] + dx, y = actorFootpoint[1] + dy;
-            if (!spatial.isWalkable(x, y, .16)) return false;
-            actorFootpoint = [x, y, actorFootpoint[2]];
-            actorPosition = "manual";
-            redraw();
-            return true;
         },
         setView(next) {
             if (!["lit", "geometry", "normals", "albedo"].includes(next)) throw new RangeError("Invalid diagnostic");
@@ -189,17 +173,6 @@ export async function mountTown3DReview() {
             ["town3d-actor", "setActorPosition"],
             ["town3d-view", "setView"]
         ]) document.getElementById(id).addEventListener("change", event => api[method](event.target.value));
-        // Manual movement only: collider-gated keyboard/touch inspection, not agent AI.
-        for (const button of document.querySelectorAll("[data-step-x][data-step-y]"))
-            button.addEventListener("click", () => api.moveActor(
-                Number(button.dataset.stepX), Number(button.dataset.stepY)));
-        canvas.addEventListener("keydown", event => {
-            const step = {ArrowLeft: [-.25, 0], ArrowRight: [.25, 0],
-                ArrowUp: [0, .25], ArrowDown: [0, -.25]}[event.key];
-            if (!step) return;
-            event.preventDefault();
-            api.moveActor(...step);
-        });
         window.addEventListener("pagehide", () => api.dispose(), {once: true});
     } catch (error) {
         status.textContent = `Town 3D review error: ${error.message}`;
