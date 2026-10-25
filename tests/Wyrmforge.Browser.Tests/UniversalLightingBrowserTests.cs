@@ -181,9 +181,24 @@ public sealed class UniversalLightingBrowserTests : PageTest
             await ConfigureAsync(canvas, new { lighting = "scene", focus, profile = "night", view = "lit",
                 fireball = true, torch = true, spot = true, rune = false, frame = 0, progress = .25 });
             var night = await PixelHashAsync(canvas);
-            var nightPixels = await canvas.EvaluateAsync<int>(
-                "c => { const p=gpuProof.proofPixels(c); let n=0; for(let i=0;i<p.length;i+=4) if(p[i]||p[i+1]||p[i+2]) n++; return n; }");
-            Assert.IsGreaterThan(0, nightPixels, $"{focus} night must expose at least some world geometry to inspection.");
+            var nightMetrics = await canvas.EvaluateAsync<System.Text.Json.JsonElement>(
+                """
+                c => {
+                    const p = gpuProof.proofPixels(c);
+                    let visible = 0, dim = 0, midtone = 0, highlight = 0, max = 0;
+                    for (let i = 0; i < p.length; i += 4) {
+                        const luminance = .2126 * p[i] + .7152 * p[i+1] + .0722 * p[i+2];
+                        if (luminance > 0) visible++;
+                        if (luminance > 0 && luminance < 32) dim++;
+                        if (luminance >= 32 && luminance < 128) midtone++;
+                        if (luminance >= 128) highlight++;
+                        max = Math.max(max, luminance);
+                    }
+                    return { visible, dim, midtone, highlight, max };
+                }
+                """);
+            Assert.IsGreaterThan(0, nightMetrics.GetProperty("visible").GetInt32(),
+                $"{focus} night must expose at least some world geometry to inspection.");
             await CaptureAsync(width, $"night-review-{focus}");
             await ConfigureAsync(canvas, new { profile = "day" });
             var day = await PixelHashAsync(canvas);
@@ -196,7 +211,7 @@ public sealed class UniversalLightingBrowserTests : PageTest
             await ConfigureAsync(canvas, new { profile = "night" });
             Assert.AreEqual(night, await PixelHashAsync(canvas),
                 $"{focus} night must restore the same frozen framebuffer after day/zero inspection.");
-            comparisons.Add(new { focus, nightVisiblePixels = nightPixels, dayDiffers = true, zeroIsBlack = true });
+            comparisons.Add(new { focus, nightLuminance = nightMetrics, dayDiffers = true, zeroIsBlack = true });
         }
         await RecordComparisonAsync(width, "night-visibility-review", comparisons);
     }
