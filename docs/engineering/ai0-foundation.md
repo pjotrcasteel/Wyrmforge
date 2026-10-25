@@ -44,3 +44,11 @@ Reproduce with `dotnet test tests/Wyrmforge.Domain.Tests`, `dotnet test tests/Wy
 Playable entry points: `/enemy-lab?kind=Hollow&ai0=true&autoplay=false&cast=false` and `/enemy-lab?kind=MireHound&ai0=true&autoplay=false&cast=false`. Pause and select **Refresh AI inspector** for a stable readout. Uncheck AI0 or remove its query parameter for fallback. No save migration, asset change, balancing change or new normal-Hunt behavior is introduced.
 
 Remaining after AI0: earned sensing and navigation/memory-expiry contracts (AI1, including Whitefang input provenance); Town modules (AI2); richer combat tactics (AI3); packs and global scheduling/pressure budgets (AI4); bounded adaptation (AI5); physical-device profiling and rollout (AI6). The compatibility policy selects existing execution modules, not new phase tactics. Snapshot restore reproduces **core** state with the same policy/version; full world/executor save/replay migration is not claimed. Current trace/blackboard bounds are entry counts, not a measured mobile allocation budget.
+
+## User-reported blank preview — 25 October
+
+The in-app browser console recorded a failed dynamic import of `/js/arena.js`; `Frame` never ran, hence the inspector correctly said the encounter had not started. The underlying transient fetch failure was not reproduced after opening a fresh tab. Added a visible startup error and explicit Retry action with a fresh root module URL, instead of silently leaving an empty canvas. A failed nested module may still require a page reload, as the message states.
+
+Release publish and all **3** AI0 browser tests pass, including a deliberately aborted arena module request followed by successful recovery without reloading. Verified the actual in-app browser: no console errors, running Hound and populated inspector at tick 5404. [Recovered in-app preview](evidence/ai0/startup-recovered-iab.png). This supersedes the earlier two-browser-test count; CI/merge remain separate.
+
+Owner-reported Hollowed animation merge checked via GitHub: #333 merged at `0b084a0f32bad56027795beb467927864fd83aeb` into `feat/universal-gpu-lighting-g0-g1`, not `main`. Remote main remained `18318936`. This AI0 preview therefore does not yet contain that branch's new animation/material work; no unrelated GPU branch was merged or source assets overwritten.
