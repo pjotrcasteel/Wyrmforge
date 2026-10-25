@@ -216,7 +216,10 @@
         // Six small original Fireball casts/hits are needed on the first actual
         // encounter, not downloaded while a projectile is already on screen.
         const fireball = recordedManifest.cues?.fire;
-        for (const take of [...(fireball?.variants ?? []), ...(fireball?.hitVariants ?? [])]) {
+        const flight = recordedManifest.cues?.['fire-flight'];
+        const burning = recordedManifest.cues?.['fire-burning'];
+        for (const take of [...(fireball?.variants ?? []), ...(fireball?.hitVariants ?? []),
+            ...(flight?.variants ?? []), ...(burning?.variants ?? [])]) {
             void loadRecordedBuffer(take).catch(() => {});
         }
     }

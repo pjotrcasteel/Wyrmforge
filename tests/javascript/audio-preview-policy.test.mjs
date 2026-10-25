@@ -36,9 +36,9 @@ test('Fireball uses new original assets exclusively, and Worn Vellum cannot fall
     assert.equal(fire.license, 'Original');
     assert.equal(fire.buildup, undefined);
     assert.deepEqual(fire.variants.map(x => x.file),
-        ['fireball-r1-cast-1.ogg', 'fireball-r1-cast-2.ogg']);
+        Array.from({ length: 6 }, (_, index) => 'fireball-r1-cast-' + (index + 1) + '.ogg'));
     assert.deepEqual(fire.hitVariants.map(x => x.file),
-        ['fireball-r1-hit-1.ogg', 'fireball-r1-hit-2.ogg']);
+        Array.from({ length: 6 }, (_, index) => 'fireball-r1-hit-' + (index + 1) + '.ogg'));
     assert.equal(manifest.authoredFireballStages.R1.oldAudioSourceUsed, false);
     assert.equal(manifest.authoredFireballStages.R1.approved, false);
     assert.deepEqual(Object.keys(manifest.uiMaterials).sort(), ['iron', 'vellum']);

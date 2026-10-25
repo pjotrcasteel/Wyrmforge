@@ -210,3 +210,23 @@ test('Sound Atelier auditions each creature action with alternating recorded A/B
     assert.match(js, /function prewarmCreaturesInHunt\(\)/);
     assert.match(js, /if \(desired === 'hunt'\) prewarmCreaturesInHunt\(\)/);
 });
+
+
+test('newly authored flight and burning cues use six original source-checked takes each', () => {
+    for (const [name, stage] of [['fire-flight', 'flight'], ['fire-burning', 'burn']]) {
+        const cue = manifest.cues[name];
+        assert.equal(cue.license, 'Original');
+        assert.equal(cue.source, 'tools/audio/build_fireball_r1.py');
+        assert.equal(cue.variants.length, 6);
+        const hashes = new Set();
+        for (const [index, variant] of cue.variants.entries()) {
+            assert.equal(variant.file, 'fireball-r1-' + stage + '-' + (index + 1) + '.ogg');
+            assert.equal(variant.source, 'tools/audio/build_fireball_r1.py');
+            const bytes = readFileSync(new URL(variant.file, directory));
+            assert.equal(bytes.subarray(0, 4).toString(), 'OggS');
+            assert.equal(sha256(bytes), variant.sha256);
+            hashes.add(variant.sha256);
+        }
+        assert.equal(hashes.size, 6);
+    }
+});
