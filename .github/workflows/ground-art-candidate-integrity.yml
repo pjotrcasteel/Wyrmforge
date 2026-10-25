@@ -17,6 +17,8 @@ on:
       - 'tools/art/build_trampled_earth_art_candidates.py'
       - 'tools/art/build_old_paving_art_candidates.py'
       - 'tools/art/build_scorched_ground_art_candidates.py'
+      - 'tools/art/build_marsh_wet_bank_art_candidates.py'
+      - 'tools/art/tests/test_marsh_wet_bank_art_candidates.py'
       - 'tools/art/tests/test_scorched_ground_art_candidates.py'
       - 'tools/art/tests/test_old_paving_art_candidates.py'
       - 'tools/art/tests/test_trampled_earth_art_candidates.py'
@@ -85,6 +87,8 @@ jobs:
         run: python tools/art/build_old_paving_art_candidates.py --output "$RUNNER_TEMP/ground-material-probes/old-paving-art-candidates"
       - name: Export six Scorched Ground paintings and six compatible review tiles (no emissive maps)
         run: python tools/art/build_scorched_ground_art_candidates.py --output "$RUNNER_TEMP/ground-material-probes/scorched-ground-art-candidates"
+      - name: Export six Marsh/Wet Bank paintings and six compatible review tiles (no water geometry)
+        run: python tools/art/build_marsh_wet_bank_art_candidates.py --output "$RUNNER_TEMP/ground-material-probes/marsh-wet-bank-art-candidates"
       - name: Upload all unapproved Wet Forest ground art evidence
         uses: actions/upload-artifact@v4
         with:
