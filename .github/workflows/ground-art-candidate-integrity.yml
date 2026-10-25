@@ -12,6 +12,7 @@ on:
       - 'tools/art/ground_family_footprint_review.py'
       - 'tools/art/review_ground_feature_motifs.py'
       - 'tools/art/build_grass_moss_art_candidates.py'
+      - 'tools/art/build_grass_moss_compatible_bank.py'
       - 'tools/art/tests/test_ground_material_probe.py'
       - 'tools/art/tests/test_ground_quilt_study.py'
       - 'tools/art/tests/test_ground_transition_study.py'
@@ -19,6 +20,7 @@ on:
       - 'tools/art/tests/test_ground_family_footprint_review.py'
       - 'tools/art/tests/test_ground_feature_motifs.py'
       - 'tools/art/tests/test_grass_moss_art_candidates.py'
+      - 'tools/art/tests/test_grass_moss_compatible_bank.py'
       - '.github/workflows/ground-art-candidate-integrity.yml'
   workflow_dispatch:
 permissions:
@@ -65,7 +67,9 @@ jobs:
         run: python tools/art/review_ground_feature_motifs.py --output "$RUNNER_TEMP/ground-material-probes"
       - name: Synthesize six edge-continuous Grass and Moss art candidates (no runtime)
         run: python tools/art/build_grass_moss_art_candidates.py --output "$RUNNER_TEMP/ground-material-probes/grass-moss-art-candidates"
-      - name: Upload Grass/Moss art candidates and previous source studies
+      - name: Build six mutually seam-compatible Grass and Moss candidate art tiles
+        run: python tools/art/build_grass_moss_compatible_bank.py --output "$RUNNER_TEMP/ground-material-probes/grass-moss-compatible-bank"
+      - name: Upload Grass/Moss art libraries and previous source studies
         uses: actions/upload-artifact@v4
         with:
           name: wet-forest-grass-mud-repeat-studies
