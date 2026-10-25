@@ -3,18 +3,25 @@
 Run from repository root:
     blender --background --factory-startup --python tools/town/t1_import_export_blender.py
 
-Generates an editable .blend and a portable glTF .glb from the checked-in
-OBJ/MTL geometry. This is a NONPRODUCTION calibration sample, never baked Town art.
+Generates an editable .blend, glTF .glb and PNG from the checked-in OBJ/MTL geometry.
+Set TOWN_GEOMETRY_VARIANT=t2 for the detailed Gothic Town preview.
+Both outputs are NONPRODUCTION and require owner visual approval.
 """
 from pathlib import Path
+import os
 import bpy
 
 ROOT = Path(__file__).resolve().parents[2]
 ASSETS = ROOT / "src/Wyrmforge.Presentation.Web/wwwroot/art/town/geometry"
-SOURCE = ASSETS / "t1-central-square-preview.obj"
-BLEND = ASSETS / "t1-central-square-preview.blend"
-GLB = ASSETS / "t1-central-square-preview.glb"
-PREVIEW = ASSETS / "t1-central-square-preview.png"
+VARIANTS = {"t1": "t1-central-square-preview", "t2": "t2-central-square-gothic"}
+VARIANT = os.environ.get("TOWN_GEOMETRY_VARIANT", "t1")
+if VARIANT not in VARIANTS:
+    raise ValueError("TOWN_GEOMETRY_VARIANT must be t1 or t2")
+PREFIX = VARIANTS[VARIANT]
+SOURCE = ASSETS / f"{PREFIX}.obj"
+BLEND = ASSETS / f"{PREFIX}.blend"
+GLB = ASSETS / f"{PREFIX}.glb"
+PREVIEW = ASSETS / f"{PREFIX}.png"
 
 if not SOURCE.is_file():
     raise FileNotFoundError(SOURCE)
@@ -26,9 +33,9 @@ bpy.ops.wm.obj_import(filepath=str(SOURCE), forward_axis='Y', up_axis='Z',
 
 meshes = [obj for obj in bpy.context.scene.objects if obj.type == "MESH"]
 if not meshes:
-    raise RuntimeError("T1 OBJ importer returned no 3D mesh")
+    raise RuntimeError(f"{VARIANT} OBJ importer returned no 3D mesh")
 if len(meshes) < 5:
-    raise RuntimeError("T1 OBJ groups were not preserved as separate semantic meshes")
+    raise RuntimeError(f"{VARIANT} OBJ groups were not preserved as separate semantic meshes")
 
 # Mesh stays in real metric coordinates. Blender Z-up is converted to glTF Y-up
 # by the glTF exporter, leaving the game's scene-schema axes as documented.
@@ -37,7 +44,7 @@ bpy.context.scene.unit_settings.scale_length = 1.0
 for obj in meshes:
     obj["town.schemaVersion"] = 1
     obj["town.previewOnly"] = True
-    obj["town.semanticGroup"] = "town.center"
+    obj["town.semanticGroup"] = obj.name if obj.name.startswith("town.") else "town.center"
 
 # Nonproduction reference camera and lights for mesh-quality review only.
 # The actual game uses the universal LightingEngine, NOT Blender lights.
@@ -45,7 +52,7 @@ from mathutils import Vector
 
 bpy.ops.object.camera_add(location=(7.5, -10, 8.8))
 camera = bpy.context.object
-camera.name = "T1_REFERENCE_CAMERA_NONPRODUCTION"
+camera.name = f"{VARIANT.upper()}_REFERENCE_CAMERA_NONPRODUCTION"
 direction = Vector((0, 0, 1.0)) - camera.location
 camera.rotation_euler = direction.to_track_quat("-Z", "Y").to_euler()
 camera.data.type = "ORTHO"
@@ -54,7 +61,7 @@ bpy.context.scene.camera = camera
 
 bpy.ops.object.light_add(type="AREA", location=(1.5, -1.4, 8.5))
 source_light = bpy.context.object
-source_light.name = "T1_MESH_REVIEW_LIGHT_NOT_GAME_LIGHT"
+source_light.name = f"{VARIANT.upper()}_REVIEW_LIGHT_NOT_GAME_LIGHT"
 source_light.data.energy = 800
 source_light.data.shape = "DISK"
 source_light.data.size = 8
@@ -76,5 +83,5 @@ bpy.ops.render.render(write_still=True)
 bpy.ops.export_scene.gltf(filepath=str(GLB), export_format="GLB",
                            export_yup=True, export_apply=True)
 if not all(p.is_file() and p.stat().st_size > 100 for p in (BLEND, GLB, PREVIEW)):
-    raise RuntimeError("T1 export did not generate the .blend, .glb and PNG outputs")
-print(f"T1 exported {len(meshes)} mesh groups: {BLEND}, {GLB}, {PREVIEW}")
+    raise RuntimeError(f"{VARIANT} export did not generate the .blend, .glb and PNG outputs")
+print(f"{VARIANT.upper()} exported {len(meshes)} mesh groups: {BLEND}, {GLB}, {PREVIEW}")
