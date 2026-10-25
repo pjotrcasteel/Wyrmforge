@@ -194,3 +194,19 @@ test('pause and resume never re-trigger a ground patch that already exists', () 
     collectSoundEvents(tracker, frame({ paused: true, burningGrounds: [{ id: 20 }] }), 100);
     assert.deepEqual(collectSoundEvents(tracker, frame({ burningGrounds: [{ id: 20 }] }), 400), []);
 });
+
+
+test('stable projectile IDs detect a new launch when another projectile disappears in the same frame', () => {
+    const tracker = createSoundEventTracker();
+    collectSoundEvents(tracker, frame({ projectiles: [{ id: 1, spell: 2 }] }), 0);
+    assert.deepEqual(collectSoundEvents(tracker, frame({ projectiles: [{ id: 2, spell: 1 }] }), 400),
+        ['fire', 'fire-flight']);
+    assert.deepEqual(collectSoundEvents(tracker, frame({ projectiles: [{ id: 2, spell: 1 }] }), 500), []);
+});
+
+test('stable projectile IDs detect a launch despite a decreasing projectile count', () => {
+    const tracker = createSoundEventTracker();
+    collectSoundEvents(tracker, frame({ projectiles: [{ id: 1, spell: 2 }, { id: 2, spell: 2 }] }), 0);
+    assert.deepEqual(collectSoundEvents(tracker, frame({ projectiles: [{ id: 3, spell: 1 }] }), 400),
+        ['fire', 'fire-flight']);
+});
