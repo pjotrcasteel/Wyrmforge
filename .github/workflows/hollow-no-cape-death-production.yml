@@ -44,6 +44,11 @@ jobs:
       - name: Save source, runtime candidate and QC previews
         run: |
           set -euo pipefail
+          # The generated source is untracked under artifacts/. Other work may
+          # have landed during the Blender render. Start the artifact commit on
+          # the newest remote head; do NOT rebase conflicting binary outputs.
+          git fetch origin art/hollow-no-cape-death-3d-production
+          git reset --hard FETCH_HEAD
           source=artifacts/hollow-no-cape-death
           atlas=src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/hollow-rigged/death
           reviews=docs/art/evidence/hollow-no-cape-death-2026-10-25
@@ -56,10 +61,6 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -f "$atlas/death.png" "$atlas/manifest.json" "$reviews/death-contact-sheet.png" "$reviews/death-south-review.gif" "$editable/hollow-death.blend"
           git commit -m "art(hollowed): generate 3D no-cape death source, atlas, and QC evidence [skip ci]"
-          # Other art/renderer commits may land while Blender is rendering.
-          # Replay this artifact-only commit on the newest branch head; never force push.
-          git fetch origin art/hollow-no-cape-death-3d-production
-          git rebase origin/art/hollow-no-cape-death-3d-production
           git push origin "HEAD:refs/heads/art/hollow-no-cape-death-3d-production"
       - uses: actions/upload-artifact@v4
         if: always()
