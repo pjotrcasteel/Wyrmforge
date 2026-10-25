@@ -6,6 +6,8 @@
 <main class="gpu-proof">
     <h1>Shared light engine</h1>
     <p>G0–G1 isolated GPU proof. Town and Hunts are unchanged. Original oak geometry and exported walk-pose normals are under review. Production adoption remains pending.</p>
+    @if (error is not null) { <p role="alert">@error</p> }
+    <canvas @ref="canvas" aria-label="Shared GPU world lighting proof"></canvas>
     <nav aria-label="Light inspection">
         <label>Camera <select aria-label="Camera" @bind="focus" @bind:after="Sync"><option>overview</option><option>actors</option><option>oak</option><option>town</option><option>water</option><option>cutouts</option></select></label>
         <label>Camera pan (pixels) <input aria-label="Camera pan" type="range" min="-8" max="8" @bind="panPixels" @bind:event="oninput" @bind:after="Sync" /></label>
@@ -35,8 +37,6 @@
         <label><input aria-label="Receives light" type="checkbox" @bind="receivesLight" @bind:after="Sync" /> Receives light</label>
         <label>Walk frame <input aria-label="Walk frame" type="range" min="0" max="15" @bind="frame" @bind:event="oninput" @bind:after="Sync" /></label>
     </nav>
-    @if (error is not null) { <p role="alert">@error</p> }
-    <canvas @ref="canvas" aria-label="Shared GPU world lighting proof"></canvas>
     <details><summary>Emitter registry and GPU diagnostics</summary><pre>@diagnostics</pre></details>
     <p>Screen-space readability remains visible even with all world light and emission off. The Town corner is diagnostic geometry, not replacement Town artwork.</p>
 </main>

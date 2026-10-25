@@ -445,3 +445,9 @@ per-frame hashes on replay. Resize/restore must preserve the frame and resource
 counts. These are deterministic GPU comparisons, not physical-device frame-time
 measurements or a claim of subpixel camera stability. New slice GPU CI pending.
 No actor assets, wizard work, production paths or C# state are changed.
+
+Night inspection of the prior published-app captures still shows small overview
+actors and a very dark oak; close-up illumination is localized and warm. No
+ambient boost or art approval is implied. The lab now places its canvas above
+controls, making the actual world visible on the first phone screen. This changes
+inspection layout only, not framebuffer sizing, source parameters or gameplay.
