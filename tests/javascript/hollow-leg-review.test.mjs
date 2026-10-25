@@ -111,7 +111,7 @@ test('the smoother even-cadence source is a separate byte-exact opt-in review, n
     const png=readFileSync(new URL(even.image,evenDir));
     const evidence=readFileSync(new URL('../../../docs/art/evidence/hollowed-broken-leg-even-cadence/candidate-walk-eight-directions.png',root));
     assert.deepEqual(png,evidence);
-    const blobSha=createHash('sha1').update(Buffer.from('blob '+png.length+'\\0')).update(png).digest('hex');
+    const blobSha=createHash('sha1').update(Buffer.from('blob '+png.length+'\0')).update(png).digest('hex');
     assert.equal(blobSha,even.sourceBlobSha);
     assert.notEqual(even.sourceBlobSha,manifest.sourceBlobSha);
     const prevFetch=globalThis.fetch,prevImage=globalThis.Image;
