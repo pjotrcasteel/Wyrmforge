@@ -16,6 +16,7 @@
     const fireballShuffleBags = new Map();
     const burningGroundVoices = new Map();
     const burningGroundPending = new Set();
+    const burningGroundGenerations = new Map();
 
     function nextFireballTake(key, count) {
         if (count <= 1) return 0;
@@ -346,6 +347,7 @@
     // The simulation owns patch lifetime. Looped original recordings are faded out when
     // the corresponding registered patch expires, rather than playing a fixed 3.9s tail.
     function stopBurningGround(id) {
+        burningGroundGenerations.set(id, (burningGroundGenerations.get(id) ?? 0) + 1);
         burningGroundPending.delete(id);
         const voice = burningGroundVoices.get(id);
         if (!voice) return;
@@ -374,8 +376,10 @@
             const index = nextFireballTake('fire-burning-loop', options.length);
             const entry = options[index];
             burningGroundPending.add(id);
+            const generation = (burningGroundGenerations.get(id) ?? 0) + 1;
+            burningGroundGenerations.set(id, generation);
             void loadRecordedBuffer(entry).then(buffer => {
-                if (!burningGroundPending.has(id) || !enabled || document.hidden || !context || context.state === 'closed') return;
+                if (burningGroundGenerations.get(id) !== generation || !burningGroundPending.has(id) || !enabled || document.hidden || !context || context.state === 'closed') return;
                 const source = context.createBufferSource();
                 const gain = context.createGain();
                 source.buffer = buffer;
@@ -398,7 +402,9 @@
                 };
                 source.start(at);
             }).catch(error => console.warn('Burning ground recording unavailable:', error))
-                .finally(() => burningGroundPending.delete(id));
+                .finally(() => {
+                    if (burningGroundGenerations.get(id) === generation) burningGroundPending.delete(id);
+                });
         }
     }
 
