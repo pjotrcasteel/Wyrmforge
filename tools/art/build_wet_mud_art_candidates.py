@@ -55,8 +55,10 @@ def create(
             preferred_source=number - 1 if family == "trampled-earth" else None,
             preference_weight=.75 if family == "trampled-earth" else 0.0,
         )
-        if set(choices) != set(range(6)):
-            raise AssertionError("Each trial must consume all six source artworks")
+        if family == "wet-mud" and set(choices) != set(range(6)):
+            raise AssertionError("Wet Mud trials must consume all six source artworks")
+        if family == "trampled-earth" and number - 1 not in choices:
+            raise AssertionError("Trampled Earth candidate must use its designated original painting")
         finished = periodic_component(raw)
         metrics = seam_metrics(finished)
         if metrics["meanRgbGapLeftRight"] or metrics["meanRgbGapTopBottom"]:
