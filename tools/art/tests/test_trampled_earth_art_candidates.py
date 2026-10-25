@@ -32,6 +32,9 @@ class TrampledEarthArtTests(unittest.TestCase):
             self.assertTrue((output / result["semanticRoleReview"]).is_file())
             self.assertEqual(len({v["reviewIntent"] for v in result["variants"]}), 6)
             self.assertTrue(all(v["visualRoleVerified"] is False for v in result["variants"]))
+            self.assertEqual([v["dominantSourceIntent"] for v in result["variants"]], list(range(1, 7)))
+            self.assertTrue(all(v["sourceUsage"][f"{i:02d}"] > 0 for i, v in enumerate(result["variants"], 1)))
+            self.assertEqual(len(list(output.glob("*UNAPPROVED.jpg"))), 3)
             self.assertTrue((output / "trampled-earth-art-candidates.json").is_file())
 
 
