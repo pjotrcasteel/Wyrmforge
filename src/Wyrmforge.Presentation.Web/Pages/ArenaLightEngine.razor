@@ -17,6 +17,8 @@
     </div>
     <nav aria-label="Light inspection">
         <label><input aria-label="Screen-space warning" type="checkbox" @bind="warningCue" /> Screen-space warning (lab)</label>
+        <label>GPU quality <select aria-label="GPU quality" @bind="quality" @bind:after="Sync"><option>low</option><option>medium</option><option>high</option><option>diagnostic</option></select></label>
+        <label><input aria-label="Adaptive GPU quality" type="checkbox" @bind="adaptive" @bind:after="Sync" /> Adaptive quality (CPU frame-time heuristic)</label>
         <label>Camera <select aria-label="Camera" @bind="focus" @bind:after="Sync"><option>overview</option><option>actors</option><option>oak</option><option>town</option><option>water</option><option>cutouts</option></select></label>
         <label>Camera pan (pixels) <input aria-label="Camera pan" type="range" min="-8" max="8" step="0.25" @bind="panPixels" @bind:event="oninput" @bind:after="Sync" /></label>
         <label>Diagnostic <select aria-label="Diagnostic" @bind="view" @bind:after="Sync"><option>lit</option><option>albedo</option><option>normals</option><option>geometry</option><option value="object-mask">Selected receiver mask</option><option value="shadow-visibility">Point shadow visibility</option><option value="light-depth">Light depth atlas</option><option value="light-bounds">Light bounds</option></select></label>
@@ -54,7 +56,8 @@
     private IJSObjectReference? module;
     private string focus = "overview", inspectObject = "hollowed", diagnostics = "";
     private bool normals = true, castsShadow = true, receivesShadow = true, receivesLight = true;
-    private string view = "lit", lighting = "scene";
+    private string view = "lit", lighting = "scene", quality = "medium";
+    private bool adaptive;
     private string profile = "night", school = "arcane";
     private bool townActive = true, aboveRoof;
     private int mastery;
@@ -81,7 +84,7 @@
     private async Task Sync()
     {
         if (module is not null) await module.InvokeVoidAsync("configureProof", canvas,
-            new { profile, view, lighting, panPixels, townActive, aboveRoof, school, mastery = mastery / 100.0, sourceDistance, behind, cutouts, cutoutAlpha, focus, inspectObject, normals, castsShadow, receivesShadow, receivesLight, animate, fireball, torch, spot, rune, shadows, reflections, progress = progress / 100.0, frame });
+            new { profile, view, lighting, quality, adaptive, panPixels, townActive, aboveRoof, school, mastery = mastery / 100.0, sourceDistance, behind, cutouts, cutoutAlpha, focus, inspectObject, normals, castsShadow, receivesShadow, receivesLight, animate, fireball, torch, spot, rune, shadows, reflections, progress = progress / 100.0, frame });
         await ReadDiagnostics();
     }
     private async Task ReadDiagnostics()
