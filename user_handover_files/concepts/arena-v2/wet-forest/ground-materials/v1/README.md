@@ -74,6 +74,16 @@ The wavering test boundary is explicitly **not** a C# `WetForestRecipe`, road sh
 
 Generate from the repository root with `python tools/art/ground_transition_study.py --output /tmp/wyrmforest-ground-source-review`, after installing the pinned visual-review dependencies in the workflow. The draft PR's **Wet Forest ground concept integrity** artifact also contains the preview boards once CI succeeds. These boards are **not** a substitute for the shared GPU-lighting integration, actual iOS/Android inspection, or user approval.
 
+## Explicitly authored puddle study — Wet Mud variant 01
+
+The first visual-only semantic-layer prototype is at [`annotations/wet-mud-01-water-study.json`](annotations/wet-mud-01-water-study.json). It contains **seven hand-positioned UV polygons**, independently hash-locked to the source WebP and original PNG. They tentatively mark major painted puddle areas in one Wet Mud candidate. This is not automatic RGB segmentation: rocks, soil, small bright glints and shorelines cannot be reliably inferred from color alone.
+
+`python tools/art/review_ground_semantic_mask.py --output /tmp/wyrm-water-annotation-review` produces a monochrome, explicitly vector-rasterized *draft* image mask, a source-versus-tinted-annotation comparison, and a JSON report with area and output hash. **About 11% of the artwork** falls inside the initial coarse polygons. The outlines still overlap some ground and miss small puddles. They are not good enough for production water, physically accurate world geometry or renderer source-of-truth.
+
+The tool refuses unknown, tampered or approved source identities; it rejects unexpected polygon coordinates, and cannot write inside the immutable art archive. All generated files carry `UNAPPROVED` names and never enter game code. This source annotation is an editable review milestone—not a finished albedo, normal, roughness, reflectance, depth, shoreline or physics authoring solution.
+
+Do not promote the annotation to a reflection material, C# wetland geometry, or runtime map until the artist refines it, the owner approves the variant, and the **same universal GPU lighting system** from PR #332 passes its proper receiving/reflection and mobile validation gates.
+
 ## Approval/locking protocol
 **Do not rename this folder CANONICAL or update runtime references until the owner explicitly accepts
 these 36 images.** After approval, record approved image hashes in an immutable manifest
