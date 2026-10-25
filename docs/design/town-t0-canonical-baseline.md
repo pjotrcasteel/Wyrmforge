@@ -25,6 +25,18 @@ Navigation/masking assets: `night-navigation.json`, `nexus-v2-walk-mask.svg`, `n
 - `wwwroot/art/town/night-navigation.json`: canonical 1672×941 source-coordinate data, including walkable, obstacles, destinations and foreground occluders. Navigation/collision polygons do **not** imply physically correct 3D caster/receiver geometry.
 - `wwwroot/js/lighting/town-relightable-contract.js` on G4: migration adapter only; does not imply a production 3D Town.
 
+## 2a. Verified geometry counts and migration hazards (2026-10-25)
+
+The `night-navigation.json` source declares a **1672×941** painting-space canvas, **16** walkable polygons, **31** obstacle footprints, **30** destinations and **11** foreground occluders. These are distinct semantic layers and must not be merged into one mesh or used as direct lighting geometry.
+
+The eleven occluders are: `noticeboard-foreground`, `well-foreground`, `west-gate-banner-foreground`, `east-gate-banner-foreground`, `west-lower-pillar-foreground`, `east-lower-pillar-foreground`, `hall-terrace-foliage-foreground`, `nexus-low-terrace-railing-foreground`, `world-gate-arch-roof`, `nexus-terrace-bushes-foreground`, `nexus-stairs-shrubs-foreground`.
+
+**Navigation divergence to resolve:** optional `town-v2-nexus.js` uses a **6-pixel grid** and **8-pixel foot radius** against a rasterized mask; it explicitly does not use the JSON. It also defines separate well/noticeboard cutout bounds and depth rules. The production actor view and V2 are different runtime paths, so a T1 mesh must not silently replace either. Record route parity and occlusion screenshots for both before migration.
+
+**Production visual-state caveat:** the Razor Town view directly references `night-active.webp` and night vacancy overlays. Day assets exist in the repository, but their presence alone does **not** prove that the current production Town renders a functioning day mode. C06 remains a runtime verification task.
+
+**Interaction IDs verified in Razor:** Arcane Nexus = `build`, Blacksmith = `forge`, Codex = `codex`, Hall of Fame = `legends`; World Gate uses a separate `OnGate` callback. Keep these identifiers stable during 3D migration.
+
 ## 3. Visual capture matrix — required real in-game evidence
 
 Capture screenshots using identical gameplay state and camera position for both legacy and future 3D Town. Record **viewport**, device/browser, commit SHA, feature flags, building unlocks, school/mastery, time profile, district and NPC count. Save PNGs under an explicit T0 artifact name; **do not substitute static paintings or generated concept images for runtime screenshots**.
