@@ -54,12 +54,12 @@ jobs:
           reviews=docs/art/evidence/hollow-no-cape-death-2026-10-25
           editable=art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-death-no-cape-standard
           mkdir -p "$atlas" "$reviews" "$editable"
-          cp "$source/death.png" "$source/manifest.json" "$atlas/"
-          cp "$source/death-contact-sheet.png" "$source/death-south-review.gif" "$reviews/"
+          cp "$source"/death*.png "$source/manifest.json" "$atlas/"
+          cp "$source"/death-contact-sheet*.png "$source"/death-south-review*.gif "$reviews/"
           cp "$source/hollow-no-cape-death.blend" "$editable/hollow-death.blend"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -f "$atlas/death.png" "$atlas/manifest.json" "$reviews/death-contact-sheet.png" "$reviews/death-south-review.gif" "$editable/hollow-death.blend"
+          git add -f "$atlas"/death*.png "$atlas/manifest.json" "$reviews"/death-contact-sheet*.png "$reviews"/death-south-review*.gif "$editable/hollow-death.blend"
           git commit -m "art(hollowed): generate 3D no-cape death source, atlas, and QC evidence [skip ci]"
           git push origin "HEAD:refs/heads/art/hollow-no-cape-death-3d-production"
       - uses: actions/upload-artifact@v4
@@ -67,8 +67,8 @@ jobs:
         with:
           name: hollow-no-cape-death-preview
           path: |
-            artifacts/hollow-no-cape-death/death-contact-sheet.png
-            artifacts/hollow-no-cape-death/death-south-review.gif
+            artifacts/hollow-no-cape-death/death-contact-sheet*.png
+            artifacts/hollow-no-cape-death/death-south-review*.gif
             artifacts/hollow-no-cape-death/manifest.json
           if-no-files-found: warn
           retention-days: 14
