@@ -199,6 +199,19 @@ def build(root: Path, annotation_file: Path, output: Path, preview_size: int = 4
         composed = Image.composite(image, background, soft_mask)
         composed_name = f"{name}-PAINTED-FEATURE-COMPOSITION-UNAPPROVED.png"
         composed.save(output / composed_name)
+        # Native mobile-scale art review. Resize the full composition instead
+        # of inventing an in-game scene, lighting, or camera.
+        mobile_size = (240, 240)
+        mobile = composed.resize(mobile_size, Image.Resampling.LANCZOS)
+        mobile_name = f"{name}-MOBILE-PAINTED-FEATURE-UNAPPROVED.png"
+        mobile.save(output / mobile_name)
+        reference_mobile = image.resize(mobile_size, Image.Resampling.LANCZOS)
+        mobile_board = Image.new("RGB", (480, 284), "#17191b")
+        ImageDraw.Draw(mobile_board).text((12, 12), "SOURCE PAINTING / MOBILE-SCALE ART STUDY / NOT GAMEPLAY", fill="#f0e8dc")
+        mobile_board.paste(reference_mobile, (0, 44))
+        mobile_board.paste(mobile, (240, 44))
+        mobile_board_name = f"{name}-MOBILE-COMPOSITION-COMPARISON-UNAPPROVED.jpg"
+        mobile_board.save(output / mobile_board_name, quality=92, subsampling=0)
         if composed.size != image.size or composed.mode != "RGB":
             raise AssertionError("Composed artwork must preserve the source canvas dimensions")
         # Source-faithful art-direction study: show a complete painted
@@ -231,6 +244,9 @@ def build(root: Path, annotation_file: Path, output: Path, preview_size: int = 4
             "annotatedIsolationPreviewFile": isolated_name,
             "paintedFeatureArtDirectionReview": showcase_name,
             "paintedFeatureCompositionFile": composed_name,
+            "mobileFeatureReviewFile": mobile_name,
+            "mobileComparisonReviewFile": mobile_board_name,
+            "mobileReviewIsGameScreenshot": False,
             "paintedFeatureCompositionIsTileable": False,
             "paintedFeatureCompositionIsRuntimeAsset": False,
             "annotatedIsolationPreviewIsRuntimeAsset": False,
