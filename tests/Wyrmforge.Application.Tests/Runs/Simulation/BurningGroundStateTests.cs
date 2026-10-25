@@ -26,7 +26,7 @@ public sealed class BurningGroundStateTests
         ground.Advance(1);
 
         Assert.AreEqual(42L, ground.Id);
-        Assert.IsGreaterThan(0, ground.RemainingSeconds);
+        Assert.IsTrue(ground.RemainingSeconds > 0);
     }
 
     [TestMethod]
