@@ -38,7 +38,9 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: '10.0.x'
+          # The 10.0.403 latest-channel download currently returns HTTP 409 on runners.
+          # Pin a released .NET 10 SDK for this independent Town preview workflow.
+          dotnet-version: '10.0.100'
 
       - name: Verify deep-link preview routing
         run: python3 -m unittest discover -s tools/development -p 'test_*.py'
