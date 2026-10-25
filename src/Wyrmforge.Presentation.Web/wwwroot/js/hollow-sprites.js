@@ -12,7 +12,21 @@ const arms=createHollowVariantAssets(new URL('arms/',base));
 const injuryLabReview=hollowInjuryLabReview();
 let manifest, loading, profile, compositor;
 export function preloadHollowSprites() {
-    return loading ??= fetch(new URL('manifest.json',base)).then(r=>{
+    return loading ??= loadHollowSprites();
+}
+async function loadHollowSprites() {
+    // Load cape-free actors independently: caped legacy atlas failures must not block them.
+    const variants=Promise.all([injuries.preload(),arms.preload()]);
+    try {
+        await loadLegacyHollowSprites();
+    } catch {
+        // The source-derived no-cape atlases are the production actors.
+    }
+    await variants;
+    return hollowSpritesReady();
+}
+function loadLegacyHollowSprites() {
+    return fetch(new URL('manifest.json',base)).then(r=>{
         if(!r.ok)throw new Error('Hollow manifest unavailable');return r.json();
     }).then(async data=>{
         const [metadata,animationProfile]=await Promise.all(['layers.json','animation-profile.json'].map(name=>fetch(new URL(name,base)).then(r=>{if(!r.ok)throw new Error('Hollow layer metadata unavailable');return r.json();})));
@@ -24,11 +38,10 @@ export function preloadHollowSprites() {
             image.onerror=()=>resolve(false);image.src=new URL(`${clip.image}?v=${clip.hash}`,base).href;
         })));
         if(decoded.every(Boolean)){manifest=data;profile=animationProfile;compositor=createSpriteLayerCompositor(metadata,data.clips,textures,{maxTiles:96});}
-        await Promise.all([injuries.preload(),arms.preload()]); // Optional art never blocks the original actor.
-        return hollowSpritesReady();
-    }).catch(()=>false); // Existing painted/native art is the offline fallback.
+        return Boolean(manifest&&textures.size===3);
+    });
 }
-export function hollowSpritesReady(){return Boolean(manifest&&textures.size===3);}
+export function hollowSpritesReady(){return Boolean(arms.ready()||injuries.ready()||(manifest&&textures.size===3));}
 export function createHollowState(){return {entities:new Map(),corpses:new Map(),seen:new Set(),clock:0,last:null,lastHud:0};}
 export function hollowDirection(dx,dy,previous){
     if(Math.hypot(dx,dy)<.001)return previous??'S';
@@ -50,7 +63,7 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
         if(state.seen.has(key))continue;
         const old=state.entities.get(death.entityId);
         state.corpses.set(key,{entityId:death.entityId,x:death.x,y:death.y,radius:death.bodyRadius,
-            direction:old?.direction??'S',at:state.clock});
+            direction:old?.direction??'S',armVariant:old?.armVariant??'standard',at:state.clock});
     }
     state.seen=currentDeaths;
     for(const [key,corpse] of state.corpses)if(state.clock-corpse.at>=4)state.corpses.delete(key);
@@ -107,12 +120,11 @@ export function drawHollowEnemy(ctx,enemy,state){
     if(!pose)return false;
     const palette=enemy.hitFlash?'brightness(1.8) saturate(.25)':enemy.frozen?
         'sepia(1) saturate(1.7) hue-rotate(135deg)':'none';
-    // The owner-approved smoother gait is now a real Hunt appearance.
-    // Match no-cape reach attacks atomically; old death remains the fallback.
-    // No fake normal maps or #332 lighting-engine overrides here.
+    // Source-derived no-cape walk and reach animations own the runtime appearance.
+    // Keep the previous caped compositor strictly as an offline asset fallback.
     if(injuries.draw(ctx,pose.injuryVariant,pose.clip,pose.frame,pose.direction,
         enemy.x,enemy.y,enemy.radius,enemy.opacity??1,palette))return true;
-    if(pose.injuryVariant==='standard'&&arms.draw(ctx,pose.armVariant,pose.clip,pose.frame,pose.direction,
+    if(arms.draw(ctx,pose.armVariant,pose.clip,pose.frame,pose.direction,
         enemy.x,enemy.y,enemy.radius,enemy.opacity??1,palette))return true;
     const legacyPreview=globalThis.location?.pathname?.includes('/enemy-lab')&&new URLSearchParams(globalThis.location.search).get('blend')==='whole';
     if(pose.layered&&compositor&&!legacyPreview){
@@ -129,12 +141,25 @@ export function drawHollowEnemy(ctx,enemy,state){
 export function drawHollowCorpses(ctx,state,reducedMotion=false){
     for(const corpse of state.corpses.values()){
         const age=state.clock-corpse.at;
-        draw(ctx,'death',reducedMotion?23:Math.min(23,Math.floor(age*12)),corpse.direction,
-            corpse.x,corpse.y,corpse.radius,age<3?1:4-age);
+        if(arms.ready()) {
+            // Temporary no-cape collapse until the rigged death atlas is authored.
+            // Never resurrect the cape for a corpse after a cape-free encounter.
+            const progress=reducedMotion?1:Math.min(1,age*3);
+            ctx.save();
+            ctx.translate(corpse.x,corpse.y);
+            ctx.rotate(progress*Math.PI/2);
+            ctx.translate(-corpse.x,-corpse.y);
+            arms.draw(ctx,corpse.armVariant,'walk',0,corpse.direction,
+                corpse.x,corpse.y,corpse.radius,age<3?1:Math.max(0,4-age));
+            ctx.restore();
+        } else {
+            draw(ctx,'death',reducedMotion?23:Math.min(23,Math.floor(age*12)),corpse.direction,
+                corpse.x,corpse.y,corpse.radius,age<3?1:4-age);
+        }
     }
 }
 export function hollowDiagnostics(state){
-    return {ready:hollowSpritesReady(),injuriesReady:injuries.ready(),armsReady:arms.ready(),injuryLabReview,layers:compositor?{...compositor.stats,estimatedBytes:compositor.estimatedBytes()}:null,entities:[...state.entities].map(([entityId,p])=>({entityId,injuryVariant:p.injuryVariant,armVariant:p.armVariant,injuryDrawn:injuries.ready()&&p.injuryVariant==='broken-leg-left'&&(p.clip==='walk'||p.clip==='attack'),clip:p.clip,frame:p.frame,direction:p.direction,baseFrame:p.baseFrame,phase:p.animation?.phase,layered:p.layered})),
+    return {ready:hollowSpritesReady(),capeFreeReady:arms.ready(),injuriesReady:injuries.ready(),armsReady:arms.ready(),injuryLabReview,layers:compositor?{...compositor.stats,estimatedBytes:compositor.estimatedBytes()}:null,entities:[...state.entities].map(([entityId,p])=>({entityId,injuryVariant:p.injuryVariant,armVariant:p.armVariant,injuryDrawn:injuries.ready()&&p.injuryVariant==='broken-leg-left'&&(p.clip==='walk'||p.clip==='attack'),clip:p.clip,frame:p.frame,direction:p.direction,baseFrame:p.baseFrame,phase:p.animation?.phase,layered:p.layered})),
         corpses:[...state.corpses.values()].map(p=>({entityId:p.entityId,direction:p.direction,age:state.clock-p.at,frame:Math.min(23,Math.floor((state.clock-p.at)*12))}))};
 }
 // Preserve playback/fallback diagnostics while the asset bundle is loading.

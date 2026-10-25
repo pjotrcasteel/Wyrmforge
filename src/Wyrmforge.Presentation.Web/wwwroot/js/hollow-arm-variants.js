@@ -1,15 +1,14 @@
 // Hollowed no-cape arm pack. C# owns all movement/attacks/damage.
-// Only three visually accepted-direction silhouettes ship in this slice.
-// The unapproved broken-leg variants are intentionally absent.
-export const HOLLOW_ARM_VARIANTS = Object.freeze(['broken-arm-right','one-arm-left']);
+// The normal actor and both arm injuries use the same no-cape source pipeline.
+// Existing broken-leg variant stays in its separately approved packet.
+export const HOLLOW_ARM_VARIANTS = Object.freeze(['standard','broken-arm-right','one-arm-left']);
 
 // Stable per-entity appearance: independent of render time, camera, and
 // repeated snapshots. No gameplay randomization or variant-specific damage.
 export function selectHollowArmVariant(entityId) {
     const id=Number(entityId);
     if(!Number.isSafeInteger(id)||id<0)return 'standard';
-    const roll=(Math.imul(id,1597334677)>>>0)%4;
-    return roll<2?HOLLOW_ARM_VARIANTS[roll]:'standard';
+    return HOLLOW_ARM_VARIANTS[(Math.imul(id,1597334677)>>>0)%HOLLOW_ARM_VARIANTS.length];
 }
 
 export function createHollowVariantAssets(baseUrl) {
@@ -20,20 +19,19 @@ export function createHollowVariantAssets(baseUrl) {
         .then(async manifest=>{
             if(manifest.schemaVersion!==1||manifest.cell!==96||manifest.frames!==16||
                 JSON.stringify(manifest.directions)!==JSON.stringify(['N','NE','E','SE','S','SW','W','NW'])||
-                manifest.variants.some(v=>!HOLLOW_ARM_VARIANTS.includes(v))||
-                manifest.variants.length!==HOLLOW_ARM_VARIANTS.length)throw new Error('Arm pack manifest mismatch');
+                JSON.stringify(manifest.variants)!==JSON.stringify(HOLLOW_ARM_VARIANTS))throw new Error('Arm pack manifest mismatch');
             const images=new Map();
             const requests=HOLLOW_ARM_VARIANTS.flatMap(variant=>
                 ['walk','attack'].map(async clip=>{
                     const item=manifest.clips?.[variant]?.[clip];
-                    if(!item||!item.image||!item.sha256||item.cell!==96||item.frames!==16)
+                    if(!item||!item.image||!/^[0-9a-f]{40}$/.test(item.gitBlobSha??'')||item.cell!==96||item.frames!==16)
                         throw new Error('Arm pack clip/source missing: '+variant+'/'+clip);
                     const image=await new Promise((resolve,reject)=>{
                         const png=new Image();
                         png.onload=()=>png.naturalWidth===1536&&png.naturalHeight===768?
                             resolve(png):reject(new Error('Invalid Hollow frame atlas size'));
                         png.onerror=()=>reject(new Error('Hollow variant image failed'));
-                        png.src=new URL(item.image+'?v='+item.sha256.slice(0,16),baseUrl).href;
+                        png.src=new URL(item.image+'?v='+item.gitBlobSha.slice(0,16),baseUrl).href;
                     });
                     images.set(variant+':'+clip,image);
                 }));
@@ -63,6 +61,6 @@ export function createHollowVariantAssets(baseUrl) {
         ctx.restore();
         return true;
     }
-    return {preload,ready:()=>Boolean(metadata&&assets.size===4),draw,
+    return {preload,ready:()=>Boolean(metadata&&assets.size===6),draw,
         get manifest(){return metadata;}};
 }
