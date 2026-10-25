@@ -37,6 +37,14 @@ The eleven occluders are: `noticeboard-foreground`, `well-foreground`, `west-gat
 
 **Interaction IDs verified in Razor:** Arcane Nexus = `build`, Blacksmith = `forge`, Codex = `codex`, Hall of Fame = `legends`; World Gate uses a separate `OnGate` callback. Keep these identifiers stable during 3D migration.
 
+## 2a. Existing browser acceptance harness (verified from source)
+
+`tests/Wyrmforge.Browser.Tests/WyrmforgeBrowserTests.cs` already provides valuable **real-browser Town screenshot automation**. It contains mobile Arcane Nexus mastery captures (`nexus-fire-baked-unlearned-{width}.png`, `nexus-fire-baked-invested-{width}.png`), per-school 390px captures (`nexus-school-{key}-390.png`), debug school captures, vacancy assertions, and an optional `/?townGeometry=1&townV2=1` NPC test. These are **test capture definitions, not evidence that the latest captures were downloaded or visually approved**.
+
+The existing tests initialize game state through `localStorage` keys `wyrmforge.firstHunt.v1`, `wyrmforge.characterSchool.v1` and `wyrmforge.arcaneBuild.v1`; enter Town using the test helper; and select the central district with `window.wyrmforgeTown.show(0, false)`. Preserve these reproducible setup paths for T0 rather than introducing a competing screenshot mechanism.
+
+**Next execution tasks:** run existing browser Town tests against a known `main` deployment, retain their actual PNG artifacts, add explicit west/east and occlusion frame captures where absent, and inspect the images against the matrix. A green test alone does not mark any visual case approved.
+
 ## 3. Visual capture matrix — required real in-game evidence
 
 Capture screenshots using identical gameplay state and camera position for both legacy and future 3D Town. Record **viewport**, device/browser, commit SHA, feature flags, building unlocks, school/mastery, time profile, district and NPC count. Save PNGs under an explicit T0 artifact name; **do not substitute static paintings or generated concept images for runtime screenshots**.
