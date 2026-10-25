@@ -143,6 +143,9 @@ export async function initializeProof(canvas) {
 export function configureProof(canvas, options) {
     const state = states.get(canvas); if (!state?.materials || !state.alive) return;
     Object.assign(state.options, options);
+    if (options.quality && options.quality !== state.engine.quality) state.engine.setQuality(options.quality);
+    if (options.adaptive !== undefined && options.adaptive !== state.engine.adaptive)
+        state.engine.setAdaptive(options.adaptive);
     const cameras = { overview: [[0, 0, 1], 5], actors: [[0, 0, .8], 2],
         cutouts: [[-4, -3, .8], 2], oak: [[2.3, 3.4, 2], 2.5], town: [[-2, 1.8, 1.2], 2.5], water: [[1.2, -1.4, .1], 2] };
     const camera = cameras[state.options.focus];
