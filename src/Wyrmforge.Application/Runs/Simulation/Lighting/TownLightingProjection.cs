@@ -27,9 +27,6 @@ public static class TownLightingProjection
                 fixture.Profile.Radius, CastsShadows: fixture.Profile.CastsShadows))
             .OrderBy(light => light.Id, StringComparer.Ordinal)
             .ToArray();
-        var snapshot = new LightingSnapshot(
-            LightingSnapshot.CurrentSchemaVersion, simulationTick, sceneId, environment, lights);
-        snapshot.Validate();
-        return snapshot;
+        return LightingSceneComposer.Compose(sceneId, simulationTick, environment, lights);
     }
 }
