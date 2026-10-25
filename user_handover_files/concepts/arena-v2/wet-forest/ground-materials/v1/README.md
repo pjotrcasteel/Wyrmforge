@@ -84,6 +84,16 @@ The tool refuses unknown, tampered or approved source identities; it rejects une
 
 Do not promote the annotation to a reflection material, C# wetland geometry, or runtime map until the artist refines it, the owner approves the variant, and the **same universal GPU lighting system** from PR #332 passes its proper receiving/reflection and mobile validation gates.
 
+## Full material-family production pass — 36 concepts, all six roles
+
+All six families now have **explicit offline production roles** in [`material-family-roles.json`](material-family-roles.json). This catalog does not assign game collision, physics, approval, texture tiling or rendering ownership. It separates the two potential continuous substrates (Grass/Moss, Wet Mud) from four author-controlled features (historical paving, trampled road art, Wyrm scorch, wetland banks). The last four require semantic world footprints and may **never** be turned into square repeating floor textures merely because their source has dark margins.
+
+Run `python tools/art/ground_family_footprint_review.py --output /tmp/wyrm-all-families` to create 12 **full portrait-size source-art inspection sheets** (six families × 320×568 and 390×844). Every sheet displays all six original candidates with a 112px-size artwork view, a smaller readability sample and a pair of raw 2×2 repeats. Dark borders remain visible, rather than being mislabeled transparent. `family-role-review.json` includes all six roles, output hashes and nonapproval flags. The CI art-review job also publishes these images.
+
+This is an **all-family scale/asset-selection checkpoint**, not an alternate Arena Generator or a rendered Hunt. Do not confuse a phone-sized review *canvas* with a physical-phone gameplay screenshot. The scale and blending of actual C# routes, obstacles and terrain belongs to the existing one-road PR #338 and the GPU renderer in PR #332 after integration. Do not derive gameplay paths, water surfaces, occluders or colored emission from raw source pixels.
+
+**Status:** 36 source concepts archived; semantic family roles defined; offline mobile-footprint review available. No variant is locked, no physical channel has been approved, and no production texture has been exported. The clean, user-liked second puddle image is a visual guide only; it must not displace hash-checked source images or be mistaken for a ready geometry mask.
+
 ## Approval/locking protocol
 **Do not rename this folder CANONICAL or update runtime references until the owner explicitly accepts
 these 36 images.** After approval, record approved image hashes in an immutable manifest
