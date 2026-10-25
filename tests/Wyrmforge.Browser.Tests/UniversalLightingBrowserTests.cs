@@ -575,7 +575,7 @@ public sealed class UniversalLightingBrowserTests : PageTest
         await Page.EvaluateAsync("async () => { window.gpuProof = await import('./js/lighting/proof-scene.js'); }");
         foreach (var quality in new[] { "low", "medium", "high", "diagnostic" })
         {
-            await Page.GetByLabel("GPU quality").SelectOptionAsync(quality);
+            await Page.GetByLabel("GPU quality", new() { Exact = true }).SelectOptionAsync(quality);
             await Expect(canvas).ToHaveAttributeAsync("data-quality", quality);
             var visible = await canvas.EvaluateAsync<bool>("c => gpuProof.proofPixels(c).some((v,i) => i%4!==3 && v>0)");
             Assert.IsTrue(visible, $"The {quality} GPU quality profile must preserve a lit scene.");
@@ -584,7 +584,7 @@ public sealed class UniversalLightingBrowserTests : PageTest
             Assert.IsGreaterThan(bounds[1], 0);
             await CaptureAsync(width, $"quality-{quality}");
         }
-        await Page.GetByLabel("GPU quality").SelectOptionAsync("medium");
+        await Page.GetByLabel("GPU quality", new() { Exact = true }).SelectOptionAsync("medium");
         await Page.GetByLabel("Adaptive GPU quality").SetCheckedAsync(true);
         await Page.WaitForFunctionAsync("() => gpuProof.proofDiagnostics(document.querySelector('.gpu-proof canvas')).adaptive === true");
         await Page.GetByLabel("Adaptive GPU quality").SetCheckedAsync(false);
