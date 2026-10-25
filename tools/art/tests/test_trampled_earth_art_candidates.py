@@ -7,9 +7,19 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from build_trampled_earth_art_candidates import create
 from quilt_ground_material_study import SOURCES
+from build_wet_mud_art_candidates import visual_difference_matrix
+import numpy as np
 
 
 class TrampledEarthArtTests(unittest.TestCase):
+    def test_visual_difference_is_symmetric_and_zero_for_identical_tiles(self):
+        tiles = [np.full((48, 48, 3), i * 30, dtype=np.uint8) for i in range(6)]
+        matrix = visual_difference_matrix(tiles)
+        self.assertEqual(len(matrix), 6)
+        self.assertTrue(all(matrix[i][i] == 0 for i in range(6)))
+        self.assertTrue(all(matrix[i][j] == matrix[j][i] for i in range(6) for j in range(6)))
+        self.assertEqual(matrix[0][1], 30)
+
     def test_rejects_writing_inside_original_source_archive(self):
         with self.assertRaises(ValueError):
             create(SOURCES, SOURCES / "generated")
@@ -24,6 +34,8 @@ class TrampledEarthArtTests(unittest.TestCase):
             result = create(SOURCES, output)
             self.assertEqual(result["family"], "trampled-earth")
             self.assertEqual(result["independentArtCount"], 6)
+            self.assertEqual(len(result["visualDifferenceMatrix"]), 6)
+            self.assertTrue(all(v["nearestVisualCandidate"] != v["candidate"] for v in result["variants"]))
             self.assertEqual(result["crossCompatibleArtCount"], 6)
             self.assertEqual(result["identicalCrossTileEdgeComparisons"], 72)
             self.assertFalse(result["runtimeUse"])
