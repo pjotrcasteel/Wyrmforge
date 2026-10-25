@@ -55,7 +55,7 @@ Capture screenshots using identical gameplay state and camera position for both 
 | C02 | 320×568, 390×844, desktop | West district and both buildings | CAPTURED / INSPECTED; awaiting owner approval |
 | C03 | 320×568, 390×844, desktop | East district and both buildings | CAPTURED / INSPECTED; awaiting owner approval |
 | C04 | 390×844 | Four buildings active and each vacant state | PENDING |
-| C05 | 390×844 | Six Nexus schools, representative mastery states | PENDING |
+| C05 | 390×844 | Six Nexus schools, representative mastery states | CAPTURED / INSPECTED; awaiting owner approval |
 | C06 | 390×844 | Day/night state or existing actual day/night behavior | PENDING — confirm runtime availability |
 | C07 | 320×568, 390×844 | NPC behind well roof/posts, noticeboard panel/both posts, foliage | PENDING |
 | C08 | 390×844 | NPCs entering/exiting screen, walking, waiting, feet-depth masks | PENDING |
@@ -69,8 +69,8 @@ Capture screenshots using identical gameplay state and camera position for both 
 - Extracted and visually inspected all nine `browser/t0-town-{west,center,east}-{320x568,390x844,1280x800}.png` real runtime captures.
 - **320px / 390px:** correct left, central and right composition, well/noticeboard and building artwork. **1280px desktop:** all three district captures show effectively the same full-width panorama, which is expected when the full panorama fits on screen; do not use them to claim independent district camera states.
 - **Observed baseline hazard:** actors appear as simple colored vertical rectangles in these captures. They must **not** be mistaken for final NPC art or approved NPC masking. Identify whether this is the production actor's expected interim rendering or a regression before acceptance.
-- The same browser artifact contains Nexus school and unlearned/invested screenshots from pre-existing browser tests; those **do not yet cover the entire C05 acceptance matrix**.
-- **Missing:** active/vacant capture set, day-mode behavior, full C07/C08 feet occlusion playback, debug geometry and TownV2 snapshots, performance numbers, explicit owner sign-off.
+- All six Nexus palette reference screenshots (`nexus-debug-{arcane,binding,death,fire,frost,storm}-390.png`) and two Fire mastery captures (`nexus-fire-baked-{invested,unlearned}-390.png`) have now been retrieved and inspected. Palette test UI is visible in the six debug captures; retain it as a test-only element, not part of the approved production image. C05 still needs owner comparison/approval.
+- **Missing:** active/vacant capture set, day-mode behavior, full C07/C08 feet occlusion playback, debug geometry and TownV2 snapshots, performance numbers, explicit owner sign-off. The T0 browser suite now includes additional captures and headless frame sampling, but their CI artifacts are not yet verified.
 
 ## 4. Behavior and spatial regression checklist
 
