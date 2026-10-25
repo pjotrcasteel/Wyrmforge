@@ -12,7 +12,7 @@ import json
 import math
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageOps
+from PIL import Image, ImageDraw, ImageOps, ImageFilter
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = ROOT / "user_handover_files/concepts/arena-v2/wet-forest/ground-materials/v1"
@@ -189,6 +189,18 @@ def build(root: Path, annotation_file: Path, output: Path, preview_size: int = 4
         panel.paste(source_thumb, ((preview_size - source_thumb.width) // 2, 42))
         panel.paste(motif_thumb, (preview_size + (preview_size - motif_thumb.width) // 2, 42))
         composition_panels.append(panel)
+        # A first *composed artwork* study: retain the source brushwork inside
+        # the hand-drawn feature while softly blending its outer edge into a
+        # second copy of the same original painting. This is an art-only
+        # arrangement, not terrain geometry, a road, or a tileable material.
+        background = ImageOps.mirror(image).convert("RGB")
+        feather_px = max(2, round(min(image.size) * .018))
+        soft_mask = mask.filter(ImageFilter.GaussianBlur(radius=feather_px))
+        composed = Image.composite(image, background, soft_mask)
+        composed_name = f"{name}-PAINTED-FEATURE-COMPOSITION-UNAPPROVED.png"
+        composed.save(output / composed_name)
+        if composed.size != image.size or composed.mode != "RGB":
+            raise AssertionError("Composed artwork must preserve the source canvas dimensions")
         # Source-faithful art-direction study: show a complete painted
         # environment beside a larger isolated motif, never a seamless tile.
         showcase = Image.new("RGB", (preview_size * 3, preview_size + 68), "#17191b")
@@ -218,6 +230,9 @@ def build(root: Path, annotation_file: Path, output: Path, preview_size: int = 4
             "sourceRgbCropFile": crop_name,
             "annotatedIsolationPreviewFile": isolated_name,
             "paintedFeatureArtDirectionReview": showcase_name,
+            "paintedFeatureCompositionFile": composed_name,
+            "paintedFeatureCompositionIsTileable": False,
+            "paintedFeatureCompositionIsRuntimeAsset": False,
             "annotatedIsolationPreviewIsRuntimeAsset": False,
             "sourceRgbCropBounds": [left, top, right, bottom],
             "sourceRgbCropSha256": hashlib.sha256((output / crop_name).read_bytes()).hexdigest(),
