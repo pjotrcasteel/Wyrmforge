@@ -79,6 +79,6 @@ test('nearest-neighbor renderer selects an actual direction row and original piv
   assert.equal(mod.drawHollowEnemy(ctx,enemy(),state),true);assert.equal(ctx.imageSmoothingEnabled,false);
   assert.equal(calls[0][2],96*7);assert.equal(calls[0][6],20-72/96*93);
   assert.equal(mod.drawHollowEnemy(ctx,enemy({kind:1}),state),false);
-  assert.deepEqual(mod.hollowDiagnostics(state).legReview,{requested:false,ready:false});
+  assert.deepEqual(mod.hollowDiagnostics(state).legReview,{requested:false,mode:null,ready:false});
  }finally{globalThis.fetch=originalFetch;globalThis.Image=originalImage;}
 });
