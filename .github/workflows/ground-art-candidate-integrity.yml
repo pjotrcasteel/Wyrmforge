@@ -13,6 +13,7 @@ on:
       - 'tools/art/review_ground_feature_motifs.py'
       - 'tools/art/build_grass_moss_art_candidates.py'
       - 'tools/art/build_grass_moss_compatible_bank.py'
+      - 'tools/art/build_wet_mud_art_candidates.py'
       - 'tools/art/tests/test_ground_material_probe.py'
       - 'tools/art/tests/test_ground_quilt_study.py'
       - 'tools/art/tests/test_ground_transition_study.py'
@@ -21,6 +22,7 @@ on:
       - 'tools/art/tests/test_ground_feature_motifs.py'
       - 'tools/art/tests/test_grass_moss_art_candidates.py'
       - 'tools/art/tests/test_grass_moss_compatible_bank.py'
+      - 'tools/art/tests/test_wet_mud_art_candidates.py'
       - '.github/workflows/ground-art-candidate-integrity.yml'
   workflow_dispatch:
 permissions:
@@ -69,7 +71,9 @@ jobs:
         run: python tools/art/build_grass_moss_art_candidates.py --output "$RUNNER_TEMP/ground-material-probes/grass-moss-art-candidates"
       - name: Build six mutually seam-compatible Grass and Moss candidate art tiles
         run: python tools/art/build_grass_moss_compatible_bank.py --output "$RUNNER_TEMP/ground-material-probes/grass-moss-compatible-bank"
-      - name: Upload Grass/Moss art libraries and previous source studies
+      - name: Author six Wet Mud variants and six compatible Wet Mud art candidates
+        run: python tools/art/build_wet_mud_art_candidates.py --output "$RUNNER_TEMP/ground-material-probes/wet-mud-art-candidates"
+      - name: Upload Grass/Moss, Wet Mud, and original source-art evidence
         uses: actions/upload-artifact@v4
         with:
           name: wet-forest-grass-mud-repeat-studies
