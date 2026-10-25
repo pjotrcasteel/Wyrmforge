@@ -50,7 +50,10 @@ def create(
     for number, seed in enumerate(SEEDS, 1):
         raw, choices = patch_quilt(
             sources, seed=seed, width=side, patch_size=patch_size,
-            overlap=overlap, candidates=candidates, diversity_strength=.15,
+            overlap=overlap, candidates=candidates,
+            diversity_strength=.15 if family == "wet-mud" else .06,
+            preferred_source=number - 1 if family == "trampled-earth" else None,
+            preference_weight=.75 if family == "trampled-earth" else 0.0,
         )
         if set(choices) != set(range(6)):
             raise AssertionError("Each trial must consume all six source artworks")
@@ -65,6 +68,7 @@ def create(
             "candidate": number, "seed": seed, "size": [side, side],
             "reviewIntent": TRAMPLED_REVIEW_ROLES[number - 1] if family == "trampled-earth" else "wet-mud-variation",
             "visualRoleVerified": False,
+            "dominantSourceIntent": number if family == "trampled-earth" else None,
             "sourceUsage": {f"{j + 1:02d}": choices.count(j) for j in range(6)},
             "independentSeam": metrics,
             "approved": False,
