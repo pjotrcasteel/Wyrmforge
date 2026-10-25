@@ -7,14 +7,16 @@ Authority: [design and acceptance matrix](../design/arena-real-geometry-light-en
 
 ## Current verified checkpoint — 25 October 2026
 
-Code/tests: `4eb49f6`, [published-app GPU run 40167497344](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40167497344)
-passed at both phone sizes; WebKit 40167497356 passed. All 387 JavaScript tests
-pass. Validate and full Browser smoke are pending at record time.
-[Town fixture and roof evidence](evidence/universal-lighting/4eb49f6/README.md)
-includes six schools/mastery, vacancy/restoration, day/night geometry parity,
-roof-to-wall shadows and all 20 complete black framebuffers.
-The previous evidence checkpoint `519603f` passed all four workflows.
-[Actor lifecycle evidence](evidence/universal-lighting/7253c6b/README.md) and
+Code/tests: `0c75ab3`; [published-app GPU run 40171667444](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40171667444)
+and WebKit 40171667454 passed. Validate 40171667453 passed; all 387 JavaScript
+tests pass. Full Browser smoke remains pending at record time. [Original temporal measurements and
+night captures](evidence/universal-lighting/0c75ab3/README.md) are preserved.
+Whole-pixel pans have at most 0.1744% mismatched interior pixels; camera return,
+16-pose/light replay and resize restoration are exact. This is not fractional
+motion or physical-device pacing evidence.
+The earlier evidence checkpoint `00e3cf1` passed all four workflows.
+[Town fixture/roof evidence](evidence/universal-lighting/4eb49f6/README.md),
+[actor lifecycle evidence](evidence/universal-lighting/7253c6b/README.md), and
 [earlier receiver/foliage/water evidence](evidence/universal-lighting/eb5cb96/README.md)
 remain preserved. The table below retains its earlier checkpoint's counts.
 
@@ -23,7 +25,7 @@ remain preserved. The table below retains its earlier checkpoint's counts.
 | Gate | Status / next acceptance |
 | --- | --- |
 | G0 | Inventory and shared contracts implemented; audit expands before any production cutover. |
-| G1 — current | Mechanisms verified for actor illumination, source lifecycle, leaf-on-leaf/cutout shadows, water direct specular and zero-light. Town school/mastery/vacancy and roof blocking now pass GPU comparisons. Next: Gothic-night readability and temporal stability, remaining representative occlusion comparisons, and visual acceptance. |
+| G1 — current | Mechanisms verified for actor illumination, source lifecycle, leaf-on-leaf/cutout shadows, water direct specular and zero-light. Town school/mastery/vacancy and roof blocking now pass GPU comparisons. Whole-pixel pans, deterministic pose/light replay and resize restoration now pass. Next: Gothic-night readability/telegraph acceptance, fractional/realtime motion review, remaining representative occlusion comparisons and visual acceptance. |
 | G2 | Authoritative C# scene bridge pending; do not connect gameplay before G1 acceptance. |
 | G3 | Advanced reflection/indirect/transmission tiers pending; direct specular is not reflected scenery. |
 | G4 | Physical iOS/Android profiling, scale and quality tiers pending. Browser phone viewports are not device evidence. |
@@ -49,7 +51,7 @@ artistic quality. Tests use an RGB difference >3 for changed-pixel counts;
 zero-light checks require every RGB channel to equal zero exactly.
 
 **G1 remains incomplete:** final Gothic-night readability/palette and complete
-artistic acceptance, temporal stability and broader Town foreground parity, actor
+artistic acceptance, fractional/realtime motion and broader Town foreground parity, actor
 volumetric/depth representation and broader clip binding, and real iOS/Android
 budgets are not established. Original color atlases remain baked source artwork;
 neutral inspection lighting is not a hidden gameplay brightness correction.
@@ -443,7 +445,8 @@ then require exact restoration. A second check replays all 16 existing walk
 poses with a deterministic light-position sequence and requires identical
 per-frame hashes on replay. Resize/restore must preserve the frame and resource
 counts. These are deterministic GPU comparisons, not physical-device frame-time
-measurements or a claim of subpixel camera stability. New slice GPU CI pending.
+measurements or a claim of subpixel camera stability. GPU CI passes on
+`0c75ab3`; the original metrics/captures are linked above.
 No actor assets, wizard work, production paths or C# state are changed.
 
 Night inspection of the prior published-app captures still shows small overview
