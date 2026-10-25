@@ -17,6 +17,7 @@
     const burningGroundVoices = new Map();
     const burningGroundPending = new Set();
     const burningGroundGenerations = new Map();
+    let nextBurningGroundGeneration = 0;
     const burningGroundActiveIds = new Set();
 
     function nextFireballTake(key, count) {
@@ -351,7 +352,7 @@
     // the corresponding registered patch expires, rather than playing a fixed 3.9s tail.
     function stopBurningGround(id) {
         burningGroundActiveIds.delete(id);
-        burningGroundGenerations.set(id, (burningGroundGenerations.get(id) ?? 0) + 1);
+        burningGroundGenerations.delete(id);
         burningGroundPending.delete(id);
         const voice = burningGroundVoices.get(id);
         if (!voice) return;
@@ -382,7 +383,7 @@
             const index = nextFireballTake('fire-burning-loop', options.length);
             const entry = options[index];
             burningGroundPending.add(id);
-            const generation = (burningGroundGenerations.get(id) ?? 0) + 1;
+            const generation = ++nextBurningGroundGeneration;
             burningGroundGenerations.set(id, generation);
             void loadRecordedBuffer(entry).then(buffer => {
                 if (burningGroundGenerations.get(id) !== generation || !burningGroundActiveIds.has(id) || !burningGroundPending.has(id) || !enabled || document.hidden || !context || context.state !== 'running') return;
@@ -416,7 +417,10 @@
                 }
             }).catch(error => console.warn('Burning ground recording unavailable:', error))
                 .finally(() => {
-                    if (burningGroundGenerations.get(id) === generation) burningGroundPending.delete(id);
+                    if (burningGroundGenerations.get(id) === generation) {
+                        burningGroundPending.delete(id);
+                        burningGroundGenerations.delete(id);
+                    }
                 });
         }
     }
