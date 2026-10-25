@@ -29,3 +29,18 @@ test('G3 invalid material map IDs and out-of-range physical values fail validati
         { emissiveMap: '' }, { aoMap: 42 }, { aoIntensity: NaN },
     ]) assert.throws(() => validateSnapshot(snapshot(material(change))));
 });
+
+test('G3 distance fog accepts ordered bounds and rejects invalid ranges', () => {
+    const s = snapshot(material());
+    s.environment.fog = { color: '#343b4a', near: 3, far: 18 };
+    assert.deepEqual(validateSnapshot(s).environment.fog, s.environment.fog);
+    for (const fog of [
+        { color: '#343b4a', near: 5, far: 5 },
+        { color: '#343b4a', near: 8, far: 4 },
+        { color: 'grey', near: 2, far: 8 },
+        { color: '#343b4a', near: -1, far: 8 },
+    ]) {
+        s.environment.fog = fog;
+        assert.throws(() => validateSnapshot(s));
+    }
+});
