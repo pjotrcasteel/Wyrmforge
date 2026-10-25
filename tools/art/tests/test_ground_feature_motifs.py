@@ -59,6 +59,13 @@ class FeatureMotifSourceTests(unittest.TestCase):
             source, annotation, data, originals = self.fixture(place)
             results = SCRIPT.build(source, annotation, place / "review", preview_size=320)
             self.assertEqual(len(results), 3)
+            board = place / "review" / "PAINTED-MOTIF-COMPOSITION-REVIEW-UNAPPROVED.jpg"
+            self.assertTrue(board.is_file())
+            with Image.open(board) as sheet:
+                self.assertEqual(sheet.size, (640, 3 * (320 + 52)))
+            metadata = json.loads((place / "review" / "SOURCE-MOTIF-STUDY.json").read_text())
+            self.assertFalse(metadata["compositionReviewIsGameScene"])
+            self.assertFalse(metadata["compositionReviewIsTileable"])
             self.assertEqual({item["semanticLayer"] for item in results}, set(SCRIPT.LAYER_ROLES))
             for item in results:
                 self.assertFalse(item["authoritativeCsharpGeometry"])
