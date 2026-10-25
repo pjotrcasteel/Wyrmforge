@@ -6,7 +6,7 @@
 <main class="gpu-proof">
     <h1>Shared light engine</h1>
     <p>Universal GPU lighting inspection scene (G1–G4 development). This is a diagnostic fixture, not the playable Town or Hunt renderer.</p>
-    <p role="status" aria-live="polite">@renderStatus</p>
+    <p aria-live="polite">@renderStatus</p>
     @if (error is not null) { <p role="alert">@error</p> }
     <div class="world-frame">
         <canvas @ref="canvas" aria-label="Shared GPU world lighting proof"></canvas>
