@@ -40,13 +40,18 @@ export class LightingEngine {
         this.textures.set(id, texture);
     }
     material(descriptor, receivesLight) {
-        const texture = id => id ? this.textures.get(id)?.clone() : null;
+        const texture = (id, colorData = false) => {
+            if (!id) return null;
+            const map = this.textures.get(id)?.clone();
+            if (map) map.colorSpace = colorData ? T.SRGBColorSpace : T.NoColorSpace;
+            return map;
+        };
         const material = new T.MeshPhysicalMaterial({
-            color: receivesLight ? descriptor.color : '#000000', map: texture(descriptor.albedo),
+            color: receivesLight ? descriptor.color : '#000000', map: texture(descriptor.albedo, true),
             normalMap: texture(descriptor.normal), roughnessMap: texture(descriptor.roughnessMap),
             aoMap: texture(descriptor.aoMap), aoMapIntensity: descriptor.aoIntensity ?? 1,
-            emissiveMap: texture(descriptor.emissiveMap),
-            roughness: descriptor.roughness, metalness: receivesLight ? descriptor.metalness : 0,
+            emissiveMap: texture(descriptor.emissiveMap, true),
+            roughness: descriptor.roughness, metalness: receivesLight && descriptor.reflection !== 'off' ? descriptor.metalness : 0,
             specularIntensity: receivesLight && descriptor.reflection !== 'off' ? descriptor.specular : 0,
             emissive: descriptor.emission, emissiveIntensity: descriptor.emissionIntensity,
             alphaTest: descriptor.alphaCutoff, side: descriptor.doubleSided ? T.DoubleSide : T.FrontSide,
