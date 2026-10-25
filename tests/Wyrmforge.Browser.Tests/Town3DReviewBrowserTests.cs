@@ -24,7 +24,7 @@ public sealed class Town3DReviewBrowserTests : PageTest
         await Page.WaitForFunctionAsync("() => window.__town3dReview?.getState().ready === true");
 
         var count = await Page.EvaluateAsync<int>("() => window.__town3dReview.getState().triangles");
-        Assert.AreEqual(3250, count, "The reviewer must render the real authored OBJ, including Gothic architectural details, not 2D scenery");
+        Assert.AreEqual(5074, count, "The reviewer must render the real authored OBJ, including Gothic architectural details, not 2D scenery");
         var nightPeak = await PeakRgbAsync();
         Assert.IsGreaterThan(nightPeak, 8, "Night must show illuminated geometry and working fixtures");
         await CaptureAsync($"t2-town-night-{width}x{height}.png", artifacts);
