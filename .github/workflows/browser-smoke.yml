@@ -32,6 +32,9 @@ jobs:
       - name: Verify Town T1 scene contracts and camera calibration
         run: node --test tools/development/town-*.test.mjs
 
+      - name: Verify T1 mesh geometry without .NET
+        run: python3 -m unittest tools.development.test_town_t1_mesh
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
         with:
