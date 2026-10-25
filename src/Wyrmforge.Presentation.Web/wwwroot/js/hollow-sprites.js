@@ -4,7 +4,7 @@ import { createSpriteLayerCompositor } from './sprite-layer-compositor.js';
 import { HOLLOW_RUN, sampleHollowRun } from './hollow-motion.js';
 import { createHollowInjuryAssets, selectHollowInjuryVariant, hollowInjuryLabReview } from './hollow-injury-variants.js';
 import { createHollowVariantAssets, selectHollowArmVariant } from './hollow-arm-variants.js';
-import { createHollowDeathAssets } from './hollow-death.js';
+import { createHollowDeathAssets, selectHollowDeathVariant } from './hollow-death.js';
 const base = new URL('../art/enemies/hollow-rigged/', import.meta.url);
 const rows = ['N','NE','E','SE','S','SW','W','NW'];
 const headings = ['E','SE','S','SW','W','NW','N','NE'];
@@ -66,7 +66,8 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
         if(state.seen.has(key))continue;
         const old=state.entities.get(death.entityId);
         state.corpses.set(key,{entityId:death.entityId,x:death.x,y:death.y,radius:death.bodyRadius,
-            direction:old?.direction??'S',armVariant:old?.armVariant??'standard',at:state.clock});
+            direction:old?.direction??'S',armVariant:old?.armVariant??'standard',
+            deathVariant:selectHollowDeathVariant(death.entityId),at:state.clock});
     }
     state.seen=currentDeaths;
     for(const [key,corpse] of state.corpses)if(state.clock-corpse.at>=4)state.corpses.delete(key);
@@ -144,7 +145,7 @@ export function drawHollowEnemy(ctx,enemy,state){
 export function drawHollowCorpses(ctx,state,reducedMotion=false){
     for(const corpse of state.corpses.values()){
         const age=state.clock-corpse.at;
-        if(skeletalDeath.draw(ctx,reducedMotion?23:Math.min(23,Math.floor(age*12)),
+        if(skeletalDeath.draw(ctx,corpse.deathVariant,reducedMotion?23:Math.min(23,Math.floor(age*12)),
             corpse.direction,corpse.x,corpse.y,corpse.radius,age<3?1:Math.max(0,4-age)))continue;
         if(arms.ready()) {
             // Safeguard if a device cannot decode the authored source death atlas.
@@ -165,7 +166,7 @@ export function drawHollowCorpses(ctx,state,reducedMotion=false){
 }
 export function hollowDiagnostics(state){
     return {ready:hollowSpritesReady(),capeFreeReady:arms.ready(),skeletalDeathReady:skeletalDeath.ready(),injuriesReady:injuries.ready(),armsReady:arms.ready(),injuryLabReview,layers:compositor?{...compositor.stats,estimatedBytes:compositor.estimatedBytes()}:null,entities:[...state.entities].map(([entityId,p])=>({entityId,injuryVariant:p.injuryVariant,armVariant:p.armVariant,runSpeed:p.runSpeed,observedDistance:p.distance,visualDistance:p.visualDistance,injuryDrawn:injuries.ready()&&p.injuryVariant==='broken-leg-left'&&(p.clip==='walk'||p.clip==='attack'),clip:p.clip,frame:p.frame,direction:p.direction,baseFrame:p.baseFrame,phase:p.animation?.phase,layered:p.layered})),
-        corpses:[...state.corpses.values()].map(p=>({entityId:p.entityId,direction:p.direction,age:state.clock-p.at,frame:Math.min(23,Math.floor((state.clock-p.at)*12))}))};
+        corpses:[...state.corpses.values()].map(p=>({entityId:p.entityId,deathVariant:p.deathVariant,direction:p.direction,age:state.clock-p.at,frame:Math.min(23,Math.floor((state.clock-p.at)*12))}))};
 }
 // Preserve playback/fallback diagnostics while the asset bundle is loading.
 const fallbackProfile={locomotion:{clip:'walk',frames:HOLLOW_RUN.frames,stride:HOLLOW_RUN.stride},actions:{attack:{clip:'attack',frames:16,fps:12,mode:'fullBody',reducedFrame:7}}};
