@@ -36,7 +36,7 @@ public sealed class TownT0BaselineBrowserTests : PageTest
         foreach (var (district, index) in new[] { ("west", 0), ("center", 1), ("east", 2) })
         {
             await view.EvaluateAsync("(el, district) => window.wyrmforgeTown.show(district, false)", index);
-            await Page.ScreenshotAsync(new()
+            await Page.WaitForTimeoutAsync(150);\n            await Page.ScreenshotAsync(new()
             {
                 Path = Path.Combine(artifacts, $"t0-town-{district}-{width}x{height}.png"),
                 FullPage = true
