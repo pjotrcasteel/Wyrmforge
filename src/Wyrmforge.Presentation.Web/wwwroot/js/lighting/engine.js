@@ -1,11 +1,11 @@
 import * as T from './vendor/three.module.js';
 import { LightingInspection } from './inspection.js';
 import { validateSnapshot, selectLights } from './registry.js';
-import { G4_QUALITY_PROFILES } from './g4-light-budget.js';
+import { G4_QUALITY_PROFILES, computeFramebufferSize, nextAdaptiveQuality } from './g4-light-budget.js';
 
 /** Shared GPU adapter; accepts resource IDs and descriptors, never entity kinds. */
 export class LightingEngine {
-    constructor(canvas, { shadowViews, maxLights, quality = 'medium' } = {}) {
+    constructor(canvas, { shadowViews, maxLights, quality = 'medium', adaptive = false } = {}) {
         if (!Object.hasOwn(G4_QUALITY_PROFILES, quality)) throw new RangeError('Unknown GPU quality profile');
         this.quality = quality;
         this.qualitySettings = G4_QUALITY_PROFILES[quality];
@@ -35,6 +35,9 @@ export class LightingEngine {
         this.inspection = new LightingInspection();
         this.materialBudget = { maps: 0, transmissive: 0, ao: 0 };
         this.frameStats = { lastMs: 0, maxMs: 0, frames: 0 };
+        this.adaptive = adaptive;
+        this.adaptiveState = { slowSamples: 0, fastSamples: 0 };
+        this.frameWindow = { totalMs: 0, count: 0 };
     }
     registerGeometry(id, geometry) {
         if (this.geometries.has(id)) throw new Error(`Duplicate geometry ${id}`);
@@ -224,15 +227,7 @@ float proofShadowVisibility() {
     render(width = this.canvas.clientWidth, height = this.canvas.clientHeight) {
         if (!this.alive) return;
         // One world sample per CSS pixel at 390px, bounded regardless of device DPR.
-        const safeWidth = Number.isFinite(width) && width > 0 ? width : 1;
-        const safeHeight = Number.isFinite(height) && height > 0 ? height : 1;
-        // Preserve G1's 390-pixel width sampling; cap height only if the
-        // selected profile's render-target limit would otherwise be exceeded.
-        const widthPixels = Math.max(1, Math.min(390, Math.round(safeWidth)));
-        const heightPixels = Math.max(1, Math.round(safeHeight * widthPixels / safeWidth));
-        const scale = Math.min(1, this.qualitySettings.maxRenderTargetSize / Math.max(widthPixels, heightPixels));
-        const w = Math.max(1, Math.round(widthPixels * scale));
-        const h = Math.max(1, Math.round(heightPixels * scale));
+        const { width: w, height: h } = computeFramebufferSize(width, height, this.qualitySettings.maxRenderTargetSize);
         if (this.canvas.width !== w || this.canvas.height !== h) this.renderer.setSize(w, h, false);
         this.camera.left = -this.halfWidth; this.camera.right = this.halfWidth;
         this.camera.top = this.halfWidth * h / w; this.camera.bottom = -this.halfWidth * h / w;
@@ -264,6 +259,17 @@ float proofShadowVisibility() {
                 this.frameStats.lastMs = elapsed;
                 this.frameStats.maxMs = Math.max(this.frameStats.maxMs, elapsed);
                 this.frameStats.frames++;
+                if (this.adaptive && this.debugView === 'lit') {
+                    this.frameWindow.totalMs += elapsed;
+                    this.frameWindow.count++;
+                    if (this.frameWindow.count >= 30) {
+                        const next = nextAdaptiveQuality(this.quality, this.frameWindow.totalMs / this.frameWindow.count,
+                            this.adaptiveState.slowSamples, this.adaptiveState.fastSamples);
+                        this.adaptiveState = { slowSamples: next.slowSamples, fastSamples: next.fastSamples };
+                        this.frameWindow = { totalMs: 0, count: 0 };
+                        if (next.quality !== this.quality) this.setQuality(next.quality);
+                    }
+                }
             }
         }
     }
@@ -271,6 +277,11 @@ float proofShadowVisibility() {
         const gl = this.renderer.getContext(), data = new Uint8Array(this.canvas.width * this.canvas.height * 4);
         gl.readPixels(0, 0, this.canvas.width, this.canvas.height, gl.RGBA, gl.UNSIGNED_BYTE, data);
         return data;
+    }
+    setAdaptive(enabled) {
+        this.adaptive = Boolean(enabled);
+        this.adaptiveState = { slowSamples: 0, fastSamples: 0 };
+        this.frameWindow = { totalMs: 0, count: 0 };
     }
     setQuality(quality) {
         if (!Object.hasOwn(G4_QUALITY_PROFILES, quality)) throw new RangeError('Unknown GPU quality profile');
@@ -295,7 +306,7 @@ float proofShadowVisibility() {
         if (this.snapshot) this.apply(this.snapshot);
     }
     diagnostics() {
-        return { frameStats: { ...this.frameStats }, quality: this.quality, shadowResolution: this.qualitySettings.shadowResolution,
+        return { adaptive: this.adaptive, frameStats: { ...this.frameStats }, quality: this.quality, shadowResolution: this.qualitySettings.shadowResolution,
             maxLights: this.maxLights, shadowViews: this.shadowViews, backend: 'WebGL2 / Three 0.186.1', view: this.debugView, depthSource: this.selected?.find(l => l.shadow)?.id ?? null, framebuffer: [this.canvas.width, this.canvas.height], objects: this.objects.size,
             lights: this.selected?.map(l => ({ id: l.id, ownerId: l.ownerId, type: l.type, position: l.position, intensity: l.intensity, shadow: l.shadow, views: l.shadowViews })),
             drawCalls: this.renderer.info.render.calls, triangles: this.renderer.info.render.triangles,
