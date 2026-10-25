@@ -49,7 +49,7 @@ export async function initializeProof(canvas) {
     if (states.has(canvas)) return;
     const engine = new LightingEngine(canvas);
     const state = { engine, alive: true, options: { profile: 'night', fireball: true, torch: true, spot: true,
-        lighting: 'scene', townActive: true, school: 'arcane', mastery: 0, sourceDistance: 2, behind: false, cutouts: false, cutoutAlpha: true, rune: false, shadows: true, reflections: true, progress: .25, frame: 0, animate: false, view: 'lit', focus: 'overview', inspectObject: 'hollowed', castsShadow: true, receivesShadow: true, receivesLight: true, normals: true }, manifests: {}, animation: {}, samples: {} };
+        lighting: 'scene', townActive: true, aboveRoof: false, school: 'arcane', mastery: 0, sourceDistance: 2, behind: false, cutouts: false, cutoutAlpha: true, rune: false, shadows: true, reflections: true, progress: .25, frame: 0, animate: false, view: 'lit', focus: 'overview', inspectObject: 'hollowed', castsShadow: true, receivesShadow: true, receivesLight: true, normals: true }, manifests: {}, animation: {}, samples: {} };
     states.set(canvas, state);
     try {
         engine.registerGeometry('box', new T.BoxGeometry(1, 1, 1));
@@ -129,7 +129,7 @@ export function configureProof(canvas, options) {
         for (const source of lights) source.range = 12;
         environment.ambient = 0; environment.emission = false;
     } else if (p.lighting === 'town-fixture') {
-        const fixture = townFixture({ active: p.townActive, school: p.school, mastery: p.mastery });
+        const fixture = townFixture({ active: p.townActive, school: p.school, mastery: p.mastery, aboveRoof: p.aboveRoof });
         lights = lights.filter(l => l.id === 'moon');
         if (fixture) {
             lights.push(fixture);
@@ -153,7 +153,7 @@ export function configureProof(canvas, options) {
     const materials = state.materials.map(m => ({ ...m, alphaCutoff: m.id === 'cutout-upper' && !p.cutoutAlpha ? 0 : m.alphaCutoff, normal: p.normals ? m.normal : undefined, reflection: p.reflections ? m.reflection : 'off',
         emissionIntensity: m.id === 'flame' && !p.torch && !p.fireball ? 0 : m.emissionIntensity }));
     if (p.lighting === 'town-fixture' && p.townActive) {
-        const fixture = townFixture({ active: p.townActive, school: p.school, mastery: p.mastery });
+        const fixture = townFixture({ active: p.townActive, school: p.school, mastery: p.mastery, aboveRoof: p.aboveRoof });
         materials.push(material('town-fixture', fixture.color, .7, { emission: fixture.color, emissionIntensity: 1 + p.mastery }));
     }
     // Disabling a fixture extinguishes its source surface too.

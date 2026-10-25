@@ -421,3 +421,9 @@ receiver masks and full-frame zero with the fixture active. New slice CI pending
 Wizard #335 and actor-art #333 remain untouched. Physical mobile, owner night
 art acceptance, broader clips/depth integration and remaining G1 comparisons
 remain open; the actual Town paintings/layout/navigation are preserved.
+
+The same Town fixture can be placed above the existing roof for an independent
+occlusion check. Tests mask visible wall pixels, toggle only roof casting with
+fixed source/camera, compare actual shadow visibility, and require exact
+restoration. This addresses a distinct mechanism check; school-color differences
+alone cannot prove roof blocking. No production architecture or art changes.

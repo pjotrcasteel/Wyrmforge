@@ -294,7 +294,19 @@ public sealed class UniversalLightingBrowserTests : PageTest
         await CaptureAsync(width, "town-vacant");
         await ConfigureAsync(canvas, new { townActive = true });
         Assert.AreEqual(active, await PixelHashAsync(canvas), "Reactivation restores the exact frozen scene without ghost sources.");
-        await ConfigureAsync(canvas, new { view = "object-mask" });
+        await ConfigureAsync(canvas, new { aboveRoof = true, inspectObject = "wall" });
+        await SaveReceiverBaselineAsync(canvas);
+        await ConfigureAsync(canvas, new { inspectObject = "roof", view = "shadow-visibility" });
+        await canvas.EvaluateAsync("c => { window.receiverEvidence.pixels=gpuProof.proofPixels(c); }");
+        await CaptureAsync(width, "town-roof-shadow-on-wall");
+        await ConfigureAsync(canvas, new { castsShadow = false });
+        var roofShadowPixels = await ReceiverChangedPixelsAsync(canvas);
+        Assert.IsGreaterThan(5, roofShadowPixels, "The roof must occlude the registered source on visible wall pixels.");
+        comparisons.Add(new { caster = "roof", receiver = "wall", changedShadowPixels = roofShadowPixels });
+        await CaptureAsync(width, "town-roof-cast-off");
+        await ConfigureAsync(canvas, new { castsShadow = true });
+        Assert.AreEqual(0, await ReceiverChangedPixelsAsync(canvas));
+        await ConfigureAsync(canvas, new { aboveRoof = false, inspectObject = "wall", view = "object-mask" });
         var nightGeometry = await PixelHashAsync(canvas);
         await ConfigureAsync(canvas, new { profile = "day" });
         Assert.AreEqual(nightGeometry, await PixelHashAsync(canvas), "Day and night must use identical receiver geometry and camera.");
@@ -337,7 +349,7 @@ public sealed class UniversalLightingBrowserTests : PageTest
             ["cutouts"] = "Cutout test fixture", ["cutoutAlpha"] = "Cutout alpha", ["lighting"] = "Lighting rig", ["behind"] = "Light behind receiver", ["profile"] = "Environment", ["view"] = "Diagnostic", ["focus"] = "Camera",
             ["fireball"] = "Fireball", ["torch"] = "Torch", ["spot"] = "Spot", ["rune"] = "Register rune",
             ["shadows"] = "Shadows", ["reflections"] = "Direct specular", ["normals"] = "Authored normals",
-            ["townActive"] = "Town active", ["school"] = "Fixture school", ["mastery"] = "Fixture mastery",
+            ["aboveRoof"] = "Fixture above roof", ["townActive"] = "Town active", ["school"] = "Fixture school", ["mastery"] = "Fixture mastery",
             ["sourceDistance"] = "Source distance", ["progress"] = "Light position", ["frame"] = "Walk frame", ["animate"] = "Animate walk",
             ["inspectObject"] = "Inspect object", ["castsShadow"] = "Casts shadow",
             ["receivesShadow"] = "Receives shadow", ["receivesLight"] = "Receives light"
