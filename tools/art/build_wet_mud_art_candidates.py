@@ -135,6 +135,7 @@ def create(
         "variants": records,
         "independentReview": repeated,
         "mixedVariantReview": mixed,
+        "semanticRoleReview": role_review,
     }
     (output / f"{family}-art-candidates.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     print("PASS: six independent and six mutually compatible source-art candidates, 72 ordered edge pairs; no game changes.")
