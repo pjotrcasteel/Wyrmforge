@@ -197,6 +197,11 @@ def build(root: Path, annotation_file: Path, output: Path, preview_size: int = 4
         feather_px = max(2, round(min(image.size) * .018))
         soft_mask = mask.filter(ImageFilter.GaussianBlur(radius=feather_px))
         composed = Image.composite(image, background, soft_mask)
+        # Keep the entire hand-authored motif *pixel exact*. Feather only
+        # outside its polygon, never across the painted feature itself.
+        composed.paste(image, (0, 0), mask)
+        if Image.composite(composed, image, mask).tobytes() != composed.tobytes():
+            raise AssertionError("Annotated painted feature was altered")
         composed_name = f"{name}-PAINTED-FEATURE-COMPOSITION-UNAPPROVED.png"
         composed.save(output / composed_name)
         # Native mobile-scale art review. Resize the full composition instead
@@ -244,6 +249,7 @@ def build(root: Path, annotation_file: Path, output: Path, preview_size: int = 4
             "annotatedIsolationPreviewFile": isolated_name,
             "paintedFeatureArtDirectionReview": showcase_name,
             "paintedFeatureCompositionFile": composed_name,
+            "paintedMotifPixelsPreservedExactly": True,
             "mobileFeatureReviewFile": mobile_name,
             "mobileComparisonReviewFile": mobile_board_name,
             "mobileReviewIsGameScreenshot": False,
