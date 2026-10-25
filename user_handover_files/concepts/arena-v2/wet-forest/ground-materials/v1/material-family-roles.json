@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "status": "review-only-not-approved",
+  "authority": "docs/canon/hunts-and-world.md and docs/canon/art-and-animation.md",
+  "purpose": "Offline art-production roles, not a gameplay terrain recipe or GPU material registry",
+  "integrationTarget": "Existing PR #338 ground compositor, using shared GPU engine PR #332 after separately approved material exports",
+  "runtimeEligible": false,
+  "variantApproval": "unreviewed",
+  "sourceEntryCount": 36,
+  "reviewFootprintsPixels": [
+    112,
+    56
+  ],
+  "physicalMasksAuthored": false,
+  "roles": [
+    {
+      "id": "grass-moss",
+      "role": "continuous-substrate-candidate",
+      "baseLayerEligibleAfterApproval": true,
+      "requiresManualFootprint": false,
+      "requiresWaterMask": false,
+      "requiresEmissionMask": false,
+      "authoringNeed": "Neutral albedo; repeat-safe multi-variant blend; preserve moss/dirt value hierarchy. No baked daylight or screen-scale noise."
+    },
+    {
+      "id": "wet-mud",
+      "role": "continuous-substrate-candidate",
+      "baseLayerEligibleAfterApproval": true,
+      "requiresManualFootprint": false,
+      "requiresWaterMask": true,
+      "requiresEmissionMask": false,
+      "authoringNeed": "Neutral soil layer and manually authored water region, specular/roughness and shore transition. Reflections must use one shared light engine."
+    },
+    {
+      "id": "old-paving",
+      "role": "historical-site-footprint-candidate",
+      "baseLayerEligibleAfterApproval": false,
+      "requiresManualFootprint": true,
+      "requiresWaterMask": false,
+      "requiresEmissionMask": false,
+      "authoringNeed": "Hand-authored stone/mortar region for ruins/settlements only, no spontaneous paved road on woodland. Material dimensions and collision landmarks from C#."
+    },
+    {
+      "id": "trampled-earth",
+      "role": "authoritative-road-detail-candidate",
+      "baseLayerEligibleAfterApproval": false,
+      "requiresManualFootprint": true,
+      "requiresWaterMask": false,
+      "requiresEmissionMask": false,
+      "authoringNeed": "Road-center/path motifs clipped to the authoritative C# single-road shape; never derive road navigation from painted RGB or black margins."
+    },
+    {
+      "id": "scorched-ground",
+      "role": "fire-lineage-corruption-candidate",
+      "baseLayerEligibleAfterApproval": false,
+      "requiresManualFootprint": true,
+      "requiresWaterMask": false,
+      "requiresEmissionMask": true,
+      "authoringNeed": "Separate charred diffuse soil and hand-authored emissive fracture regions; every light emitter must register with PR #332; no permanently glowing painted cracks."
+    },
+    {
+      "id": "marsh-wet-bank",
+      "role": "wetland-bank-reference-candidate",
+      "baseLayerEligibleAfterApproval": false,
+      "requiresManualFootprint": true,
+      "requiresWaterMask": true,
+      "requiresEmissionMask": false,
+      "authoringNeed": "Explicit wet-bank/soil/water/vegetation geometry; no fake traversability or automatic black-RGB alpha extraction; real reflections in shared renderer."
+    }
+  ],
+  "sharedGates": [
+    "Owner accepts per-variant source artwork",
+    "Editable separate albedo, geometry/footprint and physical materials authored",
+    "Seams, proportions and authored world-pixel scale pass at phone viewports",
+    "Scene lit by one shared PR #332 GPU renderer, zero-light world RGB black",
+    "Physical iOS/Android visual and performance review and deterministic C# geometry validation"
+  ]
+}
