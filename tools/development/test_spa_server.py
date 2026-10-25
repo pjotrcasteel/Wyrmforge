@@ -8,8 +8,17 @@ from pathlib import Path
 from urllib.error import HTTPError
 from urllib.request import urlopen
 from spa_server import SpaHandler
+from verify_web_assets import unresolved_pointers
 
 class SpaServerTests(unittest.TestCase):
+    def test_runtime_asset_guard_rejects_pointer_but_accepts_real_image(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            pointer = root / "missing.png"
+            pointer.write_bytes(b"version https://git-lfs.github.com/spec/v1\noid sha256:123\nsize 1234\n")
+            (root / "real.png").write_bytes(b"\x89PNG\r\n\x1a\n")
+            self.assertEqual(unresolved_pointers(root), [pointer])
+
     def test_asset_directory_does_not_shadow_spa_route(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
