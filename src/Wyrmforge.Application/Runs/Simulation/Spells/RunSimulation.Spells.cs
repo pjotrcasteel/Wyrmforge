@@ -140,7 +140,10 @@ public sealed partial class RunSimulation
                 Surge = surge.IsSurge,
                 AdditionalStatuses = SpellCombinationResolver.Resolve(id, build.Spells, build.Synergies),
             };
-            projectiles.Add(new ProjectileState(player.Position, direction * speed, radius, damage * (inferno ? 4 : 1), id, effects));
+            projectiles.Add(new ProjectileState(player.Position, direction * speed, radius, damage * (inferno ? 4 : 1), id, effects)
+            {
+                Id = ++nextProjectileAudioId,
+            });
         }
     }
 
