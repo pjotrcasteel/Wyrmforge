@@ -11,7 +11,10 @@
         <label>Diagnostic <select aria-label="Diagnostic" @bind="view" @bind:after="Sync"><option>lit</option><option>albedo</option><option>normals</option><option>geometry</option><option value="object-mask">Selected receiver mask</option><option value="shadow-visibility">Point shadow visibility</option><option value="light-depth">Light depth atlas</option><option value="light-bounds">Light bounds</option></select></label>
         <label><input aria-label="Cutout test fixture" type="checkbox" @bind="cutouts" @bind:after="Sync" /> Cutout test fixture</label>
         <label><input aria-label="Cutout alpha" type="checkbox" @bind="cutoutAlpha" @bind:after="Sync" /> Cutout alpha</label>
-        <label>Lighting rig <select aria-label="Lighting rig" @bind="lighting" @bind:after="Sync"><option value="scene">Scene sources</option><option value="neutral-key">Neutral inspection key</option><option value="source-lifecycle">Source approach / overlap test</option></select></label>
+        <label>Lighting rig <select aria-label="Lighting rig" @bind="lighting" @bind:after="Sync"><option value="scene">Scene sources</option><option value="neutral-key">Neutral inspection key</option><option value="source-lifecycle">Source approach / overlap test</option><option value="town-fixture">Town fixture test</option></select></label>
+        <label><input aria-label="Town active" type="checkbox" @bind="townActive" @bind:after="Sync" /> Town active (lab)</label>
+        <label>Fixture school <select aria-label="Fixture school" @bind="school" @bind:after="Sync"><option>fire</option><option>frost</option><option>storm</option><option>arcane</option><option>death</option><option>binding</option></select></label>
+        <label>Fixture mastery <input aria-label="Fixture mastery" type="range" min="0" max="100" @bind="mastery" @bind:event="oninput" @bind:after="Sync" /></label>
         <label>Environment <select aria-label="Environment" @bind="profile" @bind:after="Sync"><option>night</option><option>day</option><option>auto</option><option>zero</option></select></label>
         <label><input aria-label="Fireball" type="checkbox" @bind="fireball" @bind:after="Sync" /> Fireball</label>
         <label><input aria-label="Torch" type="checkbox" @bind="torch" @bind:after="Sync" /> Torch</label>
@@ -42,7 +45,9 @@
     private string focus = "overview", inspectObject = "hollowed", diagnostics = "";
     private bool normals = true, castsShadow = true, receivesShadow = true, receivesLight = true;
     private string view = "lit", lighting = "scene";
-    private string profile = "night";
+    private string profile = "night", school = "arcane";
+    private bool townActive = true;
+    private int mastery;
     private string? error;
     private bool fireball = true, torch = true, spot = true, rune, shadows = true, reflections = true;
     private bool animate, behind, cutouts, cutoutAlpha = true;
@@ -62,7 +67,7 @@
     private async Task Sync()
     {
         if (module is not null) await module.InvokeVoidAsync("configureProof", canvas,
-            new { profile, view, lighting, sourceDistance, behind, cutouts, cutoutAlpha, focus, inspectObject, normals, castsShadow, receivesShadow, receivesLight, animate, fireball, torch, spot, rune, shadows, reflections, progress = progress / 100.0, frame });
+            new { profile, view, lighting, townActive, school, mastery = mastery / 100.0, sourceDistance, behind, cutouts, cutoutAlpha, focus, inspectObject, normals, castsShadow, receivesShadow, receivesLight, animate, fireball, torch, spot, rune, shadows, reflections, progress = progress / 100.0, frame });
         await ReadDiagnostics();
     }
     private async Task ReadDiagnostics()

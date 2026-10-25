@@ -5,15 +5,26 @@ Authority: [design and acceptance matrix](../design/arena-real-geometry-light-en
 [art](../canon/art-and-animation.md), [architecture](../canon/architecture-and-quality.md),
 [town](../canon/town-and-ux.md), [roadmap](../canon/roadmap.md).
 
-## Current verified checkpoint — 24 October 2026
+## Current verified checkpoint — 25 October 2026
 
-Code/tests: `eb5cb966f58018829393160a854569798c481222`.
-[Published-app GPU run](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40133138866)
-passed. [Durable original screenshots and numeric evidence](evidence/universal-lighting/eb5cb96/README.md)
-are checked in; the complete CI artifact is 12575776916 (expires 23 November).
-All 386 local JavaScript tests pass. Validate passed on this checkpoint.
-All four workflows passed `54d20da`: GPU proof (40133801669), Browser smoke
-(40133801064), Validate (40133801153), and WebKit (40133801101).
+Code/tests: `7253c6b`; durable evidence checkpoint `519603f` passed all four
+workflows: GPU 40165546229, Browser smoke 40165546259, Validate 40165546290,
+and WebKit 40165546225. All 386 JavaScript tests passed.
+[Actor approach/overlap/extinction evidence](evidence/universal-lighting/7253c6b/README.md)
+includes 18 complete black framebuffers and original captures.
+[Earlier receiver, foliage and water evidence](evidence/universal-lighting/eb5cb96/README.md)
+is retained below; the table's counts belong to that earlier checkpoint.
+
+### Milestone position
+
+| Gate | Status / next acceptance |
+| --- | --- |
+| G0 | Inventory and shared contracts implemented; audit expands before any production cutover. |
+| G1 — current | Mechanisms verified for actor illumination, source lifecycle, leaf-on-leaf/cutout shadows, water direct specular and zero-light. Next: Town fixture school/mastery/vacancy, then outstanding occlusion/readability/temporal comparisons and visual acceptance. |
+| G2 | Authoritative C# scene bridge pending; do not connect gameplay before G1 acceptance. |
+| G3 | Advanced reflection/indirect/transmission tiers pending; direct specular is not reflected scenery. |
+| G4 | Physical iOS/Android profiling, scale and quality tiers pending. Browser phone viewports are not device evidence. |
+| G5 | No production adoption; approved Town asset decomposition and scene migration remain separately gated. |
 
 | Verified behavior | 320px viewport | 390px viewport |
 | --- | ---: | ---: |
@@ -393,3 +404,20 @@ Those changes are left on main; this proof does not integrate their visual asset
 Inspection rigs hide the scene's flame cores, which otherwise mark unrelated
 positions despite having emission disabled. Selecting an absent optional cutout
 uses the same explicit fallback anchor as the neutral-key rig.
+
+## G1 Town fixture state slice — 25 October 2026
+
+A lab-only adapter maps active/school/mastery input to ordinary shared emitter
+and material descriptors. Six light colors follow existing Spellcraft color
+families and Nexus Death/Binding palette midpoints. Intensity 8–24 is explicit
+calibration data, not approved balance. No engine dispatch/shader changes,
+production unlock integration, new artwork or alternate Town renderer.
+
+The active fixture illuminates the existing wall and NPC proxy; vacancy removes
+its source, emissive core and occupant. Day/night use the same geometry and
+materials. New published-app tests compare low/high mastery on each visible
+receiver for all six schools, unique school output, vacancy/restoration, day/night
+receiver masks and full-frame zero with the fixture active. New slice CI pending.
+Wizard #335 and actor-art #333 remain untouched. Physical mobile, owner night
+art acceptance, broader clips/depth integration and remaining G1 comparisons
+remain open; the actual Town paintings/layout/navigation are preserved.

@@ -70,3 +70,21 @@ test('cutout diagnostic supplies opaque leaves and genuine holes, not a full qua
     assert.equal(alpha[0], 0);
     assert.equal(alpha[16 * 64 + 16], 255);
 });
+
+
+test('Town fixture state registers six schools, stable identity, bounded mastery and no vacant source', async () => {
+    const { townFixture, SCHOOL_LIGHT_COLORS } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/town-fixture.js');
+    assert.equal(Object.keys(SCHOOL_LIGHT_COLORS).length, 6);
+    const colors = new Set();
+    for (const school of Object.keys(SCHOOL_LIGHT_COLORS)) {
+        const low = townFixture({ active: true, school, mastery: 0 });
+        const high = townFixture({ active: true, school, mastery: 1 });
+        validateSnapshot(snapshot([low])); validateSnapshot(snapshot([high]));
+        assert.equal(high.id, low.id); assert.equal(high.ownerId, low.ownerId);
+        assert.ok(high.intensity > low.intensity); colors.add(low.color);
+        assert.equal(townFixture({ active: false, school, mastery: 1 }), null);
+    }
+    assert.equal(colors.size, 6);
+    for (const mastery of [-1, 2, NaN]) assert.throws(() => townFixture({ active: true, school: 'fire', mastery }));
+    assert.throws(() => townFixture({ active: true, school: 'unknown', mastery: 0 }));
+});

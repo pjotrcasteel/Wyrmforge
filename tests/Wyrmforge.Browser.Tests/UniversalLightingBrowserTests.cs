@@ -155,6 +155,7 @@ public sealed class UniversalLightingBrowserTests : PageTest
         await VerifyCutoutShadowsAsync(canvas, width);
         await VerifyOakLayerShadowsAsync(canvas, width);
         await VerifyActorSourceLifecycleAsync(canvas, width);
+        await VerifyTownFixturesAsync(canvas, width);
     }
 
     private async Task VerifyPoseShadowsAsync(ILocator canvas, int width)
@@ -258,6 +259,55 @@ public sealed class UniversalLightingBrowserTests : PageTest
         await RecordComparisonAsync(width, "actor-source-lifecycle", comparisons);
     }
 
+    private async Task VerifyTownFixturesAsync(ILocator canvas, int width)
+    {
+        await ConfigureAsync(canvas, new { lighting = "town-fixture", focus = "town", profile = "night", view = "lit",
+            townActive = true, mastery = 0, fireball = false, torch = false });
+        var comparisons = new List<object>();
+        var schoolHashes = new HashSet<string>();
+        foreach (var school in new[] { "fire", "frost", "storm", "arcane", "death", "binding" })
+        {
+            await ConfigureAsync(canvas, new { school });
+            foreach (var receiver in new[] { "wall", "npc-binding-proxy" })
+            {
+                await ConfigureAsync(canvas, new { inspectObject = receiver, mastery = 0 });
+                await SaveReceiverBaselineAsync(canvas);
+                var low = await ReceiverMeanRgbAsync(canvas);
+                await ConfigureAsync(canvas, new { mastery = 1 });
+                var high = await ReceiverMeanRgbAsync(canvas);
+                Assert.IsGreaterThan(low, high, $"{school} mastery must increase actual light on {receiver}, not only the fixture core.");
+                comparisons.Add(new { school, receiver, lowMasteryMeanRgb = low, highMasteryMeanRgb = high });
+            }
+            schoolHashes.Add(await PixelHashAsync(canvas));
+            await CaptureAsync(width, $"town-{school}-mastery");
+        }
+        Assert.AreEqual(6, schoolHashes.Count, "All six schools must produce distinct lighting with the same geometry.");
+        await ConfigureAsync(canvas, new { inspectObject = "wall", school = "arcane" });
+        await SaveReceiverBaselineAsync(canvas);
+        var active = await PixelHashAsync(canvas);
+        var activeObjects = await canvas.EvaluateAsync<int>("c => gpuProof.proofDiagnostics(c).objects");
+        await ConfigureAsync(canvas, new { townActive = false });
+        Assert.IsFalse(await canvas.EvaluateAsync<bool>("c => gpuProof.proofDiagnostics(c).lights.some(l => l.id==='town-nexus-fixture')"));
+        Assert.AreEqual(activeObjects - 2, await canvas.EvaluateAsync<int>("c => gpuProof.proofDiagnostics(c).objects"),
+            "Vacancy removes both the luminous fixture core and the occupant proxy.");
+        Assert.IsGreaterThan(5, await ReceiverChangedPixelsAsync(canvas), "Vacancy must extinguish actual wall illumination.");
+        await CaptureAsync(width, "town-vacant");
+        await ConfigureAsync(canvas, new { townActive = true });
+        Assert.AreEqual(active, await PixelHashAsync(canvas), "Reactivation restores the exact frozen scene without ghost sources.");
+        await ConfigureAsync(canvas, new { view = "object-mask" });
+        var nightGeometry = await PixelHashAsync(canvas);
+        await ConfigureAsync(canvas, new { profile = "day" });
+        Assert.AreEqual(nightGeometry, await PixelHashAsync(canvas), "Day and night must use identical receiver geometry and camera.");
+        await ConfigureAsync(canvas, new { view = "lit" });
+        Assert.AreNotEqual(active, await PixelHashAsync(canvas));
+        await CaptureAsync(width, "town-fixture-day");
+        await ConfigureAsync(canvas, new { profile = "zero" });
+        Assert.IsTrue(await canvas.EvaluateAsync<bool>("c => gpuProof.proofPixels(c).every((v,i) => i%4===3 || v===0)"),
+            "Zero must disable Town fixture light, moon, ambient and the school emissive core.");
+        await CaptureAsync(width, "town-fixture-zero");
+        await RecordComparisonAsync(width, "town-fixture", comparisons);
+    }
+
     private static Task<double> ReceiverMeanRgbAsync(ILocator canvas) => canvas.EvaluateAsync<double>(
         "c => { const p=gpuProof.proofPixels(c), e=window.receiverEvidence; return e.indices.reduce((sum,i) => sum+p[i]+p[i+1]+p[i+2],0)/(3*e.indices.length); }");
 
@@ -287,6 +337,7 @@ public sealed class UniversalLightingBrowserTests : PageTest
             ["cutouts"] = "Cutout test fixture", ["cutoutAlpha"] = "Cutout alpha", ["lighting"] = "Lighting rig", ["behind"] = "Light behind receiver", ["profile"] = "Environment", ["view"] = "Diagnostic", ["focus"] = "Camera",
             ["fireball"] = "Fireball", ["torch"] = "Torch", ["spot"] = "Spot", ["rune"] = "Register rune",
             ["shadows"] = "Shadows", ["reflections"] = "Direct specular", ["normals"] = "Authored normals",
+            ["townActive"] = "Town active", ["school"] = "Fixture school", ["mastery"] = "Fixture mastery",
             ["sourceDistance"] = "Source distance", ["progress"] = "Light position", ["frame"] = "Walk frame", ["animate"] = "Animate walk",
             ["inspectObject"] = "Inspect object", ["castsShadow"] = "Casts shadow",
             ["receivesShadow"] = "Receives shadow", ["receivesLight"] = "Receives light"
@@ -299,7 +350,7 @@ public sealed class UniversalLightingBrowserTests : PageTest
                 await control.SetCheckedAsync(property.Value.GetBoolean());
             else if (property.Value.ValueKind == System.Text.Json.JsonValueKind.Number)
                 await control.EvaluateAsync("(input,value) => { input.value=value; input.dispatchEvent(new Event('input',{bubbles:true})); }",
-                    property.Value.GetDouble() * (property.Name == "progress" ? 100 : 1));
+                    property.Value.GetDouble() * (property.Name is "progress" or "mastery" ? 100 : 1));
             else await control.SelectOptionAsync(property.Value.GetString()!);
             object expected = property.Value.ValueKind switch
             {

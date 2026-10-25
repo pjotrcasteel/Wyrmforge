@@ -1,5 +1,6 @@
 // Isolated test fixture only. No RunSimulation, saves, collision or production imports.
 import * as T from './vendor/three.module.js';
+import { townFixture } from './town-fixture.js';
 import { cutoutLeafPixels } from './cutout-fixture.js';
 import { LightingEngine } from './engine.js';
 import { environmentProfile } from './registry.js';
@@ -48,7 +49,7 @@ export async function initializeProof(canvas) {
     if (states.has(canvas)) return;
     const engine = new LightingEngine(canvas);
     const state = { engine, alive: true, options: { profile: 'night', fireball: true, torch: true, spot: true,
-        lighting: 'scene', sourceDistance: 2, behind: false, cutouts: false, cutoutAlpha: true, rune: false, shadows: true, reflections: true, progress: .25, frame: 0, animate: false, view: 'lit', focus: 'overview', inspectObject: 'hollowed', castsShadow: true, receivesShadow: true, receivesLight: true, normals: true }, manifests: {}, animation: {}, samples: {} };
+        lighting: 'scene', townActive: true, school: 'arcane', mastery: 0, sourceDistance: 2, behind: false, cutouts: false, cutoutAlpha: true, rune: false, shadows: true, reflections: true, progress: .25, frame: 0, animate: false, view: 'lit', focus: 'overview', inspectObject: 'hollowed', castsShadow: true, receivesShadow: true, receivesLight: true, normals: true }, manifests: {}, animation: {}, samples: {} };
     states.set(canvas, state);
     try {
         engine.registerGeometry('box', new T.BoxGeometry(1, 1, 1));
@@ -127,6 +128,13 @@ export function configureProof(canvas, options) {
         lights[0].enabled = p.fireball; lights[1].enabled = p.torch;
         for (const source of lights) source.range = 12;
         environment.ambient = 0; environment.emission = false;
+    } else if (p.lighting === 'town-fixture') {
+        const fixture = townFixture({ active: p.townActive, school: p.school, mastery: p.mastery });
+        lights = lights.filter(l => l.id === 'moon');
+        if (fixture) {
+            lights.push(fixture);
+            objects.push(object('town-fixture-core', 'sphere', 'town-fixture', fixture.position, [1, 1, 1], { castsShadow: false }));
+        } else objects.splice(objects.findIndex(o => o.id === 'npc-binding-proxy'), 1);
     } else if (p.lighting !== 'scene') throw new RangeError('Unknown lighting rig');
     if (p.lighting !== 'scene') {
         // Scene fixture cores would falsely mark different source positions in inspection rigs.
@@ -144,6 +152,10 @@ export function configureProof(canvas, options) {
     }
     const materials = state.materials.map(m => ({ ...m, alphaCutoff: m.id === 'cutout-upper' && !p.cutoutAlpha ? 0 : m.alphaCutoff, normal: p.normals ? m.normal : undefined, reflection: p.reflections ? m.reflection : 'off',
         emissionIntensity: m.id === 'flame' && !p.torch && !p.fireball ? 0 : m.emissionIntensity }));
+    if (p.lighting === 'town-fixture' && p.townActive) {
+        const fixture = townFixture({ active: p.townActive, school: p.school, mastery: p.mastery });
+        materials.push(material('town-fixture', fixture.color, .7, { emission: fixture.color, emissionIntensity: 1 + p.mastery }));
+    }
     // Disabling a fixture extinguishes its source surface too.
     if (!p.torch && p.lighting === 'scene') objects.splice(objects.findIndex(o => o.id === 'lantern-core'), 1);
     state.engine.apply({ version: 1, time: 0, lights, materials, objects, environment });
