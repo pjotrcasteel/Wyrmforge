@@ -431,13 +431,31 @@
         for (const id of new Set([...burningGroundActiveIds, ...burningGroundVoices.keys(), ...burningGroundPending])) stopBurningGround(id);
     }
 
+    // Approved V2 Minimal: sustained Fireball casts must not stack full-length explosions.
+    // Preserve source recordings; only alter the runtime mix for repeated combat events.
+    const fireballMinimal = { lastCastAt: -Infinity, lastImpactAt: -Infinity, castCount: 0 };
+    function fireballCastMix(now, preview) {
+        if (preview) return { scale: 1, buildup: true, layers: true };
+        const continuous = now - fireballMinimal.lastCastAt < 700;
+        fireballMinimal.castCount = continuous ? fireballMinimal.castCount + 1 : 0;
+        fireballMinimal.lastCastAt = now;
+        const accent = fireballMinimal.castCount % 5 === 0;
+        return { scale: !continuous ? 0.72 : accent ? 0.36 : 0.20, buildup: !continuous, layers: !continuous };
+    }
+
     function playSpellImpact(school, preview = false, sound = design.palette.impact) {
         const options = recordedManifest?.cues?.[school]?.hitVariants;
         if (!options?.length) return false;
         const count = variants.get(school + '-hit') ?? 0;
         variants.set(school + '-hit', count + 1);
         const index = school === 'fire' ? nextFireballTake('fire-hit', options.length) : count % options.length;
-        return playRecordedEntry(options[index], sound, school + '-hit', count, preview ? 0.62 : 0.53);
+        const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+        const repeatedFire = school === 'fire' && !preview && now - fireballMinimal.lastCastAt < 850;
+        const impactAccent = repeatedFire && fireballMinimal.castCount % 5 === 0;
+        const impactScale = repeatedFire ? (impactAccent ? 0.20 : 0.055) : (preview ? 0.62 : 0.53);
+        if (repeatedFire && now - fireballMinimal.lastImpactAt < 115) return false;
+        if (school === 'fire') fireballMinimal.lastImpactAt = now;
+        return playRecordedEntry(options[index], sound, school + '-hit', count, impactScale);
     }
 
     function playRecorded(name, sound, preview, now) {
@@ -462,10 +480,11 @@
             : count;
         const entry = recordedEntry(name, 'cast', castIndex);
         if (!entry) return false;
-        if (!playRecordedEntry(entry, sound, name, count, isSpell ? 0.72 : 1)) return false;
+        const fireMix = name === 'fire' ? fireballCastMix(now, preview) : null;
+        if (!playRecordedEntry(entry, sound, name, count, fireMix ? fireMix.scale : isSpell ? 0.72 : 1)) return false;
         // The departure gesture is one semantic event made from physical sound layers.
         // Distinct delay and gain profiles are declared in the portable manifest.
-        if (entry.layers?.length) {
+        if (entry.layers?.length && (!fireMix || fireMix.layers)) {
             for (const layer of entry.layers) {
                 playRecordedEntry(layer, sound, name + '-layer', count, layer.gainScale ?? 1, layer.delaySeconds ?? 0);
             }
@@ -474,7 +493,7 @@
         lastCue.set(name, now);
         if (isSpell) {
             if (!preview) recentSpell = { name, at: now };
-            if (!preview && count % 7 === 0) {
+            if (!preview && (fireMix ? fireMix.buildup : count % 7 === 0)) {
                 const buildup = recordedEntry(name, 'buildup', count);
                 if (buildup) playRecordedEntry(buildup, sound, name + '-buildup', count, 0.13);
             }
