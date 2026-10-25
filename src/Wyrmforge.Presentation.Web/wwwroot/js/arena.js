@@ -150,12 +150,13 @@ function startSimulationFrame(state, timestamp, rect) {
         .then(snapshot => {
             if (!state.active) return;
             updatePlayerDanger(state.playerDanger, snapshot, performance.now());
+            const soundCues = collectSoundEvents(state.soundTracker, snapshot, performance.now());
             if (snapshot.paused || snapshot.ended) {
+                // Update the tracker even while paused so resume cannot replay stale combat changes.
                 window.wyrmforgeAudio?.stopAllBurningGround?.();
                 state.soundTracker.audioGrounds = new Map();
             } else {
-                const soundNow = performance.now();
-                for (const cue of collectSoundEvents(state.soundTracker, snapshot, soundNow)) {
+                for (const cue of soundCues) {
                     if (cue !== 'fire-burning') window.wyrmforgeAudio?.play?.(cue);
                 }
                 const groundTransitions = collectBurningGroundTransitions(state.soundTracker, snapshot);
