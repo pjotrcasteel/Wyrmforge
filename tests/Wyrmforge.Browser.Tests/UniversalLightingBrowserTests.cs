@@ -580,8 +580,7 @@ public sealed class UniversalLightingBrowserTests : PageTest
             var visible = await canvas.EvaluateAsync<bool>("c => gpuProof.proofPixels(c).some((v,i) => i%4!==3 && v>0)");
             Assert.IsTrue(visible, $"The {quality} GPU quality profile must preserve a lit scene.");
             var bounds = await canvas.EvaluateAsync<int[]>("c => [c.width,c.height]");
-            Assert.IsGreaterThan(bounds[0], 0);
-            Assert.IsGreaterThan(bounds[1], 0);
+            Assert.IsTrue(bounds[0] > 0 && bounds[1] > 0, $"Invalid framebuffer dimensions for {quality}: {bounds[0]}x{bounds[1]}");
             await CaptureAsync(width, $"quality-{quality}");
         }
         await Page.GetByLabel("GPU quality", new() { Exact = true }).SelectOptionAsync("medium");
