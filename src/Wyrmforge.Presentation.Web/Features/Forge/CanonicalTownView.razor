@@ -16,6 +16,17 @@
         <img class="refuge-town-night-base" src="art/town/night-active.webp?v=140"
              alt="" draggable="false" fetchpriority="high" />
 
+        @* T2 opt-in, owner-unapproved geometry comparison.
+           The canonical painting remains underneath as a safe fallback;
+           all existing building layers, NPCs, masks and interactions remain unchanged. *@
+        @if (showTown3DPreview && !showTownV2)
+        {
+            <canvas class="refuge-town-3d-preview" data-town-3d-preview="true"
+                    width="390" height="844" aria-hidden="true"></canvas>
+            <output class="refuge-town-3d-preview-status" data-town-3d-preview-status="true"
+                    hidden aria-hidden="true"></output>
+        }
+
         @* Exactly registered building paintings with one shared alpha silhouette.
            All six use Arcane architectural landmarks and the same 560x450 atlas
            coordinates; other building layers and collision remain unchanged. *@
@@ -263,6 +274,9 @@
     private bool showTownV2;
     private IJSObjectReference? townV2Module;
     private bool townV2Mounted;
+    private bool showTown3DPreview;
+    private bool town3DPreviewMounted;
+    private IJSObjectReference? town3DPreviewModule;
 
     private sealed record TownCutout(string Id, float X, float Y, float Width, float Height, int DepthY);
     private static readonly TownCutout[] TownForegroundCutouts =
@@ -326,6 +340,20 @@
             }
             return;
         }
+        if (showTown3DPreview && !town3DPreviewMounted)
+        {
+            town3DPreviewMounted = true;
+            try
+            {
+                town3DPreviewModule = await JS.InvokeAsync<IJSObjectReference>(
+                    "import", "./js/town/town-in-game-preview.js");
+                await town3DPreviewModule.InvokeVoidAsync("mountTown3DInGamePreview");
+            }
+            catch (JSException exception)
+            {
+                Logger.LogWarning(exception, "T2 preview failed; keep the approved Town painting visible.");
+            }
+        }
         if (foregroundMounted || crowd is null) return;
         foregroundMounted = true;
         try
@@ -347,6 +375,8 @@
             .Split('&', StringSplitOptions.RemoveEmptyEntries);
         showTownV2 = query.Any(parameter =>
             string.Equals(parameter, "townV2=1", StringComparison.OrdinalIgnoreCase));
+        showTown3DPreview = query.Any(parameter =>
+            string.Equals(parameter, "town3d=1", StringComparison.OrdinalIgnoreCase));
         showTownGeometry = query.Any(parameter =>
             string.Equals(parameter, "townGeometry=1", StringComparison.OrdinalIgnoreCase));
         showTownMetrics = query.Any(parameter =>
@@ -407,6 +437,10 @@
             _ = townV2Module.InvokeVoidAsync("disposeTownV2Nexus", ".refuge-canonical-scene");
         if (townV2Module is not null)
             _ = townV2Module.DisposeAsync();
+        if (town3DPreviewModule is not null)
+            _ = town3DPreviewModule.InvokeVoidAsync("disposeTown3DInGamePreview");
+        if (town3DPreviewModule is not null)
+            _ = town3DPreviewModule.DisposeAsync();
         if (foregroundModule is not null)
             _ = foregroundModule.DisposeAsync();
     }
