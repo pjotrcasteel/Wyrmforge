@@ -136,9 +136,13 @@ export class LightingEngine {
         }
         // Fog is a bounded distance approximation, not a volumetric light simulation.
         // The zero-light diagnostic must not reveal silhouettes through fog.
-        const allDark = s.environment.ambient === 0 && selected.length === 0 && !s.environment.emission;
         const fog = s.environment.fog;
-        this.scene.fog = fog && !allDark ? new T.Fog(fog.color, fog.near, fog.far) : null;
+        // Three.js scene fog is unlit and otherwise introduces its own full-bright color.
+        // Disable it when ambient is zero; direct-light-only fog needs a lit-volume pass.
+        this.scene.fog = fog && s.environment.ambient > 0 ? new T.Fog(
+            new T.Color(fog.color).multiply(new T.Color(s.environment.color))
+                .multiplyScalar(Math.min(1, s.environment.ambient)),
+            fog.near, fog.far) : null;
         this.ambient.color.set(s.environment.color); this.ambient.intensity = s.environment.ambient;
         this.renderer.toneMappingExposure = s.environment.exposure;
         this.snapshot = s; this.selected = selected;
