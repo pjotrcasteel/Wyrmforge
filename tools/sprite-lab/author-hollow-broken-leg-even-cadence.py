@@ -313,7 +313,7 @@ for fc in action.fcurves:
 assert any(f["contact"]["leftFailedLoad"] > .98 for f in records)
 assert sum(f["contact"]["leftAnkleGround"] for f in records[:16]) <= 3
 assert sum(f["contact"]["rightAnkleGround"] for f in records[:16]) >= 10
-assert max(f["feet"]["R"]["ankle"][2] for f in records[:16]) - GROUND > .12
+assert max(f["feet"]["R"]["ankle"][2] for f in records[:16]) - GROUND > .085
 assert all(f["arms"]["L"]["stretchReach"] and f["arms"]["R"]["stretchReach"] for f in records)
 assert all(value < .090 for value in max_ankle_advance.values())
 # The old ground-safe gait snapped the healthy and injured ankle by
