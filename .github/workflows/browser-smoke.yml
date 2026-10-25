@@ -37,6 +37,9 @@ jobs:
       - name: Verify deep-link preview routing
         run: python3 -m unittest discover -s tools/development -p 'test_*.py'
 
+      - name: Verify Town T1 scene contracts and camera calibration
+        run: node --test tools/development/town-*.test.mjs
+
       - name: Restore browser tests
         run: dotnet restore tests/Wyrmforge.Browser.Tests/Wyrmforge.Browser.Tests.csproj
 
