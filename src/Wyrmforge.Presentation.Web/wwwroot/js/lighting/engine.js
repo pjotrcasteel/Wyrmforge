@@ -56,11 +56,13 @@ export class LightingEngine {
             normalMap: texture(descriptor.normal), roughnessMap: texture(descriptor.roughnessMap),
             aoMap: texture(descriptor.aoMap), aoMapIntensity: descriptor.aoIntensity ?? 1,
             emissiveMap: texture(descriptor.emissiveMap, true),
+            envMap: receivesLight && descriptor.reflection === 'probe' ? this.textures.get(descriptor.reflectionProbe) ?? null : null,
             roughness: wetRoughness, metalness: receivesLight && descriptor.reflection !== 'off' ? descriptor.metalness : 0,
             specularIntensity: receivesLight && descriptor.reflection !== 'off' ? descriptor.specular : 0,
             emissive: descriptor.emission, emissiveIntensity: descriptor.emissionIntensity,
             alphaTest: descriptor.alphaCutoff, side: descriptor.doubleSided ? T.DoubleSide : T.FrontSide,
         });
+        if (descriptor.reflection === 'probe' && receivesLight) material.envMapIntensity = descriptor.specular;
         if (descriptor.normalScale !== undefined) material.normalScale.setScalar(descriptor.normalScale);
         // An emissive map modulates the emission color; a black base would suppress it entirely.
         if (descriptor.emissiveMap && descriptor.emission === '#000000') material.emissive.set('#ffffff');
@@ -93,7 +95,7 @@ export class LightingEngine {
     /** Whole authoritative visual snapshot; validate all resource references before mutation. */
     apply(input) {
         const s = validateSnapshot(input);
-        for (const m of s.materials) for (const key of ['albedo', 'normal', 'roughnessMap', 'aoMap', 'emissiveMap'])
+        for (const m of s.materials) for (const key of ['albedo', 'normal', 'roughnessMap', 'aoMap', 'emissiveMap', 'reflectionProbe'])
             if (m[key] && !this.textures.has(m[key])) throw new Error(`Missing texture ${m[key]}`);
         for (const o of s.objects) for (const key of ['geometry', 'occluderGeometry'])
             if (o[key] && !this.geometries.has(o[key])) throw new Error(`Missing geometry ${o[key]}`);
