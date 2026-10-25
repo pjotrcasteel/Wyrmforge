@@ -73,7 +73,7 @@
             module = await JavaScript.InvokeAsync<IJSObjectReference>("import", "./js/lighting/proof-scene.js");
             await module.InvokeVoidAsync("initializeProof", canvas);
             await ReadDiagnostics();
-            renderStatus = "Scene initialized. If the canvas is black, open diagnostics below and report the values.";
+            renderStatus = "GPU scene initialized. If the image is black, inspect the diagnostics shown below.";
             StateHasChanged();
         }
         catch (Exception exception) { error = $"GPU scene failed: {exception.Message}"; renderStatus = "Scene initialization failed."; StateHasChanged(); }
