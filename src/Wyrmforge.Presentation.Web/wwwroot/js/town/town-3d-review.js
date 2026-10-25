@@ -142,6 +142,19 @@ export async function mountTown3DReview() {
     try {
         const api = await initializeTown3DReview(canvas, status);
         window.__town3dReview = api;
+        // Deterministic screenshot cases for the isolated CI reviewer; URL values are strictly validated.
+        const params = new URLSearchParams(window.location.search);
+        for (const [parameter, control, method, accepted] of [
+            ["mode", "town3d-mode", "setMode", ["day", "night", "zero"]],
+            ["actor", "town3d-actor", "setActorPosition", ["behind-well", "behind-noticeboard", "in-front"]],
+            ["view", "town3d-view", "setView", ["lit", "geometry", "normals", "albedo"]]
+        ]) {
+            const value = params.get(parameter);
+            if (value && accepted.includes(value)) {
+                document.getElementById(control).value = value;
+                api[method](value);
+            }
+        }
         for (const [id, method] of [
             ["town3d-mode", "setMode"],
             ["town3d-actor", "setActorPosition"],
