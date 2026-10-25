@@ -6,7 +6,8 @@ const root=new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/',import.meta.u
 const moduleUri=name=>'data:text/javascript;base64,'+Buffer.from(readFileSync(new URL('js/'+name,root),'utf8')).toString('base64');
 const source=readFileSync(new URL('js/hollow-sprites.js',root),'utf8').replace("new URL('../art/enemies/hollow-rigged/', import.meta.url)","new URL('https://example.test/art/enemies/hollow-rigged/')")
  .replace("'./sprite-animation.js'",JSON.stringify(moduleUri('sprite-animation.js'))).replace("'./sprite-layer-compositor.js'",JSON.stringify(moduleUri('sprite-layer-compositor.js')))
- .replace("'./hollow-injury-variants.js'",JSON.stringify(moduleUri('hollow-injury-variants.js')));
+ .replace("'./hollow-injury-variants.js'",JSON.stringify(moduleUri('hollow-injury-variants.js')))
+ .replace("'./hollow-arm-variants.js'",JSON.stringify(moduleUri('hollow-arm-variants.js')));
 const mod=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
 const enemy=(values={})=>({entityId:7,kind:0,x:20,y:20,radius:11,...values});
 const snapshot=(values={})=>({enemies:[enemy()],player:{x:200,y:200,radius:9},deathBursts:[],...values});
@@ -101,4 +102,53 @@ test('nearest-neighbor renderer selects an actual direction row and original piv
   assert.equal(calls[0][2],96*7);assert.equal(calls[0][6],20-72/96*93);
   assert.equal(mod.drawHollowEnemy(ctx,enemy({kind:1}),state),false);
  }finally{globalThis.fetch=originalFetch;globalThis.Image=originalImage;}
+});
+
+test('every Hollowed uses a source-derived no-cape atlas for walk/attack and the corpse never reverts to cape',async()=>{
+ const originals={fetch:globalThis.fetch,Image:globalThis.Image};
+ const basePath='art/enemies/hollow-rigged/';
+ const baseManifest=JSON.parse(readFileSync(new URL(basePath+'manifest.json',root)));
+ const armsManifest=JSON.parse(readFileSync(new URL(basePath+'arms/manifest.json',root)));
+ const injuriesManifest=JSON.parse(readFileSync(new URL(basePath+'injuries/manifest.json',root)));
+ const layers=JSON.parse(readFileSync(new URL(basePath+'layers.json',root)));
+ const animationProfile=JSON.parse(readFileSync(new URL(basePath+'animation-profile.json',root)));
+ try {
+  globalThis.fetch=async url=>{
+   const path=String(url);
+   const data=path.includes('/arms/')?armsManifest:path.includes('/injuries/')?injuriesManifest:
+    path.endsWith('layers.json')?layers:path.endsWith('animation-profile.json')?animationProfile:baseManifest;
+   return {ok:true,json:async()=>data};
+  };
+  globalThis.Image=class {
+   set src(url){
+    this.url=String(url);
+    const path=this.url;
+    const clips=path.includes('/arms/')?Object.values(armsManifest.clips).flatMap(x=>Object.values(x)):
+     path.includes('/injuries/')?Object.values(injuriesManifest.clips):Object.values(baseManifest.clips);
+    const entry=clips.find(x=>path.includes('/'+x.image+'?'));
+    assert.ok(entry,'unexpected sprite source: '+path);
+    this.naturalWidth=entry.cell*entry.frames;this.naturalHeight=entry.cell*8;
+    queueMicrotask(()=>this.onload());
+   }
+  };
+  const isolated=await import('data:text/javascript;base64,'+Buffer.from(source+'\\n// no-cape regression').toString('base64'));
+  assert.equal(await isolated.preloadHollowSprites(),true);
+  assert.equal(isolated.hollowDiagnostics(isolated.createHollowState()).capeFreeReady,true);
+  for(let id=0;id<12;id++){
+   const e=enemy({entityId:id});
+   const state=isolated.createHollowState();
+   isolated.updateHollowSprites(state,snapshot({enemies:[e]}),0);
+   const calls=[];
+   const ctx={globalAlpha:1,save(){},restore(){},translate(){},rotate(){},drawImage(...args){calls.push(args);}};
+   assert.equal(isolated.drawHollowEnemy(ctx,e,state),true);
+   assert.equal(calls.length,1);
+   assert.match(calls[0][0].url,/\\/(arms|injuries)\\//,'caped base atlases must never render');
+   state.entities.get(id).clip='attack';
+   assert.equal(isolated.drawHollowEnemy(ctx,e,state),true);
+   assert.match(calls[1][0].url,/\\/(arms|injuries)\\//);
+   isolated.updateHollowSprites(state,snapshot({enemies:[],deathBursts:[{entityId:id,kind:0,x:20,y:20,bodyRadius:11}]}),.1);
+   isolated.drawHollowCorpses(ctx,state);
+   assert.match(calls[2][0].url,/\\/arms\\//,'corpses must never render the cape');
+  }
+ } finally {globalThis.fetch=originals.fetch;globalThis.Image=originals.Image;}
 });
