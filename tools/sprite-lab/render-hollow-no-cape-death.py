@@ -14,7 +14,7 @@ import math
 from pathlib import Path
 
 import bpy
-from mathutils import Vector
+from mathutils import Vector, Quaternion
 from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -127,6 +127,47 @@ for frame in range(1, FRAMES+1):
             bone.keyframe_insert("scale",frame=frame,group=name)
     bpy.context.view_layer.update()
 scene.frame_set(1)
+adjusted.use_fake_user=True
+
+# A second truly keyed 3D source action: a sideways broken-knee/bracing fall.
+# This does not transform any source 2D pixels or invent random frame shifts.
+side_action=adjusted.copy()
+side_action.name="Hollow_Death_No_Cape_Braced_Side_v1"
+side_action.use_fake_user=True
+rig.animation_data.action=side_action
+for frame in range(1,FRAMES+1):
+    scene.frame_set(frame)
+    impact=smoothstep((frame-4)/10)
+    if impact<1e-5:
+        continue
+    # Asymmetrical torso compression/roll is keyed independently of the first
+    # collapse. Keep the legs and floor correction grounded.
+    for bone_name,angle in (("pelvis",-5),("spine",-12),("chest",-10),("neck",8)):
+        bone=rig.pose.bones[bone_name]
+        q=Quaternion((0,1,0),math.radians(angle*impact))
+        bone.rotation_quaternion=(q@bone.rotation_quaternion).normalized()
+        bone.keyframe_insert("rotation_quaternion",frame=frame,group=bone_name)
+    for side,sign in (("L",1),("R",-1)):
+        shoulder=rig.pose.bones["upper_arm."+side].head.copy()
+        prior_wrist=rig.pose.bones["forearm."+side].tail.copy()
+        target=Vector((.35,-.59,-.45)) if side=="L" else Vector((-.11,-.43,-.44))
+        wrist=prior_wrist.lerp(target,impact)
+        elbow,wrist=ik_joint(shoulder,wrist,bone_lengths["upper_arm."+side],
+                             bone_lengths["forearm."+side],(sign*.12,.55,.15))
+        pose_segment("upper_arm."+side,shoulder,elbow)
+        pose_segment("forearm."+side,elbow,wrist)
+        tip=wrist+Vector((sign*.02,-.07,-.01)).normalized()*bone_lengths["hand."+side]
+        pose_segment("hand."+side,wrist,tip)
+        for name in ("upper_arm."+side,"forearm."+side,"hand."+side):
+            bone=rig.pose.bones[name]
+            bone.keyframe_insert("location",frame=frame,group=name)
+            bone.keyframe_insert("rotation_quaternion",frame=frame,group=name)
+            bone.keyframe_insert("scale",frame=frame,group=name)
+scene.frame_set(1)
+variants={
+    "collapse-forward":(adjusted,"death.png"),
+    "collapse-braced":(side_action,"death-braced.png"),
+}
 
 # The authored collapse carried an after-skin floor-contact corrective in the
 # old mesh. Rebuild its same Z-floor cap on the no-cape skin, after Armature.
@@ -169,66 +210,76 @@ scene.frame_start = 1
 scene.frame_end = FRAMES
 scene.render.fps = FPS
 baseline_yaw = rig.rotation_euler.z
-atlas = Image.new("RGBA", (CELL * FRAMES, CELL * len(DIRECTIONS)))
-rendered_frames = {}
-bounds = {}
-
-for row, direction in enumerate(DIRECTIONS):
-    rig.rotation_euler.z = baseline_yaw + math.radians(SOURCE_ROTATION + 180 - row * 45)
-    rendered_frames[direction] = []
-    for frame in range(FRAMES):
-        scene.frame_set(frame + 1)
-        frame_path = OUT / f"_temporary_{row:02}_{frame:02}.png"
-        scene.render.filepath = str(frame_path)
-        bpy.ops.render.render(write_still=True)
-        rendered = Image.open(frame_path).convert("RGBA")
-        frame_path.unlink()
-        if rendered.size != (CELL, CELL):
-            raise ValueError(f"Wrong death sprite size: {direction} / {frame}")
-        box = rendered.getbbox()
-        if not box or box[0] == 0 or box[1] == 0 or box[2] == CELL or box[3] == CELL:
-            raise ValueError(f"Death silhouette clipped or empty: {direction} {frame}: {box}")
-        rendered_frames[direction].append(rendered)
-        bounds[f"{direction}:{frame}"] = box
-        atlas.alpha_composite(rendered, (frame * CELL, row * CELL))
-    print(f"Rendered actual skinned death: {direction} / {FRAMES} poses", flush=True)
-
-atlas_path = OUT / "death.png"
-atlas.save(atlas_path, optimize=True)
-# Native preview at twice size, without anti-aliased scaling, for artistic QC.
-samples = (0, 3, 6, 9, 12, 16, 20, 23)
-board = Image.new("RGBA", (len(samples) * (CELL + 12), len(DIRECTIONS) * (CELL + 22)), (18, 17, 21, 255))
-ink = ImageDraw.Draw(board)
-for row, direction in enumerate(DIRECTIONS):
-    ink.text((2, row * (CELL + 22)), direction, fill=(205, 191, 171))
-    for col, frame in enumerate(samples):
-        board.alpha_composite(rendered_frames[direction][frame], (col * (CELL + 12) + 6, row * (CELL + 22) + 17))
-board.resize((board.width * 2, board.height * 2), Image.Resampling.NEAREST).convert("RGB").save(OUT / "death-contact-sheet.png")
-gif_frames = []
-for i, sprite in enumerate(rendered_frames["S"]):
-    canvas = Image.new("RGBA", (CELL + 20, CELL + 20), (18, 17, 21, 255))
-    canvas.alpha_composite(sprite, (10, 10))
-    gif_frames.append(canvas.resize((4 * (CELL + 20), 4 * (CELL + 20)), Image.Resampling.NEAREST).convert("RGB"))
-gif_frames[0].save(OUT / "death-south-review.gif", save_all=True, append_images=gif_frames[1:], duration=round(1000 / FPS), loop=0)
+all_frames={}
+all_bounds={}
+clip_manifest={}
+for name,(action,filename) in variants.items():
+    rig.animation_data.action=action
+    atlas=Image.new("RGBA",(CELL*FRAMES,CELL*len(DIRECTIONS)))
+    frames_by_direction={}
+    bounds={}
+    for row,direction in enumerate(DIRECTIONS):
+        rig.rotation_euler.z=baseline_yaw+math.radians(SOURCE_ROTATION+180-row*45)
+        frames_by_direction[direction]=[]
+        for frame in range(FRAMES):
+            scene.frame_set(frame+1)
+            temporary=OUT/f"_temporary_{name}_{row:02}_{frame:02}.png"
+            scene.render.filepath=str(temporary)
+            bpy.ops.render.render(write_still=True)
+            rendered=Image.open(temporary).convert("RGBA")
+            temporary.unlink()
+            if rendered.size!=(CELL,CELL):
+                raise ValueError(f"Wrong death sprite size: {name} {direction} {frame}")
+            box=rendered.getbbox()
+            if not box or min(box[:2])<=0 or max(box[2:])>=CELL:
+                raise ValueError(f"Death silhouette clipped or empty: {name} {direction} {frame}: {box}")
+            frames_by_direction[direction].append(rendered)
+            bounds[f"{direction}:{frame}"]=box
+            atlas.alpha_composite(rendered,(frame*CELL,row*CELL))
+        print(f"Rendered 3D death {name}: {direction} / {FRAMES} poses",flush=True)
+    atlas_path=OUT/filename
+    atlas.save(atlas_path,optimize=True)
+    clip_manifest[name]={"image":filename,"sha256":hashlib.sha256(atlas_path.read_bytes()).hexdigest()}
+    all_frames[name]=frames_by_direction
+    all_bounds[name]=bounds
+    samples=(0,3,6,9,12,16,20,23)
+    board=Image.new("RGBA",(len(samples)*(CELL+12),len(DIRECTIONS)*(CELL+22)),(18,17,21,255))
+    ink=ImageDraw.Draw(board)
+    for row,direction in enumerate(DIRECTIONS):
+        ink.text((2,row*(CELL+22)),direction,fill=(205,191,171))
+        for col,index in enumerate(samples):
+            board.alpha_composite(frames_by_direction[direction][index],
+                                   (col*(CELL+12)+6,row*(CELL+22)+17))
+    preview_suffix="" if name=="collapse-forward" else "-braced"
+    board.resize((board.width*2,board.height*2),Image.Resampling.NEAREST).convert("RGB").save(
+        OUT/f"death-contact-sheet{preview_suffix}.png")
+    gif_frames=[]
+    for sprite in frames_by_direction["S"]:
+        canvas=Image.new("RGBA",(CELL+20,CELL+20),(18,17,21,255))
+        canvas.alpha_composite(sprite,(10,10))
+        gif_frames.append(canvas.resize((4*(CELL+20),4*(CELL+20)),Image.Resampling.NEAREST).convert("RGB"))
+    gif_frames[0].save(OUT/f"death-south-review{preview_suffix}.gif",
+                       save_all=True,append_images=gif_frames[1:],duration=round(1000/FPS),loop=0)
 
 scene.frame_set(1)
 rig.rotation_euler.z = baseline_yaw
+rig.animation_data.action=adjusted
 bpy.ops.wm.save_as_mainfile(filepath=str(OUT / "hollow-no-cape-death.blend"))
-metadata = {
-    "schemaVersion": 1,
-    "actor": "hollowed",
-    "clip": "death",
-    "renderedFrom3D": True,
-    "capeRemovedInActualMesh": True,
-    "sourceRig": str(SOURCE.relative_to(ROOT)),
-    "originalDeathAction": str(DEATH_ACTION_SOURCE.relative_to(ROOT)),
-    "sourceStatus": "candidate requiring 8-way and mobile visual approval",
-    "directions": list(DIRECTIONS),
-    "frames": FRAMES, "fps": FPS, "cell": CELL,
-    "worldSize": 124, "anchor": [64, 88],
-    "image": "death.png",
-    "sha256": hashlib.sha256(atlas_path.read_bytes()).hexdigest(),
-    "boundingBoxes": bounds,
+metadata={
+    "schemaVersion":2,
+    "actor":"hollowed",
+    "clip":"death",
+    "renderedFrom3D":True,
+    "capeRemovedInActualMesh":True,
+    "sourceRig":str(SOURCE.relative_to(ROOT)),
+    "originalDeathAction":str(DEATH_ACTION_SOURCE.relative_to(ROOT)),
+    "sourceStatus":"two independently keyed 3D death motion candidates requiring mobile review",
+    "directions":list(DIRECTIONS),
+    "frames":FRAMES,"fps":FPS,"cell":CELL,
+    "worldSize":124,"anchor":[64,88],
+    "variants":list(variants),
+    "clips":clip_manifest,
+    "boundingBoxes":all_bounds,
 }
-(OUT / "manifest.json").write_text(json.dumps(metadata, indent=2) + "\n")
-print("Generated actual 24-pose, eight-direction, no-cape skeletal death preview. Owner visual acceptance pending.", flush=True)
+(OUT/"manifest.json").write_text(json.dumps(metadata,indent=2)+"\n")
+print("Generated two authored 24-pose eight-way no-cape 3D skeletal death alternatives.",flush=True)
