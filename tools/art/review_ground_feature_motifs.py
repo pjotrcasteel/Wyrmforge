@@ -200,7 +200,9 @@ def build(root: Path, annotation_file: Path, output: Path, preview_size: int = 4
         # Keep the entire hand-authored motif *pixel exact*. Feather only
         # outside its polygon, never across the painted feature itself.
         composed.paste(image, (0, 0), mask)
-        if Image.composite(composed, image, mask).tobytes() != composed.tobytes():
+        # Compare only the polygon interior; exterior pixels are intentionally
+        # feathered and must not be included in this preservation assertion.
+        if Image.composite(composed, Image.new("RGB", image.size), mask).tobytes() != Image.composite(image, Image.new("RGB", image.size), mask).tobytes():
             raise AssertionError("Annotated painted feature was altered")
         composed_name = f"{name}-PAINTED-FEATURE-COMPOSITION-UNAPPROVED.png"
         composed.save(output / composed_name)
