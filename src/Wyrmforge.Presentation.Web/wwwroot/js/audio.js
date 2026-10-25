@@ -1028,6 +1028,7 @@
         diagnostics: () => ({ enabled, state: context?.state ?? 'uninitialized', session: navigator.audioSession?.type ?? 'unsupported',
             identity: recordedManifest ? 'Recorded Dark Fantasy' : 'recordings-loading', audioRevision, uiMaterial, music: currentMusic,
             musicPlaying: currentMusic ? musicIsPlaying(currentMusic) : false, musicTracks: [...musicPlayers.values()].map(track => ({ kind: track.kind, paused: track.player.paused, level: track.level })),
-            recorded: Boolean(recordedManifest), forest: { playing: Boolean(forestPlayer && !forestPlayer.player.paused), target: forestTarget, level: forestLevel }, voices: { ...voices } }),
+            recorded: Boolean(recordedManifest), burningGround: { tracked: burningGroundActiveIds.size, playing: burningGroundVoices.size,
+                pending: burningGroundPending.size, maxVoices: 3 }, forest: { playing: Boolean(forestPlayer && !forestPlayer.player.paused), target: forestTarget, level: forestLevel }, voices: { ...voices } }),
     };
 })();
