@@ -37,6 +37,12 @@ export function validateSnapshot(input) {
         color(m.color); color(m.emission);
         for (const field of ['roughness', 'metalness', 'specular', 'alphaCutoff']) finite(m[field], field, 0, 1);
         finite(m.emissionIntensity, 'emissionIntensity', 0);
+        // G3 optional physically motivated material controls; omitted fields retain G1 behavior.
+        for (const field of ['aoIntensity', 'normalScale', 'foliageTransmission'])
+            if (m[field] !== undefined) finite(m[field], field, 0, field === 'normalScale' ? 4 : 1);
+        for (const field of ['aoMap', 'emissiveMap'])
+            if (m[field] !== undefined && (typeof m[field] !== 'string' || !m[field].trim()))
+                throw new TypeError(`Invalid ${field}`);
         if (!['off', 'direct'].includes(m.reflection)) throw new TypeError('Unsupported reflection tier');
     }
     for (const o of s.objects) {
