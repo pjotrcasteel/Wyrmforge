@@ -15,6 +15,10 @@ on:
       - 'tools/art/build_grass_moss_compatible_bank.py'
       - 'tools/art/build_wet_mud_art_candidates.py'
       - 'tools/art/build_trampled_earth_art_candidates.py'
+      - 'tools/art/build_trampled_segment_art_bank.py'
+      - 'tools/art/build_trampled_organic_transitions.py'
+      - 'tools/art/tests/test_trampled_segment_art_bank.py'
+      - 'tools/art/tests/test_trampled_organic_transitions.py'
       - 'tools/art/build_old_paving_art_candidates.py'
       - 'tools/art/build_scorched_ground_art_candidates.py'
       - 'tools/art/build_marsh_wet_bank_art_candidates.py'
@@ -85,6 +89,10 @@ jobs:
         run: python tools/art/build_wet_mud_art_candidates.py --output "$RUNNER_TEMP/ground-material-probes/wet-mud-art-candidates"
       - name: Author six Trampled Earth variants and six compatible Trampled Earth art candidates
         run: python tools/art/build_trampled_earth_art_candidates.py --output "$RUNNER_TEMP/ground-material-probes/trampled-earth-art-candidates"
+      - name: Create six source-backed segmented Trampled Earth art designs (not runtime)
+        run: python tools/art/build_trampled_segment_art_bank.py --grass "$RUNNER_TEMP/ground-material-probes/grass-moss-art-candidates" --earth "$RUNNER_TEMP/ground-material-probes/trampled-earth-art-candidates" --mud "$RUNNER_TEMP/ground-material-probes/wet-mud-art-candidates" --output "$RUNNER_TEMP/ground-material-probes/trampled-earth-segment-art-bank"
+      - name: Export six organic cross-variant transitions for PNG review
+        run: python tools/art/build_trampled_organic_transitions.py --bank "$RUNNER_TEMP/ground-material-probes/trampled-earth-segment-art-bank" --output "$RUNNER_TEMP/ground-material-probes/trampled-earth-organic-transitions"
       - name: Export six Old Paving historic-site art trials and six compatible review tiles
         run: python tools/art/build_old_paving_art_candidates.py --output "$RUNNER_TEMP/ground-material-probes/old-paving-art-candidates"
       - name: Export six Scorched Ground paintings and six compatible review tiles (no emissive maps)
