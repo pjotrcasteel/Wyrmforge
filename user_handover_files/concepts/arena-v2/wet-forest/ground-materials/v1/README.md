@@ -94,6 +94,19 @@ This is an **all-family scale/asset-selection checkpoint**, not an alternate Are
 
 **Status:** 36 source concepts archived; semantic family roles defined; offline mobile-footprint review available. No variant is locked, no physical channel has been approved, and no production texture has been exported. The clean, user-liked second puddle image is a visual guide only; it must not displace hash-checked source images or be mistaken for a ready geometry mask.
 
+## G1-independent painted-feature extraction studies — 25 October 2026
+
+**The universal lighting engine PR #332 is still G1. No G2/G3 renderer, scene integration, or production material adoption has been done or claimed here.** Continue preparing source art independently in PR #340 while G1 closes.
+
+The [explicit source-art motif annotation file](annotations/feature-motif-source-studies-v1.json) contains first editable, **coarse**, hash-locked UV boundaries for:
+- `trampled-earth-01`: painted diagonal trail details, *not* the route, physics, navigation, or a generated road;
+- `scorched-ground-01`: painted scorched-island region, **not** authored emission or a registered world light;
+- `marsh-wet-bank-01`: painted marshland composition, **not** a water-surface mask, reflective receiver, or C# wetland.
+
+Run `python tools/art/review_ground_feature_motifs.py --output /tmp/wyrm-source-feature-previews` using the same pinned Pillow CI environment. The script verifies the exact original WebP hashes, the originating PNG hashes in the source manifest, explicit UV geometry and the [six-family role catalog](material-family-roles.json). It creates separately labeled *unapproved* masks and side-by-side preview images plus machine-readable metrics. **The masks are only source-art selections, never actual world geometry/alpha/transparency or GPU material channels.** The artist must refine the coarse boundaries. It is intentionally impossible to interpret the current source annotations as game routes or glow.
+
+G1-independent authoring still possible after this checkpoint: refine the selected candidate regions, preserve source layers, author truly neutral diffuse material without assuming painted highlights are physically accurate, record independent semantic water/emissive regions, and test their pixel scale/shape in source-only previews. **Only after G1 acceptance** may a separate integration PR load accepted material layers through PR #332's existing shared lighting/material descriptors and the C# terrain/road truth from PR #338. No custom material lighting renderer, CSS tint or inferred geometry.
+
 ## Approval/locking protocol
 **Do not rename this folder CANONICAL or update runtime references until the owner explicitly accepts
 these 36 images.** After approval, record approved image hashes in an immutable manifest
