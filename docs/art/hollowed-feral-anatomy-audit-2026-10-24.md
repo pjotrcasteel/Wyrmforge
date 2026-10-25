@@ -346,3 +346,37 @@ ships inside its own *review-only* manifest, retaining false
 contact/readability at actual Hunt scale, turning/attack interruption,
 physical device testing, owner review, and matching true-pose normals,
 depth and caster atlases before any default runtime conversion.
+
+### 25 October — follow-up authentic injury variations (first 2 complete drafts)
+
+From the owner-approved **even-cadence broken LEFT leg** source, create two
+new independently editable Blender animated actors. No 2D mirroring or image
+filters are an adequate substitute for 3D anatomy.
+
+1. **Broken RIGHT leg** (independent 3D rig/IK): swap impaired-contact and
+   healthy-support channels to the true opposing skeletal bones; mirror
+   compensating pelvic fall and disabled toe, preserve two reaching arms.
+   Source directory `rigged-hollow-broken-leg-right-even-cadence`.
+2. **Broken LEFT leg + damaged RIGHT arm** (combined injury): reuse the
+   existing 3D right-arm trauma rig and independently authored left-leg
+   contact/recovery in one coherent 16-frame skinned body, with only the
+   intact LEFT arm fully reaching. Source directory
+   `rigged-hollow-broken-arm-right-leg-left-even-cadence`.
+
+Both are produced by `tools/sprite-lab/author-hollow-additional-trauma-v1.py`
+and `tools/sprite-lab/render-hollow-additional-trauma-v1.py` with independently
+versioned `.blend` files, 8 compass directions × 16 true 96px frames,
+native/4× animated clips, and comparative moving-field GIFs. Automated
+checks enforce max per-frame ankle movement 0.08m, ground-safe toe,
+anatomical segment lengths, nonflipped 3D directions, true injured-side
+weight transfer, exact cyclic closure and disabled arm.
+
+[Review right-leg GIFs](evidence/hollowed-additional-trauma-broken-leg-right)
+and [review combined-injury GIFs](evidence/hollowed-additional-trauma-broken-leg-left-broken-arm-right).
+
+**These are candidate artwork only.** The approved left-leg variant is
+isolated for immediate gameplay in [PR #343](https://github.com/pjotrcasteel/Wyrmforge/pull/343),
+based on `main`; this larger [PR #333](https://github.com/pjotrcasteel/Wyrmforge/pull/333)
+remains the 3D source/art development workstream for further visual approval
+and attack-transition/material synchronisation. Do not change PR #332 or
+claim these two candidates are live enemy spawns.
