@@ -27,7 +27,7 @@ FAMILY = "wet-mud"
 def create(
     source_root: Path, output: Path, *,
     side: int = SIDE, source_px: int = 576, patch_size: int = PATCH,
-    overlap: int = OVERLAP, candidates: int = CANDIDATES, border: int = 32,
+    overlap: int = OVERLAP, candidates: int = CANDIDATES, border: int = 32, family: str = FAMILY,
 ) -> dict:
     source_root, output = source_root.resolve(), output.resolve()
     if output == source_root or source_root in output.parents:
@@ -35,9 +35,9 @@ def create(
     if (side < 96 or side > 2048 or source_px < patch_size or border < 8
         or border > side // 8):
         raise ValueError("Invalid artwork dimension/edge-band configuration")
-    sources = load_family(source_root, FAMILY, source_px=source_px)
+    if family not in ("wet-mud", "trampled-earth"):\n        raise ValueError("Unsupported source-art family")\n    sources = load_family(source_root, family, source_px=source_px)
     if len(sources) != 6:
-        raise ValueError("Six Wet Mud original paintings are required")
+        raise ValueError("Six source paintings are required")
 
     # Build in memory before writing: a bad sample must not create partial exports.
     independent, records = [], []
@@ -75,7 +75,7 @@ def create(
 
     for index, (original, compatible_art) in enumerate(zip(independent, compatible), 1):
         for label, pixels in (("INDEPENDENT", original), ("COMPATIBLE", compatible_art)):
-            filename = f"wet-mud-{label}-ART-CANDIDATE-{index:02d}.png"
+            filename = f"{family}-{label}-ART-CANDIDATE-{index:02d}.png"
             Image.fromarray(pixels).save(output / filename, optimize=True)
             records[index - 1][label.lower()] = {
                 "file": filename,
@@ -89,7 +89,7 @@ def create(
     bank_contact(compatible).save(output / mixed, quality=91, subsampling=0)
     report = {
         "schemaVersion": 1,
-        "family": FAMILY,
+        "family": family,
         "status": "unapproved-artwork",
         "sourceCount": 6,
         "independentArtCount": 6,
@@ -104,13 +104,13 @@ def create(
         "waterGeometryAuthored": False,
         "neutralDiffuseAuthored": False,
         "physicalMaterialMapsAuthored": False,
-        "warning": "Painted puddle specular and wet highlights are still embedded in these candidate RGBs. Matching edges do not prove non-repetition, physical water, scene-light compatibility or user art approval.",
+        "warning": "Original painted details remain embedded in these candidate RGBs. Matching edges do not prove non-repetition, neutral albedo, scene-light compatibility or user art approval.",
         "variants": records,
         "independentReview": repeated,
         "mixedVariantReview": mixed,
     }
-    (output / "wet-mud-art-candidates.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
-    print("PASS: six independent and six mutually compatible Wet Mud art candidates, 72 ordered edge pairs; no game changes.")
+    (output / f"{family}-art-candidates.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    print("PASS: six independent and six mutually compatible source-art candidates, 72 ordered edge pairs; no game changes.")
     return report
 
 
