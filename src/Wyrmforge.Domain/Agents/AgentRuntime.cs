@@ -78,11 +78,17 @@ public sealed class AgentRuntime
 
     public void Restore(AgentSnapshot snapshot)
     {
+        ArgumentNullException.ThrowIfNull(snapshot);
         if (snapshot.Identity != state.Identity || snapshot.Seed != state.Seed || snapshot.DecisionIntervalTicks != state.DecisionIntervalTicks
-            || snapshot.Tick < 0 || snapshot.Sequence < 0 || !Enum.IsDefined(snapshot.Lifecycle)
+            || snapshot.Tick < 0 || snapshot.NextDecisionTick < 0 || snapshot.Sequence < 0 || !Enum.IsDefined(snapshot.Lifecycle)
             || snapshot.Observations.IsDefault || snapshot.Memory.IsDefault || snapshot.Trace.IsDefault
             || snapshot.Observations.Length > FactLimit || snapshot.Memory.Length > FactLimit || snapshot.Trace.Length > TraceLimit
-            || snapshot.Trace.Any(t => t.Alternatives.IsDefault || t.Alternatives.Length > AlternativeLimit))
+            || snapshot.Observations.Concat(snapshot.Memory).Any(f => f.ObservedTick < 0 || f.ObservedTick > snapshot.Tick)
+            || snapshot.Memory.Select(f => f.Key).Distinct(StringComparer.Ordinal).Count() != snapshot.Memory.Length
+            || snapshot.CurrentAction is { } action && action.Sequence != snapshot.Sequence
+            || snapshot.LastResult is { } result && (result.Sequence > snapshot.Sequence || !Enum.IsDefined(result.Status))
+            || snapshot.Trace.Any(t => t.Tick > snapshot.Tick || t.Tick < 0 || t.Alternatives.IsDefault
+                || t.Alternatives.Length > AlternativeLimit || t.Alternatives.Any(a => !double.IsFinite(a.Score))))
             throw new ArgumentException("Snapshot does not match this agent or its bounds.", nameof(snapshot));
         state = snapshot;
     }

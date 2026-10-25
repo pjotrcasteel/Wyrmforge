@@ -49,6 +49,7 @@
         <section class="note">
             <button @onclick="InspectAgents">Refresh AI inspector</button>
             <p>Compatibility mode: existing combat execution and legacy exact-target information. Earned perception is AI1. Pause the encounter to inspect a fixed decision.</p>
+            <p data-testid="agent-summary">@agentSummary</p>
             <pre style="max-height:28rem;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere" data-testid="agent-inspector">@agentInspection</pre>
         </section>
     }
@@ -77,6 +78,7 @@
     private bool casting;
     private bool agentFoundation;
     private string agentInspection = "Run the encounter, then refresh to inspect its agents.";
+    private string agentSummary = "";
     private string mireStyle = "painted";
     private bool paused;
     private double simulationSeconds;
@@ -137,9 +139,14 @@
         // one source for this animal, not retain an outdated decoded image.
         Navigation.NavigateTo(Navigation.GetUriWithQueryParameter("mireStyle", mireStyle), forceLoad: true, replace: true);
     }
-    private void InspectAgents() => agentInspection = simulation is null ? "Encounter not started." :
-        System.Text.Json.JsonSerializer.Serialize(simulation.InspectEnemyAgents(), new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
-    private void Restart() { simulation = null; agent = null; simulationSeconds = 0; paused = false; agentInspection = "Run the encounter, then refresh to inspect its agents."; }
+    private void InspectAgents()
+    {
+        var states = simulation?.InspectEnemyAgents();
+        agentSummary = states is null ? "Encounter not started." : states.Count == 0 ? "No supported live AI0 agents." :
+            string.Join(" · ", states.Select(s => $"{s.Identity.Archetype}: {s.CurrentAction?.Goal} / {s.CurrentAction?.Action} — {s.CurrentAction?.Reason}; executor: {s.LastResult?.Reason}"));
+        agentInspection = System.Text.Json.JsonSerializer.Serialize(states, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+    }
+    private void Restart() { simulation = null; agent = null; simulationSeconds = 0; paused = false; agentSummary = ""; agentInspection = "Run the encounter, then refresh to inspect its agents."; }
     private void TogglePause() => paused = !paused;
     public async ValueTask DisposeAsync()
     {

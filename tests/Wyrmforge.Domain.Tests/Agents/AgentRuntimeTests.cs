@@ -91,4 +91,31 @@ public sealed class AgentRuntimeTests
         Assert.ThrowsExactly<ArgumentException>(() => a.Step([new("x", "a", 0, "test"), new("x", "b", 0, "test")]));
         Assert.AreEqual(0L, a.Inspect().Tick);
     }
+
+    private sealed class EmptyPolicy : IAgentPolicy
+    {
+        public ImmutableArray<AgentAlternative> Evaluate(AgentContext context) => [];
+    }
+
+    [TestMethod]
+    public void NoEligibleAction_Waits_AndCompletionForcesEvaluationNextStep()
+    {
+        var a = new AgentRuntime(new(1, "idle", "neutral"), 42, new EmptyPolicy());
+        var request = a.Step([])!;
+        Assert.AreEqual("wait", request.Action);
+        Assert.AreEqual("no-eligible-action", request.Reason);
+        Assert.IsTrue(a.Report(new(request.Sequence, AgentActionStatus.Completed, "done")));
+        Assert.AreEqual(request.Sequence + 1, a.Step([])!.Sequence);
+    }
+
+    [TestMethod]
+    public void Restore_RejectsInvalidReplayClocksAndFutureFacts()
+    {
+        var a = Create(); a.Step([]);
+        var snapshot = a.Inspect();
+        Assert.ThrowsExactly<ArgumentException>(() => a.Restore(snapshot with { NextDecisionTick = -1 }));
+        Assert.ThrowsExactly<ArgumentException>(() => a.Restore(snapshot with { Memory = [new("future", "x", 999, "test")] }));
+        Assert.ThrowsExactly<ArgumentException>(() => a.Restore(snapshot with { Sequence = 0 }));
+        Assert.AreEqual(snapshot, a.Inspect());
+    }
 }
