@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
-import {createHollowLegReview,hollowLegReviewRequested} from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/hollow-leg-review.js';
+import {createHollowLegReview,hollowLegReviewRequested,hollowLegReviewMode} from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/hollow-leg-review.js';
 
 const root=new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/',import.meta.url);
 const dir=new URL('art/enemies/hollow-rigged/review/broken-leg-left/',root);
@@ -18,6 +18,10 @@ test('off by default; only an explicit dragged preview token enables it',async()
     assert.equal(hollowLegReviewRequested(''),false);
     assert.equal(hollowLegReviewRequested('?hollowLegReview=1'),false);
     assert.equal(hollowLegReviewRequested('?hollowLegReview=dragged'),true);
+    assert.equal(hollowLegReviewRequested('?hollowLegReview=even'),true);
+    assert.equal(hollowLegReviewMode('?hollowLegReview=dragged'),'dragged');
+    assert.equal(hollowLegReviewMode('?hollowLegReview=even'),'even');
+    assert.equal(hollowLegReviewMode('?hollowLegReview=fast'),null);
     assert.equal(hollowLegReviewRequested('?hollowLegReview=dragged-all'),false);
     const review=createHollowLegReview(dir,false);
     assert.equal(review.enabled,false);
@@ -93,4 +97,39 @@ test('failed download or invalid material/cutover manifest leaves approved art i
         assert.equal(review.draw(ctx,'standard','walk',1,'S',0,0,11),false);
         assert.deepEqual(calls,[]);
     }finally{globalThis.fetch=oldFetch;globalThis.Image=oldImage;}
+});
+
+test('the smoother even-cadence source is a separate byte-exact opt-in review, not a replacement of dragged',async()=>{
+    const evenDir=new URL('art/enemies/hollow-rigged/review/broken-leg-left-even/',root);
+    const even=JSON.parse(readFileSync(new URL('manifest.json',evenDir),'utf8'));
+    assert.equal(even.variant,'broken-leg-left-even-cadence');
+    assert.equal(even.reviewOnly,true);
+    assert.equal(even.runtimeCutover,false);
+    assert.equal(even.materialsRegenerated,false);
+    assert.ok(even.maxAnkleTravelPerFrame.L<.080);
+    assert.ok(even.maxAnkleTravelPerFrame.R<.080);
+    const png=readFileSync(new URL(even.image,evenDir));
+    const evidence=readFileSync(new URL('../../../docs/art/evidence/hollowed-broken-leg-even-cadence/candidate-walk-eight-directions.png',root));
+    assert.deepEqual(png,evidence);
+    const blobSha=createHash('sha1').update(Buffer.from('blob '+png.length+'\\0')).update(png).digest('hex');
+    assert.equal(blobSha,even.sourceBlobSha);
+    assert.notEqual(even.sourceBlobSha,manifest.sourceBlobSha);
+    const prevFetch=globalThis.fetch,prevImage=globalThis.Image;
+    try{
+        globalThis.fetch=async()=>({ok:true,json:async()=>even});
+        globalThis.Image=class {
+            naturalWidth=1536;naturalHeight=768;
+            set src(value){this.url=value;queueMicrotask(()=>this.onload());}
+        };
+        const renderer=createHollowLegReview(evenDir,true);
+        assert.equal(await renderer.preload(),true);
+        const {ctx,calls}=fakeContext();
+        assert.equal(renderer.draw(ctx,'standard','walk',8,'S',150,200,11),true);
+        assert.ok(calls.some(c=>c[0]==='drawImage'));
+        assert.equal(renderer.draw(ctx,'standard','attack',8,'S',150,200,11),false);
+        assert.equal(renderer.draw(ctx,'broken-arm-right','walk',8,'S',150,200,11),false);
+    }finally{
+        globalThis.fetch=prevFetch;
+        globalThis.Image=prevImage;
+    }
 });
