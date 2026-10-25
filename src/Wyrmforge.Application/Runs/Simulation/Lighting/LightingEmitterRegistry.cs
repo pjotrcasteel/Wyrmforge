@@ -8,9 +8,19 @@ public sealed class LightingEmitterRegistry
 
     public bool Remove(string id) => emitters.Remove(id);
 
+    public int RemoveOwner(string ownerId)
+    {
+        var ids = emitters.Values.Where(emitter => emitter.OwnerId == ownerId)
+            .Select(emitter => emitter.Id).ToArray();
+        foreach (var id in ids) emitters.Remove(id);
+        return ids.Length;
+    }
+
     public LightingSnapshot Capture(string sceneId, long tick, LightingEnvironment environment)
     {
-        var active = emitters.Values.Where(e => !e.ExpiresAtTick.HasValue || e.ExpiresAtTick.Value > tick);
+        foreach (var id in emitters.Values.Where(e => e.ExpiresAtTick.HasValue && e.ExpiresAtTick.Value <= tick)
+                     .Select(e => e.Id).ToArray()) emitters.Remove(id);
+        var active = emitters.Values;
         return LightingSceneComposer.Compose(sceneId, tick, environment, active);
     }
 
