@@ -71,9 +71,10 @@ scene.render.engine = "BLENDER_EEVEE_NEXT" if "BLENDER_EEVEE_NEXT" in     bpy.ty
 scene.render.film_transparent = False
 
 bpy.ops.wm.save_as_mainfile(filepath=str(BLEND))
+# Render independent visual QC first; a broken glTF exporter must not suppress the PNG.
+bpy.ops.render.render(write_still=True)
 bpy.ops.export_scene.gltf(filepath=str(GLB), export_format="GLB",
                            export_yup=True, export_apply=True)
-bpy.ops.render.render(write_still=True)
 if not all(p.is_file() and p.stat().st_size > 100 for p in (BLEND, GLB, PREVIEW)):
     raise RuntimeError("T1 export did not generate the .blend, .glb and PNG outputs")
 print(f"T1 exported {len(meshes)} mesh groups: {BLEND}, {GLB}, {PREVIEW}")
