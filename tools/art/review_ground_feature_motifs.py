@@ -177,7 +177,15 @@ def build(root: Path, annotation_file: Path, output: Path, preview_size: int = 4
         label = f"{item['layer']} | {name} | SOURCE PAINT ONLY"
         ImageDraw.Draw(panel).text((12, 12), label, fill="#f0e8dc")
         source_thumb = ImageOps.contain(image, (preview_size - 20, preview_size - 20), Image.Resampling.LANCZOS)
-        motif_thumb = ImageOps.contain(crop, (preview_size - 20, preview_size - 20), Image.Resampling.LANCZOS)
+        # Preserve the original RGB inside explicitly hand-authored polygons.
+        # Outside the annotation, use a neutral review-only backdrop, not
+        # inferred transparency or a runtime mask.
+        isolated = Image.new("RGB", crop.size, (49, 51, 49))
+        cropped_mask = mask.crop((left, top, right, bottom))
+        isolated.paste(crop, (0, 0), cropped_mask)
+        isolated_name = f"{name}-HAND-ANNOTATED-ISOLATION-UNAPPROVED.png"
+        isolated.save(output / isolated_name)
+        motif_thumb = ImageOps.contain(isolated, (preview_size - 20, preview_size - 20), Image.Resampling.LANCZOS)
         panel.paste(source_thumb, ((preview_size - source_thumb.width) // 2, 42))
         panel.paste(motif_thumb, (preview_size + (preview_size - motif_thumb.width) // 2, 42))
         composition_panels.append(panel)
@@ -194,6 +202,8 @@ def build(root: Path, annotation_file: Path, output: Path, preview_size: int = 4
             "maskSha256": hashlib.sha256((output / mask_name).read_bytes()).hexdigest(),
             "previewFile": preview_name,
             "sourceRgbCropFile": crop_name,
+            "annotatedIsolationPreviewFile": isolated_name,
+            "annotatedIsolationPreviewIsRuntimeAsset": False,
             "sourceRgbCropBounds": [left, top, right, bottom],
             "sourceRgbCropSha256": hashlib.sha256((output / crop_name).read_bytes()).hexdigest(),
             "sourceRgbCropPixelsUnchanged": True,
