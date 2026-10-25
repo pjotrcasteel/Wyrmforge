@@ -727,7 +727,10 @@
         if (!ctx || ctx.state === 'closed') return false;
         const sound = design.palette[name];
         const now = performance.now();
-        if (!preview && now - (lastCue.get(name) ?? -Infinity) < sound.cooldown) return false;
+        // The normal Fireball palette cooldown is for isolated spell previews; it would
+        // discard most casts during actual rapid fire and defeat V2 Minimal mixing.
+        const cooldown = !preview && name === 'fire' ? 110 : sound.cooldown;
+        if (!preview && now - (lastCue.get(name) ?? -Infinity) < cooldown) return false;
         if (recordedManifest) {
             if (!recordedManifest.cues[name]) return false;
             return playRecorded(name, sound, preview, now);
