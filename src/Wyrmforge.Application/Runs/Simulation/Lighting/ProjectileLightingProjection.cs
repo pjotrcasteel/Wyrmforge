@@ -3,25 +3,44 @@ using Wyrmforge.Domain.Spells;
 
 namespace Wyrmforge.Application.Runs.Simulation.Lighting;
 
-/// <summary>Pure projection of authoritative projectile state. No renderer clock or effects are created.</summary>
+/// <summary>Presentation metadata for a source; no renderer or gameplay logic.</summary>
+public sealed record LightSourceProfile(string Color, double Intensity, double Radius, string Type = "point", bool CastsShadows = true);
+
+/// <summary>Generic source metadata, keyed by spell school rather than individual spell IDs.</summary>
+public static class LightingSourceCatalog
+{
+    private static readonly IReadOnlyDictionary<SpellSchool, LightSourceProfile> Schools =
+        new Dictionary<SpellSchool, LightSourceProfile>
+        {
+            [SpellSchool.Fire] = new("#ff7835", 1, 3),
+            [SpellSchool.Frost] = new("#8bdfff", 0.8, 3),
+            [SpellSchool.Storm] = new("#ffe36a", 1, 3),
+            [SpellSchool.Arcane] = new("#b79aff", 0.8, 3),
+        };
+
+    public static LightSourceProfile? ForSpell(SpellId spell) =>
+        Schools.GetValueOrDefault(SpellCatalog.Get(spell).School);
+}
+
+/// <summary>Pure projection of authoritative projectile state. New spells use catalog metadata.</summary>
 public static class ProjectileLightingProjection
 {
     public static LightingEmitter? FromProjectile(ProjectileState projectile, string stableId)
     {
-        if (projectile.Spell is not (SpellId.FireBolt or SpellId.CinderNeedle))
-            return null;
+        var profile = LightingSourceCatalog.ForSpell(projectile.Spell);
+        if (profile is null) return null;
 
         return new LightingEmitter(
             Id: $"projectile:{stableId}",
             OwnerId: stableId,
-            Type: "point",
+            Type: profile.Type,
             X: projectile.Position.X,
             Y: projectile.Position.Y,
             Z: 0,
-            Color: "#ff7835",
-            Intensity: 1,
-            Radius: 3,
-            CastsShadows: true);
+            Color: profile.Color,
+            Intensity: profile.Intensity,
+            Radius: profile.Radius,
+            CastsShadows: profile.CastsShadows);
     }
 
     public static LightingSnapshot Capture(
