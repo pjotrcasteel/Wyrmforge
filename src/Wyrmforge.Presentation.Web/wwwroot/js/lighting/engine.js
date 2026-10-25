@@ -27,6 +27,7 @@ export class LightingEngine {
         this.debugView = 'lit';
         this.halfWidth = 5;
         this.inspection = new LightingInspection();
+        this.materialBudget = { maps: 0, transmissive: 0, ao: 0 };
     }
     registerGeometry(id, geometry) {
         if (this.geometries.has(id)) throw new Error(`Duplicate geometry ${id}`);
@@ -34,23 +35,45 @@ export class LightingEngine {
     }
     registerTexture(id, texture, colorData = true) {
         if (this.textures.has(id)) throw new Error(`Duplicate texture ${id}`);
+        if (texture.isCubeTexture) colorData = true;
         texture.colorSpace = colorData ? T.SRGBColorSpace : T.NoColorSpace;
         texture.magFilter = texture.minFilter = T.NearestFilter;
         texture.generateMipmaps = false;
         this.textures.set(id, texture);
     }
     material(descriptor, receivesLight) {
-        const texture = id => id ? this.textures.get(id)?.clone() : null;
+        const texture = (id, colorData = false) => {
+            if (!id) return null;
+            const source = this.textures.get(id);
+            if (!source) return null;
+            const map = source.clone();
+            map.colorSpace = colorData ? T.SRGBColorSpace : T.NoColorSpace;
+            return map;
+        };
+        const wetness = descriptor.wetness ?? 0;
+        const wetRoughness = descriptor.roughness * (1 - wetness) + Math.min(descriptor.roughness, .08) * wetness;
         const material = new T.MeshPhysicalMaterial({
-            color: receivesLight ? descriptor.color : '#000000', map: texture(descriptor.albedo),
+            color: receivesLight ? descriptor.color : '#000000', map: texture(descriptor.albedo, true),
             normalMap: texture(descriptor.normal), roughnessMap: texture(descriptor.roughnessMap),
-            roughness: descriptor.roughness, metalness: receivesLight ? descriptor.metalness : 0,
+            aoMap: texture(descriptor.aoMap), aoMapIntensity: descriptor.aoIntensity ?? 1,
+            emissiveMap: texture(descriptor.emissiveMap, true),
+            envMap: receivesLight && descriptor.reflection === 'probe' ? this.textures.get(descriptor.reflectionProbe) ?? null : null,
+            roughness: wetRoughness, metalness: receivesLight && descriptor.reflection !== 'off' ? descriptor.metalness : 0,
             specularIntensity: receivesLight && descriptor.reflection !== 'off' ? descriptor.specular : 0,
             emissive: descriptor.emission, emissiveIntensity: descriptor.emissionIntensity,
             alphaTest: descriptor.alphaCutoff, side: descriptor.doubleSided ? T.DoubleSide : T.FrontSide,
         });
+        if (descriptor.reflection === 'probe' && receivesLight) material.envMapIntensity = descriptor.specular;
+        if (descriptor.normalScale !== undefined) material.normalScale.setScalar(descriptor.normalScale);
+        // An emissive map modulates the emission color; a black base would suppress it entirely.
+        if (descriptor.emissiveMap && descriptor.emission === '#000000') material.emissive.set('#ffffff');
+        // Generic thin-surface transmission; never registers a light source.
+        if (receivesLight && descriptor.foliageTransmission > 0) {
+            material.transmission = descriptor.foliageTransmission;
+            material.thickness = 0;
+        }
         material.shadowSide = descriptor.doubleSided ? T.DoubleSide : T.FrontSide;
-        for (const map of [material.map, material.normalMap, material.roughnessMap]) if (map) map.needsUpdate = true;
+        for (const map of [material.map, material.normalMap, material.roughnessMap, material.aoMap, material.emissiveMap]) if (map) map.needsUpdate = true;
         return material;
     }
     removeObject(id) {
@@ -58,7 +81,7 @@ export class LightingEngine {
         if (!o) return;
         this.scene.remove(o.mesh);
         if (o.caster) this.scene.remove(o.caster);
-        for (const map of [o.mesh.material.map, o.mesh.material.normalMap, o.mesh.material.roughnessMap]) map?.dispose();
+        for (const map of [o.mesh.material.map, o.mesh.material.normalMap, o.mesh.material.roughnessMap, o.mesh.material.aoMap, o.mesh.material.emissiveMap]) map?.dispose();
         for (const material of o.debugMaterials?.values() ?? []) material.dispose();
         o.mesh.material.dispose(); o.caster?.material.dispose();
         this.objects.delete(id);
@@ -73,8 +96,10 @@ export class LightingEngine {
     /** Whole authoritative visual snapshot; validate all resource references before mutation. */
     apply(input) {
         const s = validateSnapshot(input);
-        for (const m of s.materials) for (const key of ['albedo', 'normal', 'roughnessMap'])
+        for (const m of s.materials) for (const key of ['albedo', 'normal', 'roughnessMap', 'aoMap', 'emissiveMap', 'reflectionProbe'])
             if (m[key] && !this.textures.has(m[key])) throw new Error(`Missing texture ${m[key]}`);
+        for (const m of s.materials) if (m.reflection === 'probe' && !this.textures.get(m.reflectionProbe)?.isCubeTexture)
+            throw new TypeError(`Reflection probe ${m.reflectionProbe} must be a cube texture`);
         for (const o of s.objects) for (const key of ['geometry', 'occluderGeometry'])
             if (o[key] && !this.geometries.has(o[key])) throw new Error(`Missing geometry ${o[key]}`);
         const selected = selectLights(s, this.shadowViews, this.maxLights);
@@ -122,12 +147,29 @@ export class LightingEngine {
             if (object.caster) object.caster.castShadow = d.castsShadow;
             object.mesh.receiveShadow = d.receivesShadow;
             object.mesh.material.emissiveIntensity = s.environment.emission ? md.emissionIntensity : 0;
-            if (d.frame) for (const map of [object.mesh.material.map, object.mesh.material.normalMap]) if (map) {
+            // Environment probes contain prelit radiance; disable them for the absolute darkness diagnostic.
+            object.mesh.material.envMapIntensity = s.environment.ambient === 0 && selected.length === 0
+                ? 0 : md.reflection === 'probe' ? md.specular : 0;
+            if (d.frame) for (const map of [object.mesh.material.map, object.mesh.material.normalMap, object.mesh.material.roughnessMap, object.mesh.material.aoMap, object.mesh.material.emissiveMap]) if (map) {
                 map.offset.fromArray(d.frame.offset); map.repeat.fromArray(d.frame.repeat); map.updateMatrix();
             }
         }
+        // Fog is a bounded distance approximation, not a volumetric light simulation.
+        // The zero-light diagnostic must not reveal silhouettes through fog.
+        const fog = s.environment.fog;
+        // Three.js scene fog is unlit and otherwise introduces its own full-bright color.
+        // Disable it when ambient is zero; direct-light-only fog needs a lit-volume pass.
+        this.scene.fog = fog && s.environment.ambient > 0 ? new T.Fog(
+            new T.Color(fog.color).multiply(new T.Color(s.environment.color))
+                .multiplyScalar(Math.min(1, s.environment.ambient)),
+            fog.near, fog.far) : null;
         this.ambient.color.set(s.environment.color); this.ambient.intensity = s.environment.ambient;
         this.renderer.toneMappingExposure = s.environment.exposure;
+        this.materialBudget = {
+            maps: s.materials.reduce((count, m) => count + ['albedo', 'normal', 'roughnessMap', 'aoMap', 'emissiveMap'].filter(key => !!m[key]).length, 0),
+            transmissive: s.materials.filter(m => (m.foliageTransmission ?? 0) > 0).length,
+            ao: s.materials.filter(m => !!m.aoMap).length,
+        };
         this.snapshot = s; this.selected = selected;
     }
     setCamera(target, halfWidth = 5) {
@@ -212,6 +254,7 @@ float proofShadowVisibility() {
             drawCalls: this.renderer.info.render.calls, triangles: this.renderer.info.render.triangles,
             textures: this.renderer.info.memory.textures, geometries: this.renderer.info.memory.geometries,
             inspectedReceiver: this.snapshot?.objects.find(o => o.id === this.inspectionObject) ?? null,
+            materialBudget: this.materialBudget, fogEnabled: !!this.scene.fog,
             productionPathsMigrated: 0 };
     }
     dispose() {

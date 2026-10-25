@@ -8,7 +8,14 @@ export interface LightEmitter {
 }
 export interface LitMaterial {
     id: string; color: string; albedo?: string; normal?: string; roughnessMap?: string;
-    roughness: number; metalness: number; specular: number; reflection: 'off' | 'direct';
+    roughness: number; metalness: number; specular: number; reflection: 'off' | 'direct' | 'probe';
+    /** Registered cube texture for probe tier; no probe is generated implicitly. */
+    reflectionProbe?: string;
+    /** G3 optional maps and controls; existing G1/G2 snapshots remain valid. */
+    aoMap?: string; aoIntensity?: number; emissiveMap?: string;
+    normalScale?: number; foliageTransmission?: number;
+    /** 0 = authored dry roughness, 1 = wet microfacet response; never emits light. */
+    wetness?: number;
     emission: string; emissionIntensity: number; alphaCutoff: number; doubleSided: boolean;
 }
 export interface LitRenderable {
@@ -22,5 +29,8 @@ export interface LitRenderable {
 }
 export interface LightingSnapshot {
     version: 1; time: number; lights: LightEmitter[]; materials: LitMaterial[]; objects: LitRenderable[];
-    environment: { ambient: number; color: string; exposure: number; emission: boolean };
+    environment: { ambient: number; color: string; exposure: number; emission: boolean;
+        /** Atmospheric distance fog, suppressed when ambient illumination is zero. */
+        fog?: { color: string; near: number; far: number };
+    };
 }

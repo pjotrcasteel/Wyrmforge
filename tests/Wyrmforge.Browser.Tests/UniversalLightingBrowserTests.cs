@@ -111,6 +111,36 @@ public sealed class UniversalLightingBrowserTests : PageTest
         Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
     }
 
+    [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
+    public async Task SharedGpu_G3WetnessAndFog_ProduceReversibleMaterialComparisons(int width, int height)
+    {
+        var root = Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL");
+        if (string.IsNullOrWhiteSpace(root)) { Assert.Inconclusive("Requires the published Blazor application."); return; }
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.GotoAsync(root.TrimEnd('/') + "/arena-light-engine");
+        var canvas = Page.Locator(".gpu-proof canvas");
+        await Expect(canvas).ToHaveAttributeAsync("data-ready", "true", new() { Timeout = 90000 });
+        await Page.EvaluateAsync("async () => { window.gpuProof = await import('./js/lighting/proof-scene.js'); }");
+        await ConfigureAsync(canvas, new { profile = "night", focus = "water", wetness = 0, fog = false });
+        var dry = await PixelHashAsync(canvas);
+        await ConfigureAsync(canvas, new { wetness = 1 });
+        Assert.AreNotEqual(dry, await PixelHashAsync(canvas), "Wet surfaces must change GPU material response.");
+        await CaptureAsync(width, "g3-wet");
+        await ConfigureAsync(canvas, new { wetness = 0 });
+        Assert.AreEqual(dry, await PixelHashAsync(canvas), "Removing wetness must restore the original framebuffer.");
+        await ConfigureAsync(canvas, new { fog = true });
+        Assert.AreNotEqual(dry, await PixelHashAsync(canvas), "Fog must alter the illuminated scene.");
+        await CaptureAsync(width, "g3-fog");
+        await ConfigureAsync(canvas, new { profile = "zero" });
+        var maximum = await canvas.EvaluateAsync<int>(
+            "c => { const p=gpuProof.proofPixels(c); let m=0; for(let i=0;i<p.length;i++) if(i%4!==3) m=Math.max(m,p[i]); return m; }");
+        Assert.AreEqual(0, maximum, "Fog and wetness must never violate the zero-light invariant.");
+        await ConfigureAsync(canvas, new { profile = "night", fog = false });
+        Assert.AreEqual(dry, await PixelHashAsync(canvas), "Restoring G3 controls must restore the exact baseline.");
+    }
+
     private async Task VerifyReceiversAsync(ILocator canvas, int width)
     {
         await ConfigureAsync(canvas, new { lighting = "neutral-key", view = "lit", progress = .25, frame = 0, fireball = false, torch = false, spot = false });
@@ -506,6 +536,13 @@ public sealed class UniversalLightingBrowserTests : PageTest
         var values = System.Text.Json.JsonSerializer.SerializeToElement(options);
         foreach (var property in values.EnumerateObject())
         {
+            if (property.Name is "wetness" or "fog")
+            {
+                await canvas.EvaluateAsync("(c,setting) => gpuProof.configureProof(c, setting)",
+                    new Dictionary<string, object> { [property.Name] = property.Value.ValueKind == System.Text.Json.JsonValueKind.Number
+                        ? property.Value.GetDouble() : property.Value.GetBoolean() });
+                continue;
+            }
             var control = Page.GetByLabel(labels[property.Name], new() { Exact = true });
             if (property.Value.ValueKind is System.Text.Json.JsonValueKind.True or System.Text.Json.JsonValueKind.False)
                 await control.SetCheckedAsync(property.Value.GetBoolean());
