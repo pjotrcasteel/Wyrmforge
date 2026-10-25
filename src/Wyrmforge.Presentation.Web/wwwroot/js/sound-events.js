@@ -12,7 +12,7 @@ const schoolFromSpell = spell => spell === 1 || spell === 4 ? 'fire'
 
 export function createSoundEventTracker() {
     return { previous: null, lastPlayed: new Map(), activeHits: new Set(), activeDeaths: new Set(),
-        activeImpacts: [], activeBurningGrounds: new Set() };
+        activeImpacts: [], activeBurningGrounds: new Set(), activeProjectileIds: new Set() };
 }
 
 export function collectSoundEvents(tracker, snapshot, now) {
@@ -57,12 +57,20 @@ export function collectSoundEvents(tracker, snapshot, now) {
     const freshGroundIds = [...groundIds].filter(id => !tracker.activeBurningGrounds.has(id));
     tracker.activeBurningGrounds = groundIds;
 
+    // Prefer authoritative identities: launches must not be inferred from net array growth.
+    // Keep count-based compatibility until every producer exposes stable projectile IDs.
+    const projectiles = snapshot?.projectiles ?? [];
+    const projectileIds = new Set(projectiles.map(p => p.id).filter(id => Number.isSafeInteger(id) && id > 0));
+    const hasProjectileIdentity = projectiles.length > 0 && projectileIds.size === projectiles.length;
+    const freshProjectiles = hasProjectileIdentity
+        ? projectiles.filter(p => !tracker.activeProjectileIds.has(p.id)) : [];
+    tracker.activeProjectileIds = projectileIds;
     const current = {
         health: snapshot?.hud?.health ?? 0,
         maxHealth: snapshot?.hud?.maxHealth ?? 0,
         kills: snapshot?.hud?.kills ?? 0,
         projectiles: snapshot?.projectiles?.length ?? 0,
-        projectileSpell: snapshot?.projectiles?.at(-1)?.spell ?? 0,
+        projectileSpell: projectiles.at(-1)?.spell ?? 0,
         lightning: snapshot?.lightning?.length ?? 0,
         impacts: impacts.length,
         powerBurst: Boolean(snapshot?.powerBurst),
@@ -115,10 +123,13 @@ export function collectSoundEvents(tracker, snapshot, now) {
         if (closest) emit(closest + '-approach', 6500);
     }
     if (current.lightning > 0 && (previous.lightning === 0 || current.lightning > previous.lightning)) emit('lightning', 350);
-    if (current.projectiles > previous.projectiles) {
-        const name = current.projectileSpell === 1 ? 'fire' : current.projectileSpell === 2 ? 'frost' : current.projectileSpell === 3 ? 'lightning' : 'arcane';
-        emit(name, 230);
-        if (name === 'fire') emit('fire-flight', 320);
+    const launches = hasProjectileIdentity ? freshProjectiles
+        : current.projectiles > previous.projectiles ? [projectiles.at(-1)] : [];
+    for (const projectile of launches) {
+        const school = schoolFromSpell(projectile?.spell);
+        if (!school) continue;
+        emit(school, 230);
+        if (school === 'fire') emit('fire-flight', 320);
     }
     if (freshGroundIds.length) emit('fire-burning', 750);
     if (current.kills === previous.kills) {
