@@ -12,8 +12,8 @@ Code/tests: `eb5cb966f58018829393160a854569798c481222`.
 passed. [Durable original screenshots and numeric evidence](evidence/universal-lighting/eb5cb96/README.md)
 are checked in; the complete CI artifact is 12575776916 (expires 23 November).
 All 386 local JavaScript tests pass. Validate passed on this checkpoint.
-Full Browser smoke passed `a0d379e`, including the startup-race fix; the newest
-full smoke/WebKit runs were pending when this record was saved.
+All four workflows passed `54d20da`: GPU proof (40133801669), Browser smoke
+(40133801064), Validate (40133801153), and WebKit (40133801101).
 
 | Verified behavior | 320px viewport | 390px viewport |
 | --- | ---: | ---: |
@@ -365,3 +365,22 @@ mask visible leaves in group `oak-2`, then toggle only `oak-1` casting. Both gro
 have the same root, so the inspection source stays stationary. Only changed
 shadow visibility on the other leaf group's pixels counts; ground shadows and
 surface-color differences cannot satisfy the assertion. This is pending CI.
+
+## Actor source lifecycle acceptance — 25 October 2026
+
+Ownership audit at `54d20da`: clean working tree and no wizard sprites, models,
+rigging or animation changes in PR #332. Wizard implementation belongs exclusively
+to #335; actor-art work in #333 remains separate. This branch consumes the existing
+Hollowed/Ashling assets through shared contracts only.
+
+The isolated lab now exposes a source approach/overlap rig using ordinary point
+light descriptors, with no engine or actor-art changes. The existing actor stays
+frozen while a source moves from 24 to 8 to 2 world units away (range 12).
+The GPU test measures only visible actor pixels and requires zero outside range,
+increasing mean RGB toward the source, additional illumination from an overlapping
+second source, exact framebuffer restoration after its removal, and full-frame
+black with both sources disabled. Ambient and emission are explicitly off in
+this diagnostic rig; this is not the normal Gothic-night environment.
+
+Validation of this new slice is pending published-app CI. Phone viewport captures
+are browser evidence, not physical iOS/Android performance or artistic acceptance.

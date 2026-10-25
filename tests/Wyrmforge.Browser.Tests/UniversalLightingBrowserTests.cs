@@ -154,6 +154,7 @@ public sealed class UniversalLightingBrowserTests : PageTest
         await VerifyPoseShadowsAsync(canvas, width);
         await VerifyCutoutShadowsAsync(canvas, width);
         await VerifyOakLayerShadowsAsync(canvas, width);
+        await VerifyActorSourceLifecycleAsync(canvas, width);
     }
 
     private async Task VerifyPoseShadowsAsync(ILocator canvas, int width)
@@ -217,6 +218,49 @@ public sealed class UniversalLightingBrowserTests : PageTest
         Assert.AreEqual(0, await ReceiverChangedPixelsAsync(canvas));
     }
 
+    private async Task VerifyActorSourceLifecycleAsync(ILocator canvas, int width)
+    {
+        await ConfigureAsync(canvas, new { lighting = "source-lifecycle", focus = "actors", profile = "night", view = "lit",
+            cutouts = false, behind = false, frame = 0, fireball = true, torch = false, spot = false, rune = false });
+        var comparisons = new List<object>();
+        foreach (var id in new[] { "hollowed", "ashling" })
+        {
+            await ConfigureAsync(canvas, new { inspectObject = id, sourceDistance = 24 });
+            await SaveReceiverBaselineAsync(canvas);
+            var outside = await ReceiverMeanRgbAsync(canvas);
+            Assert.AreEqual(0.0, outside, "An ordinary actor outside the only source range must be black.");
+            await CaptureAsync(width, $"{id}-source-outside");
+            await ConfigureAsync(canvas, new { sourceDistance = 8 });
+            var middle = await ReceiverMeanRgbAsync(canvas);
+            Assert.IsGreaterThan(outside, middle, "Entering the source range must reveal the same actor pixels.");
+            await CaptureAsync(width, $"{id}-source-entering");
+            await ConfigureAsync(canvas, new { sourceDistance = 2 });
+            var near = await ReceiverMeanRgbAsync(canvas);
+            Assert.IsGreaterThan(middle, near, "Approaching illumination must increase, not use a binary visibility threshold.");
+            var nearHash = await PixelHashAsync(canvas);
+            await CaptureAsync(width, $"{id}-source-near");
+            await ConfigureAsync(canvas, new { torch = true });
+            var overlap = await ReceiverMeanRgbAsync(canvas);
+            Assert.IsGreaterThan(near, overlap, "A second local light must add illumination on the actor itself.");
+            await CaptureAsync(width, $"{id}-source-overlap");
+            await ConfigureAsync(canvas, new { torch = false });
+            Assert.AreEqual(nearHash, await PixelHashAsync(canvas), "Removing the second light restores the entire frozen frame.");
+            await ConfigureAsync(canvas, new { fireball = false });
+            Assert.AreEqual(0.0, await ReceiverMeanRgbAsync(canvas));
+            Assert.IsTrue(await canvas.EvaluateAsync<bool>("c => gpuProof.proofPixels(c).every((v,i) => i%4===3 || v===0)"),
+                "With both registered sources disabled and no ambient/emission, the entire world must be black.");
+            await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Shared light engine" })).ToBeVisibleAsync();
+            await CaptureAsync(width, $"{id}-sources-disabled-zero");
+            await ConfigureAsync(canvas, new { fireball = true, sourceDistance = 24 });
+            Assert.AreEqual(outside, await ReceiverMeanRgbAsync(canvas), "Leaving the range must restore darkness without ghost light.");
+            comparisons.Add(new { receiver = id, distances = new[] { 24, 8, 2 }, meanRgb = new[] { outside, middle, near }, overlapMeanRgb = overlap });
+        }
+        await RecordComparisonAsync(width, "actor-source-lifecycle", comparisons);
+    }
+
+    private static Task<double> ReceiverMeanRgbAsync(ILocator canvas) => canvas.EvaluateAsync<double>(
+        "c => { const p=gpuProof.proofPixels(c), e=window.receiverEvidence; return e.indices.reduce((sum,i) => sum+p[i]+p[i+1]+p[i+2],0)/(3*e.indices.length); }");
+
     private static async Task RecordComparisonAsync(int width, string name, object evidence)
     {
         var directory = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-gpu-proof");
@@ -243,7 +287,7 @@ public sealed class UniversalLightingBrowserTests : PageTest
             ["cutouts"] = "Cutout test fixture", ["cutoutAlpha"] = "Cutout alpha", ["lighting"] = "Lighting rig", ["behind"] = "Light behind receiver", ["profile"] = "Environment", ["view"] = "Diagnostic", ["focus"] = "Camera",
             ["fireball"] = "Fireball", ["torch"] = "Torch", ["spot"] = "Spot", ["rune"] = "Register rune",
             ["shadows"] = "Shadows", ["reflections"] = "Direct specular", ["normals"] = "Authored normals",
-            ["progress"] = "Light position", ["frame"] = "Walk frame", ["animate"] = "Animate walk",
+            ["sourceDistance"] = "Source distance", ["progress"] = "Light position", ["frame"] = "Walk frame", ["animate"] = "Animate walk",
             ["inspectObject"] = "Inspect object", ["castsShadow"] = "Casts shadow",
             ["receivesShadow"] = "Receives shadow", ["receivesLight"] = "Receives light"
         };

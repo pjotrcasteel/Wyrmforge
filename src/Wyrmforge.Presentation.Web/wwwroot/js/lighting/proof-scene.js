@@ -48,7 +48,7 @@ export async function initializeProof(canvas) {
     if (states.has(canvas)) return;
     const engine = new LightingEngine(canvas);
     const state = { engine, alive: true, options: { profile: 'night', fireball: true, torch: true, spot: true,
-        lighting: 'scene', behind: false, cutouts: false, cutoutAlpha: true, rune: false, shadows: true, reflections: true, progress: .25, frame: 0, animate: false, view: 'lit', focus: 'overview', inspectObject: 'hollowed', castsShadow: true, receivesShadow: true, receivesLight: true, normals: true }, manifests: {}, animation: {}, samples: {} };
+        lighting: 'scene', sourceDistance: 2, behind: false, cutouts: false, cutoutAlpha: true, rune: false, shadows: true, reflections: true, progress: .25, frame: 0, animate: false, view: 'lit', focus: 'overview', inspectObject: 'hollowed', castsShadow: true, receivesShadow: true, receivesLight: true, normals: true }, manifests: {}, animation: {}, samples: {} };
     states.set(canvas, state);
     try {
         engine.registerGeometry('box', new T.BoxGeometry(1, 1, 1));
@@ -118,6 +118,14 @@ export function configureProof(canvas, options) {
         const receiver = objects.find(o => o.id === p.inspectObject);
         const [x, y, z] = receiver?.position ?? [-4, -3, .55];
         lights = [light('inspection-key', [x - 1.8 + p.progress * 3.6, y + (p.behind ? 2 : -2), z + 2.4], '#ffffff', 24, 'point', 10)];
+        environment.ambient = 0; environment.emission = false;
+    } else if (p.lighting === 'source-lifecycle') {
+        // Diagnostic descriptors only: same receivers, BRDF, attenuation and shadow budget.
+        const [x, y, z] = objects.find(o => o.id === p.inspectObject).position;
+        lights = [light('fireball', [x - 1, y - p.sourceDistance, z + 2.4], '#ff8d42', 32, 'point', 10),
+            light('torch', [x + 1, y - 2, z + 2.4], '#ffc27a', 10, 'point', 5)];
+        lights[0].enabled = p.fireball; lights[1].enabled = p.torch;
+        for (const source of lights) source.range = 12;
         environment.ambient = 0; environment.emission = false;
     } else if (p.lighting !== 'scene') throw new RangeError('Unknown lighting rig');
     for (const l of lights) { l.enabled &&= !zero; l.castsShadow &&= p.shadows; }
