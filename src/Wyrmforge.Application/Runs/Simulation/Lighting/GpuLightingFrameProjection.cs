@@ -25,7 +25,7 @@ public sealed record GpuLightEmitter(
     [property: JsonPropertyName("penumbra")] double Penumbra,
     [property: JsonPropertyName("castsShadow")] bool CastsShadow,
     [property: JsonPropertyName("priority")] double Priority,
-    [property: JsonPropertyName("expiresAt"), property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] double? ExpiresAt = null);
+    [property: JsonPropertyName("expiresAt"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] double? ExpiresAt = null);
 
 public sealed record GpuLightingEnvironment(
     [property: JsonPropertyName("ambient")] double Ambient,

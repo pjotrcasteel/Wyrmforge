@@ -19,6 +19,31 @@ public sealed class AshfangBossIterationTests
     private static void Invoke(RunSimulation run,string name,params object[] args) => typeof(RunSimulation).GetMethod(name,BindingFlags.Instance|BindingFlags.NonPublic)!.Invoke(run,args);
 
     [TestMethod]
+    public void SharedLightingFollowsBreathCommitmentAndExtinguishesOnRecovery()
+    {
+        var run=Create();var brain=Field<AshfangBehaviorState>(run,"ashfangBehavior");
+        brain.Begin("breath",Vector2D.Zero,new(300,0),.95);brain.Strike();
+        var a=run.CreateSnapshot().Lighting!.Lights.Single(l=>l.OwnerId.StartsWith("ashfang:"));
+        var b=run.CreateSnapshot().Lighting!.Lights.Single(l=>l.OwnerId.StartsWith("ashfang:"));
+        Assert.AreEqual(a.Id,b.Id);CollectionAssert.AreEqual(a.Position,b.Position);
+        Assert.IsGreaterThan(0,a.Intensity);Assert.IsGreaterThan(0,a.Range);
+        brain.Recover();
+        Assert.IsFalse(run.CreateSnapshot().Lighting!.Lights.Any(l=>l.OwnerId.StartsWith("ashfang:")));
+    }
+
+    [TestMethod]
+    public void SharedLightingOnlyIgnitesResolvedMeteorAndCoolsBeforeScorchEnds()
+    {
+        var run=Create();
+        Invoke(run,"RegisterAshfangEffect","meteor",new Vector2D(120,170),45d,Vector2D.Zero);
+        var light=run.CreateSnapshot().Lighting!.Lights.Single(l=>l.OwnerId.StartsWith("ashfang-effect:"));
+        CollectionAssert.AreEqual(new[]{120d,170d,8d},light.Position);
+        Invoke(run,"UpdateCombatFeedback",.6);
+        Assert.IsFalse(run.CreateSnapshot().Lighting!.Lights.Any(l=>l.OwnerId.StartsWith("ashfang-effect:")));
+        Assert.IsTrue(run.CreateSnapshot().AshfangEffects.Any(e=>e.Kind=="meteor"));
+    }
+
+    [TestMethod]
     public void TierOneLoadoutHasNoForcedEvolutionAndBossSurvivesOpeningVolleys()
     {
         var run=Create();var hud=run.CreateSnapshot().Hud.Spells.Single(s=>s.IsActive);

@@ -37,7 +37,7 @@ export function gothicNightLightSources(snapshot, spellLights = [], width = 0, h
             color: warmFire, kind: 'burning-tree' });
     }
     const breath = snapshot?.dragonBreath;
-    if (isPoint(breath) && (snapshot?.dragon?.school ?? snapshot?.hunt?.school) === 1) {
+    if (!snapshot?.lighting && isPoint(breath) && (snapshot?.dragon?.school ?? snapshot?.hunt?.school) === 1) {
         const dx = Number(breath.directionX) || 0;
         const dy = Number(breath.directionY) || 0;
         const reach = clamp(Number(breath.range) || 0, 0, 420);

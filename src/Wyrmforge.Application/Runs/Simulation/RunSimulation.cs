@@ -413,7 +413,10 @@ public sealed partial class RunSimulation
         var snapshot = ProjectileLightingProjection.Capture(
             "hunt", lightingSnapshotTick++, projectiles, projectileLightIdentities,
             new LightingEnvironment("gothic-night", "#8c9cbb", 0.012));
-        return GpuLightingFrameProjection.FromSnapshot(snapshot, elapsed);
+        var combined = LightingSceneComposer.Compose(snapshot.SceneId, snapshot.SimulationTick,
+            snapshot.Environment, snapshot.Emitters,
+            AshfangLightingProjection.Capture(CreateDragonSnapshot(), CreateAshfangEffects()));
+        return GpuLightingFrameProjection.FromSnapshot(combined, elapsed);
     }
 
     private CastMotionRenderSnapshot? CreateCastMotionSnapshot()

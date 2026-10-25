@@ -64,14 +64,15 @@ export function buildSpellLights(snapshot, elapsed = 0, reducedMotion = false, v
     for (const impact of snapshot.elementalImpacts ?? [])
         add(impact, 'impact', .8 * (1 - clamp(Number(impact.progress) || 0, 0, 1)), 106);
 
-    const dragon=snapshot.dragon;
-    if(Number(dragon?.school)===1&&dragon.action==='breath'&&['windup','strike'].includes(dragon.actionPhase)&&dragon.flightStage==='ground'){
-        candidates.push({x:dragon.x+dragon.directionX*100,y:dragon.y+dragon.directionY*100,radius:135,
-            strength:dragon.actionPhase==='strike'?.32:.10*clamp(Number(dragon.actionProgress)||0,0,1),type:'boss-fire',surge:false,...spellLightProfile(1)});
-    }
-    for(const effect of snapshot.ashfangEffects??[]){
-        if(['meteor','cinder'].includes(effect.kind)&&effect.progress<.16)candidates.push({x:effect.x,y:effect.y,radius:effect.radius*2.4,
-            strength:.65*(1-effect.progress/.16),type:'boss-impact',surge:false,...spellLightProfile(1)});
+    // Transitional Canvas adapter only. Boss lifecycle/positions come from the same
+    // C# descriptors as the universal GPU engine, never a second light simulation.
+    for (const source of snapshot.lighting?.lights ?? []) {
+        if (!source.ownerId?.startsWith('ashfang:') && !source.ownerId?.startsWith('ashfang-effect:')) continue;
+        if (!source.enabled || !/^#[0-9a-f]{6}$/i.test(source.color)) continue;
+        const center = [1, 3, 5].map(i => parseInt(source.color.slice(i, i + 2), 16));
+        candidates.push({ x: source.position?.[0], y: source.position?.[1], radius: source.range,
+            strength: source.intensity, type: 'boss-source', surge: false,
+            family: 'fire', center, edge: palette.fire.edge });
     }
     // Bound the worst-case cost when several projectiles and impacts overlap on mobile.
     // Impact gets priority over an older projectile only when it is visibly brighter.
