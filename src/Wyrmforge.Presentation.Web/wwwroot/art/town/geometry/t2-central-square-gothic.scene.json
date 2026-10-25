@@ -1,0 +1,908 @@
+{
+  "version": 1,
+  "description": "Gothic detail pass for T2 visual approval: real 3D cobblestone paving, pointed arch, banners, lantern fixtures, well roof and flowerbeds. Nonproduction until owner approves.",
+  "worldAxes": {
+    "east": "+x",
+    "north": "+y",
+    "up": "+z",
+    "units": "m"
+  },
+  "calibration": {
+    "originLegacy": [
+      836,
+      536
+    ],
+    "pixelsPerMetre": 64,
+    "approval": "provisional"
+  },
+  "nodes": [
+    {
+      "id": "town.center",
+      "parentId": null,
+      "roles": [
+        "anchor"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "id": "town.center.paving",
+      "parentId": "town.center",
+      "roles": [
+        "visual",
+        "collider"
+      ],
+      "tags": [
+        "terrain",
+        "navigation"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t2-central-square-gothic.obj#town.center.paving",
+      "materialId": "stone_paving"
+    },
+    {
+      "id": "town.center.well",
+      "parentId": "town.center",
+      "roles": [
+        "visual",
+        "collider",
+        "occluder"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t2-central-square-gothic.obj#town.center.well",
+      "materialId": "stone_well"
+    },
+    {
+      "id": "town.center.well-supports",
+      "parentId": "town.center.well",
+      "roles": [
+        "visual",
+        "collider",
+        "occluder"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t2-central-square-gothic.obj#town.center.well-supports",
+      "materialId": "timber"
+    },
+    {
+      "id": "town.center.well-canopy",
+      "parentId": "town.center.well",
+      "roles": [
+        "visual",
+        "occluder"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t2-central-square-gothic.obj#town.center.well-canopy",
+      "materialId": "slate_roof"
+    },
+    {
+      "id": "town.center.noticeboard",
+      "parentId": "town.center",
+      "roles": [
+        "anchor"
+      ],
+      "tags": [
+        "landmark",
+        "interaction"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "id": "town.center.noticeboard-posts",
+      "parentId": "town.center.noticeboard",
+      "roles": [
+        "visual",
+        "collider",
+        "occluder"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t2-central-square-gothic.obj#town.center.noticeboard-posts",
+      "materialId": "timber"
+    },
+    {
+      "id": "town.center.noticeboard-panel",
+      "parentId": "town.center.noticeboard",
+      "roles": [
+        "visual",
+        "occluder"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t2-central-square-gothic.obj#town.center.noticeboard-panel",
+      "materialId": "board"
+    },
+    {
+      "id": "town.center.lantern-pillar",
+      "parentId": "town.center",
+      "roles": [
+        "visual",
+        "collider",
+        "occluder"
+      ],
+      "tags": [
+        "fixture"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t2-central-square-gothic.obj#town.center.lantern-pillar",
+      "materialId": "stone_well"
+    },
+    {
+      "id": "town.center.lantern-fixture",
+      "parentId": "town.center",
+      "roles": [
+        "visual",
+        "emitter"
+      ],
+      "tags": [
+        "fixture"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t2-central-square-gothic.obj#town.center.lantern-fixture",
+      "materialId": "lantern"
+    },
+    {
+      "id": "town.center.world-gate",
+      "parentId": "town.center",
+      "roles": [
+        "anchor"
+      ],
+      "tags": [
+        "entrance",
+        "navigation"
+      ],
+      "transform": {
+        "position": [
+          0,
+          2.90625,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "id": "town.center.gate-stairs",
+      "parentId": "town.center",
+      "roles": [
+        "visual",
+        "collider"
+      ],
+      "tags": [
+        "terrain",
+        "navigation"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t2-central-square-gothic.obj#town.center.gate-stairs",
+      "materialId": "stone_paving"
+    },
+    {
+      "id": "town.center.world-gate-masonry",
+      "parentId": "town.center",
+      "roles": [
+        "visual",
+        "collider",
+        "occluder"
+      ],
+      "tags": [
+        "landmark",
+        "entrance"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t2-central-square-gothic.obj#town.center.world-gate-masonry",
+      "materialId": "gate_stone"
+    },
+    {
+      "id": "town.center.foliage-trunks",
+      "parentId": "town.center",
+      "roles": [
+        "visual",
+        "collider",
+        "occluder"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t2-central-square-gothic.obj#town.center.foliage-trunks",
+      "materialId": "timber"
+    },
+    {
+      "id": "town.center.foliage-crowns",
+      "parentId": "town.center",
+      "roles": [
+        "visual",
+        "occluder"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t2-central-square-gothic.obj#town.center.foliage-crowns",
+      "materialId": "foliage"
+    },
+    {
+      "id": "town.center.paving-cobbles-light",
+      "parentId": "town.center",
+      "roles": [
+        "visual"
+      ],
+      "tags": [
+        "terrain"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t2-central-square-gothic.obj#town.center.paving-cobbles-light",
+      "materialId": "stone_cobble_light"
+    },
+    {
+      "id": "town.center.paving-cobbles-mid",
+      "parentId": "town.center",
+      "roles": [
+        "visual"
+      ],
+      "tags": [
+        "terrain"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t2-central-square-gothic.obj#town.center.paving-cobbles-mid",
+      "materialId": "stone_cobble_mid"
+    },
+    {
+      "id": "town.center.paving-cobbles-dark",
+      "parentId": "town.center",
+      "roles": [
+        "visual"
+      ],
+      "tags": [
+        "terrain"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t2-central-square-gothic.obj#town.center.paving-cobbles-dark",
+      "materialId": "stone_cobble_dark"
+    },
+    {
+      "id": "town.center.well-brickwork",
+      "parentId": "town.center",
+      "roles": [
+        "visual"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t2-central-square-gothic.obj#town.center.well-brickwork",
+      "materialId": "stone_well"
+    },
+    {
+      "id": "town.center.well-roof-ridge",
+      "parentId": "town.center",
+      "roles": [
+        "visual"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t2-central-square-gothic.obj#town.center.well-roof-ridge",
+      "materialId": "timber"
+    },
+    {
+      "id": "town.center.well-roof-tiles",
+      "parentId": "town.center",
+      "roles": [
+        "visual"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t2-central-square-gothic.obj#town.center.well-roof-tiles",
+      "materialId": "slate_roof"
+    },
+    {
+      "id": "town.center.noticeboard-parchment",
+      "parentId": "town.center",
+      "roles": [
+        "visual"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t2-central-square-gothic.obj#town.center.noticeboard-parchment",
+      "materialId": "parchment"
+    },
+    {
+      "id": "town.center.noticeboard-trim",
+      "parentId": "town.center",
+      "roles": [
+        "visual"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t2-central-square-gothic.obj#town.center.noticeboard-trim",
+      "materialId": "gold"
+    },
+    {
+      "id": "town.center.world-gate-keystone",
+      "parentId": "town.center",
+      "roles": [
+        "visual"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t2-central-square-gothic.obj#town.center.world-gate-keystone",
+      "materialId": "gold"
+    },
+    {
+      "id": "town.center.world-gate-banners",
+      "parentId": "town.center",
+      "roles": [
+        "visual",
+        "occluder"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t2-central-square-gothic.obj#town.center.world-gate-banners",
+      "materialId": "banner"
+    },
+    {
+      "id": "town.center.world-gate-banner-trim",
+      "parentId": "town.center",
+      "roles": [
+        "visual"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t2-central-square-gothic.obj#town.center.world-gate-banner-trim",
+      "materialId": "gold"
+    },
+    {
+      "id": "town.center.world-gate-torches",
+      "parentId": "town.center",
+      "roles": [
+        "visual"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t2-central-square-gothic.obj#town.center.world-gate-torches",
+      "materialId": "lantern"
+    },
+    {
+      "id": "town.center.courtyard-planters",
+      "parentId": "town.center",
+      "roles": [
+        "visual"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t2-central-square-gothic.obj#town.center.courtyard-planters",
+      "materialId": "stone_well"
+    },
+    {
+      "id": "town.center.courtyard-foliage",
+      "parentId": "town.center",
+      "roles": [
+        "visual"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t2-central-square-gothic.obj#town.center.courtyard-foliage",
+      "materialId": "foliage"
+    },
+    {
+      "id": "town.center.courtyard-blooms",
+      "parentId": "town.center",
+      "roles": [
+        "visual"
+      ],
+      "tags": [
+        "landmark"
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "meshId": "art/town/geometry/t2-central-square-gothic.obj#town.center.courtyard-blooms",
+      "materialId": "flowers"
+    }
+  ]
+}
