@@ -9,10 +9,12 @@ on:
       - 'tools/art/quilt_ground_material_study.py'
       - 'tools/art/ground_transition_study.py'
       - 'tools/art/review_ground_semantic_mask.py'
+      - 'tools/art/ground_family_footprint_review.py'
       - 'tools/art/tests/test_ground_material_probe.py'
       - 'tools/art/tests/test_ground_quilt_study.py'
       - 'tools/art/tests/test_ground_transition_study.py'
       - 'tools/art/tests/test_ground_semantic_mask.py'
+      - 'tools/art/tests/test_ground_family_footprint_review.py'
       - '.github/workflows/ground-art-candidate-integrity.yml'
   workflow_dispatch:
 permissions:
@@ -49,7 +51,9 @@ jobs:
         run: python tools/art/ground_transition_study.py --output "$RUNNER_TEMP/ground-material-probes"
       - name: Generate review-only manually authored wet-mud-01 water regions
         run: python tools/art/review_ground_semantic_mask.py --output "$RUNNER_TEMP/ground-material-probes"
-      - name: Upload 36-source QA, portraits, and manual puddle annotation review
+      - name: Build 36-candidate six-family portrait art-role sheets
+        run: python tools/art/ground_family_footprint_review.py --output "$RUNNER_TEMP/ground-material-probes"
+      - name: Upload all six family sheets and prior material studies
         uses: actions/upload-artifact@v4
         with:
           name: wet-forest-grass-mud-repeat-studies
