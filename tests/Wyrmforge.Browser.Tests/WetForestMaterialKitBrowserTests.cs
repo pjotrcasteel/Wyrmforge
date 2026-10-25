@@ -32,7 +32,7 @@ public sealed class WetForestMaterialKitBrowserTests : PageTest
             new LocatorAssertionsToHaveAttributeOptions { Timeout = 90000 });
         await Expect(canvas).ToHaveAttributeAsync("data-material-review-seed", "1204");
         await Expect(canvas).ToHaveAttributeAsync("data-material-review-profile", "night");
-        Assert.IsGreaterThan(0, (await CanvasPixelsAsync(canvas)).Count(pixel => pixel > 0),
+        Assert.IsGreaterThan(0, (await CanvasStatsAsync(canvas))[2],
             "Registered world lights must reveal real material pixels.");
 
         await SaveAsync(canvas, $"wet-forest-material-kit-night-{width}.png");
@@ -40,41 +40,45 @@ public sealed class WetForestMaterialKitBrowserTests : PageTest
         await Expect(canvas).ToHaveAttributeAsync("data-material-review-profile", "neutral");
         await SaveAsync(canvas, $"wet-forest-material-kit-neutral-{width}.png");
 
-        var neutral = await CanvasPixelsAsync(canvas);
+        var neutral = await CanvasStatsAsync(canvas);
         await Page.GetByLabel("GPU lighting").SelectOptionAsync("zero");
         await Expect(canvas).ToHaveAttributeAsync("data-material-review-profile", "zero");
-        var zero = await CanvasPixelsAsync(canvas);
-        Assert.IsTrue(zero.All(pixel => pixel == 0),
+        var zero = await CanvasStatsAsync(canvas);
+        Assert.AreEqual(0L, zero[0],
             "With all sources and ambient disabled, the world framebuffer must be exactly black.");
         await SaveAsync(canvas, $"wet-forest-material-kit-zero-{width}.png");
 
         await Page.GetByLabel("GPU lighting").SelectOptionAsync("neutral");
         await Expect(canvas).ToHaveAttributeAsync("data-material-review-profile", "neutral");
-        CollectionAssert.AreEqual(neutral, await CanvasPixelsAsync(canvas),
+        CollectionAssert.AreEqual(neutral, await CanvasStatsAsync(canvas),
             "Same seed and inspection lighting must restore identical material pixels.");
 
         await Page.GetByRole(AriaRole.Button, new() { Name = "Another seed" }).ClickAsync();
         await Expect(canvas).ToHaveAttributeAsync("data-material-review-seed", "1205");
         await SaveAsync(canvas, $"wet-forest-material-kit-seed1205-{width}.png");
-        CollectionAssert.AreNotEqual(neutral, await CanvasPixelsAsync(canvas),
+        Assert.AreNotEqual(neutral[1], (await CanvasStatsAsync(canvas))[1],
             "A new C# world seed must regenerate ground appearance, not just change a label.");
 
         Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
     }
 
-    private static async Task<byte[]> CanvasPixelsAsync(ILocator canvas)
-    {
-        var rgba = await canvas.EvaluateAsync<int[]>(@"c => {
+    private static Task<long[]> CanvasStatsAsync(ILocator canvas) =>
+        canvas.EvaluateAsync<long[]>(@"c => {
             const gl = c.getContext('webgl2');
             if (!gl) throw new Error('G1 WebGL2 framebuffer unavailable');
             const data = new Uint8Array(c.width * c.height * 4);
             gl.readPixels(0, 0, c.width, c.height, gl.RGBA, gl.UNSIGNED_BYTE, data);
-            const rgb = [];
-            for (let i = 0; i < data.length; i += 4) rgb.push(data[i], data[i+1], data[i+2]);
-            return rgb;
+            let maximum = 0, hash = 2166136261, nonBlack = 0;
+            for (let i = 0; i < data.length; i += 4) {
+                for (let j = 0; j < 3; j++) {
+                    const value = data[i + j];
+                    maximum = Math.max(maximum, value);
+                    if (value) nonBlack++;
+                    hash = Math.imul(hash ^ value, 16777619) >>> 0;
+                }
+            }
+            return [maximum, hash, nonBlack];
         }");
-        return rgba.Select(x => checked((byte)x)).ToArray();
-    }
 
     private static Task SaveAsync(ILocator canvas, string file)
     {
