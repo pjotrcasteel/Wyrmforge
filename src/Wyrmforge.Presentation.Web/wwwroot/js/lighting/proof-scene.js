@@ -223,6 +223,7 @@ export function configureProof(canvas, options) {
     state.engine.setDebugView(zero ? 'lit' : p.view);
     if (state.engine.debugView !== 'lit') state.engine.render();
     canvas.dataset.diagnostics = JSON.stringify(state.engine.diagnostics());
+    canvas.dataset.quality = state.engine.quality;
     state.loop.setActive(p.animate);
 }
 export function proofPixels(canvas) { const e = states.get(canvas).engine; e.render(); return [...e.pixels()]; }
