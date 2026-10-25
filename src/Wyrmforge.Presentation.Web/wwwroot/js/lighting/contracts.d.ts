@@ -12,6 +12,8 @@ export interface LitMaterial {
     /** G3 optional maps and controls; existing G1/G2 snapshots remain valid. */
     aoMap?: string; aoIntensity?: number; emissiveMap?: string;
     normalScale?: number; foliageTransmission?: number;
+    /** 0 = authored dry roughness, 1 = wet microfacet response; never emits light. */
+    wetness?: number;
     emission: string; emissionIntensity: number; alphaCutoff: number; doubleSided: boolean;
 }
 export interface LitRenderable {
