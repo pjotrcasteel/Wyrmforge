@@ -140,3 +140,25 @@ export function collectSoundEvents(tracker, snapshot, now) {
     }
     return result;
 }
+
+// Authoritative ground-fire lifecycle for the audio mixer. A caller may loop a recorded
+// texture while a patch exists and fade it immediately when the patch expires.
+// Keeping this separate from the one-shot event list avoids changing existing cues.
+export function collectBurningGroundTransitions(tracker, snapshot) {
+    const previous = tracker.audioGrounds ?? new Map();
+    const current = new Map();
+    for (const ground of snapshot?.burningGrounds ?? []) {
+        if (!Number.isSafeInteger(ground.id) || ground.id <= 0 ||
+            !Number.isFinite(ground.remainingSeconds) || ground.remainingSeconds <= 0) continue;
+        current.set(ground.id, ground.remainingSeconds);
+    }
+    tracker.audioGrounds = current;
+    const transitions = [];
+    for (const [id, remainingSeconds] of current) {
+        transitions.push({ type: previous.has(id) ? 'update' : 'start', id, remainingSeconds });
+    }
+    for (const id of previous.keys()) {
+        if (!current.has(id)) transitions.push({ type: 'stop', id, remainingSeconds: 0 });
+    }
+    return transitions;
+}
