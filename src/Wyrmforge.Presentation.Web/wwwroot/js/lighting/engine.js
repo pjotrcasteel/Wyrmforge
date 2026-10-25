@@ -27,6 +27,7 @@ export class LightingEngine {
         this.debugView = 'lit';
         this.halfWidth = 5;
         this.inspection = new LightingInspection();
+        this.materialBudget = { maps: 0, transmissive: 0, ao: 0 };
     }
     registerGeometry(id, geometry) {
         if (this.geometries.has(id)) throw new Error(`Duplicate geometry ${id}`);
@@ -150,6 +151,11 @@ export class LightingEngine {
             fog.near, fog.far) : null;
         this.ambient.color.set(s.environment.color); this.ambient.intensity = s.environment.ambient;
         this.renderer.toneMappingExposure = s.environment.exposure;
+        this.materialBudget = {
+            maps: s.materials.reduce((count, m) => count + ['albedo', 'normal', 'roughnessMap', 'aoMap', 'emissiveMap'].filter(key => !!m[key]).length, 0),
+            transmissive: s.materials.filter(m => (m.foliageTransmission ?? 0) > 0).length,
+            ao: s.materials.filter(m => !!m.aoMap).length,
+        };
         this.snapshot = s; this.selected = selected;
     }
     setCamera(target, halfWidth = 5) {
@@ -234,6 +240,7 @@ float proofShadowVisibility() {
             drawCalls: this.renderer.info.render.calls, triangles: this.renderer.info.render.triangles,
             textures: this.renderer.info.memory.textures, geometries: this.renderer.info.memory.geometries,
             inspectedReceiver: this.snapshot?.objects.find(o => o.id === this.inspectionObject) ?? null,
+            materialBudget: this.materialBudget, fogEnabled: !!this.scene.fog,
             productionPathsMigrated: 0 };
     }
     dispose() {
