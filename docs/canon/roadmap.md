@@ -90,6 +90,17 @@ UI/menus/explicit combat telegraphs have separate readable passes.
    iOS/Android. Do not claim **all art uses one engine** until
    no world renderer bypass remains.
 
+#### Once G5 has merged — integrate Hollowed injuries and future appearances (25 October 2026)
+
+**Explicit post-G5 dependency, not work for G1–G4:** After the universal GPU lighting engine's final **G5 scene-cutover milestone is merged into `main`**, follow it with an actor-art/material integration PR. This must **not block ongoing enemy art or gameplay now**, and must not introduce Hollowed-specific light/shader paths.
+
+- **Live source:** [#343](https://github.com/pjotrcasteel/Wyrmforge/pull/343) merged the approved `broken-leg-left` even-cadence walk into Hunts. The active atlas is `wwwroot/art/enemies/hollow-rigged/injuries/broken-leg-left-walk.png` with a no-cape reach `attack` and the existing legacy `death` fallback. The editable source and further Hollowed variants are maintained separately in [#333](https://github.com/pjotrcasteel/Wyrmforge/pull/333).
+- **Repair:** regenerate **true pose-derived, aligned** albedo/normal/depth/caster (and applicable roughness/emissive) material data for *each* approved actor variant, direction, frame and `walk/attack/death` clip. Never pair the injured gait with standard-pose normals/depth, invent normals from RGB or add a full-bright Canvas escape hatch. Enforce source hashes, synchronized frame/anchor geometry and atomic material/atlas loading.
+- **Coverage:** the current `standard` and `broken-leg-left` and subsequently approved broken-arm, one-arm and other Hollowed appearances must all use the same LitSprite/light/shadow contracts, with no variant-specific lighting engine and no changes to authoritative C# AI, speed, combat, collision or saves.
+- **Acceptance:** test all 8 facings, limp/contact timing with no unnatural rapid step, walk-to-attack and death transitions, dynamic illumination and true cast/receive shadows, zero-light black-world, moving lights and occlusion at 320/390px and on physical iOS/Android hardware. Fallback to a **valid lit asset pair**, never accidentally full-bright or mismatched materials.
+
+**Scope boundary:** G5 itself must not leave an unlit bypass for any active world actor. This **source-specific material refresh follows G5's merge**, and is only complete after its own build, mobile QA and visual acceptance. As more approved variants enter Hunts, they inherit this same requirement.
+
 **Stop rule:** G1 doesn't pass merely because one tree looks
 3D, a pre-lit panorama is masked, a Hollowed receives an orange
 tint, or a puddle has a pasted specular highlight. The same
