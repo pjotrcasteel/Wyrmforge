@@ -3,6 +3,14 @@
 export const HOLLOW_DEATH_DIRECTIONS=Object.freeze(['N','NE','E','SE','S','SW','W','NW']);
 export const HOLLOW_DEATH_VARIANTS=Object.freeze(['collapse-forward','collapse-braced']);
 
+// Art selection only: independent of the spawn RNG and authoritative combat.
+export function selectHollowDeathVariant(entityId) {
+    const id=Number(entityId);
+    if(!Number.isSafeInteger(id)||id<0)return 'collapse-forward';
+    const hash=(Math.imul(id|0,0x9e3779b1)^((Math.floor(id/0x100000000)|0)>>>0))>>>0;
+    return HOLLOW_DEATH_VARIANTS[((hash>>>11)^(hash>>>24))&1];
+}
+
 export function createHollowDeathAssets(baseUrl) {
     let metadata=null,load=null;
     const textures=new Map();
