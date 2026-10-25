@@ -1,3 +1,4 @@
+import { createSoundEventTracker, collectSoundEvents, collectBurningGroundTransitions } from './sound-events.js';
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
 import { attachArenaInput, getArenaMovement, getArenaAim } from './arena-input.js';
 import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, drawArenaCloisterElevation } from './arena-environment.js';
@@ -72,6 +73,7 @@ export function disposeArena(canvas) {
     const state = arenas.get(canvas);
     if (!state) return;
     state.active = false;
+    window.wyrmforgeAudio?.stopAllBurningGround?.();
     cancelAnimationFrame(state.animationFrame);
     state.detachInput?.();
     arenas.delete(canvas);
@@ -86,6 +88,7 @@ function createState(canvas, dotNetReference) {
         active: true,
         simulationBusy: false,
         latestSnapshot: null,
+        soundTracker: createSoundEventTracker(),
         playerDanger: createPlayerDangerState(),
         mageWalk: { x: null, y: null, lastMove: Number.NEGATIVE_INFINITY },
         enemyMotion: createEnemyMotionState(),
@@ -147,6 +150,11 @@ function startSimulationFrame(state, timestamp, rect) {
         .then(snapshot => {
             if (!state.active) return;
             updatePlayerDanger(state.playerDanger, snapshot, performance.now());
+            const soundNow = performance.now();
+            for (const cue of collectSoundEvents(state.soundTracker, snapshot, soundNow)) {
+                window.wyrmforgeAudio?.play?.(cue);
+            }
+            window.wyrmforgeAudio?.syncBurningGround?.(collectBurningGroundTransitions(state.soundTracker, snapshot));
             if (snapshot.paused) state.resetInput?.();
             state.latestSnapshot = snapshot;
             state.simulationFrameCount++;
