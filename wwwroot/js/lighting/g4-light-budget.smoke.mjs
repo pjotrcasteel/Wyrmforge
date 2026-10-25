@@ -38,3 +38,12 @@ const noShadow = selectLightBudget([light('point', 'point')], camera, {
   maxLights: 1, maxShadowCost: 0
 });
 assert(noShadow.length === 1 && !noShadow[0].castShadow, 'light survives zero shadow budget');
+
+const many = Array.from({ length: 200 }, (_, i) => light(String(i).padStart(3, '0'), 'spot', i % 17));
+const selected = selectLightBudget(many, camera, { maxLights: 8, maxShadowCost: 2 });
+const reference = [...many].sort((a, b) => b.priority - a.priority ||
+  String(a.id).localeCompare(String(b.id))).slice(0, 8);
+assert(selected.map(x => x.id).join(',') === reference.map(x => x.id).join(','),
+  'bounded top-K must match full deterministic sorting');
+assert(selectLightBudget(many, camera, { maxLights: 0, maxShadowCost: 0 }).length === 0,
+  'bounded top-K handles zero slots');
