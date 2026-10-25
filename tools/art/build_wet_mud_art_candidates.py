@@ -12,7 +12,7 @@ import json
 from pathlib import Path
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw
 
 from quilt_ground_material_study import SOURCES, load_family, patch_quilt
 from build_grass_moss_art_candidates import (
@@ -95,6 +95,19 @@ def create(
     mixed = f"{family}-six-variants-3x3-UNAPPROVED.jpg"
     build_preview([Image.fromarray(art) for art in independent]).save(output / repeated, quality=91)
     bank_contact(compatible).save(output / mixed, quality=91, subsampling=0)
+    role_review = None
+    if family == "trampled-earth":
+        thumb, margin, label_height = 224, 16, 36
+        sheet = Image.new("RGB", (3 * thumb + 4 * margin, 2 * (thumb + label_height) + 3 * margin), "#17191b")
+        painter = ImageDraw.Draw(sheet)
+        for index, (art, role) in enumerate(zip(independent, TRAMPLED_REVIEW_ROLES)):
+            x = margin + (index % 3) * (thumb + margin)
+            y = margin + (index // 3) * (thumb + label_height + margin)
+            sheet.paste(Image.fromarray(art).resize((thumb, thumb), Image.Resampling.BOX), (x, y))
+            painter.text((x + 3, y + thumb + 8), f"{index + 1:02d} {role} [UNVERIFIED]", fill="#e6e0d7")
+        role_review = "trampled-earth-six-visual-roles-UNAPPROVED.jpg"
+        sheet.save(output / role_review, quality=92, subsampling=0)
+
     report = {
         "schemaVersion": 1,
         "family": family,
