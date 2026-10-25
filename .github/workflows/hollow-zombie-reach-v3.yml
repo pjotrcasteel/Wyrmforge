@@ -1,0 +1,149 @@
+name: Hollowed zombie stretched-arm + severe-limp v3 (96px GIF art review)
+on:
+  push:
+    branches: [feat/actor-lit-sprite-production]
+    paths:
+      - 'tools/sprite-lab/build-hollow-zombie-reach-v3.py'
+      - 'tools/sprite-lab/render-hollow-zombie-reach-v3.py'
+      - '.github/workflows/hollow-zombie-reach-v3.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  render:
+    name: 16x8 authentic Blender frames — ${{ matrix.variant }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [standard, broken-arm-right, one-arm-left, broken-leg-left]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - run: python -m pip install 'bpy==4.5.3' 'numpy>=1.26,<3' 'pillow>=10,<13'
+      - name: Preserve source and build new editable 16-frame no-cape v3 rig
+        run: python tools/sprite-lab/build-hollow-zombie-reach-v3.py --variant ${{ matrix.variant }}
+      - name: Sample original Blender skinned geometry / source foot anchors
+        run: |
+          python tools/sprite-lab/sample-hollow-rig.py -- \
+            art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-zombie-reach-v3-${{ matrix.variant }}
+      - name: Enforce stretched healthy arms, disabled injured arms and source contacts
+        run: |
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          import numpy as np
+          root=Path('art/source/enemies/hollow/rigged-poc/model/local-appearance-004')
+          name='${{ matrix.variant }}'
+          variant=root/('rigged-hollow-zombie-reach-v3-'+name)
+          p=json.loads((variant/'retarget-provenance.json').read_text())
+          d=json.loads((variant/'gait-diagnostics.json').read_text())
+          old=root/Path(p['sourceEditableRig']).name
+          # The source is always an exact original .blend, hash verified.
+          source=Path(p['sourceEditableRig'])
+          assert source.is_file() and hashlib.sha256(source.read_bytes()).hexdigest()==p['parentEditableBlendSha256']
+          assert len(d)==17 and p['artApproval'] is False and p['runtimeCutover'] is False
+          assert p['attackDeathReexported'] is False
+          active=('L',) if name=='broken-arm-right' else ('R',) if name=='one-arm-left' else ('L','R')
+          for s in active:
+            angles=[d[i]['arms'][s]['elbowFlexDegrees'] for i in range(16)]
+            assert min(angles)>142 and max(angles)<178,(name,s,angles)
+            assert all(d[i]['arms'][s]['stretchReach'] for i in range(16))
+            assert all(d[i]['arms'][s]['fullyFunctional'] for i in range(16))
+          for s in set(('L','R'))-set(active):
+            assert all(not d[i]['arms'][s]['fullyFunctional'] for i in range(16))
+            assert all(not d[i]['arms'][s]['stretchReach'] for i in range(16))
+          if name=='broken-leg-left':
+            assert max(d[i]['limpV3']['leftSwingDrag'] for i in range(16))>.9
+            assert max(d[i]['limpV3']['extraHipDrop'] for i in range(16))>.013
+            assert max(-d[i]['limpV3']['leftFootDelta'][2] for i in range(16))>.095
+            old=json.loads((root/'rigged-hollow-trauma-broken-leg-weight-transfer-v2/gait-diagnostics.json').read_text())
+            for i in range(16):
+              assert max(abs(a-b) for a,b in zip(d[i]['feet']['R']['ankle'],old[i]['feet']['R']['ankle']))<1e-4,(i,'R planted source foot drift')
+              if d[i]['limpV3']['leftSwingDrag']<.00001:
+                assert max(abs(a-b) for a,b in zip(d[i]['feet']['L']['ankle'],old[i]['feet']['L']['ankle']))<1e-4,(i,'L planted source foot drift')
+          with np.load(variant/'sampled-walk.npz') as b:
+            assert b['positions'].shape[0]==17
+            assert b['positions'].shape[-1]==3
+            assert b['faces'].shape[1]==3
+          foot=json.loads((variant/'actual-foot-markers.json').read_text())
+          assert len(foot)==34
+          for side in ('L','R'):
+            for segment in ('arms','feet'):
+              for joint in (('shoulder','elbow','wrist','hand') if segment=='arms' else ('hip','knee','ankle')):
+                a=d[0][segment][side][joint];b=d[-1][segment][side][joint]
+                assert max(abs(x-y) for x,y in zip(a,b))<1e-5,(side,segment,joint)
+          print('Genuine skinned source and joint assertions passed:',name)
+          PY
+      - name: Render 128 original 96px skinned poses and 32 full-cycle GIFs
+        run: python tools/sprite-lab/render-hollow-zombie-reach-v3.py --variant ${{ matrix.variant }}
+      - name: Validate all rendered GIF loops and comparisons
+        run: |
+          python - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          import json
+          variant='${{ matrix.variant }}'
+          root=Path('artifacts/hollow-zombie-reach-v3-'+variant)
+          assert Image.open(root/'candidate-walk-eight-directions.png').size==(1536,768)
+          for face in ('n','ne','e','se','s','sw','w','nw'):
+            for name in (f'{face}-animation.gif',f'{face}-zoom-4x.gif',
+                         f'compare-{face}-native-96px.gif',f'compare-{face}-zoom-4x.gif'):
+              gif=Image.open(root/name)
+              assert gif.n_frames==16,(variant,name,gif.n_frames)
+          m=json.loads((root/'candidate-manifest.json').read_text())
+          assert m['artApproval'] is False and not m['runtimeAtlasReplaced']
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hollowed-zombie-reach-v3-${{ matrix.variant }}
+          path: |
+            art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-zombie-reach-v3-${{ matrix.variant }}/
+            artifacts/hollow-zombie-reach-v3-${{ matrix.variant }}/
+          retention-days: 30
+          if-no-files-found: warn
+  preserve:
+    needs: render
+    if: github.event_name == 'push' && github.ref == 'refs/heads/feat/actor-lit-sprite-production'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: feat/actor-lit-sprite-production
+          persist-credentials: true
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: hollowed-zombie-reach-v3-*
+          merge-multiple: true
+          path: .
+      - name: Save original-editable source and actual owner-review GIFs (not production)
+        run: |
+          set -euo pipefail
+          for variant in standard broken-arm-right one-arm-left broken-leg-left; do
+            src=artifacts/hollow-zombie-reach-v3-$variant
+            dst=docs/art/evidence/hollowed-zombie-reach-v3/$variant
+            mkdir -p "$dst"
+            cp "$src"/*.gif "$dst"/
+            cp "$src"/*.png "$dst"/
+            cp "$src"/candidate-manifest.json "$dst"/
+          done
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/art/evidence/hollowed-zombie-reach-v3/
+          git add art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-zombie-reach-v3-*/
+          if ! git diff --cached --quiet; then
+            git commit -m "art(hollowed): preserve source-driven zombie reach / damaged-leg v3 and actual GIF reviews"
+            git pull --rebase origin feat/actor-lit-sprite-production
+            git push origin HEAD:feat/actor-lit-sprite-production
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hollowed-zombie-reach-v3-owner-GIF-reviews
+          path: docs/art/evidence/hollowed-zombie-reach-v3/
+          retention-days: 30

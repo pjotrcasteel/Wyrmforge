@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "reviewOnly": true,
+  "artApproval": false,
+  "runtimeCutover": false,
+  "materialsRegenerated": false,
+  "variant": "broken-leg-left-dragged-recovery",
+  "image": "walk.png",
+  "sourceBlobSha": "de61a7961418b9d9c5abb53899c2edf2ba3c7933",
+  "sourceEvidence": "docs/art/evidence/hollowed-broken-leg-dragged-recovery/candidate-walk-eight-directions.png",
+  "cell": 96,
+  "frames": 16,
+  "directions": [
+    "N",
+    "NE",
+    "E",
+    "SE",
+    "S",
+    "SW",
+    "W",
+    "NW"
+  ],
+  "fps": 22,
+  "worldSize": 93,
+  "anchor": [
+    48,
+    72
+  ],
+  "clip": "walk",
+  "scope": "opt-in standard variant walk only; normal/lighting/attack/death production assets unchanged"
+}

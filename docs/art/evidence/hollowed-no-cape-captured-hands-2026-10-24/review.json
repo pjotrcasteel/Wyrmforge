@@ -1,0 +1,13 @@
+{
+  "approved": false,
+  "rig": "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-mocap-no-cape-captured-hands-candidate/hollow-rigged.blend",
+  "poses": 16,
+  "mocap": "CMU 09_01",
+  "angles": [
+    0,
+    90,
+    180,
+    270
+  ],
+  "status": "UNAPPROVED COMPLETE LOW-ARM RUNNING REVIEW; original CMU and production assets preserved"
+}

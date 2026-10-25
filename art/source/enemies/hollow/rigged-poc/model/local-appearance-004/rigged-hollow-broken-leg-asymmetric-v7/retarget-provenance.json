@@ -1,0 +1,119 @@
+{
+  "status": "UNAPPROVED contact-conditioned full-pose broken-left-leg cadence and asymmetric recovery review",
+  "source": "CMU Graphics Lab, Subject 09, Motion 01 RUN",
+  "sourceUrl": "https://github.com/una-dinosauria/cmu-mocap/blob/master/data/009/09_01.bvh",
+  "sourceSha256": "90641ccca814b9d8d59f63576a548bb5612477364462d142a9f741268fbe3b78",
+  "license": "CMU dataset free for all uses; Bruce Hahne BVH conversion",
+  "authoringRig": "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-pixel-v3/hollow-rigged.blend",
+  "loop": {
+    "firstActualMotionIndex": 5,
+    "periodSourceFrames": 88,
+    "fitError": 0.004042674987953383,
+    "rawSamplingHz": 120
+  },
+  "output": {
+    "frames": 16,
+    "fps": 25,
+    "directions": 8
+  },
+  "axis": {
+    "right": [
+      0.9999980926513672,
+      0.0,
+      0.0019524565432220697
+    ],
+    "forward": [
+      -0.0019524566596373916,
+      0.0,
+      0.999998152256012
+    ],
+    "travel": [
+      -0.001952458987943828,
+      0.0,
+      0.9999980330467224
+    ]
+  },
+  "biomechanics": "captured shoulder yaw/roll, pelvis counterturn and shoulder-girdle translation; 120Hz hips-relative marker denoising",
+  "noRecoloring": true,
+  "noNewShaders": true,
+  "parentEditableBlendSha256": "313eca5dfa03c689d96fbd61d7643e5677cc6ebb0fe88d518022ae11e39b31e6",
+  "sourceEditableRig": "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-broken-leg-trailing-v6/hollow-rigged.blend",
+  "presentationAdjustments": {
+    "wrist": "rest anatomical hand-to-forearm orientation transported by measured forearm rotation",
+    "cloth": "rearward slipstream and source-thigh-following cloth root, no mesh or weight replacement",
+    "timing": "16 source poses at 25fps; accelerated measured CMU 88/120-second stride",
+    "sourcePositionSampling": "unchanged captured CMU gait"
+  },
+  "artApproval": false,
+  "capeRemoved": true,
+  "handGeometryCorrection": 0.23,
+  "anatomicalRepair": {
+    "method": "one source-measured mean-humerus correction per arm; rotate WHOLE arm chain about captured moving shoulder",
+    "shoulderCalibrationDegrees": {
+      "L": 27.659226704370987,
+      "R": 31.62723534797365
+    },
+    "elbow": "retains full captured 3D elbow angle and frame-to-frame changes exactly",
+    "wrist": "no authored standalone trajectory; preserved 3D elbow->wrist offset",
+    "hand": "captured hand pose blended into anatomical forearm continuation with fixed relaxation; no standalone wrist keyframes",
+    "claws": "source mesh correction is real weighted 23-percent distal claw reduction",
+    "legs": "all original 16 CMU leg/hip/contact source keys unchanged",
+    "costume": "verified real mesh cape deleted (73 islands)"
+  },
+  "variant": "broken-leg-left-asymmetric-v7",
+  "damage": {
+    "injury": "left knee/leg has reduced swing clearance, shortened forward reach and weak propulsion",
+    "mechanics": "source-height driven foot drag and exact two-bone IK; healthy right leg remains captured",
+    "attackingArms": [
+      "L",
+      "R"
+    ],
+    "impairedLeg": "L",
+    "impairedArm": null
+  },
+  "derivation": "CMU measured sprint; deterministic bounded damaged joint chains, no procedural sine/cosine limb waves",
+  "runtimeCutover": false,
+  "attackDeathReexported": false,
+  "weightTransfer": {
+    "model": "source ankle-clearance stance phases; lateral hip loading and thoracic counterlean",
+    "feet": "both original world-space ankles held via re-solved two-bone IK",
+    "nonprocedural": "no independent sin/cos oscillators or jitter",
+    "originalRecordedRunFps": 25
+  },
+  "design": {
+    "healthyArms": "shoulder-led near full forward extension; elbow flex typically 150-170 degrees",
+    "injuredArm": "only undamaged side reaches forward; damaged side retains original authored v1 injury",
+    "brokenLeg": "injured foot 0.10m lower and 0.21m shortened forward swing at maximum; source-contact-driven extra hip drop, compensatory lean",
+    "legs": "original right-foot contacts; affected left swing only, no new motion oscillator"
+  },
+  "legDamage": {
+    "physicalStance": "V4 0.060m deep buckle followed by additional 0.052m instantaneous-looking stance dip and 0.060m lateral impact, torso counterroll and pitch",
+    "anatomy": "source V4 two-bone knee IK, sharp second crooked injured-knee bend pole, previous measured fixed ankles",
+    "drag": "posterior (+Y) free-foot trail, lateral splay and floor-clamped ankle; fixed original stance contacts",
+    "healthyLeg": "original right ankle contact unchanged"
+  },
+  "animationRetiming": {
+    "measuredSource": "CMU-09_01 3D real captured full body, artist-corrected V6 no-cape injury",
+    "phaseMapSourceSamples": [
+      0.0,
+      0.45,
+      0.95,
+      1.7,
+      2.9,
+      4.45,
+      6.25,
+      8.2,
+      10.0,
+      11.2,
+      12.0,
+      12.75,
+      13.35,
+      13.95,
+      14.65,
+      15.5
+    ],
+    "authoring": "more time on left damaged contact; faster right healthy push and recovery",
+    "fullBody": "all bones share one time origin; no invented sinusoidal wrist or ankle trajectories",
+    "runtimeLocomotionSpeedChanged": false
+  }
+}

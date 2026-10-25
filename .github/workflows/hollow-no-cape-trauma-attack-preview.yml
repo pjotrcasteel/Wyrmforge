@@ -1,0 +1,108 @@
+name: Hollowed no-cape injured-arm attack preview — original rig, 96px GIFs
+
+on:
+  push:
+    branches: [feat/actor-lit-sprite-production]
+    paths:
+      - 'tools/sprite-lab/build-hollow-no-cape-injury-attacks.py'
+      - 'tools/sprite-lab/render-hollow-no-cape-injury-attacks.py'
+      - '.github/workflows/hollow-no-cape-trauma-attack-preview.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  preview-attacks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - run: python -m pip install 'bpy==4.5.3' 'numpy>=1.26,<3' 'pillow>=10,<13'
+      - name: Transfer existing 16-frame attack into three separate NO-CAPE rigs
+        run: |
+          set -euo pipefail
+          for variant in standard broken-arm-right one-arm-left; do
+            source=art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-no-cape-attack-$variant-preview
+            if ! test -f "$source/hollow-rigged.blend"; then
+              python tools/sprite-lab/build-hollow-no-cape-injury-attacks.py --variant "$variant"
+            fi
+          done
+      - name: Validate attack provenance and disabled-arm strike identity
+        run: |
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          root=Path('art/source/enemies/hollow/rigged-poc/model/local-appearance-004')
+          src=root/'rigged-attack-v2/hollow-attack.blend'
+          for variant,active,impaired in (
+              ('standard','R',None),
+              ('broken-arm-right','L','R'),
+              ('one-arm-left','R','L')):
+            folder=root/f'rigged-hollow-no-cape-attack-{variant}-preview'
+            r=json.loads((folder/'attack-review-provenance.json').read_text())
+            assert (folder/'hollow-rigged.blend').is_file()
+            assert r['sourceAttackSha256']==hashlib.sha256(src.read_bytes()).hexdigest()
+            assert r['sourceOriginalAttackTransferred'] and r['frames']==16 and r['fps']==12
+            assert r['activeArm']==active and r['impairedArm']==impaired
+            assert not r['visualContactOnly'] is False
+            assert r['artApproval'] is False and r['runtimeDamageChanged'] is False
+            assert r['contactFrames']==[7,8]
+          print('Three distinct original-attack-transferred injury rigs, unchanged gameplay contact')
+          PY
+      - name: Render the original 16-frame attack on cape-free standard
+        run: python tools/sprite-lab/render-hollow-no-cape-injury-attacks.py --variant standard
+      - name: Render two physically constrained injured-arm attack previews
+        run: |
+          python tools/sprite-lab/render-hollow-no-cape-injury-attacks.py --variant broken-arm-right
+          python tools/sprite-lab/render-hollow-no-cape-injury-attacks.py --variant one-arm-left
+      - name: Check all eight 96px attack GIFs and enlarged frame pairs
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          for variant in ('standard','broken-arm-right','one-arm-left'):
+            out=Path('artifacts')/('hollow-no-cape-attack-'+variant)
+            assert Image.open(out/'candidate-attack-eight-directions.png').size==(1536,768)
+            for facing in ('n','ne','e','se','s','sw','w','nw'):
+              names=[f'{facing}-attack.gif',f'{facing}-attack-zoom-4x.gif']
+              if variant!='standard':
+                names += [f'compare-{facing}-attack-native.gif',f'compare-{facing}-attack-4x.gif']
+              for name in names:
+                gif=Image.open(out/name)
+                assert gif.n_frames==16,(variant,facing,name,gif.n_frames)
+          print('Original no-cape source + two attack-injury variants validated in all eight directions')
+          PY
+      - name: Preserve only review source, comparison GIFs and atlases in existing PR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/feat/actor-lit-sprite-production'
+        run: |
+          set -euo pipefail
+          for variant in standard broken-arm-right one-arm-left; do
+            evidence=docs/art/evidence/hollowed-trauma-attack-v1/$variant
+            mkdir -p "$evidence"
+            cp artifacts/hollow-no-cape-attack-$variant/*.gif "$evidence"/
+            cp artifacts/hollow-no-cape-attack-$variant/*.png "$evidence"/
+            cp artifacts/hollow-no-cape-attack-$variant/candidate-manifest.json "$evidence"/
+          done
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/art/evidence/hollowed-trauma-attack-v1/
+          git add art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-no-cape-attack-*-preview/
+          if ! git diff --cached --quiet; then
+            git commit -m "art(hollowed): save no-cape injured-arm attack previews and 96px A/B animations"
+            git push origin HEAD:feat/actor-lit-sprite-production
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hollowed-trauma-attack-v1-${{ github.sha }}
+          path: |
+            art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-no-cape-attack-*-preview/
+            artifacts/hollow-no-cape-attack-*/
+          retention-days: 30
+          if-no-files-found: warn

@@ -1,0 +1,72 @@
+{
+  "variant": "broken-leg-right",
+  "status": "UNAPPROVED additional 3D rigged Hollowed trauma source; artist acceptance required",
+  "fps": 22,
+  "frames": 16,
+  "cell": 96,
+  "directions": [
+    {
+      "direction": "N",
+      "row": 0,
+      "rotationDegrees": 214.5085229876684,
+      "flipX": false
+    },
+    {
+      "direction": "NE",
+      "row": 1,
+      "rotationDegrees": 169.5085229876684,
+      "flipX": false
+    },
+    {
+      "direction": "E",
+      "row": 2,
+      "rotationDegrees": 124.50852298766841,
+      "flipX": false
+    },
+    {
+      "direction": "SE",
+      "row": 3,
+      "rotationDegrees": 79.50852298766841,
+      "flipX": false
+    },
+    {
+      "direction": "S",
+      "row": 4,
+      "rotationDegrees": 34.508522987668414,
+      "flipX": false
+    },
+    {
+      "direction": "SW",
+      "row": 5,
+      "rotationDegrees": -10.491477012331586,
+      "flipX": false
+    },
+    {
+      "direction": "W",
+      "row": 6,
+      "rotationDegrees": -55.491477012331586,
+      "flipX": false
+    },
+    {
+      "direction": "NW",
+      "row": 7,
+      "rotationDegrees": -100.49147701233159,
+      "flipX": false
+    }
+  ],
+  "anchor": [
+    48,
+    72
+  ],
+  "injuredGroundContacts": 12,
+  "healthyGroundContacts": 1,
+  "retainedFromHealthyRun": "original skinned geometry and per-variant source arms; injury leg contacts author independent 3D IK",
+  "maximumAnkleTravelPerFrame": {
+    "L": 0.07582885123425266,
+    "R": 0.0718381304602917
+  },
+  "runtimeAtlasReplaced": false,
+  "lightingMaterialsApproval": false,
+  "artApproval": false,
+  "realMobileHuntCaptured": false
+}

@@ -1,0 +1,272 @@
+{
+  "status": "UNAPPROVED additional independently rigged injury variant; no gameplay cutover",
+  "source": "CMU Graphics Lab, Subject 09, Motion 01 RUN",
+  "sourceUrl": "https://github.com/una-dinosauria/cmu-mocap/blob/master/data/009/09_01.bvh",
+  "sourceSha256": "90641ccca814b9d8d59f63576a548bb5612477364462d142a9f741268fbe3b78",
+  "license": "CMU dataset free for all uses; Bruce Hahne BVH conversion",
+  "authoringRig": "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-pixel-v3/hollow-rigged.blend",
+  "loop": {
+    "firstActualMotionIndex": 5,
+    "periodSourceFrames": 88,
+    "fitError": 0.004042674987953383,
+    "rawSamplingHz": 120
+  },
+  "output": {
+    "frames": 16,
+    "fps": 22,
+    "directions": 8
+  },
+  "axis": {
+    "right": [
+      0.9999980926513672,
+      0.0,
+      0.0019524565432220697
+    ],
+    "forward": [
+      -0.0019524566596373916,
+      0.0,
+      0.999998152256012
+    ],
+    "travel": [
+      -0.001952458987943828,
+      0.0,
+      0.9999980330467224
+    ]
+  },
+  "biomechanics": "captured shoulder yaw/roll, pelvis counterturn and shoulder-girdle translation; 120Hz hips-relative marker denoising",
+  "noRecoloring": true,
+  "noNewShaders": true,
+  "parentEditableBlendSha256": "61f743a218e5ecb968bb56b71a8f4a64cb5463eb04b5fc91aaf96029f5ea8797",
+  "sourceEditableRig": "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-zombie-reach-v3-broken-arm-right/hollow-rigged.blend",
+  "presentationAdjustments": {
+    "wrist": "rest anatomical hand-to-forearm orientation transported by measured forearm rotation",
+    "cloth": "rearward slipstream and source-thigh-following cloth root, no mesh or weight replacement",
+    "timing": "16 source poses at 25fps; accelerated measured CMU 88/120-second stride",
+    "sourcePositionSampling": "unchanged captured CMU gait"
+  },
+  "artApproval": false,
+  "capeRemoved": true,
+  "handGeometryCorrection": 0.23,
+  "anatomicalRepair": {
+    "method": "one source-measured mean-humerus correction per arm; rotate WHOLE arm chain about captured moving shoulder",
+    "shoulderCalibrationDegrees": {
+      "L": 27.659226704370987,
+      "R": 31.62723534797365
+    },
+    "elbow": "retains full captured 3D elbow angle and frame-to-frame changes exactly",
+    "wrist": "no authored standalone trajectory; preserved 3D elbow->wrist offset",
+    "hand": "captured hand pose blended into anatomical forearm continuation with fixed relaxation; no standalone wrist keyframes",
+    "claws": "source mesh correction is real weighted 23-percent distal claw reduction",
+    "legs": "all original 16 CMU leg/hip/contact source keys unchanged",
+    "costume": "verified real mesh cape deleted (73 islands)"
+  },
+  "variant": "broken-leg-left-broken-arm-right",
+  "damage": {
+    "injury": "right upper arm damaged, elbow guarded close to the ribs, limited countermotion",
+    "mechanics": "bounded captured shoulder motion with partially constrained elbow, functioning left arm",
+    "attackingArms": [
+      "L"
+    ],
+    "impairedLeg": null,
+    "impairedArm": "R"
+  },
+  "derivation": "CMU measured sprint; deterministic bounded damaged joint chains, no procedural sine/cosine limb waves",
+  "runtimeCutover": false,
+  "attackDeathReexported": false,
+  "design": {
+    "healthyArms": "shoulder-led near full forward extension; elbow flex typically 150-170 degrees",
+    "injuredArm": "only undamaged side reaches forward; damaged side retains original authored v1 injury",
+    "brokenLeg": "injured foot 0.10m lower and 0.21m shortened forward swing at maximum; source-contact-driven extra hip drop, compensatory lean",
+    "legs": "original right-foot contacts; affected left swing only, no new motion oscillator"
+  },
+  "damagedLeg": "L",
+  "damagedArmRight": true,
+  "injuryAuthoring": {
+    "damagedLeg": "L",
+    "damagedArmRight": true,
+    "maxAnkleTravelPerFrame": {
+      "L": 0.0718381304602917,
+      "R": 0.07582885123425266
+    },
+    "maxAllowedAnkleTravelPerFrame": 0.08,
+    "toeGroundPlaneZ": -0.435,
+    "minimumToeZ": -0.445,
+    "rightFoot": [
+      [
+        0.0,
+        -0.06,
+        -0.435
+      ],
+      [
+        0.2,
+        -0.02,
+        -0.435
+      ],
+      [
+        0.44,
+        0.05,
+        -0.435
+      ],
+      [
+        0.58,
+        0.1,
+        -0.435
+      ],
+      [
+        0.66,
+        0.052,
+        -0.375
+      ],
+      [
+        0.75,
+        -0.045,
+        -0.345
+      ],
+      [
+        0.84,
+        -0.09,
+        -0.37
+      ],
+      [
+        0.88,
+        -0.096,
+        -0.435
+      ],
+      [
+        0.94,
+        -0.071,
+        -0.435
+      ],
+      [
+        1.0,
+        -0.06,
+        -0.435
+      ]
+    ],
+    "leftFoot": [
+      [
+        0.0,
+        0.135,
+        -0.35
+      ],
+      [
+        0.14,
+        0.125,
+        -0.354
+      ],
+      [
+        0.28,
+        0.075,
+        -0.362
+      ],
+      [
+        0.4,
+        -0.014,
+        -0.405
+      ],
+      [
+        0.51,
+        -0.07,
+        -0.43
+      ],
+      [
+        0.55,
+        -0.074,
+        -0.435
+      ],
+      [
+        0.6,
+        -0.052,
+        -0.428
+      ],
+      [
+        0.7,
+        0.018,
+        -0.385
+      ],
+      [
+        0.82,
+        0.09,
+        -0.349
+      ],
+      [
+        0.94,
+        0.136,
+        -0.35
+      ],
+      [
+        1.0,
+        0.135,
+        -0.35
+      ]
+    ],
+    "failedLoading": [
+      [
+        0.0,
+        0
+      ],
+      [
+        0.49,
+        0
+      ],
+      [
+        0.53,
+        0.42
+      ],
+      [
+        0.565,
+        1
+      ],
+      [
+        0.595,
+        0.45
+      ],
+      [
+        0.65,
+        0
+      ],
+      [
+        1.0,
+        0
+      ]
+    ],
+    "rightSupport": [
+      [
+        0.0,
+        1
+      ],
+      [
+        0.52,
+        1
+      ],
+      [
+        0.58,
+        0.82
+      ],
+      [
+        0.65,
+        0.26
+      ],
+      [
+        0.73,
+        0.24
+      ],
+      [
+        0.86,
+        0.86
+      ],
+      [
+        0.9,
+        1
+      ],
+      [
+        1.0,
+        1
+      ]
+    ],
+    "floorZ": -0.435,
+    "sourceLegTrajectoryRetained": false,
+    "poseBasis": "16 authored contact samples, exact rig-length 2-link legs"
+  },
+  "lightingMaterialsRegenerated": false
+}

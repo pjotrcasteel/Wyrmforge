@@ -1,0 +1,126 @@
+name: Hollowed broken leg V7 — asymmetric injured stride and moving 96px reviews
+on:
+  push:
+    branches: [feat/actor-lit-sprite-production]
+    paths:
+      - 'tools/sprite-lab/retime-hollow-broken-leg-gait-v7.py'
+      - 'tools/sprite-lab/render-hollow-broken-leg-asymmetric-v7.py'
+      - '.github/workflows/hollow-broken-leg-asymmetric-v7.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+
+jobs:
+  build-render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install Blender 4.5 and image/geometry dependencies
+        run: python -m pip install 'bpy==4.5.3' 'numpy>=1.26,<3' 'pillow>=10,<13'
+      - name: Author new full-body contact-retimed V7 .blend from V6 source
+        run: python tools/sprite-lab/retime-hollow-broken-leg-gait-v7.py
+      - name: Sample 17 actual 3D skinned poses and foot marker contacts
+        run: |
+          python tools/sprite-lab/sample-hollow-rig.py -- \
+            art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-broken-leg-asymmetric-v7
+      - name: Verify weight-bearing injury, actual anatomy, source geometry and planted feet
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,json
+          import numpy as np
+          base=Path('art/source/enemies/hollow/rigged-poc/model/local-appearance-004')
+          old=base/'rigged-hollow-broken-leg-trailing-v6'
+          new=base/'rigged-hollow-broken-leg-asymmetric-v7'
+          frames=json.loads((new/'gait-diagnostics.json').read_text())
+          source=json.loads((old/'gait-diagnostics.json').read_text())
+          p=json.loads((new/'retarget-provenance.json').read_text())
+          assert len(frames)==len(source)==17
+          assert p['artApproval'] is False and p['runtimeCutover'] is False
+          assert p['attackDeathReexported'] is False
+          assert p['parentEditableBlendSha256']==hashlib.sha256((old/'hollow-rigged.blend').read_bytes()).hexdigest()
+          info=p['animationRetiming']
+          source_phases=info['phaseMapSourceSamples']
+          assert len(source_phases)==16 and source_phases[0]==0
+          advances=[f['temporalAsymmetry']['sourceFrameAdvance'] for f in frames[:16]]
+          assert max(advances)>1.7 and min(advances)<.5
+          assert all(f['temporalAsymmetry']['preservesFullCapturedJointChain'] for f in frames)
+          assert all(not f['temporalAsymmetry']['authoritativeInWorldVelocity'] for f in frames)
+          assert max(f['weightTransfer']['damagedLeftSupport'] for f in frames[:16])>.95
+          assert max(f['weightTransfer']['healthyRightSupport'] for f in frames[:16])>.95
+          for i in range(17):
+            for side in ('L','R'):
+              assert frames[i]['arms'][side]['stretchReach'] is True
+              # Diagnostic keys come from interpolated real-source Blender poses:
+              # topology and exact cyclic endpoints, not same numbered V6 frame.
+              for point in ('ankle','knee','hip'):
+                assert len(frames[i]['feet'][side][point])==3
+          for side in ('L','R'):
+            for section,joints in [('arms',('shoulder','elbow','wrist','hand')),
+                                   ('feet',('hip','knee','ankle','toe'))]:
+              for k in joints:
+                assert max(abs(a-b) for a,b in zip(frames[0][section][side][k],frames[16][section][side][k]))<1e-4
+          with np.load(old/'sampled-walk.npz') as a,np.load(new/'sampled-walk.npz') as b:
+            assert a['positions'].shape==b['positions'].shape
+            assert np.array_equal(a['faces'],b['faces'])
+            assert np.array_equal(a['uv'],b['uv'])
+            assert np.max(np.abs(a['positions']-b['positions']))>.02,'no strong body change'
+          markers=json.loads((new/'actual-foot-markers.json').read_text())
+          assert len(markers)==34
+          print('V7 true full-body unequal phase timing: 16 source poses + closure, unchanged topology')
+          PY
+      - name: Render actual 128 native 96px skinned frames, all eight directions
+        run: python tools/sprite-lab/render-hollow-broken-leg-asymmetric-v7.py
+      - name: Verify 32 complete animations and pixel-size comparisons
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from PIL import Image
+          out=Path('artifacts/hollow-trauma-broken-leg-left-asymmetric-v7')
+          assert Image.open(out/'candidate-walk-eight-directions.png').size==(1536,768)
+          for face in ('n','ne','e','se','s','sw','w','nw'):
+            for name in (f'{face}-animation.gif',f'{face}-zoom-4x.gif',
+                         f'compare-{face}-native-96px.gif',f'compare-{face}-zoom-4x.gif'):
+              g=Image.open(out/name)
+              assert g.n_frames==16,(name,g.n_frames)
+          assert not json.loads((out/'candidate-manifest.json').read_text())['runtimeAtlasReplaced']
+          for face in ('e','se'):
+            preview=Image.open(out/f'moving-field-{face}-native.gif')
+            assert preview.n_frames==32
+            assert preview.size==(400,240)
+          print('All V5 true native and enlarged sixteen-frame eight-direction GIFs checked')
+          PY
+      - name: Save original source, native 96px moving comparisons and all eight V7 clips
+        if: github.event_name == 'push' && github.ref == 'refs/heads/feat/actor-lit-sprite-production'
+        run: |
+          set -euo pipefail
+          dest=docs/art/evidence/hollowed-broken-leg-asymmetric-v7
+          mkdir -p "$dest"
+          cp artifacts/hollow-trauma-broken-leg-left-asymmetric-v7/*.gif "$dest"/
+          cp artifacts/hollow-trauma-broken-leg-left-asymmetric-v7/*.png "$dest"/
+          cp artifacts/hollow-trauma-broken-leg-left-asymmetric-v7/candidate-manifest.json "$dest"/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$dest"
+          git add art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-broken-leg-asymmetric-v7/
+          if ! git diff --cached --quiet; then
+            git commit -m "art(hollowed): preserve injury load/buckle V4 and 96px review animations"
+            git pull --rebase origin feat/actor-lit-sprite-production
+            git push origin HEAD:feat/actor-lit-sprite-production
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hollowed-broken-leg-v4-${{ github.sha }}
+          path: |
+            art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-broken-leg-asymmetric-v7/
+            artifacts/hollow-trauma-broken-leg-left-asymmetric-v7/
+          retention-days: 30
+          if-no-files-found: warn

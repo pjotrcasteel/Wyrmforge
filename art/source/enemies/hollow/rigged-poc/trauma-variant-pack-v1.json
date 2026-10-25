@@ -1,0 +1,161 @@
+{
+  "schemaVersion": 1,
+  "status": "Unapproved visual review only; NOT a runtime encounter roster or balance decision",
+  "source": "CMU Graphics Lab subject 09 motion 01, edited no-cape Hollowed Blender rig",
+  "baseActor": "Hollowed",
+  "sharedRig": "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-mocap-no-cape-captured-hands-candidate/hollow-rigged.blend",
+  "directions": [
+    "N",
+    "NE",
+    "E",
+    "SE",
+    "S",
+    "SW",
+    "W",
+    "NW"
+  ],
+  "framesPerDirection": 16,
+  "framesPerCycle": 16,
+  "reviewFps": 25,
+  "pivot": [
+    48,
+    72
+  ],
+  "productionCutover": false,
+  "materialSourceRegenerationRequired": true,
+  "variants": [
+    {
+      "id": "hollowed-standard",
+      "kind": "standard",
+      "model": "rigged-mocap-no-cape-captured-hands-candidate",
+      "limitations": [],
+      "usableArms": [
+        "L",
+        "R"
+      ],
+      "damage": "none",
+      "motion": "captured standard sprint, unapproved",
+      "evidence": "hollowed-trauma-v1/standard",
+      "attackPreview": {
+        "status": "unapproved authored 16-key attack transferred to no-cape rig; visual only",
+        "model": "rigged-hollow-no-cape-attack-standard-preview",
+        "evidence": "hollowed-trauma-attack-v1/standard",
+        "strikeArm": "R",
+        "runtimeDamageChange": false
+      },
+      "reachV3": {
+        "reviewOnly": true,
+        "approved": false,
+        "model": "rigged-hollow-zombie-reach-v3-standard",
+        "evidence": "hollowed-zombie-reach-v3/standard",
+        "design": "Both healthy arms stretched ahead of the shoulder",
+        "lightingMaterialCutover": false
+      }
+    },
+    {
+      "id": "hollowed-broken-leg-left",
+      "kind": "injured-leg",
+      "model": "rigged-hollow-trauma-broken-leg-left",
+      "impairedLeg": "L",
+      "usableArms": [
+        "L",
+        "R"
+      ],
+      "damage": "left leg impaired; preserved planted foot + source-driven reduced swing clearance and reach",
+      "motion": "asymmetric sprint / right leg compensates",
+      "evidence": "hollowed-trauma-v1/broken-leg-left",
+      "attackPreview": {
+        "status": "not yet authored with broken-leg-specific stance; retain separate v1 runtime attack unchanged",
+        "runtimeDamageChange": false
+      },
+      "locomotionV2": {
+        "status": "unapproved contact-driven weight transfer",
+        "model": "rigged-hollow-trauma-broken-leg-weight-transfer-v2",
+        "evidence": "hollowed-trauma-v2/broken-leg-left"
+      },
+      "reachV3": {
+        "reviewOnly": true,
+        "approved": false,
+        "model": "rigged-hollow-zombie-reach-v3-broken-leg-left",
+        "evidence": "hollowed-zombie-reach-v3/broken-leg-left",
+        "design": "Both healthy arms stretched; strong shortened injured-leg swing, additional hip drop, ankle IK preservation",
+        "lightingMaterialCutover": false
+      },
+      "locomotionV7": {
+        "status": "Full real Blender eight-direction render passed, owner review pending",
+        "model": "rigged-hollow-broken-leg-asymmetric-v7",
+        "evidence": "hollowed-broken-leg-asymmetric-v7",
+        "fps": 25,
+        "framesPerDirection": 16,
+        "reviewOnly": true,
+        "actualHuntCapture": false,
+        "retimedFrom": "rigged-hollow-broken-leg-trailing-v6",
+        "difference": "Captured whole-body source retiming; 9 of 16 frames painful support versus 6 of 16 in V6; accelerated healthy stride; preserves exact prior rig/silhouette. Native travel GIF is synthetic review field, not gameplay.",
+        "lightingMaterialCutover": false
+      }
+    },
+    {
+      "id": "hollowed-broken-arm-right",
+      "kind": "injured-arm",
+      "model": "rigged-hollow-trauma-broken-arm-right",
+      "impairedArm": "R",
+      "usableArms": [
+        "L"
+      ],
+      "damage": "right arm guarded near ribs and contributes little to stride; left arm functional",
+      "motion": "single functional arm sprint",
+      "evidence": "hollowed-trauma-v1/broken-arm-right",
+      "attackPreview": {
+        "status": "unapproved authored 16-key attack transferred to no-cape rig; visual only",
+        "model": "rigged-hollow-no-cape-attack-broken-arm-right-preview",
+        "evidence": "hollowed-trauma-attack-v1/broken-arm-right",
+        "strikeArm": "L",
+        "runtimeDamageChange": false
+      },
+      "reachV3": {
+        "reviewOnly": true,
+        "approved": false,
+        "model": "rigged-hollow-zombie-reach-v3-broken-arm-right",
+        "evidence": "hollowed-zombie-reach-v3/broken-arm-right",
+        "design": "Only healthy LEFT arm reaches forward; damaged right stays constrained",
+        "lightingMaterialCutover": false
+      }
+    },
+    {
+      "id": "hollowed-one-arm-left",
+      "kind": "unusable-arm",
+      "model": "rigged-hollow-trauma-one-arm-left",
+      "impairedArm": "L",
+      "usableArms": [
+        "R"
+      ],
+      "damage": "left arm present but effectively unusable, pendulous with bounded torso follow",
+      "motion": "right arm compensates in sprint",
+      "evidence": "hollowed-trauma-v1/one-arm-left",
+      "attackPreview": {
+        "status": "unapproved authored 16-key attack transferred to no-cape rig; visual only",
+        "model": "rigged-hollow-no-cape-attack-one-arm-left-preview",
+        "evidence": "hollowed-trauma-attack-v1/one-arm-left",
+        "strikeArm": "R",
+        "runtimeDamageChange": false
+      },
+      "reachV3": {
+        "reviewOnly": true,
+        "approved": false,
+        "model": "rigged-hollow-zombie-reach-v3-one-arm-left",
+        "evidence": "hollowed-zombie-reach-v3/one-arm-left",
+        "design": "Only healthy RIGHT arm reaches forward; damaged left stays constrained",
+        "lightingMaterialCutover": false
+      }
+    }
+  ],
+  "notes": [
+    "No random procedural joint jitter: variants are physical injury-specific edits over measured CMU pose.",
+    "Two separate arm-disabled variants intentionally differ in silhouette; no runtime attack animation suppression is claimed.",
+    "Both original .blend source and lighting-material contracts must be preserved.",
+    "All variants require owner review at native Hunt pixel scale and source-derived walk/attack/death materials before shipping.",
+    "Do not pair changed geometry with old atlas normals/depth/caster.",
+    "Attack preview variants mirror an EXISTING authored right-arm 16-key attack to a usable left side only when the right arm is injured. These are not gameplay cutovers.",
+    "V3 (24 Oct 2026) is a separately editable, source-derived candidate with genuine 96px GIF review. Owner approval and full lighting/material work are still required before any runtime adoption."
+  ]
+}

@@ -1,0 +1,126 @@
+name: Hollowed broken-leg weight transfer — v2 eight-direction review
+
+on:
+  push:
+    branches: [feat/actor-lit-sprite-production]
+    paths:
+      - 'tools/sprite-lab/refine-hollow-broken-leg-weight-transfer.py'
+      - 'tools/sprite-lab/render-hollow-broken-leg-weight-transfer.py'
+      - '.github/workflows/hollow-broken-leg-weight-transfer-v2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  weight-transfer-render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install actual Blender rig and imaging dependencies
+        run: python -m pip install 'bpy==4.5.3' 'numpy>=1.26,<3' 'pillow>=10,<13'
+      - name: Build distinct editable no-cape injured runner with grounded mass shift
+        run: |
+          test -f art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-trauma-broken-leg-left/hollow-rigged.blend
+          if ! test -f art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-trauma-broken-leg-weight-transfer-v2/hollow-rigged.blend; then
+            python tools/sprite-lab/refine-hollow-broken-leg-weight-transfer.py
+          fi
+      - name: Sample true skin vertices and original foot anchor contacts for 17 poses
+        run: |
+          source=art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-trauma-broken-leg-weight-transfer-v2
+          if ! test -f "$source/sampled-walk.npz"; then
+            python tools/sprite-lab/sample-hollow-rig.py -- "$source"
+          fi
+      - name: Validate original source geometry, pelvis shifts and both contact points
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,json
+          import numpy as np
+          base=Path('art/source/enemies/hollow/rigged-poc/model/local-appearance-004')
+          v1=base/'rigged-hollow-trauma-broken-leg-left'
+          v2=base/'rigged-hollow-trauma-broken-leg-weight-transfer-v2'
+          original=base/'rigged-mocap-no-cape-captured-hands-candidate'
+          source=json.loads((v1/'gait-diagnostics.json').read_text())
+          poses=json.loads((v2/'gait-diagnostics.json').read_text())
+          p=json.loads((v2/'retarget-provenance.json').read_text())
+          assert len(poses)==17
+          assert p['parentEditableBlendSha256']==hashlib.sha256((v1/'hollow-rigged.blend').read_bytes()).hexdigest()
+          assert p['artApproval'] is False and p['runtimeCutover'] is False
+          assert not p['attackDeathReexported']
+          pelvis=[frame['weightTransfer']['pelvisOffset'] for frame in poses]
+          assert max(abs(x[0]) for x in pelvis)>.025
+          assert max(abs(f['weightTransfer']['thoracicCounterleanDegrees']) for f in poses)>3
+          assert any(f['weightTransfer']['healthyRightSupport']>.60 for f in poses)
+          assert any(f['weightTransfer']['damagedLeftSupport']>.60 for f in poses)
+          for i in range(17):
+            for side in ('L','R'):
+              src=np.array(source[i]['feet'][side]['ankle'])
+              dst=np.array(poses[i]['feet'][side]['ankle'])
+              assert np.linalg.norm(src-dst)<1e-5,(i,side,'anchored ankle drift')
+              assert poses[i]['weightTransfer']['bothAnklesAnchored']
+          with np.load(v1/'sampled-walk.npz') as a, np.load(v2/'sampled-walk.npz') as b:
+            assert np.array_equal(a['faces'],b['faces'])
+            assert np.array_equal(a['uv'],b['uv'])
+            assert a['positions'].shape==b['positions'].shape and a['positions'].shape[0]==17
+            assert np.max(np.abs(a['positions']-b['positions']))>.01
+          markers1=json.loads((v1/'actual-foot-markers.json').read_text())
+          markers2=json.loads((v2/'actual-foot-markers.json').read_text())
+          assert len(markers1)==len(markers2)==34
+          for a,b in zip(markers1,markers2):
+            assert a['frame']==b['frame'] and a['side']==b['side']
+            assert max(abs(x-y) for x,y in zip(a['contact'],b['contact']))<.006,(a,b)
+          print('Verified actual 3D skin deformation, 17 frames, source geometry and pelvis compensation')
+          PY
+      - name: Render all 128 native 96px frames and 32 full-cycle GIFs
+        run: python tools/sprite-lab/render-hollow-broken-leg-weight-transfer.py
+      - name: Confirm all eight directions and 16-frame GIF closures
+        run: |
+          python - <<'PY'
+          import json
+          from PIL import Image
+          from pathlib import Path
+          out=Path('artifacts/hollow-trauma-broken-leg-left-weight-transfer-v2')
+          assert Image.open(out/'candidate-walk-eight-directions.png').size==(1536,768)
+          for facing in ('n','ne','e','se','s','sw','w','nw'):
+            for suffix in (f'{facing}-animation.gif',f'{facing}-zoom-4x.gif',
+                           f'compare-{facing}-native-96px.gif',
+                           f'compare-{facing}-zoom-4x.gif'):
+              clip=Image.open(out/suffix)
+              assert clip.n_frames==16,(suffix,clip.n_frames)
+          m=json.loads((out/'candidate-manifest.json').read_text())
+          assert m['artApproval'] is False and not m['runtimeAtlasReplaced']
+          print('Verified 32 true looping review GIFs, eight compass angles')
+          PY
+      - name: Save separate v2 rig and review GIFs to existing draft PR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/feat/actor-lit-sprite-production'
+        run: |
+          set -euo pipefail
+          dest=docs/art/evidence/hollowed-trauma-v2/broken-leg-left
+          mkdir -p "$dest"
+          cp artifacts/hollow-trauma-broken-leg-left-weight-transfer-v2/*.gif "$dest"/
+          cp artifacts/hollow-trauma-broken-leg-left-weight-transfer-v2/*.png "$dest"/
+          cp artifacts/hollow-trauma-broken-leg-left-weight-transfer-v2/candidate-manifest.json "$dest"/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-trauma-broken-leg-weight-transfer-v2/
+          git add "$dest"
+          if ! git diff --cached --quiet; then
+            git commit -m "art(hollowed): preserve contact-driven broken leg v2 Blender and review GIFs"
+            git push origin HEAD:feat/actor-lit-sprite-production
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hollowed-broken-leg-weight-transfer-v2-${{ github.sha }}
+          path: |
+            art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-trauma-broken-leg-weight-transfer-v2/
+            artifacts/hollow-trauma-broken-leg-left-weight-transfer-v2/
+          retention-days: 30
+          if-no-files-found: warn

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WyrmForge — Rigged Actor Lighting Review</title>
+<style>
+body{background:#12131a;color:#e6e0d7;font:14px system-ui;margin:0;padding:12px}
+main{max-width:960px;margin:auto}h1{font-size:19px;margin:0 0 8px}
+p{color:#b9b6c0;line-height:1.45}.controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:12px 0}
+label{display:flex;gap:7px;align-items:center}select,input,button{background:#242532;color:#fff;border:1px solid #515364;border-radius:6px;padding:7px}
+canvas{display:block;width:100%;height:min(68vh,620px);background:#000;image-rendering:pixelated;border:1px solid #444;border-radius:8px}
+aside{font-size:12px;color:#c5c3cd}
+</style></head>
+<body><main>
+<h1>Hollowed / Ashling — Authoritative sprite material review</h1>
+<p>Uses the shared G1 WebGL GPU engine. Source-rig normal/depth passes and planar alpha-caster shadow support are independent of C# gameplay. This is a test scene, not the live Hunt renderer or volumetric self-shadowing.</p>
+<div class="controls">
+<label>Hollowed <select id="hollowed"><option>walk</option><option>attack</option><option>death</option></select></label>
+<label>Ashling <select id="ashling"><option>walk</option><option>attack</option><option>death</option></select></label>
+<label>Facing <select id="direction"><option>N</option><option>NE</option><option>E</option><option>SE</option><option selected>S</option><option>SW</option><option>W</option><option>NW</option></select></label>
+<label>Frame <input id="frame" type="range" min="0" max="27" value="0"></label>
+<label>Fire position <input id="lightX" type="range" min="-1" max="1" step=".1" value="-.5"></label>
+<label>Zero light + zero emission <input id="zero" type="checkbox"></label>
+<label>Cast shadows <input id="shadows" type="checkbox" checked></label>
+<label>Play <input id="animate" type="checkbox"></label>
+</div>
+<canvas id="actor-scene"></canvas>
+<aside id="status">Initializing GPU asset review…</aside>
+</main>
+<script type="module">
+import { initializeActorReview, redrawActorReview, actorReviewPixels } from '../js/lighting/actor-review.js';
+const canvas=document.querySelector('canvas'),status=document.querySelector('#status');
+const ids=['hollowed','ashling','direction','frame','lightX','zero','shadows','animate'];
+function values(){return Object.fromEntries(ids.map(id=>{const e=document.getElementById(id);return [id,e.type==='checkbox'?e.checked:e.type==='range'?Number(e.value):e.value]}));}
+try {
+    await initializeActorReview(canvas);
+    window.actorLitReview={redraw:changes=>{
+        for(const [id,value] of Object.entries(changes)) {
+            const control=document.getElementById(id);
+            if(control) { if(control.type==='checkbox') control.checked=value; else control.value=value; }
+        }
+        redrawActorReview(canvas,changes);
+    },pixels:()=>actorReviewPixels(canvas),canvas};
+    for(const id of ids)document.getElementById(id).addEventListener('input',()=>redrawActorReview(canvas,values()));
+    status.textContent='Ready — inspect movement/attack/death from identical light snapshots; zero diagnostics are strict.';
+}catch(e){status.textContent='GPU review error: '+e.message;console.error(e)}
+</script>
+</body></html>

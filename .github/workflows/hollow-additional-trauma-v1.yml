@@ -1,0 +1,116 @@
+name: Hollowed — additional real 3D trauma variants
+on:
+  push:
+    branches: [feat/actor-lit-sprite-production]
+    paths:
+      - 'tools/sprite-lab/author-hollow-additional-trauma-v1.py'
+      - 'tools/sprite-lab/render-hollow-additional-trauma-v1.py'
+      - '.github/workflows/hollow-additional-trauma-v1.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+
+jobs:
+  additional-injuries:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install Blender and native image dependencies
+        run: python -m pip install 'bpy==4.5.3' 'numpy>=1.26,<3' 'pillow>=10,<13'
+      - name: Author and render two separate 3D-rig variants
+        run: |
+          set -euo pipefail
+          for v in broken-leg-right broken-leg-left-broken-arm-right; do
+            if [ "$v" = broken-leg-right ]; then
+              folder=rigged-hollow-broken-leg-right-even-cadence
+            else
+              folder=rigged-hollow-broken-arm-right-leg-left-even-cadence
+            fi
+            source_path="art/source/enemies/hollow/rigged-poc/model/local-appearance-004/$folder"
+            if [ ! -f "$source_path/hollow-rigged.blend" ]; then
+              python tools/sprite-lab/author-hollow-additional-trauma-v1.py --variant "$v"
+            fi
+            if [ ! -f "$source_path/sampled-walk.npz" ]; then
+              python tools/sprite-lab/sample-hollow-rig.py -- "$source_path"
+            fi
+            python tools/sprite-lab/render-hollow-additional-trauma-v1.py --variant "$v"
+          done
+      - name: Verify source geometry, asymmetric contact and two complete 96px atlases
+        run: |
+          python - <<'PY'
+          import json,math
+          from pathlib import Path
+          from PIL import Image
+          base=Path('art/source/enemies/hollow/rigged-poc/model/local-appearance-004')
+          variants={
+            'broken-leg-right':('rigged-hollow-broken-leg-right-even-cadence','R',False),
+            'broken-leg-left-broken-arm-right':('rigged-hollow-broken-arm-right-leg-left-even-cadence','L',True)
+          }
+          for variant,(source,injured,broken_arm) in variants.items():
+            folder=base/source
+            frames=json.loads((folder/'gait-diagnostics.json').read_text())
+            meta=json.loads((folder/'retarget-provenance.json').read_text())
+            assert len(frames)==17 and meta['variant']==variant
+            assert meta['damagedLeg']==injured and meta['damagedArmRight']==broken_arm
+            assert not meta['artApproval'] and not meta['runtimeCutover']
+            assert not meta['lightingMaterialsRegenerated']
+            assert (folder/'hollow-rigged.blend').stat().st_size>500_000
+            assert (folder/'sampled-walk.npz').is_file()
+            for side in ('L','R'):
+              step=max(math.dist(a['feet'][side]['ankle'],b['feet'][side]['ankle'])
+                       for a,b in zip(frames,frames[1:]))
+              assert step<.080,(variant,side,step)
+              assert all(f['feet'][side]['toe'][2]>=-.44501 for f in frames)
+              for key in ('hip','knee','ankle','toe'):
+                assert math.dist(frames[0]['feet'][side][key],frames[-1]['feet'][side][key])<.0001
+            planted_side='R' if injured=='L' else 'L'
+            assert sum(f['contact'][('left' if injured=='L' else 'right')+'AnkleGround'] for f in frames[:16])<=3
+            assert sum(f['contact'][('right' if injured=='L' else 'left')+'AnkleGround'] for f in frames[:16])>=10
+            assert all(f['arms']['R']['stretchReach']==(not broken_arm) for f in frames)
+            assert all(f['arms']['L']['stretchReach'] for f in frames)
+            out=Path('artifacts/hollow-additional-trauma-'+variant)
+            atlas=Image.open(out/'candidate-walk-eight-directions.png')
+            assert atlas.size==(1536,768)
+            for face in ('n','ne','e','se','s','sw','w','nw'):
+              im=Image.open(out/(face+'-animation.gif'))
+              assert im.n_frames==16 and im.size==(96,96)
+            m=json.loads((out/'candidate-manifest.json').read_text())
+            assert not m['runtimeAtlasReplaced'] and not m['artApproval']
+            print(variant,'passes 17 real rig positions, contacts, toe floor, 128 native frames; STILL UNAPPROVED')
+          PY
+      - name: Commit only review rigs and GIFs, never change runtime or lighting materials
+        if: github.event_name == 'push' && github.ref == 'refs/heads/feat/actor-lit-sprite-production'
+        run: |
+          set -euo pipefail
+          for v in broken-leg-right broken-leg-left-broken-arm-right; do
+            mkdir -p "docs/art/evidence/hollowed-additional-trauma-$v"
+            cp "artifacts/hollow-additional-trauma-$v/"*.gif "docs/art/evidence/hollowed-additional-trauma-$v/"
+            cp "artifacts/hollow-additional-trauma-$v/"*.png "docs/art/evidence/hollowed-additional-trauma-$v/"
+            cp "artifacts/hollow-additional-trauma-$v/candidate-manifest.json" "docs/art/evidence/hollowed-additional-trauma-$v/"
+          done
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/art/evidence/hollowed-additional-trauma-*
+          git add art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-broken-leg-right-even-cadence
+          git add art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-broken-arm-right-leg-left-even-cadence
+          if ! git diff --cached --quiet; then
+            git commit -m "art(hollowed): preserve right-leg and combined trauma editable Blender sources with 8-way GIFs"
+            git pull --rebase origin feat/actor-lit-sprite-production
+            git push origin HEAD:feat/actor-lit-sprite-production
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hollowed-two-new-3d-trauma-candidates-${{ github.sha }}
+          path: |
+            artifacts/hollow-additional-trauma-*/
+            art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-broken-leg-right-even-cadence/
+            art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-broken-arm-right-leg-left-even-cadence/
+          retention-days: 30
+          if-no-files-found: warn
