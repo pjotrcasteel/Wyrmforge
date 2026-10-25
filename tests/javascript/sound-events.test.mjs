@@ -227,3 +227,16 @@ test('burning ground lifecycle follows real patch identity and remaining duratio
     assert.deepEqual(collectBurningGroundTransitions(tracker, frame()),
         [{ type: 'stop', id: 13, remainingSeconds: 0 }]);
 });
+
+
+test('burning-ground transitions ignore invalid and expired patches', () => {
+    const tracker = createSoundEventTracker();
+    assert.deepEqual(collectBurningGroundTransitions(tracker, frame({ burningGrounds: [
+        { id: 0, remainingSeconds: 2 }, { id: 3, remainingSeconds: 0 },
+        { id: 4, remainingSeconds: -1 }, { id: 5, remainingSeconds: Number.NaN },
+        { id: 6, remainingSeconds: 0.5 },
+    ] })), [{ type: 'start', id: 6, remainingSeconds: 0.5 }]);
+    assert.deepEqual(collectBurningGroundTransitions(tracker, frame({ burningGrounds: [
+        { id: 6, remainingSeconds: 0 },
+    ] })), [{ type: 'stop', id: 6, remainingSeconds: 0 }]);
+});
