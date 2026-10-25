@@ -64,7 +64,7 @@ jobs:
               "http://127.0.0.1:4173/town3d-review.html?mode=${mode}&actor=${actor}" \
               >"artifacts/town-3d/${name}.html" 2>"artifacts/town-3d/${name}.log"
             test -s "artifacts/town-3d/${name}.png"
-            grep -q '30 authored nodes' "artifacts/town-3d/${name}.html"
+            grep -q '39 authored nodes' "artifacts/town-3d/${name}.html"
             grep -q 'data-town3d-peak-rgb=' "artifacts/town-3d/${name}.html"
             if [[ "$mode" == zero ]]; then
               peak=$(grep -o 'data-town3d-peak-rgb="[0-9]*"' "artifacts/town-3d/${name}.html" | head -1 | grep -o '[0-9]*')
