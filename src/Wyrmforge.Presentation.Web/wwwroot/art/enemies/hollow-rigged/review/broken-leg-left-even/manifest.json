@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "reviewOnly": true,
+  "artApproval": false,
+  "runtimeCutover": false,
+  "materialsRegenerated": false,
+  "variant": "broken-leg-left-even-cadence",
+  "image": "walk.png",
+  "sourceBlobSha": "5b8b28dcb30ae83b699226b3dff3b532cc6c2f01",
+  "sourceEvidence": "docs/art/evidence/hollowed-broken-leg-even-cadence/candidate-walk-eight-directions.png",
+  "cell": 96,
+  "frames": 16,
+  "directions": [
+    "N",
+    "NE",
+    "E",
+    "SE",
+    "S",
+    "SW",
+    "W",
+    "NW"
+  ],
+  "fps": 22,
+  "worldSize": 93,
+  "anchor": [
+    48,
+    72
+  ],
+  "clip": "walk",
+  "scope": "opt-in even-cadence standard Hollowed walk only; prior dragged review, normal actor, materials/attack/death untouched",
+  "maxAnkleTravelPerFrame": {
+    "L": 0.0718381304602917,
+    "R": 0.07582885123425266
+  }
+}
