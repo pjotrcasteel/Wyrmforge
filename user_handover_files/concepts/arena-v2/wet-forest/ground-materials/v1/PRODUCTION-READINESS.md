@@ -28,6 +28,23 @@
 5. **Game-scale acceptance:** inspect representative 320×568 and 390×844 gameplay captures with movement, many enemies, a moving Fireball, wet/stone/moss transitions and a fire-Wyrm influence region. Check style, scale, brightness, frame stability, and performance before promoting any derivative.
 6. **Integration isolation:** preserve the original six-swatch approved Materials Lab atlas, existing C# authority and all gameplay. Production material derivatives belong in a separately reviewed integration PR; this art PR can safely merge only as an **unapproved archive** after integrity tests pass.
 
+## All-family at-footprint inspection — 25 October 2026
+
+Artifact: [GitHub Actions artwork QA / all-family screenshots](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40172144784) (successful `verify` and `visual-review` jobs, source branch checkpoint `67abc8f`). Download `wet-forest-grass-mud-repeat-studies` for **twelve individual 320×568 / 390×844 portrait review sheets** (`family-*-UNAPPROVED.png`) plus `family-role-review.json`. These are unlit source-art sizing sheets, **not playable arena frames, relightable textures, or physical-device captures**.
+
+I inspected the 390px sheets for all six families at their representative **112px** review footprint and raw 2×2 repetition:
+
+| Family | Observed at reduced scale | Next authoring action |
+| --- | --- | --- |
+| Grass / Moss | Strong botanical/rock detailing but recognisable plant and stone clustering repeats at raw joins; too busy for automatic per-cell stamps | Use only as neutral-diffuse *source* for continuous multi-variant mosaic; prove composition/contrast with game actors and lighting |
+| Wet Mud | Puddle glints and small stone texture crowd each other when reduced; original painting already implies reflections | Separate soil diffuse from manually authored water regions; use one shared physical reflection/material system |
+| Old Paving | Plausible block texture but repeated square layouts and occasional black source borders are visible | Author site-specific stone footprints and masonry rather than generic wilderness floor |
+| Trampled Earth | Six almost identical diagonal trail motifs; repeated squares make a conspicuous stamped diagonal grid | Extract road-surface detail clipped to C# authoritative winding route from the existing one-road workstream; never invent traversability |
+| Scorched Ground | Visually powerful painted orange cracks repeated in every variant; a 2×2 stamp makes the Wyrm effect generic | Hand author non-emissive charred ground separately from actual emissive cracks and registered light sources |
+| Marsh / Wet Bank | Water colour and aquatic vegetation already painted into each bounded patch; repeated water margins form visible isolated islands | Create geometry-aware bank/water/vegetation layers; no inferred collision and no baked highlight as a real reflection |
+
+**Decision:** all 36 remain useful candidate sources, but none should be shipped as a tiled runtime image. Put the next implementation effort into physical material authoring and one genuine C#-geometry + shared GPU-renderer integration proof, not more arbitrary square-tiling tricks. The preview tooling and `material-family-roles.json` are isolated production inputs, not a second arena engine. Preserve the approved atlas and current gameplay.
+
 ## Decision
 
 **Archive integrity is a separate accomplishment from visual approval and engine-readiness.** The next useful asset task is preparing representative editable derivatives and a scene-lit mobile comparison, beginning with Grass / Moss + Wet Mud (plus an actual water/light response), without committing them to production rendering. The other families stay source concepts until reviewed.
