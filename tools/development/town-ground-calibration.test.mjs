@@ -32,3 +32,21 @@ test("ground calibration refuses invalid values and unsupported elevated pixel m
     assert.throws(() => townLegacyFootpointToWorld(0, 0,
         {...TOWN_GROUND_CALIBRATION, pixelsPerMetre: 0}), RangeError);
 });
+
+test("T1 camera reproduces three production Town slices and full-width desktop", async () => {
+    const cameraSource = await readFile(new URL("../../src/Wyrmforge.Presentation.Web/wwwroot/js/town/town-camera-reference.js", import.meta.url), "utf8");
+    const {townReferenceCamera} = await import("data:text/javascript;base64," + Buffer.from(cameraSource).toString("base64"));
+    const west = townReferenceCamera(390, 1672, 0, TOWN_GROUND_CALIBRATION);
+    const center = townReferenceCamera(390, 1672, 1, TOWN_GROUND_CALIBRATION);
+    const east = townReferenceCamera(390, 1672, 2, TOWN_GROUND_CALIBRATION);
+    assert.equal(center.centerLegacyX, 836);
+    assert.equal(center.centerWorldX, 0);
+    assert.ok(west.scrollLeft < center.scrollLeft && center.scrollLeft < east.scrollLeft);
+    assert.ok(west.centerWorldX < 0 && east.centerWorldX > 0);
+    assert.ok(Math.abs(center.visibleWorldWidth - 390 / 64) < 1e-10);
+
+    // Production desktop screenshot contains all three districts at once:
+    const desktop = [0, 1, 2].map(i => townReferenceCamera(1280, 1280, i, TOWN_GROUND_CALIBRATION));
+    assert.ok(desktop.every(c => c.scrollLeft === 0 && c.centerWorldX === 0));
+    assert.throws(() => townReferenceCamera(390, 1672, 3, TOWN_GROUND_CALIBRATION), RangeError);
+});
