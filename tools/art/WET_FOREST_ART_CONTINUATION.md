@@ -69,3 +69,13 @@ Six source-backed strips and their 18 overlapping art segments remain **unapprov
 - Automated tests require a different third-section crop and a clear synthetic palette separation between Muddy Wear and Heavy Wear. Hash-locked sources and segment overlap remain unchanged.
 
 **Next acceptance gate:** inspect full resolution and 240px mobile strips and all cross-variant joins for stamped/repeated landmarks, abrupt soil-versus-mud composition, painterly baked highlights and insufficient role identity. Do not promote any of these review candidates to neutral albedo, physically meaningful material channels or the C# arena until visual owner approval and separate lighting/road integration.
+
+## V12 — detail-preserving organic edges and content-aware source seams
+
+- Trampled Earth, Grass/Moss and Wet Mud review RGBs are selected at narrow, coherent scalloped art contacts rather than crossfaded broadly; rocks, foliage and footprints should retain their painted detail.
+- Cart-rut source-art masks now use independent track curvature, variable widths and occasional small grass intrusions. This is not authoritative road geometry.
+- Longitudinal source joins choose a deterministic minimum-cost continuous path through locally more similar source pixels within a narrow band. The approximately 4px antialias boundary avoids large faded texture bands.
+- In a local 640x1600 six-role × three-family × two-join comparison, average adjacent source RGB mismatch at 36 join paths fell from 32.538 to 15.838 (about 51%). This numeric source-pixel metric does not certify artistic seam invisibility or game integration.
+- Unit tests confirm constrained seam selection, determinism, original palette RGB preservation away from contact edges, six-role identity and the existing segment-overlap/immutable-input contracts.
+
+**Art approval still pending.** Repeated footprint-like motifs and source-baked shadows remain. No game/terrain/lighting subsystem is modified.

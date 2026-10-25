@@ -88,5 +88,33 @@ class SegmentBankTests(unittest.TestCase):
                 tool.build(*directories,home/"bad",side=128,height=320,overlap=32)
 
 
+
+    def test_content_aware_join_avoids_unmatched_painted_strip(self):
+        first = np.full((320,128,3), 30, dtype=np.float32)
+        second = np.full((320,128,3), 210, dtype=np.float32)
+        second[149:155] = first[149:155]
+        seam = tool._content_aware_join(first, second, 160, 128)
+        self.assertEqual(seam.shape, (128,))
+        self.assertTrue(np.all(seam >= 146))
+        self.assertTrue(np.all(seam <= 175))
+        self.assertLess(np.max(np.abs(np.diff(seam))), 1.01)
+        yy = np.rint(seam).astype(int)
+        mismatch = np.abs(first[yy, np.arange(128)] - second[yy, np.arange(128)]).mean()
+        self.assertEqual(mismatch, 0)
+        self.assertTrue(np.array_equal(seam, tool._content_aware_join(first, second, 160, 128)))
+
+    def test_organic_painted_edges_retain_original_rgb_for_all_six_roles(self):
+        green = (25,80,28)
+        soil = (149,99,63)
+        wet = (53,41,37)
+        g = [Image.new("RGB", (128,128), green) for _ in range(6)]
+        e = [Image.new("RGB", (128,128), soil) for _ in range(6)]
+        w = [Image.new("RGB", (128,128), wet) for _ in range(6)]
+        palette = np.array([green, soil, wet])
+        for role in range(6):
+            art = np.asarray(tool._make_strip(g, e, w, role, 128, 320))
+            exact = np.any(np.all(art[:,:,None,:] == palette[None,None,:,:], axis=-1), axis=-1)
+            self.assertGreater(np.mean(exact), .97, f"Role {tool.ROLES[role]} over-blended its sources")
+
 if __name__ == "__main__":
     unittest.main()

@@ -12,7 +12,7 @@ import json
 from pathlib import Path
 
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFilter
 
 ROLES = (
     "subtle-footpath", "heavy-wear", "cart-ruts", "muddy-wear", "broken-edges", "chaotic-wear"
@@ -57,6 +57,56 @@ def _smoothstep(t: np.ndarray) -> np.ndarray:
     return v * v * (3 - 2 * v)
 
 
+def _content_aware_join(first: np.ndarray, second: np.ndarray, target: float, side: int) -> np.ndarray:
+    """Deterministic, narrow cut through visually compatible painted RGB.
+
+    Finds a continuous art-only boundary near a chosen source transition. The
+    result is not geometry, collision, runtime alpha or an albedo material.
+    """
+    height, width = first.shape[:2]
+    radius = max(9, int(side * .11))
+    lo = max(1, int(round(target)) - radius)
+    hi = min(height - 1, int(round(target)) + radius + 1)
+    rgb_cost = np.abs(first[lo:hi].astype(np.float32) - second[lo:hi].astype(np.float32)).mean(axis=2)
+    # The 7px neighborhood penalizes single-pixel coincidences; do not create
+    # a high-frequency checkerboard to hide material mismatches.
+    blurred = np.asarray(Image.fromarray(np.clip(rgb_cost * 3, 0, 255).astype(np.uint8))
+                         .filter(ImageFilter.BoxBlur(3)), dtype=np.float32) / 3.0
+    cost = .35 * rgb_cost + .65 * blurred
+    rows = hi - lo
+    yy = np.arange(lo, hi, dtype=np.float32)
+    cost += (np.abs(yy - target) / radius)[:, None] ** 2 * 7.0
+    history = np.zeros((width, rows), dtype=np.int8)
+    cumulative = cost[:, 0].copy()
+    inf = np.float32(1e7)
+    for x in range(1, width):
+        left = np.concatenate(([inf], cumulative[:-1] + .9))
+        middle = cumulative
+        right = np.concatenate((cumulative[1:] + .9, [inf]))
+        alternatives = np.stack((left, middle, right))
+        choice = np.argmin(alternatives, axis=0).astype(np.int8)
+        cumulative = cost[:, x] + np.take_along_axis(alternatives, choice[None], axis=0)[0]
+        history[x] = choice - 1
+    row = int(np.argmin(cumulative))
+    path = np.empty(width, dtype=np.float32)
+    for x in range(width - 1, -1, -1):
+        path[x] = row + lo
+        if x:
+            row += int(history[x, row])
+    return np.convolve(np.pad(path, (4, 4), mode="edge"), np.ones(9) / 9, mode="valid").astype(np.float32)
+
+
+def _organic_coverage(value: np.ndarray, u: np.ndarray, v: np.ndarray, role: int) -> np.ndarray:
+    """Select intact source pixels through a narrow, clustered, organic edge.
+
+    This is painted substrate ownership for review—not a runtime material
+    boundary, terrain recipe, collision mask or lighting/shadow contract.
+    """
+    variation = (.125 * np.sin(u * 43 + v * 11 + role * .7) * np.sin(u * 21 - v * 7.1 + role)
+                 + .048 * np.cos(u * 77 - v * 17 + role * .31))
+    return _smoothstep((value + variation - .47) / .07)
+
+
 def _sample(images: list[Image.Image], index: int, side: int, height: int, seed: int) -> np.ndarray:
     # Sample three distinct, hash-checked source paintings with continuous UVs;
     # selection changes along softly contoured narrow joins, not crop positions.
@@ -77,11 +127,9 @@ def _sample(images: list[Image.Image], index: int, side: int, height: int, seed:
     # source-art boundaries. Only a four-pixel antialias zone crossfades RGB;
     # broad fades double landmarks and turn detailed vegetation into ghosts.
     # This is offline artwork selection, not authored game road geometry.
-    xx_float = xx.astype(np.float32)
     for k, seam in enumerate((height / 3.0, height * 2 / 3.0)):
-        boundary = (seam + side * .080 * np.sin(xx_float / side * 7.3 + seed * .61 + k)
-                    + side * .026 * np.cos(xx_float / side * 16.4 - seed * .27 + 2 * k))
-        coverage = np.clip((yy.astype(np.float32) - boundary + 2.0) / 4.0, 0, 1)[..., None]
+        boundary = _content_aware_join(sampled[k], sampled[k + 1], seam, side)
+        coverage = np.clip((yy.astype(np.float32) - boundary[None, :] + 2.0) / 4.0, 0, 1)[..., None]
         rgb = rgb * (1 - coverage) + sampled[k + 1] * coverage
     return rgb
 
@@ -99,12 +147,17 @@ def _make_strip(grass: list[Image.Image], earth: list[Image.Image], mud: list[Im
     elif role == 1:
         shape = _smoothstep((.312 + coarse - dist) / .058)
     elif role == 2:
-        left = np.abs(u - center + .13 - .025*np.sin(v*1.9))
-        right = np.abs(u - center - .13 + .015*np.sin(v*2.6))
-        ruts = np.minimum(left, right)
-        shape = _smoothstep((.056 + coarse*.35 - ruts) / .026) * .97
-        shape += .16 * _smoothstep((.22-dist)/.05)
-        shape = np.clip(shape, 0, 1)
+        # Distinct wheel tracks have independent curvature, varying widths and
+        # occasional vegetation intrusion. No road/navigation authority here.
+        spacing = .128 + .014 * np.sin(v * 2.3 + .64)
+        left_center = center - spacing + .018 * np.sin(v * 4.1)
+        right_center = center + spacing + .014 * np.cos(v * 3.9)
+        ruts = np.minimum(np.abs(u - left_center), np.abs(u - right_center))
+        rut_width = .048 + .009 * np.sin(v * 5.7 + u * 9.2)
+        shape = _smoothstep((rut_width + coarse * .4 - ruts) / .027)
+        intrusion = _smoothstep((np.sin(v * 6.7 + u * 11.1)
+                                 * np.cos(v * 3.3 - u * 9.0) - .46) / .18)
+        shape *= 1 - .78 * intrusion
     elif role == 3:
         shape = _smoothstep((.25 + coarse*2 - dist) / .06)
         mm = _sample(mud, role, side, height, 3)
@@ -116,6 +169,7 @@ def _make_strip(grass: list[Image.Image], earth: list[Image.Image], mud: list[Im
                  + .33 * np.cos(v * 5.1 - u * 7.4)
                  + .22 * np.sin(v * 1.7 + u * 19.3))
         wet = _smoothstep((broad + .09) / .14) * _smoothstep((.285 - dist) / .065)
+        wet = _organic_coverage(wet, u, v, role + 11)
         soil = soil * (1 - wet[..., None]) + mm * wet[..., None]
     elif role == 4:
         broken = .24 + .085 * np.sin(v*3.2+role) + .055 * np.sin(v*6.3+u*7)
@@ -124,7 +178,10 @@ def _make_strip(grass: list[Image.Image], earth: list[Image.Image], mud: list[Im
         islands = (np.sin(u*17 + v*3.0) * np.sin(v*3.8-u*10.2)
                    + .46*np.cos(u*25+v*4.1))
         shape = _smoothstep((islands + .18) / .72) * _smoothstep((.48-dist)/.12)
-    out = np.clip(np.rint(g * (1-shape[...,None]) + soil * shape[...,None]), 0, 255).astype(np.uint8)
+    # Avoid ghosted stones, roots and footprints caused by a 20-40px RGB
+    # crossfade. Outside the narrow art-contact band retain original RGB.
+    coverage = _organic_coverage(shape, u, v, role)
+    out = np.clip(np.rint(g * (1-coverage[...,None]) + soil * coverage[...,None]), 0, 255).astype(np.uint8)
     return Image.fromarray(out, "RGB")
 
 
