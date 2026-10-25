@@ -159,6 +159,23 @@ no relightable or neutral albedo. The two banks can be compared and revised
 without discarding originals or triggering integration. Genuine game-scale
 art review is still required.
 
+## Wet Mud artwork — twelve reproducible visual candidates
+
+The second **art-only** family now has a reproducible generator:
+`python tools/art/build_wet_mud_art_candidates.py --output /tmp/wyrm-wet-mud-candidates`.
+
+The script reads and SHA-256 verifies **all six original Wet Mud WebP paintings** and exports:
+
+- Six independent 900×900 RGB PNG trial paintings with individually matching opposite edges;
+- Six additional 900×900 mutually compatible RGB PNGs using a narrow 32-pixel shared source-art perimeter;
+- One six-panel 2×2 repetition comparison, one mixed nine-panel art composition, and a provenance/QA JSON file with hashes and per-source participation.
+
+All six original inputs participate in each deterministic candidate. The six compatible variants undergo **72 ordered horizontal/vertical cross-edge comparisons**. This is technical border continuity only—not proof of non-repetitive painting, a physically valid water surface, seamless mixed-family transitions, or approval.
+
+**Important, separate future ART step:** the Wet Mud source paintings visibly contain baked puddles, glints, wet stones and other lighting cues. All remain in these *art candidates*; a prospective neutral-diffuse edit and manually authored water/soil/vegetation sublayers are **not complete**. The owner's accepted puddle visual reference remains a direction for this later artwork refinement, not C# water geometry. Do not treat these RGB images as actual reflective water, physical height, normals, roughness, collision or emission.
+
+The script, tests, and generated artwork review archive live exclusively in PR #340. **G1–G5 lighting, road PR #338, runtime rendering, C# terrain and gameplay are owned by other workstreams and are out of scope.** No integration is made or implied.
+
 ## Approval/locking protocol
 **Do not rename this folder CANONICAL or update runtime references until the owner explicitly accepts
 these 36 images.** After approval, record approved image hashes in an immutable manifest
