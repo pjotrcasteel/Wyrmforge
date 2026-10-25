@@ -22,13 +22,15 @@ test('G3 material maps and physical controls remain optional for G1 compatibilit
     assert.equal(m.emissiveMap, 'runes');
     assert.equal(m.normalScale, 1.5);
     assert.equal(m.wetness, .6);
+    assert.equal(validateSnapshot(snapshot(material({ reflection: 'probe', reflectionProbe: 'forest-cube' }))).materials[0].reflectionProbe, 'forest-cube');
 });
 test('G3 invalid material map IDs and out-of-range physical values fail validation', () => {
     for (const change of [
         { aoIntensity: -0.1 }, { aoIntensity: 1.1 }, { normalScale: -1 },
         { normalScale: 4.1 }, { foliageTransmission: 1.01 },
         { emissiveMap: '' }, { aoMap: 42 }, { aoIntensity: NaN },
-        { wetness: -0.01 }, { wetness: 1.01 }, { wetness: Infinity },
+        { reflection: 'probe' }, { reflection: 'probe', reflectionProbe: '' },
+        { reflection: 'unknown' }, { reflectionProbe: 123 }, { wetness: -0.01 }, { wetness: 1.01 }, { wetness: Infinity },
     ]) assert.throws(() => validateSnapshot(snapshot(material(change))));
 });
 
