@@ -156,6 +156,7 @@ public sealed class UniversalLightingBrowserTests : PageTest
         await VerifyOakLayerShadowsAsync(canvas, width);
         await VerifyActorSourceLifecycleAsync(canvas, width);
         await VerifyTownFixturesAsync(canvas, width);
+        await VerifyTemporalStabilityAsync(canvas, width);
     }
 
     private async Task VerifyPoseShadowsAsync(ILocator canvas, int width)
@@ -320,6 +321,66 @@ public sealed class UniversalLightingBrowserTests : PageTest
         await RecordComparisonAsync(width, "town-fixture", comparisons);
     }
 
+    private async Task VerifyTemporalStabilityAsync(ILocator canvas, int width)
+    {
+        await ConfigureAsync(canvas, new { lighting = "scene", profile = "night", view = "lit", panPixels = 0,
+            fireball = true, torch = true, spot = true, frame = 0, progress = .25, animate = false, inspectObject = "hollowed" });
+        var comparisons = new List<object>();
+        foreach (var focus in new[] { "actors", "oak", "water" })
+        {
+            await ConfigureAsync(canvas, new { focus, panPixels = 0 });
+            var original = await PixelHashAsync(canvas);
+            await canvas.EvaluateAsync("c => { window.panEvidence={pixels:gpuProof.proofPixels(c),width:c.width,height:c.height}; }");
+            await CaptureAsync(width, $"temporal-{focus}-origin");
+            foreach (var pan in new[] { 1, 2, 4, 8, 4, 2, 1 })
+            {
+                await ConfigureAsync(canvas, new { panPixels = pan });
+                var changedFraction = await canvas.EvaluateAsync<double>(
+                    """
+                    (c,pan) => {
+                        const p=gpuProof.proofPixels(c),e=window.panEvidence; let changed=0,total=0;
+                        for(let y=1;y<e.height-1;y++) for(let x=8;x<e.width-9;x++) {
+                            const i=(y*e.width+x)*4,j=(y*e.width+x+pan)*4;
+                            if(Math.abs(p[i]-e.pixels[j])+Math.abs(p[i+1]-e.pixels[j+1])+Math.abs(p[i+2]-e.pixels[j+2])>3) changed++;
+                            total++;
+                        }
+                        return changed/total;
+                    }
+                    """, pan);
+                comparisons.Add(new { focus, panPixels = pan, translationMismatchFraction = changedFraction });
+                Assert.IsLessThan(.01, changedFraction,
+                    "An integer camera pan must translate the existing lit/shadow image; more than 1% changed interior pixels indicates instability.");
+            }
+            await CaptureAsync(width, $"temporal-{focus}-pan1");
+            await ConfigureAsync(canvas, new { panPixels = 0 });
+            Assert.AreEqual(original, await PixelHashAsync(canvas), "Returning the camera must restore the exact image.");
+        }
+        await ConfigureAsync(canvas, new { focus = "actors" });
+        var expected = new List<string>();
+        for (var pass = 0; pass < 2; pass++)
+        {
+            for (var frame = 0; frame < 16; frame++)
+            {
+                await ConfigureAsync(canvas, new { frame, progress = frame / 20.0 });
+                var hash = await PixelHashAsync(canvas);
+                if (pass == 0) expected.Add(hash);
+                else Assert.AreEqual(expected[frame], hash, "A repeated pose/light sequence must reproduce each frame exactly.");
+            }
+        }
+        Assert.IsGreaterThan(1, expected.Distinct().Count(), "Replay must include actual pose/light changes.");
+        await ConfigureAsync(canvas, new { frame = 0, progress = .25 });
+        var beforeResize = await PixelHashAsync(canvas);
+        var resources = await canvas.EvaluateAsync<string>("c => { const d=gpuProof.proofDiagnostics(c); return JSON.stringify([d.textures,d.geometries,d.lights]); }");
+        var height = width == 320 ? 568 : 844;
+        await Page.SetViewportSizeAsync(width + 16, height);
+        await Page.WaitForFunctionAsync("() => { const c=document.querySelector('.gpu-proof canvas'); return c.width===Math.min(390,Math.round(c.clientWidth)); }");
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.WaitForFunctionAsync("() => { const c=document.querySelector('.gpu-proof canvas'); return c.width===Math.min(390,Math.round(c.clientWidth)); }");
+        Assert.AreEqual(beforeResize, await PixelHashAsync(canvas), "Resize/restore must preserve the frozen scene.");
+        Assert.AreEqual(resources, await canvas.EvaluateAsync<string>("c => { const d=gpuProof.proofDiagnostics(c); return JSON.stringify([d.textures,d.geometries,d.lights]); }"));
+        await RecordComparisonAsync(width, "temporal", new { camera = comparisons, replayHashes = expected, exactReplay = true, exactResizeRestore = true });
+    }
+
     private static Task<double> ReceiverMeanRgbAsync(ILocator canvas) => canvas.EvaluateAsync<double>(
         "c => { const p=gpuProof.proofPixels(c), e=window.receiverEvidence; return e.indices.reduce((sum,i) => sum+p[i]+p[i+1]+p[i+2],0)/(3*e.indices.length); }");
 
@@ -349,7 +410,7 @@ public sealed class UniversalLightingBrowserTests : PageTest
             ["cutouts"] = "Cutout test fixture", ["cutoutAlpha"] = "Cutout alpha", ["lighting"] = "Lighting rig", ["behind"] = "Light behind receiver", ["profile"] = "Environment", ["view"] = "Diagnostic", ["focus"] = "Camera",
             ["fireball"] = "Fireball", ["torch"] = "Torch", ["spot"] = "Spot", ["rune"] = "Register rune",
             ["shadows"] = "Shadows", ["reflections"] = "Direct specular", ["normals"] = "Authored normals",
-            ["aboveRoof"] = "Fixture above roof", ["townActive"] = "Town active", ["school"] = "Fixture school", ["mastery"] = "Fixture mastery",
+            ["panPixels"] = "Camera pan", ["aboveRoof"] = "Fixture above roof", ["townActive"] = "Town active", ["school"] = "Fixture school", ["mastery"] = "Fixture mastery",
             ["sourceDistance"] = "Source distance", ["progress"] = "Light position", ["frame"] = "Walk frame", ["animate"] = "Animate walk",
             ["inspectObject"] = "Inspect object", ["castsShadow"] = "Casts shadow",
             ["receivesShadow"] = "Receives shadow", ["receivesLight"] = "Receives light"

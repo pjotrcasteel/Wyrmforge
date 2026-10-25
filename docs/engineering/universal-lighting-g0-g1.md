@@ -432,3 +432,16 @@ occlusion check. Tests mask visible wall pixels, toggle only roof casting with
 fixed source/camera, compare actual shadow visibility, and require exact
 restoration. This addresses a distinct mechanism check; school-color differences
 alone cannot prove roof blocking. No production architecture or art changes.
+
+## G1 temporal acceptance slice — 25 October 2026
+
+All four workflows passed evidence checkpoint `00e3cf1`. The next lab-only
+comparison adds integer internal-pixel camera pans along the fixed camera's
+right axis, without moving emitters or shadow cameras. Actor, oak and water
+views compare translated interior RGB pixels (difference >3, mismatch <1%),
+then require exact restoration. A second check replays all 16 existing walk
+poses with a deterministic light-position sequence and requires identical
+per-frame hashes on replay. Resize/restore must preserve the frame and resource
+counts. These are deterministic GPU comparisons, not physical-device frame-time
+measurements or a claim of subpixel camera stability. New slice GPU CI pending.
+No actor assets, wizard work, production paths or C# state are changed.

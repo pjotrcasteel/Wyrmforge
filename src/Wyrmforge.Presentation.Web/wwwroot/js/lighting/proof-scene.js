@@ -49,7 +49,7 @@ export async function initializeProof(canvas) {
     if (states.has(canvas)) return;
     const engine = new LightingEngine(canvas);
     const state = { engine, alive: true, options: { profile: 'night', fireball: true, torch: true, spot: true,
-        lighting: 'scene', townActive: true, aboveRoof: false, school: 'arcane', mastery: 0, sourceDistance: 2, behind: false, cutouts: false, cutoutAlpha: true, rune: false, shadows: true, reflections: true, progress: .25, frame: 0, animate: false, view: 'lit', focus: 'overview', inspectObject: 'hollowed', castsShadow: true, receivesShadow: true, receivesLight: true, normals: true }, manifests: {}, animation: {}, samples: {} };
+        lighting: 'scene', panPixels: 0, townActive: true, aboveRoof: false, school: 'arcane', mastery: 0, sourceDistance: 2, behind: false, cutouts: false, cutoutAlpha: true, rune: false, shadows: true, reflections: true, progress: .25, frame: 0, animate: false, view: 'lit', focus: 'overview', inspectObject: 'hollowed', castsShadow: true, receivesShadow: true, receivesLight: true, normals: true }, manifests: {}, animation: {}, samples: {} };
     states.set(canvas, state);
     try {
         engine.registerGeometry('box', new T.BoxGeometry(1, 1, 1));
@@ -84,7 +84,7 @@ export async function initializeProof(canvas) {
         const oak = await originalOak(engine);
         if (!state.alive) { engine.dispose(); return; }
         state.objects.push(...oak.objects); state.materials.push(...oak.materials);
-        state.resize = new ResizeObserver(() => { if (state.alive) state.engine.render(); });
+        state.resize = new ResizeObserver(() => { if (state.alive) configureProof(canvas, {}); });
         state.resize.observe(canvas);
         canvas.dataset.ready = 'true';
         configureProof(canvas, {});
@@ -99,7 +99,11 @@ export function configureProof(canvas, options) {
         cutouts: [[-4, -3, .8], 2], oak: [[2.3, 3.4, 2], 2.5], town: [[-2, 1.8, 1.2], 2.5], water: [[1.2, -1.4, .1], 2] };
     const camera = cameras[state.options.focus];
     if (!camera) throw new RangeError('Unknown inspection camera');
-    state.engine.setCamera(...camera);
+    // Translate the fixed camera along its screen-right axis in internal framebuffer pixels.
+    // Source positions and shadow cameras stay in world space.
+    const pixelWidth = Math.max(1, Math.min(390, Math.round(canvas.clientWidth)));
+    const pan = new T.Vector3(12, 8, 0).normalize().multiplyScalar(state.options.panPixels * camera[1] * 2 / pixelWidth);
+    state.engine.setCamera(camera[0].map((value, i) => value + pan.getComponent(i)), camera[1]);
     const p = state.options, zero = p.profile === 'zero';
     const firePosition = [-3.5 + p.progress * 7, p.behind ? 4 : -1.6, p.behind ? 3.6 : 2.4];
     const environment = environmentProfile(p.profile);
