@@ -121,8 +121,8 @@ def patch_quilt(
                     option[0], option[1],
                 ))
             else:
-                # No existing pixels to match for the first patch; choose by seeded RNG.
-                best = options[int(rng.integers(0, len(options)))]
+                # Anchor a source-led study in its designated painting; otherwise seeded selection.
+                best = next(option for option in options if option[1] == preferred_source) if preferred_source is not None else options[int(rng.integers(0, len(options)))]
             _, variant, patch = best
             source_usage[variant] += 1
             chosen.append(variant)

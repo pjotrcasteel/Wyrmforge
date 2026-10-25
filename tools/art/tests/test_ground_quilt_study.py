@@ -55,6 +55,14 @@ class SourceQuiltTests(unittest.TestCase):
         self.assertLessEqual(max(variants.count(i) for i in range(6)) -
                              min(variants.count(i) for i in range(6)), 3)
 
+    def test_preferred_source_anchors_first_patch(self):
+        sources = [np.full((90, 90, 3), 40 + i * 15, dtype=np.uint8) for i in range(6)]
+        for preferred in range(6):
+            _, chosen = STUDY.patch_quilt(sources, seed=11, width=96, patch_size=40,
+                                          overlap=10, candidates=12, preferred_source=preferred,
+                                          preference_weight=.75)
+            self.assertEqual(chosen[0], preferred)
+
     def test_source_preference_changes_selection_without_mutating_inputs(self):
         sources = [np.full((90, 90, 3), 60 + i, dtype=np.uint8) for i in range(6)]
         before = [a.copy() for a in sources]

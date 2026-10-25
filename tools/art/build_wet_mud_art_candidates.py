@@ -58,7 +58,7 @@ def create(
         if family == "wet-mud" and set(choices) != set(range(6)):
             raise AssertionError("Wet Mud trials must consume all six source artworks")
         if family in ("trampled-earth", "old-paving", "scorched-ground", "marsh-wet-bank") and number - 1 not in choices:
-            raise AssertionError("Trampled Earth candidate must use its designated original painting")
+            raise AssertionError(f"{family} candidate must use its designated original painting")
         finished = periodic_component(raw)
         metrics = seam_metrics(finished)
         if metrics["meanRgbGapLeftRight"] or metrics["meanRgbGapTopBottom"]:
@@ -72,6 +72,8 @@ def create(
             "visualRoleVerified": False,
             "dominantSourceIntent": number if family in ("trampled-earth", "old-paving", "scorched-ground", "marsh-wet-bank") else None,
             "sourceUsage": {f"{j + 1:02d}": choices.count(j) for j in range(6)},
+            "dominantSourceActual": max(range(6), key=lambda j: choices.count(j)) + 1,
+            "preferredSourcePatchShare": round(choices.count(number - 1) / len(choices), 4) if family != "wet-mud" else None,
             "independentSeam": metrics,
             "approved": False,
         })
