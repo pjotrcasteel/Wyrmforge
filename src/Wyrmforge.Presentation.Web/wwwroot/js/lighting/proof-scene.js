@@ -185,7 +185,7 @@ export function configureProof(canvas, options) {
         const id = o.id === 'npc-binding-proxy' ? 'hollowed' : o.id;
         if (state.manifests[id]) o.frame = spriteFrame(state.manifests[id], { clip: 'walk', frame: p.animate ? state.samples[id]?.frame ?? 0 : p.frame % 16, direction: 'S' });
     }
-    const materials = state.materials.map(m => ({ ...m, alphaCutoff: m.id === 'cutout-upper' && !p.cutoutAlpha ? 0 : m.alphaCutoff, normal: p.normals ? m.normal : undefined,
+    const materials = state.materials.map(m => ({ ...m, alphaCutoff: m.id === 'cutout-upper' && !p.cutoutAlpha ? 0 : m.alphaCutoff, normal: p.normals && m.normal && state.engine.textures.has(m.normal) ? m.normal : undefined,
         wetness: m.id === 'terrain' || m.id === 'stone' ? p.wetness : m.wetness,
         reflection: p.reflections ? m.reflection : 'off',
         emissionIntensity: m.id === 'flame' && !p.torch && !p.fireball ? 0 : m.emissionIntensity }));
