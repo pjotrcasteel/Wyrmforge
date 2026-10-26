@@ -147,7 +147,7 @@ async function loadApprovedImage() {
 /** The only side effect is an isolated canvas, never live Town runtime. */
 export async function initializeTownPreview(canvas) {
     if (states.has(canvas)) return;
-    const engine = new LightingEngine(canvas, { shadowViews: 8, maxLights: 8 });
+    const engine = new LightingEngine(canvas, { shadowViews: 8, maxLights: 8, maxFramebufferWidth: 780 });
     const state = { engine, mode: 'night', lamps: true, offset: 0, alive: true };
     states.set(canvas, state);
     try {
