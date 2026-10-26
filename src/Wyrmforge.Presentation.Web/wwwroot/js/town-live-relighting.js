@@ -82,7 +82,9 @@ export async function mountTownLiveGpuPreview(selector = '.refuge-canonical-scen
     try {
         // Both Stage 3 art binaries must be installed for this secondary
         // opt-in. Default preview never changes or uses missing art paths.
-        const wellV4 = query.get('townWellStage4') === '1';
+        // Use the already-authored remade well for all opt-in lighting reviews.
+        // Explicit developer ?townWellStage4=0 keeps old comparison possible.
+        const wellV4 = query.get('townWellStage4') !== '0';
         await initializeTownPreview(canvas, { wellV4, domains: true,
             sourceMode: query.get('townGpuSource') === 'day-candidate' ? 'day-candidate' : 'night',
             ...authoritativeLighting(scene, query) });
