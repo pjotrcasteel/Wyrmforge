@@ -1,5 +1,6 @@
 import { preloadFireballV5 } from './arena-fireball-v5.js';
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
+import { createCombatGroundState, updateCombatGround, drawCombatGround, drawBurningRemains, combatGroundDiagnostics } from './arena-combat-ground.js';
 import { attachArenaInput, getArenaMovement, getArenaAim } from './arena-input.js';
 import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, drawArenaCloisterElevation } from './arena-environment.js?v=20261026-wetforest-live-art-2';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
@@ -73,6 +74,7 @@ export function readArenaDiagnostics(canvas) {
         exit: state.latestSnapshot?.exit ?? null,
         enemies: state.latestSnapshot?.enemies ?? [],
         deathBursts: state.latestSnapshot?.deathBursts ?? [],
+        combatGround: combatGroundDiagnostics(state.combatGround),
         hollow: hollowDiagnostics(state.hollow),
         ashling: ashlingSprites.diagnostics(state.ashling),
         ashfang: ashfangDiagnostics(state.ashfang),
@@ -114,6 +116,7 @@ function createState(canvas, dotNetReference) {
         enemyMotion: createEnemyMotionState(),
         paintedCorpses: {},
         hollow: createHollowState(),
+        combatGround: createCombatGroundState(),
         ashling: ashlingSprites.createState(),
         ashfang: createAshfangState(),
         reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)'),
@@ -242,6 +245,8 @@ function draw(state, snapshot, width, height) {
         drawGrid(ctx, worldWidth, worldHeight);
     }
     if (snapshot.hunt) drawHuntArena(ctx, snapshot.hunt, worldWidth, worldHeight);
+    updateCombatGround(state.combatGround,snapshot,visualSeconds);
+    drawCombatGround(ctx,state.combatGround,visualSeconds,state.reducedMotion.matches);
     // World-space diffuse spell spill reaches actual masonry, terrain and the ground fog.
     drawSpellLightSpill(ctx, spellLights, lightViewport, 'terrain');
     // Actual spell sources streak across nearby cloister water, not unrelated UI bloom.
@@ -352,6 +357,7 @@ function draw(state, snapshot, width, height) {
     drawSpellLightSpill(ctx, spellLights, lightViewport, 'actors');
     for (const impact of snapshot.elementalImpacts) drawSpellImpact(ctx, impact, state.reducedMotion.matches);
     for (const death of snapshot.deathBursts) drawDeathBurst(ctx, death);
+    drawBurningRemains(ctx,state.combatGround,visualSeconds,state.reducedMotion.matches);
 
     for (const ember of snapshot.hostileProjectiles ?? []) drawHostileProjectileEmber(ctx, ember);
     for (const lance of snapshot.iceLances ?? []) drawIceLance(ctx, lance);
