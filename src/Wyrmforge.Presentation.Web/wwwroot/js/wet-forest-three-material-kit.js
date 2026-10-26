@@ -234,6 +234,80 @@ export function bakeSourceBackedThreeMaterialGround(plan, images, seed, canvasFa
     return canvas;
 }
 
+/**
+ * Fast PLAYABLE-HUNT path for the same unmodified PR #340 art used by the
+ * review compositor. Instead of copying one source crop for every 16px
+ * material cell and boundary ribbon (~65k drawImage calls for 950x1550),
+ * collect same-material cells into clipped paths, then sample the source art
+ * across the entire world just once per material.
+ *
+ * The C# material board is read-only; no extra paths/physics are authored.
+ * All source samples retain their original RGB, with no new CSS/GPU shading.
+ * The few overlap pixels at multi-material junctions follow fixed material
+ * order instead of 16px cell iteration; scene quality remains a visual gate.
+ */
+export function bakeSourceBackedThreeMaterialGroundBatched(plan, images, seed, canvasFactory) {
+    if (!plan || plan.seed !== seed || !Number.isInteger(seed) || !images || !canvasFactory
+        || !plan.board || plan.board.length !== plan.columns * plan.rows
+        || !Number.isInteger(plan.width) || !Number.isInteger(plan.height)
+        || plan.width < CELL || plan.height < CELL || plan.width > 8192 || plan.height > 8192
+        || plan.columns !== Math.ceil(plan.width / CELL) || plan.rows !== Math.ceil(plan.height / CELL)
+        || !REVIEW_IDS.every(id => images[id]?.width === REVIEW_TILE_SIZE && images[id]?.height === REVIEW_TILE_SIZE)
+        || !Array.from(plan.board).every(id => REVIEW_IDS.includes(id))) return null;
+    const canvas = canvasFactory();
+    canvas.width = plan.width;
+    canvas.height = plan.height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx || typeof ctx.save !== 'function' || typeof ctx.clip !== 'function') return null;
+    const phase = (Math.abs(seed) % 16) * 8;
+
+    // First pass: contiguous world-aligned terrain runs; at most three
+    // repeated source-image sequences, irrespective of map cell count.
+    for (const material of REVIEW_IDS) {
+        ctx.save();
+        ctx.beginPath();
+        let rectangles = 0;
+        for (let row = 0; row < plan.rows; row++) {
+            const height = Math.min(CELL, plan.height - row * CELL);
+            for (let col = 0; col < plan.columns;) {
+                const start = col;
+                const id = plan.board[row * plan.columns + col];
+                do col++; while (col < plan.columns && plan.board[row * plan.columns + col] === id);
+                if (id !== material) continue;
+                ctx.rect(start * CELL, row * CELL, Math.min(col * CELL, plan.width) - start * CELL, height);
+                rectangles++;
+            }
+        }
+        if (rectangles) {
+            ctx.clip();
+            copyOriginalArt(ctx, images, material, 0, 0, plan.width, plan.height, phase);
+        }
+        ctx.restore();
+    }
+
+    // Second pass: the SAME organic, continuous source-only contact ribbons
+    // as the review, grouped into three clip masks to avoid one drawImage
+    // per ribbon. No alpha blend or new illustrated texture.
+    const contacts = sourceBackedBoundaryContacts(plan.board, plan.columns, plan.rows, seed);
+    if (!contacts) return null;
+    for (const material of REVIEW_IDS) {
+        ctx.save();
+        ctx.beginPath();
+        let count = 0;
+        for (const contact of contacts) {
+            if (contact.material !== material) continue;
+            ctx.rect(contact.x, contact.y, contact.width, contact.height);
+            count++;
+        }
+        if (count) {
+            ctx.clip();
+            copyOriginalArt(ctx, images, material, 0, 0, plan.width, plan.height, phase);
+        }
+        ctx.restore();
+    }
+    return canvas;
+}
+
 // Provisional art-review parameters, distinct from authored material maps.
 const ROUGHNESS = Object.freeze({
     [MATERIAL_IDS.grass]: .97,
