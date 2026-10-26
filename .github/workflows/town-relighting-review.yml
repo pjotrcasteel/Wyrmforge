@@ -33,6 +33,9 @@ jobs:
               assert data[:4] == b'RIFF' and data[8:12] == b'WEBP', f'{name} is not its original WebP binary'
           PY
 
+      - name: Assert exact approved Town source hashes
+        run: python3 tools/art/check_town_sources.py
+
       - name: Check new Town GPU projection contracts
         run: node --test tests/javascript/town-relighting-contract.test.mjs tests/javascript/town-relighting-preview.test.mjs
 
