@@ -84,4 +84,4 @@ Town T1/T3/T5 own **world-space scene IDs, collision/navmesh, semantic destinati
 
 ## Non-goals and release safeguards
 
-No second renderer, no generative-model inference per frame, no replacing boss animation choreography with free-form AI, no uncontrolled cross-encounter learning, no enemy omniscience, and no coupling AI completion to G4 Town merge. Every milestone requires tests, inspectable behavior traces and playable examples, not merely a design document.
+No second renderer, no generative-model inference per frame, no replacing boss animation choreography with free-form AI, no uncontrolled cross-encounter learning, no enemy omniscience, and no coupling AI completion to cancelled G4 Town reconstruction. Every milestone requires tests, inspectable behavior traces and playable examples, not merely a design document.
