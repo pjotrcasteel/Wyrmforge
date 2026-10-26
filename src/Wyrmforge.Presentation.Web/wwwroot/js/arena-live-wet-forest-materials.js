@@ -2,7 +2,7 @@
 // The real C# snapshot remains the sole authority for trails, gates, props,
 // combat collision, pickups and water semantics. No new lighting pipeline.
 import { CELL as ATLAS_CELL } from './arena-materials.js';
-import { bakeSourceBackedThreeMaterialGround, sourceBackedUrl, SOURCE_BACKED_VARIANTS } from './wet-forest-three-material-kit.js';
+import { bakeSourceBackedThreeMaterialGroundBatched, sourceBackedUrl, SOURCE_BACKED_VARIANTS } from './wet-forest-three-material-kit.js';
 
 const SOURCE_CELL = 12; // canonical createWetForestTilePlan pixel grid
 const MATERIAL_ID = Object.freeze({
@@ -117,15 +117,15 @@ export function drawLiveWetForestMaterialBase(ctx, tiles, seed, width, height) {
     }
     const plan = liveWetForestMaterialPlan(tiles, seed, width, height);
     if (!ctx || !plan) return false;
-    // Reuse the already-tested organic PR #361 source-only compositor without
-    // allocating another world-sized offscreen canvas.
+    // Use six world-aligned material/contact clip passes instead of ~65k
+    // individual image copies. No second world canvas or new artwork.
     const target = { width, height, getContext: () => ctx };
     ctx.save();
     ctx.beginPath();
     ctx.rect(0, 0, width, height);
     ctx.clip();
     try {
-        return Boolean(bakeSourceBackedThreeMaterialGround(plan, images, seed, () => target, 'organic'));
+        return Boolean(bakeSourceBackedThreeMaterialGroundBatched(plan, images, seed, () => target));
     } finally {
         ctx.restore();
     }
