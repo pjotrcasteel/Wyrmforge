@@ -3383,6 +3383,34 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".combat-vitals-spells .combat-spell-badge")).ToHaveAttributeAsync("aria-label", "Frost Shard, rank 1");
     }
 
+    [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
+    public async Task Mobile_LiveHuntGpu_RendersActorsAndKeepsSimulationMoving(int width, int height)
+    {
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/?arenaGpu=1", new() { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await EnterFirstTrailAsync();
+        await Page.EvaluateAsync(@"async () => {
+            window.__huntGpuArena = await import(new URL('js/arena.js?v=20261026-organic-ground-v2', document.baseURI).href);
+            window.__huntGpuRead = () => window.__huntGpuArena.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
+        }");
+        await Page.WaitForFunctionAsync("() => window.__huntGpuRead()?.gpuWorld?.objects > 1", null, new() { Timeout = 60000 });
+        var before = await Page.EvaluateAsync<double>("() => window.__huntGpuRead().player.x");
+        await Page.Locator("canvas.game-canvas").FocusAsync();
+        await Page.Keyboard.DownAsync("ArrowRight");
+        try
+        {
+            await Page.WaitForFunctionAsync("x => window.__huntGpuRead().player.x > x + 2", before);
+        }
+        finally { await Page.Keyboard.UpAsync("ArrowRight"); }
+        var diagnostics = await Page.EvaluateAsync<JsonElement>("() => window.__huntGpuRead()");
+        Assert.IsFalse(diagnostics.GetProperty("renderingFailed").GetBoolean());
+        Assert.IsTrue(diagnostics.GetProperty("gpuWorld").GetProperty("objects").GetInt32() > 1);
+        await ScreenshotAsync($"live-hunt-shared-gpu-{width}.png");
+    }
+
     private async Task EnterFirstTrailAsync()
     {
         var back = Page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" });
