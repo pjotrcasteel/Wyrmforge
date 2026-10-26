@@ -28,7 +28,7 @@ jobs:
       - name: Install headless Blender from Ubuntu packages
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y blender python3-numpy libegl1 libgl1-mesa-dri libglx-mesa0
+          sudo apt-get install -y blender python3-numpy python3-pil libegl1 libgl1-mesa-dri libglx-mesa0
           blender --version
           blender --background --factory-startup --python-expr 'import numpy; print(numpy.__version__)'
 
@@ -74,6 +74,9 @@ jobs:
               assert magic == b"glTF" and version == 2 and total == len(data)
               print(f"Validated {prefix} glTF 2.0 binary: {len(data)} bytes")
           PY
+
+      - name: Pixel-check Blender's 3D framing against approved Town art
+        run: python3 tools/town/validate_canonical_blender_render.py
 
       - name: Upload visual QC and editable Blender geometry
         if: always()
