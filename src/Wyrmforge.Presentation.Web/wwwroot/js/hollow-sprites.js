@@ -27,6 +27,9 @@ export function preloadHollowSprites() {
 async function loadHollowSprites() {
     // Load cape-free actors independently: caped legacy atlas failures must not block them.
     const variants=Promise.all([injuries.preload(),arms.preload(),skeletalDeath.preload()]);
+    // Manifest-only opt-in; no 3D atlas decodes unless art is explicitly approved.
+    // Keep optional I/O out of the pure animation update path and Node tests.
+    void fracture.preload();
     try {
         await loadLegacyHollowSprites();
     } catch {
@@ -97,8 +100,6 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
                 idleFrame:persona.idleFrame,signature:persona.signature,
                 attackAt:null,age:0,lastMove:-1,animation};
             pose.deathInjury=selectHollowDeathInjury(pose);
-            // Strictly release-gated: an absent/unapproved fracture atlas never replaces a real 3D collapse.
-            void fracture.preload();
             // Only download the specific 3D damaged collapse if this injured
             // silhouette actually spawns; no eager 3×7 MB mobile atlas load.
             if(pose.deathInjury!=='standard')
