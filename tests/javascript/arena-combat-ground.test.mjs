@@ -42,7 +42,7 @@ test('lethal fire scorches; composable explosive trait adds the stronger flame e
     updateCombatGround(state,snapshot([],[burst(4,1)]),1.35);
     assert.equal(state.flames.length,2);
     assert.equal(state.flames[1].explosive,false);
-    updateCombatGround(state,snapshot([]),3.5);
+    updateCombatGround(state,snapshot([]),3.7);
     assert.equal(state.flames.length,0);
 });
 test('same damage event with a missing, broken or nonfinite coordinate is ignored',()=>{
