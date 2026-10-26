@@ -32,6 +32,10 @@ public sealed class WetForestMaterialKitBrowserTests : PageTest
             new LocatorAssertionsToHaveAttributeOptions { Timeout = 90000 });
         await Expect(canvas).ToHaveAttributeAsync("data-material-review-seed", "1204");
         await Expect(canvas).ToHaveAttributeAsync("data-material-review-profile", "night");
+        // The in-game ignition overlay outlives the WebGL initialization. A
+        // screenshot before it disappears measures the splash, not the terrain.
+        await Page.WaitForFunctionAsync("() => !document.getElementById('wyrmforge-ignition')",
+            null, new PageWaitForFunctionOptions { Timeout = 45000 });
         Assert.IsGreaterThan(0L, (await CanvasStatsAsync(canvas))[2],
             "Registered world lights must reveal real material pixels.");
 
