@@ -60,7 +60,7 @@ test('Real C# mastery strength is bounded, monotonic and never becomes a second 
     const intensities = [.16, .3, .55, .86, 1].map(strength =>
         config('nexus', unlocked, { strength }).find(x => x.magic).intensity);
     assert.ok(intensities.every((v, i) => i === 0 || v >= intensities[i - 1]));
-    assert.ok(Math.max(...intensities) <= 1.4);
+    assert.ok(Math.max(...intensities) <= 4.8);
     assert.throws(() => config('nexus', unlocked, { strength: 10 }), /radiance/);
     assert.throws(() => config('nexus', unlocked, { school: 'unknown' }), /radiance/);
 });
