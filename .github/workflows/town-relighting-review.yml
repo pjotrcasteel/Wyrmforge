@@ -165,7 +165,48 @@ jobs:
           done
           /tmp/town-gpu-capture/bin/python tools/art/town_gpu_capture_validate.py \
             artifacts/town-2p5d --width 320 --width 390 --width 1120
-          echo "Verified pixels, cropped original-GPU captures and review GIFs; no CSS painted-light substitutes."
+          # Stage 4 is an explicit separate asset + light-mode acceptance
+          # test. It must use the actual two PNGs committed in this branch.
+          for mode in day night; do
+            screenshot "stage4-$mode-1120" "1120x870" "wellV4=1&mode=$mode&npc=off"
+          done
+          screenshot "zero-stage4-1120" "1120x870" "wellV4=1&mode=zero&npc=off"
+          for offset in -100 100; do
+            screenshot "stage4-lantern-$offset-1120" "1120x870" "wellV4=1&mode=night&offset=$offset&npc=off"
+          done
+          /tmp/town-gpu-capture/bin/python - <<'PY'
+          from pathlib import Path
+          from PIL import Image, ImageChops, ImageStat
+          folder = Path('artifacts/town-2p5d')
+          def read(name):
+              with Image.open(folder / (name + '.png')) as source:
+                  img = source.convert('RGB')
+                  return img.crop((0, 0, img.width, round(img.width * 941 / 1672)))
+          day, night, zero = (read(n) for n in ('stage4-day-1120', 'stage4-night-1120', 'zero-stage4-1120'))
+          assert sum(ImageStat.Stat(zero).mean) < 2, 'Stage 4 zero light must be black'
+          assert ImageChops.difference(day, night).getbbox(), 'Stage 4 light sources do not change the scene'
+          w = day.width / 1672
+          region = tuple(round(v * w) for v in (697, 357, 952, 564))
+          original = read('day-1120-gpu-proof').crop(region)
+          replacement = day.crop(region)
+          assert ImageChops.difference(original, replacement).getbbox(), 'Approved well sprite failed to replace original well'
+          left = read('stage4-lantern--100-1120')
+          right = read('stage4-lantern-100-1120')
+          assert ImageChops.difference(left, right).getbbox(), 'Lantern position must affect real GPU lighting'
+          print('PASS Stage 4: real rendered asset, day/night, zero light, movable lantern.')
+          PY
+          echo "Verified real Stage 4 GPU pixels and legacy comparisons."
+
+      - name: Upload focused Stage 4 remade-well GPU screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: town-stage4-remade-well-gpu-review
+          path: |
+            artifacts/town-2p5d/stage4-*.png
+            artifacts/town-2p5d/zero-stage4-1120.png
+          if-no-files-found: warn
+          retention-days: 14
 
       - name: Upload exact-source review frames and diagnostics
         if: always()
