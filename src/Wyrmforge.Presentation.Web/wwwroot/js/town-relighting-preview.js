@@ -269,9 +269,9 @@ const VACANT_TOWN_PLATES = Object.freeze([
 async function loadApprovedImage(wellV4 = false, domains = false, sourceMode = 'night') {
     if (!['night', 'day-candidate'].includes(sourceMode)) throw new TypeError('Unknown Town albedo candidate');
     const image = new Image();
-    image.src = new URL(wellV4
-        ? '../' + WELL_STAGE4.backgroundUrl
-        : domains && sourceMode === 'night' ? '../art/town/night-active.webp'
+    image.src = new URL(domains && sourceMode === 'night'
+        ? '../art/town/night-active.webp'
+        : wellV4 ? '../' + WELL_STAGE4.backgroundUrl
             : '../art/town/day-active.webp', import.meta.url).href;
     await image.decode();
     if (image.naturalWidth !== TOWN_ART_SIZE[0] || image.naturalHeight !== TOWN_ART_SIZE[1])
@@ -391,6 +391,8 @@ const engine = new LightingEngine(canvas, {
         // cobblestone's base-color. Reuse the exact registered daylight
         // cobbles strictly INSIDE the authored paving alpha mask. Its
         // bright sky/buildings are NEVER used as the Town background.
+        // Stage 4's opaque clean-square PNG is strictly a *paving* source.
+        // NEVER let its daylight sky overwrite the preserved night backing.
         const floorReference = state.domains && state.sourceMode === 'night'
             ? await loadApprovedImage(state.wellV4, true, 'day-candidate')
             : source;
