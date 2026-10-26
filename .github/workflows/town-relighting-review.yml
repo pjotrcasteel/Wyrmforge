@@ -13,6 +13,10 @@ on:
       - feat/town-2p5d-relightable-g4
   workflow_dispatch:
 
+concurrency:
+  group: town-gpu-review-pr-368
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
