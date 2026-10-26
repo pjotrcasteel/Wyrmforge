@@ -1,0 +1,42 @@
+name: Hollowed 3D injury death JS contract checks
+
+on:
+  push:
+    branches:
+      - main
+      - feat/hollow-injury-deaths-20261026
+    paths:
+      - '.github/workflows/hollow-injury-death-js.yml'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/hollow-*.js'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/hollow-rigged/death/injuries/**'
+      - 'tests/javascript/hollow-*.test.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hollow-injury-js-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  injury-death-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          lfs: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify 3D skeletal injury atlas files and source hashes
+        run: |
+          node --test tests/javascript/hollow-injury-death.test.mjs tests/javascript/hollow-injury-death-assets.test.mjs
+      - name: Verify source Hollowed locomotion, body persona and two standard 3D deaths
+        run: |
+          node --test tests/javascript/hollow-motion.test.mjs tests/javascript/hollow-variation.test.mjs tests/javascript/hollow-death.test.mjs
+      - name: Verify actual Hollowed renderer integration
+        run: |
+          git lfs pull --include="art/source/enemies/hollow/rigged-poc/exports/**" --exclude=""
+          node --test tests/javascript/hollow-sprites.test.mjs
