@@ -38,11 +38,28 @@
         <label>Seed<input type="number" @bind="seed" @bind:after="Restart" /></label>
         <label><input type="checkbox" @bind="autoplay" /> Movement agent</label>
         <label><input type="checkbox" @bind="casting" @bind:after="Restart" /> Autocast</label>
+        <label><input type="checkbox" @bind="agentFoundation" @bind:after="Restart" /> AI0 foundation (Hollow / Mire Hound)</label>
         <button @onclick="Restart">Reload monster</button><button @onclick="TogglePause">@(paused ? "Resume" : "Pause")</button><a href="combat-lab">Combat lab</a><a href="hunt-lab">Wyrm lab</a><a href="arena-lab">Arena lab</a>
     </section>
+    @if (startupError is not null)
+    {
+        <section class="note" role="alert">
+            <p>The encounter could not start: @startupError</p>
+            <button @onclick="RetryStartup">Retry encounter startup</button>
+        </section>
+    }
     <section class="enemy-lab-surface"><canvas @ref="canvas" aria-label="Live enemy encounter"></canvas>
         <div class="status">@kind • @(paused ? "PAUSED" : autoplay ? "AGENT" : "MANUAL") • @(kind == EnemyKind.MireHound && mireStyle == "pixel" ? "PIXEL ART PREVIEW" : "PUBLISHED ART") • INVULNERABLE • NO PROGRESS</div>
     </section>
+    @if (agentFoundation)
+    {
+        <section class="note">
+            <button @onclick="InspectAgents">Refresh AI inspector</button>
+            <p>Compatibility mode: existing combat execution and legacy exact-target information. Earned perception is AI1. Pause the encounter to inspect a fixed decision.</p>
+            <p data-testid="agent-summary">@agentSummary</p>
+            <pre style="max-height:28rem;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere" data-testid="agent-inspector">@agentInspection</pre>
+        </section>
+    }
     <p class="note">Selecting a monster immediately reloads the actual C# encounter in the production renderer, alongside the mage. For Mire Hound, switch between current art and the opt-in pixel preview at the same viewport and seed; ordinary hunts are unchanged. Turn off Autocast to inspect movement and attacks without killing the target. Ritual objects appear with their actual caster; doubles naturally expire. No saves or player progress are changed.</p>
 </main>
 
@@ -56,6 +73,7 @@
     [Parameter, SupplyParameterFromQuery(Name = "paused")] public bool? PausedQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "seconds")] public double? SecondsQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "mireStyle")] public string? MireStyleQuery { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "ai0")] public bool? AgentFoundationQuery { get; set; }
     private ElementReference canvas;
     private IJSObjectReference? module;
     private DotNetObjectReference<EnemyLab>? reference;
@@ -65,9 +83,13 @@
     private int seed = 42;
     private bool autoplay = true;
     private bool casting;
+    private bool agentFoundation;
+    private string agentInspection = "Run the encounter, then refresh to inspect its agents.";
+    private string agentSummary = "";
     private string mireStyle = "painted";
     private bool paused;
     private double simulationSeconds;
+    private string? startupError;
 
     protected override void OnParametersSet()
     {
@@ -76,14 +98,36 @@
         if (AutoplayQuery is { } auto) autoplay = auto;
         if (CastQuery is { } cast) casting = cast;
         if (PausedQuery is { } pause) paused = pause;
+        if (AgentFoundationQuery is { } ai0) agentFoundation = ai0;
         mireStyle = MireStyleQuery == "pixel" ? "pixel" : "painted";
     }
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
-        module = await JavaScript.InvokeAsync<IJSObjectReference>("import", "./js/arena.js");
-        reference = DotNetObjectReference.Create(this);
-        await module.InvokeVoidAsync("initializeArena", canvas, reference);
+        await StartArena();
+    }
+    private async Task StartArena(bool retry = false)
+    {
+        try
+        {
+            // Browsers cache rejected module imports. An explicit retry uses a fresh URL;
+            // successful initialization still disposes the previous canvas session.
+            module ??= await JavaScript.InvokeAsync<IJSObjectReference>("import",
+                retry ? $"./js/arena.js?retry={Guid.NewGuid():N}" : "./js/arena.js");
+            reference ??= DotNetObjectReference.Create(this);
+            await module.InvokeVoidAsync("initializeArena", canvas, reference);
+            startupError = null;
+        }
+        catch (JSException)
+        {
+            startupError = "The arena renderer could not load. Retry, or reload the page if the local server was restarting.";
+        }
+        StateHasChanged();
+    }
+    private async Task RetryStartup()
+    {
+        Restart();
+        await StartArena(retry: true);
     }
     [JSInvokable]
     public Task<RunRenderSnapshot> Frame(double delta, double width, double height, double movementX, double movementY, double aimX = 0, double aimY = 0)
@@ -92,7 +136,7 @@
         {
             var build = SelfPlayBuildCatalog.All.First();
             simulation = new RunSimulationFactory(new SeededRandomSource(1)).CreateDevelopmentEnemy(build.SelectedNodes,
-                new DevelopmentEnemySetup(kind, seed, Math.Clamp(width, 240, 2560), Math.Clamp(height, 240, 2560), casting));
+                new DevelopmentEnemySetup(kind, seed, Math.Clamp(width, 240, 2560), Math.Clamp(height, 240, 2560), casting, agentFoundation));
             agent = new HeuristicRunAgent(RunAgentPersonality.Kiter, seed, build.PreferredSchool);
         }
         var snapshot = simulation.CreateSnapshot();
@@ -113,7 +157,8 @@
             ["kind"] = kind.ToString(),
             ["seed"] = seed,
             ["autoplay"] = autoplay,
-            ["cast"] = casting
+            ["cast"] = casting,
+            ["ai0"] = agentFoundation
         });
         Navigation.NavigateTo(url, replace: true);
     }
@@ -123,7 +168,14 @@
         // one source for this animal, not retain an outdated decoded image.
         Navigation.NavigateTo(Navigation.GetUriWithQueryParameter("mireStyle", mireStyle), forceLoad: true, replace: true);
     }
-    private void Restart() { simulation = null; agent = null; simulationSeconds = 0; paused = false; }
+    private void InspectAgents()
+    {
+        var states = simulation?.InspectEnemyAgents();
+        agentSummary = states is null ? "Encounter not started." : states.Count == 0 ? "No supported live AI0 agents." :
+            string.Join(" · ", states.Select(s => $"{s.Identity.Archetype}: {s.CurrentAction?.Goal} / {s.CurrentAction?.Action} — {s.CurrentAction?.Reason}; executor: {s.LastResult?.Reason}"));
+        agentInspection = System.Text.Json.JsonSerializer.Serialize(states, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+    }
+    private void Restart() { simulation = null; agent = null; simulationSeconds = 0; paused = false; agentSummary = ""; agentInspection = "Run the encounter, then refresh to inspect its agents."; }
     private void TogglePause() => paused = !paused;
     public async ValueTask DisposeAsync()
     {

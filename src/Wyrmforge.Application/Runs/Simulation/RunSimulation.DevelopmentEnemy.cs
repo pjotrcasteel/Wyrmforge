@@ -10,6 +10,8 @@ public sealed partial class RunSimulation
     internal void StartDevelopmentEnemy(DevelopmentEnemySetup setup)
     {
         setup.Validate();
+        agentFoundationEnabled = setup.AgentFoundation;
+        agentFoundationSeed = setup.Seed;
         developmentHunt = true;
         developmentInvulnerable = true;
         arenaWidth = viewportWidth = setup.Width;

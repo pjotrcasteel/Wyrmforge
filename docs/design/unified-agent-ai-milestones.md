@@ -22,6 +22,9 @@ Each agent has a stable identity, archetype/faction, sensing profile, short-term
 ## Milestones and exit gates
 
 ### AI0 — Agent foundation and simulation contract
+
+**Implementation checkpoint, 25 October 2026:** [PR #348](https://github.com/pjotrcasteel/Wyrmforge/pull/348) supplies the common C# core, Hollow/Mire Hound compatibility adapters, replay tests and real enemy-lab inspector. Local exit evidence is recorded in [AI0 foundation](../engineering/ai0-foundation.md). This is opt-in and not yet merged; CI remains a merge gate. AI1–AI6 remain open.
+
 - Inventory existing Town NPC and enemy/Wyrm behavior paths; define migration/adapters without replacing live behavior prematurely.
 - Build common agent identity, lifecycle, blackboard, observations, goal/action interfaces, seeded scheduler and deterministic test harness.
 - Add inspector output: current perceptions, memory, goal, scored alternatives, chosen action and reason.
