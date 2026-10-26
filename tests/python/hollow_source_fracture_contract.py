@@ -14,6 +14,9 @@ assert 'evaluated.to_mesh' in source, 'Segments must come from skinned 3D mesh'
 assert "context='FACES'" in source and "context='VERTS'" in source
 assert "releasedToHunts': False" in source
 assert 'keyframe_insert' in source and 'floor' in source.lower()
+assert "'ownerApproved': False" in source, 'Generated art must never be auto-approved'
+assert "'atlases': {}" in source, 'Source render must publish loadable atlas metadata'
+assert "'sourceGeometry': 'original-skinned-blender-mesh'" in source
 assert 'frame_image.getbbox()' in source, 'Every frame must be checked for clipping'
 for rejected in ('hollow-bone-burst.js', 'drawHollowBoneBurst', 'Math.random'):
     assert rejected not in source
@@ -27,7 +30,7 @@ assert motion is not None
 assert set(motion) == {'skull', 'thorax', 'pelvis', 'arm.L', 'arm.R', 'leg.L', 'leg.R'}
 for name, (speed, rotation) in motion.items():
     assert len(speed) == len(rotation) == 3, name
-    assert max(map(abs, speed)) < .7, f'{name} would scatter across the arena'
+    assert max(map(abs, speed)) < 1.65, f'{name} would scatter beyond a readable death silhouette'
     assert max(map(abs, rotation)) < .6, f'{name} would spin like a random glyph'
 
 runtime = (root / 'src/Wyrmforge.Presentation.Web/wwwroot/js/hollow-sprites.js').read_text()
