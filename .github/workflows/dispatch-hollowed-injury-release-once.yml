@@ -1,0 +1,28 @@
+name: One-time Hollowed injury release dispatch
+
+on:
+  push:
+    branches: [ops/dispatch-hollowed-injury-20261026]
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  dispatch-existing-pages-workflow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify merged Hollowed commit and explicitly run Pages on main
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const {owner,repo}=context.repo;
+            const merged='326196e449f5d55c00979608956c03cda42cccc4';
+            const compare=await github.rest.repos.compareCommits({owner,repo,base:merged,head:'main'});
+            if(!['ahead','identical'].includes(compare.data.status)) {
+              core.setFailed('Hollowed PR #363 merge is not in current main; refusing wrong release');
+              return;
+            }
+            await github.rest.actions.createWorkflowDispatch({owner,repo,workflow_id:'pages.yml',ref:'main'});
+            core.info('Triggered current main Pages workflow containing merged Hollowed PR #363.');
