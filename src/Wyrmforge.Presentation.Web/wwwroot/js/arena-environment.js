@@ -5,6 +5,7 @@ import { drawWetForestStoryArt } from './arena-wet-forest-sites.js';
 import { drawCloisterWall, drawCloisterMist, drawCloisterReflections, drawCloisterElevation, createCloisterElevationLayers } from './arena-cloister-art.js';
 import { artReady, artGeneration, artTilePattern, drawArtFrame } from './art-atlas.js';
 import { createTerritoryWallLayers, drawTerritoryWall, drawOpenedGateRubble } from './arena-territory-walls.js';
+import { liveWetForestArtworkGeneration } from './arena-live-wet-forest-materials.js';
 
 // The world is projected from canonical C# terrain state. Drawing never changes simulation outcomes.
 const textures = new Map();
@@ -219,7 +220,8 @@ export function habitatTint(habitat) {
 
 function terrainTexture(environment, width, height, approvedAtlas = null) {
     // Art generation is part of the key: the bake refreshes once the atlases finish loading.
-    const key = [environment.seed, environment.biome, environment.element, environment.district, environment.habitat, environment.stage, environment.corruption, environment.generatorPreview, environment.wetForest?.site, width, height, artGeneration(), approvedAtlas ? 'approvedGroundPreview' : 'canonicalGround'].join(':');
+    const key = [environment.seed, environment.biome, environment.element, environment.district, environment.habitat, environment.stage, environment.corruption, environment.generatorPreview, environment.wetForest?.site, width, height, artGeneration(), liveWetForestArtworkGeneration(),
+        approvedAtlas ? 'approvedGroundPreview' : 'canonicalGround'].join(':');
     if (textures.has(key)) return textures.get(key);
     const image = document.createElement('canvas');
     image.width = Math.max(1, Math.round(width));
@@ -473,7 +475,7 @@ export function drawArenaEnvironment(ctx, environment, width, height, elapsedSec
     ctx.drawImage(texture.image, 0, 0, width, height);
     // Render low-angle shadows from CURRENT physical props, never frozen floor art:
     // destroyed trees and ruins lose their shadows in the same C# simulation frame.
-    if (environment.generatorPreview === true && environment.habitat === 'WetForest') {
+    if (environment.habitat === 'WetForest' && environment.wetForest) {
         drawWetForestCastShadows(ctx, environment.seed, environment.props ?? [], width, height);
         drawWetForestFirelight(ctx, environment, width, height, elapsedSeconds);
     }
