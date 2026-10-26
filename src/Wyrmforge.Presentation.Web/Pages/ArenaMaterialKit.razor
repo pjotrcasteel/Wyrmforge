@@ -38,6 +38,13 @@
                 <option value="6">Variation 06</option>
             </select>
         </label>
+        <label>Ground boundaries
+            <select aria-label="Ground boundaries" @bind="boundaryKind" @bind:after="Sync"
+                    disabled="@(artSource == "original")">
+                <option value="organic">Continuous organic contacts</option>
+                <option value="original">Previous stepped contacts (compare)</option>
+            </select>
+        </label>
         <label>GPU lighting
             <select aria-label="GPU lighting" @bind="lighting" @bind:after="Sync">
                 <option value="night">Gothic night</option>
@@ -70,6 +77,8 @@
             <p>All PR #340 candidates remain under visual review: source highlights and repeated painted details
                 are not yet light-neutral production material channels. This preview shows the ACTUAL existing texture
                 artwork in the C# seeded GPU scene—not new drawings or fictional roads/water.</p>
+            <p>The boundary selector compares continuous source-pixel contours against the former stepped joins
+                without changing terrain, material art or world lighting. No painted image was altered.</p>
             <p>Compare all six already-created variations under identical scene lighting. Keep all originals
                 immutable until material-channel work and actual 320px/390px scene approval.</p>
             <p><a href="/arena-light-engine">Shared GPU engine proof</a> ·
@@ -87,6 +96,7 @@
     private string lighting = "night";
     private string artSource = "source-backed";
     private int artVariant = 1;
+    private string boundaryKind = "organic";
     private string? error;
 
     protected override void OnParametersSet()
@@ -104,7 +114,7 @@
         {
             module = await JavaScript.InvokeAsync<IJSObjectReference>(
                 "import", "./js/wet-forest-gpu-material-review.js");
-            await module.InvokeVoidAsync("initializeThreeMaterialReview", canvas, recipe, seed, lighting, artSource, artVariant);
+            await module.InvokeVoidAsync("initializeThreeMaterialReview", canvas, recipe, seed, lighting, artSource, artVariant, boundaryKind);
         }
         catch (JSException exception) { error = exception.Message; StateHasChanged(); }
     }
@@ -128,7 +138,7 @@
         try
         {
             recipe ??= HuntArenaGenerator.GenerateWetForest(seed);
-            await module.InvokeVoidAsync("configureThreeMaterialReview", canvas, recipe, seed, lighting, artSource, artVariant);
+            await module.InvokeVoidAsync("configureThreeMaterialReview", canvas, recipe, seed, lighting, artSource, artVariant, boundaryKind);
         }
         catch (JSException exception) { error = exception.Message; }
     }
