@@ -10,6 +10,34 @@ namespace Wyrmforge.Browser.Tests;
 public sealed class AgentFoundationBrowserTests : PageTest
 {
     [TestMethod]
+    [DataRow("Hollow")]
+    [DataRow("MireHound")]
+    public async Task PerceptionOptIn_UsesEarnedInformationInActualEnemyLab(string kind)
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        var baseUrl = Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/";
+        await Page.GotoAsync(baseUrl.TrimEnd('/') + $"/enemy-lab?kind={kind}&ai1=true&autoplay=false&cast=false&seconds=3");
+        await Page.EvaluateAsync("async () => { window.ai1Arena = await import('./js/arena.js'); }");
+        await Page.WaitForFunctionAsync("() => window.ai1Arena.readArenaDiagnostics(document.querySelector('.enemy-lab canvas'))?.hud?.seconds >= 3",
+            null, new() { Timeout = 45000 });
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Refresh AI inspector" }).ClickAsync();
+        var inspector = Page.GetByTestId("agent-inspector");
+        var json = await inspector.InnerTextAsync();
+        var state = JsonSerializer.Deserialize<AgentSnapshot[]>(json)!.Single();
+        Assert.IsFalse(state.Memory.Any(f => f.Source.Contains("legacy-exact")));
+        Assert.AreEqual("vision", state.Observations.Single(f => f.Key == "target").Source);
+        Assert.IsTrue(state.Observations.Any(f => f.Key == "path-status"));
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Refresh AI inspector" }).ClickAsync();
+        Assert.AreEqual(json, await inspector.InnerTextAsync());
+        var output = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
+        Directory.CreateDirectory(output);
+        await Page.ScreenshotAsync(new() { Path = Path.Combine(output, $"ai1-{kind}-390.png"), FullPage = true });
+        await File.WriteAllTextAsync(Path.Combine(output, $"ai1-{kind}-inspector.json"), json);
+        await Page.GetByLabel("AI1 perception (Hollow / Mire Hound)").UncheckAsync();
+        await Expect(inspector).ToHaveCountAsync(0);
+    }
+
+    [TestMethod]
     public async Task FailedArenaImport_ShowsErrorAndCanRetryWithoutReloading()
     {
         var baseUrl = Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/";

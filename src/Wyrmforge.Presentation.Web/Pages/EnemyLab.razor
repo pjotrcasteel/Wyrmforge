@@ -39,6 +39,7 @@
         <label><input type="checkbox" @bind="autoplay" /> Movement agent</label>
         <label><input type="checkbox" @bind="casting" @bind:after="Restart" /> Autocast</label>
         <label><input type="checkbox" @bind="agentFoundation" @bind:after="Restart" /> AI0 foundation (Hollow / Mire Hound)</label>
+        <label><input type="checkbox" @bind="agentPerception" @bind:after="Restart" /> AI1 perception (Hollow / Mire Hound)</label>
         <button @onclick="Restart">Reload monster</button><button @onclick="TogglePause">@(paused ? "Resume" : "Pause")</button><a href="combat-lab">Combat lab</a><a href="hunt-lab">Wyrm lab</a><a href="arena-lab">Arena lab</a>
     </section>
     @if (startupError is not null)
@@ -51,11 +52,11 @@
     <section class="enemy-lab-surface"><canvas @ref="canvas" aria-label="Live enemy encounter"></canvas>
         <div class="status">@kind • @(paused ? "PAUSED" : autoplay ? "AGENT" : "MANUAL") • @(kind == EnemyKind.MireHound && mireStyle == "pixel" ? "PIXEL ART PREVIEW" : "PUBLISHED ART") • INVULNERABLE • NO PROGRESS</div>
     </section>
-    @if (agentFoundation)
+    @if (agentFoundation || agentPerception)
     {
         <section class="note">
             <button @onclick="InspectAgents">Refresh AI inspector</button>
-            <p>Compatibility mode: existing combat execution and legacy exact-target information. Earned perception is AI1. Pause the encounter to inspect a fixed decision.</p>
+            <p>@(agentPerception ? "AI1: bounded vision, occlusion and expiring last-known locations. Profile values are provisional lab tuning." : "AI0: existing execution with legacy exact-target information.") Pause the encounter to inspect a fixed decision.</p>
             <p data-testid="agent-summary">@agentSummary</p>
             <pre style="max-height:28rem;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere" data-testid="agent-inspector">@agentInspection</pre>
         </section>
@@ -83,6 +84,8 @@
     private int seed = 42;
     private bool autoplay = true;
     private bool casting;
+    [Parameter, SupplyParameterFromQuery(Name = "ai1")] public bool? AgentPerceptionQuery { get; set; }
+    private bool agentPerception;
     private bool agentFoundation;
     private string agentInspection = "Run the encounter, then refresh to inspect its agents.";
     private string agentSummary = "";
@@ -99,6 +102,7 @@
         if (CastQuery is { } cast) casting = cast;
         if (PausedQuery is { } pause) paused = pause;
         if (AgentFoundationQuery is { } ai0) agentFoundation = ai0;
+        if (AgentPerceptionQuery is { } ai1) agentPerception = ai1;
         mireStyle = MireStyleQuery == "pixel" ? "pixel" : "painted";
     }
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -136,7 +140,7 @@
         {
             var build = SelfPlayBuildCatalog.All.First();
             simulation = new RunSimulationFactory(new SeededRandomSource(1)).CreateDevelopmentEnemy(build.SelectedNodes,
-                new DevelopmentEnemySetup(kind, seed, Math.Clamp(width, 240, 2560), Math.Clamp(height, 240, 2560), casting, agentFoundation));
+                new DevelopmentEnemySetup(kind, seed, Math.Clamp(width, 240, 2560), Math.Clamp(height, 240, 2560), casting, agentFoundation, agentPerception));
             agent = new HeuristicRunAgent(RunAgentPersonality.Kiter, seed, build.PreferredSchool);
         }
         var snapshot = simulation.CreateSnapshot();
@@ -158,7 +162,8 @@
             ["seed"] = seed,
             ["autoplay"] = autoplay,
             ["cast"] = casting,
-            ["ai0"] = agentFoundation
+            ["ai0"] = agentFoundation,
+            ["ai1"] = agentPerception
         });
         Navigation.NavigateTo(url, replace: true);
     }

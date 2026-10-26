@@ -195,6 +195,9 @@ public sealed partial class RunSimulation
     private void UpdateEnemies(double delta)
     {
         PruneEnemyAgents();
+        var sensingBudget = agentPerceptionEnabled ? new Wyrmforge.Domain.Agents.AgentQueryBudget(32) : null;
+        var pathBudget = agentPerceptionEnabled ? new Wyrmforge.Domain.Agents.AgentQueryBudget(32) : null;
+        var agentNavigation = agentPerceptionEnabled ? new HuntAgentNavigation(arenaEnvironment, arenaWidth, arenaHeight) : null;
         encounterSeconds += delta;
         rangedStaggerRemaining = Math.Max(0, rangedStaggerRemaining - delta);
         var committedCap = EnemyStagePressure.CommittedThreatCap(mapState.CurrentNode?.Stage ?? 1);
@@ -204,9 +207,11 @@ public sealed partial class RunSimulation
         RefreshPackbloodLeaders();
         UpdateSubmergedWraiths(delta, ref committed, committedCap);
         // Raised Ashlings are appended mid-loop; walking the frame's original count lets them start acting next frame.
+        var admissionOffset = agentPerceptionEnabled && enemies.Count > 0 ? (int)(agentAdmissionTick++ % enemies.Count) : 0;
         for (int index = 0, count = enemies.Count; index < count; index++)
         {
-            var enemy = enemies[index];
+            // Opt-in round-robin admission prevents a stable early-ID cohort from monopolizing the spatial budget.
+            var enemy = enemies[(index + admissionOffset) % count];
             var agent = FindEnemyAgent(enemy);
             enemy.Statuses.Tick(delta);
             var statusTimeScale = enemy.Statuses.TimeScale(false);
@@ -218,11 +223,19 @@ public sealed partial class RunSimulation
             }
 
             var scaledDelta = delta * statusTimeScale;
-            var target = mapState.EncounterActive && arenaEnvironment is not null
-                ? arenaEnvironment.EnemyNavigationTarget(enemy.Position, player.Position, arenaWidth, arenaHeight, enemy.Radius)
-                : player.Position;
+            var sensed = agentPerceptionEnabled ? agent?.Perception.Inspect() : null;
+            if (agentPerceptionEnabled && agent is not null && enemy.RoutedRemaining <= 0)
+                sensed = agent.Perception.Observe(agent.Runtime.Inspect().Tick + 1, enemy.Position, Vector2D.Zero, player.Position,
+                    (from, to) => arenaEnvironment?.HasLineOfSight(from, to, arenaWidth, arenaHeight) ?? true, sensingBudget!,
+                    agentSpellSound is { } sound ? [sound with { Tick = agent.Runtime.Inspect().Tick + 1 }] : []);
+            var knownTarget = sensed is null ? player.Position : sensed.Contact?.Position ?? enemy.Position;
+            var path = sensed is not null
+                ? agentNavigation!.Query(new(enemy.Position, knownTarget, enemy.Radius), pathBudget!) : null;
+            var target = path is not null ? path.Waypoint : mapState.EncounterActive && arenaEnvironment is not null
+                ? arenaEnvironment.EnemyNavigationTarget(enemy.Position, knownTarget, arenaWidth, arenaHeight, enemy.Radius)
+                : knownTarget;
             // While a ruined wall separates enemy and hunter, everyone simply heads for the crossing.
-            var crossing = target != player.Position;
+            var crossing = target != knownTarget;
             var direction = Wyrmforge.Domain.Combat.Behaviors.CreatureDecisions.Chase(enemy.Position, target);
             var speed = enemy.Speed;
             if (packbloodLeaders.Count > 0 && IsPackbloodEmpowered(enemy)) speed *= PackbloodSpeedMultiplier;
@@ -244,11 +257,11 @@ public sealed partial class RunSimulation
                 agent?.Runtime.Pause();
                 // Morale break: flee the hunter, then re-engage once the timer ends. Bounded, so it never soft-locks a node.
                 enemy.RoutedRemaining = Math.Max(0, enemy.RoutedRemaining - scaledDelta);
-                if (!crossing) direction = Vector2D.DirectionTo(player.Position, enemy.Position);
+                if (!crossing) direction = Vector2D.DirectionTo(knownTarget, enemy.Position);
             }
             else if (agent is not null)
             {
-                var result = agent.Step(scaledDelta, player.Position, target, speed, !crossing && committed < committedCap);
+                var result = agent.Step(scaledDelta, knownTarget, target, speed, !crossing && committed < committedCap, sensed, path);
                 direction = result.Direction;
                 speed = result.Speed;
                 if (result.Committed) committed++;
