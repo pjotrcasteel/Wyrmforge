@@ -41,6 +41,8 @@ test('neutral Town paving reduces broad painted illumination without erasing sto
     assert.ok(Math.abs(microAfter) >= Math.abs(microBefore) * .6,
         'Original stone grain and mortar seams must remain visible');
     assert.ok(candidate.coverage > 5500 && candidate.alteredPixels > 2000);
+    assert.ok(candidate.illuminationReduction > .1 && candidate.illuminationReduction <= 1,
+        'Neutral material needs quantifiable reduction in broad illumination');
     assert.equal(candidate.data[3], 0);
     assert.equal(candidate.data[candidate.data.length - 1], 0);
     assert.deepEqual(source, fixture(), 'Original approved-source pixels are never mutated');
