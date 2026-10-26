@@ -21,17 +21,17 @@ export const TOWN_NEXUS_SCHOOL_LIGHTS = Object.freeze({
 
 const FIXTURES = Object.freeze([
     // One exclusive owner per fixture; in particular NO public chimney lamp.
-    { id: 'gate-arch', domain: 'common', x: 828, y: 207, height: .32,
-        color: '#ffcd94', intensity: 2.8, range: 3.4, shadow: true },
+    { id: 'gate-arch', domain: 'common', x: 828, y: 207, height: .85,
+        color: '#ffcd94', intensity: 1.75, range: 3.4, shadow: false },
     { id: 'square-well', domain: 'common', x: 917, y: 439, height: .21,
         color: '#ffcf96', intensity: 2.9, range: 3.5, shadow: true },
     // Independently registered *real* public lantern anchors, not painted
     // emissive flags or broad fill. Coordinates are in the approved 1672x941
     // canonical Town grid; each adds one bounded point source with no shadows.
-    { id: 'gate-west-sconce', domain: 'common', x: 733, y: 208, height: .16,
-        color: '#ffbf7f', intensity: 1.6, range: 2.4, shadow: false },
-    { id: 'gate-east-sconce', domain: 'common', x: 914, y: 210, height: .16,
-        color: '#ffbf7f', intensity: 1.6, range: 2.4, shadow: false },
+    { id: 'gate-west-sconce', domain: 'common', x: 733, y: 208, height: .45,
+        color: '#ffcf93', intensity: 1.2, range: 2.4, shadow: false },
+    { id: 'gate-east-sconce', domain: 'common', x: 914, y: 210, height: .45,
+        color: '#ffcf93', intensity: 1.2, range: 2.4, shadow: false },
     { id: 'plaza-upper-west', domain: 'common', x: 549, y: 348, height: .14,
         color: '#ffcc8b', intensity: 1.7, range: 3.2, shadow: false },
     { id: 'plaza-upper-east', domain: 'common', x: 1088, y: 349, height: .14,
