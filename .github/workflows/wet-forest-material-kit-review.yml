@@ -10,8 +10,11 @@ on:
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/wet-forest-gpu-material-review.js'
       - 'tests/Wyrmforge.Browser.Tests/WetForestMaterialKitBrowserTests.cs'
       - 'tests/javascript/wet-forest-three-material-kit.test.mjs'
-      - 'tools/art/build_wet_forest_compact_materials.py'
-      - 'tools/art/test_wet_forest_compact_materials.py'
+      - 'tools/art/build_grass_moss_art_candidates.py'
+      - 'tools/art/build_wet_mud_art_candidates.py'
+      - 'tools/art/build_trampled_earth_art_candidates.py'
+      - 'tools/art/quilt_ground_material_study.py'
+      - 'user_handover_files/concepts/arena-v2/wet-forest/ground-materials/v1/**'
       - '.github/workflows/wet-forest-material-kit-review.yml'
   workflow_dispatch:
 
@@ -29,12 +32,15 @@ jobs:
         run: |
           git lfs pull --include="src/Wyrmforge.Presentation.Web/wwwroot/**" --exclude=""
           python3 tools/development/verify_web_assets.py
-      - name: Bake three unapproved authored material PNGs
+      - name: Regenerate PR340 source-backed material candidates from immutable paintings
         run: |
-          python3 -m pip install pillow
-          python3 tools/art/build_wet_forest_compact_materials.py --output src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-compact/v1
-          python3 -m unittest tools/art/test_wet_forest_compact_materials.py
-          test -s src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-compact/v1/manifest.json
+          python3 -m pip install -r tools/art/painted-requirements.txt
+          python3 tools/art/build_grass_moss_art_candidates.py --output src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-source-backed/v1/grass-moss-art-candidates
+          python3 tools/art/build_wet_mud_art_candidates.py --output src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-source-backed/v1/wet-mud-art-candidates
+          python3 tools/art/build_trampled_earth_art_candidates.py --output src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-source-backed/v1/trampled-earth-art-candidates
+          test -s src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-source-backed/v1/grass-moss-art-candidates/grass-moss-ART-CANDIDATE-01.png
+          test -s src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-source-backed/v1/wet-mud-art-candidates/wet-mud-INDEPENDENT-ART-CANDIDATE-01.png
+          test -s src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-source-backed/v1/trampled-earth-art-candidates/trampled-earth-INDEPENDENT-ART-CANDIDATE-01.png
       - name: Verify JavaScript recipe and GPU contracts
         run: node --test tests/javascript/wet-forest-three-material-kit.test.mjs
       - name: Restore and build targeted browser project
