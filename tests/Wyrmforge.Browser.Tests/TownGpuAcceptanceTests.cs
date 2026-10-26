@@ -16,11 +16,12 @@ public sealed class TownGpuAcceptanceTests : PageTest
     private string Artifacts => Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ??
         Path.Combine(Path.GetTempPath(), "wyrmforge-town-acceptance");
 
-    private async Task StartTownAsync(bool gpu)
+    private async Task StartTownAsync(bool gpu, bool wellV4 = false)
     {
         Directory.CreateDirectory(Artifacts);
         await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','3');");
-        var uri = BaseUrl.TrimEnd('/') + (gpu ? "/?townGpuPreview=1" : "/");
+        var uri = BaseUrl.TrimEnd('/') +
+            (gpu ? "/?townGpuPreview=1" + (wellV4 ? "&townWellStage4=1" : "") : "/");
         await Page.GotoAsync(uri, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         var start = Page.GetByRole(AriaRole.Button, new()
         {
@@ -139,4 +140,37 @@ public sealed class TownGpuAcceptanceTests : PageTest
         Assert.AreEqual("true", await canvas.GetAttributeAsync("data-zero-black"));
         await CaptureAsync($"town-t2-zero-light-{width}.png");
     }
+
+    [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
+    public async Task TownT2_RemadeWell_UsesBothCommittedAssetsAndGpuLantern(int width, int height)
+    {
+        await Page.SetViewportSizeAsync(width, height);
+        await StartTownAsync(gpu: true, wellV4: true);
+        await Page.WaitForFunctionAsync(@"() =>
+            ['ready','failed'].includes(document.querySelector('.refuge-canonical-scene')
+                ?.dataset.townGpuPreview)", new PageWaitForFunctionOptions { Timeout = 30000 });
+
+        var scene = Page.Locator(".refuge-canonical-scene");
+        Assert.AreEqual("ready", await scene.GetAttributeAsync("data-town-gpu-preview"),
+            "Stage 4 requires successful loading of BOTH approved PNGs.");
+        var canvas = scene.Locator(".refuge-town-gpu-canvas");
+        Assert.AreEqual("stage4-remade", await canvas.GetAttributeAsync("data-well-asset-mode"));
+        Assert.AreEqual("roof-and-posts-only", await canvas.GetAttributeAsync("data-well-shadow-caster"));
+        Assert.AreEqual("1672", await canvas.GetAttributeAsync("data-framebuffer-width"));
+        Assert.AreEqual("941", await canvas.GetAttributeAsync("data-framebuffer-height"));
+        Assert.IsNotNull(await canvas.GetAttributeAsync("data-authoritative-citizen-count"));
+        await Expect(scene.Locator("[data-town-building]")).ToHaveCountAsync(4);
+
+        await ConfigureAsync("night", "neutral", "lit", 0);
+        await CaptureAsync($"town-stage4-remade-well-night-{width}.png");
+        await ConfigureAsync("day", "neutral", "lit", 0);
+        await CaptureAsync($"town-stage4-remade-well-day-{width}.png");
+        await ConfigureAsync("night", "neutral", "shadow-visibility", 0);
+        await CaptureAsync($"town-stage4-remade-well-shadows-{width}.png");
+        await ConfigureAsync("zero", "neutral", "lit", 0);
+        Assert.AreEqual("true", await canvas.GetAttributeAsync("data-zero-black"));
+    }
+
 }
