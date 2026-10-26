@@ -57,6 +57,14 @@ export function splitTownPavingReference(source, foregroundCutouts = []) {
         if (!cutout || typeof cutout.path !== 'string') throw new TypeError('Missing authored foreground contour');
         maskContext.fill(new Path2D(cutout.path));
     }
+    // The universal material uses alphaTest=0.5 and nearest-pixel atlas
+    // sampling. Quantize the SAME authored mask once, before dividing source
+    // textures, so antialiased half-alpha cannot discard both materials.
+    const maskPixels = maskContext.getImageData(0, 0, SIZE[0], SIZE[1]);
+    for (let i = 3; i < maskPixels.data.length; i += 4)
+        maskPixels.data[i] = maskPixels.data[i] >= 128 ? 255 : 0;
+    maskContext.globalCompositeOperation = 'source-over';
+    maskContext.putImageData(maskPixels, 0, 0);
     const textureCanvas = () => {
         const canvas = document.createElement('canvas');
         canvas.width = SIZE[0]; canvas.height = SIZE[1];
@@ -77,7 +85,9 @@ export function splitTownPavingReference(source, foregroundCutouts = []) {
     const floorAlpha = inside.getImageData(0, 0, SIZE[0], SIZE[1]).data;
     for (let i = 3; i < backAlpha.length; i += 4) {
         const sum = backAlpha[i] + floorAlpha[i];
-        if (Math.abs(sum - 255) > 1) throw new Error('Town paving/backdrop mask seam at pixel ' + ((i - 3) / 4));
+        if (sum !== 255 || (backAlpha[i] !== 0 && backAlpha[i] !== 255) ||
+            (floorAlpha[i] !== 0 && floorAlpha[i] !== 255))
+            throw new Error('Town paving/backdrop mask seam at pixel ' + ((i - 3) / 4));
     }
     return { backdrop, floor };
 }
