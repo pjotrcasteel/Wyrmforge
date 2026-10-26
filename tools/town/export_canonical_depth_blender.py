@@ -69,7 +69,9 @@ scene.render.resolution_x = 390
 scene.render.resolution_y = 844
 scene.render.resolution_percentage = 100
 scene.render.image_settings.file_format = "PNG"
-scene.render.film_transparent = False\n# Headless GitHub runners have no EGL context; use deterministic CPU Cycles.\nscene.render.engine = "CYCLES"
+scene.render.film_transparent = False
+# Headless GitHub runners have no EGL context; use deterministic CPU Cycles.
+scene.render.engine = "CYCLES"
 scene.cycles.device = "CPU"
 scene.cycles.samples = 8
 # Ubuntu's apt Blender build is compiled without OpenImageDenoiser.
