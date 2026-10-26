@@ -10,9 +10,9 @@
     <header>
         <span class="eyebrow">WYRMFORGE / WET FOREST / MATERIAL KIT</span>
         <h1>Three materials. One real terrain recipe.</h1>
-        <p>Three compact, light-neutral pixel-art ground materials rendered through the shared GPU lighting engine.
-            Their locations come from the existing C# Wet Forest terrain generator. Compare them against
-            the original painted swatches without changing game geometry or live Hunts.</p>
+        <p>Grass/Moss, Trampled Earth and Wet Mud from our existing Wet Forest source-art workstream.
+            The original paintings and source-backed candidate variants are used with the shared GPU lighting engine;
+            the C# terrain recipe, road and collision rules remain unchanged.</p>
     </header>
 
     <section class="kit-controls" aria-label="Material scene controls">
@@ -23,8 +23,19 @@
         <button type="button" @onclick="NextSeed">Another seed</button>
         <label>Ground artwork
             <select aria-label="Ground artwork" @bind="artSource" @bind:after="Sync">
-                <option value="compact">New modular pixel art</option>
-                <option value="original">Original painted swatches (A/B)</option>
+                <option value="source-backed">Existing PR #340 textures (unapproved)</option>
+                <option value="original">Existing six-swatch game atlas (A/B)</option>
+            </select>
+        </label>
+        <label>Existing texture variation
+            <select aria-label="Existing texture variation" @bind="artVariant" @bind:after="Sync"
+                    disabled="@(artSource == "original")">
+                <option value="1">Variation 01</option>
+                <option value="2">Variation 02</option>
+                <option value="3">Variation 03</option>
+                <option value="4">Variation 04</option>
+                <option value="5">Variation 05</option>
+                <option value="6">Variation 06</option>
             </select>
         </label>
         <label>GPU lighting
@@ -52,16 +63,15 @@
                 <dt>Seed</dt><dd>@seed</dd>
                 <dt>Road geometry changes</dt><dd>None</dd>
                 <dt>Collisions/gameplay changes</dt><dd>None</dd>
-                <dt>Art materials</dt><dd>@(artSource == "compact" ? "Three new authored 256px flat-color modules (unapproved)" : "Original painted atlas (baked highlights)")</dd>
+                <dt>Art materials</dt><dd>@(artSource == "source-backed" ? "Three existing 900px source-backed art studies (variation " + artVariant + ", unapproved)" : "Existing painted runtime atlas (reference)")</dd>
                 <dt>GPU surface response</dt><dd>3 provisional region-specific roughness values, one shared non-color map</dd>
             </dl>
             <h3>Acceptance</h3>
-            <p>The new modules have no authored directional lighting; the original swatches do.
-                This preview tests material selection and shared GPU illumination.
-                Neither version is approved production art, nor does either create reflective water,
-                full terrain geometry, or prove native phone performance.</p>
-            <p>Next: visually judge these new fixed-palette modular materials at 320px and 390px,
-                refine their reusable decorations, and approve only the actual GPU scene.</p>
+            <p>All PR #340 candidates remain under visual review: source highlights and repeated painted details
+                are not yet light-neutral production material channels. This preview shows the ACTUAL existing texture
+                artwork in the C# seeded GPU scene—not new drawings or fictional roads/water.</p>
+            <p>Compare all six already-created variations under identical scene lighting. Keep all originals
+                immutable until material-channel work and actual 320px/390px scene approval.</p>
             <p><a href="/arena-light-engine">Shared GPU engine proof</a> ·
                <a href="/arena-lab">Existing ground lab</a></p>
         </aside>
@@ -75,7 +85,8 @@
     private HuntArenaGenerator.WetForestRecipe? recipe;
     private int seed = 1204;
     private string lighting = "night";
-    private string artSource = "compact";
+    private string artSource = "source-backed";
+    private int artVariant = 1;
     private string? error;
 
     protected override void OnParametersSet()
@@ -93,7 +104,7 @@
         {
             module = await JavaScript.InvokeAsync<IJSObjectReference>(
                 "import", "./js/wet-forest-gpu-material-review.js");
-            await module.InvokeVoidAsync("initializeThreeMaterialReview", canvas, recipe, seed, lighting, artSource);
+            await module.InvokeVoidAsync("initializeThreeMaterialReview", canvas, recipe, seed, lighting, artSource, artVariant);
         }
         catch (JSException exception) { error = exception.Message; StateHasChanged(); }
     }
@@ -117,7 +128,7 @@
         try
         {
             recipe ??= HuntArenaGenerator.GenerateWetForest(seed);
-            await module.InvokeVoidAsync("configureThreeMaterialReview", canvas, recipe, seed, lighting, artSource);
+            await module.InvokeVoidAsync("configureThreeMaterialReview", canvas, recipe, seed, lighting, artSource, artVariant);
         }
         catch (JSException exception) { error = exception.Message; }
     }
