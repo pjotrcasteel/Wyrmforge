@@ -28,7 +28,7 @@ jobs:
       - name: Install headless Blender from Ubuntu packages
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y blender python3-numpy
+          sudo apt-get install -y blender python3-numpy libegl1 libgl1-mesa-dri libglx-mesa0
           blender --version
           blender --background --factory-startup --python-expr 'import numpy; print(numpy.__version__)'
 
@@ -37,6 +37,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p artifacts/town-t1-t2
+          export LIBGL_ALWAYS_SOFTWARE=1
           for variant in t1 t2; do
             echo "Exporting ${variant}..."
             TOWN_GEOMETRY_VARIANT="${variant}" blender --background --factory-startup \
