@@ -132,7 +132,7 @@ function fragmentMotion(corpse,part,index,elapsed,reducedMotion){
         const amplitude=4+8*s1;
         y=floor-amplitude*Math.abs(Math.sin(t*14+index))*(1-t/settle);
     }
-    const rotation=(s1-.5)*1.1+(s2>.5?1:-1)*(1.6+s1*3.1)*t;
+    const rotation=(s1-.5)*1.1+(s2>.5?1:-1)*(1.6+s1*3.1)*(reducedMotion?settle:t);
     if(reducedMotion||elapsed>=settle){
         x=initialX+vx*settle*.74;
         y=floor;
