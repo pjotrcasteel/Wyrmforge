@@ -173,6 +173,10 @@ scene.frame_end = FRAMES
 scene.render.fps = FPS
 baseline_yaw = rig.rotation_euler.z
 manifest = {
+    'schemaVersion': 1, 'actor': 'hollowed', 'clip': 'fracture',
+    'ownerApproved': False, 'sourceGeometry': 'original-skinned-blender-mesh',
+    'injury': 'standard', 'worldSize': 124, 'anchor': [64, 88],
+    'directions': list(DIRECTIONS), 'atlases': {},
     'status': 'UNAPPROVED original-mesh fracture proof',
     'sourceRig': str(SOURCE.relative_to(ROOT)),
     'frames': FRAMES, 'fps': FPS, 'cell': CELL, 'splitFrame': SPLIT_FRAME,
@@ -209,7 +213,9 @@ for direction in selected:
     manifest.setdefault('splitSilhouetteOverlap', {})[direction] = round(overlap / max(1, covered), 4)
     atlas_path = OUT / f'fracture-{direction}.png'
     atlas.save(atlas_path, optimize=True)
-    manifest.setdefault('atlasHashes', {})[direction] = hashlib.sha256(atlas_path.read_bytes()).hexdigest()
+    checksum = hashlib.sha256(atlas_path.read_bytes()).hexdigest()
+    manifest.setdefault('atlasHashes', {})[direction] = checksum
+    manifest['atlases'][direction] = {'file': atlas_path.name, 'sha256': checksum}
     manifest.setdefault('boundingBoxes', {})[direction] = bounds
     samples = (0, 3, 5, 6, 7, 9, 12, 17, 23)
     sheet = Image.new('RGBA', (len(samples)*(CELL+12), CELL+36), (18, 21, 24, 255))
