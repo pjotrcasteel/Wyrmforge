@@ -48,12 +48,13 @@ export function updateCombatGround(state, snapshot, now) {
     }
     for (const death of snapshot.deathBursts ?? []) {
         const id = Number(death.entityId);
-        if (!Number.isSafeInteger(id) || !incendiary(death.traits) ||
+        if (!Number.isSafeInteger(id) || (Number(death.traits) & FIRE) === 0 ||
             !finite(Number(death.x),Number(death.y),Number(death.bodyRadius ?? death.radius)) ||
             state.seen.has('fire:'+id)) continue;
         state.seen.add('fire:'+id);
         const radius=clamp(Number(death.bodyRadius ?? death.radius),5,24);
-        state.flames.push({id,x:Number(death.x),y:Number(death.y),radius,born:now});
+        state.flames.push({id,x:Number(death.x),y:Number(death.y),radius,born:now,
+            explosive:incendiary(death.traits)});
         state.marks.push({seed:id+1000000,x:Number(death.x),y:Number(death.y),
             dx:0,dy:0,radius,severity:1,kind:Number(death.kind),
             burned:true,born:now,life:MARK_LIFETIME});
@@ -106,8 +107,8 @@ export function drawBurningRemains(ctx, state, now, reducedMotion=false) {
         const age=now-fire.born,fade=clamp(1-age/FIRE_LIFETIME,0,1);
         if (!fade || age<0) continue;
         ctx.save();
-        ctx.globalAlpha*=fade*.82;
-        const tongues=reducedMotion?3:5;
+        ctx.globalAlpha*=fade*(fire.explosive?.82:.58);
+        const tongues=reducedMotion?2:fire.explosive?6:3;
         for (let i=0;i<tongues;i++) {
             const unit=mix(fire.id,i),offset=(unit-.5)*fire.radius*1.7;
             const x=fire.x+offset,y=fire.y+(mix(fire.id,i+20)-.5)*fire.radius*.55;
