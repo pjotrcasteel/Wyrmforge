@@ -153,7 +153,7 @@ export async function initializeTownPreview(canvas) {
     try {
         const a = axes(), source = await loadApprovedImage();
         engine.registerGeometry('approved-panorama-plane', plane(BASE_WIDTH, BASE_HEIGHT, a.basis));
-        const separated = splitTownPavingReference(source);
+        const separated = splitTownPavingReference(source, CUTOUTS);
         engine.registerTexture('town-day-background', new T.CanvasTexture(separated.backdrop));
         engine.registerTexture('town-day-paving', new T.CanvasTexture(separated.floor));
         const normal = levelPavingNormal(a.right, a.up, a.toward);
