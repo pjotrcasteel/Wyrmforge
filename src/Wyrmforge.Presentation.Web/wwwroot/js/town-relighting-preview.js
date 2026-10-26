@@ -175,6 +175,28 @@ export function townPreviewManifest({ wellV4 = false, domains = false } = {}) {
         light('east-lantern', 1111, 373, 1.2,
             TOWN_NIGHT_LIGHT_GRADE.lanternColor, TOWN_NIGHT_LIGHT_GRADE.peripheralIntensity),
     ];
+    // The nighttime reference stays as the *unlit* scenic backing.
+    // Each unlocked building receives a real, independently lit GPU material
+    // using its pixel-aligned DAY-VACANT painting (no baked active windows).
+    // This isn't a filtered image or CSS/fullscreen lighting overlay.
+    if (domains) for (const plate of TOWN_EMISSION_PLATES) {
+        const key = 'town-diffuse-' + plate.domain;
+        layers.push({
+            id: key, ownerId: 'town-' + plate.domain, domain: plate.domain,
+            diffuseDomain: true, geometry: key + '-plane',
+            artBounds: [plate.x, plate.y, plate.width, plate.height],
+            material: key + '-material',
+            position: new T.Vector3(...townPreviewProjection(
+                plate.x + plate.width / 2, plate.y + plate.height / 2))
+                .addScaledVector(a.toward, .03).toArray(),
+            rotation: [0, 0, 0], scale: [1, 1, 1],
+            castsShadow: false, receivesShadow: true,
+        });
+        materials.push(material(key + '-material', key + '-albedo', {
+            roughness: .96, metalness: 0, specular: .04,
+            reflection: 'off', alphaCutoff: .5,
+        }));
+    }
     if (domains) for (const plate of TOWN_EMISSION_PLATES) {
         const classes = plate.domain === 'nexus' ? ['warm', 'magic'] : ['warm'];
         for (const kind of classes) {
@@ -276,6 +298,23 @@ async function loadApprovedImage(wellV4 = false, domains = false, sourceMode = '
     return canvas;
 }
 
+async function registerTownBuildingAlbedo(engine) {
+    for (const plate of TOWN_EMISSION_PLATES) {
+        const key = 'town-diffuse-' + plate.domain;
+        const image = new Image();
+        image.src = new URL('../art/town/day-vacant-' + plate.name + '.webp', import.meta.url).href;
+        await image.decode();
+        if (image.naturalWidth !== plate.width || image.naturalHeight !== plate.height)
+            throw new Error('Canonical diffuse material registration drift: ' + plate.name);
+        const texture = new T.Texture(image);
+        texture.needsUpdate = true;
+        engine.registerTexture(key + '-albedo', texture);
+        engine.registerGeometry(key + '-plane', plane(
+            plate.width * BASE_WIDTH / TOWN_ART_SIZE[0],
+            plate.height * BASE_WIDTH / TOWN_ART_SIZE[0], axes().basis));
+    }
+}
+
 async function registerTownEmissionMasks(engine) {
     // Original registered runtime assets, same art coordinates as the approved
     // Town. The downloaded owner-selected lighting frames remain immutable
@@ -348,11 +387,20 @@ const engine = new LightingEngine(canvas, {
         const separated = splitTownPavingReference(source, selectedCutouts);
         engine.registerTexture('town-day-background', new T.CanvasTexture(separated.backdrop));
         engine.registerTexture('town-day-paving', new T.CanvasTexture(separated.floor));
+        // CRITICAL: the night panorama is much too dark to use as the
+        // cobblestone's base-color. Reuse the exact registered daylight
+        // cobbles strictly INSIDE the authored paving alpha mask. Its
+        // bright sky/buildings are NEVER used as the Town background.
+        const floorReference = state.domains && state.sourceMode === 'night'
+            ? await loadApprovedImage(state.wellV4, true, 'day-candidate')
+            : source;
+        const pavingLayers = floorReference === source ? separated
+            : splitTownPavingReference(floorReference, selectedCutouts);
         // Preserve exact approved-source pixels as a QC toggle, but author a
         // NEW runtime-only candidate neutral albedo for the GPU paving pass.
         const neutral = document.createElement('canvas');
         neutral.width = separated.floor.width; neutral.height = separated.floor.height;
-        neutral.getContext('2d').drawImage(separated.floor, 0, 0);
+        neutral.getContext('2d').drawImage(pavingLayers.floor, 0, 0);
         state.neutralMetrics = deriveTownNeutralPavingCanvas(neutral);
         engine.registerTexture('town-paving-neutral', new T.CanvasTexture(neutral));
         const normal = levelPavingNormal(a.right, a.up, a.toward);
@@ -382,7 +430,10 @@ const engine = new LightingEngine(canvas, {
             engine.registerGeometry('approved-foreground-caster-' + cutout.id, cutoutGeometry(cutout, a.basis));
             engine.registerTexture('approved-cutout-texture-' + cutout.id, cutoutTexture(source, cutout));
         }
-        if (state.domains) await registerTownEmissionMasks(engine);
+        if (state.domains) {
+            await registerTownBuildingAlbedo(engine);
+            await registerTownEmissionMasks(engine);
+        }
         state.manifest = townPreviewManifest({ wellV4: state.wellV4, domains: state.domains });
         engine.setCamera([0, 0, 0], BASE_WIDTH / 2);
         configureTownPreview(canvas, {});
@@ -438,7 +489,8 @@ export function configureTownPreview(canvas, options) {
         // Emission cannot remain visible just because the authored window
         // texture exists: it follows the same strict per-domain GPU fixtures.
         manifest.layers = manifest.layers.filter(layer =>
-            !layer.emissionKind || (state.mode === 'night' && activeDomains.has(layer.domain)));
+            !(layer.emissionKind || layer.diffuseDomain) ||
+            (state.mode === 'night' && activeDomains.has(layer.domain)));
         const nexusMagic = manifest.materials.find(m => m.id === 'town-emissive-nexus-magic-material');
         if (nexusMagic) {
             nexusMagic.emission = state.neutralMagic ? '#ffffff' : TOWN_NEXUS_SCHOOL_LIGHTS[state.school];
