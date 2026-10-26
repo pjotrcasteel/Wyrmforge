@@ -16,12 +16,13 @@ public sealed class TownGpuAcceptanceTests : PageTest
     private string Artifacts => Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ??
         Path.Combine(Path.GetTempPath(), "wyrmforge-town-acceptance");
 
-    private async Task StartTownAsync(bool gpu, bool wellV4 = false)
+    private async Task StartTownAsync(bool gpu, bool wellV4 = false, string? lightDomain = null)
     {
         Directory.CreateDirectory(Artifacts);
         await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','3');");
         var uri = BaseUrl.TrimEnd('/') +
-            (gpu ? "/?townGpuPreview=1" + (wellV4 ? "&townWellStage4=1" : "") : "/");
+            (gpu ? "/?townGpuPreview=1" + (wellV4 ? "&townWellStage4=1" : "") +
+            (lightDomain is null ? "" : "&townLightDomain=" + Uri.EscapeDataString(lightDomain)) : "/");
         await Page.GotoAsync(uri, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         var start = Page.GetByRole(AriaRole.Button, new()
         {
@@ -139,6 +140,39 @@ public sealed class TownGpuAcceptanceTests : PageTest
         await ConfigureAsync("zero", "neutral", "lit", 1);
         Assert.AreEqual("true", await canvas.GetAttributeAsync("data-zero-black"));
         await CaptureAsync($"town-t2-zero-light-{width}.png");
+    }
+
+    [TestMethod]
+    [DataRow("common", 320, 568)]
+    [DataRow("common", 390, 844)]
+    [DataRow("nexus", 390, 844)]
+    [DataRow("blacksmith", 390, 844)]
+    [DataRow("codex", 390, 844)]
+    [DataRow("hall", 390, 844)]
+    [DataRow("off", 390, 844)]
+    public async Task TownT2_RealGameDomainIsolation_CapturesGpuFixturesAndOwnership(
+        string domain, int width, int height)
+    {
+        await Page.SetViewportSizeAsync(width, height);
+        await StartTownAsync(gpu: true, lightDomain: domain);
+        await Page.WaitForFunctionAsync(@"() =>
+            ['ready','failed'].includes(document.querySelector('.refuge-canonical-scene')
+                ?.dataset.townGpuPreview)", new PageWaitForFunctionOptions { Timeout = 30000 });
+
+        var scene = Page.Locator(".refuge-canonical-scene");
+        Assert.AreEqual("ready", await scene.GetAttributeAsync("data-town-gpu-preview"),
+            "Domain acceptance must capture the actual shared WebGL renderer");
+        var canvas = scene.Locator(".refuge-town-gpu-canvas");
+        Assert.AreEqual(domain, await canvas.GetAttributeAsync("data-light-isolation"));
+        Assert.AreEqual(domain == "blacksmith" ? "true" : "false",
+            await canvas.GetAttributeAsync("data-chimney-on"),
+            "Blacksmith chimney must never belong to Town common");
+        Assert.AreEqual("1672", await canvas.GetAttributeAsync("data-framebuffer-width"));
+        Assert.AreEqual("941", await canvas.GetAttributeAsync("data-framebuffer-height"));
+        await Expect(scene.Locator("[data-town-building]")).ToHaveCountAsync(4);
+        if (domain == "off")
+            Assert.AreEqual("true", await canvas.GetAttributeAsync("data-zero-black"));
+        await CaptureAsync($"town-t2-domain-{domain}-{width}.png");
     }
 
     [TestMethod]
