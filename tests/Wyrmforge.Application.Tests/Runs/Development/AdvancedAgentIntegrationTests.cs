@@ -102,6 +102,27 @@ public sealed class AdvancedAgentIntegrationTests
     }
 
     [TestMethod]
+    public void Ai6Metrics_ResolvedHunterHealthDamage_DoesNotConflatePressureWithHits()
+    {
+        var metrics = new AgentPerformanceMetrics();
+        metrics.Record(3, 8, 4, 2, 2, 0);
+        metrics.Record(4, 8, 3, 2, 1, 12);
+        var hit = metrics.Inspect();
+        Assert.AreEqual(12d, hit.LastHunterHealthDamage);
+        Assert.AreEqual(12d, hit.TotalHunterHealthDamage);
+        Assert.AreEqual(12d, hit.MaximumHunterHealthDamagePerStep);
+        Assert.AreEqual(2, hit.MaxCommittedThreats);
+
+        // An attack can stay committed without resolving HP damage (dodge, barrier or whiff).
+        metrics.Record(2, 8, 2, 1, 2, 0);
+        var dodged = metrics.Inspect();
+        Assert.AreEqual(0d, dodged.LastHunterHealthDamage);
+        Assert.AreEqual(12d, dodged.TotalHunterHealthDamage);
+        Assert.AreEqual(12d, dodged.MaximumHunterHealthDamagePerStep);
+        Assert.AreEqual(2, dodged.MaxCommittedThreats);
+    }
+
+    [TestMethod]
     public void Horde_64Agents_RespectsQueryCapsAndReportsActualCosts()
     {
         var run = Create(64, AgentTier.Tactical);
@@ -111,6 +132,7 @@ public sealed class AdvancedAgentIntegrationTests
         Assert.IsTrue(metrics.MaxSightQueries <= 32 && metrics.MaxPathQueries <= 32);
         Assert.IsTrue(metrics.MaxCommittedThreats <= 2);
         Assert.IsTrue(metrics.P95Milliseconds >= 0);
+        Assert.IsTrue(metrics.TotalHunterHealthDamage >= 0);
         Console.WriteLine("AI6_HOST_PROFILE " + JsonSerializer.Serialize(metrics));
     }
 

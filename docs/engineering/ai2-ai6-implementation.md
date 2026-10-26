@@ -63,3 +63,7 @@ Run the final-head browser/CI suite, inspect the live 390px Town/pack/boss previ
 - Latest-head CI is a release gate, **not yet counted as passing evidence**.
   No production rollout, physical mobile performance sign-off or user visual
   acceptance is claimed by this checkpoint. Keep all opt-ins and fallback.
+
+## AI6 damage-pressure instrumentation checkpoint — 26 October 2026
+
+The opt-in `AgentPerformanceSnapshot` now differentiates committed simultaneous attack pressure from real hunter **HP lost during the enemy-update step**, exposing last-step, cumulative and peak-step damage. Dodged attacks, invulnerable practice and absorbed hits must not be counted as health damage. Boss-only damage resolved outside `UpdateEnemies` is not part of these counters. These are read-only measurements, never combat inputs or a substitute for human fair-pressure assessment. A focused Application regression covers a committed threat without an actual hit and one resolved hit. Physical device and browser acceptance remain pending.
