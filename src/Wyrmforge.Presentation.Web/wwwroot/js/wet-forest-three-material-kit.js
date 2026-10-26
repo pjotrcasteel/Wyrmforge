@@ -2,7 +2,7 @@
 // three already-accepted material families, and no new road or collision authority.
 // Graphics-only mapping, suitable for a cached GPU albedo surface in the review page.
 import { CELL, MATERIALS, GROUND_TILE_SIZE, buildGroundQuiltAtlas,
-    drawReferenceGroundBoard, drawGroundMaterialTransitions } from './arena-materials.js';
+    drawReferenceGroundBoard, drawGroundMaterialTransitions, groundMaterialBoundaryPlan } from './arena-materials.js';
 
 export const MATERIAL_IDS = Object.freeze({ grass: 0, mud: 1, earth: 3 });
 export const MATERIAL_NAMES = Object.freeze(['Grass / moss', 'Wet mud', 'Trampled earth']);
@@ -89,6 +89,79 @@ export function threeMaterialPlan(recipe, seed, width = MAP_WIDTH, height = MAP_
         previewOnly: true, materialIds: MATERIAL_IDS };
 }
 
+// Authored 256px modular material asset library, generated deterministically
+// from tools/art/build_wet_forest_compact_materials.py for the STATIC app bundle.
+// Existing six painting sources and the C# topology are left unmodified.
+export const COMPACT_MATERIAL_SOURCE = Object.freeze({
+    0: new URL('../art/environment/wet-forest-compact/v1/grass-moss.png', import.meta.url).href,
+    1: new URL('../art/environment/wet-forest-compact/v1/wet-mud.png', import.meta.url).href,
+    3: new URL('../art/environment/wet-forest-compact/v1/trampled-earth.png', import.meta.url).href,
+});
+export const COMPACT_TILE_SIZE = 256;
+const COMPACT_INDEX = Object.freeze([0, 1, 3]);
+const nonnegativeMod = (x, n) => ((x % n) + n) % n;
+
+function drawCompactRegion(ctx, sources, index, x, y, width, height, phase) {
+    const tile = sources[index];
+    if (!tile || !Number.isFinite(x) || !Number.isFinite(y)) return false;
+    const maxX = x + width, maxY = y + height;
+    for (let py = y; py < maxY;) {
+        const sy = nonnegativeMod(py + phase, COMPACT_TILE_SIZE);
+        const h = Math.min(COMPACT_TILE_SIZE - sy, maxY - py);
+        for (let px = x; px < maxX;) {
+            const sx = nonnegativeMod(px + phase, COMPACT_TILE_SIZE);
+            const w = Math.min(COMPACT_TILE_SIZE - sx, maxX - px);
+            ctx.drawImage(tile, sx, sy, w, h, px, py, w, h);
+            px += w;
+        }
+        py += h;
+    }
+    return true;
+}
+
+/** Three directly authored repeatable pixel materials. Draw once per seed.
+ * Only approved C# terrain cells choose the base texture; edges borrow real
+ * neighboring pixel clusters using existing canonical material boundaries.
+ * No RGB alpha fade, stamp-based road authority, new collision or water plane. */
+export function bakeCompactThreeMaterialGround(plan, images, seed, canvasFactory) {
+    if (!plan || !images || !canvasFactory || !Number.isInteger(seed)
+        || !plan.board || plan.board.length !== plan.columns * plan.rows
+        || !Number.isInteger(plan.width) || !Number.isInteger(plan.height)
+        || !COMPACT_INDEX.every(i => images[i]?.width === COMPACT_TILE_SIZE && images[i]?.height === COMPACT_TILE_SIZE)
+        || !Array.from(plan.board).every(i => COMPACT_INDEX.includes(i))) return null;
+    const canvas = canvasFactory();
+    canvas.width = plan.width; canvas.height = plan.height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    ctx.imageSmoothingEnabled = false;
+    const phase = (Math.abs(seed) % 16) * 8;
+    for (let row = 0; row < plan.rows; row++)
+        for (let col = 0; col < plan.columns; col++) {
+            const x = col * CELL, y = row * CELL;
+            const w = Math.min(CELL, plan.width - x), h = Math.min(CELL, plan.height - y);
+            if (w > 0 && h > 0)
+                drawCompactRegion(ctx, images, plan.board[row * plan.columns + col], x, y, w, h, phase);
+        }
+    // Existing material boundaries provide small irregular snapped contacts
+    // where earth meets moss/mud. These are RGB pixel-art source selections,
+    // never semantic alterations, independently invented paths, or shader FX.
+    for (const edge of groundMaterialBoundaryPlan(plan.board, plan.columns, plan.rows, seed)) {
+        if (!COMPACT_INDEX.includes(edge.a) || !COMPACT_INDEX.includes(edge.b)) continue;
+        const side = (Math.imul(edge.x + 1, 73856093) ^ Math.imul(edge.y + seed, 19349663)) >>> 0;
+        const shift = side % 3;
+        if (edge.vertical) {
+            drawCompactRegion(ctx, images, edge.b, edge.x - 2 - shift, edge.y, 2, 8, phase);
+            if (side % 4 < 2)
+                drawCompactRegion(ctx, images, edge.a, edge.x + shift, edge.y + 2, 2, 4, phase);
+        } else {
+            drawCompactRegion(ctx, images, edge.b, edge.x, edge.y - 2 - shift, 8, 2, phase);
+            if (side % 4 < 2)
+                drawCompactRegion(ctx, images, edge.a, edge.x + 2, edge.y + shift, 4, 2, phase);
+        }
+    }
+    return canvas;
+}
+
 // Provisional art-review parameters, distinct from authored material maps.
 const ROUGHNESS = Object.freeze({
     [MATERIAL_IDS.grass]: .97,
@@ -153,4 +226,6 @@ export const THREE_MATERIAL_REVIEW = Object.freeze({
     runtimeAdopted: false,
     roughnessProvisional: true,
     roughnessChannel: 'G / non-color texture / G1 shared renderer',
+    compactTilePixels: COMPACT_TILE_SIZE,
+    compactPreviewApproved: false,
 });
