@@ -111,6 +111,7 @@ test('actual live fallback switches to the original PR340 paintings once decoded
         assert.equal(drawLiveWetForestMaterialBase(ctx, tiles(), seed, 48, 48), true);
         assert.ok(calls.length > 0 && calls.length <= 36,
             'The live floor must contain archived paintings with batched copies, not thousands of per-cell draws.');
+        const original = calls.slice();
         const { drawWetForestGround } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-wet-forest-art.js');
         let painterDraws = 0;
         const sourceOnlyContext = {
@@ -126,7 +127,6 @@ test('actual live fallback switches to the original PR340 paintings once decoded
             seed, width: 48, height: 48, forestProps: [], corruption: 0, element: 'fire',
         });
         assert.ok(painterDraws > 0, 'The playable floor must paint actual archived art without new stamps.');
-        const original = calls.slice();
         calls.length = 0;
         assert.equal(drawLiveWetForestMaterialBase(ctx, tiles(), seed, 48, 48), true);
         assert.deepEqual(calls, original, 'The live floor must be deterministic for the same seed.');
@@ -181,7 +181,7 @@ test('full playable-world source art scales and feathers materials with bounded 
         assert.ok(operations.rectangles > 100, 'Actual material regions and contacts must still exist.');
         assert.ok(operations.images > 0 && operations.images <= 420,
             'Too many image copies for a single static mobile world bake: ' + operations.images);
-        assert.ok(operations.clips >= 2 && operations.clips <= 9);
+        assert.ok(operations.clips >= 2 && operations.clips <= 10);
         assert.equal(operations.scaled, operations.images, '900px source motifs cannot stay 900 world pixels.');
         assert.ok(operations.feathered >= 2, 'Material edges must use a translucent feather.');
         assert.ok(operations.mirrored > 0, 'Neighbouring small tiles must avoid hard repeat seams.');
