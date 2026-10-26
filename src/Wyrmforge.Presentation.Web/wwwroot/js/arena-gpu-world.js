@@ -36,6 +36,8 @@ export class HuntGpuWorld {
             this.engine.registerTexture(id, texture);
             layer = { pixels, texture }; this.layers.set(id, layer);
         }
+        if (layer.pixels.width !== Math.ceil(width)) layer.pixels.width = Math.ceil(width);
+        if (layer.pixels.height !== Math.ceil(height)) layer.pixels.height = Math.ceil(height);
         const ctx = layer.pixels.getContext('2d');
         ctx.clearRect(0, 0, layer.pixels.width, layer.pixels.height);
         ctx.drawImage(source, 0, 0, layer.pixels.width, layer.pixels.height);
