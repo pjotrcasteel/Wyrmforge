@@ -15,7 +15,7 @@ The factory also accepts typed `AgentRolloutOptions`. No health/damage inflation
 
 | Milestone | Implementation | Acceptance boundary |
 | --- | --- | --- |
-| AI2 | Seeded 180-second ambient schedules, work/social/visit/rest utilities, shared AgentRuntime, scene IDs, closure handling, atomic destination reservations, existing walking/collision/path budget, opt-in inspector | Current authored 2D Town adapter; future 3D navmesh remains the Town workstream. Live browser validation and owner believability review remain distinct. |
+| AI2 | Seeded 180-second ambient schedules, work/social/visit/rest utilities, shared AgentRuntime, scene IDs, closure handling, atomic destination reservations, existing walking/collision/path budget, opt-in inspector | The approved painted 2D Town remains the permanent spatial/visual authority; no 3D navmesh or replacement is planned. Live browser validation and owner believability review remain distinct. |
 | AI3 | Earned contact and LOS, approach/retreat/strafe/range control, cooldown-aware scoring, executor locks, target-loss tests | Hound and Hollow migration, not a claim that every existing enemy is migrated. Provisional tuning. |
 | AI4 | Two pressure leases, deterministic rotating admission, retained commitments/recovery, support staging on an arc, existing physical crowd separation, 32-query budgets | Pack replay and 64-agent stress scenarios; player escape comfort still needs playtesting. |
 | AI5 | Five capability sets, decaying near/far and observed lateral-motion evidence, bounded confidence/bias, elite strafe/range counters, Ashfang utility restricted to authored phase/range/LOS and cooldowns | No cross-encounter learning, input inspection or telegraph shortening. Existing flight cadence, overhead targetability and landing warnings remain authoritative. |
@@ -57,6 +57,9 @@ Run the final-head browser/CI suite, inspect the live 390px Town/pack/boss previ
   all unrelated source-backed Wet Forest and Hollowed fixes from main without
   copying their changes into the AI PR diff. The earlier failed check was an
   unrelated Wet Forest JavaScript determinism assertion on the older base.
+- AI6 horde cost fix: dead-agent pruning now builds a single living-ID set rather
+  than scanning the enemy list once per registered agent each update; a new
+  64-agent regression verifies that eliminating one member leaves 63 intact.
 - Latest-head CI is a release gate, **not yet counted as passing evidence**.
   No production rollout, physical mobile performance sign-off or user visual
   acceptance is claimed by this checkpoint. Keep all opt-ins and fallback.
