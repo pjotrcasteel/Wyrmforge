@@ -287,3 +287,32 @@
     outline:2px solid #fff;outline-offset:2px;
 }
 
+
+/* Opt-in AI2 inspector lives outside the painted, swipeable scene. Its own
+   fixed stacking layer must receive genuine mobile taps, not the panorama. */
+.game-shell.refuge-home .refuge-town-ai-panel {
+    position:fixed;right:10px;bottom:calc(76px + env(safe-area-inset-bottom, 0px));
+    z-index:12051;width:min(340px,calc(100vw - 20px));max-width:calc(100vw - 20px);
+    box-sizing:border-box;padding:0;border:1px solid #d7c29d8c;border-radius:7px;
+    background:#101824f2;color:#f2dfb7;box-shadow:0 2px 12px #000b;
+    font:600 12px/1.4 ui-monospace,monospace;pointer-events:auto;
+    touch-action:manipulation;
+}
+.game-shell.refuge-home .refuge-town-ai-panel summary {
+    display:flex;align-items:center;min-height:44px;box-sizing:border-box;
+    padding:10px 12px;cursor:pointer;touch-action:manipulation;
+}
+.game-shell.refuge-home .refuge-town-ai-panel button {
+    min-height:44px;margin:0 10px 6px;padding:7px 10px;
+    border:1px solid #aab8c65e;border-radius:4px;background:#263242;
+    color:#eef3f4;cursor:pointer;touch-action:manipulation;
+}
+.game-shell.refuge-home .refuge-town-ai-panel pre {
+    max-height:min(43dvh,360px);margin:0 10px 10px;padding:8px;
+    overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;
+    border:1px solid #aab8c63c;background:#0b121f;
+    font:400 11px/1.4 ui-monospace,monospace;
+}
+.game-shell.refuge-home .refuge-town-ai-panel :is(summary,button):focus-visible {
+    outline:2px solid #f1d499;outline-offset:2px;
+}
