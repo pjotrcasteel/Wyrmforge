@@ -45,6 +45,16 @@ public sealed class WetForestMaterialKitBrowserTests : PageTest
         await SaveAsync(canvas, $"wet-forest-material-kit-neutral-{width}.png");
 
         var neutral = await CanvasStatsAsync(canvas);
+        await Expect(canvas).ToHaveAttributeAsync("data-material-review-source", "compact");
+        await Page.GetByLabel("Ground artwork").SelectOptionAsync("original");
+        await Expect(canvas).ToHaveAttributeAsync("data-material-review-source", "original");
+        await SaveAsync(canvas, $"wet-forest-material-kit-original-painting-{width}.png");
+        Assert.AreNotEqual(neutral[1], (await CanvasStatsAsync(canvas))[1],
+            "Original painting must render differently from new modular material source.");
+        await Page.GetByLabel("Ground artwork").SelectOptionAsync("compact");
+        await Expect(canvas).ToHaveAttributeAsync("data-material-review-source", "compact");
+        CollectionAssert.AreEqual(neutral, await CanvasStatsAsync(canvas),
+            "Returning to compact authored materials must restore the identical scene.");
         await Page.GetByLabel("GPU lighting").SelectOptionAsync("zero");
         await Expect(canvas).ToHaveAttributeAsync("data-material-review-profile", "zero");
         var zero = await CanvasStatsAsync(canvas);
