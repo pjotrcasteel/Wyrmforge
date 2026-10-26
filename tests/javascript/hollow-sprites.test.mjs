@@ -6,7 +6,11 @@ const root=new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/',import.meta.u
 const moduleUri=name=>'data:text/javascript;base64,'+Buffer.from(readFileSync(new URL('js/'+name,root),'utf8')).toString('base64');
 const source=readFileSync(new URL('js/hollow-sprites.js',root),'utf8').replace("new URL('../art/enemies/hollow-rigged/', import.meta.url)","new URL('https://example.test/art/enemies/hollow-rigged/')")
  .replace("'./sprite-animation.js'",JSON.stringify(moduleUri('sprite-animation.js'))).replace("'./sprite-layer-compositor.js'",JSON.stringify(moduleUri('sprite-layer-compositor.js')))
- .replace("'./hollow-injury-variants.js'",JSON.stringify(moduleUri('hollow-injury-variants.js')));
+ .replace("'./hollow-injury-variants.js'",JSON.stringify(moduleUri('hollow-injury-variants.js')))
+ .replace("'./hollow-arm-variants.js'",JSON.stringify(moduleUri('hollow-arm-variants.js')))
+ .replace("'./hollow-motion.js'",JSON.stringify(moduleUri('hollow-motion.js')))
+ .replace("'./hollow-variation.js'",JSON.stringify(moduleUri('hollow-variation.js')))
+ .replace("'./hollow-death.js'",JSON.stringify(moduleUri('hollow-death.js')));
 const mod=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
 const enemy=(values={})=>({entityId:7,kind:0,x:20,y:20,radius:11,...values});
 const snapshot=(values={})=>({enemies:[enemy()],player:{x:200,y:200,radius:9},deathBursts:[],...values});
@@ -23,7 +27,7 @@ test('walk follows travelled distance and survives duplicate render snapshots',(
  const moved=snapshot({enemies:[enemy({x:25})]});mod.updateHollowSprites(state,moved,.05);
  const frame=state.entities.get(7).frame;assert.ok(frame>0);
  mod.updateHollowSprites(state,moved,.066);assert.equal(state.entities.get(7).frame,frame);
- advance(state,moved,.1,.3);assert.equal(state.entities.get(7).frame,0);
+ advance(state,moved,.1,.3);assert.equal(state.entities.get(7).frame,state.entities.get(7).idleFrame);
  mod.updateHollowSprites(state,snapshot({enemies:[]}),.35);assert.equal(state.entities.size,0);assert.equal(state.corpses.size,0);
 });
 test('contact only drives presentation; attack freezes and recovers',()=>{
@@ -98,7 +102,115 @@ test('nearest-neighbor renderer selects an actual direction row and original piv
   const state=mod.createHollowState();mod.updateHollowSprites(state,snapshot(),0);state.entities.get(7).direction='NW';
   const calls=[];const ctx={globalAlpha:1,save(){},restore(){},drawImage(...args){calls.push(args);}};
   assert.equal(mod.drawHollowEnemy(ctx,enemy(),state),true);assert.equal(ctx.imageSmoothingEnabled,false);
-  assert.equal(calls[0][2],96*7);assert.equal(calls[0][6],20-72/96*93);
+  assert.equal(calls[0][2],96*7);assert.ok(Math.abs(calls[0][6]-(20-72/96*93*state.entities.get(7).visualScale))<1e-9);
   assert.equal(mod.drawHollowEnemy(ctx,enemy({kind:1}),state),false);
  }finally{globalThis.fetch=originalFetch;globalThis.Image=originalImage;}
+});
+
+test('every Hollowed uses a source-derived no-cape atlas for walk/attack and the corpse never reverts to cape',async()=>{
+ const originals={fetch:globalThis.fetch,Image:globalThis.Image};
+ const basePath='art/enemies/hollow-rigged/';
+ const baseManifest=JSON.parse(readFileSync(new URL(basePath+'manifest.json',root)));
+ const armsManifest=JSON.parse(readFileSync(new URL(basePath+'arms/manifest.json',root)));
+ const injuriesManifest=JSON.parse(readFileSync(new URL(basePath+'injuries/manifest.json',root)));
+ const layers=JSON.parse(readFileSync(new URL(basePath+'layers.json',root)));
+ const animationProfile=JSON.parse(readFileSync(new URL(basePath+'animation-profile.json',root)));
+ try {
+  globalThis.fetch=async url=>{
+   const path=String(url);
+   const data=path.includes('/arms/')?armsManifest:path.includes('/injuries/')?injuriesManifest:
+    path.endsWith('layers.json')?layers:path.endsWith('animation-profile.json')?animationProfile:baseManifest;
+   return {ok:true,json:async()=>data};
+  };
+  globalThis.Image=class {
+   set src(url){
+    this.url=String(url);
+    const path=this.url;
+    const clips=path.includes('/arms/')?Object.values(armsManifest.clips).flatMap(x=>Object.values(x)):
+     path.includes('/injuries/')?Object.values(injuriesManifest.clips):Object.values(baseManifest.clips);
+    const entry=clips.find(x=>path.includes('/'+x.image+'?'));
+    assert.ok(entry,'unexpected sprite source: '+path);
+    this.naturalWidth=entry.cell*entry.frames;this.naturalHeight=entry.cell*8;
+    queueMicrotask(()=>this.onload());
+   }
+  };
+  const isolated=await import('data:text/javascript;base64,'+Buffer.from(source+String.fromCharCode(10)+'// no-cape regression').toString('base64'));
+  assert.equal(await isolated.preloadHollowSprites(),true);
+  assert.equal(isolated.hollowDiagnostics(isolated.createHollowState()).capeFreeReady,true);
+  for(let id=0;id<12;id++){
+   const e=enemy({entityId:id});
+   const state=isolated.createHollowState();
+   isolated.updateHollowSprites(state,snapshot({enemies:[e]}),0);
+   const calls=[];
+   const ctx={globalAlpha:1,save(){},restore(){},translate(){},rotate(){},drawImage(...args){calls.push(args);}};
+   assert.equal(isolated.drawHollowEnemy(ctx,e,state),true);
+   assert.equal(calls.length,1);
+   assert.ok(calls[0][0].url.includes('/arms/')||calls[0][0].url.includes('/injuries/'),'caped base atlas used');
+   state.entities.get(id).clip='attack';
+   assert.equal(isolated.drawHollowEnemy(ctx,e,state),true);
+   assert.ok(calls[1][0].url.includes('/arms/')||calls[1][0].url.includes('/injuries/'),'caped base attack used');
+   isolated.updateHollowSprites(state,snapshot({enemies:[],deathBursts:[{entityId:id,kind:0,x:20,y:20,bodyRadius:11}]}),.1);
+   isolated.drawHollowCorpses(ctx,state);
+   assert.ok(calls[2][0].url.includes('/arms/'),'caped death atlas used');
+  }
+ } finally {globalThis.fetch=originals.fetch;globalThis.Image=originals.Image;}
+});
+
+test('a real Hollow death renders authored 3D frames, not a rotated walking sprite, in all facings',async()=>{
+ const oldFetch=globalThis.fetch,oldImage=globalThis.Image;
+ const artPath=name=>new URL('art/enemies/hollow-rigged/'+name,root);
+ const base=JSON.parse(readFileSync(artPath('manifest.json')));
+ const arms=JSON.parse(readFileSync(artPath('arms/manifest.json')));
+ const injury=JSON.parse(readFileSync(artPath('injuries/manifest.json')));
+ const death=JSON.parse(readFileSync(artPath('death/manifest.json')));
+ const layers=JSON.parse(readFileSync(artPath('layers.json')));
+ const animation=JSON.parse(readFileSync(artPath('animation-profile.json')));
+ try{
+  globalThis.fetch=async url=>{
+   const path=String(url);
+   const body=path.includes('/arms/')?arms:path.includes('/injuries/')?injury:
+    path.includes('/death/')?death:path.endsWith('layers.json')?layers:
+    path.endsWith('animation-profile.json')?animation:base;
+   return {ok:true,json:async()=>body};
+  };
+  globalThis.Image=class {
+   set src(url){
+    this.url=String(url);
+    const path=this.url;
+    const clips=path.includes('/arms/')?Object.values(arms.clips).flatMap(x=>Object.values(x)):
+     path.includes('/injuries/')?Object.values(injury.clips):
+     path.includes('/death/')?Object.values(death.clips).map(c=>({...c,cell:death.cell,frames:death.frames})):Object.values(base.clips);
+    const clip=clips.find(c=>path.includes('/'+c.image+'?'));
+    assert.ok(clip,'unexpected clip URL: '+path);
+    this.naturalWidth=clip.cell*clip.frames;
+    this.naturalHeight=clip.cell*8;
+    queueMicrotask(()=>this.onload());
+   }
+  };
+  const isolated=await import('data:text/javascript;base64,'+
+    Buffer.from(source+String.fromCharCode(10)+'// skeletal death integration').toString('base64'));
+  assert.equal(await isolated.preloadHollowSprites(),true);
+  assert.equal(isolated.hollowDiagnostics(isolated.createHollowState()).skeletalDeathReady,true);
+  for(const facing of ['N','NE','E','SE','S','SW','W','NW']){
+   const e=enemy({entityId:128,x:20,y:20});
+   const state=isolated.createHollowState();
+   isolated.updateHollowSprites(state,snapshot({enemies:[e]}),0);
+   state.entities.get(128).direction=facing;
+   const dead=snapshot({enemies:[],deathBursts:[{entityId:128,kind:0,x:20,y:20,bodyRadius:11}]});
+   isolated.updateHollowSprites(state,dead,.05);
+   const calls=[];
+   const ctx={globalAlpha:1,save(){},restore(){},rotate(){throw Error('death must use skeletal frames');},
+    translate(){throw Error('death must not move with 2D transforms');},
+    drawImage(...values){calls.push(values);}};
+   isolated.drawHollowCorpses(ctx,state);
+   assert.equal(calls.length,1);
+   assert.ok(calls[0][0].url.includes('/death/'+death.clips[isolated.hollowDiagnostics(state).corpses[0].deathVariant].image+'?'),
+    'must draw selected 3D death clip');
+   assert.equal(calls[0][1],0);
+   assert.equal(calls[0][2],death.directions.indexOf(facing)*128);
+   isolated.updateHollowSprites(state,{...dead,deathBursts:[]},1.05);
+   isolated.drawHollowCorpses(ctx,state);
+   assert.ok(calls.at(-1)[1]>0,'death pose must advance with time');
+  }
+ }finally{globalThis.fetch=oldFetch;globalThis.Image=oldImage;}
 });
