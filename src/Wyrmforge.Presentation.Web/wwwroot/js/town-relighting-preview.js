@@ -13,6 +13,20 @@ const BASE_WIDTH = 16;
 const BASE_HEIGHT = BASE_WIDTH * TOWN_ART_SIZE[1] / TOWN_ART_SIZE[0];
 const states = new WeakMap();
 
+// Small authored shadow PROXIES for the actual production foreground contours.
+// Distances are along camera-facing depth, not NPC collision footprints.
+// These are isolated lab values pending mobile screenshot approval.
+export const TOWN_FOREGROUND_CASTER_DEPTH = Object.freeze({
+    'noticeboard-panel': .14,
+    'noticeboard-supports': .09,
+    'well-roof': .22,
+    'well-supports': .10,
+    'well-front-rim': .16,
+    'nexus-terrace-parapet': .10,
+    'nexus-terrace-bushes': .07,
+    'nexus-stairs-shrubs': .06,
+});
+
 const material = (id, albedo, extra = {}) => ({
     id, albedo, color: '#ffffff', emission: '#000000', emissionIntensity: 0,
     roughness: .9, metalness: 0, specular: .1, reflection: 'off',
@@ -60,7 +74,15 @@ function cutoutGeometry(cutout, basis) {
         else throw new TypeError('Foreground path must start with M');
     }
     if (!shapes.length) throw new TypeError('No foreground silhouette');
-    const geometry = new T.ShapeGeometry(shapes);
+    const depth = TOWN_FOREGROUND_CASTER_DEPTH[cutout.id];
+    if (!Number.isFinite(depth) || depth <= 0 || depth > .25)
+        throw new TypeError('Missing shallow authored Town shadow-proxy depth');
+    // Shallow extruded alpha-tight silhouettes produce actual GPU shadow
+    // occlusion, unlike normals or a fullscreen multiply/darkness pass.
+    // This is invisible geometry, not visible town architecture.
+    const geometry = new T.ExtrudeGeometry(shapes, {
+        depth, steps: 1, bevelEnabled: false, curveSegments: 1,
+    });
     geometry.applyMatrix4(basis);
     return geometry;
 }
