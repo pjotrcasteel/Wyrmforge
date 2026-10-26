@@ -23,3 +23,7 @@ Make one authored, consistent-pixel-scale, light-neutral Grass/Moss base, one Tr
 ## Concurrent work boundaries
 
 Do not modify live Hunts/Town, PR #338 one-road experiments or PR #340 original painting archive. Preserve current agreed lighting behavior and the owner-approved six-swatch source.
+
+## GPU material-channel upgrade
+
+The review now generates one compact non-color **roughnessMap** from the same C#-classified 16px material cells: grass 0.97, earth 0.84, wet mud 0.47. The G channel is registered through the existing shared LightingEngine, alongside painted albedo, on the SAME ground geometry. The preview uses no custom terrain-light shader, no new gameplay water, and no extra road surface mesh. Roughness values are design hypotheses (not verified physical measurements); they must be visually reviewed and adjusted alongside replacement light-neutral albedo.
