@@ -66,12 +66,13 @@ jobs:
               --window-size="${width},${height}" --virtual-time-budget=8000 \
               --screenshot="artifacts/town-3d/${name}.png" \
               --dump-dom \
-              "http://127.0.0.1:4173/town3d-review.html?clean=1&mode=${mode}&district=${district}" \
+              "http://127.0.0.1:4173/town3d-review.html?clean=1&mode=${mode}&district=${district}&frameWidth=${width}&frameHeight=${height}" \
               >"artifacts/town-3d/${name}.html" 2>"artifacts/town-3d/${name}.log"
             test -s "artifacts/town-3d/${name}.png"
             grep -q 'data-town3d-ready="true"' "artifacts/town-3d/${name}.html"
             grep -q 'data-town3d-peak-rgb=' "artifacts/town-3d/${name}.html"
             grep -q '52704' "artifacts/town-3d/${name}.html"
+            grep -Fq "&quot;framebuffer&quot;:[${width},${height}]" "artifacts/town-3d/${name}.html"
             if [[ "$mode" != zero ]]; then
               python3 - "artifacts/town-3d/${name}.html" <<'PY'
           import re,sys
