@@ -78,8 +78,9 @@ test('Domain lights reach same existing GPU manifest and black-world zero-light 
     const m = townPreviewManifest({ domains: true, wellV4: true });
     configureTownLightDomains(m.fixtures, { unlocks: vacant });
     const common = compileTownLightingSnapshot(m, { mode: 'night' });
-    assert.deepEqual(common.lights.filter(x => x.enabled).map(x => x.domain),
-        ['common', 'common']);
+    assert.equal(common.lights.filter(x => x.enabled).length, 10);
+    assert.ok(common.lights.filter(x => x.enabled).every(x => x.domain === 'common'));
+    assert.equal(common.lights.find(x => x.id === 'town-blacksmith-chimney').enabled, false);
     const zero = compileTownLightingSnapshot(m, { mode: 'zero' });
     assert.equal(zero.environment.ambient, 0);
     assert.equal(zero.environment.emission, false);
