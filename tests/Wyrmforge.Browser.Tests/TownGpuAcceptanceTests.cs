@@ -94,6 +94,10 @@ public sealed class TownGpuAcceptanceTests : PageTest
         Assert.AreEqual("ready", state, "Gated GPU acceptance requires real WebGL, not painted fallback.");
 
         var canvas = scene.Locator(".refuge-town-gpu-canvas");
+        // Native art detail is mandatory for visual approval: no upscaled
+        // 390px WebGL version of the 1672px panoramic Town is acceptable.
+        Assert.AreEqual("1672", await canvas.GetAttributeAsync("data-framebuffer-width"));
+        Assert.AreEqual("941", await canvas.GetAttributeAsync("data-framebuffer-height"));
         var errorString = await canvas.GetAttributeAsync("data-projection-error-px");
         Assert.IsTrue(double.TryParse(errorString, NumberStyles.Float, CultureInfo.InvariantCulture,
             out var error), "GPU camera calibration must be reported.");
