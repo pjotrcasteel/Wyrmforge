@@ -35,7 +35,15 @@ test('Stage 4 does not flatten transparent well into opaque square or reintroduc
 test('Only roof and structural posts cast real GPU shadows; stone floor and planters never cast', () => {
     assert.deepEqual(Object.keys(WELL_STAGE4_CASTER_PATHS),
         ['roof', 'leftPost', 'rightPost', 'boardLeftPost', 'boardRightPost']);
-    assert.equal(WELL_STAGE4_CASTER_PATHS.roof.length, 11);
+    assert.equal(WELL_STAGE4_CASTER_PATHS.roof.length, 10);
+    assert.ok(WELL_STAGE4_CASTER_PATHS.roof.every(([, y]) => y >= 18),
+        'No giant roof shadow cast by polygons extending into empty sky');
+    const area = polygon => Math.abs(polygon.reduce((a, [x, y], i) => {
+        const [u, v] = polygon[(i + 1) % polygon.length];
+        return a + x * v - y * u;
+    }, 0)) / 2;
+    assert.ok(Object.values(WELL_STAGE4_CASTER_PATHS).reduce((a,p) => a + area(p), 0) < 10000,
+        'Well contact shadows must never use a giant well-base area');
     for (const path of Object.values(WELL_STAGE4_CASTER_PATHS))
         for (const [x, y] of path) {
             assert.ok(x >= 0 && x <= 255 && y >= 0 && y <= 207);

@@ -23,8 +23,9 @@ export const STAGE4_REPLACED_CUTOUT_IDS = Object.freeze([
 // object, NOT collision geometry or the original gigantic well/front-rim trace.
 // No ground/floor/foundation/barrel/flower shape is allowed into this atlas.
 export const WELL_STAGE4_CASTER_PATHS = Object.freeze({
-    roof: [[105, 64], [116, 40], [140, 15], [165, 5], [193, 12], [224, 35],
-        [244, 62], [216, 82], [193, 68], [155, 69], [131, 83]],
+    // Tighter roof: Stage 3 artist geometry, with NO caster in empty sky.
+    roof: [[111, 52], [132, 21], [140, 18], [213, 36], [238, 57],
+        [235, 65], [218, 58], [206, 79], [198, 82], [111, 59]],
     leftPost: [[129, 73], [143, 72], [143, 129], [131, 133]],
     rightPost: [[202, 76], [215, 77], [215, 138], [202, 135]],
     boardLeftPost: [[18, 84], [29, 82], [30, 155], [19, 159]],
