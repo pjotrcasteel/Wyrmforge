@@ -102,6 +102,10 @@ test('live C# Town DOM is read only and maps CSS feet percentages back to painti
     assert.equal(state[1].feet[1], 588.5);
     assert.equal(project(state).layers.length, 2);
     assert.equal(people[0].style.left, '51.675%', 'read only; do not alter live DOM actor position');
+    const southExit = mock(8, '978.64', '51.675%', '104%');
+    assert.deepEqual(readTownCitizensFromDom({ querySelectorAll: () =>
+        [people[0], southExit] }).map(c => c.id), [1],
+        'NPC exiting south off-screen is clipped rather than crashing all Town lighting');
     assert.throws(() => readTownCitizensFromDom({ querySelectorAll: () =>
         [mock(1, '513', '20%', '54.516%')] }), /disagree/);
     assert.throws(() => readTownCitizensFromDom({ querySelectorAll: () =>
