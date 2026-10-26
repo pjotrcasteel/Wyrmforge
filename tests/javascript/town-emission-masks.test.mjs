@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { emissionMaskPixels, TOWN_EMISSION_PLATES, TOWN_EMISSION_REGIONS }
     from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/town-emission-masks.js';
 import { townPreviewManifest } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/town-relighting-preview.js';
+import { neutralizeBuildingPixels } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/town-building-neutral-albedo.js';
 
 const plate = (domain, x, y) => ({ domain, x, y, width: 4, height: 4 });
 const pixels = (r, g, b) => {
@@ -96,4 +97,22 @@ test('Four neutral day-vacant GPU diffuse surfaces have exact canonical atlas bo
         'Night scenic backing is retained; never substituted by daytime sky');
     assert.equal(scene.layers[1].material, base.layers[1].material,
         'Both versions retain one canonical-pixel paving receiving plane');
+});
+
+test('Neutral building material stays inside both approved day/night alpha silhouettes', () => {
+    const day = new Uint8ClampedArray([220, 200, 170, 255, 255, 235, 200, 255]);
+    const night = new Uint8ClampedArray([30, 25, 22, 255, 12, 12, 12, 0]);
+    const result = neutralizeBuildingPixels(day, night, 2, 1);
+    assert.equal(result.retained, 1);
+    assert.deepEqual(Array.from(result.data.slice(4)), [0, 0, 0, 0],
+        'Daylight silhouette cannot expose a vacant-night transparent pixel');
+    for (let channel = 0; channel < 3; channel++)
+        assert.ok(result.data[channel] > night[channel] && result.data[channel] < day[channel]);
+    assert.equal(result.data[3], 255);
+});
+test('Neutral material rejects any unregistered pixel array length or invalid daylight mix', () => {
+    const day = new Uint8ClampedArray(8), night = new Uint8ClampedArray(8);
+    assert.throws(() => neutralizeBuildingPixels(day, night, 3, 1), /registered RGBA/);
+    assert.throws(() => neutralizeBuildingPixels(day, night, 2, 1,
+        { daylightContribution: 4 }), /registered RGBA/);
 });
