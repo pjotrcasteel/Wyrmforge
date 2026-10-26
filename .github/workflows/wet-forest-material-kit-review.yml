@@ -1,0 +1,65 @@
+name: Wet Forest three-material GPU review
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/Wyrmforge.Presentation.Web/Pages/ArenaMaterialKit.razor'
+      - 'src/Wyrmforge.Presentation.Web/Pages/ArenaMaterialKit.razor.css'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/wet-forest-three-material-kit.js'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/wet-forest-gpu-material-review.js'
+      - 'tests/Wyrmforge.Browser.Tests/WetForestMaterialKitBrowserTests.cs'
+      - 'tests/javascript/wet-forest-three-material-kit.test.mjs'
+      - '.github/workflows/wet-forest-material-kit-review.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  focused-material-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Restore published runtime art
+        run: |
+          git lfs pull --include="src/Wyrmforge.Presentation.Web/wwwroot/**" --exclude=""
+          python3 tools/development/verify_web_assets.py
+      - name: Verify JavaScript recipe and GPU contracts
+        run: node --test tests/javascript/wet-forest-three-material-kit.test.mjs
+      - name: Restore and build targeted browser project
+        run: |
+          dotnet restore tests/Wyrmforge.Browser.Tests/Wyrmforge.Browser.Tests.csproj
+          dotnet build tests/Wyrmforge.Browser.Tests/Wyrmforge.Browser.Tests.csproj -c Release --no-restore
+      - name: Install Chromium
+        run: pwsh tests/Wyrmforge.Browser.Tests/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
+      - name: Publish review site
+        run: |
+          dotnet restore src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj
+          dotnet publish src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -c Release --no-restore -o ./artifacts/web
+      - name: Serve site
+        run: |
+          python3 tools/development/spa_server.py --port 4173 --directory ./artifacts/web/wwwroot > ./artifacts/material-kit-server.log 2>&1 &
+          for i in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat ./artifacts/material-kit-server.log
+          exit 1
+      - name: Run only three-material GPU mobile screenshot tests
+        env:
+          WYRMFORGE_BASE_URL: http://127.0.0.1:4173/
+          WYRMFORGE_BROWSER_ARTIFACTS: ${{ github.workspace }}/artifacts/material-kit-png
+        run: dotnet test tests/Wyrmforge.Browser.Tests/Wyrmforge.Browser.Tests.csproj -c Release --no-build --filter "FullyQualifiedName~WetForestMaterialKitBrowserTests" --logger "console;verbosity=normal"
+      - name: Upload mobile GPU screenshots and diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wet-forest-three-material-gpu-pngs
+          path: |
+            artifacts/material-kit-png
+            artifacts/material-kit-server.log
+          retention-days: 14
+          if-no-files-found: warn
