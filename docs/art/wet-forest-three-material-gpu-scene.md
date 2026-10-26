@@ -76,3 +76,15 @@ python3 tools/art/build_trampled_earth_art_candidates.py --output "$output/tramp
 These are the copied PR #340 source-art exporters. They preserve the
 original paintings and their source hashes and do not alter runtime gameplay.
 All relevant CI workflows invoke them before preview app packaging.
+
+## Original-source material contact refinement (26 October 2026)
+
+**Problem observed in actual Chromium/390px neutral-light GPU screenshots:** Grass/Moss and Trampled Earth retained their desired detailed painting style, but their contact followed hard 16px terrain cell boundaries and made obvious squared-off edges. Replacing those paintings again would be the wrong fix.
+
+**Changes limited to the review compositor:**
+- `sourceBackedBoundaryContacts` traverses only existing C# material-cell boundaries and computes continuous, deterministic 2px-high / 2px-wide contact ribbons with maximum 5px displacement. Each contact copies pixels **directly from the same original PR #340 material**; no RGB crossfade, drawing new leaf patterns, procedural material generation or alpha-keyed black backgrounds.
+- The material board, C# path, site, puddle classification, and provisional roughness texture are identical in both modes. The old stepped boundary stays selectable as `Previous stepped contacts` for same-seed, same-light A/B comparisons.
+- Browser acceptance automatically captures original/organic boundary modes at 320px and 390px. Tests assert different framebuffer hashes, exact restoration when switched back, unchanged source identifiers, deterministic contact lists and no invented material IDs.
+
+**Scope/approval:** this is only a **visual boundary treatment for archived artwork**, not a new road engine, redesigned texture bank or neutral physically separated albedo. Visual review remains necessary, especially crossing/corners, width of contact regions and night legibility. Source WebPs and PR #340 exporter code are unchanged.
+
