@@ -5,6 +5,10 @@ import * as T from './lighting/vendor/three.module.js';
 import { LightingEngine } from './lighting/engine.js';
 import { compileTownLightingSnapshot, TOWN_ART_SIZE } from './town-relightable-scene.js';
 import { CUTOUTS } from './refuge-foreground-cutouts.js';
+import {
+    WELL_STAGE4, STAGE4_REPLACED_CUTOUT_IDS, stage4WellLayer, stage4WellMaterial,
+    stage4WellLight, stage4CasterGeometry,
+} from './town-well-stage4.js';
 import { splitTownPavingReference, levelPavingNormal } from './town-paving-material.js';
 import { deriveTownNeutralPavingCanvas } from './town-neutral-albedo.js';
 import { TOWN_NIGHT_LIGHT_GRADE, gradeTownPreviewLighting } from './town-lighting-grade.js';
@@ -137,7 +141,7 @@ function light(id, x, y, height, color, intensity, enabled = true) {
     };
 }
 
-export function townPreviewManifest() {
+export function townPreviewManifest({ wellV4 = false } = {}) {
     const a = axes();
     const layers = [{
         id: 'canonical-day-reference', ownerId: 'canonical-town', geometry: 'approved-panorama-plane',
@@ -169,7 +173,18 @@ export function townPreviewManifest() {
         light('east-lantern', 1111, 373, 1.2,
             TOWN_NIGHT_LIGHT_GRADE.lanternColor, TOWN_NIGHT_LIGHT_GRADE.peripheralIntensity),
     ];
-    for (const cutout of CUTOUTS) {
+    const selectedCutouts = wellV4
+        ? CUTOUTS.filter(c => !STAGE4_REPLACED_CUTOUT_IDS.includes(c.id)) : CUTOUTS;
+    if (wellV4) {
+        const direction = a.toward.toArray();
+        layers.push(stage4WellLayer(townPreviewProjection, direction));
+        materials.push(stage4WellMaterial());
+        // Replace the old lamplight: its point-shadow map and giant 2.5D
+        // cutout proxy are what caused the broad dark ring around the well.
+        fixtures.splice(fixtures.findIndex(f => f.id === 'noticeboard-lantern'), 1,
+            stage4WellLight(townPreviewProjection, direction));
+    }
+    for (const cutout of selectedCutouts) {
         const position = new T.Vector3(...townPreviewProjection(
             cutout.x + cutout.width / 2, cutout.y + cutout.height / 2))
             .addScaledVector(a.toward, .09).toArray();
@@ -188,9 +203,11 @@ export function townPreviewManifest() {
     return { version: 1, artSize: [...TOWN_ART_SIZE], layers, materials, fixtures };
 }
 
-async function loadApprovedImage() {
+async function loadApprovedImage(wellV4 = false) {
     const image = new Image();
-    image.src = new URL('../art/town/day-active.webp', import.meta.url).href;
+    image.src = new URL(wellV4
+        ? '../' + WELL_STAGE4.backgroundUrl
+        : '../art/town/day-active.webp', import.meta.url).href;
     await image.decode();
     if (image.naturalWidth !== TOWN_ART_SIZE[0] || image.naturalHeight !== TOWN_ART_SIZE[1])
         throw new Error('Approved Town source resolution changed; reject visual drift');
@@ -198,7 +215,7 @@ async function loadApprovedImage() {
 }
 
 /** The only side effect is an isolated canvas, never live Town runtime. */
-export async function initializeTownPreview(canvas) {
+export async function initializeTownPreview(canvas, { wellV4 = false } = {}) {
     if (states.has(canvas)) return;
     // The full Town scene is ~1000–1700 CSS px wide on portrait phones.
 // The previous 780px cap discarded more than half of the authored detail
@@ -208,17 +225,20 @@ const engine = new LightingEngine(canvas, {
         shadowViews: 8, maxLights: 8, maxFramebufferWidth: TOWN_ART_SIZE[0],
     });
     const state = { engine, mode: 'night', lamps: true, offset: 0, npcEnabled: true,
-        npcProgress: 0, paving: 'neutral', view: 'lit', citizens: null, alive: true };
+        npcProgress: 0, paving: 'neutral', view: 'lit', citizens: null,
+        wellV4: wellV4 === true, alive: true };
     states.set(canvas, state);
     try {
-        const a = axes(), source = await loadApprovedImage();
+        const a = axes(), source = await loadApprovedImage(state.wellV4);
+        const selectedCutouts = state.wellV4
+            ? CUTOUTS.filter(c => !STAGE4_REPLACED_CUTOUT_IDS.includes(c.id)) : CUTOUTS;
         engine.registerGeometry('approved-panorama-plane', plane(BASE_WIDTH, BASE_HEIGHT, a.basis));
         // Existing Town CSS NPC silhouettes rendered by the same shared engine.
         // This is diagnostic Town behavior, not new or approved character art.
         engine.registerGeometry('town-citizen-css-rectangle', plane(
             TOWN_CITIZEN_ART_WIDTH * BASE_WIDTH / TOWN_ART_SIZE[0],
             TOWN_CITIZEN_ART_HEIGHT * BASE_WIDTH / TOWN_ART_SIZE[0], a.basis));
-        const separated = splitTownPavingReference(source, CUTOUTS);
+        const separated = splitTownPavingReference(source, selectedCutouts);
         engine.registerTexture('town-day-background', new T.CanvasTexture(separated.backdrop));
         engine.registerTexture('town-day-paving', new T.CanvasTexture(separated.floor));
         // Preserve exact approved-source pixels as a QC toggle, but author a
@@ -232,14 +252,30 @@ const engine = new LightingEngine(canvas, {
         const normalTexture = new T.DataTexture(normal, 1, 1, T.RGBAFormat);
         normalTexture.needsUpdate = true;
         engine.registerTexture('town-paving-flat-normal', normalTexture, false);
-        for (const cutout of CUTOUTS) {
+        if (state.wellV4) {
+            const wellImage = new Image();
+            wellImage.src = new URL('../' + WELL_STAGE4.spriteUrl, import.meta.url).href;
+            await wellImage.decode();
+            if (wellImage.naturalWidth !== WELL_STAGE4.sprite.width ||
+                wellImage.naturalHeight !== WELL_STAGE4.sprite.height)
+                throw new Error('Stage 4 requires exact authored well PNG, not rescaled canvas art');
+            engine.registerGeometry('stage4-well-plane', plane(
+                WELL_STAGE4.sprite.width * BASE_WIDTH / TOWN_ART_SIZE[0],
+                WELL_STAGE4.sprite.height * BASE_WIDTH / TOWN_ART_SIZE[0], a.basis));
+            engine.registerGeometry('stage4-well-caster-proxies',
+                stage4CasterGeometry(T, a.basis));
+            const wellTexture = new T.Texture(wellImage);
+            wellTexture.needsUpdate = true;
+            engine.registerTexture('stage4-well-albedo', wellTexture);
+        }
+        for (const cutout of selectedCutouts) {
             const size = BASE_WIDTH / TOWN_ART_SIZE[0];
             engine.registerGeometry('approved-cutout-plane-' + cutout.id,
                 plane(cutout.width * size, cutout.height * size, a.basis));
             engine.registerGeometry('approved-foreground-caster-' + cutout.id, cutoutGeometry(cutout, a.basis));
             engine.registerTexture('approved-cutout-texture-' + cutout.id, cutoutTexture(source, cutout));
         }
-        state.manifest = townPreviewManifest();
+        state.manifest = townPreviewManifest({ wellV4: state.wellV4 });
         engine.setCamera([0, 0, 0], BASE_WIDTH / 2);
         configureTownPreview(canvas, {});
         canvas.dataset.ready = 'true';
@@ -269,13 +305,19 @@ export function configureTownPreview(canvas, options) {
     const citizenY = 513 + state.npcProgress * 75;
     const input = state.citizens ?? [{ id: 1, feet: [864, citizenY], isPresent: true }];
     const actor = projectTownCitizens(input,
-        townPreviewProjection, axes().toward.toArray(), { enabled: state.npcEnabled });
+        townPreviewProjection, axes().toward.toArray(),
+        { enabled: state.npcEnabled,
+          frontDepthY: state.wellV4 ? WELL_STAGE4.frontDepthY : undefined });
     manifest.layers.push(...actor.layers);
     manifest.materials.push(...actor.materials);
-    const moved = manifest.fixtures.find(f => f.id === 'noticeboard-lantern');
-    const modified = light(moved.id, moved.artAnchor[0] + state.offset,
-        moved.artAnchor[1], 1.1, TOWN_NIGHT_LIGHT_GRADE.lanternColor,
-        TOWN_NIGHT_LIGHT_GRADE.centralIntensity, state.lamps);
+    const moved = manifest.fixtures.find(f =>
+        f.id === (state.wellV4 ? 'stage4-well-lantern' : 'noticeboard-lantern'));
+    const modified = state.wellV4
+        ? stage4WellLight(townPreviewProjection, axes().toward.toArray(),
+            { offset: state.offset, enabled: state.lamps })
+        : light(moved.id, moved.artAnchor[0] + state.offset,
+            moved.artAnchor[1], 1.1, TOWN_NIGHT_LIGHT_GRADE.lanternColor,
+            TOWN_NIGHT_LIGHT_GRADE.centralIntensity, state.lamps);
     Object.assign(moved, modified);
     for (const fixture of manifest.fixtures) fixture.enabled &&= state.lamps;
     const snapshot = gradeTownPreviewLighting(compileTownLightingSnapshot(manifest, {
@@ -328,6 +370,8 @@ export function configureTownPreview(canvas, options) {
     canvas.dataset.framebufferHeight = state.engine.canvas.height.toString();
     canvas.dataset.artworkPixelsPerFramebufferPixel =
         (TOWN_ART_SIZE[0] / state.engine.canvas.width).toFixed(3);
+    canvas.dataset.wellAssetMode = state.wellV4 ? 'stage4-remade' : 'legacy';
+    canvas.dataset.wellShadowCaster = state.wellV4 ? 'roof-and-posts-only' : 'legacy';
     canvas.dataset.pavingAlbedo = state.paving;
     canvas.dataset.neutralCoverage = (state.neutralMetrics?.coverage ?? 0).toString();
     canvas.dataset.illuminationReduction =

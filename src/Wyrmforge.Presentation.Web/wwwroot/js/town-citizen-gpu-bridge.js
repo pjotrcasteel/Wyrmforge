@@ -65,9 +65,12 @@ const validVec3 = (value, label) => {
         throw new TypeError('Invalid ' + label);
 };
 
-export function projectTownCitizens(citizens, project, toward, { enabled = true } = {}) {
+export function projectTownCitizens(citizens, project, toward,
+    { enabled = true, frontDepthY = TOWN_WELL_FRONT_DEPTH_Y } = {}) {
     if (!Array.isArray(citizens) || typeof project !== 'function' || typeof enabled !== 'boolean')
         throw new TypeError('Invalid NPC projection input');
+    if (!Number.isFinite(frontDepthY) || frontDepthY < 0 || frontDepthY > ART_SIZE[1])
+        throw new RangeError('Invalid authored foreground depth threshold');
     validVec3(toward, 'Town camera facing');
     if (Math.abs(Math.hypot(...toward) - 1) > 1e-5) throw new RangeError('Camera facing must be normalized');
 
@@ -99,7 +102,7 @@ export function projectTownCitizens(citizens, project, toward, { enabled = true 
         // Proof-only source painting depth ordering: the approved existing
         // well-depth threshold decides whether actor is in front of cutouts.
         // This is NOT the permanent world-space depth system for all facades.
-        const foregroundDepth = y >= TOWN_WELL_FRONT_DEPTH_Y ? .15 : .045;
+        const foregroundDepth = y >= frontDepthY ? .15 : .045;
         const position = center.map((coord, i) => coord + foregroundDepth * toward[i]);
         return {
             id: 'town-citizen-' + citizen.id,

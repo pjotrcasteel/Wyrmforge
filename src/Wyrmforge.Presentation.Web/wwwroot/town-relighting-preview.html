@@ -34,6 +34,9 @@
 This isolated G1/G3 renderer uses the exact approved daylight painting as a <em>temporary reference texture</em>,
 plus existing hand-traced foreground cutouts as shadow casters. The painting still contains baked light/shadows:
 it must be replaced with independently authored neutral material layers before T2 visual sign-off.
+Use ?wellV4=1 to test the separate Stage 3 well and Stage 4 lantern/shadow geometry AFTER
+the two Stage 3 PNG assets have been installed in art/town. If they are missing,
+initialization deliberately fails instead of presenting the old well as a new one.
 This is neither the live Town nor the final day/night lighting. The original-source/neutralized candidate control is a technical art comparison, not final visual approval. The movable diagnostic NPC reproduces the <em>current live Town CSS placeholder</em>, not finished NPC pixel artwork.</p>
 <div class="controls">
   <label>World light
@@ -102,7 +105,7 @@ function update() {
 }
 for (const control of [mode, lamps, offset, citizen, npcProgress, paving, view]) control.addEventListener('input', update);
 try {
-    await initializeTownPreview(canvas);
+    await initializeTownPreview(canvas, { wellV4: query.get('wellV4') === '1' });
     update();
 } catch (error) {
     console.error(error);

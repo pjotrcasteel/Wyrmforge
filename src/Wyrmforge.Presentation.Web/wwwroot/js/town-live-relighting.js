@@ -51,7 +51,10 @@ export async function mountTownLiveGpuPreview(selector = '.refuge-canonical-scen
     };
 
     try {
-        await initializeTownPreview(canvas);
+        // Both Stage 3 art binaries must be installed for this secondary
+        // opt-in. Default preview never changes or uses missing art paths.
+        const wellV4 = new URLSearchParams(location.search).get('townWellStage4') === '1';
+        await initializeTownPreview(canvas, { wellV4 });
         if (session.disposed || !scene.isConnected) return false;
         liveCitizens(scene, canvas); // Complete the first REAL C# actor frame before switching.
         // Mutation records from the C# actor subtree, not a second game clock.
