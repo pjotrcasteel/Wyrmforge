@@ -72,7 +72,7 @@ jobs:
             grep -q 'data-town3d-ready="true"' "artifacts/town-3d/${name}.html"
             grep -q 'data-town3d-peak-rgb=' "artifacts/town-3d/${name}.html"
             grep -q '52704' "artifacts/town-3d/${name}.html"
-            grep -Fq "&quot;framebuffer&quot;:[${width},${height}]" "artifacts/town-3d/${name}.html"
+            grep -Fq "\"framebuffer\":[${width},${height}]" "artifacts/town-3d/${name}.html"
             if [[ "$mode" != zero ]]; then
               python3 - "artifacts/town-3d/${name}.html" <<'PY'
           import re,sys
