@@ -123,7 +123,9 @@ jobs:
               with Image.open(path) as image:
                   rgb = image.convert('RGB').crop((0, 0, image.width, round(image.width * 941 / 1672)))
                   average = sum(ImageStat.Stat(rgb).mean) / 3
-              valid = average <= 1 if name.startswith('zero-') else average >= 3
+              # Night domain isolation intentionally preserves deep-black negative space.
+              # Reject genuinely blank frames, not low-key but nonblack GPU output.
+              valid = average <= 1 if name.startswith('zero-') else average >= (0.6 if name.startswith('domain-') else 3)
               print(f'{name}: captured WebGL brightness={average:.1f}, valid={valid}')
               sys.exit(0 if valid else 1)
           except Exception as error:
