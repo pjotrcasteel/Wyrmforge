@@ -126,6 +126,33 @@ public sealed class AdvancedAgentIntegrationTests
     }
 
     [TestMethod]
+    public void Ai6Metrics_RealHuntTick_CapturesBufferedEnemyDamageAfterResolution()
+    {
+        var run = Create(1, AgentTier.Tactical);
+        typeof(RunSimulation).GetField("developmentInvulnerable", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .SetValue(run, false);
+        var hunter = (PlayerState)typeof(RunSimulation)
+            .GetField("player", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(run)!;
+        var enemy = ((List<EnemyState>)typeof(RunSimulation)
+            .GetField("enemies", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(run)!).Single();
+        hunter.Position = enemy.Position;
+
+        var before = hunter.Health;
+        run.Tick(.025, default, 800, 600);
+        var loss = before - hunter.Health;
+        Assert.IsGreaterThan(0d, loss, "A real overlapping Hound must apply buffered contact damage.");
+        var damaged = run.InspectAgentPerformance();
+        Assert.AreEqual(loss, damaged.LastHunterHealthDamage, .000001);
+        Assert.AreEqual(loss, damaged.TotalHunterHealthDamage, .000001);
+
+        hunter.Position = new Vector2D(40, 40);
+        run.Tick(.025, default, 800, 600);
+        var escaped = run.InspectAgentPerformance();
+        Assert.AreEqual(0d, escaped.LastHunterHealthDamage);
+        Assert.AreEqual(loss, escaped.TotalHunterHealthDamage, .000001);
+    }
+
+    [TestMethod]
     public void Horde_64Agents_RespectsQueryCapsAndReportsActualCosts()
     {
         var run = Create(64, AgentTier.Tactical);
