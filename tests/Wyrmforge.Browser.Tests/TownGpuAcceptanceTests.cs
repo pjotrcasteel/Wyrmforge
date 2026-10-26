@@ -90,7 +90,7 @@ public sealed class TownGpuAcceptanceTests : PageTest
         var errorString = await canvas.GetAttributeAsync("data-projection-error-px");
         Assert.IsTrue(double.TryParse(errorString, NumberStyles.Float, CultureInfo.InvariantCulture,
             out var error), "GPU camera calibration must be reported.");
-        Assert.IsLessThanOrEqualTo(2.0, error, "T1 camera must align to source pixels.");
+        Assert.IsTrue(error <= 2.0, $"T1 camera must align to source pixels; got {error:0.000}px.");
         Assert.IsNotNull(await canvas.GetAttributeAsync("data-authoritative-citizen-count"));
         await Expect(scene.Locator("[data-town-building]")).ToHaveCountAsync(4);
 
@@ -105,14 +105,15 @@ public sealed class TownGpuAcceptanceTests : PageTest
         await ConfigureAsync("day", "neutral", "lit", 0);
         await CaptureAsync($"town-t2-neutral-day-{width}.png");
 
+        // This opt-in REAL Town uses C# citizen feet; npcProgress only moves
+        // the isolated lab's scripted proxy, so never claim the following
+        // screenshots are scripted behind/front positions. The lab workflow
+        // separately captures approved well silhouettes at both test poses.
         await ConfigureAsync("night", "neutral", "shadow-visibility", 0);
-        await CaptureAsync($"town-t2-shadows-behind-well-{width}.png");
+        await CaptureAsync($"town-t2-shadows-live-crowd-{width}.png");
 
-        await ConfigureAsync("night", "neutral", "shadow-visibility", 1);
-        await CaptureAsync($"town-t2-shadows-front-well-{width}.png");
-
-        await ConfigureAsync("night", "neutral", "lit", 1);
-        await CaptureAsync($"town-t2-npc-front-well-{width}.png");
+        await ConfigureAsync("night", "neutral", "lit", 0);
+        await CaptureAsync($"town-t2-npc-live-crowd-{width}.png");
 
         await ConfigureAsync("zero", "neutral", "lit", 1);
         Assert.AreEqual("true", await canvas.GetAttributeAsync("data-zero-black"));
