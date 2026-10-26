@@ -143,7 +143,7 @@ public sealed class AdvancedAgentIntegrationTests
         for (var tick = 1; tick <= 400; tick++)
         {
             var sampled = (tick - 1) % 6 == 0;
-            if (sampled) contact = new(new Vector2D(120, tick * .5), Vector2D.Zero, tick, "vision");
+            if (sampled) contact = new(new Vector2D(120 * Math.Cos(tick * .02), 120 * Math.Sin(tick * .02)), Vector2D.Zero, tick, "vision");
             var sensed = new AgentPerceptionSnapshot(tick, tick + 1, contact, -1, sampled, true);
             agent.Step(.025, contact!.Position, contact.Position, 40, false, sensed);
         }
