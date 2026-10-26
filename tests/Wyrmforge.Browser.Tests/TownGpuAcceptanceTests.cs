@@ -43,6 +43,7 @@ public sealed class TownGpuAcceptanceTests : PageTest
     [TestMethod]
     [DataRow(320, 568)]
     [DataRow(390, 844)]
+    [DataRow(1120, 720)]
     public async Task TownT0_CanonicalOriginal_CapturesAllThreeDistricts(int width, int height)
     {
         await Page.SetViewportSizeAsync(width, height);
@@ -79,6 +80,7 @@ public sealed class TownGpuAcceptanceTests : PageTest
     [TestMethod]
     [DataRow(320, 568)]
     [DataRow(390, 844)]
+    [DataRow(1120, 720)]
     public async Task TownT2_GpuCentralSquare_CapturesPavingShadowsAndActorDepth(int width, int height)
     {
         await Page.SetViewportSizeAsync(width, height);
