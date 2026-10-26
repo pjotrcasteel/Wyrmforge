@@ -303,6 +303,6 @@
 }
 .game-shell.refuge-home .refuge-canonical-scene[data-town-gpu-preview="ready"] .refuge-town-night-base,
 .game-shell.refuge-home .refuge-canonical-scene[data-town-gpu-preview="ready"] .refuge-town-citizen,
-.game-shell.refuge-home .refuge-canonical-scene[data-town-gpu-preview="ready"] .refuge-town-png-cutout {
+.game-shell.refuge-home .refuge-canonical-scene[data-town-gpu-preview="ready"] .refuge-town-scenery-foreground {
     visibility:hidden;
 }
