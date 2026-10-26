@@ -254,7 +254,20 @@
     }
 </div>
 
+@if (showTownAgents && crowd is not null && !showTownV2)
+{
+    <details data-testid="town-agent-panel">
+        <summary>Town AI inspector</summary>
+        <button type="button" @onclick="RefreshTownAgents">Refresh Town AI inspector</button>
+        <pre data-testid="town-agent-inspector">@townAgentJson</pre>
+    </details>
+}
+
 @code {
+    private bool showTownAgents;
+    private string townAgentJson = "[]";
+    private void RefreshTownAgents() => townAgentJson = JsonSerializer.Serialize(crowd?.InspectAgents(),
+        new JsonSerializerOptions { WriteIndented = true });
     private TownCrowd? crowd;
     private readonly CancellationTokenSource loadingStop = new();
     private IJSObjectReference? foregroundModule;
@@ -345,6 +358,7 @@
     {
         var query = new Uri(Navigation.Uri).Query.TrimStart('?')
             .Split('&', StringSplitOptions.RemoveEmptyEntries);
+        showTownAgents = query.Any(parameter => string.Equals(parameter, "townAi2=1", StringComparison.OrdinalIgnoreCase));
         showTownV2 = query.Any(parameter =>
             string.Equals(parameter, "townV2=1", StringComparison.OrdinalIgnoreCase));
         showTownGeometry = query.Any(parameter =>
@@ -366,8 +380,7 @@
             var json = await http.GetStringAsync(Navigation.ToAbsoluteUri($"art/town/night-navigation.json?v={AppBuildInfo.Version}"), loadingStop.Token);
             if (loadingStop.IsCancellationRequested) return;
             crowd = new TownCrowd(TownNavigationMap.FromJson(json), seed: 205, citizenCount: citizenCount,
-                openBuildings: OpenBuildings(), agentActivities: query.Any(parameter =>
-                    string.Equals(parameter, "townAi2=1", StringComparison.OrdinalIgnoreCase)));
+                openBuildings: OpenBuildings(), agentActivities: showTownAgents);
             if (showTownWalkScan) walkScanPath = crowd.Navigation.DebugWalkabilityScanPath();
         }
         catch (OperationCanceledException) { /* Town was left before navigation loaded. */ }

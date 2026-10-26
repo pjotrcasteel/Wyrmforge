@@ -67,6 +67,7 @@ public sealed class TownCrowd
     private uint _randomState;
     private readonly bool _agentActivities;
     private readonly int _agentSeed;
+    private double _activitySeconds;
     private readonly Dictionary<int, (AgentRuntime Runtime, CitizenPolicy Policy)> _agents = [];
     public IReadOnlyList<AgentSnapshot> InspectAgents() => _agents.OrderBy(p => p.Key).Select(p => p.Value.Runtime.Inspect()).ToArray();
     private sealed class CitizenPolicy : IAgentPolicy
@@ -309,6 +310,7 @@ public sealed class TownCrowd
         var seconds = (float)Math.Clamp(elapsed.TotalSeconds, 0d, .1d);
         if (seconds <= 0) return;
         LastStepPathSearches = 0;
+        _activitySeconds += seconds;
 
         foreach (var citizen in _citizens)
         {
@@ -604,12 +606,13 @@ public sealed class TownCrowd
 
     private void ChooseActivity(TownCitizen citizen)
     {
+        var preferredActivity = CivilianSchedule.Preferred(_activitySeconds, _agentSeed, citizen.Id, citizen.AssignedWorkNode >= 0);
         var candidates = Enumerable.Range(0, _navigation.Destinations.Count)
             .Where(i => i != citizen.CurrentNode && (!citizen.IsReturning || !_navigation.Destinations[i].IsExit))
             .OrderBy(i => i == citizen.AssignedWorkNode ? 0 : 1)
             .ThenBy(i => i == citizen.PreviousNode ? 1 : 0)
             .ThenBy(i => Distance(citizen.Position, _navigation.Destinations[i].Position))
-            .Take(CivilianActivitySelector.OptionLimit).ToArray();
+            .Take(CivilianActivitySelector.OptionLimit - 1).ToArray();
         var options = candidates.Select(i =>
         {
             var place = _navigation.Destinations[i];
@@ -618,10 +621,11 @@ public sealed class TownCrowd
             var open = place.BuildingId is null || _openBuildings.Contains(place.BuildingId) && work;
             var available = !_citizens.Any(other => other != citizen && (other.DestinationNode == i
                 || other.IsPresent && !other.IsWalking && other.CurrentNode == i));
-            var utility = (work ? 4 : 2) + 1d / (1 + Distance(citizen.Position, place.Position));
+            var utility = (activity == preferredActivity ? 4 : 1) + 1d / (1 + Distance(citizen.Position, place.Position));
             if (i == citizen.PreviousNode) utility *= .25;
             return new CivilianActivityOption(place.Id, activity, utility, open, available);
-        }).ToImmutableArray();
+        }).Append(new CivilianActivityOption("rest-in-place", CivilianActivity.Rest,
+            preferredActivity == CivilianActivity.Rest && !citizen.IsReturning ? 6 : 0, true, true)).ToImmutableArray();
         var choice = CivilianActivitySelector.Select(options);
         if (!_agents.TryGetValue(citizen.Id, out var agent))
         {
@@ -632,20 +636,30 @@ public sealed class TownCrowd
         agent.Policy.Alternatives = choice.Alternatives;
         var tick = agent.Runtime.Inspect().Tick + 1;
         var request = agent.Runtime.Step([
+            new("schedule", preferredActivity.ToString(), tick, "seeded-local-schedule"),
             new("assigned-building", citizen.AssignedBuildingId ?? "none", tick, "town-assignment"),
             new("current-place", _navigation.Destinations[citizen.CurrentNode].Id, tick, "authoritative-town"),
             new("navigation-revision", _navigation.Revision.ToString(System.Globalization.CultureInfo.InvariantCulture), tick, "town-spatial-data")]);
         _activityDecisions[citizen.Id] = choice;
-        if (choice.PlaceId is { } id)
+        if (request?.Action == "rest-in-place")
+        {
+            citizen.CurrentActivity = "rest";
+            citizen.WorkBuildingId = null;
+            citizen.IdleSeconds = 5;
+            agent.Runtime.Report(new(request.Sequence, AgentActionStatus.Completed, "rest-in-reserved-current-place"));
+            return;
+        }
+        if (request?.Action is { } id && id != "wait")
         {
             var destination = _navigation.Destinations.FindIndex(p => p.Id == id);
-            if (TryChoose(citizen, [destination]))
+            if (destination >= 0 && TryChoose(citizen, [destination]))
             {
                 if (request is not null) agent.Runtime.Report(new(request.Sequence, AgentActionStatus.Completed, "destination-reserved-route-accepted"));
                 return;
             }
         }
         if (request is not null) agent.Runtime.Report(new(request.Sequence, AgentActionStatus.Rejected, "no-available-route-or-slot-retry"));
+        citizen.CurrentActivity = "wait";
         citizen.IdleSeconds = .6f;
     }
 
