@@ -1,6 +1,7 @@
 // Wet Forest floor painter: semantic, seeded 12px material tiles, not smoothed overlay blobs.
 import { wetForestTreeFireState } from './arena-wet-forest-vegetation.js';
 import { drawApprovedWetForestBase } from './arena-approved-ground-preview.js';
+import { drawLiveWetForestMaterialBase } from './arena-live-wet-forest-materials.js';
 // The C# recipe owns roads, human sites and shallow ground patches. No tile creates a collider.
 const CELL = 12;
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -415,7 +416,11 @@ export function drawWetForestGround(ctx, plan, approvedAtlas = null) {
     const tiles = createWetForestTilePlan(recipe, seed, width, height);
     ctx.save();
     ctx.globalAlpha = 1;
-    const painted = approvedAtlas && drawApprovedWetForestBase(ctx, tiles, approvedAtlas, seed, width, height);
+    // Production Hunts and the lab share the exact PR #340 source-backed
+    // materials. The previous code-painted floor stays as a safe fallback
+    // while asynchronous artwork decodes (or if an asset is unavailable).
+    const sourcePainted = !approvedAtlas && drawLiveWetForestMaterialBase(ctx, tiles, seed, width, height);
+    const painted = sourcePainted || (approvedAtlas && drawApprovedWetForestBase(ctx, tiles, approvedAtlas, seed, width, height));
     if (!painted) for (const tile of tiles) {
         const { x, y, material, variation } = tile;
         const colors = MATERIALS[material] || MATERIALS.loam;
@@ -433,36 +438,41 @@ export function drawWetForestGround(ctx, plan, approvedAtlas = null) {
             ctx.globalAlpha = 1;
         }
     }
-    // The floor uses a semantic material map: worn road margins and wet banks
-    // blend locally rather than exposing an even grid of perfectly square cells.
-    for (const mark of createWetForestMaterialEdges(tiles, seed, width, height)) {
-        ctx.globalAlpha = .73;
-        rect(ctx, mark.x, mark.y, mark.width, mark.height, mark.color);
+    // The archived material paintings ALREADY contain soil/vegetation detail.
+    // Keep older procedural flecks and rut stains only for the fallback.
+    // Never draw synthetic old texture noise on top of the approved art study.
+    if (!sourcePainted) {
+        // The floor uses a semantic material map: worn road margins and wet banks
+        // blend locally rather than exposing an even grid of perfectly square cells.
+        for (const mark of createWetForestMaterialEdges(tiles, seed, width, height)) {
+            ctx.globalAlpha = .73;
+            rect(ctx, mark.x, mark.y, mark.width, mark.height, mark.color);
+        }
+        ctx.globalAlpha = 1;
+        // Baked micro-material detail: broken soil facets, not a flat color wash.
+        for (const mark of createWetForestSurfaceDetails(tiles, seed, width, height)) {
+            ctx.globalAlpha = mark.alpha;
+            rect(ctx, mark.x, mark.y, mark.width, mark.height, mark.color);
+        }
+        ctx.globalAlpha = 1;
+        // Large-scale continuity: eroded ruts and soft edges of spacious glades.
+        // These strokes are all walkable, and generated once with the static texture.
+        for (const mark of [
+            ...createWetForestGladeMargins(recipe, seed, width, height),
+            ...createWetForestTrailImprints(recipe, seed, width, height),
+        ]) {
+            ctx.globalAlpha = mark.alpha;
+            rect(ctx, mark.x, mark.y, mark.width, mark.height, mark.color);
+        }
+        ctx.globalAlpha = 1;
+        // Embedded old paving follows the existing woodland trail for the whole
+        // arena rather than painting a short raised-looking bar across the floor.
+        for (const mark of createWetForestOldPaving(recipe, seed, width, height)) {
+            ctx.globalAlpha = mark.alpha;
+            rect(ctx, mark.x, mark.y, mark.width, mark.height, mark.color);
+        }
+        ctx.globalAlpha = 1;
     }
-    ctx.globalAlpha = 1;
-    // Baked micro-material detail: broken soil facets, not a flat color wash.
-    for (const mark of createWetForestSurfaceDetails(tiles, seed, width, height)) {
-        ctx.globalAlpha = mark.alpha;
-        rect(ctx, mark.x, mark.y, mark.width, mark.height, mark.color);
-    }
-    ctx.globalAlpha = 1;
-    // Large-scale continuity: eroded ruts and soft edges of spacious glades.
-    // These strokes are all walkable, and generated once with the static texture.
-    for (const mark of [
-        ...createWetForestGladeMargins(recipe, seed, width, height),
-        ...createWetForestTrailImprints(recipe, seed, width, height),
-    ]) {
-        ctx.globalAlpha = mark.alpha;
-        rect(ctx, mark.x, mark.y, mark.width, mark.height, mark.color);
-    }
-    ctx.globalAlpha = 1;
-    // Embedded old paving follows the existing woodland trail for the whole
-    // arena rather than painting a short raised-looking bar across the floor.
-    for (const mark of createWetForestOldPaving(recipe, seed, width, height)) {
-        ctx.globalAlpha = mark.alpha;
-        rect(ctx, mark.x, mark.y, mark.width, mark.height, mark.color);
-    }
-    ctx.globalAlpha = 1;
     // Distinct ground-only history around one physical C# story landmark.
     groundSite(ctx, recipe.site, recipe.siteX * width, recipe.siteY * height, seed);
     for (const mark of createWetForestScorchPlan(
