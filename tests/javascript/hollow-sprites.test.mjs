@@ -94,6 +94,8 @@ test('stable injury appearance is presentation-only and survives attack, death a
 
  mod.updateHollowSprites(state,killed,2.05);
  assert.equal(mod.hollowDiagnostics(state).corpses.length,1);
+ assert.equal(mod.hollowDiagnostics(state).corpses[0].deathInjury,'broken-leg-left');
+ assert.equal(state.entities.has(4),false);
 });
 
 test('nearest-neighbor renderer selects an actual direction row and original pivot',async()=>{
