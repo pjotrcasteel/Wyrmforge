@@ -7,7 +7,7 @@ export function huntLightFrame(frame, camera) {
     if (!frame) throw new TypeError('Missing authoritative Hunt lighting');
     return { ...frame, lights: frame.lights.map(light => ({ ...light,
         position: [(light.position[0] - camera.x) / UNIT, -(light.position[1] - camera.y) * GROUND_Y / UNIT, light.position[2] / UNIT],
-        direction: [light.direction[0], -light.direction[1], light.direction[2]],
+        direction: [light.direction[0], -light.direction[1] * GROUND_Y, light.direction[2]],
         range: light.range / UNIT, intensity: light.intensity,
     })) };
 }

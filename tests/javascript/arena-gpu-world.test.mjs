@@ -10,7 +10,7 @@ test('Hunt lights track camera with the same world scale and handedness as recei
     const original = structuredClone(frame);
     const projected = huntLightFrame(frame, { x: 48, y: 96 });
     assert.deepEqual(projected.lights[0].position, [2, -3 * Math.SQRT2, .5]);
-    assert.deepEqual(projected.lights[0].direction, [1, -2, -1]);
+    assert.deepEqual(projected.lights[0].direction, [1, -2 * Math.SQRT2, -1]);
     assert.equal(projected.lights[0].range, 3);
     assert.equal(projected.lights[0].intensity, 1);
     assert.deepEqual(frame, original);
