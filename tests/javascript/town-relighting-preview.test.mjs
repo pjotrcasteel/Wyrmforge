@@ -1,8 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import * as T from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/vendor/three.module.js';
 import { CUTOUTS } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/refuge-foreground-cutouts.js';
 import { compileTownLightingSnapshot } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/town-relightable-scene.js';
-import { townPreviewManifest, townPreviewProjection, TOWN_PREVIEW_SOURCE, TOWN_FOREGROUND_CASTER_DEPTH }
+import { townPreviewManifest, townPreviewProjection, TOWN_PREVIEW_SOURCE, TOWN_FOREGROUND_CASTER_DEPTH, townProjectionMaxErrorPixels }
     from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/town-relighting-preview.js';
 import { selectLights } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/registry.js';
 
@@ -98,4 +99,22 @@ test('mobile 8-shadow-view budget spends six cubemap views on the central Town l
         'Central well and board need the real shadow atlas, not the lexically first east lamp');
     assert.equal(chosen.reduce((count, light) => count + light.shadowViews, 0), 6);
     assert.equal(chosen[0].priority, 3);
+});
+
+test('actual Three.js Town camera projects nine canonical painting anchors within a source pixel', () => {
+    const camera = new T.OrthographicCamera(-8, 8, 8 * 941 / 1672, -8 * 941 / 1672, .1, 80);
+    camera.up.set(0, 0, 1);
+    camera.position.set(8, -12, 12);
+    camera.lookAt(0, 0, 0);
+    camera.updateProjectionMatrix();
+    assert.ok(townProjectionMaxErrorPixels(camera) < 1e-8,
+        'Original 1672x941 artwork, well, board, NPCs and hotspots share one exact GPU projection');
+
+    // Regression: older preview used 8.16 half-width and inset original art
+    // by about 16.4 source pixels per side, unacceptable for live Town masks.
+    camera.left = -8.16; camera.right = 8.16;
+    camera.top = 8.16 * 941 / 1672; camera.bottom = -camera.top;
+    camera.updateProjectionMatrix();
+    assert.ok(townProjectionMaxErrorPixels(camera) > 15,
+        'Old inset camera must fail T1 acceptance, even if its screenshot looks plausible');
 });
