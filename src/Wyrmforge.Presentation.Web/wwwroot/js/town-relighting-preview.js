@@ -286,10 +286,16 @@ export function configureTownPreview(canvas, options) {
     // The shared shadow-visibility inspector reuses the *real* shadow map
     // from a preceding lit frame. Never fake it with a CSS darkness mask.
     state.engine.setDebugView('lit');
-    state.engine.render(canvas.clientWidth || 1000, canvas.clientHeight || 564);
+    // G4 visual approval uses original 1672x941 art pixels, irrespective of
+    // the portrait viewport crop; downscaling this canvas to 390 pixels was
+    // the root cause of the pronounced blocks in the earlier screenshots.
+    state.engine.render(TOWN_ART_SIZE[0], TOWN_ART_SIZE[1]);
     if (state.mode !== 'zero' && state.view !== 'lit') {
         state.engine.setDebugView(state.view);
-        state.engine.render(canvas.clientWidth || 1000, canvas.clientHeight || 564);
+        // G4 visual approval uses original 1672x941 art pixels, irrespective of
+    // the portrait viewport crop; downscaling this canvas to 390 pixels was
+    // the root cause of the pronounced blocks in the earlier screenshots.
+    state.engine.render(TOWN_ART_SIZE[0], TOWN_ART_SIZE[1]);
     }
     if (state.mode === 'zero') {
         // Actual framebuffer check: no ambient, fixtures, or emission is allowed
@@ -315,6 +321,9 @@ export function configureTownPreview(canvas, options) {
         `Town GPU image alignment drifted ${projectionError.toFixed(2)} source pixels`);
     canvas.dataset.nightAmbient = state.mode === 'night'
         ? snapshot.environment.ambient.toFixed(3) : 'not-night';
+    if (state.engine.canvas.width !== TOWN_ART_SIZE[0] ||
+        state.engine.canvas.height !== TOWN_ART_SIZE[1])
+        throw new Error('Town review requires native-source GPU framebuffer resolution');
     canvas.dataset.framebufferWidth = state.engine.canvas.width.toString();
     canvas.dataset.framebufferHeight = state.engine.canvas.height.toString();
     canvas.dataset.artworkPixelsPerFramebufferPixel =
