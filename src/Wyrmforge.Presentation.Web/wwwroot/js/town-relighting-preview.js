@@ -173,7 +173,7 @@ export async function initializeTownPreview(canvas) {
     if (states.has(canvas)) return;
     const engine = new LightingEngine(canvas, { shadowViews: 8, maxLights: 8, maxFramebufferWidth: 780 });
     const state = { engine, mode: 'night', lamps: true, offset: 0, npcEnabled: true,
-        npcProgress: 0, paving: 'neutral', alive: true };
+        npcProgress: 0, paving: 'neutral', view: 'lit', alive: true };
     states.set(canvas, state);
     try {
         const a = axes(), source = await loadApprovedImage();
@@ -224,6 +224,7 @@ export function configureTownPreview(canvas, options) {
     if (!['day', 'night', 'zero'].includes(state.mode) ||
         !Number.isFinite(state.offset) || Math.abs(state.offset) > 250 ||
         !['source', 'neutral'].includes(state.paving) ||
+        !['lit', 'shadow-visibility', 'normals', 'albedo', 'geometry'].includes(state.view) ||
         !Number.isFinite(state.npcProgress) || state.npcProgress < 0 || state.npcProgress > 1 ||
         typeof state.npcEnabled !== 'boolean')
         throw new RangeError('Invalid Town proof control');
@@ -245,7 +246,14 @@ export function configureTownPreview(canvas, options) {
     });
     state.engine.apply(snapshot);
     state.engine.setCamera([0, 0, 0], 8.16);
+    // The shared shadow-visibility inspector reuses the *real* shadow map
+    // from a preceding lit frame. Never fake it with a CSS darkness mask.
+    state.engine.setDebugView('lit');
     state.engine.render(canvas.clientWidth || 1000, canvas.clientHeight || 564);
+    if (state.mode !== 'zero' && state.view !== 'lit') {
+        state.engine.setDebugView(state.view);
+        state.engine.render(canvas.clientWidth || 1000, canvas.clientHeight || 564);
+    }
     if (state.mode === 'zero') {
         // Actual framebuffer check: no ambient, fixtures, or emission is allowed
         // to leave any non-black world pixel. Alpha is intentionally ignored.
@@ -259,6 +267,7 @@ export function configureTownPreview(canvas, options) {
     canvas.dataset.npcFeetY = state.npcEnabled ? citizenY.toFixed(2) : 'hidden';
     canvas.dataset.npcPass = state.npcEnabled ? (citizenY >= 572 ? 'front' : 'behind') : 'hidden';
     canvas.dataset.npcShadowCasters = actor.layers.filter(a => a.castsShadow).length.toString();
+    canvas.dataset.inspection = state.mode === 'zero' ? 'lit' : state.view;
     canvas.dataset.pavingAlbedo = state.paving;
     canvas.dataset.neutralCoverage = (state.neutralMetrics?.coverage ?? 0).toString();
     canvas.dataset.illuminationReduction =
