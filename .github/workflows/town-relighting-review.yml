@@ -11,6 +11,7 @@ on:
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/town-neutral-albedo.js'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/town-lighting-grade.js'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/town-light-domains.js'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/town-building-neutral-albedo.js'
       - 'tools/art/town_gpu_playwright_capture.py'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/town-well-stage4.js'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/town-live-relighting.js'
