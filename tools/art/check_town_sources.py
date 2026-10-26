@@ -22,12 +22,12 @@ def main() -> None:
             failures.append(f"MISSING {source}")
             continue
         content = path.read_bytes()
-        header = f"blob {len(content)}\\0".encode("ascii")
+        header = f"blob {len(content)}\0".encode("ascii")
         actual = hashlib.sha1(header + content).hexdigest()
         if actual != expected:
             failures.append(f"CHANGED {source}: expected {expected}, got {actual}")
     if failures:
-        raise SystemExit("Approved Town sources changed without sign-off:\\n" + "\\n".join(failures))
+        raise SystemExit("Approved Town sources changed without sign-off:\n" + "\n".join(failures))
     print(f"PASS: {len(payload['files'])} approved Town sources match locked Git blob hashes.")
 
 
