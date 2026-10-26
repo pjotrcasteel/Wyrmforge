@@ -9,6 +9,7 @@ on:
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/town-citizen-gpu-bridge.js'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/town-paving-material.js'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/town-neutral-albedo.js'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/town-lighting-grade.js'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/town-live-relighting.js'
       - 'src/Wyrmforge.Presentation.Web/Features/Forge/CanonicalTownView.razor'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/css/town-canonical.css'
@@ -16,6 +17,8 @@ on:
       - 'tests/javascript/town-citizen-gpu-bridge.test.mjs'
       - 'tests/javascript/town-paving-material.test.mjs'
       - 'tests/javascript/town-neutral-albedo.test.mjs'
+      - 'tests/javascript/town-lighting-grade.test.mjs'
+      - 'tests/javascript/town-native-render-quality.test.mjs'
       - 'tests/javascript/town-live-gpu-integration.test.mjs'
       - 'tests/Wyrmforge.Browser.Tests/WyrmforgeBrowserTests.cs'
       - '.github/workflows/town-relighting-review.yml'
@@ -52,7 +55,7 @@ jobs:
         run: python3 tools/art/check_town_sources.py
 
       - name: Check new Town GPU projection contracts
-        run: node --test tests/javascript/town-relighting-contract.test.mjs tests/javascript/town-relighting-preview.test.mjs tests/javascript/town-paving-material.test.mjs tests/javascript/town-citizen-gpu-bridge.test.mjs tests/javascript/town-neutral-albedo.test.mjs tests/javascript/town-live-gpu-integration.test.mjs
+        run: node --test tests/javascript/town-relighting-contract.test.mjs tests/javascript/town-relighting-preview.test.mjs tests/javascript/town-paving-material.test.mjs tests/javascript/town-citizen-gpu-bridge.test.mjs tests/javascript/town-neutral-albedo.test.mjs tests/javascript/town-live-gpu-integration.test.mjs tests/javascript/town-lighting-grade.test.mjs tests/javascript/town-native-render-quality.test.mjs
 
       - name: Start isolated static GPU review
         run: |
@@ -80,6 +83,14 @@ jobs:
               "$BROWSER" $FLAGS --window-size="$width,$height" --dump-dom "$url" > "${base}.html" 2>> "${base}.log"
               grep -q 'data-ready="true"' "${base}.html" || { echo "GPU readiness missing for $mode ($width)"; exit 1; }
               test -s "${base}-gpu-proof.png"
+              if [ "$mode" = night ]; then
+                grep -q 'data-night-ambient="0.220"' "${base}.html" ||
+                  { echo "Native-grade cool fill failed ($width)"; exit 1; }
+                grep -q 'data-framebuffer-width="1672"' "${base}.html" ||
+                  { echo "Native artwork framebuffer width lost ($width)"; exit 1; }
+                grep -q 'data-framebuffer-height="941"' "${base}.html" ||
+                  { echo "Native artwork framebuffer height lost ($width)"; exit 1; }
+              fi
               if [ "$mode" = zero ]; then
                 grep -q 'data-zero-black="true"' "${base}.html" || { echo "Zero-light framebuffer leaked ($width)"; exit 1; }
               fi
