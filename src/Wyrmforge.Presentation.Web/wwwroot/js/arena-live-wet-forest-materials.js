@@ -2,7 +2,7 @@
 // The real C# snapshot remains the sole authority for trails, gates, props,
 // combat collision, pickups and water semantics. No new lighting pipeline.
 import { CELL as ATLAS_CELL } from './arena-materials.js';
-import { bakeSourceBackedThreeMaterialGroundBatched, sourceBackedUrl, SOURCE_BACKED_VARIANTS } from './wet-forest-three-material-kit.js';
+import { bakeSourceBackedThreeMaterialGroundBatched, sourceBackedUrl, SOURCE_BACKED_VARIANTS } from './wet-forest-three-material-kit.js?v=20261026-compact-ground-v1';
 
 const SOURCE_CELL = 12; // canonical createWetForestTilePlan pixel grid
 const MATERIAL_ID = Object.freeze({

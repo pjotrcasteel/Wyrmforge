@@ -235,17 +235,84 @@ export function bakeSourceBackedThreeMaterialGround(plan, images, seed, canvasFa
 }
 
 /**
- * Fast PLAYABLE-HUNT path for the same unmodified PR #340 art used by the
- * review compositor. Instead of copying one source crop for every 16px
- * material cell and boundary ribbon (~65k drawImage calls for 950x1550),
- * collect same-material cells into clipped paths, then sample the source art
- * across the entire world just once per material.
- *
- * The C# material board is read-only; no extra paths/physics are authored.
- * All source samples retain their original RGB, with no new CSS/GPU shading.
- * The few overlap pixels at multi-material junctions follow fixed material
- * order instead of 16px cell iteration; scene quality remains a visual gate.
+ * Playable-Hunt-only projection of the original 900px paintings. The archived
+ * artwork is a SOURCE canvas, not a 900-world-pixel tile: displaying it 1:1
+ * produced giant leaves, boulders and hard-looking material islands on phones.
+ * Downsample 900 -> 252 world pixels (0.28x) and mirror neighbouring repeats
+ * so that their sampled edge pixels touch without visible square seams.
+ * Review/lab source art and C# terrain regions remain untouched.
  */
+export const LIVE_SOURCE_TILE = 252;
+export const LIVE_FEATHER_BANDS = Object.freeze([
+    { radius: 12, alpha: .14 },
+    { radius: 5, alpha: .36 },
+]);
+
+function copyLiveScaledArt(ctx, images, material, width, height, seed) {
+    const image = images[material];
+    const phase = (Math.abs(seed) % 16) * 7;
+    for (let y = -phase, row = 0; y < height; y += LIVE_SOURCE_TILE, row++) {
+        for (let x = -phase, col = 0; x < width; x += LIVE_SOURCE_TILE, col++) {
+            const flipX = col % 2 === 1, flipY = row % 2 === 1;
+            ctx.save();
+            ctx.translate(x + (flipX ? LIVE_SOURCE_TILE : 0),
+                y + (flipY ? LIVE_SOURCE_TILE : 0));
+            ctx.scale(flipX ? -1 : 1, flipY ? -1 : 1);
+            ctx.drawImage(image, 0, 0, REVIEW_TILE_SIZE, REVIEW_TILE_SIZE,
+                0, 0, LIVE_SOURCE_TILE, LIVE_SOURCE_TILE);
+            ctx.restore();
+        }
+    }
+}
+
+/**
+ * Two deliberately thin, seeded contact washes across material boundaries.
+ * Both neighbouring archived paintings bleed 5px + 12px into each other.
+ * These are optical feather bands only: the C# material board, trail, patches,
+ * collisions and combat never change. Drawing is cached per terrain seed.
+ */
+function addLiveFeatherMask(ctx, plan, material, radius, seed) {
+    let count = 0;
+    for (let row = 0; row < plan.rows; row++) {
+        const y = row * CELL, height = Math.min(CELL, plan.height - y);
+        for (let col = 0; col < plan.columns; col++) {
+            const x = col * CELL, width = Math.min(CELL, plan.width - x);
+            const index = row * plan.columns + col, current = plan.board[index];
+            if (col + 1 < plan.columns && current !== plan.board[index + 1]) {
+                const neighbor = plan.board[index + 1], edge = x + CELL;
+                for (let part = 0; part < height; part += 4) {
+                    const span = Math.min(4, height - part);
+                    const reach = clamp(radius + Math.round(contactShift(y + part, edge, seed) * .25),
+                        2, Math.min(CELL - 1, radius + 2));
+                    if (current === material) {
+                        ctx.rect(edge, y + part, reach, span);
+                        count++;
+                    } else if (neighbor === material) {
+                        ctx.rect(edge - reach, y + part, reach, span);
+                        count++;
+                    }
+                }
+            }
+            if (row + 1 < plan.rows && current !== plan.board[index + plan.columns]) {
+                const neighbor = plan.board[index + plan.columns], edge = y + CELL;
+                for (let part = 0; part < width; part += 4) {
+                    const span = Math.min(4, width - part);
+                    const reach = clamp(radius + Math.round(contactShift(x + part, edge, seed) * .25),
+                        2, Math.min(CELL - 1, radius + 2));
+                    if (current === material) {
+                        ctx.rect(x + part, edge, span, reach);
+                        count++;
+                    } else if (neighbor === material) {
+                        ctx.rect(x + part, edge - reach, span, reach);
+                        count++;
+                    }
+                }
+            }
+        }
+    }
+    return count;
+}
+
 export function bakeSourceBackedThreeMaterialGroundBatched(plan, images, seed, canvasFactory) {
     if (!plan || plan.seed !== seed || !Number.isInteger(seed) || !images || !canvasFactory
         || !plan.board || plan.board.length !== plan.columns * plan.rows
@@ -258,11 +325,13 @@ export function bakeSourceBackedThreeMaterialGroundBatched(plan, images, seed, c
     canvas.width = plan.width;
     canvas.height = plan.height;
     const ctx = canvas.getContext('2d');
-    if (!ctx || typeof ctx.save !== 'function' || typeof ctx.clip !== 'function') return null;
-    const phase = (Math.abs(seed) % 16) * 8;
+    if (!ctx || typeof ctx.save !== 'function' || typeof ctx.clip !== 'function'
+        || typeof ctx.translate !== 'function' || typeof ctx.scale !== 'function') return null;
+    // Downsampling a painting with smoothing preserves fine detail instead of
+    // producing aliased, over-sized blocks from 900px source pixels.
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
 
-    // First pass: contiguous world-aligned terrain runs; at most three
-    // repeated source-image sequences, irrespective of map cell count.
     for (const material of REVIEW_IDS) {
         ctx.save();
         ctx.beginPath();
@@ -270,8 +339,7 @@ export function bakeSourceBackedThreeMaterialGroundBatched(plan, images, seed, c
         for (let row = 0; row < plan.rows; row++) {
             const height = Math.min(CELL, plan.height - row * CELL);
             for (let col = 0; col < plan.columns;) {
-                const start = col;
-                const id = plan.board[row * plan.columns + col];
+                const start = col, id = plan.board[row * plan.columns + col];
                 do col++; while (col < plan.columns && plan.board[row * plan.columns + col] === id);
                 if (id !== material) continue;
                 ctx.rect(start * CELL, row * CELL, Math.min(col * CELL, plan.width) - start * CELL, height);
@@ -280,30 +348,25 @@ export function bakeSourceBackedThreeMaterialGroundBatched(plan, images, seed, c
         }
         if (rectangles) {
             ctx.clip();
-            copyOriginalArt(ctx, images, material, 0, 0, plan.width, plan.height, phase);
+            copyLiveScaledArt(ctx, images, material, plan.width, plan.height, seed);
         }
         ctx.restore();
     }
 
-    // Second pass: the SAME organic, continuous source-only contact ribbons
-    // as the review, grouped into three clip masks to avoid one drawImage
-    // per ribbon. No alpha blend or new illustrated texture.
-    const contacts = sourceBackedBoundaryContacts(plan.board, plan.columns, plan.rows, seed);
-    if (!contacts) return null;
-    for (const material of REVIEW_IDS) {
-        ctx.save();
-        ctx.beginPath();
-        let count = 0;
-        for (const contact of contacts) {
-            if (contact.material !== material) continue;
-            ctx.rect(contact.x, contact.y, contact.width, contact.height);
-            count++;
+    // Unlike the original 2-5px binary contacts, these translucent,
+    // overlapping washes hide rectangular cutouts and reduce harsh contrast.
+    // The wider wash goes first, then a narrower, stronger contact pass.
+    for (const { radius, alpha } of LIVE_FEATHER_BANDS) {
+        for (const material of REVIEW_IDS) {
+            ctx.save();
+            ctx.beginPath();
+            if (addLiveFeatherMask(ctx, plan, material, radius, seed)) {
+                ctx.clip();
+                ctx.globalAlpha = alpha;
+                copyLiveScaledArt(ctx, images, material, plan.width, plan.height, seed);
+            }
+            ctx.restore();
         }
-        if (count) {
-            ctx.clip();
-            copyOriginalArt(ctx, images, material, 0, 0, plan.width, plan.height, phase);
-        }
-        ctx.restore();
     }
     return canvas;
 }
