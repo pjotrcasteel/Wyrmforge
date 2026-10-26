@@ -1,4 +1,4 @@
-import { territoryBiome, createTerritoryStoryPlan, drawTerritoryGround, drawTerritoryLandmarks, drawTerritoryMotes } from './arena-territory-art.js?v=20261022-approved-ground-preview-1';
+import { territoryBiome, createTerritoryStoryPlan, drawTerritoryGround, drawTerritoryLandmarks, drawTerritoryMotes } from './arena-territory-art.js?v=20261026-pr340-live-ground-1';
 import { drawWetForestDressing, drawWetForestCastShadows, drawWetForestFirelight } from './arena-wet-forest-dressing.js';
 import { wetForestTreeFrame, drawWetForestTreeAccents, drawWetForestTreeArt } from './arena-wet-forest-vegetation.js';
 import { drawWetForestStoryArt } from './arena-wet-forest-sites.js';
