@@ -84,6 +84,7 @@ export async function mountTownLiveGpuPreview(selector = '.refuge-canonical-scen
         // opt-in. Default preview never changes or uses missing art paths.
         const wellV4 = query.get('townWellStage4') === '1';
         await initializeTownPreview(canvas, { wellV4, domains: true,
+            sourceMode: query.get('townGpuSource') === 'day-candidate' ? 'day-candidate' : 'night',
             ...authoritativeLighting(scene, query) });
         if (session.disposed || !scene.isConnected) return false;
         liveCitizens(scene, canvas, query); // Complete the first REAL C# actor frame before switching.
