@@ -10,6 +10,7 @@ on:
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/town-paving-material.js'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/town-neutral-albedo.js'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/town-lighting-grade.js'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/town-light-domains.js'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/town-well-stage4.js'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/town-live-relighting.js'
       - 'src/Wyrmforge.Presentation.Web/Features/Forge/CanonicalTownView.razor'
@@ -19,6 +20,7 @@ on:
       - 'tests/javascript/town-paving-material.test.mjs'
       - 'tests/javascript/town-neutral-albedo.test.mjs'
       - 'tests/javascript/town-lighting-grade.test.mjs'
+      - 'tests/javascript/town-light-domains.test.mjs'
       - 'tests/javascript/town-well-stage4.test.mjs'
       - 'tests/javascript/town-native-render-quality.test.mjs'
       - 'tests/javascript/town-live-gpu-integration.test.mjs'
@@ -82,7 +84,7 @@ jobs:
           retention-days: 3
 
       - name: Check new Town GPU projection contracts
-        run: node --test tests/javascript/town-relighting-contract.test.mjs tests/javascript/town-relighting-preview.test.mjs tests/javascript/town-paving-material.test.mjs tests/javascript/town-citizen-gpu-bridge.test.mjs tests/javascript/town-neutral-albedo.test.mjs tests/javascript/town-live-gpu-integration.test.mjs tests/javascript/town-lighting-grade.test.mjs tests/javascript/town-well-stage4.test.mjs tests/javascript/town-native-render-quality.test.mjs
+        run: node --test tests/javascript/town-relighting-contract.test.mjs tests/javascript/town-relighting-preview.test.mjs tests/javascript/town-paving-material.test.mjs tests/javascript/town-citizen-gpu-bridge.test.mjs tests/javascript/town-neutral-albedo.test.mjs tests/javascript/town-live-gpu-integration.test.mjs tests/javascript/town-lighting-grade.test.mjs tests/javascript/town-well-stage4.test.mjs tests/javascript/town-native-render-quality.test.mjs tests/javascript/town-light-domains.test.mjs
 
       - name: Start isolated static GPU review
         run: |
@@ -142,6 +144,20 @@ jobs:
               screenshot "${mode}-${width}-gpu-proof" "$viewport" "mode=$mode"
             done
           done
+          # Genuine shared-GPU domain images, not repainted user screenshots.
+          for domain in common nexus blacksmith codex hall combined off; do
+            case "$domain" in
+              off) screenshot "zero-domain-off-390" "390x844" "mode=night&domains=1&domain=off&npc=off";;
+              *) screenshot "domain-${domain}-390" "390x844" "mode=night&domains=1&domain=$domain&npc=off";;
+            esac
+          done
+          for width in 320 1120; do
+            screenshot "domain-common-${width}" "${width}x870" "mode=night&domains=1&domain=common&npc=off"
+            screenshot "domain-blacksmith-${width}" "${width}x870" "mode=night&domains=1&domain=blacksmith&npc=off"
+          done
+          screenshot "domain-nexus-neutral-390" "390x844" "mode=night&domains=1&domain=nexus&white=1&npc=off"
+          screenshot "domain-nexus-fire-390" "390x844" "mode=night&domains=1&domain=nexus&school=fire&npc=off"
+          screenshot "domain-nexus-frost-390" "390x844" "mode=night&domains=1&domain=nexus&school=frost&npc=off"
           for passage in behind front hidden; do
             case "$passage" in
               behind) query='mode=night&npcProgress=0';;
