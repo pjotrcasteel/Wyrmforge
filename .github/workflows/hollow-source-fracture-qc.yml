@@ -1,0 +1,54 @@
+name: Hollowed source-mesh fracture (unapproved 3D QC)
+on:
+  push:
+    branches: [art/hollowed-source-mesh-fracture-proof]
+    paths:
+      - 'tools/sprite-lab/render-hollow-source-fracture.py'
+      - '.github/workflows/hollow-source-fracture-qc.yml'
+      - 'tests/python/hollow_source_fracture_contract.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-mesh-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          lfs: true
+      - name: Recover the actual editable Hollowed 3D character
+        run: |
+          git lfs pull --include="art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-death-no-cape-standard/hollow-death.blend" --exclude=""
+          test "$(stat -c%s art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-death-no-cape-standard/hollow-death.blend)" -gt 100000
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Verify proof-only pipeline contract before render
+        run: |
+          python -m py_compile tools/sprite-lab/render-hollow-source-fracture.py
+          python tests/python/hollow_source_fracture_contract.py
+      - name: Install Blender 4.5 LTS for real source geometry
+        run: |
+          python -m pip install --disable-pip-version-check bpy==4.5.15 Pillow==11.3.0
+          python -c "import bpy; print('Blender source renderer:', bpy.app.version_string)"
+      - name: Render 24 physical 3D mesh poses at 128px, south view
+        env:
+          OMP_NUM_THREADS: 4
+        run: |
+          python tools/sprite-lab/render-hollow-source-fracture.py --directions S
+      - name: Save source and evidence, never deploy unapproved art
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hollow-source-mesh-fracture-unapproved-qc
+          path: |
+            artifacts/hollow-source-fracture/manifest.json
+            artifacts/hollow-source-fracture/fracture-S.png
+            artifacts/hollow-source-fracture/fracture-S.gif
+            artifacts/hollow-source-fracture/fracture-S-contact-sheet.png
+            artifacts/hollow-source-fracture/hollow-source-fracture-UNAPPROVED.blend
+          retention-days: 14
+          if-no-files-found: warn
