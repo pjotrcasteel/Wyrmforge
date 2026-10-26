@@ -74,6 +74,21 @@ def main(folder: Path, widths: list[int]) -> None:
     write_gif(folder, [(f"Town NPC — {label}", frame) for label, frame in npc],
               "town-npc-passage-diagnostic.gif")
 
+    # This is an objective QUALITY guard, not a subjective T2 approval:
+    # the owner's isolated common-light source has ~36 median plaza luma.
+    # Earlier broken GPU builds had ~2-19 and must never pass as "finished"
+    # just because some lantern pixels were nonblack. Measure real framebuffer
+    # pixels (not generated artwork) in a source-normalized plaza crop.
+    common = cropped_image(folder, "source-night-common-1120", 1120)
+    x0, x1 = round(common.width * .385), round(common.width * .635)
+    y0, y1 = round(common.height * .42), round(common.height * .70)
+    median_paving = ImageStat.Stat(common.crop((x0, y0, x1, y1)).convert("L")).median[0]
+    if not 24 <= median_paving <= 65:
+        raise AssertionError(
+            f"Town T2 paving is visually outside the owner's reference range: "
+            f"median={median_paving}, expected 24..65 (reference ~36)")
+    print(f"GPU paving luminance acceptance: median {median_paving} within reference tolerance")
+
     source = cropped_image(folder, "night-source-paving-390", 390)
     neutral = cropped_image(folder, "night-neutral-paving-390", 390)
     if ImageChops.difference(source, neutral).getbbox() is None:
