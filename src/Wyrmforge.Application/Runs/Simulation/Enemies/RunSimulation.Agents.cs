@@ -51,7 +51,11 @@ public sealed partial class RunSimulation
     private void PruneEnemyAgents()
     {
         if (!agentFoundationEnabled) return;
-        foreach (var id in enemyAgents.Keys.Where(id => !enemies.Any(e => e.Id == id && e.Health > 0)).ToArray())
+        if (enemyAgents.Count == 0) return;
+        // One living-ID index replaces a per-agent scan of the entire horde
+        // (quadratic work on every 25 ms AI step in long mobile encounters).
+        var living = enemies.Where(e => e.Health > 0).Select(e => e.Id).ToHashSet();
+        foreach (var id in enemyAgents.Keys.Where(id => !living.Contains(id)).ToArray())
         {
             enemyAgents[id].Runtime.Despawn();
             enemyAgents.Remove(id);
