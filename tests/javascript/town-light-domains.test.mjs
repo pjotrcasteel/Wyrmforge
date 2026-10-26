@@ -86,3 +86,16 @@ test('Domain lights reach same existing GPU manifest and black-world zero-light 
     assert.equal(zero.environment.emission, false);
     assert.equal(zero.lights.filter(x => x.enabled).length, 0);
 });
+
+
+test('Stage4 opt-in review uses the tight remade-well caster, not the old umbrella shadow', () => {
+    const manifest = townPreviewManifest({ domains: true, wellV4: true });
+    assert.ok(manifest.layers.some(x => x.id === 'stage4-remade-well' &&
+        x.occluderGeometry === 'stage4-well-caster-proxies'));
+    assert.ok(!manifest.layers.some(x => x.id === 'foreground-well-roof'));
+    assert.ok(!manifest.layers.some(x => x.id === 'foreground-well-front-rim'));
+    assert.equal(manifest.fixtures.find(x => x.id === 'town-gate-arch').castsShadow, false,
+        'Flattened castle arch must not cast a fake black wedge across cobbles');
+    assert.deepEqual(manifest.fixtures.filter(x => x.castsShadow).map(x => x.id),
+        ['town-square-well'], 'Well roof/posts alone have a real T2 shadow volume');
+});
