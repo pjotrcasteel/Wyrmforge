@@ -53,6 +53,11 @@ import { initializeTownPreview, configureTownPreview, disposeTownPreview }
 const canvas = document.querySelector('#town-gpu'), status = document.querySelector('#status');
 const mode = document.querySelector('#mode'), lamps = document.querySelector('#lamps'),
       offset = document.querySelector('#offset'), output = document.querySelector('#light-position');
+const query = new URLSearchParams(location.search);
+if (['day', 'night', 'zero'].includes(query.get('mode'))) mode.value = query.get('mode');
+if (query.has('lamps')) lamps.checked = query.get('lamps') !== 'off';
+if (query.has('offset') && Number.isFinite(Number(query.get('offset'))) &&
+    Math.abs(Number(query.get('offset'))) <= 180) offset.value = query.get('offset');
 function update() {
     output.textContent = offset.value;
     configureTownPreview(canvas, { mode: mode.value, lamps: lamps.checked, offset: Number(offset.value) });
