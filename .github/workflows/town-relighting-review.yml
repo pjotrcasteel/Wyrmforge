@@ -109,7 +109,19 @@ jobs:
                 { echo "Neutral paving candidate was never generated"; exit 1; }
             fi
           done
-          echo "Screenshots use original authored Town sources; neutral paving is only a candidate until owner signs off."
+          for inspection in shadow-visibility normals albedo; do
+            for passage in behind front; do
+              case "$passage" in behind) progress=0;; front) progress=1;; esac
+              base="artifacts/town-2p5d/${inspection}-npc-${passage}-390"
+              url="http://127.0.0.1:4179/town-relighting-preview.html?mode=night&paving=neutral&view=$inspection&npcProgress=$progress"
+              "$BROWSER" $FLAGS --window-size="390,844" --screenshot="${base}.png" "$url" > "${base}.log" 2>&1
+              "$BROWSER" $FLAGS --window-size="390,844" --dump-dom "$url" > "${base}.html" 2>> "${base}.log"
+              grep -q "data-inspection=\"$inspection\"" "${base}.html" || { echo "Shared GPU inspector failed for $inspection"; exit 1; }
+              grep -q "data-npc-pass=\"$passage\"" "${base}.html" || { echo "Town actor depth failed"; exit 1; }
+              test -s "${base}.png"
+            done
+          done
+          echo "Screenshots use original authored Town sources; neutral paving and NPC art require owner signoff."
 
       - name: Upload exact-source review frames and diagnostics
         if: always()
