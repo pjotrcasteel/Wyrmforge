@@ -70,3 +70,30 @@ test('Five GPU emissive layers use one generic world material pipeline', () => {
         assert.ok(material.emissiveMap && material.emissionIntensity > 0);
     }
 });
+
+
+test('Four neutral day-vacant GPU diffuse surfaces have exact canonical atlas bounds', () => {
+    const scene = townPreviewManifest({ domains: true });
+    const base = townPreviewManifest();
+    const diffuse = scene.layers.filter(layer => layer.diffuseDomain);
+    assert.equal(diffuse.length, 4);
+    assert.equal(base.layers.filter(layer => layer.diffuseDomain).length, 0);
+    for (const plate of TOWN_EMISSION_PLATES) {
+        const key = 'town-diffuse-' + plate.domain;
+        const layer = diffuse.find(x => x.id === key);
+        assert.ok(layer, key);
+        assert.equal(layer.ownerId, 'town-' + plate.domain);
+        assert.deepEqual(layer.artBounds, [plate.x, plate.y, plate.width, plate.height]);
+        assert.equal(layer.castsShadow, false, 'No new fake building caster geometry');
+        assert.equal(layer.receivesShadow, true);
+        const surface = scene.materials.find(x => x.id === key + '-material');
+        assert.equal(surface.albedo, key + '-albedo');
+        assert.equal(surface.emissionIntensity, 0);
+        assert.equal(surface.reflection, 'off');
+        assert.ok(surface.roughness >= .9);
+    }
+    assert.equal(scene.layers[0].material, base.layers[0].material,
+        'Night scenic backing is retained; never substituted by daytime sky');
+    assert.equal(scene.layers[1].material, base.layers[1].material,
+        'Both versions retain one canonical-pixel paving receiving plane');
+});
