@@ -91,8 +91,8 @@ test('actual live fallback switches to the original PR340 paintings once decoded
         const first = liveWetForestArtworkGeneration();
         const calls = [];
         const ctx = {
-            save() {}, restore() {}, beginPath() {}, rect() {}, clip() {},
-            set imageSmoothingEnabled(v) { assert.equal(v, false); },
+            save() {}, restore() {}, beginPath() {}, rect() {}, clip() {}, translate() {}, scale() {},
+            set imageSmoothingEnabled(v) { assert.equal(v, true); },
             drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh) {
                 assert.equal(image.width, 900);
                 assert.equal(image.height, 900);
@@ -109,7 +109,7 @@ test('actual live fallback switches to the original PR340 paintings once decoded
         assert.equal(liveWetForestArtworkGeneration(), first + 1);
         assert.equal(liveWetForestMaterialDiagnostics(seed).status, 'source-backed');
         assert.equal(drawLiveWetForestMaterialBase(ctx, tiles(), seed, 48, 48), true);
-        assert.ok(calls.length > 0 && calls.length <= 12,
+        assert.ok(calls.length > 0 && calls.length <= 36,
             'The live floor must contain archived paintings with batched copies, not thousands of per-cell draws.');
         const { drawWetForestGround } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-wet-forest-art.js');
         let painterDraws = 0;
@@ -136,7 +136,7 @@ test('actual live fallback switches to the original PR340 paintings once decoded
     }
 });
 
-test('full playable-world source art uses fewer than 50 image draws, not 65,000', async () => {
+test('full playable-world source art scales and feathers materials with bounded copies', async () => {
     const previousImage = globalThis.Image;
     const loadedUrls = [];
     globalThis.Image = class {
@@ -161,9 +161,9 @@ test('full playable-world source art uses fewer than 50 image draws, not 65,000'
         const operations = { images: 0, rectangles: 0, clips: 0 };
         const ctx = {
             save() {}, restore() {}, beginPath() {},
-            rect() { operations.rectangles++; },
+            rect() { operations.rectangles++; }, translate() {}, scale() {},
             clip() { operations.clips++; },
-            set imageSmoothingEnabled(value) { assert.equal(value, false); },
+            set imageSmoothingEnabled(value) { assert.equal(value, true); },
             drawImage(source, sx, sy, sw, sh) {
                 assert.equal(source.width, 900);
                 assert.ok(sx >= 0 && sy >= 0 && sx + sw <= 900 && sy + sh <= 900);
@@ -172,9 +172,9 @@ test('full playable-world source art uses fewer than 50 image draws, not 65,000'
         };
         assert.equal(drawLiveWetForestMaterialBase(ctx, world, seed, width, height), true);
         assert.ok(operations.rectangles > 100, 'Actual material regions and contacts must still exist.');
-        assert.ok(operations.images > 0 && operations.images <= 48,
+        assert.ok(operations.images > 0 && operations.images <= 420,
             'Too many image copies for a single static mobile world bake: ' + operations.images);
-        assert.ok(operations.clips >= 2 && operations.clips <= 7);
+        assert.ok(operations.clips >= 2 && operations.clips <= 9);
         const first = { ...operations };
         operations.rectangles = operations.images = operations.clips = 0;
         assert.equal(drawLiveWetForestMaterialBase(ctx, world, seed, width, height), true);
