@@ -11,6 +11,11 @@ on:
 permissions:
   contents: read
 
+# Rendering the same unapproved source at every checkpoint wastes CPU budget.
+concurrency:
+  group: hollow-source-fracture-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   source-mesh-proof:
     runs-on: ubuntu-latest
