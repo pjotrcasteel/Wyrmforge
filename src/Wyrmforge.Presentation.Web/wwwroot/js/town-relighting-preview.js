@@ -416,12 +416,12 @@ export function configureTownPreview(canvas, options) {
  * readTownCitizensFromDom. The isolated lab continues using its scripted actor.
  * Never mutate the C# positions or start a separate gameplay simulation.
  */
-export function updateTownPreviewCitizens(canvas, citizens) {
+export function updateTownPreviewCitizens(canvas, citizens, options = {}) {
     const state = states.get(canvas);
     if (!state?.alive || !state.manifest) throw new Error('Town GPU preview must initialize first');
     if (!Array.isArray(citizens)) throw new TypeError('Expected authoritative C# citizens');
     state.citizens = citizens;
-    configureTownPreview(canvas, {});
+    configureTownPreview(canvas, options);
 }
 
 export function disposeTownPreview(canvas) {
