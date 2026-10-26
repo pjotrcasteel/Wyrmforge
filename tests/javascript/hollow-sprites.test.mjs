@@ -10,7 +10,8 @@ const source=readFileSync(new URL('js/hollow-sprites.js',root),'utf8').replace("
  .replace("'./hollow-arm-variants.js'",JSON.stringify(moduleUri('hollow-arm-variants.js')))
  .replace("'./hollow-motion.js'",JSON.stringify(moduleUri('hollow-motion.js')))
  .replace("'./hollow-variation.js'",JSON.stringify(moduleUri('hollow-variation.js')))
- .replace("'./hollow-death.js'",JSON.stringify(moduleUri('hollow-death.js')));
+ .replace("'./hollow-death.js'",JSON.stringify(moduleUri('hollow-death.js')))
+ .replace("'./hollow-injury-death.js'",JSON.stringify(moduleUri('hollow-injury-death.js')));
 const mod=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
 const enemy=(values={})=>({entityId:7,kind:0,x:20,y:20,radius:11,...values});
 const snapshot=(values={})=>({enemies:[enemy()],player:{x:200,y:200,radius:9},deathBursts:[],...values});
@@ -74,6 +75,7 @@ test('stable injury appearance is presentation-only and survives attack, death a
  const injury=enemy({entityId:4});
  mod.updateHollowSprites(state,snapshot({enemies:[injury]}),0);
  assert.equal(state.entities.get(4).injuryVariant,'broken-leg-left');
+ assert.equal(state.entities.get(4).deathInjury,'broken-leg-left');
  const position={x:injury.x,y:injury.y,radius:injury.radius};
  const contact=snapshot({enemies:[injury],player:{x:38,y:20,radius:9}});
  mod.updateHollowSprites(state,contact,.05);
@@ -88,8 +90,12 @@ test('stable injury appearance is presentation-only and survives attack, death a
  assert.equal(p.clip,'walk');
  assert.deepEqual(position,{x:20,y:20,radius:11});
  const killed=snapshot({enemies:[],deathBursts:[{entityId:4,kind:0,x:20,y:20,bodyRadius:11}]});
+ // Corpse must retain the actual injured silhouette after the live actor despawns.
+
  mod.updateHollowSprites(state,killed,2.05);
  assert.equal(mod.hollowDiagnostics(state).corpses.length,1);
+ assert.equal(mod.hollowDiagnostics(state).corpses[0].deathInjury,'broken-leg-left');
+ assert.equal(state.entities.has(4),false);
 });
 
 test('nearest-neighbor renderer selects an actual direction row and original pivot',async()=>{
@@ -151,7 +157,8 @@ test('every Hollowed uses a source-derived no-cape atlas for walk/attack and the
    assert.ok(calls[1][0].url.includes('/arms/')||calls[1][0].url.includes('/injuries/'),'caped base attack used');
    isolated.updateHollowSprites(state,snapshot({enemies:[],deathBursts:[{entityId:id,kind:0,x:20,y:20,bodyRadius:11}]}),.1);
    isolated.drawHollowCorpses(ctx,state);
-   assert.ok(calls[2][0].url.includes('/arms/'),'caped death atlas used');
+   assert.ok(calls[2][0].url.includes('/arms/')||calls[2][0].url.includes('/injuries/'),
+    'if 3D source injury atlas is not loaded, fallback must retain a cape-free injured actor');
   }
  } finally {globalThis.fetch=originals.fetch;globalThis.Image=originals.Image;}
 });
@@ -192,11 +199,11 @@ test('a real Hollow death renders authored 3D frames, not a rotated walking spri
   assert.equal(await isolated.preloadHollowSprites(),true);
   assert.equal(isolated.hollowDiagnostics(isolated.createHollowState()).skeletalDeathReady,true);
   for(const facing of ['N','NE','E','SE','S','SW','W','NW']){
-   const e=enemy({entityId:128,x:20,y:20});
+   const e=enemy({entityId:5,x:20,y:20});
    const state=isolated.createHollowState();
    isolated.updateHollowSprites(state,snapshot({enemies:[e]}),0);
-   state.entities.get(128).direction=facing;
-   const dead=snapshot({enemies:[],deathBursts:[{entityId:128,kind:0,x:20,y:20,bodyRadius:11}]});
+   state.entities.get(5).direction=facing;
+   const dead=snapshot({enemies:[],deathBursts:[{entityId:5,kind:0,x:20,y:20,bodyRadius:11}]});
    isolated.updateHollowSprites(state,dead,.05);
    const calls=[];
    const ctx={globalAlpha:1,save(){},restore(){},rotate(){throw Error('death must use skeletal frames');},
