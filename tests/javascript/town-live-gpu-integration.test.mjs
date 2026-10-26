@@ -35,7 +35,7 @@ test('opt-in canvas remains noninteractive and visible only after confirmed GPU 
 
 test('opt-in integration never schedules a second citizen simulation', () => {
     assert.match(bridge, /readTownCitizensFromDom\(scene\)/);
-    assert.match(bridge, /updateTownPreviewCitizens\(canvas, citizens\)/);
+    assert.match(bridge, /updateTownPreviewCitizens\(canvas, citizens, authoritativeLighting\(scene, query\)\)/);
     assert.match(bridge, /new MutationObserver/);
     assert.match(bridge, /cancelAnimationFrame/);
     assert.match(bridge, /disposeTownPreview/);
@@ -43,6 +43,9 @@ test('opt-in integration never schedules a second citizen simulation', () => {
     assert.doesNotMatch(bridge, /setInterval|setTimeout|new PeriodicTimer|\.Step\(/);
     assert.match(preview, /state\.citizens\s*\?\?/);
     assert.match(preview, /export function updateTownPreviewCitizens/);
+    assert.match(razor, /data-town-forge-unlocked/);
+    assert.match(razor, /data-town-hall-unlocked/);
+    assert.match(bridge, /townLightDomain/);
 });
 
 test('the original navigation and touch handlers remain in the existing Town implementation', () => {
