@@ -48,11 +48,25 @@ jobs:
         run: |
           python -m pip install --disable-pip-version-check bpy==4.5.15 Pillow==11.3.0
           python -c "import bpy; print('Blender source renderer:', bpy.app.version_string)"
-      - name: Render actual 3D breakup at 128px for all eight directions
+      - name: First render actual South-facing Hollowed corpse explosion
         env:
           OMP_NUM_THREADS: 4
-        run: |
-          python tools/sprite-lab/render-hollow-source-fracture.py --directions all
+        run: python tools/sprite-lab/render-hollow-source-fracture.py --directions S
+      - name: Publish early South-facing owner QC
+        uses: actions/upload-artifact@v4
+        with:
+          name: hollowed-corpse-explosion-south-review
+          path: |
+            artifacts/hollow-source-fracture/fracture-S-contact-sheet.png
+            artifacts/hollow-source-fracture/fracture-S.gif
+            artifacts/hollow-source-fracture/geometry-diagnostics.json
+            artifacts/hollow-source-fracture/manifest.json
+          retention-days: 14
+          if-no-files-found: error
+      - name: Render all eight authentic 3D view directions after South proof
+        env:
+          OMP_NUM_THREADS: 4
+        run: python tools/sprite-lab/render-hollow-source-fracture.py --directions all
       - name: Save source and evidence, never deploy unapproved art
         if: always()
         uses: actions/upload-artifact@v4

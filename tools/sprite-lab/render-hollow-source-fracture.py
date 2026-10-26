@@ -212,7 +212,10 @@ for direction in selected:
     after = poses[SPLIT_FRAME - 1].getchannel('A').point(lambda n: 255 if n > 30 else 0).convert('1')
     overlap = sum(ImageChops.logical_and(before, after).getdata())
     covered = sum(ImageChops.logical_or(before, after).getdata())
-    manifest.setdefault('splitSilhouetteOverlap', {})[direction] = round(overlap / max(1, covered), 4)
+    overlap_ratio = overlap / max(1, covered)
+    manifest.setdefault('splitSilhouetteOverlap', {})[direction] = round(overlap_ratio, 4)
+    if overlap_ratio < .36:
+        raise ValueError(f'Source skin discontinuity at disassembly: {direction} {overlap_ratio:.3f}')
     atlas_path = OUT / f'fracture-{direction}.png'
     atlas.save(atlas_path, optimize=True)
     checksum = hashlib.sha256(atlas_path.read_bytes()).hexdigest()
