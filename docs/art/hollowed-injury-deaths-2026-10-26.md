@@ -18,7 +18,7 @@ The current game has four genuine cape-free Hollowed appearances (standard, brok
 
 ## Runtime safety and mobile memory
 
-`hollow-injury-death.js` loads only when a compatible damaged silhouette actually appears in a Hunt: no eager 3×(2304×768×4 bytes) sprite allocation. Each loaded atlas is ~6.75MiB decoded, compared with ~12MiB for a standard 128px 24×8 atlas. Missing or invalid injury art falls back to the existing 3D forward/braced death; the cape and rejected spinning-walk fallback must not return. Entity IDs make appearances and death choice deterministic; C# is still authoritative for physics, contact damage, death timing and spawning.
+`hollow-injury-death.js` loads only when a compatible damaged silhouette actually appears in a Hunt: no eager 3×(2304×768×4 bytes) sprite allocation. Each loaded atlas is ~6.75MiB decoded, compared with ~12MiB for a standard 128px 24×8 atlas. If an injury-specific atlas is missing or undecoded, the corresponding damaged body's own source pose briefly fades instead of resurrecting the undamaged arms/legs or the rejected spinning-walk corpse. Standard non-injured Hollowed keep their existing 3D forward/braced deaths. Entity IDs make appearances and death choice deterministic; C# is still authoritative for physics, contact damage, death timing and spawning.
 
 ## Acceptance gates
 
