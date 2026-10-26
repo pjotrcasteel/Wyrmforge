@@ -29,6 +29,30 @@ public sealed class AgentFoundationBrowserTests : PageTest
     }
 
     [TestMethod]
+    public async Task AdaptiveAshfang_PhaseTwoMobileLab_ExposesAuthoredBossAndAdaptation()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        var baseUrl = Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/";
+        await Page.GotoAsync(baseUrl.TrimEnd('/') + "/hunt-lab?wyrm=Ashfang&ai5=true&phase=2&play=true&cast=false&invulnerable=true");
+        await Page.WaitForFunctionAsync(
+            "() => document.querySelector('.hunt-lab-stage strong')?.textContent?.includes('Ashfang') === true",
+            null, new() { Timeout = 45000 });
+
+        await Page.GetByText("Boss AI inspector", new() { Exact = true }).ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Refresh boss AI inspector" }).ClickAsync();
+        var inspection = JsonSerializer.Deserialize<JsonElement>(await Page.GetByTestId("boss-agent-inspector").InnerTextAsync());
+        var agent = inspection.GetProperty("Agent");
+        Assert.AreEqual("Ashfang", agent.GetProperty("Identity").GetProperty("Archetype").GetString());
+        Assert.IsTrue(agent.GetProperty("Observations").GetArrayLength() > 0, "The boss must use the shared observed-state core.");
+        Assert.AreEqual(JsonValueKind.Object, inspection.GetProperty("Adaptation").ValueKind,
+            "AI5 must expose bounded encounter-local learning, not the legacy boss fallback.");
+
+        var output = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
+        Directory.CreateDirectory(output);
+        await Page.ScreenshotAsync(new() { Path = Path.Combine(output, "ai5-ashfang-phase2-390.png"), FullPage = true });
+    }
+
+    [TestMethod]
     [DataRow("Hollow")]
     [DataRow("MireHound")]
     public async Task PerceptionOptIn_UsesEarnedInformationInActualEnemyLab(string kind)
