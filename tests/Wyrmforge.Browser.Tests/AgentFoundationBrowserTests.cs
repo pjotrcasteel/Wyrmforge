@@ -46,6 +46,9 @@ public sealed class AgentFoundationBrowserTests : PageTest
         Assert.IsTrue(agent.GetProperty("Observations").GetArrayLength() > 0, "The boss must use the shared observed-state core.");
         Assert.AreEqual(JsonValueKind.Object, inspection.GetProperty("Adaptation").ValueKind,
             "AI5 must expose bounded encounter-local learning, not the legacy boss fallback.");
+        var damage = inspection.GetProperty("HunterHealthPressure");
+        Assert.IsGreaterThanOrEqualTo(0d, damage.GetProperty("Total").GetDouble());
+        Assert.IsGreaterThanOrEqualTo(0d, damage.GetProperty("PeakPerTick").GetDouble());
 
         var output = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
         Directory.CreateDirectory(output);

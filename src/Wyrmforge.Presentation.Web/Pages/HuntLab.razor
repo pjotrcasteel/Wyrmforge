@@ -72,7 +72,16 @@
 @code {
     private string bossInspection = "";
     private void InspectBoss() => bossInspection = System.Text.Json.JsonSerializer.Serialize(
-        new { Agent = simulation?.InspectBossAgent(), Adaptation = simulation?.InspectBossAdaptation() },
+        new
+        {
+            Agent = simulation?.InspectBossAgent(),
+            Adaptation = simulation?.InspectBossAdaptation(),
+            HunterHealthPressure = new
+            {
+                Total = simulation?.InspectAgentPerformance().TotalHunterHealthDamage ?? 0,
+                PeakPerTick = simulation?.InspectAgentPerformance().MaximumHunterHealthDamagePerStep ?? 0
+            }
+        },
         new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
     [Inject] private IJSRuntime JavaScript { get; set; } = null!;
     [Parameter, SupplyParameterFromQuery(Name = "wyrm")] public string? WyrmQuery { get; set; }
