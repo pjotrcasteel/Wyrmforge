@@ -107,7 +107,7 @@ test('live C# Town DOM is read only and maps CSS feet percentages back to painti
         [people[0], southExit] }).map(c => c.id), [1],
         'NPC exiting south off-screen is clipped rather than crashing all Town lighting');
     assert.throws(() => readTownCitizensFromDom({ querySelectorAll: () =>
-        [mock(1, '513', '20%', '54.516%')] }), /disagree/);
+        [mock(1, '513', '51.675%', '70%')] }), /disagree/);
     assert.throws(() => readTownCitizensFromDom({ querySelectorAll: () =>
         [mock(1, null, '51.675%', '54.516%')] }), /malformed/);
 });
