@@ -66,23 +66,23 @@ public sealed partial class RunSimulation
             var shield = ShieldMultiplier(target, projectile.Position - projectile.Velocity, damage);
             var killed = DamageTarget(target, damage * shield, projectile, spawnedForHit);
             if (detonation is not null) SplashWithTraits(target.Position, damage, detonation.Radius, target.Id,
-                CombatDamageProfile.ForSpell(projectile.Spell) | CombatDamageTraits.Explosive);
+                CombatDamageProfile.ForSpell(projectile.Spell, projectile.Combination) | CombatDamageTraits.Explosive);
             ApplyDragonEssenceImpactEffects(target, damage, ref killed);
             if (!killed) ApplyProjectileStatus(projectile, target);
             if (!killed) ApplyHitRules(projectile.Spell, target);
 
             if (projectile.SplashRadius > 0) SplashWithTraits(target.Position, damage * 0.4, projectile.SplashRadius, target.Id,
-                CombatDamageProfile.ForSpell(projectile.Spell) | CombatDamageTraits.Explosive);
+                CombatDamageProfile.ForSpell(projectile.Spell, projectile.Combination) | CombatDamageTraits.Explosive);
             foreach (var interaction in interactions)
             {
                 if (interaction.SplashRadius > 0 && interaction.SplashDamageMultiplier > 0 && TrySpendReactionEvent())
                 {
                     SplashWithTraits(target.Position, damage * interaction.SplashDamageMultiplier, interaction.SplashRadius, target.Id,
-                        CombatDamageProfile.ForSpell(projectile.Spell) | CombatDamageTraits.Explosive);
+                        CombatDamageProfile.ForSpell(projectile.Spell, projectile.Combination) | CombatDamageTraits.Explosive);
                 }
             }
             if (passiveProfile.Wildfire) SplashWithTraits(target.Position, damage * 0.35, passiveProfile.Volcanic ? 90 : 64, target.Id,
-                CombatDamageProfile.ForSpell(projectile.Spell) | CombatDamageTraits.Explosive);
+                CombatDamageProfile.ForSpell(projectile.Spell, projectile.Combination) | CombatDamageTraits.Explosive);
 
             if (projectile.Spell == SpellId.ArcaneOrb)
             {
@@ -118,7 +118,7 @@ public sealed partial class RunSimulation
 
     private bool DamageTarget(ICombatTarget target, double damage, ProjectileState? source = null, List<ProjectileState>? spawned = null) =>
         DamageTargetWithTraits(target, damage, source, spawned,
-            source is null ? CombatDamageTraits.None : CombatDamageProfile.ForSpell(source.Spell));
+            source is null ? CombatDamageTraits.None : CombatDamageProfile.ForSpell(source.Spell, source.Combination));
 
     private bool DamageTargetWithTraits(ICombatTarget target, double damage, ProjectileState? source,
         List<ProjectileState>? spawned, CombatDamageTraits traits)
