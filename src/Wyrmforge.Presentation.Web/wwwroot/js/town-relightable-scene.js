@@ -92,7 +92,8 @@ export function compileTownLightingSnapshot(manifest, { state = {}, mode = 'nigh
     const lights = manifest.fixtures.map(fixture => {
         validateFixture(fixture);
         const { when, artAnchor, ...descriptor } = fixture;
-        return { ...descriptor, enabled: mode !== 'zero' && enabledWhen(when, state) && fixture.enabled !== false };
+        const unlocked = enabledWhen(when, state); // Validate C# state even in zero-light inspection.
+        return { ...descriptor, enabled: mode !== 'zero' && unlocked && fixture.enabled !== false };
     });
     // The G1/G3 GPU engine validates every material, object and light without
     // any Town-specific shader, hardcoded building type or alternate light pass.
