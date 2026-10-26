@@ -256,7 +256,7 @@
 
 @if (showTownAgents && crowd is not null && !showTownV2)
 {
-    <details data-testid="town-agent-panel">
+    <details class="refuge-town-ai-panel" data-testid="town-agent-panel">
         <summary>Town AI inspector</summary>
         <button type="button" @onclick="RefreshTownAgents">Refresh Town AI inspector</button>
         <pre data-testid="town-agent-inspector">@townAgentJson</pre>
