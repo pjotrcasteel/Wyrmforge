@@ -66,6 +66,14 @@ public sealed class TownCrowd
     private readonly HashSet<string> _openBuildings;
     private uint _randomState;
     private readonly bool _agentActivities;
+    private readonly int _agentSeed;
+    private readonly Dictionary<int, (AgentRuntime Runtime, CitizenPolicy Policy)> _agents = [];
+    public IReadOnlyList<AgentSnapshot> InspectAgents() => _agents.OrderBy(p => p.Key).Select(p => p.Value.Runtime.Inspect()).ToArray();
+    private sealed class CitizenPolicy : IAgentPolicy
+    {
+        public ImmutableArray<AgentAlternative> Alternatives { get; set; } = [];
+        public ImmutableArray<AgentAlternative> Evaluate(AgentContext context) => Alternatives;
+    }
     private readonly Dictionary<int, CivilianActivitySelection> _activityDecisions = [];
     public IReadOnlyDictionary<int, CivilianActivitySelection> InspectActivities() => new Dictionary<int, CivilianActivitySelection>(_activityDecisions);
     public int PathfindCount { get; private set; }
@@ -125,6 +133,7 @@ public sealed class TownCrowd
 
         _navigation = navigation;
         _agentActivities = agentActivities;
+        _agentSeed = seed;
         _openBuildings = new HashSet<string>(openBuildings ?? [], StringComparer.Ordinal);
         _randomState = seed == 0 ? 0xA341316Cu : unchecked((uint)seed);
         // Reuse the existing seven actors: opening a building relocates an initial
@@ -614,12 +623,29 @@ public sealed class TownCrowd
             return new CivilianActivityOption(place.Id, activity, utility, open, available);
         }).ToImmutableArray();
         var choice = CivilianActivitySelector.Select(options);
+        if (!_agents.TryGetValue(citizen.Id, out var agent))
+        {
+            var policy = new CitizenPolicy();
+            agent = (new AgentRuntime(new(citizen.Id, "citizen", "refuge"), _agentSeed, policy, 1), policy);
+            _agents.Add(citizen.Id, agent);
+        }
+        agent.Policy.Alternatives = choice.Alternatives;
+        var tick = agent.Runtime.Inspect().Tick + 1;
+        var request = agent.Runtime.Step([
+            new("assigned-building", citizen.AssignedBuildingId ?? "none", tick, "town-assignment"),
+            new("current-place", _navigation.Destinations[citizen.CurrentNode].Id, tick, "authoritative-town"),
+            new("navigation-revision", _navigation.Revision.ToString(System.Globalization.CultureInfo.InvariantCulture), tick, "town-spatial-data")]);
         _activityDecisions[citizen.Id] = choice;
         if (choice.PlaceId is { } id)
         {
             var destination = _navigation.Destinations.FindIndex(p => p.Id == id);
-            if (TryChoose(citizen, [destination])) return;
+            if (TryChoose(citizen, [destination]))
+            {
+                if (request is not null) agent.Runtime.Report(new(request.Sequence, AgentActionStatus.Completed, "destination-reserved-route-accepted"));
+                return;
+            }
         }
+        if (request is not null) agent.Runtime.Report(new(request.Sequence, AgentActionStatus.Rejected, "no-available-route-or-slot-retry"));
         citizen.IdleSeconds = .6f;
     }
 

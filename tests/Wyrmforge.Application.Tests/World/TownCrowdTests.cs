@@ -25,6 +25,8 @@ public sealed class TownCrowdTests
                 Assert.AreEqual(first.Citizens[i].Position, replay.Citizens[i].Position);
         }
         Assert.IsTrue(first.InspectActivities().Count > 0);
+        Assert.IsTrue(first.InspectAgents().Count > 0);
+        Assert.IsTrue(first.InspectAgents().All(a => a.Trace.Length > 0 && a.LastResult is not null));
         Assert.IsTrue(first.Citizens.Any(c => c.IsWalking));
     }
 
