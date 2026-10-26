@@ -1,4 +1,6 @@
 using System.Reflection;
+using Wyrmforge.Domain.Combat.Dragons;
+using Wyrmforge.Domain.Spells;
 using System.Text.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Application.Abstractions.Randomness;
@@ -19,13 +21,52 @@ public sealed class AdvancedAgentIntegrationTests
             new(EnemyKind.MireHound, 42, 800, 600) { Intelligence = tier, Count = count });
 
     [TestMethod]
+    [DataRow(1)]
+    [DataRow(2)]
+    public void AdaptiveBoss_ActualPhases_ReplayWithoutBypassingCommitments(int phase)
+    {
+        RunSimulation Boss() => new RunSimulationFactory(new SeededRandomSource(1)).CreateDevelopmentHunt(new HashSet<string>(),
+            new(DragonId.Ashfang, false, phase, SpellId.FireBolt, 42, 800, 600, true)
+            { AdaptiveAgents = true, Casting = false, BossReadySpell = false });
+        var first = Boss(); var replay = Boss(); var actions = new HashSet<string>(); var flight = false;
+        for (var i = 0; i < 1200; i++)
+        {
+            var input = i < 400 ? default : new MovementInput(Math.Sin(i * .01), Math.Cos(i * .013));
+            var actual = first.Tick(.025, input, 800, 600);
+            Assert.AreEqual(JsonSerializer.Serialize(actual), JsonSerializer.Serialize(replay.Tick(.025, input, 800, 600)));
+            if (actual.Dragon is { } dragon)
+            {
+                if (dragon.Action is { } action && action != "idle") actions.Add(action);
+                flight |= dragon.FlightStage == "overhead";
+            }
+            Assert.IsTrue(first.InspectBossAgent()!.Observations.All(f => !f.Source.Contains("legacy")));
+        }
+        Assert.IsTrue(actions.Count >= 2, "The phase-local policy should demonstrate multiple legal attacks.");
+        Assert.IsTrue(flight, "Adaptive utility may not suppress authored aerial phases.");
+        Assert.AreEqual(JsonSerializer.Serialize(first.InspectBossAgent()), JsonSerializer.Serialize(replay.InspectBossAgent()));
+    }
+
+    [TestMethod]
+    public void Horde_64Agents_RespectsQueryCapsAndReportsActualCosts()
+    {
+        var run = Create(64, AgentTier.Tactical);
+        for (var i = 0; i < 400; i++) run.Tick(.025, default, 800, 600);
+        var metrics = run.InspectAgentPerformance();
+        Assert.AreEqual(64, metrics.Population);
+        Assert.IsTrue(metrics.MaxSightQueries <= 32 && metrics.MaxPathQueries <= 32);
+        Assert.IsTrue(metrics.MaxCommittedThreats <= 2);
+        Assert.IsTrue(metrics.P95Milliseconds >= 0);
+        Console.WriteLine("AI6_HOST_PROFILE " + JsonSerializer.Serialize(metrics));
+    }
+
+    [TestMethod]
     public void TacticalPack_ActualSimulation_ReplaysWithBoundedPressureAndDiverseActions()
     {
         var first = Create(8, AgentTier.Tactical); var replay = Create(8, AgentTier.Tactical);
         var actions = new HashSet<string>(); var attacked = new HashSet<int>();
         for (var i = 0; i < 1800; i++)
         {
-            var input = new MovementInput(Math.Sin(i * .01), Math.Cos(i * .013));
+            var input = i < 600 ? default : new MovementInput(Math.Sin(i * .01), Math.Cos(i * .013));
             Assert.AreEqual(JsonSerializer.Serialize(first.Tick(.025, input, 800, 600)), JsonSerializer.Serialize(replay.Tick(.025, input, 800, 600)));
             Assert.IsTrue(first.InspectAgentPack().Leases.Length <= 2);
             foreach (var agent in first.InspectEnemyAgents())

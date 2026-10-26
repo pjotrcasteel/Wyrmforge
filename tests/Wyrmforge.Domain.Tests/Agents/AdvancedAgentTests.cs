@@ -1,11 +1,28 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Domain.Agents;
+using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Combat.Geometry;
 namespace Wyrmforge.Domain.Tests.Agents;
 
 [TestClass]
 public sealed class AdvancedAgentTests
 {
+    [TestMethod]
+    public void BossPolicy_Adaptation_CannotEnableInvalidPhaseOrRange()
+    {
+        var boss = new AshfangBehaviorState();
+        foreach (var phase in new[] { 0, 3 })
+            Assert.IsTrue(boss.Alternatives(100, true, phase, "hold-space", 1).Where(a => a.Action != "approach").All(a => !a.Allowed));
+        Assert.IsFalse(boss.Alternatives(800, true, 2, "close-distance", 1).Any(a => a.Action != "approach" && a.Allowed));
+        Assert.IsFalse(boss.Alternatives(100, false, 2, "hold-space", 1).Any(a => a.Action != "approach" && a.Allowed));
+        foreach (var tier in Enum.GetValues<AgentTier>())
+        {
+            var profile = CombatCapabilities.For(tier);
+            Assert.AreEqual(tier >= AgentTier.Adaptive, profile.Adapt);
+            Assert.AreEqual(tier == AgentTier.Masterful, profile.PhaseAware);
+        }
+    }
+
     [TestMethod]
     public void Schedule_WholeDay_RepeatsAndIncludesWorkRestAndVisits()
     {

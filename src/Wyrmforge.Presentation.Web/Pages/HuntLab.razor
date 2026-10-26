@@ -61,7 +61,19 @@
     <p class="hunt-lab-note">This uses the game's real canvas renderer for cinematic inspection. The agent may lose when invulnerability is disabled. Balance Lab measures repeatable portrait/landscape outcomes independently; an autopilot is not proof of human comfort or fun.</p>
 </main>
 
+@if (AdaptiveAgents)
+{
+    <details><summary>Boss AI inspector</summary>
+        <button @onclick="InspectBoss">Refresh boss AI inspector</button>
+        <pre data-testid="boss-agent-inspector">@bossInspection</pre>
+    </details>
+}
+
 @code {
+    private string bossInspection = "";
+    private void InspectBoss() => bossInspection = System.Text.Json.JsonSerializer.Serialize(
+        new { Agent = simulation?.InspectBossAgent(), Adaptation = simulation?.InspectBossAdaptation() },
+        new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
     [Inject] private IJSRuntime JavaScript { get; set; } = null!;
     [Parameter, SupplyParameterFromQuery(Name = "wyrm")] public string? WyrmQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "ascendant")] public bool? AscendantQuery { get; set; }
@@ -83,6 +95,7 @@
     private bool invulnerable;
     [Parameter, SupplyParameterFromQuery(Name = "play")] public bool ManualControl { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "cast")] public bool? CastingQuery { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "ai5")] public bool AdaptiveAgents { get; set; }
     private bool Casting = true;
     private bool paused;
     private string status = "PREPARING THE WYRMREALM";
@@ -140,7 +153,7 @@
         var build = SelfPlayBuildCatalog.All.First();
         var nodes = loadout == "stress" ? build.SelectedNodes : new HashSet<string>();
         var setup = new DevelopmentHuntSetup(wyrm, variant == "ascendant" && AscendantRiteCatalog.IsAvailable(wyrm), phase, spell, seed,
-            Math.Max(240, width), Math.Max(240, height), invulnerable) { Casting = Casting, Environment = true, BossReadySpell = loadout == "stress" };
+            Math.Max(240, width), Math.Max(240, height), invulnerable) { AdaptiveAgents = AdaptiveAgents, Casting = Casting, Environment = true, BossReadySpell = loadout == "stress" };
         simulation = new RunSimulationFactory(new SeededRandomSource(1)).CreateDevelopmentHunt(nodes, setup);
         agent = new HeuristicRunAgent(personality, seed, build.PreferredSchool);
         status = $"INVOCATION • {(setup.Ascendant ? "ASCENDANT " : string.Empty)}{wyrm}";

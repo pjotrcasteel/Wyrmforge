@@ -550,6 +550,26 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    public async Task Mobile_TownAgents_ExecuteSharedCoreAndExposeSchedule()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await OpenAsync();
+        await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/?townAi2=1");
+        await EnterTownIfNeededAsync();
+        await Page.GetByText("Town AI inspector", new() { Exact = true }).ClickAsync();
+        var refresh = Page.GetByRole(AriaRole.Button, new() { Name = "Refresh Town AI inspector" });
+        await Expect(refresh).ToBeVisibleAsync();
+        for (var i = 0; i < 20; i++)
+        {
+            await refresh.ClickAsync();
+            if ((await Page.GetByTestId("town-agent-inspector").InnerTextAsync()).Contains("seeded-local-schedule")) break;
+            await Page.WaitForTimeoutAsync(250);
+        }
+        await Expect(Page.GetByTestId("town-agent-inspector")).ToContainTextAsync("seeded-local-schedule");
+        await Expect(Page.GetByTestId("town-agent-inspector")).ToContainTextAsync("town-spatial-data");
+    }
+
+    [TestMethod]
     public async Task Mobile_RefugeMetrics_DebugUrlShowsLiveFPSAndSimulationCosts()
     {
         await Page.SetViewportSizeAsync(390, 844);

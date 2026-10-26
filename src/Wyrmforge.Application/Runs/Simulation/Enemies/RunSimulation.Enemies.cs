@@ -194,6 +194,7 @@ public sealed partial class RunSimulation
 
     private void UpdateEnemies(double delta)
     {
+        var agentStarted = agentFoundationEnabled ? System.Diagnostics.Stopwatch.GetTimestamp() : 0;
         PruneEnemyAgents();
         UpdateAgentPack(delta);
         var sensingBudget = agentPerceptionEnabled ? new Wyrmforge.Domain.Agents.AgentQueryBudget(32) : null;
@@ -208,6 +209,9 @@ public sealed partial class RunSimulation
         RefreshPackbloodLeaders();
         UpdateSubmergedWraiths(delta, ref committed, committedCap);
         // Raised Ashlings are appended mid-loop; walking the frame's original count lets them start acting next frame.
+        var packMembers = agentTier is >= Wyrmforge.Domain.Agents.AgentTier.Tactical
+            ? enemies.Where(e => e.Health > 0 && e.Kind == EnemyKind.MireHound).Take(256).ToArray() : [];
+        var packCenter = packMembers.Aggregate(Vector2D.Zero, (sum, e) => sum + e.Position) * (1d / Math.Max(1, packMembers.Length));
         var admissionOffset = agentPerceptionEnabled && enemies.Count > 0 ? (int)(agentAdmissionTick++ % enemies.Count) : 0;
         for (int index = 0, count = enemies.Count; index < count; index++)
         {
@@ -235,10 +239,7 @@ public sealed partial class RunSimulation
             if (packSupport && sensed?.Contact is not null && enemy.MireHound?.Phase == MireHoundPhase.Stalk)
             {
                 // Reserve the rear half-plane as an escape route; support holds a visible staging arc.
-                var anchor = enemies.Where(e => e.Health > 0 && e.Kind == EnemyKind.MireHound).Take(256)
-                    .Aggregate(Vector2D.Zero, (sum, e) => sum + e.Position);
-                var count = Math.Min(256, enemies.Count(e => e.Health > 0 && e.Kind == EnemyKind.MireHound));
-                var radial = Vector2D.DirectionTo(knownTarget, anchor * (1d / Math.Max(1, count)));
+                var radial = Vector2D.DirectionTo(knownTarget, packCenter);
                 if (radial == Vector2D.Zero) radial = new(0, -1);
                 navigationGoal = knownTarget + Vector2D.Rotate(radial, (enemy.Id % 3 - 1) * .65) * 155;
             }
@@ -349,7 +350,7 @@ public sealed partial class RunSimulation
             {
                 var previous = enemy.Position;
                 var proposed = previous + direction * speed * scaledDelta;
-                enemy.Position = mapState.EncounterActive && arenaEnvironment is not null
+                enemy.Position = (mapState.EncounterActive || agentPerceptionEnabled) && arenaEnvironment is not null
                     ? arenaEnvironment.RestrictMovement(previous, proposed, arenaWidth, arenaHeight, enemy.Radius)
                     : proposed;
             }
@@ -364,6 +365,9 @@ public sealed partial class RunSimulation
         UpdateBellShockwaves(delta);
         UpdateWinterBellHazards(delta);
         UpdateFrostHazards(delta);
+        if (agentFoundationEnabled) agentPerformance.Record(System.Diagnostics.Stopwatch.GetElapsedTime(agentStarted).TotalMilliseconds,
+            enemyAgents.Count, sensingBudget is null ? 0 : 32 - sensingBudget.Remaining,
+            pathBudget is null ? 0 : 32 - pathBudget.Remaining, CommittedThreatCount());
     }
 
     private void ResolveEnemyContacts(double delta)

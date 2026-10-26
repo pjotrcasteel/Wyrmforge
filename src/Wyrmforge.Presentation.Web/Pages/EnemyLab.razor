@@ -57,8 +57,9 @@
     {
         <section class="note">
             <button @onclick="InspectAgents">Refresh AI inspector</button>
-            <p>@(agentPerception ? "AI1: bounded vision, occlusion and expiring last-known locations. Profile values are provisional lab tuning." : "AI0: existing execution with legacy exact-target information.") Pause the encounter to inspect a fixed decision.</p>
+            <p>@(intelligence is not null ? $"Capability tier {intelligence}: earned perception, bounded pressure and authored attack locks." : agentPerception ? "AI1: bounded vision, occlusion and expiring last-known locations. Profile values are provisional lab tuning." : "AI0: existing execution with legacy exact-target information.") Pause the encounter to inspect a fixed decision.</p>
             <p data-testid="agent-summary">@agentSummary</p>
+            <pre data-testid="agent-performance">@agentPerformance</pre>
             <pre style="max-height:28rem;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere" data-testid="agent-inspector">@agentInspection</pre>
         </section>
     }
@@ -94,6 +95,7 @@
     private bool agentFoundation;
     private string agentInspection = "Run the encounter, then refresh to inspect its agents.";
     private string agentSummary = "";
+    private string agentPerformance = "";
     private string mireStyle = "painted";
     private bool paused;
     private double simulationSeconds;
@@ -185,6 +187,7 @@
     private void InspectAgents()
     {
         var states = simulation?.InspectEnemyAgents();
+        agentPerformance = System.Text.Json.JsonSerializer.Serialize(simulation?.InspectAgentPerformance());
         agentSummary = states is null ? "Encounter not started." : states.Count == 0 ? "No supported live AI0 agents." :
             string.Join(" · ", states.Select(s => $"{s.Identity.Archetype}: {s.CurrentAction?.Goal} / {s.CurrentAction?.Action} — {s.CurrentAction?.Reason}; executor: {s.LastResult?.Reason}"));
         agentInspection = System.Text.Json.JsonSerializer.Serialize(states, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });

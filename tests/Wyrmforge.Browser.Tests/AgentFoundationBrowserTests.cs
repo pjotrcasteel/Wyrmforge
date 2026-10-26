@@ -10,6 +10,25 @@ namespace Wyrmforge.Browser.Tests;
 public sealed class AgentFoundationBrowserTests : PageTest
 {
     [TestMethod]
+    public async Task TacticalPack_ActualMobileLab_ExposesBoundedPressureMetrics()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        var baseUrl = Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/";
+        await Page.GotoAsync(baseUrl.TrimEnd('/') + "/enemy-lab?kind=MireHound&tier=3&count=8&autoplay=false&cast=false&seconds=6");
+        await Page.EvaluateAsync("async () => { window.aiPackArena = await import('./js/arena.js'); }");
+        await Page.WaitForFunctionAsync("() => window.aiPackArena.readArenaDiagnostics(document.querySelector('.enemy-lab canvas'))?.hud?.seconds >= 6",
+            null, new() { Timeout = 45000 });
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Refresh AI inspector" }).ClickAsync();
+        var states = JsonSerializer.Deserialize<AgentSnapshot[]>(await Page.GetByTestId("agent-inspector").InnerTextAsync())!;
+        Assert.AreEqual(8, states.Length);
+        Assert.IsTrue(states.All(a => a.Observations.Any(f => f.Key == "tier" && f.Value == "Tactical")));
+        await Expect(Page.GetByTestId("agent-performance")).ToContainTextAsync("MaxCommittedThreats");
+        var output = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
+        Directory.CreateDirectory(output);
+        await Page.ScreenshotAsync(new() { Path = Path.Combine(output, "ai4-pack-390.png"), FullPage = true });
+    }
+
+    [TestMethod]
     [DataRow("Hollow")]
     [DataRow("MireHound")]
     public async Task PerceptionOptIn_UsesEarnedInformationInActualEnemyLab(string kind)

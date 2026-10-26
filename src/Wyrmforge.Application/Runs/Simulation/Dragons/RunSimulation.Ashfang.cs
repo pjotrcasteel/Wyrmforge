@@ -6,6 +6,17 @@ namespace Wyrmforge.Application.Runs.Simulation;
 public sealed partial class RunSimulation
 {
     private bool ashfangBreathHit;
+    private AshfangAgent? ashfangAgent;
+    public Wyrmforge.Domain.Agents.AgentSnapshot? InspectBossAgent() => ashfangAgent?.Runtime.Inspect();
+    public Wyrmforge.Domain.Agents.AdaptationSnapshot? InspectBossAdaptation() => ashfangAgent?.Adaptation.Inspect();
+    private Vector2D KnownAshfangTarget(DragonState active) => ashfangAgent is null ? player.Position
+        : ashfangAgent.Perception.Inspect().Contact?.Position ?? active.Position;
+    private void ObserveAshfangAgent(DragonState active, double delta)
+    {
+        ashfangAgent?.Tick(delta, active, ashfangBehavior, ashfangFlight.Stage, player.Position,
+            (a, b) => arenaEnvironment?.HasLineOfSight(a, b, arenaWidth, arenaHeight) ?? true,
+            target => (arenaEnvironment?.EnemyNavigationTarget(active.Position, target, arenaWidth, arenaHeight, active.Radius) ?? target) == target);
+    }
     private readonly AshfangBehaviorState ashfangBehavior = new();
 
     private void UpdateAshfangCombat(DragonState active, double delta)
@@ -45,15 +56,16 @@ public sealed partial class RunSimulation
             return;
         }
         active.AttackCooldown -= delta;
-        var navigation = arenaEnvironment?.EnemyNavigationTarget(active.Position, player.Position, arenaWidth, arenaHeight, active.Radius) ?? player.Position;
-        var clearPath = navigation == player.Position;
+        var target = KnownAshfangTarget(active);
+        var navigation = arenaEnvironment?.EnemyNavigationTarget(active.Position, target, arenaWidth, arenaHeight, active.Radius) ?? target;
+        var clearPath = navigation == target;
         if (active.AttackCooldown <= 0)
         {
-            var action = ashfangBehavior.Decide(Vector2D.Distance(active.Position, player.Position), clearPath, active.Phase);
+            var action = ashfangAgent?.Choose() ?? ashfangBehavior.Decide(Vector2D.Distance(active.Position, target), clearPath, active.Phase);
             if (action != "approach")
             {
                 ashfangBreathHit = false;
-                ashfangBehavior.Begin(action, active.Position, player.Position, active.Definition.Combat.Attack.TelegraphSeconds.For(active.Phase));
+                ashfangBehavior.Begin(action, active.Position, target, active.Definition.Combat.Attack.TelegraphSeconds.For(active.Phase));
                 active.BreathDirection = ashfangBehavior.Direction;
                 active.TelegraphRemaining = ashfangBehavior.Remaining;
                 dragonAttackSequence++;
@@ -62,7 +74,7 @@ public sealed partial class RunSimulation
         }
         // A predator closes while a target is outside its reach. It cannot
         // re-aim a committed attack or walk during its vulnerable recovery.
-        if (!clearPath || Vector2D.Distance(active.Position, player.Position) > 115)
+        if (!clearPath || Vector2D.Distance(active.Position, target) > 115)
         {
             var direction = Vector2D.DirectionTo(active.Position, navigation);
             var speed = active.Speed * active.Definition.Combat.Movement.SpeedMultiplier.For(active.Phase);

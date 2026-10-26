@@ -8,6 +8,8 @@ public sealed partial class RunSimulation
     private bool agentFoundationEnabled;
     private AgentTier? agentTier;
     private readonly PackCoordinator agentPack = new();
+    private readonly AgentPerformanceMetrics agentPerformance = new();
+    public AgentPerformanceSnapshot InspectAgentPerformance() => agentPerformance.Inspect();
     public PackSnapshot InspectAgentPack() => agentPack.Inspect();
 
     private void UpdateAgentPack(double delta)
@@ -16,7 +18,7 @@ public sealed partial class RunSimulation
         var members = enemies.Where(e => e.Health > 0 && e.Kind == EnemyKind.MireHound)
             .Take(PackCoordinator.MemberLimit).Select(e => new PackMember(e.Id,
                 e.RoutedRemaining <= 0 && e.Statuses.TimeScale(false) > 0 && e.MireHound!.CooldownRemaining <= .15
-                    && enemyAgents.TryGetValue(e.Id, out var a) && a.Perception.Inspect().Visible,
+                    && enemyAgents.TryGetValue(e.Id, out var a) && a.Perception.Inspect() is { SightClearOnLastSample: true, Contact: not null },
                 e.MireHound!.Phase != MireHoundPhase.Stalk)).ToArray();
         agentPack.Tick(delta, members);
     }

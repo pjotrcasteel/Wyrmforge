@@ -183,7 +183,7 @@ public sealed partial class RunSimulation
 
     private void UpdateDragonCombat(DragonState activeDragon, double delta)
     {
-        if (activeDragon.Definition.Id == DragonId.Ashfang) { if (!UpdateAshfangFlight(activeDragon, delta)) UpdateAshfangCombat(activeDragon, delta); return; }
+        if (activeDragon.Definition.Id == DragonId.Ashfang) { ObserveAshfangAgent(activeDragon, delta); if (!UpdateAshfangFlight(activeDragon, delta)) UpdateAshfangCombat(activeDragon, delta); return; }
         if (activeDragon.IsTelegraphing)
         {
             activeDragon.TelegraphRemaining -= delta;
