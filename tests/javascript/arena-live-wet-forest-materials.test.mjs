@@ -55,7 +55,7 @@ test('normal Hunts use the same C# recipe visuals but retain generatorPreview=fa
     assert.match(real, /drawArenaEnvironment\(ctx, snapshot\.environment/);
     assert.match(ground, /drawLiveWetForestMaterialBase\(ctx, tiles, seed, width, height\)/);
     assert.match(environ, /liveWetForestArtworkGeneration\(\)/);
-    assert.match(adapter, /bakeSourceBackedThreeMaterialGround/);
+    assert.match(adapter, /bakeSourceBackedThreeMaterialGroundBatched/);
     assert.doesNotMatch(adapter, /new (?:WebGLRenderer|LightingEngine)|Math\.random|generatorPreview/);
 });
 
@@ -95,7 +95,8 @@ test('actual live fallback switches to the original PR340 paintings once decoded
         assert.equal(liveWetForestArtworkGeneration(), first + 1);
         assert.equal(liveWetForestMaterialDiagnostics(seed).status, 'source-backed');
         assert.equal(drawLiveWetForestMaterialBase(ctx, tiles(), seed, 48, 48), true);
-        assert.ok(calls.length > 9, 'The live floor must contain the original paintings and organic contacts.');
+        assert.ok(calls.length > 0 && calls.length <= 12,
+            'The live floor must contain archived paintings with batched copies, not thousands of per-cell draws.');
         const { drawWetForestGround } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-wet-forest-art.js');
         let painterDraws = 0;
         const sourceOnlyContext = {
@@ -118,6 +119,54 @@ test('actual live fallback switches to the original PR340 paintings once decoded
         assert.equal(requested.length, 3, 'Cached materials must not trigger per-frame fetches.');
     } finally {
         globalThis.Image = oldImage;
+    }
+});
+
+test('full playable-world source art uses fewer than 50 image draws, not 65,000', async () => {
+    const previousImage = globalThis.Image;
+    const loadedUrls = [];
+    globalThis.Image = class {
+        width = 900;
+        height = 900;
+        set src(url) {
+            loadedUrls.push(url);
+            queueMicrotask(() => this.onload?.());
+        }
+    };
+    try {
+        const seed = 1213;
+        assert.equal(await preloadLiveWetForestMaterials(seed), true);
+        assert.equal(loadedUrls.length, 3);
+        const width = 950, height = 1550;
+        const columns = Math.ceil(width / 12), rows = Math.ceil(height / 12);
+        const materials = ['moss', 'road', 'mud', 'puddle', 'loam', 'leafbed', 'clearing'];
+        const world = Array.from({ length: columns * rows }, (_, i) => ({
+            x: (i % columns) * 12, y: Math.floor(i / columns) * 12,
+            material: materials[(i + Math.floor(i / columns)) % materials.length],
+        }));
+        const operations = { images: 0, rectangles: 0, clips: 0 };
+        const ctx = {
+            save() {}, restore() {}, beginPath() {},
+            rect() { operations.rectangles++; },
+            clip() { operations.clips++; },
+            set imageSmoothingEnabled(value) { assert.equal(value, false); },
+            drawImage(source, sx, sy, sw, sh) {
+                assert.equal(source.width, 900);
+                assert.ok(sx >= 0 && sy >= 0 && sx + sw <= 900 && sy + sh <= 900);
+                operations.images++;
+            },
+        };
+        assert.equal(drawLiveWetForestMaterialBase(ctx, world, seed, width, height), true);
+        assert.ok(operations.rectangles > 100, 'Actual material regions and contacts must still exist.');
+        assert.ok(operations.images > 0 && operations.images <= 48,
+            'Too many image copies for a single static mobile world bake: ' + operations.images);
+        assert.ok(operations.clips >= 2 && operations.clips <= 7);
+        const first = { ...operations };
+        operations.rectangles = operations.images = operations.clips = 0;
+        assert.equal(drawLiveWetForestMaterialBase(ctx, world, seed, width, height), true);
+        assert.deepEqual(operations, first, 'World source drawing remains deterministic.');
+    } finally {
+        globalThis.Image = previousImage;
     }
 });
 
