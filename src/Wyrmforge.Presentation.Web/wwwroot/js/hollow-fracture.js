@@ -24,8 +24,12 @@ export function isApprovedHollowFractureManifest(m) {
 // Applied only if the complete source geometry artwork passed owner approval.
 // Injured body types stay on their exact source-authored injury death actions.
 export function eligibleHollowFracture(entityId, injury = 'standard') {
-    return injury === 'standard' && Number.isSafeInteger(entityId) && entityId >= 0 &&
-        Math.imul((entityId ^ (entityId >>> 16)) | 0, 0x9e3779b1) % 4 === 0;
+    if (injury !== 'standard' || !Number.isSafeInteger(entityId) || entityId < 0) return false;
+    // Finalizer mixes upper bits before modulo: never correlate with the
+    // broken-left-leg skin selector, which uses entityId modulo 4.
+    let hash = Math.imul(entityId | 0, 0x7feb352d) >>> 0;
+    hash = Math.imul(hash ^ (hash >>> 16), 0x846ca68b) >>> 0;
+    return ((hash ^ (hash >>> 16)) >>> 0) % 4 === 0;
 }
 
 export function createHollowFractureAssets(baseUrl) {
