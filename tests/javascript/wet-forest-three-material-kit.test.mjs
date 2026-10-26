@@ -5,6 +5,7 @@ import {
     threeMaterialPlan, validateWetForestRecipe, trailAt, MATERIAL_IDS, THREE_MATERIAL_REVIEW,
     previewMaterialRoughness, bakeThreeMaterialRoughness,
     SOURCE_BACKED_VARIANTS, SOURCE_BACKED_SIZE, sourceBackedUrl, bakeSourceBackedThreeMaterialGround,
+    sourceBackedBoundaryContacts,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/wet-forest-three-material-kit.js';
 import {
     inspectionSnapshot,
@@ -146,6 +147,67 @@ test('existing PR340 source-backed artwork is chosen by family and six real vari
     assert.deepEqual(again, calls);
 });
 
+test('organic contacts are continuous, limited, seeded and do not rewrite C# terrain topology', () => {
+    const columns = 4, rows = 5, seed = 1204;
+    const board = new Uint8Array([
+        0, 0, 3, 1,
+        0, 0, 3, 1,
+        0, 0, 3, 1,
+        0, 0, 3, 1,
+        0, 0, 3, 1,
+    ]);
+    const original = board.slice();
+    const result = sourceBackedBoundaryContacts(board, columns, rows, seed);
+    assert.ok(result.length > 0);
+    assert.deepEqual(board, original, 'The gameplay-owned material classification is immutable.');
+    assert.deepEqual(result, sourceBackedBoundaryContacts(board, columns, rows, seed));
+    const materialSet = new Set([0, 1, 3]);
+    for (const contact of result) {
+        assert.ok(materialSet.has(contact.material));
+        assert.ok(contact.x >= 0 && contact.y >= 0);
+        assert.ok(contact.width > 0 && contact.height > 0);
+        assert.ok(contact.x + contact.width <= columns * 16);
+        assert.ok(contact.y + contact.height <= rows * 16);
+        assert.ok(Math.max(contact.width, contact.height) <= 5);
+        assert.ok(Math.min(contact.width, contact.height) <= 2);
+        assert.ok([0, 1, 3].includes(contact.material));
+    }
+    const otherSeed = sourceBackedBoundaryContacts(board, columns, rows, seed + 1);
+    assert.notDeepEqual(result, otherSeed, 'The contacts must vary deterministically by C# seed.');
+    assert.equal(sourceBackedBoundaryContacts(new Uint8Array([0, 2, 3, 1]), 4, 1, seed), null);
+    assert.equal(sourceBackedBoundaryContacts(null, 4, 1, seed), null);
+    assert.deepEqual(sourceBackedBoundaryContacts(new Uint8Array(9).fill(0), 3, 3, seed), []);
+});
+
+test('both contact modes sample ONLY existing source paintings, with a reversible A/B', () => {
+    const images = { 0: { width: 900, height: 900, id: 0 },
+        1: { width: 900, height: 900, id: 1 },
+        3: { width: 900, height: 900, id: 3 } };
+    const plan = { board: new Uint8Array([0, 0, 3, 1, 0, 0, 3, 1]),
+        columns: 4, rows: 2, width: 64, height: 32, seed: 1204 };
+    const draws = [];
+    const factory = () => ({
+        getContext: () => ({
+            set imageSmoothingEnabled(value) { assert.equal(value, false); },
+            drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh) {
+                assert.ok([images[0], images[1], images[3]].includes(image));
+                assert.ok(sx >= 0 && sy >= 0 && sx + sw <= 900 && sy + sh <= 900);
+                draws.push([image.id, sx, sy, sw, sh, dx, dy, dw, dh]);
+            },
+        }),
+    });
+    bakeSourceBackedThreeMaterialGround(plan, images, 1204, factory, 'original');
+    const stepped = draws.slice();
+    draws.length = 0;
+    bakeSourceBackedThreeMaterialGround(plan, images, 1204, factory, 'organic');
+    const organic = draws.slice();
+    assert.notDeepEqual(organic, stepped);
+    draws.length = 0;
+    bakeSourceBackedThreeMaterialGround(plan, images, 1204, factory, 'original');
+    assert.deepEqual(draws, stepped, 'The original review must be reversible.');
+    assert.equal(bakeSourceBackedThreeMaterialGround(plan, images, 1204, factory, 'unknown'), null);
+});
+
 test('same G1 engine snapshots deliver night, neutral inspection and true zero-light world', () => {
     for (const profile of ['night', 'neutral', 'zero']) {
         const snapshot = inspectionSnapshot('ground-albedo', profile);
@@ -188,6 +250,8 @@ test('preview receives actual C# WetForestRecipe and does not replace live Hunts
     assert.match(kit, /drawGroundMaterialTransitions/);
     assert.match(gpu, /registerTexture\(state\.roughnessId, new T\.CanvasTexture\(roughness\), false\)/);
     assert.match(gpu, /bakeSourceBackedThreeMaterialGround/);
+    assert.match(page, /Ground boundaries/);
+    assert.doesNotMatch(gpu, /night-lighting|canvas\.style\.filter/);
     assert.doesNotMatch(kit, /COMPACT_MATERIAL_SOURCE|build_wet_forest_compact_materials/);
     assert.match(page, /Ground artwork/);
     assert.doesNotMatch(gpu, /new T\.WebGLRenderer/);
