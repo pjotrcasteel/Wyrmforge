@@ -139,7 +139,13 @@ export class LightingEngine {
                 let caster;
                 if (d.occluderGeometry) {
                     // Separate authored solid caster; never reuses collision or infers volume from albedo.
-                    const hidden = new T.MeshBasicMaterial({ colorWrite: false, depthWrite: false });
+                    // Signed silhouette winding differs for screen-space cutouts and
+                    // camera-facing sprites; proxy shadowing must honor the same
+                    // generic two-sided material contract as its lit receiver.
+                    const hidden = new T.MeshBasicMaterial({
+                        colorWrite: false, depthWrite: false,
+                        side: md.doubleSided ? T.DoubleSide : T.FrontSide,
+                    });
                     caster = new T.Mesh(this.geometries.get(d.occluderGeometry), hidden);
                     this.scene.add(caster);
                 }
