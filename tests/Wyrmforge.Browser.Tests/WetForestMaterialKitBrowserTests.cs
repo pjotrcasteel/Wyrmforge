@@ -62,6 +62,22 @@ public sealed class WetForestMaterialKitBrowserTests : PageTest
         await SaveAsync(canvas, $"wet-forest-material-kit-original-pr340-variation02-{width}.png");
         Assert.AreNotEqual(neutral[1], (await CanvasStatsAsync(canvas))[1],
             "Selecting an existing archived variant should visibly change the GPU world.");
+        if (width == 390)
+        {
+            // Artist-facing acceptance evidence: every PRE-EXISTING PR #340
+            // texture combination, same C# seed / camera / GPU neutral profile.
+            var seen = new HashSet<long> { neutral[1], (await CanvasStatsAsync(canvas))[1] };
+            foreach (var variant in new[] { 3, 4, 5, 6 })
+            {
+                await Page.GetByLabel("Existing texture variation").SelectOptionAsync(variant.ToString());
+                await Expect(canvas).ToHaveAttributeAsync("data-material-review-variant", variant.ToString(),
+                    new LocatorAssertionsToHaveAttributeOptions { Timeout = 90000 });
+                var stats = await CanvasStatsAsync(canvas);
+                Assert.IsTrue(seen.Add(stats[1]),
+                    $"Archived source-backed variation {variant} should differ visually from the other five.");
+                await SaveAsync(canvas, $"wet-forest-material-kit-original-pr340-variation{variant:00}-{width}.png");
+            }
+        }
         await Page.GetByLabel("Existing texture variation").SelectOptionAsync("1");
         await Expect(canvas).ToHaveAttributeAsync("data-material-review-variant", "1",
             new LocatorAssertionsToHaveAttributeOptions { Timeout = 90000 });
