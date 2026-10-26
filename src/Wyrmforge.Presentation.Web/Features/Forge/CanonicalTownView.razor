@@ -15,6 +15,13 @@
          data-nexus-mastery-points="@NexusMasteryPoints">
         <img class="refuge-town-night-base" src="art/town/night-active.webp?v=140"
              alt="" draggable="false" fetchpriority="high" />
+        @* Strict opt-in (?townGpuPreview=1): same panorama layout, gestures, NPCs,
+           hotspots and progression; default users never create a WebGL renderer. *@
+        @if (showTownGpuPreview && !showTownV2)
+        {
+            <canvas class="refuge-town-gpu-canvas" data-town-gpu-canvas="true"
+                    aria-hidden="true"></canvas>
+        }
 
         @* Exactly registered building paintings with one shared alpha silhouette.
            All six use Arcane architectural landmarks and the same 560x450 atlas
@@ -261,6 +268,9 @@
     private DotNetObjectReference<CanonicalTownView>? routeClickReference;
     private bool foregroundMounted;
     private bool showTownV2;
+    private bool showTownGpuPreview;
+    private bool townGpuMounted;
+    private IJSObjectReference? townGpuModule;
     private IJSObjectReference? townV2Module;
     private bool townV2Mounted;
 
@@ -326,6 +336,21 @@
             }
             return;
         }
+        if (showTownGpuPreview && !townGpuMounted)
+        {
+            townGpuMounted = true;
+            try
+            {
+                townGpuModule = await JS.InvokeAsync<IJSObjectReference>(
+                    "import", "./js/town-live-relighting.js");
+                await townGpuModule.InvokeVoidAsync(
+                    "mountTownLiveGpuPreview", ".refuge-canonical-scene");
+            }
+            catch (JSException exception)
+            {
+                Logger.LogWarning(exception, "Opt-in GPU Town preview unavailable; retain canonical Town.");
+            }
+        }
         if (foregroundMounted || crowd is null) return;
         foregroundMounted = true;
         try
@@ -347,6 +372,8 @@
             .Split('&', StringSplitOptions.RemoveEmptyEntries);
         showTownV2 = query.Any(parameter =>
             string.Equals(parameter, "townV2=1", StringComparison.OrdinalIgnoreCase));
+        showTownGpuPreview = !showTownV2 && query.Any(parameter =>
+            string.Equals(parameter, "townGpuPreview=1", StringComparison.OrdinalIgnoreCase));
         showTownGeometry = query.Any(parameter =>
             string.Equals(parameter, "townGeometry=1", StringComparison.OrdinalIgnoreCase));
         showTownMetrics = query.Any(parameter =>
@@ -403,6 +430,10 @@
         // A disposed instance must not receive route-click callbacks.
         // The JS mount listens only while this viewport remains in the DOM.
         routeClickReference?.Dispose();
+        if (townGpuModule is not null)
+            _ = townGpuModule.InvokeVoidAsync("disposeTownLiveGpuPreview", ".refuge-canonical-scene");
+        if (townGpuModule is not null)
+            _ = townGpuModule.DisposeAsync();
         if (townV2Module is not null)
             _ = townV2Module.InvokeVoidAsync("disposeTownV2Nexus", ".refuge-canonical-scene");
         if (townV2Module is not null)
