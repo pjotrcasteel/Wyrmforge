@@ -9,14 +9,16 @@ public sealed class EncounterAdaptation
 {
     private AdaptationSnapshot state = new(0, 0, 0, 0, 0, 0, null, 0, "none");
     public AdaptationSnapshot Inspect() => state;
-    public void Observe(double delta, Vector2D origin, Vector2D? seenTarget)
+    public void Observe(double delta, Vector2D origin, Vector2D? seenTarget, bool sightNotResampled = false)
     {
         if (!double.IsFinite(delta) || delta < 0) throw new ArgumentOutOfRangeException(nameof(delta));
         var clock = state.Clock + delta;
         var decay = Math.Exp(-delta / 8);
         state = state with { Clock = clock, Near = state.Near * decay, Far = state.Far * decay,
             Left = state.Left * decay, Right = state.Right * decay };
-        if (seenTarget is null) state = state with { Previous = null };
+        // Skipped sensor ticks are not proof that sight was lost. Retain the last *observed*
+        // position for a future confirmed sample, but never count an unsampled target position.
+        if (seenTarget is null && !sightNotResampled) state = state with { Previous = null };
         if (clock >= state.NextSample && seenTarget is { } target)
         {
             var distance = Vector2D.Distance(origin, target);
