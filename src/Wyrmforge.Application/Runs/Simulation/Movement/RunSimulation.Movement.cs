@@ -26,6 +26,7 @@ public sealed partial class RunSimulation
             Math.Clamp(player.Position.Y, player.Radius, Math.Max(player.Radius, height - player.Radius)));
         if (arenaEnvironment is not null) player.Position = arenaEnvironment.RestrictMovement(previous, player.Position, width, height, player.Radius);
 
+        playerHeading = Vector2D.DirectionTo(previous, player.Position);
         UpdatePlayerBarriers(delta);
     }
 

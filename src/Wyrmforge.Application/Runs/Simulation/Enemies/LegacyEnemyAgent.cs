@@ -28,15 +28,17 @@ internal sealed class LegacyEnemyAgent
     }
 
     public (Vector2D Direction, double Speed, bool Committed) Step(double delta, Vector2D target,
-        Vector2D navigationTarget, double speed, bool mayCommit, AgentPerceptionSnapshot? sensed = null)
+        Vector2D navigationTarget, double speed, bool mayCommit, AgentPerceptionSnapshot? sensed = null, AgentPathResult? path = null)
     {
         Runtime.Resume();
         var tick = Runtime.Inspect().Tick + 1;
+        mayCommit &= (sensed?.Visible ?? true) && (path is null || path.Status == AgentPathStatus.Moving);
         var hound = enemy.MireHound;
         var request = Runtime.Step([
             new("target", sensed is { Contact: null } ? "unknown" : FormattableString.Invariant($"{target.X:R},{target.Y:R}"),
                 sensed?.Contact?.ObservedTick ?? tick, sensed is null ? "legacy-exact-target/world-units" : sensed.Contact?.Source ?? "expired-or-undetected"),
             new("target-visible", (sensed?.Visible ?? true).ToString(), tick, "sensing-gate"),
+            new("path-status", path?.Status.ToString() ?? "legacy", tick, path?.Reason ?? "existing-hunt-navigation"),
             new("navigation", FormattableString.Invariant($"{navigationTarget.X:R},{navigationTarget.Y:R}"), tick, "existing-hunt-navigation"),
             new("phase", hound?.Phase.ToString() ?? "Chase", tick, "authoritative-executor"),
             new("cooldown", (hound?.CooldownRemaining ?? 0).ToString("R", CultureInfo.InvariantCulture), tick, "authoritative-executor"),
@@ -69,7 +71,7 @@ internal sealed class LegacyEnemyAgent
         }
         else if (request?.Action != "chase") speed = 0;
         // Losing the target cannot cancel a warned lane, but cannot start a new attack either.
-        if (!targetKnown && hound?.Phase != MireHoundPhase.Pounce) speed = 0;
+        if ((!targetKnown || path is { Status: not AgentPathStatus.Moving }) && hound?.Phase != MireHoundPhase.Pounce) speed = 0;
         if (request is not null)
             Runtime.Report(new(request.Sequence, AgentActionStatus.Running, hound?.Phase.ToString() ?? "Chase"));
         return (direction, speed, committed);

@@ -75,7 +75,10 @@ public sealed class AgentPerception
         {
             next = tick + 1;
             next += (offset - next % profile.SampleIntervalTicks + profile.SampleIntervalTicks) % profile.SampleIntervalTicks;
-            if (InVision(observer, facing, candidate) && budget.TrySpend() && hasLineOfSight(observer, candidate))
+            var inVision = InVision(observer, facing, candidate);
+            var admitted = inVision && budget.TrySpend();
+            if (inVision && !admitted) next = tick + 1;
+            if (admitted && hasLineOfSight(observer, candidate))
             {
                 visible = true;
                 // A gap in confirmed sight must not turn hidden displacement into observed motion.
@@ -86,6 +89,20 @@ public sealed class AgentPerception
         }
         state = new(tick, next, contact, lastEventId, visible);
         return state;
+    }
+
+    /// <summary>Restore with the same sensing profile, seed and identity as the original sensor.</summary>
+    public void Restore(AgentPerceptionSnapshot snapshot)
+    {
+        ArgumentNullException.ThrowIfNull(snapshot);
+        if (snapshot.Tick < 0 || snapshot.NextSampleTick < 0 || snapshot.LastEventId < -1
+            || snapshot.Contact is { } contact && (contact.ObservedTick < 0 || contact.ObservedTick > snapshot.Tick
+                || snapshot.Tick - contact.ObservedTick >= profile.MemoryTicks
+                || contact.Source is not ("vision" or "hearing" or "threat-event"))
+            || snapshot.Visible && (snapshot.Contact?.Source != "vision" || snapshot.Contact.ObservedTick != snapshot.Tick))
+            throw new ArgumentException("Invalid sensing replay state.", nameof(snapshot));
+        if (snapshot.Contact is { } known) { ValidatePosition(known.Position); ValidatePosition(known.ObservedHeading); }
+        state = snapshot;
     }
 
     private bool InVision(Vector2D observer, Vector2D facing, Vector2D candidate)

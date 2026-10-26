@@ -14,6 +14,18 @@ public sealed class AgentPerceptionTests
             (_, _) => clear, new(1), events.IsDefault ? [] : events);
 
     [TestMethod]
+    public void Restore_SerializedSensor_ContinuesExactlyThroughLossAndExpiry()
+    {
+        var original = Create();
+        Observe(original, 1, new(20, 0));
+        var json = System.Text.Json.JsonSerializer.Serialize(original.Inspect());
+        var restored = Create();
+        restored.Restore(System.Text.Json.JsonSerializer.Deserialize<AgentPerceptionSnapshot>(json)!);
+        for (var tick = 2; tick <= 8; tick++)
+            Assert.AreEqual(Observe(original, tick, new(30, 0), tick > 5), Observe(restored, tick, new(30, 0), tick > 5));
+    }
+
+    [TestMethod]
     public void Observe_OccludedOrOutOfRange_DoesNotAcquireOrSpendUnneededQueries()
     {
         var agent = Create();
@@ -93,14 +105,21 @@ public sealed class AgentPerceptionTests
         {
             var agents = Enumerable.Range(0, 200).Select(id => new AgentPerception(new(100, 50, 3, 6), 42, id)).ToArray();
             var trace = new List<AgentPerceptionSnapshot>();
-            for (var tick = 1; tick <= 30; tick++)
+            var detected = new HashSet<int>();
+            for (var tick = 1; tick <= 120; tick++)
             {
                 var calls = 0;
                 var budget = new AgentQueryBudget(16);
-                foreach (var agent in agents)
-                    trace.Add(agent.Observe(tick, Vector2D.Zero, Vector2D.Zero, new(tick, 0), (_, _) => { calls++; return true; }, budget, []));
+                for (var i = 0; i < agents.Length; i++)
+                {
+                    var index = (i + tick - 1) % agents.Length;
+                    var sample = agents[index].Observe(tick, Vector2D.Zero, Vector2D.Zero, new(50, 0), (_, _) => { calls++; return true; }, budget, []);
+                    trace.Add(sample);
+                    if (sample.Visible) detected.Add(index);
+                }
                 Assert.IsTrue(calls <= 16);
             }
+            Assert.HasCount(200, detected);
             return System.Text.Json.JsonSerializer.Serialize(trace);
         }
         Assert.AreEqual(Run(), Run());

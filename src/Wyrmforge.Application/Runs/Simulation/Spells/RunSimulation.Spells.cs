@@ -42,6 +42,7 @@ public sealed partial class RunSimulation
         var surge = FocusedSurgeProfile.Identity;
         if (!echo)
         {
+            EmitAgentSpellSound();
             primaryCastCounts[spell.Id]++;
             surge = FocusedSurgeProfile.For(primaryCastCounts[spell.Id], rank);
             if (surge.IsSurge) FocusedSurgesCast++;

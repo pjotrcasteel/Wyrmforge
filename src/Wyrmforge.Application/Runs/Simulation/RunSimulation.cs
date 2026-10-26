@@ -186,6 +186,7 @@ public sealed partial class RunSimulation
         UpdateDragonEncounter(delta, width, height);
         UpdateSpawn(delta, width, height);
         UpdateAim(movement);
+        agentSpellSound = null;
         UpdateSpellcasting(delta, movement.IsMoving);
         UpdateContextualEffects(delta);
         // The Reliquary's hush: one held breath in which nothing hostile moves or strikes.

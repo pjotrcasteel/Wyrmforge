@@ -7,6 +7,8 @@ using Wyrmforge.Application.Runs.Navigation;
 using Wyrmforge.Application.Runs.SelfPlay;
 using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Domain.Agents;
+using Wyrmforge.Domain.Combat.Player;
+using Wyrmforge.Domain.Spells;
 using Wyrmforge.Domain.Combat.Enemies;
 using Wyrmforge.Domain.Combat.Geometry;
 
@@ -20,6 +22,46 @@ public sealed class AgentPerceptionIntegrationTests
             new DevelopmentEnemySetup(kind, 42, 800, 600, AgentPerception: true));
     private static List<EnemyState> Enemies(RunSimulation run) =>
         (List<EnemyState>)typeof(RunSimulation).GetField("enemies", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(run)!;
+
+    private static T Field<T>(RunSimulation run, string name) =>
+        (T)typeof(RunSimulation).GetField(name, BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(run)!;
+    private static void Invoke(RunSimulation run, string name, params object[] args) =>
+        typeof(RunSimulation).GetMethod(name, BindingFlags.NonPublic | BindingFlags.Instance)!.Invoke(run, args);
+
+    [TestMethod]
+    public void Movement_ClampedAtBoundary_DoesNotExposeUnexecutedInputHeading()
+    {
+        var run = Create(EnemyKind.WhitefangStalker);
+        var player = Field<PlayerState>(run, "player");
+        player.Position = new(player.Radius, 300);
+        Invoke(run, "UpdatePlayer", .025, new MovementInput(-1, 0), 800d, 600d);
+        Assert.AreEqual(Vector2D.Zero, Field<Vector2D>(run, "playerHeading"));
+        Invoke(run, "UpdatePlayer", .025, new MovementInput(1, 0), 800d, 600d);
+        Assert.AreEqual(new Vector2D(1, 0), Field<Vector2D>(run, "playerHeading"));
+    }
+
+    [TestMethod]
+    public void ActualCast_BehindClosedGate_IsHeardAtEmissionLocationWithoutAttackPermission()
+    {
+        var run = Create(EnemyKind.MireHound);
+        var map = new WyrmrealmMapState(seed: 25);
+        var terrain = ArenaEnvironmentState.Create(map.Seed, map.AvailableNodes[0]);
+        var gate = terrain.Snapshot().Barriers.Where(b => b.Kind == "gate").OrderBy(b => b.Y).First();
+        var x = (gate.X + gate.Width / 2) * 800;
+        var enemy = Enemies(run).Single();
+        enemy.Position = new(x, gate.Y * 600 - 30);
+        var player = Field<PlayerState>(run, "player");
+        player.Position = new(x, (gate.Y + gate.Height) * 600 + 30);
+        typeof(RunSimulation).GetField("arenaEnvironment", BindingFlags.NonPublic | BindingFlags.Instance)!.SetValue(run, terrain);
+        Invoke(run, "UpdateEnemies", .025);
+        Assert.AreEqual("unknown", run.InspectEnemyAgents().Single().Observations.Single(f => f.Key == "target").Value);
+        Invoke(run, "CastSpell", SpellCatalog.Get(SpellId.FireBolt), 1, 1d, false);
+        Invoke(run, "UpdateEnemies", .025);
+        var facts = run.InspectEnemyAgents().Single().Observations;
+        Assert.AreEqual("hearing", facts.Single(f => f.Key == "target").Source);
+        Assert.AreEqual("False", facts.Single(f => f.Key == "may-commit").Value);
+        Assert.AreEqual(MireHoundPhase.Stalk, enemy.MireHound!.Phase);
+    }
 
     [TestMethod]
     [DataRow(EnemyKind.Hollow)]
@@ -53,7 +95,7 @@ public sealed class AgentPerceptionIntegrationTests
     [TestMethod]
     public void RealGeometry_ClosedGatePreventsAcquisition_OpeningAllowsSight()
     {
-        var map = new WyrmrealmMapState(25);
+        var map = new WyrmrealmMapState(seed: 25);
         var terrain = ArenaEnvironmentState.Create(map.Seed, map.AvailableNodes[0]);
         var gate = terrain.Snapshot().Barriers.Where(b => b.Kind == "gate").OrderBy(b => b.Y).First();
         const double width = 800, height = 1200;

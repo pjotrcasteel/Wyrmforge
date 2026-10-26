@@ -7,6 +7,15 @@ public sealed partial class RunSimulation
 {
     private bool agentFoundationEnabled;
     private bool agentPerceptionEnabled;
+    private long agentStimulusId;
+    private long agentAdmissionTick;
+    private AgentStimulus? agentSpellSound;
+
+    private void EmitAgentSpellSound()
+    {
+        if (agentPerceptionEnabled)
+            agentSpellSound = new(++agentStimulusId, 0, player.Position, 220, AgentStimulusKind.Sound);
+    }
     private int agentFoundationSeed;
     private readonly Dictionary<int, LegacyEnemyAgent> enemyAgents = [];
 
