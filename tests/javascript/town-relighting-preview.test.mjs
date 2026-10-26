@@ -80,3 +80,12 @@ test('all approved visual cutouts have shallow explicit GPU shadow volume, never
     assert.equal(m.layers.find(x => x.id === 'town-central-paving').castsShadow, false,
         'The painted floor is NOT a vertical geometric shadow caster');
 });
+
+test('inspection view is strictly a shared GPU mode, not a Town-only shadow shader', () => {
+    const manifest = townPreviewManifest();
+    const snapshot = compileTownLightingSnapshot(manifest, { mode: 'night', state: {} });
+    assert.ok(snapshot.objects.length >= 8);
+    assert.ok(snapshot.lights.some(l => l.castsShadow), 'Existing point sources supply real shadow maps');
+    assert.ok(manifest.layers.some(l => l.occluderGeometry), 'Real authored geometry supplies shadow occlusion');
+    assert.equal(manifest.layers.find(l => l.id === 'town-central-paving').castsShadow, false);
+});
