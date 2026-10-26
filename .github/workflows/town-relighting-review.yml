@@ -6,7 +6,11 @@ on:
       - 'src/Wyrmforge.Presentation.Web/wwwroot/town-relighting-preview.html'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/town-relightable-scene.js'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/town-relighting-preview.js'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/town-citizen-gpu-bridge.js'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/town-paving-material.js'
       - 'tests/javascript/town-relighting-*.test.mjs'
+      - 'tests/javascript/town-citizen-gpu-bridge.test.mjs'
+      - 'tests/javascript/town-paving-material.test.mjs'
       - '.github/workflows/town-relighting-review.yml'
   push:
     branches:
@@ -41,7 +45,7 @@ jobs:
         run: python3 tools/art/check_town_sources.py
 
       - name: Check new Town GPU projection contracts
-        run: node --test tests/javascript/town-relighting-contract.test.mjs tests/javascript/town-relighting-preview.test.mjs tests/javascript/town-paving-material.test.mjs
+        run: node --test tests/javascript/town-relighting-contract.test.mjs tests/javascript/town-relighting-preview.test.mjs tests/javascript/town-paving-material.test.mjs tests/javascript/town-citizen-gpu-bridge.test.mjs
 
       - name: Start isolated static GPU review
         run: |
@@ -74,7 +78,24 @@ jobs:
               fi
             done
           done
-          echo "These are isolated GPU-lab screenshots of approved painted reference texture, NOT T2 final art."
+          for passage in behind front hidden; do
+            case "$passage" in
+              behind) query='?mode=night&npcProgress=0';;
+              front) query='?mode=night&npcProgress=1';;
+              hidden) query='?mode=night&npc=off';;
+            esac
+            base="artifacts/town-2p5d/npc-$passage-390"
+            url="http://127.0.0.1:4179/town-relighting-preview.html$query"
+            "$BROWSER" $FLAGS --window-size="390,844" --screenshot="${base}.png" "$url" > "${base}.log" 2>&1
+            "$BROWSER" $FLAGS --window-size="390,844" --dump-dom "$url" > "${base}.html" 2>> "${base}.log"
+            grep -q "data-npc-pass=\"$passage\"" "${base}.html" || { echo "NPC depth validation failed for $passage"; exit 1; }
+            if [ "$passage" = hidden ]; then
+              grep -q 'data-npc-shadow-casters="0"' "${base}.html" || exit 1
+            else
+              grep -q 'data-npc-shadow-casters="1"' "${base}.html" || exit 1
+            fi
+          done
+          echo "These are isolated GPU-lab screenshots of original CSS actor placeholder, NOT T2 final art."
 
       - name: Upload exact-source review frames and diagnostics
         if: always()
