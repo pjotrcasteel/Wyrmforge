@@ -215,17 +215,19 @@ export function townPreviewManifest({ wellV4 = false, domains = false } = {}) {
 // No CSS dimming; never switch full panoramas when C# buildings unlock.
 // These are still painted references, NOT artist-approved neutral albedo.
 const VACANT_TOWN_PLATES = Object.freeze([
-    ['night-vacant-ArcaneNexus.png', 0, 0, 618, 582],
-    ['night-vacant-Blacksmith.png', 0, 353, 633, 588],
-    ['night-vacant-Codex.png', 982, 0, 690, 548],
-    ['night-vacant-HallOfFame.png', 866, 333, 806, 608],
+    ['ArcaneNexus', 0, 0, 618, 582],
+    ['Blacksmith', 0, 353, 633, 588],
+    ['Codex', 982, 0, 690, 548],
+    ['HallOfFame', 866, 333, 806, 608],
 ]);
 
-async function loadApprovedImage(wellV4 = false, domains = false) {
+async function loadApprovedImage(wellV4 = false, domains = false, sourceMode = 'night') {
+    if (!['night', 'day-candidate'].includes(sourceMode)) throw new TypeError('Unknown Town albedo candidate');
     const image = new Image();
     image.src = new URL(wellV4
         ? '../' + WELL_STAGE4.backgroundUrl
-        : domains ? '../art/town/night-active.webp' : '../art/town/day-active.webp', import.meta.url).href;
+        : domains && sourceMode === 'night' ? '../art/town/night-active.webp'
+            : '../art/town/day-active.webp', import.meta.url).href;
     await image.decode();
     if (image.naturalWidth !== TOWN_ART_SIZE[0] || image.naturalHeight !== TOWN_ART_SIZE[1])
         throw new Error('Approved Town source resolution changed; reject visual drift');
@@ -238,7 +240,9 @@ async function loadApprovedImage(wellV4 = false, domains = false) {
     const context = canvas.getContext('2d');
     if (!context) throw new Error('Town 2D asset preparation unavailable');
     context.drawImage(image, 0, 0);
-    for (const [filename, x, y, width, height] of VACANT_TOWN_PLATES) {
+    for (const [building, x, y, width, height] of VACANT_TOWN_PLATES) {
+        const filename = sourceMode === 'day-candidate'
+            ? `day-vacant-${building}.webp` : `night-vacant-${building}.png`;
         const plate = new Image();
         plate.src = new URL('../art/town/' + filename, import.meta.url).href;
         await plate.decode();
@@ -251,7 +255,8 @@ async function loadApprovedImage(wellV4 = false, domains = false) {
 
 /** The only side effect is an isolated canvas, never live Town runtime. */
 export async function initializeTownPreview(canvas, { wellV4 = false, domains = false, unlocks = null,
-    school = 'none', strength = .16, isolation = 'combined', neutralMagic = false } = {}) {
+    school = 'none', strength = .16, isolation = 'combined', neutralMagic = false,
+    sourceMode = 'night' } = {}) {
     if (states.has(canvas)) return;
     // The full Town scene is ~1000–1700 CSS px wide on portrait phones.
 // The previous 780px cap discarded more than half of the authored detail
@@ -264,10 +269,10 @@ const engine = new LightingEngine(canvas, {
         npcProgress: 0, paving: 'neutral', view: 'lit', citizens: null,
         wellV4: wellV4 === true, domains: domains === true,
         unlocks: unlocks ?? { nexusUnlocked: false, forgeUnlocked: false, codexUnlocked: false, hallUnlocked: false },
-        school, strength, isolation, neutralMagic, alive: true };
+        school, strength, isolation, neutralMagic, sourceMode, alive: true };
     states.set(canvas, state);
     try {
-        const a = axes(), source = await loadApprovedImage(state.wellV4, state.domains);
+        const a = axes(), source = await loadApprovedImage(state.wellV4, state.domains, state.sourceMode);
         const selectedCutouts = state.wellV4
             ? CUTOUTS.filter(c => !STAGE4_REPLACED_CUTOUT_IDS.includes(c.id)) : CUTOUTS;
         engine.registerGeometry('approved-panorama-plane', plane(BASE_WIDTH, BASE_HEIGHT, a.basis));
@@ -437,6 +442,7 @@ export function configureTownPreview(canvas, options) {
     canvas.dataset.illuminationReduction =
         (state.neutralMetrics?.illuminationReduction ?? 0).toFixed(3);
     canvas.dataset.profile = effectiveMode;
+    canvas.dataset.albedoSource = state.sourceMode;
     canvas.dataset.fixtureCount = snapshot.lights.filter(l => l.enabled).length.toString();
     canvas.dataset.lightIsolation = state.domains ? state.isolation : 'legacy';
     canvas.dataset.chimneyOn = String(snapshot.lights.some(l => l.id === 'town-blacksmith-chimney' && l.enabled));
