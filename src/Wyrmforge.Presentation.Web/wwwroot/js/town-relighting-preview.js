@@ -6,6 +6,7 @@ import { LightingEngine } from './lighting/engine.js';
 import { compileTownLightingSnapshot, TOWN_ART_SIZE } from './town-relightable-scene.js';
 import { CUTOUTS } from './refuge-foreground-cutouts.js';
 import { splitTownPavingReference, levelPavingNormal } from './town-paving-material.js';
+import { projectTownCitizens, TOWN_CITIZEN_ART_WIDTH, TOWN_CITIZEN_ART_HEIGHT } from './town-citizen-gpu-bridge.js';
 
 export const TOWN_PREVIEW_SOURCE = 'art/town/day-active.webp';
 const BASE_WIDTH = 16;
@@ -148,11 +149,16 @@ async function loadApprovedImage() {
 export async function initializeTownPreview(canvas) {
     if (states.has(canvas)) return;
     const engine = new LightingEngine(canvas, { shadowViews: 8, maxLights: 8, maxFramebufferWidth: 780 });
-    const state = { engine, mode: 'night', lamps: true, offset: 0, alive: true };
+    const state = { engine, mode: 'night', lamps: true, offset: 0, npcEnabled: true, npcProgress: 0, alive: true };
     states.set(canvas, state);
     try {
         const a = axes(), source = await loadApprovedImage();
         engine.registerGeometry('approved-panorama-plane', plane(BASE_WIDTH, BASE_HEIGHT, a.basis));
+        // Existing Town CSS NPC silhouettes rendered by the same shared engine.
+        // This is diagnostic Town behavior, not new or approved character art.
+        engine.registerGeometry('town-citizen-css-rectangle', plane(
+            TOWN_CITIZEN_ART_WIDTH * BASE_WIDTH / TOWN_ART_SIZE[0],
+            TOWN_CITIZEN_ART_HEIGHT * BASE_WIDTH / TOWN_ART_SIZE[0], a.basis));
         const separated = splitTownPavingReference(source, CUTOUTS);
         engine.registerTexture('town-day-background', new T.CanvasTexture(separated.backdrop));
         engine.registerTexture('town-day-paving', new T.CanvasTexture(separated.floor));
@@ -185,9 +191,16 @@ export function configureTownPreview(canvas, options) {
     if (!state?.alive || !state.manifest) return;
     Object.assign(state, options);
     if (!['day', 'night', 'zero'].includes(state.mode) ||
-        !Number.isFinite(state.offset) || Math.abs(state.offset) > 250)
+        !Number.isFinite(state.offset) || Math.abs(state.offset) > 250 ||
+        !Number.isFinite(state.npcProgress) || state.npcProgress < 0 || state.npcProgress > 1 ||
+        typeof state.npcEnabled !== 'boolean')
         throw new RangeError('Invalid Town proof control');
     const manifest = structuredClone(state.manifest);
+    const citizenY = 483 + state.npcProgress * 140;
+    const actor = projectTownCitizens([{ id: 1, feet: [864, citizenY], isPresent: true }],
+        townPreviewProjection, axes().toward.toArray(), { enabled: state.npcEnabled });
+    manifest.layers.push(...actor.layers);
+    manifest.materials.push(...actor.materials);
     const moved = manifest.fixtures.find(f => f.id === 'noticeboard-lantern');
     const modified = light(moved.id, moved.artAnchor[0] + state.offset,
         moved.artAnchor[1], 1.1, '#ffc58e', 11, state.lamps);
@@ -209,6 +222,8 @@ export function configureTownPreview(canvas, options) {
         canvas.dataset.zeroBlack = (litPixels === 0).toString();
         if (litPixels) throw new Error(`Zero-light proof leaked ${litPixels} world pixels`);
     } else delete canvas.dataset.zeroBlack;
+    canvas.dataset.npcFeetY = state.npcEnabled ? citizenY.toFixed(2) : 'hidden';
+    canvas.dataset.npcShadowCasters = actor.layers.filter(a => a.castsShadow).length.toString();
     canvas.dataset.profile = state.mode;
     canvas.dataset.fixtureCount = snapshot.lights.filter(l => l.enabled).length.toString();
 }
