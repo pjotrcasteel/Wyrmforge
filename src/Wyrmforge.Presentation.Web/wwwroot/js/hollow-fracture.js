@@ -108,3 +108,9 @@ export function hollowFractureCanvasLights(emitters) {
         type:'corpse-fracture',family:'fire',center:[247,138,57],edge:[126,48,24],surge:false
     }));
 }
+
+/** Merge into the existing GPU snapshot without mutating C# authoritative input. */
+export function withHollowFractureLightingFrame(frame, emitters) {
+    if (!frame || !Array.isArray(emitters) || emitters.length === 0) return frame;
+    return {...frame,lights:[...(frame.lights ?? []),...emitters]};
+}
