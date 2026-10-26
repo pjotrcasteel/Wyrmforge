@@ -24,12 +24,17 @@ let manifest, loading, profile, compositor;
 export function preloadHollowSprites() {
     return loading ??= loadHollowSprites();
 }
+// Optional art does not block walking/attacking startup. Review/test callers
+// may explicitly await the source-validated eight-way fracture asset set.
+export function preloadHollowFracture() {
+    return fracture.preload();
+}
 async function loadHollowSprites() {
     // Load cape-free actors independently: caped legacy atlas failures must not block them.
     const variants=Promise.all([injuries.preload(),arms.preload(),skeletalDeath.preload()]);
     // Manifest-only opt-in; no 3D atlas decodes unless art is explicitly approved.
     // Keep optional I/O out of the pure animation update path and Node tests.
-    void fracture.preload();
+    void preloadHollowFracture();
     try {
         await loadLegacyHollowSprites();
     } catch {

@@ -272,6 +272,7 @@ test('approved source-mesh fracture really replaces eligible healthy deaths, nev
   const isolated=await import('data:text/javascript;base64,'+
    Buffer.from(source+String.fromCharCode(10)+'// approved source fracture integration').toString('base64'));
   await isolated.preloadHollowSprites();
+  assert.equal(await isolated.preloadHollowFracture(),true,'all eight source atlases must finish decoding');
   assert.equal(isolated.hollowDiagnostics(isolated.createHollowState()).fractureReady,true);
   let fractured=0,injured=0;
   for(let id=0;id<128;id++){
