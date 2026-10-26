@@ -5,10 +5,12 @@ import * as T from './lighting/vendor/three.module.js';
 import { LightingEngine } from './lighting/engine.js';
 import { environmentProfile } from './lighting/registry.js';
 import { GROUND_ATLAS_URL } from './arena-materials.js';
-import { threeMaterialPlan, bakeThreeMaterialGround, bakeThreeMaterialRoughness, THREE_MATERIAL_REVIEW } from './wet-forest-three-material-kit.js';
+import { threeMaterialPlan, bakeThreeMaterialGround, bakeCompactThreeMaterialGround,
+    bakeThreeMaterialRoughness, COMPACT_MATERIAL_SOURCE, THREE_MATERIAL_REVIEW } from './wet-forest-three-material-kit.js';
 
 const states = new WeakMap();
 const profiles = new Set(['night', 'neutral', 'zero']);
+const sourceKinds = new Set(['compact', 'original']);
 const makeCanvas = () => document.createElement('canvas');
 
 function lamp(id, color, position, intensity, priority) {
@@ -65,12 +67,15 @@ function redraw(state) {
     state.canvas.dataset.materialReviewReady = 'true';
     state.canvas.dataset.materialReviewProfile = state.profile;
     state.canvas.dataset.materialReviewSeed = String(state.seed);
+    state.canvas.dataset.materialReviewSource = state.sourceKind;
 }
 
 function rebuild(state) {
     const plan = threeMaterialPlan(state.recipe, state.seed);
     if (!plan) throw new TypeError('Missing/invalid C# Wet Forest terrain recipe');
-    const pixels = bakeThreeMaterialGround(plan, state.source, state.seed, makeCanvas);
+    const pixels = state.sourceKind === 'compact'
+        ? bakeCompactThreeMaterialGround(plan, state.compact, state.seed, makeCanvas)
+        : bakeThreeMaterialGround(plan, state.source, state.seed, makeCanvas);
     const roughness = bakeThreeMaterialRoughness(plan, makeCanvas);
     if (!pixels || !roughness) throw new Error('Could not bake shared-engine ground material maps');
     // Release previous material and GPU texture at re-seed (not once per frame).
@@ -88,9 +93,16 @@ function rebuild(state) {
     redraw(state);
 }
 
-export async function initializeThreeMaterialReview(canvas, recipe, seed = 1204, profile = 'night') {
+async function decode(url) {
+    const image = new Image();
+    image.src = url;
+    await image.decode();
+    return image;
+}
+
+export async function initializeThreeMaterialReview(canvas, recipe, seed = 1204, profile = 'night', sourceKind = 'compact') {
     if (states.has(canvas)) return;
-    if (!profiles.has(profile)) throw new TypeError('Unknown lighting review profile');
+    if (!profiles.has(profile) || !sourceKinds.has(sourceKind)) throw new TypeError('Unknown lighting/material review profile');
     const engine = new LightingEngine(canvas, { maxLights: 3, shadowViews: 0 });
     engine.registerGeometry('ground-plane', new T.PlaneGeometry(1, 1));
     // Explicit top-down camera: the same GPU lighting/material engine remains in charge.
@@ -98,15 +110,20 @@ export async function initializeThreeMaterialReview(canvas, recipe, seed = 1204,
     engine.camera.position.set(0, 0, 30);
     engine.camera.lookAt(0, 0, 0);
     engine.halfWidth = 8.25;
-    const state = { canvas, engine, alive: true, source: null, plan: null,
-        recipe, seed: seed | 0, profile, textureId: null, roughnessId: null, version: 0, resize: null };
+    const state = { canvas, engine, alive: true, source: null, compact: null, plan: null,
+        recipe, seed: seed | 0, profile, sourceKind, textureId: null, roughnessId: null,
+        version: 0, resize: null };
     states.set(canvas, state);
     try {
-        const source = new Image();
-        source.src = GROUND_ATLAS_URL;
-        await source.decode();
+        // These three images are fixed, independently authored material assets
+        // generated before publishing the app. They are NOT world-seed products.
+        const [source, grass, mud, earth] = await Promise.all([
+            decode(GROUND_ATLAS_URL), decode(COMPACT_MATERIAL_SOURCE[0]),
+            decode(COMPACT_MATERIAL_SOURCE[1]), decode(COMPACT_MATERIAL_SOURCE[3]),
+        ]);
         if (!state.alive) return;
         state.source = source;
+        state.compact = { 0: grass, 1: mud, 3: earth };
         rebuild(state);
         state.resize = new ResizeObserver(() => { if (state.alive) redraw(state); });
         state.resize.observe(canvas);
@@ -117,13 +134,13 @@ export async function initializeThreeMaterialReview(canvas, recipe, seed = 1204,
     }
 }
 
-export function configureThreeMaterialReview(canvas, recipe, seed, profile = 'night') {
+export function configureThreeMaterialReview(canvas, recipe, seed, profile = 'night', sourceKind = 'compact') {
     const state = states.get(canvas);
     if (!state || !state.alive) return;
-    if (!profiles.has(profile)) throw new TypeError('Unknown lighting review profile');
+    if (!profiles.has(profile) || !sourceKinds.has(sourceKind)) throw new TypeError('Unknown lighting/material review profile');
     const nextSeed = seed | 0;
-    const changed = nextSeed !== state.seed || recipe !== state.recipe;
-    state.seed = nextSeed; state.profile = profile; state.recipe = recipe;
+    const changed = nextSeed !== state.seed || recipe !== state.recipe || state.sourceKind !== sourceKind;
+    state.seed = nextSeed; state.profile = profile; state.recipe = recipe; state.sourceKind = sourceKind;
     if (!state.source) return;
     if (changed) rebuild(state);
     else redraw(state);
@@ -136,6 +153,8 @@ export function threeMaterialDiagnostics(canvas) {
         seed: state.seed, profile: state.profile, ready: Boolean(state.plan),
         counts: state.plan?.counts ?? null, source: state.plan?.authority ?? null,
         materialFamilies: THREE_MATERIAL_REVIEW.selected,
+        sourceKind: state.sourceKind,
+        materialArtApproved: false,
         sourceNeutral: THREE_MATERIAL_REVIEW.neutralAlbedoApproved,
         provisionalRoughness: THREE_MATERIAL_REVIEW.roughnessProvisional,
         GPUMaps: state.textureId ? 2 : 0,
