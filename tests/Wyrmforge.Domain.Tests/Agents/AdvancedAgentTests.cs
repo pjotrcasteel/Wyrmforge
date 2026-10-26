@@ -78,7 +78,7 @@ public sealed class AdvancedAgentTests
         for (var tick = 1; tick <= 400; tick++)
         {
             var sampled = (tick - 1) % 6 == 0;
-            Vector2D? seen = sampled ? new Vector2D(120, tick * .5) : null;
+            Vector2D? seen = sampled ? new Vector2D(120 * Math.Cos(tick * .02), 120 * Math.Sin(tick * .02)) : null;
             adaptation.Observe(.025, Vector2D.Zero, seen, sightNotResampled: !sampled);
         }
 
