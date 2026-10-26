@@ -22,6 +22,7 @@ on:
       - 'tests/javascript/town-neutral-albedo.test.mjs'
       - 'tests/javascript/town-lighting-grade.test.mjs'
       - 'tests/javascript/town-light-domains.test.mjs'
+      - 'tests/javascript/town-emission-masks.test.mjs'
       - 'tests/javascript/town-well-stage4.test.mjs'
       - 'tests/javascript/town-native-render-quality.test.mjs'
       - 'tests/javascript/town-live-gpu-integration.test.mjs'
@@ -85,7 +86,7 @@ jobs:
           retention-days: 3
 
       - name: Check new Town GPU projection contracts
-        run: node --test tests/javascript/town-relighting-contract.test.mjs tests/javascript/town-relighting-preview.test.mjs tests/javascript/town-paving-material.test.mjs tests/javascript/town-citizen-gpu-bridge.test.mjs tests/javascript/town-neutral-albedo.test.mjs tests/javascript/town-live-gpu-integration.test.mjs tests/javascript/town-lighting-grade.test.mjs tests/javascript/town-well-stage4.test.mjs tests/javascript/town-native-render-quality.test.mjs tests/javascript/town-light-domains.test.mjs
+        run: node --test tests/javascript/town-relighting-contract.test.mjs tests/javascript/town-relighting-preview.test.mjs tests/javascript/town-paving-material.test.mjs tests/javascript/town-citizen-gpu-bridge.test.mjs tests/javascript/town-neutral-albedo.test.mjs tests/javascript/town-live-gpu-integration.test.mjs tests/javascript/town-lighting-grade.test.mjs tests/javascript/town-well-stage4.test.mjs tests/javascript/town-native-render-quality.test.mjs tests/javascript/town-light-domains.test.mjs tests/javascript/town-emission-masks.test.mjs
 
       - name: Start isolated static GPU review
         run: |
