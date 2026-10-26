@@ -45,6 +45,7 @@ jobs:
         with:
           name: hollow-source-mesh-fracture-unapproved-qc
           path: |
+            artifacts/hollow-source-fracture/geometry-diagnostics.json
             artifacts/hollow-source-fracture/manifest.json
             artifacts/hollow-source-fracture/fracture-S.png
             artifacts/hollow-source-fracture/fracture-S.gif
