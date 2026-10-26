@@ -524,9 +524,19 @@ export function configureTownPreview(canvas, options) {
     const snapshot = gradeTownPreviewLighting(compileTownLightingSnapshot(manifest, {
         state: {}, mode: effectiveMode, localHour: 12, time: 0,
     }), effectiveMode);
-    // Domain proof deliberately retains selected deep-black negative space.
-    // The legacy T2 comparison remains untouched and keeps its .55 test grade.
-    if (state.domains && effectiveMode === 'night') snapshot.environment.ambient = .22;
+    // Close neutral masonry/stone needs enough indirect sky radiance to remain
+    // readable. Distant painted nighttime scenery must NOT receive the same
+    // radiance as physically registered Town materials (and must keep its
+    // approved negative space). Material multipliers run in THREE's linear
+    // PBR pipeline, not CSS, a fullscreen shader, or a fake brightened image.
+    if (state.domains && effectiveMode === 'night') {
+        snapshot.environment.ambient = .55;
+        snapshot.environment.color = '#a8b9d1';
+        for (const material of snapshot.materials)
+            if (material.id === 'approved-day-reference' ||
+                material.id.startsWith('approved-cutout-material-'))
+                material.color = '#858585';
+    }
     state.engine.apply(snapshot);
     state.engine.setCamera([0, 0, 0], BASE_WIDTH / 2);
     // The shared shadow-visibility inspector reuses the *real* shadow map
