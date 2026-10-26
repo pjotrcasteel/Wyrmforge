@@ -1,6 +1,6 @@
 import { createSpellBadge } from './spell-hud.js';
 import { createSoundEventTracker, collectSoundEvents } from './sound-events.js';
-import { disposeArena as disposeBaseArena, initializeArena as initializeBaseArena } from './arena.js';
+import { disposeArena as disposeBaseArena, initializeArena as initializeBaseArena } from './arena.js?v=20261026-wetforest-live-art-2';
 import { resolveArenaCamera } from './arena-camera.js';
 
 const frameStates = new WeakMap();

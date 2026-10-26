@@ -92,17 +92,7 @@ combat telegraphs are non-world passes and retain readability.
   frame normals/height/occluder data must be authored or exported
   consistently. Normal maps make surfaces respond to lighting but
   **do not on their own create real dynamic cast shadows**.
-- **Town Square:** current 1672×941 pre-lit night panorama, day variant,
-  active/vacant building patches and foreground cutouts are renderable
-  reference art, NOT relightable geometry. The long-term Town scene
-  needs newly derived neutral albedo, separate walls/roofs/floor/props,
-  correct depth/occluders, material/roughness/normal passes and
-  fixture/Nexus emissions. Preserve all original approved paintings,
-  four building states/unlocks, six Nexus school variants + mastery,
-  the gate, well/board, routes, NPC interactions, collision and
-  foreground masking. **Rebuild the presentation assets, not town
-  gameplay or the approved architecture**; owner signs off before
-  replacing existing assets on the active screen.
+- **Town Square — 26 October 2026 owner override (LOCKED):** retain the approved **2D painted** 1672×941 Town, day/night paintings, four active/vacant building presentations, all six Nexus school variants/mastery, gate, well, noticeboard, NPCs and foreground masks. The 3D Town rebuild and Town presentation/relighting migration are **cancelled**. Do not substitute independently modeled 3D buildings, projected-painted reliefs, 3D Town asset packs, or G4/G5 Town cutover. Generic lighting research for Hunts and actors is unaffected.
 - **Materials and effects:** water/puddles reflect lights and nearby
   world through an explicitly budgeted reflection strategy; stone,
   armour, leaves and bark use their own roughness/normal data. Transparent
@@ -118,17 +108,16 @@ combat telegraphs are non-world passes and retain readability.
   switch using representative Hunt ground, Hollowed, Ashling, rock,
   original tree, a Town lantern/wall/roof/NPC sample and reflective water.
   Adding any new light requires only source/component registration.
-  G5 cutover cannot claim completion until *every world renderer*
-  uses the engine; legacy panorama/Canvas tint bypasses must be
-  removed or explicitly documented as not-yet-migrated scenes.
+  G5 adoption covers approved Hunt and actor paths only; the deliberately
+  preserved painted 2D Town is excluded from engine cutover.
 
-[Full scene-by-scene gap audit, town migration and generic renderer
+[Historical multi-scene audit and scoped generic renderer
 acceptance](../design/arena-real-geometry-light-engine.md).
-**Change note, 23 Oct:** owner widened the engine requirement from Wet
-Forest objects to *every in-world pixel-art surface*, explicitly including
-Town Square and the replacement mage that will use Hollowed/Ashling
-sprite architecture. This requires future town art decomposition, not
-an immediate destructive replacement of approved paintings.
+**Change note, 26 Oct (supersedes 23 Oct Town directive):** the owner cancelled
+the entire 3D/relightable Town replacement. The current approved 2D Town,
+its NPCs and all building paintings stay live; generic lighting applies
+to Hunts/actors/approved new scenes only. The replacement mage still
+shares Hollowed/Ashling sprite architecture.
 
 ### Visual and technical contract
 
@@ -136,7 +125,7 @@ an immediate destructive replacement of approved paintings.
 2. **Ground contact, shadows and occlusion.** Implement subtle contact shadows and broad restrained ambient-occlusion grounding at actual trunk/root or rock-body footprints. Shadows fall on the *existing approved ground*, not on an opaque rectangle beneath a sprite. Keep canopy alpha separate from physical collision; sort tree trunk, optional canopy/front-layer, actors and props by correctly authored foot/root anchors. Never fake gameplay collision through shadow masks.
 3. **Material-aware response.** Preserve the six approved Gothic ground materials and their blends. Wet mud and stone may take restrained damp highlights, while bark, moss and leaves remain largely diffuse and dark; avoid glossy plastic vegetation or globally color-filtering painted assets. Any normals/height/roughness maps are optional and must be derived from approved editable art, with a convincing fallback when absent.
 4. **Depth and air.** Add subtle distance-dependent tint, mist and depth separation only once the lighting/grounding baseline is coherent. Maintain player/enemy silhouettes, projectiles, dodge cues, loot, exits and boss telegraphs in small portrait viewports; reduced-effects paths must remain readable.
-5. **All emitters use one engine.** From G1, the universal test registry handles Fireball, torch, wall fixture, moon/ambient, spot and dynamically extinguished sources through descriptors. At G2 connect actual C# casts, burning trees, Ashfang breath, lightning, town Nexus/forge/windows and later elemental events to the **same** type-safe source/scene snapshot, illuminating ground, water, actors and props together. All cast/receive visibility and light budgets live centrally; never add authoritative client-side fire/collision logic.
+5. **All emitters use one engine.** From G1, the universal test registry handles Fireball, torch, wall fixture, moon/ambient, spot and dynamically extinguished sources through descriptors. At G2 connect actual C# casts, burning trees, Ashfang breath, lightning and later supported Hunt/actor elemental events to the **same** type-safe source/scene snapshot, illuminating ground, water, actors and props together. All cast/receive visibility and light budgets live centrally; never add authoritative client-side fire/collision logic.
 6. **Platform neutrality.** World/arena state, terrain recipes, occluder/contact footprints and light-emitter events remain deterministic and platform-neutral in C# when integrated. Visual renderer adapters may choose Canvas/WebGL, mobile GPU shaders or a native backend **after on-device measurement**. The browser-only Materials/Arena Labs and off-line Python comps are replaceable reviews, not the iOS/Android product architecture. Favor baked/cached static lighting and a tightly bounded set of dynamic lights; test overdraw, memory, frame pacing and battery before choosing the technique.
 
 ### Reusable lighting-engine delivery gates — supersede old L0–L5
@@ -148,7 +137,7 @@ an immediate destructive replacement of approved paintings.
 | **G2 — authoritative C# integration** | Snapshot-driven light sources for actual spells, burning entities, Wyrm breath and scene fixtures, no JS gameplay authority. | Deterministic movement, expiry/replay, no combat-state mutation. |
 | **G3 — richer materials and atmosphere** | AO, bark/stone/foliage response, optional leaf transmission, subtle wet highlights and mist, extended-source approximation where justified. | Diverse materials react to the **same** light consistently without global wash or fake local effect stacks. |
 | **G4 — mobile optimization** | Shadow budgets/culling/LOD, renderer portability and stable fallbacks. | Actual iOS/Android device frame time, battery, thermal, overdraw and readability evidence. |
-| **G5 — all-scene adoption** | One renderer across accepted Town Square relightable assets, Hunts, Hollowed/Ashling/other actors and replacement mage, world VFX/fixtures and future biomes. Preserve town interactions and gameplay. | Black-world scene audits, town active/vacant/Nexus/day/night checks, all-Hunt regressions and device/owner art sign-off. |
+| **G5 — scoped scene adoption (owner revision 26 Oct)** | One renderer for Hunts, Hollowed/Ashling/other actors, replacement mage and supported world VFX/fixtures and future non-Town biomes. The Town remains its approved 2D presentation and is excluded from cutover. | Black-world tests for supported scenes, all-Hunt regressions, actual mobile-device and art review; no Town replacement required. |
 
 Previous L0–L3 Canvas/night/root/material effects and #327 tree-specific projections are **interim evidence**, not the lighting system. Neither a projected ground shadow nor a single firelit tree satisfies a reusable engine acceptance test.
 
@@ -440,6 +429,8 @@ For **The Hollow**, preserve the gaunt village undead, exposed ribs, elongated
 fingers, tattered muted brown/bone materials and hunched posture. Do not add horns,
 weapons, glowing eyes, bulky armor or a different monster family. The card's
 presentation artwork is evidence of identity, not an accepted walking cycle.
+
+**Hollowed death-art rejection (26 October 2026, owner decision):** the ASCII-glyph procedural bone burst merged in [PR #365](https://github.com/pjotrcasteel/Wyrmforge/pull/365) is **not production-worthy** and must not play in Hunts. Random ballistic sprites are not acceptable anatomy or source art. Retain the source-authored no-cape 3D forward/braced collapses and injury-consistent death atlases. A replacement disassembly must be authored from the same editable Hollowed 3D rig and matched Gothic materials; validate physically coherent joints, scale, floor contact and a believable resting corpse across all directions at 320/390px in the actual Hunt before proposing re-enablement. Passing code, pixel-count or browser smoke tests alone does not constitute approval.
 
 **Gate A:** identity and motion brief are explicit; unknowns are visible. Stop if
 the only available image cannot establish a usable character specification.
@@ -983,3 +974,11 @@ enemy mechanics are unchanged, preserving continuity with earlier accepted work.
 The owner selected the rendered size at the phone preview’s **2× setting**, evidenced by `art/source/bosses/ashfang/references/tier-I-size-owner-approved-2026-10-23.png`. This visual calibration supersedes both the earlier viewport-width quota and the oversized5× trial. Preserve the approved screenshot’s model-to-player relationship, fixed402×874 phone viewport and0.75 game camera. `tier-I-scale-baseline.json` records exact world-cell calibration; the2× UI label is not a literal statement about the complete silhouette’s width, height or area. All animation/facing proportions share this scale. Future tiers grow relative to this TierI baseline, with their multipliers still to be authored. This approves size only, not all pixel styling, remaining actions or runtime integration.
 
 **Ashfang live integration (owner-authorized, 23 October 2026):** the owner requested moving the selected pixel-art dragon into the actual game, with live species-specific AI and coherent action transitions. The branch now uses 18 authored motions/transition clips across eight directions, at the exact approved Tier I world-cell calibration, through the common Hunt renderer. C# chooses claw/bite/pounce/breath and the overhead shadow/fire-rain/landing sequence; snapshots drive pixel playback. Gait phase follows distance, authored start/stop frames bridge movement, and attack phases align with source impact events. The previous bounded proof remains archived; this request supersedes its earlier opt-in-only scope. Local integration and backup evidence is in [runtime integration](../../art/source/bosses/ashfang/RUNTIME-INTEGRATION.md). Physical-phone and final play-feel/art acceptance remain separate; unused source motions are preserved, not falsely described as finished pixel exports.
+
+### Hollowed death diversity: bone shatter (owner request, 26 October 2026)
+
+A minority of cape-free Hollowed should visibly **explode into separate bones**, not merely use a different version of the same falling torso animation. Two independent timelines share an original Gothic pixel-art bone vocabulary: **immediate shatter** (about 1/12) and **briefly buckle, then burst** (about 2/12). The remaining 3/4 retain their physically authored 3D forward/braced/injured collapses. Each selection is deterministic from entity identity and does not affect death timing, C# hit points, collisions, rewards, enemy AI, spawning or saves.
+
+The shatter uses recognisable individually shaded skull/eye sockets, jaw, ribcage, spine, pelvis and leg/arm fragments; bone pieces eject, tumble, hit the floor and remain in a grounded pile until normal corpse fade. Keep the wounded silhouette truthful: no phantom left-arm bones when the arm is missing, and shortened damaged bones remain shortened. A compact dust impact is decorative, never a damaging projectile. Reduced-motion mode skips scattering and displays a settled pile immediately. All masks are small cacheable Canvas sprite sources with nearest-neighbor pixels for mobile/WebView; no CSS overlay, no unrelated actor redraw and no need to preload any new large atlas.
+
+Visual inspiration (not source assets or copies): the bone-based attacks of classic [Castlevania skeletons](https://strategywiki.org/wiki/Castlevania/Enemies) and variety of differentiated [Diablo monster deaths](https://di.diablowiki.net/Monster). The skull/bone pixel masks and trajectories are original WyrmForge presentation art. Implemented in `js/hollow-bone-burst.js`, integrated into the existing Hollowed render path, with the `sprite-lab/hollow-bone-burst-review.html` mobile/desktop QC route and bone-burst regression tests. **Production approval requires passing real viewport captures and actual Hunt playback**, not merely passing unit tests or creating a PR.

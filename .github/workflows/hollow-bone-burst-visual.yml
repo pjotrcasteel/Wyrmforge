@@ -1,0 +1,76 @@
+name: Hollowed rejected bone prototype (archive QC)
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/hollow-bone-burst-visual.yml'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/hollow-bone-burst.js'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/sprite-lab/hollow-bone-burst-review.html'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mobile-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install actual Chromium browser
+        run: |
+          python -m pip install playwright==1.56.0
+          python -m playwright install --with-deps chromium
+      - name: Serve same source module used by actual Hunt
+        run: |
+          python3 -m http.server 8767 --bind 127.0.0.1 --directory src/Wyrmforge.Presentation.Web/wwwroot > /tmp/hollow-bone-qc-http.log 2>&1 &
+          for attempt in {1..30}; do
+            if curl -fsS 'http://127.0.0.1:8767/sprite-lab/hollow-bone-burst-review.html?still=1' >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/hollow-bone-qc-http.log
+          exit 1
+      - name: Record actual pixel bones in real mobile and desktop Chromium
+        run: |
+          mkdir -p artifacts/hollow-bone-burst
+          python3 - <<'PY'
+          from pathlib import Path
+          from playwright.sync_api import sync_playwright
+          out=Path('artifacts/hollow-bone-burst')
+          url='http://127.0.0.1:8767/sprite-lab/hollow-bone-burst-review.html?still=1'
+          with sync_playwright() as p:
+              browser=p.chromium.launch(headless=True,args=['--no-sandbox'])
+              for name,width,height in (('mobile-390',390,900),('desktop-980',980,950)):
+                  page=browser.new_page(viewport={'width':width,'height':height},device_scale_factor=1)
+                  errors=[]
+                  page.on('pageerror',lambda exc:errors.append(str(exc)))
+                  page.goto(url,wait_until='networkidle')
+                  page.wait_for_function("document.querySelectorAll('#cards canvas').length===4")
+                  page.wait_for_timeout(150)
+                  stats=page.evaluate("""() => [...document.querySelectorAll('#cards canvas')].map(c => {
+                      const pixels=c.getContext('2d').getImageData(0,0,c.width,c.height).data;
+                      let bright=0;for(let n=0;n<pixels.length;n+=4)
+                          if(pixels[n]>110&&pixels[n+1]>110&&pixels[n+2]>100)bright++;
+                      return bright;
+                  })""")
+                  if errors or any(n<70 for n in stats):
+                      raise RuntimeError(f'Bone visual regression {name}: exceptions={errors}, visible bone pixels={stats}')
+                  page.screenshot(path=str(out/f'hollow-bone-{name}.png'),full_page=True)
+                  if name=='mobile-390':
+                      page.locator('#reduce').check()
+                      page.screenshot(path=str(out/'hollow-bone-reduced-motion.png'),full_page=True)
+                  page.close()
+              browser.close()
+          print('Archived prototype canvas renders captured, mobile and desktop. NOT production art acceptance.')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hollow-bone-burst-mobile-visual-qc
+          path: artifacts/hollow-bone-burst/*.png
+          retention-days: 14
+          if-no-files-found: warn

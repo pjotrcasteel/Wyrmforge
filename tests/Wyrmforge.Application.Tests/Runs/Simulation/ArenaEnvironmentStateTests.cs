@@ -133,6 +133,54 @@ public sealed class ArenaEnvironmentStateTests
     }
 
     [TestMethod]
+    public void Create_FirstOutskirtsCombat_UsesOriginalForestGroundWithoutChangingGameplay()
+    {
+        var map = new WyrmrealmMapState(seed: 1204);
+        var node = map.AvailableNodes[0] with { Habitat = WyrmrealmHabitat.Outskirts };
+        var actual = ArenaEnvironmentState.Create(map.Seed, node).Snapshot();
+        Assert.AreEqual(nameof(WyrmrealmHabitat.Outskirts), actual.Habitat);
+        Assert.IsFalse(actual.GeneratorPreview);
+        Assert.IsNotNull(actual.WetForest, "The first Fire Hunt should use existing source-backed ground.");
+        Assert.IsGreaterThan(0, actual.Barriers.Count, "Keep the opening combat crossing gates.");
+        var expected = HuntArenaGenerator.GenerateWetForest(actual.Seed);
+        CollectionAssert.AreEqual(expected.Trail.ToArray(), actual.WetForest.Trail.ToArray());
+        CollectionAssert.AreEqual(expected.Ground.ToArray(), actual.WetForest.Ground.ToArray());
+
+        var replay = ArenaEnvironmentState.Create(map.Seed, node).Snapshot();
+        CollectionAssert.AreEqual(actual.Barriers.ToArray(), replay.Barriers.ToArray());
+        CollectionAssert.AreEqual(actual.Props.ToArray(), replay.Props.ToArray());
+
+        var lab = ArenaEnvironmentState.Create(map.Seed, node, generatorPreview: true).Snapshot();
+        Assert.IsNull(lab.WetForest, "Preserve the Old Road lab's existing visual comparison.");
+        Assert.IsEmpty(lab.Barriers, "The lab must not create production crossing gates.");
+    }
+
+    [TestMethod]
+    public void Create_NormalWetForestHunt_ExposesCachedRecipeAndPreservesCombatCrossings()
+    {
+        var map = new WyrmrealmMapState(seed: 1204);
+        var node = map.AvailableNodes[0] with { Habitat = WyrmrealmHabitat.WetForest };
+        var environment = ArenaEnvironmentState.Create(map.Seed, node);
+        var snapshot = environment.Snapshot();
+        var nextFrame = environment.Snapshot();
+        Assert.IsFalse(snapshot.GeneratorPreview, "Ordinary Hunts must not enable lab-only ecology or alter encounter rules.");
+        Assert.IsNotNull(snapshot.WetForest, "The live renderer needs the C# authored path and ground regions.");
+        Assert.AreSame(snapshot.WetForest, nextFrame.WetForest, "The path recipe must be cached instead of rebuilt each combat frame.");
+        Assert.IsGreaterThan(0, snapshot.Barriers.Count, "Preserve the existing production crossing gates.");
+        Assert.IsGreaterThan(0, snapshot.Props.Count, "Keep ordinary salvage props.");
+        Assert.IsLessThanOrEqualTo(6, snapshot.Props.Count, "Never enable the lab-only dense ecology.");
+        var expected = HuntArenaGenerator.GenerateWetForest(snapshot.Seed);
+        CollectionAssert.AreEqual(expected.Trail.ToArray(), snapshot.WetForest.Trail.ToArray());
+        CollectionAssert.AreEqual(expected.Ground.ToArray(), snapshot.WetForest.Ground.ToArray());
+        Assert.AreEqual(expected.Site, snapshot.WetForest.Site);
+
+        var replay = ArenaEnvironmentState.Create(map.Seed, node).Snapshot();
+        CollectionAssert.AreEqual(snapshot.Barriers.ToArray(), replay.Barriers.ToArray(),
+            "Source texture changes must not change combat geometry or seeded generation.");
+        CollectionAssert.AreEqual(snapshot.Props.ToArray(), replay.Props.ToArray());
+    }
+
+    [TestMethod]
     public void WetForest_GeneratesNaturalReachableSitesWithoutForcedCrossings()
     {
         var sites = new HashSet<string>();

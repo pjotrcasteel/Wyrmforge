@@ -7,6 +7,7 @@
 @using Wyrmforge.Application.Runs.SelfPlay
 @using Wyrmforge.Application.Runs.Simulation
 @using Wyrmforge.Application.Runs.Simulation.Snapshots
+@using Wyrmforge.Domain.Agents
 @using Wyrmforge.Domain.Combat.Enemies
 
 <main class="enemy-lab">
@@ -52,7 +53,7 @@
     <section class="enemy-lab-surface"><canvas @ref="canvas" aria-label="Live enemy encounter"></canvas>
         <div class="status">@kind • @(paused ? "PAUSED" : autoplay ? "AGENT" : "MANUAL") • @(kind == EnemyKind.MireHound && mireStyle == "pixel" ? "PIXEL ART PREVIEW" : "PUBLISHED ART") • INVULNERABLE • NO PROGRESS</div>
     </section>
-    @if (agentFoundation || agentPerception)
+    @if (agentFoundation || agentPerception || intelligence is not null)
     {
         <section class="note">
             <button @onclick="InspectAgents">Refresh AI inspector</button>
@@ -85,6 +86,10 @@
     private bool autoplay = true;
     private bool casting;
     [Parameter, SupplyParameterFromQuery(Name = "ai1")] public bool? AgentPerceptionQuery { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "tier")] public int? TierQuery { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "count")] public int? CountQuery { get; set; }
+    private AgentTier? intelligence;
+    private int enemyCount = 1;
     private bool agentPerception;
     private bool agentFoundation;
     private string agentInspection = "Run the encounter, then refresh to inspect its agents.";
@@ -103,6 +108,8 @@
         if (PausedQuery is { } pause) paused = pause;
         if (AgentFoundationQuery is { } ai0) agentFoundation = ai0;
         if (AgentPerceptionQuery is { } ai1) agentPerception = ai1;
+        intelligence = TierQuery is >= 1 and <= 5 ? (AgentTier)TierQuery.Value : null;
+        enemyCount = kind is EnemyKind.Hollow or EnemyKind.MireHound ? Math.Clamp(CountQuery ?? 1, 1, 64) : 1;
         mireStyle = MireStyleQuery == "pixel" ? "pixel" : "painted";
     }
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -140,7 +147,7 @@
         {
             var build = SelfPlayBuildCatalog.All.First();
             simulation = new RunSimulationFactory(new SeededRandomSource(1)).CreateDevelopmentEnemy(build.SelectedNodes,
-                new DevelopmentEnemySetup(kind, seed, Math.Clamp(width, 240, 2560), Math.Clamp(height, 240, 2560), casting, agentFoundation, agentPerception));
+                new DevelopmentEnemySetup(kind, seed, Math.Clamp(width, 240, 2560), Math.Clamp(height, 240, 2560), casting, agentFoundation, agentPerception) { Intelligence = intelligence, Count = enemyCount });
             agent = new HeuristicRunAgent(RunAgentPersonality.Kiter, seed, build.PreferredSchool);
         }
         var snapshot = simulation.CreateSnapshot();
@@ -163,7 +170,9 @@
             ["autoplay"] = autoplay,
             ["cast"] = casting,
             ["ai0"] = agentFoundation,
-            ["ai1"] = agentPerception
+            ["ai1"] = agentPerception,
+            ["tier"] = (int?)intelligence,
+            ["count"] = enemyCount
         });
         Navigation.NavigateTo(url, replace: true);
     }

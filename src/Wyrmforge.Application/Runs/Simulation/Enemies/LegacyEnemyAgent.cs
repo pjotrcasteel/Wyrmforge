@@ -16,30 +16,38 @@ internal sealed class LegacyEnemyAgent
     private readonly EnemyState enemy;
     public AgentRuntime Runtime { get; }
     public AgentPerception Perception { get; }
+    public CombatCapabilities? Capabilities { get; }
+    public EncounterAdaptation Adaptation { get; } = new();
 
-    public LegacyEnemyAgent(EnemyState enemy, int seed)
+    public LegacyEnemyAgent(EnemyState enemy, int seed, AgentTier? tier = null)
     {
         if (enemy.Kind is not (EnemyKind.Hollow or EnemyKind.MireHound))
             throw new ArgumentException("Only the two AI0 migration archetypes are supported.", nameof(enemy));
         this.enemy = enemy;
+        Capabilities = tier is { } value ? CombatCapabilities.For(value) : null;
         // Provisional lab profile, in existing Hunt world units; normal Hunts retain their existing behavior.
         Perception = new(new(360, 220, 120), seed, enemy.Id);
-        Runtime = new(new(enemy.Id, enemy.Kind.ToString(), "hostile"), seed, new CompatibilityPolicy(enemy.Kind));
+        Runtime = new(new(enemy.Id, enemy.Kind.ToString(), "hostile"), seed, Capabilities is null ? new CompatibilityPolicy(enemy.Kind) : new CombatTacticPolicy(Capabilities, enemy.Kind == EnemyKind.MireHound));
     }
 
     public (Vector2D Direction, double Speed, bool Committed) Step(double delta, Vector2D target,
-        Vector2D navigationTarget, double speed, bool mayCommit, AgentPerceptionSnapshot? sensed = null, AgentPathResult? path = null)
+        Vector2D navigationTarget, double speed, bool mayCommit, AgentPerceptionSnapshot? sensed = null, AgentPathResult? path = null, string role = "independent")
     {
         Runtime.Resume();
         var tick = Runtime.Inspect().Tick + 1;
         mayCommit &= (sensed?.Visible ?? true) && (path is null || path.Status == AgentPathStatus.Moving);
         var hound = enemy.MireHound;
+        if (Capabilities?.Adapt == true) Adaptation.Observe(delta, enemy.Position, sensed?.Visible == true ? target : null);
         var request = Runtime.Step([
             new("target", sensed is { Contact: null } ? "unknown" : FormattableString.Invariant($"{target.X:R},{target.Y:R}"),
                 sensed?.Contact?.ObservedTick ?? tick, sensed is null ? "legacy-exact-target/world-units" : sensed.Contact?.Source ?? "expired-or-undetected"),
             new("target-visible", (sensed?.Visible ?? true).ToString(), tick, "sensing-gate"),
             new("path-status", path?.Status.ToString() ?? "legacy", tick, path?.Reason ?? "existing-hunt-navigation"),
             new("navigation", FormattableString.Invariant($"{navigationTarget.X:R},{navigationTarget.Y:R}"), tick, "existing-hunt-navigation"),
+            new("pack-role", role, tick, "bounded-pressure-coordinator"),
+            new("tier", Capabilities?.Tier.ToString() ?? "compatibility", tick, "capability-profile"),
+            new("distance", Vector2D.Distance(enemy.Position, target).ToString("R", CultureInfo.InvariantCulture), tick, "earned-contact"),
+            new("adaptation", Adaptation.Inspect().Counter, tick, "decaying-confirmed-motion"),
             new("phase", hound?.Phase.ToString() ?? "Chase", tick, "authoritative-executor"),
             new("cooldown", (hound?.CooldownRemaining ?? 0).ToString("R", CultureInfo.InvariantCulture), tick, "authoritative-executor"),
             new("may-commit", mayCommit.ToString(), tick, "existing-pressure-budget")
@@ -48,10 +56,10 @@ internal sealed class LegacyEnemyAgent
         mayCommit &= sensed?.Visible ?? true;
         var direction = Vector2D.DirectionTo(enemy.Position, navigationTarget);
         var committed = false;
-        if (request?.Action == "hound-cycle" && hound is not null)
+        if (hound is not null && (Capabilities is not null || request?.Action == "hound-cycle"))
         {
             // Do not throttle this executor: cooldowns and committed lanes advance every active step.
-            committed = hound.Tick(delta, enemy.Position, target, mayCommit);
+            committed = hound.Tick(delta, enemy.Position, target, mayCommit && (Capabilities is null || request?.Action == "hound-cycle"));
             switch (hound.Phase)
             {
                 case MireHoundPhase.Windup or MireHoundPhase.Recover: speed = 0; break;
@@ -64,7 +72,19 @@ internal sealed class LegacyEnemyAgent
                     speed *= MireHoundBehaviorState.StalkSpeedMultiplier;
                     break;
                 default:
-                    if (navigationTarget == target) direction = Vector2D.DirectionTo(enemy.Position, hound.StalkPoint(enemy.Position, target));
+                    if (Capabilities is null && navigationTarget == target) direction = Vector2D.DirectionTo(enemy.Position, hound.StalkPoint(enemy.Position, target));
+                    else if (Capabilities is not null && navigationTarget == target)
+                    {
+                        var toward = Vector2D.DirectionTo(enemy.Position, target);
+                        var sign = Adaptation.Inspect().Counter switch { "circle-right" => 1, "circle-left" => -1, _ => hound.OrbitSign };
+                        direction = request?.Action switch
+                        {
+                            "retreat" => toward * -1,
+                            "strafe" => Vector2D.Rotate(toward, sign * Math.PI / 2),
+                            _ => toward
+                        };
+                        if (request?.Action == "wait") speed = 0;
+                    }
                     speed *= MireHoundBehaviorState.StalkSpeedMultiplier;
                     break;
             }

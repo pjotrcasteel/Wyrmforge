@@ -6,6 +6,10 @@ import { createHollowInjuryAssets, selectHollowInjuryVariant, hollowInjuryLabRev
 import { createHollowVariantAssets } from './hollow-arm-variants.js';
 import { selectHollowAppearance } from './hollow-variation.js';
 import { createHollowDeathAssets, selectHollowDeathVariant } from './hollow-death.js';
+import { createHollowInjuryDeathAssets, selectHollowDeathInjury } from './hollow-injury-death.js';
+import { createHollowFractureAssets, eligibleHollowFracture } from './hollow-fracture.js';
+// The rejected procedural bone-burst proof is intentionally lab-only.
+// Production deaths exclusively use the Hollowed's source-authored 3D atlases.
 const base = new URL('../art/enemies/hollow-rigged/', import.meta.url);
 const rows = ['N','NE','E','SE','S','SW','W','NW'];
 const headings = ['E','SE','S','SW','W','NW','N','NE'];
@@ -13,14 +17,21 @@ const textures = new Map();
 const injuries=createHollowInjuryAssets(new URL('injuries/',base));
 const arms=createHollowVariantAssets(new URL('arms/',base));
 const skeletalDeath=createHollowDeathAssets(new URL('death/',base));
+const injuryDeaths=createHollowInjuryDeathAssets(new URL('death/injuries/',base));
+const fracture=createHollowFractureAssets(new URL('death/fracture/',base));
 const injuryLabReview=hollowInjuryLabReview();
 let manifest, loading, profile, compositor;
 export function preloadHollowSprites() {
     return loading ??= loadHollowSprites();
 }
+// Optional 3D death art never blocks normal enemy animation startup.
+export function preloadHollowFracture() {
+    return fracture.preload();
+}
 async function loadHollowSprites() {
     // Load cape-free actors independently: caped legacy atlas failures must not block them.
     const variants=Promise.all([injuries.preload(),arms.preload(),skeletalDeath.preload()]);
+    void preloadHollowFracture();
     try {
         await loadLegacyHollowSprites();
     } catch {
@@ -68,7 +79,10 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
         const old=state.entities.get(death.entityId);
         state.corpses.set(key,{entityId:death.entityId,x:death.x,y:death.y,radius:death.bodyRadius,
             direction:old?.direction??'S',armVariant:old?.armVariant??'standard',
-            visualScale:old?.visualScale??1,deathVariant:selectHollowDeathVariant(death.entityId),at:state.clock});
+            visualScale:old?.visualScale??1,deathVariant:selectHollowDeathVariant(death.entityId),
+            deathInjury:old?.deathInjury??'standard',
+            deathStyle:fracture.ready() && eligibleHollowFracture(death.entityId,old?.deathInjury??'standard') ? 'fracture' : 'collapse',
+            at:state.clock});
     }
     state.seen=currentDeaths;
     for(const [key,corpse] of state.corpses)if(state.clock-corpse.at>=4)state.corpses.delete(key);
@@ -87,6 +101,11 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
                 armVariant:persona.armVariant,visualScale:persona.visualScale,
                 idleFrame:persona.idleFrame,signature:persona.signature,
                 attackAt:null,age:0,lastMove:-1,animation};
+            pose.deathInjury=selectHollowDeathInjury(pose);
+            // Only download the specific 3D damaged collapse if this injured
+            // silhouette actually spawns; no eager 3×7 MB mobile atlas load.
+            if(pose.deathInjury!=='standard')
+                void injuryDeaths.preload(pose.deathInjury);
             state.entities.set(id,pose);
         }
         const dx=enemy.x-pose.x,dy=enemy.y-pose.y,distance=Math.hypot(dx,dy);
@@ -158,7 +177,30 @@ export function drawHollowEnemy(ctx,enemy,state){
 export function drawHollowCorpses(ctx,state,reducedMotion=false){
     for(const corpse of state.corpses.values()){
         const age=state.clock-corpse.at;
-        if(skeletalDeath.draw(ctx,corpse.deathVariant,reducedMotion?23:Math.min(23,Math.floor(age*12)),
+        // The approved original Blender fracture replaces collapse only with all 8 real atlases.
+        // Missing art always falls back to source-authored 3D death poses.
+        if(corpse.deathStyle==='fracture' && fracture.draw(ctx,corpse,age,reducedMotion))continue;
+        const deathFrame=reducedMotion?23:Math.min(23,Math.floor(age*12));
+        const alpha=age<3?1:Math.max(0,4-age);
+        if(injuryDeaths.draw(ctx,corpse.deathInjury,deathFrame,corpse.direction,
+            corpse.x,corpse.y,corpse.radius*corpse.visualScale,alpha))continue;
+        if(corpse.deathInjury!=='standard') {
+            // Failure-safe: never regenerate a missing/guarded arm or healthy
+            // leg by switching a damaged corpse to the standard healthy rig.
+            // Briefly fade its own source pose until the 3D injury atlas loads.
+            const fallbackAlpha=Math.max(0,1-age/.3);
+            if(fallbackAlpha>0) {
+                const radius=corpse.radius*corpse.visualScale;
+                if(corpse.deathInjury==='broken-leg-left')
+                    injuries.draw(ctx,'broken-leg-left','walk',0,corpse.direction,
+                        corpse.x,corpse.y,radius,fallbackAlpha);
+                else
+                    arms.draw(ctx,corpse.armVariant,'walk',0,corpse.direction,
+                        corpse.x,corpse.y,radius,fallbackAlpha);
+            }
+            continue;
+        }
+        if(skeletalDeath.draw(ctx,corpse.deathVariant,deathFrame,
             corpse.direction,corpse.x,corpse.y,corpse.radius*corpse.visualScale,
             age<3?1:Math.max(0,4-age)))continue;
         if(arms.ready()) {
@@ -174,8 +216,8 @@ export function drawHollowCorpses(ctx,state,reducedMotion=false){
     }
 }
 export function hollowDiagnostics(state){
-    return {ready:hollowSpritesReady(),capeFreeReady:arms.ready(),skeletalDeathReady:skeletalDeath.ready(),injuriesReady:injuries.ready(),armsReady:arms.ready(),injuryLabReview,layers:compositor?{...compositor.stats,estimatedBytes:compositor.estimatedBytes()}:null,entities:[...state.entities].map(([entityId,p])=>({entityId,injuryVariant:p.injuryVariant,armVariant:p.armVariant,signature:p.signature,visualScale:p.visualScale,idleFrame:p.idleFrame,runSpeed:p.runSpeed,observedDistance:p.distance,visualDistance:p.visualDistance,injuryDrawn:injuries.ready()&&p.injuryVariant==='broken-leg-left'&&(p.clip==='walk'||p.clip==='attack'),clip:p.clip,frame:p.frame,direction:p.direction,baseFrame:p.baseFrame,phase:p.animation?.phase,layered:p.layered})),
-        corpses:[...state.corpses.values()].map(p=>({entityId:p.entityId,deathVariant:p.deathVariant,direction:p.direction,age:state.clock-p.at,frame:Math.min(23,Math.floor((state.clock-p.at)*12))}))};
+    return {ready:hollowSpritesReady(),fractureReady:fracture.ready(),capeFreeReady:arms.ready(),skeletalDeathReady:skeletalDeath.ready(),injuryDeathAtlasesLoaded:injuryDeaths.loadedCount(),injuriesReady:injuries.ready(),armsReady:arms.ready(),injuryLabReview,layers:compositor?{...compositor.stats,estimatedBytes:compositor.estimatedBytes()}:null,entities:[...state.entities].map(([entityId,p])=>({entityId,injuryVariant:p.injuryVariant,armVariant:p.armVariant,deathInjury:p.deathInjury,signature:p.signature,visualScale:p.visualScale,idleFrame:p.idleFrame,runSpeed:p.runSpeed,observedDistance:p.distance,visualDistance:p.visualDistance,injuryDrawn:injuries.ready()&&p.injuryVariant==='broken-leg-left'&&(p.clip==='walk'||p.clip==='attack'),clip:p.clip,frame:p.frame,direction:p.direction,baseFrame:p.baseFrame,phase:p.animation?.phase,layered:p.layered})),
+        corpses:[...state.corpses.values()].map(p=>({entityId:p.entityId,deathVariant:p.deathVariant,deathInjury:p.deathInjury,deathStyle:p.deathStyle,direction:p.direction,age:state.clock-p.at,frame:Math.min(23,Math.floor((state.clock-p.at)*12))}))};
 }
 // Preserve playback/fallback diagnostics while the asset bundle is loading.
 const fallbackProfile={locomotion:{clip:'walk',frames:HOLLOW_RUN.frames,stride:HOLLOW_RUN.stride},actions:{attack:{clip:'attack',frames:16,fps:12,mode:'fullBody',reducedFrame:7}}};

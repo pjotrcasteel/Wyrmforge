@@ -22,6 +22,7 @@ public sealed class ArenaEnvironmentState
     private readonly string habitat;
     private readonly bool preLair;
     private readonly bool generatorPreview;
+    private readonly HuntArenaGenerator.WetForestRecipe? wetForest;
     private EncounterPhase phase = EncounterPhase.Pressure;
 
     private sealed class Supply(string kind, double x, double y, EncounterPhase unlockPhase)
@@ -46,6 +47,12 @@ public sealed class ArenaEnvironmentState
         this.habitat = habitat;
         this.preLair = preLair;
         this.generatorPreview = generatorPreview;
+        // Preserve the first Fire Hunt's Old Road identity and combat gates,
+        // but give its floor the same original source-backed woodland materials
+        // as later Wet Forest encounters. Old Road Lab previews are unchanged.
+        var usesForestGround = habitat == nameof(WyrmrealmHabitat.WetForest) ||
+            (habitat == nameof(WyrmrealmHabitat.Outskirts) && !generatorPreview);
+        wetForest = usesForestGround ? HuntArenaGenerator.GenerateWetForest(seed) : null;
         this.seed = seed;
         this.biome = biome;
         this.element = element;
@@ -118,8 +125,7 @@ public sealed class ArenaEnvironmentState
     {
         Corruption = HuntArenaGenerator.WyrmInfluence(stage, generatorPreview && preLair),
         GeneratorPreview = generatorPreview,
-        WetForest = generatorPreview && habitat == nameof(WyrmrealmHabitat.WetForest)
-            ? HuntArenaGenerator.GenerateWetForest(seed) : null,
+        WetForest = wetForest,
         Props = destructibles.Where(prop => prop.Health > 0)
             .Select(prop => new ArenaPropRenderSnapshot(prop.Spec.Id, prop.Spec.Kind, prop.Spec.X, prop.Spec.Y, prop.Spec.Radius,
                 prop.Health / prop.Spec.Health)).ToArray(),

@@ -195,6 +195,7 @@ public sealed partial class RunSimulation
     private void UpdateEnemies(double delta)
     {
         PruneEnemyAgents();
+        UpdateAgentPack(delta);
         var sensingBudget = agentPerceptionEnabled ? new Wyrmforge.Domain.Agents.AgentQueryBudget(32) : null;
         var pathBudget = agentPerceptionEnabled ? new Wyrmforge.Domain.Agents.AgentQueryBudget(32) : null;
         var agentNavigation = agentPerceptionEnabled ? new HuntAgentNavigation(arenaEnvironment, arenaWidth, arenaHeight) : null;
@@ -229,8 +230,20 @@ public sealed partial class RunSimulation
                     (from, to) => arenaEnvironment?.HasLineOfSight(from, to, arenaWidth, arenaHeight) ?? true, sensingBudget!,
                     agentSpellSound is { } sound ? [sound with { Tick = agent.Runtime.Inspect().Tick + 1 }] : []);
             var knownTarget = sensed is null ? player.Position : sensed.Contact?.Position ?? enemy.Position;
+            var packSupport = agent?.Capabilities?.Coordinate == true && enemy.Kind == EnemyKind.MireHound && !agentPack.HasSlot(enemy.Id);
+            var navigationGoal = knownTarget;
+            if (packSupport && sensed?.Contact is not null && enemy.MireHound?.Phase == MireHoundPhase.Stalk)
+            {
+                // Reserve the rear half-plane as an escape route; support holds a visible staging arc.
+                var anchor = enemies.Where(e => e.Health > 0 && e.Kind == EnemyKind.MireHound).Take(256)
+                    .Aggregate(Vector2D.Zero, (sum, e) => sum + e.Position);
+                var count = Math.Min(256, enemies.Count(e => e.Health > 0 && e.Kind == EnemyKind.MireHound));
+                var radial = Vector2D.DirectionTo(knownTarget, anchor * (1d / Math.Max(1, count)));
+                if (radial == Vector2D.Zero) radial = new(0, -1);
+                navigationGoal = knownTarget + Vector2D.Rotate(radial, (enemy.Id % 3 - 1) * .65) * 155;
+            }
             var path = sensed is not null
-                ? agentNavigation!.Query(new(enemy.Position, knownTarget, enemy.Radius), pathBudget!) : null;
+                ? agentNavigation!.Query(new(enemy.Position, navigationGoal, enemy.Radius), pathBudget!) : null;
             var target = path is not null ? path.Waypoint : mapState.EncounterActive && arenaEnvironment is not null
                 ? arenaEnvironment.EnemyNavigationTarget(enemy.Position, knownTarget, arenaWidth, arenaHeight, enemy.Radius)
                 : knownTarget;
@@ -261,7 +274,7 @@ public sealed partial class RunSimulation
             }
             else if (agent is not null)
             {
-                var result = agent.Step(scaledDelta, knownTarget, target, speed, !crossing && committed < committedCap, sensed, path);
+                var result = agent.Step(scaledDelta, knownTarget, target, speed, !crossing && !packSupport && committed < committedCap, sensed, path, packSupport ? "support-regroup" : "engage");
                 direction = result.Direction;
                 speed = result.Speed;
                 if (result.Committed) committed++;
