@@ -27,3 +27,33 @@ Do not modify live Hunts/Town, PR #338 one-road experiments or PR #340 original 
 ## GPU material-channel upgrade
 
 The review now generates one compact non-color **roughnessMap** from the same C#-classified 16px material cells: grass 0.97, earth 0.84, wet mud 0.47. The G channel is registered through the existing shared LightingEngine, alongside painted albedo, on the SAME ground geometry. The preview uses no custom terrain-light shader, no new gameplay water, and no extra road surface mesh. Roughness values are design hypotheses (not verified physical measurements); they must be visually reviewed and adjusted alongside replacement light-neutral albedo.
+
+## Compact modular pixel-art library (unapproved visual slice)
+
+`tools/art/build_wet_forest_compact_materials.py` is the editable **fixed**
+pixel-cluster source for three 256×256 PNG terrain modules; the generator's
+reproducible output is delivered as immutable runtime PNGs under
+`wwwroot/art/environment/wet-forest-compact/v1/` by CI before app publishing.
+This is **static art asset baking**, independent of the hunt/world seed; it is
+not a level generator, and it never edits the user's approved original paintings.
+
+Color palettes are manually bounded to seven muted colors per family and do
+not contain per-pixel brightness gradients or scene-dependent highlights.
+The 256px source tiles repeat with exact left/right and top/bottom pixels;
+perceptual tiling at gameplay scale still requires explicit owner approval.
+
+The GPU scene now defaults to the compact modular art set and retains
+an **Original painted swatches** selector for direct A/B inspection. The
+existing C# Wet Forest trail and patches alone classify the ground. The
+shared `LightingEngine` receives its separately computed non-color material
+roughness map, as before. Small, crisp contact pixels from the existing
+material boundary plan replace broad cross-material alpha fades.
+
+For a local app build, run
+`python3 tools/art/build_wet_forest_compact_materials.py --output src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-compact/v1`
+first (requires Pillow). CI/Pages build and browser runs invoke the same
+asset bake automatically and include the PNGs in the packaged site.
+Use the focused Playwright run's **real GPU PNGs** to judge actual mobile
+appearance and final source identity. This checkpoint is **not** approved
+native iOS/Android art, physics water or live Hunt integration.
+

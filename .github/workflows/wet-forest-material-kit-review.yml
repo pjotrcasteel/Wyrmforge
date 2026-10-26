@@ -11,6 +11,7 @@ on:
       - 'tests/Wyrmforge.Browser.Tests/WetForestMaterialKitBrowserTests.cs'
       - 'tests/javascript/wet-forest-three-material-kit.test.mjs'
       - 'tools/art/build_wet_forest_compact_materials.py'
+      - 'tools/art/test_wet_forest_compact_materials.py'
       - '.github/workflows/wet-forest-material-kit-review.yml'
   workflow_dispatch:
 
@@ -32,6 +33,7 @@ jobs:
         run: |
           python3 -m pip install pillow
           python3 tools/art/build_wet_forest_compact_materials.py --output src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-compact/v1
+          python3 -m unittest tools/art/test_wet_forest_compact_materials.py
           test -s src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-compact/v1/manifest.json
       - name: Verify JavaScript recipe and GPU contracts
         run: node --test tests/javascript/wet-forest-three-material-kit.test.mjs
