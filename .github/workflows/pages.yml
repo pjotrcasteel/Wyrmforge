@@ -12,7 +12,9 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  # Let an active Pages build finish even if a newer main commit arrives.
+  # GitHub still coalesces pending runs, so the latest revision deploys next.
+  cancel-in-progress: false
 
 jobs:
   build:
