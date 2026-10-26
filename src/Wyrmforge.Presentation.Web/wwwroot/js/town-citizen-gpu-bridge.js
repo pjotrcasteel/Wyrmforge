@@ -14,6 +14,41 @@ export const TOWN_CITIZEN_CSS_COLORS = Object.freeze([
 
 const ART_SIZE = Object.freeze([1672, 941]);
 
+/**
+ * Read the actual C# TownCrowd positions already present in RefugeTownActors.
+ * C# owns every NPC's identity, presence, feet and movement. The DOM is only
+ * a read-only transport for future opted-in GPU Town integration.
+ *
+ * IMPORTANT: this does not mount the GPU renderer in the live Town.
+ */
+export function readTownCitizensFromDom(scene) {
+    if (!scene || typeof scene.querySelectorAll !== 'function')
+        throw new TypeError('Missing authoritative Town scene element');
+    const elements = Array.from(scene.querySelectorAll('.refuge-town-citizen[data-town-citizen-id]'));
+    return elements.map((element) => {
+        const id = Number(element.getAttribute('data-town-citizen-id'));
+        const sourceY = Number(element.getAttribute('data-town-feet-y'));
+        const left = element.style?.left;
+        const top = element.style?.top;
+        const percent = (text, axis) => {
+            if (typeof text !== 'string' || !/^\\d+(?:\\.\\d+)?%$/.test(text))
+                throw new TypeError('Missing C# Town feet percentage: ' + axis);
+            const value = Number(text.slice(0, -1));
+            if (!Number.isFinite(value) || value > 100)
+                throw new RangeError('Invalid C# Town feet percentage: ' + axis);
+            return value / 100;
+        };
+        const x = percent(left, 'x') * ART_SIZE[0];
+        const approxY = percent(top, 'y') * ART_SIZE[1];
+        if (!Number.isInteger(id) || id < 0 || !Number.isFinite(sourceY) ||
+            sourceY < 0 || sourceY > ART_SIZE[1] ||
+            Math.abs(approxY - sourceY) > .1)
+            throw new TypeError('C# Town feet coordinates and rendered style disagree');
+        return { id, feet: [x, sourceY], isPresent: true };
+    });
+}
+
+
 const validVec3 = (value, label) => {
     if (!Array.isArray(value) || value.length !== 3 || value.some(n => !Number.isFinite(n)))
         throw new TypeError('Invalid ' + label);
