@@ -50,7 +50,7 @@ test('actual anatomical bone pieces preserve one-arm and broken-leg injuries',()
     assert.equal(missingLeft.some(x=>x.limb==='leftArm'),false);
     assert.equal(missingLeft.some(x=>x.name==='upperR'),true);
     assert.equal(brokenRight.find(x=>x.name==='upperR').kind,'short');
-    assert.equal(brokenRight.find(x=>x.name==='handR').kind,'short');
+    assert.equal(brokenRight.find(x=>x.name==='handR').kind,'hand');
     assert.equal(leg.find(x=>x.name==='shinL').kind,'short');
     assert.equal(leg.find(x=>x.name==='shinR').kind,'long');
     assert.ok(intact.some(x=>x.kind==='skull'));
