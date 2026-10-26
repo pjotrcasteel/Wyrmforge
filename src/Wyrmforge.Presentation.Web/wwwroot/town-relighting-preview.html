@@ -28,7 +28,7 @@
 This isolated G1/G3 renderer uses the exact approved daylight painting as a <em>temporary reference texture</em>,
 plus existing hand-traced foreground cutouts as shadow casters. The painting still contains baked light/shadows:
 it must be replaced with independently authored neutral material layers before T2 visual sign-off.
-This is neither the live Town nor the final day/night lighting. The movable diagnostic NPC reproduces the <em>current live Town CSS placeholder</em>, not finished NPC pixel artwork.</p>
+This is neither the live Town nor the final day/night lighting. The original-source/neutralized candidate control is a technical art comparison, not final visual approval. The movable diagnostic NPC reproduces the <em>current live Town CSS placeholder</em>, not finished NPC pixel artwork.</p>
 <div class="controls">
   <label>World light
     <select id="mode" aria-label="World lighting profile">
@@ -40,6 +40,12 @@ This is neither the live Town nor the final day/night lighting. The movable diag
   <label><input type="checkbox" id="lamps" checked> Lantern sources</label>
   <label>Move center light <input id="offset" type="range" min="-180" max="180" value="0" step="10">
     <output id="light-position">0</output>px</label>
+  <label>Central paving albedo
+    <select id="paving" aria-label="Plaza material albedo">
+      <option value="neutral" selected>Neutralized candidate</option>
+      <option value="source">Original painted reference</option>
+    </select>
+  </label>
   <label><input type="checkbox" id="citizen" checked> Existing Town NPC placeholder</label>
   <label>NPC passage behind → in front of well
     <input id="npc-progress" type="range" min="0" max="1" value="0" step="0.05">
@@ -57,23 +63,26 @@ import { initializeTownPreview, configureTownPreview, disposeTownPreview }
 const canvas = document.querySelector('#town-gpu'), status = document.querySelector('#status');
 const mode = document.querySelector('#mode'), lamps = document.querySelector('#lamps'),
       offset = document.querySelector('#offset'), output = document.querySelector('#light-position'),
-      citizen = document.querySelector('#citizen'), npcProgress = document.querySelector('#npc-progress');
+      citizen = document.querySelector('#citizen'), npcProgress = document.querySelector('#npc-progress'),
+      paving = document.querySelector('#paving');
 const query = new URLSearchParams(location.search);
 if (['day', 'night', 'zero'].includes(query.get('mode'))) mode.value = query.get('mode');
 if (query.has('lamps')) lamps.checked = query.get('lamps') !== 'off';
 if (query.has('offset') && Number.isFinite(Number(query.get('offset'))) &&
     Math.abs(Number(query.get('offset'))) <= 180) offset.value = query.get('offset');
 if (query.get('npc') === 'off') citizen.checked = false;
+if (['source', 'neutral'].includes(query.get('paving'))) paving.value = query.get('paving');
 if (query.has('npcProgress') && Number.isFinite(Number(query.get('npcProgress'))) &&
     Number(query.get('npcProgress')) >= 0 && Number(query.get('npcProgress')) <= 1)
     npcProgress.value = query.get('npcProgress');
 function update() {
     output.textContent = offset.value;
     configureTownPreview(canvas, { mode: mode.value, lamps: lamps.checked, offset: Number(offset.value),
-        npcEnabled: citizen.checked, npcProgress: Number(npcProgress.value) });
+        npcEnabled: citizen.checked, npcProgress: Number(npcProgress.value),
+        paving: paving.value });
     status.textContent = canvas.dataset.error ?? 'GPU projection ready; canonical daytime reference source is still pre-lit.';
 }
-for (const control of [mode, lamps, offset, citizen, npcProgress]) control.addEventListener('input', update);
+for (const control of [mode, lamps, offset, citizen, npcProgress, paving]) control.addEventListener('input', update);
 try {
     await initializeTownPreview(canvas);
     update();
