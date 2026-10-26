@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import {
     threeMaterialPlan, validateWetForestRecipe, trailAt, MATERIAL_IDS, THREE_MATERIAL_REVIEW,
     previewMaterialRoughness, bakeThreeMaterialRoughness,
-    COMPACT_MATERIAL_SOURCE, COMPACT_TILE_SIZE, bakeCompactThreeMaterialGround,
+    SOURCE_BACKED_VARIANTS, SOURCE_BACKED_SIZE, sourceBackedUrl, bakeSourceBackedThreeMaterialGround,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/wet-forest-three-material-kit.js';
 import {
     inspectionSnapshot,
@@ -102,15 +102,19 @@ test('three semantic ground materials produce distinct non-color G-channel rough
     assert.equal(bakeThreeMaterialRoughness({ ...plan, board: new Uint8Array([0, 3, 4]) }, () => map), null);
 });
 
-test('compact authored material bank paints only three fixed source tiles with world-aligned pixels', () => {
-    const images = { 0: { width: 256, height: 256, key: 'grass' },
-        1: { width: 256, height: 256, key: 'mud' },
-        3: { width: 256, height: 256, key: 'earth' } };
-    assert.equal(COMPACT_TILE_SIZE, 256);
-    assert.equal(Object.keys(COMPACT_MATERIAL_SOURCE).length, 3);
-    assert.ok(COMPACT_MATERIAL_SOURCE[0].endsWith('/grass-moss.png'));
-    const plan = { board: new Uint8Array([0, 3, 1, 0, 3, 1]), columns: 3,
-        rows: 2, width: 48, height: 32 };
+test('existing PR340 source-backed artwork is chosen by family and six real variants', () => {
+    const images = { 0: { width: 900, height: 900, key: 'grass' },
+        1: { width: 900, height: 900, key: 'mud' },
+        3: { width: 900, height: 900, key: 'earth' } };
+    assert.equal(SOURCE_BACKED_SIZE, 900);
+    assert.deepEqual(SOURCE_BACKED_VARIANTS, [1, 2, 3, 4, 5, 6]);
+    assert.match(sourceBackedUrl(0, 1), /grass-moss-ART-CANDIDATE-01\.png$/);
+    assert.match(sourceBackedUrl(1, 6), /wet-mud-INDEPENDENT-ART-CANDIDATE-06\.png$/);
+    assert.match(sourceBackedUrl(3, 4), /trampled-earth-INDEPENDENT-ART-CANDIDATE-04\.png$/);
+    assert.equal(sourceBackedUrl(2, 1), null);
+    assert.equal(sourceBackedUrl(3, 7), null);
+    const plan = { board: new Uint8Array([0, 3, 1, 0, 3, 1]),
+        columns: 3, rows: 2, width: 48, height: 32, seed: 1204 };
     const calls = [];
     const factory = () => ({
         width: 0, height: 0,
@@ -118,29 +122,28 @@ test('compact authored material bank paints only three fixed source tiles with w
             set imageSmoothingEnabled(value) { assert.equal(value, false); },
             drawImage(source, sx, sy, sw, sh, dx, dy, dw, dh) {
                 assert.ok(Object.values(images).includes(source));
-                assert.ok(sx >= 0 && sy >= 0);
-                assert.ok(sx + sw <= 256 && sy + sh <= 256);
+                assert.ok(sx >= 0 && sy >= 0 && sx + sw <= 900 && sy + sh <= 900);
                 assert.ok(sw > 0 && sh > 0);
-                calls.push({ source: source.key, sx, sy, sw, sh, dx, dy, dw, dh });
+                calls.push([source.key, sx, sy, sw, sh, dx, dy, dw, dh]);
             },
         }),
     });
-    const canvas = bakeCompactThreeMaterialGround(plan, images, 1204, factory);
+    const canvas = bakeSourceBackedThreeMaterialGround(plan, images, 1204, factory);
     assert.equal(canvas.width, 48);
     assert.equal(canvas.height, 32);
     assert.ok(calls.length >= 6);
-    assert.deepEqual(calls.slice(0, 3).map(x => x.source), ['grass', 'earth', 'mud']);
-    assert.equal(bakeCompactThreeMaterialGround(plan,
-        { ...images, 1: { width: 128, height: 128 } }, 1204, factory), null);
-    assert.equal(bakeCompactThreeMaterialGround({ ...plan, board: new Uint8Array([0, 3, 5, 0, 3, 1]) },
+    assert.deepEqual(calls.slice(0, 3).map(x => x[0]), ['grass', 'earth', 'mud']);
+    assert.equal(bakeSourceBackedThreeMaterialGround(plan,
+        { ...images, 1: { width: 256, height: 256 } }, 1204, factory), null);
+    assert.equal(bakeSourceBackedThreeMaterialGround({ ...plan, board: new Uint8Array([0, 3, 5, 0, 3, 1]) },
         images, 1204, factory), null);
     const again = [];
-    const newFactory = () => ({ getContext: () => ({
+    const nextFactory = () => ({ getContext: () => ({
         set imageSmoothingEnabled(value) { assert.equal(value, false); },
         drawImage(source, ...args) { again.push([source.key, ...args]); },
     }) });
-    bakeCompactThreeMaterialGround(plan, images, 1204, newFactory);
-    assert.deepEqual(again, calls.map(x => [x.source, x.sx, x.sy, x.sw, x.sh, x.dx, x.dy, x.dw, x.dh]));
+    bakeSourceBackedThreeMaterialGround(plan, images, 1204, nextFactory);
+    assert.deepEqual(again, calls);
 });
 
 test('same G1 engine snapshots deliver night, neutral inspection and true zero-light world', () => {
@@ -184,7 +187,8 @@ test('preview receives actual C# WetForestRecipe and does not replace live Hunts
     assert.match(gpu, /new T\.CanvasTexture\(pixels\)/);
     assert.match(kit, /drawGroundMaterialTransitions/);
     assert.match(gpu, /registerTexture\(state\.roughnessId, new T\.CanvasTexture\(roughness\), false\)/);
-    assert.match(gpu, /bakeCompactThreeMaterialGround/);
+    assert.match(gpu, /bakeSourceBackedThreeMaterialGround/);
+    assert.doesNotMatch(kit, /COMPACT_MATERIAL_SOURCE|build_wet_forest_compact_materials/);
     assert.match(page, /Ground artwork/);
     assert.doesNotMatch(gpu, /new T\.WebGLRenderer/);
     assert.doesNotMatch(gpu, /new T\.WebGLRenderer|night-lighting|canvas\.style\.filter/);
