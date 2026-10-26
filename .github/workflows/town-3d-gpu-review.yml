@@ -91,6 +91,35 @@ jobs:
             fi
           done
 
+      - name: Publish genuine off-axis parallax and wireframe proof
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/town-3d
+          python3 -m http.server 4174 --bind 127.0.0.1 \
+            --directory src/Wyrmforge.Presentation.Web/wwwroot > artifacts/town-3d/parallax-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" || true' EXIT
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4174/town3d-review.html >/dev/null; then break; fi
+            sleep 1
+          done
+          chrome=$(command -v google-chrome || command -v chromium || command -v chromium-browser)
+          for spec in 'left:-0.65:lit' 'center:0:geometry' 'right:0.65:lit'; do
+            IFS=':' read -r name orbit view <<< "$spec"
+            "$chrome" --headless=new --no-sandbox --disable-dev-shm-usage \
+              --enable-webgl --enable-unsafe-swiftshader \
+              --use-gl=angle --use-angle=swiftshader \
+              --window-size=390,844 --virtual-time-budget=8000 \
+              --screenshot="artifacts/town-3d/t2-3d-parallax-${name}.png" \
+              --dump-dom \
+              "http://127.0.0.1:4174/town3d-review.html?clean=1&mode=night&district=center&frameWidth=390&frameHeight=844&orbit=${orbit}&view=${view}" \
+              >"artifacts/town-3d/t2-3d-parallax-${name}.html" \
+              2>"artifacts/town-3d/t2-3d-parallax-${name}.log"
+            test -s "artifacts/town-3d/t2-3d-parallax-${name}.png"
+            grep -q 'data-town3d-ready="true"' "artifacts/town-3d/t2-3d-parallax-${name}.html"
+          done
+
       - name: Publish canonical art comparisons and 3D GPU proof
         if: always()
         uses: actions/upload-artifact@v4

@@ -150,6 +150,16 @@ export async function mountTown3DReview(){
   try{
     const api=await initializeTown3DReview(canvas,status);
     window.__town3dReview=api;
+    // Read-only owner diagnostics; normal Town camera remains fixed.
+    const reviewParams=new URLSearchParams(location.search);
+    const orbitText=reviewParams.get('orbit');
+    if(orbitText!==null){
+      const orbit=Number(orbitText);
+      if(Number.isFinite(orbit)&&Math.abs(orbit)<=2)api.setOrbit(orbit);
+    }
+    const requestedView=reviewParams.get('view');
+    if(['lit','geometry','normals','albedo'].includes(requestedView))
+      api.setView(requestedView);
     for(const [id,method] of [['town3d-mode','setMode'],['town3d-district','setDistrict'],
       ['town3d-view','setView']]){
       const element=document.getElementById(id);
