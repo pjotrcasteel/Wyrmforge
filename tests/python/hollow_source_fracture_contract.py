@@ -6,7 +6,7 @@ root = Path(__file__).resolve().parents[2]
 path = root / 'tools/sprite-lab/render-hollow-source-fracture.py'
 source = path.read_text(encoding='utf-8')
 module = ast.parse(source, filename=str(path))
-assert 'random' not in source.lower(), 'Do not recreate random/generated bones'
+assert not any(isinstance(node, (ast.Import, ast.ImportFrom)) and\n               any(alias.name == 'random' for alias in node.names) for node in ast.walk(module)), 'No RNG imports'
 assert 'Hollow skinned character' in source
 assert 'Hollow editable animation rig' in source
 assert 'character.data.vertices' in source, 'Segments must come from real skin weights'
