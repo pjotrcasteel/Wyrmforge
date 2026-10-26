@@ -11,8 +11,12 @@ test('Town preview references only original approved day painting; production ni
     const manifest = townPreviewManifest();
     assert.deepEqual(manifest.artSize, [1672, 941]);
     assert.equal(manifest.layers[0].material, 'approved-day-reference');
+    assert.equal(manifest.layers[1].material, 'town-level-paving');
+    assert.equal(manifest.layers[1].geometry, 'approved-panorama-plane');
+    assert.equal(manifest.materials[1].normal, 'town-paving-flat-normal');
     assert.equal(manifest.layers[0].geometry, 'approved-panorama-plane');
-    assert.equal(manifest.materials[0].albedo, 'town-day-original');
+    assert.equal(manifest.materials[0].albedo, 'town-day-background');
+    assert.equal(manifest.materials[1].albedo, 'town-day-paving');
 });
 
 test('GPU image plane has the canonical painting aspect and stable source-pixel anchors', () => {
@@ -27,8 +31,8 @@ test('GPU image plane has the canonical painting aspect and stable source-pixel 
 
 test('all authored NPC foreground alpha paths become independent GPU shadow casters', () => {
     const manifest = townPreviewManifest();
-    assert.equal(manifest.layers.length, 1 + CUTOUTS.length);
-    assert.equal(manifest.materials.length, 1 + CUTOUTS.length);
+    assert.equal(manifest.layers.length, 2 + CUTOUTS.length);
+    assert.equal(manifest.materials.length, 2 + CUTOUTS.length);
     const ids = new Set(manifest.layers.map(l=>l.id));
     assert.equal(ids.size, manifest.layers.length);
     for (const cutout of CUTOUTS) {
@@ -45,7 +49,7 @@ test('G1–G3 registry sees all three lantern sources; zero diagnostic removes t
     const m = townPreviewManifest();
     const night = compileTownLightingSnapshot(m, { state:{},mode:'night' });
     assert.equal(selectLights(night).length, 3);
-    assert.equal(night.objects.length, 1+ CUTOUTS.length);
+    assert.equal(night.objects.length, 2 + CUTOUTS.length);
     const zero = compileTownLightingSnapshot(m, { state:{},mode:'zero' });
     assert.equal(zero.environment.emission, false);
     assert.equal(zero.environment.ambient, 0);
