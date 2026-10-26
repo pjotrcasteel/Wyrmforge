@@ -48,8 +48,20 @@ No production cutover, AI or G4 changes.</p>
 <output id="town3d-status" role="status">Loading canonical geometry…</output>
 </main>
 <script>
-document.documentElement.dataset.reviewClean=
-    new URLSearchParams(location.search).get('clean')==='1'?'true':'false';
+const params=new URLSearchParams(location.search);
+document.documentElement.dataset.reviewClean=params.get('clean')==='1'?'true':'false';
+// CI's raw Chromium --window-size includes browser chrome on Linux and does
+// not guarantee an exact CSS viewport. Explicit review-frame geometry makes
+// 320×568 and 390×844 pixel comparisons real, not mislabeled screenshots.
+const w=Number(params.get('frameWidth')),h=Number(params.get('frameHeight'));
+if(params.has('frameWidth')&&params.has('frameHeight')&&Number.isInteger(w)&&
+    Number.isInteger(h)&&w>=320&&w<=1280&&h>=568&&h<=1024){
+  const canvas=document.getElementById('town3d-canvas');
+  canvas.style.width=w+'px';
+  canvas.style.height=h+'px';
+  document.querySelector('main').style.width=w+'px';
+  document.querySelector('main').style.maxWidth='none';
+}
 </script>
 <script type="module">
 import {mountTown3DReview} from './js/town/town-canonical-review.js';
