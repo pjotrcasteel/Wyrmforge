@@ -158,15 +158,22 @@ test('full playable-world source art scales and feathers materials with bounded 
             x: (i % columns) * 12, y: Math.floor(i / columns) * 12,
             material: materials[(i + Math.floor(i / columns)) % materials.length],
         }));
-        const operations = { images: 0, rectangles: 0, clips: 0 };
+        const operations = { images: 0, rectangles: 0, clips: 0, scaled: 0, feathered: 0, mirrored: 0 };
         const ctx = {
             save() {}, restore() {}, beginPath() {},
-            rect() { operations.rectangles++; }, translate() {}, scale() {},
+            rect() { operations.rectangles++; },
+            translate() {},
+            scale(x, y) { if (x < 0 || y < 0) operations.mirrored++; },
+            set globalAlpha(alpha) { if (alpha < 1) operations.feathered++; },
             clip() { operations.clips++; },
             set imageSmoothingEnabled(value) { assert.equal(value, true); },
-            drawImage(source, sx, sy, sw, sh) {
+            drawImage(source, sx, sy, sw, sh, dx, dy, dw, dh) {
                 assert.equal(source.width, 900);
-                assert.ok(sx >= 0 && sy >= 0 && sx + sw <= 900 && sy + sh <= 900);
+                assert.equal(sw, 900);
+                assert.equal(sh, 900);
+                assert.equal(dw, 252);
+                assert.equal(dh, 252);
+                operations.scaled++;
                 operations.images++;
             },
         };
@@ -175,8 +182,12 @@ test('full playable-world source art scales and feathers materials with bounded 
         assert.ok(operations.images > 0 && operations.images <= 420,
             'Too many image copies for a single static mobile world bake: ' + operations.images);
         assert.ok(operations.clips >= 2 && operations.clips <= 9);
+        assert.equal(operations.scaled, operations.images, '900px source motifs cannot stay 900 world pixels.');
+        assert.ok(operations.feathered >= 2, 'Material edges must use a translucent feather.');
+        assert.ok(operations.mirrored > 0, 'Neighbouring small tiles must avoid hard repeat seams.');
         const first = { ...operations };
         operations.rectangles = operations.images = operations.clips = 0;
+        operations.scaled = operations.feathered = operations.mirrored = 0;
         assert.equal(drawLiveWetForestMaterialBase(ctx, world, seed, width, height), true);
         assert.deepEqual(operations, first, 'World source drawing remains deterministic.');
     } finally {
