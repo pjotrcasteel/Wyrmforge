@@ -1,0 +1,69 @@
+name: Town T2 in-game art and NPC acceptance
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/Wyrmforge.Presentation.Web/**'
+      - 'tests/Wyrmforge.Browser.Tests/TownT2InGameBrowserTests.cs'
+      - 'tests/Wyrmforge.Browser.Tests/Town3DReviewBrowserTests.cs'
+      - '.github/workflows/town-t2-in-game.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  town-t2-playwright:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - name: Restore verified canonical production art
+        run: |
+          git lfs pull --include="src/Wyrmforge.Presentation.Web/wwwroot/**" --exclude=""
+          python3 tools/development/verify_web_assets.py
+      - name: Check runner's preinstalled .NET SDK
+        run: |
+          dotnet --list-sdks | grep -Eq '^10\.0\.' || { echo "::error::.NET 10 missing"; exit 1; }
+      - name: Restore and build targeted Town browser tests
+        run: |
+          dotnet restore tests/Wyrmforge.Browser.Tests/Wyrmforge.Browser.Tests.csproj
+          dotnet build tests/Wyrmforge.Browser.Tests/Wyrmforge.Browser.Tests.csproj -c Release --no-restore
+      - name: Install Chromium for real Playwright captures
+        run: pwsh tests/Wyrmforge.Browser.Tests/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
+      - name: Compile production WyrmForge app with opt-in T2 preview
+        run: |
+          dotnet restore src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj
+          dotnet publish src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -c Release --no-restore -o ./artifacts/web
+      - name: Start real app and run T2 acceptance (not mocked)
+        shell: bash
+        env:
+          WYRMFORGE_BASE_URL: http://127.0.0.1:4173/
+          WYRMFORGE_BROWSER_ARTIFACTS: ${{ github.workspace }}/artifacts/browser
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/browser
+          python3 tools/development/spa_server.py --port 4173 --directory ./artifacts/web/wwwroot >artifacts/town-t2-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" || true' EXIT
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then break; fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:4173/town3d-review.html >/dev/null
+          dotnet test tests/Wyrmforge.Browser.Tests/Wyrmforge.Browser.Tests.csproj \
+            -c Release --no-build \
+            --filter 'FullyQualifiedName~TownT2InGameBrowserTests|FullyQualifiedName~Town3DReviewBrowserTests' \
+            --logger "trx;LogFileName=town-t2-acceptance.trx"
+      - name: Upload T2 real game screenshots and test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: town-t2-real-game-${{ github.sha }}
+          path: |
+            artifacts/browser
+            artifacts/town-t2-server.log
+            tests/Wyrmforge.Browser.Tests/TestResults/**/town-t2-acceptance.trx
+          if-no-files-found: warn
+          retention-days: 14
