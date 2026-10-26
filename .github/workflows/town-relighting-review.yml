@@ -9,10 +9,15 @@ on:
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/town-citizen-gpu-bridge.js'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/town-paving-material.js'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/town-neutral-albedo.js'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/town-live-relighting.js'
+      - 'src/Wyrmforge.Presentation.Web/Features/Forge/CanonicalTownView.razor'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/css/town-canonical.css'
       - 'tests/javascript/town-relighting-*.test.mjs'
       - 'tests/javascript/town-citizen-gpu-bridge.test.mjs'
       - 'tests/javascript/town-paving-material.test.mjs'
       - 'tests/javascript/town-neutral-albedo.test.mjs'
+      - 'tests/javascript/town-live-gpu-integration.test.mjs'
+      - 'tests/Wyrmforge.Browser.Tests/WyrmforgeBrowserTests.cs'
       - '.github/workflows/town-relighting-review.yml'
   push:
     branches:
@@ -47,7 +52,7 @@ jobs:
         run: python3 tools/art/check_town_sources.py
 
       - name: Check new Town GPU projection contracts
-        run: node --test tests/javascript/town-relighting-contract.test.mjs tests/javascript/town-relighting-preview.test.mjs tests/javascript/town-paving-material.test.mjs tests/javascript/town-citizen-gpu-bridge.test.mjs tests/javascript/town-neutral-albedo.test.mjs
+        run: node --test tests/javascript/town-relighting-contract.test.mjs tests/javascript/town-relighting-preview.test.mjs tests/javascript/town-paving-material.test.mjs tests/javascript/town-citizen-gpu-bridge.test.mjs tests/javascript/town-neutral-albedo.test.mjs tests/javascript/town-live-gpu-integration.test.mjs
 
       - name: Start isolated static GPU review
         run: |
