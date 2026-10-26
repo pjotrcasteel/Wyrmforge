@@ -83,7 +83,10 @@ camera = bpy.context.object
 camera.name = "CANONICAL_FIXED_TOWN_CAMERA"
 camera.rotation_euler = (-camera.location).to_track_quat("-Z", "Y").to_euler()
 camera.data.type = "ORTHO"
-camera.data.ortho_scale = W / PX_PER_METRE * 390 / 1672 * 941 / 844
+# Blender ortho_scale measures visible VERTICAL world height, whereas
+# LightingEngine.setCamera specifies horizontal half-width. Preserve
+# the 941px source height and 390x844 portrait aspect exactly.
+camera.data.ortho_scale = H / PX_PER_METRE
 scene.camera = camera
 bpy.context.view_layer.update()
 basis = camera.matrix_world.to_3x3()
