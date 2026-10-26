@@ -13,6 +13,8 @@
 
 ## Future Town Square presentation migration — one universal lighting engine (LOCKED, 23 October 2026)
 
+**Owner revision (26 October 2026, LOCKED):** Retain the approved 2D Town paintings and exact silhouettes. The previous full-3D Town reconstruction direction is cancelled. Produce faithful **2.5D relightable derivative layers** with separately authored neutral albedo, material normals, depth/caster silhouettes and fixture emission using the **existing universal GPU lighting engine**. Small invisible proxy shadow geometry is allowed where authored, but no rebuilt 3D buildings, random substitute pixel art or reskinned new Town. Original paintings remain immutable reference and live fallback until visual sign-off; direct GPU lighting of pre-lit `night-active.webp` is **not** acceptable as a final solution. Follow [Town T0–T6 2.5D milestones](../design/town-2p5d-relighting-milestones.md) with T2 owner screenshot approval before further expansion.
+
 **Product-owner direction (NOT current shipped behavior):** the Town
 Square is part of the exact same scene-lighting world as every Hunt.
 **The lighting engine, not an already-bright picture, determines what
