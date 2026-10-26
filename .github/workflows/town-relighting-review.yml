@@ -76,7 +76,7 @@ jobs:
           screenshot () {
             local name="$1" viewport="$2" query="$3"
             local url="http://127.0.0.1:4179/town-relighting-preview.html?capture=1&${query}"
-            "$BROWSER" $FLAGS --window-size="$viewport" \
+            "$BROWSER" $FLAGS --window-size="${viewport/x/,}" \
               --screenshot="artifacts/town-2p5d/${name}.png" "$url" \
               > "artifacts/town-2p5d/${name}.log" 2>&1
             test -s "artifacts/town-2p5d/${name}.png"
