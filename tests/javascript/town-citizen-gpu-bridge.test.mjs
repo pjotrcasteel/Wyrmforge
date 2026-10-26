@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { projectTownCitizens, TOWN_CITIZEN_ART_WIDTH, TOWN_CITIZEN_ART_HEIGHT,
+import { readTownCitizensFromDom, projectTownCitizens, TOWN_CITIZEN_ART_WIDTH, TOWN_CITIZEN_ART_HEIGHT,
     TOWN_CITIZEN_CSS_COLORS, TOWN_WELL_FRONT_DEPTH_Y }
     from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/town-citizen-gpu-bridge.js';
 import { townPreviewManifest, townPreviewProjection }
@@ -76,4 +76,34 @@ test('14 simultaneous citizens remain distinct and invalid authoritative positio
     assert.throws(() => project([citizen(1, [800, 942])]), /canonical/);
     assert.throws(() => project([{ id: 1, feet: [800, 500] }]), /presence/);
     assert.throws(() => projectTownCitizens([citizen(1, [800, 500])], townPreviewProjection, [0, 0, 0]), /normalized/);
+});
+
+test('live C# Town DOM is read only and maps CSS feet percentages back to painting pixels', () => {
+    const mock = (id, sourceY, left, top) => ({
+        style: { left, top },
+        getAttribute: key => ({
+            'data-town-citizen-id': String(id), 'data-town-feet-y': sourceY,
+        })[key] ?? null,
+    });
+    const people = [
+        mock(1, '513', '51.675%', '54.516%'),
+        mock(2, '588,5', '51.675%', '62.540%'),
+    ];
+    const root = {
+        querySelectorAll: selector => {
+            assert.equal(selector, '.refuge-town-citizen[data-town-citizen-id]');
+            return people;
+        },
+    };
+    const state = readTownCitizensFromDom(root);
+    assert.equal(state.length, 2);
+    assert.ok(Math.abs(state[0].feet[0] - 864) < .02);
+    assert.equal(state[0].feet[1], 513);
+    assert.equal(state[1].feet[1], 588.5);
+    assert.equal(project(state).layers.length, 2);
+    assert.equal(people[0].style.left, '51.675%', 'read only; do not alter live DOM actor position');
+    assert.throws(() => readTownCitizensFromDom({ querySelectorAll: () =>
+        [mock(1, '513', '20%', '54.516%')] }), /disagree/);
+    assert.throws(() => readTownCitizensFromDom({ querySelectorAll: () =>
+        [mock(1, null, '51.675%', '54.516%')] }), /malformed/);
 });
