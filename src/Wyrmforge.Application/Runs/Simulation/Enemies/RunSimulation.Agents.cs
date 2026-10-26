@@ -6,6 +6,7 @@ namespace Wyrmforge.Application.Runs.Simulation;
 public sealed partial class RunSimulation
 {
     private bool agentFoundationEnabled;
+    private bool agentPerceptionEnabled;
     private int agentFoundationSeed;
     private readonly Dictionary<int, LegacyEnemyAgent> enemyAgents = [];
 

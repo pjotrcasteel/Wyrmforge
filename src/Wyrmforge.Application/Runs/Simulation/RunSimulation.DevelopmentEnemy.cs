@@ -10,7 +10,8 @@ public sealed partial class RunSimulation
     internal void StartDevelopmentEnemy(DevelopmentEnemySetup setup)
     {
         setup.Validate();
-        agentFoundationEnabled = setup.AgentFoundation;
+        agentFoundationEnabled = setup.AgentFoundation || setup.AgentPerception;
+        agentPerceptionEnabled = setup.AgentPerception;
         agentFoundationSeed = setup.Seed;
         developmentHunt = true;
         developmentInvulnerable = true;

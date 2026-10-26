@@ -15,28 +15,35 @@ internal sealed class LegacyEnemyAgent
 {
     private readonly EnemyState enemy;
     public AgentRuntime Runtime { get; }
+    public AgentPerception Perception { get; }
 
     public LegacyEnemyAgent(EnemyState enemy, int seed)
     {
         if (enemy.Kind is not (EnemyKind.Hollow or EnemyKind.MireHound))
             throw new ArgumentException("Only the two AI0 migration archetypes are supported.", nameof(enemy));
         this.enemy = enemy;
+        // Provisional lab profile, in existing Hunt world units; normal Hunts retain their existing behavior.
+        Perception = new(new(360, 220, 120), seed, enemy.Id);
         Runtime = new(new(enemy.Id, enemy.Kind.ToString(), "hostile"), seed, new CompatibilityPolicy(enemy.Kind));
     }
 
     public (Vector2D Direction, double Speed, bool Committed) Step(double delta, Vector2D target,
-        Vector2D navigationTarget, double speed, bool mayCommit)
+        Vector2D navigationTarget, double speed, bool mayCommit, AgentPerceptionSnapshot? sensed = null)
     {
         Runtime.Resume();
         var tick = Runtime.Inspect().Tick + 1;
         var hound = enemy.MireHound;
         var request = Runtime.Step([
-            new("target", FormattableString.Invariant($"{target.X:R},{target.Y:R}"), tick, "legacy-exact-target/world-units"),
+            new("target", sensed is { Contact: null } ? "unknown" : FormattableString.Invariant($"{target.X:R},{target.Y:R}"),
+                sensed?.Contact?.ObservedTick ?? tick, sensed is null ? "legacy-exact-target/world-units" : sensed.Contact?.Source ?? "expired-or-undetected"),
+            new("target-visible", (sensed?.Visible ?? true).ToString(), tick, "sensing-gate"),
             new("navigation", FormattableString.Invariant($"{navigationTarget.X:R},{navigationTarget.Y:R}"), tick, "existing-hunt-navigation"),
             new("phase", hound?.Phase.ToString() ?? "Chase", tick, "authoritative-executor"),
             new("cooldown", (hound?.CooldownRemaining ?? 0).ToString("R", CultureInfo.InvariantCulture), tick, "authoritative-executor"),
             new("may-commit", mayCommit.ToString(), tick, "existing-pressure-budget")
         ]);
+        var targetKnown = sensed is null || sensed.Contact is not null;
+        mayCommit &= sensed?.Visible ?? true;
         var direction = Vector2D.DirectionTo(enemy.Position, navigationTarget);
         var committed = false;
         if (request?.Action == "hound-cycle" && hound is not null)
@@ -61,6 +68,8 @@ internal sealed class LegacyEnemyAgent
             }
         }
         else if (request?.Action != "chase") speed = 0;
+        // Losing the target cannot cancel a warned lane, but cannot start a new attack either.
+        if (!targetKnown && hound?.Phase != MireHoundPhase.Pounce) speed = 0;
         if (request is not null)
             Runtime.Report(new(request.Sequence, AgentActionStatus.Running, hound?.Phase.ToString() ?? "Chase"));
         return (direction, speed, committed);

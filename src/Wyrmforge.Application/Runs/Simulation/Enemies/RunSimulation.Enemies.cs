@@ -195,6 +195,7 @@ public sealed partial class RunSimulation
     private void UpdateEnemies(double delta)
     {
         PruneEnemyAgents();
+        var sensingBudget = agentPerceptionEnabled ? new Wyrmforge.Domain.Agents.AgentQueryBudget(32) : null;
         encounterSeconds += delta;
         rangedStaggerRemaining = Math.Max(0, rangedStaggerRemaining - delta);
         var committedCap = EnemyStagePressure.CommittedThreatCap(mapState.CurrentNode?.Stage ?? 1);
@@ -218,11 +219,16 @@ public sealed partial class RunSimulation
             }
 
             var scaledDelta = delta * statusTimeScale;
+            Wyrmforge.Domain.Agents.AgentPerceptionSnapshot? sensed = null;
+            if (agentPerceptionEnabled && agent is not null && enemy.RoutedRemaining <= 0)
+                sensed = agent.Perception.Observe(agent.Runtime.Inspect().Tick + 1, enemy.Position, Vector2D.Zero, player.Position,
+                    (from, to) => arenaEnvironment?.HasLineOfSight(from, to, arenaWidth, arenaHeight) ?? true, sensingBudget!, []);
+            var knownTarget = sensed is null ? player.Position : sensed.Contact?.Position ?? enemy.Position;
             var target = mapState.EncounterActive && arenaEnvironment is not null
-                ? arenaEnvironment.EnemyNavigationTarget(enemy.Position, player.Position, arenaWidth, arenaHeight, enemy.Radius)
-                : player.Position;
+                ? arenaEnvironment.EnemyNavigationTarget(enemy.Position, knownTarget, arenaWidth, arenaHeight, enemy.Radius)
+                : knownTarget;
             // While a ruined wall separates enemy and hunter, everyone simply heads for the crossing.
-            var crossing = target != player.Position;
+            var crossing = target != knownTarget;
             var direction = Wyrmforge.Domain.Combat.Behaviors.CreatureDecisions.Chase(enemy.Position, target);
             var speed = enemy.Speed;
             if (packbloodLeaders.Count > 0 && IsPackbloodEmpowered(enemy)) speed *= PackbloodSpeedMultiplier;
@@ -248,7 +254,7 @@ public sealed partial class RunSimulation
             }
             else if (agent is not null)
             {
-                var result = agent.Step(scaledDelta, player.Position, target, speed, !crossing && committed < committedCap);
+                var result = agent.Step(scaledDelta, knownTarget, target, speed, !crossing && committed < committedCap, sensed);
                 direction = result.Direction;
                 speed = result.Speed;
                 if (result.Committed) committed++;
