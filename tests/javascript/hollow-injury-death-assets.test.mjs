@@ -19,7 +19,7 @@ test('all three injury death variants are separately source-authored Blender act
     assert.deepEqual(manifest.anchor,[48,66]);
     assert.deepEqual(manifest.variants,HOLLOW_INJURY_DEATH_VARIANTS);
     assert.deepEqual(manifest.directions,HOLLOW_INJURY_DEATH_DIRECTIONS);
-    const source=new URL('../../../../../../../../../art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-injury-deaths/hollow-injury-deaths.blend',base);
+    const source=new URL('../../../../../../../../art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-injury-deaths/hollow-injury-deaths.blend',base);
     assert.equal(existsSync(source),true,'preserve editable 3D rig, not only rendered pixels');
 });
 
