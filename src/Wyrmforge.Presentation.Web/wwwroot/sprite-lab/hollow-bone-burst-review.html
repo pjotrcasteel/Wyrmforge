@@ -32,10 +32,10 @@ canvas{display:block;width:100%;aspect-ratio:1.26;image-rendering:pixelated;back
 <script type="module">
 import {drawHollowBoneBurst,hollowBoneBurstDelay} from '../js/hollow-bone-burst.js';
 const designs=[
- {title:'IMMEDIATE SHATTER',style:'shatter-burst',injury:'standard',id:3,note:'At impact • fast breakup'},
- {title:'BUCKLE THEN BURST',style:'buckle-burst',injury:'broken-arm-right',id:21,note:'Brief source 3D buckle, then bones'},
- {title:'MISSING LEFT ARM',style:'shatter-burst',injury:'one-arm-left',id:41,note:'No phantom left arm fragments'},
- {title:'DAMAGED LEFT LEG',style:'buckle-burst',injury:'broken-leg-left',id:47,note:'Shortened damaged shin remains'}
+ {title:'IMMEDIATE SHATTER',style:'shatter-burst',injury:'standard',id:3,still:.14,note:'At impact • fast breakup'},
+ {title:'BUCKLE THEN BURST',style:'buckle-burst',injury:'broken-arm-right',id:21,still:.49,note:'Brief source 3D buckle, then bones'},
+ {title:'MISSING LEFT ARM',style:'shatter-burst',injury:'one-arm-left',id:41,still:.67,note:'No phantom left arm fragments'},
+ {title:'DAMAGED LEFT LEG',style:'buckle-burst',injury:'broken-leg-left',id:47,still:1.8,note:'Shortened damaged shin remains'}
 ];
 const cards=document.getElementById('cards');
 const views=designs.map(item=>{
@@ -49,9 +49,10 @@ const views=designs.map(item=>{
 let started=performance.now(),paused=false,pausedAge=0;
 const fixed=new URLSearchParams(location.search).has('still');
 function render(now){
- const elapsed=fixed?1.2:paused?pausedAge:(now-started)/1000%4;
+ const elapsed=paused?pausedAge:(now-started)/1000%4;
  for(const view of views){
   const ctx=view.ctx;
+  const frameAge=fixed?view.still:elapsed;
   ctx.fillStyle='#182026';ctx.fillRect(0,0,220,175);
   ctx.fillStyle='#252d2e';ctx.fillRect(0,135,220,40);
   ctx.fillStyle='#3a403c';
@@ -59,14 +60,14 @@ function render(now){
   ctx.fillStyle='#141a1b';ctx.fillRect(52,136,120,2);
   // The source skeletal pose plays before the buckle-burst. A dark torso
   // placeholder in this isolated QC page marks that external sprite phase.
-  if(elapsed<hollowBoneBurstDelay(view.style)){
+  if(frameAge<hollowBoneBurstDelay(view.style)){
    ctx.fillStyle='#5b6764';ctx.fillRect(105,85,10,42);
    ctx.fillStyle='#8b8f81';ctx.fillRect(103,72,14,14);
   }else{
    drawHollowBoneBurst(ctx,{
     entityId:view.id,deathStyle:view.style,deathInjury:view.injury,
     x:110,y:136,radius:11,visualScale:1
-   },elapsed,document.getElementById('reduce').checked);
+   },frameAge,document.getElementById('reduce').checked);
   }
  }
  if(!fixed)requestAnimationFrame(render);
