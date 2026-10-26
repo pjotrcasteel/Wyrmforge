@@ -54,6 +54,19 @@ jobs:
       - name: Assert exact approved Town source hashes
         run: python3 tools/art/check_town_sources.py
 
+      # Stage 1 material authoring needs the EXACT approved full-resolution
+      # source, not an unrelated generated square or a scaled screenshot.
+      # This exports immutable source bytes without modifying game artwork.
+      - name: Export approved Town source for well-free square authoring
+        uses: actions/upload-artifact@v4
+        with:
+          name: wyrmforge-stage1-approved-town-source
+          path: |
+            src/Wyrmforge.Presentation.Web/wwwroot/art/town/day-active.webp
+            src/Wyrmforge.Presentation.Web/wwwroot/art/town/night-active.webp
+          if-no-files-found: error
+          retention-days: 3
+
       - name: Check new Town GPU projection contracts
         run: node --test tests/javascript/town-relighting-contract.test.mjs tests/javascript/town-relighting-preview.test.mjs tests/javascript/town-paving-material.test.mjs tests/javascript/town-citizen-gpu-bridge.test.mjs tests/javascript/town-neutral-albedo.test.mjs tests/javascript/town-live-gpu-integration.test.mjs tests/javascript/town-lighting-grade.test.mjs tests/javascript/town-native-render-quality.test.mjs
 
