@@ -73,7 +73,6 @@ scene.render.film_transparent = False\n# Headless GitHub runners have no EGL con
 scene.cycles.device = "CPU"
 scene.cycles.samples = 8
 # Ubuntu's apt Blender build is compiled without OpenImageDenoiser.
-scene.cycles.use_denoising = False
 for layer in scene.view_layers:
     layer.cycles.use_denoising = False
 
