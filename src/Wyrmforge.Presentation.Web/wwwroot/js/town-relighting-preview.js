@@ -149,8 +149,8 @@ export async function initializeTownPreview(canvas) {
         }
         state.manifest = townPreviewManifest();
         engine.setCamera([0, 0, 0], 8.16);
-        canvas.dataset.ready = 'true';
         configureTownPreview(canvas, {});
+        canvas.dataset.ready = 'true';
         state.resize = new ResizeObserver(() => configureTownPreview(canvas, {}));
         state.resize.observe(canvas);
     } catch (error) {
@@ -179,6 +179,16 @@ export function configureTownPreview(canvas, options) {
     state.engine.apply(snapshot);
     state.engine.setCamera([0, 0, 0], 8.16);
     state.engine.render(canvas.clientWidth || 1000, canvas.clientHeight || 564);
+    if (state.mode === 'zero') {
+        // Actual framebuffer check: no ambient, fixtures, or emission is allowed
+        // to leave any non-black world pixel. Alpha is intentionally ignored.
+        const pixels = state.engine.pixels();
+        let litPixels = 0;
+        for (let i = 0; i < pixels.length; i += 4)
+            if (pixels[i] || pixels[i + 1] || pixels[i + 2]) litPixels++;
+        canvas.dataset.zeroBlack = (litPixels === 0).toString();
+        if (litPixels) throw new Error(`Zero-light proof leaked ${litPixels} world pixels`);
+    } else delete canvas.dataset.zeroBlack;
     canvas.dataset.profile = state.mode;
     canvas.dataset.fixtureCount = snapshot.lights.filter(l => l.enabled).length.toString();
 }
