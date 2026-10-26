@@ -3391,12 +3391,22 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.SetViewportSizeAsync(width, height);
         await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/?arenaGpu=1", new() { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
-        await EnterFirstTrailAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT", Exact = true }).ClickAsync();
+        await ContinueThroughWorldGateAsync();
+        await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
         await Page.EvaluateAsync(@"async () => {
             window.__huntGpuArena = await import(new URL('js/arena.js?v=20261026-organic-ground-v2', document.baseURI).href);
             window.__huntGpuRead = () => window.__huntGpuArena.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
         }");
-        await Page.WaitForFunctionAsync("() => window.__huntGpuRead()?.gpuWorld?.objects > 1", null, new() { Timeout = 60000 });
+        await Page.WaitForFunctionAsync(@"() => {
+            const d=window.__huntGpuRead();
+            return d && ((d.gpuWorld?.objects>2 && d.enemies.length>0) || d.gpuWorld?.error || d.renderingFailed);
+        }", null, new() { Timeout = 60000 });
+        await ScreenshotAsync($"live-hunt-shared-gpu-initial-{width}.png");
+        var startup = await Page.EvaluateAsync<JsonElement>("() => window.__huntGpuRead()");
+        Assert.IsFalse(startup.GetProperty("renderingFailed").GetBoolean());
+        Assert.IsTrue(startup.GetProperty("gpuWorld").TryGetProperty("objects", out var objects) && objects.GetInt32() > 2,
+            startup.GetProperty("gpuWorld").ToString());
         var before = await Page.EvaluateAsync<double>("() => window.__huntGpuRead().player.x");
         await Page.Locator("canvas.game-canvas").FocusAsync();
         await Page.Keyboard.DownAsync("ArrowRight");
@@ -3415,7 +3425,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
     {
         var back = Page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" });
         if (await back.IsVisibleAsync()) await back.ClickAsync();
-        await Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^BEGIN (FIRST )?HUNT$") }).ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN HUNT", Exact = true }).ClickAsync();
         await ContinueThroughWorldGateAsync();
         await Expect(Page.GetByText("Choose your trail.", new() { Exact = true })).ToBeVisibleAsync();
 
