@@ -1,0 +1,544 @@
+{
+  "schemaVersion": 1,
+  "collection": "wet-forest-ground-material-variations-v1",
+  "status": "review-only-not-approved",
+  "sourceFormat": "webp-q92-from-png-concepts",
+  "lighting": "baked artist highlights exist; neutral albedo + material channels required before GPU use",
+  "tileability": "unverified; NOT runtime tiles",
+  "families": [
+    {
+      "id": "grass-moss",
+      "variants": [
+        {
+          "id": "grass-moss-01",
+          "file": "grass-moss/variant-01.webp",
+          "size": [
+            1254,
+            1254
+          ],
+          "sha256": "31efb437ff9e51da07e0beed53f0958227505fa9d7bca3d5b94a49050bf25002",
+          "sourcePngSha256": "271390a75462a81a1f805f17e45373ad42d3a1f009aef4b6c2beb410308d64eb",
+          "sourcePngName": "top_down_close_up_seamless_game_texture_style_sc_1_batch_1.png",
+          "approval": "unreviewed",
+          "seamless": false,
+          "lightNeutral": false
+        },
+        {
+          "id": "grass-moss-02",
+          "file": "grass-moss/variant-02.webp",
+          "size": [
+            1254,
+            1254
+          ],
+          "sha256": "973cf90a16beff3988ff71076a672fc770568420dcbc22a91f5b3afc26c8b533",
+          "sourcePngSha256": "51feda9bc98b97f0314322cbc386aadadd6b9dfaf4c6b192ad252b218dcdc154",
+          "sourcePngName": "top_down_close_up_seamless_tile_like_pixel_art_t_2_batch_2.png",
+          "approval": "unreviewed",
+          "seamless": false,
+          "lightNeutral": false
+        },
+        {
+          "id": "grass-moss-03",
+          "file": "grass-moss/variant-03.webp",
+          "size": [
+            1254,
+            1254
+          ],
+          "sha256": "477e548ef0208927650d47f81d1d24b506c0f9b9351c191a8c66e44c856845de",
+          "sourcePngSha256": "e850244bdf193f68371cd7d75005c517ef5b34c578f83d231cdfc5e64d5732b9",
+          "sourcePngName": "a_top_down_square_tileable_style_pixel_art_textu_3_batch_3.png",
+          "approval": "unreviewed",
+          "seamless": false,
+          "lightNeutral": false
+        },
+        {
+          "id": "grass-moss-04",
+          "file": "grass-moss/variant-04.webp",
+          "size": [
+            1254,
+            1254
+          ],
+          "sha256": "7cbaec097412c5628c49b210baf1883c3e6a15ddba0937a9fc461c3c881cf75f",
+          "sourcePngSha256": "767bcbe546b6f919fd7f8bb6cec0c9a8e1fe98690e65e756ee490f1e2a7b2461",
+          "sourcePngName": "top_down_square_seamless_looking_pixel_art_textu_4_batch_4.png",
+          "approval": "unreviewed",
+          "seamless": false,
+          "lightNeutral": false
+        },
+        {
+          "id": "grass-moss-05",
+          "file": "grass-moss/variant-05.webp",
+          "size": [
+            1254,
+            1254
+          ],
+          "sha256": "e18de7b82fdecb108c60fbe50604cacf97724988e0e1881f2f23bf2cc2169b0a",
+          "sourcePngSha256": "35a9d29495803bed3a5eefb349922fed578a3e418a6a01961697cff52373fea5",
+          "sourcePngName": "top_down_close_up_pixel_art_texture_of_a_wet_fores_5_batch_5.png",
+          "approval": "unreviewed",
+          "seamless": false,
+          "lightNeutral": false
+        },
+        {
+          "id": "grass-moss-06",
+          "file": "grass-moss/variant-06.webp",
+          "size": [
+            1254,
+            1254
+          ],
+          "sha256": "9eb981bc930f87db780c252eb3e3d8e492cce2237480efcc0d6fda3f60e95552",
+          "sourcePngSha256": "60ded5079e4610fe7b7d36017a2cb9ff8ef4fc749466214f344522cd02c30433",
+          "sourcePngName": "a_top_down_tileable_looking_high_detail_pixel_ar_6_batch_6.png",
+          "approval": "unreviewed",
+          "seamless": false,
+          "lightNeutral": false
+        }
+      ]
+    },
+    {
+      "id": "wet-mud",
+      "variants": [
+        {
+          "id": "wet-mud-01",
+          "file": "wet-mud/variant-01.webp",
+          "size": [
+            1254,
+            1254
+          ],
+          "sha256": "897b905e4635eac4810457b87a2317861b45b0566b096d727f8dd2b532a9b637",
+          "sourcePngSha256": "33319e675c751d4d932434ed0e4205aed0951fe6c1aa478bc9fb3ceef691f6e1",
+          "sourcePngName": "a_detailed_close_up_pixel_art_texture_top_down_t_1_batch_1.png",
+          "approval": "unreviewed",
+          "seamless": false,
+          "lightNeutral": false
+        },
+        {
+          "id": "wet-mud-02",
+          "file": "wet-mud/variant-02.webp",
+          "size": [
+            1254,
+            1254
+          ],
+          "sha256": "277ca43eecaf88c41e9c955db1d79d49ce15f805fd3d5386acbe2b66563df9cf",
+          "sourcePngSha256": "ee4751ec5c2ca0009691d13290e4adeaa8a9cf4b19e8ed2f597af3ed5a5994c6",
+          "sourcePngName": "a_close_top_down_seamless_looking_pixel_art_text_2_batch_2.png",
+          "approval": "unreviewed",
+          "seamless": false,
+          "lightNeutral": false
+        },
+        {
+          "id": "wet-mud-03",
+          "file": "wet-mud/variant-03.webp",
+          "size": [
+            1254,
+            1254
+          ],
+          "sha256": "cdba7e5185930e93b564b1bac351355b2fa82536f417e80e7a11e971a390f254",
+          "sourcePngSha256": "33b3347162e4e56a5f57355b9681ac38374e9df6198e79fcb91147d9286fd919",
+          "sourcePngName": "top_down_close_up_seamless_tile_like_texture_scene_3_batch_3.png",
+          "approval": "unreviewed",
+          "seamless": false,
+          "lightNeutral": false
+        },
+        {
+          "id": "wet-mud-04",
+          "file": "wet-mud/variant-04.webp",
+          "size": [
+            1254,
+            1254
+          ],
+          "sha256": "ca3ec1f29ae94f05a0dbf925321bba08779b674d795fc0ff53b81e868569742c",
+          "sourcePngSha256": "aeeca4b2808fb157792ba6ca726a5e58edc6a9c0ca54c9cf9209453b3d96042b",
+          "sourcePngName": "top_down_seamless_pixel_art_texture_tile_of_a_we_4_batch_4.png",
+          "approval": "unreviewed",
+          "seamless": false,
+          "lightNeutral": false
+        },
+        {
+          "id": "wet-mud-05",
+          "file": "wet-mud/variant-05.webp",
+          "size": [
+            1254,
+            1254
+          ],
+          "sha256": "aca1e763d16a5a82b3f3c3b641eb8fad0645976883c73f87e6f167fc38bcbed0",
+          "sourcePngSha256": "00f7dea217bfcd55d1ea97144c05d4e4344a077a03a1844f4a08bfdd5baf1e98",
+          "sourcePngName": "top_down_seamless_tiled_ground_texture_a_highly_5_batch_5.png",
+          "approval": "unreviewed",
+          "seamless": false,
+          "lightNeutral": false
+        },
+        {
+          "id": "wet-mud-06",
+          "file": "wet-mud/variant-06.webp",
+          "size": [
+            1254,
+            1254
+          ],
+          "sha256": "d671d4007fbc64b2f3fb8a46a3875dd251e909ed620dd82bba2ddbfe13e95f6a",
+          "sourcePngSha256": "9f20511da233aeee7a12c93ad55b8d129f543aa959d5826456a1fb78c029be64",
+          "sourcePngName": "a_detailed_close_up_top_down_pixel_art_texture_s_6_batch_6.png",
+          "approval": "unreviewed",
+          "seamless": false,
+          "lightNeutral": false
+        }
+      ]
+    },
+    {
+      "id": "old-paving",
+      "variants": [
+        {
+          "id": "old-paving-01",
+          "file": "old-paving/variant-01.webp",
+          "size": [
+            1312,
+            1199
+          ],
+          "sha256": "c817f6f5f9a588b4c0035f4cf2c78ffb966e7495639c0149812d8eb100baa2e5",
+          "sourcePngSha256": "0b870d356ef4bd6e8ae9f1b65175c47e10828a119ff9789cccd04d5d858777a3",
+          "sourcePngName": "top_down_pixel_art_texture_tile_of_an_old_weather.png",
+          "approval": "unreviewed",
+          "seamless": false,
+          "lightNeutral": false
+        },
+        {
+          "id": "old-paving-02",
+          "file": "old-paving/variant-02.webp",
+          "size": [
+            1305,
+            1206
+          ],
+          "sha256": "e4e1ae00d8211362b40978d4c0f41e6e368318e1c7203074b663ae60e4a907e8",
+          "sourcePngSha256": "16e12bc9c08cc42a4dfea474ca9de5df901699e9867cd039d2e3881edda3ee19",
+          "sourcePngName": "a_highly_detailed_pixel_art_isometric_less_top.png",
+          "approval": "unreviewed",
+          "seamless": false,
+          "lightNeutral": false
+        },
+        {
+          "id": "old-paving-03",
+          "file": "old-paving/variant-03.webp",
+          "size": [
+            1536,
+            1024
+          ],
+          "sha256": "f8799e69bc93104de954460f208c68488574742683ef26472e6a074dacab82e8",
+          "sourcePngSha256": "b32011e49b1ecacf16750f76b27fb764a3e0139c875b05761196e365a803fd1d",
+          "sourcePngName": "top_down_close_up_pixel_art_texture_tile_a_detai.png",
+          "approval": "unreviewed",
+          "seamless": false,
+          "lightNeutral": false
+        },
+        {
+          "id": "old-paving-04",
+          "file": "old-paving/variant-04.webp",
+          "size": [
+            1312,
+            1199
+          ],
+          "sha256": "58581a0d31aadfd1e5515fb25e9630ae8ba5e695dc661f302ca0f4105fb3be8e",
+          "sourcePngSha256": "0d84298a4b1b5705533724716abb3dacb09fc0aac9135a838e4c72c5e80a8320",
+          "sourcePngName": "a_top_down_detailed_pixel_art_2d_game_texture_t.png",
+          "approval": "unreviewed",
+          "seamless": false,
+          "lightNeutral": false
+        },
+        {
+          "id": "old-paving-05",
+          "file": "old-paving/variant-05.webp",
+          "size": [
+            1284,
+            1225
+          ],
+          "sha256": "c686240bb67aa6fec62d612d5cba7c3f9cd58cb3014b515de54802763b725038",
+          "sourcePngSha256": "4b0f004fc5f848a9f31cc143618d8ba2ca7fa05d0cd25e83968874c038347b03",
+          "sourcePngName": "top_down_detailed_pixel_art_style_scene_of_an_anci.png",
+          "approval": "unreviewed",
+          "seamless": false,
+          "lightNeutral": false
+        },
+        {
+          "id": "old-paving-06",
+          "file": "old-paving/variant-06.webp",
+          "size": [
+            1312,
+            1199
+          ],
+          "sha256": "6e50802e1c145b37fb76635500b0c47c93a657ba3b0af1f6cdded996264de53b",
+          "sourcePngSha256": "f7dfadbb07cee6a8f9bced5a966a971c74083eb3b90118473cfca1a2947ba693",
+          "sourcePngName": "a_detailed_top_down_pixel_art_style_image_of_an.png",
+          "approval": "unreviewed",
+          "seamless": false,
+          "lightNeutral": false
+        }
+      ]
+    },
+    {
+      "id": "trampled-earth",
+      "variants": [
+        {
+          "id": "trampled-earth-01",
+          "file": "trampled-earth/variant-01.webp",
+          "size": [
+            1312,
+            1199
+          ],
+          "sha256": "65f8e82798289d8bee203b3210433be56f8b35c118475e152c5585dcc8ab9374",
+          "sourcePngSha256": "e988aeadaee2e3de704db206f8f214d015f4cd4b6f808088b9f75e1f3bc76145",
+          "sourcePngName": "top_down_pixel_art_style_texture_ground_tile_a_sq.png",
+          "approval": "unreviewed",
+          "seamless": false,
+          "lightNeutral": false
+        },
+        {
+          "id": "trampled-earth-02",
+          "file": "trampled-earth/variant-02.webp",
+          "size": [
+            1312,
+            1199
+          ],
+          "sha256": "8ea7fc8e9d234525e61480f216d0625bbd14cfe23979159eecdf772c3f381805",
+          "sourcePngSha256": "bc40601141431e603a756019d95c9022e8c75c2db1666ff4b33a4e4b688a78a5",
+          "sourcePngName": "a_detailed_pixel_art_top_down_texture_tile_scene.png",
+          "approval": "unreviewed",
+          "seamless": false,
+          "lightNeutral": false
+        },
+        {
+          "id": "trampled-earth-03",
+          "file": "trampled-earth/variant-03.webp",
+          "size": [
+            1312,
+            1199
+          ],
+          "sha256": "8b0fe7b1bf91e41eafc87d93ab7a6d6c5143fe0b7ab10ca432d6df5925330b89",
+          "sourcePngSha256": "99044e1309246964eadd29ad247468816243caa988d69d5b2c08be31a8b6f82d",
+          "sourcePngName": "a_detailed_pixel_art_top_down_ground_terrain_tile.png",
+          "approval": "unreviewed",
+          "seamless": false,
+          "lightNeutral": false
+        },
+        {
+          "id": "trampled-earth-04",
+          "file": "trampled-earth/variant-04.webp",
+          "size": [
+            1254,
+            1254
+          ],
+          "sha256": "617d759bf17c22c14260c4a4ac3620fffa0a894d485f431d7784919fe2861360",
+          "sourcePngSha256": "f5d1e045a97db89cbbee703c27e6c01654d1fd0b904f17432eff82e86f0fd547",
+          "sourcePngName": "top_down_or_isometric_style_pixel_art_game_texture.png",
+          "approval": "unreviewed",
+          "seamless": false,
+          "lightNeutral": false
+        },
+        {
+          "id": "trampled-earth-05",
+          "file": "trampled-earth/variant-05.webp",
+          "size": [
+            1312,
+            1199
+          ],
+          "sha256": "4a88e14f3a8ad3ef79fd7e1d56f384179376e21db6a7ae7027cf0a37c3d48d5e",
+          "sourcePngSha256": "80eb3045f9a504002d29d06961a1a790cb2830ef9e4c3a67f908a2cd195b383d",
+          "sourcePngName": "top_down_pixel_art_pixel_texture_illustration_of.png",
+          "approval": "unreviewed",
+          "seamless": false,
+          "lightNeutral": false
+        },
+        {
+          "id": "trampled-earth-06",
+          "file": "trampled-earth/variant-06.webp",
+          "size": [
+            1254,
+            1254
+          ],
+          "sha256": "15787b7987c5202d0edf504d96a67cf74cd783be5b28c32be874d5175a565b9f",
+          "sourcePngSha256": "4ba2a77abec258c0a48df3b7b8cddce80c9f28278118c6ea033a86015b9b48c8",
+          "sourcePngName": "top_down_flat_pixel_art_texture_illustration_of_a.png",
+          "approval": "unreviewed",
+          "seamless": false,
+          "lightNeutral": false
+        }
+      ]
+    },
+    {
+      "id": "scorched-ground",
+      "variants": [
+        {
+          "id": "scorched-ground-01",
+          "file": "scorched-ground/variant-01.webp",
+          "size": [
+            1254,
+            1254
+          ],
+          "sha256": "4f202abd7818d7aafabcf6879f1f1587779292df02ed4c1c43af6a6463b4ffbb",
+          "sourcePngSha256": "1765e4791b2b889bd5abf4e35348c60869b8ead8d1b293ef8ee09e5ac793ac01",
+          "sourcePngName": "scorched_earth_ember_tile.png",
+          "approval": "unreviewed",
+          "seamless": false,
+          "lightNeutral": false
+        },
+        {
+          "id": "scorched-ground-02",
+          "file": "scorched-ground/variant-02.webp",
+          "size": [
+            1254,
+            1254
+          ],
+          "sha256": "2ec42dab59290227ffd221cf482ebbdfc2fe0d0b0ad8e12da25ec57721a55cbf",
+          "sourcePngSha256": "e8419348f8b41164e10430d83a1c1bd62986c7ae5351ec3e74114602ee47d2d1",
+          "sourcePngName": "scorched_lava_cracks_terrain_tile.png",
+          "approval": "unreviewed",
+          "seamless": false,
+          "lightNeutral": false
+        },
+        {
+          "id": "scorched-ground-03",
+          "file": "scorched-ground/variant-03.webp",
+          "size": [
+            1254,
+            1254
+          ],
+          "sha256": "34925f35644de48199f167fda36498d032a6211b2bd34c097c2ea5bdef3080a8",
+          "sourcePngSha256": "b5b00d0141af296e008983a1f8153372eea99dd267b3678d00365966f1ee8caa",
+          "sourcePngName": "scorched_ember_wasteland_tile.png",
+          "approval": "unreviewed",
+          "seamless": false,
+          "lightNeutral": false
+        },
+        {
+          "id": "scorched-ground-04",
+          "file": "scorched-ground/variant-04.webp",
+          "size": [
+            1254,
+            1254
+          ],
+          "sha256": "24339d6e80a13f63e23d2fcea46edec8bc73b79d24f0f6524a3ff415fc8db7b9",
+          "sourcePngSha256": "e3e6b13c9f64fbf32f12136fa68aba7fe2a69d12f82328784abc39a83deef74b",
+          "sourcePngName": "scorched_volcanic_lava_tile.png",
+          "approval": "unreviewed",
+          "seamless": false,
+          "lightNeutral": false
+        },
+        {
+          "id": "scorched-ground-05",
+          "file": "scorched-ground/variant-05.webp",
+          "size": [
+            1254,
+            1254
+          ],
+          "sha256": "517d2554437af1a98fd645d62815899779184707cfb97bd0944143979dfd4417",
+          "sourcePngSha256": "6e04e2b210736f349f3a6488c10a5e218f1d92b267626d46ae8b9c8fbf536978",
+          "sourcePngName": "scorched_lava_cracked_ground_tile.png",
+          "approval": "unreviewed",
+          "seamless": false,
+          "lightNeutral": false
+        },
+        {
+          "id": "scorched-ground-06",
+          "file": "scorched-ground/variant-06.webp",
+          "size": [
+            1254,
+            1254
+          ],
+          "sha256": "424a5bbffe9d5b814b2c72ad8748e63d8320623a8de5220dab82395794e2713d",
+          "sourcePngSha256": "d9b3cfe345d5c88cb1c76772473c5a4dbabafb6d9ea6394765b19b9f899d5635",
+          "sourcePngName": "scorched_emberroot_terrain_tile.png",
+          "approval": "unreviewed",
+          "seamless": false,
+          "lightNeutral": false
+        }
+      ]
+    },
+    {
+      "id": "marsh-wet-bank",
+      "variants": [
+        {
+          "id": "marsh-wet-bank-01",
+          "file": "marsh-wet-bank/variant-01.webp",
+          "size": [
+            1254,
+            1254
+          ],
+          "sha256": "5049fa0228f446bbf3d2f4d03b1462d06d8be9e9715a0deea3dfa0cef6d7c2ed",
+          "sourcePngSha256": "6506ddda7e0667e850b56c89e88ec81a123f48d27df91cd629286ac07df26530",
+          "sourcePngName": "muddy_marsh_puddle_tile.png",
+          "approval": "unreviewed",
+          "seamless": false,
+          "lightNeutral": false
+        },
+        {
+          "id": "marsh-wet-bank-02",
+          "file": "marsh-wet-bank/variant-02.webp",
+          "size": [
+            1254,
+            1254
+          ],
+          "sha256": "5dc41b8ebac408c797d68d0e86ec1660c7a72371889a11cd14bc6e59878b128d",
+          "sourcePngSha256": "091ade01316b083280f7ab17ea41e7e5c6575541144f8809ace2b85d1ce118e8",
+          "sourcePngName": "muddy_marshland_tile_with_reeds_and_lily_pads.png",
+          "approval": "unreviewed",
+          "seamless": false,
+          "lightNeutral": false
+        },
+        {
+          "id": "marsh-wet-bank-03",
+          "file": "marsh-wet-bank/variant-03.webp",
+          "size": [
+            1254,
+            1254
+          ],
+          "sha256": "e173873ac6af4ab9c7377575c751b23aae0af47040ae5760b52a5dfc195b8799",
+          "sourcePngSha256": "b90ed7ca175d81719b0ca7741d6d58a6d0cce66c7678fa706132f789dded8847",
+          "sourcePngName": "pixel_art_marshland_terrain_tile.png",
+          "approval": "unreviewed",
+          "seamless": false,
+          "lightNeutral": false
+        },
+        {
+          "id": "marsh-wet-bank-04",
+          "file": "marsh-wet-bank/variant-04.webp",
+          "size": [
+            1254,
+            1254
+          ],
+          "sha256": "b14a95fa124e4e2ea5f505ee0334f0f3e3b4de45511d52476a2663102eb561e8",
+          "sourcePngSha256": "60f32ca993597529d6b778f52c52846354909d1214d387bbbbe9df2e7797f0da",
+          "sourcePngName": "muddy_marsh_terrain_tile.png",
+          "approval": "unreviewed",
+          "seamless": false,
+          "lightNeutral": false
+        },
+        {
+          "id": "marsh-wet-bank-05",
+          "file": "marsh-wet-bank/variant-05.webp",
+          "size": [
+            1254,
+            1254
+          ],
+          "sha256": "3995a8d5f8fdcfbe5f84f5ed940f4842c64285d3ecbcaf284f12fd414a7e47b5",
+          "sourcePngSha256": "0d1c12e0cf1ed0670749b7cedbff82b7a07787219d4e2019041c26ae00b6b2a2",
+          "sourcePngName": "pixel_art_marshland_water_tile.png",
+          "approval": "unreviewed",
+          "seamless": false,
+          "lightNeutral": false
+        },
+        {
+          "id": "marsh-wet-bank-06",
+          "file": "marsh-wet-bank/variant-06.webp",
+          "size": [
+            1254,
+            1254
+          ],
+          "sha256": "5089811c59ae409a3142977794c0833e9f1aea839390c9bc274e02c5f48419d2",
+          "sourcePngSha256": "2c60e82831f09dce68b698cd5a48c4e50154e27a0b24bb3aca623933a54b1d0e",
+          "sourcePngName": "muddy_marsh_pixel_art_tile.png",
+          "approval": "unreviewed",
+          "seamless": false,
+          "lightNeutral": false
+        }
+      ]
+    }
+  ]
+}
