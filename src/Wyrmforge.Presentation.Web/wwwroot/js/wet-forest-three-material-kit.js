@@ -89,6 +89,42 @@ export function threeMaterialPlan(recipe, seed, width = MAP_WIDTH, height = MAP_
         previewOnly: true, materialIds: MATERIAL_IDS };
 }
 
+// Provisional art-review parameters, distinct from authored material maps.
+const ROUGHNESS = Object.freeze({
+    [MATERIAL_IDS.grass]: .97,
+    [MATERIAL_IDS.mud]: .47,
+    [MATERIAL_IDS.earth]: .84,
+});
+
+export function previewMaterialRoughness(id) {
+    return ROUGHNESS[id] ?? null;
+}
+
+/** Pack a provisional per-pixel roughness channel for the SAME G1 GPU mesh.
+ * Three.js samples the GREEN channel from a non-color roughnessMap texture.
+ * This deliberately avoids inventing additional road meshes or duplicating
+ * the terrain recipe. Values are design hypotheses pending artist approval. */
+export function bakeThreeMaterialRoughness(plan, canvasFactory) {
+    if (!plan || !plan.board || plan.board.length !== plan.columns * plan.rows
+        || !canvasFactory || !Number.isInteger(plan.width) || !Number.isInteger(plan.height))
+        return null;
+    const canvas = canvasFactory();
+    canvas.width = plan.width; canvas.height = plan.height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    ctx.imageSmoothingEnabled = false;
+    for (let row = 0; row < plan.rows; row++)
+        for (let col = 0; col < plan.columns; col++) {
+            const value = previewMaterialRoughness(plan.board[row * plan.columns + col]);
+            if (value === null) return null;
+            // 1 physical roughness sample per semantic tile; no color/albedo re-bake.
+            ctx.fillStyle = `rgb(0, ${Math.round(value * 255)}, 0)`;
+            ctx.fillRect(col * CELL, row * CELL,
+                Math.min(CELL, plan.width - col * CELL), Math.min(CELL, plan.height - row * CELL));
+        }
+    return canvas;
+}
+
 /** Reuse the *existing* six-swatch approved source/atlas. Only 3 surfaces are selected.
  * The cached canvas becomes the G1 shared renderer's albedo texture. Existing
  * baked highlights are temporary and NOT certified as neutral production maps. */
@@ -115,4 +151,6 @@ export const THREE_MATERIAL_REVIEW = Object.freeze({
     dynamicLighting: true,
     neutralAlbedoApproved: false,
     runtimeAdopted: false,
+    roughnessProvisional: true,
+    roughnessChannel: 'G / non-color texture / G1 shared renderer',
 });
