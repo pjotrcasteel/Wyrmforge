@@ -3,14 +3,14 @@
 // neutral albedo; its highlights must still be separately authored out.
 export const PLAZA_PAVING_POLYGON = Object.freeze([
     [552, 375], [706, 361], [729, 382], [844, 386], [960, 384],
-    [1023, 389], [1086, 428], [1117, 468], [1132, 517],
-    [1130, 556], [1148, 597], [1213, 634], [1253, 701],
-    [1198, 740], [1102, 728], [1042, 719], [1004, 742],
-    [943, 786], [770, 797], [624, 756], [524, 735],
-    [476, 686], [448, 623], [475, 548], [505, 483], [521, 423],
+    [1023, 389], [1080, 422], [1104, 473], [1120, 531],
+    [1110, 589], [1130, 640], [1140, 682], [1120, 709],
+    [1042, 700], [1004, 727], [943, 760], [770, 778],
+    [624, 746], [556, 722], [532, 670], [523, 622],
+    [525, 548], [516, 483], [521, 423],
 ]);
 
-export const TOWN_PAVING_BOUNDS = Object.freeze([448, 361, 805, 436]);
+export const TOWN_PAVING_BOUNDS = Object.freeze([516, 361, 624, 417]);
 const SIZE = Object.freeze([1672, 941]);
 
 export function validateTownPavingPolygon(polygon = PLAZA_PAVING_POLYGON) {
@@ -39,10 +39,24 @@ export function pavingPath() {
 }
 
 /** Complete, pixel-aligned complementary textures: no replacement art. */
-export function splitTownPavingReference(source) {
+export function splitTownPavingReference(source, foregroundCutouts = []) {
     if (source.naturalWidth !== SIZE[0] || source.naturalHeight !== SIZE[1])
         throw new Error('Approved Town source does not match canonical 1672x941 art');
     const path = pavingPath();
+    // Make one shared alpha mask. Excluding original traced well/board masks
+    // prevents painting roofs/posts as horizontal paving normals. Crucially,
+    // backdrop and paving use the very same alpha rather than two independent
+    // rasterizations that could create visible seams.
+    const mask = document.createElement('canvas');
+    mask.width = SIZE[0]; mask.height = SIZE[1];
+    const maskContext = mask.getContext('2d');
+    maskContext.fillStyle = '#ffffff';
+    maskContext.fill(path);
+    maskContext.globalCompositeOperation = 'destination-out';
+    for (const cutout of foregroundCutouts) {
+        if (!cutout || typeof cutout.path !== 'string') throw new TypeError('Missing authored foreground contour');
+        maskContext.fill(new Path2D(cutout.path));
+    }
     const textureCanvas = () => {
         const canvas = document.createElement('canvas');
         canvas.width = SIZE[0]; canvas.height = SIZE[1];
@@ -53,12 +67,10 @@ export function splitTownPavingReference(source) {
     const floor = textureCanvas();
     const outside = backdrop.getContext('2d');
     outside.globalCompositeOperation = 'destination-out';
-    outside.fillStyle = 'black';
-    outside.fill(path);
+    outside.drawImage(mask, 0, 0);
     const inside = floor.getContext('2d');
     inside.globalCompositeOperation = 'destination-in';
-    inside.fillStyle = 'white';
-    inside.fill(path);
+    inside.drawImage(mask, 0, 0);
     return { backdrop, floor };
 }
 
