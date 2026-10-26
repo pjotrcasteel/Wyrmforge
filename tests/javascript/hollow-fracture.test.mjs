@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {
     FRACTURE_DIRECTIONS,FRACTURE_FRAMES,isApprovedHollowFractureManifest,
-    eligibleHollowFracture,createHollowFractureAssets,hollowFractureEmitters,hollowFractureCanvasLights
+    eligibleHollowFracture,createHollowFractureAssets,hollowFractureEmitters,hollowFractureCanvasLights,withHollowFractureLightingFrame
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/hollow-fracture.js';
 import {validateSnapshot,selectLights} from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/registry.js';
 
@@ -105,8 +105,13 @@ test('fracture ember light shares generic GPU contract and projects into the leg
     assert.deepEqual(hollowFractureEmitters(corpses,5.62),impact,'same visual time must be deterministic');
     assert.equal(impact[0].id,'hollow-fracture:40:ember');
     assert.equal(impact[0].castsShadow,false);
-    const scene=validateSnapshot({version:1,time:5.62,lights:impact,materials:[],objects:[],
-        environment:{ambient:0,color:'#000000',exposure:1,emission:false}});
+    const original={version:1,time:5.62,lights:[],materials:[],objects:[],
+        environment:{ambient:0,color:'#000000',exposure:1,emission:false}};
+    const framed=withHollowFractureLightingFrame(original,impact);
+    assert.equal(original.lights.length,0,'presentation must never mutate C# authoritative lights');
+    assert.equal(framed.lights.length,1);
+    assert.equal(withHollowFractureLightingFrame(original,[]),original);
+    const scene=validateSnapshot(framed);
     assert.equal(selectLights(scene).length,1);
     const canvas=hollowFractureCanvasLights(impact);
     assert.equal(canvas[0].x,200);assert.equal(canvas[0].y,125);
@@ -123,6 +128,7 @@ test('production uses original source atlases and never resurrects the rejected 
     assert.ok(source.includes("deathStyle:fracture.ready() && eligibleHollowFracture"));
     assert.ok(source.includes("fracture.draw(ctx,corpse,age,reducedMotion)"));
     assert.ok(arena.includes('hollowFractureCanvasLights(fractureEmitters)'));
+    assert.ok(arena.includes('withHollowFractureLightingFrame(snapshot.lighting,fractureEmitters)'));
     assert.ok(arena.includes('hollowFractureEmitters(state.hollow.corpses,state.hollow.clock'));
     assert.ok(!source.includes('drawHollowBoneBurst'));
     assert.ok(!ours.includes('Math.random'));
