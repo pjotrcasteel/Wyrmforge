@@ -19,7 +19,7 @@ public sealed partial class RunSimulation
             throw new ArgumentException("This Ascendant has no implemented encounter.", nameof(setup));
 
         developmentHunt = true;
-        if (setup.AdaptiveAgents && setup.Wyrm == DragonId.Ashfang) ashfangAgent = new(setup.Seed);
+        adaptiveAshfangEnabled = setup.AdaptiveAgents;
         developmentInvulnerable = setup.Invulnerable;
         while (depthState.Depth < 2) depthState.PushDeeper();
         mapState = CreateSeededMapState(depthState.Depth);

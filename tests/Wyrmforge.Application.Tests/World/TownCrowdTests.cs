@@ -10,6 +10,27 @@ public sealed class TownCrowdTests
         TownNavigationMap.FromJson(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "night-navigation.json")));
 
     [TestMethod]
+    public void AgentActivities_FourteenResidents_KeepFeetSeparatedAndReactToClosedBuildings()
+    {
+        var crowd = new TownCrowd(Scene(), 205, 14, new[] { "build", "forge", "codex", "legends" }, agentActivities: true);
+        for (var tick = 0; tick < 800; tick++)
+        {
+            if (tick == 300) crowd.SetOpenBuildings([]);
+            crowd.Step(TimeSpan.FromMilliseconds(100));
+            Assert.IsTrue(crowd.LastStepPathSearches <= 1);
+            var present = crowd.Citizens.Where(c => c.IsPresent).ToArray();
+            for (var i = 0; i < present.Length; i++)
+                for (var j = i + 1; j < present.Length; j++)
+                {
+                    var dx = present[i].Position.X - present[j].Position.X;
+                    var dy = present[i].Position.Y - present[j].Position.Y;
+                    Assert.IsTrue(dx * dx + dy * dy >= 399.9, $"Tick {tick}: citizens {present[i].Id}/{present[j].Id} at {present[i].Position}/{present[j].Position}.");
+                }
+            if (tick >= 300) Assert.IsTrue(crowd.Citizens.All(c => c.WorkBuildingId is null && c.AssignedBuildingId is null));
+        }
+    }
+
+    [TestMethod]
     public void AgentActivities_SeededCrowd_PreservesReservationsAndPathBudget()
     {
         var first = new TownCrowd(Scene(), 451, agentActivities: true);

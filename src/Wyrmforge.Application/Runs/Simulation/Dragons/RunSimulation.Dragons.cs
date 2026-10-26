@@ -198,6 +198,7 @@ public sealed partial class RunSimulation
 
     private void SpawnDragon(DragonDefinition definition, double width, double height)
     {
+        ashfangAgent = adaptiveAshfangEnabled && definition.Id == DragonId.Ashfang ? new(agentFoundationSeed) : null;
         ashfangFlight.Reset();
         ashfangBehavior.Reset();
         ashfangEffects.Clear();

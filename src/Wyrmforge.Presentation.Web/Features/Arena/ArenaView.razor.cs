@@ -33,6 +33,7 @@ public partial class ArenaView : IAsyncDisposable
     private bool ChoosingPrimary => simulation is { PrimaryCommitted: false };
 
     [Inject] public RunSimulationFactory SimulationFactory { get; set; } = null!;
+    [Inject] public NavigationManager Navigation { get; set; } = null!;
     [Inject] public IJSRuntime JavaScript { get; set; } = null!;
     [Parameter, EditorRequired] public IReadOnlySet<string> SelectedNodes { get; set; } = new HashSet<string>();
     [Parameter, EditorRequired] public ForgeProgressionState Progression { get; set; } = null!;
@@ -98,7 +99,9 @@ public partial class ArenaView : IAsyncDisposable
 
     protected override void OnInitialized()
     {
-        simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt, researchLead: ResearchLead, preparedMutations: PreparedMutations, fireballMutations: FireballMutations, contextualSpell: ContextualSpell, region: Region, regionOpening: RegionOpening, hunt: Hunt, amplifierAssignments: MutationAmplifierAssignments, fireballLevel: FireballLevel);
+        var agentPreview = new Uri(Navigation.Uri).Query.TrimStart('?').Split('&')
+            .Any(value => string.Equals(value, "agents=1", StringComparison.OrdinalIgnoreCase));
+        simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt, researchLead: ResearchLead, preparedMutations: PreparedMutations, fireballMutations: FireballMutations, contextualSpell: ContextualSpell, region: Region, regionOpening: RegionOpening, hunt: Hunt, amplifierAssignments: MutationAmplifierAssignments, fireballLevel: FireballLevel, agents: agentPreview ? new(true, true) : null);
         if (RewardCache) simulation.OpenRewardCache();
     }
 

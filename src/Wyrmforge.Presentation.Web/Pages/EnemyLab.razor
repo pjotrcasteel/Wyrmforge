@@ -187,7 +187,11 @@
     private void InspectAgents()
     {
         var states = simulation?.InspectEnemyAgents();
-        agentPerformance = System.Text.Json.JsonSerializer.Serialize(simulation?.InspectAgentPerformance());
+        agentPerformance = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            Cost = simulation?.InspectAgentPerformance(), Pack = simulation?.InspectAgentPack(),
+            RecentTraces = states?.Select(AgentTraceMetrics.From).ToArray()
+        });
         agentSummary = states is null ? "Encounter not started." : states.Count == 0 ? "No supported live AI0 agents." :
             string.Join(" · ", states.Select(s => $"{s.Identity.Archetype}: {s.CurrentAction?.Goal} / {s.CurrentAction?.Action} — {s.CurrentAction?.Reason}; executor: {s.LastResult?.Reason}"));
         agentInspection = System.Text.Json.JsonSerializer.Serialize(states, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });

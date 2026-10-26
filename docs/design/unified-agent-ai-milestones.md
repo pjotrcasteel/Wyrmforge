@@ -23,7 +23,7 @@ Each agent has a stable identity, archetype/faction, sensing profile, short-term
 
 ### AI0 — Agent foundation and simulation contract
 
-**Implementation checkpoint, 25 October 2026:** [PR #348](https://github.com/pjotrcasteel/Wyrmforge/pull/348) supplies the common C# core, Hollow/Mire Hound compatibility adapters, replay tests and real enemy-lab inspector. Local exit evidence is recorded in [AI0 foundation](../engineering/ai0-foundation.md). This is opt-in and not yet merged; CI remains a merge gate. AI1–AI6 remain open.
+**Implementation checkpoint, 25 October 2026:** [PR #348](https://github.com/pjotrcasteel/Wyrmforge/pull/348) supplies the common C# core, Hollow/Mire Hound compatibility adapters, replay tests and real enemy-lab inspector. Local exit evidence is recorded in [AI0 foundation](../engineering/ai0-foundation.md). AI0 and AI1 are merged (#348, #362), with opt-in rollout. AI2–AI6 implementation continues in [PR #364](https://github.com/pjotrcasteel/Wyrmforge/pull/364). See [implementation and acceptance evidence](../engineering/ai2-ai6-implementation.md); automated implementation evidence is distinct from mobile/gameplay acceptance.
 
 - Inventory existing Town NPC and enemy/Wyrm behavior paths; define migration/adapters without replacing live behavior prematurely.
 - Build common agent identity, lifecycle, blackboard, observations, goal/action interfaces, seeded scheduler and deterministic test harness.

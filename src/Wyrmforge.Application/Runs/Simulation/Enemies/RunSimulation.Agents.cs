@@ -7,6 +7,15 @@ public sealed partial class RunSimulation
 {
     private bool agentFoundationEnabled;
     private AgentTier? agentTier;
+    private bool agentArchetypeProfiles;
+    private bool adaptiveAshfangEnabled;
+    internal void ConfigureAgents(AgentRolloutOptions? options, int seed)
+    {
+        agentFoundationSeed = seed;
+        agentFoundationEnabled = agentPerceptionEnabled = agentArchetypeProfiles = options?.Enemies == true;
+        agentTier = agentArchetypeProfiles ? AgentTier.Tactical : null;
+        adaptiveAshfangEnabled = options?.AdaptiveAshfang == true;
+    }
     private readonly PackCoordinator agentPack = new();
     private readonly AgentPerformanceMetrics agentPerformance = new();
     public AgentPerformanceSnapshot InspectAgentPerformance() => agentPerformance.Inspect();
@@ -53,7 +62,9 @@ public sealed partial class RunSimulation
     {
         if (!agentFoundationEnabled || enemy.Health <= 0 || enemy.Kind is not (EnemyKind.Hollow or EnemyKind.MireHound)) return null;
         if (!enemyAgents.TryGetValue(enemy.Id, out var agent))
-            enemyAgents.Add(enemy.Id, agent = new(enemy, agentFoundationSeed, agentTier));
+            enemyAgents.Add(enemy.Id, agent = new(enemy, agentFoundationSeed, agentArchetypeProfiles
+                ? enemy.Kind == EnemyKind.Hollow ? AgentTier.Instinctive : enemy.IsElite ? AgentTier.Adaptive : AgentTier.Tactical
+                : agentTier));
         return agent;
     }
 }

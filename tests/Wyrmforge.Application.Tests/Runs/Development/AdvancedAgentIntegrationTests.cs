@@ -21,6 +21,27 @@ public sealed class AdvancedAgentIntegrationTests
             new(EnemyKind.MireHound, 42, 800, 600) { Intelligence = tier, Count = count });
 
     [TestMethod]
+    public void RegularHunt_RolloutFlag_PreservesDefaultAndUsesArchetypeCapabilities()
+    {
+        var factory = new RunSimulationFactory(new SeededRandomSource(1));
+        var legacy = factory.Create(new HashSet<string>(), seed: 42);
+        var opted = factory.Create(new HashSet<string>(), seed: 42, agents: new(true, true));
+        var field = typeof(RunSimulation).GetField("enemies", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        foreach (var run in new[] { legacy, opted })
+        {
+            var enemies = (List<EnemyState>)field.GetValue(run)!;
+            enemies.Add(new(1001, new(300, 200), 13, 100, 40, EnemyKind.Hollow));
+            enemies.Add(new(1002, new(400, 200), 13, 100, 40, EnemyKind.MireHound));
+            run.ChoosePrimary(SpellId.FireBolt);
+            var update = typeof(RunSimulation).GetMethod("UpdateEnemies", BindingFlags.Instance | BindingFlags.NonPublic)!;
+            for (var i = 0; i < 10; i++) update.Invoke(run, new object[] { .025 });
+        }
+        Assert.AreEqual(0, legacy.InspectEnemyAgents().Count);
+        Assert.AreEqual("Instinctive", opted.InspectEnemyAgents().Single(a => a.Identity.Id == 1001).Observations.Single(f => f.Key == "tier").Value);
+        Assert.AreEqual("Tactical", opted.InspectEnemyAgents().Single(a => a.Identity.Id == 1002).Observations.Single(f => f.Key == "tier").Value);
+    }
+
+    [TestMethod]
     [DataRow(1)]
     [DataRow(2)]
     public void AdaptiveBoss_ActualPhases_ReplayWithoutBypassingCommitments(int phase)
