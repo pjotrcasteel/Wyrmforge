@@ -1,0 +1,41 @@
+name: Cancel superseded Hunt GPU checks
+
+on:
+  push:
+    branches: [fix/hunt-ground-repetition]
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: hunt-gpu-check-cleanup
+  cancel-in-progress: true
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Cancel only obsolete runs on this task branch
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const branch = 'fix/hunt-ground-repetition';
+            const runs = await github.paginate(github.rest.actions.listWorkflowRunsForRepo, {
+              owner: context.repo.owner, repo: context.repo.repo, branch, per_page: 100
+            });
+            const active = new Set(['queued', 'in_progress', 'waiting', 'pending', 'requested']);
+            for (const run of runs) {
+              if (run.head_branch !== branch || run.head_sha === context.sha ||
+                  run.id === context.runId || !active.has(run.status)) continue;
+              try {
+                await github.rest.actions.cancelWorkflowRun({
+                  owner: context.repo.owner, repo: context.repo.repo, run_id: run.id
+                });
+                core.info('Cancelled superseded run ' + run.id + ' (' + run.name + ')');
+              } catch (error) {
+                if (error.status !== 409 && error.status !== 422) throw error;
+                core.info('Run already finished: ' + run.id);
+              }
+            }
