@@ -473,8 +473,11 @@ export function drawWetForestGround(ctx, plan, approvedAtlas = null) {
         }
         ctx.globalAlpha = 1;
     }
-    // Distinct ground-only history around one physical C# story landmark.
-    groundSite(ctx, recipe.site, recipe.siteX * width, recipe.siteY * height, seed);
+    // The PR #340 paintings already supply worn soil, footprints and rocks.
+    // Do not stamp the old synthetic rectangular site marks over that artwork.
+    // Keep them only when the original fallback/atlas is being rendered.
+    if (!sourcePainted)
+        groundSite(ctx, recipe.site, recipe.siteX * width, recipe.siteY * height, seed);
     for (const mark of createWetForestScorchPlan(
         plan.forestProps, seed, width, height, clamp(plan.corruption || 0, 0, 1), plan.element)) {
         ctx.globalAlpha = mark.alpha;
