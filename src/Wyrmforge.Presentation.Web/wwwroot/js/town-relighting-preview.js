@@ -196,7 +196,7 @@ export function configureTownPreview(canvas, options) {
         typeof state.npcEnabled !== 'boolean')
         throw new RangeError('Invalid Town proof control');
     const manifest = structuredClone(state.manifest);
-    const citizenY = 483 + state.npcProgress * 140;
+    const citizenY = 513 + state.npcProgress * 75;
     const actor = projectTownCitizens([{ id: 1, feet: [864, citizenY], isPresent: true }],
         townPreviewProjection, axes().toward.toArray(), { enabled: state.npcEnabled });
     manifest.layers.push(...actor.layers);
@@ -223,6 +223,7 @@ export function configureTownPreview(canvas, options) {
         if (litPixels) throw new Error(`Zero-light proof leaked ${litPixels} world pixels`);
     } else delete canvas.dataset.zeroBlack;
     canvas.dataset.npcFeetY = state.npcEnabled ? citizenY.toFixed(2) : 'hidden';
+    canvas.dataset.npcPass = state.npcEnabled ? (citizenY >= 572 ? 'front' : 'behind') : 'hidden';
     canvas.dataset.npcShadowCasters = actor.layers.filter(a => a.castsShadow).length.toString();
     canvas.dataset.profile = state.mode;
     canvas.dataset.fixtureCount = snapshot.lights.filter(l => l.enabled).length.toString();
