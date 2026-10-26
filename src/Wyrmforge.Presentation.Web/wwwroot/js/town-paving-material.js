@@ -71,6 +71,14 @@ export function splitTownPavingReference(source, foregroundCutouts = []) {
     const inside = floor.getContext('2d');
     inside.globalCompositeOperation = 'destination-in';
     inside.drawImage(mask, 0, 0);
+    // A seam cannot be signed off on an image alone. Confirm the two atlas
+    // planes are an exact alpha partition at every approved source pixel.
+    const backAlpha = outside.getImageData(0, 0, SIZE[0], SIZE[1]).data;
+    const floorAlpha = inside.getImageData(0, 0, SIZE[0], SIZE[1]).data;
+    for (let i = 3; i < backAlpha.length; i += 4) {
+        const sum = backAlpha[i] + floorAlpha[i];
+        if (Math.abs(sum - 255) > 1) throw new Error('Town paving/backdrop mask seam at pixel ' + ((i - 3) / 4));
+    }
     return { backdrop, floor };
 }
 
