@@ -78,6 +78,15 @@ The adapter's `artBounds` is purely visual indexing; it **does not** auto-create
 - Only cut over production Town with explicit owner visual approval and rollback retained; G5 owns final universe-wide renderer cutover.
 - **Exit:** CI plus **real** 320px/390px and physical phone evidence; no declaration of universal lighting while other world paths bypass it.
 
+## Implementation checkpoint — neutral paving candidate and GPU actor depth (26 October 2026)
+
+- **T0:** 21 original files protected by Git blob hashes; actual legacy 320/390px screenshot matrix is still incomplete.
+- **T1:** `town-relightable-scene.js` accepts source-aligned layers, authored materials, C#-owned fixture predicates and zero-light snapshots in the shared G1–G3 engine. Paving and backdrop use binary complementary masks.
+- **T2 candidate:** `town-neutral-albedo.js` processes **only** the original Town paving derivative, estimates low-frequency painted illumination in linear color, and preserves fine stone variation. The original, unmodified painting remains selectable using `paving=source` and is never overwritten.
+- **T2 shadow/actor:** eight authored original foreground contours cast via shallow invisible volumes; current production NPC CSS silhouette (16×30 pixels) receives/casts light in the isolated proof. A read-only converter can consume real C# `TownCitizen` feet from the existing DOM, but production actors are **not** migrated.
+- **Direct checks:** pure-material 160×40 fixture broad illumination difference fell about 48% with high-frequency detail retained; full 624×417 candidate takes ~0.9 s in isolated JS, **not a physical iOS/Android performance measurement**. Scripted 14-NPC, stable ID and depth tests are present. Actual neutral material browser captures require completion of the newest GitHub Actions run.
+- **Signoff still required:** compare day/night, source/neutral, zero-light, well foreground and actor at 320/390px; check halo, material seams, texture retention, shadows, mobile performance, source-color fidelity and original gameplay. Only an owner-reviewed capture advances T2. Do not reinterpret this algorithm as a finished hand-authored neutral material.
+
 ## Workstream boundaries / evidence
 
 This is a Town art/material/renderer integration project only. Do not touch the wizard implementation, enemy AI milestones, Hunt behavior or competing TownV2 PRs. All changes must include implementation/test hashes and reviewable game screenshots where visuals change. Passing JS/unit tests proves the contract, **not** the visual match.
