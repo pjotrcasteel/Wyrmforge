@@ -304,6 +304,8 @@
 .game-shell.refuge-home .refuge-canonical-scene[data-town-gpu-preview="ready"] .refuge-town-gpu-canvas {
     visibility:visible;
 }
+.game-shell.refuge-home .refuge-canonical-scene[data-town-gpu-preview="ready"] .refuge-town-nexus-school-art,
+.game-shell.refuge-home .refuge-canonical-scene[data-town-gpu-preview="ready"] .refuge-town-vacant-layer,
 .game-shell.refuge-home .refuge-canonical-scene[data-town-gpu-preview="ready"] .refuge-town-night-base,
 .game-shell.refuge-home .refuge-canonical-scene[data-town-gpu-preview="ready"] .refuge-town-citizen,
 .game-shell.refuge-home .refuge-canonical-scene[data-town-gpu-preview="ready"] .refuge-town-scenery-foreground {
