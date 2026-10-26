@@ -36,6 +36,14 @@ test('Only roof and structural posts cast real GPU shadows; stone floor and plan
     assert.deepEqual(Object.keys(WELL_STAGE4_CASTER_PATHS),
         ['roof', 'leftPost', 'rightPost', 'boardLeftPost', 'boardRightPost']);
     assert.equal(WELL_STAGE4_CASTER_PATHS.roof.length, 10);
+    assert.deepEqual(WELL_STAGE4_CASTER_PATHS.rightPost,
+        [[190, 76], [203, 77], [203, 138], [190, 135]],
+        'Right support caster must follow solid timber rather than transparent lantern space');
+    assert.deepEqual(WELL_STAGE4_CASTER_PATHS.boardLeftPost,
+        [[26, 78], [37, 76], [38, 149], [27, 153]]);
+    assert.deepEqual(WELL_STAGE4_CASTER_PATHS.boardRightPost,
+        [[90, 45], [99, 47], [97, 152], [89, 150]]);
+
     assert.ok(WELL_STAGE4_CASTER_PATHS.roof.every(([, y]) => y >= 18),
         'No giant roof shadow cast by polygons extending into empty sky');
     const area = polygon => Math.abs(polygon.reduce((a, [x, y], i) => {
