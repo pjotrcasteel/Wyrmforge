@@ -1,3 +1,5 @@
+> **SUPERSEDED 26 October 2026:** The owner cancelled the full 3D Town rebuild. This file is preserved as historical context only. Use [Town 2.5D relighting milestones](town-2p5d-relighting-milestones.md) for all current T0–T6 work. No Blender/3D building deliverable is required.
+
 # WyrmForge — Full 3D Town Rebuild Milestones (T0–T6)
 
 **Status:** Approved architectural direction; implementation pending visual gates.
