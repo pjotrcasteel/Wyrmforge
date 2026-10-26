@@ -15,10 +15,10 @@ const enabled = list => list.filter(light => light.enabled);
 const config = (isolation, unlocks = unlocked, extra = {}) =>
     configureTownLightDomains(fixtures(), { isolation, unlocks, ...extra });
 
-test('Five exclusive domains route exactly eight lights through the shared GPU registry', () => {
+test('Five exclusive domains route twenty-two local lamps through the shared GPU registry', () => {
     assert.deepEqual(TOWN_LIGHT_DOMAINS, ['common', 'nexus', 'blacksmith', 'codex', 'hall']);
     const all = fixtures();
-    assert.equal(all.length, 8);
+    assert.equal(all.length, 22);
     assert.equal(new Set(all.map(x => x.id)).size, all.length);
     for (const light of all) {
         assert.equal(light.ownerId, 'town-' + light.domain);
@@ -27,7 +27,7 @@ test('Five exclusive domains route exactly eight lights through the shared GPU r
         assert.ok(!/banner|flag|cloth/i.test(light.id));
     }
     assert.equal(selectLights(compileTownLightingSnapshot(
-        townPreviewManifest({ domains: true }), { mode: 'night' }), 8, 8).length, 8);
+        townPreviewManifest({ domains: true }), { mode: 'night' }), 8, 24).length, 22);
 });
 test('Each domain isolates only its own sources; common never enables chimney', () => {
     for (const domain of TOWN_LIGHT_DOMAINS) {
@@ -39,7 +39,8 @@ test('Each domain isolates only its own sources; common never enables chimney', 
     assert.equal(enabled(config('off')).length, 0);
 });
 test('Vacancy suppresses all four building groups and leaves public square only', () => {
-    assert.deepEqual(enabled(config('combined', vacant)).map(x => x.domain), ['common', 'common']);
+    assert.equal(enabled(config('combined', vacant)).length, 10);
+    assert.ok(enabled(config('combined', vacant)).every(x => x.domain === 'common'));
     for (const key of Object.keys(vacant)) {
         const state = { ...unlocked, [key]: false };
         assert.ok(enabled(config('combined', state)).every(light =>
