@@ -41,7 +41,7 @@ jobs:
         run: python3 tools/art/check_town_sources.py
 
       - name: Check new Town GPU projection contracts
-        run: node --test tests/javascript/town-relighting-contract.test.mjs tests/javascript/town-relighting-preview.test.mjs
+        run: node --test tests/javascript/town-relighting-contract.test.mjs tests/javascript/town-relighting-preview.test.mjs tests/javascript/town-paving-material.test.mjs
 
       - name: Start isolated static GPU review
         run: |
@@ -58,14 +58,21 @@ jobs:
         run: |
           set -euo pipefail
           BROWSER=$(command -v google-chrome || command -v chromium || command -v chromium-browser)
-          FLAGS="--headless=new --no-sandbox --disable-dev-shm-usage --enable-unsafe-swiftshader --use-gl=angle --use-angle=swiftshader --hide-scrollbars --force-device-scale-factor=1 --window-size=1120,870 --virtual-time-budget=12000"
-          for mode in day night zero; do
-            "$BROWSER" $FLAGS --screenshot="artifacts/town-2p5d/${mode}-gpu-proof.png" \
-              "http://127.0.0.1:4179/town-relighting-preview.html?mode=$mode" > "artifacts/town-2p5d/${mode}.log" 2>&1
-            "$BROWSER" $FLAGS --dump-dom \
-              "http://127.0.0.1:4179/town-relighting-preview.html?mode=$mode" > "artifacts/town-2p5d/${mode}.html" 2>> "artifacts/town-2p5d/${mode}.log"
-            grep -q 'data-ready="true"' "artifacts/town-2p5d/${mode}.html" || { echo "GPU readiness missing for $mode"; exit 1; }
-            test -s "artifacts/town-2p5d/${mode}-gpu-proof.png"
+          FLAGS="--headless=new --no-sandbox --disable-dev-shm-usage --enable-unsafe-swiftshader --use-gl=angle --use-angle=swiftshader --hide-scrollbars --force-device-scale-factor=1 --virtual-time-budget=12000"
+          for viewport in 320x760 390x844 1120x870; do
+            width="${viewport%x*}"
+            height="${viewport#*x}"
+            for mode in day night zero; do
+              base="artifacts/town-2p5d/${mode}-${width}"
+              url="http://127.0.0.1:4179/town-relighting-preview.html?mode=$mode"
+              "$BROWSER" $FLAGS --window-size="$width,$height" --screenshot="${base}-gpu-proof.png" "$url" > "${base}.log" 2>&1
+              "$BROWSER" $FLAGS --window-size="$width,$height" --dump-dom "$url" > "${base}.html" 2>> "${base}.log"
+              grep -q 'data-ready="true"' "${base}.html" || { echo "GPU readiness missing for $mode ($width)"; exit 1; }
+              test -s "${base}-gpu-proof.png"
+              if [ "$mode" = zero ]; then
+                grep -q 'data-zero-black="true"' "${base}.html" || { echo "Zero-light framebuffer leaked ($width)"; exit 1; }
+              fi
+            done
           done
           echo "These are isolated GPU-lab screenshots of approved painted reference texture, NOT T2 final art."
 
