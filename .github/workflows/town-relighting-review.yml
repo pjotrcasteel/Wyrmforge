@@ -186,6 +186,14 @@ jobs:
             --filter 'FullyQualifiedName~TownGpuAcceptanceTests' \
             --logger 'trx;LogFileName=town-acceptance.trx'
 
+      - name: Create labeled actual-game mobile comparison PNGs
+        if: always()
+        run: |
+          python3 -m venv /tmp/wyrmforge-town-sheet
+          /tmp/wyrmforge-town-sheet/bin/pip install --quiet Pillow
+          /tmp/wyrmforge-town-sheet/bin/python tools/art/town_acceptance_sheet.py \
+            artifacts/town-in-game --width 320 --width 390
+
       - name: Upload playable Town acceptance screenshots
         if: always()
         uses: actions/upload-artifact@v4
