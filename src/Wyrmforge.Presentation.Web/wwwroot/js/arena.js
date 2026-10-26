@@ -1,3 +1,4 @@
+import { HuntGpuWorld } from './arena-gpu-world.js';
 import { preloadFireballV5 } from './arena-fireball-v5.js';
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
 import { attachArenaInput, getArenaMovement, getArenaAim } from './arena-input.js';
@@ -42,6 +43,7 @@ export function initializeArena(canvas, dotNetReference) {
     const state = createState(canvas, dotNetReference);
     arenas.set(canvas, state);
     state.detachInput = attachArenaInput(state);
+    try { if (new URLSearchParams(location.search).get('arenaGpu') === '1') state.gpuWorld = new HuntGpuWorld(); } catch (error) { state.gpuError = String(error); }
     const now = performance.now();
     state.lastSimulationTimestamp = now;
     state.performanceWindowStarted = now;
@@ -85,6 +87,7 @@ export function readArenaDiagnostics(canvas) {
         hunt: state.latestSnapshot?.hunt ?? null,
         performance: { fps:state.displayFps, simulationHz:state.displaySimulationHz, simulationMilliseconds:state.displaySimulationMilliseconds, bridgeMilliseconds:state.displayBridgeMilliseconds },
         renderingFailed: Boolean(state.renderingFailed),
+        gpuWorld: state.gpuWorld?.engine.diagnostics() ?? { error: state.gpuError ?? null },
         sharedLighting: state.fractureGpuFrame ?? state.latestSnapshot?.lighting ?? null,
         hollowFractureGpuEmitters: state.fractureGpuEmitters ?? [],
         wetForestGround: state.latestSnapshot?.environment?.wetForest
@@ -99,6 +102,7 @@ export function disposeArena(canvas) {
     state.active = false;
     cancelAnimationFrame(state.animationFrame);
     state.detachInput?.();
+    state.gpuWorld?.dispose();
     arenas.delete(canvas);
 }
 
@@ -226,7 +230,7 @@ function drawWaiting(state, width, height) {
 }
 
 function draw(state, snapshot, width, height) {
-    const ctx = state.context;
+    let ctx = state.context;
     ctx.globalAlpha=1;ctx.filter='none';ctx.globalCompositeOperation='source-over';
     const danger = playerDangerPresentation(state.playerDanger, snapshot, performance.now(), state.reducedMotion.matches);
     const camera = resolveArenaCamera(snapshot.world, snapshot.player, width, height);
@@ -306,7 +310,20 @@ function draw(state, snapshot, width, height) {
         { kind: 'mage', depth: snapshot.player.y + (snapshot.player.radius || 0) },
         ...getArenaCloisterElevations(snapshot.environment, worldWidth, worldHeight, visualSeconds),
     ];
+    const gpu = snapshot.lighting && state.gpuWorld;
+    if (gpu) gpu.begin(ctx, camera, width, height);
+    const worldContext = ctx;
     for (const layer of sortSceneDepthLayers(depthLayers)) {
+        let tile, tileX, tileY, tileSize;
+        if (gpu) {
+            const actor = layer.enemy ?? layer.dragon ?? snapshot.player;
+            tileSize = layer.kind === 'masonry' ? Math.max(width, height) : Math.max(160, Math.min(768, (actor.radius || 20) * 12));
+            tileX = actor.x - tileSize / 2; tileY = actor.y - tileSize * .75;
+            tile = state.gpuActorScratch ??= document.createElement('canvas');
+            tile.width = tile.height = Math.ceil(tileSize);
+            ctx = tile.getContext('2d'); ctx.imageSmoothingEnabled = false;
+            ctx.translate(-tileX, -tileY);
+        }
         if (layer.kind === 'masonry') {
             drawArenaCloisterElevation(ctx, layer);
         } else if (layer.kind === 'dragon') {
@@ -324,7 +341,14 @@ function draw(state, snapshot, width, height) {
                 updateMageWalk(state.mageWalk, snapshot.player, visualSeconds, state.reducedMotion.matches),
                 state.mageWalk.facing);
         }
+        if (gpu) {
+            gpu.capture('hunt-actor-' + layer.kind + '-' + (layer.enemy?.entityId ?? layer.dragon?.entityId ?? (layer.kind === 'masonry' ? layer.depth : 'primary')),
+                tile, tileX - camera.x, tileY - camera.y, tileSize, tileSize,
+                .12 + Math.max(0, Math.min(1, layer.depth / worldHeight)) * .1);
+            ctx = worldContext;
+        }
     }
+    if (gpu) gpu.render(ctx, state.fractureGpuFrame);
     drawReliquaryEmergence(ctx, snapshot.reliquary);
     drawBellWardenEntrance(ctx, snapshot.bellWarden);
     if (snapshot.powerBurst) {
@@ -346,7 +370,7 @@ function draw(state, snapshot, width, height) {
     // Keep high-priority attack tells and magical VFX ABOVE the veil.
     const realFires = createWetForestFirelightPlan(snapshot.environment, worldWidth, worldHeight);
     const nightSources = gothicNightLightSources(snapshot, spellLights, worldWidth, worldHeight, realFires);
-    drawGothicNight(ctx, gothicNightPlan(snapshot.player, nightSources, lightViewport), state.nightMask);
+    if (!gpu) drawGothicNight(ctx, gothicNightPlan(snapshot.player, nightSources, lightViewport), state.nightMask);
     // Tactical telegraphs must remain readable even when the ground is nearly
     // black. They are presentation cues, not physical light emitters.
     for (const hazard of snapshot.huntHazards ?? []) {
@@ -358,7 +382,7 @@ function draw(state, snapshot, width, height) {
         snapshot.dragon?.school ?? snapshot.hunt?.school, snapshot.dragon);
     // A second weaker pass colors nearby silhouettes without whitening shadows.
     drawAshfangAirEffects(ctx,snapshot,ashfangSockets(state.ashfang),state.reducedMotion.matches);
-    drawSpellLightSpill(ctx, spellLights, lightViewport, 'actors');
+    if (!gpu) drawSpellLightSpill(ctx, spellLights, lightViewport, 'actors');
     for (const impact of snapshot.elementalImpacts) drawSpellImpact(ctx, impact, state.reducedMotion.matches);
     for (const death of snapshot.deathBursts) drawDeathBurst(ctx, death);
 
