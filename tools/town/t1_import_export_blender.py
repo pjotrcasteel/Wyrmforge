@@ -78,7 +78,6 @@ scene.render.engine = "CYCLES"
 scene.cycles.device = "CPU"
 scene.cycles.samples = 12
 # Ubuntu's apt Blender build is compiled without OpenImageDenoiser.
-scene.cycles.use_denoising = False
 for layer in scene.view_layers:
     layer.cycles.use_denoising = False
 scene.render.film_transparent = False
