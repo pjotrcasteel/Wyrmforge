@@ -1,0 +1,103 @@
+name: Hollowed 3D injury-specific death source renders
+
+on:
+  push:
+    branches: [feat/hollow-injury-deaths-20261026]
+    paths:
+      - '.github/workflows/hollow-injury-deaths-production.yml'
+      - 'tools/sprite-lab/render-hollow-injury-deaths.py'
+      - 'art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-zombie-reach-v3-*/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: hollow-injury-death-source
+  cancel-in-progress: true
+
+jobs:
+  check-rig-and-authoring:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          lfs: true
+      - name: Restore editable Blender source
+        run: |
+          git lfs pull --include="art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-death-no-cape-standard/**" --exclude=""
+          test "$(head -c 7 art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-death-no-cape-standard/hollow-death.blend)" = BLENDER
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install Blender 4.5 source renderer
+        run: python -m pip install --disable-pip-version-check bpy==4.5.15 Pillow==11.3.0
+      - name: Author broken-arm fall and render 24 actual south-facing frames
+        run: python tools/sprite-lab/render-hollow-injury-deaths.py --variant broken-arm-right --directions S
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hollow-injury-death-authoring-preflight
+          path: |
+            artifacts/hollow-injury-deaths/death-broken-arm-right-contact-sheet.png
+            artifacts/hollow-injury-deaths/death-broken-arm-right-review.gif
+          if-no-files-found: warn
+          retention-days: 14
+
+  render:
+    needs: check-rig-and-authoring
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          lfs: true
+          persist-credentials: true
+      - name: Restore editable source
+        run: |
+          git lfs pull --include="art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-death-no-cape-standard/**" --exclude=""
+          test "$(head -c 7 art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-death-no-cape-standard/hollow-death.blend)" = BLENDER
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install Blender 4.5 LTS source renderer
+        run: python -m pip install --disable-pip-version-check bpy==4.5.15 Pillow==11.3.0
+      - name: Render three genuinely keyed injury deaths × eight directions × 24 frames
+        env:
+          OMP_NUM_THREADS: '4'
+        run: python tools/sprite-lab/render-hollow-injury-deaths.py
+      - name: Checkpoint all preview and runtime assets without overwriting concurrent code
+        run: |
+          set -euo pipefail
+          source=artifacts/hollow-injury-deaths
+          target=src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/hollow-rigged/death/injuries
+          reviews=docs/art/evidence/hollow-injury-deaths-2026-10-26
+          editable=art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-injury-deaths
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for attempt in 1 2 3 4; do
+            git fetch origin feat/hollow-injury-deaths-20261026
+            git reset --hard FETCH_HEAD
+            mkdir -p "$target" "$reviews" "$editable"
+            cp "$source"/death-*.png "$target/"
+            cp "$source/manifest.json" "$target/"
+            cp "$source"/death-*-contact-sheet.png "$source"/death-*-review.gif "$reviews/"
+            cp "$source/hollow-injury-deaths.blend" "$editable/hollow-injury-deaths.blend"
+            git add -f "$target" "$reviews" "$editable"
+            if git diff --cached --quiet; then echo "Identical injury assets already saved"; exit 0; fi
+            git commit -m "art(hollowed): source-render three skeletal injury deaths, preserved Blender rig and QC [skip ci]"
+            if git push origin "HEAD:refs/heads/feat/hollow-injury-deaths-20261026"; then exit 0; fi
+            echo "Concurrent GitHub head update; replaying only generated art commit"
+          done
+          exit 1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hollow-injury-death-three-variants-qc
+          path: |
+            artifacts/hollow-injury-deaths/*-contact-sheet.png
+            artifacts/hollow-injury-deaths/*-review.gif
+            artifacts/hollow-injury-deaths/manifest.json
+          if-no-files-found: warn
+          retention-days: 14
