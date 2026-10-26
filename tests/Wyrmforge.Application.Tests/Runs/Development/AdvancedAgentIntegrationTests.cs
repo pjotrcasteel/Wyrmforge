@@ -101,6 +101,24 @@ public sealed class AdvancedAgentIntegrationTests
         Assert.IsTrue(attacked.Count > 0, "A pressure budget must not deadlock all attacks.");
     }
     [TestMethod]
+    public void AdaptiveHound_StaggeredSight_CountersConfirmedLateralMovement()
+    {
+        var enemy = new EnemyState(1, Vector2D.Zero, 13, 100, 40, EnemyKind.MireHound);
+        var agent = new LegacyEnemyAgent(enemy, 42, AgentTier.Adaptive);
+        AgentContact? contact = null;
+        for (var tick = 1; tick <= 400; tick++)
+        {
+            var sampled = (tick - 1) % 6 == 0;
+            if (sampled) contact = new(new Vector2D(120, tick * .5), Vector2D.Zero, tick, "vision");
+            var sensed = new AgentPerceptionSnapshot(tick, tick + 1, contact, -1, sampled, true);
+            agent.Step(.025, contact!.Position, contact.Position, 40, false, sensed);
+        }
+
+        Assert.AreEqual("circle-left", agent.Adaptation.Inspect().Counter);
+        Assert.IsTrue(agent.Adaptation.Inspect().Confidence >= .35);
+    }
+
+    [TestMethod]
     public void ReactiveHound_TargetLost_KeepsWarnedLaneAndRecovery()
     {
         var enemy = new EnemyState(1, Vector2D.Zero, 13, 100, 40, EnemyKind.MireHound);
