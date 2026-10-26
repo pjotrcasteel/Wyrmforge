@@ -116,6 +116,8 @@ test('fracture ember light shares generic GPU contract and projects into the leg
     const zero={...original,environment:{ambient:0,color:'#000000',exposure:1,emission:false}};
     assert.equal(withHollowFractureLightingFrame(zero,impact),zero,
         'zero-light GPU diagnostics may never be illuminated by corpse VFX');
+    assert.deepEqual(hollowFractureCanvasLights(impact,zero),[],
+        'Canvas fallback must respect zero-light mode too');
     const scene=validateSnapshot(framed);
     assert.equal(selectLights(scene).length,1);
     const canvas=hollowFractureCanvasLights(impact);
@@ -132,7 +134,7 @@ test('production uses original source atlases and never resurrects the rejected 
     const ours=readFileSync(new URL('hollow-fracture.js',web),'utf8');
     assert.ok(source.includes("deathStyle:fracture.ready() && eligibleHollowFracture"));
     assert.ok(source.includes("fracture.draw(ctx,corpse,age,reducedMotion)"));
-    assert.ok(arena.includes('hollowFractureCanvasLights(fractureEmitters)'));
+    assert.ok(arena.includes('hollowFractureCanvasLights(fractureEmitters,snapshot.lighting)'));
     assert.ok(arena.includes('withHollowFractureLightingFrame(snapshot.lighting,fractureEmitters)'));
     assert.ok(arena.includes('hollowFractureEmitters(state.hollow.corpses,state.hollow.clock'));
     assert.ok(!source.includes('drawHollowBoneBurst'));
