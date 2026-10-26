@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
+import {selectHollowDeathStyle} from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/hollow-bone-burst.js';
 const root=new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/',import.meta.url);
 const moduleUri=name=>'data:text/javascript;base64,'+Buffer.from(readFileSync(new URL('js/'+name,root),'utf8')).toString('base64');
 const source=readFileSync(new URL('js/hollow-sprites.js',root),'utf8').replace("new URL('../art/enemies/hollow-rigged/', import.meta.url)","new URL('https://example.test/art/enemies/hollow-rigged/')")
@@ -11,7 +12,8 @@ const source=readFileSync(new URL('js/hollow-sprites.js',root),'utf8').replace("
  .replace("'./hollow-motion.js'",JSON.stringify(moduleUri('hollow-motion.js')))
  .replace("'./hollow-variation.js'",JSON.stringify(moduleUri('hollow-variation.js')))
  .replace("'./hollow-death.js'",JSON.stringify(moduleUri('hollow-death.js')))
- .replace("'./hollow-injury-death.js'",JSON.stringify(moduleUri('hollow-injury-death.js')));
+ .replace("'./hollow-injury-death.js'",JSON.stringify(moduleUri('hollow-injury-death.js')))
+ .replace("'./hollow-bone-burst.js'",JSON.stringify(moduleUri('hollow-bone-burst.js')));
 const mod=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
 const enemy=(values={})=>({entityId:7,kind:0,x:20,y:20,radius:11,...values});
 const snapshot=(values={})=>({enemies:[enemy()],player:{x:200,y:200,radius:9},deathBursts:[],...values});
@@ -220,4 +222,31 @@ test('a real Hollow death renders authored 3D frames, not a rotated walking spri
    assert.ok(calls.at(-1)[1]>0,'death pose must advance with time');
   }
  }finally{globalThis.fetch=oldFetch;globalThis.Image=oldImage;}
+});
+
+test('a quarter of dead Hollowed shatter in the actual Hunt renderer; standard corpses still use existing 3D rig',()=>{
+ const ids=Array.from({length:128},(_,id)=>id);
+ const styleCounts={};
+ for(const id of ids)styleCounts[selectHollowDeathStyle(id)]=(styleCounts[selectHollowDeathStyle(id)]??0)+1;
+ assert.ok(styleCounts['shatter-burst']>0);
+ assert.ok(styleCounts['buckle-burst']>0);
+ assert.ok(styleCounts.collapse>60);
+ for(const style of ['shatter-burst','buckle-burst']){
+  const id=ids.find(id=>selectHollowDeathStyle(id)===style);
+  const state=mod.createHollowState();
+  const e=enemy({entityId:id});
+  mod.updateHollowSprites(state,snapshot({enemies:[e]}),0);
+  const dead=snapshot({enemies:[],deathBursts:[{entityId:id,kind:0,x:20,y:20,bodyRadius:11}]});
+  advance(state,dead,.05,.75);
+  const corpse=mod.hollowDiagnostics(state).corpses[0];
+  assert.equal(corpse.deathStyle,style);
+  const painted=[];
+  const ctx={globalAlpha:1,save(){},restore(){},translate(){},rotate(){},scale(){},
+   fillRect(...args){painted.push(args);},drawImage(){throw Error('burst must not draw a walking/death sprite');}};
+  assert.doesNotThrow(()=>mod.drawHollowCorpses(ctx,state));
+  assert.ok(painted.length>70,'real individual pixel bones and grounded remains render in the Hunt');
+  const frameBefore=state.clock;
+  mod.updateHollowSprites(state,{...dead,paused:true},.85);
+  assert.equal(state.clock,frameBefore,'visual burst does not advance during C# pause');
+ }
 });
