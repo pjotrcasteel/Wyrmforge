@@ -33,3 +33,21 @@ These are **candidate sources, not yet imported or approved**. Download, inspect
 A greybox model has been rendered for a first owner review, with independent volumes for hall, round observatory dome, roof, right portal and stairs. This is **preliminary**, not approved. The review PNG demonstrates that the current geometry needs a narrower, richer hall shape, more precise dome proportions, a stronger astrolabe silhouette and correct portal/stair positioning. The pixel painting must not be used as a mesh texture to conceal these shortcomings.
 
 Accept only an explicit approval based on **actual geometry** compared against canonical art. Green CI does not count as artistic approval.
+
+
+## Oct 26, 2026 — Arcane Nexus greybox revision checkpoints (NOT ACCEPTED)
+
+- **Step 5**: built independently lifted roof slates, porch double doors, additional dormers, Gothic stone course blocks, enlarged exposed observatory orrery. Actual GLB and orthographic/off-axis screenshots generated and reviewed; detail improvements alone did not correct overall fidelity.
+- **Step 6**: replaced the oversized single roof mass with crossing real gables and true 3D framing; modeled a through-depth **open portal passage** instead of the previous solid front slab; added structural arch/rim and massing. Source: `tools/town/arcane_nexus_step6_greybox.py`; structural test: `tools/town/test_arcane_nexus_step6_geometry.py`.
+- **Step 7**: narrowed the rectangular portal annex and gallery as a coherent group relative to the tower, added geometric banners and the rooftop astrolabe. Source: `tools/town/arcane_nexus_step7_greybox.py`; test: `tools/town/test_arcane_nexus_step7_geometry.py`. Exports 181 semantic meshes and 83,932 triangles, intentionally **not mobile-optimized**.
+
+**Reproduce Step 7** from repository root (numpy, trimesh, vtk and pillow installed):
+
+```sh
+python tools/town/arcane_nexus_step7_greybox.py artifacts/town-nexus/step7 --render --reference path/to/captured-west-town.png
+python tools/town/test_arcane_nexus_step7_geometry.py
+```
+
+A reproducible user-side screenshot and `.glb` were produced; their portable downloadable previews were provided in chat. No persistent PNGs were claimed as checked into this repo, and no in-game integration of Steps 5–7 was performed.
+
+**Visual QC result: REJECT / CONTINUE GEOMETRY.** The approved west-district source painting is richer and less symmetrical than these greyboxes. Remaining priority problems: portal outer wall too monolithic, observatory facade looks like plain masonry cylinder, the chapel is still a generic Gothic hall, and the greybox camera must be calibrated to the exact in-game camera before T2 completion. Do not apply canonical texture projection to conceal these failures. Do not merge PR #359; T1/T2 still require explicit owner review and acceptance.
