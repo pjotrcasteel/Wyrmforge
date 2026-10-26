@@ -45,7 +45,21 @@ public sealed class WetForestMaterialKitBrowserTests : PageTest
         await SaveAsync(canvas, $"wet-forest-material-kit-neutral-{width}.png");
 
         var neutral = await CanvasStatsAsync(canvas);
+        await Expect(canvas).ToHaveAttributeAsync("data-material-review-boundary", "organic");
         await Expect(canvas).ToHaveAttributeAsync("data-material-review-source", "source-backed");
+        await Page.GetByLabel("Ground boundaries").SelectOptionAsync("original");
+        await Expect(canvas).ToHaveAttributeAsync("data-material-review-boundary", "original",
+            new LocatorAssertionsToHaveAttributeOptions { Timeout = 90000 });
+        await SaveAsync(canvas, $"wet-forest-boundary-previous-stepped-neutral-{width}.png");
+        var previous = await CanvasStatsAsync(canvas);
+        Assert.AreNotEqual(neutral[1], previous[1],
+            "The previous stepped and organic contacts should differ with identical C# recipe and GPU lighting.");
+        await Page.GetByLabel("Ground boundaries").SelectOptionAsync("organic");
+        await Expect(canvas).ToHaveAttributeAsync("data-material-review-boundary", "organic",
+            new LocatorAssertionsToHaveAttributeOptions { Timeout = 90000 });
+        CollectionAssert.AreEqual(neutral, await CanvasStatsAsync(canvas),
+            "Switching back to the organic source-only contacts must restore the same GPU frame.");
+        await SaveAsync(canvas, $"wet-forest-boundary-organic-neutral-{width}.png");
         await Page.GetByLabel("Ground artwork").SelectOptionAsync("original");
         await Expect(canvas).ToHaveAttributeAsync("data-material-review-source", "original");
         await SaveAsync(canvas, $"wet-forest-material-kit-original-painting-{width}.png");
