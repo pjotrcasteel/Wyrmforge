@@ -82,6 +82,26 @@ public sealed class AdvancedAgentIntegrationTests
     }
 
     [TestMethod]
+    public void TacticalHorde_DeadMember_RemovesAgentWithoutDisturbingSurvivors()
+    {
+        var run = Create(64, AgentTier.Tactical);
+        run.Tick(.025, default, 800, 600);
+        var before = run.InspectEnemyAgents().Select(a => a.Identity.Id).ToArray();
+        Assert.AreEqual(64, before.Length);
+
+        var entities = (List<EnemyState>)typeof(RunSimulation)
+            .GetField("enemies", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(run)!;
+        var eliminated = entities.Single(e => e.Id == before[13]);
+        eliminated.Health = 0;
+        run.Tick(.025, default, 800, 600);
+
+        var remaining = run.InspectEnemyAgents().Select(a => a.Identity.Id).ToArray();
+        Assert.AreEqual(63, remaining.Length);
+        CollectionAssert.AreEquivalent(before.Where(id => id != eliminated.Id).ToArray(), remaining);
+        Assert.AreEqual(63, run.InspectAgentPerformance().Population);
+    }
+
+    [TestMethod]
     public void Horde_64Agents_RespectsQueryCapsAndReportsActualCosts()
     {
         var run = Create(64, AgentTier.Tactical);
