@@ -13,7 +13,7 @@
     <div class="refuge-canonical-scene" aria-label="Night-time Refuge town square"
          data-nexus-school="@(DisplayNexusSchool?.ToString().ToLowerInvariant() ?? "none")"
          data-nexus-mastery-points="@NexusMasteryPoints"
-         data-nexus-radiance-strength="@FormattableString.Invariant($"{TownNexusRadiance.Strength(NexusMasteryPoints):0.000}")"
+         data-nexus-radiance-strength="@TownNexusRadiance.Strength(NexusMasteryPoints).ToString(System.Globalization.CultureInfo.InvariantCulture)"
          data-town-nexus-unlocked="@(NexusUnlocked ? "true" : "false")"
          data-town-forge-unlocked="@(ForgeUnlocked ? "true" : "false")"
          data-town-codex-unlocked="@(CodexUnlocked ? "true" : "false")"
