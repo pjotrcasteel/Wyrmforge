@@ -441,6 +441,8 @@ fingers, tattered muted brown/bone materials and hunched posture. Do not add hor
 weapons, glowing eyes, bulky armor or a different monster family. The card's
 presentation artwork is evidence of identity, not an accepted walking cycle.
 
+**Hollowed death-art rejection (26 October 2026, owner decision):** the ASCII-glyph procedural bone burst merged in [PR #365](https://github.com/pjotrcasteel/Wyrmforge/pull/365) is **not production-worthy** and must not play in Hunts. Random ballistic sprites are not acceptable anatomy or source art. Retain the source-authored no-cape 3D forward/braced collapses and injury-consistent death atlases. A replacement disassembly must be authored from the same editable Hollowed 3D rig and matched Gothic materials; validate physically coherent joints, scale, floor contact and a believable resting corpse across all directions at 320/390px in the actual Hunt before proposing re-enablement. Passing code, pixel-count or browser smoke tests alone does not constitute approval.
+
 **Gate A:** identity and motion brief are explicit; unknowns are visible. Stop if
 the only available image cannot establish a usable character specification.
 

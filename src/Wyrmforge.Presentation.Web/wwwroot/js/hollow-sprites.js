@@ -7,7 +7,8 @@ import { createHollowVariantAssets } from './hollow-arm-variants.js';
 import { selectHollowAppearance } from './hollow-variation.js';
 import { createHollowDeathAssets, selectHollowDeathVariant } from './hollow-death.js';
 import { createHollowInjuryDeathAssets, selectHollowDeathInjury } from './hollow-injury-death.js';
-import { selectHollowDeathStyle, drawHollowBoneBurst } from './hollow-bone-burst.js';
+// The rejected procedural bone-burst proof is intentionally lab-only.
+// Production deaths exclusively use the Hollowed's source-authored 3D atlases.
 const base = new URL('../art/enemies/hollow-rigged/', import.meta.url);
 const rows = ['N','NE','E','SE','S','SW','W','NW'];
 const headings = ['E','SE','S','SW','W','NW','N','NE'];
@@ -72,7 +73,7 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
         state.corpses.set(key,{entityId:death.entityId,x:death.x,y:death.y,radius:death.bodyRadius,
             direction:old?.direction??'S',armVariant:old?.armVariant??'standard',
             visualScale:old?.visualScale??1,deathVariant:selectHollowDeathVariant(death.entityId),
-            deathInjury:old?.deathInjury??'standard',deathStyle:selectHollowDeathStyle(death.entityId),at:state.clock});
+            deathInjury:old?.deathInjury??'standard',deathStyle:'collapse',at:state.clock});
     }
     state.seen=currentDeaths;
     for(const [key,corpse] of state.corpses)if(state.clock-corpse.at>=4)state.corpses.delete(key);
@@ -94,7 +95,7 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
             pose.deathInjury=selectHollowDeathInjury(pose);
             // Only download the specific 3D damaged collapse if this injured
             // silhouette actually spawns; no eager 3×7 MB mobile atlas load.
-            if(pose.deathInjury!=='standard'&&selectHollowDeathStyle(id)==='collapse')
+            if(pose.deathInjury!=='standard')
                 void injuryDeaths.preload(pose.deathInjury);
             state.entities.set(id,pose);
         }
@@ -167,9 +168,8 @@ export function drawHollowEnemy(ctx,enemy,state){
 export function drawHollowCorpses(ctx,state,reducedMotion=false){
     for(const corpse of state.corpses.values()){
         const age=state.clock-corpse.at;
-        // A subset of Hollowed physically shatter into individual pixel-art bones.
-        // Selection is stable per entity and never changes C# damage/death rules.
-        if(drawHollowBoneBurst(ctx,corpse,age,reducedMotion))continue;
+        // PR #365's ASCII-glyph bone burst failed owner visual approval.
+        // Keep actual skinned 3D collapse playback until source-authored disassembly passes review.
         const deathFrame=reducedMotion?23:Math.min(23,Math.floor(age*12));
         const alpha=age<3?1:Math.max(0,4-age);
         if(injuryDeaths.draw(ctx,corpse.deathInjury,deathFrame,corpse.direction,
