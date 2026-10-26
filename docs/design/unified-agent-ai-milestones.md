@@ -1,7 +1,7 @@
 # WyrmForge — Unified Agent AI Milestones (AI0–AI6)
 
 **Status:** Architecture/roadmap approved in principle; **separate implementation workstream**, not a G4 Town deliverable.
-**Related spatial contract:** [3D Town rebuild milestones](town-3d-rebuild-milestones.md).
+**Town spatial contract:** reuse existing painted 2D Town walk masks, C# NPC navigation and interaction data. The 3D Town rebuild was cancelled 26 October 2026; AI is not dependent on it.
 **Goal:** One reusable AI Agent framework supporting Town inhabitants, ordinary enemies, elites, Wyrm bosses and later summons/companions through specialized profiles and behaviors.
 
 ## Architectural rules
@@ -10,10 +10,10 @@
 - **Deterministic C# simulation:** decisions and authoritative state live outside rendering, support seeded reproducibility, bounded CPU budgets and testable action outcomes. The GPU renderer visualizes agent states but never decides behavior.
 - **Perception is earned:** agents use vision/line of sight, hearing, threat events, distance and last-known information. No omniscient access to player inputs, invisible actors or exact positions without a sensing mechanism.
 - **Utility decisions + controlled execution:** utility scoring selects goals/tactics; explicit state machines or behavior trees execute actions with animation locks, cooldowns, telegraph commitments, interrupt/cancel rules and gameplay authority.
-- **Navigation is pluggable:** Town 3D navmesh/semantic anchors, Hunt traversal, flying Wyrms and special movement share queries and commands, not identical locomotion assumptions.
+- **Navigation is pluggable:** existing 2D Town route/occlusion data and semantic anchors, Hunt traversal, flying Wyrms and special movement share queries and commands, not identical locomotion assumptions.
 - **No LLM dependency in real-time combat.** Optional generative dialogue/high-level personality is a future extension, not required for agent motion or combat.
 - **Fair difficulty:** tactical intelligence progresses through capabilities, not only stat inflation. Preserve readable telegraphs, counterplay, bounded reaction times, limited simultaneous pressure and controlled randomness.
-- **Isolation:** AI0–AI6 are **not** T0–T6 or G4/G5 acceptance requirements. Town delivers spatial data interfaces only. Combat AI work must not block the Town art/lighting migration.
+- **Isolation:** AI0–AI6 are **not** T0–T6 or G4/G5 acceptance requirements. The existing 2D Town provides spatial data interfaces; no 3D Town art/lighting migration is planned.
 
 ## Shared agent contract (target)
 
