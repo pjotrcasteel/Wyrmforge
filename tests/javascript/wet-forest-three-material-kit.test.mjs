@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
     threeMaterialPlan, validateWetForestRecipe, trailAt, MATERIAL_IDS, THREE_MATERIAL_REVIEW,
+    previewMaterialRoughness, bakeThreeMaterialRoughness,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/wet-forest-three-material-kit.js';
 import {
     inspectionSnapshot,
@@ -76,6 +77,30 @@ test('reject malformed or invented C# topology instead of silently generating ne
     assert.equal(trailAt(null, .5), null);
 });
 
+test('three semantic ground materials produce distinct non-color G-channel roughness at pixel scale', () => {
+    assert.ok(previewMaterialRoughness(MATERIAL_IDS.grass) > previewMaterialRoughness(MATERIAL_IDS.earth));
+    assert.ok(previewMaterialRoughness(MATERIAL_IDS.earth) > previewMaterialRoughness(MATERIAL_IDS.mud));
+    assert.equal(previewMaterialRoughness(2), null);
+    const plan = { board: new Uint8Array([0, 3, 1]), columns: 3, rows: 1, width: 48, height: 16 };
+    const painted = [];
+    const map = bakeThreeMaterialRoughness(plan, () => ({
+        width: 0, height: 0,
+        getContext() { return {
+            set imageSmoothingEnabled(value) { assert.equal(value, false); },
+            set fillStyle(value) { painted.push({ type: 'fill', value }); },
+            fillRect(...args) { painted.push({ type: 'rect', args }); },
+        }; },
+    }));
+    assert.equal(map.width, 48);
+    assert.equal(map.height, 16);
+    assert.equal(painted.filter(x => x.type === 'rect').length, 3);
+    assert.deepEqual(painted.filter(x => x.type === 'rect').map(x => x.args),
+        [[0, 0, 16, 16], [16, 0, 16, 16], [32, 0, 16, 16]]);
+    const green = painted.filter(x => x.type === 'fill').map(x => Number(x.value.match(/rgb\(0, (\d+), 0\)/)[1]));
+    assert.ok(green[0] > green[1] && green[1] > green[2]);
+    assert.equal(bakeThreeMaterialRoughness({ ...plan, board: new Uint8Array([0, 3, 4]) }, () => map), null);
+});
+
 test('same G1 engine snapshots deliver night, neutral inspection and true zero-light world', () => {
     for (const profile of ['night', 'neutral', 'zero']) {
         const snapshot = inspectionSnapshot('ground-albedo', profile);
@@ -83,6 +108,8 @@ test('same G1 engine snapshots deliver night, neutral inspection and true zero-l
         assert.equal(snapshot.objects.length, 1);
         assert.equal(snapshot.materials.length, 1);
         assert.equal(snapshot.materials[0].albedo, 'ground-albedo');
+        assert.equal(snapshot.materials[0].roughnessMap, 'forest-roughness');
+        assert.equal(snapshot.materials[0].roughness, 1);
         assert.equal(snapshot.objects[0].geometry, 'ground-plane');
         assert.equal(snapshot.objects[0].castsShadow, false);
         if (profile === 'zero') {
@@ -114,6 +141,7 @@ test('preview receives actual C# WetForestRecipe and does not replace live Hunts
     assert.match(gpu, /import \{ LightingEngine \} from '.\/lighting\/engine\.js'/);
     assert.match(gpu, /new T\.CanvasTexture\(pixels\)/);
     assert.match(kit, /drawGroundMaterialTransitions/);
+    assert.match(gpu, /registerTexture\(state\.roughnessId, new T\.CanvasTexture\(roughness\), false\)/);
     assert.doesNotMatch(gpu, /new T\.WebGLRenderer|night-lighting|canvas\.style\.filter/);
     assert.doesNotMatch(live, /wet-forest-three-material-kit|wet-forest-gpu-material-review/);
 });
