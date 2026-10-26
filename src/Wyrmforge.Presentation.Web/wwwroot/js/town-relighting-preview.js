@@ -173,7 +173,7 @@ export async function initializeTownPreview(canvas) {
     if (states.has(canvas)) return;
     const engine = new LightingEngine(canvas, { shadowViews: 8, maxLights: 8, maxFramebufferWidth: 780 });
     const state = { engine, mode: 'night', lamps: true, offset: 0, npcEnabled: true,
-        npcProgress: 0, paving: 'neutral', view: 'lit', alive: true };
+        npcProgress: 0, paving: 'neutral', view: 'lit', citizens: null, alive: true };
     states.set(canvas, state);
     try {
         const a = axes(), source = await loadApprovedImage();
@@ -232,7 +232,8 @@ export function configureTownPreview(canvas, options) {
     manifest.materials.find(m => m.id === 'town-level-paving').albedo =
         state.paving === 'neutral' ? 'town-paving-neutral' : 'town-day-paving';
     const citizenY = 513 + state.npcProgress * 75;
-    const actor = projectTownCitizens([{ id: 1, feet: [864, citizenY], isPresent: true }],
+    const input = state.citizens ?? [{ id: 1, feet: [864, citizenY], isPresent: true }];
+    const actor = projectTownCitizens(input,
         townPreviewProjection, axes().toward.toArray(), { enabled: state.npcEnabled });
     manifest.layers.push(...actor.layers);
     manifest.materials.push(...actor.materials);
@@ -264,8 +265,10 @@ export function configureTownPreview(canvas, options) {
         canvas.dataset.zeroBlack = (litPixels === 0).toString();
         if (litPixels) throw new Error(`Zero-light proof leaked ${litPixels} world pixels`);
     } else delete canvas.dataset.zeroBlack;
-    canvas.dataset.npcFeetY = state.npcEnabled ? citizenY.toFixed(2) : 'hidden';
-    canvas.dataset.npcPass = state.npcEnabled ? (citizenY >= 572 ? 'front' : 'behind') : 'hidden';
+    canvas.dataset.npcFeetY = !state.npcEnabled ? 'hidden' : state.citizens === null
+        ? citizenY.toFixed(2) : 'authoritative';
+    canvas.dataset.npcPass = !state.npcEnabled ? 'hidden' : state.citizens === null
+        ? (citizenY >= 572 ? 'front' : 'behind') : 'authoritative';
     canvas.dataset.npcShadowCasters = actor.layers.filter(a => a.castsShadow).length.toString();
     canvas.dataset.inspection = state.mode === 'zero' ? 'lit' : state.view;
     canvas.dataset.pavingAlbedo = state.paving;
@@ -274,6 +277,19 @@ export function configureTownPreview(canvas, options) {
         (state.neutralMetrics?.illuminationReduction ?? 0).toFixed(3);
     canvas.dataset.profile = state.mode;
     canvas.dataset.fixtureCount = snapshot.lights.filter(l => l.enabled).length.toString();
+}
+
+/**
+ * Live opt-in Town only: render the C# citizen identity and feet passed in by
+ * readTownCitizensFromDom. The isolated lab continues using its scripted actor.
+ * Never mutate the C# positions or start a separate gameplay simulation.
+ */
+export function updateTownPreviewCitizens(canvas, citizens) {
+    const state = states.get(canvas);
+    if (!state?.alive || !state.manifest) throw new Error('Town GPU preview must initialize first');
+    if (!Array.isArray(citizens)) throw new TypeError('Expected authoritative C# citizens');
+    state.citizens = citizens;
+    configureTownPreview(canvas, {});
 }
 
 export function disposeTownPreview(canvas) {
