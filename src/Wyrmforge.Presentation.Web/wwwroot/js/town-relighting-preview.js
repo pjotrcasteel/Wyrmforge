@@ -183,6 +183,11 @@ export function townPreviewManifest({ wellV4 = false } = {}) {
         // cutout proxy are what caused the broad dark ring around the well.
         fixtures.splice(fixtures.findIndex(f => f.id === 'noticeboard-lantern'), 1,
             stage4WellLight(townPreviewProjection, direction));
+        // Don't spend the remaining cubemap shadow budget on legacy
+        // panorama cutouts. The only new T2 shadow is the tightly authored
+        // well roof/posts; surrounding lamps still provide illumination.
+        fixtures.filter(f => f.id !== 'stage4-well-lantern')
+            .forEach(f => { f.castsShadow = false; });
     }
     for (const cutout of selectedCutouts) {
         const position = new T.Vector3(...townPreviewProjection(

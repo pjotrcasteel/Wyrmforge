@@ -60,6 +60,8 @@ test('Remade lantern uses one movable G1/G3 spot source and the existing mobile 
     const selected = selectLights(scene, 8, 8);
     assert.equal(selected.find(x => x.id === 'stage4-well-lantern').shadow, true);
     assert.equal(selected.find(x => x.id === 'stage4-well-lantern').shadowViews, 1);
+    assert.deepEqual(selected.filter(x => x.shadow).map(x => x.id), ['stage4-well-lantern'],
+        'Only the new well geometry may cast a new T2 shadow');
     assert.deepEqual(stage4WellLight(project, toward, { offset: 30 }).artAnchor, [947, 439]);
     assert.equal(stage4WellLight(project, toward, { enabled: false }).enabled, false);
     assert.throws(() => stage4WellLight(project, toward, { offset: 400 }), /controls/);
