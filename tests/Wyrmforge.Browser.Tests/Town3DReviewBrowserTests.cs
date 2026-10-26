@@ -28,15 +28,15 @@ public sealed class Town3DReviewBrowserTests : PageTest
             new() { WaitUntil = WaitUntilState.NetworkIdle });
         await Page.WaitForFunctionAsync("() => window.__town3dReview?.getState().ready === true");
 
-        Assert.IsGreaterThan(
-            await Page.EvaluateAsync<int>("() => window.__town3dReview.getState().triangles"), 50000,
+        Assert.IsGreaterThan(50000,
+            await Page.EvaluateAsync<int>("() => window.__town3dReview.getState().triangles"),
             "Town must use a dense nonplanar 3D scene, not a painted cube");
         Assert.AreEqual(23, await Page.EvaluateAsync<int>(
             "() => window.__town3dReview.getState().volumeCount"));
-        Assert.IsGreaterThan(await Page.EvaluateAsync<double>(
-            "() => window.__town3dReview.getState().depthMax - window.__town3dReview.getState().depthMin"), 6d);
-        Assert.IsGreaterThan(await Page.EvaluateAsync<int>(
-            "() => window.__town3dReview.getState().peakRgb"), 150);
+        Assert.IsGreaterThan(6d, await Page.EvaluateAsync<double>(
+            "() => window.__town3dReview.getState().depthMax - window.__town3dReview.getState().depthMin"));
+        Assert.IsGreaterThan(150, await Page.EvaluateAsync<int>(
+            "() => window.__town3dReview.getState().peakRgb"));
         Assert.IsTrue(await Page.EvaluateAsync<double>(
             "() => window.__town3dReview.getState().referenceMae") < 14,
             "The shared GPU render must closely match the approved original Town painting");
