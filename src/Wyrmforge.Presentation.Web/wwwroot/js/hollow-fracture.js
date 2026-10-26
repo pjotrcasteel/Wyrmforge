@@ -104,8 +104,11 @@ export function hollowFractureEmitters(corpses, clock, reducedMotion=false) {
         .slice(0,MAX_VISIBLE_LIGHTS);
 }
 
-export function hollowFractureCanvasLights(emitters) {
-    return emitters.map(e => ({
+export function hollowFractureCanvasLights(emitters, frame = null) {
+    // The Canvas compatibility path obeys the same zero-light gate as GPU.
+    // Never punch a visible halo through an intentionally black world.
+    if (frame && withHollowFractureLightingFrame(frame, emitters) === frame) return [];
+    return (emitters ?? []).map(e => ({
         x:e.position[0], y:e.position[1], radius:e.range, strength:e.intensity,
         type:'corpse-fracture',family:'fire',center:[247,138,57],edge:[126,48,24],surge:false
     }));
