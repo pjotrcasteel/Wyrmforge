@@ -129,13 +129,66 @@ function copyOriginalArt(ctx, images, materialId, x, y, width, height, phase) {
     return true;
 }
 
+// Visual-only contiguous pixel contacts between different C# material cells.
+// This does NOT change the authoritative C# material board, roads or physics.
+// Unlike the old independently jittered 8px rectangles, each 2px contact
+// samples a low-frequency CONTINUOUS displacement in world coordinates, so a
+// road boundary does not restart or jump at every cell edge.
+const BOUNDARY_SPAN = 2;
+const MAX_CONTACT = 5;
+function contactShift(along, across, seed) {
+    const phase = (seed | 0) * .017 + across * .041;
+    const wave = 3.05 * Math.sin(along / 15 + phase) + 1.65 * Math.sin(along / 29 - phase * .37);
+    return Math.max(-MAX_CONTACT, Math.min(MAX_CONTACT, Math.round(wave)));
+}
+
+export function sourceBackedBoundaryContacts(board, columns, rows, seed) {
+    if (!board || !Number.isInteger(columns) || !Number.isInteger(rows)
+        || columns <= 0 || rows <= 0 || board.length !== columns * rows
+        || !Number.isInteger(seed) || !Array.from(board).every(x => REVIEW_IDS.includes(x))) return null;
+    const contacts = [];
+    for (let row = 0; row < rows; row++)
+        for (let col = 0; col < columns; col++) {
+            const index = row * columns + col, a = board[index];
+            const x = col * CELL, y = row * CELL;
+            if (col + 1 < columns && board[index + 1] !== a) {
+                const b = board[index + 1], boundary = x + CELL;
+                for (let offset = 0; offset < CELL; offset += BOUNDARY_SPAN) {
+                    const dy = y + offset;
+                    const displacement = contactShift(dy, boundary, seed);
+                    if (displacement > 0)
+                        contacts.push({ material: a, x: boundary, y: dy,
+                            width: displacement, height: BOUNDARY_SPAN });
+                    else if (displacement < 0)
+                        contacts.push({ material: b, x: boundary + displacement, y: dy,
+                            width: -displacement, height: BOUNDARY_SPAN });
+                }
+            }
+            if (row + 1 < rows && board[index + columns] !== a) {
+                const b = board[index + columns], boundary = y + CELL;
+                for (let offset = 0; offset < CELL; offset += BOUNDARY_SPAN) {
+                    const dx = x + offset;
+                    const displacement = contactShift(dx, boundary, seed);
+                    if (displacement > 0)
+                        contacts.push({ material: a, x: dx, y: boundary,
+                            width: BOUNDARY_SPAN, height: displacement });
+                    else if (displacement < 0)
+                        contacts.push({ material: b, x: dx, y: boundary + displacement,
+                            width: BOUNDARY_SPAN, height: -displacement });
+                }
+            }
+        }
+    return contacts;
+}
+
 /** Directly place pre-existing PR #340 artwork beneath authoritative C# region
  * boundaries. No synthetic recoloring, shading, noise or new world topology.
  * 16px cells are classification, NOT independent stamps of painted objects.
  * Images remain unapproved until owner inspects actual gameplay-scale captures.
  */
-export function bakeSourceBackedThreeMaterialGround(plan, images, seed, canvasFactory) {
+export function bakeSourceBackedThreeMaterialGround(plan, images, seed, canvasFactory, transition = 'organic') {
     if (!plan || plan.seed !== seed || !Number.isInteger(seed) || !images || !canvasFactory
+        || !['organic', 'original'].includes(transition)
         || !plan.board || plan.board.length !== plan.columns * plan.rows
         || !Number.isInteger(plan.width) || !Number.isInteger(plan.height)
         || !REVIEW_IDS.every(i => images[i]?.width === REVIEW_TILE_SIZE && images[i]?.height === REVIEW_TILE_SIZE)
@@ -153,8 +206,17 @@ export function bakeSourceBackedThreeMaterialGround(plan, images, seed, canvasFa
             if (w > 0 && h > 0)
                 copyOriginalArt(ctx, images, plan.board[row * plan.columns + col], x, y, w, h, phase);
         }
-    // Use existing canonical semantic boundary locations, never color-key
-    // transparent pixels (original trampled concepts had dark/black margins).
+    if (transition === 'organic') {
+        // Draw ONLY pixels sampled from the same archived candidate images;
+        // never alpha-blend painted leaves, pebbles or footprint landmarks.
+        const contacts = sourceBackedBoundaryContacts(plan.board, plan.columns, plan.rows, seed);
+        if (!contacts) return null;
+        for (const c of contacts)
+            copyOriginalArt(ctx, images, c.material, c.x, c.y, c.width, c.height, phase);
+        return canvas;
+    }
+    // Old boundary compositor, kept solely for exact-seed A/B comparison.
+    // Neither mode invents a new world path or infers transparency from RGB.
     for (const edge of groundMaterialBoundaryPlan(plan.board, plan.columns, plan.rows, seed)) {
         if (!REVIEW_IDS.includes(edge.a) || !REVIEW_IDS.includes(edge.b)) continue;
         const side = (Math.imul(edge.x + 1, 73856093) ^ Math.imul(edge.y + seed, 19349663)) >>> 0;
