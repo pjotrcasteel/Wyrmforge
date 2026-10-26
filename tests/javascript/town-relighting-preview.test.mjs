@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { CUTOUTS } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/refuge-foreground-cutouts.js';
 import { compileTownLightingSnapshot } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/town-relightable-scene.js';
-import { townPreviewManifest, townPreviewProjection, TOWN_PREVIEW_SOURCE }
+import { townPreviewManifest, townPreviewProjection, TOWN_PREVIEW_SOURCE, TOWN_FOREGROUND_CASTER_DEPTH }
     from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/town-relighting-preview.js';
 import { selectLights } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/registry.js';
 
@@ -63,4 +63,20 @@ test('changing a fixture descriptor requires no Town-specific shader behavior', 
     const sample=compileTownLightingSnapshot(m,{state:{},mode:'night'});
     assert.equal(sample.lights[0].position[0],m.fixtures[0].position[0]);
     assert.equal(sample.lights[0].artAnchor,undefined);
+});
+
+test('all approved visual cutouts have shallow explicit GPU shadow volume, never inferred from collision', () => {
+    const expected = CUTOUTS.map(c => c.id).sort();
+    assert.deepEqual(Object.keys(TOWN_FOREGROUND_CASTER_DEPTH).sort(), expected);
+    const m = townPreviewManifest();
+    for (const cutout of CUTOUTS) {
+        const depth = TOWN_FOREGROUND_CASTER_DEPTH[cutout.id];
+        assert.ok(depth >= .05 && depth <= .25, 'Only lightweight non-gameplay shadow proxies are allowed');
+        const layer = m.layers.find(x => x.id === 'foreground-' + cutout.id);
+        assert.equal(layer.occluderGeometry, 'approved-foreground-caster-' + cutout.id);
+        assert.equal(layer.castsShadow, true);
+        assert.equal(layer.receivesShadow, true);
+    }
+    assert.equal(m.layers.find(x => x.id === 'town-central-paving').castsShadow, false,
+        'The painted floor is NOT a vertical geometric shadow caster');
 });
