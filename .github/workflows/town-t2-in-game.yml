@@ -56,6 +56,38 @@ jobs:
             -c Release --no-build \
             --filter 'FullyQualifiedName~TownT2InGameBrowserTests|FullyQualifiedName~Town3DReviewBrowserTests' \
             --logger "trx;LogFileName=town-t2-acceptance.trx"
+      - name: Package real playable Town T2 preview for owner
+        if: success() && github.event_name == 'pull_request'
+        run: |
+          mkdir -p artifacts/town-t2-playable
+          cp -a artifacts/web/wwwroot artifacts/town-t2-playable/wwwroot
+          cp tools/development/spa_server.py artifacts/town-t2-playable/preview_server.py
+          cat > artifacts/town-t2-playable/README.md <<'DOC'
+          # WyrmForge — T1/T2 owner-review build (DO NOT MERGE)
+          On a desktop with Python 3, unzip this artifact and run:
+          python3 preview_server.py --port 4173 --directory ./wwwroot
+
+          Open http://127.0.0.1:4173/?town3d=1&townNpcCount=14
+          to test the real Town, actors, buildings, interactions and opt-in GPU
+          reconstruction. The current production Town is NIGHT-ONLY.
+          Optional independent art/depth debugger:
+          http://127.0.0.1:4173/town3d-review.html?mode=night&district=center
+
+          This is a locally served PR review package, not a public deployment.
+          T3 and G4 are paused pending explicit visual approval.
+          DOC
+          test -s artifacts/town-t2-playable/wwwroot/index.html
+          test -s artifacts/town-t2-playable/wwwroot/town3d-review.html
+
+      - name: Upload playable Town T2 owner-review app
+        if: success() && github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: town-t2-playable-${{ github.sha }}
+          path: artifacts/town-t2-playable
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Upload T2 real game screenshots and test results
         if: always()
         uses: actions/upload-artifact@v4
