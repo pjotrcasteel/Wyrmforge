@@ -75,7 +75,7 @@ export function hollowBoneBurstDelay(style) {
 export function hollowBoneFragments(injury='standard') {
     const missingLeftArm=injury==='one-arm-left';
     return SOURCE_PARTS.filter(part=>!(missingLeftArm&&part.limb==='leftArm')).map(part=>({
-        ...part,kind:injury==='broken-arm-right'&&part.limb==='rightArm'?'short':
+        ...part,kind:injury==='broken-arm-right'&&part.name==='upperR'?'short':
             injury==='broken-leg-left'&&part.limb==='leftLeg'?'short':part.kind
     }));
 }
@@ -126,15 +126,18 @@ function fragmentMotion(corpse,part,index,elapsed,reducedMotion){
     const vx=(part.side===0?(s1-.5)*100:part.side*(29+25*s1))+(s2-.5)*24;
     const vy=-(62+50*s2);
     const floor=-4-(index%3)*2;
-    let x=initialX+vx*t*.74;
-    let y=Math.min(floor,part.y+vy*t+145*t*t);
+    // A short impulse makes the creature visibly SHATTER, rather than showing
+    // a recognisable upright skeleton at the first few rendered frames.
+    const impulse=1-Math.exp(-t*14);
+    let x=initialX+vx*(.15+.76*t)*impulse;
+    let y=Math.min(floor,part.y+vy*(t+.07*impulse)+145*t*t);
     if(t<settle&&y>=floor){
         const amplitude=4+8*s1;
         y=floor-amplitude*Math.abs(Math.sin(t*14+index))*(1-t/settle);
     }
     const rotation=(s1-.5)*1.1+(s2>.5?1:-1)*(1.6+s1*3.1)*(reducedMotion?settle:t);
     if(reducedMotion||elapsed>=settle){
-        x=initialX+vx*settle*.74;
+        x=initialX+vx*(.15+.76*settle)*(1-Math.exp(-settle*14));
         y=floor;
     }
     return {x,y,rotation:reducedMotion?rotation*.5:rotation};
