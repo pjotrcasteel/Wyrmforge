@@ -52,7 +52,7 @@ test('Outside authored aperture region never emits regardless of RGB delta', () 
     const mask = emissionMaskPixels(pixels(255, 155, 38), pixels(0, 0, 0),
         4, 4, plate('codex', 1000, 20), 'warm');
     assert.ok(mask.every(x => x === 0));
-    assert.throws(() => emissionMaskPixels(pixels(3, 4, 5), pixels(0, 0, 0),
+    assert.throws(() => emissionMaskPixels(new Uint8ClampedArray(7), pixels(0, 0, 0),
         4, 4, plate('codex', 1000, 20), 'warm'), /Invalid authored/);
 });
 
