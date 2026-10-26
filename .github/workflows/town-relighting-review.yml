@@ -11,6 +11,7 @@ on:
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/town-neutral-albedo.js'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/town-lighting-grade.js'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/town-light-domains.js'
+      - 'tools/art/town_gpu_playwright_capture.py'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/town-well-stage4.js'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/town-live-relighting.js'
       - 'src/Wyrmforge.Presentation.Web/Features/Forge/CanonicalTownView.razor'
@@ -97,101 +98,16 @@ jobs:
           cat artifacts/town-2p5d/server.log
           exit 1
 
-      - name: Capture and verify true GPU pixels, without the debug UI
+      - name: Capture validated GPU pixels with true browser readiness
         run: |
           set -euo pipefail
           BROWSER=$(command -v google-chrome || command -v chromium || command -v chromium-browser)
-          FLAGS="--headless=new --no-sandbox --disable-dev-shm-usage --enable-unsafe-swiftshader --use-gl=angle --use-angle=swiftshader --hide-scrollbars --force-device-scale-factor=1 --virtual-time-budget=18000"
           python3 -m venv /tmp/town-gpu-capture
-          /tmp/town-gpu-capture/bin/pip install --quiet Pillow
-          screenshot () {
-            local name="$1" viewport="$2" query="$3" attempt
-            local url="http://127.0.0.1:4179/town-relighting-preview.html?capture=1&${query}"
-            local path="artifacts/town-2p5d/${name}.png"
-            # Chromium/SwiftShader sometimes captures an entirely black canvas
-            # before async WebGL initialization. Check the pixels of THIS
-            # screenshot and retry; never trust a separate --dump-dom process.
-            for attempt in 1 2 3 4; do
-              "$BROWSER" $FLAGS --window-size="${viewport/x/,}" \
-                --screenshot="$path" "$url" \
-                > "artifacts/town-2p5d/${name}.log" 2>&1
-              if /tmp/town-gpu-capture/bin/python - "$path" "$name" <<'PY'
-          import sys
-          from PIL import Image, ImageStat
-          path, name = sys.argv[1:]
-          try:
-              with Image.open(path) as image:
-                  rgb = image.convert('RGB').crop((0, 0, image.width, round(image.width * 941 / 1672)))
-                  average = sum(ImageStat.Stat(rgb).mean) / 3
-              # Night domain isolation intentionally preserves deep-black negative space.
-              # Reject genuinely blank frames, not low-key but nonblack GPU output.
-              valid = average <= 1 if name.startswith('zero-') else average >= (0.6 if name.startswith('domain-') else 3)
-              print(f'{name}: captured WebGL brightness={average:.1f}, valid={valid}')
-              sys.exit(0 if valid else 1)
-          except Exception as error:
-              print(error, file=sys.stderr)
-              sys.exit(1)
-          PY
-              then
-                return 0
-              fi
-              echo "Retrying incomplete WebGL screenshot ${name} (attempt ${attempt}/4)"
-            done
-            echo "::error::Town WebGL image never rendered: ${name}"
-            return 1
-          }
-          for viewport in 320x760 390x844 1120x870; do
-            width="${viewport%x*}"
-            for mode in day night zero; do
-              screenshot "${mode}-${width}-gpu-proof" "$viewport" "mode=$mode"
-            done
-          done
-          # Genuine shared-GPU domain images, not repainted user screenshots.
-          for domain in common nexus blacksmith codex hall combined off; do
-            case "$domain" in
-              off) screenshot "zero-domain-off-390" "390x844" "mode=night&domains=1&domain=off&npc=off";;
-              *) screenshot "domain-${domain}-390" "390x844" "mode=night&domains=1&domain=$domain&npc=off";;
-            esac
-          done
-          for width in 320 1120; do
-            screenshot "domain-common-${width}" "${width}x870" "mode=night&domains=1&domain=common&npc=off"
-            screenshot "domain-blacksmith-${width}" "${width}x870" "mode=night&domains=1&domain=blacksmith&npc=off"
-          done
-          screenshot "domain-nexus-neutral-390" "390x844" "mode=night&domains=1&domain=nexus&white=1&npc=off"
-          screenshot "domain-nexus-fire-390" "390x844" "mode=night&domains=1&domain=nexus&school=fire&npc=off"
-          screenshot "domain-nexus-frost-390" "390x844" "mode=night&domains=1&domain=nexus&school=frost&npc=off"
-          for passage in behind front hidden; do
-            case "$passage" in
-              behind) query='mode=night&npcProgress=0';;
-              front) query='mode=night&npcProgress=1';;
-              hidden) query='mode=night&npc=off';;
-            esac
-            screenshot "npc-$passage-390" "390,844" "$query"
-          done
-          for albedo in source neutral; do
-            screenshot "night-$albedo-paving-390" "390,844" "mode=night&paving=$albedo&npc=off"
-          done
-          for inspection in shadow-visibility normals albedo; do
-            for passage in behind front; do
-              case "$passage" in behind) progress=0;; front) progress=1;; esac
-              screenshot "$inspection-npc-$passage-390" "390,844" \
-                "mode=night&paving=neutral&view=$inspection&npcProgress=$progress"
-            done
-          done
-          for offset in -120 0 120; do
-            screenshot "lantern-$offset-1120" "1120,870" "mode=night&offset=$offset"
-          done
+          /tmp/town-gpu-capture/bin/pip install --quiet Pillow playwright
+          /tmp/town-gpu-capture/bin/python tools/art/town_gpu_playwright_capture.py \
+            --chrome "$BROWSER" --output artifacts/town-2p5d
           /tmp/town-gpu-capture/bin/python tools/art/town_gpu_capture_validate.py \
             artifacts/town-2p5d --width 320 --width 390 --width 1120
-          # Stage 4 is an explicit separate asset + light-mode acceptance
-          # test. It must use the actual two PNGs committed in this branch.
-          for mode in day night; do
-            screenshot "stage4-$mode-1120" "1120x870" "wellV4=1&mode=$mode&npc=off"
-          done
-          screenshot "zero-stage4-1120" "1120x870" "wellV4=1&mode=zero&npc=off"
-          for offset in -100 100; do
-            screenshot "stage4-lantern-$offset-1120" "1120x870" "wellV4=1&mode=night&offset=$offset&npc=off"
-          done
           /tmp/town-gpu-capture/bin/python - <<'PY'
           from pathlib import Path
           from PIL import Image, ImageChops, ImageStat
