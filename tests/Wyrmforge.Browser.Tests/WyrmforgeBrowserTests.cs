@@ -3391,47 +3391,54 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.SetViewportSizeAsync(width, height);
         await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/?arenaGpu=1", new() { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
-        await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT", Exact = true }).ClickAsync();
-        await ContinueThroughWorldGateAsync();
-        await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
-        await Page.EvaluateAsync(@"async () => {
-            window.__huntGpuArena = await import(new URL('js/arena.js?v=20261026-organic-ground-v2', document.baseURI).href);
-            window.__huntGpuRead = () => window.__huntGpuArena.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
-        }");
-        await Page.WaitForFunctionAsync(@"() => {
-            const d=window.__huntGpuRead();
-            return d && ((d.gpuWorld?.objects>2 && d.enemies.length>0) || d.gpuWorld?.error || d.renderingFailed);
-        }", null, new() { Timeout = 60000 });
-        await ScreenshotAsync($"live-hunt-shared-gpu-initial-{width}.png");
-        var startup = await Page.EvaluateAsync<JsonElement>("() => window.__huntGpuRead()");
-        Assert.IsFalse(startup.GetProperty("renderingFailed").GetBoolean());
-        Assert.IsTrue(startup.GetProperty("gpuWorld").TryGetProperty("objects", out var objects) && objects.GetInt32() > 2,
-            startup.GetProperty("gpuWorld").ToString());
-        var before = await Page.EvaluateAsync<double>("() => window.__huntGpuRead().player.x");
-        await Page.Locator("canvas.game-canvas").FocusAsync();
-        await Page.Keyboard.DownAsync("ArrowRight");
         try
         {
-            await Page.WaitForFunctionAsync("x => window.__huntGpuRead().player.x > x + 2", before);
+            await EnterFirstTrailAsync("BEGIN FIRST HUNT");
+            await Page.EvaluateAsync(@"async () => {
+                window.__huntGpuArena = await import(new URL('js/arena.js?v=20261026-organic-ground-v2', document.baseURI).href);
+                window.__huntGpuRead = () => window.__huntGpuArena.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
+            }");
+            await Page.WaitForFunctionAsync(@"() => {
+                const d=window.__huntGpuRead();
+                return d && (d.gpuWorld?.objects>1 || d.gpuWorld?.error || d.renderingFailed);
+            }", null, new() { Timeout = 30000 });
+            var startup = await Page.EvaluateAsync<JsonElement>("() => window.__huntGpuRead()");
+            Assert.IsFalse(startup.GetProperty("renderingFailed").GetBoolean());
+            Assert.IsTrue(startup.GetProperty("gpuWorld").TryGetProperty("objects", out var objects) && objects.GetInt32() > 1,
+                startup.GetProperty("gpuWorld").ToString());
+            await Page.WaitForFunctionAsync("() => !window.__huntGpuRead().paused");
+            var before = await Page.EvaluateAsync<double>("() => window.__huntGpuRead().player.x");
+            await Page.Locator("canvas.game-canvas").FocusAsync();
+            await Page.Keyboard.DownAsync("ArrowRight");
+            try
+            {
+                await Page.WaitForFunctionAsync("x => window.__huntGpuRead().player.x > x + 20", before);
+            }
+            finally { await Page.Keyboard.UpAsync("ArrowRight"); }
+            await Page.WaitForFunctionAsync("() => window.__huntGpuRead().enemies.length > 0");
+            var diagnostics = await Page.EvaluateAsync<JsonElement>("() => window.__huntGpuRead()");
+            Assert.IsFalse(diagnostics.GetProperty("renderingFailed").GetBoolean());
+            Assert.IsTrue(diagnostics.GetProperty("gpuWorld").GetProperty("objects").GetInt32() > 2);
         }
-        finally { await Page.Keyboard.UpAsync("ArrowRight"); }
-        var diagnostics = await Page.EvaluateAsync<JsonElement>("() => window.__huntGpuRead()");
-        Assert.IsFalse(diagnostics.GetProperty("renderingFailed").GetBoolean());
-        Assert.IsTrue(diagnostics.GetProperty("gpuWorld").GetProperty("objects").GetInt32() > 1);
-        await ScreenshotAsync($"live-hunt-shared-gpu-{width}.png");
+        finally
+        {
+            await ScreenshotAsync($"live-hunt-shared-gpu-{width}.png");
+            Directory.CreateDirectory(ArtifactDirectory);
+            var diagnostic = await Page.EvaluateAsync<string>("() => JSON.stringify(window.__huntGpuRead?.() ?? null)");
+            await File.WriteAllTextAsync(Path.Combine(ArtifactDirectory, $"live-hunt-shared-gpu-{width}.json"), diagnostic);
+        }
     }
 
-    private async Task EnterFirstTrailAsync()
+    private async Task EnterFirstTrailAsync(string gateLabel = "BEGIN HUNT")
     {
         var back = Page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" });
         if (await back.IsVisibleAsync()) await back.ClickAsync();
-        await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN HUNT", Exact = true }).ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = gateLabel, Exact = true }).ClickAsync();
         await ContinueThroughWorldGateAsync();
         await Expect(Page.GetByText("Choose your trail.", new() { Exact = true })).ToBeVisibleAsync();
-
         var route = Page.Locator("button.route-node.available").First;
         await route.ClickAsync();
-        await Page.GetByRole(AriaRole.Button, new() { NameRegex = new System.Text.RegularExpressions.Regex("^Enter (rare )?trail$") }).ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^Enter (rare )?trail$") }).ClickAsync();
         await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
     }
 
