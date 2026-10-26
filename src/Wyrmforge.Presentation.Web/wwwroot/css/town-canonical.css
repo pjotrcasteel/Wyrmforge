@@ -287,3 +287,22 @@
     outline:2px solid #fff;outline-offset:2px;
 }
 
+
+
+/* G4/T2 AUTHOR-ONLY opt-in (?townGpuPreview=1). This canvas occupies the
+   same canonical 1672x941 panorama and receives NO pointer events. Hotspots,
+   panning, active/vacant overlays and C# citizen movement stay authoritative.
+   The original painting is kept loaded as an immediate failure fallback. */
+.game-shell.refuge-home .refuge-town-gpu-canvas {
+    position:absolute;inset:0;width:100%;height:100%;z-index:0;
+    display:block;visibility:hidden;pointer-events:none;touch-action:none;
+    user-select:none;image-rendering:pixelated;
+}
+.game-shell.refuge-home .refuge-canonical-scene[data-town-gpu-preview="ready"] .refuge-town-gpu-canvas {
+    visibility:visible;
+}
+.game-shell.refuge-home .refuge-canonical-scene[data-town-gpu-preview="ready"] .refuge-town-night-base,
+.game-shell.refuge-home .refuge-canonical-scene[data-town-gpu-preview="ready"] .refuge-town-citizen,
+.game-shell.refuge-home .refuge-canonical-scene[data-town-gpu-preview="ready"] .refuge-town-png-cutout {
+    visibility:hidden;
+}
