@@ -396,6 +396,12 @@ const engine = new LightingEngine(canvas, {
             : source;
         const pavingLayers = floorReference === source ? separated
             : splitTownPavingReference(floorReference, selectedCutouts);
+        if (state.domains) {
+            // A day/night environment switch must change the scenic source,
+            // not merely turn up ambient on a painted night panorama.
+            engine.registerTexture('town-authored-day-background',
+                new T.CanvasTexture(pavingLayers.backdrop));
+        }
         // Preserve exact approved-source pixels as a QC toggle, but author a
         // NEW runtime-only candidate neutral albedo for the GPU paving pass.
         const neutral = document.createElement('canvas');
@@ -459,6 +465,9 @@ export function configureTownPreview(canvas, options) {
         typeof state.npcEnabled !== 'boolean')
         throw new RangeError('Invalid Town proof control');
     const manifest = structuredClone(state.manifest);
+    if (state.domains && state.mode === 'day')
+        manifest.materials.find(m => m.id === 'approved-day-reference').albedo =
+            'town-authored-day-background';
     manifest.materials.find(m => m.id === 'town-level-paving').albedo =
         state.paving === 'neutral' ? 'town-paving-neutral' : 'town-day-paving';
     const citizenY = 513 + state.npcProgress * 75;
