@@ -169,6 +169,22 @@ export function drawHollowCorpses(ctx,state,reducedMotion=false){
         const alpha=age<3?1:Math.max(0,4-age);
         if(injuryDeaths.draw(ctx,corpse.deathInjury,deathFrame,corpse.direction,
             corpse.x,corpse.y,corpse.radius*corpse.visualScale,alpha))continue;
+        if(corpse.deathInjury!=='standard') {
+            // Failure-safe: never regenerate a missing/guarded arm or healthy
+            // leg by switching a damaged corpse to the standard healthy rig.
+            // Briefly fade its own source pose until the 3D injury atlas loads.
+            const fallbackAlpha=Math.max(0,1-age/.3);
+            if(fallbackAlpha>0) {
+                const radius=corpse.radius*corpse.visualScale;
+                if(corpse.deathInjury==='broken-leg-left')
+                    injuries.draw(ctx,'broken-leg-left','walk',0,corpse.direction,
+                        corpse.x,corpse.y,radius,fallbackAlpha);
+                else
+                    arms.draw(ctx,corpse.armVariant,'walk',0,corpse.direction,
+                        corpse.x,corpse.y,radius,fallbackAlpha);
+            }
+            continue;
+        }
         if(skeletalDeath.draw(ctx,corpse.deathVariant,deathFrame,
             corpse.direction,corpse.x,corpse.y,corpse.radius*corpse.visualScale,
             age<3?1:Math.max(0,4-age)))continue;
