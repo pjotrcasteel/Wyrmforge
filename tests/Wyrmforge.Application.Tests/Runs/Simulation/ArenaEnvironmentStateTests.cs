@@ -133,6 +133,29 @@ public sealed class ArenaEnvironmentStateTests
     }
 
     [TestMethod]
+    public void Create_FirstOutskirtsCombat_UsesOriginalForestGroundWithoutChangingGameplay()
+    {
+        var map = new WyrmrealmMapState(seed: 1204);
+        var node = map.AvailableNodes[0] with { Habitat = WyrmrealmHabitat.Outskirts };
+        var actual = ArenaEnvironmentState.Create(map.Seed, node).Snapshot();
+        Assert.AreEqual(nameof(WyrmrealmHabitat.Outskirts), actual.Habitat);
+        Assert.IsFalse(actual.GeneratorPreview);
+        Assert.IsNotNull(actual.WetForest, "The first Fire Hunt should use existing source-backed ground.");
+        Assert.IsGreaterThan(0, actual.Barriers.Count, "Keep the opening combat crossing gates.");
+        var expected = HuntArenaGenerator.GenerateWetForest(actual.Seed);
+        CollectionAssert.AreEqual(expected.Trail.ToArray(), actual.WetForest.Trail.ToArray());
+        CollectionAssert.AreEqual(expected.Ground.ToArray(), actual.WetForest.Ground.ToArray());
+
+        var replay = ArenaEnvironmentState.Create(map.Seed, node).Snapshot();
+        CollectionAssert.AreEqual(actual.Barriers.ToArray(), replay.Barriers.ToArray());
+        CollectionAssert.AreEqual(actual.Props.ToArray(), replay.Props.ToArray());
+
+        var lab = ArenaEnvironmentState.Create(map.Seed, node, generatorPreview: true).Snapshot();
+        Assert.IsNull(lab.WetForest, "Preserve the Old Road lab's existing visual comparison.");
+        Assert.IsEmpty(lab.Barriers, "The lab must not create production crossing gates.");
+    }
+
+    [TestMethod]
     public void Create_NormalWetForestHunt_ExposesCachedRecipeAndPreservesCombatCrossings()
     {
         var map = new WyrmrealmMapState(seed: 1204);

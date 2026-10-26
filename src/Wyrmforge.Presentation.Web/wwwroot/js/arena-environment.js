@@ -78,7 +78,9 @@ function drawTerrain(ctx, plan, width, height, approvedAtlas = null) {
         ctx.globalAlpha = 1;
     }
     drawTerritoryGround(ctx, plan.story, approvedAtlas);
-    if (tile) drawGroundDecals(ctx, plan, width, height);
+    // The existing PR #340 source paintings already contain pebbles, grasses
+    // and leaf details; don't hide the real ground under legacy tiled decals.
+    if (tile && !plan.story.wetForest) drawGroundDecals(ctx, plan, width, height);
     if (plan.story.wetForest) drawWetForestDressing(ctx, plan.story, plan.forestProps, width, height);
 
     // No shared road overlay: the canonical encounter district now owns the entire

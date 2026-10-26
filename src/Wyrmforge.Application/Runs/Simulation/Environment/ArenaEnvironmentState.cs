@@ -47,11 +47,12 @@ public sealed class ArenaEnvironmentState
         this.habitat = habitat;
         this.preLair = preLair;
         this.generatorPreview = generatorPreview;
-        // The C# terrain recipe is visual authority for BOTH playable Wet Forest
-        // Hunts and the arena review. This does not enable lab-only props or
-        // change the existing production crossing gates/collision rules.
-        wetForest = habitat == nameof(WyrmrealmHabitat.WetForest)
-            ? HuntArenaGenerator.GenerateWetForest(seed) : null;
+        // Preserve the first Fire Hunt's Old Road identity and combat gates,
+        // but give its floor the same original source-backed woodland materials
+        // as later Wet Forest encounters. Old Road Lab previews are unchanged.
+        var usesForestGround = habitat == nameof(WyrmrealmHabitat.WetForest) ||
+            (habitat == nameof(WyrmrealmHabitat.Outskirts) && !generatorPreview);
+        wetForest = usesForestGround ? HuntArenaGenerator.GenerateWetForest(seed) : null;
         this.seed = seed;
         this.biome = biome;
         this.element = element;
