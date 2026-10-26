@@ -22,6 +22,7 @@ public sealed class ArenaEnvironmentState
     private readonly string habitat;
     private readonly bool preLair;
     private readonly bool generatorPreview;
+    private readonly HuntArenaGenerator.WetForestRecipe? wetForest;
     private EncounterPhase phase = EncounterPhase.Pressure;
 
     private sealed class Supply(string kind, double x, double y, EncounterPhase unlockPhase)
@@ -46,6 +47,11 @@ public sealed class ArenaEnvironmentState
         this.habitat = habitat;
         this.preLair = preLair;
         this.generatorPreview = generatorPreview;
+        // The C# terrain recipe is visual authority for BOTH playable Wet Forest
+        // Hunts and the arena review. This does not enable lab-only props or
+        // change the existing production crossing gates/collision rules.
+        wetForest = habitat == nameof(WyrmrealmHabitat.WetForest)
+            ? HuntArenaGenerator.GenerateWetForest(seed) : null;
         this.seed = seed;
         this.biome = biome;
         this.element = element;
@@ -118,8 +124,7 @@ public sealed class ArenaEnvironmentState
     {
         Corruption = HuntArenaGenerator.WyrmInfluence(stage, generatorPreview && preLair),
         GeneratorPreview = generatorPreview,
-        WetForest = generatorPreview && habitat == nameof(WyrmrealmHabitat.WetForest)
-            ? HuntArenaGenerator.GenerateWetForest(seed) : null,
+        WetForest = wetForest,
         Props = destructibles.Where(prop => prop.Health > 0)
             .Select(prop => new ArenaPropRenderSnapshot(prop.Spec.Id, prop.Spec.Kind, prop.Spec.X, prop.Spec.Y, prop.Spec.Radius,
                 prop.Health / prop.Spec.Health)).ToArray(),
