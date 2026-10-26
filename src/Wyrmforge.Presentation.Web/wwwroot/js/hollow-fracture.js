@@ -114,5 +114,10 @@ export function hollowFractureCanvasLights(emitters) {
 /** Merge into the existing GPU snapshot without mutating C# authoritative input. */
 export function withHollowFractureLightingFrame(frame, emitters) {
     if (!frame || !Array.isArray(emitters) || emitters.length === 0) return frame;
+    // Explicit G1/G5 zero-light diagnostics must remain truly black. A VFX
+    // descriptor must not re-enable world illumination behind the engine's back.
+    const zero = frame.environment?.ambient === 0 && frame.environment?.emission === false &&
+        (frame.lights ?? []).every(light => !light.enabled || light.intensity === 0);
+    if (zero) return frame;
     return {...frame,lights:[...(frame.lights ?? []),...emitters]};
 }
