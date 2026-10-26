@@ -41,18 +41,22 @@ export function readTownCitizensFromDom(scene) {
             if (typeof text !== 'string' || !/^\d+(?:\.\d+)?%$/.test(text))
                 throw new TypeError('Missing C# Town feet percentage: ' + axis);
             const value = Number(text.slice(0, -1));
-            if (!Number.isFinite(value) || value > 100)
+            if (!Number.isFinite(value) || value > 150)
                 throw new RangeError('Invalid C# Town feet percentage: ' + axis);
             return value / 100;
         };
         const x = percent(left, 'x') * ART_SIZE[0];
         const approxY = percent(top, 'y') * ART_SIZE[1];
         if (!Number.isInteger(id) || id < 0 || !Number.isFinite(sourceY) ||
-            sourceY < 0 || sourceY > ART_SIZE[1] ||
+            sourceY < 0 || sourceY > ART_SIZE[1] * 1.5 ||
             Math.abs(approxY - sourceY) > .1)
             throw new TypeError('C# Town feet coordinates and rendered style disagree');
+        // C# citizens can remain marked present while walking *off-screen
+        // south*. They must not disable the entire GPU preview when their feet
+        // pass the visible painting boundary. The live Town also clips them.
+        if (x > ART_SIZE[0] || sourceY > ART_SIZE[1]) return null;
         return { id, feet: [x, sourceY], isPresent: true };
-    });
+    }).filter(Boolean);
 }
 
 
