@@ -172,6 +172,8 @@ public sealed class TownGpuAcceptanceTests : PageTest
         await Expect(scene.Locator("[data-town-building]")).ToHaveCountAsync(4);
         if (domain == "off")
             Assert.AreEqual("true", await canvas.GetAttributeAsync("data-zero-black"));
+        var district = domain is "nexus" or "blacksmith" ? 0 : domain is "codex" or "hall" ? 2 : 1;
+        await Page.EvaluateAsync("index => window.wyrmforgeTown.show(index, false)", district);
         await CaptureAsync($"town-t2-domain-{domain}-{width}.png");
     }
 
