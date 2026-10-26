@@ -46,6 +46,28 @@ function axes() {
     return { right, up, toward, basis: new T.Matrix4().makeBasis(right, up, toward) };
 }
 
+/**
+ * T1 acceptance, not an aesthetic approximation: validate real Three.js
+ * camera projection against the source painting at nine art-space anchors.
+ * Canvas remains pixel-identical to the original 1672×941 composition.
+ */
+export function townProjectionMaxErrorPixels(camera) {
+    if (!camera?.isCamera) throw new TypeError('Missing live Three.js Town camera');
+    camera.updateMatrixWorld();
+    let maximum = 0;
+    for (const [x, y] of [
+        [0, 0], [TOWN_ART_SIZE[0], 0], [0, TOWN_ART_SIZE[1]],
+        [...TOWN_ART_SIZE], [TOWN_ART_SIZE[0] / 2, TOWN_ART_SIZE[1] / 2],
+        [712, 412], [864, 513], [902, 465], [1200, 710],
+    ]) {
+        const normalized = new T.Vector3(...townPreviewProjection(x, y)).project(camera);
+        const rx = (normalized.x + 1) / 2 * TOWN_ART_SIZE[0];
+        const ry = (1 - normalized.y) / 2 * TOWN_ART_SIZE[1];
+        maximum = Math.max(maximum, Math.abs(rx - x), Math.abs(ry - y));
+    }
+    return maximum;
+}
+
 export function townPreviewProjection(x, y) {
     const a = axes();
     return a.right.multiplyScalar((x / TOWN_ART_SIZE[0] - .5) * BASE_WIDTH)
@@ -274,6 +296,12 @@ export function configureTownPreview(canvas, options) {
         ? (citizenY >= 572 ? 'front' : 'behind') : 'authoritative';
     canvas.dataset.npcShadowCasters = actor.layers.filter(a => a.castsShadow).length.toString();
     canvas.dataset.inspection = state.mode === 'zero' ? 'lit' : state.view;
+    const projectionError = townProjectionMaxErrorPixels(state.engine.camera);
+    canvas.dataset.projectionErrorPx = projectionError.toFixed(3);
+    // Reject even apparently plausible previews if the live GPU image moves
+    // well, gate, actor or hotspot artwork from their canonical positions.
+    if (projectionError > 2) throw new Error(
+        `Town GPU image alignment drifted ${projectionError.toFixed(2)} source pixels`);
     canvas.dataset.pavingAlbedo = state.paving;
     canvas.dataset.neutralCoverage = (state.neutralMetrics?.coverage ?? 0).toString();
     canvas.dataset.illuminationReduction =
