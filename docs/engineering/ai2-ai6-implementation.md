@@ -39,3 +39,24 @@ Pack admission preserves the last confirmed sight result between scheduled sampl
 ## Remaining release gates
 
 Run the final-head browser/CI suite, inspect the live 390px Town/pack/boss previews, and measure the same scenarios on actual iPhone and Android hardware. Validate early and advanced Hunt pressure, escape lanes, boss recovery and Town believability with human play. Keep opt-in defaults until those results are recorded; do not mark AI6 accepted or claim automatic art/gameplay sign-off.
+
+## Follow-up implementation checkpoint — 26 October 2026
+
+- AI5 sensing fix: an unsampled perception frame is no longer treated as a
+  confirmed line-of-sight loss. `EncounterAdaptation` now preserves its previous
+  **observed** target only until the next actual sample; it never reads hidden
+  movement, and a confirmed loss still clears the motion baseline. The same
+  correction is wired into Tactical/Adaptive Hound and Ashfang adapters.
+- AI5 freeze fix: Ashfang's agent perception and decision clock no longer advance
+  when the authored Wyrm time scale is zero. A frozen boss cannot accumulate
+  observations and immediately exploit them when it unfreezes.
+- Added Domain and Application regression tests for staggered lateral sightings,
+  adaptation confidence, confirmed sight loss and frozen Ashfang frames.
+- Rebased the validation input by **merging** main `2fb030a` into this PR at
+  `0c72ea1` (two parents, no overlap with the 36 AI PR files). This retains
+  all unrelated source-backed Wet Forest and Hollowed fixes from main without
+  copying their changes into the AI PR diff. The earlier failed check was an
+  unrelated Wet Forest JavaScript determinism assertion on the older base.
+- Latest-head CI is a release gate, **not yet counted as passing evidence**.
+  No production rollout, physical mobile performance sign-off or user visual
+  acceptance is claimed by this checkpoint. Keep all opt-ins and fallback.
