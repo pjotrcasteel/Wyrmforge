@@ -23,13 +23,13 @@ public static class CombatDamageProfile
     {
         var primary = spell switch
         {
-        SpellId.FireBolt => CombatDamageTraits.Fire | CombatDamageTraits.Explosive,
-        SpellId.CinderNeedle => CombatDamageTraits.Fire | CombatDamageTraits.Piercing,
-        SpellId.FrostShard or SpellId.IceLance => CombatDamageTraits.Frost | CombatDamageTraits.Piercing,
-        SpellId.ChainLightning or SpellId.BallLightning => CombatDamageTraits.Storm,
-        SpellId.ArcaneOrb => CombatDamageTraits.Arcane | CombatDamageTraits.Force,
-        SpellId.AetherDart => CombatDamageTraits.Arcane | CombatDamageTraits.Piercing,
-        _ => CombatDamageTraits.None
+            SpellId.FireBolt => CombatDamageTraits.Fire | CombatDamageTraits.Explosive,
+            SpellId.CinderNeedle => CombatDamageTraits.Fire | CombatDamageTraits.Piercing,
+            SpellId.FrostShard or SpellId.IceLance => CombatDamageTraits.Frost | CombatDamageTraits.Piercing,
+            SpellId.ChainLightning or SpellId.BallLightning => CombatDamageTraits.Storm,
+            SpellId.ArcaneOrb => CombatDamageTraits.Arcane | CombatDamageTraits.Force,
+            SpellId.AetherDart => CombatDamageTraits.Arcane | CombatDamageTraits.Piercing,
+            _ => CombatDamageTraits.None
         };
         // Compound sources keep their original trait; an infusion adds its
         // actual elemental identity without awarding cosmetic damage.
