@@ -5,7 +5,7 @@ import * as T from './lighting/vendor/three.module.js';
 import { LightingEngine } from './lighting/engine.js';
 import { environmentProfile } from './lighting/registry.js';
 import { GROUND_ATLAS_URL } from './arena-materials.js';
-import { threeMaterialPlan, bakeThreeMaterialGround, THREE_MATERIAL_REVIEW } from './wet-forest-three-material-kit.js';
+import { threeMaterialPlan, bakeThreeMaterialGround, bakeThreeMaterialRoughness, THREE_MATERIAL_REVIEW } from './wet-forest-three-material-kit.js';
 
 const states = new WeakMap();
 const profiles = new Set(['night', 'neutral', 'zero']);
@@ -19,10 +19,11 @@ function lamp(id, color, position, intensity, priority) {
     };
 }
 
-function material(texture) {
+function material(texture, roughness) {
     return {
         id: 'forest-ground-material', color: '#ffffff', albedo: texture,
-        roughness: .91, metalness: 0, specular: .13, reflection: 'direct',
+        roughnessMap: roughness, roughness: 1, metalness: 0,
+        specular: .35, reflection: 'direct',
         emission: '#000000', emissionIntensity: 0, alphaCutoff: 0,
         doubleSided: false,
     };
@@ -37,7 +38,7 @@ function ground() {
     };
 }
 
-export function inspectionSnapshot(textureId, profile) {
+export function inspectionSnapshot(textureId, profile, roughnessId = 'forest-roughness') {
     if (!profiles.has(profile)) throw new TypeError('Unknown lighting review profile');
     const zero = profile === 'zero';
     const environment = environmentProfile(zero ? 'zero' : profile === 'night' ? 'night' : 'day');
@@ -52,13 +53,13 @@ export function inspectionSnapshot(textureId, profile) {
            lamp('forest-lamp-east', '#9bb5d7', [4.0, -5.2, 4.1], 18, 5)]
         : [];
     return { version: 1, time: 0, environment, lights,
-        materials: [material(textureId)], objects: [ground()] };
+        materials: [material(textureId, roughnessId)], objects: [ground()] };
 }
 
 function redraw(state) {
     if (!state.alive || !state.textureId) return;
     const engine = state.engine;
-    engine.apply(inspectionSnapshot(state.textureId, state.profile));
+    engine.apply(inspectionSnapshot(state.textureId, state.profile, state.roughnessId));
     engine.setDebugView('lit');
     engine.render(Math.max(1, state.canvas.clientWidth), Math.max(1, state.canvas.clientHeight));
     state.canvas.dataset.materialReviewReady = 'true';
@@ -70,15 +71,19 @@ function rebuild(state) {
     const plan = threeMaterialPlan(state.recipe, state.seed);
     if (!plan) throw new TypeError('Missing/invalid C# Wet Forest terrain recipe');
     const pixels = bakeThreeMaterialGround(plan, state.source, state.seed, makeCanvas);
-    if (!pixels) throw new Error('Could not bake the existing approved ground swatches');
+    const roughness = bakeThreeMaterialRoughness(plan, makeCanvas);
+    if (!pixels || !roughness) throw new Error('Could not bake shared-engine ground material maps');
     // Release previous material and GPU texture at re-seed (not once per frame).
     state.engine.removeObject('forest-ground');
-    if (state.textureId) {
-        state.engine.textures.get(state.textureId)?.dispose();
-        state.engine.textures.delete(state.textureId);
+    for (const id of [state.textureId, state.roughnessId]) if (id) {
+        state.engine.textures.get(id)?.dispose();
+        state.engine.textures.delete(id);
     }
-    state.textureId = 'forest-ground-' + ++state.version;
+    const version = ++state.version;
+    state.textureId = 'forest-ground-' + version;
+    state.roughnessId = 'forest-roughness-' + version;
     state.engine.registerTexture(state.textureId, new T.CanvasTexture(pixels));
+    state.engine.registerTexture(state.roughnessId, new T.CanvasTexture(roughness), false);
     state.plan = plan;
     redraw(state);
 }
@@ -94,7 +99,7 @@ export async function initializeThreeMaterialReview(canvas, recipe, seed = 1204,
     engine.camera.lookAt(0, 0, 0);
     engine.halfWidth = 8.25;
     const state = { canvas, engine, alive: true, source: null, plan: null,
-        recipe, seed: seed | 0, profile, textureId: null, version: 0, resize: null };
+        recipe, seed: seed | 0, profile, textureId: null, roughnessId: null, version: 0, resize: null };
     states.set(canvas, state);
     try {
         const source = new Image();
@@ -132,6 +137,8 @@ export function threeMaterialDiagnostics(canvas) {
         counts: state.plan?.counts ?? null, source: state.plan?.authority ?? null,
         materialFamilies: THREE_MATERIAL_REVIEW.selected,
         sourceNeutral: THREE_MATERIAL_REVIEW.neutralAlbedoApproved,
+        provisionalRoughness: THREE_MATERIAL_REVIEW.roughnessProvisional,
+        GPUMaps: state.textureId ? 2 : 0,
         gameIntegrated: false, lights: state.engine.selected?.length ?? 0,
     };
 }
