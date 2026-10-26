@@ -36,3 +36,31 @@ test('authored sprite foot anchor stays on the ground and its billboard faces th
     assert.ok(top.z > 0, 'Standing cutout geometry must rise above ground to cast a directional shadow.');
     geometry.dispose();
 });
+
+test('same-depth walls keep distinct stable GPU IDs and crop their own footprints', async () => {
+    const { huntLayerCapture } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/hunt-gpu-layers.js');
+    const left = { kind: 'masonry', depth: 325, width: 1000, height: 1000,
+        barrier: { kind: 'ruin', x: 0, y: .3, width: .38, height: .025 } };
+    const right = { ...left, barrier: { ...left.barrier, x: .62 } };
+    const a = huntLayerCapture(left, { x: 500, y: 800 });
+    const b = huntLayerCapture(right, { x: 500, y: 800 });
+    assert.notEqual(a.id, b.id, 'Shared depth is not a unique material identity.');
+    assert.deepEqual(a, huntLayerCapture(left, { x: 10, y: 20 }));
+    assert.ok(a.x <= 0 && a.x + a.size >= 380);
+    assert.ok(a.y <= 300 && a.y + a.size >= 325);
+    assert.ok(b.x <= 620 && b.x + b.size >= 1000);
+});
+
+test('prop and dead-boss GPU resources stay at their own world positions', async () => {
+    const { huntLayerCapture } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/hunt-gpu-layers.js');
+    const player = { x: 20, y: 30 };
+    const prop = huntLayerCapture({ kind: 'masonry', width: 1000, height: 1500,
+        prop: { id: 7, x: .8, y: .6, radius: 16 } }, player);
+    assert.equal(prop.id, 'hunt-prop:7');
+    assert.equal(prop.x + prop.size / 2, 800);
+    assert.equal(prop.y + prop.size * .75, 900);
+    const death = huntLayerCapture({ kind: 'dragonDeath', depth: 600 }, player, { id: 9, x: 700, y: 600, radius: 60 });
+    assert.equal(death.id, 'hunt-dragonDeath:9');
+    assert.equal(death.x + death.size / 2, 700);
+    assert.equal(death.y + death.size * .75, 600);
+});
