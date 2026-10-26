@@ -3415,7 +3415,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
     {
         var back = Page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" });
         if (await back.IsVisibleAsync()) await back.ClickAsync();
-        await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN HUNT", Exact = true }).ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^BEGIN (FIRST )?HUNT$") }).ClickAsync();
         await ContinueThroughWorldGateAsync();
         await Expect(Page.GetByText("Choose your trail.", new() { Exact = true })).ToBeVisibleAsync();
 

@@ -37,16 +37,27 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
             const lit=world.engine.pixels();let peak=0;
             for(let i=0;i<lit.length;i+=4)peak=Math.max(peak,lit[i],lit[i+1],lit[i+2]);
             const shadowViews=world.engine.diagnostics().lights.filter(l=>l.shadow).length;
+            world.render(ctx,{...frame,lights:frame.lights.map(light=>({...light,castsShadow:false}))});
+            const unshadowed=world.engine.pixels();
+            const alpha=tile.getContext('2d').getImageData(0,0,96,96).data;
+            let groundShadowPixels=0;
+            for(let i=0;i<lit.length;i+=4){
+                const x=(i/4)%width, y=height-1-Math.floor(i/4/width);
+                const sx=Math.floor(x-(width/2-48)),sy=Math.floor(y-(height/2-48));
+                const actorPixel=sx>=0&&sy>=0&&sx<96&&sy<96&&alpha[(sy*96+sx)*4+3]>0;
+                if(!actorPixel&&(lit[i]!==unshadowed[i]||lit[i+1]!==unshadowed[i+1]||lit[i+2]!==unshadowed[i+2]))groundShadowPixels++;
+            }
             world.render(ctx,{...frame,lights:[]});
             const zero=world.engine.pixels();let dark=0;
             for(let i=0;i<zero.length;i+=4)dark=Math.max(dark,zero[i],zero[i+1],zero[i+2]);
             world.render(ctx,frame);
             window.__huntGpuAdapterProof=world;
-            return [peak,dark,shadowViews];
+            return [peak,dark,shadowViews,groundShadowPixels];
         }", new { width, height });
         Assert.IsTrue(result[0] > 0, "Actual shared GPU output must respond to source light.");
         Assert.AreEqual(0, result[1], "No ambient/emission/sources must produce black world pixels.");
         Assert.AreEqual(1, result[2], "The shared engine must select the actual shadow-casting source.");
+        Assert.IsTrue(result[3] > 0, "Disabling source shadows must change actual ground pixels outside the actor silhouette.");
         var artifacts = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
         Directory.CreateDirectory(artifacts);
         await Page.Locator("#hunt-gpu-adapter-proof").ScreenshotAsync(new()
