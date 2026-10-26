@@ -10,6 +10,9 @@ import { deriveTownNeutralPavingCanvas } from './town-neutral-albedo.js';
 import { projectTownCitizens, TOWN_CITIZEN_ART_WIDTH, TOWN_CITIZEN_ART_HEIGHT } from './town-citizen-gpu-bridge.js';
 
 export const TOWN_PREVIEW_SOURCE = 'art/town/day-active.webp';
+// Equal orthographic width and art-plane width is essential: the old
+// 8.16 half-width shrank the canonical image by 1.96% (16.4 original
+// artwork pixels per side), visibly misaligning C# Town hotspots/NPCs.
 const BASE_WIDTH = 16;
 const BASE_HEIGHT = BASE_WIDTH * TOWN_ART_SIZE[1] / TOWN_ART_SIZE[0];
 const states = new WeakMap();
@@ -205,7 +208,7 @@ export async function initializeTownPreview(canvas) {
             engine.registerTexture('approved-cutout-texture-' + cutout.id, cutoutTexture(source, cutout));
         }
         state.manifest = townPreviewManifest();
-        engine.setCamera([0, 0, 0], 8.16);
+        engine.setCamera([0, 0, 0], BASE_WIDTH / 2);
         configureTownPreview(canvas, {});
         canvas.dataset.ready = 'true';
         state.resize = new ResizeObserver(() => configureTownPreview(canvas, {}));
@@ -246,7 +249,7 @@ export function configureTownPreview(canvas, options) {
         state: {}, mode: state.mode, localHour: 12, time: 0,
     });
     state.engine.apply(snapshot);
-    state.engine.setCamera([0, 0, 0], 8.16);
+    state.engine.setCamera([0, 0, 0], BASE_WIDTH / 2);
     // The shared shadow-visibility inspector reuses the *real* shadow map
     // from a preceding lit frame. Never fake it with a CSS darkness mask.
     state.engine.setDebugView('lit');
