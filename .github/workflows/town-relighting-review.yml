@@ -8,9 +8,11 @@ on:
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/town-relighting-preview.js'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/town-citizen-gpu-bridge.js'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/town-paving-material.js'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/town-neutral-albedo.js'
       - 'tests/javascript/town-relighting-*.test.mjs'
       - 'tests/javascript/town-citizen-gpu-bridge.test.mjs'
       - 'tests/javascript/town-paving-material.test.mjs'
+      - 'tests/javascript/town-neutral-albedo.test.mjs'
       - '.github/workflows/town-relighting-review.yml'
   push:
     branches:
@@ -45,7 +47,7 @@ jobs:
         run: python3 tools/art/check_town_sources.py
 
       - name: Check new Town GPU projection contracts
-        run: node --test tests/javascript/town-relighting-contract.test.mjs tests/javascript/town-relighting-preview.test.mjs tests/javascript/town-paving-material.test.mjs tests/javascript/town-citizen-gpu-bridge.test.mjs
+        run: node --test tests/javascript/town-relighting-contract.test.mjs tests/javascript/town-relighting-preview.test.mjs tests/javascript/town-paving-material.test.mjs tests/javascript/town-citizen-gpu-bridge.test.mjs tests/javascript/town-neutral-albedo.test.mjs
 
       - name: Start isolated static GPU review
         run: |
@@ -95,7 +97,19 @@ jobs:
               grep -q 'data-npc-shadow-casters="1"' "${base}.html" || exit 1
             fi
           done
-          echo "These are isolated GPU-lab screenshots of original CSS actor placeholder, NOT T2 final art."
+          for albedo in source neutral; do
+            base="artifacts/town-2p5d/night-${albedo}-paving-390"
+            url="http://127.0.0.1:4179/town-relighting-preview.html?mode=night&paving=$albedo&npc=off"
+            "$BROWSER" $FLAGS --window-size="390,844" --screenshot="${base}.png" "$url" > "${base}.log" 2>&1
+            "$BROWSER" $FLAGS --window-size="390,844" --dump-dom "$url" > "${base}.html" 2>> "${base}.log"
+            grep -q "data-paving-albedo=\"$albedo\"" "${base}.html" || { echo "Paving material selection failed"; exit 1; }
+            grep -q 'data-ready="true"' "${base}.html" || { echo "GPU scene failed"; exit 1; }
+            if [ "$albedo" = neutral ]; then
+              grep -E -q 'data-neutral-coverage="[1-9][0-9]+"' "${base}.html" ||
+                { echo "Neutral paving candidate was never generated"; exit 1; }
+            fi
+          done
+          echo "Screenshots use original authored Town sources; neutral paving is only a candidate until owner signs off."
 
       - name: Upload exact-source review frames and diagnostics
         if: always()
