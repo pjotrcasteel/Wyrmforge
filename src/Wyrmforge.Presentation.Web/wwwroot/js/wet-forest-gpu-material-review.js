@@ -11,6 +11,7 @@ import { threeMaterialPlan, bakeThreeMaterialGround, bakeSourceBackedThreeMateri
 const states = new WeakMap();
 const profiles = new Set(['night', 'neutral', 'zero']);
 const sourceKinds = new Set(['source-backed', 'original']);
+const boundaryKinds = new Set(['organic', 'original']);
 const makeCanvas = () => document.createElement('canvas');
 
 function lamp(id, color, position, intensity, priority) {
@@ -69,6 +70,7 @@ function redraw(state) {
     state.canvas.dataset.materialReviewSeed = String(state.seed);
     state.canvas.dataset.materialReviewSource = state.sourceKind;
     state.canvas.dataset.materialReviewVariant = String(state.variant);
+    state.canvas.dataset.materialReviewBoundary = state.boundaryKind;
 }
 
 async function decode(url) {
@@ -98,7 +100,7 @@ async function rebuild(state) {
     const plan = threeMaterialPlan(state.recipe, state.seed);
     if (!plan) throw new TypeError('Missing/invalid C# Wet Forest terrain recipe');
     const pixels = state.sourceKind === 'source-backed'
-        ? bakeSourceBackedThreeMaterialGround(plan, state.art, state.seed, makeCanvas)
+        ? bakeSourceBackedThreeMaterialGround(plan, state.art, state.seed, makeCanvas, state.boundaryKind)
         : bakeThreeMaterialGround(plan, state.source, state.seed, makeCanvas);
     const roughness = bakeThreeMaterialRoughness(plan, makeCanvas);
     if (!pixels || !roughness) throw new Error('Could not bake source-backed GPU ground material maps');
@@ -116,9 +118,10 @@ async function rebuild(state) {
     redraw(state);
 }
 
-export async function initializeThreeMaterialReview(canvas, recipe, seed = 1204, profile = 'night', sourceKind = 'source-backed', variant = 1) {
+export async function initializeThreeMaterialReview(canvas, recipe, seed = 1204, profile = 'night', sourceKind = 'source-backed', variant = 1, boundaryKind = 'organic') {
     if (states.has(canvas)) return;
-    if (!profiles.has(profile) || !sourceKinds.has(sourceKind) || !SOURCE_BACKED_VARIANTS.includes(variant))
+    if (!profiles.has(profile) || !sourceKinds.has(sourceKind)
+        || !SOURCE_BACKED_VARIANTS.includes(variant) || !boundaryKinds.has(boundaryKind))
         throw new TypeError('Unknown lighting/artwork review options');
     const engine = new LightingEngine(canvas, { maxLights: 3, shadowViews: 0 });
     engine.registerGeometry('ground-plane', new T.PlaneGeometry(1, 1));
@@ -127,7 +130,7 @@ export async function initializeThreeMaterialReview(canvas, recipe, seed = 1204,
     engine.camera.lookAt(0, 0, 0);
     engine.halfWidth = 8.25;
     const state = { canvas, engine, alive: true, source: null, art: null, plan: null,
-        recipe, seed: seed | 0, profile, sourceKind, variant, loadedVariant: 0,
+        recipe, seed: seed | 0, profile, sourceKind, variant, boundaryKind, loadedVariant: 0,
         textureId: null, roughnessId: null, version: 0, buildSerial: 0, resize: null };
     states.set(canvas, state);
     try {
@@ -144,16 +147,17 @@ export async function initializeThreeMaterialReview(canvas, recipe, seed = 1204,
     }
 }
 
-export async function configureThreeMaterialReview(canvas, recipe, seed, profile = 'night', sourceKind = 'source-backed', variant = 1) {
+export async function configureThreeMaterialReview(canvas, recipe, seed, profile = 'night', sourceKind = 'source-backed', variant = 1, boundaryKind = 'organic') {
     const state = states.get(canvas);
     if (!state || !state.alive) return;
-    if (!profiles.has(profile) || !sourceKinds.has(sourceKind) || !SOURCE_BACKED_VARIANTS.includes(variant))
+    if (!profiles.has(profile) || !sourceKinds.has(sourceKind)
+        || !SOURCE_BACKED_VARIANTS.includes(variant) || !boundaryKinds.has(boundaryKind))
         throw new TypeError('Unknown lighting/artwork review options');
     const nextSeed = seed | 0;
     const changed = nextSeed !== state.seed || recipe !== state.recipe
-        || state.sourceKind !== sourceKind || state.variant !== variant;
+        || state.sourceKind !== sourceKind || state.variant !== variant || state.boundaryKind !== boundaryKind;
     state.seed = nextSeed; state.profile = profile; state.recipe = recipe;
-    state.sourceKind = sourceKind; state.variant = variant;
+    state.sourceKind = sourceKind; state.variant = variant; state.boundaryKind = boundaryKind;
     if (!state.source) return;
     if (changed) await rebuild(state);
     else redraw(state);
@@ -168,6 +172,7 @@ export function threeMaterialDiagnostics(canvas) {
         materialFamilies: THREE_MATERIAL_REVIEW.selected,
         sourceKind: state.sourceKind,
         variant: state.variant,
+        boundaryKind: state.boundaryKind,
         materialArtApproved: false,
         sourceNeutral: THREE_MATERIAL_REVIEW.neutralAlbedoApproved,
         provisionalRoughness: THREE_MATERIAL_REVIEW.roughnessProvisional,
