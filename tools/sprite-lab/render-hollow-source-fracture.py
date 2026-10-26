@@ -125,6 +125,17 @@ for part in PARTS:
     obj.keyframe_insert('hide_render', frame=SPLIT_FRAME)
     pieces[part] = (obj, origin.copy())
 evaluated.to_mesh_clear()
+geometry_report = {
+    'source': str(SOURCE.relative_to(ROOT)),
+    'parts': {part: {'faces': counts[part],
+                     'vertices': len(pieces[part][0].data.vertices),
+                     'uvLayers': len(pieces[part][0].data.uv_layers),
+                     'materials': [material.name if material else None for material in pieces[part][0].data.materials]}
+              for part in PARTS}
+}
+assert all(item['vertices'] and item['uvLayers'] and item['materials']
+           for item in geometry_report['parts'].values()), 'Loss of source mesh UV/material/geometry data'
+(OUT / 'geometry-diagnostics.json').write_text(json.dumps(geometry_report, indent=2) + '\n')
 character.hide_render = False
 character.keyframe_insert('hide_render', frame=SPLIT_FRAME - 1)
 character.hide_render = True
@@ -188,6 +199,14 @@ for direction in selected:
         bounds.append(box)
         poses.append(frame_image)
         atlas.alpha_composite(frame_image, ((frame - 1)*CELL, 0))
+    # A screenshot containing pixels is not necessarily valid: record how
+    # much of the original silhouette survives the mesh cut at frame 7.
+    from PIL import ImageChops
+    before = poses[SPLIT_FRAME - 2].getchannel('A').point(lambda n: 255 if n > 30 else 0).convert('1')
+    after = poses[SPLIT_FRAME - 1].getchannel('A').point(lambda n: 255 if n > 30 else 0).convert('1')
+    overlap = sum(ImageChops.logical_and(before, after).getdata())
+    covered = sum(ImageChops.logical_or(before, after).getdata())
+    manifest.setdefault('splitSilhouetteOverlap', {})[direction] = round(overlap / max(1, covered), 4)
     atlas_path = OUT / f'fracture-{direction}.png'
     atlas.save(atlas_path, optimize=True)
     manifest.setdefault('atlasHashes', {})[direction] = hashlib.sha256(atlas_path.read_bytes()).hexdigest()
