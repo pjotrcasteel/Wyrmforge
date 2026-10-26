@@ -1,4 +1,3 @@
-import { HuntGpuWorld } from './arena-gpu-world.js';
 import { preloadFireballV5 } from './arena-fireball-v5.js';
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
 import { attachArenaInput, getArenaMovement, getArenaAim } from './arena-input.js';
@@ -43,7 +42,11 @@ export function initializeArena(canvas, dotNetReference) {
     const state = createState(canvas, dotNetReference);
     arenas.set(canvas, state);
     state.detachInput = attachArenaInput(state);
-    try { if (new URLSearchParams(location.search).get('arenaGpu') === '1') state.gpuWorld = new HuntGpuWorld(); } catch (error) { state.gpuError = String(error); }
+    if (new URLSearchParams(location.search).get('arenaGpu') === '1') {
+        void import('./arena-gpu-world.js').then(({ HuntGpuWorld }) => {
+            if (state.active) state.gpuWorld = new HuntGpuWorld();
+        }).catch(error => { state.gpuError = String(error); });
+    }
     const now = performance.now();
     state.lastSimulationTimestamp = now;
     state.performanceWindowStarted = now;
