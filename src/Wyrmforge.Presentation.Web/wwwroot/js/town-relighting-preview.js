@@ -6,6 +6,7 @@ import { LightingEngine } from './lighting/engine.js';
 import { compileTownLightingSnapshot, TOWN_ART_SIZE } from './town-relightable-scene.js';
 import { CUTOUTS } from './refuge-foreground-cutouts.js';
 import { splitTownPavingReference, levelPavingNormal } from './town-paving-material.js';
+import { deriveTownNeutralPavingCanvas } from './town-neutral-albedo.js';
 import { projectTownCitizens, TOWN_CITIZEN_ART_WIDTH, TOWN_CITIZEN_ART_HEIGHT } from './town-citizen-gpu-bridge.js';
 
 export const TOWN_PREVIEW_SOURCE = 'art/town/day-active.webp';
@@ -171,7 +172,8 @@ async function loadApprovedImage() {
 export async function initializeTownPreview(canvas) {
     if (states.has(canvas)) return;
     const engine = new LightingEngine(canvas, { shadowViews: 8, maxLights: 8, maxFramebufferWidth: 780 });
-    const state = { engine, mode: 'night', lamps: true, offset: 0, npcEnabled: true, npcProgress: 0, alive: true };
+    const state = { engine, mode: 'night', lamps: true, offset: 0, npcEnabled: true,
+        npcProgress: 0, paving: 'neutral', alive: true };
     states.set(canvas, state);
     try {
         const a = axes(), source = await loadApprovedImage();
@@ -184,6 +186,13 @@ export async function initializeTownPreview(canvas) {
         const separated = splitTownPavingReference(source, CUTOUTS);
         engine.registerTexture('town-day-background', new T.CanvasTexture(separated.backdrop));
         engine.registerTexture('town-day-paving', new T.CanvasTexture(separated.floor));
+        // Preserve exact approved-source pixels as a QC toggle, but author a
+        // NEW runtime-only candidate neutral albedo for the GPU paving pass.
+        const neutral = document.createElement('canvas');
+        neutral.width = separated.floor.width; neutral.height = separated.floor.height;
+        neutral.getContext('2d').drawImage(separated.floor, 0, 0);
+        state.neutralMetrics = deriveTownNeutralPavingCanvas(neutral);
+        engine.registerTexture('town-paving-neutral', new T.CanvasTexture(neutral));
         const normal = levelPavingNormal(a.right, a.up, a.toward);
         const normalTexture = new T.DataTexture(normal, 1, 1, T.RGBAFormat);
         normalTexture.needsUpdate = true;
@@ -214,10 +223,13 @@ export function configureTownPreview(canvas, options) {
     Object.assign(state, options);
     if (!['day', 'night', 'zero'].includes(state.mode) ||
         !Number.isFinite(state.offset) || Math.abs(state.offset) > 250 ||
+        !['source', 'neutral'].includes(state.paving) ||
         !Number.isFinite(state.npcProgress) || state.npcProgress < 0 || state.npcProgress > 1 ||
         typeof state.npcEnabled !== 'boolean')
         throw new RangeError('Invalid Town proof control');
     const manifest = structuredClone(state.manifest);
+    manifest.materials.find(m => m.id === 'town-level-paving').albedo =
+        state.paving === 'neutral' ? 'town-paving-neutral' : 'town-day-paving';
     const citizenY = 513 + state.npcProgress * 75;
     const actor = projectTownCitizens([{ id: 1, feet: [864, citizenY], isPresent: true }],
         townPreviewProjection, axes().toward.toArray(), { enabled: state.npcEnabled });
@@ -247,6 +259,8 @@ export function configureTownPreview(canvas, options) {
     canvas.dataset.npcFeetY = state.npcEnabled ? citizenY.toFixed(2) : 'hidden';
     canvas.dataset.npcPass = state.npcEnabled ? (citizenY >= 572 ? 'front' : 'behind') : 'hidden';
     canvas.dataset.npcShadowCasters = actor.layers.filter(a => a.castsShadow).length.toString();
+    canvas.dataset.pavingAlbedo = state.paving;
+    canvas.dataset.neutralCoverage = (state.neutralMetrics?.coverage ?? 0).toString();
     canvas.dataset.profile = state.mode;
     canvas.dataset.fixtureCount = snapshot.lights.filter(l => l.enabled).length.toString();
 }
