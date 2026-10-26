@@ -1,5 +1,5 @@
 // Wet Forest vertical slice: one deterministic, gameplay-authoritative C# recipe,
-// three already-accepted material families, and no new road or collision authority.
+// three source-art study families, and no new road or collision authority.
 // Graphics-only mapping, suitable for a cached GPU albedo surface in the review page.
 import { CELL, MATERIALS, GROUND_TILE_SIZE, buildGroundQuiltAtlas,
     drawReferenceGroundBoard, drawGroundMaterialTransitions, groundMaterialBoundaryPlan } from './arena-materials.js';
@@ -89,29 +89,39 @@ export function threeMaterialPlan(recipe, seed, width = MAP_WIDTH, height = MAP_
         previewOnly: true, materialIds: MATERIAL_IDS };
 }
 
-// Authored 256px modular material asset library, generated deterministically
-// from tools/art/build_wet_forest_compact_materials.py for the STATIC app bundle.
-// Existing six painting sources and the C# topology are left unmodified.
-export const COMPACT_MATERIAL_SOURCE = Object.freeze({
-    0: new URL('../art/environment/wet-forest-compact/v1/grass-moss.png', import.meta.url).href,
-    1: new URL('../art/environment/wet-forest-compact/v1/wet-mud.png', import.meta.url).href,
-    3: new URL('../art/environment/wet-forest-compact/v1/trampled-earth.png', import.meta.url).href,
+// These are the SAME 900px source-backed image candidates from Wet Forest
+// art PR #340, exported by its ORIGINAL generators from hash-locked paintings.
+// They are still unapproved and contain painterly highlights (not neutral albedo).
+const REVIEW_TILE_SIZE = 900;
+const REVIEW_IDS = Object.freeze([0, 1, 3]);
+const REVIEW_FAMILY = Object.freeze({
+    0: ['grass-moss', 'grass-moss-ART-CANDIDATE-'],
+    1: ['wet-mud', 'wet-mud-INDEPENDENT-ART-CANDIDATE-'],
+    3: ['trampled-earth', 'trampled-earth-INDEPENDENT-ART-CANDIDATE-'],
 });
-export const COMPACT_TILE_SIZE = 256;
-const COMPACT_INDEX = Object.freeze([0, 1, 3]);
-const nonnegativeMod = (x, n) => ((x % n) + n) % n;
+const nonnegativeMod = (value, period) => ((value % period) + period) % period;
+export const SOURCE_BACKED_VARIANTS = Object.freeze([1, 2, 3, 4, 5, 6]);
+export const SOURCE_BACKED_SIZE = REVIEW_TILE_SIZE;
 
-function drawCompactRegion(ctx, sources, index, x, y, width, height, phase) {
-    const tile = sources[index];
-    if (!tile || !Number.isFinite(x) || !Number.isFinite(y)) return false;
-    const maxX = x + width, maxY = y + height;
-    for (let py = y; py < maxY;) {
-        const sy = nonnegativeMod(py + phase, COMPACT_TILE_SIZE);
-        const h = Math.min(COMPACT_TILE_SIZE - sy, maxY - py);
-        for (let px = x; px < maxX;) {
-            const sx = nonnegativeMod(px + phase, COMPACT_TILE_SIZE);
-            const w = Math.min(COMPACT_TILE_SIZE - sx, maxX - px);
-            ctx.drawImage(tile, sx, sy, w, h, px, py, w, h);
+export function sourceBackedUrl(materialId, variant) {
+    if (!REVIEW_FAMILY[materialId] || !SOURCE_BACKED_VARIANTS.includes(variant)) return null;
+    const [family, prefix] = REVIEW_FAMILY[materialId];
+    const num = String(variant).padStart(2, '0');
+    return new URL('../art/environment/wet-forest-source-backed/v1/' +
+        family + '-art-candidates/' + prefix + num + '.png', import.meta.url).href;
+}
+
+function copyOriginalArt(ctx, images, materialId, x, y, width, height, phase) {
+    const art = images[materialId];
+    if (!art) return false;
+    const endX = x + width, endY = y + height;
+    for (let py = y; py < endY;) {
+        const sy = nonnegativeMod(py + phase, REVIEW_TILE_SIZE);
+        const h = Math.min(REVIEW_TILE_SIZE - sy, endY - py);
+        for (let px = x; px < endX;) {
+            const sx = nonnegativeMod(px + phase, REVIEW_TILE_SIZE);
+            const w = Math.min(REVIEW_TILE_SIZE - sx, endX - px);
+            ctx.drawImage(art, sx, sy, w, h, px, py, w, h);
             px += w;
         }
         py += h;
@@ -119,16 +129,17 @@ function drawCompactRegion(ctx, sources, index, x, y, width, height, phase) {
     return true;
 }
 
-/** Three directly authored repeatable pixel materials. Draw once per seed.
- * Only approved C# terrain cells choose the base texture; edges borrow real
- * neighboring pixel clusters using existing canonical material boundaries.
- * No RGB alpha fade, stamp-based road authority, new collision or water plane. */
-export function bakeCompactThreeMaterialGround(plan, images, seed, canvasFactory) {
-    if (!plan || !images || !canvasFactory || !Number.isInteger(seed)
+/** Directly place pre-existing PR #340 artwork beneath authoritative C# region
+ * boundaries. No synthetic recoloring, shading, noise or new world topology.
+ * 16px cells are classification, NOT independent stamps of painted objects.
+ * Images remain unapproved until owner inspects actual gameplay-scale captures.
+ */
+export function bakeSourceBackedThreeMaterialGround(plan, images, seed, canvasFactory) {
+    if (!plan || plan.seed !== seed || !Number.isInteger(seed) || !images || !canvasFactory
         || !plan.board || plan.board.length !== plan.columns * plan.rows
         || !Number.isInteger(plan.width) || !Number.isInteger(plan.height)
-        || !COMPACT_INDEX.every(i => images[i]?.width === COMPACT_TILE_SIZE && images[i]?.height === COMPACT_TILE_SIZE)
-        || !Array.from(plan.board).every(i => COMPACT_INDEX.includes(i))) return null;
+        || !REVIEW_IDS.every(i => images[i]?.width === REVIEW_TILE_SIZE && images[i]?.height === REVIEW_TILE_SIZE)
+        || !Array.from(plan.board).every(i => REVIEW_IDS.includes(i))) return null;
     const canvas = canvasFactory();
     canvas.width = plan.width; canvas.height = plan.height;
     const ctx = canvas.getContext('2d');
@@ -140,23 +151,22 @@ export function bakeCompactThreeMaterialGround(plan, images, seed, canvasFactory
             const x = col * CELL, y = row * CELL;
             const w = Math.min(CELL, plan.width - x), h = Math.min(CELL, plan.height - y);
             if (w > 0 && h > 0)
-                drawCompactRegion(ctx, images, plan.board[row * plan.columns + col], x, y, w, h, phase);
+                copyOriginalArt(ctx, images, plan.board[row * plan.columns + col], x, y, w, h, phase);
         }
-    // Existing material boundaries provide small irregular snapped contacts
-    // where earth meets moss/mud. These are RGB pixel-art source selections,
-    // never semantic alterations, independently invented paths, or shader FX.
+    // Use existing canonical semantic boundary locations, never color-key
+    // transparent pixels (original trampled concepts had dark/black margins).
     for (const edge of groundMaterialBoundaryPlan(plan.board, plan.columns, plan.rows, seed)) {
-        if (!COMPACT_INDEX.includes(edge.a) || !COMPACT_INDEX.includes(edge.b)) continue;
+        if (!REVIEW_IDS.includes(edge.a) || !REVIEW_IDS.includes(edge.b)) continue;
         const side = (Math.imul(edge.x + 1, 73856093) ^ Math.imul(edge.y + seed, 19349663)) >>> 0;
         const shift = side % 3;
         if (edge.vertical) {
-            drawCompactRegion(ctx, images, edge.b, edge.x - 2 - shift, edge.y, 2, 8, phase);
+            copyOriginalArt(ctx, images, edge.b, edge.x - 2 - shift, edge.y, 2, 8, phase);
             if (side % 4 < 2)
-                drawCompactRegion(ctx, images, edge.a, edge.x + shift, edge.y + 2, 2, 4, phase);
+                copyOriginalArt(ctx, images, edge.a, edge.x + shift, edge.y + 2, 2, 4, phase);
         } else {
-            drawCompactRegion(ctx, images, edge.b, edge.x, edge.y - 2 - shift, 8, 2, phase);
+            copyOriginalArt(ctx, images, edge.b, edge.x, edge.y - 2 - shift, 8, 2, phase);
             if (side % 4 < 2)
-                drawCompactRegion(ctx, images, edge.a, edge.x + 2, edge.y + shift, 4, 2, phase);
+                copyOriginalArt(ctx, images, edge.a, edge.x + 2, edge.y + shift, 4, 2, phase);
         }
     }
     return canvas;
@@ -226,6 +236,7 @@ export const THREE_MATERIAL_REVIEW = Object.freeze({
     runtimeAdopted: false,
     roughnessProvisional: true,
     roughnessChannel: 'G / non-color texture / G1 shared renderer',
-    compactTilePixels: COMPACT_TILE_SIZE,
-    compactPreviewApproved: false,
+    sourceBackedTilePixels: REVIEW_TILE_SIZE,
+    sourceCandidateVariantCount: SOURCE_BACKED_VARIANTS.length,
+    sourceBackedPreviewApproved: false,
 });
