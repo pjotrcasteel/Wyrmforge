@@ -231,6 +231,7 @@ function drawWaiting(state, width, height) {
 
 function draw(state, snapshot, width, height) {
     let ctx = state.context;
+    let gpu = snapshot.lighting && state.gpuWorld;
     ctx.globalAlpha=1;ctx.filter='none';ctx.globalCompositeOperation='source-over';
     const danger = playerDangerPresentation(state.playerDanger, snapshot, performance.now(), state.reducedMotion.matches);
     const camera = resolveArenaCamera(snapshot.world, snapshot.player, width, height);
@@ -257,7 +258,7 @@ function draw(state, snapshot, width, height) {
     }
     if (snapshot.hunt) drawHuntArena(ctx, snapshot.hunt, worldWidth, worldHeight);
     // World-space diffuse spell spill reaches actual masonry, terrain and the ground fog.
-    drawSpellLightSpill(ctx, spellLights, lightViewport, 'terrain');
+    if (!gpu) drawSpellLightSpill(ctx, spellLights, lightViewport, 'terrain');
     // Actual spell sources streak across nearby cloister water, not unrelated UI bloom.
     drawArenaCloisterReflections(ctx, snapshot.environment, worldWidth, worldHeight,
         spellLights, visualSeconds, state.reducedMotion.matches);
@@ -310,13 +311,14 @@ function draw(state, snapshot, width, height) {
         { kind: 'mage', depth: snapshot.player.y + (snapshot.player.radius || 0) },
         ...getArenaCloisterElevations(snapshot.environment, worldWidth, worldHeight, visualSeconds),
     ];
-    const gpu = snapshot.lighting && state.gpuWorld;
     if (gpu) gpu.begin(ctx, camera, width, height);
     const worldContext = ctx;
     for (const layer of sortSceneDepthLayers(depthLayers)) {
         let tile, tileX, tileY, tileSize;
         if (gpu) {
             const actor = layer.enemy ?? layer.dragon ?? snapshot.player;
+            if (layer.kind !== 'masonry' && (actor.x < camera.x - 384 || actor.y < camera.y - 384 ||
+                actor.x > camera.x + width + 384 || actor.y > camera.y + height + 384)) continue;
             tileSize = layer.kind === 'masonry' ? Math.max(width, height) : Math.max(160, Math.min(768, (actor.radius || 20) * 12));
             tileX = actor.x - tileSize / 2; tileY = actor.y - tileSize * .75;
             tile = state.gpuActorScratch ??= document.createElement('canvas');
@@ -332,12 +334,12 @@ function draw(state, snapshot, width, height) {
             drawAshfangDeath(ctx,state.ashfang);
         } else if (layer.kind === 'enemy') {
             const enemy = layer.enemy;
-            drawEnemy(ctx, enemy, sampleSpellLight(spellLights, enemy.x, enemy.y),
+            drawEnemy(ctx, enemy, gpu ? null : sampleSpellLight(spellLights, enemy.x, enemy.y),
                 enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId),state.hollow,state.ashling);
             drawEliteCrest(ctx, enemy, visualSeconds, state.reducedMotion.matches);
         } else {
             drawMage(ctx, snapshot.player, snapshot.castMotion, danger.hit, state.reducedMotion.matches,
-                sampleSpellLight(spellLights, snapshot.player.x, snapshot.player.y),
+                gpu ? null : sampleSpellLight(spellLights, snapshot.player.x, snapshot.player.y),
                 updateMageWalk(state.mageWalk, snapshot.player, visualSeconds, state.reducedMotion.matches),
                 state.mageWalk.facing);
         }
@@ -348,7 +350,12 @@ function draw(state, snapshot, width, height) {
             ctx = worldContext;
         }
     }
-    if (gpu) gpu.render(ctx, state.fractureGpuFrame);
+    if (gpu) {
+        try { gpu.render(ctx, state.fractureGpuFrame); }
+        catch (error) {
+            state.gpuError = String(error); gpu.dispose(); state.gpuWorld = null; gpu = null;
+        }
+    }
     drawReliquaryEmergence(ctx, snapshot.reliquary);
     drawBellWardenEntrance(ctx, snapshot.bellWarden);
     if (snapshot.powerBurst) {
