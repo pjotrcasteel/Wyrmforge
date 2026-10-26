@@ -89,3 +89,13 @@ test('inspection view is strictly a shared GPU mode, not a Town-only shadow shad
     assert.ok(manifest.layers.some(l => l.occluderGeometry), 'Real authored geometry supplies shadow occlusion');
     assert.equal(manifest.layers.find(l => l.id === 'town-central-paving').castsShadow, false);
 });
+
+test('mobile 8-shadow-view budget spends six cubemap views on the central Town lantern', () => {
+    const snapshot = compileTownLightingSnapshot(townPreviewManifest(), { mode: 'night', state: {} });
+    const chosen = selectLights(snapshot, 8, 8);
+    assert.equal(chosen.length, 3);
+    assert.deepEqual(chosen.filter(l => l.shadow).map(l => l.id), ['noticeboard-lantern'],
+        'Central well and board need the real shadow atlas, not the lexically first east lamp');
+    assert.equal(chosen.reduce((count, light) => count + light.shadowViews, 0), 6);
+    assert.equal(chosen[0].priority, 3);
+});
