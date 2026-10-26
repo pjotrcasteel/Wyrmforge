@@ -10,7 +10,8 @@ const source=readFileSync(new URL('js/hollow-sprites.js',root),'utf8').replace("
  .replace("'./hollow-arm-variants.js'",JSON.stringify(moduleUri('hollow-arm-variants.js')))
  .replace("'./hollow-motion.js'",JSON.stringify(moduleUri('hollow-motion.js')))
  .replace("'./hollow-variation.js'",JSON.stringify(moduleUri('hollow-variation.js')))
- .replace("'./hollow-death.js'",JSON.stringify(moduleUri('hollow-death.js')));
+ .replace("'./hollow-death.js'",JSON.stringify(moduleUri('hollow-death.js')))
+ .replace("'./hollow-injury-death.js'",JSON.stringify(moduleUri('hollow-injury-death.js')));
 const mod=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
 const enemy=(values={})=>({entityId:7,kind:0,x:20,y:20,radius:11,...values});
 const snapshot=(values={})=>({enemies:[enemy()],player:{x:200,y:200,radius:9},deathBursts:[],...values});
@@ -74,6 +75,7 @@ test('stable injury appearance is presentation-only and survives attack, death a
  const injury=enemy({entityId:4});
  mod.updateHollowSprites(state,snapshot({enemies:[injury]}),0);
  assert.equal(state.entities.get(4).injuryVariant,'broken-leg-left');
+ assert.equal(state.entities.get(4).deathInjury,'broken-leg-left');
  const position={x:injury.x,y:injury.y,radius:injury.radius};
  const contact=snapshot({enemies:[injury],player:{x:38,y:20,radius:9}});
  mod.updateHollowSprites(state,contact,.05);
@@ -88,6 +90,8 @@ test('stable injury appearance is presentation-only and survives attack, death a
  assert.equal(p.clip,'walk');
  assert.deepEqual(position,{x:20,y:20,radius:11});
  const killed=snapshot({enemies:[],deathBursts:[{entityId:4,kind:0,x:20,y:20,bodyRadius:11}]});
+ // Corpse must retain the actual injured silhouette after the live actor despawns.
+
  mod.updateHollowSprites(state,killed,2.05);
  assert.equal(mod.hollowDiagnostics(state).corpses.length,1);
 });
