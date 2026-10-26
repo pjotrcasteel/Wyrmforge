@@ -55,8 +55,8 @@ def masks_from_canonical_js():
     pattern = r"volume\('([a-z0-9-]+)',([\d.]+),([\d.]+),(\[\[.*?\]\])\)"
     found = [(name, float(depth), float(thick), ast.literal_eval(points))
              for name, depth, thick, points in re.findall(pattern, source)]
-    if len(found) != 23:
-        raise RuntimeError(f"Expected 23 source-authoritative semantic volumes; got {len(found)}")
+    if len(found) != 24:
+        raise RuntimeError(f"Expected 24 source-authoritative semantic volumes; got {len(found)}")
     return found
 
 

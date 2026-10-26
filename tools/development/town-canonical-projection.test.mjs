@@ -8,8 +8,8 @@ const {FRAME,TOWN_SEMANTIC_VOLUMES,townPaintedDepth}=
 
 test("T1 semantic Town geometry is metric, nonplanar, bounded and stable",()=>{
     assert.deepEqual(FRAME,{width:1672,height:941,pixelsPerMetre:94.1,columns:216,rows:122});
-    assert.equal(TOWN_SEMANTIC_VOLUMES.length,23);
-    assert.equal(new Set(TOWN_SEMANTIC_VOLUMES.map(volume=>volume.id)).size,23);
+    assert.equal(TOWN_SEMANTIC_VOLUMES.length,24);
+    assert.equal(new Set(TOWN_SEMANTIC_VOLUMES.map(volume=>volume.id)).size,24);
     const depths=[];
     for(let y=0;y<=941;y+=47)for(let x=0;x<=1672;x+=76)
         depths.push(townPaintedDepth(x,y));
@@ -27,7 +27,7 @@ test("T1 volumes use precise canonical pixel silhouettes and have nonzero actual
         assert.ok(points(volume).every(([x,y])=>x>=0&&x<=FRAME.width&&y>=0&&y<=FRAME.height));
     }
     for(const id of ["arcane-nexus-walls","blacksmith-facade","hall-of-fame-facade",
-        "codex-facade","world-gate-arch","well-roof","noticeboard-panel"])
+        "codex-facade","world-gate-arch","well-roof","well-lintel","noticeboard-panel"])
         assert.ok(TOWN_SEMANTIC_VOLUMES.some(v=>v.id===id),id);
     assert.ok(TOWN_SEMANTIC_VOLUMES.find(v=>v.id==="well-masonry")
         .points.some(([x,y])=>x===819&&y===508));

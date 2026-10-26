@@ -31,7 +31,7 @@ public sealed class Town3DReviewBrowserTests : PageTest
         Assert.IsGreaterThan(50000,
             await Page.EvaluateAsync<int>("() => window.__town3dReview.getState().triangles"),
             "Town must use a dense nonplanar 3D scene, not a painted cube");
-        Assert.AreEqual(23, await Page.EvaluateAsync<int>(
+        Assert.AreEqual(24, await Page.EvaluateAsync<int>(
             "() => window.__town3dReview.getState().volumeCount"));
         Assert.IsGreaterThan(6d, await Page.EvaluateAsync<double>(
             "() => window.__town3dReview.getState().depthMax - window.__town3dReview.getState().depthMin"));
