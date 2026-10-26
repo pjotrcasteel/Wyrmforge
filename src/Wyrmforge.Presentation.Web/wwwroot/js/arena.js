@@ -254,7 +254,7 @@ function draw(state, snapshot, width, height) {
     ctx.clearRect(0, 0, width, height);
     ctx.save();
     ctx.translate(-camera.x, -camera.y);
-    if (!drawArenaEnvironment(ctx, snapshot.environment, worldWidth, worldHeight, visualSeconds)) {
+    if (!drawArenaEnvironment(ctx, snapshot.environment, worldWidth, worldHeight, visualSeconds, null, gpu ? 'gpu' : 'canvas')) {
         ctx.fillStyle = '#14111b';
         ctx.fillRect(0, 0, worldWidth, worldHeight);
         drawGrid(ctx, worldWidth, worldHeight);
