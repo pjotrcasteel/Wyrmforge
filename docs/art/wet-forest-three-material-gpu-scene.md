@@ -88,3 +88,18 @@ All relevant CI workflows invoke them before preview app packaging.
 
 **Scope/approval:** this is only a **visual boundary treatment for archived artwork**, not a new road engine, redesigned texture bank or neutral physically separated albedo. Visual review remains necessary, especially crossing/corners, width of contact regions and night legibility. Source WebPs and PR #340 exporter code are unchanged.
 
+
+## Live playable Wet Forest integration — 26 October 2026
+
+This PR now connects the **existing 18 source-backed PR #340 candidates to real Wet Forest Hunts**, not only the isolated material-kit preview:
+
+1. The C# `ArenaEnvironmentState` exposes one cached `HuntArenaGenerator.GenerateWetForest(seed)` recipe in both lab and normal Wet Forest encounter snapshots. Ordinary Hunts **retain generatorPreview=false**, their existing gates, openable supplies, collision and at most six salvage props. No dense lab ecology, new road geometry, or changes to enemy AI.
+2. Live `arena-territory-art.js` selects the C# Wet Forest floor whenever the snapshot has that habitat/recipe, regardless of lab mode. Only Wet Forest encounters use these source materials; other habitats (including the opening Old Road) retain their established artwork.
+3. `arena-live-wet-forest-materials.js` lazily loads the exact three PR #340 PNG candidates for the encounter's deterministic variant (1–6). Existing live 12px semantic material cells select Grass/Moss, Trampled Earth and Wet Mud. It reuses the tested PR #361 organic source-pixel contact painter, not the previously rejected invented flat tiles. No artwork pixels or C# world state are changed.
+4. The world terrain canvas is cached **once per seed and art-generation revision**, never rebuilt in every combat frame. While image decoding, the old floor remains visible; a failed PNG load leaves the game playable. At most two decoded banks are held for memory safety.
+5. `readArenaDiagnostics(canvas).wetForestGround` exposes `loading`, `source-backed` or `fallback-error`, plus seed-variant and PR #340 provenance. Unit tests assert original C# geometry and deterministic art mapping; a focused Playwright test captures actual `drawArenaEnvironment` game-renderer screenshots with source artwork before/after decoding at phone widths.
+
+**Important rendering distinction:** playable Hunts currently composite their world through `arena.js`'s established Canvas 2D pipeline and Gothic-night pass. The standalone material-kit review uses the shared universal GPU `LightingEngine`. This integration **does not pretend to migrate the entire live Hunt renderer to GPU** or change spell/actor lighting. The next renderer milestone is separate.
+
+**Visual acceptance:** no live/Hunt screenshot or source material is owner-approved yet. The browser game-renderer proof uses a fixed C#-recipe-shaped test fixture, *not* simulated player combat. Human inspection of real in-game Wet Forest encounters, trail crossings, actor readability and mobile performance is required before promotion/merge. The initial first Hunt node is typically Old Road/Outskirts; seek a Forest/Wet Forest encounter to observe the new textures.
+
