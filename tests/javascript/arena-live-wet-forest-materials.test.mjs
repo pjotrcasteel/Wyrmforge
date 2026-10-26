@@ -59,6 +59,20 @@ test('normal Hunts use the same C# recipe visuals but retain generatorPreview=fa
     assert.doesNotMatch(adapter, /new (?:WebGLRenderer|LightingEngine)|Math\.random|generatorPreview/);
 });
 
+test('first playable Old Road uses archived forest materials, without changing other habitats', () => {
+    const base = { seed: 1204, biome: 'River valley', stage: 1, district: 'causeway',
+        habitat: 'Outskirts', generatorPreview: false, wetForest: recipe,
+        props: [], element: 'fire', corruption: .1 };
+    const opening = createTerritoryStoryPlan(base, 950, 1550);
+    assert.equal(opening.wetForest, recipe);
+    assert.equal(opening.habitat, 'Outskirts', 'Keep the encounter habitat unchanged.');
+    assert.deepEqual(opening.landmarks, []);
+    assert.equal(createTerritoryStoryPlan({ ...base, habitat: 'WetForest' }, 950, 1550).wetForest, recipe);
+    assert.equal(createTerritoryStoryPlan({ ...base, habitat: 'FrozenRoad' }, 950, 1550).wetForest, undefined);
+    const environment = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js', import.meta.url), 'utf8');
+    assert.match(environment, /if \(tile && !plan\.story\.wetForest\) drawGroundDecals/);
+});
+
 test('actual live fallback switches to the original PR340 paintings once decoded, only one ground bake per seed', async () => {
     const oldImage = globalThis.Image;
     const requested = [];

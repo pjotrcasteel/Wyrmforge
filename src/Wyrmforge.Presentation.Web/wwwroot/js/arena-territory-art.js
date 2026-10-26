@@ -49,10 +49,10 @@ export function createTerritoryStoryPlan(environment, width, height) {
     const district = ['causeway', 'sanctuary', 'rift'].includes(environment.district) ? environment.district : 'causeway';
     const corruption = clamp(environment.corruption ?? ((environment.stage ?? 1) - 1) / 7, 0, 1);
     const generatorPreview = environment.generatorPreview === true;
-    // Live Wet Forest Hunts now receive the SAME C# recipe as the review, but
-    // retain production crossings, salvage props and normal combat authority.
-    if (environment.habitat === 'WetForest' && environment.wetForest) {
-        return { biome, element, district, corruption, generatorPreview, habitat: 'WetForest',
+    // The first Old Road and later Wet Forest combat encounters share archived
+    // terrain artwork, but keep their distinct C# habitat and encounter rules.
+    if (environment.wetForest && ['WetForest', 'Outskirts'].includes(environment.habitat)) {
+        return { biome, element, district, corruption, generatorPreview, habitat: environment.habitat,
             seed: environment.seed, width, height, wetForest: environment.wetForest,
             // Real render-snapshot feet, passed to the baked floor so fire ash
             // matches destructible trees rather than random scene decoration.
