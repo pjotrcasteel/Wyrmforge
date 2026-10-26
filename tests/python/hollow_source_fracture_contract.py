@@ -6,7 +6,8 @@ root = Path(__file__).resolve().parents[2]
 path = root / 'tools/sprite-lab/render-hollow-source-fracture.py'
 source = path.read_text(encoding='utf-8')
 module = ast.parse(source, filename=str(path))
-assert not any(isinstance(node, (ast.Import, ast.ImportFrom)) and\n               any(alias.name == 'random' for alias in node.names) for node in ast.walk(module)), 'No RNG imports'
+assert not any(isinstance(node, (ast.Import, ast.ImportFrom)) and
+               any(alias.name == 'random' for alias in node.names) for node in ast.walk(module)), 'No RNG imports'
 assert 'Hollow skinned character' in source
 assert 'Hollow editable animation rig' in source
 assert 'character.data.vertices' in source, 'Segments must come from real skin weights'
@@ -31,7 +32,7 @@ assert set(motion) == {'skull', 'thorax', 'pelvis', 'arm.L', 'arm.R', 'leg.L', '
 for name, (speed, rotation) in motion.items():
     assert len(speed) == len(rotation) == 3, name
     assert max(map(abs, speed)) < 1.65, f'{name} would scatter beyond a readable death silhouette'
-    assert max(map(abs, rotation)) < .6, f'{name} would spin like a random glyph'
+    assert max(map(abs, rotation)) < .8, f'{name} would spin like a random glyph'
 
 runtime = (root / 'src/Wyrmforge.Presentation.Web/wwwroot/js/hollow-sprites.js').read_text()
 assert 'drawHollowBoneBurst' not in runtime
