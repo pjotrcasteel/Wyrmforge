@@ -22,21 +22,21 @@ export const TOWN_NEXUS_SCHOOL_LIGHTS = Object.freeze({
 const FIXTURES = Object.freeze([
     // One exclusive owner per fixture; in particular NO public chimney lamp.
     { id: 'gate-arch', domain: 'common', x: 828, y: 207, height: .32,
-        color: '#ffcd94', intensity: 1.55, range: 3.4, shadow: true },
+        color: '#ffcd94', intensity: 5.0, range: 3.6, shadow: true },
     { id: 'square-well', domain: 'common', x: 917, y: 439, height: .21,
-        color: '#ffcf96', intensity: 1.35, range: 2.6, shadow: true },
+        color: '#ffcf96', intensity: 4.0, range: 2.8, shadow: true },
     { id: 'nexus-windows', domain: 'nexus', x: 262, y: 226, height: .25,
-        color: '#ffcc93', intensity: .72, range: 1.95, shadow: false },
+        color: '#ffcc93', intensity: 2.8, range: 2.1, shadow: false },
     { id: 'nexus-magic', domain: 'nexus', x: 395, y: 288, height: .32,
-        color: '#ffffff', intensity: .65, range: 2.1, shadow: false, magic: true },
+        color: '#ffffff', intensity: 3.3, range: 2.4, shadow: false, magic: true },
     { id: 'blacksmith-forge', domain: 'blacksmith', x: 197, y: 635, height: .25,
-        color: '#ff8e43', intensity: 1.1, range: 2.2, shadow: false },
+        color: '#ff8e43', intensity: 4.2, range: 2.4, shadow: false },
     { id: 'blacksmith-chimney', domain: 'blacksmith', x: 136, y: 458, height: .3,
-        color: '#ffae5b', intensity: .45, range: 1.25, shadow: false },
+        color: '#ffae5b', intensity: 1.8, range: 1.4, shadow: false },
     { id: 'codex-interior', domain: 'codex', x: 1290, y: 266, height: .31,
-        color: '#ffd2a0', intensity: 1.05, range: 2.3, shadow: false },
+        color: '#ffd2a0', intensity: 3.3, range: 2.5, shadow: false },
     { id: 'hall-interior', domain: 'hall', x: 1293, y: 628, height: .34,
-        color: '#ffcb94', intensity: 1.15, range: 2.45, shadow: false },
+        color: '#ffcb94', intensity: 3.3, range: 2.5, shadow: false },
 ]);
 
 function unitVector(v) {
@@ -102,7 +102,7 @@ export function configureTownLightDomains(fixtures, {
             light.color = neutralMagic ? '#ffffff' : TOWN_NEXUS_SCHOOL_LIGHTS[school];
             // Mirrors the C# TownNexusRadiance strength already calculated
             // from real invested points. Conservative scaling avoids bloom.
-            light.intensity = Math.min(1.4, .35 + .85 * strength);
+            light.intensity = Math.min(4.8, 1.6 + 3.2 * strength);
         }
     }
     const chimney = fixtures.find(x => x.id === 'town-blacksmith-chimney');
