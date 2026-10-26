@@ -5,6 +5,7 @@
 import { initializeTownPreview, updateTownPreviewCitizens, disposeTownPreview }
     from './town-relighting-preview.js';
 import { readTownCitizensFromDom } from './town-citizen-gpu-bridge.js';
+import { TOWN_LIGHT_ISOLATIONS } from './town-light-domains.js';
 
 const sessions = new WeakMap();
 let activeSession = null;
@@ -22,9 +23,36 @@ function cleanup(session) {
     if (activeSession === session) activeSession = null;
 }
 
-function liveCitizens(scene, canvas) {
+function authoritativeLighting(scene, query) {
+    const bool = key => {
+        const value = scene.dataset[key];
+        if (value !== 'true' && value !== 'false')
+            throw new TypeError('Missing authoritative C# Town flag: ' + key);
+        return value === 'true';
+    };
+    const strength = Number(scene.dataset.nexusRadianceStrength);
+    if (!Number.isFinite(strength) || strength < 0 || strength > 1)
+        throw new TypeError('Invalid C# Nexus progression strength');
+    const isolation = query.get('townLightDomain') ?? 'combined';
+    if (!TOWN_LIGHT_ISOLATIONS.includes(isolation))
+        throw new TypeError('Invalid developer domain override');
+    return {
+        unlocks: {
+            nexusUnlocked: bool('townNexusUnlocked'),
+            forgeUnlocked: bool('townForgeUnlocked'),
+            codexUnlocked: bool('townCodexUnlocked'),
+            hallUnlocked: bool('townHallUnlocked'),
+        },
+        school: scene.dataset.nexusSchool ?? 'none',
+        strength,
+        isolation,
+        neutralMagic: query.get('townMagicWhite') === '1',
+    };
+}
+
+function liveCitizens(scene, canvas, query) {
     const citizens = readTownCitizensFromDom(scene);
-    updateTownPreviewCitizens(canvas, citizens);
+    updateTownPreviewCitizens(canvas, citizens, authoritativeLighting(scene, query));
     canvas.dataset.authoritativeCitizenCount = String(citizens.length);
     return citizens.length;
 }
@@ -36,6 +64,7 @@ export async function mountTownLiveGpuPreview(selector = '.refuge-canonical-scen
     const canvas = scene.querySelector('.refuge-town-gpu-canvas');
     if (!canvas) return false;
 
+    const query = new URLSearchParams(location.search);
     const session = { scene, canvas, observer: null, frame: null, disposed: false };
     sessions.set(scene, session);
     activeSession = session;
@@ -53,16 +82,17 @@ export async function mountTownLiveGpuPreview(selector = '.refuge-canonical-scen
     try {
         // Both Stage 3 art binaries must be installed for this secondary
         // opt-in. Default preview never changes or uses missing art paths.
-        const wellV4 = new URLSearchParams(location.search).get('townWellStage4') === '1';
-        await initializeTownPreview(canvas, { wellV4 });
+        const wellV4 = query.get('townWellStage4') === '1';
+        await initializeTownPreview(canvas, { wellV4, domains: true,
+            ...authoritativeLighting(scene, query) });
         if (session.disposed || !scene.isConnected) return false;
-        liveCitizens(scene, canvas); // Complete the first REAL C# actor frame before switching.
+        liveCitizens(scene, canvas, query); // Complete the first REAL C# actor frame before switching.
         // Mutation records from the C# actor subtree, not a second game clock.
         const update = () => {
             session.frame = null;
             if (session.disposed) return;
             if (!scene.isConnected) { cleanup(session); return; }
-            try { liveCitizens(scene, canvas); }
+            try { liveCitizens(scene, canvas, query); }
             catch (error) { disable(error); }
         };
         session.observer = new MutationObserver(mutations => {
@@ -73,7 +103,10 @@ export async function mountTownLiveGpuPreview(selector = '.refuge-canonical-scen
         });
         session.observer.observe(scene, {
             subtree: true, childList: true, attributes: true,
-            attributeFilter: ['style', 'data-town-feet-y', 'data-town-citizen-id'],
+            attributeFilter: ['style', 'data-town-feet-y', 'data-town-citizen-id',
+                'data-nexus-school', 'data-nexus-radiance-strength',
+                'data-town-nexus-unlocked', 'data-town-forge-unlocked',
+                'data-town-codex-unlocked', 'data-town-hall-unlocked'],
         });
         scene.dataset.townGpuPreview = 'ready';
         return true;
