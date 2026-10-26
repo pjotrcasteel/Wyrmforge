@@ -30,13 +30,15 @@ PARTS = ('skull', 'thorax', 'pelvis', 'arm.L', 'arm.R', 'leg.L', 'leg.R')
 # These restrained source-model-unit cues are art-direction data, not RNG.
 # Large ribcage/pelvis fragments retain mass; head remains one recognizable piece.
 MOTION = {
-    'skull': ((.03, -.17, .55), (.12, -.28, .15)),
-    'thorax': ((.01, .08, .12), (-.13, .15, -.08)),
-    'pelvis': ((0, .02, .12), (.07, -.10, .08)),
-    'arm.L': ((.32, -.07, .32), (.10, .24, .48)),
-    'arm.R': ((-.32, .02, .30), (-.10, -.25, -.43)),
-    'leg.L': ((.17, .19, .18), (.13, -.10, .24)),
-    'leg.R': ((-.19, .14, .20), (-.08, .09, -.28)),
+    # Keyframed release speeds are world units/s. Long-distance scatter
+    # looks like flying confetti; preserve a central heavy thorax and pelvis.
+    'skull': ((.05, -.22, 1.35), (.15, -.27, .14)),
+    'thorax': ((.01, .08, .44), (-.16, .21, -.12)),
+    'pelvis': ((0, .04, .23), (.06, -.13, .10)),
+    'arm.L': ((1.04, -.22, .88), (.16, .39, .61)),
+    'arm.R': ((-1.02, .14, .85), (-.17, -.38, -.59)),
+    'leg.L': ((.60, .35, .62), (.16, -.26, .39)),
+    'leg.R': ((-.65, .28, .58), (-.12, .23, -.37)),
 }
 parser = argparse.ArgumentParser()
 parser.add_argument('--directions', choices=('S', 'all'), default='S')
@@ -151,7 +153,7 @@ for frame in range(SPLIT_FRAME, FRAMES + 1):
         obj.rotation_euler = tuple(component*turn for component in angles)
         obj.location = Vector((origin.x + velocity[0]*travel,
                                origin.y + velocity[1]*travel,
-                               origin.z + velocity[2]*time - 2.5*time*time))
+                               origin.z + velocity[2]*time - 1.9*time*time))
         rotation = obj.rotation_euler.to_matrix()
         lowest_vertex = min((rotation @ vertex.co).z for vertex in obj.data.vertices)
         obj.location.z = max(obj.location.z, FLOOR - lowest_vertex)
