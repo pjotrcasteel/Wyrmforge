@@ -10,6 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: write
   contents: write
   pull-requests: write
 
@@ -108,7 +109,12 @@ jobs:
             exit 0
           fi
           git commit -m "art(hollowed): release owner-approved eight-way source-mesh fracture atlases [skip ci]"
-          if ! git push origin HEAD:refs/heads/main; then
+          # GITHUB_TOKEN pushes do not trigger normal push workflows, even if
+          # [skip ci] is removed. Explicit workflow_dispatch DOES trigger Pages.
+          if git push origin HEAD:refs/heads/main; then
+            gh workflow run pages.yml --ref main
+            echo "Requested Pages deployment of committed, approved fracture assets."
+          else
             echo "Main is protected: preserve the approved runtime art on an automatic pull request."
             branch="art/approved-hollowed-fracture-atlases"
             git push --force-with-lease origin HEAD:refs/heads/"$branch"

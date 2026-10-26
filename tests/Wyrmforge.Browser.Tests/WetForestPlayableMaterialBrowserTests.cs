@@ -13,9 +13,10 @@ namespace Wyrmforge.Browser.Tests;
 public sealed class WetForestPlayableMaterialBrowserTests : PageTest
 {
     [TestMethod]
-    [DataRow(320, 568)]
-    [DataRow(390, 844)]
-    public async Task LiveArenaEnvironment_UsesArchivedPr340PixelsAfterDecode_WithoutReplacingGameplay(int width, int height)
+    [DataRow(320, 568, "Outskirts")]
+    [DataRow(390, 844, "Outskirts")]
+    [DataRow(390, 844, "WetForest")]
+    public async Task LiveArenaEnvironment_UsesArchivedPr340PixelsAfterDecode_WithoutReplacingGameplay(int width, int height, string habitat)
     {
         var root = Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL");
         if (string.IsNullOrWhiteSpace(root))
@@ -30,7 +31,7 @@ public sealed class WetForestPlayableMaterialBrowserTests : PageTest
         await Page.WaitForFunctionAsync("() => !document.getElementById('wyrmforge-ignition')",
             null, new PageWaitForFunctionOptions { Timeout = 45000 });
 
-        var before = await Page.EvaluateAsync<string>(@"async width => {
+        var before = await Page.EvaluateAsync<string>(@"async ({width, habitat}) => {
             const arena = await import('./js/arena-environment.js');
             const art = await import('./js/arena-live-wet-forest-materials.js');
             const canvas = document.createElement('canvas');
@@ -45,7 +46,7 @@ public sealed class WetForestPlayableMaterialBrowserTests : PageTest
             document.body.appendChild(canvas);
             const environment = {
                 seed: 1204, biome:'River valley', district:'causeway',
-                stage:1, corruption:.15, habitat:'WetForest', generatorPreview:false,
+                stage:1, corruption:.15, habitat, generatorPreview:false,
                 element:'fire', supplies:[], props:[],
                 barriers:[
                     {kind:'ruin',x:0,y:.31,width:.38,height:.025,open:false},
@@ -80,7 +81,7 @@ public sealed class WetForestPlayableMaterialBrowserTests : PageTest
             window.__liveForestProof = { environment, canvas, draw,
                 diagnostics:() => art.liveWetForestMaterialDiagnostics(environment.seed) };
             return draw();
-        }", width);
+        }", new { width, habitat });
 
         await Page.WaitForFunctionAsync("() => window.__liveForestProof?.diagnostics()?.status === 'source-backed'",
             null, new PageWaitForFunctionOptions { Timeout = 90000 });
@@ -99,7 +100,7 @@ public sealed class WetForestPlayableMaterialBrowserTests : PageTest
         await Page.Locator("#live-wetforest-game-render-proof").ScreenshotAsync(
             new LocatorScreenshotOptions
             {
-                Path = Path.Combine(artifacts, $"live-wetforest-playable-ground-{width}.png"),
+                Path = Path.Combine(artifacts, $"live-{habitat.ToLowerInvariant()}-playable-ground-{width}.png"),
             });
     }
 }

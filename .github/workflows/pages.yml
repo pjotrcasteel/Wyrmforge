@@ -146,7 +146,7 @@ jobs:
           WYRMFORGE_CHECK_DEPLOYED_VERSION: "true"
           WYRMFORGE_EXPECTED_VERSION: ${{ needs.build.outputs.version }}
           WYRMFORGE_EXPECTED_COMMIT: ${{ github.sha }}
-        run: dotnet test tests/Wyrmforge.Browser.Tests/Wyrmforge.Browser.Tests.csproj -c Release --no-build --filter "Desktop_HomeAndAtlas_RenderAtWideViewport|Mobile_ArenaLab_GeneratesPhysicalSeededWorldAndAcceptsTestControls|Mobile_ArenaLab_MalformedDeepLink_RecoversInsteadOfShowingBlackScreen"
+        run: dotnet test tests/Wyrmforge.Browser.Tests/Wyrmforge.Browser.Tests.csproj -c Release --no-build --filter "Desktop_HomeAndAtlas_RenderAtWideViewport|Mobile_ArenaLab_GeneratesPhysicalSeededWorldAndAcceptsTestControls|Mobile_ArenaLab_MalformedDeepLink_RecoversInsteadOfShowingBlackScreen|LiveArenaEnvironment_UsesArchivedPr340PixelsAfterDecode_WithoutReplacingGameplay"
 
       - name: Verify live playtest collector connection
         env:

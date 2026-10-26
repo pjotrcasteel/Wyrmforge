@@ -14,7 +14,6 @@ import math
 from collections import Counter
 from pathlib import Path
 
-import bmesh
 import bpy
 from mathutils import Vector
 from PIL import Image, ImageDraw
@@ -97,19 +96,37 @@ assert sum(counts.values()) == len(mesh.polygons)
 rig_from_character = rig.matrix_world.inverted() @ character.matrix_world
 pieces = {}
 for part in PARTS:
-    bm = bmesh.new()
-    bm.from_mesh(mesh)
-    bm.faces.ensure_lookup_table()
-    removed = [face for index, face in enumerate(bm.faces) if assignment[index] != part]
-    bmesh.ops.delete(bm, geom=removed, context='FACES')
-    loose = [vertex for vertex in bm.verts if not vertex.link_faces]
-    if loose:
-        bmesh.ops.delete(bm, geom=loose, context='VERTS')
+    # PyPI's bpy 4.5 Python wheel omits the separate bmesh module.
+    # Reassemble an exact subset of the evaluated 3D source mesh with bpy
+    # alone, preserving per-face material assignments and per-corner UVs.
+    source_faces = [index for index, region in enumerate(assignment) if region == part]
+    source_vertices = sorted({
+        int(vertex) for face in source_faces for vertex in mesh.polygons[face].vertices
+    })
+    vertex_map = {original: new for new, original in enumerate(source_vertices)}
+    face_vertices = [
+        [vertex_map[int(vertex)] for vertex in mesh.polygons[index].vertices]
+        for index in source_faces
+    ]
     isolated = bpy.data.meshes.new('Original Hollowed skinned 3D geometry: ' + part)
-    bm.to_mesh(isolated)
-    bm.free()
+    isolated.from_pydata(
+        [tuple(mesh.vertices[index].co) for index in source_vertices], [], face_vertices
+    )
+    isolated.update()
     for material in character.data.materials:
         isolated.materials.append(material)
+    for new_index, source_index in enumerate(source_faces):
+        original = mesh.polygons[source_index]
+        new_face = isolated.polygons[new_index]
+        new_face.material_index = original.material_index
+        new_face.use_smooth = original.use_smooth
+    for original_layer in mesh.uv_layers:
+        copied_layer = isolated.uv_layers.new(name=original_layer.name)
+        for new_index, source_index in enumerate(source_faces):
+            original = mesh.polygons[source_index]
+            new_face = isolated.polygons[new_index]
+            for old_loop, new_loop in zip(original.loop_indices, new_face.loop_indices):
+                copied_layer.data[new_loop].uv = tuple(original_layer.data[old_loop].uv)
     assert len(isolated.polygons) == counts[part], f'Lost actual skin geometry in {part}'
     for vertex in isolated.vertices:
         vertex.co = rig_from_character @ vertex.co
