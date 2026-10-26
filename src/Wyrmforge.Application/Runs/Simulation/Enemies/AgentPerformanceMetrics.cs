@@ -12,16 +12,20 @@ internal sealed class AgentPerformanceMetrics
     private long frames;
     private double total, maximum, lastHunterHealthDamage, totalHunterHealthDamage, maxHunterHealthDamage;
     private int population, sight, paths, maxSight, maxPaths, pressure, maxPressure;
-    public void Record(double milliseconds, int count, int sightQueries, int pathQueries, int committed, double hunterHealthDamage)
+    public void Record(double milliseconds, int count, int sightQueries, int pathQueries, int committed)
     {
         samples[frames % samples.Length] = milliseconds;
         frames++; total += milliseconds; maximum = Math.Max(maximum, milliseconds);
         population = count; sight = sightQueries; paths = pathQueries; pressure = committed;
-        // This is applied HP loss in the enemy update, not theoretical attack damage or blocked hits.
-        lastHunterHealthDamage = double.IsFinite(hunterHealthDamage) ? Math.Max(0, hunterHealthDamage) : 0;
+        maxSight = Math.Max(maxSight, sight); maxPaths = Math.Max(maxPaths, paths); maxPressure = Math.Max(maxPressure, committed);
+    }
+    /// <summary>Called once after the authoritative damage buffer resolves for the whole active Hunt tick.</summary>
+    public void RecordResolvedHunterDamage(double healthDamage)
+    {
+        // Excludes dodges, absorbed hits and guard-time damage. Never enters combat decision logic.
+        lastHunterHealthDamage = double.IsFinite(healthDamage) ? Math.Max(0, healthDamage) : 0;
         totalHunterHealthDamage += lastHunterHealthDamage;
         maxHunterHealthDamage = Math.Max(maxHunterHealthDamage, lastHunterHealthDamage);
-        maxSight = Math.Max(maxSight, sight); maxPaths = Math.Max(maxPaths, paths); maxPressure = Math.Max(maxPressure, committed);
     }
     public AgentPerformanceSnapshot Inspect()
     {

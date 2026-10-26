@@ -195,7 +195,6 @@ public sealed partial class RunSimulation
     private void UpdateEnemies(double delta)
     {
         var agentStarted = agentFoundationEnabled ? System.Diagnostics.Stopwatch.GetTimestamp() : 0;
-        var hunterHealthBeforeEnemyStep = agentFoundationEnabled ? player.Health : 0d;
         PruneEnemyAgents();
         UpdateAgentPack(delta);
         var sensingBudget = agentPerceptionEnabled ? new Wyrmforge.Domain.Agents.AgentQueryBudget(32) : null;
@@ -368,8 +367,7 @@ public sealed partial class RunSimulation
         UpdateFrostHazards(delta);
         if (agentFoundationEnabled) agentPerformance.Record(System.Diagnostics.Stopwatch.GetElapsedTime(agentStarted).TotalMilliseconds,
             enemyAgents.Count, sensingBudget is null ? 0 : 32 - sensingBudget.Remaining,
-            pathBudget is null ? 0 : 32 - pathBudget.Remaining, CommittedThreatCount(),
-            Math.Max(0, hunterHealthBeforeEnemyStep - player.Health));
+            pathBudget is null ? 0 : 32 - pathBudget.Remaining, CommittedThreatCount());
     }
 
     private void ResolveEnemyContacts(double delta)

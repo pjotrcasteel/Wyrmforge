@@ -105,8 +105,10 @@ public sealed class AdvancedAgentIntegrationTests
     public void Ai6Metrics_ResolvedHunterHealthDamage_DoesNotConflatePressureWithHits()
     {
         var metrics = new AgentPerformanceMetrics();
-        metrics.Record(3, 8, 4, 2, 2, 0);
-        metrics.Record(4, 8, 3, 2, 1, 12);
+        metrics.Record(3, 8, 4, 2, 2);
+        metrics.RecordResolvedHunterDamage(0);
+        metrics.Record(4, 8, 3, 2, 1);
+        metrics.RecordResolvedHunterDamage(12);
         var hit = metrics.Inspect();
         Assert.AreEqual(12d, hit.LastHunterHealthDamage);
         Assert.AreEqual(12d, hit.TotalHunterHealthDamage);
@@ -114,7 +116,8 @@ public sealed class AdvancedAgentIntegrationTests
         Assert.AreEqual(2, hit.MaxCommittedThreats);
 
         // An attack can stay committed without resolving HP damage (dodge, barrier or whiff).
-        metrics.Record(2, 8, 2, 1, 2, 0);
+        metrics.Record(2, 8, 2, 1, 2);
+        metrics.RecordResolvedHunterDamage(0);
         var dodged = metrics.Inspect();
         Assert.AreEqual(0d, dodged.LastHunterHealthDamage);
         Assert.AreEqual(12d, dodged.TotalHunterHealthDamage);
