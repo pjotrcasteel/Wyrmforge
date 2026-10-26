@@ -252,3 +252,48 @@ test('rejected bone sprites are lab-only: every production Hollowed corpse uses 
  assert.equal(runtime.includes('drawHollowBoneBurst'),false,'no rejected effect imported into production');
  assert.equal(runtime.includes('selectHollowDeathStyle'),false,'no rejected death style selected in production');
 });
+
+test('approved source-mesh fracture really replaces eligible healthy deaths, never injured corpses',async()=>{
+ const previous={fetch:globalThis.fetch,Image:globalThis.Image};
+ const directions=['N','NE','E','SE','S','SW','W','NW'];
+ const approved={
+  schemaVersion:1,actor:'hollowed',clip:'fracture',ownerApproved:true,
+  sourceGeometry:'original-skinned-blender-mesh',injury:'standard',
+  frames:24,fps:12,cell:128,worldSize:124,anchor:[64,88],directions,
+  atlases:Object.fromEntries(directions.map(d=>[d,{file:'fracture-'+d+'.png',sha256:'a'.repeat(64)}]))
+ };
+ try{
+  globalThis.fetch=async uri=>String(uri).includes('/death/fracture/manifest.json')?
+   {ok:true,json:async()=>approved}:{ok:false};
+  globalThis.Image=class {
+   set src(url){this.url=String(url);this.naturalWidth=3072;this.naturalHeight=128;
+    queueMicrotask(()=>this.onload());}
+  };
+  const isolated=await import('data:text/javascript;base64,'+
+   Buffer.from(source+String.fromCharCode(10)+'// approved source fracture integration').toString('base64'));
+  await isolated.preloadHollowSprites();
+  assert.equal(isolated.hollowDiagnostics(isolated.createHollowState()).fractureReady,true);
+  let fractured=0,injured=0;
+  for(let id=0;id<128;id++){
+   const state=isolated.createHollowState(),e=enemy({entityId:id});
+   isolated.updateHollowSprites(state,snapshot({enemies:[e]}),0);
+   const old=state.entities.get(id);
+   const death=snapshot({enemies:[],deathBursts:[{entityId:id,kind:0,x:20,y:20,bodyRadius:11}]});
+   isolated.updateHollowSprites(state,death,.1);
+   const corpse=[...state.corpses.values()][0];
+   if(old.deathInjury!=='standard'){
+    assert.equal(corpse.deathStyle,'collapse','injured Hollowed must never regenerate a healthy fracture');
+    injured++;continue;
+   }
+   if(corpse.deathStyle!=='fracture')continue;
+   fractured++;
+   const images=[],ctx={globalAlpha:1,save(){},restore(){},drawImage(...args){images.push(args)}};
+   isolated.drawHollowCorpses(ctx,state);
+   assert.equal(images.length,1);
+   assert.ok(images[0][0].url.includes('/death/fracture/fracture-S.png?'),
+    'the actual authored 3D atlas is drawn, not a generated pixel-bone or old death');
+  }
+  assert.ok(fractured>=3,'original skin selection must allow some real explosions');
+  assert.ok(injured>=15,'injuries remain part of the original visual distribution');
+ }finally{globalThis.fetch=previous.fetch;globalThis.Image=previous.Image;}
+});
