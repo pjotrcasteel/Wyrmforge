@@ -1,5 +1,6 @@
 using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Combat.Enemies;
+using Wyrmforge.Domain.Combat.Damage;
 using Wyrmforge.Domain.Combat.Geometry;
 using Wyrmforge.Domain.Combat.Modifiers;
 using Wyrmforge.Domain.Combat.Projectiles;
@@ -64,20 +65,24 @@ public sealed partial class RunSimulation
             // The source point sits one second back along the flight path, so the shield reads where the shot came from.
             var shield = ShieldMultiplier(target, projectile.Position - projectile.Velocity, damage);
             var killed = DamageTarget(target, damage * shield, projectile, spawnedForHit);
-            if (detonation is not null) Splash(target.Position, damage, detonation.Radius, target.Id);
+            if (detonation is not null) SplashWithTraits(target.Position, damage, detonation.Radius, target.Id,
+                CombatDamageProfile.ForSpell(projectile.Spell) | CombatDamageTraits.Explosive);
             ApplyDragonEssenceImpactEffects(target, damage, ref killed);
             if (!killed) ApplyProjectileStatus(projectile, target);
             if (!killed) ApplyHitRules(projectile.Spell, target);
 
-            if (projectile.SplashRadius > 0) Splash(target.Position, damage * 0.4, projectile.SplashRadius, target.Id);
+            if (projectile.SplashRadius > 0) SplashWithTraits(target.Position, damage * 0.4, projectile.SplashRadius, target.Id,
+                CombatDamageProfile.ForSpell(projectile.Spell) | CombatDamageTraits.Explosive);
             foreach (var interaction in interactions)
             {
                 if (interaction.SplashRadius > 0 && interaction.SplashDamageMultiplier > 0 && TrySpendReactionEvent())
                 {
-                    Splash(target.Position, damage * interaction.SplashDamageMultiplier, interaction.SplashRadius, target.Id);
+                    SplashWithTraits(target.Position, damage * interaction.SplashDamageMultiplier, interaction.SplashRadius, target.Id,
+                        CombatDamageProfile.ForSpell(projectile.Spell) | CombatDamageTraits.Explosive);
                 }
             }
-            if (passiveProfile.Wildfire) Splash(target.Position, damage * 0.35, passiveProfile.Volcanic ? 90 : 64, target.Id);
+            if (passiveProfile.Wildfire) SplashWithTraits(target.Position, damage * 0.35, passiveProfile.Volcanic ? 90 : 64, target.Id,
+                CombatDamageProfile.ForSpell(projectile.Spell) | CombatDamageTraits.Explosive);
 
             if (projectile.Spell == SpellId.ArcaneOrb)
             {
@@ -111,7 +116,12 @@ public sealed partial class RunSimulation
         }
     }
 
-    private bool DamageTarget(ICombatTarget target, double damage, ProjectileState? source = null, List<ProjectileState>? spawned = null)
+    private bool DamageTarget(ICombatTarget target, double damage, ProjectileState? source = null, List<ProjectileState>? spawned = null) =>
+        DamageTargetWithTraits(target, damage, source, spawned,
+            source is null ? CombatDamageTraits.None : CombatDamageProfile.ForSpell(source.Spell));
+
+    private bool DamageTargetWithTraits(ICombatTarget target, double damage, ProjectileState? source,
+        List<ProjectileState>? spawned, CombatDamageTraits traits)
     {
         if (target.Health <= 0 || damage <= 0) return false;
         if (target is DragonState protectedDragon)
@@ -146,6 +156,7 @@ public sealed partial class RunSimulation
         }
         var shatters = source is not null && FrostShatter.Triggers(source.Spell, target.Statuses.Has(CombatStatusId.Frozen));
         target.Health -= damage;
+        if (target is EnemyState struck) RegisterCombatWound(struck, damage, traits, source);
         if (target is EnemyState { BellWarden: { } bell } cracking && bell.TryBeginCrack(cracking.Health, cracking.MaxHealth)) BellWardenCracks++;
         if (target is EnemyState { WinterBell: { } winter } rimed && winter.TryBeginRime(rimed.Health, rimed.MaxHealth)) BeginWinterRime();
         RegisterTargetHit(target);
@@ -170,7 +181,7 @@ public sealed partial class RunSimulation
                 break;
             case EnemyState defeatedEnemy:
                 RecordControlledKill(defeatedEnemy);
-                RegisterEnemyDeath(defeatedEnemy);
+                RegisterEnemyDeath(defeatedEnemy, traits);
                 RegisterSupportDeath(defeatedEnemy);
                 RegisterFrostDeath(defeatedEnemy);
                 kills++;
@@ -207,11 +218,15 @@ public sealed partial class RunSimulation
         return true;
     }
 
-    private void Splash(Vector2D position, double damage, double radius, int ignoreId)
+    private void Splash(Vector2D position, double damage, double radius, int ignoreId) =>
+        SplashWithTraits(position, damage, radius, ignoreId, CombatDamageTraits.None);
+
+    private void SplashWithTraits(Vector2D position, double damage, double radius, int ignoreId, CombatDamageTraits traits)
     {
         RegisterSplashPulse(position, radius);
         combatSpatialIndex.CollectWithinRadius(position, radius, ignoreId, spatialQueryBuffer);
-        foreach (var target in spatialQueryBuffer) DamageTarget(target, damage * ShieldMultiplier(target, position, damage));
+        foreach (var target in spatialQueryBuffer)
+            DamageTargetWithTraits(target, damage * ShieldMultiplier(target, position, damage), null, null, traits);
         arenaEnvironment?.DamagePropsInRadius(position, arenaWidth, arenaHeight, radius, damage);
     }
 
