@@ -26,8 +26,15 @@ export function readTownCitizensFromDom(scene) {
         throw new TypeError('Missing authoritative Town scene element');
     const elements = Array.from(scene.querySelectorAll('.refuge-town-citizen[data-town-citizen-id]'));
     return elements.map((element) => {
-        const id = Number(element.getAttribute('data-town-citizen-id'));
-        const sourceY = Number(element.getAttribute('data-town-feet-y'));
+        const rawId = element.getAttribute('data-town-citizen-id');
+        const rawY = element.getAttribute('data-town-feet-y');
+        if (typeof rawId !== 'string' || !/^\\d+$/.test(rawId) ||
+            typeof rawY !== 'string' || !/^\\d+(?:[.,]\\d+)?$/.test(rawY))
+            throw new TypeError('Missing or malformed C# Town citizen identity/feet');
+        const id = Number(rawId);
+        // Razor attributes can be rendered under nl-NL (decimal comma) even
+        // though existing CSS positions use invariant percent formatting.
+        const sourceY = Number(rawY.replace(',', '.'));
         const left = element.style?.left;
         const top = element.style?.top;
         const percent = (text, axis) => {
