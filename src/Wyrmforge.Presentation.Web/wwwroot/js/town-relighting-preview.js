@@ -12,6 +12,7 @@ import {
 import { splitTownPavingReference, levelPavingNormal } from './town-paving-material.js';
 import { deriveTownNeutralPavingCanvas } from './town-neutral-albedo.js';
 import { TOWN_NIGHT_LIGHT_GRADE, gradeTownPreviewLighting } from './town-lighting-grade.js';
+import { createTownDomainFixtures, configureTownLightDomains, TOWN_LIGHT_ISOLATIONS } from './town-light-domains.js';
 import { projectTownCitizens, TOWN_CITIZEN_ART_WIDTH, TOWN_CITIZEN_ART_HEIGHT } from './town-citizen-gpu-bridge.js';
 
 export const TOWN_PREVIEW_SOURCE = 'art/town/day-active.webp';
@@ -141,7 +142,7 @@ function light(id, x, y, height, color, intensity, enabled = true) {
     };
 }
 
-export function townPreviewManifest({ wellV4 = false } = {}) {
+export function townPreviewManifest({ wellV4 = false, domains = false } = {}) {
     const a = axes();
     const layers = [{
         id: 'canonical-day-reference', ownerId: 'canonical-town', geometry: 'approved-panorama-plane',
@@ -165,7 +166,7 @@ export function townPreviewManifest({ wellV4 = false } = {}) {
         position: new T.Vector3().addScaledVector(a.toward, .015).toArray(),
         rotation: [0, 0, 0], scale: [1, 1, 1], castsShadow: false, receivesShadow: true,
     });
-    const fixtures = [
+    const legacyFixtures = [
         light('noticeboard-lantern', 902, 465, 1.1,
             TOWN_NIGHT_LIGHT_GRADE.lanternColor, TOWN_NIGHT_LIGHT_GRADE.centralIntensity),
         light('north-west-lantern', 552, 373, 1.2,
@@ -173,6 +174,7 @@ export function townPreviewManifest({ wellV4 = false } = {}) {
         light('east-lantern', 1111, 373, 1.2,
             TOWN_NIGHT_LIGHT_GRADE.lanternColor, TOWN_NIGHT_LIGHT_GRADE.peripheralIntensity),
     ];
+    const fixtures = domains ? createTownDomainFixtures(townPreviewProjection, a.toward.toArray()) : legacyFixtures;
     const selectedCutouts = wellV4
         ? CUTOUTS.filter(c => !STAGE4_REPLACED_CUTOUT_IDS.includes(c.id)) : CUTOUTS;
     if (wellV4) {
@@ -181,12 +183,12 @@ export function townPreviewManifest({ wellV4 = false } = {}) {
         materials.push(stage4WellMaterial());
         // Replace the old lamplight: its point-shadow map and giant 2.5D
         // cutout proxy are what caused the broad dark ring around the well.
-        fixtures.splice(fixtures.findIndex(f => f.id === 'noticeboard-lantern'), 1,
+        if (!domains) fixtures.splice(fixtures.findIndex(f => f.id === 'noticeboard-lantern'), 1,
             stage4WellLight(townPreviewProjection, direction));
         // Don't spend the remaining cubemap shadow budget on legacy
         // panorama cutouts. The only new T2 shadow is the tightly authored
         // well roof/posts; surrounding lamps still provide illumination.
-        fixtures.filter(f => f.id !== 'stage4-well-lantern')
+        fixtures.filter(f => f.id !== (domains ? 'town-square-well' : 'stage4-well-lantern'))
             .forEach(f => { f.castsShadow = false; });
     }
     for (const cutout of selectedCutouts) {
@@ -220,7 +222,8 @@ async function loadApprovedImage(wellV4 = false) {
 }
 
 /** The only side effect is an isolated canvas, never live Town runtime. */
-export async function initializeTownPreview(canvas, { wellV4 = false } = {}) {
+export async function initializeTownPreview(canvas, { wellV4 = false, domains = false, unlocks = null,
+    school = 'none', strength = .16, isolation = 'combined', neutralMagic = false } = {}) {
     if (states.has(canvas)) return;
     // The full Town scene is ~1000–1700 CSS px wide on portrait phones.
 // The previous 780px cap discarded more than half of the authored detail
@@ -231,7 +234,9 @@ const engine = new LightingEngine(canvas, {
     });
     const state = { engine, mode: 'night', lamps: true, offset: 0, npcEnabled: true,
         npcProgress: 0, paving: 'neutral', view: 'lit', citizens: null,
-        wellV4: wellV4 === true, alive: true };
+        wellV4: wellV4 === true, domains: domains === true,
+        unlocks: unlocks ?? { nexusUnlocked: false, forgeUnlocked: false, codexUnlocked: false, hallUnlocked: false },
+        school, strength, isolation, neutralMagic, alive: true };
     states.set(canvas, state);
     try {
         const a = axes(), source = await loadApprovedImage(state.wellV4);
@@ -280,7 +285,7 @@ const engine = new LightingEngine(canvas, {
             engine.registerGeometry('approved-foreground-caster-' + cutout.id, cutoutGeometry(cutout, a.basis));
             engine.registerTexture('approved-cutout-texture-' + cutout.id, cutoutTexture(source, cutout));
         }
-        state.manifest = townPreviewManifest({ wellV4: state.wellV4 });
+        state.manifest = townPreviewManifest({ wellV4: state.wellV4, domains: state.domains });
         engine.setCamera([0, 0, 0], BASE_WIDTH / 2);
         configureTownPreview(canvas, {});
         canvas.dataset.ready = 'true';
@@ -315,16 +320,34 @@ export function configureTownPreview(canvas, options) {
           frontDepthY: state.wellV4 ? WELL_STAGE4.frontDepthY : undefined });
     manifest.layers.push(...actor.layers);
     manifest.materials.push(...actor.materials);
-    const moved = manifest.fixtures.find(f =>
-        f.id === (state.wellV4 ? 'stage4-well-lantern' : 'noticeboard-lantern'));
-    const modified = state.wellV4
-        ? stage4WellLight(townPreviewProjection, axes().toward.toArray(),
-            { offset: state.offset, enabled: state.lamps })
-        : light(moved.id, moved.artAnchor[0] + state.offset,
-            moved.artAnchor[1], 1.1, TOWN_NIGHT_LIGHT_GRADE.lanternColor,
-            TOWN_NIGHT_LIGHT_GRADE.centralIntensity, state.lamps);
-    Object.assign(moved, modified);
-    for (const fixture of manifest.fixtures) fixture.enabled &&= state.lamps;
+    if (state.domains) {
+        if (!TOWN_LIGHT_ISOLATIONS.includes(state.isolation))
+            throw new TypeError('Invalid developer light isolation');
+        configureTownLightDomains(manifest.fixtures, {
+            unlocks: state.unlocks, isolation: state.isolation,
+            school: state.school, strength: state.strength, neutralMagic: state.neutralMagic,
+        });
+        // Keep the movable light diagnostic in world coordinates, with no
+        // texture-space adjustment or full-scene painted-light blending.
+        const well = manifest.fixtures.find(f => f.id === 'town-square-well');
+        if (state.offset) {
+            const original = townPreviewProjection(well.artAnchor[0], well.artAnchor[1]);
+            const moved = townPreviewProjection(well.artAnchor[0] + state.offset, well.artAnchor[1]);
+            well.position = well.position.map((value, i) => value + moved[i] - original[i]);
+        }
+        if (!state.lamps) for (const fixture of manifest.fixtures) fixture.enabled = false;
+    } else {
+        const moved = manifest.fixtures.find(f =>
+            f.id === (state.wellV4 ? 'stage4-well-lantern' : 'noticeboard-lantern'));
+        const modified = state.wellV4
+            ? stage4WellLight(townPreviewProjection, axes().toward.toArray(),
+                { offset: state.offset, enabled: state.lamps })
+            : light(moved.id, moved.artAnchor[0] + state.offset,
+                moved.artAnchor[1], 1.1, TOWN_NIGHT_LIGHT_GRADE.lanternColor,
+                TOWN_NIGHT_LIGHT_GRADE.centralIntensity, state.lamps);
+        Object.assign(moved, modified);
+        for (const fixture of manifest.fixtures) fixture.enabled &&= state.lamps;
+    }
     const snapshot = gradeTownPreviewLighting(compileTownLightingSnapshot(manifest, {
         state: {}, mode: state.mode, localHour: 12, time: 0,
     }), state.mode);
@@ -383,6 +406,9 @@ export function configureTownPreview(canvas, options) {
         (state.neutralMetrics?.illuminationReduction ?? 0).toFixed(3);
     canvas.dataset.profile = state.mode;
     canvas.dataset.fixtureCount = snapshot.lights.filter(l => l.enabled).length.toString();
+    canvas.dataset.lightIsolation = state.domains ? state.isolation : 'legacy';
+    canvas.dataset.chimneyOn = String(snapshot.lights.some(l => l.id === 'town-blacksmith-chimney' && l.enabled));
+    canvas.dataset.nexusMagicColor = snapshot.lights.find(l => l.id === 'town-nexus-magic')?.color ?? 'none';
 }
 
 /**
