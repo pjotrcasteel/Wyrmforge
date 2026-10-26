@@ -196,7 +196,13 @@ async function loadApprovedImage() {
 /** The only side effect is an isolated canvas, never live Town runtime. */
 export async function initializeTownPreview(canvas) {
     if (states.has(canvas)) return;
-    const engine = new LightingEngine(canvas, { shadowViews: 8, maxLights: 8, maxFramebufferWidth: 780 });
+    // The full Town scene is ~1000–1700 CSS px wide on portrait phones.
+// The previous 780px cap discarded more than half of the authored detail
+// before CSS enlarged the image. The separate generic engine keeps its
+// 390px default for other scenes; ONLY this opt-in Town uses native-art QA.
+const engine = new LightingEngine(canvas, {
+        shadowViews: 8, maxLights: 8, maxFramebufferWidth: TOWN_ART_SIZE[0],
+    });
     const state = { engine, mode: 'night', lamps: true, offset: 0, npcEnabled: true,
         npcProgress: 0, paving: 'neutral', view: 'lit', citizens: null, alive: true };
     states.set(canvas, state);
@@ -302,6 +308,10 @@ export function configureTownPreview(canvas, options) {
     // well, gate, actor or hotspot artwork from their canonical positions.
     if (projectionError > 2) throw new Error(
         `Town GPU image alignment drifted ${projectionError.toFixed(2)} source pixels`);
+    canvas.dataset.framebufferWidth = state.engine.canvas.width.toString();
+    canvas.dataset.framebufferHeight = state.engine.canvas.height.toString();
+    canvas.dataset.artworkPixelsPerFramebufferPixel =
+        (TOWN_ART_SIZE[0] / state.engine.canvas.width).toFixed(3);
     canvas.dataset.pavingAlbedo = state.paving;
     canvas.dataset.neutralCoverage = (state.neutralMetrics?.coverage ?? 0).toString();
     canvas.dataset.illuminationReduction =
