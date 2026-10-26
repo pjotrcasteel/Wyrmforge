@@ -12,7 +12,12 @@
      aria-label="Refuge town: swipe between West, World Gate and East">
     <div class="refuge-canonical-scene" aria-label="Night-time Refuge town square"
          data-nexus-school="@(DisplayNexusSchool?.ToString().ToLowerInvariant() ?? "none")"
-         data-nexus-mastery-points="@NexusMasteryPoints">
+         data-nexus-mastery-points="@NexusMasteryPoints"
+         data-nexus-radiance-strength="@FormattableString.Invariant($"{TownNexusRadiance.Strength(NexusMasteryPoints):0.000}")"
+         data-town-nexus-unlocked="@(NexusUnlocked ? "true" : "false")"
+         data-town-forge-unlocked="@(ForgeUnlocked ? "true" : "false")"
+         data-town-codex-unlocked="@(CodexUnlocked ? "true" : "false")"
+         data-town-hall-unlocked="@(HallUnlocked ? "true" : "false")">
         <img class="refuge-town-night-base" src="art/town/night-active.webp?v=140"
              alt="" draggable="false" fetchpriority="high" />
         @* Strict opt-in (?townGpuPreview=1): same panorama layout, gestures, NPCs,
