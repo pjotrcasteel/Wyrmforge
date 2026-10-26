@@ -1671,7 +1671,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.AreEqual(3, await Page.Locator(".fireball-mutator img.fireball-mutation-art").CountAsync(),
             "Implemented mutations each have authored, separate pixel-art assets.");
         Assert.IsTrue(await Page.Locator(".fireball-mutator img.fireball-mutation-art").EvaluateAllAsync<bool>(
-            "images => images.every(image => image.complete && image.naturalWidth > 0)"),
+            "async images => { try { await Promise.all(images.map(image => image.decode())); } catch { return false; } return images.every(image => image.complete && image.naturalWidth > 0); }"),
             "All implemented Fireball mutation art must load in the actual selector.");
         await Page.Locator(".fireball-mutator").Filter(new() { HasText = "Detonation" }).ClickAsync();
         await Expect(Page.Locator(".fireball-socket--1")).ToContainTextAsync("Detonation");
