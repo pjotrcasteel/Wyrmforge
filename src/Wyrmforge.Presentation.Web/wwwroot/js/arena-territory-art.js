@@ -1,4 +1,4 @@
-import { drawWetForestGround } from './arena-wet-forest-art.js?v=20261026-compact-ground-v1';
+import { drawWetForestGround } from './arena-wet-forest-art.js?v=20261026-organic-ground-v2';
 import { createCloisterPlan, drawCloisterFloor } from './arena-cloister-art.js';
 import { artReady, hasArtFrame, drawArtFrame } from './art-atlas.js';
 
