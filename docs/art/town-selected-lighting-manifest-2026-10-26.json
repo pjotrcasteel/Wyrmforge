@@ -1,0 +1,156 @@
+{
+  "schemaVersion": 1,
+  "selectedOn": "2026-10-26",
+  "canonicalArtSize": [
+    1672,
+    941
+  ],
+  "sourceStatus": "Exact uploaded owner-selected binaries copied locally to the versioned user delivery ZIP. The uploaded PNG binaries are NOT in GitHub; this manifest does NOT imply they are checked in or used as runtime textures.",
+  "integration": "Reference-only until geometrical registration and neutral-albedo proof. Domain fixtures use shared GPU engine; runtime candidate uses EXISTING canonical night-active and vacant PNGs.",
+  "note": "A fully-lit opaque RGB scene is not an emissive mask. 1536x864 artwork must not be stretched/aligned by guesswork to 1672x941. Gray/normal-style images are not geometry.",
+  "images": [
+    {
+      "filename": "01_gate_well_square_ONLY_no_chimney(2).png",
+      "role": "common",
+      "width": 1536,
+      "height": 864,
+      "sha256": "51162cfc22ba90fbaaf18467f28b325329d07a109f64625f7b906832a3d41671",
+      "ownerSelected": true,
+      "opaque": true,
+      "referenceOnly": true,
+      "group": "1536x864"
+    },
+    {
+      "filename": "02_observatory_only_WHITE(2).png",
+      "role": "nexus-neutral-white",
+      "width": 1536,
+      "height": 864,
+      "sha256": "f22d09ecdfb60c967ba2046778fb719161d2f265c3d263be20b4b2ec2b4b5195",
+      "ownerSelected": true,
+      "opaque": true,
+      "referenceOnly": true,
+      "group": "1536x864"
+    },
+    {
+      "filename": "03_blacksmith_only_WITH_chimney(2).png",
+      "role": "blacksmith-with-chimney",
+      "width": 1536,
+      "height": 864,
+      "sha256": "3b69399e15310c8230d4220b63aaf980173bd181c236d94f533d2e8172bc6a2d",
+      "ownerSelected": true,
+      "opaque": true,
+      "referenceOnly": true,
+      "group": "1536x864"
+    },
+    {
+      "filename": "04_codex_top_right_only(3).png",
+      "role": "codex",
+      "width": 1672,
+      "height": 941,
+      "sha256": "1608ba28568cddea59334b6214ed6bf2f3309b41e02c04856c2b5e241782e1a1",
+      "ownerSelected": true,
+      "opaque": true,
+      "referenceOnly": true,
+      "group": "1672x941"
+    },
+    {
+      "filename": "05_hall_of_fame_bottom_right_only(3).png",
+      "role": "hall",
+      "width": 1672,
+      "height": 941,
+      "sha256": "7071d907835c9c191dac35af7bb7bd55a67ace6da4739590d507a82f46eedca9",
+      "ownerSelected": true,
+      "opaque": true,
+      "referenceOnly": true,
+      "group": "1672x941"
+    },
+    {
+      "filename": "betoverd_kasteelplein_in_normaalkaartstijl(1).png",
+      "role": "normal-style-reference-only",
+      "width": 1672,
+      "height": 941,
+      "sha256": "4efca9bc5c0607ad9cfeefe543f5170b16986504ca3d1c01260e1e0c4e590d7a",
+      "ownerSelected": true,
+      "opaque": true,
+      "referenceOnly": true,
+      "group": "1672x941"
+    },
+    {
+      "filename": "grid(1).png",
+      "role": "debug-grid-reference-only",
+      "width": 1536,
+      "height": 864,
+      "sha256": "29e1058c333273758789c06c6cc96183f5e27fc2eaa33c58e6c727334eee5ef6",
+      "ownerSelected": true,
+      "opaque": true,
+      "referenceOnly": true,
+      "group": "1536x864"
+    },
+    {
+      "filename": "kasteelstad_op_een_bloemrijk_plein(1).png",
+      "role": "day-reference",
+      "width": 1672,
+      "height": 941,
+      "sha256": "589f2fb8904fec68e9fa5d5ad402cd2683fefd0778db6308257c8eac7f0605b0",
+      "ownerSelected": true,
+      "opaque": true,
+      "referenceOnly": true,
+      "group": "1672x941"
+    },
+    {
+      "filename": "monochrome_fantasyburcht_met_centraal_plein(1).png",
+      "role": "grayscale-reference-only",
+      "width": 1672,
+      "height": 941,
+      "sha256": "d82301a9474ad6e0312824cd871a2a1a7fe1ad793c37d0c47b19faa6eddc5cde",
+      "ownerSelected": true,
+      "opaque": true,
+      "referenceOnly": true,
+      "group": "1672x941"
+    },
+    {
+      "filename": "monochrome_middeleeuws_kasteelplein(1).png",
+      "role": "grayscale-reference-only",
+      "width": 1672,
+      "height": 941,
+      "sha256": "c4bec1eec58342cebe6101e628c45966a21be7e1baf94748a00bbb887ebc5cb1",
+      "ownerSelected": true,
+      "opaque": true,
+      "referenceOnly": true,
+      "group": "1672x941"
+    },
+    {
+      "filename": "town_albedo_neutralized_preview(2).png",
+      "role": "candidate-albedo-preview-only",
+      "width": 1672,
+      "height": 941,
+      "sha256": "b4d4d985a0f1d82075dfb3bd394317b77a889da5534d38f76f2ec49d39bbdd97",
+      "ownerSelected": true,
+      "opaque": true,
+      "referenceOnly": true,
+      "group": "1672x941"
+    },
+    {
+      "filename": "town_grid_debug(1).png",
+      "role": "debug-grid-reference-only",
+      "width": 1672,
+      "height": 941,
+      "sha256": "25f37b08cb67ed0ac851295e5405e9429017062a3dbeaa4db37729a692953271",
+      "ownerSelected": true,
+      "opaque": true,
+      "referenceOnly": true,
+      "group": "1672x941"
+    },
+    {
+      "filename": "wide_cinematic_isometric_3d_fantasy_medieval_town(1).png",
+      "role": "combined-night",
+      "width": 1672,
+      "height": 941,
+      "sha256": "76a16fcc9da09651bb407658385ddf4b47d03a61048cccc52e28d3d9e3a8902e",
+      "ownerSelected": true,
+      "opaque": true,
+      "referenceOnly": true,
+      "group": "1672x941"
+    }
+  ]
+}
