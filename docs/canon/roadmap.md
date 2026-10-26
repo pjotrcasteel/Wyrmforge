@@ -31,13 +31,9 @@ Read current `main`, open PRs, CI and runtime before taking the next priority. D
 | **P8 — season-to-Eternal power loop** | Seasonal achievements unlock substantial earned powers through the **integrated Arcane Nexus** for Eternal/casual play; provide eventual legitimate catch-up, keep ranked starts normalized. | Cross-mode isolation, persistence, reward entitlement and no season-reset on Eternal; privacy-safe verified all-time frontier. | P6–P7 and existing Nexus/research progression. |
 | **P9 — expand depth, don't front-load scope** | Deeper Wyrm variants, region ecologies, authored Chronicle/story, private blueprint sharing and Conclave social polish in separate slices as each becomes a real playable journey. | Each feature has a use, real gameplay/state, migrations, tests, mobile acceptance and no contradictions to previously approved lore/art. | Proven earlier vertical slices. |
 
-### Universal lighting engine and Town Square relighting — P5 dependency, 23 October 2026 (LOCKED)
+### Universal lighting engine — P5 dependency (painted 2D Town remains authoritative; updated 26 October 2026)
 
-**Updated owner direction:** The single engine must determine the
-visibility/shading of **every world-space pixel** across Town, Hunts
-and all future gameplay scenes. Trees/leaf self-shadowing, actor
-lighting, wet reflections, town buildings and real fixtures use
-the SAME light/material/shadow registry. Normal maps alone do not
+**Updated owner direction (26 October 2026):** The universal lighting engine remains useful for Hunts, actors and future scenes. The approved **2D painted Town remains unchanged**, and is explicitly **excluded from G4/G5 geometry or renderer cutover**. Trees/leaf self-shadowing, actor lighting and wet reflections in active 3D world scenes share a generic registry. Normal maps alone do not
 cast geometry shadows. A 2D/3D sprite may not remain full-bright
 because its source image is bright. A zero-light test (ambient,
 all fixtures, all emission = off) yields black **world art**;
@@ -75,23 +71,8 @@ UI/menus/explicit combat telegraphs have separate readable passes.
    depth, atmospheric effects, pixel-stable light grids.
    Reflections and emissive surfaces are explicit, not pasted
    bright spots or duplicated baked direct fire.
-6. **G4 — optimize & town asset production:** select/measure
-   native mobile renderer and light/LOD budgets, and produce
-   a **non-destructive relightable Town material/geometry layer
-   set** from preserved approved paintings. Town's existing
-   building states, six Nexus variants/mastery, pedestrian paths,
-   depth masking, unlocks, well/board and three-district
-   composition are NOT redesigned. Town Auto/Day/Night settings
-   become environment profiles in same engine, while Hunts
-   remain night-only.
-7. **G5 — scene cutover with actual QA:** migrate Town, Hunts,
-   actors and environmental/FX paths to the one renderer;
-   delete legacy per-scene brightness/darkness hacks at approved
-   cutover, keep gameplay/collisions/navigation intact, test
-   zero-light + dynamic-light + normal daylight/near-black-night
-   and UI/accessibility at 320/390px, desktop and physical
-   iOS/Android. Do not claim **all art uses one engine** until
-   no world renderer bypass remains.
+6. **G4 — generic mobile GPU optimization only:** select and measure native/browser rendering approaches, shadow/LOD budgets, culling, battery, memory and thermal response for Hunts, actors and future non-Town scenes. **Do not build Town geometry, material decomposition, replacement imagery or a Town renderer.** The mixed Town/GPU draft PR #346 was closed unmerged.
+7. **G5 — scoped renderer adoption:** extend the shared lighting engine to approved Hunt, actor and world-VFX paths with real device evidence. **No Town migration or cutover.** Keep the existing 2D Town day/night paintings, overlays, NPCs, routing and gameplay untouched. Do not report the entire game's renderer migrated while the intentionally separate painted Town presentation remains.
 
 #### Once G5 has merged — integrate Hollowed injuries and future appearances (25 October 2026)
 
@@ -106,16 +87,13 @@ UI/menus/explicit combat telegraphs have separate readable passes.
 
 **Stop rule:** G1 doesn't pass merely because one tree looks
 3D, a pre-lit panorama is masked, a Hollowed receives an orange
-tint, or a puddle has a pasted specular highlight. The same
-scene engine must light arbitrary registered objects and actually
-determine which world-space surfaces are visible. The full
-Town Square visual rebuild is a **subsequent gated asset/scene
-migration**, not an excuse to discard its accepted architecture
-or rewrite current gameplay before the engine exists.
+tint, or a puddle has a pasted specular highlight. The shared
+renderer must light arbitrary registered objects in its supported
+scenes. **The Town Square 3D visual rebuild is cancelled** and the existing 2D Town must not be replaced.
 
 [Universal lighting-engine implementation and scene inventory](../design/arena-real-geometry-light-engine.md) ·
 [Canonical art and visibility](art-and-animation.md#one-engine-controls-visibility-in-every-world-scene--locked-23-october-2026) ·
-[Town Square preservation and relighting migration](town-and-ux.md#future-town-square-presentation-migration--one-universal-lighting-engine-locked-23-october-2026).
+[Approved painted 2D Town](town-and-ux.md#approved-painted-2d-town--owner-decision-26-october-2026-locked).
 
 **Continuing compatible work in parallel:** The unified Arcane Nexus, minor/major upgrade pacing, Fateweave card-by-card reroll, research-to-spell proof and the future **3–4 intelligent spell scheduler** remain binding. If one of these is the active workstream, do not pause it merely to force P1; finish a safe checkpoint first. Otherwise plan them as **small dependency-conscious slices alongside P1–P5**, not as a massive replacement of the working Forge/Web/SpellBook system. Expand spell loadouts only after the auto-target/manual-override arbitration and shared cast scheduling are reliably tested.
 
