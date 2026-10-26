@@ -14,6 +14,7 @@ import { deriveTownNeutralPavingCanvas } from './town-neutral-albedo.js';
 import { TOWN_NIGHT_LIGHT_GRADE, gradeTownPreviewLighting } from './town-lighting-grade.js';
 import { createTownDomainFixtures, configureTownLightDomains, TOWN_LIGHT_ISOLATIONS, TOWN_NEXUS_SCHOOL_LIGHTS } from './town-light-domains.js';
 import { TOWN_EMISSION_PLATES, emissionMaskPixels } from './town-emission-masks.js';
+import { neutralizeBuildingPixels } from './town-building-neutral-albedo.js';
 import { projectTownCitizens, TOWN_CITIZEN_ART_WIDTH, TOWN_CITIZEN_ART_HEIGHT } from './town-citizen-gpu-bridge.js';
 
 export const TOWN_PREVIEW_SOURCE = 'art/town/day-active.webp';
@@ -301,14 +302,27 @@ async function loadApprovedImage(wellV4 = false, domains = false, sourceMode = '
 async function registerTownBuildingAlbedo(engine) {
     for (const plate of TOWN_EMISSION_PLATES) {
         const key = 'town-diffuse-' + plate.domain;
-        const image = new Image();
-        image.src = new URL('../art/town/day-vacant-' + plate.name + '.webp', import.meta.url).href;
-        await image.decode();
-        if (image.naturalWidth !== plate.width || image.naturalHeight !== plate.height)
-            throw new Error('Canonical diffuse material registration drift: ' + plate.name);
-        const texture = new T.Texture(image);
-        texture.needsUpdate = true;
-        engine.registerTexture(key + '-albedo', texture);
+        const day = new Image(), night = new Image();
+        day.src = new URL('../art/town/day-vacant-' + plate.name + '.webp', import.meta.url).href;
+        night.src = new URL('../art/town/night-vacant-' + plate.name + '.png', import.meta.url).href;
+        await Promise.all([day.decode(), night.decode()]);
+        for (const image of [day, night]) {
+            if (image.naturalWidth !== plate.width || image.naturalHeight !== plate.height)
+                throw new Error('Canonical building albedo registration drift: ' + plate.name);
+        }
+        const surface = document.createElement('canvas');
+        surface.width = plate.width; surface.height = plate.height;
+        const context = surface.getContext('2d', { willReadFrequently: true });
+        if (!context) throw new Error('Building neutral albedo authoring canvas unavailable');
+        context.drawImage(day, 0, 0);
+        const dayPixels = context.getImageData(0, 0, plate.width, plate.height).data;
+        context.clearRect(0, 0, plate.width, plate.height);
+        context.drawImage(night, 0, 0);
+        const nightPixels = context.getImageData(0, 0, plate.width, plate.height).data;
+        const neutral = neutralizeBuildingPixels(dayPixels, nightPixels, plate.width, plate.height);
+        const authored = new ImageData(neutral.data, plate.width, plate.height);
+        context.putImageData(authored, 0, 0);
+        engine.registerTexture(key + '-albedo', new T.CanvasTexture(surface));
         engine.registerGeometry(key + '-plane', plane(
             plate.width * BASE_WIDTH / TOWN_ART_SIZE[0],
             plate.height * BASE_WIDTH / TOWN_ART_SIZE[0], axes().basis));
