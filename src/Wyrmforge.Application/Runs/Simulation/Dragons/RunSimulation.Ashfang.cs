@@ -13,6 +13,8 @@ public sealed partial class RunSimulation
         : ashfangAgent.Perception.Inspect().Contact?.Position ?? active.Position;
     private void ObserveAshfangAgent(DragonState active, double delta)
     {
+        // A frozen Wyrm cannot keep sensing or learning while its executor is paused.
+        if (delta <= 0) return;
         ashfangAgent?.Tick(delta, active, ashfangBehavior, ashfangFlight.Stage, player.Position,
             (a, b) => arenaEnvironment?.HasLineOfSight(a, b, arenaWidth, arenaHeight) ?? true,
             target => (arenaEnvironment?.EnemyNavigationTarget(active.Position, target, arenaWidth, arenaHeight, active.Radius) ?? target) == target);
