@@ -132,7 +132,8 @@ function update() {
 for (const control of [mode, lamps, offset, citizen, npcProgress, paving, view, domain, school, neutralMagic]) control.addEventListener('input', update);
 try {
     await initializeTownPreview(canvas, {
-        wellV4: query.get('wellV4') === '1', domains: query.get('domains') === '1',
+        wellV4: query.has('wellV4') ? query.get('wellV4') === '1' : query.get('domains') === '1',
+        domains: query.get('domains') === '1',
         sourceMode: query.get('source') === 'day-candidate' ? 'day-candidate' : 'night',
         unlocks: { nexusUnlocked: true, forgeUnlocked: true, codexUnlocked: true, hallUnlocked: true },
     });
