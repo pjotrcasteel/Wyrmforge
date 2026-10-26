@@ -27,7 +27,8 @@ internal sealed class AshfangAgent
     {
         var tick = Runtime.Inspect().Tick + 1;
         var sensed = Perception.Observe(tick, dragon.Position, Vector2D.Zero, player, sight, new(1), []);
-        Adaptation.Observe(delta, dragon.Position, sensed.Visible ? sensed.Contact?.Position : null);
+        Adaptation.Observe(delta, dragon.Position, sensed.Visible ? sensed.Contact?.Position : null,
+            sightNotResampled: !sensed.Visible && sensed.SightClearOnLastSample);
         var distance = sensed.Contact is { } contact ? Vector2D.Distance(dragon.Position, contact.Position) : double.PositiveInfinity;
         policy.Alternatives = behavior.Alternatives(distance, sensed.Contact is { } knownTarget && clearPath(knownTarget.Position) && sensed.Visible, dragon.Phase,
             Adaptation.Inspect().Counter, Adaptation.Inspect().Confidence);
