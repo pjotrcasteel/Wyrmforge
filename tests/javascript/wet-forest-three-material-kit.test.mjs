@@ -258,3 +258,20 @@ test('preview receives actual C# WetForestRecipe and does not replace live Hunts
     assert.doesNotMatch(gpu, /new T\.WebGLRenderer|night-lighting|canvas\.style\.filter/);
     assert.doesNotMatch(live, /wet-forest-three-material-kit|wet-forest-gpu-material-review/);
 });
+
+test('live organic crops cover world edges without mirrors and vary independently by seed and material', async () => {
+    const { liveGroundPatchPlan } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/wet-forest-three-material-kit.js');
+    const plan = liveGroundPatchPlan(950, 1550, 1204, 0);
+    assert.deepEqual(plan, liveGroundPatchPlan(950, 1550, 1204, 0));
+    assert.notDeepEqual(plan, liveGroundPatchPlan(950, 1550, 1205, 0));
+    assert.notDeepEqual(plan, liveGroundPatchPlan(950, 1550, 1204, 1));
+    assert.ok(new Set(plan.map(p => `${p.sx}:${p.sy}`)).size > plan.length * .95);
+    for (const p of plan) {
+        assert.ok(p.sx >= 0 && p.sy >= 0 && p.sx + 600 <= 900 && p.sy + 600 <= 900);
+    }
+    // The first 48px are feathered; each opaque 120px core must cover
+    // the entire world, including its four corners, without alpha holes.
+    for (let y = 0; y < 1550; y += 7)
+        for (let x = 0; x < 950; x += 7)
+            assert.ok(plan.some(p => x >= p.x + 48 && x < p.x + 168 && y >= p.y + 48 && y < p.y + 168));
+});
