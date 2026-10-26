@@ -157,7 +157,8 @@ test('every Hollowed uses a source-derived no-cape atlas for walk/attack and the
    assert.ok(calls[1][0].url.includes('/arms/')||calls[1][0].url.includes('/injuries/'),'caped base attack used');
    isolated.updateHollowSprites(state,snapshot({enemies:[],deathBursts:[{entityId:id,kind:0,x:20,y:20,bodyRadius:11}]}),.1);
    isolated.drawHollowCorpses(ctx,state);
-   assert.ok(calls[2][0].url.includes('/arms/'),'caped death atlas used');
+   assert.ok(calls[2][0].url.includes('/arms/')||calls[2][0].url.includes('/injuries/'),
+    'if 3D source injury atlas is not loaded, fallback must retain a cape-free injured actor');
   }
  } finally {globalThis.fetch=originals.fetch;globalThis.Image=originals.Image;}
 });
@@ -198,11 +199,11 @@ test('a real Hollow death renders authored 3D frames, not a rotated walking spri
   assert.equal(await isolated.preloadHollowSprites(),true);
   assert.equal(isolated.hollowDiagnostics(isolated.createHollowState()).skeletalDeathReady,true);
   for(const facing of ['N','NE','E','SE','S','SW','W','NW']){
-   const e=enemy({entityId:128,x:20,y:20});
+   const e=enemy({entityId:5,x:20,y:20});
    const state=isolated.createHollowState();
    isolated.updateHollowSprites(state,snapshot({enemies:[e]}),0);
-   state.entities.get(128).direction=facing;
-   const dead=snapshot({enemies:[],deathBursts:[{entityId:128,kind:0,x:20,y:20,bodyRadius:11}]});
+   state.entities.get(5).direction=facing;
+   const dead=snapshot({enemies:[],deathBursts:[{entityId:5,kind:0,x:20,y:20,bodyRadius:11}]});
    isolated.updateHollowSprites(state,dead,.05);
    const calls=[];
    const ctx={globalAlpha:1,save(){},restore(){},rotate(){throw Error('death must use skeletal frames');},
