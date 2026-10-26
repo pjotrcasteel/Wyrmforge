@@ -1,6 +1,7 @@
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
 using Wyrmforge.Domain.Combat.Geometry;
 using Wyrmforge.Domain.Combat.Projectiles;
+using Wyrmforge.Domain.Combat.Damage;
 using Wyrmforge.Domain.Spells;
 
 namespace Wyrmforge.Application.Runs.Simulation;
@@ -36,7 +37,8 @@ public sealed partial class RunSimulation
             for (var tick = 0; tick < ticks; tick++)
             {
                 combatSpatialIndex.CollectWithinRadius(ground.Position, ground.EffectiveRadius, int.MinValue, spatialQueryBuffer);
-                foreach (var target in spatialQueryBuffer) DamageTarget(target, ground.DamagePerTick);
+                foreach (var target in spatialQueryBuffer)
+                    DamageTargetWithTraits(target, ground.DamagePerTick, null, null, CombatDamageTraits.Fire);
             }
         }
 
