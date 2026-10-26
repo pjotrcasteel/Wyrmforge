@@ -31,6 +31,15 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate source fracture atlas gating, impact glow and live fallback
+        run: |
+          node --check src/Wyrmforge.Presentation.Web/wwwroot/js/hollow-fracture.js
+          node --check src/Wyrmforge.Presentation.Web/wwwroot/js/hollow-sprites.js
+          node --check src/Wyrmforge.Presentation.Web/wwwroot/js/arena.js
+          node --test tests/javascript/hollow-fracture.test.mjs
       - name: Verify proof-only pipeline contract before render
         run: |
           python -m py_compile tools/sprite-lab/render-hollow-source-fracture.py
