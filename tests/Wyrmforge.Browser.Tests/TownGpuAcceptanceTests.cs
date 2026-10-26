@@ -87,7 +87,7 @@ public sealed class TownGpuAcceptanceTests : PageTest
         await StartTownAsync(gpu: true);
         await Page.WaitForFunctionAsync(@"() =>
             ['ready', 'failed'].includes(document.querySelector('.refuge-canonical-scene')
-                ?.dataset.townGpuPreview)", new() { Timeout = 25000 });
+                ?.dataset.townGpuPreview)", new PageWaitForFunctionOptions { Timeout = 25000 });
 
         var scene = Page.Locator(".refuge-canonical-scene");
         var state = await scene.GetAttributeAsync("data-town-gpu-preview");
