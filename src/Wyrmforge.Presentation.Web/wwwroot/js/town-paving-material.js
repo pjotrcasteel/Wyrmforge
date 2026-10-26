@@ -40,7 +40,10 @@ export function pavingPath() {
 
 /** Complete, pixel-aligned complementary textures: no replacement art. */
 export function splitTownPavingReference(source, foregroundCutouts = []) {
-    if (source.naturalWidth !== SIZE[0] || source.naturalHeight !== SIZE[1])
+    // Both the original decoded <img> and the registered offscreen vacant-plate
+    // canvas are legal exact-source inputs; neither may be stretched.
+    if ((source.naturalWidth ?? source.width) !== SIZE[0] ||
+        (source.naturalHeight ?? source.height) !== SIZE[1])
         throw new Error('Approved Town source does not match canonical 1672x941 art');
     const path = pavingPath();
     // Make one shared alpha mask. Excluding original traced well/board masks
