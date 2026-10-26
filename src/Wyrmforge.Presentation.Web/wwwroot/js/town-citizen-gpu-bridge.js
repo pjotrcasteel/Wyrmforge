@@ -28,8 +28,8 @@ export function readTownCitizensFromDom(scene) {
     return elements.map((element) => {
         const rawId = element.getAttribute('data-town-citizen-id');
         const rawY = element.getAttribute('data-town-feet-y');
-        if (typeof rawId !== 'string' || !/^\\d+$/.test(rawId) ||
-            typeof rawY !== 'string' || !/^\\d+(?:[.,]\\d+)?$/.test(rawY))
+        if (typeof rawId !== 'string' || !/^\d+$/.test(rawId) ||
+            typeof rawY !== 'string' || !/^\d+(?:[.,]\d+)?$/.test(rawY))
             throw new TypeError('Missing or malformed C# Town citizen identity/feet');
         const id = Number(rawId);
         // Razor attributes can be rendered under nl-NL (decimal comma) even
@@ -38,7 +38,7 @@ export function readTownCitizensFromDom(scene) {
         const left = element.style?.left;
         const top = element.style?.top;
         const percent = (text, axis) => {
-            if (typeof text !== 'string' || !/^\\d+(?:\\.\\d+)?%$/.test(text))
+            if (typeof text !== 'string' || !/^\d+(?:\.\d+)?%$/.test(text))
                 throw new TypeError('Missing C# Town feet percentage: ' + axis);
             const value = Number(text.slice(0, -1));
             if (!Number.isFinite(value) || value > 100)
