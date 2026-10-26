@@ -37,7 +37,9 @@ internal sealed class LegacyEnemyAgent
         var tick = Runtime.Inspect().Tick + 1;
         mayCommit &= (sensed?.Visible ?? true) && (path is null || path.Status == AgentPathStatus.Moving);
         var hound = enemy.MireHound;
-        if (Capabilities?.Adapt == true) Adaptation.Observe(delta, enemy.Position, sensed?.Visible == true ? target : null);
+        if (Capabilities?.Adapt == true)
+            Adaptation.Observe(delta, enemy.Position, sensed?.Visible == true ? sensed.Contact?.Position : null,
+                sightNotResampled: sensed is { Visible: false, SightClearOnLastSample: true });
         var request = Runtime.Step([
             new("target", sensed is { Contact: null } ? "unknown" : FormattableString.Invariant($"{target.X:R},{target.Y:R}"),
                 sensed?.Contact?.ObservedTick ?? tick, sensed is null ? "legacy-exact-target/world-units" : sensed.Contact?.Source ?? "expired-or-undetected"),
