@@ -471,13 +471,13 @@ function drawWetForestProp(ctx, prop, x, y, size) {
     return true;
 }
 
-export function drawArenaEnvironment(ctx, environment, width, height, elapsedSeconds = 0, approvedAtlas = null) {
+export function drawArenaEnvironment(ctx, environment, width, height, elapsedSeconds = 0, approvedAtlas = null, lightingMode = 'canvas') {
     if (!environment) return false;
     const texture = terrainTexture(environment, width, height, approvedAtlas);
     ctx.drawImage(texture.image, 0, 0, width, height);
     // Render low-angle shadows from CURRENT physical props, never frozen floor art:
     // destroyed trees and ruins lose their shadows in the same C# simulation frame.
-    if (environment.habitat === 'WetForest' && environment.wetForest) {
+    if (lightingMode !== 'gpu' && environment.habitat === 'WetForest' && environment.wetForest) {
         drawWetForestCastShadows(ctx, environment.seed, environment.props ?? [], width, height);
         drawWetForestFirelight(ctx, environment, width, height, elapsedSeconds);
     }
