@@ -23,7 +23,7 @@
   "atlases": {
     "N": {
       "file": "fracture-N.png",
-      "sha256": "4462c81926617739ec25b0819855c7cf7c3a3e2c7d64138de552bbc70e19fa4c"
+      "sha256": "122516fc0dd0a9dffb08acebc9ae3fb15bfae900472de497178024e638ea066d"
     },
     "NE": {
       "file": "fracture-NE.png",
@@ -31,19 +31,19 @@
     },
     "E": {
       "file": "fracture-E.png",
-      "sha256": "c4a9ccf5ed8e5ff4ac99cf0ac51392a9d0d0ea9d324d3403c4b8499462d83b0c"
+      "sha256": "ce098742ac5aa8cadf16c8cc46996be028071b25ebbc2db945a1c7b1c414cde5"
     },
     "SE": {
       "file": "fracture-SE.png",
-      "sha256": "3901ecc8584f45192c0ac041ca3b2a3c84a57a8ceea3e5a3cc79ec98d08478c3"
+      "sha256": "63be4942b599906818b4b9e5084ba049e82662a733f627c7fd68e123e66eb70c"
     },
     "S": {
       "file": "fracture-S.png",
-      "sha256": "595d62f6be515197543506d652ef022a03147cffab5f98aaeb1d81a6e55eacea"
+      "sha256": "6704e8ee76c17b6d8dc109dba94755532e0b6edb58a3db1b85775be67a7e1d0f"
     },
     "SW": {
       "file": "fracture-SW.png",
-      "sha256": "e7a189c254b09608a22e3fd5ae192179339b0ce674fab485f45f8322764d4369"
+      "sha256": "40c3519aac2e42161af79875b9ce28a431ce16637ed684124a01e7e1c75283f6"
     },
     "W": {
       "file": "fracture-W.png",
@@ -51,7 +51,7 @@
     },
     "NW": {
       "file": "fracture-NW.png",
-      "sha256": "08ff8d9d9efc8ffa5e5c2ba8fe88c74134ac9505e56d764046145e923265cbaf"
+      "sha256": "5fd3e72833ce1099627d2b698f9813ef1f1bf8e7b98c16cadf2e66af41739b0e"
     }
   },
   "status": "owner-approved source geometry, released after Blender CI",
@@ -93,14 +93,14 @@
     "NW": 0.7158
   },
   "atlasHashes": {
-    "N": "4462c81926617739ec25b0819855c7cf7c3a3e2c7d64138de552bbc70e19fa4c",
+    "N": "122516fc0dd0a9dffb08acebc9ae3fb15bfae900472de497178024e638ea066d",
     "NE": "155ead87d44c3fdd4b6a386d5c7ca3f1103d242e2ff6d284aa5dfb7674e6cbb1",
-    "E": "c4a9ccf5ed8e5ff4ac99cf0ac51392a9d0d0ea9d324d3403c4b8499462d83b0c",
-    "SE": "3901ecc8584f45192c0ac041ca3b2a3c84a57a8ceea3e5a3cc79ec98d08478c3",
-    "S": "595d62f6be515197543506d652ef022a03147cffab5f98aaeb1d81a6e55eacea",
-    "SW": "e7a189c254b09608a22e3fd5ae192179339b0ce674fab485f45f8322764d4369",
+    "E": "ce098742ac5aa8cadf16c8cc46996be028071b25ebbc2db945a1c7b1c414cde5",
+    "SE": "63be4942b599906818b4b9e5084ba049e82662a733f627c7fd68e123e66eb70c",
+    "S": "6704e8ee76c17b6d8dc109dba94755532e0b6edb58a3db1b85775be67a7e1d0f",
+    "SW": "40c3519aac2e42161af79875b9ce28a431ce16637ed684124a01e7e1c75283f6",
     "W": "1babd4b88908dff11e4424e2e332f1cd81af30035003d2a52d7f3f71b0cd302a",
-    "NW": "08ff8d9d9efc8ffa5e5c2ba8fe88c74134ac9505e56d764046145e923265cbaf"
+    "NW": "5fd3e72833ce1099627d2b698f9813ef1f1bf8e7b98c16cadf2e66af41739b0e"
   },
   "boundingBoxes": {
     "N": [
