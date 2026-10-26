@@ -26,6 +26,12 @@ def captures():
         for domain in ("common", "blacksmith"):
             yield f"domain-{domain}-{width}", (width, 870), dict(
                 mode="night", domains=1, domain=domain, npc="off")
+    # Explicit material diagnosis: same GPU lights with (a) doubly dark night
+    # painted albedo versus (b) a brighter, still UNAPPROVED daytime candidate.
+    for source in ("night", "day-candidate"):
+        for domain in ("common", "combined"):
+            yield f"source-{source}-{domain}-1120", (1120, 870), dict(
+                mode="night", domains=1, domain=domain, source=source, npc="off")
     for name, school, white in (
         ("domain-nexus-neutral-390", "none", 1),
         ("domain-nexus-fire-390", "fire", 0),
