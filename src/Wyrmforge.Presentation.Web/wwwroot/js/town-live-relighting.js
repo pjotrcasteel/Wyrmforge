@@ -7,6 +7,20 @@ import { initializeTownPreview, updateTownPreviewCitizens, disposeTownPreview }
 import { readTownCitizensFromDom } from './town-citizen-gpu-bridge.js';
 
 const sessions = new WeakMap();
+let activeSession = null;
+
+// Blazor removes its DOM before IDisposable may call the JS module. Retain
+// exactly one active reference so detached WebGL contexts still get disposed.
+function cleanup(session) {
+    if (!session || session.disposed) return;
+    session.disposed = true;
+    session.observer?.disconnect();
+    if (session.frame !== null) cancelAnimationFrame(session.frame);
+    disposeTownPreview(session.canvas);
+    delete session.scene.dataset.townGpuPreview;
+    sessions.delete(session.scene);
+    if (activeSession === session) activeSession = null;
+}
 
 function liveCitizens(scene, canvas) {
     const citizens = readTownCitizensFromDom(scene);
@@ -18,11 +32,13 @@ function liveCitizens(scene, canvas) {
 export async function mountTownLiveGpuPreview(selector = '.refuge-canonical-scene') {
     const scene = document.querySelector(selector);
     if (!scene || sessions.has(scene)) return false;
+    if (activeSession && activeSession.scene !== scene) cleanup(activeSession);
     const canvas = scene.querySelector('.refuge-town-gpu-canvas');
     if (!canvas) return false;
 
     const session = { scene, canvas, observer: null, frame: null, disposed: false };
     sessions.set(scene, session);
+    activeSession = session;
     scene.dataset.townGpuPreview = 'loading';
 
     const disable = error => {
@@ -30,7 +46,7 @@ export async function mountTownLiveGpuPreview(selector = '.refuge-canonical-scen
         scene.dataset.townGpuPreview = 'failed';
         canvas.dataset.error = error.message;
         console.error('Town GPU optional preview restored original art:', error);
-        disposeTownLiveGpuPreview(selector);
+        cleanup(session);
         scene.dataset.townGpuPreview = 'failed';
     };
 
@@ -41,7 +57,8 @@ export async function mountTownLiveGpuPreview(selector = '.refuge-canonical-scen
         // Mutation records from the C# actor subtree, not a second game clock.
         const update = () => {
             session.frame = null;
-            if (session.disposed || !scene.isConnected) return;
+            if (session.disposed) return;
+            if (!scene.isConnected) { cleanup(session); return; }
             try { liveCitizens(scene, canvas); }
             catch (error) { disable(error); }
         };
@@ -65,13 +82,6 @@ export async function mountTownLiveGpuPreview(selector = '.refuge-canonical-scen
 
 export function disposeTownLiveGpuPreview(selector = '.refuge-canonical-scene') {
     const scene = document.querySelector(selector);
-    if (!scene) return;
-    const session = sessions.get(scene);
-    if (!session) return;
-    session.disposed = true;
-    session.observer?.disconnect();
-    if (session.frame !== null) cancelAnimationFrame(session.frame);
-    disposeTownPreview(session.canvas);
-    delete scene.dataset.townGpuPreview;
-    sessions.delete(scene);
+    // Accept late Blazor teardown after the actual scene node was detached.
+    cleanup(scene ? sessions.get(scene) : activeSession);
 }
