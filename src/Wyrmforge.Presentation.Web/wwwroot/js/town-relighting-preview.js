@@ -106,7 +106,7 @@ function light(id, x, y, height, color, intensity, enabled = true) {
     return {
         id, ownerId: id, type: 'point', enabled, color, intensity,
         position: p.toArray(), direction: [0, 0, -1], range: 5,
-        coneAngle: .55, penumbra: .3, castsShadow: true, priority: 1,
+        coneAngle: .55, penumbra: .3, castsShadow: true, priority: id === 'noticeboard-lantern' ? 3 : 1,
         artAnchor: [x, y],
     };
 }
