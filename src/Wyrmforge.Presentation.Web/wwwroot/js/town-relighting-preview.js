@@ -210,15 +210,43 @@ export function townPreviewManifest({ wellV4 = false, domains = false } = {}) {
     return { version: 1, artSize: [...TOWN_ART_SIZE], layers, materials, fixtures };
 }
 
-async function loadApprovedImage(wellV4 = false) {
+// Exact existing canonical vacant overlays, placed at their authored 1672x941
+// image coordinates. Used only to make one COMMON dark candidate source.
+// No CSS dimming; never switch full panoramas when C# buildings unlock.
+// These are still painted references, NOT artist-approved neutral albedo.
+const VACANT_TOWN_PLATES = Object.freeze([
+    ['night-vacant-ArcaneNexus.png', 0, 0, 618, 582],
+    ['night-vacant-Blacksmith.png', 0, 353, 633, 588],
+    ['night-vacant-Codex.png', 982, 0, 690, 548],
+    ['night-vacant-HallOfFame.png', 866, 333, 806, 608],
+]);
+
+async function loadApprovedImage(wellV4 = false, domains = false) {
     const image = new Image();
     image.src = new URL(wellV4
         ? '../' + WELL_STAGE4.backgroundUrl
-        : '../art/town/day-active.webp', import.meta.url).href;
+        : domains ? '../art/town/night-active.webp' : '../art/town/day-active.webp', import.meta.url).href;
     await image.decode();
     if (image.naturalWidth !== TOWN_ART_SIZE[0] || image.naturalHeight !== TOWN_ART_SIZE[1])
         throw new Error('Approved Town source resolution changed; reject visual drift');
-    return image;
+    if (!domains) return image;
+    // In the opt-in domain preview, remove baked ACTIVE-building window
+    // artwork using the matching authentic vacant plates already in the game.
+    // This is a fixed source texture, not five composited light frames.
+    const canvas = document.createElement('canvas');
+    canvas.width = TOWN_ART_SIZE[0]; canvas.height = TOWN_ART_SIZE[1];
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Town 2D asset preparation unavailable');
+    context.drawImage(image, 0, 0);
+    for (const [filename, x, y, width, height] of VACANT_TOWN_PLATES) {
+        const plate = new Image();
+        plate.src = new URL('../art/town/' + filename, import.meta.url).href;
+        await plate.decode();
+        if (plate.naturalWidth !== width || plate.naturalHeight !== height)
+            throw new Error('Original vacant plate registration failed: ' + filename);
+        context.drawImage(plate, x, y);
+    }
+    return canvas;
 }
 
 /** The only side effect is an isolated canvas, never live Town runtime. */
@@ -239,7 +267,7 @@ const engine = new LightingEngine(canvas, {
         school, strength, isolation, neutralMagic, alive: true };
     states.set(canvas, state);
     try {
-        const a = axes(), source = await loadApprovedImage(state.wellV4);
+        const a = axes(), source = await loadApprovedImage(state.wellV4, state.domains);
         const selectedCutouts = state.wellV4
             ? CUTOUTS.filter(c => !STAGE4_REPLACED_CUTOUT_IDS.includes(c.id)) : CUTOUTS;
         engine.registerGeometry('approved-panorama-plane', plane(BASE_WIDTH, BASE_HEIGHT, a.basis));
@@ -348,9 +376,13 @@ export function configureTownPreview(canvas, options) {
         Object.assign(moved, modified);
         for (const fixture of manifest.fixtures) fixture.enabled &&= state.lamps;
     }
+    const effectiveMode = state.domains && state.isolation === 'off' ? 'zero' : state.mode;
     const snapshot = gradeTownPreviewLighting(compileTownLightingSnapshot(manifest, {
-        state: {}, mode: state.mode, localHour: 12, time: 0,
-    }), state.mode);
+        state: {}, mode: effectiveMode, localHour: 12, time: 0,
+    }), effectiveMode);
+    // Domain proof deliberately retains selected deep-black negative space.
+    // The legacy T2 comparison remains untouched and keeps its .55 test grade.
+    if (state.domains && effectiveMode === 'night') snapshot.environment.ambient = .22;
     state.engine.apply(snapshot);
     state.engine.setCamera([0, 0, 0], BASE_WIDTH / 2);
     // The shared shadow-visibility inspector reuses the *real* shadow map
@@ -360,14 +392,14 @@ export function configureTownPreview(canvas, options) {
     // the portrait viewport crop; downscaling this canvas to 390 pixels was
     // the root cause of the pronounced blocks in the earlier screenshots.
     state.engine.render(TOWN_ART_SIZE[0], TOWN_ART_SIZE[1]);
-    if (state.mode !== 'zero' && state.view !== 'lit') {
+    if (effectiveMode !== 'zero' && state.view !== 'lit') {
         state.engine.setDebugView(state.view);
         // G4 visual approval uses original 1672x941 art pixels, irrespective of
     // the portrait viewport crop; downscaling this canvas to 390 pixels was
     // the root cause of the pronounced blocks in the earlier screenshots.
     state.engine.render(TOWN_ART_SIZE[0], TOWN_ART_SIZE[1]);
     }
-    if (state.mode === 'zero') {
+    if (effectiveMode === 'zero') {
         // Actual framebuffer check: no ambient, fixtures, or emission is allowed
         // to leave any non-black world pixel. Alpha is intentionally ignored.
         const pixels = state.engine.pixels();
@@ -382,14 +414,14 @@ export function configureTownPreview(canvas, options) {
     canvas.dataset.npcPass = !state.npcEnabled ? 'hidden' : state.citizens === null
         ? (citizenY >= 572 ? 'front' : 'behind') : 'authoritative';
     canvas.dataset.npcShadowCasters = actor.layers.filter(a => a.castsShadow).length.toString();
-    canvas.dataset.inspection = state.mode === 'zero' ? 'lit' : state.view;
+    canvas.dataset.inspection = effectiveMode === 'zero' ? 'lit' : state.view;
     const projectionError = townProjectionMaxErrorPixels(state.engine.camera);
     canvas.dataset.projectionErrorPx = projectionError.toFixed(3);
     // Reject even apparently plausible previews if the live GPU image moves
     // well, gate, actor or hotspot artwork from their canonical positions.
     if (projectionError > 2) throw new Error(
         `Town GPU image alignment drifted ${projectionError.toFixed(2)} source pixels`);
-    canvas.dataset.nightAmbient = state.mode === 'night'
+    canvas.dataset.nightAmbient = effectiveMode === 'night'
         ? snapshot.environment.ambient.toFixed(3) : 'not-night';
     if (state.engine.canvas.width !== TOWN_ART_SIZE[0] ||
         state.engine.canvas.height !== TOWN_ART_SIZE[1])
@@ -404,7 +436,7 @@ export function configureTownPreview(canvas, options) {
     canvas.dataset.neutralCoverage = (state.neutralMetrics?.coverage ?? 0).toString();
     canvas.dataset.illuminationReduction =
         (state.neutralMetrics?.illuminationReduction ?? 0).toFixed(3);
-    canvas.dataset.profile = state.mode;
+    canvas.dataset.profile = effectiveMode;
     canvas.dataset.fixtureCount = snapshot.lights.filter(l => l.enabled).length.toString();
     canvas.dataset.lightIsolation = state.domains ? state.isolation : 'legacy';
     canvas.dataset.chimneyOn = String(snapshot.lights.some(l => l.id === 'town-blacksmith-chimney' && l.enabled));
