@@ -296,7 +296,10 @@
 .game-shell.refuge-home .refuge-town-gpu-canvas {
     position:absolute;inset:0;width:100%;height:100%;z-index:0;
     display:block;visibility:hidden;pointer-events:none;touch-action:none;
-    user-select:none;image-rendering:pixelated;
+    /* Native-art framebuffer: do not forcibly nearest-neighbor scale the
+       entire 1672px painting. Individual pixel-art sprites retain their own
+       explicit per-texture sampling rules inside the universal renderer. */
+    user-select:none;image-rendering:auto;
 }
 .game-shell.refuge-home .refuge-canonical-scene[data-town-gpu-preview="ready"] .refuge-town-gpu-canvas {
     visibility:visible;
