@@ -54,3 +54,13 @@ test('the original navigation and touch handlers remain in the existing Town imp
     assert.match(razor, /SelectTownRouteCitizen/);
     assert.match(razor, /crowd\.Navigation\.Occluders/);
 });
+
+
+test('T2 domain proof defaults to authored remade well while preserving legacy opt-out', () => {
+    assert.match(bridge, /query\.get\('townWellStage4'\) !== '0'/);
+    assert.match(preview, /night-active\.webp/);
+    assert.match(preview, /registerTownBuildingAlbedo\(engine\)/);
+    assert.match(preview, /splitTownPavingReference\(floorReference, selectedCutouts\)/);
+    assert.match(preview, /town-authored-day-background/);
+    assert.match(preview, /pavingLayers\.floor/);
+});
