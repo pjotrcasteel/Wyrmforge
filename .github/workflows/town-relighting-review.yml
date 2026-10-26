@@ -68,76 +68,51 @@ jobs:
           cat artifacts/town-2p5d/server.log
           exit 1
 
-      - name: Capture actual shared-GPU day night and zero-light frames
+      - name: Capture and verify true GPU pixels, without the debug UI
         run: |
           set -euo pipefail
           BROWSER=$(command -v google-chrome || command -v chromium || command -v chromium-browser)
-          FLAGS="--headless=new --no-sandbox --disable-dev-shm-usage --enable-unsafe-swiftshader --use-gl=angle --use-angle=swiftshader --hide-scrollbars --force-device-scale-factor=1 --virtual-time-budget=30000"
+          FLAGS="--headless=new --no-sandbox --disable-dev-shm-usage --enable-unsafe-swiftshader --use-gl=angle --use-angle=swiftshader --hide-scrollbars --force-device-scale-factor=1 --virtual-time-budget=18000"
+          screenshot () {
+            local name="$1" viewport="$2" query="$3"
+            local url="http://127.0.0.1:4179/town-relighting-preview.html?capture=1&${query}"
+            "$BROWSER" $FLAGS --window-size="$viewport" \
+              --screenshot="artifacts/town-2p5d/${name}.png" "$url" \
+              > "artifacts/town-2p5d/${name}.log" 2>&1
+            test -s "artifacts/town-2p5d/${name}.png"
+          }
           for viewport in 320x760 390x844 1120x870; do
             width="${viewport%x*}"
-            height="${viewport#*x}"
             for mode in day night zero; do
-              base="artifacts/town-2p5d/${mode}-${width}"
-              url="http://127.0.0.1:4179/town-relighting-preview.html?capture=1&mode=$mode"
-              "$BROWSER" $FLAGS --window-size="$width,$height" --screenshot="${base}-gpu-proof.png" "$url" > "${base}.log" 2>&1
-              "$BROWSER" $FLAGS --window-size="$width,$height" --dump-dom "$url" > "${base}.html" 2>> "${base}.log"
-              grep -q 'data-ready="true"' "${base}.html" || { echo "GPU readiness missing for $mode ($width)"; exit 1; }
-              test -s "${base}-gpu-proof.png"
-              if [ "$mode" = night ]; then
-                grep -q 'data-night-ambient="0.550"' "${base}.html" ||
-                  { echo "Native-grade cool fill failed ($width)"; exit 1; }
-                grep -q 'data-framebuffer-width="1672"' "${base}.html" ||
-                  { echo "Native artwork framebuffer width lost ($width)"; exit 1; }
-                grep -q 'data-framebuffer-height="941"' "${base}.html" ||
-                  { echo "Native artwork framebuffer height lost ($width)"; exit 1; }
-              fi
-              if [ "$mode" = zero ]; then
-                grep -q 'data-zero-black="true"' "${base}.html" || { echo "Zero-light framebuffer leaked ($width)"; exit 1; }
-              fi
+              screenshot "${mode}-${width}-gpu-proof" "$viewport" "mode=$mode"
             done
           done
           for passage in behind front hidden; do
             case "$passage" in
-              behind) query='?mode=night&npcProgress=0';;
-              front) query='?mode=night&npcProgress=1';;
-              hidden) query='?mode=night&npc=off';;
+              behind) query='mode=night&npcProgress=0';;
+              front) query='mode=night&npcProgress=1';;
+              hidden) query='mode=night&npc=off';;
             esac
-            base="artifacts/town-2p5d/npc-$passage-390"
-            url="http://127.0.0.1:4179/town-relighting-preview.html?capture=1&${query#?}"
-            "$BROWSER" $FLAGS --window-size="390,844" --screenshot="${base}.png" "$url" > "${base}.log" 2>&1
-            "$BROWSER" $FLAGS --window-size="390,844" --dump-dom "$url" > "${base}.html" 2>> "${base}.log"
-            grep -q "data-npc-pass=\"$passage\"" "${base}.html" || { echo "NPC depth validation failed for $passage"; exit 1; }
-            if [ "$passage" = hidden ]; then
-              grep -q 'data-npc-shadow-casters="0"' "${base}.html" || exit 1
-            else
-              grep -q 'data-npc-shadow-casters="1"' "${base}.html" || exit 1
-            fi
+            screenshot "npc-$passage-390" "390,844" "$query"
           done
           for albedo in source neutral; do
-            base="artifacts/town-2p5d/night-${albedo}-paving-390"
-            url="http://127.0.0.1:4179/town-relighting-preview.html?capture=1&mode=night&paving=$albedo&npc=off"
-            "$BROWSER" $FLAGS --window-size="390,844" --screenshot="${base}.png" "$url" > "${base}.log" 2>&1
-            "$BROWSER" $FLAGS --window-size="390,844" --dump-dom "$url" > "${base}.html" 2>> "${base}.log"
-            grep -q "data-paving-albedo=\"$albedo\"" "${base}.html" || { echo "Paving material selection failed"; exit 1; }
-            grep -q 'data-ready="true"' "${base}.html" || { echo "GPU scene failed"; exit 1; }
-            if [ "$albedo" = neutral ]; then
-              grep -E -q 'data-neutral-coverage="[1-9][0-9]+"' "${base}.html" ||
-                { echo "Neutral paving candidate was never generated"; exit 1; }
-            fi
+            screenshot "night-$albedo-paving-390" "390,844" "mode=night&paving=$albedo&npc=off"
           done
           for inspection in shadow-visibility normals albedo; do
             for passage in behind front; do
               case "$passage" in behind) progress=0;; front) progress=1;; esac
-              base="artifacts/town-2p5d/${inspection}-npc-${passage}-390"
-              url="http://127.0.0.1:4179/town-relighting-preview.html?capture=1&mode=night&paving=neutral&view=$inspection&npcProgress=$progress"
-              "$BROWSER" $FLAGS --window-size="390,844" --screenshot="${base}.png" "$url" > "${base}.log" 2>&1
-              "$BROWSER" $FLAGS --window-size="390,844" --dump-dom "$url" > "${base}.html" 2>> "${base}.log"
-              grep -q "data-inspection=\"$inspection\"" "${base}.html" || { echo "Shared GPU inspector failed for $inspection"; exit 1; }
-              grep -q "data-npc-pass=\"$passage\"" "${base}.html" || { echo "Town actor depth failed"; exit 1; }
-              test -s "${base}.png"
+              screenshot "$inspection-npc-$passage-390" "390,844" \
+                "mode=night&paving=neutral&view=$inspection&npcProgress=$progress"
             done
           done
-          echo "Screenshots use original authored Town sources; neutral paving and NPC art require owner signoff."
+          for offset in -120 0 120; do
+            screenshot "lantern-$offset-1120" "1120,870" "mode=night&offset=$offset"
+          done
+          python3 -m venv /tmp/town-gpu-capture
+          /tmp/town-gpu-capture/bin/pip install --quiet Pillow
+          /tmp/town-gpu-capture/bin/python tools/art/town_gpu_capture_validate.py \
+            artifacts/town-2p5d --width 320 --width 390 --width 1120
+          echo "Verified pixels, cropped original-GPU captures and review GIFs; no CSS painted-light substitutes."
 
       - name: Upload exact-source review frames and diagnostics
         if: always()
