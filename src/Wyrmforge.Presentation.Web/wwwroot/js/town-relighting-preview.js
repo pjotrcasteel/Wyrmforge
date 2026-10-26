@@ -261,6 +261,8 @@ export function configureTownPreview(canvas, options) {
     canvas.dataset.npcShadowCasters = actor.layers.filter(a => a.castsShadow).length.toString();
     canvas.dataset.pavingAlbedo = state.paving;
     canvas.dataset.neutralCoverage = (state.neutralMetrics?.coverage ?? 0).toString();
+    canvas.dataset.illuminationReduction =
+        (state.neutralMetrics?.illuminationReduction ?? 0).toFixed(3);
     canvas.dataset.profile = state.mode;
     canvas.dataset.fixtureCount = snapshot.lights.filter(l => l.enabled).length.toString();
 }
