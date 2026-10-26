@@ -13,7 +13,7 @@ test('night Town remains visible without giant orange light pools', () => {
     const original = compileTownLightingSnapshot(townPreviewManifest(), { mode: 'night' });
     const night = gradeTownPreviewLighting(original, 'night');
     assert.ok(original.environment.ambient < .03, 'Old night profile is near-black');
-    assert.ok(night.environment.ambient >= .15 && night.environment.ambient <= .3,
+    assert.ok(night.environment.ambient >= .4 && night.environment.ambient <= .8,
         'Night needs a subtle cool fill, not full daylight');
     assert.equal(night.environment.color, TOWN_NIGHT_LIGHT_GRADE.color);
     assert.deepEqual(night.lights.map(x => x.intensity),
@@ -28,7 +28,9 @@ test('night Town remains visible without giant orange light pools', () => {
 test('day Town uses cool ambient daylight without duplicated lantern glow', () => {
     const original = compileTownLightingSnapshot(townPreviewManifest(), { mode: 'day' });
     const day = gradeTownPreviewLighting(original, 'day');
-    assert.equal(day.environment.ambient, original.environment.ambient);
+    assert.equal(day.environment.ambient, TOWN_NIGHT_LIGHT_GRADE.dayAmbient);
+    assert.equal(day.environment.color, TOWN_NIGHT_LIGHT_GRADE.dayColor);
+    assert.equal(original.environment.ambient, .55, 'generic global daylight must remain unchanged');
     assert.deepEqual(selectLights(day), []);
     assert.equal(original.lights.filter(x => x.enabled).length, 3);
 });

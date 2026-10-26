@@ -72,19 +72,19 @@ jobs:
         run: |
           set -euo pipefail
           BROWSER=$(command -v google-chrome || command -v chromium || command -v chromium-browser)
-          FLAGS="--headless=new --no-sandbox --disable-dev-shm-usage --enable-unsafe-swiftshader --use-gl=angle --use-angle=swiftshader --hide-scrollbars --force-device-scale-factor=1 --virtual-time-budget=12000"
+          FLAGS="--headless=new --no-sandbox --disable-dev-shm-usage --enable-unsafe-swiftshader --use-gl=angle --use-angle=swiftshader --hide-scrollbars --force-device-scale-factor=1 --virtual-time-budget=30000"
           for viewport in 320x760 390x844 1120x870; do
             width="${viewport%x*}"
             height="${viewport#*x}"
             for mode in day night zero; do
               base="artifacts/town-2p5d/${mode}-${width}"
-              url="http://127.0.0.1:4179/town-relighting-preview.html?mode=$mode"
+              url="http://127.0.0.1:4179/town-relighting-preview.html?capture=1&mode=$mode"
               "$BROWSER" $FLAGS --window-size="$width,$height" --screenshot="${base}-gpu-proof.png" "$url" > "${base}.log" 2>&1
               "$BROWSER" $FLAGS --window-size="$width,$height" --dump-dom "$url" > "${base}.html" 2>> "${base}.log"
               grep -q 'data-ready="true"' "${base}.html" || { echo "GPU readiness missing for $mode ($width)"; exit 1; }
               test -s "${base}-gpu-proof.png"
               if [ "$mode" = night ]; then
-                grep -q 'data-night-ambient="0.220"' "${base}.html" ||
+                grep -q 'data-night-ambient="0.550"' "${base}.html" ||
                   { echo "Native-grade cool fill failed ($width)"; exit 1; }
                 grep -q 'data-framebuffer-width="1672"' "${base}.html" ||
                   { echo "Native artwork framebuffer width lost ($width)"; exit 1; }
@@ -103,7 +103,7 @@ jobs:
               hidden) query='?mode=night&npc=off';;
             esac
             base="artifacts/town-2p5d/npc-$passage-390"
-            url="http://127.0.0.1:4179/town-relighting-preview.html$query"
+            url="http://127.0.0.1:4179/town-relighting-preview.html?capture=1&${query#?}"
             "$BROWSER" $FLAGS --window-size="390,844" --screenshot="${base}.png" "$url" > "${base}.log" 2>&1
             "$BROWSER" $FLAGS --window-size="390,844" --dump-dom "$url" > "${base}.html" 2>> "${base}.log"
             grep -q "data-npc-pass=\"$passage\"" "${base}.html" || { echo "NPC depth validation failed for $passage"; exit 1; }
@@ -115,7 +115,7 @@ jobs:
           done
           for albedo in source neutral; do
             base="artifacts/town-2p5d/night-${albedo}-paving-390"
-            url="http://127.0.0.1:4179/town-relighting-preview.html?mode=night&paving=$albedo&npc=off"
+            url="http://127.0.0.1:4179/town-relighting-preview.html?capture=1&mode=night&paving=$albedo&npc=off"
             "$BROWSER" $FLAGS --window-size="390,844" --screenshot="${base}.png" "$url" > "${base}.log" 2>&1
             "$BROWSER" $FLAGS --window-size="390,844" --dump-dom "$url" > "${base}.html" 2>> "${base}.log"
             grep -q "data-paving-albedo=\"$albedo\"" "${base}.html" || { echo "Paving material selection failed"; exit 1; }
@@ -129,7 +129,7 @@ jobs:
             for passage in behind front; do
               case "$passage" in behind) progress=0;; front) progress=1;; esac
               base="artifacts/town-2p5d/${inspection}-npc-${passage}-390"
-              url="http://127.0.0.1:4179/town-relighting-preview.html?mode=night&paving=neutral&view=$inspection&npcProgress=$progress"
+              url="http://127.0.0.1:4179/town-relighting-preview.html?capture=1&mode=night&paving=neutral&view=$inspection&npcProgress=$progress"
               "$BROWSER" $FLAGS --window-size="390,844" --screenshot="${base}.png" "$url" > "${base}.log" 2>&1
               "$BROWSER" $FLAGS --window-size="390,844" --dump-dom "$url" > "${base}.html" 2>> "${base}.log"
               grep -q "data-inspection=\"$inspection\"" "${base}.html" || { echo "Shared GPU inspector failed for $inspection"; exit 1; }

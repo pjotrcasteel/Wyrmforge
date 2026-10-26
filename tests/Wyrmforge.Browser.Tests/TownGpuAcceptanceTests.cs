@@ -34,11 +34,20 @@ public sealed class TownGpuAcceptanceTests : PageTest
         await Expect(Page.GetByRole(AriaRole.Region, new() { Name = "Town square" })).ToBeVisibleAsync();
     }
 
-    private Task CaptureAsync(string filename) => Page.ScreenshotAsync(new PageScreenshotOptions
+    private async Task CaptureAsync(string filename)
     {
-        Path = Path.Combine(Artifacts, filename),
-        FullPage = true,
-    });
+        // Remove incidental browser hover/focus decoration from the approval
+        // evidence. Keep the actual gameplay markup and artwork unchanged.
+        await Page.EvaluateAsync("() => document.activeElement?.blur()");
+        var viewport = Page.ViewportSize;
+        if (viewport is not null)
+            await Page.Mouse.MoveAsync(viewport.Width / 2f, viewport.Height - 2);
+        await Page.ScreenshotAsync(new PageScreenshotOptions
+        {
+            Path = Path.Combine(Artifacts, filename),
+            FullPage = true,
+        });
+    }
 
     [TestMethod]
     [DataRow(320, 568)]

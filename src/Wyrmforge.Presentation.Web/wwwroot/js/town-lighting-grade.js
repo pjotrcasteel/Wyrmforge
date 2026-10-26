@@ -4,8 +4,10 @@
 import { validateSnapshot } from './lighting/registry.js';
 
 export const TOWN_NIGHT_LIGHT_GRADE = Object.freeze({
-    ambient: .22,
+    ambient: .55,
     color: '#b3c3df',
+    dayAmbient: 2.15,
+    dayColor: '#fff4e7',
     lanternColor: '#ffdab7',
     centralIntensity: 2.5,
     peripheralIntensity: 1.45,
@@ -20,8 +22,11 @@ export function gradeTownPreviewLighting(snapshot, mode) {
         graded.environment.ambient = TOWN_NIGHT_LIGHT_GRADE.ambient;
         graded.environment.color = TOWN_NIGHT_LIGHT_GRADE.color;
     } else if (mode === 'day') {
-        // The original reference already has painted daylight. No giant
-        // synthetic warm pools during daytime.
+        // A physically shaded texture needs substantially more than the
+        // shared generic 0.55 ambient to preserve the source-art clarity.
+        // Calibration is local to this Town proof, never to the shared engine.
+        graded.environment.ambient = TOWN_NIGHT_LIGHT_GRADE.dayAmbient;
+        graded.environment.color = TOWN_NIGHT_LIGHT_GRADE.dayColor;
         for (const fixture of graded.lights) fixture.enabled = false;
     } else {
         // Never allow a grading preset to override G1 absolute black.

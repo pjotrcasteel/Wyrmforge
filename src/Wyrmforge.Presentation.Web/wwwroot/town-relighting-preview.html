@@ -16,6 +16,12 @@
     select { padding: 6px; background: #232b3d; color: #fff; }
     canvas { display: block; width: 100%; height: auto; aspect-ratio: 1672/941; image-rendering: auto; background: #000; }
     .reference { margin-top: 16px; width: 100%; height: auto; display: block; }
+    /* ?capture=1 records only real rendered GPU pixels. No 700px-tall
+       instruction panel above the Town in evidence screenshots. */
+    body.capture { margin: 0; padding: 0; overflow: hidden; background: #000; }
+    body.capture main { max-width: none; margin: 0; }
+    body.capture main > :not(canvas) { display: none !important; }
+    body.capture canvas { display: block; width: 100vw; height: auto; }
     .compare { font-size: .8rem; margin: 10px 0 6px; }
     .notice { border-left: 3px solid #d9a56c; padding: 8px 14px; background: #20202a; }
     output { min-width: 3ch; display: inline-block; }
@@ -75,6 +81,7 @@ const mode = document.querySelector('#mode'), lamps = document.querySelector('#l
       citizen = document.querySelector('#citizen'), npcProgress = document.querySelector('#npc-progress'),
       paving = document.querySelector('#paving'), view = document.querySelector('#view');
 const query = new URLSearchParams(location.search);
+document.body.classList.toggle('capture', query.get('capture') === '1');
 if (['day', 'night', 'zero'].includes(query.get('mode'))) mode.value = query.get('mode');
 if (query.has('lamps')) lamps.checked = query.get('lamps') !== 'off';
 if (query.has('offset') && Number.isFinite(Number(query.get('offset'))) &&
