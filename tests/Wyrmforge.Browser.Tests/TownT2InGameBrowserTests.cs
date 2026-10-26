@@ -24,7 +24,8 @@ public sealed class TownT2InGameBrowserTests : PageTest
         Directory.CreateDirectory(artifacts);
         await Page.SetViewportSizeAsync(width,height);
         await Page.AddInitScriptAsync(@"localStorage.setItem('wyrmforge.firstHunt.v1','3');
-            localStorage.setItem('wyrmforge.characterSchool.v1','Pyromancer');");
+            localStorage.setItem('wyrmforge.characterSchool.v1','Pyromancer');
+            localStorage.setItem('wyrmforge.townLighting.v1','night');");
         await Page.GotoAsync(root.TrimEnd('/')+"/?town3d=1&townNpcCount=14",
             new(){WaitUntil=WaitUntilState.NetworkIdle});
 
@@ -54,5 +55,22 @@ public sealed class TownT2InGameBrowserTests : PageTest
             Path=Path.Combine(artifacts,$"t2-real-game-town3d-center-{width}x{height}.png"),
             FullPage=true
         });
+        // Exercise the game's actual day/night controller. This must not
+        // remount TownCrowd, erase interactable buildings or lose the 3D camera.
+        await Page.EvaluateAsync("() => window.wyrmforgeTownLighting.setMode('day')");
+        await Page.WaitForFunctionAsync(
+            "() => window.__town3dInGamePreview?.getState().mode==='day' && " +
+            "window.__town3dInGamePreview.getState().referenceMae < 14");
+        Assert.AreEqual(5,await Page.Locator(".refuge-town-spot").CountAsync(),
+            "Daytime must not remove original Town building and World Gate interactions.");
+        await Page.ScreenshotAsync(new()
+        {
+            Path=Path.Combine(artifacts,$"t2-real-game-town3d-day-center-{width}x{height}.png"),
+            FullPage=true
+        });
+        await Page.EvaluateAsync("() => window.wyrmforgeTownLighting.setMode('night')");
+        await Page.WaitForFunctionAsync(
+            "() => window.__town3dInGamePreview?.getState().mode==='night' && " +
+            "window.__town3dInGamePreview.getState().referenceMae < 14");
     }
 }
