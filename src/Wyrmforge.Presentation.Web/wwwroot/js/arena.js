@@ -9,6 +9,7 @@ import { drawMage, updateMageWalk } from './arena-mage.js';
 import { drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions, enemyFacing } from './arena-enemy-art.js';
 import { preloadPaintedEnemies, drawPaintedEnemy, drawPaintedWyrm, updatePaintedCorpses, drawPaintedCorpses, mireHoundPixelPreviewEnabled } from './painted-enemies.js';
 import { preloadHollowSprites, hollowSpritesReady, createHollowState, updateHollowSprites, drawHollowEnemy, drawHollowCorpses, hollowDiagnostics } from './hollow-sprites.js';
+import { hollowFractureEmitters, hollowFractureCanvasLights } from './hollow-fracture.js';
 import { preloadAshfang, createAshfangState, updateAshfang, drawAshfang, drawAshfangDeath, ashfangSockets, ashfangDiagnostics } from './ashfang-sprites.js';
 import { drawAshfangWarning, drawAshfangGroundEffects, drawAshfangAirEffects, ashfangVfxDiagnostics } from './ashfang-vfx.js';
 import { ashlingSprites } from './ashling-sprites.js';
@@ -84,6 +85,7 @@ export function readArenaDiagnostics(canvas) {
         performance: { fps:state.displayFps, simulationHz:state.displaySimulationHz, simulationMilliseconds:state.displaySimulationMilliseconds, bridgeMilliseconds:state.displayBridgeMilliseconds },
         renderingFailed: Boolean(state.renderingFailed),
         sharedLighting: state.latestSnapshot?.lighting ?? null,
+        hollowFractureGpuEmitters: state.fractureGpuEmitters ?? [],
         lighting: { mode: 'night', darkness: GOTHIC_NIGHT.darkness, source: 'authoritative-csharp-snapshot' },
     };
 }
@@ -229,7 +231,15 @@ function draw(state, snapshot, width, height) {
     const worldWidth = camera.width;
     const worldHeight = camera.height;
     const lightViewport = { x: camera.x, y: camera.y, width, height };
-    const spellLights = buildSpellLights(snapshot, visualSeconds, state.reducedMotion.matches, lightViewport);
+    updateHollowSprites(state.hollow,snapshot,visualSeconds,state.reducedMotion.matches);
+    // One source descriptor for GPU and transitional Canvas. No fabricated 2D bone pixels;
+    // no death emitter until approved original Blender fracture art is active.
+    const fractureEmitters = hollowFractureEmitters(state.hollow.corpses,state.hollow.clock,state.reducedMotion.matches);
+    state.fractureGpuEmitters = fractureEmitters;
+    const spellLights = [
+        ...buildSpellLights(snapshot, visualSeconds, state.reducedMotion.matches, lightViewport),
+        ...hollowFractureCanvasLights(fractureEmitters)
+    ];
     ctx.clearRect(0, 0, width, height);
     ctx.save();
     ctx.translate(-camera.x, -camera.y);
@@ -272,7 +282,6 @@ function draw(state, snapshot, width, height) {
     if (snapshot.wardPulse) drawWardPulse(ctx, snapshot.wardPulse, state.reducedMotion.matches);
     updatePaintedCorpses(state.paintedCorpses, snapshot.deathBursts, state.enemyMotion, visualSeconds);
     const enemyPoses = updateEnemyMotions(state.enemyMotion, snapshot.enemies, visualSeconds, state.reducedMotion.matches);
-    updateHollowSprites(state.hollow,snapshot,visualSeconds,state.reducedMotion.matches);
     ashlingSprites.update(state.ashling,snapshot,visualSeconds,state.reducedMotion.matches);
     updateAshfang(state.ashfang,snapshot,visualSeconds,state.reducedMotion.matches);
     drawPaintedCorpses(ctx, state.paintedCorpses, visualSeconds,hollowSpritesReady(),ashlingSprites.ready());
