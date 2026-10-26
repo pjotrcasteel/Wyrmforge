@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>WyrmForge • Hollowed bone shatter QC</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,Arial,sans-serif;background:#111519;color:#d8d3c7}
+body{margin:0;padding:20px;max-width:880px;margin-inline:auto}
+h1{font-size:21px;letter-spacing:.08em;margin:0 0 7px}
+p{font-size:13px;line-height:1.5;color:#aeb6af;margin:4px 0 18px}
+small{color:#aeb6af}
+.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:15px 0}
+button{border:1px solid #727a72;color:#e8e1d5;background:#30383a;padding:9px 14px;border-radius:4px;cursor:pointer}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.card{background:#1d2427;border:1px solid #434b4a;padding:11px}
+h2{margin:0 0 8px;font-size:13px;letter-spacing:.05em}
+canvas{display:block;width:100%;aspect-ratio:1.26;image-rendering:pixelated;background:#182026}
+.label{margin-top:6px;font-size:12px;color:#b7bab0}
+@media(max-width:550px){body{padding:12px}.grid{gap:7px}.card{padding:6px}h2{font-size:11px}}
+</style>
+</head>
+<body>
+<h1>HOLLOWED / BONES SHATTER</h1>
+<p>Actual in-game Canvas renderer: skull, jaw, ribs, vertebrae, pelvis and loose limbs. Each fragment flies out and settles into a bone pile. 25% of Hollowed receive one of two bone deaths; C# combat remains unchanged.</p>
+<div class="controls">
+<button id="replay">Replay</button><button id="pause">Pause</button>
+<label><input id="reduce" type="checkbox"> Reduced motion</label>
+<small>Eight directions are not required for a radial bone burst. No mirrored death sprites.</small>
+</div>
+<div class="grid" id="cards"></div>
+<script type="module">
+import {drawHollowBoneBurst,hollowBoneBurstDelay} from '../js/hollow-bone-burst.js';
+const designs=[
+ {title:'IMMEDIATE SHATTER',style:'shatter-burst',injury:'standard',id:3,still:.14,note:'At impact • fast breakup'},
+ {title:'BUCKLE THEN BURST',style:'buckle-burst',injury:'broken-arm-right',id:21,still:.49,note:'Brief source 3D buckle, then bones'},
+ {title:'MISSING LEFT ARM',style:'shatter-burst',injury:'one-arm-left',id:41,still:.67,note:'No phantom left arm fragments'},
+ {title:'DAMAGED LEFT LEG',style:'buckle-burst',injury:'broken-leg-left',id:47,still:1.8,note:'Shortened damaged shin remains'}
+];
+const cards=document.getElementById('cards');
+const views=designs.map(item=>{
+ const card=document.createElement('div');card.className='card';
+ const h=document.createElement('h2');h.textContent=item.title;
+ const canvas=document.createElement('canvas');canvas.width=220;canvas.height=175;
+ const footer=document.createElement('div');footer.className='label';footer.textContent=item.note;
+ card.append(h,canvas,footer);cards.append(card);
+ return {...item,canvas,ctx:canvas.getContext('2d',{alpha:false})};
+});
+let started=performance.now(),paused=false,pausedAge=0;
+const fixed=new URLSearchParams(location.search).has('still');
+function render(now){
+ const elapsed=paused?pausedAge:(now-started)/1000%4;
+ for(const view of views){
+  const ctx=view.ctx;
+  const frameAge=fixed?view.still:elapsed;
+  ctx.fillStyle='#182026';ctx.fillRect(0,0,220,175);
+  ctx.fillStyle='#252d2e';ctx.fillRect(0,135,220,40);
+  ctx.fillStyle='#3a403c';
+  for(let i=0;i<16;i++)ctx.fillRect(i*15,135+(i%3)*10,8,2);
+  ctx.fillStyle='#141a1b';ctx.fillRect(52,136,120,2);
+  // The source skeletal pose plays before the buckle-burst. A dark torso
+  // placeholder in this isolated QC page marks that external sprite phase.
+  if(frameAge<hollowBoneBurstDelay(view.style)){
+   ctx.fillStyle='#5b6764';ctx.fillRect(105,85,10,42);
+   ctx.fillStyle='#8b8f81';ctx.fillRect(103,72,14,14);
+  }else{
+   drawHollowBoneBurst(ctx,{
+    entityId:view.id,deathStyle:view.style,deathInjury:view.injury,
+    x:110,y:136,radius:11,visualScale:1
+   },frameAge,document.getElementById('reduce').checked);
+  }
+ }
+ if(!fixed)requestAnimationFrame(render);
+}
+document.getElementById('replay').addEventListener('click',()=>{started=performance.now();pausedAge=0;});
+document.getElementById('pause').addEventListener('click',event=>{
+ if(!paused){pausedAge=(performance.now()-started)/1000%4;paused=true;event.target.textContent='Resume';}
+ else{started=performance.now()-pausedAge*1000;paused=false;event.target.textContent='Pause';}
+});
+requestAnimationFrame(render);
+</script>
+</body>
+</html>
