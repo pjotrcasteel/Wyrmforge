@@ -1,6 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Domain.Combat.Damage;
 using Wyrmforge.Domain.Spells;
+using Wyrmforge.Domain.Spells.Synergies;
 
 namespace Wyrmforge.Domain.Tests.Combat;
 
@@ -16,6 +17,10 @@ public sealed class CombatDamageTraitsTests
         Assert.IsTrue(CombatDamageProfile.IsIncendiaryBlast(fireball));
         Assert.IsFalse(CombatDamageProfile.IsIncendiaryBlast(CombatDamageTraits.Fire));
         Assert.IsFalse(CombatDamageProfile.IsIncendiaryBlast(CombatDamageTraits.Explosive));
+        var frostfire = CombatDamageProfile.ForSpell(SpellId.FireBolt, SynergyId.Frostfire);
+        Assert.IsTrue((frostfire & CombatDamageTraits.Fire) != 0);
+        Assert.IsTrue((frostfire & CombatDamageTraits.Explosive) != 0);
+        Assert.IsTrue((frostfire & CombatDamageTraits.Frost) != 0);
     }
 
     [TestMethod]
