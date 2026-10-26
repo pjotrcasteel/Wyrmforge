@@ -53,6 +53,9 @@ export function emissionMaskPixels(active, vacant, width, height, plate, kind = 
         const y1 = Math.min(height, Math.floor(ay + ah - plate.y));
         for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) {
             const i = (y * width + x) * 4;
+            // Transparent vacant pixels have no comparable registered unlit surface.
+            // Never mistake missing pixels for dramatic emission differences.
+            if (active[i+3] < 245 || vacant[i+3] < 245) continue;
             const ar = active[i], ag = active[i+1], ab = active[i+2];
             const delta = .2126 * (lin[ar]-lin[vacant[i]]) +
                 .7152 * (lin[ag]-lin[vacant[i+1]]) + .0722 * (lin[ab]-lin[vacant[i+2]]);
