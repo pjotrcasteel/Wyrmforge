@@ -12,7 +12,8 @@ import {
 import { splitTownPavingReference, levelPavingNormal } from './town-paving-material.js';
 import { deriveTownNeutralPavingCanvas } from './town-neutral-albedo.js';
 import { TOWN_NIGHT_LIGHT_GRADE, gradeTownPreviewLighting } from './town-lighting-grade.js';
-import { createTownDomainFixtures, configureTownLightDomains, TOWN_LIGHT_ISOLATIONS } from './town-light-domains.js';
+import { createTownDomainFixtures, configureTownLightDomains, TOWN_LIGHT_ISOLATIONS, TOWN_NEXUS_SCHOOL_LIGHTS } from './town-light-domains.js';
+import { TOWN_EMISSION_PLATES, emissionMaskPixels } from './town-emission-masks.js';
 import { projectTownCitizens, TOWN_CITIZEN_ART_WIDTH, TOWN_CITIZEN_ART_HEIGHT } from './town-citizen-gpu-bridge.js';
 
 export const TOWN_PREVIEW_SOURCE = 'art/town/day-active.webp';
@@ -174,6 +175,28 @@ export function townPreviewManifest({ wellV4 = false, domains = false } = {}) {
         light('east-lantern', 1111, 373, 1.2,
             TOWN_NIGHT_LIGHT_GRADE.lanternColor, TOWN_NIGHT_LIGHT_GRADE.peripheralIntensity),
     ];
+    if (domains) for (const plate of TOWN_EMISSION_PLATES) {
+        const classes = plate.domain === 'nexus' ? ['warm', 'magic'] : ['warm'];
+        for (const kind of classes) {
+            const key = 'town-emissive-' + plate.domain + '-' + kind;
+            layers.push({
+                id: key, ownerId: 'town-' + plate.domain,
+                domain: plate.domain, emissionKind: kind, geometry: key + '-plane',
+                artBounds: [plate.x, plate.y, plate.width, plate.height],
+                material: key + '-material',
+                position: new T.Vector3(...townPreviewProjection(
+                    plate.x + plate.width / 2, plate.y + plate.height / 2))
+                    .addScaledVector(a.toward, .05).toArray(),
+                rotation: [0, 0, 0], scale: [1, 1, 1],
+                castsShadow: false, receivesShadow: false,
+            });
+            materials.push(material(key + '-material', key + '-map', {
+                color: '#000000', emissiveMap: key + '-map',
+                emission: '#ffffff', emissionIntensity: 1.4,
+                roughness: 1, specular: 0, metalness: 0,
+            }));
+        }
+    }
     const fixtures = domains ? createTownDomainFixtures(townPreviewProjection, a.toward.toArray()) : legacyFixtures;
     const selectedCutouts = wellV4
         ? CUTOUTS.filter(c => !STAGE4_REPLACED_CUTOUT_IDS.includes(c.id)) : CUTOUTS;
@@ -253,6 +276,47 @@ async function loadApprovedImage(wellV4 = false, domains = false, sourceMode = '
     return canvas;
 }
 
+async function registerTownEmissionMasks(engine) {
+    // Original registered runtime assets, same art coordinates as the approved
+    // Town. The downloaded owner-selected lighting frames remain immutable
+    // visual references; these are not guessed colour blobs.
+    const active = new Image();
+    active.src = new URL('../art/town/night-active.webp', import.meta.url).href;
+    await active.decode();
+    if (active.naturalWidth !== 1672 || active.naturalHeight !== 941)
+        throw new Error('Town emission requires pixel-exact active reference');
+    for (const plate of TOWN_EMISSION_PLATES) {
+        const vacant = new Image();
+        vacant.src = new URL('../art/town/night-vacant-' + plate.name + '.png', import.meta.url).href;
+        await vacant.decode();
+        if (vacant.naturalWidth !== plate.width || vacant.naturalHeight !== plate.height)
+            throw new Error('Emission plate registration drift: ' + plate.name);
+        const draw = document.createElement('canvas');
+        draw.width = plate.width; draw.height = plate.height;
+        const ctx = draw.getContext('2d', { willReadFrequently: true });
+        ctx.drawImage(active, plate.x, plate.y, plate.width, plate.height,
+            0, 0, plate.width, plate.height);
+        const activePixels = ctx.getImageData(0, 0, plate.width, plate.height).data;
+        ctx.clearRect(0, 0, plate.width, plate.height);
+        ctx.drawImage(vacant, 0, 0);
+        const vacantPixels = ctx.getImageData(0, 0, plate.width, plate.height).data;
+        for (const kind of plate.domain === 'nexus' ? ['warm', 'magic'] : ['warm']) {
+            const key = 'town-emissive-' + plate.domain + '-' + kind;
+            const mask = emissionMaskPixels(activePixels, vacantPixels,
+                plate.width, plate.height, plate, kind);
+            const output = document.createElement('canvas');
+            output.width = plate.width; output.height = plate.height;
+            output.getContext('2d').putImageData(
+                new ImageData(mask, plate.width, plate.height), 0, 0);
+            const texture = new T.CanvasTexture(output);
+            engine.registerTexture(key + '-map', texture);
+            engine.registerGeometry(key + '-plane', plane(
+                plate.width * BASE_WIDTH / TOWN_ART_SIZE[0],
+                plate.height * BASE_WIDTH / TOWN_ART_SIZE[0], axes().basis));
+        }
+    }
+}
+
 /** The only side effect is an isolated canvas, never live Town runtime. */
 export async function initializeTownPreview(canvas, { wellV4 = false, domains = false, unlocks = null,
     school = 'none', strength = .16, isolation = 'combined', neutralMagic = false,
@@ -318,6 +382,7 @@ const engine = new LightingEngine(canvas, {
             engine.registerGeometry('approved-foreground-caster-' + cutout.id, cutoutGeometry(cutout, a.basis));
             engine.registerTexture('approved-cutout-texture-' + cutout.id, cutoutTexture(source, cutout));
         }
+        if (state.domains) await registerTownEmissionMasks(engine);
         state.manifest = townPreviewManifest({ wellV4: state.wellV4, domains: state.domains });
         engine.setCamera([0, 0, 0], BASE_WIDTH / 2);
         configureTownPreview(canvas, {});
@@ -369,6 +434,17 @@ export function configureTownPreview(canvas, options) {
             well.position = well.position.map((value, i) => value + moved[i] - original[i]);
         }
         if (!state.lamps) for (const fixture of manifest.fixtures) fixture.enabled = false;
+        const activeDomains = new Set(manifest.fixtures.filter(f => f.enabled).map(f => f.domain));
+        // Emission cannot remain visible just because the authored window
+        // texture exists: it follows the same strict per-domain GPU fixtures.
+        manifest.layers = manifest.layers.filter(layer =>
+            !layer.emissionKind || (state.mode === 'night' && activeDomains.has(layer.domain)));
+        const nexusMagic = manifest.materials.find(m => m.id === 'town-emissive-nexus-magic-material');
+        if (nexusMagic) {
+            nexusMagic.emission = state.neutralMagic ? '#ffffff' : TOWN_NEXUS_SCHOOL_LIGHTS[state.school];
+            nexusMagic.emissionIntensity = Math.min(2.4, .5 + 1.6 * state.strength);
+        }
+
     } else {
         const moved = manifest.fixtures.find(f =>
             f.id === (state.wellV4 ? 'stage4-well-lantern' : 'noticeboard-lantern'));
