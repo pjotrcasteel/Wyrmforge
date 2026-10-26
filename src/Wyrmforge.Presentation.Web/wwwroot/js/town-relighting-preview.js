@@ -7,6 +7,7 @@ import { compileTownLightingSnapshot, TOWN_ART_SIZE } from './town-relightable-s
 import { CUTOUTS } from './refuge-foreground-cutouts.js';
 import { splitTownPavingReference, levelPavingNormal } from './town-paving-material.js';
 import { deriveTownNeutralPavingCanvas } from './town-neutral-albedo.js';
+import { TOWN_NIGHT_LIGHT_GRADE, gradeTownPreviewLighting } from './town-lighting-grade.js';
 import { projectTownCitizens, TOWN_CITIZEN_ART_WIDTH, TOWN_CITIZEN_ART_HEIGHT } from './town-citizen-gpu-bridge.js';
 
 export const TOWN_PREVIEW_SOURCE = 'art/town/day-active.webp';
@@ -130,7 +131,7 @@ function light(id, x, y, height, color, intensity, enabled = true) {
         .addScaledVector(a.toward, height);
     return {
         id, ownerId: id, type: 'point', enabled, color, intensity,
-        position: p.toArray(), direction: [0, 0, -1], range: 5,
+        position: p.toArray(), direction: [0, 0, -1], range: TOWN_NIGHT_LIGHT_GRADE.range,
         coneAngle: .55, penumbra: .3, castsShadow: true, priority: id === 'noticeboard-lantern' ? 3 : 1,
         artAnchor: [x, y],
     };
@@ -161,9 +162,12 @@ export function townPreviewManifest() {
         rotation: [0, 0, 0], scale: [1, 1, 1], castsShadow: false, receivesShadow: true,
     });
     const fixtures = [
-        light('noticeboard-lantern', 902, 465, 1.1, '#ffc58e', 11),
-        light('north-west-lantern', 552, 373, 1.2, '#ffc58e', 7),
-        light('east-lantern', 1111, 373, 1.2, '#ffc58e', 7),
+        light('noticeboard-lantern', 902, 465, 1.1,
+            TOWN_NIGHT_LIGHT_GRADE.lanternColor, TOWN_NIGHT_LIGHT_GRADE.centralIntensity),
+        light('north-west-lantern', 552, 373, 1.2,
+            TOWN_NIGHT_LIGHT_GRADE.lanternColor, TOWN_NIGHT_LIGHT_GRADE.peripheralIntensity),
+        light('east-lantern', 1111, 373, 1.2,
+            TOWN_NIGHT_LIGHT_GRADE.lanternColor, TOWN_NIGHT_LIGHT_GRADE.peripheralIntensity),
     ];
     for (const cutout of CUTOUTS) {
         const position = new T.Vector3(...townPreviewProjection(
@@ -270,12 +274,13 @@ export function configureTownPreview(canvas, options) {
     manifest.materials.push(...actor.materials);
     const moved = manifest.fixtures.find(f => f.id === 'noticeboard-lantern');
     const modified = light(moved.id, moved.artAnchor[0] + state.offset,
-        moved.artAnchor[1], 1.1, '#ffc58e', 11, state.lamps);
+        moved.artAnchor[1], 1.1, TOWN_NIGHT_LIGHT_GRADE.lanternColor,
+        TOWN_NIGHT_LIGHT_GRADE.centralIntensity, state.lamps);
     Object.assign(moved, modified);
     for (const fixture of manifest.fixtures) fixture.enabled &&= state.lamps;
-    const snapshot = compileTownLightingSnapshot(manifest, {
+    const snapshot = gradeTownPreviewLighting(compileTownLightingSnapshot(manifest, {
         state: {}, mode: state.mode, localHour: 12, time: 0,
-    });
+    }), state.mode);
     state.engine.apply(snapshot);
     state.engine.setCamera([0, 0, 0], BASE_WIDTH / 2);
     // The shared shadow-visibility inspector reuses the *real* shadow map
@@ -308,6 +313,8 @@ export function configureTownPreview(canvas, options) {
     // well, gate, actor or hotspot artwork from their canonical positions.
     if (projectionError > 2) throw new Error(
         `Town GPU image alignment drifted ${projectionError.toFixed(2)} source pixels`);
+    canvas.dataset.nightAmbient = state.mode === 'night'
+        ? snapshot.environment.ambient.toFixed(3) : 'not-night';
     canvas.dataset.framebufferWidth = state.engine.canvas.width.toString();
     canvas.dataset.framebufferHeight = state.engine.canvas.height.toString();
     canvas.dataset.artworkPixelsPerFramebufferPixel =
