@@ -239,7 +239,7 @@ function draw(state, snapshot, width, height) {
     state.fractureGpuFrame = withHollowFractureLightingFrame(snapshot.lighting,fractureEmitters);
     const spellLights = [
         ...buildSpellLights(snapshot, visualSeconds, state.reducedMotion.matches, lightViewport),
-        ...hollowFractureCanvasLights(fractureEmitters)
+        ...hollowFractureCanvasLights(fractureEmitters,snapshot.lighting)
     ];
     ctx.clearRect(0, 0, width, height);
     ctx.save();
