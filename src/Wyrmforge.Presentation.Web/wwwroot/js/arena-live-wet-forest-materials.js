@@ -38,23 +38,28 @@ function decode(url) {
 // previous LIVE Hunt terrain as the fallback, never a blank/black arena.
 export function preloadLiveWetForestMaterials(seed) {
     const variant = wetForestVariantForSeed(seed);
-    if (!variant || ready.has(variant) || pending.has(variant) || failed.has(variant)
-        || typeof Image === 'undefined') return;
+    if (!variant || typeof Image === 'undefined') return Promise.resolve(false);
+    if (ready.has(variant)) return Promise.resolve(true);
+    if (pending.has(variant)) return pending.get(variant);
+    if (failed.has(variant)) return Promise.resolve(false);
     const urls = [0, 1, 3].map(id => sourceBackedUrl(id, variant));
-    if (urls.some(url => !url)) return;
+    if (urls.some(url => !url)) return Promise.resolve(false);
     const task = Promise.all(urls.map(decode))
         .then(([grass, mud, earth]) => {
             ready.delete(variant);
             ready.set(variant, { 0: grass, 1: mud, 3: earth });
             while (ready.size > 2) ready.delete(ready.keys().next().value);
             generation++;
+            return true;
         })
         .catch(error => {
             failed.set(variant, error.message);
             console.warn('WyrmForge: using existing Wet Forest fallback after artwork load failure.', error);
+            return false;
         })
         .finally(() => pending.delete(variant));
     pending.set(variant, task);
+    return task;
 }
 
 export function liveWetForestArtworkGeneration() {
