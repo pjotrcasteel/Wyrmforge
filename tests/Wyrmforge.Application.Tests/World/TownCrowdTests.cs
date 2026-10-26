@@ -10,6 +10,25 @@ public sealed class TownCrowdTests
         TownNavigationMap.FromJson(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "night-navigation.json")));
 
     [TestMethod]
+    public void AgentActivities_SeededCrowd_PreservesReservationsAndPathBudget()
+    {
+        var first = new TownCrowd(Scene(), 451, agentActivities: true);
+        var replay = new TownCrowd(Scene(), 451, agentActivities: true);
+        for (var tick = 0; tick < 400; tick++)
+        {
+            first.Step(TimeSpan.FromMilliseconds(100));
+            replay.Step(TimeSpan.FromMilliseconds(100));
+            Assert.IsTrue(first.LastStepPathSearches <= 1);
+            var reserved = first.Citizens.Where(c => c.DestinationNode >= 0).Select(c => c.DestinationNode).ToArray();
+            Assert.AreEqual(reserved.Length, reserved.Distinct().Count());
+            for (var i = 0; i < first.Citizens.Count; i++)
+                Assert.AreEqual(first.Citizens[i].Position, replay.Citizens[i].Position);
+        }
+        Assert.IsTrue(first.InspectActivities().Count > 0);
+        Assert.IsTrue(first.Citizens.Any(c => c.IsWalking));
+    }
+
+    [TestMethod]
     public void Step_SameSeedAndTicks_ReplaysIdenticalPedestrians()
     {
         var first = new TownCrowd(Scene(), 451);
