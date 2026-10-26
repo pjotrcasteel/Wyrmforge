@@ -64,11 +64,16 @@ public sealed class TownGpuAcceptanceTests : PageTest
 
     private async Task ConfigureAsync(string mode, string paving, string view, double npcProgress)
     {
-        await Page.EvaluateAsync(@"async options => {
+        var valid = await Page.EvaluateAsync<bool>(@"async options => {
             const canvas = document.querySelector('.refuge-town-gpu-canvas');
             const module = await import(new URL('./js/town-relighting-preview.js', document.baseURI).href);
             module.configureTownPreview(canvas, options);
+            return canvas.dataset.pavingAlbedo === options.paving &&
+                canvas.dataset.profile === options.mode &&
+                canvas.dataset.inspection === (options.mode === 'zero' ? 'lit' : options.view) &&
+                Number(canvas.dataset.projectionErrorPx) <= 2;
         }", new { mode, paving, view, npcProgress, npcEnabled = true, lamps = true, offset = 0 });
+        Assert.IsTrue(valid, "Screenshot rejected: GPU mode, material selection or pixel alignment did not match.");
     }
 
     [TestMethod]
