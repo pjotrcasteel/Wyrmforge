@@ -80,7 +80,7 @@ An ordinary enemy may remain Tier I late in the game. Intelligence tiers are ass
 
 ## Cross-workstream interface with Town
 
-Town T1/T3/T5 own **world-space scene IDs, collision/navmesh, semantic destinations, interaction/occupancy slots and scene-state events**. AI1/AI2 consume these contracts later. Town does **not** implement sensing, memory, planning, utility scoring, dialogue or behavior trees. Combat AI uses the same agent core with Hunt-specific navigation and action modules.
+The **approved painted 2D Town** owns world-space scene IDs, walking masks, A* navigation, semantic destinations, interaction/occupancy slots and active/vacant building state. AI1/AI2 consume those existing contracts; there is **no dependency on the cancelled 3D Town T0–T6 workstream**. Town does not implement sensing, memory, planning, utility scoring, dialogue or behavior trees. Combat AI uses the same shared core with Hunt-specific navigation and execution modules.
 
 ## Non-goals and release safeguards
 
