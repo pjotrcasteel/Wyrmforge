@@ -72,6 +72,28 @@ public sealed class AdvancedAgentTests
         Assert.IsNull(memory.Inspect().Previous);
     }
     [TestMethod]
+    public void Adaptation_StaggeredSight_PreservesOnlyConfirmedLateralObservations()
+    {
+        var adaptation = new EncounterAdaptation();
+        for (var tick = 1; tick <= 400; tick++)
+        {
+            var sampled = (tick - 1) % 6 == 0;
+            Vector2D? seen = sampled ? new Vector2D(120, tick * .5) : null;
+            adaptation.Observe(.025, Vector2D.Zero, seen, sightNotResampled: !sampled);
+        }
+
+        Assert.AreEqual("circle-left", adaptation.Inspect().Counter,
+            "Decision-frame gaps must not erase the previous confirmed sight position.");
+        Assert.IsTrue(adaptation.Inspect().Confidence >= .35);
+
+        var lastConfirmed = adaptation.Inspect().Previous;
+        adaptation.Observe(.025, Vector2D.Zero, null, sightNotResampled: true);
+        Assert.AreEqual(lastConfirmed, adaptation.Inspect().Previous);
+        adaptation.Observe(.025, Vector2D.Zero, null);
+        Assert.IsNull(adaptation.Inspect().Previous, "A real sight-loss sample clears the motion baseline.");
+    }
+
+    [TestMethod]
     public void Tactics_NoVisibleTarget_DoesNotAllowAttack()
     {
         var runtime = new AgentRuntime(new(1, "hound", "hostile"), 42, new CombatTacticPolicy(CombatCapabilities.For(AgentTier.Adaptive), true), 1);
