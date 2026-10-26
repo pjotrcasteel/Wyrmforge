@@ -14,6 +14,17 @@ public sealed class AgentPerceptionTests
             (_, _) => clear, new(1), events.IsDefault ? [] : events);
 
     [TestMethod]
+    public void Observe_StaggeredSamples_DerivesHeadingFromConfirmedPositions()
+    {
+        var agent = Create(6);
+        Observe(agent, 1, new(10, 0));
+        AgentPerceptionSnapshot sample;
+        var tick = 2;
+        do { sample = Observe(agent, tick++, new(20, 0)); } while (!sample.Visible);
+        Assert.AreEqual(new Vector2D(1, 0), sample.Contact!.ObservedHeading);
+    }
+
+    [TestMethod]
     public void Restore_SerializedSensor_ContinuesExactlyThroughLossAndExpiry()
     {
         var original = Create();

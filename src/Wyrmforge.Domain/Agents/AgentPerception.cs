@@ -18,7 +18,7 @@ public enum AgentStimulusKind { Sound, Threat }
 /// <summary>Authoritative event location at emission, never a live entity reference.</summary>
 public sealed record AgentStimulus(long Id, long Tick, Vector2D Position, double Radius, AgentStimulusKind Kind);
 public sealed record AgentContact(Vector2D Position, Vector2D ObservedHeading, long ObservedTick, string Source);
-public sealed record AgentPerceptionSnapshot(long Tick, long NextSampleTick, AgentContact? Contact, long LastEventId, bool Visible);
+public sealed record AgentPerceptionSnapshot(long Tick, long NextSampleTick, AgentContact? Contact, long LastEventId, bool Visible, bool SightClearOnLastSample = false);
 
 /// <summary>Shared per-frame admission budget. Call agents in stable identity order; denied queries never reveal a target.</summary>
 public sealed class AgentQueryBudget(int capacity)
@@ -70,9 +70,11 @@ public sealed class AgentPerception
             contact = new(stimulus.Position, Vector2D.Zero, stimulus.Tick, stimulus.Kind == AgentStimulusKind.Sound ? "hearing" : "threat-event");
         }
         var visible = false;
+        var lastSampleClear = previous.SightClearOnLastSample;
         var next = previous.NextSampleTick;
         if (tick >= next)
         {
+            lastSampleClear = false;
             next = tick + 1;
             next += (offset - next % profile.SampleIntervalTicks + profile.SampleIntervalTicks) % profile.SampleIntervalTicks;
             var inVision = InVision(observer, facing, candidate);
@@ -81,13 +83,14 @@ public sealed class AgentPerception
             if (admitted && hasLineOfSight(observer, candidate))
             {
                 visible = true;
+                lastSampleClear = true;
                 // A gap in confirmed sight must not turn hidden displacement into observed motion.
-                var heading = previous.Contact is { Source: "vision" } seen && seen.ObservedTick == previous.Tick && previous.Visible
+                var heading = previous.Contact is { Source: "vision" } seen && previous.SightClearOnLastSample
                     ? Vector2D.DirectionTo(seen.Position, candidate) : Vector2D.Zero;
                 contact = new(candidate, heading, tick, "vision");
             }
         }
-        state = new(tick, next, contact, lastEventId, visible);
+        state = new(tick, next, contact, lastEventId, visible, lastSampleClear);
         return state;
     }
 

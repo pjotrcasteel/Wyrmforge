@@ -29,6 +29,19 @@ public sealed class AgentPerceptionIntegrationTests
         typeof(RunSimulation).GetMethod(name, BindingFlags.NonPublic | BindingFlags.Instance)!.Invoke(run, args);
 
     [TestMethod]
+    public void RoutedAgent_WithoutKnowledge_DoesNotFleeFromHiddenExactPosition()
+    {
+        var run = Create(EnemyKind.Hollow);
+        var enemy = Enemies(run).Single();
+        enemy.Position = new(30, 30);
+        enemy.RoutedRemaining = 1;
+        var start = enemy.Position;
+        for (var i = 0; i < 50; i++) run.Tick(.025, default, 800, 600);
+        Assert.AreEqual(start, enemy.Position);
+        Assert.AreEqual("unknown", run.InspectEnemyAgents().Single().Observations.Single(f => f.Key == "target").Value);
+    }
+
+    [TestMethod]
     public void Movement_ClampedAtBoundary_DoesNotExposeUnexecutedInputHeading()
     {
         var run = Create(EnemyKind.WhitefangStalker);

@@ -223,7 +223,7 @@ public sealed partial class RunSimulation
             }
 
             var scaledDelta = delta * statusTimeScale;
-            Wyrmforge.Domain.Agents.AgentPerceptionSnapshot? sensed = null;
+            var sensed = agentPerceptionEnabled ? agent?.Perception.Inspect() : null;
             if (agentPerceptionEnabled && agent is not null && enemy.RoutedRemaining <= 0)
                 sensed = agent.Perception.Observe(agent.Runtime.Inspect().Tick + 1, enemy.Position, Vector2D.Zero, player.Position,
                     (from, to) => arenaEnvironment?.HasLineOfSight(from, to, arenaWidth, arenaHeight) ?? true, sensingBudget!,
@@ -257,7 +257,7 @@ public sealed partial class RunSimulation
                 agent?.Runtime.Pause();
                 // Morale break: flee the hunter, then re-engage once the timer ends. Bounded, so it never soft-locks a node.
                 enemy.RoutedRemaining = Math.Max(0, enemy.RoutedRemaining - scaledDelta);
-                if (!crossing) direction = Vector2D.DirectionTo(player.Position, enemy.Position);
+                if (!crossing) direction = Vector2D.DirectionTo(knownTarget, enemy.Position);
             }
             else if (agent is not null)
             {

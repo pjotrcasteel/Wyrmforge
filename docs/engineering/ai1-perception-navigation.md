@@ -21,4 +21,6 @@ Remaining AI1 gates:
 
 ## Checkpoint validation
 
-392 Domain tests pass. Focused Application coverage includes AI0 full-frame compatibility, AI1 deterministic execution, range denial, real closed/open gates, committed attacks, and dynamic Town/Hunt path recovery. Final full suites and new browser tests are running; no AI1 completion or rollout is claimed.
+393 Domain tests pass; 21 focused Application tests pass; browser test project builds with zero warnings/errors. The full Application suite is being rerun after the final changes. Focused Application coverage includes AI0 full-frame compatibility, AI1 deterministic execution, range denial, real closed/open gates, committed attacks, and dynamic Town/Hunt path recovery. Final full suites and new browser tests are running; no AI1 completion or rollout is claimed.
+
+Final review also guards routed enemies against exact-position fallback, and derives motion across scheduled sight samples without carrying motion through confirmed occlusion. Local WASM packaging is blocked by the environment's out-of-process task-host socket restriction; ordinary C# and browser-test compilation succeed. Published browser execution is validated in GitHub CI, not inferred from compilation.
