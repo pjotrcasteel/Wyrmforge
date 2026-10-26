@@ -39,11 +39,24 @@ public sealed class AgentFoundationBrowserTests : PageTest
             null, new() { Timeout = 45000 });
 
         await Page.GetByText("Boss AI inspector", new() { Exact = true }).ClickAsync();
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Refresh boss AI inspector" }).ClickAsync();
-        var inspection = JsonSerializer.Deserialize<JsonElement>(await Page.GetByTestId("boss-agent-inspector").InnerTextAsync());
+        var refresh = Page.GetByRole(AriaRole.Button, new() { Name = "Refresh boss AI inspector" });
+        var inspector = Page.GetByTestId("boss-agent-inspector");
+        JsonElement inspection = default;
+        // Encounter startup can be visible before its first authoritative simulation tick.
+        // Poll observed state, not the painted boss title or a fixed browser delay.
+        for (var attempt = 0; attempt < 30; attempt++)
+        {
+            await refresh.ClickAsync();
+            inspection = JsonSerializer.Deserialize<JsonElement>(await inspector.InnerTextAsync());
+            if (inspection.GetProperty("Agent") is { ValueKind: JsonValueKind.Object } observed &&
+                observed.GetProperty("Observations").GetArrayLength() > 0) break;
+            await Page.WaitForTimeoutAsync(200);
+        }
         var agent = inspection.GetProperty("Agent");
+        Assert.AreEqual(JsonValueKind.Object, agent.ValueKind, "Ashfang must enter the shared agent runtime.");
         Assert.AreEqual("Ashfang", agent.GetProperty("Identity").GetProperty("Archetype").GetString());
-        Assert.IsTrue(agent.GetProperty("Observations").GetArrayLength() > 0, "The boss must use the shared observed-state core.");
+        Assert.IsTrue(agent.GetProperty("Observations").GetArrayLength() > 0,
+            "The boss must produce an actual authoritative observation, not just a painted encounter title.");
         Assert.AreEqual(JsonValueKind.Object, inspection.GetProperty("Adaptation").ValueKind,
             "AI5 must expose bounded encounter-local learning, not the legacy boss fallback.");
         var damage = inspection.GetProperty("HunterHealthPressure");
