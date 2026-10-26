@@ -45,16 +45,28 @@ public sealed class WetForestMaterialKitBrowserTests : PageTest
         await SaveAsync(canvas, $"wet-forest-material-kit-neutral-{width}.png");
 
         var neutral = await CanvasStatsAsync(canvas);
-        await Expect(canvas).ToHaveAttributeAsync("data-material-review-source", "compact");
+        await Expect(canvas).ToHaveAttributeAsync("data-material-review-source", "source-backed");
         await Page.GetByLabel("Ground artwork").SelectOptionAsync("original");
         await Expect(canvas).ToHaveAttributeAsync("data-material-review-source", "original");
         await SaveAsync(canvas, $"wet-forest-material-kit-original-painting-{width}.png");
         Assert.AreNotEqual(neutral[1], (await CanvasStatsAsync(canvas))[1],
-            "Original painting must render differently from new modular material source.");
-        await Page.GetByLabel("Ground artwork").SelectOptionAsync("compact");
-        await Expect(canvas).ToHaveAttributeAsync("data-material-review-source", "compact");
+            "The existing six-swatch atlas must be visually distinguishable from PR340 artwork.");
+        await Page.GetByLabel("Ground artwork").SelectOptionAsync("source-backed");
+        await Expect(canvas).ToHaveAttributeAsync("data-material-review-source", "source-backed");
         CollectionAssert.AreEqual(neutral, await CanvasStatsAsync(canvas),
-            "Returning to compact authored materials must restore the identical scene.");
+            "Returning to the same archived PR340 artwork must reproduce its pixel output.");
+        await Expect(canvas).ToHaveAttributeAsync("data-material-review-variant", "1");
+        await Page.GetByLabel("Existing texture variation").SelectOptionAsync("2");
+        await Expect(canvas).ToHaveAttributeAsync("data-material-review-variant", "2",
+            new LocatorAssertionsToHaveAttributeOptions { Timeout = 90000 });
+        await SaveAsync(canvas, $"wet-forest-material-kit-original-pr340-variation02-{width}.png");
+        Assert.AreNotEqual(neutral[1], (await CanvasStatsAsync(canvas))[1],
+            "Selecting an existing archived variant should visibly change the GPU world.");
+        await Page.GetByLabel("Existing texture variation").SelectOptionAsync("1");
+        await Expect(canvas).ToHaveAttributeAsync("data-material-review-variant", "1",
+            new LocatorAssertionsToHaveAttributeOptions { Timeout = 90000 });
+        CollectionAssert.AreEqual(neutral, await CanvasStatsAsync(canvas),
+            "Returning to archived variant 1 must restore exactly the same rendered scene.");
         await Page.GetByLabel("GPU lighting").SelectOptionAsync("zero");
         await Expect(canvas).ToHaveAttributeAsync("data-material-review-profile", "zero");
         var zero = await CanvasStatsAsync(canvas);
