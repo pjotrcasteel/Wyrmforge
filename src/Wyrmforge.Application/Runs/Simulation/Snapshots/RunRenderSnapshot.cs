@@ -28,6 +28,7 @@ public sealed record RunRenderSnapshot(
     public bool PresentationPaused { get; init; }
     public DragonRenderSnapshot? DragonDefeat { get; init; }
     public GpuLightingFrame? Lighting { get; init; }
+    public IReadOnlyList<CombatWoundRenderSnapshot> CombatWounds { get; init; } = [];
 
     public SplashPulseRenderSnapshot? PowerBurst { get; init; }
     public TrailRenderSnapshot? Trail { get; init; }
