@@ -42,6 +42,20 @@ public sealed class AdvancedAgentIntegrationTests
     }
 
     [TestMethod]
+    public void AdaptiveBoss_FrozenFrame_DoesNotAdvanceAgentSensing()
+    {
+        var run = new RunSimulationFactory(new SeededRandomSource(1)).CreateDevelopmentHunt(new HashSet<string>(),
+            new(DragonId.Ashfang, false, 1, SpellId.FireBolt, 42, 800, 600, true)
+            { AdaptiveAgents = true, Casting = false, BossReadySpell = false });
+        var dragon = (DragonState)typeof(RunSimulation).GetField("dragon", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(run)!;
+        var combat = typeof(RunSimulation).GetMethod("UpdateDragonCombat", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        var before = run.InspectBossAgent()!;
+        for (var frame = 0; frame < 15; frame++) combat.Invoke(run, [dragon, 0d]);
+        Assert.AreEqual(before, run.InspectBossAgent(),
+            "Time-scaled freeze must pause Wyrm observations as well as attacks and movement.");
+    }
+
+    [TestMethod]
     [DataRow(1)]
     [DataRow(2)]
     public void AdaptiveBoss_ActualPhases_ReplayWithoutBypassingCommitments(int phase)
