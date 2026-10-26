@@ -28,6 +28,11 @@ jobs:
           git lfs pull --include="src/Wyrmforge.Presentation.Web/wwwroot/**" --exclude=""
           python3 tools/development/verify_web_assets.py
 
+      - name: Bake three unapproved authored material PNGs
+        run: |
+          python3 -m pip install pillow
+          python3 tools/art/build_wet_forest_compact_materials.py --output src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-compact/v1
+          test -s src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-compact/v1/manifest.json
       - name: Use preinstalled .NET 10 SDK
         run: |
           dotnet --list-sdks

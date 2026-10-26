@@ -10,6 +10,7 @@ on:
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/wet-forest-gpu-material-review.js'
       - 'tests/Wyrmforge.Browser.Tests/WetForestMaterialKitBrowserTests.cs'
       - 'tests/javascript/wet-forest-three-material-kit.test.mjs'
+      - 'tools/art/build_wet_forest_compact_materials.py'
       - '.github/workflows/wet-forest-material-kit-review.yml'
   workflow_dispatch:
 
@@ -27,6 +28,11 @@ jobs:
         run: |
           git lfs pull --include="src/Wyrmforge.Presentation.Web/wwwroot/**" --exclude=""
           python3 tools/development/verify_web_assets.py
+      - name: Bake three unapproved authored material PNGs
+        run: |
+          python3 -m pip install pillow
+          python3 tools/art/build_wet_forest_compact_materials.py --output src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-compact/v1
+          test -s src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-compact/v1/manifest.json
       - name: Verify JavaScript recipe and GPU contracts
         run: node --test tests/javascript/wet-forest-three-material-kit.test.mjs
       - name: Restore and build targeted browser project

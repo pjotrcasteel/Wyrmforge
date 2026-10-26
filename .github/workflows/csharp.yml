@@ -36,6 +36,7 @@ jobs:
       - name: Verify reproducible sprite atlases
         run: |
           python3 -m pip install -r tools/art/painted-requirements.txt
+          python3 tools/art/build_wet_forest_compact_materials.py --output src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-compact/v1
           node tools/art/build-art.mjs --check
           python3 tools/art/build-painted-enemies.py --check
           python3 tools/art/build-nexus-school-assets.py

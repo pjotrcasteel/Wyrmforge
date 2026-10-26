@@ -38,6 +38,11 @@ jobs:
       - name: Verify deep-link preview routing
         run: python3 -m unittest discover -s tools/development -p 'test_*.py'
 
+      - name: Bake three unapproved authored material PNGs
+        run: |
+          python3 -m pip install pillow
+          python3 tools/art/build_wet_forest_compact_materials.py --output src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-compact/v1
+          test -s src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-compact/v1/manifest.json
       - name: Restore browser tests
         run: dotnet restore tests/Wyrmforge.Browser.Tests/Wyrmforge.Browser.Tests.csproj
 
