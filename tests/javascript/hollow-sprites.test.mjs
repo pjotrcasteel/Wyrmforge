@@ -13,7 +13,8 @@ const source=readFileSync(new URL('js/hollow-sprites.js',root),'utf8').replace("
  .replace("'./hollow-variation.js'",JSON.stringify(moduleUri('hollow-variation.js')))
  .replace("'./hollow-death.js'",JSON.stringify(moduleUri('hollow-death.js')))
  .replace("'./hollow-injury-death.js'",JSON.stringify(moduleUri('hollow-injury-death.js')))
- .replace("'./hollow-bone-burst.js'",JSON.stringify(moduleUri('hollow-bone-burst.js')));
+ .replace("'./hollow-bone-burst.js'",JSON.stringify(moduleUri('hollow-bone-burst.js')))
+ .replace("'./hollow-fracture.js'",JSON.stringify(moduleUri('hollow-fracture.js')));
 const mod=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
 const enemy=(values={})=>({entityId:7,kind:0,x:20,y:20,radius:11,...values});
 const snapshot=(values={})=>({enemies:[enemy()],player:{x:200,y:200,radius:9},deathBursts:[],...values});
