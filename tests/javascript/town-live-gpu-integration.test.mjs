@@ -29,7 +29,7 @@ test('opt-in canvas remains noninteractive and visible only after confirmed GPU 
     assert.match(css, /\[data-town-gpu-preview="ready"\] \.refuge-town-gpu-canvas\s*\{[^}]*visibility:visible/s);
     assert.match(css, /\[data-town-gpu-preview="ready"\] \.refuge-town-night-base/s);
     assert.match(css, /\[data-town-gpu-preview="ready"\] \.refuge-town-citizen/s);
-    assert.match(css, /\[data-town-gpu-preview="ready"\] \.refuge-town-png-cutout/s);
+    assert.match(css, /\[data-town-gpu-preview="ready"\] \.refuge-town-scenery-foreground/s);
     assert.doesNotMatch(css.slice(css.indexOf('G4/T2 AUTHOR-ONLY')), /filter\s*:|mix-blend-mode|brightness\(/);
 });
 
