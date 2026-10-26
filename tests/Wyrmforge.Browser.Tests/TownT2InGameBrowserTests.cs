@@ -42,7 +42,7 @@ public sealed class TownT2InGameBrowserTests : PageTest
         var deviation=await Page.EvaluateAsync<double>(
             "() => window.__town3dInGamePreview.getState().referenceMae");
         Assert.IsTrue(deviation < 14,$"In-game GPU reconstruction must match the approved artwork (MAE {deviation}).");
-        Assert.IsGreaterThan(await Page.Locator(".refuge-town-citizen").CountAsync(),0,
+        Assert.IsGreaterThan(0,await Page.Locator(".refuge-town-citizen").CountAsync(),
             "Use the real existing TownCrowd citizens instead of a fake AI/NPC clone.");
         Assert.AreEqual(5,await Page.Locator(".refuge-town-spot").CountAsync());
         await Expect(Page.Locator(".refuge-town-night-base")).ToBeVisibleAsync();
