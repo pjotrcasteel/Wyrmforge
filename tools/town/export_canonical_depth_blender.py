@@ -72,6 +72,10 @@ scene.render.image_settings.file_format = "PNG"
 scene.render.film_transparent = False\n# Headless GitHub runners have no EGL context; use deterministic CPU Cycles.\nscene.render.engine = "CYCLES"
 scene.cycles.device = "CPU"
 scene.cycles.samples = 8
+# Ubuntu's apt Blender build is compiled without OpenImageDenoiser.
+scene.cycles.use_denoising = False
+for layer in scene.view_layers:
+    layer.cycles.use_denoising = False
 
 bpy.ops.object.camera_add(location=(8, -12, 12))
 camera = bpy.context.object
