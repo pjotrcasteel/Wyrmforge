@@ -69,6 +69,18 @@ jobs:
           if-no-files-found: error
           retention-days: 3
 
+      - name: Export exact GPU review runtime for Stage 4 binary-art QC
+        uses: actions/upload-artifact@v4
+        with:
+          name: wyrmforge-town-stage4-local-gpu-runtime
+          path: |
+            src/Wyrmforge.Presentation.Web/wwwroot/js/
+            src/Wyrmforge.Presentation.Web/wwwroot/town-relighting-preview.html
+            src/Wyrmforge.Presentation.Web/wwwroot/art/town/day-active.webp
+            src/Wyrmforge.Presentation.Web/wwwroot/art/town/night-active.webp
+          if-no-files-found: error
+          retention-days: 3
+
       - name: Check new Town GPU projection contracts
         run: node --test tests/javascript/town-relighting-contract.test.mjs tests/javascript/town-relighting-preview.test.mjs tests/javascript/town-paving-material.test.mjs tests/javascript/town-citizen-gpu-bridge.test.mjs tests/javascript/town-neutral-albedo.test.mjs tests/javascript/town-live-gpu-integration.test.mjs tests/javascript/town-lighting-grade.test.mjs tests/javascript/town-well-stage4.test.mjs tests/javascript/town-native-render-quality.test.mjs
 
