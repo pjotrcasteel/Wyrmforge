@@ -29,17 +29,19 @@ test('confirmed hit generates persistent dark blood without repeated frame decal
     assert.ok(c.calls.includes('rgba(73,22,25,.67)'));
     assert.deepEqual(combatGroundDiagnostics(state),{groundMarks:1,flamingRemains:0,bounded:true});
 });
-test('lethal fire AND explosive traits ignite the corpse, fire alone does not',()=>{
+test('lethal fire scorches; composable explosive trait adds the stronger flame effect',()=>{
     const state=createCombatGroundState();
     updateCombatGround(state,snapshot([wound(3,3,true)],[burst(3,3)]),1.0);
     assert.equal(state.marks.length,2);
     assert.equal(state.flames.length,1);
+    assert.equal(state.flames[0].explosive,true);
     const c=canvas();drawBurningRemains(c,state,1.2);
     assert.ok(c.calls.includes('rgba(224,92,32,.64)'));
     updateCombatGround(state,snapshot([wound(3,3,true)],[burst(3,3)]),1.3);
     assert.equal(state.flames.length,1);
     updateCombatGround(state,snapshot([],[burst(4,1)]),1.35);
-    assert.equal(state.flames.length,1);
+    assert.equal(state.flames.length,2);
+    assert.equal(state.flames[1].explosive,false);
     updateCombatGround(state,snapshot([]),3.5);
     assert.equal(state.flames.length,0);
 });
