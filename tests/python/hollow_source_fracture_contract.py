@@ -12,7 +12,11 @@ assert 'Hollow skinned character' in source
 assert 'Hollow editable animation rig' in source
 assert 'character.data.vertices' in source, 'Segments must come from real skin weights'
 assert 'evaluated.to_mesh' in source, 'Segments must come from skinned 3D mesh'
-assert "context='FACES'" in source and "context='VERTS'" in source
+assert 'isolated.from_pydata' in source, 'Source skin must be subset from Blender mesh'
+assert 'mesh.polygons[source_index]' in source
+assert 'original_layer.data[old_loop].uv' in source, 'Preserve every original UV per face corner'
+assert 'new_face.material_index = original.material_index' in source
+assert 'bmesh.new()' not in source, 'PyPI Blender module has no separate bmesh package'
 assert "releasedToHunts': False" in source
 assert 'keyframe_insert' in source and 'floor' in source.lower()
 assert "'ownerApproved': False" in source, 'Generated art must never be auto-approved'
