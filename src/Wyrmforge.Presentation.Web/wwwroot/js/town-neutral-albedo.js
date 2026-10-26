@@ -56,7 +56,7 @@ export function neutralizeTownPavingPixels(pixels, width, height, {
     const out = new Uint8ClampedArray(pixels);
     if (!count) return { data: out, coverage: 0, meanGain: 1, alteredPixels: 0 };
     const meanLogLight = allLight / count, meanLogWarm = allWarm / count;
-    let gainTotal = 0, altered = 0;
+    let gainTotal = 0, altered = 0, broadVariationBefore = 0, broadVariationAfter = 0;
     const rectSum = (sum, x0, y0, x1, y1) =>
         sum[y1 * stride + x1] - sum[y0 * stride + x1] -
         sum[y1 * stride + x0] + sum[y0 * stride + x0];
@@ -72,6 +72,8 @@ export function neutralizeTownPavingPixels(pixels, width, height, {
             const localLogWarm = weight ? rectSum(warmSum, x0, y0, x1, y1) / weight : meanLogWarm;
             // A narrow gain limit avoids destroying approved paint/stone texture.
             const gain = clamp(Math.exp((meanLogLight - localLogLight) * strength), .68, 1.52);
+            broadVariationBefore += (localLogLight - meanLogLight) ** 2;
+            broadVariationAfter += (localLogLight + Math.log(gain) - meanLogLight) ** 2;
             // Reduce only broad *excess* orange cast above the painting's
             // aggregate stone hue: never replace decorative authored colors.
             const cast = clamp((localLogWarm - meanLogWarm) * warmth, -.13, .22);
@@ -84,7 +86,10 @@ export function neutralizeTownPavingPixels(pixels, width, height, {
             gainTotal += gain;
         }
     }
-    return { data: out, coverage: count, meanGain: gainTotal / count, alteredPixels: altered };
+    const illuminationReduction = broadVariationBefore > 1e-9 ?
+        clamp(1 - Math.sqrt(broadVariationAfter / broadVariationBefore), 0, 1) : 0;
+    return { data: out, coverage: count, meanGain: gainTotal / count, alteredPixels: altered,
+        illuminationReduction };
 }
 
 /** Mutate only a NEW lab canvas, never the original canonical source painting. */
@@ -99,5 +104,6 @@ export function deriveTownNeutralPavingCanvas(pavingCanvas, options = {}) {
     input.data.set(result.data);
     context.putImageData(input, x, y);
     return { coverage: result.coverage, alteredPixels: result.alteredPixels,
-        meanGain: result.meanGain, method: 'linear-log-local-illumination-v1' };
+        meanGain: result.meanGain, illuminationReduction: result.illuminationReduction,
+        method: 'linear-log-local-illumination-v1' };
 }
