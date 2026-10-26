@@ -5,6 +5,7 @@ import * as T from './lighting/vendor/three.module.js';
 import { LightingEngine } from './lighting/engine.js';
 import { compileTownLightingSnapshot, TOWN_ART_SIZE } from './town-relightable-scene.js';
 import { CUTOUTS } from './refuge-foreground-cutouts.js';
+import { splitTownPavingReference, levelPavingNormal } from './town-paving-material.js';
 
 export const TOWN_PREVIEW_SOURCE = 'art/town/day-active.webp';
 const BASE_WIDTH = 16;
@@ -94,11 +95,26 @@ export function townPreviewManifest() {
         position: [0, 0, 0], rotation: [0, 0, 0], scale: [1, 1, 1],
         castsShadow: false, receivesShadow: true,
     }];
-    const materials = [material('approved-day-reference', 'town-day-original')];
+    // Opaque architecture/reference painting and independent paving now share
+    // complementary alpha masks. Only paving receives the authored level-ground
+    // normal. No RGB-to-normal or RGB-to-geometry inference.
+    const materials = [
+        material('approved-day-reference', 'town-day-background'),
+        material('town-level-paving', 'town-day-paving', {
+            normal: 'town-paving-flat-normal', roughness: .87, specular: .16,
+        }),
+    ];
+    layers.push({
+        id: 'town-central-paving', ownerId: 'canonical-town-paving',
+        geometry: 'approved-panorama-plane', artBounds: [0, 0, ...TOWN_ART_SIZE],
+        material: 'town-level-paving',
+        position: new T.Vector3().addScaledVector(a.toward, .015).toArray(),
+        rotation: [0, 0, 0], scale: [1, 1, 1], castsShadow: false, receivesShadow: true,
+    });
     const fixtures = [
-        light('noticeboard-lantern', 902, 465, 1.1, '#ffc58e', 16),
-        light('north-west-lantern', 552, 373, 1.2, '#ffc58e', 12),
-        light('east-lantern', 1111, 373, 1.2, '#ffc58e', 12),
+        light('noticeboard-lantern', 902, 465, 1.1, '#ffc58e', 11),
+        light('north-west-lantern', 552, 373, 1.2, '#ffc58e', 7),
+        light('east-lantern', 1111, 373, 1.2, '#ffc58e', 7),
     ];
     for (const cutout of CUTOUTS) {
         const position = new T.Vector3(...townPreviewProjection(
@@ -137,9 +153,13 @@ export async function initializeTownPreview(canvas) {
     try {
         const a = axes(), source = await loadApprovedImage();
         engine.registerGeometry('approved-panorama-plane', plane(BASE_WIDTH, BASE_HEIGHT, a.basis));
-        const tex = new T.Texture(source);
-        tex.needsUpdate = true;
-        engine.registerTexture('town-day-original', tex);
+        const separated = splitTownPavingReference(source);
+        engine.registerTexture('town-day-background', new T.CanvasTexture(separated.backdrop));
+        engine.registerTexture('town-day-paving', new T.CanvasTexture(separated.floor));
+        const normal = levelPavingNormal(a.right, a.up, a.toward);
+        const normalTexture = new T.DataTexture(normal, 1, 1, T.RGBAFormat);
+        normalTexture.needsUpdate = true;
+        engine.registerTexture('town-paving-flat-normal', normalTexture, false);
         for (const cutout of CUTOUTS) {
             const size = BASE_WIDTH / TOWN_ART_SIZE[0];
             engine.registerGeometry('approved-cutout-plane-' + cutout.id,
@@ -170,7 +190,7 @@ export function configureTownPreview(canvas, options) {
     const manifest = structuredClone(state.manifest);
     const moved = manifest.fixtures.find(f => f.id === 'noticeboard-lantern');
     const modified = light(moved.id, moved.artAnchor[0] + state.offset,
-        moved.artAnchor[1], 1.1, '#ffc58e', 16, state.lamps);
+        moved.artAnchor[1], 1.1, '#ffc58e', 11, state.lamps);
     Object.assign(moved, modified);
     for (const fixture of manifest.fixtures) fixture.enabled &&= state.lamps;
     const snapshot = compileTownLightingSnapshot(manifest, {
