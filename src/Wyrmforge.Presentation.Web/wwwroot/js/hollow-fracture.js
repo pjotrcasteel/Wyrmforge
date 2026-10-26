@@ -94,8 +94,8 @@ export function hollowFractureEmitters(corpses, clock, reducedMotion=false) {
             type:'point',enabled:true,
             position:[corpse.x,corpse.y,body*.62],direction:[0,0,-1],
             color:'#f78a39',intensity:strength,range:body*7.5,
-            coneAngle:Math.PI/4,penumbra:0,castsShadow:false,priority:2,
-            expiresAt:corpse.at+1.38
+            coneAngle:Math.PI/4,penumbra:0,castsShadow:false,priority:2
+
         });
     }
     return lights.sort((a,b) => b.intensity-a.intensity || a.id.localeCompare(b.id))
