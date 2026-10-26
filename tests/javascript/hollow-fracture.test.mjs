@@ -40,11 +40,10 @@ test('fracture clips must derive from the approved 3D Hollowed and include all e
 
 test('art choice is deterministic and never replaces an existing damaged Hollowed',()=>{
     const eligible=Array.from({length:400},(_,id)=>id).filter(id=>eligibleHollowFracture(id));
-    assert.ok(eligible.length>=70&&eligible.length<=130,'one in four stable candidates');
-    const sound=eligible.filter(id=>id%4!==0);
-    assert.ok(sound.length>35,'fractures must actually occur among uninjured Hollowed');
-    assert.ok(sound.length<eligible.length,'injured variants must remain protected');
+    assert.equal(eligible.length,400,'every intact standard Hollowed may fracture');
     assert.ok(eligibleHollowFracture(0));
+    // Appearance chooses the impaired leg independently; other injuries are
+    // filtered by the existing deathInjury source-rig contract below.
     for(const injury of ['one-arm-left','broken-arm-right','broken-leg-left'])
         for(const id of eligible)assert.equal(eligibleHollowFracture(id,injury),false);
     for(const id of [-1,1.5,NaN,Infinity])assert.equal(eligibleHollowFracture(id),false);
