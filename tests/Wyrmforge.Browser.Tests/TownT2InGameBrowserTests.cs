@@ -46,6 +46,15 @@ public sealed class TownT2InGameBrowserTests : PageTest
             "Use the real existing TownCrowd citizens instead of a fake AI/NPC clone.");
         Assert.AreEqual(5,await Page.Locator(".refuge-town-spot").CountAsync());
         await Expect(Page.Locator(".refuge-town-night-base")).ToBeVisibleAsync();
+        // Real gameplay cutouts remain in the DOM and must finish extracting
+        // the well roof and noticeboard from the approved painting. This is
+        // the existing foot-depth system, not synthetic test-only actors.
+        await Page.WaitForFunctionAsync(@"() =>
+            ['well-roof','noticeboard-panel'].every(id =>
+                document.querySelector('[data-town-cutout=""' + id + '""]')
+                    ?.dataset.townPngReady === 'true')");
+        Assert.IsTrue(await Page.Locator("[data-town-cutout][data-town-png-ready='true']").CountAsync() >= 2,
+            "Well/noticeboard architectural alpha masks are required for NPC occlusion.");
 
         await Page.EvaluateAsync("() => window.wyrmforgeTown.show(1,false)");
         await Page.WaitForTimeoutAsync(150);
