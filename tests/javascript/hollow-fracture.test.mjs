@@ -108,11 +108,14 @@ test('fracture ember light shares generic GPU contract and projects into the leg
     assert.equal(impact[0].id,'hollow-fracture:40:ember');
     assert.equal(impact[0].castsShadow,false);
     const original={version:1,time:5.62,lights:[],materials:[],objects:[],
-        environment:{ambient:0,color:'#000000',exposure:1,emission:false}};
+        environment:{ambient:.012,color:'#8c9cbb',exposure:1,emission:true}};
     const framed=withHollowFractureLightingFrame(original,impact);
     assert.equal(original.lights.length,0,'presentation must never mutate C# authoritative lights');
     assert.equal(framed.lights.length,1);
     assert.equal(withHollowFractureLightingFrame(original,[]),original);
+    const zero={...original,environment:{ambient:0,color:'#000000',exposure:1,emission:false}};
+    assert.equal(withHollowFractureLightingFrame(zero,impact),zero,
+        'zero-light GPU diagnostics may never be illuminated by corpse VFX');
     const scene=validateSnapshot(framed);
     assert.equal(selectLights(scene).length,1);
     const canvas=hollowFractureCanvasLights(impact);
