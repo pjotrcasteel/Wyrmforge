@@ -108,17 +108,16 @@ combat telegraphs are non-world passes and retain readability.
   switch using representative Hunt ground, Hollowed, Ashling, rock,
   original tree, a Town lantern/wall/roof/NPC sample and reflective water.
   Adding any new light requires only source/component registration.
-  G5 cutover cannot claim completion until *every world renderer*
-  uses the engine; legacy panorama/Canvas tint bypasses must be
-  removed or explicitly documented as not-yet-migrated scenes.
+  G5 adoption covers approved Hunt and actor paths only; the deliberately
+  preserved painted 2D Town is excluded from engine cutover.
 
-[Full scene-by-scene gap audit, town migration and generic renderer
+[Historical multi-scene audit and scoped generic renderer
 acceptance](../design/arena-real-geometry-light-engine.md).
-**Change note, 23 Oct:** owner widened the engine requirement from Wet
-Forest objects to *every in-world pixel-art surface*, explicitly including
-Town Square and the replacement mage that will use Hollowed/Ashling
-sprite architecture. This requires future town art decomposition, not
-an immediate destructive replacement of approved paintings.
+**Change note, 26 Oct (supersedes 23 Oct Town directive):** the owner cancelled
+the entire 3D/relightable Town replacement. The current approved 2D Town,
+its NPCs and all building paintings stay live; generic lighting applies
+to Hunts/actors/approved new scenes only. The replacement mage still
+shares Hollowed/Ashling sprite architecture.
 
 ### Visual and technical contract
 
@@ -126,7 +125,7 @@ an immediate destructive replacement of approved paintings.
 2. **Ground contact, shadows and occlusion.** Implement subtle contact shadows and broad restrained ambient-occlusion grounding at actual trunk/root or rock-body footprints. Shadows fall on the *existing approved ground*, not on an opaque rectangle beneath a sprite. Keep canopy alpha separate from physical collision; sort tree trunk, optional canopy/front-layer, actors and props by correctly authored foot/root anchors. Never fake gameplay collision through shadow masks.
 3. **Material-aware response.** Preserve the six approved Gothic ground materials and their blends. Wet mud and stone may take restrained damp highlights, while bark, moss and leaves remain largely diffuse and dark; avoid glossy plastic vegetation or globally color-filtering painted assets. Any normals/height/roughness maps are optional and must be derived from approved editable art, with a convincing fallback when absent.
 4. **Depth and air.** Add subtle distance-dependent tint, mist and depth separation only once the lighting/grounding baseline is coherent. Maintain player/enemy silhouettes, projectiles, dodge cues, loot, exits and boss telegraphs in small portrait viewports; reduced-effects paths must remain readable.
-5. **All emitters use one engine.** From G1, the universal test registry handles Fireball, torch, wall fixture, moon/ambient, spot and dynamically extinguished sources through descriptors. At G2 connect actual C# casts, burning trees, Ashfang breath, lightning, town Nexus/forge/windows and later elemental events to the **same** type-safe source/scene snapshot, illuminating ground, water, actors and props together. All cast/receive visibility and light budgets live centrally; never add authoritative client-side fire/collision logic.
+5. **All emitters use one engine.** From G1, the universal test registry handles Fireball, torch, wall fixture, moon/ambient, spot and dynamically extinguished sources through descriptors. At G2 connect actual C# casts, burning trees, Ashfang breath, lightning and later supported Hunt/actor elemental events to the **same** type-safe source/scene snapshot, illuminating ground, water, actors and props together. All cast/receive visibility and light budgets live centrally; never add authoritative client-side fire/collision logic.
 6. **Platform neutrality.** World/arena state, terrain recipes, occluder/contact footprints and light-emitter events remain deterministic and platform-neutral in C# when integrated. Visual renderer adapters may choose Canvas/WebGL, mobile GPU shaders or a native backend **after on-device measurement**. The browser-only Materials/Arena Labs and off-line Python comps are replaceable reviews, not the iOS/Android product architecture. Favor baked/cached static lighting and a tightly bounded set of dynamic lights; test overdraw, memory, frame pacing and battery before choosing the technique.
 
 ### Reusable lighting-engine delivery gates — supersede old L0–L5
