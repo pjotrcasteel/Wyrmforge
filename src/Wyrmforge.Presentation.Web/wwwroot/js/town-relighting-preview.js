@@ -258,7 +258,7 @@ export async function initializeTownPreview(canvas, { wellV4 = false, domains = 
 // before CSS enlarged the image. The separate generic engine keeps its
 // 390px default for other scenes; ONLY this opt-in Town uses native-art QA.
 const engine = new LightingEngine(canvas, {
-        shadowViews: 8, maxLights: 8, maxFramebufferWidth: TOWN_ART_SIZE[0],
+        shadowViews: 8, maxLights: domains ? 24 : 8, maxFramebufferWidth: TOWN_ART_SIZE[0],
     });
     const state = { engine, mode: 'night', lamps: true, offset: 0, npcEnabled: true,
         npcProgress: 0, paving: 'neutral', view: 'lit', citizens: null,
