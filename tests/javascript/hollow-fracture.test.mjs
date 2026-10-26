@@ -104,6 +104,9 @@ test('fracture ember light shares generic GPU contract and projects into the leg
     assert.equal(before.length,0);assert.equal(impact.length,1);
     assert.equal(later.length,1);assert.ok(later[0].intensity < impact[0].intensity);
     assert.equal(hollowFractureEmitters(corpses,6.4).length,0);
+    const invalid=new Map([[99,{...standard,entityId:99,x:Number.NaN}]]);
+    assert.deepEqual(hollowFractureEmitters(invalid,5.7),[],
+        'malformed presentation coordinates may not invalidate the whole GPU frame');
     assert.deepEqual(hollowFractureEmitters(corpses,5.62),impact,'same visual time must be deterministic');
     assert.equal(impact[0].id,'hollow-fracture:40:ember');
     assert.equal(impact[0].castsShadow,false);
@@ -113,6 +116,9 @@ test('fracture ember light shares generic GPU contract and projects into the leg
     assert.equal(original.lights.length,0,'presentation must never mutate C# authoritative lights');
     assert.equal(framed.lights.length,1);
     assert.equal(withHollowFractureLightingFrame(original,[]),original);
+    const authoritative={...original,lights:[{...impact[0],intensity:.25}]};
+    assert.equal(withHollowFractureLightingFrame(authoritative,impact),authoritative,
+        'presentation may never replace C#-owned emitters with the same ID');
     const zero={...original,environment:{ambient:0,color:'#000000',exposure:1,emission:false}};
     assert.equal(withHollowFractureLightingFrame(zero,impact),zero,
         'zero-light GPU diagnostics may never be illuminated by corpse VFX');

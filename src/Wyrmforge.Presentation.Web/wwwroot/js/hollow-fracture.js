@@ -82,7 +82,9 @@ export function hollowFractureEmitters(corpses, clock, reducedMotion=false) {
     if (!Number.isFinite(clock)) return [];
     const lights = [];
     for (const corpse of corpses?.values?.() ?? []) {
-        if (corpse.deathStyle !== 'fracture' || !Number.isSafeInteger(corpse.entityId)) continue;
+        if (corpse.deathStyle !== 'fracture' || !Number.isSafeInteger(corpse.entityId) ||
+            !Number.isFinite(corpse.x) || !Number.isFinite(corpse.y) ||
+            !Number.isFinite(corpse.at)) continue;
         const age = clock-corpse.at;
         if (!Number.isFinite(age) || age < .38 || age >= 1.38) continue;
         const release = clamp((age-.38)/.22,0,1);
@@ -122,5 +124,14 @@ export function withHollowFractureLightingFrame(frame, emitters) {
     const zero = frame.environment?.ambient === 0 && frame.environment?.emission === false &&
         (frame.lights ?? []).every(light => !light.enabled || light.intensity === 0);
     if (zero) return frame;
-    return {...frame,lights:[...(frame.lights ?? []),...emitters]};
+    const prior = frame.lights ?? [];
+    const ids = new Set(prior.map(light => light.id));
+    const additions = emitters.filter(light => {
+        if (ids.has(light.id)) return false;
+        ids.add(light.id);
+        return true;
+    });
+    if (!additions.length) return frame;
+    // C# source lights always win identity conflicts; no shared-frame mutation.
+    return {...frame,lights:[...prior,...additions]};
 }
