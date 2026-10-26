@@ -73,13 +73,41 @@ jobs:
           set -euo pipefail
           BROWSER=$(command -v google-chrome || command -v chromium || command -v chromium-browser)
           FLAGS="--headless=new --no-sandbox --disable-dev-shm-usage --enable-unsafe-swiftshader --use-gl=angle --use-angle=swiftshader --hide-scrollbars --force-device-scale-factor=1 --virtual-time-budget=18000"
+          python3 -m venv /tmp/town-gpu-capture
+          /tmp/town-gpu-capture/bin/pip install --quiet Pillow
           screenshot () {
-            local name="$1" viewport="$2" query="$3"
+            local name="$1" viewport="$2" query="$3" attempt
             local url="http://127.0.0.1:4179/town-relighting-preview.html?capture=1&${query}"
-            "$BROWSER" $FLAGS --window-size="${viewport/x/,}" \
-              --screenshot="artifacts/town-2p5d/${name}.png" "$url" \
-              > "artifacts/town-2p5d/${name}.log" 2>&1
-            test -s "artifacts/town-2p5d/${name}.png"
+            local path="artifacts/town-2p5d/${name}.png"
+            # Chromium/SwiftShader sometimes captures an entirely black canvas
+            # before async WebGL initialization. Check the pixels of THIS
+            # screenshot and retry; never trust a separate --dump-dom process.
+            for attempt in 1 2 3 4; do
+              "$BROWSER" $FLAGS --window-size="${viewport/x/,}" \
+                --screenshot="$path" "$url" \
+                > "artifacts/town-2p5d/${name}.log" 2>&1
+              if /tmp/town-gpu-capture/bin/python - "$path" "$name" <<'PY'
+          import sys
+          from PIL import Image, ImageStat
+          path, name = sys.argv[1:]
+          try:
+              with Image.open(path) as image:
+                  rgb = image.convert('RGB').crop((0, 0, image.width, round(image.width * 941 / 1672)))
+                  average = sum(ImageStat.Stat(rgb).mean) / 3
+              valid = average <= 1 if name.startswith('zero-') else average >= 3
+              print(f'{name}: captured WebGL brightness={average:.1f}, valid={valid}')
+              sys.exit(0 if valid else 1)
+          except Exception as error:
+              print(error, file=sys.stderr)
+              sys.exit(1)
+          PY
+              then
+                return 0
+              fi
+              echo "Retrying incomplete WebGL screenshot ${name} (attempt ${attempt}/4)"
+            done
+            echo "::error::Town WebGL image never rendered: ${name}"
+            return 1
           }
           for viewport in 320x760 390x844 1120x870; do
             width="${viewport%x*}"
@@ -108,8 +136,6 @@ jobs:
           for offset in -120 0 120; do
             screenshot "lantern-$offset-1120" "1120,870" "mode=night&offset=$offset"
           done
-          python3 -m venv /tmp/town-gpu-capture
-          /tmp/town-gpu-capture/bin/pip install --quiet Pillow
           /tmp/town-gpu-capture/bin/python tools/art/town_gpu_capture_validate.py \
             artifacts/town-2p5d --width 320 --width 390 --width 1120
           echo "Verified pixels, cropped original-GPU captures and review GIFs; no CSS painted-light substitutes."
