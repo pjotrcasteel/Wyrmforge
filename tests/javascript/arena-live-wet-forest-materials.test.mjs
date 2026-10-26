@@ -96,6 +96,21 @@ test('actual live fallback switches to the original PR340 paintings once decoded
         assert.equal(liveWetForestMaterialDiagnostics(seed).status, 'source-backed');
         assert.equal(drawLiveWetForestMaterialBase(ctx, tiles(), seed, 48, 48), true);
         assert.ok(calls.length > 9, 'The live floor must contain the original paintings and organic contacts.');
+        const { drawWetForestGround } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-wet-forest-art.js');
+        let painterDraws = 0;
+        const sourceOnlyContext = {
+            ...ctx,
+            set fillStyle(_value) {},
+            fillRect() { throw new Error('Old synthetic ground/site details must not cover the PR340 paintings.'); },
+            drawImage(...args) { painterDraws++; ctx.drawImage(...args); },
+        };
+        drawWetForestGround(sourceOnlyContext, {
+            wetForest: { site: 'broken-wagon', siteX: .5, siteY: .5,
+                trail: [{ x: .5, y: 0, width: .18 }, { x: .5, y: 1, width: .18 }],
+                ground: [] },
+            seed, width: 48, height: 48, forestProps: [], corruption: 0, element: 'fire',
+        });
+        assert.ok(painterDraws > 0, 'The playable floor must paint actual archived art without new stamps.');
         const original = calls.slice();
         calls.length = 0;
         assert.equal(drawLiveWetForestMaterialBase(ctx, tiles(), seed, 48, 48), true);
