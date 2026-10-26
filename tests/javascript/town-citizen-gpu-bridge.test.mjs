@@ -64,7 +64,7 @@ test('existing C# crowd identity, presence and ordering feed one shared GPU rend
         assert.equal(item.receivesLight, true);
     }
     assert.ok(!gpu.objects.some(x => x.id === 'town-citizen-12'), 'Absent NPC must not cast a ghost shadow');
-    assert.deepEqual(project(actors, townPreviewProjection, forward, { enabled: false }).layers, []);
+    assert.deepEqual(projectTownCitizens(actors, townPreviewProjection, forward, { enabled: false }).layers, []);
 });
 
 test('14 simultaneous citizens remain distinct and invalid authoritative positions cannot be rendered', () => {
@@ -75,5 +75,5 @@ test('14 simultaneous citizens remain distinct and invalid authoritative positio
     assert.throws(() => project([citizen(1, [-10, 500])]), /canonical/);
     assert.throws(() => project([citizen(1, [800, 942])]), /canonical/);
     assert.throws(() => project([{ id: 1, feet: [800, 500] }]), /presence/);
-    assert.throws(() => project([citizen(1, [800, 500])], townPreviewProjection, [0, 0, 0]), /normalized/);
+    assert.throws(() => projectTownCitizens([citizen(1, [800, 500])], townPreviewProjection, [0, 0, 0]), /normalized/);
 });
