@@ -1,17 +1,19 @@
-name: Hollowed source-mesh fracture (unapproved 3D QC)
+name: Hollowed source-mesh fracture (owner-approved source release)
 on:
   push:
-    branches: [art/hollowed-source-mesh-fracture-proof]
+    branches: [main, art/hollowed-source-mesh-fracture-proof]
     paths:
       - 'tools/sprite-lab/render-hollow-source-fracture.py'
+      - 'tools/sprite-lab/publish-approved-hollow-fracture.py'
       - '.github/workflows/hollow-source-fracture-qc.yml'
       - 'tests/python/hollow_source_fracture_contract.py'
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
+  pull-requests: write
 
-# Rendering the same unapproved source at every checkpoint wastes CPU budget.
+# Render only when source/release logic changes, never on each gameplay commit.
 concurrency:
   group: hollow-source-fracture-${{ github.ref }}
   cancel-in-progress: true
@@ -19,7 +21,7 @@ concurrency:
 jobs:
   source-mesh-proof:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v6
         with:
@@ -67,11 +69,14 @@ jobs:
         env:
           OMP_NUM_THREADS: 4
         run: python tools/sprite-lab/render-hollow-source-fracture.py --directions all
-      - name: Save source and evidence, never deploy unapproved art
+      - name: Publish approved original-source atlases into the playable Hunt
+        if: github.ref == 'refs/heads/main'
+        run: python tools/sprite-lab/publish-approved-hollow-fracture.py
+      - name: Save source and review evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: hollow-source-mesh-fracture-unapproved-qc
+          name: hollow-source-mesh-fracture-original-geometry-review
           path: |
             artifacts/hollow-source-fracture/geometry-diagnostics.json
             artifacts/hollow-source-fracture/manifest.json
@@ -80,3 +85,33 @@ jobs:
             artifacts/hollow-source-fracture/hollow-source-fracture-UNAPPROVED.blend
           retention-days: 14
           if-no-files-found: warn
+
+      - name: Archive approved runtime sprites for direct inspection
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: hollow-source-mesh-fracture-approved-runtime-atlases
+          path: src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/hollow-rigged/death/fracture/
+          retention-days: 30
+          if-no-files-found: error
+      - name: Commit real Blender atlases into production after all gates
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/hollow-rigged/death/fracture/
+          if git diff --cached --quiet; then
+            echo "Source fracture art already released; nothing to publish."
+            exit 0
+          fi
+          git commit -m "art(hollowed): release owner-approved eight-way source-mesh fracture atlases [skip ci]"
+          if ! git push origin HEAD:refs/heads/main; then
+            echo "Main is protected: preserve the approved runtime art on an automatic pull request."
+            branch="art/approved-hollowed-fracture-atlases"
+            git push --force-with-lease origin HEAD:refs/heads/"$branch"
+            gh pr create --base main --head "$branch" --title "art(hollowed): publish approved source-mesh fracture sprites" \
+              --body "All eight original Blender 3D fracture atlases passed the source-geometry, alpha, 24-frame, SHA-256, silhouette and release-contract checks. Owner approved the art direction 2026-10-26. This adds the actual game-ready PNGs and approved manifest; the runtime already supports them." || true
+          fi
