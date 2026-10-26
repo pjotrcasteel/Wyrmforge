@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WyrmForge · Town 2.5D GPU relighting review</title>
+<style>
+    :root { color-scheme: dark; font-family: system-ui, sans-serif; }
+    body { background: #0b101c; color: #e8e8df; margin: 0; padding: 16px; }
+    main { max-width: 1120px; margin: 0 auto; }
+    h1 { font-size: 1.25rem; margin: 0 0 8px; }
+    p { line-height: 1.5; color: #bbbfc9; font-size: .9rem; }
+    .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; padding: 12px 0; }
+    label { display: inline-flex; align-items: center; gap: 8px; }
+    select, input { accent-color: #e6ac75; }
+    select { padding: 6px; background: #232b3d; color: #fff; }
+    canvas { display: block; width: 100%; height: auto; aspect-ratio: 1672/941; image-rendering: pixelated; background: #000; }
+    .reference { margin-top: 16px; width: 100%; height: auto; display: block; }
+    .compare { font-size: .8rem; margin: 10px 0 6px; }
+    .notice { border-left: 3px solid #d9a56c; padding: 8px 14px; background: #20202a; }
+    output { min-width: 3ch; display: inline-block; }
+</style>
+</head>
+<body>
+<main>
+<h1>Town relighting · original artwork GPU proof</h1>
+<p class="notice"><strong>Prototype — NOT approved relightable Town artwork.</strong>
+This isolated G1/G3 renderer uses the exact approved daylight painting as a <em>temporary reference texture</em>,
+plus existing hand-traced foreground cutouts as shadow casters. The painting still contains baked light/shadows:
+it must be replaced with independently authored neutral material layers before T2 visual sign-off.
+This is neither the live Town nor the final day/night lighting.</p>
+<div class="controls">
+  <label>World light
+    <select id="mode" aria-label="World lighting profile">
+      <option value="night">Night proof</option>
+      <option value="day">Day proof</option>
+      <option value="zero">Zero-light inspector</option>
+    </select>
+  </label>
+  <label><input type="checkbox" id="lamps" checked> Lantern sources</label>
+  <label>Move center light <input id="offset" type="range" min="-180" max="180" value="0" step="10">
+    <output id="light-position">0</output>px</label>
+</div>
+<canvas id="town-gpu" role="img" aria-label="Original Town art projected into the universal GPU lighting engine"></canvas>
+<p id="status" role="status">Initializing GPU projection…</p>
+<p class="compare">Immutable approved reference (day painting, below). Compare composition and landmark alignment only.</p>
+<img class="reference" src="art/town/day-active.webp" width="1672" height="941"
+     alt="Unmodified approved WyrmForge Town daytime painting">
+</main>
+<script type="module">
+import { initializeTownPreview, configureTownPreview, disposeTownPreview }
+    from './js/town-relighting-preview.js';
+const canvas = document.querySelector('#town-gpu'), status = document.querySelector('#status');
+const mode = document.querySelector('#mode'), lamps = document.querySelector('#lamps'),
+      offset = document.querySelector('#offset'), output = document.querySelector('#light-position');
+function update() {
+    output.textContent = offset.value;
+    configureTownPreview(canvas, { mode: mode.value, lamps: lamps.checked, offset: Number(offset.value) });
+    status.textContent = canvas.dataset.error ?? 'GPU projection ready; canonical daytime reference source is still pre-lit.';
+}
+for (const control of [mode, lamps, offset]) control.addEventListener('input', update);
+try {
+    await initializeTownPreview(canvas);
+    update();
+} catch (error) {
+    console.error(error);
+    status.textContent = 'GPU proof failed: ' + error.message;
+}
+window.addEventListener('pagehide', () => disposeTownPreview(canvas), { once: true });
+</script>
+</body>
+</html>
