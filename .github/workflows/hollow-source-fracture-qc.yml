@@ -48,11 +48,11 @@ jobs:
         run: |
           python -m pip install --disable-pip-version-check bpy==4.5.15 Pillow==11.3.0
           python -c "import bpy; print('Blender source renderer:', bpy.app.version_string)"
-      - name: Render 24 physical 3D mesh poses at 128px, south view
+      - name: Render actual 3D breakup at 128px for all eight directions
         env:
           OMP_NUM_THREADS: 4
         run: |
-          python tools/sprite-lab/render-hollow-source-fracture.py --directions S
+          python tools/sprite-lab/render-hollow-source-fracture.py --directions all
       - name: Save source and evidence, never deploy unapproved art
         if: always()
         uses: actions/upload-artifact@v4
@@ -61,9 +61,8 @@ jobs:
           path: |
             artifacts/hollow-source-fracture/geometry-diagnostics.json
             artifacts/hollow-source-fracture/manifest.json
-            artifacts/hollow-source-fracture/fracture-S.png
-            artifacts/hollow-source-fracture/fracture-S.gif
-            artifacts/hollow-source-fracture/fracture-S-contact-sheet.png
+            artifacts/hollow-source-fracture/fracture-*.png
+            artifacts/hollow-source-fracture/fracture-*.gif
             artifacts/hollow-source-fracture/hollow-source-fracture-UNAPPROVED.blend
           retention-days: 14
           if-no-files-found: warn
