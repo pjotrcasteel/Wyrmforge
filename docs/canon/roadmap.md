@@ -75,10 +75,11 @@ UI/menus/explicit combat telegraphs have separate readable passes.
    depth, atmospheric effects, pixel-stable light grids.
    Reflections and emissive surfaces are explicit, not pasted
    bright spots or duplicated baked direct fire.
-6. **G4 — optimize & town asset production:** select/measure
+6. **G4 — optimize & 2.5D Town relighting (owner revision 26 October 2026):** select/measure
    native mobile renderer and light/LOD budgets, and produce
-   a **non-destructive relightable Town material/geometry layer
-   set** from preserved approved paintings. Town's existing
+   a **non-destructive relightable 2.5D Town material/depth/occluder layer
+   set** derived faithfully from preserved approved paintings, **without**
+   a full-3D Town rebuild. Follow [Town T0–T6](../design/town-2p5d-relighting-milestones.md) and require screenshot approval at T2. Town's existing
    building states, six Nexus variants/mastery, pedestrian paths,
    depth masking, unlocks, well/board and three-district
    composition are NOT redesigned. Town Auto/Day/Night settings
