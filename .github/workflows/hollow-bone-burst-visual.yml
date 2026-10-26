@@ -1,4 +1,4 @@
-name: Hollowed bone-burst visual QC
+name: Hollowed rejected bone prototype (archive QC)
 
 on:
   pull_request:
@@ -65,7 +65,7 @@ jobs:
                       page.screenshot(path=str(out/'hollow-bone-reduced-motion.png'),full_page=True)
                   page.close()
               browser.close()
-          print('Actual canvas render screenshot QC passed, mobile and desktop.')
+          print('Archived prototype canvas renders captured, mobile and desktop. NOT production art acceptance.')
           PY
       - uses: actions/upload-artifact@v4
         if: always()

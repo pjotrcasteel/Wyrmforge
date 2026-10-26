@@ -224,29 +224,30 @@ test('a real Hollow death renders authored 3D frames, not a rotated walking spri
  }finally{globalThis.fetch=oldFetch;globalThis.Image=oldImage;}
 });
 
-test('a quarter of dead Hollowed shatter in the actual Hunt renderer; standard corpses still use existing 3D rig',()=>{
+test('rejected bone sprites are lab-only: every production Hollowed corpse uses an authored collapse',()=>{
  const ids=Array.from({length:128},(_,id)=>id);
- const styleCounts={};
- for(const id of ids)styleCounts[selectHollowDeathStyle(id)]=(styleCounts[selectHollowDeathStyle(id)]??0)+1;
- assert.ok(styleCounts['shatter-burst']>0);
- assert.ok(styleCounts['buckle-burst']>0);
- assert.ok(styleCounts.collapse>60);
- for(const style of ['shatter-burst','buckle-burst']){
-  const id=ids.find(id=>selectHollowDeathStyle(id)===style);
-  const state=mod.createHollowState();
-  const e=enemy({entityId:id});
+ const rejected=ids.filter(id=>selectHollowDeathStyle(id)!=='collapse');
+ assert.ok(rejected.some(id=>selectHollowDeathStyle(id)==='shatter-burst'));
+ assert.ok(rejected.some(id=>selectHollowDeathStyle(id)==='buckle-burst'));
+ for(const id of rejected.slice(0,24)){
+  const state=mod.createHollowState(),e=enemy({entityId:id});
   mod.updateHollowSprites(state,snapshot({enemies:[e]}),0);
   const dead=snapshot({enemies:[],deathBursts:[{entityId:id,kind:0,x:20,y:20,bodyRadius:11}]});
   advance(state,dead,.05,.75);
   const corpse=mod.hollowDiagnostics(state).corpses[0];
-  assert.equal(corpse.deathStyle,style);
-  const painted=[];
-  const ctx={globalAlpha:1,save(){},restore(){},translate(){},rotate(){},scale(){},
-   fillRect(...args){painted.push(args);},drawImage(){throw Error('burst must not draw a walking/death sprite');}};
+  assert.equal(corpse.deathStyle,'collapse','rejected procedural variants must never reach Hunts');
+  const ctx={globalAlpha:1,save(){},restore(){},
+   translate(){throw Error('procedural bone fragments must not translate')},
+   rotate(){throw Error('procedural bone fragments must not rotate')},
+   scale(){throw Error('procedural bone fragments must not scale')},
+   fillRect(){throw Error('procedural bone fragments and dust must not render')},
+   drawImage(){}};
   assert.doesNotThrow(()=>mod.drawHollowCorpses(ctx,state));
-  assert.ok(painted.length>70,'real individual pixel bones and grounded remains render in the Hunt');
-  const frameBefore=state.clock;
+  const before=state.clock;
   mod.updateHollowSprites(state,{...dead,paused:true},.85);
-  assert.equal(state.clock,frameBefore,'visual burst does not advance during C# pause');
+  assert.equal(state.clock,before,'corpse playback remains frozen during pause');
  }
+ const runtime=readFileSync(new URL('js/hollow-sprites.js',root),'utf8');
+ assert.equal(runtime.includes('drawHollowBoneBurst'),false,'no rejected effect imported into production');
+ assert.equal(runtime.includes('selectHollowDeathStyle'),false,'no rejected death style selected in production');
 });

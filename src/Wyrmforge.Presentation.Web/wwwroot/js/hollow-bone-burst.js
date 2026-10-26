@@ -1,4 +1,5 @@
-// Hollowed bone-shatter deaths: presentation-only pixel bone sprites.
+// REJECTED ART PROTOTYPE (26 Oct 2026): procedural pixel bones failed owner visual QC.
+// Archive for isolated Sprite Lab comparison ONLY; do not re-enable in production.
 // Rendering is deterministic per C# entity ID. No combat, loot or C# physics changes.
 // 25% shatter (two distinct timings); others keep the approved skeletal collapse.
 const BONES=Object.freeze({
