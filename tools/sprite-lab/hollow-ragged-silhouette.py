@@ -35,6 +35,7 @@ def shorten_hanging_cloth(actor):
     before = len(mesh.vertices)
     candidates = []
     removed_samples = []
+    protected_bone_weighted_vertices = 0
     intact_leg_vertices = 0
     near_hem = 0
     for v in mesh.vertices:
@@ -43,20 +44,21 @@ def shorten_hanging_cloth(actor):
         legs = sum(weights.get(k, 0.0) for k in LEGS)
         if legs > .45:
             intact_leg_vertices += 1
+            protected_bone_weighted_vertices += 1
         # Hem roughly at upper thigh, not at ankle. Unequal tears leave
         # naturally asymmetric scraps near the waist; not a straight cut.
-        torn_hem = -.155 + .022*math.sin(v.co.x*24 + v.co.y*11) + .014*math.sin(v.co.x*47)
-        if cloth >= .52 and legs < .10 and v.co.z < torn_hem:
+        torn_hem = -.035 + .038*math.sin(v.co.x*24 + v.co.y*11) + .022*math.sin(v.co.x*47)
+        if cloth >= .30 and legs < .23 and v.co.z < torn_hem:
             candidates.append(v.index)
             removed_samples.append((v.co.z, cloth, legs))
-        elif cloth >= .52 and legs < .10 and abs(v.co.z-torn_hem) < .035:
+        elif cloth >= .30 and legs < .23 and abs(v.co.z-torn_hem) < .045:
             near_hem += 1
     if not candidates:
         raise ValueError("No long hanging cloth to remove; inspect source before changing body")
     # Conservative fail-closed mesh bounds. There must be substantial cloth,
     # but never enough deletions to amputate the Hollowed lower torso.
     ratio = len(candidates)/before
-    if not .005 < ratio < .22:
+    if not .06 < ratio < .28:
         raise ValueError(f"Unexpected long-cloth removal ratio: {ratio:.4f}")
     bm = bmesh.new()
     bm.from_mesh(mesh)
@@ -69,14 +71,16 @@ def shorten_hanging_cloth(actor):
         raise ValueError("Mesh/leg preservation failed")
     return {
         "sourceSkinnedMesh": True,
-        "method": "weighted long hanging cloth geometry removal",
+        "method": "aggressive weighted knee-to-waist hanging cloth removal",
         "removedLongClothVertices": len(candidates),
         "originalVertices": before,
         "remainingVertices": len(mesh.vertices),
         "removedRatio": round(ratio, 4),
         "survivingOriginalLegWeightedVertices": intact_leg_vertices,
+        "protectedLegGroupCount": protected_bone_weighted_vertices,
         "originalBodyAndLegsPreserved": True,
         "raggedUpperThighHem": True,
+        "waistLengthTatteredNotLongCoat": True,
         "candidateNotApproved": True,
         "maxRemovedHeightZ": round(max(z for z,_,_ in removed_samples), 4),
         "minRemovedHeightZ": round(min(z for z,_,_ in removed_samples), 4),
