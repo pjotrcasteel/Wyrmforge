@@ -185,6 +185,99 @@ def author_real_attack(rig):
     return module.author_attack_action(bpy, rig)
 
 
+# This is SOURCE skeletal authoring, not an image warp or a secondary renderer.
+# Each key is an explicitly staged 3D attack beat, not another walk cycle.
+# Angles are relative to the actual first-frame no-cape skin/armature.
+#               spine, chest, chest-yaw, lead shoulder, lead elbow, trailing shoulder, neck
+ATTACK_BEATS = (
+    (0,   (0,   0,   0,    0,    0,    0,   0)),  # transition from walk
+    (2,   (-9, -11, -8,  -23,   30,   -9,  11)),  # coil backward / telegraph
+    (4,  (-17, -19, -15, -39,   45,  -15,  16)),  # unmistakable anticipation
+    (6,   (13,  19,  14,  60,  -43,   22, -14)),  # torso commits to lunge
+    (7,   (26,  30,  22,  84,  -58,   32, -23)),  # full-body claw strike
+    (8,   (29,  31,  25,  90,  -62,   35, -26)),  # fiery contact / jaw forward
+    (9,   (21,  21,  18,  78,  -43,   24, -16)),  # follow-through
+    (11,  (8,    4,   5,  30,    7,    8,  -5)),  # pull arm back
+    (13,  (-3,  -5,  -3, -12,   18,   -5,   5)),  # settle into damaged stance
+    (15,  (0,    0,   0,   0,    0,    0,   0)),  # return to locomotion
+)
+
+
+def attack_angles(index):
+    """Piecewise smooth attack staging with a true impact and stable return."""
+    for (left_index, left), (right_index, right) in zip(ATTACK_BEATS, ATTACK_BEATS[1:]):
+        if left_index <= index <= right_index:
+            t = (index - left_index) / (right_index - left_index)
+            t = t * t * (3 - 2 * t)
+            return tuple(a + (b - a) * t for a, b in zip(left, right))
+    return ATTACK_BEATS[-1][1]
+
+
+def author_real_strike(scene, rig, variant):
+    """Rebuild the existing 16-frame reach as an authored wind-up, hit, recovery.
+
+    Ground-support bones retain the first actual source pose throughout this
+    planted attack; only the body above the hips and its striking arms move.
+    Absent arms are never restored: the surviving side becomes the lead claw.
+    """
+    from mathutils import Quaternion
+
+    source = rig.animation_data.action
+    scene.frame_set(1)
+    bones = {bone.name: bone for bone in rig.pose.bones}
+    required = ("spine", "chest", "neck", "head", "upper_arm.L",
+                "upper_arm.R", "forearm.L", "forearm.R")
+    if not all(name in bones for name in required):
+        raise ValueError("Original source-skinned Hollowed attack rig lacks essential joints")
+    source_pose = {name: bone.matrix_basis.copy() for name, bone in bones.items()}
+    action = source.copy()
+    action.name = "Hollow_" + variant.replace("-", "_") + "_Windup_Claw_Recovery_v2"
+    action.use_fake_user = True
+    rig.animation_data.action = action
+    lead = "R" if variant in ("one-arm-left", "broken-arm-right") and variant == "one-arm-left" else "L"
+    if variant == "broken-arm-right":
+        lead = "L"
+    trail = "L" if lead == "R" else "R"
+
+    def rotate(name, axis, degrees):
+        bone = bones[name]
+        bone.rotation_mode = "QUATERNION"
+        bone.rotation_quaternion = (
+            Quaternion(axis, math.radians(degrees)) @ bone.rotation_quaternion
+        ).normalized()
+
+    pose_evidence = []
+    for index in range(FRAMES):
+        frame = index + 1
+        scene.frame_set(frame)
+        for name, matrix in source_pose.items():
+            bones[name].matrix_basis = matrix
+        spine, chest, yaw, shoulder, elbow, opposite, neck = attack_angles(index)
+        rotate("spine", (1, 0, 0), spine)
+        rotate("chest", (1, 0, 0), chest)
+        rotate("chest", (0, 0, 1), yaw * (1 if lead == "L" else -1))
+        rotate("neck", (1, 0, 0), neck)
+        rotate("head", (1, 0, 0), neck * .35)
+        rotate("upper_arm." + lead, (1, 0, 0), shoulder)
+        rotate("forearm." + lead, (1, 0, 0), elbow)
+        # The second arm braces/recoils, it does not duplicate the strike.
+        if variant != "one-arm-left":
+            rotate("upper_arm." + trail, (1, 0, 0), opposite)
+            rotate("forearm." + trail, (1, 0, 0), -opposite * .48)
+        for name, bone in bones.items():
+            bone.keyframe_insert("location", frame=frame, group=name)
+            bone.keyframe_insert("rotation_quaternion", frame=frame, group=name)
+            bone.keyframe_insert("scale", frame=frame, group=name)
+        pose_evidence.append({"frame": index, "beat": (
+            "windup" if index < 5 else "strike" if index < 10 else "recovery"),
+            "spinePitchDegrees": round(spine, 2),
+            "leadClawDegrees": round(shoulder, 2)})
+    scene.frame_set(1)
+    return {"name": action.name, "sourceAction": source.name, "leadClaw": lead,
+            "bodyRootTranslated": False, "legsAndFootContactPreserved": True,
+            "sourceSkinned3D": True, "poses": pose_evidence}
+
+
 def main():
     if not SOURCE.is_file() or SOURCE.open("rb").read(7) != b"BLENDER":
         raise FileNotFoundError(f"Missing REAL no-cape 3D rig: {SOURCE}")
@@ -195,6 +288,7 @@ def main():
     assert actor.type == "MESH" and rig.type == "ARMATURE"
     assert any(m.type == "ARMATURE" and m.object == rig for m in actor.modifiers)
     assert rig.animation_data and rig.animation_data.action
+    strike = author_real_strike(scene, rig, NAME)
     mask_regions = author_surface_mask(actor.data)
     fire = attach_emissive_material(actor)
     attack_motion = author_real_attack(rig)
@@ -269,7 +363,8 @@ def main():
         "emissiveSha256": hashlib.sha256(mask_file.read_bytes()).hexdigest(),
         "directions": list(RENDER_DIRECTIONS), "frames": FRAMES, "cell": CELL,
         "review": review, "perFrameEvidence": evidence,
-        "attackEmissionFollowsReal3DPose": True, "universalGpuLightOnly": True,
+        "attackEmissionFollowsReal3DPose": True, "attackMotion": strike,
+        "universalGpuLightOnly": True,
         "attackMotion": attack_motion,
         "walkActionReusedForAttack": False,
         "canvasLightEngineAdded": False,
