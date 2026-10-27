@@ -48,3 +48,11 @@ test('G3 distance fog accepts ordered bounds and rejects invalid ranges', () => 
         assert.throws(() => validateSnapshot(s));
     }
 });
+
+test('Emission additive mode rejects diffuse surfaces and unsupported blends', () => {
+    const emitter = material({ color: '#000000', emissiveMap: 'aperture', specular: 0, metalness: 0, blendMode: 'emission-additive' });
+    assert.equal(validateSnapshot(snapshot(emitter)).materials[0].blendMode, 'emission-additive');
+    for (const change of [{color:'#777777'}, {specular:.2}, {metalness:.2}, {emissiveMap:undefined}, {blendMode:'screen'}])
+        assert.throws(() => validateSnapshot(snapshot({...emitter,...change})), TypeError);
+    assert.equal(validateSnapshot(snapshot(material())).materials[0].blendMode, undefined);
+});
