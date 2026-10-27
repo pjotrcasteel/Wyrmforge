@@ -33,24 +33,24 @@ RAKE_KNOTS = (
 # Different actual performance timing, not mirrored/recolored existing frames:
 # MAUL: long telegraph, both claws drop in a weighty simultaneous blow.
 # BITE: short deceptive hesitation, fast head/mouth lunge and brief hold.
-+STYLE_KNOTS = {
-+    "rake": RAKE_KNOTS,
-+    "maul": ((1,0,0,0,0,0),(3,.48,0,0,.08,.12),(6,1,0,0,.10,.10),
-+             (8,.24,.75,0,.68,.56),(9,0,1,0,1,1),(10,0,.92,0,.93,.86),
-+             (12,0,.16,.85,.24,.28),(14,0,0,.45,.08,.12),(16,0,0,0,0,0)),
-+    "bite": ((1,0,0,0,0,0),(3,.22,0,0,.06,.12),(4,.72,0,0,.12,.18),
-+             (5,.14,.78,0,.76,.96),(6,0,1,0,1,1),(8,0,.86,0,.93,1),
-+             (10,0,.22,.75,.48,.42),(12,0,0,.82,.18,.18),(16,0,0,0,0,0)),
-+}
-+
-+def attack_channels(frame, style="rake"):
-+    if not 1 <= frame <= FRAME_COUNT:
-+        raise ValueError(f"Attack frame outside authored clip: {frame}")
-+    if style not in STYLE_KNOTS:
-+        raise ValueError(f"Unknown actual source attack: {style}")
-+    knots = STYLE_KNOTS[style]
-+    for i in range(len(knots) - 1):
-+        a, b = knots[i], knots[i + 1]
+STYLE_KNOTS = {
+    "rake": RAKE_KNOTS,
+    "maul": ((1,0,0,0,0,0),(3,.48,0,0,.08,.12),(6,1,0,0,.10,.10),
+             (8,.24,.75,0,.68,.56),(9,0,1,0,1,1),(10,0,.92,0,.93,.86),
+             (12,0,.16,.85,.24,.28),(14,0,0,.45,.08,.12),(16,0,0,0,0,0)),
+    "bite": ((1,0,0,0,0,0),(3,.22,0,0,.06,.12),(4,.72,0,0,.12,.18),
+             (5,.14,.78,0,.76,.96),(6,0,1,0,1,1),(8,0,.86,0,.93,1),
+             (10,0,.22,.75,.48,.42),(12,0,0,.82,.18,.18),(16,0,0,0,0,0)),
+}
+
+def attack_channels(frame, style="rake"):
+    if not 1 <= frame <= FRAME_COUNT:
+        raise ValueError(f"Attack frame outside authored clip: {frame}")
+    if style not in STYLE_KNOTS:
+        raise ValueError(f"Unknown actual source attack: {style}")
+    knots = STYLE_KNOTS[style]
+    for i in range(len(knots) - 1):
+        a, b = knots[i], knots[i + 1]
         if a[0] <= frame <= b[0]:
             t = (frame - a[0]) / (b[0] - a[0])
             eased = t*t*(3 - 2*t)
