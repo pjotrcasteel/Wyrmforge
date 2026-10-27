@@ -8,12 +8,14 @@ export function attachArenaInput(state, browserWindow = window, browserDocument 
     state.touchId = state.aimTouchId = state.aimPointerId = null;
     state.aimPoint = null;
     state.tapAimUntil = 0;
+    state.pendingPropId = null;
     state.inputSuspended = false;
     const reset = () => {
         state.keys.clear();
         state.pointerId = state.touchId = state.aimTouchId = state.aimPointerId = null;
         state.aimPoint = null;
         state.tapAimUntil = 0;
+        state.pendingPropId = null;
     };
     state.resetInput = reset;
     const rightSide = point => {
@@ -25,6 +27,29 @@ export function attachArenaInput(state, browserWindow = window, browserDocument 
         state.touchCurrent = { ...state.touchOrigin };
     };
     const setAim = point => { state.aimPoint = { x: point.clientX, y: point.clientY }; };
+    const focusAt = point => {
+        const snapshot = state.latestSnapshot, rect = canvas.getBoundingClientRect?.();
+        const world = snapshot?.world;
+        if (!rect || !world || !snapshot?.player || snapshot.paused ||
+            point.clientX < rect.left || point.clientX > rect.left + rect.width ||
+            point.clientY < rect.top || point.clientY > rect.top + rect.height) return false;
+        const camera = resolveArenaCamera(world, snapshot.player, rect.width, rect.height);
+        const x = point.clientX - rect.left + camera.x, y = point.clientY - rect.top + camera.y;
+        let chosen = null, distance = Infinity;
+        // Snapshot hit-testing is a request only; the authoritative simulation rechecks
+        // kind eligibility, range, line of sight and remaining health by stable ID.
+        for (const prop of snapshot.environment?.props ?? []) {
+            if (prop.healthFraction <= 0) continue;
+            const gap = Math.hypot(x - prop.x * world.width, y - prop.y * world.height);
+            if (gap <= prop.radius + 9 && (gap < distance || (gap === distance && prop.id < chosen?.id))) {
+                chosen = prop;
+                distance = gap;
+            }
+        }
+        if (!chosen) return false;
+        state.pendingPropId = chosen.id;
+        return true;
+    };
     const onKeyDown = event => {
         state.inputSuspended = false;
         if (event.target?.isContentEditable || event.target?.closest?.('input, textarea, select, [contenteditable], [role="dialog"]')) return;
@@ -46,6 +71,7 @@ export function attachArenaInput(state, browserWindow = window, browserDocument 
             if (state.pointerId !== null || event.isPrimary === false) return;
             state.pointerId = event.pointerId;
             setMove(event);
+            state.pointerStartedAt = Date.now();
         }
         try { canvas.setPointerCapture?.(event.pointerId); } catch { /* Touch Events remain active. */ }
         if (event.pointerType === 'touch' && event.cancelable) event.preventDefault();
@@ -57,10 +83,18 @@ export function attachArenaInput(state, browserWindow = window, browserDocument 
         if (event.pointerType === 'touch' && event.cancelable) event.preventDefault();
     };
     const onPointerEnd = event => {
-        if (event.pointerId === state.pointerId) state.pointerId = null;
+        if (event.pointerId === state.pointerId) {
+            const tap = event.type === 'pointerup' && Date.now() - state.pointerStartedAt <= 180 &&
+                Math.hypot(event.clientX - state.touchOrigin.x, event.clientY - state.touchOrigin.y) < 8;
+            if (tap) focusAt(event);
+            state.pointerId = null;
+        }
         if (event.pointerId === state.aimPointerId) {
+            const tap = event.type === 'pointerup' && Date.now() - state.aimStartedAt <= 180 &&
+                Math.hypot(event.clientX - state.aimStart.x, event.clientY - state.aimStart.y) < 8;
+            if (tap) focusAt(event);
             state.aimPointerId = null;
-            state.tapAimUntil = 0; // Mouse release and interrupted capture restore auto immediately.
+            state.tapAimUntil = 0; // Release and interrupted capture restore auto immediately.
         }
     };
     const onTouchStart = event => {
@@ -79,6 +113,7 @@ export function attachArenaInput(state, browserWindow = window, browserDocument 
                 state.touchId = touch.identifier;
                 state.pointerId = null;
                 setMove(touch);
+                state.touchStartedAt = Date.now();
             }
         }
         if (event.cancelable) event.preventDefault();
@@ -92,13 +127,19 @@ export function attachArenaInput(state, browserWindow = window, browserDocument 
     };
     const onTouchEnd = event => {
         for (const touch of Array.from(event.changedTouches ?? [])) {
-            if (touch.identifier === state.touchId) state.touchId = null;
+            if (touch.identifier === state.touchId) {
+                const tap = event.type === 'touchend' && Date.now() - state.touchStartedAt <= 180 &&
+                    Math.hypot(touch.clientX - state.touchOrigin.x, touch.clientY - state.touchOrigin.y) < 8;
+                if (tap) focusAt(touch);
+                state.touchId = null;
+            }
             if (touch.identifier === state.aimTouchId) {
                 state.aimTouchId = null;
                 const tap = event.type === 'touchend' && Date.now() - state.aimStartedAt <= 180 &&
                     Math.hypot(touch.clientX - state.aimStart.x, touch.clientY - state.aimStart.y) < 8;
-                // A short-lived point cast cue makes the tap's endpoint explicit, never a latched heading.
-                state.tapAimUntil = tap ? Date.now() + 350 : 0;
+                const propFocused = tap && focusAt(touch);
+                // Only a non-prop tap uses the existing brief manual pointing cue.
+                state.tapAimUntil = tap && !propFocused ? Date.now() + 350 : 0;
             }
         }
     };
@@ -146,6 +187,12 @@ export function getArenaMovement(state) {
     if (state.pointerId === null && state.touchId === null) return stick(state, 0);
     const dx = state.touchCurrent.x - state.touchOrigin.x, dy = state.touchCurrent.y - state.touchOrigin.y;
     return Math.hypot(dx, dy) < 5 ? { x: 0, y: 0 } : normalize(dx, dy);
+}
+
+export function getArenaPropFocus(state) {
+    const id = state.inputSuspended || state.latestSnapshot?.paused ? null : state.pendingPropId;
+    state.pendingPropId = null;
+    return id ?? null;
 }
 
 export function getArenaAim(state, now = Date.now()) {
