@@ -7,7 +7,7 @@
 **Canonical roadmap:** docs/canon/roadmap.md (the active unified engines policy; AN0–AN6)  
 **Canonical art specification:** docs/canon/art-and-animation.md  
 **Reference footage:** https://youtu.be/C2eVIKeCH8E — Deniz Canbulut, “zombie walk animations,” 16 seconds, four distinct walking performances. Use for analytical inspiration only.  
-**Preferred execution model:** GPT-6.1 Sol, Medium reasoning in ChatGPT Work if available; otherwise Sol Medium available in Work. Astra Low only if a proven difficult blocker cannot be resolved with Sol. Availability varies.  
+**Efficient model setting:** Use ChatGPT Work's current default capable coding model with **Medium reasoning where selectable**. Raise thinking effort only for a specific, demonstrated blocker, then return to Medium; model names and choices in Work can vary by plan and product configuration. Spend the allowance on implementation and visual QA, not repeated planning.  
 **Delivery:** reusable animation engineering FOUNDATION + ONE exceptional Hollowed end-to-end reference, NOT six Hollowed characters or a new collection of attacks.
 
 ## 0. The briefest possible executive instruction
