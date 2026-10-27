@@ -68,14 +68,18 @@ export function drawTargetIndicator(ctx, marker, pass = 'ground') {
         ctx.strokeStyle = 'rgba(2,3,7,.9)';
         ctx.lineWidth = 3.4;
         ctx.beginPath();
+        ctx.moveTo((rx + 1) * Math.cos(.16), (ry + 1) * Math.sin(.16));
         ctx.ellipse(0, 0, rx + 1, ry + 1, 0, .16, Math.PI - .16);
+        ctx.moveTo((rx + 1) * Math.cos(Math.PI + .16), (ry + 1) * Math.sin(Math.PI + .16));
         ctx.ellipse(0, 0, rx + 1, ry + 1, 0, Math.PI + .16, Math.PI * 2 - .16);
         ctx.stroke();
         ctx.strokeStyle = color;
         ctx.globalAlpha = .94;
         ctx.lineWidth = 2;
         ctx.beginPath();
+        ctx.moveTo((rx + 1) * Math.cos(.16), (ry + 1) * Math.sin(.16));
         ctx.ellipse(0, 0, rx + 1, ry + 1, 0, .16, Math.PI - .16);
+        ctx.moveTo((rx + 1) * Math.cos(Math.PI + .16), (ry + 1) * Math.sin(Math.PI + .16));
         ctx.ellipse(0, 0, rx + 1, ry + 1, 0, Math.PI + .16, Math.PI * 2 - .16);
         ctx.stroke();
 
