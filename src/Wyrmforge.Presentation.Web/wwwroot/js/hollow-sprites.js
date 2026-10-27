@@ -2,6 +2,7 @@
 import { createSpriteAnimationState, updateSpriteAnimation } from './sprite-animation.js';
 import { createSpriteLayerCompositor } from './sprite-layer-compositor.js';
 import { HOLLOW_RUN, sampleHollowRun } from './hollow-motion.js';
+import { createHollowCombatLayers, updateHollowCombatLayers } from './hollow-combat-layers.js';
 import { createHollowInjuryAssets, selectHollowInjuryVariant, hollowInjuryLabReview } from './hollow-injury-variants.js';
 import { createHollowVariantAssets } from './hollow-arm-variants.js';
 import { selectHollowAppearance } from './hollow-variation.js';
@@ -109,7 +110,7 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
                 direction:'S',clip:'walk',frame:0,injuryVariant:persona.injuryVariant,
                 armVariant:persona.armVariant,visualScale:persona.visualScale,
                 idleFrame:persona.idleFrame,initialPhase:persona.initialPhase,signature:persona.signature,
-                attackAt:null,age:0,lastMove:-1,animation};
+                attackAt:null,age:0,lastMove:-1,animation,combatLayers:createHollowCombatLayers()};
             pose.deathInjury=selectHollowDeathInjury(pose);
             // Only download the specific 3D damaged collapse if this injured
             // silhouette actually spawns; no eager 3×7 MB mobile atlas load.
@@ -128,7 +129,7 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
             pose.lastMove=-1;pose.attackAt=null;pose.animation=createSpriteAnimationState();
             // A streamed/teleported actor keeps its own authored gait offset.
             // Resetting to phase zero makes every relocated Hollow step in sync.
-            pose.animation.phase=pose.initialPhase;}
+            pose.animation.phase=pose.initialPhase;pose.combatLayers=createHollowCombatLayers(pose.direction);}
         pose.x=enemy.x;pose.y=enemy.y;
         const locomotion=sampleHollowRun(pose,distance,dt,advancing);
         if(pose.attackAt!=null&&pose.age-pose.attackAt>=16/12)pose.attackAt=null;
@@ -137,15 +138,24 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
         if(advancing&&touching&&pose.attackAt==null){
             pose.attackAt=pose.age;pose.direction=hollowDirection(player.x-enemy.x,player.y-enemy.y,pose.direction);
         }
-        // Continue steering the existing action toward its target. Changing
-        // direction never creates a new action token or restarts either clip.
-        if(advancing&&pose.attackAt!=null&&player)pose.direction=hollowDirection(player.x-enemy.x,player.y-enemy.y,pose.direction);
+        // The chase legs follow world motion while a committed upper-body
+        // strike keeps its own facing. A fleeing player cannot cancel/restart
+        // the blow; the upper torso turns after impact and rejoins the chase.
+        const targetFacing=player?hollowDirection(player.x-enemy.x,player.y-enemy.y,pose.direction):pose.direction;
+        const movementFacing=locomotion.moving?pose.direction:targetFacing;
+        pose.combatLayer=updateHollowCombatLayers(pose.combatLayers,{
+            movementFacing,targetFacing,attackToken:pose.attackAt,
+            attackElapsed:pose.attackAt==null?Infinity:pose.age-pose.attackAt,
+            deltaSeconds:dt,paused:snapshot.paused||snapshot.ended,
+            frozen:enemy.frozen,reducedMotion,moving:locomotion.moving,
+            crawling:typeof pose.signature==='string'&&pose.signature.includes('crawler')});
         // Playback uses a common controller; only the contact signal belongs
         // to this creature adapter. Profile data owns stride, regions and clips.
         const config=profile??fallbackProfile;
         const sample=updateSpriteAnimation(pose.animation,config,{deltaSeconds:dt,
             distance:locomotion.distance,moving:locomotion.moving,
-            paused:snapshot.paused||snapshot.ended,frozen:enemy.frozen,reducedMotion,direction:pose.direction,
+            paused:snapshot.paused||snapshot.ended,frozen:enemy.frozen,reducedMotion,
+            direction:pose.combatLayer.actionActive?pose.combatLayer.upperFacing:pose.combatLayer.lowerFacing,
             action:pose.attackAt==null?null:{name:'attack',token:pose.attackAt}});
         pose.direction=sample.direction;pose.clip=sample.clip;
         // A frozen/paused Hollow must retain the exact leg-support pose from
@@ -255,7 +265,7 @@ export function drawHollowCorpses(ctx,state,reducedMotion=false){
 }
 export function hollowDiagnostics(state){
     return {ready:hollowSpritesReady(),fractureReady:fracture.ready(),capeFreeReady:arms.ready(),skeletalDeathReady:skeletalDeath.ready(),injuryDeathAtlasesLoaded:injuryDeaths.loadedCount(),injuriesReady:injuries.ready(),armsReady:arms.ready(),injuryLabReview,layers:compositor?{...compositor.stats,estimatedBytes:compositor.estimatedBytes()}:null,entities:[...state.entities].map(([entityId,p])=>({entityId,injuryVariant:p.injuryVariant,armVariant:p.armVariant,deathInjury:p.deathInjury,signature:p.signature,visualScale:p.visualScale,idleFrame:p.idleFrame,runSpeed:p.runSpeed,observedDistance:p.distance,visualDistance:p.visualDistance,injuryDrawn:injuries.ready()&&p.injuryVariant==='broken-leg-left'&&(p.clip==='walk'||p.clip==='attack'),clip:p.clip,frame:p.frame,direction:p.direction,baseFrame:p.baseFrame,phase:p.animation?.phase,layered:p.layered,
-        blendFrom:p.blendFrom??null,blendWeight:p.blendWeight??1})),
+        blendFrom:p.blendFrom??null,blendWeight:p.blendWeight??1,combatLayer:p.combatLayer??null})),
         corpses:[...state.corpses.values()].map(p=>({entityId:p.entityId,deathVariant:p.deathVariant,deathInjury:p.deathInjury,deathStyle:p.deathStyle,direction:p.direction,age:state.clock-p.at,frame:Math.min(23,Math.floor((state.clock-p.at)*12))}))};
 }
 // Preserve playback/fallback diagnostics while the asset bundle is loading.
