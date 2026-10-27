@@ -1346,7 +1346,7 @@ function roundRect(ctx, x, y, width, height, radius) {
 
 // Snapshot direction is the same C# direction used to launch the primary spell.
 function drawAimRune(ctx, player) {
-    if (!Number.isFinite(player.aimAngle) || (!player.manualAim && player.aimTargetId == null)) return;
+    if (!Number.isFinite(player.aimAngle) || (!player.manualAim && player.aimTargetId == null && player.aimPropId == null)) return;
     ctx.save();
     ctx.translate(player.x, player.y + 7);
     ctx.rotate(player.aimAngle);
