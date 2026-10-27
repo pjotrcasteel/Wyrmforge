@@ -34,9 +34,11 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--variant", choices=("standard", "broken-arm-right", "one-arm-left", "broken-leg-left"),
                     default="standard")
 parser.add_argument("--directions", choices=("SE", "all"), default="SE")
+parser.add_argument("--style", choices=("rake","maul","bite"), default="rake",
+                    help="Independent source 3D attack behavior; never randomize inside source")
 args = parser.parse_args()
 DIRECTIONS = FACINGS if args.directions == "all" else ("S", "E")
-DEST = OUTPUT / args.variant
+DEST = OUTPUT / args.variant / args.style if args.style != "rake" else OUTPUT / args.variant
 DEST.mkdir(parents=True, exist_ok=True)
 
 
@@ -114,7 +116,7 @@ if spec is None or spec.loader is None:
     raise RuntimeError(f"Missing Blender attack author: {script}")
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
-attack_report = module.author_attack_action(bpy, rig, args.variant)
+attack_report = module.author_attack_action(bpy, rig, args.variant, args.style)
 attack_frames = samples(rig)
 
 # Add the SAME mesh-bound internal fire sockets as the approved idle Ember QC.
@@ -140,7 +142,7 @@ fire_controls, source_regions = embers.attach_internal_fire(actor)
 if not fire_controls:
     raise ValueError("No source-bound fire shader on cape-free Hollowed")
 
-action = bpy.data.actions.new(f"Hollow_{args.variant}_MovingStrike_AndChase_v1")
+action = bpy.data.actions.new(f"Hollow_{args.variant}_{args.style}_MovingStrike_AndChase_v2")
 rig.animation_data.action = action
 scene.frame_start, scene.frame_end, scene.render.fps = 1, COUNT, 24
 
@@ -209,6 +211,9 @@ scene.render.image_settings.color_depth = "8"
 
 report = {"model": args.variant, "capeFree": True, "sourceWalk": str(WALK.relative_to(ROOT)),
           "sourceStrike": str(variant_source.relative_to(ROOT)),
+          "attackStyle": args.style, "independentSkeletalAttack": True,
+          "sourceActionName": attack_report["newAttackAction"],
+          "impactSourceFrame": attack_report["impactAtSourceFrame"],
           "garmentRevision": cloth_report, "shortJacketNotCoat": True,
           "3dSkinned": True, "legGaitContinuousDuringAttack": True,
           "attackUninterruptedByTurn": True, "sourceAttack": attack_report,
@@ -224,7 +229,7 @@ report = {"model": args.variant, "capeFree": True, "sourceWalk": str(WALK.relati
 for scenario, turns in (("running-strike", False), ("pass-by-turn-and-chase", True)):
     # Each case has its own editable source action; no action frames recycled.
     if scenario != "running-strike":
-        action = bpy.data.actions.new(f"Hollow_{args.variant}_PassBy_TurnAndChase_v1")
+        action = bpy.data.actions.new(f"Hollow_{args.variant}_{args.style}_PassBy_TurnAndChase_v2")
         rig.animation_data.action = action
     key_sequence(turns)
     view_pivot.rotation_euler.z = 0
@@ -240,6 +245,10 @@ for scenario, turns in (("running-strike", False), ("pass-by-turn-and-chase", Tr
             authored_pose = (index-ATTACK_START)//STRIKE_HOLD
             strength = (embers.strength_for_motion(authored_pose, attack_start=0)
                         if ATTACK_START <= index < ATTACK_START+STRIKE_POSES*STRIKE_HOLD else .85)
+            if args.style == "bite" and ATTACK_START+8 <= index <= ATTACK_START+17:
+                strength *= 1.15  # Mouth/eye embers flare on the snap.
+            if args.style == "maul" and ATTACK_START+15 <= index <= ATTACK_START+21:
+                strength *= 1.12  # Heavy two-claw contact has a later peak.
             for socket in fire_controls:
                 socket.default_value = strength
             # View rotation belongs to an UNKEYED parent; otherwise Blender
