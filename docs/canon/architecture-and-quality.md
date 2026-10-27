@@ -1,6 +1,6 @@
 # Architecture, persistence and validation
 
-> **Canonical WyrmForge specification · updated 20 October 2026.** Keep gameplay deterministic and platform-agnostic; distinguish simulator truth from client rendering.
+> **Canonical WyrmForge specification · updated 27 October 2026.** Keep gameplay deterministic and platform-agnostic; distinguish simulator truth from client rendering.
 > [Canonical index](README.md) · Only explicitly marked **LOCKED/approved** requirements are commitments. Proposed values, old milestones and drafts are not evidence of shipped code. Verify current `main`, PRs and tests.
 
 ## LOCKED — unified engine ownership and event authority (27 October 2026)
