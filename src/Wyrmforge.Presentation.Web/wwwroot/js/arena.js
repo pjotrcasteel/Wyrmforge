@@ -12,6 +12,7 @@ import { drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions, enemyFac
 import { preloadPaintedEnemies, drawPaintedEnemy, drawPaintedWyrm, updatePaintedCorpses, drawPaintedCorpses, mireHoundPixelPreviewEnabled } from './painted-enemies.js';
 import { preloadHollowSprites, hollowSpritesReady, createHollowState, updateHollowSprites, drawHollowEnemy, drawHollowCorpses, hollowDiagnostics } from './hollow-sprites.js';
 import { hollowFractureEmitters, hollowFractureCanvasLights, withHollowFractureLightingFrame } from './hollow-fracture.js';
+import { hollowFireEmitters, hollowFireCanvasLights } from './hollow-inner-fire.js';
 import { preloadAshfang, createAshfangState, updateAshfang, drawAshfang, drawAshfangDeath, ashfangSockets, ashfangDiagnostics } from './ashfang-sprites.js';
 import { drawAshfangWarning, drawAshfangGroundEffects, drawAshfangAirEffects, ashfangVfxDiagnostics } from './ashfang-vfx.js';
 import { ashlingSprites } from './ashling-sprites.js';
@@ -88,7 +89,8 @@ export function readArenaDiagnostics(canvas) {
         hunt: state.latestSnapshot?.hunt ?? null,
         performance: { fps:state.displayFps, simulationHz:state.displaySimulationHz, simulationMilliseconds:state.displaySimulationMilliseconds, bridgeMilliseconds:state.displayBridgeMilliseconds },
         renderingFailed: Boolean(state.renderingFailed),
-        sharedLighting: state.fractureGpuFrame ?? state.latestSnapshot?.lighting ?? null,
+        sharedLighting: state.sharedLightingFrame ?? state.fractureGpuFrame ?? state.latestSnapshot?.lighting ?? null,
+        hollowFireGpuEmitters: state.hollowFireGpuEmitters ?? [],
         hollowFractureGpuEmitters: state.fractureGpuEmitters ?? [],
         wetForestGround: state.latestSnapshot?.environment?.wetForest
             ? liveWetForestMaterialDiagnostics(state.latestSnapshot.environment.seed) : null,
@@ -243,9 +245,17 @@ function draw(state, snapshot, width, height) {
     const fractureEmitters = hollowFractureEmitters(state.hollow.corpses,state.hollow.clock,state.reducedMotion.matches);
     state.fractureGpuEmitters = fractureEmitters;
     state.fractureGpuFrame = withHollowFractureLightingFrame(snapshot.lighting,fractureEmitters);
+    // Hollowed internal embers and attack surges use the exact same universal
+    // GPU frame and standard Canvas compatibility adapters as other fires.
+    // No independent spotlight or procedural fire-light renderer is introduced.
+    const hollowEmbers = hollowFireEmitters(snapshot.enemies,state.hollow,visualSeconds,
+        state.reducedMotion.matches,lightViewport);
+    state.hollowFireGpuEmitters = hollowEmbers;
+    state.sharedLightingFrame = withHollowFractureLightingFrame(state.fractureGpuFrame,hollowEmbers);
     const spellLights = [
         ...buildSpellLights(snapshot, visualSeconds, state.reducedMotion.matches, lightViewport),
-        ...hollowFractureCanvasLights(fractureEmitters,snapshot.lighting)
+        ...hollowFractureCanvasLights(fractureEmitters,snapshot.lighting),
+        ...hollowFireCanvasLights(hollowEmbers,snapshot.lighting)
     ];
     ctx.clearRect(0, 0, width, height);
     ctx.save();
