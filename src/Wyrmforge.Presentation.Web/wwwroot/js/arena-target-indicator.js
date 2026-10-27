@@ -99,19 +99,50 @@ function drawRuneInscriptions(ctx, marker) {
     }
 }
 
-function drawUnderlight(ctx, marker) {
-    if (marker.kind === 'object') return;
-    // This is an extremely faint selection VFX on the lower body, not a
-    // registered GPU/world light and not a new source of physical shadows.
-    // Its radial falloff never fills the sigil or produces a bright spotlight.
-    const { rx, ry } = marker;
-    const lift = Math.max(14, ry * 2.5);
-    const halo = ctx.createRadialGradient(0, -lift * .42, 1, 0, -lift * .42, rx * .90);
-    halo.addColorStop(0, marker.kind === 'boss' ? 'rgba(216,208,243,.055)' : 'rgba(216,208,243,.07)');
-    halo.addColorStop(.55, 'rgba(216,208,243,.023)');
-    halo.addColorStop(1, 'rgba(216,208,243,0)');
-    ctx.fillStyle = halo;
-    ctx.fillRect(-rx, -lift * 1.8, rx * 2, lift * 2.1);
+// The selection light is ONE standard emitter within the shared GPU frame.
+// Its CURRENT Canvas compatibility view comes from the existing arena spell
+// light-spill/night adapters; this module never paints an independent light.
+// Explicit G1/G5 zero-light validation keeps every world pixel unlit.
+export function targetSelectionLightEmitter(marker, frame) {
+    if (!marker || !frame || marker.kind === 'object' ||
+        !Number.isFinite(marker.x) || !Number.isFinite(marker.y)) return null;
+    const zeroLight = frame.environment?.ambient === 0 && frame.environment?.emission === false &&
+        (frame.lights ?? []).every(light => !light.enabled || light.intensity === 0);
+    if (zeroLight) return null;
+
+    const boss = marker.kind === 'boss';
+    return {
+        id: 'target-selection:underlight',
+        ownerId: 'target-selection',
+        type: 'point',
+        enabled: true,
+        position: [marker.x, marker.y - Math.min(marker.ry, 16), 2],
+        direction: [0, 0, -1],
+        color: SIGIL_COLOR,
+        intensity: boss ? .10 : .12,
+        range: Math.min(62, Math.max(26, marker.rx * 1.08)),
+        coneAngle: Math.PI / 4,
+        penumbra: 0,
+        castsShadow: false,
+        priority: 1,
+    };
+}
+
+// Bridge the SAME emitter, without a second lighting algorithm, to the
+// existing Canvas Hunt adapter while G5's universal GPU integration lands.
+export function targetSelectionCanvasLight(emitter) {
+    if (!emitter) return [];
+    return [{
+        x: emitter.position[0],
+        y: emitter.position[1],
+        radius: emitter.range,
+        strength: emitter.intensity,
+        type: 'target-selection',
+        family: 'selection',
+        center: [217, 207, 238],
+        edge: [99, 90, 116],
+        surge: false,
+    }];
 }
 
 export function drawTargetIndicator(ctx, marker, pass = 'ground', seconds = 0, reducedMotion = false) {
@@ -133,7 +164,7 @@ export function drawTargetIndicator(ctx, marker, pass = 'ground', seconds = 0, r
         ctx.lineWidth = 1;
         strokeArcSegments(ctx, marker.rx, marker.ry, isObject ? 3 : 5);
     } else {
-        drawUnderlight(ctx, marker);
+        // Physical underlight is owned by the shared GPU emitter, not drawn here.
         ctx.globalAlpha = Math.min(.5, baseAlpha * breath);
         ctx.shadowColor = 'rgba(210,197,240,.20)';
         ctx.shadowBlur = isObject ? 1.2 : 2.2;
