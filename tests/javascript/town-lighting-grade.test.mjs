@@ -13,8 +13,8 @@ test('night Town remains visible without giant orange light pools', () => {
     const original = compileTownLightingSnapshot(townPreviewManifest(), { mode: 'night' });
     const night = gradeTownPreviewLighting(original, 'night');
     assert.ok(original.environment.ambient < .03, 'Old night profile is near-black');
-    assert.ok(night.environment.ambient >= .4 && night.environment.ambient <= .8,
-        'Night needs a subtle cool fill, not full daylight');
+    assert.ok(night.environment.ambient > 0 && night.environment.ambient <= .03,
+        'Gothic night forbids the previous broad .55 ambient wash');
     assert.equal(night.environment.color, TOWN_NIGHT_LIGHT_GRADE.color);
     assert.deepEqual(night.lights.map(x => x.intensity),
         [TOWN_NIGHT_LIGHT_GRADE.centralIntensity, TOWN_NIGHT_LIGHT_GRADE.peripheralIntensity,

@@ -15,10 +15,10 @@ const enabled = list => list.filter(light => light.enabled);
 const config = (isolation, unlocks = unlocked, extra = {}) =>
     configureTownLightDomains(fixtures(), { isolation, unlocks, ...extra });
 
-test('Five exclusive domains route twenty-two local lamps through the shared GPU registry', () => {
+test('Five exclusive domains route twenty-three local lamps through the shared GPU registry', () => {
     assert.deepEqual(TOWN_LIGHT_DOMAINS, ['common', 'nexus', 'blacksmith', 'codex', 'hall']);
     const all = fixtures();
-    assert.equal(all.length, 22);
+    assert.equal(all.length, 23);
     assert.equal(new Set(all.map(x => x.id)).size, all.length);
     for (const light of all) {
         assert.equal(light.ownerId, 'town-' + light.domain);
@@ -27,7 +27,7 @@ test('Five exclusive domains route twenty-two local lamps through the shared GPU
         assert.ok(!/banner|flag|cloth/i.test(light.id));
     }
     assert.equal(selectLights(compileTownLightingSnapshot(
-        townPreviewManifest({ domains: true }), { mode: 'night' }), 8, 24).length, 22);
+        townPreviewManifest({ domains: true }), { mode: 'night' }), 8, 24).length, 23);
 });
 test('Each domain isolates only its own sources; common never enables chimney', () => {
     for (const domain of TOWN_LIGHT_DOMAINS) {

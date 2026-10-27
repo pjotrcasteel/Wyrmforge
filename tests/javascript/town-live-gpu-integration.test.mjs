@@ -56,8 +56,8 @@ test('the original navigation and touch handlers remain in the existing Town imp
 });
 
 
-test('T2 domain proof defaults to authored remade well while preserving legacy opt-out', () => {
-    assert.match(bridge, /query\.get\('townWellStage4'\) !== '0'/);
+test('T2 uses unchanged canonical well unless separate Stage4 is explicitly requested', () => {
+    assert.match(bridge, /query\.get\('townWellStage4'\) === '1'/);
     assert.match(preview, /night-active\.webp/);
     assert.match(preview, /registerTownBuildingAlbedo\(engine\)/);
     assert.match(preview, /splitTownPavingReference\(floorReference, selectedCutouts\)/);

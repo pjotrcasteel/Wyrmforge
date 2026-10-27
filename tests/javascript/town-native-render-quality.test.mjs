@@ -32,7 +32,7 @@ test('Town night illumination is cooler, legible and avoids saturated local lamp
         compileTownLightingSnapshot(manifest, { mode: 'night' }), 'night');
     assert.equal(snapshot.environment.ambient, TOWN_NIGHT_LIGHT_GRADE.ambient);
     assert.equal(snapshot.environment.color, TOWN_NIGHT_LIGHT_GRADE.color);
-    assert.ok(snapshot.environment.ambient >= .4 && snapshot.environment.ambient < .8);
+    assert.ok(snapshot.environment.ambient > 0 && snapshot.environment.ambient <= .03);
     assert.deepEqual(snapshot.lights.map(l => l.intensity),
         [TOWN_NIGHT_LIGHT_GRADE.centralIntensity,
             TOWN_NIGHT_LIGHT_GRADE.peripheralIntensity, TOWN_NIGHT_LIGHT_GRADE.peripheralIntensity]);

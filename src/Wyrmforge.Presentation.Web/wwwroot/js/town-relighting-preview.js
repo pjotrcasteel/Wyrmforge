@@ -15,6 +15,7 @@ import { TOWN_NIGHT_LIGHT_GRADE, gradeTownPreviewLighting } from './town-lightin
 import { createTownDomainFixtures, configureTownLightDomains, TOWN_LIGHT_ISOLATIONS, TOWN_NEXUS_SCHOOL_LIGHTS } from './town-light-domains.js';
 import { TOWN_EMISSION_PLATES, emissionMaskPixels } from './town-emission-masks.js';
 import { neutralizeBuildingPixels } from './town-building-neutral-albedo.js';
+import { townDomainSnapshot } from './town-preview-state.js';
 import { projectTownCitizens, TOWN_CITIZEN_ART_WIDTH, TOWN_CITIZEN_ART_HEIGHT } from './town-citizen-gpu-bridge.js';
 
 export const TOWN_PREVIEW_SOURCE = 'art/town/day-active.webp';
@@ -373,7 +374,7 @@ async function registerTownEmissionMasks(engine) {
 /** The only side effect is an isolated canvas, never live Town runtime. */
 export async function initializeTownPreview(canvas, { wellV4 = false, domains = false, unlocks = null,
     school = 'none', strength = .16, isolation = 'combined', neutralMagic = false,
-    sourceMode = 'night' } = {}) {
+    sourceMode = 'night', exposure = 1 } = {}) {
     if (states.has(canvas)) return;
     // The full Town scene is ~1000–1700 CSS px wide on portrait phones.
 // The previous 780px cap discarded more than half of the authored detail
@@ -386,7 +387,7 @@ const engine = new LightingEngine(canvas, {
         npcProgress: 0, paving: 'neutral', view: 'lit', citizens: null,
         wellV4: wellV4 === true, domains: domains === true,
         unlocks: unlocks ?? { nexusUnlocked: false, forgeUnlocked: false, codexUnlocked: false, hallUnlocked: false },
-        school, strength, isolation, neutralMagic, sourceMode, alive: true };
+        school, strength, isolation, neutralMagic, sourceMode, exposure, alive: true };
     states.set(canvas, state);
     try {
         const a = axes(), source = await loadApprovedImage(state.wellV4, state.domains, state.sourceMode);
@@ -509,18 +510,6 @@ export function configureTownPreview(canvas, options) {
             const moved = townPreviewProjection(well.artAnchor[0] + state.offset, well.artAnchor[1]);
             well.position = well.position.map((value, i) => value + moved[i] - original[i]);
         }
-        if (!state.lamps) for (const fixture of manifest.fixtures) fixture.enabled = false;
-        const activeDomains = new Set(manifest.fixtures.filter(f => f.enabled).map(f => f.domain));
-        // Emission cannot remain visible just because the authored window
-        // texture exists: it follows the same strict per-domain GPU fixtures.
-        manifest.layers = manifest.layers.filter(layer =>
-            !(layer.emissionKind || layer.diffuseDomain) ||
-            (state.mode === 'night' && activeDomains.has(layer.domain)));
-        const nexusMagic = manifest.materials.find(m => m.id === 'town-emissive-nexus-magic-material');
-        if (nexusMagic) {
-            nexusMagic.emission = state.neutralMagic ? '#ffffff' : TOWN_NEXUS_SCHOOL_LIGHTS[state.school];
-            nexusMagic.emissionIntensity = Math.min(2.4, .5 + 1.6 * state.strength);
-        }
 
     } else {
         const moved = manifest.fixtures.find(f =>
@@ -534,23 +523,11 @@ export function configureTownPreview(canvas, options) {
         Object.assign(moved, modified);
         for (const fixture of manifest.fixtures) fixture.enabled &&= state.lamps;
     }
-    const effectiveMode = state.domains && state.isolation === 'off' ? 'zero' : state.mode;
-    const snapshot = gradeTownPreviewLighting(compileTownLightingSnapshot(manifest, {
-        state: {}, mode: effectiveMode, localHour: 12, time: 0,
-    }), effectiveMode);
-    // Close neutral masonry/stone needs enough indirect sky radiance to remain
-    // readable. Distant painted nighttime scenery must NOT receive the same
-    // radiance as physically registered Town materials (and must keep its
-    // approved negative space). Material multipliers run in THREE's linear
-    // PBR pipeline, not CSS, a fullscreen shader, or a fake brightened image.
-    if (state.domains && effectiveMode === 'night') {
-        snapshot.environment.ambient = .55;
-        snapshot.environment.color = '#a8b9d1';
-        for (const material of snapshot.materials)
-            if (material.id === 'approved-day-reference' ||
-                material.id.startsWith('approved-cutout-material-'))
-                material.color = '#858585';
-    }
+    const { snapshot, effectiveMode } = state.domains
+        ? townDomainSnapshot(manifest, state)
+        : { snapshot: gradeTownPreviewLighting(compileTownLightingSnapshot(manifest, {
+            state: {}, mode: state.mode, localHour: 12, time: 0,
+        }), state.mode), effectiveMode: state.mode };
     state.engine.apply(snapshot);
     state.engine.setCamera([0, 0, 0], BASE_WIDTH / 2);
     // The shared shadow-visibility inspector reuses the *real* shadow map

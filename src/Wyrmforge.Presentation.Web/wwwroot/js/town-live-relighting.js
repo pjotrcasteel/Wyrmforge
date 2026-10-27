@@ -5,6 +5,7 @@
 import { initializeTownPreview, updateTownPreviewCitizens, disposeTownPreview }
     from './town-relighting-preview.js';
 import { readTownCitizensFromDom } from './town-citizen-gpu-bridge.js';
+import { resolveTownPreviewMode } from './town-preview-state.js';
 import { TOWN_LIGHT_ISOLATIONS } from './town-light-domains.js';
 
 const sessions = new WeakMap();
@@ -16,6 +17,7 @@ function cleanup(session) {
     if (!session || session.disposed) return;
     session.disposed = true;
     session.observer?.disconnect();
+    if (session.timeChanged) window.removeEventListener('wyrmforge:town-time', session.timeChanged);
     if (session.frame !== null) cancelAnimationFrame(session.frame);
     disposeTownPreview(session.canvas);
     delete session.scene.dataset.townGpuPreview;
@@ -46,6 +48,7 @@ function authoritativeLighting(scene, query) {
         school: scene.dataset.nexusSchool ?? 'none',
         strength,
         isolation,
+        mode: resolveTownPreviewMode(scene, query, window.wyrmforgeTownLighting?.getState()),
         neutralMagic: query.get('townMagicWhite') === '1',
     };
 }
@@ -84,7 +87,7 @@ export async function mountTownLiveGpuPreview(selector = '.refuge-canonical-scen
         // opt-in. Default preview never changes or uses missing art paths.
         // Use the already-authored remade well for all opt-in lighting reviews.
         // Explicit developer ?townWellStage4=0 keeps old comparison possible.
-        const wellV4 = query.get('townWellStage4') !== '0';
+        const wellV4 = query.get('townWellStage4') === '1';
         await initializeTownPreview(canvas, { wellV4, domains: true,
             sourceMode: query.get('townGpuSource') === 'day-candidate' ? 'day-candidate' : 'night',
             ...authoritativeLighting(scene, query) });
@@ -98,18 +101,23 @@ export async function mountTownLiveGpuPreview(selector = '.refuge-canonical-scen
             try { liveCitizens(scene, canvas, query); }
             catch (error) { disable(error); }
         };
-        session.observer = new MutationObserver(mutations => {
+        const queueUpdate = () => {
             if (session.disposed || session.frame !== null) return;
-            if (mutations.every(m => !m.target?.closest?.('.refuge-town-crowd') &&
-                !m.addedNodes?.length && !m.removedNodes?.length)) return;
             session.frame = requestAnimationFrame(update);
+        };
+        session.timeChanged = queueUpdate;
+        window.addEventListener('wyrmforge:town-time', session.timeChanged);
+        session.observer = new MutationObserver(mutations => {
+            const relevant = mutations.some(m => m.type === 'childList' ||
+                m.target === scene || m.target?.closest?.('.refuge-town-crowd'));
+            if (relevant) queueUpdate();
         });
         session.observer.observe(scene, {
             subtree: true, childList: true, attributes: true,
             attributeFilter: ['style', 'data-town-feet-y', 'data-town-citizen-id',
                 'data-nexus-school', 'data-nexus-radiance-strength',
                 'data-town-nexus-unlocked', 'data-town-forge-unlocked',
-                'data-town-codex-unlocked', 'data-town-hall-unlocked'],
+                'data-town-codex-unlocked', 'data-town-hall-unlocked', 'data-town-time'],
         });
         scene.dataset.townGpuPreview = 'ready';
         return true;

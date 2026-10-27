@@ -66,6 +66,7 @@ This is neither the live Town nor the final day/night lighting. The original-sou
       <option value="binding">Summoner</option>
     </select>
   </label>
+  <label>Diagnostic exposure <input id="exposure" type="range" min="0.25" max="2" value="1" step="0.05"></label>
   <label><input type="checkbox" id="lamps" checked> Lantern sources</label>
   <label>Move center light <input id="offset" type="range" min="-180" max="180" value="0" step="10">
     <output id="light-position">0</output>px</label>
@@ -104,7 +105,7 @@ const mode = document.querySelector('#mode'), lamps = document.querySelector('#l
       citizen = document.querySelector('#citizen'), npcProgress = document.querySelector('#npc-progress'),
       paving = document.querySelector('#paving'), view = document.querySelector('#view'),
       domain = document.querySelector('#domain'), school = document.querySelector('#school'),
-      neutralMagic = document.querySelector('#neutral-magic');
+      neutralMagic = document.querySelector('#neutral-magic'), exposure = document.querySelector('#exposure');
 const query = new URLSearchParams(location.search);
 document.body.classList.toggle('capture', query.get('capture') === '1');
 if (['day', 'night', 'zero'].includes(query.get('mode'))) mode.value = query.get('mode');
@@ -126,13 +127,13 @@ function update() {
     configureTownPreview(canvas, { mode: mode.value, lamps: lamps.checked, offset: Number(offset.value),
         npcEnabled: citizen.checked, npcProgress: Number(npcProgress.value),
         paving: paving.value, view: view.value, isolation: domain.value,
-        school: school.value, neutralMagic: neutralMagic.checked });
+        school: school.value, neutralMagic: neutralMagic.checked, exposure: Number(exposure.value) });
     status.textContent = canvas.dataset.error ?? 'GPU projection ready; canonical daytime reference source is still pre-lit.';
 }
-for (const control of [mode, lamps, offset, citizen, npcProgress, paving, view, domain, school, neutralMagic]) control.addEventListener('input', update);
+for (const control of [mode, lamps, offset, citizen, npcProgress, paving, view, domain, school, neutralMagic, exposure]) control.addEventListener('input', update);
 try {
     await initializeTownPreview(canvas, {
-        wellV4: query.has('wellV4') ? query.get('wellV4') === '1' : query.get('domains') === '1',
+        wellV4: query.get('wellV4') === '1',
         domains: query.get('domains') === '1',
         sourceMode: query.get('source') === 'day-candidate' ? 'day-candidate' : 'night',
         unlocks: { nexusUnlocked: true, forgeUnlocked: true, codexUnlocked: true, hallUnlocked: true },

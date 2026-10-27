@@ -4,8 +4,8 @@
 import { validateSnapshot } from './lighting/registry.js';
 
 export const TOWN_NIGHT_LIGHT_GRADE = Object.freeze({
-    ambient: .55,
-    color: '#b3c3df',
+    ambient: .025,
+    color: '#9aa5b5',
     dayAmbient: 2.15,
     dayColor: '#fff4e7',
     lanternColor: '#ffdab7',

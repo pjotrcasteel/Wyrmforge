@@ -11,12 +11,12 @@ export const TOWN_LIGHT_ISOLATIONS = Object.freeze([
 // The shared school's warm/cold identity follows existing elemental palettes.
 export const TOWN_NEXUS_SCHOOL_LIGHTS = Object.freeze({
     none: '#ffffff',
-    fire: '#e7763e',
-    frost: '#88c4df',
-    storm: '#e0c665',
-    arcane: '#ae75df',
-    death: '#76c98e',
-    binding: '#63bcb3',
+    fire: '#ff7a36',
+    frost: '#7fd0ff',
+    storm: '#e3cf4f',
+    arcane: '#b887ff',
+    death: '#53a662',
+    binding: '#24a897',
 });
 
 const FIXTURES = Object.freeze([
@@ -46,6 +46,8 @@ const FIXTURES = Object.freeze([
         color: '#ffd09b', intensity: 1.4, range: 3.1, shadow: false },
     { id: 'nexus-windows', domain: 'nexus', x: 262, y: 226, height: .25,
         color: '#ffcc93', intensity: 2.8, range: 2.1, shadow: false },
+    { id: 'nexus-dome-magic', domain: 'nexus', x: 303, y: 106, height: .28,
+        color: '#ffffff', intensity: 3.3, range: 1.6, shadow: false, magic: true },
     { id: 'nexus-magic', domain: 'nexus', x: 395, y: 288, height: .32,
         color: '#ffffff', intensity: 3.3, range: 2.4, shadow: false, magic: true },
     { id: 'nexus-shop-lantern', domain: 'nexus', x: 155, y: 301, height: .12,
