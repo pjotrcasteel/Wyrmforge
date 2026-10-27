@@ -151,3 +151,31 @@ owner separately. The full local JS rerun encountered automatic network-review b
 of an unrelated `example.test` request; focused Town checks remain independently green.
 
 **STOP: T2 owner visual approval required. No T3–T6, merge or live cutover.**
+
+## Owner rejection: wet paving, well artifacts and missing lanterns
+
+The owner rejected the prior T2 image. It must not be treated as approved.
+The night painting itself contains specular-looking streaks; lowering GPU specular
+cannot remove them (the domain materials already had reflection disabled).
+The corrected candidate uses only original canonical daytime paving within the
+existing ground mask, with bounded illumination normalization. It is dry-looking
+painted material, **not recovered physical albedo**. A 28px material boundary blends
+back to the original surrounding receiver; it does not feather around the well/board
+holes, which would reintroduce the wet halo. No post-render wash or second scene.
+The domain floor shares the camera-facing normal with adjacent painted masonry;
+roughness 1, specular 0, reflections OFF. Original source bytes remain unchanged.
+
+Foreground well/board textures now sample the **same already-calibrated source** as
+the scene behind them, rather than a separate scene with gain 3 versus 4. Original
+flat support extrusions no longer cast or receive misleading rectangle shadows in
+domain mode. Feet-depth foreground occlusion remains present; no collision changes.
+The existing daytime ground also contains a painted well shadow, so this remains a
+candidate rather than proof of physically correct movable shadows.
+
+Five omitted public point sources are registered with exclusive common ownership:
+west/east gate-foot lanterns (693,362)/(970,362), west/east wall lanterns
+(458,476)/(1073,424), lower-west lantern (540,710). Their bounded glass emission
+masks and the missing noticeboard lantern mask are added. Common now has 20 sources;
+all five groups total 33. Explicit local cap 40 prevents silently dropping source 33;
+shadow budget remains 8, no per-light shadow maps added. **75 focused Town tests pass**.
+Fresh GPU close-ups and zero-light/mobile checks follow; T2 remains unapproved.

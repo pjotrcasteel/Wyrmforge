@@ -9,7 +9,7 @@ import {
     WELL_STAGE4, STAGE4_REPLACED_CUTOUT_IDS, stage4WellLayer, stage4WellMaterial,
     stage4WellLight, stage4CasterGeometry,
 } from './town-well-stage4.js';
-import { splitTownPavingReference, levelPavingNormal } from './town-paving-material.js';
+import { splitTownPavingReference, softenTownPavingBoundary, levelPavingNormal } from './town-paving-material.js';
 import { deriveTownNeutralPavingCanvas } from './town-neutral-albedo.js';
 import { TOWN_NIGHT_LIGHT_GRADE, gradeTownPreviewLighting } from './town-lighting-grade.js';
 import { createTownDomainFixtures, configureTownLightDomains, TOWN_LIGHT_ISOLATIONS, TOWN_NEXUS_SCHOOL_LIGHTS } from './town-light-domains.js';
@@ -173,7 +173,9 @@ export function townPreviewManifest({ wellV4 = false, domains = false } = {}) {
     const materials = [
         material('approved-day-reference', 'town-day-background'),
         material('town-level-paving', 'town-day-paving', {
-            normal: 'town-paving-flat-normal', roughness: .87, specular: .16,
+            // A painted 2D receiver has no measured world-space paving geometry.
+            // Keep its normal continuous with the surrounding scene in domain mode.
+            ...(domains ? {} : { normal: 'town-paving-flat-normal' }), roughness: 1, specular: 0,
         }),
     ];
     layers.push({
@@ -243,7 +245,9 @@ export function townPreviewManifest({ wellV4 = false, domains = false } = {}) {
             artBounds: [cutout.x, cutout.y, cutout.width, cutout.height],
             material: 'approved-cutout-material-' + cutout.id,
             position, rotation: [0, 0, 0], scale: [1, 1, 1],
-            castsShadow: !domains || ['well-supports', 'noticeboard-supports'].includes(cutout.id), receivesShadow: true,
+            // Original billboard support extrusions are not reliable shadow volumes.
+            // Keep feet-depth occlusion, but do not project their rectangular shadows.
+            castsShadow: !domains, receivesShadow: !domains,
         });
         materials.push(material('approved-cutout-material-' + cutout.id,
             'approved-cutout-texture-' + cutout.id));
@@ -350,7 +354,7 @@ export async function initializeTownPreview(canvas, { wellV4 = false, domains = 
 // before CSS enlarged the image. The separate generic engine keeps its
 // 390px default for other scenes; ONLY this opt-in Town uses native-art QA.
 const engine = new LightingEngine(canvas, {
-        shadowViews: 8, maxLights: domains ? 32 : 8, maxFramebufferWidth: TOWN_ART_SIZE[0],
+        shadowViews: 8, maxLights: domains ? 40 : 8, maxFramebufferWidth: TOWN_ART_SIZE[0],
     });
     const state = { engine, mode: environmentMode, environmentMode, diagnosticMode: null, lamps: true, offset: 0, npcEnabled: true,
         npcProgress: 0, paving: 'neutral', view: 'lit', citizens: null,
@@ -388,9 +392,11 @@ const engine = new LightingEngine(canvas, {
         // bright sky/buildings are NEVER used as the Town background.
         // Stage 4's opaque clean-square PNG is strictly a *paving* source.
         // NEVER let its daylight sky overwrite the preserved night backing.
-        const floorReference = source;
         const dayReference = state.domains
             ? await loadApprovedImage(false, false, 'day-candidate') : source;
+        // The night source contains painted wet streaks. Use only original
+        // dry daytime paving inside the authored ground mask, never its sky/buildings.
+        const floorReference = state.domains ? dayReference : source;
         ensureAlive();
         ensureAlive();
         const pavingLayers = floorReference === source ? separated
@@ -406,8 +412,8 @@ const engine = new LightingEngine(canvas, {
         const neutral = document.createElement('canvas');
         neutral.width = separated.floor.width; neutral.height = separated.floor.height;
         neutral.getContext('2d').drawImage(pavingLayers.floor, 0, 0);
-        state.neutralMetrics = state.domains ? {coverage:0,illuminationReduction:0}
-            : deriveTownNeutralPavingCanvas(neutral);
+        state.neutralMetrics = deriveTownNeutralPavingCanvas(neutral);
+        if (state.domains) softenTownPavingBoundary(neutral, separated.floor);
         engine.registerTexture('town-paving-neutral', new T.CanvasTexture(neutral));
         const normal = levelPavingNormal(a.right, a.up, a.toward);
         const normalTexture = new T.DataTexture(normal, 1, 1, T.RGBAFormat);
@@ -430,15 +436,17 @@ const engine = new LightingEngine(canvas, {
             wellTexture.needsUpdate = true;
             engine.registerTexture('stage4-well-albedo', wellTexture);
         }
-        const foregroundSource = state.domains
-            ? await loadApprovedImage(false, true, 'night') : source;
+        // Foreground must sample the SAME already-calibrated pixels as its backing.
+        // Reloading an uncalibrated scene and lifting by a different amount
+        // creates dark roof seams and a halo around the well.
+        const foregroundSource = source;
         ensureAlive();
         for (const cutout of selectedCutouts) {
             const size = BASE_WIDTH / TOWN_ART_SIZE[0];
             engine.registerGeometry('approved-cutout-plane-' + cutout.id,
                 plane(cutout.width * size, cutout.height * size, a.basis));
             engine.registerGeometry('approved-foreground-caster-' + cutout.id, cutoutGeometry(cutout, a.basis));
-            engine.registerTexture('approved-cutout-texture-' + cutout.id, cutoutTexture(foregroundSource, cutout, state.domains ? 3 : 1));
+            engine.registerTexture('approved-cutout-texture-' + cutout.id, cutoutTexture(foregroundSource, cutout));
         }
         if (state.domains) {
             await registerTownEmissionMasks(engine, ensureAlive);

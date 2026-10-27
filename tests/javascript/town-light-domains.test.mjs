@@ -15,10 +15,10 @@ const enabled = list => list.filter(light => light.enabled);
 const config = (isolation, unlocks = unlocked, extra = {}) =>
     configureTownLightDomains(fixtures(), { isolation, unlocks, ...extra });
 
-test('Five exclusive domains route twenty-eight local lamps through the shared GPU registry', () => {
+test('Five exclusive domains route thirty-three local lamps through the shared GPU registry', () => {
     assert.deepEqual(TOWN_LIGHT_DOMAINS, ['common', 'nexus', 'blacksmith', 'codex', 'hall']);
     const all = fixtures();
-    assert.equal(all.length, 28);
+    assert.equal(all.length, 33);
     assert.equal(new Set(all.map(x => x.id)).size, all.length);
     for (const light of all) {
         assert.equal(light.ownerId, 'town-' + light.domain);
@@ -27,7 +27,7 @@ test('Five exclusive domains route twenty-eight local lamps through the shared G
         assert.ok(!/banner|flag|cloth/i.test(light.id));
     }
     assert.equal(selectLights(compileTownLightingSnapshot(
-        townPreviewManifest({ domains: true }), { mode: 'night' }), 8, 32).length, 28);
+        townPreviewManifest({ domains: true }), { mode: 'night' }), 8, 40).length, 33);
 });
 test('Each domain isolates only its own sources; common never enables chimney', () => {
     for (const domain of TOWN_LIGHT_DOMAINS) {
@@ -39,7 +39,7 @@ test('Each domain isolates only its own sources; common never enables chimney', 
     assert.equal(enabled(config('off')).length, 0);
 });
 test('Vacancy suppresses all four building groups and leaves public square only', () => {
-    assert.equal(enabled(config('combined', vacant)).length, 15);
+    assert.equal(enabled(config('combined', vacant)).length, 20);
     assert.ok(enabled(config('combined', vacant)).every(x => x.domain === 'common'));
     for (const key of Object.keys(vacant)) {
         const state = { ...unlocked, [key]: false };
@@ -78,7 +78,7 @@ test('Domain lights reach same existing GPU manifest and black-world zero-light 
     const m = townPreviewManifest({ domains: true, wellV4: true });
     configureTownLightDomains(m.fixtures, { unlocks: vacant });
     const common = compileTownLightingSnapshot(m, { mode: 'night' });
-    assert.equal(common.lights.filter(x => x.enabled).length, 15);
+    assert.equal(common.lights.filter(x => x.enabled).length, 20);
     assert.ok(common.lights.filter(x => x.enabled).every(x => x.domain === 'common'));
     assert.equal(common.lights.find(x => x.id === 'town-blacksmith-chimney').enabled, false);
     const zero = compileTownLightingSnapshot(m, { mode: 'zero' });
@@ -98,4 +98,28 @@ test('Stage4 opt-in review uses the tight remade-well caster, not the old umbrel
         'Flattened castle arch must not cast a fake black wedge across cobbles');
     assert.deepEqual(manifest.fixtures.filter(x => x.castsShadow).map(x => x.id),
         ['town-square-well'], 'Well roof/posts alone have a real T2 shadow volume');
+});
+
+test('All five previously omitted public wall and gate-foot lanterns have one common owner', () => {
+    const list = fixtures();
+    for (const suffix of ['gate-west-foot-lantern', 'gate-east-foot-lantern',
+        'square-west-wall-lantern', 'square-east-wall-lantern', 'square-lower-west-lantern']) {
+        const matches = list.filter(light => light.id === 'town-' + suffix);
+        assert.equal(matches.length, 1);
+        assert.equal(matches[0].domain, 'common');
+        assert.equal(matches[0].ownerId, 'town-common');
+        assert.equal(config('common', vacant).find(light => light.id === matches[0].id).enabled, true);
+    }
+});
+
+test('Domain paving is matte and the original well occlusion does not cast billboard block shadows', () => {
+    const scene = townPreviewManifest({ domains: true });
+    const ground = scene.materials.find(material => material.id === 'town-level-paving');
+    assert.equal(ground.reflection, 'off');
+    assert.equal(ground.specular, 0);
+    assert.equal(ground.roughness, 1);
+    assert.equal(ground.normal, undefined, 'No mismatched world-up normal on a camera-facing painted receiver');
+    const foreground = scene.layers.filter(layer => layer.id.startsWith('foreground-'));
+    assert.ok(foreground.length > 0, 'Keep NPC feet-depth occlusion geometry');
+    assert.ok(foreground.every(layer => !layer.castsShadow && !layer.receivesShadow));
 });

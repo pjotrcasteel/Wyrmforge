@@ -107,3 +107,38 @@ export function levelPavingNormal(right, up, toward) {
         Math.abs(Math.hypot(...normal) - 1) > 1e-4) throw new TypeError('Invalid Town tangent basis');
     return Uint8Array.from([...normal.map(n => Math.round((n * .5 + .5) * 255)), 255]);
 }
+
+/** Blend only a narrow material-authoring boundary, not rendered lighting.
+ * Both inputs are original-size ground crops; alpha and stone geometry stay fixed.
+ * The interior uses dry canonical daytime paving, never the night painting's wet streaks.
+ */
+export function softenTownPavingBoundary(dryCanvas, nightCanvas, width = 28) {
+    if (dryCanvas.width !== 1672 || dryCanvas.height !== 941 ||
+        nightCanvas.width !== 1672 || nightCanvas.height !== 941 ||
+        !Number.isInteger(width) || width < 1 || width > 64)
+        throw new TypeError('Expected exact Town ground candidates');
+    const ctx = dryCanvas.getContext('2d');
+    const dry = ctx.getImageData(0, 0, 1672, 941);
+    const night = nightCanvas.getContext('2d').getImageData(0, 0, 1672, 941).data;
+    const w = 1672, h = 941, distance = new Uint8Array(w*h);
+    // Only feather the outer ground boundary, never well/board holes: doing
+    // that would bring the painted wet halo back around the foreground prop.
+    const mask=document.createElement('canvas'); mask.width=w; mask.height=h;
+    const maskContext=mask.getContext('2d'); maskContext.fill(pavingPath());
+    const coverage=maskContext.getImageData(0,0,w,h).data;
+    for (let y=0;y<h;y++) for(let x=0;x<w;x++) {
+        const n=y*w+x;
+        if(coverage[n*4+3]) distance[n]=Math.min(width,
+            x ? distance[n-1]+1 : 1, y ? distance[n-w]+1 : 1);
+    }
+    for(let y=h-1;y>=0;y--) for(let x=w-1;x>=0;x--) {
+        const n=y*w+x;
+        if(!coverage[n*4+3]) continue;
+        distance[n]=Math.min(distance[n],x+1<w?distance[n+1]+1:1,y+1<h?distance[n+w]+1:1);
+        const t=Math.min(1,distance[n]/width), weight=t*t*(3-2*t);
+        for(let c=0;c<3;c++) dry.data[n*4+c]=Math.round(
+            night[n*4+c]*(1-weight)+dry.data[n*4+c]*weight);
+    }
+    ctx.putImageData(dry,0,0);
+    return dryCanvas;
+}
