@@ -12,7 +12,8 @@ const enemy = (entityId, values = {}) => ({
     kind: 0, entityId, x: entityId * 30, y: 200, radius: 11, healthRatio: 1, opacity: 1, ...values,
 });
 const state = (...poses) => ({
-    entities: new Map(poses.map((pose, index) => [index + 1,
+    // No argument means a real idle Hollowed exists, not an empty pose map.
+    entities: new Map((poses.length ? poses : [{}]).map((pose, index) => [index + 1,
         { attackAt: null, age: .3, clip: 'walk', ...pose }])),
 });
 
