@@ -79,9 +79,14 @@ test('an active attack follows a changed target direction without restarting',()
  advance(state,snapshot({player:{x:38,y:20,radius:9}}),.05,.3);
  const pose=state.entities.get(7),token=pose.attackAt,frame=pose.frame;
  advance(state,snapshot({player:{x:20,y:2,radius:9}}),.35,.6);
- assert.equal(pose.direction,'N');assert.equal(pose.attackAt,token);assert.ok(pose.frame>frame);
+ assert.equal(pose.direction,'E','A committed strike does not instantly spin toward a passing target');
+ assert.equal(pose.combatLayer.lowerFacing,'N','Chase legs already follow the new target');
+ assert.equal(pose.attackAt,token);assert.ok(pose.frame>frame);
+ advance(state,snapshot({player:{x:20,y:2,radius:9}}),.65,1);
+ assert.equal(pose.direction,'N','Upper body rotates to chase after the strike impact');
+ assert.equal(pose.attackAt,token,'The attack is not restarted by the turn');
  const frozen=snapshot({enemies:[enemy({frozen:true})],player:{x:2,y:20,radius:9}});
- advance(state,frozen,.65,.8);assert.equal(pose.direction,'N');
+ advance(state,frozen,1.05,1.2);assert.equal(pose.direction,'N');
 });
 test('walk-to-strike and 8-way turning crossfade actual source frames for 160ms',()=>{
  const state=mod.createHollowState();
