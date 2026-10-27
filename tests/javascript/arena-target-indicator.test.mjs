@@ -88,41 +88,76 @@ function recordingCanvas() {
         beginPath: () => calls.push('beginPath'),
         moveTo: (...args) => calls.push(['moveTo', ...args]),
         lineTo: (...args) => calls.push(['lineTo', ...args]),
+        closePath: () => calls.push('closePath'),
         ellipse: (...args) => calls.push(['ellipse', ...args]),
         fill: () => calls.push('fill'),
-        stroke() { calls.push(['stroke', this.strokeStyle, this.globalAlpha]); },
+        stroke() { calls.push(['stroke', this.strokeStyle, this.globalAlpha, this.lineWidth, this.shadowBlur]); },
         globalAlpha: 1,
+        shadowBlur: 0,
     };
     return ctx;
 }
 
-test('underlay and contrast passes draw stable distinct object and enemy rings', () => {
-    const snapshot = scene();
-    const hostile = resolveTargetIndicator(snapshot);
+const callsOf = (ctx, name) => ctx.calls.filter(call => Array.isArray(call) && call[0] === name);
+const strokes = ctx => callsOf(ctx, 'stroke');
+
+test('enemy indicator uses unfilled, separated neutral arcane fragments rather than a solid circle', () => {
     const ctx = recordingCanvas();
-
-    drawTargetIndicator(ctx, hostile, 'ground');
-    assert.equal(ctx.calls.filter(call => call === 'fill').length, 1, 'Footprint underlay uses one muted fill.');
-    assert.equal(ctx.calls.filter(call => Array.isArray(call) && call[0] === 'ellipse').length, 1);
-    assert.ok(ctx.calls.some(call => Array.isArray(call) && call[0] === 'stroke' && call[1] === '#cbdde4'));
+    drawTargetIndicator(ctx, resolveTargetIndicator(scene()), 'ground', 0, true);
+    assert.equal(callsOf(ctx, 'ellipse').length, 4);
+    assert.equal(ctx.calls.includes('fill'), false, 'No AoE-style area fill.');
+    assert.ok(strokes(ctx).every(call => call[1] === '#dcd4ee'));
     assert.equal(ctx.calls.at(-1), 'restore');
 
     ctx.calls.length = 0;
-    drawTargetIndicator(ctx, hostile, 'contrast');
-    assert.equal(ctx.calls.filter(call => call === 'fill').length, 0, 'Post-night cue never covers sprite pixels.');
-    assert.equal(ctx.calls.filter(call => Array.isArray(call) && call[0] === 'ellipse').length, 4);
-    assert.equal(ctx.calls.filter(call => Array.isArray(call) && call[0] === 'lineTo').length, 4);
+    drawTargetIndicator(ctx, resolveTargetIndicator(scene()), 'contrast', 0, true);
+    assert.equal(callsOf(ctx, 'ellipse').length, 4, 'Exactly four disjoint arc fragments.');
+    assert.equal(ctx.calls.filter(call => call === 'closePath').length, 2, 'Two minimal rune diamonds.');
+    assert.ok(callsOf(ctx, 'lineTo').length >= 6, 'Small inscribed glyphs, not cardinal crosshair ticks.');
+    assert.equal(ctx.calls.includes('fill'), false);
     assert.equal(ctx.calls.at(-1), 'restore');
-
-    ctx.calls.length = 0;
-    snapshot.player.aimPropId = 42;
-    drawTargetIndicator(ctx, resolveTargetIndicator(snapshot), 'contrast');
-    assert.ok(ctx.calls.some(call => Array.isArray(call) && call[0] === 'stroke' && call[1] === '#ddc18b'));
-    assert.equal(ctx.calls.at(-1), 'restore');
+    assert.ok(strokes(ctx).every(call => call[1] === '#dcd4ee'));
+    assert.ok(strokes(ctx).some(call => call[4] === 2.5), 'Glow must be bounded to 2.5px.');
 });
 
-test('nothing is drawn for missing targets, including no scene state', () => {
+test('future destructibles share the same color but a quieter, smaller sigil', () => {
+    const snapshot = scene(), ctx = recordingCanvas();
+    snapshot.player.aimPropId = 72; // Unknown future prop kind.
+    drawTargetIndicator(ctx, resolveTargetIndicator(snapshot), 'contrast', 0, true);
+    assert.equal(callsOf(ctx, 'ellipse').length, 2);
+    assert.equal(ctx.calls.filter(call => call === 'closePath').length, 1);
+    assert.ok(strokes(ctx).every(call => call[1] === '#dcd4ee'), 'Never imply a spell school or fire telegraph.');
+    assert.ok(strokes(ctx).every(call => call[2] <= .54));
+    assert.equal(ctx.calls.includes('fill'), false);
+});
+
+test('boss has the same school-neutral language with only two added rune strokes', () => {
+    const snapshot = scene(), ctx = recordingCanvas();
+    snapshot.player.aimTargetId = 99;
+    drawTargetIndicator(ctx, resolveTargetIndicator(snapshot), 'contrast', 0, true);
+    assert.equal(callsOf(ctx, 'ellipse').length, 4, 'No second warning circle around a boss.');
+    assert.equal(ctx.calls.filter(call => call === 'closePath').length, 2);
+    assert.ok(callsOf(ctx, 'lineTo').length >= 8, 'Additional boss inscriptions.');
+    assert.ok(strokes(ctx).every(call => call[1] === '#dcd4ee'));
+    assert.equal(ctx.calls.includes('fill'), false);
+});
+
+test('motion preference freezes shimmer; unrestricted shimmer stays subtle', () => {
+    const marker = resolveTargetIndicator(scene());
+    const a = recordingCanvas(), b = recordingCanvas(), c = recordingCanvas(), d = recordingCanvas();
+    drawTargetIndicator(a, marker, 'contrast', 0, true);
+    drawTargetIndicator(b, marker, 'contrast', Math.PI / 2, true);
+    assert.deepEqual(a.calls, b.calls);
+    drawTargetIndicator(c, marker, 'contrast', 0, false);
+    drawTargetIndicator(d, marker, 'contrast', Math.PI / 2, false);
+    assert.notDeepEqual(strokes(c).map(x => x[2]), strokes(d).map(x => x[2]));
+    assert.ok(strokes(d).every(x => x[2] <= .83), 'Brightness does not turn into a distracting pulse.');
+});
+
+test('no rendering for missing targets, paused state or unknown drawing passes', () => {
     const ctx = recordingCanvas();
     drawTargetIndicator(ctx, resolveTargetIndicator({}), 'contrast');
+    assert.deepEqual(ctx.calls, []);
+    drawTargetIndicator(ctx, resolveTargetIndicator(scene()), 'unknown');
     assert.deepEqual(ctx.calls, []);
 });
