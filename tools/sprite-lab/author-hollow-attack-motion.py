@@ -59,7 +59,7 @@ def author_attack_action(bpy, rig, variant="standard"):
             pb.location.copy(), pb.rotation_quaternion.copy(), pb.scale.copy()
         )
 
-    action = bpy.data.actions.new(f"Hollow_{variant}_Feral_IK_Claw_v6")
+    action = bpy.data.actions.new(f"Hollow_{variant}_Feral_HighClaw_v7")
     # Native two-bone IK produces a REAL 3D hand trajectory around the head
     # and across the victim, instead of rotating two full arms in place.
     rest = {bone.name:bone for bone in rig.data.bones}
@@ -96,9 +96,9 @@ def author_attack_action(bpy, rig, variant="standard"):
         reach = length_a + length_b
         # A predator chambers near its ear, then tears DOWN AND IN across
         # the chest toward the hunter. The strike is not a straight reach.
-        chamber = shoulder + Vector((sign*.13, .12, reach*.50))
-        slash = shoulder + Vector((-sign*.19, -.24, reach*.07))
-        follow = shoulder + Vector((-sign*.30, -.21, -reach*.35))
+        chamber = shoulder + Vector((sign*.15, .08, reach*.68))
+        slash = shoulder + Vector((-sign*.24, -.31, reach*.38))
+        follow = shoulder + Vector((-sign*.34, -.23, reach*.10))
         target = original_wrist.lerp(chamber, windup)
         target = target.lerp(slash, strike)
         target = target.lerp(follow, recoil * .40)
@@ -144,10 +144,10 @@ def author_attack_action(bpy, rig, variant="standard"):
                 pb.location.z -= .018*windup + .006*strike
                 pb.location.y -= .025*windup - .040*strike + .016*recoil
             elif name == "spine":
-                angle = -.19*windup + .13*forward - .09*recoil
+                angle = -.19*windup + .035*forward - .08*recoil
                 pb.rotation_quaternion = Quaternion(Vector((1, 0, 0)), angle) @ pb.rotation_quaternion
             elif name == "chest":
-                pitch = -.30*windup + .21*forward - .12*recoil
+                pitch = -.27*windup + .07*forward - .11*recoil
                 twist = (-.28*windup + .37*strike - .09*recoil) * (1 if lead == "L" else -1)
                 pb.rotation_quaternion = (
                     Quaternion(Vector((0, 0, 1)), twist)
@@ -219,5 +219,6 @@ def author_attack_action(bpy, rig, variant="standard"):
         "diagonalClawRake": True,
         "chestHeightNotGroundSlam": True,
         "realTwoBoneIKClaw": True,
+        "highForwardContact": True,
         "authoredClawTargets": hands,
     }
