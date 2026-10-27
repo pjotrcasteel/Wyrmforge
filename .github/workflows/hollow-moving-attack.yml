@@ -7,6 +7,7 @@ on:
       - 'tools/sprite-lab/author-hollow-moving-attack.py'
       - 'tools/sprite-lab/author-hollow-attack-motion.py'
       - 'tools/sprite-lab/hollow-source-embers.py'
+      - 'tools/sprite-lab/hollow-ragged-silhouette.py'
       - '.github/workflows/hollow-moving-attack.yml'
   pull_request:
     branches: [main]
@@ -14,6 +15,7 @@ on:
       - 'tools/sprite-lab/author-hollow-moving-attack.py'
       - 'tools/sprite-lab/author-hollow-attack-motion.py'
       - 'tools/sprite-lab/hollow-source-embers.py'
+      - 'tools/sprite-lab/hollow-ragged-silhouette.py'
       - '.github/workflows/hollow-moving-attack.yml'
   workflow_dispatch:
 
@@ -58,6 +60,16 @@ jobs:
           assert data["attackUninterruptedByTurn"]
           assert data["basePoseExactlyAuthoredWalk"]
           assert data["attackOnlyUpperBodyAdditive"]
+          garment = data["garmentRevision"]
+          assert data["shortJacketNotCoat"] and garment["raggedUpperThighHem"]
+          assert garment["originalBodyAndLegsPreserved"]
+          assert garment["removedLongClothVertices"] > 0
+          assert len(data["garmentComparisons"]) == 2
+          assert min(data["garmentSilhouetteDifferencePixels"].values()) > 10
+          for item in data["garmentComparisons"]:
+              assert (file.parent/item).is_file()
+          assert data["sourceAttack"]["diagonalClawRake"]
+          assert data["sourceAttack"]["impactAtFrame"] == 7
           assert data["attackPoses"] == 16 and data["attackFps"] == 12
           assert data["previewFps"] == 24 and data["frames"] == 56
           assert data["sourceEmissionOnSkinnedMesh"]
@@ -78,6 +90,7 @@ jobs:
           path: |
             artifacts/hollow-moving-strike/standard/*.blend
             artifacts/hollow-moving-strike/standard/*.gif
+            artifacts/hollow-moving-strike/standard/*.png
             artifacts/hollow-moving-strike/standard/*.json
           if-no-files-found: warn
           retention-days: 14
