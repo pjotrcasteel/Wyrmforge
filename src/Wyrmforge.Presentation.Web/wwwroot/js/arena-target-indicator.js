@@ -40,96 +40,116 @@ function indicator(kind, x, y, radius) {
     };
 }
 
-// A single neutral visual language for Fire, Frost, Storm and every other school.
-// Unlike hostile orange area telegraphs, a target is shown by short, unfilled
-// ivory-lilac rune fragments at the feet. No gameplay, emissive light or art edits.
-const SIGIL_COLOR = '#dcd4ee';
-const SEGMENTS = Object.freeze([
-    [.14, 1.07],
-    [1.84, 2.73],
-    [3.28, 4.22],
-    [5.02, 5.94],
+// Target selection is an in-world magical seal, not an attack telegraph.
+// All schools and object kinds share the same desaturated, near-ivory ink.
+const SIGIL_COLOR = '#d9cfee';
+
+// Small hand-drawn Futhark-inspired strokes, not text characters or a font.
+// Normalized coordinates keep glyphs legible on high-DPI mobile canvases.
+const RUNES = Object.freeze([
+    [[-0.45, -1, -0.45, 1], [-0.45, -.85, .55, -.48], [-.45, -.15, .45, .15]],
+    [[-.5, -1, -.5, 1], [-.5, -1, .48, -.1], [.48, -.1, -.5, .18]],
+    [[-.52, -1, .48, 1], [.48, -1, -.52, 1]],
+    [[0, -1, 0, 1], [-.65, -.5, 0, -.05], [.65, -.5, 0, -.05]],
+    [[-.5, -1, .52, -.15], [.52, -.15, -.5, .6], [-.5, .6, .5, 1]],
+    [[-.55, -.9, .5, -.9], [0, -.9, 0, 1], [-.48, -.25, .45, -.25]],
+    [[-.55, -1, -.55, 1], [-.55, -.1, .53, -.1], [.53, -.1, .53, .8]],
+    [[-.5, -1, .5, 1], [.5, -1, -.5, 1], [0, -.55, 0, .6]],
 ]);
 
-function drawBrokenArcs(ctx, marker, passage) {
-    const { rx, ry, kind } = marker;
-    const count = kind === 'object' ? 2 : 4;
+// Empty gaps let the sigil fade into the cobbles without becoming another
+// concentric AoE circle. No full ring, warning-color fill or cardinal reticle.
+const RING_ARCS = Object.freeze([
+    [.12, 1.07], [1.49, 2.56], [2.94, 3.94], [4.36, 5.38], [5.68, 6.06],
+]);
+
+function strokeArcSegments(ctx, rx, ry, count) {
     for (let i = 0; i < count; i++) {
-        // Props keep only opposite, short fragments: visually lower priority.
-        const index = kind === 'object' ? i * 2 : i;
-        const [start, end] = SEGMENTS[index];
+        const [start, end] = RING_ARCS[i];
         ctx.beginPath();
-        ctx.ellipse(0, 0, rx + passage, ry + passage * .3, 0, start, end);
+        ctx.ellipse(0, 0, rx, ry, 0, start, end);
         ctx.stroke();
     }
 }
 
-function drawDiamond(ctx, x, y, size) {
+function strokeRune(ctx, rune, size) {
     ctx.beginPath();
-    ctx.moveTo(x, y - size);
-    ctx.lineTo(x + size * .68, y);
-    ctx.lineTo(x, y + size);
-    ctx.lineTo(x - size * .68, y);
-    ctx.closePath();
+    for (const [x1, y1, x2, y2] of rune) {
+        ctx.moveTo(x1 * size, y1 * size);
+        ctx.lineTo(x2 * size, y2 * size);
+    }
     ctx.stroke();
 }
 
-function drawRunicAccents(ctx, marker) {
+function drawRuneInscriptions(ctx, marker) {
     const { rx, ry, kind } = marker;
-    const size = kind === 'boss' ? 5 : kind === 'object' ? 2.7 : 3.5;
-    drawDiamond(ctx, -rx - 2, 0, size);
-    if (kind !== 'object') drawDiamond(ctx, rx + 2, 0, size);
+    const count = kind === 'boss' ? 10 : kind === 'object' ? 3 : 6;
+    const size = Math.min(5.2, Math.max(2.8, rx * .13));
+    const offset = kind === 'object' ? .4 : .21;
+    for (let index = 0; index < count; index++) {
+        const angle = -Math.PI + offset + (index + .5) * (Math.PI * 2 / count);
+        const x = Math.cos(angle) * rx * .83;
+        const y = Math.sin(angle) * ry * .81;
+        // A narrower glyph height follows the foreshortened ground plane.
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(1, .62);
+        strokeRune(ctx, RUNES[index % RUNES.length], size);
+        ctx.restore();
+    }
+}
 
-    // Two short angled glyphs make the line feel inscribed rather than a crosshair.
-    // The marks never join into an enclosing outline or compete with attack AoEs.
-    if (kind === 'object') return;
-    ctx.beginPath();
-    ctx.moveTo(-rx * .25, -ry - 1);
-    ctx.lineTo(-rx * .25 + 2.5, -ry - 4);
-    ctx.moveTo(rx * .25, ry + 1);
-    ctx.lineTo(rx * .25 - 2.5, ry + 4);
-    ctx.stroke();
-
-    // A boss earns two extra inscription marks, not a huge second warning ring.
-    if (kind !== 'boss') return;
-    ctx.beginPath();
-    ctx.moveTo(-rx * .52, ry * .85);
-    ctx.lineTo(-rx * .52 - 3.5, ry * .85 + 3);
-    ctx.moveTo(rx * .52, -ry * .85);
-    ctx.lineTo(rx * .52 + 3.5, -ry * .85 - 3);
-    ctx.stroke();
+function drawUnderlight(ctx, marker) {
+    if (marker.kind === 'object') return;
+    // This is an extremely faint selection VFX on the lower body, not a
+    // registered GPU/world light and not a new source of physical shadows.
+    // Its radial falloff never fills the sigil or produces a bright spotlight.
+    const { rx, ry } = marker;
+    const lift = Math.max(14, ry * 2.5);
+    const halo = ctx.createRadialGradient(0, -lift * .42, 1, 0, -lift * .42, rx * .90);
+    halo.addColorStop(0, marker.kind === 'boss' ? 'rgba(216,208,243,.055)' : 'rgba(216,208,243,.07)');
+    halo.addColorStop(.55, 'rgba(216,208,243,.023)');
+    halo.addColorStop(1, 'rgba(216,208,243,0)');
+    ctx.fillStyle = halo;
+    ctx.fillRect(-rx, -lift * 1.8, rx * 2, lift * 2.1);
 }
 
 export function drawTargetIndicator(ctx, marker, pass = 'ground', seconds = 0, reducedMotion = false) {
     if (!marker || (pass !== 'ground' && pass !== 'contrast')) return;
+
     const isObject = marker.kind === 'object';
-    // A very small opacity breath adds magic without rotation, pulsing size,
-    // shader work or additional lights. Reduced motion freezes it.
-    const breath = reducedMotion || !Number.isFinite(seconds) ? 1 : 1 + Math.sin(seconds * 1.1) * .055;
-    const emphasis = isObject ? .54 : marker.kind === 'boss' ? .86 : .78;
+    const baseAlpha = isObject ? .26 : marker.kind === 'boss' ? .46 : .40;
+    const breath = reducedMotion || !Number.isFinite(seconds) ? 1 : 1 + Math.sin(seconds * .9) * .035;
+
     ctx.save();
     ctx.translate(marker.x, marker.y);
     ctx.strokeStyle = SIGIL_COLOR;
-    ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
 
     if (pass === 'ground') {
-        // The underlying trace sits under actors, the world/night mask and
-        // destructible scenery. Deliberately no filled target circle.
-        ctx.globalAlpha = emphasis * .30;
-        ctx.lineWidth = isObject ? 1.2 : 1.5;
-        drawBrokenArcs(ctx, marker, 0);
+        // The world/night lighting naturally darkens this subtle ground trace.
+        ctx.globalAlpha = baseAlpha * .44;
+        ctx.lineWidth = 1;
+        strokeArcSegments(ctx, marker.rx, marker.ry, isObject ? 3 : 5);
     } else {
-        // A restrained glow survives Gothic darkness without looking emissive,
-        // school-colored or like a filled hostile attack telegraph.
-        ctx.globalAlpha = Math.min(1, emphasis * breath);
-        ctx.lineWidth = isObject ? 1.35 : 1.6;
-        ctx.shadowColor = 'rgba(206,194,239,.42)';
-        ctx.shadowBlur = isObject ? 1 : 2.5;
-        drawBrokenArcs(ctx, marker, .7);
+        drawUnderlight(ctx, marker);
+        ctx.globalAlpha = Math.min(.5, baseAlpha * breath);
+        ctx.shadowColor = 'rgba(210,197,240,.20)';
+        ctx.shadowBlur = isObject ? 1.2 : 2.2;
+        ctx.lineWidth = isObject ? .9 : 1.15;
+        strokeArcSegments(ctx, marker.rx, marker.ry, isObject ? 3 : 5);
         ctx.shadowBlur = 0;
-        ctx.lineWidth = isObject ? 1.15 : 1.35;
-        drawRunicAccents(ctx, marker);
+        ctx.lineWidth = isObject ? .85 : 1;
+        drawRuneInscriptions(ctx, marker);
+
+        // One incomplete inner arc gives bosses a hint of a ritual seal.
+        if (marker.kind === 'boss') {
+            ctx.globalAlpha *= .38;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, marker.rx * .72, marker.ry * .7, 0, .45, 2.35);
+            ctx.stroke();
+        }
     }
 
     ctx.restore();
