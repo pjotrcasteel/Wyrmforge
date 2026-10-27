@@ -1,5 +1,7 @@
 using Wyrmforge.Domain.Combat.Geometry;
 using Wyrmforge.Domain.Combat.Targets;
+using Wyrmforge.Domain.Combat.Abilities;
+using Wyrmforge.Domain.Spells;
 
 namespace Wyrmforge.Application.Runs.Simulation;
 
@@ -11,22 +13,51 @@ public sealed partial class RunSimulation
     private bool manualAimEngaged;
     private int? automaticTargetId;
 
+    private int? selectedPropId;
+    private int? aimedPropId;
+
     private void UpdateAim(MovementInput input)
     {
         manualAimEngaged = input.HasManualAim;
+        aimedPropId = null;
         if (manualAimEngaged)
         {
+            selectedPropId = null;
             effectiveAim = input.AimDirection;
             automaticTargetId = null;
             return;
         }
+
+        if (input.FocusPropId is { } requestedId) selectedPropId = requestedId;
+        if (selectedPropId is { } selectedId && FindEligibleProp(selectedId) is { } selected)
+        {
+            aimedPropId = selected.Id;
+            automaticTargetId = null;
+            effectiveAim = Vector2D.DirectionTo(player.Position, selected.Position);
+            return;
+        }
+
+        // An invalid, destroyed, occluded or distant focus never blocks regular auto targeting.
+        selectedPropId = null;
         var nearest = PrimaryTarget(player.Position);
         if (nearest is not null)
         {
             automaticTargetId = nearest.Id;
             effectiveAim = Vector2D.DirectionTo(player.Position, nearest.Position);
+            return;
         }
-        else automaticTargetId = null;
+
+        automaticTargetId = null;
+        if (FindEligibleProp() is not { } prop) return;
+        aimedPropId = prop.Id;
+        effectiveAim = Vector2D.DirectionTo(player.Position, prop.Position);
+    }
+
+    private (int Id, Vector2D Position)? FindEligibleProp(int? requestedId = null)
+    {
+        if (arenaEnvironment is null || !build.Spells.IsPrimaryCommitted ||
+            SpellCatalog.Get(build.Spells.ActiveSpell).Ability.Delivery is not ProjectileAbilityProfile) return null;
+        return arenaEnvironment.FindTargetableProp(player.Position, arenaWidth, arenaHeight, PrimaryAcquisitionRange, requestedId);
     }
 
     private ICombatTarget? PrimaryTarget(Vector2D origin, bool directional = false)
