@@ -225,3 +225,9 @@ The four circled side/lower ground lanes now use the same dry material mask, fol
 existing public ground coordinates. No geometry, collision, progression or source-art
 modification. 77 focused Town tests pass, including hue preservation and source-alpha
 regressions. New GPU proof follows this checkpoint; no T2 visual approval is claimed.
+
+Close-up review also caught dry-ground coverage overlapping the projected Hall roof
+and the western shop silhouette. Ground walkability does not imply visible ground:
+the material mask now excludes those source-aligned scenery contours, retaining the
+canonical vacant-state window/roof pixels rather than borrowing day-building pixels.
+No collision or gameplay map change. This correction is included in the final proof.

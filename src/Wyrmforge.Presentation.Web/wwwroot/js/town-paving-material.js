@@ -23,6 +23,14 @@ export const TOWN_DRY_GROUND_LANES = Object.freeze([
 ]);
 export const TOWN_PAVING_BOUNDS = Object.freeze([418, 225, 751, 716]);
 const SIZE = Object.freeze([1672, 941]);
+// Visible property silhouettes are not ground even where walkable space continues
+// behind them. Keep original vacant-state roofs, windows, cloth and foliage.
+const DRY_GROUND_SCENERY_EXCLUSIONS = Object.freeze([
+    [[1110,480],[1090,510],[1070,548],[1050,594],[1042,620],[1045,644],
+     [1062,669],[1050,698],[1072,720],[1100,740],[1120,760],[1200,800],[1672,941],[1672,333]],
+    [[0,353],[330,430],[350,479],[396,494],[450,490],[474,512],[479,559],
+     [451,581],[461,643],[429,691],[0,941]],
+]);
 
 export function validateTownPavingPolygon(polygon = PLAZA_PAVING_POLYGON) {
     if (!Array.isArray(polygon) || polygon.length < 3) throw new TypeError('Missing authored paving contour');
@@ -72,6 +80,11 @@ export function splitTownPavingReference(source, foregroundCutouts = []) {
     maskContext.fillStyle = '#ffffff';
     maskContext.fill(path);
     maskContext.globalCompositeOperation = 'destination-out';
+    for(const points of DRY_GROUND_SCENERY_EXCLUSIONS) {
+        const contour=new Path2D();contour.moveTo(...points[0]);
+        for(const point of points.slice(1)) contour.lineTo(...point);
+        contour.closePath();maskContext.fill(contour);
+    }
     for (const cutout of foregroundCutouts) {
         if (!cutout || typeof cutout.path !== 'string') throw new TypeError('Missing authored foreground contour');
         maskContext.fill(new Path2D(cutout.path));
