@@ -16,7 +16,7 @@ FRAME_COUNT = 16
 FPS = 12
 # Attack timeline: grounded anticipation (1-5), reach (6-9), recoil (10-12),
 # settling into the locomotion support pose (13-16).
-POSE_KNOTS = (
+RAKE_KNOTS = (
     # frame, windup, strike, recoil, torso forward, head forward
     (1, 0.00, 0.00, 0.00, 0.00, 0.00),
     (3, 0.60, 0.00, 0.00, 0.08, 0.10),
@@ -30,21 +30,39 @@ POSE_KNOTS = (
     (16, 0.00, 0.00, 0.00, 0.00, 0.00),
 )
 
-def attack_channels(frame):
-    if not 1 <= frame <= FRAME_COUNT:
-        raise ValueError(f"Attack frame outside authored clip: {frame}")
-    for i in range(len(POSE_KNOTS) - 1):
-        a, b = POSE_KNOTS[i], POSE_KNOTS[i + 1]
+# Different actual performance timing, not mirrored/recolored existing frames:
+# MAUL: long telegraph, both claws drop in a weighty simultaneous blow.
+# BITE: short deceptive hesitation, fast head/mouth lunge and brief hold.
++STYLE_KNOTS = {
++    "rake": RAKE_KNOTS,
++    "maul": ((1,0,0,0,0,0),(3,.48,0,0,.08,.12),(6,1,0,0,.10,.10),
++             (8,.24,.75,0,.68,.56),(9,0,1,0,1,1),(10,0,.92,0,.93,.86),
++             (12,0,.16,.85,.24,.28),(14,0,0,.45,.08,.12),(16,0,0,0,0,0)),
++    "bite": ((1,0,0,0,0,0),(3,.22,0,0,.06,.12),(4,.72,0,0,.12,.18),
++             (5,.14,.78,0,.76,.96),(6,0,1,0,1,1),(8,0,.86,0,.93,1),
++             (10,0,.22,.75,.48,.42),(12,0,0,.82,.18,.18),(16,0,0,0,0,0)),
++}
++
++def attack_channels(frame, style="rake"):
++    if not 1 <= frame <= FRAME_COUNT:
++        raise ValueError(f"Attack frame outside authored clip: {frame}")
++    if style not in STYLE_KNOTS:
++        raise ValueError(f"Unknown actual source attack: {style}")
++    knots = STYLE_KNOTS[style]
++    for i in range(len(knots) - 1):
++        a, b = knots[i], knots[i + 1]
         if a[0] <= frame <= b[0]:
             t = (frame - a[0]) / (b[0] - a[0])
             eased = t*t*(3 - 2*t)
             return tuple(a[j] * (1 - eased) + b[j] * eased for j in range(1, 6))
-    return POSE_KNOTS[-1][1:]
+    return knots[-1][1:]
 
 
-def author_attack_action(bpy, rig, variant="standard"):
+def author_attack_action(bpy, rig, variant="standard", style="rake"):
     if rig.type != "ARMATURE" or not rig.animation_data or not rig.animation_data.action:
         raise ValueError("Missing actual original Hollowed walk action")
+    if style not in STYLE_KNOTS:
+        raise ValueError(f"Unknown source attack: {style}")
     original = rig.animation_data.action
     original.use_fake_user = True
     # Sample the exact original planted source pose and retain genuine local
@@ -59,18 +77,19 @@ def author_attack_action(bpy, rig, variant="standard"):
             pb.location.copy(), pb.rotation_quaternion.copy(), pb.scale.copy()
         )
 
-    action = bpy.data.actions.new(f"Hollow_{variant}_Feral_SweepingClaw_v8")
+    action = bpy.data.actions.new(f"Hollow_{variant}_Feral_{style.title()}_v9")
     # Native two-bone IK produces a REAL 3D hand trajectory around the head
     # and across the victim, instead of rotating two full arms in place.
     rest = {bone.name:bone for bone in rig.data.bones}
     hands = []
     hand_side = "R" if variant == "one-arm-left" else "L"
-    lead_upper, lead_fore, lead_hand = (
-        f"upper_arm.{hand_side}", f"forearm.{hand_side}", f"hand.{hand_side}"
-    )
-    for name in (lead_upper, lead_fore, lead_hand):
-        if name not in rest:
-            raise ValueError(f"Missing authentic source arm bone: {name}")
+    # Never create a ghost arm. The broken-arm rigs use whichever surviving
+    # limb is physically present; full two-arm mauls need both actual arms.
+    available_sides = tuple(side for side in ("L","R") if all(
+        f"{part}.{side}" in rest for part in ("upper_arm","forearm","hand")))
+    if hand_side not in available_sides:
+        raise ValueError(f"Source attack's striking claw is absent: {hand_side}")
+    arms_to_ik = available_sides if style in ("maul","bite") else (hand_side,)
 
     def orient_bone(name, start, end):
         direction = end-start
@@ -83,15 +102,17 @@ def author_attack_action(bpy, rig, variant="standard"):
         matrix.translation = start
         return matrix
 
-    def place_claw(frame, windup, strike, recoil):
+    def place_claw(frame, windup, strike, recoil, side):
         # Animated in actual source rig coordinates. No 2D sprite rotation,
         # no synthetic extra limb, no teleportation or fake impact effect.
         bpy.context.view_layer.update()
+        lead_upper, lead_fore, lead_hand = (
+            f"upper_arm.{side}", f"forearm.{side}", f"hand.{side}")
         upper = rig.pose.bones[lead_upper]
         shoulder = upper.head.copy()
         forearm = rig.pose.bones[lead_fore]
         original_wrist = rig.pose.bones[lead_hand].head.copy()
-        sign = 1 if hand_side == "L" else -1
+        sign = 1 if side == "L" else -1
         length_a, length_b = rest[lead_upper].length, rest[lead_fore].length
         reach = length_a + length_b
         # A predator chambers near its ear, then tears DOWN AND IN across
@@ -102,16 +123,37 @@ def author_attack_action(bpy, rig, variant="standard"):
         # which looked like a held reach instead of a travelling claw.
         rake_start = shoulder + Vector((sign*.25, -.31, reach*.58))
         rake_end = shoulder + Vector((-sign*.38, -.34, reach*.12))
-        if frame <= 5:
-            target = original_wrist.lerp(chamber, windup)
-        elif frame <= 9:
-            t = min(1.0, max(0.0, (frame-6)/3))
-            t = t*t*(3-2*t)
-            target = rake_start.lerp(rake_end, t)
+        if style == "rake":
+            if frame <= 5:
+                target = original_wrist.lerp(chamber, windup)
+            elif frame <= 9:
+                t = min(1.0, max(0.0, (frame-6)/3))
+                t = t*t*(3-2*t)
+                target = rake_start.lerp(rake_end, t)
+            else:
+                t = min(1.0, max(0.0, (frame-9)/7))
+                t = t*t*(3-2*t)
+                target = rake_end.lerp(original_wrist, t)
+        elif style == "maul":
+            # Two raised, independently skinned fists descend together.
+            high = shoulder + Vector((sign*.16, .11, reach*.79))
+            low = shoulder + Vector((sign*.07, -.39, -reach*.05))
+            if frame <= 6:
+                target = original_wrist.lerp(high, windup)
+            elif frame <= 10:
+                target = high.lerp(low, max(0,min(1,(frame-7)/2)))
+            else:
+                target = low.lerp(original_wrist, max(0,min(1,(frame-10)/6)))
         else:
-            t = min(1.0, max(0.0, (frame-9)/7))
-            t = t*t*(3-2*t)
-            target = rake_end.lerp(original_wrist, t)
+            # Lunge & BITE: two reaching arms seize the victim's shoulders;
+            # head/neck, not fists, deliver the rapid contact.
+            grab = shoulder + Vector((sign*.20, -.42, reach*.16))
+            if frame <= 4:
+                target = original_wrist.lerp(chamber, windup)
+            elif frame <= 8:
+                target = chamber.lerp(grab,max(0,min(1,(frame-5)/2)))
+            else:
+                target = grab.lerp(original_wrist,max(0,min(1,(frame-8)/8)))
         line = target-shoulder
         near = abs(length_a-length_b)+.0005
         distance = min(max(line.length, near), reach-.003)
@@ -138,7 +180,7 @@ def author_attack_action(bpy, rig, variant="standard"):
     # Arm anatomy determines which surviving claw performs the impact.
     lead = "R" if variant == "one-arm-left" else "L"
     for frame in range(1, FRAME_COUNT + 1):
-        windup, strike, recoil, forward, head = attack_channels(frame)
+        windup, strike, recoil, forward, head = attack_channels(frame, style)
         for pb in rig.pose.bones:
             location, rotation, scale = baseline[pb.name]
             pb.location = location.copy()
@@ -154,21 +196,29 @@ def author_attack_action(bpy, rig, variant="standard"):
                 pb.location.z -= .018*windup + .006*strike
                 pb.location.y -= .025*windup - .040*strike + .016*recoil
             elif name == "spine":
-                angle = -.19*windup + .035*forward - .08*recoil
+                angle = (-.19*windup + .035*forward - .08*recoil) if style == "rake" else (
+                    -.26*windup + .15*forward - .15*recoil if style == "maul"
+                    else -.10*windup + .24*forward - .16*recoil)
                 pb.rotation_quaternion = Quaternion(Vector((1, 0, 0)), angle) @ pb.rotation_quaternion
             elif name == "chest":
-                pitch = -.27*windup + .07*forward - .11*recoil
-                twist = (-.28*windup + .37*strike - .09*recoil) * (1 if lead == "L" else -1)
+                pitch = (-.27*windup + .07*forward - .11*recoil) if style == "rake" else (
+                    -.35*windup + .23*forward - .18*recoil if style == "maul"
+                    else -.13*windup + .40*forward - .25*recoil)
+                twist = ((-.28*windup + .37*strike - .09*recoil) if style == "rake"
+                    else (.03*windup + .05*strike) if style == "maul"
+                    else (.18*strike - .08*recoil)) * (1 if lead == "L" else -1)
                 pb.rotation_quaternion = (
                     Quaternion(Vector((0, 0, 1)), twist)
                     @ Quaternion(Vector((1, 0, 0)), pitch)
                     @ pb.rotation_quaternion)
             elif name == "neck":
-                pb.rotation_quaternion = Quaternion(Vector((1, 0, 0)),
-                    .14*windup - .16*head + .06*recoil) @ pb.rotation_quaternion
+                pitch = (.14*windup - .16*head + .06*recoil) if style != "bite" else (
+                    .26*windup - .52*head + .20*recoil)
+                pb.rotation_quaternion = Quaternion(Vector((1, 0, 0)), pitch) @ pb.rotation_quaternion
             elif name == "head":
-                pb.rotation_quaternion = Quaternion(Vector((1, 0, 0)),
-                    .18*windup - .18*head + .08*recoil) @ pb.rotation_quaternion
+                pitch = (.18*windup - .18*head + .08*recoil) if style != "bite" else (
+                    .36*windup - .68*head + .22*recoil)
+                pb.rotation_quaternion = Quaternion(Vector((1, 0, 0)), pitch) @ pb.rotation_quaternion
             elif name.startswith(("clavicle.", "upper_arm.")):
                 is_lead = name.endswith("." + lead)
                 # Powerful unilateral claw rake: high chamber behind head,
@@ -198,7 +248,9 @@ def author_attack_action(bpy, rig, variant="standard"):
             # contrast, not an implausible full-body ground slam.
             # Lower limb joints remain exactly the genuine source skin support.
         if max(windup, strike, recoil) > .02:
-            hands.append({"frame": frame, "clawTarget": place_claw(frame,windup,strike,recoil)})
+            for side in arms_to_ik:
+                hands.append({"frame": frame, "side":side,
+                              "clawTarget":place_claw(frame,windup,strike,recoil,side)})
         for pb in rig.pose.bones:
             pb.keyframe_insert("location", frame=frame, group=pb.name)
             pb.keyframe_insert("rotation_quaternion", frame=frame, group=pb.name)
@@ -215,6 +267,9 @@ def author_attack_action(bpy, rig, variant="standard"):
     # editable independently. A walk/attack/turn QC sequence is rendered next.
     return {
         "sourceWalkAction": original.name,
+        "style": style,
+        "distinctSourceAttackAction": True,
+        "impactAtSourceFrame": 9 if style == "maul" else 6 if style == "bite" else 7,
         "newAttackAction": action.name,
         "frames": FRAME_COUNT,
         "fps": FPS,
@@ -232,4 +287,8 @@ def author_attack_action(bpy, rig, variant="standard"):
         "highForwardContact": True,
         "continuousSweepingClawAcrossFourSourceFrames": True,
         "authoredClawTargets": hands,
+        "actualIKSides": list(arms_to_ik),
+        "visualRole": {"rake":"fast diagonal tearing swipe",
+                       "maul":"heavy overhead double-claw blow",
+                       "bite":"rapid forward neck-and-mouth snap"}[style],
     }
