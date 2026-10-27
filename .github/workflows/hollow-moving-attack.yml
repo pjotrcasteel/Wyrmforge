@@ -63,12 +63,15 @@ jobs:
           garment = data["garmentRevision"]
           assert data["shortJacketNotCoat"] and garment["raggedUpperThighHem"]
           assert garment["originalBodyAndLegsPreserved"]
+          assert garment["waistLengthTatteredNotLongCoat"]
           assert garment["removedLongClothVertices"] > 0
           assert len(data["garmentComparisons"]) == 2
           assert min(data["garmentSilhouetteDifferencePixels"].values()) > 10
           for item in data["garmentComparisons"]:
               assert (file.parent/item).is_file()
           assert data["sourceAttack"]["diagonalClawRake"]
+          assert data["sourceAttack"]["realTwoBoneIKClaw"]
+          assert len(data["sourceAttack"]["authoredClawTargets"]) >= 8
           assert data["sourceAttack"]["impactAtFrame"] == 7
           assert data["attackPoses"] == 16 and data["attackFps"] == 12
           assert data["previewFps"] == 24 and data["frames"] == 56
@@ -82,6 +85,19 @@ jobs:
               assert (file.parent/item).is_file()
           PY
 
+      - name: Encode phone-friendly MP4 approval reviews (not just GIF)
+        run: |
+          command -v ffmpeg
+          for scenario in running-strike pass-by-turn-and-chase; do
+            left="artifacts/hollow-moving-strike/standard/standard-${scenario}-S.gif"
+            right="artifacts/hollow-moving-strike/standard/standard-${scenario}-E.gif"
+            output="artifacts/hollow-moving-strike/standard/standard-${scenario}-phone-review.mp4"
+            ffmpeg -hide_banner -loglevel error -y -i "$left" -i "$right" \
+              -filter_complex "[0:v]fps=24,scale=576:656:flags=neighbor[a];[1:v]fps=24,scale=576:656:flags=neighbor[b];[a][b]hstack=inputs=2,format=yuv420p[out]" \
+              -map "[out]" -c:v libx264 -movflags +faststart -crf 20 "$output"
+            test -s "$output"
+          done
+
       - name: Upload source blend actions and animated owner review
         if: always()
         uses: actions/upload-artifact@v4
@@ -90,6 +106,7 @@ jobs:
           path: |
             artifacts/hollow-moving-strike/standard/*.blend
             artifacts/hollow-moving-strike/standard/*.gif
+            artifacts/hollow-moving-strike/standard/*.mp4
             artifacts/hollow-moving-strike/standard/*.png
             artifacts/hollow-moving-strike/standard/*.json
           if-no-files-found: warn
