@@ -6,12 +6,14 @@ on:
     paths:
       - 'tools/sprite-lab/author-hollow-moving-attack.py'
       - 'tools/sprite-lab/author-hollow-attack-motion.py'
+      - 'tools/sprite-lab/hollow-source-embers.py'
       - '.github/workflows/hollow-moving-attack.yml'
   pull_request:
     branches: [main]
     paths:
       - 'tools/sprite-lab/author-hollow-moving-attack.py'
       - 'tools/sprite-lab/author-hollow-attack-motion.py'
+      - 'tools/sprite-lab/hollow-source-embers.py'
       - '.github/workflows/hollow-moving-attack.yml'
   workflow_dispatch:
 
@@ -54,6 +56,12 @@ jobs:
           assert data["capeFree"] and data["3dSkinned"]
           assert data["preflightRigMatched"] and data["legGaitContinuousDuringAttack"]
           assert data["attackUninterruptedByTurn"]
+          assert data["attackPoses"] == 16 and data["attackFps"] == 12
+          assert data["previewFps"] == 24 and data["frames"] == 56
+          assert data["sourceEmissionOnSkinnedMesh"]
+          assert min(data["sourceFireRegionVertices"][k] for k in ("eye-left","eye-right","open-mouth")) >= 3
+          assert len(data["verifiedFirePixels"]) == 4
+          assert all(v > 3 for v in data["verifiedFirePixels"].values())
           assert not data["runtimeIntegrated"] and not data["ownerApproved"]
           assert len(data["renders"]) == 4
           for item in data["renders"]:
