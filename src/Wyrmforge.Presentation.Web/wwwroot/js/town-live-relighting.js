@@ -48,7 +48,7 @@ function authoritativeLighting(scene, query) {
         school: scene.dataset.nexusSchool ?? 'none',
         strength,
         isolation,
-        mode: resolveTownPreviewMode(scene, query, window.wyrmforgeTownLighting?.getState()),
+        environmentMode: resolveTownPreviewMode(scene, query, window.wyrmforgeTownLighting?.getState()),
         neutralMagic: query.get('townMagicWhite') === '1',
     };
 }

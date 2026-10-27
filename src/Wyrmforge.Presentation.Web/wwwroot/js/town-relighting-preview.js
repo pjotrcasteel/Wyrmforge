@@ -16,7 +16,7 @@ import { createTownDomainFixtures, configureTownLightDomains, TOWN_LIGHT_ISOLATI
 import { TOWN_EMISSION_PLATES, TOWN_APERTURE_PLATES, emissionMaskPixels, commonAperturePixels } from './town-emission-masks.js';
 import { liftTownReferencePixels } from './town-building-neutral-albedo.js';
 import { clipTownNightSilhouette } from './town-night-silhouette.js';
-import { townDomainSnapshot } from './town-preview-state.js';
+import { townDomainSnapshot, applyTownPreviewEnvironment } from './town-preview-state.js';
 import { projectTownCitizens, TOWN_CITIZEN_ART_WIDTH, TOWN_CITIZEN_ART_HEIGHT } from './town-citizen-gpu-bridge.js';
 
 export const TOWN_PREVIEW_SOURCE = 'art/town/day-active.webp';
@@ -343,7 +343,7 @@ async function registerTownEmissionMasks(engine, ensureAlive = () => {}) {
 /** The only side effect is an isolated canvas, never live Town runtime. */
 export async function initializeTownPreview(canvas, { wellV4 = false, domains = false, unlocks = null,
     school = 'none', strength = .16, isolation = 'combined', neutralMagic = false,
-    sourceMode = 'night', exposure = 1 } = {}) {
+    sourceMode = 'night', exposure = 1, environmentMode = 'night' } = {}) {
     if (states.has(canvas)) return;
     // The full Town scene is ~1000–1700 CSS px wide on portrait phones.
 // The previous 780px cap discarded more than half of the authored detail
@@ -352,7 +352,7 @@ export async function initializeTownPreview(canvas, { wellV4 = false, domains = 
 const engine = new LightingEngine(canvas, {
         shadowViews: 8, maxLights: domains ? 32 : 8, maxFramebufferWidth: TOWN_ART_SIZE[0],
     });
-    const state = { engine, mode: 'night', lamps: true, offset: 0, npcEnabled: true,
+    const state = { engine, mode: environmentMode, environmentMode, diagnosticMode: null, lamps: true, offset: 0, npcEnabled: true,
         npcProgress: 0, paving: 'neutral', view: 'lit', citizens: null,
         wellV4: wellV4 === true, domains: domains === true,
         unlocks: unlocks ?? { nexusUnlocked: false, forgeUnlocked: false, codexUnlocked: false, hallUnlocked: false },
@@ -460,6 +460,7 @@ export function configureTownPreview(canvas, options) {
     const state = states.get(canvas);
     if (!state?.alive || !state.manifest) return;
     Object.assign(state, options);
+    applyTownPreviewEnvironment(state, options);
     if (!['day', 'night', 'zero'].includes(state.mode) ||
         !Number.isFinite(state.offset) || Math.abs(state.offset) > 250 ||
         !['source', 'neutral'].includes(state.paving) ||

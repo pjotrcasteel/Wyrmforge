@@ -43,3 +43,18 @@ export function townDomainSnapshot(manifest, {
     // and zero still disable ambient, every local source and all emission.
     return { snapshot, effectiveMode };
 }
+
+/** Device time updates never reset an explicit temporary lighting inspector. */
+export function applyTownPreviewEnvironment(state, options) {
+    const valid = value => ['day','night','zero'].includes(value);
+    if (Object.hasOwn(options,'environmentMode')) {
+        if (!valid(options.environmentMode)) throw new TypeError('Invalid authoritative Town environment');
+        state.environmentMode=options.environmentMode;
+    }
+    if (Object.hasOwn(options,'mode')) {
+        if (options.mode!==null && !valid(options.mode)) throw new TypeError('Invalid diagnostic Town environment');
+        state.diagnosticMode=options.mode;
+    }
+    state.mode=state.diagnosticMode ?? state.environmentMode;
+    return state.mode;
+}

@@ -82,3 +82,15 @@ test('All ten exact JPEG uploads are hash pinned and never falsely approved as r
         assert.equal(bytes[0],255);assert.equal(bytes[1],216);
     }
 });
+
+
+test('Live citizen/clock updates cannot erase zero/day inspector state; clearing it resumes actual device time', async () => {
+    const {applyTownPreviewEnvironment}=await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/town-preview-state.js');
+    const state={environmentMode:'night',diagnosticMode:null};
+    assert.equal(applyTownPreviewEnvironment(state,{environmentMode:'day'}),'day');
+    assert.equal(applyTownPreviewEnvironment(state,{mode:'zero'}),'zero');
+    assert.equal(applyTownPreviewEnvironment(state,{environmentMode:'night'}),'zero');
+    assert.equal(applyTownPreviewEnvironment(state,{}),'zero');
+    assert.equal(applyTownPreviewEnvironment(state,{mode:null}),'night');
+    assert.throws(()=>applyTownPreviewEnvironment(state,{environmentMode:'invalid'}),/authoritative/);
+});
