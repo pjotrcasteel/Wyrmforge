@@ -141,13 +141,20 @@ def key_sequence(turn_after_impact):
         # EVERY attack phase. No full-body switch to planted 'attack' atlas.
         for bone in rig.pose.bones:
             name = bone.name
-            original = attack_frames[0][name]
-            travel = walk_frames[walk_index][name] @ baseline[name].inverted()
-            moving = travel @ original
-            # Upper attack rides on source locomotion. All legs, pelvis,
-            # cloth, and lower-body support remain driven by the real gait.
-            result = blend_matrix(moving, attack_frames[strike_index][name], attack_alpha) \
-                if active and name in UPPER else moving
+            # Use the EXACT actual source gait. The earlier preview
+            # incorrectly multiplied the walk onto an idle REACH pose,
+            # making every running frame look like a permanent attack.
+            # Rest transforms were verified compatible above.
+            moving = walk_frames[walk_index][name]
+            # Only the upper skeletal delta is additive to locomotion.
+            # Never replace the walking pelvis, feet, cloth or hand support
+            # with a full-body attack pose.
+            if active and name in UPPER:
+                attack_delta = attack_frames[strike_index][name] @ attack_frames[0][name].inverted()
+                swung = attack_delta @ moving
+                result = blend_matrix(moving, swung, attack_alpha)
+            else:
+                result = moving
             bone.matrix_basis = result
             bone.rotation_mode = "QUATERNION"
             bone.keyframe_insert("location", frame=frame, group=name)
@@ -175,6 +182,7 @@ report = {"model": args.variant, "capeFree": True, "sourceWalk": str(WALK.relati
           "sourceStrike": str(variant_source.relative_to(ROOT)),
           "3dSkinned": True, "legGaitContinuousDuringAttack": True,
           "attackUninterruptedByTurn": True, "sourceAttack": attack_report,
+          "basePoseExactlyAuthoredWalk": True, "attackOnlyUpperBodyAdditive": True,
           "frames": COUNT, "attackPoses": STRIKE_POSES, "attackFps": 12,
           "previewFps": 24, "sourceEmissionOnSkinnedMesh": True,
           "sourceFireRegionVertices": source_regions,
