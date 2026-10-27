@@ -33,7 +33,7 @@ jobs:
           python3 tools/development/verify_web_assets.py
 
       - name: Use preinstalled .NET 10
-        run: dotnet --list-sdks | grep -Eq '^10\\.0\\.' || { echo "::error::Missing .NET 10 SDK"; exit 1; }
+        run: dotnet --list-sdks | grep -Eq '^10\.0\.' || { echo "::error::Missing .NET 10 SDK"; exit 1; }
 
       - name: Regenerate required source-backed art
         run: |
@@ -80,7 +80,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Use preinstalled .NET 10
-        run: dotnet --list-sdks | grep -Eq '^10\\.0\\.' || { echo "::error::Missing .NET 10 SDK"; exit 1; }
+        run: dotnet --list-sdks | grep -Eq '^10\.0\.' || { echo "::error::Missing .NET 10 SDK"; exit 1; }
 
       - name: Validate browser test shard coverage
         run: python3 -m unittest discover -s tools/development -p 'test_*.py'
