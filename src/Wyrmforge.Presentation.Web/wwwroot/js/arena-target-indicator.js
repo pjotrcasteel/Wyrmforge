@@ -40,61 +40,148 @@ function indicator(kind, x, y, radius) {
     };
 }
 
-export function drawTargetIndicator(ctx, marker, pass = 'ground') {
-    if (!marker) return;
-    const { x, y, rx, ry, kind } = marker;
-    const isObject = kind === 'object';
-    // Silver/ivory for a hostile, muted amber for a breakable. Neither uses
-    // danger-telegraph red, spell emissive orange, bloom or flashing animation.
-    const color = isObject ? '#ddc18b' : '#cbdde4';
-    ctx.save();
-    ctx.translate(x, y);
+// Target selection is an in-world magical seal, not an attack telegraph.
+// All schools and object kinds share the same desaturated, near-ivory ink.
+const SIGIL_COLOR = '#d9cfee';
 
-    if (pass === 'ground') {
-        ctx.beginPath();
-        ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
-        ctx.fillStyle = isObject ? 'rgba(144,104,49,.12)' : 'rgba(124,160,172,.09)';
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(2,3,7,.85)';
-        ctx.lineWidth = 4;
-        ctx.stroke();
-        ctx.strokeStyle = color;
-        ctx.globalAlpha = .6;
-        ctx.lineWidth = 1.8;
-        ctx.stroke();
-    } else if (pass === 'contrast') {
-        // Re-establish only a thin footprint edge above the night mask.
-        // A solid overlay across the monster would obscure animation pixels.
-        ctx.strokeStyle = 'rgba(2,3,7,.9)';
-        ctx.lineWidth = 3.4;
-        ctx.beginPath();
-        ctx.moveTo((rx + 1) * Math.cos(.16), (ry + 1) * Math.sin(.16));
-        ctx.ellipse(0, 0, rx + 1, ry + 1, 0, .16, Math.PI - .16);
-        ctx.moveTo((rx + 1) * Math.cos(Math.PI + .16), (ry + 1) * Math.sin(Math.PI + .16));
-        ctx.ellipse(0, 0, rx + 1, ry + 1, 0, Math.PI + .16, Math.PI * 2 - .16);
-        ctx.stroke();
-        ctx.strokeStyle = color;
-        ctx.globalAlpha = .94;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo((rx + 1) * Math.cos(.16), (ry + 1) * Math.sin(.16));
-        ctx.ellipse(0, 0, rx + 1, ry + 1, 0, .16, Math.PI - .16);
-        ctx.moveTo((rx + 1) * Math.cos(Math.PI + .16), (ry + 1) * Math.sin(Math.PI + .16));
-        ctx.ellipse(0, 0, rx + 1, ry + 1, 0, Math.PI + .16, Math.PI * 2 - .16);
-        ctx.stroke();
+// Small hand-drawn Futhark-inspired strokes, not text characters or a font.
+// Normalized coordinates keep glyphs legible on high-DPI mobile canvases.
+const RUNES = Object.freeze([
+    [[-0.45, -1, -0.45, 1], [-0.45, -.85, .55, -.48], [-.45, -.15, .45, .15]],
+    [[-.5, -1, -.5, 1], [-.5, -1, .48, -.1], [.48, -.1, -.5, .18]],
+    [[-.52, -1, .48, 1], [.48, -1, -.52, 1]],
+    [[0, -1, 0, 1], [-.65, -.5, 0, -.05], [.65, -.5, 0, -.05]],
+    [[-.5, -1, .52, -.15], [.52, -.15, -.5, .6], [-.5, .6, .5, 1]],
+    [[-.55, -.9, .5, -.9], [0, -.9, 0, 1], [-.48, -.25, .45, -.25]],
+    [[-.55, -1, -.55, 1], [-.55, -.1, .53, -.1], [.53, -.1, .53, .8]],
+    [[-.5, -1, .5, 1], [.5, -1, -.5, 1], [0, -.55, 0, .6]],
+]);
 
-        // Four fixed notches remain recognizable on an animated/dark terrain.
-        // No animation, framebuffer readback, sprite edits or GPU emitters.
+// Empty gaps let the sigil fade into the cobbles without becoming another
+// concentric AoE circle. No full ring, warning-color fill or cardinal reticle.
+const RING_ARCS = Object.freeze([
+    [.12, 1.07], [1.49, 2.56], [2.94, 3.94], [4.36, 5.38], [5.68, 6.06],
+]);
+
+function strokeArcSegments(ctx, rx, ry, count) {
+    for (let i = 0; i < count; i++) {
+        const [start, end] = RING_ARCS[i];
         ctx.beginPath();
-        ctx.moveTo(-rx - 5, 0);
-        ctx.lineTo(-rx + 3, 0);
-        ctx.moveTo(rx - 3, 0);
-        ctx.lineTo(rx + 5, 0);
-        ctx.moveTo(0, -ry - 4);
-        ctx.lineTo(0, -ry + 2);
-        ctx.moveTo(0, ry - 2);
-        ctx.lineTo(0, ry + 4);
+        ctx.ellipse(0, 0, rx, ry, 0, start, end);
         ctx.stroke();
     }
+}
+
+function strokeRune(ctx, rune, size) {
+    ctx.beginPath();
+    for (const [x1, y1, x2, y2] of rune) {
+        ctx.moveTo(x1 * size, y1 * size);
+        ctx.lineTo(x2 * size, y2 * size);
+    }
+    ctx.stroke();
+}
+
+function drawRuneInscriptions(ctx, marker) {
+    const { rx, ry, kind } = marker;
+    const count = kind === 'boss' ? 10 : kind === 'object' ? 3 : 6;
+    const size = Math.min(5.2, Math.max(2.8, rx * .13));
+    const offset = kind === 'object' ? .4 : .21;
+    for (let index = 0; index < count; index++) {
+        const angle = -Math.PI + offset + (index + .5) * (Math.PI * 2 / count);
+        const x = Math.cos(angle) * rx * .83;
+        const y = Math.sin(angle) * ry * .81;
+        // A narrower glyph height follows the foreshortened ground plane.
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(1, .62);
+        strokeRune(ctx, RUNES[index % RUNES.length], size);
+        ctx.restore();
+    }
+}
+
+// The selection light is ONE standard emitter within the shared GPU frame.
+// Its CURRENT Canvas compatibility view comes from the existing arena spell
+// light-spill/night adapters; this module never paints an independent light.
+// Explicit G1/G5 zero-light validation keeps every world pixel unlit.
+export function targetSelectionLightEmitter(marker, frame) {
+    if (!marker || !frame || marker.kind === 'object' ||
+        !Number.isFinite(marker.x) || !Number.isFinite(marker.y)) return null;
+    const zeroLight = frame.environment?.ambient === 0 && frame.environment?.emission === false &&
+        (frame.lights ?? []).every(light => !light.enabled || light.intensity === 0);
+    if (zeroLight) return null;
+
+    const boss = marker.kind === 'boss';
+    return {
+        id: 'target-selection:underlight',
+        ownerId: 'target-selection',
+        type: 'point',
+        enabled: true,
+        position: [marker.x, marker.y - Math.min(marker.ry, 16), 2],
+        direction: [0, 0, -1],
+        color: SIGIL_COLOR,
+        intensity: boss ? .10 : .12,
+        range: Math.min(62, Math.max(26, marker.rx * 1.08)),
+        coneAngle: Math.PI / 4,
+        penumbra: 0,
+        castsShadow: false,
+        priority: 1,
+    };
+}
+
+// Bridge the SAME emitter, without a second lighting algorithm, to the
+// existing Canvas Hunt adapter while G5's universal GPU integration lands.
+export function targetSelectionCanvasLight(emitter) {
+    if (!emitter) return [];
+    return [{
+        x: emitter.position[0],
+        y: emitter.position[1],
+        radius: emitter.range,
+        strength: emitter.intensity,
+        type: 'target-selection',
+        family: 'selection',
+        center: [217, 207, 238],
+        edge: [99, 90, 116],
+        surge: false,
+    }];
+}
+
+export function drawTargetIndicator(ctx, marker, pass = 'ground', seconds = 0, reducedMotion = false) {
+    if (!marker || (pass !== 'ground' && pass !== 'contrast')) return;
+
+    const isObject = marker.kind === 'object';
+    const baseAlpha = isObject ? .26 : marker.kind === 'boss' ? .46 : .40;
+    const breath = reducedMotion || !Number.isFinite(seconds) ? 1 : 1 + Math.sin(seconds * .9) * .035;
+
+    ctx.save();
+    ctx.translate(marker.x, marker.y);
+    ctx.strokeStyle = SIGIL_COLOR;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    if (pass === 'ground') {
+        // The world/night lighting naturally darkens this subtle ground trace.
+        ctx.globalAlpha = baseAlpha * .44;
+        ctx.lineWidth = 1;
+        strokeArcSegments(ctx, marker.rx, marker.ry, isObject ? 3 : 5);
+    } else {
+        // Physical underlight is owned by the shared GPU emitter, not drawn here.
+        ctx.globalAlpha = Math.min(.5, baseAlpha * breath);
+        ctx.shadowColor = 'rgba(210,197,240,.20)';
+        ctx.shadowBlur = isObject ? 1.2 : 2.2;
+        ctx.lineWidth = isObject ? .9 : 1.15;
+        strokeArcSegments(ctx, marker.rx, marker.ry, isObject ? 3 : 5);
+        ctx.shadowBlur = 0;
+        ctx.lineWidth = isObject ? .85 : 1;
+        drawRuneInscriptions(ctx, marker);
+
+        // One incomplete inner arc gives bosses a hint of a ritual seal.
+        if (marker.kind === 'boss') {
+            ctx.globalAlpha *= .38;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, marker.rx * .72, marker.ry * .7, 0, .45, 2.35);
+            ctx.stroke();
+        }
+    }
+
     ctx.restore();
 }

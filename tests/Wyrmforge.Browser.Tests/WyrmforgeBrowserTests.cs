@@ -2579,6 +2579,69 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
+    public async Task Mobile_LiveHunt_ArcaneTargetSigilStyleProof_IsLegibleAndSchoolNeutral(int width, int height)
+    {
+        await Page.SetViewportSizeAsync(width, height);
+        await OpenAsync();
+        await EnterFirstTrailAsync();
+        await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
+
+        // Art-direction contact sheet on top of a REAL running Gothic-night Hunt.
+        // Separate from actual targeting selection tests: these three fixtures only
+        // expose the exact production rendering functions for visual review.
+        var proof = await Page.EvaluateAsync<JsonElement>(@"async () => {
+            const { drawTargetIndicator } = await import('./js/arena-target-indicator.js');
+            const game = document.querySelector('canvas.game-canvas');
+            if (!game) return { ok: false, colored: 0 };
+            const bounds = game.getBoundingClientRect();
+            const overlay = document.createElement('canvas');
+            overlay.id = 'arcane-target-sigil-qc';
+            overlay.width = game.width;
+            overlay.height = game.height;
+            Object.assign(overlay.style, {
+                position: 'absolute',
+                left: game.offsetLeft + 'px',
+                top: game.offsetTop + 'px',
+                width: bounds.width + 'px',
+                height: bounds.height + 'px',
+                pointerEvents: 'none',
+                zIndex: '100',
+            });
+            game.parentElement.style.position = 'relative';
+            game.parentElement.appendChild(overlay);
+
+            const ctx = overlay.getContext('2d', { willReadFrequently: true });
+            const width = overlay.width, height = overlay.height;
+            const fixtures = [
+                { kind: 'enemy', x: width * .23, y: height * .46, rx: 24, ry: 9 },
+                { kind: 'boss', x: width * .52, y: height * .61, rx: 58, ry: 21 },
+                { kind: 'object', x: width * .80, y: height * .46, rx: 20, ry: 7 },
+            ];
+            const labels = ['ENEMY', 'BOSS', 'OBJECT'];
+            for (let index = 0; index < fixtures.length; index++) {
+                const marker = fixtures[index];
+                drawTargetIndicator(ctx, marker, 'ground', 0, true);
+                drawTargetIndicator(ctx, marker, 'contrast', 0, true);
+                ctx.font = '10px system-ui';
+                ctx.textAlign = 'center';
+                ctx.fillStyle = '#dcd4ee';
+                ctx.fillText(labels[index], marker.x, marker.y - marker.ry - 16);
+            }
+            const pixels = ctx.getImageData(0, 0, width, height).data;
+            let colored = 0;
+            for (let i = 3; i < pixels.length; i += 4) if (pixels[i] > 0) colored++;
+            return { ok: true, colored };
+        }");
+        Assert.IsTrue(proof.GetProperty("ok").GetBoolean());
+        Assert.IsGreaterThan(180, proof.GetProperty("colored").GetInt32(),
+            "Neutral target sigils must draw visible arc and rune pixels on the live portrait Hunt.");
+
+        await ScreenshotAsync($"mobile-arcane-target-sigil-style-qc-{width}.png");
+    }
+
+    [TestMethod]
     public async Task Mobile_FirstTrail_RendersActiveCombatWithoutPageOverflow()
     {
         Directory.CreateDirectory(ArtifactDirectory);
