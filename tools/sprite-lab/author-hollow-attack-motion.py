@@ -10,7 +10,7 @@ replaying the walking loop under an attack label.
 from __future__ import annotations
 
 import math
-from mathutils import Quaternion, Vector
+from mathutils import Matrix, Quaternion, Vector
 
 FRAME_COUNT = 16
 FPS = 12
@@ -59,7 +59,71 @@ def author_attack_action(bpy, rig, variant="standard"):
             pb.location.copy(), pb.rotation_quaternion.copy(), pb.scale.copy()
         )
 
-    action = bpy.data.actions.new(f"Hollow_{variant}_Ferocious_Diagonal_Claw_v5")
+    action = bpy.data.actions.new(f"Hollow_{variant}_Feral_IK_Claw_v6")
+    # Native two-bone IK produces a REAL 3D hand trajectory around the head
+    # and across the victim, instead of rotating two full arms in place.
+    rest = {bone.name:bone for bone in rig.data.bones}
+    hands = []
+    hand_side = "R" if variant == "one-arm-left" else "L"
+    lead_upper, lead_fore, lead_hand = (
+        f"upper_arm.{hand_side}", f"forearm.{hand_side}", f"hand.{hand_side}"
+    )
+    for name in (lead_upper, lead_fore, lead_hand):
+        if name not in rest:
+            raise ValueError(f"Missing authentic source arm bone: {name}")
+
+    def orient_bone(name, start, end):
+        direction = end-start
+        if direction.length < 1e-6:
+            raise ValueError(f"Degenerate claw bone vector: {name}")
+        bone = rest[name]
+        original = bone.tail_local - bone.head_local
+        orient = original.rotation_difference(direction)
+        matrix = (orient.to_matrix() @ bone.matrix_local.to_3x3()).to_4x4()
+        matrix.translation = start
+        return matrix
+
+    def place_claw(windup, strike, recoil):
+        # Animated in actual source rig coordinates. No 2D sprite rotation,
+        # no synthetic extra limb, no teleportation or fake impact effect.
+        bpy.context.view_layer.update()
+        upper = rig.pose.bones[lead_upper]
+        shoulder = upper.head.copy()
+        forearm = rig.pose.bones[lead_fore]
+        original_wrist = rig.pose.bones[lead_hand].head.copy()
+        sign = 1 if hand_side == "L" else -1
+        length_a, length_b = rest[lead_upper].length, rest[lead_fore].length
+        reach = length_a + length_b
+        # A predator chambers near its ear, then tears DOWN AND IN across
+        # the chest toward the hunter. The strike is not a straight reach.
+        chamber = shoulder + Vector((sign*.13, .12, reach*.50))
+        slash = shoulder + Vector((-sign*.19, -.24, reach*.07))
+        follow = shoulder + Vector((-sign*.30, -.21, -reach*.35))
+        target = original_wrist.lerp(chamber, windup)
+        target = target.lerp(slash, strike)
+        target = target.lerp(follow, recoil * .40)
+        line = target-shoulder
+        near = abs(length_a-length_b)+.0005
+        distance = min(max(line.length, near), reach-.003)
+        axis = line.normalized()
+        clamped = shoulder + axis*distance
+        tangent = Vector((sign, -.35, .65))
+        tangent -= axis * tangent.dot(axis)
+        if tangent.length < .0001:
+            tangent = Vector((0,0,1))
+        tangent.normalize()
+        along = (length_a*length_a-length_b*length_b+distance*distance)/(2*distance)
+        elbow = shoulder + axis*along + tangent*math.sqrt(max(0,length_a*length_a-along*along))
+        upper.matrix = orient_bone(lead_upper,shoulder,elbow)
+        bpy.context.view_layer.update()
+        forearm.matrix = orient_bone(lead_fore,elbow,clamped)
+        bpy.context.view_layer.update()
+        # At the tip, claw points forward/down on impact, then flexes back.
+        tip = clamped + (clamped-elbow).normalized()*rest[lead_hand].length
+        rig.pose.bones[lead_hand].matrix = orient_bone(lead_hand,clamped,tip)
+        bpy.context.view_layer.update()
+        return tuple(round(v,4) for v in clamped)
+
     rig.animation_data.action = action
     # Arm anatomy determines which surviving claw performs the impact.
     lead = "R" if variant == "one-arm-left" else "L"
@@ -123,9 +187,12 @@ def author_attack_action(bpy, rig, variant="standard"):
             # Keep the torso upright; the CLAW supplies the speed and angular
             # contrast, not an implausible full-body ground slam.
             # Lower limb joints remain exactly the genuine source skin support.
-            pb.keyframe_insert("location", frame=frame, group=name)
-            pb.keyframe_insert("rotation_quaternion", frame=frame, group=name)
-            pb.keyframe_insert("scale", frame=frame, group=name)
+        if max(windup, strike, recoil) > .02:
+            hands.append({"frame": frame, "clawTarget": place_claw(windup,strike,recoil)})
+        for pb in rig.pose.bones:
+            pb.keyframe_insert("location", frame=frame, group=pb.name)
+            pb.keyframe_insert("rotation_quaternion", frame=frame, group=pb.name)
+            pb.keyframe_insert("scale", frame=frame, group=pb.name)
     bpy.context.scene.frame_start = 1
     bpy.context.scene.frame_end = FRAME_COUNT
     bpy.context.scene.frame_set(1)
@@ -151,4 +218,6 @@ def author_attack_action(bpy, rig, variant="standard"):
         "impactAtFrame": 7,
         "diagonalClawRake": True,
         "chestHeightNotGroundSlam": True,
+        "realTwoBoneIKClaw": True,
+        "authoredClawTargets": hands,
     }
