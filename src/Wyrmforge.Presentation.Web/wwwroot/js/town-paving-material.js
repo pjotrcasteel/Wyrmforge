@@ -2,15 +2,17 @@
 // This is a gated LAB experiment. Do not mistake a painted source for final
 // neutral albedo; its highlights must still be separately authored out.
 export const PLAZA_PAVING_POLYGON = Object.freeze([
-    [552, 375], [706, 361], [729, 382], [844, 386], [960, 384],
+    [552, 375], [706, 361], [741, 368], [762, 338], [797, 225],
+    [869, 225], [906, 337], [933, 365], [960, 384],
     [1023, 389], [1080, 422], [1104, 473], [1120, 531],
     [1110, 589], [1130, 640], [1140, 682], [1120, 709],
-    [1042, 700], [1004, 727], [943, 760], [770, 778],
+    [1042, 700], [1004, 727], [977, 747], [1015, 941],
+    [665, 941], [695, 747],
     [624, 746], [556, 722], [532, 670], [523, 622],
     [525, 548], [516, 483], [521, 423],
 ]);
 
-export const TOWN_PAVING_BOUNDS = Object.freeze([516, 361, 624, 417]);
+export const TOWN_PAVING_BOUNDS = Object.freeze([516, 225, 624, 716]);
 const SIZE = Object.freeze([1672, 941]);
 
 export function validateTownPavingPolygon(polygon = PLAZA_PAVING_POLYGON) {

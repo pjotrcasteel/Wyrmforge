@@ -186,3 +186,8 @@ retaining a cut-paper halo over the dry ground. Added **T2-only** tighter alpha 
 traced against original full-resolution pixels. The production `CUTOUTS` array and
 collision map remain unchanged. Both the dry-ground exclusion and raised foreground
 use the same corrected paths, so the halo cannot be cured in only one of the layers.
+
+Extended only the dry ground material mask along the existing World Gate stair and
+southern approach coordinates, so the painted wet streaks do not continue through
+those two public routes. The navigation/collision data itself is untouched. The
+75 focused Town tests remain green after the expanded material bounds.
