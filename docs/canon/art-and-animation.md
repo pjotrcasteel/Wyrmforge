@@ -982,3 +982,20 @@ A minority of cape-free Hollowed should visibly **explode into separate bones**,
 The shatter uses recognisable individually shaded skull/eye sockets, jaw, ribcage, spine, pelvis and leg/arm fragments; bone pieces eject, tumble, hit the floor and remain in a grounded pile until normal corpse fade. Keep the wounded silhouette truthful: no phantom left-arm bones when the arm is missing, and shortened damaged bones remain shortened. A compact dust impact is decorative, never a damaging projectile. Reduced-motion mode skips scattering and displays a settled pile immediately. All masks are small cacheable Canvas sprite sources with nearest-neighbor pixels for mobile/WebView; no CSS overlay, no unrelated actor redraw and no need to preload any new large atlas.
 
 Visual inspiration (not source assets or copies): the bone-based attacks of classic [Castlevania skeletons](https://strategywiki.org/wiki/Castlevania/Enemies) and variety of differentiated [Diablo monster deaths](https://di.diablowiki.net/Monster). The skull/bone pixel masks and trajectories are original WyrmForge presentation art. Implemented in `js/hollow-bone-burst.js`, integrated into the existing Hollowed render path, with the `sprite-lab/hollow-bone-burst-review.html` mobile/desktop QC route and bone-burst regression tests. **Production approval requires passing real viewport captures and actual Hunt playback**, not merely passing unit tests or creating a PR.
+
+
+## Universal animation foundation — AN0–AN6 (27 October 2026)
+
+Use the single shared sprite animation public contract and existing semantic
+compositor; new bodies supply profiles and source-authored clips. C# owns world
+movement, target intent, collision, damage, death and saves. Animation contact
+kinematics never introduces another gameplay physics or AI engine.
+
+A cape-free waist-ragged Hollowed proof must show supported gait, planted/stepped
+claw, distinct impulse/recoil, committed contact while its target passes behind,
+and weight-bearing reorientation/chase. Real missing limbs persist across
+clips. Source/atlas/phone proof and existing GPU material acceptance are separate
+checks. Mathematical foot anchors alone do not prove the skin or a convincing
+performance. [Gates](roadmap.md#an0an6--universal-character-animation-foundation-owner-contract-27-october-2026)
+· [Current candidate status](../animation/AN-status.md). Keep the draft PR unmerged
+until the owner explicitly accepts the final visual proof.

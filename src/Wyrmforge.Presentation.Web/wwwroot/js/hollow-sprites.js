@@ -1,4 +1,5 @@
 // Presentation only: C# remains authoritative for movement, contact damage and death.
+import { createCreatureAnimationAssets } from './creature-animation-assets.js';
 import { createSpriteAnimationState, updateSpriteAnimation } from './sprite-animation.js';
 import { createSpriteLayerCompositor } from './sprite-layer-compositor.js';
 import { HOLLOW_RUN, sampleHollowRun } from './hollow-motion.js';
@@ -10,6 +11,8 @@ import { createHollowInjuryDeathAssets, selectHollowDeathInjury } from './hollow
 import { createHollowFractureAssets, eligibleHollowFracture } from './hollow-fracture.js';
 // The rejected procedural bone-burst proof is intentionally lab-only.
 // Production deaths exclusively use the Hollowed's source-authored 3D atlases.
+const foundationEnabled=new URLSearchParams(globalThis.location?.search??'').get('animationFoundation')==='1';
+const foundation=createCreatureAnimationAssets(new URL('../art/review/animation-foundation/',import.meta.url));
 const base = new URL('../art/enemies/hollow-rigged/', import.meta.url);
 const rows = ['N','NE','E','SE','S','SW','W','NW'];
 const headings = ['E','SE','S','SW','W','NW','N','NE'];
@@ -22,6 +25,7 @@ const fracture=createHollowFractureAssets(new URL('death/fracture/',base));
 const injuryLabReview=hollowInjuryLabReview();
 let manifest, loading, profile, compositor;
 export function preloadHollowSprites() {
+    if(foundationEnabled)void foundation.preload();
     return loading ??= loadHollowSprites();
 }
 // Optional 3D death art never blocks normal enemy animation startup.
@@ -115,7 +119,7 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
             pose.direction=hollowDirection(dx,dy,pose.direction);
         }
         if(distance>=64){pose.distance=0;pose.visualDistance=0;pose.runSpeed=null;pose.lastSampleAge=null;
-            pose.lastMove=-1;pose.attackAt=null;pose.animation=createSpriteAnimationState();}
+            pose.lastMove=-1;pose.attackAt=null;pose.animation=createSpriteAnimationState();pose.foundationAnimation=null;pose.foundationSample=null;}
         pose.x=enemy.x;pose.y=enemy.y;
         const locomotion=sampleHollowRun(pose,distance,dt,advancing);
         if(pose.attackAt!=null&&pose.age-pose.attackAt>=16/12)pose.attackAt=null;
@@ -137,6 +141,17 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
         pose.direction=sample.direction;pose.clip=sample.clip;
         pose.frame=!locomotion.moving&&sample.clip==='walk'&&!reducedMotion?pose.idleFrame:sample.frame;
         pose.baseFrame=sample.baseFrame;pose.layered=sample.layered;
+        // Candidate cutover is explicit and anatomy-safe. Healthy proof never
+        // substitutes a missing/broken limb; legacy gameplay/deaths stay intact.
+        if(foundationEnabled&&foundation.ready()&&pose.armVariant==='standard'&&pose.injuryVariant==='standard'){
+            pose.foundationAnimation??=createSpriteAnimationState();
+            if(pose.foundationAttackAt!==pose.attackAt&&pose.attackAt!=null)pose.foundationSequence=(pose.foundationSequence??-1)+1;
+            pose.foundationAttackAt=pose.attackAt;
+            pose.foundationSample=updateSpriteAnimation(pose.foundationAnimation,foundation.profile,{
+                entityId:id,timestamp:pose.age,travel:pose.distance,world:{x:enemy.x,y:enemy.y},direction:pose.direction,
+                moving:locomotion.moving,paused:snapshot.paused||snapshot.ended,frozen:enemy.frozen,reducedMotion,
+                action:pose.attackAt==null?null:{name:'attack',token:`proximity-${id}-${pose.attackAt}`,sequence:pose.foundationSequence}});
+        }
     }
     for(const id of state.entities.keys())if(!present.has(id))state.entities.delete(id);
 }
@@ -154,6 +169,7 @@ export function drawHollowEnemy(ctx,enemy,state){
     if(Number(enemy.kind)!==0)return false;
     const pose=state.entities.get(enemy.entityId);
     if(!pose)return false;
+    if(pose.foundationSample&&foundation.draw(ctx,pose.foundationSample,enemy.x,enemy.y,enemy.radius*pose.visualScale,enemy.opacity??1))return true;
     const palette=enemy.hitFlash?'brightness(1.8) saturate(.25)':enemy.frozen?
         'sepia(1) saturate(1.7) hue-rotate(135deg)':'none';
     // Source-derived no-cape walk and reach animations own the runtime appearance.

@@ -1,0 +1,222 @@
+{
+  "schemaVersion": 2,
+  "coordinateSpace": "actor-xy-ground-z-up",
+  "unitsPerPixel": 1,
+  "maxRootOffset": 0.5,
+  "rig": {
+    "bodyPlan": "quadruped",
+    "bones": [
+      {
+        "id": "root",
+        "length": 1,
+        "rest": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "id": "front-left",
+        "parent": "root",
+        "length": 1,
+        "rest": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "id": "front-right",
+        "parent": "root",
+        "length": 1,
+        "rest": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "id": "rear-left",
+        "parent": "root",
+        "length": 1,
+        "rest": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "id": "rear-right",
+        "parent": "root",
+        "length": 1,
+        "rest": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    ],
+    "semantics": {
+      "root": "root"
+    },
+    "absentBones": [],
+    "contacts": [
+      {
+        "id": "front-left",
+        "bone": "front-left",
+        "surface": "paw"
+      },
+      {
+        "id": "front-right",
+        "bone": "front-right",
+        "surface": "paw"
+      },
+      {
+        "id": "rear-left",
+        "bone": "rear-left",
+        "surface": "paw"
+      },
+      {
+        "id": "rear-right",
+        "bone": "rear-right",
+        "surface": "paw"
+      }
+    ]
+  },
+  "facing": {
+    "directions": [
+      "E",
+      "SE",
+      "S",
+      "SW",
+      "W",
+      "NW",
+      "N",
+      "NE"
+    ]
+  },
+  "locomotion": {
+    "clip": "rest",
+    "frames": 2,
+    "fps": 12,
+    "samples": [
+      {
+        "contacts": [
+          {
+            "id": "front-left",
+            "x": -1,
+            "y": -1
+          },
+          {
+            "id": "front-right",
+            "x": 1,
+            "y": -1
+          },
+          {
+            "id": "rear-left",
+            "x": -1,
+            "y": 1
+          },
+          {
+            "id": "rear-right",
+            "x": 1,
+            "y": 1
+          }
+        ],
+        "balance": "supported"
+      },
+      {
+        "contacts": [
+          {
+            "id": "front-left",
+            "x": -1,
+            "y": -1
+          },
+          {
+            "id": "front-right",
+            "x": 1,
+            "y": -1
+          },
+          {
+            "id": "rear-left",
+            "x": -1,
+            "y": 1
+          },
+          {
+            "id": "rear-right",
+            "x": 1,
+            "y": 1
+          }
+        ],
+        "balance": "supported"
+      }
+    ],
+    "stride": 10
+  },
+  "actions": {}
+}

@@ -88,7 +88,7 @@ export function validateCreatureRigProfile(profile) {
     const directions=profile.facing?.directions;
     if(!Array.isArray(directions)||directions.length!==8||new Set(directions).size!==8)fail('eight unique facing rows required');
     if(!(profile.locomotion?.stride>0))fail('positive authored stride required');
-    const specs=[profile.locomotion,...Object.values(profile.actions??{}),...(profile.pivot?[profile.pivot]:[])];
+    const specs=[profile.locomotion,...Object.values(profile.actions??{}),...(profile.pivot?[profile.pivot]:[]),...Object.values(profile.pivots??{})];
     for(const clip of specs){
         if(!clip.clip||!Number.isSafeInteger(clip.frames)||clip.frames<1||!(clip.fps>0))fail('invalid clip dimensions/time');
         if(clip.mode==='regions'&&!clip.coupledSupport)fail('region action requires authored coupledSupport');
@@ -170,8 +170,8 @@ function updateContactAnimation(state,profile,input){
     const progress=current?Math.min(1,(state.time-state.action.started)*current.fps/current.frames):1;
     const committed=current&&progress<(current.commitUntil??0);
     const higher=spec&&(spec.priority??0)>(current?.priority??-1);
-    if(spec&&signal.sequence>state.sequence&&(!stopped||spec.terminal)&&(!current||higher||(!committed&&!current.terminal))){
-        state.action={name:signal.name,token:signal.token,started:state.time};state.sequence=signal.sequence;
+    if(spec&&signal.token!==state.lastToken&&signal.sequence>state.sequence&&(!stopped||spec.terminal)&&(!current||higher||(!committed&&!current.terminal))){
+        state.action={name:signal.name,token:signal.token,started:state.time};state.sequence=signal.sequence;state.lastToken=signal.token;
         state.actionDirection=state.facingIndex;
         // Every action is full-body unless its source declares coupled regions.
         state.contacts={};
@@ -183,20 +183,23 @@ function updateContactAnimation(state,profile,input){
     const locomotionFrame=Math.min(profile.locomotion.frames-1,Math.floor(state.phase*profile.locomotion.frames));
     const turning=!actionSpec&&target>=0&&target!==state.facingIndex;
     let pivotFrame=null;
-    if(turning&&profile.pivot&&!stopped){
+    const turnDelta=(target-state.facingIndex+12)%8-4;
+    if(turning&&state.pivotSign==null)state.pivotSign=turnDelta<0?-1:1;
+    const pivotSpec=profile.pivots?.[state.pivotSign<0?'negative':'positive']??profile.pivot;
+    if(turning&&pivotSpec&&!stopped){
         state.pivotTime+=dt;
-        const duration=profile.pivot.frames/profile.pivot.fps;
+        const duration=pivotSpec.frames/pivotSpec.fps;
         while(state.pivotTime>=duration){
             state.pivotTime-=duration;
             const delta=(target-state.facingIndex+12)%8-4;
-            state.facingIndex=(state.facingIndex+(delta<0?-1:1)+8)%8;
+            state.facingIndex=(state.facingIndex+state.pivotSign+8)%8;
             state.contacts={};
-            if(state.facingIndex===target){state.pivotTime=0;break;}
+            if(state.facingIndex===target){state.pivotTime=0;state.pivotSign=null;break;}
         }
-        pivotFrame=Math.min(profile.pivot.frames-1,Math.floor(state.pivotTime*profile.pivot.fps));
-    }else if(!turning)state.pivotTime=0;
+        pivotFrame=Math.min(pivotSpec.frames-1,Math.floor(state.pivotTime*pivotSpec.fps));
+    }else if(!turning){state.pivotTime=0;state.pivotSign=null;}
     if(actionSpec)state.facingIndex=state.actionDirection;
-    const clipSpec=actionSpec??(turning&&profile.pivot?profile.pivot:profile.locomotion);
+    const clipSpec=actionSpec??(turning&&pivotSpec?pivotSpec:profile.locomotion);
     let frame=actionSpec?Math.min(actionSpec.frames-1,Math.floor(actionProgress*actionSpec.frames)):
         pivotFrame??(input.moving?locomotionFrame:(profile.locomotion.idleFrame??locomotionFrame));
     if(stopped&&state.sample&&!actionSpec?.terminal)frame=state.sample.frame;

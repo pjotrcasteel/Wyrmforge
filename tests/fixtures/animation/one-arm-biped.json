@@ -1,0 +1,148 @@
+{
+  "schemaVersion": 2,
+  "coordinateSpace": "actor-xy-ground-z-up",
+  "unitsPerPixel": 1,
+  "maxRootOffset": 0.5,
+  "rig": {
+    "bodyPlan": "biped",
+    "bones": [
+      {
+        "id": "root",
+        "length": 1,
+        "rest": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "id": "left-foot",
+        "parent": "root",
+        "length": 1,
+        "rest": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "id": "right-foot",
+        "parent": "root",
+        "length": 1,
+        "rest": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    ],
+    "semantics": {
+      "root": "root"
+    },
+    "absentBones": [
+      "left-arm"
+    ],
+    "contacts": [
+      {
+        "id": "left-foot",
+        "bone": "left-foot",
+        "surface": "foot"
+      },
+      {
+        "id": "right-foot",
+        "bone": "right-foot",
+        "surface": "foot"
+      }
+    ]
+  },
+  "facing": {
+    "directions": [
+      "E",
+      "SE",
+      "S",
+      "SW",
+      "W",
+      "NW",
+      "N",
+      "NE"
+    ]
+  },
+  "locomotion": {
+    "clip": "rest",
+    "frames": 2,
+    "fps": 12,
+    "samples": [
+      {
+        "contacts": [
+          {
+            "id": "left-foot",
+            "x": -1,
+            "y": -1
+          },
+          {
+            "id": "right-foot",
+            "x": 1,
+            "y": -1
+          }
+        ],
+        "balance": "supported"
+      },
+      {
+        "contacts": [
+          {
+            "id": "left-foot",
+            "x": -1,
+            "y": -1
+          },
+          {
+            "id": "right-foot",
+            "x": 1,
+            "y": -1
+          }
+        ],
+        "balance": "supported"
+      }
+    ],
+    "stride": 10
+  },
+  "actions": {}
+}

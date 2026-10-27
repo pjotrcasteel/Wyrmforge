@@ -72,7 +72,8 @@ for clip in args.only.split(','):
         scene.frame_set(index+1)
         p=index/16;t=index/15 if index<16 else 1
         rig.location=(0,0,0);rig.rotation_mode='XYZ';rig.rotation_euler=(0,0,0)
-        yaw=0
+        yaw=math.pi/4*smooth((p-.08)/.84) if clip=='pivot' else 0
+        rig.rotation_euler.z=yaw
         # Torso has separate load/torque/recoil curves; no independent leg loop.
         attack=clip=='attack'
         torque=interp([(0,0),(.27,-.27),(.43,-.30),(.56,.34),(.72,.22),(1,0)],t) if attack else .045*math.sin(2*math.pi*p)
@@ -87,26 +88,31 @@ for clip in args.only.split(','):
         set_local('cloth.L',(.045*math.sin(2*math.pi*p-.5),0,0));set_local('cloth.R',(.035*math.sin(2*math.pi*p-1),0,0))
         for side,sign in [('L',1),('R',-1)]:set_local('clavicle.'+side,(0,.025*sign,torque*.15))
         bpy.context.view_layer.update()
-        contacts=[];footprints=[]
+        contacts=[];footprints=[];feet_poses={};hand_targets={}
         for side,sign in [('L',1),('R',-1)]:
             if attack:
                 sole=Vector((sign*.085,-.06 if side=='L' else .055,SOLE_Z));stance=True
             elif clip=='pivot':
-                # One sole stays planted; the other visibly lifts, repositions,
-                # and lands before the next support phase. Body yaw is supplied
-                # by the eventual sequence; this clip is a step, not a root spin.
-                sole=Vector((sign*.085,0,SOLE_Z));stance=side=='L' or p<.12 or p>.88
-                if not stance:
-                    a=(p-.12)/.76;sole.y=-.055*math.sin(math.pi*a);sole.z+=.055*math.sin(math.pi*a)
+                # Two actual weight-bearing steps complete one 45 degree turn.
+                start=Vector((sign*.085,0,SOLE_Z))
+                end=Matrix.Rotation(math.pi/4,4,'Z') @ start
+                begin,finish=(.48,.96) if side=='L' else (.04,.48)
+                a=max(0,min(1,(p-begin)/(finish-begin)))
+                stance=p<=begin or p>=finish
+                world_sole=start.lerp(end,smooth(a));world_sole.z+=.05*math.sin(math.pi*a)
+                sole=Matrix.Rotation(-yaw,4,'Z') @ world_sole
             else:sole,stance=foot_target(side,p)
             footrest=rig.data.bones['foot.'+side]
             landmark=Vector((sign*.09,-.025,SOLE_Z))
-            ankle=sole-(landmark-footrest.head_local)
+            foot_yaw=(math.pi/4*smooth(a) if clip=='pivot' else 0)-yaw
+            foot_rotation=Matrix.Rotation(foot_yaw,4,'Z')
+            ankle=sole-foot_rotation.to_3x3() @ (landmark-footrest.head_local)
             flex=solve_chain(rig,'thigh.'+side,'shin.'+side,ankle,Vector((sign*.09,-.5,-.2)),(8,145))
-            fmatrix=footrest.matrix_local.copy();fmatrix.translation=ankle;rig.pose.bones['foot.'+side].matrix=fmatrix
+            fmatrix=foot_rotation @ footrest.matrix_local;fmatrix.translation=ankle;rig.pose.bones['foot.'+side].matrix=fmatrix
             bpy.context.view_layer.update()
+            feet_poses[side]=(ankle.copy(),fmatrix.copy())
             actual=rig.pose.bones['foot.'+side].matrix @ rest['foot.'+side].inverted() @ landmark
-            world=actual+Vector((0,-STRIDE*p if clip=='walk' else 0,0))
+            world=Matrix.Rotation(yaw,4,'Z') @ actual+Vector((0,-STRIDE*p if clip=='walk' else 0,0))
             if stance:
                 # A new support epoch may reuse a limb ID after a swing.
                 if side in last_points:slips.append((world-last_points[side]).length)
@@ -128,11 +134,42 @@ for clip in args.only.split(','):
             hand=rig.data.bones['hand.'+side];direction=Vector((sign*.15,-.8,-.6)).normalized()
             rig.pose.bones['hand.'+side].matrix=segment_matrix(hand,target,target+direction*hand.length)
             bpy.context.view_layer.update();joint_ranges.setdefault('elbow-'+side,[]).append(flex)
-        com=Vector((pelvis_x,-.012,0))
-        # This is a declared pelvis-based mass proxy, not validated whole-body COM.
+            hand_targets[side]=(target.copy(),direction.copy())
+        # Author-provided segment mass fractions, applied to actual posed
+        # segment centres. This is an approximation, not a dynamics simulation.
+        weights={'pelvis':.18,'spine':.12,'chest':.20,'neck':.02,'head':.08}
+        for side in ['L','R']:
+            weights.update({'thigh.'+side:.10,'shin.'+side:.04,'foot.'+side:.02,
+                            'upper_arm.'+side:.035,'forearm.'+side:.02,'hand.'+side:.01})
+        com=sum(((rig.pose.bones[name].head+rig.pose.bones[name].tail)*.5*weight for name,weight in weights.items()),Vector())/sum(weights.values())
         margin=support_margin(com,footprints)
-        sample={'contacts':contacts,'com':[com.x,com.y],'supportMargin':margin,'balance':'supported' if margin>=0 else 'catch','massModel':'pelvis-proxy-not-whole-body-COM'}
+        # A kinematic balance pass moves the pelvis/mass, then re-solves the
+        # SAME planted ankles. It cannot translate the contact targets or bones.
+        # No unsupported pose is relabelled as a catch without a real step.
+        for balance_iteration in range(10):
+            if margin>=.003:break
+            goal=Vector((sum(c['x'] for c in contacts)/len(contacts),sum(c['y'] for c in contacts)/len(contacts),com.z))
+            shift=(goal-com)*.65;shift.z=0
+            if shift.length>.025:shift.normalize();shift*=.025
+            matrix=rig.pose.bones['pelvis'].matrix.copy();matrix.translation+=shift
+            rig.pose.bones['pelvis'].matrix=matrix;bpy.context.view_layer.update()
+            for side,sign in [('L',1),('R',-1)]:
+                ankle,fmatrix=feet_poses[side]
+                flex=solve_chain(rig,'thigh.'+side,'shin.'+side,ankle,Vector((sign*.09,-.5,-.2)),(8,145))
+                rig.pose.bones['foot.'+side].matrix=fmatrix;bpy.context.view_layer.update()
+                joint_ranges['knee-'+side].append(flex)
+                target,direction=hand_targets[side];target+=shift
+                flex=solve_chain(rig,'upper_arm.'+side,'forearm.'+side,target,Vector((sign*.6,.08,.15)),(12,150))
+                hand=rig.data.bones['hand.'+side];rig.pose.bones['hand.'+side].matrix=segment_matrix(hand,target,target+direction*hand.length)
+                bpy.context.view_layer.update();joint_ranges['elbow-'+side].append(flex)
+            com=sum(((rig.pose.bones[name].head+rig.pose.bones[name].tail)*.5*weight for name,weight in weights.items()),Vector())/sum(weights.values())
+            margin=support_margin(com,footprints)
+        if margin<0:raise ValueError(f'Unbalanced {clip} frame {index}: mass projection {margin:.6f}m outside support')
+        sample={'contacts':contacts,'com':[com.x,com.y],'supportMargin':margin,
+                'balance':'supported' if margin>=0 else 'catch','authoredYawRadians':yaw,
+                'massModel':'authored-segment-centres-approximation'}
         samples.append(sample)
+        rig.keyframe_insert("rotation_euler",frame=index+1)
         for bone in rig.pose.bones:
             bone.keyframe_insert('location',frame=index+1);bone.keyframe_insert('rotation_euler' if bone.rotation_mode=='XYZ' else 'rotation_quaternion',frame=index+1);bone.keyframe_insert('scale',frame=index+1)
         for bone in rig.pose.bones:length_error=max(length_error,abs((bone.tail-bone.head).length-rig.data.bones[bone.name].length))
@@ -149,7 +186,7 @@ for clip in args.only.split(','):
 bpy.ops.file.pack_all()
 scene.frame_set(1);bpy.ops.wm.save_as_mainfile(filepath=str(OUT/'hollow-foundation.blend'))
 skeleton=[{'id':b.name,'parent':b.parent.name if b.parent else None,'length':b.length,'rest':[x for row in b.matrix_local for x in row]} for b in rig.data.bones]
-manifest={'schemaVersion':2,'candidateNotApproved':True,'runtimeIntegrated':False,'sourceSha256':hashlib.sha256(SOURCE.read_bytes()).hexdigest(),'blenderVersion':bpy.app.version_string,'coordinateSpace':'actor-xy-ground-z-up','sourceUnits':'metres','unitsPerPixel':1.55/96,'skeleton':skeleton,'skeletonSignature':hashlib.sha256(json.dumps(skeleton,sort_keys=True).encode()).hexdigest(),'clips':records,'directions':DIRECTIONS,'cloth':cloth,'emissionRegions':regions,'sourceQCOnly':True,'wholeBodyCOMValidated':False}
+manifest={'schemaVersion':2,'candidateNotApproved':True,'runtimeIntegrated':False,'sourceSha256':hashlib.sha256(SOURCE.read_bytes()).hexdigest(),'blenderVersion':bpy.app.version_string,'coordinateSpace':'actor-xy-ground-z-up','sourceUnits':'metres','unitsPerPixel':1.55/96,'skeleton':skeleton,'skeletonSignature':hashlib.sha256(json.dumps(skeleton,sort_keys=True).encode()).hexdigest(),'clips':records,'directions':DIRECTIONS,'cloth':cloth,'emissionRegions':regions,'sourceQCOnly':True,'wholeBodyCOMValidated':False,'massModel':'authored-segment-centres-approximation-not-physical-dynamics'}
 (OUT/'source-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
 if args.render:
     for clip,action in actions.items():

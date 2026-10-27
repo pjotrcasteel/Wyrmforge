@@ -316,3 +316,27 @@ An Eternal player can save at a **secured refuge**, quit, relaunch the **town** 
 ## Dated legacy roadmaps
 
 The [earlier gameplay opportunity plan](../roadmap/wyrmforge-gameplay-next-level.md) and [October handover](../handover/2026-10-15-project-art-and-backlog.md) remain milestone evidence. Their dated step/status claims do **not** override this topic or current code.
+
+
+## AN0–AN6 — universal character animation foundation (owner contract, 27 October 2026)
+
+This bounded track refines the existing shared `sprite-animation.js` and source
+pipeline. It supersedes ANIM1–ANIM4 *for this foundation only*. It is not a
+second engine or authorization to implement every creature's content, AI,
+lighting or cosmetic physics. [Execution evidence](../animation/AN-status.md).
+
+| Gate | Required evidence before completion |
+|---|---|
+| AN0 | Current-main/PR/source audit, reproduced failures, source-cited research and gameplay authority decision. |
+| AN1 | One versioned rig/intent/state/pose/export API; biped, missing limb, palm crawler and non-Hollowed metadata tests. |
+| AN2 | Editable cape-free source gait, measured world contact, fixed lengths, limits, mass/support reasoning and grounded starts/stops/turns. |
+| AN3 | Same full-body framework: supported claw, commitment through crossing target, recovery/turn/chase, pause/death and replay tests. |
+| AN4 | One excellent source-supported Hollowed; true eight facings, iPhone MP4, source/contact overlay and native/phone proof. |
+| AN5 | Reversible candidate flag, default parity, actual Hunt/GPU integration, applicable JS/C#/Blender/browser tests and measured device/performance limits. |
+| AN6 | Coherent draft PR, reproducible source/exports, public developer API and next-content handovers; only final owner approval remains. |
+
+**Execution:** continue across commits and test/render checkpoints. Do not merge,
+deploy or mark art accepted before explicit owner visual approval. Passing
+source contact checks does not complete runtime/visual gates. Rejected #385
+maul/bite content remains rejected; Ashling and other active workstreams stay
+unchanged. All gates remain open until their evidence is recorded.

@@ -5,7 +5,10 @@ import {createHash} from 'node:crypto';
 import {selectHollowDeathStyle} from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/hollow-bone-burst.js';
 const root=new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/',import.meta.url);
 const moduleUri=name=>'data:text/javascript;base64,'+Buffer.from(readFileSync(new URL('js/'+name,root),'utf8')).toString('base64');
+const assetUri='data:text/javascript;base64,'+Buffer.from(readFileSync(new URL('js/creature-animation-assets.js',root),'utf8').replace("'./sprite-animation.js'",JSON.stringify(moduleUri('sprite-animation.js')))).toString('base64');
 const source=readFileSync(new URL('js/hollow-sprites.js',root),'utf8').replace("new URL('../art/enemies/hollow-rigged/', import.meta.url)","new URL('https://example.test/art/enemies/hollow-rigged/')")
+ .replace("new URL('../art/review/animation-foundation/',import.meta.url)","new URL('https://example.test/art/review/animation-foundation/')")
+ .replace("'./creature-animation-assets.js'",JSON.stringify(assetUri))
  .replace("'./sprite-animation.js'",JSON.stringify(moduleUri('sprite-animation.js'))).replace("'./sprite-layer-compositor.js'",JSON.stringify(moduleUri('sprite-layer-compositor.js')))
  .replace("'./hollow-injury-variants.js'",JSON.stringify(moduleUri('hollow-injury-variants.js')))
  .replace("'./hollow-arm-variants.js'",JSON.stringify(moduleUri('hollow-arm-variants.js')))

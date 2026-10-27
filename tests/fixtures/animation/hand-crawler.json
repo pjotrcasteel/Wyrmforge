@@ -1,0 +1,149 @@
+{
+  "schemaVersion": 2,
+  "coordinateSpace": "actor-xy-ground-z-up",
+  "unitsPerPixel": 1,
+  "maxRootOffset": 0.5,
+  "rig": {
+    "bodyPlan": "hand-supported",
+    "bones": [
+      {
+        "id": "root",
+        "length": 1,
+        "rest": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "id": "left-hand",
+        "parent": "root",
+        "length": 1,
+        "rest": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "id": "right-hand",
+        "parent": "root",
+        "length": 1,
+        "rest": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    ],
+    "semantics": {
+      "root": "root"
+    },
+    "absentBones": [
+      "left-leg",
+      "right-leg"
+    ],
+    "contacts": [
+      {
+        "id": "left-hand",
+        "bone": "left-hand",
+        "surface": "palm"
+      },
+      {
+        "id": "right-hand",
+        "bone": "right-hand",
+        "surface": "palm"
+      }
+    ]
+  },
+  "facing": {
+    "directions": [
+      "E",
+      "SE",
+      "S",
+      "SW",
+      "W",
+      "NW",
+      "N",
+      "NE"
+    ]
+  },
+  "locomotion": {
+    "clip": "rest",
+    "frames": 2,
+    "fps": 12,
+    "samples": [
+      {
+        "contacts": [
+          {
+            "id": "left-hand",
+            "x": -1,
+            "y": -1
+          },
+          {
+            "id": "right-hand",
+            "x": 1,
+            "y": -1
+          }
+        ],
+        "balance": "supported"
+      },
+      {
+        "contacts": [
+          {
+            "id": "left-hand",
+            "x": -1,
+            "y": -1
+          },
+          {
+            "id": "right-hand",
+            "x": 1,
+            "y": -1
+          }
+        ],
+        "balance": "supported"
+      }
+    ],
+    "stride": 10
+  },
+  "actions": {}
+}

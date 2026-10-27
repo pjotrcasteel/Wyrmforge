@@ -74,3 +74,13 @@ test('reduced-motion samples declared static pose without changing gameplay inpu
  const p=fixture(),s=create(),i=intent(.1,{reducedMotion:true,action:strike()});const copy=structuredClone(i);
  assert.equal(update(s,p,i).frame,0);assert.deepEqual(i,copy);
 });
+test('duplicate token with a different sequence cannot restart completed action',()=>{
+ const p=fixture(),s=create();update(s,p,intent(0,{action:strike()}));update(s,p,intent(2));
+ const a=update(s,p,intent(2.1,{action:{...strike(),sequence:100}}));assert.equal(a.clip,'walk');
+});
+test('reusable JSON examples validate and sample without a species branch',()=>{
+ for(const name of ['generic-quadruped','hand-crawler','one-arm-biped']){
+  const p=validate(JSON.parse(readFileSync(new URL(`../fixtures/animation/${name}.json`,import.meta.url),'utf8')));
+  const s=create();assert.equal(update(s,p,intent()).clip,'rest');
+ }
+});
