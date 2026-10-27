@@ -76,6 +76,17 @@ walk_bones = set(walk_frames[0])
 
 variant_source = SOURCES / f"{REACH}{args.variant}/hollow-rigged.blend"
 scene, rig = load_source(variant_source)
+# The source may store its root as a quaternion; editing rotation_euler
+# silently does NOTHING unless the Blender object's active rotation mode
+# is Euler. Preserve the actual original orientation before switching.
+if rig.rotation_mode == "QUATERNION":
+    original_orientation = rig.rotation_quaternion.to_euler("XYZ")
+elif rig.rotation_mode == "AXIS_ANGLE":
+    original_orientation = rig.matrix_basis.to_euler("XYZ")
+else:
+    original_orientation = rig.rotation_euler.copy()
+rig.rotation_mode = "XYZ"
+rig.rotation_euler = original_orientation
 source_yaw = rig.rotation_euler.z
 if not {"pelvis", "spine", "chest", "neck", "head", "thigh.L",
         "thigh.R", "shin.L", "shin.R", "foot.L", "foot.R"}.issubset(walk_bones):
@@ -197,6 +208,7 @@ for scenario, turns in (("running-strike", False), ("pass-by-turn-and-chase", Tr
         rig.animation_data.action = action
     key_sequence(turns)
     bpy.ops.wm.save_as_mainfile(filepath=str(DEST / f"{args.variant}-{scenario}.blend"))
+    source_image_rows = {}
     for direction in DIRECTIONS:
         angle = source_yaw + math.radians(ROTATION + 180 - FACINGS.index(direction)*45)
         review = []
@@ -209,7 +221,11 @@ for scenario, turns in (("running-strike", False), ("pass-by-turn-and-chase", Tr
                         if ATTACK_START <= index < ATTACK_START+STRIKE_POSES*STRIKE_HOLD else .85)
             for socket in fire_controls:
                 socket.default_value = strength
-            rig.rotation_euler.z += angle
+            # Set the absolute authored yaw on the ACTIVE Euler rotation,
+            # not an ignored property of a quaternion-driven armature.
+            rig.rotation_euler.z = angle + (
+                math.radians(158 * smooth((index-31)/21)) if turns else 0
+            )
             bpy.context.view_layer.update()
             temporary = DEST / "_temporary.png"
             scene.render.filepath = str(temporary)
@@ -245,11 +261,20 @@ for scenario, turns in (("running-strike", False), ("pass-by-turn-and-chase", Tr
             ImageDraw.Draw(panel).text((8, 12), f"FIRE / {scenario} {direction} {index+1}/{COUNT}",
                                        fill=(245, 185, 127))
             review.append(panel)
+        source_image_rows[direction] = review
         filename = f"{args.variant}-{scenario}-{direction}.gif"
         review[0].save(DEST / filename, save_all=True, append_images=review[1:],
                        duration=42, loop=0)
         report["renders"].append(filename)
         print(f"Source 3D {scenario}/{direction}: {COUNT} poses", flush=True)
+    # Protect against fake 8-way exports. The older source pipeline rendered
+    # effectively byte-identical South/East rows, despite different labels.
+    first, second = (source_image_rows[d][0] for d in ("S", "E"))
+    from PIL import ImageChops
+    changed = sum(1 for value in ImageChops.difference(first, second).convert("L").getdata() if value > 12)
+    if changed < 50:
+        raise ValueError(f"Directional 3D render is not truly different: {scenario}, changedPixels={changed}")
+    report.setdefault("distinctDirectionalPixels", {})[scenario] = changed
 
 (DEST / "manifest.json").write_text(json.dumps(report, indent=2)+"\n", encoding="utf-8")
 print(json.dumps({"variant": args.variant, "directions": DIRECTIONS, "renders": report["renders"]}))
