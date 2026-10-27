@@ -227,7 +227,7 @@ export function townPreviewManifest({ wellV4 = false, domains = false } = {}) {
             });
             materials.push(material(key + '-material', key + '-map', {
                 color: '#000000', emissiveMap: key + '-map',
-                emission: '#ffffff', emissionIntensity: 1.4,
+                emission: '#ffffff', emissionIntensity: plate.domain === 'common' ? .95 : 1.4,
                 roughness: 1, specular: 0, metalness: 0,
             }));
         }
@@ -427,7 +427,8 @@ const engine = new LightingEngine(canvas, {
         const neutral = document.createElement('canvas');
         neutral.width = separated.floor.width; neutral.height = separated.floor.height;
         neutral.getContext('2d').drawImage(pavingLayers.floor, 0, 0);
-        state.neutralMetrics = deriveTownNeutralPavingCanvas(neutral);
+        state.neutralMetrics = deriveTownNeutralPavingCanvas(neutral,
+            state.domains ? { chromaRetention: .45 } : {});
         if (state.domains) softenTownPavingBoundary(neutral, separated.floor);
         engine.registerTexture('town-paving-neutral', new T.CanvasTexture(neutral));
         const normal = levelPavingNormal(a.right, a.up, a.toward);

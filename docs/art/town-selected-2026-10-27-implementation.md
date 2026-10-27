@@ -209,3 +209,19 @@ uses source crop (650,375)-(970,585), enlarged 2x with nearest sampling in lossl
 [Exact proof/source metadata](previews/town-dry-cleanup-2026-10-27.json).
 This addresses the owner's wet-look, cutout halo and missing-lantern feedback;
 it is still a T2 candidate awaiting visual approval, not a live Town replacement.
+
+## Owner circled-area and colour correction
+
+The owner marked the roof window, gate sconces, upper-east foot lantern, well roof,
+side ground transitions and both lower lamp pools. The previous result remains rejected.
+Found a real hue error in the exposure candidate: independent RGB clipping changed
+bright orange source pixels into pale yellow/green-looking patches. Exposure now uses
+one shared bounded linear-RGB gain per pixel to preserve source channel ratios. Public
+illumination is a less-yellow `#fff0e3`; warm glass/flame emission remains source-coloured,
+with a softer threshold knee and reduced common emission (.95 instead of 1.4).
+Only the dry **ground material candidate** retains .45 of source chroma, reducing the
+orange/green stone cast; no screen-space filter or whole-building/flag tint is applied.
+The four circled side/lower ground lanes now use the same dry material mask, following
+existing public ground coordinates. No geometry, collision, progression or source-art
+modification. 77 focused Town tests pass, including hue preservation and source-alpha
+regressions. New GPU proof follows this checkpoint; no T2 visual approval is claimed.

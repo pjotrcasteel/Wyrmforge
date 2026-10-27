@@ -18,13 +18,14 @@ const fromLinear = value => {
 };
 
 export function neutralizeTownPavingPixels(pixels, width, height, {
-    radius = 44, strength = .76, warmth = .35,
+    radius = 44, strength = .76, warmth = .35, chromaRetention = 1,
 } = {}) {
     if (!(pixels instanceof Uint8ClampedArray) || !Number.isInteger(width) || !Number.isInteger(height) ||
         width < 1 || height < 1 || pixels.length !== width * height * 4 ||
         !Number.isInteger(radius) || radius < 1 || radius > 128 ||
         !Number.isFinite(strength) || strength < 0 || strength > 1 ||
-        !Number.isFinite(warmth) || warmth < 0 || warmth > 1)
+        !Number.isFinite(warmth) || warmth < 0 || warmth > 1 ||
+        !Number.isFinite(chromaRetention) || chromaRetention < 0 || chromaRetention > 1)
         throw new TypeError('Invalid neutral paving albedo input');
 
     const stride = width + 1, length = stride * (height + 1);
@@ -80,7 +81,10 @@ export function neutralizeTownPavingPixels(pixels, width, height, {
             const r = toLinear(pixels[index]) * gain * Math.exp(-cast * .65);
             const g = toLinear(pixels[index + 1]) * gain;
             const b = toLinear(pixels[index + 2]) * gain * Math.exp(cast * .35);
-            out[index] = fromLinear(r); out[index + 1] = fromLinear(g); out[index + 2] = fromLinear(b);
+            const gray=.2126*r+.7152*g+.0722*b;
+            out[index] = fromLinear(gray+(r-gray)*chromaRetention);
+            out[index + 1] = fromLinear(gray+(g-gray)*chromaRetention);
+            out[index + 2] = fromLinear(gray+(b-gray)*chromaRetention);
             if (out[index] !== pixels[index] || out[index + 1] !== pixels[index + 1] ||
                 out[index + 2] !== pixels[index + 2]) altered++;
             gainTotal += gain;

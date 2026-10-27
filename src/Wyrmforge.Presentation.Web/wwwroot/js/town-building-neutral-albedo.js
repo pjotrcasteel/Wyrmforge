@@ -49,6 +49,12 @@ export function liftTownReferencePixels(pixels, width, height, gain = 4) {
         !Number.isInteger(width) || !Number.isInteger(height) || width<1 || height<1 ||
         !Number.isFinite(gain) || gain<1 || gain>6) throw new TypeError('Invalid source reflectance candidate');
     const result=new Uint8ClampedArray(pixels);
-    for(let i=0;i<result.length;i+=4) for(let c=0;c<3;c++) result[i+c]=encoded(linear(pixels[i+c])*gain);
+    for(let i=0;i<result.length;i+=4) {
+        const rgb=[linear(pixels[i]),linear(pixels[i+1]),linear(pixels[i+2])];
+        // One shared gain preserves channel ratios. Independent channel clipping
+        // turned painted orange highlights into yellow/green-looking patches.
+        const boundedGain=Math.min(gain,1/Math.max(...rgb,1e-6));
+        for(let c=0;c<3;c++) result[i+c]=encoded(rgb[c]*boundedGain);
+    }
     return result;
 }

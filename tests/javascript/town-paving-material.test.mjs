@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { PLAZA_PAVING_POLYGON, TOWN_PAVING_BOUNDS, validateTownPavingPolygon, levelPavingNormal }
+import { PLAZA_PAVING_POLYGON, TOWN_DRY_GROUND_LANES, TOWN_PAVING_BOUNDS, validateTownPavingPolygon, levelPavingNormal }
     from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/town-paving-material.js';
 
 test('plaza surface is a genuinely authored screen-space contour inside the 1672x941 painting', () => {
@@ -8,7 +8,7 @@ test('plaza surface is a genuinely authored screen-space contour inside the 1672
     assert.equal(shape.points, PLAZA_PAVING_POLYGON.length);
     assert.ok(shape.area > 100000 && shape.area < 450000, 'Conservative central square only, not arbitrary Town background');
     const [left, top, width, height] = TOWN_PAVING_BOUNDS;
-    const points = PLAZA_PAVING_POLYGON;
+    const points = [...PLAZA_PAVING_POLYGON,...TOWN_DRY_GROUND_LANES.flat()];
     assert.equal(Math.min(...points.map(p => p[0])), left);
     assert.equal(Math.min(...points.map(p => p[1])), top);
     assert.equal(Math.max(...points.map(p => p[0])) - left, width);

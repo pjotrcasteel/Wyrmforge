@@ -123,7 +123,12 @@ export function commonAperturePixels(source, width, height) {
             const i=(y*width+x)*4;
             if (isTownClothPixel(x,y) || source[i+3]<245 ||
                 source[i]<140 || source[i+1]<65 || source[i]<source[i+2]*1.3) continue;
-            result[i]=source[i];result[i+1]=source[i+1];result[i+2]=source[i+2];result[i+3]=255;
+            // Soft luminance knee retains the glass/flame shape without a hard
+            // rectangular cut at the source threshold. Decorative cloth is excluded.
+            const strength=Math.min(1,Math.max(0,(source[i]-100)/120));
+            result[i]=Math.round(source[i]*strength);
+            result[i+1]=Math.round(source[i+1]*strength);
+            result[i+2]=Math.round(source[i+2]*strength);result[i+3]=255;
         }
     return result;
 }

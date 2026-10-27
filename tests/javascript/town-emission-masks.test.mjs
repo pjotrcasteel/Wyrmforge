@@ -128,3 +128,11 @@ test('Lower Hall annex and both side crystals are covered by their own source ma
         assert.equal(magic[3],255);assert.equal(magic[0],magic[1]);assert.equal(magic[1],magic[2]);
     }
 });
+
+test('Bright orange source highlights keep their hue instead of clipping red and green independently', async () => {
+    const {liftTownReferencePixels}=await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/town-building-neutral-albedo.js');
+    const output=liftTownReferencePixels(new Uint8ClampedArray([220,145,80,255]),1,1,4);
+    assert.equal(output[0],255);
+    assert.ok(output[1]<190 && output[2]<130,'An orange source must not become a pale yellow patch');
+    assert.equal(output[3],255);
+});

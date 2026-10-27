@@ -12,7 +12,16 @@ export const PLAZA_PAVING_POLYGON = Object.freeze([
     [525, 548], [516, 483], [521, 423],
 ]);
 
-export const TOWN_PAVING_BOUNDS = Object.freeze([516, 225, 624, 716]);
+// Additional dry MATERIAL coverage follows the existing public ground lanes.
+// It does not add roads, collision, or guessed depth. In particular the old
+// rectangle stopped short of the circled side approaches and lower lamp pools.
+export const TOWN_DRY_GROUND_LANES = Object.freeze([
+    [[429,513],[465,484],[528,466],[588,468],[608,516],[614,574],[573,621],[507,645],[449,627],[418,580]],
+    [[1034,473],[1117,469],[1161,485],[1169,536],[1149,592],[1091,618],[1025,615],[1008,558]],
+    [[520,843],[550,823],[612,810],[676,806],[708,798],[736,828],[720,858],[635,874],[540,870]],
+    [[958,794],[1016,787],[1063,795],[1093,794],[1097,833],[1084,876],[1030,865],[968,865]],
+]);
+export const TOWN_PAVING_BOUNDS = Object.freeze([418, 225, 751, 716]);
 const SIZE = Object.freeze([1672, 941]);
 
 export function validateTownPavingPolygon(polygon = PLAZA_PAVING_POLYGON) {
@@ -37,6 +46,11 @@ export function pavingPath() {
     path.moveTo(...first);
     for (const point of remaining) path.lineTo(...point);
     path.closePath();
+    for(const lane of TOWN_DRY_GROUND_LANES) {
+        path.moveTo(...lane[0]);
+        for(const point of lane.slice(1)) path.lineTo(...point);
+        path.closePath();
+    }
     return path;
 }
 

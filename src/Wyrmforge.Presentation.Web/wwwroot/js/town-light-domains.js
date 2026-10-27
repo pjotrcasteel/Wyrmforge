@@ -112,7 +112,7 @@ export function createTownDomainFixtures(project, toward) {
             id: 'town-' + source.id, ownerId: 'town-' + source.domain,
             domain: source.domain, magic: source.magic === true,
             type: source.type ?? (source.shadow ? 'spot' : 'point'),
-            enabled: true, color: source.domain === 'common' ? '#ffe4c5' : source.color,
+            enabled: true, color: source.domain === 'common' ? '#fff0e3' : source.color,
             intensity: source.intensity * (source.domain === 'common' ? .4 : 1),
             position, direction: [0, 0, -1], range: source.range,
             coneAngle: .58, penumbra: .65,

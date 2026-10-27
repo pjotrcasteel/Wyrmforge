@@ -70,3 +70,12 @@ test('invalid source dimensions and non-finite or unsafe illumination settings f
     assert.deepEqual(empty.data, clear);
     assert.equal(empty.coverage, 0);
 });
+
+test('Dry stone chroma calibration is local to its candidate pixels and retains alpha', () => {
+    const source=new Uint8ClampedArray([160,140,100,255]);
+    const options={strength:0,warmth:0,chromaRetention:0};
+    const gray=neutralizeTownPavingPixels(source,1,1,options).data;
+    assert.equal(gray[0],gray[1]);assert.equal(gray[1],gray[2]);assert.equal(gray[3],255);
+    assert.deepEqual(source,new Uint8ClampedArray([160,140,100,255]));
+    assert.throws(()=>neutralizeTownPavingPixels(source,1,1,{chromaRetention:2}),TypeError);
+});
