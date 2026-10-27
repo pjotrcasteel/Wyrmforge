@@ -157,3 +157,23 @@ test('Public sconce emission accepts bright flame but rejects neighbouring warm 
     assert.equal(mask[at(742,230)+3],0,'Warm masonry must not become emissive');
     assert.equal(mask[at(744,230)+3],255,'The real flame must remain emissive');
 });
+
+
+test('Public apertures share light chromaticity despite differently painted flame hues', async () => {
+    const {commonAperturePixels}=await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/town-emission-masks.js');
+    const source=new Uint8ClampedArray(1672*941*4),at=(x,y)=>(y*1672+x)*4;
+    source.set([245,130,20,255],at(744,230));
+    source.set([220,190,120,255],at(922,230));
+    const original=source.slice(),output=commonAperturePixels(source,1672,941);
+    const linear=v=>{v/=255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4;};
+    const rgb=(buffer,i)=>[0,1,2].map(c=>linear(buffer[i+c]));
+    const luminance=v=>.2126*v[0]+.7152*v[1]+.0722*v[2];
+    const colors=[at(744,230),at(922,230)].map(i=>rgb(output,i));
+    for(let c=1;c<3;c++) assert.ok(Math.abs(colors[0][c]/colors[0][0]-colors[1][c]/colors[1][0])<.015);
+    for(const i of [at(744,230),at(922,230)]) {
+        const strength=Math.min(1,Math.max(0,Math.min(source[i]-150,source[i+1]-100)/100));
+        const expected=[0,1,2].map(c=>linear(Math.round(source[i+c]*strength)));
+        assert.ok(Math.abs(luminance(rgb(output,i))-luminance(expected))<.003);
+    }
+    assert.deepEqual(source,original);
+});

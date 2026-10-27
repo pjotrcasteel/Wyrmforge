@@ -1,6 +1,7 @@
 // T2: domain ownership for the existing universal GPU LightingEngine.
 // The five selected owner screenshots are references, never additive RGB layers.
 // No new shaders, image overlays, flags-as-emitters or gameplay progression.
+export const TOWN_PUBLIC_LIGHT_COLOR = '#ffd2a0';
 export const TOWN_LIGHT_DOMAINS = Object.freeze([
     'common', 'nexus', 'blacksmith', 'codex', 'hall',
 ]);
@@ -112,7 +113,7 @@ export function createTownDomainFixtures(project, toward) {
             id: 'town-' + source.id, ownerId: 'town-' + source.domain,
             domain: source.domain, magic: source.magic === true,
             type: source.type ?? (source.shadow ? 'spot' : 'point'),
-            enabled: true, color: source.domain === 'common' ? '#ffd2a0' : source.color,
+            enabled: true, color: source.domain === 'common' ? TOWN_PUBLIC_LIGHT_COLOR : source.color,
             intensity: source.intensity * (source.domain === 'common' ? .28 : 1),
             // Local amber pools; broad overlapping ranges washed out the paving.
             position, direction: [0, 0, -1], range: source.domain === 'common'

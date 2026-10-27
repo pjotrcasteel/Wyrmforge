@@ -1,3 +1,4 @@
+import { TOWN_PUBLIC_LIGHT_COLOR } from './town-light-domains.js';
 // T2 bounded emission candidate derived ONLY from the genuine pixel-aligned
 // canonical active/vacant Town art. This is not a Photoshop full-scene overlay.
 // Warm apertures and Nexus magical apparatus are disjoint emission materials.
@@ -114,6 +115,13 @@ export const TOWN_COMMON_APERTURES = Object.freeze([
     [704,685,13,25], [894,682,13,24], [594,842,16,32], [1010,850,16,33],
     [827,24,15,25], [718,15,13,23], [937,14,13,24],
 ]);
+const publicLinear = [1, 3, 5].map(offset => {
+    const v = parseInt(TOWN_PUBLIC_LIGHT_COLOR.slice(offset, offset + 2), 16) / 255;
+    return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4;
+});
+const linearChannel = value => value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4;
+const encodeChannel = value => Math.round(255 * (value <= .0031308 ? 12.92 * value : 1.055 * value ** (1 / 2.4) - .055));
+const luminance = rgb => .2126 * rgb[0] + .7152 * rgb[1] + .0722 * rgb[2];
 export function commonAperturePixels(source, width, height) {
     if (width!==1672 || height!==941 || source?.length!==width*height*4)
         throw new TypeError('Public emission requires exact canonical source pixels');
@@ -126,9 +134,12 @@ export function commonAperturePixels(source, width, height) {
             // Soft luminance knee retains the glass/flame shape without a hard
             // rectangular cut at the source threshold. Decorative cloth is excluded.
             const strength=Math.min(1,Math.max(0,Math.min(source[i]-150,source[i+1]-100)/100));
-            result[i]=Math.round(source[i]*strength);
-            result[i+1]=Math.round(source[i+1]*strength);
-            result[i+2]=Math.round(source[i+2]*strength);result[i+3]=255;
+            // The source supplies aperture shape and luminance, never a second
+            // competing lamp hue. Match the real point lights in linear space.
+            const sourceLinear = [0, 1, 2].map(c => linearChannel(Math.round(source[i+c]*strength) / 255));
+            const gain = Math.min(1 / Math.max(...publicLinear), luminance(sourceLinear) / luminance(publicLinear));
+            for (let c = 0; c < 3; c++) result[i+c] = encodeChannel(publicLinear[c] * gain);
+            result[i+3]=255;
         }
     return result;
 }
