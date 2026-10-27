@@ -24,7 +24,7 @@ public sealed partial class RunSimulation
         spellCooldowns[spell.Id] -= delta;
         // The contextual spell is judged every tick so a defence is never starved by the primary, but it spends the primary's cast.
         if (TryCastContextualSpell(delta, spell, rank, moving)) return;
-        if (spellCooldowns[spell.Id] > 0 || (!manualAimEngaged && PrimaryTarget(player.Position) is null)) return;
+        if (spellCooldowns[spell.Id] > 0 || (!manualAimEngaged && aimedPropId is null && PrimaryTarget(player.Position) is null)) return;
         CastSpell(spell, rank, FocusedCastProfile.For(spell.Id, rank).DamageMultiplier, false);
         spellCooldowns[spell.Id] = GetSpellCooldown(spell, rank, moving);
     }
@@ -86,8 +86,8 @@ public sealed partial class RunSimulation
 
     private void CastProjectileSpell(SpellDefinition spell, ProjectileAbilityProfile profile, int rank, double damageScale, FocusedSurgeProfile surge)
     {
-        var target = PrimaryTarget(player.Position);
-        if (target is null && !manualAimEngaged) return;
+        var target = aimedPropId is null ? PrimaryTarget(player.Position) : null;
+        if (target is null && !manualAimEngaged && aimedPropId is null) return;
         var id = spell.Id;
         var focused = FocusedCastProfile.For(id, rank);
         var evolution = EvolutionProfile(id);
@@ -95,7 +95,7 @@ public sealed partial class RunSimulation
         var prismatic = passiveProfile.Prismatic && projectileCastCount > 0 && projectileCastCount % 5 == 0;
         var baseCount = prismatic ? passiveProfile.AstralBarrage ? 5 : 3 : 1;
         var count = baseCount + buildModifiers.ApplyInt(BuildStatId.ExtraProjectiles) + evolution.ExtraProjectiles;
-        var volleyTargets = prismatic && !manualAimEngaged ? NearestTargets(player.Position, count) : Array.Empty<ICombatTarget>();
+        var volleyTargets = prismatic && !manualAimEngaged && aimedPropId is null ? NearestTargets(player.Position, count) : Array.Empty<ICombatTarget>();
         var baseDirection = effectiveAim;
         var meteorHeart = id == SpellId.FireBolt && HasFireballMutation(FireballMutationId.MeteorHeart);
         var cinderNeedle = id == SpellId.FireBolt && HasFireballMutation(FireballMutationId.CinderNeedle);
@@ -114,7 +114,7 @@ public sealed partial class RunSimulation
         {
             var volleyTarget = volleyTargets.Count > 0 ? volleyTargets[index % volleyTargets.Count] : target;
             var offset = prismatic || count == 1 ? 0 : (index - (count - 1) / 2d) * 0.16;
-            var aimedDirection = manualAimEngaged || volleyTarget is null ? baseDirection : Vector2D.DirectionTo(player.Position, volleyTarget.Position);
+            var aimedDirection = manualAimEngaged || aimedPropId is not null || volleyTarget is null ? baseDirection : Vector2D.DirectionTo(player.Position, volleyTarget.Position);
             var direction = Vector2D.Rotate(prismatic ? aimedDirection : baseDirection, offset);
             var baseRadius = inferno ? 9 : masteredArcaneOrb ? 7 : profile.Radius;
             var radius = baseRadius * evolution.ProjectileRadiusMultiplier * focused.RadiusMultiplier * surge.RadiusMultiplier * (meteorHeart ? 1.45 : 1) * (cinderNeedle ? 0.72 : 1);
