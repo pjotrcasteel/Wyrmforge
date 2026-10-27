@@ -10,6 +10,7 @@ const source=readFileSync(new URL('js/hollow-sprites.js',root),'utf8').replace("
  .replace("'./hollow-injury-variants.js'",JSON.stringify(moduleUri('hollow-injury-variants.js')))
  .replace("'./hollow-arm-variants.js'",JSON.stringify(moduleUri('hollow-arm-variants.js')))
  .replace("'./hollow-motion.js'",JSON.stringify(moduleUri('hollow-motion.js')))
+ .replace("'./hollow-combat-layers.js'",JSON.stringify(moduleUri('hollow-combat-layers.js')))
  .replace("'./hollow-variation.js'",JSON.stringify(moduleUri('hollow-variation.js')))
  .replace("'./hollow-death.js'",JSON.stringify(moduleUri('hollow-death.js')))
  .replace("'./hollow-injury-death.js'",JSON.stringify(moduleUri('hollow-injury-death.js')))
