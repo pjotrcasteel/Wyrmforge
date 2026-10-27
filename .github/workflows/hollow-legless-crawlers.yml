@@ -19,8 +19,9 @@ jobs:
       - uses: actions/checkout@v4
       - name: Restore current real cape-free Blender mesh and rig
         run: |
-          git lfs pull --include="art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-zombie-reach-v3-standard/**" --exclude=""
+          git lfs pull --include="art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-zombie-reach-v3-standard/**,art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-zombie-reach-v3-broken-arm-right/**" --exclude=""
           test "$(head -c 7 art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-zombie-reach-v3-standard/hollow-rigged.blend)" = BLENDER
+          test "$(head -c 7 art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-zombie-reach-v3-broken-arm-right/hollow-rigged.blend)" = BLENDER
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
