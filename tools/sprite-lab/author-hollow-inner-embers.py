@@ -17,6 +17,7 @@ import argparse
 import hashlib
 import json
 import math
+import importlib.util
 from pathlib import Path
 
 import bpy
@@ -172,6 +173,18 @@ def emissive_delta(base, fired):
     return diff
 
 
+def author_real_attack(rig):
+    # Load the adjacent source-action author in ordinary Blender Python.
+    # PR review may contain malformed or unavailable rigs: fail visibly.
+    source = Path(__file__).with_name("author-hollow-attack-motion.py")
+    spec = importlib.util.spec_from_file_location("hollow_attack_motion", source)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Source attack motion author unavailable: {source}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.author_attack_action(bpy, rig)
+
+
 def main():
     if not SOURCE.is_file() or SOURCE.open("rb").read(7) != b"BLENDER":
         raise FileNotFoundError(f"Missing REAL no-cape 3D rig: {SOURCE}")
@@ -184,6 +197,10 @@ def main():
     assert rig.animation_data and rig.animation_data.action
     mask_regions = author_surface_mask(actor.data)
     fire = attach_emissive_material(actor)
+    attack_motion = author_real_attack(rig)
+    # The source .blend includes two distinct 3D actions (original walking
+    # and newly keyed, planted attack). The preview renders the ATTACK action,
+    # not the original walking action incorrectly relabeled as attack.
     scene.render.engine = "CYCLES"
     scene.cycles.device = "CPU"
     scene.cycles.samples = 8
@@ -253,6 +270,8 @@ def main():
         "directions": list(RENDER_DIRECTIONS), "frames": FRAMES, "cell": CELL,
         "review": review, "perFrameEvidence": evidence,
         "attackEmissionFollowsReal3DPose": True, "universalGpuLightOnly": True,
+        "attackMotion": attack_motion,
+        "walkActionReusedForAttack": False,
         "canvasLightEngineAdded": False,
         "ownerApproved": False, "runtimeIntegrated": False,
         "pending": "sculpt open jaw/wound cavities, validate eight directions and all six source bodies, approve mobile appearance",
