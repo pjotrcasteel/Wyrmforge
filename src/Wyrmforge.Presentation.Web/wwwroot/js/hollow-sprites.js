@@ -99,7 +99,7 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
             pose={x:enemy.x,y:enemy.y,distance:0,visualDistance:0,runSpeed:null,lastSampleAge:null,
                 direction:'S',clip:'walk',frame:0,injuryVariant:persona.injuryVariant,
                 armVariant:persona.armVariant,visualScale:persona.visualScale,
-                idleFrame:persona.idleFrame,signature:persona.signature,
+                idleFrame:persona.idleFrame,initialPhase:persona.initialPhase,signature:persona.signature,
                 attackAt:null,age:0,lastMove:-1,animation};
             pose.deathInjury=selectHollowDeathInjury(pose);
             // Only download the specific 3D damaged collapse if this injured
@@ -115,7 +115,10 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
             pose.direction=hollowDirection(dx,dy,pose.direction);
         }
         if(distance>=64){pose.distance=0;pose.visualDistance=0;pose.runSpeed=null;pose.lastSampleAge=null;
-            pose.lastMove=-1;pose.attackAt=null;pose.animation=createSpriteAnimationState();}
+            pose.lastMove=-1;pose.attackAt=null;pose.animation=createSpriteAnimationState();
+            // A streamed/teleported actor keeps its own authored gait offset.
+            // Resetting to phase zero makes every relocated Hollow step in sync.
+            pose.animation.phase=pose.initialPhase;}
         pose.x=enemy.x;pose.y=enemy.y;
         const locomotion=sampleHollowRun(pose,distance,dt,advancing);
         if(pose.attackAt!=null&&pose.age-pose.attackAt>=16/12)pose.attackAt=null;
@@ -135,7 +138,12 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
             paused:snapshot.paused||snapshot.ended,frozen:enemy.frozen,reducedMotion,direction:pose.direction,
             action:pose.attackAt==null?null:{name:'attack',token:pose.attackAt}});
         pose.direction=sample.direction;pose.clip=sample.clip;
-        pose.frame=!locomotion.moving&&sample.clip==='walk'&&!reducedMotion?pose.idleFrame:sample.frame;
+        // A frozen/paused Hollow must retain the exact leg-support pose from
+        // its last rendered frame. Snapping to idle is visibly jarring and
+        // makes feet jump despite zero C# movement. An ordinary voluntary
+        // stop can still settle onto the identity-specific contact idle.
+        pose.frame=!advancing&&sample.clip==='walk'?pose.frame:
+            !locomotion.moving&&sample.clip==='walk'&&!reducedMotion?pose.idleFrame:sample.frame;
         pose.baseFrame=sample.baseFrame;pose.layered=sample.layered;
     }
     for(const id of state.entities.keys())if(!present.has(id))state.entities.delete(id);
