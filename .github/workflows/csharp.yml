@@ -12,6 +12,8 @@ on:
       - 'Wyrmforge.slnx'
       - 'Directory.Build.props'
       - '.github/workflows/**'
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
