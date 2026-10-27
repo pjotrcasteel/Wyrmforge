@@ -19,12 +19,14 @@ FPS = 12
 POSE_KNOTS = (
     # frame, windup, strike, recoil, torso forward, head forward
     (1, 0.00, 0.00, 0.00, 0.00, 0.00),
-    (3, 0.55, 0.00, 0.00, 0.08, 0.05),
-    (5, 1.00, 0.00, 0.00, 0.14, 0.10),
-    (7, 0.18, 1.00, 0.00, 0.95, 0.85),
-    (9, 0.00, 0.95, 0.00, 1.00, 1.00),
-    (11, 0.00, 0.20, 1.00, 0.50, 0.70),
-    (13, 0.00, 0.00, 0.55, 0.24, 0.35),
+    (3, 0.60, 0.00, 0.00, 0.08, 0.10),
+    (5, 1.00, 0.00, 0.00, 0.16, 0.16),
+    (6, 0.12, 0.74, 0.00, 0.76, 0.76),
+    (7, 0.00, 1.00, 0.00, 1.00, 1.00),
+    (8, 0.00, 0.95, 0.00, 1.00, 0.98),
+    (10, 0.00, 0.34, 0.72, 0.54, 0.58),
+    (12, 0.00, 0.08, 0.90, 0.20, 0.20),
+    (14, 0.00, 0.00, 0.26, 0.05, 0.04),
     (16, 0.00, 0.00, 0.00, 0.00, 0.00),
 )
 
@@ -57,7 +59,7 @@ def author_attack_action(bpy, rig, variant="standard"):
             pb.location.copy(), pb.rotation_quaternion.copy(), pb.scale.copy()
         )
 
-    action = bpy.data.actions.new(f"Hollow_{variant}_Gothic_Fire_Claw_v4")
+    action = bpy.data.actions.new(f"Hollow_{variant}_Ferocious_Diagonal_Claw_v5")
     rig.animation_data.action = action
     # Arm anatomy determines which surviving claw performs the impact.
     lead = "R" if variant == "one-arm-left" else "L"
@@ -95,24 +97,32 @@ def author_attack_action(bpy, rig, variant="standard"):
                     .18*windup - .18*head + .08*recoil) @ pb.rotation_quaternion
             elif name.startswith(("clavicle.", "upper_arm.")):
                 is_lead = name.endswith("." + lead)
-                phase = (-1.02*windup + .27*strike - .18*recoil) if is_lead \
-                    else (.11*windup - .33*strike + .18*recoil)
+                # Powerful unilateral claw rake: high chamber behind head,
+                # fast forward reach, then diagonal inward cut. The back arm
+                # counterbalances instead of becoming a T-pose second blade.
+                phase = (-1.20*windup + 1.02*strike - .25*recoil) if is_lead \
+                    else (.13*windup - .22*strike + .12*recoil)
                 if name.startswith("clavicle."):
                     phase *= .47
-                yaw = (-.20*windup + .29*strike) * (1 if is_lead else -.55)
+                yaw = (-.36*windup + .68*strike) * (1 if is_lead else -.35)
+                diagonal = (.24*windup - .63*strike) * (1 if lead == "L" else -1) \
+                    if is_lead else .08*recoil
                 pb.rotation_quaternion = (
-                    Quaternion(Vector((0, 1, 0)), yaw)
+                    Quaternion(Vector((0, 0, 1)), diagonal)
+                    @ Quaternion(Vector((0, 1, 0)), yaw)
                     @ Quaternion(Vector((1, 0, 0)), phase)
                     @ pb.rotation_quaternion)
             elif name.startswith("forearm."):
-                phase = (-.80*windup + .42*strike - .14*recoil) \
-                    if name.endswith("." + lead) else (.12*windup - .30*strike)
+                phase = (-.92*windup + 1.18*strike - .25*recoil) \
+                    if name.endswith("." + lead) else (.05*windup - .26*strike)
                 pb.rotation_quaternion = Quaternion(Vector((1, 0, 0)), phase) @ pb.rotation_quaternion
             elif name.startswith("hand."):
-                phase = (.29*windup - .22*strike + .13*recoil) \
-                    if name.endswith("." + lead) else (.06*windup - .09*strike)
+                phase = (.40*windup - .68*strike + .28*recoil) \
+                    if name.endswith("." + lead) else (.05*windup - .08*strike)
                 pb.rotation_quaternion = Quaternion(Vector((1, 0, 0)), phase) @ pb.rotation_quaternion
-            # Keep the claw at chest/head height: do not fold the zombie into a ground slam.\n            # Lower limb joints remain exactly the genuine source skin support.
+            # Keep the torso upright; the CLAW supplies the speed and angular
+            # contrast, not an implausible full-body ground slam.
+            # Lower limb joints remain exactly the genuine source skin support.
             pb.keyframe_insert("location", frame=frame, group=name)
             pb.keyframe_insert("rotation_quaternion", frame=frame, group=name)
             pb.keyframe_insert("scale", frame=frame, group=name)
@@ -138,4 +148,7 @@ def author_attack_action(bpy, rig, variant="standard"):
         "lockedPlantedLegs": True,
         "dominantClaw": lead,
         "asymmetricWindupClawFollowThrough": True,
+        "impactAtFrame": 7,
+        "diagonalClawRake": True,
+        "chestHeightNotGroundSlam": True,
     }
