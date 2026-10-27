@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Text.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Application.Runs.Simulation;
+using Wyrmforge.Application.Runs.Simulation.Snapshots;
 using Wyrmforge.Application.Runs.Navigation;
 using Wyrmforge.Application.Tests.TestDoubles;
 using Wyrmforge.Domain.Combat.Enemies;
@@ -21,7 +22,8 @@ public sealed class HybridAimTests
         var input = JsonSerializer.Deserialize<MovementInput>("{\"X\":0,\"Y\":-1}");
         Assert.IsFalse(input.HasManualAim);
         Assert.AreEqual(new Vector2D(0, -1), input.Direction);
-        Assert.AreEqual(2, MovementInput.CurrentVersion);
+        Assert.AreEqual(3, MovementInput.CurrentVersion);
+        Assert.IsNull(input.FocusPropId);
     }
 
     [TestMethod]
@@ -154,6 +156,129 @@ public sealed class HybridAimTests
         Assert.IsTrue(paused.Paused);
         Assert.IsFalse(paused.Player.ManualAim);
         Assert.IsNull(paused.Player.AimTargetId);
+    }
+
+    [TestMethod]
+    public void AutomaticTargetingPrefersDistantEnemyToNearbyProp()
+    {
+        var (simulation, environment, prop, origin, _) = PropScene();
+        var enemy = AddVisibleEnemy(simulation, environment, origin, 10);
+        Assert.IsGreaterThan(0d, Vector2D.Distance(enemy.Position, origin));
+        Invoke(simulation, "UpdateAim", default(MovementInput));
+
+        var aim = simulation.CreateSnapshot().Player;
+        Assert.AreEqual(enemy.Id, aim.AimTargetId);
+        Assert.IsNull(aim.AimPropId, "Any legal hostile must win over even the closest destructible.");
+        Cast(simulation, SpellId.FireBolt);
+        var shot = Field<List<ProjectileState>>(simulation, "projectiles").Single();
+        var expected = Vector2D.DirectionTo(origin, enemy.Position);
+        Assert.AreEqual(expected.X, shot.Velocity.Normalized().X, 1e-6);
+        Assert.AreEqual(expected.Y, shot.Velocity.Normalized().Y, 1e-6);
+    }
+
+    [TestMethod]
+    public void NoHostileMakesGenericDestructibleEligibleForAutoAcquisition()
+    {
+        var (simulation, _, prop, origin, position) = PropScene();
+        Invoke(simulation, "UpdateAim", default(MovementInput));
+        Assert.AreEqual(prop.Id, simulation.CreateSnapshot().Player.AimPropId);
+        Assert.IsNull(simulation.CreateSnapshot().Player.AimTargetId);
+        Cast(simulation, SpellId.FireBolt);
+        var shot = Field<List<ProjectileState>>(simulation, "projectiles").Single();
+        var expected = Vector2D.DirectionTo(origin, position);
+        Assert.AreEqual(expected.X, shot.Velocity.Normalized().X, 1e-6);
+        Assert.AreEqual(expected.Y, shot.Velocity.Normalized().Y, 1e-6);
+    }
+
+    [TestMethod]
+    public void DeliberatelyFocusedPropBeatsEnemyUntilDestroyedOrManualOverride()
+    {
+        var (simulation, environment, prop, origin, position) = PropScene();
+        var enemy = AddVisibleEnemy(simulation, environment, origin, 15);
+        Invoke(simulation, "UpdateAim", new MovementInput(0, 0, FocusPropId: prop.Id));
+        Assert.AreEqual(prop.Id, simulation.CreateSnapshot().Player.AimPropId);
+        Assert.IsNull(simulation.CreateSnapshot().Player.AimTargetId);
+
+        Invoke(simulation, "UpdateAim", default(MovementInput));
+        Assert.AreEqual(prop.Id, simulation.CreateSnapshot().Player.AimPropId, "Focus persists through idle input.");
+        Cast(simulation, SpellId.FireBolt);
+        var projectile = Field<List<ProjectileState>>(simulation, "projectiles").Single();
+        var expected = Vector2D.DirectionTo(origin, position);
+        Assert.AreEqual(expected.X, projectile.Velocity.Normalized().X, 1e-6);
+        Assert.AreEqual(expected.Y, projectile.Velocity.Normalized().Y, 1e-6);
+
+        Assert.IsTrue(environment.TryDamageProp(position, 950, 1550, 0, 10_000));
+        Assert.IsFalse(environment.TryDamageProp(position, 950, 1550, 0, 10_000), "Destroyed props do not pay twice.");
+        Assert.AreEqual(1, environment.Snapshot().Supplies.Count(s => s.Kind == "material:CharredScrap"));
+        Invoke(simulation, "UpdateAim", default(MovementInput));
+        Assert.AreEqual(enemy.Id, simulation.CreateSnapshot().Player.AimTargetId);
+        Assert.IsNull(simulation.CreateSnapshot().Player.AimPropId);
+
+        // Deliberate manual steering always disarms any automatic focus.
+        Invoke(simulation, "UpdateAim", new MovementInput(0, 0, 1, 0));
+        Assert.IsTrue(simulation.CreateSnapshot().Player.ManualAim);
+        Assert.IsNull(simulation.CreateSnapshot().Player.AimPropId);
+    }
+
+    [TestMethod]
+    public void OccludedOrOutOfRangePropFocusIsRejectedAndCannotReplaceAHostile()
+    {
+        var (simulation, environment, prop, origin, position) = PropScene();
+        var enemy = AddVisibleEnemy(simulation, environment, origin, 22);
+        var player = Field<PlayerState>(simulation, "player");
+        player.Position = new Vector2D(position.X + 2000, position.Y + 2000);
+        Invoke(simulation, "UpdateAim", new MovementInput(0, 0, FocusPropId: prop.Id));
+        Assert.IsNull(simulation.CreateSnapshot().Player.AimPropId, "Focus cannot violate acquisition distance.");
+        player.Position = origin;
+        Invoke(simulation, "UpdateAim", default(MovementInput));
+        Assert.AreEqual(enemy.Id, simulation.CreateSnapshot().Player.AimTargetId);
+    }
+
+    private static (RunSimulation Simulation, ArenaEnvironmentState Environment, ArenaPropRenderSnapshot Prop,
+        Vector2D Origin, Vector2D Position) PropScene()
+    {
+        const double width = 950;
+        const double height = 1550;
+        var map = new WyrmrealmMapState(seed: 25);
+        var node = map.AvailableNodes.First(n => n.Type == WyrmrealmNodeType.Combat);
+        var environment = ArenaEnvironmentState.Create(map.Seed, node);
+        foreach (var prop in environment.Snapshot().Props)
+        {
+            var position = new Vector2D(prop.X * width, prop.Y * height);
+            foreach (var offset in new[] { new Vector2D(-75, 0), new Vector2D(75, 0), new Vector2D(0, -75), new Vector2D(0, 75) })
+            {
+                var origin = position + offset;
+                if (environment.IsBlocked(origin, width, height, 12) ||
+                    environment.FindTargetableProp(origin, width, height, 900, prop.Id) is null) continue;
+                var simulation = Scene();
+                Assert.IsTrue(simulation.ChoosePrimary(SpellId.FireBolt));
+                typeof(RunSimulation).GetField("arenaEnvironment", BindingFlags.NonPublic | BindingFlags.Instance)!
+                    .SetValue(simulation, environment);
+                typeof(RunSimulation).GetField("arenaWidth", BindingFlags.NonPublic | BindingFlags.Instance)!
+                    .SetValue(simulation, width);
+                typeof(RunSimulation).GetField("arenaHeight", BindingFlags.NonPublic | BindingFlags.Instance)!
+                    .SetValue(simulation, height);
+                Field<PlayerState>(simulation, "player").Position = origin;
+                return (simulation, environment, prop, origin, position);
+            }
+        }
+        Assert.Fail("Expected a visible reachable destructible in the seeded combat arena.");
+        throw new InvalidOperationException();
+    }
+
+    private static EnemyState AddVisibleEnemy(RunSimulation simulation, ArenaEnvironmentState environment, Vector2D origin, int id)
+    {
+        foreach (var offset in new[] { new Vector2D(-300, 0), new Vector2D(300, 0),
+            new Vector2D(0, -300), new Vector2D(0, 300), new Vector2D(250, 250), new Vector2D(-250, -250) })
+        {
+            var position = origin + offset;
+            if (position.X < 20 || position.X > 930 || position.Y < 20 || position.Y > 1530 ||
+                environment.IsBlocked(position, 950, 1550, 12) ||
+                !environment.HasLineOfSight(origin, position, 950, 1550)) continue;
+            return AddEnemy(simulation, id, position.X, position.Y);
+        }
+        Assert.Fail("Expected at least one distant visible enemy location.");
+        throw new InvalidOperationException();
     }
 
     private static RunSimulation Scene()
