@@ -71,7 +71,12 @@ def fire_regions(vertices):
         nearby = [v.co.y for v in vertices
                   if abs(v.co.x - x) < rx * 1.35 and abs(v.co.z - z) < rz * 1.35]
         if len(nearby) < 4:
-            raise ValueError(f"Missing actual cape-free surface for {label}; no fake screen-space glow")
+            if label.startswith("striking-hand") or label.endswith("-wound"):
+                # Missing arms and source-damaged anatomy are REAL. Do not
+                # invent a disembodied flaming hand or painted wound.
+                print(f"Source region absent for {NAME}: {label} (not emitted)", flush=True)
+                continue
+            raise ValueError(f"Missing actual cape-free face surface for {label}; no fake screen-space glow")
         front = sorted(nearby)[max(0, int(len(nearby) * .08) - 1)]
         records.append((label, x, front, z, rx, rz, heat))
     return records
@@ -101,6 +106,7 @@ def author_surface_mask(mesh):
     return [{
         "name": name, "position": [x, y, z], "radiusX": rx,
         "radiusZ": rz, "weightedSurfaceVertices": totals[name],
+        "sourceBound": True,
     } for name, x, y, z, rx, rz, _ in regions]
 
 
