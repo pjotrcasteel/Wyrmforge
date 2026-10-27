@@ -141,7 +141,9 @@ test('production uses original source atlases and never resurrects the rejected 
     assert.ok(source.includes("deathStyle:fracture.ready() && eligibleHollowFracture"));
     assert.ok(source.includes("fracture.draw(ctx,corpse,age,reducedMotion)"));
     assert.ok(arena.includes('hollowFractureCanvasLights(fractureEmitters,snapshot.lighting)'));
-    assert.ok(arena.includes('withHollowFractureLightingFrame(snapshot.lighting,fractureEmitters)'));
+    assert.ok(arena.includes('state.sharedLightingFrame = withHollowFractureLightingFrame(snapshot.lighting,'));
+    assert.ok(arena.includes('selectionEmitter ? [...fractureEmitters,selectionEmitter] : fractureEmitters'),
+        'All selection and Hollowed emitters must share the existing GPU frame.');
     assert.ok(arena.includes('hollowFractureEmitters(state.hollow.corpses,state.hollow.clock'));
     assert.ok(!source.includes('drawHollowBoneBurst'));
     assert.ok(!ours.includes('Math.random'));
