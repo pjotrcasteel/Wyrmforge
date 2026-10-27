@@ -191,3 +191,21 @@ Extended only the dry ground material mask along the existing World Gate stair a
 southern approach coordinates, so the painted wet streaks do not continue through
 those two public routes. The navigation/collision data itself is untouched. The
 75 focused Town tests remain green after the expanded material bounds.
+
+### Corrected T2 owner-review proof
+
+Rendering checkpoint **59c2d2b3b267d623fdb78d1b126f3dd9e4859b19**.
+13 browser cases captured as both native 1672x941 framebuffer PNG and viewport PNG:
+previous rejected common render; current common/combined/off at 320,390,1120;
+day at 390; isolated Blacksmith and white Nexus at 390. No image generation or
+rendered-pixel recoloring. Exact module/screenshot hashes accompany each frame.
+Every native off framebuffer is entirely RGB zero. Common has 20 sources and chimney
+OFF; combined has all 33; isolated Blacksmith has chimney ON. 75 focused tests and
+21 immutable asset hashes pass. Latest CI and physical-phone performance are pending.
+
+[Full native corrected common render](previews/town-common-dry-cleanup-2026-10-27.png).
+[Rejected LEFT / corrected RIGHT well close-up](previews/town-well-dry-cleanup-closeup-2026-10-27.png)
+uses source crop (650,375)-(970,585), enlarged 2x with nearest sampling in lossless PNG.
+[Exact proof/source metadata](previews/town-dry-cleanup-2026-10-27.json).
+This addresses the owner's wet-look, cutout halo and missing-lantern feedback;
+it is still a T2 candidate awaiting visual approval, not a live Town replacement.
