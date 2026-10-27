@@ -61,6 +61,10 @@ def fire_regions(vertices):
         ("open-mouth", 0, .387, .027, .015, .85),
         ("rib-wound", -.085, .237, .038, .047, .52),
         ("abdomen-wound", .047, .116, .038, .048, .38),
+        # The actual source reach attacks have fiery hand/forearm contact,
+        # like Ashling. On amputated bodies, no vertex = no invented limb.
+        ("striking-hand-left", -.258, -.11, .040, .050, .64),
+        ("striking-hand-right", .258, -.11, .040, .050, .64),
     )
     records = []
     for label, x, z, rx, rz, heat in sources:
@@ -176,7 +180,9 @@ def main():
     fire = attach_emissive_material(actor)
     scene.render.engine = "CYCLES"
     scene.cycles.device = "CPU"
-    scene.cycles.samples = 4
+    scene.cycles.samples = 8
+    scene.cycles.use_animated_seed = False
+    scene.cycles.seed = 23
     scene.render.film_transparent = True
     scene.render.resolution_x = CELL
     scene.render.resolution_y = CELL
