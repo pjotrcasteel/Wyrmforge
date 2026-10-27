@@ -253,7 +253,7 @@ function draw(state, snapshot, width, height) {
         selectionEmitter ? [...fractureEmitters,selectionEmitter] : fractureEmitters);
     // Source-skinned Hollowed internal fire adds ordinary GPU emitters to the
     // same lighting frame as fracture embers and neutral target sigils.
-    const hollowEmbers = hollowFireEmitters(snapshot.enemies,state.hollow,visualSeconds,
+    const hollowEmbers = hollowFireEmitters(snapshot.enemies,state.hollow,state.hollow.clock,
         state.reducedMotion.matches,lightViewport);
     state.hollowFireGpuEmitters = hollowEmbers;
     state.sharedLightingFrame = withHollowFractureLightingFrame(state.sharedLightingFrame,hollowEmbers);
