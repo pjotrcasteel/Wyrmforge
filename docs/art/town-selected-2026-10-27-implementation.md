@@ -110,3 +110,13 @@ painted canonical sources, not artist-authored neutral physical albedo. The hand
 skyline and limited support shadow proxies are approximations, never ground-truth
 scene geometry. The approved selected frames are references because their geometry
 is not reliably registered for subtraction. No full RGB night states are stacked.
+
+## T2 follow-up: remove public pillar hotspots
+
+The first owner-facing comparison exposed pale, concentrated pillar highlights.
+Public lamp proxies were only .12–.14 world units in front of the receiving painting,
+causing inverse-square spikes. Raised those ten public proxies to .5 without moving
+their canonical screen anchors, changing engine shaders, light ownership, art or saves.
+This is proxy calibration, not a claim of measured architectural height. Existing
+common-only capture confirms chimney OFF and neutral-white diagnostic state. A fresh
+same-code desktop/mobile visual set follows this checkpoint; owner approval is pending.
