@@ -73,3 +73,40 @@ Those first frames exposed the painted-magic issue, so fresh final frames must r
 them before visual review. All 525 JS tests passed after main reconciliation; the
 latest reflectance correction has 71 focused tests passing. Physical-phone performance
 and owner visual approval are still absent.
+
+
+## Final code checkpoint and owner-review evidence
+
+Rendering checkpoint: [`0a5c01e`](https://github.com/pjotrcasteel/Wyrmforge/commit/0a5c01e7748eccf83f219d5dcb3be127065fdc5f).
+**T2 still requires owner visual review; draft, unmerged, no production cutover.**
+
+- **528/528 JavaScript tests** pass after the last rendering change; **73/73** focused Town tests pass.
+- **21** original approved Town asset hashes remain unchanged.
+- **59 genuine browser screenshots** saved, plus labeled crops/GIFs and per-frame JSON.
+  All seven light subsets are captured at **320, 390 and 1120px**. New aperture
+  frames and common/combined/off calibration frames were recaptured separately;
+  their exact runtime JS hashes are in per-frame metadata rather than falsely
+  claiming every image came from one identical intermediate commit.
+- Every strict-off native framebuffer reports **zero nonblack world pixels**.
+  Common-only chimney is OFF; Blacksmith-only chimney is ON; neutral Nexus magic
+  is `#ffffff`. Public paving median is **43**, within the existing reference
+  tolerance **24–65** (selected reference about **36**); this is not visual signoff.
+- The actual shared WebGL renderer passes the live-update regression: a temporary
+  zero inspector remains black after a citizen/clock update, clearing it restores
+  authoritative day, and teardown disposes resources. No progression/save writes.
+- CI .NET build, tests and publish passed at the final rendering checkpoint `0a5c01e`; latest full CI/browser
+  acceptance must be checked separately. Physical iPhone/Android performance
+  and final visual matching remain unverified.
+
+[Selected common reference vs genuine GPU](previews/town-selected-common-2026-10-27.jpg)
+(left reference, right GPU) and [all five domains](previews/town-selected-five-domains-2026-10-27.jpg).
+Exact identifiers and screenshot hashes: [comparison metadata](previews/town-selected-five-domains-2026-10-27.json).
+The owner also has the 38MB screenshot/runtime bundle with all ten unchanged uploads,
+59 raw browser frames, diagnostic exports, validation logs and a local-server GPU lab.
+That lab is the same renderer/modules, not a published full-game PR deployment.
+
+Remaining approval limits: bounded reflectance candidates still originate from
+painted canonical sources, not artist-authored neutral physical albedo. The hand
+skyline and limited support shadow proxies are approximations, never ground-truth
+scene geometry. The approved selected frames are references because their geometry
+is not reliably registered for subtraction. No full RGB night states are stacked.
