@@ -47,6 +47,21 @@ const material = (id, albedo, extra = {}) => ({
     alphaCutoff: .5, doubleSided: true, ...extra,
 });
 
+// T2-only alpha corrections traced against original 1672x941 source pixels.
+// The production NPC masks remain untouched. These tighter paths exclude the
+// surrounding paving that previously appeared as a bright cut-paper halo.
+const DOMAIN_FOREGROUND_PATHS = Object.freeze({
+    'noticeboard-panel': 'M738 444 L745 443 L745 447 L794 430 L798 423 L805 424 L809 430 L805 436 L804 484 L797 491 L746 509 L738 505 Z',
+    'noticeboard-supports': 'M737 446 L747 444 L747 531 L741 537 L737 534 Z M797 427 L807 426 L805 529 L798 533 L796 529 Z',
+    'well-roof': 'M810 435 L820 420 L827 410 L825 401 L824 395 L829 390 L834 393 L834 400 L832 405 L837 410 L899 429 L902 423 L909 425 L911 432 L923 444 L922 449 L914 449 L907 445 L909 453 L896 451 L891 458 L872 453 L832 446 L819 444 L816 447 L810 441 Z',
+    'well-supports': 'M830 444 L840 446 L840 495 L830 499 Z M879 452 L890 454 L891 505 L880 509 Z',
+    'well-front-rim': 'M718 514 L733 505 L751 501 L772 509 L794 518 L818 520 L843 518 L872 515 L891 498 L908 502 L919 513 L932 519 L938 532 L930 547 L916 556 L887 561 L843 563 L786 561 L754 557 L735 551 L718 539 Z',
+});
+function domainForeground(cutouts, domains) {
+    return cutouts.map(cutout => domains && DOMAIN_FOREGROUND_PATHS[cutout.id]
+        ? { ...cutout, path: DOMAIN_FOREGROUND_PATHS[cutout.id] } : cutout);
+}
+
 function axes() {
     // Identical projection to LightingEngine.setCamera([0,0,0]); keeps the
     // painting's perspective baked into ART, never warps approved geometry.
@@ -218,8 +233,8 @@ export function townPreviewManifest({ wellV4 = false, domains = false } = {}) {
         }
     }
     const fixtures = domains ? createTownDomainFixtures(townPreviewProjection, a.toward.toArray()) : legacyFixtures;
-    const selectedCutouts = wellV4
-        ? CUTOUTS.filter(c => !STAGE4_REPLACED_CUTOUT_IDS.includes(c.id)) : CUTOUTS;
+    const selectedCutouts = domainForeground(wellV4
+        ? CUTOUTS.filter(c => !STAGE4_REPLACED_CUTOUT_IDS.includes(c.id)) : CUTOUTS, domains);
     if (wellV4) {
         const direction = a.toward.toArray();
         layers.push(stage4WellLayer(townPreviewProjection, direction));
@@ -375,8 +390,8 @@ const engine = new LightingEngine(canvas, {
             pixels.data.set(liftTownReferencePixels(pixels.data,source.width,source.height,4));
             context.putImageData(pixels,0,0);
         }
-        const selectedCutouts = state.wellV4
-            ? CUTOUTS.filter(c => !STAGE4_REPLACED_CUTOUT_IDS.includes(c.id)) : CUTOUTS;
+        const selectedCutouts = domainForeground(state.wellV4
+            ? CUTOUTS.filter(c => !STAGE4_REPLACED_CUTOUT_IDS.includes(c.id)) : CUTOUTS, state.domains);
         engine.registerGeometry('approved-panorama-plane', plane(BASE_WIDTH, BASE_HEIGHT, a.basis));
         // Existing Town CSS NPC silhouettes rendered by the same shared engine.
         // This is diagnostic Town behavior, not new or approved character art.

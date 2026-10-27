@@ -179,3 +179,10 @@ masks and the missing noticeboard lantern mask are added. Common now has 20 sour
 all five groups total 33. Explicit local cap 40 prevents silently dropping source 33;
 shadow budget remains 8, no per-light shadow maps added. **75 focused Town tests pass**.
 Fresh GPU close-ups and zero-light/mobile checks follow; T2 remains unapproved.
+
+Close-up QC found that the inherited foreground polygons included several pixels
+of paving above the well roof and beside the noticeboard/posts. Those pixels were
+retaining a cut-paper halo over the dry ground. Added **T2-only** tighter alpha paths
+traced against original full-resolution pixels. The production `CUTOUTS` array and
+collision map remain unchanged. Both the dry-ground exclusion and raised foreground
+use the same corrected paths, so the halo cannot be cured in only one of the layers.
