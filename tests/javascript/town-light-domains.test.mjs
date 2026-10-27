@@ -18,7 +18,7 @@ const config = (isolation, unlocks = unlocked, extra = {}) =>
 test('Five exclusive domains route thirty-three local lamps through the shared GPU registry', () => {
     assert.deepEqual(TOWN_LIGHT_DOMAINS, ['common', 'nexus', 'blacksmith', 'codex', 'hall']);
     const all = fixtures();
-    assert.equal(all.length, 33);
+    assert.equal(all.length, 34);
     assert.equal(new Set(all.map(x => x.id)).size, all.length);
     for (const light of all) {
         assert.equal(light.ownerId, 'town-' + light.domain);
@@ -27,7 +27,7 @@ test('Five exclusive domains route thirty-three local lamps through the shared G
         assert.ok(!/banner|flag|cloth/i.test(light.id));
     }
     assert.equal(selectLights(compileTownLightingSnapshot(
-        townPreviewManifest({ domains: true }), { mode: 'night' }), 8, 40).length, 33);
+        townPreviewManifest({ domains: true }), { mode: 'night' }), 8, 40).length, 34);
 });
 test('Each domain isolates only its own sources; common never enables chimney', () => {
     for (const domain of TOWN_LIGHT_DOMAINS) {
@@ -39,7 +39,7 @@ test('Each domain isolates only its own sources; common never enables chimney', 
     assert.equal(enabled(config('off')).length, 0);
 });
 test('Vacancy suppresses all four building groups and leaves public square only', () => {
-    assert.equal(enabled(config('combined', vacant)).length, 20);
+    assert.equal(enabled(config('combined', vacant)).length, 21);
     assert.ok(enabled(config('combined', vacant)).every(x => x.domain === 'common'));
     for (const key of Object.keys(vacant)) {
         const state = { ...unlocked, [key]: false };
@@ -78,7 +78,7 @@ test('Domain lights reach same existing GPU manifest and black-world zero-light 
     const m = townPreviewManifest({ domains: true, wellV4: true });
     configureTownLightDomains(m.fixtures, { unlocks: vacant });
     const common = compileTownLightingSnapshot(m, { mode: 'night' });
-    assert.equal(common.lights.filter(x => x.enabled).length, 20);
+    assert.equal(common.lights.filter(x => x.enabled).length, 21);
     assert.ok(common.lights.filter(x => x.enabled).every(x => x.domain === 'common'));
     assert.equal(common.lights.find(x => x.id === 'town-blacksmith-chimney').enabled, false);
     const zero = compileTownLightingSnapshot(m, { mode: 'zero' });
@@ -122,4 +122,15 @@ test('Domain paving is matte and the original well occlusion does not cast billb
     const foreground = scene.layers.filter(layer => layer.id.startsWith('foreground-'));
     assert.ok(foreground.length > 0, 'Keep NPC feet-depth occlusion geometry');
     assert.ok(foreground.every(layer => !layer.castsShadow && !layer.receivesShadow));
+});
+
+
+test('Gate attic emission has a bounded common-domain source and obeys isolation', () => {
+    const light = config('common', vacant).find(x => x.id === 'town-gate-attic-window');
+    assert.equal(light.ownerId, 'town-common');
+    assert.equal(light.enabled, true);
+    assert.deepEqual(light.artAnchor, [834, 38]);
+    assert.ok(light.range <= 1, 'Attic spill must not become a roof-wide ambient wash');
+    assert.equal(config('off', vacant).find(x => x.id === light.id).enabled, false);
+    assert.equal(config('blacksmith', vacant).find(x => x.id === light.id).enabled, false);
 });

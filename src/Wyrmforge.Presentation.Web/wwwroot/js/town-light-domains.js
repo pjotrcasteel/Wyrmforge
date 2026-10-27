@@ -22,6 +22,9 @@ export const TOWN_NEXUS_SCHOOL_LIGHTS = Object.freeze({
 
 const FIXTURES = Object.freeze([
     // One exclusive owner per fixture; in particular NO public chimney lamp.
+    // The emissive attic window needs a matching local source to reveal its frame.
+    { id: 'gate-attic-window', domain: 'common', x: 834, y: 38, height: .45,
+        color: TOWN_PUBLIC_LIGHT_COLOR, intensity: .8, range: .9, shadow: false },
     { id: 'gate-arch', domain: 'common', x: 833, y: 199, height: .85,
         color: '#ffcd94', intensity: .9, range: 3.4, shadow: false },
     { id: 'square-well', domain: 'common', x: 900, y: 468, height: .65, type: 'point',
