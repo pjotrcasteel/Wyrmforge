@@ -24,6 +24,8 @@ MODEL = ROOT / "art/source/enemies/hollow/rigged-poc/model/local-appearance-004"
 OUT = ROOT / "artifacts/hollow-body-diversity"
 STANDARD = MODEL / "rigged-hollow-zombie-reach-v3-standard/hollow-rigged.blend"
 BROKEN = MODEL / "rigged-hollow-zombie-reach-v3-broken-leg-left/hollow-rigged.blend"
+BROKEN_ARM = MODEL / "rigged-hollow-zombie-reach-v3-broken-arm-right/hollow-rigged.blend"
+ONE_ARM = MODEL / "rigged-hollow-zombie-reach-v3-one-arm-left/hollow-rigged.blend"
 CELL = 96
 FRAMES = 16
 DIRECTIONS = ("N", "NE", "E", "SE", "S", "SW", "W", "NW")
@@ -34,8 +36,9 @@ ROTATION = math.degrees(math.atan2(-3.2, 2.2)) + 90
 BODIES = (
     ("original", STANDARD, "Unmodified current no-cape anatomy (reference)"),
     ("ravenous", STANDARD, "Taller narrow torso; elongated grasping, forward-leaning silhouette"),
-    ("grave-wretch", STANDARD, "Broad hunched upper body, swollen torso and lowered skull"),
+    ("grave-wretch", BROKEN_ARM, "Swollen hunched shoulders and existing right-arm fracture"),
     ("broken", BROKEN, "Asymmetrical bone structure with the genuine source broken left leg"),
+    ("severed", ONE_ARM, "Missing left arm, displaced shoulder socket and collapsed narrow ribs"),
 )
 
 def smooth01(value):
@@ -53,17 +56,17 @@ def morph_vertex(name, co):
     trunk = gaussian(z, .04, .32)
     if name == "ravenous":
         # Long torso, narrow shoulders/waist and extended hunched neck.
-        x = x * (1 - .22 * trunk) + .013 * upper
-        y = y - .058 * upper - .018 * chest
-        z = z + .085 * upper
+        x = x * (1 - .33 * trunk) + .015 * upper
+        y = y - .075 * upper - .018 * chest
+        z = z + .103 * upper
         # Feet remain anchored; the physical shoulder/torso must change.
     elif name == "grave-wretch":
         # Rot-swollen and compact; broad shoulders and barrel-like ribs.
-        x = x * (1 + .38 * chest)
-        y = y * (1 + .34 * trunk) + .038 * chest
-        z = z * (.91 if z > -.14 else 1.0) - .036 * upper
+        x = x * (1 + .51 * chest)
+        y = y * (1 + .44 * trunk) + .045 * chest
+        z = z * (.88 if z > -.14 else 1.0) - .042 * upper
         # A real altered upper-back silhouette; no separate blob drawn above it.
-        y += .065 * gaussian(z, .23, .12) * smooth01((y + .07) / .16)
+        y += .074 * gaussian(z, .23, .12) * smooth01((y + .07) / .16)
     elif name == "broken":
         # The base model ALREADY contains an injured left leg.
         # Build permanent shoulder and rib asymmetry in the skin, not a camera lean.
@@ -71,6 +74,13 @@ def morph_vertex(name, co):
         z -= .048 * upper * smooth01((x + .18) / .32)
         y -= .048 * upper
         x *= 1 + .13 * chest
+    elif name == "severed":
+        # Missing left arm is source mesh, NOT a hidden sprite column.
+        # Permanently collapse the ruined shoulder and cant the head.
+        x -= .073 * upper
+        z -= .062 * upper * smooth01((-.06 - x) / .28)
+        y += .057 * gaussian(z, .19, .24)
+        x *= 1 - .20 * trunk
     return (x, y, z)
 
 def author_body(name, source, description):
@@ -185,18 +195,18 @@ def build_comparison(records):
         }
     screens = []
     for index in range(FRAMES):
-        board = Image.new("RGB", (390, 372), (17, 16, 22))
+        board = Image.new("RGB", (585, 372), (17, 16, 22))
         ink = ImageDraw.Draw(board)
-        ink.text((8, 8), "HOLLOWED / FOUR REAL PHYSICAL BODIES", fill=(214, 197, 174))
-        ink.text((8, 24), "Current cape-free 3D source / South view", fill=(138, 132, 132))
+        ink.text((8, 8), "HOLLOWED / FIVE ACTUAL PHYSICAL BODIES", fill=(214, 197, 174))
+        ink.text((8, 24), "Current cape-free 3D source / South view / still pre-approval", fill=(138, 132, 132))
         for p, entry in enumerate(records):
-            x = (p % 2) * 195
-            y = 36 + (p // 2) * 168
+            x = (p % 3) * 195
+            y = 36 + (p // 3) * 168
             loop = all_clips[entry["name"]]["S"]
             loop.seek(index)
             board.paste(loop.convert("RGB").crop((0, 0, 195, 168)), (x, y))
         screens.append(board)
-    compared = OUT / "hollow-four-body-morphology.gif"
+    compared = OUT / "hollow-five-body-morphology.gif"
     screens[0].save(compared, save_all=True, append_images=screens[1:],
                     duration=40, loop=0)
     for body in all_clips.values():
@@ -228,13 +238,13 @@ def main():
         "variants": rows,
         "reviewGate": "Mobile/owner silhouette acceptance, genuine clip continuity, C# speeds and eight-direction integration remain",
     }
-    assert all(different_pixels[name] > 12 for name in ("ravenous", "grave-wretch", "broken")), (
+    assert all(different_pixels[name] > 12 for name in ("ravenous", "grave-wretch", "broken", "severed")), (
         f"Body variants cannot be near-identical to original: {different_pixels}"
     )
     (OUT / "manifest.json").write_text(json.dumps(report, indent=2) + "\n")
     (OUT / "README.md").write_text(
         "# Hollowed: ACTUAL physical model variants (not color swaps)\n\n"
-        + "Four different source-skinned 3D body models, preserving the accepted cape-free family. "
+        + "Five different source-skinned 3D body models including the original, preserving the accepted cape-free family. "
           "Anatomy and 3D mesh alter physically and the original mesh/UV/weights remain editable. "
           "No gameplay or published runtime asset is changed.\n\n"
         + f"![All four physical bodies]({comparison})\n\n"
