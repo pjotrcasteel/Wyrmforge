@@ -26,7 +26,8 @@ from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[2]
 MODEL = ROOT / "art/source/enemies/hollow/rigged-poc/model/local-appearance-004"
-SOURCE = MODEL / "rigged-hollow-zombie-reach-v3-standard/hollow-rigged.blend"
+SOURCE_STANDARD = MODEL / "rigged-hollow-zombie-reach-v3-standard/hollow-rigged.blend"
+SOURCE_BROKEN_ARM = MODEL / "rigged-hollow-zombie-reach-v3-broken-arm-right/hollow-rigged.blend"
 OUT = ROOT / "artifacts/hollow-legless-crawlers"
 DIRECTIONS = ("N", "NE", "E", "SE", "S", "SW", "W", "NW")
 ROTATION = math.degrees(math.atan2(-3.2, 2.2)) + 90
@@ -34,12 +35,12 @@ FRAMES = 16
 CELL = 96
 ARCHETYPES = {
     "grave-dragger": {
-        "cut_z": -.13, "pitch": 73.0, "fps": 12, "shoulder_width": 1.12,
+        "source": SOURCE_STANDARD, "cut_z": -.13, "pitch": 73.0, "fps": 12, "shoulder_width": 1.12,
         "length": 1.07, "stride": .095, "bob": .012,
         "description": "No legs; broad-shouldered heavy torso, two deep alternating arm pulls.",
     },
     "crypt-scuttler": {
-        "cut_z": -.048, "pitch": 81.0, "fps": 21, "shoulder_width": 1.32,
+        "source": SOURCE_BROKEN_ARM, "cut_z": -.048, "pitch": 81.0, "fps": 21, "shoulder_width": 1.32,
         "length": .84, "stride": .16, "bob": .022,
         "description": "No legs; compact twisted ribcage, disproportionately wide fast grasping arms.",
     },
@@ -181,9 +182,10 @@ def force_arm(rig, side, goal_world, rest, lengths):
 
 
 def author(name, spec):
-    if not SOURCE.is_file() or SOURCE.open("rb").read(7) != b"BLENDER":
-        raise RuntimeError("Actual cape-free source Blender scene is required")
-    bpy.ops.wm.open_mainfile(filepath=str(SOURCE))
+    source = spec["source"]
+    if not source.is_file() or source.open("rb").read(7) != b"BLENDER":
+        raise RuntimeError(f"Actual cape-free source Blender scene is required: {source}")
+    bpy.ops.wm.open_mainfile(filepath=str(source))
     bpy.context.preferences.filepaths.save_version = 0
     scene = bpy.context.scene
     rig = bpy.data.objects["Hollow editable animation rig"]
@@ -310,7 +312,7 @@ def author(name, spec):
         "body": "physical 3D bilateral leg amputation, altered torso and source armature",
         "retainsOriginalFourUprightModels": True,
         "usesObsoleteCape": False, "sourceAction": source_action.name,
-        "newAction": action.name, "sourceBlender": str(SOURCE.relative_to(ROOT)),
+        "newAction": action.name, "sourceBlender": str(source.relative_to(ROOT)),
         "editableBlender": editable.name, "frames": FRAMES, "fps": spec["fps"],
         "cell": CELL, "directionsRendered": list(RENDER_DIRECTIONS),
         "atlas": atlas_path.name, "atlasSha256": hashlib.sha256(atlas_path.read_bytes()).hexdigest(),
