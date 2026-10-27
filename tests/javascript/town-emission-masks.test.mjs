@@ -118,3 +118,13 @@ test('Night reflectance candidate never interpolates mismatched daylight geometr
     assert.ok(result[0]>original[0] && result[0]<result[1] && result[1]<result[2]);
     assert.throws(()=>liftTownReferencePixels(original,2,1,100),/reflectance/);
 });
+
+
+test('Lower Hall annex and both side crystals are covered by their own source masks', () => {
+    const warm=emissionMaskPixels(pixels(250,170,60),pixels(2,2,2),4,4,plate('hall',1540,800),'warm');
+    assert.ok(warm[3]>0,'Lower Hall windows must not disappear below the previous y=765 cutoff');
+    for(const [x,y] of [[345,310],[485,275]]) {
+        const magic=emissionMaskPixels(pixels(100,150,250),pixels(2,2,2),4,4,plate('nexus',x,y),'magic');
+        assert.equal(magic[3],255);assert.equal(magic[0],magic[1]);assert.equal(magic[1],magic[2]);
+    }
+});

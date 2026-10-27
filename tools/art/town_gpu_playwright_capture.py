@@ -81,6 +81,10 @@ async def main():
     parser.add_argument("--base", default="http://127.0.0.1:4179/town-relighting-preview.html")
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
+    runtime = Path(__file__).resolve().parents[2] / 'src/Wyrmforge.Presentation.Web/wwwroot/js'
+    runtime_hashes = {str(path.relative_to(runtime)):hashlib.sha256(path.read_bytes()).hexdigest()
+        for path in [*runtime.glob('town-*.js'), *runtime.glob('lighting/*.js')]}
+
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(
             executable_path=args.chrome, headless=True,
@@ -118,7 +122,7 @@ async def main():
                             (args.output / (name + ".png")).write_bytes(png)
                             (args.output / (name + '.json')).write_text(json.dumps({
                                 'url':url, 'viewport':[width,height], 'renderer':'shared LightingEngine WebGL',
-                                'diagnostic':diagnostic, 'screenshotSha256':hashlib.sha256(png).hexdigest(),
+                                'runtimeSourceSha256':runtime_hashes, 'diagnostic':diagnostic, 'screenshotSha256':hashlib.sha256(png).hexdigest(),
                                 'physicalPhoneTest':False, 'visualApproval':False,
                             }, indent=2)+'\n')
                             success = True
