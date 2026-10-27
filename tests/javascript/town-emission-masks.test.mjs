@@ -64,6 +64,7 @@ test('Six GPU emissive layers use one generic world material pipeline', () => {
     const apertures = integrated.layers.filter(x => x.emissionKind);
     assert.equal(apertures.length, 6);
     for (const aperture of apertures) {
+        assert.equal(integrated.materials.find(m => m.id === aperture.material).blendMode, 'emission-additive');
         assert.equal(aperture.castsShadow, false);
         assert.equal(aperture.receivesShadow, false);
         assert.match(aperture.ownerId, /^town-(common|nexus|blacksmith|codex|hall)$/);

@@ -68,6 +68,12 @@ export class LightingEngine {
             emissive: descriptor.emission, emissiveIntensity: descriptor.emissionIntensity,
             alphaTest: descriptor.alphaCutoff, side: descriptor.doubleSided ? T.DoubleSide : T.FrontSide,
         });
+        // Emission-only overlays add radiance without erasing the receiver.
+        if (descriptor.blendMode === 'emission-additive') {
+            material.transparent = true;
+            material.blending = T.AdditiveBlending;
+            material.depthWrite = false;
+        }
         if (descriptor.reflection === 'probe' && receivesLight) material.envMapIntensity = descriptor.specular;
         if (descriptor.normalScale !== undefined) material.normalScale.setScalar(descriptor.normalScale);
         // An emissive map modulates the emission color; a black base would suppress it entirely.

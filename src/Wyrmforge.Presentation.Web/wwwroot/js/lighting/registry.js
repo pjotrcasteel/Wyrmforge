@@ -35,6 +35,10 @@ export function validateSnapshot(input) {
     }
     for (const m of s.materials) {
         color(m.color); color(m.emission);
+        if (m.blendMode !== undefined && m.blendMode !== 'emission-additive')
+            throw new TypeError('Unsupported material blend mode');
+        if (m.blendMode === 'emission-additive' && (m.color !== '#000000' || !m.emissiveMap || m.specular !== 0 || m.metalness !== 0))
+            throw new TypeError('Additive material must contain emission only');
         for (const field of ['roughness', 'metalness', 'specular', 'alphaCutoff']) finite(m[field], field, 0, 1);
         finite(m.emissionIntensity, 'emissionIntensity', 0);
         // G3 optional physically motivated material controls; omitted fields retain G1 behavior.

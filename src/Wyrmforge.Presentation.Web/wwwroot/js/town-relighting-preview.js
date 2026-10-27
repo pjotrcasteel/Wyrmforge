@@ -226,7 +226,7 @@ export function townPreviewManifest({ wellV4 = false, domains = false } = {}) {
                 castsShadow: false, receivesShadow: false,
             });
             materials.push(material(key + '-material', key + '-map', {
-                color: '#000000', emissiveMap: key + '-map',
+                color: '#000000', emissiveMap: key + '-map', blendMode: 'emission-additive',
                 emission: '#ffffff', emissionIntensity: plate.domain === 'common' ? .95 : 1.4,
                 roughness: 1, specular: 0, metalness: 0,
             }));
