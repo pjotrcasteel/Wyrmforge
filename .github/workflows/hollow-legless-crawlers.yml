@@ -1,0 +1,47 @@
+name: Hollowed two true legless crawler source renders
+
+on:
+  push:
+    branches: [fix/hollowed-animation-polish-20261027]
+    paths:
+      - 'tools/sprite-lab/author-hollow-legless-crawlers.py'
+      - '.github/workflows/hollow-legless-crawlers.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore current real cape-free Blender mesh and rig
+        run: |
+          git lfs pull --include="art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-zombie-reach-v3-standard/**" --exclude=""
+          test "$(head -c 7 art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-zombie-reach-v3-standard/hollow-rigged.blend)" = BLENDER
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install existing Blender 4.5 and preview renderer
+        run: python -m pip install --disable-pip-version-check bpy==4.5.15 Pillow==11.3.0
+      - name: Syntax check
+        run: python -m py_compile tools/sprite-lab/author-hollow-legless-crawlers.py
+      - name: Physically remove legs, key prone crawling in real 3D, render South
+        env:
+          OMP_NUM_THREADS: '4'
+        run: python tools/sprite-lab/author-hollow-legless-crawlers.py --directions S
+      - name: Keep separate editable 3D characters and motion evidence
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hollow-two-legless-crawlers-source-qc
+          path: |
+            artifacts/hollow-legless-crawlers/*.blend
+            artifacts/hollow-legless-crawlers/*.gif
+            artifacts/hollow-legless-crawlers/*.png
+            artifacts/hollow-legless-crawlers/*.json
+            artifacts/hollow-legless-crawlers/README.md
+          retention-days: 14
+          if-no-files-found: warn
