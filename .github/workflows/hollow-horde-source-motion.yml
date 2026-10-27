@@ -1,0 +1,47 @@
+name: Hollowed feral and crippled 3D motion candidates
+
+on:
+  push:
+    branches: [fix/hollowed-animation-polish-20261027]
+    paths:
+      - 'tools/sprite-lab/author-hollow-horde-motion.py'
+      - '.github/workflows/hollow-horde-source-motion.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  author-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore only current cape-free source rigs
+        run: |
+          git lfs pull --include="art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-zombie-reach-v3-standard/**,art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-zombie-reach-v3-broken-leg-left/**" --exclude=""
+          test "$(head -c 7 art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-zombie-reach-v3-standard/hollow-rigged.blend)" = BLENDER
+          test "$(head -c 7 art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-zombie-reach-v3-broken-leg-left/hollow-rigged.blend)" = BLENDER
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install existing Blender 4.5 LTS toolchain
+        run: python -m pip install --disable-pip-version-check bpy==4.5.15 Pillow==11.3.0
+      - name: Validate authoring script syntax
+        run: python -m py_compile tools/sprite-lab/author-hollow-horde-motion.py
+      - name: Render actual 3D feral and injured source motion
+        env:
+          OMP_NUM_THREADS: '4'
+        run: python tools/sprite-lab/author-hollow-horde-motion.py
+      - name: Publish editable rig and visual review, never runtime assets
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hollow-horde-3d-motion-candidates
+          path: |
+            artifacts/hollow-horde-motion/*.gif
+            artifacts/hollow-horde-motion/*.json
+            artifacts/hollow-horde-motion/*.blend
+            artifacts/hollow-horde-motion/README.md
+          if-no-files-found: warn
+          retention-days: 14
