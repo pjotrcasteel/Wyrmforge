@@ -136,3 +136,15 @@ test('Bright orange source highlights keep their hue instead of clipping red and
     assert.ok(output[1]<190 && output[2]<130,'An orange source must not become a pale yellow patch');
     assert.equal(output[3],255);
 });
+
+test('Gate masonry correction retains flame/glass, banners and input alpha', async () => {
+    const {neutralizeTownGateMasonry}=await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/town-building-neutral-albedo.js');
+    const source=new Uint8ClampedArray(1672*941*4);
+    const at=(x,y)=>(y*1672+x)*4;
+    for(const [x,y] of [[735,205],[744,230],[690,205]]) source.set([180,120,60,255],at(x,y));
+    const output=neutralizeTownGateMasonry(source,1672,941);
+    assert.ok(output[at(735,205)]-output[at(735,205)+2]<100);
+    for(const [x,y] of [[744,230],[690,205]])
+        assert.deepEqual(output.slice(at(x,y),at(x,y)+4),source.slice(at(x,y),at(x,y)+4));
+    assert.equal(output[at(735,205)+3],255);
+});

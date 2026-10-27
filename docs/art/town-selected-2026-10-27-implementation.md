@@ -231,3 +231,10 @@ and the western shop silhouette. Ground walkability does not imply visible groun
 the material mask now excludes those source-aligned scenery contours, retaining the
 canonical vacant-state window/roof pixels rather than borrowing day-building pixels.
 No collision or gameplay map change. This correction is included in the final proof.
+
+The close-ups still showed double-orange masonry beside the gate sconces. Added a
+bounded, feathered reflectance-chroma correction on those two source-aligned stone
+patches only. Flame/glass apertures and adjacent banners are explicitly retained;
+this removes painted wall colour multiplying the real warm engine lights. It is
+candidate material authoring, not a screen tint or physical albedo recovery. 78
+focused tests pass, including glass/banner/source-alpha preservation.
