@@ -3,6 +3,20 @@
 > **Canonical WyrmForge specification · updated 20 October 2026.** Owner-approved art and one repeatable animated-character production pipeline.
 > [Canonical index](README.md) · Only explicitly marked **LOCKED/approved** requirements are commitments. Proposed values, old milestones and drafts are not evidence of shipped code. Verify current `main`, PRs and tests.
 
+## Hollowed animation-quality gate (owner direction, 27 October 2026 — OPEN)
+
+**Priority:** complete the Hollowed animation refinement **before proceeding with the next WyrmForge feature milestone**. The owner likes the Ashling's animation quality; **do not change the Ashling**. The current Hollowed movement/acting is **not artistically approved** even if rigged, deterministic, source-authored and technically validated.
+
+- Keep the cape-free Gothic skeletal identity, four injury silhouettes and corresponding source-authored deaths. Hollowed should move like a heavy, damaged, threatening shambler, **not** reuse the agile Ashling's motions, speed or combat timing.
+- Reauthor actual skinned 3D source **idle, locomotion, transitions, attack anticipation/strike/recovery and credible impact reaction**, with readable torso weight, asymmetrical limb drag, grounded foot plants, restrained secondary cloth/head action and distinct injured-limb mechanics. Retain the real eight-direction exports; no mirrored rows, generic 2D sway, arbitrary sprite transforms or brightness-only fake hit animation.
+- Motion must read at native **320px and 390px portrait** beside the accepted Ashling under the real Hunt lighting. A slow creep, normal approach, turning, sustained chase, brief halt, freeze/pause, attack, hit, and injury-dependent death must all be judged in motion, not merely via contact-sheet stills.
+- Preserve C# authority for navigation, movement speed, collision, attack/contact damage, death, enemy balance and save data. Match authored stride and contact timing to the observed simulation; fix foot sliding **at its source** rather than hiding it by retiming poses.
+- Work in small committed review slices, store editable Blender/source pose files as well as runtime atlases, provide side-by-side GIF/mobile gameplay evidence with clear revision identifiers, and obtain **explicit owner art approval** before treating Hollowed as complete or unblocking the next milestone.
+
+**First checkpoint:** the 27 October playback-only fix prevents pose snapping on pause/freeze and synchronized phase resets on relocation. This is a technical correction, **not** acceptance of the existing motion or proof of a new source animation. A later authored art export and in-game visual review are still required.
+
+Useful principles (not art to copy): [Epic's contact/phase/IK locomotion explanation](https://dev.epicgames.com/community/learning/tutorials/EkxO/unreal-engine-procedural-animation-with-a-locomotor) and [Microsoft's timing, anticipation and believable animation principles](https://learn.microsoft.com/en-us/windows/win32/lwef/animation-principles).
+
 ## Present-day approved identity (20 October 2026)
 
 - Gothic, grounded, readable dark fantasy. Prefer coherent real building geometry and material, limited meaningful magical light, and believable people/creatures over ornamental AI-generated clutter. Real game visual acceptance at mobile scale is required.
