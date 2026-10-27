@@ -126,6 +126,16 @@ if fire_spec is None or fire_spec.loader is None:
 embers = importlib.util.module_from_spec(fire_spec)
 fire_spec.loader.exec_module(embers)
 actor = bpy.data.objects["Hollow skinned character"]
+# Remove the skirt-length coat shape from the REAL weighted mesh before
+# assigning inner embers. Preserve anatomy, capeless source and skinning.
+original_garment_mesh = actor.data
+hem_path = Path(__file__).with_name("hollow-ragged-silhouette.py")
+hem_spec = importlib.util.spec_from_file_location("hollow_ragged_silhouette", hem_path)
+if hem_spec is None or hem_spec.loader is None:
+    raise RuntimeError(f"Missing source cloth authoring tool: {hem_path}")
+hem_module = importlib.util.module_from_spec(hem_spec)
+hem_spec.loader.exec_module(hem_module)
+cloth_report = hem_module.shorten_hanging_cloth(actor)
 fire_controls, source_regions = embers.attach_internal_fire(actor)
 if not fire_controls:
     raise ValueError("No source-bound fire shader on cape-free Hollowed")
@@ -199,6 +209,7 @@ scene.render.image_settings.color_depth = "8"
 
 report = {"model": args.variant, "capeFree": True, "sourceWalk": str(WALK.relative_to(ROOT)),
           "sourceStrike": str(variant_source.relative_to(ROOT)),
+          "garmentRevision": cloth_report, "shortJacketNotCoat": True,
           "3dSkinned": True, "legGaitContinuousDuringAttack": True,
           "attackUninterruptedByTurn": True, "sourceAttack": attack_report,
           "basePoseExactlyAuthoredWalk": True, "attackOnlyUpperBodyAdditive": True,
@@ -208,7 +219,7 @@ report = {"model": args.variant, "capeFree": True, "sourceWalk": str(WALK.relati
           "emissionOutsideAttack": .85, "maxSourceAttackEmission": 4.35,
           "directions": list(DIRECTIONS), "mobileReviewOnly": True,
           "ownerApproved": False, "runtimeIntegrated": False, "preflightRigMatched": True,
-          "renders": []}
+          "renders": [], "garmentComparisons": []}
 
 for scenario, turns in (("running-strike", False), ("pass-by-turn-and-chase", True)):
     # Each case has its own editable source action; no action frames recycled.
@@ -242,6 +253,37 @@ for scenario, turns in (("running-strike", False), ("pass-by-turn-and-chase", Tr
             temporary.unlink()
             if image.size != (CELL, CELL) or not image.getbbox():
                 raise ValueError(f"Missing real skinned pose: {scenario}/{direction}/{index}")
+            if index == 1 and scenario == "running-strike":
+                # Side-by-side genuine ORIGINAL long-hem source vs actually
+                # trimmed geometry, SAME skeleton pose and facing, NO fire.
+                saved_mesh = actor.data
+                for socket in fire_controls:
+                    socket.default_value = 0
+                bare = DEST / "_garment_original.png"
+                actor.data = original_garment_mesh
+                scene.render.filepath = str(bare)
+                bpy.ops.render.render(write_still=True)
+                old_body = Image.open(bare).convert("RGBA")
+                bare.unlink()
+                actor.data = saved_mesh
+                scene.render.filepath = str(DEST / "_garment_trimmed.png")
+                bpy.ops.render.render(write_still=True)
+                new_body = Image.open(scene.render.filepath).convert("RGBA")
+                (DEST / "_garment_trimmed.png").unlink()
+                for socket in fire_controls:
+                    socket.default_value = strength
+                old_mask = old_body.getchannel("A")
+                new_mask = new_body.getchannel("A")
+                alpha_change = sum(a != b for a, b in zip(old_mask.getdata(),new_mask.getdata()))
+                if alpha_change < 10:
+                    raise ValueError("The long garment has not changed visible silhouette")
+                compare = Image.new("RGBA", (CELL*2,CELL), (16,14,21,255))
+                compare.alpha_composite(old_body, (0,0))
+                compare.alpha_composite(new_body, (CELL,0))
+                output = f"{args.variant}-long-coat-versus-short-torn-hem-{direction}.png"
+                compare.save(DEST / output)
+                report["garmentComparisons"].append(output)
+                report.setdefault("garmentSilhouetteDifferencePixels",{})[direction] = alpha_change
             if index == ATTACK_START + 8 * STRIKE_HOLD:
                 # Independently prove bright source emission actually changed
                 # the rendered actor. Do not ship a "fire" review lacking fire.
