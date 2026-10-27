@@ -1,6 +1,11 @@
 name: Hollowed source-bound internal fire & attack QC
 
 on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/sprite-lab/author-hollow-inner-embers.py'
+      - '.github/workflows/hollow-inner-fire-source.yml'
   push:
     branches: [fix/hollowed-animation-polish-20261027]
     paths:
