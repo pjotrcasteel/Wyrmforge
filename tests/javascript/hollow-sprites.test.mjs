@@ -83,6 +83,45 @@ test('an active attack follows a changed target direction without restarting',()
  const frozen=snapshot({enemies:[enemy({frozen:true})],player:{x:2,y:20,radius:9}});
  advance(state,frozen,.65,.8);assert.equal(pose.direction,'N');
 });
+test('walk-to-strike and 8-way turning crossfade actual source frames for 160ms',()=>{
+ const state=mod.createHollowState();
+ const walking=snapshot({player:{x:200,y:200,radius:9}});
+ mod.updateHollowSprites(state,walking,0);
+ mod.updateHollowSprites(state,snapshot({enemies:[enemy({x:22})]}),.05);
+ const pose=state.entities.get(7);
+ const prior={clip:pose.clip,frame:pose.frame,direction:pose.direction};
+ const touching=snapshot({enemies:[enemy({x:22})],player:{x:37,y:20,radius:9}});
+ mod.updateHollowSprites(state,touching,.10);
+ assert.equal(pose.clip,'attack');
+ assert.deepEqual(pose.blendFrom,prior,'The previous planted walk frame must remain the fade source.');
+ assert.equal(pose.blendWeight,0);
+ const token=pose.attackAt;
+ mod.updateHollowSprites(state,touching,.18);
+ assert.ok(pose.blendWeight>0 && pose.blendWeight<1);
+ assert.equal(pose.attackAt,token,'Crossfading must not restart the combat animation.');
+ mod.updateHollowSprites(state,touching,.30);
+ assert.equal(pose.blendFrom,null);
+ assert.equal(pose.blendWeight,1);
+ const changed=snapshot({enemies:[enemy({x:22})],player:{x:22,y:4,radius:9}});
+ mod.updateHollowSprites(state,changed,.35);
+ assert.equal(pose.clip,'attack');
+ assert.equal(pose.direction,'N');
+ assert.equal(pose.blendFrom.direction,'E','Turning retains the last 3D sprite facing for the fade.');
+ assert.equal(pose.blendWeight,0);
+ assert.equal(pose.attackAt,token);
+});
+test('reduced motion removes opacity interpolation and pauses preserve transitions',()=>{
+ assert.equal(mod.hollowBlendWeight(1,1.03,true),1);
+ assert.equal(mod.hollowBlendWeight(undefined,1),1);
+ assert.equal(mod.hollowBlendWeight(1,1),0);
+ assert.equal(mod.hollowBlendWeight(1,1.08),.5);
+ assert.equal(mod.hollowBlendWeight(1,1.16),1);
+ const state=mod.createHollowState(),contact=snapshot({player:{x:38,y:20,radius:9}});
+ mod.updateHollowSprites(state,contact,0);
+ assert.equal(state.entities.get(7).blendFrom,null);
+ mod.updateHollowSprites(state,contact,.10,true);
+ assert.equal(state.entities.get(7).blendWeight,1);
+});
 test('only authoritative Hollow deaths collapse then hold before fading; paused clock stops',()=>{
  const state=mod.createHollowState();mod.updateHollowSprites(state,snapshot(),0);
  const death={entityId:7,kind:0,x:20,y:20,bodyRadius:11};
