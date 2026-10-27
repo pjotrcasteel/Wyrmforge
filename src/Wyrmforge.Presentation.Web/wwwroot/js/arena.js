@@ -1,7 +1,7 @@
 import { preloadFireballV5 } from './arena-fireball-v5.js';
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
 import { attachArenaInput, getArenaMovement, getArenaAim, getArenaPropFocus } from './arena-input.js';
-import { resolveTargetIndicator, drawTargetIndicator } from './arena-target-indicator.js';
+import { resolveTargetIndicator, drawTargetIndicator, targetSelectionLightEmitter, targetSelectionCanvasLight } from './arena-target-indicator.js';
 import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, drawArenaCloisterElevation } from './arena-environment.js?v=20261026-compact-ground-v1';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
@@ -89,9 +89,9 @@ export function readArenaDiagnostics(canvas) {
         hunt: state.latestSnapshot?.hunt ?? null,
         performance: { fps:state.displayFps, simulationHz:state.displaySimulationHz, simulationMilliseconds:state.displaySimulationMilliseconds, bridgeMilliseconds:state.displayBridgeMilliseconds },
         renderingFailed: Boolean(state.renderingFailed),
-        sharedLighting: state.sharedLightingFrame ?? state.fractureGpuFrame ?? state.latestSnapshot?.lighting ?? null,
-        hollowFireGpuEmitters: state.hollowFireGpuEmitters ?? [],
+        sharedLighting: state.sharedLightingFrame ?? state.latestSnapshot?.lighting ?? null,
         hollowFractureGpuEmitters: state.fractureGpuEmitters ?? [],
+        hollowFireGpuEmitters: state.hollowFireGpuEmitters ?? [],
         wetForestGround: state.latestSnapshot?.environment?.wetForest
             ? liveWetForestMaterialDiagnostics(state.latestSnapshot.environment.seed) : null,
         lighting: { mode: 'night', darkness: GOTHIC_NIGHT.darkness, source: 'authoritative-csharp-snapshot' },
@@ -243,18 +243,24 @@ function draw(state, snapshot, width, height) {
     updateHollowSprites(state.hollow,snapshot,visualSeconds,state.reducedMotion.matches);
     // Source-derived death geometry and a shared GPU-compatible emitter; never procedural bones.
     const fractureEmitters = hollowFractureEmitters(state.hollow.corpses,state.hollow.clock,state.reducedMotion.matches);
+    // Every illumination cue uses the SAME authoritative lighting frame.
+    // The selected target supplies a generic, ultra-dim emitter; no second
+    // spotlight renderer or school-specific light engine exists.
+    const selectionEmitter = targetSelectionLightEmitter(targetIndicator,snapshot.lighting);
     state.fractureGpuEmitters = fractureEmitters;
-    state.fractureGpuFrame = withHollowFractureLightingFrame(snapshot.lighting,fractureEmitters);
-    // Hollowed internal embers and attack surges use the exact same universal
-    // GPU frame and standard Canvas compatibility adapters as other fires.
-    // No independent spotlight or procedural fire-light renderer is introduced.
+    state.selectionGpuEmitter = selectionEmitter;
+    state.sharedLightingFrame = withHollowFractureLightingFrame(snapshot.lighting,
+        selectionEmitter ? [...fractureEmitters,selectionEmitter] : fractureEmitters);
+    // Source-skinned Hollowed internal fire adds ordinary GPU emitters to the
+    // same lighting frame as fracture embers and neutral target sigils.
     const hollowEmbers = hollowFireEmitters(snapshot.enemies,state.hollow,visualSeconds,
         state.reducedMotion.matches,lightViewport);
     state.hollowFireGpuEmitters = hollowEmbers;
-    state.sharedLightingFrame = withHollowFractureLightingFrame(state.fractureGpuFrame,hollowEmbers);
+    state.sharedLightingFrame = withHollowFractureLightingFrame(state.sharedLightingFrame,hollowEmbers);
     const spellLights = [
         ...buildSpellLights(snapshot, visualSeconds, state.reducedMotion.matches, lightViewport),
         ...hollowFractureCanvasLights(fractureEmitters,snapshot.lighting),
+        ...targetSelectionCanvasLight(selectionEmitter),
         ...hollowFireCanvasLights(hollowEmbers,snapshot.lighting)
     ];
     ctx.clearRect(0, 0, width, height);
@@ -294,8 +300,8 @@ function draw(state, snapshot, width, height) {
     drawPlayerChill(ctx, snapshot.player, state.reducedMotion.matches ? 0 : visualSeconds);
     for (const shard of snapshot.experienceShards ?? []) drawExperienceShard(ctx, shard);
     for (const pulse of snapshot.splashPulses) drawSplashPulse(ctx, pulse, snapshot.dragon?.school);
-    // The footprint is world-aligned beneath sprites and destructible scene props.
-    drawTargetIndicator(ctx, targetIndicator);
+    // Neutral magic lies beneath the world sprites without replacing hostile attack telegraphs.
+    drawTargetIndicator(ctx, targetIndicator, 'ground', visualSeconds, state.reducedMotion.matches);
     drawAimRune(ctx, snapshot.player);
     drawWardReadiness(ctx, snapshot.player, visualSeconds, state.reducedMotion.matches);
     if (snapshot.wardPulse) drawWardPulse(ctx, snapshot.wardPulse, state.reducedMotion.matches);
@@ -363,8 +369,8 @@ function draw(state, snapshot, width, height) {
     const realFires = createWetForestFirelightPlan(snapshot.environment, worldWidth, worldHeight);
     const nightSources = gothicNightLightSources(snapshot, spellLights, worldWidth, worldHeight, realFires);
     drawGothicNight(ctx, gothicNightPlan(snapshot.player, nightSources, lightViewport), state.nightMask);
-    // A thin contrast rim stays readable at Gothic-night black levels without becoming a light source.
-    drawTargetIndicator(ctx, targetIndicator, 'contrast');
+    // Restrained rune fragments survive the night veil without adding a light emitter.
+    drawTargetIndicator(ctx, targetIndicator, 'contrast', visualSeconds, state.reducedMotion.matches);
     // Tactical telegraphs must remain readable even when the ground is nearly
     // black. They are presentation cues, not physical light emitters.
     for (const hazard of snapshot.huntHazards ?? []) {

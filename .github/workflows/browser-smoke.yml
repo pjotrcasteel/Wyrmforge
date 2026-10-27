@@ -70,7 +70,9 @@ jobs:
     name: Browser shard ${{ matrix.shard }}/4
     needs: preview
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # Chromium installation and browser startup can exceed 10 minutes on cold hosted runners.
+    # Keep the full suite required; do not abort a healthy shard halfway through tests.
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
@@ -120,6 +122,8 @@ jobs:
         run: >
           dotnet test tests/Wyrmforge.Browser.Tests/Wyrmforge.Browser.Tests.csproj
           -c Release --no-build --filter "${{ steps.selection.outputs.filter }}"
+          --logger "console;verbosity=normal"
+          --blame-hang-timeout 7m --blame-hang-dump-type none
 
       - name: Preserve shard evidence
         if: always()
