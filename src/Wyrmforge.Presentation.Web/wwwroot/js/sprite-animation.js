@@ -19,6 +19,7 @@ function resolveFacing(state,profile,input,dt,stopped){
     return spec.directions[state.facingIndex];
 }
 export function updateSpriteAnimation(state,profile,input){
+    if(profile.schemaVersion===2)return updateContactAnimation(state,profile,input);
     const stopped=input.paused||input.frozen;
     const dt=stopped?0:Math.max(0,Math.min(profile.maxDeltaSeconds??.1,Number(input.deltaSeconds)||0));
     state.time+=dt;
@@ -51,5 +52,158 @@ export function updateSpriteAnimation(state,profile,input){
         clip:actionSpec?.clip??profile.locomotion.clip,frame:actionSpec?actionFrame:baseFrame,
         direction:resolveFacing(state,profile,input,dt,stopped),layered,baseRegion:actionSpec?.supportRegion,actionRegion:actionSpec?.region,
         useBasePose:layered&&(actionFrame===(actionSpec.entryFrame??-1)||actionFrame===(actionSpec.exitFrame??-1))};
+    return state.sample;
+}
+
+
+/** Validate once at asset load, never per actor/frame. V1 remains compatible. */
+export function validateCreatureRigProfile(profile) {
+    const fail=message=>{throw new TypeError(`CreatureRigProfile: ${message}`);};
+    if(profile?.schemaVersion!==2)fail('unsupported schemaVersion; expected 2');
+    if(profile.coordinateSpace!=='actor-xy-ground-z-up')fail('unsupported bind coordinate space');
+    if(!Number.isFinite(profile.unitsPerPixel)||profile.unitsPerPixel<=0)fail('unitsPerPixel must be positive');
+    const rig=profile.rig;
+    if(!rig||!Array.isArray(rig.bones)||!rig.bones.length)fail('bone hierarchy required');
+    const bones=new Map();
+    for(const bone of rig.bones){
+        if(!bone.id||bones.has(bone.id))fail('duplicate/empty bone');
+        if(!Number.isFinite(bone.length)||bone.length<=0)fail(`invalid length: ${bone.id}`);
+        if(!Array.isArray(bone.rest)||bone.rest.length!==16||!bone.rest.every(Number.isFinite))fail(`invalid bind: ${bone.id}`);
+        if(bone.parent&&!bones.has(bone.parent))fail(`parent must precede child: ${bone.id}`);
+        if(bone.limits&&(!bone.limits.every(Number.isFinite)||bone.limits.length!==2||bone.limits[0]>bone.limits[1]))fail(`invalid limits: ${bone.id}`);
+        bones.set(bone.id,bone);
+    }
+    for(const [semantic,id] of Object.entries(rig.semantics??{}))if(!bones.has(id))fail(`missing semantic ${semantic}: ${id}`);
+    if(!rig.semantics?.root)fail('root semantic required');
+    const contacts=new Set();
+    for(const contact of rig.contacts??[]){
+        if(contacts.has(contact.id)||!bones.has(contact.bone))fail(`invalid contact: ${contact.id}`);
+        if(!['foot','palm','body','paw'].includes(contact.surface))fail(`invalid contact surface: ${contact.id}`);
+        if(rig.absentBones?.includes(contact.bone))fail(`absent limb contact: ${contact.id}`);
+        contacts.add(contact.id);
+    }
+    if(!contacts.size)fail('at least one actual surface contact required');
+    for(const id of rig.absentBones??[])if(bones.has(id))fail(`absent bone still present: ${id}`);
+    for(const socket of Object.values(rig.sockets??{}))if(!bones.has(socket.bone))fail('socket on missing bone');
+    const directions=profile.facing?.directions;
+    if(!Array.isArray(directions)||directions.length!==8||new Set(directions).size!==8)fail('eight unique facing rows required');
+    if(!(profile.locomotion?.stride>0))fail('positive authored stride required');
+    const specs=[profile.locomotion,...Object.values(profile.actions??{}),...(profile.pivot?[profile.pivot]:[])];
+    for(const clip of specs){
+        if(!clip.clip||!Number.isSafeInteger(clip.frames)||clip.frames<1||!(clip.fps>0))fail('invalid clip dimensions/time');
+        if(clip.mode==='regions'&&!clip.coupledSupport)fail('region action requires authored coupledSupport');
+        if(!Array.isArray(clip.samples)||clip.samples.length!==clip.frames)fail(`contact samples required: ${clip.clip}`);
+        if(clip.commitUntil!=null&&(!(clip.commitUntil>=0)||clip.commitUntil>1))fail('invalid commitment');
+        for(const sample of clip.samples){
+            const ids=new Set();
+            for(const c of sample.contacts??[]){
+                if(!contacts.has(c.id)||ids.has(c.id)||![c.x,c.y].every(Number.isFinite))fail(`invalid sampled contact: ${c.id}`);
+                ids.add(c.id);
+            }
+            if(!ids.size&&!['flight','catch','fall'].includes(sample.balance))fail(`unsupported pose lacks explicit momentum state: ${clip.clip}`);
+        }
+    }
+    if(!(profile.maxRootOffset>=0)||profile.maxRootOffset>profile.unitsPerPixel)fail('root correction exceeds one source pixel');
+    return profile;
+}
+
+/** Canonical JSON for hashed profiles, replay snapshots and source manifests. */
+export function serializeAnimationData(value) {
+    if(value===null||typeof value!=='object'){
+        if(typeof value==='number'&&!Number.isFinite(value))throw new TypeError('Animation data must be finite');
+        return JSON.stringify(value);
+    }
+    if(Array.isArray(value))return '['+value.map(serializeAnimationData).join(',')+']';
+    return '{'+Object.keys(value).sort().map(key=>JSON.stringify(key)+':'+serializeAnimationData(value[key])).join(',')+'}';
+}
+
+function seededIdentity(id){
+    let hash=2166136261;
+    for(const c of String(id)){hash^=c.charCodeAt(0);hash=Math.imul(hash,16777619);}
+    return hash>>>0;
+}
+function contactPoint(c,world,yaw){
+    const a=yaw*Math.PI/180,cos=Math.cos(a),sin=Math.sin(a);
+    return {x:world.x+c.x*cos-c.y*sin,y:world.y+c.x*sin+c.y*cos};
+}
+function solvePresentationContacts(state,profile,spec,frame,world,yaw){
+    const authored=spec.samples[frame],active=new Set(),errors=[];
+    let dx=0,dy=0,count=0;
+    for(const c of authored.contacts??[]){
+        active.add(c.id);const point=contactPoint(c,world,yaw);
+        let anchor=state.contacts[c.id];
+        if(!anchor){anchor={x:point.x+state.rootOffset.x,y:point.y+state.rootOffset.y};state.contacts[c.id]=anchor;}
+        dx+=anchor.x-point.x;dy+=anchor.y-point.y;count++;
+    }
+    for(const id of Object.keys(state.contacts))if(!active.has(id))delete state.contacts[id];
+    if(count){dx/=count;dy/=count;}
+    // Atlas sampling can require a subpixel translation; it never moves gameplay.
+    const length=Math.hypot(dx,dy),scale=length>profile.maxRootOffset?profile.maxRootOffset/length:1;
+    state.rootOffset={x:dx*scale,y:dy*scale};
+    for(const c of authored.contacts??[]){
+        const point=contactPoint(c,world,yaw),anchor=state.contacts[c.id];
+        errors.push({id:c.id,slip:Math.hypot(point.x+state.rootOffset.x-anchor.x,point.y+state.rootOffset.y-anchor.y)});
+    }
+    return {contacts:state.contacts,errors,maxSlip:Math.max(0,...errors.map(c=>c.slip)),balance:authored.balance??'supported',
+        com:authored.com??null,support:authored.contacts??[],correctionSaturated:length>profile.maxRootOffset};
+}
+function updateContactAnimation(state,profile,input){
+    if(!state.contactVersion){
+        if(!Number.isFinite(input.timestamp)||!Number.isFinite(input.travel)||!input.world||input.entityId==null)
+            throw new TypeError('MotionIntent requires stable entityId, timestamp, cumulative travel and world');
+        Object.assign(state,{contactVersion:2,entityId:input.entityId,seed:seededIdentity(input.entityId),
+            timestamp:input.timestamp,travel:input.travel,contacts:{},rootOffset:{x:0,y:0},sequence:-1,
+            facingIndex:Math.max(0,profile.facing.directions.indexOf(input.direction)),pivotTime:0});
+    }
+    if(state.entityId!==input.entityId)throw new TypeError('Animation state cannot be shared between entities');
+    if(![input.timestamp,input.travel,input.world?.x,input.world?.y].every(Number.isFinite))throw new TypeError('Non-finite MotionIntent');
+    if(input.timestamp<state.timestamp||input.travel<state.travel)throw new RangeError('Replay seek requires a fresh animation state');
+    const stopped=Boolean(input.paused||input.frozen),wasStopped=Boolean(state.stopped);
+    const dt=stopped||wasStopped?0:input.timestamp-state.timestamp;
+    const distance=stopped||wasStopped?0:input.travel-state.travel;
+    state.timestamp=input.timestamp;state.travel=input.travel;state.stopped=stopped;
+    state.time+=dt;
+    if(!stopped)state.phase=(state.phase+distance/profile.locomotion.stride)%1;
+    const signal=input.action,spec=signal&&profile.actions[signal.name];
+    if(signal&&(!Number.isSafeInteger(signal.sequence)||signal.sequence<0||signal.token==null))throw new TypeError('Action requires token and monotonic sequence');
+    const current=state.action&&profile.actions[state.action.name];
+    const progress=current?Math.min(1,(state.time-state.action.started)*current.fps/current.frames):1;
+    const committed=current&&progress<(current.commitUntil??0);
+    const higher=spec&&(spec.priority??0)>(current?.priority??-1);
+    if(spec&&signal.sequence>state.sequence&&(!stopped||spec.terminal)&&(!current||higher||(!committed&&!current.terminal))){
+        state.action={name:signal.name,token:signal.token,started:state.time};state.sequence=signal.sequence;
+        state.actionDirection=state.facingIndex;
+        // Every action is full-body unless its source declares coupled regions.
+        state.contacts={};
+    }
+    let actionSpec=state.action&&profile.actions[state.action.name];
+    let actionProgress=actionSpec?Math.min(1,(state.time-state.action.started)*actionSpec.fps/actionSpec.frames):null;
+    if(actionSpec&&actionProgress>=1&&!actionSpec.hold){state.action=null;actionSpec=null;actionProgress=null;}
+    const target=profile.facing.directions.indexOf(input.direction);
+    const locomotionFrame=Math.min(profile.locomotion.frames-1,Math.floor(state.phase*profile.locomotion.frames));
+    const turning=!actionSpec&&target>=0&&target!==state.facingIndex;
+    let pivotFrame=null;
+    if(turning&&profile.pivot&&!stopped){
+        state.pivotTime+=dt;
+        const duration=profile.pivot.frames/profile.pivot.fps;
+        while(state.pivotTime>=duration){
+            state.pivotTime-=duration;
+            const delta=(target-state.facingIndex+12)%8-4;
+            state.facingIndex=(state.facingIndex+(delta<0?-1:1)+8)%8;
+            state.contacts={};
+            if(state.facingIndex===target){state.pivotTime=0;break;}
+        }
+        pivotFrame=Math.min(profile.pivot.frames-1,Math.floor(state.pivotTime*profile.pivot.fps));
+    }else if(!turning)state.pivotTime=0;
+    if(actionSpec)state.facingIndex=state.actionDirection;
+    const clipSpec=actionSpec??(turning&&profile.pivot?profile.pivot:profile.locomotion);
+    let frame=actionSpec?Math.min(actionSpec.frames-1,Math.floor(actionProgress*actionSpec.frames)):
+        pivotFrame??(input.moving?locomotionFrame:(profile.locomotion.idleFrame??locomotionFrame));
+    if(stopped&&state.sample&&!actionSpec?.terminal)frame=state.sample.frame;
+    if(input.reducedMotion)frame=clipSpec.reducedFrame??0;
+    const debug=solvePresentationContacts(state,profile,clipSpec,frame,input.world,state.facingIndex*45);
+    state.sample={baseClip:profile.locomotion.clip,baseFrame:locomotionFrame,phase:state.phase,clip:clipSpec.clip,frame,
+        direction:profile.facing.directions[state.facingIndex],layered:false,actionToken:state.action?.token??null,
+        actionProgress,rootOffset:{...state.rootOffset},material:clipSpec.material??null,debug,seed:state.seed};
     return state.sample;
 }
