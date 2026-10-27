@@ -88,7 +88,7 @@ export function readArenaDiagnostics(canvas) {
         hunt: state.latestSnapshot?.hunt ?? null,
         performance: { fps:state.displayFps, simulationHz:state.displaySimulationHz, simulationMilliseconds:state.displaySimulationMilliseconds, bridgeMilliseconds:state.displayBridgeMilliseconds },
         renderingFailed: Boolean(state.renderingFailed),
-        sharedLighting: state.fractureGpuFrame ?? state.latestSnapshot?.lighting ?? null,
+        sharedLighting: state.sharedLightingFrame ?? state.latestSnapshot?.lighting ?? null,
         hollowFractureGpuEmitters: state.fractureGpuEmitters ?? [],
         wetForestGround: state.latestSnapshot?.environment?.wetForest
             ? liveWetForestMaterialDiagnostics(state.latestSnapshot.environment.seed) : null,
@@ -247,7 +247,7 @@ function draw(state, snapshot, width, height) {
     const selectionEmitter = targetSelectionLightEmitter(targetIndicator,snapshot.lighting);
     state.fractureGpuEmitters = fractureEmitters;
     state.selectionGpuEmitter = selectionEmitter;
-    state.fractureGpuFrame = withHollowFractureLightingFrame(snapshot.lighting,
+    state.sharedLightingFrame = withHollowFractureLightingFrame(snapshot.lighting,
         selectionEmitter ? [...fractureEmitters,selectionEmitter] : fractureEmitters);
     const spellLights = [
         ...buildSpellLights(snapshot, visualSeconds, state.reducedMotion.matches, lightViewport),
