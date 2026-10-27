@@ -1,0 +1,597 @@
+{
+  "before": "bf26857ba5102d5d3f41f37ce46effb508825c43",
+  "after": "5c656a5079748b7f3a0853184b36b0b9e85d7929",
+  "roi": [
+    [
+      "Roof window",
+      [
+        802,
+        0,
+        864,
+        77
+      ]
+    ],
+    [
+      "Gate sconces",
+      [
+        695,
+        182,
+        960,
+        280
+      ]
+    ],
+    [
+      "Upper-east lantern",
+      [
+        933,
+        332,
+        1003,
+        428
+      ]
+    ],
+    [
+      "Well roof",
+      [
+        795,
+        375,
+        939,
+        475
+      ]
+    ],
+    [
+      "West approach",
+      [
+        424,
+        430,
+        585,
+        609
+      ]
+    ],
+    [
+      "East approach",
+      [
+        1080,
+        433,
+        1196,
+        598
+      ]
+    ],
+    [
+      "Lower-west pool",
+      [
+        470,
+        765,
+        663,
+        892
+      ]
+    ],
+    [
+      "Lower-east pool",
+      [
+        943,
+        765,
+        1124,
+        892
+      ]
+    ]
+  ],
+  "resampling": "nearest display crops; native framebuffer pixels unchanged",
+  "visualApproval": false,
+  "captures": [
+    {
+      "codeCheckpoint": "5c656a5079748b7f3a0853184b36b0b9e85d7929",
+      "diagnostic": {
+        "engine": "three.js r186",
+        "npcFeetY": "hidden",
+        "npcPass": "hidden",
+        "npcShadowCasters": "0",
+        "inspection": "lit",
+        "projectionErrorPx": "0.000",
+        "nightAmbient": "0.025",
+        "framebufferWidth": "1672",
+        "framebufferHeight": "941",
+        "artworkPixelsPerFramebufferPixel": "1.000",
+        "wellAssetMode": "legacy",
+        "wellShadowCaster": "legacy",
+        "pavingAlbedo": "neutral",
+        "neutralCoverage": "283302",
+        "illuminationReduction": "0.465",
+        "profile": "night",
+        "albedoSource": "night",
+        "fixtureCount": "3",
+        "lightIsolation": "blacksmith",
+        "chimneyOn": "true",
+        "nexusMagicColor": "#ffffff",
+        "ready": "true",
+        "selectedSource": "A5C9AC1E-1EDA-4E6B-894E-33B7B6197728.jpeg",
+        "selectedSourceSha256": "1290fc0325468f73eeb2e17d6eeecc59bfa9f33009d0fe01df236aadb23649f6"
+      },
+      "viewportWidth": 390,
+      "nativeSha256": "c245fa4561122fdd25c99ea76f15f189e0f009bb9b6414fa7ac8beea340e062d",
+      "runtimeModuleSha256": {
+        "town-relighting-preview.js": "9f4ba2fac3dcb5c178db0abae899b0118cbafdf3d812834d3e85573627e63bce",
+        "town-light-domains.js": "28dc4a0b5733052b4620cf270de3c9db7bb6b7a11b268aac31addbddd38c8067",
+        "town-emission-masks.js": "2d56ce2a3353aca420c16f26c1ac56a95791108c6ea42549eaaa9af99ea64fba",
+        "town-paving-material.js": "21f027cccad4e8d69445009d5ed0351bf9f2b85adbfcb37f1cc3194f33c11d11",
+        "town-neutral-albedo.js": "7f717000c49230261cad09f96b0cd4ef07225d5ed4cf52c6549529f1cc299656",
+        "town-building-neutral-albedo.js": "4ef71d6506435b0caf78e4b4c83c4fb25bb9175138447b7aa7002d7800709818"
+      }
+    },
+    {
+      "codeCheckpoint": "5c656a5079748b7f3a0853184b36b0b9e85d7929",
+      "diagnostic": {
+        "engine": "three.js r186",
+        "npcFeetY": "hidden",
+        "npcPass": "hidden",
+        "npcShadowCasters": "0",
+        "inspection": "lit",
+        "projectionErrorPx": "0.000",
+        "nightAmbient": "0.025",
+        "framebufferWidth": "1672",
+        "framebufferHeight": "941",
+        "artworkPixelsPerFramebufferPixel": "1.000",
+        "wellAssetMode": "legacy",
+        "wellShadowCaster": "legacy",
+        "pavingAlbedo": "neutral",
+        "neutralCoverage": "283302",
+        "illuminationReduction": "0.465",
+        "profile": "night",
+        "albedoSource": "night",
+        "fixtureCount": "33",
+        "lightIsolation": "combined",
+        "chimneyOn": "true",
+        "nexusMagicColor": "#ffffff",
+        "ready": "true",
+        "selectedSource": "8B4BA6F4-3B4B-4499-975E-015565C67BA5.jpeg",
+        "selectedSourceSha256": "8821fe5a165f3c28377d3c9ce5d5727c90622d2690b919a8f8267d133b84fc66"
+      },
+      "viewportWidth": 1120,
+      "nativeSha256": "9e33579bd28b7b998ad8e5f7c9e38549a3b6f715ea4775182cdcadd99cc55ca5",
+      "runtimeModuleSha256": {
+        "town-relighting-preview.js": "9f4ba2fac3dcb5c178db0abae899b0118cbafdf3d812834d3e85573627e63bce",
+        "town-light-domains.js": "28dc4a0b5733052b4620cf270de3c9db7bb6b7a11b268aac31addbddd38c8067",
+        "town-emission-masks.js": "2d56ce2a3353aca420c16f26c1ac56a95791108c6ea42549eaaa9af99ea64fba",
+        "town-paving-material.js": "21f027cccad4e8d69445009d5ed0351bf9f2b85adbfcb37f1cc3194f33c11d11",
+        "town-neutral-albedo.js": "7f717000c49230261cad09f96b0cd4ef07225d5ed4cf52c6549529f1cc299656",
+        "town-building-neutral-albedo.js": "4ef71d6506435b0caf78e4b4c83c4fb25bb9175138447b7aa7002d7800709818"
+      }
+    },
+    {
+      "codeCheckpoint": "5c656a5079748b7f3a0853184b36b0b9e85d7929",
+      "diagnostic": {
+        "engine": "three.js r186",
+        "npcFeetY": "hidden",
+        "npcPass": "hidden",
+        "npcShadowCasters": "0",
+        "inspection": "lit",
+        "projectionErrorPx": "0.000",
+        "nightAmbient": "0.025",
+        "framebufferWidth": "1672",
+        "framebufferHeight": "941",
+        "artworkPixelsPerFramebufferPixel": "1.000",
+        "wellAssetMode": "legacy",
+        "wellShadowCaster": "legacy",
+        "pavingAlbedo": "neutral",
+        "neutralCoverage": "283302",
+        "illuminationReduction": "0.465",
+        "profile": "night",
+        "albedoSource": "night",
+        "fixtureCount": "33",
+        "lightIsolation": "combined",
+        "chimneyOn": "true",
+        "nexusMagicColor": "#ffffff",
+        "ready": "true",
+        "selectedSource": "8B4BA6F4-3B4B-4499-975E-015565C67BA5.jpeg",
+        "selectedSourceSha256": "8821fe5a165f3c28377d3c9ce5d5727c90622d2690b919a8f8267d133b84fc66"
+      },
+      "viewportWidth": 320,
+      "nativeSha256": "9e33579bd28b7b998ad8e5f7c9e38549a3b6f715ea4775182cdcadd99cc55ca5",
+      "runtimeModuleSha256": {
+        "town-relighting-preview.js": "9f4ba2fac3dcb5c178db0abae899b0118cbafdf3d812834d3e85573627e63bce",
+        "town-light-domains.js": "28dc4a0b5733052b4620cf270de3c9db7bb6b7a11b268aac31addbddd38c8067",
+        "town-emission-masks.js": "2d56ce2a3353aca420c16f26c1ac56a95791108c6ea42549eaaa9af99ea64fba",
+        "town-paving-material.js": "21f027cccad4e8d69445009d5ed0351bf9f2b85adbfcb37f1cc3194f33c11d11",
+        "town-neutral-albedo.js": "7f717000c49230261cad09f96b0cd4ef07225d5ed4cf52c6549529f1cc299656",
+        "town-building-neutral-albedo.js": "4ef71d6506435b0caf78e4b4c83c4fb25bb9175138447b7aa7002d7800709818"
+      }
+    },
+    {
+      "codeCheckpoint": "5c656a5079748b7f3a0853184b36b0b9e85d7929",
+      "diagnostic": {
+        "engine": "three.js r186",
+        "npcFeetY": "hidden",
+        "npcPass": "hidden",
+        "npcShadowCasters": "0",
+        "inspection": "lit",
+        "projectionErrorPx": "0.000",
+        "nightAmbient": "0.025",
+        "framebufferWidth": "1672",
+        "framebufferHeight": "941",
+        "artworkPixelsPerFramebufferPixel": "1.000",
+        "wellAssetMode": "legacy",
+        "wellShadowCaster": "legacy",
+        "pavingAlbedo": "neutral",
+        "neutralCoverage": "283302",
+        "illuminationReduction": "0.465",
+        "profile": "night",
+        "albedoSource": "night",
+        "fixtureCount": "33",
+        "lightIsolation": "combined",
+        "chimneyOn": "true",
+        "nexusMagicColor": "#ffffff",
+        "ready": "true",
+        "selectedSource": "8B4BA6F4-3B4B-4499-975E-015565C67BA5.jpeg",
+        "selectedSourceSha256": "8821fe5a165f3c28377d3c9ce5d5727c90622d2690b919a8f8267d133b84fc66"
+      },
+      "viewportWidth": 390,
+      "nativeSha256": "9e33579bd28b7b998ad8e5f7c9e38549a3b6f715ea4775182cdcadd99cc55ca5",
+      "runtimeModuleSha256": {
+        "town-relighting-preview.js": "9f4ba2fac3dcb5c178db0abae899b0118cbafdf3d812834d3e85573627e63bce",
+        "town-light-domains.js": "28dc4a0b5733052b4620cf270de3c9db7bb6b7a11b268aac31addbddd38c8067",
+        "town-emission-masks.js": "2d56ce2a3353aca420c16f26c1ac56a95791108c6ea42549eaaa9af99ea64fba",
+        "town-paving-material.js": "21f027cccad4e8d69445009d5ed0351bf9f2b85adbfcb37f1cc3194f33c11d11",
+        "town-neutral-albedo.js": "7f717000c49230261cad09f96b0cd4ef07225d5ed4cf52c6549529f1cc299656",
+        "town-building-neutral-albedo.js": "4ef71d6506435b0caf78e4b4c83c4fb25bb9175138447b7aa7002d7800709818"
+      }
+    },
+    {
+      "codeCheckpoint": "5c656a5079748b7f3a0853184b36b0b9e85d7929",
+      "diagnostic": {
+        "engine": "three.js r186",
+        "npcFeetY": "hidden",
+        "npcPass": "hidden",
+        "npcShadowCasters": "0",
+        "inspection": "lit",
+        "projectionErrorPx": "0.000",
+        "nightAmbient": "not-night",
+        "framebufferWidth": "1672",
+        "framebufferHeight": "941",
+        "artworkPixelsPerFramebufferPixel": "1.000",
+        "wellAssetMode": "legacy",
+        "wellShadowCaster": "legacy",
+        "pavingAlbedo": "neutral",
+        "neutralCoverage": "283302",
+        "illuminationReduction": "0.465",
+        "profile": "day",
+        "albedoSource": "night",
+        "fixtureCount": "0",
+        "lightIsolation": "common",
+        "chimneyOn": "false",
+        "nexusMagicColor": "#ffffff",
+        "ready": "true",
+        "selectedSource": "3B62CD6B-1248-4D85-8B5D-98A1EF34B1D1(1).jpeg",
+        "selectedSourceSha256": "3943d386d688d1a3373ef926db213634e15fb27d27a17c322ee2c45a675b923d"
+      },
+      "viewportWidth": 390,
+      "nativeSha256": "46338622bcc747f2974d5010c741918eb31b6b25e94ecb2bbd572d42cb89aff1",
+      "runtimeModuleSha256": {
+        "town-relighting-preview.js": "9f4ba2fac3dcb5c178db0abae899b0118cbafdf3d812834d3e85573627e63bce",
+        "town-light-domains.js": "28dc4a0b5733052b4620cf270de3c9db7bb6b7a11b268aac31addbddd38c8067",
+        "town-emission-masks.js": "2d56ce2a3353aca420c16f26c1ac56a95791108c6ea42549eaaa9af99ea64fba",
+        "town-paving-material.js": "21f027cccad4e8d69445009d5ed0351bf9f2b85adbfcb37f1cc3194f33c11d11",
+        "town-neutral-albedo.js": "7f717000c49230261cad09f96b0cd4ef07225d5ed4cf52c6549529f1cc299656",
+        "town-building-neutral-albedo.js": "4ef71d6506435b0caf78e4b4c83c4fb25bb9175138447b7aa7002d7800709818"
+      }
+    },
+    {
+      "codeCheckpoint": "5c656a5079748b7f3a0853184b36b0b9e85d7929",
+      "diagnostic": {
+        "engine": "three.js r186",
+        "npcFeetY": "hidden",
+        "npcPass": "hidden",
+        "npcShadowCasters": "0",
+        "inspection": "lit",
+        "projectionErrorPx": "0.000",
+        "nightAmbient": "0.025",
+        "framebufferWidth": "1672",
+        "framebufferHeight": "941",
+        "artworkPixelsPerFramebufferPixel": "1.000",
+        "wellAssetMode": "legacy",
+        "wellShadowCaster": "legacy",
+        "pavingAlbedo": "neutral",
+        "neutralCoverage": "283302",
+        "illuminationReduction": "0.465",
+        "profile": "night",
+        "albedoSource": "night",
+        "fixtureCount": "20",
+        "lightIsolation": "common",
+        "chimneyOn": "false",
+        "nexusMagicColor": "#ffffff",
+        "ready": "true",
+        "selectedSource": "A4829886-EEE9-41CB-8737-36739F87CB78.jpeg",
+        "selectedSourceSha256": "24bc6d6349a81174e36d961e16d448c0109d8d523f5f952a08d9081483b504b0"
+      },
+      "viewportWidth": 1120,
+      "nativeSha256": "6a5e72af6f108fe4cbc34e516cae3ebc71018d84ff4325749001ea6f12a0e471",
+      "runtimeModuleSha256": {
+        "town-relighting-preview.js": "9f4ba2fac3dcb5c178db0abae899b0118cbafdf3d812834d3e85573627e63bce",
+        "town-light-domains.js": "28dc4a0b5733052b4620cf270de3c9db7bb6b7a11b268aac31addbddd38c8067",
+        "town-emission-masks.js": "2d56ce2a3353aca420c16f26c1ac56a95791108c6ea42549eaaa9af99ea64fba",
+        "town-paving-material.js": "21f027cccad4e8d69445009d5ed0351bf9f2b85adbfcb37f1cc3194f33c11d11",
+        "town-neutral-albedo.js": "7f717000c49230261cad09f96b0cd4ef07225d5ed4cf52c6549529f1cc299656",
+        "town-building-neutral-albedo.js": "4ef71d6506435b0caf78e4b4c83c4fb25bb9175138447b7aa7002d7800709818"
+      }
+    },
+    {
+      "codeCheckpoint": "5c656a5079748b7f3a0853184b36b0b9e85d7929",
+      "diagnostic": {
+        "engine": "three.js r186",
+        "npcFeetY": "hidden",
+        "npcPass": "hidden",
+        "npcShadowCasters": "0",
+        "inspection": "lit",
+        "projectionErrorPx": "0.000",
+        "nightAmbient": "0.025",
+        "framebufferWidth": "1672",
+        "framebufferHeight": "941",
+        "artworkPixelsPerFramebufferPixel": "1.000",
+        "wellAssetMode": "legacy",
+        "wellShadowCaster": "legacy",
+        "pavingAlbedo": "neutral",
+        "neutralCoverage": "283302",
+        "illuminationReduction": "0.465",
+        "profile": "night",
+        "albedoSource": "night",
+        "fixtureCount": "20",
+        "lightIsolation": "common",
+        "chimneyOn": "false",
+        "nexusMagicColor": "#ffffff",
+        "ready": "true",
+        "selectedSource": "A4829886-EEE9-41CB-8737-36739F87CB78.jpeg",
+        "selectedSourceSha256": "24bc6d6349a81174e36d961e16d448c0109d8d523f5f952a08d9081483b504b0"
+      },
+      "viewportWidth": 320,
+      "nativeSha256": "6a5e72af6f108fe4cbc34e516cae3ebc71018d84ff4325749001ea6f12a0e471",
+      "runtimeModuleSha256": {
+        "town-relighting-preview.js": "9f4ba2fac3dcb5c178db0abae899b0118cbafdf3d812834d3e85573627e63bce",
+        "town-light-domains.js": "28dc4a0b5733052b4620cf270de3c9db7bb6b7a11b268aac31addbddd38c8067",
+        "town-emission-masks.js": "2d56ce2a3353aca420c16f26c1ac56a95791108c6ea42549eaaa9af99ea64fba",
+        "town-paving-material.js": "21f027cccad4e8d69445009d5ed0351bf9f2b85adbfcb37f1cc3194f33c11d11",
+        "town-neutral-albedo.js": "7f717000c49230261cad09f96b0cd4ef07225d5ed4cf52c6549529f1cc299656",
+        "town-building-neutral-albedo.js": "4ef71d6506435b0caf78e4b4c83c4fb25bb9175138447b7aa7002d7800709818"
+      }
+    },
+    {
+      "codeCheckpoint": "5c656a5079748b7f3a0853184b36b0b9e85d7929",
+      "diagnostic": {
+        "engine": "three.js r186",
+        "npcFeetY": "hidden",
+        "npcPass": "hidden",
+        "npcShadowCasters": "0",
+        "inspection": "lit",
+        "projectionErrorPx": "0.000",
+        "nightAmbient": "0.025",
+        "framebufferWidth": "1672",
+        "framebufferHeight": "941",
+        "artworkPixelsPerFramebufferPixel": "1.000",
+        "wellAssetMode": "legacy",
+        "wellShadowCaster": "legacy",
+        "pavingAlbedo": "neutral",
+        "neutralCoverage": "283302",
+        "illuminationReduction": "0.465",
+        "profile": "night",
+        "albedoSource": "night",
+        "fixtureCount": "20",
+        "lightIsolation": "common",
+        "chimneyOn": "false",
+        "nexusMagicColor": "#ffffff",
+        "ready": "true",
+        "selectedSource": "A4829886-EEE9-41CB-8737-36739F87CB78.jpeg",
+        "selectedSourceSha256": "24bc6d6349a81174e36d961e16d448c0109d8d523f5f952a08d9081483b504b0"
+      },
+      "viewportWidth": 390,
+      "nativeSha256": "6a5e72af6f108fe4cbc34e516cae3ebc71018d84ff4325749001ea6f12a0e471",
+      "runtimeModuleSha256": {
+        "town-relighting-preview.js": "9f4ba2fac3dcb5c178db0abae899b0118cbafdf3d812834d3e85573627e63bce",
+        "town-light-domains.js": "28dc4a0b5733052b4620cf270de3c9db7bb6b7a11b268aac31addbddd38c8067",
+        "town-emission-masks.js": "2d56ce2a3353aca420c16f26c1ac56a95791108c6ea42549eaaa9af99ea64fba",
+        "town-paving-material.js": "21f027cccad4e8d69445009d5ed0351bf9f2b85adbfcb37f1cc3194f33c11d11",
+        "town-neutral-albedo.js": "7f717000c49230261cad09f96b0cd4ef07225d5ed4cf52c6549529f1cc299656",
+        "town-building-neutral-albedo.js": "4ef71d6506435b0caf78e4b4c83c4fb25bb9175138447b7aa7002d7800709818"
+      }
+    },
+    {
+      "codeCheckpoint": "5c656a5079748b7f3a0853184b36b0b9e85d7929",
+      "diagnostic": {
+        "engine": "three.js r186",
+        "npcFeetY": "hidden",
+        "npcPass": "hidden",
+        "npcShadowCasters": "0",
+        "inspection": "lit",
+        "projectionErrorPx": "0.000",
+        "nightAmbient": "0.025",
+        "framebufferWidth": "1672",
+        "framebufferHeight": "941",
+        "artworkPixelsPerFramebufferPixel": "1.000",
+        "wellAssetMode": "legacy",
+        "wellShadowCaster": "legacy",
+        "pavingAlbedo": "neutral",
+        "neutralCoverage": "283302",
+        "illuminationReduction": "0.465",
+        "profile": "night",
+        "albedoSource": "night",
+        "fixtureCount": "4",
+        "lightIsolation": "nexus",
+        "chimneyOn": "false",
+        "nexusMagicColor": "#ffffff",
+        "ready": "true",
+        "selectedSource": "0AD50A56-B979-4658-9E91-4E1E54C82CE6.jpeg",
+        "selectedSourceSha256": "394a5c8f1b9de18d60fac52ae014a9ab8fe524bebd44dd68504a913040cc5b11"
+      },
+      "viewportWidth": 390,
+      "nativeSha256": "5b849c4619c55c85ef5e00517848ba5a0085838d2d0417c8c651ff5e7aa400ee",
+      "runtimeModuleSha256": {
+        "town-relighting-preview.js": "9f4ba2fac3dcb5c178db0abae899b0118cbafdf3d812834d3e85573627e63bce",
+        "town-light-domains.js": "28dc4a0b5733052b4620cf270de3c9db7bb6b7a11b268aac31addbddd38c8067",
+        "town-emission-masks.js": "2d56ce2a3353aca420c16f26c1ac56a95791108c6ea42549eaaa9af99ea64fba",
+        "town-paving-material.js": "21f027cccad4e8d69445009d5ed0351bf9f2b85adbfcb37f1cc3194f33c11d11",
+        "town-neutral-albedo.js": "7f717000c49230261cad09f96b0cd4ef07225d5ed4cf52c6549529f1cc299656",
+        "town-building-neutral-albedo.js": "4ef71d6506435b0caf78e4b4c83c4fb25bb9175138447b7aa7002d7800709818"
+      }
+    },
+    {
+      "codeCheckpoint": "5c656a5079748b7f3a0853184b36b0b9e85d7929",
+      "diagnostic": {
+        "engine": "three.js r186",
+        "npcFeetY": "hidden",
+        "npcPass": "hidden",
+        "npcShadowCasters": "0",
+        "inspection": "lit",
+        "projectionErrorPx": "0.000",
+        "nightAmbient": "not-night",
+        "framebufferWidth": "1672",
+        "framebufferHeight": "941",
+        "artworkPixelsPerFramebufferPixel": "1.000",
+        "wellAssetMode": "legacy",
+        "wellShadowCaster": "legacy",
+        "pavingAlbedo": "neutral",
+        "neutralCoverage": "283302",
+        "illuminationReduction": "0.465",
+        "profile": "zero",
+        "albedoSource": "night",
+        "fixtureCount": "0",
+        "lightIsolation": "off",
+        "chimneyOn": "false",
+        "nexusMagicColor": "#ffffff",
+        "ready": "true",
+        "selectedSource": "8B4BA6F4-3B4B-4499-975E-015565C67BA5.jpeg",
+        "selectedSourceSha256": "8821fe5a165f3c28377d3c9ce5d5727c90622d2690b919a8f8267d133b84fc66",
+        "zeroBlack": "true"
+      },
+      "viewportWidth": 1120,
+      "nativeSha256": "e5814eb8b79190fcfa19b6c9062f819b190087b6d85305e57c1e175f57273a29",
+      "runtimeModuleSha256": {
+        "town-relighting-preview.js": "9f4ba2fac3dcb5c178db0abae899b0118cbafdf3d812834d3e85573627e63bce",
+        "town-light-domains.js": "28dc4a0b5733052b4620cf270de3c9db7bb6b7a11b268aac31addbddd38c8067",
+        "town-emission-masks.js": "2d56ce2a3353aca420c16f26c1ac56a95791108c6ea42549eaaa9af99ea64fba",
+        "town-paving-material.js": "21f027cccad4e8d69445009d5ed0351bf9f2b85adbfcb37f1cc3194f33c11d11",
+        "town-neutral-albedo.js": "7f717000c49230261cad09f96b0cd4ef07225d5ed4cf52c6549529f1cc299656",
+        "town-building-neutral-albedo.js": "4ef71d6506435b0caf78e4b4c83c4fb25bb9175138447b7aa7002d7800709818"
+      }
+    },
+    {
+      "codeCheckpoint": "5c656a5079748b7f3a0853184b36b0b9e85d7929",
+      "diagnostic": {
+        "engine": "three.js r186",
+        "npcFeetY": "hidden",
+        "npcPass": "hidden",
+        "npcShadowCasters": "0",
+        "inspection": "lit",
+        "projectionErrorPx": "0.000",
+        "nightAmbient": "not-night",
+        "framebufferWidth": "1672",
+        "framebufferHeight": "941",
+        "artworkPixelsPerFramebufferPixel": "1.000",
+        "wellAssetMode": "legacy",
+        "wellShadowCaster": "legacy",
+        "pavingAlbedo": "neutral",
+        "neutralCoverage": "283302",
+        "illuminationReduction": "0.465",
+        "profile": "zero",
+        "albedoSource": "night",
+        "fixtureCount": "0",
+        "lightIsolation": "off",
+        "chimneyOn": "false",
+        "nexusMagicColor": "#ffffff",
+        "ready": "true",
+        "selectedSource": "8B4BA6F4-3B4B-4499-975E-015565C67BA5.jpeg",
+        "selectedSourceSha256": "8821fe5a165f3c28377d3c9ce5d5727c90622d2690b919a8f8267d133b84fc66",
+        "zeroBlack": "true"
+      },
+      "viewportWidth": 320,
+      "nativeSha256": "e5814eb8b79190fcfa19b6c9062f819b190087b6d85305e57c1e175f57273a29",
+      "runtimeModuleSha256": {
+        "town-relighting-preview.js": "9f4ba2fac3dcb5c178db0abae899b0118cbafdf3d812834d3e85573627e63bce",
+        "town-light-domains.js": "28dc4a0b5733052b4620cf270de3c9db7bb6b7a11b268aac31addbddd38c8067",
+        "town-emission-masks.js": "2d56ce2a3353aca420c16f26c1ac56a95791108c6ea42549eaaa9af99ea64fba",
+        "town-paving-material.js": "21f027cccad4e8d69445009d5ed0351bf9f2b85adbfcb37f1cc3194f33c11d11",
+        "town-neutral-albedo.js": "7f717000c49230261cad09f96b0cd4ef07225d5ed4cf52c6549529f1cc299656",
+        "town-building-neutral-albedo.js": "4ef71d6506435b0caf78e4b4c83c4fb25bb9175138447b7aa7002d7800709818"
+      }
+    },
+    {
+      "codeCheckpoint": "5c656a5079748b7f3a0853184b36b0b9e85d7929",
+      "diagnostic": {
+        "engine": "three.js r186",
+        "npcFeetY": "hidden",
+        "npcPass": "hidden",
+        "npcShadowCasters": "0",
+        "inspection": "lit",
+        "projectionErrorPx": "0.000",
+        "nightAmbient": "not-night",
+        "framebufferWidth": "1672",
+        "framebufferHeight": "941",
+        "artworkPixelsPerFramebufferPixel": "1.000",
+        "wellAssetMode": "legacy",
+        "wellShadowCaster": "legacy",
+        "pavingAlbedo": "neutral",
+        "neutralCoverage": "283302",
+        "illuminationReduction": "0.465",
+        "profile": "zero",
+        "albedoSource": "night",
+        "fixtureCount": "0",
+        "lightIsolation": "off",
+        "chimneyOn": "false",
+        "nexusMagicColor": "#ffffff",
+        "ready": "true",
+        "selectedSource": "8B4BA6F4-3B4B-4499-975E-015565C67BA5.jpeg",
+        "selectedSourceSha256": "8821fe5a165f3c28377d3c9ce5d5727c90622d2690b919a8f8267d133b84fc66",
+        "zeroBlack": "true"
+      },
+      "viewportWidth": 390,
+      "nativeSha256": "e5814eb8b79190fcfa19b6c9062f819b190087b6d85305e57c1e175f57273a29",
+      "runtimeModuleSha256": {
+        "town-relighting-preview.js": "9f4ba2fac3dcb5c178db0abae899b0118cbafdf3d812834d3e85573627e63bce",
+        "town-light-domains.js": "28dc4a0b5733052b4620cf270de3c9db7bb6b7a11b268aac31addbddd38c8067",
+        "town-emission-masks.js": "2d56ce2a3353aca420c16f26c1ac56a95791108c6ea42549eaaa9af99ea64fba",
+        "town-paving-material.js": "21f027cccad4e8d69445009d5ed0351bf9f2b85adbfcb37f1cc3194f33c11d11",
+        "town-neutral-albedo.js": "7f717000c49230261cad09f96b0cd4ef07225d5ed4cf52c6549529f1cc299656",
+        "town-building-neutral-albedo.js": "4ef71d6506435b0caf78e4b4c83c4fb25bb9175138447b7aa7002d7800709818"
+      }
+    },
+    {
+      "codeCheckpoint": "bf26857ba",
+      "diagnostic": {
+        "engine": "three.js r186",
+        "npcFeetY": "hidden",
+        "npcPass": "hidden",
+        "npcShadowCasters": "0",
+        "inspection": "lit",
+        "projectionErrorPx": "0.000",
+        "nightAmbient": "0.025",
+        "framebufferWidth": "1672",
+        "framebufferHeight": "941",
+        "artworkPixelsPerFramebufferPixel": "1.000",
+        "wellAssetMode": "legacy",
+        "wellShadowCaster": "legacy",
+        "pavingAlbedo": "neutral",
+        "neutralCoverage": "270134",
+        "illuminationReduction": "0.429",
+        "profile": "night",
+        "albedoSource": "night",
+        "fixtureCount": "20",
+        "lightIsolation": "common",
+        "chimneyOn": "false",
+        "nexusMagicColor": "#ffffff",
+        "ready": "true",
+        "selectedSource": "A4829886-EEE9-41CB-8737-36739F87CB78.jpeg",
+        "selectedSourceSha256": "24bc6d6349a81174e36d961e16d448c0109d8d523f5f952a08d9081483b504b0"
+      },
+      "viewportWidth": 1120,
+      "nativeSha256": "9a070cb2971d807d2bb50f5856544a83512f2d83edd3b8d9b79c3126989540ae",
+      "runtimeModuleSha256": {
+        "town-relighting-preview.js": "d2a3e83bd505493ed2c5ac2286b6df2faae34f51b149cc71f6290880ae45375e",
+        "town-light-domains.js": "6cece828fd69a814f7ce1535bd0dcdc279333158c6d1bebf275dd41dd999394b",
+        "town-emission-masks.js": "3cf4673b40572afd948b2f508e2c7e2bb621bacf21ae51d45ad562461138b953",
+        "town-paving-material.js": "85604dc569823b944266bb14b3db7fa87b4cfbab1e9987c717a8609baf12815a",
+        "town-neutral-albedo.js": "e9b1776b2fcc3920be3c7395c02229af32a1d2c8646b42fb7cc9fe8834691f85",
+        "town-building-neutral-albedo.js": "9b13fd565e964ec6634059f672793ad6abc38337ce2baec7707e3405cf18db65"
+      }
+    }
+  ],
+  "ownerFeedback": {
+    "file": "IMG_6225.jpeg",
+    "sha256": "58a2b77831157ad62a77ab67879c442c21e63077ca4c35bc0216d9ec670961eb",
+    "role": "owner annotations, not runtime art"
+  }
+}

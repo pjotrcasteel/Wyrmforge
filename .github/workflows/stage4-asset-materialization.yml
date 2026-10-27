@@ -1,0 +1,45 @@
+name: Commit exact T2 Stage 4 Square PNG
+on:
+  push:
+    branches:
+      - feat/town-2p5d-relightable-g4
+    paths:
+      - 'tools/art/stage4-square-transfer/**'
+permissions:
+  contents: write
+jobs:
+  restore-square:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Decode and SHA256-verify the EXACT artist approved images
+        run: |
+          python3 - <<'PY'
+          import base64, hashlib
+          from pathlib import Path
+          pieces = sorted(Path('tools/art/stage4-square-transfer').glob('part-*.b64'))
+          assert len(pieces) == 16, 'Missing Stage 4 PNG transport parts'
+          encoded = b''.join(b''.join(p.read_bytes().split()) for p in pieces)
+          assert len(encoded) == 4632588
+          raw = base64.b64decode(encoded, validate=True)
+          assert len(raw) == 3474441 and raw[:8] == b'\x89PNG\r\n\x1a\n'
+          assert hashlib.sha256(raw).hexdigest() == 'ce9bd21277e2c8754b90fc7a7541ca227918aee3444da6b2a7e3757376f495e1'
+          target = Path('src/Wyrmforge.Presentation.Web/wwwroot/art/town/stage4-town-square-no-well.png')
+          target.parent.mkdir(parents=True,exist_ok=True)
+          target.write_bytes(raw)
+          well = Path('src/Wyrmforge.Presentation.Web/wwwroot/art/town/stage4-remade-well-255x207.png')
+          assert hashlib.sha256(well.read_bytes()).hexdigest() == '92fa7dc6593701f92d168b65ac572e652fa1f9df1bf563d1149e2c8a681c23d1'
+          print('PASS: exact square and well binary bytes; no altered source artwork')
+          PY
+      - name: Commit verified opaque PNG; discard transfer-only text
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/Wyrmforge.Presentation.Web/wwwroot/art/town/stage4-town-square-no-well.png
+          git rm -r tools/art/stage4-square-transfer
+          git commit -m 'feat(town): commit verified Stage 4 opaque square and remade well'
+          git push origin HEAD:feat/town-2p5d-relightable-g4

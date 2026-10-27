@@ -982,3 +982,12 @@ A minority of cape-free Hollowed should visibly **explode into separate bones**,
 The shatter uses recognisable individually shaded skull/eye sockets, jaw, ribcage, spine, pelvis and leg/arm fragments; bone pieces eject, tumble, hit the floor and remain in a grounded pile until normal corpse fade. Keep the wounded silhouette truthful: no phantom left-arm bones when the arm is missing, and shortened damaged bones remain shortened. A compact dust impact is decorative, never a damaging projectile. Reduced-motion mode skips scattering and displays a settled pile immediately. All masks are small cacheable Canvas sprite sources with nearest-neighbor pixels for mobile/WebView; no CSS overlay, no unrelated actor redraw and no need to preload any new large atlas.
 
 Visual inspiration (not source assets or copies): the bone-based attacks of classic [Castlevania skeletons](https://strategywiki.org/wiki/Castlevania/Enemies) and variety of differentiated [Diablo monster deaths](https://di.diablowiki.net/Monster). The skull/bone pixel masks and trajectories are original WyrmForge presentation art. Implemented in `js/hollow-bone-burst.js`, integrated into the existing Hollowed render path, with the `sprite-lab/hollow-bone-burst-review.html` mobile/desktop QC route and bone-burst regression tests. **Production approval requires passing real viewport captures and actual Hunt playback**, not merely passing unit tests or creating a PR.
+
+
+### Selected Town input exception — 27 October 2026
+
+Owner instruction explicitly authorizes the opt-in 2D/shared-GPU T2 proof in PR #368.
+Use the ten current selected JPEG originals and their measured manifest as references;
+never silently import older experiments or treat the supplied normal/depth-style renders
+as measured physical maps. Original paintings and production Town stay intact. No 3D
+reconstruction or T3–T6 work. See [Town scope](town-and-ux.md#selected-art-shared-gpu-opt-in--owner-instruction-27-october-2026).

@@ -1,0 +1,635 @@
+{
+  "description": "Exact selected reference LEFT; genuine shared-WebGL screenshot RIGHT. Display-scaled, not pixel-registered.",
+  "visualApproval": false,
+  "rows": [
+    {
+      "domain": "common",
+      "reference": {
+        "file": "A4829886-EEE9-41CB-8737-36739F87CB78.jpeg",
+        "sha256": "24bc6d6349a81174e36d961e16d448c0109d8d523f5f952a08d9081483b504b0",
+        "dimensions": [
+          1536,
+          864
+        ],
+        "mode": "RGB",
+        "hasAlpha": false,
+        "crop": [
+          0,
+          0,
+          1536,
+          864
+        ],
+        "role": "common",
+        "approvalStatus": "owner-selected-reference",
+        "runtimeMaterialApproved": false,
+        "usage": "reference-only",
+        "notes": "Gate, public square and well reference; chimney dark; faint building-light residue is not an enabled source.",
+        "canonicalRegistration": {
+          "status": "measured-reference-only",
+          "pixelRegistered": false,
+          "method": "SIFT ratio .7 / similarity RANSAC 2px; no image resampling",
+          "referenceToTargetAffine": [
+            [
+              1.080117,
+              0.005586,
+              13.647063
+            ],
+            [
+              -0.005586,
+              1.080117,
+              14.147793
+            ]
+          ],
+          "matches": 20,
+          "inliers": 5,
+          "medianInlierErrorPx": 0.181,
+          "p95InlierErrorPx": 1.282,
+          "allMatchMedianErrorPx": 179.662,
+          "warning": "Similarity-fit inliers do not prove exact full-scene pixel registration or unchanged architecture."
+        },
+        "commonReferenceRegistration": {
+          "status": "measured-reference-only",
+          "pixelRegistered": false,
+          "method": "SIFT ratio .7 / similarity RANSAC 2px; no image resampling",
+          "referenceToTargetAffine": [
+            [
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.0,
+              1.0,
+              0.0
+            ]
+          ],
+          "matches": 3231,
+          "inliers": 3231,
+          "medianInlierErrorPx": 0.0,
+          "p95InlierErrorPx": 0.0,
+          "allMatchMedianErrorPx": 0.0,
+          "warning": "Similarity-fit inliers do not prove exact full-scene pixel registration or unchanged architecture."
+        }
+      },
+      "gpu": {
+        "url": "http://127.0.0.1:4180/town-relighting-preview.html?capture=1&mode=night&domains=1&domain=common&npc=off&white=1",
+        "viewport": [
+          1120,
+          870
+        ],
+        "renderer": "shared LightingEngine WebGL",
+        "runtimeSourceSha256": {
+          "town-night-silhouette.js": "748c567053a1fbdf3e4190d0663afa06efd896036eabf810a4a6f974e54d71f9",
+          "town-paving-material.js": "a343c422cc785bdd5b5e53d05ec8577f0ac35e6f0058c759c6de682ea6e2b0e7",
+          "town-citizen-gpu-bridge.js": "022008a4060ae8f9e4d988da23928dfc17f3bd2afc187ba8c4277e24bfbab9f5",
+          "town-emission-masks.js": "85ed7691d949d2f197f712cbca892a60de8932af4b4a7c47f8fbba2949456d05",
+          "town-building-neutral-albedo.js": "9b13fd565e964ec6634059f672793ad6abc38337ce2baec7707e3405cf18db65",
+          "town-preview-state.js": "e86be14e3e504bd4eff2b0e9f7d933f09a041df40cd89751dbb5a27ac45091db",
+          "town-live-relighting.js": "302f8542c54d5543c791c8ac190620e1605052520e9d46682174411edeb815a4",
+          "town-neutral-albedo.js": "e9b1776b2fcc3920be3c7395c02229af32a1d2c8646b42fb7cc9fe8834691f85",
+          "town-v2-nexus.js": "4f10ef2a40989f80797693531149ca91b1b321479b103d8ee4278e5caf7e5110",
+          "town-light-domains.js": "087334886f8857487ac77978557e9663edc6be33b8a9469f682abb320dc34110",
+          "town-well-stage4.js": "56a08a570fec87620514e0d89e585b34a24de522cf18f618bf14f58d5d9c51e1",
+          "town-relightable-scene.js": "b8aa39d14a147170588660afaa82ebd62b4be5d20853c9e118546cdfa9c2c2c8",
+          "town-relighting-preview.js": "e893f060dede06d930a3d0c7b4c011862d20a44e00eba518f322cb1ebf6800c2",
+          "town-lighting-grade.js": "9d9fff935190def46d651af2817acc96a2590f7c50dbf4aef229811a598c4000",
+          "town-lighting.js": "e8af5a7981d0a2f9777e80403b58fe696a3d5689867f99014f128342bf7cd061",
+          "lighting/cutout-fixture.js": "25b8df3eef1795531cf46c954596d65b72a49577741da74d772e0b3f5117c17a",
+          "lighting/town-fixture.js": "5fdd97397d4f30453e5d6239bd2034a196b8fedfb660c7f15b3f2a120357af35",
+          "lighting/proof-scene.js": "a4d7b56b061a727fded58ba65bc28bd7e878bf98a7c589f7106775954459768e",
+          "lighting/frame-loop.js": "570263fe14a1b53a5287ff297d89efc8aa79442ed4fe6a954e2d6dbac5f3752a",
+          "lighting/engine.js": "119a4eba2060087310d9d09936d181177c41feee325e59cce181db799132b4fb",
+          "lighting/inspection.js": "6e06d1724e90c84a8bb553e88c223f361cd40b2a82462ed91eeeb75094f3aeef",
+          "lighting/registry.js": "95eaab56ca4edda8afaa0883931672c61dbed2201f10d570fd1305696a74101a",
+          "lighting/lit-sprite.js": "e5e477a05b2b65c0ebb0cb62392f9fb925885595372e934dcdbd11799c28d365"
+        },
+        "diagnostic": {
+          "engine": "three.js r186",
+          "npcFeetY": "hidden",
+          "npcPass": "hidden",
+          "npcShadowCasters": "0",
+          "inspection": "lit",
+          "projectionErrorPx": "0.000",
+          "nightAmbient": "0.025",
+          "framebufferWidth": "1672",
+          "framebufferHeight": "941",
+          "artworkPixelsPerFramebufferPixel": "1.000",
+          "wellAssetMode": "legacy",
+          "wellShadowCaster": "legacy",
+          "pavingAlbedo": "neutral",
+          "neutralCoverage": "0",
+          "illuminationReduction": "0.000",
+          "profile": "night",
+          "albedoSource": "night",
+          "fixtureCount": "15",
+          "lightIsolation": "common",
+          "chimneyOn": "false",
+          "nexusMagicColor": "#ffffff",
+          "ready": "true",
+          "selectedSource": "A4829886-EEE9-41CB-8737-36739F87CB78.jpeg",
+          "selectedSourceSha256": "24bc6d6349a81174e36d961e16d448c0109d8d523f5f952a08d9081483b504b0"
+        },
+        "screenshotSha256": "189c08cf6a4151d6ab52027d68f9d9e621e74299bc2d028a9ed13ed2b57d6012",
+        "physicalPhoneTest": false,
+        "visualApproval": false
+      },
+      "png": "artifacts/town-soft-pools-2026-10-27/domain-common-1120.png"
+    },
+    {
+      "domain": "nexus",
+      "reference": {
+        "file": "0AD50A56-B979-4658-9E91-4E1E54C82CE6.jpeg",
+        "sha256": "394a5c8f1b9de18d60fac52ae014a9ab8fe524bebd44dd68504a913040cc5b11",
+        "dimensions": [
+          1536,
+          864
+        ],
+        "mode": "RGB",
+        "hasAlpha": false,
+        "crop": [
+          0,
+          0,
+          1536,
+          864
+        ],
+        "role": "nexus",
+        "approvalStatus": "owner-selected-reference",
+        "runtimeMaterialApproved": false,
+        "usage": "reference-only",
+        "notes": "Upper-left Nexus reference with neutral-white dome/portal magic; faint residual lights elsewhere.",
+        "canonicalRegistration": {
+          "status": "measured-reference-only",
+          "pixelRegistered": false,
+          "method": "SIFT ratio .7 / similarity RANSAC 2px; no image resampling",
+          "referenceToTargetAffine": [
+            [
+              1.116613,
+              -0.003711,
+              3.60077
+            ],
+            [
+              0.003711,
+              1.116613,
+              -0.149668
+            ]
+          ],
+          "matches": 20,
+          "inliers": 9,
+          "medianInlierErrorPx": 0.72,
+          "p95InlierErrorPx": 1.655,
+          "allMatchMedianErrorPx": 6.405,
+          "warning": "Similarity-fit inliers do not prove exact full-scene pixel registration or unchanged architecture."
+        },
+        "commonReferenceRegistration": {
+          "status": "measured-reference-only",
+          "pixelRegistered": false,
+          "method": "SIFT ratio .7 / similarity RANSAC 2px; no image resampling",
+          "referenceToTargetAffine": [
+            [
+              0.999986,
+              2.5e-05,
+              0.007233
+            ],
+            [
+              -2.5e-05,
+              0.999986,
+              0.08449
+            ]
+          ],
+          "matches": 39,
+          "inliers": 31,
+          "medianInlierErrorPx": 0.068,
+          "p95InlierErrorPx": 0.631,
+          "allMatchMedianErrorPx": 0.074,
+          "warning": "Similarity-fit inliers do not prove exact full-scene pixel registration or unchanged architecture."
+        }
+      },
+      "gpu": {
+        "url": "http://127.0.0.1:4180/town-relighting-preview.html?capture=1&mode=night&domains=1&domain=nexus&npc=off&white=1",
+        "viewport": [
+          1120,
+          870
+        ],
+        "renderer": "shared LightingEngine WebGL",
+        "runtimeSourceSha256": {
+          "town-night-silhouette.js": "748c567053a1fbdf3e4190d0663afa06efd896036eabf810a4a6f974e54d71f9",
+          "town-paving-material.js": "a343c422cc785bdd5b5e53d05ec8577f0ac35e6f0058c759c6de682ea6e2b0e7",
+          "town-citizen-gpu-bridge.js": "022008a4060ae8f9e4d988da23928dfc17f3bd2afc187ba8c4277e24bfbab9f5",
+          "town-emission-masks.js": "85ed7691d949d2f197f712cbca892a60de8932af4b4a7c47f8fbba2949456d05",
+          "town-building-neutral-albedo.js": "9b13fd565e964ec6634059f672793ad6abc38337ce2baec7707e3405cf18db65",
+          "town-preview-state.js": "e86be14e3e504bd4eff2b0e9f7d933f09a041df40cd89751dbb5a27ac45091db",
+          "town-live-relighting.js": "302f8542c54d5543c791c8ac190620e1605052520e9d46682174411edeb815a4",
+          "town-neutral-albedo.js": "e9b1776b2fcc3920be3c7395c02229af32a1d2c8646b42fb7cc9fe8834691f85",
+          "town-v2-nexus.js": "4f10ef2a40989f80797693531149ca91b1b321479b103d8ee4278e5caf7e5110",
+          "town-light-domains.js": "087334886f8857487ac77978557e9663edc6be33b8a9469f682abb320dc34110",
+          "town-well-stage4.js": "56a08a570fec87620514e0d89e585b34a24de522cf18f618bf14f58d5d9c51e1",
+          "town-relightable-scene.js": "b8aa39d14a147170588660afaa82ebd62b4be5d20853c9e118546cdfa9c2c2c8",
+          "town-relighting-preview.js": "e893f060dede06d930a3d0c7b4c011862d20a44e00eba518f322cb1ebf6800c2",
+          "town-lighting-grade.js": "9d9fff935190def46d651af2817acc96a2590f7c50dbf4aef229811a598c4000",
+          "town-lighting.js": "e8af5a7981d0a2f9777e80403b58fe696a3d5689867f99014f128342bf7cd061",
+          "lighting/cutout-fixture.js": "25b8df3eef1795531cf46c954596d65b72a49577741da74d772e0b3f5117c17a",
+          "lighting/town-fixture.js": "5fdd97397d4f30453e5d6239bd2034a196b8fedfb660c7f15b3f2a120357af35",
+          "lighting/proof-scene.js": "a4d7b56b061a727fded58ba65bc28bd7e878bf98a7c589f7106775954459768e",
+          "lighting/frame-loop.js": "570263fe14a1b53a5287ff297d89efc8aa79442ed4fe6a954e2d6dbac5f3752a",
+          "lighting/engine.js": "119a4eba2060087310d9d09936d181177c41feee325e59cce181db799132b4fb",
+          "lighting/inspection.js": "6e06d1724e90c84a8bb553e88c223f361cd40b2a82462ed91eeeb75094f3aeef",
+          "lighting/registry.js": "95eaab56ca4edda8afaa0883931672c61dbed2201f10d570fd1305696a74101a",
+          "lighting/lit-sprite.js": "e5e477a05b2b65c0ebb0cb62392f9fb925885595372e934dcdbd11799c28d365"
+        },
+        "diagnostic": {
+          "engine": "three.js r186",
+          "npcFeetY": "hidden",
+          "npcPass": "hidden",
+          "npcShadowCasters": "0",
+          "inspection": "lit",
+          "projectionErrorPx": "0.000",
+          "nightAmbient": "0.025",
+          "framebufferWidth": "1672",
+          "framebufferHeight": "941",
+          "artworkPixelsPerFramebufferPixel": "1.000",
+          "wellAssetMode": "legacy",
+          "wellShadowCaster": "legacy",
+          "pavingAlbedo": "neutral",
+          "neutralCoverage": "0",
+          "illuminationReduction": "0.000",
+          "profile": "night",
+          "albedoSource": "night",
+          "fixtureCount": "4",
+          "lightIsolation": "nexus",
+          "chimneyOn": "false",
+          "nexusMagicColor": "#ffffff",
+          "ready": "true",
+          "selectedSource": "0AD50A56-B979-4658-9E91-4E1E54C82CE6.jpeg",
+          "selectedSourceSha256": "394a5c8f1b9de18d60fac52ae014a9ab8fe524bebd44dd68504a913040cc5b11"
+        },
+        "screenshotSha256": "36fe5fdb4bcacf6dd904ebc2a57a258d2acb98fca3762cd140d409227f69839d",
+        "physicalPhoneTest": false,
+        "visualApproval": false
+      },
+      "png": "artifacts/town-soft-pools-2026-10-27/domain-nexus-1120.png"
+    },
+    {
+      "domain": "blacksmith",
+      "reference": {
+        "file": "A5C9AC1E-1EDA-4E6B-894E-33B7B6197728.jpeg",
+        "sha256": "1290fc0325468f73eeb2e17d6eeecc59bfa9f33009d0fe01df236aadb23649f6",
+        "dimensions": [
+          1536,
+          864
+        ],
+        "mode": "RGB",
+        "hasAlpha": false,
+        "crop": [
+          0,
+          0,
+          1536,
+          864
+        ],
+        "role": "blacksmith",
+        "approvalStatus": "owner-selected-reference",
+        "runtimeMaterialApproved": false,
+        "usage": "reference-only",
+        "notes": "Lower-left forge and chimney reference; faint residual lights exist elsewhere.",
+        "canonicalRegistration": {
+          "status": "measured-reference-only",
+          "pixelRegistered": false,
+          "method": "SIFT ratio .7 / similarity RANSAC 2px; no image resampling",
+          "referenceToTargetAffine": [
+            [
+              1.092375,
+              -0.004294,
+              8.223958
+            ],
+            [
+              0.004294,
+              1.092375,
+              3.117887
+            ]
+          ],
+          "matches": 20,
+          "inliers": 12,
+          "medianInlierErrorPx": 0.744,
+          "p95InlierErrorPx": 1.498,
+          "allMatchMedianErrorPx": 1.391,
+          "warning": "Similarity-fit inliers do not prove exact full-scene pixel registration or unchanged architecture."
+        },
+        "commonReferenceRegistration": {
+          "status": "measured-reference-only",
+          "pixelRegistered": false,
+          "method": "SIFT ratio .7 / similarity RANSAC 2px; no image resampling",
+          "referenceToTargetAffine": [
+            [
+              0.999965,
+              3.6e-05,
+              0.038505
+            ],
+            [
+              -3.6e-05,
+              0.999965,
+              0.01058
+            ]
+          ],
+          "matches": 47,
+          "inliers": 44,
+          "medianInlierErrorPx": 0.044,
+          "p95InlierErrorPx": 0.206,
+          "allMatchMedianErrorPx": 0.045,
+          "warning": "Similarity-fit inliers do not prove exact full-scene pixel registration or unchanged architecture."
+        }
+      },
+      "gpu": {
+        "url": "http://127.0.0.1:4180/town-relighting-preview.html?capture=1&mode=night&domains=1&domain=blacksmith&npc=off&white=1",
+        "viewport": [
+          1120,
+          870
+        ],
+        "renderer": "shared LightingEngine WebGL",
+        "runtimeSourceSha256": {
+          "town-night-silhouette.js": "748c567053a1fbdf3e4190d0663afa06efd896036eabf810a4a6f974e54d71f9",
+          "town-paving-material.js": "a343c422cc785bdd5b5e53d05ec8577f0ac35e6f0058c759c6de682ea6e2b0e7",
+          "town-citizen-gpu-bridge.js": "022008a4060ae8f9e4d988da23928dfc17f3bd2afc187ba8c4277e24bfbab9f5",
+          "town-emission-masks.js": "85ed7691d949d2f197f712cbca892a60de8932af4b4a7c47f8fbba2949456d05",
+          "town-building-neutral-albedo.js": "9b13fd565e964ec6634059f672793ad6abc38337ce2baec7707e3405cf18db65",
+          "town-preview-state.js": "e86be14e3e504bd4eff2b0e9f7d933f09a041df40cd89751dbb5a27ac45091db",
+          "town-live-relighting.js": "302f8542c54d5543c791c8ac190620e1605052520e9d46682174411edeb815a4",
+          "town-neutral-albedo.js": "e9b1776b2fcc3920be3c7395c02229af32a1d2c8646b42fb7cc9fe8834691f85",
+          "town-v2-nexus.js": "4f10ef2a40989f80797693531149ca91b1b321479b103d8ee4278e5caf7e5110",
+          "town-light-domains.js": "087334886f8857487ac77978557e9663edc6be33b8a9469f682abb320dc34110",
+          "town-well-stage4.js": "56a08a570fec87620514e0d89e585b34a24de522cf18f618bf14f58d5d9c51e1",
+          "town-relightable-scene.js": "b8aa39d14a147170588660afaa82ebd62b4be5d20853c9e118546cdfa9c2c2c8",
+          "town-relighting-preview.js": "e893f060dede06d930a3d0c7b4c011862d20a44e00eba518f322cb1ebf6800c2",
+          "town-lighting-grade.js": "9d9fff935190def46d651af2817acc96a2590f7c50dbf4aef229811a598c4000",
+          "town-lighting.js": "e8af5a7981d0a2f9777e80403b58fe696a3d5689867f99014f128342bf7cd061",
+          "lighting/cutout-fixture.js": "25b8df3eef1795531cf46c954596d65b72a49577741da74d772e0b3f5117c17a",
+          "lighting/town-fixture.js": "5fdd97397d4f30453e5d6239bd2034a196b8fedfb660c7f15b3f2a120357af35",
+          "lighting/proof-scene.js": "a4d7b56b061a727fded58ba65bc28bd7e878bf98a7c589f7106775954459768e",
+          "lighting/frame-loop.js": "570263fe14a1b53a5287ff297d89efc8aa79442ed4fe6a954e2d6dbac5f3752a",
+          "lighting/engine.js": "119a4eba2060087310d9d09936d181177c41feee325e59cce181db799132b4fb",
+          "lighting/inspection.js": "6e06d1724e90c84a8bb553e88c223f361cd40b2a82462ed91eeeb75094f3aeef",
+          "lighting/registry.js": "95eaab56ca4edda8afaa0883931672c61dbed2201f10d570fd1305696a74101a",
+          "lighting/lit-sprite.js": "e5e477a05b2b65c0ebb0cb62392f9fb925885595372e934dcdbd11799c28d365"
+        },
+        "diagnostic": {
+          "engine": "three.js r186",
+          "npcFeetY": "hidden",
+          "npcPass": "hidden",
+          "npcShadowCasters": "0",
+          "inspection": "lit",
+          "projectionErrorPx": "0.000",
+          "nightAmbient": "0.025",
+          "framebufferWidth": "1672",
+          "framebufferHeight": "941",
+          "artworkPixelsPerFramebufferPixel": "1.000",
+          "wellAssetMode": "legacy",
+          "wellShadowCaster": "legacy",
+          "pavingAlbedo": "neutral",
+          "neutralCoverage": "0",
+          "illuminationReduction": "0.000",
+          "profile": "night",
+          "albedoSource": "night",
+          "fixtureCount": "3",
+          "lightIsolation": "blacksmith",
+          "chimneyOn": "true",
+          "nexusMagicColor": "#ffffff",
+          "ready": "true",
+          "selectedSource": "A5C9AC1E-1EDA-4E6B-894E-33B7B6197728.jpeg",
+          "selectedSourceSha256": "1290fc0325468f73eeb2e17d6eeecc59bfa9f33009d0fe01df236aadb23649f6"
+        },
+        "screenshotSha256": "1d46aa9ec1b177219a567197b85c259eb3ddc75150704ecf6d2b8e382b2988b9",
+        "physicalPhoneTest": false,
+        "visualApproval": false
+      },
+      "png": "artifacts/town-soft-pools-2026-10-27/domain-blacksmith-1120.png"
+    },
+    {
+      "domain": "codex",
+      "reference": {
+        "file": "6E9455CC-C09E-4AC1-B3B0-9E6FBA1FD4BB.jpeg",
+        "sha256": "85117dd909f96199c976c9fdea9b2a20df1f7abf03277a48b408e2206110a0da",
+        "dimensions": [
+          1536,
+          864
+        ],
+        "mode": "RGB",
+        "hasAlpha": false,
+        "crop": [
+          0,
+          0,
+          1536,
+          864
+        ],
+        "role": "codex",
+        "approvalStatus": "owner-selected-reference",
+        "runtimeMaterialApproved": false,
+        "usage": "reference-only",
+        "notes": "Upper-right Codex lighting reference; other architecture is still faintly visible.",
+        "canonicalRegistration": {
+          "status": "insufficient-correspondences",
+          "matches": 6,
+          "pixelRegistered": false
+        },
+        "commonReferenceRegistration": {
+          "status": "insufficient-correspondences",
+          "matches": 5,
+          "pixelRegistered": false
+        }
+      },
+      "gpu": {
+        "url": "http://127.0.0.1:4180/town-relighting-preview.html?capture=1&mode=night&domains=1&domain=codex&npc=off&white=1",
+        "viewport": [
+          1120,
+          870
+        ],
+        "renderer": "shared LightingEngine WebGL",
+        "runtimeSourceSha256": {
+          "town-night-silhouette.js": "748c567053a1fbdf3e4190d0663afa06efd896036eabf810a4a6f974e54d71f9",
+          "town-paving-material.js": "a343c422cc785bdd5b5e53d05ec8577f0ac35e6f0058c759c6de682ea6e2b0e7",
+          "town-citizen-gpu-bridge.js": "022008a4060ae8f9e4d988da23928dfc17f3bd2afc187ba8c4277e24bfbab9f5",
+          "town-emission-masks.js": "85ed7691d949d2f197f712cbca892a60de8932af4b4a7c47f8fbba2949456d05",
+          "town-building-neutral-albedo.js": "9b13fd565e964ec6634059f672793ad6abc38337ce2baec7707e3405cf18db65",
+          "town-preview-state.js": "e86be14e3e504bd4eff2b0e9f7d933f09a041df40cd89751dbb5a27ac45091db",
+          "town-live-relighting.js": "302f8542c54d5543c791c8ac190620e1605052520e9d46682174411edeb815a4",
+          "town-neutral-albedo.js": "e9b1776b2fcc3920be3c7395c02229af32a1d2c8646b42fb7cc9fe8834691f85",
+          "town-v2-nexus.js": "4f10ef2a40989f80797693531149ca91b1b321479b103d8ee4278e5caf7e5110",
+          "town-light-domains.js": "087334886f8857487ac77978557e9663edc6be33b8a9469f682abb320dc34110",
+          "town-well-stage4.js": "56a08a570fec87620514e0d89e585b34a24de522cf18f618bf14f58d5d9c51e1",
+          "town-relightable-scene.js": "b8aa39d14a147170588660afaa82ebd62b4be5d20853c9e118546cdfa9c2c2c8",
+          "town-relighting-preview.js": "e893f060dede06d930a3d0c7b4c011862d20a44e00eba518f322cb1ebf6800c2",
+          "town-lighting-grade.js": "9d9fff935190def46d651af2817acc96a2590f7c50dbf4aef229811a598c4000",
+          "town-lighting.js": "e8af5a7981d0a2f9777e80403b58fe696a3d5689867f99014f128342bf7cd061",
+          "lighting/cutout-fixture.js": "25b8df3eef1795531cf46c954596d65b72a49577741da74d772e0b3f5117c17a",
+          "lighting/town-fixture.js": "5fdd97397d4f30453e5d6239bd2034a196b8fedfb660c7f15b3f2a120357af35",
+          "lighting/proof-scene.js": "a4d7b56b061a727fded58ba65bc28bd7e878bf98a7c589f7106775954459768e",
+          "lighting/frame-loop.js": "570263fe14a1b53a5287ff297d89efc8aa79442ed4fe6a954e2d6dbac5f3752a",
+          "lighting/engine.js": "119a4eba2060087310d9d09936d181177c41feee325e59cce181db799132b4fb",
+          "lighting/inspection.js": "6e06d1724e90c84a8bb553e88c223f361cd40b2a82462ed91eeeb75094f3aeef",
+          "lighting/registry.js": "95eaab56ca4edda8afaa0883931672c61dbed2201f10d570fd1305696a74101a",
+          "lighting/lit-sprite.js": "e5e477a05b2b65c0ebb0cb62392f9fb925885595372e934dcdbd11799c28d365"
+        },
+        "diagnostic": {
+          "engine": "three.js r186",
+          "npcFeetY": "hidden",
+          "npcPass": "hidden",
+          "npcShadowCasters": "0",
+          "inspection": "lit",
+          "projectionErrorPx": "0.000",
+          "nightAmbient": "0.025",
+          "framebufferWidth": "1672",
+          "framebufferHeight": "941",
+          "artworkPixelsPerFramebufferPixel": "1.000",
+          "wellAssetMode": "legacy",
+          "wellShadowCaster": "legacy",
+          "pavingAlbedo": "neutral",
+          "neutralCoverage": "0",
+          "illuminationReduction": "0.000",
+          "profile": "night",
+          "albedoSource": "night",
+          "fixtureCount": "3",
+          "lightIsolation": "codex",
+          "chimneyOn": "false",
+          "nexusMagicColor": "#ffffff",
+          "ready": "true",
+          "selectedSource": "6E9455CC-C09E-4AC1-B3B0-9E6FBA1FD4BB.jpeg",
+          "selectedSourceSha256": "85117dd909f96199c976c9fdea9b2a20df1f7abf03277a48b408e2206110a0da"
+        },
+        "screenshotSha256": "dcb4d841212174e7e63c3d19190ab6a5c116827f7e2c4feee758d27bee8181a0",
+        "physicalPhoneTest": false,
+        "visualApproval": false
+      },
+      "png": "artifacts/town-soft-pools-2026-10-27/domain-codex-1120.png"
+    },
+    {
+      "domain": "hall",
+      "reference": {
+        "file": "3E7DC52A-0D09-442C-85D1-155C4C6C694A.jpeg",
+        "sha256": "9318fc6e3d2403bfb2fe7239121aa942ac856c1939016c80915c2bba360d099b",
+        "dimensions": [
+          1536,
+          864
+        ],
+        "mode": "RGB",
+        "hasAlpha": false,
+        "crop": [
+          0,
+          0,
+          1536,
+          864
+        ],
+        "role": "hall",
+        "approvalStatus": "owner-selected-reference",
+        "runtimeMaterialApproved": false,
+        "usage": "reference-only",
+        "notes": "Lower-right Hall lighting reference; other architecture is still faintly visible.",
+        "canonicalRegistration": {
+          "status": "measured-reference-only",
+          "pixelRegistered": false,
+          "method": "SIFT ratio .7 / similarity RANSAC 2px; no image resampling",
+          "referenceToTargetAffine": [
+            [
+              1.170616,
+              -0.003668,
+              -1.595982
+            ],
+            [
+              0.003668,
+              1.170616,
+              -4.724075
+            ]
+          ],
+          "matches": 14,
+          "inliers": 10,
+          "medianInlierErrorPx": 0.804,
+          "p95InlierErrorPx": 1.391,
+          "allMatchMedianErrorPx": 1.01,
+          "warning": "Similarity-fit inliers do not prove exact full-scene pixel registration or unchanged architecture."
+        },
+        "commonReferenceRegistration": {
+          "status": "measured-reference-only",
+          "pixelRegistered": false,
+          "method": "SIFT ratio .7 / similarity RANSAC 2px; no image resampling",
+          "referenceToTargetAffine": [
+            [
+              0.026299,
+              -0.237914,
+              555.501316
+            ],
+            [
+              0.237914,
+              0.026299,
+              129.130051
+            ]
+          ],
+          "matches": 12,
+          "inliers": 3,
+          "medianInlierErrorPx": 0.927,
+          "p95InlierErrorPx": 0.933,
+          "allMatchMedianErrorPx": 289.741,
+          "warning": "Similarity-fit inliers do not prove exact full-scene pixel registration or unchanged architecture."
+        }
+      },
+      "gpu": {
+        "url": "http://127.0.0.1:4180/town-relighting-preview.html?capture=1&mode=night&domains=1&domain=hall&npc=off&white=1",
+        "viewport": [
+          1120,
+          870
+        ],
+        "renderer": "shared LightingEngine WebGL",
+        "runtimeSourceSha256": {
+          "town-night-silhouette.js": "748c567053a1fbdf3e4190d0663afa06efd896036eabf810a4a6f974e54d71f9",
+          "town-paving-material.js": "a343c422cc785bdd5b5e53d05ec8577f0ac35e6f0058c759c6de682ea6e2b0e7",
+          "town-citizen-gpu-bridge.js": "022008a4060ae8f9e4d988da23928dfc17f3bd2afc187ba8c4277e24bfbab9f5",
+          "town-emission-masks.js": "85ed7691d949d2f197f712cbca892a60de8932af4b4a7c47f8fbba2949456d05",
+          "town-building-neutral-albedo.js": "9b13fd565e964ec6634059f672793ad6abc38337ce2baec7707e3405cf18db65",
+          "town-preview-state.js": "e86be14e3e504bd4eff2b0e9f7d933f09a041df40cd89751dbb5a27ac45091db",
+          "town-live-relighting.js": "302f8542c54d5543c791c8ac190620e1605052520e9d46682174411edeb815a4",
+          "town-neutral-albedo.js": "e9b1776b2fcc3920be3c7395c02229af32a1d2c8646b42fb7cc9fe8834691f85",
+          "town-v2-nexus.js": "4f10ef2a40989f80797693531149ca91b1b321479b103d8ee4278e5caf7e5110",
+          "town-light-domains.js": "087334886f8857487ac77978557e9663edc6be33b8a9469f682abb320dc34110",
+          "town-well-stage4.js": "56a08a570fec87620514e0d89e585b34a24de522cf18f618bf14f58d5d9c51e1",
+          "town-relightable-scene.js": "b8aa39d14a147170588660afaa82ebd62b4be5d20853c9e118546cdfa9c2c2c8",
+          "town-relighting-preview.js": "e893f060dede06d930a3d0c7b4c011862d20a44e00eba518f322cb1ebf6800c2",
+          "town-lighting-grade.js": "9d9fff935190def46d651af2817acc96a2590f7c50dbf4aef229811a598c4000",
+          "town-lighting.js": "e8af5a7981d0a2f9777e80403b58fe696a3d5689867f99014f128342bf7cd061",
+          "lighting/cutout-fixture.js": "25b8df3eef1795531cf46c954596d65b72a49577741da74d772e0b3f5117c17a",
+          "lighting/town-fixture.js": "5fdd97397d4f30453e5d6239bd2034a196b8fedfb660c7f15b3f2a120357af35",
+          "lighting/proof-scene.js": "a4d7b56b061a727fded58ba65bc28bd7e878bf98a7c589f7106775954459768e",
+          "lighting/frame-loop.js": "570263fe14a1b53a5287ff297d89efc8aa79442ed4fe6a954e2d6dbac5f3752a",
+          "lighting/engine.js": "119a4eba2060087310d9d09936d181177c41feee325e59cce181db799132b4fb",
+          "lighting/inspection.js": "6e06d1724e90c84a8bb553e88c223f361cd40b2a82462ed91eeeb75094f3aeef",
+          "lighting/registry.js": "95eaab56ca4edda8afaa0883931672c61dbed2201f10d570fd1305696a74101a",
+          "lighting/lit-sprite.js": "e5e477a05b2b65c0ebb0cb62392f9fb925885595372e934dcdbd11799c28d365"
+        },
+        "diagnostic": {
+          "engine": "three.js r186",
+          "npcFeetY": "hidden",
+          "npcPass": "hidden",
+          "npcShadowCasters": "0",
+          "inspection": "lit",
+          "projectionErrorPx": "0.000",
+          "nightAmbient": "0.025",
+          "framebufferWidth": "1672",
+          "framebufferHeight": "941",
+          "artworkPixelsPerFramebufferPixel": "1.000",
+          "wellAssetMode": "legacy",
+          "wellShadowCaster": "legacy",
+          "pavingAlbedo": "neutral",
+          "neutralCoverage": "0",
+          "illuminationReduction": "0.000",
+          "profile": "night",
+          "albedoSource": "night",
+          "fixtureCount": "3",
+          "lightIsolation": "hall",
+          "chimneyOn": "false",
+          "nexusMagicColor": "#ffffff",
+          "ready": "true",
+          "selectedSource": "3E7DC52A-0D09-442C-85D1-155C4C6C694A.jpeg",
+          "selectedSourceSha256": "9318fc6e3d2403bfb2fe7239121aa942ac856c1939016c80915c2bba360d099b"
+        },
+        "screenshotSha256": "7e7ffd33350929aa3b0d527e9cb3b36ecb46fdf8820c9ed7adf55b9bd1ec9a4c",
+        "physicalPhoneTest": false,
+        "visualApproval": false
+      },
+      "png": "artifacts/town-soft-pools-2026-10-27/domain-hall-1120.png"
+    }
+  ]
+}

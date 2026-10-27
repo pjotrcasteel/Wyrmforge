@@ -208,8 +208,8 @@ UI/menus/explicit combat telegraphs have separate readable passes.
    depth, atmospheric effects, pixel-stable light grids.
    Reflections and emissive surfaces are explicit, not pasted
    bright spots or duplicated baked direct fire.
-6. **G4 — generic mobile GPU optimization only:** select and measure native/browser rendering approaches, shadow/LOD budgets, culling, battery, memory and thermal response for Hunts, actors and future non-Town scenes. **Do not build Town geometry, material decomposition, replacement imagery or a Town renderer.** The mixed Town/GPU draft PR #346 was closed unmerged.
-7. **G5 — scoped renderer adoption:** extend the shared lighting engine to approved Hunt, actor and world-VFX paths with real device evidence. **No Town migration or cutover.** Keep the existing 2D Town day/night paintings, overlays, NPCs, routing and gameplay untouched. Do not report the entire game's renderer migrated while the intentionally separate painted Town presentation remains.
+6. **G4 — generic mobile GPU optimization only:** select and measure native/browser rendering approaches, shadow/LOD budgets, culling, battery, memory and thermal response for Hunts, actors and future non-Town scenes. **No production Town replacement or 3D rebuild.** The owner separately authorized the bounded selected-art 2D/shared-GPU T2 opt-in in PR #368 on 27 October; stop for central-square visual approval, with T3–T6 deferred. The mixed Town/GPU draft PR #346 was closed unmerged.
+7. **G5 — scoped renderer adoption:** extend the shared lighting engine to approved Hunt, actor and world-VFX paths with real device evidence. **No Town production cutover without separate owner approval.** Keep the existing 2D Town day/night paintings, overlays, NPCs, routing and gameplay untouched. Do not report the entire game's renderer migrated while the intentionally separate painted Town presentation remains.
 
 #### Once G5 has merged — integrate Hollowed injuries and future appearances (25 October 2026)
 

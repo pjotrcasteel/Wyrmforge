@@ -15,6 +15,46 @@ public sealed class WyrmforgeBrowserTests : PageTest
     [TestMethod]
     [DataRow(320, 568)]
     [DataRow(390, 844)]
+    public async Task Mobile_TownGpuOptIn_PreservesHotspotsAndFallback(int width, int height)
+    {
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.AddInitScriptAsync(
+            "localStorage.setItem('wyrmforge.firstHunt.v1','3');");
+        await Page.GotoAsync($"{BaseUrl.TrimEnd('/')}?townGpuPreview=1",
+            new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+
+        var scene = Page.Locator(".refuge-canonical-scene");
+        await Expect(scene.Locator(".refuge-town-gpu-canvas")).ToHaveCountAsync(1);
+        await Expect(scene.Locator(".refuge-town-night-base")).ToHaveCountAsync(1);
+        await Expect(scene.Locator("[data-town-building]")).ToHaveCountAsync(4);
+        await Expect(scene.Locator(".refuge-town-spot--gate")).ToHaveCountAsync(1);
+        await Page.WaitForFunctionAsync(@"() => {
+            const scene = document.querySelector('.refuge-canonical-scene');
+            return ['ready', 'failed'].includes(scene?.dataset.townGpuPreview);
+        }", new PageWaitForFunctionOptions { Timeout = 20000 });
+
+        var state = await scene.GetAttributeAsync("data-town-gpu-preview");
+        if (state == "ready")
+        {
+            await Expect(scene.Locator(".refuge-town-gpu-canvas")).ToBeVisibleAsync();
+            var count = await scene.Locator(".refuge-town-gpu-canvas")
+                .GetAttributeAsync("data-authoritative-citizen-count");
+            Assert.IsNotNull(count, "GPU Town must receive real C# citizen snapshots.");
+        }
+        else
+        {
+            Assert.AreEqual("failed", state);
+            await Expect(scene.Locator(".refuge-town-night-base")).ToBeVisibleAsync();
+        }
+
+        await ScreenshotAsync($"town-gpu-opt-in-{state}-{width}.png");
+    }
+
+
+    [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
     public async Task Mobile_TownArcaneNexus_UsesBakedFireAssetAndSchoolMastery(int width, int height)
     {
         await Page.SetViewportSizeAsync(width, height);

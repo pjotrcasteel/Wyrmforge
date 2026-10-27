@@ -4,7 +4,12 @@ import { validateSnapshot, selectLights } from './registry.js';
 
 /** Shared GPU adapter; accepts resource IDs and descriptors, never entity kinds. */
 export class LightingEngine {
-    constructor(canvas, { shadowViews = 8, maxLights = 8 } = {}) {
+    constructor(canvas, { shadowViews = 8, maxLights = 8, maxFramebufferWidth = 390 } = {}) {
+        // Mobile remains strictly bounded at 390 by default; an isolated
+        // desktop QA scene may request a higher diagnostic resolution.
+        if (!Number.isInteger(maxFramebufferWidth) || maxFramebufferWidth < 160 || maxFramebufferWidth > 2048)
+            throw new RangeError('Invalid framebuffer pixel budget');
+        this.maxFramebufferWidth = maxFramebufferWidth;
         this.canvas = canvas;
         this.renderer = new T.WebGLRenderer({ canvas, antialias: false, alpha: false, preserveDrawingBuffer: true });
         this.renderer.outputColorSpace = T.SRGBColorSpace;
@@ -63,6 +68,12 @@ export class LightingEngine {
             emissive: descriptor.emission, emissiveIntensity: descriptor.emissionIntensity,
             alphaTest: descriptor.alphaCutoff, side: descriptor.doubleSided ? T.DoubleSide : T.FrontSide,
         });
+        // Emission-only overlays add radiance without erasing the receiver.
+        if (descriptor.blendMode === 'emission-additive') {
+            material.transparent = true;
+            material.blending = T.AdditiveBlending;
+            material.depthWrite = false;
+        }
         if (descriptor.reflection === 'probe' && receivesLight) material.envMapIntensity = descriptor.specular;
         if (descriptor.normalScale !== undefined) material.normalScale.setScalar(descriptor.normalScale);
         // An emissive map modulates the emission color; a black base would suppress it entirely.
@@ -134,7 +145,13 @@ export class LightingEngine {
                 let caster;
                 if (d.occluderGeometry) {
                     // Separate authored solid caster; never reuses collision or infers volume from albedo.
-                    const hidden = new T.MeshBasicMaterial({ colorWrite: false, depthWrite: false });
+                    // Signed silhouette winding differs for screen-space cutouts and
+                    // camera-facing sprites; proxy shadowing must honor the same
+                    // generic two-sided material contract as its lit receiver.
+                    const hidden = new T.MeshBasicMaterial({
+                        colorWrite: false, depthWrite: false,
+                        side: md.doubleSided ? T.DoubleSide : T.FrontSide,
+                    });
                     caster = new T.Mesh(this.geometries.get(d.occluderGeometry), hidden);
                     this.scene.add(caster);
                 }
@@ -214,8 +231,8 @@ float proofShadowVisibility() {
     }
     render(width = this.canvas.clientWidth, height = this.canvas.clientHeight) {
         if (!this.alive) return;
-        // One world sample per CSS pixel at 390px, bounded regardless of device DPR.
-        const w = Math.max(1, Math.min(390, Math.round(width))), h = Math.max(1, Math.round(height * w / width));
+        // Bounded framebuffer, independent of device DPR and CSS upscaling.
+        const w = Math.max(1, Math.min(this.maxFramebufferWidth, Math.round(width))), h = Math.max(1, Math.round(height * w / width));
         if (this.canvas.width !== w || this.canvas.height !== h) this.renderer.setSize(w, h, false);
         this.camera.left = -this.halfWidth; this.camera.right = this.halfWidth;
         this.camera.top = this.halfWidth * h / w; this.camera.bottom = -this.halfWidth * h / w;

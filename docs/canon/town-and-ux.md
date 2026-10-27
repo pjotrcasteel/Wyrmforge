@@ -19,6 +19,28 @@ Preserve the 2D day/night source paintings, four building active/vacant visual s
 
 A generic lighting-engine diagnostic containing simple representative Town-like objects does **not** authorize replacing or rebuilding the live Town. Continue generic GPU/mobile lighting work for Hunts/actors only when independently scoped. **No 3D Town rebuild, relightable replacement-scene migration or Town cutover is planned.**
 
+## Selected-art shared-GPU opt-in — owner instruction 27 October 2026
+
+The owner explicitly authorized continuing draft [PR #368](https://github.com/pjotrcasteel/Wyrmforge/pull/368)
+as a **non-destructive 2D lighting experiment**, using the existing shared GPU engine and
+only the ten currently selected uploads as visual references. This is a scoped exception
+to the earlier prohibition on Town renderer experiments, not revival of cancelled 3D PRs.
+Keep the canonical 1672×941 art, silhouettes, navigation, gameplay, NPC feet occlusion,
+World Gate and production painting intact. No automatic live Town cutover.
+
+Exactly five independent light domains: public/common, Nexus, Blacksmith, Codex and
+Hall. The chimney belongs only to Blacksmith; banners and gold decoration never emit.
+Four building domains obey existing C# unlocks. Neutral-white Nexus magic receives
+runtime six-school tint and bounded actual earned mastery strength. No alternate saves
+or preview progression. Source references may not be stacked as full-scene light RGB;
+unregistered images and estimated normal/depth pictures are not ground-truth materials.
+
+`?townGpuPreview=1` and the genuine shared-engine GPU lab are developer-only.
+Strict black-world, fallback, per-domain isolation and actual 320/390/desktop captures
+are required. **T2 central-square owner visual approval is the stopping gate. T3–T6
+and any later 3D Town remain deferred.** Preserve all already-merged Hunt/AI/art work.
+Implementation evidence: [27 October receipt](../art/town-selected-2026-10-27-implementation.md).
+
 ## Ambient townspeople and painted-world navigation (updated 20 October 2026)
 
 - **Current behaviour:** autonomous pedestrians use seeded C# decisions and a terrain-aware pathfinder. The visual placeholders are deliberately larger until character art is accepted.

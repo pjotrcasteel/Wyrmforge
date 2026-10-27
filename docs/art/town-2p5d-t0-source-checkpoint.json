@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "baseline": "approved current main Town, 26 October 2026",
+  "status": "reference hashes only; no new material artwork is approved",
+  "sourcePaintingSize": [
+    1672,
+    941
+  ],
+  "hashAlgorithm": "git-blob-sha1",
+  "files": {
+    "src/Wyrmforge.Presentation.Web/wwwroot/art/town/day-active.webp": "9b3b8b063a93b6feb7e3912efd8cb9e2ce74fd67",
+    "src/Wyrmforge.Presentation.Web/wwwroot/art/town/night-active.webp": "22479a34acdf8e927cb62af4ab7e018b3900925a",
+    "src/Wyrmforge.Presentation.Web/wwwroot/art/town/night-navigation.json": "556572ff2e4ebbd7fffcd7a6db3c98e905a89b34",
+    "src/Wyrmforge.Presentation.Web/wwwroot/art/town/nexus-approved/arcane.webp": "8aaae24ee214fd8c1c8b997d9b445990d491ebe0",
+    "src/Wyrmforge.Presentation.Web/wwwroot/art/town/nexus-approved/binding.webp": "17a4715678d474f21390f043ea4651f8cadec428",
+    "src/Wyrmforge.Presentation.Web/wwwroot/art/town/nexus-approved/death.webp": "30ad484c6ec197e9cd49c9854cd229ca82af4b06",
+    "src/Wyrmforge.Presentation.Web/wwwroot/art/town/nexus-approved/fire.webp": "4c078cf972773a94e39456bf5ea35ea73827fc5b",
+    "src/Wyrmforge.Presentation.Web/wwwroot/art/town/nexus-approved/frost.webp": "9353c64dd2489fd4711de74acae65e3e082b142f",
+    "src/Wyrmforge.Presentation.Web/wwwroot/art/town/nexus-approved/storm.webp": "7c5b100d5eff9ce2a059a6709fa2b547b0cc21f0",
+    "src/Wyrmforge.Presentation.Web/wwwroot/art/town/night-vacant-ArcaneNexus.png": "641ba5ceeb72122837c301c5e1878c3690370443",
+    "src/Wyrmforge.Presentation.Web/wwwroot/art/town/night-vacant-Blacksmith.png": "48091a10b7bceebff4fb6495f5624c816d221060",
+    "src/Wyrmforge.Presentation.Web/wwwroot/art/town/night-vacant-Codex.png": "2f02e81faf795ab59f5ef49284a9412b5a8d00ff",
+    "src/Wyrmforge.Presentation.Web/wwwroot/art/town/night-vacant-HallOfFame.png": "5ccf7b8d44f36a52d30642ae33339d3a06eef762",
+    "user_handover_files/concepts/buildings/ArcaneNexus/active.png": "7aae66a749a10c18c879635d9df74d06b173a02d",
+    "user_handover_files/concepts/buildings/ArcaneNexus/vacant.png": "a67055723d0fac257b834d38bea27c464b1de545",
+    "user_handover_files/concepts/buildings/Blacksmith/active.png": "162730b884e1b91a5c54e7336d0f228351be4636",
+    "user_handover_files/concepts/buildings/Blacksmith/vacant.png": "3acb5c8b6d81d4e184383651a5c473e060c2fea3",
+    "user_handover_files/concepts/buildings/Codex/active.png": "f1c57211d036204e87d8fd8ed6055ecb970667cb",
+    "user_handover_files/concepts/buildings/Codex/vacant.png": "795114040501a7c04f58f4f8ce70a0c3e19b301d",
+    "user_handover_files/concepts/buildings/HallOfFame/active.png": "e00f98a34a2dfaea09252ad400cbf899aa2877ce",
+    "user_handover_files/concepts/buildings/HallOfFame/vacant.png": "e23baf29cadefeeadaea34a89efebb65b6d6e6fe"
+  }
+}
