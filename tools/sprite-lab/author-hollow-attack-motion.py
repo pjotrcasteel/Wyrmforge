@@ -40,10 +40,11 @@ def attack_channels(frame):
     return POSE_KNOTS[-1][1:]
 
 
-def author_attack_action(bpy, rig):
+def author_attack_action(bpy, rig, variant="standard"):
     if rig.type != "ARMATURE" or not rig.animation_data or not rig.animation_data.action:
         raise ValueError("Missing actual original Hollowed walk action")
     original = rig.animation_data.action
+    original.use_fake_user = True
     # Sample the exact original planted source pose and retain genuine local
     # skeletal coordinates. No additive 2D deformation of the final sprite.
     baseline = {}
@@ -56,8 +57,10 @@ def author_attack_action(bpy, rig):
             pb.location.copy(), pb.rotation_quaternion.copy(), pb.scale.copy()
         )
 
-    action = bpy.data.actions.new("Hollow_Gothic_Fire_Lunge_Attack_16")
+    action = bpy.data.actions.new(f"Hollow_{variant}_Gothic_Fire_Claw_v3")
     rig.animation_data.action = action
+    # Arm anatomy determines which surviving claw performs the impact.
+    lead = "R" if variant == "one-arm-left" else "L"
     for frame in range(1, FRAME_COUNT + 1):
         windup, strike, recoil, forward, head = attack_channels(frame)
         for pb in rig.pose.bones:
@@ -67,35 +70,49 @@ def author_attack_action(bpy, rig):
             pb.rotation_quaternion = rotation.copy()
             pb.scale = scale.copy()
             name = pb.name
-            # Core mass pitches towards the victim and recoils, independent
-            # of which arms/legs exist in each REAL damaged body.
+            # Clear silhouette beats: pull weight BACK, twist/chamber one
+            # surviving claw, release torso FORWARD, hit, then recoil.
+            # The walk/crawl compositor subsequently supplies its own grounded
+            # lower-body support; this source action does not fake foot travel.
             if name == "pelvis":
-                pb.location.z -= .022*windup + .014*strike
-                pb.location.y -= .018*windup + .085*strike - .026*recoil
-            elif name in ("spine", "chest"):
-                angle = (-.19*windup + .38*forward - .11*recoil) * (1.0 if name == "chest" else .64)
+                pb.location.z -= .028*windup + .012*strike
+                pb.location.y -= .032*windup - .075*strike + .018*recoil
+            elif name == "spine":
+                angle = -.25*windup + .42*forward - .13*recoil
                 pb.rotation_quaternion = Quaternion(Vector((1, 0, 0)), angle) @ pb.rotation_quaternion
-            elif name == "neck":
-                pb.rotation_quaternion = Quaternion(Vector((1, 0, 0)), -.10*windup + .24*head) @ pb.rotation_quaternion
-            elif name == "head":
-                pitch = .17*windup - .24*head
-                pb.rotation_quaternion = Quaternion(Vector((1, 0, 0)), pitch) @ pb.rotation_quaternion
-            elif name.startswith("clavicle.") or name.startswith("upper_arm."):
-                side = 1 if name.endswith(".L") else -1
-                pitch = -.44*windup + .98*strike - .21*recoil
-                if name.startswith("upper_arm."):
-                    pitch *= .87
+            elif name == "chest":
+                pitch = -.39*windup + .66*forward - .21*recoil
+                twist = (-.27*windup + .30*strike - .07*recoil) * (1 if lead == "L" else -1)
                 pb.rotation_quaternion = (
-                    Quaternion(Vector((1, 0, 0)), pitch)
-                    @ Quaternion(Vector((0, 1, 0)), side*(.16*windup + .23*strike))
-                    @ pb.rotation_quaternion
-                )
+                    Quaternion(Vector((0, 0, 1)), twist)
+                    @ Quaternion(Vector((1, 0, 0)), pitch)
+                    @ pb.rotation_quaternion)
+            elif name == "neck":
+                pb.rotation_quaternion = Quaternion(Vector((1, 0, 0)),
+                    .16*windup - .30*head + .08*recoil) @ pb.rotation_quaternion
+            elif name == "head":
+                pb.rotation_quaternion = Quaternion(Vector((1, 0, 0)),
+                    .22*windup - .34*head + .09*recoil) @ pb.rotation_quaternion
+            elif name.startswith(("clavicle.", "upper_arm.")):
+                is_lead = name.endswith("." + lead)
+                phase = (-1.10*windup + 1.47*strike - .22*recoil) if is_lead \
+                    else (.11*windup - .33*strike + .18*recoil)
+                if name.startswith("clavicle."):
+                    phase *= .47
+                yaw = (-.20*windup + .29*strike) * (1 if is_lead else -.55)
+                pb.rotation_quaternion = (
+                    Quaternion(Vector((0, 1, 0)), yaw)
+                    @ Quaternion(Vector((1, 0, 0)), phase)
+                    @ pb.rotation_quaternion)
             elif name.startswith("forearm."):
-                pb.rotation_quaternion = Quaternion(Vector((1, 0, 0)), -.55*windup + 1.18*strike - .26*recoil) @ pb.rotation_quaternion
+                phase = (-.92*windup + 1.42*strike - .19*recoil) \
+                    if name.endswith("." + lead) else (.12*windup - .30*strike)
+                pb.rotation_quaternion = Quaternion(Vector((1, 0, 0)), phase) @ pb.rotation_quaternion
             elif name.startswith("hand."):
-                pb.rotation_quaternion = Quaternion(Vector((1, 0, 0)), .25*windup - .52*strike) @ pb.rotation_quaternion
-            # Lower legs are held at real planted 3D support pose. Never
-            # animate walk-cycle stride through a supposedly rooted strike.
+                phase = (.35*windup - .56*strike + .18*recoil) \
+                    if name.endswith("." + lead) else (.06*windup - .09*strike)
+                pb.rotation_quaternion = Quaternion(Vector((1, 0, 0)), phase) @ pb.rotation_quaternion
+            # Lower limb joints remain exactly the genuine source skin support.
             pb.keyframe_insert("location", frame=frame, group=name)
             pb.keyframe_insert("rotation_quaternion", frame=frame, group=name)
             pb.keyframe_insert("scale", frame=frame, group=name)
@@ -119,4 +136,6 @@ def author_attack_action(bpy, rig):
         "strikeFrames": [6, 7, 8, 9],
         "recoveryFrames": [10, 11, 12, 13, 14, 15, 16],
         "lockedPlantedLegs": True,
+        "dominantClaw": lead,
+        "asymmetricWindupClawFollowThrough": True,
     }
