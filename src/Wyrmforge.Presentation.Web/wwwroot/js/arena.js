@@ -284,8 +284,8 @@ function draw(state, snapshot, width, height) {
     drawPlayerChill(ctx, snapshot.player, state.reducedMotion.matches ? 0 : visualSeconds);
     for (const shard of snapshot.experienceShards ?? []) drawExperienceShard(ctx, shard);
     for (const pulse of snapshot.splashPulses) drawSplashPulse(ctx, pulse, snapshot.dragon?.school);
-    // The footprint is world-aligned beneath sprites and destructible scene props.
-    drawTargetIndicator(ctx, targetIndicator);
+    // Neutral magic lies beneath the world sprites without replacing hostile attack telegraphs.
+    drawTargetIndicator(ctx, targetIndicator, 'ground', visualSeconds, state.reducedMotion.matches);
     drawAimRune(ctx, snapshot.player);
     drawWardReadiness(ctx, snapshot.player, visualSeconds, state.reducedMotion.matches);
     if (snapshot.wardPulse) drawWardPulse(ctx, snapshot.wardPulse, state.reducedMotion.matches);
@@ -353,8 +353,8 @@ function draw(state, snapshot, width, height) {
     const realFires = createWetForestFirelightPlan(snapshot.environment, worldWidth, worldHeight);
     const nightSources = gothicNightLightSources(snapshot, spellLights, worldWidth, worldHeight, realFires);
     drawGothicNight(ctx, gothicNightPlan(snapshot.player, nightSources, lightViewport), state.nightMask);
-    // A thin contrast rim stays readable at Gothic-night black levels without becoming a light source.
-    drawTargetIndicator(ctx, targetIndicator, 'contrast');
+    // Restrained rune fragments survive the night veil without adding a light emitter.
+    drawTargetIndicator(ctx, targetIndicator, 'contrast', visualSeconds, state.reducedMotion.matches);
     // Tactical telegraphs must remain readable even when the ground is nearly
     // black. They are presentation cues, not physical light emitters.
     for (const hazard of snapshot.huntHazards ?? []) {
