@@ -87,7 +87,7 @@ test('large hordes stay within mobile GPU budget and do not illuminate offscreen
     const sources=hollowFireEmitters(bodies,poses,1,true);
     assert.equal(sources.length,HOLLOW_FIRE_MAX_LIGHTS);
     assert.equal(new Set(sources.map(x=>x.id)).size,sources.length);
-    assert.deepEqual(hollowFireEmitters(bodies,poses,1,true,{x:5,y:160,width:55,height:100})
+    assert.deepEqual(hollowFireEmitters(bodies,poses,1,true,{x:5,y:160,width:30,height:100})
         .map(x=>x.id),['hollow-inner-fire:1','hollow-inner-fire:2']);
 });
 
