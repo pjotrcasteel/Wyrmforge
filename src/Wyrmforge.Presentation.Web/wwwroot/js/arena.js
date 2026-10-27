@@ -1,6 +1,6 @@
 import { preloadFireballV5 } from './arena-fireball-v5.js';
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
-import { attachArenaInput, getArenaMovement, getArenaAim } from './arena-input.js';
+import { attachArenaInput, getArenaMovement, getArenaAim, getArenaPropFocus } from './arena-input.js';
 import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, drawArenaCloisterElevation } from './arena-environment.js?v=20261026-compact-ground-v1';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
@@ -59,6 +59,8 @@ export function readArenaDiagnostics(canvas) {
         ended: state.latestSnapshot?.ended??false,
         movement: getArenaMovement(state),
         aim: getArenaAim(state),
+        pendingPropId: state.pendingPropId,
+        aimedPropId: state.latestSnapshot?.player?.aimPropId ?? null,
         projectiles: state.latestSnapshot?.projectiles ?? [],
         // Read-only visual provenance for real-Hunt evidence captures.
         // These never modify the original scene, C# simulation, or VFX renderer.
@@ -172,7 +174,7 @@ function startSimulationFrame(state, timestamp, rect) {
     const aim = getArenaAim(state);
     const bridgeStarted = performance.now();
 
-    state.dotNetReference.invokeMethodAsync('Frame', delta, rect.width, rect.height, movement.x, movement.y, aim.x, aim.y)
+    state.dotNetReference.invokeMethodAsync('Frame', delta, rect.width, rect.height, movement.x, movement.y, aim.x, aim.y, getArenaPropFocus(state))
         .then(snapshot => {
             if (!state.active) return;
             updatePlayerDanger(state.playerDanger, snapshot, performance.now());
