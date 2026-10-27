@@ -110,7 +110,6 @@ fire_controls, source_regions = embers.attach_internal_fire(actor)
 if not fire_controls:
     raise ValueError("No source-bound fire shader on cape-free Hollowed")
 
-baseline = walk_frames[0]
 action = bpy.data.actions.new(f"Hollow_{args.variant}_MovingStrike_AndChase_v1")
 rig.animation_data.action = action
 scene.frame_start, scene.frame_end, scene.render.fps = 1, COUNT, 24
