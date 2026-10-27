@@ -10,7 +10,7 @@ test('Hunt lights track camera with the same world scale and handedness as recei
     const original = structuredClone(frame);
     const projected = huntLightFrame(frame, { x: 48, y: 96 });
     assert.deepEqual(projected.lights[0].position, [2, -3 * Math.SQRT2, .5]);
-    assert.deepEqual(projected.lights[0].direction, [1, -2 * Math.SQRT2, -1]);
+    assert.deepEqual(projected.lights[0].direction, [1, -2 * Math.SQRT2, -1].map(v => v / Math.sqrt(10)));
     assert.equal(projected.lights[0].range, 3);
     assert.equal(projected.lights[0].intensity, 1);
     assert.deepEqual(frame, original);
@@ -63,4 +63,17 @@ test('prop and dead-boss GPU resources stay at their own world positions', async
     assert.equal(death.id, 'hunt-dragonDeath:9');
     assert.equal(death.x + death.size / 2, 700);
     assert.equal(death.y + death.size * .75, 600);
+});
+
+
+test('Generic directional emitters preserve orientation and unit length across camera movement', () => {
+    for (const direction of [[1,0,0],[0,1,0],[0,0,-1],[.3,.4,-.5],[0,0,0]]) {
+        const frame={ lights:[{id:'arbitrary-emitter',position:[10,20,30],direction,range:120,intensity:2,expiresAt:4}] };
+        const a=huntLightFrame(frame,{x:0,y:0}).lights[0];
+        const b=huntLightFrame(frame,{x:300,y:-200}).lights[0];
+        assert.deepEqual(a.direction,b.direction);
+        assert.ok(Math.abs(Math.hypot(...a.direction)-(Math.hypot(...direction)>0?1:0))<1e-12);
+        assert.equal(a.expiresAt,4);
+        assert.equal(a.id,'arbitrary-emitter');
+    }
 });

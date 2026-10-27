@@ -3,11 +3,17 @@ import * as T from './lighting/vendor/three.module.js';
 import { LightingEngine } from './lighting/engine.js';
 const UNIT = 48;
 const GROUND_Y = Math.SQRT2;
+function projectLightDirection(direction) {
+    const projected = [direction[0], -direction[1] * GROUND_Y, direction[2]];
+    const length = Math.hypot(...projected);
+    // Point emitters may have a zero direction; never introduce NaN there.
+    return length === 0 ? projected : projected.map(value => value / length);
+}
 export function huntLightFrame(frame, camera) {
     if (!frame) throw new TypeError('Missing authoritative Hunt lighting');
     return { ...frame, lights: frame.lights.map(light => ({ ...light,
         position: [(light.position[0] - camera.x) / UNIT, -(light.position[1] - camera.y) * GROUND_Y / UNIT, light.position[2] / UNIT],
-        direction: [light.direction[0], -light.direction[1] * GROUND_Y, light.direction[2]],
+        direction: projectLightDirection(light.direction),
         range: light.range / UNIT, intensity: light.intensity,
     })) };
 }

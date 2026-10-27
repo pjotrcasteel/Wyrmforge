@@ -5,6 +5,18 @@
 
 ## How to choose the next slice
 
+### Arena-first lighting — owner update, 27 October 2026
+
+Town relighting T0–T2 is now **paused**, alongside deferred T3–T6. Keep the current
+painted 2D Town and preserve draft #368 for a later revisit. This supersedes the
+active Town acceptance sequencing below: no Town milestone blocks G4/G5.
+Continue the existing arena integration draft #381 and shared GPU engine, prioritizing
+moving projectiles, short-lived explosion lights, persistent/environment emitters and
+directional sources through generic descriptors. Preserve C# event ownership and
+actor/AI work in other PRs. Completion still requires actual Hunt shadow/occlusion,
+zero-light, fallback and mobile performance evidence; point-source demos alone do not
+establish complete dynamic combat-lighting adoption.
+
 ### FOCUS GATE — lighting and unified AI engines (owner decision, 26 October 2026; LOCKED active sequencing)
 
 **Effective immediately, this owner instruction supersedes the 25 October Ashfang-first sequencing, the default P0–P9/CV1–CV5 selection order and any older handover suggesting other new features.** The **only two active development priorities** are:
