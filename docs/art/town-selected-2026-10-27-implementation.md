@@ -245,3 +245,21 @@ and raised the public brightness gate, with a soft knee requiring both red and g
 brightness. Warm brick is now explicitly rejected by a regression test. Sconce stone
 correction uses an elliptical zero-at-edge falloff; it does not leave a rectangular
 gray patch or preserve a rectangular orange hole. **79 focused tests pass**.
+
+### Latest circled-area proof
+
+Final rendering checkpoint **5c656a5079748b7f3a0853184b36b0b9e85d7929**.
+Fresh 13-case set: previous common render; current common/combined/off at 320,390,1120;
+day 390; isolated Blacksmith and neutral Nexus 390. Each has native framebuffer PNG,
+viewport PNG and exact module/PNG hashes. Strict off is RGB black at all widths;
+common chimney OFF; Blacksmith chimney ON. **79 focused Town tests pass.** Original
+source assets remain unchanged. Current full CI and physical-phone checks are pending.
+
+[Current full native GPU render](previews/town-common-colour-cleanup-2026-10-27.png).
+[All eight owner-marked areas BEFORE/AFTER](previews/town-owner-circled-areas-2026-10-27.png).
+[Exact source/capture records, crop bounds and feedback-image SHA](previews/town-owner-circled-areas-2026-10-27.json).
+The owner also receives the 29MB raw PNG/metadata bundle. Stone is cooler and the
+stamped public emission rectangles are corrected. The roof/window details remain for
+owner review; this is still a source-derived material candidate with painted shadow
+limitations, not a claim that every marked area is visually finished. T2 remains
+unapproved, PR draft, no T3–T6 or live Town cutover.
