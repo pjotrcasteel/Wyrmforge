@@ -1,0 +1,35 @@
+name: Hollowed cape-free motion review
+
+on:
+  push:
+    branches:
+      - fix/hollowed-animation-polish-20261027
+    paths:
+      - 'tools/sprite-lab/review-hollow-cape-free-motion.py'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/hollow-rigged/arms/**'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/hollow-rigged/injuries/**'
+      - '.github/workflows/hollow-cape-free-motion-review.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install image review dependency
+        run: python -m pip install "Pillow>=10,<13"
+      - name: Generate four cape-free source reviews
+        run: python tools/sprite-lab/review-hollow-cape-free-motion.py --output hollow-cape-free-review
+      - name: Publish truthful before-art evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: hollow-cape-free-motion-review
+          path: hollow-cape-free-review/
+          if-no-files-found: error

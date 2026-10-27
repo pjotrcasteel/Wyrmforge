@@ -12,6 +12,7 @@ import { drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions, enemyFac
 import { preloadPaintedEnemies, drawPaintedEnemy, drawPaintedWyrm, updatePaintedCorpses, drawPaintedCorpses, mireHoundPixelPreviewEnabled } from './painted-enemies.js';
 import { preloadHollowSprites, hollowSpritesReady, createHollowState, updateHollowSprites, drawHollowEnemy, drawHollowCorpses, hollowDiagnostics } from './hollow-sprites.js';
 import { hollowFractureEmitters, hollowFractureCanvasLights, withHollowFractureLightingFrame } from './hollow-fracture.js';
+import { hollowFireEmitters, hollowFireCanvasLights } from './hollow-inner-fire.js';
 import { preloadAshfang, createAshfangState, updateAshfang, drawAshfang, drawAshfangDeath, ashfangSockets, ashfangDiagnostics } from './ashfang-sprites.js';
 import { drawAshfangWarning, drawAshfangGroundEffects, drawAshfangAirEffects, ashfangVfxDiagnostics } from './ashfang-vfx.js';
 import { ashlingSprites } from './ashling-sprites.js';
@@ -90,6 +91,7 @@ export function readArenaDiagnostics(canvas) {
         renderingFailed: Boolean(state.renderingFailed),
         sharedLighting: state.sharedLightingFrame ?? state.latestSnapshot?.lighting ?? null,
         hollowFractureGpuEmitters: state.fractureGpuEmitters ?? [],
+        hollowFireGpuEmitters: state.hollowFireGpuEmitters ?? [],
         wetForestGround: state.latestSnapshot?.environment?.wetForest
             ? liveWetForestMaterialDiagnostics(state.latestSnapshot.environment.seed) : null,
         lighting: { mode: 'night', darkness: GOTHIC_NIGHT.darkness, source: 'authoritative-csharp-snapshot' },
@@ -249,10 +251,17 @@ function draw(state, snapshot, width, height) {
     state.selectionGpuEmitter = selectionEmitter;
     state.sharedLightingFrame = withHollowFractureLightingFrame(snapshot.lighting,
         selectionEmitter ? [...fractureEmitters,selectionEmitter] : fractureEmitters);
+    // Source-skinned Hollowed internal fire adds ordinary GPU emitters to the
+    // same lighting frame as fracture embers and neutral target sigils.
+    const hollowEmbers = hollowFireEmitters(snapshot.enemies,state.hollow,state.hollow.clock,
+        state.reducedMotion.matches,lightViewport);
+    state.hollowFireGpuEmitters = hollowEmbers;
+    state.sharedLightingFrame = withHollowFractureLightingFrame(state.sharedLightingFrame,hollowEmbers);
     const spellLights = [
         ...buildSpellLights(snapshot, visualSeconds, state.reducedMotion.matches, lightViewport),
         ...hollowFractureCanvasLights(fractureEmitters,snapshot.lighting),
-        ...targetSelectionCanvasLight(selectionEmitter)
+        ...targetSelectionCanvasLight(selectionEmitter),
+        ...hollowFireCanvasLights(hollowEmbers,snapshot.lighting)
     ];
     ctx.clearRect(0, 0, width, height);
     ctx.save();

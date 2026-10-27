@@ -3,6 +3,20 @@
 > **Canonical WyrmForge specification · updated 20 October 2026.** Original grounded Gothic enemies; roster plans and implementation evidence remain distinct.
 > [Canonical index](README.md) · Only explicitly marked **LOCKED/approved** requirements are commitments. Proposed values, old milestones and drafts are not evidence of shipped code. Verify current `main`, PRs and tests.
 
+## Creature family variation: Hollowed first, Ashlings later (owner direction, 27 October 2026)
+
+**Visual variety must be physical as well as animated.** One recolored creature with a different playback rate does not qualify.
+
+**Hollowed — current priority and art-approval blocker.** Build a dark Gothic population around the existing **cape-free**, actual source-skinned Blender rigs:
+- Physically distinct skeletal models with instantly legible body masses, height/shoulder/head proportions, asymmetrical breakage, missing/ruined limbs, posture, and real injury-consistent walk, claw, impact and death actions. At least four visibly distinguishable individuals in one mixed horde; the model differences are not just random costume colors or scale.
+- Match **Frenzied**, **Wanderer**, **Crippled**, and **Crawler** motion/behaviour archetypes to suitable bodies rather than arbitrary combinations. A real crawler is a new low floor-contact rigged locomotion and combat set, not a 2D tilt of an upright zombie. Preserve original bone/UV/material provenance in new source assets.
+- Once visually accepted, give each actor deterministic identity within the same `EnemyKind.Hollow` family; ensure actual speed/behaviour differences happen in **C#**, remain readable and fair, respect collision and floor/hit anchors, and do not invalidate gameplay/saves/replays. Cross-consistency of body, movement and attacks matters more than the total number of cosmetic permutations.
+- Before game integration, present native-size mobile **moving** comparisons in 8 real facings, a mixed-horde scene alongside the approved Ashling, and editable 3D models; only owner art approval allows switching live art.
+
+**Ashling — later, explicitly NOT part of this Hollowed-first PR.** After the Hollowed and current rendering milestones, create **3–4 genuinely distinct Ashling demon body/animation versions**, all within the approved original Ashling lineage. Preserve what already makes the Ashling appealing; variations can include distinct horn/head structures, torsos, claw and limb shapes, and corresponding authored attacks/deaths (not just palettes or speed multipliers). A shared demon family should retain readable identity and gameplay fairness. No Ashling mesh, animation, speed or combat changes in the current task.
+
+The source-body review script `tools/sprite-lab/author-hollow-body-diversity.py` and PR #385 are an unapproved art checkpoint, **not** proof of a finished crawler or deployed population.
+
 ## Fire Tier-I boss durability — owner playtest 25 October 2026 (tunable)
 
 The mandatory pre-lair **Bell Warden** and Tier-I **Ashfang** currently die too quickly in the playable Hunt. Increase **survivability only**, not damage, attack rate, speed, or add counts. The first tuning pass multiplies the Tier-I Bell Warden's existing encounter-scaled HP by **2.5** and Tier-I Ashfang's existing tier/depth-scaled HP by **3.0**. Half-health crack/phase transitions remain proportional to max HP and retain their damage-overflow protection. Ascendant and Elder Ashfang, other Wyrms, other enemies, and other regions keep their previous values. These HP multipliers are provisional pending owner playtesting of the deployed build; judge encounter time and visible phase cycles, not only whether the fight can be won.

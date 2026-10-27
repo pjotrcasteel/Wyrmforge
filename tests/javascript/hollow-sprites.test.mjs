@@ -10,6 +10,7 @@ const source=readFileSync(new URL('js/hollow-sprites.js',root),'utf8').replace("
  .replace("'./hollow-injury-variants.js'",JSON.stringify(moduleUri('hollow-injury-variants.js')))
  .replace("'./hollow-arm-variants.js'",JSON.stringify(moduleUri('hollow-arm-variants.js')))
  .replace("'./hollow-motion.js'",JSON.stringify(moduleUri('hollow-motion.js')))
+ .replace("'./hollow-combat-layers.js'",JSON.stringify(moduleUri('hollow-combat-layers.js')))
  .replace("'./hollow-variation.js'",JSON.stringify(moduleUri('hollow-variation.js')))
  .replace("'./hollow-death.js'",JSON.stringify(moduleUri('hollow-death.js')))
  .replace("'./hollow-injury-death.js'",JSON.stringify(moduleUri('hollow-injury-death.js')))
@@ -34,6 +35,37 @@ test('walk follows travelled distance and survives duplicate render snapshots',(
  advance(state,moved,.1,.3);assert.equal(state.entities.get(7).frame,state.entities.get(7).idleFrame);
  mod.updateHollowSprites(state,snapshot({enemies:[]}),.35);assert.equal(state.entities.size,0);assert.equal(state.corpses.size,0);
 });
+test('pause and freeze preserve the exact walk support pose without foot snapping',()=>{
+ const state=mod.createHollowState();
+ mod.updateHollowSprites(state,snapshot(),0);
+ const moved=snapshot({enemies:[enemy({x:22.6})]});
+ mod.updateHollowSprites(state,moved,.05);
+ const pose=state.entities.get(7);
+ pose.frame=7; // Deliberately between the two authored idle contact poses.
+ const phase=pose.animation.phase,worldX=pose.x,age=pose.age;
+ mod.updateHollowSprites(state,{...moved,paused:true},.066);
+ assert.equal(pose.frame,7,'pausing a moving Hollow must not jump its feet to idle');
+ assert.equal(pose.animation.phase,phase);
+ assert.equal(pose.age,age);
+ mod.updateHollowSprites(state,{...moved,enemies:[enemy({x:22.6,frozen:true})]},.082);
+ assert.equal(pose.frame,7,'freezing must preserve the actual last rendered support pose');
+ assert.equal(pose.animation.phase,phase);
+ assert.equal(pose.x,worldX);
+});
+
+test('relocating a Hollow preserves its individual gait phase instead of synchronizing the pack',()=>{
+ const state=mod.createHollowState();
+ mod.updateHollowSprites(state,snapshot(),0);
+ const pose=state.entities.get(7),originalPhase=pose.initialPhase;
+ assert.equal(pose.animation.phase,originalPhase);
+ mod.updateHollowSprites(state,snapshot({enemies:[enemy({x:22.6})]}),.05);
+ assert.notEqual(pose.animation.phase,originalPhase);
+ mod.updateHollowSprites(state,snapshot({enemies:[enemy({x:200})]}),.1);
+ assert.equal(pose.animation.phase,originalPhase,'streamed actors keep their original per-identity walk offset');
+ assert.equal(pose.attackAt,null);
+ assert.equal(pose.runSpeed,null);
+});
+
 test('contact only drives presentation; attack freezes and recovers',()=>{
  const state=mod.createHollowState();const contact=snapshot({player:{x:38,y:20,radius:9}});
  mod.updateHollowSprites(state,contact,0);assert.equal(state.entities.get(7).clip,'attack');assert.equal(state.entities.get(7).direction,'E');
@@ -48,9 +80,53 @@ test('an active attack follows a changed target direction without restarting',()
  advance(state,snapshot({player:{x:38,y:20,radius:9}}),.05,.3);
  const pose=state.entities.get(7),token=pose.attackAt,frame=pose.frame;
  advance(state,snapshot({player:{x:20,y:2,radius:9}}),.35,.6);
- assert.equal(pose.direction,'N');assert.equal(pose.attackAt,token);assert.ok(pose.frame>frame);
+ assert.equal(pose.direction,'E','A committed strike does not instantly spin toward a passing target');
+ assert.equal(pose.combatLayer.lowerFacing,'N','Chase legs already follow the new target');
+ assert.equal(pose.attackAt,token);assert.ok(pose.frame>frame);
+ advance(state,snapshot({player:{x:20,y:2,radius:9}}),.65,1);
+ assert.equal(pose.direction,'N','Upper body rotates to chase after the strike impact');
+ assert.equal(pose.attackAt,token,'The attack is not restarted by the turn');
  const frozen=snapshot({enemies:[enemy({frozen:true})],player:{x:2,y:20,radius:9}});
- advance(state,frozen,.65,.8);assert.equal(pose.direction,'N');
+ advance(state,frozen,1.05,1.2);assert.equal(pose.direction,'N');
+});
+test('walk-to-strike and 8-way turning crossfade actual source frames for 160ms',()=>{
+ const state=mod.createHollowState();
+ const walking=snapshot({player:{x:200,y:200,radius:9}});
+ mod.updateHollowSprites(state,walking,0);
+ mod.updateHollowSprites(state,snapshot({enemies:[enemy({x:22})]}),.05);
+ const pose=state.entities.get(7);
+ const prior={clip:pose.clip,frame:pose.frame,direction:pose.direction};
+ const touching=snapshot({enemies:[enemy({x:22})],player:{x:37,y:20,radius:9}});
+ mod.updateHollowSprites(state,touching,.10);
+ assert.equal(pose.clip,'attack');
+ assert.deepEqual(pose.blendFrom,prior,'The previous planted walk frame must remain the fade source.');
+ assert.equal(pose.blendWeight,0);
+ const token=pose.attackAt;
+ mod.updateHollowSprites(state,touching,.18);
+ assert.ok(pose.blendWeight>0 && pose.blendWeight<1);
+ assert.equal(pose.attackAt,token,'Crossfading must not restart the combat animation.');
+ mod.updateHollowSprites(state,touching,.30);
+ assert.equal(pose.blendFrom,null);
+ assert.equal(pose.blendWeight,1);
+ const changed=snapshot({enemies:[enemy({x:22})],player:{x:22,y:4,radius:9}});
+ mod.updateHollowSprites(state,changed,.35);
+ assert.equal(pose.clip,'attack');
+ assert.equal(pose.direction,'N');
+ assert.equal(pose.blendFrom.direction,'E','Turning retains the last 3D sprite facing for the fade.');
+ assert.equal(pose.blendWeight,0);
+ assert.equal(pose.attackAt,token);
+});
+test('reduced motion removes opacity interpolation and pauses preserve transitions',()=>{
+ assert.equal(mod.hollowBlendWeight(1,1.03,true),1);
+ assert.equal(mod.hollowBlendWeight(undefined,1),1);
+ assert.equal(mod.hollowBlendWeight(1,1),0);
+ assert.equal(mod.hollowBlendWeight(1,1.08),.5);
+ assert.equal(mod.hollowBlendWeight(1,1.16),1);
+ const state=mod.createHollowState(),contact=snapshot({player:{x:38,y:20,radius:9}});
+ mod.updateHollowSprites(state,contact,0);
+ assert.equal(state.entities.get(7).blendFrom,null);
+ mod.updateHollowSprites(state,contact,.10,true);
+ assert.equal(state.entities.get(7).blendWeight,1);
 });
 test('only authoritative Hollow deaths collapse then hold before fading; paused clock stops',()=>{
  const state=mod.createHollowState();mod.updateHollowSprites(state,snapshot(),0);
