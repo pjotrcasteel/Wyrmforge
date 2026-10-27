@@ -59,7 +59,7 @@ test('the original navigation and touch handlers remain in the existing Town imp
 test('T2 uses unchanged canonical well unless separate Stage4 is explicitly requested', () => {
     assert.match(bridge, /query\.get\('townWellStage4'\) === '1'/);
     assert.match(preview, /night-active\.webp/);
-    assert.match(preview, /liftTownReferencePixels\(pixels\.data,source\.width,source\.height,4\)/);
+    assert.match(preview, /liftTownReferencePixels\(pixels\.data,source\.width,source\.height,3\)/);
     assert.match(preview, /splitTownPavingReference\(floorReference, selectedCutouts\)/);
     assert.match(preview, /town-authored-day-background/);
     assert.match(preview, /pavingLayers\.floor/);

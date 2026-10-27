@@ -14,7 +14,7 @@ import { deriveTownNeutralPavingCanvas } from './town-neutral-albedo.js';
 import { TOWN_NIGHT_LIGHT_GRADE, gradeTownPreviewLighting } from './town-lighting-grade.js';
 import { createTownDomainFixtures, configureTownLightDomains, TOWN_LIGHT_ISOLATIONS, TOWN_NEXUS_SCHOOL_LIGHTS } from './town-light-domains.js';
 import { TOWN_EMISSION_PLATES, TOWN_APERTURE_PLATES, emissionMaskPixels, commonAperturePixels } from './town-emission-masks.js';
-import { liftTownReferencePixels, neutralizeTownGateMasonry } from './town-building-neutral-albedo.js';
+import { liftTownReferencePixels } from './town-building-neutral-albedo.js';
 import { clipTownNightSilhouette } from './town-night-silhouette.js';
 import { townDomainSnapshot, applyTownPreviewEnvironment } from './town-preview-state.js';
 import { projectTownCitizens, TOWN_CITIZEN_ART_WIDTH, TOWN_CITIZEN_ART_HEIGHT } from './town-citizen-gpu-bridge.js';
@@ -387,8 +387,7 @@ const engine = new LightingEngine(canvas, {
             clipTownNightSilhouette(source);
             const context=source.getContext('2d');
             const pixels=context.getImageData(0,0,source.width,source.height);
-            pixels.data.set(neutralizeTownGateMasonry(
-                liftTownReferencePixels(pixels.data,source.width,source.height,4),source.width,source.height));
+            pixels.data.set(liftTownReferencePixels(pixels.data,source.width,source.height,3));
             context.putImageData(pixels,0,0);
         }
         const selectedCutouts = domainForeground(state.wellV4
@@ -429,7 +428,7 @@ const engine = new LightingEngine(canvas, {
         neutral.width = separated.floor.width; neutral.height = separated.floor.height;
         neutral.getContext('2d').drawImage(pavingLayers.floor, 0, 0);
         state.neutralMetrics = deriveTownNeutralPavingCanvas(neutral,
-            state.domains ? { chromaRetention: .45 } : {});
+            state.domains ? { chromaRetention: .8 } : {});
         if (state.domains) softenTownPavingBoundary(neutral, separated.floor);
         engine.registerTexture('town-paving-neutral', new T.CanvasTexture(neutral));
         const normal = levelPavingNormal(a.right, a.up, a.toward);

@@ -263,3 +263,15 @@ stamped public emission rectangles are corrected. The roof/window details remain
 owner review; this is still a source-derived material candidate with painted shadow
 limitations, not a claim that every marked area is visually finished. T2 remains
 unapproved, PR draft, no T3–T6 or live Town cutover.
+
+## Amber-light correction after owner rejection
+
+The owner rejected the colour-cleanup checkpoint as white lighting. Its screenshots
+are rejected evidence, not acceptance. Restore warm public light (#ffd2a0), lower
+public intensity from .4 to .28, and bound each public source radius to 1.8 world
+units (gate arch 2.4) to avoid overlapping pools recolouring the entire square.
+Remove localized gray gate-masonry correction, restore paving chroma retention
+from .45 to .8, and reduce the night-reference linear lift from 4 to 3. Original
+assets, tight flame masks, dry paving geometry and well foreground masks stay intact.
+79 focused Town JS tests pass. This checkpoint precedes fresh GPU capture and is
+not a claim of visual correctness. T2 owner acceptance remains required.

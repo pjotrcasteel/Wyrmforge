@@ -112,9 +112,11 @@ export function createTownDomainFixtures(project, toward) {
             id: 'town-' + source.id, ownerId: 'town-' + source.domain,
             domain: source.domain, magic: source.magic === true,
             type: source.type ?? (source.shadow ? 'spot' : 'point'),
-            enabled: true, color: source.domain === 'common' ? '#fff0e3' : source.color,
-            intensity: source.intensity * (source.domain === 'common' ? .4 : 1),
-            position, direction: [0, 0, -1], range: source.range,
+            enabled: true, color: source.domain === 'common' ? '#ffd2a0' : source.color,
+            intensity: source.intensity * (source.domain === 'common' ? .28 : 1),
+            // Local amber pools; broad overlapping ranges washed out the paving.
+            position, direction: [0, 0, -1], range: source.domain === 'common'
+                ? Math.min(source.range, source.id === 'gate-arch' ? 2.4 : 1.8) : source.range,
             coneAngle: .58, penumbra: .65,
             castsShadow: source.shadow, priority: source.shadow ? 4 : 1,
             artAnchor: [source.x, source.y],
