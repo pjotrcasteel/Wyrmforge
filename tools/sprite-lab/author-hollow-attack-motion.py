@@ -59,7 +59,7 @@ def author_attack_action(bpy, rig, variant="standard"):
             pb.location.copy(), pb.rotation_quaternion.copy(), pb.scale.copy()
         )
 
-    action = bpy.data.actions.new(f"Hollow_{variant}_Feral_HighClaw_v7")
+    action = bpy.data.actions.new(f"Hollow_{variant}_Feral_SweepingClaw_v8")
     # Native two-bone IK produces a REAL 3D hand trajectory around the head
     # and across the victim, instead of rotating two full arms in place.
     rest = {bone.name:bone for bone in rig.data.bones}
@@ -83,7 +83,7 @@ def author_attack_action(bpy, rig, variant="standard"):
         matrix.translation = start
         return matrix
 
-    def place_claw(windup, strike, recoil):
+    def place_claw(frame, windup, strike, recoil):
         # Animated in actual source rig coordinates. No 2D sprite rotation,
         # no synthetic extra limb, no teleportation or fake impact effect.
         bpy.context.view_layer.update()
@@ -97,11 +97,21 @@ def author_attack_action(bpy, rig, variant="standard"):
         # A predator chambers near its ear, then tears DOWN AND IN across
         # the chest toward the hunter. The strike is not a straight reach.
         chamber = shoulder + Vector((sign*.15, .08, reach*.68))
-        slash = shoulder + Vector((-sign*.24, -.31, reach*.38))
-        follow = shoulder + Vector((-sign*.34, -.23, reach*.10))
-        target = original_wrist.lerp(chamber, windup)
-        target = target.lerp(slash, strike)
-        target = target.lerp(follow, recoil * .40)
+        # A real 3D four-frame swept trajectory through the player's upper
+        # body. The old source authored nearly identical strike frames 6-9,
+        # which looked like a held reach instead of a travelling claw.
+        rake_start = shoulder + Vector((sign*.25, -.31, reach*.58))
+        rake_end = shoulder + Vector((-sign*.38, -.34, reach*.12))
+        if frame <= 5:
+            target = original_wrist.lerp(chamber, windup)
+        elif frame <= 9:
+            t = min(1.0, max(0.0, (frame-6)/3))
+            t = t*t*(3-2*t)
+            target = rake_start.lerp(rake_end, t)
+        else:
+            t = min(1.0, max(0.0, (frame-9)/7))
+            t = t*t*(3-2*t)
+            target = rake_end.lerp(original_wrist, t)
         line = target-shoulder
         near = abs(length_a-length_b)+.0005
         distance = min(max(line.length, near), reach-.003)
@@ -188,7 +198,7 @@ def author_attack_action(bpy, rig, variant="standard"):
             # contrast, not an implausible full-body ground slam.
             # Lower limb joints remain exactly the genuine source skin support.
         if max(windup, strike, recoil) > .02:
-            hands.append({"frame": frame, "clawTarget": place_claw(windup,strike,recoil)})
+            hands.append({"frame": frame, "clawTarget": place_claw(frame,windup,strike,recoil)})
         for pb in rig.pose.bones:
             pb.keyframe_insert("location", frame=frame, group=pb.name)
             pb.keyframe_insert("rotation_quaternion", frame=frame, group=pb.name)
@@ -220,5 +230,6 @@ def author_attack_action(bpy, rig, variant="standard"):
         "chestHeightNotGroundSlam": True,
         "realTwoBoneIKClaw": True,
         "highForwardContact": True,
+        "continuousSweepingClawAcrossFourSourceFrames": True,
         "authoredClawTargets": hands,
     }
