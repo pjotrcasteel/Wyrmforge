@@ -19,10 +19,10 @@ pixel registered. Localized feature fits are not whole-image registration proof.
 ## Implementation
 
 - Same G1–G3 LightingEngine, 1672×941 art projection and current gameplay bridge.
-- 27 bounded fixtures, one exclusive domain per fixture. Chimney only Blacksmith.
+- 28 bounded fixtures, one exclusive domain per fixture. Chimney only Blacksmith.
 - Two runtime-tinted neutral magic emitters: Nexus dome and portal. Existing six-school
   palette, actual C# TownNexusRadiance strength, no second progression or save write.
-- Stable diffuse receivers across unlocks/isolation. Only emissive objects and light
+- One stable scene receiver across unlocks/isolation; removed overlapping building diffuse plates. Only emissive objects and light
   descriptors change. Public sources remain available with every building vacant.
 - Pure snapshot policy tested across isolation, vacancy, day, night, strict zero,
   exposure, six schools and source-hash integrity.
@@ -40,14 +40,36 @@ pixel registered. Localized feature fits are not whole-image registration proof.
 
 ## Verification and limits
 
-Initial checkpoint: 69 focused Town JS tests passed. Current mask slice: 70 passed.
+Initial checkpoint: 69 focused Town JS tests passed. Current mask slice: 71 passed.
 21 original Town source hashes verified unchanged. Real local Chromium SwiftShader
 now renders the shared engine (software GPU, not physical iPhone/Android performance).
-First common-only frame confirms native projection, 14 common sources, chimney OFF,
-zero isolation ambient and black negative space. This is **not visual approval**.
+First common-only frame confirms native projection, 15 common sources, chimney OFF,
+bounded .025 night ambient and black negative space. This is **not visual approval**.
 
 Material candidates still derive from painted canonical sources; they are not
 artist-authored neutral PBR albedo. The selected 1536 uploads were not stretched into
 1672 geometry. Current public pools/well and all building masks still require final
 side-by-side QC. Full C# build/actual-game phone screenshots and latest CI are pending.
 Do not merge or replace the live scene on the strength of unit tests.
+
+
+## GPU QC correction after first full matrix
+
+The historical `day-vacant-ArcaneNexus.webp` visibly contains block-corrupted edges
+and a painted blue portal/dome. It is no longer used as a night reflectance source.
+Removed the four overlapping diffuse building plates entirely: one stable registered
+night-vacant composite receives real engine lights, with a bounded linear exposure
+candidate (gain 4) and no geometry interpolation. Public glass/flame and building
+warm/magic masks remain independent shared-engine emissive materials. Foreground
+cutouts use the exact original source with bounded gain, avoiding a daylight roof halo.
+This is a candidate reflectance correction, **not recovered physical neutral albedo**.
+Night isolation uses the same small .025 environment as combined; strict off/zero
+still disable ambient, all sources and emission. The explicit sky alpha keeps the
+moon, distant landscape and background black independent of the light subset.
+
+A first complete genuine GPU matrix passed readiness and zero-black pixel checks at
+320/390/1120 widths; its median public paving was 44 (reference tolerance 24–65).
+Those first frames exposed the painted-magic issue, so fresh final frames must replace
+them before visual review. All 525 JS tests passed after main reconciliation; the
+latest reflectance correction has 71 focused tests passing. Physical-phone performance
+and owner visual approval are still absent.

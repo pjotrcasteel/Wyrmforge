@@ -20,10 +20,10 @@ test('Every isolation and vacancy keeps identical non-emissive receivers and sou
     }
     assert.deepEqual(receivers(snap({mode:'day'})), initial);
 });
-test('Single-domain isolation has no ambient wash, other emitters or chimney leak', () => {
+test('Single-domain isolation has bounded night ambient, no other emitters or chimney leak', () => {
     for (const isolation of TOWN_LIGHT_DOMAINS) {
         const s = snap({isolation});
-        assert.equal(s.environment.ambient,0);
+        assert.ok(s.environment.ambient <= .03);
         assert.ok(s.lights.filter(l => l.enabled).every(l => l.domain === isolation));
         assert.ok(s.objects.filter(o => o.id.startsWith('town-emissive-')).every(o => o.ownerId === 'town-'+isolation));
         assert.equal(s.lights.find(l => l.id === 'town-blacksmith-chimney').enabled,isolation === 'blacksmith');

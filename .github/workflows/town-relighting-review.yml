@@ -131,6 +131,8 @@ jobs:
           assert ImageChops.difference(left, right).getbbox(), 'Lantern position must affect real GPU lighting'
           print('PASS Stage 4: real rendered asset, day/night, zero light, movable lantern.')
           PY
+          /tmp/town-gpu-capture/bin/python tools/art/town_selected_comparison.py \
+            artifacts/town-2p5d artifacts/town-2p5d/selected-owner-vs-gpu.jpg
           echo "Verified real Stage 4 GPU pixels and legacy comparisons."
 
       - name: Upload focused Stage 4 remade-well GPU screenshots

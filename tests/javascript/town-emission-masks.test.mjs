@@ -73,30 +73,11 @@ test('Six GPU emissive layers use one generic world material pipeline', () => {
 });
 
 
-test('Four neutral day-vacant GPU diffuse surfaces have exact canonical atlas bounds', () => {
-    const scene = townPreviewManifest({ domains: true });
-    const base = townPreviewManifest();
-    const diffuse = scene.layers.filter(layer => layer.diffuseDomain);
-    assert.equal(diffuse.length, 4);
-    assert.equal(base.layers.filter(layer => layer.diffuseDomain).length, 0);
-    for (const plate of TOWN_EMISSION_PLATES) {
-        const key = 'town-diffuse-' + plate.domain;
-        const layer = diffuse.find(x => x.id === key);
-        assert.ok(layer, key);
-        assert.equal(layer.ownerId, 'town-' + plate.domain);
-        assert.deepEqual(layer.artBounds, [plate.x, plate.y, plate.width, plate.height]);
-        assert.equal(layer.castsShadow, false, 'No new fake building caster geometry');
-        assert.equal(layer.receivesShadow, true);
-        const surface = scene.materials.find(x => x.id === key + '-material');
-        assert.equal(surface.albedo, key + '-albedo');
-        assert.equal(surface.emissionIntensity, 0);
-        assert.equal(surface.reflection, 'off');
-        assert.ok(surface.roughness >= .9);
-    }
-    assert.equal(scene.layers[0].material, base.layers[0].material,
-        'Night scenic backing is retained; never substituted by daytime sky');
-    assert.equal(scene.layers[1].material, base.layers[1].material,
-        'Both versions retain one canonical-pixel paving receiving plane');
+test('The domain scene uses one immutable base receiver rather than overlapping building diffuse paintings', () => {
+    const scene = townPreviewManifest({ domains:true });
+    assert.equal(scene.layers.filter(layer=>layer.diffuseDomain).length,0);
+    assert.equal(scene.layers.filter(layer=>layer.id==='canonical-day-reference').length,1);
+    assert.ok(scene.layers.filter(layer=>!layer.emissionKind).every(layer=>!layer.domain));
 });
 
 test('Neutral building material stays inside both approved day/night alpha silhouettes', () => {
@@ -125,4 +106,15 @@ test('Golden banner decoration cannot emit even when active-source pixels are br
         const mask=emissionMaskPixels(pixels(255,180,50),pixels(0,0,0),4,4,plate('hall',x+1,y+1),'warm');
         assert.ok(mask.every(value=>value===0));
     }
+});
+
+
+test('Night reflectance candidate never interpolates mismatched daylight geometry or changes alpha', async () => {
+    const {liftTownReferencePixels}=await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/town-building-neutral-albedo.js');
+    const original=new Uint8ClampedArray([20,30,40,255,60,70,80,0]);
+    const copy=new Uint8ClampedArray(original);
+    const result=liftTownReferencePixels(original,2,1,4);
+    assert.deepEqual(original,copy);assert.equal(result[3],255);assert.equal(result[7],0);
+    assert.ok(result[0]>original[0] && result[0]<result[1] && result[1]<result[2]);
+    assert.throws(()=>liftTownReferencePixels(original,2,1,100),/reflectance/);
 });

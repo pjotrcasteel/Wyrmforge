@@ -40,3 +40,15 @@ export function neutralizeBuildingPixels(dayPixels, nightPixels, width, height, 
     }
     return { data: result, retained };
 }
+
+/** Bounded linear-exposure candidate using ONLY the original registered source.
+ * No claim of recovered physical albedo; no geometry/color-frame interpolation.
+ */
+export function liftTownReferencePixels(pixels, width, height, gain = 4) {
+    if (!(pixels instanceof Uint8ClampedArray) || pixels.length !== width*height*4 ||
+        !Number.isInteger(width) || !Number.isInteger(height) || width<1 || height<1 ||
+        !Number.isFinite(gain) || gain<1 || gain>6) throw new TypeError('Invalid source reflectance candidate');
+    const result=new Uint8ClampedArray(pixels);
+    for(let i=0;i<result.length;i+=4) for(let c=0;c<3;c++) result[i+c]=encoded(linear(pixels[i+c])*gain);
+    return result;
+}

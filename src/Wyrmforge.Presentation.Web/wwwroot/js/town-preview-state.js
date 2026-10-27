@@ -37,8 +37,9 @@ export function townDomainSnapshot(manifest, {
         state: {}, mode: effectiveMode, localHour: 12, time: 0,
     }), effectiveMode);
     snapshot.environment.exposure = exposure;
-    // Isolation compares ONLY that source group: no broad ambient contribution.
-    // Combined Gothic night retains a conservative small diagnostic fill.
-    if (effectiveMode === 'night' && isolation !== 'combined') snapshot.environment.ambient = 0;
+    // All night inspections keep the same small calibrated environment. This
+    // reveals unpowered masonry without enabling any building emitter. The
+    // hand-authored scene alpha keeps negative sky space strictly black; off
+    // and zero still disable ambient, every local source and all emission.
     return { snapshot, effectiveMode };
 }
