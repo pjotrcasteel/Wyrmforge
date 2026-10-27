@@ -134,7 +134,7 @@
         await StartArena(retry: true);
     }
     [JSInvokable]
-    public Task<RunRenderSnapshot> Frame(double delta, double width, double height, double movementX, double movementY, double aimX = 0, double aimY = 0)
+    public Task<RunRenderSnapshot> Frame(double delta, double width, double height, double movementX, double movementY, double aimX = 0, double aimY = 0, int? focusPropId = null)
     {
         if (simulation is null)
         {
