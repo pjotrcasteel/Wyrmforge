@@ -5,12 +5,14 @@ on:
     branches: [main]
     paths:
       - 'tools/sprite-lab/author-hollow-inner-embers.py'
+      - 'tools/sprite-lab/author-hollow-attack-motion.py'
       - 'tools/sprite-lab/check-hollow-inner-embers.py'
       - '.github/workflows/hollow-inner-fire-source.yml'
   push:
     branches: [fix/hollowed-animation-polish-20261027]
     paths:
       - 'tools/sprite-lab/author-hollow-inner-embers.py'
+      - 'tools/sprite-lab/author-hollow-attack-motion.py'
       - 'tools/sprite-lab/check-hollow-inner-embers.py'
       - '.github/workflows/hollow-inner-fire-source.yml'
   workflow_dispatch:
