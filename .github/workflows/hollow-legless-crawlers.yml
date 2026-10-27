@@ -5,6 +5,7 @@ on:
     branches: [fix/hollowed-animation-polish-20261027]
     paths:
       - 'tools/sprite-lab/author-hollow-legless-crawlers.py'
+      - 'tools/sprite-lab/author-hollow-inner-embers.py'
       - '.github/workflows/hollow-legless-crawlers.yml'
   workflow_dispatch:
 
@@ -33,6 +34,26 @@ jobs:
         env:
           OMP_NUM_THREADS: '4'
         run: python tools/sprite-lab/author-hollow-legless-crawlers.py --directions S
+      - name: Render source-bound internal fire on both REAL legless 3D bodies
+        run: |
+          python tools/sprite-lab/author-hollow-inner-embers.py \
+            --source-blend artifacts/hollow-legless-crawlers/grave-dragger-real-legless-crawler.blend --directions S
+          python tools/sprite-lab/author-hollow-inner-embers.py \
+            --source-blend artifacts/hollow-legless-crawlers/crypt-scuttler-real-legless-crawler.blend --directions S
+
+      - name: Upload independent crawler internal-fire visual approvals
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hollow-legless-crawler-source-fire-qc
+          path: |
+            artifacts/hollow-internal-embers/**/*.gif
+            artifacts/hollow-internal-embers/**/*.png
+            artifacts/hollow-internal-embers/**/*.blend
+            artifacts/hollow-internal-embers/**/*.json
+          retention-days: 14
+          if-no-files-found: warn
+
       - name: Keep separate editable 3D characters and motion evidence
         uses: actions/upload-artifact@v4
         if: always()
