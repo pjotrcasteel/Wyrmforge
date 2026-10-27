@@ -147,11 +147,14 @@ def author_attack_action(bpy, rig, variant="standard", style="rake"):
         else:
             # Lunge & BITE: two reaching arms seize the victim's shoulders;
             # head/neck, not fists, deliver the rapid contact.
-            grab = shoulder + Vector((sign*.20, -.42, reach*.16))
+            # Fold elbows IN rather than extending them horizontally as a
+            # T-pose. Jaws lead: claws brace against the victim's chest.
+            mouth_guard = shoulder + Vector((-sign*.03, .04, reach*.30))
+            grab = shoulder + Vector((-sign*.12, -.26, reach*.14))
             if frame <= 4:
-                target = original_wrist.lerp(chamber, windup)
+                target = original_wrist.lerp(mouth_guard, windup)
             elif frame <= 8:
-                target = chamber.lerp(grab,max(0,min(1,(frame-5)/2)))
+                target = mouth_guard.lerp(grab,max(0,min(1,(frame-5)/2)))
             else:
                 target = grab.lerp(original_wrist,max(0,min(1,(frame-8)/8)))
         line = target-shoulder
@@ -213,11 +216,14 @@ def author_attack_action(bpy, rig, variant="standard", style="rake"):
                     @ pb.rotation_quaternion)
             elif name == "neck":
                 pitch = (.14*windup - .16*head + .06*recoil) if style != "bite" else (
-                    .26*windup - .52*head + .20*recoil)
+                    .29*windup - .61*head + .22*recoil)
+                if style == "bite":
+                    pb.location.y -= .075*head
+                    pb.location.z -= .012*head
                 pb.rotation_quaternion = Quaternion(Vector((1, 0, 0)), pitch) @ pb.rotation_quaternion
             elif name == "head":
                 pitch = (.18*windup - .18*head + .08*recoil) if style != "bite" else (
-                    .36*windup - .68*head + .22*recoil)
+                    .32*windup - .75*head + .24*recoil)
                 pb.rotation_quaternion = Quaternion(Vector((1, 0, 0)), pitch) @ pb.rotation_quaternion
             elif name.startswith(("clavicle.", "upper_arm.")):
                 is_lead = name.endswith("." + lead)
@@ -288,6 +294,7 @@ def author_attack_action(bpy, rig, variant="standard", style="rake"):
         "continuousSweepingClawAcrossFourSourceFrames": True,
         "authoredClawTargets": hands,
         "actualIKSides": list(arms_to_ik),
+        "biteArmsFoldInwardAtContact": style == "bite",
         "visualRole": {"rake":"fast diagonal tearing swipe",
                        "maul":"heavy overhead double-claw blow",
                        "bite":"rapid forward neck-and-mouth snap"}[style],
