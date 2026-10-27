@@ -13,6 +13,15 @@ import { createHollowFractureAssets, eligibleHollowFracture } from './hollow-fra
 const base = new URL('../art/enemies/hollow-rigged/', import.meta.url);
 const rows = ['N','NE','E','SE','S','SW','W','NW'];
 const headings = ['E','SE','S','SW','W','NW','N','NE'];
+// Runtime atlas transitions only: body poses themselves come from Blender.
+// A short two-source alpha blend removes the hard sprite cut at attacks and
+// 45-degree turning boundaries without changing authoritative C# combat.
+export const HOLLOW_TRANSITION_SECONDS = .16;
+export function hollowBlendWeight(start, now, reducedMotion = false) {
+    if (reducedMotion || !Number.isFinite(start) || !Number.isFinite(now)) return 1;
+    const t = Math.max(0, Math.min(1, (now - start) / HOLLOW_TRANSITION_SECONDS));
+    return t * t * (3 - 2 * t);
+}
 const textures = new Map();
 const injuries=createHollowInjuryAssets(new URL('injuries/',base));
 const arms=createHollowVariantAssets(new URL('arms/',base));
@@ -108,6 +117,7 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
                 void injuryDeaths.preload(pose.deathInjury);
             state.entities.set(id,pose);
         }
+        const lastVisual = {clip:pose.clip,frame:pose.frame,direction:pose.direction};
         const dx=enemy.x-pose.x,dy=enemy.y-pose.y,distance=Math.hypot(dx,dy);
         const advancing=!snapshot.paused&&!snapshot.ended&&!enemy.frozen;
         if(advancing)pose.age+=dt;
@@ -145,6 +155,15 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
         pose.frame=!advancing&&sample.clip==='walk'?pose.frame:
             !locomotion.moving&&sample.clip==='walk'&&!reducedMotion?pose.idleFrame:sample.frame;
         pose.baseFrame=sample.baseFrame;pose.layered=sample.layered;
+        const changed = lastVisual.clip !== pose.clip || lastVisual.direction !== pose.direction;
+        if (advancing && changed && distance < 64 && !reducedMotion) {
+            // Start with the previously displayed REAL source frame. Never
+            // restart the attack action, teleport feet or rewrite its token.
+            pose.blendFrom = lastVisual;
+            pose.blendSince = state.clock;
+        }
+        pose.blendWeight = hollowBlendWeight(pose.blendSince,state.clock,reducedMotion);
+        if (pose.blendWeight >= 1) pose.blendFrom = null;
     }
     for(const id of state.entities.keys())if(!present.has(id))state.entities.delete(id);
 }
@@ -164,12 +183,23 @@ export function drawHollowEnemy(ctx,enemy,state){
     if(!pose)return false;
     const palette=enemy.hitFlash?'brightness(1.8) saturate(.25)':enemy.frozen?
         'sepia(1) saturate(1.7) hue-rotate(135deg)':'none';
-    // Source-derived no-cape walk and reach animations own the runtime appearance.
-    // Keep the previous caped compositor strictly as an offline asset fallback.
-    if(injuries.draw(ctx,pose.injuryVariant,pose.clip,pose.frame,pose.direction,
-        enemy.x,enemy.y,enemy.radius*pose.visualScale,enemy.opacity??1,palette))return true;
-    if(arms.draw(ctx,pose.armVariant,pose.clip,pose.frame,pose.direction,
-        enemy.x,enemy.y,enemy.radius*pose.visualScale,enemy.opacity??1,palette))return true;
+    // Always prefer authentic no-cape source atlases. Blend walk ↔ attack and
+    // facing-row transitions using two already-loaded frames; no new renderer,
+    // procedural skeleton, GPU effect or on-the-fly asset synthesis.
+    const sourceFrame = (clip,frame,direction,opacity) => {
+        if(injuries.draw(ctx,pose.injuryVariant,clip,frame,direction,
+            enemy.x,enemy.y,enemy.radius*pose.visualScale,opacity,palette))return true;
+        return arms.draw(ctx,pose.armVariant,clip,frame,direction,
+            enemy.x,enemy.y,enemy.radius*pose.visualScale,opacity,palette);
+    };
+    const opacity=Math.max(0,Math.min(1,enemy.opacity??1));
+    const blend=pose.blendFrom;
+    if(blend && pose.blendWeight < 1 && sourceFrame(
+        blend.clip,blend.frame,blend.direction,opacity*(1-pose.blendWeight))) {
+        sourceFrame(pose.clip,pose.frame,pose.direction,opacity*pose.blendWeight);
+        return true;
+    }
+    if(sourceFrame(pose.clip,pose.frame,pose.direction,opacity))return true;
     const legacyPreview=globalThis.location?.pathname?.includes('/enemy-lab')&&new URLSearchParams(globalThis.location.search).get('blend')==='whole';
     if(pose.layered&&compositor&&!legacyPreview){
         const tile=compositor.compose(pose.animation.sample);
@@ -224,7 +254,8 @@ export function drawHollowCorpses(ctx,state,reducedMotion=false){
     }
 }
 export function hollowDiagnostics(state){
-    return {ready:hollowSpritesReady(),fractureReady:fracture.ready(),capeFreeReady:arms.ready(),skeletalDeathReady:skeletalDeath.ready(),injuryDeathAtlasesLoaded:injuryDeaths.loadedCount(),injuriesReady:injuries.ready(),armsReady:arms.ready(),injuryLabReview,layers:compositor?{...compositor.stats,estimatedBytes:compositor.estimatedBytes()}:null,entities:[...state.entities].map(([entityId,p])=>({entityId,injuryVariant:p.injuryVariant,armVariant:p.armVariant,deathInjury:p.deathInjury,signature:p.signature,visualScale:p.visualScale,idleFrame:p.idleFrame,runSpeed:p.runSpeed,observedDistance:p.distance,visualDistance:p.visualDistance,injuryDrawn:injuries.ready()&&p.injuryVariant==='broken-leg-left'&&(p.clip==='walk'||p.clip==='attack'),clip:p.clip,frame:p.frame,direction:p.direction,baseFrame:p.baseFrame,phase:p.animation?.phase,layered:p.layered})),
+    return {ready:hollowSpritesReady(),fractureReady:fracture.ready(),capeFreeReady:arms.ready(),skeletalDeathReady:skeletalDeath.ready(),injuryDeathAtlasesLoaded:injuryDeaths.loadedCount(),injuriesReady:injuries.ready(),armsReady:arms.ready(),injuryLabReview,layers:compositor?{...compositor.stats,estimatedBytes:compositor.estimatedBytes()}:null,entities:[...state.entities].map(([entityId,p])=>({entityId,injuryVariant:p.injuryVariant,armVariant:p.armVariant,deathInjury:p.deathInjury,signature:p.signature,visualScale:p.visualScale,idleFrame:p.idleFrame,runSpeed:p.runSpeed,observedDistance:p.distance,visualDistance:p.visualDistance,injuryDrawn:injuries.ready()&&p.injuryVariant==='broken-leg-left'&&(p.clip==='walk'||p.clip==='attack'),clip:p.clip,frame:p.frame,direction:p.direction,baseFrame:p.baseFrame,phase:p.animation?.phase,layered:p.layered,
+        blendFrom:p.blendFrom??null,blendWeight:p.blendWeight??1})),
         corpses:[...state.corpses.values()].map(p=>({entityId:p.entityId,deathVariant:p.deathVariant,deathInjury:p.deathInjury,deathStyle:p.deathStyle,direction:p.direction,age:state.clock-p.at,frame:Math.min(23,Math.floor((state.clock-p.at)*12))}))};
 }
 // Preserve playback/fallback diagnostics while the asset bundle is loading.
