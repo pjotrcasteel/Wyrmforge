@@ -77,3 +77,17 @@ test('Generic directional emitters preserve orientation and unit length across c
         assert.equal(a.id,'arbitrary-emitter');
     }
 });
+
+
+test('Offscreen sources cannot consume the budget needed by visible explosions', async () => {
+    const { selectLights } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/registry.js');
+    const source=(id,x,type='point')=>({id,type,position:[x,100,24],direction:[0,0,-1],range:80,intensity:1,enabled:true,priority:0,castsShadow:false});
+    const frame={time:0,lights:[...Array.from({length:12},(_,i)=>source('a-distant-'+i,2000+i)),source('z-explosion',200)]};
+    const original=structuredClone(frame);
+    const visible=huntLightFrame(frame,{x:0,y:0},{width:390,height:844});
+    assert.deepEqual(selectLights(visible,6,8).map(l=>l.id),['z-explosion']);
+    assert.deepEqual(frame,original);
+    frame.lights=[source('spill',-79),source('outside',-81),source('sun',2000,'directional')];
+    assert.deepEqual(huntLightFrame(frame,{x:0,y:0},{width:390,height:844}).lights.map(l=>l.id),['spill','sun']);
+    assert.deepEqual(huntLightFrame(frame,{x:1900,y:0},{width:390,height:844}).lights.map(l=>l.id),['sun']);
+});

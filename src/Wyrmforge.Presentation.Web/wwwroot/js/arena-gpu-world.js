@@ -1,6 +1,7 @@
 // Live Hunt adapter. Existing C# lights and animation samplers remain authoritative.
 import * as T from './lighting/vendor/three.module.js';
 import { LightingEngine } from './lighting/engine.js';
+import { lightsIntersectingView } from './lighting/registry.js';
 const UNIT = 48;
 const GROUND_Y = Math.SQRT2;
 function projectLightDirection(direction) {
@@ -9,9 +10,13 @@ function projectLightDirection(direction) {
     // Point emitters may have a zero direction; never introduce NaN there.
     return length === 0 ? projected : projected.map(value => value / length);
 }
-export function huntLightFrame(frame, camera) {
+export function huntLightFrame(frame, camera, viewport = null) {
     if (!frame) throw new TypeError('Missing authoritative Hunt lighting');
-    return { ...frame, lights: frame.lights.map(light => ({ ...light,
+    const visible = viewport ? lightsIntersectingView(frame.lights, {
+        left: camera.x, top: camera.y,
+        right: camera.x + viewport.width, bottom: camera.y + viewport.height,
+    }) : frame.lights;
+    return { ...frame, lights: visible.map(light => ({ ...light,
         position: [(light.position[0] - camera.x) / UNIT, -(light.position[1] - camera.y) * GROUND_Y / UNIT, light.position[2] / UNIT],
         direction: projectLightDirection(light.direction),
         range: light.range / UNIT, intensity: light.intensity,
@@ -65,7 +70,7 @@ export class HuntGpuWorld {
     }
     render(ctx, frame) {
         const engine = this.engine;
-        engine.apply({ ...huntLightFrame(frame, this.camera), materials: this.materials, objects: this.objects });
+        engine.apply({ ...huntLightFrame(frame, this.camera, { width: this.width, height: this.height }), materials: this.materials, objects: this.objects });
         // CanvasTexture clones share pixels, but each GPU map needs an upload notification.
         for (const object of engine.objects.values()) if (object.mesh.material.map) object.mesh.material.map.needsUpdate = true;
         engine.halfWidth = this.width / UNIT / 2;
