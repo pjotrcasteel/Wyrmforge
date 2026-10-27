@@ -34,6 +34,37 @@ test('walk follows travelled distance and survives duplicate render snapshots',(
  advance(state,moved,.1,.3);assert.equal(state.entities.get(7).frame,state.entities.get(7).idleFrame);
  mod.updateHollowSprites(state,snapshot({enemies:[]}),.35);assert.equal(state.entities.size,0);assert.equal(state.corpses.size,0);
 });
+test('pause and freeze preserve the exact walk support pose without foot snapping',()=>{
+ const state=mod.createHollowState();
+ mod.updateHollowSprites(state,snapshot(),0);
+ const moved=snapshot({enemies:[enemy({x:22.6})]});
+ mod.updateHollowSprites(state,moved,.05);
+ const pose=state.entities.get(7);
+ pose.frame=7; // Deliberately between the two authored idle contact poses.
+ const phase=pose.animation.phase,worldX=pose.x,age=pose.age;
+ mod.updateHollowSprites(state,{...moved,paused:true},.066);
+ assert.equal(pose.frame,7,'pausing a moving Hollow must not jump its feet to idle');
+ assert.equal(pose.animation.phase,phase);
+ assert.equal(pose.age,age);
+ mod.updateHollowSprites(state,{...moved,enemies:[enemy({x:22.6,frozen:true})]},.082);
+ assert.equal(pose.frame,7,'freezing must preserve the actual last rendered support pose');
+ assert.equal(pose.animation.phase,phase);
+ assert.equal(pose.x,worldX);
+});
+
+test('relocating a Hollow preserves its individual gait phase instead of synchronizing the pack',()=>{
+ const state=mod.createHollowState();
+ mod.updateHollowSprites(state,snapshot(),0);
+ const pose=state.entities.get(7),originalPhase=pose.initialPhase;
+ assert.equal(pose.animation.phase,originalPhase);
+ mod.updateHollowSprites(state,snapshot({enemies:[enemy({x:22.6})]}),.05);
+ assert.notEqual(pose.animation.phase,originalPhase);
+ mod.updateHollowSprites(state,snapshot({enemies:[enemy({x:200})]}),.1);
+ assert.equal(pose.animation.phase,originalPhase,'streamed actors keep their original per-identity walk offset');
+ assert.equal(pose.attackAt,null);
+ assert.equal(pose.runSpeed,null);
+});
+
 test('contact only drives presentation; attack freezes and recovers',()=>{
  const state=mod.createHollowState();const contact=snapshot({player:{x:38,y:20,radius:9}});
  mod.updateHollowSprites(state,contact,0);assert.equal(state.entities.get(7).clip,'attack');assert.equal(state.entities.get(7).direction,'E');
