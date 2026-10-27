@@ -1,0 +1,111 @@
+name: Hollowed attack variation source QC
+
+on:
+  push:
+    branches: [fix/hollowed-animation-polish-20261027]
+    paths:
+      - 'tools/sprite-lab/author-hollow-moving-attack.py'
+      - 'tools/sprite-lab/author-hollow-attack-motion.py'
+      - 'tools/sprite-lab/hollow-source-embers.py'
+      - 'tools/sprite-lab/hollow-ragged-silhouette.py'
+      - '.github/workflows/hollow-attack-variations.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/sprite-lab/author-hollow-moving-attack.py'
+      - 'tools/sprite-lab/author-hollow-attack-motion.py'
+      - '.github/workflows/hollow-attack-variations.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  authored-attacks:
+    name: "Hollowed authentic ${{ matrix.style }} source attack"
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        style: [maul, bite]
+    env:
+      STYLE: ${{ matrix.style }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore genuine cape-free rig and walking source
+        run: |
+          git lfs pull --include="art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-zombie-reach-v3-standard/**,art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-pixel-v3/hollow-rigged.blend" --exclude=""
+          test "$(head -c 7 art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-pixel-v3/hollow-rigged.blend)" = BLENDER
+          test "$(head -c 7 art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-zombie-reach-v3-standard/hollow-rigged.blend)" = BLENDER
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install 3D source rig and animation tooling
+        run: python -m pip install --disable-pip-version-check bpy==4.5.15 Pillow==11.3.0
+      - name: Render distinct 3D attack and committed pass-by pursuit
+        run: |
+          python -m py_compile tools/sprite-lab/author-hollow-moving-attack.py tools/sprite-lab/author-hollow-attack-motion.py
+          python tools/sprite-lab/author-hollow-moving-attack.py --variant standard --style "$STYLE" --directions SE
+      - name: Validate genuine individual skeletal action, cloth and fire
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          style=os.environ["STYLE"]
+          root=Path("artifacts/hollow-moving-strike/standard")/style
+          file=root/"manifest.json"
+          data=json.loads(file.read_text())
+          assert data["attackStyle"]==style
+          assert data["independentSkeletalAttack"]
+          assert style.title() in data["sourceActionName"]
+          assert data["sourceAttack"]["style"]==style
+          assert data["sourceAttack"]["distinctSourceAttackAction"]
+          assert data["sourceAttack"]["realTwoBoneIKClaw"]
+          assert data["sourceAttack"]["impactAtSourceFrame"]==(9 if style=="maul" else 6)
+          assert len(data["sourceAttack"]["actualIKSides"])==2
+          assert len(data["sourceAttack"]["authoredClawTargets"])>=16
+          assert data["attackOnlyUpperBodyAdditive"] and data["basePoseExactlyAuthoredWalk"]
+          assert data["legGaitContinuousDuringAttack"] and data["attackUninterruptedByTurn"]
+          assert data["attackFps"]==12 and data["previewFps"]==24
+          assert data["sourceEmissionOnSkinnedMesh"]
+          assert len(data["verifiedFirePixels"])==4
+          assert all(n>3 for n in data["verifiedFirePixels"].values())
+          assert data["garmentRevision"]["waistLengthTatteredNotLongCoat"]
+          assert len(data["distinctDirectionalPixels"])==2
+          assert min(data["distinctDirectionalPixels"].values())>200
+          assert len(data["renders"])==4 and all((root/name).is_file() for name in data["renders"])
+          assert not data["runtimeIntegrated"] and not data["ownerApproved"]
+          PY
+      - name: Encode playable phone previews
+        run: |
+          if ! command -v ffmpeg >/dev/null 2>&1; then
+            python -m pip install --disable-pip-version-check imageio-ffmpeg==0.6.0
+            binary="$(python -c 'import imageio_ffmpeg;print(imageio_ffmpeg.get_ffmpeg_exe())')"
+            mkdir -p "$RUNNER_TEMP/video-bin"
+            ln -s "$binary" "$RUNNER_TEMP/video-bin/ffmpeg"
+            export PATH="$RUNNER_TEMP/video-bin:$PATH"
+          fi
+          dir="artifacts/hollow-moving-strike/standard/$STYLE"
+          for scenario in running-strike pass-by-turn-and-chase; do
+            ffmpeg -hide_banner -loglevel error -y \
+              -i "$dir/standard-${scenario}-S.gif" -i "$dir/standard-${scenario}-E.gif" \
+              -filter_complex "[0:v]fps=24,scale=576:656:flags=neighbor[a];[1:v]fps=24,scale=576:656:flags=neighbor[b];[a][b]hstack=inputs=2,format=yuv420p[out]" \
+              -map "[out]" -c:v libx264 -movflags +faststart -crf 20 \
+              "$dir/standard-${STYLE}-${scenario}-phone.mp4"
+            test -s "$dir/standard-${STYLE}-${scenario}-phone.mp4"
+          done
+      - name: Upload editable Blender and MP4/GIF proof (not production art)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hollowed-${{ matrix.style }}-3d-source-qc
+          path: |
+            artifacts/hollow-moving-strike/standard/${{ matrix.style }}/*.blend
+            artifacts/hollow-moving-strike/standard/${{ matrix.style }}/*.gif
+            artifacts/hollow-moving-strike/standard/${{ matrix.style }}/*.mp4
+            artifacts/hollow-moving-strike/standard/${{ matrix.style }}/*.png
+            artifacts/hollow-moving-strike/standard/${{ matrix.style }}/*.json
+          retention-days: 14
+          if-no-files-found: warn
