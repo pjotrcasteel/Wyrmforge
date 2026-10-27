@@ -2482,7 +2482,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await OpenAsync();
         await EnterFirstTrailAsync();
         await Page.EvaluateAsync(@"async () => {
-            const arena = await import('./js/arena.js');
+            const arena = await import('./js/arena-performance.js');
             const camera = await import('./js/arena-camera.js');
             window.__roamingState = arena.readArenaDiagnostics;
             window.__roamingCamera = camera.resolveArenaCamera;
@@ -2533,7 +2533,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await OpenAsync();
         await EnterFirstTrailAsync();
         await Page.EvaluateAsync(@"async () => {
-            const arena = await import('./js/arena.js');
+            const arena = await import('./js/arena-performance.js');
             window.__arenaDiagnostics = arena.readArenaDiagnostics;
         }");
         await Page.WaitForFunctionAsync(@"() =>
@@ -2541,7 +2541,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
 
         await Page.EvaluateAsync(@"async () => {
             const canvas = document.querySelector('canvas.game-canvas');
-            const arena = await import('./js/arena.js');
+            const arena = await import('./js/arena-performance.js');
             const start = arena.readArenaDiagnostics(canvas);
             const rect = canvas.getBoundingClientRect();
             window.__touchMoveBaseline = { x: start.player.x, scrollY: window.scrollY };
@@ -2561,7 +2561,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         }", null, new PageWaitForFunctionOptions { Timeout = 7000 });
         var observedMovement = await movement.JsonValueAsync<double>();
         var details = await Page.EvaluateAsync<System.Text.Json.JsonElement>(@"async () => {
-            const arena = await import('./js/arena.js');
+            const arena = await import('./js/arena-performance.js');
             const canvas = document.querySelector('canvas.game-canvas');
             const result = arena.readArenaDiagnostics(canvas);
             const original = window.__touchMoveBaseline;

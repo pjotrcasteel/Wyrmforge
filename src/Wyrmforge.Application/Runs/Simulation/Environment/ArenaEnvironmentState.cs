@@ -116,6 +116,27 @@ public sealed class ArenaEnvironmentState
         if (current > phase) phase = current;
     }
 
+    /// <summary>Find a live attackable prop, independent of its visual kind. The candidate itself does not obstruct its sight line.</summary>
+    public (int Id, Vector2D Position)? FindTargetableProp(Vector2D origin, double width, double height, double range,
+        int? requestedId = null)
+    {
+        (int Id, Vector2D Position)? best = null;
+        var bestDistance = double.PositiveInfinity;
+        foreach (var prop in destructibles)
+        {
+            if (prop.Health <= 0 || (requestedId is not null && prop.Spec.Id != requestedId)) continue;
+            var position = new Vector2D(prop.Spec.X * width, prop.Spec.Y * height);
+            var distance = Vector2D.Distance(origin, position);
+            if (distance > range || distance > bestDistance || BlocksSegment(origin, position, width, height, ignoredPropId: prop.Spec.Id)) continue;
+            if (best is null || distance < bestDistance || prop.Spec.Id < best.Value.Id)
+            {
+                best = (prop.Spec.Id, position);
+                bestDistance = distance;
+            }
+        }
+        return best;
+    }
+
     public ArenaEnvironmentRenderSnapshot Snapshot() => new(seed, biome, element, stage, landmark,
         supplies.Where(supply => !supply.Collected)
             .Select(supply => new ArenaSupplyRenderSnapshot(supply.Kind, supply.X, supply.Y, IsOpen(supply)))
@@ -146,7 +167,7 @@ public sealed class ArenaEnvironmentState
         !BlocksSegment(from, to, width, height);
 
     /// <summary>Continuous swept-circle collision; thin barriers cannot be skipped by a fast projectile.</summary>
-    public bool BlocksSegment(Vector2D from, Vector2D to, double width, double height, double radius = 0)
+    public bool BlocksSegment(Vector2D from, Vector2D to, double width, double height, double radius = 0, int? ignoredPropId = null)
     {
         if (width <= 0 || height <= 0) return false;
         foreach (var barrier in barriers)
@@ -168,7 +189,7 @@ public sealed class ArenaEnvironmentState
         }
         foreach (var prop in destructibles)
         {
-            if (prop.Health <= 0) continue;
+            if (prop.Health <= 0 || prop.Spec.Id == ignoredPropId) continue;
             var footprint = new Vector2D(prop.Spec.X * width, prop.Spec.Y * height);
             var combinedRadius = prop.Spec.Radius + radius;
             if (SegmentDistanceSquared(footprint, from, to) <= combinedRadius * combinedRadius) return true;

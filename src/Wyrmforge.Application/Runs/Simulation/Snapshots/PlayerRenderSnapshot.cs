@@ -5,6 +5,7 @@ public sealed record PlayerRenderSnapshot(double X, double Y, double Radius, boo
     public double AimAngle { get; init; }
     public bool ManualAim { get; init; }
     public int? AimTargetId { get; init; }
+    public int? AimPropId { get; init; }
 
     public int FocusCharge { get; init; }
 
