@@ -32,7 +32,7 @@ test('Single-domain isolation has no ambient wash, other emitters or chimney lea
 test('Vacant combined Town keeps public sources, and strict black-world strips all radiance', () => {
     const v = snap({unlocks:vacant});
     assert.ok(v.lights.filter(l => l.enabled).every(l => l.domain === 'common'));
-    assert.ok(!v.objects.some(o => o.id.startsWith('town-emissive-')));
+    assert.ok(v.objects.filter(o => o.id.startsWith('town-emissive-')).every(o => o.ownerId === 'town-common'));
     for (const settings of [{mode:'zero'},{isolation:'off'},{isolation:'off',mode:'day'}]) {
         const s = snap(settings);
         assert.equal(s.environment.ambient,0);assert.equal(s.environment.emission,false);

@@ -13,8 +13,9 @@ import { splitTownPavingReference, levelPavingNormal } from './town-paving-mater
 import { deriveTownNeutralPavingCanvas } from './town-neutral-albedo.js';
 import { TOWN_NIGHT_LIGHT_GRADE, gradeTownPreviewLighting } from './town-lighting-grade.js';
 import { createTownDomainFixtures, configureTownLightDomains, TOWN_LIGHT_ISOLATIONS, TOWN_NEXUS_SCHOOL_LIGHTS } from './town-light-domains.js';
-import { TOWN_EMISSION_PLATES, emissionMaskPixels } from './town-emission-masks.js';
+import { TOWN_EMISSION_PLATES, TOWN_APERTURE_PLATES, emissionMaskPixels, commonAperturePixels } from './town-emission-masks.js';
 import { neutralizeBuildingPixels } from './town-building-neutral-albedo.js';
+import { clipTownNightSilhouette } from './town-night-silhouette.js';
 import { townDomainSnapshot } from './town-preview-state.js';
 import { projectTownCitizens, TOWN_CITIZEN_ART_WIDTH, TOWN_CITIZEN_ART_HEIGHT } from './town-citizen-gpu-bridge.js';
 
@@ -122,12 +123,25 @@ function cutoutGeometry(cutout, basis) {
     return geometry;
 }
 
-function cutoutTexture(source, cutout) {
+function cutoutTexture(source, cutout, lift = 1) {
     const canvas = document.createElement('canvas');
     canvas.width = cutout.width; canvas.height = cutout.height;
     const context = canvas.getContext('2d');
     context.drawImage(source, cutout.x, cutout.y, cutout.width, cutout.height,
         0, 0, cutout.width, cutout.height);
+    // Conservative candidate exposure in LINEAR color, on the exact original
+    // cutout geometry. Never borrow a differently painted daylight roof edge.
+    if (lift !== 1) {
+        const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+        for (let i = 0; i < pixels.data.length; i += 4) for (let c = 0; c < 3; c++) {
+            const value = pixels.data[i+c] / 255;
+            const linear = value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4;
+            const bounded = Math.min(1, linear * lift);
+            pixels.data[i+c] = Math.round(255 * (bounded <= .0031308
+                ? 12.92 * bounded : 1.055 * bounded ** (1/2.4) - .055));
+        }
+        context.putImageData(pixels, 0, 0);
+    }
     context.globalCompositeOperation = 'destination-in';
     context.translate(-cutout.x, -cutout.y);
     context.fill(new Path2D(cutout.path));
@@ -199,7 +213,7 @@ export function townPreviewManifest({ wellV4 = false, domains = false } = {}) {
             reflection: 'off', alphaCutoff: .5,
         }));
     }
-    if (domains) for (const plate of TOWN_EMISSION_PLATES) {
+    if (domains) for (const plate of TOWN_APERTURE_PLATES) {
         const classes = plate.domain === 'nexus' ? ['warm', 'magic'] : ['warm'];
         for (const kind of classes) {
             const key = 'town-emissive-' + plate.domain + '-' + kind;
@@ -249,7 +263,7 @@ export function townPreviewManifest({ wellV4 = false, domains = false } = {}) {
             artBounds: [cutout.x, cutout.y, cutout.width, cutout.height],
             material: 'approved-cutout-material-' + cutout.id,
             position, rotation: [0, 0, 0], scale: [1, 1, 1],
-            castsShadow: true, receivesShadow: true,
+            castsShadow: !domains || ['well-supports', 'noticeboard-supports'].includes(cutout.id), receivesShadow: true,
         });
         materials.push(material('approved-cutout-material-' + cutout.id,
             'approved-cutout-texture-' + cutout.id));
@@ -297,16 +311,17 @@ async function loadApprovedImage(wellV4 = false, domains = false, sourceMode = '
             throw new Error('Original vacant plate registration failed: ' + filename);
         context.drawImage(plate, x, y);
     }
-    return canvas;
+    return sourceMode === 'night' ? clipTownNightSilhouette(canvas) : canvas;
 }
 
-async function registerTownBuildingAlbedo(engine) {
+async function registerTownBuildingAlbedo(engine, ensureAlive = () => {}) {
     for (const plate of TOWN_EMISSION_PLATES) {
         const key = 'town-diffuse-' + plate.domain;
         const day = new Image(), night = new Image();
         day.src = new URL('../art/town/day-vacant-' + plate.name + '.webp', import.meta.url).href;
         night.src = new URL('../art/town/night-vacant-' + plate.name + '.png', import.meta.url).href;
         await Promise.all([day.decode(), night.decode()]);
+        ensureAlive();
         for (const image of [day, night]) {
             if (image.naturalWidth !== plate.width || image.naturalHeight !== plate.height)
                 throw new Error('Canonical building albedo registration drift: ' + plate.name);
@@ -323,6 +338,7 @@ async function registerTownBuildingAlbedo(engine) {
         const neutral = neutralizeBuildingPixels(dayPixels, nightPixels, plate.width, plate.height);
         const authored = new ImageData(neutral.data, plate.width, plate.height);
         context.putImageData(authored, 0, 0);
+        clipTownNightSilhouette(surface, plate);
         engine.registerTexture(key + '-albedo', new T.CanvasTexture(surface));
         engine.registerGeometry(key + '-plane', plane(
             plate.width * BASE_WIDTH / TOWN_ART_SIZE[0],
@@ -330,20 +346,24 @@ async function registerTownBuildingAlbedo(engine) {
     }
 }
 
-async function registerTownEmissionMasks(engine) {
+async function registerTownEmissionMasks(engine, ensureAlive = () => {}) {
     // Original registered runtime assets, same art coordinates as the approved
     // Town. The downloaded owner-selected lighting frames remain immutable
     // visual references; these are not guessed colour blobs.
     const active = new Image();
     active.src = new URL('../art/town/night-active.webp', import.meta.url).href;
     await active.decode();
+    ensureAlive();
     if (active.naturalWidth !== 1672 || active.naturalHeight !== 941)
         throw new Error('Town emission requires pixel-exact active reference');
-    for (const plate of TOWN_EMISSION_PLATES) {
+    for (const plate of TOWN_APERTURE_PLATES) {
         const vacant = new Image();
-        vacant.src = new URL('../art/town/night-vacant-' + plate.name + '.png', import.meta.url).href;
-        await vacant.decode();
-        if (vacant.naturalWidth !== plate.width || vacant.naturalHeight !== plate.height)
+        if (plate.domain !== 'common') {
+            vacant.src = new URL('../art/town/night-vacant-' + plate.name + '.png', import.meta.url).href;
+            await vacant.decode();
+            ensureAlive();
+        }
+        if (plate.domain !== 'common' && (vacant.naturalWidth !== plate.width || vacant.naturalHeight !== plate.height))
             throw new Error('Emission plate registration drift: ' + plate.name);
         const draw = document.createElement('canvas');
         draw.width = plate.width; draw.height = plate.height;
@@ -352,12 +372,13 @@ async function registerTownEmissionMasks(engine) {
             0, 0, plate.width, plate.height);
         const activePixels = ctx.getImageData(0, 0, plate.width, plate.height).data;
         ctx.clearRect(0, 0, plate.width, plate.height);
-        ctx.drawImage(vacant, 0, 0);
+        if (plate.domain !== 'common') ctx.drawImage(vacant, 0, 0);
         const vacantPixels = ctx.getImageData(0, 0, plate.width, plate.height).data;
         for (const kind of plate.domain === 'nexus' ? ['warm', 'magic'] : ['warm']) {
             const key = 'town-emissive-' + plate.domain + '-' + kind;
-            const mask = emissionMaskPixels(activePixels, vacantPixels,
-                plate.width, plate.height, plate, kind);
+            const mask = plate.domain === 'common'
+                ? commonAperturePixels(activePixels, plate.width, plate.height)
+                : emissionMaskPixels(activePixels, vacantPixels, plate.width, plate.height, plate, kind);
             const output = document.createElement('canvas');
             output.width = plate.width; output.height = plate.height;
             output.getContext('2d').putImageData(
@@ -381,7 +402,7 @@ export async function initializeTownPreview(canvas, { wellV4 = false, domains = 
 // before CSS enlarged the image. The separate generic engine keeps its
 // 390px default for other scenes; ONLY this opt-in Town uses native-art QA.
 const engine = new LightingEngine(canvas, {
-        shadowViews: 8, maxLights: domains ? 24 : 8, maxFramebufferWidth: TOWN_ART_SIZE[0],
+        shadowViews: 8, maxLights: domains ? 32 : 8, maxFramebufferWidth: TOWN_ART_SIZE[0],
     });
     const state = { engine, mode: 'night', lamps: true, offset: 0, npcEnabled: true,
         npcProgress: 0, paving: 'neutral', view: 'lit', citizens: null,
@@ -389,8 +410,13 @@ const engine = new LightingEngine(canvas, {
         unlocks: unlocks ?? { nexusUnlocked: false, forgeUnlocked: false, codexUnlocked: false, hallUnlocked: false },
         school, strength, isolation, neutralMagic, sourceMode, exposure, alive: true };
     states.set(canvas, state);
+    const ensureAlive = () => { if (!state.alive) throw new Error('Town preview disposed during asset loading'); };
     try {
-        const a = axes(), source = await loadApprovedImage(state.wellV4, state.domains, state.sourceMode);
+        const a = axes();
+        const source = await loadApprovedImage(state.wellV4, state.domains,
+            state.domains ? 'day-candidate' : state.sourceMode);
+        ensureAlive();
+        if (state.domains && state.sourceMode === 'night') clipTownNightSilhouette(source);
         const selectedCutouts = state.wellV4
             ? CUTOUTS.filter(c => !STAGE4_REPLACED_CUTOUT_IDS.includes(c.id)) : CUTOUTS;
         engine.registerGeometry('approved-panorama-plane', plane(BASE_WIDTH, BASE_HEIGHT, a.basis));
@@ -408,9 +434,10 @@ const engine = new LightingEngine(canvas, {
         // bright sky/buildings are NEVER used as the Town background.
         // Stage 4's opaque clean-square PNG is strictly a *paving* source.
         // NEVER let its daylight sky overwrite the preserved night backing.
-        const floorReference = state.domains && state.sourceMode === 'night'
+        const floorReference = state.domains
             ? await loadApprovedImage(state.wellV4, true, 'day-candidate')
             : source;
+        ensureAlive();
         const pavingLayers = floorReference === source ? separated
             : splitTownPavingReference(floorReference, selectedCutouts);
         if (state.domains) {
@@ -434,6 +461,7 @@ const engine = new LightingEngine(canvas, {
             const wellImage = new Image();
             wellImage.src = new URL('../' + WELL_STAGE4.spriteUrl, import.meta.url).href;
             await wellImage.decode();
+            ensureAlive();
             if (wellImage.naturalWidth !== WELL_STAGE4.sprite.width ||
                 wellImage.naturalHeight !== WELL_STAGE4.sprite.height)
                 throw new Error('Stage 4 requires exact authored well PNG, not rescaled canvas art');
@@ -446,16 +474,19 @@ const engine = new LightingEngine(canvas, {
             wellTexture.needsUpdate = true;
             engine.registerTexture('stage4-well-albedo', wellTexture);
         }
+        const foregroundSource = state.domains
+            ? await loadApprovedImage(false, true, 'night') : source;
+        ensureAlive();
         for (const cutout of selectedCutouts) {
             const size = BASE_WIDTH / TOWN_ART_SIZE[0];
             engine.registerGeometry('approved-cutout-plane-' + cutout.id,
                 plane(cutout.width * size, cutout.height * size, a.basis));
             engine.registerGeometry('approved-foreground-caster-' + cutout.id, cutoutGeometry(cutout, a.basis));
-            engine.registerTexture('approved-cutout-texture-' + cutout.id, cutoutTexture(source, cutout));
+            engine.registerTexture('approved-cutout-texture-' + cutout.id, cutoutTexture(foregroundSource, cutout, state.domains ? 3 : 1));
         }
         if (state.domains) {
-            await registerTownBuildingAlbedo(engine);
-            await registerTownEmissionMasks(engine);
+            await registerTownBuildingAlbedo(engine, ensureAlive);
+            await registerTownEmissionMasks(engine, ensureAlive);
         }
         state.manifest = townPreviewManifest({ wellV4: state.wellV4, domains: state.domains });
         engine.setCamera([0, 0, 0], BASE_WIDTH / 2);

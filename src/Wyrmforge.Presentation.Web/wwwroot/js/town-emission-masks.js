@@ -52,6 +52,7 @@ export function emissionMaskPixels(active, vacant, width, height, plate, kind = 
         const x1 = Math.min(width, Math.floor(ax + aw - plate.x));
         const y1 = Math.min(height, Math.floor(ay + ah - plate.y));
         for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) {
+            if (isTownClothPixel(x + plate.x, y + plate.y)) continue;
             const i = (y * width + x) * 4;
             // Transparent vacant pixels have no comparable registered unlit surface.
             // Never mistake missing pixels for dramatic emission differences.
@@ -77,5 +78,50 @@ export function emissionMaskPixels(active, vacant, width, height, plate, kind = 
             result[i+3] = 255;
         }
     }
+    return result;
+}
+
+// Manually bounded CLOTH exclusions in the unchanged 1672x941 canonical art.
+// Gold thread belongs to the same non-emissive surface. These are emission
+// masks only, never geometry/collision, shadow wedges or visible dark overlays.
+export const TOWN_CLOTH_REGIONS = Object.freeze([
+    [146,205,29,82], [303,184,36,114], [232,293,39,62],
+    [673,91,45,154], [951,89,44,155], [589,221,28,84], [1052,219,28,84],
+    [619,308,36,87], [1007,307,33,89], [1301,169,34,102],
+    [1432,237,37,108], [1130,263,26,55], [1380,373,32,48],
+    [1258,485,57,126], [1194,496,32,112], [1390,528,34,114],
+    [1576,514,32,111], [1192,658,34,102], [1350,695,32,101],
+    [1058,620,31,85], [1639,663,32,72], [593,663,39,100], [967,659,43,109],
+]);
+export function isTownClothPixel(x, y) {
+    return TOWN_CLOTH_REGIONS.some(([left,top,width,height]) =>
+        x >= left && x < left+width && y >= top && y < top+height);
+}
+
+// Source-authored public lamp apertures, not an RGB scene contribution.
+// These small bounds follow the lantern glass/flames in canonical source pixels.
+// No inferred unlit frame is used or claimed for this common-domain mask.
+export const TOWN_COMMON_EMISSION_PLATE = Object.freeze({
+    domain:'common', name:'PublicFixtures', x:0, y:0, width:1672, height:941,
+});
+export const TOWN_APERTURE_PLATES = Object.freeze([TOWN_COMMON_EMISSION_PLATE, ...TOWN_EMISSION_PLATES]);
+export const TOWN_COMMON_APERTURES = Object.freeze([
+    [826,188,15,22], [738,220,12,24], [916,220,12,24],
+    [895,456,11,21], [546,360,12,21], [1105,362,12,22],
+    [355,422,12,24], [1212,418,13,22], [608,609,15,26], [987,611,15,25],
+    [704,685,13,25], [894,682,13,24], [594,842,16,32], [1010,850,16,33],
+    [827,24,15,25], [718,15,13,23], [937,14,13,24],
+]);
+export function commonAperturePixels(source, width, height) {
+    if (width!==1672 || height!==941 || source?.length!==width*height*4)
+        throw new TypeError('Public emission requires exact canonical source pixels');
+    const result=new Uint8ClampedArray(source.length);
+    for (const [left,top,w,h] of TOWN_COMMON_APERTURES)
+        for (let y=top;y<top+h;y++) for (let x=left;x<left+w;x++) {
+            const i=(y*width+x)*4;
+            if (isTownClothPixel(x,y) || source[i+3]<245 ||
+                source[i]<140 || source[i+1]<65 || source[i]<source[i+2]*1.3) continue;
+            result[i]=source[i];result[i+1]=source[i+1];result[i+2]=source[i+2];result[i+3]=255;
+        }
     return result;
 }

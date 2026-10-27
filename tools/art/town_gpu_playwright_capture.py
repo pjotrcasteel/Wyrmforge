@@ -8,6 +8,8 @@ The existing universal engine is exercised through town-relighting-preview.html.
 import argparse
 import asyncio
 import io
+import json
+import hashlib
 from pathlib import Path
 from urllib.parse import urlencode
 
@@ -19,13 +21,11 @@ def captures():
     for width, height in [(320, 760), (390, 844), (1120, 870)]:
         for mode in ("day", "night", "zero"):
             yield f"{mode}-{width}-gpu-proof", (width, height), dict(mode=mode)
-    for domain in ("common", "nexus", "blacksmith", "codex", "hall", "combined", "off"):
-        name = "zero-domain-off-390" if domain == "off" else f"domain-{domain}-390"
-        yield name, (390, 844), dict(mode="night", domains=1, domain=domain, npc="off")
-    for width in (320, 1120):
-        for domain in ("common", "blacksmith"):
-            yield f"domain-{domain}-{width}", (width, 870), dict(
-                mode="night", domains=1, domain=domain, npc="off")
+    for width in (320, 390, 1120):
+        for domain in ("common", "nexus", "blacksmith", "codex", "hall", "combined", "off"):
+            name = f"zero-domain-off-{width}" if domain == "off" else f"domain-{domain}-{width}"
+            yield name, (width, 870), dict(mode="night", domains=1, domain=domain, npc="off", white=1)
+        yield f"domain-day-{width}", (width, 870), dict(mode="day", domains=1, npc="off")
     # Explicit material diagnosis: same GPU lights with (a) doubly dark night
     # painted albedo versus (b) a brighter, still UNAPPROVED daytime candidate.
     for source in ("night", "day-candidate"):
@@ -104,11 +104,23 @@ async def main():
                             "() => document.querySelector('#town-gpu')?.dataset.ready === 'true'",
                             timeout=35000)
                         await page.wait_for_timeout(200)
+                        diagnostic = await page.locator('#town-gpu').evaluate('(canvas) => ({...canvas.dataset})')
+                        if diagnostic.get('error'):
+                            raise RuntimeError(diagnostic['error'])
+                        if params.get('domain') == 'common' and diagnostic.get('chimneyOn') != 'false':
+                            raise RuntimeError('Blacksmith chimney leaked into common group')
+                        if params.get('white') == 1 and params.get('domain') == 'nexus' and diagnostic.get('nexusMagicColor') != '#ffffff':
+                            raise RuntimeError('Neutral-white magic was tinted')
                         png = await page.screenshot(animations="disabled")
                         valid, mean = acceptable(png, name)
                         print(f"{name}: GPU mean={mean:.3f}, acceptable={valid}, attempt={attempt}", flush=True)
                         if valid:
                             (args.output / (name + ".png")).write_bytes(png)
+                            (args.output / (name + '.json')).write_text(json.dumps({
+                                'url':url, 'viewport':[width,height], 'renderer':'shared LightingEngine WebGL',
+                                'diagnostic':diagnostic, 'screenshotSha256':hashlib.sha256(png).hexdigest(),
+                                'physicalPhoneTest':False, 'visualApproval':False,
+                            }, indent=2)+'\n')
                             success = True
                             break
                         last_error = "Canvas remained black or failed pixel validity check"

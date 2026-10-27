@@ -15,10 +15,10 @@ const enabled = list => list.filter(light => light.enabled);
 const config = (isolation, unlocks = unlocked, extra = {}) =>
     configureTownLightDomains(fixtures(), { isolation, unlocks, ...extra });
 
-test('Five exclusive domains route twenty-three local lamps through the shared GPU registry', () => {
+test('Five exclusive domains route twenty-seven local lamps through the shared GPU registry', () => {
     assert.deepEqual(TOWN_LIGHT_DOMAINS, ['common', 'nexus', 'blacksmith', 'codex', 'hall']);
     const all = fixtures();
-    assert.equal(all.length, 23);
+    assert.equal(all.length, 27);
     assert.equal(new Set(all.map(x => x.id)).size, all.length);
     for (const light of all) {
         assert.equal(light.ownerId, 'town-' + light.domain);
@@ -27,7 +27,7 @@ test('Five exclusive domains route twenty-three local lamps through the shared G
         assert.ok(!/banner|flag|cloth/i.test(light.id));
     }
     assert.equal(selectLights(compileTownLightingSnapshot(
-        townPreviewManifest({ domains: true }), { mode: 'night' }), 8, 24).length, 23);
+        townPreviewManifest({ domains: true }), { mode: 'night' }), 8, 32).length, 27);
 });
 test('Each domain isolates only its own sources; common never enables chimney', () => {
     for (const domain of TOWN_LIGHT_DOMAINS) {
@@ -39,7 +39,7 @@ test('Each domain isolates only its own sources; common never enables chimney', 
     assert.equal(enabled(config('off')).length, 0);
 });
 test('Vacancy suppresses all four building groups and leaves public square only', () => {
-    assert.equal(enabled(config('combined', vacant)).length, 10);
+    assert.equal(enabled(config('combined', vacant)).length, 14);
     assert.ok(enabled(config('combined', vacant)).every(x => x.domain === 'common'));
     for (const key of Object.keys(vacant)) {
         const state = { ...unlocked, [key]: false };
@@ -78,7 +78,7 @@ test('Domain lights reach same existing GPU manifest and black-world zero-light 
     const m = townPreviewManifest({ domains: true, wellV4: true });
     configureTownLightDomains(m.fixtures, { unlocks: vacant });
     const common = compileTownLightingSnapshot(m, { mode: 'night' });
-    assert.equal(common.lights.filter(x => x.enabled).length, 10);
+    assert.equal(common.lights.filter(x => x.enabled).length, 14);
     assert.ok(common.lights.filter(x => x.enabled).every(x => x.domain === 'common'));
     assert.equal(common.lights.find(x => x.id === 'town-blacksmith-chimney').enabled, false);
     const zero = compileTownLightingSnapshot(m, { mode: 'zero' });

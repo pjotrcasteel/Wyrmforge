@@ -57,16 +57,16 @@ test('Outside authored aperture region never emits regardless of RGB delta', () 
         4, 4, plate('codex', 1000, 20), 'warm'), /Invalid authored/);
 });
 
-test('Five GPU emissive layers use one generic world material pipeline', () => {
+test('Six GPU emissive layers use one generic world material pipeline', () => {
     const original = townPreviewManifest();
     const integrated = townPreviewManifest({ domains: true });
     assert.ok(!original.layers.some(x => x.emissionKind));
     const apertures = integrated.layers.filter(x => x.emissionKind);
-    assert.equal(apertures.length, 5);
+    assert.equal(apertures.length, 6);
     for (const aperture of apertures) {
         assert.equal(aperture.castsShadow, false);
         assert.equal(aperture.receivesShadow, false);
-        assert.match(aperture.ownerId, /^town-(nexus|blacksmith|codex|hall)$/);
+        assert.match(aperture.ownerId, /^town-(common|nexus|blacksmith|codex|hall)$/);
         const material = integrated.materials.find(m => m.id === aperture.material);
         assert.ok(material.emissiveMap && material.emissionIntensity > 0);
     }
@@ -115,4 +115,14 @@ test('Neutral material rejects any unregistered pixel array length or invalid da
     assert.throws(() => neutralizeBuildingPixels(day, night, 3, 1), /registered RGBA/);
     assert.throws(() => neutralizeBuildingPixels(day, night, 2, 1,
         { daylightContribution: 4 }), /registered RGBA/);
+});
+
+
+test('Golden banner decoration cannot emit even when active-source pixels are bright', async () => {
+    const {TOWN_CLOTH_REGIONS,isTownClothPixel}=await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/town-emission-masks.js');
+    for(const [x,y,w,h] of TOWN_CLOTH_REGIONS) {
+        assert.ok(isTownClothPixel(x+w/2,y+h/2));
+        const mask=emissionMaskPixels(pixels(255,180,50),pixels(0,0,0),4,4,plate('hall',x+1,y+1),'warm');
+        assert.ok(mask.every(value=>value===0));
+    }
 });

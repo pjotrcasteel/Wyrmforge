@@ -92,6 +92,8 @@ This is neither the live Town nor the final day/night lighting. The original-sou
 </div>
 <canvas id="town-gpu" role="img" aria-label="Original Town art projected into the universal GPU lighting engine"></canvas>
 <p id="status" role="status">Initializing GPU projection…</p>
+<p class="compare" id="selected-id">Selected owner reference (loading exact manifest…)</p>
+<img id="selected-reference" class="reference" width="1536" height="864" alt="Exact owner-selected lighting reference">
 <p class="compare">Immutable approved reference (day painting, below). Compare composition and landmark alignment only.</p>
 <img class="reference" src="art/town/day-active.webp" width="1672" height="941"
      alt="Unmodified approved WyrmForge Town daytime painting">
@@ -106,6 +108,23 @@ const mode = document.querySelector('#mode'), lamps = document.querySelector('#l
       paving = document.querySelector('#paving'), view = document.querySelector('#view'),
       domain = document.querySelector('#domain'), school = document.querySelector('#school'),
       neutralMagic = document.querySelector('#neutral-magic'), exposure = document.querySelector('#exposure');
+const selectedBase = 'art/town/selected/2026-10-27/';
+const selectedManifest = await fetch(selectedBase + 'manifest.json').then(response => {
+    if (!response.ok) throw new Error('Owner-selected manifest is unavailable');
+    return response.json();
+});
+function updateSelectedReference() {
+    const role = mode.value === 'day' ? 'day-reference' :
+        domain.value === 'combined' || domain.value === 'off' ? 'combined-grid-reference' : domain.value;
+    const selected = selectedManifest.images.find(image => image.role === role);
+    if (!selected) throw new Error('Missing selected owner reference: ' + role);
+    document.querySelector('#selected-reference').src = selectedBase + encodeURIComponent(selected.file);
+    document.querySelector('#selected-id').textContent =
+        selected.role + ' · ' + selected.file + ' · SHA-256 ' + selected.sha256 +
+        ' · reference only; no pixel registration or unlit-base claim';
+    canvas.dataset.selectedSource = selected.file;
+    canvas.dataset.selectedSourceSha256 = selected.sha256;
+}
 const query = new URLSearchParams(location.search);
 document.body.classList.toggle('capture', query.get('capture') === '1');
 if (['day', 'night', 'zero'].includes(query.get('mode'))) mode.value = query.get('mode');
@@ -124,6 +143,7 @@ if (query.has('npcProgress') && Number.isFinite(Number(query.get('npcProgress'))
     npcProgress.value = query.get('npcProgress');
 function update() {
     output.textContent = offset.value;
+    updateSelectedReference();
     configureTownPreview(canvas, { mode: mode.value, lamps: lamps.checked, offset: Number(offset.value),
         npcEnabled: citizen.checked, npcProgress: Number(npcProgress.value),
         paving: paving.value, view: view.value, isolation: domain.value,

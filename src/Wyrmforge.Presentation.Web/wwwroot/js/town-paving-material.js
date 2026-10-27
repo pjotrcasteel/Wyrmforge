@@ -76,6 +76,7 @@ export function splitTownPavingReference(source, foregroundCutouts = []) {
     };
     const backdrop = textureCanvas();
     const floor = textureCanvas();
+    const sourceAlpha = backdrop.getContext('2d').getImageData(0, 0, SIZE[0], SIZE[1]).data;
     const outside = backdrop.getContext('2d');
     outside.globalCompositeOperation = 'destination-out';
     outside.drawImage(mask, 0, 0);
@@ -88,7 +89,7 @@ export function splitTownPavingReference(source, foregroundCutouts = []) {
     const floorAlpha = inside.getImageData(0, 0, SIZE[0], SIZE[1]).data;
     for (let i = 3; i < backAlpha.length; i += 4) {
         const sum = backAlpha[i] + floorAlpha[i];
-        if (sum !== 255 || (backAlpha[i] !== 0 && backAlpha[i] !== 255) ||
+        if (sum !== sourceAlpha[i] || (backAlpha[i] !== 0 && backAlpha[i] !== 255) ||
             (floorAlpha[i] !== 0 && floorAlpha[i] !== 255))
             throw new Error('Town paving/backdrop mask seam at pixel ' + ((i - 3) / 4));
     }
