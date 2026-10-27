@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { resolveTargetIndicator, drawTargetIndicator } from
+import { resolveTargetIndicator, drawTargetIndicator, targetSelectionLightEmitter, targetSelectionCanvasLight } from
     '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-target-indicator.js';
 
 function scene() {
@@ -117,14 +117,13 @@ test('enemy uses multiple actual rune glyphs and faded incomplete ring, not a UI
     assert.equal(callsOf(ctx, 'ellipse').length, 5, 'Five separated outer arcs only.');
     assert.equal(callsOf(ctx, 'scale').length, 6, 'Six inscribed runes follow the ellipse.');
     assert.ok(callsOf(ctx, 'lineTo').length >= 17, 'Each glyph must have rune strokes, not diamonds or ticks.');
-    assert.equal(callsOf(ctx, 'radialGradient').length, 1, 'Very faint lower-body selection glow.');
-    assert.equal(callsOf(ctx, 'fillRect').length, 1);
+    assert.equal(callsOf(ctx, 'radialGradient').length, 0, 'No separate lighting algorithm in sigil renderer.');
+    assert.equal(callsOf(ctx, 'fillRect').length, 0, 'Lighting must be supplied by the shared emitter.');
     assert.equal(ctx.calls.at(-1), 'restore');
     assert.ok(strokes(ctx).every(call => call[1] === '#d9cfee'));
     assert.ok(strokes(ctx).every(call => call[2] <= .42));
     assert.ok(strokes(ctx).some(call => call[4] === 2.2), 'Glow must be bounded to 2.2 px.');
-    assert.ok(ctx.calls.some(call => Array.isArray(call) && call[0] === 'colorStop' &&
-        String(call[2]).includes('rgba(216,208,243,.07)')));
+    assert.equal(callsOf(ctx, 'colorStop').length, 0, 'Renderer may not introduce local light gradients.');
 });
 
 test('future destructibles retain faint rune language without any character underlight', () => {
@@ -145,8 +144,8 @@ test('boss uses ten inscribed glyphs and only one faint interior segment', () =>
     drawTargetIndicator(ctx, resolveTargetIndicator(snapshot), 'contrast', 0, true);
     assert.equal(callsOf(ctx, 'ellipse').length, 6, 'Five partial outer arcs and one incomplete inner line.');
     assert.equal(callsOf(ctx, 'scale').length, 10);
-    assert.equal(callsOf(ctx, 'radialGradient').length, 1);
-    assert.equal(callsOf(ctx, 'fillRect').length, 1);
+    assert.equal(callsOf(ctx, 'radialGradient').length, 0);
+    assert.equal(callsOf(ctx, 'fillRect').length, 0);
     assert.ok(strokes(ctx).every(call => call[1] === '#d9cfee'));
     assert.ok(strokes(ctx).every(call => call[2] <= .49));
 });
@@ -176,4 +175,56 @@ test('missing targets, paused state and unsupported passes never produce light o
     paused.paused = true;
     drawTargetIndicator(ctx, resolveTargetIndicator(paused), 'contrast');
     assert.deepEqual(ctx.calls, []);
+});
+
+const litFrame = () => ({
+    environment: { ambient: .03, emission: true },
+    lights: [{ id: 'physical-torch', enabled: true, intensity: .5 }],
+});
+
+test('faint selection underlight is one shared GPU point emitter with a Canvas compatibility adapter', () => {
+    const enemy = resolveTargetIndicator(scene());
+    const light = targetSelectionLightEmitter(enemy, litFrame());
+    assert.deepEqual(light.ownerId, 'target-selection');
+    assert.equal(light.id, 'target-selection:underlight');
+    assert.equal(light.type, 'point');
+    assert.equal(light.enabled, true);
+    assert.equal(light.castsShadow, false);
+    assert.equal(light.color, '#d9cfee');
+    assert.ok(light.intensity <= .12 && light.intensity > 0);
+    assert.ok(light.range >= 26 && light.range <= 62);
+    assert.deepEqual(targetSelectionCanvasLight(light), [{
+        x: light.position[0], y: light.position[1], radius: light.range,
+        strength: light.intensity, type: 'target-selection', family: 'selection',
+        center: [217, 207, 238], edge: [99, 90, 116], surge: false,
+    }]);
+    assert.deepEqual(targetSelectionCanvasLight(null), []);
+});
+
+test('explicit universal zero-light gate and absent authoritative frame reject underlight', () => {
+    const enemy = resolveTargetIndicator(scene());
+    assert.equal(targetSelectionLightEmitter(enemy, null), null);
+    assert.equal(targetSelectionLightEmitter(enemy, {
+        environment: { ambient: 0, emission: false },
+        lights: [{ enabled: true, intensity: 0 }],
+    }), null);
+    assert.equal(targetSelectionLightEmitter(enemy, {
+        environment: { ambient: 0, emission: false },
+        lights: [],
+    }), null);
+    assert.ok(targetSelectionLightEmitter(enemy, litFrame()));
+});
+
+test('objects and stale targets never create additional world light emitters', () => {
+    const snapshot = scene();
+    snapshot.player.aimPropId = 42;
+    assert.equal(targetSelectionLightEmitter(resolveTargetIndicator(snapshot), litFrame()), null);
+    snapshot.environment.props[0].healthFraction = 0;
+    assert.equal(targetSelectionLightEmitter(resolveTargetIndicator(snapshot), litFrame()), null);
+    snapshot.player.aimPropId = null;
+    snapshot.player.aimTargetId = 99;
+    const boss = targetSelectionLightEmitter(resolveTargetIndicator(snapshot), litFrame());
+    assert.ok(boss.intensity > 0 && boss.intensity < .12);
+    snapshot.dragon.targetable = false;
+    assert.equal(targetSelectionLightEmitter(resolveTargetIndicator(snapshot), litFrame()), null);
 });
