@@ -15,7 +15,7 @@ from pathlib import Path
 
 import bpy
 from mathutils import Matrix
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageChops
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCES = ROOT / "art/source/enemies/hollow/rigged-poc/model/local-appearance-004"
@@ -24,7 +24,8 @@ REACH = "rigged-hollow-zombie-reach-v3-"
 OUTPUT = ROOT / "artifacts/hollow-moving-strike"
 FACINGS = ("N", "NE", "E", "SE", "S", "SW", "W", "NW")
 ROTATION = math.degrees(math.atan2(-3.2, 2.2)) + 90
-COUNT, CELL, ATTACK_START = 32, 96, 8
+COUNT, CELL, ATTACK_START = 56, 96, 8
+STRIKE_POSES, STRIKE_HOLD = 16, 2  # 16 genuine attack poses at 12fps on a 24fps preview
 UPPER = ("spine", "chest", "neck", "head",
          "clavicle.L", "clavicle.R", "upper_arm.L", "upper_arm.R",
          "forearm.L", "forearm.R", "hand.L", "hand.R")
@@ -93,8 +94,21 @@ if spec is None or spec.loader is None:
     raise RuntimeError(f"Missing Blender attack author: {script}")
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
-attack_report = module.author_attack_action(bpy, rig)
+attack_report = module.author_attack_action(bpy, rig, args.variant)
 attack_frames = samples(rig)
+
+# Add the SAME mesh-bound internal fire sockets as the approved idle Ember QC.
+# This changes the source MATERIAL, not the silhouette or a composited GIF.
+embers_spec = Path(__file__).with_name("hollow-source-embers.py")
+fire_spec = importlib.util.spec_from_file_location("hollow_source_embers", embers_spec)
+if fire_spec is None or fire_spec.loader is None:
+    raise RuntimeError(f"Missing canonical Hollowed source emission shader: {embers_spec}")
+embers = importlib.util.module_from_spec(fire_spec)
+fire_spec.loader.exec_module(embers)
+actor = bpy.data.objects["Hollow skinned character"]
+fire_controls, source_regions = embers.attach_internal_fire(actor)
+if not fire_controls:
+    raise ValueError("No source-bound fire shader on cape-free Hollowed")
 
 baseline = walk_frames[0]
 action = bpy.data.actions.new(f"Hollow_{args.variant}_MovingStrike_AndChase_v1")
@@ -119,9 +133,10 @@ def key_sequence(turn_after_impact):
         frame = index+1
         scene.frame_set(frame)
         walk_index = index % 16
-        active = ATTACK_START <= index < ATTACK_START+16
-        strike_index = index - ATTACK_START
-        attack_alpha = smooth((strike_index+1)/3)*smooth((16-strike_index)/3) if active else 0
+        active = ATTACK_START <= index < ATTACK_START + STRIKE_POSES * STRIKE_HOLD
+        strike_index = min(STRIKE_POSES - 1, max(0, (index-ATTACK_START)//STRIKE_HOLD))
+        attack_alpha = (smooth((index-ATTACK_START+1)/5)
+                        *smooth((ATTACK_START+STRIKE_POSES*STRIKE_HOLD-index)/6)) if active else 0
         # Independent movement phase keeps foot-support contacts periodic for
         # EVERY attack phase. No full-body switch to planted 'attack' atlas.
         for bone in rig.pose.bones:
@@ -140,7 +155,7 @@ def key_sequence(turn_after_impact):
             bone.keyframe_insert("scale", frame=frame, group=name)
         # On a pass-by, finish the swipe before rotating back toward the
         # player. The attack animation NEVER rewinds or gets cancelled.
-        turn = 0 if not turn_after_impact else 158 * smooth((index-19)/11)
+        turn = 0 if not turn_after_impact else 158 * smooth((index-31)/21)
         rig.rotation_euler.z = math.radians(turn)
         rig.keyframe_insert("rotation_euler", frame=frame)
     scene.frame_set(1)
@@ -160,7 +175,11 @@ report = {"model": args.variant, "capeFree": True, "sourceWalk": str(WALK.relati
           "sourceStrike": str(variant_source.relative_to(ROOT)),
           "3dSkinned": True, "legGaitContinuousDuringAttack": True,
           "attackUninterruptedByTurn": True, "sourceAttack": attack_report,
-          "frames": COUNT, "directions": list(DIRECTIONS), "mobileReviewOnly": True,
+          "frames": COUNT, "attackPoses": STRIKE_POSES, "attackFps": 12,
+          "previewFps": 24, "sourceEmissionOnSkinnedMesh": True,
+          "sourceFireRegionVertices": source_regions,
+          "emissionOutsideAttack": .85, "maxSourceAttackEmission": 4.35,
+          "directions": list(DIRECTIONS), "mobileReviewOnly": True,
           "ownerApproved": False, "runtimeIntegrated": False, "preflightRigMatched": True,
           "renders": []}
 
@@ -176,6 +195,13 @@ for scenario, turns in (("running-strike", False), ("pass-by-turn-and-chase", Tr
         review = []
         for index in range(COUNT):
             scene.frame_set(index+1)
+            # Use the actor's OWN skinned eye/mouth/wound emission, not screen
+            # overlay. Flares exactly at the committed 3D claw impact.
+            authored_pose = (index-ATTACK_START)//STRIKE_HOLD
+            strength = (embers.strength_for_motion(authored_pose, attack_start=0)
+                        if ATTACK_START <= index < ATTACK_START+STRIKE_POSES*STRIKE_HOLD else .85)
+            for socket in fire_controls:
+                socket.default_value = strength
             rig.rotation_euler.z += angle
             bpy.context.view_layer.update()
             temporary = DEST / "_temporary.png"
@@ -185,10 +211,31 @@ for scenario, turns in (("running-strike", False), ("pass-by-turn-and-chase", Tr
             temporary.unlink()
             if image.size != (CELL, CELL) or not image.getbbox():
                 raise ValueError(f"Missing real skinned pose: {scenario}/{direction}/{index}")
+            if index == ATTACK_START + 8 * STRIKE_HOLD:
+                # Independently prove bright source emission actually changed
+                # the rendered actor. Do not ship a "fire" review lacking fire.
+                for socket in fire_controls:
+                    socket.default_value = 0
+                blank = DEST / "_no_emission.png"
+                scene.render.filepath = str(blank)
+                bpy.ops.render.render(write_still=True)
+                unlit = Image.open(blank).convert("RGBA")
+                blank.unlink()
+                alpha = image.getchannel("A")
+                if image.getchannel("A").tobytes() != unlit.getchannel("A").tobytes():
+                    raise ValueError("Fire unexpectedly changes the source actor silhouette")
+                changed = ImageChops.difference(image.convert("RGB"), unlit.convert("RGB"))
+                differences = sum(1 for px, opaque in zip(changed.convert("L").getdata(),alpha.getdata())
+                                  if opaque and px > 8)
+                if differences < 3:
+                    raise ValueError("No VISIBLE fire on the original 3D face/wounds at impact")
+                report.setdefault("verifiedFirePixels",{})[f"{scenario}/{direction}"] = differences
+                for socket in fire_controls:
+                    socket.default_value = strength
             panel = Image.new("RGB", (CELL*3, CELL*3+40), (17, 16, 23))
             frame = image.resize((CELL*3, CELL*3), Image.Resampling.NEAREST)
             panel.paste(frame, (0, 40), frame)
-            ImageDraw.Draw(panel).text((8, 12), f"{args.variant}: {scenario} {direction} {index+1}/32",
+            ImageDraw.Draw(panel).text((8, 12), f"FIRE / {scenario} {direction} {index+1}/{COUNT}",
                                        fill=(245, 185, 127))
             review.append(panel)
         filename = f"{args.variant}-{scenario}-{direction}.gif"
