@@ -359,7 +359,7 @@ public sealed partial class RunSimulation
                 Combination = impact.Combination,
                 Surge = impact.Surge,
             }).ToArray(),
-            deathBursts.Select(burst => new DeathBurstRenderSnapshot(burst.Position.X, burst.Position.Y, burst.Radius, burst.Progress, burst.Intensity, burst.Kind, burst.EntityId, burst.BodyRadius)).ToArray(),
+            deathBursts.Select(burst => new DeathBurstRenderSnapshot(burst.Position.X, burst.Position.Y, burst.Radius, burst.Progress, burst.Intensity, burst.Kind, burst.EntityId, burst.BodyRadius) { Traits = burst.Traits }).ToArray(),
             CreateFieryAreaSnapshots(),
             essenceBolts.Select(bolt => new EssenceBoltRenderSnapshot(bolt.From.X, bolt.From.Y, bolt.To.X, bolt.To.Y, bolt.Life)).ToArray(),
             projectiles.Select(projectile => new ProjectileRenderSnapshot(projectile.Position.X, projectile.Position.Y, projectile.Radius, projectile.Spell, projectile.Inferno)
@@ -405,6 +405,10 @@ public sealed partial class RunSimulation
             SnowClouds = CreateSnowCloudSnapshots(),
             RimeHusks = CreateRimeHuskSnapshots(),
             AvalancheRings = CreateAvalancheRingSnapshots(),
+            CombatWounds = combatWounds.Select(wound => new CombatWoundRenderSnapshot(
+                wound.Id, wound.Position.X, wound.Position.Y, wound.Radius,
+                wound.DirectionX, wound.DirectionY, wound.Severity, wound.Kind,
+                wound.Traits, wound.Killed)).ToArray(),
             Lighting = CreateLightingFrame(),
         };
     }
