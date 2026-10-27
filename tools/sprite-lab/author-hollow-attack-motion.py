@@ -57,7 +57,7 @@ def author_attack_action(bpy, rig, variant="standard"):
             pb.location.copy(), pb.rotation_quaternion.copy(), pb.scale.copy()
         )
 
-    action = bpy.data.actions.new(f"Hollow_{variant}_Gothic_Fire_Claw_v3")
+    action = bpy.data.actions.new(f"Hollow_{variant}_Gothic_Fire_Claw_v4")
     rig.animation_data.action = action
     # Arm anatomy determines which surviving claw performs the impact.
     lead = "R" if variant == "one-arm-left" else "L"
@@ -75,27 +75,27 @@ def author_attack_action(bpy, rig, variant="standard"):
             # The walk/crawl compositor subsequently supplies its own grounded
             # lower-body support; this source action does not fake foot travel.
             if name == "pelvis":
-                pb.location.z -= .028*windup + .012*strike
-                pb.location.y -= .032*windup - .075*strike + .018*recoil
+                pb.location.z -= .018*windup + .006*strike
+                pb.location.y -= .025*windup - .040*strike + .016*recoil
             elif name == "spine":
-                angle = -.25*windup + .42*forward - .13*recoil
+                angle = -.19*windup + .13*forward - .09*recoil
                 pb.rotation_quaternion = Quaternion(Vector((1, 0, 0)), angle) @ pb.rotation_quaternion
             elif name == "chest":
-                pitch = -.39*windup + .66*forward - .21*recoil
-                twist = (-.27*windup + .30*strike - .07*recoil) * (1 if lead == "L" else -1)
+                pitch = -.30*windup + .21*forward - .12*recoil
+                twist = (-.28*windup + .37*strike - .09*recoil) * (1 if lead == "L" else -1)
                 pb.rotation_quaternion = (
                     Quaternion(Vector((0, 0, 1)), twist)
                     @ Quaternion(Vector((1, 0, 0)), pitch)
                     @ pb.rotation_quaternion)
             elif name == "neck":
                 pb.rotation_quaternion = Quaternion(Vector((1, 0, 0)),
-                    .16*windup - .30*head + .08*recoil) @ pb.rotation_quaternion
+                    .14*windup - .16*head + .06*recoil) @ pb.rotation_quaternion
             elif name == "head":
                 pb.rotation_quaternion = Quaternion(Vector((1, 0, 0)),
-                    .22*windup - .34*head + .09*recoil) @ pb.rotation_quaternion
+                    .18*windup - .18*head + .08*recoil) @ pb.rotation_quaternion
             elif name.startswith(("clavicle.", "upper_arm.")):
                 is_lead = name.endswith("." + lead)
-                phase = (-1.10*windup + 1.47*strike - .22*recoil) if is_lead \
+                phase = (-1.02*windup + .27*strike - .18*recoil) if is_lead \
                     else (.11*windup - .33*strike + .18*recoil)
                 if name.startswith("clavicle."):
                     phase *= .47
@@ -105,14 +105,14 @@ def author_attack_action(bpy, rig, variant="standard"):
                     @ Quaternion(Vector((1, 0, 0)), phase)
                     @ pb.rotation_quaternion)
             elif name.startswith("forearm."):
-                phase = (-.92*windup + 1.42*strike - .19*recoil) \
+                phase = (-.80*windup + .42*strike - .14*recoil) \
                     if name.endswith("." + lead) else (.12*windup - .30*strike)
                 pb.rotation_quaternion = Quaternion(Vector((1, 0, 0)), phase) @ pb.rotation_quaternion
             elif name.startswith("hand."):
-                phase = (.35*windup - .56*strike + .18*recoil) \
+                phase = (.29*windup - .22*strike + .13*recoil) \
                     if name.endswith("." + lead) else (.06*windup - .09*strike)
                 pb.rotation_quaternion = Quaternion(Vector((1, 0, 0)), phase) @ pb.rotation_quaternion
-            # Lower limb joints remain exactly the genuine source skin support.
+            # Keep the claw at chest/head height: do not fold the zombie into a ground slam.\n            # Lower limb joints remain exactly the genuine source skin support.
             pb.keyframe_insert("location", frame=frame, group=name)
             pb.keyframe_insert("rotation_quaternion", frame=frame, group=name)
             pb.keyframe_insert("scale", frame=frame, group=name)
