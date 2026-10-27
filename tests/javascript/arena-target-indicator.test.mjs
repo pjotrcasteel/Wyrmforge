@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { resolveTargetIndicator, drawTargetIndicator, targetSelectionLightEmitter, targetSelectionCanvasLight } from
     '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-target-indicator.js';
+import { withHollowFractureLightingFrame } from
+    '../../src/Wyrmforge.Presentation.Web/wwwroot/js/hollow-fracture.js';
 
 function scene() {
     return {
@@ -227,4 +229,18 @@ test('objects and stale targets never create additional world light emitters', (
     assert.ok(boss.intensity > 0 && boss.intensity < .12);
     snapshot.dragon.targetable = false;
     assert.equal(targetSelectionLightEmitter(resolveTargetIndicator(snapshot), litFrame()), null);
+});
+
+test('selection light merges into one immutable shared GPU frame rather than creating a second engine', () => {
+    const base = litFrame();
+    const selected = targetSelectionLightEmitter(resolveTargetIndicator(scene()), base);
+    const combined = withHollowFractureLightingFrame(base, [selected]);
+    assert.notEqual(combined, base);
+    assert.equal(base.lights.length, 1, 'Never mutate authoritative C# input frame.');
+    assert.equal(combined.lights.length, 2, 'Add exactly one selection emitter to the existing lights.');
+    assert.equal(combined.lights[1].id, selected.id);
+    assert.equal(combined.lights[1].ownerId, selected.ownerId);
+    const zero = { environment: { ambient: 0, emission: false }, lights: [] };
+    assert.equal(withHollowFractureLightingFrame(zero, [selected]), zero,
+        'Even a supplied selection descriptor cannot break zero-light = black.');
 });
