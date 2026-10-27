@@ -1,7 +1,7 @@
 """Compare exact owner references with genuine browser GPU frames; no generated imagery."""
 import argparse,json,hashlib
 from pathlib import Path
-from PIL import Image,ImageDraw
+from PIL import Image,ImageDraw,ImageFont
 ROOT=Path(__file__).resolve().parents[2]
 SELECTED=ROOT/'src/Wyrmforge.Presentation.Web/wwwroot/art/town/selected/2026-10-27'
 
@@ -27,6 +27,17 @@ def build(folder,output):
   record['rows'].append({'domain':domain,'reference':source,'gpu':diagnostic,'png':str(raw.resolve().relative_to(ROOT))})
  output.parent.mkdir(parents=True,exist_ok=True)
  board.save(output,quality=90)
+ # Phone-friendly T2 review: reference above, real GPU below, identical aspect.
+ # This only labels/crops a browser screenshot; it never recolors rendered pixels.
+ font=ImageFont.truetype('DejaVuSans.ttf',18)
+ common=record['rows'][0]; stack=Image.new('RGB',(960,1160),(10,10,12)); labels=ImageDraw.Draw(stack)
+ labels.text((14,8),'YOUR SELECTED COMMON REFERENCE',font=font,fill='white')
+ with Image.open(SELECTED/common['reference']['file']) as frame:
+  stack.paste(frame.convert('RGB').resize((960,540),Image.Resampling.LANCZOS),(0,35))
+ labels.text((14,585),'ACTUAL SHARED GPU | public lights only | chimney OFF',font=font,fill='white')
+ with Image.open(folder/'domain-common-1120.png') as frame:
+  stack.paste(frame.convert('RGB').crop((0,0,1120,630)).resize((960,540),Image.Resampling.LANCZOS),(0,620))
+ stack.save(output.with_name('town-selected-common-soft-pools-2026-10-27.jpg'),quality=92)
  output.with_suffix('.json').write_text(json.dumps(record,indent=2)+'\n')
  print(output)
 if __name__=='__main__':

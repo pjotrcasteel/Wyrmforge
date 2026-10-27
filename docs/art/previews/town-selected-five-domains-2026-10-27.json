@@ -88,7 +88,7 @@
           "town-live-relighting.js": "302f8542c54d5543c791c8ac190620e1605052520e9d46682174411edeb815a4",
           "town-neutral-albedo.js": "e9b1776b2fcc3920be3c7395c02229af32a1d2c8646b42fb7cc9fe8834691f85",
           "town-v2-nexus.js": "4f10ef2a40989f80797693531149ca91b1b321479b103d8ee4278e5caf7e5110",
-          "town-light-domains.js": "bbf1d093e214c311082dbc80c107b3b38d5a9f978161a08539286ae72fdc4549",
+          "town-light-domains.js": "087334886f8857487ac77978557e9663edc6be33b8a9469f682abb320dc34110",
           "town-well-stage4.js": "56a08a570fec87620514e0d89e585b34a24de522cf18f618bf14f58d5d9c51e1",
           "town-relightable-scene.js": "b8aa39d14a147170588660afaa82ebd62b4be5d20853c9e118546cdfa9c2c2c8",
           "town-relighting-preview.js": "e893f060dede06d930a3d0c7b4c011862d20a44e00eba518f322cb1ebf6800c2",
@@ -129,11 +129,11 @@
           "selectedSource": "A4829886-EEE9-41CB-8737-36739F87CB78.jpeg",
           "selectedSourceSha256": "24bc6d6349a81174e36d961e16d448c0109d8d523f5f952a08d9081483b504b0"
         },
-        "screenshotSha256": "28a1a13243fb69f643be40b9ba88e3bcc6833f2fc6996d11614a86dbeb59ee65",
+        "screenshotSha256": "189c08cf6a4151d6ab52027d68f9d9e621e74299bc2d028a9ed13ed2b57d6012",
         "physicalPhoneTest": false,
         "visualApproval": false
       },
-      "png": "artifacts/town-selected-final-2026-10-27/domain-common-1120.png"
+      "png": "artifacts/town-soft-pools-2026-10-27/domain-common-1120.png"
     },
     {
       "domain": "nexus",
@@ -217,14 +217,14 @@
           "town-citizen-gpu-bridge.js": "022008a4060ae8f9e4d988da23928dfc17f3bd2afc187ba8c4277e24bfbab9f5",
           "town-emission-masks.js": "85ed7691d949d2f197f712cbca892a60de8932af4b4a7c47f8fbba2949456d05",
           "town-building-neutral-albedo.js": "9b13fd565e964ec6634059f672793ad6abc38337ce2baec7707e3405cf18db65",
-          "town-preview-state.js": "3d38acf8d8fef79036efa0b362a3058d792b48237ae4f8bf9bd07d0ee7168360",
-          "town-live-relighting.js": "0ef669113aba770cffbeadfee89f0bbdfcc1da513f28ff36bc6c9e93a0b7222d",
+          "town-preview-state.js": "e86be14e3e504bd4eff2b0e9f7d933f09a041df40cd89751dbb5a27ac45091db",
+          "town-live-relighting.js": "302f8542c54d5543c791c8ac190620e1605052520e9d46682174411edeb815a4",
           "town-neutral-albedo.js": "e9b1776b2fcc3920be3c7395c02229af32a1d2c8646b42fb7cc9fe8834691f85",
           "town-v2-nexus.js": "4f10ef2a40989f80797693531149ca91b1b321479b103d8ee4278e5caf7e5110",
-          "town-light-domains.js": "fdf638a6d4c7e9c98fe59bc036f47a5bd3b8e3c7e9614bbf15ea8872a9a57402",
+          "town-light-domains.js": "087334886f8857487ac77978557e9663edc6be33b8a9469f682abb320dc34110",
           "town-well-stage4.js": "56a08a570fec87620514e0d89e585b34a24de522cf18f618bf14f58d5d9c51e1",
           "town-relightable-scene.js": "b8aa39d14a147170588660afaa82ebd62b4be5d20853c9e118546cdfa9c2c2c8",
-          "town-relighting-preview.js": "b7c7b1da4c375dee6aebe4342b7151a4ec18bb3beb8bc627d8329896b90331d0",
+          "town-relighting-preview.js": "e893f060dede06d930a3d0c7b4c011862d20a44e00eba518f322cb1ebf6800c2",
           "town-lighting-grade.js": "9d9fff935190def46d651af2817acc96a2590f7c50dbf4aef229811a598c4000",
           "town-lighting.js": "e8af5a7981d0a2f9777e80403b58fe696a3d5689867f99014f128342bf7cd061",
           "lighting/cutout-fixture.js": "25b8df3eef1795531cf46c954596d65b72a49577741da74d772e0b3f5117c17a",
@@ -266,7 +266,7 @@
         "physicalPhoneTest": false,
         "visualApproval": false
       },
-      "png": "artifacts/town-selected-final-2026-10-27/domain-nexus-1120.png"
+      "png": "artifacts/town-soft-pools-2026-10-27/domain-nexus-1120.png"
     },
     {
       "domain": "blacksmith",
@@ -350,14 +350,14 @@
           "town-citizen-gpu-bridge.js": "022008a4060ae8f9e4d988da23928dfc17f3bd2afc187ba8c4277e24bfbab9f5",
           "town-emission-masks.js": "85ed7691d949d2f197f712cbca892a60de8932af4b4a7c47f8fbba2949456d05",
           "town-building-neutral-albedo.js": "9b13fd565e964ec6634059f672793ad6abc38337ce2baec7707e3405cf18db65",
-          "town-preview-state.js": "3d38acf8d8fef79036efa0b362a3058d792b48237ae4f8bf9bd07d0ee7168360",
-          "town-live-relighting.js": "0ef669113aba770cffbeadfee89f0bbdfcc1da513f28ff36bc6c9e93a0b7222d",
+          "town-preview-state.js": "e86be14e3e504bd4eff2b0e9f7d933f09a041df40cd89751dbb5a27ac45091db",
+          "town-live-relighting.js": "302f8542c54d5543c791c8ac190620e1605052520e9d46682174411edeb815a4",
           "town-neutral-albedo.js": "e9b1776b2fcc3920be3c7395c02229af32a1d2c8646b42fb7cc9fe8834691f85",
           "town-v2-nexus.js": "4f10ef2a40989f80797693531149ca91b1b321479b103d8ee4278e5caf7e5110",
-          "town-light-domains.js": "fdf638a6d4c7e9c98fe59bc036f47a5bd3b8e3c7e9614bbf15ea8872a9a57402",
+          "town-light-domains.js": "087334886f8857487ac77978557e9663edc6be33b8a9469f682abb320dc34110",
           "town-well-stage4.js": "56a08a570fec87620514e0d89e585b34a24de522cf18f618bf14f58d5d9c51e1",
           "town-relightable-scene.js": "b8aa39d14a147170588660afaa82ebd62b4be5d20853c9e118546cdfa9c2c2c8",
-          "town-relighting-preview.js": "b7c7b1da4c375dee6aebe4342b7151a4ec18bb3beb8bc627d8329896b90331d0",
+          "town-relighting-preview.js": "e893f060dede06d930a3d0c7b4c011862d20a44e00eba518f322cb1ebf6800c2",
           "town-lighting-grade.js": "9d9fff935190def46d651af2817acc96a2590f7c50dbf4aef229811a598c4000",
           "town-lighting.js": "e8af5a7981d0a2f9777e80403b58fe696a3d5689867f99014f128342bf7cd061",
           "lighting/cutout-fixture.js": "25b8df3eef1795531cf46c954596d65b72a49577741da74d772e0b3f5117c17a",
@@ -399,7 +399,7 @@
         "physicalPhoneTest": false,
         "visualApproval": false
       },
-      "png": "artifacts/town-selected-final-2026-10-27/domain-blacksmith-1120.png"
+      "png": "artifacts/town-soft-pools-2026-10-27/domain-blacksmith-1120.png"
     },
     {
       "domain": "codex",
@@ -447,14 +447,14 @@
           "town-citizen-gpu-bridge.js": "022008a4060ae8f9e4d988da23928dfc17f3bd2afc187ba8c4277e24bfbab9f5",
           "town-emission-masks.js": "85ed7691d949d2f197f712cbca892a60de8932af4b4a7c47f8fbba2949456d05",
           "town-building-neutral-albedo.js": "9b13fd565e964ec6634059f672793ad6abc38337ce2baec7707e3405cf18db65",
-          "town-preview-state.js": "3d38acf8d8fef79036efa0b362a3058d792b48237ae4f8bf9bd07d0ee7168360",
-          "town-live-relighting.js": "0ef669113aba770cffbeadfee89f0bbdfcc1da513f28ff36bc6c9e93a0b7222d",
+          "town-preview-state.js": "e86be14e3e504bd4eff2b0e9f7d933f09a041df40cd89751dbb5a27ac45091db",
+          "town-live-relighting.js": "302f8542c54d5543c791c8ac190620e1605052520e9d46682174411edeb815a4",
           "town-neutral-albedo.js": "e9b1776b2fcc3920be3c7395c02229af32a1d2c8646b42fb7cc9fe8834691f85",
           "town-v2-nexus.js": "4f10ef2a40989f80797693531149ca91b1b321479b103d8ee4278e5caf7e5110",
-          "town-light-domains.js": "fdf638a6d4c7e9c98fe59bc036f47a5bd3b8e3c7e9614bbf15ea8872a9a57402",
+          "town-light-domains.js": "087334886f8857487ac77978557e9663edc6be33b8a9469f682abb320dc34110",
           "town-well-stage4.js": "56a08a570fec87620514e0d89e585b34a24de522cf18f618bf14f58d5d9c51e1",
           "town-relightable-scene.js": "b8aa39d14a147170588660afaa82ebd62b4be5d20853c9e118546cdfa9c2c2c8",
-          "town-relighting-preview.js": "b7c7b1da4c375dee6aebe4342b7151a4ec18bb3beb8bc627d8329896b90331d0",
+          "town-relighting-preview.js": "e893f060dede06d930a3d0c7b4c011862d20a44e00eba518f322cb1ebf6800c2",
           "town-lighting-grade.js": "9d9fff935190def46d651af2817acc96a2590f7c50dbf4aef229811a598c4000",
           "town-lighting.js": "e8af5a7981d0a2f9777e80403b58fe696a3d5689867f99014f128342bf7cd061",
           "lighting/cutout-fixture.js": "25b8df3eef1795531cf46c954596d65b72a49577741da74d772e0b3f5117c17a",
@@ -496,7 +496,7 @@
         "physicalPhoneTest": false,
         "visualApproval": false
       },
-      "png": "artifacts/town-selected-final-2026-10-27/domain-codex-1120.png"
+      "png": "artifacts/town-soft-pools-2026-10-27/domain-codex-1120.png"
     },
     {
       "domain": "hall",
@@ -580,14 +580,14 @@
           "town-citizen-gpu-bridge.js": "022008a4060ae8f9e4d988da23928dfc17f3bd2afc187ba8c4277e24bfbab9f5",
           "town-emission-masks.js": "85ed7691d949d2f197f712cbca892a60de8932af4b4a7c47f8fbba2949456d05",
           "town-building-neutral-albedo.js": "9b13fd565e964ec6634059f672793ad6abc38337ce2baec7707e3405cf18db65",
-          "town-preview-state.js": "3d38acf8d8fef79036efa0b362a3058d792b48237ae4f8bf9bd07d0ee7168360",
-          "town-live-relighting.js": "0ef669113aba770cffbeadfee89f0bbdfcc1da513f28ff36bc6c9e93a0b7222d",
+          "town-preview-state.js": "e86be14e3e504bd4eff2b0e9f7d933f09a041df40cd89751dbb5a27ac45091db",
+          "town-live-relighting.js": "302f8542c54d5543c791c8ac190620e1605052520e9d46682174411edeb815a4",
           "town-neutral-albedo.js": "e9b1776b2fcc3920be3c7395c02229af32a1d2c8646b42fb7cc9fe8834691f85",
           "town-v2-nexus.js": "4f10ef2a40989f80797693531149ca91b1b321479b103d8ee4278e5caf7e5110",
-          "town-light-domains.js": "fdf638a6d4c7e9c98fe59bc036f47a5bd3b8e3c7e9614bbf15ea8872a9a57402",
+          "town-light-domains.js": "087334886f8857487ac77978557e9663edc6be33b8a9469f682abb320dc34110",
           "town-well-stage4.js": "56a08a570fec87620514e0d89e585b34a24de522cf18f618bf14f58d5d9c51e1",
           "town-relightable-scene.js": "b8aa39d14a147170588660afaa82ebd62b4be5d20853c9e118546cdfa9c2c2c8",
-          "town-relighting-preview.js": "b7c7b1da4c375dee6aebe4342b7151a4ec18bb3beb8bc627d8329896b90331d0",
+          "town-relighting-preview.js": "e893f060dede06d930a3d0c7b4c011862d20a44e00eba518f322cb1ebf6800c2",
           "town-lighting-grade.js": "9d9fff935190def46d651af2817acc96a2590f7c50dbf4aef229811a598c4000",
           "town-lighting.js": "e8af5a7981d0a2f9777e80403b58fe696a3d5689867f99014f128342bf7cd061",
           "lighting/cutout-fixture.js": "25b8df3eef1795531cf46c954596d65b72a49577741da74d772e0b3f5117c17a",
@@ -629,7 +629,7 @@
         "physicalPhoneTest": false,
         "visualApproval": false
       },
-      "png": "artifacts/town-selected-final-2026-10-27/domain-hall-1120.png"
+      "png": "artifacts/town-soft-pools-2026-10-27/domain-hall-1120.png"
     }
   ]
 }

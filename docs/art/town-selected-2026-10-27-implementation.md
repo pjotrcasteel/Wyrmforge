@@ -120,3 +120,34 @@ their canonical screen anchors, changing engine shaders, light ownership, art or
 This is proxy calibration, not a claim of measured architectural height. Existing
 common-only capture confirms chimney OFF and neutral-white diagnostic state. A fresh
 same-code desktop/mobile visual set follows this checkpoint; owner approval is pending.
+
+### Follow-up visual proof (rendering checkpoint `1fd8cf7e`)
+
+Public intensity was then reduced from .55 to .4 after correcting the lamp-to-receiver
+separation. Fresh **59/59** genuine shared-GPU captures use this same rendering code,
+with per-frame module/screenshot hashes. **73/73 focused Town tests** pass; the **21
+original asset hashes** remain unchanged. Every world pixel is RGB zero in strict-zero
+and domain-off at **320, 390 and 1120px**. Common-only chimney OFF, Blacksmith-only ON.
+Paving median is now **38** (selected reference roughly 36), versus 43 at the previous
+checkpoint. Pixel brightness is only a guard, not proof of matching colour or light shape.
+
+- [Phone-friendly selected reference ABOVE / actual GPU BELOW](previews/town-selected-common-soft-pools-2026-10-27.jpg)
+- [Previous GPU ABOVE / corrected GPU BELOW](previews/town-common-gpu-before-after-2026-10-27.jpg)
+- [Fresh five-domain comparison and exact source metadata](previews/town-selected-five-domains-2026-10-27.json)
+
+Known visible differences remain: paving is warmer/yellower than the selected common
+reference; the original canonical gate does not contain the extra rooftop flames shown
+in that reference. Its existing gold roof ornaments must not be converted into emitters.
+No new rooftop torch artwork, painted-source substitution or colour-wash workaround was
+introduced. These differences are for owner review at T2, not a claim of visual completion.
+
+CI at previous `bd205f598` completed Validate, shared GPU, WebKit and both Town GPU lab
+and actual-game mobile acceptance successfully (Town run **40462347006**). Actual-game
+320/390 screenshots were downloaded and visually inspected: they preserve the real
+HUD/camera crop but use the **previous** lamp calibration. New rendering-code CI is still
+running; do not mislabel prior screenshots as the new result. Physical iOS/Android
+performance remains unverified. The new 59-frame browser proof bundle is supplied to the
+owner separately. The full local JS rerun encountered automatic network-review blocking
+of an unrelated `example.test` request; focused Town checks remain independently green.
+
+**STOP: T2 owner visual approval required. No T3–T6, merge or live cutover.**
