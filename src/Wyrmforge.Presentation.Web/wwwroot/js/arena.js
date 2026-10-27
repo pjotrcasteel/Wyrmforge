@@ -1,7 +1,7 @@
 import { preloadFireballV5 } from './arena-fireball-v5.js';
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
 import { attachArenaInput, getArenaMovement, getArenaAim, getArenaPropFocus } from './arena-input.js';
-import { resolveTargetIndicator, drawTargetIndicator } from './arena-target-indicator.js';
+import { resolveTargetIndicator, drawTargetIndicator, targetSelectionLightEmitter, targetSelectionCanvasLight } from './arena-target-indicator.js';
 import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, drawArenaCloisterElevation } from './arena-environment.js?v=20261026-compact-ground-v1';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
@@ -241,11 +241,18 @@ function draw(state, snapshot, width, height) {
     updateHollowSprites(state.hollow,snapshot,visualSeconds,state.reducedMotion.matches);
     // Source-derived death geometry and a shared GPU-compatible emitter; never procedural bones.
     const fractureEmitters = hollowFractureEmitters(state.hollow.corpses,state.hollow.clock,state.reducedMotion.matches);
+    // Every illumination cue uses the SAME authoritative lighting frame.
+    // The selected target supplies a generic, ultra-dim emitter; no second
+    // spotlight renderer or school-specific light engine exists.
+    const selectionEmitter = targetSelectionLightEmitter(targetIndicator,snapshot.lighting);
     state.fractureGpuEmitters = fractureEmitters;
-    state.fractureGpuFrame = withHollowFractureLightingFrame(snapshot.lighting,fractureEmitters);
+    state.selectionGpuEmitter = selectionEmitter;
+    state.fractureGpuFrame = withHollowFractureLightingFrame(snapshot.lighting,
+        selectionEmitter ? [...fractureEmitters,selectionEmitter] : fractureEmitters);
     const spellLights = [
         ...buildSpellLights(snapshot, visualSeconds, state.reducedMotion.matches, lightViewport),
-        ...hollowFractureCanvasLights(fractureEmitters,snapshot.lighting)
+        ...hollowFractureCanvasLights(fractureEmitters,snapshot.lighting),
+        ...targetSelectionCanvasLight(selectionEmitter)
     ];
     ctx.clearRect(0, 0, width, height);
     ctx.save();
