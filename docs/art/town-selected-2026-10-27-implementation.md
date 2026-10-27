@@ -238,3 +238,10 @@ patches only. Flame/glass apertures and adjacent banners are explicitly retained
 this removes painted wall colour multiplying the real warm engine lights. It is
 candidate material authoring, not a screen tint or physical albedo recovery. 78
 focused tests pass, including glass/banner/source-alpha preservation.
+
+Magnified sconce QC isolated a second source of the stamped glow: the public emission
+bounds included warm brick. Tightened the three gate apertures to actual flame/glass
+and raised the public brightness gate, with a soft knee requiring both red and green
+brightness. Warm brick is now explicitly rejected by a regression test. Sconce stone
+correction uses an elliptical zero-at-edge falloff; it does not leave a rectangular
+gray patch or preserve a rectangular orange hole. **79 focused tests pass**.

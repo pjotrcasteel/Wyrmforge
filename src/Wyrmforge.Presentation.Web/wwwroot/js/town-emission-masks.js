@@ -108,7 +108,7 @@ export const TOWN_APERTURE_PLATES = Object.freeze([TOWN_COMMON_EMISSION_PLATE, .
 export const TOWN_COMMON_APERTURES = Object.freeze([
     [686,350,15,25], [963,350,15,25], [451,463,16,29],
     [1065,412,16,27], [532,698,17,28], [723,470,14,23],
-    [826,188,15,22], [738,220,12,24], [916,220,12,24],
+    [830,190,7,15], [741,222,7,17], [919,222,7,17],
     [895,456,11,21], [546,360,12,21], [1105,362,12,22],
     [355,422,12,24], [1212,418,13,22], [608,609,15,26], [987,611,15,25],
     [704,685,13,25], [894,682,13,24], [594,842,16,32], [1010,850,16,33],
@@ -122,10 +122,10 @@ export function commonAperturePixels(source, width, height) {
         for (let y=top;y<top+h;y++) for (let x=left;x<left+w;x++) {
             const i=(y*width+x)*4;
             if (isTownClothPixel(x,y) || source[i+3]<245 ||
-                source[i]<140 || source[i+1]<65 || source[i]<source[i+2]*1.3) continue;
+                source[i]<190 || source[i+1]<125 || source[i]<source[i+2]*1.3) continue;
             // Soft luminance knee retains the glass/flame shape without a hard
             // rectangular cut at the source threshold. Decorative cloth is excluded.
-            const strength=Math.min(1,Math.max(0,(source[i]-100)/120));
+            const strength=Math.min(1,Math.max(0,Math.min(source[i]-150,source[i+1]-100)/100));
             result[i]=Math.round(source[i]*strength);
             result[i+1]=Math.round(source[i+1]*strength);
             result[i+2]=Math.round(source[i+2]*strength);result[i+3]=255;

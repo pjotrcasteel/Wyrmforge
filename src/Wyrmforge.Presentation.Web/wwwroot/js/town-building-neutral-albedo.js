@@ -70,13 +70,15 @@ export function neutralizeTownGateMasonry(pixels, width, height) {
     for(const [left,top,right,bottom,lampX] of [[718,173,770,269,744],[895,173,950,269,922]]) {
         for(let y=top;y<bottom;y++) for(let x=left;x<right;x++) {
             // Keep the actual flame/glass and near-neutral green foliage intact.
-            if(Math.abs(x-lampX)<=9 && y>=215 && y<=248) continue;
+            if((x-lampX)**2/9+(y-230)**2/100<1) continue;
             const i=(y*width+x)*4;
             if(pixels[i+1]>pixels[i]*.94) continue;
             const rgb=[linear(pixels[i]),linear(pixels[i+1]),linear(pixels[i+2])];
             const gray=.2126*rgb[0]+.7152*rgb[1]+.0722*rgb[2];
-            const edge=Math.min(x-left,right-1-x,y-top,bottom-1-y);
-            const weight=Math.min(1,edge/10)*.8;
+            // Elliptical falloff reaches zero on every mask edge: no grey
+            // rectangular patch around the lamp. Keep some source stone colour.
+            const dx=(x-lampX)/26, dy=(y-221)/48;
+            const weight=Math.max(0,1-dx*dx-dy*dy)**2*.7;
             for(let c=0;c<3;c++) out[i+c]=encoded(rgb[c]+(gray-rgb[c])*weight);
         }
     }

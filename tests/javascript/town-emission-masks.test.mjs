@@ -148,3 +148,12 @@ test('Gate masonry correction retains flame/glass, banners and input alpha', asy
         assert.deepEqual(output.slice(at(x,y),at(x,y)+4),source.slice(at(x,y),at(x,y)+4));
     assert.equal(output[at(735,205)+3],255);
 });
+
+test('Public sconce emission accepts bright flame but rejects neighbouring warm brick', async () => {
+    const {commonAperturePixels}=await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/town-emission-masks.js');
+    const source=new Uint8ClampedArray(1672*941*4),at=(x,y)=>(y*1672+x)*4;
+    source.set([180,115,65,255],at(742,230));source.set([255,210,80,255],at(744,230));
+    const mask=commonAperturePixels(source,1672,941);
+    assert.equal(mask[at(742,230)+3],0,'Warm masonry must not become emissive');
+    assert.equal(mask[at(744,230)+3],255,'The real flame must remain emissive');
+});
