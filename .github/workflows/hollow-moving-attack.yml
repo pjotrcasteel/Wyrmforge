@@ -87,6 +87,11 @@ jobs:
 
       - name: Encode phone-friendly MP4 approval reviews (not just GIF)
         run: |
+          if ! command -v ffmpeg >/dev/null 2>&1; then
+            python -m pip install --disable-pip-version-check imageio-ffmpeg==0.6.0
+            export PATH="$(python -c 'import imageio_ffmpeg,os;print(os.path.dirname(imageio_ffmpeg.get_ffmpeg_exe()))'):$PATH"
+            ln -sf "$(python -c 'import imageio_ffmpeg;print(imageio_ffmpeg.get_ffmpeg_exe())')" "$(dirname "$(python -c 'import imageio_ffmpeg;print(imageio_ffmpeg.get_ffmpeg_exe())')")/ffmpeg"
+          fi
           command -v ffmpeg
           for scenario in running-strike pass-by-turn-and-chase; do
             left="artifacts/hollow-moving-strike/standard/standard-${scenario}-S.gif"
