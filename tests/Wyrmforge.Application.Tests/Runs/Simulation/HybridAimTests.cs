@@ -207,6 +207,15 @@ public sealed class HybridAimTests
         Assert.AreEqual(expected.X, projectile.Velocity.Normalized().X, 1e-6);
         Assert.AreEqual(expected.Y, projectile.Velocity.Normalized().Y, 1e-6);
 
+        Invoke(simulation, "UpdateAim", new MovementInput(0, 0, 1, 0));
+        Assert.IsTrue(simulation.CreateSnapshot().Player.ManualAim);
+        Assert.IsNull(simulation.CreateSnapshot().Player.AimPropId);
+        Invoke(simulation, "UpdateAim", default(MovementInput));
+        Assert.AreEqual(enemy.Id, simulation.CreateSnapshot().Player.AimTargetId,
+            "Releasing manual aim must not reactivate an old selected prop.");
+        Invoke(simulation, "UpdateAim", new MovementInput(0, 0, FocusPropId: prop.Id));
+        Assert.AreEqual(prop.Id, simulation.CreateSnapshot().Player.AimPropId);
+
         Assert.IsTrue(environment.TryDamageProp(position, 950, 1550, 0, 10_000));
         Assert.IsFalse(environment.TryDamageProp(position, 950, 1550, 0, 10_000), "Destroyed props do not pay twice.");
         Assert.AreEqual(1, environment.Snapshot().Supplies.Count(s => s.Kind == "material:CharredScrap"));
