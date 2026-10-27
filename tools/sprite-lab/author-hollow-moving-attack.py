@@ -88,6 +88,15 @@ else:
 rig.rotation_mode = "XYZ"
 rig.rotation_euler = original_orientation
 source_yaw = rig.rotation_euler.z
+# Render eight views through an UNANIMATED parent pivot. Source rig yaw is
+# keyed for the pursuit, so changing that same animated property per view
+# gets silently replaced by the action on render. A parent view transform
+# does not collide with the authored root animation.
+view_pivot = bpy.data.objects.new("Hollow unkeyed viewing pivot", None)
+scene.collection.objects.link(view_pivot)
+original_world = rig.matrix_world.copy()
+rig.parent = view_pivot
+rig.matrix_world = original_world
 if not {"pelvis", "spine", "chest", "neck", "head", "thigh.L",
         "thigh.R", "shin.L", "shin.R", "foot.L", "foot.R"}.issubset(walk_bones):
     raise ValueError("The REAL walking source is missing required foot/support joints")
@@ -173,7 +182,7 @@ def key_sequence(turn_after_impact):
         # On a pass-by, finish the swipe before rotating back toward the
         # player. The attack animation NEVER rewinds or gets cancelled.
         turn = 0 if not turn_after_impact else 158 * smooth((index-31)/21)
-        rig.rotation_euler.z = math.radians(turn)
+        rig.rotation_euler.z = source_yaw + math.radians(turn)
         rig.keyframe_insert("rotation_euler", frame=frame)
     scene.frame_set(1)
 
@@ -207,6 +216,7 @@ for scenario, turns in (("running-strike", False), ("pass-by-turn-and-chase", Tr
         action = bpy.data.actions.new(f"Hollow_{args.variant}_PassBy_TurnAndChase_v1")
         rig.animation_data.action = action
     key_sequence(turns)
+    view_pivot.rotation_euler.z = 0
     bpy.ops.wm.save_as_mainfile(filepath=str(DEST / f"{args.variant}-{scenario}.blend"))
     source_image_rows = {}
     for direction in DIRECTIONS:
@@ -221,11 +231,9 @@ for scenario, turns in (("running-strike", False), ("pass-by-turn-and-chase", Tr
                         if ATTACK_START <= index < ATTACK_START+STRIKE_POSES*STRIKE_HOLD else .85)
             for socket in fire_controls:
                 socket.default_value = strength
-            # Set the absolute authored yaw on the ACTIVE Euler rotation,
-            # not an ignored property of a quaternion-driven armature.
-            rig.rotation_euler.z = angle + (
-                math.radians(158 * smooth((index-31)/21)) if turns else 0
-            )
+            # View rotation belongs to an UNKEYED parent; otherwise Blender
+            # replaces it with the root action curves when render evaluates.
+            view_pivot.rotation_euler.z = angle - source_yaw
             bpy.context.view_layer.update()
             temporary = DEST / "_temporary.png"
             scene.render.filepath = str(temporary)
@@ -269,10 +277,11 @@ for scenario, turns in (("running-strike", False), ("pass-by-turn-and-chase", Tr
         print(f"Source 3D {scenario}/{direction}: {COUNT} poses", flush=True)
     # Protect against fake 8-way exports. The older source pipeline rendered
     # effectively byte-identical South/East rows, despite different labels.
-    first, second = (source_image_rows[d][0] for d in ("S", "E"))
+    first, second = (source_image_rows[d][0].crop((0,40,CELL*3,CELL*3))
+                     for d in ("S", "E"))
     from PIL import ImageChops
     changed = sum(1 for value in ImageChops.difference(first, second).convert("L").getdata() if value > 12)
-    if changed < 50:
+    if changed < 200:
         raise ValueError(f"Directional 3D render is not truly different: {scenario}, changedPixels={changed}")
     report.setdefault("distinctDirectionalPixels", {})[scenario] = changed
 
