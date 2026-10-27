@@ -9,7 +9,7 @@ export function calibrationEmitters({ fireball = true, torch = false, progress =
         const p = clamp(Number.isFinite(progress) ? progress : .5, 0, 1);
         result.push({
             kind: 'fireball', x: 385 + 202 * p,
-            y: 622 - Math.sin(Math.PI * p) * 28,
+            y: 692 - Math.sin(Math.PI * p) * 24,
             radius: 218, relief: .99, color: FIRE,
             progress: p, altitude: 46,
         });
