@@ -127,3 +127,88 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
 
+  open-cc0-zombie-import:
+    name: Independently licensed CC0 zombie — import and 8-angle Blender source screening
+    needs: source-boundary
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '2'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            tools/art/hollow-rebuild/
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install genuine Blender and 7-Zip import library
+        run: |
+          python -m pip install --disable-pip-version-check bpy==4.5.15 Pillow==11.3.0 py7zr==1.0.0
+          python -c "import bpy; print('Blender:', bpy.app.version_string)"
+      - name: Download CC0 original from author-hosted OpenGameArt entry — never run external scripts
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/hollow-rebuild/oga-cc0-original
+          curl --fail --location --retry 3 --max-time 100 --silent --show-error \
+            --user-agent "WyrmForge-Hollowed-Source-Research/1.0" \
+            'https://opengameart.org/sites/default/files/Male%20City%20Zombie.7z' \
+            -o artifacts/hollow-rebuild/oga-cc0-original/source.7z
+          test "$(stat -c%s artifacts/hollow-rebuild/oga-cc0-original/source.7z)" -gt 200000
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          import py7zr
+          root = Path('artifacts/hollow-rebuild/oga-cc0-original')
+          archive = root / 'source.7z'
+          with py7zr.SevenZipFile(archive) as zipfile:
+              filenames = zipfile.getnames()
+              if len(filenames) > 150 or any('..' in Path(name).parts or name.startswith('/') for name in filenames):
+                  raise ValueError('Unsafe or excessively large archive')
+              print('SOURCE ARCHIVE CONTENTS:')
+              print('\n'.join(filenames))
+              zipfile.extractall(path=root / 'extracted')
+          candidates = [p for p in (root/'extracted').rglob('*') if p.is_file() and p.suffix.lower() in ('.blend','.glb','.gltf','.fbx','.obj')]
+          if not candidates:
+              raise ValueError('No Blender/GLB/FBX/OBJ source model in lawful CC0 archive')
+          preference = {'.blend':0, '.glb':1, '.gltf':2, '.fbx':3, '.obj':4}
+          candidates.sort(key=lambda p:(preference[p.suffix.lower()], len(p.parts),len(p.name)))
+          model = candidates[0].resolve()
+          (root/'model-path.txt').write_text(str(model),encoding='utf-8')
+          (root/'source-LICENSE.txt').write_text(
+              'CC0 1.0 Universal — Rikindle3D (2020)\n'
+              'https://opengameart.org/content/male-city-zombie-ready-for-use-in-game-engines\n'
+              'https://creativecommons.org/publicdomain/zero/1.0/\n'
+              'Original source checksum: SHA256 '+hashlib.sha256(archive.read_bytes()).hexdigest()+'\n',
+              encoding='utf-8')
+          (root/'source-list.json').write_text(json.dumps({'chosen':model.name,'names':filenames},indent=2)+'\n')
+          print('CHOSEN SOURCE:',model.name,'SHA256:',hashlib.sha256(model.read_bytes()).hexdigest())
+          PY
+      - name: Evaluate original zombie geometry with eight real neutral Blender views — NO animations
+        run: |
+          source_path="$(cat artifacts/hollow-rebuild/oga-cc0-original/model-path.txt)"
+          python tools/art/hollow-rebuild/evaluate_free_character_blender.py \
+            --input "$source_path" \
+            --license-file artifacts/hollow-rebuild/oga-cc0-original/source-LICENSE.txt \
+            --license CC0-1.0 \
+            --source-url 'https://opengameart.org/content/male-city-zombie-ready-for-use-in-game-engines' \
+            --author Rikindle3D \
+            --output artifacts/hollow-rebuild/oga-cc0-source-review
+          test -s artifacts/hollow-rebuild/oga-cc0-source-review/source-clay-8views-BLENDER.png
+          test -s artifacts/hollow-rebuild/oga-cc0-source-review/source-clay-native96-BLENDER.png
+          test -s artifacts/hollow-rebuild/oga-cc0-source-review/imported-hollowed-source-UNAPPROVED.blend
+      - name: Preserve source attribution and authentic Blender multi-angle screening
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hollowed-h1-OGA-CC0-zombie-initial-source-screening-UNAPPROVED
+          path: |
+            artifacts/hollow-rebuild/oga-cc0-original/source-LICENSE.txt
+            artifacts/hollow-rebuild/oga-cc0-original/source-list.json
+            artifacts/hollow-rebuild/oga-cc0-source-review/
+          if-no-files-found: warn
+          retention-days: 30
