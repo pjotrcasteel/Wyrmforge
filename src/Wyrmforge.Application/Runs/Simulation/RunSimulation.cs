@@ -335,6 +335,7 @@ public sealed partial class RunSimulation
                 ManualAim = manualAimEngaged,
                 AimTargetId = automaticTargetId,
                 AimPropId = aimedPropId,
+                ActiveSchool = SpellCatalog.Get(build.Spells.ActiveSpell).School.ToString(),
                 FocusCharge = primaryCastCounts[build.Spells.ActiveSpell] % FocusedSurgeProfile.CastInterval,
                 WardCharge = WardCharge,
                 Chill = player.Chill.Stacks,
