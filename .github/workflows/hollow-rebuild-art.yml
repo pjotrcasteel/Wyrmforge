@@ -161,6 +161,27 @@ jobs:
           assert data['animation_engine_modified'] is False, data
           print('Only source art assessed; no attack clips transferred',data)
           PY
+      - name: Author reversible Hollowed source sculpt, ash-rot materials and 8-view real Blender review
+        run: |
+          python -m py_compile tools/art/hollow-rebuild/sculpt_cc0_horror_hollowed_h1_blender.py
+          python tools/art/hollow-rebuild/sculpt_cc0_horror_hollowed_h1_blender.py \
+            --input artifacts/hollow-rebuild/horror-source-review/imported-hollowed-source-UNAPPROVED.blend \
+            --output artifacts/hollow-rebuild/horror-hollowed-h1
+          test -s artifacts/hollow-rebuild/horror-hollowed-h1/hollowed-horror-cc0-original-anatomy-H1-UNAPPROVED.blend
+          test -s artifacts/hollow-rebuild/horror-hollowed-h1/source-clay-native96-BLENDER.png
+          test -s artifacts/hollow-rebuild/horror-hollowed-h1/source-material-8views-BLENDER.png
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          qc=json.loads(Path('artifacts/hollow-rebuild/horror-hollowed-h1/h1-authored-source-qc.json').read_text())
+          assert qc['editable_shape_keys']==2, qc
+          assert qc['sculpted_vertices']>600, qc
+          assert qc['front_wound_faces']>=4, qc
+          assert qc['source_armatures']>=1 and qc['source_vertex_groups']>0, qc
+          assert qc['actions']==0 and qc['new_animation_clips']==0, qc
+          assert qc['production_game_code_changed'] is False and qc['owner_approved'] is False
+          print('Blender original Hollowed source passes technical gate only. VISUAL OWNER APPROVAL NOT GIVEN.')
+          PY
       - name: Preserve 3D evidence; never ship candidate into WyrmForge runtime
         if: always()
         uses: actions/upload-artifact@v4
@@ -170,5 +191,6 @@ jobs:
             artifacts/hollow-rebuild/horror-original/source-list.json
             artifacts/hollow-rebuild/horror-original/creator-LICENSE.txt
             artifacts/hollow-rebuild/horror-source-review/
+            artifacts/hollow-rebuild/horror-hollowed-h1/
           if-no-files-found: warn
           retention-days: 30
