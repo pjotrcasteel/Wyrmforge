@@ -113,6 +113,71 @@ def inspect_islands(actor):
             "suspiciousClothIslands": suspicious}
 
 
+
+def remove_detached_cloth_scraps(actor):
+    """Delete only detached tiny cloth-only components and unreferenced vertices.
+
+    Connected anatomy and larger ragged details are deliberately left alone.
+    A wrong source mesh must fail closed instead of having fingers amputated.
+    """
+    mesh = actor.data
+    group_names = {group.index: group.name for group in actor.vertex_groups}
+    used = set()
+    neighbours = {}
+    for polygon in mesh.polygons:
+        verts = tuple(polygon.vertices)
+        used.update(verts)
+        for vertex in verts:
+            neighbours.setdefault(vertex, set()).update(
+                other for other in verts if other != vertex
+            )
+    unreferenced = set(range(len(mesh.vertices))) - used
+    remaining = set(used)
+    detached = []
+    removed_components = []
+    while remaining:
+        first = remaining.pop()
+        component = {first}
+        todo = [first]
+        while todo:
+            for neighbor in neighbours[todo.pop()]:
+                if neighbor in remaining:
+                    remaining.remove(neighbor)
+                    component.add(neighbor)
+                    todo.append(neighbor)
+        if len(component) > 24:
+            continue
+        weights = [weight_map(mesh.vertices[index], group_names)
+                   for index in component]
+        cloth = sum(sum(weight.get(name, 0.0) for name in CLOTH)
+                    for weight in weights) / len(weights)
+        legs = max((sum(weight.get(name, 0.0) for name in LEGS)
+                    for weight in weights), default=0)
+        min_z = min(mesh.vertices[index].co.z for index in component)
+        if cloth >= 0.70 and legs < 0.18 and min_z < 0.08:
+            detached.extend(component)
+            removed_components.append(len(component))
+    total = len(unreferenced) + len(detached)
+    if total > 200:
+        raise ValueError(f"Unexpected floating debris ({total} vertices), inspect")
+    if total:
+        bm = bmesh.new()
+        bm.from_mesh(mesh)
+        bm.verts.ensure_lookup_table()
+        bmesh.ops.delete(
+            bm, geom=[bm.verts[i] for i in sorted(unreferenced.union(detached))],
+            context="VERTS"
+        )
+        bm.to_mesh(mesh)
+        bm.free()
+        mesh.update()
+    return {
+        "deletedUnreferencedVertices": len(unreferenced),
+        "deletedTinyClothIslands": len(removed_components),
+        "deletedTinyClothIslandVertices": len(detached),
+        "removedIslandSizes": removed_components,
+    }
+
 def add_ash_crust(actor):
     """Matte, localized ash around Work's existing real mesh-bound embers.
 
@@ -220,7 +285,10 @@ def main():
     bone_names = tuple(bone.name for bone in rig.data.bones)
     actor.data = actor.data.copy()
     cloth = remove_remaining_long_cloth(actor)
+    debris = remove_detached_cloth_scraps(actor)
     islands = inspect_islands(actor)
+    if islands["unreferencedVertices"] or islands["suspiciousClothIslands"]:
+        raise ValueError(f"Detached cloth/loose vertices remain: {islands}")
     ash = add_ash_crust(actor)
     if bone_names != tuple(bone.name for bone in rig.data.bones):
         raise ValueError("Animation bone hierarchy changed during art polish")
@@ -235,7 +303,8 @@ def main():
         "existingClothFixRetained": True,
         "existingInternalEmbersRetained": True,
         "skeletonUnchanged": True,
-        "cloth": cloth, "islands": islands, "ash": ash,
+        "cloth": cloth, "removedDetachedDebris": debris,
+        "islands": islands, "ash": ash,
         "needsNativeAndMobileVisualReview": True,
         "animationEngineModified": False,
         "productionAssetsModified": False,
