@@ -10,13 +10,13 @@ const COLOR = '#d9cfee';
 // Atlas cells are independent textures; never bake a school icon into the base.
 // Source: user-approved PNGs, downsampled for the mobile renderer.
 export const SIGIL_ATLAS = Object.freeze({
-    base: [0, 0, 192, 128],
-    fire: [192, 0, 96, 96],
-    frost: [288, 0, 96, 96],
-    storm: [192, 96, 96, 96],
-    arcane: [288, 96, 96, 96],
-    necromancer: [0, 128, 96, 96],
-    summoner: [96, 128, 96, 96],
+    base: [0, 0, 128, 85],
+    fire: [128, 0, 64, 64],
+    frost: [192, 0, 64, 64],
+    storm: [128, 64, 64, 64],
+    arcane: [192, 64, 64, 64],
+    necromancer: [0, 128, 64, 64],
+    summoner: [64, 128, 64, 64],
 });
 
 export function resolveSigilSchool(school) {
@@ -154,7 +154,7 @@ export function targetSelectionCanvasLight(emitter) {
 export function drawTargetIndicator(ctx, marker, pass = 'ground', seconds = 0, reducedMotion = false,
     art = null, school = 'arcane') {
     if (!marker || (pass !== 'ground' && pass !== 'contrast') ||
-        !art?.complete || art.naturalWidth < 384 || art.naturalHeight < 224) return false;
+        !art?.complete || art.naturalWidth < 256 || art.naturalHeight < 192) return false;
 
     const alpha = clamp(marker.opacity ?? 1, 0, 1);
     if (alpha <= 0 || marker.rx <= 0 || marker.ry <= 0) return false;
