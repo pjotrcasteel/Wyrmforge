@@ -34,6 +34,7 @@ export function validateSnapshot(input) {
         if (l.expiresAt !== undefined) finite(l.expiresAt, 'expiresAt', 0);
     }
     for (const m of s.materials) {
+        if(m.flatShading!==undefined&&typeof m.flatShading!=='boolean')throw new TypeError('Invalid source surface shading');
         color(m.color); color(m.emission);
         for (const field of ['roughness', 'metalness', 'specular', 'alphaCutoff']) finite(m[field], field, 0, 1);
         finite(m.emissionIntensity, 'emissionIntensity', 0);
@@ -47,6 +48,7 @@ export function validateSnapshot(input) {
         if (m.reflection === 'probe' && !m.reflectionProbe) throw new TypeError('Probe reflection requires a texture ID');
     }
     for (const o of s.objects) {
+        if(o.skinPose!==undefined&&(!(Array.isArray(o.skinPose)||ArrayBuffer.isView(o.skinPose))||!Number.isSafeInteger(o.skinPose.length)||o.skinPose.length<16||o.skinPose.length>128*16||o.skinPose.length%16||!Array.from(o.skinPose).every(Number.isFinite)))throw new TypeError('Invalid source skin pose');
         if (!materials.has(o.material) || !o.geometry || !o.ownerId) throw new TypeError('Unresolved renderable');
         vector(o.position, 'position'); vector(o.rotation, 'rotation'); vector(o.scale, 'scale');
         if (o.scale.some(n => n <= 0)) throw new TypeError('Nonpositive scale');

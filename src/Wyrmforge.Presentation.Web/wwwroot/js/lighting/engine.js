@@ -1,6 +1,7 @@
 import * as T from './vendor/three.module.js';
 import { LightingInspection } from './inspection.js';
 import { validateSnapshot, selectLights } from './registry.js';
+import {validateSkinBinding,validateSkinPose,createSkinnedRenderable,applySourceSkinPose} from './source-skin.js';
 
 /** Shared GPU adapter; accepts resource IDs and descriptors, never entity kinds. */
 export class LightingEngine {
@@ -21,7 +22,7 @@ export class LightingEngine {
         this.ambient = new T.AmbientLight();
         this.scene.add(this.ambient);
         this.objects = new Map(); this.lights = new Map();
-        this.geometries = new Map(); this.textures = new Map();
+        this.geometries = new Map(); this.textures = new Map();this.skinBindings=new Map();
         this.shadowViews = shadowViews; this.maxLights = maxLights;
         this.alive = true;
         this.debugView = 'lit';
@@ -29,8 +30,9 @@ export class LightingEngine {
         this.inspection = new LightingInspection();
         this.materialBudget = { maps: 0, transmissive: 0, ao: 0 };
     }
-    registerGeometry(id, geometry) {
+    registerGeometry(id, geometry, {skinBinding}={}) {
         if (this.geometries.has(id)) throw new Error(`Duplicate geometry ${id}`);
+        if(skinBinding){validateSkinBinding(skinBinding,geometry);if(!Number.isFinite(skinBinding.motionRadius??0)||(skinBinding.motionRadius??0)<0)throw new TypeError('Bounded source skin motion radius required');this.skinBindings.set(id,structuredClone(skinBinding));}
         this.geometries.set(id, geometry);
     }
     registerTexture(id, texture, colorData = true) {
@@ -62,6 +64,7 @@ export class LightingEngine {
             specularIntensity: receivesLight && descriptor.reflection !== 'off' ? descriptor.specular : 0,
             emissive: descriptor.emission, emissiveIntensity: descriptor.emissionIntensity,
             alphaTest: descriptor.alphaCutoff, side: descriptor.doubleSided ? T.DoubleSide : T.FrontSide,
+            flatShading:descriptor.flatShading??false,
         });
         if (descriptor.reflection === 'probe' && receivesLight) material.envMapIntensity = descriptor.specular;
         if (descriptor.normalScale !== undefined) material.normalScale.setScalar(descriptor.normalScale);
@@ -84,6 +87,7 @@ export class LightingEngine {
         for (const map of [o.mesh.material.map, o.mesh.material.normalMap, o.mesh.material.roughnessMap, o.mesh.material.aoMap, o.mesh.material.emissiveMap]) map?.dispose();
         for (const material of o.debugMaterials?.values() ?? []) material.dispose();
         o.mesh.material.dispose(); o.caster?.material.dispose();
+        for(const resource of [o.skin,o.casterSkin].filter(Boolean)){resource.mesh.customDepthMaterial?.dispose();resource.mesh.customDistanceMaterial?.dispose();resource.skeleton.dispose();}
         this.objects.delete(id);
     }
     removeLight(id) {
@@ -102,6 +106,11 @@ export class LightingEngine {
             throw new TypeError(`Reflection probe ${m.reflectionProbe} must be a cube texture`);
         for (const o of s.objects) for (const key of ['geometry', 'occluderGeometry'])
             if (o[key] && !this.geometries.has(o[key])) throw new Error(`Missing geometry ${o[key]}`);
+        for(const o of s.objects)if(o.skinPose){
+            const binding=this.skinBindings.get(o.geometry);if(!binding)throw new TypeError('Skin pose requires registered source skin geometry');
+            validateSkinPose(binding,o.skinPose);
+            if(o.occluderGeometry){const caster=this.skinBindings.get(o.occluderGeometry);if(!caster||JSON.stringify(caster.bones.map(b=>b.id))!==JSON.stringify(binding.bones.map(b=>b.id)))throw new TypeError('Source skin caster anatomy mismatch');validateSkinPose(caster,o.skinPose);}
+        }
         const selected = selectLights(s, this.shadowViews, this.maxLights);
         for (const id of this.lights.keys()) if (!selected.some(l => l.id === id)) this.removeLight(id);
         for (const d of selected) {
@@ -130,16 +139,21 @@ export class LightingEngine {
             let object = this.objects.get(d.id);
             if (object && object.signature !== signature) { this.removeObject(d.id); object = null; }
             if (!object) {
-                const mesh = new T.Mesh(this.geometries.get(d.geometry), this.material(md, d.receivesLight));
-                let caster;
+                const geometry=this.geometries.get(d.geometry),material=this.material(md,d.receivesLight),binding=this.skinBindings.get(d.geometry);
+                const skin=binding?createSkinnedRenderable(T,geometry,material,binding):null;
+                const mesh = skin?.mesh??new T.Mesh(geometry,material);
+                let caster,casterSkin;
                 if (d.occluderGeometry) {
                     // Separate authored solid caster; never reuses collision or infers volume from albedo.
                     const hidden = new T.MeshBasicMaterial({ colorWrite: false, depthWrite: false });
-                    caster = new T.Mesh(this.geometries.get(d.occluderGeometry), hidden);
+                    const casterGeometry=this.geometries.get(d.occluderGeometry),casterBinding=this.skinBindings.get(d.occluderGeometry);
+                    casterSkin=casterBinding?createSkinnedRenderable(T,casterGeometry,hidden,casterBinding):null;
+                    caster = casterSkin?.mesh??new T.Mesh(casterGeometry, hidden);
                     this.scene.add(caster);
                 }
-                object = { id: d.id, mesh, caster, signature }; this.objects.set(d.id, object); this.scene.add(mesh);
+                object = { id: d.id, mesh, caster, skin,casterSkin,signature }; this.objects.set(d.id, object); this.scene.add(mesh);
             }
+            if(d.skinPose){applySourceSkinPose(object.skin,d.skinPose);if(object.casterSkin)applySourceSkinPose(object.casterSkin,d.skinPose);}
             for (const mesh of [object.mesh, object.caster].filter(Boolean)) {
                 mesh.position.fromArray(d.position); mesh.rotation.set(...d.rotation); mesh.scale.fromArray(d.scale);
             }
@@ -188,10 +202,11 @@ export class LightingEngine {
         object.debugMaterials ??= new Map();
         const key = `${this.debugView}-${object.id === this.inspectionObject}`;
         if (object.debugMaterials.has(key)) return object.debugMaterials.get(key);
-        const view = this.debugView, material = object.mesh.material.clone();
+        const view = this.debugView,sourceCompile=object.mesh.material.onBeforeCompile, material = object.mesh.material.clone();
         material.wireframe = view === 'geometry';
         material.toneMapped = false;
-        material.onBeforeCompile = shader => {
+        material.onBeforeCompile = (shader,renderer) => {
+            sourceCompile.call(material,shader,renderer);
             if (view === 'shadow-visibility') shader.fragmentShader = shader.fragmentShader.replace(
                 '#include <shadowmap_pars_fragment>', `#include <shadowmap_pars_fragment>
 float proofShadowVisibility() {
@@ -263,6 +278,7 @@ float proofShadowVisibility() {
         for (const id of this.lights.keys()) this.removeLight(id);
         for (const geometry of this.geometries.values()) geometry.dispose();
         for (const texture of this.textures.values()) texture.dispose();
+        this.skinBindings.clear();
         this.inspection.dispose();
         this.renderer.dispose();
     }

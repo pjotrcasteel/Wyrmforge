@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "sourceSignature": "75a1698be134b6e83192912ca0b0ceaf4f26f1c774d4734a2fdb3299abd7eb59",
+  "sourceBlendSha256": "7fd3aa88aea9dd4f2caad0f0c1860d10eece936900e5c332771c298e2acfa89e",
+  "buffer": "skin.bin",
+  "bufferSha256": "d0f17d79abba31cd91ebf6bd7ad6c89cb2d00a9d797efee1883d8c3ac41b220a",
+  "attributes": {
+    "position": {
+      "offset": 0,
+      "bytes": 29880,
+      "component": "f",
+      "itemSize": 3,
+      "count": 2490
+    },
+    "normal": {
+      "offset": 29880,
+      "bytes": 29880,
+      "component": "f",
+      "itemSize": 3,
+      "count": 2490
+    },
+    "uv": {
+      "offset": 59760,
+      "bytes": 19920,
+      "component": "f",
+      "itemSize": 2,
+      "count": 2490
+    },
+    "skinIndex": {
+      "offset": 79680,
+      "bytes": 19920,
+      "component": "H",
+      "itemSize": 4,
+      "count": 2490
+    },
+    "skinWeight": {
+      "offset": 99600,
+      "bytes": 39840,
+      "component": "f",
+      "itemSize": 4,
+      "count": 2490
+    },
+    "skinIndex2": {
+      "offset": 139440,
+      "bytes": 19920,
+      "component": "H",
+      "itemSize": 4,
+      "count": 2490
+    },
+    "skinWeight2": {
+      "offset": 159360,
+      "bytes": 39840,
+      "component": "f",
+      "itemSize": 4,
+      "count": 2490
+    },
+    "sourceEmission": {
+      "offset": 199200,
+      "bytes": 9960,
+      "component": "f",
+      "itemSize": 1,
+      "count": 2490
+    },
+    "index": {
+      "offset": 209160,
+      "bytes": 21600,
+      "component": "I",
+      "itemSize": 1,
+      "count": 5400
+    }
+  },
+  "poses": "poses.json",
+  "posesSha256": "3ec17d04b26ad01b01c13bef50229e7c66e57741dabbdafe2bb7f4b3baa5c536",
+  "albedo": "albedo.png",
+  "albedoSha256": "51e38c94175cdc8de688758ba6a9e5b5aea28a1b11bdb5e992bf606512a9dae0",
+  "albedoSize": [
+    1024,
+    1024
+  ],
+  "vertices": 2490,
+  "triangles": 1800,
+  "influenceSets": 2,
+  "flatShading": false,
+  "maxDiscardedSkinWeight": 0,
+  "emission": "#ff8424",
+  "emissionIntensity": 0.800000011920929,
+  "sourceUnits": "metres",
+  "candidateNotApproved": true,
+  "runtimeAccepted": false
+}

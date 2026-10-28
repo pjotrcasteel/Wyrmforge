@@ -16,6 +16,8 @@ export interface LitMaterial {
     normalScale?: number; foliageTransmission?: number;
     /** 0 = authored dry roughness, 1 = wet microfacet response; never emits light. */
     wetness?: number;
+    /** Source mesh shading; authored smooth normals remain the default. */
+    flatShading?:boolean;
     emission: string; emissionIntensity: number; alphaCutoff: number; doubleSided: boolean;
 }
 export interface LitRenderable {
@@ -26,6 +28,8 @@ export interface LitRenderable {
     occluderGeometry?: string;
     /** Same normalized atlas region for albedo/normal and shadow alpha. */
     frame?: { offset: [number, number]; repeat: [number, number] };
+    /** Complete source-rig global matrices; geometry registration owns the bind. */
+    skinPose?:number[]|Float32Array;
 }
 export interface LightingSnapshot {
     version: 1; time: number; lights: LightEmitter[]; materials: LitMaterial[]; objects: LitRenderable[];

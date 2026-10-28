@@ -45,6 +45,31 @@ culling helper is reused. They are an integration dependency, not a new Hunt
 renderer. This checkpoint does not enable the adapter or claim G4/G5 completion;
 source skin resources will extend its existing path. PR #381 remains untouched.
 
+### Source-skin GPU resource checkpoint (in progress)
+
+The original UV texture, actual source weights and a compact 16×16 whole-body
+pose surface now export independently of raster cards. A **candidate** 1,800-
+triangle LOD contains 2,490 render vertices, 230,760 binary geometry bytes and
+580,378 pose JSON bytes, plus the original 1024² albedo texture. All weights
+are retained in eight channels; discarded weight is zero. A four-weight attempt
+correctly rejected five-bone seam vertices instead of silently changing skin.
+Original tiny bind-width scales are preserved, not rounded into new anatomy.
+
+The existing LightingEngine now accepts generic registered skin bindings and
+complete global pose matrices, with corresponding eight-weight lit, normal,
+depth and point-distance shader hooks. No species logic or animation clock was
+added to lighting. Source quaternion/local-transform interpolation and bind-roll
+reconstruction belong to shared animation math. Skin and atlas exporters now
+reuse **one runtime profile builder**. Original default atlas calibration tests
+still pass. The new resource tests cover source immutability, antipodal
+quaternions, full gait/claw endpoints, fixed lengths, bad hierarchy/weights/
+buffers, independent entity skeletons and all eight-influence shader variants.
+
+**Not accepted yet:** browser shader compilation, LOD/native visual fidelity,
+continuous compact-pose skin replay, resource lifecycle/performance, body-yaw
+plant orientation, actual C# Hunt integration, phone limits and final film.
+This code checkpoint changes no default production actor path.
+
 The shared contact-kinematics module now has an **opt-in source-authoring study**
 primitive, `solveSupportedSourcePose`. It accepts caller-owned support targets,
 solves all declared contact chains together, translates the coupled source body
