@@ -2603,6 +2603,15 @@ public sealed class WyrmforgeBrowserTests : PageTest
             await Page.WaitForTimeoutAsync(200);
             await ScreenshotAsync($"mobile-v3-sigil-live-hollowed-390-frame-{frame}.png");
         }
+
+        // Wait until the opening sequence ends and Hollowed close on the hunter.
+        // Later frames must show real active combat rather than only entrance staging.
+        await Page.WaitForTimeoutAsync(6500);
+        for (var frame = 4; frame < 12; frame++)
+        {
+            await Page.WaitForTimeoutAsync(400);
+            await ScreenshotAsync($"mobile-v3-sigil-live-hollowed-390-frame-{frame}.png");
+        }
     }
 
     [TestMethod]
