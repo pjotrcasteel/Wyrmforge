@@ -19,7 +19,7 @@ ALLOWED_PREFIXES = (
 ALLOWED_EXACT = frozenset((
     ".github/workflows/hollow-rebuild-art.yml",
 ))
-BASE_DEFAULT = "789f3c175371dd1b07978424feda725462205db6"
+BASE_DEFAULT = "origin/main"
 
 
 def changed_files(base: str) -> list[str]:
