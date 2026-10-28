@@ -164,7 +164,12 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
                 velocity:{x:dt>0?dx/dt:0,y:dt>0?dy/dt:0},
                 moving:locomotion.moving,paused:snapshot.paused||snapshot.ended,frozen:enemy.frozen,reducedMotion,
                 action:pose.foundationCue??null});
-            if(foundation.manifest.regions||foundation.manifest.skin){
+            if(enemy.hitFlash&&foundation.manifest.skin){
+                // Confirmed C# impact presentation uses the existing hit art.
+                // Keep the one action clock, but rebind sole epochs after the
+                // forced reaction instead of solving it as ordinary stance.
+                pose.foundationContacts=null;pose.foundationSample=null;pose.foundationError=null;pose.foundationFailure=null;
+            }else if(foundation.manifest.regions||foundation.manifest.skin){
                 pose.foundationContacts??={};
                 try{
                     pose.foundationSample=(foundation.manifest.skin?foundation.updateSkin:foundation.updateRegions)(pose.foundationContacts,pose.foundationSample,{

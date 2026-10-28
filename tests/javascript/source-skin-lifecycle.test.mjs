@@ -28,3 +28,11 @@ test('source claw retains yaw through crossing target, freeze holds matrices, an
  const frozen=take(input(5,{frozen:true,direction:'N'}));assert.deepEqual(frozen.skinPose,b.skinPose);
  take(input(6));const reduced=take(input(6.1,{reducedMotion:true}));assert.equal(reduced.debug.transported,true);assert.equal(reduced.debug.maxSlip,null);assert.ok(Object.values(reduced.sourcePose.sourceContacts).every(c=>!c.planted));
 });
+
+test('pause and first resume preserve a lateral source pose rather than changing its held swing axis',()=>{
+ const state=createSpriteAnimationState(),contacts={};
+ const take=(timestamp,x,extra={})=>{const intent={entityId:5,timestamp,travel:x,world:{x,y:0},direction:'S',moving:true,velocity:{x:30,y:0},...extra};return updateSourceSkinSupport(contacts,surface,profile,updateSpriteAnimation(state,profile,intent),intent);};
+ take(0,0);take(.05,1.5);const before=take(.1,3);
+ const paused=take(5,3,{paused:true,moving:false,velocity:{x:0,y:0}});assert.deepEqual(paused.skinPose,before.skinPose);
+ const resume=take(6,3,{moving:false,velocity:{x:0,y:0}});assert.deepEqual(resume.skinPose,before.skinPose);
+});

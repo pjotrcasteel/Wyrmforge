@@ -87,7 +87,7 @@ export class LightingEngine {
         for (const map of [o.mesh.material.map, o.mesh.material.normalMap, o.mesh.material.roughnessMap, o.mesh.material.aoMap, o.mesh.material.emissiveMap]) map?.dispose();
         for (const material of o.debugMaterials?.values() ?? []) material.dispose();
         o.mesh.material.dispose(); o.caster?.material.dispose();
-        for(const resource of [o.skin,o.casterSkin].filter(Boolean)){resource.mesh.customDepthMaterial?.dispose();resource.mesh.customDistanceMaterial?.dispose();resource.skeleton.dispose();}
+        for(const resource of [o.skin,o.casterSkin].filter(Boolean)){resource.mesh.customDepthMaterial?.dispose();resource.mesh.customDistanceMaterial?.dispose();resource.skeleton.dispose();resource.dual?.texture.dispose();}
         this.objects.delete(id);
     }
     removeLight(id) {

@@ -3,6 +3,7 @@ import {validateSourceSkinSurface} from './source-skin-pose.js';
 const bytesPerComponent={f:4,H:2,I:4},constructors={f:Float32Array,H:Uint16Array,I:Uint32Array};
 export function decodeSourceSkinGeometry(manifest,buffer,surface){
     if(manifest.version!==1||manifest.sourceSignature!==surface.sourceSignature||manifest.sourceBlendSha256!==surface.sourceBlendSha256||!Number.isSafeInteger(manifest.vertices)||manifest.vertices<3||manifest.vertices>200000||!Number.isSafeInteger(manifest.triangles)||manifest.triangles<1||manifest.triangles>200000||![1,2,3,4].includes(manifest.influenceSets??1))throw new TypeError('Invalid source skin geometry contract');
+    if(!['linear','dual-quaternion'].includes(manifest.skinningMode??'linear')||(manifest.skinningMode??'linear')!==(surface.skinningMode??'linear'))throw new TypeError('Source skin deformation mode mismatch');
     if(!(buffer instanceof ArrayBuffer)||buffer.byteLength>16*1024*1024)throw new RangeError('Source skin geometry byte budget exceeded');
     const specs={position:['f',3],normal:['f',3],uv:['f',2],skinIndex:['H',4],skinWeight:['f',4],sourceEmission:['f',1],index:['I',1]};
     for(let set=2;set<=(manifest.influenceSets??1);set++){specs['skinIndex'+set]=['H',4];specs['skinWeight'+set]=['f',4];}

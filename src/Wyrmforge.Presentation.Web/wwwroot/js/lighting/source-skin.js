@@ -1,7 +1,9 @@
 // Generic source-skin resource backend for LightingEngine. No animation clock.
+import {createDualQuaternionSkin,patchDualQuaternionShader} from './source-skin-dual-quaternion.js';
 import {invertSourceMatrix} from '../source-skin-pose.js';
 export function validateSkinBinding(binding,geometry){
     if(!binding||!Array.isArray(binding.bones)||!binding.bones.length||binding.bones.length>128||![1,2,3,4].includes(binding.influenceSets??1))throw new TypeError('Bounded source skin binding required');
+    if(!['linear','dual-quaternion'].includes(binding.skinningMode??'linear'))throw new TypeError('Unknown source skin deformation mode');
     const ids=new Set();
     for(const [i,b] of binding.bones.entries()){
         if(!b.id||ids.has(b.id)||!Number.isSafeInteger(b.parent)||b.parent<-1||b.parent>=i)throw new TypeError('Ordered source skin hierarchy required');
@@ -13,11 +15,12 @@ export function validateSkinBinding(binding,geometry){
     }
     return binding;
 }
-function extendSkinShader(T,material,sets,emission){
+function extendSkinShader(T,material,sets,emission,dual){
     const previous=material.onBeforeCompile,previousKey=material.customProgramCacheKey.bind(material);
     material.onBeforeCompile=function(shader,renderer){
         previous.call(this,shader,renderer);
-        if(sets>1){
+        if(dual)patchDualQuaternionShader(shader,dual,sets);
+        else if(sets>1){
             const extraSets=Array.from({length:sets-1},(_,i)=>i+2);
             shader.vertexShader=extraSets.map(set=>`attribute vec4 skinIndex${set};\nattribute vec4 skinWeight${set};\n`).join('')+shader.vertexShader;
             const letters=['X','Y','Z','W'],channels=['x','y','z','w'];
@@ -36,7 +39,7 @@ function extendSkinShader(T,material,sets,emission){
             shader.fragmentShader=shader.fragmentShader.replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\ntotalEmissiveRadiance *= sourceEmissionFactor;');
         }
     };
-    material.customProgramCacheKey=()=>previousKey()+`:source-skin-${sets*4}-${emission?1:0}`;
+    material.customProgramCacheKey=()=>previousKey()+`:source-skin-${sets*4}-${emission?1:0}-${dual?"dq":"linear"}`;
 }
 export function createSkinnedRenderable(T,geometry,material,binding){
     validateSkinBinding(binding,geometry);
@@ -53,12 +56,13 @@ export function createSkinnedRenderable(T,geometry,material,binding){
     // Bounds are the source geometry plus an explicit bounded source motion
     // envelope, not a per-frame CPU walk over every skinned vertex.
     geometry.computeBoundingSphere();mesh.boundingSphere=geometry.boundingSphere.clone();mesh.boundingSphere.radius+=(binding.motionRadius??0);
-    const sets=binding.influenceSets??1;
-    extendSkinShader(T,material,sets,Boolean(geometry.attributes.sourceEmission)&&Boolean(material.isMeshStandardMaterial));
+    const sets=binding.influenceSets??1,dual=binding.skinningMode==='dual-quaternion'?createDualQuaternionSkin(T,binding):null;
+    if(dual){dual.update(rest);mesh.applyBoneTransform=(index,vector)=>dual.transform(geometry,index,vector);}
+    extendSkinShader(T,material,sets,Boolean(geometry.attributes.sourceEmission)&&Boolean(material.isMeshStandardMaterial),dual);
     mesh.customDepthMaterial=new T.MeshDepthMaterial({depthPacking:T.RGBADepthPacking,map:material.map,alphaTest:material.alphaTest,side:material.side});
     mesh.customDistanceMaterial=new T.MeshDistanceMaterial({map:material.map,alphaTest:material.alphaTest,side:material.side});
-    extendSkinShader(T,mesh.customDepthMaterial,sets,false);extendSkinShader(T,mesh.customDistanceMaterial,sets,false);
-    return {mesh,skeleton,bones,binding,globalPose:rest.map(m=>m.clone()),inverseScratch:new T.Matrix4()};
+    extendSkinShader(T,mesh.customDepthMaterial,sets,false,dual);extendSkinShader(T,mesh.customDistanceMaterial,sets,false,dual);
+    return {mesh,skeleton,bones,binding,dual,globalPose:rest.map(m=>m.clone()),inverseScratch:new T.Matrix4()};
 }
 export function validateSkinPose(binding,matrices){
     if(!(Array.isArray(matrices)||ArrayBuffer.isView(matrices))||matrices.length!==binding.bones.length*16)throw new TypeError('Complete finite source skin pose required');
@@ -71,6 +75,7 @@ export function applySourceSkinPose(resource,matrices){
         const m=globalPose[i].fromArray(matrices,i*16);
         if(m.determinant()<=1e-8||Math.abs(m.elements[3])+Math.abs(m.elements[7])+Math.abs(m.elements[11])+Math.abs(m.elements[15]-1)>1e-6)throw new RangeError('Proper affine source skin pose required');
     }
+    resource.dual?.update(globalPose);
     for(let i=0;i<bones.length;i++){
         const parent=binding.bones[i].parent;
         if(parent<0)bones[i].matrix.copy(globalPose[i]);

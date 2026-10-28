@@ -2,6 +2,24 @@
 
 **NOT FINISHED. Keep PR #387 draft and unmerged. No final visual approval requested.**
 
+## Preserve-volume audit — 29 October 2026 (in progress)
+
+The source Armature modifier uses preserve-volume dual-quaternion deformation.
+The earlier linear GPU backend matched bones and pure-foot patches but did not
+prove blended-vertex fidelity. The shared backend now declares and implements
+linear/dual-quaternion modes for lit, normal, depth and distance passes, with
+per-actor textures and rigid-transform validation. A two-bone regression retains
+joint radius; the former linear blend collapses it. Full evaluated-source mesh,
+protected-contact LOD, browser and actual-Hunt revalidation remain required.
+The public candidate pack has NOT yet been replaced by this new export.
+
+Additional fixes awaiting final integration validation: frozen lateral contact
+axis, hit-flash rebind, airborne reach constrained to the ground half-space,
+actual first-Hunt/mobile-emulation capture, and clearly labelled shared-engine
+developer illumination. The first real trail capture exposed pre-existing
+missing Wet Forest candidate images; do not describe fallback ground as accepted
+GPU environment migration. No physical-phone performance claim is made.
+
 ## Windows continuation â€” 28 October 2026
 
 ### Whole-body support study (after `59f5cc546`)

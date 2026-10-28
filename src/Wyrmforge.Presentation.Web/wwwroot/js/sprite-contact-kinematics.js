@@ -41,6 +41,7 @@ function projected(point,matrix){
  */
 export function solveSupportedSourcePose(frame,targets,options){
     const {massWeights,rootBone,maxContactExcursion,maxBodyTranslation,minimumSupportMargin=0}=options;
+    if(options.groundZ!=null&&!Number.isFinite(options.groundZ))throw new TypeError('Finite source ground plane required');
     if(!frame?.sourceBones||!frame.sourceContacts||!massWeights||!Object.hasOwn(frame.sourceBones,rootBone)||
        ![maxContactExcursion,maxBodyTranslation,minimumSupportMargin].every(n=>Number.isFinite(n)&&n>=0))throw new TypeError('Explicit source pose anatomy and bounded authoring envelope required');
     const bones=frame.sourceBones,chains=Object.entries(frame.sourceContacts),used=new Set();
@@ -98,11 +99,22 @@ export function solveSupportedSourcePose(frame,targets,options){
         for(const [id,c] of chains){
             let target=targets[id];const rotation=target.rotation;
             if(options.fitSwingReach&&!target.planted){
-                const offset=bones[c.end].head.map((n,i)=>n-c.sourceContact[i]),ankle=target.point.map((n,i)=>n+(rotation?offset.reduce((s,v,j)=>s+rotation[i*3+j]*v,0):offset[i]));
+                const offset=bones[c.end].head.map((n,i)=>n-c.sourceContact[i]),oriented=rotation?offset.map((_,i)=>offset.reduce((s,v,j)=>s+rotation[i*3+j]*v,0)):offset,ankle=target.point.map((n,i)=>n+oriented[i]);
                 const root=posed[c.upper].head,delta=ankle.map((n,i)=>n-root[i]),length=Math.hypot(...delta);
                 const reach=angle=>Math.sqrt(c.upperLength**2+c.lowerLength**2+2*c.upperLength*c.lowerLength*Math.cos(angle*Math.PI/180));
                 const minimum=reach(c.limits[1])*(1+1e-5),maximum=reach(Math.max(.1,c.limits[0]))*(1-1e-5),clamped=Math.max(minimum,Math.min(maximum,length));
                 if(Math.abs(clamped-length)>1e-9){if(length<1e-8)throw new RangeError('Singular source swing target');target={...target,point:target.point.map((n,i)=>n+delta[i]*(clamped/length-1)),swingReachCorrection:Math.abs(clamped-length)};}
+                if(options.groundZ!=null&&target.point[2]<options.groundZ){
+                    // Intersect the joint's reach shell with the declared
+                    // ground half-space. Do not fix a folded knee by pushing
+                    // an airborne sole through the floor.
+                    const dz=options.groundZ+oriented[2]-root[2];if(Math.abs(dz)>=maximum)throw new RangeError('No source swing reach above the ground plane');
+                    let x=target.point[0]+oriented[0]-root[0],y=target.point[1]+oriented[1]-root[1],horizontal=Math.hypot(x,y);
+                    if(horizontal<1e-8){x=c.pole[0]-root[0];y=c.pole[1]-root[1];horizontal=Math.hypot(x,y);if(horizontal<1e-8)throw new RangeError('Singular grounded source swing pole');}
+                    const radius=Math.max(Math.sqrt(Math.max(0,minimum**2-dz**2)),Math.min(Math.sqrt(Math.max(0,maximum**2-dz**2)),horizontal));
+                    const point=[root[0]+x/horizontal*radius-oriented[0],root[1]+y/horizontal*radius-oriented[1],options.groundZ];
+                    target={...target,point,swingReachCorrection:Math.hypot(...point.map((n,i)=>n-targets[id].point[i]))};
+                }
             }
             const delta=target.point.map((n,i)=>n-c.sourceContact[i]);
             const move=point=>rotation?target.point.map((v,row)=>v+point.reduce((s,n,col)=>s+rotation[row*3+col]*(n-c.sourceContact[col]),0)):plus(point,delta);

@@ -8,6 +8,20 @@ import {createSkinnedRenderable,applySourceSkinPose,validateSkinPose} from '../.
 import * as T from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/vendor/three.module.js';
 const data=()=>JSON.parse(readFileSync(new URL('../fixtures/animation/compact-source-skin.json',import.meta.url)));
 const distance=(a,b)=>Math.hypot(...a.map((n,i)=>n-b[i]));
+
+test('declared preserve-volume skin retains a blended joint radius and isolates actor textures',()=>{
+ const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute([1,0,0],3));g.setAttribute('skinIndex',new T.Uint16BufferAttribute([0,1,0,0],4));g.setAttribute('skinWeight',new T.Float32BufferAttribute([.5,.5,0,0],4));
+ const rest=new T.Matrix4().toArray(),binding={bones:[{id:'a',parent:-1,rest},{id:'b',parent:-1,rest}],skinningMode:'dual-quaternion'};
+ const one=createSkinnedRenderable(T,g,new T.MeshStandardMaterial(),binding),two=createSkinnedRenderable(T,g,new T.MeshStandardMaterial(),binding);
+ applySourceSkinPose(one,[...rest,...new T.Matrix4().makeRotationZ(Math.PI).toArray()]);
+ const actual=one.mesh.applyBoneTransform(0,new T.Vector3(1,0,0));assert.ok(actual.distanceTo(new T.Vector3(0,1,0))<1e-6);assert.notEqual(one.dual.texture,two.dual.texture);
+ assert.ok(two.mesh.applyBoneTransform(0,new T.Vector3(1,0,0)).distanceTo(new T.Vector3(1,0,0))<1e-6);
+ for(const material of [one.mesh.material,one.mesh.customDepthMaterial,one.mesh.customDistanceMaterial]){
+  const shader={uniforms:{},vertexShader:'#include <skinbase_vertex>\n#include <skinnormal_vertex>\n#include <skinning_vertex>',fragmentShader:''};material.onBeforeCompile(shader,null);assert.equal(shader.uniforms.sourceDualQuaternions.value,one.dual.texture);assert.match(shader.vertexShader,/objectNormal=sourceRotate/);assert.match(shader.vertexShader,/transformed=sourceRotate/);
+ }
+ assert.throws(()=>applySourceSkinPose(one,[...rest,...new T.Matrix4().makeScale(2,1,1).toArray()]),/rigid/);
+ for(const r of [one,two]){r.dual.texture.dispose();r.skeleton.dispose();r.mesh.material.dispose();r.mesh.customDepthMaterial.dispose();r.mesh.customDistanceMaterial.dispose();}g.dispose();
+});
 test('compact source surfaces interpolate the complete rig and retain gait/claw endpoint identity',()=>{
  const s=validate(data()),copy=JSON.stringify(s);
  for(const phase of [0,.01,.17,.37,.5,.83,.999]){

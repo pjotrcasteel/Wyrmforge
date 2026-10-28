@@ -17,6 +17,7 @@ p.add_argument('--lateral-stride-metres',type=float,default=0,help='Authored sid
 p.add_argument('--guide-poses',action='store_true',help='Export the saved pre-balance guide actions; runtime full-body support solve is mandatory.')
 p.add_argument('--orientation-warp-degrees',type=float,default=0,help='Authored pelvis/upper-chain orientation allowance; 0 disables the shared whole-body orientation warp.')
 p.add_argument('--balance-joint-degrees',type=float,default=0,help='Authored spine balance allowance after leg/body projection; 0 disables it.')
+p.add_argument('--protect-contact-surfaces',action='store_true',help='Exclude actual source contact patches and their one-native-pixel guard band from LOD edge collapse.')
 a=p.parse_args(sys.argv[sys.argv.index('--')+1:]);a.out.mkdir(parents=True,exist_ok=True)
 if not math.isfinite(a.load_ramp_fraction) or not 0<=a.load_ramp_fraction<=.5:p.error('load ramp must be finite and within 0..0.5 cycles')
 if not math.isfinite(a.lateral_stride_metres) or a.lateral_stride_metres<0:p.error('lateral stride must be finite and nonnegative')
@@ -26,6 +27,9 @@ if not math.isfinite(a.balance_joint_degrees) or not 0<=a.balance_joint_degrees<
 m=json.loads((a.source/'source-manifest.json').read_text());blend=a.source/'hollow-foundation.blend'
 bpy.ops.wm.open_mainfile(filepath=str(blend.resolve()))
 r=bpy.data.objects['Hollow editable animation rig'];actor=bpy.data.objects['Hollow skinned character'];scene=bpy.context.scene
+modifiers=[modifier for modifier in actor.modifiers if modifier.type=='ARMATURE']
+if len(modifiers)!=1 or modifiers[0].object!=r or not modifiers[0].use_vertex_groups or modifiers[0].use_bone_envelopes or modifiers[0].use_multi_modifier or modifiers[0].vertex_group:raise ValueError('One unmasked vertex-group source armature modifier required')
+skinning_mode='dual-quaternion' if modifiers[0].use_deform_preserve_volume else 'linear'
 bones=list(r.data.bones);lookup={bone.name:i for i,bone in enumerate(bones)}
 def column_major(matrix):return [round(matrix[row][col],8) for col in range(4) for row in range(4)]
 def transform(matrix):
@@ -56,7 +60,7 @@ contacts=[]
 for chain in m['contactChains']:
  patch=next(patch for patch in m['solePatches'].values() if patch['bone']==chain['end'])
  contacts.append({**chain,'orientationMode':'ground-yaw','restHull':patch['restHull'],'upperLength':r.data.bones[chain['upper']].length,'lowerLength':r.data.bones[chain['middle']].length})
-surface={'version':1,'sourceSignature':m['skeletonSignature'],'sourceBlendSha256':hashlib.sha256(blend.read_bytes()).hexdigest(),
+surface={'version':1,'skinningMode':skinning_mode,'sourceSignature':m['skeletonSignature'],'sourceBlendSha256':hashlib.sha256(blend.read_bytes()).hexdigest(),
  'rootBone':'root','bodyBone':'pelvis','transformStride':10,'bones':rig,'massWeights':m['massWeights'],'contacts':contacts,'contactCycles':m.get('contactCycles',[]),
  'minimumSupportMarginMetres':m['minimumSupportMarginMetres'],'groundZMetres':m['groundZMetres'],'unitsPerPixel':m['unitsPerPixel'],
  'authoringEnvelope':{'maxContactExcursion':m['clips']['walk']['strideMetres'],'maxBodyTranslation':m['clips']['walk']['strideMetres']/2},
@@ -78,11 +82,17 @@ if a.triangles:
  if a.triangles<64:raise ValueError('LOD target must be at least 64 triangles')
  geometry.data.calc_loop_triangles();original_count=len(geometry.data.loop_triangles)
  modifier=geometry.modifiers.new('AN explicit source LOD candidate','DECIMATE');modifier.ratio=min(1,a.triangles/original_count);modifier.use_collapse_triangulate=True
- if a.protect_groups:
-  protected=a.protect_groups.split(',')
+ if a.protect_groups or a.protect_contact_surfaces:
+  protected=a.protect_groups.split(',') if a.protect_groups else []
   if any(geometry.vertex_groups.get(name) is None for name in protected):raise ValueError('Protected anatomy group is absent')
   group=geometry.vertex_groups.new(name='AN permitted LOD reduction');group.add(list(range(len(geometry.data.vertices))),1,'REPLACE')
   vertices=[vertex.index for vertex in geometry.data.vertices if any(geometry.vertex_groups[g.group].name in protected and g.weight>=.5 for g in vertex.groups)]
+  if a.protect_contact_surfaces:
+   to_rig=r.matrix_world.inverted() @ geometry.matrix_world
+   limits={patch['bone']:patch['minimumRestZ']+m['unitsPerPixel'] for patch in m['solePatches'].values()}
+   vertices.extend(vertex.index for vertex in geometry.data.vertices if any(geometry.vertex_groups[g.group].name in limits and g.weight>=.5 and (to_rig @ vertex.co).z<=limits[geometry.vertex_groups[g.group].name] for g in vertex.groups))
+   vertices.extend(index for patch in m['solePatches'].values() for index in patch['vertexIndices'])
+  vertices=sorted(set(vertices))
   group.add(vertices,0,'REPLACE');modifier.vertex_group=group.name;modifier.vertex_group_factor=1
  bpy.ops.object.modifier_apply(modifier=modifier.name)
 mesh=geometry.data;mesh.calc_loop_triangles();to_rig=r.matrix_world.inverted() @ geometry.matrix_world;normal_matrix=to_rig.to_3x3().inverted().transposed()
@@ -126,10 +136,11 @@ def srgb(n):return 12.92*n if n<=.0031308 else 1.055*n**(1/2.4)-.055
 emitter=next((n for n in material.node_tree.nodes if n.type=='EMISSION'),None)
 colour=emitter.inputs['Color'].default_value[:3] if emitter else [0,0,0]
 strength=next((n.inputs[1].default_value for n in material.node_tree.nodes if n.type=='MATH' and n.operation=='MULTIPLY' and not n.inputs[1].is_linked),0)
-manifest={'version':1,'sourceSignature':m['skeletonSignature'],'sourceBlendSha256':surface['sourceBlendSha256'],'buffer':'skin.bin','bufferSha256':hashlib.sha256(binary).hexdigest(),'attributes':attributes,
+manifest={'version':1,'skinningMode':skinning_mode,'sourceSignature':m['skeletonSignature'],'sourceBlendSha256':surface['sourceBlendSha256'],'buffer':'skin.bin','bufferSha256':hashlib.sha256(binary).hexdigest(),'attributes':attributes,
  'poses':'poses.json','posesSha256':hashlib.sha256((a.out/'poses.json').read_bytes()).hexdigest(),'albedo':'albedo.png','albedoSha256':hashlib.sha256(texture.read_bytes()).hexdigest(),'albedoSize':list(image.size),
  'vertices':len(vertices)//3,'triangles':len(indices)//3,'influenceSets':influence_sets,'flatShading':all(not poly.use_smooth for poly in mesh.polygons),'doubleSided':not material.use_backface_culling,'maxDiscardedSkinWeight':max_discarded,
  'emission':'#'+''.join(f'{round(max(0,min(1,srgb(v)))*255):02x}' for v in colour),'emissionIntensity':strength,'sourceUnits':'metres','candidateNotApproved':True,'runtimeAccepted':False}
+manifest['protectedContactSurfaces']=a.protect_contact_surfaces
 manifest['protectedAnatomyGroups']=a.protect_groups.split(',') if a.protect_groups else []
 (a.out/'skin.json').write_text(json.dumps(manifest,indent=2)+'\n')
 # The same public profile/lifecycle is used by raster and source-skin backends.

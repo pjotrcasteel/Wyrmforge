@@ -98,13 +98,13 @@ export function readArenaDiagnostics(canvas) {
         hollowFractureGpuEmitters: state.fractureGpuEmitters ?? [],
         wetForestGround: state.latestSnapshot?.environment?.wetForest
             ? liveWetForestMaterialDiagnostics(state.latestSnapshot.environment.seed) : null,
-        lighting: { mode: 'night', darkness: GOTHIC_NIGHT.darkness, source: 'authoritative-csharp-snapshot' },
+        lighting: { mode: state.gpuWorld?.inspectionLighting?'developer-neutral-inspection':'night', darkness: GOTHIC_NIGHT.darkness, source: state.gpuWorld?.inspectionLighting?'developer-inspection-over-csharp-snapshot':'authoritative-csharp-snapshot' },
     };
 }
 // Explicit developer inspection; never changes the authoritative light frame.
 export function setArenaLightingInspection(canvas,view='lit'){
-    const engine=arenas.get(canvas)?.gpuWorld?.engine;if(!engine)return false;
-    engine.setDebugView(view);return true;
+    const world=arenas.get(canvas)?.gpuWorld;if(!world)return false;
+    world.engine.setDebugView(view==='neutral-lit'?'lit':view);world.inspectionLighting=view==='neutral-lit';return true;
 }
 
 export function disposeArena(canvas) {

@@ -375,7 +375,7 @@ function updateContactAnimation(state,profile,input){
         state.facingIndex=((Math.round(zero-state.sourceYaw/(Math.PI/4))%8)+8)%8;
         contactPhase=state.phase;
         const cos=Math.cos(state.sourceYaw),sin=Math.sin(state.sourceYaw),b=s.groundBasis;
-        if(Math.hypot(displacement.x,displacement.y)<1e-10&&!input.moving)state.sourceAxisWorld={x:b[0]*sin-b[1]*cos,y:b[2]*sin-b[3]*cos};
+        if(dt>0&&!stopped&&Math.hypot(displacement.x,displacement.y)<1e-10&&!input.moving)state.sourceAxisWorld={x:b[0]*sin-b[1]*cos,y:b[2]*sin-b[3]*cos};
         sourceSupport={yaw:state.sourceYaw,warpYaw:state.sourceWarpYaw??0,phaseCycles:state.sourceSupportPhaseCycles,phaseAdvance:sourceAdvance,phaseDirection:state.sourcePhaseDirection??1,axisWorld:{...state.sourceAxisWorld},
             groundBasis:[b[0]*cos+b[1]*sin,-b[0]*sin+b[1]*cos,b[2]*cos+b[3]*sin,-b[2]*sin+b[3]*cos],reducedMotion:Boolean(input.reducedMotion)};
     }

@@ -42,7 +42,7 @@ export function updateSourceSkinSupport(state,surface,profile,sample,intent){
         for(let i=root+1;i<surface.bones.length;i++)if(indices.has(surface.bones[i].parent))indices.add(i);
         state.balanceJoint={...config.balanceJoint,descendants:[...indices].map(i=>surface.bones[i].id)};
     }
-    const posed=transported?{...base,sourceContacts:Object.fromEntries(Object.entries(base.sourceContacts).map(([id,c])=>[id,{...c,planted:false}]))}:solveSupportedSourcePose(base,local,{massWeights:surface.massWeights,rootBone:surface.rootBone,...surface.authoringEnvelope,minimumSupportMargin:surface.minimumSupportMarginMetres,fitReach:true,fitSwingReach:true,supportWeights:weights,balanceJoint:state.balanceJoint});
+    const posed=transported?{...base,sourceContacts:Object.fromEntries(Object.entries(base.sourceContacts).map(([id,c])=>[id,{...c,planted:false}]))}:solveSupportedSourcePose(base,local,{massWeights:surface.massWeights,rootBone:surface.rootBone,...surface.authoringEnvelope,minimumSupportMargin:surface.minimumSupportMarginMetres,groundZ:z,fitReach:true,fitSwingReach:true,supportWeights:weights,balanceJoint:state.balanceJoint});
     if(!transported)for(const [id,c] of Object.entries(posed.sourceContacts))if(!c.planted){
         const p=c.sourceContact,t=state.contacts.targets[id];
         t.x=intent.world.x+(projection[0]*p[0]+projection[1]*p[1]+projection[2]*p[2]+projection[3])*scale;

@@ -25,7 +25,7 @@ const server=http.createServer((req,res)=>{
   const resource=await loadSourceSkinResources(new URL('/assets/',location.href),{manifest:'skin.json',sha256:sha});
   const engine=new LightingEngine(document.querySelector('canvas'),{shadowViews:6,maxLights:8});
   const geometry=new T.BufferGeometry();for(const [name,a] of Object.entries(resource.attributes))if(name==='index')geometry.setIndex(new T.BufferAttribute(a.array,1));else geometry.setAttribute(name,new T.BufferAttribute(a.array,a.itemSize));
-  engine.registerGeometry('skin',geometry,{skinBinding:{bones:resource.surface.bones,influenceSets:resource.manifest.influenceSets,motionRadius:resource.surface.strideMetres*1.5}});
+  engine.registerGeometry('skin',geometry,{skinBinding:{bones:resource.surface.bones,influenceSets:resource.manifest.influenceSets,skinningMode:resource.manifest.skinningMode,motionRadius:resource.surface.strideMetres*1.5}});
   engine.registerGeometry('floor',new T.PlaneGeometry(4,4));const texture=new T.Texture(resource.image);texture.needsUpdate=true;engine.registerTexture('albedo',texture,true);
   const baseMaterial={roughness:.85,metalness:0,specular:.1,reflection:'direct',alphaCutoff:.1,doubleSided:resource.manifest.doubleSided??true};
   const materials=[{...baseMaterial,id:'body',color:'#ffffff',albedo:'albedo',flatShading:resource.manifest.flatShading,emission:resource.manifest.emission,emissionIntensity:resource.manifest.emissionIntensity},{...baseMaterial,id:'floor',color:'#666666',emission:'#000000',emissionIntensity:0}];

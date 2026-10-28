@@ -4,7 +4,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const published=path.resolve(process.env.WYRMFORGE_PUBLISHED_ROOT||'artifacts/web/wwwroot');
 const source=path.resolve(__dirname,'../../src/Wyrmforge.Presentation.Web/wwwroot');
 const out=path.resolve(process.env.AN_CAPTURE_DIR||'artifacts/animation-hunt');fs.mkdirSync(out,{recursive:true});
-const candidate=process.env.AN_CANDIDATE!=='0',width=Number(process.env.AN_WIDTH||390);
+const candidate=process.env.AN_CANDIDATE!=='0',width=Number(process.env.AN_WIDTH||390),liveTrail=process.env.AN_SCENE==='trail',selector=liveTrail?'canvas.game-canvas':'.enemy-lab canvas';
 const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json','.wasm':'application/wasm','.png':'image/png','.svg':'image/svg+xml','.ogg':'audio/ogg','.mp3':'audio/mpeg','.bin':'application/octet-stream'};
 let browser;
 const server=http.createServer((req,res)=>{
@@ -24,31 +24,41 @@ const server=http.createServer((req,res)=>{
  await new Promise(r=>server.listen(0,'127.0.0.1',r));
  browser=await chromium.launch({executablePath:process.env.CHROMIUM_EXECUTABLE,args:['--no-sandbox','--disable-dev-shm-usage']});
  const errors=[],consoleErrors=[];
- const page=await browser.newPage({viewport:{width,height:844},recordVideo:{dir:out,size:{width,height:844}}});
+ const page=await browser.newPage({viewport:{width,height:844},isMobile:process.env.AN_MOBILE==='1',hasTouch:process.env.AN_MOBILE==='1',deviceScaleFactor:process.env.AN_MOBILE==='1'?3:1,recordVideo:{dir:out,size:{width,height:844}}});
  page.on('pageerror',e=>errors.push(e.message));page.on('crash',()=>errors.push('renderer crash'));
  page.on('console',m=>{if(m.type()==='error')consoleErrors.push(m.text().slice(0,400));});
+ await page.addInitScript(({trail,selector})=>{window.__anCanvasSelector=selector;window.__anModulePath=trail?'/js/arena-performance.js':'/js/arena.js';if(trail){localStorage.setItem('wyrmforge.firstHunt.v1','2');localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:24,Nodes:[]}));localStorage.setItem('wyrmforge.characterSchool.v1','Pyromancer');}},{trail:liveTrail,selector});
  const flags=candidate?'&animationFoundation=1&arenaGpu=1':'';
- await page.goto(`http://127.0.0.1:${server.address().port}/enemy-lab?kind=Hollow&seed=42&autoplay=false&cast=false&paused=true&entityId=5${flags}${process.env.AN_CONTACTS?'&animationContacts=1':''}`);
- await page.locator('.enemy-lab canvas').waitFor({timeout:60000});
+ const route=liveTrail?`/?${flags.slice(1)}`:`/enemy-lab?kind=Hollow&seed=42&autoplay=false&cast=false&paused=true&entityId=5${flags}`;
+ await page.goto(`http://127.0.0.1:${server.address().port}${route}${process.env.AN_CONTACTS?'&animationContacts=1':''}`);
+ if(liveTrail){
+  await page.locator('#wyrmforge-ignition').waitFor({state:'hidden',timeout:60000});
+  await page.getByRole('button',{name:/^START GAME/}).click();await page.getByRole('region',{name:'Town square'}).waitFor({timeout:30000});
+  await page.getByRole('button',{name:/^BEGIN (FIRST )?HUNT$/}).click();
+  await page.getByRole('button',{name:'Enter Free Play',exact:true}).click();await page.locator('.gate-action--primary').click();await page.locator('.gate-lineage--fire').click();await page.locator('.gate-tier--ready').click();
+  await page.locator('button.route-node.available').first().click();await page.getByRole('button',{name:/^Enter (rare )?trail$/}).click();
+ }
+
+ await page.locator(selector).waitFor({timeout:60000});
  await page.locator('#wyrmforge-ignition').waitFor({state:'hidden',timeout:60000});
  if(candidate)await page.waitForFunction(async()=>{
-  const m=await import('/js/arena.js'),d=m.readArenaDiagnostics(document.querySelector('.enemy-lab canvas'));
+  const m=await import(window.__anModulePath??'/js/arena.js'),d=m.readArenaDiagnostics(document.querySelector(window.__anCanvasSelector));
   return d?.hollow?.foundation?.ready===true&&d?.gpuWorld?.backend;
  },{},{timeout:60000});
  if(process.env.AN_INSPECTION)await page.evaluate(async view=>{
-  const m=await import('/js/arena.js');m.setArenaLightingInspection(document.querySelector('.enemy-lab canvas'),view);
+  const m=await import(window.__anModulePath??'/js/arena.js');m.setArenaLightingInspection(document.querySelector(window.__anCanvasSelector),view);
   const label=document.createElement('div');label.textContent='DEVELOPER '+view.toUpperCase()+' INSPECTION / ACTUAL C# ENCOUNTER';
   label.style='position:fixed;bottom:0;left:0;background:#fff;color:#000;font:11px sans-serif;padding:5px;z-index:9999';document.body.appendChild(label);
  },process.env.AN_INSPECTION);
  await page.evaluate(async()=>{
-  const m=await import('/js/arena.js');window.__anTrace=[];
-  window.__anTraceTimer=setInterval(()=>{const d=m.readArenaDiagnostics(document.querySelector('.enemy-lab canvas'));if(d)window.__anTrace.push({at:performance.now(),simulationTimeSeconds:d.simulationTimeSeconds,enemies:d.enemies,player:d.player,hollow:d.hollow,performance:d.performance,gpuWorld:d.gpuWorld});},50);
+  const m=await import(window.__anModulePath??'/js/arena.js');window.__anTrace=[];
+  window.__anTraceTimer=setInterval(()=>{const d=m.readArenaDiagnostics(document.querySelector(window.__anCanvasSelector));if(d)window.__anTrace.push({at:performance.now(),simulationTimeSeconds:d.simulationTimeSeconds,enemies:d.enemies,player:d.player,hollow:d.hollow,performance:d.performance,gpuWorld:d.gpuWorld});},50);
  });
- const initial=await page.evaluate(async()=>{const m=await import('/js/arena.js');return m.readArenaDiagnostics(document.querySelector('.enemy-lab canvas'));});
+ const initial=await page.evaluate(async()=>{const m=await import(window.__anModulePath??'/js/arena.js');return m.readArenaDiagnostics(document.querySelector(window.__anCanvasSelector));});
  fs.writeFileSync(path.join(out,'initial-diagnostics.json'),JSON.stringify(initial,null,2));
  await page.screenshot({path:path.join(out,'hunt-ready.png')});
- await page.getByRole('button',{name:'Resume',exact:true}).click();
- await page.locator('.enemy-lab canvas').focus();
+ if(!liveTrail)await page.getByRole('button',{name:'Resume',exact:true}).click();
+ await page.locator(selector).focus();
  await page.waitForTimeout(2500);
  for(const [key,duration] of [['ArrowRight',1300],['ArrowUp',1100],['ArrowLeft',1800],['ArrowDown',900]]){
   await page.keyboard.down(key);await page.waitForTimeout(duration);await page.keyboard.up(key);await page.waitForTimeout(350);
@@ -59,7 +69,7 @@ const server=http.createServer((req,res)=>{
  fs.writeFileSync(path.join(out,'motion-trace.json'),JSON.stringify(trace,null,2));
  fs.writeFileSync(path.join(out,'browser-errors.json'),JSON.stringify({errors,consoleErrors},null,2));
  const video=await page.video().path();await page.close();await browser.close();server.close();
- const summary={candidate,inspection:process.env.AN_INSPECTION??'lit',physicalDevice:false,viewport:{width,height:844},samples:trace.length,solveFailures:trace.flatMap(r=>r.hollow.entities.filter(e=>e.foundationError).map(e=>({time:r.simulationTimeSeconds,error:e.foundationError}))),maximumProjectedSoleDrift:Math.max(...trace.flatMap(r=>r.hollow.entities.map(e=>e.foundation?.maxSlip??0))),gpuErrors:trace.filter(r=>r.gpuWorld?.error),video,errors,consoleErrors};
+ const summary={scene:liveTrail?'real-first-trail':'real-development-encounter',mobileEmulated:process.env.AN_MOBILE==='1',candidate,inspection:process.env.AN_INSPECTION??'lit',physicalDevice:false,viewport:{width,height:844},samples:trace.length,solveFailures:trace.flatMap(r=>r.hollow.entities.filter(e=>e.foundationError).map(e=>({time:r.simulationTimeSeconds,error:e.foundationError}))),maximumProjectedSoleDrift:Math.max(...trace.flatMap(r=>r.hollow.entities.map(e=>e.foundation?.maxSlip??0))),gpuErrors:trace.filter(r=>r.gpuWorld?.error),video,errors,consoleErrors};
  fs.writeFileSync(path.join(out,'capture-summary.json'),JSON.stringify(summary,null,2));
  if(errors.length||summary.solveFailures.length||summary.gpuErrors.length)throw Error(JSON.stringify(summary));
  console.log(JSON.stringify(summary,null,2));

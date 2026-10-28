@@ -80,7 +80,7 @@ export class HuntGpuWorld {
         if(!this.skins.has(key)){
             const geometry=new T.BufferGeometry();
             for(const [name,a] of Object.entries(resource.attributes))if(name==='index')geometry.setIndex(new T.BufferAttribute(a.array,a.itemSize));else geometry.setAttribute(name,new T.BufferAttribute(a.array,a.itemSize));
-            this.engine.registerGeometry(key,geometry,{skinBinding:{bones:resource.surface.bones,influenceSets:resource.manifest.influenceSets,motionRadius:resource.surface.strideMetres*1.5}});
+            this.engine.registerGeometry(key,geometry,{skinBinding:{bones:resource.surface.bones,influenceSets:resource.manifest.influenceSets,skinningMode:resource.manifest.skinningMode,motionRadius:resource.surface.strideMetres*1.5}});
             const texture=new T.Texture(resource.image);texture.needsUpdate=true;this.engine.registerTexture(key,texture,true);
             this.skins.set(key,{...material(key),flatShading:resource.manifest.flatShading,doubleSided:resource.manifest.doubleSided,emission:resource.manifest.emission,emissionIntensity:resource.manifest.emissionIntensity});
         }
@@ -99,6 +99,10 @@ export class HuntGpuWorld {
     }
     render(ctx, frame) {
         const engine = this.engine;
+        if(this.inspectionLighting){
+            const environment={...frame.environment,ambient:.35,color:'#aebaca',exposure:1,emission:true};delete environment.fog;
+            frame={...frame,environment,lights:[...frame.lights,{id:'developer-inspection:key',ownerId:'developer-inspection',type:'point',enabled:true,position:[this.camera.x+this.width*.35,this.camera.y+this.height*.45,96],direction:[0,0,-1],color:'#fff3dc',intensity:16,range:720,coneAngle:.7,penumbra:0,castsShadow:true,priority:1000}]};
+        }
         engine.apply({ ...huntLightFrame(frame, this.camera, { width: this.width, height: this.height },this.groundY), materials: this.materials, objects: this.objects });
         // CanvasTexture clones share pixels, but each GPU map needs an upload notification.
         for (const object of engine.objects.values()) if (object.mesh.material.map?.isCanvasTexture) object.mesh.material.map.needsUpdate = true;
