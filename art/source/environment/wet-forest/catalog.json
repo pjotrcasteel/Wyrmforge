@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "project": "WyrmForge Arena Rebuild V2 — Step 3",
+  "authoritativeGround": "Step 1/2 approved-material recipe; immutable for this milestone",
+  "integration": "none; production candidates only",
+  "sourceGenerator": "tools/art/step3_wet_forest.py",
+  "renderProfile": {
+    "pixels": [
+      768,
+      768
+    ],
+    "projection": "2.5d orthographic",
+    "alpha": true,
+    "separateShadow": true,
+    "materialLighting": "neutral dawn",
+    "anchor": "root contact at world z=0",
+    "browserOnly": false
+  },
+  "assets": [
+    {
+      "id": "ancient_oak",
+      "category": "living_tree",
+      "state": "source-ready-unrendered",
+      "source": "ancient_oak/ancient_oak.blend",
+      "sprite": "ancient_oak/ancient_oak-candidate.png",
+      "seed": 12043,
+      "review": "missing"
+    },
+    {
+      "id": "dead_elm",
+      "category": "dead_tree",
+      "state": "source-ready-unrendered",
+      "source": "dead_elm/dead_elm.blend",
+      "sprite": "dead_elm/dead_elm-candidate.png",
+      "seed": 12047,
+      "review": "missing"
+    },
+    {
+      "id": "undergrowth_fern",
+      "category": "undergrowth",
+      "state": "not-started",
+      "review": "missing"
+    },
+    {
+      "id": "broken_root",
+      "category": "roots",
+      "state": "not-started",
+      "review": "missing"
+    },
+    {
+      "id": "mossy_boulder",
+      "category": "rocks",
+      "state": "not-started",
+      "review": "missing"
+    },
+    {
+      "id": "fallen_log",
+      "category": "fallen_tree",
+      "state": "not-started",
+      "review": "missing"
+    }
+  ],
+  "rules": [
+    "No old sprites, traces, atlas or retextured legacy models",
+    "No composite backgrounds or sprite-sheet collages as runtime sprites",
+    "One independently editable Blender file per model",
+    "Art is reviewed at 1× gameplay scale before variants",
+    "Never paint a ground texture into a tree root sprite",
+    "Keep editable .blend and derivative PNG together",
+    "No imports into Hunts or the new arena until separately approved"
+  ]
+}
