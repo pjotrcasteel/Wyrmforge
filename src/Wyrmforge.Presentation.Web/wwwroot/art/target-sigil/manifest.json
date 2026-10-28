@@ -74,6 +74,14 @@
       "csharpSchool": "Binding"
     }
   },
-  "contract": "The one base rect is always drawn beneath the selected target; only the separately drawn center rect depends on active school. Do not bake a school emblem into the base.",
-  "rendering": "G4/G5 shared universal lighting emitter drives world underlighting; asset provides transparent art only. Source art is LOCKED; only export resolution/palette may be optimized."
+  "contract": "Exactly one locked V3 base rectangle is always painted below the selected target. The distinct center emblem is selected from the C# active-primary-school snapshot. Owner-approved runtime palette tint applies to BOTH base and center with their original pixel alpha, shape, and highlights unchanged. Missing/unknown school does not display a false Arcane emblem.",
+  "rendering": "G4/G5 shared universal lighting emitter is tinted to match the player's primary school; the existing GPU/Canvas adapter consumes the same emitter. No new renderer, pre-baked per-school rings or procedural artwork. The immutable approved source atlas is unchanged.",
+  "schoolTint": {
+    "Fire": "#ff784a",
+    "Frost": "#8bd8ff",
+    "Storm": "#ffd665",
+    "Arcane": "#c497ff",
+    "Necromancer": "#8cdb80",
+    "Summoner": "#6cdbc9"
+  }
 }
