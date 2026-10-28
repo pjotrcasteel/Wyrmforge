@@ -234,6 +234,26 @@ jobs:
           assert d['owner_approved'] is False,d
           print('PASS source-only anatomical geometry; owner visual approval NOT GIVEN')
           PY
+      - name: Sculpt asymmetric connected human skull with first-hit recessed eye sockets
+        run: |
+          python -m py_compile tools/art/hollow-rebuild/sculpt_asymmetric_skull_h1_blender.py
+          python tools/art/hollow-rebuild/sculpt_asymmetric_skull_h1_blender.py \
+            --input artifacts/hollow-rebuild/horror-anatomical-h1/hollowed-h1-real-anatomy-ribs-claws-UNAPPROVED.blend \
+            --output artifacts/hollow-rebuild/horror-skull-h1
+          test -s artifacts/hollow-rebuild/horror-skull-h1/hollowed-h1-skull-ribcage-connected-claws-UNAPPROVED.blend
+          test -s artifacts/hollow-rebuild/horror-skull-h1/source-clay-8views-BLENDER.png
+          test -s artifacts/hollow-rebuild/horror-skull-h1/source-material-native96-BLENDER.png
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          q=json.loads(Path('artifacts/hollow-rebuild/horror-skull-h1/h1-skull-source-qc.json').read_text())
+          assert q['connected_skull_vertices_sculpted']>=10,q
+          assert q['orbital_left_faces']>=1 and q['orbital_right_faces']>=1,q
+          assert q['original_source_skin_topology_preserved'] is True,q
+          assert q['created_mesh_fragments']==0 and q['source_animation_actions']==0,q
+          assert q['game_engine_modified'] is False and q['owner_approved'] is False,q
+          print('Source skull QC passed; does not imply artistic approval.')
+          PY
       - name: Preserve 3D evidence; never ship candidate into WyrmForge runtime
         if: always()
         uses: actions/upload-artifact@v4
@@ -246,5 +266,6 @@ jobs:
             artifacts/hollow-rebuild/horror-hollowed-h1/
             artifacts/hollow-rebuild/horror-feral-rest-h1/
             artifacts/hollow-rebuild/horror-anatomical-h1/
+            artifacts/hollow-rebuild/horror-skull-h1/
           if-no-files-found: warn
           retention-days: 30
