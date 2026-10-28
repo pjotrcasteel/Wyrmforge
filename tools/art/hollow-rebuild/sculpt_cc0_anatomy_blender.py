@@ -22,6 +22,16 @@ from mathutils import Vector
 from PIL import Image, ImageDraw
 
 
+# MakeHuman's hm08 `base.obj` contains 19,158 vertices, but the only
+# visible naked human *skin* is 0..13,379. Everything after that is hidden
+# authoring geometry for clothes/hair, teeth, joints and the ground.
+# Official documentation: https://static.makehumancommunity.org/about/concepts/basemesh.html
+# Importing all vertices is the root cause of the REJECTED v2 dress/hair render.
+BODY_VERTEX_COUNT = 13380
+FULL_VERTEX_COUNT = 19158
+FULL_FACE_COUNT = 18486
+
+
 def read_cc0_obj(path):
     points = []
     faces = []
@@ -31,10 +41,13 @@ def read_cc0_obj(path):
             points.append((x, y, z))
         elif line.startswith("f "):
             faces.append(tuple(int(p.split("/")[0]) - 1 for p in line.split()[1:]))
-    if len(points) != 19158 or len(faces) != 18486:
+    if len(points) != FULL_VERTEX_COUNT or len(faces) != FULL_FACE_COUNT:
         raise ValueError(f"Unexpected MakeHuman core reference: {len(points)} verts / {len(faces)} faces")
-    return points, faces
-
+    body_faces = [face for face in faces if all(0 <= index < BODY_VERTEX_COUNT for index in face)]
+    excluded = len(faces) - len(body_faces)
+    if len(body_faces) < 10000 or excluded < 1000:
+        raise ValueError(f"Unexpected MakeHuman body/auxiliary split: {len(body_faces)} body faces, {excluded} helpers")
+    return points[:BODY_VERTEX_COUNT], body_faces
 
 def sculpt_base(points):
     """One-time authoring-space transformation; no animation or frame posing.
@@ -101,7 +114,9 @@ def create(source, out):
     actor["source_license"] = "CC0-1.0 (MakeHuman core asset)"
     actor["source_ref"] = "makehumancommunity/makehuman:makehuman/data/3dobjs/base.obj"
     actor["source_blob_sha"] = "d26635e9326e3cca30778fd7b9c00062b03cce09"
-    actor["status"] = "H1 BLOCKOUT, NOT OWNER APPROVED OR RUNTIME INTEGRATED"
+    actor["status"] = "H1 BODY-ONLY BLOCKOUT, NOT OWNER APPROVED OR RUNTIME INTEGRATED"
+    actor["makehuman_body_only"] = True
+    actor["excluded_helpers"] = "hair, skirt, tights, bones/joints, eyes and teeth, ground"
     scene = bpy.context.scene
     scene.render.engine = "CYCLES"
     scene.cycles.samples = 12
@@ -159,6 +174,9 @@ def create(source, out):
         "source_git_blob_sha": actor["source_blob_sha"],
         "source_license": "CC0-1.0", "license_url": "https://github.com/makehumancommunity/makehuman/blob/master/LICENSE.md",
         "mesh_vertices": len(mesh.vertices), "mesh_faces": len(mesh.polygons),
+        "body_only": True, "rendered_helpers": False,
+        "excluded_authoring_helper_vertices": FULL_VERTEX_COUNT - BODY_VERTEX_COUNT,
+        "correction": "MakeHuman hm08 hair/skirt/tights helpers excluded by canonical vertex boundary",
         "render_angles": labels, "blender_version": bpy.app.version_string,
         "animation_engine_modified": False, "runtime_modified": False,
         "source_rigged": False, "owner_approved": False,
