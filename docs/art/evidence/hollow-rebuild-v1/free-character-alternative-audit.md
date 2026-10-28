@@ -73,3 +73,19 @@ and true internal ember cavities. Do not replace one generic zombie with a
 different generic zombie and call it finished. Once a source is genuinely
 owner-reviewable, show **actual model images or GIF in chat**, not an AI
 concept illustration.
+
+
+## Visual screening decision — 28 October (before mesh import)
+
+Actual creator-published model poster images were inspected for the two 3DAssets.dev candidates:
+
+- **Ash-burnt husk** ([actual model preview](https://cdn.3dassets.dev/assets/12006/v1/poster.webp)): **REJECT**. Too mannequin-like; cylindrical forearms, simplistic skull and clothed outline; not the ash-corrupted anatomy or cohesive WyrmForge quality required.
+- **Brute infected** ([actual model preview](https://cdn.3dassets.dev/assets/12007/v1/poster.webp)): **REJECT**. Giant smooth cylindrical shoulder growth and cartoon-like form; would recreate the previous rejected shapeless/backpack mass. No genuine open wounds or believable shoulder structures.
+
+These posters are **third-party source previews**, not Blender renders of our edited model. No attempt to claim imported source or owner-reviewed gameplay art. The CC0 license remains valid; quality is the reason to reject them.
+
+Both automated import/render jobs were **removed from the routine PR workflow**, since they cannot pass the shape/silhouette gate and would unnecessarily consume CI resources. The separate license-gated evaluator remains available for a better future source.
+
+**Priority:** first complete and inspect the source-derived **feral human anatomy sculpt** using the existing CC0 MakeHuman topology. If it remains generic, research/license a meaningfully better **professionally authored human-undead anatomy base**, such as Hotstrike Studio's actual Sketchfab CC BY upload (requires attribution and an exact download/provenance receipt). Do not use a license-conflicted itch.io standalone package as a committed source substitute. Do not import random zombie samples merely because they are free.
+
+The shared animation engine and PR #387 are still **ABSOLUTELY READ ONLY**.
