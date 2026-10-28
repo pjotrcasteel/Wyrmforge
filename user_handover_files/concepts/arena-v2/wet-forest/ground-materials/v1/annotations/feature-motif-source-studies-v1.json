@@ -1,0 +1,218 @@
+{
+  "schemaVersion": 1,
+  "status": "manual-artwork-study-not-approved",
+  "runtimeUse": false,
+  "physicalSceneGeometry": false,
+  "derivedNormalRoughnessOrEmission": false,
+  "authoringBasis": "Visually positioned source-painting motifs; coordinates do not describe C# terrain, obstacles, water, navigation, or lighting emitters.",
+  "notes": "Coarse artist-editable UV regions only. Use as initial masking review; none is approved. Do not use black pixels as automatic transparency.",
+  "items": [
+    {
+      "assetId": "trampled-earth-01",
+      "sourcePath": "trampled-earth/variant-01.webp",
+      "sourceSha256": "65f8e82798289d8bee203b3210433be56f8b35c118475e152c5585dcc8ab9374",
+      "sourcePngSha256": "e988aeadaee2e3de704db206f8f214d015f4cd4b6f808088b9f75e1f3bc76145",
+      "role": "authoritative-road-detail-candidate",
+      "layer": "painted-trail-motif",
+      "rationale": "Original diagonal wheel-rut/footpath pigment as a candidate overlay fragment, NEVER a new road route or collision polygon.",
+      "polygons": [
+        [
+          [
+            0.31,
+            0.12
+          ],
+          [
+            0.43,
+            0.1
+          ],
+          [
+            0.55,
+            0.2
+          ],
+          [
+            0.56,
+            0.28
+          ],
+          [
+            0.51,
+            0.35
+          ],
+          [
+            0.62,
+            0.41
+          ],
+          [
+            0.73,
+            0.52
+          ],
+          [
+            0.86,
+            0.67
+          ],
+          [
+            0.91,
+            0.82
+          ],
+          [
+            0.79,
+            0.86
+          ],
+          [
+            0.67,
+            0.72
+          ],
+          [
+            0.54,
+            0.6
+          ],
+          [
+            0.45,
+            0.55
+          ],
+          [
+            0.35,
+            0.46
+          ],
+          [
+            0.24,
+            0.36
+          ],
+          [
+            0.23,
+            0.24
+          ]
+        ]
+      ]
+    },
+    {
+      "assetId": "scorched-ground-01",
+      "sourcePath": "scorched-ground/variant-01.webp",
+      "sourceSha256": "4f202abd7818d7aafabcf6879f1f1587779292df02ed4c1c43af6a6463b4ffbb",
+      "sourcePngSha256": "1765e4791b2b889bd5abf4e35348c60869b8ead8d1b293ef8ee09e5ac793ac01",
+      "role": "fire-lineage-corruption-candidate",
+      "layer": "painted-charred-motif",
+      "rationale": "Scorched-island surface motif, not individual emissive cracks; visually bright paint is NOT a registered emitter.",
+      "polygons": [
+        [
+          [
+            0.1,
+            0.16
+          ],
+          [
+            0.25,
+            0.07
+          ],
+          [
+            0.52,
+            0.075
+          ],
+          [
+            0.77,
+            0.095
+          ],
+          [
+            0.92,
+            0.24
+          ],
+          [
+            0.9,
+            0.55
+          ],
+          [
+            0.85,
+            0.77
+          ],
+          [
+            0.68,
+            0.91
+          ],
+          [
+            0.37,
+            0.92
+          ],
+          [
+            0.13,
+            0.83
+          ],
+          [
+            0.07,
+            0.6
+          ],
+          [
+            0.065,
+            0.38
+          ]
+        ]
+      ]
+    },
+    {
+      "assetId": "marsh-wet-bank-01",
+      "sourcePath": "marsh-wet-bank/variant-01.webp",
+      "sourceSha256": "5049fa0228f446bbf3d2f4d03b1462d06d8be9e9715a0deea3dfa0cef6d7c2ed",
+      "sourcePngSha256": "6506ddda7e0667e850b56c89e88ec81a123f48d27df91cd629286ac07df26530",
+      "role": "wetland-bank-reference-candidate",
+      "layer": "painted-marshland-motif",
+      "rationale": "Whole wet-bank visual composition; not water surface or C# wetland geometry. Stones, reeds, water require separate authoring.",
+      "polygons": [
+        [
+          [
+            0.54,
+            0.05
+          ],
+          [
+            0.73,
+            0.075
+          ],
+          [
+            0.84,
+            0.23
+          ],
+          [
+            0.76,
+            0.37
+          ],
+          [
+            0.85,
+            0.47
+          ],
+          [
+            0.82,
+            0.63
+          ],
+          [
+            0.75,
+            0.77
+          ],
+          [
+            0.81,
+            0.91
+          ],
+          [
+            0.63,
+            0.94
+          ],
+          [
+            0.55,
+            0.83
+          ],
+          [
+            0.52,
+            0.69
+          ],
+          [
+            0.4,
+            0.56
+          ],
+          [
+            0.36,
+            0.43
+          ],
+          [
+            0.47,
+            0.28
+          ]
+        ]
+      ]
+    }
+  ]
+}

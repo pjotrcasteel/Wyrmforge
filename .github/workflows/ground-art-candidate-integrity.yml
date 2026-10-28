@@ -1,0 +1,110 @@
+name: Wet Forest ground concept integrity
+on:
+  pull_request:
+    paths:
+      - 'user_handover_files/concepts/arena-v2/wet-forest/ground-materials/v1/**'
+      - 'tools/art/verify_ground_candidate_collection.mjs'
+      - 'tools/art/build_ground_material_probe.py'
+      - 'tools/art/audit_ground_source_art.py'
+      - 'tools/art/quilt_ground_material_study.py'
+      - 'tools/art/ground_transition_study.py'
+      - 'tools/art/review_ground_semantic_mask.py'
+      - 'tools/art/ground_family_footprint_review.py'
+      - 'tools/art/review_ground_feature_motifs.py'
+      - 'tools/art/build_grass_moss_art_candidates.py'
+      - 'tools/art/build_grass_moss_compatible_bank.py'
+      - 'tools/art/build_wet_mud_art_candidates.py'
+      - 'tools/art/build_trampled_earth_art_candidates.py'
+      - 'tools/art/build_trampled_segment_art_bank.py'
+      - 'tools/art/build_trampled_organic_transitions.py'
+      - 'tools/art/tests/test_trampled_segment_art_bank.py'
+      - 'tools/art/tests/test_trampled_organic_transitions.py'
+      - 'tools/art/build_old_paving_art_candidates.py'
+      - 'tools/art/build_scorched_ground_art_candidates.py'
+      - 'tools/art/build_marsh_wet_bank_art_candidates.py'
+      - 'tools/art/tests/test_marsh_wet_bank_art_candidates.py'
+      - 'tools/art/ground_art_visual_triage.py'
+      - 'tools/art/tests/test_ground_art_visual_triage.py'
+      - 'tools/art/tests/test_scorched_ground_art_candidates.py'
+      - 'tools/art/tests/test_old_paving_art_candidates.py'
+      - 'tools/art/tests/test_trampled_earth_art_candidates.py'
+      - 'tools/art/tests/test_ground_material_probe.py'
+      - 'tools/art/tests/test_ground_quilt_study.py'
+      - 'tools/art/tests/test_ground_transition_study.py'
+      - 'tools/art/tests/test_ground_semantic_mask.py'
+      - 'tools/art/tests/test_ground_family_footprint_review.py'
+      - 'tools/art/tests/test_ground_feature_motifs.py'
+      - 'tools/art/tests/test_grass_moss_art_candidates.py'
+      - 'tools/art/tests/test_grass_moss_compatible_bank.py'
+      - 'tools/art/tests/test_wet_mud_art_candidates.py'
+      - '.github/workflows/ground-art-candidate-integrity.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+# Cancel superseded review jobs for this PR only; do not touch game validation or G1 CI.
+concurrency:
+  group: wet-forest-art-review-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate all 36 candidate image hashes and source metadata
+        run: node tools/art/verify_ground_candidate_collection.mjs
+
+  visual-review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned image decoding dependency
+        run: python -m pip install Pillow==12.0.0 numpy==2.2.6
+      - name: Test non-destructive material preparation
+        run: python -m unittest discover -s tools/art/tests -p 'test_*.py' -v
+      - name: Build 12 Ground/Moss and Wet Mud repeat comparisons
+        run: python tools/art/build_ground_material_probe.py --output "$RUNNER_TEMP/ground-material-probes" --tile-px 240
+      - name: Audit all 36 source images for border/matte warnings
+        run: python tools/art/audit_ground_source_art.py --output "$RUNNER_TEMP/ground-material-probes"
+      - name: Create two source-only six-variant seam-cut quilting comparisons
+        run: python tools/art/quilt_ground_material_study.py --output "$RUNNER_TEMP/ground-material-probes"
+      - name: Create source-only material transition comparisons at mobile viewport sizes
+        run: python tools/art/ground_transition_study.py --output "$RUNNER_TEMP/ground-material-probes"
+      - name: Generate review-only manually authored wet-mud-01 water regions
+        run: python tools/art/review_ground_semantic_mask.py --output "$RUNNER_TEMP/ground-material-probes"
+      - name: Build 36-candidate six-family portrait art-role sheets
+        run: python tools/art/ground_family_footprint_review.py --output "$RUNNER_TEMP/ground-material-probes"
+      - name: Review explicitly outlined road, scorch, and marsh source motifs
+        run: python tools/art/review_ground_feature_motifs.py --output "$RUNNER_TEMP/ground-material-probes"
+      - name: Synthesize six edge-continuous Grass and Moss art candidates (no runtime)
+        run: python tools/art/build_grass_moss_art_candidates.py --output "$RUNNER_TEMP/ground-material-probes/grass-moss-art-candidates"
+      - name: Build six mutually seam-compatible Grass and Moss candidate art tiles
+        run: python tools/art/build_grass_moss_compatible_bank.py --output "$RUNNER_TEMP/ground-material-probes/grass-moss-compatible-bank"
+      - name: Author six Wet Mud variants and six compatible Wet Mud art candidates
+        run: python tools/art/build_wet_mud_art_candidates.py --output "$RUNNER_TEMP/ground-material-probes/wet-mud-art-candidates"
+      - name: Author six Trampled Earth variants and six compatible Trampled Earth art candidates
+        run: python tools/art/build_trampled_earth_art_candidates.py --output "$RUNNER_TEMP/ground-material-probes/trampled-earth-art-candidates"
+      - name: Create six source-backed segmented Trampled Earth art designs (not runtime)
+        run: python tools/art/build_trampled_segment_art_bank.py --grass "$RUNNER_TEMP/ground-material-probes/grass-moss-art-candidates" --earth "$RUNNER_TEMP/ground-material-probes/trampled-earth-art-candidates" --mud "$RUNNER_TEMP/ground-material-probes/wet-mud-art-candidates" --output "$RUNNER_TEMP/ground-material-probes/trampled-earth-segment-art-bank"
+      - name: Export six organic cross-variant transitions for PNG review
+        run: python tools/art/build_trampled_organic_transitions.py --bank "$RUNNER_TEMP/ground-material-probes/trampled-earth-segment-art-bank" --output "$RUNNER_TEMP/ground-material-probes/trampled-earth-organic-transitions"
+      - name: Export six Old Paving historic-site art trials and six compatible review tiles
+        run: python tools/art/build_old_paving_art_candidates.py --output "$RUNNER_TEMP/ground-material-probes/old-paving-art-candidates"
+      - name: Export six Scorched Ground paintings and six compatible review tiles (no emissive maps)
+        run: python tools/art/build_scorched_ground_art_candidates.py --output "$RUNNER_TEMP/ground-material-probes/scorched-ground-art-candidates"
+      - name: Export six Marsh/Wet Bank paintings and six compatible review tiles (no water geometry)
+        run: python tools/art/build_marsh_wet_bank_art_candidates.py --output "$RUNNER_TEMP/ground-material-probes/marsh-wet-bank-art-candidates"
+      - name: Aggregate six-family visual review diagnostics without approval
+        run: python tools/art/ground_art_visual_triage.py --output "$RUNNER_TEMP/ground-material-probes"
+      - name: Upload all unapproved Wet Forest ground art evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: wet-forest-grass-mud-repeat-studies
+          path: ${{ runner.temp }}/ground-material-probes/
+          retention-days: 30
+          if-no-files-found: error
