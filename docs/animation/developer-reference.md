@@ -132,13 +132,13 @@ application checks. Pin the actual tool versions in evidence; do not call a gree
 Blender process visual approval.
 
 ```sh
-blender -b -t 2 --python tools/animation/author_hollow_foundation.py -- --out artifacts/foundation --only walk,attack,pivot,pivot-negative,attack-travel
-blender -b -t 2 --python tools/animation/validate_source.py -- artifacts/foundation
-blender -b -t 2 --python tools/animation/render_grid_review.py -- artifacts/foundation
+blender -b -t 2 --python-exit-code 1 --python tools/animation/author_hollow_foundation.py -- --out artifacts/foundation --only walk,attack,pivot,pivot-negative
+blender -b -t 2 --python-exit-code 1 --python tools/animation/validate_source.py -- artifacts/foundation
+blender -b -t 2 --python-exit-code 1 --python tools/animation/render_grid_review.py -- artifacts/foundation
 # Full export is intentionally tiered; inspect source review before this render.
-blender -b -t 2 --python tools/animation/author_hollow_foundation.py -- --out artifacts/foundation --only walk,attack,pivot,pivot-negative,attack-travel --render --all --samples 2
+blender -b -t 2 --python-exit-code 1 --python tools/animation/author_hollow_foundation.py -- --out artifacts/foundation --only walk,attack,pivot,pivot-negative --render --all --samples 2
 python tools/animation/export_atlases.py artifacts/foundation --out artifacts/atlas-candidate
-blender -b -t 2 --python tools/animation/render_material_passes.py -- artifacts/foundation/hollow-foundation.blend --out artifacts/material-candidate
+blender -b -t 2 --python-exit-code 1 --python tools/animation/render_material_passes.py -- artifacts/foundation/hollow-foundation.blend --out artifacts/material-candidate
 ```
 
 The final command currently covers walk/attack material passes; it does not
@@ -152,7 +152,7 @@ scrubbing across a row boundary is not a continuous animation performance.
 ```sh
 node --test tests/javascript/creature-animation.test.mjs tests/javascript/creature-animation-assets.test.mjs tests/javascript/sprite-atlas-layout.test.mjs
 node --test tests/javascript/*.test.mjs
-blender -b -t 2 --python tools/animation/test_kinematics.py
+blender -b -t 2 --python-exit-code 1 --python tools/animation/test_kinematics.py
 # Standard .NET test project paths are listed under tests/; use Release.
 dotnet test tests/Wyrmforge.Application.Tests/Wyrmforge.Application.Tests.csproj -c Release
 ```
@@ -215,7 +215,7 @@ capability a complete grounded actor.
 CPU source metadata study (S/E only):
 
 ```sh
-blender -b -t 2 --python tools/animation/export_contact_regions.py -- artifacts/foundation --out artifacts/contact-regions --color-atlas path/to/verified/walk.png
+blender -b -t 2 --python-exit-code 1 --python tools/animation/export_contact_regions.py -- artifacts/foundation --out artifacts/contact-regions --color-atlas path/to/verified/walk.png
 node --test tests/javascript/sprite-contact-kinematics.test.mjs tests/javascript/sprite-layer-compositor.test.mjs
 node tools/animation/benchmark_contact_chains.mjs
 ```
@@ -248,3 +248,23 @@ node tools/animation/review_contact_regions.cjs artifacts/contact-regions/contac
 The current source audit also found that hand-picked sole landmarks did not lie
 on the actual mesh patch. Real sole-vertex ownership/patch calibration is an open
 source gate; never cite the old landmark-only slip as mesh contact acceptance.
+
+### Actual mesh support and reliable source failures
+
+The current author fits knee/ankle binds to actual weighted joint rings while
+checking rest-skin fidelity. `solePatches` records the fully owned near-ground
+skin vertices, convex support hull and pixel-derived height band.
+`validate_source.py` reopens the saved file and measures those evaluated skin
+vertices, actual ground error and independently recomputed segment-mass support.
+Historical files without real patches require explicit `--allow-legacy-landmarks`
+and are never mesh-contact acceptance.
+
+```sh
+python tools/animation/test_source_qc.py artifacts/foundation --blender /path/to/blender
+```
+
+The harness mutates temporary copies only and requires nonzero Blender status
+plus the expected skating/hover failure. Always use `--python-exit-code 1` in
+Blender automation. The cached source CI performs no full color/material render
+or release. The earlier optional attack-travel study is rejected by the corrected
+sole/reach constraints; the default four-action source is the current candidate.

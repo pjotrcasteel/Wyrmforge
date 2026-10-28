@@ -304,3 +304,39 @@ or the rectangular support footprint. The actual near-ground sole patches contai
 225/180 fully foot-weighted vertices. Correcting authoring to use those real mesh
 patches and independently measuring their posed vertices is the next required
 source gate. Previous source and study archives remain explicitly unapproved.
+
+## Actual sole-patch source gate — 28 October
+
+The source rig knee/ankle bind centres were fitted to actual weighted mesh joint
+rings, retaining original joint heights. Rest-skin displacement is only
+6.32203e-8m; mesh, UVs, weights and original anatomy were not rescaled. Foot
+support now comes from 405 fully foot-weighted actual near-ground vertices and
+their convex support hulls, not a rectangle around a hand-picked empty point.
+The support band derives from a quarter native source pixel (0.00403646m).
+The authoring mass-margin target was tightened to half a source pixel (0.00807292m).
+
+Independent saved-Blender evaluation measures the evaluated skin vertices:
+
+| Clip | Maximum actual sole slip, m | Maximum sole ground error, m | Minimum independent mass-proxy margin, m |
+|---|---:|---:|---:|
+| walk | 2.18112e-7 | 2.38419e-7 | 0.00927244 |
+| stationary supported claw | 1.49198e-7 | 2.38419e-7 | 0.03641078 |
+| positive turn | 3.14009e-7 | 1.78814e-7 | 0.00909645 |
+| negative turn | 3.00343e-7 | 2.38419e-7 | 0.01053297 |
+
+All knee/elbow limits and fixed bone lengths pass. This remains a declared
+segment-mass/support approximation, not rigid-body dynamics or visual acceptance.
+Real-mesh world-motion Hunt acceptance remains open.
+
+Temporary-clone negative tests inject actual mesh skating and hovering. Both
+were rejected for the expected geometry failure with **Blender exit status 1**.
+Commands now use `--python-exit-code 1`; Blender's default zero status after a
+Python exception cannot be treated as a passing check. The new read-only source
+workflow caches a SHA-pinned Blender 4.5.3 runtime, runs these gates without
+rendering every commit, and uploads source/QC only; it cannot publish or merge.
+
+The old optional 256-pose `attack-travel` study fails the corrected real-sole
+reach constraint at pose 26 and remains rejected. The reproducible current
+source pipeline uses the four validated clips, then shared contact-region
+integration. Do not spend another full eight-facing grid render on that rejected
+study or promote its historical landmark-only metrics.

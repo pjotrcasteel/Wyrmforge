@@ -11,6 +11,7 @@ from mathutils import Vector,Matrix,Euler
 from bpy_extras.object_utils import world_to_camera_view
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 from kinematics import solve_chain, segment_matrix, support_margin
+from source_contacts import mesh_sole_patch,fit_upright_contact_bind
 from hollow_ragged_silhouette import shorten_hanging_cloth
 from hollow_source_embers import attach_internal_fire
 ROOT=Path(__file__).resolve().parents[2]
@@ -32,10 +33,13 @@ scene.render.film_transparent=True;scene.render.image_settings.file_format='PNG'
 scene.view_settings.view_transform='Standard';scene.render.fps=12
 scene.camera.data.ortho_scale=1.55
 scene.frame_start=1;scene.frame_end=16
+bind_repair=fit_upright_contact_bind(rig,actor,[[prefix+side for prefix in ['thigh.','shin.','foot.']] for side in ['L','R']],1.55/96)
 rest={b.name:b.matrix_local.copy() for b in rig.data.bones}
 SOLE_Z=-.50
 STRIDE=.36
 DIRECTIONS=['N','NE','E','SE','S','SW','W','NW']
+SOLE_PATCHES={side:mesh_sole_patch(rig,actor,'foot.'+side,1.55/96) for side in ['L','R']}
+SUPPORT_MARGIN=.5*1.55/96
 # Separate unanimated view pivot: source yaw never overwrites the render angle.
 view=bpy.data.objects.new('AN unanimated view',None);scene.collection.objects.link(view);rig.parent=view
 front=math.atan2(-3.2,2.2)+math.pi/2
@@ -64,6 +68,11 @@ def foot_target(side,p):
         a=(q-.62)/.38;local_y=STRIDE*(.31-smooth(a)*.62);z=SOLE_Z+.055*math.sin(math.pi*a);stance=False
     return Vector((sign*.085,local_y,z)),stance
 
+def checked_chain(rig,upper,lower,target,pole,limits):
+    try:return solve_chain(rig,upper,lower,target,pole,limits)
+    except ValueError as error:raise ValueError(f'{clip} pose {index}, {upper}, head={list(rig.pose.bones[upper].head)}, target={list(target)}: {error}') from error
+
+(OUT/'source-preflight.json').write_text(json.dumps({'bindRepair':bind_repair,'patches':SOLE_PATCHES,'rest':{k:[v for row in matrix for v in row] for k,matrix in rest.items()}},sort_keys=True))
 records={};actions={}
 GRID_PHASES=16
 GRID_ACTIONS=16
@@ -89,7 +98,7 @@ for clip in args.only.split(','):
         torque=interp([(0,0),(.27,-.27),(.43,-.30),(.56,.34),(.72,.22),(1,0)],t) if attack else .045*math.sin(2*math.pi*p)
         lean=interp([(0,.09),(.3,-.08),(.47,-.03),(.58,.19),(.76,.12),(1,.09)],t) if attack else .09+.025*math.sin(4*math.pi*p)
         pelvis_x=.085*math.sin(2*math.pi*p) if not attack or grid else interp([(0,0),(.3,-.018),(.6,.024),(1,0)],t)
-        pelvis_z=-.065+.009*math.cos(4*math.pi*p) if not attack or grid else interp([(0,-.056),(.32,-.073),(.57,-.059),(.75,-.068),(1,-.056)],t)
+        pelvis_z=-.09+.009*math.cos(4*math.pi*p) if not attack or grid else interp([(0,-.081),(.32,-.098),(.57,-.084),(.75,-.093),(1,-.081)],t)
         # Offsets are local to the true bind orientation (not world premultiplies).
         set_local('root',(0,0,0),(0,0,0))
         pelvis=rig.pose.bones['pelvis'];pelvis.matrix=Matrix.Translation(Vector((pelvis_x,0,pelvis_z+.025))) @ rest['pelvis']
@@ -113,11 +122,11 @@ for clip in args.only.split(','):
                 sole=Matrix.Rotation(-yaw,4,'Z') @ world_sole
             else:sole,stance=foot_target(side,p)
             footrest=rig.data.bones['foot.'+side]
-            landmark=Vector((sign*.09,-.025,SOLE_Z))
+            landmark=Vector(SOLE_PATCHES[side]['restContactPoint'])
             foot_yaw=(turn_sign*math.pi/4*smooth(a) if clip.startswith('pivot') else 0)-yaw
             foot_rotation=Matrix.Rotation(foot_yaw,4,'Z')
             ankle=sole-foot_rotation.to_3x3() @ (landmark-footrest.head_local)
-            flex=solve_chain(rig,'thigh.'+side,'shin.'+side,ankle,Vector((sign*.09,-.5,-.2)),(8,145))
+            flex=checked_chain(rig,'thigh.'+side,'shin.'+side,ankle,Vector((sign*.09,-.5,-.2)),(8,145))
             fmatrix=foot_rotation @ footrest.matrix_local;fmatrix.translation=ankle;rig.pose.bones['foot.'+side].matrix=fmatrix
             bpy.context.view_layer.update()
             feet_poses[side]=(ankle.copy(),fmatrix.copy())
@@ -128,7 +137,9 @@ for clip in args.only.split(','):
                 if side in last_points:slips.append((world-last_points[side]).length)
                 last_points[side]=world.copy()
                 contacts.append({'id':'foot-'+side,'x':actual.x,'y':actual.y,'z':actual.z})
-                footprints += [(actual.x+x,actual.y+y) for x,y in [(-.027,-.055),(.027,-.055),(.027,.055),(-.027,.055)]]
+                for point in SOLE_PATCHES[side]['restHull']:
+                    support=rig.pose.bones['foot.'+side].matrix @ rest['foot.'+side].inverted() @ Vector(point)
+                    footprints.append((support.x,support.y))
             else:last_points.pop(side,None)
             joint_ranges.setdefault('knee-'+side,[]).append(flex)
         # Shoulder-to-claw trajectories stay on the striking side of the ribcage.
@@ -140,7 +151,7 @@ for clip in args.only.split(','):
             else:
                 x=sign*(.245+.012*math.sin(2*math.pi*p-.5));y=-.14+.04*math.sin(2*math.pi*p+(0 if side=='L' else math.pi)-.45);z=.035+.015*math.sin(2*math.pi*p-.7)
             target=Vector((x,y,z))
-            flex=solve_chain(rig,'upper_arm.'+side,'forearm.'+side,target,Vector((sign*.6,.08,.15)),(12,150))
+            flex=checked_chain(rig,'upper_arm.'+side,'forearm.'+side,target,Vector((sign*.6,.08,.15)),(12,150))
             hand=rig.data.bones['hand.'+side];direction=Vector((sign*.15,-.8,-.6)).normalized()
             rig.pose.bones['hand.'+side].matrix=segment_matrix(hand,target,target+direction*hand.length)
             bpy.context.view_layer.update();joint_ranges.setdefault('elbow-'+side,[]).append(flex)
@@ -157,7 +168,7 @@ for clip in args.only.split(','):
         # SAME planted ankles. It cannot translate the contact targets or bones.
         # No unsupported pose is relabelled as a catch without a real step.
         for balance_iteration in range(10):
-            if margin>=.003:break
+            if margin>=SUPPORT_MARGIN:break
             goal=Vector((sum(c['x'] for c in contacts)/len(contacts),sum(c['y'] for c in contacts)/len(contacts),com.z))
             shift=(goal-com)*.65;shift.z=0
             if shift.length>.025:shift.normalize();shift*=.025
@@ -165,16 +176,16 @@ for clip in args.only.split(','):
             rig.pose.bones['pelvis'].matrix=matrix;bpy.context.view_layer.update()
             for side,sign in [('L',1),('R',-1)]:
                 ankle,fmatrix=feet_poses[side]
-                flex=solve_chain(rig,'thigh.'+side,'shin.'+side,ankle,Vector((sign*.09,-.5,-.2)),(8,145))
+                flex=checked_chain(rig,'thigh.'+side,'shin.'+side,ankle,Vector((sign*.09,-.5,-.2)),(8,145))
                 rig.pose.bones['foot.'+side].matrix=fmatrix;bpy.context.view_layer.update()
                 joint_ranges['knee-'+side].append(flex)
                 target,direction=hand_targets[side];target+=shift
-                flex=solve_chain(rig,'upper_arm.'+side,'forearm.'+side,target,Vector((sign*.6,.08,.15)),(12,150))
+                flex=checked_chain(rig,'upper_arm.'+side,'forearm.'+side,target,Vector((sign*.6,.08,.15)),(12,150))
                 hand=rig.data.bones['hand.'+side];rig.pose.bones['hand.'+side].matrix=segment_matrix(hand,target,target+direction*hand.length)
                 bpy.context.view_layer.update();joint_ranges['elbow-'+side].append(flex)
             com=sum(((rig.pose.bones[name].head+rig.pose.bones[name].tail)*.5*weight for name,weight in weights.items()),Vector())/sum(weights.values())
             margin=support_margin(com,footprints)
-        if margin<0:raise ValueError(f'Unbalanced {clip} frame {index}: mass projection {margin:.6f}m outside support')
+        if margin<SUPPORT_MARGIN-1e-6:raise ValueError(f'Unbalanced {clip} frame {index}: mass projection {margin:.6f}m outside support')
         sample={'contacts':contacts,'com':[com.x,com.y],'supportMargin':margin,
                 'balance':'supported' if margin>=0 else 'catch','authoredYawRadians':yaw,
                 'massModel':'authored-segment-centres-approximation',
@@ -207,7 +218,7 @@ for row,direction in enumerate(DIRECTIONS):
     origin=pixel(Vector((0,0,0)));axes=[pixel(Vector(axis)) for axis in [(1,0,0),(0,1,0),(0,0,1)]]
     projection_by_direction[direction]=[axes[k][0]-origin[0] for k in range(3)]+[origin[0]]+[axes[k][1]-origin[1] for k in range(3)]+[origin[1]]
 view.rotation_euler=(0,0,0)
-manifest={'schemaVersion':2,'projectionByDirection':projection_by_direction,'toolSha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'contactChains':[{'id':'foot-'+side,'upper':'thigh.'+side,'middle':'shin.'+side,'end':'foot.'+side,'pole':[sign*.09,-.5,-.2],'restContactPoint':[sign*.09,-.025,SOLE_Z],'limits':[8,145],'bindSpace':'rig-source'} for side,sign in [('L',1),('R',-1)]],'candidateNotApproved':True,'runtimeIntegrated':False,'sourceSha256':hashlib.sha256(SOURCE.read_bytes()).hexdigest(),'blenderVersion':bpy.app.version_string,'coordinateSpace':'actor-xy-ground-z-up','sourceUnits':'metres','unitsPerPixel':1.55/96,'skeleton':skeleton,'skeletonSignature':hashlib.sha256(json.dumps(skeleton,sort_keys=True).encode()).hexdigest(),'clips':records,'directions':DIRECTIONS,'cloth':cloth,'emissionRegions':regions,'sourceQCOnly':True,'wholeBodyCOMValidated':False,'massModel':'authored-segment-centres-approximation-not-physical-dynamics'}
+manifest={'schemaVersion':2,'groundZMetres':SOLE_Z,'bindRepair':bind_repair,'solePatches':SOLE_PATCHES,'minimumSupportMarginMetres':SUPPORT_MARGIN,'massWeights':weights,'projectionByDirection':projection_by_direction,'toolSha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'contactChains':[{'id':'foot-'+side,'upper':'thigh.'+side,'middle':'shin.'+side,'end':'foot.'+side,'pole':[sign*.09,-.5,-.2],'restContactPoint':SOLE_PATCHES[side]['restContactPoint'],'limits':[8,145],'bindSpace':'rig-source'} for side,sign in [('L',1),('R',-1)]],'candidateNotApproved':True,'runtimeIntegrated':False,'sourceSha256':hashlib.sha256(SOURCE.read_bytes()).hexdigest(),'blenderVersion':bpy.app.version_string,'coordinateSpace':'actor-xy-ground-z-up','sourceUnits':'metres','unitsPerPixel':1.55/96,'skeleton':skeleton,'skeletonSignature':hashlib.sha256(json.dumps(skeleton,sort_keys=True).encode()).hexdigest(),'clips':records,'directions':DIRECTIONS,'cloth':cloth,'emissionRegions':regions,'sourceQCOnly':True,'wholeBodyCOMValidated':False,'massModel':'authored-segment-centres-approximation-not-physical-dynamics'}
 (OUT/'source-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
 if args.render:
     for clip,action in actions.items():
