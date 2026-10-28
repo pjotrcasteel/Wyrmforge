@@ -119,7 +119,7 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
             pose.direction=hollowDirection(dx,dy,pose.direction);
         }
         if(distance>=64){pose.distance=0;pose.visualDistance=0;pose.runSpeed=null;pose.lastSampleAge=null;
-            pose.lastMove=-1;pose.attackAt=null;pose.animation=createSpriteAnimationState();pose.foundationAnimation=null;pose.foundationSample=null;}
+            pose.lastMove=-1;pose.attackAt=null;pose.animation=createSpriteAnimationState();pose.foundationAnimation=null;pose.foundationSample=null;pose.foundationCue=null;}
         pose.x=enemy.x;pose.y=enemy.y;
         const locomotion=sampleHollowRun(pose,distance,dt,advancing);
         if(pose.attackAt!=null&&pose.age-pose.attackAt>=16/12)pose.attackAt=null;
@@ -145,12 +145,16 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
         // substitutes a missing/broken limb; legacy gameplay/deaths stay intact.
         if(foundationEnabled&&foundation.ready()&&pose.armVariant==='standard'&&pose.injuryVariant==='standard'){
             pose.foundationAnimation??=createSpriteAnimationState();
-            if(pose.foundationAttackAt!==pose.attackAt&&pose.attackAt!=null)pose.foundationSequence=(pose.foundationSequence??-1)+1;
-            pose.foundationAttackAt=pose.attackAt;
+            // The shared lifecycle owns action completion. Legacy render-age
+            // expiration must not enqueue a second cue against C# sample time.
+            if(advancing&&touching&&!pose.foundationAnimation.action){
+                pose.foundationSequence=(pose.foundationSequence??-1)+1;
+                pose.foundationCue={name:'attack',token:`proximity-${id}-${pose.foundationSequence}`,sequence:pose.foundationSequence};
+            }
             pose.foundationSample=updateSpriteAnimation(pose.foundationAnimation,foundation.profile,{
-                entityId:id,timestamp:pose.age,travel:pose.distance,scale:Math.max(.65,Math.min(1.8,(Number(enemy.radius)||11)/11))*pose.visualScale,world:{x:enemy.x,y:enemy.y},direction:pose.direction,
+                entityId:id,timestamp:Number.isFinite(snapshot.simulationTimeSeconds)?snapshot.simulationTimeSeconds:pose.age,travel:pose.distance,scale:Math.max(.65,Math.min(1.8,(Number(enemy.radius)||11)/11))*pose.visualScale,world:{x:enemy.x,y:enemy.y},direction:pose.direction,
                 moving:locomotion.moving,paused:snapshot.paused||snapshot.ended,frozen:enemy.frozen,reducedMotion,
-                action:pose.attackAt==null?null:{name:'attack',token:`proximity-${id}-${pose.attackAt}`,sequence:pose.foundationSequence}});
+                action:pose.foundationCue??null});
         }
     }
     for(const id of state.entities.keys())if(!present.has(id))state.entities.delete(id);

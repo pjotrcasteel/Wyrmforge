@@ -3,8 +3,8 @@ export type Vector2={x:number;y:number};
 export type Balance='supported'|'catch'|'flight'|'fall';
 export interface ContactSample {id:string;x:number;y:number}
 export interface SourcePose {contacts:ContactSample[];com?:[number,number];balance:Balance}
-export interface PoseGrid {travel?:'facing-projection';stanceVelocity?:Vector2;phaseFrames:number;actionFrames:number;order:'action-major';phaseSampling:'nearest';actionSampling:'nearest'}
-export interface ClipProfile {poseGrid?:PoseGrid;clip:string;frames:number;fps:number;samples:SourcePose[];mode?:'fullBody'|'regions';coupledSupport?:boolean;priority?:number;commitUntil?:number;hold?:boolean;terminal?:boolean;reducedFrame?:number}
+export interface PoseGrid {stanceVelocityByDirection?:Record<string,Vector2>;travel?:'facing-projection';stanceVelocity?:Vector2;phaseFrames:number;actionFrames:number;order:'action-major';phaseSampling:'nearest';actionSampling:'nearest'}
+export interface ClipProfile {contactSpace?:'projected-world-offset';facingSamples?:Record<string,SourcePose[]>;strideByDirection?:Record<string,number>;stanceVelocityByDirection?:Record<string,Vector2>;phaseSampling?:'nearest';poseGrid?:PoseGrid;clip:string;frames:number;fps:number;samples:SourcePose[];mode?:'fullBody'|'regions';coupledSupport?:boolean;priority?:number;commitUntil?:number;hold?:boolean;terminal?:boolean;reducedFrame?:number}
 export interface ContactChain {upper:string;middle:string;end:string;pole:[number,number,number];restContactPoint:[number,number,number];limits:[number,number];bindSpace:'rig-source'}
 export interface CreatureRigProfile {
  schemaVersion:2;coordinateSpace:'actor-xy-ground-z-up';unitsPerPixel:number;maxRootOffset:number;

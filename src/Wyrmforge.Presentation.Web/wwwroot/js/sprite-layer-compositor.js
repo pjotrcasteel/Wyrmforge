@@ -37,7 +37,11 @@ export function createSpriteLayerCompositor(metadata,clips,images,options={}){
         if(tiles.size>=maxTiles){const oldest=tiles.keys().next().value;tile=tiles.get(oldest);tiles.delete(oldest);stats.evictions++;}
         else{tile=makeCanvas();stats.allocatedTiles++;}
         const ctx=tile.getContext('2d');ctx.clearRect(0,0,size,size);ctx.imageSmoothingEnabled=false;
-        if(parts){
+        const first=parts?.[0],sourceFrame=first&&metadata.clips[first.clip]?.[first.direction]?.[first.frame];
+        const complete=sourceFrame?.completeRegions;
+        const wholeSource=parts&&Array.isArray(complete)&&parts.length===complete.length&&new Set(parts.map(p=>p.region)).size===complete.length&&parts.every(p=>p.clip===first.clip&&p.frame===first.frame&&p.direction===first.direction&&complete.includes(p.region)&&p.transform.every((v,i)=>v===[1,0,0,1,0,0][i]));
+        if(wholeSource){source(ctx,first.clip,first.frame,first.direction);}
+        else if(parts){
             for(const part of parts){
                 const frame=metadata.clips[part.clip]?.[part.direction]?.[part.frame];
                 if(!frame)throw new RangeError('Unknown semantic sprite source pose');

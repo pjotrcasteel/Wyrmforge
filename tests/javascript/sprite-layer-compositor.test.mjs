@@ -36,3 +36,12 @@ test('invalid part leaves the existing cache and canvas state untouched',t=>{
  assert.throws(()=>c.compose({parts:[part('foot'),part('ghost-hand')]}),/Unknown sprite region/);
  assert.deepEqual(c.stats,before);assert.equal(calls.length,n);assert.equal(c.compose(pose),tile);
 });
+test('complete unchanged source regions draw original pixels once; partial sets cannot restore an absent region',t=>{
+ const previous=globalThis.Path2D;globalThis.Path2D=class{rect(){}};t.after(()=>{globalThis.Path2D=previous;});
+ let draws=0;const frame={completeRegions:['body','foot'],regions:{body:[],foot:[]}},ctx={clearRect(){},save(){},restore(){},clip(){},transform(){},drawImage(){draws++;}};
+ const c=createSpriteLayerCompositor({canvasSize:16,directions:['S'],clips:{rest:{S:[frame]}}},{rest:{cell:16,frames:1}},new Map([['rest',{}]]),{makeCanvas:()=>({getContext:()=>ctx})});
+ const part=region=>({clip:'rest',frame:0,direction:'S',region,transform:[1,0,0,1,0,0]});
+ c.compose({parts:[part('body'),part('foot')]});assert.equal(draws,1);
+ c.compose({parts:[part('body')]});assert.equal(draws,2);
+ c.compose({parts:[part('body'),part('body')]});assert.equal(draws,4,'a duplicate is not a complete body/foot set');
+});

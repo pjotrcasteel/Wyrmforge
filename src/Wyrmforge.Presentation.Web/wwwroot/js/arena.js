@@ -55,6 +55,7 @@ export function readArenaDiagnostics(canvas) {
     if (!state) return null;
     return {
         active: state.active,
+        simulationTimeSeconds: state.latestSnapshot?.simulationTimeSeconds ?? null,
         hud: state.latestSnapshot?.hud??null,
         paused: state.latestSnapshot?.paused??false,
         ended: state.latestSnapshot?.ended??false,

@@ -41,6 +41,31 @@ def runtime_clip(name):
         samples.append({'contacts':contacts,'balance':s['balance'],'com':com,'supportMarginMetres':s['supportMargin']})
     result={'clip':name,'frames':c['frames'],'fps':c['fps'],'samples':samples}
     if c.get('poseGrid'):result['poseGrid']={**c['poseGrid'],'travel':'facing-projection','stanceVelocity':{'x':-c['strideMetres']*scale,'y':0}}
+    if m.get('projectionByDirection'):
+        pixel_scale=93/96;projected={}
+        def ground_point(point,projection):
+            x,y,z=point
+            return [(projection[0]*x+projection[1]*y+projection[2]*z+projection[3]-48)*pixel_scale,
+                    (projection[4]*x+projection[5]*y+projection[6]*z+projection[7]-72)*pixel_scale]
+        for direction,projection in m['projectionByDirection'].items():
+            views=[]
+            for sample in c['samples']:
+                angle=sample.get('authoredYawRadians',0);co,si=math.cos(angle),math.sin(angle)
+                contacts=[]
+                for q in sample['contacts']:
+                    xy=ground_point((q['x']*co-q['y']*si,q['x']*si+q['y']*co,q['z']),projection)
+                    contacts.append({'id':q['id'],'x':xy[0],'y':xy[1]})
+                cx,cy=sample['com'];com=ground_point((cx*co-cy*si,cx*si+cy*co,-.5),projection)
+                views.append({'contacts':contacts,'com':com,'balance':sample['balance'],'supportMarginMetres':sample['supportMargin']})
+            projected[direction]=views
+        result['facingSamples']=projected;result['samples']=projected['E'];result['contactSpace']='projected-world-offset'
+        if c['strideMetres']>0:
+            result['strideByDirection']={d:math.hypot(p[1],p[5])*c['strideMetres']*pixel_scale for d,p in m['projectionByDirection'].items()}
+        if name=='walk':
+            result['phaseSampling']='nearest'
+            result['stanceVelocityByDirection']={d:{'x':p[1]*c['strideMetres']*pixel_scale,'y':p[5]*c['strideMetres']*pixel_scale} for d,p in m['projectionByDirection'].items()}
+        if c.get('poseGrid'):
+            result['poseGrid']['stanceVelocityByDirection']={d:{'x':p[1]*c['strideMetres']*pixel_scale,'y':p[5]*c['strideMetres']*pixel_scale} for d,p in m['projectionByDirection'].items()}
     return result
 profile={'schemaVersion':2,'coordinateSpace':'actor-xy-ground-z-up','unitsPerPixel':93/96,'maxRootOffset':93/96,
  'rig':{'sourceSpace':{'coordinateSpace':'blender-armature-xyz-metres','toActor':[0,-scale,0,0,scale,0,0,0,0,0,scale,.5*scale,0,0,0,1]},'bodyPlan':'biped','bones':m['skeleton'],'semantics':{'root':'root','pelvis':'pelvis','spine':'spine','head':'head'},'absentBones':[],

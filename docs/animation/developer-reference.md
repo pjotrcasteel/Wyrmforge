@@ -225,3 +225,26 @@ fail if they miss any actual color-alpha pixel. The exporter never redraws color
 sprites. Bone-chain arguments are authoring data; the playback/kinematics modules
 contain no species branches. Study metadata marks partial directions and source
 QC explicitly. It is not a shipped asset declaration.
+
+### Projected contact calibration and authoritative sample time
+
+`contactSpace:'projected-world-offset'` plus `facingSamples` declares offsets from
+the sprite anchor in actual presentation-world units, already projected for each
+view. Do not yaw-rotate them again. `strideByDirection` and
+`stanceVelocityByDirection` preserve the actual camera ground projection. The
+source bind transform and camera projection have different jobs; a proper 3D bind
+basis is not a substitute for orthographic screen contact calibration.
+
+`RunRenderSnapshot.SimulationTimeSeconds` is read-only `elapsed`; it creates no
+new attack event. The opt-in adapter uses this sample time and the shared action
+state instead of repeatedly reissuing cues from the legacy visual-age timeout.
+Snapshots without the field retain the earlier fallback. The source-region QA
+command uses actual compositor pixels and is explicitly separate from Hunt QC:
+
+```sh
+node tools/animation/review_contact_regions.cjs artifacts/contact-regions/contact-regions.json
+```
+
+The current source audit also found that hand-picked sole landmarks did not lie
+on the actual mesh patch. Real sole-vertex ownership/patch calibration is an open
+source gate; never cite the old landmark-only slip as mesh contact acceptance.

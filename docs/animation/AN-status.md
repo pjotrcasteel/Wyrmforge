@@ -272,3 +272,35 @@ now records chain surface landmarks and its tool SHA; all five saved actions
 were independently rechecked. Contact scheduling, mass/support-aware regional
 integration, deformed source/mobile visual QC and material-normal transforms
 remain open. No runtime source is silently marked accepted.
+
+## Camera/contact-space and actual-sole audit correction
+
+The old contact residuals above used an actor-local Cartesian approximation.
+They are evidence that the candidate failed, **not exact measurements of the
+drawn feet**. Independent S/E source projections exposed a sign and ground-plane
+foreshortening mismatch. The exporter now records the actual orthographic camera
+basis for eight views, emits projected-world contact offsets and per-view strides,
+and playback does not rotate those offsets a second time. A saved-rig marker
+cross-check has maximum error 0.00000256 actor units. New projected fixtures cover
+S/E/diagonal source travel and reverse at 15–120Hz. Lateral motion still requires
+regional correction; this is not declared solved.
+
+The authoritative snapshot now projects `SimulationTimeSeconds = elapsed` without
+changing ticking, damage or AI. The opt-in adapter consumes it and lets the shared
+action lifecycle decide when a visual proximity cue completes. Duplicate renders,
+legacy render-age expiry, freeze/resume and crossing targets do not restart the
+candidate cue. Old snapshots fall back compatibly. Full local Application tests
+passed **671/671**; full Node tests passed **524/524** at this checkpoint.
+
+Source-region Canvas QA now actually renders the shared compositor with the
+constrained 3D chain helper, for eight S/E key poses and a bounded 2cm correction.
+This is source QC, not Hunt acceptance. Complete unchanged region sets draw the
+original source once; partial sets cannot accidentally restore absent regions.
+
+**Additional actual-mesh failure found:** the original manually chosen rest
+landmark `(±0.09,-0.025,-0.5)` is about 5.5cm from the actual highly foot-weighted
+mesh vertices. Its near-zero mathematical drift did not prove real sole contact
+or the rectangular support footprint. The actual near-ground sole patches contain
+225/180 fully foot-weighted vertices. Correcting authoring to use those real mesh
+patches and independently measuring their posed vertices is the next required
+source gate. Previous source and study archives remain explicitly unapproved.

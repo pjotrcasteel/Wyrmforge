@@ -26,6 +26,8 @@ public sealed record RunRenderSnapshot(
 {
     public IReadOnlyList<AshfangEffectRenderSnapshot> AshfangEffects { get; init; } = [];
     public bool PresentationPaused { get; init; }
+    /// <summary>Read-only simulation sample time for presentation/replay. It is not an attack or damage cue.</summary>
+    public double SimulationTimeSeconds { get; init; }
     public DragonRenderSnapshot? DragonDefeat { get; init; }
     public GpuLightingFrame? Lighting { get; init; }
 

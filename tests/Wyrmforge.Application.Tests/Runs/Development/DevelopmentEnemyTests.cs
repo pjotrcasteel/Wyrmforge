@@ -81,6 +81,26 @@ public sealed class DevelopmentEnemyTests
     }
 
     [TestMethod]
+    public void PresentationSampleTimeComesFromSimulationAndRepeatedReadsCannotAdvanceIt()
+    {
+        var run = Create(EnemyKind.Hollow);
+        Assert.AreEqual(0, run.CreateSnapshot().SimulationTimeSeconds);
+        var sample = run.Tick(.02, default, 800, 600);
+        Assert.AreEqual(.02, sample.SimulationTimeSeconds, 1e-12);
+        Assert.AreEqual(sample.SimulationTimeSeconds, run.CreateSnapshot().SimulationTimeSeconds);
+        Assert.AreEqual(.07, run.Tick(.5, default, 800, 600).SimulationTimeSeconds, 1e-12);
+        Assert.AreEqual(.07, run.Tick(0, default, 800, 600).SimulationTimeSeconds, 1e-12);
+    }
+
+    [TestMethod]
+    public void PausedOrdinarySnapshotDoesNotAdvancePresentationSampleTime()
+    {
+        var run = new RunSimulationFactory(new SeededRandomSource(1)).Create(SelfPlayBuildCatalog.All.First().SelectedNodes, seed: 42);
+        Assert.IsTrue(run.CreateSnapshot().Paused);
+        Assert.AreEqual(0, run.Tick(.05, default, 800, 600).SimulationTimeSeconds);
+    }
+
+    [TestMethod]
     public void InvalidDimensionsOrKind_AreRejected()
     {
         Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new DevelopmentEnemySetup((EnemyKind)99, 1, 800, 600).Validate());

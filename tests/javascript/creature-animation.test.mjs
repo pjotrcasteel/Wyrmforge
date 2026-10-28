@@ -180,3 +180,32 @@ test('non-finite source timing, strides, mass projections and malformed facing l
   const p=structuredClone(fixture());mutate(p);assert.throws(()=>validate(p),TypeError);
  }
 });
+test('projected contact metadata matches independently exported saved-rig screen markers, without a second facing rotation',()=>{
+ const p=validate(JSON.parse(readFileSync(new URL('../fixtures/animation/projected-contact-source.json',import.meta.url),'utf8')));
+ for(const marker of p.sourceEvidence.projectedMarkerChecks){
+  const sample=p.locomotion.facingSamples[marker.direction][marker.frame].contacts.find(c=>c.id===marker.id);
+  const expected=marker.markerPixel128.map((v,i)=>(v-p.sourceEvidence.sourceCanvasAnchor128[i])*p.sourceEvidence.nativePixelScale);
+  assert.ok(Math.hypot(sample.x-expected[0],sample.y-expected[1])<64*2**-23*128*p.unitsPerPixel);
+ }
+ const s=create(),a=update(s,p,intent(0,{direction:'S'}));
+ for(const c of p.locomotion.facingSamples.S[0].contacts)assert.ok(Math.hypot(a.debug.contacts[c.id].x-c.x,a.debug.contacts[c.id].y-c.y)<1e-10);
+ assert.ok(p.locomotion.strideByDirection.S<p.locomotion.strideByDirection.E,'camera foreshortening must be calibrated rather than ignored');
+});
+test('actual projected source grid contacts remain planted in S/E/diagonal source travel and reversal at 15–120Hz',()=>{
+ const p=validate(JSON.parse(readFileSync(new URL('../fixtures/animation/projected-contact-source.json',import.meta.url),'utf8')));
+ for(const fps of [15,30,60,120])for(const direction of ['S','E','NE','SW'])for(const reverse of [false,true]){
+  const s=create(),v=p.actions.strike.poseGrid.stanceVelocityByDirection[direction],length=Math.hypot(v.x,v.y);let max=0;
+  for(let i=0;i<=fps*1.2;i++){
+   const t=i/fps,travel=t*46.53,position=reverse&&t>.55?.55*46.53-(t-.55)*46.53:travel;
+   const a=update(s,p,intent(t,{direction,travel,world:{x:-v.x/length*position,y:-v.y/length*position},moving:true,action:strike()}));
+   assert.equal(a.debug.correctionSaturated,false,`${direction}/${fps}Hz`);max=Math.max(max,a.debug.maxSlip);
+  }
+  assert.ok(max<p.unitsPerPixel/4,`${direction}/${fps}Hz reverse=${reverse}: ${max}`);
+ }
+});
+test('projected source data requires all eight calibrated facing rows and finite positive strides',()=>{
+ const p=JSON.parse(readFileSync(new URL('../fixtures/animation/projected-contact-source.json',import.meta.url),'utf8'));
+ for(const change of [p=>delete p.locomotion.facingSamples.S,p=>p.locomotion.contactSpace='actor-local',p=>p.locomotion.strideByDirection.S=0,p=>p.actions.strike.poseGrid.stanceVelocityByDirection.S={x:NaN,y:0}]){
+  const invalid=structuredClone(p);change(invalid);assert.throws(()=>validate(invalid),/projected/);
+ }
+});

@@ -86,7 +86,7 @@ for direction in result['exportedDirections']:
    pose=rig.pose.bones[c['end']];rest=rig.data.bones[c['end']]
    point=pose.matrix @ rest.matrix_local.inverted() @ Vector(c['restContactPoint'])
    source_contacts[c['id']]={**c,'sourceContact':list(point),'upperLength':rig.data.bones[c['upper']].length,'lowerLength':rig.data.bones[c['middle']].length}
-  frames.append({'sourceContacts':source_contacts,'projection':projection,'regions':regions,'projectedBones':projected,'sourceBones':source,'ownershipCoverage':1.0 if np.all(masks.any(axis=0)[alpha]) else 0.0})
+  frames.append({'completeRegions':['body',*bones],'sourceContacts':source_contacts,'projection':projection,'regions':regions,'projectedBones':projected,'sourceBones':source,'ownershipCoverage':1.0 if np.all(masks.any(axis=0)[alpha]) else 0.0})
  result['clips'][a.clip][direction]=frames;print('CONTACT_REGIONS',direction,len(frames),flush=True)
 (out/'contact-regions.json').write_text(json.dumps(result,separators=(',',':'))+'\n')
 print('CONTACT_REGION_OUTPUT',str(out),flush=True)

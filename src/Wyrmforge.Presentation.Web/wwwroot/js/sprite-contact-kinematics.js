@@ -58,9 +58,10 @@ export function retargetSourceContactRegion(input){
         upperLength:input.upperLength,lowerLength:input.lowerLength,limits:input.limits});
     const rootPixel=projected(upper.head,projection),jointPixel=projected(solved.middle,projection),anklePixel=projected(ankle,projection);
     const oldAnklePixel=projected(end.head,projection);
+    const identity=[1,0,0,1,0,0];
     return {middle:solved.middle,ankle,flexDegrees:solved.flexDegrees,correctionDistance:correction,
-        upperTransform:segmentTransform(rootPixel,projected(upper.tail,projection),rootPixel,jointPixel),
-        lowerTransform:segmentTransform(projected(lower.head,projection),projected(lower.tail,projection),jointPixel,anklePixel),
+        upperTransform:correction===0?[...identity]:segmentTransform(rootPixel,projected(upper.tail,projection),rootPixel,jointPixel),
+        lowerTransform:correction===0?[...identity]:segmentTransform(projected(lower.head,projection),projected(lower.tail,projection),jointPixel,anklePixel),
         endTransform:[1,0,0,1,anklePixel[0]-oldAnklePixel[0],anklePixel[1]-oldAnklePixel[1]],
         projectedContact:projected(targetContact,projection)};
 }

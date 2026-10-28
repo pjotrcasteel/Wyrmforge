@@ -8,6 +8,7 @@ import argparse,sys,json,math,hashlib
 from pathlib import Path
 import bpy
 from mathutils import Vector,Matrix,Euler
+from bpy_extras.object_utils import world_to_camera_view
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 from kinematics import solve_chain, segment_matrix, support_margin
 from hollow_ragged_silhouette import shorten_hanging_cloth
@@ -198,7 +199,15 @@ for clip in args.only.split(','):
 bpy.ops.file.pack_all()
 scene.frame_set(1);bpy.ops.wm.save_as_mainfile(filepath=str(OUT/'hollow-foundation.blend'))
 skeleton=[{'id':b.name,'parent':b.parent.name if b.parent else None,'length':b.length,'rest':[x for row in b.matrix_local for x in row]} for b in rig.data.bones]
-manifest={'schemaVersion':2,'toolSha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'contactChains':[{'id':'foot-'+side,'upper':'thigh.'+side,'middle':'shin.'+side,'end':'foot.'+side,'pole':[sign*.09,-.5,-.2],'restContactPoint':[sign*.09,-.025,SOLE_Z],'limits':[8,145],'bindSpace':'rig-source'} for side,sign in [('L',1),('R',-1)]],'candidateNotApproved':True,'runtimeIntegrated':False,'sourceSha256':hashlib.sha256(SOURCE.read_bytes()).hexdigest(),'blenderVersion':bpy.app.version_string,'coordinateSpace':'actor-xy-ground-z-up','sourceUnits':'metres','unitsPerPixel':1.55/96,'skeleton':skeleton,'skeletonSignature':hashlib.sha256(json.dumps(skeleton,sort_keys=True).encode()).hexdigest(),'clips':records,'directions':DIRECTIONS,'cloth':cloth,'emissionRegions':regions,'sourceQCOnly':True,'wholeBodyCOMValidated':False,'massModel':'authored-segment-centres-approximation-not-physical-dynamics'}
+projection_by_direction={}
+for row,direction in enumerate(DIRECTIONS):
+    view.rotation_euler.z=front+math.pi-row*math.pi/4;bpy.context.view_layer.update()
+    def pixel(point):
+        p=world_to_camera_view(scene,scene.camera,rig.matrix_world @ point);return [p.x*96,(1-p.y)*96]
+    origin=pixel(Vector((0,0,0)));axes=[pixel(Vector(axis)) for axis in [(1,0,0),(0,1,0),(0,0,1)]]
+    projection_by_direction[direction]=[axes[k][0]-origin[0] for k in range(3)]+[origin[0]]+[axes[k][1]-origin[1] for k in range(3)]+[origin[1]]
+view.rotation_euler=(0,0,0)
+manifest={'schemaVersion':2,'projectionByDirection':projection_by_direction,'toolSha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'contactChains':[{'id':'foot-'+side,'upper':'thigh.'+side,'middle':'shin.'+side,'end':'foot.'+side,'pole':[sign*.09,-.5,-.2],'restContactPoint':[sign*.09,-.025,SOLE_Z],'limits':[8,145],'bindSpace':'rig-source'} for side,sign in [('L',1),('R',-1)]],'candidateNotApproved':True,'runtimeIntegrated':False,'sourceSha256':hashlib.sha256(SOURCE.read_bytes()).hexdigest(),'blenderVersion':bpy.app.version_string,'coordinateSpace':'actor-xy-ground-z-up','sourceUnits':'metres','unitsPerPixel':1.55/96,'skeleton':skeleton,'skeletonSignature':hashlib.sha256(json.dumps(skeleton,sort_keys=True).encode()).hexdigest(),'clips':records,'directions':DIRECTIONS,'cloth':cloth,'emissionRegions':regions,'sourceQCOnly':True,'wholeBodyCOMValidated':False,'massModel':'authored-segment-centres-approximation-not-physical-dynamics'}
 (OUT/'source-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
 if args.render:
     for clip,action in actions.items():

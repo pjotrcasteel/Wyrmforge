@@ -116,8 +116,16 @@ export function validateCreatureRigProfile(profile) {
         if(clip.poseGrid?.stanceVelocity&&![clip.poseGrid.stanceVelocity.x,clip.poseGrid.stanceVelocity.y].every(Number.isFinite))fail(`invalid stance velocity: ${clip.clip}`);
         if(clip.mode==='regions'&&!clip.coupledSupport)fail('region action requires authored coupledSupport');
         if(!Array.isArray(clip.samples)||clip.samples.length!==clip.frames)fail(`contact samples required: ${clip.clip}`);
+        if(clip.reducedFrame!=null&&(!Number.isSafeInteger(clip.reducedFrame)||clip.reducedFrame<0||clip.reducedFrame>=clip.frames))fail('invalid reduced-motion source frame');
         if(clip.commitUntil!=null&&(!(clip.commitUntil>=0)||clip.commitUntil>1))fail('invalid commitment');
-        for(const sample of clip.samples){
+        if(clip.facingSamples){
+            if(clip.contactSpace!=='projected-world-offset'||Object.keys(clip.facingSamples).length!==directions.length||!directions.every(d=>Array.isArray(clip.facingSamples[d])&&clip.facingSamples[d].length===clip.frames))fail(`invalid projected contacts: ${clip.clip}`);
+        }
+        if(clip.phaseSampling!=null&&clip.phaseSampling!=='nearest')fail(`invalid phase sampling: ${clip.clip}`);
+        if(clip.stanceVelocityByDirection&&!directions.every(d=>{const v=clip.stanceVelocityByDirection[d];return v&&Number.isFinite(v.x)&&Number.isFinite(v.y)&&Math.hypot(v.x,v.y)>0;}))fail(`invalid projected stance velocity: ${clip.clip}`);
+        if(clip.strideByDirection&&!directions.every(d=>Number.isFinite(clip.strideByDirection[d])&&clip.strideByDirection[d]>0))fail(`invalid projected strides: ${clip.clip}`);
+        if(clip.poseGrid?.stanceVelocityByDirection&&!directions.every(d=>{const v=clip.poseGrid.stanceVelocityByDirection[d];return v&&Number.isFinite(v.x)&&Number.isFinite(v.y)&&Math.hypot(v.x,v.y)>0;}))fail(`invalid projected stance velocity: ${clip.clip}`);
+        for(const sample of [clip.samples,...Object.values(clip.facingSamples??{})].flat()){
             if(sample.com!=null&&(!Array.isArray(sample.com)||sample.com.length!==2||!sample.com.every(Number.isFinite)))fail(`invalid mass projection: ${clip.clip}`);
             const ids=new Set();
             for(const c of sample.contacts??[]){
@@ -174,21 +182,24 @@ function contactPoint(c,world,yaw,scale=1){
     return {x:world.x+(c.x*cos-c.y*sin)*scale,y:world.y+(c.x*sin+c.y*cos)*scale};
 }
 function solvePresentationContacts(state,profile,spec,frame,world,yaw,actorScale,contactPhase=state.phase){
-    const authored=spec.samples[frame],active=new Set(),errors=[];
+    const direction=profile.facing.directions[Math.round(yaw/45)%8];
+    const authored=spec.facingSamples?.[direction]?.[frame]??spec.samples[frame],active=new Set(),errors=[];
+    const localYaw=spec.facingSamples?0:yaw;
     let dx=0,dy=0,count=0;
     for(const c of authored.contacts??[]){
-        active.add(c.id);const point=contactPoint(c,world,yaw,actorScale);
+        active.add(c.id);const point=contactPoint(c,world,localYaw,actorScale);
         let anchor=state.contacts[c.id];
         if(!anchor){
             const grid=spec.poseGrid;
-            if(grid?.stanceVelocity){
+            const stanceVelocity=grid?.stanceVelocityByDirection?.[direction]??grid?.stanceVelocity??spec.stanceVelocityByDirection?.[direction];
+            if(stanceVelocity){
                 // A newly planted raster pose may precede/follow continuous travel.
                 // Initialize its world anchor at the continuous source phase, then
                 // measure the DRAWN pose against it. Never replace measured contacts
                 // with interpolated contacts: the bounded correction moves the sprite.
-                const sampledPhase=(frame%grid.phaseFrames)/grid.phaseFrames;
+                const sampledPhase=(frame%(grid?.phaseFrames??spec.frames))/(grid?.phaseFrames??spec.frames);
                 const phaseError=(contactPhase-sampledPhase+1.5)%1-.5;
-                anchor=contactPoint({x:c.x+phaseError*grid.stanceVelocity.x,y:c.y+phaseError*grid.stanceVelocity.y},world,yaw,actorScale);
+                anchor=contactPoint({x:c.x+phaseError*stanceVelocity.x,y:c.y+phaseError*stanceVelocity.y},world,localYaw,actorScale);
             }else anchor={x:point.x+state.rootOffset.x,y:point.y+state.rootOffset.y};
             state.contacts[c.id]=anchor;
         }
@@ -201,10 +212,10 @@ function solvePresentationContacts(state,profile,spec,frame,world,yaw,actorScale
     const length=Math.hypot(dx,dy),scale=length>limit?limit/length:1;
     state.rootOffset={x:dx*scale,y:dy*scale};
     for(const c of authored.contacts??[]){
-        const point=contactPoint(c,world,yaw,actorScale),anchor=state.contacts[c.id];
+        const point=contactPoint(c,world,localYaw,actorScale),anchor=state.contacts[c.id];
         errors.push({id:c.id,slip:Math.hypot(point.x+state.rootOffset.x-anchor.x,point.y+state.rootOffset.y-anchor.y)});
     }
-    return {contacts:state.contacts,errors,maxSlip:Math.max(0,...errors.map(c=>c.slip)),balance:authored.balance??'supported',
+    return {measurementSpace:spec.facingSamples?'unsnapped-source-marker-world-projection':'legacy-actor-local-contact-approximation',contacts:state.contacts,errors,maxSlip:Math.max(0,...errors.map(c=>c.slip)),balance:authored.balance??'supported',
         com:authored.com??null,support:authored.contacts??[],correctionSaturated:length>limit};
 }
 function actionDuration(spec){return (spec.poseGrid?.actionFrames??spec.frames)/spec.fps;}
@@ -233,7 +244,8 @@ function updateContactAnimation(state,profile,input){
     state.previousWorld={...input.world};
     state.timestamp=input.timestamp;state.travel=input.travel;state.stopped=stopped;
     state.time+=dt;
-    if(!stopped)state.phase=(state.phase+distance/(profile.locomotion.stride*actorScale))%1;
+    const stride=profile.locomotion.strideByDirection?.[profile.facing.directions[state.action?state.actionDirection:state.facingIndex]]??profile.locomotion.stride;
+    if(!stopped)state.phase=(state.phase+distance/(stride*actorScale))%1;
     const signal=input.action,spec=signal&&Object.hasOwn(profile.actions,signal.name)?profile.actions[signal.name]:null;
     if(signal&&(!Number.isSafeInteger(signal.sequence)||signal.sequence<0||!((typeof signal.token==='string'&&signal.token.length>0)||Number.isSafeInteger(signal.token))))throw new TypeError('Action requires token and monotonic sequence');
     const current=state.action&&profile.actions[state.action.name];
@@ -252,12 +264,14 @@ function updateContactAnimation(state,profile,input){
     if(actionSpec&&actionProgress>=1&&!actionSpec.hold){state.action=null;actionSpec=null;actionProgress=null;}
     if(actionSpec?.poseGrid?.travel==='facing-projection'&&!beganAction){
         const yaw=state.actionDirection*Math.PI/4;
-        const projected=displacement.x*Math.cos(yaw)+displacement.y*Math.sin(yaw);
-        state.action.contactPhase=((state.action.contactPhase+projected/(profile.locomotion.stride*actorScale))%1+1)%1;
+        const v=actionSpec.poseGrid.stanceVelocityByDirection?.[profile.facing.directions[state.actionDirection]];
+        const length=v?Math.hypot(v.x,v.y):stride;
+        const projected=v?-(displacement.x*v.x+displacement.y*v.y)/length:displacement.x*Math.cos(yaw)+displacement.y*Math.sin(yaw);
+        state.action.contactPhase=((state.action.contactPhase+projected/(length*actorScale))%1+1)%1;
     }
     const contactPhase=actionSpec?.poseGrid?.travel==='facing-projection'?state.action.contactPhase:state.phase;
     const target=profile.facing.directions.indexOf(input.direction);
-    const locomotionFrame=Math.min(profile.locomotion.frames-1,Math.floor(state.phase*profile.locomotion.frames));
+    const locomotionFrame=profile.locomotion.phaseSampling==='nearest'?Math.round(state.phase*profile.locomotion.frames)%profile.locomotion.frames:Math.min(profile.locomotion.frames-1,Math.floor(state.phase*profile.locomotion.frames));
     const turning=!actionSpec&&target>=0&&target!==state.facingIndex;
     let pivotFrame=null;
     const turnDelta=(target-state.facingIndex+12)%8-4;
