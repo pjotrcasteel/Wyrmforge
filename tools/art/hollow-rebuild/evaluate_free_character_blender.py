@@ -29,7 +29,7 @@ from PIL import Image, ImageDraw
 
 
 LABELS = ("S", "SW", "W", "NW", "N", "NE", "E", "SE")
-RECOGNIZED_LICENSES = ("CC0-1.0", "CC-BY-4.0", "GAME-USE-ONLY")
+RECOGNIZED_LICENSES = ("CC0-1.0", "CC-BY-3.0", "CC-BY-4.0", "GAME-USE-ONLY")
 
 
 def arguments():
