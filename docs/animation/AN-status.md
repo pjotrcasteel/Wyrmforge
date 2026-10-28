@@ -4,6 +4,37 @@
 
 ## Windows continuation — 28 October 2026
 
+### Whole-body support study (after `59f5cc546`)
+
+The shared contact-kinematics module now has an **opt-in source-authoring study**
+primitive, `solveSupportedSourcePose`. It accepts caller-owned support targets,
+solves all declared contact chains together, translates the coupled source body
+within an explicit finite source envelope, and recomputes segment mass from the
+resulting whole-body skeleton after every load pass. Bone lengths and joint
+limits are fixed. The source root does not move. It supplies no clock, AI,
+world integration, damage or creature-name branches. It is **not enabled by a
+runtime adapter** and does not bypass/widen the existing one-pixel raster
+correction or whole-sprite offset limits.
+
+Independent actual-skin replay on Blender 4.5.14 passed **1,296 source poses**:
+16 gait phases × (walk + 8 claw rows) × 9 headings from -180° to +180°. Actual
+sole-target error `2.75168e-7m`, ground error `2.38419e-7m`, bone endpoint
+disagreement `4.03502e-7m`, length error `1.78814e-7m`, recomputed mass discrepancy
+`3.20462e-8m`; minimum actual skin support margin `0.00809175m` against the
+unchanged `0.00807292m` source minimum. All poses replayed on the actual saved
+mesh, rather than accepting solver target arrays as contact evidence.
+
+Full JS **551/551 passes**, including source immutability, non-Hollowed bone/hand
+names, actually absent non-support arm, missing support, forged masses, excursion
+and unbounded-body negative cases. The source study's bounded 0.28m contact
+excursion and 0.14m body translation are explicit **skeletal-authoring envelopes**,
+derived from its source stride; they are not raster tolerances or acceptance of
+those extreme displacements in a rendered sprite. Runtime raster deformation,
+continuous retained-foot trajectories, full-skin transitions, GPU materials and
+actual Hunts still require separate proof. Do not label this runtime grounding.
+
+Preserved source/reports: `art/source/animation-foundation/supported-study-20261028/`.
+
 ### Directional source continuation (after `4dbe3b371`)
 
 The saved source generator now supports an explicit ground-travel heading and

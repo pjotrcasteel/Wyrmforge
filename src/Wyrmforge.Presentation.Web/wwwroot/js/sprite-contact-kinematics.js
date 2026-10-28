@@ -31,6 +31,71 @@ function projected(point,matrix){
     return [matrix[0]*point[0]+matrix[1]*point[1]+matrix[2]*point[2]+matrix[3],
         matrix[4]*point[0]+matrix[5]*point[1]+matrix[6]*point[2]+matrix[7]];
 }
+
+/** Repose a complete source skeleton against caller-owned support targets.
+ * This is an opt-in authoring/study primitive, not contact scheduling or a
+ * replacement for the one-pixel raster correction. Its output must pass an
+ * independent saved-skin replay before an adapter can render it as supported.
+ * The source body/action remains coupled; every load pass re-solves all limbs
+ * and recomputes the mass proxy from the resulting whole-body bone segments.
+ */
+export function solveSupportedSourcePose(frame,targets,options){
+    const {massWeights,rootBone,maxContactExcursion,maxBodyTranslation,minimumSupportMargin=0}=options;
+    if(!frame?.sourceBones||!frame.sourceContacts||!massWeights||!Object.hasOwn(frame.sourceBones,rootBone)||
+       ![maxContactExcursion,maxBodyTranslation,minimumSupportMargin].every(n=>Number.isFinite(n)&&n>=0))throw new TypeError('Explicit source pose anatomy and bounded authoring envelope required');
+    const bones=frame.sourceBones,chains=Object.entries(frame.sourceContacts),used=new Set();
+    for(const [id,c] of chains){
+        const target=Object.hasOwn(targets,id)?targets[id]:null;
+        if(!target||typeof target.planted!=='boolean'||!Array.isArray(target.point)||target.point.length!==3||!target.point.every(Number.isFinite))throw new TypeError('Finite authored source support target required: '+id);
+        if(!Array.isArray(c.sourceContact)||c.sourceContact.length!==3||!c.sourceContact.every(Number.isFinite))throw new TypeError('Actual source surface required');
+        if(Math.hypot(...target.point.map((v,i)=>v-c.sourceContact[i]))>maxContactExcursion)throw new RangeError('Authored source pose excursion exceeded');
+        for(const name of [c.upper,c.middle,c.end]){
+            if(used.has(name)||name===rootBone||!Object.hasOwn(bones,name))throw new TypeError('Distinct present source contact chains required');
+            used.add(name);
+        }
+        if(!Array.isArray(c.footprint)||c.footprint.length<3)throw new TypeError('Actual source support footprint required');
+    }
+    let totalMass=0;
+    for(const [name,weight] of Object.entries(massWeights)){
+        if(!Object.hasOwn(bones,name)||!Number.isFinite(weight)||weight<=0)throw new TypeError('Present source segment masses required');
+        totalMass+=weight;
+    }
+    if(!(totalMass>0))throw new TypeError('Positive whole-body source mass required');
+    const plus=(point,delta)=>point.map((v,i)=>v+delta[i]);
+    let bodyShift=[0,0,0],posed,contacts,center,support;
+    for(let pass=0;pass<=10;pass++){
+        posed=Object.create(null);contacts=Object.create(null);const footprint=[];
+        for(const [name,bone] of Object.entries(bones)){
+            if(![bone.head,bone.tail].every(v=>Array.isArray(v)&&v.length===3&&v.every(Number.isFinite)))throw new TypeError('Finite complete source skeleton required');
+            const shift=name===rootBone?[0,0,0]:bodyShift;
+            posed[name]={head:plus(bone.head,shift),tail:plus(bone.tail,shift)};
+        }
+        for(const [id,c] of chains){
+            const target=targets[id],delta=target.point.map((n,i)=>n-c.sourceContact[i]);
+            const ankle=plus(bones[c.end].head,delta),root=posed[c.upper].head;
+            const solved=solveTwoBoneContact({root,target:ankle,pole:plus(c.pole,bodyShift),upperLength:c.upperLength,lowerLength:c.lowerLength,limits:c.limits});
+            posed[c.upper]={head:root,tail:[...solved.middle]};
+            posed[c.middle]={head:[...solved.middle],tail:ankle};
+            posed[c.end]={head:ankle,tail:plus(bones[c.end].tail,delta)};
+            const patch=c.footprint.map(v=>plus(v,delta));
+            if(target.planted)footprint.push(...patch.map(p=>p.slice(0,2)));
+            contacts[id]={...c,sourceContact:[...target.point],planted:target.planted,footprint:patch,flexDegrees:solved.flexDegrees};
+        }
+        if(!footprint.length)throw new RangeError('Supported source pose has no actual ground support');
+        center=[0,0,0];
+        for(const [name,weight] of Object.entries(massWeights))for(let axis=0;axis<3;axis++)center[axis]+=(posed[name].head[axis]+posed[name].tail[axis])*weight/(2*totalMass);
+        support=measureSourceSupport(footprint,center.slice(0,2));
+        if(support.staticallySupported&&support.margin>=minimumSupportMargin)return {...frame,sourceBones:posed,sourceContacts:contacts,massCenter:center,
+            sourceRepose:{bodyShift:[...bodyShift],support,passes:pass+1,measurement:'recomputed whole-body source segment mass; saved-skin replay required'}};
+        const centroid=footprint.reduce((s,p)=>[s[0]+p[0]/footprint.length,s[1]+p[1]/footprint.length],[0,0]);
+        let dx=(centroid[0]-center[0])*.65,dy=(centroid[1]-center[1])*.65;
+        const distance=Math.hypot(dx,dy);if(distance>.025){dx*=.025/distance;dy*=.025/distance;}
+        const next=[bodyShift[0]+dx,bodyShift[1]+dy,0];
+        if(Math.hypot(...next)>maxBodyTranslation)throw new RangeError('Authored source body translation envelope exceeded');
+        bodyShift=next;
+    }
+    throw new RangeError('Reposed whole-body source mass remains outside actual support');
+}
 function segmentTransform(fromHead,fromTail,toHead,toTail){
     const x=fromTail[0]-fromHead[0],y=fromTail[1]-fromHead[1],length=Math.hypot(x,y);
     const nx=toTail[0]-toHead[0],ny=toTail[1]-toHead[1],nextLength=Math.hypot(nx,ny);

@@ -198,3 +198,55 @@ test('bounded phase-body translation carries swing geometry and pole with the re
  const b=update(state,frame,{...intent,timestamp:1,world:{x:100.1,y:200},phaseOffset:{x:.2,y:.1}});assert.deepEqual(b.support,anchor);assert.equal(b.swing.x,98.3);assert.equal(b.swing.y,204.1);
  const legacy=update({},frame,{...intent,translateSwing:false});assert.equal(legacy.swing.x,98);assert.equal(legacy.swing.y,204);
 });
+
+test('whole-body source reposing supports lateral/backward steps with fixed anatomy and recomputed mass',async()=>{
+ const {readFileSync}=await import('node:fs');
+ const {solveSupportedSourcePose:repose}=await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/sprite-contact-kinematics.js');
+ const f=JSON.parse(readFileSync(new URL('../fixtures/animation/supported-source-pose.json',import.meta.url)));
+ const original=JSON.stringify(f);
+ for(const heading of [-180,-90,-45,0,45,90,180]){
+  const a=heading*Math.PI/180,targets=Object.fromEntries(Object.entries(f.frame.sourceContacts).map(([id,c])=>[id,{point:[c.sourceContact[0]-Math.sin(a)*c.sourceContact[1],Math.cos(a)*c.sourceContact[1],c.sourceContact[2]],planted:c.planted}]));
+  const r=repose(f.frame,targets,{massWeights:f.massWeights,rootBone:f.rootBone,...f.authoringEnvelope,minimumSupportMargin:f.minimumSupportMarginMetres});
+  assert.ok(r.sourceRepose.support.margin>=f.minimumSupportMarginMetres);
+  assert.ok(Math.hypot(...r.sourceRepose.bodyShift)<=f.authoringEnvelope.maxBodyTranslation);
+  for(const [id,c] of Object.entries(r.sourceContacts))assert.deepEqual(c.sourceContact,targets[id].point);
+  for(const [name,b] of Object.entries(r.sourceBones))assert.ok(Math.abs(distance(b.head,b.tail)-distance(f.frame.sourceBones[name].head,f.frame.sourceBones[name].tail))<1e-6);
+  const mass=Object.values(f.massWeights).reduce((a,b)=>a+b,0),center=[0,0,0];
+  for(const [name,w] of Object.entries(f.massWeights))for(let axis=0;axis<3;axis++)center[axis]+=(r.sourceBones[name].head[axis]+r.sourceBones[name].tail[axis])*w/(2*mass);
+  assert.deepEqual(r.massCenter,center);assert.deepEqual(r.sourceBones[f.rootBone],f.frame.sourceBones[f.rootBone]);
+ }
+ assert.equal(JSON.stringify(f),original,'source metadata is immutable');
+});
+
+test('whole-body source reposing rejects missing support, forged mass, excursions and unbounded body motion',async()=>{
+ const {readFileSync}=await import('node:fs');
+ const {solveSupportedSourcePose:repose}=await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/sprite-contact-kinematics.js');
+ const f=JSON.parse(readFileSync(new URL('../fixtures/animation/supported-source-pose.json',import.meta.url)));
+ const targets=Object.fromEntries(Object.entries(f.frame.sourceContacts).map(([id,c])=>[id,{point:[...c.sourceContact],planted:c.planted}]));
+ const options={massWeights:f.massWeights,rootBone:f.rootBone,...f.authoringEnvelope,minimumSupportMargin:f.minimumSupportMarginMetres};
+ const none=structuredClone(targets);for(const t of Object.values(none))t.planted=false;
+ assert.throws(()=>repose(f.frame,none,options),/no actual ground support/);
+ assert.throws(()=>repose(f.frame,targets,{...options,maxBodyTranslation:Infinity}),/bounded authoring/);
+ assert.throws(()=>repose(f.frame,targets,{...options,massWeights:{absent:1}}),/segment masses/);
+ const far=structuredClone(targets);Object.values(far)[0].point[0]+=10;
+ assert.throws(()=>repose(f.frame,far,options),/excursion/);
+ const lateral=structuredClone(targets);Object.values(lateral)[1].planted=false;
+ assert.throws(()=>repose(f.frame,lateral,{...options,maxBodyTranslation:0}),/translation envelope/);
+ assert.throws(()=>repose(f.frame,{},options),/support target/);
+});
+
+test('source support reposing has no species/bone-name dependency or phantom absent arm',async()=>{
+ const {readFileSync}=await import('node:fs');
+ const {solveSupportedSourcePose:repose}=await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/sprite-contact-kinematics.js');
+ const f=JSON.parse(readFileSync(new URL('../fixtures/animation/supported-source-pose.json',import.meta.url)));
+ const names=Object.fromEntries(Object.keys(f.frame.sourceBones).map((name,i)=>[name,'generic-'+i]));
+ // Remove an actually non-supporting limb from anatomy and its mass model.
+ for(const name of ['upper_arm.L','forearm.L','hand.L']){delete f.frame.sourceBones[name];delete f.massWeights[name];}
+ f.frame.sourceBones=Object.fromEntries(Object.entries(f.frame.sourceBones).map(([name,b])=>[names[name],b]));
+ f.massWeights=Object.fromEntries(Object.entries(f.massWeights).map(([name,w])=>[names[name],w]));
+ f.frame.sourceContacts=Object.fromEntries(Object.values(f.frame.sourceContacts).map((c,i)=>['palm-'+i,{...c,upper:names[c.upper],middle:names[c.middle],end:names[c.end]}]));
+ const targets=Object.fromEntries(Object.entries(f.frame.sourceContacts).map(([id,c])=>[id,{point:[...c.sourceContact],planted:c.planted}]));
+ const r=repose(f.frame,targets,{massWeights:f.massWeights,rootBone:names[f.rootBone],...f.authoringEnvelope,minimumSupportMargin:0});
+ assert.deepEqual(Object.keys(r.sourceContacts),['palm-0','palm-1']);assert.equal(Object.keys(r.sourceBones).length,Object.keys(f.frame.sourceBones).length);
+ for(const name of ['upper_arm.L','forearm.L','hand.L'])assert.equal(Object.hasOwn(r.sourceBones,names[name]),false);
+});

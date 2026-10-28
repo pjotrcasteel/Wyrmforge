@@ -1,0 +1,150 @@
+{
+  "sourceStudyOnly": true,
+  "runtimeAccepted": false,
+  "results": [
+    {
+      "heading": -180,
+      "clip": "walk",
+      "count": 16,
+      "maximumBodyShift": 0.09713701035455362,
+      "minimumMargin": 0.009422564429084864,
+      "failure": null
+    },
+    {
+      "heading": -180,
+      "clip": "attack-travel",
+      "count": 128,
+      "maximumBodyShift": 0.09844269210362018,
+      "minimumMargin": 0.008684045338898957,
+      "failure": null
+    },
+    {
+      "heading": -135,
+      "clip": "walk",
+      "count": 16,
+      "maximumBodyShift": 0.0749995873240952,
+      "minimumMargin": 0.008091644032052467,
+      "failure": null
+    },
+    {
+      "heading": -135,
+      "clip": "attack-travel",
+      "count": 128,
+      "maximumBodyShift": 0.0749998123226188,
+      "minimumMargin": 0.008091642639589345,
+      "failure": null
+    },
+    {
+      "heading": -90,
+      "clip": "walk",
+      "count": 16,
+      "maximumBodyShift": 0.07073529009017862,
+      "minimumMargin": 0.011461807677378389,
+      "failure": null
+    },
+    {
+      "heading": -90,
+      "clip": "attack-travel",
+      "count": 128,
+      "maximumBodyShift": 0.07316887272685901,
+      "minimumMargin": 0.009746023897389535,
+      "failure": null
+    },
+    {
+      "heading": -45,
+      "clip": "walk",
+      "count": 16,
+      "maximumBodyShift": 0.04999907872331895,
+      "minimumMargin": 0.009183765052018579,
+      "failure": null
+    },
+    {
+      "heading": -45,
+      "clip": "attack-travel",
+      "count": 128,
+      "maximumBodyShift": 0.049999687316906224,
+      "minimumMargin": 0.009183762041920982,
+      "failure": null
+    },
+    {
+      "heading": 0,
+      "clip": "walk",
+      "count": 16,
+      "maximumBodyShift": 0,
+      "minimumMargin": 0.008330747370761057,
+      "failure": null
+    },
+    {
+      "heading": 0,
+      "clip": "attack-travel",
+      "count": 128,
+      "maximumBodyShift": 0,
+      "minimumMargin": 0.008330669387852627,
+      "failure": null
+    },
+    {
+      "heading": 45,
+      "clip": "walk",
+      "count": 16,
+      "maximumBodyShift": 0.04701600552349033,
+      "minimumMargin": 0.009687236715591295,
+      "failure": null
+    },
+    {
+      "heading": 45,
+      "clip": "attack-travel",
+      "count": 128,
+      "maximumBodyShift": 0.04733915966618841,
+      "minimumMargin": 0.008139714814635973,
+      "failure": null
+    },
+    {
+      "heading": 90,
+      "clip": "walk",
+      "count": 16,
+      "maximumBodyShift": 0.06732010215546967,
+      "minimumMargin": 0.009384850484315062,
+      "failure": null
+    },
+    {
+      "heading": 90,
+      "clip": "attack-travel",
+      "count": 128,
+      "maximumBodyShift": 0.06831250842793933,
+      "minimumMargin": 0.008156922737189059,
+      "failure": null
+    },
+    {
+      "heading": 135,
+      "clip": "walk",
+      "count": 16,
+      "maximumBodyShift": 0.07499973315310993,
+      "minimumMargin": 0.009989653024101824,
+      "failure": null
+    },
+    {
+      "heading": 135,
+      "clip": "attack-travel",
+      "count": 128,
+      "maximumBodyShift": 0.07499973315803497,
+      "minimumMargin": 0.008272077968929323,
+      "failure": null
+    },
+    {
+      "heading": 180,
+      "clip": "walk",
+      "count": 16,
+      "maximumBodyShift": 0.09713701035455362,
+      "minimumMargin": 0.009422564429084864,
+      "failure": null
+    },
+    {
+      "heading": 180,
+      "clip": "attack-travel",
+      "count": 128,
+      "maximumBodyShift": 0.09844269210362018,
+      "minimumMargin": 0.008684045338898957,
+      "failure": null
+    }
+  ]
+}

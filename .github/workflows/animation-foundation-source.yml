@@ -82,6 +82,16 @@ jobs:
           assert all(r['failure'] and r['failure']['reason'] == 'source-pixel correction budget' for r in report['results'])
           print('All 96 unsupported lateral cases rejected by the unchanged correction budget.')
           PY
+      - name: Reopen whole-body support study on actual saved skin
+        shell: bash
+        run: |
+          set -euo pipefail
+          BLENDER_BIN="$PWD/.cache/blender-4.5.3-linux-x64/blender"
+          SOURCE=artifacts/animation-supported-source-ci
+          "$BLENDER_BIN" -b -t 2 --python-exit-code 1 --python tools/animation/author_hollow_foundation.py -- --out "$SOURCE" --only walk,attack-travel --phase-samples 16 --action-samples 8 --samples 2 --stride-metres .28
+          "$BLENDER_BIN" -b -t 2 --python-exit-code 1 --python tools/animation/export_pose_metadata.py -- "$SOURCE" --out "$SOURCE/pose-data.json"
+          node tools/animation/check_supported_pose.mjs "$SOURCE/pose-data.json" "$SOURCE/reposed-study.json"
+          "$BLENDER_BIN" -b -t 2 --python-exit-code 1 --python tools/animation/validate_reposed_skin.py -- "$SOURCE" "$SOURCE/reposed-study.json"
       - uses: actions/upload-artifact@v4
         with:
           name: animation-foundation-editable-source-and-actual-mesh-qc
@@ -101,5 +111,10 @@ jobs:
             artifacts/animation-heading-*/independent-source-qc.json
             artifacts/animation-heading-*/negative-source-qc.json
             artifacts/animation-heading-*/motion-envelope-qc.json
+            artifacts/animation-supported-source-ci/hollow-foundation.blend
+            artifacts/animation-supported-source-ci/source-manifest.json
+            artifacts/animation-supported-source-ci/pose-data.json
+            artifacts/animation-supported-source-ci/reposed-study.json.summary.json
+            artifacts/animation-supported-source-ci/reposed-study.skin-qc.json
           if-no-files-found: error
           retention-days: 14
