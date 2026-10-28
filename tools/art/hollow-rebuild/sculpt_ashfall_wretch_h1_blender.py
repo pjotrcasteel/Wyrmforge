@@ -91,6 +91,23 @@ def original_human_to_hollowed(point):
     x -= .065*skull
     x += .033*hip
 
+    # The original 2013 source has a rear shoulder protrusion which in
+    # 96px orthographic renders resembles a backpack. Flatten only the
+    # POSTERIOR part of the scapular volume while preserving the anterior
+    # deltoid/upper-arm connection needed for a grounded future swipe.
+    posterior = ease(.015, .225, y)
+    rear_scapula = shoulder * posterior * ease(.20, .54, -x)
+    y -= .072 * rear_scapula
+    x += .030 * rear_scapula
+    z -= .014 * rear_scapula
+
+    # Corrupted human cranial planes (not a wolf muzzle or rabbit skull).
+    # Preserve existing mandible geometry, break the over-symmetric brow
+    # and make the lead cheek slightly forward, without detached face props.
+    face = ease(.02, .20, -y) * bump(z, 2.74, .22)
+    x -= .018 * face
+    y -= .027 * face * ease(.02, .26, -x)
+
     # Wretched reaching hand on the elevated shoulder side, opposite limb
     # crooked, narrower, with a visible asymmetric claw envelope.
     x -= .065 * left * distal * bump(z, 1.75, .62)
@@ -203,6 +220,7 @@ def create(source: Path, output: Path) -> None:
         "origin": "Rosswet Mobile, Thin Zombie, CC BY 3.0",
         "source_url": mesh["original_url"],
         "author_modifications": mesh["modifications"],
+        "author_sculpt_revision": "H1 r2: posterior scapula reduced, asymmetric cranial planes",
         "saved_source": final.name,
         "body_meshes": len(meshes),
         "skin_source_triangles": sum(len(m.data.polygons) for m in meshes),
