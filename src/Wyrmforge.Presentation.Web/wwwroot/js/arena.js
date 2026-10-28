@@ -1,7 +1,7 @@
 import { preloadFireballV5 } from './arena-fireball-v5.js';
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
 import { attachArenaInput, getArenaMovement, getArenaAim, getArenaPropFocus } from './arena-input.js';
-import { resolveTargetIndicator, presentTargetSigil, drawTargetIndicator, targetSelectionLightEmitter, targetSelectionCanvasLight } from './arena-target-indicator.js?v=20261028-approved-sigil-v4';
+import { resolveTargetIndicator, presentTargetSigil, drawTargetIndicator, preloadTargetSigilArt, targetSelectionLightEmitter, targetSelectionCanvasLight } from './arena-target-indicator.js?v=20261028-locked-decal-v5';
 import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, drawArenaCloisterElevation } from './arena-environment.js?v=20261026-compact-ground-v1';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
@@ -111,6 +111,7 @@ function createState(canvas, dotNetReference) {
         context: canvas.getContext('2d'),
         nightMask: document.createElement('canvas'),
         actorLightBuffer: document.createElement('canvas'),
+        targetSigilArt: preloadTargetSigilArt(),
         targetSigil: { key: null, activeMarker: null, lastOpacity: 0, enteredAt: 0, exitedAt: null, exitMarker: null },
         dotNetReference,
         active: true,
@@ -297,9 +298,11 @@ function draw(state, snapshot, width, height) {
     for (const shard of snapshot.experienceShards ?? []) drawExperienceShard(ctx, shard);
     for (const pulse of snapshot.splashPulses) drawSplashPulse(ctx, pulse, snapshot.dragon?.school);
     // Neutral magic lies beneath the world sprites without replacing hostile attack telegraphs.
-    drawTargetIndicator(ctx, targetIndicator, 'ground', visualSeconds, state.reducedMotion.matches);
+    drawTargetIndicator(ctx, targetIndicator, 'ground', visualSeconds, state.reducedMotion.matches,
+        state.targetSigilArt, snapshot.player?.activeSchool);
     // All luminous detail remains on the ground BEFORE opaque depth-sorted actors.
-    drawTargetIndicator(ctx, targetIndicator, 'contrast', visualSeconds, state.reducedMotion.matches);
+    drawTargetIndicator(ctx, targetIndicator, 'contrast', visualSeconds, state.reducedMotion.matches,
+        state.targetSigilArt, snapshot.player?.activeSchool);
     drawAimRune(ctx, snapshot.player);
     drawWardReadiness(ctx, snapshot.player, visualSeconds, state.reducedMotion.matches);
     if (snapshot.wardPulse) drawWardPulse(ctx, snapshot.wardPulse, state.reducedMotion.matches);
