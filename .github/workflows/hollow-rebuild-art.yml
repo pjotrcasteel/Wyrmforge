@@ -57,8 +57,8 @@ jobs:
 # This workflow does not touch, test, import, trigger or modify the shared
 # universal animation engine. It does not build or deploy the game.
 
-  cutaway-ribs-source-v5:
-    name: Hollowed H1 v5 — actual skin-anchored 3D rib source (UNAPPROVED)
+  torn-ribcage-source-v6:
+    name: Hollowed H1 v6 — connected necrotic ribcage geometry (UNAPPROVED)
     needs: source-boundary
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -86,19 +86,20 @@ jobs:
           python -m py_compile tools/art/hollow-rebuild/sculpt_cc0_anatomy_blender.py \
             tools/art/hollow-rebuild/sculpt_feral_anatomy_v2_blender.py \
             tools/art/hollow-rebuild/sculpt_human_undead_v4_blender.py \
-            tools/art/hollow-rebuild/sculpt_cutaway_ribs_v5_blender.py
+            tools/art/hollow-rebuild/sculpt_cutaway_ribs_v5_blender.py \
+            tools/art/hollow-rebuild/sculpt_torn_ribcage_v6_blender.py
       - name: Sculpt original asymmetric torso/shoulder rest shape and render eight viewpoints
         run: |
-          python tools/art/hollow-rebuild/sculpt_cutaway_ribs_v5_blender.py \
+          python tools/art/hollow-rebuild/sculpt_torn_ribcage_v6_blender.py \
             --input art/source/enemies/hollow/rebuild-v1/references/makehuman-core-base-CC0.obj \
-            --output artifacts/hollow-rebuild/cutaway-ribs-v5
-          test -s artifacts/hollow-rebuild/cutaway-ribs-v5/hollowed-cutaway-ribs-v5-UNAPPROVED.blend
-          test -s artifacts/hollow-rebuild/cutaway-ribs-v5/cc0-source-8views-BLENDER.png
-          test -s artifacts/hollow-rebuild/cutaway-ribs-v5/cc0-source-native96-BLENDER.png
+            --output artifacts/hollow-rebuild/torn-ribcage-v6
+          test -s artifacts/hollow-rebuild/torn-ribcage-v6/hollowed-torn-ribcage-v6-UNAPPROVED.blend
+          test -s artifacts/hollow-rebuild/torn-ribcage-v6/cc0-source-8views-BLENDER.png
+          test -s artifacts/hollow-rebuild/torn-ribcage-v6/cc0-source-native96-BLENDER.png
           python - <<'PY'
           import json
           from pathlib import Path
-          qc = json.loads(Path("artifacts/hollow-rebuild/cutaway-ribs-v5/source-qc.json").read_text())
+          qc = json.loads(Path("artifacts/hollow-rebuild/torn-ribcage-v6/source-qc.json").read_text())
           assert qc["mesh_vertices"] == 13380, qc
           assert qc["rendered_helpers"] is False, qc
           assert qc["excluded_authoring_helper_vertices"] == 5778, qc
@@ -106,18 +107,22 @@ jobs:
           assert qc["human_body_only"] is True, qc
           assert qc["rendered_helpers"] is False, qc
           assert qc["embedded_rib_curves"] == 6, qc
+          assert qc["sculpted_wound_vertices"] >= 100, qc
+          assert qc["deep_torn_tissue_vertices"] >= 35, qc
+          assert qc["wound_cavity_polygon_faces"] >= 25, qc
+          assert qc["new_animation_actions"] == 0, qc
           assert qc["animation_actions_added"] == 0, qc
           print("PASS: original human body only, no skirt/tights/hair authoring helpers")
           PY
       - name: Reopen immutable H1 source in an independent Blender process
         run: |
-          python -c "import bpy; bpy.ops.wm.open_mainfile(filepath='artifacts/hollow-rebuild/cutaway-ribs-v5/hollowed-cutaway-ribs-v5-UNAPPROVED.blend'); assert len([o for o in bpy.data.objects if o.type == 'MESH']) > 0; print('H1 source reopened, NOT ART APPROVED')"
+          python -c "import bpy; bpy.ops.wm.open_mainfile(filepath='artifacts/hollow-rebuild/torn-ribcage-v6/hollowed-torn-ribcage-v6-UNAPPROVED.blend'); assert len([o for o in bpy.data.objects if o.type == 'MESH']) > 0; print('H1 source reopened, NOT ART APPROVED')"
       - name: Preserve genuine Blender source and previews without runtime integration
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: hollowed-h1-v5-CUTAWAY-RIBS-Blender-UNAPPROVED
-          path: artifacts/hollow-rebuild/cutaway-ribs-v5/
+          name: hollowed-h1-v6-TORN-RIBCAGE-Blender-UNAPPROVED
+          path: artifacts/hollow-rebuild/torn-ribcage-v6/
           if-no-files-found: warn
           retention-days: 30
 
