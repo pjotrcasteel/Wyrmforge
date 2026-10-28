@@ -91,3 +91,12 @@ test('Offscreen sources cannot consume the budget needed by visible explosions',
     assert.deepEqual(huntLightFrame(frame,{x:0,y:0},{width:390,height:844}).lights.map(l=>l.id),['spill','sun']);
     assert.deepEqual(huntLightFrame(frame,{x:1900,y:0},{width:390,height:844}).lights.map(l=>l.id),['sun']);
 });
+
+test('source projection is scene configuration data and rejects incompatible camera axes atomically',async()=>{
+ const {HuntGpuWorld,huntActorGeometry}=await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js');
+ const world=Object.create(HuntGpuWorld.prototype);Object.assign(world,{sourceCamera:true,groundY:Math.SQRT2,elevation:Math.PI/4,billboardGeometry:huntActorGeometry()});
+ const descriptor={worldUnitsPerMetre:80,projection:{groundBasis:[80,0,0,-40],heightProjection:[0,-Math.sqrt(80**2-40**2)]}};
+ world.configureSourceProjection(descriptor);assert.ok(Math.abs(world.groundY-2)<1e-12);assert.ok(Math.abs(world.elevation-Math.PI/6)<1e-12);
+ const positions=Array.from(world.billboardGeometry.attributes.position.array);world.configureSourceProjection(descriptor);assert.deepEqual(Array.from(world.billboardGeometry.attributes.position.array),positions);
+ assert.throws(()=>world.configureSourceProjection({...descriptor,projection:{...descriptor.projection,groundBasis:[0,80,-40,0]}}),/canonical orthographic/);assert.equal(world.groundY,2);world.billboardGeometry.dispose();
+});

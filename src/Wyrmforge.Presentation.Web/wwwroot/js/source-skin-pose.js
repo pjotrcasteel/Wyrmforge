@@ -99,6 +99,23 @@ export function sampleSourceSkinSurface(surface,{clip,gaitPhase,actionProgress=0
     for(const [id,mass] of Object.entries(surface.massWeights))for(let axis=0;axis<3;axis++)center[axis]+=(sourceBones[id].head[axis]+sourceBones[id].tail[axis])*mass/(2*total);
     return {sourceBones,sourceContacts,massCenter:center,balance:'supported',matrices};
 }
+/** Orientation warp of ONE complete source pose. The declared upper chain
+ * distributes counter-torque; it never samples a second action or clock. */
+export function orientSourceSkinPose(surface,pose,yaw,config){
+    if(!config||Math.abs(yaw)<1e-12)return pose;
+    if(!Number.isFinite(yaw)||Math.abs(yaw)>config.maxYawRadians+1e-8)throw new RangeError('Source orientation warp exceeds authored limits');
+    const rotation=angle=>[Math.cos(angle),Math.sin(angle),0,0,-Math.sin(angle),Math.cos(angle),0,0,0,0,1,0,0,0,0,1];
+    const sourceBones=Object.fromEntries(Object.entries(pose.sourceBones).map(([id,b])=>[id,{head:[...b.head],tail:[...b.tail],matrix:[...b.matrix]}]));
+    const descendants=id=>{const root=surface.bones.findIndex(b=>b.id===id);if(root<0)throw new TypeError('Present source warp bone required');const indices=new Set([root]);for(let i=root+1;i<surface.bones.length;i++)if(indices.has(surface.bones[i].parent))indices.add(i);return [...indices].map(i=>surface.bones[i].id);};
+    const lower=new Set(descendants(config.lowerRoot)),r=rotation(yaw);
+    const transform=(ids,angle,pivot)=>{const m=rotation(angle),p=point(m,pivot);for(let i=0;i<3;i++)m[12+i]=pivot[i]-p[i];for(const id of ids){const b=sourceBones[id];b.head=point(m,b.head);b.tail=point(m,b.tail);b.matrix=multiplySourceMatrices(m,b.matrix);}};
+    transform(lower,yaw,[0,0,0]);
+    for(const joint of config.upperChain)transform(descendants(joint.bone),-yaw*joint.weight,sourceBones[joint.bone].head);
+    const sourceContacts=Object.fromEntries(Object.entries(pose.sourceContacts).map(([id,c])=>[id,{...c,sourceContact:point(r,c.sourceContact),footprint:c.footprint.map(p=>point(r,p)),pole:point(r,c.pole),sourceYaw:c.sourceYaw+yaw}]));
+    const total=Object.values(surface.massWeights).reduce((a,b)=>a+b,0),massCenter=[0,0,0];
+    for(const [id,mass] of Object.entries(surface.massWeights))for(let axis=0;axis<3;axis++)massCenter[axis]+=(sourceBones[id].head[axis]+sourceBones[id].tail[axis])*mass/(2*total);
+    return {...pose,sourceBones,sourceContacts,massCenter,legOrientation:r};
+}
 function fromTo(from,to){
     const a=from.map(n=>n/Math.hypot(...from)),b=to.map(n=>n/Math.hypot(...to)),dot=a.reduce((s,n,i)=>s+n*b[i],0);
     let q=[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0],1+dot];
@@ -114,10 +131,12 @@ export function sourceSkinPoseMatrices(surface,base,posed){
         const desired=posed.sourceBones[bone.id];if(!desired)throw new TypeError('Present source skin bone required');
         let m;
         if(segmentBones.has(bone.id)){
-            const axis=[bone.rest[4],bone.rest[5],bone.rest[6]],direction=desired.tail.map((n,i)=>n-desired.head[i]);
-            m=multiplySourceMatrices(fromTo(axis,direction),bone.rest);
+            const rest=base.legOrientation?multiplySourceMatrices(base.legOrientation,bone.rest):bone.rest;
+            const axis=[rest[4],rest[5],rest[6]],direction=desired.tail.map((n,i)=>n-desired.head[i]);
+            m=multiplySourceMatrices(fromTo(axis,direction),rest);
         }else{
             m=[...base.sourceBones[bone.id].matrix];
+            if(desired.rotationDelta){const r=desired.rotationDelta;m=multiplySourceMatrices([r[0],r[3],r[6],0,r[1],r[4],r[7],0,r[2],r[5],r[8],0,0,0,0,1],m);}
             const contact=endBones.has(bone.id)?posed.sourceContacts[endBones.get(bone.id)]:null;
             if(contact?.rotationDelta){
                 const r=contact.rotationDelta;m=multiplySourceMatrices([r[0],r[3],r[6],0,r[1],r[4],r[7],0,r[2],r[5],r[8],0,0,0,0,1],m);

@@ -272,3 +272,15 @@ test('source support keeps one clock, commits yaw, freezes and rejects scale cha
  const turn=update(s,p,intent(7,{direction:'N',world:{x:0,y:6},travel:6}));assert.ok(Math.abs(turn.sourceSupport.yaw)>0);assert.equal(turn.clip,'walk');
  assert.throws(()=>update(s,p,intent(8,{scale:2,travel:6})),/fresh state/);
 });
+
+test('source support validates data-driven orientation, counter-torque, stride axes and non-contact balance joints',()=>{
+ const p=fixture();p.rig.bones.push({id:'waist',parent:'root',length:.2,rest:identity},{id:'spine',parent:'waist',length:.2,rest:identity},{id:'chest',parent:'spine',length:.2,rest:identity});
+ p.sourceSupport={version:1,facingZero:'S',groundBasis:[60,0,0,-34],heightProjection:[0,-50],groundZ:-.5,strideMetres:.56,strideMetresByAxis:[.22,.56],turnRadiansPerSecond:.6,turnCyclesPerRadian:1.2,orientationWarp:{lowerRoot:'waist',upperChain:[{bone:'spine',weight:.5},{bone:'chest',weight:.5}],maxYawRadians:Math.PI/3,maxRadiansPerCycle:Math.PI*2},balanceJoint:{bone:'spine',maxRadians:.1}};
+ assert.equal(validate(p),p);
+ for(const mutate of [p=>p.sourceSupport.strideMetresByAxis[0]=0,p=>p.sourceSupport.orientationWarp.upperChain[0].weight=.1,p=>p.sourceSupport.orientationWarp.upperChain[1].bone='limb',p=>p.sourceSupport.orientationWarp.maxYawRadians=4,p=>p.sourceSupport.orientationWarp.maxRadiansPerCycle=Infinity,p=>p.sourceSupport.balanceJoint.bone='limb',p=>p.sourceSupport.balanceJoint.maxRadians=.5]){const q=structuredClone(p);mutate(q);assert.throws(()=>validate(q));}
+});
+
+test('canonical pose export treats finite GPU matrix channels as explicit JSON arrays',()=>{
+ const matrices=new Float32Array([1,.5,0,-2]);assert.equal(serialize({matrices}),serialize({matrices:Array.from(matrices)}));
+ assert.throws(()=>serialize(new Float32Array([NaN])));assert.throws(()=>serialize(new DataView(new ArrayBuffer(16))));assert.throws(()=>serialize(new BigInt64Array([1n])));
+});

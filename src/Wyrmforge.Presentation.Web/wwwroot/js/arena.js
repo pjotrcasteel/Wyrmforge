@@ -343,7 +343,11 @@ function draw(state, snapshot, width, height) {
         { kind: 'mage', depth: snapshot.player.y + (snapshot.player.radius || 0) },
         ...getArenaCloisterElevations(snapshot.environment, worldWidth, worldHeight, visualSeconds),
     ];
-    if(gpu)gpu.begin(ctx,camera,width,height);
+    if(gpu){
+        const source=snapshot.enemies.map(e=>hollowSkinDescriptor(e,state.hollow)).find(Boolean);
+        if(source)try{gpu.configureSourceProjection(source);}catch(error){state.gpuError=String(error);gpu.dispose();state.gpuWorld=null;gpu=null;}
+        if(gpu)gpu.begin(ctx,camera,width,height);
+    }
     const worldContext=ctx;
     for (const layer of sortSceneDepthLayers(depthLayers)) {
         let tile,capture,skin=null;

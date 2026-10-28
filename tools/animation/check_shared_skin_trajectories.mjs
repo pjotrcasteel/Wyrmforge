@@ -11,7 +11,7 @@ for(const entityId of (process.env.AN_SEEDS?Array.from({length:Number(process.en
   const initial=world(1/hz),vx=i?dx*hz:(process.env.AN_INITIAL_MOVING?(initial[0]-p[0])*hz:0),vy=i?dy*hz:(process.env.AN_INITIAL_MOVING?(initial[1]-p[1])*hz:0);
   const intent={entityId,velocity:{x:vx,y:vy},timestamp:t,travel,world:{x:p[0],y:p[1]},direction:name==='turn'&&t>.5?'N':'S',moving:!!(vx||vy),action:t>=.7?{name:'attack',token:'test',sequence:0}:null};
   try{const sample=updateSpriteAnimation(state,profile,intent),posed=updateSourceSkinSupport(contacts,surface,profile,sample,intent);count++;maxShift=Math.max(maxShift,Math.hypot(...(posed.sourcePose.sourceRepose?.bodyShift??[0,0,0])));
-   if(entityId===1&&hz===30)poses.push({sequence:name,timestamp:t,world:p,yaw:sample.sourceSupport.yaw,matrices:Array.from(posed.skinPose),sourceBones:posed.sourcePose.sourceBones,sourceContacts:posed.sourcePose.sourceContacts,massCenter:posed.sourcePose.massCenter,maximumProjectedSoleDrift:posed.debug.maxSlip});
+   if(entityId===Number(process.env.AN_CAPTURE_ENTITY??1)&&hz===30)poses.push({sequence:name,timestamp:t,world:p,yaw:sample.sourceSupport.yaw,phase:sample.contactPhase,phaseAdvance:sample.sourceSupport.phaseAdvance,bodyShift:posed.sourcePose.sourceRepose?.bodyShift,balanceTiltRadians:posed.sourcePose.sourceRepose?.balanceTiltRadians,matrices:Array.from(posed.skinPose),sourceBones:posed.sourcePose.sourceBones,sourceContacts:posed.sourcePose.sourceContacts,massCenter:posed.sourcePose.massCenter,maximumProjectedSoleDrift:posed.debug.maxSlip});
   }catch(e){error={t,message:e.message,details:e.sourcePoseFailure};break;}
  }
  reports.push({entityId,name,hz,count,maxShift,error});

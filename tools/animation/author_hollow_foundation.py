@@ -16,12 +16,13 @@ from hollow_ragged_silhouette import shorten_hanging_cloth
 from hollow_source_embers import attach_internal_fire
 ROOT=Path(__file__).resolve().parents[2]
 SOURCE=ROOT/'art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-zombie-reach-v3-standard/hollow-rigged.blend'
-parser=argparse.ArgumentParser();parser.add_argument('--out',default='artifacts/animation');parser.add_argument('--render',action='store_true');parser.add_argument('--all',action='store_true');parser.add_argument('--only',default='walk,attack,pivot,pivot-negative');parser.add_argument('--samples',type=int,default=4);parser.add_argument('--phase-samples',type=int,choices=[8,16],default=16);parser.add_argument('--action-samples',type=int,choices=[8,16],default=16)
+parser=argparse.ArgumentParser();parser.add_argument('--out',default='artifacts/animation');parser.add_argument('--render',action='store_true');parser.add_argument('--all',action='store_true');parser.add_argument('--only',default='walk,attack,pivot,pivot-negative');parser.add_argument('--samples',type=int,default=4);parser.add_argument('--phase-samples',type=int,choices=[8,16,32],default=16);parser.add_argument('--action-samples',type=int,choices=[8,16],default=16)
 parser.add_argument('--travel-heading-degrees',type=float,default=0,help='Source-authored travel direction relative to the committed body facing; study only.')
 parser.add_argument('--stride-metres',type=float,default=.36,help='Authored source gait distance per cycle, not a gameplay speed.')
 parser.add_argument('--flexion-reserve-pixels',type=float,default=0,help='Lower the authored source pelvis to reserve knee flexion; native source pixels, not runtime root correction.')
 parser.add_argument('--pelvis-drop-metres',type=float,default=0,help='Explicit authored crouch height for longer source strides; no change to contact tolerances.')
 parser.add_argument('--stance-fraction',type=float,default=.62,help='Authored fraction of each contact cycle spent on the ground.')
+parser.add_argument('--guides',action='store_true',help='Preserve pre-balance whole-body guide actions for the shared runtime support solve; guides alone are not grounded acceptance.')
 args=parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
 if not math.isfinite(args.travel_heading_degrees) or abs(args.travel_heading_degrees)>45:parser.error('travel heading must be finite and within -45..45 degrees')
 if not math.isfinite(args.stride_metres) or args.stride_metres<=0:parser.error('source stride must be finite and positive')
@@ -94,13 +95,13 @@ GRID_ACTIONS=args.action_samples
 for clip in args.only.split(','):
     action=bpy.data.actions.new('AN1_'+clip+'_supported_v1');rig.animation_data_create();rig.animation_data.action=action
     action.use_fake_user=True;actions[clip]=action
-    samples=[];last_points={};slips=[];joint_ranges={};length_error=0
+    samples=[];last_points={};slips=[];joint_ranges={};length_error=0;guide_frames=[]
     grid=clip=='attack-travel'
-    frame_count=GRID_PHASES*GRID_ACTIONS if grid else 16
-    for index in range(frame_count if grid else 17):
+    frame_count=GRID_PHASES*GRID_ACTIONS if grid else GRID_PHASES if clip=='walk' else 16
+    for index in range(frame_count if grid else frame_count+1):
         scene.frame_set(index+1)
         gait_index=index%GRID_PHASES if grid else index
-        p=gait_index/(GRID_PHASES if grid else 16);t=(index//GRID_PHASES)/(GRID_ACTIONS-1) if grid else (index/15 if index<16 else 1)
+        p=gait_index/(GRID_PHASES if grid or clip=='walk' else 16);t=(index//GRID_PHASES)/(GRID_ACTIONS-1) if grid else (index/15 if index<16 else 1)
         # A grid is a sampled whole-body surface, not a sequential action.
         # Each row starts a new gait/contact experiment at a fixed action time.
         if grid and gait_index==0:last_points={}
@@ -204,6 +205,7 @@ for clip in args.only.split(','):
                             'upper_arm.'+side:.035,'forearm.'+side:.02,'hand.'+side:.01})
         com=sum(((rig.pose.bones[name].head+rig.pose.bones[name].tail)*.5*weight for name,weight in weights.items()),Vector())/sum(weights.values())
         margin=support_margin(com,footprints)
+        if args.guides:guide_frames.append((rig.rotation_euler.copy(),{bone.name:bone.matrix_basis.copy() for bone in rig.pose.bones}))
         # A kinematic balance pass moves the pelvis/mass, then re-solves the
         # SAME planted ankles. It cannot translate the contact targets or bones.
         # No unsupported pose is relabelled as a catch without a real step.
@@ -244,12 +246,19 @@ for clip in args.only.split(','):
                 if bag:
                     for curve in bag.fcurves:
                         for key in curve.keyframe_points:key.interpolation='LINEAR'
-    records[clip]={'samples':samples[:frame_count],'maxStanceSlipMetres':max(slips,default=0),'maxBoneLengthErrorMetres':length_error,'jointRangesDegrees':{k:[min(v),max(v)] for k,v in joint_ranges.items()},'strideMetres':STRIDE if clip=='walk' or grid else 0,'frames':frame_count,'fps':GRID_ACTIONS/(16/12) if grid else 12}
+    records[clip]={'samples':samples[:frame_count],'maxStanceSlipMetres':max(slips,default=0),'maxBoneLengthErrorMetres':length_error,'jointRangesDegrees':{k:[min(v),max(v)] for k,v in joint_ranges.items()},'strideMetres':STRIDE if clip=='walk' or grid else 0,'frames':frame_count,'fps':GRID_ACTIONS/(16/12) if grid else GRID_PHASES/(16/12) if clip=='walk' else 12}
     if grid and 'walk' in records:records[clip]['transitionReference']='walk'
     if clip=='walk' or grid:
         records[clip]['rootStrideVectorMetres']=list(TRAVEL_ROTATION @ Vector((0,-STRIDE,0)))
         records[clip]['travelHeadingDegrees']=args.travel_heading_degrees
     if grid:records[clip]['poseGrid']={'phaseFrames':GRID_PHASES,'actionFrames':GRID_ACTIONS,'order':'action-major','phaseSampling':'nearest','actionSampling':'nearest'}
+    if args.guides:
+        guide=bpy.data.actions.new('AN1_'+clip+'_guide_v1');guide.use_fake_user=True;rig.animation_data.action=guide
+        for frame,(rotation,channels) in enumerate(guide_frames):
+            scene.frame_set(frame+1);rig.rotation_euler=rotation;rig.keyframe_insert('rotation_euler',frame=frame+1)
+            for bone in rig.pose.bones:
+                bone.matrix_basis=channels[bone.name];bone.keyframe_insert('location',frame=frame+1);bone.keyframe_insert('rotation_euler' if bone.rotation_mode=='XYZ' else 'rotation_quaternion',frame=frame+1);bone.keyframe_insert('scale',frame=frame+1)
+        records[clip]['guideAction']=guide.name;records[clip]['guideMassSupported']=False;rig.animation_data.action=action
     print('AN_CLIP',clip,json.dumps({k:v for k,v in records[clip].items() if k!='samples'}),flush=True)
 # Pack images into editable source rather than depending on another workstation.
 bpy.ops.file.pack_all()

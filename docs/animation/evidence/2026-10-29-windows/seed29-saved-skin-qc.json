@@ -1,0 +1,11 @@
+{
+  "sourceStudyOnly": true,
+  "runtimeAccepted": false,
+  "poses": 1089,
+  "maximumBoneEndpointErrorMetres": 5.358205615390897e-07,
+  "maximumBoneLengthErrorMetres": 2.086162567138672e-07,
+  "maximumGroundErrorMetres": 0.004023849964141846,
+  "maximumRetainedWorldSoleDriftMetres": 5.213277245919675e-07,
+  "maximumMassErrorMetres": 5.487695285177318e-08,
+  "minimumActualSupportMarginMetres": 0.008084039370397308
+}

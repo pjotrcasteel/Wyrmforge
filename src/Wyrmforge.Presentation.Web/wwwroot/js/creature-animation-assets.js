@@ -30,6 +30,7 @@ export function createCreatureAnimationAssets(baseUrl,{maxDecodedBytes=64*1024*1
             if(!profile.sourceSupport)throw new TypeError('Source skin requires shared source support profile');
             const skin=await loadSourceSkinResources(baseUrl,manifest.skin,{maxDecodedBytes});
             if(skin.surface.sourceSignature!==manifest.sourceSignature){skin.dispose();throw new TypeError('Source skin/profile signature mismatch');}
+            if(skin.surface.strideMetres!==profile.sourceSupport.strideMetres||['strideMetresByAxis','orientationWarp','balanceJoint'].some(key=>JSON.stringify(skin.surface[key]??null)!==JSON.stringify(profile.sourceSupport[key]??null))){skin.dispose();throw new TypeError('Source skin/profile motion mismatch');}
             if(version!==generation){skin.dispose();return false;}
             data={manifest,profile,skin,images:new Map(),encodedBytes:skin.encodedBytes,decodedBytes:skin.decodedBytes};return true;
         }
@@ -121,7 +122,7 @@ export function createCreatureAnimationAssets(baseUrl,{maxDecodedBytes=64*1024*1
         },
         renderDescriptor(sample){
             if(!data)return null;
-            if(data.skin){if(sample.debug?.sourcePending||!sample.skinPose)throw new Error('Source support pose unresolved');return {skin:data.skin,skinPose:sample.skinPose,yaw:sample.sourceSupport.yaw,productionAccepted:data.manifest.productionReady===true};}
+            if(data.skin){if(sample.debug?.sourcePending||!sample.skinPose)throw new Error('Source support pose unresolved');const s=data.profile.sourceSupport;return {skin:data.skin,skinPose:sample.skinPose,yaw:sample.sourceSupport.yaw,worldUnitsPerMetre:s.worldUnitsPerMetre??Math.hypot(s.groundBasis[0],s.groundBasis[2]),groundZ:s.groundZ,projection:{groundBasis:s.groundBasis,heightProjection:s.heightProjection},productionAccepted:data.manifest.productionReady===true};}
             if(sample.parts)throw new Error('Regional GPU material transforms have not been validated');
             const clip=data.manifest.clips[sample.clip];
             if(!clip)throw new RangeError('Unknown source clip');

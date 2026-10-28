@@ -70,8 +70,10 @@ export function solveSupportedSourcePose(frame,targets,options){
     }
     if(!(totalMass>0))throw new TypeError('Positive whole-body source mass required');
     const plus=(point,delta)=>point.map((v,i)=>v+delta[i]);
-    let bodyShift=[0,0,0],posed,contacts,center,support;
-    for(let pass=0;pass<=(options.fitReach?32:10);pass++){
+    const joint=options.balanceJoint;
+    if(joint&&(!Object.hasOwn(bones,joint.bone)||!Array.isArray(joint.descendants)||!joint.descendants.includes(joint.bone)||joint.descendants.some(id=>!Object.hasOwn(bones,id)||used.has(id)||id===rootBone)||!Number.isFinite(joint.maxRadians)||joint.maxRadians<=0||joint.maxRadians>Math.PI/12))throw new TypeError('Bounded non-contact source balance joint required');
+    let bodyShift=[0,0,0],bodyTilt=[0,0],posed,contacts,center,support;
+    for(let pass=0;pass<=(options.fitReach?48:10);pass++){
         if(options.fitReach){
             // Project the coherent body into all declared leg reach spheres.
             // The source's minimum flexion supplies the reach reserve; never
@@ -116,6 +118,12 @@ export function solveSupportedSourcePose(frame,targets,options){
             contacts[id]={...c,sourceContact:[...target.point],planted:target.planted,footprint:patch,flexDegrees:solved.flexDegrees,...(target.swingReachCorrection?{swingReachCorrection:target.swingReachCorrection}:{}),...(rotation?{rotationDelta:[...rotation]}:{})};
         }
         if(!footprint.length)throw new RangeError('Supported source pose has no actual ground support');
+        if(joint&&Math.hypot(...bodyTilt)>1e-12){
+            const angle=Math.hypot(...bodyTilt),x=bodyTilt[0]/angle,y=bodyTilt[1]/angle,c=Math.cos(angle),s=Math.sin(angle),k=1-c;
+            const r=[c+x*x*k,x*y*k,y*s,x*y*k,c+y*y*k,-x*s,-y*s,x*s,c],pivot=posed[joint.bone].head;
+            const rotate=p=>pivot.map((v,row)=>v+p.reduce((sum,n,col)=>sum+r[row*3+col]*(n-pivot[col]),0));
+            for(const id of joint.descendants){posed[id]={head:rotate(posed[id].head),tail:rotate(posed[id].tail),rotationDelta:r};}
+        }
         center=[0,0,0];
         for(const [name,weight] of Object.entries(massWeights))for(let axis=0;axis<3;axis++)center[axis]+=(posed[name].head[axis]+posed[name].tail[axis])*weight/(2*totalMass);
         const actualSupport=measureSourceSupport(footprint,center.slice(0,2));
@@ -131,7 +139,7 @@ export function solveSupportedSourcePose(frame,targets,options){
         }
         support=measureSourceSupport(loadFootprint,center.slice(0,2));
         if(support.staticallySupported&&support.margin>=minimumSupportMargin&&actualSupport.margin>=minimumSupportMargin)return {...frame,sourceBones:posed,sourceContacts:contacts,massCenter:center,
-            sourceRepose:{bodyShift:[...bodyShift],support:actualSupport,loadSupport:support,passes:pass+1,measurement:'recomputed whole-body source segment mass; saved-skin replay required'}};
+            sourceRepose:{bodyShift:[...bodyShift],balanceTiltRadians:[...bodyTilt],support:actualSupport,loadSupport:support,passes:pass+1,measurement:'recomputed whole-body source segment mass; saved-skin replay required'}};
         const centroid=footprint.reduce((s,p)=>[s[0]+p[0]/footprint.length,s[1]+p[1]/footprint.length],[0,0]);
         let dx=(centroid[0]-center[0])*.65,dy=(centroid[1]-center[1])*.65;
         if(options.fitReach&&support.dimension===2){
@@ -142,6 +150,14 @@ export function solveSupportedSourcePose(frame,targets,options){
                 if(gap>0){desired[0]+=nx*gap;desired[1]+=ny*gap;}
             }
             dx=(desired[0]-center[0])*1.25;dy=(desired[1]-center[1])*1.25;
+        }
+        if(joint&&pass>=24){
+            const pivot=posed[joint.bone].head;
+            const lever=joint.descendants.reduce((sum,id)=>sum+(massWeights[id]??0)*((posed[id].head[2]+posed[id].tail[2])/2-pivot[2]),0)/totalMass;
+            if(lever<=1e-5)throw new RangeError('Source balance joint has no positive mass lever');
+            bodyTilt=[bodyTilt[0]-dy/(1.25*lever),bodyTilt[1]+dx/(1.25*lever)];
+            const angle=Math.hypot(...bodyTilt);if(angle>joint.maxRadians)bodyTilt=bodyTilt.map(n=>n*joint.maxRadians/angle);
+            continue;
         }
         const distance=Math.hypot(dx,dy);if(distance>.025){dx*=.025/distance;dy*=.025/distance;}
         const next=[bodyShift[0]+dx,bodyShift[1]+dy,bodyShift[2]];
@@ -241,16 +257,19 @@ export function updateSourceContactTargets(state,frame,intent){
     for(const [id,c] of entries){
         const z=c.planted&&intent.groundZ!=null?intent.groundZ:c.sourceContact[2],point=projected([c.sourceContact[0],c.sourceContact[1],z],projection),old=previous[id];
         const authored={x:world.x+(point[0]-anchor[0])*pixelScale+(c.planted||translateSwing?phaseOffset.x:0),y:world.y+(point[1]-anchor[1])*pixelScale+(c.planted||translateSwing?phaseOffset.y:0),z,planted:c.planted,transported:false};
+        let swingProgress=c.swingProgress??1;if(intent.sourcePhaseDirection<0)swingProgress=1-swingProgress;
         if(intent.smoothSwing&&!c.planted&&old){
-            const start=old.supportActive?{x:old.x,y:old.y}:old.liftoffPoint??{x:old.x,y:old.y};
-            let progress=c.swingProgress??1;if(intent.sourcePhaseDirection<0)progress=1-progress;
-            const ease=progress*progress*(3-2*progress);
-            authored.x=start.x+(authored.x-start.x)*ease;authored.y=start.y+(authored.y-start.y)*ease;authored.liftoffPoint=start;
+            const fresh=old.supportActive||old.swingDirection!==(intent.sourcePhaseDirection??1);
+            const start=fresh?{x:old.x,y:old.y}:old.liftoffPoint??{x:old.x,y:old.y},startProgress=fresh?swingProgress:old.liftoffProgress??0;
+            swingProgress=Math.max(0,Math.min(1,(swingProgress-startProgress)/Math.max(1e-8,1-startProgress)));
+            const ease=swingProgress*swingProgress*(3-2*swingProgress);
+            authored.x=start.x+(authored.x-start.x)*ease;authored.y=start.y+(authored.y-start.y)*ease;authored.liftoffPoint=start;authored.liftoffProgress=startProgress;authored.swingDirection=intent.sourcePhaseDirection??1;
+            if(fresh)authored.liftoffOrientation=old.orientationWorld;
         }
         if(intent.sourceYaw!=null){
             const desired=intent.sourceYaw+(c.sourceYaw??0);
-            const start=old?.supportActive&&Number.isFinite(old.orientationWorld)?old.orientationWorld:old?.liftoffOrientation??desired;
-            let progress=Math.max(0,Math.min(1,c.swingProgress??1));if(intent.sourcePhaseDirection<0)progress=1-progress;
+            const start=authored.liftoffOrientation??(old?.supportActive&&Number.isFinite(old.orientationWorld)?old.orientationWorld:old?.liftoffOrientation??desired);
+            const progress=Math.max(0,Math.min(1,swingProgress));
             const ease=progress*progress*(3-2*progress),delta=((desired-start+Math.PI*3)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;
             authored.orientationWorld=c.planted?desired:start+delta*ease;authored.liftoffOrientation=start;
         }
@@ -406,3 +425,4 @@ export function measureSourceSupport(points,center){
     for(let i=0;i<hull.length;i++){const a=hull[i],b=hull[(i+1)%hull.length];if(cross(a,b,center)<0)inside=false;distance=Math.min(distance,segmentDistance(a,b));}
     return {hull,dimension:2,margin:inside?distance:-distance,staticallySupported:inside};
 }
+

@@ -146,6 +146,22 @@ export function validateCreatureRigProfile(profile) {
             for(const c of s.contactCycles)if(!contacts.has(c.id)||!Number.isFinite(c.phaseOffset)||c.phaseOffset<0||c.phaseOffset>=1||!Number.isFinite(c.stanceFraction)||c.stanceFraction<=0||c.stanceFraction>1||!Array.isArray(c.neutral)||c.neutral.length!==3||!c.neutral.every(Number.isFinite))fail('invalid source support cycles');
         }
         if(s.strideMetresByAxis!=null&&(!Array.isArray(s.strideMetresByAxis)||s.strideMetresByAxis.length!==2||!s.strideMetresByAxis.every(n=>Number.isFinite(n)&&n>0)))fail('invalid source stride axes');
+        if(s.worldUnitsPerMetre!=null&&(!Number.isFinite(s.worldUnitsPerMetre)||s.worldUnitsPerMetre<=0))fail('invalid source world scale');
+        if(s.orientationWarp){
+            const w=s.orientationWarp;
+            if(!bones.has(w.lowerRoot)||!Array.isArray(w.upperChain)||!w.upperChain.length||w.upperChain.length>4||!Number.isFinite(w.maxYawRadians)||w.maxYawRadians<=0||w.maxYawRadians>Math.PI/2||!Number.isFinite(w.maxRadiansPerCycle)||w.maxRadiansPerCycle<=0||w.maxRadiansPerCycle>Math.PI*4)fail('invalid source orientation warp');
+            let parent=w.lowerRoot,total=0;
+            for(const j of w.upperChain){
+                if(bones.get(j.bone)?.parent!==parent||!Number.isFinite(j.weight)||j.weight<=0||j.weight>1)fail('invalid source counter-torque chain');
+                for(const contact of rig.contacts){let bone=contact.bone;while(bone){if(bone===j.bone)fail('counter-torque chain may not contain a ground contact');bone=bones.get(bone)?.parent;}}
+                parent=j.bone;total+=j.weight;
+            }
+            if(Math.abs(total-1)>1e-8)fail('source counter-torque must preserve the committed upper pose');
+        }
+        if(s.balanceJoint){
+            const j=s.balanceJoint;if(!bones.has(j.bone)||!Number.isFinite(j.maxRadians)||j.maxRadians<=0||j.maxRadians>Math.PI/12)fail('invalid source balance joint');
+            for(const c of rig.contacts){let b=c.bone;while(b){if(b===j.bone)fail('balance joint may not contain a ground contact');b=bones.get(b)?.parent;}}
+        }
     }
     return profile;
 }
@@ -171,6 +187,7 @@ export function serializeAnimationData(value) {
                 }
                 return '['+result.join(',')+']';
             }
+            if(ArrayBuffer.isView(item)&&!(item instanceof DataView))return encode(Array.from(item));
             const proto=Object.getPrototypeOf(item);
             if(proto!==null&&proto!==Object.prototype)throw new TypeError('Animation data requires plain JSON objects');
             return '{'+Object.keys(item).sort().map(key=>{
@@ -261,6 +278,7 @@ function updateContactAnimation(state,profile,input){
     let sourceCycleBefore=null;
     if(profile.sourceSupport){
         const s=profile.sourceSupport,zero=profile.facing.directions.indexOf(s.facingZero);
+        const initializingSource=state.sourceYaw==null;
         if(state.sourceYaw==null){
             state.sourceYaw=(zero-state.facingIndex)*Math.PI/4;state.sourceScale=actorScale;
             if(s.seededPhase)state.phase=input.moving?(state.seed>>>0)/4294967296:(profile.locomotion.idleFrame??0)/profile.locomotion.frames;
@@ -282,7 +300,11 @@ function updateContactAnimation(state,profile,input){
                 sign=reverse>forward?-1:1;
             }
             state.sourceAxisWorld={x:observed.x/Math.hypot(observed.x,observed.y)*sign,y:observed.y/Math.hypot(observed.x,observed.y)*sign};
-            const delta=inverse(displacement),axes=s.strideMetresByAxis??[s.strideMetres,s.strideMetres],advance=sign*Math.hypot(delta[0]/axes[0],delta[1]/axes[1]);
+            const delta=inverse(displacement),axes=s.strideMetresByAxis??[s.strideMetres,s.strideMetres],warp=state.sourceWarpYaw??0,cw=Math.cos(warp),sw=Math.sin(warp),localDelta=[cw*delta[0]+sw*delta[1],-sw*delta[0]+cw*delta[1]],advance=sign*Math.hypot(localDelta[0]/axes[0],localDelta[1]/axes[1]);
+            if(s.orientationWarp){
+                const w=s.orientationWarp,desired=Math.max(-w.maxYawRadians,Math.min(w.maxYawRadians,Math.atan2(source[0]*sign,-source[1]*sign))),step=Math.abs(advance)*w.maxRadiansPerCycle;
+                state.sourceWarpYaw=initializingSource?desired:warp+Math.max(-step,Math.min(step,desired-warp));
+            }
             state.sourceSupportPhaseCycles+=advance;if(advance)state.sourcePhaseDirection=Math.sign(advance);
         }
         state.sourceAxisWorld??={x:-basis[1],y:-basis[3]};
@@ -335,6 +357,7 @@ function updateContactAnimation(state,profile,input){
     let sourceSupport=null;
     if(profile.sourceSupport){
         const s=profile.sourceSupport,zero=profile.facing.directions.indexOf(s.facingZero);
+        const previousYaw=state.sourceYaw;
         if(!actionSpec&&!stopped&&target>=0){
             const desired=(zero-target)*Math.PI/4,difference=Math.atan2(Math.sin(desired-state.sourceYaw),Math.cos(desired-state.sourceYaw));
             const yawStep=Math.max(-s.turnRadiansPerSecond*dt,Math.min(s.turnRadiansPerSecond*dt,difference));
@@ -344,11 +367,16 @@ function updateContactAnimation(state,profile,input){
             state.phase=(state.sourceSupportPhaseCycles%1+1)%1;
         }
         const sourceAdvance=state.sourceSupportPhaseCycles-sourceCycleBefore;if(sourceAdvance)state.sourcePhaseDirection=Math.sign(sourceAdvance);
+        if(s.orientationWarp){
+            const limit=s.orientationWarp.maxYawRadians,warp=(state.sourceWarpYaw??0)-(state.sourceYaw-previousYaw);
+            const relax=!input.moving?Math.abs(sourceAdvance)*s.orientationWarp.maxRadiansPerCycle:0;
+            state.sourceWarpYaw=Math.max(-limit,Math.min(limit,warp-Math.sign(warp)*Math.min(Math.abs(warp),relax)));
+        }
         state.facingIndex=((Math.round(zero-state.sourceYaw/(Math.PI/4))%8)+8)%8;
         contactPhase=state.phase;
         const cos=Math.cos(state.sourceYaw),sin=Math.sin(state.sourceYaw),b=s.groundBasis;
         if(Math.hypot(displacement.x,displacement.y)<1e-10&&!input.moving)state.sourceAxisWorld={x:b[0]*sin-b[1]*cos,y:b[2]*sin-b[3]*cos};
-        sourceSupport={yaw:state.sourceYaw,phaseCycles:state.sourceSupportPhaseCycles,phaseAdvance:sourceAdvance,phaseDirection:state.sourcePhaseDirection??1,axisWorld:{...state.sourceAxisWorld},
+        sourceSupport={yaw:state.sourceYaw,warpYaw:state.sourceWarpYaw??0,phaseCycles:state.sourceSupportPhaseCycles,phaseAdvance:sourceAdvance,phaseDirection:state.sourcePhaseDirection??1,axisWorld:{...state.sourceAxisWorld},
             groundBasis:[b[0]*cos+b[1]*sin,-b[0]*sin+b[1]*cos,b[2]*cos+b[3]*sin,-b[2]*sin+b[3]*cos],reducedMotion:Boolean(input.reducedMotion)};
     }
     const locomotionFrame=profile.locomotion.phaseSampling==='nearest'?Math.round(state.phase*profile.locomotion.frames)%profile.locomotion.frames:Math.min(profile.locomotion.frames-1,Math.floor(state.phase*profile.locomotion.frames));

@@ -71,7 +71,9 @@ export function hollowDirection(dx,dy,previous){
 }
 export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
     const hud=Number(snapshot.hud?.seconds??0);
-    if(seconds<state.last||hud<state.lastHud){Object.assign(state,createHollowState());}
+    const sampleTime=Number.isFinite(snapshot.simulationTimeSeconds)?snapshot.simulationTimeSeconds:null;
+    if(seconds<state.last||hud<state.lastHud||sampleTime!=null&&state.lastSimulationTime!=null&&sampleTime<state.lastSimulationTime){Object.assign(state,createHollowState());}
+    state.lastSimulationTime=sampleTime;
     const dt=state.last==null?0:Math.max(0,Math.min(.1,seconds-state.last));
     state.last=seconds;state.lastHud=hud;
     if(!snapshot.paused&&!snapshot.ended)state.clock+=dt;
@@ -89,6 +91,9 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
             at:state.clock});
     }
     state.seen=currentDeaths;
+    const foundationCandidates=foundationEnabled?new Set((snapshot.enemies??[]).filter(e=>Number(e.kind)===0).sort((a,b)=>{
+        const p=snapshot.player??{x:0,y:0};return Math.hypot(a.x-p.x,a.y-p.y)-Math.hypot(b.x-p.x,b.y-p.y)||a.entityId-b.entityId;
+    }).slice(0,12).map(e=>e.entityId)):null;
     for(const [key,corpse] of state.corpses)if(state.clock-corpse.at>=4)state.corpses.delete(key);
     while(state.corpses.size>96)state.corpses.delete(state.corpses.keys().next().value);
     const present=new Set();
@@ -143,7 +148,10 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
         pose.baseFrame=sample.baseFrame;pose.layered=sample.layered;
         // Candidate cutover is explicit and anatomy-safe. Healthy proof never
         // substitutes a missing/broken limb; legacy gameplay/deaths stay intact.
-        if(foundationEnabled&&foundation.ready()&&pose.armVariant==='standard'&&pose.injuryVariant==='standard'){
+        if(foundationEnabled&&foundation.ready()&&foundationCandidates.has(id)&&pose.armVariant==='standard'&&pose.injuryVariant==='standard'){
+            const actorScale=Math.max(.65,Math.min(1.8,(Number(enemy.radius)||11)/11))*pose.visualScale;
+            if(pose.foundationActorScale!=null&&Math.abs(pose.foundationActorScale-actorScale)>1e-9){pose.foundationAnimation=null;pose.foundationContacts=null;pose.foundationCue=null;}
+            pose.foundationActorScale=actorScale;
             pose.foundationAnimation??=createSpriteAnimationState();
             // The shared lifecycle owns action completion. Legacy render-age
             // expiration must not enqueue a second cue against C# sample time.
@@ -152,7 +160,7 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
                 pose.foundationCue={name:'attack',token:`proximity-${id}-${pose.foundationSequence}`,sequence:pose.foundationSequence};
             }
             pose.foundationSample=updateSpriteAnimation(pose.foundationAnimation,foundation.profile,{
-                entityId:id,timestamp:Number.isFinite(snapshot.simulationTimeSeconds)?snapshot.simulationTimeSeconds:pose.age,travel:pose.distance,scale:Math.max(.65,Math.min(1.8,(Number(enemy.radius)||11)/11))*pose.visualScale,world:{x:enemy.x,y:enemy.y},direction:pose.direction,
+                entityId:id,timestamp:Number.isFinite(snapshot.simulationTimeSeconds)?snapshot.simulationTimeSeconds:pose.age,travel:pose.distance,scale:actorScale,world:{x:enemy.x,y:enemy.y},direction:pose.direction,
                 velocity:{x:dt>0?dx/dt:0,y:dt>0?dy/dt:0},
                 moving:locomotion.moving,paused:snapshot.paused||snapshot.ended,frozen:enemy.frozen,reducedMotion,
                 action:pose.foundationCue??null});
@@ -161,7 +169,7 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
                 try{
                     pose.foundationSample=(foundation.manifest.skin?foundation.updateSkin:foundation.updateRegions)(pose.foundationContacts,pose.foundationSample,{
                         timestamp:Number.isFinite(snapshot.simulationTimeSeconds)?snapshot.simulationTimeSeconds:pose.age,
-                        world:{x:enemy.x,y:enemy.y},scale:Math.max(.65,Math.min(1.8,(Number(enemy.radius)||11)/11))*pose.visualScale,
+                        world:{x:enemy.x,y:enemy.y},scale:actorScale,
                         paused:snapshot.paused||snapshot.ended,frozen:enemy.frozen,
                         maxCorrection:foundation.manifest.regions?.maxCorrectionMetres,
                         maxRootCorrection:foundation.manifest.regions?.maxRootCorrectionMetres??0});
@@ -170,10 +178,14 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
                     // Preserve the diagnosis and use this actor's existing art.
                     // Failed contact poses must never masquerade as grounded.
                     pose.foundationError=error.message;
-                    pose.foundationFailure={clip:pose.foundationSample?.clip,frame:pose.foundationSample?.frame,direction:pose.foundationSample?.direction,phase:pose.foundationSample?.contactPhase,contactId:error.contactId??null,requiredCorrectionMetres:error.requiredCorrectionMetres??null,maxCorrectionMetres:error.maxCorrectionMetres??null};
+                    pose.foundationFailure={clip:pose.foundationSample?.clip,frame:pose.foundationSample?.frame,direction:pose.foundationSample?.direction,phase:pose.foundationSample?.contactPhase,contactId:error.contactId??null,requiredCorrectionMetres:error.requiredCorrectionMetres??null,maxCorrectionMetres:error.maxCorrectionMetres??null,solver:error.sourcePoseFailure??null};
                     pose.foundationSample=null;
                 }
             }
+        }else if(pose.foundationAnimation){
+            // A budget re-entry starts a fresh presentation epoch, never stale
+            // world anchors accumulated while this actor used approved art.
+            pose.foundationAnimation=null;pose.foundationSample=null;pose.foundationContacts=null;pose.foundationCue=null;pose.foundationError=null;pose.foundationFailure=null;
         }
     }
     for(const id of state.entities.keys())if(!present.has(id))state.entities.delete(id);
@@ -215,7 +227,7 @@ export function drawHollowEnemy(ctx,enemy,state){
 }
 export function hollowSkinDescriptor(enemy,state){
     const pose=state.entities.get(enemy.entityId);
-    if(!foundationEnabled||!pose?.foundationSample?.skinPose||pose.foundationError||enemy.hitFlash||enemy.frozen)return null;
+    if(!foundationEnabled||!pose?.foundationSample?.skinPose||pose.foundationError||pose.foundationSample.sourceSupport?.reducedMotion||enemy.hitFlash||enemy.frozen)return null;
     return {...foundation.renderDescriptor(pose.foundationSample),scale:Math.max(.65,Math.min(1.8,(Number(enemy.radius)||11)/11))*pose.visualScale};
 }
 export function drawHollowSkinSupportOverlay(ctx,state){
@@ -277,7 +289,7 @@ export function drawHollowCorpses(ctx,state,reducedMotion=false){
     }
 }
 export function hollowDiagnostics(state){
-    return {ready:hollowSpritesReady(),fractureReady:fracture.ready(),capeFreeReady:arms.ready(),skeletalDeathReady:skeletalDeath.ready(),injuryDeathAtlasesLoaded:injuryDeaths.loadedCount(),injuriesReady:injuries.ready(),armsReady:arms.ready(),injuryLabReview,foundation:{enabled:foundationEnabled,ready:foundation.ready(),error:foundation.error??null},layers:compositor?{...compositor.stats,estimatedBytes:compositor.estimatedBytes()}:null,entities:[...state.entities].map(([entityId,p])=>({entityId,injuryVariant:p.injuryVariant,armVariant:p.armVariant,deathInjury:p.deathInjury,signature:p.signature,visualScale:p.visualScale,idleFrame:p.idleFrame,runSpeed:p.runSpeed,observedDistance:p.distance,visualDistance:p.visualDistance,injuryDrawn:injuries.ready()&&p.injuryVariant==='broken-leg-left'&&(p.clip==='walk'||p.clip==='attack'),clip:p.clip,frame:p.frame,direction:p.direction,baseFrame:p.baseFrame,phase:p.animation?.phase,layered:p.layered,foundationError:p.foundationError??null,foundationFailure:p.foundationFailure??null,foundation:p.foundationSample?{clip:p.foundationSample.clip,frame:p.foundationSample.frame,direction:p.foundationSample.direction,actionToken:p.foundationSample.actionToken,actionProgress:p.foundationSample.actionProgress,sourceYaw:p.foundationSample.sourceSupport?.yaw??null,contactPhase:p.foundationSample.contactPhase,transported:p.foundationSample.debug.transported??false,supportMargin:p.foundationSample.debug.support?.margin??null,maxSlip:p.foundationSample.debug.maxSlip,rootOffset:p.foundationSample.rootOffset,regional:p.foundationSample.debug.regional??null}:null})),
+    return {ready:hollowSpritesReady(),fractureReady:fracture.ready(),capeFreeReady:arms.ready(),skeletalDeathReady:skeletalDeath.ready(),injuryDeathAtlasesLoaded:injuryDeaths.loadedCount(),injuriesReady:injuries.ready(),armsReady:arms.ready(),injuryLabReview,foundation:{enabled:foundationEnabled,ready:foundation.ready(),error:foundation.error??null},layers:compositor?{...compositor.stats,estimatedBytes:compositor.estimatedBytes()}:null,entities:[...state.entities].map(([entityId,p])=>({entityId,injuryVariant:p.injuryVariant,armVariant:p.armVariant,deathInjury:p.deathInjury,signature:p.signature,visualScale:p.visualScale,idleFrame:p.idleFrame,runSpeed:p.runSpeed,observedDistance:p.distance,visualDistance:p.visualDistance,injuryDrawn:injuries.ready()&&p.injuryVariant==='broken-leg-left'&&(p.clip==='walk'||p.clip==='attack'),clip:p.clip,frame:p.frame,direction:p.direction,baseFrame:p.baseFrame,phase:p.animation?.phase,layered:p.layered,foundationError:p.foundationError??null,foundationFailure:p.foundationFailure??null,foundation:p.foundationSample?{clip:p.foundationSample.clip,frame:p.foundationSample.frame,direction:p.foundationSample.direction,actionToken:p.foundationSample.actionToken,actionProgress:p.foundationSample.actionProgress,sourceYaw:p.foundationSample.sourceSupport?.yaw??null,warpYaw:p.foundationSample.sourceSupport?.warpYaw??0,balanceTiltRadians:p.foundationSample.sourcePose?.sourceRepose?.balanceTiltRadians??null,solverPasses:p.foundationSample.sourcePose?.sourceRepose?.passes??null,contactPhase:p.foundationSample.contactPhase,transported:p.foundationSample.debug.transported??false,supportMargin:p.foundationSample.debug.support?.margin??null,maxSlip:p.foundationSample.debug.maxSlip,rootOffset:p.foundationSample.rootOffset,regional:p.foundationSample.debug.regional??null}:null})),
         corpses:[...state.corpses.values()].map(p=>({entityId:p.entityId,deathVariant:p.deathVariant,deathInjury:p.deathInjury,deathStyle:p.deathStyle,direction:p.direction,age:state.clock-p.at,frame:Math.min(23,Math.floor((state.clock-p.at)*12))}))};
 }
 // Preserve playback/fallback diagnostics while the asset bundle is loading.

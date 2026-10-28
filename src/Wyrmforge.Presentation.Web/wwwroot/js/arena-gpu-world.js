@@ -35,12 +35,11 @@ export class HuntGpuWorld {
     constructor({sourceCamera=false,maxSkinActors=12}={}) {
         if(!Number.isSafeInteger(maxSkinActors)||maxSkinActors<0||maxSkinActors>32)throw new RangeError('Bounded Hunt skin population required');
         this.maxSkinActors=maxSkinActors;
-        this.groundY=sourceCamera?61.93548774719238/34.730770111083984:GROUND_Y;
-        this.elevation=sourceCamera?Math.asin(1/this.groundY):Math.PI/4;
+        this.sourceCamera=sourceCamera;this.groundY=GROUND_Y;this.elevation=Math.PI/4;
         this.canvas = document.createElement('canvas');
         this.engine = new LightingEngine(this.canvas, { shadowViews: 6, maxLights: 8 });
         this.engine.registerGeometry('hunt-plane', new T.PlaneGeometry(1, 1));
-        const billboard=huntActorGeometry();if(sourceCamera){billboard.rotateX(-Math.PI/4);billboard.rotateX(Math.PI/2-this.elevation);}
+        const billboard=this.billboardGeometry=huntActorGeometry();
         this.engine.registerGeometry('hunt-billboard', billboard);
         this.skins=new Map();
         this.layers = new Map();
@@ -86,7 +85,17 @@ export class HuntGpuWorld {
             this.skins.set(key,{...material(key),flatShading:resource.manifest.flatShading,doubleSided:resource.manifest.doubleSided,emission:resource.manifest.emission,emissionIntensity:resource.manifest.emissionIntensity});
         }
         if(!this.materials.some(m=>m.id===key))this.materials.push(this.skins.get(key));
-        this.objects.push({id,ownerId:id,geometry:key,material:key,position:[x/UNIT,-y*this.groundY/UNIT,.625*scale],rotation:[0,0,descriptor.yaw],scale:[1.25*scale,1.25*scale,1.25*scale],castsShadow:true,receivesShadow:true,receivesLight:true,skinPose:descriptor.skinPose});
+        const modelScale=descriptor.worldUnitsPerMetre/UNIT*scale;
+        this.objects.push({id,ownerId:id,geometry:key,material:key,position:[x/UNIT,-y*this.groundY/UNIT,-descriptor.groundZ*modelScale],rotation:[0,0,descriptor.yaw],scale:[modelScale,modelScale,modelScale],castsShadow:true,receivesShadow:true,receivesLight:true,skinPose:descriptor.skinPose});
+    }
+    configureSourceProjection(descriptor){
+        if(!this.sourceCamera)return;
+        const units=descriptor.worldUnitsPerMetre,b=descriptor.projection?.groundBasis,h=descriptor.projection?.heightProjection;
+        if(!Number.isFinite(units)||units<=0||!Array.isArray(b)||b.length!==4||!Array.isArray(h)||h.length!==2||![...b,...h].every(Number.isFinite)||Math.abs(b[0]-units)>units*.0001||Math.abs(b[1])+Math.abs(b[2])+Math.abs(h[0])>units*.0001||b[3]>=0||h[1]>=0||Math.abs(Math.hypot(b[3],h[1])-units)>units*.0001)throw new TypeError('Source projection must match the canonical orthographic scene axes');
+        const key=JSON.stringify([b,h,units]);if(this.sourceProjectionKey===key)return;
+        const groundY=units/-b[3],elevation=Math.asin(1/groundY);
+        this.billboardGeometry.rotateX(this.elevation-elevation);
+        this.groundY=groundY;this.elevation=elevation;this.sourceProjectionKey=key;
     }
     render(ctx, frame) {
         const engine = this.engine;

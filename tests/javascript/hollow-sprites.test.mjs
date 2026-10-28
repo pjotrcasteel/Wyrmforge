@@ -301,3 +301,9 @@ test('approved source-mesh fracture really replaces eligible healthy deaths, nev
   assert.ok(injured>=15,'injuries remain part of the original visual distribution');
  }finally{globalThis.fetch=previous.fetch;globalThis.Image=previous.Image;}
 });
+
+test('authoritative replay seeks within the same HUD second start a fresh presentation epoch',()=>{
+ const state=mod.createHollowState();mod.updateHollowSprites(state,snapshot({simulationTimeSeconds:.1,hud:{seconds:0}}),1);
+ mod.updateHollowSprites(state,snapshot({simulationTimeSeconds:.4,hud:{seconds:0},enemies:[enemy({x:25})]}),1.3);const old=state.entities.get(7);
+ mod.updateHollowSprites(state,snapshot({simulationTimeSeconds:.05,hud:{seconds:0}}),1.4);assert.notEqual(state.entities.get(7),old);assert.equal(state.entities.get(7).distance,0);
+});

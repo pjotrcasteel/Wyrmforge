@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {validateSourceSkinSurface as validate,sampleSourceSkinSurface as sample,sourceSkinPoseMatrices as matrices,multiplySourceMatrices as multiply,invertSourceMatrix as invert} from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/source-skin-pose.js';
+import {validateSourceSkinSurface as validate,sampleSourceSkinSurface as sample,sourceSkinPoseMatrices as matrices,multiplySourceMatrices as multiply,invertSourceMatrix as invert,orientSourceSkinPose as orient} from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/source-skin-pose.js';
 import {decodeSourceSkinGeometry as decode} from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/source-skin-assets.js';
 import {solveSupportedSourcePose as repose} from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/sprite-contact-kinematics.js';
 import {createSkinnedRenderable,applySourceSkinPose,validateSkinPose} from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/source-skin.js';
@@ -93,4 +93,18 @@ test('inspection shader cache preserves the influence-set contract across differ
   debug.dispose();resource.mesh.material.dispose();resource.mesh.customDepthMaterial.dispose();resource.mesh.customDistanceMaterial.dispose();resource.skeleton.dispose();g.dispose();
  }
  assert.equal(new Set(keys).size,3);
+});
+
+
+test('whole-body orientation warp preserves lengths and committed chest orientation on data-named rigs',()=>{
+ for(const prefix of ['', 'other-']){
+  const s=data();
+  if(prefix){for(const b of s.bones)b.id=prefix+b.id;s.rootBone=prefix+s.rootBone;s.bodyBone=prefix+s.bodyBone;s.massWeights=Object.fromEntries(Object.entries(s.massWeights).map(([id,w])=>[prefix+id,w]));for(const c of s.contacts)for(const key of ['upper','middle','end'])c[key]=prefix+c[key];}
+  const base=sample(s,{clip:'attack-travel',gaitPhase:.17,actionProgress:.5}),config={lowerRoot:prefix+'pelvis',upperChain:[{bone:prefix+'spine',weight:.5},{bone:prefix+'chest',weight:.5}],maxYawRadians:Math.PI/3,maxRadiansPerCycle:Math.PI*2},pose=orient(s,base,.7,config);
+  assert.deepEqual(pose.sourceBones[s.rootBone],base.sourceBones[s.rootBone]);
+  for(const [id,b] of Object.entries(base.sourceBones))assert.ok(Math.abs(distance(b.head,b.tail)-distance(pose.sourceBones[id].head,pose.sourceBones[id].tail))<1e-10);
+  const chest=prefix+'chest';for(let i=0;i<12;i++)assert.ok(Math.abs(pose.sourceBones[chest].matrix[i]-base.sourceBones[chest].matrix[i])<1e-10);
+  assert.ok(distance(pose.sourceBones[prefix+'foot.L'].head,base.sourceBones[prefix+'foot.L'].head)>.01);
+  assert.ok(Array.from(matrices(s,pose,pose)).every(Number.isFinite));assert.throws(()=>orient(s,base,2,config),/authored limits/);
+ }
 });
