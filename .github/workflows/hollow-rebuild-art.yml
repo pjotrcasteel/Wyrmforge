@@ -41,6 +41,7 @@ jobs:
         run: |
           python -m py_compile tools/art/hollow-rebuild/check-scope.py
           python -m py_compile tools/art/hollow-rebuild/qc_h1_geometry.py
+          python -m py_compile tools/art/hollow-rebuild/evaluate_free_character_blender.py
       - name: Verify new source-only anatomical sculpt constraints
         run: python tools/art/hollow-rebuild/test_feral_source_shape.py
 
