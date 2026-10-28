@@ -3,7 +3,7 @@ export type Vector2={x:number;y:number};
 export type Balance='supported'|'catch'|'flight'|'fall';
 export interface ContactSample {id:string;x:number;y:number}
 export interface SourcePose {contacts:ContactSample[];com?:[number,number];balance:Balance}
-export interface PoseGrid {phaseFrames:number;actionFrames:number;order:'action-major';phaseSampling:'nearest';actionSampling:'nearest'}
+export interface PoseGrid {travel?:'facing-projection';stanceVelocity?:Vector2;phaseFrames:number;actionFrames:number;order:'action-major';phaseSampling:'nearest';actionSampling:'nearest'}
 export interface ClipProfile {poseGrid?:PoseGrid;clip:string;frames:number;fps:number;samples:SourcePose[];mode?:'fullBody'|'regions';coupledSupport?:boolean;priority?:number;commitUntil?:number;hold?:boolean;terminal?:boolean;reducedFrame?:number}
 export interface CreatureRigProfile {
  schemaVersion:2;coordinateSpace:'actor-xy-ground-z-up';unitsPerPixel:number;maxRootOffset:number;
@@ -25,6 +25,6 @@ export interface MotionIntent {
 }
 export interface PoseSample {
  clip:string;frame:number;direction:string;baseClip:string;baseFrame:number;phase:number;layered:boolean;
- actionToken:string|number|null;actionProgress:number|null;rootOffset:Vector2;seed:number;
+ actionToken:string|number|null;actionProgress:number|null;contactPhase:number;rootOffset:Vector2;seed:number;
  material:unknown;debug:{contacts:Record<string,Vector2>;maxSlip:number;errors:{id:string;slip:number}[];balance:Balance;correctionSaturated:boolean};
 }

@@ -99,6 +99,8 @@ export function validateCreatureRigProfile(profile) {
             const grid=clip.poseGrid;
             if(!Number.isSafeInteger(grid.phaseFrames)||grid.phaseFrames<2||!Number.isSafeInteger(grid.actionFrames)||grid.actionFrames<2||grid.phaseFrames*grid.actionFrames!==clip.frames||grid.order!=='action-major'||grid.phaseSampling!=='nearest'||grid.actionSampling!=='nearest')fail(`invalid pose grid: ${clip.clip}`);
         }
+        if(clip.poseGrid?.travel!=null&&clip.poseGrid.travel!=='facing-projection')fail(`invalid grid travel mode: ${clip.clip}`);
+        if(clip.poseGrid?.stanceVelocity&&![clip.poseGrid.stanceVelocity.x,clip.poseGrid.stanceVelocity.y].every(Number.isFinite))fail(`invalid stance velocity: ${clip.clip}`);
         if(clip.mode==='regions'&&!clip.coupledSupport)fail('region action requires authored coupledSupport');
         if(!Array.isArray(clip.samples)||clip.samples.length!==clip.frames)fail(`contact samples required: ${clip.clip}`);
         if(clip.commitUntil!=null&&(!(clip.commitUntil>=0)||clip.commitUntil>1))fail('invalid commitment');
@@ -134,13 +136,25 @@ function contactPoint(c,world,yaw,scale=1){
     const a=yaw*Math.PI/180,cos=Math.cos(a),sin=Math.sin(a);
     return {x:world.x+(c.x*cos-c.y*sin)*scale,y:world.y+(c.x*sin+c.y*cos)*scale};
 }
-function solvePresentationContacts(state,profile,spec,frame,world,yaw,actorScale){
+function solvePresentationContacts(state,profile,spec,frame,world,yaw,actorScale,contactPhase=state.phase){
     const authored=spec.samples[frame],active=new Set(),errors=[];
     let dx=0,dy=0,count=0;
     for(const c of authored.contacts??[]){
         active.add(c.id);const point=contactPoint(c,world,yaw,actorScale);
         let anchor=state.contacts[c.id];
-        if(!anchor){anchor={x:point.x+state.rootOffset.x,y:point.y+state.rootOffset.y};state.contacts[c.id]=anchor;}
+        if(!anchor){
+            const grid=spec.poseGrid;
+            if(grid?.stanceVelocity){
+                // A newly planted raster pose may precede/follow continuous travel.
+                // Initialize its world anchor at the continuous source phase, then
+                // measure the DRAWN pose against it. Never replace measured contacts
+                // with interpolated contacts: the bounded correction moves the sprite.
+                const sampledPhase=(frame%grid.phaseFrames)/grid.phaseFrames;
+                const phaseError=(contactPhase-sampledPhase+1.5)%1-.5;
+                anchor=contactPoint({x:c.x+phaseError*grid.stanceVelocity.x,y:c.y+phaseError*grid.stanceVelocity.y},world,yaw,actorScale);
+            }else anchor={x:point.x+state.rootOffset.x,y:point.y+state.rootOffset.y};
+            state.contacts[c.id]=anchor;
+        }
         dx+=anchor.x-point.x;dy+=anchor.y-point.y;count++;
     }
     for(const id of Object.keys(state.contacts))if(!active.has(id))delete state.contacts[id];
@@ -177,6 +191,9 @@ function updateContactAnimation(state,profile,input){
     const stopped=Boolean(input.paused||input.frozen),wasStopped=Boolean(state.stopped);
     const dt=stopped||wasStopped?0:input.timestamp-state.timestamp;
     const distance=stopped||wasStopped?0:input.travel-state.travel;
+    const previousWorld=state.previousWorld??input.world;
+    const displacement=stopped||wasStopped?{x:0,y:0}:{x:input.world.x-previousWorld.x,y:input.world.y-previousWorld.y};
+    state.previousWorld={...input.world};
     state.timestamp=input.timestamp;state.travel=input.travel;state.stopped=stopped;
     state.time+=dt;
     if(!stopped)state.phase=(state.phase+distance/(profile.locomotion.stride*actorScale))%1;
@@ -185,9 +202,10 @@ function updateContactAnimation(state,profile,input){
     const current=state.action&&profile.actions[state.action.name];
     const progress=current?Math.min(1,(state.time-state.action.started)/actionDuration(current)):1;
     const committed=current&&progress<(current.commitUntil??0);
+    let beganAction=false;
     const higher=spec&&(spec.priority??0)>(current?.priority??-1);
     if(spec&&signal.token!==state.lastToken&&signal.sequence>state.sequence&&(!stopped||spec.terminal)&&(!current||higher||(!committed&&!current.terminal))){
-        state.action={name:signal.name,token:signal.token,started:state.time};state.sequence=signal.sequence;state.lastToken=signal.token;
+        beganAction=true;state.action={name:signal.name,token:signal.token,started:state.time,contactPhase:state.phase};state.sequence=signal.sequence;state.lastToken=signal.token;
         state.actionDirection=state.facingIndex;
         // Every action is full-body unless its source declares coupled regions.
         state.contacts={};
@@ -195,6 +213,12 @@ function updateContactAnimation(state,profile,input){
     let actionSpec=state.action&&profile.actions[state.action.name];
     let actionProgress=actionSpec?Math.min(1,(state.time-state.action.started)/actionDuration(actionSpec)):null;
     if(actionSpec&&actionProgress>=1&&!actionSpec.hold){state.action=null;actionSpec=null;actionProgress=null;}
+    if(actionSpec?.poseGrid?.travel==='facing-projection'&&!beganAction){
+        const yaw=state.actionDirection*Math.PI/4;
+        const projected=displacement.x*Math.cos(yaw)+displacement.y*Math.sin(yaw);
+        state.action.contactPhase=((state.action.contactPhase+projected/(profile.locomotion.stride*actorScale))%1+1)%1;
+    }
+    const contactPhase=actionSpec?.poseGrid?.travel==='facing-projection'?state.action.contactPhase:state.phase;
     const target=profile.facing.directions.indexOf(input.direction);
     const locomotionFrame=Math.min(profile.locomotion.frames-1,Math.floor(state.phase*profile.locomotion.frames));
     const turning=!actionSpec&&target>=0&&target!==state.facingIndex;
@@ -216,13 +240,13 @@ function updateContactAnimation(state,profile,input){
     }else if(!turning){state.pivotTime=0;state.pivotSign=null;}
     if(actionSpec)state.facingIndex=state.actionDirection;
     const clipSpec=actionSpec??(turning&&pivotSpec?pivotSpec:profile.locomotion);
-    let frame=actionSpec?(actionSpec.poseGrid?poseGridFrame(actionSpec,state.phase,actionProgress):Math.min(actionSpec.frames-1,Math.floor(actionProgress*actionSpec.frames))):
+    let frame=actionSpec?(actionSpec.poseGrid?poseGridFrame(actionSpec,contactPhase,actionProgress):Math.min(actionSpec.frames-1,Math.floor(actionProgress*actionSpec.frames))):
         pivotFrame??(input.moving?locomotionFrame:(profile.locomotion.idleFrame??locomotionFrame));
     if(stopped&&state.sample&&!actionSpec?.terminal)frame=state.sample.frame;
     if(input.reducedMotion)frame=clipSpec.reducedFrame??0;
-    const debug=solvePresentationContacts(state,profile,clipSpec,frame,input.world,state.facingIndex*45,actorScale);
+    const debug=solvePresentationContacts(state,profile,clipSpec,frame,input.world,state.facingIndex*45,actorScale,contactPhase);
     state.sample={baseClip:profile.locomotion.clip,baseFrame:locomotionFrame,phase:state.phase,clip:clipSpec.clip,frame,
         direction:profile.facing.directions[state.facingIndex],layered:false,actionToken:state.action?.token??null,
-        actionProgress,rootOffset:{...state.rootOffset},material:clipSpec.material??null,debug,seed:state.seed};
+        actionProgress,contactPhase,rootOffset:{...state.rootOffset},material:clipSpec.material??null,debug,seed:state.seed};
     return state.sample;
 }

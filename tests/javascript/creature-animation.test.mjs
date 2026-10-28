@@ -128,3 +128,26 @@ test('pose grid rejects incomplete, ambiguous and fractional sample layouts',()=
   change(p.actions.strike.poseGrid);assert.throws(()=>validate(p),/pose grid/);
  }
 });
+
+test('actual source-derived grid plants raster contact landmarks under forward and reversed C# root motion',()=>{
+ const p=validate(JSON.parse(readFileSync(new URL('../fixtures/animation/travel-grid-source.json',import.meta.url),'utf8')));
+ for(const fps of [15,30,60,120])for(const reverse of [false,true]){
+  const s=create();let maximum=0;
+  for(let i=0;i<fps*1.3;i++){
+   const t=i/fps,travel=t*46.53,x=reverse&&t>.55?.55*46.53-(t-.55)*46.53:travel;
+   const a=update(s,p,intent(t,{travel,world:{x,y:0},moving:true,direction:reverse&&t>.55?'W':'E',action:strike()}));
+   assert.equal(a.actionToken,'claw-0');assert.equal(a.direction,'E');
+   assert.equal(a.debug.correctionSaturated,false,`${fps}Hz saturated at ${t}`);
+   assert.ok(Math.hypot(a.rootOffset.x,a.rootOffset.y)<=p.maxRootOffset+1e-10);
+   maximum=Math.max(maximum,a.debug.maxSlip);
+  }
+  assert.ok(maximum<p.unitsPerPixel/4,`${fps}Hz reverse=${reverse}: ${maximum} > quarter source pixel`);
+ }
+});
+test('forward-only source grid reports lateral drift; projection cannot claim arbitrary-direction grounding',()=>{
+ const p=validate(JSON.parse(readFileSync(new URL('../fixtures/animation/travel-grid-source.json',import.meta.url),'utf8'))),s=create();
+ update(s,p,intent(0,{direction:'E',action:strike()}));
+ const a=update(s,p,intent(.2,{travel:6,world:{x:0,y:6},direction:'S',moving:true,action:strike()}));
+ assert.equal(a.direction,'E');assert.equal(a.actionToken,'claw-0');assert.equal(a.debug.correctionSaturated,true);
+ assert.ok(a.debug.maxSlip>p.unitsPerPixel/4);
+});

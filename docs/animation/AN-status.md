@@ -168,3 +168,24 @@ blender -b -t 2 --python tools/animation/author_hollow_foundation.py -- --out ar
 blender -b -t 2 --python tools/animation/validate_source.py -- artifacts/travel-study
 node --test tests/javascript/creature-animation.test.mjs tests/javascript/sprite-animation.test.mjs
 ```
+
+### Source-grid playback contact probe
+
+A second probe uses the **actual 256 source contact samples**, transformed to
+actor units, at the previously observed healthy actor speed (46.53 units/s).
+This is a synthetic trajectory fixture, not a new actual-Hunt recording.
+The quarter-source-pixel tolerance is still `(93/96)/4 = 0.2421875` actor units.
+
+Unsigned travel initially failed even this study: forward drift reached
+1.22025 units and forward-to-reverse drift 25.3335 units. Two scoped corrections
+now initialize contacts at the source's continuous stance phase, measure the
+actual selected raster-pose contacts, and drive an action grid from signed root
+displacement projected onto its committed facing. The action clock and token
+continue unchanged. The sprite correction remains bounded to one source pixel.
+
+For 15/30/60/120Hz forward and exact opposite-direction root travel, maximum
+sampled landmark slip is below 0.00000233 units, with no correction saturation.
+The complete Node suite passed **500/500** after these changes. A negative
+lateral-motion test intentionally requires observable saturation/slip: a
+forward-axis grid cannot claim arbitrary-direction grounding. This is not yet
+an integrated raster/Hunt result, and does not close AN2–AN5.
