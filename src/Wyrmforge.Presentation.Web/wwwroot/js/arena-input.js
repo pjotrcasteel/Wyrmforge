@@ -195,6 +195,12 @@ export function getArenaPropFocus(state) {
     return id ?? null;
 }
 
+// Only a live gamepad stick requests C# target snapping. Mouse and touch remain precise.
+export function isArenaRightStickAim(state, aim, now = Date.now()) {
+    if (state.inputSuspended || state.latestSnapshot?.paused || Math.hypot(aim.x, aim.y) <= .01) return false;
+    return state.aimTouchId == null && state.aimPointerId == null && state.tapAimUntil <= now;
+}
+
 export function getArenaAim(state, now = Date.now()) {
     if (state.inputSuspended || state.latestSnapshot?.paused) return { x: 0, y: 0 };
     const engaged = state.aimTouchId != null || state.aimPointerId != null || state.tapAimUntil > now;
