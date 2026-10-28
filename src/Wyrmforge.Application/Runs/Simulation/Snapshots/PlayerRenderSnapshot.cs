@@ -7,6 +7,9 @@ public sealed record PlayerRenderSnapshot(double X, double Y, double Radius, boo
     public int? AimTargetId { get; init; }
     public int? AimPropId { get; init; }
 
+    /// <summary>The primary school selected by the C# run; authoritative for school-specific target-sigil artwork.</summary>
+    public string ActiveSchool { get; init; } = "Arcane";
+
     public int FocusCharge { get; init; }
 
     /// <summary>Warding Pulse readiness 0→1, or null when no contextual spell is prepared.</summary>

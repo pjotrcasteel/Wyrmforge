@@ -1,8 +1,8 @@
 import { huntLayerCapture } from './hunt-gpu-layers.js';
 import { preloadFireballV5 } from './arena-fireball-v5.js';
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
-import { attachArenaInput, getArenaMovement, getArenaAim, getArenaPropFocus } from './arena-input.js';
-import { resolveTargetIndicator, drawTargetIndicator, targetSelectionLightEmitter, targetSelectionCanvasLight } from './arena-target-indicator.js?v=20261028-rune-circle-v3';
+import { attachArenaInput, getArenaMovement, getArenaAim, isArenaStickAim, getArenaPropFocus } from './arena-input.js';
+import { resolveTargetIndicator, presentTargetSigil, drawTargetIndicator, preloadTargetSigilArt, targetSelectionLightEmitter, targetSelectionCanvasLight, actorLightsWithoutSigilOverlay } from './arena-target-indicator.js?v=20261028-stick-snap-floor-v2';
 import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, drawArenaCloisterElevation } from './arena-environment.js?v=20261026-compact-ground-v1';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
@@ -123,6 +123,8 @@ function createState(canvas, dotNetReference) {
         context: canvas.getContext('2d'),
         nightMask: document.createElement('canvas'),
         actorLightBuffer: document.createElement('canvas'),
+        targetSigilArt: preloadTargetSigilArt(),
+        targetSigil: { key: null, activeMarker: null, lastOpacity: 0, enteredAt: 0, exitedAt: null, exitMarker: null },
         dotNetReference,
         active: true,
         simulationBusy: false,
@@ -188,7 +190,7 @@ function startSimulationFrame(state, timestamp, rect) {
     const aim = getArenaAim(state);
     const bridgeStarted = performance.now();
 
-    state.dotNetReference.invokeMethodAsync('Frame', delta, rect.width, rect.height, movement.x, movement.y, aim.x, aim.y, getArenaPropFocus(state))
+    state.dotNetReference.invokeMethodAsync('Frame', delta, rect.width, rect.height, movement.x, movement.y, aim.x, aim.y, getArenaPropFocus(state), isArenaStickAim(state, aim))
         .then(snapshot => {
             if (!state.active) return;
             updatePlayerDanger(state.playerDanger, snapshot, performance.now());
@@ -247,8 +249,11 @@ function draw(state, snapshot, width, height) {
     ctx.globalAlpha=1;ctx.filter='none';ctx.globalCompositeOperation='source-over';
     const danger = playerDangerPresentation(state.playerDanger, snapshot, performance.now(), state.reducedMotion.matches);
     const camera = resolveArenaCamera(snapshot.world, snapshot.player, width, height);
-    const targetIndicator = resolveTargetIndicator(snapshot);
+    const selectedTarget = resolveTargetIndicator(snapshot);
     const visualSeconds = performance.now() / 1000;
+    const targetId = snapshot.player?.aimPropId ?? snapshot.player?.aimTargetId;
+    const targetIndicator = presentTargetSigil(state.targetSigil, selectedTarget, targetId,
+        visualSeconds, state.reducedMotion.matches);
     const worldWidth = camera.width;
     const worldHeight = camera.height;
     const lightViewport = { x: camera.x, y: camera.y, width, height };
@@ -256,9 +261,10 @@ function draw(state, snapshot, width, height) {
     // Source-derived death geometry and a shared GPU-compatible emitter; never procedural bones.
     const fractureEmitters = hollowFractureEmitters(state.hollow.corpses,state.hollow.clock,state.reducedMotion.matches);
     // Every illumination cue uses the SAME authoritative lighting frame.
-    // The selected target supplies a generic, ultra-dim emitter; no second
-    // spotlight renderer or school-specific light engine exists.
-    const selectionEmitter = targetSelectionLightEmitter(targetIndicator,snapshot.lighting);
+    // The selected target supplies the SAME generic emitter, colored from the
+    // C# active school. No independent lighting system or false school selection.
+    const selectionEmitter = targetSelectionLightEmitter(targetIndicator, snapshot.lighting,
+        snapshot.player?.activeSchool);
     state.fractureGpuEmitters = fractureEmitters;
     state.selectionGpuEmitter = selectionEmitter;
     state.sharedLightingFrame = withHollowFractureLightingFrame(snapshot.lighting,
@@ -305,10 +311,12 @@ function draw(state, snapshot, width, height) {
     drawPlayerChill(ctx, snapshot.player, state.reducedMotion.matches ? 0 : visualSeconds);
     for (const shard of snapshot.experienceShards ?? []) drawExperienceShard(ctx, shard);
     for (const pulse of snapshot.splashPulses) drawSplashPulse(ctx, pulse, snapshot.dragon?.school);
-    // Neutral magic lies beneath the world sprites without replacing hostile attack telegraphs.
-    drawTargetIndicator(ctx, targetIndicator, 'ground', visualSeconds, state.reducedMotion.matches);
+    // The approved V3 sigil is school-colored beneath actors, without replacing attack telegraphs.
+    drawTargetIndicator(ctx, targetIndicator, 'ground', visualSeconds, state.reducedMotion.matches,
+        state.targetSigilArt, snapshot.player?.activeSchool);
     // All luminous detail remains on the ground BEFORE opaque depth-sorted actors.
-    drawTargetIndicator(ctx, targetIndicator, 'contrast', visualSeconds, state.reducedMotion.matches);
+    drawTargetIndicator(ctx, targetIndicator, 'contrast', visualSeconds, state.reducedMotion.matches,
+        state.targetSigilArt, snapshot.player?.activeSchool);
     drawAimRune(ctx, snapshot.player);
     drawWardReadiness(ctx, snapshot.player, visualSeconds, state.reducedMotion.matches);
     if (snapshot.wardPulse) drawWardPulse(ctx, snapshot.wardPulse, state.reducedMotion.matches);
@@ -408,7 +416,9 @@ function draw(state, snapshot, width, height) {
         snapshot.dragon?.school ?? snapshot.hunt?.school, snapshot.dragon);
     // A second weaker pass colors nearby silhouettes without whitening shadows.
     drawAshfangAirEffects(ctx,snapshot,ashfangSockets(state.ashfang),state.reducedMotion.matches);
-    if(!gpu)drawSpellLightSpill(ctx, spellLights, lightViewport, 'actors');
+    // Selection light illuminates the terrain and the selected sprite's alpha-isolated
+    // material pass above. Do not screen-blend it over all actors after occlusion.
+    if(!gpu)drawSpellLightSpill(ctx, actorLightsWithoutSigilOverlay(spellLights), lightViewport, 'actors');
     for (const impact of snapshot.elementalImpacts) drawSpellImpact(ctx, impact, state.reducedMotion.matches);
     for (const death of snapshot.deathBursts) drawDeathBurst(ctx, death);
 

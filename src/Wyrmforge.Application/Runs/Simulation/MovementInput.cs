@@ -3,7 +3,7 @@ using Wyrmforge.Domain.Combat.Geometry;
 namespace Wyrmforge.Application.Runs.Simulation;
 
 /// <summary>Version 3 input: optional prop focus preserves the original movement and manual-aim contracts.</summary>
-public readonly record struct MovementInput(double X, double Y, double AimX = 0, double AimY = 0, int? FocusPropId = null)
+public readonly record struct MovementInput(double X, double Y, double AimX = 0, double AimY = 0, int? FocusPropId = null, bool SnapAim = false)
 {
     public const int CurrentVersion = 3;
     public Vector2D Direction => new Vector2D(X, Y).Normalized();

@@ -118,7 +118,7 @@ public sealed class ArenaEnvironmentState
 
     /// <summary>Find a live attackable prop, independent of its visual kind. The candidate itself does not obstruct its sight line.</summary>
     public (int Id, Vector2D Position)? FindTargetableProp(Vector2D origin, double width, double height, double range,
-        int? requestedId = null)
+        int? requestedId = null, Func<Vector2D, bool>? isVisible = null)
     {
         (int Id, Vector2D Position)? best = null;
         var bestDistance = double.PositiveInfinity;
@@ -127,7 +127,8 @@ public sealed class ArenaEnvironmentState
             if (prop.Health <= 0 || (requestedId is not null && prop.Spec.Id != requestedId)) continue;
             var position = new Vector2D(prop.Spec.X * width, prop.Spec.Y * height);
             var distance = Vector2D.Distance(origin, position);
-            if (distance > range || distance > bestDistance || BlocksSegment(origin, position, width, height, ignoredPropId: prop.Spec.Id)) continue;
+            if (distance > range || distance > bestDistance || isVisible?.Invoke(position) == false ||
+                BlocksSegment(origin, position, width, height, ignoredPropId: prop.Spec.Id)) continue;
             if (best is null || distance < bestDistance || prop.Spec.Id < best.Value.Id)
             {
                 best = (prop.Spec.Id, position);
