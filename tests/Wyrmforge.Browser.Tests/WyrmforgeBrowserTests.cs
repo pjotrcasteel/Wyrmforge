@@ -2617,7 +2617,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
     [TestMethod]
     [DataRow(320, 568)]
     [DataRow(390, 844)]
-    public async Task Mobile_LiveHunt_ArcaneTargetSigilStyleProof_IsLegibleAndSchoolNeutral(int width, int height)
+    public async Task Mobile_LiveHunt_V3TargetSigilArtworkFixtures_AreVisible(int width, int height)
     {
         await Page.SetViewportSizeAsync(width, height);
         await OpenAsync();
@@ -2628,7 +2628,11 @@ public sealed class WyrmforgeBrowserTests : PageTest
         // Separate from actual targeting selection tests: these three fixtures only
         // expose the exact production rendering functions for visual review.
         var proof = await Page.EvaluateAsync<JsonElement>(@"async () => {
-            const { drawTargetIndicator } = await import('./js/arena-target-indicator.js');
+            const { drawTargetIndicator, preloadTargetSigilArt } = await import('./js/arena-target-indicator.js');
+            const art = preloadTargetSigilArt();
+            if (!art) return { ok: false, colored: 0 };
+            await art.decode();
+            if (art.naturalWidth !== 256 || art.naturalHeight !== 192) return { ok: false, colored: 0 };
             const game = document.querySelector('canvas.game-canvas');
             if (!game) return { ok: false, colored: 0 };
             const bounds = game.getBoundingClientRect();
@@ -2651,15 +2655,17 @@ public sealed class WyrmforgeBrowserTests : PageTest
             const ctx = overlay.getContext('2d', { willReadFrequently: true });
             const width = overlay.width, height = overlay.height;
             const fixtures = [
-                { kind: 'enemy', x: width * .23, y: height * .46, rx: 24, ry: 9 },
-                { kind: 'boss', x: width * .52, y: height * .61, rx: 58, ry: 21 },
-                { kind: 'object', x: width * .80, y: height * .46, rx: 20, ry: 7 },
+                { kind: 'enemy', x: width * .23, y: height * .46, rx: 30, ry: 16, opacity: 1 },
+                { kind: 'boss', x: width * .52, y: height * .61, rx: 79, ry: 41, opacity: 1 },
+                { kind: 'object', x: width * .80, y: height * .46, rx: 25, ry: 13, opacity: 1 },
             ];
             const labels = ['ENEMY', 'BOSS', 'OBJECT'];
             for (let index = 0; index < fixtures.length; index++) {
                 const marker = fixtures[index];
-                drawTargetIndicator(ctx, marker, 'ground', 0, true);
-                drawTargetIndicator(ctx, marker, 'contrast', 0, true);
+                const school = ['Fire', 'Frost', 'Arcane'][index];
+                if (!drawTargetIndicator(ctx, marker, 'ground', 0, true, art, school)
+                    || !drawTargetIndicator(ctx, marker, 'contrast', 0, true, art, school))
+                    return { ok: false, colored: 0 };
                 ctx.font = '10px system-ui';
                 ctx.textAlign = 'center';
                 ctx.fillStyle = '#dcd4ee';
