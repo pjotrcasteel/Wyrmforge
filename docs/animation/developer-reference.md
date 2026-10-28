@@ -308,3 +308,15 @@ not claim GPU, physical-mobile, or actual-Hunt-horde acceptance.
 A renewed `--only attack-travel --phase-samples 8` source study uses 128 whole-body
 samples and 1.5cm additional pelvis flexion reserve. All real-sole QC passes,
 but it is still a source study without arbitrary-direction runtime acceptance.
+
+Material packing preserves saved source sample count, checks every source/material
+alpha, normalizes the supersampled **evaluated geometry normal vector**, and
+rejects directions below 8-bit normal precision. It records the pre-normalization
+length range. This is normal representation cleanup, not an RGB/art-derived
+normal or proof of regional normal deformation. `renderDescriptor` continues to
+reject regional GPU use until that deformation is validated.
+
+`review_pose_grid.py SOURCE --out study.mp4` picks independent gait/action indices
+from genuine S/E source frames and emits H.264/yuv420p/faststart with a source-only
+label. A packed grid is not a sequential animation and this study is not the final
+continuous performance or actual-Hunt approval video.

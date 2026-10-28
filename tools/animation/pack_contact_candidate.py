@@ -49,6 +49,17 @@ for clip,spec in manifest['clips'].items():
                         if image.size!=(spec['cell'],spec['cell']):raise ValueError('Material cell dimensions mismatch')
                         atlas.paste(image.convert('RGBA'),(index*spec['cell'],row*spec['cell']))
             if ImageChops.difference(alpha,atlas.getchannel('A')).getbbox():raise ValueError('Material/source alpha mismatch: '+clip+'/'+mode)
+            if mode=='normal':
+                # Supersampling averages real evaluated geometry normals.
+                # Normalize that vector representation; never infer it from art.
+                import numpy as np
+                pixels=np.array(atlas);mask=pixels[:,:,3]>0
+                vectors=pixels[:,:,:3][mask].astype(float)/127.5-1
+                lengths=np.linalg.norm(vectors,axis=1)
+                if np.any(lengths<=3**.5/255):raise ValueError('Geometry normal direction is below 8-bit quantization precision')
+                pixels[:,:,:3][mask]=np.rint((vectors/lengths[:,None]+1)*127.5).clip(0,255).astype(np.uint8)
+                atlas=Image.fromarray(pixels)
+                spec['sourceNormalPreNormalizationLengthRange']=[float(lengths.min()),float(lengths.max())]
             filename=clip+'-'+mode+'.png';atlas.save(a.pack/filename)
             spec.setdefault('materials',{})[mode]={'image':filename,'sha256':hashlib.sha256((a.pack/filename).read_bytes()).hexdigest(),'basis':'camera-right/up/toward' if mode=='normal' else 'source-evaluated'}
     if a.crop:
@@ -86,6 +97,7 @@ matrix=profile['rig']['sourceSpace']['toActor']
 metres_to_world=sum(v*v for v in matrix[:3])**.5
 manifest['regions']['maxCorrectionMetres']=profile['unitsPerPixel']/metres_to_world
 manifest['runtimeIntegrated']=False;manifest['productionReady']=False
+if a.materials:manifest['materialGate']='Source-aligned albedo/normal/emissive alpha verified; regional deformation, depth/casters and actual GPU Hunt acceptance remain open'
 (a.pack/'contact-regions.json').write_bytes(payload)
 (a.pack/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
 print(json.dumps({'metadataBytes':len(payload),'decodedTextureBytes':decoded,'sourceSignature':manifest['sourceSignature'],'runtimeAccepted':False}))

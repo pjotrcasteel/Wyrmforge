@@ -28,8 +28,9 @@ for direction,row in [('S',4),('E',2)]:
   bpy.context.view_layer.update()
   contact_pixels=[]
   for c in clip['samples'][frame]['contacts']:
-   side=c['id'].split('-')[-1];sign=1 if side=='L' else -1;bone=rig.pose.bones['foot.'+side]
-   point=rig.matrix_world @ bone.matrix @ rig.data.bones[bone.name].matrix_local.inverted() @ Vector((sign*.09,-.025,-.5))
+   # The authored contacts are fitted to real mesh sole patches. The historic
+   # hand-picked empty landmark is not a valid overlay for corrected sources.
+   point=rig.matrix_world @ Vector((c['x'],c['y'],c['z']))
    projected=world_to_camera_view(scene,scene.camera,point)
    contact_pixels.append({'id':c['id'],'pixel':[projected.x*scene.render.resolution_x,(1-projected.y)*scene.render.resolution_y],'world':list(point)})
   scene.render.filepath=str(out/f'{i:02d}.png');bpy.ops.render.render(write_still=True)
