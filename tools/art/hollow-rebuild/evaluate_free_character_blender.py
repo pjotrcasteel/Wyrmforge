@@ -197,6 +197,9 @@ def main():
     if a.license == "GAME-USE-ONLY":
         raise ValueError("Do not repackage restricted assets in public GitHub/CI artifacts")
     out = a.output.resolve()
+    allowed_output = (Path.cwd() / "artifacts" / "hollow-rebuild").resolve()
+    if not out.is_relative_to(allowed_output) or out == allowed_output:
+        raise ValueError("Evaluation output must remain inside artifacts/hollow-rebuild only")
     out.mkdir(parents=True, exist_ok=True)
     meshes = load_source(source)
     scale = normalize(meshes)
