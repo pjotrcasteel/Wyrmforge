@@ -3,3 +3,16 @@
 /* Selecting one actor must remain usable at the actual iPhone viewport. */
 .settings select{max-width:100%;min-width:170px}.settings button,.settings a{touch-action:manipulation}
 @media(max-width:650px){.settings label:first-child{flex:1 1 100%;justify-content:space-between}.settings label:first-child select{flex:1;max-width:70%}}
+
+/* AI4/AI6 inspector JSON must never increase the full-page width at 320/390px.
+   Keep traces readable within a bounded, copyable, scrollable diagnostic surface. */
+.enemy-lab .note{min-width:0;max-width:1100px}
+.enemy-lab .note pre{
+    box-sizing:border-box;
+    display:block;
+    max-width:100%;
+    min-width:0;
+    overflow-x:auto;
+    white-space:pre-wrap;
+    overflow-wrap:anywhere;
+}

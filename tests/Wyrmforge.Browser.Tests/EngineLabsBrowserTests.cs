@@ -53,4 +53,20 @@ public sealed class EngineLabsBrowserTests : PageTest
         await Expect(Page.GetByTestId("ai-lab-notes")).ToContainTextAsync("seed field does not override");
         await Expect(Page.Locator("nav[aria-label='Engine labs'] a")).ToHaveCountAsync(8);
     }
+    [TestMethod]
+    public async Task TacticalPack_390pxInspector_DoesNotExpandDocumentToTraceWidth()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.GotoAsync($"{BaseUrl}/enemy-lab?kind=MireHound&tier=3&count=8&autoplay=false&cast=false&seconds=6");
+
+        var refresh = Page.GetByRole(AriaRole.Button, new() { Name = "Refresh AI inspector" });
+        await Expect(refresh).ToBeVisibleAsync();
+        await refresh.ClickAsync();
+        await Expect(Page.GetByTestId("agent-performance")).ToBeVisibleAsync();
+        await Expect(Page.GetByTestId("agent-inspector")).ToBeVisibleAsync();
+
+        var scrollWidth = await Page.EvaluateAsync<int>("() => document.documentElement.scrollWidth");
+        Assert.IsLessThanOrEqualTo(391, scrollWidth,
+            "AI debug output must stay inside the real 390px viewport instead of expanding to 10,000px.");
+    }
 }
