@@ -7,7 +7,7 @@ on:
       - 'tools/art/hollowed/**'
       - '.github/workflows/hollowed-art-polish-qc.yml'
   pull_request:
-    branches: [main]
+    branches: [feat/universal-character-animation-an0-an6]
     paths:
       - 'tools/art/hollowed/**'
       - '.github/workflows/hollowed-art-polish-qc.yml'
