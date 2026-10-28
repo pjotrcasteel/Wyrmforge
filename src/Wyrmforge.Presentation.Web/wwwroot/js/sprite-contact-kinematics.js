@@ -61,6 +61,7 @@ export function solveSupportedSourcePose(frame,targets,options){
             const det=r[0]*(r[4]*r[8]-r[5]*r[7])-r[1]*(r[3]*r[8]-r[5]*r[6])+r[2]*(r[3]*r[7]-r[4]*r[6]);
             if(Math.abs(det-1)>1e-6||columns.some(c=>Math.abs(Math.hypot(...c)-1)>1e-6)||Math.abs(columns[0].reduce((s,n,i)=>s+n*columns[1][i],0))+Math.abs(columns[0].reduce((s,n,i)=>s+n*columns[2][i],0))+Math.abs(columns[1].reduce((s,n,i)=>s+n*columns[2][i],0))>1e-6)throw new RangeError('Source contact rotation may not stretch or reflect anatomy');
         }
+        if(options.supportWeights&&(!Object.hasOwn(options.supportWeights,id)||!Number.isFinite(options.supportWeights[id])||options.supportWeights[id]<0||options.supportWeights[id]>1||!target.planted&&options.supportWeights[id]!==0))throw new TypeError('Explicit planted source load weights required');
     }
     let totalMass=0;
     for(const [name,weight] of Object.entries(massWeights)){
@@ -77,6 +78,7 @@ export function solveSupportedSourcePose(frame,targets,options){
             // stretch a segment or silently expand its authoring envelope.
             for(let iteration=0;iteration<12;iteration++)for(const [id,c] of chains){
                 const target=targets[id],r=target.rotation;
+                if(options.fitSwingReach&&!target.planted)continue;
                 const offset=bones[c.end].head.map((n,i)=>n-c.sourceContact[i]);
                 const ankle=target.point.map((n,i)=>n+(r?offset.reduce((s,v,j)=>s+r[i*3+j]*v,0):offset[i]));
                 const hip=plus(bones[c.upper].head,bodyShift),delta=ankle.map((n,i)=>n-hip[i]),length=Math.hypot(...delta);
@@ -92,7 +94,15 @@ export function solveSupportedSourcePose(frame,targets,options){
             posed[name]={head:plus(bone.head,shift),tail:plus(bone.tail,shift)};
         }
         for(const [id,c] of chains){
-            const target=targets[id],delta=target.point.map((n,i)=>n-c.sourceContact[i]),rotation=target.rotation;
+            let target=targets[id];const rotation=target.rotation;
+            if(options.fitSwingReach&&!target.planted){
+                const offset=bones[c.end].head.map((n,i)=>n-c.sourceContact[i]),ankle=target.point.map((n,i)=>n+(rotation?offset.reduce((s,v,j)=>s+rotation[i*3+j]*v,0):offset[i]));
+                const root=posed[c.upper].head,delta=ankle.map((n,i)=>n-root[i]),length=Math.hypot(...delta);
+                const reach=angle=>Math.sqrt(c.upperLength**2+c.lowerLength**2+2*c.upperLength*c.lowerLength*Math.cos(angle*Math.PI/180));
+                const minimum=reach(c.limits[1])*(1+1e-5),maximum=reach(Math.max(.1,c.limits[0]))*(1-1e-5),clamped=Math.max(minimum,Math.min(maximum,length));
+                if(Math.abs(clamped-length)>1e-9){if(length<1e-8)throw new RangeError('Singular source swing target');target={...target,point:target.point.map((n,i)=>n+delta[i]*(clamped/length-1)),swingReachCorrection:Math.abs(clamped-length)};}
+            }
+            const delta=target.point.map((n,i)=>n-c.sourceContact[i]);
             const move=point=>rotation?target.point.map((v,row)=>v+point.reduce((s,n,col)=>s+rotation[row*3+col]*(n-c.sourceContact[col]),0)):plus(point,delta);
             const ankle=move(bones[c.end].head),root=posed[c.upper].head;
             let solved;
@@ -103,14 +113,25 @@ export function solveSupportedSourcePose(frame,targets,options){
             posed[c.end]={head:ankle,tail:move(bones[c.end].tail)};
             const patch=c.footprint.map(move);
             if(target.planted)footprint.push(...patch.map(p=>p.slice(0,2)));
-            contacts[id]={...c,sourceContact:[...target.point],planted:target.planted,footprint:patch,flexDegrees:solved.flexDegrees,...(rotation?{rotationDelta:[...rotation]}:{})};
+            contacts[id]={...c,sourceContact:[...target.point],planted:target.planted,footprint:patch,flexDegrees:solved.flexDegrees,...(target.swingReachCorrection?{swingReachCorrection:target.swingReachCorrection}:{}),...(rotation?{rotationDelta:[...rotation]}:{})};
         }
         if(!footprint.length)throw new RangeError('Supported source pose has no actual ground support');
         center=[0,0,0];
         for(const [name,weight] of Object.entries(massWeights))for(let axis=0;axis<3;axis++)center[axis]+=(posed[name].head[axis]+posed[name].tail[axis])*weight/(2*totalMass);
-        support=measureSourceSupport(footprint,center.slice(0,2));
-        if(support.staticallySupported&&support.margin>=minimumSupportMargin)return {...frame,sourceBones:posed,sourceContacts:contacts,massCenter:center,
-            sourceRepose:{bodyShift:[...bodyShift],support,passes:pass+1,measurement:'recomputed whole-body source segment mass; saved-skin replay required'}};
+        const actualSupport=measureSourceSupport(footprint,center.slice(0,2));
+        let loadFootprint=footprint;
+        if(options.supportWeights){
+            const sum=Object.values(options.supportWeights).reduce((s,n)=>s+n,0);if(!(sum>0))throw new RangeError('Source pose has no positive ground load');
+            loadFootprint=[[0,0]];
+            for(const [id,c] of Object.entries(contacts)){
+                const weight=options.supportWeights[id]/sum;if(!weight)continue;
+                const candidates=loadFootprint.flatMap(a=>c.footprint.map(p=>[a[0]+p[0]*weight,a[1]+p[1]*weight]));
+                loadFootprint=measureSourceSupport(candidates,[0,0]).hull;
+            }
+        }
+        support=measureSourceSupport(loadFootprint,center.slice(0,2));
+        if(support.staticallySupported&&support.margin>=minimumSupportMargin&&actualSupport.margin>=minimumSupportMargin)return {...frame,sourceBones:posed,sourceContacts:contacts,massCenter:center,
+            sourceRepose:{bodyShift:[...bodyShift],support:actualSupport,loadSupport:support,passes:pass+1,measurement:'recomputed whole-body source segment mass; saved-skin replay required'}};
         const centroid=footprint.reduce((s,p)=>[s[0]+p[0]/footprint.length,s[1]+p[1]/footprint.length],[0,0]);
         let dx=(centroid[0]-center[0])*.65,dy=(centroid[1]-center[1])*.65;
         if(options.fitReach&&support.dimension===2){
@@ -220,6 +241,12 @@ export function updateSourceContactTargets(state,frame,intent){
     for(const [id,c] of entries){
         const z=c.planted&&intent.groundZ!=null?intent.groundZ:c.sourceContact[2],point=projected([c.sourceContact[0],c.sourceContact[1],z],projection),old=previous[id];
         const authored={x:world.x+(point[0]-anchor[0])*pixelScale+(c.planted||translateSwing?phaseOffset.x:0),y:world.y+(point[1]-anchor[1])*pixelScale+(c.planted||translateSwing?phaseOffset.y:0),z,planted:c.planted,transported:false};
+        if(intent.smoothSwing&&!c.planted&&old){
+            const start=old.supportActive?{x:old.x,y:old.y}:old.liftoffPoint??{x:old.x,y:old.y};
+            let progress=c.swingProgress??1;if(intent.sourcePhaseDirection<0)progress=1-progress;
+            const ease=progress*progress*(3-2*progress);
+            authored.x=start.x+(authored.x-start.x)*ease;authored.y=start.y+(authored.y-start.y)*ease;authored.liftoffPoint=start;
+        }
         if(intent.sourceYaw!=null){
             const desired=intent.sourceYaw+(c.sourceYaw??0);
             const start=old?.supportActive&&Number.isFinite(old.orientationWorld)?old.orientationWorld:old?.liftoffOrientation??desired;

@@ -79,3 +79,18 @@ test('shared GPU skin resources keep entity skeletons separate and patch lit/nor
  assert.throws(()=>validateSkinPose(binding,new Float32Array(16)),/Complete/);const bad=posed.slice();bad[0]=0;assert.throws(()=>applySourceSkinPose(one,bad),/invertible/);
  for(const r of [one,two]){r.mesh.material.dispose();r.mesh.customDepthMaterial.dispose();r.mesh.customDistanceMaterial.dispose();r.skeleton.dispose();}g.dispose();
 });
+
+test('inspection shader cache preserves the influence-set contract across different skinned content',async()=>{
+ const {LightingEngine}=await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/engine.js');
+ const engine=Object.create(LightingEngine.prototype);engine.debugView='normals';engine.inspectionObject='actor';
+ const {s,buffer,manifest}=geometryFixture(),attributes=decode(manifest,buffer,s),keys=[];
+ for(const sets of [2,3,4]){
+  const g=new T.BufferGeometry();for(const [name,item] of Object.entries(attributes))if(name==='index')g.setIndex(new T.BufferAttribute(item.array,1));else g.setAttribute(name,new T.BufferAttribute(item.array,item.itemSize));
+  for(let set=3;set<=sets;set++){g.setAttribute('skinIndex'+set,new T.BufferAttribute(new Uint16Array(manifest.vertices*4),4));g.setAttribute('skinWeight'+set,new T.BufferAttribute(new Float32Array(manifest.vertices*4),4));}
+  const resource=createSkinnedRenderable(T,g,new T.MeshPhysicalMaterial(),{bones:s.bones,influenceSets:sets}),debug=engine.debugMaterial({id:'actor',mesh:resource.mesh});keys.push(debug.customProgramCacheKey());
+  const shader={vertexShader:'#include <begin_vertex>\n#include <skinbase_vertex>\n#include <skinnormal_vertex>\n#include <skinning_vertex>',fragmentShader:'#include <emissivemap_fragment>\n#include <opaque_fragment>'};debug.onBeforeCompile(shader,null);
+  assert.match(shader.vertexShader,new RegExp('skinWeight'+sets+'\\.w'));assert.match(shader.fragmentShader,/outgoingLight = normal/);
+  debug.dispose();resource.mesh.material.dispose();resource.mesh.customDepthMaterial.dispose();resource.mesh.customDistanceMaterial.dispose();resource.skeleton.dispose();g.dispose();
+ }
+ assert.equal(new Set(keys).size,3);
+});

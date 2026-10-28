@@ -63,6 +63,8 @@ export function validateSourceSkinSurface(surface){
     }
     for(const c of surface.contactCycles)if(!ids.has(c.id)||!Number.isFinite(c.phaseOffset)||c.phaseOffset<0||c.phaseOffset>=1||!Number.isFinite(c.stanceFraction)||c.stanceFraction<=0||c.stanceFraction>1||!Array.isArray(c.neutral)||c.neutral.length!==3||!c.neutral.every(Number.isFinite)||!Number.isFinite(c.liftMetres)||c.liftMetres<0)fail('contact cycles');
     if(new Set(surface.contactCycles.map(c=>c.id)).size!==ids.size)fail('duplicate contact cycle');
+    for(const c of surface.contactCycles)if(c.loadRampFraction!=null&&(!Number.isFinite(c.loadRampFraction)||c.loadRampFraction<=0||c.loadRampFraction>c.stanceFraction/2))fail('invalid authored load ramp');
+    if(surface.strideMetresByAxis!=null&&(!Array.isArray(surface.strideMetresByAxis)||surface.strideMetresByAxis.length!==2||!surface.strideMetresByAxis.every(n=>Number.isFinite(n)&&n>0)))fail('invalid source stride axes');
     if(!surface.massWeights||!Object.keys(surface.massWeights).length)fail('mass model');
     for(const [name,mass] of Object.entries(surface.massWeights))if(!names.has(name)||!Number.isFinite(mass)||mass<=0)fail('mass model');
     if(![surface.strideMetres,surface.unitsPerPixel].every(v=>Number.isFinite(v)&&v>0)||![surface.authoringEnvelope?.maxContactExcursion,surface.authoringEnvelope?.maxBodyTranslation,surface.minimumSupportMarginMetres].every(v=>Number.isFinite(v)&&v>=0))fail('explicit source envelope');

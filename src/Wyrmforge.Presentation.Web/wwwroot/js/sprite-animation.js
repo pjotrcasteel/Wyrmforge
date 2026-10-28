@@ -145,6 +145,7 @@ export function validateCreatureRigProfile(profile) {
             if(!Array.isArray(s.contactCycles)||!s.contactCycles.length||new Set(s.contactCycles.map(c=>c.id)).size!==s.contactCycles.length)fail('invalid source support cycles');
             for(const c of s.contactCycles)if(!contacts.has(c.id)||!Number.isFinite(c.phaseOffset)||c.phaseOffset<0||c.phaseOffset>=1||!Number.isFinite(c.stanceFraction)||c.stanceFraction<=0||c.stanceFraction>1||!Array.isArray(c.neutral)||c.neutral.length!==3||!c.neutral.every(Number.isFinite))fail('invalid source support cycles');
         }
+        if(s.strideMetresByAxis!=null&&(!Array.isArray(s.strideMetresByAxis)||s.strideMetresByAxis.length!==2||!s.strideMetresByAxis.every(n=>Number.isFinite(n)&&n>0)))fail('invalid source stride axes');
     }
     return profile;
 }
@@ -281,7 +282,7 @@ function updateContactAnimation(state,profile,input){
                 sign=reverse>forward?-1:1;
             }
             state.sourceAxisWorld={x:observed.x/Math.hypot(observed.x,observed.y)*sign,y:observed.y/Math.hypot(observed.x,observed.y)*sign};
-            const delta=inverse(displacement),advance=sign*Math.hypot(...delta)/s.strideMetres;
+            const delta=inverse(displacement),axes=s.strideMetresByAxis??[s.strideMetres,s.strideMetres],advance=sign*Math.hypot(delta[0]/axes[0],delta[1]/axes[1]);
             state.sourceSupportPhaseCycles+=advance;if(advance)state.sourcePhaseDirection=Math.sign(advance);
         }
         state.sourceAxisWorld??={x:-basis[1],y:-basis[3]};
@@ -397,4 +398,6 @@ function updateContactAnimation(state,profile,input){
         actionProgress,contactPhase,sourcePhaseOffset,rootOffset:{...state.rootOffset},material:clipSpec.material??null,debug,seed:state.seed,...(sourceSupport?{sourceSupport}:{})};
     return state.sample;
 }
+
+
 

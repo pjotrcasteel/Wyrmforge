@@ -202,7 +202,7 @@ export class LightingEngine {
         object.debugMaterials ??= new Map();
         const key = `${this.debugView}-${object.id === this.inspectionObject}`;
         if (object.debugMaterials.has(key)) return object.debugMaterials.get(key);
-        const view = this.debugView,sourceCompile=object.mesh.material.onBeforeCompile, material = object.mesh.material.clone();
+        const view = this.debugView,sourceCompile=object.mesh.material.onBeforeCompile,sourceKey=object.mesh.material.customProgramCacheKey(), material = object.mesh.material.clone();
         material.wireframe = view === 'geometry';
         material.toneMapped = false;
         material.onBeforeCompile = (shader,renderer) => {
@@ -223,7 +223,7 @@ float proofShadowVisibility() {
             shader.fragmentShader = shader.fragmentShader.replace('#include <opaque_fragment>',
                 `outgoingLight = ${output};\n#include <opaque_fragment>`);
         };
-        material.customProgramCacheKey = () => `lighting-inspection-${key}`;
+        material.customProgramCacheKey = () => `lighting-inspection-${key}:${sourceKey}`;
         object.debugMaterials.set(key, material);
         return material;
     }

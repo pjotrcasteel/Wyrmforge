@@ -12,7 +12,11 @@ from runtime_profile import build_runtime_profile
 
 p=argparse.ArgumentParser();p.add_argument('source',type=Path);p.add_argument('--out',type=Path,required=True)
 p.add_argument('--triangles',type=int,default=0);p.add_argument('--emission-attribute');p.add_argument('--protect-groups',default='',help='Explicit source anatomy to exclude from edge collapse; may exceed triangle target.')
+p.add_argument('--load-ramp-fraction',type=float,default=0,help='Authored contact load-transfer ramp, in gait cycles; 0 retains unweighted support.')
+p.add_argument('--lateral-stride-metres',type=float,default=0,help='Authored side-step distance per cycle; 0 uses the forward source stride.')
 a=p.parse_args(sys.argv[sys.argv.index('--')+1:]);a.out.mkdir(parents=True,exist_ok=True)
+if not math.isfinite(a.load_ramp_fraction) or not 0<=a.load_ramp_fraction<=.5:p.error('load ramp must be finite and within 0..0.5 cycles')
+if not math.isfinite(a.lateral_stride_metres) or a.lateral_stride_metres<0:p.error('lateral stride must be finite and nonnegative')
 m=json.loads((a.source/'source-manifest.json').read_text());blend=a.source/'hollow-foundation.blend'
 bpy.ops.wm.open_mainfile(filepath=str(blend.resolve()))
 r=bpy.data.objects['Hollow editable animation rig'];actor=bpy.data.objects['Hollow skinned character'];scene=bpy.context.scene
@@ -52,6 +56,9 @@ surface={'version':1,'sourceSignature':m['skeletonSignature'],'sourceBlendSha256
  'authoringEnvelope':{'maxContactExcursion':m['clips']['walk']['strideMetres'],'maxBodyTranslation':m['clips']['walk']['strideMetres']/2},
  'strideMetres':m['clips']['walk']['strideMetres'],'projectionByDirection':m['projectionByDirection'],'clips':clips,
  'candidateNotApproved':True,'runtimeAccepted':False}
+if a.load_ramp_fraction:
+ for c in surface['contactCycles']:c['loadRampFraction']=a.load_ramp_fraction
+if a.lateral_stride_metres:surface['strideMetresByAxis']=[a.lateral_stride_metres,surface['strideMetres']]
 (a.out/'poses.json').write_text(json.dumps(surface,separators=(',',':'))+'\n')
 # Export the original rest skin, or an explicit independently reviewable LOD.
 r.animation_data_clear();r.data.pose_position='REST';bpy.context.view_layer.update()
@@ -119,6 +126,7 @@ manifest['protectedAnatomyGroups']=a.protect_groups.split(',') if a.protect_grou
 profile=build_runtime_profile(m);projection=m['projectionByDirection']['S'];pixel_scale=93/96
 turn=m.get('turnSupport',{'radians':math.pi/4,'durationSeconds':16/12,'phaseCycles':1})
 profile['sourceSupport']={'version':1,'facingZero':'S','groundBasis':[projection[i]*pixel_scale for i in [0,1,4,5]],'heightProjection':[projection[i]*pixel_scale for i in [2,6]],'groundZ':m['groundZMetres'],'strideMetres':m['clips']['walk']['strideMetres'],'turnRadiansPerSecond':turn['radians']/turn['durationSeconds'],'turnCyclesPerRadian':turn['phaseCycles']/turn['radians'],'contactCycles':m['contactCycles'],'seededPhase':True}
+if 'strideMetresByAxis' in surface:profile['sourceSupport']['strideMetresByAxis']=surface['strideMetresByAxis']
 (a.out/'profile.json').write_text(json.dumps(profile,separators=(',',':'))+'\n')
 runtime_manifest={'schemaVersion':2,'sourceSignature':m['skeletonSignature'],'directions':m['directions'],'profileSha256':hashlib.sha256((a.out/'profile.json').read_bytes()).hexdigest(),
  'skin':{'manifest':'skin.json','sha256':hashlib.sha256((a.out/'skin.json').read_bytes()).hexdigest()},
