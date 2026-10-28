@@ -1,0 +1,13 @@
+{
+  "sourceBlendSha256": "7e2bcd6462b83c823dd7ffd468590ef48b4c87ff2486c7b2fd358d4a3a6aeda6",
+  "clips": [
+    "walk",
+    "attack-travel"
+  ],
+  "directions": [
+    "S",
+    "E"
+  ],
+  "samples": 2,
+  "toolSha256": "54cce790666b28aae75afefa458145db5f77a59e66717e57e8fe0ed5cac9ee2e"
+}

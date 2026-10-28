@@ -33,7 +33,16 @@ CI reproduces both studies and all four source negatives.
 Editable sources and measurements are preserved under
 `art/source/animation-foundation/directional-20261028/`. Directional source data
 is not yet selected by runtime; no cross-heading blend, moving-turn or full Hunt
-acceptance is claimed. Source S/E render and phone-size review remain pending.
+acceptance is claimed. Source S/E renders completed after `18a3cbedb`: 576 actual
+RGBA frames across both studies, walk and moving claw. Two labelled 5.33s
+768×480/30fps H.264/yuv420p faststart source movies show walk→claw→walk using
+independent gait/action clocks, enlarged and native 96px views. Render receipts,
+transparent source frames and videos are preserved with each editable source.
+The review utility now uses the same nearest-sample rounding as JS.
+Still images show the cape-free body, distinct planted/swing legs and readable
+claw reach. This is a source study, not the required real-game
+walk→strike→recover→turn→chase performance or physical-phone acceptance. No
+cross-heading transition has been visually or mathematically accepted.
 
 Research principles (28 Oct; no assets/code copied):
 [Epic locomotion blending](https://dev.epicgames.com/documentation/en-us/unreal-engine/locomotion-based-blending-in-unreal-engine)
