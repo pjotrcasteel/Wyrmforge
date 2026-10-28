@@ -151,7 +151,10 @@ def sculpt_visible_skin(mesh, helper):
     finally:
         evaluated.to_mesh_clear()
     bpy.context.view_layer.update()
-    if not 0.06 < maximum_delta < .40:
+    # Three deliberately different silhouettes may require stronger but
+    # bounded static sculpting than the rejected close-to-stock .40m limit.
+    # This is source-art deformation, not a motion clip or runtime tolerance.
+    if not 0.06 < maximum_delta < .65:
         raise ValueError(f"Feral source anatomy deformation outside safe H1 range: {maximum_delta:.4f}")
     if delta_count < 200:
         raise ValueError(f"Feral sculpt did not deform enough anatomical source vertices: {delta_count}")
