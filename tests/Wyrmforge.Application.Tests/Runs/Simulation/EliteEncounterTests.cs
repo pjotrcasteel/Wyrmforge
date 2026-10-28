@@ -249,6 +249,9 @@ public sealed class EliteEncounterTests
         var simulation = Create();
         Assert.IsTrue(simulation.ChooseMapNode(simulation.AvailableMapNodes[0].Id));
         simulation.Tick(0, default, 390, 700);
+        // These direct behavior-unit fixtures need an open field. Terrain/navigation
+        // integration is covered separately; Random.Shared map obstacles are not inputs.
+        SetField(simulation, "arenaEnvironment", null);
         var player = Field<PlayerState>(simulation, "player");
         player.Health = player.MaxHealth;
         return (simulation, player, Field<List<EnemyState>>(simulation, "enemies"));
@@ -267,7 +270,7 @@ public sealed class EliteEncounterTests
     private static T Field<T>(RunSimulation simulation, string name) =>
         (T)typeof(RunSimulation).GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(simulation)!;
 
-    private static void SetField(RunSimulation simulation, string name, object value) =>
+    private static void SetField(RunSimulation simulation, string name, object? value) =>
         typeof(RunSimulation).GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(simulation, value);
 
     private static void Invoke(RunSimulation simulation, string name, params object?[] arguments) =>

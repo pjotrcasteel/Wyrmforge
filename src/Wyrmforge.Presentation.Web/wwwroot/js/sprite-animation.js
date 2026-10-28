@@ -122,15 +122,15 @@ function seededIdentity(id){
     for(const c of String(id)){hash^=c.charCodeAt(0);hash=Math.imul(hash,16777619);}
     return hash>>>0;
 }
-function contactPoint(c,world,yaw){
+function contactPoint(c,world,yaw,scale=1){
     const a=yaw*Math.PI/180,cos=Math.cos(a),sin=Math.sin(a);
-    return {x:world.x+c.x*cos-c.y*sin,y:world.y+c.x*sin+c.y*cos};
+    return {x:world.x+(c.x*cos-c.y*sin)*scale,y:world.y+(c.x*sin+c.y*cos)*scale};
 }
-function solvePresentationContacts(state,profile,spec,frame,world,yaw){
+function solvePresentationContacts(state,profile,spec,frame,world,yaw,actorScale){
     const authored=spec.samples[frame],active=new Set(),errors=[];
     let dx=0,dy=0,count=0;
     for(const c of authored.contacts??[]){
-        active.add(c.id);const point=contactPoint(c,world,yaw);
+        active.add(c.id);const point=contactPoint(c,world,yaw,actorScale);
         let anchor=state.contacts[c.id];
         if(!anchor){anchor={x:point.x+state.rootOffset.x,y:point.y+state.rootOffset.y};state.contacts[c.id]=anchor;}
         dx+=anchor.x-point.x;dy+=anchor.y-point.y;count++;
@@ -138,14 +138,15 @@ function solvePresentationContacts(state,profile,spec,frame,world,yaw){
     for(const id of Object.keys(state.contacts))if(!active.has(id))delete state.contacts[id];
     if(count){dx/=count;dy/=count;}
     // Atlas sampling can require a subpixel translation; it never moves gameplay.
-    const length=Math.hypot(dx,dy),scale=length>profile.maxRootOffset?profile.maxRootOffset/length:1;
+    const limit=profile.maxRootOffset*actorScale;
+    const length=Math.hypot(dx,dy),scale=length>limit?limit/length:1;
     state.rootOffset={x:dx*scale,y:dy*scale};
     for(const c of authored.contacts??[]){
-        const point=contactPoint(c,world,yaw),anchor=state.contacts[c.id];
+        const point=contactPoint(c,world,yaw,actorScale),anchor=state.contacts[c.id];
         errors.push({id:c.id,slip:Math.hypot(point.x+state.rootOffset.x-anchor.x,point.y+state.rootOffset.y-anchor.y)});
     }
     return {contacts:state.contacts,errors,maxSlip:Math.max(0,...errors.map(c=>c.slip)),balance:authored.balance??'supported',
-        com:authored.com??null,support:authored.contacts??[],correctionSaturated:length>profile.maxRootOffset};
+        com:authored.com??null,support:authored.contacts??[],correctionSaturated:length>limit};
 }
 function updateContactAnimation(state,profile,input){
     if(!state.contactVersion){
@@ -158,12 +159,14 @@ function updateContactAnimation(state,profile,input){
     if(state.entityId!==input.entityId)throw new TypeError('Animation state cannot be shared between entities');
     if(![input.timestamp,input.travel,input.world?.x,input.world?.y].every(Number.isFinite))throw new TypeError('Non-finite MotionIntent');
     if(input.timestamp<state.timestamp||input.travel<state.travel)throw new RangeError('Replay seek requires a fresh animation state');
+    const actorScale=input.scale??1;
+    if(!Number.isFinite(actorScale)||actorScale<=0)throw new RangeError('Positive actor scale required');
     const stopped=Boolean(input.paused||input.frozen),wasStopped=Boolean(state.stopped);
     const dt=stopped||wasStopped?0:input.timestamp-state.timestamp;
     const distance=stopped||wasStopped?0:input.travel-state.travel;
     state.timestamp=input.timestamp;state.travel=input.travel;state.stopped=stopped;
     state.time+=dt;
-    if(!stopped)state.phase=(state.phase+distance/profile.locomotion.stride)%1;
+    if(!stopped)state.phase=(state.phase+distance/(profile.locomotion.stride*actorScale))%1;
     const signal=input.action,spec=signal&&profile.actions[signal.name];
     if(signal&&(!Number.isSafeInteger(signal.sequence)||signal.sequence<0||signal.token==null))throw new TypeError('Action requires token and monotonic sequence');
     const current=state.action&&profile.actions[state.action.name];
@@ -204,7 +207,7 @@ function updateContactAnimation(state,profile,input){
         pivotFrame??(input.moving?locomotionFrame:(profile.locomotion.idleFrame??locomotionFrame));
     if(stopped&&state.sample&&!actionSpec?.terminal)frame=state.sample.frame;
     if(input.reducedMotion)frame=clipSpec.reducedFrame??0;
-    const debug=solvePresentationContacts(state,profile,clipSpec,frame,input.world,state.facingIndex*45);
+    const debug=solvePresentationContacts(state,profile,clipSpec,frame,input.world,state.facingIndex*45,actorScale);
     state.sample={baseClip:profile.locomotion.clip,baseFrame:locomotionFrame,phase:state.phase,clip:clipSpec.clip,frame,
         direction:profile.facing.directions[state.facingIndex],layered:false,actionToken:state.action?.token??null,
         actionProgress,rootOffset:{...state.rootOffset},material:clipSpec.material??null,debug,seed:state.seed};

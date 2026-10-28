@@ -148,7 +148,7 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
             if(pose.foundationAttackAt!==pose.attackAt&&pose.attackAt!=null)pose.foundationSequence=(pose.foundationSequence??-1)+1;
             pose.foundationAttackAt=pose.attackAt;
             pose.foundationSample=updateSpriteAnimation(pose.foundationAnimation,foundation.profile,{
-                entityId:id,timestamp:pose.age,travel:pose.distance,world:{x:enemy.x,y:enemy.y},direction:pose.direction,
+                entityId:id,timestamp:pose.age,travel:pose.distance,scale:Math.max(.65,Math.min(1.8,(Number(enemy.radius)||11)/11))*pose.visualScale,world:{x:enemy.x,y:enemy.y},direction:pose.direction,
                 moving:locomotion.moving,paused:snapshot.paused||snapshot.ended,frozen:enemy.frozen,reducedMotion,
                 action:pose.attackAt==null?null:{name:'attack',token:`proximity-${id}-${pose.attackAt}`,sequence:pose.foundationSequence}});
         }

@@ -1,0 +1,1539 @@
+{
+  "schemaVersion": 2,
+  "candidateNotApproved": true,
+  "productionReady": false,
+  "reviewLightingOnly": true,
+  "runtimeIntegrated": false,
+  "directions": [
+    "N",
+    "NE",
+    "E",
+    "SE",
+    "S",
+    "SW",
+    "W",
+    "NW"
+  ],
+  "clips": {
+    "walk": {
+      "image": "walk.png",
+      "sha256": "215add07a205e859251a5f64efc8810af1187fa9fc1dae18a14a9b22c15c778d",
+      "frames": 16,
+      "cell": 96,
+      "anchor": [
+        48,
+        72
+      ],
+      "worldSize": 93,
+      "reviewLightingOnly": true,
+      "materials": {
+        "albedo": {
+          "image": "walk-albedo.png",
+          "sha256": "2a587fd4a4aff25b97d0dd9b110258be4d683f8d34a1c73cdd38867fa56e00ec",
+          "basis": "source-evaluated"
+        },
+        "normal": {
+          "image": "walk-normal.png",
+          "sha256": "c2fb272996c959ca9e498677cc538f542387f05e085cb305f2e296709c079493",
+          "basis": "camera-right/up/toward"
+        },
+        "emissive": {
+          "image": "walk-emissive.png",
+          "sha256": "f180487e6e933c1834c86ec6ac36250371f307fa9d5dfd1f3f82a10c70660685",
+          "basis": "source-evaluated"
+        }
+      }
+    },
+    "attack": {
+      "image": "attack.png",
+      "sha256": "b85e5896f6c56f68a878481dfe38a3574c13f1565bda58579fafbb64d2bcf49e",
+      "frames": 16,
+      "cell": 96,
+      "anchor": [
+        48,
+        72
+      ],
+      "worldSize": 93,
+      "reviewLightingOnly": true,
+      "materials": {
+        "albedo": {
+          "image": "attack-albedo.png",
+          "sha256": "b6b63b45aaa16e2547325fd9b849e24feae3cc5402d0efbbbb6fc986869e5150",
+          "basis": "source-evaluated"
+        },
+        "normal": {
+          "image": "attack-normal.png",
+          "sha256": "bfe2973c45be88b8cc206f1c50ff38ea61af6559301263c32509c6c4db178c2b",
+          "basis": "camera-right/up/toward"
+        },
+        "emissive": {
+          "image": "attack-emissive.png",
+          "sha256": "24f260c4afb267d8b6b132ffa7f503c7ded3cc09460a483e28a620f268a14151",
+          "basis": "source-evaluated"
+        }
+      }
+    },
+    "pivot": {
+      "image": "pivot.png",
+      "sha256": "f4bf451a468aa16de8b3986d544736ce9fdfa3294839f3fc623a8f7f981687db",
+      "frames": 16,
+      "cell": 96,
+      "anchor": [
+        48,
+        72
+      ],
+      "worldSize": 93,
+      "reviewLightingOnly": true
+    },
+    "pivot-negative": {
+      "image": "pivot-negative.png",
+      "sha256": "0132dfb1c2391cc27a4b3d6ab6a918be5e18235089248a3bb3a1974aeea96017",
+      "frames": 16,
+      "cell": 96,
+      "anchor": [
+        48,
+        72
+      ],
+      "worldSize": 93,
+      "reviewLightingOnly": true
+    }
+  },
+  "sourceSignature": "a21338a916f68e733a947356b44f24c0125b20d933805d75d53b4cae825f821f",
+  "rowSha256": {
+    "walk": [
+      "579658fe3baa2814d889ab17624de6facb99f13aac859a734b975d557145d288",
+      "e23831c02c97f925e89ed0294340b1cd0eb6a23aeb36edc4d0e37a60736e36ab",
+      "7e515edde63e4ec536624ce1dcd94b9396341db24d9f3648abd347b3e7c6fc98",
+      "fe2b50a62dcf169ab555af85df2c5c67f579fea0e81a8a9c5d3090a9585c5b09",
+      "902aa2a6009e69d2b6e4292fe6c3ddea53b85ad43474585d6e1dd8b9718e7bb5",
+      "e7598a7963fccdf3c046e4961e17d7192ff9630ee99b643d9cd7ae439f4a3baf",
+      "a76276a22f55aceef1b644639ee4004b6bf6b9fdda4607828e69abf91df5d329",
+      "ed89a26d23a460d2489c65ae6bc755e01042b0389a55fb4e9d37f9c81321ee20"
+    ],
+    "attack": [
+      "c367d45ffbd333f81eae871ac0330451f68dcb0ec1a30c26b5d115778be2afd2",
+      "fb479209fa8e59a3a84fc9a4478cb1db0ca1ca56bfdfd84e8bed0b263cee2e27",
+      "71ced2176089fd69851651894b557b031347ccfe74de20ba6ca10f45bd5bdfaf",
+      "fd5b15b9d7d571a27d27c10bcf2aa4e7fd5607c327a1ab3d46076b80f09d7b4d",
+      "2fb478b3c41555beb122a50477808a0c9ea71ed08ef2364fe27af11c3e842c9f",
+      "cb47f3e78062394c642da456d9198c073386f41f5b817e837adbf8d48b437b93",
+      "4d7e79393cf609eba0c6ad9108e285aabb31df6f07f75f8e957fa81dd1bed8bd",
+      "e4e3134d82b1093f402129f17612b6f5e1270f593bf07cd715580239868b04c7"
+    ],
+    "pivot": [
+      "d7c05848c5b2c336e8dea21dc89198de6cef6d5a538f024255a48c7081d9395c",
+      "6a5af713e576b0bcf5b592457cbc12ae4118e3db8c9113f394d1583c94970a91",
+      "f32193f82f3433f3d27c203b8813d31229a415ffcb6ccd67577c72abe54031fd",
+      "76dd95b309ac647d183c691d2499f5458079f4b71cce87206b2b803789ef536c",
+      "6ed92e130f2c1b5658e0cb97673e4708f7b2dca67ac87eeeb7f2d1fa39f57f08",
+      "1eb88516a45fb28a94983554851886749b03298cff16b2f52c5c8b46c38689a0",
+      "19d8570ba8548ad81a4ca09995ac68494968a7e0e572bc97531f102bc7d2af75",
+      "b1b2757942cb14356054c387511683c554f47eccf5aa29cfdf622d3615151d91"
+    ],
+    "pivot-negative": [
+      "ffc0fca97fee5ebe5e5e7bc75fd4378a17814352e466c8bf8e5dd85d868d1983",
+      "5c0b1f632cc0370d0470979a6afc13d3b0fd5e77cad570bee56cf10a7128922e",
+      "716b2d0b843b83f41df81070f22cfe83e0fe3150adb898654bb213b25fe47a09",
+      "22bad473112de0461f2adbffe85eda7aafd667c67ead36b48a4f20d05b9ecb9d",
+      "da040a7a76da882cf6a7f496ab2713129508abed099a35c91de80d84b0ef66a1",
+      "087af8b27a46e46523f93d334d4ed8ccc15a1efd89161eeadc3c53ef1dd00622",
+      "4df092bbb4b5f167128507801689fb134659a4fc6de43a8484003a129f7654d0",
+      "3a333ba9c7a96af8a0de5d9595fbb77f4a3cb183872b4590eaf7c3507be03592"
+    ]
+  },
+  "sourceQC": {
+    "walk": {
+      "samples": [
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08500000089406967,
+              "y": -0.11159998178482056,
+              "z": -0.5
+            },
+            {
+              "id": "foot-R",
+              "x": -0.08500000089406967,
+              "y": 0.06840001791715622,
+              "z": -0.4999999701976776
+            }
+          ],
+          "com": [
+            -0.00023546120792161673,
+            -0.02878166176378727
+          ],
+          "supportMargin": 0.052291355758905686,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08500000834465027,
+              "y": -0.08909997344017029,
+              "z": -0.5
+            },
+            {
+              "id": "foot-R",
+              "x": -0.08500000089406967,
+              "y": 0.0908999964594841,
+              "z": -0.4999999701976776
+            }
+          ],
+          "com": [
+            0.025715218856930733,
+            -0.026499846950173378
+          ],
+          "supportMargin": 0.057275559650779455,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08499999344348907,
+              "y": -0.06659999489784241,
+              "z": -0.4999999701976776
+            }
+          ],
+          "com": [
+            0.06162885203957558,
+            -0.03890031576156616
+          ],
+          "supportMargin": 0.003628858596086498,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08499997854232788,
+              "y": -0.04410003870725632,
+              "z": -0.5
+            }
+          ],
+          "com": [
+            0.06189531832933426,
+            -0.026164589449763298
+          ],
+          "supportMargin": 0.0038953397870063744,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08499998599290848,
+              "y": -0.021599983796477318,
+              "z": -0.4999999701976776
+            }
+          ],
+          "com": [
+            0.06697360426187515,
+            -0.02841845527291298
+          ],
+          "supportMargin": 0.008973618268966671,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08499998599290848,
+              "y": 0.0009000028949230909,
+              "z": -0.4999999701976776
+            }
+          ],
+          "com": [
+            0.062187012284994125,
+            -0.03018425963819027
+          ],
+          "supportMargin": 0.004187026292085644,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08500000834465027,
+              "y": 0.023399993777275085,
+              "z": -0.4999999701976776
+            }
+          ],
+          "com": [
+            0.07220285385847092,
+            0.004903457127511501
+          ],
+          "supportMargin": 0.014202845513820644,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08499999344348907,
+              "y": 0.04589994624257088,
+              "z": -0.4999999701976776
+            }
+          ],
+          "com": [
+            0.06536123156547546,
+            0.021313413977622986
+          ],
+          "supportMargin": 0.007361238121986385,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08500000834465027,
+              "y": 0.06840002536773682,
+              "z": -0.4999999701976776
+            },
+            {
+              "id": "foot-R",
+              "x": -0.08499999344348907,
+              "y": -0.11159998178482056,
+              "z": -0.5
+            }
+          ],
+          "com": [
+            0.0002444203128106892,
+            -0.028528288006782532
+          ],
+          "supportMargin": 0.05245881727343197,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08500001579523087,
+              "y": 0.09090001881122589,
+              "z": -0.4999999403953552
+            },
+            {
+              "id": "foot-R",
+              "x": -0.08500000089406967,
+              "y": -0.08910001814365387,
+              "z": -0.4999999701976776
+            }
+          ],
+          "com": [
+            -0.025690486654639244,
+            -0.02638903260231018
+          ],
+          "supportMargin": 0.057333685193491295,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-R",
+              "x": -0.08500000834465027,
+              "y": -0.0666000247001648,
+              "z": -0.4999999701976776
+            }
+          ],
+          "com": [
+            -0.06156541407108307,
+            -0.038907550275325775
+          ],
+          "supportMargin": 0.0035654057264327965,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-R",
+              "x": -0.08500000834465027,
+              "y": -0.044099997729063034,
+              "z": -0.5
+            }
+          ],
+          "com": [
+            -0.061722807586193085,
+            -0.02628309465944767
+          ],
+          "supportMargin": 0.0037227992415428124,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-R",
+              "x": -0.08500000089406967,
+              "y": -0.02160000428557396,
+              "z": -0.4999999403953552
+            }
+          ],
+          "com": [
+            -0.06674923747777939,
+            -0.028585918247699738
+          ],
+          "supportMargin": 0.008749236583709713,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-R",
+              "x": -0.08500000089406967,
+              "y": 0.0008999959100037813,
+              "z": -0.4999999701976776
+            }
+          ],
+          "com": [
+            -0.061986349523067474,
+            -0.03041927143931389
+          ],
+          "supportMargin": 0.003986348628997799,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-R",
+              "x": -0.08499998599290848,
+              "y": 0.023399997502565384,
+              "z": -0.5
+            }
+          ],
+          "com": [
+            -0.0720364972949028,
+            0.0046118032187223434
+          ],
+          "supportMargin": 0.01403651130199432,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-R",
+              "x": -0.08499998599290848,
+              "y": 0.045900046825408936,
+              "z": -0.4999999701976776
+            }
+          ],
+          "com": [
+            -0.06522583216428757,
+            0.021047532558441162
+          ],
+          "supportMargin": 0.007225846171379086,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation"
+        }
+      ],
+      "maxStanceSlipMetres": 7.598131170262075e-08,
+      "maxBoneLengthErrorMetres": 1.234131685179385e-07,
+      "jointRangesDegrees": {
+        "knee-L": [
+          28.90765842262431,
+          79.22119456927564
+        ],
+        "knee-R": [
+          28.904515647290225,
+          79.22121050842802
+        ],
+        "elbow-L": [
+          43.959201983699785,
+          107.38251117430978
+        ],
+        "elbow-R": [
+          44.549118441285174,
+          101.23738253274773
+        ]
+      },
+      "strideMetres": 0.36,
+      "frames": 16,
+      "fps": 12
+    },
+    "attack": {
+      "samples": [
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08500001579523087,
+              "y": -0.059999968856573105,
+              "z": -0.4999999403953552
+            },
+            {
+              "id": "foot-R",
+              "x": -0.08500000089406967,
+              "y": 0.05499999597668648,
+              "z": -0.4999999701976776
+            }
+          ],
+          "com": [
+            -0.000557829684112221,
+            -0.027350876480340958
+          ],
+          "supportMargin": 0.039787798316853216,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08500000089406967,
+              "y": -0.060000017285346985,
+              "z": -0.4999999701976776
+            },
+            {
+              "id": "foot-R",
+              "x": -0.08500001579523087,
+              "y": 0.055000003427267075,
+              "z": -0.5
+            }
+          ],
+          "com": [
+            -0.001961487578228116,
+            -0.02489819936454296
+          ],
+          "supportMargin": 0.04103285377558762,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08499999344348907,
+              "y": -0.0599999874830246,
+              "z": -0.4999999403953552
+            },
+            {
+              "id": "foot-R",
+              "x": -0.08500000834465027,
+              "y": 0.05499999225139618,
+              "z": -0.4999999701976776
+            }
+          ],
+          "com": [
+            -0.005135871935635805,
+            -0.019855646416544914
+          ],
+          "supportMargin": 0.043430871900600534,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08500000834465027,
+              "y": -0.059999991208314896,
+              "z": -0.5
+            },
+            {
+              "id": "foot-R",
+              "x": -0.08499999344348907,
+              "y": 0.05500001460313797,
+              "z": -0.4999999403953552
+            }
+          ],
+          "com": [
+            -0.007948354817926884,
+            -0.0140222804620862
+          ],
+          "supportMargin": 0.046686675176818064,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08500000834465027,
+              "y": -0.05999995395541191,
+              "z": -0.4999999701976776
+            },
+            {
+              "id": "foot-R",
+              "x": -0.08499998599290848,
+              "y": 0.05500001460313797,
+              "z": -0.4999999701976776
+            }
+          ],
+          "com": [
+            -0.009597266092896461,
+            -0.011504272930324078
+          ],
+          "supportMargin": 0.04784838252521476,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08500001579523087,
+              "y": -0.06000000238418579,
+              "z": -0.5
+            },
+            {
+              "id": "foot-R",
+              "x": -0.08499998599290848,
+              "y": 0.055000003427267075,
+              "z": -0.4999999403953552
+            }
+          ],
+          "com": [
+            -0.00894579105079174,
+            -0.012034306302666664
+          ],
+          "supportMargin": 0.04777441337995981,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08500001579523087,
+              "y": -0.06000002846121788,
+              "z": -0.4999999403953552
+            },
+            {
+              "id": "foot-R",
+              "x": -0.08500000089406967,
+              "y": 0.05500000715255737,
+              "z": -0.4999999403953552
+            }
+          ],
+          "com": [
+            -0.001346295583061874,
+            -0.013169461861252785
+          ],
+          "supportMargin": 0.051092264634231055,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08499999344348907,
+              "y": -0.06000002473592758,
+              "z": -0.4999999403953552
+            },
+            {
+              "id": "foot-R",
+              "x": -0.08499999344348907,
+              "y": 0.05500000715255737,
+              "z": -0.4999999403953552
+            }
+          ],
+          "com": [
+            0.007909811101853848,
+            -0.014454839751124382
+          ],
+          "supportMargin": 0.05521389450572034,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08500002324581146,
+              "y": -0.059999980032444,
+              "z": -0.5000000596046448
+            },
+            {
+              "id": "foot-R",
+              "x": -0.08499999344348907,
+              "y": 0.055000003427267075,
+              "z": -0.4999999701976776
+            }
+          ],
+          "com": [
+            0.014380636624991894,
+            -0.03273876756429672
+          ],
+          "supportMargin": 0.043695256128355196,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08500000834465027,
+              "y": -0.059999980032444,
+              "z": -0.4999999701976776
+            },
+            {
+              "id": "foot-R",
+              "x": -0.08500001579523087,
+              "y": 0.05500004440546036,
+              "z": -0.4999999403953552
+            }
+          ],
+          "com": [
+            0.019414080306887627,
+            -0.04001544043421745
+          ],
+          "supportMargin": 0.040488391028631575,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08500001579523087,
+              "y": -0.0599999763071537,
+              "z": -0.5
+            },
+            {
+              "id": "foot-R",
+              "x": -0.08500000089406967,
+              "y": 0.05500000715255737,
+              "z": -0.4999999403953552
+            }
+          ],
+          "com": [
+            0.01750957779586315,
+            -0.037718113511800766
+          ],
+          "supportMargin": 0.041324122005461365,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08499999344348907,
+              "y": -0.059999994933605194,
+              "z": -0.5
+            },
+            {
+              "id": "foot-R",
+              "x": -0.08499998599290848,
+              "y": 0.05500002205371857,
+              "z": -0.4999999701976776
+            }
+          ],
+          "com": [
+            0.013886484317481518,
+            -0.03617475926876068
+          ],
+          "supportMargin": 0.04057241276820007,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08500001579523087,
+              "y": -0.059999980032444,
+              "z": -0.5
+            },
+            {
+              "id": "foot-R",
+              "x": -0.08500001579523087,
+              "y": 0.054999999701976776,
+              "z": -0.4999999403953552
+            }
+          ],
+          "com": [
+            0.008875629864633083,
+            -0.03507170081138611
+          ],
+          "supportMargin": 0.03867842866070817,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08500000089406967,
+              "y": -0.05999999865889549,
+              "z": -0.4999999701976776
+            },
+            {
+              "id": "foot-R",
+              "x": -0.08500001579523087,
+              "y": 0.055000025779008865,
+              "z": -0.4999999701976776
+            }
+          ],
+          "com": [
+            0.003991271834820509,
+            -0.03238167613744736
+          ],
+          "supportMargin": 0.03816978450537139,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08500002324581146,
+              "y": -0.0599999874830246,
+              "z": -0.5
+            },
+            {
+              "id": "foot-R",
+              "x": -0.08499999344348907,
+              "y": 0.05499999597668648,
+              "z": -0.5
+            }
+          ],
+          "com": [
+            0.00047621410340070724,
+            -0.029415354132652283
+          ],
+          "supportMargin": 0.03865721383118886,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08500001579523087,
+              "y": -0.05999993905425072,
+              "z": -0.4999999403953552
+            },
+            {
+              "id": "foot-R",
+              "x": -0.08500000089406967,
+              "y": 0.05500000715255737,
+              "z": -0.4999999701976776
+            }
+          ],
+          "com": [
+            -0.0007627111044712365,
+            -0.027813652530312538
+          ],
+          "supportMargin": 0.03928967424075268,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation"
+        }
+      ],
+      "maxStanceSlipMetres": 1.3075715880680267e-07,
+      "maxBoneLengthErrorMetres": 1.1340516337110529e-07,
+      "jointRangesDegrees": {
+        "knee-L": [
+          50.64216080806011,
+          59.647292485117816
+        ],
+        "knee-R": [
+          46.40890559547148,
+          56.67877532173662
+        ],
+        "elbow-L": [
+          65.81134060859054,
+          94.76886280595158
+        ],
+        "elbow-R": [
+          53.469195569852275,
+          118.1923643722353
+        ]
+      },
+      "strideMetres": 0,
+      "frames": 16,
+      "fps": 12
+    },
+    "pivot": {
+      "samples": [
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08500000834465027,
+              "y": 4.293396926868809e-08,
+              "z": -0.5
+            },
+            {
+              "id": "foot-R",
+              "x": -0.08499999344348907,
+              "y": 1.879408983995745e-08,
+              "z": -0.4999999403953552
+            }
+          ],
+          "com": [
+            -0.00015807805175427347,
+            -0.027369841933250427
+          ],
+          "supportMargin": 0.027630131059148577,
+          "balance": "supported",
+          "authoredYawRadians": 0.0,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08500001579523087,
+              "y": -1.8980355065423282e-08,
+              "z": -0.4999999701976776
+            }
+          ],
+          "com": [
+            0.06367991864681244,
+            -0.009717785753309727
+          ],
+          "supportMargin": 0.00567990285158157,
+          "balance": "supported",
+          "authoredYawRadians": 0.0,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08499816060066223,
+              "y": -0.0005542459548451006,
+              "z": -0.49999988079071045
+            }
+          ],
+          "com": [
+            0.06393853574991226,
+            -0.01752346381545067
+          ],
+          "supportMargin": 0.005940375149250027,
+          "balance": "supported",
+          "authoredYawRadians": 0.006520536410312725,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08494703471660614,
+              "y": -0.002999597694724798,
+              "z": -0.5
+            }
+          ],
+          "com": [
+            0.06231718510389328,
+            -0.03280964121222496
+          ],
+          "supportMargin": 0.004370150387287136,
+          "balance": "supported",
+          "authoredYawRadians": 0.035297169576856,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08470392972230911,
+              "y": -0.0070879184640944,
+              "z": -0.4999999701976776
+            }
+          ],
+          "com": [
+            0.06774140149354935,
+            -0.033287808299064636
+          ],
+          "supportMargin": 0.01003747177124023,
+          "balance": "supported",
+          "authoredYawRadians": 0.0834845978605949,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.0840807780623436,
+              "y": -0.012466898187994957,
+              "z": -0.4999999701976776
+            }
+          ],
+          "com": [
+            0.06285247206687927,
+            -0.033070068806409836
+          ],
+          "supportMargin": 0.005771694004535671,
+          "balance": "supported",
+          "authoredYawRadians": 0.14720066223809028,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08290347456932068,
+              "y": -0.01876208931207657,
+              "z": -0.4999999701976776
+            }
+          ],
+          "com": [
+            0.067354217171669,
+            -0.02438722550868988
+          ],
+          "supportMargin": 0.011450742602348324,
+          "balance": "supported",
+          "authoredYawRadians": 0.22256320368590296,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08105936646461487,
+              "y": -0.025580832734704018,
+              "z": -0.5
+            }
+          ],
+          "com": [
+            0.06579727679491043,
+            -0.026613440364599228
+          ],
+          "supportMargin": 0.011737910330295559,
+          "balance": "supported",
+          "authoredYawRadians": 0.30569006318059394,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-R",
+              "x": -0.07852975279092789,
+              "y": -0.03252808004617691,
+              "z": -0.5
+            }
+          ],
+          "com": [
+            -0.06202380359172821,
+            -0.03177525848150253
+          ],
+          "supportMargin": 0.01049405080080032,
+          "balance": "supported",
+          "authoredYawRadians": 0.39269908169872414,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-R",
+              "x": -0.08105933666229248,
+              "y": -0.025580862537026405,
+              "z": -0.5
+            }
+          ],
+          "com": [
+            -0.06557556986808777,
+            -0.02733609452843666
+          ],
+          "supportMargin": 0.011516233205795284,
+          "balance": "supported",
+          "authoredYawRadians": 0.4797081002168543,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-R",
+              "x": -0.0829034373164177,
+              "y": -0.018762094900012016,
+              "z": -0.5000000596046448
+            }
+          ],
+          "com": [
+            -0.06701528280973434,
+            -0.02574753761291504
+          ],
+          "supportMargin": 0.011111845493316647,
+          "balance": "supported",
+          "authoredYawRadians": 0.5628349597115453,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-R",
+              "x": -0.0840807631611824,
+              "y": -0.012466905638575554,
+              "z": -0.5
+            }
+          ],
+          "com": [
+            -0.06243300810456276,
+            -0.03487296774983406
+          ],
+          "supportMargin": 0.005352244943380352,
+          "balance": "supported",
+          "authoredYawRadians": 0.638197501159358,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-R",
+              "x": -0.0847039520740509,
+              "y": -0.007087931036949158,
+              "z": -0.49999991059303284
+            }
+          ],
+          "com": [
+            -0.06747226417064667,
+            -0.033143118023872375
+          ],
+          "supportMargin": 0.00976831209659576,
+          "balance": "supported",
+          "authoredYawRadians": 0.7019135655368535,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-R",
+              "x": -0.08494704961776733,
+              "y": -0.0029996493831276894,
+              "z": -0.4999999701976776
+            }
+          ],
+          "com": [
+            -0.06229453533887863,
+            -0.030832236632704735
+          ],
+          "supportMargin": 0.004347485721111294,
+          "balance": "supported",
+          "authoredYawRadians": 0.7501009938205923,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-R",
+              "x": -0.08499816805124283,
+              "y": -0.000554238329641521,
+              "z": -0.4999999403953552
+            }
+          ],
+          "com": [
+            -0.06466525048017502,
+            -0.015510980039834976
+          ],
+          "supportMargin": 0.006667082428932186,
+          "balance": "supported",
+          "authoredYawRadians": 0.7788776269871356,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-R",
+              "x": -0.08500000089406967,
+              "y": 2.5108455758982018e-08,
+              "z": -0.4999999701976776
+            }
+          ],
+          "com": [
+            -0.06440429389476776,
+            -0.00874592550098896
+          ],
+          "supportMargin": 0.006404293000698086,
+          "balance": "supported",
+          "authoredYawRadians": 0.7853981633974483,
+          "massModel": "authored-segment-centres-approximation"
+        }
+      ],
+      "maxStanceSlipMetres": 1.2786282258476627e-07,
+      "maxBoneLengthErrorMetres": 1.2249500291883209e-07,
+      "jointRangesDegrees": {
+        "knee-L": [
+          47.99218503628242,
+          77.27798254244071
+        ],
+        "knee-R": [
+          49.82888964718879,
+          77.55334131473869
+        ],
+        "elbow-L": [
+          43.95933892172056,
+          107.38253913328644
+        ],
+        "elbow-R": [
+          44.5492325453192,
+          101.23738508309225
+        ]
+      },
+      "strideMetres": 0,
+      "frames": 16,
+      "fps": 12
+    },
+    "pivot-negative": {
+      "samples": [
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08500000089406967,
+              "y": 3.114342561616468e-08,
+              "z": -0.5
+            },
+            {
+              "id": "foot-R",
+              "x": -0.08500000089406967,
+              "y": 3.114342561616468e-08,
+              "z": -0.5
+            }
+          ],
+          "com": [
+            -0.0001580824755365029,
+            -0.027369854971766472
+          ],
+          "supportMargin": 0.027630113884807912,
+          "balance": "supported",
+          "authoredYawRadians": -0.0,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08499999344348907,
+              "y": 1.544132821607036e-08,
+              "z": -0.4999999701976776
+            }
+          ],
+          "com": [
+            0.06370716542005539,
+            -0.009688283316791058
+          ],
+          "supportMargin": 0.005707171976566311,
+          "balance": "supported",
+          "authoredYawRadians": -0.0,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08499819040298462,
+              "y": 0.0005542865837924182,
+              "z": -0.4999999403953552
+            }
+          ],
+          "com": [
+            0.0639769583940506,
+            -0.016628466546535492
+          ],
+          "supportMargin": 0.005978767991065975,
+          "balance": "supported",
+          "authoredYawRadians": -0.006520536410312725,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08494704961776733,
+              "y": 0.002999641466885805,
+              "z": -0.4999999403953552
+            }
+          ],
+          "com": [
+            0.06250759214162827,
+            -0.030464570969343185
+          ],
+          "supportMargin": 0.004560542523860928,
+          "balance": "supported",
+          "authoredYawRadians": -0.035297169576856,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.0847039669752121,
+              "y": 0.007087945472449064,
+              "z": -0.5
+            }
+          ],
+          "com": [
+            0.06792043149471283,
+            -0.029004061594605446
+          ],
+          "supportMargin": 0.010216464519500729,
+          "balance": "supported",
+          "authoredYawRadians": -0.0834845978605949,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.0840807780623436,
+              "y": 0.012466917745769024,
+              "z": -0.4999999403953552
+            }
+          ],
+          "com": [
+            0.06303474307060242,
+            -0.026696953922510147
+          ],
+          "supportMargin": 0.005953965008258816,
+          "balance": "supported",
+          "authoredYawRadians": -0.14720066223809028,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08290347456932068,
+              "y": 0.018762068822979927,
+              "z": -0.4999999403953552
+            }
+          ],
+          "com": [
+            0.061748847365379333,
+            -0.007740783039480448
+          ],
+          "supportMargin": 0.005845372796058651,
+          "balance": "supported",
+          "authoredYawRadians": -0.22256320368590296,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08105935901403427,
+              "y": 0.025580888614058495,
+              "z": -0.49999991059303284
+            }
+          ],
+          "com": [
+            0.058143436908721924,
+            0.00562247121706605
+          ],
+          "supportMargin": 0.004084077894687649,
+          "balance": "supported",
+          "authoredYawRadians": -0.30569006318059394,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-R",
+              "x": -0.07852974534034729,
+              "y": 0.032528121024370193,
+              "z": -0.4999999403953552
+            }
+          ],
+          "com": [
+            -0.06644611805677414,
+            0.024637706577777863
+          ],
+          "supportMargin": 0.014916372716426844,
+          "balance": "supported",
+          "authoredYawRadians": -0.39269908169872414,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-R",
+              "x": -0.08105933666229248,
+              "y": 0.02558089792728424,
+              "z": -0.4999999701976776
+            }
+          ],
+          "com": [
+            -0.07030528038740158,
+            0.016012830659747124
+          ],
+          "supportMargin": 0.016245943725109097,
+          "balance": "supported",
+          "authoredYawRadians": -0.4797081002168543,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-R",
+              "x": -0.08290344476699829,
+              "y": 0.018762078136205673,
+              "z": -0.4999999701976776
+            }
+          ],
+          "com": [
+            -0.0606987401843071,
+            -0.01084865815937519
+          ],
+          "supportMargin": 0.004795295417308804,
+          "balance": "supported",
+          "authoredYawRadians": -0.5628349597115453,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-R",
+              "x": -0.08408074826002121,
+              "y": 0.012466968037188053,
+              "z": -0.4999999701976776
+            }
+          ],
+          "com": [
+            -0.06250634789466858,
+            -0.029170576483011246
+          ],
+          "supportMargin": 0.005425599634647366,
+          "balance": "supported",
+          "authoredYawRadians": -0.638197501159358,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-R",
+              "x": -0.0847039595246315,
+              "y": 0.007087989244610071,
+              "z": -0.4999999403953552
+            }
+          ],
+          "com": [
+            -0.06757936626672745,
+            -0.029386550188064575
+          ],
+          "supportMargin": 0.009875406742095943,
+          "balance": "supported",
+          "authoredYawRadians": -0.7019135655368535,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-R",
+              "x": -0.08494704961776733,
+              "y": 0.0029996512457728386,
+              "z": -0.4999999701976776
+            }
+          ],
+          "com": [
+            -0.06243737414479256,
+            -0.028808828443288803
+          ],
+          "supportMargin": 0.004490324527025219,
+          "balance": "supported",
+          "authoredYawRadians": -0.7501009938205923,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-R",
+              "x": -0.08499819040298462,
+              "y": 0.000554276688490063,
+              "z": -0.4999999403953552
+            }
+          ],
+          "com": [
+            -0.0646602213382721,
+            -0.014696258120238781
+          ],
+          "supportMargin": 0.006662030935287472,
+          "balance": "supported",
+          "authoredYawRadians": -0.7788776269871356,
+          "massModel": "authored-segment-centres-approximation"
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-R",
+              "x": -0.08499999344348907,
+              "y": 1.6018748549839756e-09,
+              "z": -0.5
+            }
+          ],
+          "com": [
+            -0.06442712247371674,
+            -0.00872215535491705
+          ],
+          "supportMargin": 0.006427129030227657,
+          "balance": "supported",
+          "authoredYawRadians": -0.7853981633974483,
+          "massModel": "authored-segment-centres-approximation"
+        }
+      ],
+      "maxStanceSlipMetres": 6.516596557399593e-08,
+      "maxBoneLengthErrorMetres": 1.2368861818101706e-07,
+      "jointRangesDegrees": {
+        "knee-L": [
+          49.34309747627512,
+          78.36512692642788
+        ],
+        "knee-R": [
+          45.95964785860352,
+          78.82983491926281
+        ],
+        "elbow-L": [
+          43.95922841036182,
+          107.38250505828421
+        ],
+        "elbow-R": [
+          44.54914696731532,
+          101.23743545240109
+        ]
+      },
+      "strideMetres": 0,
+      "frames": 16,
+      "fps": 12
+    }
+  },
+  "materialGate": "Source passes exist. Depth/caster, source-pass alpha alignment QC and actual Hunt GPU acceptance remain open."
+}

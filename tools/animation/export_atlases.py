@@ -45,6 +45,8 @@ profile={'schemaVersion':2,'coordinateSpace':'actor-xy-ground-z-up','unitsPerPix
  'locomotion':{**runtime_clip('walk'),'stride':m['clips']['walk']['strideMetres']*scale},
  'actions':{'attack':{**runtime_clip('attack'),'mode':'fullBody','priority':10,'commitUntil':1,'reducedFrame':8,'visualTimingOnly':True}},
  'pivot':runtime_clip('pivot')}
+if 'pivot-negative' in m['clips']:
+    profile['pivots']={'positive':runtime_clip('pivot'),'negative':runtime_clip('pivot-negative')}
 (out/'profile.json').write_text(json.dumps(profile,indent=2)+'\n')
 manifest={'schemaVersion':2,'candidateNotApproved':True,'productionReady':False,'reviewLightingOnly':True,'runtimeIntegrated':False,'directions':directions,'clips':clips,'sourceSignature':m['skeletonSignature'],'rowSha256':row_hashes,'sourceQC':m['clips'],'materialGate':'aligned unlit albedo/normal/depth/emissive export and actual Hunt GPU acceptance open'}
 (out/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')

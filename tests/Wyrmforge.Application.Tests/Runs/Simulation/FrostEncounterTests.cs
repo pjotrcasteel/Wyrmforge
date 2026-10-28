@@ -344,6 +344,9 @@ public sealed class FrostEncounterTests
         var simulation = new RunSimulation(new HashSet<string>(), new LevelChoiceService(random), random);
         Assert.IsTrue(simulation.ChooseMapNode(simulation.AvailableMapNodes[0].Id));
         simulation.Tick(0, default, 390, 700);
+        // These direct behavior-unit fixtures need an open field. Terrain/navigation
+        // integration is covered separately; Random.Shared map obstacles are not inputs.
+        SetField(simulation, "arenaEnvironment", null);
         if (graceElapsed) SetField(simulation, "encounterSeconds", EnemyStagePressure.RangedGraceSeconds);
         return (simulation, Field<PlayerState>(simulation, "player"), Field<List<EnemyState>>(simulation, "enemies"));
     }
@@ -359,7 +362,7 @@ public sealed class FrostEncounterTests
     private static T Field<T>(RunSimulation simulation, string name) =>
         (T)typeof(RunSimulation).GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(simulation)!;
 
-    private static void SetField(RunSimulation simulation, string name, object value) =>
+    private static void SetField(RunSimulation simulation, string name, object? value) =>
         typeof(RunSimulation).GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(simulation, value);
 
     private static T Invoke<T>(RunSimulation simulation, string name, params object?[] arguments) =>

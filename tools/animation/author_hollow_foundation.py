@@ -14,7 +14,7 @@ from hollow_ragged_silhouette import shorten_hanging_cloth
 from hollow_source_embers import attach_internal_fire
 ROOT=Path(__file__).resolve().parents[2]
 SOURCE=ROOT/'art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-zombie-reach-v3-standard/hollow-rigged.blend'
-parser=argparse.ArgumentParser();parser.add_argument('--out',default='artifacts/animation');parser.add_argument('--render',action='store_true');parser.add_argument('--all',action='store_true');parser.add_argument('--only',default='walk,attack,pivot');parser.add_argument('--samples',type=int,default=4)
+parser=argparse.ArgumentParser();parser.add_argument('--out',default='artifacts/animation');parser.add_argument('--render',action='store_true');parser.add_argument('--all',action='store_true');parser.add_argument('--only',default='walk,attack,pivot,pivot-negative');parser.add_argument('--samples',type=int,default=4)
 args=parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
 OUT=(ROOT/args.out).resolve();OUT.mkdir(parents=True,exist_ok=True)
 bpy.ops.wm.open_mainfile(filepath=str(SOURCE));scene=bpy.context.scene
@@ -72,7 +72,8 @@ for clip in args.only.split(','):
         scene.frame_set(index+1)
         p=index/16;t=index/15 if index<16 else 1
         rig.location=(0,0,0);rig.rotation_mode='XYZ';rig.rotation_euler=(0,0,0)
-        yaw=math.pi/4*smooth((p-.08)/.84) if clip=='pivot' else 0
+        turn_sign=-1 if clip=='pivot-negative' else 1
+        yaw=turn_sign*math.pi/4*smooth((p-.08)/.84) if clip.startswith('pivot') else 0
         rig.rotation_euler.z=yaw
         # Torso has separate load/torque/recoil curves; no independent leg loop.
         attack=clip=='attack'
@@ -92,10 +93,10 @@ for clip in args.only.split(','):
         for side,sign in [('L',1),('R',-1)]:
             if attack:
                 sole=Vector((sign*.085,-.06 if side=='L' else .055,SOLE_Z));stance=True
-            elif clip=='pivot':
+            elif clip.startswith('pivot'):
                 # Two actual weight-bearing steps complete one 45 degree turn.
                 start=Vector((sign*.085,0,SOLE_Z))
-                end=Matrix.Rotation(math.pi/4,4,'Z') @ start
+                end=Matrix.Rotation(turn_sign*math.pi/4,4,'Z') @ start
                 begin,finish=(.48,.96) if side=='L' else (.04,.48)
                 a=max(0,min(1,(p-begin)/(finish-begin)))
                 stance=p<=begin or p>=finish
@@ -104,7 +105,7 @@ for clip in args.only.split(','):
             else:sole,stance=foot_target(side,p)
             footrest=rig.data.bones['foot.'+side]
             landmark=Vector((sign*.09,-.025,SOLE_Z))
-            foot_yaw=(math.pi/4*smooth(a) if clip=='pivot' else 0)-yaw
+            foot_yaw=(turn_sign*math.pi/4*smooth(a) if clip.startswith('pivot') else 0)-yaw
             foot_rotation=Matrix.Rotation(foot_yaw,4,'Z')
             ankle=sole-foot_rotation.to_3x3() @ (landmark-footrest.head_local)
             flex=solve_chain(rig,'thigh.'+side,'shin.'+side,ankle,Vector((sign*.09,-.5,-.2)),(8,145))

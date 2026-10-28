@@ -18,7 +18,7 @@ export interface CreatureRigProfile {
  * one action token always identifies the same source action. Proximity cues are visual only.
  */
 export interface MotionIntent {
- entityId:string|number;timestamp:number;travel:number;world:Vector2;direction:string;moving:boolean;
+ entityId:string|number;scale?:number;timestamp:number;travel:number;world:Vector2;direction:string;moving:boolean;
  paused?:boolean;frozen?:boolean;reducedMotion?:boolean;
  action?:{name:string;token:string|number;sequence:number}|null;
 }
