@@ -52,7 +52,7 @@
     </section>
     </details>
     <section class="hunt-lab-surface" aria-label="Live developer Wyrm encounter">
-        <canvas @ref="canvas" class="hunt-lab-canvas" aria-label="Automated live Wyrm arena"></canvas>
+        <canvas @ref="canvas" class="hunt-lab-canvas" aria-label="Automated live Wyrm arena" data-arena-module="@ArenaModulePath"></canvas>
         <div class="hunt-lab-stage" aria-live="polite">
             <strong>@status</strong>
             <span>@(paused ? "PAUSED" : ManualControl ? invulnerable ? "LIVE CONTROLS • INVULNERABLE PRACTICE" : "LIVE CONTROLS • FULL DAMAGE" : invulnerable ? "AUTOPILOT • PRACTICE • NO PROGRESS" : "AUTOPILOT • FULL DAMAGE • NO PROGRESS")</span>
@@ -67,6 +67,8 @@
     [Parameter, SupplyParameterFromQuery(Name = "ascendant")] public bool? AscendantQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "phase")] public int? PhaseQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "seed")] public int? SeedQuery { get; set; }
+
+    private static string ArenaModulePath => $"./js/arena.js?v={AppBuildInfo.Version}-{AppBuildInfo.Commit}";
 
     private ElementReference canvas;
     private IJSObjectReference? arenaModule;
@@ -102,7 +104,7 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
-        arenaModule = await JavaScript.InvokeAsync<IJSObjectReference>("import", $"./js/arena.js?v={AppBuildInfo.Version}-{AppBuildInfo.Commit}");
+        arenaModule = await JavaScript.InvokeAsync<IJSObjectReference>("import", ArenaModulePath);
         reference = DotNetObjectReference.Create(this);
         await arenaModule.InvokeVoidAsync("initializeArena", canvas, reference);
     }
