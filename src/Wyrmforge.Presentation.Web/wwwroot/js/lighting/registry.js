@@ -88,3 +88,14 @@ export function environmentProfile(mode, localHour = new Date().getHours()) {
     return { ambient: mode === 'zero' ? 0 : day ? .55 : .012,
         color: day ? '#c2d0de' : '#8c9cbb', exposure: 1, emission: mode !== 'zero' };
 }
+
+/** Existing Hunt GPU adapter's conservative XY culling before light budgeting. */
+export function lightsIntersectingView(lights, bounds) {
+    const {left,top,right,bottom}=bounds;
+    if(![left,top,right,bottom].every(Number.isFinite)||right<left||bottom<top)throw new TypeError('Invalid light view bounds');
+    return lights.filter(light=>{
+        if(light.type==='directional')return true;
+        const [x,y]=light.position,dx=Math.max(left-x,0,x-right),dy=Math.max(top-y,0,y-bottom);
+        return dx*dx+dy*dy<=light.range*light.range;
+    });
+}

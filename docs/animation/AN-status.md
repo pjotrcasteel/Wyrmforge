@@ -37,6 +37,14 @@ animation clock/pose and C# authority. No second renderer/lighting loop or gamep
 simulation is authorized. Keep current Canvas sprite fallback and other approved
 actors untouched; actual GPU/Hunt proof and performance remain gates.
 
+GPU integration baseline: current main `789f3c175` was merged into this draft
+without changing main or concurrent branches. The existing `arena-gpu-world.js`
+and `hunt-gpu-layers.js` adapter paths and their regression tests were recovered
+unchanged from active PR #381 head `b3c534de`; its conservative shared light
+culling helper is reused. They are an integration dependency, not a new Hunt
+renderer. This checkpoint does not enable the adapter or claim G4/G5 completion;
+source skin resources will extend its existing path. PR #381 remains untouched.
+
 The shared contact-kinematics module now has an **opt-in source-authoring study**
 primitive, `solveSupportedSourcePose`. It accepts caller-owned support targets,
 solves all declared contact chains together, translates the coupled source body
