@@ -111,7 +111,8 @@ jobs:
           assert qc["deep_torn_tissue_vertices"] >= 35, qc
           assert qc["wound_cavity_polygon_faces"] >= 25, qc
           assert qc["new_animation_actions"] == 0, qc
-          assert qc["animation_actions_added"] == 0, qc
+          assert qc["new_animation_actions"] == 0, qc
+          assert qc["rear_wound_faces"] == 0, qc
           print("PASS: original human body only, no skirt/tights/hair authoring helpers")
           PY
       - name: Reopen immutable H1 source in an independent Blender process
