@@ -2,7 +2,7 @@ import { huntLayerCapture } from './hunt-gpu-layers.js';
 import { preloadFireballV5 } from './arena-fireball-v5.js';
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
 import { attachArenaInput, getArenaMovement, getArenaAim, isArenaStickAim, getArenaPropFocus } from './arena-input.js';
-import { resolveTargetIndicator, presentTargetSigil, drawTargetIndicator, preloadTargetSigilArt, targetSelectionLightEmitter, targetSelectionCanvasLight, actorLightsWithoutSigilOverlay } from './arena-target-indicator.js?v=20261028-stick-snap-floor-v2';
+import { resolveTargetIndicator, presentTargetSigil, drawTargetIndicator, preloadTargetSigilArt, targetSelectionLightEmitter, targetSelectionCanvasLight, actorLightsWithoutSigilOverlay } from './arena-target-indicator.js?v=20261028-feet-centered-v3';
 import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, drawArenaCloisterElevation } from './arena-environment.js?v=20261026-compact-ground-v1';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
@@ -311,10 +311,11 @@ function draw(state, snapshot, width, height) {
     drawPlayerChill(ctx, snapshot.player, state.reducedMotion.matches ? 0 : visualSeconds);
     for (const shard of snapshot.experienceShards ?? []) drawExperienceShard(ctx, shard);
     for (const pulse of snapshot.splashPulses) drawSplashPulse(ctx, pulse, snapshot.dragon?.school);
-    // The approved V3 sigil is school-colored beneath actors, without replacing attack telegraphs.
+    // A floor decal: the actor's C# ground pivot sits at the sigil center.
+    // Paint BOTH halves before depth-sorted actors. Opaque legs/body naturally mask
+    // the back arc; never composite bright sigil artwork over the sprite afterward.
     drawTargetIndicator(ctx, targetIndicator, 'ground', visualSeconds, state.reducedMotion.matches,
         state.targetSigilArt, snapshot.player?.activeSchool);
-    // All luminous detail remains on the ground BEFORE opaque depth-sorted actors.
     drawTargetIndicator(ctx, targetIndicator, 'contrast', visualSeconds, state.reducedMotion.matches,
         state.targetSigilArt, snapshot.player?.activeSchool);
     drawAimRune(ctx, snapshot.player);
