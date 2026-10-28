@@ -4,8 +4,15 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import sys
 from pathlib import Path
+
+# Blender runs isolated and intentionally ignores PYTHONPATH on some builds.
+# Explicitly append the matching CPython 3.11 Pillow wheel directory.
+external_site = os.environ.get("HOLLOW_ART_PIL_SITE")
+if external_site:
+    sys.path.insert(0, external_site)
 
 import bpy
 from PIL import Image, ImageDraw, ImageFont
