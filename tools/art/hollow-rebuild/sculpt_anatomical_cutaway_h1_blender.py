@@ -174,7 +174,7 @@ def tapered_tube(points, radius, sides=8):
 
 
 def ribs(mesh,rig,bone):
-    bone_material=new_mat("H1 dead bone: muted, NO glow",(.29,.265,.245),.97)
+    bone_material=new_mat("H1 dead bone: muted, NO glow",(.245,.225,.205),.97)
     made=0
     # Fixed anatomical landmarks only; actual endpoints require measured
     # *skin* intersections, so missing intersections reject individual arcs.
@@ -188,8 +188,12 @@ def ribs(mesh,rig,bone):
             hits=[]
             for i in range(22):
                 u=i/21.
-                x=side*(.025+.305*u)
-                z=zmid+.017*u
+                # Distinct anatomical arcs, not seven identical horizontal
+                # bars. Each still needs real original-skin ray contacts.
+                reach=.305-.022*(row%3)+(.010 if side<0 else -.016)
+                x=side*(.025+reach*u)
+                z=(zmid + (.013+.009*(row%3))*u
+                   + .011*math.sin(math.pi*u)*(1 if side<0 else -.45))
                 hit=front_hit(mesh,x,z)
                 if hit is None:
                     hits.append(None)
@@ -218,9 +222,14 @@ def ribs(mesh,rig,bone):
                 u=i/(len(measured)-1)
                 # Real relief from the recessed skin, actual body endpoints
                 # are slightly embedded so ribs cannot float.
-                relief=.040*math.sin(math.pi*u)-(.022 if i in (0,len(measured)-1) else 0.)
+                arch=math.sin(math.pi*u)
+                distortion=1+.17*math.cos(2*math.pi*u+row*1.4+(0 if side<0 else .8))
+                relief=.034*arch*distortion - (.026 if i in (0,len(measured)-1) else 0.)
+                if row==1 and side<0:
+                    relief-=.009*math.exp(-((u-.67)/.065)**2)
                 contour.append((point[0],point[1]-relief,point[2]))
-            v,f=tapered_tube(contour,.017 if row<3 else .014,sides=7)
+            radius=.013+.002*(row%2)+(.001 if side>0 else 0.)
+            v,f=tapered_tube(contour,radius,sides=7)
             armature_mesh("H1 anatomically anchored rib "+str(side)+"/"+str(row+1),
                           v,f,mesh,rig,bone,bone_material)
             made+=1
