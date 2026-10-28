@@ -37,6 +37,9 @@ public sealed class FrostEliteTests
     public void Splinterwright_SeedsBloomsAlongTheWholeLane()
     {
         var (simulation, player, enemies) = Encounter(graceElapsed: true);
+        // This test proves the Splinterwright's lane-spaced blooms, not gated-world navigation.
+        // Remove map barriers so a sealed crossing cannot prevent the caster ever firing.
+        SetField(simulation, "arenaEnvironment", null!);
         enemies.Add(new EnemyState(500, player.Position + new Vector2D(260, 0), 11, 1000, 0, EnemyKind.Shardcaster) { Elite = EliteAffix.Splinterwright });
         var most = 0;
         for (var time = 0d; time < 6 && most == 0; time += 0.05)
