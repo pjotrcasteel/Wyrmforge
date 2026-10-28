@@ -1,7 +1,7 @@
 import { preloadFireballV5 } from './arena-fireball-v5.js';
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
 import { attachArenaInput, getArenaMovement, getArenaAim, getArenaPropFocus } from './arena-input.js';
-import { resolveTargetIndicator, drawTargetIndicator, targetSelectionLightEmitter, targetSelectionCanvasLight } from './arena-target-indicator.js';
+import { resolveTargetIndicator, drawTargetIndicator, targetSelectionLightEmitter, targetSelectionCanvasLight } from './arena-target-indicator.js?v=20261028-rune-circle-v3';
 import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, drawArenaCloisterElevation } from './arena-environment.js?v=20261026-compact-ground-v1';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
@@ -21,7 +21,7 @@ import { drawBellWardenGround, drawBellWardenEntrance, drawBellWardenBar } from 
 import { drawWinterBellGround, drawWinterBellAir } from './arena-winterbell-vfx.js';
 import { drawGlassReliquaryGround, drawGlassReliquaryAir } from './arena-glass-reliquary-vfx.js';
 import { loadArt, artReady, hasArtFrame, drawArtFrame } from './art-atlas.js';
-import { buildSpellLights, drawSpellLightSpill, sampleSpellLight, drawActorWithEmitter } from './arena-spell-lighting.js';
+import { buildSpellLights, drawSpellLightSpill, sampleSpellLight, drawActorWithEmitter } from './arena-spell-lighting.js?v=20261028-ground-light-v3';
 import { gothicNightLightSources, gothicNightPlan, drawGothicNight, GOTHIC_NIGHT } from './arena-night-lighting.js';
 import { createWetForestFirelightPlan } from './arena-wet-forest-dressing.js';
 import { resolveArenaCamera, drawExitGuide } from './arena-camera.js';
