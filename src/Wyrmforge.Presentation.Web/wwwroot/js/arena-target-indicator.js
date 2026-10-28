@@ -207,6 +207,12 @@ export function targetSelectionLightEmitter(marker, frame, school) {
     };
 }
 
+// The floor decal is composited before actors; do not wash the same selection
+// light over every sprite in the later screen-blended VFX pass.
+export function actorLightsWithoutSigilOverlay(lights) {
+    return (lights ?? []).filter(light => light.family !== 'selection');
+}
+
 export function targetSelectionCanvasLight(emitter) {
     if (!emitter) return [];
     const center = rgb(emitter.color);
