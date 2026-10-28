@@ -168,11 +168,13 @@ public sealed partial class RunSimulation
 
         for (var jump = 0; jump < jumps; jump++)
         {
-            var target = jump == 0 && primary
-                ? rightStickTargetId is { } snappedId
-                    ? PrimaryCandidates().FirstOrDefault(candidate => candidate.Id == snappedId && IsEligibleForAim(candidate, current))
-                    : PrimaryTarget(current, manualAimEngaged)
-                : NearestTarget(current, hit);
+            var target = (jump, primary, rightStickTargetId) switch
+            {
+                (0, true, int snappedId) => PrimaryCandidates()
+                    .FirstOrDefault(candidate => candidate.Id == snappedId && IsEligibleForAim(candidate, current)),
+                (0, true, _) => PrimaryTarget(current, manualAimEngaged),
+                _ => NearestTarget(current, hit),
+            };
             if (target is null) break;
             hit.Add(target.Id);
             hitCount++;
