@@ -195,6 +195,16 @@ export function getArenaPropFocus(state) {
     return id ?? null;
 }
 
+// The physical controller stick and a dragged virtual right-thumb stick both request
+// directional snap. A pointer tap or deliberate mouse aim remains precise.
+export function isArenaStickAim(state, aim, now = Date.now()) {
+    if (state.inputSuspended || state.latestSnapshot?.paused || Math.hypot(aim.x, aim.y) <= .01) return false;
+    const draggingRightThumb = state.aimIsTouch && (state.aimTouchId != null || state.aimPointerId != null) &&
+        state.aimStart && state.aimPoint && Math.hypot(state.aimPoint.x - state.aimStart.x, state.aimPoint.y - state.aimStart.y) >= 8;
+    if (draggingRightThumb) return true;
+    return state.aimTouchId == null && state.aimPointerId == null && state.tapAimUntil <= now;
+}
+
 export function getArenaAim(state, now = Date.now()) {
     if (state.inputSuspended || state.latestSnapshot?.paused) return { x: 0, y: 0 };
     const engaged = state.aimTouchId != null || state.aimPointerId != null || state.tapAimUntil > now;

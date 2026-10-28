@@ -158,6 +158,7 @@ public sealed partial class RunSimulation
             // A paused choice/map is an input boundary, not a latched manual heading.
             manualAimEngaged = false;
             automaticTargetId = null;
+            rightStickTargetId = null;
             selectedPropId = null;
             aimedPropId = null;
             return CreateSnapshot();
