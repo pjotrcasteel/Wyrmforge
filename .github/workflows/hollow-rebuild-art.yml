@@ -140,6 +140,25 @@ jobs:
           test -s artifacts/hollow-rebuild/oga-thin-undead-review/source-clay-8views-BLENDER.png
           test -s artifacts/hollow-rebuild/oga-thin-undead-review/source-material-native96-BLENDER.png
           test -s artifacts/hollow-rebuild/oga-thin-undead-review/imported-hollowed-source-UNAPPROVED.blend
+      - name: Author distinct Ashfall Wretch static rest-body sculpt and inspect same eight cameras
+        run: |
+          python -m py_compile tools/art/hollow-rebuild/sculpt_ashfall_wretch_h1_blender.py
+          python tools/art/hollow-rebuild/sculpt_ashfall_wretch_h1_blender.py \
+            --input artifacts/hollow-rebuild/oga-thin-undead-review/imported-hollowed-source-UNAPPROVED.blend \
+            --output artifacts/hollow-rebuild/ashfall-wretch-h1
+          test -s artifacts/hollow-rebuild/ashfall-wretch-h1/hollowed-ashfall-wretch-source-h1-UNAPPROVED.blend
+          test -s artifacts/hollow-rebuild/ashfall-wretch-h1/source-clay-8views-BLENDER.png
+          test -s artifacts/hollow-rebuild/ashfall-wretch-h1/source-clay-native96-BLENDER.png
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          m=json.loads(Path('artifacts/hollow-rebuild/ashfall-wretch-h1/h1-sculpt-review.json').read_text())
+          assert m['owner_approved'] is False, m
+          assert m['actions'] == 0, m
+          assert m['original_topology_preserved'] and m['original_vertex_groups_preserved'],m
+          assert m['modified_vertices'] > 200, m
+          print('WyrmForge source anatomy created, but NOT visually approved.')
+          PY
       - name: Archive genuinely rendered source and complete legal provenance, NOT production assets
         if: always()
         uses: actions/upload-artifact@v4
@@ -149,5 +168,6 @@ jobs:
             artifacts/hollow-rebuild/oga-thin-undead-original/source-list.json
             artifacts/hollow-rebuild/oga-thin-undead-original/source-LICENSE.txt
             artifacts/hollow-rebuild/oga-thin-undead-review/
+            artifacts/hollow-rebuild/ashfall-wretch-h1/
           if-no-files-found: warn
           retention-days: 30
