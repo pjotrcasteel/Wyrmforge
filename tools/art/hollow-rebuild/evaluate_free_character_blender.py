@@ -96,8 +96,10 @@ def normalize(meshes, target_height=3.1):
         if len(obj.data.vertices) == 0:
             continue
         sample_stride = max(1, len(obj.data.vertices) // 25000)
-        points.extend(obj.matrix_world @ v.co
-                      for v in obj.data.vertices[::sample_stride])
+        # bpy_prop_collection is not a Python list: Blender 4.5 rejects
+        # stepped slices. Index by integer so large mesh samples remain valid.
+        points.extend(obj.matrix_world @ obj.data.vertices[i].co
+                      for i in range(0, len(obj.data.vertices), sample_stride))
     if not points:
         raise ValueError("All imported meshes were empty")
     xs, ys, zs = ([float(p[i]) for p in points] for i in range(3))
