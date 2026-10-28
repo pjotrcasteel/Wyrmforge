@@ -165,7 +165,7 @@ def author_source(input_path,output_path):
         (.075,.066,.061),(.30,.284,.267),9.8,.22)
     wound=procedural_material(
         "Hollowed exposed charred flesh (NO EMISSION)",
-        (.060,.035,.033),(.18,.089,.072),17.0,.29)
+        (.052,.045,.043),(.135,.111,.101),17.0,.29)
     mesh.data.materials.clear()
     mesh.data.materials.append(material)
     mesh.data.materials.append(wound)
