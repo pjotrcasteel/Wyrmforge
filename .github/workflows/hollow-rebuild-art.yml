@@ -209,6 +209,29 @@ jobs:
           assert d['animation_engine_modified'] is False and d['owner_approved'] is False
           print('PASS geometry source-only stance, still ART UNAPPROVED.')
           PY
+      - name: Sculpt actual connected thoracic cavity, curved source-rig ribs and 3D fingertip talons
+        run: |
+          python -m py_compile tools/art/hollow-rebuild/sculpt_anatomical_cutaway_h1_blender.py
+          python tools/art/hollow-rebuild/sculpt_anatomical_cutaway_h1_blender.py \
+            --input artifacts/hollow-rebuild/horror-feral-rest-h1/hollowed-h1-feral-rest-source-UNAPPROVED.blend \
+            --output artifacts/hollow-rebuild/horror-anatomical-h1
+          test -s artifacts/hollow-rebuild/horror-anatomical-h1/hollowed-h1-real-anatomy-ribs-claws-UNAPPROVED.blend
+          test -s artifacts/hollow-rebuild/horror-anatomical-h1/source-clay-native96-BLENDER.png
+          test -s artifacts/hollow-rebuild/horror-anatomical-h1/source-material-8views-BLENDER.png
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('artifacts/hollow-rebuild/horror-anatomical-h1/h1-anatomical-source-qc.json')
+          d=json.loads(p.read_text(encoding='utf-8'))
+          assert d['real_skin_cavity_deformed_vertices']>=14,d
+          assert d['deep_cavity_m']>=.07,d
+          assert d['source_bone_ribs']>=4,d
+          assert d['finger_bone_talons']==6,d
+          assert d['original_topology_preserved'] is True,d
+          assert d['actions']==0 and d['animation_engine_modified'] is False,d
+          assert d['owner_approved'] is False,d
+          print('PASS source-only anatomical geometry; owner visual approval NOT GIVEN')
+          PY
       - name: Preserve 3D evidence; never ship candidate into WyrmForge runtime
         if: always()
         uses: actions/upload-artifact@v4
@@ -220,5 +243,6 @@ jobs:
             artifacts/hollow-rebuild/horror-source-review/
             artifacts/hollow-rebuild/horror-hollowed-h1/
             artifacts/hollow-rebuild/horror-feral-rest-h1/
+            artifacts/hollow-rebuild/horror-anatomical-h1/
           if-no-files-found: warn
           retention-days: 30
