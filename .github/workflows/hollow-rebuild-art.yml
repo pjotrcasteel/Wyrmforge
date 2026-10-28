@@ -159,6 +159,33 @@ jobs:
           assert m['modified_vertices'] > 200, m
           print('WyrmForge source anatomy created, but NOT visually approved.')
           PY
+      - name: Build two genuinely distinct Hollowed rest-body silhouettes — NO animation
+        run: |
+          python -m py_compile tools/art/hollow-rebuild/sculpt_silhouette_variants_h1_blender.py
+          for variant in raker collapsed; do
+            python tools/art/hollow-rebuild/sculpt_silhouette_variants_h1_blender.py \
+              --input artifacts/hollow-rebuild/oga-thin-undead-review/imported-hollowed-source-UNAPPROVED.blend \
+              --output "artifacts/hollow-rebuild/h1-variant-$variant" \
+              --variant "$variant"
+            test -s "artifacts/hollow-rebuild/h1-variant-$variant/source-clay-native96-BLENDER.png"
+            test -s "artifacts/hollow-rebuild/h1-variant-$variant/source-material-8views-BLENDER.png"
+            test -s "artifacts/hollow-rebuild/h1-variant-$variant/hollowed-ashfall-wretch-source-h1-UNAPPROVED.blend"
+          done
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          for kind in ('raker', 'collapsed'):
+              p=Path(f'artifacts/hollow-rebuild/h1-variant-{kind}/h1-sculpt-review.json')
+              data=json.loads(p.read_text(encoding='utf-8'))
+              assert data['source_variant']==kind
+              assert data['actions']==0 and data['generated_animation_clips']==0
+              assert data['source_rig_weights_preserved'] is True
+              assert data['modified_vertices'] > 1000
+              assert data['owner_approved'] is False
+              print('PASS author-only static-source',kind,
+                    'changed vertices',data['modified_vertices'],
+                    'maximum delta meters',data['maximum_visible_rest_deformation_m'])
+          PY
       - name: Archive genuinely rendered source and complete legal provenance, NOT production assets
         if: always()
         uses: actions/upload-artifact@v4
@@ -169,5 +196,7 @@ jobs:
             artifacts/hollow-rebuild/oga-thin-undead-original/source-LICENSE.txt
             artifacts/hollow-rebuild/oga-thin-undead-review/
             artifacts/hollow-rebuild/ashfall-wretch-h1/
+            artifacts/hollow-rebuild/h1-variant-raker/
+            artifacts/hollow-rebuild/h1-variant-collapsed/
           if-no-files-found: warn
           retention-days: 30
