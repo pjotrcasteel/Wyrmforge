@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { resolveTargetIndicator, drawTargetIndicator, targetSelectionLightEmitter, targetSelectionCanvasLight } from
+import { resolveTargetIndicator, presentTargetSigil, drawTargetIndicator, targetSelectionLightEmitter, targetSelectionCanvasLight } from
     '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-target-indicator.js';
 import { withHollowFractureLightingFrame } from
     '../../src/Wyrmforge.Presentation.Web/wwwroot/js/hollow-fracture.js';
@@ -25,39 +25,69 @@ function scene() {
     };
 }
 
-test('exactly the C# selected enemy gets an ellipse; nearby enemies do not', () => {
-    const indicator = resolveTargetIndicator(scene());
-    assert.deepEqual(indicator, { kind: 'enemy', x: 310, y: 452, rx: 35.2, ry: 16 });
+const litFrame = () => ({
+    environment: { ambient: .03, emission: true },
+    lights: [{ id: 'physical-torch', enabled: true, intensity: .5 }],
 });
 
-test('boss targeting uses entity ID and scales ring footprint to its actual radius', () => {
+function recordingCanvas() {
+    const calls = [];
+    const ctx = {
+        calls,
+        save: () => calls.push(['save']),
+        restore: () => calls.push(['restore']),
+        translate: (...args) => calls.push(['translate', ...args]),
+        scale: (...args) => calls.push(['scale', ...args]),
+        rotate: (...args) => calls.push(['rotate', ...args]),
+        beginPath: () => calls.push(['beginPath']),
+        closePath: () => calls.push(['closePath']),
+        moveTo: (...args) => calls.push(['moveTo', ...args]),
+        lineTo: (...args) => calls.push(['lineTo', ...args]),
+        arc: (...args) => calls.push(['arc', ...args]),
+        fillRect: (...args) => calls.push(['fillRect', ...args]),
+        createRadialGradient: (...args) => {
+            calls.push(['inkGradient', ...args]);
+            return { addColorStop: (position, color) => calls.push(['inkStop', position, color]) };
+        },
+        stroke() { calls.push(['stroke', this.globalAlpha, this.lineWidth, this.shadowBlur]); },
+        globalAlpha: 1,
+        shadowBlur: 0,
+    };
+    return ctx;
+}
+
+const callsOf = (ctx, name) => ctx.calls.filter(call => call[0] === name);
+
+test('authoritative selected enemy receives a half-size ground sigil, not nearby enemies', () => {
+    assert.deepEqual(resolveTargetIndicator(scene()),
+        { kind: 'enemy', x: 310, y: 452, rx: 17.6, ry: 8 });
+});
+
+test('boss and destructible footprints are also halved, with a small mobile floor', () => {
     const snapshot = scene();
     snapshot.player.aimTargetId = 99;
-    const ring = resolveTargetIndicator(snapshot);
-    assert.equal(ring.kind, 'boss');
-    assert.equal(ring.x, 450);
-    assert.equal(ring.y, 691);
-    assert.ok(ring.rx > 60);
-    assert.ok(ring.ry > 20);
+    const boss = resolveTargetIndicator(snapshot);
+    assert.equal(boss.kind, 'boss');
+    assert.equal(boss.x, 450);
+    assert.equal(boss.y, 691);
+    assert.equal(boss.rx, 56.75);
+    assert.equal(boss.ry, 26);
     snapshot.dragon.targetable = false;
     assert.equal(resolveTargetIndicator(snapshot), null);
-});
 
-test('barrel and future breakable kinds use the same authoritative prop ID lookup', () => {
-    const snapshot = scene();
     snapshot.player.aimPropId = 42;
     assert.deepEqual(resolveTargetIndicator(snapshot),
-        { kind: 'object', x: 250, y: 608, rx: 32, ry: 15 });
+        { kind: 'object', x: 250, y: 608, rx: 16, ry: 7 });
     snapshot.player.aimPropId = 72;
     const future = resolveTargetIndicator(snapshot);
     assert.equal(future.kind, 'object');
     assert.equal(future.x, 750);
     assert.equal(future.y, 918);
-    assert.ok(future.rx > 30);
-    assert.ok(future.ry > 10);
+    assert.equal(future.rx, 25.25);
+    assert.equal(future.ry, 12);
 });
 
-test('manual aim, paused runs, destroyed targets and stale IDs have no visual marker', () => {
+test('manual aim, paused runs, destroyed targets and stale C# IDs produce no marker', () => {
     const snapshot = scene();
     snapshot.player.manualAim = true;
     assert.equal(resolveTargetIndicator(snapshot), null);
@@ -80,120 +110,102 @@ test('manual aim, paused runs, destroyed targets and stale IDs have no visual ma
     assert.equal(resolveTargetIndicator(snapshot), null);
 });
 
-function recordingCanvas() {
-    const calls = [];
-    const gradient = {
-        addColorStop: (position, color) => calls.push(['colorStop', position, color]),
-    };
-    const ctx = {
-        calls,
-        save: () => calls.push('save'),
-        restore: () => calls.push('restore'),
-        translate: (...args) => calls.push(['translate', ...args]),
-        scale: (...args) => calls.push(['scale', ...args]),
-        beginPath: () => calls.push('beginPath'),
-        moveTo: (...args) => calls.push(['moveTo', ...args]),
-        lineTo: (...args) => calls.push(['lineTo', ...args]),
-        ellipse: (...args) => calls.push(['ellipse', ...args]),
-        createRadialGradient: (...args) => { calls.push(['radialGradient', ...args]); return gradient; },
-        fillRect: (...args) => calls.push(['fillRect', ...args]),
-        stroke() { calls.push(['stroke', this.strokeStyle, this.globalAlpha, this.lineWidth, this.shadowBlur]); },
-        globalAlpha: 1,
-        shadowBlur: 0,
-    };
-    return ctx;
-}
+test('V3 sigil animates 0 → 1 on entry and 1 → 0 on exit without resurrecting a stale light', () => {
+    const state = { key: null };
+    const marker = resolveTargetIndicator(scene());
+    const atStart = presentTargetSigil(state, marker, 17, 100);
+    assert.equal(atStart.opacity, 0);
+    assert.equal(targetSelectionLightEmitter(atStart, litFrame()), null);
+    const entering = presentTargetSigil(state, marker, 17, 100.11);
+    assert.ok(entering.opacity > 0 && entering.opacity < 1);
+    const visible = presentTargetSigil(state, marker, 17, 100.23);
+    assert.equal(visible.opacity, 1);
+    assert.ok(targetSelectionLightEmitter(visible, litFrame()));
+    const exiting = presentTargetSigil(state, null, null, 100.3);
+    assert.equal(exiting.opacity, 1);
+    assert.ok(presentTargetSigil(state, null, null, 100.43).opacity < 1);
+    assert.equal(presentTargetSigil(state, null, null, 100.56), null);
+    assert.equal(presentTargetSigil(state, null, null, 100.8), null);
+});
 
-const callsOf = (ctx, name) => ctx.calls.filter(call => Array.isArray(call) && call[0] === name);
-const strokes = ctx => callsOf(ctx, 'stroke');
+test('switching targets restarts entry and reduced-motion renders a stable sigil', () => {
+    const state = { key: null };
+    const marker = resolveTargetIndicator(scene());
+    assert.equal(presentTargetSigil(state, marker, 17, 20, false).opacity, 0);
+    assert.equal(presentTargetSigil(state, marker, 17, 20.5, false).opacity, 1);
+    assert.equal(presentTargetSigil(state, marker, 99, 21, false).opacity, 0);
+    assert.equal(presentTargetSigil(state, marker, 99, 21, true).opacity, 1);
+    assert.equal(presentTargetSigil(state, null, null, 21.1, true), null);
+});
 
-test('enemy uses a complete double ring and actual rune glyphs, not a UI crosshair', () => {
+test('V3 paints a compact double ring, four compass tips, a central flame crest and actual runes', () => {
     const ctx = recordingCanvas();
-    const target = resolveTargetIndicator(scene());
-    drawTargetIndicator(ctx, target, 'ground', 0, true);
-    assert.equal(callsOf(ctx, 'ellipse').length, 2);
-    assert.equal(callsOf(ctx, 'fillRect').length, 0, 'Ground sigil has no AoE-style fill.');
+    const marker = resolveTargetIndicator(scene());
+    drawTargetIndicator(ctx, marker, 'ground', 0, true);
+    assert.equal(callsOf(ctx, 'arc').length, 2);
+    assert.equal(callsOf(ctx, 'fillRect').length, 0, 'Ground glow is a bounded inscription, not a spotlight.');
+    assert.equal(callsOf(ctx, 'inkGradient').length, 1);
 
     ctx.calls.length = 0;
-    drawTargetIndicator(ctx, target, 'contrast', 0, true);
-    assert.equal(callsOf(ctx, 'ellipse').length, 2, 'Two continuous ground-plane rune borders.');
-    assert.equal(callsOf(ctx, 'scale').length, 8, 'Eight inscribed runes form a full circle.');
-    assert.ok(callsOf(ctx, 'lineTo').length >= 26, 'Full runic circle requires glyph strokes and radial dividers.');
-    assert.equal(callsOf(ctx, 'radialGradient').length, 0, 'No separate lighting algorithm in sigil renderer.');
-    assert.equal(callsOf(ctx, 'fillRect').length, 0, 'Lighting must be supplied by the shared emitter.');
-    assert.equal(ctx.calls.at(-1), 'restore');
-    assert.ok(strokes(ctx).every(call => call[1] === '#d9cfee'));
-    assert.ok(strokes(ctx).every(call => call[2] <= .65));
-    assert.ok(strokes(ctx).some(call => call[4] === 1.8), 'Glow must be bounded to 1.8 px.');
-    assert.equal(callsOf(ctx, 'colorStop').length, 0, 'Renderer may not introduce local light gradients.');
+    drawTargetIndicator(ctx, marker, 'contrast', 0, true);
+    assert.equal(callsOf(ctx, 'arc').length, 2, 'The rune circle has two complete concentric rings.');
+    assert.equal(callsOf(ctx, 'inkGradient').length, 1, 'A radial alpha mask is applied only to sigil ink.');
+    const stops = callsOf(ctx, 'inkStop');
+    assert.equal(stops.length, 5);
+    assert.equal(stops[0][2], 'rgba(217,207,238,1)');
+    assert.equal(stops.at(-1)[2], 'rgba(217,207,238,0)', 'Outer edge fades to exactly zero.');
+    assert.ok(callsOf(ctx, 'lineTo').length >= 40, 'Runes, four compass tips and crest are fully drawn.');
+    assert.equal(callsOf(ctx, 'fillRect').length, 4, 'Four tiny motes provide restrained magical texture.');
+    assert.equal(callsOf(ctx, 'rotate').length, 13, 'Four compass points and eight runes share a rotating band.');
+    assert.equal(ctx.calls.at(-1)[0], 'restore');
+    assert.ok(callsOf(ctx, 'stroke').every(call => call[1] <= .88));
 });
 
-test('future destructibles retain faint rune language without any character underlight', () => {
-    const snapshot = scene(), ctx = recordingCanvas();
-    snapshot.player.aimPropId = 72;
-    drawTargetIndicator(ctx, resolveTargetIndicator(snapshot), 'contrast', 0, true);
-    assert.equal(callsOf(ctx, 'ellipse').length, 2);
-    assert.equal(callsOf(ctx, 'scale').length, 4, 'Unknown prop type receives runic symbols automatically.');
-    assert.equal(callsOf(ctx, 'radialGradient').length, 0, 'Do not illuminate destructible scenery.');
-    assert.equal(callsOf(ctx, 'fillRect').length, 0);
-    assert.ok(strokes(ctx).every(call => call[1] === '#d9cfee'));
-    assert.ok(strokes(ctx).every(call => call[2] <= .36));
-});
-
-test('boss uses twelve inscribed glyphs and a subsidiary interior ring', () => {
-    const snapshot = scene(), ctx = recordingCanvas();
-    snapshot.player.aimTargetId = 99;
-    drawTargetIndicator(ctx, resolveTargetIndicator(snapshot), 'contrast', 0, true);
-    assert.equal(callsOf(ctx, 'ellipse').length, 3, 'Two full rings and a subordinate boss seal.');
-    assert.equal(callsOf(ctx, 'scale').length, 12);
-    assert.equal(callsOf(ctx, 'radialGradient').length, 0);
-    assert.equal(callsOf(ctx, 'fillRect').length, 0);
-    assert.ok(strokes(ctx).every(call => call[1] === '#d9cfee'));
-    assert.ok(strokes(ctx).every(call => call[2] <= .69));
-});
-
-test('school state never changes rune colors or glow and reduced motion freezes shimmer', () => {
+test('rune ink remains school-neutral and reduced-motion does not rotate or shimmer over time', () => {
     const marker = resolveTargetIndicator(scene());
-    const base = recordingCanvas(), frost = recordingCanvas(), storm = recordingCanvas(), animated = recordingCanvas();
+    const base = recordingCanvas(), still = recordingCanvas(), animated = recordingCanvas();
     drawTargetIndicator(base, marker, 'contrast', 0, true);
-    drawTargetIndicator(frost, marker, 'contrast', Math.PI / 2, true);
-    drawTargetIndicator(storm, marker, 'contrast', Math.PI * 2, true);
-    assert.deepEqual(base.calls, frost.calls);
-    assert.deepEqual(base.calls, storm.calls);
-    drawTargetIndicator(animated, marker, 'contrast', Math.PI / 2, false);
-    assert.notDeepEqual(strokes(base).map(call => call[2]), strokes(animated).map(call => call[2]));
-    assert.ok(strokes(animated).every(call => call[2] <= .65));
-    const tint = new Set([...strokes(base), ...strokes(animated)].map(call => call[1]));
-    assert.deepEqual([...tint], ['#d9cfee']);
+    drawTargetIndicator(still, marker, 'contrast', Math.PI * 2, true);
+    assert.deepEqual(base.calls, still.calls);
+    drawTargetIndicator(animated, marker, 'contrast', Math.PI * 2, false);
+    assert.notDeepEqual(base.calls, animated.calls);
+    const colors = callsOf(animated, 'inkStop').map(call => call[2]);
+    assert.ok(colors.every(color => color.startsWith('rgba(217,207,238,')));
 });
 
-test('missing targets, paused state and unsupported passes never produce light or glyphs', () => {
+test('boss has twelve glyphs and subordinate core ring, objects four with faint opacity', () => {
+    const snapshot = scene();
+    const boss = recordingCanvas();
+    snapshot.player.aimTargetId = 99;
+    drawTargetIndicator(boss, resolveTargetIndicator(snapshot), 'contrast', 0, true);
+    assert.equal(callsOf(boss, 'arc').length, 3);
+    assert.equal(callsOf(boss, 'rotate').length, 17);
+
+    const object = recordingCanvas();
+    snapshot.player.aimPropId = 72;
+    drawTargetIndicator(object, resolveTargetIndicator(snapshot), 'contrast', 0, true);
+    assert.equal(callsOf(object, 'arc').length, 2);
+    assert.equal(callsOf(object, 'rotate').length, 9);
+    assert.ok(callsOf(object, 'stroke').every(call => call[1] <= .46));
+});
+
+test('zero-alpha, missing targets and unknown render passes never draw glyphs', () => {
     const ctx = recordingCanvas();
-    drawTargetIndicator(ctx, resolveTargetIndicator({}), 'contrast');
-    assert.deepEqual(ctx.calls, []);
-    drawTargetIndicator(ctx, resolveTargetIndicator(scene()), 'unknown');
-    assert.deepEqual(ctx.calls, []);
-    const paused = scene();
-    paused.paused = true;
-    drawTargetIndicator(ctx, resolveTargetIndicator(paused), 'contrast');
+    drawTargetIndicator(ctx, null);
+    drawTargetIndicator(ctx, { ...resolveTargetIndicator(scene()), opacity: 0 }, 'contrast');
+    drawTargetIndicator(ctx, resolveTargetIndicator(scene()), 'unrecognized');
     assert.deepEqual(ctx.calls, []);
 });
 
-const litFrame = () => ({
-    environment: { ambient: .03, emission: true },
-    lights: [{ id: 'physical-torch', enabled: true, intensity: .5 }],
-});
-
-test('faint selection underlight is one shared GPU point emitter with a Canvas compatibility adapter', () => {
-    const enemy = resolveTargetIndicator(scene());
-    const light = targetSelectionLightEmitter(enemy, litFrame());
-    assert.deepEqual(light.ownerId, 'target-selection');
+test('one point emitter fades with the rune, retaining shared lighting and alpha-isolated actors', () => {
+    const marker = resolveTargetIndicator(scene());
+    const light = targetSelectionLightEmitter({ ...marker, opacity: .5 }, litFrame());
+    assert.equal(light.ownerId, 'target-selection');
     assert.equal(light.id, 'target-selection:underlight');
     assert.equal(light.type, 'point');
-    assert.equal(light.enabled, true);
     assert.equal(light.castsShadow, false);
     assert.equal(light.color, '#d9cfee');
-    assert.ok(light.intensity <= .48 && light.intensity > 0);
+    assert.equal(light.intensity, .24);
     assert.ok(light.range >= 48 && light.range <= 125);
     assert.deepEqual(targetSelectionCanvasLight(light), [{
         x: light.position[0], y: light.position[1], radius: light.range,
@@ -203,44 +215,32 @@ test('faint selection underlight is one shared GPU point emitter with a Canvas c
     assert.deepEqual(targetSelectionCanvasLight(null), []);
 });
 
-test('explicit universal zero-light gate and absent authoritative frame reject underlight', () => {
-    const enemy = resolveTargetIndicator(scene());
-    assert.equal(targetSelectionLightEmitter(enemy, null), null);
-    assert.equal(targetSelectionLightEmitter(enemy, {
+test('zero-light environment, missing frame and invalid selection do not create an emitter', () => {
+    const marker = resolveTargetIndicator(scene());
+    assert.equal(targetSelectionLightEmitter(marker, null), null);
+    assert.equal(targetSelectionLightEmitter(marker, {
         environment: { ambient: 0, emission: false },
         lights: [{ enabled: true, intensity: 0 }],
     }), null);
-    assert.equal(targetSelectionLightEmitter(enemy, {
-        environment: { ambient: 0, emission: false },
-        lights: [],
+    assert.equal(targetSelectionLightEmitter(marker, {
+        environment: { ambient: 0, emission: false }, lights: [],
     }), null);
-    assert.ok(targetSelectionLightEmitter(enemy, litFrame()));
-});
-
-test('objects and stale targets never create additional world light emitters', () => {
     const snapshot = scene();
     snapshot.player.aimPropId = 42;
     assert.equal(targetSelectionLightEmitter(resolveTargetIndicator(snapshot), litFrame()), null);
-    snapshot.environment.props[0].healthFraction = 0;
-    assert.equal(targetSelectionLightEmitter(resolveTargetIndicator(snapshot), litFrame()), null);
     snapshot.player.aimPropId = null;
     snapshot.player.aimTargetId = 99;
-    const boss = targetSelectionLightEmitter(resolveTargetIndicator(snapshot), litFrame());
-    assert.ok(boss.intensity > 0 && boss.intensity < .48);
-    snapshot.dragon.targetable = false;
-    assert.equal(targetSelectionLightEmitter(resolveTargetIndicator(snapshot), litFrame()), null);
+    assert.ok(targetSelectionLightEmitter(resolveTargetIndicator(snapshot), litFrame()).intensity < .48);
 });
 
-test('selection light merges into one immutable shared GPU frame rather than creating a second engine', () => {
+test('sigil is only one immutable light added to the authoritative shared GPU frame', () => {
     const base = litFrame();
     const selected = targetSelectionLightEmitter(resolveTargetIndicator(scene()), base);
     const combined = withHollowFractureLightingFrame(base, [selected]);
     assert.notEqual(combined, base);
-    assert.equal(base.lights.length, 1, 'Never mutate authoritative C# input frame.');
-    assert.equal(combined.lights.length, 2, 'Add exactly one selection emitter to the existing lights.');
+    assert.equal(base.lights.length, 1);
+    assert.equal(combined.lights.length, 2);
     assert.equal(combined.lights[1].id, selected.id);
-    assert.equal(combined.lights[1].ownerId, selected.ownerId);
     const zero = { environment: { ambient: 0, emission: false }, lights: [] };
-    assert.equal(withHollowFractureLightingFrame(zero, [selected]), zero,
-        'Even a supplied selection descriptor cannot break zero-light = black.');
+    assert.equal(withHollowFractureLightingFrame(zero, [selected]), zero);
 });
