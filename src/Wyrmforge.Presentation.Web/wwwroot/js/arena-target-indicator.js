@@ -69,13 +69,17 @@ export function resolveTargetIndicator(snapshot) {
 
 function indicator(kind, x, y, radius) {
     if (![x, y, radius].every(finite) || radius <= 0) return null;
-    const footprint = Math.min(80, Math.max(16, (radius * 1.7 + (kind === 'boss' ? 20 : 8)) * .5));
+    // A combat-readability floor keeps the approved ring legible beneath Hollowed silhouettes.
+    // Bosses scale independently so their marker does not become an oversized telegraph.
+    const boss = kind === 'boss';
+    const footprint = Math.min(boss ? 92 : 68,
+        Math.max(boss ? 52 : 25, (radius * 1.7 + (boss ? 20 : 8)) * (boss ? .7 : .85)));
     return {
         kind,
         x: Math.round(x),
         y: Math.round(y + radius * (kind === 'object' ? .7 : .75)),
         rx: footprint,
-        ry: Math.max(7, Math.round(footprint * .46)),
+        ry: Math.max(12, Math.round(footprint * .52)),
     };
 }
 
@@ -130,8 +134,8 @@ export function targetSelectionLightEmitter(marker, frame) {
         position: [marker.x, marker.y + 1, 2],
         direction: [0, 0, -1],
         color: COLOR,
-        intensity: (marker.kind === 'boss' ? .34 : .48) * opacity,
-        range: Math.min(125, Math.max(48, marker.rx * 1.7)),
+        intensity: (marker.kind === 'boss' ? .58 : .78) * opacity,
+        range: Math.min(155, Math.max(65, marker.rx * 1.9)),
         coneAngle: Math.PI / 4,
         penumbra: 0,
         castsShadow: false,
@@ -164,7 +168,10 @@ export function drawTargetIndicator(ctx, marker, pass = 'ground', seconds = 0, r
 
     ctx.save();
     ctx.translate(marker.x, marker.y);
-    ctx.globalAlpha = alpha * (pass === 'ground' ? .18 : (isObject ? .45 : .88) * pulse);
+    // Preserve the approved texture: improve visibility with opacity and additive
+    // compositing, not new runes, circles, procedural glow or another light engine.
+    ctx.globalAlpha = alpha * (pass === 'ground' ? .38 : Math.min(1, (isObject ? .72 : 1) * pulse));
+    if (pass === 'contrast') ctx.globalCompositeOperation = 'screen';
 
     if (pass === 'ground') {
         // Base material only; never add screen-space spotlights here.
