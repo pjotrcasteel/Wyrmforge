@@ -178,3 +178,82 @@ jobs:
           path: artifacts/hollow-rebuild/feral-anatomy-v2/
           if-no-files-found: warn
           retention-days: 30
+
+  cc0-open-asset-comparison:
+    name: Free CC0 infected source — real Blender review (UNAPPROVED)
+    needs: source-boundary
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      matrix:
+        candidate:
+          - label: ash-burnt-husk
+            source_url: https://cdn.3dassets.dev/assets/12006/v1/model.glb
+            page_url: https://3dassets.dev/assets/undead-horde-and-infected-variants-ash-burnt-husk-infe-6ddf10d4
+          - label: asymmetric-brute
+            source_url: https://cdn.3dassets.dev/assets/12007/v1/model.glb
+            page_url: https://3dassets.dev/assets/undead-horde-and-infected-variants-brute-boss-infected-c135f27a
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '2'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install real Blender 4.5 LTS for static source-model evaluation
+        run: |
+          python -m pip install --disable-pip-version-check bpy==4.5.15 Pillow==11.3.0
+          python -c "import bpy; print('Source-only Blender:', bpy.app.version_string)"
+      - name: Fetch only confirmed CC0 reference source, not game art
+        env:
+          SOURCE_URL: ${{ matrix.candidate.source_url }}
+          PAGE_URL: ${{ matrix.candidate.page_url }}
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/hollow-rebuild/free-source-input
+          curl --fail --location --silent --show-error --retry 3 --max-time 120 \
+            "$SOURCE_URL" -o artifacts/hollow-rebuild/free-source-input/source.glb
+          test "$(stat -c%s artifacts/hollow-rebuild/free-source-input/source.glb)" -gt 100000
+          printf 'CC0 1.0 Universal\nSource: %s\nLicense: https://creativecommons.org/publicdomain/zero/1.0/\n' \
+            "$PAGE_URL" > artifacts/hollow-rebuild/free-source-input/source-LICENSE.txt
+      - name: Import editable CC0 geometry, strip external actions and render 8 actual Blender viewpoints
+        env:
+          PAGE_URL: ${{ matrix.candidate.page_url }}
+          CANDIDATE: ${{ matrix.candidate.label }}
+        run: |
+          python tools/art/hollow-rebuild/evaluate_free_character_blender.py \
+            --input artifacts/hollow-rebuild/free-source-input/source.glb \
+            --license-file artifacts/hollow-rebuild/free-source-input/source-LICENSE.txt \
+            --license CC0-1.0 --author '3DAssets.dev' --source-url "$PAGE_URL" \
+            --output "artifacts/hollow-rebuild/cc0-candidate-$CANDIDATE"
+          test -s "artifacts/hollow-rebuild/cc0-candidate-$CANDIDATE/source-clay-native96-BLENDER.png"
+          test -s "artifacts/hollow-rebuild/cc0-candidate-$CANDIDATE/source-material-8views-BLENDER.png"
+          test -s "artifacts/hollow-rebuild/cc0-candidate-$CANDIDATE/imported-hollowed-source-UNAPPROVED.blend"
+      - name: Reopen copied source in an independent Blender process, reject hidden actions
+        env:
+          CANDIDATE: ${{ matrix.candidate.label }}
+        run: |
+          python - <<'PY'
+          import os
+          import bpy
+          filename = 'artifacts/hollow-rebuild/cc0-candidate-' + os.environ['CANDIDATE'] + '/imported-hollowed-source-UNAPPROVED.blend'
+          bpy.ops.wm.open_mainfile(filepath=filename)
+          assert len(bpy.data.actions) == 0, 'Imported external animation actions!'
+          assert sum(o.type == 'MESH' for o in bpy.data.objects) >= 1
+          print('Source .blend reopened. STATIC SOURCE ONLY, NOT OWNER APPROVED.')
+          PY
+      - name: Save genuine 3D renders, legal provenance and editable source, not production art
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hollowed-cc0-alternative-${{ matrix.candidate.label }}-UNAPPROVED
+          path: |
+            artifacts/hollow-rebuild/cc0-candidate-${{ matrix.candidate.label }}/
+            artifacts/hollow-rebuild/free-source-input/source-LICENSE.txt
+          if-no-files-found: warn
+          retention-days: 30
