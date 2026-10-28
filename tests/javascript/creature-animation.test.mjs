@@ -232,3 +232,15 @@ test('moving action exits on its signed support phase and consumes the final sam
   assert.ok(Math.abs(sample.phase-expected)<1e-12,`${hz}Hz reverse=${reverse}: ${sample.phase} != ${expected}`);
  }
 });
+
+test('calibrated locomotion continues signed root travel after recovery instead of consuming unsigned path length',()=>{
+ const p=validate(JSON.parse(readFileSync(new URL('../fixtures/animation/projected-contact-source.json',import.meta.url))));
+ for(const direction of ['S','E','SE'])for(const hz of [15,30,60,120]){
+  const s=create(),v=p.locomotion.stanceVelocityByDirection[direction],length=Math.hypot(v.x,v.y),speed=30;
+  for(let i=0;i<=hz*2;i++){
+   const t=i/hz,signed=t<=.5?speed*t:speed*(1-t),world={x:-v.x/length*signed,y:-v.y/length*signed};
+   const pose=update(s,p,intent(t,{world,travel:speed*t,direction,moving:true,action:strike()}));
+   if(t>1.4){assert.equal(pose.actionToken,null);assert.ok(Math.abs(pose.phase-((signed/length%1+1)%1))<1e-12);}
+  }
+ }
+});

@@ -476,3 +476,18 @@ including complete-skin endpoint failure. CI now authors/reopens that source in
 addition to the original four-clip proof, and uploads its saved source/QC.
 Capture now begins when candidate assets are actually ready, before the initial
 approach is discarded by a fixed startup sleep; steering still starts 1.5s later.
+
+### Source-forward envelope and signed locomotion
+
+A read-only reopened-rig probe now checks 96 forward/reversal scenarios before
+rendering: 15/30/60/120Hz, four initial phases, and 1/2/4.3 gait cycles per second.
+All 96 pass source-pixel correction and anatomical reach/knee limits. It is
+explicitly source-forward-only, not arbitrary-motion, raster or Hunt acceptance.
+The source workflow reproduces and uploads this report.
+
+Calibrated locomotion now also consumes actual signed C# displacement projected
+onto the declared source stance derivative. It no longer loses that sign after
+recovery; old packs retain their cumulative-distance behavior. Focused suite:
+56/56 passed, including S/E/diagonal reversal beyond action completion. Lateral
+motion is not reclassified as supported; regional reach/support failures remain
+observable and continue to use the matching existing actor fallback.

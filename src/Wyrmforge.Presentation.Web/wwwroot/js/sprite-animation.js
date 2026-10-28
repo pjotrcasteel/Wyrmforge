@@ -247,7 +247,13 @@ function updateContactAnimation(state,profile,input){
     state.timestamp=input.timestamp;state.travel=input.travel;state.stopped=stopped;
     state.time+=dt;
     const stride=profile.locomotion.strideByDirection?.[profile.facing.directions[state.action?state.actionDirection:state.facingIndex]]??profile.locomotion.stride;
-    if(!stopped)state.phase=(state.phase+distance/(stride*actorScale))%1;
+    if(!stopped){
+        // Calibrated source motion consumes actual signed root displacement.
+        // Cumulative path length remains the compatibility input for old packs.
+        const v=profile.locomotion.stanceVelocityByDirection?.[profile.facing.directions[state.action?state.actionDirection:state.facingIndex]];
+        const advance=v?-(displacement.x*v.x+displacement.y*v.y)/((v.x*v.x+v.y*v.y)*actorScale):distance/(stride*actorScale);
+        state.phase=((state.phase+advance)%1+1)%1;
+    }
     const signal=input.action,spec=signal&&Object.hasOwn(profile.actions,signal.name)?profile.actions[signal.name]:null;
     if(signal&&(!Number.isSafeInteger(signal.sequence)||signal.sequence<0||!((typeof signal.token==='string'&&signal.token.length>0)||Number.isSafeInteger(signal.token))))throw new TypeError('Action requires token and monotonic sequence');
     const current=state.action&&profile.actions[state.action.name];
