@@ -102,7 +102,7 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
-        arenaModule = await JavaScript.InvokeAsync<IJSObjectReference>("import", "./js/arena.js");
+        arenaModule = await JavaScript.InvokeAsync<IJSObjectReference>("import", $"./js/arena.js?v={AppBuildInfo.Version}-{AppBuildInfo.Commit}");
         reference = DotNetObjectReference.Create(this);
         await arenaModule.InvokeVoidAsync("initializeArena", canvas, reference);
     }
