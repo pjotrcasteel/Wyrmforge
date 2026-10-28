@@ -55,7 +55,13 @@ def sculpt_torn_cavity(actor, base, metrics):
     changed = 0
     deep = 0
     peak_depth = 0.0
+    # The distorted thorax leans forward: even its BACK can have negative Y.
+    # Source-space Y alone therefore cannot identify anterior tissue.
+    # Gate on true surface NORMAL before sculpting to prevent the rejected
+    # dark backpack-shaped wound from wrapping around the model.
     for vertex in actor.data.vertices:
+        if vertex.normal.y > -.20:
+            continue
         displacement, body, radius = wound_fields(*vertex.co)
         if abs(displacement) > .0004:
             vertex.co.y += displacement
@@ -69,7 +75,10 @@ def sculpt_torn_cavity(actor, base, metrics):
     for polygon in actor.data.polygons:
         center = polygon.center
         displacement, body, radius = wound_fields(*center)
-        if radius < .76 and body > .10:
+        # The original all-side selection painted the back as an enormous
+        # dark backpack. Never assign necrotic front-cavity material to any
+        # rear/side-facing polygon, even if its Y coordinate is negative.
+        if polygon.normal.y < -.20 and radius < .76 and body > .10:
             polygon.material_index = char_index
             char_faces += 1
 
