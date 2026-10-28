@@ -13,6 +13,7 @@ export interface CreatureRigProfile {
  sockets?:Record<string,{bone:string}>};
  facing:{directions:string[]};locomotion:ClipProfile&{stride:number;idleFrame?:number};actions:Record<string,ClipProfile>;
  pivot?:ClipProfile;pivots?:{positive:ClipProfile;negative:ClipProfile};
+ sourceSupport?:{version:1;facingZero:string;groundBasis:[number,number,number,number];heightProjection:[number,number];groundZ:number;strideMetres:number;turnRadiansPerSecond:number;turnCyclesPerRadian:number;seededPhase?:boolean;contactCycles?:{id:string;phaseOffset:number;stanceFraction:number;neutral:[number,number,number];liftMetres:number}[]};
 }
 /** timestamp = monotonic presentation sample time; travel = cumulative C# world displacement.
  * Freeze/paused snapshots are sampled too; first resumed sample does not catch up.
@@ -20,13 +21,14 @@ export interface CreatureRigProfile {
  * one action token always identifies the same source action. Proximity cues are visual only.
  */
 export interface MotionIntent {
- entityId:string|number;scale?:number;timestamp:number;travel:number;world:Vector2;direction:string;moving:boolean;
+ entityId:string|number;scale?:number;timestamp:number;travel:number;world:Vector2;velocity?:Vector2;direction:string;moving:boolean;
  paused?:boolean;frozen?:boolean;reducedMotion?:boolean;
  action?:{name:string;token:string|number;sequence:number}|null;
 }
 export interface SemanticSpritePart {clip:string;frame:number;direction:string;region:string;transform:[number,number,number,number,number,number]}
 export interface PoseSample {parts?:SemanticSpritePart[];
+ skinPose?:Float32Array;sourceSupport?:{yaw:number;phaseCycles:number;phaseAdvance:number;phaseDirection:1|-1;axisWorld:Vector2;groundBasis:number[];reducedMotion:boolean};
  clip:string;frame:number;direction:string;baseClip:string;baseFrame:number;phase:number;layered:boolean;
  actionToken:string|number|null;actionProgress:number|null;contactPhase:number;rootOffset:Vector2;seed:number;
- material:unknown;debug:{contacts:Record<string,Vector2>;maxSlip:number;errors:{id:string;slip:number}[];balance:Balance;correctionSaturated:boolean};
+ material:unknown;debug:{contacts:Record<string,Vector2>;maxSlip:number|null;sourcePending?:boolean;transported?:boolean;support?:unknown;errors:{id:string;slip:number}[];balance:Balance;correctionSaturated:boolean};
 }

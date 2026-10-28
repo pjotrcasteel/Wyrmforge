@@ -12,7 +12,7 @@ import { createHollowFractureAssets, eligibleHollowFracture } from './hollow-fra
 // The rejected procedural bone-burst proof is intentionally lab-only.
 // Production deaths exclusively use the Hollowed's source-authored 3D atlases.
 const foundationEnabled=new URLSearchParams(globalThis.location?.search??'').get('animationFoundation')==='1';
-const foundation=createCreatureAnimationAssets(new URL('../art/review/animation-foundation/',import.meta.url));
+const foundation=createCreatureAnimationAssets(new URL('../art/review/animation-foundation-skin/',import.meta.url));
 const base = new URL('../art/enemies/hollow-rigged/', import.meta.url);
 const rows = ['N','NE','E','SE','S','SW','W','NW'];
 const headings = ['E','SE','S','SW','W','NW','N','NE'];
@@ -153,17 +153,18 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
             }
             pose.foundationSample=updateSpriteAnimation(pose.foundationAnimation,foundation.profile,{
                 entityId:id,timestamp:Number.isFinite(snapshot.simulationTimeSeconds)?snapshot.simulationTimeSeconds:pose.age,travel:pose.distance,scale:Math.max(.65,Math.min(1.8,(Number(enemy.radius)||11)/11))*pose.visualScale,world:{x:enemy.x,y:enemy.y},direction:pose.direction,
+                velocity:{x:dt>0?dx/dt:0,y:dt>0?dy/dt:0},
                 moving:locomotion.moving,paused:snapshot.paused||snapshot.ended,frozen:enemy.frozen,reducedMotion,
                 action:pose.foundationCue??null});
-            if(foundation.manifest.regions){
+            if(foundation.manifest.regions||foundation.manifest.skin){
                 pose.foundationContacts??={};
                 try{
-                    pose.foundationSample=foundation.updateRegions(pose.foundationContacts,pose.foundationSample,{
+                    pose.foundationSample=(foundation.manifest.skin?foundation.updateSkin:foundation.updateRegions)(pose.foundationContacts,pose.foundationSample,{
                         timestamp:Number.isFinite(snapshot.simulationTimeSeconds)?snapshot.simulationTimeSeconds:pose.age,
                         world:{x:enemy.x,y:enemy.y},scale:Math.max(.65,Math.min(1.8,(Number(enemy.radius)||11)/11))*pose.visualScale,
                         paused:snapshot.paused||snapshot.ended,frozen:enemy.frozen,
-                        maxCorrection:foundation.manifest.regions.maxCorrectionMetres,
-                        maxRootCorrection:foundation.manifest.regions.maxRootCorrectionMetres??0});
+                        maxCorrection:foundation.manifest.regions?.maxCorrectionMetres,
+                        maxRootCorrection:foundation.manifest.regions?.maxRootCorrectionMetres??0});
                     pose.foundationError=null;pose.foundationFailure=null;
                 }catch(error){
                     // Preserve the diagnosis and use this actor's existing art.
@@ -211,6 +212,11 @@ export function drawHollowEnemy(ctx,enemy,state){
     }
     return draw(ctx,pose.clip,pose.frame,pose.direction,enemy.x,enemy.y,enemy.radius*pose.visualScale,enemy.opacity??1,
         enemy.hitFlash?'brightness(1.8) saturate(.25)':enemy.frozen?'sepia(1) saturate(1.7) hue-rotate(135deg)':'none');
+}
+export function hollowSkinDescriptor(enemy,state){
+    const pose=state.entities.get(enemy.entityId);
+    if(!foundationEnabled||!pose?.foundationSample?.skinPose||pose.foundationError||enemy.hitFlash||enemy.frozen)return null;
+    return {...foundation.renderDescriptor(pose.foundationSample),scale:Math.max(.65,Math.min(1.8,(Number(enemy.radius)||11)/11))*pose.visualScale};
 }
 export function drawHollowCorpses(ctx,state,reducedMotion=false){
     for(const corpse of state.corpses.values()){

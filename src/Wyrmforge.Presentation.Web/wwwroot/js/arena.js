@@ -1,3 +1,4 @@
+import { huntLayerCapture } from './hunt-gpu-layers.js';
 import { preloadFireballV5 } from './arena-fireball-v5.js';
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
 import { attachArenaInput, getArenaMovement, getArenaAim, getArenaPropFocus } from './arena-input.js';
@@ -10,7 +11,7 @@ import { drawSpellCastMotion, drawSpellProjectile, drawSpellImpact } from './are
 import { drawMage, updateMageWalk } from './arena-mage.js';
 import { drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions, enemyFacing } from './arena-enemy-art.js';
 import { preloadPaintedEnemies, drawPaintedEnemy, drawPaintedWyrm, updatePaintedCorpses, drawPaintedCorpses, mireHoundPixelPreviewEnabled } from './painted-enemies.js';
-import { preloadHollowSprites, hollowSpritesReady, createHollowState, updateHollowSprites, drawHollowEnemy, drawHollowCorpses, hollowDiagnostics } from './hollow-sprites.js';
+import { preloadHollowSprites, hollowSpritesReady, createHollowState, updateHollowSprites, drawHollowEnemy, drawHollowCorpses, hollowDiagnostics, hollowSkinDescriptor } from './hollow-sprites.js';
 import { hollowFractureEmitters, hollowFractureCanvasLights, withHollowFractureLightingFrame } from './hollow-fracture.js';
 import { preloadAshfang, createAshfangState, updateAshfang, drawAshfang, drawAshfangDeath, ashfangSockets, ashfangDiagnostics } from './ashfang-sprites.js';
 import { drawAshfangWarning, drawAshfangGroundEffects, drawAshfangAirEffects, ashfangVfxDiagnostics } from './ashfang-vfx.js';
@@ -43,6 +44,9 @@ export function initializeArena(canvas, dotNetReference) {
     const state = createState(canvas, dotNetReference);
     arenas.set(canvas, state);
     state.detachInput = attachArenaInput(state);
+    if(new URLSearchParams(location.search).get('arenaGpu')==='1')void import('./arena-gpu-world.js').then(({HuntGpuWorld})=>{
+        if(state.active)state.gpuWorld=new HuntGpuWorld({sourceCamera:new URLSearchParams(location.search).get('animationFoundation')==='1'});
+    }).catch(error=>{state.gpuError=String(error);});
     const now = performance.now();
     state.lastSimulationTimestamp = now;
     state.performanceWindowStarted = now;
@@ -90,6 +94,7 @@ export function readArenaDiagnostics(canvas) {
         performance: { fps:state.displayFps, simulationHz:state.displaySimulationHz, simulationMilliseconds:state.displaySimulationMilliseconds, bridgeMilliseconds:state.displayBridgeMilliseconds },
         renderingFailed: Boolean(state.renderingFailed),
         sharedLighting: state.sharedLightingFrame ?? state.latestSnapshot?.lighting ?? null,
+        gpuWorld:state.gpuWorld?.engine.diagnostics()??{error:state.gpuError??null},
         hollowFractureGpuEmitters: state.fractureGpuEmitters ?? [],
         wetForestGround: state.latestSnapshot?.environment?.wetForest
             ? liveWetForestMaterialDiagnostics(state.latestSnapshot.environment.seed) : null,
@@ -103,6 +108,7 @@ export function disposeArena(canvas) {
     state.active = false;
     cancelAnimationFrame(state.animationFrame);
     state.detachInput?.();
+    state.gpuWorld?.dispose();
     arenas.delete(canvas);
 }
 
@@ -231,7 +237,8 @@ function drawWaiting(state, width, height) {
 }
 
 function draw(state, snapshot, width, height) {
-    const ctx = state.context;
+    let ctx = state.context;
+    let gpu=snapshot.lighting&&state.gpuWorld;
     ctx.globalAlpha=1;ctx.filter='none';ctx.globalCompositeOperation='source-over';
     const danger = playerDangerPresentation(state.playerDanger, snapshot, performance.now(), state.reducedMotion.matches);
     const camera = resolveArenaCamera(snapshot.world, snapshot.player, width, height);
@@ -266,7 +273,7 @@ function draw(state, snapshot, width, height) {
     }
     if (snapshot.hunt) drawHuntArena(ctx, snapshot.hunt, worldWidth, worldHeight);
     // World-space diffuse spell spill reaches actual masonry, terrain and the ground fog.
-    drawSpellLightSpill(ctx, spellLights, lightViewport, 'terrain');
+    if(!gpu)drawSpellLightSpill(ctx, spellLights, lightViewport, 'terrain');
     // Actual spell sources streak across nearby cloister water, not unrelated UI bloom.
     drawArenaCloisterReflections(ctx, snapshot.environment, worldWidth, worldHeight,
         spellLights, visualSeconds, state.reducedMotion.matches);
@@ -323,7 +330,17 @@ function draw(state, snapshot, width, height) {
         { kind: 'mage', depth: snapshot.player.y + (snapshot.player.radius || 0) },
         ...getArenaCloisterElevations(snapshot.environment, worldWidth, worldHeight, visualSeconds),
     ];
+    if(gpu)gpu.begin(ctx,camera,width,height);
+    const worldContext=ctx;
     for (const layer of sortSceneDepthLayers(depthLayers)) {
+        let tile,capture,skin=null;
+        if(gpu){
+            capture=huntLayerCapture(layer,snapshot.player,state.ashfang.death);if(!capture)continue;
+            if(capture.x+capture.size<camera.x-384||capture.y+capture.size<camera.y-384||capture.x>camera.x+width+384||capture.y>camera.y+height+384)continue;
+            tile=state.gpuActorScratch??=document.createElement('canvas');tile.width=tile.height=Math.ceil(capture.size);
+            ctx=tile.getContext('2d');ctx.imageSmoothingEnabled=false;ctx.translate(-capture.x,-capture.y);
+            if(layer.kind==='enemy')skin=hollowSkinDescriptor(layer.enemy,state.hollow);
+        }
         if (layer.kind === 'masonry') {
             drawArenaCloisterElevation(ctx, layer);
         } else if (layer.kind === 'dragon') {
@@ -332,19 +349,25 @@ function draw(state, snapshot, width, height) {
             drawAshfangDeath(ctx,state.ashfang);
         } else if (layer.kind === 'enemy') {
             const enemy = layer.enemy;
-            const paintEnemy = surface => drawEnemy(surface, enemy, sampleSpellLight(spellLights, enemy.x, enemy.y),
+            const paintEnemy = surface => drawEnemy(surface, enemy, gpu?null:sampleSpellLight(spellLights, enemy.x, enemy.y),
                 enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId),state.hollow,state.ashling);
             // The same point emitter illuminates opaque Hollowed, Ashling and fallback sprites.
             // A reusable source-atop material pass preserves silhouette/alpha occlusion.
-            drawActorWithEmitter(ctx, state.actorLightBuffer, enemy, selectionEmitter, paintEnemy);
+            if(!skin){if(gpu)paintEnemy(ctx);else drawActorWithEmitter(ctx, state.actorLightBuffer, enemy, selectionEmitter, paintEnemy);}
             drawEliteCrest(ctx, enemy, visualSeconds, state.reducedMotion.matches);
         } else {
             drawMage(ctx, snapshot.player, snapshot.castMotion, danger.hit, state.reducedMotion.matches,
-                sampleSpellLight(spellLights, snapshot.player.x, snapshot.player.y),
+                gpu?null:sampleSpellLight(spellLights, snapshot.player.x, snapshot.player.y),
                 updateMageWalk(state.mageWalk, snapshot.player, visualSeconds, state.reducedMotion.matches),
                 state.mageWalk.facing);
         }
+        if(gpu){
+            if(skin)gpu.captureSkin(capture.id+'-skin',skin,layer.enemy.x-camera.x,layer.enemy.y-camera.y,skin.scale);
+            gpu.capture(capture.id,tile,capture.x-camera.x,capture.y-camera.y,capture.size,capture.size,.12+Math.max(0,Math.min(1,layer.depth/worldHeight))*.1,!skin,true);
+            ctx=worldContext;
+        }
     }
+    if(gpu)try{gpu.render(ctx,state.sharedLightingFrame);}catch(error){state.gpuError=String(error);gpu.dispose();state.gpuWorld=null;gpu=null;}
     drawReliquaryEmergence(ctx, snapshot.reliquary);
     drawBellWardenEntrance(ctx, snapshot.bellWarden);
     if (snapshot.powerBurst) {
@@ -366,7 +389,7 @@ function draw(state, snapshot, width, height) {
     // Keep high-priority attack tells and magical VFX ABOVE the veil.
     const realFires = createWetForestFirelightPlan(snapshot.environment, worldWidth, worldHeight);
     const nightSources = gothicNightLightSources(snapshot, spellLights, worldWidth, worldHeight, realFires);
-    drawGothicNight(ctx, gothicNightPlan(snapshot.player, nightSources, lightViewport), state.nightMask);
+    if(!gpu)drawGothicNight(ctx, gothicNightPlan(snapshot.player, nightSources, lightViewport), state.nightMask);
     // Never redraw the floor seal over enemies after the night pass.
     // Tactical telegraphs must remain readable even when the ground is nearly
     // black. They are presentation cues, not physical light emitters.
@@ -379,7 +402,7 @@ function draw(state, snapshot, width, height) {
         snapshot.dragon?.school ?? snapshot.hunt?.school, snapshot.dragon);
     // A second weaker pass colors nearby silhouettes without whitening shadows.
     drawAshfangAirEffects(ctx,snapshot,ashfangSockets(state.ashfang),state.reducedMotion.matches);
-    drawSpellLightSpill(ctx, spellLights, lightViewport, 'actors');
+    if(!gpu)drawSpellLightSpill(ctx, spellLights, lightViewport, 'actors');
     for (const impact of snapshot.elementalImpacts) drawSpellImpact(ctx, impact, state.reducedMotion.matches);
     for (const death of snapshot.deathBursts) drawDeathBurst(ctx, death);
 

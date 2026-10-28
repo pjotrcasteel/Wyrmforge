@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 2,
+  "sourceSignature": "75a1698be134b6e83192912ca0b0ceaf4f26f1c774d4734a2fdb3299abd7eb59",
+  "directions": [
+    "N",
+    "NE",
+    "E",
+    "SE",
+    "S",
+    "SW",
+    "W",
+    "NW"
+  ],
+  "profileSha256": "463be98f5fd7e229651f7763b88d603cf92316af2a684396afb18b7d8af9880d",
+  "skin": {
+    "manifest": "skin.json",
+    "sha256": "375a42889681d7ee9a7129fc4f263732b646bf71135615eae533c5f7412fe53b"
+  },
+  "clips": {
+    "walk": {
+      "frames": 16,
+      "cell": 96,
+      "anchor": [
+        48,
+        72
+      ],
+      "worldSize": 93
+    },
+    "attack-travel": {
+      "frames": 256,
+      "cell": 96,
+      "anchor": [
+        48,
+        72
+      ],
+      "worldSize": 93
+    }
+  },
+  "productionReady": false,
+  "candidateNotApproved": true,
+  "runtimeIntegrated": false
+}

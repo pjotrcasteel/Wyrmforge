@@ -5,6 +5,8 @@ import {createHash} from 'node:crypto';
 const root=new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/',import.meta.url);
 const uri=s=>'data:text/javascript;base64,'+Buffer.from(s).toString('base64');
 const source=readFileSync(new URL('creature-animation-assets.js',root),'utf8')
+ .replace("'./source-skin-assets.js'",JSON.stringify(new URL('source-skin-assets.js',root).href))
+ .replace("'./source-skin-support.js'",JSON.stringify(new URL('source-skin-support.js',root).href))
  .replace("'./sprite-animation.js'",JSON.stringify(uri(readFileSync(new URL('sprite-animation.js',root),'utf8'))))
  .replace("'./sprite-layer-compositor.js'",JSON.stringify(uri(readFileSync(new URL('sprite-layer-compositor.js',root),'utf8'))))
  .replace("'./sprite-contact-kinematics.js'",JSON.stringify(uri(readFileSync(new URL('sprite-contact-kinematics.js',root),'utf8'))))

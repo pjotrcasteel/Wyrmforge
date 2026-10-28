@@ -3,6 +3,8 @@ import {validateCreatureRigProfile} from './sprite-animation.js';
 import {createSpriteLayerCompositor} from './sprite-layer-compositor.js';
 import {sampleSourceContactRegions,updateSourceContactTargets,sourceGroundPointFromPixel} from './sprite-contact-kinematics.js';
 import {spriteFrame,spriteAtlasLayout} from './lighting/lit-sprite.js';
+import {loadSourceSkinResources} from './source-skin-assets.js';
+import {updateSourceSkinSupport} from './source-skin-support.js';
 export function createCreatureAnimationAssets(baseUrl,{maxDecodedBytes=64*1024*1024}={}){
     let data=null,pending=null,lastError=null,generation=0;
     async function load(){
@@ -24,6 +26,13 @@ export function createCreatureAnimationAssets(baseUrl,{maxDecodedBytes=64*1024*1
         if(manifest.schemaVersion!==2||manifest.directions.length!==8)throw new TypeError('Invalid animation atlas manifest');
         const specs=[profile.locomotion,...Object.values(profile.actions),...Object.values(profile.pivots??{}),...(profile.pivot?[profile.pivot]:[])];
         for(const spec of specs)if(manifest.clips[spec.clip]?.frames!==spec.frames)throw new TypeError(`Profile/atlas mismatch: ${spec.clip}`);
+        if(manifest.skin){
+            if(!profile.sourceSupport)throw new TypeError('Source skin requires shared source support profile');
+            const skin=await loadSourceSkinResources(baseUrl,manifest.skin,{maxDecodedBytes});
+            if(skin.surface.sourceSignature!==manifest.sourceSignature){skin.dispose();throw new TypeError('Source skin/profile signature mismatch');}
+            if(version!==generation){skin.dispose();return false;}
+            data={manifest,profile,skin,images:new Map(),encodedBytes:skin.encodedBytes,decodedBytes:skin.decodedBytes};return true;
+        }
         const estimate=Object.values(manifest.clips).reduce((sum,clip)=>{const layout=spriteAtlasLayout(clip,manifest.directions.length);return sum+layout.width*layout.height*4*(1+Object.keys(clip.materials??{}).length);},0);
         if(!Number.isFinite(estimate)||estimate>maxDecodedBytes)throw new RangeError('Animation texture budget exceeded');
         const images=new Map();let encodedBytes=0,decodedBytes=0;
@@ -79,7 +88,9 @@ export function createCreatureAnimationAssets(baseUrl,{maxDecodedBytes=64*1024*1
         if(version!==generation){for(const image of images.values())image.src='';return false;}
         data={manifest,profile,images,encodedBytes,decodedBytes,regions,compositor};return true;
     }
-    return {preload:()=>pending??=load().catch(error=>{lastError=error.message;return false;}),ready:()=>Boolean(data),dispose(){generation++;data?.compositor?.clear();for(const image of data?.images.values()??[])image.src='';data=null;pending=null;lastError=null;},get profile(){return data?.profile;},get manifest(){return data?.manifest;},get error(){return lastError;},
+    return {preload:()=>pending??=load().catch(error=>{lastError=error.message;return false;}),ready:()=>Boolean(data),dispose(){generation++;data?.skin?.dispose();data?.compositor?.clear();for(const image of data?.images.values()??[])image.src='';data=null;pending=null;lastError=null;},get profile(){return data?.profile;},get manifest(){return data?.manifest;},get error(){return lastError;},
+        get skin(){return data?.skin??null;},
+        updateSkin(state,sample,intent){if(!data?.skin)throw new Error('Source skin unavailable');return updateSourceSkinSupport(state,data.skin.surface,data.profile,sample,intent);},
         get stats(){return {textures:data?.images.size??0,encodedBytes:data?.encodedBytes??0,decodedBytes:data?.decodedBytes??0,regionCacheBytes:data?.compositor?.estimatedBytes()??0};},
         sampleRegions(sample,targets,options){
             const frame=data?.regions?.clips[sample.clip]?.[sample.direction]?.[sample.frame];
@@ -110,6 +121,7 @@ export function createCreatureAnimationAssets(baseUrl,{maxDecodedBytes=64*1024*1
         },
         renderDescriptor(sample){
             if(!data)return null;
+            if(data.skin){if(sample.debug?.sourcePending||!sample.skinPose)throw new Error('Source support pose unresolved');return {skin:data.skin,skinPose:sample.skinPose,yaw:sample.sourceSupport.yaw,productionAccepted:data.manifest.productionReady===true};}
             if(sample.parts)throw new Error('Regional GPU material transforms have not been validated');
             const clip=data.manifest.clips[sample.clip];
             if(!clip)throw new RangeError('Unknown source clip');
