@@ -138,9 +138,12 @@ function indicator(kind, x, y, radius) {
     return {
         kind,
         x: Math.round(x),
-        // Anchor enemy and boss seals at the feet, below the sprite silhouette.
-        // Former .95-radius positioning pushed the bright rune into the body.
-        y: Math.round(y + radius * (kind === 'object' ? .7 : 1.6)),
+        // C# actor positions are the sprite pivots at ground/feet level (the
+        // Ashfang renderer even places its contact shadow at y + 2). Center the
+        // floor seal THERE, not 1.6 radii below the actor where it floats away.
+        // The scene draws both decal passes before opaque depth-sorted sprites:
+        // the rear arc is hidden by the monster's actual legs/body alpha.
+        y: Math.round(y + (kind === 'object' ? radius * .7 : Math.min(4, radius * .2))),
         rx: footprint,
         ry: Math.max(15, Math.round(footprint * (kind === 'object' ? .56 : .5))),
     };
