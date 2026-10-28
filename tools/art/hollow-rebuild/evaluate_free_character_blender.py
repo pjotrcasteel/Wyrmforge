@@ -90,47 +90,86 @@ def load_source(path):
     return meshes
 
 
-def normalize(meshes, target_height=3.1):
-    points = []
+def evaluated_mesh_bounds(meshes):
+    """Use final evaluated skinned positions, not armature rest/source coords.
+
+    Blender source mesh/armature transforms can make raw local mesh bounds
+    wildly unlike the actual rendered character. This was the cause of
+    2026-10-28 Thin Zombie being ~50 pixels high in 400px review renders.
+    """
+    bpy.context.view_layer.update()
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    samples = []
     for obj in meshes:
-        if len(obj.data.vertices) == 0:
-            continue
-        sample_stride = max(1, len(obj.data.vertices) // 25000)
-        # bpy_prop_collection is not a Python list: Blender 4.5 rejects
-        # stepped slices. Index by integer so large mesh samples remain valid.
-        points.extend(obj.matrix_world @ obj.data.vertices[i].co
-                      for i in range(0, len(obj.data.vertices), sample_stride))
-    if not points:
-        raise ValueError("All imported meshes were empty")
-    xs, ys, zs = ([float(p[i]) for p in points] for i in range(3))
-    low = Vector((min(xs), min(ys), min(zs)))
-    high = Vector((max(xs), max(ys), max(zs)))
+        evaluated = obj.evaluated_get(depsgraph)
+        mesh = evaluated.to_mesh()
+        try:
+            stride = max(1, len(mesh.vertices) // 25000)
+            samples.extend(evaluated.matrix_world @ mesh.vertices[i].co
+                           for i in range(0, len(mesh.vertices), stride))
+        finally:
+            evaluated.to_mesh_clear()
+    if not samples:
+        raise ValueError("Source rig evaluation has no actual visible mesh")
+    low = Vector(tuple(min(point[i] for point in samples) for i in range(3)))
+    high = Vector(tuple(max(point[i] for point in samples) for i in range(3)))
+    return low, high
+
+
+def normalize(meshes, target_height=3.1):
+    """Normalize by ACTUAL evaluated skinned bounds and then verify result.
+
+    Resting armature modifiers may transform a shape very differently than
+    its raw mesh vertices. Never accept a claimed 3.1m height until evaluated
+    world-space vertices show that size.
+    """
+    low, high = evaluated_mesh_bounds(meshes)
     dimensions = high - low
-    if dimensions.z <= .01 or dimensions.z > 100000:
-        raise ValueError(f"Invalid source character height: {dimensions.z}")
+    if dimensions.z <= 0.01 or dimensions.z > 100000:
+        raise ValueError(f"Invalid evaluated character height: {dimensions.z}")
     if max(dimensions.x, dimensions.y) > 4 * dimensions.z:
-        raise ValueError("A large floor/scene is included in the character asset")
-    root = bpy.data.objects.new("Hollowed candidate static source root — NOT APPROVED", None)
+        raise ValueError("Character includes a giant floor or remote prop")
+    root = bpy.data.objects.new("Hollowed source review root — NOT APPROVED", None)
     bpy.context.scene.collection.objects.link(root)
     original = {obj: obj.matrix_world.copy() for obj in bpy.context.scene.objects
                 if obj != root and obj.parent is None}
     for obj, matrix in original.items():
         obj.parent = root
         obj.matrix_world = matrix
-    ratio = target_height / dimensions.z
-    root.scale = (ratio,) * 3
-    root.location = (-ratio * (low.x + high.x) / 2,
-                     -ratio * (low.y + high.y) / 2,
-                     -ratio * low.z)
-    return dict(source_height=round(dimensions.z, 6),
-                normalized_height=target_height, uniform_scale=round(ratio, 6))
+    # Source may have pre-applied rig-deformation scale. Iterate until
+    # independently evaluated visible character height equals 3.1 Blender m.
+    for attempt in range(4):
+        bpy.context.view_layer.update()
+        actual_min, actual_max = evaluated_mesh_bounds(meshes)
+        current_height = actual_max.z - actual_min.z
+        if current_height < .001:
+            raise ValueError("Rig shrank evaluated character to near-zero height")
+        factor = target_height / current_height
+        root.scale = tuple(component * factor for component in root.scale)
+        bpy.context.view_layer.update()
+        actual_min, actual_max = evaluated_mesh_bounds(meshes)
+        center = (actual_min + actual_max) / 2
+        root.location += Vector((-center.x, -center.y, -actual_min.z))
+        bpy.context.view_layer.update()
+    final_low, final_high = evaluated_mesh_bounds(meshes)
+    final_height = float(final_high.z - final_low.z)
+    if abs(final_height - target_height) > .06:
+        raise ValueError(f"Source size normalization was not true in render: {final_height:.4f}m")
+    return {
+        "source_evaluated_height": round(float(dimensions.z), 6),
+        "normalized_evaluated_height": round(final_height, 6),
+        "normalized_min_xyz": [round(float(q), 6) for q in final_low],
+        "normalized_max_xyz": [round(float(q), 6) for q in final_high],
+        "root_scale_xyz": [round(float(q), 6) for q in root.scale],
+        "note": "Actual evaluated vertices after armature modifiers, not rest/source mesh bounds",
+    }
 
 
 def look_at(obj, target):
     obj.rotation_euler = (Vector(target) - obj.location).to_track_quat("-Z", "Y").to_euler()
 
 
-def studio():
+def studio(meshes):
     scene = bpy.context.scene
     scene.render.engine = "CYCLES"
     scene.cycles.samples = 12
@@ -161,22 +200,28 @@ def studio():
     scene.collection.objects.link(camera)
     scene.camera = camera
     data.type = "ORTHO"
-    data.ortho_scale = 3.95
+    body_low, body_high = evaluated_mesh_bounds(meshes)
+    dimensions = body_high - body_low
+    data.ortho_scale = max(1.20 * float(dimensions.z),
+                           1.25 * float(dimensions.x) * 400 / 320,
+                           1.25 * float(dimensions.y) * 400 / 320)
     clay = bpy.data.materials.new("H1 material neutral clay — emission OFF")
     clay.use_nodes = True
     bsdf = clay.node_tree.nodes.get("Principled BSDF")
     bsdf.inputs["Base Color"].default_value = (.57, .54, .49, 1)
     bsdf.inputs["Roughness"].default_value = .95
-    return camera, clay
+    return camera, clay, tuple((body_low + body_high) / 2)
 
 
-def render_study(out, camera, clay, surface):
+def render_study(out, camera, clay, surface, center):
     bpy.context.view_layer.material_override = clay if surface == "clay" else None
     sheet = Image.new("RGB", (320 * 4, 400 * 2), (15, 16, 19))
     for i, facing in enumerate(LABELS):
         angle = math.tau * i / 8.0
-        camera.location = (7 * math.sin(angle), -7 * math.cos(angle), 5.0)
-        look_at(camera, (0, 0, 1.55))
+        camera.location = (center[0] + 7 * math.sin(angle),
+                           center[1] - 7 * math.cos(angle),
+                           center[2] + 3.35)
+        look_at(camera, center)
         path = out / f"source-{surface}-{facing}.png"
         bpy.context.scene.render.filepath = str(path)
         bpy.ops.render.render(write_still=True)
@@ -207,9 +252,9 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     meshes = load_source(source)
     scale = normalize(meshes)
-    camera, clay = studio()
-    render_study(out, camera, clay, "clay")
-    render_study(out, camera, clay, "material")
+    camera, clay, center = studio(meshes)
+    render_study(out, camera, clay, "clay", center)
+    render_study(out, camera, clay, "material", center)
     bpy.ops.file.pack_all()
     result = {
         "status": "THIRD-PARTY SOURCE EVALUATION — NO ART APPROVAL",
@@ -229,8 +274,8 @@ def main():
         raise RuntimeError("Source still contains animation actions; refuse to save")
     (out / "source-review.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     bpy.context.scene.render.filepath = ""
-    camera.location = (4.95, -4.95, 5.0)
-    look_at(camera, (0, 0, 1.55))
+    camera.location = (center[0] + 4.95, center[1] - 4.95, center[2] + 3.35)
+    look_at(camera, center)
     bpy.context.preferences.filepaths.save_version = 0
     bpy.ops.wm.save_as_mainfile(filepath=str(out / "imported-hollowed-source-UNAPPROVED.blend"))
 
