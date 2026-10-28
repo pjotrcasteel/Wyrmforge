@@ -20,6 +20,23 @@ unchanged. This is still a tool-driven source study; independent continuous
 skin replay, runtime source-pose/raster/GPU integration and actual Hunt proof
 remain pending. Current bounded source is preserved separately from old renders.
 
+**Independent continuous skin replay completed:** 1,452 actual skinned samples
+across the 12 synthetic trajectories at 30Hz. Maximum retained world-space sole
+drift `5.21807e-7m`, ground error `2.68221e-7m`, bone-length error `1.63913e-7m`;
+minimum recomputed actual-skin support margin `0.00812760m`. The 48-rate/source
+solver cases and this real-skin replay are distinct evidence; neither is a Hunt.
+
+**Raster representation rejection:** sampled dominant-weight skin projections in
+all eight views found affine region errors up to **72.48 native pixels** for
+near-end-on shins. This is a conservative source-geometry diagnostic, not visible
+raster acceptance, and cannot justify enabling large deformations in the sprite
+compositor. The steering skin remains source-correct; this rendering approximation
+is not accepted. Next integration must use source skin geometry through the
+existing shared LightingEngine resource/backend path, retaining the same shared
+animation clock/pose and C# authority. No second renderer/lighting loop or gameplay
+simulation is authorized. Keep current Canvas sprite fallback and other approved
+actors untouched; actual GPU/Hunt proof and performance remain gates.
+
 The shared contact-kinematics module now has an **opt-in source-authoring study**
 primitive, `solveSupportedSourcePose`. It accepts caller-owned support targets,
 solves all declared contact chains together, translates the coupled source body

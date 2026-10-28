@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 const root=path.resolve(import.meta.dirname,'../..');
-const {updateGroundContactTargets:schedule,updateSourceContactTargets:follow,solveSupportedSourcePose:solve}=await import(pathToFileURL(root+'/src/Wyrmforge.Presentation.Web/wwwroot/js/sprite-contact-kinematics.js'));
+const {updateGroundContactTargets:schedule,updateSourceContactTargets:follow,solveSupportedSourcePose:solve,sourcePoseRegionTransforms:transforms}=await import(pathToFileURL(root+'/src/Wyrmforge.Presentation.Web/wwwroot/js/sprite-contact-kinematics.js'));
 const source=JSON.parse(fs.readFileSync(process.argv[2])),out=process.argv[3];
 const sourceFollow=process.argv.includes('--source-follow');
 const speed=46.53/60,stride=source.clips.walk.spec.strideMetres,grid=source.clips['attack-travel'].spec.poseGrid;
@@ -62,7 +62,8 @@ for(const scenario of scenarios)for(const hz of [15,30,60,120]){
     prior.set(id,{point,planted:c.planted});
    }
    maximumShift=Math.max(maximumShift,Math.hypot(...posed.sourceRepose.bodyShift));minimumMargin=Math.min(minimumMargin,posed.sourceRepose.support.margin);count++;
-   if(hz===30)poses.push({heading:scenario.id,sequence:scenario.id,timestamp:t,world,clip,index,bodyShift:posed.sourceRepose.bodyShift,sourceBones:posed.sourceBones,sourceContacts:posed.sourceContacts,massCenter:posed.massCenter});
+   if(hz===30)poses.push({heading:scenario.id,sequence:scenario.id,timestamp:t,world,clip,index,bodyShift:posed.sourceRepose.bodyShift,sourceBones:posed.sourceBones,sourceContacts:posed.sourceContacts,massCenter:posed.massCenter,
+    rasterTransformsByDirection:source.projectionByDirection?Object.fromEntries(Object.entries(source.projectionByDirection).map(([direction,p])=>[direction,transforms(frame,posed,p)])):null});
   }catch(e){failure={tick,time:t,clip,index,message:e.message,details:e.sourcePoseFailure??null};break;}
   previous=world;
  }

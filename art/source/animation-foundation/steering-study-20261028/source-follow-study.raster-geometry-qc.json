@@ -1,0 +1,304 @@
+{
+  "measurement": "dominant-weight source-skin vertex projection, not visible raster acceptance",
+  "sourceStudyOnly": true,
+  "runtimeAccepted": false,
+  "sampledPoses": 73,
+  "views": {
+    "N": {
+      "body": {
+        "maximumNativePixelError": 1.4280223435959152,
+        "vertexSamples": 2192774,
+        "samplesAboveQuarterPixel": 6668
+      },
+      "thigh.L": {
+        "maximumNativePixelError": 13.317281601437605,
+        "vertexSamples": 288861,
+        "samplesAboveQuarterPixel": 66282
+      },
+      "shin.L": {
+        "maximumNativePixelError": 2.481246143069702,
+        "vertexSamples": 128772,
+        "samplesAboveQuarterPixel": 12136
+      },
+      "foot.L": {
+        "maximumNativePixelError": 0.32020833782294966,
+        "vertexSamples": 145343,
+        "samplesAboveQuarterPixel": 43
+      },
+      "thigh.R": {
+        "maximumNativePixelError": 12.266000038863037,
+        "vertexSamples": 283751,
+        "samplesAboveQuarterPixel": 66055
+      },
+      "shin.R": {
+        "maximumNativePixelError": 3.0785437818285617,
+        "vertexSamples": 147168,
+        "samplesAboveQuarterPixel": 15481
+      },
+      "foot.R": {
+        "maximumNativePixelError": 0.4792348081843502,
+        "vertexSamples": 126217,
+        "samplesAboveQuarterPixel": 81
+      }
+    },
+    "NE": {
+      "body": {
+        "maximumNativePixelError": 1.5219588107217104,
+        "vertexSamples": 2192774,
+        "samplesAboveQuarterPixel": 7725
+      },
+      "thigh.L": {
+        "maximumNativePixelError": 7.9101383735992155,
+        "vertexSamples": 288861,
+        "samplesAboveQuarterPixel": 56817
+      },
+      "shin.L": {
+        "maximumNativePixelError": 3.0440670490309407,
+        "vertexSamples": 128772,
+        "samplesAboveQuarterPixel": 9417
+      },
+      "foot.L": {
+        "maximumNativePixelError": 0.30386298263962325,
+        "vertexSamples": 145343,
+        "samplesAboveQuarterPixel": 59
+      },
+      "thigh.R": {
+        "maximumNativePixelError": 2.6267903159205965,
+        "vertexSamples": 283751,
+        "samplesAboveQuarterPixel": 60166
+      },
+      "shin.R": {
+        "maximumNativePixelError": 3.1984484129528723,
+        "vertexSamples": 147168,
+        "samplesAboveQuarterPixel": 13048
+      },
+      "foot.R": {
+        "maximumNativePixelError": 0.4768585608159631,
+        "vertexSamples": 126217,
+        "samplesAboveQuarterPixel": 130
+      }
+    },
+    "E": {
+      "body": {
+        "maximumNativePixelError": 1.5281107358652666,
+        "vertexSamples": 2192774,
+        "samplesAboveQuarterPixel": 7819
+      },
+      "thigh.L": {
+        "maximumNativePixelError": 3.1759460738021574,
+        "vertexSamples": 288861,
+        "samplesAboveQuarterPixel": 47689
+      },
+      "shin.L": {
+        "maximumNativePixelError": 4.8685686928693785,
+        "vertexSamples": 128772,
+        "samplesAboveQuarterPixel": 16146
+      },
+      "foot.L": {
+        "maximumNativePixelError": 0.3439490301714477,
+        "vertexSamples": 145343,
+        "samplesAboveQuarterPixel": 69
+      },
+      "thigh.R": {
+        "maximumNativePixelError": 1.8712866703959243,
+        "vertexSamples": 283751,
+        "samplesAboveQuarterPixel": 32947
+      },
+      "shin.R": {
+        "maximumNativePixelError": 4.322071982362198,
+        "vertexSamples": 147168,
+        "samplesAboveQuarterPixel": 18220
+      },
+      "foot.R": {
+        "maximumNativePixelError": 0.4451627623223435,
+        "vertexSamples": 126217,
+        "samplesAboveQuarterPixel": 141
+      }
+    },
+    "SE": {
+      "body": {
+        "maximumNativePixelError": 1.2582039453295784,
+        "vertexSamples": 2192774,
+        "samplesAboveQuarterPixel": 7079
+      },
+      "thigh.L": {
+        "maximumNativePixelError": 4.347999587862689,
+        "vertexSamples": 288861,
+        "samplesAboveQuarterPixel": 48332
+      },
+      "shin.L": {
+        "maximumNativePixelError": 9.111100685460524,
+        "vertexSamples": 128772,
+        "samplesAboveQuarterPixel": 25016
+      },
+      "foot.L": {
+        "maximumNativePixelError": 0.4187251580291733,
+        "vertexSamples": 145343,
+        "samplesAboveQuarterPixel": 74
+      },
+      "thigh.R": {
+        "maximumNativePixelError": 2.096648481405857,
+        "vertexSamples": 283751,
+        "samplesAboveQuarterPixel": 37783
+      },
+      "shin.R": {
+        "maximumNativePixelError": 6.138932993363086,
+        "vertexSamples": 147168,
+        "samplesAboveQuarterPixel": 33948
+      },
+      "foot.R": {
+        "maximumNativePixelError": 0.4156186635740875,
+        "vertexSamples": 126217,
+        "samplesAboveQuarterPixel": 111
+      }
+    },
+    "S": {
+      "body": {
+        "maximumNativePixelError": 1.180396850730947,
+        "vertexSamples": 2192774,
+        "samplesAboveQuarterPixel": 7266
+      },
+      "thigh.L": {
+        "maximumNativePixelError": 4.024184386961393,
+        "vertexSamples": 288861,
+        "samplesAboveQuarterPixel": 42359
+      },
+      "shin.L": {
+        "maximumNativePixelError": 48.098780778089605,
+        "vertexSamples": 128772,
+        "samplesAboveQuarterPixel": 43276
+      },
+      "foot.L": {
+        "maximumNativePixelError": 0.4354793885721246,
+        "vertexSamples": 145343,
+        "samplesAboveQuarterPixel": 77
+      },
+      "thigh.R": {
+        "maximumNativePixelError": 5.430846630086402,
+        "vertexSamples": 283751,
+        "samplesAboveQuarterPixel": 43920
+      },
+      "shin.R": {
+        "maximumNativePixelError": 72.479276806852,
+        "vertexSamples": 147168,
+        "samplesAboveQuarterPixel": 54100
+      },
+      "foot.R": {
+        "maximumNativePixelError": 0.4163250962101341,
+        "vertexSamples": 126217,
+        "samplesAboveQuarterPixel": 91
+      }
+    },
+    "SW": {
+      "body": {
+        "maximumNativePixelError": 1.3423038431537369,
+        "vertexSamples": 2192774,
+        "samplesAboveQuarterPixel": 8379
+      },
+      "thigh.L": {
+        "maximumNativePixelError": 1.8136877758988623,
+        "vertexSamples": 288861,
+        "samplesAboveQuarterPixel": 27784
+      },
+      "shin.L": {
+        "maximumNativePixelError": 6.088766567140836,
+        "vertexSamples": 128772,
+        "samplesAboveQuarterPixel": 23306
+      },
+      "foot.L": {
+        "maximumNativePixelError": 0.4347490230443831,
+        "vertexSamples": 145343,
+        "samplesAboveQuarterPixel": 80
+      },
+      "thigh.R": {
+        "maximumNativePixelError": 5.884986228055301,
+        "vertexSamples": 283751,
+        "samplesAboveQuarterPixel": 45654
+      },
+      "shin.R": {
+        "maximumNativePixelError": 12.79555694279851,
+        "vertexSamples": 147168,
+        "samplesAboveQuarterPixel": 27336
+      },
+      "foot.R": {
+        "maximumNativePixelError": 0.402362742857498,
+        "vertexSamples": 126217,
+        "samplesAboveQuarterPixel": 68
+      }
+    },
+    "W": {
+      "body": {
+        "maximumNativePixelError": 1.4755102461216199,
+        "vertexSamples": 2192774,
+        "samplesAboveQuarterPixel": 8719
+      },
+      "thigh.L": {
+        "maximumNativePixelError": 1.957757868578606,
+        "vertexSamples": 288861,
+        "samplesAboveQuarterPixel": 32766
+      },
+      "shin.L": {
+        "maximumNativePixelError": 3.2965449726362737,
+        "vertexSamples": 128772,
+        "samplesAboveQuarterPixel": 15620
+      },
+      "foot.L": {
+        "maximumNativePixelError": 0.41082638882297245,
+        "vertexSamples": 145343,
+        "samplesAboveQuarterPixel": 88
+      },
+      "thigh.R": {
+        "maximumNativePixelError": 4.200909850664701,
+        "vertexSamples": 283751,
+        "samplesAboveQuarterPixel": 53168
+      },
+      "shin.R": {
+        "maximumNativePixelError": 4.694393936786797,
+        "vertexSamples": 147168,
+        "samplesAboveQuarterPixel": 18383
+      },
+      "foot.R": {
+        "maximumNativePixelError": 0.40614555845933864,
+        "vertexSamples": 126217,
+        "samplesAboveQuarterPixel": 49
+      }
+    },
+    "NW": {
+      "body": {
+        "maximumNativePixelError": 1.5484544520423598,
+        "vertexSamples": 2192774,
+        "samplesAboveQuarterPixel": 7781
+      },
+      "thigh.L": {
+        "maximumNativePixelError": 2.4237180860144423,
+        "vertexSamples": 288861,
+        "samplesAboveQuarterPixel": 65109
+      },
+      "shin.L": {
+        "maximumNativePixelError": 2.2714900037735544,
+        "vertexSamples": 128772,
+        "samplesAboveQuarterPixel": 16327
+      },
+      "foot.L": {
+        "maximumNativePixelError": 0.32585630381603453,
+        "vertexSamples": 145343,
+        "samplesAboveQuarterPixel": 83
+      },
+      "thigh.R": {
+        "maximumNativePixelError": 9.150741965343949,
+        "vertexSamples": 283751,
+        "samplesAboveQuarterPixel": 60428
+      },
+      "shin.R": {
+        "maximumNativePixelError": 3.9504378981880617,
+        "vertexSamples": 147168,
+        "samplesAboveQuarterPixel": 17445
+      },
+      "foot.R": {
+        "maximumNativePixelError": 0.4551126503112876,
+        "vertexSamples": 126217,
+        "samplesAboveQuarterPixel": 59
+      }
+    }
+  }
+}

@@ -92,6 +92,18 @@ jobs:
           "$BLENDER_BIN" -b -t 2 --python-exit-code 1 --python tools/animation/export_pose_metadata.py -- "$SOURCE" --out "$SOURCE/pose-data.json"
           node tools/animation/check_supported_pose.mjs "$SOURCE/pose-data.json" "$SOURCE/reposed-study.json"
           "$BLENDER_BIN" -b -t 2 --python-exit-code 1 --python tools/animation/validate_reposed_skin.py -- "$SOURCE" "$SOURCE/reposed-study.json"
+      - name: Verify continuous steering on retained actual world-space skin plants
+        shell: bash
+        run: |
+          set -euo pipefail
+          BLENDER_BIN="$PWD/.cache/blender-4.5.3-linux-x64/blender"
+          SOURCE=artifacts/animation-steering-source-ci
+          "$BLENDER_BIN" -b -t 2 --python-exit-code 1 --python tools/animation/author_hollow_foundation.py -- --out "$SOURCE" --only walk,attack-travel --phase-samples 16 --action-samples 8 --samples 2 --stride-metres .28 --flexion-reserve-pixels 1
+          "$BLENDER_BIN" -b -t 2 --python-exit-code 1 --python tools/animation/validate_source.py -- "$SOURCE"
+          python3 tools/animation/test_source_qc.py "$SOURCE" --blender "$BLENDER_BIN"
+          "$BLENDER_BIN" -b -t 2 --python-exit-code 1 --python tools/animation/export_pose_metadata.py -- "$SOURCE" --out "$SOURCE/pose-data.json"
+          node tools/animation/check_supported_trajectories.mjs "$SOURCE/pose-data.json" "$SOURCE/source-follow-study.json" --source-follow
+          "$BLENDER_BIN" -b -t 2 --python-exit-code 1 --python tools/animation/validate_reposed_skin.py -- "$SOURCE" "$SOURCE/source-follow-study.json" --raster-every 20
       - uses: actions/upload-artifact@v4
         with:
           name: animation-foundation-editable-source-and-actual-mesh-qc
@@ -116,5 +128,13 @@ jobs:
             artifacts/animation-supported-source-ci/pose-data.json
             artifacts/animation-supported-source-ci/reposed-study.json.summary.json
             artifacts/animation-supported-source-ci/reposed-study.skin-qc.json
+            artifacts/animation-steering-source-ci/hollow-foundation.blend
+            artifacts/animation-steering-source-ci/source-manifest.json
+            artifacts/animation-steering-source-ci/pose-data.json
+            artifacts/animation-steering-source-ci/independent-source-qc.json
+            artifacts/animation-steering-source-ci/negative-source-qc.json
+            artifacts/animation-steering-source-ci/source-follow-study.json.summary.json
+            artifacts/animation-steering-source-ci/source-follow-study.skin-qc.json
+            artifacts/animation-steering-source-ci/source-follow-study.raster-geometry-qc.json
           if-no-files-found: error
           retention-days: 14

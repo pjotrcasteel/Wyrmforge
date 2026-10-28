@@ -108,6 +108,26 @@ function segmentTransform(fromHead,fromTail,toHead,toTail){
     const a=ratio*ax*ux+bx*vx,b=ratio*ay*ux+by*vx,c=ratio*ax*uy+bx*vy,d=ratio*ay*uy+by*vy;
     return [a,b,c,d,toHead[0]-a*fromHead[0]-c*fromHead[1],toHead[1]-b*fromHead[0]-d*fromHead[1]];
 }
+
+/** Project an independently validated source skeleton onto its original source
+ * regions. This describes geometry only; raster fidelity/material acceptance
+ * must be measured separately before any rendering adapter adopts the pose. */
+export function sourcePoseRegionTransforms(source,posed,projection){
+    if(!source?.sourceBones||!source.sourceContacts||!posed?.sourceBones||!Array.isArray(projection)||projection.length!==8||!projection.every(Number.isFinite)||
+       !Array.isArray(posed.sourceRepose?.bodyShift)||posed.sourceRepose.bodyShift.length!==3||!posed.sourceRepose.bodyShift.every(Number.isFinite))throw new TypeError('Validated source skeleton and calibrated projection required');
+    const shift=posed.sourceRepose.bodyShift,origin=projected([0,0,0],projection),offset=projected(shift,projection);
+    const transforms=Object.create(null);transforms.body=[1,0,0,1,offset[0]-origin[0],offset[1]-origin[1]];
+    for(const c of Object.values(source.sourceContacts)){
+        for(const name of [c.upper,c.middle]){
+            const before=source.sourceBones[name],after=posed.sourceBones[name];
+            if(!before||!after)throw new TypeError('Present complete source region chain required');
+            transforms[name]=segmentTransform(projected(before.head,projection),projected(before.tail,projection),projected(after.head,projection),projected(after.tail,projection));
+        }
+        const before=projected(source.sourceBones[c.end].head,projection),after=projected(posed.sourceBones[c.end].head,projection);
+        transforms[c.end]=[1,0,0,1,after[0]-before[0],after[1]-before[1]];
+    }
+    return transforms;
+}
 /** Turn one declared source chain into compositor transforms. Caller supplies
  * real source-space surface points, a calibrated orthographic projection and
  * an explicit correction bound. No target/contact/AI scheduling is performed.

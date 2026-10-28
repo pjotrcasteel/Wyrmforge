@@ -272,3 +272,16 @@ test('the selected source phase owns stance boundaries while continuous phase ow
  assert.equal(state.phaseCycles,.99);assert.equal(state.sourcePhaseCycles,1);
  assert.throws(()=>update(state,patterns,{...input,timestamp:.4,phaseCycles:1,sourcePhaseCycles:.9375}),/replay seek/);
 });
+
+test('source-region approximation maps exact bone endpoints but remains a separate raster acceptance gate',async()=>{
+ const {readFileSync}=await import('node:fs');
+ const {solveSupportedSourcePose:repose,sourcePoseRegionTransforms:project}=await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/sprite-contact-kinematics.js');
+ const f=JSON.parse(readFileSync(new URL('../fixtures/animation/supported-source-pose.json',import.meta.url)));
+ const targets=Object.fromEntries(Object.entries(f.frame.sourceContacts).map(([id,c])=>[id,{point:[c.sourceContact[0]-c.sourceContact[1],0,c.sourceContact[2]],planted:c.planted}]));
+ const posed=repose(f.frame,targets,{massWeights:f.massWeights,rootBone:f.rootBone,...f.authoringEnvelope,minimumSupportMargin:f.minimumSupportMarginMetres});
+ const p=[60,0,0,64,0,0,-60,32],transforms=project(f.frame,posed,p),screen=v=>[v[0]*60+64,-v[2]*60+32];
+ const apply=(m,v)=>[m[0]*v[0]+m[2]*v[1]+m[4],m[1]*v[0]+m[3]*v[1]+m[5]];
+ for(const c of Object.values(f.frame.sourceContacts))for(const name of [c.upper,c.middle])for(const end of ['head','tail'])assert.ok(Math.hypot(...apply(transforms[name],screen(f.frame.sourceBones[name][end])).map((n,i)=>n-screen(posed.sourceBones[name][end])[i]))<1e-10);
+ assert.throws(()=>project(f.frame,posed,[1]),/calibrated projection/);
+ assert.equal(Object.hasOwn(posed,'runtimeAccepted'),false,'bone mapping does not declare raster or runtime acceptance');
+});
