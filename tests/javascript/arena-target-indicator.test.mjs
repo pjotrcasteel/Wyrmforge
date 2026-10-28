@@ -60,11 +60,13 @@ test('all six schools map to their own artwork; future school aliases remain sta
     assert.equal(resolveSigilSchool('not-yet-known'), 'arcane');
 });
 
-test('C# selected enemy receives half-size footprint; unselected enemies are ignored', () => {
-    assert.deepEqual(resolveTargetIndicator(scene()), { kind: 'enemy', x: 310, y: 452, rx: 17.6, ry: 8 });
+test('C# selected enemy receives a legible combat footprint; unselected enemies are ignored', () => {
+    assert.deepEqual(resolveTargetIndicator(scene()), { kind: 'enemy', x: 310, y: 452, rx: 29.92, ry: 16 });
     const s = scene();
     s.player.aimTargetId = 99;
-    assert.deepEqual(resolveTargetIndicator(s), { kind: 'boss', x: 450, y: 691, rx: 56.75, ry: 26 });
+    const boss = resolveTargetIndicator(s);
+    assert.deepEqual({ ...boss, rx: Math.round(boss.rx) },
+        { kind: 'boss', x: 450, y: 691, rx: 79, ry: 41 });
     s.dragon.targetable = false;
     assert.equal(resolveTargetIndicator(s), null);
 });
@@ -80,7 +82,7 @@ test('manual aim, paused and ended runs, and stale targets never show a seal', (
     s.ended = false; s.player.aimTargetId = 123456;
     assert.equal(resolveTargetIndicator(s), null);
     s.player.aimPropId = 42;
-    assert.deepEqual(resolveTargetIndicator(s), { kind: 'object', x: 250, y: 608, rx: 16, ry: 7 });
+    assert.deepEqual(resolveTargetIndicator(s), { kind: 'object', x: 250, y: 608, rx: 25, ry: 13 });
 });
 
 test('one same immutable base decal is painted for each school; only the center crop changes', () => {
@@ -105,9 +107,12 @@ test('all authored artwork stays on the ground in exactly two passes, without pr
     const ctx = canvas();
     drawTargetIndicator(ctx, marker, 'ground', 0, true, atlas, 'fire');
     assert.equal(images(ctx).length, 1, 'Ground underlay is only the locked base.');
+    assert.equal(ctx.globalAlpha, .38, 'Ground ink must be stronger without procedural rings.');
     ctx.calls.length = 0;
     drawTargetIndicator(ctx, marker, 'contrast', 0, true, atlas, 'fire');
     assert.equal(images(ctx).length, 2, 'Detail pass adds one selected school icon.');
+    assert.equal(ctx.globalAlpha, 1, 'Selected enemy sigil must be readable at full contrast.');
+    assert.equal(ctx.globalCompositeOperation, 'screen', 'Use the approved artwork as the luminous detail.');
     assert.ok(ctx.calls.every(call => !['arc', 'ellipse', 'createRadialGradient', 'fillRect'].includes(call[0])));
 });
 
@@ -128,7 +133,7 @@ test('target entry and exit opacity are smooth; underlight follows the exact sam
     assert.ok(presentTargetSigil(state, marker, 17, 10.115).opacity > 0);
     const visible = presentTargetSigil(state, marker, 17, 10.23);
     assert.equal(visible.opacity, 1);
-    assert.equal(targetSelectionLightEmitter(visible, litFrame()).intensity, .48);
+    assert.equal(targetSelectionLightEmitter(visible, litFrame()).intensity, .78);
     const dying = presentTargetSigil(state, null, null, 10.4);
     assert.equal(dying.opacity, 1);
     assert.ok(presentTargetSigil(state, null, null, 10.53).opacity < 1);
@@ -150,6 +155,8 @@ test('selection emitter is only one light in the authoritative GPU frame, with z
     assert.equal(selected.ownerId, 'target-selection');
     assert.equal(selected.castsShadow, false);
     assert.equal(selected.color, '#d9cfee');
+    assert.equal(selected.intensity, .78);
+    assert.ok(selected.range >= 65 && selected.range <= 155);
     const merged = withHollowFractureLightingFrame(frame, [selected]);
     assert.equal(merged.lights.length, 2);
     assert.equal(frame.lights.length, 1);
