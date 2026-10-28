@@ -1,6 +1,6 @@
 import { createSpellBadge } from './spell-hud.js';
 import { createSoundEventTracker, collectSoundEvents } from './sound-events.js';
-import { disposeArena as disposeBaseArena, initializeArena as initializeBaseArena, readArenaDiagnostics as readBaseArenaDiagnostics } from './arena.js?v=20261028-rune-occlusion-v3';
+import { disposeArena as disposeBaseArena, initializeArena as initializeBaseArena, readArenaDiagnostics as readBaseArenaDiagnostics } from './arena.js?v=20261028-approved-sigil-v4';
 import { resolveArenaCamera } from './arena-camera.js';
 
 const frameStates = new WeakMap();
