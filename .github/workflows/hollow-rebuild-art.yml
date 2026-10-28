@@ -38,7 +38,9 @@ jobs:
       - name: Verify source isolation — no animation/gameplay/runtime edits
         run: python tools/art/hollow-rebuild/check-scope.py
       - name: Verify source-guard syntax
-        run: python -m py_compile tools/art/hollow-rebuild/check-scope.py
+        run: |
+          python -m py_compile tools/art/hollow-rebuild/check-scope.py
+          python -m py_compile tools/art/hollow-rebuild/qc_h1_geometry.py
 
 # This workflow does not touch, test, import, trigger or modify the shared
 # universal animation engine. It does not build or deploy the game.
