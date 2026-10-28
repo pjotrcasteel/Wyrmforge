@@ -179,23 +179,45 @@ def ribs(mesh,rig,bone):
     for side, rows in ((-1,(2.045,2.135,2.225,2.315)),
                        (1,(2.075,2.165,2.255))):
         for row,zmid in enumerate(rows):
-            contour=[]
-            valid=True
-            for i in range(11):
-                u=i/10.
-                x=side*(.042 + .30*u)
-                z=zmid+(.036*math.sin(math.pi*u))+.025*u
+            # Find the ACTUAL visible chest span in this pose; the earlier
+            # broad fixed arc (-.34 to .34) crossed empty air on every row.
+            # Keep only a contiguous measured segment, with *both* ends
+            # grounded in real skin. No synthetic unsupported tips.
+            hits=[]
+            for i in range(22):
+                u=i/21.
+                x=side*(.025+.305*u)
+                z=zmid+.017*u
                 hit=front_hit(mesh,x,z)
                 if hit is None:
-                    valid=False
-                    break
-                location,normal,face=hit
-                # Ends penetrate under skin. Central rib emerges from the
-                # depressed chest. The anatomy is a curved 3D tube, not bars.
-                relief=.040*math.sin(math.pi*u)-(.018 if i in (0,10) else 0)
-                contour.append((x,float(location.y-relief),z))
-            if not valid:
+                    hits.append(None)
+                else:
+                    pos,normal,face=hit
+                    hits.append((x,float(pos.y),z))
+            runs=[]
+            current=[]
+            for hit in hits:
+                if hit is None:
+                    if current:
+                        runs.append(current)
+                        current=[]
+                else:
+                    current.append(hit)
+            if current:
+                runs.append(current)
+            runs.sort(key=lambda run:len(run),reverse=True)
+            if not runs or len(runs[0])<7:
                 continue
+            measured=runs[0]
+            if abs(measured[-1][0]-measured[0][0])<.095:
+                continue
+            contour=[]
+            for i,point in enumerate(measured):
+                u=i/(len(measured)-1)
+                # Real relief from the recessed skin, actual body endpoints
+                # are slightly embedded so ribs cannot float.
+                relief=.040*math.sin(math.pi*u)-(.022 if i in (0,len(measured)-1) else 0.)
+                contour.append((point[0],point[1]-relief,point[2]))
             v,f=tapered_tube(contour,.017 if row<3 else .014,sides=7)
             armature_mesh("H1 anatomically anchored rib "+str(side)+"/"+str(row+1),
                           v,f,mesh,rig,bone,bone_material)
