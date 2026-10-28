@@ -89,3 +89,45 @@ jobs:
           path: artifacts/hollow-rebuild/h1-anatomical-v3/
           if-no-files-found: warn
           retention-days: 30
+
+  cc0-sculpt-proof:
+    name: CC0 anatomical topology — static Blender source proof (UNAPPROVED)
+    needs: source-boundary
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '2'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install isolated real Blender and source-only image dependency
+        run: |
+          python -m pip install --disable-pip-version-check bpy==4.5.15 Pillow==11.3.0
+          python -c "import bpy; print('Source-only Blender:', bpy.app.version_string)"
+      - name: Compile authoring code and verify CC0 source
+        run: |
+          python -m py_compile tools/art/hollow-rebuild/sculpt_cc0_anatomy_blender.py
+          grep -F 'explicitly released as CC0' art/source/enemies/hollow/rebuild-v1/references/makehuman-core-base-CC0.obj
+          test "$(wc -c < art/source/enemies/hollow/rebuild-v1/references/makehuman-core-base-CC0.obj)" -gt 1000000
+      - name: Author editable source and eight real Blender views (no animation)
+        run: |
+          python tools/art/hollow-rebuild/sculpt_cc0_anatomy_blender.py \
+            --input art/source/enemies/hollow/rebuild-v1/references/makehuman-core-base-CC0.obj \
+            --output artifacts/hollow-rebuild/cc0-sculpt-anatomy
+          test -s artifacts/hollow-rebuild/cc0-sculpt-anatomy/hollowed-cc0-anatomy-blockout.blend
+          test -s artifacts/hollow-rebuild/cc0-sculpt-anatomy/cc0-source-8views-BLENDER.png
+          test -s artifacts/hollow-rebuild/cc0-sculpt-anatomy/cc0-source-native96-BLENDER.png
+      - name: Preserve original anatomical source, QC and render artifacts — NOT production
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hollowed-h1-cc0-anatomy-BLENDER-review-UNAPPROVED
+          path: artifacts/hollow-rebuild/cc0-sculpt-anatomy/
+          if-no-files-found: warn
+          retention-days: 30
