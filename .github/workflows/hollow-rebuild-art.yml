@@ -255,6 +255,34 @@ jobs:
           assert q['game_engine_modified'] is False and q['owner_approved'] is False,q
           print('PASS static face geometry QC only; ART NOT OWNER APPROVED.')
           PY
+      - name: Replace blank head with genuine human skull, damaged FACE and articulated jaw (source art only)
+        run: |
+          mkdir -p artifacts/hollow-rebuild/head-original
+          curl --fail --location --silent --show-error --retry 3 --max-time 90 \
+            'https://opengameart.org/sites/default/files/head_1.blend' \
+            -o artifacts/hollow-rebuild/head-original/head-original.blend
+          python -m py_compile tools/art/hollow-rebuild/graft_real_cc0_head_h1_blender.py
+          python tools/art/hollow-rebuild/graft_real_cc0_head_h1_blender.py \
+            --body artifacts/hollow-rebuild/horror-facial-v2/hollowed-h1-sculpted-facial-planes-v2-UNAPPROVED.blend \
+            --head-source artifacts/hollow-rebuild/head-original/head-original.blend \
+            --output artifacts/hollow-rebuild/horror-real-head-h1
+          test -s artifacts/hollow-rebuild/horror-real-head-h1/hollowed-h1-cc0-REAL-FACE-SKULL-JAW-UNAPPROVED.blend
+          test -s artifacts/hollow-rebuild/horror-real-head-h1/source-clay-8views-BLENDER.png
+          test -s artifacts/hollow-rebuild/horror-real-head-h1/genuine-anatomical-head-closeup-front.png
+          test -s artifacts/hollow-rebuild/horror-real-head-h1/genuine-anatomical-head-closeup-three-quarter.png
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('artifacts/hollow-rebuild/horror-real-head-h1/real-human-head-graft-qc.json')
+          q=json.loads(p.read_text())
+          assert q['source_only_replaced_head'] is True and q['head_3d_is_donor_geometry'] is True,q
+          assert q['original_rig_bones']==70 and q['body_cut']['old_head_vertices_removed']>35,q
+          assert q['face_skull_jaw']['face']['damaged_face_polygons_removed']>=8,q
+          assert q['dark_eye_mask_material_faces']==0,q
+          assert q['added_animation_actions']==0 and q['animation_engine_touched'] is False,q
+          assert q['gameplay_or_runtime_touched'] is False and q['owner_approved'] is False,q
+          print('Source-only anatomical graft passed technical QC. ART NOT APPROVED.')
+          PY
       - name: Preserve 3D evidence; never ship candidate into WyrmForge runtime
         if: always()
         uses: actions/upload-artifact@v4
@@ -268,6 +296,7 @@ jobs:
             artifacts/hollow-rebuild/horror-feral-rest-h1/
             artifacts/hollow-rebuild/horror-anatomical-h1/
             artifacts/hollow-rebuild/horror-facial-v2/
+            artifacts/hollow-rebuild/horror-real-head-h1/
           if-no-files-found: warn
           retention-days: 30
 
