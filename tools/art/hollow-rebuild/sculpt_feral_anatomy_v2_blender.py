@@ -102,6 +102,19 @@ def create(source: Path, target: Path) -> None:
     previous = target / "hollowed-cc0-anatomy-blockout.blend"
     published = target / "hollowed-feral-source-v2-UNAPPROVED.blend"
     previous.rename(published)
+    # Save the camera at a useful H1 three-quarter angle as well. The CC0
+    # source helper saves its .blend before positioning the review cameras;
+    # an independently reopened production source must not open on an empty
+    # or origin-mounted camera. This remains a single unanimated rest sculpt.
+    import bpy
+    bpy.ops.wm.open_mainfile(filepath=str(published))
+    camera = bpy.context.scene.camera
+    if camera is None or camera.type != "CAMERA":
+        raise RuntimeError("Source file lost its real Blender camera")
+    camera.location = (4.95, -4.95, 5.40)
+    module.point_camera(camera, (0, -.20, 1.57))
+    bpy.context.preferences.filepaths.save_version = 0
+    bpy.ops.wm.save_as_mainfile(filepath=str(published))
     qc_file = target / "source-qc.json"
     qc = json.loads(qc_file.read_text(encoding="utf-8"))
     qc["status"] = "H1 v2 anatomical rest sculpt; REAL Blender model, VISUALLY UNAPPROVED"
