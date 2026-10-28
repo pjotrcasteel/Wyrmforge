@@ -1,7 +1,11 @@
-// Tactical selection feedback lives in presentation only. The C# aim target IDs,
-// not pointer position or renderer heuristics, are the single source of truth.
-// Objects are matched by registered prop ID, never by their current art/kind.
-const finite = value => Number.isFinite(value);
+// Tactical selection remains presentation-only: C# owns all targeting IDs.
+// V3 is one small, school-neutral WyrmForge combat sigil; its animated ink
+// is not a separate light source, shader, or combat authority.
+const finite = Number.isFinite;
+const TAU = Math.PI * 2;
+const COLOR = '#d9cfee';
+const clamp = (value, low, high) => Math.min(high, Math.max(low, value));
+const smoothstep = t => t * t * (3 - 2 * t);
 
 export function resolveTargetIndicator(snapshot) {
     const player = snapshot?.player;
@@ -29,58 +33,72 @@ export function resolveTargetIndicator(snapshot) {
 
 function indicator(kind, x, y, radius) {
     if (![x, y, radius].every(finite) || radius <= 0) return null;
-    // Readable at 320px mobile width; respects each target's C# collision size.
-    const footprint = Math.min(160, Math.max(32, radius * 1.7 + (kind === 'boss' ? 20 : 8)));
+    // Half the approved PR #388 footprint, including the mobile minimum.
+    const footprint = Math.min(80, Math.max(16, (radius * 1.7 + (kind === 'boss' ? 20 : 8)) * .5));
     return {
         kind,
         x: Math.round(x),
         y: Math.round(y + radius * (kind === 'object' ? .7 : .75)),
         rx: footprint,
-        ry: Math.max(13, Math.round(footprint * .46)),
+        ry: Math.max(7, Math.round(footprint * .46)),
     };
 }
 
-// Target selection is an in-world magical seal, not an attack telegraph.
-// All schools and object kinds share the same desaturated, near-ivory ink.
-const SIGIL_COLOR = '#d9cfee';
+// Presentation-only transition state, owned by each arena (never global).
+// A removed target gets a real fade-out; swapping targets starts a new fade-in.
+export function presentTargetSigil(state, marker, key, seconds, reducedMotion = false) {
+    if (!state || !finite(seconds)) return marker;
+    const nextKey = marker ? marker.kind + ':' + String(key) : null;
 
-// Small hand-drawn Futhark-inspired strokes, not text characters or a font.
-// Normalized coordinates keep glyphs legible on high-DPI mobile canvases.
+    if (nextKey !== state.key) {
+        if (marker) {
+            state.key = nextKey;
+            state.enteredAt = seconds;
+            state.exitedAt = null;
+            state.exitMarker = null;
+        } else if (state.key !== null) {
+            state.key = null;
+            state.exitedAt = seconds;
+            state.exitMarker = { ...state.activeMarker, opacity: state.lastOpacity ?? 1 };
+        }
+    }
+
+    if (marker) {
+        state.activeMarker = marker;
+        const opacity = reducedMotion ? 1 : smoothstep(clamp((seconds - state.enteredAt) / .23, 0, 1));
+        state.lastOpacity = opacity;
+        return { ...marker, opacity };
+    }
+
+    if (state.exitMarker && state.exitedAt !== null) {
+        const progress = reducedMotion ? 1 : smoothstep(clamp((seconds - state.exitedAt) / .26, 0, 1));
+        const opacity = state.exitMarker.opacity * (1 - progress);
+        if (opacity > 0.001) return { ...state.exitMarker, opacity };
+        state.exitMarker = null;
+        state.exitedAt = null;
+    }
+    return null;
+}
+
+// Hand-drawn, Futhark-inspired rune strokes. No font loading or Unicode fallback.
 const RUNES = Object.freeze([
-    [[-0.45, -1, -0.45, 1], [-0.45, -.85, .55, -.48], [-.45, -.15, .45, .15]],
-    [[-.5, -1, -.5, 1], [-.5, -1, .48, -.1], [.48, -.1, -.5, .18]],
-    [[-.52, -1, .48, 1], [.48, -1, -.52, 1]],
-    [[0, -1, 0, 1], [-.65, -.5, 0, -.05], [.65, -.5, 0, -.05]],
-    [[-.5, -1, .52, -.15], [.52, -.15, -.5, .6], [-.5, .6, .5, 1]],
-    [[-.55, -.9, .5, -.9], [0, -.9, 0, 1], [-.48, -.25, .45, -.25]],
-    [[-.55, -1, -.55, 1], [-.55, -.1, .53, -.1], [.53, -.1, .53, .8]],
-    [[-.5, -1, .5, 1], [.5, -1, -.5, 1], [0, -.55, 0, .6]],
+    [[-.45,-1,-.45,1],[-.45,-.85,.55,-.48],[-.45,-.15,.45,.15]],
+    [[-.5,-1,-.5,1],[-.5,-1,.48,-.1],[.48,-.1,-.5,.18]],
+    [[-.52,-1,.48,1],[.48,-1,-.52,1]],
+    [[0,-1,0,1],[-.65,-.5,0,-.05],[.65,-.5,0,-.05]],
+    [[-.5,-1,.52,-.15],[.52,-.15,-.5,.6],[-.5,.6,.5,1]],
+    [[-.55,-.9,.5,-.9],[0,-.9,0,1],[-.48,-.25,.45,-.25]],
+    [[-.55,-1,-.55,1],[-.55,-.1,.53,-.1],[.53,-.1,.53,.8]],
+    [[-.5,-1,.5,1],[.5,-1,-.5,1],[0,-.55,0,.6]],
 ]);
 
-// A rune CIRCLE rather than a broken targeting reticle: concentric, unbroken
-// ground-plane inscriptions bound actual runes. Geometry remains school-neutral.
-function strokeRuneBorders(ctx, rx, ry, inner = true) {
+function ring(ctx, radius) {
     ctx.beginPath();
-    ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
-    ctx.stroke();
-    if (inner) {
-        ctx.beginPath();
-        ctx.ellipse(0, 0, rx * .62, ry * .62, 0, 0, Math.PI * 2);
-        ctx.stroke();
-    }
-}
-
-function strokeRuneDividers(ctx, rx, ry, count) {
-    ctx.beginPath();
-    for (let i = 0; i < count; i++) {
-        const angle = (i + .5) * Math.PI * 2 / count;
-        ctx.moveTo(Math.cos(angle) * rx * .67, Math.sin(angle) * ry * .67);
-        ctx.lineTo(Math.cos(angle) * rx * .72, Math.sin(angle) * ry * .72);
-    }
+    ctx.arc(0, 0, radius, 0, TAU);
     ctx.stroke();
 }
 
-function strokeRune(ctx, rune, size) {
+function glyph(ctx, rune, size) {
     ctx.beginPath();
     for (const [x1, y1, x2, y2] of rune) {
         ctx.moveTo(x1 * size, y1 * size);
@@ -89,31 +107,87 @@ function strokeRune(ctx, rune, size) {
     ctx.stroke();
 }
 
-function drawRuneInscriptions(ctx, marker) {
-    const { rx, ry, kind } = marker;
-    const count = kind === 'boss' ? 12 : kind === 'object' ? 4 : 8;
-    const size = Math.min(6.5, Math.max(3.3, rx * .145));
-    const offset = .18;
+function runeBand(ctx, radius, count, rotation) {
+    const size = clamp(radius * .11, 2, 5.6);
+    ctx.save();
+    ctx.rotate(rotation);
+    ctx.lineWidth = clamp(radius * .035, .65, 1);
     for (let index = 0; index < count; index++) {
-        const angle = -Math.PI + offset + (index + .5) * (Math.PI * 2 / count);
-        const x = Math.cos(angle) * rx * .83;
-        const y = Math.sin(angle) * ry * .81;
-        // A narrower glyph height follows the foreshortened ground plane.
+        const angle = -Math.PI / 2 + (index + .5) * TAU / count;
         ctx.save();
-        ctx.translate(x, y);
-        ctx.scale(1, .72);
-        strokeRune(ctx, RUNES[index % RUNES.length], size);
+        ctx.translate(Math.cos(angle) * radius * .785, Math.sin(angle) * radius * .785);
+        ctx.rotate(angle + Math.PI / 2);
+        glyph(ctx, RUNES[index % RUNES.length], size);
+        ctx.restore();
+    }
+    ctx.restore();
+}
+
+function compass(ctx, radius) {
+    ctx.lineWidth = clamp(radius * .035, .65, 1.2);
+    for (let index = 0; index < 4; index++) {
+        const angle = index * Math.PI / 2;
+        ctx.save();
+        ctx.rotate(angle);
+        const width = radius * .09;
+        ctx.beginPath();
+        ctx.moveTo(radius * .64, -width);
+        ctx.lineTo(radius * .99, 0);
+        ctx.lineTo(radius * .64, width);
+        ctx.lineTo(radius * .73, 0);
+        ctx.closePath();
+        ctx.stroke();
         ctx.restore();
     }
 }
 
-// The selection light is ONE standard emitter within the shared GPU frame.
-// Its CURRENT Canvas compatibility view comes from the existing arena spell
-// light-spill/night adapters; this module never paints an independent light.
-// Explicit G1/G5 zero-light validation keeps every world pixel unlit.
+function crest(ctx, radius) {
+    // Shared geometric Wyrmforge flame/diamond emblem; neutral to spell school.
+    const size = radius * .34;
+    ctx.lineWidth = clamp(radius * .055, .85, 1.7);
+    ctx.beginPath();
+    ctx.moveTo(0, -size * 1.32);
+    ctx.lineTo(size * .41, -size * .48);
+    ctx.lineTo(size * .18, -size * .07);
+    ctx.lineTo(size * .58, -size * .3);
+    ctx.lineTo(size * .44, size * .47);
+    ctx.lineTo(0, size);
+    ctx.lineTo(-size * .44, size * .47);
+    ctx.lineTo(-size * .58, -size * .3);
+    ctx.lineTo(-size * .18, -size * .07);
+    ctx.lineTo(-size * .41, -size * .48);
+    ctx.closePath();
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, -size * .56);
+    ctx.lineTo(size * .19, size * .22);
+    ctx.lineTo(0, size * .62);
+    ctx.lineTo(-size * .19, size * .22);
+    ctx.closePath();
+    ctx.stroke();
+}
+
+function motes(ctx, radius, seconds, reducedMotion) {
+    // Four inexpensive decorative glints. All ink is painted in the ground pass
+    // before actors, so particles cannot draw through a character silhouette.
+    ctx.fillStyle = COLOR;
+    for (let i = 0; i < 4; i++) {
+        const phase = reducedMotion ? .55 : (seconds * .19 + i * .31) % 1;
+        const angle = i * 2.39996 + .7;
+        const distance = radius * (.17 + phase * .62);
+        const size = clamp(radius * .035, .55, 1.2);
+        ctx.globalAlpha = (1 - phase) * .48;
+        ctx.fillRect(Math.cos(angle) * distance, Math.sin(angle) * distance, size, size);
+    }
+}
+
+// The same single point emitter used by the shared lighting frame.
+// Fades in/out with the ink, including on retarget and target loss.
 export function targetSelectionLightEmitter(marker, frame) {
     if (!marker || !frame || marker.kind === 'object' ||
-        !Number.isFinite(marker.x) || !Number.isFinite(marker.y)) return null;
+        !finite(marker.x) || !finite(marker.y)) return null;
+    const opacity = clamp(marker.opacity ?? 1, 0, 1);
+    if (opacity <= 0) return null;
     const zeroLight = frame.environment?.ambient === 0 && frame.environment?.emission === false &&
         (frame.lights ?? []).every(light => !light.enabled || light.intensity === 0);
     if (zeroLight) return null;
@@ -126,9 +200,9 @@ export function targetSelectionLightEmitter(marker, frame) {
         enabled: true,
         position: [marker.x, marker.y + 1, 2],
         direction: [0, 0, -1],
-        color: SIGIL_COLOR,
-        intensity: boss ? .34 : .48,
-        range: Math.min(125, Math.max(48, marker.rx * 1.25)),
+        color: COLOR,
+        intensity: (boss ? .34 : .48) * opacity,
+        range: Math.min(125, Math.max(48, marker.rx * 1.7)),
         coneAngle: Math.PI / 4,
         penumbra: 0,
         castsShadow: false,
@@ -136,8 +210,6 @@ export function targetSelectionLightEmitter(marker, frame) {
     };
 }
 
-// Bridge the SAME emitter, without a second lighting algorithm, to the
-// existing Canvas Hunt adapter while G5's universal GPU integration lands.
 export function targetSelectionCanvasLight(emitter) {
     if (!emitter) return [];
     return [{
@@ -153,45 +225,64 @@ export function targetSelectionCanvasLight(emitter) {
     }];
 }
 
+// Both passes are drawn BEFORE all actors and occluders by arena.js.
+// The radial gradient changes only glyph/inscription opacity; it does NOT
+// simulate a new world light (that is exclusively the shared emitter above).
 export function drawTargetIndicator(ctx, marker, pass = 'ground', seconds = 0, reducedMotion = false) {
     if (!marker || (pass !== 'ground' && pass !== 'contrast')) return;
-
+    const alpha = clamp(marker.opacity ?? 1, 0, 1);
+    if (alpha <= 0 || marker.rx <= 0 || marker.ry <= 0) return;
+    const radius = marker.rx;
+    const boss = marker.kind === 'boss';
     const isObject = marker.kind === 'object';
-    const baseAlpha = isObject ? .35 : marker.kind === 'boss' ? .66 : .62;
-    const breath = reducedMotion || !Number.isFinite(seconds) ? 1 : 1 + Math.sin(seconds * .9) * .035;
-    const count = marker.kind === 'boss' ? 12 : isObject ? 4 : 8;
+    const count = boss ? 12 : isObject ? 4 : 8;
+    const pulse = reducedMotion ? 1 : 1 + Math.sin(seconds * 1.9) * .055;
+    const rotation = reducedMotion ? 0 : seconds * .085;
 
     ctx.save();
     ctx.translate(marker.x, marker.y);
-    ctx.strokeStyle = SIGIL_COLOR;
+    ctx.scale(1, marker.ry / radius);
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
+    const ink = ctx.createRadialGradient(0, 0, radius * .05, 0, 0, radius);
+    ink.addColorStop(0, 'rgba(217,207,238,1)');
+    ink.addColorStop(.5, 'rgba(217,207,238,1)');
+    ink.addColorStop(.72, 'rgba(217,207,238,.85)');
+    ink.addColorStop(.94, 'rgba(217,207,238,.23)');
+    ink.addColorStop(1, 'rgba(217,207,238,0)');
+    ctx.strokeStyle = ink;
+    ctx.shadowColor = 'rgba(174,112,247,.64)';
+
     if (pass === 'ground') {
-        ctx.globalAlpha = baseAlpha * .45;
-        ctx.lineWidth = 1.8;
-        strokeRuneBorders(ctx, marker.rx, marker.ry, true);
+        // Low-contrast ambient inscription haze, no separate Canvas light pool.
+        ctx.globalAlpha = alpha * (isObject ? .14 : .27);
+        ctx.shadowBlur = clamp(radius * .18, 2, 8);
+        ctx.lineWidth = clamp(radius * .11, 1.6, 4);
+        ring(ctx, radius * .65);
+        ctx.lineWidth = clamp(radius * .065, 1.1, 2.4);
+        ring(ctx, radius * .86);
     } else {
-        // This pass must be executed BEFORE all actor/depth sprites; never above them.
-        // Visibility is supplied by the SAME physical point emitter and night mask.
-        ctx.globalAlpha = Math.min(.72, baseAlpha * breath);
-        ctx.shadowColor = 'rgba(210,197,240,.15)';
-        ctx.shadowBlur = isObject ? .8 : 1.8;
-        ctx.lineWidth = 1.15;
-        strokeRuneBorders(ctx, marker.rx, marker.ry, true);
+        ctx.globalAlpha = alpha * (isObject ? .46 : .83) * pulse;
+        ctx.shadowBlur = clamp(radius * .12, 1.4, 5);
+        ctx.lineWidth = clamp(radius * .048, .85, 1.7);
+        ring(ctx, radius * .88);
+        ring(ctx, radius * .63);
+        ctx.shadowBlur = clamp(radius * .09, 1, 3.5);
+        compass(ctx, radius);
         ctx.shadowBlur = 0;
-        ctx.lineWidth = .85;
-        strokeRuneDividers(ctx, marker.rx, marker.ry, count);
-        ctx.lineWidth = 1;
-        drawRuneInscriptions(ctx, marker);
-
-        if (marker.kind === 'boss') {
-            ctx.globalAlpha *= .45;
-            ctx.beginPath();
-            ctx.ellipse(0, 0, marker.rx * .42, marker.ry * .42, 0, 0, Math.PI * 2);
-            ctx.stroke();
+        runeBand(ctx, radius, count, rotation);
+        // The central emblem is the strongest part: outer strokes vanish,
+        // inward geometry stays fully opaque in the ink gradient.
+        ctx.shadowBlur = clamp(radius * .14, 1.5, 5);
+        crest(ctx, radius);
+        ctx.shadowBlur = 0;
+        if (boss) {
+            ctx.lineWidth = .65;
+            ring(ctx, radius * .43);
         }
+        ctx.globalAlpha = alpha;
+        motes(ctx, radius, seconds, reducedMotion);
     }
-
     ctx.restore();
 }
