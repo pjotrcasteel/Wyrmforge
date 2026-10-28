@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { attachArenaInput, getArenaMovement, getArenaAim, getArenaPropFocus } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-input.js';
+import { attachArenaInput, getArenaMovement, getArenaAim, isArenaRightStickAim, getArenaPropFocus } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-input.js';
 
 class FakeTarget {
     listeners = new Map();
@@ -280,5 +280,18 @@ test('focus is dropped on input reset and pause', () => {
     a.state.pendingPropId = 123;
     a.state.latestSnapshot.paused = true;
     assert.equal(getArenaPropFocus(a.state), null);
+    a.detach();
+});
+
+test('only active controller aiming requests target snap, not mouse or touch', () => {
+    const a = aimedArena();
+    a.state.gamepads = () => [{ connected: true, axes: [0, 0, 1, 0] }];
+    assert.equal(isArenaRightStickAim(a.state, getArenaAim(a.state)), true);
+    a.canvas.dispatch('pointerdown', { pointerType: 'mouse', clientX: 390, clientY: 370 });
+    assert.equal(isArenaRightStickAim(a.state, getArenaAim(a.state)), false);
+    a.win.dispatch('pointerup', { pointerType: 'mouse' });
+    assert.equal(isArenaRightStickAim(a.state, getArenaAim(a.state)), true);
+    a.state.gamepads = () => [{ connected: true, axes: [0, 0, .1, .1] }];
+    assert.equal(isArenaRightStickAim(a.state, getArenaAim(a.state)), false);
     a.detach();
 });
