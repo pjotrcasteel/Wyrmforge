@@ -298,10 +298,13 @@ function updateContactAnimation(state,profile,input){
             state.contacts=Object.create(null);
             if(state.facingIndex===target){state.pivotTime=0;state.pivotSign=null;break;}
         }
-        pivotFrame=Math.min(pivotSpec.frames-1,Math.floor(state.pivotTime*pivotSpec.fps));
+        if(state.facingIndex!==target)pivotFrame=Math.min(pivotSpec.frames-1,Math.floor(state.pivotTime*pivotSpec.fps));
     }else if(!turning){state.pivotTime=0;state.pivotSign=null;}
     if(actionSpec)state.facingIndex=state.actionDirection;
-    let clipSpec=actionSpec??(turning&&pivotSpec?pivotSpec:profile.locomotion);
+    // Completing the final support step must not replay pivot frame zero in
+    // the new facing. Use the continuing gait in this very sample.
+    const activePivot=turning&&pivotSpec&&state.facingIndex!==target;
+    let clipSpec=actionSpec??(activePivot?pivotSpec:profile.locomotion);
     let frame=actionSpec?(actionSpec.poseGrid?poseGridFrame(actionSpec,contactPhase,actionProgress):Math.min(actionSpec.frames-1,Math.floor(actionProgress*actionSpec.frames))):
         pivotFrame??(input.moving?locomotionFrame:(profile.locomotion.idleFrame??locomotionFrame));
     if(stopped&&state.sample&&!actionSpec?.terminal){

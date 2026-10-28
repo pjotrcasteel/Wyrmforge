@@ -2,6 +2,21 @@
 
 **NOT FINISHED. Keep PR #387 draft and unmerged. No final visual approval requested.**
 
+## Windows continuation — 28 October 2026
+
+Resumed existing PR #387 at `14659ba25` after fetching current main
+`789f3c175`; preserved untracked Ashfang sources and concurrent PRs #385/#389.
+Reproduced a final-support-step lifecycle defect: the completing sample selected
+pivot frame zero in the newly reached facing, then returned to gait one sample
+later. The shared controller now returns to locomotion in the completing sample.
+The regression failed before the fix and passes in both turn directions at
+15/30/60/120Hz. Full local Node 24.22.1 suite: **548/548 passed**;
+log: `artifacts/an-continuation-js.txt` (local generated evidence).
+
+This is a lifecycle correction, not source-transition or visual acceptance.
+No C# gameplay/save changes. Arbitrary lateral movement, moving turns, regional
+GPU/depth/casters, device/horde and final continuous visual proof remain open.
+
 Base: c84eac3347a28b52b1d61cb507ff7e60711d9774.
 Foundation branch: feat/universal-character-animation-an0-an6.
 Prior remote checkpoint: 37d95b8f4ecb6b1f8dded9a7d95920376c0c1dc0.

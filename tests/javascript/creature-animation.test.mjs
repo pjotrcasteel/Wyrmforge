@@ -58,6 +58,23 @@ test('15/30/60/120 Hz sample the same absolute action and distance phases',()=>{
  }
  assert.ok(results.every(r=>JSON.stringify(r)===JSON.stringify(results[0])),JSON.stringify(results));
 });
+
+test('completed support turn returns to locomotion in the completing sample',()=>{
+ for(const hz of [15,30,60,120])for(const direction of ['SE','SW']){
+  const p=fixture(),s=create();update(s,p,intent());
+  let pose;
+  for(let i=1;i<=hz;i++){
+   const time=i/hz;
+   pose=update(s,p,intent(time,{direction,moving:true,travel:time*4}));
+   if(pose.direction===direction){
+    assert.equal(pose.clip,'walk',`${hz}Hz ${direction} replayed a pivot after reaching its target`);
+    assert.equal(pose.frame,Math.floor(pose.phase*4));
+    break;
+   }
+  }
+  assert.equal(pose.direction,direction);
+ }
+});
 test('contact solver reports real slip when authoritative motion exceeds bounded correction',()=>{
  const p=fixture(),s=create();update(s,p,intent());
  const a=update(s,p,intent(.1,{world:{x:2,y:0},travel:2,moving:true}));
