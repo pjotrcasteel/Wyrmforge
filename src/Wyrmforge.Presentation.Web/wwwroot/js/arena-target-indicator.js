@@ -105,7 +105,9 @@ export function preloadTargetSigilArt() {
 
 export function resolveTargetIndicator(snapshot) {
     const player = snapshot?.player;
-    if (!player || player.manualAim || snapshot.paused || snapshot.ended) return null;
+    // Manual free aim has no C# target ID; a right-stick snap does. The latter
+    // must show the same sigil as auto-aim without guessing a target in JS.
+    if (!player || snapshot.paused || snapshot.ended) return null;
 
     if (Number.isInteger(player.aimPropId)) {
         const world = snapshot.world;
@@ -136,9 +138,11 @@ function indicator(kind, x, y, radius) {
     return {
         kind,
         x: Math.round(x),
-        y: Math.round(y + radius * (kind === 'object' ? .7 : .95)),
+        // Anchor enemy and boss seals at the feet, below the sprite silhouette.
+        // Former .95-radius positioning pushed the bright rune into the body.
+        y: Math.round(y + radius * (kind === 'object' ? .7 : 1.6)),
         rx: footprint,
-        ry: Math.max(15, Math.round(footprint * .56)),
+        ry: Math.max(15, Math.round(footprint * (kind === 'object' ? .56 : .5))),
     };
 }
 
@@ -214,7 +218,7 @@ export function targetSelectionCanvasLight(emitter) {
     }];
 }
 
-// Both pieces render on the GROUND, before depth-sorted actors. The shared
+// Both pieces render on the GROUND, below the actual feet and before depth-sorted actors. The shared
 // lighting adapter handles underlight; this only paints authored artwork.
 export function drawTargetIndicator(ctx, marker, pass = 'ground', seconds = 0, reducedMotion = false,
     art = null, school = null) {
