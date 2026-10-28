@@ -226,7 +226,9 @@ jobs:
           assert d['real_skin_cavity_deformed_vertices']>=14,d
           assert d['deep_cavity_m']>=.07,d
           assert d['source_bone_ribs']>=4,d
-          assert d['finger_bone_talons']==6,d
+          assert d['finger_bone_talons']==0 and d['detached_talon_meshes']==0,d
+          assert d['connected_claw_vertices']>=12,d
+          assert d['finger_bone_groups_used']>=9,d
           assert d['original_topology_preserved'] is True,d
           assert d['actions']==0 and d['animation_engine_modified'] is False,d
           assert d['owner_approved'] is False,d
