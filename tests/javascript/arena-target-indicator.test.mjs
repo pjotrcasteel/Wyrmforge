@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-    SIGIL_ATLAS, resolveSigilSchool, resolveTargetIndicator, presentTargetSigil, drawTargetIndicator,
+    SIGIL_ATLAS, SIGIL_SCHOOL_COLORS, tintSigilPixels, resolveSigilSchool, resolveTargetIndicator, presentTargetSigil, drawTargetIndicator,
     targetSelectionLightEmitter, targetSelectionCanvasLight,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-target-indicator.js';
 import { withHollowFractureLightingFrame } from
@@ -57,7 +57,57 @@ test('all six schools map to their own artwork; future school aliases remain sta
     assert.equal(resolveSigilSchool('Necromancer'), 'necromancer');
     assert.equal(resolveSigilSchool('Binding'), 'summoner');
     assert.equal(resolveSigilSchool('Summoner'), 'summoner');
-    assert.equal(resolveSigilSchool('not-yet-known'), 'arcane');
+    assert.equal(resolveSigilSchool('not-yet-known'), null);
+    assert.equal(resolveSigilSchool(undefined), null);
+    assert.equal(resolveSigilSchool(''), null);
+});
+
+test('six school palettes color both base and center without changing approved alpha or source imagery', () => {
+    assert.deepEqual(Object.keys(SIGIL_SCHOOL_COLORS),
+        ['fire', 'frost', 'storm', 'arcane', 'necromancer', 'summoner']);
+    assert.equal(new Set(Object.values(SIGIL_SCHOOL_COLORS)).size, 6);
+    const original = new Uint8ClampedArray([175, 88, 238, 255, 75, 25, 130, 95, 0, 0, 0, 0]);
+    const channels = ['fire', 'frost', 'storm', 'necromancer', 'summoner'];
+    for (const school of channels) {
+        const pixels = new Uint8ClampedArray(original);
+        assert.equal(tintSigilPixels(pixels, school), pixels);
+        assert.equal(pixels[3], 255);
+        assert.equal(pixels[7], 95);
+        assert.equal(pixels[11], 0);
+        assert.notDeepEqual(pixels, original, school + ' must tint the original purple artwork');
+        assert.notEqual(pixels[0], pixels[4], 'original light and dark pixel detail must survive');
+        if (school === 'fire' || school === 'storm') assert.ok(pixels[0] > pixels[1] && pixels[1] > pixels[2], school);
+        if (school === 'frost') assert.ok(pixels[2] > pixels[1] && pixels[1] > pixels[0]);
+        if (school === 'necromancer' || school === 'summoner') assert.ok(pixels[1] > pixels[0], school);
+    }
+    assert.deepEqual(tintSigilPixels(new Uint8ClampedArray(original), 'Arcane'), original);
+    assert.deepEqual(tintSigilPixels(new Uint8ClampedArray(original), null), original);
+    assert.deepEqual(original, new Uint8ClampedArray([175, 88, 238, 255, 75, 25, 130, 95, 0, 0, 0, 0]));
+});
+
+test('one existing shared point emitter and Canvas adapter follow C# school without adding light engines', () => {
+    const marker = resolveTargetIndicator(scene());
+    for (const school of ['Fire', 'Frost', 'Storm', 'Arcane', 'Death', 'Binding']) {
+        const key = resolveSigilSchool(school);
+        const emitter = targetSelectionLightEmitter(marker, litFrame(), school);
+        assert.equal(emitter.color, SIGIL_SCHOOL_COLORS[key], school);
+        assert.equal(emitter.id, 'target-selection:underlight');
+        const adapter = targetSelectionCanvasLight(emitter);
+        assert.equal(adapter.length, 1);
+        const hex = emitter.color;
+        assert.deepEqual(adapter[0].center,
+            [hex.slice(1, 3), hex.slice(3, 5), hex.slice(5, 7)].map(part => parseInt(part, 16)));
+    }
+    assert.equal(targetSelectionLightEmitter(marker, litFrame(), null).color, '#d9cfee');
+    assert.equal(targetSelectionLightEmitter(marker,
+        { environment: { ambient: 0, emission: false }, lights: [] }, 'Fire'), null);
+});
+
+test('missing school never inserts a misleading Arcane center emblem', () => {
+    const marker = { ...resolveTargetIndicator(scene()), opacity: 1 };
+    const ctx = canvas();
+    assert.equal(drawTargetIndicator(ctx, marker, 'contrast', 0, true, atlas, null), true);
+    assert.equal(images(ctx).length, 1);
 });
 
 test('C# selected enemy receives a legible combat footprint; unselected enemies are ignored', () => {
