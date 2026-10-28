@@ -135,3 +135,36 @@ Resume from this remote branch, not by merging #385:
 7. Upload accessible final source and MP4, complete docs and next-content
    handovers. Ask the one final owner visual approval only when all controlled
    work is genuinely complete. Never merge/deploy/mark art accepted beforehand.
+
+## Moving-strike study — 28 October, after b8d5617
+
+The source generator now accepts `--only attack-travel`: a 16 gait-phase ×
+16 action-progress **whole-body** pose grid. Every pose re-solves the actual
+arms, ankles, pelvis and mass proxy together. It is not an upper-body attack
+pasted onto a separately running leg loop. The grid is an authoring surface;
+its 256 samples are not a 256-frame sequential animation.
+
+Independent saved-Blender evaluation passed all 256 samples: maximum stance
+landmark drift 1.248945e-7m, bone-length error 1.427865e-7m, minimum mass-proxy
+support margin 0.00300793m; knees 11.385–79.222°, elbows 25.106–149.822°.
+The existing quarter-pixel tolerance and anatomical limits were unchanged.
+
+Shared playback has optional validated action-major pose-grid metadata and
+independent distance/action sampling. Action duration uses the action-axis
+frame count, not the packed pose count. Target crossing, freeze/resume,
+15/30/60/120Hz and malformed grids have focused regression coverage.
+The narrow v1/v2 suite passed 22/22.
+
+**Not integrated or accepted:** this study only covers travel along the source
+forward axis. Turning world velocity during a locked strike, quantized raster
+contact, atlas memory, material export and live Hunt contact remain open.
+The existing runtime candidate is unchanged; the ~19.97-world-unit failure is
+not claimed fixed. No new C# motion, damage or AI changes were made.
+
+Reproduce the study:
+
+```sh
+blender -b -t 2 --python tools/animation/author_hollow_foundation.py -- --out artifacts/travel-study --only attack-travel
+blender -b -t 2 --python tools/animation/validate_source.py -- artifacts/travel-study
+node --test tests/javascript/creature-animation.test.mjs tests/javascript/sprite-animation.test.mjs
+```

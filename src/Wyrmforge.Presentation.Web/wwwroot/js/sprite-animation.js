@@ -95,6 +95,10 @@ export function validateCreatureRigProfile(profile) {
     const specs=[profile.locomotion,...Object.values(profile.actions??{}),...(profile.pivot?[profile.pivot]:[]),...Object.values(profile.pivots??{})];
     for(const clip of specs){
         if(!clip.clip||!Number.isSafeInteger(clip.frames)||clip.frames<1||!(clip.fps>0))fail('invalid clip dimensions/time');
+        if(clip.poseGrid){
+            const grid=clip.poseGrid;
+            if(!Number.isSafeInteger(grid.phaseFrames)||grid.phaseFrames<2||!Number.isSafeInteger(grid.actionFrames)||grid.actionFrames<2||grid.phaseFrames*grid.actionFrames!==clip.frames||grid.order!=='action-major'||grid.phaseSampling!=='nearest'||grid.actionSampling!=='nearest')fail(`invalid pose grid: ${clip.clip}`);
+        }
         if(clip.mode==='regions'&&!clip.coupledSupport)fail('region action requires authored coupledSupport');
         if(!Array.isArray(clip.samples)||clip.samples.length!==clip.frames)fail(`contact samples required: ${clip.clip}`);
         if(clip.commitUntil!=null&&(!(clip.commitUntil>=0)||clip.commitUntil>1))fail('invalid commitment');
@@ -152,6 +156,11 @@ function solvePresentationContacts(state,profile,spec,frame,world,yaw,actorScale
     return {contacts:state.contacts,errors,maxSlip:Math.max(0,...errors.map(c=>c.slip)),balance:authored.balance??'supported',
         com:authored.com??null,support:authored.contacts??[],correctionSaturated:length>limit};
 }
+function actionDuration(spec){return (spec.poseGrid?.actionFrames??spec.frames)/spec.fps;}
+function poseGridFrame(spec,phase,progress){
+    const grid=spec.poseGrid;
+    return Math.min(grid.actionFrames-1,Math.round(progress*(grid.actionFrames-1)))*grid.phaseFrames+Math.round(phase*grid.phaseFrames)%grid.phaseFrames;
+}
 function updateContactAnimation(state,profile,input){
     if(!state.contactVersion){
         if(!Number.isFinite(input.timestamp)||!Number.isFinite(input.travel)||!input.world||input.entityId==null)
@@ -174,7 +183,7 @@ function updateContactAnimation(state,profile,input){
     const signal=input.action,spec=signal&&profile.actions[signal.name];
     if(signal&&(!Number.isSafeInteger(signal.sequence)||signal.sequence<0||signal.token==null))throw new TypeError('Action requires token and monotonic sequence');
     const current=state.action&&profile.actions[state.action.name];
-    const progress=current?Math.min(1,(state.time-state.action.started)*current.fps/current.frames):1;
+    const progress=current?Math.min(1,(state.time-state.action.started)/actionDuration(current)):1;
     const committed=current&&progress<(current.commitUntil??0);
     const higher=spec&&(spec.priority??0)>(current?.priority??-1);
     if(spec&&signal.token!==state.lastToken&&signal.sequence>state.sequence&&(!stopped||spec.terminal)&&(!current||higher||(!committed&&!current.terminal))){
@@ -184,7 +193,7 @@ function updateContactAnimation(state,profile,input){
         state.contacts={};
     }
     let actionSpec=state.action&&profile.actions[state.action.name];
-    let actionProgress=actionSpec?Math.min(1,(state.time-state.action.started)*actionSpec.fps/actionSpec.frames):null;
+    let actionProgress=actionSpec?Math.min(1,(state.time-state.action.started)/actionDuration(actionSpec)):null;
     if(actionSpec&&actionProgress>=1&&!actionSpec.hold){state.action=null;actionSpec=null;actionProgress=null;}
     const target=profile.facing.directions.indexOf(input.direction);
     const locomotionFrame=Math.min(profile.locomotion.frames-1,Math.floor(state.phase*profile.locomotion.frames));
@@ -207,7 +216,7 @@ function updateContactAnimation(state,profile,input){
     }else if(!turning){state.pivotTime=0;state.pivotSign=null;}
     if(actionSpec)state.facingIndex=state.actionDirection;
     const clipSpec=actionSpec??(turning&&pivotSpec?pivotSpec:profile.locomotion);
-    let frame=actionSpec?Math.min(actionSpec.frames-1,Math.floor(actionProgress*actionSpec.frames)):
+    let frame=actionSpec?(actionSpec.poseGrid?poseGridFrame(actionSpec,state.phase,actionProgress):Math.min(actionSpec.frames-1,Math.floor(actionProgress*actionSpec.frames))):
         pivotFrame??(input.moving?locomotionFrame:(profile.locomotion.idleFrame??locomotionFrame));
     if(stopped&&state.sample&&!actionSpec?.terminal)frame=state.sample.frame;
     if(input.reducedMotion)frame=clipSpec.reducedFrame??0;

@@ -3,7 +3,8 @@ export type Vector2={x:number;y:number};
 export type Balance='supported'|'catch'|'flight'|'fall';
 export interface ContactSample {id:string;x:number;y:number}
 export interface SourcePose {contacts:ContactSample[];com?:[number,number];balance:Balance}
-export interface ClipProfile {clip:string;frames:number;fps:number;samples:SourcePose[];mode?:'fullBody'|'regions';coupledSupport?:boolean;priority?:number;commitUntil?:number;hold?:boolean;terminal?:boolean;reducedFrame?:number}
+export interface PoseGrid {phaseFrames:number;actionFrames:number;order:'action-major';phaseSampling:'nearest';actionSampling:'nearest'}
+export interface ClipProfile {poseGrid?:PoseGrid;clip:string;frames:number;fps:number;samples:SourcePose[];mode?:'fullBody'|'regions';coupledSupport?:boolean;priority?:number;commitUntil?:number;hold?:boolean;terminal?:boolean;reducedFrame?:number}
 export interface CreatureRigProfile {
  schemaVersion:2;coordinateSpace:'actor-xy-ground-z-up';unitsPerPixel:number;maxRootOffset:number;
  rig:{bodyPlan:string;bones:{id:string;parent?:string|null;length:number;rest:number[];limits?:[number,number]}[];

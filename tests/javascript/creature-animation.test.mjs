@@ -96,3 +96,35 @@ test('scaled bodies use proportional stride and bounded contact correction',()=>
  assert.equal(a.phase,.25);assert.equal(Math.abs(a.rootOffset.x),1);
  assert.throws(()=>update(s,p,intent(.3,{scale:0})),RangeError);
 });
+
+test('whole-body pose grid samples independent distance and committed action clocks',()=>{
+ const p=structuredClone(fixture()),s=create();
+ p.actions.strike.poseGrid={phaseFrames:4,actionFrames:3,order:'action-major',phaseSampling:'nearest',actionSampling:'nearest'};
+ p.actions.strike.frames=12;p.actions.strike.fps=3;
+ p.actions.strike.samples=Array.from({length:12},()=>({contacts:[{id:'support',x:0,y:0}],balance:'supported'}));
+ validate(p);update(s,p,intent(0,{action:strike()}));
+ let a=update(s,p,intent(.5,{travel:1,moving:true,direction:'N',action:strike(1)}));
+ assert.equal(a.actionToken,'claw-0');assert.equal(a.actionProgress,.5);assert.equal(a.frame,5);assert.equal(a.direction,'S');
+ a=update(s,p,intent(.5,{travel:2,moving:true}));assert.equal(a.frame,6);assert.equal(a.actionProgress,.5);
+ a=update(s,p,intent(.75,{travel:2,moving:false}));assert.equal(a.frame,10);assert.equal(a.actionProgress,.75);
+ assert.equal(update(s,p,intent(1,{travel:2})).actionToken,null,'grid duration is actionFrames/fps, not total packed poses/fps');
+});
+test('pose grid freeze and replay preserve both clocks at variable render FPS',()=>{
+ const p=structuredClone(fixture());p.actions.strike.poseGrid={phaseFrames:4,actionFrames:4,order:'action-major',phaseSampling:'nearest',actionSampling:'nearest'};
+ p.actions.strike.frames=16;p.actions.strike.samples=Array(16).fill(p.actions.strike.samples[0]);
+ const results=[];
+ for(const fps of [15,30,60,120]){
+  const s=create();update(s,p,intent(0,{action:strike()}));
+  for(let i=1;i<=fps/3;i++)update(s,p,intent(i/fps,{travel:i/fps*2,moving:true}));
+  const before=structuredClone(s.sample);const freeze=update(s,p,intent(8,{frozen:true,travel:2/3}));
+  assert.equal(freeze.frame,before.frame);assert.equal(update(s,p,intent(9,{travel:2/3})).frame,before.frame);
+  results.push([s.sample.frame,Number(s.sample.actionProgress.toFixed(8)),Number(s.sample.phase.toFixed(8))]);
+ }
+ assert.ok(results.every(r=>JSON.stringify(r)===JSON.stringify(results[0])),JSON.stringify(results));
+});
+test('pose grid rejects incomplete, ambiguous and fractional sample layouts',()=>{
+ for(const change of [g=>g.phaseFrames=3,g=>g.actionFrames=1,g=>g.order='phase-major',g=>g.phaseSampling='interpolated',g=>g.actionFrames=2.5]){
+  const p=structuredClone(fixture());p.actions.strike.poseGrid={phaseFrames:2,actionFrames:2,order:'action-major',phaseSampling:'nearest',actionSampling:'nearest'};
+  change(p.actions.strike.poseGrid);assert.throws(()=>validate(p),/pose grid/);
+ }
+});

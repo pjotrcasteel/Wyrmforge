@@ -13,11 +13,12 @@ scene=bpy.context.scene;results={};rest=r.data.bones
 for name,clip in m['clips'].items():
  r.animation_data.action=bpy.data.actions['AN1_'+name+'_supported_v1'];anchors={};maxslip=0;maxlength=0;ranges={}
  for f,s in enumerate(clip['samples']):
+  if clip.get('poseGrid') and f%clip['poseGrid']['phaseFrames']==0:anchors={}
   scene.frame_set(f+1);active={c['id'] for c in s['contacts']}
   for side,sign in [('L',1),('R',-1)]:
    id='foot-'+side;bone=r.pose.bones['foot.'+side]
    actual=r.matrix_world @ bone.matrix @ rest[bone.name].matrix_local.inverted() @ Vector((sign*.09,-.025,-.5))
-   if name=='walk':actual+=Vector((0,-clip['strideMetres']*f/16,0))
+   actual+=Vector((0,-s.get('rootTravelMetres',clip['strideMetres']*f/16 if name=='walk' else 0),0))
    if id in active:
     if id in anchors:maxslip=max(maxslip,(actual-anchors[id]).length)
     else:anchors[id]=actual.copy()

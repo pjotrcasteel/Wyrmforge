@@ -64,23 +64,31 @@ def foot_target(side,p):
     return Vector((sign*.085,local_y,z)),stance
 
 records={};actions={}
+GRID_PHASES=16
+GRID_ACTIONS=16
 for clip in args.only.split(','):
     action=bpy.data.actions.new('AN1_'+clip+'_supported_v1');rig.animation_data_create();rig.animation_data.action=action
     action.use_fake_user=True;actions[clip]=action
     samples=[];last_points={};slips=[];joint_ranges={};length_error=0
-    for index in range(17):
+    grid=clip=='attack-travel'
+    frame_count=GRID_PHASES*GRID_ACTIONS if grid else 16
+    for index in range(frame_count if grid else 17):
         scene.frame_set(index+1)
-        p=index/16;t=index/15 if index<16 else 1
+        gait_index=index%GRID_PHASES if grid else index
+        p=gait_index/16;t=(index//GRID_PHASES)/(GRID_ACTIONS-1) if grid else (index/15 if index<16 else 1)
+        # A grid is a sampled whole-body surface, not a sequential action.
+        # Each row starts a new gait/contact experiment at a fixed action time.
+        if grid and gait_index==0:last_points={}
         rig.location=(0,0,0);rig.rotation_mode='XYZ';rig.rotation_euler=(0,0,0)
         turn_sign=-1 if clip=='pivot-negative' else 1
         yaw=turn_sign*math.pi/4*smooth((p-.08)/.84) if clip.startswith('pivot') else 0
         rig.rotation_euler.z=yaw
         # Torso has separate load/torque/recoil curves; no independent leg loop.
-        attack=clip=='attack'
+        attack=clip in ['attack','attack-travel']
         torque=interp([(0,0),(.27,-.27),(.43,-.30),(.56,.34),(.72,.22),(1,0)],t) if attack else .045*math.sin(2*math.pi*p)
         lean=interp([(0,.09),(.3,-.08),(.47,-.03),(.58,.19),(.76,.12),(1,.09)],t) if attack else .09+.025*math.sin(4*math.pi*p)
-        pelvis_x=.085*math.sin(2*math.pi*p) if not attack else interp([(0,0),(.3,-.018),(.6,.024),(1,0)],t)
-        pelvis_z=-.065+.009*math.cos(4*math.pi*p) if not attack else interp([(0,-.056),(.32,-.073),(.57,-.059),(.75,-.068),(1,-.056)],t)
+        pelvis_x=.085*math.sin(2*math.pi*p) if not attack or grid else interp([(0,0),(.3,-.018),(.6,.024),(1,0)],t)
+        pelvis_z=-.065+.009*math.cos(4*math.pi*p) if not attack or grid else interp([(0,-.056),(.32,-.073),(.57,-.059),(.75,-.068),(1,-.056)],t)
         # Offsets are local to the true bind orientation (not world premultiplies).
         set_local('root',(0,0,0),(0,0,0))
         pelvis=rig.pose.bones['pelvis'];pelvis.matrix=Matrix.Translation(Vector((pelvis_x,0,pelvis_z+.025))) @ rest['pelvis']
@@ -91,7 +99,7 @@ for clip in args.only.split(','):
         bpy.context.view_layer.update()
         contacts=[];footprints=[];feet_poses={};hand_targets={}
         for side,sign in [('L',1),('R',-1)]:
-            if attack:
+            if attack and not grid:
                 sole=Vector((sign*.085,-.06 if side=='L' else .055,SOLE_Z));stance=True
             elif clip.startswith('pivot'):
                 # Two actual weight-bearing steps complete one 45 degree turn.
@@ -113,7 +121,7 @@ for clip in args.only.split(','):
             bpy.context.view_layer.update()
             feet_poses[side]=(ankle.copy(),fmatrix.copy())
             actual=rig.pose.bones['foot.'+side].matrix @ rest['foot.'+side].inverted() @ landmark
-            world=Matrix.Rotation(yaw,4,'Z') @ actual+Vector((0,-STRIDE*p if clip=='walk' else 0,0))
+            world=Matrix.Rotation(yaw,4,'Z') @ actual+Vector((0,-STRIDE*p if clip=='walk' or grid else 0,0))
             if stance:
                 # A new support epoch may reuse a limb ID after a swing.
                 if side in last_points:slips.append((world-last_points[side]).length)
@@ -168,7 +176,9 @@ for clip in args.only.split(','):
         if margin<0:raise ValueError(f'Unbalanced {clip} frame {index}: mass projection {margin:.6f}m outside support')
         sample={'contacts':contacts,'com':[com.x,com.y],'supportMargin':margin,
                 'balance':'supported' if margin>=0 else 'catch','authoredYawRadians':yaw,
-                'massModel':'authored-segment-centres-approximation'}
+                'massModel':'authored-segment-centres-approximation',
+                'rootTravelMetres':STRIDE*p if clip=='walk' or grid else 0,
+                'gaitPhase':p,'actionProgress':t if attack else None}
         samples.append(sample)
         rig.keyframe_insert("rotation_euler",frame=index+1)
         for bone in rig.pose.bones:
@@ -181,7 +191,8 @@ for clip in args.only.split(','):
                 if bag:
                     for curve in bag.fcurves:
                         for key in curve.keyframe_points:key.interpolation='LINEAR'
-    records[clip]={'samples':samples[:16],'maxStanceSlipMetres':max(slips,default=0),'maxBoneLengthErrorMetres':length_error,'jointRangesDegrees':{k:[min(v),max(v)] for k,v in joint_ranges.items()},'strideMetres':STRIDE if clip=='walk' else 0,'frames':16,'fps':12}
+    records[clip]={'samples':samples[:frame_count],'maxStanceSlipMetres':max(slips,default=0),'maxBoneLengthErrorMetres':length_error,'jointRangesDegrees':{k:[min(v),max(v)] for k,v in joint_ranges.items()},'strideMetres':STRIDE if clip=='walk' or grid else 0,'frames':frame_count,'fps':12}
+    if grid:records[clip]['poseGrid']={'phaseFrames':GRID_PHASES,'actionFrames':GRID_ACTIONS,'order':'action-major','phaseSampling':'nearest','actionSampling':'nearest'}
     print('AN_CLIP',clip,json.dumps({k:v for k,v in records[clip].items() if k!='samples'}),flush=True)
 # Pack images into editable source rather than depending on another workstation.
 bpy.ops.file.pack_all()
@@ -196,7 +207,7 @@ if args.render:
             if not args.all and direction not in ['S','E']:continue
             view.rotation_euler.z=front+math.pi-row*math.pi/4
             folder=OUT/'frames'/clip/direction;folder.mkdir(parents=True,exist_ok=True)
-            for index in range(16):
+            for index in range(records[clip]['frames']):
                 scene.frame_set(index+1);scene.render.filepath=str(folder/f'{index:02d}.png');bpy.ops.render.render(write_still=True)
             print('AN_RENDER',clip,direction,flush=True)
 print('AN_OUTPUT',str(OUT),flush=True)
