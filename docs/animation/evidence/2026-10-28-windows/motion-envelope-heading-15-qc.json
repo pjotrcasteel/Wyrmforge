@@ -1,0 +1,1352 @@
+{
+  "sourceForwardOnly": false,
+  "rootHeadingDegrees": 15.0,
+  "runtimeAccepted": false,
+  "correctionBudgetMetres": 0.016145833333333335,
+  "results": [
+    {
+      "hz": 15,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0,
+      "reverse": false,
+      "maxCorrectionMetres": 0.01874703915144519,
+      "minimumKneeFlexDegrees": 44.937591464211664,
+      "failure": {
+        "time": 0.2,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.01874703915144519
+      }
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0,
+      "reverse": true,
+      "maxCorrectionMetres": 0.01874703915144519,
+      "minimumKneeFlexDegrees": 44.937591464211664,
+      "failure": {
+        "time": 0.2,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.01874703915144519
+      }
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.17,
+      "reverse": false,
+      "maxCorrectionMetres": 0.01911420761978276,
+      "minimumKneeFlexDegrees": 63.74196545315081,
+      "failure": {
+        "time": 0.2,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.01911420761978276
+      }
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.17,
+      "reverse": true,
+      "maxCorrectionMetres": 0.01911420761978276,
+      "minimumKneeFlexDegrees": 63.74196545315081,
+      "failure": {
+        "time": 0.2,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.01911420761978276
+      }
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.35,
+      "reverse": false,
+      "maxCorrectionMetres": 0.019889928666422578,
+      "minimumKneeFlexDegrees": 54.44914218648482,
+      "failure": {
+        "time": 0.2,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.019889928666422578
+      }
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.35,
+      "reverse": true,
+      "maxCorrectionMetres": 0.019889928666422578,
+      "minimumKneeFlexDegrees": 54.44914218648482,
+      "failure": {
+        "time": 0.2,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.019889928666422578
+      }
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.61,
+      "reverse": false,
+      "maxCorrectionMetres": 0.018934331416115044,
+      "minimumKneeFlexDegrees": 60.56062076894429,
+      "failure": {
+        "time": 0.2,
+        "contact": "foot-R",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.018934331416115044
+      }
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.61,
+      "reverse": true,
+      "maxCorrectionMetres": 0.018934331416115044,
+      "minimumKneeFlexDegrees": 60.56062076894429,
+      "failure": {
+        "time": 0.2,
+        "contact": "foot-R",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.018934331416115044
+      }
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0,
+      "reverse": false,
+      "maxCorrectionMetres": 0.024996033481602262,
+      "minimumKneeFlexDegrees": 49.800235476368044,
+      "failure": {
+        "time": 0.13333333333333333,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.024996033481602262
+      }
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0,
+      "reverse": true,
+      "maxCorrectionMetres": 0.024996033481602262,
+      "minimumKneeFlexDegrees": 49.800235476368044,
+      "failure": {
+        "time": 0.13333333333333333,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.024996033481602262
+      }
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.17,
+      "reverse": false,
+      "maxCorrectionMetres": 0.025101929329827834,
+      "minimumKneeFlexDegrees": 60.707808388414705,
+      "failure": {
+        "time": 0.13333333333333333,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.025101929329827834
+      }
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.17,
+      "reverse": true,
+      "maxCorrectionMetres": 0.025101929329827834,
+      "minimumKneeFlexDegrees": 60.707808388414705,
+      "failure": {
+        "time": 0.13333333333333333,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.025101929329827834
+      }
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.35,
+      "reverse": false,
+      "maxCorrectionMetres": 0.025326419755483946,
+      "minimumKneeFlexDegrees": 51.13114952239275,
+      "failure": {
+        "time": 0.2,
+        "contact": "foot-R",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.025326419755483946
+      }
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.35,
+      "reverse": true,
+      "maxCorrectionMetres": 0.025326419755483946,
+      "minimumKneeFlexDegrees": 51.13114952239275,
+      "failure": {
+        "time": 0.2,
+        "contact": "foot-R",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.025326419755483946
+      }
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.61,
+      "reverse": false,
+      "maxCorrectionMetres": 0.024989827371972584,
+      "minimumKneeFlexDegrees": 60.56062076894429,
+      "failure": {
+        "time": 0.13333333333333333,
+        "contact": "foot-R",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.024989827371972584
+      }
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.61,
+      "reverse": true,
+      "maxCorrectionMetres": 0.024989827371972584,
+      "minimumKneeFlexDegrees": 60.56062076894429,
+      "failure": {
+        "time": 0.13333333333333333,
+        "contact": "foot-R",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.024989827371972584
+      }
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0,
+      "reverse": false,
+      "maxCorrectionMetres": 0.028411290693631373,
+      "minimumKneeFlexDegrees": 49.800235476368044,
+      "failure": {
+        "time": 0.06666666666666667,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.028411290693631373
+      }
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0,
+      "reverse": true,
+      "maxCorrectionMetres": 0.028411290693631373,
+      "minimumKneeFlexDegrees": 49.800235476368044,
+      "failure": {
+        "time": 0.06666666666666667,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.028411290693631373
+      }
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.17,
+      "reverse": false,
+      "maxCorrectionMetres": 0.02692356253254351,
+      "minimumKneeFlexDegrees": 53.698456173507935,
+      "failure": {
+        "time": 0.06666666666666667,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.02692356253254351
+      }
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.17,
+      "reverse": true,
+      "maxCorrectionMetres": 0.02692356253254351,
+      "minimumKneeFlexDegrees": 53.698456173507935,
+      "failure": {
+        "time": 0.06666666666666667,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.02692356253254351
+      }
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.35,
+      "reverse": false,
+      "maxCorrectionMetres": 0.028651497006784512,
+      "minimumKneeFlexDegrees": 60.22428465907669,
+      "failure": {
+        "time": 0.13333333333333333,
+        "contact": "foot-R",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.028651497006784512
+      }
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.35,
+      "reverse": true,
+      "maxCorrectionMetres": 0.028651497006784512,
+      "minimumKneeFlexDegrees": 60.22428465907669,
+      "failure": {
+        "time": 0.13333333333333333,
+        "contact": "foot-R",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.028651497006784512
+      }
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.61,
+      "reverse": false,
+      "maxCorrectionMetres": 0.027051427132330684,
+      "minimumKneeFlexDegrees": 60.56062076894429,
+      "failure": {
+        "time": 0.06666666666666667,
+        "contact": "foot-R",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.027051427132330684
+      }
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.61,
+      "reverse": true,
+      "maxCorrectionMetres": 0.027051427132330684,
+      "minimumKneeFlexDegrees": 60.56062076894429,
+      "failure": {
+        "time": 0.06666666666666667,
+        "contact": "foot-R",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.027051427132330684
+      }
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0,
+      "reverse": false,
+      "maxCorrectionMetres": 0.01822779313589056,
+      "minimumKneeFlexDegrees": 44.937591464211664,
+      "failure": {
+        "time": 0.16666666666666666,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.01822779313589056
+      }
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0,
+      "reverse": true,
+      "maxCorrectionMetres": 0.01822779313589056,
+      "minimumKneeFlexDegrees": 44.937591464211664,
+      "failure": {
+        "time": 0.16666666666666666,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.01822779313589056
+      }
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.17,
+      "reverse": false,
+      "maxCorrectionMetres": 0.016895273841256973,
+      "minimumKneeFlexDegrees": 62.79934755559226,
+      "failure": {
+        "time": 0.16666666666666666,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.016895273841256973
+      }
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.17,
+      "reverse": true,
+      "maxCorrectionMetres": 0.016895273841256973,
+      "minimumKneeFlexDegrees": 62.79934755559226,
+      "failure": {
+        "time": 0.16666666666666666,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.016895273841256973
+      }
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.35,
+      "reverse": false,
+      "maxCorrectionMetres": 0.019889928666422578,
+      "minimumKneeFlexDegrees": 54.44914218648482,
+      "failure": {
+        "time": 0.2,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.019889928666422578
+      }
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.35,
+      "reverse": true,
+      "maxCorrectionMetres": 0.019889928666422578,
+      "minimumKneeFlexDegrees": 54.44914218648482,
+      "failure": {
+        "time": 0.2,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.019889928666422578
+      }
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.61,
+      "reverse": false,
+      "maxCorrectionMetres": 0.017269634313773156,
+      "minimumKneeFlexDegrees": 60.30765128564349,
+      "failure": {
+        "time": 0.16666666666666666,
+        "contact": "foot-R",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.017269634313773156
+      }
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.61,
+      "reverse": true,
+      "maxCorrectionMetres": 0.017269634313773156,
+      "minimumKneeFlexDegrees": 60.30765128564349,
+      "failure": {
+        "time": 0.16666666666666666,
+        "contact": "foot-R",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.017269634313773156
+      }
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0,
+      "reverse": false,
+      "maxCorrectionMetres": 0.01874703915144519,
+      "minimumKneeFlexDegrees": 44.937591464211664,
+      "failure": {
+        "time": 0.1,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.01874703915144519
+      }
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0,
+      "reverse": true,
+      "maxCorrectionMetres": 0.01874703915144519,
+      "minimumKneeFlexDegrees": 44.937591464211664,
+      "failure": {
+        "time": 0.1,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.01874703915144519
+      }
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.17,
+      "reverse": false,
+      "maxCorrectionMetres": 0.01911420761978276,
+      "minimumKneeFlexDegrees": 61.89402313024816,
+      "failure": {
+        "time": 0.1,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.01911420761978276
+      }
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.17,
+      "reverse": true,
+      "maxCorrectionMetres": 0.01911420761978276,
+      "minimumKneeFlexDegrees": 61.89402313024816,
+      "failure": {
+        "time": 0.1,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.01911420761978276
+      }
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.35,
+      "reverse": false,
+      "maxCorrectionMetres": 0.019889928666422578,
+      "minimumKneeFlexDegrees": 51.13114952239275,
+      "failure": {
+        "time": 0.1,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.019889928666422578
+      }
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.35,
+      "reverse": true,
+      "maxCorrectionMetres": 0.019889928666422578,
+      "minimumKneeFlexDegrees": 51.13114952239275,
+      "failure": {
+        "time": 0.1,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.019889928666422578
+      }
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.61,
+      "reverse": false,
+      "maxCorrectionMetres": 0.018934331416115044,
+      "minimumKneeFlexDegrees": 60.56062076894429,
+      "failure": {
+        "time": 0.1,
+        "contact": "foot-R",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.018934331416115044
+      }
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.61,
+      "reverse": true,
+      "maxCorrectionMetres": 0.018934331416115044,
+      "minimumKneeFlexDegrees": 60.56062076894429,
+      "failure": {
+        "time": 0.1,
+        "contact": "foot-R",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.018934331416115044
+      }
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0,
+      "reverse": false,
+      "maxCorrectionMetres": 0.028411290693631373,
+      "minimumKneeFlexDegrees": 49.800235476368044,
+      "failure": {
+        "time": 0.06666666666666667,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.028411290693631373
+      }
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0,
+      "reverse": true,
+      "maxCorrectionMetres": 0.028411290693631373,
+      "minimumKneeFlexDegrees": 49.800235476368044,
+      "failure": {
+        "time": 0.06666666666666667,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.028411290693631373
+      }
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.17,
+      "reverse": false,
+      "maxCorrectionMetres": 0.02692356253254351,
+      "minimumKneeFlexDegrees": 53.698456173507935,
+      "failure": {
+        "time": 0.06666666666666667,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.02692356253254351
+      }
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.17,
+      "reverse": true,
+      "maxCorrectionMetres": 0.02692356253254351,
+      "minimumKneeFlexDegrees": 53.698456173507935,
+      "failure": {
+        "time": 0.06666666666666667,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.02692356253254351
+      }
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.35,
+      "reverse": false,
+      "maxCorrectionMetres": 0.027275581355371368,
+      "minimumKneeFlexDegrees": 50.36958512310346,
+      "failure": {
+        "time": 0.1,
+        "contact": "foot-R",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.027275581355371368
+      }
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.35,
+      "reverse": true,
+      "maxCorrectionMetres": 0.027275581355371368,
+      "minimumKneeFlexDegrees": 50.36958512310346,
+      "failure": {
+        "time": 0.1,
+        "contact": "foot-R",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.027275581355371368
+      }
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.61,
+      "reverse": false,
+      "maxCorrectionMetres": 0.027051427132330684,
+      "minimumKneeFlexDegrees": 60.56062076894429,
+      "failure": {
+        "time": 0.06666666666666667,
+        "contact": "foot-R",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.027051427132330684
+      }
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.61,
+      "reverse": true,
+      "maxCorrectionMetres": 0.027051427132330684,
+      "minimumKneeFlexDegrees": 60.56062076894429,
+      "failure": {
+        "time": 0.06666666666666667,
+        "contact": "foot-R",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.027051427132330684
+      }
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0,
+      "reverse": false,
+      "maxCorrectionMetres": 0.01822779313589056,
+      "minimumKneeFlexDegrees": 43.16262025973123,
+      "failure": {
+        "time": 0.16666666666666666,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.01822779313589056
+      }
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0,
+      "reverse": true,
+      "maxCorrectionMetres": 0.01822779313589056,
+      "minimumKneeFlexDegrees": 43.16262025973123,
+      "failure": {
+        "time": 0.16666666666666666,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.01822779313589056
+      }
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.17,
+      "reverse": false,
+      "maxCorrectionMetres": 0.016895273841256973,
+      "minimumKneeFlexDegrees": 62.19250305801049,
+      "failure": {
+        "time": 0.16666666666666666,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.016895273841256973
+      }
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.17,
+      "reverse": true,
+      "maxCorrectionMetres": 0.016895273841256973,
+      "minimumKneeFlexDegrees": 62.19250305801049,
+      "failure": {
+        "time": 0.16666666666666666,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.016895273841256973
+      }
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.35,
+      "reverse": false,
+      "maxCorrectionMetres": 0.019669198536403677,
+      "minimumKneeFlexDegrees": 53.984710480102436,
+      "failure": {
+        "time": 0.18333333333333332,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.019669198536403677
+      }
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.35,
+      "reverse": true,
+      "maxCorrectionMetres": 0.019669198536403677,
+      "minimumKneeFlexDegrees": 53.984710480102436,
+      "failure": {
+        "time": 0.18333333333333332,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.019669198536403677
+      }
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.61,
+      "reverse": false,
+      "maxCorrectionMetres": 0.017269634313773156,
+      "minimumKneeFlexDegrees": 60.30765128564349,
+      "failure": {
+        "time": 0.16666666666666666,
+        "contact": "foot-R",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.017269634313773156
+      }
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.61,
+      "reverse": true,
+      "maxCorrectionMetres": 0.017269634313773156,
+      "minimumKneeFlexDegrees": 60.30765128564349,
+      "failure": {
+        "time": 0.16666666666666666,
+        "contact": "foot-R",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.017269634313773156
+      }
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0,
+      "reverse": false,
+      "maxCorrectionMetres": 0.018227789343791097,
+      "minimumKneeFlexDegrees": 44.937591464211664,
+      "failure": {
+        "time": 0.08333333333333333,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.018227789343791097
+      }
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0,
+      "reverse": true,
+      "maxCorrectionMetres": 0.018227789343791097,
+      "minimumKneeFlexDegrees": 44.937591464211664,
+      "failure": {
+        "time": 0.08333333333333333,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.018227789343791097
+      }
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.17,
+      "reverse": false,
+      "maxCorrectionMetres": 0.01689525037086893,
+      "minimumKneeFlexDegrees": 60.300549383877154,
+      "failure": {
+        "time": 0.08333333333333333,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.01689525037086893
+      }
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.17,
+      "reverse": true,
+      "maxCorrectionMetres": 0.01689525037086893,
+      "minimumKneeFlexDegrees": 60.300549383877154,
+      "failure": {
+        "time": 0.08333333333333333,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.01689525037086893
+      }
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.35,
+      "reverse": false,
+      "maxCorrectionMetres": 0.019889928666422578,
+      "minimumKneeFlexDegrees": 48.474804832572744,
+      "failure": {
+        "time": 0.1,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.019889928666422578
+      }
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.35,
+      "reverse": true,
+      "maxCorrectionMetres": 0.019889928666422578,
+      "minimumKneeFlexDegrees": 48.474804832572744,
+      "failure": {
+        "time": 0.1,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.019889928666422578
+      }
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.61,
+      "reverse": false,
+      "maxCorrectionMetres": 0.0172696488491378,
+      "minimumKneeFlexDegrees": 60.30765128564349,
+      "failure": {
+        "time": 0.08333333333333333,
+        "contact": "foot-R",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.0172696488491378
+      }
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.61,
+      "reverse": true,
+      "maxCorrectionMetres": 0.0172696488491378,
+      "minimumKneeFlexDegrees": 60.30765128564349,
+      "failure": {
+        "time": 0.08333333333333333,
+        "contact": "foot-R",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.0172696488491378
+      }
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0,
+      "reverse": false,
+      "maxCorrectionMetres": 0.02130847722890452,
+      "minimumKneeFlexDegrees": 44.417763978815145,
+      "failure": {
+        "time": 0.05,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.02130847722890452
+      }
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0,
+      "reverse": true,
+      "maxCorrectionMetres": 0.02130847722890452,
+      "minimumKneeFlexDegrees": 44.417763978815145,
+      "failure": {
+        "time": 0.05,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.02130847722890452
+      }
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.17,
+      "reverse": false,
+      "maxCorrectionMetres": 0.020055739134542692,
+      "minimumKneeFlexDegrees": 57.261636790253874,
+      "failure": {
+        "time": 0.05,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.020055739134542692
+      }
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.17,
+      "reverse": true,
+      "maxCorrectionMetres": 0.020055739134542692,
+      "minimumKneeFlexDegrees": 57.261636790253874,
+      "failure": {
+        "time": 0.05,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.020055739134542692
+      }
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.35,
+      "reverse": false,
+      "maxCorrectionMetres": 0.020107692689550056,
+      "minimumKneeFlexDegrees": 46.21567626870771,
+      "failure": {
+        "time": 0.05,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.020107692689550056
+      }
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.35,
+      "reverse": true,
+      "maxCorrectionMetres": 0.020107692689550056,
+      "minimumKneeFlexDegrees": 46.21567626870771,
+      "failure": {
+        "time": 0.05,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.020107692689550056
+      }
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.61,
+      "reverse": false,
+      "maxCorrectionMetres": 0.020119027674334076,
+      "minimumKneeFlexDegrees": 60.56062076894429,
+      "failure": {
+        "time": 0.05,
+        "contact": "foot-R",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.020119027674334076
+      }
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.61,
+      "reverse": true,
+      "maxCorrectionMetres": 0.020119027674334076,
+      "minimumKneeFlexDegrees": 60.56062076894429,
+      "failure": {
+        "time": 0.05,
+        "contact": "foot-R",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.020119027674334076
+      }
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0,
+      "reverse": false,
+      "maxCorrectionMetres": 0.017854975908291278,
+      "minimumKneeFlexDegrees": 42.227795120969915,
+      "failure": {
+        "time": 0.15833333333333333,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.017854975908291278
+      }
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0,
+      "reverse": true,
+      "maxCorrectionMetres": 0.017854975908291278,
+      "minimumKneeFlexDegrees": 42.227795120969915,
+      "failure": {
+        "time": 0.15833333333333333,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.017854975908291278
+      }
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.17,
+      "reverse": false,
+      "maxCorrectionMetres": 0.016895273841256973,
+      "minimumKneeFlexDegrees": 62.19250305801049,
+      "failure": {
+        "time": 0.16666666666666666,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.016895273841256973
+      }
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.17,
+      "reverse": true,
+      "maxCorrectionMetres": 0.016895273841256973,
+      "minimumKneeFlexDegrees": 62.19250305801049,
+      "failure": {
+        "time": 0.16666666666666666,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.016895273841256973
+      }
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.35,
+      "reverse": false,
+      "maxCorrectionMetres": 0.017687217912716127,
+      "minimumKneeFlexDegrees": 54.657580212669245,
+      "failure": {
+        "time": 0.175,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.017687217912716127
+      }
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.35,
+      "reverse": true,
+      "maxCorrectionMetres": 0.017687217912716127,
+      "minimumKneeFlexDegrees": 54.657580212669245,
+      "failure": {
+        "time": 0.175,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.017687217912716127
+      }
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.61,
+      "reverse": false,
+      "maxCorrectionMetres": 0.017269634313773156,
+      "minimumKneeFlexDegrees": 60.211931447347354,
+      "failure": {
+        "time": 0.16666666666666666,
+        "contact": "foot-R",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.017269634313773156
+      }
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.61,
+      "reverse": true,
+      "maxCorrectionMetres": 0.017269634313773156,
+      "minimumKneeFlexDegrees": 60.211931447347354,
+      "failure": {
+        "time": 0.16666666666666666,
+        "contact": "foot-R",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.017269634313773156
+      }
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0,
+      "reverse": false,
+      "maxCorrectionMetres": 0.018227789343791097,
+      "minimumKneeFlexDegrees": 43.16262025973123,
+      "failure": {
+        "time": 0.08333333333333333,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.018227789343791097
+      }
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0,
+      "reverse": true,
+      "maxCorrectionMetres": 0.018227789343791097,
+      "minimumKneeFlexDegrees": 43.16262025973123,
+      "failure": {
+        "time": 0.08333333333333333,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.018227789343791097
+      }
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.17,
+      "reverse": false,
+      "maxCorrectionMetres": 0.01689525037086893,
+      "minimumKneeFlexDegrees": 60.300549383877154,
+      "failure": {
+        "time": 0.08333333333333333,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.01689525037086893
+      }
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.17,
+      "reverse": true,
+      "maxCorrectionMetres": 0.01689525037086893,
+      "minimumKneeFlexDegrees": 60.300549383877154,
+      "failure": {
+        "time": 0.08333333333333333,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.01689525037086893
+      }
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.35,
+      "reverse": false,
+      "maxCorrectionMetres": 0.019669205934615873,
+      "minimumKneeFlexDegrees": 47.01303572609564,
+      "failure": {
+        "time": 0.09166666666666666,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.019669205934615873
+      }
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.35,
+      "reverse": true,
+      "maxCorrectionMetres": 0.019669205934615873,
+      "minimumKneeFlexDegrees": 47.01303572609564,
+      "failure": {
+        "time": 0.09166666666666666,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.019669205934615873
+      }
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.61,
+      "reverse": false,
+      "maxCorrectionMetres": 0.0172696488491378,
+      "minimumKneeFlexDegrees": 60.30765128564349,
+      "failure": {
+        "time": 0.08333333333333333,
+        "contact": "foot-R",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.0172696488491378
+      }
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.61,
+      "reverse": true,
+      "maxCorrectionMetres": 0.0172696488491378,
+      "minimumKneeFlexDegrees": 60.30765128564349,
+      "failure": {
+        "time": 0.08333333333333333,
+        "contact": "foot-R",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.0172696488491378
+      }
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0,
+      "reverse": false,
+      "maxCorrectionMetres": 0.017484339289396078,
+      "minimumKneeFlexDegrees": 44.417763978815145,
+      "failure": {
+        "time": 0.041666666666666664,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.017484339289396078
+      }
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0,
+      "reverse": true,
+      "maxCorrectionMetres": 0.017484339289396078,
+      "minimumKneeFlexDegrees": 44.417763978815145,
+      "failure": {
+        "time": 0.041666666666666664,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.017484339289396078
+      }
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.17,
+      "reverse": false,
+      "maxCorrectionMetres": 0.019993280181206458,
+      "minimumKneeFlexDegrees": 59.642753692512585,
+      "failure": {
+        "time": 0.041666666666666664,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.019993280181206458
+      }
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.17,
+      "reverse": true,
+      "maxCorrectionMetres": 0.019993280181206458,
+      "minimumKneeFlexDegrees": 59.642753692512585,
+      "failure": {
+        "time": 0.041666666666666664,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.019993280181206458
+      }
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.35,
+      "reverse": false,
+      "maxCorrectionMetres": 0.018644247323249777,
+      "minimumKneeFlexDegrees": 47.38741355666289,
+      "failure": {
+        "time": 0.041666666666666664,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.018644247323249777
+      }
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.35,
+      "reverse": true,
+      "maxCorrectionMetres": 0.018644247323249777,
+      "minimumKneeFlexDegrees": 47.38741355666289,
+      "failure": {
+        "time": 0.041666666666666664,
+        "contact": "foot-L",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.018644247323249777
+      }
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.61,
+      "reverse": false,
+      "maxCorrectionMetres": 0.019773691452053765,
+      "minimumKneeFlexDegrees": 60.28030349140808,
+      "failure": {
+        "time": 0.041666666666666664,
+        "contact": "foot-R",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.019773691452053765
+      }
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.61,
+      "reverse": true,
+      "maxCorrectionMetres": 0.019773691452053765,
+      "minimumKneeFlexDegrees": 60.28030349140808,
+      "failure": {
+        "time": 0.041666666666666664,
+        "contact": "foot-R",
+        "reason": "source-pixel correction budget",
+        "correctionMetres": 0.019773691452053765
+      }
+    }
+  ]
+}

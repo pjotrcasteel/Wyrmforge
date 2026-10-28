@@ -354,6 +354,12 @@ python tools/animation/test_source_qc.py artifacts/moving-source --blender /path
 ```
 
 Eight action samples retain the same 4/3-second action duration (6 action FPS).
+`validate_motion_envelope.py -- SOURCE --heading-degrees 15` probes actual
+lateral root displacement while advancing gait by its forward projection.
+It writes a separate heading-labelled report and exits nonzero on rejection;
+the default forward report is preserved. Current 15-degree cases all reject the
+unchanged one-source-pixel correction budget. This diagnostic cannot substitute
+for supported turning source motion or actual runtime replay.
 The source-forward envelope is not arbitrary-motion acceptance. The source
 workflow runs these checks without a full render. Render saved sources with
 `render_saved_clips.py`; `--directions S,E` explicitly records partial views.

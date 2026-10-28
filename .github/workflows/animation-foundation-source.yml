@@ -49,6 +49,24 @@ jobs:
           "$BLENDER_BIN" -b -t 2 --python-exit-code 1 --python tools/animation/validate_source.py -- artifacts/animation-moving-source-ci
           python3 tools/animation/test_source_qc.py artifacts/animation-moving-source-ci --blender "$BLENDER_BIN"
           "$BLENDER_BIN" -b -t 2 --python-exit-code 1 --python tools/animation/validate_motion_envelope.py -- artifacts/animation-moving-source-ci
+      - name: Reject unsupported lateral motion without widening contact limits
+        shell: bash
+        run: |
+          set -euo pipefail
+          BLENDER_BIN="$PWD/.cache/blender-4.5.3-linux-x64/blender"
+          if "$BLENDER_BIN" -b -t 2 --python-exit-code 1 --python tools/animation/validate_motion_envelope.py -- artifacts/animation-moving-source-ci --heading-degrees 15; then
+            echo "Unexpected lateral acceptance: review the source envelope before changing this gate."
+            exit 1
+          fi
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path('artifacts/animation-moving-source-ci/motion-envelope-heading-15-qc.json').read_text())
+          assert report['rootHeadingDegrees'] == 15 and report['runtimeAccepted'] is False
+          assert len(report['results']) == 96
+          assert all(r['failure'] and r['failure']['reason'] == 'source-pixel correction budget' for r in report['results'])
+          print('All 96 unsupported lateral cases rejected by the unchanged correction budget.')
+          PY
       - uses: actions/upload-artifact@v4
         with:
           name: animation-foundation-editable-source-and-actual-mesh-qc
@@ -62,5 +80,6 @@ jobs:
             artifacts/animation-moving-source-ci/independent-source-qc.json
             artifacts/animation-moving-source-ci/negative-source-qc.json
             artifacts/animation-moving-source-ci/motion-envelope-qc.json
+            artifacts/animation-moving-source-ci/motion-envelope-heading-15-qc.json
           if-no-files-found: error
           retention-days: 14

@@ -1,0 +1,20 @@
+{
+  "skating": {
+    "rejected": true,
+    "exitCode": 1,
+    "expectedFailure": "actual mesh sole skating",
+    "logTail": "Blender 4.5.14 LTS (hash 62c1db4208e8 built 2026-09-15 01:33:49)\nRead blend: \"C:\\Wyrmforge\\artifacts\\an-qc-temp\\animation-source-negative-t0pk6yva\\hollow-foundation.blend\"\n\nBlender quit\nTraceback (most recent call last):\n  File \"C:\\Wyrmforge\\tools\\animation\\validate_source.py\", line 42, in <module>\n    assert slip<tolerance,('actual mesh sole skating',name,f,id,index,slip,tolerance)\n           ^^^^^^^^^^^^^^\nAssertionError: ('actual mesh sole skating', 'walk', 1, 'foot-L', 37104, 0.02499999157158701, 0.004036458333333334)\n\nError: script failed, file: 'C:\\Wyrmforge\\tools\\animation\\validate_source.py', exiting.\n"
+  },
+  "hover": {
+    "rejected": true,
+    "exitCode": 1,
+    "expectedFailure": "actual mesh sole hover/penetration",
+    "logTail": "Blender 4.5.14 LTS (hash 62c1db4208e8 built 2026-09-15 01:33:49)\nRead blend: \"C:\\Wyrmforge\\artifacts\\an-qc-temp\\animation-source-negative-y1uudxqx\\hollow-foundation.blend\"\n\nBlender quit\nTraceback (most recent call last):\n  File \"C:\\Wyrmforge\\tools\\animation\\validate_source.py\", line 66, in <module>\n    assert maxgrounderror<tolerance,('actual mesh sole hover/penetration',name,maxgrounderror,tolerance)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: ('actual mesh sole hover/penetration', 'walk', 0.05000004172325134, 0.004036458333333334)\n\nError: script failed, file: 'C:\\Wyrmforge\\tools\\animation\\validate_source.py', exiting.\n"
+  },
+  "transition": {
+    "rejected": true,
+    "exitCode": 1,
+    "expectedFailure": "Whole-body entry/exit skin discontinuity",
+    "logTail": "Blender 4.5.14 LTS (hash 62c1db4208e8 built 2026-09-15 01:33:49)\nRead blend: \"C:\\Wyrmforge\\artifacts\\an-qc-temp\\animation-source-negative-xw2por4w\\hollow-foundation.blend\"\n\nBlender quit\nTraceback (most recent call last):\n  File \"C:\\Wyrmforge\\tools\\animation\\validate_source.py\", line 88, in <module>\n    if maximum>=tolerance:raise ValueError(f'Whole-body entry/exit skin discontinuity: {name} {maximum}m >= {tolerance}m')\n                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nValueError: Whole-body entry/exit skin discontinuity: attack-travel 0.048743305576457105m >= 0.004036458333333334m\n\nError: script failed, file: 'C:\\Wyrmforge\\tools\\animation\\validate_source.py', exiting.\n"
+  }
+}

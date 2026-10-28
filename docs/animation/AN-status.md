@@ -17,6 +17,23 @@ This is a lifecycle correction, not source-transition or visual acceptance.
 No C# gameplay/save changes. Arbitrary lateral movement, moving turns, regional
 GPU/depth/casters, device/horde and final continuous visual proof remain open.
 
+The next source checkpoint reauthors/reopens walk + 16×8 moving claw using local
+Blender **4.5.14 LTS**, distinct from CI's pinned 4.5.3. Actual sole drift maxima:
+walk `1.49755e-7m`, claw `2.18112e-7m`; whole-skin endpoint discrepancy
+`1.22113e-6m`. All three temporary-clone negatives (skating, hover, cloth-only
+transition mismatch) reject with Blender exit 1. Source-forward envelope 96/96
+passes. New **15-degree lateral root-motion probe rejects 96/96 cases** under
+the unchanged `0.0161458m` source-pixel correction budget; first 15Hz case fails
+at 0.2s with `0.0187470m` required correction. Gait phase uses forward projection,
+while contact anchors include both components of actual root travel.
+
+Preserved editable rebuild: `art/source/animation-foundation/windows-recovery-20261028/`.
+Independent QC and both envelope reports:
+`docs/animation/evidence/2026-10-28-windows/`. CI now requires the 15-degree probe
+to fail for the expected correction-budget reason, and uploads its report.
+This is diagnostic coverage and recoverable source, **not** a lateral-motion fix,
+new raster/material export, new Hunt capture or final visual acceptance.
+
 Base: c84eac3347a28b52b1d61cb507ff7e60711d9774.
 Foundation branch: feat/universal-character-animation-an0-an6.
 Prior remote checkpoint: 37d95b8f4ecb6b1f8dded9a7d95920376c0c1dc0.
