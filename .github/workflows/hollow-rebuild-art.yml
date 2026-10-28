@@ -182,6 +182,13 @@ jobs:
           assert qc['production_game_code_changed'] is False and qc['owner_approved'] is False
           print('Blender original Hollowed source passes technical gate only. VISUAL OWNER APPROVAL NOT GIVEN.')
           PY
+      - name: Inspect existing armature bone hierarchy for artist-authored static feral rest shape
+        run: |
+          python -m py_compile tools/art/hollow-rebuild/inspect_source_rig_blender.py
+          python tools/art/hollow-rebuild/inspect_source_rig_blender.py \
+            --input artifacts/hollow-rebuild/horror-hollowed-h1/hollowed-horror-cc0-original-anatomy-H1-UNAPPROVED.blend \
+            --output artifacts/hollow-rebuild/horror-hollowed-h1/source-armature-anatomy.json
+          test -s artifacts/hollow-rebuild/horror-hollowed-h1/source-armature-anatomy.json
       - name: Preserve 3D evidence; never ship candidate into WyrmForge runtime
         if: always()
         uses: actions/upload-artifact@v4
