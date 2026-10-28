@@ -10,10 +10,10 @@
     </header>
 
     <nav class="engine-navigation" aria-label="Engine labs">
-        <a href="/engine-labs" aria-current="@(Selected is null ? "page" : null)">All engines</a>
+        <a href="engine-labs" aria-current="@(Selected is null ? "page" : null)">All engines</a>
         @foreach (var lab in Labs)
         {
-            <a href="@($"/engine-labs/{lab.Slug}")" aria-current="@(Selected?.Slug == lab.Slug ? "page" : null)">@lab.Name</a>
+            <a href="@($"engine-labs/{lab.Slug}")" aria-current="@(Selected?.Slug == lab.Slug ? "page" : null)">@lab.Name</a>
         }
     </nav>
 
@@ -23,7 +23,7 @@
             @foreach (var lab in Labs)
             {
                 <article>
-                    <h2><a href="@($"/engine-labs/{lab.Slug}")">@lab.Name</a></h2>
+                    <h2><a href="@($"engine-labs/{lab.Slug}")">@lab.Name</a></h2>
                     <p>@lab.Description</p>
                     <small>@lab.Status</small>
                 </article>
@@ -63,7 +63,7 @@
             <h2>How to verify</h2>
             <p>Inside the real simulation, choose <strong>Refresh AI inspector</strong> (Enemy), <strong>Boss AI inspector</strong> (Ashfang), or <strong>Town AI inspector</strong> (Town). Compare perception, selected actions, expired memory, group pressure and measured timing with the same seed. The 64-agent scenario intentionally raises workload: use a desktop first and compare phones separately.</p>
             <p>The Town uses its existing painted 2D spatial contracts. Enemy and Wyrm scenarios use existing authoritative combat tick and renderer paths. No new agent simulation runs in this lab shell. Some embedded controls may need the full-screen link on small phones.</p>
-            <p><a href="/engine-labs">Back to all engines</a> · <a href="https://github.com/pjotrcasteel/Wyrmforge/pull/364" target="_blank" rel="noopener noreferrer">AI implementation and acceptance PR</a></p>
+            <p><a href="engine-labs">Back to all engines</a> · <a href="https://github.com/pjotrcasteel/Wyrmforge/pull/364" target="_blank" rel="noopener noreferrer">AI implementation and acceptance PR</a></p>
         </section>
     }
     else if (Selected is not null)
@@ -76,12 +76,12 @@
             {
                 <p><a href="@Selected.ExistingPreview">Open existing related real preview</a> (existing implementation, not the new dedicated lab acceptance)</p>
             }
-            <p><a href="/engine-labs">Back to all engines</a></p>
+            <p><a href="engine-labs">Back to all engines</a></p>
         </section>
     }
     else
     {
-        <section class="lab-notes" role="alert"><h2>Unknown engine</h2><p><a href="/engine-labs">Choose a supported engine lab</a>.</p></section>
+        <section class="lab-notes" role="alert"><h2>Unknown engine</h2><p><a href="engine-labs">Choose a supported engine lab</a>.</p></section>
     }
 </main>
 
@@ -117,14 +117,14 @@
 
     private string PreviewUrl => Scenario switch
     {
-        "civilian" => "/?townAi2=1",
-        "perception" => $"/enemy-lab?kind=MireHound&ai1=true&autoplay=false&cast=false&seed={Seed}",
-        "reactive" => $"/enemy-lab?kind=MireHound&tier=2&count=1&autoplay=false&cast=false&seed={Seed}",
-        "elite" => $"/enemy-lab?kind=MireHound&tier=4&count=1&autoplay=false&cast=false&seed={Seed}",
-        "boss" => $"/hunt-lab?wyrm=Ashfang&ai5=true&phase=2&play=true&cast=false&invulnerable=true&seed={Seed}",
-        "stress" => $"/enemy-lab?kind=MireHound&tier=3&count=64&autoplay=false&cast=false&seed={Seed}",
-        "legacy" => $"/enemy-lab?kind=Hollow&ai0=true&autoplay=false&cast=false&seed={Seed}",
-        _ => $"/enemy-lab?kind=MireHound&tier=3&count=8&autoplay=false&cast=false&seed={Seed}"
+        "civilian" => "?townAi2=1",
+        "perception" => $"enemy-lab?kind=MireHound&ai1=true&autoplay=false&cast=false&seed={Seed}",
+        "reactive" => $"enemy-lab?kind=MireHound&tier=2&count=1&autoplay=false&cast=false&seed={Seed}",
+        "elite" => $"enemy-lab?kind=MireHound&tier=4&count=1&autoplay=false&cast=false&seed={Seed}",
+        "boss" => $"hunt-lab?wyrm=Ashfang&ai5=true&phase=2&play=true&cast=false&invulnerable=true&seed={Seed}",
+        "stress" => $"enemy-lab?kind=MireHound&tier=3&count=64&autoplay=false&cast=false&seed={Seed}",
+        "legacy" => $"enemy-lab?kind=Hollow&ai0=true&autoplay=false&cast=false&seed={Seed}",
+        _ => $"enemy-lab?kind=MireHound&tier=3&count=8&autoplay=false&cast=false&seed={Seed}"
     };
 
     private string PreviewKey => $"{Scenario}/{Seed}/{Revision}";

@@ -23,7 +23,7 @@ public sealed class EngineLabsBrowserTests : PageTest
         {
             await Page.GotoAsync($"{BaseUrl}/engine-labs/{engine}");
             await Expect(Page.Locator("nav[aria-label='Engine labs'] a[aria-current='page']"))
-                .ToHaveAttributeAsync("href", $"/engine-labs/{engine}");
+                .ToHaveAttributeAsync("href", $"engine-labs/{engine}");
             if (engine != "ai")
             {
                 await Expect(Page.GetByText("Dedicated", new() { Exact = false }).First)
@@ -41,15 +41,15 @@ public sealed class EngineLabsBrowserTests : PageTest
 
         var preview = Page.Locator("iframe[title='Live authoritative engine preview']");
         await Expect(preview).ToHaveAttributeAsync("src",
-            "/enemy-lab?kind=MireHound&tier=3&count=8&autoplay=false&cast=false&seed=42");
+            "enemy-lab?kind=MireHound&tier=3&count=8&autoplay=false&cast=false&seed=42");
 
         await Page.GetByLabel("Replay seed").FillAsync("927");
         await Page.GetByLabel("Scenario").SelectOptionAsync("boss");
         await Expect(preview).ToHaveAttributeAsync("src",
-            "/hunt-lab?wyrm=Ashfang&ai5=true&phase=2&play=true&cast=false&invulnerable=true&seed=927");
+            "hunt-lab?wyrm=Ashfang&ai5=true&phase=2&play=true&cast=false&invulnerable=true&seed=927");
 
         await Page.GetByLabel("Scenario").SelectOptionAsync("civilian");
-        await Expect(preview).ToHaveAttributeAsync("src", "/?townAi2=1");
+        await Expect(preview).ToHaveAttributeAsync("src", "?townAi2=1");
         await Expect(Page.GetByTestId("ai-lab-notes")).ToContainTextAsync("seed field does not override");
         await Expect(Page.Locator("nav[aria-label='Engine labs'] a")).ToHaveCountAsync(8);
     }
@@ -72,5 +72,24 @@ public sealed class EngineLabsBrowserTests : PageTest
         var scrollWidth = await Page.EvaluateAsync<int>("() => document.documentElement.scrollWidth");
         Assert.IsLessThanOrEqualTo(391, scrollWidth,
             "AI debug output must stay inside the real 390px viewport instead of expanding to 10,000px.");
+    }
+
+    [TestMethod]
+    public async Task AiLab_LinksRespectGitHubPagesBasePath()
+    {
+        await Page.GotoAsync($"{BaseUrl}/engine-labs/ai");
+
+        var nav = Page.Locator("nav[aria-label='Engine labs'] a[aria-current='page']");
+        await Expect(nav).ToHaveAttributeAsync("href", "engine-labs/ai");
+        var frame = Page.Locator("iframe[title='Live authoritative engine preview']");
+        await Expect(frame).ToHaveAttributeAsync("src",
+            "enemy-lab?kind=MireHound&tier=3&count=8&autoplay=false&cast=false&seed=42");
+
+        // A relative path is required: publishing rewrites <base href="/"> to
+        // <base href="/Wyrmforge/">, and absolute paths would bypass the app.
+        var rootRelativeLink = await nav.GetAttributeAsync("href");
+        var rootRelativeFrame = await frame.GetAttributeAsync("src");
+        Assert.IsFalse(rootRelativeLink!.StartsWith('/'));
+        Assert.IsFalse(rootRelativeFrame!.StartsWith('/'));
     }
 }
