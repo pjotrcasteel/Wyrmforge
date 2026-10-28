@@ -314,7 +314,7 @@ def render(src,outdir):
 
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('--output',default='/mnt/data/hollow_rebuild/h1-anatomical-v3')
+    p=argparse.ArgumentParser();p.add_argument('--output',default='artifacts/hollow-rebuild/h1-anatomical-v3')
     p.add_argument('--render',action='store_true');args=p.parse_args()
     out=Path(args.output);out.mkdir(parents=True,exist_ok=True)
     scene,main,parts=make_wretch()
