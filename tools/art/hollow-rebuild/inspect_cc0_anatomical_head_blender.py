@@ -49,9 +49,32 @@ def inspect(src, out):
         raise ValueError("Reference should include real skull + skin layers, not just a prop")
     if len(bpy.data.actions)>0:
         raise ValueError("Untrusted model imported executable/animation action")
+    # Original author models in millimetre-scale Blender units. A camera
+    # 7 units from a ~230-unit head was INSIDE the skull, showing black caps.
+    # For a real proof normalize the whole original source to a fixed 3.1m
+    # inspection height, preserve its geometry, then put cameras OUTSIDE.
+    normalized=h.normalize(meshes,target_height=3.1)
+    if abs(normalized["normalized_evaluated_height"]-3.1)>.06:
+        raise ValueError("Camera is still inside the original oversized head")
     camera,clay,center=h.studio(meshes)
     h.render_study(out,camera,clay,"clay",center)
     h.render_study(out,camera,clay,"material",center)
+    for variant, names in (
+       ("external-skull-only",("skull","jaw")),
+       ("external-face-only",("face",))
+    ):
+        for obj in meshes:
+            obj.hide_render = obj.name.lower() not in names
+        bpy.context.view_layer.update()
+        camera.location=(center[0],center[1]-7,center[2]+3.35)
+        h.look_at(camera,center)
+        bpy.context.view_layer.material_override=clay
+        bpy.context.scene.render.filepath=str(out/(variant+"-real-BLENDER.png"))
+        bpy.ops.render.render(write_still=True)
+        bpy.context.view_layer.material_override=None
+    for obj in meshes:
+        obj.hide_render=False
+    bpy.context.view_layer.update()
     camera.location=(center[0]+5,center[1]-5,center[2]+3.0)
     h.look_at(camera,center)
     bpy.context.preferences.filepaths.save_version=0
@@ -64,6 +87,7 @@ def inspect(src, out):
         "sha256":hashlib.sha256(src.read_bytes()).hexdigest(),
         "source_name":src.name,
         "geometry_objects":metadata,
+        "normalized_source":normalized,
         "mesh_count":len(meshes),
         "total_vertices":sum(x["vertices"] for x in metadata),
         "animation_actions":len(bpy.data.actions),
