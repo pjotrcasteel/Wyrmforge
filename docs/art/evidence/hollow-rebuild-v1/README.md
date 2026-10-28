@@ -84,3 +84,23 @@ The visual rebuild now contains actual source code for a new `hollowed-anatomica
 Reference principles used for anatomy (reference only; no source geometry copied): [OpenStax — skull](https://openstax.org/books/anatomy-and-physiology-2e/pages/7-2-the-skull), [NCBI StatPearls — thoracic cage and ribs](https://www.ncbi.nlm.nih.gov/books/NBK538328/). Organic rig source will be independently authored; reference licensing does not grant image/mesh redistribution.
 
 **No changes to animation engine / PR #387 / gameplay / Ashling / lighting engine / runtime files; no cutover.**
+
+## H1 continued — three further source studies (v5–v7), 28 October 2026
+
+**Artistic decision: REJECTED; H1 remains open.** This checkpoint is a rejection and direction change, **not** a completed model, model-owner approval, source integration or production export.
+
+- V5: authored a new connected SDF anatomy study with dropped skull, displaced jaw, injured ribs, asymmetrical arms and planted feet. It remained visibly mannequin-like and the large eye cavities / jaw made the face childish.
+- V6: removed the symmetrical U-shaped grin, reduced eye cavity radii, deepened wound cuts and corrected floating bone ornaments. The figure still read as a generic thin humanoid rather than a frightening original WyrmForge Hollowed.
+- V7: introduced a source-only static forward/lateral body collapse and authored a genuine eight-facing 3D turntable at an elevated orthographic camera. The eight facings exposed still-unconvincing rear geometry, bland legs, smooth rounded anatomy, awkward head/jaw placement and an unmemorable silhouette.
+
+The local v7 source primary mesh reports 45,344 triangles, exactly one connected component and watertight topology. **These are technical observations, not aesthetic acceptance.** The source-only VTK renders are not Blender renders, real Hunt captures or animation-engine results. No new animation, retarget, rigging, shaders, gameplay, renderer or runtime changes were made.
+
+**Source retention:** A self-contained *rejected-studies* bundle `WyrmForge_Hollowed_H1_v5-v7_REJECTED_Source_Review.zip` was generated in the conversation with three new GLBs, original reproducible Python source files, native 96px images, eight-view true 3D renders, a rotation GIF and reports. The bundle is **not** committed into this PR; do not claim a fresh-checkout source model exists for v5–v7.
+
+### H1 next-path correction
+
+Procedurally blended cylinders and ellipsoids are producing visually consistent but aesthetically poor anatomy. **Stop iterating on those shapes**. Rebuild the visual source as a deliberate **sculpted** original model using anatomical references for skull, zygoma/mandible, scapula, ribs, pelvis and musculature. Sculpt silhouette with actual large, medium and small forms, asymmetric injury, and clear front/back profile. Avoid simplistic round sockets, a smile-shaped hanging jaw, tube-shaped arms, uniform unbroken tissue and toy feet. Preserve ash-in-wound material intention but do not add emission to hide failed geometry.
+
+Because the current chat container does not have Blender installed and network installation is unavailable, a genuine `.blend` render/reopen is **not verified in this checkpoint**. A subsequent isolated Blender execution environment (the repository's established Blender 4.5 LTS CI/local workstation) is required to establish genuine sculpt evidence. Do not reinterpret VTK screenshots as a completed Blender deliverable.
+
+**Hard scope lock continues unchanged**: Animation PR #387 and all engine/animation/runtime source remain read-only, **even after eventual owner art approval**. No merge or deploy.
