@@ -27,7 +27,7 @@ function scene() {
 
 test('exactly the C# selected enemy gets an ellipse; nearby enemies do not', () => {
     const indicator = resolveTargetIndicator(scene());
-    assert.deepEqual(indicator, { kind: 'enemy', x: 310, y: 452, rx: 25.24, ry: 8 });
+    assert.deepEqual(indicator, { kind: 'enemy', x: 310, y: 452, rx: 35.2, ry: 16 });
 });
 
 test('boss targeting uses entity ID and scales ring footprint to its actual radius', () => {
@@ -47,7 +47,7 @@ test('barrel and future breakable kinds use the same authoritative prop ID looku
     const snapshot = scene();
     snapshot.player.aimPropId = 42;
     assert.deepEqual(resolveTargetIndicator(snapshot),
-        { kind: 'object', x: 250, y: 608, rx: 20.68, ry: 7 });
+        { kind: 'object', x: 250, y: 608, rx: 32, ry: 15 });
     snapshot.player.aimPropId = 72;
     const future = resolveTargetIndicator(snapshot);
     assert.equal(future.kind, 'object');
@@ -107,24 +107,24 @@ function recordingCanvas() {
 const callsOf = (ctx, name) => ctx.calls.filter(call => Array.isArray(call) && call[0] === name);
 const strokes = ctx => callsOf(ctx, 'stroke');
 
-test('enemy uses multiple actual rune glyphs and faded incomplete ring, not a UI crosshair', () => {
+test('enemy uses a complete double ring and actual rune glyphs, not a UI crosshair', () => {
     const ctx = recordingCanvas();
     const target = resolveTargetIndicator(scene());
     drawTargetIndicator(ctx, target, 'ground', 0, true);
-    assert.equal(callsOf(ctx, 'ellipse').length, 5);
+    assert.equal(callsOf(ctx, 'ellipse').length, 2);
     assert.equal(callsOf(ctx, 'fillRect').length, 0, 'Ground sigil has no AoE-style fill.');
 
     ctx.calls.length = 0;
     drawTargetIndicator(ctx, target, 'contrast', 0, true);
-    assert.equal(callsOf(ctx, 'ellipse').length, 5, 'Five separated outer arcs only.');
-    assert.equal(callsOf(ctx, 'scale').length, 6, 'Six inscribed runes follow the ellipse.');
-    assert.ok(callsOf(ctx, 'lineTo').length >= 17, 'Each glyph must have rune strokes, not diamonds or ticks.');
+    assert.equal(callsOf(ctx, 'ellipse').length, 2, 'Two continuous ground-plane rune borders.');
+    assert.equal(callsOf(ctx, 'scale').length, 8, 'Eight inscribed runes form a full circle.');
+    assert.ok(callsOf(ctx, 'lineTo').length >= 26, 'Full runic circle requires glyph strokes and radial dividers.');
     assert.equal(callsOf(ctx, 'radialGradient').length, 0, 'No separate lighting algorithm in sigil renderer.');
     assert.equal(callsOf(ctx, 'fillRect').length, 0, 'Lighting must be supplied by the shared emitter.');
     assert.equal(ctx.calls.at(-1), 'restore');
     assert.ok(strokes(ctx).every(call => call[1] === '#d9cfee'));
-    assert.ok(strokes(ctx).every(call => call[2] <= .42));
-    assert.ok(strokes(ctx).some(call => call[4] === 2.2), 'Glow must be bounded to 2.2 px.');
+    assert.ok(strokes(ctx).every(call => call[2] <= .65));
+    assert.ok(strokes(ctx).some(call => call[4] === 1.8), 'Glow must be bounded to 1.8 px.');
     assert.equal(callsOf(ctx, 'colorStop').length, 0, 'Renderer may not introduce local light gradients.');
 });
 
@@ -132,24 +132,24 @@ test('future destructibles retain faint rune language without any character unde
     const snapshot = scene(), ctx = recordingCanvas();
     snapshot.player.aimPropId = 72;
     drawTargetIndicator(ctx, resolveTargetIndicator(snapshot), 'contrast', 0, true);
-    assert.equal(callsOf(ctx, 'ellipse').length, 3);
-    assert.equal(callsOf(ctx, 'scale').length, 3, 'Unknown prop type receives runic symbols automatically.');
+    assert.equal(callsOf(ctx, 'ellipse').length, 2);
+    assert.equal(callsOf(ctx, 'scale').length, 4, 'Unknown prop type receives runic symbols automatically.');
     assert.equal(callsOf(ctx, 'radialGradient').length, 0, 'Do not illuminate destructible scenery.');
     assert.equal(callsOf(ctx, 'fillRect').length, 0);
     assert.ok(strokes(ctx).every(call => call[1] === '#d9cfee'));
-    assert.ok(strokes(ctx).every(call => call[2] <= .27));
+    assert.ok(strokes(ctx).every(call => call[2] <= .36));
 });
 
-test('boss uses ten inscribed glyphs and only one faint interior segment', () => {
+test('boss uses twelve inscribed glyphs and a subsidiary interior ring', () => {
     const snapshot = scene(), ctx = recordingCanvas();
     snapshot.player.aimTargetId = 99;
     drawTargetIndicator(ctx, resolveTargetIndicator(snapshot), 'contrast', 0, true);
-    assert.equal(callsOf(ctx, 'ellipse').length, 6, 'Five partial outer arcs and one incomplete inner line.');
-    assert.equal(callsOf(ctx, 'scale').length, 10);
+    assert.equal(callsOf(ctx, 'ellipse').length, 3, 'Two full rings and a subordinate boss seal.');
+    assert.equal(callsOf(ctx, 'scale').length, 12);
     assert.equal(callsOf(ctx, 'radialGradient').length, 0);
     assert.equal(callsOf(ctx, 'fillRect').length, 0);
     assert.ok(strokes(ctx).every(call => call[1] === '#d9cfee'));
-    assert.ok(strokes(ctx).every(call => call[2] <= .49));
+    assert.ok(strokes(ctx).every(call => call[2] <= .69));
 });
 
 test('school state never changes rune colors or glow and reduced motion freezes shimmer', () => {
@@ -162,7 +162,7 @@ test('school state never changes rune colors or glow and reduced motion freezes 
     assert.deepEqual(base.calls, storm.calls);
     drawTargetIndicator(animated, marker, 'contrast', Math.PI / 2, false);
     assert.notDeepEqual(strokes(base).map(call => call[2]), strokes(animated).map(call => call[2]));
-    assert.ok(strokes(animated).every(call => call[2] <= .42));
+    assert.ok(strokes(animated).every(call => call[2] <= .65));
     const tint = new Set([...strokes(base), ...strokes(animated)].map(call => call[1]));
     assert.deepEqual([...tint], ['#d9cfee']);
 });
@@ -193,8 +193,8 @@ test('faint selection underlight is one shared GPU point emitter with a Canvas c
     assert.equal(light.enabled, true);
     assert.equal(light.castsShadow, false);
     assert.equal(light.color, '#d9cfee');
-    assert.ok(light.intensity <= .12 && light.intensity > 0);
-    assert.ok(light.range >= 26 && light.range <= 62);
+    assert.ok(light.intensity <= .48 && light.intensity > 0);
+    assert.ok(light.range >= 48 && light.range <= 125);
     assert.deepEqual(targetSelectionCanvasLight(light), [{
         x: light.position[0], y: light.position[1], radius: light.range,
         strength: light.intensity, type: 'target-selection', family: 'selection',
@@ -226,7 +226,7 @@ test('objects and stale targets never create additional world light emitters', (
     snapshot.player.aimPropId = null;
     snapshot.player.aimTargetId = 99;
     const boss = targetSelectionLightEmitter(resolveTargetIndicator(snapshot), litFrame());
-    assert.ok(boss.intensity > 0 && boss.intensity < .12);
+    assert.ok(boss.intensity > 0 && boss.intensity < .48);
     snapshot.dragon.targetable = false;
     assert.equal(targetSelectionLightEmitter(resolveTargetIndicator(snapshot), litFrame()), null);
 });
