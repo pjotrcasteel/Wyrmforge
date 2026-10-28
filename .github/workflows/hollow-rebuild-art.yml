@@ -57,76 +57,6 @@ jobs:
 # This workflow does not touch, test, import, trigger or modify the shared
 # universal animation engine. It does not build or deploy the game.
 
-  torn-ribcage-source-v6:
-    name: Hollowed H1 v6 — connected necrotic ribcage geometry (UNAPPROVED)
-    needs: source-boundary
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    env:
-      OPENBLAS_NUM_THREADS: '1'
-      OMP_NUM_THREADS: '2'
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 1
-          filter: blob:none
-          sparse-checkout: |
-            art/source/enemies/hollow/rebuild-v1/
-            tools/art/hollow-rebuild/
-          persist-credentials: false
-      - uses: actions/setup-python@v6
-        with:
-          python-version: '3.11'
-      - name: Install isolated Blender art-source dependencies
-        run: |
-          python -m pip install --disable-pip-version-check bpy==4.5.15 Pillow==11.3.0
-          python -c "import bpy; print('Genuine Blender:', bpy.app.version_string)"
-      - name: Compile both source-sculpt scripts
-        run: |
-          python -m py_compile tools/art/hollow-rebuild/sculpt_cc0_anatomy_blender.py \
-            tools/art/hollow-rebuild/sculpt_feral_anatomy_v2_blender.py \
-            tools/art/hollow-rebuild/sculpt_human_undead_v4_blender.py \
-            tools/art/hollow-rebuild/sculpt_cutaway_ribs_v5_blender.py \
-            tools/art/hollow-rebuild/sculpt_torn_ribcage_v6_blender.py
-      - name: Sculpt original asymmetric torso/shoulder rest shape and render eight viewpoints
-        run: |
-          python tools/art/hollow-rebuild/sculpt_torn_ribcage_v6_blender.py \
-            --input art/source/enemies/hollow/rebuild-v1/references/makehuman-core-base-CC0.obj \
-            --output artifacts/hollow-rebuild/torn-ribcage-v6
-          test -s artifacts/hollow-rebuild/torn-ribcage-v6/hollowed-torn-ribcage-v6-UNAPPROVED.blend
-          test -s artifacts/hollow-rebuild/torn-ribcage-v6/cc0-source-8views-BLENDER.png
-          test -s artifacts/hollow-rebuild/torn-ribcage-v6/cc0-source-native96-BLENDER.png
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          qc = json.loads(Path("artifacts/hollow-rebuild/torn-ribcage-v6/source-qc.json").read_text())
-          assert qc["mesh_vertices"] == 13380, qc
-          assert qc["rendered_helpers"] is False, qc
-          assert qc["excluded_authoring_helper_vertices"] == 5778, qc
-          assert qc["body_only"] is True, qc
-          assert qc["human_body_only"] is True, qc
-          assert qc["rendered_helpers"] is False, qc
-          assert qc["embedded_rib_curves"] == 6, qc
-          assert qc["sculpted_wound_vertices"] >= 100, qc
-          assert qc["deep_torn_tissue_vertices"] >= 35, qc
-          assert qc["wound_cavity_polygon_faces"] >= 25, qc
-          assert qc["new_animation_actions"] == 0, qc
-          assert qc["new_animation_actions"] == 0, qc
-          assert qc["rear_wound_faces"] == 0, qc
-          print("PASS: original human body only, no skirt/tights/hair authoring helpers")
-          PY
-      - name: Reopen immutable H1 source in an independent Blender process
-        run: |
-          python -c "import bpy; bpy.ops.wm.open_mainfile(filepath='artifacts/hollow-rebuild/torn-ribcage-v6/hollowed-torn-ribcage-v6-UNAPPROVED.blend'); assert len([o for o in bpy.data.objects if o.type == 'MESH']) > 0; print('H1 source reopened, NOT ART APPROVED')"
-      - name: Preserve genuine Blender source and previews without runtime integration
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: hollowed-h1-v6-TORN-RIBCAGE-Blender-UNAPPROVED
-          path: artifacts/hollow-rebuild/torn-ribcage-v6/
-          if-no-files-found: warn
-          retention-days: 30
-
   open-cc0-zombie-import:
     name: Independently licensed CC0 zombie — import and 8-angle Blender source screening
     needs: source-boundary
@@ -172,12 +102,14 @@ jobs:
               print('SOURCE ARCHIVE CONTENTS:')
               print('\n'.join(filenames))
               zipfile.extractall(path=root / 'extracted')
-          candidates = [p for p in (root/'extracted').rglob('*') if p.is_file() and p.suffix.lower() in ('.blend','.glb','.gltf','.fbx','.obj')]
-          if not candidates:
-              raise ValueError('No Blender/GLB/FBX/OBJ source model in lawful CC0 archive')
-          preference = {'.blend':0, '.glb':1, '.gltf':2, '.fbx':3, '.obj':4}
-          candidates.sort(key=lambda p:(preference[p.suffix.lower()], len(p.parts),len(p.name)))
-          model = candidates[0].resolve()
+          # The archive has one real source character mesh plus stand-alone
+          # motion FBXs. Import ONLY the actual character! A generic "first
+          # alphabetically" policy incorrectly chose Walking.fbx.
+          candidates = [p for p in (root/'extracted').rglob('*') if p.is_file()]
+          models = [p for p in candidates if p.name.lower() == 'infectedcityman.fbx']
+          if len(models) != 1:
+              raise ValueError('Expected exactly one original InfectedCityMan.fbx source')
+          model = models[0].resolve()
           (root/'model-path.txt').write_text(str(model),encoding='utf-8')
           (root/'source-LICENSE.txt').write_text(
               'CC0 1.0 Universal — Rikindle3D (2020)\n'
