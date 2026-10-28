@@ -28,14 +28,14 @@ function rgb(hex) {
 export function tintSigilPixels(pixels, school) {
     const color = SIGIL_SCHOOL_COLORS[resolveSigilSchool(school)];
     if (!color || resolveSigilSchool(school) === 'arcane') return pixels;
-    const [red, green, blue] = rgb(color);
+    const channels = rgb(color);
     for (let i = 0; i < pixels.length; i += 4) {
         if (pixels[i + 3] === 0) continue;
         const value = Math.max(pixels[i], pixels[i + 1], pixels[i + 2]) / 255;
         const brightness = .20 + value * .80;
         const highlight = Math.max(0, (value - .72) / .28) * .15;
         for (let channel = 0; channel < 3; channel++) {
-            const target = [red, green, blue][channel];
+            const target = channels[channel];
             pixels[i + channel] = Math.min(255, Math.round(target * brightness + (255 - target) * highlight));
         }
     }
