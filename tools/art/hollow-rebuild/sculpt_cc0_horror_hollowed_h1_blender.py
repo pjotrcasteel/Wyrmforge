@@ -169,23 +169,43 @@ def author_source(input_path,output_path):
     mesh.data.materials.clear()
     mesh.data.materials.append(material)
     mesh.data.materials.append(wound)
-    wound_faces=0
+    # The source is skinned by THREE original FBX armatures. Their original
+    # base polygon centers are NOT the visible character's world-space body!
+    # Ray-cast actual post-shape-key/evaluated front skin, not undeformed
+    # source polygon coordinates. This also ensures the back never gets the
+    # rejected backpack-like dark patch.
+    from mathutils.bvhtree import BVHTree
+    bpy.context.view_layer.update()
+    dag=bpy.context.evaluated_depsgraph_get()
+    surface=BVHTree.FromObject(mesh,dag)
+    front_wound_indices=set()
+    ray_count=0
+    for row in range(13):
+        z=1.86+.042*row
+        for col in range(13):
+            x=-.49+.043*col
+            chest=bell(x,-.22,.31)*bell(z,2.11,.32)
+            if chest<.23:
+                continue
+            position,normal,face_index,distance=surface.ray_cast(
+                Vector((x,-9.0,z)),Vector((0,1,0)),18.0)
+            ray_count+=1
+            if position is not None and face_index is not None:
+                if 0<=face_index<len(mesh.data.polygons):
+                    front_wound_indices.add(face_index)
+    for row in range(5):
+        z=2.69+.049*row
+        for col in range(5):
+            x=-.27+.07*col
+            position,normal,face_index,distance=surface.ray_cast(
+                Vector((x,-9.0,z)),Vector((0,1,0)),18.0)
+            ray_count+=1
+            if position is not None and face_index is not None:
+                if 0<=face_index<len(mesh.data.polygons):
+                    front_wound_indices.add(face_index)
     for poly in mesh.data.polygons:
-        # These are original local-space poly centers/normals. In FBX source
-        # world is transformed by parent, so compare actual mesh world coords.
-        centroid=mesh.matrix_world@poly.center
-        normal=mesh.matrix_world.to_3x3()@poly.normal
-        x,y,z=centroid
-        front=normal.y<-.20
-        # asymmetrical organic scalp, collar and ribcage scars;
-        # never apply the wound to the back.
-        chest=bell(x,-.22,.35)*bell(z,2.05,.31)
-        cheek=bell(x,-.11,.19)*bell(z,2.80,.15)
-        if front and (chest>.48 or cheek>.62):
-            poly.material_index=1
-            wound_faces+=1
-        else:
-            poly.material_index=0
+        poly.material_index=1 if poly.index in front_wound_indices else 0
+    wound_faces=len(front_wound_indices)
     if wound_faces<4:
         raise ValueError("Source wound topology has no visible front-facing surfaces")
     mesh.name="WyrmForge Hollowed — feral human source H1 UNAPPROVED"
@@ -231,6 +251,8 @@ def author_source(input_path,output_path):
         "sculpted_vertices":changed,
         "max_static_sculpt_displacement_m":round(max_dist,5),
         "front_wound_faces":wound_faces,
+        "front_evaluated_surface_raycasts":ray_count,
+        "front_only_material_selection":"first hit raycast from camera-negative-Y against evaluated skin",
         "actions":len(bpy.data.actions),
         "new_animation_clips":0,
         "material_emission_enabled":False,
