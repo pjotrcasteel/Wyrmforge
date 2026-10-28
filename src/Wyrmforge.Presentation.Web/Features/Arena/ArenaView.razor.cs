@@ -108,7 +108,7 @@ public partial class ArenaView : IAsyncDisposable
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
-        arenaModule = await JavaScript.InvokeAsync<IJSObjectReference>("import", CancellationToken.None, $"./js/arena-performance.js?v={AppBuildInfo.Version}");
+        arenaModule = await JavaScript.InvokeAsync<IJSObjectReference>("import", CancellationToken.None, $"./js/arena-performance.js?v={AppBuildInfo.Version}-{AppBuildInfo.Commit}");
         dotNetReference = DotNetObjectReference.Create(this);
         await arenaModule.InvokeVoidAsync("initializeArena", CancellationToken.None, canvas, dotNetReference);
         // Character creation already chose the Divine school. Commit its signature without a Hunt overlay.
@@ -117,7 +117,7 @@ public partial class ArenaView : IAsyncDisposable
     }
 
     [JSInvokable]
-    public async Task<RunRenderSnapshot> Frame(double delta, double width, double height, double movementX, double movementY, double aimX = 0, double aimY = 0)
+    public async Task<RunRenderSnapshot> Frame(double delta, double width, double height, double movementX, double movementY, double aimX = 0, double aimY = 0, int? focusPropId = null, bool stickSnap = false)
     {
         var frameStarted = Stopwatch.GetTimestamp();
         var current = simulation ?? throw new InvalidOperationException("Arena simulation has not been initialized.");
@@ -144,7 +144,7 @@ public partial class ArenaView : IAsyncDisposable
         var previousWinterRimes = current.WinterBellRimes;
         var bellWardenWasSlain = current.BellWardenDefeat is not null;
         var previousRefugeReturns = current.RefugeReturns;
-        var snapshot = current.Tick(delta, new MovementInput(movementX, movementY, aimX, aimY), width, height);
+        var snapshot = current.Tick(delta, new MovementInput(movementX, movementY, aimX, aimY, focusPropId, stickSnap), width, height);
         var simulationMilliseconds = Stopwatch.GetElapsedTime(frameStarted).TotalMilliseconds;
         var stateChanged = hadChoices != current.PendingChoices.Count > 0
             || hadEssenceChoices != current.PendingDragonEssenceChoices.Count > 0
