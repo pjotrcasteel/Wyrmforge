@@ -104,3 +104,17 @@ Procedurally blended cylinders and ellipsoids are producing visually consistent 
 Because the current chat container does not have Blender installed and network installation is unavailable, a genuine `.blend` render/reopen is **not verified in this checkpoint**. A subsequent isolated Blender execution environment (the repository's established Blender 4.5 LTS CI/local workstation) is required to establish genuine sculpt evidence. Do not reinterpret VTK screenshots as a completed Blender deliverable.
 
 **Hard scope lock continues unchanged**: Animation PR #387 and all engine/animation/runtime source remain read-only, **even after eventual owner art approval**. No merge or deploy.
+
+
+## H1 continuation: predator swipe anatomy studies — 28 October 2026
+
+Owner requested rigged zombie, bear and werewolf references to ensure future **swipe-capable** anatomy. The reference audit and deliberate non-copied design choices are in [rigged-zombie-bear-werewolf-swipe-references.md](rigged-zombie-bear-werewolf-swipe-references.md).
+
+**Implemented on this isolated branch:**
+- `tools/art/hollow-rebuild/sculpt_feral_anatomy_v2_blender.py`: a new original **STATIC REST MODEL** shape pass over the CC0 human base, varying thoracic yaw, left/right shoulder positions, scapular reach, head lean and leg weight. It is not an animation clip, and its existence alone is not artistic acceptance.
+- `tools/art/hollow-rebuild/test_feral_source_shape.py`: Python-only source-shape tests for asymmetry, bounded deformation, deterministic vertex layout and ground contact.
+- The existing isolated GitHub Actions renderer now generates eight genuine Blender angles and reopens the authored `.blend`. Preview artifacts are marked **UNAPPROVED**. Do not claim the visual render passed until the run succeeds and the resulting image is inspected.
+
+**Explicit exclusions:** No bear/werewolf skeletons or animations were imported. No rig/action keyframes, new swipe animation, runtime atlases, C# combat code, existing animation source or shared engine changed. PR #387 remains absolutely read-only even after future visual approval.
+
+**Next H1 quality gate:** inspect the latest actual Blender turnaround, reject weak model proportions and iterate sculpt. Only a clearly feral, coat-free, damaged HUMAN undead with proper shoulder mechanics and readable native mobile silhouette can advance to H2. Do not present technical green checks as owner approval.
