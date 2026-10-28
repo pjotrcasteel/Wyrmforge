@@ -17,6 +17,18 @@ public sealed class DevelopmentEnemyTests
             new DevelopmentEnemySetup(kind, 42, 800, 600, casting));
 
     [TestMethod]
+    public void ExplicitLabIdentityIsAuthoritativeAndDefaultIdentityRemainsOne()
+    {
+        var selected = new RunSimulationFactory(new SeededRandomSource(1)).CreateDevelopmentEnemy(SelfPlayBuildCatalog.All.First().SelectedNodes,
+            new DevelopmentEnemySetup(EnemyKind.Hollow, 42, 800, 600, EntityId: 5));
+        Assert.AreEqual(5, selected.CreateSnapshot().Enemies.Single().EntityId);
+        var original = new RunSimulationFactory(new SeededRandomSource(1)).CreateDevelopmentEnemy(SelfPlayBuildCatalog.All.First().SelectedNodes,
+            new DevelopmentEnemySetup(EnemyKind.Hollow, 42, 800, 600));
+        Assert.AreEqual(1, original.CreateSnapshot().Enemies.Single().EntityId);
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new DevelopmentEnemySetup(EnemyKind.Hollow, 42, 800, 600, EntityId: 0).Validate());
+    }
+
+    [TestMethod]
     public void EveryImplementedKind_UsesActualSimulationAndIsDeterministic()
     {
         foreach (var kind in Enum.GetValues<EnemyKind>())

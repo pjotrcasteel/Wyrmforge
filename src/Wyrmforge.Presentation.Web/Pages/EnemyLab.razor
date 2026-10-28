@@ -69,6 +69,7 @@
     [Inject] private NavigationManager Navigation { get; set; } = null!;
     [Parameter, SupplyParameterFromQuery(Name = "kind")] public string? KindQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "seed")] public int? SeedQuery { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "entityId")] public int? EntityIdQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "autoplay")] public bool? AutoplayQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "cast")] public bool? CastQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "paused")] public bool? PausedQuery { get; set; }
@@ -140,7 +141,7 @@
         {
             var build = SelfPlayBuildCatalog.All.First();
             simulation = new RunSimulationFactory(new SeededRandomSource(1)).CreateDevelopmentEnemy(build.SelectedNodes,
-                new DevelopmentEnemySetup(kind, seed, Math.Clamp(width, 240, 2560), Math.Clamp(height, 240, 2560), casting, agentFoundation, agentPerception));
+                new DevelopmentEnemySetup(kind, seed, Math.Clamp(width, 240, 2560), Math.Clamp(height, 240, 2560), casting, agentFoundation, agentPerception, EntityIdQuery ?? 1));
             agent = new HeuristicRunAgent(RunAgentPersonality.Kiter, seed, build.PreferredSchool);
         }
         var snapshot = simulation.CreateSnapshot();

@@ -10,6 +10,8 @@ public sealed partial class RunSimulation
     internal void StartDevelopmentEnemy(DevelopmentEnemySetup setup)
     {
         setup.Validate();
+        // Developer-only identity selection exercises real stable appearance profiles.
+        enemyId = setup.EntityId - 1;
         agentFoundationEnabled = setup.AgentFoundation || setup.AgentPerception;
         agentPerceptionEnabled = setup.AgentPerception;
         agentFoundationSeed = setup.Seed;

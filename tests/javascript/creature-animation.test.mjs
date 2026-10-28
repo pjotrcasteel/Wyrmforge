@@ -84,3 +84,15 @@ test('reusable JSON examples validate and sample without a species branch',()=>{
   const s=create();assert.equal(update(s,p,intent()).clip,'rest');
  }
 });
+
+test('singular, reflected and non-affine binds are rejected before authoring/runtime',()=>{
+ for(const mutate of [m=>m[0]=0,m=>m[0]=-1,m=>m[15]=0]){
+  const p=structuredClone(fixture());mutate(p.rig.bones[1].rest);assert.throws(()=>validate(p),/bind/);
+ }
+});
+test('scaled bodies use proportional stride and bounded contact correction',()=>{
+ const p=fixture(),s=create();update(s,p,intent(0,{scale:2}));
+ const a=update(s,p,intent(.25,{scale:2,travel:2,moving:true,world:{x:3,y:0}}));
+ assert.equal(a.phase,.25);assert.equal(Math.abs(a.rootOffset.x),1);
+ assert.throws(()=>update(s,p,intent(.3,{scale:0})),RangeError);
+});

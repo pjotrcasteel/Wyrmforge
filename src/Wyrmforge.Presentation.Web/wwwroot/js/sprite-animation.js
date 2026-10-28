@@ -69,12 +69,16 @@ export function validateCreatureRigProfile(profile) {
         if(!bone.id||bones.has(bone.id))fail('duplicate/empty bone');
         if(!Number.isFinite(bone.length)||bone.length<=0)fail(`invalid length: ${bone.id}`);
         if(!Array.isArray(bone.rest)||bone.rest.length!==16||!bone.rest.every(Number.isFinite))fail(`invalid bind: ${bone.id}`);
+        const m=bone.rest;
+        const determinant=m[0]*(m[5]*m[10]-m[6]*m[9])-m[1]*(m[4]*m[10]-m[6]*m[8])+m[2]*(m[4]*m[9]-m[5]*m[8]);
+        if(determinant<=1e-8||Math.abs(m[12])+Math.abs(m[13])+Math.abs(m[14])+Math.abs(m[15]-1)>1e-6)fail(`singular/reflected/non-affine bind: ${bone.id}`);
         if(bone.parent&&!bones.has(bone.parent))fail(`parent must precede child: ${bone.id}`);
         if(bone.limits&&(!bone.limits.every(Number.isFinite)||bone.limits.length!==2||bone.limits[0]>bone.limits[1]))fail(`invalid limits: ${bone.id}`);
         bones.set(bone.id,bone);
     }
     for(const [semantic,id] of Object.entries(rig.semantics??{}))if(!bones.has(id))fail(`missing semantic ${semantic}: ${id}`);
     if(!rig.semantics?.root)fail('root semantic required');
+    if(bones.get(rig.semantics.root).parent)fail('root semantic must name a hierarchy root');
     const contacts=new Set();
     for(const contact of rig.contacts??[]){
         if(contacts.has(contact.id)||!bones.has(contact.bone))fail(`invalid contact: ${contact.id}`);
