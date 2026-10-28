@@ -102,10 +102,10 @@ jobs:
           assert qc["mesh_vertices"] == 13380, qc
           assert qc["rendered_helpers"] is False, qc
           assert qc["excluded_authoring_helper_vertices"] == 5778, qc
-          assert qc["skirt_or_hair_helpers"] is False, qc
-          assert qc["animation_actions_added"] == 0, qc
+          assert qc["body_only"] is True, qc
           assert qc["human_body_only"] is True, qc
-          assert qc["embedded_rib_curves"] >= 5, qc
+          assert qc["rendered_helpers"] is False, qc
+          assert qc["embedded_rib_curves"] == 6, qc
           assert qc["animation_actions_added"] == 0, qc
           print("PASS: original human body only, no skirt/tights/hair authoring helpers")
           PY
