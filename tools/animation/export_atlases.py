@@ -31,6 +31,8 @@ for name,clip in m['clips'].items():
 
 def runtime_clip(name):
     c=m['clips'][name];samples=[]
+    root_stride=c.get('rootStrideVectorMetres',[0,-c['strideMetres'],0])
+    if len(root_stride)!=3 or not all(math.isfinite(v) for v in root_stride) or abs(root_stride[2])>1e-9 or abs(math.hypot(*root_stride)-c['strideMetres'])>1e-6:raise ValueError('Invalid source root stride vector')
     for s in c['samples']:
         angle=s.get('authoredYawRadians',0);cos,sin=math.cos(angle),math.sin(angle)
         contacts=[]
@@ -41,7 +43,7 @@ def runtime_clip(name):
         samples.append({'contacts':contacts,'balance':s['balance'],'com':com,'supportMarginMetres':s['supportMargin']})
     result={'clip':name,'frames':c['frames'],'fps':c['fps'],'samples':samples}
     if name.startswith('pivot'):result['facingStep']=-round((c['samples'][-1].get('authoredYawRadians',0)-c['samples'][0].get('authoredYawRadians',0))/(math.pi/4))
-    if c.get('poseGrid'):result['poseGrid']={**c['poseGrid'],'travel':'facing-projection','stanceVelocity':{'x':-c['strideMetres']*scale,'y':0}}
+    if c.get('poseGrid'):result['poseGrid']={**c['poseGrid'],'travel':'facing-projection','stanceVelocity':{'x':root_stride[1]*scale,'y':-root_stride[0]*scale}}
     if m.get('projectionByDirection'):
         pixel_scale=93/96;projected={}
         def ground_point(point,projection):
@@ -60,13 +62,14 @@ def runtime_clip(name):
                 views.append({'contacts':contacts,'com':com,'balance':sample['balance'],'supportMarginMetres':sample['supportMargin']})
             projected[direction]=views
         result['facingSamples']=projected;result['samples']=projected['E'];result['contactSpace']='projected-world-offset'
+        stance={d:{'x':-(p[0]*root_stride[0]+p[1]*root_stride[1])*pixel_scale,'y':-(p[4]*root_stride[0]+p[5]*root_stride[1])*pixel_scale} for d,p in m['projectionByDirection'].items()}
         if c['strideMetres']>0:
-            result['strideByDirection']={d:math.hypot(p[1],p[5])*c['strideMetres']*pixel_scale for d,p in m['projectionByDirection'].items()}
+            result['strideByDirection']={d:math.hypot(v['x'],v['y']) for d,v in stance.items()}
         if name=='walk':
             result['phaseSampling']='nearest'
-            result['stanceVelocityByDirection']={d:{'x':p[1]*c['strideMetres']*pixel_scale,'y':p[5]*c['strideMetres']*pixel_scale} for d,p in m['projectionByDirection'].items()}
+            result['stanceVelocityByDirection']=stance
         if c.get('poseGrid'):
-            result['poseGrid']['stanceVelocityByDirection']={d:{'x':p[1]*c['strideMetres']*pixel_scale,'y':p[5]*c['strideMetres']*pixel_scale} for d,p in m['projectionByDirection'].items()}
+            result['poseGrid']['stanceVelocityByDirection']=stance
     return result
 profile={'schemaVersion':2,'coordinateSpace':'actor-xy-ground-z-up','unitsPerPixel':93/96,'maxRootOffset':93/96,
  'rig':{'signature':m['skeletonSignature'],'sourceSpace':{'coordinateSpace':'blender-armature-xyz-metres','toActor':[0,-scale,0,0,scale,0,0,0,0,0,scale,.5*scale,0,0,0,1]},'bodyPlan':'biped','bones':m['skeleton'],'semantics':{'root':'root','pelvis':'pelvis','spine':'spine','head':'head'},'absentBones':[],
@@ -74,8 +77,10 @@ profile={'schemaVersion':2,'coordinateSpace':'actor-xy-ground-z-up','unitsPerPix
  'sockets':{'head':{'bone':'head'},'mouth':{'bone':'head'},'wound':{'bone':'chest'}}},
  'facing':{'directions':['E','SE','S','SW','W','NW','N','NE']},
  'locomotion':{**runtime_clip('walk'),'stride':m['clips']['walk']['strideMetres']*scale},
- 'actions':{'attack':{**runtime_clip('attack'),'mode':'fullBody','priority':10,'commitUntil':1,'reducedFrame':8,'visualTimingOnly':True}},
- 'pivot':runtime_clip('pivot')}
+ 'actions':{}}
+if 'attack' in m['clips']:
+    profile['actions']['attack']={**runtime_clip('attack'),'mode':'fullBody','priority':10,'commitUntil':1,'reducedFrame':8,'visualTimingOnly':True}
+if 'pivot' in m['clips']:profile['pivot']=runtime_clip('pivot')
 if 'pivot-negative' in m['clips']:
     profile['pivot']=runtime_clip('pivot-negative')
     profile['pivots']={'positive':runtime_clip('pivot-negative'),'negative':runtime_clip('pivot')}

@@ -20,6 +20,7 @@ jobs:
         with:
           sparse-checkout: |
             tools/animation
+            src/Wyrmforge.Presentation.Web/wwwroot/js
             art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-zombie-reach-v3-standard
       - uses: actions/cache@v4
         id: blender
@@ -49,6 +50,20 @@ jobs:
           "$BLENDER_BIN" -b -t 2 --python-exit-code 1 --python tools/animation/validate_source.py -- artifacts/animation-moving-source-ci
           python3 tools/animation/test_source_qc.py artifacts/animation-moving-source-ci --blender "$BLENDER_BIN"
           "$BLENDER_BIN" -b -t 2 --python-exit-code 1 --python tools/animation/validate_motion_envelope.py -- artifacts/animation-moving-source-ci
+      - name: Author and validate directional whole-body source studies
+        shell: bash
+        run: |
+          set -euo pipefail
+          BLENDER_BIN="$PWD/.cache/blender-4.5.3-linux-x64/blender"
+          for heading in -22.5 22.5; do
+            SOURCE="artifacts/animation-heading-$heading"
+            "$BLENDER_BIN" -b -t 2 --python-exit-code 1 --python tools/animation/author_hollow_foundation.py -- --out "$SOURCE" --only walk,attack-travel --phase-samples 16 --action-samples 8 --samples 2 --travel-heading-degrees "$heading" --stride-metres .28
+            "$BLENDER_BIN" -b -t 2 --python-exit-code 1 --python tools/animation/validate_source.py -- "$SOURCE"
+            "$BLENDER_BIN" -b -t 2 --python-exit-code 1 --python tools/animation/validate_motion_envelope.py -- "$SOURCE"
+            python3 tools/animation/test_source_qc.py "$SOURCE" --blender "$BLENDER_BIN"
+          done
+          python3 -m pip install Pillow==12.0.0
+          python3 tools/animation/test_directional_export.py artifacts/animation-moving-source-ci artifacts/animation-heading-22.5 artifacts/animation-heading--22.5
       - name: Reject unsupported lateral motion without widening contact limits
         shell: bash
         run: |
@@ -81,5 +96,10 @@ jobs:
             artifacts/animation-moving-source-ci/negative-source-qc.json
             artifacts/animation-moving-source-ci/motion-envelope-qc.json
             artifacts/animation-moving-source-ci/motion-envelope-heading-15-qc.json
+            artifacts/animation-heading-*/hollow-foundation.blend
+            artifacts/animation-heading-*/source-manifest.json
+            artifacts/animation-heading-*/independent-source-qc.json
+            artifacts/animation-heading-*/negative-source-qc.json
+            artifacts/animation-heading-*/motion-envelope-qc.json
           if-no-files-found: error
           retention-days: 14

@@ -1,0 +1,877 @@
+{
+  "sourceForwardOnly": true,
+  "rootHeadingDegrees": 0,
+  "sourceStrideVectorMetres": [
+    -0.1071513444185257,
+    -0.25868627429008484,
+    0.0
+  ],
+  "runtimeAccepted": false,
+  "correctionBudgetMetres": 0.016145833333333335,
+  "results": [
+    {
+      "hz": 15,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008166705245461451,
+      "minimumKneeFlexDegrees": 48.97409982763065,
+      "failure": null
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0,
+      "reverse": true,
+      "maxCorrectionMetres": 0.008166680689346721,
+      "minimumKneeFlexDegrees": 48.97409982763065,
+      "failure": null
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.17,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008399996997807553,
+      "minimumKneeFlexDegrees": 51.99698939600873,
+      "failure": null
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.17,
+      "reverse": true,
+      "maxCorrectionMetres": 0.008399981677979194,
+      "minimumKneeFlexDegrees": 52.88764856453409,
+      "failure": null
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.35,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008166740214527754,
+      "minimumKneeFlexDegrees": 47.87948837774957,
+      "failure": null
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.35,
+      "reverse": true,
+      "maxCorrectionMetres": 0.008166690433692753,
+      "minimumKneeFlexDegrees": 50.01529848413483,
+      "failure": null
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.61,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008633320357985058,
+      "minimumKneeFlexDegrees": 48.3239348418997,
+      "failure": null
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.61,
+      "reverse": true,
+      "maxCorrectionMetres": 0.008633285646067248,
+      "minimumKneeFlexDegrees": 50.41745113072258,
+      "failure": null
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008166700623927135,
+      "minimumKneeFlexDegrees": 48.974063778051686,
+      "failure": null
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0,
+      "reverse": true,
+      "maxCorrectionMetres": 0.008166679018631433,
+      "minimumKneeFlexDegrees": 53.062749012873724,
+      "failure": null
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.17,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008400113120083525,
+      "minimumKneeFlexDegrees": 53.33864753793924,
+      "failure": null
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.17,
+      "reverse": true,
+      "maxCorrectionMetres": 0.008400023037475996,
+      "minimumKneeFlexDegrees": 50.81167612581419,
+      "failure": null
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.35,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008166709087756617,
+      "minimumKneeFlexDegrees": 52.16916641116559,
+      "failure": null
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.35,
+      "reverse": true,
+      "maxCorrectionMetres": 0.008166718720757155,
+      "minimumKneeFlexDegrees": 47.879496434461316,
+      "failure": null
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.61,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008633355438424997,
+      "minimumKneeFlexDegrees": 48.3239276381056,
+      "failure": null
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.61,
+      "reverse": true,
+      "maxCorrectionMetres": 0.008633358019879429,
+      "minimumKneeFlexDegrees": 52.531970688468405,
+      "failure": null
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008633344745737771,
+      "minimumKneeFlexDegrees": 50.56769750140839,
+      "failure": null
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0,
+      "reverse": true,
+      "maxCorrectionMetres": 0.008399995048889412,
+      "minimumKneeFlexDegrees": 52.38791163403313,
+      "failure": null
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.17,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008400044259145499,
+      "minimumKneeFlexDegrees": 50.01530455750884,
+      "failure": null
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.17,
+      "reverse": true,
+      "maxCorrectionMetres": 0.008633339794439695,
+      "minimumKneeFlexDegrees": 50.5676598287383,
+      "failure": null
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.35,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008633366657831343,
+      "minimumKneeFlexDegrees": 47.879480106599516,
+      "failure": null
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.35,
+      "reverse": true,
+      "maxCorrectionMetres": 0.00839997377338177,
+      "minimumKneeFlexDegrees": 49.396813907316414,
+      "failure": null
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.61,
+      "reverse": false,
+      "maxCorrectionMetres": 0.0086333032390749,
+      "minimumKneeFlexDegrees": 49.18648356853967,
+      "failure": null
+    },
+    {
+      "hz": 15,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.61,
+      "reverse": true,
+      "maxCorrectionMetres": 0.008399999650500962,
+      "minimumKneeFlexDegrees": 51.00586345685525,
+      "failure": null
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008166705245461451,
+      "minimumKneeFlexDegrees": 48.97409982763065,
+      "failure": null
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0,
+      "reverse": true,
+      "maxCorrectionMetres": 0.008166682860993316,
+      "minimumKneeFlexDegrees": 48.97409982763065,
+      "failure": null
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.17,
+      "reverse": false,
+      "maxCorrectionMetres": 0.00840003630173943,
+      "minimumKneeFlexDegrees": 51.99698939600873,
+      "failure": null
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.17,
+      "reverse": true,
+      "maxCorrectionMetres": 0.00840001166881571,
+      "minimumKneeFlexDegrees": 51.99702466100018,
+      "failure": null
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.35,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008166721115071177,
+      "minimumKneeFlexDegrees": 47.87948837774957,
+      "failure": null
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.35,
+      "reverse": true,
+      "maxCorrectionMetres": 0.00816671716163317,
+      "minimumKneeFlexDegrees": 47.879504276734934,
+      "failure": null
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.61,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008633361179864603,
+      "minimumKneeFlexDegrees": 48.3239348418997,
+      "failure": null
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.61,
+      "reverse": true,
+      "maxCorrectionMetres": 0.008633361179864603,
+      "minimumKneeFlexDegrees": 48.32394272713282,
+      "failure": null
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008166721449386549,
+      "minimumKneeFlexDegrees": 48.974063778051686,
+      "failure": null
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0,
+      "reverse": true,
+      "maxCorrectionMetres": 0.008166679018631433,
+      "minimumKneeFlexDegrees": 48.9740991619982,
+      "failure": null
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.17,
+      "reverse": false,
+      "maxCorrectionMetres": 0.0084000385206953,
+      "minimumKneeFlexDegrees": 50.81166244757847,
+      "failure": null
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.17,
+      "reverse": true,
+      "maxCorrectionMetres": 0.008400034460257264,
+      "minimumKneeFlexDegrees": 50.81167612581419,
+      "failure": null
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.35,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008166754023862287,
+      "minimumKneeFlexDegrees": 47.87949622002415,
+      "failure": null
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.35,
+      "reverse": true,
+      "maxCorrectionMetres": 0.008166718720757155,
+      "minimumKneeFlexDegrees": 47.879496434461316,
+      "failure": null
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.61,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008633309981295877,
+      "minimumKneeFlexDegrees": 48.323912841120574,
+      "failure": null
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.61,
+      "reverse": true,
+      "maxCorrectionMetres": 0.00863334205939555,
+      "minimumKneeFlexDegrees": 48.32394272713282,
+      "failure": null
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008633344745737771,
+      "minimumKneeFlexDegrees": 50.56769750140839,
+      "failure": null
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0,
+      "reverse": true,
+      "maxCorrectionMetres": 0.008400049185547733,
+      "minimumKneeFlexDegrees": 52.193415475159,
+      "failure": null
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.17,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008633386778983669,
+      "minimumKneeFlexDegrees": 50.01530455750884,
+      "failure": null
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.17,
+      "reverse": true,
+      "maxCorrectionMetres": 0.008633339794439695,
+      "minimumKneeFlexDegrees": 50.5676598287383,
+      "failure": null
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.35,
+      "reverse": false,
+      "maxCorrectionMetres": 0.00863325625402484,
+      "minimumKneeFlexDegrees": 47.65389320738791,
+      "failure": null
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.35,
+      "reverse": true,
+      "maxCorrectionMetres": 0.008633352331162482,
+      "minimumKneeFlexDegrees": 49.396813907316414,
+      "failure": null
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.61,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008633355123208189,
+      "minimumKneeFlexDegrees": 49.18648356853967,
+      "failure": null
+    },
+    {
+      "hz": 30,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.61,
+      "reverse": true,
+      "maxCorrectionMetres": 0.008400136344494116,
+      "minimumKneeFlexDegrees": 51.00586345685525,
+      "failure": null
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008166720669824852,
+      "minimumKneeFlexDegrees": 47.87950502420156,
+      "failure": null
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0,
+      "reverse": true,
+      "maxCorrectionMetres": 0.008166699956001588,
+      "minimumKneeFlexDegrees": 47.87950502420156,
+      "failure": null
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.17,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008400076415837144,
+      "minimumKneeFlexDegrees": 50.985960771706516,
+      "failure": null
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.17,
+      "reverse": true,
+      "maxCorrectionMetres": 0.008400037816922836,
+      "minimumKneeFlexDegrees": 50.98598998179975,
+      "failure": null
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.35,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008166731639201586,
+      "minimumKneeFlexDegrees": 47.87948837774957,
+      "failure": null
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.35,
+      "reverse": true,
+      "maxCorrectionMetres": 0.00816671716163317,
+      "minimumKneeFlexDegrees": 47.879504276734934,
+      "failure": null
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.61,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008633361179864603,
+      "minimumKneeFlexDegrees": 47.195795251140794,
+      "failure": null
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.61,
+      "reverse": true,
+      "maxCorrectionMetres": 0.008633367711347418,
+      "minimumKneeFlexDegrees": 47.19580342728523,
+      "failure": null
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008166781698143869,
+      "minimumKneeFlexDegrees": 48.97409982763065,
+      "failure": null
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0,
+      "reverse": true,
+      "maxCorrectionMetres": 0.00816670524627712,
+      "minimumKneeFlexDegrees": 48.9740991619982,
+      "failure": null
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.17,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008400022442450934,
+      "minimumKneeFlexDegrees": 48.759523217671216,
+      "failure": null
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.17,
+      "reverse": true,
+      "maxCorrectionMetres": 0.00840001773210311,
+      "minimumKneeFlexDegrees": 48.75953784610272,
+      "failure": null
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.35,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008166748288536666,
+      "minimumKneeFlexDegrees": 47.87949622002415,
+      "failure": null
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.35,
+      "reverse": true,
+      "maxCorrectionMetres": 0.00816671716163317,
+      "minimumKneeFlexDegrees": 47.879496434461316,
+      "failure": null
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.61,
+      "reverse": false,
+      "maxCorrectionMetres": 0.00863344445584892,
+      "minimumKneeFlexDegrees": 48.323912841120574,
+      "failure": null
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.61,
+      "reverse": true,
+      "maxCorrectionMetres": 0.008633361179864603,
+      "minimumKneeFlexDegrees": 48.32394272713282,
+      "failure": null
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008633344745737771,
+      "minimumKneeFlexDegrees": 47.311191714389025,
+      "failure": null
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0,
+      "reverse": true,
+      "maxCorrectionMetres": 0.008633329786693858,
+      "minimumKneeFlexDegrees": 48.65146840964442,
+      "failure": null
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.17,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008633386778983669,
+      "minimumKneeFlexDegrees": 50.01530455750884,
+      "failure": null
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.17,
+      "reverse": true,
+      "maxCorrectionMetres": 0.008633357599316136,
+      "minimumKneeFlexDegrees": 47.31120849995429,
+      "failure": null
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.35,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008633339162410323,
+      "minimumKneeFlexDegrees": 47.65389320738791,
+      "failure": null
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.35,
+      "reverse": true,
+      "maxCorrectionMetres": 0.008633387516407208,
+      "minimumKneeFlexDegrees": 49.396813907316414,
+      "failure": null
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.61,
+      "reverse": false,
+      "maxCorrectionMetres": 0.00863341322105128,
+      "minimumKneeFlexDegrees": 49.18648356853967,
+      "failure": null
+    },
+    {
+      "hz": 60,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.61,
+      "reverse": true,
+      "maxCorrectionMetres": 0.008633361495904207,
+      "minimumKneeFlexDegrees": 51.00586345685525,
+      "failure": null
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008166720669824852,
+      "minimumKneeFlexDegrees": 47.31120142095955,
+      "failure": null
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0,
+      "reverse": true,
+      "maxCorrectionMetres": 0.008166699956001588,
+      "minimumKneeFlexDegrees": 47.31120142095955,
+      "failure": null
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.17,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008400076415837144,
+      "minimumKneeFlexDegrees": 50.985960771706516,
+      "failure": null
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.17,
+      "reverse": true,
+      "maxCorrectionMetres": 0.00840004057766454,
+      "minimumKneeFlexDegrees": 50.98598998179975,
+      "failure": null
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.35,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008166747620179996,
+      "minimumKneeFlexDegrees": 47.87948837774957,
+      "failure": null
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.35,
+      "reverse": true,
+      "maxCorrectionMetres": 0.00816672640544176,
+      "minimumKneeFlexDegrees": 47.31120034519955,
+      "failure": null
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.61,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008633372873270836,
+      "minimumKneeFlexDegrees": 47.195795251140794,
+      "failure": null
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 1,
+      "initialPhase": 0.61,
+      "reverse": true,
+      "maxCorrectionMetres": 0.008633368343426137,
+      "minimumKneeFlexDegrees": 47.19580342728523,
+      "failure": null
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008166781698143869,
+      "minimumKneeFlexDegrees": 47.87950502420156,
+      "failure": null
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0,
+      "reverse": true,
+      "maxCorrectionMetres": 0.00816672595954319,
+      "minimumKneeFlexDegrees": 47.879496434461316,
+      "failure": null
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.17,
+      "reverse": false,
+      "maxCorrectionMetres": 0.00840005454503699,
+      "minimumKneeFlexDegrees": 47.65387769417546,
+      "failure": null
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.17,
+      "reverse": true,
+      "maxCorrectionMetres": 0.00840005454503699,
+      "minimumKneeFlexDegrees": 47.653900518210804,
+      "failure": null
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.35,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008166748399902252,
+      "minimumKneeFlexDegrees": 47.87949622002415,
+      "failure": null
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.35,
+      "reverse": true,
+      "maxCorrectionMetres": 0.00816671716163317,
+      "minimumKneeFlexDegrees": 47.879496434461316,
+      "failure": null
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.61,
+      "reverse": false,
+      "maxCorrectionMetres": 0.00863344445584892,
+      "minimumKneeFlexDegrees": 47.195850130392586,
+      "failure": null
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 2,
+      "initialPhase": 0.61,
+      "reverse": true,
+      "maxCorrectionMetres": 0.008633391045556145,
+      "minimumKneeFlexDegrees": 47.19580342728523,
+      "failure": null
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008633367553276292,
+      "minimumKneeFlexDegrees": 47.311161642558346,
+      "failure": null
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0,
+      "reverse": true,
+      "maxCorrectionMetres": 0.008633366131921996,
+      "minimumKneeFlexDegrees": 48.65146840964442,
+      "failure": null
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.17,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008633386778983669,
+      "minimumKneeFlexDegrees": 47.71052717155723,
+      "failure": null
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.17,
+      "reverse": true,
+      "maxCorrectionMetres": 0.008633364340208692,
+      "minimumKneeFlexDegrees": 47.31120849995429,
+      "failure": null
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.35,
+      "reverse": false,
+      "maxCorrectionMetres": 0.008633368238028249,
+      "minimumKneeFlexDegrees": 47.65389320738791,
+      "failure": null
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.35,
+      "reverse": true,
+      "maxCorrectionMetres": 0.008633387516407208,
+      "minimumKneeFlexDegrees": 47.253579324372,
+      "failure": null
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.61,
+      "reverse": false,
+      "maxCorrectionMetres": 0.00863341322105128,
+      "minimumKneeFlexDegrees": 47.25367952479587,
+      "failure": null
+    },
+    {
+      "hz": 120,
+      "cyclesPerSecond": 4.3,
+      "initialPhase": 0.61,
+      "reverse": true,
+      "maxCorrectionMetres": 0.008633380827125687,
+      "minimumKneeFlexDegrees": 48.813381873677656,
+      "failure": null
+    }
+  ]
+}

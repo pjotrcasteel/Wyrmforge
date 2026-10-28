@@ -12,15 +12,22 @@ cases=[('skating','actual mesh sole skating'),('hover','actual mesh sole hover/p
 manifest=json.loads((source/'source-manifest.json').read_text())
 transition=next((name for name,c in manifest['clips'].items() if c.get('transitionReference')),None)
 if transition:cases.append(('transition','Whole-body entry/exit skin discontinuity'))
+if any('rootStrideVectorMetres' in c for c in manifest['clips'].values()):cases.append(('travel-vector','actual mesh sole skating'))
 for kind,expected in cases:
  with tempfile.TemporaryDirectory(prefix='animation-source-negative-') as temp:
   folder=Path(temp);shutil.copy2(source/'hollow-foundation.blend',folder/'hollow-foundation.blend');shutil.copy2(source/'source-manifest.json',folder/'source-manifest.json')
   file=str(folder/'hollow-foundation.blend')
   expression=f"import bpy; bpy.ops.wm.open_mainfile(filepath={file!r}); actor=bpy.data.objects['Hollow skinned character']; scene=bpy.context.scene; "
-  if kind=='skating':
+  if kind=='travel-vector':
+   modified=json.loads((folder/'source-manifest.json').read_text())
+   for clip in modified['clips'].values():
+    for sample in clip['samples']:
+     if 'rootTravelVectorMetres' in sample:sample['rootTravelVectorMetres'][0]+=.2*sample['rootTravelMetres']
+   (folder/'source-manifest.json').write_text(json.dumps(modified))
+  elif kind=='skating':
    expression+="scene.frame_set(1); actor.location.x=0; actor.keyframe_insert('location',frame=1); scene.frame_set(3); actor.location.x=.05; actor.keyframe_insert('location',frame=3); "
   elif kind=='hover':expression+="actor.location.z+=.05; "
-  else:
+  elif kind=='transition':
    expression+=f"rig=bpy.data.objects['Hollow editable animation rig']; rig.animation_data.action=bpy.data.actions[{'AN1_'+transition+'_supported_v1'!r}]; scene.frame_set(1); bone=rig.pose.bones['cloth.L']; bone.location.x+=.05; bone.keyframe_insert('location',frame=1); "
   expression+=f"bpy.ops.wm.save_as_mainfile(filepath={file!r})"
   mutation=subprocess.run([a.blender,'-b','-t','2','--python-exit-code','1','--python-expr',expression],capture_output=True,text=True)

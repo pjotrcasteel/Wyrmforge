@@ -25,7 +25,7 @@ for name,clip in m['clips'].items():
  for f,s in enumerate(clip['samples']):
   if clip.get('poseGrid') and f%clip['poseGrid']['phaseFrames']==0:anchors={}
   scene.frame_set(f+1);bpy.context.view_layer.update();active={c['id'] for c in s['contacts']};support=[]
-  travel=Vector((0,-s.get('rootTravelMetres',clip['strideMetres']*f/16 if name=='walk' else 0),0))
+  travel=Vector(s.get('rootTravelVectorMetres',(0,-s.get('rootTravelMetres',clip['strideMetres']*f/16 if name=='walk' else 0),0)))
   evaluated=actor.evaluated_get(bpy.context.evaluated_depsgraph_get());mesh=evaluated.to_mesh()
   if len(mesh.vertices)!=len(actor.data.vertices):raise ValueError('Unsupported topology-changing modifier')
   for side,sign in [('L',1),('R',-1)]:

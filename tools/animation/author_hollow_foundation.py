@@ -17,7 +17,13 @@ from hollow_source_embers import attach_internal_fire
 ROOT=Path(__file__).resolve().parents[2]
 SOURCE=ROOT/'art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-zombie-reach-v3-standard/hollow-rigged.blend'
 parser=argparse.ArgumentParser();parser.add_argument('--out',default='artifacts/animation');parser.add_argument('--render',action='store_true');parser.add_argument('--all',action='store_true');parser.add_argument('--only',default='walk,attack,pivot,pivot-negative');parser.add_argument('--samples',type=int,default=4);parser.add_argument('--phase-samples',type=int,choices=[8,16],default=16);parser.add_argument('--action-samples',type=int,choices=[8,16],default=16)
+parser.add_argument('--travel-heading-degrees',type=float,default=0,help='Source-authored travel direction relative to the committed body facing; study only.')
+parser.add_argument('--stride-metres',type=float,default=.36,help='Authored source gait distance per cycle, not a gameplay speed.')
 args=parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
+if not math.isfinite(args.travel_heading_degrees) or abs(args.travel_heading_degrees)>45:parser.error('travel heading must be finite and within -45..45 degrees')
+if not math.isfinite(args.stride_metres) or args.stride_metres<=0:parser.error('source stride must be finite and positive')
+if args.travel_heading_degrees and any(c not in ['walk','attack-travel'] for c in args.only.split(',')):parser.error('directional studies require --only walk,attack-travel')
+TRAVEL_ROTATION=Matrix.Rotation(math.radians(args.travel_heading_degrees),4,'Z')
 OUT=(ROOT/args.out).resolve();OUT.mkdir(parents=True,exist_ok=True)
 bpy.ops.wm.open_mainfile(filepath=str(SOURCE));scene=bpy.context.scene
 rig=bpy.data.objects['Hollow editable animation rig'];actor=bpy.data.objects['Hollow skinned character']
@@ -36,7 +42,7 @@ scene.frame_start=1;scene.frame_end=16
 bind_repair=fit_upright_contact_bind(rig,actor,[[prefix+side for prefix in ['thigh.','shin.','foot.']] for side in ['L','R']],1.55/96)
 rest={b.name:b.matrix_local.copy() for b in rig.data.bones}
 SOLE_Z=-.50
-STRIDE=.36
+STRIDE=args.stride_metres
 DIRECTIONS=['N','NE','E','SE','S','SW','W','NW']
 SOLE_PATCHES={side:mesh_sole_patch(rig,actor,'foot.'+side,1.55/96) for side in ['L','R']}
 SUPPORT_MARGIN=.5*1.55/96
@@ -66,7 +72,9 @@ def foot_target(side,p):
         local_y=STRIDE*(q-.31);z=SOLE_Z;stance=True
     else:
         a=(q-.62)/.38;local_y=STRIDE*(.31-smooth(a)*.62);z=SOLE_Z+.055*math.sin(math.pi*a);stance=False
-    return Vector((sign*.085,local_y,z)),stance
+    # Preserve anatomical stance width and the source sole orientation; change
+    # the direction of the actual step, not the identity of left/right feet.
+    return Vector((sign*.085,0,z))+TRAVEL_ROTATION @ Vector((0,local_y,0)),stance
 
 def checked_chain(rig,upper,lower,target,pole,limits):
     try:return solve_chain(rig,upper,lower,target,pole,limits)
@@ -110,7 +118,7 @@ for clip in args.only.split(','):
         if grid:pelvis_z-=.015*action_weight
         # Offsets are local to the true bind orientation (not world premultiplies).
         set_local('root',(0,0,0),(0,0,0))
-        pelvis=rig.pose.bones['pelvis'];pelvis.matrix=Matrix.Translation(Vector((pelvis_x,0,pelvis_z+.025))) @ rest['pelvis']
+        pelvis=rig.pose.bones['pelvis'];pelvis.matrix=Matrix.Translation(TRAVEL_ROTATION @ Vector((pelvis_x,0,pelvis_z+.025))) @ rest['pelvis']
         set_local('spine',(lean*.45,0,-torque*.30));set_local('chest',(lean*.55,0,torque))
         set_local('neck',(.06,0,-torque*.15));set_local('head',(.05+.025*math.sin(2*math.pi*p-.7),.09,-torque*.20))
         set_local('cloth.L',(.045*math.sin(2*math.pi*p-.5),0,0));set_local('cloth.R',(.035*math.sin(2*math.pi*p-1),0,0))
@@ -135,12 +143,12 @@ for clip in args.only.split(','):
             foot_yaw=(turn_sign*math.pi/4*smooth(a) if clip.startswith('pivot') else 0)-yaw
             foot_rotation=Matrix.Rotation(foot_yaw,4,'Z')
             ankle=sole-foot_rotation.to_3x3() @ (landmark-footrest.head_local)
-            flex=checked_chain(rig,'thigh.'+side,'shin.'+side,ankle,Vector((sign*.09,-.5,-.2)),(8,145))
+            flex=checked_chain(rig,'thigh.'+side,'shin.'+side,ankle,TRAVEL_ROTATION @ Vector((sign*.09,-.5,-.2)),(8,145))
             fmatrix=foot_rotation @ footrest.matrix_local;fmatrix.translation=ankle;rig.pose.bones['foot.'+side].matrix=fmatrix
             bpy.context.view_layer.update()
             feet_poses[side]=(ankle.copy(),fmatrix.copy())
             actual=rig.pose.bones['foot.'+side].matrix @ rest['foot.'+side].inverted() @ landmark
-            world=Matrix.Rotation(yaw,4,'Z') @ actual+Vector((0,-STRIDE*p if clip=='walk' or grid else 0,0))
+            world=Matrix.Rotation(yaw,4,'Z') @ actual+TRAVEL_ROTATION @ Vector((0,-STRIDE*p if clip=='walk' or grid else 0,0))
             if stance:
                 # A new support epoch may reuse a limb ID after a swing.
                 if side in last_points:slips.append((world-last_points[side]).length)
@@ -199,7 +207,7 @@ for clip in args.only.split(','):
             rig.pose.bones['pelvis'].matrix=matrix;bpy.context.view_layer.update()
             for side,sign in [('L',1),('R',-1)]:
                 ankle,fmatrix=feet_poses[side]
-                flex=checked_chain(rig,'thigh.'+side,'shin.'+side,ankle,Vector((sign*.09,-.5,-.2)),(8,145))
+                flex=checked_chain(rig,'thigh.'+side,'shin.'+side,ankle,TRAVEL_ROTATION @ Vector((sign*.09,-.5,-.2)),(8,145))
                 rig.pose.bones['foot.'+side].matrix=fmatrix;bpy.context.view_layer.update()
                 joint_ranges['knee-'+side].append(flex)
                 target,direction,pole_offset=hand_targets[side];target+=shift
@@ -213,6 +221,7 @@ for clip in args.only.split(','):
                 'balance':'supported' if margin>=0 else 'catch','authoredYawRadians':yaw,
                 'massModel':'authored-segment-centres-approximation',
                 'rootTravelMetres':STRIDE*p if clip=='walk' or grid else 0,
+                'rootTravelVectorMetres':list(TRAVEL_ROTATION @ Vector((0,-STRIDE*p if clip=='walk' or grid else 0,0))),
                 'gaitPhase':p,'actionProgress':t if attack else None}
         samples.append(sample)
         rig.keyframe_insert("rotation_euler",frame=index+1)
@@ -228,6 +237,9 @@ for clip in args.only.split(','):
                         for key in curve.keyframe_points:key.interpolation='LINEAR'
     records[clip]={'samples':samples[:frame_count],'maxStanceSlipMetres':max(slips,default=0),'maxBoneLengthErrorMetres':length_error,'jointRangesDegrees':{k:[min(v),max(v)] for k,v in joint_ranges.items()},'strideMetres':STRIDE if clip=='walk' or grid else 0,'frames':frame_count,'fps':GRID_ACTIONS/(16/12) if grid else 12}
     if grid and 'walk' in records:records[clip]['transitionReference']='walk'
+    if clip=='walk' or grid:
+        records[clip]['rootStrideVectorMetres']=list(TRAVEL_ROTATION @ Vector((0,-STRIDE,0)))
+        records[clip]['travelHeadingDegrees']=args.travel_heading_degrees
     if grid:records[clip]['poseGrid']={'phaseFrames':GRID_PHASES,'actionFrames':GRID_ACTIONS,'order':'action-major','phaseSampling':'nearest','actionSampling':'nearest'}
     print('AN_CLIP',clip,json.dumps({k:v for k,v in records[clip].items() if k!='samples'}),flush=True)
 # Pack images into editable source rather than depending on another workstation.
@@ -243,6 +255,8 @@ for row,direction in enumerate(DIRECTIONS):
     projection_by_direction[direction]=[axes[k][0]-origin[0] for k in range(3)]+[origin[0]]+[axes[k][1]-origin[1] for k in range(3)]+[origin[1]]
 view.rotation_euler=(0,0,0)
 manifest={'schemaVersion':2,'groundZMetres':SOLE_Z,'bindRepair':bind_repair,'solePatches':SOLE_PATCHES,'minimumSupportMarginMetres':SUPPORT_MARGIN,'massWeights':weights,'projectionByDirection':projection_by_direction,'toolSha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'contactChains':[{'id':'foot-'+side,'upper':'thigh.'+side,'middle':'shin.'+side,'end':'foot.'+side,'pole':[sign*.09,-.5,-.2],'restContactPoint':SOLE_PATCHES[side]['restContactPoint'],'limits':[8,145],'bindSpace':'rig-source'} for side,sign in [('L',1),('R',-1)]],'candidateNotApproved':True,'runtimeIntegrated':False,'sourceSha256':hashlib.sha256(SOURCE.read_bytes()).hexdigest(),'blenderVersion':bpy.app.version_string,'coordinateSpace':'actor-xy-ground-z-up','sourceUnits':'metres','unitsPerPixel':1.55/96,'skeleton':skeleton,'skeletonSignature':hashlib.sha256(json.dumps(skeleton,sort_keys=True).encode()).hexdigest(),'clips':records,'directions':DIRECTIONS,'cloth':cloth,'emissionRegions':regions,'sourceQCOnly':True,'wholeBodyCOMValidated':False,'massModel':'authored-segment-centres-approximation-not-physical-dynamics'}
+for chain in manifest['contactChains']:
+    chain['pole']=list(TRAVEL_ROTATION @ Vector(chain['pole']))
 (OUT/'source-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
 if args.render:
     for clip,action in actions.items():

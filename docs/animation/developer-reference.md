@@ -354,6 +354,16 @@ python tools/animation/test_source_qc.py artifacts/moving-source --blender /path
 ```
 
 Eight action samples retain the same 4/3-second action duration (6 action FPS).
+The generator's `--travel-heading-degrees ±22.5 --stride-metres .28` options
+produce **source studies** with `--only walk,attack-travel`. They retain body
+facing and author diagonal steps; they do not modify C# movement or select clips
+in runtime. Per-sample `rootTravelVectorMetres` and per-clip
+`rootStrideVectorMetres` are source-ground vectors. Export projects the negative
+stride as the stance derivative in each real camera view. Legacy source metadata
+without these fields retains its original negative-Y stride. Validate with the
+same independent mesh, envelope and mutation commands, then run
+`python tools/animation/test_directional_export.py SOURCE...` (Pillow + Node).
+That exporter test uses labelled synthetic cells, not a visual-review atlas.
 `validate_motion_envelope.py -- SOURCE --heading-degrees 15` probes actual
 lateral root displacement while advancing gait by its forward projection.
 It writes a separate heading-labelled report and exits nonzero on rejection;

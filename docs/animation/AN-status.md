@@ -4,6 +4,48 @@
 
 ## Windows continuation — 28 October 2026
 
+### Directional source continuation (after `4dbe3b371`)
+
+The saved source generator now supports an explicit ground-travel heading and
+stride vector while retaining the committed body/claw facing. Authored **±22.5°**
+walk and moving-claw studies use a **0.28m source stride**. This is animation
+source geometry, not a change to C# speed or gameplay balancing. The first 0.36m
+diagonal attempt rejected unreachable knees; it was not promoted or given looser
+limits. Feet retain their anatomical stance width and sole orientation; pelvis
+load, knees/poles, swing and planted source targets are solved together.
+
+Both reopened 16×8 studies pass actual sole/ground/bone/support and complete-skin
+gait↔claw checks, and each passes 96 signed source-direction envelope cases at
+15/30/60/120Hz. Maximum sole drift: positive `4.49512e-7m`, negative
+`3.45213e-7m`; endpoint discrepancy: positive `8.68061e-7m`, negative
+`8.81722e-7m`. Each also rejects skating, hover, endpoint corruption **and forged
+lateral root-vector metadata**, all with Blender exit 1. Original default source
+metrics are unchanged. Full JavaScript: **548/548 pass**.
+
+Export now derives camera-calibrated stance velocity from the declared source
+stride vector rather than assuming forward-only Y travel. An end-to-end test
+runs the actual PNG/profile exporter, independently measures planted contact
+derivatives for eight views and both clips, then validates the generated profile
+with the existing JS public schema. Default and both directional studies pass.
+Its synthetic atlas markers are test fixtures, **not rendered creature artwork**.
+CI reproduces both studies and all four source negatives.
+
+Editable sources and measurements are preserved under
+`art/source/animation-foundation/directional-20261028/`. Directional source data
+is not yet selected by runtime; no cross-heading blend, moving-turn or full Hunt
+acceptance is claimed. Source S/E render and phone-size review remain pending.
+
+Research principles (28 Oct; no assets/code copied):
+[Epic locomotion blending](https://dev.epicgames.com/documentation/en-us/unreal-engine/locomotion-based-blending-in-unreal-engine)
+separates travel direction/speed from facing, supporting authored direction
+samples rather than pretending one forward clip covers every trajectory;
+[Spine IK guidance](https://esotericsoftware.com/spine-ik-constraints)
+places limb endpoints from targets and distinguishes rotation from stretching.
+This study keeps fixed lengths, existing knee limits, support checks and the
+approved cape-free mesh/material identity. Its native/mobile art quality remains
+to be inspected from actual source renders. Blender manual fetch failed and is
+not cited as inspected evidence.
+
 Resumed existing PR #387 at `14659ba25` after fetching current main
 `789f3c175`; preserved untracked Ashfang sources and concurrent PRs #385/#389.
 Reproduced a final-support-step lifecycle defect: the completing sample selected

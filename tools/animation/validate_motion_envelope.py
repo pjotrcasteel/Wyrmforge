@@ -27,6 +27,10 @@ for name in ['walk','attack-travel']:
    chains[c['id']]={'root':list(upper.head),'end':list(end.head),'point':list(point),'planted':any(p['id']==c['id'] for p in sample['contacts']),'a':rig.data.bones[c['upper']].length,'b':rig.data.bones[c['middle']].length,'limits':c['limits']}
   poses[name].append(chains)
 grid=m['clips']['attack-travel']['poseGrid'];duration=grid['actionFrames']/m['clips']['attack-travel']['fps'];stride=m['clips']['walk']['strideMetres'];limit=m['unitsPerPixel'];results=[]
+source_stride=Vector(m['clips']['walk'].get('rootStrideVectorMetres',(0,-stride,0)))
+if abs(source_stride.length-stride)>1e-6 or abs(source_stride.z)>1e-9:raise ValueError('Invalid authored ground stride vector')
+for clip in ['walk','attack-travel']:
+ if (Vector(m['clips'][clip].get('rootStrideVectorMetres',(0,-stride,0)))-source_stride).length>1e-9:raise ValueError('Moving action must share the source gait stride vector')
 for hz in [15,30,60,120]:
  for rate in [1,2,4.3]:
   for initial in [0,.17,.35,.61]:
@@ -39,10 +43,10 @@ for hz in [15,30,60,120]:
       count=grid['phaseFrames'];action=min(grid['actionFrames']-1,math.floor(t/duration*(grid['actionFrames']-1)+.5));index=action*count+math.floor(phase*count+.5)%count;name='attack-travel'
      else:count=m['clips']['walk']['frames'];index=math.floor(phase*count+.5)%count;name='walk'
      sampled=(index%count)/count;error=(phase-sampled+1.5)%1-.5
-     world=Vector((stride*travel*math.sin(heading),-stride*travel*math.cos(heading),0))
+     world=Vector((source_stride.x*math.cos(heading)-source_stride.y*math.sin(heading),source_stride.x*math.sin(heading)+source_stride.y*math.cos(heading),0))*travel
      for id,c in poses[name][index].items():
       if not c['planted']:anchors.pop(id,None);continue
-      if id not in anchors:anchors[id]=list(Vector(c['point'])+world+Vector((0,stride*error,0)))
+      if id not in anchors:anchors[id]=list(Vector(c['point'])+world-source_stride*error)
       target=Vector(anchors[id])-world;point=Vector(c['point']);correction=(target-point).length;maximum=max(maximum,correction)
       ankle=Vector(c['end'])+target-point;reach=(ankle-Vector(c['root'])).length;a,b=c['a'],c['b']
       if not abs(a-b)<reach<a+b:failure={'time':t,'contact':id,'reason':'unreachable source chain'};break
@@ -51,7 +55,7 @@ for hz in [15,30,60,120]:
       if correction>limit:failure={'time':t,'contact':id,'reason':'source-pixel correction budget','correctionMetres':correction};break
      if failure:break
     results.append({'hz':hz,'cyclesPerSecond':rate,'initialPhase':initial,'reverse':reverse,'maxCorrectionMetres':maximum,'minimumKneeFlexDegrees':minimum_flex,'failure':failure})
-report={'sourceForwardOnly':args.heading_degrees==0,'rootHeadingDegrees':args.heading_degrees,'runtimeAccepted':False,'correctionBudgetMetres':limit,'results':results}
+report={'sourceForwardOnly':args.heading_degrees==0,'rootHeadingDegrees':args.heading_degrees,'sourceStrideVectorMetres':list(source_stride),'runtimeAccepted':False,'correctionBudgetMetres':limit,'results':results}
 filename='motion-envelope-qc.json' if args.heading_degrees==0 else f'motion-envelope-heading-{args.heading_degrees:g}-qc.json'
 (folder/filename).write_text(json.dumps(report,indent=2)+'\n')
 failed=[r for r in results if r['failure']];print('SOURCE_MOTION_ENVELOPE',len(results)-len(failed),'/',len(results),'passed; root heading',args.heading_degrees)
