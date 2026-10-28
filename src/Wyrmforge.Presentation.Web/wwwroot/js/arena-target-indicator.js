@@ -143,7 +143,7 @@ function indicator(kind, x, y, radius) {
         // floor seal THERE, not 1.6 radii below the actor where it floats away.
         // The scene draws both decal passes before opaque depth-sorted sprites:
         // the rear arc is hidden by the monster's actual legs/body alpha.
-        y: Math.round(y + (kind === 'object' ? radius * .7 : Math.min(4, radius * .2))),
+        y: Math.round(y + (kind === 'object' ? radius * .7 : boss ? 2 : Math.min(4, radius * .2))),
         rx: footprint,
         ry: Math.max(15, Math.round(footprint * (kind === 'object' ? .56 : .5))),
     };
