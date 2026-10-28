@@ -334,3 +334,28 @@ corrections, changing world displacement, or synthesizing extra raster frames.
 `node tools/animation/check_live_contacts.mjs PACK` replays actual packed source
 chains through the same lifecycle at 15/30/60/120Hz. It deliberately exits nonzero
 for rejected moving-stationary actions. It is not a raster, Hunt or device test.
+
+For newly packed regional candidates, `regions.continuousPhaseBody: true` also
+carries that phase residual into body and swing geometry. Source pole positions
+translate with the chain. `maxRootCorrectionMetres` is an explicit one-source-
+pixel source-body bound derived from the same rig scale as contact correction;
+`PoseSample.rootOffset` remains zero on the regional path. This is quantization
+compensation, not permission to follow arbitrary lateral root motion. Both reach
+and actual source support are checked after correction. Packs without the
+explicit declaration retain their previous swing/body behavior.
+
+The current bounded source authoring/QC commands are:
+
+```sh
+blender -b -t 2 --python-exit-code 1 --python tools/animation/author_hollow_foundation.py -- --out artifacts/moving-source --only walk,attack-travel --phase-samples 16 --action-samples 8 --samples 2
+blender -b -t 2 --python-exit-code 1 --python tools/animation/validate_source.py -- artifacts/moving-source
+blender -b -t 2 --python-exit-code 1 --python tools/animation/validate_motion_envelope.py -- artifacts/moving-source
+python tools/animation/test_source_qc.py artifacts/moving-source --blender /path/to/blender
+```
+
+Eight action samples retain the same 4/3-second action duration (6 action FPS).
+The source-forward envelope is not arbitrary-motion acceptance. The source
+workflow runs these checks without a full render. Render saved sources with
+`render_saved_clips.py`; `--directions S,E` explicitly records partial views.
+Actual Hunt diagnostic failures retain clip/frame/facing/contact and required
+versus allowed correction in `foundationFailure` alongside matching fallback.

@@ -119,7 +119,7 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
             pose.direction=hollowDirection(dx,dy,pose.direction);
         }
         if(distance>=64){pose.distance=0;pose.visualDistance=0;pose.runSpeed=null;pose.lastSampleAge=null;
-            pose.lastMove=-1;pose.attackAt=null;pose.animation=createSpriteAnimationState();pose.foundationAnimation=null;pose.foundationSample=null;pose.foundationCue=null;pose.foundationContacts=null;pose.foundationError=null;}
+            pose.lastMove=-1;pose.attackAt=null;pose.animation=createSpriteAnimationState();pose.foundationAnimation=null;pose.foundationSample=null;pose.foundationCue=null;pose.foundationContacts=null;pose.foundationError=null;pose.foundationFailure=null;}
         pose.x=enemy.x;pose.y=enemy.y;
         const locomotion=sampleHollowRun(pose,distance,dt,advancing);
         if(pose.attackAt!=null&&pose.age-pose.attackAt>=16/12)pose.attackAt=null;
@@ -164,11 +164,13 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
                         paused:snapshot.paused||snapshot.ended,frozen:enemy.frozen,
                         maxCorrection:foundation.manifest.regions.maxCorrectionMetres,
                         maxRootCorrection:foundation.manifest.regions.maxRootCorrectionMetres??0});
-                    pose.foundationError=null;
+                    pose.foundationError=null;pose.foundationFailure=null;
                 }catch(error){
                     // Preserve the diagnosis and use this actor's existing art.
                     // Failed contact poses must never masquerade as grounded.
-                    pose.foundationError=error.message;pose.foundationSample=null;
+                    pose.foundationError=error.message;
+                    pose.foundationFailure={clip:pose.foundationSample?.clip,frame:pose.foundationSample?.frame,direction:pose.foundationSample?.direction,phase:pose.foundationSample?.contactPhase,contactId:error.contactId??null,requiredCorrectionMetres:error.requiredCorrectionMetres??null,maxCorrectionMetres:error.maxCorrectionMetres??null};
+                    pose.foundationSample=null;
                 }
             }
         }
@@ -252,7 +254,7 @@ export function drawHollowCorpses(ctx,state,reducedMotion=false){
     }
 }
 export function hollowDiagnostics(state){
-    return {ready:hollowSpritesReady(),fractureReady:fracture.ready(),capeFreeReady:arms.ready(),skeletalDeathReady:skeletalDeath.ready(),injuryDeathAtlasesLoaded:injuryDeaths.loadedCount(),injuriesReady:injuries.ready(),armsReady:arms.ready(),injuryLabReview,foundation:{enabled:foundationEnabled,ready:foundation.ready(),error:foundation.error??null},layers:compositor?{...compositor.stats,estimatedBytes:compositor.estimatedBytes()}:null,entities:[...state.entities].map(([entityId,p])=>({entityId,injuryVariant:p.injuryVariant,armVariant:p.armVariant,deathInjury:p.deathInjury,signature:p.signature,visualScale:p.visualScale,idleFrame:p.idleFrame,runSpeed:p.runSpeed,observedDistance:p.distance,visualDistance:p.visualDistance,injuryDrawn:injuries.ready()&&p.injuryVariant==='broken-leg-left'&&(p.clip==='walk'||p.clip==='attack'),clip:p.clip,frame:p.frame,direction:p.direction,baseFrame:p.baseFrame,phase:p.animation?.phase,layered:p.layered,foundationError:p.foundationError??null,foundation:p.foundationSample?{clip:p.foundationSample.clip,frame:p.foundationSample.frame,direction:p.foundationSample.direction,actionToken:p.foundationSample.actionToken,maxSlip:p.foundationSample.debug.maxSlip,rootOffset:p.foundationSample.rootOffset,regional:p.foundationSample.debug.regional??null}:null})),
+    return {ready:hollowSpritesReady(),fractureReady:fracture.ready(),capeFreeReady:arms.ready(),skeletalDeathReady:skeletalDeath.ready(),injuryDeathAtlasesLoaded:injuryDeaths.loadedCount(),injuriesReady:injuries.ready(),armsReady:arms.ready(),injuryLabReview,foundation:{enabled:foundationEnabled,ready:foundation.ready(),error:foundation.error??null},layers:compositor?{...compositor.stats,estimatedBytes:compositor.estimatedBytes()}:null,entities:[...state.entities].map(([entityId,p])=>({entityId,injuryVariant:p.injuryVariant,armVariant:p.armVariant,deathInjury:p.deathInjury,signature:p.signature,visualScale:p.visualScale,idleFrame:p.idleFrame,runSpeed:p.runSpeed,observedDistance:p.distance,visualDistance:p.visualDistance,injuryDrawn:injuries.ready()&&p.injuryVariant==='broken-leg-left'&&(p.clip==='walk'||p.clip==='attack'),clip:p.clip,frame:p.frame,direction:p.direction,baseFrame:p.baseFrame,phase:p.animation?.phase,layered:p.layered,foundationError:p.foundationError??null,foundationFailure:p.foundationFailure??null,foundation:p.foundationSample?{clip:p.foundationSample.clip,frame:p.foundationSample.frame,direction:p.foundationSample.direction,actionToken:p.foundationSample.actionToken,maxSlip:p.foundationSample.debug.maxSlip,rootOffset:p.foundationSample.rootOffset,regional:p.foundationSample.debug.regional??null}:null})),
         corpses:[...state.corpses.values()].map(p=>({entityId:p.entityId,deathVariant:p.deathVariant,deathInjury:p.deathInjury,deathStyle:p.deathStyle,direction:p.direction,age:state.clock-p.at,frame:Math.min(23,Math.floor((state.clock-p.at)*12))}))};
 }
 // Preserve playback/fallback diagnostics while the asset bundle is loading.

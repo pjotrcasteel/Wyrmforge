@@ -87,7 +87,7 @@ export function sourceGroundPointFromPixel(pixel,groundZ,projection){
  * Forced frozen transport is reported as transport, never as grounded stance.
  */
 export function updateSourceContactTargets(state,frame,intent){
-    const {timestamp,world,pixelScale,anchor,phaseOffset={x:0,y:0},paused=false,frozen=false}=intent;
+    const {timestamp,world,pixelScale,anchor,phaseOffset={x:0,y:0},translateSwing=false,paused=false,frozen=false}=intent;
     if(!Number.isFinite(timestamp)||timestamp<0||![world?.x,world?.y,pixelScale,phaseOffset?.x,phaseOffset?.y].every(Number.isFinite)||pixelScale<=0||!Array.isArray(anchor)||anchor.length!==2||!anchor.every(Number.isFinite))throw new TypeError('Finite source support placement required');
     const entries=Object.entries(frame?.sourceContacts??{}),projection=frame?.projection;
     if(!entries.length||!Array.isArray(projection)||projection.length!==8||!projection.every(Number.isFinite))throw new TypeError('Actual source support metadata required');
@@ -99,7 +99,7 @@ export function updateSourceContactTargets(state,frame,intent){
     const previous=state.targets??Object.create(null),targets=Object.create(null);
     for(const [id,c] of entries){
         const point=projected(c.sourceContact,projection),old=previous[id];
-        const authored={x:world.x+(point[0]-anchor[0])*pixelScale+(c.planted?phaseOffset.x:0),y:world.y+(point[1]-anchor[1])*pixelScale+(c.planted?phaseOffset.y:0),z:c.sourceContact[2],planted:c.planted,transported:false};
+        const authored={x:world.x+(point[0]-anchor[0])*pixelScale+(c.planted||translateSwing?phaseOffset.x:0),y:world.y+(point[1]-anchor[1])*pixelScale+(c.planted||translateSwing?phaseOffset.y:0),z:c.sourceContact[2],planted:c.planted,transported:false};
         if(stopped&&old)targets[id]={...old,x:old.x+dx,y:old.y+dy,planted:dx||dy?false:old.planted,transported:Boolean(dx||dy)};
         else if(c.planted&&old?.supportActive)targets[id]={...old,planted:true,transported:false};
         else targets[id]=authored;
@@ -190,7 +190,9 @@ export function sampleSourceContactRegions(frame,sample,targets,options){
         const ground=sourceGroundPointFromPixel(pixel,target.z,projection);
         const upper=frame.sourceBones[c.upper],lower=frame.sourceBones[c.middle],end=frame.sourceBones[c.end];
         if(!upper||!lower||!end)throw new TypeError('Missing actual source chain: '+id);
-        const result=retargetSourceContactRegion({...c,upper,lower,end,targetContact:ground,projection,maxCorrection,maxRootCorrection,rootTarget:upper.head.map((n,i)=>n+bodyOffset[i])});
+        let result;
+        try{result=retargetSourceContactRegion({...c,pole:c.pole.map((n,i)=>n+bodyOffset[i]),upper,lower,end,targetContact:ground,projection,maxCorrection,maxRootCorrection,rootTarget:upper.head.map((n,i)=>n+bodyOffset[i])});}
+        catch(error){error.contactId=id;throw error;}
         for(const [region,transform] of [[c.upper,result.upperTransform],[c.middle,result.lowerTransform],[c.end,result.endTransform]]){
             if(used.has(region))throw new TypeError('Overlapping source chains: '+region);
             used.add(region);parts.push({...sample,region,transform});

@@ -1,7 +1,7 @@
 // Atomic atlas adapter for the ONE shared sprite-animation controller.
 import {validateCreatureRigProfile} from './sprite-animation.js';
 import {createSpriteLayerCompositor} from './sprite-layer-compositor.js';
-import {sampleSourceContactRegions,updateSourceContactTargets} from './sprite-contact-kinematics.js';
+import {sampleSourceContactRegions,updateSourceContactTargets,sourceGroundPointFromPixel} from './sprite-contact-kinematics.js';
 import {spriteFrame,spriteAtlasLayout} from './lighting/lit-sprite.js';
 export function createCreatureAnimationAssets(baseUrl,{maxDecodedBytes=64*1024*1024}={}){
     let data=null,pending=null,lastError=null,generation=0;
@@ -51,6 +51,7 @@ export function createCreatureAnimationAssets(baseUrl,{maxDecodedBytes=64*1024*1
         let regions=null,compositor=null;
         if(manifest.regions){
             const spec=manifest.regions;
+            if(spec.continuousPhaseBody!=null&&typeof spec.continuousPhaseBody!=='boolean')throw new TypeError('Explicit phase-body correction declaration required');
             if(typeof spec.metadata!=='string'||!/^[a-f0-9]{64}$/.test(spec.sha256??''))throw new TypeError('Invalid source region manifest');
             const response=await fetch(new URL(spec.metadata,baseUrl));if(!response.ok)throw new Error('Source regions unavailable');
             const bytes=await response.arrayBuffer();if(bytes.byteLength>4*1024*1024)throw new RangeError('Source region metadata budget exceeded');
@@ -92,8 +93,16 @@ export function createCreatureAnimationAssets(baseUrl,{maxDecodedBytes=64*1024*1
             const clip=data.manifest.clips[sample.clip],scale=intent.scale??1;
             if(!Number.isFinite(scale)||scale<=0)throw new RangeError('Positive regional actor scale required');
             const pixelScale=clip.worldSize/clip.cell*scale;
-            const targets=updateSourceContactTargets(state,frame,{...intent,phaseOffset:sample.sourcePhaseOffset,pixelScale,anchor:data.regions.anchor});
-            const regional=sampleSourceContactRegions(frame,sample,targets,{...intent,pixelScale,anchor:data.regions.anchor});
+            const targets=updateSourceContactTargets(state,frame,{...intent,phaseOffset:sample.sourcePhaseOffset,translateSwing:Boolean(data.manifest.regions.continuousPhaseBody),pixelScale,anchor:data.regions.anchor});
+            // Translate the authored body by the same sub-frame phase residual
+            // used at landing. This preserves its source mass/support relation;
+            // it does not follow arbitrary C# drift or move the gameplay root.
+            let bodyOffset=[0,0,0];
+            if(data.manifest.regions.continuousPhaseBody){
+                const phase=sample.sourcePhaseOffset??{x:0,y:0},p=frame.projection;
+                bodyOffset=sourceGroundPointFromPixel([p[3]+phase.x/pixelScale,p[7]+phase.y/pixelScale],0,p);
+            }
+            const regional=sampleSourceContactRegions(frame,sample,targets,{...intent,bodyOffset,pixelScale,anchor:data.regions.anchor});
             if(frame.balance==='supported'&&!Object.values(targets).some(t=>t.transported)&&!regional.support?.staticallySupported)throw new RangeError('Authored mass proxy is outside actual source support');
             // Regional anchors already consume world displacement. Applying the
             // whole-sprite contact correction again would move every planted foot.

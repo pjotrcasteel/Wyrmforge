@@ -5,7 +5,7 @@ import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 const root=path.resolve(import.meta.dirname,'../..');
 const {createSpriteAnimationState:create,updateSpriteAnimation:update,validateCreatureRigProfile:validate}=await import(pathToFileURL(root+'/src/Wyrmforge.Presentation.Web/wwwroot/js/sprite-animation.js'));
-const {updateSourceContactTargets:targets,sampleSourceContactRegions:solve}=await import(pathToFileURL(root+'/src/Wyrmforge.Presentation.Web/wwwroot/js/sprite-contact-kinematics.js'));
+const {updateSourceContactTargets:targets,sampleSourceContactRegions:solve,sourceGroundPointFromPixel:inverse}=await import(pathToFileURL(root+'/src/Wyrmforge.Presentation.Web/wwwroot/js/sprite-contact-kinematics.js'));
 const pack=path.resolve(process.argv[2]);
 const profile=validate(JSON.parse(fs.readFileSync(pack+'/profile.json'))),manifest=JSON.parse(fs.readFileSync(pack+'/manifest.json')),regions=JSON.parse(fs.readFileSync(pack+'/'+manifest.regions.metadata));
 if(regions.sourcePoses)for(const views of Object.values(regions.clips))for(const frames of Object.values(views))for(const frame of frames)Object.assign(frame,regions.sourcePoses[frame.sourcePoseIndex]);
@@ -16,8 +16,10 @@ for(const direction of manifest.directions)for(const hz of [15,30,60,120])for(co
   const time=i/hz,world={x:velocity.x*time,y:velocity.y*time},intent={entityId:1,timestamp:time,travel:speed*time,world,direction,moving:true,action:attack?{name:'attack',token:'claw',sequence:0}:null};
   try{
    const sample=update(state,profile,intent),frame=regions.clips[sample.clip][direction][sample.frame],spec=manifest.clips[sample.clip],pixelScale=spec.worldSize/spec.cell;
-   const t=targets(contacts,frame,{timestamp:time,world,phaseOffset:sample.sourcePhaseOffset,pixelScale,anchor:regions.anchor});
-   const r=solve(frame,sample,t,{world,pixelScale,anchor:regions.anchor,maxCorrection:manifest.regions.maxCorrectionMetres});
+   const t=targets(contacts,frame,{timestamp:time,world,phaseOffset:sample.sourcePhaseOffset,translateSwing:Boolean(manifest.regions.continuousPhaseBody),pixelScale,anchor:regions.anchor});
+   const offset=sample.sourcePhaseOffset??{x:0,y:0},p=frame.projection;
+   const bodyOffset=manifest.regions.continuousPhaseBody?inverse([p[3]+offset.x/pixelScale,p[7]+offset.y/pixelScale],0,p):[0,0,0];
+   const r=solve(frame,sample,t,{world,pixelScale,anchor:regions.anchor,maxCorrection:manifest.regions.maxCorrectionMetres,maxRootCorrection:manifest.regions.maxRootCorrectionMetres,bodyOffset});
    if(frame.balance==='supported'&&!r.support?.staticallySupported)throw new RangeError('Authored mass proxy is outside actual source support');
    maxSlip=Math.max(maxSlip,...r.contacts.map(c=>c.slip));
   }catch(e){failed={time,message:e.message,requiredCorrectionMetres:e.requiredCorrectionMetres};break;}

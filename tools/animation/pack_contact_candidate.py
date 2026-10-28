@@ -117,6 +117,8 @@ manifest['regions']={'metadata':'contact-regions.json','sha256':hashlib.sha256(p
 matrix=profile['rig']['sourceSpace']['toActor']
 metres_to_world=sum(v*v for v in matrix[:3])**.5
 manifest['regions']['maxCorrectionMetres']=profile['unitsPerPixel']/metres_to_world
+manifest['regions']['maxRootCorrectionMetres']=manifest['regions']['maxCorrectionMetres']
+manifest['regions']['continuousPhaseBody']=True
 manifest['runtimeIntegrated']=False;manifest['productionReady']=False
 if a.materials:manifest['materialGate']='Source-aligned albedo/normal/emissive alpha verified; regional deformation, depth/casters and actual GPU Hunt acceptance remain open'
 (a.pack/'contact-regions.json').write_bytes(payload)

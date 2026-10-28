@@ -491,3 +491,34 @@ recovery; old packs retain their cumulative-distance behavior. Focused suite:
 56/56 passed, including S/E/diagonal reversal beyond action completion. Lateral
 motion is not reclassified as supported; regional reach/support failures remain
 observable and continue to use the matching existing actor fallback.
+
+### Bounded moving pack: live contact/body integration evidence
+
+The complete 16-gait-phase × 8-action-pose, eight-facing pack retains
+3,262,548 metadata bytes and 22,631,424 decoded color bytes. Initial actual-pack
+replay passed 57/64 scenarios; seven failed support because a phase-corrected
+foot anchor was combined with an uncorrected body. The shared adapter now applies
+the identical bounded source-phase translation to body, swing chains and poles.
+Existing planted anchors remain fixed. Both source-contact correction and body
+translation stay within one native source pixel, and anatomical limits and the
+support test remain unchanged. Old packs without `continuousPhaseBody` retain
+prior behavior. Final actual-pack replay: **64/64 passed**, eight facings × four
+frame rates × walk/moving-claw, with support checked as well as contact error.
+
+Actual published Blazor Enemy Lab at 320/390px still fails the full sequence:
+first capture 24/90 regional poses, diagnostic repeat 23/88, with all remaining
+poses rejected and the matching fallback shown. Diagnostics now identify the
+failed contact, source pose and measured/allowed correction. The initial path
+has lateral motion even while labelled S: one recorded walking residual is
+0.0239493m versus the unchanged 0.0161458m allowance. This is the concrete remaining
+arbitrary-motion/source-support gate. No limit was widened to hide it. Source-
+forward success cannot be called a grounded pass-by/turn/pursuit performance.
+
+Full local JS: **547/547 passed**. Current synthetic browser benchmark: 500 visible
+actors, 60 frames, mean **17.79ms**, p95 **28.2ms**, max **53.9ms**, zero solve
+failures; 22,631,424 decoded color bytes plus 6,291,456 shared cache bytes.
+Chrome's coarse reported heap was 35.1MB before/after. This was desktop headless
+Chromium, no concurrent Blender rendering, not physical-phone, GPU or real-Hunt
+horde acceptance. Current source remains candidate/unapproved. GPU deformation,
+depth/casters, arbitrary moving turns, final continuous sequence and device gates
+are open. Do not request final owner approval or call AN0–AN6 complete.

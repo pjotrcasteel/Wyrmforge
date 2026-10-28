@@ -17,6 +17,7 @@ const server=http.createServer((req,res)=>{
   const {createCreatureAnimationAssets}=await import('/js/creature-animation-assets.js');
   const assets=createCreatureAnimationAssets(new URL('/pack/',location.href));if(!await assets.preload())throw new Error(assets.error);
   const metadata=await (await fetch('/pack/contact-regions.json')).json(),manifest=assets.manifest;
+  if(metadata.sourcePoses)for(const views of Object.values(metadata.clips))for(const frames of Object.values(views))for(const frame of frames)Object.assign(frame,metadata.sourcePoses[frame.sourcePoseIndex]);
   const ctx=document.querySelector('canvas').getContext('2d'),times=[],count=500,iterations=60;
   const memoryBefore=performance.memory?.usedJSHeapSize??null;let failures=0;
   for(let tick=0;tick<iterations;tick++){

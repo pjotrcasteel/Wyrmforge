@@ -186,3 +186,15 @@ test('continuous landing phase prevents accumulated quantization drift in actual
   }
  }
 });
+
+test('bounded phase-body translation carries swing geometry and pole with the real chain while retained support stays fixed',async()=>{
+ const {retargetSourceContactRegion:retarget,updateSourceContactTargets:update}=await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/sprite-contact-kinematics.js');
+ const c=chain(),middle=solve(c).middle,shift=[.005,-.004,0],plus=p=>p.map((v,i)=>v+shift[i]);
+ const r=retarget({...c,pole:plus(c.pole),upper:{head:c.root,tail:middle},lower:{head:middle,tail:c.target},end:{head:c.target},sourceContact:[.15,0,-.33],targetContact:plus([.15,0,-.33]),rootTarget:plus(c.root),maxRootCorrection:.01,maxCorrection:.01,projection:[60,0,0,64,0,0,-60,32]});
+ assert.ok(distance(r.middle,plus(middle))<1e-12);assert.ok(distance(r.ankle,plus(c.target))<1e-12);
+ const frame={projection:[10,0,0,64,0,10,0,88],sourceContacts:{support:{sourceContact:[.1,.2,-.5],planted:true},swing:{sourceContact:[-.1,.2,-.45],planted:false}}};
+ const intent={timestamp:0,world:{x:100,y:200},pixelScale:2,anchor:[64,88],phaseOffset:{x:.3,y:-.2},translateSwing:true},state={};
+ const a=update(state,frame,intent);assert.equal(a.swing.x,98.3);assert.equal(a.swing.y,203.8);const anchor={...a.support};
+ const b=update(state,frame,{...intent,timestamp:1,world:{x:100.1,y:200},phaseOffset:{x:.2,y:.1}});assert.deepEqual(b.support,anchor);assert.equal(b.swing.x,98.3);assert.equal(b.swing.y,204.1);
+ const legacy=update({},frame,{...intent,translateSwing:false});assert.equal(legacy.swing.x,98);assert.equal(legacy.swing.y,204);
+});
