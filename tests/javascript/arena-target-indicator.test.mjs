@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import {
     SIGIL_ATLAS, SIGIL_SCHOOL_COLORS, tintSigilPixels, resolveSigilSchool, resolveTargetIndicator, presentTargetSigil, drawTargetIndicator,
     targetSelectionLightEmitter, targetSelectionCanvasLight, actorLightsWithoutSigilOverlay,
@@ -113,12 +114,12 @@ test('missing school never inserts a misleading Arcane center emblem', () => {
 test('C# selected enemy receives a legible combat footprint; unselected enemies are ignored', () => {
     const enemy = resolveTargetIndicator(scene());
     assert.deepEqual({ ...enemy, rx: Math.round(enemy.rx) },
-        { kind: 'enemy', x: 310, y: 466, rx: 34, ry: 17 });
+        { kind: 'enemy', x: 310, y: 443, rx: 34, ry: 17 });
     const s = scene();
     s.player.aimTargetId = 99;
     const boss = resolveTargetIndicator(s);
     assert.deepEqual({ ...boss, rx: Math.round(boss.rx) },
-        { kind: 'boss', x: 450, y: 738, rx: 79, ry: 40 });
+        { kind: 'boss', x: 450, y: 652, rx: 79, ry: 40 });
     s.dragon.targetable = false;
     assert.equal(resolveTargetIndicator(s), null);
 });
@@ -142,15 +143,29 @@ test('right-stick snap uses the authoritative target ID, while free aim and stal
     assert.deepEqual(resolveTargetIndicator(s), { kind: 'object', x: 250, y: 608, rx: 32, ry: 18 });
 });
 
-test('targeting rune is grounded below the enemy and boss sprite centers', () => {
+test('the ground sigil is centered at the actual actor feet, not displaced below the monster', () => {
     const s = scene();
     const enemy = resolveTargetIndicator(s);
-    assert.ok(enemy.y - enemy.ry > s.enemies[1].y,
-        'Enemy rune begins below the sprite center, not through the torso.');
+    assert.ok(Math.abs(enemy.y - s.enemies[1].y) <= 4,
+        'Enemy feet must cross the center of the seal.');
     s.player.aimTargetId = 99;
     const boss = resolveTargetIndicator(s);
-    assert.ok(boss.y - boss.ry > s.dragon.y,
-        'Boss rune begins below the body center.');
+    assert.equal(boss.y, s.dragon.y + 2,
+        'Ashfang contact shadow and targeting seal share the ground pivot.');
+    assert.ok(enemy.ry < enemy.rx && boss.ry < boss.rx,
+        'Ground sigils stay foreshortened on the floor.');
+});
+
+test('both sigil passes stay below alpha-composited enemy and boss sprites', () => {
+    const source = readFileSync(
+        new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena.js', import.meta.url), 'utf8');
+    const ground = source.indexOf("drawTargetIndicator(ctx, targetIndicator, 'ground'");
+    const luminous = source.indexOf("drawTargetIndicator(ctx, targetIndicator, 'contrast'");
+    const sprites = source.indexOf('for (const layer of sortSceneDepthLayers(depthLayers))');
+    assert.ok(ground >= 0 && luminous > ground && sprites > luminous,
+        'Draw the entire decal before actor silhouettes, so their feet occlude its rear arc.');
+    assert.equal(source.indexOf('drawTargetIndicator(ctx, targetIndicator', sprites), -1,
+        'Never redraw rune artwork over monster sprites later in the frame.');
 });
 
 test('selection underlight is never screen-blended over actors after sprites are drawn', () => {
