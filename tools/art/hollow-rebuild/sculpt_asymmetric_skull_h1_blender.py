@@ -64,8 +64,8 @@ def skull_deformation(mesh):
         # Unequal orbital hollows. Brow/lid edges rise as the orbital
         # centre recedes. The original full HEAD remains a connected mesh.
         orbits=(
-            (-.085,3.022,.087,.094,.075),
-            (.092,2.978,.069,.078,.057)
+            (-.085,2.885,.082,.065,.068),
+            (.092,2.855,.074,.065,.050)
         )
         relief=0.
         for xc,zc,rx,rz,depth in orbits:
@@ -74,10 +74,10 @@ def skull_deformation(mesh):
             raised=.030*bell(radial,1.02,.20)
             relief+=depth*inside - raised
         # A battered human cheek and asymmetrical jaw, not a wolf muzzle.
-        left_cheek=bell(x,-.135,.085)*bell(z,2.865,.085)
-        right_cheek=bell(x,.145,.080)*bell(z,2.885,.080)
+        left_cheek=bell(x,-.135,.085)*bell(z,2.755,.075)
+        right_cheek=bell(x,.145,.080)*bell(z,2.780,.075)
         relief+=.040*right_cheek-.022*left_cheek
-        jaw=bell(z,2.785,.105)*bell(x,.02,.175)
+        jaw=bell(z,2.705,.09)*bell(x,.02,.175)
         side_shift=.030*jaw
         source_delta=Vector((side_shift,relief+.026*jaw,-.019*jaw))
         if source_delta.length>.002:
@@ -116,8 +116,8 @@ def add_orbit_material(mesh):
     direction.normalize()
     eye_sets=[]
     eye_centres=(
-        (-.085,3.022,.102,.112),
-        (.092,2.978,.083,.095),
+        (-.085,2.885,.093,.073),
+        (.092,2.855,.084,.074),
     )
     for xc,zc,rx,rz in eye_centres:
         selected=set()
