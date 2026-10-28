@@ -43,6 +43,7 @@ export function validateSourceSkinSurface(surface){
     for(const c of Object.values(surface.clips)){
         if(!Number.isSafeInteger(c.frames)||c.frames<1||!Number.isFinite(c.fps)||c.fps<=0||!Array.isArray(c.poses)||c.poses.length!==c.frames)fail('clip');
         if(c.poseGrid&&(!Number.isSafeInteger(c.poseGrid.phaseFrames)||!Number.isSafeInteger(c.poseGrid.actionFrames)||c.poseGrid.phaseFrames<2||c.poseGrid.actionFrames<2||c.poseGrid.phaseFrames*c.poseGrid.actionFrames!==c.frames||c.poseGrid.order!=='action-major'))fail('pose surface dimensions');
+        for(const contact of surface.contacts??[])if(contact.orientationMode==='ground-yaw'||c.contactYaws){const yaws=c.contactYaws?.[contact.id];if(!Array.isArray(yaws)||yaws.length!==c.frames||!yaws.every(Number.isFinite))fail('source contact orientations');}
         for(const pose of c.poses){
             if(!Array.isArray(pose)||pose.length!==surface.bones.length*10||!pose.every(Number.isFinite))fail('pose channels');
             for(let i=0;i<pose.length;i+=10){quaternion(pose.slice(i+3,i+7));if(pose.slice(i+7,i+10).some(v=>v<=0))fail('pose scale');}
@@ -53,6 +54,7 @@ export function validateSourceSkinSurface(surface){
     if(!Array.isArray(surface.contacts)||!surface.contacts.length||!Array.isArray(surface.contactCycles)||surface.contactCycles.length!==surface.contacts.length)fail('contacts');
     const ids=new Set(),used=new Set();
     for(const c of surface.contacts){
+        if(c.orientationMode!==undefined&&c.orientationMode!=='ground-yaw')fail('unsupported contact orientation control');
         if(!c.id||ids.has(c.id)||![c.upper,c.middle,c.end].every(name=>names.has(name)&&!used.has(name)))fail('contact anatomy');
         for(const name of [c.upper,c.middle,c.end])used.add(name);ids.add(c.id);
         if(surface.bones.find(b=>b.id===c.middle).parent!==surface.bones.findIndex(b=>b.id===c.upper)||surface.bones.find(b=>b.id===c.end).parent!==surface.bones.findIndex(b=>b.id===c.middle))fail('disconnected source chain');
@@ -74,13 +76,22 @@ export function sampleSourceSkinSurface(surface,{clip,gaitPhase,actionProgress=0
     for(const [index,bone] of surface.bones.entries()){
         const channels=(row,gait)=>spec.poses[row*count+gait].slice(index*10,index*10+10);
         const local=matrixTRS(blend(blend(channels(a0,g0),channels(a0,g1),gt),blend(channels(a1,g0),channels(a1,g1),gt),at));
-        const global=bone.parent<0?local:multiplySourceMatrices(matrices[bone.parent],local);matrices.push(global);
+        let global=bone.parent<0?local:multiplySourceMatrices(matrices[bone.parent],local);
+        const contact=surface.contacts.find(c=>c.end===bone.id&&c.orientationMode==='ground-yaw');
+        if(contact&&spec.contactYaws){
+            const values=spec.contactYaws[contact.id],angle=(a,b,t)=>a+Math.atan2(Math.sin(b-a),Math.cos(b-a))*t;
+            const yaw=angle(angle(values[a0*count+g0],values[a0*count+g1],gt),angle(values[a1*count+g0],values[a1*count+g1],gt),at);
+            const rotation=matrixTRS([0,0,0,0,0,Math.sin(yaw/2),Math.cos(yaw/2),1,1,1]),oriented=multiplySourceMatrices(rotation,bone.rest);
+            for(let axis=0;axis<3;axis++)oriented[12+axis]=global[12+axis];global=oriented;
+        }
+        matrices.push(global);
         sourceBones[bone.id]={head:global.slice(12,15),tail:point(global,[0,bone.length,0]),matrix:global};
     }
     const sourceContacts=Object.create(null);
     for(const c of surface.contacts){
         const bone=surface.bones.find(b=>b.id===c.end),skin=multiplySourceMatrices(sourceBones[c.end].matrix,invertSourceMatrix(bone.rest)),cycle=surface.contactCycles.find(p=>p.id===c.id),q=(phase+cycle.phaseOffset)%1;
-        sourceContacts[c.id]={...c,sourceContact:point(skin,c.restContactPoint),footprint:c.restHull.map(p=>point(skin,p)),planted:q<cycle.stanceFraction};
+        sourceContacts[c.id]={...c,sourceContact:point(skin,c.restContactPoint),footprint:c.restHull.map(p=>point(skin,p)),planted:q<cycle.stanceFraction,
+            swingProgress:Math.max(0,Math.min(1,(q-cycle.stanceFraction)/(1-cycle.stanceFraction))),sourceYaw:Math.atan2(skin[1],skin[0])};
     }
     const total=Object.values(surface.massWeights).reduce((a,b)=>a+b,0),center=[0,0,0];
     for(const [id,mass] of Object.entries(surface.massWeights))for(let axis=0;axis<3;axis++)center[axis]+=(sourceBones[id].head[axis]+sourceBones[id].tail[axis])*mass/(2*total);

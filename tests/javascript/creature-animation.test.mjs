@@ -261,3 +261,14 @@ test('calibrated locomotion continues signed root travel after recovery instead 
   }
  }
 });
+
+test('source support keeps one clock, commits yaw, freezes and rejects scale changes',()=>{
+ const p=fixture();p.sourceSupport={version:1,facingZero:'S',groundBasis:[60,0,0,-34],heightProjection:[0,-50],groundZ:-.5,strideMetres:.28,turnRadiansPerSecond:.6,turnCyclesPerRadian:1.2};
+ validate(p);const s=create();update(s,p,intent(0,{action:strike()}));
+ const attack=update(s,p,intent(.5,{direction:'N',world:{x:0,y:6},travel:6}));
+ assert.equal(attack.sourceSupport.yaw,0);assert.equal(attack.actionToken,'claw-0');assert.equal(attack.debug.sourcePending,true);assert.equal(attack.debug.maxSlip,null);
+ const paused=update(s,p,intent(5,{paused:true,direction:'N',world:{x:0,y:6},travel:6}));assert.equal(paused.sourceSupport.phaseAdvance,0);assert.equal(paused.actionProgress,attack.actionProgress);
+ update(s,p,intent(6,{direction:'N',world:{x:0,y:6},travel:6}));
+ const turn=update(s,p,intent(7,{direction:'N',world:{x:0,y:6},travel:6}));assert.ok(Math.abs(turn.sourceSupport.yaw)>0);assert.equal(turn.clip,'walk');
+ assert.throws(()=>update(s,p,intent(8,{scale:2,travel:6})),/fresh state/);
+});

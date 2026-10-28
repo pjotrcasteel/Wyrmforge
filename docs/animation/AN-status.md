@@ -700,3 +700,9 @@ Chromium, no concurrent Blender rendering, not physical-phone, GPU or real-Hunt
 horde acceptance. Current source remains candidate/unapproved. GPU deformation,
 depth/casters, arbitrary moving turns, final continuous sequence and device gates
 are open. Do not request final owner approval or call AN0–AN6 complete.
+
+### Shared skin lifecycle continuation — 28 October
+
+The shared v2 lifecycle now emits source-support phase, continuous committed yaw and calibrated ground basis. Source skin support consumes that sample without another clock. Ground-yaw foot controls preserve sole orientation through body turns; bounded coherent body fitting retains fixed leg lengths and explicit source limits. New synthetic shared-lifecycle checks cover forward, sideways, backward, corner, reversal, idle and turn at 15/30/60/120 Hz (28/28); this is not independent saved-skin or Hunt acceptance. All 569 JavaScript tests pass. Independent full skin/foot-orientation replay and actual Hunt adoption remain open.
+
+The real LightingEngine compiled and rendered source skin lit, normal, mask and shadow passes in Windows HeadlessChrome 153.0.8010.12, with no browser errors and exactly zero nonblack world pixels when lights/ambient/emission are disabled. The 1,800-triangle candidate loses silhouette detail. The protected-group decimation experiment creates holes in the actual Blender source and is rejected. Unprotected 6,000/12,000 triangle candidates require native comparison/performance review. Variable influence sets preserve all source weights, including 12-weight experimental geometry; no source weights are silently discarded. Physical iPhone evidence and final owner approval are still open.

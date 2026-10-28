@@ -2,10 +2,10 @@
 import {validateSourceSkinSurface} from './source-skin-pose.js';
 const bytesPerComponent={f:4,H:2,I:4},constructors={f:Float32Array,H:Uint16Array,I:Uint32Array};
 export function decodeSourceSkinGeometry(manifest,buffer,surface){
-    if(manifest.version!==1||manifest.sourceSignature!==surface.sourceSignature||manifest.sourceBlendSha256!==surface.sourceBlendSha256||!Number.isSafeInteger(manifest.vertices)||manifest.vertices<3||manifest.vertices>200000||!Number.isSafeInteger(manifest.triangles)||manifest.triangles<1||manifest.triangles>200000||![1,2].includes(manifest.influenceSets??1))throw new TypeError('Invalid source skin geometry contract');
+    if(manifest.version!==1||manifest.sourceSignature!==surface.sourceSignature||manifest.sourceBlendSha256!==surface.sourceBlendSha256||!Number.isSafeInteger(manifest.vertices)||manifest.vertices<3||manifest.vertices>200000||!Number.isSafeInteger(manifest.triangles)||manifest.triangles<1||manifest.triangles>200000||![1,2,3,4].includes(manifest.influenceSets??1))throw new TypeError('Invalid source skin geometry contract');
     if(!(buffer instanceof ArrayBuffer)||buffer.byteLength>16*1024*1024)throw new RangeError('Source skin geometry byte budget exceeded');
     const specs={position:['f',3],normal:['f',3],uv:['f',2],skinIndex:['H',4],skinWeight:['f',4],sourceEmission:['f',1],index:['I',1]};
-    if(manifest.influenceSets===2){specs.skinIndex2=['H',4];specs.skinWeight2=['f',4];}
+    for(let set=2;set<=(manifest.influenceSets??1);set++){specs['skinIndex'+set]=['H',4];specs['skinWeight'+set]=['f',4];}
     const attributes={},ranges=[];
     for(const [name,[component,itemSize]] of Object.entries(specs)){
         const s=manifest.attributes?.[name],count=name==='index'?manifest.triangles*3:manifest.vertices,size=bytesPerComponent[component];
@@ -19,7 +19,7 @@ export function decodeSourceSkinGeometry(manifest,buffer,surface){
     for(let i=0;i<manifest.vertices;i++){
         const n=attributes.normal.array.subarray(i*3,i*3+3);if(Math.abs(Math.hypot(...n)-1)>.02)throw new RangeError('Source geometry normal is not normalized');
         let total=0;
-        for(const suffix of (manifest.influenceSets===2?['','2']:['']))for(let k=0;k<4;k++){
+        for(const suffix of Array.from({length:manifest.influenceSets??1},(_,i)=>i?String(i+1):''))for(let k=0;k<4;k++){
             const weight=attributes['skinWeight'+suffix].array[i*4+k],bone=attributes['skinIndex'+suffix].array[i*4+k];
             if(weight<0||weight>1||bone>=surface.bones.length)throw new RangeError('Invalid source skin influence');total+=weight;
         }

@@ -54,6 +54,13 @@ export function solveSupportedSourcePose(frame,targets,options){
             used.add(name);
         }
         if(!Array.isArray(c.footprint)||c.footprint.length<3)throw new TypeError('Actual source support footprint required');
+        if(target.rotation){
+            const r=target.rotation;
+            if(!Array.isArray(r)||r.length!==9||!r.every(Number.isFinite))throw new TypeError('Proper source contact rotation required');
+            const columns=[[r[0],r[3],r[6]],[r[1],r[4],r[7]],[r[2],r[5],r[8]]];
+            const det=r[0]*(r[4]*r[8]-r[5]*r[7])-r[1]*(r[3]*r[8]-r[5]*r[6])+r[2]*(r[3]*r[7]-r[4]*r[6]);
+            if(Math.abs(det-1)>1e-6||columns.some(c=>Math.abs(Math.hypot(...c)-1)>1e-6)||Math.abs(columns[0].reduce((s,n,i)=>s+n*columns[1][i],0))+Math.abs(columns[0].reduce((s,n,i)=>s+n*columns[2][i],0))+Math.abs(columns[1].reduce((s,n,i)=>s+n*columns[2][i],0))>1e-6)throw new RangeError('Source contact rotation may not stretch or reflect anatomy');
+        }
     }
     let totalMass=0;
     for(const [name,weight] of Object.entries(massWeights)){
@@ -64,6 +71,20 @@ export function solveSupportedSourcePose(frame,targets,options){
     const plus=(point,delta)=>point.map((v,i)=>v+delta[i]);
     let bodyShift=[0,0,0],posed,contacts,center,support;
     for(let pass=0;pass<=10;pass++){
+        if(options.fitReach){
+            // Project the coherent body into all declared leg reach spheres.
+            // The source's minimum flexion supplies the reach reserve; never
+            // stretch a segment or silently expand its authoring envelope.
+            for(let iteration=0;iteration<12;iteration++)for(const [id,c] of chains){
+                const target=targets[id],r=target.rotation;
+                const offset=bones[c.end].head.map((n,i)=>n-c.sourceContact[i]);
+                const ankle=target.point.map((n,i)=>n+(r?offset.reduce((s,v,j)=>s+r[i*3+j]*v,0):offset[i]));
+                const hip=plus(bones[c.upper].head,bodyShift),delta=ankle.map((n,i)=>n-hip[i]),length=Math.hypot(...delta);
+                const maximum=Math.sqrt(c.upperLength**2+c.lowerLength**2+2*c.upperLength*c.lowerLength*Math.cos(Math.max(.1,c.limits[0])*Math.PI/180))*(1-1e-5);
+                if(length>maximum)bodyShift=bodyShift.map((n,i)=>n+delta[i]*(length-maximum)/length);
+            }
+            if(Math.hypot(...bodyShift)>maxBodyTranslation)throw new RangeError('Authored source reach/body translation envelope exceeded');
+        }
         posed=Object.create(null);contacts=Object.create(null);const footprint=[];
         for(const [name,bone] of Object.entries(bones)){
             if(![bone.head,bone.tail].every(v=>Array.isArray(v)&&v.length===3&&v.every(Number.isFinite)))throw new TypeError('Finite complete source skeleton required');
@@ -71,17 +92,18 @@ export function solveSupportedSourcePose(frame,targets,options){
             posed[name]={head:plus(bone.head,shift),tail:plus(bone.tail,shift)};
         }
         for(const [id,c] of chains){
-            const target=targets[id],delta=target.point.map((n,i)=>n-c.sourceContact[i]);
-            const ankle=plus(bones[c.end].head,delta),root=posed[c.upper].head;
+            const target=targets[id],delta=target.point.map((n,i)=>n-c.sourceContact[i]),rotation=target.rotation;
+            const move=point=>rotation?target.point.map((v,row)=>v+point.reduce((s,n,col)=>s+rotation[row*3+col]*(n-c.sourceContact[col]),0)):plus(point,delta);
+            const ankle=move(bones[c.end].head),root=posed[c.upper].head;
             let solved;
             try{solved=solveTwoBoneContact({root,target:ankle,pole:plus(c.pole,bodyShift),upperLength:c.upperLength,lowerLength:c.lowerLength,limits:c.limits});}
             catch(error){error.sourcePoseFailure={contactId:id,root,target:ankle,bodyShift:[...bodyShift],supportPoint:target.point};throw error;}
             posed[c.upper]={head:root,tail:[...solved.middle]};
             posed[c.middle]={head:[...solved.middle],tail:ankle};
-            posed[c.end]={head:ankle,tail:plus(bones[c.end].tail,delta)};
-            const patch=c.footprint.map(v=>plus(v,delta));
+            posed[c.end]={head:ankle,tail:move(bones[c.end].tail)};
+            const patch=c.footprint.map(move);
             if(target.planted)footprint.push(...patch.map(p=>p.slice(0,2)));
-            contacts[id]={...c,sourceContact:[...target.point],planted:target.planted,footprint:patch,flexDegrees:solved.flexDegrees};
+            contacts[id]={...c,sourceContact:[...target.point],planted:target.planted,footprint:patch,flexDegrees:solved.flexDegrees,...(rotation?{rotationDelta:[...rotation]}:{})};
         }
         if(!footprint.length)throw new RangeError('Supported source pose has no actual ground support');
         center=[0,0,0];
@@ -91,9 +113,18 @@ export function solveSupportedSourcePose(frame,targets,options){
             sourceRepose:{bodyShift:[...bodyShift],support,passes:pass+1,measurement:'recomputed whole-body source segment mass; saved-skin replay required'}};
         const centroid=footprint.reduce((s,p)=>[s[0]+p[0]/footprint.length,s[1]+p[1]/footprint.length],[0,0]);
         let dx=(centroid[0]-center[0])*.65,dy=(centroid[1]-center[1])*.65;
+        if(options.fitReach&&support.dimension===2){
+            const desired=[...center];
+            for(let iteration=0;iteration<12;iteration++)for(let i=0;i<support.hull.length;i++){
+                const a=support.hull[i],b=support.hull[(i+1)%support.hull.length],ex=b[0]-a[0],ey=b[1]-a[1],length=Math.hypot(ex,ey),nx=-ey/length,ny=ex/length;
+                const gap=minimumSupportMargin+1e-5-((desired[0]-a[0])*nx+(desired[1]-a[1])*ny);
+                if(gap>0){desired[0]+=nx*gap;desired[1]+=ny*gap;}
+            }
+            dx=(desired[0]-center[0])*1.25;dy=(desired[1]-center[1])*1.25;
+        }
         const distance=Math.hypot(dx,dy);if(distance>.025){dx*=.025/distance;dy*=.025/distance;}
-        const next=[bodyShift[0]+dx,bodyShift[1]+dy,0];
-        if(Math.hypot(...next)>maxBodyTranslation)throw new RangeError('Authored source body translation envelope exceeded');
+        const next=[bodyShift[0]+dx,bodyShift[1]+dy,bodyShift[2]];
+        if(Math.hypot(...next)>maxBodyTranslation){const error=new RangeError('Authored source body translation envelope exceeded');error.sourcePoseFailure={bodyShift,next,center,support,targets};throw error;}
         bodyShift=next;
     }
     throw new RangeError('Reposed whole-body source mass remains outside actual support');
@@ -175,23 +206,38 @@ export function sourceGroundPointFromPixel(pixel,groundZ,projection){
  */
 export function updateSourceContactTargets(state,frame,intent){
     const {timestamp,world,pixelScale,anchor,phaseOffset={x:0,y:0},translateSwing=false,paused=false,frozen=false}=intent;
+    if(intent.sourceYaw!=null&&!Number.isFinite(intent.sourceYaw)||intent.groundZ!=null&&!Number.isFinite(intent.groundZ)||intent.sourcePhaseDirection!=null&&![-1,1].includes(intent.sourcePhaseDirection))throw new TypeError('Finite source orientation and contact ground required');
+    if(intent.maxSwingStep!=null&&(!Number.isFinite(intent.maxSwingStep)||intent.maxSwingStep<0)||intent.retainLandingPosition!=null&&typeof intent.retainLandingPosition!=='boolean')throw new TypeError('Bounded source swing placement required');
     if(!Number.isFinite(timestamp)||timestamp<0||![world?.x,world?.y,pixelScale,phaseOffset?.x,phaseOffset?.y].every(Number.isFinite)||pixelScale<=0||!Array.isArray(anchor)||anchor.length!==2||!anchor.every(Number.isFinite))throw new TypeError('Finite source support placement required');
     const entries=Object.entries(frame?.sourceContacts??{}),projection=frame?.projection;
     if(!entries.length||!Array.isArray(projection)||projection.length!==8||!projection.every(Number.isFinite))throw new TypeError('Actual source support metadata required');
-    for(const [,c] of entries)if(typeof c.planted!=='boolean'||!Array.isArray(c.sourceContact)||c.sourceContact.length!==3||!c.sourceContact.every(Number.isFinite))throw new TypeError('Explicit authored source stance required');
+    for(const [,c] of entries)if(typeof c.planted!=='boolean'||!Array.isArray(c.sourceContact)||c.sourceContact.length!==3||!c.sourceContact.every(Number.isFinite)||c.sourceYaw!=null&&!Number.isFinite(c.sourceYaw)||c.swingProgress!=null&&(!Number.isFinite(c.swingProgress)||c.swingProgress<0||c.swingProgress>1))throw new TypeError('Explicit authored source stance required');
     const signature=JSON.stringify(entries.map(([id])=>id).sort());
     if(state.signature!=null&&state.signature!==signature)throw new TypeError('Contact anatomy changed; fresh animation state required');
     if(state.timestamp!=null&&timestamp<state.timestamp)throw new RangeError('Contact replay seek requires fresh state');
     const stopped=Boolean(paused||frozen),dx=state.world?world.x-state.world.x:0,dy=state.world?world.y-state.world.y:0;
     const previous=state.targets??Object.create(null),targets=Object.create(null);
     for(const [id,c] of entries){
-        const point=projected(c.sourceContact,projection),old=previous[id];
-        const authored={x:world.x+(point[0]-anchor[0])*pixelScale+(c.planted||translateSwing?phaseOffset.x:0),y:world.y+(point[1]-anchor[1])*pixelScale+(c.planted||translateSwing?phaseOffset.y:0),z:c.sourceContact[2],planted:c.planted,transported:false};
+        const z=c.planted&&intent.groundZ!=null?intent.groundZ:c.sourceContact[2],point=projected([c.sourceContact[0],c.sourceContact[1],z],projection),old=previous[id];
+        const authored={x:world.x+(point[0]-anchor[0])*pixelScale+(c.planted||translateSwing?phaseOffset.x:0),y:world.y+(point[1]-anchor[1])*pixelScale+(c.planted||translateSwing?phaseOffset.y:0),z,planted:c.planted,transported:false};
+        if(intent.sourceYaw!=null){
+            const desired=intent.sourceYaw+(c.sourceYaw??0);
+            const start=old?.supportActive&&Number.isFinite(old.orientationWorld)?old.orientationWorld:old?.liftoffOrientation??desired;
+            let progress=Math.max(0,Math.min(1,c.swingProgress??1));if(intent.sourcePhaseDirection<0)progress=1-progress;
+            const ease=progress*progress*(3-2*progress),delta=((desired-start+Math.PI*3)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;
+            authored.orientationWorld=c.planted?desired:start+delta*ease;authored.liftoffOrientation=start;
+        }
+        if(old&&!c.planted&&intent.maxSwingStep!=null){
+            const dx=authored.x-old.x,dy=authored.y-old.y,length=Math.hypot(dx,dy),fraction=length?Math.min(1,intent.maxSwingStep/length):0;
+            authored.x=old.x+dx*fraction;authored.y=old.y+dy*fraction;
+        }
+        if(c.planted&&old&&!old.supportActive&&intent.retainLandingPosition&&!old.transported){authored.x=old.x;authored.y=old.y;authored.landingRetained=true;}
         if(stopped&&old)targets[id]={...old,x:old.x+dx,y:old.y+dy,planted:dx||dy?false:old.planted,transported:Boolean(dx||dy)};
         else if(c.planted&&old?.supportActive)targets[id]={...old,planted:true,transported:false};
         else targets[id]=authored;
         // Keep the authored support epoch through a frozen external transport.
         targets[id].supportActive=stopped&&old?old.supportActive:c.planted;
+        if(intent.sourceYaw!=null&&!Number.isFinite(targets[id].orientationWorld)){targets[id].orientationWorld=authored.orientationWorld;targets[id].liftoffOrientation=authored.liftoffOrientation;}
     }
     Object.assign(state,{signature,timestamp,world:{...world},targets});
     return targets;

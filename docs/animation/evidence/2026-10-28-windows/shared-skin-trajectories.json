@@ -1,0 +1,198 @@
+[
+  {
+    "name": "forward",
+    "hz": 15,
+    "count": 61,
+    "maxShift": 0.0739659017119167,
+    "error": null
+  },
+  {
+    "name": "forward",
+    "hz": 30,
+    "count": 121,
+    "maxShift": 0.07455800215346722,
+    "error": null
+  },
+  {
+    "name": "forward",
+    "hz": 60,
+    "count": 241,
+    "maxShift": 0.07587696625234676,
+    "error": null
+  },
+  {
+    "name": "forward",
+    "hz": 120,
+    "count": 481,
+    "maxShift": 0.07587696625234676,
+    "error": null
+  },
+  {
+    "name": "side",
+    "hz": 15,
+    "count": 61,
+    "maxShift": 0.12052747128927498,
+    "error": null
+  },
+  {
+    "name": "side",
+    "hz": 30,
+    "count": 121,
+    "maxShift": 0.12041367610544756,
+    "error": null
+  },
+  {
+    "name": "side",
+    "hz": 60,
+    "count": 241,
+    "maxShift": 0.1243992824564786,
+    "error": null
+  },
+  {
+    "name": "side",
+    "hz": 120,
+    "count": 481,
+    "maxShift": 0.12794998229239712,
+    "error": null
+  },
+  {
+    "name": "back",
+    "hz": 15,
+    "count": 61,
+    "maxShift": 0.07370281686601408,
+    "error": null
+  },
+  {
+    "name": "back",
+    "hz": 30,
+    "count": 121,
+    "maxShift": 0.07276917921412902,
+    "error": null
+  },
+  {
+    "name": "back",
+    "hz": 60,
+    "count": 241,
+    "maxShift": 0.07276917924959832,
+    "error": null
+  },
+  {
+    "name": "back",
+    "hz": 120,
+    "count": 481,
+    "maxShift": 0.07398922525932897,
+    "error": null
+  },
+  {
+    "name": "corner",
+    "hz": 15,
+    "count": 61,
+    "maxShift": 0.11191412163716659,
+    "error": null
+  },
+  {
+    "name": "corner",
+    "hz": 30,
+    "count": 121,
+    "maxShift": 0.12050962164674335,
+    "error": null
+  },
+  {
+    "name": "corner",
+    "hz": 60,
+    "count": 241,
+    "maxShift": 0.12050962175590524,
+    "error": null
+  },
+  {
+    "name": "corner",
+    "hz": 120,
+    "count": 481,
+    "maxShift": 0.12152913044842696,
+    "error": null
+  },
+  {
+    "name": "reverse",
+    "hz": 15,
+    "count": 61,
+    "maxShift": 0.06355071595381645,
+    "error": null
+  },
+  {
+    "name": "reverse",
+    "hz": 30,
+    "count": 121,
+    "maxShift": 0.06294916160452652,
+    "error": null
+  },
+  {
+    "name": "reverse",
+    "hz": 60,
+    "count": 241,
+    "maxShift": 0.07587696625234676,
+    "error": null
+  },
+  {
+    "name": "reverse",
+    "hz": 120,
+    "count": 481,
+    "maxShift": 0.07587696625234676,
+    "error": null
+  },
+  {
+    "name": "idle",
+    "hz": 15,
+    "count": 61,
+    "maxShift": 0,
+    "error": null
+  },
+  {
+    "name": "idle",
+    "hz": 30,
+    "count": 121,
+    "maxShift": 0,
+    "error": null
+  },
+  {
+    "name": "idle",
+    "hz": 60,
+    "count": 241,
+    "maxShift": 0,
+    "error": null
+  },
+  {
+    "name": "idle",
+    "hz": 120,
+    "count": 481,
+    "maxShift": 0,
+    "error": null
+  },
+  {
+    "name": "turn",
+    "hz": 15,
+    "count": 61,
+    "maxShift": 0.06824102568816821,
+    "error": null
+  },
+  {
+    "name": "turn",
+    "hz": 30,
+    "count": 121,
+    "maxShift": 0.08521271455213089,
+    "error": null
+  },
+  {
+    "name": "turn",
+    "hz": 60,
+    "count": 241,
+    "maxShift": 0.09890607109121123,
+    "error": null
+  },
+  {
+    "name": "turn",
+    "hz": 120,
+    "count": 481,
+    "maxShift": 0.10409580764107838,
+    "error": null
+  }
+]

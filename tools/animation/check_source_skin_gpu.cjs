@@ -4,6 +4,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const root=path.resolve(__dirname,'../..'),asset=path.resolve(process.argv[2]||'artifacts/an-skin-lod1800');
 const out=path.resolve(process.env.AN_GPU_OUT||'artifacts/an-source-skin-gpu');fs.mkdirSync(out,{recursive:true});
 const mime={'.js':'text/javascript','.json':'application/json','.png':'image/png','.bin':'application/octet-stream'};
+let activeBrowser;
 const server=http.createServer((req,res)=>{
  const route=decodeURIComponent(new URL(req.url,'http://localhost').pathname);if(route.includes('..')){res.writeHead(403);return res.end();}
  if(route==='/'){res.setHeader('Content-Type','text/html');return res.end('<!doctype html><style>body{margin:0;background:#000}canvas{width:390px;height:390px}</style><canvas width="390" height="390"></canvas>');}
@@ -12,7 +13,7 @@ const server=http.createServer((req,res)=>{
 });
 (async()=>{
  await new Promise(r=>server.listen(0,'127.0.0.1',r));
- const browser=await chromium.launch({executablePath:process.env.CHROMIUM_EXECUTABLE,args:['--no-sandbox','--disable-dev-shm-usage']});
+ const browser=activeBrowser=await chromium.launch({executablePath:process.env.CHROMIUM_EXECUTABLE,args:['--no-sandbox','--disable-dev-shm-usage']});
  const page=await browser.newPage({viewport:{width:390,height:390}}),errors=[];
  page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
  await page.goto(`http://127.0.0.1:${server.address().port}/`);
@@ -26,12 +27,12 @@ const server=http.createServer((req,res)=>{
   const geometry=new T.BufferGeometry();for(const [name,a] of Object.entries(resource.attributes))if(name==='index')geometry.setIndex(new T.BufferAttribute(a.array,1));else geometry.setAttribute(name,new T.BufferAttribute(a.array,a.itemSize));
   engine.registerGeometry('skin',geometry,{skinBinding:{bones:resource.surface.bones,influenceSets:resource.manifest.influenceSets,motionRadius:resource.surface.strideMetres*1.5}});
   engine.registerGeometry('floor',new T.PlaneGeometry(4,4));const texture=new T.Texture(resource.image);texture.needsUpdate=true;engine.registerTexture('albedo',texture,true);
-  const baseMaterial={roughness:.85,metalness:0,specular:.1,reflection:'direct',alphaCutoff:.1,doubleSided:false};
+  const baseMaterial={roughness:.85,metalness:0,specular:.1,reflection:'direct',alphaCutoff:.1,doubleSided:resource.manifest.doubleSided??true};
   const materials=[{...baseMaterial,id:'body',color:'#ffffff',albedo:'albedo',flatShading:resource.manifest.flatShading,emission:resource.manifest.emission,emissionIntensity:resource.manifest.emissionIntensity},{...baseMaterial,id:'floor',color:'#666666',emission:'#000000',emissionIntensity:0}];
   const light={id:'point',ownerId:'fixture',type:'point',enabled:true,position:[-1,-2,3],direction:[0,0,-1],color:'#fff3dc',intensity:14,range:8,coneAngle:.7,penumbra:0,castsShadow:true,priority:1};
   engine.halfWidth=390/48/2;const elevation=Math.asin(34.730770111083984/61.93548774719238);
   engine.camera.position.set(0,-8*Math.cos(elevation),8*Math.sin(elevation));engine.camera.lookAt(0,0,0);
-  window.__skinProof={engine,resource};
+  engine.inspectionObject='body';window.__skinProof={engine,resource};
   window.__renderSkin=(phase,progress,{view='lit',zero=false,body=true}={})=>{
    const source=sampleSourceSkinSurface(resource.surface,{clip:'attack-travel',gaitPhase:phase,actionProgress:progress});
    const targets=Object.fromEntries(Object.entries(source.sourceContacts).map(([id,c])=>[id,{point:[...c.sourceContact],planted:c.planted}]));
@@ -45,11 +46,12 @@ const server=http.createServer((req,res)=>{
   return {browser:navigator.userAgent,sourceBytes:resource.decodedBytes,sourceVertices:resource.manifest.vertices,triangles:resource.manifest.triangles};
  });
  const cases={};
- for(const [name,args] of Object.entries({claw:[.27,.56,{}],normals:[.27,.56,{view:'normals'}],recovery:[.73,.93,{}],zero:[.27,.56,{zero:true}]})){
+ for(const [name,args] of Object.entries({claw:[.27,.56,{}],normals:[.27,.56,{view:'normals'}],albedo:[.27,.56,{view:'albedo'}],mask:[.27,.56,{view:'object-mask'}],recovery:[.73,.93,{}],bodyless:[.27,.56,{body:false}],zero:[.27,.56,{zero:true}]})){
   cases[name]=await page.evaluate(args=>window.__renderSkin(...args),args);await page.screenshot({path:path.join(out,name+'.png')});
  }
  if(cases.zero.nonblack!==0)throw Error('Zero-light source skin revealed world pixels');
  if(cases.claw.nonblack<100||cases.normals.nonblack<100)throw Error('Source skin or normal pass did not render');
+ if(cases.claw.sum===cases.bodyless.sum||cases.mask.nonblack<20)throw Error('Only the fixture floor rendered; source skin is absent');
  const data={sourceStudyOnly:true,huntAccepted:false,physicalDevice:false,setup,cases,errors};fs.writeFileSync(path.join(out,'gpu-proof.json'),JSON.stringify(data,null,2));
  await browser.close();server.close();if(errors.length)throw Error(JSON.stringify(errors));console.log(JSON.stringify(data,null,2));
-})().catch(e=>{console.error(e);server.close();process.exitCode=1;});
+})().catch(async e=>{console.error(e);await activeBrowser?.close();server.close();process.exitCode=1;});
