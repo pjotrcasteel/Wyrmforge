@@ -164,3 +164,25 @@ test('real sole source targets drive the same regional solver under arbitrary bo
   assert.throws(()=>sample(frame,{clip:'walk',frame:0,direction},update(state,frame,intent),{...options,world:intent.world}),/budget|Unreachable/);
  }
 });
+
+test('continuous landing phase prevents accumulated quantization drift in actual eight-view sole chains at 15–120Hz',async()=>{
+ const {readFileSync}=await import('node:fs');
+ const {createSpriteAnimationState:create,updateSpriteAnimation:update}=await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/sprite-animation.js');
+ const {updateSourceContactTargets:targets,sampleSourceContactRegions:sample}=await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/sprite-contact-kinematics.js');
+ const f=JSON.parse(readFileSync(new URL('../fixtures/animation/continuous-sole-contacts.json',import.meta.url)));
+ for(const frames of Object.values(f.frames))for(const frame of frames)Object.assign(frame,f.sourcePoses[frame.sourcePoseIndex]);
+ for(const direction of f.profile.facing.directions)for(const hz of [15,30,60,120]){
+  const s=create(),support={},v=f.profile.locomotion.stanceVelocityByDirection[direction],length=Math.hypot(v.x,v.y),speed=30,prior={};
+  for(let i=0;i<=hz*2;i++){
+   const t=i/hz,world={x:-v.x/length*speed*t,y:-v.y/length*speed*t};
+   const pose=update(s,f.profile,{entityId:17,timestamp:t,travel:speed*t,world,direction,moving:true});
+   const frame=f.frames[direction][pose.frame],options={timestamp:t,world,pixelScale:93/96,anchor:f.anchor,phaseOffset:pose.sourcePhaseOffset,maxCorrection:f.maxCorrectionMetres};
+   const anchors=targets(support,frame,options),result=sample(frame,pose,anchors,options);
+   for(const c of result.contacts){
+    assert.ok(c.slip<1e-10,`${direction}/${hz}: source projected contact drift`);
+    if(c.planted&&prior[c.id]?.planted)assert.deepEqual(c.target,prior[c.id].target);
+    prior[c.id]=c;
+   }
+  }
+ }
+});

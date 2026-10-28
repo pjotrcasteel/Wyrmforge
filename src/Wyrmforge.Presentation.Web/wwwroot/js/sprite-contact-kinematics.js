@@ -52,7 +52,7 @@ export function retargetSourceContactRegion(input){
        !Array.isArray(projection)||projection.length!==8||!projection.every(Number.isFinite)||!Number.isFinite(maxCorrection)||maxCorrection<0)
         throw new TypeError('Complete source contact region and bounded projection required');
     const correction=Math.hypot(...targetContact.map((v,i)=>v-sourceContact[i]));
-    if(correction>maxCorrection)throw new RangeError('Source contact correction budget exceeded');
+    if(correction>maxCorrection)throw Object.assign(new RangeError('Source contact correction budget exceeded'),{requiredCorrectionMetres:correction,maxCorrectionMetres:maxCorrection});
     const rootTarget=input.rootTarget??upper.head;
     if(!Array.isArray(rootTarget)||rootTarget.length!==3||!rootTarget.every(Number.isFinite))throw new TypeError('Finite posed chain root required');
     const rootShift=Math.hypot(...rootTarget.map((v,i)=>v-upper.head[i]));
@@ -87,8 +87,8 @@ export function sourceGroundPointFromPixel(pixel,groundZ,projection){
  * Forced frozen transport is reported as transport, never as grounded stance.
  */
 export function updateSourceContactTargets(state,frame,intent){
-    const {timestamp,world,pixelScale,anchor,paused=false,frozen=false}=intent;
-    if(!Number.isFinite(timestamp)||timestamp<0||![world?.x,world?.y,pixelScale].every(Number.isFinite)||pixelScale<=0||!Array.isArray(anchor)||anchor.length!==2||!anchor.every(Number.isFinite))throw new TypeError('Finite source support placement required');
+    const {timestamp,world,pixelScale,anchor,phaseOffset={x:0,y:0},paused=false,frozen=false}=intent;
+    if(!Number.isFinite(timestamp)||timestamp<0||![world?.x,world?.y,pixelScale,phaseOffset?.x,phaseOffset?.y].every(Number.isFinite)||pixelScale<=0||!Array.isArray(anchor)||anchor.length!==2||!anchor.every(Number.isFinite))throw new TypeError('Finite source support placement required');
     const entries=Object.entries(frame?.sourceContacts??{}),projection=frame?.projection;
     if(!entries.length||!Array.isArray(projection)||projection.length!==8||!projection.every(Number.isFinite))throw new TypeError('Actual source support metadata required');
     for(const [,c] of entries)if(typeof c.planted!=='boolean'||!Array.isArray(c.sourceContact)||c.sourceContact.length!==3||!c.sourceContact.every(Number.isFinite))throw new TypeError('Explicit authored source stance required');
@@ -99,7 +99,7 @@ export function updateSourceContactTargets(state,frame,intent){
     const previous=state.targets??Object.create(null),targets=Object.create(null);
     for(const [id,c] of entries){
         const point=projected(c.sourceContact,projection),old=previous[id];
-        const authored={x:world.x+(point[0]-anchor[0])*pixelScale,y:world.y+(point[1]-anchor[1])*pixelScale,z:c.sourceContact[2],planted:c.planted,transported:false};
+        const authored={x:world.x+(point[0]-anchor[0])*pixelScale+(c.planted?phaseOffset.x:0),y:world.y+(point[1]-anchor[1])*pixelScale+(c.planted?phaseOffset.y:0),z:c.sourceContact[2],planted:c.planted,transported:false};
         if(stopped&&old)targets[id]={...old,x:old.x+dx,y:old.y+dy,planted:dx||dy?false:old.planted,transported:Boolean(dx||dy)};
         else if(c.planted&&old?.supportActive)targets[id]={...old,planted:true,transported:false};
         else targets[id]=authored;

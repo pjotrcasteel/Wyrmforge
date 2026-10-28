@@ -39,8 +39,17 @@ directions=manifest['directions'];color_pixels=None
 if a.color_atlas:
  color=bpy.data.images.load(str(Path(a.color_atlas).resolve()),check_existing=False);color.colorspace_settings.name='Non-Color'
  width,height=color.size
- if width!=96*manifest['clips'][a.clip]['frames'] or height!=96*len(directions):raise ValueError('Color atlas dimensions do not match source frames')
- color_pixels=np.asarray(color.pixels[:],dtype=np.float32).reshape((height,width,4))[::-1].copy();bpy.data.images.remove(color)
+ packed=np.asarray(color.pixels[:],dtype=np.float32).reshape((height,width,4))[::-1].copy();bpy.data.images.remove(color)
+ count=manifest['clips'][a.clip]['frames'];atlas_manifest=Path(a.color_atlas).resolve().parent/'manifest.json'
+ atlas_spec=json.loads(atlas_manifest.read_text())['clips'][a.clip] if atlas_manifest.exists() else {'frames':count,'cell':96}
+ crop=atlas_spec.get('crop',[0,0,96,96]);columns=atlas_spec.get('columns',count);rows=math.ceil(count/columns);tile_w,tile_h=crop[2]-crop[0],crop[3]-crop[1]
+ if atlas_spec['frames']!=count or atlas_spec['cell']!=96 or width!=columns*tile_w or height!=rows*len(directions)*tile_h:raise ValueError('Color atlas dimensions do not match source frames')
+ # Restore original source-cell coordinates without resampling cropped pixels.
+ color_pixels=np.zeros((96*len(directions),96*count,4),dtype=np.float32)
+ for row in range(len(directions)):
+  for index in range(count):
+   x=(index%columns)*tile_w;y=(row*rows+index//columns)*tile_h
+   color_pixels[row*96+crop[1]:row*96+crop[3],index*96+crop[0]:index*96+crop[2]]=packed[y:y+tile_h,x:x+tile_w]
 result={'schemaVersion':2,'canvasSize':128,'anchor':[64,88],'directions':directions,'exportedDirections':a.directions.split(','),'colorAlphaValidated':color_pixels is not None,'sourceQCOnly':True,'runtimeIntegrated':False,'sourceSignature':manifest['skeletonSignature'],'massWeights':manifest.get('massWeights',{}),'groundZMetres':manifest.get('groundZMetres',-.5),'chainBones':chains,'clips':{a.clip:{}},'toolSha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
 if a.color_atlas:result['colorAtlasSha256']={a.clip:hashlib.sha256(Path(a.color_atlas).read_bytes()).hexdigest()}
 result['sourceBlendSha256']=hashlib.sha256((folder/'hollow-foundation.blend').read_bytes()).hexdigest()

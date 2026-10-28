@@ -60,6 +60,15 @@ export function createCreatureAnimationAssets(baseUrl,{maxDecodedBytes=64*1024*1
             if(regions.sourceSignature!==manifest.sourceSignature||JSON.stringify(regions.directions)!==JSON.stringify(manifest.directions)||regions.canvasSize!==128||regions.anchor?.length!==2||!regions.anchor.every(Number.isFinite))throw new TypeError('Source region rig/placement mismatch');
             for(const spec of specs)if(regions.colorAtlasSha256?.[spec.clip]!==manifest.clips[spec.clip].sha256)throw new Error('Source region color-atlas provenance mismatch');
             for(const spec of specs)for(const direction of manifest.directions)if(regions.clips?.[spec.clip]?.[direction]?.length!==spec.frames)throw new TypeError('Incomplete source region facing frames');
+            if(regions.sourcePoses!=null){
+                if(!Array.isArray(regions.sourcePoses)||!regions.sourcePoses.length||regions.sourcePosePrecisionMetres!==1e-8)throw new TypeError('Invalid shared source pose table');
+                for(const views of Object.values(regions.clips))for(const frames of Object.values(views))for(const frame of frames){
+                    if(!Number.isSafeInteger(frame.sourcePoseIndex)||frame.sourcePoseIndex<0||frame.sourcePoseIndex>=regions.sourcePoses.length)throw new TypeError('Invalid shared source pose reference');
+                    const pose=regions.sourcePoses[frame.sourcePoseIndex];
+                    if(!pose?.sourceBones||!pose.sourceContacts||!Array.isArray(pose.completeRegions))throw new TypeError('Incomplete shared source pose');
+                    for(const key of ['sourceBones','sourceContacts','massCenter','balance','completeRegions'])frame[key]=pose[key];
+                }
+            }
             // Cache is shared by the pack, not allocated once per creature.
             const remaining=maxDecodedBytes-decodedBytes;
             const maxTiles=Math.min(96,Math.floor(remaining/(regions.canvasSize**2*4)));
@@ -83,7 +92,7 @@ export function createCreatureAnimationAssets(baseUrl,{maxDecodedBytes=64*1024*1
             const clip=data.manifest.clips[sample.clip],scale=intent.scale??1;
             if(!Number.isFinite(scale)||scale<=0)throw new RangeError('Positive regional actor scale required');
             const pixelScale=clip.worldSize/clip.cell*scale;
-            const targets=updateSourceContactTargets(state,frame,{...intent,pixelScale,anchor:data.regions.anchor});
+            const targets=updateSourceContactTargets(state,frame,{...intent,phaseOffset:sample.sourcePhaseOffset,pixelScale,anchor:data.regions.anchor});
             const regional=sampleSourceContactRegions(frame,sample,targets,{...intent,pixelScale,anchor:data.regions.anchor});
             if(frame.balance==='supported'&&!Object.values(targets).some(t=>t.transported)&&!regional.support?.staticallySupported)throw new RangeError('Authored mass proxy is outside actual source support');
             // Regional anchors already consume world displacement. Applying the

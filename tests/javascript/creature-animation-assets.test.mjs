@@ -87,3 +87,11 @@ test('signed regional metadata cannot be attached to another color atlas with th
  globalThis.fetch=async url=>String(url).includes('regions.json')?{ok:true,arrayBuffer:async()=>payload.buffer}:original(url);
  const a=create(new URL('https://example.test/'));assert.equal(await a.preload(),false);assert.equal(a.ready(),false);assert.match(a.error,/color-atlas provenance mismatch/);
 });
+
+test('shared source-space pose tables resolve camera frames and reject invalid references atomically',async t=>{
+ const m=mock(t),original=globalThis.fetch;
+ const metadata={sourceSignature:manifest.sourceSignature,colorAtlasSha256:{rest:hash},directions:manifest.directions,canvasSize:128,anchor:[64,88],sourcePosePrecisionMetres:1e-8,sourcePoses:[{sourceBones:{},sourceContacts:{},massCenter:null,balance:'supported',completeRegions:[]}],clips:{rest:Object.fromEntries(manifest.directions.map(d=>[d,[{sourcePoseIndex:0},{sourcePoseIndex:0}]]))}};
+ function bind(){const payload=new TextEncoder().encode(JSON.stringify(metadata));m.regions={metadata:'regions.json',sha256:createHash('sha256').update(payload).digest('hex')};globalThis.fetch=async url=>String(url).includes('regions.json')?{ok:true,arrayBuffer:async()=>payload.buffer}:original(url);}
+ bind();const valid=create(new URL('https://example.test/'));assert.equal(await valid.preload(),true);
+ metadata.clips.rest.S[0].sourcePoseIndex=1;bind();const bad=create(new URL('https://example.test/'));assert.equal(await bad.preload(),false);assert.equal(bad.ready(),false);assert.match(bad.error,/shared source pose reference/);
+});

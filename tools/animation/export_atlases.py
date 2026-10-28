@@ -7,12 +7,12 @@ albedo/normal/depth/material passes and actual Hunt renderer validation.
 from pathlib import Path
 import argparse,json,hashlib,math
 from PIL import Image
-p=argparse.ArgumentParser();p.add_argument('source');p.add_argument('--out',required=True);a=p.parse_args()
+p=argparse.ArgumentParser();p.add_argument('source');p.add_argument('--out',required=True);p.add_argument('--full-cells',action='store_true');a=p.parse_args()
 source=Path(a.source);out=Path(a.out);out.mkdir(parents=True,exist_ok=True)
 m=json.loads((source/'source-manifest.json').read_text());directions=m['directions'];scale=93/1.55
 clips={};row_hashes={}
 for name,clip in m['clips'].items():
-    count=clip['frames'];grid=clip.get('poseGrid');crop=(16,12,80,84) if grid else (0,0,96,96);columns=min(count,32);rows=math.ceil(count/columns);width,height=crop[2]-crop[0],crop[3]-crop[1]
+    count=clip['frames'];grid=clip.get('poseGrid');crop=(16,12,80,84) if grid and not a.full_cells else (0,0,96,96);columns=min(count,32);rows=math.ceil(count/columns);width,height=crop[2]-crop[0],crop[3]-crop[1]
     atlas=Image.new('RGBA',(width*columns,height*rows*8));hashes=[]
     for row,direction in enumerate(directions):
         frames=[]
@@ -80,7 +80,7 @@ if 'pivot-negative' in m['clips']:
     profile['pivot']=runtime_clip('pivot-negative')
     profile['pivots']={'positive':runtime_clip('pivot-negative'),'negative':runtime_clip('pivot')}
 if 'attack-travel' in m['clips']:
-    profile['actions']['attack']={**runtime_clip('attack-travel'),'mode':'fullBody','priority':10,'commitUntil':1,'reducedFrame':128,'visualTimingOnly':True}
+    profile['actions']['attack']={**runtime_clip('attack-travel'),'mode':'fullBody','priority':10,'commitUntil':1,'reducedFrame':(m['clips']['attack-travel']['poseGrid']['actionFrames']//2)*m['clips']['attack-travel']['poseGrid']['phaseFrames'],'visualTimingOnly':True}
     clips.pop('attack',None)
     row_hashes.pop('attack',None)
 (out/'profile.json').write_text(json.dumps(profile,indent=2)+'\n')

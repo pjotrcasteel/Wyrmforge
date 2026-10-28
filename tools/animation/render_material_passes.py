@@ -3,10 +3,11 @@
 No RGB-derived normals. One Blender scene, same rig/action/camera/frame for
 all material passes. Depth/caster geometry remains a separate open gate.
 """
-import bpy,sys,argparse,math
+import bpy,sys,argparse,math,json
 from pathlib import Path
 p=argparse.ArgumentParser();p.add_argument('source');p.add_argument('--out',required=True);p.add_argument('--clips',default='walk,attack');p.add_argument('--directions',default='N,NE,E,SE,S,SW,W,NW');a=p.parse_args(sys.argv[sys.argv.index('--')+1:])
 bpy.ops.wm.open_mainfile(filepath=str(Path(a.source).resolve()))
+source_manifest=json.loads((Path(a.source).resolve().parent/'source-manifest.json').read_text())
 scene=bpy.context.scene;rig=bpy.data.objects['Hollow editable animation rig'];actor=bpy.data.objects['Hollow skinned character'];view=bpy.data.objects['AN unanimated view']
 # Keep the saved source sampling. Changing sample count changes silhouette-edge
 # coverage and prevents exact albedo/normal/emission/source alpha agreement.
@@ -43,7 +44,7 @@ for clip in a.clips.split(','):
     for row,direction in enumerate(['N','NE','E','SE','S','SW','W','NW']):
         if direction not in a.directions.split(','):continue
         view.rotation_euler.z=front+math.pi-row*math.pi/4
-        for index in range(16):
+        for index in range(source_manifest['clips'][clip]['frames']):
             scene.frame_set(index+1)
             for mode in materials:
                 for slot,m in enumerate(materials[mode]):actor.data.materials[slot]=m

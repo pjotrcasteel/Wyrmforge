@@ -398,3 +398,29 @@ The cropped pack loaded in the real published application with zero loader/brows
 contains both editable source studies, independent real-sole QC, the exact cropped pack, real Hunt failure traces/H.264, a separately labelled S/E moving-source MP4, source-region inspection image and local test/performance logs. It is explicitly incomplete. `review_pose_grid.py` samples separate gait/action clocks rather than playing packed rows sequentially; it does not prove source entry/exit continuity. The historical grid review overlay now uses actual authored sole contacts instead of the obsolete empty landmark.
 
 Latest completed local suites: **542/542 JS**, **671/671 Application**. At code checkpoint b7df6c52, 9/10 workflows were successful and Browser smoke was still running; later-head CI must be checked independently. PR #387 remains draft/unmerged. AN2/AN3 live moving-support/body coupling, AN4 continuous walk→strike→recover→turn→chase, AN5 GPU/depth/casters and representative mobile performance are **not finished**. No final owner approval is requested.
+
+### Continuation: continuous stance initialization and moving-pack export
+
+Recovered the prior working tree and remote `bbc966f4` without discarding source
+or export changes. The public lifecycle now exposes a calibrated
+`sourcePhaseOffset`: newly observed planted contacts start at continuous gait
+phase instead of the nearest raster frame. Existing world support epochs remain
+fixed. Swing targets, pause, reduced motion and correction/reach limits retain
+their existing meaning. No C# movement, damage or AI was changed.
+
+A packed-source replay reproduced failure in all 32 constant-forward walking
+cases before the correction. After correction, all eight facings at 15/30/60/120Hz
+pass two-second source-chain replays under the unchanged one-source-pixel budget.
+The committed actual-source fixture exercises these paths, stable stance targets
+and <1e-10 projected-world reconstruction residual. This is source-chain evidence,
+not raster/Hunt/phone acceptance. The same replay still rejects the stationary
+claw during movement; moving action and turn integration remain open.
+
+The recovered export changes support wrapped multi-row contact/color/material
+atlases and shared camera-independent source pose tables. They preserve per-clip
+Blender hashes when separately authored actions share the same validated bind
+rig. Source-pose sharing reduces the existing four-action metadata from 3,359,647
+to 1,198,918 bytes; it does not raise the 4MiB bound. A hardcoded reduced-motion
+frame 128 was outside the renewed 128-pose moving-claw grid; export now computes
+a valid middle action row from declared grid dimensions. The eight-view moving
+region export is being completed and is not yet runtime acceptance.

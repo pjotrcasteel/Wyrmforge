@@ -304,8 +304,15 @@ function updateContactAnimation(state,profile,input){
     }
     if(input.reducedMotion)frame=clipSpec.reducedFrame??0;
     const debug=solvePresentationContacts(state,profile,clipSpec,frame,input.world,state.facingIndex*45,actorScale,contactPhase);
+    // A newly observed stance starts at continuous source phase, not at the
+    // nearest raster frame. Otherwise each landing banks a quantization error.
+    const phaseFrames=clipSpec.poseGrid?.phaseFrames??clipSpec.frames;
+    const stanceVelocity=clipSpec.poseGrid?.stanceVelocityByDirection?.[profile.facing.directions[state.facingIndex]]??clipSpec.stanceVelocityByDirection?.[profile.facing.directions[state.facingIndex]];
+    const phaseError=(contactPhase-(frame%phaseFrames)/phaseFrames+1.5)%1-.5;
+    const sourcePhaseOffset=!input.reducedMotion&&stanceVelocity&&(clipSpec.poseGrid||clipSpec.phaseSampling==='nearest')?
+        {x:stanceVelocity.x*phaseError*actorScale,y:stanceVelocity.y*phaseError*actorScale}:{x:0,y:0};
     state.sample={baseClip:profile.locomotion.clip,baseFrame:locomotionFrame,phase:state.phase,clip:clipSpec.clip,frame,
         direction:profile.facing.directions[state.facingIndex],layered:false,actionToken:state.action?.token??null,
-        actionProgress,contactPhase,rootOffset:{...state.rootOffset},material:clipSpec.material??null,debug,seed:state.seed};
+        actionProgress,contactPhase,sourcePhaseOffset,rootOffset:{...state.rootOffset},material:clipSpec.material??null,debug,seed:state.seed};
     return state.sample;
 }

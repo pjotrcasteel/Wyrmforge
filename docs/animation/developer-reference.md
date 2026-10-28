@@ -320,3 +320,17 @@ reject regional GPU use until that deformation is validated.
 from genuine S/E source frames and emits H.264/yuv420p/faststart with a source-only
 label. A packed grid is not a sequential animation and this study is not the final
 continuous performance or actual-Hunt approval video.
+
+### Continuous source stance initialization
+
+`PoseSample.sourcePhaseOffset` is a projected-world offset already multiplied by
+actor scale. The shared controller derives it from the selected clip's declared
+stance derivative and continuous phase relative to its nearest source frame.
+`updateRegions` applies it only when a planted contact begins a new support epoch;
+existing anchors never move to follow this value. Swing poses remain authored.
+It prevents accumulated frame-rounding error without permitting longer source
+corrections, changing world displacement, or synthesizing extra raster frames.
+
+`node tools/animation/check_live_contacts.mjs PACK` replays actual packed source
+chains through the same lifecycle at 15/30/60/120Hz. It deliberately exits nonzero
+for rejected moving-stationary actions. It is not a raster, Hunt or device test.

@@ -3,7 +3,7 @@
 Never declares runtime/art acceptance. Refuses mismatched rigs, missing rows,
 misaligned alpha, clipped source cells, and the runtime's metadata/texture budget.
 """
-import argparse,hashlib,json
+import argparse,hashlib,json,math
 from pathlib import Path
 from PIL import Image
 
@@ -12,11 +12,13 @@ p.add_argument('pack',type=Path)
 p.add_argument('--regions',type=Path,required=True,help='Parent containing <clip>/contact-regions.json')
 p.add_argument('--materials',type=Path)
 p.add_argument('--crop',action='store_true',help='Losslessly remove common transparent padding from original cells')
+p.add_argument('--share-source-poses',action='store_true',help='Share calibrated source-space data across camera rows')
 a=p.parse_args()
 manifest=json.loads((a.pack/'manifest.json').read_text())
 profile=json.loads((a.pack/'profile.json').read_text())
 metadata=None
 for clip,spec in manifest['clips'].items():
+    columns=spec.get('columns',spec['frames']);rows=math.ceil(spec['frames']/columns)
     item=json.loads((a.regions/clip/'contact-regions.json').read_text())
     if item['sourceSignature']!=manifest['sourceSignature'] or item['directions']!=manifest['directions']:
         raise ValueError('Source region rig/facing mismatch: '+clip)
@@ -26,8 +28,10 @@ for clip,spec in manifest['clips'].items():
         raise ValueError('Source region color-atlas provenance mismatch: '+clip)
     views=item['clips'][clip]
     if set(views)!=set(manifest['directions']):raise ValueError('Incomplete source region directions: '+clip)
-    if metadata is None:metadata={k:v for k,v in item.items() if k!='clips'};metadata['clips']={};metadata['colorAtlasSha256']={}
-    if metadata['sourceBlendSha256']!=item['sourceBlendSha256']:raise ValueError('Mixed source action files')
+    if metadata is None:metadata={k:v for k,v in item.items() if k!='clips'};metadata['clips']={};metadata['colorAtlasSha256']={};metadata['sourceBlendSha256ByClip']={}
+    # Different named actions may live in separate editable files, but every
+    # clip retains its own source provenance and the same validated bind rig.
+    metadata['sourceBlendSha256ByClip'][clip]=item['sourceBlendSha256']
     metadata['colorAtlasSha256'].update(item['colorAtlasSha256'])
     for direction,frames in views.items():
         if len(frames)!=spec['frames']:raise ValueError('Source region frame mismatch: '+clip)
@@ -42,12 +46,12 @@ for clip,spec in manifest['clips'].items():
         from PIL import ImageChops
         with Image.open(a.pack/spec['image']) as src:alpha=src.convert('RGBA').getchannel('A')
         for mode in ['albedo','normal','emissive']:
-            atlas=Image.new('RGBA',(spec['cell']*spec['frames'],spec['cell']*8))
+            atlas=Image.new('RGBA',(spec['cell']*columns,spec['cell']*rows*8))
             for row,direction in enumerate(manifest['directions']):
                 for index in range(spec['frames']):
                     with Image.open(a.materials/mode/clip/direction/f'{index:02d}.png') as image:
                         if image.size!=(spec['cell'],spec['cell']):raise ValueError('Material cell dimensions mismatch')
-                        atlas.paste(image.convert('RGBA'),(index*spec['cell'],row*spec['cell']))
+                        atlas.paste(image.convert('RGBA'),((index%columns)*spec['cell'],(row*rows+index//columns)*spec['cell']))
             if ImageChops.difference(alpha,atlas.getchannel('A')).getbbox():raise ValueError('Material/source alpha mismatch: '+clip+'/'+mode)
             if mode=='normal':
                 # Supersampling averages real evaluated geometry normals.
@@ -68,7 +72,8 @@ for clip,spec in manifest['clips'].items():
         with Image.open(a.pack/spec['image']) as src:
             for row in range(8):
                 for index in range(spec['frames']):
-                    box=src.crop((index*cell,row*cell,(index+1)*cell,(row+1)*cell)).getbbox()
+                    x=(index%columns)*cell;y=(row*rows+index//columns)*cell
+                    box=src.crop((x,y,x+cell,y+cell)).getbbox()
                     if box:boxes.append(box)
         if not boxes:raise ValueError('Empty source clip')
         crop=[max(0,min(b[0] for b in boxes)-1),max(0,min(b[1] for b in boxes)-1),min(cell,max(b[2] for b in boxes)+1),min(cell,max(b[3] for b in boxes)+1)]
@@ -76,18 +81,34 @@ for clip,spec in manifest['clips'].items():
         metadata.setdefault('uncroppedColorAtlasSha256',{})[clip]=spec['sha256']
         for image_spec in [spec,*spec.get('materials',{}).values()]:
             with Image.open(a.pack/image_spec['image']) as src:
-                cropped=Image.new('RGBA',(width*spec['frames'],height*8))
+                cropped=Image.new('RGBA',(width*columns,height*rows*8))
                 for row in range(8):
                     for index in range(spec['frames']):
-                        cropped.paste(src.crop((index*cell+crop[0],row*cell+crop[1],index*cell+crop[2],row*cell+crop[3])),(index*width,row*height))
+                        x=(index%columns)*cell;y=(row*rows+index//columns)*cell
+                        cropped.paste(src.crop((x+crop[0],y+crop[1],x+crop[2],y+crop[3])),((index%columns)*width,(row*rows+index//columns)*height))
             cropped.save(a.pack/image_spec['image'])
             image_spec['sha256']=hashlib.sha256((a.pack/image_spec['image']).read_bytes()).hexdigest()
-        spec['crop']=crop;spec['columns']=spec['frames']
+        spec['crop']=crop;spec['columns']=columns
         metadata['colorAtlasSha256'][clip]=spec['sha256']
 
+if a.share_source_poses:
+    poses=[];lookup={}
+    def calibrated(value):
+        if isinstance(value,float):return round(value,8)
+        if isinstance(value,list):return [calibrated(v) for v in value]
+        if isinstance(value,dict):return {k:calibrated(v) for k,v in value.items()}
+        return value
+    for views in metadata['clips'].values():
+        for frames in views.values():
+            for frame in frames:
+                pose=calibrated({k:frame.pop(k) for k in ['sourceBones','sourceContacts','massCenter','balance','completeRegions']})
+                key=json.dumps(pose,sort_keys=True,separators=(',',':'))
+                if key not in lookup:lookup[key]=len(poses);poses.append(pose)
+                frame['sourcePoseIndex']=lookup[key]
+    metadata['sourcePoses']=poses;metadata['sourcePosePrecisionMetres']=1e-8
 payload=(json.dumps(metadata,separators=(',',':'))+'\n').encode()
 if len(payload)>4*1024*1024:raise ValueError('Source region metadata budget exceeded')
-decoded=sum((c.get('crop',[0,0,c['cell'],c['cell']])[2]-c.get('crop',[0,0,c['cell'],c['cell']])[0])*(c.get('crop',[0,0,c['cell'],c['cell']])[3]-c.get('crop',[0,0,c['cell'],c['cell']])[1])*c['frames']*8*4*(1+len(c.get('materials',{}))) for c in manifest['clips'].values())
+decoded=sum((c.get('crop',[0,0,c['cell'],c['cell']])[2]-c.get('crop',[0,0,c['cell'],c['cell']])[0])*(c.get('crop',[0,0,c['cell'],c['cell']])[3]-c.get('crop',[0,0,c['cell'],c['cell']])[1])*c.get('columns',c['frames'])*math.ceil(c['frames']/c.get('columns',c['frames']))*8*4*(1+len(c.get('materials',{}))) for c in manifest['clips'].values())
 if decoded+128**2*4>64*1024*1024:raise ValueError('No room for a regional tile in the texture budget')
 manifest['regions']={'metadata':'contact-regions.json','sha256':hashlib.sha256(payload).hexdigest(),
     'maxCorrectionMetres':next(iter(manifest['sourceQC'].values())).get('unitsPerPixel',1.55/96),
