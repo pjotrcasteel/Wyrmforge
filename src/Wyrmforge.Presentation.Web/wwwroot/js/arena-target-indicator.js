@@ -30,13 +30,13 @@ export function resolveTargetIndicator(snapshot) {
 function indicator(kind, x, y, radius) {
     if (![x, y, radius].every(finite) || radius <= 0) return null;
     // Readable at 320px mobile width; respects each target's C# collision size.
-    const footprint = Math.min(142, Math.max(18, radius * 1.14 + (kind === 'boss' ? 12 : 7)));
+    const footprint = Math.min(160, Math.max(32, radius * 1.7 + (kind === 'boss' ? 20 : 8)));
     return {
         kind,
         x: Math.round(x),
         y: Math.round(y + radius * (kind === 'object' ? .7 : .75)),
         rx: footprint,
-        ry: Math.max(7, Math.round(footprint * .32)),
+        ry: Math.max(13, Math.round(footprint * .46)),
     };
 }
 
@@ -57,19 +57,27 @@ const RUNES = Object.freeze([
     [[-.5, -1, .5, 1], [.5, -1, -.5, 1], [0, -.55, 0, .6]],
 ]);
 
-// Empty gaps let the sigil fade into the cobbles without becoming another
-// concentric AoE circle. No full ring, warning-color fill or cardinal reticle.
-const RING_ARCS = Object.freeze([
-    [.12, 1.07], [1.49, 2.56], [2.94, 3.94], [4.36, 5.38], [5.68, 6.06],
-]);
-
-function strokeArcSegments(ctx, rx, ry, count) {
-    for (let i = 0; i < count; i++) {
-        const [start, end] = RING_ARCS[i];
+// A rune CIRCLE rather than a broken targeting reticle: concentric, unbroken
+// ground-plane inscriptions bound actual runes. Geometry remains school-neutral.
+function strokeRuneBorders(ctx, rx, ry, inner = true) {
+    ctx.beginPath();
+    ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    if (inner) {
         ctx.beginPath();
-        ctx.ellipse(0, 0, rx, ry, 0, start, end);
+        ctx.ellipse(0, 0, rx * .62, ry * .62, 0, 0, Math.PI * 2);
         ctx.stroke();
     }
+}
+
+function strokeRuneDividers(ctx, rx, ry, count) {
+    ctx.beginPath();
+    for (let i = 0; i < count; i++) {
+        const angle = (i + .5) * Math.PI * 2 / count;
+        ctx.moveTo(Math.cos(angle) * rx * .67, Math.sin(angle) * ry * .67);
+        ctx.lineTo(Math.cos(angle) * rx * .72, Math.sin(angle) * ry * .72);
+    }
+    ctx.stroke();
 }
 
 function strokeRune(ctx, rune, size) {
@@ -83,9 +91,9 @@ function strokeRune(ctx, rune, size) {
 
 function drawRuneInscriptions(ctx, marker) {
     const { rx, ry, kind } = marker;
-    const count = kind === 'boss' ? 10 : kind === 'object' ? 3 : 6;
-    const size = Math.min(5.2, Math.max(2.8, rx * .13));
-    const offset = kind === 'object' ? .4 : .21;
+    const count = kind === 'boss' ? 12 : kind === 'object' ? 4 : 8;
+    const size = Math.min(6.5, Math.max(3.3, rx * .145));
+    const offset = .18;
     for (let index = 0; index < count; index++) {
         const angle = -Math.PI + offset + (index + .5) * (Math.PI * 2 / count);
         const x = Math.cos(angle) * rx * .83;
@@ -93,7 +101,7 @@ function drawRuneInscriptions(ctx, marker) {
         // A narrower glyph height follows the foreshortened ground plane.
         ctx.save();
         ctx.translate(x, y);
-        ctx.scale(1, .62);
+        ctx.scale(1, .72);
         strokeRune(ctx, RUNES[index % RUNES.length], size);
         ctx.restore();
     }
@@ -116,11 +124,11 @@ export function targetSelectionLightEmitter(marker, frame) {
         ownerId: 'target-selection',
         type: 'point',
         enabled: true,
-        position: [marker.x, marker.y - Math.min(marker.ry, 16), 2],
+        position: [marker.x, marker.y + 1, 2],
         direction: [0, 0, -1],
         color: SIGIL_COLOR,
-        intensity: boss ? .10 : .12,
-        range: Math.min(62, Math.max(26, marker.rx * 1.08)),
+        intensity: boss ? .34 : .48,
+        range: Math.min(125, Math.max(48, marker.rx * 1.25)),
         coneAngle: Math.PI / 4,
         penumbra: 0,
         castsShadow: false,
@@ -149,8 +157,9 @@ export function drawTargetIndicator(ctx, marker, pass = 'ground', seconds = 0, r
     if (!marker || (pass !== 'ground' && pass !== 'contrast')) return;
 
     const isObject = marker.kind === 'object';
-    const baseAlpha = isObject ? .26 : marker.kind === 'boss' ? .46 : .40;
+    const baseAlpha = isObject ? .35 : marker.kind === 'boss' ? .66 : .62;
     const breath = reducedMotion || !Number.isFinite(seconds) ? 1 : 1 + Math.sin(seconds * .9) * .035;
+    const count = marker.kind === 'boss' ? 12 : isObject ? 4 : 8;
 
     ctx.save();
     ctx.translate(marker.x, marker.y);
@@ -159,26 +168,27 @@ export function drawTargetIndicator(ctx, marker, pass = 'ground', seconds = 0, r
     ctx.lineJoin = 'round';
 
     if (pass === 'ground') {
-        // The world/night lighting naturally darkens this subtle ground trace.
-        ctx.globalAlpha = baseAlpha * .44;
-        ctx.lineWidth = 1;
-        strokeArcSegments(ctx, marker.rx, marker.ry, isObject ? 3 : 5);
+        ctx.globalAlpha = baseAlpha * .45;
+        ctx.lineWidth = 1.8;
+        strokeRuneBorders(ctx, marker.rx, marker.ry, true);
     } else {
-        // Physical underlight is owned by the shared GPU emitter, not drawn here.
-        ctx.globalAlpha = Math.min(.5, baseAlpha * breath);
-        ctx.shadowColor = 'rgba(210,197,240,.20)';
-        ctx.shadowBlur = isObject ? 1.2 : 2.2;
-        ctx.lineWidth = isObject ? .9 : 1.15;
-        strokeArcSegments(ctx, marker.rx, marker.ry, isObject ? 3 : 5);
+        // This pass must be executed BEFORE all actor/depth sprites; never above them.
+        // Visibility is supplied by the SAME physical point emitter and night mask.
+        ctx.globalAlpha = Math.min(.72, baseAlpha * breath);
+        ctx.shadowColor = 'rgba(210,197,240,.15)';
+        ctx.shadowBlur = isObject ? .8 : 1.8;
+        ctx.lineWidth = 1.15;
+        strokeRuneBorders(ctx, marker.rx, marker.ry, true);
         ctx.shadowBlur = 0;
-        ctx.lineWidth = isObject ? .85 : 1;
+        ctx.lineWidth = .85;
+        strokeRuneDividers(ctx, marker.rx, marker.ry, count);
+        ctx.lineWidth = 1;
         drawRuneInscriptions(ctx, marker);
 
-        // One incomplete inner arc gives bosses a hint of a ritual seal.
         if (marker.kind === 'boss') {
-            ctx.globalAlpha *= .38;
+            ctx.globalAlpha *= .45;
             ctx.beginPath();
-            ctx.ellipse(0, 0, marker.rx * .72, marker.ry * .7, 0, .45, 2.35);
+            ctx.ellipse(0, 0, marker.rx * .42, marker.ry * .42, 0, 0, Math.PI * 2);
             ctx.stroke();
         }
     }

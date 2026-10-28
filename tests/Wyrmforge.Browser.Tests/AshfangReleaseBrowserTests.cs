@@ -16,7 +16,12 @@ public sealed class AshfangReleaseBrowserTests : PageTest
         var baseUrl = Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/";
         await Page.GotoAsync(baseUrl.TrimEnd('/') + "/hunt-lab?wyrm=Ashfang&ascendant=false&play=true&cast=true");
         await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Face the wyrm." })).ToBeVisibleAsync();
-        await Page.EvaluateAsync("async () => { window.releaseArena = await import('./js/arena.js'); }");
+        await Page.EvaluateAsync("""
+            async () => {
+                const canvas = document.querySelector('.hunt-lab canvas');
+                window.releaseArena = await import(canvas.dataset.arenaModule);
+            }
+            """);
         await Page.WaitForFunctionAsync("""
             () => {
                 const d = window.releaseArena.readArenaDiagnostics(document.querySelector('.hunt-lab canvas'));
