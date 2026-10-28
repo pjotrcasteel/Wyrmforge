@@ -174,7 +174,7 @@ def tapered_tube(points, radius, sides=8):
 
 
 def ribs(mesh,rig,bone):
-    bone_material=new_mat("H1 dead bone: muted, NO glow",(.39,.355,.30),.97)
+    bone_material=new_mat("H1 dead bone: muted, NO glow",(.29,.265,.245),.97)
     made=0
     # Fixed anatomical landmarks only; actual endpoints require measured
     # *skin* intersections, so missing intersections reject individual arcs.
@@ -229,32 +229,75 @@ def ribs(mesh,rig,bone):
     return made
 
 
-def claw_tips(mesh,rig):
-    ivory=new_mat("H1 hooked blackened bone talon",(.185,.158,.133),.98)
-    sources=(
+def claw_tips(mesh, rig):
+    """Sculpt HOOKED NAIL TIPS FROM THE EXISTING CONNECTED SKIN.
+
+    Earlier independent bone-weighted talon meshes were seen FLOATING in the
+    authentic eight-way Blender renders. That H1 pass is REJECTED. Instead,
+    original finger source vertices remain physically connected and retain
+    their original finger-bone weights, topology and source UVs.
+    """
+    finger_names=(
         "joint25","joint25.001","joint25.002",
-        "joint25.003","joint25.004","joint25.005"
+        "joint25.003","joint25.004","joint25.005",
+        "joint24","joint24.001","joint24.002",
+        "joint24.003","joint24.004","joint24.005",
+        "Thumb_2","joint31"
     )
-    created=0
+    names={g.name:g.index for g in mesh.vertex_groups}
+    tips={name:names[name] for name in finger_names if name in names}
+    if len(tips)<9:
+        raise ValueError("Expected actual source finger-tip groups for connected claw sculpt")
+    previous=mesh.data.shape_keys.key_blocks[-1]
+    if previous.value<.99:
+        raise ValueError("Last source anatomy shape key must be active")
     bpy.context.view_layer.update()
-    for bone_name in sources:
-        if bone_name not in rig.pose.bones:
-            raise ValueError("No fingertip source bone "+bone_name)
-        bone=rig.pose.bones[bone_name]
-        head=rig.matrix_world@bone.head
-        tail=rig.matrix_world@bone.tail
-        finger=(tail-head)
-        # True 3D solid taper, curved down and toward the body. Avoid big
-        # cartoon spikes: about 5–7 cm, derived from each fingertip.
-        direction=finger.normalized() if finger.length>.001 else Vector((0,0,-1))
-        base=tail - direction*.016
-        contour=[base, tail+direction*.025+Vector((0,-.008,-.012)),
-                 tail+direction*.052+Vector((0,-.020,-.030))]
-        v,f=tapered_tube(contour,.014,sides=6)
-        armature_mesh("H1 original hooked fingertip "+bone_name,v,f,mesh,rig,
-                      bone_name,ivory)
-        created+=1
-    return created
+    dag=bpy.context.evaluated_depsgraph_get()
+    evaluated=mesh.evaluated_get(dag)
+    temporary=evaluated.to_mesh()
+    try:
+        if len(temporary.vertices)!=len(mesh.data.vertices):
+            raise ValueError("Finger-source topology unexpectedly changed")
+        actual=[mesh.matrix_world @ vertex.co for vertex in temporary.vertices]
+    finally:
+        evaluated.to_mesh_clear()
+
+    claw=mesh.shape_key_add(name="H1 connected hook-claw finger tips — no float geometry",
+                            from_mix=False)
+    claw.relative_key=previous
+    inv=mesh.matrix_world.inverted().to_3x3()
+    touched=0
+    affected_names=set()
+    for i,vertex in enumerate(mesh.data.vertices):
+        matches=[(g.group,g.weight) for g in vertex.groups if g.group in tips.values()]
+        if not matches:
+            claw.data[i].co=previous.data[i].co
+            continue
+        strongest=max(weight for index,weight in matches)
+        for index,weight in matches:
+            if weight>.05:
+                affected_names.update(name for name,idx in tips.items() if idx==index)
+        if strongest<.08:
+            claw.data[i].co=previous.data[i].co
+            continue
+        world=actual[i]
+        # The existing claws curl toward the floor and slightly inward.
+        # Fingertips get more extension than penultimate finger joints.
+        terminal=any(index in {names[n] for n in finger_names[:6] if n in names}
+                     for index,weight in matches if weight>.1)
+        bend=.064 if terminal else .027
+        displacement=Vector((-.010 if world.x>0 else .010,
+                             -.045*strongest,
+                             -bend*strongest))
+        claw.data[i].co=previous.data[i].co + inv @ displacement
+        touched+=1
+    claw.value=1.
+    bpy.context.view_layer.update()
+    if touched<12 or len(affected_names)<9:
+        raise ValueError(f"Not enough connected finger vertices to sculpt: {touched}, {affected_names}")
+    return {"connected_claw_vertices":touched,
+            "finger_bone_groups_used":len(affected_names),
+            "detached_talon_meshes":0}
 
 
 def main():
@@ -282,7 +325,7 @@ def main():
     before=(len(mesh.data.vertices),len(mesh.data.polygons),len(mesh.vertex_groups))
     n,depth=source_cavity(mesh)
     nribs=ribs(mesh,rig,"joint3")
-    nclaws=claw_tips(mesh,rig)
+    connected_claws=claw_tips(mesh,rig)
     if before!=(len(mesh.data.vertices),len(mesh.data.polygons),len(mesh.vertex_groups)):
         raise ValueError("Original connected skin or weights were changed")
     if len(bpy.data.actions)!=0:
@@ -313,7 +356,8 @@ def main():
         "real_skin_cavity_deformed_vertices":n,
         "deep_cavity_m":depth,
         "source_bone_ribs":nribs,
-        "finger_bone_talons":nclaws,
+        "finger_bone_talons":0,
+        **connected_claws,
         "extra_3d_mesh_objects":len(visible)-1,
         "original_source_bones":len(rig.data.bones),
         "actions":len(bpy.data.actions),
