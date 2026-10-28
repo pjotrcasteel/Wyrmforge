@@ -93,3 +93,29 @@ test('support scheduling at rest cannot consume frozen time or reset to another 
  const a=update(s,p,base);assert.deepEqual([a.targets.palm.x,a.targets.palm.y],[3,4]);
  assert.throws(()=>update(s,p,{...base,timestamp:1,phaseCycles:.9,frozen:true}),/support phase/);
 });
+test('actual corrected sole chains produce shared compositor parts and preserve projected world anchors',async()=>{
+ const {readFileSync}=await import('node:fs');
+ const {sampleSourceContactRegions:sample}=await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/sprite-contact-kinematics.js');
+ const fixture=JSON.parse(readFileSync(new URL('../fixtures/animation/actual-sole-region-chains.json',import.meta.url)));
+ for(const [direction,frames] of Object.entries(fixture.frames))for(let index=0;index<frames.length;index++){
+  const frame=frames[index],targets=Object.create(null),p=frame.projection,world={x:123.25,y:-7.75},pixelScale=93/96;
+  for(const [id,c] of Object.entries(frame.sourceContacts)){
+   const point=c.sourceContact;
+   targets[id]={x:world.x+(p[0]*point[0]+p[1]*point[1]+p[2]*point[2]+p[3]-64)*pixelScale,y:world.y+(p[4]*point[0]+p[5]*point[1]+p[6]*point[2]+p[7]-88)*pixelScale,z:point[2],planted:true};
+  }
+  const options={world,pixelScale,anchor:[64,88],maxCorrection:.001};
+  const result=sample(frame,{clip:'walk',frame:index,direction},targets,options);
+  assert.equal(result.parts.length,frame.completeRegions.length);
+  for(const contact of result.contacts)assert.ok(contact.slip<1e-11);
+  const missing=structuredClone(targets);delete missing[Object.keys(missing)[0]];assert.throws(()=>sample(frame,{clip:'walk',frame:index,direction},missing,options),/Missing actual support/);
+ }
+});
+test('actual footprint hull distinguishes loaded area, unstable lean and degenerate line/point support',async()=>{
+ const {measureSourceSupport:measure}=await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/sprite-contact-kinematics.js');
+ const feet=[[-.1,-.1],[.1,-.1],[.1,.1],[-.1,.1],[0,0],[-.1,-.1]];
+ assert.deepEqual(measure(feet,[0,0]),{hull:[[-.1,-.1],[.1,-.1],[.1,.1],[-.1,.1]],dimension:2,margin:.1,staticallySupported:true});
+ const lean=measure(feet,[.3,.3]);assert.equal(lean.staticallySupported,false);assert.ok(Math.abs(lean.margin+Math.sqrt(.08))<1e-12);
+ assert.equal(measure([[0,0],[1,0]],[.5,0]).staticallySupported,false);
+ assert.equal(measure([[0,0]],[0,0]).dimension,0);
+ assert.throws(()=>measure([[NaN,0]],[0,0]),/Finite actual/);
+});

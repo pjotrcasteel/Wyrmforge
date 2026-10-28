@@ -349,3 +349,10 @@ The new shoulder-relative hanging/leading arm source passes independent evaluate
 Full local JavaScript regression suite: **531/531 passed**. Added atomic profile-byte SHA validation and skeleton-signature agreement, invalid pelvis-correction budget rejection, calibrated projection inversion, and generic arbitrary-anatomy stance/swing target scheduling. The scheduling helper is not yet connected to production sampling. Corrected Blender Z-yaw versus screen-facing turn sign in atlas export; runtime visual continuity still requires integration validation.
 
 Remaining acceptance gates stay open: runtime regional body/contact coupling and support checks, source entry/exit continuity, aligned deformed material maps, eight-facing current-source export, complete continuous source performance, actual Hunt phone-scale lighting capture, and representative renderer performance. Do not infer AN6 completion from this checkpoint.
+
+
+### Sparse region sampling checkpoint
+
+`sampleSourceContactRegions` produces existing shared-compositor parts from actual source chains and caller-owned world support targets. `measureSourceSupport` reports the actual projected footprint hull, including explicit degenerate point/line support; its mass readout is labelled an authored proxy rather than a newly simulated physical COM. Missing support targets and unreachable joints fail visibly.
+
+The corrected-source S/E metadata export completed; the browser compositor review was rendered and inspected. `node tools/animation/check_region_trajectory.mjs artifacts/shoulder-contact-regions/contact-regions.json` completed two calibrated forward strides at 120 Hz in both views, with maximum projected target reconstruction error 2.061e-14 world units. This measures projected source contact reconstruction, not raster foot slip, arbitrary-direction Hunt grounding, or dynamic balance. Full local JS suite: **533/533**. Runtime wiring and remaining acceptance gates are still open.

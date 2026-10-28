@@ -3,12 +3,12 @@ const fs=require('fs'),path=require('path'),http=require('http');
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const root=path.resolve('src/Wyrmforge.Presentation.Web/wwwroot');
 const metadata=path.resolve(process.argv[2]||'artifacts/contact-regions-study/contact-regions.json');
-const output=path.resolve('artifacts/contact-region-review');fs.mkdirSync(output,{recursive:true});
+const output=path.resolve(process.env.AN_REGION_OUTPUT||'artifacts/contact-region-review');fs.mkdirSync(output,{recursive:true});
 const server=http.createServer((req,res)=>{const route=new URL(req.url,'http://localhost').pathname;let file;
  if(route==='/metadata')file=metadata;
- else if(route==='/atlas')file=path.join(root,'art/review/animation-foundation/walk.png');
+ else if(route==='/atlas')file=process.env.AN_REGION_ATLAS?path.resolve(process.env.AN_REGION_ATLAS):path.join(root,'art/review/animation-foundation/walk.png');
  else if(route.startsWith('/js/')&&!route.includes('..'))file=path.join(root,route);
- else{res.setHeader('Content-Type','text/html');return res.end('<body style="background:#14151b;color:#eee;font:16px sans-serif"><h2>Contact-region SOURCE QC — not Hunt integration or art acceptance</h2><main style="display:grid;grid-template-columns:repeat(4,256px)"></main></body>');}
+ else{res.setHeader('Content-Type','text/html; charset=utf-8');return res.end('<body style="background:#14151b;color:#eee;font:16px sans-serif"><h2>Contact-region SOURCE QC — not Hunt integration or art acceptance</h2><main style="display:grid;grid-template-columns:repeat(4,256px)"></main></body>');}
  if(!fs.existsSync(file)){res.writeHead(404);return res.end();}res.setHeader('Content-Type',route==='/atlas'?'image/png':route.startsWith('/js/')?'text/javascript':'application/json');fs.createReadStream(file).pipe(res);
 });
 (async()=>{await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const browser=await chromium.launch({executablePath:process.env.CHROMIUM_EXECUTABLE,args:['--no-sandbox','--disable-dev-shm-usage']});

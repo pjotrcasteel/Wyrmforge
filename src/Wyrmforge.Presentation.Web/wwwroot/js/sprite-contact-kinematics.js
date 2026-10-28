@@ -141,3 +141,67 @@ export function updateGroundContactTargets(state,patterns,intent){
     state.timestamp=timestamp;state.phaseCycles=phaseCycles;state.world={...world};state.stopped=false;
     return {targets:state.targets,plannedLandings:planned,transported:false};
 }
+
+/** Sample sparse source regions using caller-owned world support targets.
+ * The existing compositor consumes the returned parts. This does not advance
+ * action time, choose a clip, change world motion, or invent missing anatomy.
+ */
+export function sampleSourceContactRegions(frame,sample,targets,options){
+    const {world,pixelScale,anchor,maxCorrection,maxRootCorrection=0,bodyOffset=[0,0,0]}=options;
+    if(![world?.x,world?.y,pixelScale,...(anchor??[])].every(Number.isFinite)||!(pixelScale>0)||anchor?.length!==2||!Array.isArray(bodyOffset)||bodyOffset.length!==3||!bodyOffset.every(Number.isFinite))throw new TypeError('Calibrated world/pixel source placement required');
+    if(!frame?.sourceContacts||!frame.sourceBones||!Array.isArray(frame.completeRegions))throw new TypeError('Actual source contact regions required');
+    const projection=frame.projection,parts=[],measurements=[],supportPoints=[];
+    const own=(o,k)=>Object.hasOwn(o,k);
+    const used=new Set();
+    for(const [id,c] of Object.entries(frame.sourceContacts)){
+        if(!own(targets,id))throw new TypeError('Missing actual support target: '+id);
+        const target=targets[id];
+        if(![target.x,target.y,target.z].every(Number.isFinite))throw new TypeError('Finite world contact and source height required');
+        const pixel=[anchor[0]+(target.x-world.x)/pixelScale,anchor[1]+(target.y-world.y)/pixelScale];
+        const ground=sourceGroundPointFromPixel(pixel,target.z,projection);
+        const upper=frame.sourceBones[c.upper],lower=frame.sourceBones[c.middle],end=frame.sourceBones[c.end];
+        if(!upper||!lower||!end)throw new TypeError('Missing actual source chain: '+id);
+        const result=retargetSourceContactRegion({...c,upper,lower,end,targetContact:ground,projection,maxCorrection,maxRootCorrection,rootTarget:upper.head.map((n,i)=>n+bodyOffset[i])});
+        for(const [region,transform] of [[c.upper,result.upperTransform],[c.middle,result.lowerTransform],[c.end,result.endTransform]]){
+            if(used.has(region))throw new TypeError('Overlapping source chains: '+region);
+            used.add(region);parts.push({...sample,region,transform});
+        }
+        const actualWorld={x:world.x+(result.projectedContact[0]-anchor[0])*pixelScale,y:world.y+(result.projectedContact[1]-anchor[1])*pixelScale};
+        if(target.planted)for(const vertex of c.footprint??[]){
+            const point=vertex.map((v,i)=>v+ground[i]-c.sourceContact[i]);
+            supportPoints.push([world.x+(projection[0]*point[0]+projection[1]*point[1]+projection[2]*point[2]+projection[3]-anchor[0])*pixelScale,world.y+(projection[4]*point[0]+projection[5]*point[1]+projection[6]*point[2]+projection[7]-anchor[1])*pixelScale]);
+        }
+        measurements.push({id,planted:Boolean(target.planted),world:actualWorld,target:{x:target.x,y:target.y},slip:Math.hypot(actualWorld.x-target.x,actualWorld.y-target.y),flexDegrees:result.flexDegrees});
+    }
+    const dx=projection[0]*bodyOffset[0]+projection[1]*bodyOffset[1]+projection[2]*bodyOffset[2],dy=projection[4]*bodyOffset[0]+projection[5]*bodyOffset[1]+projection[6]*bodyOffset[2];
+    for(const region of frame.completeRegions)if(!used.has(region))parts.push({...sample,region,transform:[1,0,0,1,dx,dy]});
+    if(parts.length!==frame.completeRegions.length||parts.some(p=>!frame.completeRegions.includes(p.region)))throw new TypeError('Incomplete source region anatomy');
+    let support=null;
+    if(frame.massCenter&&supportPoints.length){
+        // Authored source mass proxy, not a claim of dynamic equilibrium or a
+        // re-integrated physics COM after every regional deformation.
+        const m=frame.massCenter.map((n,i)=>n+bodyOffset[i]);
+        const groundZ=options.groundZ??Math.min(...Object.values(targets).filter(t=>t.planted).map(t=>t.z));
+        if(!Number.isFinite(groundZ))throw new TypeError('Finite support ground required');
+        const center=[world.x+(projection[0]*m[0]+projection[1]*m[1]+projection[2]*groundZ+projection[3]-anchor[0])*pixelScale,world.y+(projection[4]*m[0]+projection[5]*m[1]+projection[6]*groundZ+projection[7]-anchor[1])*pixelScale];
+        support={...measureSourceSupport(supportPoints,center),center,measurement:'authored mass proxy projected onto contact ground'};
+    }
+    return {parts,contacts:measurements,support,measurementSpace:'calibrated-source-projection'};
+}
+
+/** Signed distance to the real projected support hull. A point or line cannot
+ * provide positive static area support. Dynamic catch/fall permission remains
+ * explicit caller metadata, never an automatic exemption for a bad pose. */
+export function measureSourceSupport(points,center){
+    if(!Array.isArray(points)||!points.length||!Array.isArray(center)||center.length!==2||!center.every(Number.isFinite)||points.some(p=>!Array.isArray(p)||p.length!==2||!p.every(Number.isFinite)))throw new TypeError('Finite actual support footprint and mass projection required');
+    const sorted=points.map(p=>[...p]).sort((a,b)=>a[0]-b[0]||a[1]-b[1]).filter((p,i,a)=>!i||p[0]!==a[i-1][0]||p[1]!==a[i-1][1]);
+    const cross=(o,a,b)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]);
+    const half=values=>{const h=[];for(const p of values){while(h.length>1&&cross(h[h.length-2],h[h.length-1],p)<=0)h.pop();h.push(p);}return h;};
+    const lower=half(sorted),upper=half([...sorted].reverse());
+    const hull=sorted.length===1?sorted:[...lower.slice(0,-1),...upper.slice(0,-1)];
+    const segmentDistance=(a,b)=>{const x=b[0]-a[0],y=b[1]-a[1],length=x*x+y*y;const t=length?Math.max(0,Math.min(1,((center[0]-a[0])*x+(center[1]-a[1])*y)/length)):0;return Math.hypot(center[0]-a[0]-t*x,center[1]-a[1]-t*y);};
+    if(hull.length<3)return {hull,dimension:hull.length-1,margin:-segmentDistance(hull[0],hull.at(-1)),staticallySupported:false};
+    let inside=true,distance=Infinity;
+    for(let i=0;i<hull.length;i++){const a=hull[i],b=hull[(i+1)%hull.length];if(cross(a,b,center)<0)inside=false;distance=Math.min(distance,segmentDistance(a,b));}
+    return {hull,dimension:2,margin:inside?distance:-distance,staticallySupported:inside};
+}
