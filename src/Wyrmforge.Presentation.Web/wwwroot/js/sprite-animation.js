@@ -292,10 +292,16 @@ function updateContactAnimation(state,profile,input){
         pivotFrame=Math.min(pivotSpec.frames-1,Math.floor(state.pivotTime*pivotSpec.fps));
     }else if(!turning){state.pivotTime=0;state.pivotSign=null;}
     if(actionSpec)state.facingIndex=state.actionDirection;
-    const clipSpec=actionSpec??(turning&&pivotSpec?pivotSpec:profile.locomotion);
+    let clipSpec=actionSpec??(turning&&pivotSpec?pivotSpec:profile.locomotion);
     let frame=actionSpec?(actionSpec.poseGrid?poseGridFrame(actionSpec,contactPhase,actionProgress):Math.min(actionSpec.frames-1,Math.floor(actionProgress*actionSpec.frames))):
         pivotFrame??(input.moving?locomotionFrame:(profile.locomotion.idleFrame??locomotionFrame));
-    if(stopped&&state.sample&&!actionSpec?.terminal)frame=state.sample.frame;
+    if(stopped&&state.sample&&!actionSpec?.terminal){
+        // A changed target while frozen cannot select a different source clip
+        // under the retained frame number (which may even exceed its length).
+        clipSpec=[profile.locomotion,...Object.values(profile.actions),...Object.values(profile.pivots??{}),profile.pivot].find(c=>c?.clip===state.sample.clip)??clipSpec;
+        frame=state.sample.frame;
+        state.facingIndex=profile.facing.directions.indexOf(state.sample.direction);
+    }
     if(input.reducedMotion)frame=clipSpec.reducedFrame??0;
     const debug=solvePresentationContacts(state,profile,clipSpec,frame,input.world,state.facingIndex*45,actorScale,contactPhase);
     state.sample={baseClip:profile.locomotion.clip,baseFrame:locomotionFrame,phase:state.phase,clip:clipSpec.clip,frame,

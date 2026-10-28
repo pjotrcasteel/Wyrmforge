@@ -42,6 +42,8 @@ if a.color_atlas:
  if width!=96*manifest['clips'][a.clip]['frames'] or height!=96*len(directions):raise ValueError('Color atlas dimensions do not match source frames')
  color_pixels=np.asarray(color.pixels[:],dtype=np.float32).reshape((height,width,4))[::-1].copy();bpy.data.images.remove(color)
 result={'schemaVersion':2,'canvasSize':128,'anchor':[64,88],'directions':directions,'exportedDirections':a.directions.split(','),'colorAlphaValidated':color_pixels is not None,'sourceQCOnly':True,'runtimeIntegrated':False,'sourceSignature':manifest['skeletonSignature'],'massWeights':manifest.get('massWeights',{}),'groundZMetres':manifest.get('groundZMetres',-.5),'chainBones':chains,'clips':{a.clip:{}},'toolSha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
+if a.color_atlas:result['colorAtlasSha256']={a.clip:hashlib.sha256(Path(a.color_atlas).read_bytes()).hexdigest()}
+result['sourceBlendSha256']=hashlib.sha256((folder/'hollow-foundation.blend').read_bytes()).hexdigest()
 def runs(mask):
  r=[]
  for y,row in enumerate(mask):

@@ -45,3 +45,19 @@ test('complete unchanged source regions draw original pixels once; partial sets 
  c.compose({parts:[part('body')]});assert.equal(draws,2);
  c.compose({parts:[part('body'),part('body')]});assert.equal(draws,4,'a duplicate is not a complete body/foot set');
 });
+
+test('cropped atlas rectangles retain their original padded region coordinates and native pixel scale',t=>{
+ const previous=globalThis.Path2D;globalThis.Path2D=class{rect(){}};t.after(()=>{globalThis.Path2D=previous;});
+ const calls=[],ctx={clearRect(){},save(){},restore(){},clip(){},transform(){},drawImage(...args){calls.push(args.slice(1));}};
+ const frame={regions:{foot:[[20,30,4]]}};
+ const c=createSpriteLayerCompositor({canvasSize:128,directions:['S'],clips:{walk:{S:[frame]}}},{walk:{cell:96,frames:1}},new Map([['walk',{}]]),{makeCanvas:()=>({getContext:()=>ctx}),sourceRectangle:()=>({source:[0,0,48,64],destination:[40,32,48,64]})});
+ c.compose({parts:[{clip:'walk',frame:0,direction:'S',region:'foot',transform:[1,0,0,1,0,0]}]});
+ assert.deepEqual(calls,[[0,0,48,64,40,32,48,64]]);
+});
+
+test('world cancellation noise reuses semantic cache while actual source-pixel corrections stay distinct',t=>{
+ const {compositor:c,calls,part}=setup(t),pose={parts:[part('foot',[1,0,0,1,.1,.2])]};
+ const tile=c.compose(pose),count=calls.length;
+ assert.equal(c.compose({parts:[part('foot',[1+1e-13,0,0,1,.1+1e-13,.2])]}),tile);assert.equal(calls.length,count);
+ c.compose({parts:[part('foot',[1,0,0,1,.1+1/256,.2])]});assert.ok(calls.length>count);
+});

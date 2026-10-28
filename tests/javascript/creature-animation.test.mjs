@@ -209,3 +209,13 @@ test('projected source data requires all eight calibrated facing rows and finite
   const invalid=structuredClone(p);change(invalid);assert.throws(()=>validate(invalid),/projected/);
  }
 });
+
+test('pause/freeze retains the entire source pose when facing intent changes between unequal clips',()=>{
+ for(const flag of ['paused','frozen']){
+  const p=fixture(),s=create();p.pivot={...p.pivot,frames:1,samples:[p.pivot.samples[0]]};
+  update(s,p,intent(0,{moving:true}));const before=update(s,p,intent(.2,{travel:3,moving:true}));assert.equal(before.clip,'walk');assert.equal(before.frame,3);
+  const held=update(s,p,intent(2,{travel:3,direction:'N',[flag]:true}));
+  assert.equal(held.clip,before.clip);assert.equal(held.frame,before.frame);assert.equal(held.direction,before.direction);
+  const death=update(s,p,intent(3,{travel:3,[flag]:true,action:{name:'death',token:'dead',sequence:4}}));assert.equal(death.clip,'death');
+ }
+});

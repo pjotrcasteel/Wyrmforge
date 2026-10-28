@@ -70,11 +70,20 @@ test('source region metadata is hash-checked and tied to the exact rig before pu
 });
 test('region-enabled packs retain shared budgets and reject unvalidated GPU deformation',async t=>{
  const m=mock(t),original=globalThis.fetch;
- const metadata={sourceSignature:manifest.sourceSignature,directions:manifest.directions,canvasSize:128,anchor:[64,88],clips:{rest:Object.fromEntries(manifest.directions.map(d=>[d,[{},{}]]))}};
+ const metadata={sourceSignature:manifest.sourceSignature,colorAtlasSha256:{rest:hash},directions:manifest.directions,canvasSize:128,anchor:[64,88],clips:{rest:Object.fromEntries(manifest.directions.map(d=>[d,[{},{}]]))}};
  const payload=new TextEncoder().encode(JSON.stringify(metadata));m.regions={metadata:'regions.json',sha256:createHash('sha256').update(payload).digest('hex')};
  globalThis.fetch=async url=>String(url).includes('regions.json')?{ok:true,arrayBuffer:async()=>payload.buffer}:original(url);
  const a=create(new URL('https://example.test/'));assert.equal(await a.preload(),true);assert.equal(a.stats.regionCacheBytes,0);
  assert.throws(()=>a.sampleRegions({clip:'rest',frame:2,direction:'S'},{},{}),/pose unavailable/);
  assert.throws(()=>a.renderDescriptor({parts:[{}]}),/GPU material transforms/);
  a.dispose();assert.equal(a.ready(),false);
+});
+
+test('signed regional metadata cannot be attached to another color atlas with the same rig',async t=>{
+ const m=mock(t),original=globalThis.fetch;
+ const metadata={sourceSignature:manifest.sourceSignature,colorAtlasSha256:{rest:'0'.repeat(64)},directions:manifest.directions,canvasSize:128,anchor:[64,88],clips:{rest:Object.fromEntries(manifest.directions.map(d=>[d,[{},{}]]))}};
+ const payload=new TextEncoder().encode(JSON.stringify(metadata));
+ m.regions={metadata:'regions.json',sha256:createHash('sha256').update(payload).digest('hex')};
+ globalThis.fetch=async url=>String(url).includes('regions.json')?{ok:true,arrayBuffer:async()=>payload.buffer}:original(url);
+ const a=create(new URL('https://example.test/'));assert.equal(await a.preload(),false);assert.equal(a.ready(),false);assert.match(a.error,/color-atlas provenance mismatch/);
 });

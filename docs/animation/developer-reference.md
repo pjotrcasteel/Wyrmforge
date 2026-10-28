@@ -285,3 +285,26 @@ world contacts already account for displacement. Reach/limit/budget failures are
 observable and the Hollowed adapter records `foundationError` before fallback.
 Packs without region metadata retain their previous sample. This bridge does not
 make the historical source pack, source transitions or GPU materials accepted.
+
+### Candidate pack and full compositor profiling
+
+`export_contact_regions.py` now records the exact validated color atlas and saved
+Blender hashes. `pack_contact_candidate.py PACK --regions REGIONS [--materials MAPS]
+[--crop]` refuses mixed rigs, incomplete directions/frames, missing actual-alpha
+validation, or a mismatched color atlas. It removes unused review-only joint
+matrices, preserves actual source contacts, optionally verifies all source/material
+alpha and losslessly crops transparent cell padding. Cropped drawing retains
+original source pixel coordinates through the existing compositor; it never
+rescales the character. Start from a fresh full-cell color export before packing.
+
+The metadata and texture limits remain 4MiB and 64MiB respectively. Per-pack cache
+identity canonicalization removes numerical cancellation noise, with a worst-case
+128px-source alias below 1.82e-7 native pixels. It does not round drawn transforms.
+`benchmark_regions.cjs PACK` exercises the real sparse solver, shared compositor
+and Canvas drawing for 500 synthetic visible actors. Supply
+`CHROMIUM_EXECUTABLE`; record concurrency/device limits with the result. It does
+not claim GPU, physical-mobile, or actual-Hunt-horde acceptance.
+
+A renewed `--only attack-travel --phase-samples 8` source study uses 128 whole-body
+samples and 1.5cm additional pelvis flexion reserve. All real-sole QC passes,
+but it is still a source study without arbitrary-direction runtime acceptance.

@@ -58,12 +58,13 @@ export function createCreatureAnimationAssets(baseUrl,{maxDecodedBytes=64*1024*1
             if(hash!==spec.sha256)throw new Error('Source region hash mismatch');
             regions=JSON.parse(new TextDecoder().decode(bytes));
             if(regions.sourceSignature!==manifest.sourceSignature||JSON.stringify(regions.directions)!==JSON.stringify(manifest.directions)||regions.canvasSize!==128||regions.anchor?.length!==2||!regions.anchor.every(Number.isFinite))throw new TypeError('Source region rig/placement mismatch');
+            for(const spec of specs)if(regions.colorAtlasSha256?.[spec.clip]!==manifest.clips[spec.clip].sha256)throw new Error('Source region color-atlas provenance mismatch');
             for(const spec of specs)for(const direction of manifest.directions)if(regions.clips?.[spec.clip]?.[direction]?.length!==spec.frames)throw new TypeError('Incomplete source region facing frames');
             // Cache is shared by the pack, not allocated once per creature.
             const remaining=maxDecodedBytes-decodedBytes;
             const maxTiles=Math.min(96,Math.floor(remaining/(regions.canvasSize**2*4)));
             if(maxTiles<1)throw new RangeError('Source region tile budget exceeded');
-            compositor=createSpriteLayerCompositor(regions,manifest.clips,images,{maxTiles,sourceRectangle(name,index,direction){const c=manifest.clips[name],layout=spriteAtlasLayout(c,manifest.directions.length);if(layout.crop.some((n,i)=>n!==[0,0,c.cell,c.cell][i]))throw new TypeError('Regional source crop placement is not calibrated');return [(index%layout.columns)*layout.tileWidth,(manifest.directions.indexOf(direction)*layout.rowsPerDirection+Math.floor(index/layout.columns))*layout.tileHeight,layout.tileWidth,layout.tileHeight];}});
+            compositor=createSpriteLayerCompositor(regions,manifest.clips,images,{maxTiles,sourceRectangle(name,index,direction){const c=manifest.clips[name],layout=spriteAtlasLayout(c,manifest.directions.length),pad=(regions.canvasSize-c.cell)/2;return {source:[(index%layout.columns)*layout.tileWidth,(manifest.directions.indexOf(direction)*layout.rowsPerDirection+Math.floor(index/layout.columns))*layout.tileHeight,layout.tileWidth,layout.tileHeight],destination:[pad+layout.crop[0],pad+layout.crop[1],layout.tileWidth,layout.tileHeight]};}});
         }
         if(version!==generation){for(const image of images.values())image.src='';return false;}
         data={manifest,profile,images,encodedBytes,decodedBytes,regions,compositor};return true;

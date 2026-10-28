@@ -18,7 +18,10 @@ export function createSpriteLayerCompositor(metadata,clips,images,options={}){
         const pad=(size-(clip?.cell??size))/2;
         if(!clip||row<0||!Number.isSafeInteger(index)||index<0||index>=clip.frames||!images.get(clipName))throw new RangeError('Unknown sprite source pose');
         const rectangle=options.sourceRectangle?.(clipName,index,direction)??[index*clip.cell,row*clip.cell,clip.cell,clip.cell];
-        ctx.drawImage(images.get(clipName),...rectangle,pad,pad,clip.cell,clip.cell);
+        const sourceRect=Array.isArray(rectangle)?rectangle:rectangle.source;
+        const destination=Array.isArray(rectangle)?[pad,pad,clip.cell,clip.cell]:rectangle.destination;
+        if(![sourceRect,destination].every(r=>Array.isArray(r)&&r.length===4&&r.every(Number.isFinite)&&r[2]>0&&r[3]>0))throw new TypeError('Invalid calibrated sprite source rectangle');
+        ctx.drawImage(images.get(clipName),...sourceRect,...destination);
     }
     function compose(sample){
         const parts=sample.parts;
@@ -30,7 +33,11 @@ export function createSpriteLayerCompositor(metadata,clips,images,options={}){
             if(!frame||!clip||!Number.isSafeInteger(part.frame)||part.frame<0||part.frame>=clip.frames||!images.get(part.clip))throw new RangeError('Unknown semantic sprite source pose');
             regionPath(frame,part.region); // Fail before evicting or modifying a cached tile.
         }
-        const key=parts?'parts:'+parts.map(p=>[p.clip,p.frame,p.direction,p.region,...p.transform].join(',')).join(';'):[sample.direction,sample.baseClip,sample.baseFrame,sample.clip,sample.frame,sample.baseRegion,sample.actionRegion,sample.useBasePose].join(':');
+        // World-to-source cancellation leaves insignificant floating noise.
+        // Canonicalize cache identity only, never the drawn/source transforms.
+        // At a 128px source, the worst alias is <1.82e-7 native pixels, far
+        // below the Float32 source projection precision or a raster pixel.
+        const key=parts?'parts:'+parts.map(p=>[p.clip,p.frame,p.direction,p.region,...p.transform.map(v=>Math.round(v*1e9)/1e9)].join(',')).join(';'):[sample.direction,sample.baseClip,sample.baseFrame,sample.clip,sample.frame,sample.baseRegion,sample.actionRegion,sample.useBasePose].join(':');
         if(tiles.has(key)){const tile=tiles.get(key);tiles.delete(key);tiles.set(key,tile);stats.hits++;return tile;}
         stats.misses++;
         let tile;

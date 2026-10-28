@@ -8,7 +8,9 @@ from pathlib import Path
 p=argparse.ArgumentParser();p.add_argument('source');p.add_argument('--out',required=True);p.add_argument('--clips',default='walk,attack');p.add_argument('--directions',default='N,NE,E,SE,S,SW,W,NW');a=p.parse_args(sys.argv[sys.argv.index('--')+1:])
 bpy.ops.wm.open_mainfile(filepath=str(Path(a.source).resolve()))
 scene=bpy.context.scene;rig=bpy.data.objects['Hollow editable animation rig'];actor=bpy.data.objects['Hollow skinned character'];view=bpy.data.objects['AN unanimated view']
-scene.cycles.samples=1;scene.cycles.device='CPU'
+# Keep the saved source sampling. Changing sample count changes silhouette-edge
+# coverage and prevents exact albedo/normal/emission/source alpha agreement.
+scene.cycles.device='CPU'
 out=Path(a.out).resolve();out.mkdir(parents=True,exist_ok=True)
 original=list(actor.data.materials)
 materials={}
