@@ -178,6 +178,17 @@ def author_source(input_path,output_path):
     bpy.context.view_layer.update()
     dag=bpy.context.evaluated_depsgraph_get()
     surface=BVHTree.FromObject(mesh,dag)
+    # BVHTree.FromObject evaluates deformations in OBJECT-LOCAL space, not
+    # normalized world coordinates. The imported FBX has parent/armature
+    # transforms: sending world-space rays into this tree gave ZERO hits.
+    # Convert ray origin, direction and max distance through world->local.
+    world_to_local=mesh.matrix_world.inverted()
+    local_front=world_to_local.to_3x3()@Vector((0,1,0))
+    local_distance=18.0*local_front.length
+    local_front.normalize()
+    def ray_front(x,z):
+        origin=world_to_local@Vector((x,-9.0,z))
+        return surface.ray_cast(origin,local_front,local_distance)
     front_wound_indices=set()
     ray_count=0
     for row in range(13):
@@ -187,8 +198,7 @@ def author_source(input_path,output_path):
             chest=bell(x,-.22,.31)*bell(z,2.11,.32)
             if chest<.23:
                 continue
-            position,normal,face_index,distance=surface.ray_cast(
-                Vector((x,-9.0,z)),Vector((0,1,0)),18.0)
+            position,normal,face_index,distance=ray_front(x,z)
             ray_count+=1
             if position is not None and face_index is not None:
                 if 0<=face_index<len(mesh.data.polygons):
@@ -197,8 +207,7 @@ def author_source(input_path,output_path):
         z=2.69+.049*row
         for col in range(5):
             x=-.27+.07*col
-            position,normal,face_index,distance=surface.ray_cast(
-                Vector((x,-9.0,z)),Vector((0,1,0)),18.0)
+            position,normal,face_index,distance=ray_front(x,z)
             ray_count+=1
             if position is not None and face_index is not None:
                 if 0<=face_index<len(mesh.data.polygons):
