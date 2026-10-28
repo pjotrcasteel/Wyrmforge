@@ -66,4 +66,25 @@ for name,clip in m['clips'].items():
   assert maxgrounderror<tolerance,('actual mesh sole hover/penetration',name,maxgrounderror,tolerance)
   assert maxband<tolerance+1e-6,('contact patch exceeds pixel-derived ground band',name,maxband,tolerance)
  results[name]={'measurement':'evaluated skinned sole vertices' if patches else 'legacy virtual landmark only','maxSavedActionSlipMetres':maxslip,'toleranceMetres':tolerance,'maxBoneLengthErrorMetres':maxlength,'jointRanges':{k:[min(v),max(v)] for k,v in ranges.items()},'minimumIndependentMassMarginMetres':minmargin if patches else None,'maximumActualSoleGroundErrorMetres':maxgrounderror if patches else None,'maximumGroundPatchBandMetres':maxband if patches else None,'sampledStanceVertices':sampledvertices,'uniqueSoleVertices':sum(len(p['vertexIndices']) for p in patches.values()) if patches else 0}
+# Verify declared full-body entry/exit surfaces against independently reopened
+# evaluated skin, not just coincident foot markers or authoring target arrays.
+for name,clip in m['clips'].items():
+ reference=clip.get('transitionReference')
+ if reference is None:continue
+ grid=clip.get('poseGrid');base=m['clips'].get(reference)
+ if not grid or not base or base['frames']!=grid['phaseFrames']:raise ValueError('Transition reference must match source gait phase samples')
+ def skin(action,index):
+  r.animation_data.action=bpy.data.actions['AN1_'+action+'_supported_v1'];scene.frame_set(index+1);bpy.context.view_layer.update()
+  evaluated=actor.evaluated_get(bpy.context.evaluated_depsgraph_get());mesh=evaluated.to_mesh()
+  points=[evaluated.matrix_world @ v.co for v in mesh.vertices];evaluated.to_mesh_clear();return points
+ maximum=0
+ for phase in range(grid['phaseFrames']):
+  baseline=skin(reference,phase)
+  for row in [0,grid['actionFrames']-1]:
+   endpoint=skin(name,row*grid['phaseFrames']+phase)
+   if len(endpoint)!=len(baseline):raise ValueError('Transition changed source topology')
+   maximum=max(maximum,max((a-b).length for a,b in zip(endpoint,baseline)))
+ tolerance=m['unitsPerPixel']*.25
+ if maximum>=tolerance:raise ValueError(f'Whole-body entry/exit skin discontinuity: {name} {maximum}m >= {tolerance}m')
+ results[name]['transition']={'reference':reference,'phaseSamples':grid['phaseFrames'],'maximumEvaluatedSkinDiscontinuityMetres':maximum,'toleranceMetres':tolerance}
 (folder/'independent-source-qc.json').write_text(json.dumps(results,indent=2)+'\n');print('AN_INDEPENDENT_QC',json.dumps(results),flush=True)

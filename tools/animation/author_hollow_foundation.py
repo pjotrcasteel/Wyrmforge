@@ -97,11 +97,17 @@ for clip in args.only.split(','):
         attack=clip in ['attack','attack-travel']
         torque=interp([(0,0),(.27,-.27),(.43,-.30),(.56,.34),(.72,.22),(1,0)],t) if attack else .045*math.sin(2*math.pi*p)
         lean=interp([(0,.09),(.3,-.08),(.47,-.03),(.58,.19),(.76,.12),(1,.09)],t) if attack else .09+.025*math.sin(4*math.pi*p)
+        if grid:
+            # The moving action is a whole-body surface whose first/last rows
+            # exactly match the same gait. Only its interior reserves flexion.
+            action_weight=smooth(t/.20)*(1-smooth((t-.80)/.20))
+            torque=.045*math.sin(2*math.pi*p)*(1-action_weight)+torque*action_weight
+            lean=(.09+.025*math.sin(4*math.pi*p))*(1-action_weight)+lean*action_weight
         pelvis_x=.085*math.sin(2*math.pi*p) if not attack or grid else interp([(0,0),(.3,-.018),(.6,.024),(1,0)],t)
         pelvis_z=-.09+.009*math.cos(4*math.pi*p) if not attack or grid else interp([(0,-.081),(.32,-.098),(.57,-.084),(.75,-.093),(1,-.081)],t)
         # Moving contact poses need flexion reserve for the actual sole patch,
         # rather than extending toward the old empty virtual foot landmark.
-        if grid:pelvis_z-=.015
+        if grid:pelvis_z-=.015*action_weight
         # Offsets are local to the true bind orientation (not world premultiplies).
         set_local('root',(0,0,0),(0,0,0))
         pelvis=rig.pose.bones['pelvis'];pelvis.matrix=Matrix.Translation(Vector((pelvis_x,0,pelvis_z+.025))) @ rest['pelvis']
@@ -154,11 +160,13 @@ for clip in args.only.split(','):
             leading=side=='R'
             direction=Vector((sign*.10,-.75,-.65)).normalized() if leading else Vector((sign*.08,.08,-.994)).normalized()
             baseline=direction*length*(.90 if leading else .94)
+            lag=.012*math.sin(2*math.pi*p-.65)-.012*math.sin(-.65)
             if attack and leading:
                 offset=Vector((
                     interp([(0,baseline.x),(.30,-.07),(.44,-.07),(.57,-.015),(.72,-.06),(.86,-.04),(1,baseline.x)],t),
                     interp([(0,baseline.y),(.30,.035),(.44,-.025),(.57,-.29),(.72,-.23),(.86,-.15),(1,baseline.y)],t),
                     interp([(0,baseline.z),(.30,-.13),(.44,-.11),(.57,-.10),(.72,-.25),(.86,-.24),(1,baseline.z)],t)))
+                if grid:offset=baseline*(1-action_weight)+offset*action_weight+Vector((0,lag*(1-action_weight),0))
                 hand_direction=Vector((sign*.10,-.80,-.60)).normalized()
             else:
                 lag=.012*math.sin(2*math.pi*p-.65)-.012*math.sin(-.65)
@@ -219,6 +227,7 @@ for clip in args.only.split(','):
                     for curve in bag.fcurves:
                         for key in curve.keyframe_points:key.interpolation='LINEAR'
     records[clip]={'samples':samples[:frame_count],'maxStanceSlipMetres':max(slips,default=0),'maxBoneLengthErrorMetres':length_error,'jointRangesDegrees':{k:[min(v),max(v)] for k,v in joint_ranges.items()},'strideMetres':STRIDE if clip=='walk' or grid else 0,'frames':frame_count,'fps':12}
+    if grid and 'walk' in records:records[clip]['transitionReference']='walk'
     if grid:records[clip]['poseGrid']={'phaseFrames':GRID_PHASES,'actionFrames':GRID_ACTIONS,'order':'action-major','phaseSampling':'nearest','actionSampling':'nearest'}
     print('AN_CLIP',clip,json.dumps({k:v for k,v in records[clip].items() if k!='samples'}),flush=True)
 # Pack images into editable source rather than depending on another workstation.

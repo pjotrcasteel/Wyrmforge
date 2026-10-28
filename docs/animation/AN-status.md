@@ -424,3 +424,28 @@ to 1,198,918 bytes; it does not raise the 4MiB bound. A hardcoded reduced-motion
 frame 128 was outside the renewed 128-pose moving-claw grid; export now computes
 a valid middle action row from declared grid dimensions. The eight-view moving
 region export is being completed and is not yet runtime acceptance.
+
+### Moving-grid and exact source-transition checkpoint
+
+The 128-pose moving pack completed all eight region views and fits unchanged
+budgets: 3,253,774 metadata bytes and 22,369,280 decoded color bytes. Its genuine
+Blazor capture still rejected 58/58 sampled regional poses. Constant-forward
+replays also expose corrections above the unchanged source-pixel bound; this
+pack is rejected as runtime acceptance, not promoted because it loads.
+
+A new 16-phase/16-action source surface joins the actual walking performance at
+both ends. Interior torso/arm load and knee-flexion reserve fade in/out together;
+the endpoint uses the same hanging/leading arms and body motion as the gait.
+Reopened-mesh QC passes all 256 poses: maximum actual stance drift 2.56802e-7m,
+minimum mass-proxy support margin 0.00816692m. Independent complete evaluated-skin
+entry/exit comparison across all 16 phases measures maximum discrepancy
+3.12603e-6m (quarter-source-pixel limit 0.00403646m). These are source results only;
+this source has not yet completed rendering or regional/runtime integration.
+
+`validate_source.py` now checks any declared `transitionReference` against the
+saved Blender skin. Temporary-clone mutation checks reject skating, hover and a
+cloth-only endpoint mismatch, each with Blender exit 1. The latter measures a
+0.0487433m discrepancy and leaves contact/mass checks otherwise intact.
+Latest complete JavaScript suite: 544/544. Live capture browser errors: none.
+All earlier GPU, moving-turn, full-sequence, horde/device and final-review gates
+remain open; AN0–AN6 is not complete.
