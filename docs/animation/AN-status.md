@@ -457,3 +457,14 @@ discrepancy 1.81647e-6m. The action-pose count is an explicit authoring option,
 not a relaxed contact tolerance. Its eight-facing export and runtime proof remain
 pending. The separately rendered 256-pose S/E study is H.264/yuv420p at 768×480;
 it is not the required continuous walk→turn→chase Hunt approval movie.
+
+### Signed action exit continuity
+
+The shared lifecycle previously discarded the moving action's signed contact
+phase on completion and resumed the unsigned cumulative-distance phase. It also
+dropped displacement in the completing sample. Recovery now retains that signed
+phase before releasing the action. A forward/reversal regression checks the exact
+exit at 15/30/60/120Hz. Focused animation/asset/contact suite: **55/55 passed**.
+This repairs clock/phase continuity; it does not make a source turn under arbitrary
+lateral C# motion physically supported. The bounded source's full facing render
+is still a pending acceptance input.

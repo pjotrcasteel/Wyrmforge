@@ -263,7 +263,6 @@ function updateContactAnimation(state,profile,input){
     }
     let actionSpec=state.action&&profile.actions[state.action.name];
     let actionProgress=actionSpec?Math.min(1,(state.time-state.action.started)/actionDuration(actionSpec)):null;
-    if(actionSpec&&actionProgress>=1&&!actionSpec.hold){state.action=null;actionSpec=null;actionProgress=null;}
     if(actionSpec?.poseGrid?.travel==='facing-projection'&&!beganAction){
         const yaw=state.actionDirection*Math.PI/4;
         const v=actionSpec.poseGrid.stanceVelocityByDirection?.[profile.facing.directions[state.actionDirection]];
@@ -271,6 +270,10 @@ function updateContactAnimation(state,profile,input){
         const projected=v?-(displacement.x*v.x+displacement.y*v.y)/length:displacement.x*Math.cos(yaw)+displacement.y*Math.sin(yaw);
         state.action.contactPhase=((state.action.contactPhase+projected/(length*actorScale))%1+1)%1;
     }
+    // Exit on the same support phase, including signed travel in the final
+    // sample. Unsigned distance phase must not replace a reversing action gait.
+    if(actionSpec?.poseGrid?.travel==='facing-projection')state.phase=state.action.contactPhase;
+    if(actionSpec&&actionProgress>=1&&!actionSpec.hold){state.action=null;actionSpec=null;actionProgress=null;}
     const contactPhase=actionSpec?.poseGrid?.travel==='facing-projection'?state.action.contactPhase:state.phase;
     const target=profile.facing.directions.indexOf(input.direction);
     const locomotionFrame=profile.locomotion.phaseSampling==='nearest'?Math.round(state.phase*profile.locomotion.frames)%profile.locomotion.frames:Math.min(profile.locomotion.frames-1,Math.floor(state.phase*profile.locomotion.frames));

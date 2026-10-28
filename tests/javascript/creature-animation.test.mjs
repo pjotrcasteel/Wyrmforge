@@ -219,3 +219,16 @@ test('pause/freeze retains the entire source pose when facing intent changes bet
   const death=update(s,p,intent(3,{travel:3,[flag]:true,action:{name:'death',token:'dead',sequence:4}}));assert.equal(death.clip,'death');
  }
 });
+
+test('moving action exits on its signed support phase and consumes the final sample displacement at every render rate',()=>{
+ const p=validate(JSON.parse(readFileSync(new URL('../fixtures/animation/travel-grid-source.json',import.meta.url))));
+ for(const hz of [15,30,60,120])for(const reverse of [false,true]){
+  const s=create(),speed=30,end=p.actions.strike.poseGrid.actionFrames/p.actions.strike.fps+1e-8;
+  const at=t=>{const x=reverse&&t>.5?speed*(1-t):speed*t;return intent(t,{travel:speed*t,world:{x,y:0},direction:'E',moving:true,action:strike()});};
+  update(s,p,at(0));
+  for(let i=1;i/hz<end-2e-8;i++)update(s,p,at(i/hz));
+  const sample=update(s,p,at(end)),x=at(end).world.x,expected=((x/p.locomotion.stride)%1+1)%1;
+  assert.equal(sample.actionToken,null);
+  assert.ok(Math.abs(sample.phase-expected)<1e-12,`${hz}Hz reverse=${reverse}: ${sample.phase} != ${expected}`);
+ }
+});
