@@ -81,6 +81,7 @@ export function resolveSigilSchool(school) {
     switch (String(school ?? '').toLowerCase()) {
         case 'fire':
         case 'pyromancer': return 'fire';
+        case 'arcane': return 'arcane';
         case 'frost':
         case 'cryomancer': return 'frost';
         case 'storm':
