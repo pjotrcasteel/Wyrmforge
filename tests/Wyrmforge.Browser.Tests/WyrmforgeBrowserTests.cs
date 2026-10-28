@@ -2655,9 +2655,9 @@ public sealed class WyrmforgeBrowserTests : PageTest
             const ctx = overlay.getContext('2d', { willReadFrequently: true });
             const width = overlay.width, height = overlay.height;
             const fixtures = [
-                { kind: 'enemy', x: width * .23, y: height * .46, rx: 30, ry: 16, opacity: 1 },
-                { kind: 'boss', x: width * .52, y: height * .61, rx: 79, ry: 41, opacity: 1 },
-                { kind: 'object', x: width * .80, y: height * .46, rx: 25, ry: 13, opacity: 1 },
+                { kind: 'enemy', x: width * .23, y: height * .46, rx: 34, ry: 19, opacity: 1 },
+                { kind: 'boss', x: width * .52, y: height * .61, rx: 79, ry: 44, opacity: 1 },
+                { kind: 'object', x: width * .80, y: height * .46, rx: 32, ry: 18, opacity: 1 },
             ];
             const labels = ['ENEMY', 'BOSS', 'OBJECT'];
             for (let index = 0; index < fixtures.length; index++) {
