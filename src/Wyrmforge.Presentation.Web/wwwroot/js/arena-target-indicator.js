@@ -73,13 +73,13 @@ function indicator(kind, x, y, radius) {
     // Bosses scale independently so their marker does not become an oversized telegraph.
     const boss = kind === 'boss';
     const footprint = Math.min(boss ? 92 : 68,
-        Math.max(boss ? 52 : 25, (radius * 1.7 + (boss ? 20 : 8)) * (boss ? .7 : .85)));
+        Math.max(boss ? 52 : 32, (radius * 1.7 + (boss ? 20 : 8)) * (boss ? .7 : .98)));
     return {
         kind,
         x: Math.round(x),
-        y: Math.round(y + radius * (kind === 'object' ? .7 : .75)),
+        y: Math.round(y + radius * (kind === 'object' ? .7 : .95)),
         rx: footprint,
-        ry: Math.max(12, Math.round(footprint * .52)),
+        ry: Math.max(15, Math.round(footprint * .56)),
     };
 }
 
@@ -102,7 +102,8 @@ export function presentTargetSigil(state, marker, key, seconds, reducedMotion = 
 
     if (marker) {
         state.activeMarker = marker;
-        const opacity = reducedMotion ? 1 : smoothstep(clamp((seconds - state.enteredAt) / .23, 0, 1));
+        // Fast retargeting must not leave a short-lived enemy permanently half-faded.
+        const opacity = reducedMotion ? 1 : smoothstep(clamp((seconds - state.enteredAt) / .12, 0, 1));
         state.lastOpacity = opacity;
         return { ...marker, opacity };
     }
@@ -134,7 +135,7 @@ export function targetSelectionLightEmitter(marker, frame) {
         position: [marker.x, marker.y + 1, 2],
         direction: [0, 0, -1],
         color: COLOR,
-        intensity: (marker.kind === 'boss' ? .58 : .78) * opacity,
+        intensity: (marker.kind === 'boss' ? .66 : .90) * opacity,
         range: Math.min(155, Math.max(65, marker.rx * 1.9)),
         coneAngle: Math.PI / 4,
         penumbra: 0,
@@ -168,9 +169,11 @@ export function drawTargetIndicator(ctx, marker, pass = 'ground', seconds = 0, r
 
     ctx.save();
     ctx.translate(marker.x, marker.y);
+    // The atlas is intentional pixel art; bilinear shrinking erased its thin rune strokes.
+    ctx.imageSmoothingEnabled = false;
     // Preserve the approved texture: improve visibility with opacity and additive
     // compositing, not new runes, circles, procedural glow or another light engine.
-    ctx.globalAlpha = alpha * (pass === 'ground' ? .38 : Math.min(1, (isObject ? .72 : 1) * pulse));
+    ctx.globalAlpha = alpha * (pass === 'ground' ? .48 : Math.min(1, (isObject ? .72 : 1) * pulse));
     if (pass === 'contrast') ctx.globalCompositeOperation = 'screen';
 
     if (pass === 'ground') {
