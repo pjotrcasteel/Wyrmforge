@@ -18,6 +18,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 concurrency:
   group: hollowed-rebuild-scope-${{ github.ref }}
@@ -30,13 +31,21 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          fetch-depth: 0
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            .github/workflows/hollow-rebuild-art.yml
+            art/source/enemies/hollow/rebuild-v1/
+            tools/art/hollow-rebuild/
+            docs/art/evidence/hollow-rebuild-v1/
           persist-credentials: false
       - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
-      - name: Verify source isolation — no animation/gameplay/runtime edits
-        run: python tools/art/hollow-rebuild/check-scope.py
+      - name: Verify entire PR file list — no animation/gameplay/runtime edits
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python tools/art/hollow-rebuild/check-scope.py --pr 391
       - name: Verify source-guard syntax
         run: |
           python -m py_compile tools/art/hollow-rebuild/check-scope.py
@@ -60,6 +69,10 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            art/source/enemies/hollow/rebuild-v1/
+            tools/art/hollow-rebuild/
           persist-credentials: false
       - uses: actions/setup-python@v6
         with:
@@ -105,6 +118,10 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            art/source/enemies/hollow/rebuild-v1/
+            tools/art/hollow-rebuild/
           persist-credentials: false
       - uses: actions/setup-python@v6
         with:
@@ -147,6 +164,10 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            art/source/enemies/hollow/rebuild-v1/
+            tools/art/hollow-rebuild/
           persist-credentials: false
       - uses: actions/setup-python@v6
         with:
@@ -200,8 +221,12 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          persist-credentials: false
           fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            art/source/enemies/hollow/rebuild-v1/
+            tools/art/hollow-rebuild/
+          persist-credentials: false
       - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
