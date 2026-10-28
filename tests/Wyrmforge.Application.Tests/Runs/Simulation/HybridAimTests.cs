@@ -243,6 +243,107 @@ public sealed class HybridAimTests
         Assert.AreEqual(enemy.Id, simulation.CreateSnapshot().Player.AimTargetId);
     }
 
+
+    [TestMethod]
+    public void AutomaticAimNeverAcquiresAnOffscreenEnemyEvenWhenItIsCloser()
+    {
+        var simulation = Scene();
+        SetPrivate(simulation, "viewportWidth", 320d);
+        SetPrivate(simulation, "viewportHeight", 300d);
+        var hidden = AddEnemy(simulation, 1, 570, 300);
+        var visible = AddEnemy(simulation, 2, 540, 425);
+        Assert.IsLessThan(Vector2D.Distance(new Vector2D(400, 300), visible.Position),
+            Vector2D.Distance(new Vector2D(400, 300), hidden.Position));
+
+        Invoke(simulation, "UpdateAim", default(MovementInput));
+        Assert.AreEqual(visible.Id, simulation.CreateSnapshot().Player.AimTargetId);
+        visible.Position = new Vector2D(570, 425);
+        Invoke(simulation, "UpdateAim", default(MovementInput));
+        Assert.IsNull(simulation.CreateSnapshot().Player.AimTargetId, "Offscreen enemies cannot retain an aim lock.");
+    }
+
+    [TestMethod]
+    public void RightStickSnapsToVisibleEnemyInItsConeAndProjectileUsesTheSnappedDirection()
+    {
+        var simulation = Scene();
+        var target = AddEnemy(simulation, 1, 550, 350);
+        AddEnemy(simulation, 2, 340, 300);
+        Invoke(simulation, "UpdateAim", new MovementInput(0, 0, 1, 0, SnapAim: true));
+
+        Assert.IsTrue(simulation.CreateSnapshot().Player.ManualAim);
+        Assert.AreEqual(target.Id, simulation.CreateSnapshot().Player.AimTargetId);
+        Cast(simulation, SpellId.FireBolt);
+        var shot = Field<List<ProjectileState>>(simulation, "projectiles").Single();
+        var direction = Vector2D.DirectionTo(new Vector2D(400, 300), target.Position);
+        Assert.AreEqual(direction.X, shot.Velocity.Normalized().X, 1e-9);
+        Assert.AreEqual(direction.Y, shot.Velocity.Normalized().Y, 1e-9);
+
+        Invoke(simulation, "UpdateAim", default(MovementInput));
+        Assert.IsFalse(simulation.CreateSnapshot().Player.ManualAim);
+        Assert.AreEqual(2, simulation.CreateSnapshot().Player.AimTargetId, "Releasing the stick restores ordinary auto-aim.");
+    }
+
+    [TestMethod]
+    public void RightStickDoesNotMagnetizeToEnemyOutsideCone()
+    {
+        var simulation = Scene();
+        AddEnemy(simulation, 1, 400, 450);
+        Invoke(simulation, "UpdateAim", new MovementInput(0, 0, 1, 0, SnapAim: true));
+        Assert.IsNull(simulation.CreateSnapshot().Player.AimTargetId);
+        Cast(simulation, SpellId.FireBolt);
+        var shot = Field<List<ProjectileState>>(simulation, "projectiles").Single();
+        Assert.IsGreaterThan(0d, shot.Velocity.X);
+        Assert.AreEqual(0d, shot.Velocity.Y, 1e-9);
+    }
+
+    [TestMethod]
+    public void SnappedLightningFirstLinkHitsTheSelectedEnemyNotTheNearestByDefault()
+    {
+        var simulation = Scene();
+        AddEnemy(simulation, 1, 490, 300);
+        var selected = AddEnemy(simulation, 2, 550, 345);
+        Invoke(simulation, "UpdateAim", new MovementInput(0, 0, 1, .3, SnapAim: true));
+        Assert.AreEqual(selected.Id, simulation.CreateSnapshot().Player.AimTargetId);
+        Cast(simulation, SpellId.ChainLightning);
+        var first = simulation.CreateSnapshot().Lightning.First();
+        Assert.AreEqual(selected.Position.X, first.ToX);
+        Assert.AreEqual(selected.Position.Y, first.ToY);
+    }
+
+    [TestMethod]
+    public void ClosedMasonryPreventsBothAutoLockAndRightStickSnapUntilItsGateOpens()
+    {
+        const double width = 800, height = 1200;
+        var map = new WyrmrealmMapState(seed: 25);
+        var environment = ArenaEnvironmentState.Create(map.Seed, map.AvailableNodes[0]);
+        var gate = environment.Snapshot().Barriers.Where(barrier => barrier.Kind == "gate")
+            .OrderBy(barrier => barrier.Y).First();
+        var x = (gate.X + gate.Width / 2) * width;
+        var above = new Vector2D(x, gate.Y * height - 30);
+        var below = new Vector2D(x, (gate.Y + gate.Height) * height + 30);
+        Assert.IsFalse(environment.HasLineOfSight(above, below, width, height));
+
+        var simulation = Scene();
+        SetPrivate(simulation, "arenaEnvironment", environment);
+        SetPrivate(simulation, "arenaWidth", width);
+        SetPrivate(simulation, "arenaHeight", height);
+        SetPrivate(simulation, "viewportWidth", width);
+        SetPrivate(simulation, "viewportHeight", height);
+        Field<PlayerState>(simulation, "player").Position = above;
+        AddEnemy(simulation, 1, below.X, below.Y);
+        Invoke(simulation, "UpdateAim", default(MovementInput));
+        Assert.IsNull(simulation.CreateSnapshot().Player.AimTargetId);
+        var heading = Vector2D.DirectionTo(above, below);
+        Invoke(simulation, "UpdateAim", new MovementInput(0, 0, heading.X, heading.Y, SnapAim: true));
+        Assert.IsNull(simulation.CreateSnapshot().Player.AimTargetId);
+        environment.SetPhase(EncounterPhase.BreathingRoom);
+        Invoke(simulation, "UpdateAim", default(MovementInput));
+        Assert.AreEqual(1, simulation.CreateSnapshot().Player.AimTargetId);
+    }
+
+    private static void SetPrivate(RunSimulation simulation, string field, object value) =>
+        typeof(RunSimulation).GetField(field, BindingFlags.NonPublic | BindingFlags.Instance)!.SetValue(simulation, value);
+
     private static (RunSimulation Simulation, ArenaEnvironmentState Environment, ArenaPropRenderSnapshot Prop,
         Vector2D Origin, Vector2D Position) PropScene()
     {
