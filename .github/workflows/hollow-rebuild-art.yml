@@ -57,11 +57,12 @@ jobs:
 # This workflow does not touch, test, import, trigger or modify the shared
 # universal animation engine. It does not build or deploy the game.
 
-  open-cc0-zombie-import:
-    name: Independently licensed CC0 zombie — import and 8-angle Blender source screening
+
+  original-undead-sculpt-screening:
+    name: Artist-authored Thin Zombie — Blender 3D source screening (NOT APPROVED)
     needs: source-boundary
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
     env:
       OPENBLAS_NUM_THREADS: '1'
       OMP_NUM_THREADS: '2'
@@ -76,71 +77,77 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
-      - name: Install genuine Blender and 7-Zip import library
+      - name: Install real isolated Blender 4.5 and image source tools
         run: |
-          python -m pip install --disable-pip-version-check bpy==4.5.15 Pillow==11.3.0 py7zr==1.0.0
-          python -c "import bpy; print('Blender:', bpy.app.version_string)"
-      - name: Download CC0 original from author-hosted OpenGameArt entry — never run external scripts
+          python -m pip install --disable-pip-version-check bpy==4.5.15 Pillow==11.3.0
+          python -c "import bpy; print('Blender', bpy.app.version_string)"
+      - name: Download CC BY 3.0 original from OpenGameArt, inspect safe ZIP and select a genuine 3D source
         run: |
           set -euo pipefail
-          mkdir -p artifacts/hollow-rebuild/oga-cc0-original
+          mkdir -p artifacts/hollow-rebuild/oga-thin-undead-original
           curl --fail --location --retry 3 --max-time 100 --silent --show-error \
-            --user-agent "WyrmForge-Hollowed-Source-Research/1.0" \
-            'https://opengameart.org/sites/default/files/Male%20City%20Zombie.7z' \
-            -o artifacts/hollow-rebuild/oga-cc0-original/source.7z
-          test "$(stat -c%s artifacts/hollow-rebuild/oga-cc0-original/source.7z)" -gt 200000
+            --user-agent 'WyrmForge-Hollowed-Source-Research/1.0' \
+            'https://opengameart.org/sites/default/files/new_thin_zom.zip' \
+            -o artifacts/hollow-rebuild/oga-thin-undead-original/source.zip
+          test "$(stat -c%s artifacts/hollow-rebuild/oga-thin-undead-original/source.zip)" -gt 100000
           python - <<'PY'
-          import hashlib, json
+          import hashlib, json, zipfile
           from pathlib import Path
-          import py7zr
-          root = Path('artifacts/hollow-rebuild/oga-cc0-original')
-          archive = root / 'source.7z'
-          with py7zr.SevenZipFile(archive) as zipfile:
-              filenames = zipfile.getnames()
-              if len(filenames) > 150 or any('..' in Path(name).parts or name.startswith('/') for name in filenames):
-                  raise ValueError('Unsafe or excessively large archive')
-              print('SOURCE ARCHIVE CONTENTS:')
-              print('\n'.join(filenames))
-              zipfile.extractall(path=root / 'extracted')
-          # The archive has one real source character mesh plus stand-alone
-          # motion FBXs. Import ONLY the actual character! A generic "first
-          # alphabetically" policy incorrectly chose Walking.fbx.
-          candidates = [p for p in (root/'extracted').rglob('*') if p.is_file()]
-          models = [p for p in candidates if p.name.lower() == 'infectedcityman.fbx']
-          if len(models) != 1:
-              raise ValueError('Expected exactly one original InfectedCityMan.fbx source')
-          model = models[0].resolve()
-          (root/'model-path.txt').write_text(str(model),encoding='utf-8')
+          root = Path('artifacts/hollow-rebuild/oga-thin-undead-original')
+          archive = root / 'source.zip'
+          with zipfile.ZipFile(archive) as z:
+              files = z.infolist()
+              if len(files) > 150 or sum(f.file_size for f in files) > 150_000_000:
+                  raise ValueError('Source archive is unexpectedly large')
+              if any('..' in Path(f.filename).parts or f.filename.startswith('/') for f in files):
+                  raise ValueError('Refusing unsafe ZIP paths')
+              print('ORIGINAL ARTIST ARCHIVE:', '\n'.join(f.filename for f in files))
+              z.extractall(root / 'extracted')
+          candidates = [p for p in (root/'extracted').rglob('*')
+                        if p.is_file() and p.suffix.lower() in ('.blend','.glb','.gltf','.fbx')]
+          if not candidates:
+              raise ValueError('No legally downloadable Blender/FBX/GLB source in archive')
+          priority = {'.blend':0,'.glb':1,'.gltf':2,'.fbx':3}
+          candidates.sort(key=lambda p:(priority[p.suffix.lower()],
+                                         0 if 'thin' in p.name.lower() or 'zom' in p.name.lower() else 1,
+                                         len(p.parts)))
+          selected = candidates[0].resolve()
+          (root/'model-path.txt').write_text(str(selected), encoding='utf-8')
           (root/'source-LICENSE.txt').write_text(
-              'CC0 1.0 Universal — Rikindle3D (2020)\n'
-              'https://opengameart.org/content/male-city-zombie-ready-for-use-in-game-engines\n'
-              'https://creativecommons.org/publicdomain/zero/1.0/\n'
-              'Original source checksum: SHA256 '+hashlib.sha256(archive.read_bytes()).hexdigest()+'\n',
+              'Original creator: Rosswet Mobile\n'
+              'Original title: Thin Zombie [ Awake Zombie Asset ]\n'
+              'License: CC BY 3.0 Unported\n'
+              'https://creativecommons.org/licenses/by/3.0/\n'
+              'https://opengameart.org/content/thin-zombie-awake-zombie-asset\n'
+              'Modifications: source screening only; source actions removed in evaluation\n'
+              'Original ZIP SHA256: ' + hashlib.sha256(archive.read_bytes()).hexdigest()+'\n',
               encoding='utf-8')
-          (root/'source-list.json').write_text(json.dumps({'chosen':model.name,'names':filenames},indent=2)+'\n')
-          print('CHOSEN SOURCE:',model.name,'SHA256:',hashlib.sha256(model.read_bytes()).hexdigest())
+          (root/'source-list.json').write_text(
+              json.dumps({'chosen':selected.name,'files':[f.filename for f in files],
+                          'original_sha256':hashlib.sha256(archive.read_bytes()).hexdigest()},indent=2)+'\n')
+          print('SOURCE SELECTED:', selected.name)
           PY
-      - name: Evaluate original zombie geometry with eight real neutral Blender views — NO animations
+      - name: Inspect actual riggable source mesh in Blender — import ONLY no actions and render eight real views
         run: |
-          source_path="$(cat artifacts/hollow-rebuild/oga-cc0-original/model-path.txt)"
+          source_path="$(cat artifacts/hollow-rebuild/oga-thin-undead-original/model-path.txt)"
           python tools/art/hollow-rebuild/evaluate_free_character_blender.py \
             --input "$source_path" \
-            --license-file artifacts/hollow-rebuild/oga-cc0-original/source-LICENSE.txt \
-            --license CC0-1.0 \
-            --source-url 'https://opengameart.org/content/male-city-zombie-ready-for-use-in-game-engines' \
-            --author Rikindle3D \
-            --output artifacts/hollow-rebuild/oga-cc0-source-review
-          test -s artifacts/hollow-rebuild/oga-cc0-source-review/source-clay-8views-BLENDER.png
-          test -s artifacts/hollow-rebuild/oga-cc0-source-review/source-clay-native96-BLENDER.png
-          test -s artifacts/hollow-rebuild/oga-cc0-source-review/imported-hollowed-source-UNAPPROVED.blend
-      - name: Preserve source attribution and authentic Blender multi-angle screening
+            --license-file artifacts/hollow-rebuild/oga-thin-undead-original/source-LICENSE.txt \
+            --license CC-BY-3.0 \
+            --source-url 'https://opengameart.org/content/thin-zombie-awake-zombie-asset' \
+            --author 'Rosswet Mobile' \
+            --output artifacts/hollow-rebuild/oga-thin-undead-review
+          test -s artifacts/hollow-rebuild/oga-thin-undead-review/source-clay-8views-BLENDER.png
+          test -s artifacts/hollow-rebuild/oga-thin-undead-review/source-material-native96-BLENDER.png
+          test -s artifacts/hollow-rebuild/oga-thin-undead-review/imported-hollowed-source-UNAPPROVED.blend
+      - name: Archive genuinely rendered source and complete legal provenance, NOT production assets
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: hollowed-h1-OGA-CC0-zombie-initial-source-screening-UNAPPROVED
+          name: hollowed-H1-ROSSWET-original-3D-source-review-UNAPPROVED
           path: |
-            artifacts/hollow-rebuild/oga-cc0-original/source-LICENSE.txt
-            artifacts/hollow-rebuild/oga-cc0-original/source-list.json
-            artifacts/hollow-rebuild/oga-cc0-source-review/
+            artifacts/hollow-rebuild/oga-thin-undead-original/source-list.json
+            artifacts/hollow-rebuild/oga-thin-undead-original/source-LICENSE.txt
+            artifacts/hollow-rebuild/oga-thin-undead-review/
           if-no-files-found: warn
           retention-days: 30
