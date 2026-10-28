@@ -155,6 +155,19 @@ def add_ash_crust(actor):
         fire_add = output.inputs["Surface"].links[0].from_node
         if fire_add.type != "ADD_SHADER" or not fire_add.inputs[0].is_linked:
             raise ValueError("Cannot preserve original inner-fire layering")
+        if not fire_add.inputs[1].is_linked:
+            raise ValueError("Existing source-bound fire is missing")
+        ember_shader = fire_add.inputs[1].links[0].from_node
+        if ember_shader.type != "EMISSION" or not ember_shader.inputs["Strength"].is_linked:
+            raise ValueError("Existing mesh-bound ember shader changed")
+        ember_control = ember_shader.inputs["Strength"].links[0].from_node
+        if ember_control.type != "MATH" or ember_control.operation != "MULTIPLY":
+            raise ValueError("Existing authored ember strength control changed")
+        # Modest art-candidate enhancement; retain exactly the same vertex mask
+        # and socket so future engine-driven attack charge/cooling still works.
+        ember_control.inputs[1].default_value = max(
+            1.2, ember_control.inputs[1].default_value
+        )
         base_link = fire_add.inputs[0].links[0]
         base_socket = base_link.from_socket
         links.remove(base_link)
