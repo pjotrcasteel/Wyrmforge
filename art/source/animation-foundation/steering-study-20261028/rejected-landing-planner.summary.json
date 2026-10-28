@@ -1,0 +1,619 @@
+{
+  "sourceStudyOnly": true,
+  "runtimeAccepted": false,
+  "measurement": "synthetic authoritative root trajectories through shared contact schedule and coupled source support",
+  "results": [
+    {
+      "scenario": "forward",
+      "hz": 15,
+      "count": 61,
+      "maximumSlip": 0,
+      "maximumBodyShift": 0.025,
+      "minimumMargin": 0.008323350446701426,
+      "failure": null
+    },
+    {
+      "scenario": "forward",
+      "hz": 30,
+      "count": 121,
+      "maximumSlip": 6.938893903907228e-18,
+      "maximumBodyShift": 0.025,
+      "minimumMargin": 0.008336110927181919,
+      "failure": null
+    },
+    {
+      "scenario": "forward",
+      "hz": 60,
+      "count": 241,
+      "maximumSlip": 1.3877787807814457e-17,
+      "maximumBodyShift": 0.025,
+      "minimumMargin": 0.008353747589668163,
+      "failure": null
+    },
+    {
+      "scenario": "forward",
+      "hz": 120,
+      "count": 481,
+      "maximumSlip": 1.3877787807814457e-17,
+      "maximumBodyShift": 0.025000000000000005,
+      "minimumMargin": 0.008117746709518519,
+      "failure": null
+    },
+    {
+      "scenario": "sideways",
+      "hz": 15,
+      "count": 61,
+      "maximumSlip": 0,
+      "maximumBodyShift": 0.06680345602249459,
+      "minimumMargin": 0.008607926867216025,
+      "failure": null
+    },
+    {
+      "scenario": "sideways",
+      "hz": 30,
+      "count": 121,
+      "maximumSlip": 2.7755575615628914e-17,
+      "maximumBodyShift": 0.06683169393159782,
+      "minimumMargin": 0.008605330051201322,
+      "failure": null
+    },
+    {
+      "scenario": "sideways",
+      "hz": 60,
+      "count": 241,
+      "maximumSlip": 2.7755575615628914e-17,
+      "maximumBodyShift": 0.06922946561692975,
+      "minimumMargin": 0.008537814362344836,
+      "failure": null
+    },
+    {
+      "scenario": "sideways",
+      "hz": 120,
+      "count": 481,
+      "maximumSlip": 2.7755575615628914e-17,
+      "maximumBodyShift": 0.07499865002402593,
+      "minimumMargin": 0.008137079426502512,
+      "failure": null
+    },
+    {
+      "scenario": "diagonal",
+      "hz": 15,
+      "count": 61,
+      "maximumSlip": 0,
+      "maximumBodyShift": 0.047665930633723666,
+      "minimumMargin": 0.008348795613372113,
+      "failure": null
+    },
+    {
+      "scenario": "diagonal",
+      "hz": 30,
+      "count": 110,
+      "maximumSlip": 0,
+      "maximumBodyShift": 0.047667601475685994,
+      "minimumMargin": 0.008334550924947557,
+      "failure": {
+        "tick": 110,
+        "time": 3.6666666666666665,
+        "clip": "walk",
+        "index": 2,
+        "message": "Unreachable or singular source contact target",
+        "details": {
+          "contactId": "foot-R",
+          "root": [
+            0.048054994880050744,
+            -0.009531313143917296,
+            -0.08999999612569809
+          ],
+          "target": [
+            -0.13214998955658452,
+            0.1553228160255291,
+            -0.44245839172278806
+          ],
+          "bodyShift": [
+            0.02486578920373353,
+            0.002586991935721662,
+            0
+          ],
+          "supportPoint": [
+            -0.15744129831722753,
+            0.07244129831722756,
+            -0.4977271264163153
+          ]
+        }
+      }
+    },
+    {
+      "scenario": "diagonal",
+      "hz": 60,
+      "count": 241,
+      "maximumSlip": 1.5515838457795457e-17,
+      "maximumBodyShift": 0.04835153647032902,
+      "minimumMargin": 0.008200750651651887,
+      "failure": null
+    },
+    {
+      "scenario": "diagonal",
+      "hz": 120,
+      "count": 5,
+      "maximumSlip": 2.8609792490763984e-17,
+      "maximumBodyShift": 0,
+      "minimumMargin": 0.03526050433473348,
+      "failure": {
+        "tick": 5,
+        "time": 0.041666666666666664,
+        "clip": "walk",
+        "index": 2,
+        "message": "Unreachable or singular source contact target",
+        "details": {
+          "contactId": "foot-R",
+          "root": [
+            0.06940357602427044,
+            -0.012628622087892201,
+            -0.08999999612569809
+          ],
+          "target": [
+            -0.12007420619582143,
+            0.143247032664766,
+            -0.44245839172278806
+          ],
+          "bodyShift": [
+            0.046214370347953226,
+            -0.0005103170082532436,
+            0
+          ],
+          "supportPoint": [
+            -0.14536551495646444,
+            0.060365514956464444,
+            -0.4977271264163153
+          ]
+        }
+      }
+    },
+    {
+      "scenario": "backward",
+      "hz": 15,
+      "count": 61,
+      "maximumSlip": 0,
+      "maximumBodyShift": 0.09754090309059564,
+      "minimumMargin": 0.008985830980792971,
+      "failure": null
+    },
+    {
+      "scenario": "backward",
+      "hz": 30,
+      "count": 121,
+      "maximumSlip": 6.938893903907228e-18,
+      "maximumBodyShift": 0.09754291474523746,
+      "minimumMargin": 0.00815687344032556,
+      "failure": null
+    },
+    {
+      "scenario": "backward",
+      "hz": 60,
+      "count": 241,
+      "maximumSlip": 1.3877787807814457e-17,
+      "maximumBodyShift": 0.09999936686606209,
+      "minimumMargin": 0.008204486118775339,
+      "failure": null
+    },
+    {
+      "scenario": "backward",
+      "hz": 120,
+      "count": 481,
+      "maximumSlip": 1.3877787807814457e-17,
+      "maximumBodyShift": 0.09999936686606209,
+      "minimumMargin": 0.008289621576003983,
+      "failure": null
+    },
+    {
+      "scenario": "reverse",
+      "hz": 15,
+      "count": 20,
+      "maximumSlip": 0,
+      "maximumBodyShift": 0.04999999971019543,
+      "minimumMargin": 0.008323350446701426,
+      "failure": {
+        "tick": 20,
+        "time": 1.3333333333333333,
+        "clip": "attack-travel",
+        "index": 59,
+        "message": "Authored source body translation envelope exceeded",
+        "details": null
+      }
+    },
+    {
+      "scenario": "reverse",
+      "hz": 30,
+      "count": 42,
+      "maximumSlip": 6.938893903907228e-18,
+      "maximumBodyShift": 0.12499940423287254,
+      "minimumMargin": 0.008171878439515808,
+      "failure": {
+        "tick": 42,
+        "time": 1.4,
+        "clip": "attack-travel",
+        "index": 78,
+        "message": "Authored source body translation envelope exceeded",
+        "details": null
+      }
+    },
+    {
+      "scenario": "reverse",
+      "hz": 60,
+      "count": 90,
+      "maximumSlip": 1.3877787807814457e-17,
+      "maximumBodyShift": 0.12499984326236135,
+      "minimumMargin": 0.008353747589668163,
+      "failure": {
+        "tick": 90,
+        "time": 1.5,
+        "clip": "attack-travel",
+        "index": 66,
+        "message": "Authored source pose excursion exceeded",
+        "details": null
+      }
+    },
+    {
+      "scenario": "reverse",
+      "hz": 120,
+      "count": 171,
+      "maximumSlip": 1.3877787807814457e-17,
+      "maximumBodyShift": 0.12499984326236135,
+      "minimumMargin": 0.008117746709518632,
+      "failure": {
+        "tick": 171,
+        "time": 1.425,
+        "clip": "attack-travel",
+        "index": 79,
+        "message": "Authored source body translation envelope exceeded",
+        "details": null
+      }
+    },
+    {
+      "scenario": "corner",
+      "hz": 15,
+      "count": 20,
+      "maximumSlip": 0,
+      "maximumBodyShift": 0.025,
+      "minimumMargin": 0.008323350446701426,
+      "failure": {
+        "tick": 20,
+        "time": 1.3333333333333333,
+        "clip": "attack-travel",
+        "index": 59,
+        "message": "Authored source body translation envelope exceeded",
+        "details": null
+      }
+    },
+    {
+      "scenario": "corner",
+      "hz": 30,
+      "count": 45,
+      "maximumSlip": 6.938893903907228e-18,
+      "maximumBodyShift": 0.12069604384963696,
+      "minimumMargin": 0.008336110927181919,
+      "failure": {
+        "tick": 45,
+        "time": 1.5,
+        "clip": "attack-travel",
+        "index": 66,
+        "message": "Unreachable or singular source contact target",
+        "details": {
+          "contactId": "foot-R",
+          "root": [
+            0.0474177030783894,
+            0.009136391000533397,
+            -0.10499995201826096
+          ],
+          "target": [
+            -0.2226445308717968,
+            0.01815092933575846,
+            -0.44245842152511045
+          ],
+          "bodyShift": [
+            0.020708649412989846,
+            0.014005421789074237,
+            0
+          ],
+          "supportPoint": [
+            -0.24793583963243981,
+            -0.06473057347138189,
+            -0.4977271264163153
+          ]
+        }
+      }
+    },
+    {
+      "scenario": "corner",
+      "hz": 60,
+      "count": 241,
+      "maximumSlip": 2.7755575615628914e-17,
+      "maximumBodyShift": 0.0749934799211667,
+      "minimumMargin": 0.008353747589668163,
+      "failure": null
+    },
+    {
+      "scenario": "corner",
+      "hz": 120,
+      "count": 481,
+      "maximumSlip": 1.3877787807814457e-17,
+      "maximumBodyShift": 0.09215391906699448,
+      "minimumMargin": 0.008117746709518632,
+      "failure": null
+    },
+    {
+      "scenario": "arc",
+      "hz": 15,
+      "count": 61,
+      "maximumSlip": 3.469446951953614e-18,
+      "maximumBodyShift": 0.09277744549409406,
+      "minimumMargin": 0.008467834302947418,
+      "failure": null
+    },
+    {
+      "scenario": "arc",
+      "hz": 30,
+      "count": 121,
+      "maximumSlip": 1.3877787807814457e-17,
+      "maximumBodyShift": 0.09757838224662911,
+      "minimumMargin": 0.008274864937168966,
+      "failure": null
+    },
+    {
+      "scenario": "arc",
+      "hz": 60,
+      "count": 241,
+      "maximumSlip": 1.3877787807814457e-17,
+      "maximumBodyShift": 0.09999842029331049,
+      "minimumMargin": 0.00812475616422448,
+      "failure": null
+    },
+    {
+      "scenario": "arc",
+      "hz": 120,
+      "count": 91,
+      "maximumSlip": 2.7755575615628914e-17,
+      "maximumBodyShift": 0.049998580882646575,
+      "minimumMargin": 0.00932759592763941,
+      "failure": {
+        "tick": 91,
+        "time": 0.7583333333333333,
+        "clip": "attack-travel",
+        "index": 2,
+        "message": "Unreachable or singular source contact target",
+        "details": {
+          "contactId": "foot-R",
+          "root": [
+            0.0709376309658295,
+            -0.021340066322024568,
+            -0.09000001102685928
+          ],
+          "target": [
+            -0.11585829564807226,
+            0.13703204149283382,
+            -0.44245842152511045
+          ],
+          "bodyShift": [
+            0.047748358234286914,
+            -0.00922172678345035,
+            0
+          ],
+          "supportPoint": [
+            -0.14114960440871527,
+            0.05415053868569347,
+            -0.4977271264163153
+          ]
+        }
+      }
+    },
+    {
+      "scenario": "pass-by",
+      "hz": 15,
+      "count": 61,
+      "maximumSlip": 1.3877787807814457e-17,
+      "maximumBodyShift": 0.025000000000000005,
+      "minimumMargin": 0.00829049872170168,
+      "failure": null
+    },
+    {
+      "scenario": "pass-by",
+      "hz": 30,
+      "count": 121,
+      "maximumSlip": 1.3877787807814457e-17,
+      "maximumBodyShift": 0.025,
+      "minimumMargin": 0.008589461675832171,
+      "failure": null
+    },
+    {
+      "scenario": "pass-by",
+      "hz": 60,
+      "count": 241,
+      "maximumSlip": 1.3877787807814457e-17,
+      "maximumBodyShift": 0.0499998951088647,
+      "minimumMargin": 0.008280280068378554,
+      "failure": null
+    },
+    {
+      "scenario": "pass-by",
+      "hz": 120,
+      "count": 481,
+      "maximumSlip": 1.3877787807814457e-17,
+      "maximumBodyShift": 0.04999989465015824,
+      "minimumMargin": 0.008154008422188355,
+      "failure": null
+    },
+    {
+      "scenario": "start-stop",
+      "hz": 15,
+      "count": 61,
+      "maximumSlip": 0,
+      "maximumBodyShift": 0,
+      "minimumMargin": 0.00858022538122152,
+      "failure": null
+    },
+    {
+      "scenario": "start-stop",
+      "hz": 30,
+      "count": 121,
+      "maximumSlip": 0,
+      "maximumBodyShift": 0.025000000000000005,
+      "minimumMargin": 0.00808390145672658,
+      "failure": null
+    },
+    {
+      "scenario": "start-stop",
+      "hz": 60,
+      "count": 241,
+      "maximumSlip": 6.938893903907228e-18,
+      "maximumBodyShift": 0.025000000000000005,
+      "minimumMargin": 0.008304140243253112,
+      "failure": null
+    },
+    {
+      "scenario": "start-stop",
+      "hz": 120,
+      "count": 481,
+      "maximumSlip": 6.938893903907228e-18,
+      "maximumBodyShift": 0.025,
+      "minimumMargin": 0.008089779624005512,
+      "failure": null
+    },
+    {
+      "scenario": "acceleration",
+      "hz": 15,
+      "count": 61,
+      "maximumSlip": 1.3877787807814457e-17,
+      "maximumBodyShift": 0.025,
+      "minimumMargin": 0.008762802893026474,
+      "failure": null
+    },
+    {
+      "scenario": "acceleration",
+      "hz": 30,
+      "count": 121,
+      "maximumSlip": 1.3877787807814457e-17,
+      "maximumBodyShift": 0.025,
+      "minimumMargin": 0.00861700133173965,
+      "failure": null
+    },
+    {
+      "scenario": "acceleration",
+      "hz": 60,
+      "count": 241,
+      "maximumSlip": 2.7755575615628914e-17,
+      "maximumBodyShift": 0.025000000000000005,
+      "minimumMargin": 0.008554815460798962,
+      "failure": null
+    },
+    {
+      "scenario": "acceleration",
+      "hz": 120,
+      "count": 481,
+      "maximumSlip": 1.3877787807814457e-17,
+      "maximumBodyShift": 0.025,
+      "minimumMargin": 0.008087451428478644,
+      "failure": null
+    },
+    {
+      "scenario": "slow",
+      "hz": 15,
+      "count": 61,
+      "maximumSlip": 1.3877787807814457e-17,
+      "maximumBodyShift": 0.025,
+      "minimumMargin": 0.008580244276733352,
+      "failure": null
+    },
+    {
+      "scenario": "slow",
+      "hz": 30,
+      "count": 121,
+      "maximumSlip": 1.3877787807814457e-17,
+      "maximumBodyShift": 0.024999999999999998,
+      "minimumMargin": 0.008117713607152225,
+      "failure": null
+    },
+    {
+      "scenario": "slow",
+      "hz": 60,
+      "count": 241,
+      "maximumSlip": 1.3877787807814457e-17,
+      "maximumBodyShift": 0.024999999999999998,
+      "minimumMargin": 0.008130536527738546,
+      "failure": null
+    },
+    {
+      "scenario": "slow",
+      "hz": 120,
+      "count": 481,
+      "maximumSlip": 1.3877787807814457e-17,
+      "maximumBodyShift": 0.025,
+      "minimumMargin": 0.008088261494751085,
+      "failure": null
+    },
+    {
+      "scenario": "freeze-resume",
+      "hz": 15,
+      "count": 29,
+      "maximumSlip": 0,
+      "maximumBodyShift": 0.07499822849049859,
+      "minimumMargin": 0.008323350446701426,
+      "failure": {
+        "tick": 29,
+        "time": 1.9333333333333333,
+        "clip": "attack-travel",
+        "index": 59,
+        "message": "Source contact joint limit exceeded",
+        "details": {
+          "contactId": "foot-L",
+          "root": [
+            -0.02844942674851499,
+            -0.02861246498328766,
+            -0.11136429756879807
+          ],
+          "target": [
+            0.06277622193098069,
+            0.257174506755251,
+            -0.4155931245906116
+          ],
+          "bodyShift": [
+            -0.005033647053600171,
+            -0.02448800517273268,
+            0
+          ],
+          "supportPoint": [
+            0.085,
+            0.17409080264129073,
+            -0.47087586637566103
+          ]
+        }
+      }
+    },
+    {
+      "scenario": "freeze-resume",
+      "hz": 30,
+      "count": 121,
+      "maximumSlip": 6.938893903907228e-18,
+      "maximumBodyShift": 0.025000000000000005,
+      "minimumMargin": 0.008336110927181919,
+      "failure": null
+    },
+    {
+      "scenario": "freeze-resume",
+      "hz": 60,
+      "count": 241,
+      "maximumSlip": 1.3877787807814457e-17,
+      "maximumBodyShift": 0.025000000000000005,
+      "minimumMargin": 0.008353747589668163,
+      "failure": null
+    },
+    {
+      "scenario": "freeze-resume",
+      "hz": 120,
+      "count": 481,
+      "maximumSlip": 1.3877787807814457e-17,
+      "maximumBodyShift": 0.025000000000000005,
+      "minimumMargin": 0.008117746709518632,
+      "failure": null
+    }
+  ]
+}

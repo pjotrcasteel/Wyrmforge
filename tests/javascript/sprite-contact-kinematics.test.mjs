@@ -250,3 +250,25 @@ test('source support reposing has no species/bone-name dependency or phantom abs
  assert.deepEqual(Object.keys(r.sourceContacts),['palm-0','palm-1']);assert.equal(Object.keys(r.sourceBones).length,Object.keys(f.frame.sourceBones).length);
  for(const name of ['upper_arm.L','forearm.L','hand.L'])assert.equal(Object.hasOwn(r.sourceBones,names[name]),false);
 });
+
+test('holding the lifecycle phase at rest cannot move an existing swing landing using wall time',async()=>{
+ const {updateGroundContactTargets:update}=await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/sprite-contact-kinematics.js');
+ const patterns=[{id:'palm',phaseOffset:0,stanceFraction:.6,neutral:{x:0,y:0}}],state={};
+ const input={timestamp:0,phaseCycles:.7,world:{x:0,y:0},velocity:{x:1,y:0},stride:1,nominalPhaseRate:1};
+ update(state,patterns,input);
+ const before=structuredClone(state.targets);
+ const out=update(state,patterns,{...input,timestamp:5,velocity:{x:0,y:0}});
+ assert.deepEqual(JSON.parse(JSON.stringify(out.targets)),before);
+ assert.equal(out.plannedLandings.length,0);assert.equal(state.timestamp,5);
+});
+
+test('the selected source phase owns stance boundaries while continuous phase owns travel rate',async()=>{
+ const {updateGroundContactTargets:update}=await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/sprite-contact-kinematics.js');
+ const state={},patterns=[{id:'paw',phaseOffset:0,stanceFraction:.62,neutral:{x:0,y:0}}];
+ const input={timestamp:0,phaseCycles:.61,sourcePhaseCycles:.625,world:{x:0,y:0},velocity:{x:1,y:0},stride:1,nominalPhaseRate:1};
+ const first=update(state,patterns,input);assert.equal(first.targets.paw.planted,false,'source frame already lifted this contact');
+ const landed=update(state,patterns,{...input,timestamp:.38,phaseCycles:.99,sourcePhaseCycles:1,world:{x:.38,y:0}});
+ assert.equal(landed.targets.paw.planted,true,'source frame landed before its nearest-frame continuous phase');
+ assert.equal(state.phaseCycles,.99);assert.equal(state.sourcePhaseCycles,1);
+ assert.throws(()=>update(state,patterns,{...input,timestamp:.4,phaseCycles:1,sourcePhaseCycles:.9375}),/replay seek/);
+});

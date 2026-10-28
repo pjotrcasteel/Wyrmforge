@@ -15,6 +15,7 @@ result={'sourceStudyOnly':True,'sourceBlendSha256':hashlib.sha256(blend.read_byt
  'massWeights':m['massWeights'],'rootBone':'root','bodyBone':'pelvis','unitsPerPixel':m['unitsPerPixel'],
  'minimumSupportMarginMetres':m['minimumSupportMarginMetres'],'groundZMetres':m['groundZMetres'],'clips':{}}
 result['authoringEnvelope']={'maxContactExcursion':m['clips']['walk']['strideMetres'],'maxBodyTranslation':m['clips']['walk']['strideMetres']/2}
+result['contactCycles']=m.get('contactCycles',[])
 for name,clip in m['clips'].items():
  r.animation_data.action=bpy.data.actions['AN1_'+name+'_supported_v1'];frames=[]
  for index,sample in enumerate(clip['samples']):

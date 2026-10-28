@@ -6,6 +6,20 @@
 
 ### Whole-body support study (after `59f5cc546`)
 
+**Continuous-motion follow-up (in progress):** a synthetic 12-trajectory ×
+15/30/60/120Hz study now passes **48/48** through the same source-support follower
+and whole-body solver. It keeps actual source stance flags and world anchors,
+and carries signed source phase through reversals while allowing the lower
+body's travel axis to change under a committed claw. The initial generic
+landing planner failed 10/48 cases and is not promoted. A source-following
+prototype removed its stance/template mismatch; five remaining diagonal/arc
+reach failures were resolved by **authoring one native pixel of knee-flexion
+reserve in the saved source**, not by increasing bone lengths, angular limits,
+root offsets or pixel correction tolerances. The original default source is
+unchanged. This is still a tool-driven source study; independent continuous
+skin replay, runtime source-pose/raster/GPU integration and actual Hunt proof
+remain pending. Current bounded source is preserved separately from old renders.
+
 The shared contact-kinematics module now has an **opt-in source-authoring study**
 primitive, `solveSupportedSourcePose`. It accepts caller-owned support targets,
 solves all declared contact chains together, translates the coupled source body

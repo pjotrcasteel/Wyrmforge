@@ -19,9 +19,11 @@ SOURCE=ROOT/'art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rig
 parser=argparse.ArgumentParser();parser.add_argument('--out',default='artifacts/animation');parser.add_argument('--render',action='store_true');parser.add_argument('--all',action='store_true');parser.add_argument('--only',default='walk,attack,pivot,pivot-negative');parser.add_argument('--samples',type=int,default=4);parser.add_argument('--phase-samples',type=int,choices=[8,16],default=16);parser.add_argument('--action-samples',type=int,choices=[8,16],default=16)
 parser.add_argument('--travel-heading-degrees',type=float,default=0,help='Source-authored travel direction relative to the committed body facing; study only.')
 parser.add_argument('--stride-metres',type=float,default=.36,help='Authored source gait distance per cycle, not a gameplay speed.')
+parser.add_argument('--flexion-reserve-pixels',type=float,default=0,help='Lower the authored source pelvis to reserve knee flexion; native source pixels, not runtime root correction.')
 args=parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
 if not math.isfinite(args.travel_heading_degrees) or abs(args.travel_heading_degrees)>45:parser.error('travel heading must be finite and within -45..45 degrees')
 if not math.isfinite(args.stride_metres) or args.stride_metres<=0:parser.error('source stride must be finite and positive')
+if not math.isfinite(args.flexion_reserve_pixels) or not 0<=args.flexion_reserve_pixels<=2:parser.error('source flexion reserve must be finite and within 0..2 native pixels')
 if args.travel_heading_degrees and any(c not in ['walk','attack-travel'] for c in args.only.split(',')):parser.error('directional studies require --only walk,attack-travel')
 TRAVEL_ROTATION=Matrix.Rotation(math.radians(args.travel_heading_degrees),4,'Z')
 OUT=(ROOT/args.out).resolve();OUT.mkdir(parents=True,exist_ok=True)
@@ -116,6 +118,7 @@ for clip in args.only.split(','):
         # Moving contact poses need flexion reserve for the actual sole patch,
         # rather than extending toward the old empty virtual foot landmark.
         if grid:pelvis_z-=.015*action_weight
+        pelvis_z-=args.flexion_reserve_pixels*1.55/96
         # Offsets are local to the true bind orientation (not world premultiplies).
         set_local('root',(0,0,0),(0,0,0))
         pelvis=rig.pose.bones['pelvis'];pelvis.matrix=Matrix.Translation(TRAVEL_ROTATION @ Vector((pelvis_x,0,pelvis_z+.025))) @ rest['pelvis']
@@ -255,6 +258,8 @@ for row,direction in enumerate(DIRECTIONS):
     projection_by_direction[direction]=[axes[k][0]-origin[0] for k in range(3)]+[origin[0]]+[axes[k][1]-origin[1] for k in range(3)]+[origin[1]]
 view.rotation_euler=(0,0,0)
 manifest={'schemaVersion':2,'groundZMetres':SOLE_Z,'bindRepair':bind_repair,'solePatches':SOLE_PATCHES,'minimumSupportMarginMetres':SUPPORT_MARGIN,'massWeights':weights,'projectionByDirection':projection_by_direction,'toolSha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'contactChains':[{'id':'foot-'+side,'upper':'thigh.'+side,'middle':'shin.'+side,'end':'foot.'+side,'pole':[sign*.09,-.5,-.2],'restContactPoint':SOLE_PATCHES[side]['restContactPoint'],'limits':[8,145],'bindSpace':'rig-source'} for side,sign in [('L',1),('R',-1)]],'candidateNotApproved':True,'runtimeIntegrated':False,'sourceSha256':hashlib.sha256(SOURCE.read_bytes()).hexdigest(),'blenderVersion':bpy.app.version_string,'coordinateSpace':'actor-xy-ground-z-up','sourceUnits':'metres','unitsPerPixel':1.55/96,'skeleton':skeleton,'skeletonSignature':hashlib.sha256(json.dumps(skeleton,sort_keys=True).encode()).hexdigest(),'clips':records,'directions':DIRECTIONS,'cloth':cloth,'emissionRegions':regions,'sourceQCOnly':True,'wholeBodyCOMValidated':False,'massModel':'authored-segment-centres-approximation-not-physical-dynamics'}
+manifest['contactCycles']=[{'id':'foot-'+side,'phaseOffset':offset,'stanceFraction':.62,'neutral':[sign*.085,0,SOLE_Z],'liftMetres':.055} for side,sign,offset in [('L',1,0),('R',-1,.5)]]
+manifest['flexionReserveMetres']=args.flexion_reserve_pixels*1.55/96
 for chain in manifest['contactChains']:
     chain['pole']=list(TRAVEL_ROTATION @ Vector(chain['pole']))
 (OUT/'source-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')

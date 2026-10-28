@@ -73,7 +73,9 @@ export function solveSupportedSourcePose(frame,targets,options){
         for(const [id,c] of chains){
             const target=targets[id],delta=target.point.map((n,i)=>n-c.sourceContact[i]);
             const ankle=plus(bones[c.end].head,delta),root=posed[c.upper].head;
-            const solved=solveTwoBoneContact({root,target:ankle,pole:plus(c.pole,bodyShift),upperLength:c.upperLength,lowerLength:c.lowerLength,limits:c.limits});
+            let solved;
+            try{solved=solveTwoBoneContact({root,target:ankle,pole:plus(c.pole,bodyShift),upperLength:c.upperLength,lowerLength:c.lowerLength,limits:c.limits});}
+            catch(error){error.sourcePoseFailure={contactId:id,root,target:ankle,bodyShift:[...bodyShift],supportPoint:target.point};throw error;}
             posed[c.upper]={head:root,tail:[...solved.middle]};
             posed[c.middle]={head:[...solved.middle],tail:ankle};
             posed[c.end]={head:ankle,tail:plus(bones[c.end].tail,delta)};
@@ -182,7 +184,8 @@ export function updateSourceContactTargets(state,frame,intent){
  */
 export function updateGroundContactTargets(state,patterns,intent){
     const {timestamp,phaseCycles,world,velocity,stride,nominalPhaseRate}=intent;
-    if(timestamp<0||phaseCycles<0||![timestamp,phaseCycles,world?.x,world?.y,velocity?.x,velocity?.y,stride,nominalPhaseRate].every(Number.isFinite)||stride<=0||nominalPhaseRate<=0||!Array.isArray(patterns)||!patterns.length)throw new TypeError('Finite authoritative motion and contact patterns required');
+    const sourcePhaseCycles=intent.sourcePhaseCycles??phaseCycles;
+    if(timestamp<0||phaseCycles<0||sourcePhaseCycles<0||![timestamp,phaseCycles,sourcePhaseCycles,world?.x,world?.y,velocity?.x,velocity?.y,stride,nominalPhaseRate].every(Number.isFinite)||stride<=0||nominalPhaseRate<=0||!Array.isArray(patterns)||!patterns.length)throw new TypeError('Finite authoritative motion and contact patterns required');
     const ids=new Set();
     for(const p of patterns){
         if(typeof p.id!=='string'||!p.id||ids.has(p.id)||!Number.isFinite(p.phaseOffset)||p.phaseOffset<0||p.phaseOffset>=1||!Number.isFinite(p.stanceFraction)||p.stanceFraction<=0||p.stanceFraction>1||![p.neutral?.x,p.neutral?.y].every(Number.isFinite))throw new TypeError('Invalid actual contact-cycle descriptor');
@@ -190,7 +193,7 @@ export function updateGroundContactTargets(state,patterns,intent){
     }
     const signature=JSON.stringify([...ids].sort());
     if(state.signature!=null&&state.signature!==signature)throw new TypeError('Contact anatomy changed; fresh animation state required');
-    if(state.timestamp!=null&&(timestamp<state.timestamp||phaseCycles<state.phaseCycles))throw new RangeError('Contact replay seek requires fresh state');
+    if(state.timestamp!=null&&(timestamp<state.timestamp||phaseCycles<state.phaseCycles||sourcePhaseCycles<(state.sourcePhaseCycles??state.phaseCycles)))throw new RangeError('Contact replay seek requires fresh state');
     if(state.signature==null)Object.assign(state,{signature,contacts:Object.create(null),timestamp,phaseCycles,world:{...world},stopped:false,targets:Object.create(null)});
     const stopped=Boolean(intent.paused||intent.frozen),dx=world.x-state.world.x,dy=world.y-state.world.y;
     if(stopped&&phaseCycles!==state.phaseCycles)throw new RangeError('Paused/frozen support phase cannot advance');
@@ -201,10 +204,19 @@ export function updateGroundContactTargets(state,patterns,intent){
         return {targets:state.targets,plannedLandings:[],transported};
     }
     const dt=state.stopped?0:timestamp-state.timestamp,phaseDelta=phaseCycles-state.phaseCycles;
+    if(dt>0&&phaseDelta===0&&dx===0&&dy===0&&Object.keys(state.targets).length){
+        // The lifecycle's support phase is held at rest. Do not let wall time
+        // pull a suspended swing toward a different landing behind its back.
+        state.timestamp=timestamp;state.phaseCycles=phaseCycles;state.world={...world};state.stopped=false;
+        return {targets:state.targets,plannedLandings:[],transported:false};
+    }
     const speed=Math.hypot(velocity.x,velocity.y),direction=speed>1e-8?{x:velocity.x/speed,y:velocity.y/speed}:{x:0,y:0};
     const rate=dt>0&&phaseDelta>0?phaseDelta/dt:nominalPhaseRate,planned=[];
     for(const p of patterns){
-        const unwrapped=phaseCycles+p.phaseOffset,cycle=Math.floor(unwrapped),q=unwrapped-cycle,planted=q<p.stanceFraction;
+        // Stance/swing belongs to the actually selected source pose. Its owner
+        // may supply the sampled (unwrapped) phase while continuous distance
+        // remains the rate/landing clock. Do not support a foot the source lifted.
+        const unwrapped=sourcePhaseCycles+p.phaseOffset,cycle=Math.floor(unwrapped),q=unwrapped-cycle,planted=q<p.stanceFraction;
         let contact=state.contacts[p.id];
         const targetAtLanding=()=>({x:world.x+p.neutral.x+velocity.x*(1-q)/rate+direction.x*stride*p.stanceFraction*.5,
             y:world.y+p.neutral.y+velocity.y*(1-q)/rate+direction.y*stride*p.stanceFraction*.5});
@@ -232,7 +244,7 @@ export function updateGroundContactTargets(state,patterns,intent){
         }
         contact.planted=planted;contact.cycle=cycle;
     }
-    state.timestamp=timestamp;state.phaseCycles=phaseCycles;state.world={...world};state.stopped=false;
+    state.timestamp=timestamp;state.phaseCycles=phaseCycles;state.sourcePhaseCycles=sourcePhaseCycles;state.world={...world};state.stopped=false;
     return {targets:state.targets,plannedLandings:planned,transported:false};
 }
 
