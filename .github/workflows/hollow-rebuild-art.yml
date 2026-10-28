@@ -131,3 +131,47 @@ jobs:
           path: artifacts/hollow-rebuild/cc0-sculpt-anatomy/
           if-no-files-found: warn
           retention-days: 30
+
+  feral-anatomy-study-v2:
+    name: Original Hollowed feral anatomy — Blender 3D clay views (UNAPPROVED)
+    needs: source-boundary
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '2'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install isolated Blender art-source dependencies
+        run: |
+          python -m pip install --disable-pip-version-check bpy==4.5.15 Pillow==11.3.0
+          python -c "import bpy; print('Genuine Blender:', bpy.app.version_string)"
+      - name: Compile both source-sculpt scripts
+        run: |
+          python -m py_compile tools/art/hollow-rebuild/sculpt_cc0_anatomy_blender.py \
+            tools/art/hollow-rebuild/sculpt_feral_anatomy_v2_blender.py
+      - name: Sculpt original asymmetric torso/shoulder rest shape and render eight viewpoints
+        run: |
+          python tools/art/hollow-rebuild/sculpt_feral_anatomy_v2_blender.py \
+            --input art/source/enemies/hollow/rebuild-v1/references/makehuman-core-base-CC0.obj \
+            --output artifacts/hollow-rebuild/feral-anatomy-v2
+          test -s artifacts/hollow-rebuild/feral-anatomy-v2/hollowed-feral-source-v2-UNAPPROVED.blend
+          test -s artifacts/hollow-rebuild/feral-anatomy-v2/cc0-source-8views-BLENDER.png
+          test -s artifacts/hollow-rebuild/feral-anatomy-v2/cc0-source-native96-BLENDER.png
+      - name: Reopen immutable H1 source in an independent Blender process
+        run: |
+          python -c "import bpy; bpy.ops.wm.open_mainfile(filepath='artifacts/hollow-rebuild/feral-anatomy-v2/hollowed-feral-source-v2-UNAPPROVED.blend'); assert len([o for o in bpy.data.objects if o.type == 'MESH']) > 0; print('H1 source reopened, NOT ART APPROVED')"
+      - name: Preserve genuine Blender source and previews without runtime integration
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hollowed-h1-feral-anatomy-v2-BLENDER-UNAPPROVED
+          path: artifacts/hollow-rebuild/feral-anatomy-v2/
+          if-no-files-found: warn
+          retention-days: 30
