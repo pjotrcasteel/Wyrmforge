@@ -57,152 +57,8 @@ jobs:
 # This workflow does not touch, test, import, trigger or modify the shared
 # universal animation engine. It does not build or deploy the game.
 
-
-  original-undead-sculpt-screening:
-    name: Artist-authored Thin Zombie — Blender 3D source screening (NOT APPROVED)
-    needs: source-boundary
-    runs-on: ubuntu-latest
-    timeout-minutes: 35
-    env:
-      OPENBLAS_NUM_THREADS: '1'
-      OMP_NUM_THREADS: '2'
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 1
-          filter: blob:none
-          sparse-checkout: |
-            tools/art/hollow-rebuild/
-          persist-credentials: false
-      - uses: actions/setup-python@v6
-        with:
-          python-version: '3.11'
-      - name: Install real isolated Blender 4.5 and image source tools
-        run: |
-          python -m pip install --disable-pip-version-check bpy==4.5.15 Pillow==11.3.0
-          python -c "import bpy; print('Blender', bpy.app.version_string)"
-      - name: Download CC BY 3.0 original from OpenGameArt, inspect safe ZIP and select a genuine 3D source
-        run: |
-          set -euo pipefail
-          mkdir -p artifacts/hollow-rebuild/oga-thin-undead-original
-          curl --fail --location --retry 3 --max-time 100 --silent --show-error \
-            --user-agent 'WyrmForge-Hollowed-Source-Research/1.0' \
-            'https://opengameart.org/sites/default/files/new_thin_zom.zip' \
-            -o artifacts/hollow-rebuild/oga-thin-undead-original/source.zip
-          test "$(stat -c%s artifacts/hollow-rebuild/oga-thin-undead-original/source.zip)" -gt 100000
-          python - <<'PY'
-          import hashlib, json, zipfile
-          from pathlib import Path
-          root = Path('artifacts/hollow-rebuild/oga-thin-undead-original')
-          archive = root / 'source.zip'
-          with zipfile.ZipFile(archive) as z:
-              files = z.infolist()
-              if len(files) > 150 or sum(f.file_size for f in files) > 150_000_000:
-                  raise ValueError('Source archive is unexpectedly large')
-              if any('..' in Path(f.filename).parts or f.filename.startswith('/') for f in files):
-                  raise ValueError('Refusing unsafe ZIP paths')
-              print('ORIGINAL ARTIST ARCHIVE:', '\n'.join(f.filename for f in files))
-              z.extractall(root / 'extracted')
-          candidates = [p for p in (root/'extracted').rglob('*')
-                        if p.is_file() and p.suffix.lower() in ('.blend','.glb','.gltf','.fbx')]
-          if not candidates:
-              raise ValueError('No legally downloadable Blender/FBX/GLB source in archive')
-          priority = {'.blend':0,'.glb':1,'.gltf':2,'.fbx':3}
-          candidates.sort(key=lambda p:(priority[p.suffix.lower()],
-                                         0 if 'thin' in p.name.lower() or 'zom' in p.name.lower() else 1,
-                                         len(p.parts)))
-          selected = candidates[0].resolve()
-          (root/'model-path.txt').write_text(str(selected), encoding='utf-8')
-          (root/'source-LICENSE.txt').write_text(
-              'Original creator: Rosswet Mobile\n'
-              'Original title: Thin Zombie [ Awake Zombie Asset ]\n'
-              'License: CC BY 3.0 Unported\n'
-              'https://creativecommons.org/licenses/by/3.0/\n'
-              'https://opengameart.org/content/thin-zombie-awake-zombie-asset\n'
-              'Modifications: source screening only; source actions removed in evaluation\n'
-              'Original ZIP SHA256: ' + hashlib.sha256(archive.read_bytes()).hexdigest()+'\n',
-              encoding='utf-8')
-          (root/'source-list.json').write_text(
-              json.dumps({'chosen':selected.name,'files':[f.filename for f in files],
-                          'original_sha256':hashlib.sha256(archive.read_bytes()).hexdigest()},indent=2)+'\n')
-          print('SOURCE SELECTED:', selected.name)
-          PY
-      - name: Inspect actual riggable source mesh in Blender — import ONLY no actions and render eight real views
-        run: |
-          source_path="$(cat artifacts/hollow-rebuild/oga-thin-undead-original/model-path.txt)"
-          python tools/art/hollow-rebuild/evaluate_free_character_blender.py \
-            --input "$source_path" \
-            --license-file artifacts/hollow-rebuild/oga-thin-undead-original/source-LICENSE.txt \
-            --license CC-BY-3.0 \
-            --source-url 'https://opengameart.org/content/thin-zombie-awake-zombie-asset' \
-            --author 'Rosswet Mobile' \
-            --output artifacts/hollow-rebuild/oga-thin-undead-review
-          test -s artifacts/hollow-rebuild/oga-thin-undead-review/source-clay-8views-BLENDER.png
-          test -s artifacts/hollow-rebuild/oga-thin-undead-review/source-material-native96-BLENDER.png
-          test -s artifacts/hollow-rebuild/oga-thin-undead-review/imported-hollowed-source-UNAPPROVED.blend
-      - name: Author distinct Ashfall Wretch static rest-body sculpt and inspect same eight cameras
-        run: |
-          python -m py_compile tools/art/hollow-rebuild/sculpt_ashfall_wretch_h1_blender.py
-          python tools/art/hollow-rebuild/sculpt_ashfall_wretch_h1_blender.py \
-            --input artifacts/hollow-rebuild/oga-thin-undead-review/imported-hollowed-source-UNAPPROVED.blend \
-            --output artifacts/hollow-rebuild/ashfall-wretch-h1
-          test -s artifacts/hollow-rebuild/ashfall-wretch-h1/hollowed-ashfall-wretch-source-h1-UNAPPROVED.blend
-          test -s artifacts/hollow-rebuild/ashfall-wretch-h1/source-clay-8views-BLENDER.png
-          test -s artifacts/hollow-rebuild/ashfall-wretch-h1/source-clay-native96-BLENDER.png
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          m=json.loads(Path('artifacts/hollow-rebuild/ashfall-wretch-h1/h1-sculpt-review.json').read_text())
-          assert m['owner_approved'] is False, m
-          assert m['actions'] == 0, m
-          assert m['original_topology_preserved'] and m['original_vertex_groups_preserved'],m
-          assert m['modified_vertices'] > 200, m
-          print('WyrmForge source anatomy created, but NOT visually approved.')
-          PY
-      - name: Build two genuinely distinct Hollowed rest-body silhouettes — NO animation
-        run: |
-          python -m py_compile tools/art/hollow-rebuild/sculpt_silhouette_variants_h1_blender.py
-          for variant in raker collapsed; do
-            python tools/art/hollow-rebuild/sculpt_silhouette_variants_h1_blender.py \
-              --input artifacts/hollow-rebuild/oga-thin-undead-review/imported-hollowed-source-UNAPPROVED.blend \
-              --output "artifacts/hollow-rebuild/h1-variant-$variant" \
-              --variant "$variant"
-            test -s "artifacts/hollow-rebuild/h1-variant-$variant/source-clay-native96-BLENDER.png"
-            test -s "artifacts/hollow-rebuild/h1-variant-$variant/source-material-8views-BLENDER.png"
-            test -s "artifacts/hollow-rebuild/h1-variant-$variant/hollowed-ashfall-wretch-source-h1-UNAPPROVED.blend"
-          done
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          for kind in ('raker', 'collapsed'):
-              p=Path(f'artifacts/hollow-rebuild/h1-variant-{kind}/h1-sculpt-review.json')
-              data=json.loads(p.read_text(encoding='utf-8'))
-              assert data['source_variant']==kind
-              assert data['actions']==0 and data['generated_animation_clips']==0
-              assert data['source_rig_weights_preserved'] is True
-              assert data['modified_vertices'] > 1000
-              assert data['owner_approved'] is False
-              print('PASS author-only static-source',kind,
-                    'changed vertices',data['modified_vertices'],
-                    'maximum delta meters',data['maximum_visible_rest_deformation_m'])
-          PY
-      - name: Archive genuinely rendered source and complete legal provenance, NOT production assets
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: hollowed-H1-ROSSWET-original-3D-source-review-UNAPPROVED
-          path: |
-            artifacts/hollow-rebuild/oga-thin-undead-original/source-list.json
-            artifacts/hollow-rebuild/oga-thin-undead-original/source-LICENSE.txt
-            artifacts/hollow-rebuild/oga-thin-undead-review/
-            artifacts/hollow-rebuild/ashfall-wretch-h1/
-            artifacts/hollow-rebuild/h1-variant-raker/
-            artifacts/hollow-rebuild/h1-variant-collapsed/
-          if-no-files-found: warn
-          retention-days: 30
-
-  independent-authored-cc0-mudeater:
-    name: CC0 sculpted-source comparison — Mudeater real Blender (NO animations)
+  cc0-horror-creature-primary-source:
+    name: Author-made CC0 horror creature — real 3D and editable rig screening
     needs: source-boundary
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -220,63 +76,94 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
-      - name: Install real Blender 4.5 LTS art screen
+      - name: Install real Blender and PNG review dependencies
         run: |
           python -m pip install --disable-pip-version-check bpy==4.5.15 Pillow==11.3.0
-          python -c "import bpy; print('True Blender',bpy.app.version_string)"
-      - name: Download original creator's CC0 source only; do not run embedded scripts
+          python -c "import bpy; print('Real Blender:',bpy.app.version_string)"
+      - name: Fetch CC0 original Horror Game Maker model; inspect archive before importing
         run: |
           set -euo pipefail
-          mkdir -p artifacts/hollow-rebuild/mudeater-input
-          curl --fail --location --retry 3 --max-time 120 --silent --show-error \
-            --user-agent 'WyrmForge-Hollowed-Source-Research/1.0' \
-            'https://opengameart.org/sites/default/files/mudeater.blend' \
-            -o artifacts/hollow-rebuild/mudeater-input/mudeater-original.blend
-          test "$(stat -c%s artifacts/hollow-rebuild/mudeater-input/mudeater-original.blend)" -gt 1000000
+          mkdir -p artifacts/hollow-rebuild/horror-original
+          curl --fail --location --silent --show-error --retry 3 --max-time 180 \
+            --user-agent "WyrmForge-Hollowed-Source-Research/1.0" \
+            'https://opengameart.org/sites/default/files/Colors.zip' \
+            -o artifacts/hollow-rebuild/horror-original/source.zip
+          test "$(stat -c%s artifacts/hollow-rebuild/horror-original/source.zip)" -gt 10000000
           python - <<'PY'
-          import hashlib
+          import hashlib,json,zipfile
           from pathlib import Path
-          root=Path('artifacts/hollow-rebuild/mudeater-input')
-          src=root/'mudeater-original.blend'
-          if src.read_bytes()[:7]!=b'BLENDER':
-              raise ValueError('Downloaded file is not an actual Blender .blend')
-          (root/'creator-LICENSE.txt').write_text(
-              'Original creators: CDmir (Čestmír Dammer) and TinyWorlds\n'
-              'Title: Mudeater (animated)\n'
-              'License: CC0 1.0 Universal, per original OpenGameArt listing\n'
-              'https://opengameart.org/content/mudeater-animated\n'
-              'https://creativecommons.org/publicdomain/zero/1.0/\n'
-              'Source is inspected only; original actions must NOT enter WyrmForge.\n'
-              'Original .blend SHA256: '+hashlib.sha256(src.read_bytes()).hexdigest()+'\n',
-              encoding='utf-8')
-          print('ORIGINAL BLENDER SHA256:',hashlib.sha256(src.read_bytes()).hexdigest())
+          root=Path('artifacts/hollow-rebuild/horror-original')
+          src=root/'source.zip'
+          with zipfile.ZipFile(src) as archive:
+              names=archive.infolist()
+              if len(names)>600 or sum(x.file_size for x in names)>1_500_000_000:
+                  raise ValueError('CC0 creator archive unexpectedly large')
+              if any('..' in Path(item.filename).parts or item.filename.startswith('/') for item in names):
+                  raise ValueError('Creator archive has unsafe filename')
+              assets=[item for item in names if item.filename.lower().endswith(('.fbx','.blend','.glb','.gltf'))]
+              if not assets:
+                  raise ValueError('No editable 3D model in original creator ZIP')
+              # Never pick a standalone "Run" or "Attack" animation file;
+              # choose the largest *character* mesh-bearing FBX instead.
+              excluded=('animation','walk','run','jump','attack','idle','death','pose','dance','sprint')
+              models=[i for i in assets if not any(x in Path(i.filename).stem.lower() for x in excluded)]
+              if not models:
+                  raise ValueError('Only animation clips found; no real character source')
+              models.sort(key=lambda item: (item.file_size, '.blend' in item.filename.lower()),reverse=True)
+              selected=models[0]
+              # Extract only original artist's chosen character source plus PNGs;
+              # ignore additional animations and any scripts/executables.
+              textures=[item for item in names if item.filename.lower().endswith(('.png','.jpg','.jpeg','.tga'))]
+              for item in [selected]+textures:
+                  archive.extract(item,root/'extracted')
+              model=(root/'extracted'/selected.filename).resolve()
+              (root/'model-path.txt').write_text(str(model),encoding='utf-8')
+              (root/'source-list.json').write_text(
+                  json.dumps({'source_filename':selected.filename,'source_size':selected.file_size,
+                              'other_models':[i.filename for i in models],
+                              'texture_count':len(textures),
+                              'sha256':hashlib.sha256(src.read_bytes()).hexdigest()},indent=2)+'\n',encoding='utf-8')
+              (root/'creator-LICENSE.txt').write_text(
+                  'Original: 3D Horror Game Monster / Horror Game Maker\n'
+                  'Creator: City Building Game Art\n'
+                  'OpenGameArt license: Creative Commons Zero (CC0 1.0 Universal)\n'
+                  'https://opengameart.org/content/3d-horror-game-monster\n'
+                  'https://creativecommons.org/publicdomain/zero/1.0/\n'
+                  'CC0 model sourced from artist original Colors.zip; no external animations/scripts used.\n'
+                  'Original ZIP SHA256: '+hashlib.sha256(src.read_bytes()).hexdigest()+'\n',
+                  encoding='utf-8')
+              print('SELECTED CREATOR SOURCE',selected.filename,'SIZE',selected.file_size)
+              print('OTHER MODEL FILENAMES', [i.filename for i in models][:30])
+              print('ORIGINAL TEXTURES',len(textures))
           PY
-      - name: Validate authored Mudeater shape in actual neutral Blender 8-way and 96px
+      - name: Screen actual CC0 character model, armature and eight neutral Blender angles
         run: |
+          source_path="$(cat artifacts/hollow-rebuild/horror-original/model-path.txt)"
           python tools/art/hollow-rebuild/evaluate_free_character_blender.py \
-            --input artifacts/hollow-rebuild/mudeater-input/mudeater-original.blend \
-            --license-file artifacts/hollow-rebuild/mudeater-input/creator-LICENSE.txt \
-            --license CC0-1.0 --author 'CDmir and TinyWorlds' \
-            --source-url 'https://opengameart.org/content/mudeater-animated' \
-            --output artifacts/hollow-rebuild/mudeater-review
-          test -s artifacts/hollow-rebuild/mudeater-review/source-clay-8views-BLENDER.png
-          test -s artifacts/hollow-rebuild/mudeater-review/source-clay-native96-BLENDER.png
-          test -s artifacts/hollow-rebuild/mudeater-review/imported-hollowed-source-UNAPPROVED.blend
+            --input "$source_path" \
+            --license-file artifacts/hollow-rebuild/horror-original/creator-LICENSE.txt \
+            --license CC0-1.0 --author 'City Building Game Art' \
+            --source-url 'https://opengameart.org/content/3d-horror-game-monster' \
+            --output artifacts/hollow-rebuild/horror-source-review
+          test -s artifacts/hollow-rebuild/horror-source-review/source-clay-8views-BLENDER.png
+          test -s artifacts/hollow-rebuild/horror-source-review/source-material-native96-BLENDER.png
+          test -s artifacts/hollow-rebuild/horror-source-review/imported-hollowed-source-UNAPPROVED.blend
           python - <<'PY'
           import json
           from pathlib import Path
-          data=json.loads(Path('artifacts/hollow-rebuild/mudeater-review/source-review.json').read_text())
-          assert data['actions_remaining']==0, data
-          assert data['owner_approved'] is False and data['animation_engine_modified'] is False
-          print('PASS independent Blender screening, source anatomy only:',data)
+          data=json.loads(Path('artifacts/hollow-rebuild/horror-source-review/source-review.json').read_text())
+          assert data['actions_remaining']==0 and data['owner_approved'] is False, data
+          assert data['animation_engine_modified'] is False, data
+          print('Only source art assessed; no attack clips transferred',data)
           PY
-      - name: Archive 8-view geometry review and original license; exclude live game assets
+      - name: Preserve 3D evidence; never ship candidate into WyrmForge runtime
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: hollowed-h1-MUDEATER-CC0-real-source-review-UNAPPROVED
+          name: hollowed-h1-HORROR-CC0-author-model-source-UNAPPROVED
           path: |
-            artifacts/hollow-rebuild/mudeater-input/creator-LICENSE.txt
-            artifacts/hollow-rebuild/mudeater-review/
+            artifacts/hollow-rebuild/horror-original/source-list.json
+            artifacts/hollow-rebuild/horror-original/creator-LICENSE.txt
+            artifacts/hollow-rebuild/horror-source-review/
           if-no-files-found: warn
           retention-days: 30
