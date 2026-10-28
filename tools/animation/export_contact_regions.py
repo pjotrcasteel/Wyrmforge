@@ -91,7 +91,7 @@ for direction in result['exportedDirections']:
    source_contacts[c['id']]={**c,'planted':planted,'sourceContact':list(point),'footprint':footprint,'upperLength':rig.data.bones[c['upper']].length,'lowerLength':rig.data.bones[c['middle']].length}
   mass_weights=manifest.get('massWeights',{})
   mass_center=sum(((rig.pose.bones[name].head+rig.pose.bones[name].tail)*.5*weight for name,weight in mass_weights.items()),Vector())/sum(mass_weights.values()) if mass_weights else None
-  frames.append({'massCenter':list(mass_center) if mass_center is not None else None,'completeRegions':['body',*bones],'sourceContacts':source_contacts,'projection':projection,'regions':regions,'projectedBones':projected,'sourceBones':source,'ownershipCoverage':1.0 if np.all(masks.any(axis=0)[alpha]) else 0.0})
+  frames.append({'balance':manifest['clips'][a.clip]['samples'][frame]['balance'],'massCenter':list(mass_center) if mass_center is not None else None,'completeRegions':['body',*bones],'sourceContacts':source_contacts,'projection':projection,'regions':regions,'projectedBones':projected,'sourceBones':source,'ownershipCoverage':1.0 if np.all(masks.any(axis=0)[alpha]) else 0.0})
  result['clips'][a.clip][direction]=frames;print('CONTACT_REGIONS',direction,len(frames),flush=True)
 (out/'contact-regions.json').write_text(json.dumps(result,separators=(',',':'))+'\n')
 print('CONTACT_REGION_OUTPUT',str(out),flush=True)

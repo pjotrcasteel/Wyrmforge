@@ -16,7 +16,7 @@ from hollow_ragged_silhouette import shorten_hanging_cloth
 from hollow_source_embers import attach_internal_fire
 ROOT=Path(__file__).resolve().parents[2]
 SOURCE=ROOT/'art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-zombie-reach-v3-standard/hollow-rigged.blend'
-parser=argparse.ArgumentParser();parser.add_argument('--out',default='artifacts/animation');parser.add_argument('--render',action='store_true');parser.add_argument('--all',action='store_true');parser.add_argument('--only',default='walk,attack,pivot,pivot-negative');parser.add_argument('--samples',type=int,default=4)
+parser=argparse.ArgumentParser();parser.add_argument('--out',default='artifacts/animation');parser.add_argument('--render',action='store_true');parser.add_argument('--all',action='store_true');parser.add_argument('--only',default='walk,attack,pivot,pivot-negative');parser.add_argument('--samples',type=int,default=4);parser.add_argument('--phase-samples',type=int,choices=[8,16],default=16)
 args=parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
 OUT=(ROOT/args.out).resolve();OUT.mkdir(parents=True,exist_ok=True)
 bpy.ops.wm.open_mainfile(filepath=str(SOURCE));scene=bpy.context.scene
@@ -74,7 +74,7 @@ def checked_chain(rig,upper,lower,target,pole,limits):
 
 (OUT/'source-preflight.json').write_text(json.dumps({'bindRepair':bind_repair,'patches':SOLE_PATCHES,'rest':{k:[v for row in matrix for v in row] for k,matrix in rest.items()}},sort_keys=True))
 records={};actions={}
-GRID_PHASES=16
+GRID_PHASES=args.phase_samples
 GRID_ACTIONS=16
 for clip in args.only.split(','):
     action=bpy.data.actions.new('AN1_'+clip+'_supported_v1');rig.animation_data_create();rig.animation_data.action=action
@@ -85,7 +85,7 @@ for clip in args.only.split(','):
     for index in range(frame_count if grid else 17):
         scene.frame_set(index+1)
         gait_index=index%GRID_PHASES if grid else index
-        p=gait_index/16;t=(index//GRID_PHASES)/(GRID_ACTIONS-1) if grid else (index/15 if index<16 else 1)
+        p=gait_index/(GRID_PHASES if grid else 16);t=(index//GRID_PHASES)/(GRID_ACTIONS-1) if grid else (index/15 if index<16 else 1)
         # A grid is a sampled whole-body surface, not a sequential action.
         # Each row starts a new gait/contact experiment at a fixed action time.
         if grid and gait_index==0:last_points={}
@@ -99,6 +99,9 @@ for clip in args.only.split(','):
         lean=interp([(0,.09),(.3,-.08),(.47,-.03),(.58,.19),(.76,.12),(1,.09)],t) if attack else .09+.025*math.sin(4*math.pi*p)
         pelvis_x=.085*math.sin(2*math.pi*p) if not attack or grid else interp([(0,0),(.3,-.018),(.6,.024),(1,0)],t)
         pelvis_z=-.09+.009*math.cos(4*math.pi*p) if not attack or grid else interp([(0,-.081),(.32,-.098),(.57,-.084),(.75,-.093),(1,-.081)],t)
+        # Moving contact poses need flexion reserve for the actual sole patch,
+        # rather than extending toward the old empty virtual foot landmark.
+        if grid:pelvis_z-=.015
         # Offsets are local to the true bind orientation (not world premultiplies).
         set_local('root',(0,0,0),(0,0,0))
         pelvis=rig.pose.bones['pelvis'];pelvis.matrix=Matrix.Translation(Vector((pelvis_x,0,pelvis_z+.025))) @ rest['pelvis']

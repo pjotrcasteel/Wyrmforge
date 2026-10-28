@@ -11,7 +11,7 @@ for(const direction of metadata.exportedDirections){
  let maxSlip=0,failed=null;
  for(let i=0;i<=240;i++){
   const t=i/120,world={x:velocity.x*t,y:velocity.y*t},out=update(state,patterns,{timestamp:t,phaseCycles:t,world,velocity,stride:Math.hypot(velocity.x,velocity.y),nominalPhaseRate:1});
-  const frameIndex=Math.floor(t%1*16),frame=frames[frameIndex],targets=Object.fromEntries(Object.entries(out.targets).map(([id,v])=>[id,{...v,z:-.5+v.lift*.055}]));
+  const frameIndex=Math.floor(t%1*16),frame=frames[frameIndex],targets=Object.fromEntries(Object.entries(out.targets).map(([id,v])=>[id,{...v,x:v.x+frame.projection[2]*v.lift*.055*pixelScale,y:v.y+frame.projection[6]*v.lift*.055*pixelScale,z:-.5+v.lift*.055}]));
   try{const r=sample(frame,{clip:'walk',frame:frameIndex,direction},targets,{world,pixelScale,anchor:[64,88],maxCorrection:.15});maxSlip=Math.max(maxSlip,...r.contacts.map(c=>c.slip));}catch(e){failed={t,frame:frameIndex,message:e.message};break;}
  }
  results.push({direction,maxSlip,failed});

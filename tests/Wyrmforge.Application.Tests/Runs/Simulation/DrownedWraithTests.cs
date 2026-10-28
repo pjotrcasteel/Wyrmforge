@@ -110,6 +110,9 @@ public sealed class DrownedWraithTests
         var simulation = new RunSimulation(new HashSet<string>(), new LevelChoiceService(random), random);
         Assert.IsTrue(simulation.ChooseMapNode(simulation.AvailableMapNodes[0].Id));
         simulation.Tick(0, default, 390, 700);
+        // Direct behavior fixture: unrelated random map walls must not prevent
+        // surfacing into claw range. Terrain/navigation have integration tests.
+        typeof(RunSimulation).GetField("arenaEnvironment", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(simulation, null);
         var player = Field<PlayerState>(simulation, "player");
         player.Health = player.MaxHealth;
         return (simulation, player, Field<List<EnemyState>>(simulation, "enemies"), Field<List<EnemyState>>(simulation, "submergedWraiths"));

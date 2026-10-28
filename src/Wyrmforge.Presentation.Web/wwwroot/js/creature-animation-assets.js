@@ -84,6 +84,7 @@ export function createCreatureAnimationAssets(baseUrl,{maxDecodedBytes=64*1024*1
             const pixelScale=clip.worldSize/clip.cell*scale;
             const targets=updateSourceContactTargets(state,frame,{...intent,pixelScale,anchor:data.regions.anchor});
             const regional=sampleSourceContactRegions(frame,sample,targets,{...intent,pixelScale,anchor:data.regions.anchor});
+            if(frame.balance==='supported'&&!Object.values(targets).some(t=>t.transported)&&!regional.support?.staticallySupported)throw new RangeError('Authored mass proxy is outside actual source support');
             // Regional anchors already consume world displacement. Applying the
             // whole-sprite contact correction again would move every planted foot.
             return {...sample,...regional,rootOffset:{x:0,y:0},debug:{...sample.debug,regional:{contacts:regional.contacts,support:regional.support,measurementSpace:regional.measurementSpace}}};
