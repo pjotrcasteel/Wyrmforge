@@ -17,6 +17,7 @@ import json
 import math
 from pathlib import Path
 
+import bpy  # Bundled Blender wheel registers the mathutils binary module.
 from mathutils import Vector
 
 HERE=Path(__file__).resolve().parent
