@@ -65,7 +65,7 @@ jobs:
         env:
           OMP_NUM_THREADS: '2'
         run: |
-          PYTHONPATH="$(python -c 'import site; print(site.getsitepackages()[0])')"           /tmp/blender-bin/blender -b -t 2 --python-exit-code 1             --python tools/art/hollowed/render_before_after.py --             --before artifacts/hollowed-polish/source/hollow-foundation.blend             --after artifacts/hollowed-polish/candidate/hollow-art-v2.blend             --out artifacts/hollowed-polish/review
+          HOLLOW_ART_PIL_SITE="$(python -c 'import site; print(site.getsitepackages()[0])')"           /tmp/blender-bin/blender -b -t 2 --python-exit-code 1             --python tools/art/hollowed/render_before_after.py --             --before artifacts/hollowed-polish/source/hollow-foundation.blend             --after artifacts/hollowed-polish/candidate/hollow-art-v2.blend             --out artifacts/hollowed-polish/review
           test -s artifacts/hollowed-polish/review/real-hollowed-before-after.png
       - name: Save genuine Blender output and before/after previews
         if: always()
