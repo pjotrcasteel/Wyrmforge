@@ -116,6 +116,70 @@ def evaluated_mesh_bounds(meshes):
     return low, high
 
 
+def restore_original_texture_atlas(source, meshes):
+    """Restore legal original PNG atlas when linking an old .blend library.
+
+    Loading objects from old Blender source via bpy.data.libraries.load()
+    preserves image datablocks, but does NOT reliably rebase relative paths.
+    If the artist's archive has exactly one PNG, retain/pack that original
+    image and create a valid Cycles Principled connection where legacy
+    Blender Internal shader settings are no longer supported.
+    This only affects a NEW source-evaluation scene, not production art.
+    """
+    if source.suffix.lower() != ".blend":
+        return {"candidate_atlases":0, "rebased_images":0, "material_image_links":0}
+    candidates = sorted(source.parent.glob("*.png"))
+    if len(candidates) != 1:
+        return {"candidate_atlases":len(candidates), "rebased_images":0, "material_image_links":0}
+    source_atlas = candidates[0].resolve()
+    images = [img for img in bpy.data.images if img.type == "IMAGE" and img.source == "FILE"]
+    rebased=0
+    for img in images:
+        try:
+            if img.packed_file is None:
+                img.filepath = str(source_atlas)
+                img.reload()
+                img.pack()
+                rebased+=1
+        except RuntimeError as error:
+            raise ValueError(f"Cannot restore the artist's original atlas {source_atlas.name}: {error}")
+    if not images:
+        image=bpy.data.images.load(str(source_atlas), check_existing=True)
+        image.pack()
+        images=[image]
+        rebased+=1
+    atlas=images[0]
+    links=0
+    for obj in meshes:
+        for material in obj.data.materials:
+            if material is None:
+                continue
+            material.use_nodes=True
+            nodes=material.node_tree.nodes
+            shader=nodes.get("Principled BSDF")
+            if shader is None:
+                shader=nodes.new("ShaderNodeBsdfPrincipled")
+            image_nodes=[node for node in nodes if node.type == "TEX_IMAGE"]
+            if not image_nodes:
+                texture=nodes.new("ShaderNodeTexImage")
+                texture.name="Creator original PNG atlas — evaluation only"
+                texture.image=atlas
+            else:
+                texture=image_nodes[0]
+                if texture.image is None or texture.image.size[0] <= 0:
+                    texture.image=atlas
+            if not shader.inputs["Base Color"].is_linked:
+                material.node_tree.links.new(texture.outputs["Color"],shader.inputs["Base Color"])
+            output=next((node for node in nodes if node.type=="OUTPUT_MATERIAL"),None)
+            if output is None:
+                output=nodes.new("ShaderNodeOutputMaterial")
+            if not output.inputs["Surface"].is_linked:
+                material.node_tree.links.new(shader.outputs["BSDF"],output.inputs["Surface"])
+            links+=1
+    return {"candidate_atlases":1,"rebased_images":rebased,
+            "material_image_links":links,"atlas_name":source_atlas.name}
+
+
 def normalize(meshes, target_height=3.1):
     """Normalize by ACTUAL evaluated skinned bounds and then verify result.
 
@@ -251,6 +315,7 @@ def main():
         raise ValueError("Evaluation output must remain inside artifacts/hollow-rebuild only")
     out.mkdir(parents=True, exist_ok=True)
     meshes = load_source(source)
+    texture_provenance = restore_original_texture_atlas(source, meshes)
     scale = normalize(meshes)
     camera, clay, center = studio(meshes)
     render_study(out, camera, clay, "clay", center)
@@ -269,6 +334,7 @@ def main():
         "base_animations_imported_into_evaluation": False,
         "animation_engine_modified": False, "runtime_modified": False,
         "owner_approved": False, "scale": scale,
+        "texture_provenance": texture_provenance,
     }
     if result["actions_remaining"] != 0:
         raise RuntimeError("Source still contains animation actions; refuse to save")
