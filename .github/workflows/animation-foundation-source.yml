@@ -45,6 +45,9 @@ jobs:
           "$BLENDER_BIN" -b -t 2 --python-exit-code 1 --python tools/animation/author_hollow_foundation.py -- --out artifacts/animation-source-ci
           "$BLENDER_BIN" -b -t 2 --python-exit-code 1 --python tools/animation/validate_source.py -- artifacts/animation-source-ci
           python3 tools/animation/test_source_qc.py artifacts/animation-source-ci --blender "$BLENDER_BIN"
+          "$BLENDER_BIN" -b -t 2 --python-exit-code 1 --python tools/animation/author_hollow_foundation.py -- --out artifacts/animation-moving-source-ci --only walk,attack-travel --phase-samples 16 --action-samples 8 --samples 2
+          "$BLENDER_BIN" -b -t 2 --python-exit-code 1 --python tools/animation/validate_source.py -- artifacts/animation-moving-source-ci
+          python3 tools/animation/test_source_qc.py artifacts/animation-moving-source-ci --blender "$BLENDER_BIN"
       - uses: actions/upload-artifact@v4
         with:
           name: animation-foundation-editable-source-and-actual-mesh-qc
@@ -53,5 +56,9 @@ jobs:
             artifacts/animation-source-ci/source-manifest.json
             artifacts/animation-source-ci/independent-source-qc.json
             artifacts/animation-source-ci/negative-source-qc.json
+            artifacts/animation-moving-source-ci/hollow-foundation.blend
+            artifacts/animation-moving-source-ci/source-manifest.json
+            artifacts/animation-moving-source-ci/independent-source-qc.json
+            artifacts/animation-moving-source-ci/negative-source-qc.json
           if-no-files-found: error
           retention-days: 14

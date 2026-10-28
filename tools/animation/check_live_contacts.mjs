@@ -18,6 +18,7 @@ for(const direction of manifest.directions)for(const hz of [15,30,60,120])for(co
    const sample=update(state,profile,intent),frame=regions.clips[sample.clip][direction][sample.frame],spec=manifest.clips[sample.clip],pixelScale=spec.worldSize/spec.cell;
    const t=targets(contacts,frame,{timestamp:time,world,phaseOffset:sample.sourcePhaseOffset,pixelScale,anchor:regions.anchor});
    const r=solve(frame,sample,t,{world,pixelScale,anchor:regions.anchor,maxCorrection:manifest.regions.maxCorrectionMetres});
+   if(frame.balance==='supported'&&!r.support?.staticallySupported)throw new RangeError('Authored mass proxy is outside actual source support');
    maxSlip=Math.max(maxSlip,...r.contacts.map(c=>c.slip));
   }catch(e){failed={time,message:e.message,requiredCorrectionMetres:e.requiredCorrectionMetres};break;}
  }

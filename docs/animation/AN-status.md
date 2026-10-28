@@ -468,3 +468,11 @@ exit at 15/30/60/120Hz. Focused animation/asset/contact suite: **55/55 passed**.
 This repairs clock/phase continuity; it does not make a source turn under arbitrary
 lateral C# motion physically supported. The bounded source's full facing render
 is still a pending acceptance input.
+
+Full local JavaScript regression after the signed-phase change: **545/545 passed**
+(`node --test --test-concurrency=4 --test-reporter=tap tests/javascript/*.test.mjs`).
+The bounded moving source also passed all three temporary-clone rejection tests,
+including complete-skin endpoint failure. CI now authors/reopens that source in
+addition to the original four-clip proof, and uploads its saved source/QC.
+Capture now begins when candidate assets are actually ready, before the initial
+approach is discarded by a fixed startup sleep; steering still starts 1.5s later.
