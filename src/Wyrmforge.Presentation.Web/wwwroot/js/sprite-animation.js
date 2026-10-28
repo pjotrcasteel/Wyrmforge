@@ -64,16 +64,24 @@ export function validateCreatureRigProfile(profile) {
     if(!Number.isFinite(profile.unitsPerPixel)||profile.unitsPerPixel<=0)fail('unitsPerPixel must be positive');
     const rig=profile.rig;
     if(!rig||!Array.isArray(rig.bones)||!rig.bones.length)fail('bone hierarchy required');
+    if(rig.sourceSpace){
+        const {coordinateSpace,toActor:m}=rig.sourceSpace;
+        if(coordinateSpace!=='blender-armature-xyz-metres'||!Array.isArray(m)||m.length!==16||!m.every(Number.isFinite))fail('invalid source-to-actor bind space');
+        const lengths=[Math.hypot(m[0],m[4],m[8]),Math.hypot(m[1],m[5],m[9]),Math.hypot(m[2],m[6],m[10])];
+        const scale=lengths[0];
+        const dot=(a,b)=>m[a]*m[b]+m[a+4]*m[b+4]+m[a+8]*m[b+8];
+        if(!(scale>0)||lengths.some(n=>Math.abs(n/scale-1)>1e-6)||[dot(0,1),dot(0,2),dot(1,2)].some(n=>Math.abs(n/(scale*scale))>1e-6)||Math.abs(m[2])+Math.abs(m[6])+Math.abs(m[8])+Math.abs(m[9])>scale*1e-6||m[10]<=0||m[0]*m[5]-m[1]*m[4]<=0||Math.abs(m[12])+Math.abs(m[13])+Math.abs(m[14])+Math.abs(m[15]-1)>1e-6)fail('source-to-actor requires a proper uniform Z-up bind transform');
+    }
     const bones=new Map();
     for(const bone of rig.bones){
-        if(!bone.id||bones.has(bone.id))fail('duplicate/empty bone');
+        if(typeof bone.id!=='string'||!bone.id||bones.has(bone.id))fail('duplicate/empty bone');
         if(!Number.isFinite(bone.length)||bone.length<=0)fail(`invalid length: ${bone.id}`);
         if(!Array.isArray(bone.rest)||bone.rest.length!==16||!bone.rest.every(Number.isFinite))fail(`invalid bind: ${bone.id}`);
         const m=bone.rest;
         const determinant=m[0]*(m[5]*m[10]-m[6]*m[9])-m[1]*(m[4]*m[10]-m[6]*m[8])+m[2]*(m[4]*m[9]-m[5]*m[8]);
         if(determinant<=1e-8||Math.abs(m[12])+Math.abs(m[13])+Math.abs(m[14])+Math.abs(m[15]-1)>1e-6)fail(`singular/reflected/non-affine bind: ${bone.id}`);
         if(bone.parent&&!bones.has(bone.parent))fail(`parent must precede child: ${bone.id}`);
-        if(bone.limits&&(!bone.limits.every(Number.isFinite)||bone.limits.length!==2||bone.limits[0]>bone.limits[1]))fail(`invalid limits: ${bone.id}`);
+        if(bone.limits&&(!Array.isArray(bone.limits)||!bone.limits.every(Number.isFinite)||bone.limits.length!==2||bone.limits[0]>bone.limits[1]))fail(`invalid limits: ${bone.id}`);
         bones.set(bone.id,bone);
     }
     for(const [semantic,id] of Object.entries(rig.semantics??{}))if(!bones.has(id))fail(`missing semantic ${semantic}: ${id}`);
@@ -81,20 +89,25 @@ export function validateCreatureRigProfile(profile) {
     if(bones.get(rig.semantics.root).parent)fail('root semantic must name a hierarchy root');
     const contacts=new Set();
     for(const contact of rig.contacts??[]){
-        if(contacts.has(contact.id)||!bones.has(contact.bone))fail(`invalid contact: ${contact.id}`);
+        if(typeof contact.id!=='string'||!contact.id||contacts.has(contact.id)||!bones.has(contact.bone))fail(`invalid contact: ${contact.id}`);
         if(!['foot','palm','body','paw'].includes(contact.surface))fail(`invalid contact surface: ${contact.id}`);
         if(rig.absentBones?.includes(contact.bone))fail(`absent limb contact: ${contact.id}`);
+        if(contact.chain){
+            const c=contact.chain,upper=bones.get(c.upper),middle=bones.get(c.middle),end=bones.get(c.end);
+            if(!upper||!middle||!end||middle.parent!==c.upper||end.parent!==c.middle||c.end!==contact.bone||c.bindSpace!=='rig-source')fail(`invalid contact chain: ${contact.id}`);
+            if(![c.pole,c.restContactPoint].every(v=>Array.isArray(v)&&v.length===3&&v.every(Number.isFinite))||!Array.isArray(c.limits)||c.limits.length!==2||!c.limits.every(Number.isFinite)||c.limits[0]<0||c.limits[1]>180||c.limits[0]>c.limits[1])fail(`invalid chain geometry: ${contact.id}`);
+        }
         contacts.add(contact.id);
     }
     if(!contacts.size)fail('at least one actual surface contact required');
     for(const id of rig.absentBones??[])if(bones.has(id))fail(`absent bone still present: ${id}`);
     for(const socket of Object.values(rig.sockets??{}))if(!bones.has(socket.bone))fail('socket on missing bone');
     const directions=profile.facing?.directions;
-    if(!Array.isArray(directions)||directions.length!==8||new Set(directions).size!==8)fail('eight unique facing rows required');
-    if(!(profile.locomotion?.stride>0))fail('positive authored stride required');
+    if(!Array.isArray(directions)||directions.length!==8||!directions.every(d=>typeof d==='string'&&d.length>0)||new Set(directions).size!==8)fail('eight unique facing rows required');
+    if(!Number.isFinite(profile.locomotion?.stride)||!(profile.locomotion?.stride>0))fail('positive authored stride required');
     const specs=[profile.locomotion,...Object.values(profile.actions??{}),...(profile.pivot?[profile.pivot]:[]),...Object.values(profile.pivots??{})];
     for(const clip of specs){
-        if(!clip.clip||!Number.isSafeInteger(clip.frames)||clip.frames<1||!(clip.fps>0))fail('invalid clip dimensions/time');
+        if(typeof clip.clip!=='string'||!clip.clip||!Number.isSafeInteger(clip.frames)||clip.frames<1||!Number.isFinite(clip.fps)||!(clip.fps>0))fail('invalid clip dimensions/time');
         if(clip.poseGrid){
             const grid=clip.poseGrid;
             if(!Number.isSafeInteger(grid.phaseFrames)||grid.phaseFrames<2||!Number.isSafeInteger(grid.actionFrames)||grid.actionFrames<2||grid.phaseFrames*grid.actionFrames!==clip.frames||grid.order!=='action-major'||grid.phaseSampling!=='nearest'||grid.actionSampling!=='nearest')fail(`invalid pose grid: ${clip.clip}`);
@@ -105,6 +118,7 @@ export function validateCreatureRigProfile(profile) {
         if(!Array.isArray(clip.samples)||clip.samples.length!==clip.frames)fail(`contact samples required: ${clip.clip}`);
         if(clip.commitUntil!=null&&(!(clip.commitUntil>=0)||clip.commitUntil>1))fail('invalid commitment');
         for(const sample of clip.samples){
+            if(sample.com!=null&&(!Array.isArray(sample.com)||sample.com.length!==2||!sample.com.every(Number.isFinite)))fail(`invalid mass projection: ${clip.clip}`);
             const ids=new Set();
             for(const c of sample.contacts??[]){
                 if(!contacts.has(c.id)||ids.has(c.id)||![c.x,c.y].every(Number.isFinite))fail(`invalid sampled contact: ${c.id}`);
@@ -119,12 +133,35 @@ export function validateCreatureRigProfile(profile) {
 
 /** Canonical JSON for hashed profiles, replay snapshots and source manifests. */
 export function serializeAnimationData(value) {
-    if(value===null||typeof value!=='object'){
-        if(typeof value==='number'&&!Number.isFinite(value))throw new TypeError('Animation data must be finite');
-        return JSON.stringify(value);
+    const active=new Set();
+    function encode(item){
+        if(item===null)return 'null';
+        const kind=typeof item;
+        if(kind==='string'||kind==='boolean')return JSON.stringify(item);
+        if(kind==='number'&&Number.isFinite(item))return JSON.stringify(item);
+        if(kind!=='object')throw new TypeError('Animation data must contain finite JSON values');
+        if(active.has(item))throw new TypeError('Animation data cannot contain cycles');
+        if(Object.getOwnPropertySymbols(item).length)throw new TypeError('Animation data cannot contain symbol keys');
+        active.add(item);
+        try{
+            if(Array.isArray(item)){
+                const result=[];
+                for(let i=0;i<item.length;i++){
+                    if(!Object.hasOwn(item,i))throw new TypeError('Animation data cannot contain sparse arrays');
+                    result.push(encode(item[i]));
+                }
+                return '['+result.join(',')+']';
+            }
+            const proto=Object.getPrototypeOf(item);
+            if(proto!==null&&proto!==Object.prototype)throw new TypeError('Animation data requires plain JSON objects');
+            return '{'+Object.keys(item).sort().map(key=>{
+                const descriptor=Object.getOwnPropertyDescriptor(item,key);
+                if(!Object.hasOwn(descriptor,'value'))throw new TypeError('Animation data cannot contain accessors');
+                return JSON.stringify(key)+':'+encode(descriptor.value);
+            }).join(',')+'}';
+        }finally{active.delete(item);}
     }
-    if(Array.isArray(value))return '['+value.map(serializeAnimationData).join(',')+']';
-    return '{'+Object.keys(value).sort().map(key=>JSON.stringify(key)+':'+serializeAnimationData(value[key])).join(',')+'}';
+    return encode(value);
 }
 
 function seededIdentity(id){
@@ -180,7 +217,7 @@ function updateContactAnimation(state,profile,input){
         if(!Number.isFinite(input.timestamp)||!Number.isFinite(input.travel)||!input.world||input.entityId==null)
             throw new TypeError('MotionIntent requires stable entityId, timestamp, cumulative travel and world');
         Object.assign(state,{contactVersion:2,entityId:input.entityId,seed:seededIdentity(input.entityId),
-            timestamp:input.timestamp,travel:input.travel,contacts:{},rootOffset:{x:0,y:0},sequence:-1,
+            timestamp:input.timestamp,travel:input.travel,contacts:Object.create(null),rootOffset:{x:0,y:0},sequence:-1,
             facingIndex:Math.max(0,profile.facing.directions.indexOf(input.direction)),pivotTime:0});
     }
     if(state.entityId!==input.entityId)throw new TypeError('Animation state cannot be shared between entities');
@@ -197,8 +234,8 @@ function updateContactAnimation(state,profile,input){
     state.timestamp=input.timestamp;state.travel=input.travel;state.stopped=stopped;
     state.time+=dt;
     if(!stopped)state.phase=(state.phase+distance/(profile.locomotion.stride*actorScale))%1;
-    const signal=input.action,spec=signal&&profile.actions[signal.name];
-    if(signal&&(!Number.isSafeInteger(signal.sequence)||signal.sequence<0||signal.token==null))throw new TypeError('Action requires token and monotonic sequence');
+    const signal=input.action,spec=signal&&Object.hasOwn(profile.actions,signal.name)?profile.actions[signal.name]:null;
+    if(signal&&(!Number.isSafeInteger(signal.sequence)||signal.sequence<0||!((typeof signal.token==='string'&&signal.token.length>0)||Number.isSafeInteger(signal.token))))throw new TypeError('Action requires token and monotonic sequence');
     const current=state.action&&profile.actions[state.action.name];
     const progress=current?Math.min(1,(state.time-state.action.started)/actionDuration(current)):1;
     const committed=current&&progress<(current.commitUntil??0);
@@ -208,7 +245,7 @@ function updateContactAnimation(state,profile,input){
         beganAction=true;state.action={name:signal.name,token:signal.token,started:state.time,contactPhase:state.phase};state.sequence=signal.sequence;state.lastToken=signal.token;
         state.actionDirection=state.facingIndex;
         // Every action is full-body unless its source declares coupled regions.
-        state.contacts={};
+        state.contacts=Object.create(null);
     }
     let actionSpec=state.action&&profile.actions[state.action.name];
     let actionProgress=actionSpec?Math.min(1,(state.time-state.action.started)/actionDuration(actionSpec)):null;
@@ -233,7 +270,7 @@ function updateContactAnimation(state,profile,input){
             state.pivotTime-=duration;
             const delta=(target-state.facingIndex+12)%8-4;
             state.facingIndex=(state.facingIndex+state.pivotSign+8)%8;
-            state.contacts={};
+            state.contacts=Object.create(null);
             if(state.facingIndex===target){state.pivotTime=0;state.pivotSign=null;break;}
         }
         pivotFrame=Math.min(pivotSpec.frames-1,Math.floor(state.pivotTime*pivotSpec.fps));

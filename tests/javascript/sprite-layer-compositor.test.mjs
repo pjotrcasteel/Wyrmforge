@@ -1,0 +1,38 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createSpriteLayerCompositor} from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/sprite-layer-compositor.js';
+function setup(t,maxTiles=2){
+ const previous=globalThis.Path2D;globalThis.Path2D=class{rect(){}};t.after(()=>{globalThis.Path2D=previous;});
+ const calls=[];const frame={attachment:[8,8],regions:{torso:[[1,2,3]],shin:[[8,4,2]],foot:[[12,5,3]]}};
+ const metadata={canvasSize:16,directions:['S'],clips:{walk:{S:[frame,frame]}}};
+ const ctx={clearRect(){},save(){},restore(){},clip(){},translate(){},transform(...args){calls.push(['transform',...args]);},drawImage(...args){calls.push(['source',...args.slice(1)]);}};
+ const makeCanvas=()=>({getContext:()=>ctx});
+ const compositor=createSpriteLayerCompositor(metadata,{walk:{cell:16,frames:2}},new Map([['walk',{}]]),{maxTiles,makeCanvas});
+ const part=(region,transform=[1,0,0,1,0,0])=>({clip:'walk',frame:1,direction:'S',region,transform});
+ return {compositor,calls,part};
+}
+test('one compositor renders source-bound semantic parts in supplied depth order and caches transforms',t=>{
+ const {compositor:c,calls,part}=setup(t);
+ const pose={parts:[part('foot',[1,0,0,1,2,-1]),part('shin'),part('torso')]};
+ const tile=c.compose(pose);assert.equal(calls.length,6);assert.deepEqual(calls[0],['transform',1,0,0,1,2,-1]);
+ assert.equal(c.compose(structuredClone(pose)),tile);assert.equal(calls.length,6);assert.equal(c.stats.hits,1);
+ pose.parts[0].transform[4]=3;c.compose(pose);assert.equal(c.stats.misses,2);assert.equal(c.stats.tiles,2);
+ pose.parts[0].transform[4]=4;c.compose(pose);assert.equal(c.stats.evictions,1);assert.equal(c.stats.allocatedTiles,2);assert.equal(c.estimatedBytes(),2*16*16*4);
+});
+test('semantic part rendering rejects singular/reflected transforms, absent regions and absent source frames',t=>{
+ const {compositor:c,part}=setup(t);
+ for(const transform of [[0,0,0,0,0,0],[-1,0,0,1,0,0],[1,0,0,1,Infinity,0],[1]])assert.throws(()=>c.compose({parts:[part('foot',transform)]}),/transform/);
+ assert.throws(()=>c.compose({parts:[part('ghost-hand')]}),/Unknown sprite region/);
+ assert.throws(()=>c.compose({parts:[{...part('foot'),frame:99}]}),/source pose/);
+ assert.throws(()=>c.compose({parts:[]}),/nonempty/);
+});
+test('legacy two-region samples retain shared attachment join and full-pose cache behavior',t=>{
+ const {compositor:c,calls}=setup(t);const pose={direction:'S',baseClip:'walk',baseFrame:0,clip:'walk',frame:1,baseRegion:'shin',actionRegion:'torso',useBasePose:false};
+ c.compose(pose);assert.equal(calls.filter(x=>x[0]==='source').length,2);
+ c.compose({...pose,useBasePose:true});assert.equal(calls.filter(x=>x[0]==='source').length,3);
+});
+test('invalid part leaves the existing cache and canvas state untouched',t=>{
+ const {compositor:c,calls,part}=setup(t,1),pose={parts:[part('torso')]};const tile=c.compose(pose),before=structuredClone(c.stats),n=calls.length;
+ assert.throws(()=>c.compose({parts:[part('foot'),part('ghost-hand')]}),/Unknown sprite region/);
+ assert.deepEqual(c.stats,before);assert.equal(calls.length,n);assert.equal(c.compose(pose),tile);
+});

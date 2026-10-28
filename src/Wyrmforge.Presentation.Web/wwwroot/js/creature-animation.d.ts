@@ -5,10 +5,11 @@ export interface ContactSample {id:string;x:number;y:number}
 export interface SourcePose {contacts:ContactSample[];com?:[number,number];balance:Balance}
 export interface PoseGrid {travel?:'facing-projection';stanceVelocity?:Vector2;phaseFrames:number;actionFrames:number;order:'action-major';phaseSampling:'nearest';actionSampling:'nearest'}
 export interface ClipProfile {poseGrid?:PoseGrid;clip:string;frames:number;fps:number;samples:SourcePose[];mode?:'fullBody'|'regions';coupledSupport?:boolean;priority?:number;commitUntil?:number;hold?:boolean;terminal?:boolean;reducedFrame?:number}
+export interface ContactChain {upper:string;middle:string;end:string;pole:[number,number,number];restContactPoint:[number,number,number];limits:[number,number];bindSpace:'rig-source'}
 export interface CreatureRigProfile {
  schemaVersion:2;coordinateSpace:'actor-xy-ground-z-up';unitsPerPixel:number;maxRootOffset:number;
- rig:{bodyPlan:string;bones:{id:string;parent?:string|null;length:number;rest:number[];limits?:[number,number]}[];
- semantics:Record<string,string>;absentBones?:string[];contacts:{id:string;bone:string;surface:'foot'|'palm'|'body'|'paw'}[];
+ rig:{sourceSpace?:{coordinateSpace:'blender-armature-xyz-metres';toActor:number[]};bodyPlan:string;bones:{id:string;parent?:string|null;length:number;rest:number[];limits?:[number,number]}[];
+ semantics:Record<string,string>;absentBones?:string[];contacts:{id:string;bone:string;surface:'foot'|'palm'|'body'|'paw';chain?:ContactChain}[];
  sockets?:Record<string,{bone:string}>};
  facing:{directions:string[]};locomotion:ClipProfile&{stride:number;idleFrame?:number};actions:Record<string,ClipProfile>;
  pivot?:ClipProfile;pivots?:{positive:ClipProfile;negative:ClipProfile};
@@ -23,7 +24,8 @@ export interface MotionIntent {
  paused?:boolean;frozen?:boolean;reducedMotion?:boolean;
  action?:{name:string;token:string|number;sequence:number}|null;
 }
-export interface PoseSample {
+export interface SemanticSpritePart {clip:string;frame:number;direction:string;region:string;transform:[number,number,number,number,number,number]}
+export interface PoseSample {parts?:SemanticSpritePart[];
  clip:string;frame:number;direction:string;baseClip:string;baseFrame:number;phase:number;layered:boolean;
  actionToken:string|number|null;actionProgress:number|null;contactPhase:number;rootOffset:Vector2;seed:number;
  material:unknown;debug:{contacts:Record<string,Vector2>;maxSlip:number;errors:{id:string;slip:number}[];balance:Balance;correctionSaturated:boolean};

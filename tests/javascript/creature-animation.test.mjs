@@ -151,3 +151,32 @@ test('forward-only source grid reports lateral drift; projection cannot claim ar
  assert.equal(a.direction,'E');assert.equal(a.actionToken,'claw-0');assert.equal(a.debug.correctionSaturated,true);
  assert.ok(a.debug.maxSlip>p.unitsPerPixel/4);
 });
+test('optional sparse chains require present connected source bones, explicit bind space and valid poles/limits',()=>{
+ const p=structuredClone(fixture());p.rig.bones.push({id:'middle',parent:'limb',length:1,rest:identity},{id:'end',parent:'middle',length:1,rest:identity});
+ const contact=p.rig.contacts[0];contact.bone='end';contact.chain={upper:'limb',middle:'middle',end:'end',pole:[0,-1,0],restContactPoint:[0,0,0],limits:[8,145],bindSpace:'rig-source'};
+ assert.equal(validate(p),p);
+ for(const change of [{upper:'ghost'},{middle:'root'},{end:'limb'},{bindSpace:'world'},{pole:[0,NaN,0]},{limits:[145,8]}]){
+  const invalid=structuredClone(p);Object.assign(invalid.rig.contacts[0].chain,change);assert.throws(()=>validate(invalid),/chain/);
+ }
+});
+test('source bind conversion declares units and rejects reflection, skew and unsupported up axes',()=>{
+ const p=structuredClone(fixture());p.rig.sourceSpace={coordinateSpace:'blender-armature-xyz-metres',toActor:[0,-60,0,0,60,0,0,0,0,0,60,30,0,0,0,1]};assert.equal(validate(p),p);
+ for(const change of [m=>m[10]=-60,m=>m[0]=1,m=>m[5]=20,m=>m[15]=0,m=>m[8]=10]){const invalid=structuredClone(p);change(invalid.rig.sourceSpace.toActor);assert.throws(()=>validate(invalid),/bind transform/);}
+});
+test('canonical profile/replay serialization rejects non-JSON values, cycles and accessor side effects',()=>{
+ const cycle={};cycle.self=cycle;const sparse=[];sparse.length=1;let accessed=false;const accessor={get value(){accessed=true;return 1;}};
+ for(const value of [undefined,{x:undefined},NaN,Infinity,()=>1,1n,Symbol('x'),new Date(),cycle,sparse,accessor])assert.throws(()=>serialize(value),TypeError);
+ assert.equal(accessed,false);const shared={x:2};assert.equal(serialize({b:shared,a:shared}),'{"a":{"x":2},"b":{"x":2}}');
+ assert.deepEqual(JSON.parse(serialize(Object.assign(Object.create(null),{z:1,a:2}))),{a:2,z:1});
+});
+test('reserved contact and action names cannot become inherited contacts or unregistered actions',()=>{
+ const p=structuredClone(fixture());p.rig.contacts[0].id='__proto__';for(const spec of [p.locomotion,p.pivot,...Object.values(p.actions)])for(const sample of spec.samples)sample.contacts[0].id='__proto__';
+ validate(p);const s=create();const a=update(s,p,intent(0,{action:{name:'constructor',token:'unknown',sequence:0}}));
+ assert.equal(a.clip,'walk');assert.equal(a.debug.maxSlip,0);assert.ok(Object.hasOwn(a.debug.contacts,'__proto__'));
+ assert.throws(()=>update(s,p,intent(.1,{action:{name:'strike',token:{},sequence:1}})),/Action requires/);
+});
+test('non-finite source timing, strides, mass projections and malformed facing labels fail at load',()=>{
+ for(const mutate of [p=>p.locomotion.fps=Infinity,p=>p.locomotion.stride=Infinity,p=>p.locomotion.samples[0].com=[NaN,0],p=>p.facing.directions[0]={},p=>p.rig.bones[0].limits='unbounded']){
+  const p=structuredClone(fixture());mutate(p);assert.throws(()=>validate(p),TypeError);
+ }
+});

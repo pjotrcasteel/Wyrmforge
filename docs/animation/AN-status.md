@@ -211,3 +211,64 @@ pending frames are not counted as complete. `developer-reference.md` now records
 the actual API, coordinates, clocks, exporter commands, body-plan extension,
 material/retarget limits, feature flag and rollback. It is a developer reference,
 not a claim that open AN acceptance gates have passed.
+
+## Actual grid/Hunt comparison and contact-region correction work
+
+A rebuilt real Enemy Lab was captured twice at 390/320px, with C# healthy entity
+5 and the same right/up/left player inputs. Both captures loaded their requested
+asset pack without browser errors. These are desktop Chromium 142 Canvas runs,
+not physical phone or GPU-lighting acceptance.
+
+| Measured sampled residual | Original stationary action | Forward/reverse pose grid |
+|---|---:|---:|
+| Attack maximum slip, world units | 24.35060 | 14.26452 |
+| Moving negative turn maximum slip, world units | 47.06024 | 48.05397 |
+
+The trace confirms sideways C# velocity during a south-facing committed action.
+The source-derived straight/reverse unit proof was valid but insufficient.
+**The grid is not promoted to the repository's runtime asset path.** Eight
+meaningful camera rows and all 2,048 color frames finished and passed crop/hash
+checks. The review pack, including existing walk material maps, decodes to
+63 MiB under the unchanged 64 MiB budget. Grid/turn final material, depth/caster
+and actual GPU proof remain open. Adding direction grids multiplies memory and
+does not repair contact transitions; the reusable correction now extends the
+existing semantic compositor instead.
+
+[New source/evidence checkpoint](https://chatgpt.com/library?file_id=libfile_0f3d0a8a044c81918b37170633e169c2&account_id=personal)
+contains the genuine combined five-action editable Blender file, eight-view
+review atlas, source manifest/QC, actual Hunt traces/screens/videos and a short
+H.264 source study. It is a checkpoint, not a final owner-approval package.
+Its CHECKPOINT.json records its exact older code/test boundary.
+
+### Implemented correction primitives, not yet a Hunt fix
+
+- Existing compositor accepts ordered source-bound semantic parts with affine
+  transforms. Legacy attachment composition still works. Invalid regions and
+  transforms fail before cache eviction or drawing; cache allocation stays bounded.
+- Shared sparse two-bone animation kinematics rejects unreachable/singular poles,
+  invalid limits and over-budget source corrections. It does not integrate forces,
+  own gameplay or schedule contacts. The projected region helper preserves real
+  3D chain lengths and maps those solved joints into compositor transforms.
+- Independent Blender data for 32 actual knees agrees with the JS helper within
+  a documented Float32 accumulation bound. Seeded property checks cover unequal
+  lengths, poles, scaling and translation.
+- Node-only 500-actor/600-frame cost for two pooled chains per actor, validation
+  included: mean 0.27008ms, p95 0.48430ms. This is NOT the full regional compositor,
+  mobile CPU, GPU or Hunt-horde cost. Regional integration must be profiled too.
+- CPU Blender skin-ownership export extends the existing RLE contract. A real
+  S/E × 16-pose study covers all 26,203 actual color-alpha pixels, with zero gaps;
+  it also exports source joint matrices and calibrated orthographic projections.
+  One-sample ownership initially missed 4,126 edge pixels and was rejected;
+  matching four-sample ownership passes cover the actual source alpha. This does
+  not prove deformed seam quality or unrendered directions.
+- Profiles can explicitly declare source-metres-to-actor transforms and actual
+  connected contact chains. Reflected/skewed/up-axis-invalid binds, missing chain
+  bones, malformed poles and non-finite timing fail at load. Canonical replay JSON
+  rejects cycles, sparse arrays, accessors and non-JSON values. Reserved string
+  contact IDs cannot alias object prototypes.
+
+Latest full Node result after these primitives: **518/518**. Source authoring
+now records chain surface landmarks and its tool SHA; all five saved actions
+were independently rechecked. Contact scheduling, mass/support-aware regional
+integration, deformed source/mobile visual QC and material-normal transforms
+remain open. No runtime source is silently marked accepted.

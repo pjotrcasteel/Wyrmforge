@@ -185,3 +185,43 @@ injured sources and Ashling remain on existing adapters. Remove the query flag t
 restore the previous presentation immediately. Do not mark productionReady or
 remove fallback until owner visual acceptance and remaining runtime gates pass.
 No save migration or damage-balance rollback is needed: this feature owns neither.
+
+## Contact-region correction primitives (candidate, not integrated)
+
+`SemanticSpritePart` extends the same render sample with ordered
+`{clip, frame, direction, region, transform:[a,b,c,d,e,f]}` entries. The existing
+compositor clips actual source pixels before applying these transforms. Its LRU
+budget is shared, not allocated per actor. Unknown source regions and singular
+transforms fail before mutating a cached tile. A sourceRectangle callback can
+supply an existing atlas layout; this is a rendering bridge, not another clock.
+
+`rig.sourceSpace` may explicitly describe Blender armature metres and its proper
+uniform Z-up `toActor` matrix. Current Hollowed maps `(x,y,z)` to
+`(-y*60,x*60,(z+0.5)*60)`. Bone arrays remain source-space data. Contact `chain`
+metadata names connected present upper/middle/end bones, an explicit source pole,
+rest surface point, joint limits and `bindSpace:'rig-source'`. Validation rejects
+inconsistent spaces and missing limbs before correction.
+
+`sprite-contact-kinematics.js` contains leaf kinematics, not another engine:
+`solveTwoBoneContact` can reuse its output buffer; `retargetSourceContactRegion`
+consumes actual posed source segments, source/target surface points, calibrated
+orthographic projection, pole/length/limit data and a required finite correction
+budget. It returns fixed-length 3D joints and projected region transforms. It
+never clamps an impossible target or changes simulation state. Contact planning,
+source-to-world conversion, support/mass acceptance and final material-normal
+rotation are still integration gates; an adapter must not call this partial
+capability a complete grounded actor.
+
+CPU source metadata study (S/E only):
+
+```sh
+blender -b -t 2 --python tools/animation/export_contact_regions.py -- artifacts/foundation --out artifacts/contact-regions --color-atlas path/to/verified/walk.png
+node --test tests/javascript/sprite-contact-kinematics.test.mjs tests/javascript/sprite-layer-compositor.test.mjs
+node tools/animation/benchmark_contact_chains.mjs
+```
+
+Ownership passes use the same sample count as the inspected source alpha and
+fail if they miss any actual color-alpha pixel. The exporter never redraws color
+sprites. Bone-chain arguments are authoring data; the playback/kinematics modules
+contain no species branches. Study metadata marks partial directions and source
+QC explicitly. It is not a shipped asset declaration.

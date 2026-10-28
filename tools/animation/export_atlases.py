@@ -43,8 +43,8 @@ def runtime_clip(name):
     if c.get('poseGrid'):result['poseGrid']={**c['poseGrid'],'travel':'facing-projection','stanceVelocity':{'x':-c['strideMetres']*scale,'y':0}}
     return result
 profile={'schemaVersion':2,'coordinateSpace':'actor-xy-ground-z-up','unitsPerPixel':93/96,'maxRootOffset':93/96,
- 'rig':{'bodyPlan':'biped','bones':m['skeleton'],'semantics':{'root':'root','pelvis':'pelvis','spine':'spine','head':'head'},'absentBones':[],
- 'contacts':[{'id':'foot-'+side,'bone':'foot.'+side,'surface':'foot'} for side in ['L','R']],
+ 'rig':{'sourceSpace':{'coordinateSpace':'blender-armature-xyz-metres','toActor':[0,-scale,0,0,scale,0,0,0,0,0,scale,.5*scale,0,0,0,1]},'bodyPlan':'biped','bones':m['skeleton'],'semantics':{'root':'root','pelvis':'pelvis','spine':'spine','head':'head'},'absentBones':[],
+ 'contacts':[{'id':'foot-'+side,'bone':'foot.'+side,'surface':'foot',**({'chain':next(c for c in m['contactChains'] if c['id']=='foot-'+side)} if m.get('contactChains') else {})} for side in ['L','R']],
  'sockets':{'head':{'bone':'head'},'mouth':{'bone':'head'},'wound':{'bone':'chest'}}},
  'facing':{'directions':['E','SE','S','SW','W','NW','N','NE']},
  'locomotion':{**runtime_clip('walk'),'stride':m['clips']['walk']['strideMetres']*scale},
