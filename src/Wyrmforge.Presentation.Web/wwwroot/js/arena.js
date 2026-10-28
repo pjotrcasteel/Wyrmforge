@@ -1,7 +1,7 @@
 import { preloadFireballV5 } from './arena-fireball-v5.js';
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
 import { attachArenaInput, getArenaMovement, getArenaAim, getArenaPropFocus } from './arena-input.js';
-import { resolveTargetIndicator, drawTargetIndicator, targetSelectionLightEmitter, targetSelectionCanvasLight } from './arena-target-indicator.js?v=20261028-rune-circle-v3';
+import { resolveTargetIndicator, presentTargetSigil, drawTargetIndicator, targetSelectionLightEmitter, targetSelectionCanvasLight } from './arena-target-indicator.js?v=20261028-approved-sigil-v4';
 import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, drawArenaCloisterElevation } from './arena-environment.js?v=20261026-compact-ground-v1';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
@@ -111,6 +111,7 @@ function createState(canvas, dotNetReference) {
         context: canvas.getContext('2d'),
         nightMask: document.createElement('canvas'),
         actorLightBuffer: document.createElement('canvas'),
+        targetSigil: { key: null, activeMarker: null, lastOpacity: 0, enteredAt: 0, exitedAt: null, exitMarker: null },
         dotNetReference,
         active: true,
         simulationBusy: false,
@@ -234,8 +235,11 @@ function draw(state, snapshot, width, height) {
     ctx.globalAlpha=1;ctx.filter='none';ctx.globalCompositeOperation='source-over';
     const danger = playerDangerPresentation(state.playerDanger, snapshot, performance.now(), state.reducedMotion.matches);
     const camera = resolveArenaCamera(snapshot.world, snapshot.player, width, height);
-    const targetIndicator = resolveTargetIndicator(snapshot);
+    const selectedTarget = resolveTargetIndicator(snapshot);
     const visualSeconds = performance.now() / 1000;
+    const targetId = snapshot.player?.aimPropId ?? snapshot.player?.aimTargetId;
+    const targetIndicator = presentTargetSigil(state.targetSigil, selectedTarget, targetId,
+        visualSeconds, state.reducedMotion.matches);
     const worldWidth = camera.width;
     const worldHeight = camera.height;
     const lightViewport = { x: camera.x, y: camera.y, width, height };
