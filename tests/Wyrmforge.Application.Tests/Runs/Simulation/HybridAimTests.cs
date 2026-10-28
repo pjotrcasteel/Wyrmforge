@@ -252,7 +252,7 @@ public sealed class HybridAimTests
         SetPrivate(simulation, "viewportHeight", 300d);
         var hidden = AddEnemy(simulation, 1, 570, 300);
         var visible = AddEnemy(simulation, 2, 540, 425);
-        Assert.IsLessThan(Vector2D.Distance(new Vector2D(400, 300), visible.Position),
+        Assert.IsGreaterThan(Vector2D.Distance(new Vector2D(400, 300), visible.Position),
             Vector2D.Distance(new Vector2D(400, 300), hidden.Position));
 
         Invoke(simulation, "UpdateAim", default(MovementInput));
@@ -368,6 +368,8 @@ public sealed class HybridAimTests
                     .SetValue(simulation, width);
                 typeof(RunSimulation).GetField("arenaHeight", BindingFlags.NonPublic | BindingFlags.Instance)!
                     .SetValue(simulation, height);
+                SetPrivate(simulation, "viewportWidth", width);
+                SetPrivate(simulation, "viewportHeight", height);
                 Field<PlayerState>(simulation, "player").Position = origin;
                 return (simulation, environment, prop, origin, position);
             }
