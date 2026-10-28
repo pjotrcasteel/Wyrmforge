@@ -158,6 +158,9 @@ public sealed partial class RunSimulation
             // A paused choice/map is an input boundary, not a latched manual heading.
             manualAimEngaged = false;
             automaticTargetId = null;
+            rightStickTargetId = null;
+            selectedPropId = null;
+            aimedPropId = null;
             return CreateSnapshot();
         }
         if (trailExitPending)
@@ -337,6 +340,8 @@ public sealed partial class RunSimulation
                 AimAngle = Math.Atan2(effectiveAim.Y, effectiveAim.X),
                 ManualAim = manualAimEngaged,
                 AimTargetId = automaticTargetId,
+                AimPropId = aimedPropId,
+                ActiveSchool = SpellCatalog.Get(build.Spells.ActiveSpell).School.ToString(),
                 FocusCharge = primaryCastCounts[build.Spells.ActiveSpell] % FocusedSurgeProfile.CastInterval,
                 WardCharge = WardCharge,
                 Chill = player.Chill.Stacks,

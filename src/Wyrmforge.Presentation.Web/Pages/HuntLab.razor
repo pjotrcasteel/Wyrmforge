@@ -52,7 +52,7 @@
     </section>
     </details>
     <section class="hunt-lab-surface" aria-label="Live developer Wyrm encounter">
-        <canvas @ref="canvas" class="hunt-lab-canvas" aria-label="Automated live Wyrm arena"></canvas>
+        <canvas @ref="canvas" class="hunt-lab-canvas" aria-label="Automated live Wyrm arena" data-arena-module="@ArenaModulePath"></canvas>
         <div class="hunt-lab-stage" aria-live="polite">
             <strong>@status</strong>
             <span>@(paused ? "PAUSED" : ManualControl ? invulnerable ? "LIVE CONTROLS • INVULNERABLE PRACTICE" : "LIVE CONTROLS • FULL DAMAGE" : invulnerable ? "AUTOPILOT • PRACTICE • NO PROGRESS" : "AUTOPILOT • FULL DAMAGE • NO PROGRESS")</span>
@@ -89,6 +89,8 @@
     [Parameter, SupplyParameterFromQuery(Name = "phase")] public int? PhaseQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "seed")] public int? SeedQuery { get; set; }
 
+    private static string ArenaModulePath => $"./js/arena.js?v={AppBuildInfo.Version}-{AppBuildInfo.Commit}";
+
     private ElementReference canvas;
     private IJSObjectReference? arenaModule;
     private DotNetObjectReference<HuntLab>? reference;
@@ -124,20 +126,20 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
-        arenaModule = await JavaScript.InvokeAsync<IJSObjectReference>("import", "./js/arena.js");
+        arenaModule = await JavaScript.InvokeAsync<IJSObjectReference>("import", ArenaModulePath);
         reference = DotNetObjectReference.Create(this);
         await arenaModule.InvokeVoidAsync("initializeArena", canvas, reference);
     }
 
     [JSInvokable]
-    public Task<RunRenderSnapshot> Frame(double delta, double width, double height, double movementX, double movementY, double aimX = 0, double aimY = 0)
+    public Task<RunRenderSnapshot> Frame(double delta, double width, double height, double movementX, double movementY, double aimX = 0, double aimY = 0, int? focusPropId = null, bool stickSnap = false)
     {
         if (simulation is null) CreateEncounter(width, height);
         var current = simulation!;
         var snapshot = current.CreateSnapshot();
         if (paused || current.IsEnded || snapshot.Dragon is null) return Task.FromResult(snapshot with { Paused = paused || snapshot.Paused, PresentationPaused = paused });
         var observation = new RunAgentObservation(snapshot, [], [], [], [], [], current.Depth, 0, false);
-        snapshot = current.Tick(delta, ManualControl ? new MovementInput(movementX, movementY, aimX, aimY) : agent!.ChooseMovement(observation), width, height);
+        snapshot = current.Tick(delta, ManualControl ? new MovementInput(movementX, movementY, aimX, aimY, focusPropId, stickSnap) : agent!.ChooseMovement(observation), width, height);
         var nextStatus = snapshot.Dragon is { } boss ? $"{boss.Name} • P{boss.Phase} • {Math.Ceiling(boss.Health)} HP"
             : current.CreateEvaluationSummary().DragonIds.Contains(selectedWyrm) ? "WYRM DEFEATED • NO TROPHY AWARDED" : "ENCOUNTER COMPLETE";
         if (current.IsEnded) nextStatus = "AGENT DEFEATED • RESTART TO WATCH AGAIN";
