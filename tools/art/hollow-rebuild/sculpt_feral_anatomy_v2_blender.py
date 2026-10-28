@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""H1 v2 feral anatomical source study — no animation engine or game changes.
+"""H1 v3 body-only feral anatomical source study — no animation engine or game changes.
 
 Reuses MakeHuman CC0 *topology* only and the isolated H1 clay-render helper.
 This is an authored one-time REST SHAPE (no animation actions or keyframes).
@@ -100,7 +100,7 @@ def create(source: Path, target: Path) -> None:
     module.sculpt_base = edited
     module.create(source, target)
     previous = target / "hollowed-cc0-anatomy-blockout.blend"
-    published = target / "hollowed-feral-source-v2-UNAPPROVED.blend"
+    published = target / "hollowed-feral-source-v3-BODY-ONLY-UNAPPROVED.blend"
     previous.rename(published)
     # Save the camera at a useful H1 three-quarter angle as well. The CC0
     # source helper saves its .blend before positioning the review cameras;
@@ -117,10 +117,13 @@ def create(source: Path, target: Path) -> None:
     bpy.ops.wm.save_as_mainfile(filepath=str(published))
     qc_file = target / "source-qc.json"
     qc = json.loads(qc_file.read_text(encoding="utf-8"))
-    qc["status"] = "H1 v2 anatomical rest sculpt; REAL Blender model, VISUALLY UNAPPROVED"
+    qc["status"] = "H1 v3 body-only anatomical rest sculpt; REAL Blender model, VISUALLY UNAPPROVED"
     qc["source_blend"] = published.name
     qc["rest_shape"] = "Original feral shape changes to CC0 human topology, no imported motions"
     qc["source_bones"] = False
+    if qc["mesh_vertices"] != 13380 or qc["rendered_helpers"] is not False:
+        raise ValueError("Authoring helpers leaked into the source-body render; reject immediately")
+    qc["unwanted_helper_geometry"] = "EXCLUDED (MakeHuman official body vertices 0..13379)"
     qc["attack_animation_created"] = False
     qc["animation_engine_modified"] = False
     qc["owner_approved"] = False
