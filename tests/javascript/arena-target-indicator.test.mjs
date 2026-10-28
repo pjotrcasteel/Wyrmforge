@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
     SIGIL_ATLAS, SIGIL_SCHOOL_COLORS, tintSigilPixels, resolveSigilSchool, resolveTargetIndicator, presentTargetSigil, drawTargetIndicator,
-    targetSelectionLightEmitter, targetSelectionCanvasLight,
+    targetSelectionLightEmitter, targetSelectionCanvasLight, actorLightsWithoutSigilOverlay,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-target-indicator.js';
 import { withHollowFractureLightingFrame } from
     '../../src/Wyrmforge.Presentation.Web/wwwroot/js/hollow-fracture.js';
@@ -113,21 +113,26 @@ test('missing school never inserts a misleading Arcane center emblem', () => {
 test('C# selected enemy receives a legible combat footprint; unselected enemies are ignored', () => {
     const enemy = resolveTargetIndicator(scene());
     assert.deepEqual({ ...enemy, rx: Math.round(enemy.rx) },
-        { kind: 'enemy', x: 310, y: 455, rx: 34, ry: 19 });
+        { kind: 'enemy', x: 310, y: 466, rx: 34, ry: 17 });
     const s = scene();
     s.player.aimTargetId = 99;
     const boss = resolveTargetIndicator(s);
     assert.deepEqual({ ...boss, rx: Math.round(boss.rx) },
-        { kind: 'boss', x: 450, y: 702, rx: 79, ry: 44 });
+        { kind: 'boss', x: 450, y: 738, rx: 79, ry: 40 });
     s.dragon.targetable = false;
     assert.equal(resolveTargetIndicator(s), null);
 });
 
-test('manual aim, paused and ended runs, and stale targets never show a seal', () => {
+test('right-stick snap uses the authoritative target ID, while free aim and stale IDs never show a seal', () => {
     const s = scene();
     s.player.manualAim = true;
-    assert.equal(resolveTargetIndicator(s), null);
-    s.player.manualAim = false; s.paused = true;
+    assert.equal(resolveTargetIndicator(s).kind, 'enemy',
+        'Manual stick input WITH a confirmed snap must show the same marker as auto-aim.');
+    s.player.aimTargetId = null;
+    assert.equal(resolveTargetIndicator(s), null, 'Free manual aiming is not an automatic lock-on.');
+    s.player.manualAim = false;
+    s.player.aimTargetId = 17;
+    s.paused = true;
     assert.equal(resolveTargetIndicator(s), null);
     s.paused = false; s.ended = true;
     assert.equal(resolveTargetIndicator(s), null);
@@ -135,6 +140,26 @@ test('manual aim, paused and ended runs, and stale targets never show a seal', (
     assert.equal(resolveTargetIndicator(s), null);
     s.player.aimPropId = 42;
     assert.deepEqual(resolveTargetIndicator(s), { kind: 'object', x: 250, y: 608, rx: 32, ry: 18 });
+});
+
+test('targeting rune is grounded below the enemy and boss sprite centers', () => {
+    const s = scene();
+    const enemy = resolveTargetIndicator(s);
+    assert.ok(enemy.y - enemy.ry > s.enemies[1].y,
+        'Enemy rune begins below the sprite center, not through the torso.');
+    s.player.aimTargetId = 99;
+    const boss = resolveTargetIndicator(s);
+    assert.ok(boss.y - boss.ry > s.dragon.y,
+        'Boss rune begins below the body center.');
+});
+
+test('selection underlight is never screen-blended over actors after sprites are drawn', () => {
+    const light = targetSelectionCanvasLight(targetSelectionLightEmitter(resolveTargetIndicator(scene()), litFrame(), 'Fire'))[0];
+    const fireball = { family: 'fire', x: 30, y: 50, radius: 70, strength: .8 };
+    const actors = actorLightsWithoutSigilOverlay([fireball, light]);
+    assert.deepEqual(actors, [fireball]);
+    assert.equal(light.family, 'selection', 'Selection remains a floor light and alpha-isolated material emitter.');
+    assert.deepEqual(actorLightsWithoutSigilOverlay(), []);
 });
 
 test('one same immutable base decal is painted for each school; only the center crop changes', () => {

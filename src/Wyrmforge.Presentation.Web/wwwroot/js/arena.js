@@ -1,7 +1,7 @@
 import { preloadFireballV5 } from './arena-fireball-v5.js';
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
 import { attachArenaInput, getArenaMovement, getArenaAim, isArenaStickAim, getArenaPropFocus } from './arena-input.js';
-import { resolveTargetIndicator, presentTargetSigil, drawTargetIndicator, preloadTargetSigilArt, targetSelectionLightEmitter, targetSelectionCanvasLight } from './arena-target-indicator.js?v=20261028-school-palette-v1';
+import { resolveTargetIndicator, presentTargetSigil, drawTargetIndicator, preloadTargetSigilArt, targetSelectionLightEmitter, targetSelectionCanvasLight, actorLightsWithoutSigilOverlay } from './arena-target-indicator.js?v=20261028-stick-snap-floor-v2';
 import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, drawArenaCloisterElevation } from './arena-environment.js?v=20261026-compact-ground-v1';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
@@ -386,7 +386,9 @@ function draw(state, snapshot, width, height) {
         snapshot.dragon?.school ?? snapshot.hunt?.school, snapshot.dragon);
     // A second weaker pass colors nearby silhouettes without whitening shadows.
     drawAshfangAirEffects(ctx,snapshot,ashfangSockets(state.ashfang),state.reducedMotion.matches);
-    drawSpellLightSpill(ctx, spellLights, lightViewport, 'actors');
+    // Selection light illuminates the terrain and the selected sprite's alpha-isolated
+    // material pass above. Do not screen-blend it over all actors after occlusion.
+    drawSpellLightSpill(ctx, actorLightsWithoutSigilOverlay(spellLights), lightViewport, 'actors');
     for (const impact of snapshot.elementalImpacts) drawSpellImpact(ctx, impact, state.reducedMotion.matches);
     for (const death of snapshot.deathBursts) drawDeathBurst(ctx, death);
 
