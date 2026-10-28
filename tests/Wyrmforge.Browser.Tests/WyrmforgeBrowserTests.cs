@@ -2579,9 +2579,45 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    public async Task Mobile_LiveHunt_V3SigilOnActualCSharpSelectedEnemy_VisualEvidence()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await OpenAsync();
+        await EnterFirstTrailAsync();
+        await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
+
+        // No injected overlay or manually painted target: wait for the real C# aim identity.
+        await Page.WaitForFunctionAsync(@"async () => {
+            const { readArenaDiagnostics } = await import('./js/arena-performance.js');
+            const canvas = document.querySelector('canvas.game-canvas');
+            const state = canvas && readArenaDiagnostics(canvas);
+            const id = state?.player?.aimTargetId;
+            return !state?.paused && !state?.ended && Number.isInteger(id) &&
+                state.enemies?.some(enemy => enemy.entityId === id && enemy.healthRatio > 0);
+        }", null, new() { Timeout = 45000 });
+
+        // Capture unmodified production frames over the genuine target and attack cycle.
+        // The current real-size decal and six center textures must be evaluated visually.
+        for (var frame = 0; frame < 4; frame++)
+        {
+            await Page.WaitForTimeoutAsync(200);
+            await ScreenshotAsync($"mobile-v3-sigil-live-hollowed-390-frame-{frame}.png");
+        }
+
+        // Wait until the opening sequence ends and Hollowed close on the hunter.
+        // Later frames must show real active combat rather than only entrance staging.
+        await Page.WaitForTimeoutAsync(6500);
+        for (var frame = 4; frame < 12; frame++)
+        {
+            await Page.WaitForTimeoutAsync(400);
+            await ScreenshotAsync($"mobile-v3-sigil-live-hollowed-390-frame-{frame}.png");
+        }
+    }
+
+    [TestMethod]
     [DataRow(320, 568)]
     [DataRow(390, 844)]
-    public async Task Mobile_LiveHunt_ArcaneTargetSigilStyleProof_IsLegibleAndSchoolNeutral(int width, int height)
+    public async Task Mobile_LiveHunt_V3TargetSigilArtworkFixtures_AreVisible(int width, int height)
     {
         await Page.SetViewportSizeAsync(width, height);
         await OpenAsync();
@@ -2592,7 +2628,11 @@ public sealed class WyrmforgeBrowserTests : PageTest
         // Separate from actual targeting selection tests: these three fixtures only
         // expose the exact production rendering functions for visual review.
         var proof = await Page.EvaluateAsync<JsonElement>(@"async () => {
-            const { drawTargetIndicator } = await import('./js/arena-target-indicator.js');
+            const { drawTargetIndicator, preloadTargetSigilArt } = await import('./js/arena-target-indicator.js');
+            const art = preloadTargetSigilArt();
+            if (!art) return { ok: false, colored: 0 };
+            await art.decode();
+            if (art.naturalWidth !== 256 || art.naturalHeight !== 192) return { ok: false, colored: 0 };
             const game = document.querySelector('canvas.game-canvas');
             if (!game) return { ok: false, colored: 0 };
             const bounds = game.getBoundingClientRect();
@@ -2615,15 +2655,17 @@ public sealed class WyrmforgeBrowserTests : PageTest
             const ctx = overlay.getContext('2d', { willReadFrequently: true });
             const width = overlay.width, height = overlay.height;
             const fixtures = [
-                { kind: 'enemy', x: width * .23, y: height * .46, rx: 24, ry: 9 },
-                { kind: 'boss', x: width * .52, y: height * .61, rx: 58, ry: 21 },
-                { kind: 'object', x: width * .80, y: height * .46, rx: 20, ry: 7 },
+                { kind: 'enemy', x: width * .23, y: height * .46, rx: 34, ry: 19, opacity: 1 },
+                { kind: 'boss', x: width * .52, y: height * .61, rx: 79, ry: 44, opacity: 1 },
+                { kind: 'object', x: width * .80, y: height * .46, rx: 32, ry: 18, opacity: 1 },
             ];
-            const labels = ['ENEMY', 'BOSS', 'OBJECT'];
+            const labels = ['FIRE', 'FROST', 'ARCANE'];
             for (let index = 0; index < fixtures.length; index++) {
                 const marker = fixtures[index];
-                drawTargetIndicator(ctx, marker, 'ground', 0, true);
-                drawTargetIndicator(ctx, marker, 'contrast', 0, true);
+                const school = ['Fire', 'Frost', 'Arcane'][index];
+                if (!drawTargetIndicator(ctx, marker, 'ground', 0, true, art, school)
+                    || !drawTargetIndicator(ctx, marker, 'contrast', 0, true, art, school))
+                    return { ok: false, colored: 0 };
                 ctx.font = '10px system-ui';
                 ctx.textAlign = 'center';
                 ctx.fillStyle = '#dcd4ee';
@@ -2632,11 +2674,42 @@ public sealed class WyrmforgeBrowserTests : PageTest
             const pixels = ctx.getImageData(0, 0, width, height).data;
             let colored = 0;
             for (let i = 3; i < pixels.length; i += 4) if (pixels[i] > 0) colored++;
-            return { ok: true, colored };
+
+            // Sample real Canvas output of each school using the loaded, immutable PNG.
+            // A wrong Arcane fallback or an all-purple atlas would fail this check.
+            const tones = {};
+            for (const school of ['Fire', 'Frost', 'Storm', 'Arcane', 'Death', 'Binding']) {
+                const probe = document.createElement('canvas');
+                probe.width = 256;
+                probe.height = 192;
+                const surface = probe.getContext('2d', { willReadFrequently: true });
+                const marker = { kind: 'enemy', x: 128, y: 96, rx: 68, ry: 38, opacity: 1 };
+                if (!drawTargetIndicator(surface, marker, 'contrast', 0, true, art, school))
+                    return { ok: false, colored, schoolColors: false };
+                const data = surface.getImageData(0, 0, probe.width, probe.height).data;
+                const totals = [0, 0, 0];
+                let count = 0;
+                for (let i = 0; i < data.length; i += 4) {
+                    if (data[i + 3] < 30) continue;
+                    for (let c = 0; c < 3; c++) totals[c] += data[i + c];
+                    count++;
+                }
+                tones[school] = totals.map(value => value / Math.max(count, 1));
+            }
+            const schoolColors =
+                tones.Fire[0] > tones.Fire[1] && tones.Fire[1] > tones.Fire[2] &&
+                tones.Frost[2] > tones.Frost[1] && tones.Frost[1] > tones.Frost[0] &&
+                tones.Storm[0] > tones.Storm[2] &&
+                tones.Arcane[2] > tones.Arcane[0] &&
+                tones.Death[1] > tones.Death[0] &&
+                tones.Binding[1] > tones.Binding[0];
+            return { ok: true, colored, schoolColors };
         }");
         Assert.IsTrue(proof.GetProperty("ok").GetBoolean());
         Assert.IsGreaterThan(180, proof.GetProperty("colored").GetInt32(),
-            "Neutral target sigils must draw visible arc and rune pixels on the live portrait Hunt.");
+            "V3 sigils must draw visible authored rune pixels on the live portrait Hunt.");
+        Assert.IsTrue(proof.GetProperty("schoolColors").GetBoolean(),
+            "The real V3 base ring and center must carry all six correct school colors.");
 
         await ScreenshotAsync($"mobile-arcane-target-sigil-style-qc-{width}.png");
     }

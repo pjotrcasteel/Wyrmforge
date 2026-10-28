@@ -1,7 +1,107 @@
-// Tactical selection feedback lives in presentation only. The C# aim target IDs,
-// not pointer position or renderer heuristics, are the single source of truth.
-// Objects are matched by registered prop ID, never by their current art/kind.
-const finite = value => Number.isFinite(value);
+// LOCKED ART: V3 outer ring is exactly one authored decal.
+// School emblems live in separate atlas cells. C# owns the active school,
+// target IDs, hitboxes and aim; presentation only paints the selected target.
+// Do not redraw or procedurally reinterpret the approved sigil.
+const finite = Number.isFinite;
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+const smoothstep = t => t * t * (3 - 2 * t);
+const NEUTRAL_COLOR = '#d9cfee';
+
+// The C# player's active primary school is the only authority. This palette
+// recolors the locked V3 PNG; it never replaces the approved rune geometry.
+export const SIGIL_SCHOOL_COLORS = Object.freeze({
+    fire: '#ff784a',
+    frost: '#8bd8ff',
+    storm: '#ffd665',
+    arcane: '#c497ff',
+    necromancer: '#8cdb80',
+    summoner: '#6cdbc9',
+});
+const tintedArtCache = new WeakMap();
+
+function rgb(hex) {
+    return [1, 3, 5].map(offset => parseInt(hex.slice(offset, offset + 2), 16));
+}
+
+// One-time atlas pixel transform: preserve the source's alpha, details,
+// highlights, and all seven independent atlas rectangles.
+export function tintSigilPixels(pixels, school) {
+    const color = SIGIL_SCHOOL_COLORS[resolveSigilSchool(school)];
+    if (!color || resolveSigilSchool(school) === 'arcane') return pixels;
+    const channels = rgb(color);
+    for (let i = 0; i < pixels.length; i += 4) {
+        if (pixels[i + 3] === 0) continue;
+        const value = Math.max(pixels[i], pixels[i + 1], pixels[i + 2]) / 255;
+        const brightness = .20 + value * .80;
+        const highlight = Math.max(0, (value - .72) / .28) * .15;
+        for (let channel = 0; channel < 3; channel++) {
+            const target = channels[channel];
+            pixels[i + channel] = Math.min(255, Math.round(target * brightness + (255 - target) * highlight));
+        }
+    }
+    return pixels;
+}
+
+function artForSchool(art, school) {
+    const key = resolveSigilSchool(school);
+    if (!key || key === 'arcane' || typeof document === 'undefined') return art;
+    let cache = tintedArtCache.get(art);
+    if (!cache) {
+        cache = new Map();
+        tintedArtCache.set(art, cache);
+    }
+    if (cache.has(key)) return cache.get(key);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = art.naturalWidth;
+    canvas.height = art.naturalHeight;
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    if (!context) return art;
+    context.drawImage(art, 0, 0);
+    const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+    tintSigilPixels(pixels.data, key);
+    context.putImageData(pixels, 0, 0);
+    cache.set(key, canvas);
+    return canvas;
+}
+
+// Atlas cells are independent textures; never bake a school icon into the base.
+// Source: user-approved PNGs, downsampled for the mobile renderer.
+export const SIGIL_ATLAS = Object.freeze({
+    base: [0, 0, 128, 85],
+    fire: [128, 0, 64, 64],
+    frost: [192, 0, 64, 64],
+    storm: [128, 64, 64, 64],
+    arcane: [192, 64, 64, 64],
+    necromancer: [0, 128, 64, 64],
+    summoner: [64, 128, 64, 64],
+});
+
+export function resolveSigilSchool(school) {
+    switch (String(school ?? '').toLowerCase()) {
+        case 'fire':
+        case 'pyromancer': return 'fire';
+        case 'arcane': return 'arcane';
+        case 'frost':
+        case 'cryomancer': return 'frost';
+        case 'storm':
+        case 'stormcaller':
+        case 'electric': return 'storm';
+        case 'death':
+        case 'necromancer': return 'necromancer';
+        case 'binding':
+        case 'summoner': return 'summoner';
+        default: return null; // Missing/unknown C# school must not impersonate Arcane.
+    }
+}
+
+export function preloadTargetSigilArt() {
+    if (typeof Image === 'undefined') return null;
+    const image = new Image();
+    image.decoding = 'async';
+    image.src = new URL('../art/target-sigil/atlas.png?v=20261028-locked-v1', import.meta.url).href;
+    return image;
+}
 
 export function resolveTargetIndicator(snapshot) {
     const player = snapshot?.player;
@@ -23,102 +123,69 @@ export function resolveTargetIndicator(snapshot) {
     const dragon = snapshot.dragon;
     if (dragon?.entityId === player.aimTargetId && dragon.health > 0 && dragon.targetable !== false)
         return indicator('boss', dragon.x, dragon.y, dragon.radius);
-
     return null;
 }
 
 function indicator(kind, x, y, radius) {
     if (![x, y, radius].every(finite) || radius <= 0) return null;
-    // Readable at 320px mobile width; respects each target's C# collision size.
-    const footprint = Math.min(160, Math.max(32, radius * 1.7 + (kind === 'boss' ? 20 : 8)));
+    // A combat-readability floor keeps the approved ring legible beneath Hollowed silhouettes.
+    // Bosses scale independently so their marker does not become an oversized telegraph.
+    const boss = kind === 'boss';
+    const footprint = Math.min(boss ? 92 : 68,
+        Math.max(boss ? 52 : 32, (radius * 1.7 + (boss ? 20 : 8)) * (boss ? .7 : .98)));
     return {
         kind,
         x: Math.round(x),
-        y: Math.round(y + radius * (kind === 'object' ? .7 : .75)),
+        y: Math.round(y + radius * (kind === 'object' ? .7 : .95)),
         rx: footprint,
-        ry: Math.max(13, Math.round(footprint * .46)),
+        ry: Math.max(15, Math.round(footprint * .56)),
     };
 }
 
-// Target selection is an in-world magical seal, not an attack telegraph.
-// All schools and object kinds share the same desaturated, near-ivory ink.
-const SIGIL_COLOR = '#d9cfee';
+export function presentTargetSigil(state, marker, key, seconds, reducedMotion = false) {
+    if (!state || !finite(seconds)) return marker;
+    const nextKey = marker ? marker.kind + ':' + String(key) : null;
 
-// Small hand-drawn Futhark-inspired strokes, not text characters or a font.
-// Normalized coordinates keep glyphs legible on high-DPI mobile canvases.
-const RUNES = Object.freeze([
-    [[-0.45, -1, -0.45, 1], [-0.45, -.85, .55, -.48], [-.45, -.15, .45, .15]],
-    [[-.5, -1, -.5, 1], [-.5, -1, .48, -.1], [.48, -.1, -.5, .18]],
-    [[-.52, -1, .48, 1], [.48, -1, -.52, 1]],
-    [[0, -1, 0, 1], [-.65, -.5, 0, -.05], [.65, -.5, 0, -.05]],
-    [[-.5, -1, .52, -.15], [.52, -.15, -.5, .6], [-.5, .6, .5, 1]],
-    [[-.55, -.9, .5, -.9], [0, -.9, 0, 1], [-.48, -.25, .45, -.25]],
-    [[-.55, -1, -.55, 1], [-.55, -.1, .53, -.1], [.53, -.1, .53, .8]],
-    [[-.5, -1, .5, 1], [.5, -1, -.5, 1], [0, -.55, 0, .6]],
-]);
-
-// A rune CIRCLE rather than a broken targeting reticle: concentric, unbroken
-// ground-plane inscriptions bound actual runes. Geometry remains school-neutral.
-function strokeRuneBorders(ctx, rx, ry, inner = true) {
-    ctx.beginPath();
-    ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
-    ctx.stroke();
-    if (inner) {
-        ctx.beginPath();
-        ctx.ellipse(0, 0, rx * .62, ry * .62, 0, 0, Math.PI * 2);
-        ctx.stroke();
+    if (nextKey !== state.key) {
+        if (marker) {
+            state.key = nextKey;
+            state.enteredAt = seconds;
+            state.exitedAt = null;
+            state.exitMarker = null;
+        } else if (state.key !== null) {
+            state.key = null;
+            state.exitedAt = seconds;
+            state.exitMarker = { ...state.activeMarker, opacity: state.lastOpacity ?? 1 };
+        }
     }
+
+    if (marker) {
+        state.activeMarker = marker;
+        // Fast retargeting must not leave a short-lived enemy permanently half-faded.
+        const opacity = reducedMotion ? 1 : smoothstep(clamp((seconds - state.enteredAt) / .12, 0, 1));
+        state.lastOpacity = opacity;
+        return { ...marker, opacity };
+    }
+
+    if (state.exitMarker && state.exitedAt !== null) {
+        const progress = reducedMotion ? 1 : smoothstep(clamp((seconds - state.exitedAt) / .26, 0, 1));
+        const opacity = state.exitMarker.opacity * (1 - progress);
+        if (opacity > .001) return { ...state.exitMarker, opacity };
+        state.exitMarker = null;
+        state.exitedAt = null;
+    }
+    return null;
 }
 
-function strokeRuneDividers(ctx, rx, ry, count) {
-    ctx.beginPath();
-    for (let i = 0; i < count; i++) {
-        const angle = (i + .5) * Math.PI * 2 / count;
-        ctx.moveTo(Math.cos(angle) * rx * .67, Math.sin(angle) * ry * .67);
-        ctx.lineTo(Math.cos(angle) * rx * .72, Math.sin(angle) * ry * .72);
-    }
-    ctx.stroke();
-}
-
-function strokeRune(ctx, rune, size) {
-    ctx.beginPath();
-    for (const [x1, y1, x2, y2] of rune) {
-        ctx.moveTo(x1 * size, y1 * size);
-        ctx.lineTo(x2 * size, y2 * size);
-    }
-    ctx.stroke();
-}
-
-function drawRuneInscriptions(ctx, marker) {
-    const { rx, ry, kind } = marker;
-    const count = kind === 'boss' ? 12 : kind === 'object' ? 4 : 8;
-    const size = Math.min(6.5, Math.max(3.3, rx * .145));
-    const offset = .18;
-    for (let index = 0; index < count; index++) {
-        const angle = -Math.PI + offset + (index + .5) * (Math.PI * 2 / count);
-        const x = Math.cos(angle) * rx * .83;
-        const y = Math.sin(angle) * ry * .81;
-        // A narrower glyph height follows the foreshortened ground plane.
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.scale(1, .72);
-        strokeRune(ctx, RUNES[index % RUNES.length], size);
-        ctx.restore();
-    }
-}
-
-// The selection light is ONE standard emitter within the shared GPU frame.
-// Its CURRENT Canvas compatibility view comes from the existing arena spell
-// light-spill/night adapters; this module never paints an independent light.
-// Explicit G1/G5 zero-light validation keeps every world pixel unlit.
-export function targetSelectionLightEmitter(marker, frame) {
+export function targetSelectionLightEmitter(marker, frame, school) {
     if (!marker || !frame || marker.kind === 'object' ||
-        !Number.isFinite(marker.x) || !Number.isFinite(marker.y)) return null;
+        !finite(marker.x) || !finite(marker.y)) return null;
+    const opacity = clamp(marker.opacity ?? 1, 0, 1);
+    if (opacity <= 0) return null;
     const zeroLight = frame.environment?.ambient === 0 && frame.environment?.emission === false &&
         (frame.lights ?? []).every(light => !light.enabled || light.intensity === 0);
     if (zeroLight) return null;
 
-    const boss = marker.kind === 'boss';
     return {
         id: 'target-selection:underlight',
         ownerId: 'target-selection',
@@ -126,9 +193,9 @@ export function targetSelectionLightEmitter(marker, frame) {
         enabled: true,
         position: [marker.x, marker.y + 1, 2],
         direction: [0, 0, -1],
-        color: SIGIL_COLOR,
-        intensity: boss ? .34 : .48,
-        range: Math.min(125, Math.max(48, marker.rx * 1.25)),
+        color: SIGIL_SCHOOL_COLORS[resolveSigilSchool(school)] ?? NEUTRAL_COLOR,
+        intensity: (marker.kind === 'boss' ? .66 : .90) * opacity,
+        range: Math.min(155, Math.max(65, marker.rx * 1.9)),
         coneAngle: Math.PI / 4,
         penumbra: 0,
         castsShadow: false,
@@ -136,62 +203,56 @@ export function targetSelectionLightEmitter(marker, frame) {
     };
 }
 
-// Bridge the SAME emitter, without a second lighting algorithm, to the
-// existing Canvas Hunt adapter while G5's universal GPU integration lands.
 export function targetSelectionCanvasLight(emitter) {
     if (!emitter) return [];
+    const center = rgb(emitter.color);
     return [{
-        x: emitter.position[0],
-        y: emitter.position[1],
-        radius: emitter.range,
-        strength: emitter.intensity,
-        type: 'target-selection',
-        family: 'selection',
-        center: [217, 207, 238],
-        edge: [99, 90, 116],
-        surge: false,
+        x: emitter.position[0], y: emitter.position[1],
+        radius: emitter.range, strength: emitter.intensity,
+        type: 'target-selection', family: 'selection',
+        center, edge: center.map(channel => Math.round(channel * .44)), surge: false,
     }];
 }
 
-export function drawTargetIndicator(ctx, marker, pass = 'ground', seconds = 0, reducedMotion = false) {
-    if (!marker || (pass !== 'ground' && pass !== 'contrast')) return;
+// Both pieces render on the GROUND, before depth-sorted actors. The shared
+// lighting adapter handles underlight; this only paints authored artwork.
+export function drawTargetIndicator(ctx, marker, pass = 'ground', seconds = 0, reducedMotion = false,
+    art = null, school = null) {
+    if (!marker || (pass !== 'ground' && pass !== 'contrast') ||
+        !art?.complete || art.naturalWidth < 256 || art.naturalHeight < 192) return false;
 
+    const alpha = clamp(marker.opacity ?? 1, 0, 1);
+    if (alpha <= 0 || marker.rx <= 0 || marker.ry <= 0) return false;
+
+    const activeSchool = resolveSigilSchool(school);
+    const selectedArt = artForSchool(art, activeSchool);
     const isObject = marker.kind === 'object';
-    const baseAlpha = isObject ? .35 : marker.kind === 'boss' ? .66 : .62;
-    const breath = reducedMotion || !Number.isFinite(seconds) ? 1 : 1 + Math.sin(seconds * .9) * .035;
-    const count = marker.kind === 'boss' ? 12 : isObject ? 4 : 8;
+    const pulse = reducedMotion ? 1 : 1 + Math.sin(seconds * 1.9) * .035;
 
     ctx.save();
     ctx.translate(marker.x, marker.y);
-    ctx.strokeStyle = SIGIL_COLOR;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
+    // The atlas is intentional pixel art; bilinear shrinking erased its thin rune strokes.
+    ctx.imageSmoothingEnabled = false;
+    // Preserve the approved texture: improve visibility with opacity and additive
+    // compositing, not new runes, circles, procedural glow or another light engine.
+    ctx.globalAlpha = alpha * (pass === 'ground' ? .48 : Math.min(1, (isObject ? .72 : 1) * pulse));
+    if (pass === 'contrast') ctx.globalCompositeOperation = 'screen';
 
     if (pass === 'ground') {
-        ctx.globalAlpha = baseAlpha * .45;
-        ctx.lineWidth = 1.8;
-        strokeRuneBorders(ctx, marker.rx, marker.ry, true);
+        // Base material only; never add screen-space spotlights here.
+        const [sx, sy, sw, sh] = SIGIL_ATLAS.base;
+        ctx.drawImage(selectedArt, sx, sy, sw, sh, -marker.rx, -marker.ry, marker.rx * 2, marker.ry * 2);
     } else {
-        // This pass must be executed BEFORE all actor/depth sprites; never above them.
-        // Visibility is supplied by the SAME physical point emitter and night mask.
-        ctx.globalAlpha = Math.min(.72, baseAlpha * breath);
-        ctx.shadowColor = 'rgba(210,197,240,.15)';
-        ctx.shadowBlur = isObject ? .8 : 1.8;
-        ctx.lineWidth = 1.15;
-        strokeRuneBorders(ctx, marker.rx, marker.ry, true);
-        ctx.shadowBlur = 0;
-        ctx.lineWidth = .85;
-        strokeRuneDividers(ctx, marker.rx, marker.ry, count);
-        ctx.lineWidth = 1;
-        drawRuneInscriptions(ctx, marker);
-
-        if (marker.kind === 'boss') {
-            ctx.globalAlpha *= .45;
-            ctx.beginPath();
-            ctx.ellipse(0, 0, marker.rx * .42, marker.ry * .42, 0, 0, Math.PI * 2);
-            ctx.stroke();
+        const [sx, sy, sw, sh] = SIGIL_ATLAS.base;
+        ctx.drawImage(selectedArt, sx, sy, sw, sh, -marker.rx, -marker.ry, marker.rx * 2, marker.ry * 2);
+        if (activeSchool) {
+            const [ix, iy, iw, ih] = SIGIL_ATLAS[activeSchool];
+            const iconRx = marker.rx * .34;
+            const iconRy = marker.ry * .52;
+            ctx.drawImage(selectedArt, ix, iy, iw, ih, -iconRx, -iconRy, iconRx * 2, iconRy * 2);
         }
     }
 
     ctx.restore();
+    return true;
 }
