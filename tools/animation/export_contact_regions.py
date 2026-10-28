@@ -41,7 +41,7 @@ if a.color_atlas:
  width,height=color.size
  if width!=96*manifest['clips'][a.clip]['frames'] or height!=96*len(directions):raise ValueError('Color atlas dimensions do not match source frames')
  color_pixels=np.asarray(color.pixels[:],dtype=np.float32).reshape((height,width,4))[::-1].copy();bpy.data.images.remove(color)
-result={'schemaVersion':2,'canvasSize':128,'anchor':[64,88],'directions':directions,'exportedDirections':a.directions.split(','),'colorAlphaValidated':color_pixels is not None,'sourceQCOnly':True,'runtimeIntegrated':False,'sourceSignature':manifest['skeletonSignature'],'chainBones':chains,'clips':{a.clip:{}},'toolSha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
+result={'schemaVersion':2,'canvasSize':128,'anchor':[64,88],'directions':directions,'exportedDirections':a.directions.split(','),'colorAlphaValidated':color_pixels is not None,'sourceQCOnly':True,'runtimeIntegrated':False,'sourceSignature':manifest['skeletonSignature'],'massWeights':manifest.get('massWeights',{}),'groundZMetres':manifest.get('groundZMetres',-.5),'chainBones':chains,'clips':{a.clip:{}},'toolSha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
 def runs(mask):
  r=[]
  for y,row in enumerate(mask):
@@ -85,8 +85,12 @@ for direction in result['exportedDirections']:
    if c['end'] not in bones:continue
    pose=rig.pose.bones[c['end']];rest=rig.data.bones[c['end']]
    point=pose.matrix @ rest.matrix_local.inverted() @ Vector(c['restContactPoint'])
-   source_contacts[c['id']]={**c,'sourceContact':list(point),'upperLength':rig.data.bones[c['upper']].length,'lowerLength':rig.data.bones[c['middle']].length}
-  frames.append({'completeRegions':['body',*bones],'sourceContacts':source_contacts,'projection':projection,'regions':regions,'projectedBones':projected,'sourceBones':source,'ownershipCoverage':1.0 if np.all(masks.any(axis=0)[alpha]) else 0.0})
+   patch=next((p for p in manifest.get('solePatches',{}).values() if p['bone']==c['end']),None)
+   footprint=[list(pose.matrix @ rest.matrix_local.inverted() @ Vector(v)) for v in patch['restHull']] if patch else []
+   source_contacts[c['id']]={**c,'sourceContact':list(point),'footprint':footprint,'upperLength':rig.data.bones[c['upper']].length,'lowerLength':rig.data.bones[c['middle']].length}
+  mass_weights=manifest.get('massWeights',{})
+  mass_center=sum(((rig.pose.bones[name].head+rig.pose.bones[name].tail)*.5*weight for name,weight in mass_weights.items()),Vector())/sum(mass_weights.values()) if mass_weights else None
+  frames.append({'massCenter':list(mass_center) if mass_center is not None else None,'completeRegions':['body',*bones],'sourceContacts':source_contacts,'projection':projection,'regions':regions,'projectedBones':projected,'sourceBones':source,'ownershipCoverage':1.0 if np.all(masks.any(axis=0)[alpha]) else 0.0})
  result['clips'][a.clip][direction]=frames;print('CONTACT_REGIONS',direction,len(frames),flush=True)
 (out/'contact-regions.json').write_text(json.dumps(result,separators=(',',':'))+'\n')
 print('CONTACT_REGION_OUTPUT',str(out),flush=True)

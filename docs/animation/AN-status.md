@@ -340,3 +340,12 @@ reach constraint at pose 26 and remains rejected. The reproducible current
 source pipeline uses the four validated clips, then shared contact-region
 integration. Do not spend another full eight-facing grid render on that rejected
 study or promote its historical landmark-only metrics.
+
+
+### Continued checkpoint: corrected sole source and asymmetric arm coupling
+
+The new shoulder-relative hanging/leading arm source passes independent evaluated-mesh QC for all four actions. Maximum stance-vertex drift: walk 1.943e-7 m, claw 1.505e-7 m, positive-source turn 2.896e-7 m, negative-source turn 2.937e-7 m. Minimum mass-proxy support margins respectively 0.0128003, 0.0352565, 0.00831263, 0.00856848 m. These are offline source results, not live Hunt acceptance.
+
+Full local JavaScript regression suite: **531/531 passed**. Added atomic profile-byte SHA validation and skeleton-signature agreement, invalid pelvis-correction budget rejection, calibrated projection inversion, and generic arbitrary-anatomy stance/swing target scheduling. The scheduling helper is not yet connected to production sampling. Corrected Blender Z-yaw versus screen-facing turn sign in atlas export; runtime visual continuity still requires integration validation.
+
+Remaining acceptance gates stay open: runtime regional body/contact coupling and support checks, source entry/exit continuity, aligned deformed material maps, eight-facing current-source export, complete continuous source performance, actual Hunt phone-scale lighting capture, and representative renderer performance. Do not infer AN6 completion from this checkpoint.

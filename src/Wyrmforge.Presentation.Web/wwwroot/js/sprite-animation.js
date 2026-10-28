@@ -64,6 +64,7 @@ export function validateCreatureRigProfile(profile) {
     if(!Number.isFinite(profile.unitsPerPixel)||profile.unitsPerPixel<=0)fail('unitsPerPixel must be positive');
     const rig=profile.rig;
     if(!rig||!Array.isArray(rig.bones)||!rig.bones.length)fail('bone hierarchy required');
+    if(rig.signature!=null&&!/^[a-f0-9]{64}$/.test(rig.signature))fail('invalid skeleton signature');
     if(rig.sourceSpace){
         const {coordinateSpace,toActor:m}=rig.sourceSpace;
         if(coordinateSpace!=='blender-armature-xyz-metres'||!Array.isArray(m)||m.length!==16||!m.every(Number.isFinite))fail('invalid source-to-actor bind space');
@@ -105,6 +106,7 @@ export function validateCreatureRigProfile(profile) {
     const directions=profile.facing?.directions;
     if(!Array.isArray(directions)||directions.length!==8||!directions.every(d=>typeof d==='string'&&d.length>0)||new Set(directions).size!==8)fail('eight unique facing rows required');
     if(!Number.isFinite(profile.locomotion?.stride)||!(profile.locomotion?.stride>0))fail('positive authored stride required');
+    for(const [name,expected] of [['positive',1],['negative',-1]])if(profile.pivots?.[name]?.facingStep!=null&&profile.pivots[name].facingStep!==expected)fail(`source turn faces the wrong direction: ${name}`);
     const specs=[profile.locomotion,...Object.values(profile.actions??{}),...(profile.pivot?[profile.pivot]:[]),...Object.values(profile.pivots??{})];
     for(const clip of specs){
         if(typeof clip.clip!=='string'||!clip.clip||!Number.isSafeInteger(clip.frames)||clip.frames<1||!Number.isFinite(clip.fps)||!(clip.fps>0))fail('invalid clip dimensions/time');

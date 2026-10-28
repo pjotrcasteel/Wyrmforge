@@ -42,3 +42,17 @@ test('cropped multi-row atlas loads and draws at the original source pixel scale
  assert.equal(a.draw(ctx,sample,100,200,11),true);assert.deepEqual(draw[0],[0,252,24,28,89,180,24,28]);
  assert.deepEqual(a.renderDescriptor(sample).frame,{offset:[0,.375],repeat:[1,1/16]});
 });
+
+test('profile bytes are source-hashed before textures and reject tampering atomically',async t=>{
+ const m=mock(t),original=globalThis.fetch;
+ const payload=new TextEncoder().encode(JSON.stringify(profile));
+ m.profileSha256=createHash('sha256').update(payload).digest('hex');
+ globalThis.fetch=async url=>String(url).includes('profile')?{ok:true,arrayBuffer:async()=>payload.buffer}:original(url);
+ const good=create(new URL('https://example.test/'));assert.equal(await good.preload(),true);
+ m.profileSha256='0'.repeat(64);
+ const bad=create(new URL('https://example.test/'));assert.equal(await bad.preload(),false);assert.match(bad.error,/profile source hash mismatch/);assert.equal(bad.stats.textures,0);
+});
+test('source skeleton signature disagreement rejects a valid typed profile',async t=>{
+ const signed=structuredClone(profile);signed.rig.signature='a'.repeat(64);mock(t,()=>{},signed);
+ const a=create(new URL('https://example.test/'));assert.equal(await a.preload(),false);assert.match(a.error,/Rig\/source signature mismatch/);
+});

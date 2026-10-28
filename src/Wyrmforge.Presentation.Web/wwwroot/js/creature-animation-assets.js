@@ -5,10 +5,20 @@ export function createCreatureAnimationAssets(baseUrl,{maxDecodedBytes=64*1024*1
     let data=null,pending=null,lastError=null,generation=0;
     async function load(){
         const version=generation;
-        const [manifest,profile]=await Promise.all(['manifest.json','profile.json'].map(async name=>{
-            const response=await fetch(new URL(name,baseUrl));if(!response.ok)throw new Error(`Animation asset unavailable: ${name}`);return response.json();
+        const [manifestResponse,profileResponse]=await Promise.all(['manifest.json','profile.json'].map(async name=>{
+            const response=await fetch(new URL(name,baseUrl));if(!response.ok)throw new Error(`Animation asset unavailable: ${name}`);return response;
         }));
+        const manifest=await manifestResponse.json();
+        let profile;
+        if(manifest.profileSha256){
+            if(!/^[a-f0-9]{64}$/.test(manifest.profileSha256))throw new TypeError('Invalid animation profile hash');
+            const bytes=await profileResponse.arrayBuffer();
+            const hash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(n=>n.toString(16).padStart(2,'0')).join('');
+            if(hash!==manifest.profileSha256)throw new Error('Animation profile source hash mismatch');
+            profile=JSON.parse(new TextDecoder().decode(bytes));
+        }else profile=await profileResponse.json();
         validateCreatureRigProfile(profile);
+        if(profile.rig.signature!=null&&profile.rig.signature!==manifest.sourceSignature)throw new TypeError('Rig/source signature mismatch');
         if(manifest.schemaVersion!==2||manifest.directions.length!==8)throw new TypeError('Invalid animation atlas manifest');
         const specs=[profile.locomotion,...Object.values(profile.actions),...Object.values(profile.pivots??{}),...(profile.pivot?[profile.pivot]:[])];
         for(const spec of specs)if(manifest.clips[spec.clip]?.frames!==spec.frames)throw new TypeError(`Profile/atlas mismatch: ${spec.clip}`);

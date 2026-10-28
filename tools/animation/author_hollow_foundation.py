@@ -142,20 +142,32 @@ for clip in args.only.split(','):
                     footprints.append((support.x,support.y))
             else:last_points.pop(side,None)
             joint_ranges.setdefault('knee-'+side,[]).append(flex)
-        # Shoulder-to-claw trajectories stay on the striking side of the ribcage.
+        # Shoulder-relative authored performance. The passive arm hangs under
+        # gravity; the lead arm reaches. A shoulder/pelvis move carries the wrist
+        # target with it rather than leaving an isolated hand fixed in space.
         for side,sign in [('L',1),('R',-1)]:
-            if attack and side=='R':
-                x=interp([(0,-.25),(.30,-.30),(.44,-.29),(.57,-.12),(.72,-.18),(1,-.25)],t)
-                y=interp([(0,-.14),(.30,.015),(.44,-.01),(.57,-.34),(.72,-.27),(1,-.14)],t)
-                z=interp([(0,.05),(.30,.24),(.44,.25),(.57,.16),(.72,.02),(1,.05)],t)
+            shoulder=rig.pose.bones['upper_arm.'+side].head.copy()
+            length=rig.data.bones['upper_arm.'+side].length+rig.data.bones['forearm.'+side].length
+            leading=side=='R'
+            direction=Vector((sign*.10,-.75,-.65)).normalized() if leading else Vector((sign*.08,.08,-.994)).normalized()
+            baseline=direction*length*(.90 if leading else .94)
+            if attack and leading:
+                offset=Vector((
+                    interp([(0,baseline.x),(.30,-.07),(.44,-.07),(.57,-.015),(.72,-.06),(.86,-.04),(1,baseline.x)],t),
+                    interp([(0,baseline.y),(.30,.035),(.44,-.025),(.57,-.29),(.72,-.23),(.86,-.15),(1,baseline.y)],t),
+                    interp([(0,baseline.z),(.30,-.13),(.44,-.11),(.57,-.10),(.72,-.25),(.86,-.24),(1,baseline.z)],t)))
+                hand_direction=Vector((sign*.10,-.80,-.60)).normalized()
             else:
-                x=sign*(.245+.012*math.sin(2*math.pi*p-.5));y=-.14+.04*math.sin(2*math.pi*p+(0 if side=='L' else math.pi)-.45);z=.035+.015*math.sin(2*math.pi*p-.7)
-            target=Vector((x,y,z))
-            flex=checked_chain(rig,'upper_arm.'+side,'forearm.'+side,target,Vector((sign*.6,.08,.15)),(12,150))
-            hand=rig.data.bones['hand.'+side];direction=Vector((sign*.15,-.8,-.6)).normalized()
-            rig.pose.bones['hand.'+side].matrix=segment_matrix(hand,target,target+direction*hand.length)
+                lag=.012*math.sin(2*math.pi*p-.65)-.012*math.sin(-.65)
+                offset=baseline+Vector((0,lag,0))
+                hand_direction=Vector((sign*.10,-.80,-.60)).normalized() if leading else Vector((sign*.04,-.08,-.995)).normalized()
+            target=shoulder+offset
+            pole_offset=Vector((sign*.14,.04,-.15)) if leading else Vector((sign*.12,-.12,-.15))
+            flex=checked_chain(rig,'upper_arm.'+side,'forearm.'+side,target,shoulder+pole_offset,(12,150))
+            hand=rig.data.bones['hand.'+side]
+            rig.pose.bones['hand.'+side].matrix=segment_matrix(hand,target,target+hand_direction*hand.length)
             bpy.context.view_layer.update();joint_ranges.setdefault('elbow-'+side,[]).append(flex)
-            hand_targets[side]=(target.copy(),direction.copy())
+            hand_targets[side]=(target.copy(),hand_direction.copy(),pole_offset.copy())
         # Author-provided segment mass fractions, applied to actual posed
         # segment centres. This is an approximation, not a dynamics simulation.
         weights={'pelvis':.18,'spine':.12,'chest':.20,'neck':.02,'head':.08}
@@ -179,8 +191,8 @@ for clip in args.only.split(','):
                 flex=checked_chain(rig,'thigh.'+side,'shin.'+side,ankle,Vector((sign*.09,-.5,-.2)),(8,145))
                 rig.pose.bones['foot.'+side].matrix=fmatrix;bpy.context.view_layer.update()
                 joint_ranges['knee-'+side].append(flex)
-                target,direction=hand_targets[side];target+=shift
-                flex=checked_chain(rig,'upper_arm.'+side,'forearm.'+side,target,Vector((sign*.6,.08,.15)),(12,150))
+                target,direction,pole_offset=hand_targets[side];target+=shift
+                flex=checked_chain(rig,'upper_arm.'+side,'forearm.'+side,target,rig.pose.bones['upper_arm.'+side].head+pole_offset,(12,150))
                 hand=rig.data.bones['hand.'+side];rig.pose.bones['hand.'+side].matrix=segment_matrix(hand,target,target+direction*hand.length)
                 bpy.context.view_layer.update();joint_ranges['elbow-'+side].append(flex)
             com=sum(((rig.pose.bones[name].head+rig.pose.bones[name].tail)*.5*weight for name,weight in weights.items()),Vector())/sum(weights.values())

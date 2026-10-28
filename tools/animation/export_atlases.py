@@ -40,6 +40,7 @@ def runtime_clip(name):
         cx,cy=s['com'];com=[-(cx*sin+cy*cos)*scale,(cx*cos-cy*sin)*scale]
         samples.append({'contacts':contacts,'balance':s['balance'],'com':com,'supportMarginMetres':s['supportMargin']})
     result={'clip':name,'frames':c['frames'],'fps':c['fps'],'samples':samples}
+    if name.startswith('pivot'):result['facingStep']=-round((c['samples'][-1].get('authoredYawRadians',0)-c['samples'][0].get('authoredYawRadians',0))/(math.pi/4))
     if c.get('poseGrid'):result['poseGrid']={**c['poseGrid'],'travel':'facing-projection','stanceVelocity':{'x':-c['strideMetres']*scale,'y':0}}
     if m.get('projectionByDirection'):
         pixel_scale=93/96;projected={}
@@ -68,7 +69,7 @@ def runtime_clip(name):
             result['poseGrid']['stanceVelocityByDirection']={d:{'x':p[1]*c['strideMetres']*pixel_scale,'y':p[5]*c['strideMetres']*pixel_scale} for d,p in m['projectionByDirection'].items()}
     return result
 profile={'schemaVersion':2,'coordinateSpace':'actor-xy-ground-z-up','unitsPerPixel':93/96,'maxRootOffset':93/96,
- 'rig':{'sourceSpace':{'coordinateSpace':'blender-armature-xyz-metres','toActor':[0,-scale,0,0,scale,0,0,0,0,0,scale,.5*scale,0,0,0,1]},'bodyPlan':'biped','bones':m['skeleton'],'semantics':{'root':'root','pelvis':'pelvis','spine':'spine','head':'head'},'absentBones':[],
+ 'rig':{'signature':m['skeletonSignature'],'sourceSpace':{'coordinateSpace':'blender-armature-xyz-metres','toActor':[0,-scale,0,0,scale,0,0,0,0,0,scale,.5*scale,0,0,0,1]},'bodyPlan':'biped','bones':m['skeleton'],'semantics':{'root':'root','pelvis':'pelvis','spine':'spine','head':'head'},'absentBones':[],
  'contacts':[{'id':'foot-'+side,'bone':'foot.'+side,'surface':'foot',**({'chain':next(c for c in m['contactChains'] if c['id']=='foot-'+side)} if m.get('contactChains') else {})} for side in ['L','R']],
  'sockets':{'head':{'bone':'head'},'mouth':{'bone':'head'},'wound':{'bone':'chest'}}},
  'facing':{'directions':['E','SE','S','SW','W','NW','N','NE']},
@@ -76,12 +77,13 @@ profile={'schemaVersion':2,'coordinateSpace':'actor-xy-ground-z-up','unitsPerPix
  'actions':{'attack':{**runtime_clip('attack'),'mode':'fullBody','priority':10,'commitUntil':1,'reducedFrame':8,'visualTimingOnly':True}},
  'pivot':runtime_clip('pivot')}
 if 'pivot-negative' in m['clips']:
-    profile['pivots']={'positive':runtime_clip('pivot'),'negative':runtime_clip('pivot-negative')}
+    profile['pivot']=runtime_clip('pivot-negative')
+    profile['pivots']={'positive':runtime_clip('pivot-negative'),'negative':runtime_clip('pivot')}
 if 'attack-travel' in m['clips']:
     profile['actions']['attack']={**runtime_clip('attack-travel'),'mode':'fullBody','priority':10,'commitUntil':1,'reducedFrame':128,'visualTimingOnly':True}
     clips.pop('attack',None)
     row_hashes.pop('attack',None)
 (out/'profile.json').write_text(json.dumps(profile,indent=2)+'\n')
-manifest={'schemaVersion':2,'candidateNotApproved':True,'productionReady':False,'reviewLightingOnly':True,'runtimeIntegrated':False,'directions':directions,'clips':clips,'sourceSignature':m['skeletonSignature'],'rowSha256':row_hashes,'sourceQC':m['clips'],'materialGate':'aligned unlit albedo/normal/depth/emissive export and actual Hunt GPU acceptance open'}
+manifest={'schemaVersion':2,'profileSha256':hashlib.sha256((out/'profile.json').read_bytes()).hexdigest(),'candidateNotApproved':True,'productionReady':False,'reviewLightingOnly':True,'runtimeIntegrated':False,'directions':directions,'clips':clips,'sourceSignature':m['skeletonSignature'],'rowSha256':row_hashes,'sourceQC':m['clips'],'materialGate':'aligned unlit albedo/normal/depth/emissive export and actual Hunt GPU acceptance open'}
 (out/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
 print(json.dumps({'atlasBytes':sum((out/v['image']).stat().st_size for v in clips.values()),'eightDistinctRows':list(row_hashes),'gpuProductionReady':False}))

@@ -50,3 +50,46 @@ test('source contact regions map their actual segment endpoints to the solved po
  assert.deepEqual(input,copy);assert.throws(()=>retarget({...input,maxCorrection:.001}),/budget/);
  assert.throws(()=>retarget({...input,projection:[1]}),/projection/);
 });
+test('calibrated ground inverse preserves actual source projection and rejects edge-on input',async()=>{
+ const {sourceGroundPointFromPixel:inverse}=await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/sprite-contact-kinematics.js');
+ const p=[0,-60,0,64,-34,0,-51,62],point=[.17,-.1,-.5];const pixel=[p[0]*point[0]+p[1]*point[1]+p[2]*point[2]+p[3],p[4]*point[0]+p[5]*point[1]+p[6]*point[2]+p[7]];
+ assert.ok(distance(inverse(pixel,-.5,p),point)<1e-12);assert.throws(()=>inverse(pixel,-.5,[1,0,0,0,2,0,0,0]),/singular/);
+});
+test('generic contact cycles keep real stance anchors fixed through arbitrary world movement and source swing lifts',async()=>{
+ const {updateGroundContactTargets:update}=await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/sprite-contact-kinematics.js');
+ for(const ids of [['foot-L','foot-R'],['palm-L','palm-R'],['paw-a','paw-b','paw-c','paw-d']]){
+  const patterns=ids.map((id,i)=>({id,phaseOffset:i/ids.length,stanceFraction:.62,neutral:{x:i%2?2:-2,y:0}})),state={},last=new Map();
+  for(let frame=0;frame<=180;frame++){
+   const t=frame/60,v=t<1.5?{x:20,y:0}:{x:0,y:20},world=t<1.5?{x:20*t,y:0}:{x:30,y:20*(t-1.5)};
+   const out=update(state,patterns,{timestamp:t,phaseCycles:t,world,velocity:v,stride:20,nominalPhaseRate:1});
+   for(const [id,target] of Object.entries(out.targets)){
+    assert.ok(target.lift>=0&&target.lift<=1);
+    if(target.planted&&last.get(id)?.planted)assert.deepEqual([target.x,target.y],[last.get(id).x,last.get(id).y]);
+    if(target.planted)assert.equal(target.lift,0);
+    last.set(id,structuredClone(target));
+   }
+  }
+ }
+});
+test('contact replay, frozen transport and actual anatomy remain deterministic and explicit',async()=>{
+ const {updateGroundContactTargets:update}=await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/sprite-contact-kinematics.js');
+ const patterns=[{id:'only-palm',phaseOffset:0,stanceFraction:1,neutral:{x:0,y:0}}],state={},intent=(t,extra={})=>({timestamp:t,phaseCycles:0,world:{x:0,y:0},velocity:{x:0,y:0},stride:20,nominalPhaseRate:1,...extra});
+ const a=update(state,patterns,intent(0));assert.equal(a.targets['only-palm'].planted,true);
+ const b=update(state,patterns,intent(1,{frozen:true,world:{x:3,y:0}}));assert.equal(b.transported,true);assert.equal(b.targets['only-palm'].planted,false);assert.equal(b.targets['only-palm'].x,3);
+ const c=update(state,patterns,intent(2,{world:{x:3,y:0}}));assert.equal(c.targets['only-palm'].x,3);assert.equal(c.targets['only-palm'].planted,true);
+ assert.throws(()=>update(state,patterns,intent(1)),/replay seek/);
+ assert.throws(()=>update(state,[{...patterns[0],id:'ghost-foot'}],intent(3)),/anatomy/);
+});
+test('pelvis/body reaction can move a real chain root while preserving its world contact and segment lengths',async()=>{
+ const {retargetSourceContactRegion:retarget}=await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/sprite-contact-kinematics.js');
+ const c=chain(),middle=solve(c).middle,rootTarget=[.01,.005,0],input={...c,upper:{head:c.root,tail:middle},lower:{head:middle,tail:c.target},end:{head:c.target},sourceContact:[.15,0,-.33],targetContact:[.15,0,-.33],rootTarget,maxRootCorrection:.02,projection:[60,0,0,64,0,0,-60,32],maxCorrection:.03};
+ const r=retarget(input);assert.ok(Math.abs(distance(rootTarget,r.middle)-c.upperLength)<1e-12);assert.ok(Math.abs(distance(r.middle,r.ankle)-c.lowerLength)<1e-12);assert.deepEqual(r.ankle,c.target);
+ for(const budget of [NaN,Infinity,-1])assert.throws(()=>retarget({...input,maxRootCorrection:budget}),/budget/);
+ assert.notDeepEqual(r.upperTransform,[1,0,0,1,0,0]);assert.throws(()=>retarget({...input,maxRootCorrection:0}),/pelvis correction/);
+});
+test('support scheduling at rest cannot consume frozen time or reset to another anatomy',async()=>{
+ const {updateGroundContactTargets:update}=await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/sprite-contact-kinematics.js');
+ const p=[{id:'palm',phaseOffset:0,stanceFraction:.62,neutral:{x:0,y:0}}],s={},base={timestamp:0,phaseCycles:.8,world:{x:0,y:0},velocity:{x:0,y:0},stride:20,nominalPhaseRate:1,initialTargets:{palm:{x:3,y:4}}};
+ const a=update(s,p,base);assert.deepEqual([a.targets.palm.x,a.targets.palm.y],[3,4]);
+ assert.throws(()=>update(s,p,{...base,timestamp:1,phaseCycles:.9,frozen:true}),/support phase/);
+});
