@@ -1,6 +1,6 @@
 // Atomic atlas adapter for the ONE shared sprite-animation controller.
 import {validateCreatureRigProfile} from './sprite-animation.js';
-import {spriteFrame} from './lighting/lit-sprite.js';
+import {spriteFrame,spriteAtlasLayout} from './lighting/lit-sprite.js';
 export function createCreatureAnimationAssets(baseUrl,{maxDecodedBytes=64*1024*1024}={}){
     let data=null,pending=null,lastError=null,generation=0;
     async function load(){
@@ -12,7 +12,7 @@ export function createCreatureAnimationAssets(baseUrl,{maxDecodedBytes=64*1024*1
         if(manifest.schemaVersion!==2||manifest.directions.length!==8)throw new TypeError('Invalid animation atlas manifest');
         const specs=[profile.locomotion,...Object.values(profile.actions),...Object.values(profile.pivots??{}),...(profile.pivot?[profile.pivot]:[])];
         for(const spec of specs)if(manifest.clips[spec.clip]?.frames!==spec.frames)throw new TypeError(`Profile/atlas mismatch: ${spec.clip}`);
-        const estimate=Object.values(manifest.clips).reduce((sum,clip)=>sum+clip.cell*clip.cell*clip.frames*8*4*(1+Object.keys(clip.materials??{}).length),0);
+        const estimate=Object.values(manifest.clips).reduce((sum,clip)=>{const layout=spriteAtlasLayout(clip,manifest.directions.length);return sum+layout.width*layout.height*4*(1+Object.keys(clip.materials??{}).length);},0);
         if(!Number.isFinite(estimate)||estimate>maxDecodedBytes)throw new RangeError('Animation texture budget exceeded');
         const images=new Map();let encodedBytes=0,decodedBytes=0;
         async function texture(item,clip,key){
@@ -25,7 +25,8 @@ export function createCreatureAnimationAssets(baseUrl,{maxDecodedBytes=64*1024*1
             const url=URL.createObjectURL(new Blob([bytes],{type:'image/png'}));
             try{
                 const image=await new Promise((resolve,reject)=>{const i=new Image();i.onload=()=>resolve(i);i.onerror=()=>reject(new Error(`Atlas decode failed: ${key}`));i.src=url;});
-                if(image.naturalWidth!==clip.cell*clip.frames||image.naturalHeight!==clip.cell*8)throw new RangeError(`Clipped atlas: ${key}`);
+                const layout=spriteAtlasLayout(clip,manifest.directions.length);
+                if(image.naturalWidth!==layout.width||image.naturalHeight!==layout.height)throw new RangeError(`Clipped atlas: ${key}`);
                 images.set(key,image);encodedBytes+=bytes.byteLength;decodedBytes+=image.naturalWidth*image.naturalHeight*4;
             }finally{URL.revokeObjectURL(url);}
         }
@@ -54,8 +55,9 @@ export function createCreatureAnimationAssets(baseUrl,{maxDecodedBytes=64*1024*1
             const row=data.manifest.directions.indexOf(sample.direction);if(row<0)return false;
             const size=clip.worldSize*Math.max(.65,Math.min(1.8,(Number(radius)||11)/11));
             ctx.save();ctx.globalAlpha*=opacity;ctx.imageSmoothingEnabled=false;
-            ctx.drawImage(image,sample.frame*clip.cell,row*clip.cell,clip.cell,clip.cell,
-                Math.round(x+sample.rootOffset.x-clip.anchor[0]/clip.cell*size),Math.round(y+sample.rootOffset.y-clip.anchor[1]/clip.cell*size),size,size);
+            const layout=spriteAtlasLayout(clip,data.manifest.directions.length);
+            ctx.drawImage(image,(sample.frame%layout.columns)*layout.tileWidth,(row*layout.rowsPerDirection+Math.floor(sample.frame/layout.columns))*layout.tileHeight,layout.tileWidth,layout.tileHeight,
+                Math.round(x+sample.rootOffset.x+(layout.crop[0]-clip.anchor[0])/clip.cell*size),Math.round(y+sample.rootOffset.y+(layout.crop[1]-clip.anchor[1])/clip.cell*size),layout.tileWidth/clip.cell*size,layout.tileHeight/clip.cell*size);
             ctx.restore();return true;
         }};
 }

@@ -189,3 +189,25 @@ The complete Node suite passed **500/500** after these changes. A negative
 lateral-motion test intentionally requires observable saturation/slip: a
 forward-axis grid cannot claim arbitrary-direction grounding. This is not yet
 an integrated raster/Hunt result, and does not close AN2–AN5.
+
+### Atlas/layout and reliability checkpoint
+
+The existing `lighting/lit-sprite.js` binding now accepts optional source-pixel
+crops and multi-row frame packing; its original UV and geometry tests still pass.
+The same layout drives the existing Canvas adapter, GPU frame descriptor and
+budget/dimension checks. New tests verify exact cropped bounds, foot anchor,
+source pixel scale and multi-row facing offsets. No GPU shader or lighting engine
+was changed. The default decoded budget remains 64 MiB.
+
+The full JavaScript suite passed **503/503**. A fresh full Release Application
+run on .NET 10.0.100 passed **669/669** (2m9s). The real Blazor application was
+rebuilt successfully; local SDK TaskHostFactory IPC declarations were removed
+only from restored SDK package files, not repository code, to accommodate the
+execution environment. A new browser capture must be evaluated separately.
+
+All five combined editable source actions passed independent saved-file QC.
+The eight-view/256-pose grid color render is in progress at this checkpoint;
+pending frames are not counted as complete. `developer-reference.md` now records
+the actual API, coordinates, clocks, exporter commands, body-plan extension,
+material/retarget limits, feature flag and rollback. It is a developer reference,
+not a claim that open AN acceptance gates have passed.
