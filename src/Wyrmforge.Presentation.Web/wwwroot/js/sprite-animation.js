@@ -262,7 +262,7 @@ function updateContactAnimation(state,profile,input){
         const s=profile.sourceSupport,zero=profile.facing.directions.indexOf(s.facingZero);
         if(state.sourceYaw==null){
             state.sourceYaw=(zero-state.facingIndex)*Math.PI/4;state.sourceScale=actorScale;
-            if(s.seededPhase)state.phase=(state.seed>>>0)/4294967296;
+            if(s.seededPhase)state.phase=input.moving?(state.seed>>>0)/4294967296:(profile.locomotion.idleFrame??0)/profile.locomotion.frames;
             state.sourceSupportPhaseCycles=state.phase;
         }
         sourceCycleBefore=state.sourceSupportPhaseCycles;
@@ -277,7 +277,7 @@ function updateContactAnimation(state,profile,input){
                 const scores=s.contactCycles.map(c=>({c,ahead:c.neutral[0]*source[0]+c.neutral[1]*source[1]})),ahead=Math.max(...scores.map(c=>c.ahead));
                 const leading=scores.filter(c=>Math.abs(c.ahead-ahead)<1e-8);
                 let forward=0,reverse=0;
-                for(const {c} of leading){const q=(state.phase+c.phaseOffset)%1;if(q<c.stanceFraction){forward+=c.stanceFraction-q;reverse+=q;}else{forward-=1-q;reverse-=q-c.stanceFraction;}}
+                for(const {c} of leading){const q=(state.phase+c.phaseOffset)%1;if(q<c.stanceFraction){forward-=c.stanceFraction-q;reverse-=q;}else{forward-=1-q;reverse-=q-c.stanceFraction;}}
                 sign=reverse>forward?-1:1;
             }
             state.sourceAxisWorld={x:observed.x/Math.hypot(observed.x,observed.y)*sign,y:observed.y/Math.hypot(observed.x,observed.y)*sign};
@@ -286,6 +286,15 @@ function updateContactAnimation(state,profile,input){
         }
         state.sourceAxisWorld??={x:-basis[1],y:-basis[3]};
         state.phase=(state.sourceSupportPhaseCycles%1+1)%1;
+        if(!input.moving&&!stopped&&!input.reducedMotion&&Math.hypot(displacement.x,displacement.y)<1e-10&&dt>0&&s.contactCycles?.length){
+            const sign=state.sourcePhaseDirection??1;
+            const swings=s.contactCycles.map(c=>({c,q:(state.phase+c.phaseOffset)%1})).filter(({c,q})=>q>=c.stanceFraction);
+            if(swings.length){
+                const landing=Math.max(...swings.map(({c,q})=>sign>0?1-q:q-c.stanceFraction+1e-8));
+                state.sourceSupportPhaseCycles+=sign*Math.min(landing,dt*profile.locomotion.fps/profile.locomotion.frames);
+                state.phase=(state.sourceSupportPhaseCycles%1+1)%1;
+            }
+        }
     }else if(!stopped){
         // Calibrated source motion consumes actual signed root displacement.
         // Cumulative path length remains the compatibility input for old packs.
@@ -388,3 +397,4 @@ function updateContactAnimation(state,profile,input){
         actionProgress,contactPhase,sourcePhaseOffset,rootOffset:{...state.rootOffset},material:clipSpec.material??null,debug,seed:state.seed,...(sourceSupport?{sourceSupport}:{})};
     return state.sample;
 }
+

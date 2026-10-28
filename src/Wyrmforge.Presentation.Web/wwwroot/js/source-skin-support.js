@@ -7,7 +7,10 @@ export function updateSourceSkinSupport(state,surface,profile,sample,intent){
     if(!support||!config)throw new TypeError('Shared source-support sample required');
     const scale=intent.scale??1;
     if(!Number.isFinite(scale)||scale<=0)throw new RangeError('Positive source actor scale required');
-    const base=sampleSourceSkinSurface(surface,{clip:sample.clip,gaitPhase:sample.contactPhase,actionProgress:sample.actionProgress??0});
+    const clip=surface.clips[sample.clip],grid=clip.poseGrid;
+    const gaitPhase=support.reducedMotion?(sample.frame%(grid?.phaseFrames??clip.frames))/(grid?.phaseFrames??clip.frames):sample.contactPhase;
+    const actionProgress=support.reducedMotion&&grid?Math.floor(sample.frame/grid.phaseFrames)/(grid.actionFrames-1):sample.actionProgress??0;
+    const base=sampleSourceSkinSurface(surface,{clip:sample.clip,gaitPhase,actionProgress});
     const b=support.groundBasis,h=config.heightProjection,z=config.groundZ;
     const projection=[b[0],b[1],h[0],-h[0]*z,b[2],b[3],h[1],-h[1]*z];
     const det=b[0]*b[3]-b[1]*b[2],axis=support.axisWorld;
@@ -27,7 +30,7 @@ export function updateSourceSkinSupport(state,surface,profile,sample,intent){
         const c=base.sourceContacts[id],angle=t.orientationWorld-support.yaw-c.sourceYaw,cos=Math.cos(angle),sin=Math.sin(angle);
         return [id,{point:sourceGroundPointFromPixel([(t.x-intent.world.x)/scale,(t.y-intent.world.y)/scale],t.z,projection),planted:t.planted,rotation:[cos,-sin,0,sin,cos,0,0,0,1]}];
     }));
-    const posed=transported?base:solveSupportedSourcePose(base,local,{massWeights:surface.massWeights,rootBone:surface.rootBone,...surface.authoringEnvelope,minimumSupportMargin:surface.minimumSupportMarginMetres,fitReach:true});
+    const posed=transported?{...base,sourceContacts:Object.fromEntries(Object.entries(base.sourceContacts).map(([id,c])=>[id,{...c,planted:false}]))}:solveSupportedSourcePose(base,local,{massWeights:surface.massWeights,rootBone:surface.rootBone,...surface.authoringEnvelope,minimumSupportMargin:surface.minimumSupportMarginMetres,fitReach:true});
     const matrices=sourceSkinPoseMatrices(surface,base,posed);
     let maxSlip=transported?null:0;
     const patches=Object.fromEntries(Object.entries(posed.sourceContacts).map(([id,c])=>{

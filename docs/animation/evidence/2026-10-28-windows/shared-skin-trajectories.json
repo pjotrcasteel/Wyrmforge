@@ -1,145 +1,166 @@
 [
   {
+    "entityId": 1,
     "name": "forward",
     "hz": 15,
     "count": 61,
-    "maxShift": 0.0739659017119167,
+    "maxShift": 0.061499090083919586,
     "error": null
   },
   {
+    "entityId": 1,
     "name": "forward",
     "hz": 30,
     "count": 121,
-    "maxShift": 0.07455800215346722,
+    "maxShift": 0.07042582703630168,
     "error": null
   },
   {
+    "entityId": 1,
     "name": "forward",
     "hz": 60,
     "count": 241,
-    "maxShift": 0.07587696625234676,
+    "maxShift": 0.0730931890648742,
     "error": null
   },
   {
+    "entityId": 1,
     "name": "forward",
     "hz": 120,
     "count": 481,
-    "maxShift": 0.07587696625234676,
+    "maxShift": 0.07353334188977884,
     "error": null
   },
   {
+    "entityId": 1,
     "name": "side",
     "hz": 15,
     "count": 61,
-    "maxShift": 0.12052747128927498,
+    "maxShift": 0.10567117599323544,
     "error": null
   },
   {
+    "entityId": 1,
     "name": "side",
     "hz": 30,
     "count": 121,
-    "maxShift": 0.12041367610544756,
+    "maxShift": 0.10829080792707453,
     "error": null
   },
   {
+    "entityId": 1,
     "name": "side",
     "hz": 60,
     "count": 241,
-    "maxShift": 0.1243992824564786,
+    "maxShift": 0.11570577587196633,
     "error": null
   },
   {
+    "entityId": 1,
     "name": "side",
     "hz": 120,
     "count": 481,
-    "maxShift": 0.12794998229239712,
+    "maxShift": 0.12107030765963112,
     "error": null
   },
   {
+    "entityId": 1,
     "name": "back",
     "hz": 15,
     "count": 61,
-    "maxShift": 0.07370281686601408,
+    "maxShift": 0.06925629373930867,
     "error": null
   },
   {
+    "entityId": 1,
     "name": "back",
     "hz": 30,
     "count": 121,
-    "maxShift": 0.07276917921412902,
+    "maxShift": 0.06851542041942206,
     "error": null
   },
   {
+    "entityId": 1,
     "name": "back",
     "hz": 60,
     "count": 241,
-    "maxShift": 0.07276917924959832,
+    "maxShift": 0.07371156452392498,
     "error": null
   },
   {
+    "entityId": 1,
     "name": "back",
     "hz": 120,
     "count": 481,
-    "maxShift": 0.07398922525932897,
+    "maxShift": 0.07371156475259409,
     "error": null
   },
   {
+    "entityId": 1,
     "name": "corner",
     "hz": 15,
     "count": 61,
-    "maxShift": 0.11191412163716659,
+    "maxShift": 0.12368080159072244,
     "error": null
   },
   {
+    "entityId": 1,
     "name": "corner",
     "hz": 30,
     "count": 121,
-    "maxShift": 0.12050962164674335,
+    "maxShift": 0.11562361157863385,
     "error": null
   },
   {
+    "entityId": 1,
     "name": "corner",
     "hz": 60,
     "count": 241,
-    "maxShift": 0.12050962175590524,
+    "maxShift": 0.12759959806094823,
     "error": null
   },
   {
+    "entityId": 1,
     "name": "corner",
     "hz": 120,
     "count": 481,
-    "maxShift": 0.12152913044842696,
+    "maxShift": 0.1275995981594657,
     "error": null
   },
   {
+    "entityId": 1,
     "name": "reverse",
     "hz": 15,
     "count": 61,
-    "maxShift": 0.06355071595381645,
+    "maxShift": 0.06455469376022893,
     "error": null
   },
   {
+    "entityId": 1,
     "name": "reverse",
     "hz": 30,
     "count": 121,
-    "maxShift": 0.06294916160452652,
+    "maxShift": 0.06940629690467737,
     "error": null
   },
   {
+    "entityId": 1,
     "name": "reverse",
     "hz": 60,
     "count": 241,
-    "maxShift": 0.07587696625234676,
+    "maxShift": 0.06940629691405854,
     "error": null
   },
   {
+    "entityId": 1,
     "name": "reverse",
     "hz": 120,
     "count": 481,
-    "maxShift": 0.07587696625234676,
+    "maxShift": 0.07589866294837565,
     "error": null
   },
   {
+    "entityId": 1,
     "name": "idle",
     "hz": 15,
     "count": 61,
@@ -147,6 +168,7 @@
     "error": null
   },
   {
+    "entityId": 1,
     "name": "idle",
     "hz": 30,
     "count": 121,
@@ -154,6 +176,7 @@
     "error": null
   },
   {
+    "entityId": 1,
     "name": "idle",
     "hz": 60,
     "count": 241,
@@ -161,6 +184,7 @@
     "error": null
   },
   {
+    "entityId": 1,
     "name": "idle",
     "hz": 120,
     "count": 481,
@@ -168,31 +192,99 @@
     "error": null
   },
   {
+    "entityId": 1,
     "name": "turn",
     "hz": 15,
     "count": 61,
-    "maxShift": 0.06824102568816821,
+    "maxShift": 0.06502529822588707,
     "error": null
   },
   {
+    "entityId": 1,
     "name": "turn",
     "hz": 30,
     "count": 121,
-    "maxShift": 0.08521271455213089,
+    "maxShift": 0.08128196824594319,
     "error": null
   },
   {
+    "entityId": 1,
     "name": "turn",
     "hz": 60,
     "count": 241,
-    "maxShift": 0.09890607109121123,
+    "maxShift": 0.09317459008336243,
     "error": null
   },
   {
+    "entityId": 1,
     "name": "turn",
     "hz": 120,
     "count": 481,
-    "maxShift": 0.10409580764107838,
+    "maxShift": 0.09916608561032242,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "arc",
+    "hz": 15,
+    "count": 61,
+    "maxShift": 0.09393661814977326,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "arc",
+    "hz": 30,
+    "count": 121,
+    "maxShift": 0.09721105105974702,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "arc",
+    "hz": 60,
+    "count": 241,
+    "maxShift": 0.09845818483862344,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "arc",
+    "hz": 120,
+    "count": 481,
+    "maxShift": 0.11709532917308667,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "startstop",
+    "hz": 15,
+    "count": 61,
+    "maxShift": 0.05670289444052488,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "startstop",
+    "hz": 30,
+    "count": 121,
+    "maxShift": 0.056904566955372445,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "startstop",
+    "hz": 60,
+    "count": 241,
+    "maxShift": 0.07078948391960546,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "startstop",
+    "hz": 120,
+    "count": 481,
+    "maxShift": 0.07296897841633763,
     "error": null
   }
 ]

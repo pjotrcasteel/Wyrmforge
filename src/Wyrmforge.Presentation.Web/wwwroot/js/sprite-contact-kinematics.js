@@ -70,7 +70,7 @@ export function solveSupportedSourcePose(frame,targets,options){
     if(!(totalMass>0))throw new TypeError('Positive whole-body source mass required');
     const plus=(point,delta)=>point.map((v,i)=>v+delta[i]);
     let bodyShift=[0,0,0],posed,contacts,center,support;
-    for(let pass=0;pass<=10;pass++){
+    for(let pass=0;pass<=(options.fitReach?32:10);pass++){
         if(options.fitReach){
             // Project the coherent body into all declared leg reach spheres.
             // The source's minimum flexion supplies the reach reserve; never
@@ -127,7 +127,7 @@ export function solveSupportedSourcePose(frame,targets,options){
         if(Math.hypot(...next)>maxBodyTranslation){const error=new RangeError('Authored source body translation envelope exceeded');error.sourcePoseFailure={bodyShift,next,center,support,targets};throw error;}
         bodyShift=next;
     }
-    throw new RangeError('Reposed whole-body source mass remains outside actual support');
+    const error=new RangeError('Reposed whole-body source mass remains outside actual support');error.sourcePoseFailure={bodyShift,center,support,targets};throw error;
 }
 function segmentTransform(fromHead,fromTail,toHead,toTail){
     const x=fromTail[0]-fromHead[0],y=fromTail[1]-fromHead[1],length=Math.hypot(x,y);

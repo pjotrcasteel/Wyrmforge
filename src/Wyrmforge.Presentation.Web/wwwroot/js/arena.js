@@ -11,7 +11,7 @@ import { drawSpellCastMotion, drawSpellProjectile, drawSpellImpact } from './are
 import { drawMage, updateMageWalk } from './arena-mage.js';
 import { drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions, enemyFacing } from './arena-enemy-art.js';
 import { preloadPaintedEnemies, drawPaintedEnemy, drawPaintedWyrm, updatePaintedCorpses, drawPaintedCorpses, mireHoundPixelPreviewEnabled } from './painted-enemies.js';
-import { preloadHollowSprites, hollowSpritesReady, createHollowState, updateHollowSprites, drawHollowEnemy, drawHollowCorpses, hollowDiagnostics, hollowSkinDescriptor } from './hollow-sprites.js';
+import { preloadHollowSprites, hollowSpritesReady, createHollowState, updateHollowSprites, drawHollowEnemy, drawHollowCorpses, hollowDiagnostics, hollowSkinDescriptor, drawHollowSkinSupportOverlay } from './hollow-sprites.js';
 import { hollowFractureEmitters, hollowFractureCanvasLights, withHollowFractureLightingFrame } from './hollow-fracture.js';
 import { preloadAshfang, createAshfangState, updateAshfang, drawAshfang, drawAshfangDeath, ashfangSockets, ashfangDiagnostics } from './ashfang-sprites.js';
 import { drawAshfangWarning, drawAshfangGroundEffects, drawAshfangAirEffects, ashfangVfxDiagnostics } from './ashfang-vfx.js';
@@ -100,6 +100,11 @@ export function readArenaDiagnostics(canvas) {
             ? liveWetForestMaterialDiagnostics(state.latestSnapshot.environment.seed) : null,
         lighting: { mode: 'night', darkness: GOTHIC_NIGHT.darkness, source: 'authoritative-csharp-snapshot' },
     };
+}
+// Explicit developer inspection; never changes the authoritative light frame.
+export function setArenaLightingInspection(canvas,view='lit'){
+    const engine=arenas.get(canvas)?.gpuWorld?.engine;if(!engine)return false;
+    engine.setDebugView(view);return true;
 }
 
 export function disposeArena(canvas) {
@@ -339,7 +344,7 @@ function draw(state, snapshot, width, height) {
             if(capture.x+capture.size<camera.x-384||capture.y+capture.size<camera.y-384||capture.x>camera.x+width+384||capture.y>camera.y+height+384)continue;
             tile=state.gpuActorScratch??=document.createElement('canvas');tile.width=tile.height=Math.ceil(capture.size);
             ctx=tile.getContext('2d');ctx.imageSmoothingEnabled=false;ctx.translate(-capture.x,-capture.y);
-            if(layer.kind==='enemy')skin=hollowSkinDescriptor(layer.enemy,state.hollow);
+            if(layer.kind==='enemy'&&gpu.skinCount<gpu.maxSkinActors)skin=hollowSkinDescriptor(layer.enemy,state.hollow);
         }
         if (layer.kind === 'masonry') {
             drawArenaCloisterElevation(ctx, layer);
@@ -368,6 +373,7 @@ function draw(state, snapshot, width, height) {
         }
     }
     if(gpu)try{gpu.render(ctx,state.sharedLightingFrame);}catch(error){state.gpuError=String(error);gpu.dispose();state.gpuWorld=null;gpu=null;}
+    if(gpu)drawHollowSkinSupportOverlay(ctx,state.hollow);
     drawReliquaryEmergence(ctx, snapshot.reliquary);
     drawBellWardenEntrance(ctx, snapshot.bellWarden);
     if (snapshot.powerBurst) {

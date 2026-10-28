@@ -218,6 +218,23 @@ export function hollowSkinDescriptor(enemy,state){
     if(!foundationEnabled||!pose?.foundationSample?.skinPose||pose.foundationError||enemy.hitFlash||enemy.frozen)return null;
     return {...foundation.renderDescriptor(pose.foundationSample),scale:Math.max(.65,Math.min(1.8,(Number(enemy.radius)||11)/11))*pose.visualScale};
 }
+export function drawHollowSkinSupportOverlay(ctx,state){
+    if(new URLSearchParams(globalThis.location?.search??'').get('animationContacts')!=='1')return;
+    ctx.save();ctx.lineWidth=.65;ctx.font='8px monospace';
+    for(const pose of state.entities.values()){
+        const sample=pose.foundationSample;if(!sample?.skinPose||!sample.sourcePose)continue;
+        const scale=Math.max(.65,Math.min(1.8,pose.visualScale)),b=sample.sourceSupport.groundBasis,h=foundation.profile.sourceSupport.heightProjection,z=foundation.profile.sourceSupport.groundZ;
+        const project=p=>[pose.x+(b[0]*p[0]+b[1]*p[1]+h[0]*(p[2]-z))*scale,pose.y+(b[2]*p[0]+b[3]*p[1]+h[1]*(p[2]-z))*scale];
+        ctx.strokeStyle='#99bbff';
+        for(const bone of Object.values(sample.sourcePose.sourceBones)){const a=project(bone.head),b=project(bone.tail);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();}
+        for(const contact of Object.values(sample.sourcePose.sourceContacts)){
+            ctx.strokeStyle=contact.planted?'#55ff88':'#ffaa44';ctx.beginPath();contact.footprint.forEach((p,i)=>{const q=project(p);if(i)ctx.lineTo(...q);else ctx.moveTo(...q);});ctx.closePath();ctx.stroke();
+        }
+        const center=project(sample.sourcePose.massCenter);ctx.fillStyle='#ff66dd';ctx.fillRect(center[0]-1,center[1]-1,2,2);
+        ctx.fillStyle='#ffffff';ctx.fillText(sample.clip+' '+sample.contactPhase.toFixed(2),pose.x-28,pose.y+12);
+    }
+    ctx.restore();
+}
 export function drawHollowCorpses(ctx,state,reducedMotion=false){
     for(const corpse of state.corpses.values()){
         const age=state.clock-corpse.at;

@@ -32,7 +32,9 @@ export function huntActorGeometry() {
     return actor;
 }
 export class HuntGpuWorld {
-    constructor({sourceCamera=false}={}) {
+    constructor({sourceCamera=false,maxSkinActors=12}={}) {
+        if(!Number.isSafeInteger(maxSkinActors)||maxSkinActors<0||maxSkinActors>32)throw new RangeError('Bounded Hunt skin population required');
+        this.maxSkinActors=maxSkinActors;
         this.groundY=sourceCamera?61.93548774719238/34.730770111083984:GROUND_Y;
         this.elevation=sourceCamera?Math.asin(1/this.groundY):Math.PI/4;
         this.canvas = document.createElement('canvas');
@@ -46,7 +48,7 @@ export class HuntGpuWorld {
     }
     begin(ctx, camera, width, height) {
         this.camera = camera; this.width = width; this.height = height;
-        this.used.clear(); this.objects = []; this.materials = [];
+        this.used.clear(); this.objects = []; this.materials = [];this.skinCount=0;
         this.capture('hunt-ground', ctx.canvas, 0, 0, width, height, 0, false);
     }
     capture(id, source, x, y, width, height, elevation = 0, castsShadow = true,billboard=castsShadow) {
@@ -73,6 +75,8 @@ export class HuntGpuWorld {
             castsShadow, receivesShadow: true, receivesLight: true });
     }
     captureSkin(id,descriptor,x,y,scale=1){
+        if(this.skinCount>=this.maxSkinActors)throw new RangeError('Hunt skin budget exceeded');
+        this.skinCount++;
         const resource=descriptor.skin,key='source-skin-'+resource.manifest.bufferSha256;
         if(!this.skins.has(key)){
             const geometry=new T.BufferGeometry();
