@@ -67,3 +67,20 @@ Some exploratory meshes also showed >1 connected components and one failed the w
 - [ ] H7: future separate integration only with a **new explicit authorization**, not automatically unlocked by H6 approval.
 
 **No production code, renderer, lighting or animation-engine changes are authorized on this branch.** Passing tests without compelling genuine 3D visuals does not satisfy H1–H6.
+
+
+## H1 checkpoint — connected original anatomical source (28 October, still NOT owner-ready)
+
+The visual rebuild now contains actual source code for a new `hollowed-anatomical-v3.glb` 3D character study, authored *without importing* the previous Hollowed or the approved Ashling:
+
+- `tools/art/hollow-rebuild/create_anatomical_v3.py` generates real implicit-sculpted tissue (with anatomically carved eye/mouth/chest cavities), reaching claws, skin-bearing limbs, plus separately authored ribs, clavicle, mandible and charred wound interiors.
+- Local self-test: connected primary tissue **1 component**, **watertight**, **35,536 base triangles**, 30 labeled anatomy parts and 37,780 total triangles. These are structural checks, **not** proof of visual quality.
+- Independent local VTK clay/material/silhouette renders of four genuine camera views were produced and inspected. **They remain rough.** Face and torso proportions still look too conventional, and native 96px silhouette is not sufficiently feral. This is **not an approved Hollowed**, and current runtime is untouched.
+- `tools/art/hollow-rebuild/render_source_blender.py` imports this genuinely new GLB into Blender 4.5, writes an editable `.blend`, and renders front/three-quarter/profile/back with matching clay, material and absolute silhouette. Source-only GitHub Actions runs the pipeline; results must be inspected before any Blender-rendered claim.
+- Isolated workflow is in `.github/workflows/hollow-rebuild-art.yml`. A passed CI job proves source can generate actual Blender assets, **not** owner art acceptance or game integration.
+
+**Important difference:** The earlier rejected H1 studies remain historical evidence and should **not** be imported/retopologized as a production base. The v3 anatomy is also provisional. The next art pass must fix native-scale silhouette and specific Gothic/human identity before H1 closes; do **not** add orange glow or claim H2/rig/UV completion.
+
+Reference principles used for anatomy (reference only; no source geometry copied): [OpenStax — skull](https://openstax.org/books/anatomy-and-physiology-2e/pages/7-2-the-skull), [NCBI StatPearls — thoracic cage and ribs](https://www.ncbi.nlm.nih.gov/books/NBK538328/). Organic rig source will be independently authored; reference licensing does not grant image/mesh redistribution.
+
+**No changes to animation engine / PR #387 / gameplay / Ashling / lighting engine / runtime files; no cutover.**
