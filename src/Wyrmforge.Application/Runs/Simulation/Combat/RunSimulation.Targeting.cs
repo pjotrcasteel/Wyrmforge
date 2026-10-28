@@ -50,11 +50,12 @@ public sealed partial class RunSimulation
         if (count <= 0) return Array.Empty<ICombatTarget>();
 
         var candidates = enemies
-            .Where(enemy => enemy.Health > 0)
+            .Where(enemy => IsEligibleForAim(enemy, position))
             .Cast<ICombatTarget>()
             .ToList();
 
-        if (CanTargetActiveDragon && dragon is { Health: > 0 } activeDragon) candidates.Add(activeDragon);
+        if (CanTargetActiveDragon && dragon is { Health: > 0 } activeDragon && IsEligibleForAim(activeDragon, position))
+            candidates.Add(activeDragon);
 
         return candidates
             .OrderBy(target => Vector2D.Distance(position, target.Position))
