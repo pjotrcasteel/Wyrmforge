@@ -189,6 +189,26 @@ jobs:
             --input artifacts/hollow-rebuild/horror-hollowed-h1/hollowed-horror-cc0-original-anatomy-H1-UNAPPROVED.blend \
             --output artifacts/hollow-rebuild/horror-hollowed-h1/source-armature-anatomy.json
           test -s artifacts/hollow-rebuild/horror-hollowed-h1/source-armature-anatomy.json
+      - name: Author connected armature feral claw resting stance — no animation clips, engine or keyframes
+        run: |
+          python -m py_compile tools/art/hollow-rebuild/pose_feral_rest_source_blender.py
+          python tools/art/hollow-rebuild/pose_feral_rest_source_blender.py \
+            --input artifacts/hollow-rebuild/horror-hollowed-h1/hollowed-horror-cc0-original-anatomy-H1-UNAPPROVED.blend \
+            --output artifacts/hollow-rebuild/horror-feral-rest-h1
+          test -s artifacts/hollow-rebuild/horror-feral-rest-h1/hollowed-h1-feral-rest-source-UNAPPROVED.blend
+          test -s artifacts/hollow-rebuild/horror-feral-rest-h1/source-clay-8views-BLENDER.png
+          test -s artifacts/hollow-rebuild/horror-feral-rest-h1/source-material-native96-BLENDER.png
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('artifacts/hollow-rebuild/horror-feral-rest-h1/rest-source-qc.json')
+          d=json.loads(p.read_text(encoding='utf-8'))
+          assert d['source_bones']==70 and d['skin_meshes']==1, d
+          assert d['source_actions']==0 and d['attack_clips_created']==0, d
+          assert all(v>=.22 for v in d['actual_wrist_drop_metres'].values()), d
+          assert d['animation_engine_modified'] is False and d['owner_approved'] is False
+          print('PASS geometry source-only stance, still ART UNAPPROVED.')
+          PY
       - name: Preserve 3D evidence; never ship candidate into WyrmForge runtime
         if: always()
         uses: actions/upload-artifact@v4
@@ -199,5 +219,6 @@ jobs:
             artifacts/hollow-rebuild/horror-original/creator-LICENSE.txt
             artifacts/hollow-rebuild/horror-source-review/
             artifacts/hollow-rebuild/horror-hollowed-h1/
+            artifacts/hollow-rebuild/horror-feral-rest-h1/
           if-no-files-found: warn
           retention-days: 30
