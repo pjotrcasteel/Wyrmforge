@@ -386,7 +386,9 @@ function draw(state, snapshot, width, height) {
         snapshot.dragon?.school ?? snapshot.hunt?.school, snapshot.dragon);
     // A second weaker pass colors nearby silhouettes without whitening shadows.
     drawAshfangAirEffects(ctx,snapshot,ashfangSockets(state.ashfang),state.reducedMotion.matches);
-    drawSpellLightSpill(ctx, spellLights, lightViewport, 'actors');
+    // Selection light illuminates the terrain and the selected sprite's alpha-isolated
+    // material pass above. Do not screen-blend it over all actors after occlusion.
+    drawSpellLightSpill(ctx, spellLights.filter(light => light.family !== 'selection'), lightViewport, 'actors');
     for (const impact of snapshot.elementalImpacts) drawSpellImpact(ctx, impact, state.reducedMotion.matches);
     for (const death of snapshot.deathBursts) drawDeathBurst(ctx, death);
 
