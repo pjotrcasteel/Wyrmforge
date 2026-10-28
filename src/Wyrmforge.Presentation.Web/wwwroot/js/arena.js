@@ -1,6 +1,6 @@
 import { preloadFireballV5 } from './arena-fireball-v5.js';
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
-import { attachArenaInput, getArenaMovement, getArenaAim, getArenaPropFocus } from './arena-input.js';
+import { attachArenaInput, getArenaMovement, getArenaAim, isArenaRightStickAim, getArenaPropFocus } from './arena-input.js';
 import { resolveTargetIndicator, presentTargetSigil, drawTargetIndicator, preloadTargetSigilArt, targetSelectionLightEmitter, targetSelectionCanvasLight } from './arena-target-indicator.js?v=20261028-school-palette-v1';
 import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, drawArenaCloisterElevation } from './arena-environment.js?v=20261026-compact-ground-v1';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
@@ -178,7 +178,7 @@ function startSimulationFrame(state, timestamp, rect) {
     const aim = getArenaAim(state);
     const bridgeStarted = performance.now();
 
-    state.dotNetReference.invokeMethodAsync('Frame', delta, rect.width, rect.height, movement.x, movement.y, aim.x, aim.y, getArenaPropFocus(state))
+    state.dotNetReference.invokeMethodAsync('Frame', delta, rect.width, rect.height, movement.x, movement.y, aim.x, aim.y, getArenaPropFocus(state), isArenaRightStickAim(state, aim))
         .then(snapshot => {
             if (!state.active) return;
             updatePlayerDanger(state.playerDanger, snapshot, performance.now());
