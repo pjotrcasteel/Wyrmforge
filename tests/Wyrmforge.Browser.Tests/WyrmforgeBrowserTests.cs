@@ -2659,7 +2659,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
                 { kind: 'boss', x: width * .52, y: height * .61, rx: 79, ry: 44, opacity: 1 },
                 { kind: 'object', x: width * .80, y: height * .46, rx: 32, ry: 18, opacity: 1 },
             ];
-            const labels = ['ENEMY', 'BOSS', 'OBJECT'];
+            const labels = ['FIRE', 'FROST', 'ARCANE'];
             for (let index = 0; index < fixtures.length; index++) {
                 const marker = fixtures[index];
                 const school = ['Fire', 'Frost', 'Arcane'][index];
@@ -2674,11 +2674,42 @@ public sealed class WyrmforgeBrowserTests : PageTest
             const pixels = ctx.getImageData(0, 0, width, height).data;
             let colored = 0;
             for (let i = 3; i < pixels.length; i += 4) if (pixels[i] > 0) colored++;
-            return { ok: true, colored };
+
+            // Sample real Canvas output of each school using the loaded, immutable PNG.
+            // A wrong Arcane fallback or an all-purple atlas would fail this check.
+            const tones = {};
+            for (const school of ['Fire', 'Frost', 'Storm', 'Arcane', 'Death', 'Binding']) {
+                const probe = document.createElement('canvas');
+                probe.width = 256;
+                probe.height = 192;
+                const surface = probe.getContext('2d', { willReadFrequently: true });
+                const marker = { kind: 'enemy', x: 128, y: 96, rx: 68, ry: 38, opacity: 1 };
+                if (!drawTargetIndicator(surface, marker, 'contrast', 0, true, art, school))
+                    return { ok: false, colored, schoolColors: false };
+                const data = surface.getImageData(0, 0, probe.width, probe.height).data;
+                const totals = [0, 0, 0];
+                let count = 0;
+                for (let i = 0; i < data.length; i += 4) {
+                    if (data[i + 3] < 30) continue;
+                    for (let c = 0; c < 3; c++) totals[c] += data[i + c];
+                    count++;
+                }
+                tones[school] = totals.map(value => value / Math.max(count, 1));
+            }
+            const schoolColors =
+                tones.Fire[0] > tones.Fire[1] && tones.Fire[1] > tones.Fire[2] &&
+                tones.Frost[2] > tones.Frost[1] && tones.Frost[1] > tones.Frost[0] &&
+                tones.Storm[0] > tones.Storm[2] &&
+                tones.Arcane[2] > tones.Arcane[0] &&
+                tones.Death[1] > tones.Death[0] &&
+                tones.Binding[1] > tones.Binding[0];
+            return { ok: true, colored, schoolColors };
         }");
         Assert.IsTrue(proof.GetProperty("ok").GetBoolean());
         Assert.IsGreaterThan(180, proof.GetProperty("colored").GetInt32(),
-            "Neutral target sigils must draw visible arc and rune pixels on the live portrait Hunt.");
+            "V3 sigils must draw visible authored rune pixels on the live portrait Hunt.");
+        Assert.IsTrue(proof.GetProperty("schoolColors").GetBoolean(),
+            "The real V3 base ring and center must carry all six correct school colors.");
 
         await ScreenshotAsync($"mobile-arcane-target-sigil-style-qc-{width}.png");
     }
