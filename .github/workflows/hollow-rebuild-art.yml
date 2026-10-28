@@ -270,3 +270,77 @@ jobs:
             artifacts/hollow-rebuild/horror-facial-v2/
           if-no-files-found: warn
           retention-days: 30
+
+  cc0-anatomical-head-audit:
+    name: Anatomically accurate CC0 face and skull — isolated real Blender screening
+    needs: source-boundary
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '2'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            tools/art/hollow-rebuild/
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install real Blender 4.5 and reference image compositor
+        run: |
+          python -m pip install --disable-pip-version-check bpy==4.5.15 Pillow==11.3.0
+          python -c "import bpy; print('Anatomy source audit Blender',bpy.app.version_string)"
+      - name: Download original MRI-derived CC0 human skull AND facial skin layer
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/hollow-rebuild/head-original
+          curl --fail --location --silent --show-error --retry 3 --max-time 120 \
+            --user-agent 'WyrmForge-Hollowed-Source-Research/1.0' \
+            'https://opengameart.org/sites/default/files/head_1.blend' \
+            -o artifacts/hollow-rebuild/head-original/head-original.blend
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib
+          p=Path('artifacts/hollow-rebuild/head-original/head-original.blend')
+          assert p.stat().st_size>300000
+          assert p.read_bytes()[:7]==b'BLENDER'
+          (p.parent/'LICENSE-CC0.txt').write_text(
+            'Author: Drummyfish\nTitle: Brain and Skull (includes human face skin)\n'
+            'License: CC0 1.0 Universal\n'
+            'https://opengameart.org/content/brain-and-skull\n'
+            'https://creativecommons.org/publicdomain/zero/1.0/\n'
+            'Original source SHA256: '+hashlib.sha256(p.read_bytes()).hexdigest()+'\n',
+            encoding='utf-8')
+          print('True original anatomical Blender source',p.stat().st_size)
+          PY
+      - name: Independently render exact original skull and face geometry, with source inventory
+        run: |
+          python -m py_compile tools/art/hollow-rebuild/inspect_cc0_anatomical_head_blender.py
+          python tools/art/hollow-rebuild/inspect_cc0_anatomical_head_blender.py \
+            --input artifacts/hollow-rebuild/head-original/head-original.blend \
+            --output artifacts/hollow-rebuild/head-reference-review
+          test -s artifacts/hollow-rebuild/head-reference-review/source-clay-8views-BLENDER.png
+          test -s artifacts/hollow-rebuild/head-reference-review/source-clay-native96-BLENDER.png
+          test -s artifacts/hollow-rebuild/head-reference-review/external-anatomical-head-only-UNAPPROVED.blend
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          j=json.loads(Path('artifacts/hollow-rebuild/head-reference-review/head-source-audit.json').read_text())
+          assert j['mesh_count']>=2 and j['total_vertices']>500
+          assert j['animation_actions']==0 and j['candidate_approved'] is False
+          print('Independent real anatomical model verified; actual graft not yet done')
+          PY
+      - name: Preserve original head inventory, genuine renders and CC0 attribution
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hollowed-h1-cc0-ANATOMICAL-HUMAN-HEAD-SOURCE-REVIEW-UNAPPROVED
+          path: |
+            artifacts/hollow-rebuild/head-original/LICENSE-CC0.txt
+            artifacts/hollow-rebuild/head-reference-review/
+          if-no-files-found: warn
+          retention-days: 30
