@@ -61,9 +61,13 @@ public sealed class EngineLabsBrowserTests : PageTest
 
         var refresh = Page.GetByRole(AriaRole.Button, new() { Name = "Refresh AI inspector" });
         await Expect(refresh).ToBeVisibleAsync();
+        await Page.EvaluateAsync("async () => { window.aiViewport = await import('./js/arena.js'); }");
+        await Page.WaitForFunctionAsync(
+            "() => window.aiViewport.readArenaDiagnostics(document.querySelector('.enemy-lab canvas'))?.hud?.seconds >= 6",
+            null, new() { Timeout = 45000 });
         await refresh.ClickAsync();
-        await Expect(Page.GetByTestId("agent-performance")).ToBeVisibleAsync();
-        await Expect(Page.GetByTestId("agent-inspector")).ToBeVisibleAsync();
+        await Expect(Page.GetByTestId("agent-performance")).ToContainTextAsync("MaxCommittedThreats");
+        await Expect(Page.GetByTestId("agent-inspector")).ToContainTextAsync("MireHound");
 
         var scrollWidth = await Page.EvaluateAsync<int>("() => document.documentElement.scrollWidth");
         Assert.IsLessThanOrEqualTo(391, scrollWidth,
