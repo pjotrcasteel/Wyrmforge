@@ -449,3 +449,11 @@ cloth-only endpoint mismatch, each with Blender exit 1. The latter measures a
 Latest complete JavaScript suite: 544/544. Live capture browser errors: none.
 All earlier GPU, moving-turn, full-sequence, horde/device and final-review gates
 remain open; AN0–AN6 is not complete.
+
+A bounded source alternative uses 16 gait phases × 8 complete action poses,
+with action FPS 6 to preserve the original 4/3-second action duration. Reopened
+mesh QC passes: maximum actual stance drift 2.42116e-7m and full-skin entry/exit
+discrepancy 1.81647e-6m. The action-pose count is an explicit authoring option,
+not a relaxed contact tolerance. Its eight-facing export and runtime proof remain
+pending. The separately rendered 256-pose S/E study is H.264/yuv420p at 768×480;
+it is not the required continuous walk→turn→chase Hunt approval movie.
