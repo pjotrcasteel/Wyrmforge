@@ -134,7 +134,7 @@
         await StartArena(retry: true);
     }
     [JSInvokable]
-    public Task<RunRenderSnapshot> Frame(double delta, double width, double height, double movementX, double movementY, double aimX = 0, double aimY = 0, int? focusPropId = null)
+    public Task<RunRenderSnapshot> Frame(double delta, double width, double height, double movementX, double movementY, double aimX = 0, double aimY = 0, int? focusPropId = null, bool stickSnap = false)
     {
         if (simulation is null)
         {
@@ -148,7 +148,7 @@
         if (SecondsQuery is { } limit && double.IsFinite(limit) && simulationSeconds >= Math.Max(0, limit)) return Task.FromResult(snapshot with { Paused = true });
         var movement = autoplay
             ? agent!.ChooseMovement(new RunAgentObservation(snapshot, [], [], [], [], [], simulation.Depth, 0, false))
-            : new MovementInput(movementX, movementY, aimX, aimY);
+            : new MovementInput(movementX, movementY, aimX, aimY, focusPropId, stickSnap);
         simulationSeconds += Math.Clamp(delta, 0, .05);
         return Task.FromResult(simulation.Tick(delta, movement, width, height));
     }

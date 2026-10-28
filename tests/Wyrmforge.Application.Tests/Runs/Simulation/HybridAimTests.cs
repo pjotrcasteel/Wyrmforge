@@ -252,8 +252,9 @@ public sealed class HybridAimTests
         SetPrivate(simulation, "viewportHeight", 300d);
         var hidden = AddEnemy(simulation, 1, 570, 300);
         var visible = AddEnemy(simulation, 2, 540, 425);
-        Assert.IsGreaterThan(Vector2D.Distance(new Vector2D(400, 300), visible.Position),
-            Vector2D.Distance(new Vector2D(400, 300), hidden.Position));
+        Assert.IsLessThan(Vector2D.Distance(new Vector2D(400, 300), hidden.Position),
+            Vector2D.Distance(new Vector2D(400, 300), visible.Position),
+            "Offscreen target is deliberately closer, so camera visibility must take priority.");
 
         Invoke(simulation, "UpdateAim", default(MovementInput));
         Assert.AreEqual(visible.Id, simulation.CreateSnapshot().Player.AimTargetId);
