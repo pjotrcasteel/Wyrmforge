@@ -156,7 +156,9 @@ def tapered_tube(points, radius, sides=8):
             normal=tangent.cross(Vector((0,1,0)))
         normal.normalize()
         other=tangent.cross(normal).normalized()
-        taper=max(.12, math.sin(math.pi*i/(count-1))**.45)
+        # sin(pi) can be tiny negative due float rounding at the tip.
+        # Clamp before fractional power; complex taper invalidates geometry.
+        taper=max(.12, max(0.0, math.sin(math.pi*i/(count-1)))**.45)
         for k in range(sides):
             ang=2*math.pi*k/sides
             v=pt + radius*taper*(math.cos(ang)*normal+math.sin(ang)*other)
