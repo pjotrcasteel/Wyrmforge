@@ -83,6 +83,12 @@ def sculpt_torn_cavity(actor, base, metrics):
             char_faces += 1
 
     bpy.context.view_layer.update()
+    rear_wound_faces = sum(
+        poly.material_index == char_index and poly.normal.y >= -.20
+        for poly in actor.data.polygons
+    )
+    if rear_wound_faces:
+        raise ValueError(f"Necrotic cavity leaked around to the back: {rear_wound_faces} faces")
     if changed < 100 or deep < 35 or char_faces < 25 or peak_depth < .045:
         raise ValueError(
             f"Insufficient connected wound sculpture: vertices={changed}, "
@@ -93,6 +99,7 @@ def sculpt_torn_cavity(actor, base, metrics):
     metrics["sculpted_wound_vertices"] = changed
     metrics["deep_torn_tissue_vertices"] = deep
     metrics["wound_cavity_polygon_faces"] = char_faces
+    metrics["rear_wound_faces"] = rear_wound_faces
     metrics["true_cavity_depth_m"] = round(peak_depth, 5)
 
 
