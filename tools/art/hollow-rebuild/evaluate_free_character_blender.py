@@ -33,7 +33,9 @@ RECOGNIZED_LICENSES = ("CC0-1.0", "CC-BY-4.0", "GAME-USE-ONLY")
 
 
 def arguments():
-    argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
+    # Blender CLI passes script args after '--'; standalone bpy Python uses
+    # normal argv without that separator. Both are supported deliberately.
+    argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:]
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", type=Path, required=True)
     parser.add_argument("--license-file", type=Path, required=True)
