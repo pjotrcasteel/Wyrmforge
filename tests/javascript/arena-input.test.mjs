@@ -225,6 +225,9 @@ test('right thumb can aim west with a short drag while remaining on the right ha
     a.canvas.dispatch('touchmove', { touches: [{ ...left, clientX: 110 }, { ...right, clientX: 340 }] });
     assert.deepEqual(getArenaMovement(a.state), { x: 1, y: 0 });
     assert.deepEqual(getArenaAim(a.state), { x: -1, y: 0 });
+    assert.equal(isArenaStickAim(a.state, getArenaAim(a.state)), true, 'Mobile right-thumb drags use the same snap as gamepads.');
+    a.canvas.dispatch('touchend', { changedTouches: [{ ...right, clientX: 340 }] });
+    assert.equal(isArenaStickAim(a.state, getArenaAim(a.state)), false);
     a.detach();
 });
 
