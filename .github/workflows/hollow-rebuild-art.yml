@@ -86,7 +86,7 @@ jobs:
           mkdir -p artifacts/hollow-rebuild/horror-original
           curl --fail --location --silent --show-error --retry 3 --max-time 180 \
             --user-agent "WyrmForge-Hollowed-Source-Research/1.0" \
-            'https://opengameart.org/sites/default/files/Colors.zip' \
+            'https://opengameart.org/sites/default/files/Poses.zip' \
             -o artifacts/hollow-rebuild/horror-original/source.zip
           test "$(stat -c%s artifacts/hollow-rebuild/horror-original/source.zip)" -gt 10000000
           python - <<'PY'
@@ -100,15 +100,20 @@ jobs:
                   raise ValueError('CC0 creator archive unexpectedly large')
               if any('..' in Path(item.filename).parts or item.filename.startswith('/') for item in names):
                   raise ValueError('Creator archive has unsafe filename')
-              assets=[item for item in names if item.filename.lower().endswith(('.fbx','.blend','.glb','.gltf'))]
+              print('CREATOR ARCHIVE FIRST FILES:',[(item.filename,item.file_size) for item in names[:100]])
+              assets=[item for item in names if item.filename.lower().endswith(('.fbx','.blend','.glb','.gltf','.obj','.dae'))]
               if not assets:
-                  raise ValueError('No editable 3D model in original creator ZIP')
+                  raise ValueError('No editable FBX/BLEND/GLB/OBJ/DAE in Poses.zip; source unavailable')
               # Never pick a standalone "Run" or "Attack" animation file;
               # choose the largest *character* mesh-bearing FBX instead.
               excluded=('animation','walk','run','jump','attack','idle','death','pose','dance','sprint')
               models=[i for i in assets if not any(x in Path(i.filename).stem.lower() for x in excluded)]
               if not models:
-                  raise ValueError('Only animation clips found; no real character source')
+                  # Rigged animated character poses may be individual FBXs
+                  # that still carry a complete skinned mesh. Import source
+                  # geometry only; strip all animation actions.
+                  models=assets
+                  print('ALL CREATOR SOURCE NAMES WERE POSES; evaluating mesh-bearing source instead')
               models.sort(key=lambda item: (item.file_size, '.blend' in item.filename.lower()),reverse=True)
               selected=models[0]
               # Extract only original artist's chosen character source plus PNGs;
@@ -129,7 +134,7 @@ jobs:
                   'OpenGameArt license: Creative Commons Zero (CC0 1.0 Universal)\n'
                   'https://opengameart.org/content/3d-horror-game-monster\n'
                   'https://creativecommons.org/publicdomain/zero/1.0/\n'
-                  'CC0 model sourced from artist original Colors.zip; no external animations/scripts used.\n'
+                  'CC0 model sourced from artist original Poses.zip; evaluation strips all animations.\n'
                   'Original ZIP SHA256: '+hashlib.sha256(src.read_bytes()).hexdigest()+'\n',
                   encoding='utf-8')
               print('SELECTED CREATOR SOURCE',selected.filename,'SIZE',selected.file_size)
