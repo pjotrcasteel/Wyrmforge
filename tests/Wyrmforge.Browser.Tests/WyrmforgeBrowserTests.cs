@@ -2579,6 +2579,33 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    public async Task Mobile_LiveHunt_V3SigilOnActualCSharpSelectedEnemy_VisualEvidence()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await OpenAsync();
+        await EnterFirstTrailAsync();
+        await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
+
+        // No injected overlay or manually painted target: wait for the real C# aim identity.
+        await Page.WaitForFunctionAsync(@"async () => {
+            const { readArenaDiagnostics } = await import('./js/arena-performance.js');
+            const canvas = document.querySelector('canvas.game-canvas');
+            const state = canvas && readArenaDiagnostics(canvas);
+            const id = state?.player?.aimTargetId;
+            return !state?.paused && !state?.ended && Number.isInteger(id) &&
+                state.enemies?.some(enemy => enemy.entityId === id && enemy.healthRatio > 0);
+        }", null, new() { Timeout = 45000 });
+
+        // Capture unmodified production frames over the genuine target and attack cycle.
+        // The current real-size decal and six center textures must be evaluated visually.
+        for (var frame = 0; frame < 4; frame++)
+        {
+            await Page.WaitForTimeoutAsync(200);
+            await ScreenshotAsync($"mobile-v3-sigil-live-hollowed-390-frame-{frame}.png");
+        }
+    }
+
+    [TestMethod]
     [DataRow(320, 568)]
     [DataRow(390, 844)]
     public async Task Mobile_LiveHunt_ArcaneTargetSigilStyleProof_IsLegibleAndSchoolNeutral(int width, int height)
