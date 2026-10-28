@@ -46,11 +46,14 @@ def remove_remaining_long_cloth(actor):
         legs = sum(weights.get(name, 0.0) for name in LEGS)
         # Work's first cleanup stops around the hip. This deliberately finishes
         # only residual skirt-like weighted geometry below the short ragged hem.
-        hem = 0.015 + 0.018 * math.sin(vertex.co.x * 27 + vertex.co.y * 13)
+        # The first pass leaves a skirt-like band in true profile views.
+        # Cut remaining clearly cloth-dominated hip/upper-thigh panels, but
+        # protect any anatomy with meaningful leg weights.
+        hem = 0.070 + 0.024 * math.sin(vertex.co.x * 27 + vertex.co.y * 13)
         if legs >= 0.18:
             protected += 1
             continue
-        if cloth >= 0.58 and vertex.co.z < hem:
+        if cloth >= 0.42 and vertex.co.z < hem:
             selected.append(vertex.index)
 
     if len(selected) > max(1, int(len(mesh.vertices) * 0.15)):
