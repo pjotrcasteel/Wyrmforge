@@ -180,6 +180,29 @@ def restore_original_texture_atlas(source, meshes):
             "material_image_links":links,"atlas_name":source_atlas.name}
 
 
+def frame_legacy_source(meshes):
+    """Preview a historic rig without changing its transform hierarchy.
+
+    Blender 2.x .blend libraries can evaluate deformers/constraints after
+    reparents in a way that invalidates iterative root normalization.
+    The source art review must preserve creator rig transforms and instead
+    move camera/lights around independently measured evaluated geometry.
+    Production normalization, weights and retargeting are NOT performed.
+    """
+    low,high=evaluated_mesh_bounds(meshes)
+    extent=high-low
+    if extent.z<=.01 or extent.z>1000 or max(extent.x,extent.y)>8*extent.z:
+        raise ValueError("No plausible single humanoid mesh for native-scale framing")
+    return {
+        "mode":"historical .blend source preserved; camera only",
+        "source_evaluated_height":round(float(extent.z),6),
+        "source_low_xyz":[round(float(v),6) for v in low],
+        "source_high_xyz":[round(float(v),6) for v in high],
+        "rig_hierarchy_reparented":False,
+        "rig_scale_modified":False,
+    }
+
+
 def normalize(meshes, target_height=3.1):
     """Normalize by ACTUAL evaluated skinned bounds and then verify result.
 
@@ -247,18 +270,22 @@ def studio(meshes):
     world.node_tree.nodes["Background"].inputs["Color"].default_value = (.045, .05, .06, 1)
     world.node_tree.nodes["Background"].inputs["Strength"].default_value = .6
     scene.world = world
+    frame_low,frame_high=evaluated_mesh_bounds(meshes)
+    frame_center=(frame_low+frame_high)/2
+    frame_extent=frame_high-frame_low
+    unit=max(1.0,float(frame_extent.z)/3.1)
     for name, position, power in (
-        ("H1 neutral key", (-4, -5, 6), 550),
-        ("H1 neutral rim", (3, 3, 5), 350),
+        ("H1 neutral key",(-4,-5,6),550),
+        ("H1 neutral rim",(3,3,5),350),
     ):
         data = bpy.data.lights.new(name, "AREA")
         lamp = bpy.data.objects.new(name, data)
         scene.collection.objects.link(lamp)
-        lamp.location = position
-        data.energy = power
+        lamp.location = frame_center + Vector(tuple(unit * c for c in position))
+        data.energy = power * unit * unit
         data.shape = "DISK"
-        data.size = 4
-        look_at(lamp, (0, 0, 1.5))
+        data.size = 4 * unit
+        look_at(lamp, frame_center)
     data = bpy.data.cameras.new("H1 source inspection orthographic")
     camera = bpy.data.objects.new("H1 camera", data)
     scene.collection.objects.link(camera)
@@ -316,7 +343,8 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     meshes = load_source(source)
     texture_provenance = restore_original_texture_atlas(source, meshes)
-    scale = normalize(meshes)
+    scale = (frame_legacy_source(meshes) if source.suffix.lower()==".blend"
+             else normalize(meshes))
     camera, clay, center = studio(meshes)
     render_study(out, camera, clay, "clay", center)
     render_study(out, camera, clay, "material", center)
