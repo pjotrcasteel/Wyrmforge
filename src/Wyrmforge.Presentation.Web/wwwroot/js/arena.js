@@ -21,7 +21,7 @@ import { drawBellWardenGround, drawBellWardenEntrance, drawBellWardenBar } from 
 import { drawWinterBellGround, drawWinterBellAir } from './arena-winterbell-vfx.js';
 import { drawGlassReliquaryGround, drawGlassReliquaryAir } from './arena-glass-reliquary-vfx.js';
 import { loadArt, artReady, hasArtFrame, drawArtFrame } from './art-atlas.js';
-import { buildSpellLights, drawSpellLightSpill, sampleSpellLight } from './arena-spell-lighting.js';
+import { buildSpellLights, drawSpellLightSpill, sampleSpellLight, drawActorWithEmitter } from './arena-spell-lighting.js';
 import { gothicNightLightSources, gothicNightPlan, drawGothicNight, GOTHIC_NIGHT } from './arena-night-lighting.js';
 import { createWetForestFirelightPlan } from './arena-wet-forest-dressing.js';
 import { resolveArenaCamera, drawExitGuide } from './arena-camera.js';
@@ -110,6 +110,7 @@ function createState(canvas, dotNetReference) {
         canvas,
         context: canvas.getContext('2d'),
         nightMask: document.createElement('canvas'),
+        actorLightBuffer: document.createElement('canvas'),
         dotNetReference,
         active: true,
         simulationBusy: false,
@@ -293,6 +294,8 @@ function draw(state, snapshot, width, height) {
     for (const pulse of snapshot.splashPulses) drawSplashPulse(ctx, pulse, snapshot.dragon?.school);
     // Neutral magic lies beneath the world sprites without replacing hostile attack telegraphs.
     drawTargetIndicator(ctx, targetIndicator, 'ground', visualSeconds, state.reducedMotion.matches);
+    // All luminous detail remains on the ground BEFORE opaque depth-sorted actors.
+    drawTargetIndicator(ctx, targetIndicator, 'contrast', visualSeconds, state.reducedMotion.matches);
     drawAimRune(ctx, snapshot.player);
     drawWardReadiness(ctx, snapshot.player, visualSeconds, state.reducedMotion.matches);
     if (snapshot.wardPulse) drawWardPulse(ctx, snapshot.wardPulse, state.reducedMotion.matches);
@@ -328,8 +331,11 @@ function draw(state, snapshot, width, height) {
             drawAshfangDeath(ctx,state.ashfang);
         } else if (layer.kind === 'enemy') {
             const enemy = layer.enemy;
-            drawEnemy(ctx, enemy, sampleSpellLight(spellLights, enemy.x, enemy.y),
+            const paintEnemy = surface => drawEnemy(surface, enemy, sampleSpellLight(spellLights, enemy.x, enemy.y),
                 enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId),state.hollow,state.ashling);
+            // The same point emitter illuminates opaque Hollowed, Ashling and fallback sprites.
+            // A reusable source-atop material pass preserves silhouette/alpha occlusion.
+            drawActorWithEmitter(ctx, state.actorLightBuffer, enemy, selectionEmitter, paintEnemy);
             drawEliteCrest(ctx, enemy, visualSeconds, state.reducedMotion.matches);
         } else {
             drawMage(ctx, snapshot.player, snapshot.castMotion, danger.hit, state.reducedMotion.matches,
@@ -360,8 +366,7 @@ function draw(state, snapshot, width, height) {
     const realFires = createWetForestFirelightPlan(snapshot.environment, worldWidth, worldHeight);
     const nightSources = gothicNightLightSources(snapshot, spellLights, worldWidth, worldHeight, realFires);
     drawGothicNight(ctx, gothicNightPlan(snapshot.player, nightSources, lightViewport), state.nightMask);
-    // Restrained rune fragments survive the night veil without adding a light emitter.
-    drawTargetIndicator(ctx, targetIndicator, 'contrast', visualSeconds, state.reducedMotion.matches);
+    // Never redraw the floor seal over enemies after the night pass.
     // Tactical telegraphs must remain readable even when the ground is nearly
     // black. They are presentation cues, not physical light emitters.
     for (const hazard of snapshot.huntHazards ?? []) {
