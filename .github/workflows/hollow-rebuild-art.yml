@@ -42,3 +42,48 @@ jobs:
 
 # This workflow does not touch, test, import, trigger or modify the shared
 # universal animation engine. It does not build or deploy the game.
+
+  blender-source-proof:
+    name: Original 3D source — real Blender 4.5 clay review (NOT approved art)
+    needs: source-boundary
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '2'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install isolated Blender 4.5 LTS and source-only art dependencies
+        run: |
+          python -m pip install --disable-pip-version-check \
+            bpy==4.5.15 Pillow==11.3.0 trimesh==4.11.1 \
+            numpy scipy scikit-image
+          python -c "import bpy; print('Real Blender:', bpy.app.version_string)"
+      - name: Generate independent original 3D anatomical source
+        run: |
+          python -m py_compile tools/art/hollow-rebuild/create_anatomical_v3.py tools/art/hollow-rebuild/render_source_blender.py
+          python tools/art/hollow-rebuild/create_anatomical_v3.py \
+            --output artifacts/hollow-rebuild/h1-anatomical-v3
+          test -s artifacts/hollow-rebuild/h1-anatomical-v3/hollowed-anatomical-v3.glb
+      - name: Import editable new Hollowed and render genuine Blender viewpoints
+        run: |
+          python tools/art/hollow-rebuild/render_source_blender.py \
+            --input artifacts/hollow-rebuild/h1-anatomical-v3/hollowed-anatomical-v3.glb \
+            --output artifacts/hollow-rebuild/h1-anatomical-v3/blender
+          test -s artifacts/hollow-rebuild/h1-anatomical-v3/blender/hollowed-source-h1.blend
+          test -s artifacts/hollow-rebuild/h1-anatomical-v3/blender/clay-4views-BLENDER.png
+          test -s artifacts/hollow-rebuild/h1-anatomical-v3/blender/silhouette-native96-BLENDER.png
+      - name: Preserve source, Blender file, real renders and metrics — NOT production
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hollowed-h1-original-3d-source-blender-review-UNAPPROVED
+          path: artifacts/hollow-rebuild/h1-anatomical-v3/
+          if-no-files-found: warn
+          retention-days: 30
