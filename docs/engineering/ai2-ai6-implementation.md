@@ -71,3 +71,12 @@ The opt-in `AgentPerformanceSnapshot` differentiates simultaneous committed atta
 **Damage instrumentation correctness:** the original instrumentation checkpoint sampled player HP at the end of `UpdateEnemies`, but hostile attacks still held their damage in `pendingPlayerDamage`; this would always undercount or report zero. The final hook samples immediately around `ResolvePlayerDamage()` in `RunSimulation.Tick`, with zero-damage frames recorded separately from combat pressure. This correction is included before AI6 acceptance and does not change how damage is resolved.
 
 Ashfang's opt-in `hunt-lab?ai5=true` inspector also exposes total and peak-per-tick **resolved** hunter HP loss next to the agent/adaptation decisions. The phase-two 390px browser scenario now checks these fields. Damage pressure is observational, including hostile sources resolved in that Hunt, and is never used to select attacks.
+
+## Engine Lab delivery checkpoint — 29 October 2026
+
+The first centralized lab route `/engine-labs/ai` reuses the **existing** opt-in Town, Enemy and Ashfang application surfaces through one live scene iframe. Its test controls choose AI1 vision, AI2 civilian schedule, AI3 reaction, AI4 pack, AI5 elite/boss, AI6 64-Hound stress, and AI0 fallback. The seed follows the supported Enemy/Hunt scenario query parameters; Town keeps its existing seed/state. The hub `/engine-labs` links all seven durable engine routes; **only AI has interactive lab behavior**. Other routes explicitly label their own engine-lab acceptance as pending and link to existing relevant proofs where available.
+
+Before this checkpoint, the recorded browser workflow at PR head's synthetic merge commit had **154 passing / 2 failing browser tests**. Both failures were 30-second Trail movement timeouts (`Mobile_RoamingTrail_CameraFollowsHunterBeyondScreenAndPageDoesNotScroll` and `Mobile_FirstTrail_SafariTouchDrag_MovesHunterWithoutDocumentScroll`), not identified as AI regressions. Re-run latest-head C#/browser/packaging checks after this checkpoint; the earlier run does not prove this source head. PR #387 actively modifies `RunSimulation.cs`, `RunSimulation.DevelopmentEnemy.cs`, `DevelopmentEnemySetup.cs` and `EnemyLab.razor`; this lab checkpoint deliberately does not modify those four shared files.
+
+The lab remains a developer-facing browser preview, not physical iOS/Android validation, nor gameplay, visual or AI6 rollout acceptance. Keep all production defaults and the draft PR unchanged until gates pass.
+

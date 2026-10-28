@@ -66,6 +66,12 @@ Each agent has a stable identity, archetype/faction, sensing profile, short-term
 - Run balance/playtesting across early hunts, advanced hunts and Wyrm encounters; ship behind flags with fallback.
 - **Exit:** validated mobile budgets, combat fairness, stable Town behavior, reproducible regression suite and gameplay sign-off.
 
+### AI-LAB — shared engine playground (AI6 exit deliverable, 29 October 2026)
+
+The single first engine lab is `/engine-labs/ai` (hub: `/engine-labs`). It must reuse actual AI0–AI6 opt-in scenarios rather than simulate fake decisions in the presentation shell: Town residents with the approved painted 2D scene, earned perception, reactive tactics, eight-agent pressure, encounter-local elite adaptation, Ashfang's authored phase II and a bounded 64-agent stress case. Expose repeatable seed options where existing simulations support them, visible inspectors and trace/performance state, a true legacy fallback, and the option to open the full real scene on a phone. The Town seed remains governed by the existing Town simulator and is not overwritten by the lab seed input.
+
+**Exit:** independently navigable lab URLs for every engine, AI scenario selection and restart tests at 390px, actual simulation/diagnostic browser evidence, no save/gameplay-authority regression, sensible mobile resource use, and physical iPhone/Android plus human fairness/visual approval. Lab routes alone or embedded simulation links do **not** satisfy AI2–AI6 gameplay acceptance. Other engine labs are tracked in the canonical roadmap and developed only by their owner workstreams. Keep AN0–AN6 and PR #387 untouched.
+
 ## Progressive enemy intelligence
 
 | Tier | Behavior capability | Example |
