@@ -66,9 +66,15 @@ The tool **must not** claim artistic acceptance based on numeric reports alone.
 - Do not move the candidate to runtime or merge into Work's branch without the
   owner's explicit visual approval.
 
-## Current evidence limit
+## Executed real-source Blender proof — 28 October 2026
 
-This isolated branch contains the candidate source-processing logic only.
-The execution environment used to prepare it has no Blender installation or
-materialized project source mesh. **No mesh render, mobile comparison, Blender
-execution, live Hunt validation or quality approval has occurred yet.**
+- [GitHub Actions run #40707116507](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40707116507): **PASS** after repairing the Pillow import in isolated Blender Python. Work's existing cloth/ember source rebuilt successfully with actual Blender 4.5.14 LTS.
+- First art candidate removed 749 additional cloth-dominated vertices, 81 unreferenced vertices and **seven confirmed small disconnected cloth islands (55 more vertices)**. Source rig bone hierarchy was unchanged; existing mesh-bound emission was retained. Actual S/E walk and attack contact-sheet rendered and archived.
+- [GitHub Actions run #40707780823](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40707780823): **PASS**. A further guarded profile/hip trim removes 955 additional cloth vertices. Final mesh has **zero unreferenced vertices and zero flagged disconnected tiny cloth components**, preserves 16,095 leg-weighted vertices, retains one authentic source material and 16,550 localized ash-mapped vertices.
+- The latest passed workflow artifact `hollowed-preserved-source-real-blender-review` contains source/candidate editable .blend files, numeric QC reports and **32 actual rendered 96px source frames plus a before/after PNG contact sheet**. These are review renders, not actual mobile Hunts.
+- Independent PNG pixel comparison versus the previous candidate indicates the second hip pass changes only around 13–14 pixels per selected East profile pose and essentially zero South pixels. Therefore that incremental trim is **not a major visual redesign** despite removing more 3D geometry.
+- Human visual check: trailing profile detail, indistinct dark anatomy, and lack of strong personality relative to approved Ashling remain unresolved. Ash/glow is visible in the source render, but artistic approval is **NOT** claimed. No production assets changed.
+
+## Open mandatory art work
+
+The remaining silhouette and material improvements cannot be solved by reporting green kinematic tests alone. Inspect the actual retained mesh/UV weights and author further art-driven edits to recognizable undead anatomy. Preserve Work's animation controller, source contact and existing source-bound ember channels, then repeat the real eight-direction and mobile/Hunt evidence before integration.
