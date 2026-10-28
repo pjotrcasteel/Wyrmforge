@@ -6,6 +6,8 @@ const root=new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/',import.met
 const uri=s=>'data:text/javascript;base64,'+Buffer.from(s).toString('base64');
 const source=readFileSync(new URL('creature-animation-assets.js',root),'utf8')
  .replace("'./sprite-animation.js'",JSON.stringify(uri(readFileSync(new URL('sprite-animation.js',root),'utf8'))))
+ .replace("'./sprite-layer-compositor.js'",JSON.stringify(uri(readFileSync(new URL('sprite-layer-compositor.js',root),'utf8'))))
+ .replace("'./sprite-contact-kinematics.js'",JSON.stringify(uri(readFileSync(new URL('sprite-contact-kinematics.js',root),'utf8'))))
  .replace("'./lighting/lit-sprite.js'",JSON.stringify(uri(readFileSync(new URL('lighting/lit-sprite.js',root),'utf8'))));
 const {createCreatureAnimationAssets:create}=await import(uri(source));
 const bytes=new Uint8Array([1,2,3]),hash=createHash('sha256').update(bytes).digest('hex');
@@ -55,4 +57,24 @@ test('profile bytes are source-hashed before textures and reject tampering atomi
 test('source skeleton signature disagreement rejects a valid typed profile',async t=>{
  const signed=structuredClone(profile);signed.rig.signature='a'.repeat(64);mock(t,()=>{},signed);
  const a=create(new URL('https://example.test/'));assert.equal(await a.preload(),false);assert.match(a.error,/Rig\/source signature mismatch/);
+});
+test('source region metadata is hash-checked and tied to the exact rig before publication',async t=>{
+ const m=mock(t),original=globalThis.fetch;
+ const metadata={sourceSignature:'wrong-source',directions:manifest.directions,canvasSize:128,anchor:[64,88],clips:{}};
+ const payload=new TextEncoder().encode(JSON.stringify(metadata));
+ m.regions={metadata:'regions.json',sha256:createHash('sha256').update(payload).digest('hex')};
+ globalThis.fetch=async url=>String(url).includes('regions.json')?{ok:true,arrayBuffer:async()=>payload.buffer}:original(url);
+ const mismatch=create(new URL('https://example.test/'));assert.equal(await mismatch.preload(),false);assert.match(mismatch.error,/region rig\/placement mismatch/);assert.equal(mismatch.ready(),false);
+ m.regions.sha256='0'.repeat(64);
+ const tampered=create(new URL('https://example.test/'));assert.equal(await tampered.preload(),false);assert.match(tampered.error,/region hash mismatch/);
+});
+test('region-enabled packs retain shared budgets and reject unvalidated GPU deformation',async t=>{
+ const m=mock(t),original=globalThis.fetch;
+ const metadata={sourceSignature:manifest.sourceSignature,directions:manifest.directions,canvasSize:128,anchor:[64,88],clips:{rest:Object.fromEntries(manifest.directions.map(d=>[d,[{},{}]]))}};
+ const payload=new TextEncoder().encode(JSON.stringify(metadata));m.regions={metadata:'regions.json',sha256:createHash('sha256').update(payload).digest('hex')};
+ globalThis.fetch=async url=>String(url).includes('regions.json')?{ok:true,arrayBuffer:async()=>payload.buffer}:original(url);
+ const a=create(new URL('https://example.test/'));assert.equal(await a.preload(),true);assert.equal(a.stats.regionCacheBytes,0);
+ assert.throws(()=>a.sampleRegions({clip:'rest',frame:2,direction:'S'},{},{}),/pose unavailable/);
+ assert.throws(()=>a.renderDescriptor({parts:[{}]}),/GPU material transforms/);
+ a.dispose();assert.equal(a.ready(),false);
 });

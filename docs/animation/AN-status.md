@@ -356,3 +356,8 @@ Remaining acceptance gates stay open: runtime regional body/contact coupling and
 `sampleSourceContactRegions` produces existing shared-compositor parts from actual source chains and caller-owned world support targets. `measureSourceSupport` reports the actual projected footprint hull, including explicit degenerate point/line support; its mass readout is labelled an authored proxy rather than a newly simulated physical COM. Missing support targets and unreachable joints fail visibly.
 
 The corrected-source S/E metadata export completed; the browser compositor review was rendered and inspected. `node tools/animation/check_region_trajectory.mjs artifacts/shoulder-contact-regions/contact-regions.json` completed two calibrated forward strides at 120 Hz in both views, with maximum projected target reconstruction error 2.061e-14 world units. This measures projected source contact reconstruction, not raster foot slip, arbitrary-direction Hunt grounding, or dynamic balance. Full local JS suite: **533/533**. Runtime wiring and remaining acceptance gates are still open.
+
+
+### Asset-to-compositor bridge
+
+The existing atomic asset adapter now accepts optional SHA-verified source region metadata, requires exact rig identity and all required facing/frame rows, and exposes `sampleRegions` for caller-owned support targets. Canvas drawing reuses the existing shared compositor with one pack-wide cache constrained by the same texture budget. GPU regional descriptors explicitly reject pending material deformation instead of advertising incorrect normal/emissive transforms. Default assets remain unchanged. Full local JS suite **535/535 passed**. This is bridge implementation, not completed live motion integration.
