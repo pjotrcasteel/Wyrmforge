@@ -1,7 +1,15 @@
 # Architecture, persistence and validation
 
-> **Canonical WyrmForge specification · updated 20 October 2026.** Keep gameplay deterministic and platform-agnostic; distinguish simulator truth from client rendering.
+> **Canonical WyrmForge specification · updated 27 October 2026.** Keep gameplay deterministic and platform-agnostic; distinguish simulator truth from client rendering.
 > [Canonical index](README.md) · Only explicitly marked **LOCKED/approved** requirements are commitments. Proposed values, old milestones and drafts are not evidence of shipped code. Verify current `main`, PRs and tests.
+
+## LOCKED — unified engine ownership and event authority (27 October 2026)
+
+**One reusable engine per responsibility.** The C# `RunSimulation`/Domain + Application core owns every gameplay outcome; one shared lighting, AI, animation, cosmetic physics, VFX and audio runtime/contract family respectively owns its presentation or agent concern. Do not create alternate enemy-, spell-, school- or scene-local *engines* for behavior that belongs to those shared services. Scene- and creature-specific data, authored motion, effect profiles, adapters, backend implementations and temporary migrations are allowed; duplicate gameplay decision-makers or independent shared-feature runtimes are not.
+
+On one authoritative event (e.g. Fireball impact → C# damage/death), publish or project typed, replayable **source event facts** with stable event/actor IDs, tick/time, transform/direction, traits/status and source lifecycle. Let lighting, VFX, animation, cosmetic 2.5D physics and sound consume those facts without introducing extra hits, deaths, loot, navigation/collision changes or gameplay RNG. C# agent/AI uses real observations and executes through established simulation boundaries. A shared contract does not require one giant orchestrator or identical tick rates.
+
+Before adding an engine or extending a scene, inspect existing code and active PRs, select the current owner and reuse its registry/adapter path; supply an additional profile, not a second implementation. Preserve current gameplay, saves, visuals, sound, approved assets, painted 2D Town and mobile fallbacks. Exercise lifecycle, deterministic replay/duplicate delivery, pause/resume, entity expiry, reduced-effects, device budgets and cross-creature/spell coverage. The binding roadmap, sequencing and migration milestones are in [the engine architecture and ENG0–ENG4 consolidation section](roadmap.md#locked--one-reusable-engine-per-responsibility-owner-decision-27-october-2026).
 
 ## 10. Suggested architecture / repo touchpoints — implementation guidance, not new API orders
 

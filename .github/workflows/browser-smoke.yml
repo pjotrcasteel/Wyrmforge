@@ -8,6 +8,8 @@ on:
       - 'src/Wyrmforge.Application/**'
       - 'src/Wyrmforge.Domain/**'
       - 'tests/Wyrmforge.Browser.Tests/**'
+      - 'tools/development/browser_shards.py'
+      - 'tools/development/test_browser_shards.py'
       - '.github/workflows/browser-smoke.yml'
   push:
     branches: [main]
@@ -17,72 +19,35 @@ permissions:
   contents: read
 
 jobs:
-  browser:
+  preview:
+    name: Playable preview (available before browser tests)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Restore runtime Git LFS art (exclude large source archives)
+      - name: Restore runtime art
         run: |
           git lfs pull --include="src/Wyrmforge.Presentation.Web/wwwroot/**" --exclude=""
           python3 tools/development/verify_web_assets.py
 
-      - name: Use preinstalled .NET 10 SDK
-        run: |
-          dotnet --list-sdks
-          dotnet --list-sdks | grep -Eq '^10\.0\.' || { echo "::error::Runner does not have the .NET 10 SDK"; exit 1; }
-          dotnet --version
+      - name: Use preinstalled .NET 10
+        run: dotnet --list-sdks | grep -Eq '^10\.0\.' || { echo "::error::Missing .NET 10 SDK"; exit 1; }
 
-      - name: Verify deep-link preview routing
-        run: python3 -m unittest discover -s tools/development -p 'test_*.py'
-
-      - name: Regenerate PR340 source-backed material candidates from immutable paintings
+      - name: Regenerate required source-backed art
         run: |
           python3 -m pip install -r tools/art/painted-requirements.txt
           python3 tools/art/build_grass_moss_art_candidates.py --output src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-source-backed/v1/grass-moss-art-candidates
           python3 tools/art/build_wet_mud_art_candidates.py --output src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-source-backed/v1/wet-mud-art-candidates
           python3 tools/art/build_trampled_earth_art_candidates.py --output src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-source-backed/v1/trampled-earth-art-candidates
-          test -s src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-source-backed/v1/grass-moss-art-candidates/grass-moss-ART-CANDIDATE-01.png
-          test -s src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-source-backed/v1/wet-mud-art-candidates/wet-mud-INDEPENDENT-ART-CANDIDATE-01.png
-          test -s src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-source-backed/v1/trampled-earth-art-candidates/trampled-earth-INDEPENDENT-ART-CANDIDATE-01.png
-      - name: Restore browser tests
-        run: dotnet restore tests/Wyrmforge.Browser.Tests/Wyrmforge.Browser.Tests.csproj
 
-      - name: Build browser tests
-        run: dotnet build tests/Wyrmforge.Browser.Tests/Wyrmforge.Browser.Tests.csproj -c Release --no-restore
-
-      - name: Install Chromium
-        run: pwsh tests/Wyrmforge.Browser.Tests/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
-
-      - name: Restore web
-        run: dotnet restore src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj
-
-      - name: Publish web
-        run: dotnet publish src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -c Release --no-restore -o ./artifacts/web
-
-      - name: Start local Wyrmforge
+      - name: Publish playable game
         run: |
-          python3 tools/development/spa_server.py --port 4173 --directory ./artifacts/web/wwwroot > ./artifacts/browser-server.log 2>&1 &
-          echo $! > ./artifacts/browser-server.pid
-          for attempt in {1..30}; do
-            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then
-              exit 0
-            fi
-            sleep 1
-          done
-          cat ./artifacts/browser-server.log
-          exit 1
-
-      - name: Run browser smoke
-        env:
-          WYRMFORGE_BASE_URL: http://127.0.0.1:4173/
-          WYRMFORGE_BROWSER_ARTIFACTS: ${{ github.workspace }}/artifacts/browser
-        run: dotnet test tests/Wyrmforge.Browser.Tests/Wyrmforge.Browser.Tests.csproj -c Release --no-build
+          dotnet restore src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj
+          dotnet publish src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -c Release --no-restore -o ./artifacts/web
 
       - name: Prepare playable PR preview package
-        if: success() && github.event_name == 'pull_request'
         run: |
           mkdir -p artifacts/playable-preview
           cp -a artifacts/web/wwwroot artifacts/playable-preview/wwwroot
@@ -92,8 +57,8 @@ jobs:
           test -f artifacts/playable-preview/wwwroot/index.html
           grep -q '<base href="/" />' artifacts/playable-preview/wwwroot/index.html
 
-      - name: Upload playable PR preview
-        if: success() && github.event_name == 'pull_request'
+      # Independent of browser verification: artifact appears as soon as publish succeeds.
+      - name: Upload playable preview for immediate visual testing
         uses: actions/upload-artifact@v4
         with:
           name: wyrmforge-playable-preview-${{ github.sha }}
@@ -101,13 +66,87 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-      - name: Upload browser evidence
+  browser-shard:
+    name: Browser shard ${{ matrix.shard }}/4
+    needs: preview
+    runs-on: ubuntu-latest
+    # Chromium installation and browser startup can exceed 10 minutes on cold hosted runners.
+    # Keep the full suite required; do not abort a healthy shard halfway through tests.
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Use preinstalled .NET 10
+        run: dotnet --list-sdks | grep -Eq '^10\.0\.' || { echo "::error::Missing .NET 10 SDK"; exit 1; }
+
+      - name: Validate browser test shard coverage
+        run: python3 -m unittest discover -s tools/development -p 'test_*.py'
+
+      - name: Restore and build browser tests
+        run: |
+          dotnet restore tests/Wyrmforge.Browser.Tests/Wyrmforge.Browser.Tests.csproj
+          dotnet build tests/Wyrmforge.Browser.Tests/Wyrmforge.Browser.Tests.csproj -c Release --no-restore
+
+      - name: Install Chromium
+        run: pwsh tests/Wyrmforge.Browser.Tests/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
+
+      - name: Download matching playable build
+        uses: actions/download-artifact@v4
+        with:
+          name: wyrmforge-playable-preview-${{ github.sha }}
+          path: artifacts/playable-preview
+
+      - name: Start local WyrmForge
+        run: |
+          python3 tools/development/spa_server.py --port 4173 --directory ./artifacts/playable-preview/wwwroot > ./artifacts/browser-server.log 2>&1 &
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat ./artifacts/browser-server.log
+          exit 1
+
+      - name: Select this shard's test methods
+        id: selection
+        run: python3 tools/development/browser_shards.py --shard ${{ matrix.shard }} --shards 4 --output "$GITHUB_OUTPUT"
+
+      - name: Run browser regression shard
+        env:
+          WYRMFORGE_BASE_URL: http://127.0.0.1:4173/
+          WYRMFORGE_BROWSER_ARTIFACTS: ${{ github.workspace }}/artifacts/browser/shard-${{ matrix.shard }}
+        run: >
+          dotnet test tests/Wyrmforge.Browser.Tests/Wyrmforge.Browser.Tests.csproj
+          -c Release --no-build --filter "${{ steps.selection.outputs.filter }}"
+          --logger "console;verbosity=normal"
+          --blame-hang-timeout 7m --blame-hang-dump-type none
+
+      - name: Preserve shard evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: wyrmforge-browser-${{ github.sha }}
+          name: wyrmforge-browser-shard-${{ matrix.shard }}-${{ github.sha }}
           path: |
             artifacts/browser
             artifacts/browser-server.log
           if-no-files-found: warn
           retention-days: 14
+
+  # Keep the historical 'browser' check name for branch protection.
+  browser:
+    name: browser
+    if: always()
+    needs: [preview, browser-shard]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require preview and all four shards
+        env:
+          PREVIEW_RESULT: ${{ needs.preview.result }}
+          SHARDS_RESULT: ${{ needs.browser-shard.result }}
+        run: |
+          test "$PREVIEW_RESULT" = "success"
+          test "$SHARDS_RESULT" = "success"

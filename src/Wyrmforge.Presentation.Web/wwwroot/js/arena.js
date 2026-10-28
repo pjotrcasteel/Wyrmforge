@@ -1,6 +1,7 @@
 import { preloadFireballV5 } from './arena-fireball-v5.js';
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
-import { attachArenaInput, getArenaMovement, getArenaAim } from './arena-input.js';
+import { attachArenaInput, getArenaMovement, getArenaAim, isArenaStickAim, getArenaPropFocus } from './arena-input.js';
+import { resolveTargetIndicator, presentTargetSigil, drawTargetIndicator, preloadTargetSigilArt, targetSelectionLightEmitter, targetSelectionCanvasLight, actorLightsWithoutSigilOverlay } from './arena-target-indicator.js?v=20261028-feet-centered-v3';
 import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, drawArenaCloisterElevation } from './arena-environment.js?v=20261026-compact-ground-v1';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
@@ -20,7 +21,7 @@ import { drawBellWardenGround, drawBellWardenEntrance, drawBellWardenBar } from 
 import { drawWinterBellGround, drawWinterBellAir } from './arena-winterbell-vfx.js';
 import { drawGlassReliquaryGround, drawGlassReliquaryAir } from './arena-glass-reliquary-vfx.js';
 import { loadArt, artReady, hasArtFrame, drawArtFrame } from './art-atlas.js';
-import { buildSpellLights, drawSpellLightSpill, sampleSpellLight } from './arena-spell-lighting.js';
+import { buildSpellLights, drawSpellLightSpill, sampleSpellLight, drawActorWithEmitter } from './arena-spell-lighting.js?v=20261028-ground-light-v3';
 import { gothicNightLightSources, gothicNightPlan, drawGothicNight, GOTHIC_NIGHT } from './arena-night-lighting.js';
 import { createWetForestFirelightPlan } from './arena-wet-forest-dressing.js';
 import { resolveArenaCamera, drawExitGuide } from './arena-camera.js';
@@ -59,6 +60,8 @@ export function readArenaDiagnostics(canvas) {
         ended: state.latestSnapshot?.ended??false,
         movement: getArenaMovement(state),
         aim: getArenaAim(state),
+        pendingPropId: state.pendingPropId,
+        aimedPropId: state.latestSnapshot?.player?.aimPropId ?? null,
         projectiles: state.latestSnapshot?.projectiles ?? [],
         // Read-only visual provenance for real-Hunt evidence captures.
         // These never modify the original scene, C# simulation, or VFX renderer.
@@ -85,7 +88,7 @@ export function readArenaDiagnostics(canvas) {
         hunt: state.latestSnapshot?.hunt ?? null,
         performance: { fps:state.displayFps, simulationHz:state.displaySimulationHz, simulationMilliseconds:state.displaySimulationMilliseconds, bridgeMilliseconds:state.displayBridgeMilliseconds },
         renderingFailed: Boolean(state.renderingFailed),
-        sharedLighting: state.fractureGpuFrame ?? state.latestSnapshot?.lighting ?? null,
+        sharedLighting: state.sharedLightingFrame ?? state.latestSnapshot?.lighting ?? null,
         hollowFractureGpuEmitters: state.fractureGpuEmitters ?? [],
         wetForestGround: state.latestSnapshot?.environment?.wetForest
             ? liveWetForestMaterialDiagnostics(state.latestSnapshot.environment.seed) : null,
@@ -107,6 +110,9 @@ function createState(canvas, dotNetReference) {
         canvas,
         context: canvas.getContext('2d'),
         nightMask: document.createElement('canvas'),
+        actorLightBuffer: document.createElement('canvas'),
+        targetSigilArt: preloadTargetSigilArt(),
+        targetSigil: { key: null, activeMarker: null, lastOpacity: 0, enteredAt: 0, exitedAt: null, exitMarker: null },
         dotNetReference,
         active: true,
         simulationBusy: false,
@@ -172,7 +178,7 @@ function startSimulationFrame(state, timestamp, rect) {
     const aim = getArenaAim(state);
     const bridgeStarted = performance.now();
 
-    state.dotNetReference.invokeMethodAsync('Frame', delta, rect.width, rect.height, movement.x, movement.y, aim.x, aim.y)
+    state.dotNetReference.invokeMethodAsync('Frame', delta, rect.width, rect.height, movement.x, movement.y, aim.x, aim.y, getArenaPropFocus(state), isArenaStickAim(state, aim))
         .then(snapshot => {
             if (!state.active) return;
             updatePlayerDanger(state.playerDanger, snapshot, performance.now());
@@ -230,18 +236,30 @@ function draw(state, snapshot, width, height) {
     ctx.globalAlpha=1;ctx.filter='none';ctx.globalCompositeOperation='source-over';
     const danger = playerDangerPresentation(state.playerDanger, snapshot, performance.now(), state.reducedMotion.matches);
     const camera = resolveArenaCamera(snapshot.world, snapshot.player, width, height);
+    const selectedTarget = resolveTargetIndicator(snapshot);
     const visualSeconds = performance.now() / 1000;
+    const targetId = snapshot.player?.aimPropId ?? snapshot.player?.aimTargetId;
+    const targetIndicator = presentTargetSigil(state.targetSigil, selectedTarget, targetId,
+        visualSeconds, state.reducedMotion.matches);
     const worldWidth = camera.width;
     const worldHeight = camera.height;
     const lightViewport = { x: camera.x, y: camera.y, width, height };
     updateHollowSprites(state.hollow,snapshot,visualSeconds,state.reducedMotion.matches);
     // Source-derived death geometry and a shared GPU-compatible emitter; never procedural bones.
     const fractureEmitters = hollowFractureEmitters(state.hollow.corpses,state.hollow.clock,state.reducedMotion.matches);
+    // Every illumination cue uses the SAME authoritative lighting frame.
+    // The selected target supplies the SAME generic emitter, colored from the
+    // C# active school. No independent lighting system or false school selection.
+    const selectionEmitter = targetSelectionLightEmitter(targetIndicator, snapshot.lighting,
+        snapshot.player?.activeSchool);
     state.fractureGpuEmitters = fractureEmitters;
-    state.fractureGpuFrame = withHollowFractureLightingFrame(snapshot.lighting,fractureEmitters);
+    state.selectionGpuEmitter = selectionEmitter;
+    state.sharedLightingFrame = withHollowFractureLightingFrame(snapshot.lighting,
+        selectionEmitter ? [...fractureEmitters,selectionEmitter] : fractureEmitters);
     const spellLights = [
         ...buildSpellLights(snapshot, visualSeconds, state.reducedMotion.matches, lightViewport),
-        ...hollowFractureCanvasLights(fractureEmitters,snapshot.lighting)
+        ...hollowFractureCanvasLights(fractureEmitters,snapshot.lighting),
+        ...targetSelectionCanvasLight(selectionEmitter)
     ];
     ctx.clearRect(0, 0, width, height);
     ctx.save();
@@ -280,6 +298,13 @@ function draw(state, snapshot, width, height) {
     drawPlayerChill(ctx, snapshot.player, state.reducedMotion.matches ? 0 : visualSeconds);
     for (const shard of snapshot.experienceShards ?? []) drawExperienceShard(ctx, shard);
     for (const pulse of snapshot.splashPulses) drawSplashPulse(ctx, pulse, snapshot.dragon?.school);
+    // A floor decal: the actor's C# ground pivot sits at the sigil center.
+    // Paint BOTH halves before depth-sorted actors. Opaque legs/body naturally mask
+    // the back arc; never composite bright sigil artwork over the sprite afterward.
+    drawTargetIndicator(ctx, targetIndicator, 'ground', visualSeconds, state.reducedMotion.matches,
+        state.targetSigilArt, snapshot.player?.activeSchool);
+    drawTargetIndicator(ctx, targetIndicator, 'contrast', visualSeconds, state.reducedMotion.matches,
+        state.targetSigilArt, snapshot.player?.activeSchool);
     drawAimRune(ctx, snapshot.player);
     drawWardReadiness(ctx, snapshot.player, visualSeconds, state.reducedMotion.matches);
     if (snapshot.wardPulse) drawWardPulse(ctx, snapshot.wardPulse, state.reducedMotion.matches);
@@ -315,8 +340,11 @@ function draw(state, snapshot, width, height) {
             drawAshfangDeath(ctx,state.ashfang);
         } else if (layer.kind === 'enemy') {
             const enemy = layer.enemy;
-            drawEnemy(ctx, enemy, sampleSpellLight(spellLights, enemy.x, enemy.y),
+            const paintEnemy = surface => drawEnemy(surface, enemy, sampleSpellLight(spellLights, enemy.x, enemy.y),
                 enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId),state.hollow,state.ashling);
+            // The same point emitter illuminates opaque Hollowed, Ashling and fallback sprites.
+            // A reusable source-atop material pass preserves silhouette/alpha occlusion.
+            drawActorWithEmitter(ctx, state.actorLightBuffer, enemy, selectionEmitter, paintEnemy);
             drawEliteCrest(ctx, enemy, visualSeconds, state.reducedMotion.matches);
         } else {
             drawMage(ctx, snapshot.player, snapshot.castMotion, danger.hit, state.reducedMotion.matches,
@@ -347,6 +375,7 @@ function draw(state, snapshot, width, height) {
     const realFires = createWetForestFirelightPlan(snapshot.environment, worldWidth, worldHeight);
     const nightSources = gothicNightLightSources(snapshot, spellLights, worldWidth, worldHeight, realFires);
     drawGothicNight(ctx, gothicNightPlan(snapshot.player, nightSources, lightViewport), state.nightMask);
+    // Never redraw the floor seal over enemies after the night pass.
     // Tactical telegraphs must remain readable even when the ground is nearly
     // black. They are presentation cues, not physical light emitters.
     for (const hazard of snapshot.huntHazards ?? []) {
@@ -358,7 +387,9 @@ function draw(state, snapshot, width, height) {
         snapshot.dragon?.school ?? snapshot.hunt?.school, snapshot.dragon);
     // A second weaker pass colors nearby silhouettes without whitening shadows.
     drawAshfangAirEffects(ctx,snapshot,ashfangSockets(state.ashfang),state.reducedMotion.matches);
-    drawSpellLightSpill(ctx, spellLights, lightViewport, 'actors');
+    // Selection light illuminates the terrain and the selected sprite's alpha-isolated
+    // material pass above. Do not screen-blend it over all actors after occlusion.
+    drawSpellLightSpill(ctx, actorLightsWithoutSigilOverlay(spellLights), lightViewport, 'actors');
     for (const impact of snapshot.elementalImpacts) drawSpellImpact(ctx, impact, state.reducedMotion.matches);
     for (const death of snapshot.deathBursts) drawDeathBurst(ctx, death);
 
@@ -1344,7 +1375,7 @@ function roundRect(ctx, x, y, width, height, radius) {
 
 // Snapshot direction is the same C# direction used to launch the primary spell.
 function drawAimRune(ctx, player) {
-    if (!Number.isFinite(player.aimAngle) || (!player.manualAim && player.aimTargetId == null)) return;
+    if (!Number.isFinite(player.aimAngle) || (!player.manualAim && player.aimTargetId == null && player.aimPropId == null)) return;
     ctx.save();
     ctx.translate(player.x, player.y + 7);
     ctx.rotate(player.aimAngle);
