@@ -173,9 +173,18 @@ def create(source: Path, output: Path) -> None:
 
     output.mkdir(parents=True, exist_ok=True)
     camera = bpy.context.scene.camera
+    # Blender may discard an unused inspection-only material when saving
+    # the preceding .blend. Recreate the source-review clay if necessary;
+    # this is a material override, never gameplay emission or baked lighting.
     clay = bpy.data.materials.get("H1 material neutral clay — emission OFF")
-    if camera is None or clay is None:
-        raise ValueError("No genuine Blender inspection camera or clay material in source")
+    if clay is None:
+        clay = bpy.data.materials.new("H1 material neutral clay — emission OFF")
+        clay.use_nodes = True
+        shader = clay.node_tree.nodes.get("Principled BSDF")
+        shader.inputs["Base Color"].default_value = (.57, .54, .49, 1)
+        shader.inputs["Roughness"].default_value = .95
+    if camera is None:
+        raise ValueError("No genuine Blender inspection camera in source")
     low, high = helper.evaluated_mesh_bounds(meshes)
     center = tuple((low+high)/2)
     dims = high-low
