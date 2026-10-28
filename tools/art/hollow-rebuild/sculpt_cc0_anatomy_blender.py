@@ -99,7 +99,7 @@ def material(name, rgba, emissive=False):
     return m
 
 
-def create(source, out):
+def create(source, out, augment_source=None):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     points, faces = read_cc0_obj(source)
     verts = sculpt_base(points)
@@ -117,6 +117,11 @@ def create(source, out):
     actor["status"] = "H1 BODY-ONLY BLOCKOUT, NOT OWNER APPROVED OR RUNTIME INTEGRATED"
     actor["makehuman_body_only"] = True
     actor["excluded_helpers"] = "hair, skirt, tights, bones/joints, eyes and teeth, ground"
+    # Optional static source-anatomy authoring only. This callback runs before
+    # the eight proof renders. It cannot create runtime or animation clips.
+    if augment_source is not None:
+        augment_source(actor)
+
     scene = bpy.context.scene
     scene.render.engine = "CYCLES"
     scene.cycles.samples = 12
