@@ -87,7 +87,8 @@ for direction in result['exportedDirections']:
    point=pose.matrix @ rest.matrix_local.inverted() @ Vector(c['restContactPoint'])
    patch=next((p for p in manifest.get('solePatches',{}).values() if p['bone']==c['end']),None)
    footprint=[list(pose.matrix @ rest.matrix_local.inverted() @ Vector(v)) for v in patch['restHull']] if patch else []
-   source_contacts[c['id']]={**c,'sourceContact':list(point),'footprint':footprint,'upperLength':rig.data.bones[c['upper']].length,'lowerLength':rig.data.bones[c['middle']].length}
+   planted=any(q['id']==c['id'] for q in manifest['clips'][a.clip]['samples'][frame]['contacts'])
+   source_contacts[c['id']]={**c,'planted':planted,'sourceContact':list(point),'footprint':footprint,'upperLength':rig.data.bones[c['upper']].length,'lowerLength':rig.data.bones[c['middle']].length}
   mass_weights=manifest.get('massWeights',{})
   mass_center=sum(((rig.pose.bones[name].head+rig.pose.bones[name].tail)*.5*weight for name,weight in mass_weights.items()),Vector())/sum(mass_weights.values()) if mass_weights else None
   frames.append({'massCenter':list(mass_center) if mass_center is not None else None,'completeRegions':['body',*bones],'sourceContacts':source_contacts,'projection':projection,'regions':regions,'projectedBones':projected,'sourceBones':source,'ownershipCoverage':1.0 if np.all(masks.any(axis=0)[alpha]) else 0.0})

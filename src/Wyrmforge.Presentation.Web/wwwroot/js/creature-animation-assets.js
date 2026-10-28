@@ -1,7 +1,7 @@
 // Atomic atlas adapter for the ONE shared sprite-animation controller.
 import {validateCreatureRigProfile} from './sprite-animation.js';
 import {createSpriteLayerCompositor} from './sprite-layer-compositor.js';
-import {sampleSourceContactRegions} from './sprite-contact-kinematics.js';
+import {sampleSourceContactRegions,updateSourceContactTargets} from './sprite-contact-kinematics.js';
 import {spriteFrame,spriteAtlasLayout} from './lighting/lit-sprite.js';
 export function createCreatureAnimationAssets(baseUrl,{maxDecodedBytes=64*1024*1024}={}){
     let data=null,pending=null,lastError=null,generation=0;
@@ -74,6 +74,19 @@ export function createCreatureAnimationAssets(baseUrl,{maxDecodedBytes=64*1024*1
             const frame=data?.regions?.clips[sample.clip]?.[sample.direction]?.[sample.frame];
             if(!frame)throw new RangeError('Source contact region pose unavailable');
             return {...sample,...sampleSourceContactRegions(frame,sample,targets,{...options,anchor:data.regions.anchor})};
+        },
+        updateRegions(state,sample,intent){
+            if(!data?.regions)return sample;
+            const frame=data.regions.clips[sample.clip]?.[sample.direction]?.[sample.frame];
+            if(!frame)throw new RangeError('Source contact region pose unavailable');
+            const clip=data.manifest.clips[sample.clip],scale=intent.scale??1;
+            if(!Number.isFinite(scale)||scale<=0)throw new RangeError('Positive regional actor scale required');
+            const pixelScale=clip.worldSize/clip.cell*scale;
+            const targets=updateSourceContactTargets(state,frame,{...intent,pixelScale,anchor:data.regions.anchor});
+            const regional=sampleSourceContactRegions(frame,sample,targets,{...intent,pixelScale,anchor:data.regions.anchor});
+            // Regional anchors already consume world displacement. Applying the
+            // whole-sprite contact correction again would move every planted foot.
+            return {...sample,...regional,rootOffset:{x:0,y:0},debug:{...sample.debug,regional:{contacts:regional.contacts,support:regional.support,measurementSpace:regional.measurementSpace}}};
         },
         renderDescriptor(sample){
             if(!data)return null;

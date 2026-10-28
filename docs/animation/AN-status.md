@@ -361,3 +361,11 @@ The corrected-source S/E metadata export completed; the browser compositor revie
 ### Asset-to-compositor bridge
 
 The existing atomic asset adapter now accepts optional SHA-verified source region metadata, requires exact rig identity and all required facing/frame rows, and exposes `sampleRegions` for caller-owned support targets. Canvas drawing reuses the existing shared compositor with one pack-wide cache constrained by the same texture budget. GPU regional descriptors explicitly reject pending material deformation instead of advertising incorrect normal/emissive transforms. Default assets remain unchanged. Full local JS suite **535/535 passed**. This is bridge implementation, not completed live motion integration.
+
+### Resumed live support bridge — 28 October
+
+Resumed at `463b723` and inspected current main `789f3c17` and open PRs; parallel sigil, lighting, AI and art branches remain separate. Rebuilt all four current editable source actions with SHA-verified Blender 4.5.3. Independent saved-mesh QC reproduced maximum actual stance drift below 2.94e-7m and minimum authored mass-proxy margin 0.0083126m.
+
+The source-region exporter now records explicit per-frame stance membership. The shared contact helper retains actual world support epochs across source clip/facing changes and makes externally transported frozen contacts explicit. The asset adapter passes those supports through the existing fixed-length regional solver/compositor and avoids applying whole-sprite root correction twice. The healthy opt-in Hunt adapter calls this bridge when the pack supplies region metadata; unreachable/budget failures retain a per-actor diagnosis and fall back to that actor's existing art. No damage, movement, AI or save behavior changed.
+
+This does not promote the old asset pack: its metadata has no current-source regions. Moving-strike support, transition continuity, complete current-source exports, deformed materials, GPU/Hunt proof and final approval remain open. Synthetic bounded-world displacement tests are not raster or actual-Hunt foot-slip evidence.

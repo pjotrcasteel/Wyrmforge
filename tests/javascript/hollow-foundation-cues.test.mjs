@@ -6,7 +6,7 @@ const root=new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/',import.met
 const uri=text=>'data:text/javascript;base64,'+Buffer.from(text).toString('base64');
 const profile=JSON.parse(readFileSync(new URL('../fixtures/animation/travel-grid-source.json',import.meta.url),'utf8'));
 profile.actions.attack=profile.actions.strike;delete profile.actions.strike;
-const stub=uri(`export function createCreatureAnimationAssets(){return {ready:()=>true,profile:${JSON.stringify(profile)},draw:()=>false};}`);
+const stub=uri(`export function createCreatureAnimationAssets(){return {ready:()=>true,manifest:{},profile:${JSON.stringify(profile)},draw:()=>false};}`);
 const source=readFileSync(new URL('hollow-sprites.js',root),'utf8')
  .replace(/new URL\('\.\.\/art\/[^']+',\s*import.meta.url\)/g,"new URL('https://example.test/')")
  .replace(/from '(\.\/[^']+)'/g,(_,path)=>'from '+JSON.stringify(path==='./creature-animation-assets.js'?stub:uri(readFileSync(new URL(path,root),'utf8'))));

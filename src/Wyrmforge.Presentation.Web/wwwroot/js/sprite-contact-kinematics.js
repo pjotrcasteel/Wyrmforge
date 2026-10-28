@@ -81,6 +81,35 @@ export function sourceGroundPointFromPixel(pixel,groundZ,projection){
     return [(x*f-b*y)/det,(a*y-e*x)/det,groundZ];
 }
 
+/** Follow the support epochs of the selected full-body source pose. Contacts
+ * survive clip/facing changes until the source actually releases that limb.
+ * This consumes the owner's sample clock; it creates no locomotion/action loop.
+ * Forced frozen transport is reported as transport, never as grounded stance.
+ */
+export function updateSourceContactTargets(state,frame,intent){
+    const {timestamp,world,pixelScale,anchor,paused=false,frozen=false}=intent;
+    if(!Number.isFinite(timestamp)||timestamp<0||![world?.x,world?.y,pixelScale].every(Number.isFinite)||pixelScale<=0||!Array.isArray(anchor)||anchor.length!==2||!anchor.every(Number.isFinite))throw new TypeError('Finite source support placement required');
+    const entries=Object.entries(frame?.sourceContacts??{}),projection=frame?.projection;
+    if(!entries.length||!Array.isArray(projection)||projection.length!==8||!projection.every(Number.isFinite))throw new TypeError('Actual source support metadata required');
+    for(const [,c] of entries)if(typeof c.planted!=='boolean'||!Array.isArray(c.sourceContact)||c.sourceContact.length!==3||!c.sourceContact.every(Number.isFinite))throw new TypeError('Explicit authored source stance required');
+    const signature=JSON.stringify(entries.map(([id])=>id).sort());
+    if(state.signature!=null&&state.signature!==signature)throw new TypeError('Contact anatomy changed; fresh animation state required');
+    if(state.timestamp!=null&&timestamp<state.timestamp)throw new RangeError('Contact replay seek requires fresh state');
+    const stopped=Boolean(paused||frozen),dx=state.world?world.x-state.world.x:0,dy=state.world?world.y-state.world.y:0;
+    const previous=state.targets??Object.create(null),targets=Object.create(null);
+    for(const [id,c] of entries){
+        const point=projected(c.sourceContact,projection),old=previous[id];
+        const authored={x:world.x+(point[0]-anchor[0])*pixelScale,y:world.y+(point[1]-anchor[1])*pixelScale,z:c.sourceContact[2],planted:c.planted,transported:false};
+        if(stopped&&old)targets[id]={...old,x:old.x+dx,y:old.y+dy,planted:dx||dy?false:old.planted,transported:Boolean(dx||dy)};
+        else if(c.planted&&old?.supportActive)targets[id]={...old,planted:true,transported:false};
+        else targets[id]=authored;
+        // Keep the authored support epoch through a frozen external transport.
+        targets[id].supportActive=stopped&&old?old.supportActive:c.planted;
+    }
+    Object.assign(state,{signature,timestamp,world:{...world},targets});
+    return targets;
+}
+
 /** Shared contact scheduling primitive. The owning animation lifecycle supplies
  * absolute C# time and unwrapped support phase. No independent timer, AI, forces,
  * root integration or gameplay outcomes. Targets are ground XY + normalized lift;

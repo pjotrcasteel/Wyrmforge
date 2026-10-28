@@ -268,3 +268,20 @@ plus the expected skating/hover failure. Always use `--python-exit-code 1` in
 Blender automation. The cached source CI performs no full color/material render
 or release. The earlier optional attack-travel study is rejected by the corrected
 sole/reach constraints; the default four-action source is the current candidate.
+
+### Live source support bridge
+
+`updateSourceContactTargets(state, frame, intent)` consumes explicit boolean
+`sourceContacts[id].planted` from the selected full-body source frame. Retain its
+state per actor; it preserves world support across clip/facing changes until the
+source releases the contact. It does not choose steps or run another clock.
+Frozen external displacement is reported as transport; it is not called stance.
+
+`assets.updateRegions(state, sample, intent)` supplies calibrated pixel scale and
+passes those targets into the existing regional solver. Intent includes C# sample
+`timestamp`, `world`, positive actor `scale`, pause/freeze and finite source-metre
+`maxCorrection`/optional `maxRootCorrection`. The returned root offset is zero:
+world contacts already account for displacement. Reach/limit/budget failures are
+observable and the Hollowed adapter records `foundationError` before fallback.
+Packs without region metadata retain their previous sample. This bridge does not
+make the historical source pack, source transitions or GPU materials accepted.

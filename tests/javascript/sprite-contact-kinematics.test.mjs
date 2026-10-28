@@ -119,3 +119,48 @@ test('actual footprint hull distinguishes loaded area, unstable lean and degener
  assert.equal(measure([[0,0]],[0,0]).dimension,0);
  assert.throws(()=>measure([[NaN,0]],[0,0]),/Finite actual/);
 });
+
+test('source support epochs survive clip/facing changes and frozen transport without another clock',async()=>{
+ const {updateSourceContactTargets:update}=await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/sprite-contact-kinematics.js');
+ const frame={projection:[10,0,0,64,0,10,0,88],sourceContacts:{palm:{sourceContact:[.1,.2,-.5],planted:true}}};
+ const state={},intent={timestamp:0,world:{x:100,y:200},pixelScale:2,anchor:[64,88]};
+ assert.deepEqual(update(state,frame,intent).palm,{x:102,y:204,z:-.5,planted:true,transported:false,supportActive:true});
+ const turned=structuredClone(frame);turned.projection=[0,-10,0,64,10,0,0,88];
+ assert.deepEqual(update(state,turned,{...intent,timestamp:1,world:{x:103,y:201}}).palm,state.targets.palm);
+ assert.equal(state.targets.palm.x,102);assert.equal(state.targets.palm.y,204);
+ const frozen=update(state,turned,{...intent,timestamp:2,world:{x:106,y:201},frozen:true}).palm;
+ assert.equal(frozen.x,105);assert.equal(frozen.planted,false);assert.equal(frozen.transported,true);
+ const resumed=update(state,turned,{...intent,timestamp:3,world:{x:106,y:201}}).palm;
+ assert.equal(resumed.x,105);assert.equal(resumed.planted,true);
+ turned.sourceContacts.palm.planted=false;
+ const swing=update(state,turned,{...intent,timestamp:4,world:{x:106,y:201}}).palm;
+ assert.equal(swing.x,102);assert.equal(swing.y,203);assert.equal(swing.planted,false);
+ turned.sourceContacts.palm.planted=true;
+ const landing=update(state,turned,{...intent,timestamp:5,world:{x:107,y:201}}).palm;
+ assert.equal(landing.x,103);assert.equal(landing.y,203);
+ const before=structuredClone(state);
+ assert.throws(()=>update(state,turned,{...intent,timestamp:4}),/replay seek/);
+ assert.deepEqual(JSON.parse(JSON.stringify(state)),before);
+ delete turned.sourceContacts.palm.planted;
+ assert.throws(()=>update(state,turned,{...intent,timestamp:6}),/Explicit authored/);
+});
+
+test('real sole source targets drive the same regional solver under arbitrary bounded root displacement',async()=>{
+ const {updateSourceContactTargets:update,sampleSourceContactRegions:sample}=await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/sprite-contact-kinematics.js');
+ const {readFileSync}=await import('node:fs');
+ const fixture=JSON.parse(readFileSync(new URL('../fixtures/animation/actual-sole-region-chains.json',import.meta.url)));
+ for(const [direction,frames] of Object.entries(fixture.frames)){
+  const frame=structuredClone(frames[0]);for(const c of Object.values(frame.sourceContacts))c.planted=true;
+  const state={},base={timestamp:0,world:{x:123,y:456},pixelScale:93/96,anchor:[64,88]},options={...base,maxCorrection:.02};
+  const initial=update(state,frame,base),copy=structuredClone(initial);
+  for(let i=1;i<=20;i++){
+   const intent={...base,timestamp:i/60,world:{x:123+Math.sin(i)*.1,y:456+Math.cos(i)*.1}};
+   const targets=update(state,frame,intent);
+   assert.deepEqual({...targets},copy);
+   const result=sample(frame,{clip:'walk',frame:0,direction},targets,{...options,world:intent.world});
+   assert.ok(result.contacts.every(c=>c.slip<1e-10));
+  }
+  const intent={...base,timestamp:1,world:{x:153,y:456}};
+  assert.throws(()=>sample(frame,{clip:'walk',frame:0,direction},update(state,frame,intent),{...options,world:intent.world}),/budget|Unreachable/);
+ }
+});
