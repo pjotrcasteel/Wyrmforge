@@ -56,9 +56,10 @@ export function initializeArena(canvas, dotNetReference) {
     arenas.set(canvas, state);
     state.detachInput = attachArenaInput(state);
     if (new URLSearchParams(location.search).get('arenaGpu') === '1') {
+        const quality = new URLSearchParams(location.search).get('gpuQuality') ?? 'balanced';
         void import('./arena-gpu-world.js').then(({ HuntGpuWorld }) => {
             if (!state.active) return;
-            state.gpuWorld = new HuntGpuWorld();
+            state.gpuWorld = new HuntGpuWorld({ quality });
             // Optional authored asset adapters cannot disable the shared renderer.
             return import('./arena-gpu-fireball.js')
                 .then(fireball => { if (state.active) state.gpuFireball = fireball; })
