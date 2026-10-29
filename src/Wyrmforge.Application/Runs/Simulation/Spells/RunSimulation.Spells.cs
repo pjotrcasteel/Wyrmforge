@@ -206,7 +206,7 @@ public sealed partial class RunSimulation
         lightning.Add(new LightningTrace(origin, target.Position, 0.16));
         var forkDamage = ApplyChainInteractions(spell.Id, target, ChainLightningMastery.CalculateForkDamage(damage), ref jumps, ref bonusJumpsTriggered);
         RegisterElementalImpact(target.Position, spell.Id, rank, combination, surged);
-        var killed = DamageTarget(target, forkDamage);
+        var killed = DamageTarget(target, forkDamage, spellId: spell.Id, empowered: surged);
         if (!killed) ApplyAbilityStatus(spell, rank, target, firstLink: false);
         if (!killed) ApplyHitRules(spell.Id, target);
     }
