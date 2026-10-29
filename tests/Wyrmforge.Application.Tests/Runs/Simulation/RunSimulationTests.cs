@@ -64,9 +64,12 @@ public sealed class RunSimulationTests
         EnemyRenderSnapshot? damagedEnemy = null;
         ElementalImpactRenderSnapshot? impact = null;
 
-        for (var tick = 0; tick < 65 && damagedEnemy is null; tick++)
+        // Auto-targeting now correctly excludes enemies outside the visible, unobstructed
+        // camera area. This test must use a representative Hunt viewport rather than
+        // expecting an off-screen attack to land inside a 200x200 inspection window.
+        for (var tick = 0; tick < 120 && damagedEnemy is null; tick++)
         {
-            var snapshot = simulation.Tick(0.05, default, 200, 200);
+            var snapshot = simulation.Tick(0.05, default, 800, 600);
             damagedEnemy = snapshot.Enemies.FirstOrDefault(enemy => enemy.HealthRatio < 1);
             if (damagedEnemy is not null) impact = snapshot.ElementalImpacts.FirstOrDefault();
         }
