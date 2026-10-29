@@ -3540,12 +3540,13 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
-    [DataRow(320, 568)]
-    [DataRow(390, 844)]
-    public async Task Mobile_LiveHuntGpu_RendersActorsAndKeepsSimulationMoving(int width, int height)
+    [DataRow(320, 568, "mobile")]
+    [DataRow(390, 844, "mobile")]
+    [DataRow(390, 844, "balanced")]
+    public async Task Mobile_LiveHuntGpu_RendersActorsAndKeepsSimulationMoving(int width, int height, string quality)
     {
         await Page.SetViewportSizeAsync(width, height);
-        await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/?arenaGpu=1", new() { WaitUntil = WaitUntilState.NetworkIdle });
+        await Page.GotoAsync(BaseUrl.TrimEnd('/') + $"/?arenaGpu=1&gpuQuality={quality}", new() { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
         try
         {
@@ -3560,6 +3561,9 @@ public sealed class WyrmforgeBrowserTests : PageTest
             }", null, new() { Timeout = 30000 });
             var startup = await Page.EvaluateAsync<JsonElement>("() => window.__huntGpuRead()");
             Assert.IsFalse(startup.GetProperty("renderingFailed").GetBoolean());
+            Assert.AreEqual(quality, startup.GetProperty("gpuWorld").GetProperty("quality").GetString());
+            Assert.AreEqual(quality == "mobile" ? 256 : 512,
+                startup.GetProperty("gpuWorld").GetProperty("budgets").GetProperty("shadowMapSize").GetInt32());
             Assert.IsTrue(startup.GetProperty("gpuWorld").TryGetProperty("objects", out var objects) && objects.GetInt32() > 1,
                 startup.GetProperty("gpuWorld").ToString());
             await Page.WaitForFunctionAsync("() => !window.__huntGpuRead().paused");
@@ -3578,10 +3582,21 @@ public sealed class WyrmforgeBrowserTests : PageTest
         }
         finally
         {
-            await ScreenshotAsync($"live-hunt-shared-gpu-{width}.png");
+            await ScreenshotAsync($"live-hunt-shared-gpu-{width}-{quality}.png");
+            await Page.ScreenshotAsync(new()
+            {
+                Path = Path.Combine(ArtifactDirectory, $"live-hunt-light-focus-{width}-{quality}.png"),
+                Clip = new()
+                {
+                    X = (width - 240) / 2,
+                    Y = (height - 260) / 2,
+                    Width = 240,
+                    Height = 260,
+                },
+            });
             Directory.CreateDirectory(ArtifactDirectory);
             var diagnostic = await Page.EvaluateAsync<string>("() => JSON.stringify(window.__huntGpuRead?.() ?? null)");
-            await File.WriteAllTextAsync(Path.Combine(ArtifactDirectory, $"live-hunt-shared-gpu-{width}.json"), diagnostic);
+            await File.WriteAllTextAsync(Path.Combine(ArtifactDirectory, $"live-hunt-shared-gpu-{width}-{quality}.json"), diagnostic);
         }
     }
 
