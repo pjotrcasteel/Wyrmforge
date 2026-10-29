@@ -13,4 +13,8 @@ public sealed record DamageNumberRenderSnapshot(
     double Progress,
     bool Finisher,
     bool Empowered,
-    bool Periodic);
+    bool Periodic)
+{
+    /// <summary>Authoritative damage classification; a cosmetic renderer may style it but never decide it.</summary>
+    public string Flavor { get; init; } = "Impact";
+}
