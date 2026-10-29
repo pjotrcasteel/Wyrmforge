@@ -26,8 +26,14 @@ export function huntLayerCapture(layer, player, dragonDeath = null) {
  * depends on these names; the generic GPU engine accepts opaque revision keys.
  */
 export function huntLayerRevision(layer, artAvailable = false) {
-    if (layer.kind !== 'masonry' || layer.style !== 'destructible' || layer.wetForest || !layer.prop)
-        return undefined;
+    if (layer.kind !== 'masonry') return undefined;
+    // Cloister walls are drawn solely from immutable world geometry and colors.
+    // Avoid re-rasterizing and uploading four large, unchanged cutouts every frame.
+    // Other masonry styles may animate and must retain the dynamic fallback.
+    if (layer.style === undefined && layer.barrier && !layer.wetForest) {
+        return JSON.stringify(['cloister-wall-v1', layer.barrier, layer.width, layer.height]);
+    }
+    if (layer.style !== 'destructible' || layer.wetForest || !layer.prop) return undefined;
     // Damage, geometry, identity and late-loaded art each invalidate the capture.
     return JSON.stringify([layer.prop, layer.width, layer.height, Boolean(artAvailable)]);
 }
