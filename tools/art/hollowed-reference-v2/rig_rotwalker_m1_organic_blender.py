@@ -191,25 +191,25 @@ def set_pose(rig, phase):
     follow=math.sin(phase-.45)
     later=math.sin(phase-.90)
     rig.pose.bones["H_Root"].location=(0,0,0)
-    axis_turn(rig,"H_Pelvis",[((0,1,0), .030 + .030*follow),
-                              ((1,0,0), .055+.030*wave)])
-    axis_turn(rig,"H_SpineLumbar",[((1,0,0), .39 + .060*wave),
+    axis_turn(rig,"H_Pelvis",[((0,1,0), .035 + .045*follow),
+                              ((1,0,0), .060+.035*wave)])
+    axis_turn(rig,"H_SpineLumbar",[((1,0,0), .44 + .065*wave),
                                    ((0,0,1), .040*later)])
-    axis_turn(rig,"H_SpineThoracic",[((1,0,0), .30 + .065*follow),
-                                     ((0,0,1), -.038*wave)])
+    axis_turn(rig,"H_SpineThoracic",[((1,0,0), .34 + .070*follow),
+                                     ((0,0,1), -.058*wave)])
     axis_turn(rig,"H_Neck",[((1,0,0), -.18 + .045*later)])
     axis_turn(rig,"H_Head",[((1,0,0), -.16 + .055*math.sin(phase-.78)),
-                            ((0,0,1), -.055+.025*later)])
+                            ((0,0,1), -.065+.045*later)])
     # Arms do NOT swing together: one reaches around the side of the
     # collapsed body; the opposite claw trails with different timing.
     axis_turn(rig,"H_Clavicle_L",[((1,0,0), -.05+.030*wave),
                                   ((0,0,1), .065+.018*follow)])
     axis_turn(rig,"H_Clavicle_R",[((1,0,0), .085+.045*follow),
                                   ((0,0,1), -.10-.028*later)])
-    axis_turn(rig,"H_UpperArm_L",[((0,0,1), ARM_ANGLES["L"][0]+.045*wave),
+    axis_turn(rig,"H_UpperArm_L",[((0,0,1), ARM_ANGLES["L"][0]+.070*wave),
                                  ((0,1,0), ARM_ANGLES["L"][1]+.045*later)])
-    axis_turn(rig,"H_UpperArm_R",[((0,0,1), ARM_ANGLES["R"][0]-.045*follow),
-                                 ((0,1,0), ARM_ANGLES["R"][1]+.045*wave)])
+    axis_turn(rig,"H_UpperArm_R",[((0,0,1), ARM_ANGLES["R"][0]-.075*follow),
+                                 ((0,1,0), ARM_ANGLES["R"][1]+.070*wave)])
     axis_turn(rig,"H_ForeArm_L",[((0,1,0), -.27+.070*later),
                                 ((1,0,0), -.16-.025*follow)])
     axis_turn(rig,"H_ForeArm_R",[((0,1,0), .17-.080*later),
@@ -217,11 +217,11 @@ def set_pose(rig, phase):
     axis_turn(rig,"H_ClawsRoot_L",[((0,1,0), -.16+.08*later)])
     axis_turn(rig,"H_ClawsRoot_R",[((0,1,0), .12-.07*follow)])
     # Broken-kneed stance: asymmetric pelvis-counter thigh/shin angles.
-    axis_turn(rig,"H_Thigh_L",[((1,0,0), -.50+.045*wave),
+    axis_turn(rig,"H_Thigh_L",[((1,0,0), -.56+.050*wave),
                               ((0,1,0), -.045)])
     axis_turn(rig,"H_Thigh_R",[((1,0,0), .24-.035*follow),
                               ((0,1,0), .038)])
-    axis_turn(rig,"H_Shin_L",[((1,0,0), .70+.060*follow)])
+    axis_turn(rig,"H_Shin_L",[((1,0,0), .77+.075*follow)])
     axis_turn(rig,"H_Shin_R",[((1,0,0), -.39-.060*wave)])
     axis_turn(rig,"H_Foot_L",[((1,0,0), -.30)])
     axis_turn(rig,"H_Foot_R",[((1,0,0), .12)])
@@ -255,9 +255,14 @@ def calibrate_arms_on_true_3d_bones(rig):
                 lateral = abs(float(hand.x))
                 # Record global best even on failure; never hide a bad source
                 # topology/weighting problem with an angle threshold change.
-                diff = ((reach-.33)**2 * 3.5
-                        + (downward-.79)**2 * 4.0
-                        + (lateral-.67)**2 * 2.0
+                # Deliberately distinct arm silhouettes from owner target:
+                # one long reaching claw, the other spread to the side.
+                forward_target, drop_target, lateral_target = (
+                    (.20,.88,.77) if side=="L" else (.43,.88,.67)
+                )
+                diff = ((reach-forward_target)**2 * 4.0
+                        + (downward-drop_target)**2 * 5.0
+                        + (lateral-lateral_target)**2 * 3.0
                         + .012*(yaw*yaw + drop*drop))
                 if observed is None or diff < observed[0]:
                     observed = (diff,yaw,drop,reach,downward,lateral)
