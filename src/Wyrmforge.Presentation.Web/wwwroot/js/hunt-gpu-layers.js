@@ -31,3 +31,25 @@ export function huntLayerRevision(layer, artAvailable = false) {
     // Damage, geometry, identity and late-loaded art each invalidate the capture.
     return JSON.stringify([layer.prop, layer.width, layer.height, Boolean(artAvailable)]);
 }
+
+
+/**
+ * Reuse the same CPU raster surface between GPU fallback layers instead of
+ * allocating its bitmap again for every actor. State is isolated by save/restore
+ * in the caller, while per-layer pixels are cleared before repaint.
+ */
+export function prepareHuntGpuScratch(canvas, size, worldX, worldY) {
+    if (![size, worldX, worldY].every(Number.isFinite) || size <= 0)
+        throw new RangeError('Invalid GPU fallback layer bounds');
+    const pixels = Math.ceil(size);
+    if (canvas.width !== pixels) canvas.width = pixels;
+    if (canvas.height !== pixels) canvas.height = pixels;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('GPU fallback layer needs a 2D raster context');
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, pixels, pixels);
+    ctx.imageSmoothingEnabled = false;
+    ctx.save();
+    ctx.translate(-worldX, -worldY);
+    return ctx;
+}
