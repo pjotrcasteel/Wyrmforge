@@ -17,6 +17,8 @@ export interface LitMaterial {
     /** 0 = authored dry roughness, 1 = wet microfacet response; never emits light. */
     wetness?: number;
     emission: string; emissionIntensity: number; alphaCutoff: number; doubleSided: boolean;
+    /** Cutout for solid sprites; alpha/additive for genuinely translucent world VFX. */
+    blendMode?: 'cutout' | 'alpha' | 'additive';
 }
 export interface LitRenderable {
     id: string; ownerId: string; geometry: string; material: string;
