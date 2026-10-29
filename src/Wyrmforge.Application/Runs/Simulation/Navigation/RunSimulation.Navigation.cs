@@ -151,6 +151,7 @@ public sealed partial class RunSimulation
         splashPulses.Clear();
         elementalImpacts.Clear();
         deathBursts.Clear();
+        damageNumbers.Clear();
         unstableRiftState.Reset();
         encounterPlan = null;
         encounterPlanIndex = 0;
