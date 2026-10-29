@@ -53,7 +53,7 @@ for pose in study['poses']:
   if not target['planted']:plants.pop(key,None);continue
   points=vertices[patches[contact['id']]];error=max(abs(float(points[:,2].min())-ground),abs(float(points[:,2].max())-ground));result['maximumSoleGroundErrorMetres']=max(result['maximumSoleGroundErrorMetres'],error)
   if error>tolerance+1e-6:raise ValueError('Actual runtime sole lost ground contact')
-  world=points@rotation.T+root
+  world=(points@rotation.T)*pose.get('scale',1)+root
   if key in plants:
    drift=float(np.linalg.norm(world-plants[key],axis=1).max());result['maximumRetainedWorldSoleDriftMetres']=max(result['maximumRetainedWorldSoleDriftMetres'],drift)
    if drift>tolerance:raise ValueError('Actual runtime weighted sole skates')

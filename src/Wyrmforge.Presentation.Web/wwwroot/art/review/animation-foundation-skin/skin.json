@@ -2,7 +2,7 @@
   "version": 1,
   "skinningMode": "dual-quaternion",
   "sourceSignature": "75a1698be134b6e83192912ca0b0ceaf4f26f1c774d4734a2fdb3299abd7eb59",
-  "sourceBlendSha256": "427cc4571ae160f81be09784f7e081279629b47a9d546a524a074b1387b828e3",
+  "sourceBlendSha256": "9390d2a1dd848b6ec3d49a65d238361612b9b0e8b39b1869b7073a45b081f1f5",
   "buffer": "skin.bin",
   "bufferSha256": "7a8acbf5f11db4de8ac07bf10e55eb1d278ba65c01cc767816782aa22774ecfe",
   "attributes": {
@@ -71,7 +71,7 @@
     }
   },
   "poses": "poses.json",
-  "posesSha256": "e1de6bbaed7083f410c8efdfe223e6c30115bcd93809b06a18496caeb24b37ea",
+  "posesSha256": "a80b941dc06311e7b6c34cdc982e8aa3dc9b054ae7c8b0a09bb0d4336bd74aa1",
   "albedo": "albedo.png",
   "albedoSha256": "51e38c94175cdc8de688758ba6a9e5b5aea28a1b11bdb5e992bf606512a9dae0",
   "albedoSize": [
