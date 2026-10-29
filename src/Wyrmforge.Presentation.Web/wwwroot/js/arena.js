@@ -91,7 +91,7 @@ export function readArenaDiagnostics(canvas) {
         hunt: state.latestSnapshot?.hunt ?? null,
         performance: { fps:state.displayFps, simulationHz:state.displaySimulationHz, simulationMilliseconds:state.displaySimulationMilliseconds, bridgeMilliseconds:state.displayBridgeMilliseconds },
         renderingFailed: Boolean(state.renderingFailed),
-        gpuWorld: state.gpuWorld?.engine.diagnostics() ?? { error: state.gpuError ?? null },
+        gpuWorld: state.gpuWorld?.diagnostics() ?? { error: state.gpuError ?? null },
         sharedLighting: state.fractureGpuFrame ?? state.latestSnapshot?.lighting ?? null,
         hollowFractureGpuEmitters: state.fractureGpuEmitters ?? [],
         wetForestGround: state.latestSnapshot?.environment?.wetForest
