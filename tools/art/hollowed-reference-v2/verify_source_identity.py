@@ -28,7 +28,12 @@ REJECTED = (
 )
 
 
-def verify() -> dict:
+def verify(*, allow_candidate: bool = False) -> dict:
+    # A source can be legal and completely independent of H1 yet still
+    # be artistically unsuitable. Audit runs may admit a candidate, but
+    # production gates MUST reject it without explicit promotion.
+    if bpy.context.scene.get("candidate_only", False) and not allow_candidate:
+        raise RuntimeError("Only a screened candidate: never count as an authored Hollowed")
     if not bpy.data.filepath:
         raise RuntimeError("Save the new artist source first; temporary scenes are not evidence")
     mesh_objects = [o for o in bpy.data.objects if o.type == "MESH"]
@@ -54,7 +59,8 @@ def verify() -> dict:
         raise RuntimeError("Missing artist, source/provenance and verified license fields")
     result = {
         "actual_blender_source": str(Path(bpy.data.filepath).name),
-        "new_reference_v2": True,
+        "new_reference_v2": not bool(bpy.context.scene.get("candidate_only", False)),
+        "candidate_only": bool(bpy.context.scene.get("candidate_only", False)),
         "mesh_objects": len(mesh_objects),
         "armature_bones": [len(o.data.bones) for o in bpy.data.objects
                            if o.type == "ARMATURE"],
