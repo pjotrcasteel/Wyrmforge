@@ -65,5 +65,9 @@ test('AR0 diagnostics remain projections, not a second JS gameplay or geographic
     assert.match(application, /WorldSeed/);
     assert.match(renderer, /drawSemanticSiteFloor\(ctx, environment\.geography, width, height\)/);
     assert.match(renderer, /if \(texture\) ctx\.drawImage\(texture\.image/);
+    const liveScene = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena.js', import.meta.url), 'utf8');
+    assert.match(liveScene, /semanticSiteModeEnabled\(\) && snapshot\.environment\?\.geography\?\.version === 1/);
+    assert.match(liveScene, /drawGothicNight\(ctx, gothicNightPlan\(/,
+        'Normal Hunts must retain the original night lighting engine.');
     assert.doesNotMatch(application, /#[0-9a-fA-F]{6}/, 'C# material IDs must not carry presentation colors');
 });
