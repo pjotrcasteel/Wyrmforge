@@ -56,18 +56,33 @@ def audit(profile):
                 if slip is not None:
                     ranked.append((slip / unit, index))
             best = min(ranked) if ranked else None
+            step = pivots[sign].get("facingStep")
+            if step not in (-1, 1):
+                raise ValueError("Explicit single-step authored pivot facing required: " + sign)
+            destination = directions[(directions.index(direction) + step) % len(directions)]
+            next_walk = locomotion["facingSamples"][destination][0].get("contacts", [])
+            last_turn = pivot_rows[-1].get("contacts", [])
+            exit_slip = compare_entry(last_turn, next_walk, limit)
+            exit_pixels = exit_slip / unit if exit_slip is not None else None
             results.append({
                 "direction": direction,
                 "turn": sign,
+                "nextFacing": destination,
                 "bestNativeMarkerSlip": best[0] if best else None,
                 "bestWalkEntryFrame": best[1] if best else None,
                 "compatibleAuthoredContactEpochs": len(ranked),
                 "sourceEntryWithinOneNativePixel": bool(best and best[0] <= 1),
+                "exitNativeMarkerSlip": exit_pixels,
+                "exitFullyPlanted": exit_slip is not None,
+                "sourceExitWithinOneNativePixel": bool(exit_pixels is not None and exit_pixels <= 1),
             })
     return {
         "measurement": "actual source walk/pivot marker continuity with bounded shared root correction; not raster/game/phone approval",
         "runtimeAccepted": False,
         "sourceEntryGatePassed": all(r["sourceEntryWithinOneNativePixel"] for r in results),
+        "sourceExitGatePassed": all(r["sourceExitWithinOneNativePixel"] for r in results),
+        "sourceTransitionGatePassed": all(r["sourceEntryWithinOneNativePixel"] and
+                                         r["sourceExitWithinOneNativePixel"] for r in results),
         "nativePixelWorldUnits": unit,
         "rootCorrectionLimitWorldUnits": limit,
         "results": results,
@@ -97,5 +112,5 @@ if __name__ == "__main__":
     else:
         report = audit(json.loads(Path(args.profile).read_text()))
         print(json.dumps(report, indent=2))
-        if not report["sourceEntryGatePassed"] and not args.diagnostic:
+        if not report["sourceTransitionGatePassed"] and not args.diagnostic:
             raise SystemExit(1)
