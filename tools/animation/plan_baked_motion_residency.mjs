@@ -40,7 +40,7 @@ export function planBakedMotionResidency(manifest) {
     const options=[];
     // Whole-body 3-way action plan: forward plus both genuine lateral
     // directions. Travel heading is distinct from committed body facing.
-    for(const phases of [8,16])for(const stages of [4,6,8,16]){
+    for(const phases of [8,16])for(const stages of [4,5,6,8,16]){
         const perClipFrames=phases*stages;
         const layout=plannedLayout(perClipFrames);
         const perClipBytes=layout.decodedBytes;
