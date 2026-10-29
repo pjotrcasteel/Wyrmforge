@@ -138,13 +138,19 @@ public sealed class EngineLabsBrowserTests : PageTest
             null, new() { Timeout = 60000 });
 
         await Page.GetByRole(AriaRole.Button, new() { Name = "Refresh AI inspector" }).ClickAsync();
-        var snapshot = JsonSerializer.Deserialize<JsonElement>(await Page.GetByTestId("agent-performance").InnerTextAsync());
-        Assert.AreEqual(64, snapshot.GetProperty("Population").GetInt32(),
+        var diagnostics = JsonSerializer.Deserialize<JsonElement>(await Page.GetByTestId("agent-performance").InnerTextAsync());
+        var cost = diagnostics.GetProperty("Cost");
+        var pack = diagnostics.GetProperty("Pack");
+        var traces = diagnostics.GetProperty("RecentTraces");
+        Assert.AreEqual(64, cost.GetProperty("Population").GetInt32(),
             "This must exercise the real 64-agent simulation, not a small visual approximation.");
-        Assert.IsGreaterThan(snapshot.GetProperty("Frames").GetInt64(), 0);
-        Assert.IsLessThanOrEqualTo(32, snapshot.GetProperty("MaxSightQueries").GetInt32());
-        Assert.IsLessThanOrEqualTo(32, snapshot.GetProperty("MaxPathQueries").GetInt32());
-        Assert.IsLessThanOrEqualTo(2, snapshot.GetProperty("MaxCommittedThreats").GetInt32());
+        Assert.IsGreaterThan(cost.GetProperty("Frames").GetInt64(), 0);
+        Assert.IsLessThanOrEqualTo(32, cost.GetProperty("MaxSightQueries").GetInt32());
+        Assert.IsLessThanOrEqualTo(32, cost.GetProperty("MaxPathQueries").GetInt32());
+        Assert.IsLessThanOrEqualTo(2, cost.GetProperty("MaxCommittedThreats").GetInt32());
+        Assert.IsLessThanOrEqualTo(2, pack.GetProperty("Leases").GetArrayLength());
+        Assert.AreEqual(64, traces.GetArrayLength(),
+            "All 64 active agents should produce bounded, independently inspected traces.");
 
         var width = await Page.EvaluateAsync<int>("() => document.documentElement.scrollWidth");
         Assert.IsLessThanOrEqualTo(391, width);
