@@ -19,3 +19,15 @@ export function huntLayerCapture(layer, player, dragonDeath = null) {
     }
     return { id: 'hunt-' + id, x: actor.x - size / 2, y: actor.y - size * .75, size };
 }
+
+/**
+ * Explicit visual revisions for genuinely static legacy captures only.
+ * Dynamic foliage, VFX and moving actors always redraw. No lighting behavior
+ * depends on these names; the generic GPU engine accepts opaque revision keys.
+ */
+export function huntLayerRevision(layer, artAvailable = false) {
+    if (layer.kind !== 'masonry' || layer.style !== 'destructible' || layer.wetForest || !layer.prop)
+        return undefined;
+    // Damage, geometry, identity and late-loaded art each invalidate the capture.
+    return JSON.stringify([layer.prop, layer.width, layer.height, Boolean(artAvailable)]);
+}
