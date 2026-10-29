@@ -90,3 +90,11 @@ All 610 JavaScript checks pass, including invalid-library and frozen-selection
 checks. The first S-view source bake is inspected; the eight-view atlas,
 switching contact residuals and actual C# Hunt acceptance are still pending.
 
+The dense source-heading library passes all 2,880 constant-heading marker cases
+(360 screen angles, 15/30/60/120 Hz, 30/60 world pixels per second), maximum
+0.5201 native pixels. Curved paths remain a failure: 19/40 cases exceed one
+pixel, maximum 3.5741. More headings close the straight-motion envelope but do
+not establish grounded turning. Keep this negative evidence and the AN2 gate
+open; do not reset contacts at every clip switch to conceal the residual.
+Current-main Application validation passes 694/694 tests.
+

@@ -11,8 +11,9 @@ let browser;
 const server=http.createServer((req,res)=>{
  const route=decodeURIComponent(new URL(req.url,'http://localhost').pathname);
  if(route.includes('..')){res.writeHead(403);return res.end();}
- if(process.env.AN_ASSET_ROOT&&route.startsWith('/art/review/animation-foundation-skin/')){
-  const asset=path.join(path.resolve(process.env.AN_ASSET_ROOT),route.slice('/art/review/animation-foundation-skin/'.length));
+ const assetPrefix=foundationMode==='sprite-walk'?'/art/review/animation-foundation-sprite-walk/':'/art/review/animation-foundation-skin/';
+ if(process.env.AN_ASSET_ROOT&&route.startsWith(assetPrefix)){
+  const asset=path.join(path.resolve(process.env.AN_ASSET_ROOT),route.slice(assetPrefix.length));
   if(fs.existsSync(asset)){res.setHeader('Content-Type',mime[path.extname(asset)]||'application/octet-stream');fs.createReadStream(asset).pipe(res);return;}
  }
  const base=route.startsWith('/js/')||route.startsWith('/art/review/animation-foundation')?source:published;

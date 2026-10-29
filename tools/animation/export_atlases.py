@@ -7,16 +7,29 @@ albedo/normal/depth/material passes and actual Hunt renderer validation.
 from pathlib import Path
 import argparse,json,hashlib,math
 from PIL import Image
-p=argparse.ArgumentParser();p.add_argument('source');p.add_argument('--out',required=True);p.add_argument('--full-cells',action='store_true');p.add_argument('--clips',help='Explicit complete clip subset for a bounded source proof; walk is required.');a=p.parse_args()
+p=argparse.ArgumentParser();p.add_argument('source');p.add_argument('--out',required=True);p.add_argument('--full-cells',action='store_true');p.add_argument('--tight-crop',action='store_true',help='Lossless common alpha union with one native pixel of guard; no rescaling.');p.add_argument('--clips',help='Explicit complete clip subset for a bounded source proof; walk is required.');a=p.parse_args()
+if a.full_cells and a.tight_crop:p.error('Choose full cells or measured crop')
 source=Path(a.source);out=Path(a.out);out.mkdir(parents=True,exist_ok=True)
 m=json.loads((source/'source-manifest.json').read_text());directions=m['directions'];scale=93/1.55
 if a.clips:
     selected=a.clips.split(',')
     if 'walk' not in selected or len(set(selected))!=len(selected) or any(name not in m['clips'] for name in selected):p.error('A unique existing clip subset including walk is required')
     m={**m,'clips':{name:m['clips'][name] for name in selected}}
+common_crop=None
+if a.tight_crop:
+    boxes=[]
+    for name,clip in m['clips'].items():
+        for direction in directions:
+            for frame in range(clip['frames']):
+                with Image.open(source/'frames'/name/direction/f'{frame:02d}.png') as image:
+                    assert image.size==(96,96),'Unexpected native source cell'
+                    box=image.convert('RGBA').getchannel('A').getbbox()
+                    assert box and box[0]>0 and box[1]>0 and box[2]<96 and box[3]<96,'Clipped source frame'
+                    boxes.append(box)
+    common_crop=(min(b[0] for b in boxes)-1,min(b[1] for b in boxes)-1,max(b[2] for b in boxes)+1,max(b[3] for b in boxes)+1)
 clips={};row_hashes={}
 for name,clip in m['clips'].items():
-    count=clip['frames'];grid=clip.get('poseGrid');crop=(16,12,80,84) if grid and not a.full_cells else (0,0,96,96);columns=min(count,32);rows=math.ceil(count/columns);width,height=crop[2]-crop[0],crop[3]-crop[1]
+    count=clip['frames'];grid=clip.get('poseGrid');crop=common_crop or ((16,12,80,84) if grid and not a.full_cells else (0,0,96,96));columns=min(count,32);rows=math.ceil(count/columns);width,height=crop[2]-crop[0],crop[3]-crop[1]
     atlas=Image.new('RGBA',(width*columns,height*rows*8));hashes=[]
     for row,direction in enumerate(directions):
         frames=[]
