@@ -106,6 +106,10 @@ export function validateCreatureRigProfile(profile) {
     const directions=profile.facing?.directions;
     if(!Array.isArray(directions)||directions.length!==8||!directions.every(d=>typeof d==='string'&&d.length>0)||new Set(directions).size!==8)fail('eight unique facing rows required');
     if(profile.facing.transition!=null&&!['row','source-pivot'].includes(profile.facing.transition))fail('invalid facing transition policy');
+    if(profile.facing.selection!=null&&!['intent','projected-motion'].includes(profile.facing.selection))fail('invalid facing selection policy');
+    if(profile.facing.selection==='projected-motion'&&!directions.every(d=>{
+        const v=profile.locomotion?.stanceVelocityByDirection?.[d];return v&&[v.x,v.y].every(Number.isFinite)&&Math.hypot(v.x,v.y)>0;
+    }))fail('projected facing requires complete measured source stride vectors');
     if(!Number.isFinite(profile.locomotion?.stride)||!(profile.locomotion?.stride>0))fail('positive authored stride required');
     for(const [name,expected] of [['positive',1],['negative',-1]])if(profile.pivots?.[name]?.facingStep!=null&&profile.pivots[name].facingStep!==expected)fail(`source turn faces the wrong direction: ${name}`);
     const specs=[profile.locomotion,...Object.values(profile.actions??{}),...(profile.pivot?[profile.pivot]:[]),...Object.values(profile.pivots??{})];
@@ -275,8 +279,20 @@ function updateContactAnimation(state,profile,input){
     state.previousWorld={...input.world};
     state.timestamp=input.timestamp;state.travel=input.travel;state.stopped=stopped;
     state.time+=dt;
+    let requestedFacing=profile.facing.directions.indexOf(input.direction);
+    const newAction=input.action&&Object.hasOwn(profile.actions,input.action.name)&&input.action.token!==state.lastToken;
+    if(!profile.sourceSupport&&profile.facing.selection==='projected-motion'&&!state.action&&!newAction&&!stopped){
+        const observed=Math.hypot(displacement.x,displacement.y)>1e-10?displacement:input.velocity;
+        if(observed&&Math.hypot(observed.x,observed.y)>1e-10){
+            let best=-Infinity;
+            for(const [index,direction] of profile.facing.directions.entries()){
+                const v=profile.locomotion.stanceVelocityByDirection[direction],score=-(observed.x*v.x+observed.y*v.y)/Math.hypot(v.x,v.y);
+                if(score>best){best=score;requestedFacing=index;}
+            }
+        }
+    }
     if(!profile.sourceSupport&&profile.facing.transition==='row'&&!state.action&&!stopped){
-        const row=profile.facing.directions.indexOf(input.direction);
+        const row=requestedFacing;
         if(row>=0&&row!==state.facingIndex){
             // Explicit discrete atlas policy: preserve gait phase, but a new
             // source view begins new contact epochs. This is not a baked turn.
@@ -362,7 +378,7 @@ function updateContactAnimation(state,profile,input){
     if(actionSpec?.poseGrid?.travel==='facing-projection')state.phase=state.action.contactPhase;
     if(actionSpec&&actionProgress>=1&&!actionSpec.hold){state.action=null;actionSpec=null;actionProgress=null;}
     let contactPhase=actionSpec?.poseGrid?.travel==='facing-projection'?state.action.contactPhase:state.phase;
-    const target=profile.facing.directions.indexOf(input.direction);
+    const target=requestedFacing;
     let sourceSupport=null;
     if(profile.sourceSupport){
         const s=profile.sourceSupport,zero=profile.facing.directions.indexOf(s.facingZero);

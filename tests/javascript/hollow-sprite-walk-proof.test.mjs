@@ -43,3 +43,22 @@ test('an explicit row-switch profile preserves gait phase and starts new facing 
   assert.equal(sample.direction,direction);assert.equal(sample.phase,first.phase);assert.ok(sample.debug.maxSlip<1e-8);
  }
 });
+
+test('locomotion chooses the measured source direction instead of an equal-screen-angle label',()=>{
+ assert.equal(profile.facing.selection,'projected-motion');const state=createSpriteAnimationState();
+ updateSpriteAnimation(state,profile,{entityId:5,timestamp:0,travel:0,world:{x:0,y:0},direction:'NE',moving:true});
+ const sample=updateSpriteAnimation(state,profile,{entityId:5,timestamp:.1,travel:3,world:{x:1,y:-2.75},direction:'NE',moving:true});
+ assert.equal(sample.direction,'N','The source NE forward vector is about 29 degrees on screen; this observed 70-degree motion is closer to source N.');
+});
+
+test('projected locomotion selection does not override a new committed action intent',()=>{
+ // This metadata-only action tests ownership, not a rendered claw asset.
+ const configured={...profile,actions:{attack:{...profile.locomotion,clip:'test-claw',mode:'fullBody',priority:10,commitUntil:1}}};
+ const state=createSpriteAnimationState();
+ updateSpriteAnimation(state,configured,{entityId:5,timestamp:0,travel:0,world:{x:0,y:0},direction:'N',moving:true});
+ const cue={name:'attack',token:'test-commit',sequence:0};
+ const began=updateSpriteAnimation(state,configured,{entityId:5,timestamp:.1,travel:3,world:{x:0,y:-3},direction:'E',moving:true,action:cue});
+ assert.equal(began.direction,'E');assert.equal(began.actionToken,cue.token);
+ const held=updateSpriteAnimation(state,configured,{entityId:5,timestamp:.2,travel:6,world:{x:0,y:-6},direction:'W',moving:true,action:cue});
+ assert.equal(held.direction,'E');assert.equal(held.actionToken,cue.token);
+});

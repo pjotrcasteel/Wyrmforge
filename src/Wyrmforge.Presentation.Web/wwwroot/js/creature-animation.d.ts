@@ -14,7 +14,7 @@ export interface CreatureRigProfile {
  rig:{signature?:string;sourceSpace?:{coordinateSpace:'blender-armature-xyz-metres';toActor:number[]};bodyPlan:string;bones:{id:string;parent?:string|null;length:number;rest:number[];limits?:[number,number]}[];
  semantics:Record<string,string>;absentBones?:string[];contacts:{id:string;bone:string;surface:'foot'|'palm'|'body'|'paw';chain?:ContactChain}[];
  sockets?:Record<string,{bone:string}>};
- facing:{directions:string[];transition?:'row'|'source-pivot'};locomotion:ClipProfile&{stride:number;idleFrame?:number};actions:Record<string,ClipProfile>;
+ facing:{directions:string[];transition?:'row'|'source-pivot';selection?:'intent'|'projected-motion'};locomotion:ClipProfile&{stride:number;idleFrame?:number};actions:Record<string,ClipProfile>;
  pivot?:ClipProfile;pivots?:{positive:ClipProfile;negative:ClipProfile};
  sourceSupport?:SourceSupportProfile;
 }

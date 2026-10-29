@@ -90,6 +90,13 @@ weight-bearing turn. Profiles without this optional field retain prior behavior.
 The [baked-walk receipt](spritesheet-walk-proof-20261029.md) records the current
 contact/facing findings without replacing the older source research evidence.
 
+`facing.selection: 'projected-motion'` selects locomotion rows against the
+measured `locomotion.stanceVelocityByDirection` vectors. All eight finite,
+nonzero vectors are required. This handles the source camera's unequal screen
+angles; it does not assume that a true 3D diagonal projects to 45 screen degrees.
+Explicit new action intent and an active committed action take precedence.
+Absent this optional declaration, existing intent-facing behavior is preserved.
+
 `wwwroot/js/sprite-animation.js` is the shared playback owner. Existing schema-v1
 profiles continue to use its existing API. No species switch belongs in this module.
 

@@ -619,7 +619,8 @@
       "N",
       "NE"
     ],
-    "transition": "row"
+    "transition": "row",
+    "selection": "projected-motion"
   },
   "locomotion": {
     "clip": "walk",

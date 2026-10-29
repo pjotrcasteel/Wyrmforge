@@ -26,6 +26,19 @@ calibration and authored turn/transition work remain necessary. See
 [the capture receipt](evidence/20261029/baked-walk-row-capture.json).
 This receipt does not close AN2/AN4/AN6.
 
+## Source-projected locomotion facing
+
+The next calibration uses `facing.selection: projected-motion`. Equal 45-degree
+screen sectors do not match an elevated orthographic source: its NE stride is
+about 29 degrees on screen. The shared controller now compares observed motion
+with the complete measured source stride vectors to choose a locomotion row.
+New committed actions still use their explicit facing intent. Other profiles
+and the source-skin yaw path keep their existing behavior.
+
+All 590 JS checks pass, including measured-direction selection and action-facing
+priority. The fresh real-encounter result remains to be recorded before accepting
+the calibration or the contact gate.
+
 The proof is explicitly selected by `animationFoundation=sprite-walk`. Default
 art and gameplay remain unchanged. Missing claw content continues to use the
 existing attack art, rather than presenting an unrendered source attack.

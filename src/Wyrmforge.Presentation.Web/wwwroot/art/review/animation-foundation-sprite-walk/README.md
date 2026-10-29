@@ -6,6 +6,8 @@ It contains 16 complete source poses in each of eight genuinely rendered views.
 No live skin, per-limb cutout or runtime PNG warp is used by this asset pack.
 Its explicit row-switch policy preserves gait phase; it does not claim a
 source-authored weight-bearing turn. Contact validation is still in progress.
+Locomotion selects rows using the measured projected stride vectors, not equal
+screen-angle sectors. New action intent remains separate from movement facing.
 
 The source is `art/source/animation-foundation/catch-step-20261029/`.
 `manifest.json` records its blend hash, rig signature and eight distinct row

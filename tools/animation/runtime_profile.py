@@ -61,4 +61,6 @@ def build_runtime_profile(m):
     if 'attack-travel' in m['clips']:
         profile['actions']['attack']={**runtime_clip('attack-travel'),'mode':'fullBody','priority':10,'commitUntil':1,'reducedFrame':(m['clips']['attack-travel']['poseGrid']['actionFrames']//2)*m['clips']['attack-travel']['poseGrid']['phaseFrames'],'visualTimingOnly':True}
     profile['facing']['transition']='source-pivot' if profile.get('pivot') or profile.get('pivots') else 'row'
+    if profile['facing']['transition']=='row' and profile['locomotion'].get('stanceVelocityByDirection'):
+        profile['facing']['selection']='projected-motion'
     return profile
