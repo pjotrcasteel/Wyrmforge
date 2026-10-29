@@ -277,6 +277,19 @@ for clip_id,clip,heading in entries:
                 bone.matrix_basis=channels[bone.name];bone.keyframe_insert('location',frame=frame+1);bone.keyframe_insert('rotation_euler' if bone.rotation_mode=='XYZ' else 'rotation_quaternion',frame=frame+1);bone.keyframe_insert('scale',frame=frame+1)
         records[clip_id]['guideAction']=guide.name;records[clip_id]['guideMassSupported']=False;rig.animation_data.action=action
     print('AN_CLIP',clip_id,json.dumps({k:v for k,v in records[clip_id].items() if k!='samples'}),flush=True)
+# A turn's first DRAWN frame must not teleport either planted walk sole.
+# Check the authored actual-source markers before saving any review evidence.
+if 'walk' in records:
+    walk_entry={c['id']:Vector((c['x'],c['y'],c['z'])) for c in records['walk']['samples'][0]['contacts']}
+    for turn_name in ['pivot','pivot-negative']:
+        if turn_name not in records:continue
+        turn_entry={c['id']:Vector((c['x'],c['y'],c['z'])) for c in records[turn_name]['samples'][0]['contacts']}
+        if walk_entry.keys()!=turn_entry.keys():
+            raise ValueError(f'{turn_name} entry changes planted walk contacts; author a support transition')
+        mismatch=max((walk_entry[k]-turn_entry[k]).length for k in walk_entry)
+        if mismatch>1e-5:
+            raise ValueError(f'{turn_name} first-frame sole marker discontinuity: {mismatch:.9f} m')
+        records[turn_name]['authoredWalkEntryMaxSourceContactDeltaMetres']=mismatch
 # Pack images into editable source rather than depending on another workstation.
 bpy.ops.file.pack_all()
 if 'walk' in actions:rig.animation_data.action=actions['walk']
