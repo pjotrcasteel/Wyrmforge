@@ -121,6 +121,18 @@ public sealed class WorldFirstArenaBrowserTests : PageTest
         Assert.IsGreaterThan(0, await Page.EvaluateAsync<int>("() => window.__wyrmforgeAr0Geography.obstacleCount"));
         Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
         await Page.ScreenshotAsync(new() { Path = Path.Combine(output, $"ar1-{kind}-live-hunt-{width}.png"), FullPage = false });
+
+        // Move the real C# hunter through the actual Hunt simulation and camera.
+        // This must never be a fabricated overview or a still from a separate lab.
+        await Page.Keyboard.DownAsync("w");
+        await Page.WaitForTimeoutAsync(1000);
+        await Page.Keyboard.UpAsync("w");
+        await Page.Keyboard.DownAsync("d");
+        await Page.WaitForTimeoutAsync(800);
+        await Page.Keyboard.UpAsync("d");
+        Assert.AreEqual(siteId, await Page.EvaluateAsync<string>("() => window.__wyrmforgeAr0Geography.siteId"));
+        Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
+        await Page.ScreenshotAsync(new() { Path = Path.Combine(output, $"ar1-{kind}-traversal-{width}.png"), FullPage = false });
     }
 
 }
