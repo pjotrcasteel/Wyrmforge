@@ -132,15 +132,19 @@ jobs:
             const root=`artifacts/an6-compact-claw-hunt-${width}`;
             const summary=JSON.parse(fs.readFileSync(root+'/capture-summary.json','utf8'));
             const trace=JSON.parse(fs.readFileSync(root+'/motion-trace.json','utf8'));
-            const actionSamples=trace.flatMap(t=>t.hollow?.entities??[])
-              .filter(e=>e.foundation?.clip==='attack-travel').length;
+            const entities=trace.flatMap(t=>t.hollow?.entities??[]);
+            const actionSamples=entities.filter(e=>e.foundation?.clip==='attack-travel').length;
+            const renderedClawFrames=Math.max(0,...entities.map(e=>e.foundationClawDrawnFrames??0));
+            const renderedSpriteFrames=Math.max(0,...entities.map(e=>e.foundationDrawnFrames??0));
             const result={width,scene:summary.scene,physicalDevice:false,sourceLitOnly:true,
-              actionSamples,maximumNativeMarkerSlip:summary.maximumNativeMarkerSlip,
+              actionSamples,renderedClawFrames,renderedSpriteFrames,
+              maximumNativeMarkerSlip:summary.maximumNativeMarkerSlip,
               markerContactWithinOneNativePixel:summary.markerContactWithinOneNativePixel,
               browserErrors:summary.errors,resourceErrors:summary.failedResources.length};
             fs.writeFileSync(root+'/claw-proof.json',JSON.stringify(result,null,2)+'\\n');
             console.log(JSON.stringify(result));
-            if(!actionSamples)throw Error('No actual source-claw actor frames were rendered at '+width+'px');
+            if(!actionSamples||!renderedClawFrames)throw Error('Claw was not both sampled AND drawn at '+width+'px');
+            if(summary.errors.length||summary.failedResources.length)throw Error('Captured scene has browser or missing-resource errors at '+width+'px');
           }
           NODE
       - uses: actions/upload-artifact@v4
