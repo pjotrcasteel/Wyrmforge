@@ -102,6 +102,30 @@ test('Accept valid explicit consent only; refuse silent/malformed and cross-orig
     assert.equal((await post(e, { consent: true, report: report() })).status, 202);
     assert.equal(e.DB.reports.size, 1);
 });
+test('Accept bounded AI summaries while stripping raw locations, decision traces and identifiers', async () => {
+    const submitted = report();
+    submitted.recentRuns[0].ai = {
+        samples: 3, frames: 500, population: 64, sightQueriesMax: 32, pathQueriesMax: 32,
+        committedMax: 2, meanMs: 5.126, p95Ms: 7.43, maxMs: 38,
+        resolvedDamage: 25, damagePeak: 9, observedAgents: 30,
+        recordedDecisions: 125, actionDiversity: 25, maxDecisionLatencyTicks: 4,
+        playerName: 'never store me', coordinates: [10, 20], trace: [{ action: 'attack', position: [1, 2] }]
+    };
+    const saved = sanitizeReport(submitted).recentRuns[0].ai;
+    assert.equal(saved.population, 64);
+    assert.equal(saved.p95Ms, 7.4);
+    assert.equal(saved.committedMax, 2);
+    assert.equal(saved.coordinates, undefined);
+    assert.equal(saved.trace, undefined);
+    assert.equal(saved.playerName, undefined);
+    assert.equal(sanitizeReport({ ...submitted, recentRuns: [{ ...submitted.recentRuns[0], ai: { samples: 0 } }] })
+        .recentRuns[0].ai, null);
+    const e = env();
+    assert.equal((await post(e, { consent: false, report: submitted })).status, 400);
+    assert.equal((await post(e, { consent: true, report: submitted })).status, 202);
+    assert.equal(JSON.parse(e.DB.reports.values().next().value.data).recentRuns[0].ai.population, 64);
+});
+
 test('Discard unexpected properties, identifiers and detailed viewport/fingerprint data', async () => {
     const safe = sanitizeReport(report());
     assert.equal(safe.device.kind, 'touch');

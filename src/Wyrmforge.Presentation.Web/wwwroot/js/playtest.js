@@ -4,6 +4,7 @@
     const key = 'wyrmforge.playtest.v1';
     const schemaVersion = 1;
     const maximumRuns = 12;
+    const aiConsentKey = 'wyrmforge.playtest.aiAutoConsent.v1';
     const allowedMilestones = new Set(['trail_entered', 'wyrm_entered', 'refuge_reached', 'descended', 'extracted']);
     const newId = () => globalThis.crypto?.randomUUID?.() ?? `local-${Date.now()}-${Math.floor(Math.random() * 1e9)}`;
     const blank = () => ({ schemaVersion, sessionId: newId(), started: 0, ended: 0, interrupted: 0, trails: 0, wyrmGates: 0, runs: [], active: null });
@@ -62,6 +63,42 @@
         const share = value => Number.isFinite(value) ? Math.round(Math.min(1, Math.max(0, value)) * 1000) / 1000 : 0;
         return { enemy: share(control?.enemy), threat: share(control?.threat), elite: share(control?.elite), wyrm: share(control?.wyrm), controlledKills: share(control?.controlledKills) };
     }
+    function getAiAutoConsent() {
+        try { return localStorage.getItem(aiConsentKey) === 'yes'; } catch { return false; }
+    }
+    function setAiAutoConsent(enabled) {
+        try {
+            if (enabled === true) localStorage.setItem(aiConsentKey, 'yes');
+            else localStorage.removeItem(aiConsentKey);
+        } catch { /* Storage unavailable: fail closed; no automatic upload. */ }
+        return getAiAutoConsent();
+    }
+    const boundedMilliseconds = value => Number.isFinite(value) ? Math.round(Math.min(10000, Math.max(0, value)) * 10) / 10 : 0;
+    function aiSample(source) {
+        if (!state.active || !source || typeof source !== 'object' || !Number.isFinite(source.frames) || source.frames <= 0) return;
+        const previous = state.active.ai ?? { samples: 0 };
+        const latest = {
+            samples: previous.samples + 1,
+            frames: safeNumber(source.frames),
+            population: Math.max(previous.population ?? 0, safeNumber(source.population)),
+            sightQueriesMax: Math.max(previous.sightQueriesMax ?? 0, safeNumber(source.sightQueriesMax)),
+            pathQueriesMax: Math.max(previous.pathQueriesMax ?? 0, safeNumber(source.pathQueriesMax)),
+            committedMax: Math.max(previous.committedMax ?? 0, safeNumber(source.committedMax)),
+            meanMs: boundedMilliseconds(source.meanMs),
+            p95Ms: Math.max(previous.p95Ms ?? 0, boundedMilliseconds(source.p95Ms)),
+            maxMs: Math.max(previous.maxMs ?? 0, boundedMilliseconds(source.maxMs)),
+            resolvedDamage: boundedMilliseconds(source.resolvedDamage),
+            damagePeak: Math.max(previous.damagePeak ?? 0, boundedMilliseconds(source.damagePeak)),
+            observedAgents: Math.max(previous.observedAgents ?? 0, safeNumber(source.observedAgents)),
+            recordedDecisions: Math.max(previous.recordedDecisions ?? 0, safeNumber(source.recordedDecisions)),
+            actionDiversity: Math.max(previous.actionDiversity ?? 0, safeNumber(source.actionDiversity)),
+            maxDecisionLatencyTicks: Math.max(previous.maxDecisionLatencyTicks ?? 0, safeNumber(source.maxDecisionLatencyTicks))
+        };
+        state.active.ai = latest;
+        // Bound local writes: samples arrive approximately every 300 AI frames (~5s).
+        persist();
+    }
+
     function finishRun(report) {
         if (!report || typeof report !== 'object') return;
         const active = state.active ?? { runId: newId(), startedAt: Date.now(), ascendantRite: false, milestones: [], perf: { samples: 0, slowFrames: 0, maxBridgeMs: 0 } };
@@ -79,6 +116,10 @@
         state.ended++;
         state.active = null;
         persist();
+        // Upload only when the player previously opted in. Sending is best-effort;
+        // a failed request never blocks the end-of-run screen or discards local data.
+        if (getAiAutoConsent() && state.runs.at(-1)?.ai?.samples > 0)
+            void sendAutomaticAiReport(state.runs.at(-1));
     }
     function context() {
         return {
@@ -136,7 +177,10 @@
     }
     function clear() {
         state = blank();
-        try { localStorage.removeItem(key); } catch { /* No storage available. */ }
+        try {
+            localStorage.removeItem(key);
+            localStorage.removeItem(aiConsentKey);
+        } catch { /* No storage available. */ }
     }
     const lastSentKey = 'wyrmforge.playtest.lastReceipt.v1';
     const pendingKey = 'wyrmforge.playtest.pendingReceipt.v1';
@@ -168,6 +212,34 @@
         return endpointPromise;
     }
     async function collectorReady() { return (await getCollectorEndpoint()) !== null; }
+    async function sendAutomaticAiReport(run) {
+        if (!getAiAutoConsent()) return 'not_consented';
+        const endpoint = await getCollectorEndpoint();
+        if (!endpoint || !getAiAutoConsent()) return 'unavailable';
+        // No stable player identifier, free text, coordinates, account or full device fingerprint.
+        // The isolated report/run IDs exist solely for duplicate handling and deletion.
+        const sanitizedRun = { ...run, runId: newId() };
+        const report = {
+            ...buildReport({ includeRuns: false }),
+            id: newId(),
+            feedback: { enjoyment: null, clarity: null, replay: null, troubleArea: null, bestMoment: '', improvement: '' },
+            stats: { starts: 0, completedRuns: 0, interruptedRuns: 0, trailsEntered: 0, wyrmGatesEntered: 0 },
+            recentRuns: [sanitizedRun]
+        };
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 12000);
+        try {
+            const response = await fetch(endpoint, {
+                method: 'POST', mode: 'cors', credentials: 'omit', cache: 'no-store',
+                redirect: 'error', referrerPolicy: 'no-referrer', signal: controller.signal,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ consent: true, report })
+            });
+            return response.ok ? 'sent' : 'failure';
+        } catch { return 'unavailable'; }
+        finally { clearTimeout(timeout); }
+    }
+
     async function sendDirect(answers) {
         const endpoint = await getCollectorEndpoint();
         if (!endpoint) return 'unavailable';
@@ -198,5 +270,8 @@
         finally { clearTimeout(timer); }
     }
 
-    window.wyrmforgePlaytest = { startRun, milestone, performanceSample, finishRun, buildReport, share, clear, collectorReady, sendDirect };
+    window.wyrmforgePlaytest = {
+        startRun, milestone, performanceSample, aiSample, finishRun, buildReport, share, clear,
+        collectorReady, sendDirect, getAiAutoConsent, setAiAutoConsent
+    };
 })();
