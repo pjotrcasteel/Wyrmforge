@@ -65,10 +65,37 @@ export class HuntGpuWorld {
         this.engine.registerGeometry('hunt-billboard', huntActorGeometry());
         this.layers = new Map();
         this.used = new Set();
+        this.dirtyTextures = new Set();
+        this.lastFrameUploads = { dynamicTextures: 0, dynamicPixels: 0 };
+    }
+    /** Preloaded art textures and authored geometry are registered once, not captured each frame. */
+    registerAssetTexture(id, texture, colorData = true) {
+        if (!texture?.isTexture) throw new TypeError('Expected a preloaded GPU texture');
+        this.engine.registerTexture(id, texture, colorData);
+        texture.needsUpdate = true;
+    }
+    registerAssetGeometry(id, geometry) {
+        if (!geometry?.isBufferGeometry) throw new TypeError('Expected authored buffer geometry');
+        this.engine.registerGeometry(id, geometry);
+    }
+    /** Submit any already-described renderable: no creature, biome or Canvas special cases. */
+    submitSurface(renderable, descriptor) {
+        if (!this.objects || !this.materials) throw new Error('Begin a Hunt GPU frame before submitting surfaces');
+        if (!renderable?.id || !descriptor?.id || renderable.material !== descriptor.id)
+            throw new TypeError('Renderable must reference its registered material descriptor');
+        const existing = this.materials.find(value => value.id === descriptor.id);
+        if (existing && JSON.stringify(existing) !== JSON.stringify(descriptor))
+            throw new TypeError('Conflicting material descriptors for shared resource ID');
+        if (!existing) this.materials.push(descriptor);
+        this.objects.push(renderable);
+    }
+    diagnostics() {
+        return { ...this.engine.diagnostics(), textureUploads: this.lastFrameUploads,
+            authoredTextures: this.engine.textures.size - this.layers.size, canvasCaptures: this.layers.size };
     }
     begin(ctx, camera, width, height) {
         this.camera = camera; this.width = width; this.height = height;
-        this.used.clear(); this.objects = []; this.materials = [];
+        this.used.clear(); this.dirtyTextures.clear(); this.objects = []; this.materials = [];
         this.capture('hunt-ground', ctx.canvas, 0, 0, width, height, 0, false);
     }
     capture(id, source, x, y, width, height, elevation = 0, castsShadow = true, surface = {}) {
@@ -90,15 +117,34 @@ export class HuntGpuWorld {
             ctx.clearRect(0, 0, layer.pixels.width, layer.pixels.height);
             ctx.drawImage(source, 0, 0, layer.pixels.width, layer.pixels.height);
             layer.texture.needsUpdate = true;
+            this.dirtyTextures.add(id);
         }
-        this.materials.push(huntSurfaceMaterial(id, surface.material, Boolean(source)));
-        this.objects.push(huntSurfaceRenderable(id, x, y, width, height, castsShadow, surface));
+        this.submitSurface(huntSurfaceRenderable(id, x, y, width, height, castsShadow, surface),
+            huntSurfaceMaterial(id, surface.material, Boolean(source)));
     }
     render(ctx, frame) {
         const engine = this.engine;
         engine.apply({ ...huntLightFrame(frame, this.camera, { width: this.width, height: this.height }), materials: this.materials, objects: this.objects });
-        // CanvasTexture clones share pixels, but each GPU map needs an upload notification.
-        for (const object of engine.objects.values()) if (object.mesh.material.map) object.mesh.material.map.needsUpdate = true;
+        // Only repainted Canvas sources need a new upload. Static authored textures and
+        // atlas frames retain their GPU allocations across Hunt frames.
+        const byMaterial = new Map(this.materials.map(value => [value.id, value]));
+        let updatedPixels = 0;
+        for (const entry of this.objects) {
+            const material = byMaterial.get(entry.material);
+            const mesh = engine.objects.get(entry.id)?.mesh;
+            if (!mesh || !material) continue;
+            for (const [key, mapKey] of [['albedo', 'map'], ['normal', 'normalMap'],
+                ['roughnessMap', 'roughnessMap'], ['aoMap', 'aoMap'], ['emissiveMap', 'emissiveMap']]) {
+                if (this.dirtyTextures.has(material[key]) && mesh.material[mapKey])
+                    mesh.material[mapKey].needsUpdate = true;
+            }
+        }
+        for (const id of this.dirtyTextures) {
+            const pixels = this.layers.get(id)?.pixels;
+            if (pixels) updatedPixels += pixels.width * pixels.height;
+        }
+        this.lastFrameUploads = { dynamicTextures: this.dirtyTextures.size, dynamicPixels: updatedPixels };
+        this.dirtyTextures.clear();
         engine.halfWidth = this.width / UNIT / 2;
         engine.camera.up.set(0, 0, 1);
         const centerY = -this.height * GROUND_Y / UNIT / 2;
