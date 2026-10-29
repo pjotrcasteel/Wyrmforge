@@ -51,13 +51,20 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
             const zero=world.engine.pixels();let dark=0;
             for(let i=0;i<zero.length;i+=4)dark=Math.max(dark,zero[i],zero[i+1],zero[i+2]);
             world.render(ctx,frame);
+            const composed=ctx.getImageData(0,0,width,height).data;
+            let composedPeak=0;
+            for(let i=0;i<composed.length;i+=4)
+                composedPeak=Math.max(composedPeak,composed[i],composed[i+1],composed[i+2]);
+            const retained=world.engine.renderer.getContext().getContextAttributes().preserveDrawingBuffer;
             window.__huntGpuAdapterProof=world;
-            return [peak,dark,shadowViews,groundShadowPixels];
+            return [peak,dark,shadowViews,groundShadowPixels,composedPeak,retained?1:0];
         }", new { width, height });
         Assert.IsTrue(result[0] > 0, "Actual shared GPU output must respond to source light.");
         Assert.AreEqual(0, result[1], "No ambient/emission/sources must produce black world pixels.");
         Assert.AreEqual(1, result[2], "The shared engine must select the actual shadow-casting source.");
         Assert.IsTrue(result[3] > 0, "Disabling source shadows must change actual ground pixels outside the actor silhouette.");
+        Assert.IsTrue(result[4] > 0, "Opt-in Hunt must compose nonblack WebGL pixels into its actual game Canvas.");
+        Assert.AreEqual(0, result[5], "Mobile Hunt must not retain a completed WebGL drawing buffer.");
         var artifacts = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
         Directory.CreateDirectory(artifacts);
         await Page.Locator("#hunt-gpu-adapter-proof").ScreenshotAsync(new()
@@ -115,10 +122,15 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
             for(let i=0;i<zero.length;i+=4)
                 dark = Math.max(dark,zero[i],zero[i+1],zero[i+2]);
             world.render(ctx, frame);
+            const composed = ctx.getImageData(0, 0, width, height).data;
+            let compositePeak = 0;
+            for(let i=0;i<composed.length;i+=4)
+                compositePeak=Math.max(compositePeak,composed[i],composed[i+1],composed[i+2]);
             const diagnostics = world.diagnostics();
             window.__huntGpuFireballProof = world;
             return [submitted.size, peak, dark, diagnostics.authoredTextures,
-                diagnostics.textureUploads.dynamicTextures, diagnostics.budgets.shadowMapSize];
+                diagnostics.textureUploads.dynamicTextures, diagnostics.budgets.shadowMapSize,
+                compositePeak, diagnostics.budgets.preserveDrawingBuffer ? 1 : 0];
         }", new { width, height });
         Assert.AreEqual(1, result[0], "Fireball must be bound through its authored GPU material.");
         Assert.IsTrue(result[1] > 0, "The authored emissive channel must survive actual GPU composition.");
@@ -126,6 +138,8 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
         Assert.AreEqual(2, result[3], "Exactly the authored albedo and emissive textures are registered.");
         Assert.AreEqual(0, result[4], "Unchanged GPU atlas resources cannot be recaptured as Canvas.");
         Assert.AreEqual(width == 320 ? 256 : 512, result[5], "Shared GPU quality tier must control actual renderer shadow allocations.");
+        Assert.IsTrue(result[6] > 0, "The authored Fireball must reach the composed game Canvas, not just the offscreen framebuffer.");
+        Assert.AreEqual(0, result[7], "Live Hunt Fireball uses the memory-saving framebuffer policy.");
         var artifacts = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
         Directory.CreateDirectory(artifacts);
         await Page.Locator("#hunt-gpu-fireball-proof").ScreenshotAsync(new()
