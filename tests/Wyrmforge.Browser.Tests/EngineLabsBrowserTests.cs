@@ -92,4 +92,35 @@ public sealed class EngineLabsBrowserTests : PageTest
         Assert.IsFalse(rootRelativeLink!.StartsWith('/'));
         Assert.IsFalse(rootRelativeFrame!.StartsWith('/'));
     }
+
+    [TestMethod]
+    public async Task AiLab_390px_EmbedsRealEncounterAndNavigatesBetweenEngines()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.GotoAsync($"{BaseUrl}/engine-labs/ai");
+
+        var liveEncounter = Page.FrameLocator("iframe[title='Live authoritative engine preview']");
+        await Expect(liveEncounter.Locator("canvas[aria-label='Live enemy encounter']"))
+            .ToBeVisibleAsync(new() { Timeout = 45000 });
+        await Expect(liveEncounter.GetByRole(AriaRole.Heading, new() { Name = "Fire & Frost enemy lab" }))
+            .ToBeVisibleAsync();
+
+        var documentWidth = await Page.EvaluateAsync<int>("() => document.documentElement.scrollWidth");
+        Assert.IsLessThanOrEqualTo(391, documentWidth,
+            "The embedded simulation and engine switcher must not stretch a 390px device.");
+
+        var output = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ??
+            Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
+        Directory.CreateDirectory(output);
+        await Page.ScreenshotAsync(new()
+        {
+            Path = Path.Combine(output, "engine-ai-lab-live-390.png"),
+            FullPage = true
+        });
+
+        await Page.Locator("nav[aria-label='Engine labs'] a[href='engine-labs/lighting']").ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Lighting Lab" })).ToBeVisibleAsync();
+        await Page.Locator("nav[aria-label='Engine labs'] a[href='engine-labs/ai']").ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "AI Lab" })).ToBeVisibleAsync();
+    }
 }
