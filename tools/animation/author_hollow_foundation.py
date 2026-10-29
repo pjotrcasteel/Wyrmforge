@@ -28,7 +28,7 @@ parser.add_argument('--motion-headings',default='',help='Additional nonzero walk
 parser.add_argument('--compress-source',action='store_true',help='Save the editable Blender source with lossless native compression.')
 args=parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
 if not math.isfinite(args.travel_heading_degrees) or abs(args.travel_heading_degrees)>(90 if args.experimental_lateral_motion else 45):parser.error('travel heading must be finite and within -45..45 degrees (or -90..90 in explicit source-only lateral study)')
-if args.experimental_lateral_motion and (abs(args.travel_heading_degrees)<=45 or args.stride_metres>.28 or args.only!='walk'):parser.error('lateral feasibility requires 45<abs(heading)<=90, --only walk and stride <=0.28m; source-only')
+if args.experimental_lateral_motion and (abs(args.travel_heading_degrees)<=45 or args.stride_metres>.28 or args.only not in ('walk','walk,attack-travel')):parser.error('lateral feasibility requires 45<abs(heading)<=90, --only walk[,attack-travel] and stride <=0.28m; source-only')
 if not math.isfinite(args.stride_metres) or args.stride_metres<=0:parser.error('source stride must be finite and positive')
 if not math.isfinite(args.flexion_reserve_pixels) or not 0<=args.flexion_reserve_pixels<=2:parser.error('source flexion reserve must be finite and within 0..2 native pixels')
 if not math.isfinite(args.pelvis_drop_metres) or not 0<=args.pelvis_drop_metres<=.10:parser.error('source crouch must be finite and within 0..0.10 metres')
