@@ -133,6 +133,8 @@ test('automatic private report contains only compact measurements, never raw dev
         assert.equal(report.recentRuns[0].g4.samples, undefined);
         assert.equal(report.recentRuns[0].g4.batteryPercent, undefined);
         assert.equal(JSON.stringify(report).includes('PRIVATE'), false);
+        assert.equal(buildG4CollectorReport({ ...deviceRecord, recording: true }), null,
+            'Automatic uploads must never send an incomplete checkpoint as a completed Hunt');
     } finally {
         globalThis.document = oldDocument;
         globalThis.matchMedia = oldMatchMedia;
