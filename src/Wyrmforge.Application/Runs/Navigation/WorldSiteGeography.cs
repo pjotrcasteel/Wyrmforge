@@ -128,7 +128,24 @@ public static class WorldSiteGeographyProjection
                 ports,
                 corridors,
                 landmarks);
-            geography = geography with { Landscape = WorldSiteLandscapeGenerator.Generate(node, geography) };
+            var landscape = WorldSiteLandscapeGenerator.Generate(node, geography);
+            var localSurface = landscape.Kind switch
+            {
+                "forest-fork" or "forest-trail" => substrate with
+                {
+                    Material = WorldSiteSurfaceId.Grass, Moisture = .72, Shelter = .7, Slope = .08,
+                },
+                "mountain-pass" => substrate with
+                {
+                    Material = WorldSiteSurfaceId.Rock, Height = .72, Slope = .62, Moisture = .21,
+                },
+                "wyrm-lair" => substrate with
+                {
+                    Material = WorldSiteSurfaceId.Rock, Height = .57, Slope = .26, Wear = .65,
+                },
+                _ => substrate,
+            };
+            geography = geography with { Landscape = landscape, Substrate = localSurface };
             return node with { Geography = geography };
         }).ToArray();
     }
