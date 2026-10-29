@@ -62,7 +62,11 @@ export class LightingEngine {
             roughness: wetRoughness, metalness: receivesLight && descriptor.reflection !== 'off' ? descriptor.metalness : 0,
             specularIntensity: receivesLight && descriptor.reflection !== 'off' ? descriptor.specular : 0,
             emissive: descriptor.emission, emissiveIntensity: descriptor.emissionIntensity,
-            alphaTest: descriptor.alphaCutoff, side: descriptor.doubleSided ? T.DoubleSide : T.FrontSide,
+            alphaTest: descriptor.blendMode && descriptor.blendMode !== 'cutout' ? 0 : descriptor.alphaCutoff,
+            transparent: descriptor.blendMode === 'alpha' || descriptor.blendMode === 'additive',
+            blending: descriptor.blendMode === 'additive' ? T.AdditiveBlending : T.NormalBlending,
+            depthWrite: descriptor.blendMode !== 'alpha' && descriptor.blendMode !== 'additive',
+            side: descriptor.doubleSided ? T.DoubleSide : T.FrontSide,
         });
         if (descriptor.reflection === 'probe' && receivesLight) material.envMapIntensity = descriptor.specular;
         if (descriptor.normalScale !== undefined) material.normalScale.setScalar(descriptor.normalScale);
