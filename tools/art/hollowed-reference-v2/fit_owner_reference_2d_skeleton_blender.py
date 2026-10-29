@@ -267,6 +267,83 @@ def fit_real_source_boot_contact(rig, body):
     return results
 
 
+def level_source_leg_chain_to_real_sole(rig, body):
+    """Recover a pair of planted feet without retilting solved sole planes.
+
+    Solve translation of the actual THIGH SOURCE ART bone (and its shin/foot
+    children). The heel-to-toe ankle orientation is already correct; a
+    whole-chain offset preserves that correct ankle pitch and avoids the
+    old floating-leg defect. This is a small static pose correction, not
+    gameplay IK or a universal motion-engine change.
+    """
+    source_indices={}
+    for side in ("L","R"):
+        group=body.vertex_groups.get(f"H_Foot_{side}")
+        if group is None:
+            raise ValueError("Missing authentic source foot groups")
+        source_indices[side]=[
+            vertex.index for vertex in body.data.vertices
+            if any(g.group==group.index and g.weight>.20 for g in vertex.groups)
+        ]
+        if len(source_indices[side])<100:
+            raise ValueError(f"Too little source foot geometry {side}")
+
+    def sole_height(points,side):
+        return float(min(points[i].z for i in source_indices[side]))
+
+    points=evaluated_world_vertices(body)
+    initial={side:sole_height(points,side) for side in ("L","R")}
+    high=max(initial,key=initial.get)
+    low="R" if high=="L" else "L"
+    current_gap=float(initial[high]-initial[low])
+    if current_gap<.025:
+        return {"before_m":{k:round(v,5) for k,v in initial.items()},
+                "after_m":{k:round(v,5) for k,v in initial.items()},
+                "adjusted_leg":None,"vertical_world_separation_m":round(current_gap,5)}
+
+    joint=rig.pose.bones[f"H_Thigh_{high}"]
+    origin=joint.location.copy()
+    joint_head_before=(rig.matrix_world @ joint.head).copy()
+    best=None
+    for n in range(-14,15):
+        offset=n*.0125
+        joint.location=origin+Vector((0,0,offset))
+        bpy.context.view_layer.update()
+        changed=evaluated_world_vertices(body)
+        actual=sole_height(changed,high)
+        gap=abs(actual-initial[low])
+        # Prefer truly leveled feet while penalizing anatomically large
+        # hip/upper-thigh separation.
+        score=gap*10.0 + abs(offset)*.25
+        if best is None or score<best[0]:
+            best=(score,offset,actual)
+    _,offset,actual=best
+    joint.location=origin+Vector((0,0,offset))
+    bpy.context.view_layer.update()
+    points=evaluated_world_vertices(body)
+    updated={side:sole_height(points,side) for side in ("L","R")}
+    gap=abs(updated["L"]-updated["R"])
+    joint_head_after=rig.matrix_world @ joint.head
+    shift=float((joint_head_after-joint_head_before).length)
+    if gap>.028:
+        raise ValueError(
+            f"Reference source feet not actually level after leg-chain fitting: "
+            f"{updated} chosen_adjustment={offset:.4f}"
+        )
+    if shift>.13:
+        raise ValueError(f"Source hip/thigh disconnected during contact fit: {shift:.4f}")
+    return {
+        "before_m":{k:round(v,5) for k,v in initial.items()},
+        "after_m":{k:round(v,5) for k,v in updated.items()},
+        "adjusted_leg":high,
+        "local_thigh_axis_translation_m":round(offset,5),
+        "true_thigh_head_shift_m":round(shift,5),
+        "vertical_world_separation_m":round(gap,5),
+        "both_foot_heights_matched_within_28mm":True,
+    }
+
+
+
 def fit_full_reference_pose(rig, body, global_root, data, target):
     # The old idle generated via uncalibrated rotations is not the new
     # authoritative pose. Clear ONLY source-art actions on NEW art rig.
@@ -315,6 +392,7 @@ def fit_full_reference_pose(rig, body, global_root, data, target):
     # Owner's foot landmarks drive location. Actual source artist's boot
     # skin weights decide which ankle pitch/roll produces heel + toe support.
     fitted_boots=fit_real_source_boot_contact(rig,body)
+    fitted_legs=level_source_leg_chain_to_real_sole(rig,body)
     initial_lo,_=extents(evaluated_world_vertices(body))
     global_root.location.z -= float(initial_lo.z)
     bpy.context.view_layer.update()
@@ -391,6 +469,7 @@ def fit_full_reference_pose(rig, body, global_root, data, target):
         },
         "real_weight_bearing_sole_patches": foot_patches,
         "anatomical_boot_rotation_fit":fitted_boots,
+        "anatomical_leg_chain_ground_fit":fitted_legs,
         "owner_traced_targets_preserved":True,
         "limb_bone_stretch_anatomically_bounded":True,
         "old_incremental_pose_discarded":True,
