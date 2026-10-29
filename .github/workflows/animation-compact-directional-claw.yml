@@ -1,0 +1,96 @@
+name: Animation compact directional claw source feasibility
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/animation-compact-directional-claw.yml'
+      - 'tools/animation/author_hollow_foundation.py'
+      - 'tools/animation/validate_source.py'
+      - 'tools/animation/validate_motion_envelope.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: animation-compact-directional-claw-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  compact-five-stage-whole-body-source:
+    name: 8 gait x 5 claw at ${{ matrix.heading }} degrees
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        heading: [0, 90, -90]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          sparse-checkout: |
+            tools/animation
+            art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-zombie-reach-v3-standard
+      - uses: actions/cache@v4
+        id: blender
+        with:
+          path: .cache/blender-4.5.3-linux-x64
+          key: animation-source-blender-4.5.3-linux-x64-975c58fc
+      - name: Restore pinned Blender
+        if: steps.blender.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .cache
+          curl --fail --location --retry 2 https://download.blender.org/release/Blender4.5/blender-4.5.3-linux-x64.tar.xz -o .cache/blender.tar.xz
+          echo '975c58fcb244273838534bba771e64ad87739216b0f9b39a888531a49a72d845  .cache/blender.tar.xz' | sha256sum --check
+          tar --no-same-owner -xf .cache/blender.tar.xz -C .cache
+          rm .cache/blender.tar.xz
+      - name: Validate exact compact whole-body gait/claw source and native sole reach
+        shell: bash
+        env:
+          HEADING: ${{ matrix.heading }}
+        run: |
+          set -euo pipefail
+          SOURCE="artifacts/an6-compact-directional-${HEADING}"
+          BLENDER="$PWD/.cache/blender-4.5.3-linux-x64/blender"
+          mkdir -p "$SOURCE"
+          EXTRA=()
+          if [ "$HEADING" != 0 ]; then EXTRA+=(--experimental-lateral-motion); fi
+          "$BLENDER" -b -t 2 --python-exit-code 1 --python tools/animation/author_hollow_foundation.py -- \
+            --out "$SOURCE" --only walk,attack-travel --phase-samples 8 --action-samples 5 \
+            --travel-heading-degrees "$HEADING" "${EXTRA[@]}" --stride-metres .28 \
+            --stance-fraction .6 --flexion-reserve-pixels 2 --pelvis-drop-metres .075 \
+            --compress-source > "$SOURCE/author.log" 2>&1
+          "$BLENDER" -b -t 2 --python-exit-code 1 --python tools/animation/validate_source.py -- "$SOURCE" > "$SOURCE/independent-skin.log" 2>&1
+          python3 tools/animation/test_source_qc.py "$SOURCE" --blender "$BLENDER" > "$SOURCE/mutations.log" 2>&1
+          "$BLENDER" -b -t 2 --python-exit-code 1 --python tools/animation/validate_motion_envelope.py -- "$SOURCE" > "$SOURCE/motion-envelope.log" 2>&1
+          SOURCE="$SOURCE" HEADING="$HEADING" python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          s=Path(os.environ['SOURCE']);m=json.loads((s/'source-manifest.json').read_text())
+          a=m['clips']['attack-travel'];w=m['clips']['walk']
+          assert a['frames']==40 and w['frames']==8
+          assert a['poseGrid']['phaseFrames']==8 and a['poseGrid']['actionFrames']==5
+          assert a['transitionReference']=='walk'
+          assert len(a['samples'])==40 and m['candidateNotApproved'] and not m['runtimeIntegrated']
+          assert abs(a['fps']-3.75)<1e-8
+          if float(os.environ['HEADING']):
+              assert m['experimentalLateralMotion']['sourceStudyOnly']
+              assert not m['experimentalLateralMotion']['acceptedForRuntime']
+          report={'nativeFullBodyClawFrames':40,'gaitPhases':8,'actionStages':5,
+                  'headingDegrees':float(os.environ['HEADING']),'sourceRigValidated':True,
+                  'sourceEnvelopeValidated':True,'oneNativePixelLimitUnchanged':True,
+                  'runtimeAccepted':False,'gameCaptured':False,'visualApproved':False}
+          (s/'feasibility.json').write_text(json.dumps(report,indent=2)+'\n')
+          print(json.dumps(report))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: an6-compact-five-stage-source-${{ matrix.heading }}
+          path: |
+            artifacts/an6-compact-directional-${{ matrix.heading }}/source-manifest.json
+            artifacts/an6-compact-directional-${{ matrix.heading }}/feasibility.json
+            artifacts/an6-compact-directional-${{ matrix.heading }}/*.log
+            artifacts/an6-compact-directional-${{ matrix.heading }}/independent-source-qc.json
+            artifacts/an6-compact-directional-${{ matrix.heading }}/negative-source-qc.json
+            artifacts/an6-compact-directional-${{ matrix.heading }}/motion-envelope-qc.json
+          if-no-files-found: warn
+          retention-days: 14
