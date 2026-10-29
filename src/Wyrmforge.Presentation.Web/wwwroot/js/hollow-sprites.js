@@ -12,13 +12,12 @@ import { createHollowFractureAssets, eligibleHollowFracture } from './hollow-fra
 // The rejected procedural bone-burst proof is intentionally lab-only.
 // Production deaths exclusively use the Hollowed's source-authored 3D atlases.
 const foundationMode=new URLSearchParams(globalThis.location?.search??'').get('animationFoundation');
-const foundationSpritePaths=new Map([
-    ['sprite-walk','../art/review/animation-foundation-sprite-walk/'],
-    ['sprite-claw','../art/review/animation-foundation-sprite-claw/']
-]);
-const foundationEnabled=foundationMode==='1'||foundationSpritePaths.has(foundationMode);
-const foundation=createCreatureAnimationAssets(new URL(
-    foundationSpritePaths.get(foundationMode)??'../art/review/animation-foundation-skin/',import.meta.url));
+const foundationEnabled=foundationMode==='1'||foundationMode==='sprite-walk'||foundationMode==='sprite-claw';
+const foundation=createCreatureAnimationAssets(foundationMode==='sprite-claw'
+    ?new URL('../art/review/animation-foundation-sprite-claw/',import.meta.url)
+    :foundationMode==='sprite-walk'
+        ?new URL('../art/review/animation-foundation-sprite-walk/',import.meta.url)
+        :new URL('../art/review/animation-foundation-skin/',import.meta.url));
 const base = new URL('../art/enemies/hollow-rigged/', import.meta.url);
 const rows = ['N','NE','E','SE','S','SW','W','NW'];
 const headings = ['E','SE','S','SW','W','NW','N','NE'];
