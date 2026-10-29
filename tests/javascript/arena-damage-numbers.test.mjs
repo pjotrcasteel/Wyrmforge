@@ -47,6 +47,9 @@ test('finishing blows are highlighted, surges amplified, schools distinct, motio
     assert.equal(finishing.text, '24', 'No arcade punctuation for finishers.');
     assert.ok(finishing.fontSize > normal.fontSize);
     assert.ok(empowered.fontSize > normal.fontSize);
+    const heavy = presentDamageNumber(hit({ heavy: true }), 'full', true);
+    assert.ok(heavy.fontSize > normal.fontSize);
+    assert.equal(heavy.text, '24', 'Heavy damage is not a fabricated critical roll.');
     assert.notEqual(finishing.color, normal.color);
     assert.notEqual(presentDamageNumber(hit({ school: 'Frost' })).color, normal.color);
     assert.notEqual(presentDamageNumber(hit({ school: 'Storm' })).color, normal.color);
