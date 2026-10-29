@@ -64,7 +64,7 @@ test('GPU diagnostics are sampled once per second, not on each animation frame',
     assert.equal(report.samples[0].cpuSubmissionMeanMs, 3.25);
     assert.equal(report.samples[2].shadowMapSize, 512);
     assert.deepEqual(report.device.viewport, { width: 390, height: 844 });
-    assert.equal(report.schema, 'wyrmforge.g4-device-review.v1');
+    assert.equal(report.schema, 'g4-device-review.v1');
     assert.equal(report.elapsedSeconds, 3);
 });
 
