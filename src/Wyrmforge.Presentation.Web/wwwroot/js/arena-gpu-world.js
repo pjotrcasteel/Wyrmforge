@@ -25,6 +25,32 @@ export function huntLightFrame(frame, camera, viewport = null) {
 const material = id => ({ id, albedo: id, color: '#ffffff', roughness: .95, metalness: 0,
     specular: .15, reflection: 'direct', emission: '#000000', emissionIntensity: 0,
     alphaCutoff: .1, doubleSided: true });
+/**
+ * Generic Hunt-to-lighting adapter: asset sources describe geometry, material and shadow
+ * participation. The shared LightingEngine remains ignorant of creature/terrain kinds.
+ * A custom geometry is registered once via LightingEngine.registerGeometry().
+ */
+export function huntSurfaceRenderable(id, x, y, width, height, castsShadow, surface = {}) {
+    const geometry = surface.geometry ?? (castsShadow ? 'hunt-billboard' : 'hunt-plane');
+    const standing = surface.standing ?? geometry === 'hunt-billboard';
+    return {
+        id, ownerId: surface.ownerId ?? id, geometry, material: id,
+        position: surface.position ?? [(x + width / 2) / UNIT, -(y + height * (standing ? .75 : .5)) * GROUND_Y / UNIT, standing ? .001 : 0],
+        rotation: surface.rotation ?? [0, 0, 0],
+        scale: surface.scale ?? [width / UNIT, height * (standing ? 1 : GROUND_Y) / UNIT, 1],
+        castsShadow: surface.castsShadow ?? castsShadow,
+        receivesShadow: surface.receivesShadow ?? true,
+        receivesLight: surface.receivesLight ?? true,
+        ...(surface.occluderGeometry ? { occluderGeometry: surface.occluderGeometry } : {}),
+    };
+}
+
+/** Keeps asset-specific appearance data separate from lighting calculations. */
+export function huntSurfaceMaterial(id, overrides = {}, hasAlbedoSource = true) {
+    const descriptor = { ...material(id), ...overrides, id };
+    if (!hasAlbedoSource && !overrides.albedo) delete descriptor.albedo;
+    return descriptor;
+}
 export function huntActorGeometry() {
     const actor = new T.PlaneGeometry(1, 1);
     actor.translate(0, .25, 0);
@@ -45,28 +71,28 @@ export class HuntGpuWorld {
         this.used.clear(); this.objects = []; this.materials = [];
         this.capture('hunt-ground', ctx.canvas, 0, 0, width, height, 0, false);
     }
-    capture(id, source, x, y, width, height, elevation = 0, castsShadow = true) {
-        this.used.add(id);
-        let layer = this.layers.get(id);
-        if (!layer) {
-            const pixels = document.createElement('canvas');
-            pixels.width = Math.max(1, Math.ceil(width)); pixels.height = Math.max(1, Math.ceil(height));
-            const texture = new T.CanvasTexture(pixels);
-            this.engine.registerTexture(id, texture);
-            layer = { pixels, texture }; this.layers.set(id, layer);
+    capture(id, source, x, y, width, height, elevation = 0, castsShadow = true, surface = {}) {
+        // Existing Canvas layers remain a migration fallback. New renderables may instead
+        // reference registered GPU texture IDs, authored geometry and surface channels.
+        if (source) {
+            this.used.add(id);
+            let layer = this.layers.get(id);
+            if (!layer) {
+                const pixels = document.createElement('canvas');
+                pixels.width = Math.max(1, Math.ceil(width)); pixels.height = Math.max(1, Math.ceil(height));
+                const texture = new T.CanvasTexture(pixels);
+                this.engine.registerTexture(id, texture);
+                layer = { pixels, texture }; this.layers.set(id, layer);
+            }
+            if (layer.pixels.width !== Math.ceil(width)) layer.pixels.width = Math.ceil(width);
+            if (layer.pixels.height !== Math.ceil(height)) layer.pixels.height = Math.ceil(height);
+            const ctx = layer.pixels.getContext('2d');
+            ctx.clearRect(0, 0, layer.pixels.width, layer.pixels.height);
+            ctx.drawImage(source, 0, 0, layer.pixels.width, layer.pixels.height);
+            layer.texture.needsUpdate = true;
         }
-        if (layer.pixels.width !== Math.ceil(width)) layer.pixels.width = Math.ceil(width);
-        if (layer.pixels.height !== Math.ceil(height)) layer.pixels.height = Math.ceil(height);
-        const ctx = layer.pixels.getContext('2d');
-        ctx.clearRect(0, 0, layer.pixels.width, layer.pixels.height);
-        ctx.drawImage(source, 0, 0, layer.pixels.width, layer.pixels.height);
-        layer.texture.needsUpdate = true;
-        this.materials.push(material(id));
-        const actor = castsShadow;
-        this.objects.push({ id, ownerId: id, geometry: actor ? 'hunt-billboard' : 'hunt-plane', material: id,
-            position: [(x + width / 2) / UNIT, -(y + height * (actor ? .75 : .5)) * GROUND_Y / UNIT, actor ? .001 : 0],
-            rotation: [0, 0, 0], scale: [width / UNIT, height * (actor ? 1 : GROUND_Y) / UNIT, 1],
-            castsShadow, receivesShadow: true, receivesLight: true });
+        this.materials.push(huntSurfaceMaterial(id, surface.material, Boolean(source)));
+        this.objects.push(huntSurfaceRenderable(id, x, y, width, height, castsShadow, surface));
     }
     render(ctx, frame) {
         const engine = this.engine;
