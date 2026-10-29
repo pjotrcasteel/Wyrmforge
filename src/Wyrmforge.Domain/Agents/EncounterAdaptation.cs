@@ -17,6 +17,10 @@ public sealed class EncounterAdaptation
             throw new ArgumentException("Observation origin must be finite.", nameof(origin));
         if (seenTarget is { } observed && (!double.IsFinite(observed.X) || !double.IsFinite(observed.Y)))
             throw new ArgumentException("Confirmed sight position must be finite.", nameof(seenTarget));
+        // Unsampled frames cannot supply a new target position. Enforce the
+        // earned-perception boundary here, even if a future adapter is wrong.
+        if (sightNotResampled && seenTarget is not null)
+            throw new ArgumentException("An unsampled sight frame cannot contain a new observed target.", nameof(seenTarget));
 
         var clock = state.Clock + delta;
         var decay = Math.Exp(-delta / 8);

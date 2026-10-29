@@ -104,6 +104,8 @@ public sealed class AdvancedAgentTests
             adaptation.Observe(.5, new Vector2D(double.NaN, 0), new Vector2D(120, 0)));
         Assert.ThrowsExactly<ArgumentException>(() =>
             adaptation.Observe(.5, Vector2D.Zero, new Vector2D(double.PositiveInfinity, 0)));
+        Assert.ThrowsExactly<ArgumentException>(() =>
+            adaptation.Observe(.5, Vector2D.Zero, new Vector2D(120, 0), sightNotResampled: true));
         var overflowingClock = new EncounterAdaptation();
         overflowingClock.Observe(double.MaxValue, Vector2D.Zero, null);
         var nearLimit = overflowingClock.Inspect();
