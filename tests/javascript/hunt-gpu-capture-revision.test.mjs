@@ -122,8 +122,8 @@ test('bounded Hunt raster pool reuses different actor sizes and evicts the least
     });
     const one = pool.acquire(160);
     const two = pool.acquire(96);
-    assert.equal(pool.acquire(160), one);
-    assert.equal(pool.acquire(96), two, 'Switching between sizes never reallocates a reusable bitmap');
+    assert.equal(pool.acquire(96), two);
+    assert.equal(pool.acquire(160), one, 'Switching between sizes never reallocates a reusable bitmap');
     assert.deepEqual(pool.diagnostics(), {
         capacity: 2, active: 2, created: 2, reused: 2, evicted: 0,
         estimatedBytes: (160 * 160 + 96 * 96) * 4,
