@@ -101,13 +101,31 @@ public partial class ArenaView : IAsyncDisposable
 
     protected override void OnInitialized()
     {
-        var agentPreview = new Uri(Navigation.Uri).Query.TrimStart('?').Split('&')
-            .Any(value => string.Equals(value, "agents=1", StringComparison.OrdinalIgnoreCase));
-        simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt, researchLead: ResearchLead, preparedMutations: PreparedMutations, fireballMutations: FireballMutations, contextualSpell: ContextualSpell, region: Region, regionOpening: RegionOpening, hunt: Hunt, amplifierAssignments: MutationAmplifierAssignments, fireballLevel: FireballLevel, agents: agentPreview ? new(true, true) : null);
-        if (new Uri(Navigation.Uri).Query.TrimStart('?').Split('&')
-            .Any(value => string.Equals(value, "ar1Geography=1", StringComparison.OrdinalIgnoreCase)))
-            simulation.EnableWorldSiteGeography();
+        var query = new Uri(Navigation.Uri).Query.TrimStart('?').Split('&');
+        var agentPreview = query.Any(value => string.Equals(value, "agents=1", StringComparison.OrdinalIgnoreCase));
+        var geographyPreview = query.Any(value => string.Equals(value, "ar1Geography=1", StringComparison.OrdinalIgnoreCase));
+        var requestedSite = query.FirstOrDefault(value => value.StartsWith("ar1SiteKind=", StringComparison.OrdinalIgnoreCase))
+            ?.Split('=', 2).Last();
+        var previewSeed = geographyPreview && requestedSite is "forest-fork" or "mountain-pass"
+            ? FindWorldSiteReviewSeed(requestedSite)
+            : RunSeed;
+        simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, previewSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt, researchLead: ResearchLead, preparedMutations: PreparedMutations, fireballMutations: FireballMutations, contextualSpell: ContextualSpell, region: Region, regionOpening: RegionOpening, hunt: Hunt, amplifierAssignments: MutationAmplifierAssignments, fireballLevel: FireballLevel, agents: agentPreview ? new(true, true) : null);
+        if (geographyPreview) simulation.EnableWorldSiteGeography();
         if (RewardCache) simulation.OpenRewardCache();
+    }
+
+    // Debug-seed selection still enters the real Hunt through its normal Chart and C# simulation.
+    // No stage skip, progress unlock, reward or save override is performed.
+    private static int FindWorldSiteReviewSeed(string kind)
+    {
+        for (var runSeed = 0; runSeed < 128; runSeed++)
+        {
+            var mapSeed = unchecked(runSeed * 397 ^ 7919) & int.MaxValue;
+            var opening = WyrmrealmMapGenerator.GenerateFireHunt(mapSeed, WyrmTier.Wyrm)
+                .Single(node => node.Stage == 1);
+            if (opening.Geography?.Landscape?.Kind == kind) return runSeed;
+        }
+        throw new InvalidOperationException($"No canonical Fire opening site satisfies AR1 geography kind '{kind}'.");
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
