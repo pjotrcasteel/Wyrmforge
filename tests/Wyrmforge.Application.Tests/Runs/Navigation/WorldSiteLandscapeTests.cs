@@ -49,6 +49,31 @@ public sealed class WorldSiteLandscapeTests
     }
 
     [TestMethod]
+    public void MobileStartingCamera_ShowsPhysicalForestAndMountainFeatures_NotOnlyFlatSubstrate()
+    {
+        var observations = new Dictionary<string, int>(StringComparer.Ordinal)
+        {
+            ["forest-fork"] = 0,
+            ["mountain-pass"] = 0,
+        };
+        for (var seed = 0; seed < 100; seed++)
+        {
+            foreach (var node in WyrmrealmMapGenerator.GenerateFireHunt(seed, WyrmTier.Wyrm))
+            {
+                var site = node.Geography!;
+                if (!observations.ContainsKey(site.Landscape!.Kind)) continue;
+                if (site.Landscape.Obstacles.Any(obstacle =>
+                    obstacle.Outline.Any(point => point.X is > .30 and < .70 && point.Y is > .27 and < .73)))
+                    observations[site.Landscape.Kind]++;
+            }
+        }
+        Assert.IsGreaterThan(20, observations["forest-fork"],
+            "Genuine forest forks need legible C# roots near the mobile player's starting camera.");
+        Assert.IsGreaterThan(20, observations["mountain-pass"],
+            "Mountain approaches need a visible C# cliff silhouette at ordinary mobile scale.");
+    }
+
+    [TestMethod]
     public void PhysicalCorridors_StayWalkableFromCenterToEveryMappedExit()
     {
         const double width = 950, height = 1550;
