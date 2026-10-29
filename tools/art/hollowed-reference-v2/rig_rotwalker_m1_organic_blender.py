@@ -47,10 +47,64 @@ def bounds(points):
             Vector(tuple(max(p[i] for p in points) for i in range(3))))
 
 
+def sculpt_original_arm_proportions(body):
+    """Extend the REAL artist-source forearms in REST topology, not at pose time.
+
+    This is a reversible physical sculpt shape key, preserving the creator's
+    original Basis mesh. It changes broad anatomical proportion *before*
+    weighting a rig; 2x+ pose-bone scaling previously stretched finger/clothing
+    faces into thin blades, so it is now prohibited.
+    """
+    original=eval_points(body)
+    lo,hi=bounds(original)
+    width=float(hi.x-lo.x)
+    if not 2.20<width<2.55 or body.data.shape_keys:
+        raise ValueError("Expected untouched owner-approved Rotwalker source")
+    center_x=(lo.x+hi.x)/2
+    floor=lo.z
+    basis=body.shape_key_add(name="SOTUDIOS Rotwalker ORIGINAL unchanged",from_mix=False)
+    sculpt=body.shape_key_add(
+        name="WyrmForge Hollowed M1 organic LONG-LIMBED anatomy source",from_mix=False
+    )
+    local_from_world=body.matrix_world.inverted().to_3x3()
+    moved=0
+    maximum=0.
+    for i,p in enumerate(original):
+        xx=abs(float(p.x-center_x))
+        height_offset=abs(float(p.z-floor-2.14))
+        influence=1.0-smooth(height_offset,.20,.64)
+        extension=max(0.,xx-.38)*.39*influence
+        direction=1 if p.x>=center_x else -1
+        delta=Vector((direction*extension,0,0))
+        sculpt.data[i].co=basis.data[i].co + local_from_world @ delta
+        if extension>.006:
+            moved+=1
+            maximum=max(maximum,extension)
+    sculpt.value=1.0
+    bpy.context.view_layer.update()
+    new=eval_points(body)
+    l2,h2=bounds(new)
+    if moved<500 or not .25<maximum<.45:
+        raise ValueError(f"Anatomical extension absent or destructive: {moved}, {maximum}")
+    if not width+.45<float(h2.x-l2.x)<width+.85:
+        raise ValueError("Source-based arm reach extension outside safe anatomy envelope")
+    if len(original)!=len(new):
+        raise ValueError("Original source topology changed")
+    return {
+        "original_artist_armspan_m":round(width,4),
+        "anatomical_sculpt_armspan_m":round(float(h2.x-l2.x),4),
+        "source_vertices_softly_resculpted":moved,
+        "max_rest_length_extension_m":round(maximum,4),
+        "original_basis_retained":True,
+        "topology_or_triangles_added":False,
+        "not_a_pose_bone_scaling_shortcut":True,
+    }
+
+
 def create_rig(body, base):
     """Real Blender skinning hierarchy for an *unrigged* artist source mesh."""
     lo,hi=bounds(base)
-    if not 2.74 < hi.z-lo.z < 2.90 or not 2.2 < hi.x-lo.x < 2.55:
+    if not 2.74 < hi.z-lo.z < 2.90 or not 2.75 < hi.x-lo.x < 3.22:
         raise ValueError("Wrong original 3D character; abort rather than rig old H1")
     if len(base)!=len(body.data.vertices) or len(base)<31000:
         raise ValueError("Original source topology changed")
@@ -75,9 +129,9 @@ def create_rig(body, base):
     for side,code in ((-1,"L"),(1,"R")):
         spec.update({
             f"H_Clavicle_{code}": ("H_SpineThoracic",P(0,0,2.23),P(side*.40,0,2.22)),
-            f"H_UpperArm_{code}": (f"H_Clavicle_{code}",P(side*.38,0,2.20),P(side*.72,0,2.16)),
-            f"H_ForeArm_{code}": (f"H_UpperArm_{code}",P(side*.72,0,2.16),P(side*.98,0,2.13)),
-            f"H_ClawsRoot_{code}": (f"H_ForeArm_{code}",P(side*.98,0,2.13),P(side*1.15,-.02,2.10)),
+            f"H_UpperArm_{code}": (f"H_Clavicle_{code}",P(side*.38,0,2.20),P(side*.85,0,2.16)),
+            f"H_ForeArm_{code}": (f"H_UpperArm_{code}",P(side*.85,0,2.16),P(side*1.19,0,2.13)),
+            f"H_ClawsRoot_{code}": (f"H_ForeArm_{code}",P(side*1.19,0,2.13),P(side*1.46,-.02,2.10)),
             f"H_Thigh_{code}": ("H_Pelvis",P(side*.19,0,1.21),P(side*.23,0,.70)),
             f"H_Shin_{code}": (f"H_Thigh_{code}",P(side*.23,0,.70),P(side*.23,0,.17)),
             f"H_Foot_{code}": (f"H_Shin_{code}",P(side*.23,0,.17),P(side*.23,-.16,.06)),
@@ -131,9 +185,9 @@ def create_rig(body, base):
         # Arm chain in actual source T-pose: shoulder to upper arm to
         # elbow, wrist, hands. Share across neighboring bones at seams.
         arm_clav=1-smooth(ax,.37,.57)
-        arm_upper=smooth(ax,.37,.59)*(1-smooth(ax,.65,.83))
-        arm_fore=smooth(ax,.67,.88)*(1-smooth(ax,.98,1.11))
-        arm_hand=smooth(ax,.98,1.12)
+        arm_upper=smooth(ax,.43,.66)*(1-smooth(ax,.77,.98))
+        arm_fore=smooth(ax,.81,.99)*(1-smooth(ax,1.19,1.39))
+        arm_hand=smooth(ax,1.20,1.43)
         arm_sum=arm_clav+arm_upper+arm_fore+arm_hand
         if arm_sum>.0001:
             add(f"H_Clavicle_{side}",arm_mask*arm_clav/arm_sum)
@@ -515,6 +569,7 @@ def main():
         raise ValueError("Expected untouched original Rotwalker artist sculpt")
     if bpy.data.armatures:
         raise ValueError("Expected unrigged Rotwalker; no old H1 rig allowed")
+    anatomical_proportions=sculpt_original_arm_proportions(body[0])
     baseline=eval_points(body[0])
     initial_lo,_=bounds(baseline)
     rig,rig_report=create_rig(body[0],baseline)
@@ -539,6 +594,7 @@ def main():
       "original_source":"Owner-selected Sotudios Rotwalker CC BY 4.0",
       "original_mesh_preserved":True,
       "rig":rig_report,
+      "anatomical_source_proportion_sculpt":anatomical_proportions,
       "calibrated_reaching_arms":calibrated,
       "shared_global_world_motion_parent":global_motion_root.name,
       "motion":movement,
