@@ -2,6 +2,15 @@
 
 **NOT FINISHED. Keep PR #387 draft and unmerged. No final visual approval requested.**
 
+## Owner reaffirmation: 2.5D spritesheets - 29 October 2026
+
+The owner has asked to retain and verify the spritesheet goal. It is viable for
+coherent baked full-body animation and bounded authored transitions. The live
+skinned-mesh proof is research, not completion of that representation. See the
+[milestone and resource reconciliation](spritesheet-viability-20261029.md).
+Continue through the existing sprite controller/export/material path; do not
+silently substitute a live skeletal renderer or promise arbitrary PNG blending.
+
 ## Current continuity audit - 29 October 2026
 
 The public candidate is the 0.65-duty catch-step source preserved at `0c57b3e12`.

@@ -1,6 +1,10 @@
 # Shared character animation developer reference
 
 Status: source-skin review candidate in draft PR #387. [Gate audit and evidence](AN-status.md).
+
+**29 October owner direction:** the shipped target remains 2.5D spritesheets.
+The source-skin path below is retained research, not an approved replacement.
+See [the milestone/representation reconciliation](spritesheet-viability-20261029.md).
 Canon: [art](../canon/art-and-animation.md#universal-animation-foundation--an0an6-27-october-2026),
 [authority](../canon/architecture-and-quality.md#locked--unified-engine-ownership-and-event-authority-27-october-2026).
 

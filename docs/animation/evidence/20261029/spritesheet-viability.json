@@ -1,0 +1,263 @@
+{
+  "sourceManifestSha256": "ec6da6541e6af30d05965ae6fb924991a6c28927c32eb2aa7339a3f106c78cfa",
+  "measuredExistingPack": [
+    {
+      "clip": "walk",
+      "framesPerFacing": 16,
+      "facings": 8,
+      "actualAlphaBoundsInSourceCell": [
+        22,
+        18,
+        74,
+        82
+      ],
+      "loadedRgbaBytesIncludingReviewColor": 18874368,
+      "availableMaterialPasses": [
+        "albedo",
+        "normal",
+        "emissive"
+      ]
+    },
+    {
+      "clip": "attack",
+      "framesPerFacing": 16,
+      "facings": 8,
+      "actualAlphaBoundsInSourceCell": [
+        20,
+        19,
+        76,
+        81
+      ],
+      "loadedRgbaBytesIncludingReviewColor": 18874368,
+      "availableMaterialPasses": [
+        "albedo",
+        "normal",
+        "emissive"
+      ]
+    },
+    {
+      "clip": "pivot",
+      "framesPerFacing": 16,
+      "facings": 8,
+      "actualAlphaBoundsInSourceCell": [
+        20,
+        18,
+        75,
+        80
+      ],
+      "loadedRgbaBytesIncludingReviewColor": 4718592,
+      "availableMaterialPasses": []
+    },
+    {
+      "clip": "pivot-negative",
+      "framesPerFacing": 16,
+      "facings": 8,
+      "actualAlphaBoundsInSourceCell": [
+        21,
+        18,
+        75,
+        80
+      ],
+      "loadedRgbaBytesIncludingReviewColor": 4718592,
+      "availableMaterialPasses": []
+    }
+  ],
+  "existingLoadedRgbaBytes": 47185920,
+  "measuredCommonAlphaBounds": [
+    20,
+    18,
+    76,
+    82
+  ],
+  "planningCropSizeWithOnePixelGuard": [
+    58,
+    66
+  ],
+  "channelAssumption": "Production albedo, geometry-derived normal and emission; do not also retain the redundant review-lit color sheet.",
+  "plans": [
+    {
+      "name": "ordinary full-body clips",
+      "decodedRgbaBytes": 23519232,
+      "under64MiB": true,
+      "under4096TextureDimension": true,
+      "layouts": [
+        {
+          "clip": "walk",
+          "framesPerFacing": 16,
+          "textureSize": [
+            928,
+            528
+          ],
+          "rgbaChannels": 3,
+          "decodedBytes": 5879808
+        },
+        {
+          "clip": "claw",
+          "framesPerFacing": 16,
+          "textureSize": [
+            928,
+            528
+          ],
+          "rgbaChannels": 3,
+          "decodedBytes": 5879808
+        },
+        {
+          "clip": "turn-left",
+          "framesPerFacing": 16,
+          "textureSize": [
+            928,
+            528
+          ],
+          "rgbaChannels": 3,
+          "decodedBytes": 5879808
+        },
+        {
+          "clip": "turn-right",
+          "framesPerFacing": 16,
+          "textureSize": [
+            928,
+            528
+          ],
+          "rgbaChannels": 3,
+          "decodedBytes": 5879808
+        }
+      ],
+      "assumption": "Unrendered poses must independently fit this measured crop; no acceptance implied."
+    },
+    {
+      "name": "16 gait x 8 action moving-claw grid plus walk",
+      "decodedRgbaBytes": 52918272,
+      "under64MiB": true,
+      "under4096TextureDimension": true,
+      "layouts": [
+        {
+          "clip": "walk",
+          "framesPerFacing": 16,
+          "textureSize": [
+            928,
+            528
+          ],
+          "rgbaChannels": 3,
+          "decodedBytes": 5879808
+        },
+        {
+          "clip": "moving-claw",
+          "framesPerFacing": 128,
+          "textureSize": [
+            1856,
+            2112
+          ],
+          "rgbaChannels": 3,
+          "decodedBytes": 47038464
+        }
+      ],
+      "assumption": "Unrendered poses must independently fit this measured crop; no acceptance implied."
+    },
+    {
+      "name": "same moving grid plus authored turn pair",
+      "decodedRgbaBytes": 64677888,
+      "under64MiB": true,
+      "under4096TextureDimension": true,
+      "layouts": [
+        {
+          "clip": "walk",
+          "framesPerFacing": 16,
+          "textureSize": [
+            928,
+            528
+          ],
+          "rgbaChannels": 3,
+          "decodedBytes": 5879808
+        },
+        {
+          "clip": "moving-claw",
+          "framesPerFacing": 128,
+          "textureSize": [
+            1856,
+            2112
+          ],
+          "rgbaChannels": 3,
+          "decodedBytes": 47038464
+        },
+        {
+          "clip": "turn-left",
+          "framesPerFacing": 16,
+          "textureSize": [
+            928,
+            528
+          ],
+          "rgbaChannels": 3,
+          "decodedBytes": 5879808
+        },
+        {
+          "clip": "turn-right",
+          "framesPerFacing": 16,
+          "textureSize": [
+            928,
+            528
+          ],
+          "rgbaChannels": 3,
+          "decodedBytes": 5879808
+        }
+      ],
+      "assumption": "Unrendered poses must independently fit this measured crop; no acceptance implied."
+    },
+    {
+      "name": "same library with a fourth RGBA depth pass",
+      "decodedRgbaBytes": 86237184,
+      "under64MiB": false,
+      "under4096TextureDimension": true,
+      "layouts": [
+        {
+          "clip": "walk",
+          "framesPerFacing": 16,
+          "textureSize": [
+            928,
+            528
+          ],
+          "rgbaChannels": 4,
+          "decodedBytes": 7839744
+        },
+        {
+          "clip": "moving-claw",
+          "framesPerFacing": 128,
+          "textureSize": [
+            1856,
+            2112
+          ],
+          "rgbaChannels": 4,
+          "decodedBytes": 62717952
+        },
+        {
+          "clip": "turn-left",
+          "framesPerFacing": 16,
+          "textureSize": [
+            928,
+            528
+          ],
+          "rgbaChannels": 4,
+          "decodedBytes": 7839744
+        },
+        {
+          "clip": "turn-right",
+          "framesPerFacing": 16,
+          "textureSize": [
+            928,
+            528
+          ],
+          "rgbaChannels": 4,
+          "decodedBytes": 7839744
+        }
+      ],
+      "assumption": "Unrendered poses must independently fit this measured crop; no acceptance implied."
+    }
+  ],
+  "spritesheetsAreDiscrete": true,
+  "runtimeAcceptance": false,
+  "remainingGates": [
+    "New full-body pose bounds and material alignment",
+    "Actual C# movement/contact and bounded transitions",
+    "Shared GPU receiver/depth/caster acceptance",
+    "Measured device memory/performance and owner visual approval"
+  ]
+}
