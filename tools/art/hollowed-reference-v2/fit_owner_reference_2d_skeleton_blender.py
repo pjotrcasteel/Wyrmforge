@@ -146,11 +146,33 @@ def fit_full_reference_pose(rig, body, global_root, data, target):
         pb.scale=(1,1,1)
     bpy.context.view_layer.update()
 
+    # Distinguish the real traced pose from the anatomy-constrained pose.
+    # Original joint targets are never edited: reports/render overlays still
+    # show the drawing's exact traced locations. An illustrated leg can be
+    # farther from the hip than the selected sculpt's bones can reach.
+    effective_target=dict(target)
+    source_low,source_high=extents(evaluated_world_vertices(body))
+    body_center=Vector(((source_low.x+source_high.x)/2,
+                        (source_low.y+source_high.y)/2,source_low.z))
+    for key,bone in (
+        ("left_ankle_effective_target_m_relative_to_body_center","H_Shin_L"),
+        ("left_toe_effective_target_m_relative_to_body_center","H_Foot_L"),
+    ):
+        effective_target[bone]=body_center+Vector(data["constraints"][key])
     results={}
     for name in FIT_ORDER:
         results[name] = rotate_real_bone_to_target(
-            rig, name, target[name],
+            rig, name, effective_target[name],
             data["max_bone_stretch"].get(name,1.4)
+        )
+        results[name]["original_trace_target"]= [
+            round(float(v),4) for v in target[name]
+        ]
+        results[name]["original_trace_residual_m"]=round(
+            float((target[name]-(rig.matrix_world@rig.pose.bones[name].tail)).length),4
+        )
+        results[name]["anatomy_constrained_target_used"] = (
+            name in ("H_Shin_L","H_Foot_L")
         )
 
     initial_lo,_=extents(evaluated_world_vertices(body))
@@ -159,6 +181,22 @@ def fit_full_reference_pose(rig, body, global_root, data, target):
     grounded_lo,_=extents(evaluated_world_vertices(body))
     if abs(grounded_lo.z)>.025:
         raise ValueError(f"Global root failed real mesh ground contact: {grounded_lo.z}")
+    # A ONE-foot contact check is a false positive for the owner's wide,
+    # asymmetrical pose. Both feet must visibly support the 3D weight.
+    body_coordinates=evaluated_world_vertices(body)
+    xmid=(grounded_lo.x+extents(body_coordinates)[1].x)/2
+    contacts={}
+    for side,sign in (("L",-1),("R",1)):
+        candidates=[v.z for v in body_coordinates
+                    if sign*(v.x-xmid)>.24 and v.z<.75]
+        if not candidates:
+            raise ValueError(f"No real source vertices near {side} foot")
+        contacts[side]=float(min(candidates))
+    if abs(contacts["L"]-contacts["R"])>.11:
+        raise ValueError(
+            f"Owner pose has only one supported foot, not stable gait: "
+            f"left_z={contacts['L']:.4f}, right_z={contacts['R']:.4f}"
+        )
 
     # Check the specific OWNER visual identity, not small rotation deltas.
     head_world=rig.matrix_world @ rig.pose.bones["H_Head"].head
@@ -190,6 +228,11 @@ def fit_full_reference_pose(rig, body, global_root, data, target):
         "measured_head_forward_vs_pelvis_m":round(forward_head,4),
         "real_3d_claw_reach":hand_stats,
         "real_mesh_ground_z":round(float(grounded_lo.z),5),
+        "per_foot_real_mesh_ground_contact_z": {
+            k:round(v,5) for k,v in contacts.items()
+        },
+        "owner_traced_targets_preserved":True,
+        "limb_bone_stretch_anatomically_bounded":True,
         "old_incremental_pose_discarded":True,
         "actual_source_skeleton_targets_reconstructed_from_2d":True,
         "source_art_only":True,
