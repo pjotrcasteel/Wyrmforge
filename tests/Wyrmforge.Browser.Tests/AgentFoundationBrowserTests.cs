@@ -63,6 +63,10 @@ public sealed class AgentFoundationBrowserTests : PageTest
         Assert.IsGreaterThanOrEqualTo(0d, damage.GetProperty("Total").GetDouble());
         Assert.IsGreaterThanOrEqualTo(0d, damage.GetProperty("PeakPerTick").GetDouble());
 
+        var documentWidth = await Page.EvaluateAsync<int>("() => document.documentElement.scrollWidth");
+        Assert.IsLessThanOrEqualTo(391, documentWidth,
+            "AI5 boss trace must remain inside a real 390px viewport.");
+
         var output = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
         Directory.CreateDirectory(output);
         await Page.ScreenshotAsync(new() { Path = Path.Combine(output, "ai5-ashfang-phase2-390.png"), FullPage = true });
