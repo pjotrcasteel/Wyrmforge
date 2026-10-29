@@ -104,8 +104,12 @@ public sealed class AdvancedAgentTests
             adaptation.Observe(.5, new Vector2D(double.NaN, 0), new Vector2D(120, 0)));
         Assert.ThrowsExactly<ArgumentException>(() =>
             adaptation.Observe(.5, Vector2D.Zero, new Vector2D(double.PositiveInfinity, 0)));
+        var overflowingClock = new EncounterAdaptation();
+        overflowingClock.Observe(double.MaxValue, Vector2D.Zero, null);
+        var nearLimit = overflowingClock.Inspect();
         Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
-            adaptation.Observe(double.MaxValue, Vector2D.Zero, null));
+            overflowingClock.Observe(double.MaxValue, Vector2D.Zero, null));
+        Assert.AreEqual(nearLimit, overflowingClock.Inspect());
         Assert.AreEqual(before, adaptation.Inspect(),
             "Invalid sensing must not poison the clock, confidence or saved replay state.");
 
