@@ -491,6 +491,38 @@ function semanticMaterialName(material) {
     return typeof material === 'number' ? siteSurfaceNames[material] : material;
 }
 
+// Visualize the exact C# polygon used by movement, sight and projectile collision.
+// Authoring debug is an opt-in view of gameplay truth, never a substitute physics mask.
+export function drawWorldSiteLandscape(ctx, geography, width, height) {
+    const landscape = geography?.landscape;
+    if (!landscape || !Array.isArray(landscape.obstacles)) return false;
+    const palette = {
+        'tree-root': ['#264a34', '#172d24'],
+        cliff: ['#56636d', '#9aa4ac'],
+        'wyrm-rib': ['#55434a', '#92747a'],
+        rock: ['#737673', '#343d44'],
+    };
+    ctx.save();
+    for (const obstacle of landscape.obstacles) {
+        if (!Array.isArray(obstacle.outline) || obstacle.outline.length < 3) continue;
+        const colors = palette[obstacle.kind] ?? [siteSurfaceColors[semanticMaterialName(obstacle.material)], '#151e23'];
+        ctx.fillStyle = colors[0];
+        ctx.strokeStyle = colors[1];
+        ctx.lineWidth = obstacle.kind === 'cliff' ? 3 : 2;
+        ctx.beginPath();
+        for (let i = 0; i < obstacle.outline.length; i++) {
+            const point = obstacle.outline[i];
+            if (i === 0) ctx.moveTo(point.x * width, point.y * height);
+            else ctx.lineTo(point.x * width, point.y * height);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+    }
+    ctx.restore();
+    return true;
+}
+
 export function drawSemanticSiteFloor(ctx, geography, width, height) {
     if (!geography || geography.version !== 1 || !Array.isArray(geography.ports) ||
         !Array.isArray(geography.corridors)) return false;
@@ -500,6 +532,7 @@ export function drawSemanticSiteFloor(ctx, geography, width, height) {
     ctx.save();
     ctx.fillStyle = siteSurfaceColors[substrate];
     ctx.fillRect(0, 0, width, height);
+    if (geography.landscape) drawWorldSiteLandscape(ctx, geography, width, height);
     for (const corridor of geography.corridors) {
         const material = semanticMaterialName(corridor.material);
         if (!(material in siteSurfaceColors) || corridor.points?.length < 2) continue;
@@ -537,6 +570,9 @@ export function drawArenaEnvironment(ctx, environment, width, height, elapsedSec
     const semantic = semanticSiteModeEnabled() && drawSemanticSiteFloor(ctx, environment.geography, width, height);
     const texture = semantic ? null : terrainTexture(environment, width, height, approvedAtlas);
     if (texture) ctx.drawImage(texture.image, 0, 0, width, height);
+    // On the AR1 run-wide geometry preview, painted and semantic palettes display
+    // the same C# colliders. The default Hunt never activates these new obstacles.
+    if (!semantic && environment.geographyActive) drawWorldSiteLandscape(ctx, environment.geography, width, height);
     if (semantic) {
         globalThis.__wyrmforgeAr0Geography = {
             siteId: environment.geography.siteId,
@@ -545,6 +581,9 @@ export function drawArenaEnvironment(ctx, environment, width, height, elapsedSec
             version: environment.geography.version,
             edges: environment.geography.ports.map(port => port.edgeId),
             material: semanticMaterialName(environment.geography.substrate.material),
+            kind: environment.geography.landscape?.kind ?? null,
+            obstacleCount: environment.geography.landscape?.obstacles?.length ?? 0,
+            geographyActive: environment.geographyActive === true,
         };
     }
     // Render low-angle shadows from CURRENT physical props, never frozen floor art:
