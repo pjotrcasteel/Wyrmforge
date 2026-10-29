@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { HuntGpuWorld, compositeHuntGpuFrame, huntGpuRendererBudget } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js';
+import { HuntGpuWorld, compositeHuntGpuFrame, huntGpuRendererBudget, needsRetainedHuntBuffer } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js';
 import { huntLayerRevision, prepareHuntGpuScratch, HuntGpuScratchPool } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/hunt-gpu-layers.js';
 
 function fakeCapture() {
@@ -228,6 +228,18 @@ test('mobile Hunt GPU budget does not retain finished drawing buffers; labs reta
     assert.equal(huntGpuRendererBudget('balanced').preserveDrawingBuffer, false);
     assert.equal(huntGpuRendererBudget('high').shadowMapSize, 1024);
     assert.throws(() => huntGpuRendererBudget('ultra'), RangeError);
+});
+
+
+test('iPhone/iPad WebKit retains the render buffer before copy; other browsers stay memory-efficient', () => {
+    assert.equal(needsRetainedHuntBuffer('Mozilla/5.0 (iPhone; CPU iPhone OS 26_6 like Mac OS X) AppleWebKit/605.1.15', 5), true);
+    assert.equal(needsRetainedHuntBuffer('Mozilla/5.0 (iPad; CPU OS 18_0 like Mac OS X) AppleWebKit/605.1.15', 5), true);
+    assert.equal(needsRetainedHuntBuffer('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15) AppleWebKit/605.1.15', 5), true);
+    assert.equal(needsRetainedHuntBuffer('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15) AppleWebKit/605.1.15', 0), false);
+    assert.equal(needsRetainedHuntBuffer('Mozilla/5.0 (Linux; Android 16) Chrome/140.0', 5), false);
+    assert.equal(huntGpuRendererBudget('mobile', true).preserveDrawingBuffer, true);
+    assert.equal(huntGpuRendererBudget('mobile').preserveDrawingBuffer, false);
+    assert.throws(() => huntGpuRendererBudget('mobile', 'true'), TypeError);
 });
 
 test('WebGL-to-Hunt composite always uses nearest pixel sampling and restores caller canvas state', () => {
