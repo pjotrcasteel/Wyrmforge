@@ -425,27 +425,31 @@ function updateContactAnimation(state,profile,input){
             groundBasis:[b[0]*cos+b[1]*sin,-b[0]*sin+b[1]*cos,b[2]*cos+b[3]*sin,-b[2]*sin+b[3]*cos],reducedMotion:Boolean(input.reducedMotion)};
     }
     const locomotionFrame=locomotion.phaseSampling==='nearest'?Math.round(state.phase*locomotion.frames)%locomotion.frames:Math.min(locomotion.frames-1,Math.floor(state.phase*locomotion.frames));
-    const turning=!profile.sourceSupport&&!actionSpec&&target>=0&&target!==state.facingIndex;
+    // Once a grounded pivot begins, finish its planted source step before
+    // reacting to a crossing or returning target. Re-plan at step boundaries.
+    const turning=!profile.sourceSupport&&!actionSpec&&target>=0&&(target!==state.facingIndex||state.pivotSign!=null);
     let pivotFrame=null;
     const turnDelta=(target-state.facingIndex+12)%8-4;
     if(turning&&state.pivotSign==null)state.pivotSign=turnDelta<0?-1:1;
-    const pivotSpec=profile.pivots?.[state.pivotSign<0?'negative':'positive']??profile.pivot;
+    const selectPivot=()=>profile.pivots?.[state.pivotSign<0?'negative':'positive']??profile.pivot;
+    let pivotSpec=selectPivot();
     if(turning&&pivotSpec&&!stopped){
         state.pivotTime+=dt;
-        const duration=pivotSpec.frames/pivotSpec.fps;
-        while(state.pivotTime>=duration){
-            state.pivotTime-=duration;
-            const delta=(target-state.facingIndex+12)%8-4;
+        while(state.pivotTime>=pivotSpec.frames/pivotSpec.fps){
+            state.pivotTime-=pivotSpec.frames/pivotSpec.fps;
             state.facingIndex=(state.facingIndex+state.pivotSign+8)%8;
             state.contacts=Object.create(null);
             if(state.facingIndex===target){state.pivotTime=0;state.pivotSign=null;break;}
+            const remainingDelta=(target-state.facingIndex+12)%8-4;
+            state.pivotSign=remainingDelta<0?-1:1;
+            pivotSpec=selectPivot();
         }
-        if(state.facingIndex!==target)pivotFrame=Math.min(pivotSpec.frames-1,Math.floor(state.pivotTime*pivotSpec.fps));
+        if(state.pivotSign!=null)pivotFrame=Math.min(pivotSpec.frames-1,Math.floor(state.pivotTime*pivotSpec.fps));
     }else if(!turning){state.pivotTime=0;state.pivotSign=null;}
     if(actionSpec&&!profile.sourceSupport)state.facingIndex=state.actionDirection;
     // Completing the final support step must not replay pivot frame zero in
     // the new facing. Use the continuing gait in this very sample.
-    const activePivot=turning&&pivotSpec&&state.facingIndex!==target;
+    const activePivot=turning&&pivotSpec&&state.pivotSign!=null;
     let clipSpec=actionSpec??(activePivot?pivotSpec:locomotion);
     let frame=actionSpec?(actionSpec.poseGrid?poseGridFrame(actionSpec,contactPhase,actionProgress):Math.min(actionSpec.frames-1,Math.floor(actionProgress*actionSpec.frames))):
         pivotFrame??(input.moving?locomotionFrame:(profile.locomotion.idleFrame??locomotionFrame));
