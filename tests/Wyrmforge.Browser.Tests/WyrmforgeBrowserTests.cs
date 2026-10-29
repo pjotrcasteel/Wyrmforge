@@ -3640,11 +3640,16 @@ public sealed class WyrmforgeBrowserTests : PageTest
             const w = Math.floor(canvas.width * .64);
             const h = Math.floor(canvas.height * .5);
             const pixels = canvas.getContext('2d').getImageData(startX, startY, w, h).data;
-            let visiblePixels = 0;
-            for (let i = 0; i < pixels.length; i += 4)
-                if (pixels[i] + pixels[i + 1] + pixels[i + 2] >= 72)
-                    visiblePixels++;
-            return visiblePixels >= 600;
+            // A bright projectile/telegraph cannot make an otherwise-black
+            // playfield pass. Require a distributed sky-lit terrain floor.
+            let readablePixels = 0, totalBrightness = 0;
+            for (let i = 0; i < pixels.length; i += 4) {
+                const brightness = pixels[i] + pixels[i + 1] + pixels[i + 2];
+                totalBrightness += brightness;
+                if (brightness >= 30) readablePixels++;
+            }
+            const count = pixels.length / 4;
+            return readablePixels >= count * .16 && totalBrightness >= count * 14;
         }", null, new() { Timeout = 30000 });
 
         await panel.Locator("summary").ClickAsync();
