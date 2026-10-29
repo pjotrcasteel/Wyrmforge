@@ -1,3 +1,80 @@
+// G4 evidence is local-first: death/navigation must never destroy a finished run.
+export const G4_LAST_RECORD_KEY = 'wyrmforge.g4.lastRecord.v1';
+const G4_PENDING_KEY = 'wyrmforge.g4.pendingRecord.v1';
+const G4_RECEIPT_KEY = 'wyrmforge.g4.lastReceipt.v1';
+const G4_CONSENT_KEY = 'wyrmforge.g4.autoSendConsent.v1';
+const minimumIntervals = 10;
+const readJson = key => {
+    try { return JSON.parse(localStorage.getItem(key) ?? 'null'); } catch { return null; }
+};
+const writeJson = (key, value) => {
+    try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch { return false; }
+};
+export const hasG4Evidence = value => value?.frameIntervals >= minimumIntervals &&
+    Number.isFinite(value?.observedFps) && Number.isFinite(value?.frameMsP95);
+const consented = () => {
+    try { return localStorage.getItem(G4_CONSENT_KEY) === 'yes'; } catch { return false; }
+};
+
+/** Only bounded numeric aggregation is sent. No full UA, coordinates, DPR, or individual frame samples. */
+export function buildG4CollectorReport(record) {
+    if (!hasG4Evidence(record)) return null;
+    const keys = ['frameIntervals', 'elapsedSeconds', 'measuredPlayingSeconds', 'observedFps',
+        'frameMsP50', 'frameMsP95', 'frameMsP99', 'over33msPercent',
+        'renderingFailures', 'missingGpuFrames', 'gpuSamples', 'sampledDynamicPixelsMean'];
+    const g4 = Object.fromEntries(keys.map(key => [key, record[key] ?? null]));
+    g4.mode = record.mode;
+    g4.quality = record.quality;
+    return {
+        schema: 'wyrmforge.playtest.report.v1',
+        id: record.id,
+        gameVersion: document.querySelector('[data-game-version]')?.getAttribute('data-game-version') ?? '0.0.180',
+        device: { kind: 'touch', standalone: matchMedia('(display-mode: standalone)').matches },
+        feedback: { enjoyment: null, clarity: null, replay: null, troubleArea: null, bestMoment: '', improvement: '' },
+        stats: { starts: 0, completedRuns: 0, interruptedRuns: 0, trailsEntered: 0, wyrmGatesEntered: 0 },
+        recentRuns: [{ runId: record.id, outcome: record.outcome === 'Defeated' ? 'Defeated' :
+            record.outcome === 'Abandoned' ? 'Abandoned' : 'Interrupted',
+            perf: { samples: record.frameIntervals, slowFrames: Math.round(record.frameIntervals *
+                record.over33msPercent / 100), maxBridgeMs: 0 }, g4 }]
+    };
+}
+
+async function sendPendingG4Evidence(setStatus = () => {}) {
+    if (!consented()) return;
+    const record = readJson(G4_PENDING_KEY);
+    if (!record || !hasG4Evidence(record)) return;
+    const report = buildG4CollectorReport(record);
+    if (!report) return;
+    try {
+        const configuration = await fetch(new URL('playtest-collector-config.json', document.baseURI),
+            { cache: 'no-store', credentials: 'omit' });
+        if (!configuration.ok || !consented()) { setStatus('G4 saved locally · collector offline'); return; }
+        const { endpoint } = await configuration.json();
+        const uri = new URL(endpoint);
+        if (uri.protocol !== 'https:' || uri.pathname !== '/v1/reports' || uri.search || uri.hash ||
+            uri.username || uri.password) return;
+        const response = await fetch(uri.href, {
+            method: 'POST', mode: 'cors', credentials: 'omit', cache: 'no-store',
+            redirect: 'error', referrerPolicy: 'no-referrer', keepalive: true,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ consent: true, report })
+        });
+        const receipt = response.ok ? await response.json() : null;
+        if (receipt?.accepted && receipt.id === record.id) {
+            const active = readJson(G4_PENDING_KEY);
+            if (active?.id === record.id) {
+                writeJson(G4_RECEIPT_KEY, { id: record.id, status: 'received' });
+                try { localStorage.removeItem(G4_PENDING_KEY); } catch { /* Read-only private browsing. */ }
+            }
+            setStatus('G4 saved and privately received');
+        } else {
+            setStatus('G4 saved locally · sending unavailable');
+        }
+    } catch {
+        setStatus('G4 saved locally · sending unavailable');
+    }
+}
+
 // Opt-in physical-device evidence recorder for the existing Hunt renderer.
 // Measures browser requestAnimationFrame pacing; never claims GPU time, VRAM,
 // battery draw, thermal state or a gameplay simulation result.
