@@ -88,13 +88,13 @@ def pose_connected_mesh(body):
         # A subtle asymmetric hip lean and a true forward collapsed spine.
         waist_pivot = Vector((0, 0, 1.30))
         torso_weight = smooth(z, 1.22, 1.69)
-        bent = bone_rotate(Vector((x,y,z)), waist_pivot, (1,0,0), .28)
+        bent = bone_rotate(Vector((x,y,z)), waist_pivot, (1,0,0), .31)
         upper = Vector((x,y,z)).lerp(bent, torso_weight)
         upper.x += .030 * torso_weight * smooth(z,1.60,2.2)
         # Chin/face lowered relative to upper thorax, NOT detached skull.
         neck_weight = smooth(z, 2.24, 2.57)
-        head_pivot = bone_rotate(Vector((0,0,2.29)), waist_pivot, (1,0,0), .28)
-        lowered = bone_rotate(upper, head_pivot, (1,0,0), .10)
+        head_pivot = bone_rotate(Vector((0,0,2.29)), waist_pivot, (1,0,0), .31)
+        lowered = bone_rotate(upper, head_pivot, (1,0,0), .12)
         upper = upper.lerp(lowered, neck_weight * .75)
 
         # Original arm source extends sideways in T-pose. Anatomically
@@ -109,11 +109,11 @@ def pose_connected_mesh(body):
         outer = upper - shoulder
         # Independent arm outreach: right arm lowered, left reaching.
         if side > 0:
-            yaw = -.31
-            drop = 1.19
+            yaw = -.46
+            drop = 1.29
         else:
-            yaw = .34
-            drop = -.89
+            yaw = .58
+            drop = -.70
         # A true 3D approach: twist arm forward then drop from real
         # shoulder pivot. Do not simply rotate a 2D silhouette.
         rotated = bone_rotate(shoulder + outer, shoulder, (0,0,1), yaw)
@@ -126,11 +126,11 @@ def pose_connected_mesh(body):
         leg_side = 1 if x >= 0 else -1
         hip = Vector((leg_side*.20,0,1.22))
         if leg_side > 0:
-            hip_bend = -.095
-            knee_bend = .11
+            hip_bend = -.18
+            knee_bend = .20
         else:
-            hip_bend = .13
-            knee_bend = -.15
+            hip_bend = .22
+            knee_bend = -.24
         lowered_leg = bone_rotate(Vector((x,y,z)), hip, (1,0,0), hip_bend)
         knee_pivot = bone_rotate(Vector((leg_side*.23,0,.68)), hip, (1,0,0), hip_bend)
         knee_relative = bone_rotate(lowered_leg, knee_pivot, (1,0,0), knee_bend)
