@@ -243,16 +243,16 @@
     "H_Head": 1,
     "H_Clavicle_L": 1.25,
     "H_Clavicle_R": 1.25,
-    "H_UpperArm_L": 2.2,
-    "H_UpperArm_R": 2.2,
-    "H_ForeArm_L": 2.8,
-    "H_ForeArm_R": 2.8,
-    "H_ClawsRoot_L": 2.9,
-    "H_ClawsRoot_R": 2.9,
-    "H_Thigh_L": 1.3,
-    "H_Thigh_R": 1.3,
-    "H_Shin_L": 1.3,
-    "H_Shin_R": 1.3,
+    "H_UpperArm_L": 1.4,
+    "H_UpperArm_R": 1.4,
+    "H_ForeArm_L": 1.5,
+    "H_ForeArm_R": 1.5,
+    "H_ClawsRoot_L": 1.35,
+    "H_ClawsRoot_R": 1.35,
+    "H_Thigh_L": 1.22,
+    "H_Thigh_R": 1.22,
+    "H_Shin_L": 1.27,
+    "H_Shin_R": 1.27,
     "H_Foot_L": 1.45,
     "H_Foot_R": 1.45
   },
@@ -263,5 +263,22 @@
     "Back panel confirms asymmetry/shoulder slope but cannot resolve exact depth; do not infer false precision.",
     "Rig fitting and true 3D owner review before modeling details/pixel conversion.",
     "Professional animation still requires topology/weight refinement and physical grounded gait; prototype is not gameplay integration."
-  ]
+  ],
+  "constraints": {
+    "protect_original_sculpt": "bone_scale_y_limited_to_source_proportions; original traced landmark coordinates remain unchanged",
+    "limb_reach": "reference bone directions drive pose, with soft-error residual when original artist limb length is insufficient",
+    "both_feet": "two independent ground contacts required; no single-minimum false pass",
+    "left_ankle_effective_target_m_relative_to_body_center": [
+      -0.61,
+      0.34,
+      0.23
+    ],
+    "left_toe_effective_target_m_relative_to_body_center": [
+      -0.78,
+      0.42,
+      0.055
+    ],
+    "elbow_and_shoulder_refinement": "owner-traced original target stays visible; physical source topology takes precedence over destructive stretching",
+    "note": "effective left leg placement is an initial anatomy constraint, NOT an alteration to owner image or an approved redesign"
+  }
 }
