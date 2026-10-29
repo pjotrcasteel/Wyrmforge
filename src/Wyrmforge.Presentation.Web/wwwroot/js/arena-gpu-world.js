@@ -103,12 +103,24 @@ export class HuntGpuWorld {
         this.used.clear(); this.dirtyTextures.clear(); this.objects = []; this.materials = [];
         this.capture('hunt-ground', ctx.canvas, 0, 0, width, height, 0, false);
     }
+    /** Callers may skip repaint only when their explicit visual revision is unchanged. */
+    canReuseCapture(id, revision, width, height) {
+        const layer = this.layers.get(id);
+        return revision !== undefined && layer?.revision === revision &&
+            layer.pixels.width === Math.max(1, Math.ceil(width)) &&
+            layer.pixels.height === Math.max(1, Math.ceil(height));
+    }
     capture(id, source, x, y, width, height, elevation = 0, castsShadow = true, surface = {}) {
         // Existing Canvas layers remain a migration fallback. New renderables may instead
         // reference registered GPU texture IDs, authored geometry and surface channels.
         if (source) {
+            const revision = surface.revision;
+            if (revision !== undefined && (typeof revision !== 'string' &&
+                !(typeof revision === 'number' && Number.isFinite(revision))))
+                throw new TypeError('Capture revision must be a stable string or finite number');
             this.used.add(id);
             let layer = this.layers.get(id);
+            const unchanged = this.canReuseCapture(id, revision, width, height);
             if (!layer) {
                 const pixels = document.createElement('canvas');
                 pixels.width = Math.max(1, Math.ceil(width)); pixels.height = Math.max(1, Math.ceil(height));
@@ -116,13 +128,16 @@ export class HuntGpuWorld {
                 this.engine.registerTexture(id, texture);
                 layer = { pixels, texture }; this.layers.set(id, layer);
             }
-            if (layer.pixels.width !== Math.ceil(width)) layer.pixels.width = Math.ceil(width);
-            if (layer.pixels.height !== Math.ceil(height)) layer.pixels.height = Math.ceil(height);
-            const ctx = layer.pixels.getContext('2d');
-            ctx.clearRect(0, 0, layer.pixels.width, layer.pixels.height);
-            ctx.drawImage(source, 0, 0, layer.pixels.width, layer.pixels.height);
-            layer.texture.needsUpdate = true;
-            this.dirtyTextures.add(id);
+            if (!unchanged) {
+                if (layer.pixels.width !== Math.ceil(width)) layer.pixels.width = Math.ceil(width);
+                if (layer.pixels.height !== Math.ceil(height)) layer.pixels.height = Math.ceil(height);
+                const ctx = layer.pixels.getContext('2d');
+                ctx.clearRect(0, 0, layer.pixels.width, layer.pixels.height);
+                ctx.drawImage(source, 0, 0, layer.pixels.width, layer.pixels.height);
+                layer.texture.needsUpdate = true;
+                this.dirtyTextures.add(id);
+                layer.revision = revision;
+            }
         }
         this.submitSurface(huntSurfaceRenderable(id, x, y, width, height, castsShadow, surface),
             huntSurfaceMaterial(id, surface.material, Boolean(source)));
