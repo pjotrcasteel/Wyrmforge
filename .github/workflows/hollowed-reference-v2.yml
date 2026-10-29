@@ -23,6 +23,13 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            .github/workflows/hollowed-reference-v2.yml
+            art/source/enemies/hollow/reference-v2/
+            docs/art/evidence/hollowed-reference-v2/
+            tools/art/hollowed-reference-v2/
           persist-credentials: false
       - uses: actions/setup-python@v6
         with:
