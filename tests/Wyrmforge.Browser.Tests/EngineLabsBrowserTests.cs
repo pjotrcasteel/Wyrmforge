@@ -1,0 +1,188 @@
+using System.Text.Json;
+using Microsoft.Playwright;
+using Microsoft.Playwright.MSTest;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace Wyrmforge.Browser.Tests;
+
+[TestClass]
+public sealed class EngineLabsBrowserTests : PageTest
+{
+    private static string BaseUrl => (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ??
+        "http://127.0.0.1:4173/").TrimEnd('/');
+
+    [TestMethod]
+    public async Task Hub_NavigatesEveryEngineWithoutPretendingPendingLabsAreAccepted()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.GotoAsync($"{BaseUrl}/engine-labs");
+
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Engine Development Labs" }))
+            .ToBeVisibleAsync();
+
+        foreach (var engine in new[] { "ai", "lighting", "animation", "gameplay", "visual-physics", "vfx", "audio" })
+        {
+            await Page.GotoAsync($"{BaseUrl}/engine-labs/{engine}");
+            await Expect(Page.Locator("nav[aria-label='Engine labs'] a[aria-current='page']"))
+                .ToHaveAttributeAsync("href", $"engine-labs/{engine}");
+            if (engine != "ai")
+            {
+                await Expect(Page.GetByText("Dedicated", new() { Exact = false }).First)
+                    .ToBeVisibleAsync();
+                await Expect(Page.Locator("iframe")).ToHaveCountAsync(0);
+
+                // GitHub Pages serves the application under /Wyrmforge/.
+                // Related real demos must not escape the Blazor document base.
+                var existingPreview = Page.GetByRole(AriaRole.Link, new() { Name = "Open existing related real preview" });
+                if (engine == "audio")
+                {
+                    await Expect(existingPreview).ToHaveCountAsync(0);
+                }
+                else
+                {
+                    var expected = engine == "lighting" ? "arena-light-engine" :
+                        engine == "animation" ? "enemy-lab" : "combat-lab";
+                    await Expect(existingPreview).ToHaveAttributeAsync("href", expected);
+                }
+            }
+        }
+    }
+
+    [TestMethod]
+    public async Task AiLab_PresetsSelectActualSeededSimulationAndKeepMobileNavigation()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.GotoAsync($"{BaseUrl}/engine-labs/ai");
+
+        var preview = Page.Locator("iframe[title='Live authoritative engine preview']");
+        await Expect(preview).ToHaveAttributeAsync("src",
+            "enemy-lab?kind=MireHound&tier=3&count=8&autoplay=false&cast=false&seed=42");
+
+        await Page.GetByLabel("Replay seed").FillAsync("927");
+        await Page.GetByLabel("Scenario").SelectOptionAsync("boss");
+        await Expect(preview).ToHaveAttributeAsync("src",
+            "hunt-lab?wyrm=Ashfang&ai5=true&phase=2&play=true&cast=false&invulnerable=true&seed=927");
+
+        await Page.GetByLabel("Scenario").SelectOptionAsync("civilian");
+        await Expect(preview).ToHaveAttributeAsync("src", "?townAi2=1");
+        await Expect(Page.GetByTestId("ai-lab-notes")).ToContainTextAsync("seed field does not override");
+        await Expect(Page.Locator("nav[aria-label='Engine labs'] a")).ToHaveCountAsync(8);
+    }
+    [TestMethod]
+    public async Task TacticalPack_390pxInspector_DoesNotExpandDocumentToTraceWidth()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.GotoAsync($"{BaseUrl}/enemy-lab?kind=MireHound&tier=3&count=8&autoplay=false&cast=false&seconds=6");
+
+        var refresh = Page.GetByRole(AriaRole.Button, new() { Name = "Refresh AI inspector" });
+        await Expect(refresh).ToBeVisibleAsync();
+        await Page.EvaluateAsync("async () => { window.aiViewport = await import('./js/arena.js'); }");
+        await Page.WaitForFunctionAsync(
+            "() => window.aiViewport.readArenaDiagnostics(document.querySelector('.enemy-lab canvas'))?.hud?.seconds >= 6",
+            null, new() { Timeout = 45000 });
+        await refresh.ClickAsync();
+        await Expect(Page.GetByTestId("agent-performance")).ToContainTextAsync("MaxCommittedThreats");
+        await Expect(Page.GetByTestId("agent-inspector")).ToContainTextAsync("MireHound");
+
+        var scrollWidth = await Page.EvaluateAsync<int>("() => document.documentElement.scrollWidth");
+        Assert.IsLessThanOrEqualTo(391, scrollWidth,
+            "AI debug output must stay inside the real 390px viewport instead of expanding to 10,000px.");
+    }
+
+    [TestMethod]
+    public async Task AiLab_LinksRespectGitHubPagesBasePath()
+    {
+        await Page.GotoAsync($"{BaseUrl}/engine-labs/ai");
+
+        var nav = Page.Locator("nav[aria-label='Engine labs'] a[aria-current='page']");
+        await Expect(nav).ToHaveAttributeAsync("href", "engine-labs/ai");
+        var frame = Page.Locator("iframe[title='Live authoritative engine preview']");
+        await Expect(frame).ToHaveAttributeAsync("src",
+            "enemy-lab?kind=MireHound&tier=3&count=8&autoplay=false&cast=false&seed=42");
+
+        // A relative path is required: publishing rewrites <base href="/"> to
+        // <base href="/Wyrmforge/">, and absolute paths would bypass the app.
+        var rootRelativeLink = await nav.GetAttributeAsync("href");
+        var rootRelativeFrame = await frame.GetAttributeAsync("src");
+        Assert.IsFalse(rootRelativeLink!.StartsWith('/'));
+        Assert.IsFalse(rootRelativeFrame!.StartsWith('/'));
+    }
+
+    [TestMethod]
+    public async Task AiLab_390px_EmbedsRealEncounterAndNavigatesBetweenEngines()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.GotoAsync($"{BaseUrl}/engine-labs/ai");
+
+        var liveEncounter = Page.FrameLocator("iframe[title='Live authoritative engine preview']");
+        await Expect(liveEncounter.Locator("canvas[aria-label='Live enemy encounter']"))
+            .ToBeVisibleAsync(new() { Timeout = 45000 });
+        await Expect(liveEncounter.GetByRole(AriaRole.Heading, new() { Name = "Fire & Frost enemy lab" }))
+            .ToBeVisibleAsync();
+
+        var documentWidth = await Page.EvaluateAsync<int>("() => document.documentElement.scrollWidth");
+        Assert.IsLessThanOrEqualTo(391, documentWidth,
+            "The embedded simulation and engine switcher must not stretch a 390px device.");
+
+        var output = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ??
+            Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
+        Directory.CreateDirectory(output);
+        await Page.ScreenshotAsync(new()
+        {
+            Path = Path.Combine(output, "engine-ai-lab-live-390.png"),
+            FullPage = true
+        });
+
+        await Page.Locator("nav[aria-label='Engine labs'] a[href='engine-labs/lighting']").ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Lighting Lab", Exact = true })).ToBeVisibleAsync();
+        await Page.Locator("nav[aria-label='Engine labs'] a[href='engine-labs/ai']").ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "AI Lab", Exact = true })).ToBeVisibleAsync();
+    }
+
+    [TestMethod]
+    public async Task Ai6_64AgentBrowserStress_RespectsSightPathAndPressureBudgets()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.GotoAsync(
+            $"{BaseUrl}/enemy-lab?kind=MireHound&tier=3&count=64&autoplay=false&cast=false&seconds=5&seed=42");
+
+        await Page.EvaluateAsync("async () => { window.ai64Arena = await import('./js/arena.js'); }");
+        await Page.WaitForFunctionAsync(
+            "() => window.ai64Arena.readArenaDiagnostics(document.querySelector('.enemy-lab canvas'))?.hud?.seconds >= 5",
+            null, new() { Timeout = 60000 });
+
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Refresh AI inspector" }).ClickAsync();
+        var diagnostics = JsonSerializer.Deserialize<JsonElement>(await Page.GetByTestId("agent-performance").InnerTextAsync());
+        var cost = diagnostics.GetProperty("Cost");
+        var pack = diagnostics.GetProperty("Pack");
+        var traces = diagnostics.GetProperty("RecentTraces");
+        Assert.AreEqual(64, cost.GetProperty("Population").GetInt32(),
+            "This must exercise the real 64-agent simulation, not a small visual approximation.");
+        Assert.IsGreaterThan(0L, cost.GetProperty("Frames").GetInt64());
+        Assert.IsLessThanOrEqualTo(32, cost.GetProperty("MaxSightQueries").GetInt32());
+        Assert.IsLessThanOrEqualTo(32, cost.GetProperty("MaxPathQueries").GetInt32());
+        Assert.IsLessThanOrEqualTo(2, cost.GetProperty("MaxCommittedThreats").GetInt32());
+        Assert.IsLessThanOrEqualTo(2, pack.GetProperty("Leases").GetArrayLength());
+        Assert.AreEqual(64, traces.GetArrayLength(),
+            "All 64 active agents should produce bounded, independently inspected traces.");
+
+        var summary = Page.GetByTestId("agent-summary");
+        var summaryHeight = await summary.EvaluateAsync<double>("element => element.getBoundingClientRect().height");
+        var summaryScrollable = await summary.EvaluateAsync<bool>("element => element.scrollHeight > element.clientHeight");
+        Assert.IsLessThanOrEqualTo(225d, summaryHeight,
+            "The 64-agent summary must be scrollable in its own panel, not six pages of raw text.");
+        Assert.IsTrue(summaryScrollable, "Full per-agent observations must remain available by scrolling.");
+
+        var width = await Page.EvaluateAsync<int>("() => document.documentElement.scrollWidth");
+        Assert.IsLessThanOrEqualTo(391, width);
+
+        var output = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ??
+            Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
+        Directory.CreateDirectory(output);
+        await Page.ScreenshotAsync(new()
+        {
+            Path = Path.Combine(output, "ai6-64-hound-stress-390.png"),
+            FullPage = true
+        });
+    }
+}

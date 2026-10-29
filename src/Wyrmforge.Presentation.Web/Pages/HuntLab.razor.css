@@ -23,3 +23,42 @@
 .hunt-lab-surface{height:min(75dvh,850px)}
 .hunt-lab-stage{font-size:.65rem;padding:5px 8px;max-width:220px}
 @media(max-width:650px){.hunt-lab-head{gap:9px;margin-bottom:9px}.hunt-lab-head h1{font-size:1.35rem}.hunt-lab-head p{font-size:.7rem;line-height:1.35}.hunt-lab-actions a{display:none}.hunt-lab-surface{height:calc(100dvh - 245px);min-height:420px}.hunt-lab-note{font-size:.6rem}.hunt-lab-stage{max-width:190px}}
+
+
+/* AI5 diagnostics must fit the real phone width, including long JSON trace values.
+   Keep the full inspection data available without increasing the document width. */
+.boss-agent-panel{
+    box-sizing:border-box;
+    min-width:0;
+    width:calc(100% - 20px);
+    max-width:1100px;
+    margin:12px auto 20px;
+    border:1px solid #463655;
+    border-radius:10px;
+    padding:12px;
+    background:#16121e;
+    color:#f0e9f5;
+}
+.boss-agent-panel summary{cursor:pointer;min-height:44px;align-content:center}
+.boss-agent-panel button{
+    min-height:44px;
+    padding:8px 12px;
+    color:#ead9f5;
+    background:#21192b;
+    border:1px solid #534267;
+    border-radius:8px;
+    cursor:pointer;
+}
+.boss-agent-panel pre{
+    box-sizing:border-box;
+    display:block;
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    max-height:65dvh;
+    overflow:auto;
+    white-space:pre-wrap;
+    overflow-wrap:anywhere;
+    font-size:.72rem;
+    line-height:1.45;
+}

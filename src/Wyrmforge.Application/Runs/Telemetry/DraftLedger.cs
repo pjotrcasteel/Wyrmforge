@@ -27,11 +27,12 @@ public static class ChoiceSchools
         };
     }
 
+    // Multicast changes projectile delivery in every school, not Arcane specifically.
     public static SpellSchool? RuneSchool(RunUpgradeId id) => id switch
     {
         RunUpgradeId.Quickening or RunUpgradeId.Fleetfoot or RunUpgradeId.ChainSpark or RunUpgradeId.StaticCharge => SpellSchool.Storm,
         RunUpgradeId.Vitality or RunUpgradeId.FrostTouch or RunUpgradeId.Bulwark => SpellSchool.Frost,
-        RunUpgradeId.Multicast or RunUpgradeId.ArcaneEcho or RunUpgradeId.Velocity => SpellSchool.Arcane,
+        RunUpgradeId.ArcaneEcho or RunUpgradeId.Velocity => SpellSchool.Arcane,
         RunUpgradeId.Emberbrand => SpellSchool.Fire,
         _ => null,
     };

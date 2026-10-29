@@ -202,7 +202,12 @@ public sealed partial class RunSimulation
         ResolveRelicDefeatBursts();
         enemies.RemoveAll(enemy => enemy.Health <= 0);
         CompleteMapEncounterCleanup();
+        // All hostile attacks buffer their strongest hit until this exact resolution point.
+        // Sampling HP earlier in UpdateEnemies would incorrectly report zero actual damage.
+        var hunterHealthBeforeResolution = player.Health;
         ResolvePlayerDamage();
+        if (agentFoundationEnabled || adaptiveAshfangEnabled)
+            agentPerformance.RecordResolvedHunterDamage(hunterHealthBeforeResolution - player.Health);
         if (player.Health <= 0)
         {
             if (extractionState.IsActive) DeathsDuringExtraction++;
@@ -238,8 +243,8 @@ public sealed partial class RunSimulation
         ApplyChoiceEffects(choice);
         RefreshBuildHud();
 
-        // Rank III no longer grants a free immediate evolution.
-        // The player earns a separate evolution choice at a later five-level breakthrough.
+        // Hunt rewards only grant temporary refinements, runes or school attunement.
+        // Permanent spell ranks and researched mutations remain in the Arcane Nexus.
         pendingChoices = [];
         CloseFateweaveRound();
         if (mapState.EncounterActive || dragonEncounterStarted) ReleaseUpgradePower();

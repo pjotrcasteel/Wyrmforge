@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <!-- Development default and fixed baseline for tools/release/auto_version.py. Pages releases override it automatically. -->
-    <VersionPrefix>0.0.179</VersionPrefix>
+    <VersionPrefix>0.0.180</VersionPrefix>
     <IncludeSourceRevisionInInformationalVersion>true</IncludeSourceRevisionInInformationalVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>

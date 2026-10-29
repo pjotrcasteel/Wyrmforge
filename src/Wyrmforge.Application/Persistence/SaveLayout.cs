@@ -61,6 +61,7 @@ public static class SaveLayout
         ["wyrmforge.audio.ui.v1"] = SaveDomain.Preferences,
         ["wyrmforge.player-name.v1"] = SaveDomain.Preferences,
         ["wyrmforge_player_name"] = SaveDomain.Preferences,
+        ["wyrmforge.playtest.aiAutoConsent.v1"] = SaveDomain.Preferences,
         ["wyrmforge.playtest.v1"] = SaveDomain.Telemetry,
         ["wyrmforge.playtest.report.v1"] = SaveDomain.Telemetry,
         ["wyrmforge.playtest.lastReceipt.v1"] = SaveDomain.Telemetry,

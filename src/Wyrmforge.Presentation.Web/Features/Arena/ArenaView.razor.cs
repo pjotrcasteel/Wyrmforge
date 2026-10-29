@@ -18,6 +18,7 @@ using Wyrmforge.Domain.Progression.PassiveTree;
 using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Progression.Relics;
 using Wyrmforge.Domain.Progression.SpellMastery;
+using Wyrmforge.Domain.Agents;
 using Wyrmforge.Domain.Spells;
 using Wyrmforge.Domain.World;
 
@@ -30,9 +31,11 @@ public partial class ArenaView : IAsyncDisposable
     private IJSObjectReference? arenaModule;
     private DotNetObjectReference<ArenaView>? dotNetReference;
     private bool gameOverSent;
+    private long lastAiProfilingFrame;
     private bool ChoosingPrimary => simulation is { PrimaryCommitted: false };
 
     [Inject] public RunSimulationFactory SimulationFactory { get; set; } = null!;
+    [Inject] public NavigationManager Navigation { get; set; } = null!;
     [Inject] public IJSRuntime JavaScript { get; set; } = null!;
     [Parameter, EditorRequired] public IReadOnlySet<string> SelectedNodes { get; set; } = new HashSet<string>();
     [Parameter, EditorRequired] public ForgeProgressionState Progression { get; set; } = null!;
@@ -98,7 +101,9 @@ public partial class ArenaView : IAsyncDisposable
 
     protected override void OnInitialized()
     {
-        simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt, researchLead: ResearchLead, preparedMutations: PreparedMutations, fireballMutations: FireballMutations, contextualSpell: ContextualSpell, region: Region, regionOpening: RegionOpening, hunt: Hunt, amplifierAssignments: MutationAmplifierAssignments, fireballLevel: FireballLevel);
+        var agentPreview = new Uri(Navigation.Uri).Query.TrimStart('?').Split('&')
+            .Any(value => string.Equals(value, "agents=1", StringComparison.OrdinalIgnoreCase));
+        simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt, researchLead: ResearchLead, preparedMutations: PreparedMutations, fireballMutations: FireballMutations, contextualSpell: ContextualSpell, region: Region, regionOpening: RegionOpening, hunt: Hunt, amplifierAssignments: MutationAmplifierAssignments, fireballLevel: FireballLevel, agents: agentPreview ? new(true, true) : null);
         if (RewardCache) simulation.OpenRewardCache();
     }
 
@@ -224,12 +229,49 @@ public partial class ArenaView : IAsyncDisposable
         if (!hadChoices && current.PendingChoices.Count > 0) await TryPlayAudioAsync("upgrade-open");
         if (stateChanged) await InvokeAsync(StateHasChanged);
 
+        // AI timing, bounded pressure and compact observation summaries are sampled
+        // from authoritative C# state, never reconstructed from canvas pixels.
+        if (!gameOverSent) await SampleAiProfilingAsync(current, snapshot.Ended);
         if (snapshot.Ended && !gameOverSent)
         {
             gameOverSent = true;
             await OnGameOver.InvokeAsync(current.CreateEvaluationSummary());
         }
         return snapshot with { SimulationMilliseconds = simulationMilliseconds };
+    }
+
+    private async Task SampleAiProfilingAsync(RunSimulation current, bool final)
+    {
+        var cost = current.InspectAgentPerformance();
+        if (cost.Frames == 0 || (!final && cost.Frames - lastAiProfilingFrame < 300)) return;
+        lastAiProfilingFrame = cost.Frames;
+        try
+        {
+            // No coordinates, player identity, action-by-action logs or full blackboards
+            // leave the simulation. Summarize bounded agent traces only.
+            var traces = current.InspectEnemyAgents().Select(AgentTraceMetrics.From).ToArray();
+            await JavaScript.InvokeVoidAsync("wyrmforgePlaytest.aiSample", CancellationToken.None, new
+            {
+                frames = cost.Frames,
+                population = cost.Population,
+                sightQueriesMax = cost.MaxSightQueries,
+                pathQueriesMax = cost.MaxPathQueries,
+                committedMax = cost.MaxCommittedThreats,
+                meanMs = cost.MeanMilliseconds,
+                p95Ms = cost.P95Milliseconds,
+                maxMs = cost.MaximumMilliseconds,
+                resolvedDamage = cost.TotalHunterHealthDamage,
+                damagePeak = cost.MaximumHunterHealthDamagePerStep,
+                observedAgents = traces.Count(trace => trace.ObservationAgeTicks.HasValue),
+                recordedDecisions = traces.Sum(trace => trace.RecordedDecisions),
+                actionDiversity = traces.Sum(trace => trace.ActionDiversity),
+                maxDecisionLatencyTicks = traces.Select(trace => trace.DecisionLatencyTicks ?? 0).DefaultIfEmpty(0).Max()
+            });
+        }
+        catch (JSException)
+        {
+            // A blocked analytics API or private browser mode must never affect combat.
+        }
     }
 
     private Task CancelStartAsync() => ChoosingPrimary && !gameOverSent ? OnCancelStart.InvokeAsync() : Task.CompletedTask;

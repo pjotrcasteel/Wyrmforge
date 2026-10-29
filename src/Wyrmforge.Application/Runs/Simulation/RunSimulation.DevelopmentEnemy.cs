@@ -10,8 +10,9 @@ public sealed partial class RunSimulation
     internal void StartDevelopmentEnemy(DevelopmentEnemySetup setup)
     {
         setup.Validate();
-        agentFoundationEnabled = setup.AgentFoundation || setup.AgentPerception;
-        agentPerceptionEnabled = setup.AgentPerception;
+        agentFoundationEnabled = setup.AgentFoundation || setup.AgentPerception || setup.Intelligence is not null;
+        agentTier = setup.Intelligence;
+        agentPerceptionEnabled = setup.AgentPerception || setup.Intelligence is not null;
         agentFoundationSeed = setup.Seed;
         developmentHunt = true;
         developmentInvulnerable = true;
@@ -48,7 +49,14 @@ public sealed partial class RunSimulation
             default:
                 var definition = EnemyCatalog.Get(setup.Kind);
                 var (health, speed) = EnemyStats(definition);
-                enemies.Add(new EnemyState(++enemyId, spot, definition.Radius, health, speed, setup.Kind));
+                for (var i = 0; i < setup.Count; i++)
+                {
+                    var offset = setup.Count == 1 ? Vector2D.Zero : new Vector2D((i % 8 - 3.5) * 32, -(i / 8) * 32);
+                    var position = spot + offset;
+                    position = new(Math.Clamp(position.X, definition.Radius, setup.Width - definition.Radius),
+                        Math.Clamp(position.Y, definition.Radius, setup.Height - definition.Radius));
+                    enemies.Add(new EnemyState(++enemyId, position, definition.Radius, health, speed, setup.Kind));
+                }
                 RecordEnemyEncounter(setup.Kind);
                 break;
         }

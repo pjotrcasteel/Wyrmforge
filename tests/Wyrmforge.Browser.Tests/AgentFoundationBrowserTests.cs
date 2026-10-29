@@ -10,6 +10,69 @@ namespace Wyrmforge.Browser.Tests;
 public sealed class AgentFoundationBrowserTests : PageTest
 {
     [TestMethod]
+    public async Task TacticalPack_ActualMobileLab_ExposesBoundedPressureMetrics()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        var baseUrl = Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/";
+        await Page.GotoAsync(baseUrl.TrimEnd('/') + "/enemy-lab?kind=MireHound&tier=3&count=8&autoplay=false&cast=false&seconds=6");
+        await Page.EvaluateAsync("async () => { window.aiPackArena = await import('./js/arena.js'); }");
+        await Page.WaitForFunctionAsync("() => window.aiPackArena.readArenaDiagnostics(document.querySelector('.enemy-lab canvas'))?.hud?.seconds >= 6",
+            null, new() { Timeout = 45000 });
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Refresh AI inspector" }).ClickAsync();
+        var states = JsonSerializer.Deserialize<AgentSnapshot[]>(await Page.GetByTestId("agent-inspector").InnerTextAsync())!;
+        Assert.AreEqual(8, states.Length);
+        Assert.IsTrue(states.All(a => a.Observations.Any(f => f.Key == "tier" && f.Value == "Tactical")));
+        await Expect(Page.GetByTestId("agent-performance")).ToContainTextAsync("MaxCommittedThreats");
+        var output = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
+        Directory.CreateDirectory(output);
+        await Page.ScreenshotAsync(new() { Path = Path.Combine(output, "ai4-pack-390.png"), FullPage = true });
+    }
+
+    [TestMethod]
+    public async Task AdaptiveAshfang_PhaseTwoMobileLab_ExposesAuthoredBossAndAdaptation()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        var baseUrl = Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/";
+        await Page.GotoAsync(baseUrl.TrimEnd('/') + "/hunt-lab?wyrm=Ashfang&ai5=true&phase=2&play=true&cast=false&invulnerable=true");
+        await Page.WaitForFunctionAsync(
+            "() => document.querySelector('.hunt-lab-stage strong')?.textContent?.includes('Ashfang') === true",
+            null, new() { Timeout = 45000 });
+
+        await Page.GetByText("Boss AI inspector", new() { Exact = true }).ClickAsync();
+        var refresh = Page.GetByRole(AriaRole.Button, new() { Name = "Refresh boss AI inspector" });
+        var inspector = Page.GetByTestId("boss-agent-inspector");
+        JsonElement inspection = default;
+        // Encounter startup can be visible before its first authoritative simulation tick.
+        // Poll observed state, not the painted boss title or a fixed browser delay.
+        for (var attempt = 0; attempt < 30; attempt++)
+        {
+            await refresh.ClickAsync();
+            inspection = JsonSerializer.Deserialize<JsonElement>(await inspector.InnerTextAsync());
+            if (inspection.GetProperty("Agent") is { ValueKind: JsonValueKind.Object } observed &&
+                observed.GetProperty("Observations").GetArrayLength() > 0) break;
+            await Page.WaitForTimeoutAsync(200);
+        }
+        var agent = inspection.GetProperty("Agent");
+        Assert.AreEqual(JsonValueKind.Object, agent.ValueKind, "Ashfang must enter the shared agent runtime.");
+        Assert.AreEqual("Ashfang", agent.GetProperty("Identity").GetProperty("Archetype").GetString());
+        Assert.IsTrue(agent.GetProperty("Observations").GetArrayLength() > 0,
+            "The boss must produce an actual authoritative observation, not just a painted encounter title.");
+        Assert.AreEqual(JsonValueKind.Object, inspection.GetProperty("Adaptation").ValueKind,
+            "AI5 must expose bounded encounter-local learning, not the legacy boss fallback.");
+        var damage = inspection.GetProperty("HunterHealthPressure");
+        Assert.IsGreaterThanOrEqualTo(0d, damage.GetProperty("Total").GetDouble());
+        Assert.IsGreaterThanOrEqualTo(0d, damage.GetProperty("PeakPerTick").GetDouble());
+
+        var documentWidth = await Page.EvaluateAsync<int>("() => document.documentElement.scrollWidth");
+        Assert.IsLessThanOrEqualTo(391, documentWidth,
+            "AI5 boss trace must remain inside a real 390px viewport.");
+
+        var output = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
+        Directory.CreateDirectory(output);
+        await Page.ScreenshotAsync(new() { Path = Path.Combine(output, "ai5-ashfang-phase2-390.png"), FullPage = true });
+    }
+
+    [TestMethod]
     [DataRow("Hollow")]
     [DataRow("MireHound")]
     public async Task PerceptionOptIn_UsesEarnedInformationInActualEnemyLab(string kind)

@@ -13,6 +13,7 @@ public sealed record DevelopmentHuntSetup(
     double Height,
     bool Invulnerable = false)
 {
+    public bool AdaptiveAgents { get; init; }
     public bool BossReadySpell { get; init; } = true;
     public bool Environment { get; init; }
     public bool Casting { get; init; } = true;

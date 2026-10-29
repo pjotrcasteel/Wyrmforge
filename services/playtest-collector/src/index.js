@@ -1,6 +1,6 @@
 import { validateName } from '../../../src/Wyrmforge.Presentation.Web/wwwroot/js/name-policy.js';
 
-// Cloudflare Worker: explicit-consent feedback intake. No automatic/passive telemetry.
+// Cloudflare Worker: explicitly consented playtest feedback and opt-in automatic AI run summaries.
 const REPORT_SCHEMA = 'wyrmforge.playtest.report.v1';
 const MAX_BYTES = 32 * 1024;
 const MAX_RUNS = 12;
@@ -24,6 +24,25 @@ function int(value, max = 1000000) { return Number.isInteger(value) && value >= 
 function string(value, max) { return typeof value === 'string' ? value.trim().slice(0, max) : ''; }
 function rating(value) { return Number.isInteger(value) && value >= 1 && value <= 5 ? value : null; }
 function enumValue(value, allowed) { return allowed.has(value) ? value : null; }
+
+function aiNumber(value, maximum = 10000) {
+    return Number.isFinite(value) && value >= 0 ? Math.min(maximum, Math.round(value * 10) / 10) : 0;
+}
+function sanitizeAi(value) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+    if (!Number.isInteger(value.samples) || value.samples < 1 || value.samples > 100000) return null;
+    return {
+        samples: int(value.samples, 100000), frames: int(value.frames, 10000000),
+        population: int(value.population, 1000), sightQueriesMax: int(value.sightQueriesMax, 1000),
+        pathQueriesMax: int(value.pathQueriesMax, 1000), committedMax: int(value.committedMax, 1000),
+        meanMs: aiNumber(value.meanMs), p95Ms: aiNumber(value.p95Ms), maxMs: aiNumber(value.maxMs),
+        resolvedDamage: aiNumber(value.resolvedDamage, 100000),
+        damagePeak: aiNumber(value.damagePeak, 100000),
+        observedAgents: int(value.observedAgents, 1000), recordedDecisions: int(value.recordedDecisions, 100000),
+        actionDiversity: int(value.actionDiversity, 100000),
+        maxDecisionLatencyTicks: int(value.maxDecisionLatencyTicks, 100000)
+    };
+}
 
 export function sanitizeReport(report) {
     if (!report || typeof report !== 'object' || Array.isArray(report) || report.schema !== REPORT_SCHEMA ||
@@ -50,7 +69,8 @@ export function sanitizeReport(report) {
             spellEvolutions: Array.isArray(run.spellEvolutions) ?
                 run.spellEvolutions.filter(v => typeof v === 'string').map(v => string(v, 40)).slice(0, 12) : [],
             perf: { samples: int(run.perf?.samples), slowFrames: int(run.perf?.slowFrames),
-                maxBridgeMs: int(run.perf?.maxBridgeMs, 10000) }
+                maxBridgeMs: int(run.perf?.maxBridgeMs, 10000) },
+            ai: sanitizeAi(run.ai)
         });
     }
     return {
@@ -179,7 +199,18 @@ async function admin(request, env, url) {
             WHERE trouble_area IS NOT NULL GROUP BY trouble_area ORDER BY count DESC`).all();
         const intent = await env.DB.prepare(`SELECT replay,COUNT(*) AS count FROM reports
             WHERE replay IS NOT NULL GROUP BY replay ORDER BY count DESC`).all();
-        return json({ aggregate, issues: issues.results, replayIntent: intent.results });
+        // Aggregate inside D1. No per-run AI traces, seeds, IDs or free text
+        // are returned to the private summary or public insights workflow.
+        const ai = await env.DB.prepare(`SELECT COUNT(*) AS runs,
+            ROUND(AVG(json_extract(j.value, '$.ai.p95Ms')), 1) AS meanP95Ms,
+            ROUND(MAX(json_extract(j.value, '$.ai.maxMs')), 1) AS peakMs,
+            MAX(json_extract(j.value, '$.ai.population')) AS maxPopulation,
+            MAX(json_extract(j.value, '$.ai.committedMax')) AS maxCommitted,
+            MAX(json_extract(j.value, '$.ai.sightQueriesMax')) AS maxSightQueries,
+            MAX(json_extract(j.value, '$.ai.pathQueriesMax')) AS maxPathQueries
+            FROM reports r JOIN json_each(r.data, '$.recentRuns') j
+            WHERE json_extract(j.value, '$.ai.samples') > 0`).first();
+        return json({ aggregate, issues: issues.results, replayIntent: intent.results, ai });
     }
     if (request.method === 'GET' && url.pathname === '/v1/admin/leaderboard') {
         const scores = await env.DB.prepare('SELECT id,nickname,score,game_version,created_at FROM leaderboard_entries ORDER BY created_at DESC LIMIT 100').all();
