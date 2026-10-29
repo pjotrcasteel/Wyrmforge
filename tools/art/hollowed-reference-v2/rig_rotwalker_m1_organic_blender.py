@@ -23,6 +23,9 @@ VIEWS = ("front", "front-right", "right", "back-right",
          "back", "back-left", "left", "front-left")
 FRAMES = (1, 7, 13, 19, 25, 31, 37, 43)
 
+# Calibrated on actual Blender evaluated source bones, not guessed axes.
+ARM_ANGLES = {"L": (.90, -1.02), "R": (-1.10, 1.10)}
+
 
 def smooth(v, a, b):
     t = max(0., min(1., (v-a)/(b-a)))
@@ -203,10 +206,10 @@ def set_pose(rig, phase):
                                   ((0,0,1), .065+.018*follow)])
     axis_turn(rig,"H_Clavicle_R",[((1,0,0), .085+.045*follow),
                                   ((0,0,1), -.10-.028*later)])
-    axis_turn(rig,"H_UpperArm_L",[((0,0,1), .90+.085*wave),
-                                 ((0,1,0), -1.02+.080*later)])
-    axis_turn(rig,"H_UpperArm_R",[((0,0,1), -1.10-.090*follow),
-                                 ((0,1,0), 1.10+.085*wave)])
+    axis_turn(rig,"H_UpperArm_L",[((0,0,1), ARM_ANGLES["L"][0]+.045*wave),
+                                 ((0,1,0), ARM_ANGLES["L"][1]+.045*later)])
+    axis_turn(rig,"H_UpperArm_R",[((0,0,1), ARM_ANGLES["R"][0]-.045*follow),
+                                 ((0,1,0), ARM_ANGLES["R"][1]+.045*wave)])
     axis_turn(rig,"H_ForeArm_L",[((0,1,0), -.27+.070*later),
                                 ((1,0,0), -.16-.025*follow)])
     axis_turn(rig,"H_ForeArm_R",[((0,1,0), .17-.080*later),
@@ -222,6 +225,65 @@ def set_pose(rig, phase):
     axis_turn(rig,"H_Shin_R",[((1,0,0), -.39-.060*wave)])
     axis_turn(rig,"H_Foot_L",[((1,0,0), -.30)])
     axis_turn(rig,"H_Foot_R",[((1,0,0), .12)])
+
+
+def calibrate_arms_on_true_3d_bones(rig):
+    """Use evaluated 3D joints to choose the forward reaching shoulder angles.
+
+    Imported artist meshes can have bone rest axes unrelated to expected XYZ
+    anatomy. Blind rotations were rejected because the arms went BEHIND torso.
+    Search a reproducible bounded set of real Blender bone poses instead.
+    """
+    set_pose(rig, 0.0)
+    bpy.context.view_layer.update()
+    results = {}
+    for side in ("L", "R"):
+        upper = f"H_UpperArm_{side}"
+        claw_name = f"H_ClawsRoot_{side}"
+        best = None
+        observed = None
+        for yaw_i in range(-12, 13):
+            yaw = yaw_i * .15
+            for drop_i in range(-11, 12):
+                drop = drop_i * .15
+                axis_turn(rig, upper, [((0,0,1), yaw), ((0,1,0), drop)])
+                bpy.context.view_layer.update()
+                shoulder = rig.matrix_world @ rig.pose.bones[upper].head
+                hand = rig.matrix_world @ rig.pose.bones[claw_name].tail
+                reach = float(shoulder.y - hand.y)
+                downward = float(shoulder.z - hand.z)
+                lateral = abs(float(hand.x))
+                # Record global best even on failure; never hide a bad source
+                # topology/weighting problem with an angle threshold change.
+                diff = ((reach-.33)**2 * 3.5
+                        + (downward-.79)**2 * 4.0
+                        + (lateral-.67)**2 * 2.0
+                        + .012*(yaw*yaw + drop*drop))
+                if observed is None or diff < observed[0]:
+                    observed = (diff,yaw,drop,reach,downward,lateral)
+                if not (.22 < reach < .95
+                        and .57 < downward < 1.30
+                        and .40 < lateral < 1.18):
+                    continue
+                if best is None or diff < best[0]:
+                    best = (diff,yaw,drop,reach,downward,lateral)
+        if best is None:
+            raise ValueError(
+                f"No actual forward-reaching anatomical pose for {side}; "
+                f"best measured candidate={observed}"
+            )
+        _,yaw,drop,reach,downward,lateral = best
+        ARM_ANGLES[side] = (yaw,drop)
+        results[side] = {
+            "yaw_radians_in_local_source_rest": round(yaw,4),
+            "drop_radians_in_local_source_rest": round(drop,4),
+            "hand_forward_m": round(reach,4),
+            "hand_below_shoulder_m": round(downward,4),
+            "lateral_hand_distance_m": round(lateral,4)
+        }
+        axis_turn(rig,upper,[((0,0,1),yaw),((0,1,0),drop)])
+        bpy.context.view_layer.update()
+    return results
 
 
 def author_motion(rig, body, original_low):
@@ -427,6 +489,7 @@ def main():
     baseline=eval_points(body[0])
     initial_lo,_=bounds(baseline)
     rig,rig_report=create_rig(body[0],baseline)
+    calibrated=calibrate_arms_on_true_3d_bones(rig)
     movement=author_motion(rig,body[0],initial_lo)
     views=screenshot(out,body[0])
     if len(body[0].data.vertices)!=rig_report["original_vertices"]:
@@ -446,6 +509,7 @@ def main():
       "original_source":"Owner-selected Sotudios Rotwalker CC BY 4.0",
       "original_mesh_preserved":True,
       "rig":rig_report,
+      "calibrated_reaching_arms":calibrated,
       "motion":movement,
       "render":views,
       "old_H1_source_used":False,
