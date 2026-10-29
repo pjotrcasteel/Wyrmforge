@@ -2,6 +2,33 @@
 
 **NOT FINISHED. Keep PR #387 draft and unmerged. No final visual approval requested.**
 
+## 29 October 2026 — measured compact atlas, real controller and C# blocker
+
+**AN6 remains open.** The four-clip Blender source job passed on
+[workflow 40964288628](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40964288628).
+Full-rate pivots exceed the 64 MiB decoded 3-map limit (72,382,464 B).
+Endpoint-preserving eight-frame pivots fit at 65,802,240 B and retain
+source-only phase-zero entry/exit checks.
+
+The actual shared runtime rejects 192/256 turns when entered at nonzero
+walk phase; native slip peaks at 22.225811 px. Actual source-backed claw
+replay covers 384 directions/phases/paths/rates: 128/128 aligned forward
+cases pass; all 128 lateral and 128 crossing cases fail (29.96775 and
+14.48388 px maxima). Genuine C# 320/390 Enemy Lab captures draw claw
+and pivots but reach 101.17/104.36 native pixels; browser/resource logs
+are clean. This is a real art/controller compatibility failure, not a
+CI wiring issue or an owner visual approval gate.
+
+Committed target crossing now completes a planted pivot step before
+replanning; tests cover mid-step target return and reversal. Replay matrices
+reject empty-case false greens. Source profile, source-skin research and
+existing unrelated art/lighting/AI/physics work remain preserved.
+Next: author a **direction-aware, phase-aware** 2.5D sprite motion
+representation without exceeding the memory limit or changing C# movement.
+The previous rigid cutout/affine-warp experiment was rejected and must not
+be presented as a fix. More complete source/Hunt/GPU/mobile acceptance is
+mandatory. PR #387 stays draft and unmerged.
+
 ## Owner reaffirmation: 2.5D spritesheets - 29 October 2026
 
 The owner has asked to retain and verify the spritesheet goal. It is viable for
