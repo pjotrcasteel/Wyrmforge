@@ -278,7 +278,7 @@ Read current `main`, open PRs, CI and runtime before taking the next priority. D
 
 ### Universal lighting engine — P5 dependency (painted 2D Town remains authoritative; updated 26 October 2026)
 
-**Updated owner direction (26 October 2026):** The universal lighting engine remains useful for Hunts, actors and future scenes. The approved **2D painted Town remains unchanged**, and is explicitly **excluded from G4/G5 geometry or renderer cutover**. Trees/leaf self-shadowing, actor lighting and wet reflections in active 3D world scenes share a generic registry. Normal maps alone do not
+**Updated owner direction (26 October 2026):** The universal lighting engine remains useful for Hunts, actors and future scenes. The approved **2D painted Town remains unchanged**, and is explicitly **excluded from G4/G5 geometry or renderer cutover**. Trees/leaf self-shadowing, actor lighting and wet reflections in active 2.5D GPU Hunt scenes share a generic registry. Normal maps alone do not
 cast geometry shadows. A 2D/3D sprite may not remain full-bright
 because its source image is bright. A zero-light test (ambient,
 all fixtures, all emission = off) yields black **world art**;
