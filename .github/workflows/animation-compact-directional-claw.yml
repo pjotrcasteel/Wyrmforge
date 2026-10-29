@@ -55,7 +55,7 @@ jobs:
           if [ "$HEADING" != 0 ]; then EXTRA+=(--experimental-lateral-motion); fi
           "$BLENDER" -b -t 2 --python-exit-code 1 --python tools/animation/author_hollow_foundation.py -- \
             --out "$SOURCE" --only walk,attack-travel --phase-samples 8 --action-samples 5 \
-            --travel-heading-degrees "$HEADING" "${EXTRA[@]}" --stride-metres .28 \
+            --travel-heading-degrees "$HEADING" "${EXTRA[@]}" --stride-metres .25 \
             --stance-fraction .6 --flexion-reserve-pixels 2 --pelvis-drop-metres .075 \
             --compress-source > "$SOURCE/author.log" 2>&1
           "$BLENDER" -b -t 2 --python-exit-code 1 --python tools/animation/validate_source.py -- "$SOURCE" > "$SOURCE/independent-skin.log" 2>&1
@@ -68,14 +68,14 @@ jobs:
           a=m['clips']['attack-travel'];w=m['clips']['walk']
           assert a['frames']==40 and w['frames']==8
           assert a['poseGrid']['phaseFrames']==8 and a['poseGrid']['actionFrames']==5
-          assert a['transitionReference']=='walk'
+          assert a['transitionReference']=='walk' and abs(a['strideMetres']-.25)<1e-6
           assert len(a['samples'])==40 and m['candidateNotApproved'] and not m['runtimeIntegrated']
           assert abs(a['fps']-3.75)<1e-8
           if float(os.environ['HEADING']):
               assert m['experimentalLateralMotion']['sourceStudyOnly']
               assert not m['experimentalLateralMotion']['acceptedForRuntime']
           report={'nativeFullBodyClawFrames':40,'gaitPhases':8,'actionStages':5,
-                  'headingDegrees':float(os.environ['HEADING']),'sourceRigValidated':True,
+                  'headingDegrees':float(os.environ['HEADING']),'authoredStrideMetres':.25,'sourceRigValidated':True,
                   'sourceEnvelopeValidated':True,'oneNativePixelLimitUnchanged':True,
                   'runtimeAccepted':False,'gameCaptured':False,'visualApproved':False}
           (s/'feasibility.json').write_text(json.dumps(report,indent=2)+'\n')
