@@ -523,7 +523,7 @@ export function drawWorldSiteLandscape(ctx, geography, width, height) {
     return true;
 }
 
-export function drawSemanticSiteFloor(ctx, geography, width, height) {
+export function drawSemanticSiteFloor(ctx, geography, width, height, geographyActive = false) {
     if (!geography || geography.version !== 1 || !Array.isArray(geography.ports) ||
         !Array.isArray(geography.corridors)) return false;
     const substrate = semanticMaterialName(geography.substrate?.material);
@@ -532,7 +532,7 @@ export function drawSemanticSiteFloor(ctx, geography, width, height) {
     ctx.save();
     ctx.fillStyle = siteSurfaceColors[substrate];
     ctx.fillRect(0, 0, width, height);
-    if (geography.landscape) drawWorldSiteLandscape(ctx, geography, width, height);
+    if (geographyActive && geography.landscape) drawWorldSiteLandscape(ctx, geography, width, height);
     for (const corridor of geography.corridors) {
         const material = semanticMaterialName(corridor.material);
         if (!(material in siteSurfaceColors) || corridor.points?.length < 2) continue;
@@ -567,7 +567,7 @@ export function drawSemanticSiteFloor(ctx, geography, width, height) {
 
 export function drawArenaEnvironment(ctx, environment, width, height, elapsedSeconds = 0, approvedAtlas = null) {
     if (!environment) return false;
-    const semantic = semanticSiteModeEnabled() && drawSemanticSiteFloor(ctx, environment.geography, width, height);
+    const semantic = semanticSiteModeEnabled() && drawSemanticSiteFloor(ctx, environment.geography, width, height, environment.geographyActive === true);
     const texture = semantic ? null : terrainTexture(environment, width, height, approvedAtlas);
     if (texture) ctx.drawImage(texture.image, 0, 0, width, height);
     // On the AR1 run-wide geometry preview, painted and semantic palettes display
