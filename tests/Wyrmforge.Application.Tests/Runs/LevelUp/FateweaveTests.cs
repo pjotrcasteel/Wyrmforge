@@ -124,51 +124,57 @@ public sealed class FateweaveTests
     }
 
     [TestMethod]
-    public void GildedBreakthrough_StaysInTheMilestonePool_AndOutranksTheCard()
+    public void GildedBreakthrough_StaysInTemporaryMajorPoolAndNeverOffersSpellRanks()
     {
         var build = new RunBuildState();
-        var primary = build.Spells.ActiveSpell;
-        build.Spells.LearnOrUpgrade(primary);
-        var support = SpellCatalog.All.First(spell => spell.School != SpellCatalog.Get(primary).School).Id;
-        build.Spells.LearnOrUpgrade(support);
+        Assert.IsTrue(build.Spells.TryChoosePrimary(SpellId.FireBolt));
         var service = new LevelChoiceService(new SeededRandomSource(3));
         var pool = service.RollForProgression(build, 10, false, count: 50);
-        Assert.IsTrue(pool.Any(choice => choice.Rarity == RewardRarity.Legendary), "A learned second school makes a synergy legal at level 10.");
-        var visible = pool.Where(choice => choice.Rarity < RewardRarity.Legendary).Take(3).ToArray();
-        Assert.AreEqual(3, visible.Length);
+        var attunement = pool.Single(choice => choice.Kind == LevelChoiceKind.SchoolPower);
+        Assert.AreEqual(RewardRarity.Uncommon, attunement.Rarity);
 
-        Assert.IsTrue(service.CanGild(build, visible, 0, new HashSet<string>(), 10, false));
-        var gilded = service.Reweave(build, visible, 0, new HashSet<string>(), 10, false, null, gilded: true, new SeededRandomSource(4))!;
+        Assert.IsTrue(service.CanGild(build, [attunement], 0, new HashSet<string>(), 10, false));
+        var gilded = service.Reweave(build, [attunement], 0, new HashSet<string>(), 10, false, null,
+            gilded: true, new SeededRandomSource(4))!;
 
         Assert.IsTrue(gilded.Gilded);
-        Assert.IsTrue(gilded.Rarity > visible[0].Rarity);
+        Assert.AreEqual(LevelChoiceKind.Rune, gilded.Kind);
+        Assert.IsTrue(gilded.Rarity > attunement.Rarity);
         Assert.IsTrue(PowerMilestoneProfile.IsMajorChoice(build, gilded, 10));
-        Assert.IsFalse(service.CanGild(build, visible, 0, new HashSet<string>(), 5, false), "Level 5 never reaches past the Rank II breakthrough.");
+        Assert.IsFalse(gilded.Id.StartsWith("spell:", StringComparison.Ordinal));
     }
 
     [TestMethod]
-    public void EvolutionDraftsCannotBeRewoven()
+    public void LaterBreakthroughs_AndReweaves_NeverOfferLegacyEvolutionsOrRankCards()
     {
         var build = new RunBuildState();
-        var primary = build.Spells.ActiveSpell;
-        while (build.Spells[primary] < SpellCatalog.Get(primary).MaxRank) build.Spells.LearnOrUpgrade(primary);
+        Assert.IsTrue(build.Spells.TryChoosePrimary(SpellId.FireBolt));
         var service = new LevelChoiceService(new SeededRandomSource(1));
-        var evolutions = service.RollForProgression(build, 15, false);
-        Assert.IsTrue(evolutions.All(choice => choice.Kind == LevelChoiceKind.Evolution));
 
-        Assert.IsFalse(service.CanReweave(build, evolutions, new HashSet<string>(), 15, false));
-        Assert.IsFalse(service.CanGild(build, evolutions, 0, new HashSet<string>(), 15, false));
+        foreach (var level in new[] { 5, 10, 15, 20 })
+        {
+            var choices = service.RollForProgression(build, level, false, count: 50);
+            Assert.IsTrue(choices.All(choice => choice.Kind is LevelChoiceKind.Rune or LevelChoiceKind.SchoolPower));
+            var rewoven = service.Reweave(build, [choices[0]], 0, new HashSet<string>(), level, false,
+                null, gilded: false, new SeededRandomSource(2));
+            Assert.IsNotNull(rewoven);
+            Assert.IsTrue(rewoven.Kind is LevelChoiceKind.Rune or LevelChoiceKind.SchoolPower);
+            Assert.IsFalse(rewoven.Id.StartsWith("spell:", StringComparison.Ordinal)
+                || rewoven.Id.StartsWith("evolution:", StringComparison.Ordinal));
+        }
     }
 
     [TestMethod]
-    public void GuaranteedRankTwo_HasNoAlternative()
+    public void LevelFiveBreakthrough_HasAlternativesInsteadOfForcedFireballRankTwo()
     {
         var build = new RunBuildState();
+        Assert.IsTrue(build.Spells.TryChoosePrimary(SpellId.FireBolt));
         var service = new LevelChoiceService(new SeededRandomSource(1));
-        var draft = service.RollForProgression(build, 5, false);
-        Assert.AreEqual(1, draft.Count);
-
-        Assert.IsFalse(service.CanReweave(build, draft, new HashSet<string>(), 5, false));
+        var choices = service.RollForProgression(build, 5, false);
+        Assert.AreEqual(3, choices.Count);
+        Assert.IsFalse(choices.Any(choice => choice.Id.StartsWith("spell:", StringComparison.Ordinal)));
+        Assert.IsTrue(service.CanReweave(build, choices, new HashSet<string>(), 5, false),
+            "One alternate breakthrough remains available for Fateweave after three cards are shown.");
     }
 
     [TestMethod]
