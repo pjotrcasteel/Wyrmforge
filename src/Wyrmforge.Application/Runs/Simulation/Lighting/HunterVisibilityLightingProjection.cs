@@ -21,7 +21,7 @@ public static class HunterVisibilityLightingProjection
             Y: position.Y,
             Z: 64,
             Color: "#bfc9dc",
-            Intensity: 5.5,
-            Radius: 175,
+            Intensity: 14,
+            Radius: 210,
             CastsShadows: false);
 }
