@@ -16,7 +16,7 @@ from hollow_ragged_silhouette import shorten_hanging_cloth
 from hollow_source_embers import attach_internal_fire
 ROOT=Path(__file__).resolve().parents[2]
 SOURCE=ROOT/'art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-zombie-reach-v3-standard/hollow-rigged.blend'
-parser=argparse.ArgumentParser();parser.add_argument('--out',default='artifacts/animation');parser.add_argument('--render',action='store_true');parser.add_argument('--all',action='store_true');parser.add_argument('--only',default='walk,attack,pivot,pivot-negative');parser.add_argument('--samples',type=int,default=4);parser.add_argument('--phase-samples',type=int,choices=[8,16,32],default=16);parser.add_argument('--action-samples',type=int,choices=[8,16],default=16)
+parser=argparse.ArgumentParser();parser.add_argument('--out',default='artifacts/animation');parser.add_argument('--render',action='store_true');parser.add_argument('--all',action='store_true');parser.add_argument('--only',default='walk,attack,pivot,pivot-negative');parser.add_argument('--samples',type=int,default=4);parser.add_argument('--phase-samples',type=int,choices=[8,16,32],default=16);parser.add_argument('--action-samples',type=int,choices=[5,8,16],default=16)
 parser.add_argument('--travel-heading-degrees',type=float,default=0,help='Source-authored travel direction relative to the committed body facing; study only.')
 parser.add_argument('--experimental-lateral-motion',action='store_true',help='Source-only 45..90 degree lateral gait feasibility; NEVER production/runtime approval.')
 parser.add_argument('--stride-metres',type=float,default=.36,help='Authored source gait distance per cycle, not a gameplay speed.')
