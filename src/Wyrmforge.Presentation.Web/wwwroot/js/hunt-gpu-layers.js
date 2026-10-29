@@ -53,3 +53,52 @@ export function prepareHuntGpuScratch(canvas, size, worldX, worldY) {
     ctx.translate(-worldX, -worldY);
     return ctx;
 }
+
+
+/**
+ * Bounded pool of CPU-only staging canvases keyed by raster size. The GPU
+ * renderer remains the one shared LightingEngine; the pool only holds temporary
+ * legacy asset pixels while that migration is in progress.
+ */
+export class HuntGpuScratchPool {
+    constructor(capacity = 4, createCanvas = () => document.createElement('canvas')) {
+        if (!Number.isInteger(capacity) || capacity < 1 || capacity > 8)
+            throw new RangeError('Invalid GPU raster pool capacity');
+        this.capacity = capacity;
+        this.createCanvas = createCanvas;
+        this.surfaces = new Map();
+        this.created = 0;
+        this.reused = 0;
+        this.evicted = 0;
+    }
+    acquire(size) {
+        if (!Number.isFinite(size) || size <= 0) throw new RangeError('Invalid GPU raster size');
+        const pixels = Math.ceil(size);
+        let canvas = this.surfaces.get(pixels);
+        if (canvas) {
+            this.surfaces.delete(pixels);
+            this.reused++;
+        } else {
+            canvas = this.createCanvas();
+            canvas.width = pixels;
+            canvas.height = pixels;
+            this.created++;
+            if (this.surfaces.size >= this.capacity) {
+                this.surfaces.delete(this.surfaces.keys().next().value);
+                this.evicted++;
+            }
+        }
+        this.surfaces.set(pixels, canvas);
+        return canvas;
+    }
+    diagnostics() {
+        let pixels = 0;
+        for (const size of this.surfaces.keys()) pixels += size * size;
+        return { capacity: this.capacity, active: this.surfaces.size,
+            created: this.created, reused: this.reused, evicted: this.evicted,
+            estimatedBytes: pixels * 4 };
+    }
+    clear() {
+        this.surfaces.clear();
+    }
+}
