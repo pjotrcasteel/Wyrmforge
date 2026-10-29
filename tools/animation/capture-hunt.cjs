@@ -66,6 +66,9 @@ const server=http.createServer((req,res)=>{
  const initial=await page.evaluate(async()=>{const m=await import(window.__anModulePath??'/js/arena.js');return m.readArenaDiagnostics(document.querySelector(window.__anCanvasSelector));});
  fs.writeFileSync(path.join(out,'initial-diagnostics.json'),JSON.stringify(initial,null,2));
  await page.screenshot({path:path.join(out,'hunt-ready.png')});
+ // Keep genuine C# Canvas frames without surrounding developer controls.
+ // No image generation, fake sprites, layout manipulation or art acceptance.
+ await page.locator(selector).screenshot({path:path.join(out,'hunt-canvas-ready.png')});
  if(!liveTrail)await page.getByRole('button',{name:'Resume',exact:true}).click();
  await page.locator(selector).focus();
  await page.waitForTimeout(2500);
@@ -74,6 +77,7 @@ const server=http.createServer((req,res)=>{
  }
  await page.waitForTimeout(2000);
  await page.screenshot({path:path.join(out,'hunt-passby.png')});
+ await page.locator(selector).screenshot({path:path.join(out,'hunt-canvas-passby.png')});
  const trace=await page.evaluate(()=>{clearInterval(window.__anTraceTimer);return window.__anTrace;});
  fs.writeFileSync(path.join(out,'motion-trace.json'),JSON.stringify(trace,null,2));
  fs.writeFileSync(path.join(out,'browser-errors.json'),JSON.stringify({errors,consoleErrors,failedResources},null,2));
