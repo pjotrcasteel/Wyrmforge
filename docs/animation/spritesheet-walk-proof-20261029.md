@@ -238,3 +238,34 @@ integrated unchanged; it does not deploy this animation draft or change the
 validated C#/JS runtime. The Pages workflow names the existing source-backed
 ground generators for restoring the three omitted local validation assets;
 use those source tools in the next Hunt validation rather than inventing art.
+
+## Same-day AN6 continuation — committed recovery and texture budget guard
+
+The shared baked controller now settles a completed committed action into the
+current projected-motion row **on the completing sample**, rather than showing
+one stale-facing locomotion frame before the next C# frame. This preserves the
+single gait clock, action priority, native-pixel root bound, frozen playback and
+the existing contact epochs. It does **not** author or accept a grounded turn.
+New tests cover both explicit row recovery and crossing-target observed motion.
+
+An executable atlas budget audit uses the same `spriteAtlasLayout` dimensions
+as the shared renderer, counting the source color as the primary albedo instead
+of duplicating it. It accepts full-library projected normal/emissive maps and
+reports per-clip decoded RGBA bytes, remaining headroom and budget failures.
+Measured from the preserved actual manifest:
+
+- Nine-heading motion library: **19,160,064 bytes** source-color only.
+- The same layout with normal + emissive: **57,480,192 bytes**
+  (54.8174 MiB), leaving **9,628,672 bytes** under 64 MiB before actions.
+- Existing separately exported single-walk three-map pack: **6,094,848 bytes**.
+- A hypothetical 128-frame claw added at the walk's current source crop
+  fails the combined 64 MiB gate. This is a *planning negative*, **not** an
+  actual claw export or a measured claw memory footprint.
+
+Reproduce with
+`node tools/animation/check_baked_atlas_budget.mjs --production-maps src/Wyrmforge.Presentation.Web/wwwroot/art/review/animation-foundation-sprite-motion/manifest.json`.
+The new regression tests exercise this measured capacity and negative case.
+CI/build status must be checked independently; the new regression suite
+does not establish actual in-Hunt contact, caster/depth parity or phone cost.
+The non-base heading claw, grounded turn and all remaining execution gates
+above remain open. **AN6 is still incomplete and PR #387 remains draft.**
