@@ -52,6 +52,7 @@ jobs:
           python -m py_compile tools/art/hollow-rebuild/qc_h1_geometry.py
           python -m py_compile tools/art/hollow-rebuild/evaluate_free_character_blender.py
           python -m py_compile tools/art/hollow-rebuild/sculpt_reference_hollowed_h1_blender.py
+          python -m py_compile tools/art/hollow-rebuild/sculpt_body_pose_h1_blender.py
       - name: Verify new source-only anatomical sculpt constraints
         run: python tools/art/hollow-rebuild/test_feral_source_shape.py
 
@@ -210,6 +211,29 @@ jobs:
           assert d['animation_engine_modified'] is False and d['owner_approved'] is False
           print('PASS geometry source-only stance, still ART UNAPPROVED.')
           PY
+      - name: BODY FIRST – original 70-bone body proportions and resting pose (no detail layers)
+        run: |
+          python -m py_compile tools/art/hollow-rebuild/sculpt_body_pose_h1_blender.py
+          python tools/art/hollow-rebuild/sculpt_body_pose_h1_blender.py \
+            --input artifacts/hollow-rebuild/horror-feral-rest-h1/hollowed-h1-feral-rest-source-UNAPPROVED.blend \
+            --output artifacts/hollow-rebuild/horror-body-pose-h1
+          test -s artifacts/hollow-rebuild/horror-body-pose-h1/Hollowed-H1-body-pose-source-NOT-APPROVED.blend
+          test -s artifacts/hollow-rebuild/horror-body-pose-h1/real-body-clay-FRONT-SIDE-BACK-BLENDER.png
+          test -s artifacts/hollow-rebuild/horror-body-pose-h1/real-body-silhouette-8views-BLENDER.png
+          test -s artifacts/hollow-rebuild/horror-body-pose-h1/real-body-clay-native96-BLENDER.png
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('artifacts/hollow-rebuild/horror-body-pose-h1/body-pose-QC.json')
+          d=json.loads(p.read_text(encoding='utf-8'))
+          assert d['original_connected_topology_and_weights_preserved'] is True,d
+          assert d['pose']['original_rig_bones']==70,d
+          assert d['proportions']['changed_connected_skin_vertices']>200,d
+          assert d['views']['native_96px_views']==8,d
+          assert d['actions']==0 and d['animation_engine_modified'] is False,d
+          assert d['runtime_modified'] is False and d['approved'] is False,d
+          print('Body and feral pose blockout DONE. ART VISUAL APPROVAL STILL REQUIRED.')
+          PY
       - name: Sculpt actual connected thoracic cavity, curved source-rig ribs and 3D fingertip talons
         run: |
           python -m py_compile tools/art/hollow-rebuild/sculpt_anatomical_cutaway_h1_blender.py
@@ -319,6 +343,7 @@ jobs:
             artifacts/hollow-rebuild/horror-source-review/
             artifacts/hollow-rebuild/horror-hollowed-h1/
             artifacts/hollow-rebuild/horror-feral-rest-h1/
+            artifacts/hollow-rebuild/horror-body-pose-h1/
             artifacts/hollow-rebuild/horror-anatomical-h1/
             artifacts/hollow-rebuild/horror-facial-v2/
             artifacts/hollow-rebuild/horror-real-head-h1/
