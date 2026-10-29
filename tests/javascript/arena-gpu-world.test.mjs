@@ -91,3 +91,23 @@ test('Offscreen sources cannot consume the budget needed by visible explosions',
     assert.deepEqual(huntLightFrame(frame,{x:0,y:0},{width:390,height:844}).lights.map(l=>l.id),['spill','sun']);
     assert.deepEqual(huntLightFrame(frame,{x:1900,y:0},{width:390,height:844}).lights.map(l=>l.id),['sun']);
 });
+
+test('live Hunt maintains one legacy enemy draw and one shared GPU path after main integration', async () => {
+    const { readFile } = await import('node:fs/promises');
+    const url = new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena.js', import.meta.url);
+    const code = await readFile(url, 'utf8');
+    const begin = code.indexOf("} else if (layer.kind === 'enemy') {");
+    const end = code.indexOf("} else {\n            drawMage(", begin);
+    assert.ok(begin >= 0 && end > begin, 'Enemy rendering must remain depth-sorted');
+    const enemyBranch = code.slice(begin, end);
+    assert.equal((enemyBranch.match(/drawActorWithEmitter\(/g) ?? []).length, 1,
+        'Legacy alpha-isolated actor draw must not be duplicated during merges');
+    assert.equal((enemyBranch.match(/drawEliteCrest\(/g) ?? []).length, 1,
+        'Elite crests must be painted exactly once');
+    assert.match(enemyBranch, /if \(gpu\)/);
+    assert.match(enemyBranch, /else\s*\{/);
+    assert.match(code, /gpu\.render\(ctx, state\.sharedLightingFrame\)/,
+        'The selected C# authoritative frame must feed the shared GPU engine');
+    assert.match(code, /drawDamageNumbers\(ctx, snapshot\.damageNumbers/);
+    assert.match(code, /drawTargetIndicator\(ctx, targetIndicator, 'ground'/);
+});
