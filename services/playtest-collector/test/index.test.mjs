@@ -139,6 +139,37 @@ test('Accept bounded AI summaries while stripping raw locations, decision traces
     assert.equal(summary.ai.maxCommitted, 2);
 });
 
+
+test('G4 opted-in report preserves bounded pacing but never stores user agent or trace data', async () => {
+    const payload = report();
+    payload.recentRuns[0].g4 = {
+        mode: 'gpu', quality: 'mobile', frameIntervals: 372, elapsedSeconds: 50.5,
+        measuredPlayingSeconds: 45, observedFps: 12.3, frameMsP50: 75, frameMsP95: 140,
+        frameMsP99: 170, over33msPercent: 98, gpuSamples: 41,
+        sampledDynamicPixelsMean: 420010, renderingFailures: 0, missingGpuFrames: 0,
+        userAgent: 'private-device', viewport: '402x656', samples: [1, 2, 3],
+        coordinates: [42, 21], batteryPercent: 53
+    };
+    const sanitized = sanitizeReport(payload).recentRuns[0].g4;
+    assert.equal(sanitized.mode, 'gpu');
+    assert.equal(sanitized.frameMsP95, 140);
+    assert.equal(sanitized.observedFps, 12.3);
+    assert.equal(sanitized.userAgent, undefined);
+    assert.equal(sanitized.viewport, undefined);
+    assert.equal(sanitized.coordinates, undefined);
+    assert.equal(sanitized.samples, undefined);
+    assert.equal(sanitized.batteryPercent, undefined);
+    assert.equal(sanitizeReport({ ...payload, recentRuns: [{
+        ...payload.recentRuns[0], g4: { ...payload.recentRuns[0].g4, frameIntervals: 0 }
+    }] }).recentRuns[0].g4, null);
+    const e = env();
+    assert.equal((await post(e, { consent: false, report: payload })).status, 400);
+    assert.equal((await post(e, { consent: true, report: payload })).status, 202);
+    const stored = JSON.parse(e.DB.reports.values().next().value.data);
+    assert.equal(stored.recentRuns[0].g4.frameMsP95, 140);
+    assert.equal(stored.recentRuns[0].g4.userAgent, undefined);
+});
+
 test('Discard unexpected properties, identifiers and detailed viewport/fingerprint data', async () => {
     const safe = sanitizeReport(report());
     assert.equal(safe.device.kind, 'touch');

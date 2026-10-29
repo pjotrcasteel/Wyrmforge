@@ -44,6 +44,30 @@ function sanitizeAi(value) {
     };
 }
 
+/** Compact, consented G4 result: no raw UA, precise viewport, traces or per-frame samples. */
+function sanitizeG4(value) {
+    if (!value || typeof value !== 'object' || Array.isArray(value) ||
+        !['canvas', 'gpu'].includes(value.mode) || !Number.isInteger(value.frameIntervals) ||
+        value.frameIntervals < 10 || value.frameIntervals > 72000) return null;
+    return {
+        mode: value.mode,
+        quality: value.mode === 'gpu' ? enumValue(value.quality, new Set(['mobile', 'balanced', 'high'])) : null,
+        frameIntervals: int(value.frameIntervals, 72000),
+        elapsedSeconds: aiNumber(value.elapsedSeconds, 600),
+        measuredPlayingSeconds: aiNumber(value.measuredPlayingSeconds, 600),
+        observedFps: aiNumber(value.observedFps, 240),
+        frameMsP50: aiNumber(value.frameMsP50, 1000),
+        frameMsP95: aiNumber(value.frameMsP95, 1000),
+        frameMsP99: aiNumber(value.frameMsP99, 1000),
+        over33msPercent: aiNumber(value.over33msPercent, 100),
+        renderingFailures: int(value.renderingFailures, 72000),
+        missingGpuFrames: int(value.missingGpuFrames, 72000),
+        gpuSamples: int(value.gpuSamples, 600),
+        sampledDynamicPixelsMean: value.sampledDynamicPixelsMean === null ? null :
+            int(value.sampledDynamicPixelsMean, 100000000)
+    };
+}
+
 export function sanitizeReport(report) {
     if (!report || typeof report !== 'object' || Array.isArray(report) || report.schema !== REPORT_SCHEMA ||
         typeof report.id !== 'string' || !identifier.test(report.id) ||
@@ -70,7 +94,8 @@ export function sanitizeReport(report) {
                 run.spellEvolutions.filter(v => typeof v === 'string').map(v => string(v, 40)).slice(0, 12) : [],
             perf: { samples: int(run.perf?.samples), slowFrames: int(run.perf?.slowFrames),
                 maxBridgeMs: int(run.perf?.maxBridgeMs, 10000) },
-            ai: sanitizeAi(run.ai)
+            ai: sanitizeAi(run.ai),
+            g4: sanitizeG4(run.g4)
         });
     }
     return {
