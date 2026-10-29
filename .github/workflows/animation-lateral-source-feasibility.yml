@@ -6,6 +6,7 @@ on:
       - 'tools/animation/author_hollow_foundation.py'
       - 'tools/animation/validate_source.py'
       - 'tools/animation/test_source_qc.py'
+      - 'tools/animation/audit_source_direction_switch.py'
   workflow_dispatch:
 permissions:
   contents: read
@@ -103,12 +104,39 @@ jobs:
           if [ "$AUTHOR_EXIT" -ne 0 ] || [ "$SOURCE_QC_EXIT" -ne 0 ] || [ "$MUTATIONS_EXIT" -ne 0 ] || { [ "$MODE" = attack ] && [ "$ENVELOPE_EXIT" -ne 0 ]; }; then
             echo "::warning::Orthogonal whole-body source is NOT anatomically validated; see uploaded diagnosis."
           fi
+      - name: Diagnose every real forward-to-sideways source contact transition
+        if: matrix.mode == 'attack'
+        env:
+          HEADING: ${{ matrix.heading }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/animation/audit_source_direction_switch.py --self-test
+          BASE=artifacts/an6-forward-reference
+          SIDE="artifacts/an6-side-step-${HEADING}-attack"
+          BLENDER="$PWD/.cache/blender-4.5.3-linux-x64/blender"
+          "$BLENDER" -b -t 2 --python-exit-code 1 --python tools/animation/author_hollow_foundation.py -- --out "$BASE" --only walk,attack-travel --stride-metres .28 --stance-fraction .6 --flexion-reserve-pixels 2 --pelvis-drop-metres .075 --compress-source > "$SIDE/forward-author.log" 2>&1
+          "$BLENDER" -b -t 2 --python-exit-code 1 --python tools/animation/validate_source.py -- "$BASE" > "$SIDE/forward-independent-validate.log" 2>&1
+          python3 tools/animation/audit_source_direction_switch.py "$BASE/source-manifest.json" "$SIDE/source-manifest.json" --diagnostic --out "$SIDE/direction-switch-qc.json"
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          path=Path(f"artifacts/an6-side-step-{os.environ['HEADING']}-attack/direction-switch-qc.json")
+          result=json.loads(path.read_text())
+          assert result['scenarios']==144 and result['runtimeAccepted'] is False
+          assert result['lateralHeadingDegrees']==float(os.environ['HEADING'])
+          assert result['failedScenarios']==sum(not x['withinOneNativePixel'] for x in result['results'])
+          print('REAL SOURCE SWITCH',result['scenarios'],'contacts compared,',
+                result['failedScenarios'],'not yet safe; worst native source jump:',
+                result['worstSourceNativeJump'])
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: an6-orthogonal-source-study-${{ matrix.heading }}-${{ matrix.mode }}
           path: |
             artifacts/an6-side-step-${{ matrix.heading }}-${{ matrix.mode }}/source-feasibility.json
+            artifacts/an6-side-step-${{ matrix.heading }}-${{ matrix.mode }}/direction-switch-qc.json
             artifacts/an6-side-step-${{ matrix.heading }}-${{ matrix.mode }}/*.log
             artifacts/an6-side-step-${{ matrix.heading }}-${{ matrix.mode }}/independent-source-qc.json
             artifacts/an6-side-step-${{ matrix.heading }}-${{ matrix.mode }}/negative-source-qc.json
