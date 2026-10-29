@@ -166,6 +166,13 @@ public sealed class EngineLabsBrowserTests : PageTest
         Assert.AreEqual(64, traces.GetArrayLength(),
             "All 64 active agents should produce bounded, independently inspected traces.");
 
+        var summary = Page.GetByTestId("agent-summary");
+        var summaryHeight = await summary.EvaluateAsync<double>("element => element.getBoundingClientRect().height");
+        var summaryScrollable = await summary.EvaluateAsync<bool>("element => element.scrollHeight > element.clientHeight");
+        Assert.IsLessThanOrEqualTo(225d, summaryHeight,
+            "The 64-agent summary must be scrollable in its own panel, not six pages of raw text.");
+        Assert.IsTrue(summaryScrollable, "Full per-agent observations must remain available by scrolling.");
+
         var width = await Page.EvaluateAsync<int>("() => document.documentElement.scrollWidth");
         Assert.IsLessThanOrEqualTo(391, width);
 

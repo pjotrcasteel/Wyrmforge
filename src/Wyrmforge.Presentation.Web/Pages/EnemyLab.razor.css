@@ -16,3 +16,25 @@
     white-space:pre-wrap;
     overflow-wrap:anywhere;
 }
+
+/* A 64-agent diagnostic must stay browsable on a phone instead of turning
+   the document into thousands of unstructured lines. Scrolling is confined
+   to the readable inspector surfaces; all observations remain copyable. */
+.enemy-lab .note [data-testid="agent-summary"]{
+    max-height:13rem;
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    overflow-wrap:anywhere;
+    padding:8px;
+    border:1px solid #463655;
+    border-radius:8px;
+}
+.enemy-lab .note [data-testid="agent-performance"]{
+    max-height:18rem;
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    padding:10px;
+    border:1px solid #463655;
+    border-radius:8px;
+    background:#100d15;
+}
