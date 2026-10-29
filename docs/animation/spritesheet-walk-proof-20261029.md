@@ -36,8 +36,22 @@ New committed actions still use their explicit facing intent. Other profiles
 and the source-skin yaw path keep their existing behavior.
 
 All 590 JS checks pass, including measured-direction selection and action-facing
-priority. The fresh real-encounter result remains to be recorded before accepting
-the calibration or the contact gate.
+priority. The fresh real C# encounter has no browser/resource/adapter errors;
+maximum marker residual is now 5.04 world pixels, still outside acceptance.
+
+The same packed profile was replayed through the public controller at
+15/30/60/120 Hz and speeds 30/60 world pixels per second. All 64 source-forward
+cases pass the unchanged one-native-pixel residual gate; maximum residual is
+0.0839 native pixels. The 64 between-heading cases correctly fail, peaking at
+7.6327 native pixels. This separates correct source-aligned playback from the
+finite motion-direction coverage gap. These tests measure projected source
+markers, not raster silhouettes, weighted skin, phone cost or final animation
+quality. No regional warp or live skin is used.
+
+`check_live_contacts.mjs PACK` now handles ordinary full-frame packs as well as
+the older regional study. `--between` explicitly probes the unsupported angular
+coverage and exits nonzero on the unchanged contact gate. Source-authored motion
+variants and turns are next; increasing the correction allowance is not a fix.
 
 The proof is explicitly selected by `animationFoundation=sprite-walk`. Default
 art and gameplay remain unchanged. Missing claw content continues to use the

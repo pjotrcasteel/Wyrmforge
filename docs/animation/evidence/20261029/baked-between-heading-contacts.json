@@ -1,0 +1,519 @@
+{
+  "measurement": "unsnapped baked full-frame source markers through the shared controller; no regional warp or live skin",
+  "motion": "midway between adjacent source headings",
+  "runtimeAccepted": false,
+  "results": [
+    {
+      "direction": "N",
+      "hz": 15,
+      "speed": 30,
+      "maxMarkerSlipWorldPixels": 6.4566963868193685,
+      "maxMarkerSlipNativePixels": 6.664976915426445,
+      "correctionSaturatedSamples": 29
+    },
+    {
+      "direction": "N",
+      "hz": 15,
+      "speed": 60,
+      "maxMarkerSlipWorldPixels": 7.264462674420093,
+      "maxMarkerSlipNativePixels": 7.498800180046548,
+      "correctionSaturatedSamples": 30
+    },
+    {
+      "direction": "N",
+      "hz": 30,
+      "speed": 30,
+      "maxMarkerSlipWorldPixels": 7.261277368498338,
+      "maxMarkerSlipNativePixels": 7.495512122320865,
+      "correctionSaturatedSamples": 58
+    },
+    {
+      "direction": "N",
+      "hz": 30,
+      "speed": 60,
+      "maxMarkerSlipWorldPixels": 7.271771862573101,
+      "maxMarkerSlipNativePixels": 7.506345148462556,
+      "correctionSaturatedSamples": 59
+    },
+    {
+      "direction": "N",
+      "hz": 60,
+      "speed": 30,
+      "maxMarkerSlipWorldPixels": 7.291972112986187,
+      "maxMarkerSlipNativePixels": 7.527197019856709,
+      "correctionSaturatedSamples": 116
+    },
+    {
+      "direction": "N",
+      "hz": 60,
+      "speed": 60,
+      "maxMarkerSlipWorldPixels": 7.275743676065059,
+      "maxMarkerSlipNativePixels": 7.510445084970383,
+      "correctionSaturatedSamples": 118
+    },
+    {
+      "direction": "N",
+      "hz": 120,
+      "speed": 30,
+      "maxMarkerSlipWorldPixels": 7.3942110100881555,
+      "maxMarkerSlipNativePixels": 7.632733945897451,
+      "correctionSaturatedSamples": 232
+    },
+    {
+      "direction": "N",
+      "hz": 120,
+      "speed": 60,
+      "maxMarkerSlipWorldPixels": 7.291972112986187,
+      "maxMarkerSlipNativePixels": 7.527197019856709,
+      "correctionSaturatedSamples": 236
+    },
+    {
+      "direction": "NE",
+      "hz": 15,
+      "speed": 30,
+      "maxMarkerSlipWorldPixels": 4.029337307298324,
+      "maxMarkerSlipNativePixels": 4.159315930114398,
+      "correctionSaturatedSamples": 28
+    },
+    {
+      "direction": "NE",
+      "hz": 15,
+      "speed": 60,
+      "maxMarkerSlipWorldPixels": 3.640471309898431,
+      "maxMarkerSlipNativePixels": 3.7579058682822515,
+      "correctionSaturatedSamples": 28
+    },
+    {
+      "direction": "NE",
+      "hz": 30,
+      "speed": 30,
+      "maxMarkerSlipWorldPixels": 4.3218024191260245,
+      "maxMarkerSlipNativePixels": 4.461215400388154,
+      "correctionSaturatedSamples": 58
+    },
+    {
+      "direction": "NE",
+      "hz": 30,
+      "speed": 60,
+      "maxMarkerSlipWorldPixels": 4.058585324693314,
+      "maxMarkerSlipNativePixels": 4.189507431941485,
+      "correctionSaturatedSamples": 58
+    },
+    {
+      "direction": "NE",
+      "hz": 60,
+      "speed": 30,
+      "maxMarkerSlipWorldPixels": 4.433114174740313,
+      "maxMarkerSlipNativePixels": 4.576117857796452,
+      "correctionSaturatedSamples": 115
+    },
+    {
+      "direction": "NE",
+      "hz": 60,
+      "speed": 60,
+      "maxMarkerSlipWorldPixels": 4.3218024191260245,
+      "maxMarkerSlipNativePixels": 4.461215400388154,
+      "correctionSaturatedSamples": 118
+    },
+    {
+      "direction": "NE",
+      "hz": 120,
+      "speed": 30,
+      "maxMarkerSlipWorldPixels": 4.432868274250037,
+      "maxMarkerSlipNativePixels": 4.575864025032296,
+      "correctionSaturatedSamples": 228
+    },
+    {
+      "direction": "NE",
+      "hz": 120,
+      "speed": 60,
+      "maxMarkerSlipWorldPixels": 4.434096995868205,
+      "maxMarkerSlipNativePixels": 4.577132382831696,
+      "correctionSaturatedSamples": 235
+    },
+    {
+      "direction": "E",
+      "hz": 15,
+      "speed": 30,
+      "maxMarkerSlipWorldPixels": 4.0293381629639775,
+      "maxMarkerSlipNativePixels": 4.15931681338217,
+      "correctionSaturatedSamples": 28
+    },
+    {
+      "direction": "E",
+      "hz": 15,
+      "speed": 60,
+      "maxMarkerSlipWorldPixels": 3.640472543222762,
+      "maxMarkerSlipNativePixels": 3.757907141391238,
+      "correctionSaturatedSamples": 28
+    },
+    {
+      "direction": "E",
+      "hz": 30,
+      "speed": 30,
+      "maxMarkerSlipWorldPixels": 4.321803142742602,
+      "maxMarkerSlipNativePixels": 4.461216147347202,
+      "correctionSaturatedSamples": 58
+    },
+    {
+      "direction": "E",
+      "hz": 30,
+      "speed": 60,
+      "maxMarkerSlipWorldPixels": 4.058587397770791,
+      "maxMarkerSlipNativePixels": 4.189509571892429,
+      "correctionSaturatedSamples": 58
+    },
+    {
+      "direction": "E",
+      "hz": 60,
+      "speed": 30,
+      "maxMarkerSlipWorldPixels": 4.433114970349718,
+      "maxMarkerSlipNativePixels": 4.576118679070676,
+      "correctionSaturatedSamples": 115
+    },
+    {
+      "direction": "E",
+      "hz": 60,
+      "speed": 60,
+      "maxMarkerSlipWorldPixels": 4.321803142742602,
+      "maxMarkerSlipNativePixels": 4.461216147347202,
+      "correctionSaturatedSamples": 118
+    },
+    {
+      "direction": "E",
+      "hz": 120,
+      "speed": 30,
+      "maxMarkerSlipWorldPixels": 4.432869070048675,
+      "maxMarkerSlipNativePixels": 4.575864846501857,
+      "correctionSaturatedSamples": 228
+    },
+    {
+      "direction": "E",
+      "hz": 120,
+      "speed": 60,
+      "maxMarkerSlipWorldPixels": 4.434097594978653,
+      "maxMarkerSlipNativePixels": 4.577133001268288,
+      "correctionSaturatedSamples": 235
+    },
+    {
+      "direction": "SE",
+      "hz": 15,
+      "speed": 30,
+      "maxMarkerSlipWorldPixels": 6.456695564158285,
+      "maxMarkerSlipNativePixels": 6.664976066227907,
+      "correctionSaturatedSamples": 29
+    },
+    {
+      "direction": "SE",
+      "hz": 15,
+      "speed": 60,
+      "maxMarkerSlipWorldPixels": 7.264464439986093,
+      "maxMarkerSlipNativePixels": 7.49880200256629,
+      "correctionSaturatedSamples": 30
+    },
+    {
+      "direction": "SE",
+      "hz": 30,
+      "speed": 30,
+      "maxMarkerSlipWorldPixels": 7.2612772250303514,
+      "maxMarkerSlipNativePixels": 7.495511974224879,
+      "correctionSaturatedSamples": 58
+    },
+    {
+      "direction": "SE",
+      "hz": 30,
+      "speed": 60,
+      "maxMarkerSlipWorldPixels": 7.271773848015745,
+      "maxMarkerSlipNativePixels": 7.506347197951737,
+      "correctionSaturatedSamples": 59
+    },
+    {
+      "direction": "SE",
+      "hz": 60,
+      "speed": 30,
+      "maxMarkerSlipWorldPixels": 7.291973866992355,
+      "maxMarkerSlipNativePixels": 7.527198830443721,
+      "correctionSaturatedSamples": 116
+    },
+    {
+      "direction": "SE",
+      "hz": 60,
+      "speed": 60,
+      "maxMarkerSlipWorldPixels": 7.275743989741515,
+      "maxMarkerSlipNativePixels": 7.510445408765435,
+      "correctionSaturatedSamples": 118
+    },
+    {
+      "direction": "SE",
+      "hz": 120,
+      "speed": 30,
+      "maxMarkerSlipWorldPixels": 7.394212786788459,
+      "maxMarkerSlipNativePixels": 7.632735779910667,
+      "correctionSaturatedSamples": 232
+    },
+    {
+      "direction": "SE",
+      "hz": 120,
+      "speed": 60,
+      "maxMarkerSlipWorldPixels": 7.291973866992355,
+      "maxMarkerSlipNativePixels": 7.527198830443721,
+      "correctionSaturatedSamples": 236
+    },
+    {
+      "direction": "S",
+      "hz": 15,
+      "speed": 30,
+      "maxMarkerSlipWorldPixels": 6.456695660678113,
+      "maxMarkerSlipNativePixels": 6.664976165861278,
+      "correctionSaturatedSamples": 29
+    },
+    {
+      "direction": "S",
+      "hz": 15,
+      "speed": 60,
+      "maxMarkerSlipWorldPixels": 7.264461581681499,
+      "maxMarkerSlipNativePixels": 7.498799052058322,
+      "correctionSaturatedSamples": 30
+    },
+    {
+      "direction": "S",
+      "hz": 30,
+      "speed": 30,
+      "maxMarkerSlipWorldPixels": 7.261276330357689,
+      "maxMarkerSlipNativePixels": 7.495511050691809,
+      "correctionSaturatedSamples": 58
+    },
+    {
+      "direction": "S",
+      "hz": 30,
+      "speed": 60,
+      "maxMarkerSlipWorldPixels": 7.271770616349804,
+      "maxMarkerSlipNativePixels": 7.5063438620385075,
+      "correctionSaturatedSamples": 59
+    },
+    {
+      "direction": "S",
+      "hz": 60,
+      "speed": 30,
+      "maxMarkerSlipWorldPixels": 7.291971042072225,
+      "maxMarkerSlipNativePixels": 7.527195914397136,
+      "correctionSaturatedSamples": 116
+    },
+    {
+      "direction": "S",
+      "hz": 60,
+      "speed": 60,
+      "maxMarkerSlipWorldPixels": 7.275742331101285,
+      "maxMarkerSlipNativePixels": 7.510443696620682,
+      "correctionSaturatedSamples": 118
+    },
+    {
+      "direction": "S",
+      "hz": 120,
+      "speed": 30,
+      "maxMarkerSlipWorldPixels": 7.394209929854478,
+      "maxMarkerSlipNativePixels": 7.632732830817526,
+      "correctionSaturatedSamples": 232
+    },
+    {
+      "direction": "S",
+      "hz": 120,
+      "speed": 60,
+      "maxMarkerSlipWorldPixels": 7.291971042072225,
+      "maxMarkerSlipNativePixels": 7.527195914397136,
+      "correctionSaturatedSamples": 236
+    },
+    {
+      "direction": "SW",
+      "hz": 15,
+      "speed": 30,
+      "maxMarkerSlipWorldPixels": 4.029337649670943,
+      "maxMarkerSlipNativePixels": 4.159316283531296,
+      "correctionSaturatedSamples": 28
+    },
+    {
+      "direction": "SW",
+      "hz": 15,
+      "speed": 60,
+      "maxMarkerSlipWorldPixels": 3.6404704767109433,
+      "maxMarkerSlipNativePixels": 3.757905008217748,
+      "correctionSaturatedSamples": 28
+    },
+    {
+      "direction": "SW",
+      "hz": 30,
+      "speed": 30,
+      "maxMarkerSlipWorldPixels": 4.321801996720253,
+      "maxMarkerSlipNativePixels": 4.46121496435639,
+      "correctionSaturatedSamples": 58
+    },
+    {
+      "direction": "SW",
+      "hz": 30,
+      "speed": 60,
+      "maxMarkerSlipWorldPixels": 4.058584833490196,
+      "maxMarkerSlipNativePixels": 4.189506924893105,
+      "correctionSaturatedSamples": 58
+    },
+    {
+      "direction": "SW",
+      "hz": 60,
+      "speed": 30,
+      "maxMarkerSlipWorldPixels": 4.43311378370116,
+      "maxMarkerSlipNativePixels": 4.576117454143133,
+      "correctionSaturatedSamples": 115
+    },
+    {
+      "direction": "SW",
+      "hz": 60,
+      "speed": 60,
+      "maxMarkerSlipWorldPixels": 4.321801996720253,
+      "maxMarkerSlipNativePixels": 4.46121496435639,
+      "correctionSaturatedSamples": 118
+    },
+    {
+      "direction": "SW",
+      "hz": 120,
+      "speed": 30,
+      "maxMarkerSlipWorldPixels": 4.432867884793034,
+      "maxMarkerSlipNativePixels": 4.5758636230121645,
+      "correctionSaturatedSamples": 228
+    },
+    {
+      "direction": "SW",
+      "hz": 120,
+      "speed": 60,
+      "maxMarkerSlipWorldPixels": 4.434095996567622,
+      "maxMarkerSlipNativePixels": 4.57713135129561,
+      "correctionSaturatedSamples": 235
+    },
+    {
+      "direction": "W",
+      "hz": 15,
+      "speed": 30,
+      "maxMarkerSlipWorldPixels": 4.02933667305828,
+      "maxMarkerSlipNativePixels": 4.159315275414999,
+      "correctionSaturatedSamples": 28
+    },
+    {
+      "direction": "W",
+      "hz": 15,
+      "speed": 60,
+      "maxMarkerSlipWorldPixels": 3.6404702459426277,
+      "maxMarkerSlipNativePixels": 3.757904770005293,
+      "correctionSaturatedSamples": 28
+    },
+    {
+      "direction": "W",
+      "hz": 30,
+      "speed": 30,
+      "maxMarkerSlipWorldPixels": 4.321800961272892,
+      "maxMarkerSlipNativePixels": 4.461213895507502,
+      "correctionSaturatedSamples": 58
+    },
+    {
+      "direction": "W",
+      "hz": 30,
+      "speed": 60,
+      "maxMarkerSlipWorldPixels": 4.058585275697131,
+      "maxMarkerSlipNativePixels": 4.1895073813647805,
+      "correctionSaturatedSamples": 58
+    },
+    {
+      "direction": "W",
+      "hz": 60,
+      "speed": 30,
+      "maxMarkerSlipWorldPixels": 4.433112775372671,
+      "maxMarkerSlipNativePixels": 4.576116413287918,
+      "correctionSaturatedSamples": 115
+    },
+    {
+      "direction": "W",
+      "hz": 60,
+      "speed": 60,
+      "maxMarkerSlipWorldPixels": 4.321800961272892,
+      "maxMarkerSlipNativePixels": 4.461213895507502,
+      "correctionSaturatedSamples": 118
+    },
+    {
+      "direction": "W",
+      "hz": 120,
+      "speed": 30,
+      "maxMarkerSlipWorldPixels": 4.4328668778994,
+      "maxMarkerSlipNativePixels": 4.575862583638091,
+      "correctionSaturatedSamples": 228
+    },
+    {
+      "direction": "W",
+      "hz": 120,
+      "speed": 60,
+      "maxMarkerSlipWorldPixels": 4.434094916709192,
+      "maxMarkerSlipNativePixels": 4.577130236603037,
+      "correctionSaturatedSamples": 235
+    },
+    {
+      "direction": "NW",
+      "hz": 15,
+      "speed": 30,
+      "maxMarkerSlipWorldPixels": 6.456694209793455,
+      "maxMarkerSlipNativePixels": 6.6649746681738895,
+      "correctionSaturatedSamples": 29
+    },
+    {
+      "direction": "NW",
+      "hz": 15,
+      "speed": 60,
+      "maxMarkerSlipWorldPixels": 7.264462945077283,
+      "maxMarkerSlipNativePixels": 7.498800459434615,
+      "correctionSaturatedSamples": 30
+    },
+    {
+      "direction": "NW",
+      "hz": 30,
+      "speed": 30,
+      "maxMarkerSlipWorldPixels": 7.261275733773598,
+      "maxMarkerSlipNativePixels": 7.495510434863069,
+      "correctionSaturatedSamples": 58
+    },
+    {
+      "direction": "NW",
+      "hz": 30,
+      "speed": 60,
+      "maxMarkerSlipWorldPixels": 7.2717723631304265,
+      "maxMarkerSlipNativePixels": 7.506345665166892,
+      "correctionSaturatedSamples": 59
+    },
+    {
+      "direction": "NW",
+      "hz": 60,
+      "speed": 30,
+      "maxMarkerSlipWorldPixels": 7.291972378401256,
+      "maxMarkerSlipNativePixels": 7.527197293833554,
+      "correctionSaturatedSamples": 116
+    },
+    {
+      "direction": "NW",
+      "hz": 60,
+      "speed": 60,
+      "maxMarkerSlipWorldPixels": 7.275742521291967,
+      "maxMarkerSlipNativePixels": 7.5104438929465465,
+      "correctionSaturatedSamples": 118
+    },
+    {
+      "direction": "NW",
+      "hz": 120,
+      "speed": 30,
+      "maxMarkerSlipWorldPixels": 7.394211279100599,
+      "maxMarkerSlipNativePixels": 7.632734223587715,
+      "correctionSaturatedSamples": 232
+    },
+    {
+      "direction": "NW",
+      "hz": 120,
+      "speed": 60,
+      "maxMarkerSlipWorldPixels": 7.291972378401256,
+      "maxMarkerSlipNativePixels": 7.527197293833554,
+      "correctionSaturatedSamples": 236
+    }
+  ]
+}
