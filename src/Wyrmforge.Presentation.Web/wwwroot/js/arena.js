@@ -392,11 +392,6 @@ function draw(state, snapshot, width, height) {
                 drawActorWithEmitter(ctx, state.actorLightBuffer, enemy, selectionEmitter, paintEnemy);
             }
             drawEliteCrest(ctx, enemy, visualSeconds, state.reducedMotion.matches);
-                enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId),state.hollow,state.ashling);
-            // The same point emitter illuminates opaque Hollowed, Ashling and fallback sprites.
-            // A reusable source-atop material pass preserves silhouette/alpha occlusion.
-            drawActorWithEmitter(ctx, state.actorLightBuffer, enemy, selectionEmitter, paintEnemy);
-            drawEliteCrest(ctx, enemy, visualSeconds, state.reducedMotion.matches);
         } else {
             drawMage(ctx, snapshot.player, snapshot.castMotion, danger.hit, state.reducedMotion.matches,
                 gpu ? null : sampleSpellLight(spellLights, snapshot.player.x, snapshot.player.y),
