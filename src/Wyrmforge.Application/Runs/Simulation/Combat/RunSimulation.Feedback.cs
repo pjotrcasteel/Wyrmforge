@@ -60,6 +60,7 @@ public sealed partial class RunSimulation
         var school = SpellCatalog.Get(spell ?? build.Spells.ActiveSpell).School.ToString();
         // No synthetic crits or elemental ailments: these labels describe damage the simulation actually applied.
         var kind = flavor ?? (periodic ? "Periodic" : "Impact");
+        var heavy = !periodic && amount >= Math.Max(8, target.MaxHealth * 0.16);
         var matching = damageNumbers.LastOrDefault(number =>
             number.TargetId == target.Id && number.IsDragon == (target is DragonState) &&
             number.School == school && number.Flavor == kind && number.Periodic == periodic && !number.Finisher &&
@@ -70,17 +71,19 @@ public sealed partial class RunSimulation
             matching.Amount += amount;
             matching.Finisher |= finisher;
             matching.Empowered |= empowered;
+            matching.Heavy |= !periodic && matching.Amount >= Math.Max(8, target.MaxHealth * 0.16);
             return;
         }
 
         if (damageNumbers.Count >= MaxDamageNumbers) damageNumbers.RemoveAt(0);
-        damageNumbers.Add(new DamageNumberState(++nextDamageNumberSequence, target, amount, school, kind, finisher, empowered, periodic));
+        damageNumbers.Add(new DamageNumberState(++nextDamageNumberSequence, target, amount, school, kind, finisher, empowered, periodic)
+        { Heavy = heavy });
     }
 
     private IReadOnlyList<DamageNumberRenderSnapshot> CreateDamageNumberSnapshots() =>
         damageNumbers.Select(number => new DamageNumberRenderSnapshot(number.Sequence, number.X, number.Y,
             number.Amount, number.School, number.Progress, number.Finisher, number.Empowered, number.Periodic)
-            { Flavor = number.Flavor }).ToArray();
+            { Flavor = number.Flavor, Heavy = number.Heavy }).ToArray();
 
     private void RegisterSplashPulse(Vector2D position, double radius, double duration = SplashPulseSeconds) => splashPulses.Add(new SplashPulseState(position, radius, duration));
 
@@ -115,6 +118,7 @@ public sealed partial class RunSimulation
         public double Amount { get; set; } = amount;
         public bool Finisher { get; set; } = finisher;
         public bool Empowered { get; set; } = empowered;
+        public bool Heavy { get; set; }
         public double Life { get; set; } = DamageNumberDuration;
         public double Age => DamageNumberDuration - Life;
         public double Progress => Math.Clamp(Age / DamageNumberDuration, 0, 1);
