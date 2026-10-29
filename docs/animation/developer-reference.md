@@ -5,6 +5,30 @@ Status: source-skin review candidate in draft PR #387. [Gate audit and evidence]
 **29 October owner direction:** the shipped target remains 2.5D spritesheets.
 The source-skin path below is retained research, not an approved replacement.
 See [the milestone/representation reconciliation](spritesheet-viability-20261029.md).
+
+### Baked motion-heading library
+
+Optional `locomotion.motionVariants: ClipProfile[]` reuses this same controller
+and atomic asset owner. Supply at most sixteen complete whole-body clips with
+the base gait's frame count, fps and per-frame contact IDs. Each clip needs true
+eight-view projected samples, calibrated strides/stance vectors and nearest
+source phase sampling. The profile must explicitly use `facing.transition: row`
+and `facing.selection: projected-motion`; this option is rejected for live-skin
+profiles. The matching clip must exist in the atlas manifest and pass the usual
+hash, dimensions and decoded-memory checks.
+
+Observed displacement selects a source motion clip and direction together; it
+never starts another clock or resets phase at a clip boundary. Committed actions
+retain their existing facing/timing authority and pause retains its exact clip.
+This does not synthesize missing actions or grounded turns. Source contact
+anchors persist across motion-clip switches so discontinuity remains measurable.
+See the [current positive and negative evidence](spritesheet-walk-proof-20261029.md).
+
+`export_atlases.py --tight-crop` measures the common native alpha union across
+all selected clips/frames/views, adds one native pixel of guard and copies pixels
+without resampling. Cell and anchor remain in the original coordinate system;
+the existing atlas layout contract applies the crop. Actual new pose bounds and
+all production material maps still count toward the decoded asset budget.
 Canon: [art](../canon/art-and-animation.md#universal-animation-foundation--an0an6-27-october-2026),
 [authority](../canon/architecture-and-quality.md#locked--unified-engine-ownership-and-event-authority-27-october-2026).
 

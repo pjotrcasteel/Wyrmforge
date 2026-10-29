@@ -10,7 +10,7 @@ the requested spritesheet representation. Do not silently replace that target.
 
 | Gate | Actual state | Work still required |
 |---|---|---|
-| AN0 | Source, engine owners, failures and references are recorded. The connected GitHub service confirms current main `750e56ab7` and draft #387; that main is already merged. | CLI Git transport is unavailable; remote checkpoints are verified through the connected service. |
+| AN0 | Source, engine owners, failures and references are recorded. Current main `f72f4aa10` is integrated, including the locked pixel-first rules; draft #387 is preserved. | Continue checking concurrent main/PR changes. Escalated Git transport now supports verified remote checkpoints. |
 | AN1 | Shared versioned controller, rig profiles, source export and cross-anatomy tests exist; full-frame atlas loading/playback already exists. | Demonstrate the final sprite pack through that same API, with bounded discrete transitions. |
 | AN2 | Editable cape-free sources and independent skin/sole/length/support checks exist. | A convincing baked gait, grounded start/stop/turn and actual C# contact proof. Torso-transfer discontinuity remains unresolved in the live-retargeting study. |
 | AN3 | Commitment, coupled source actions, pause/death/replay and recovery logic have evidence. | Validate the baked full-body claw and its authored entry/recovery/turn/chase transitions in the actual game. |

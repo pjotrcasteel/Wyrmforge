@@ -98,3 +98,9 @@ not establish grounded turning. Keep this negative evidence and the AN2 gate
 open; do not reset contacts at every clip switch to conceal the residual.
 Current-main Application validation passes 694/694 tests.
 
+The completed review bake contains 1,152 frames (nine walks, eight genuine views).
+Its measured guarded crop is `[15,23,81,86]`, 18.2725 MiB decoded RGBA; three
+matching maps would be 54.8174 MiB before actions. The review pack contains only
+source-lit color. Both source libraries pass the real exporter, lossless-pixel
+crop checks, independent projected derivatives and runtime-profile validation.
+
