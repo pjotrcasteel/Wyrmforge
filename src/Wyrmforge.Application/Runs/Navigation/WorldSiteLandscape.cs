@@ -93,7 +93,59 @@ public static class WorldSiteLandscapeGenerator
             obstacles.Add(new WorldSiteObstacle(obstacleKind, material,
                 kind == "mountain-pass" ? 2.2 : kind == "wyrm-lair" ? 1.4 : .5, outline));
         }
+        // The camera begins at the road junction. Reserve a few real C#-collision
+        // shoulders *beside* graph corridors so mobile players can read the place
+        // immediately, without inventing scenery in the JavaScript renderer.
+        if (kind is "forest-fork" or "forest-trail" or "mountain-pass")
+            AddNearRoadShoulders(geography, kind, random, obstacles);
+
         return new WorldSiteLandscapeRecipe(kind, obstacles);
+    }
+
+    private static void AddNearRoadShoulders(
+        WorldSiteGeography site, string kind, Random random, List<WorldSiteObstacle> obstacles)
+    {
+        foreach (var corridor in site.Corridors)
+        {
+            if (corridor.Points.Count < 2) continue;
+            var from = corridor.Points[0];
+            var destination = corridor.Points[^1];
+            var dx = destination.X - from.X;
+            var dy = destination.Y - from.Y;
+            var length = Math.Sqrt(dx * dx + dy * dy);
+            if (length < .01) continue;
+
+            // Take the same 35%-65% section in which an actual Hunt's first
+            // portrait camera starts. Candidate placement stays entirely in C#.
+            var progress = .36 + random.NextDouble() * .22;
+            var center = new HuntPoint(from.X + progress * dx, from.Y + progress * dy);
+            var offset = kind == "mountain-pass" ? .16 : .155;
+            var radiusX = kind == "mountain-pass" ? .065 : .045;
+            var radiusY = kind == "mountain-pass" ? .075 : .055;
+            foreach (var side in new[] { -1d, 1d })
+            {
+                var point = new HuntPoint(
+                    center.X - dy / length * offset * side,
+                    center.Y + dx / length * offset * side);
+                if (point.X - radiusX < .02 || point.X + radiusX > .98 ||
+                    point.Y - radiusY < .02 || point.Y + radiusY > .98)
+                    continue;
+                if (site.Corridors.Any(route =>
+                    CorridorDistance(point, route.Points) < Math.Max(radiusX, radiusY) + route.Width * .5 + .055))
+                    continue;
+                if (Math.Abs(point.X - .5) < radiusX + .10 &&
+                    Math.Abs(point.Y - .5) < radiusY + .11)
+                    continue;
+                var material = kind == "mountain-pass"
+                    ? site.RegionId == "frost" ? WorldSiteSurfaceId.GlacialIce : WorldSiteSurfaceId.Rock
+                    : WorldSiteSurfaceId.Grass;
+                var obstacleKind = kind == "mountain-pass"
+                    ? site.RegionId == "frost" ? "glacier-cliff" : "cliff"
+                    : "tree-root";
+                obstacles.Add(new WorldSiteObstacle(obstacleKind, material,
+                    kind == "mountain-pass" ? 1.5 : .7, Polygon(point, radiusX, radiusY, random)));
+            }
+        }
     }
 
     private static string SelectKind(WyrmrealmMapNode node, WorldSiteGeography geography)
