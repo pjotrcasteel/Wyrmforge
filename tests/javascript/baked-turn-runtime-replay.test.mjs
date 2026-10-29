@@ -40,6 +40,9 @@ test('replay requires both authored pivot directions and rejects bad sampling',(
     const noPivot=fixture();delete noPivot.pivots.negative;
     assert.throws(()=>replayUnifiedTurns(noPivot),TypeError);
     assert.throws(()=>replayUnifiedTurns(fixture(),{rates:[0]}),RangeError);
+    assert.throws(()=>replayUnifiedTurns(fixture(),{rates:[]}),RangeError);
+    assert.throws(()=>replayUnifiedTurns(fixture(),{entryPhases:[]}),RangeError);
+    assert.throws(()=>replayUnifiedTurns(fixture(),{targets:[]}),RangeError);
     assert.throws(()=>replayUnifiedTurns(fixture(),{entryPhases:[1]}),RangeError);
 });
 
