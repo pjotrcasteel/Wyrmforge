@@ -290,25 +290,30 @@ function updateContactAnimation(state,profile,input){
     const motionClips=[profile.locomotion,...(profile.locomotion.motionVariants??[])];
     let locomotion=motionClips.find(c=>c.clip===state.motionClip)??profile.locomotion;
     const newAction=input.action&&Object.hasOwn(profile.actions,input.action.name)&&input.action.token!==state.lastToken;
-    if(!profile.sourceSupport&&profile.facing.selection==='projected-motion'&&!state.action&&!newAction&&!stopped){
-        const observed=Math.hypot(displacement.x,displacement.y)>1e-10?displacement:input.velocity;
-        if(observed&&Math.hypot(observed.x,observed.y)>1e-10){
-            let best=-Infinity;
-            for(const candidate of motionClips)for(const [index,direction] of profile.facing.directions.entries()){
-                const v=candidate.stanceVelocityByDirection[direction],score=-(observed.x*v.x+observed.y*v.y)/Math.hypot(v.x,v.y);
-                if(score>best){best=score;requestedFacing=index;locomotion=candidate;}
+    // Only a finished committed action may select a new baked direction.
+    // Apply its exit on the *same* C# sample as recovery, not one frame later.
+    // Existing row epochs are unchanged; do not erase contacts at clip switches.
+    const settleBakedFacing=(selectProjected)=>{
+        if(selectProjected&&!profile.sourceSupport&&profile.facing.selection==='projected-motion'&&!stopped){
+            const observed=Math.hypot(displacement.x,displacement.y)>1e-10?displacement:input.velocity;
+            if(observed&&Math.hypot(observed.x,observed.y)>1e-10){
+                let best=-Infinity;
+                for(const candidate of motionClips)for(const [index,direction] of profile.facing.directions.entries()){
+                    const v=candidate.stanceVelocityByDirection[direction],score=-(observed.x*v.x+observed.y*v.y)/Math.hypot(v.x,v.y);
+                    if(score>best){best=score;requestedFacing=index;locomotion=candidate;}
+                }
+                state.motionClip=locomotion.clip;
             }
-            state.motionClip=locomotion.clip;
         }
-    }
-    if(!profile.sourceSupport&&profile.facing.transition==='row'&&!state.action&&!stopped){
-        const row=requestedFacing;
-        if(row>=0&&row!==state.facingIndex){
-            // Explicit discrete atlas policy: preserve gait phase, but a new
-            // source view begins new contact epochs. This is not a baked turn.
-            state.facingIndex=row;state.contacts=Object.create(null);state.pivotTime=0;state.pivotSign=null;
+        if(!profile.sourceSupport&&profile.facing.transition==='row'&&!stopped){
+            if(requestedFacing>=0&&requestedFacing!==state.facingIndex){
+                // A discrete source view begins one new contact epoch.
+                // This is not an authored weight-bearing turn.
+                state.facingIndex=requestedFacing;state.contacts=Object.create(null);state.pivotTime=0;state.pivotSign=null;
+            }
         }
-    }
+    };
+    if(!state.action)settleBakedFacing(!newAction);
     const stride=locomotion.strideByDirection?.[profile.facing.directions[state.action?state.actionDirection:state.facingIndex]]??profile.locomotion.stride;
     let sourceCycleBefore=null;
     if(profile.sourceSupport){
@@ -386,7 +391,10 @@ function updateContactAnimation(state,profile,input){
     // Exit on the same support phase, including signed travel in the final
     // sample. Unsigned distance phase must not replace a reversing action gait.
     if(actionSpec?.poseGrid?.travel==='facing-projection')state.phase=state.action.contactPhase;
-    if(actionSpec&&actionProgress>=1&&!actionSpec.hold){state.action=null;actionSpec=null;actionProgress=null;}
+    if(actionSpec&&actionProgress>=1&&!actionSpec.hold){
+        state.action=null;actionSpec=null;actionProgress=null;
+        settleBakedFacing(true);
+    }
     let contactPhase=actionSpec?.poseGrid?.travel==='facing-projection'?state.action.contactPhase:state.phase;
     const target=requestedFacing;
     let sourceSupport=null;
