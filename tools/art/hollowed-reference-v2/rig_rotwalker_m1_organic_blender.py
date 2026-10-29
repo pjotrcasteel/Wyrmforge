@@ -299,6 +299,10 @@ def author_motion(rig, body, original_low):
     footsteps=[]
     for frame in range(1,50,6):
         scene.frame_set(frame)
+        # World-space armature location is the actual root motion authority.
+        # Previous local pose-bone translation did not move all skinned source
+        # geometry consistently, leaving genuine heel-contact failures.
+        rig.location.z=0.0
         phase=(frame-1)/48.0*math.tau
         set_pose(rig,phase)
         bpy.context.view_layer.update()
@@ -326,7 +330,7 @@ def author_motion(rig, body, original_low):
         residual=delta
         for iteration in range(5):
             correction+=residual
-            rig.pose.bones["H_Root"].location.z=correction
+            rig.location.z=correction
             bpy.context.view_layer.update()
             low,_=bounds(eval_points(body))
             residual=float(original_low.z-low.z)
@@ -343,19 +347,19 @@ def author_motion(rig, body, original_low):
         for bone in rig.pose.bones:
             bone.keyframe_insert(data_path="rotation_quaternion",
                                  frame=frame,group=bone.name)
-        rig.pose.bones["H_Root"].keyframe_insert(data_path="location",frame=frame,
-                                                 group="H_Root")
+        rig.keyframe_insert(data_path="location",frame=frame,
+                             group="H_Root_WORLD")
         footsteps.append({"frame":frame,"ground_z":round(float(low.z),5),
                           "root_correction":round(correction,6),
                           "residual_m":round(residual,6)})
     # Seamless loop on true original bone controls, not a sprite crossfade.
     scene.frame_set(49)
     set_pose(rig,0)
-    rig.pose.bones["H_Root"].location.z=footsteps[0]["root_correction"]
+    rig.location.z=footsteps[0]["root_correction"]
     for bone in rig.pose.bones:
         bone.keyframe_insert(data_path="rotation_quaternion",frame=49,group=bone.name)
-    rig.pose.bones["H_Root"].keyframe_insert(data_path="location",frame=49,
-                                             group="H_Root")
+    rig.keyframe_insert(data_path="location",frame=49,
+                         group="H_Root_WORLD")
     scene.frame_set(1)
     if not bpy.data.actions:
         raise ValueError("No actual editable armature animation was authored")
