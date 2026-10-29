@@ -10,6 +10,7 @@ public sealed partial class RunSimulation
     private readonly EncounterDirector encounterDirector = new();
     private ArenaEnvironmentState? arenaEnvironment;
     private bool worldSiteGeographyEnabled;
+    private string? walkedExitNodeId;
 
     /// <summary>Opt in to the AR1 physical terrain preview for this run; normal Hunts keep their approved fallback.</summary>
     public void EnableWorldSiteGeography() => worldSiteGeographyEnabled = true;
@@ -52,9 +53,11 @@ public sealed partial class RunSimulation
 
     public bool ChooseMapNode(string id)
     {
-        if (dragonEncounterStarted || trailExitPending) return false;
+        if (dragonEncounterStarted || trailExitPending || (worldSiteGeographyEnabled && walkedExitNodeId is { } exitId && exitId != id))
+            return false;
         var node = mapState.Choose(id);
         if (node is null) return false;
+        walkedExitNodeId = null;
         ClearMapEncounterField();
         trailExperienceAtEntry = experienceEarned;
         materialCargoState.BeginTrail();
