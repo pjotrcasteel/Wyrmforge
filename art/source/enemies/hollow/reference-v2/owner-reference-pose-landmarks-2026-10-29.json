@@ -117,6 +117,10 @@
       "Rtoe": [
         413,
         838
+      ],
+      "crown": [
+        232,
+        134
       ]
     },
     "side": {
@@ -203,6 +207,10 @@
       "Rtoe": [
         744,
         846
+      ],
+      "crown": [
+        822,
+        135
       ]
     }
   },
@@ -211,7 +219,7 @@
     "H_SpineLumbar": "thorax",
     "H_SpineThoracic": "neck",
     "H_Neck": "head",
-    "H_Head": "head",
+    "H_Head": "crown",
     "H_Clavicle_L": "Lshoulder",
     "H_UpperArm_L": "Lelbow",
     "H_ForeArm_L": "Lwrist",
