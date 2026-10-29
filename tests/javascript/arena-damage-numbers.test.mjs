@@ -53,7 +53,7 @@ test('finishing blows are highlighted, surges amplified, schools distinct, motio
     assert.notEqual(presentDamageNumber(hit({ school: 'Arcane' })).color, normal.color);
     assert.notEqual(presentDamageNumber(hit({ school: 'Necromancer' })).color, normal.color);
     assert.notEqual(presentDamageNumber(hit({ school: 'Summoner' })).color, normal.color);
-    const moving = presentDamageNumber(hit({ progress: .6 }), 'full', false);
+    const moving = presentDamageNumber(hit({ progress: .85 }), 'full', false);
     assert.ok(moving.y < hit().y);
     assert.ok(moving.opacity < 1);
     assert.equal(presentDamageNumber(hit({ progress: 1 })), null);
