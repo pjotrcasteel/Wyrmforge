@@ -31,6 +31,13 @@ FIT_ORDER = (
     "H_Thigh_R", "H_Shin_R", "H_Foot_R",
 )
 FRAMES = (1, 7, 13, 19, 25, 31, 37, 43)
+# Source sculpt is responsible for physical lengths. Do not resize actual
+# head, footwear, hands or shoulder shells simply to chase a 2D pixel.
+RIGID_LENGTH_SOURCE_BONES = frozenset({
+    "H_Head", "H_Clavicle_L", "H_Clavicle_R",
+    "H_ClawsRoot_L", "H_ClawsRoot_R",
+    "H_Foot_L", "H_Foot_R",
+})
 
 
 def evaluated_world_vertices(body):
@@ -109,7 +116,10 @@ def rotate_real_bone_to_target(rig, bone_name, target, max_scale):
     wanted = target-head
     if source.length < .01 or wanted.length < .02:
         raise ValueError(f"Unusable source / target segment {bone_name}")
-    scale = max(.75, min(max_scale, wanted.length / source.length))
+    if bone_name in RIGID_LENGTH_SOURCE_BONES:
+        scale=1.0
+    else:
+        scale=max(.85,min(max_scale,wanted.length/source.length))
     bone.scale.y *= scale
     bpy.context.view_layer.update()
     head = rig.matrix_world @ bone.head
@@ -127,6 +137,7 @@ def rotate_real_bone_to_target(rig, bone_name, target, max_scale):
         "actual": [round(float(a),4) for a in actual],
         "error_m": round(float((target-actual).length),4),
         "source_bone_stretch_y": round(float(bone.scale.y),3),
+        "original_3d_volume_length_protected":bone_name in RIGID_LENGTH_SOURCE_BONES,
     }
 
 
