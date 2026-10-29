@@ -140,6 +140,11 @@ def hole_in_real_face(mesh):
     """
     bm=bmesh.new()
     bm.from_mesh(mesh)
+    # The CC0 source has under 1,000 face polygons. Before making a real
+    # torn skin boundary, create enough anatomical edge resolution to avoid
+    # the rejected blocky polygon staircase across the brow and cheek.
+    bmesh.ops.subdivide_edges(
+        bm,edges=list(bm.edges),cuts=1,use_grid_fill=True)
     before=len(bm.faces)
     faces=[]
     for f in bm.faces:
@@ -148,18 +153,58 @@ def hole_in_real_face(mesh):
         # Original source is in mm-scale coordinates. Choose a damaged
         # asymmetrical cheek/temple near the orbit. Avoid amputating nose,
         # remaining cheek or all lips.
-        r=((x+36)/48)**2+((z-53)/70)**2
-        edge=.10*math.sin(.071*z+.13*x)
+        # Concentrate the opening around one damaged orbit and zygomatic
+        # cheek instead of erasing the entire left face and forehead.
+        # Unequal radii and a low-amplitude irregular boundary create
+        # torn skin, not an artificial half-skull / terminator mask.
+        r=((x+40)/35)**2+((z-62)/49)**2
+        edge=(.075*math.sin(.095*z+.16*x)
+              +.045*math.sin(.23*z-.11*x))
         if r+edge<1.0 and y<0:
             faces.append(f)
     if len(faces)<8 or len(faces)>before*.4:
         bm.free()
         raise ValueError(f"Unsafe facial-cutout geometry ({len(faces)}/{before})")
     bmesh.ops.delete(bm,geom=faces,context="FACES")
+    # Give the wound border actual tissue thickness, without detached
+    # decal planes, dark face buttons or emissive masking.
+    for vert in bm.verts:
+        x,y,z=vert.co
+        if vert.is_boundary and y<0 and -82<x<5 and 4<z<117:
+            vert.co.y-=2.0+1.25*math.sin(.16*x+.19*z)
     bm.to_mesh(mesh)
     bm.free()
     mesh.update()
     return len(faces)
+
+
+def fracture_surviving_skin(mesh):
+    """Original asymmetric deformation of the surviving CC0 facial tissue.
+
+    Do not hide a normal stock human behind shadows. The intact side still
+    needs a sunken orbit and contracted jawline, without replacing the real
+    anatomical surface with a black face-mask texture.
+    """
+    altered=0
+    for vert in mesh.vertices:
+        x,y,z=vert.co
+        if y>9 or z< -50:
+            continue
+        cheek=math.exp(-(((x+37)/37)**2+((z-27)/42)**2))
+        brow=math.exp(-(((x-18)/44)**2+((z-83)/26)**2))
+        jaw=math.exp(-(((x-18)/33)**2+((z+18)/27)**2))
+        dx=3.8*cheek-2.5*jaw
+        dy=6.5*cheek+4.6*brow+4.5*jaw
+        dz=-2.5*brow-3.0*jaw
+        if abs(dx)+abs(dy)+abs(dz)>.025:
+            vert.co.x+=dx
+            vert.co.y+=dy
+            vert.co.z+=dz
+            altered+=1
+    mesh.update()
+    if altered<30:
+        raise ValueError(f"Insufficient surviving face anatomy sculpt: {altered}")
+    return altered
 
 
 def graft_obj(source,part,rig,target_transform,material_obj,body):
@@ -178,6 +223,7 @@ def graft_obj(source,part,rig,target_transform,material_obj,body):
     invert=rest_to_pos.inverted()
     clone=source.data.copy()
     cut=hole_in_real_face(clone) if part=="face" else 0
+    changed_skin=fracture_surviving_skin(clone) if part=="face" else 0
     verts=[]
     source_world=source.matrix_world.copy()
     for v in clone.vertices:
@@ -198,6 +244,11 @@ def graft_obj(source,part,rig,target_transform,material_obj,body):
     vg.add(list(range(len(clone.vertices))),1.0,"REPLACE")
     arm=obj.modifiers.new("Existing 70-bone source armature ONLY","ARMATURE")
     arm.object=rig
+    # Source facial topology is low-poly; restoring one level of the
+    # author's original subdivision makes actual cheek/jaw contours legible.
+    smooth=obj.modifiers.new("Anatomical source curvature","SUBSURF")
+    smooth.levels=1
+    smooth.render_levels=1
     obj["source_CC0"]="Drummyfish Brain and Skull"
     obj["original_url"]=HEAD_URL
     obj["source_art_only"]=True
@@ -205,6 +256,7 @@ def graft_obj(source,part,rig,target_transform,material_obj,body):
     obj["animation_actions_added"]=0
     return obj,{"mesh_vertices":len(clone.vertices),
                 "mesh_faces":len(clone.polygons),
+                "sculpted_surviving_face_vertices":changed_skin,
                 "damaged_face_polygons_removed":cut,
                 "bone":bone_name}
 
@@ -253,16 +305,23 @@ def main():
         made[part]=meta
     if made["face"]["damaged_face_polygons_removed"]<8:
         raise ValueError("No real skin opening, old fake skull has returned")
+    # Original donor datablocks are NOT scene meshes and must not influence
+    # framing or silently remain as giant offstage source parts in the .blend.
+    for original in donor.values():
+        bpy.data.objects.remove(original,do_unlink=True)
     if len(bpy.data.actions)>0:
         raise ValueError("An animation action was created by head source graft")
 
     # Truly rendered source proof, first full 8-way with neutral clay, then
     # detailed front and quarter FACE closeups at 512px.
     helper=renderer()
-    live=[o for o in bpy.data.objects if o.type=="MESH"]
+    live=[o for o in bpy.context.scene.objects
+          if o.type=="MESH" and not o.hide_render]
     low,high=helper.evaluated_mesh_bounds(live)
     center=tuple((low+high)/2)
     dims=high-low
+    if not 2.0<float(dims.z)<5.0:
+        raise ValueError(f"Source scene framing includes a stray donor: {tuple(dims)}")
     camera=bpy.context.scene.camera
     if camera is None: raise ValueError("Missing genuine Blender source camera")
     camera.data.ortho_scale=max(1.2*float(dims.z),
@@ -299,6 +358,9 @@ def main():
       "source_only_replaced_head":True,
       "dark_eye_mask_material_faces":0,
       "head_3d_is_donor_geometry":True,
+      "active_visible_source_meshes":len(live),
+      "framed_model_height_m":round(float(dims.z),4),
+      "framed_model_width_m":round(float(dims.x),4),
       "added_animation_actions":len(bpy.data.actions),
       "animation_engine_touched":False,
       "gameplay_or_runtime_touched":False,
