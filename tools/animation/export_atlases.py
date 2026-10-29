@@ -25,7 +25,9 @@ if a.experimental_half_pivots:
         clip=m['clips'][name]
         if clip['frames']!=16 or clip['fps']!=12 or len(clip['samples'])!=16 or clip.get('poseGrid'):
             p.error('Half-pivot study requires actual complete 16-frame/12fps non-grid source')
-        indices[name]=list(range(0,16,2))
+        # Eight real source poses spanning BOTH planted endpoints. Even-index
+        # sampling would omit frame 15 and reintroduce an unlanded final foot.
+        indices[name]=[round(i*15/7) for i in range(8)]
         m['clips'][name]={**clip,'frames':8,'fps':6,'samples':[clip['samples'][i] for i in indices[name]],
                           'experimentalSourceFrameIndices':indices[name]}
 common_crop=None
