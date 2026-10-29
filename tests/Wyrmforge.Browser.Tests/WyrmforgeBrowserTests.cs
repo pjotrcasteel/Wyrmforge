@@ -3582,6 +3582,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         }
         finally
         {
+            Directory.CreateDirectory(ArtifactDirectory);
             await ScreenshotAsync($"live-hunt-shared-gpu-{width}-{quality}.png");
             await Page.ScreenshotAsync(new()
             {
@@ -3594,7 +3595,6 @@ public sealed class WyrmforgeBrowserTests : PageTest
                     Height = 260,
                 },
             });
-            Directory.CreateDirectory(ArtifactDirectory);
             var diagnostic = await Page.EvaluateAsync<string>("() => JSON.stringify(window.__huntGpuRead?.() ?? null)");
             await File.WriteAllTextAsync(Path.Combine(ArtifactDirectory, $"live-hunt-shared-gpu-{width}-{quality}.json"), diagnostic);
         }
