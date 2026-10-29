@@ -1,0 +1,263 @@
+{
+  "walk": {
+    "measurement": "evaluated skinned sole vertices",
+    "maxSavedActionSlipMetres": 3.129243850708008e-07,
+    "toleranceMetres": 0.004036458333333334,
+    "maxBoneLengthErrorMetres": 1.683500396032489e-07,
+    "jointRanges": {
+      "knee-L": [
+        58.908919930877595,
+        121.01880801628167
+      ],
+      "elbow-L": [
+        38.007817070586555,
+        40.31533842506742
+      ],
+      "knee-R": [
+        59.46354495186097,
+        121.28566350715407
+      ],
+      "elbow-R": [
+        49.18845766639849,
+        61.40533358194975
+      ]
+    },
+    "minimumIndependentMassMarginMetres": 0.00887903169706086,
+    "maximumActualSoleGroundErrorMetres": 3.2782554626464844e-07,
+    "maximumGroundPatchBandMetres": 0.004023820161819458,
+    "sampledStanceVertices": 4455,
+    "uniqueSoleVertices": 405
+  },
+  "walk-heading-m19p6875": {
+    "measurement": "evaluated skinned sole vertices",
+    "maxSavedActionSlipMetres": 5.95161033676312e-07,
+    "toleranceMetres": 0.004036458333333334,
+    "maxBoneLengthErrorMetres": 1.7490838111200446e-07,
+    "jointRanges": {
+      "knee-L": [
+        43.48523604905951,
+        124.07395163202837
+      ],
+      "elbow-L": [
+        38.00778633473529,
+        40.31533842506742
+      ],
+      "knee-R": [
+        70.75791844263738,
+        116.76320401239187
+      ],
+      "elbow-R": [
+        49.18845083620932,
+        61.40533358194975
+      ]
+    },
+    "minimumIndependentMassMarginMetres": 0.008584304964982753,
+    "maximumActualSoleGroundErrorMetres": 5.960464477539062e-07,
+    "maximumGroundPatchBandMetres": 0.004023760557174683,
+    "sampledStanceVertices": 4455,
+    "uniqueSoleVertices": 405
+  },
+  "walk-heading-m14p0625": {
+    "measurement": "evaluated skinned sole vertices",
+    "maxSavedActionSlipMetres": 5.342123439980552e-07,
+    "toleranceMetres": 0.004036458333333334,
+    "maxBoneLengthErrorMetres": 1.8884485616932345e-07,
+    "jointRanges": {
+      "knee-L": [
+        50.721923927525566,
+        122.09702167865987
+      ],
+      "elbow-L": [
+        38.007817070586555,
+        40.315369160918685
+      ],
+      "knee-R": [
+        67.3141917046303,
+        117.38475122686302
+      ],
+      "elbow-R": [
+        49.18844742111474,
+        61.405347242328084
+      ]
+    },
+    "minimumIndependentMassMarginMetres": 0.012563675430667156,
+    "maximumActualSoleGroundErrorMetres": 5.364418029785156e-07,
+    "maximumGroundPatchBandMetres": 0.004023760557174683,
+    "sampledStanceVertices": 4455,
+    "uniqueSoleVertices": 405
+  },
+  "walk-heading-m8p4375": {
+    "measurement": "evaluated skinned sole vertices",
+    "maxSavedActionSlipMetres": 3.791020582082436e-07,
+    "toleranceMetres": 0.004036458333333334,
+    "maxBoneLengthErrorMetres": 1.467450850278773e-07,
+    "jointRanges": {
+      "knee-L": [
+        51.51087566345915,
+        121.71817840615596
+      ],
+      "elbow-L": [
+        38.007823900775726,
+        40.31535891563493
+      ],
+      "knee-R": [
+        67.99066047021753,
+        117.95977119270806
+      ],
+      "elbow-R": [
+        49.18845083620932,
+        61.40534041213891
+      ]
+    },
+    "minimumIndependentMassMarginMetres": 0.009548339441112866,
+    "maximumActualSoleGroundErrorMetres": 4.470348358154297e-07,
+    "maximumGroundPatchBandMetres": 0.00402379035949707,
+    "sampledStanceVertices": 4455,
+    "uniqueSoleVertices": 405
+  },
+  "walk-heading-m2p8125": {
+    "measurement": "evaluated skinned sole vertices",
+    "maxSavedActionSlipMetres": 3.35875776277069e-07,
+    "toleranceMetres": 0.004036458333333334,
+    "maxBoneLengthErrorMetres": 1.5022920432650189e-07,
+    "jointRanges": {
+      "knee-L": [
+        59.470409291976836,
+        121.26903882671425
+      ],
+      "elbow-L": [
+        38.007817070586555,
+        40.315341840162006
+      ],
+      "knee-R": [
+        59.52062484275476,
+        121.03474967780447
+      ],
+      "elbow-R": [
+        49.188444006020156,
+        61.405319921571405
+      ]
+    },
+    "minimumIndependentMassMarginMetres": 0.009976558399370051,
+    "maximumActualSoleGroundErrorMetres": 4.470348358154297e-07,
+    "maximumGroundPatchBandMetres": 0.004023820161819458,
+    "sampledStanceVertices": 4455,
+    "uniqueSoleVertices": 405
+  },
+  "walk-heading-p2p8125": {
+    "measurement": "evaluated skinned sole vertices",
+    "maxSavedActionSlipMetres": 3.516800320507868e-07,
+    "toleranceMetres": 0.004036458333333334,
+    "maxBoneLengthErrorMetres": 1.6274812272842887e-07,
+    "jointRanges": {
+      "knee-L": [
+        59.33801973529447,
+        118.33704352170288
+      ],
+      "elbow-L": [
+        38.00777267435695,
+        40.31535891563493
+      ],
+      "knee-R": [
+        60.059253560701976,
+        121.51955650509198
+      ],
+      "elbow-R": [
+        49.18847474187142,
+        61.405319921571405
+      ]
+    },
+    "minimumIndependentMassMarginMetres": 0.008995247484978859,
+    "maximumActualSoleGroundErrorMetres": 3.5762786865234375e-07,
+    "maximumGroundPatchBandMetres": 0.004023730754852295,
+    "sampledStanceVertices": 4455,
+    "uniqueSoleVertices": 405
+  },
+  "walk-heading-p8p4375": {
+    "measurement": "evaluated skinned sole vertices",
+    "maxSavedActionSlipMetres": 3.8886035533845093e-07,
+    "toleranceMetres": 0.004036458333333334,
+    "maxBoneLengthErrorMetres": 1.4508187579087561e-07,
+    "jointRanges": {
+      "knee-L": [
+        67.64385761511014,
+        117.6416346415472
+      ],
+      "elbow-L": [
+        38.007817070586555,
+        40.31535891563493
+      ],
+      "knee-R": [
+        51.90833120145137,
+        121.93515985570892
+      ],
+      "elbow-R": [
+        49.188440590925566,
+        61.40534041213891
+      ]
+    },
+    "minimumIndependentMassMarginMetres": 0.00900338702447275,
+    "maximumActualSoleGroundErrorMetres": 4.470348358154297e-07,
+    "maximumGroundPatchBandMetres": 0.004023849964141846,
+    "sampledStanceVertices": 4455,
+    "uniqueSoleVertices": 405
+  },
+  "walk-heading-p14p0625": {
+    "measurement": "evaluated skinned sole vertices",
+    "maxSavedActionSlipMetres": 3.175031505921858e-07,
+    "toleranceMetres": 0.004036458333333334,
+    "maxBoneLengthErrorMetres": 1.5605314873656795e-07,
+    "jointRanges": {
+      "knee-L": [
+        67.04033526985864,
+        117.04090584366624
+      ],
+      "elbow-L": [
+        38.00777267435695,
+        40.31533842506742
+      ],
+      "knee-R": [
+        51.61256010472772,
+        122.27985218236277
+      ],
+      "elbow-R": [
+        49.18841327016889,
+        61.405319921571405
+      ]
+    },
+    "minimumIndependentMassMarginMetres": 0.012583343391579979,
+    "maximumActualSoleGroundErrorMetres": 3.5762786865234375e-07,
+    "maximumGroundPatchBandMetres": 0.004023760557174683,
+    "sampledStanceVertices": 4455,
+    "uniqueSoleVertices": 405
+  },
+  "walk-heading-p19p6875": {
+    "measurement": "evaluated skinned sole vertices",
+    "maxSavedActionSlipMetres": 4.015026564987743e-07,
+    "toleranceMetres": 0.004036458333333334,
+    "maxBoneLengthErrorMetres": 1.5407989789606447e-07,
+    "jointRanges": {
+      "knee-L": [
+        70.68566187140782,
+        116.3961906275304
+      ],
+      "elbow-L": [
+        38.007789749829875,
+        40.31533842506742
+      ],
+      "knee-R": [
+        44.16262689018469,
+        124.19138990461757
+      ],
+      "elbow-R": [
+        49.188433760736395,
+        61.405326751760576
+      ]
+    },
+    "minimumIndependentMassMarginMetres": 0.009481348000851297,
+    "maximumActualSoleGroundErrorMetres": 3.5762786865234375e-07,
+    "maximumGroundPatchBandMetres": 0.00402379035949707,
+    "sampledStanceVertices": 4455,
+    "uniqueSoleVertices": 405
+  }
+}

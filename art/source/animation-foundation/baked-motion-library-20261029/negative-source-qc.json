@@ -1,0 +1,20 @@
+{
+  "skating": {
+    "rejected": true,
+    "exitCode": 1,
+    "expectedFailure": "actual mesh sole skating",
+    "logTail": "Blender 4.5.14 LTS (hash 62c1db4208e8 built 2026-09-15 01:33:49)\nRead blend: \"C:\\Wyrmforge\\artifacts\\an-qc-tmp\\animation-source-negative-f176td_7\\hollow-foundation.blend\"\n\nBlender quit\nTraceback (most recent call last):\n  File \"C:\\Wyrmforge\\tools\\animation\\validate_source.py\", line 42, in <module>\n    assert slip<tolerance,('actual mesh sole skating',name,f,id,index,slip,tolerance)\n           ^^^^^^^^^^^^^^\nAssertionError: ('actual mesh sole skating', 'walk', 1, 'foot-L', 37104, 0.025000028824505884, 0.004036458333333334)\n\nError: script failed, file: 'C:\\Wyrmforge\\tools\\animation\\validate_source.py', exiting.\n"
+  },
+  "hover": {
+    "rejected": true,
+    "exitCode": 1,
+    "expectedFailure": "actual mesh sole hover/penetration",
+    "logTail": "Blender 4.5.14 LTS (hash 62c1db4208e8 built 2026-09-15 01:33:49)\nRead blend: \"C:\\Wyrmforge\\artifacts\\an-qc-tmp\\animation-source-negative-xsii74j5\\hollow-foundation.blend\"\n\nBlender quit\nTraceback (most recent call last):\n  File \"C:\\Wyrmforge\\tools\\animation\\validate_source.py\", line 66, in <module>\n    assert maxgrounderror<tolerance,('actual mesh sole hover/penetration',name,maxgrounderror,tolerance)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: ('actual mesh sole hover/penetration', 'walk', 0.05000036954879761, 0.004036458333333334)\n\nError: script failed, file: 'C:\\Wyrmforge\\tools\\animation\\validate_source.py', exiting.\n"
+  },
+  "travel-vector": {
+    "rejected": true,
+    "exitCode": 1,
+    "expectedFailure": "actual mesh sole skating",
+    "logTail": "Blender 4.5.14 LTS (hash 62c1db4208e8 built 2026-09-15 01:33:49)\nRead blend: \"C:\\Wyrmforge\\artifacts\\an-qc-tmp\\animation-source-negative-ue2j622b\\hollow-foundation.blend\"\n\nBlender quit\nTraceback (most recent call last):\n  File \"C:\\Wyrmforge\\tools\\animation\\validate_source.py\", line 42, in <module>\n    assert slip<tolerance,('actual mesh sole skating',name,f,id,index,slip,tolerance)\n           ^^^^^^^^^^^^^^\nAssertionError: ('actual mesh sole skating', 'walk', 1, 'foot-L', 37104, 0.007000021713753372, 0.004036458333333334)\n\nError: script failed, file: 'C:\\Wyrmforge\\tools\\animation\\validate_source.py', exiting.\n"
+  }
+}

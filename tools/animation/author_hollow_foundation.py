@@ -23,6 +23,8 @@ parser.add_argument('--flexion-reserve-pixels',type=float,default=0,help='Lower 
 parser.add_argument('--pelvis-drop-metres',type=float,default=0,help='Explicit authored crouch height for longer source strides; no change to contact tolerances.')
 parser.add_argument('--stance-fraction',type=float,default=.62,help='Authored fraction of each contact cycle spent on the ground.')
 parser.add_argument('--guides',action='store_true',help='Preserve pre-balance whole-body guide actions for the shared runtime support solve; guides alone are not grounded acceptance.')
+parser.add_argument('--motion-headings',default='',help='Additional nonzero walk headings in degrees, comma-separated, in the same editable character. Use --motion-headings=-a,b for negative values.')
+parser.add_argument('--compress-source',action='store_true',help='Save the editable Blender source with lossless native compression.')
 args=parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
 if not math.isfinite(args.travel_heading_degrees) or abs(args.travel_heading_degrees)>45:parser.error('travel heading must be finite and within -45..45 degrees')
 if not math.isfinite(args.stride_metres) or args.stride_metres<=0:parser.error('source stride must be finite and positive')
@@ -30,6 +32,10 @@ if not math.isfinite(args.flexion_reserve_pixels) or not 0<=args.flexion_reserve
 if not math.isfinite(args.pelvis_drop_metres) or not 0<=args.pelvis_drop_metres<=.10:parser.error('source crouch must be finite and within 0..0.10 metres')
 if not math.isfinite(args.stance_fraction) or not .5<args.stance_fraction<.9:parser.error('source stance fraction must be within 0.5..0.9')
 if args.travel_heading_degrees and any(c not in ['walk','attack-travel'] for c in args.only.split(',')):parser.error('directional studies require --only walk,attack-travel')
+try:motion_headings=[float(v) for v in args.motion_headings.split(',')] if args.motion_headings else []
+except ValueError:parser.error('motion headings must be comma-separated finite numbers')
+if motion_headings and (args.travel_heading_degrees or 'walk' not in args.only.split(',')):parser.error('a motion library requires the zero-heading walk as its base')
+if len(motion_headings)>16 or len(set(motion_headings))!=len(motion_headings) or any(not math.isfinite(v) or not 0<abs(v)<=45 for v in motion_headings):parser.error('up to sixteen unique nonzero headings within -45..45 degrees are supported')
 TRAVEL_ROTATION=Matrix.Rotation(math.radians(args.travel_heading_degrees),4,'Z')
 OUT=(ROOT/args.out).resolve();OUT.mkdir(parents=True,exist_ok=True)
 bpy.ops.wm.open_mainfile(filepath=str(SOURCE));scene=bpy.context.scene
@@ -92,9 +98,12 @@ def checked_chain(rig,upper,lower,target,pole,limits):
 records={};actions={}
 GRID_PHASES=args.phase_samples
 GRID_ACTIONS=args.action_samples
-for clip in args.only.split(','):
-    action=bpy.data.actions.new('AN1_'+clip+'_supported_v1');rig.animation_data_create();rig.animation_data.action=action
-    action.use_fake_user=True;actions[clip]=action
+entries=[(name,name,args.travel_heading_degrees) for name in args.only.split(',')]
+entries.extend(('walk-heading-'+('m' if heading<0 else 'p')+format(abs(heading),'.8g').replace('.','p'),'walk',heading) for heading in motion_headings)
+for clip_id,clip,heading in entries:
+    TRAVEL_ROTATION=Matrix.Rotation(math.radians(heading),4,'Z')
+    action=bpy.data.actions.new('AN1_'+clip_id+'_supported_v1');rig.animation_data_create();rig.animation_data.action=action
+    action.use_fake_user=True;actions[clip_id]=action
     samples=[];last_points={};slips=[];joint_ranges={};length_error=0;guide_frames=[]
     grid=clip=='attack-travel'
     frame_count=GRID_PHASES*GRID_ACTIONS if grid else GRID_PHASES if clip=='walk' else 16
@@ -246,23 +255,26 @@ for clip in args.only.split(','):
                 if bag:
                     for curve in bag.fcurves:
                         for key in curve.keyframe_points:key.interpolation='LINEAR'
-    records[clip]={'samples':samples[:frame_count],'maxStanceSlipMetres':max(slips,default=0),'maxBoneLengthErrorMetres':length_error,'jointRangesDegrees':{k:[min(v),max(v)] for k,v in joint_ranges.items()},'strideMetres':STRIDE if clip=='walk' or grid else 0,'frames':frame_count,'fps':GRID_ACTIONS/(16/12) if grid else GRID_PHASES/(16/12) if clip=='walk' else 12}
-    if grid and 'walk' in records:records[clip]['transitionReference']='walk'
+    records[clip_id]={'samples':samples[:frame_count],'maxStanceSlipMetres':max(slips,default=0),'maxBoneLengthErrorMetres':length_error,'jointRangesDegrees':{k:[min(v),max(v)] for k,v in joint_ranges.items()},'strideMetres':STRIDE if clip=='walk' or grid else 0,'frames':frame_count,'fps':GRID_ACTIONS/(16/12) if grid else GRID_PHASES/(16/12) if clip=='walk' else 12}
+    if clip_id!=clip:records[clip_id]['motionVariantOf']=clip
+    if grid and 'walk' in records:records[clip_id]['transitionReference']='walk'
     if clip=='walk' or grid:
-        records[clip]['rootStrideVectorMetres']=list(TRAVEL_ROTATION @ Vector((0,-STRIDE,0)))
-        records[clip]['travelHeadingDegrees']=args.travel_heading_degrees
-    if grid:records[clip]['poseGrid']={'phaseFrames':GRID_PHASES,'actionFrames':GRID_ACTIONS,'order':'action-major','phaseSampling':'nearest','actionSampling':'nearest'}
+        records[clip_id]['rootStrideVectorMetres']=list(TRAVEL_ROTATION @ Vector((0,-STRIDE,0)))
+        records[clip_id]['travelHeadingDegrees']=heading
+    records[clip_id]['contactPoleById']={'foot-'+side:list(TRAVEL_ROTATION @ Vector((sign*.09,-.5,-.2))) for side,sign in [('L',1),('R',-1)]}
+    if grid:records[clip_id]['poseGrid']={'phaseFrames':GRID_PHASES,'actionFrames':GRID_ACTIONS,'order':'action-major','phaseSampling':'nearest','actionSampling':'nearest'}
     if args.guides:
-        guide=bpy.data.actions.new('AN1_'+clip+'_guide_v1');guide.use_fake_user=True;rig.animation_data.action=guide
+        guide=bpy.data.actions.new('AN1_'+clip_id+'_guide_v1');guide.use_fake_user=True;rig.animation_data.action=guide
         for frame,(rotation,channels) in enumerate(guide_frames):
             scene.frame_set(frame+1);rig.rotation_euler=rotation;rig.keyframe_insert('rotation_euler',frame=frame+1)
             for bone in rig.pose.bones:
                 bone.matrix_basis=channels[bone.name];bone.keyframe_insert('location',frame=frame+1);bone.keyframe_insert('rotation_euler' if bone.rotation_mode=='XYZ' else 'rotation_quaternion',frame=frame+1);bone.keyframe_insert('scale',frame=frame+1)
-        records[clip]['guideAction']=guide.name;records[clip]['guideMassSupported']=False;rig.animation_data.action=action
-    print('AN_CLIP',clip,json.dumps({k:v for k,v in records[clip].items() if k!='samples'}),flush=True)
+        records[clip_id]['guideAction']=guide.name;records[clip_id]['guideMassSupported']=False;rig.animation_data.action=action
+    print('AN_CLIP',clip_id,json.dumps({k:v for k,v in records[clip_id].items() if k!='samples'}),flush=True)
 # Pack images into editable source rather than depending on another workstation.
 bpy.ops.file.pack_all()
-scene.frame_set(1);bpy.ops.wm.save_as_mainfile(filepath=str(OUT/'hollow-foundation.blend'))
+if 'walk' in actions:rig.animation_data.action=actions['walk']
+scene.frame_set(1);bpy.ops.wm.save_as_mainfile(filepath=str(OUT/'hollow-foundation.blend'),compress=args.compress_source)
 skeleton=[{'id':b.name,'parent':b.parent.name if b.parent else None,'length':b.length,'rest':[x for row in b.matrix_local for x in row]} for b in rig.data.bones]
 projection_by_direction={}
 for row,direction in enumerate(DIRECTIONS):
@@ -277,8 +289,10 @@ manifest['contactCycles']=[{'id':'foot-'+side,'phaseOffset':offset,'stanceFracti
 manifest['flexionReserveMetres']=args.flexion_reserve_pixels*1.55/96
 manifest['authoredPelvisDropMetres']=args.pelvis_drop_metres
 manifest['turnSupport']={'radians':math.pi/4,'durationSeconds':16/12,'phaseCycles':1}
+reference_rotation=Matrix.Rotation(math.radians(args.travel_heading_degrees),4,'Z')
 for chain in manifest['contactChains']:
-    chain['pole']=list(TRAVEL_ROTATION @ Vector(chain['pole']))
+    chain['pole']=list(reference_rotation @ Vector(chain['pole']))
+if motion_headings:manifest['motionHeadingLibrary']={'baseClip':'walk','variants':[name for name,c in records.items() if c.get('motionVariantOf')=='walk'],'samePhaseContactSchedule':True}
 (OUT/'source-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
 if args.render:
     for clip,action in actions.items():

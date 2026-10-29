@@ -59,3 +59,12 @@ existing attack art, rather than presenting an unrendered source attack.
 
 See [the milestone and representation audit](spritesheet-viability-20261029.md)
 and the [walk pack README](../../src/Wyrmforge.Presentation.Web/wwwroot/art/review/animation-foundation-sprite-walk/README.md).
+# Source motion-library continuation
+
+Nine editable whole-body walk actions are preserved in
+`art/source/animation-foundation/baked-motion-library-20261029/`. Independent
+saved-source mesh checks and all three negative mutations pass. The original
+walk/moving-claw guide-authoring regression also passes. This closes source
+authoring for the bounded heading experiment only; baking, shared-controller
+selection, boundary continuity and actual game contact proof remain open.
+

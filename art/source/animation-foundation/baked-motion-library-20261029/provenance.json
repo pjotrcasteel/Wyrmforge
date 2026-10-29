@@ -1,0 +1,30 @@
+{
+  "candidateNotApproved": true,
+  "representation": "editable source for baked full-body sprite motion library",
+  "runtimeIntegrated": false,
+  "sourceFiles": {
+    "hollow-foundation.blend": "d675f42685c792a6f422a11b989c2ea6f3568fb18bcb3797d51f777c85fe9c90",
+    "source-manifest.json": "9d1dc0458bc79fb5cde222baa725b9f4d95655b58e315d69541db936c37fdf52",
+    "source-preflight.json": "16870e29932dcbbf76c9c4dbbdf0c001ebc86dca007baf492aa665e449a39274",
+    "independent-source-qc.json": "84840e831628039785525bce2f0e2415ee70cf1bbea6e7a2683ba698f6087f3f",
+    "negative-source-qc.json": "608f281ed0d49e13a5ed0777dc746799a31c9d49a95c10f7d70d195ee00dfe75"
+  },
+  "sameSkeletonAsCatchStep": true,
+  "samePhaseContactScheduleVerified": true,
+  "authorArguments": [
+    "--only",
+    "walk",
+    "--phase-samples",
+    "16",
+    "--stride-metres",
+    "0.56",
+    "--flexion-reserve-pixels",
+    "2",
+    "--pelvis-drop-metres",
+    "0.075",
+    "--stance-fraction",
+    "0.65",
+    "--motion-headings=-19.6875,-14.0625,-8.4375,-2.8125,2.8125,8.4375,14.0625,19.6875",
+    "--compress-source"
+  ]
+}
