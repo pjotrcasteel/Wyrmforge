@@ -157,8 +157,6 @@ def fit_full_reference_pose(rig, body, global_root, data, target):
     for key,bone in (
         ("left_ankle_effective_target_m_relative_to_body_center","H_Shin_L"),
         ("left_toe_effective_target_m_relative_to_body_center","H_Foot_L"),
-        ("right_ankle_effective_target_m_relative_to_body_center","H_Shin_R"),
-        ("right_toe_effective_target_m_relative_to_body_center","H_Foot_R"),
     ):
         effective_target[bone]=body_center+Vector(data["constraints"][key])
     results={}
@@ -174,7 +172,7 @@ def fit_full_reference_pose(rig, body, global_root, data, target):
             float((target[name]-(rig.matrix_world@rig.pose.bones[name].tail)).length),4
         )
         results[name]["anatomy_constrained_target_used"] = (
-            name in ("H_Shin_L","H_Foot_L","H_Shin_R","H_Foot_R")
+            name in ("H_Shin_L","H_Foot_L")
         )
 
     initial_lo,_=extents(evaluated_world_vertices(body))
