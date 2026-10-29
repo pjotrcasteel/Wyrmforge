@@ -1,3 +1,5 @@
+> **LATEST OWNER DIRECTIVE — FULL 3D FIRST.** Complete the actual Rotwalker-derived Hollowed model, feral pose, ghoul anatomy, hair, clothing, final materials and source rig/deformation inspection before invoking Blender's pixel conversion. Earlier mobile-first guidance below describes the **eventual M5/M6 export fidelity contract**, not an instruction to pixelate an unfinished model. See [current milestone order](HOLLOWED-3D-FIRST-PRODUCTION-ORDER.md). 
+
 # Owner-approved modeling foundation: Sotudios Rotwalker
 
 **29 October 2026 — Owner explicitly chose the real 3D Rotwalker candidate as the new Hollowed foundation.**
@@ -26,7 +28,7 @@ Verified WyrmForge historical technical reference on main:
 7. Keep an explicit source camera/scale/pivot contract. Historical proof pivot `[48,72]` and drawing dimensions are starting *review* references only; verify against actual integration camera and occlusion before choosing the production atlas.
 8. Quality acceptance is VISUAL: neutral clay → native pixel silhouette → grayscale/palette → true dark arena contrast → motion and mobile physical-device performance. Passing an automated contour test alone is **insufficient**.
 
-### First proof to execute on this branch
+### Historical proof already executed (DO NOT make next modeling milestone)
 
 `tools/art/hollowed-reference-v2/render_mobile_candidate_blender.py` consumes the genuine unmodified Rotwalker source file in the audit artifacts. It generates 8 native 96×96 diagnostic views, a shared-palette and binary-alpha review sheet, and 4× nearest-neighbor inspection. This is an **unapproved source-candidate proof**, not an import into the game; significant anatomy and pose are still outstanding.
 
