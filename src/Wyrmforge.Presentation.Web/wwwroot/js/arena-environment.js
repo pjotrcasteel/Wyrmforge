@@ -480,8 +480,9 @@ const siteSurfaceColors = Object.freeze({
     Mud: '#564b45',
     Rock: '#728088',
     ShallowWater: '#387f9d',
+    GlacialIce: '#a5bbc8',
 });
-const siteSurfaceNames = Object.freeze(['Soil', 'Grass', 'Road', 'Mud', 'Rock', 'ShallowWater']);
+const siteSurfaceNames = Object.freeze(['Soil', 'Grass', 'Road', 'Mud', 'Rock', 'ShallowWater', 'GlacialIce']);
 
 export function semanticSiteModeEnabled() {
     return new URLSearchParams(globalThis.location?.search ?? '').get('arenaTerrain') === 'semantic';
@@ -499,6 +500,8 @@ export function drawWorldSiteLandscape(ctx, geography, width, height) {
     const palette = {
         'tree-root': ['#264a34', '#172d24'],
         cliff: ['#56636d', '#9aa4ac'],
+        'glacier-cliff': ['#859eae', '#d3dde7'],
+        'ice-spire': ['#b1d5e5', '#e5f2f8'],
         'wyrm-rib': ['#55434a', '#92747a'],
         rock: ['#737673', '#343d44'],
     };
