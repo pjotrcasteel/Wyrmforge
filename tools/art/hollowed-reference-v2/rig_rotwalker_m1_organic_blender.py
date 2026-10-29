@@ -94,7 +94,8 @@ def sculpt_original_arm_proportions(body):
         forearm_band=smooth(xx,.63,.86)*(1.0-smooth(xx,1.17,1.39))*influence
         axial_z=float(p.z-floor-2.14)
         axial_y=float(p.y-cy)
-        organic_bulk=(.19*forearm_band+.31*hand_band)
+        # Narrow swollen sleeves in real source geometry; preserve hand mass.
+        organic_bulk=(-.19*forearm_band+.10*hand_band)
         hand_y=organic_bulk*axial_y
         hand_z=organic_bulk*axial_z
         # A continuous, slightly downward-hooked distal finger shape.
