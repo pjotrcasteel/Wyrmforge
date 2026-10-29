@@ -1,11 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { HuntGpuWorld } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js';
+import { HuntGpuWorld, compositeHuntGpuFrame, huntGpuRendererBudget } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js';
 import { huntLayerRevision, prepareHuntGpuScratch, HuntGpuScratchPool } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/hunt-gpu-layers.js';
 
 function fakeCapture() {
     let drawings = 0;
-    const context = { clearRect() {}, drawImage() { drawings++; } };
+    const context = { clearRect() {}, imageSmoothingEnabled: true, drawImage() { drawings++; } };
     const pixels = { width: 64, height: 64, getContext() { return context; } };
     const layer = { pixels, texture: { needsUpdate: false }, revision: 'stable' };
     const world = {
@@ -19,7 +19,7 @@ function fakeCapture() {
         HuntGpuWorld.prototype.capture.call(world, 'prop', {}, 0, 0, width, height, 0, true,
             revision === null ? {} : { revision });
     };
-    return { capture, world, layer, get drawings() { return drawings; } };
+    return { capture, world, layer, context, get drawings() { return drawings; } };
 }
 
 test('explicit stable surface revisions skip both Canvas copies and GPU uploads', () => {
@@ -31,6 +31,7 @@ test('explicit stable surface revisions skip both Canvas copies and GPU uploads'
     assert.ok(c.world.used.has('prop'));
     c.capture('damaged');
     assert.equal(c.drawings, 1);
+    assert.equal(c.context.imageSmoothingEnabled, false, 'Canvas-to-GPU capture must not bilinearly blur source pixels');
     assert.equal(c.layer.revision, 'damaged');
     assert.deepEqual([...c.world.dirtyTextures], ['prop']);
     c.world.dirtyTextures.clear();
@@ -130,6 +131,8 @@ test('bounded Hunt raster pool reuses different actor sizes and evicts the least
     });
     pool.acquire(320);
     assert.equal(pool.diagnostics().evicted, 1);
+    assert.equal(two.width, 0, 'Evicted staging canvas must release its CPU bitmap immediately');
+    assert.equal(two.height, 0);
     assert.equal(pool.acquire(160), one,
         'Most-recently-used size remains available when another surface is evicted');
     const replacement = pool.acquire(96);
@@ -138,9 +141,45 @@ test('bounded Hunt raster pool reuses different actor sizes and evicts the least
     assert.equal(pool.diagnostics().active, 2);
     assert.ok(pool.diagnostics().estimatedBytes <= (320 * 320 + 160 * 160) * 4);
     pool.clear();
+    assert.equal(one.width, 0, 'Disposing the pool must release retained CPU bitmaps');
+    assert.equal(one.height, 0);
     assert.equal(pool.diagnostics().active, 0);
     assert.equal(pool.diagnostics().estimatedBytes, 0);
     assert.throws(() => new HuntGpuScratchPool(0, () => ({})), RangeError);
     assert.throws(() => new HuntGpuScratchPool(9, () => ({})), RangeError);
     assert.throws(() => pool.acquire(-1), RangeError);
+});
+
+test('mobile Hunt GPU budget does not retain finished drawing buffers; labs retain defaults', () => {
+    const mobile = huntGpuRendererBudget('mobile');
+    assert.deepEqual(mobile, {
+        maxLights: 6, shadowViews: 6, shadowMapSize: 256, preserveDrawingBuffer: false,
+    });
+    assert.equal(huntGpuRendererBudget('balanced').preserveDrawingBuffer, false);
+    assert.equal(huntGpuRendererBudget('high').shadowMapSize, 1024);
+    assert.throws(() => huntGpuRendererBudget('ultra'), RangeError);
+});
+
+test('WebGL-to-Hunt composite always uses nearest pixel sampling and restores caller canvas state', () => {
+    const calls = [];
+    const ctx = {
+        canvas: { width: 390, height: 844 },
+        imageSmoothingEnabled: true,
+        save() { this.oldSmoothing = this.imageSmoothingEnabled; calls.push('save'); },
+        setTransform(...values) { calls.push(['transform', ...values]); },
+        drawImage(image, x, y, width, height) {
+            calls.push(['draw', image, x, y, width, height, this.imageSmoothingEnabled]);
+        },
+        restore() { this.imageSmoothingEnabled = this.oldSmoothing; calls.push('restore'); },
+    };
+    const image = { width: 320, height: 692 };
+    compositeHuntGpuFrame(ctx, image);
+    assert.deepEqual(calls, [
+        'save', ['transform', 1, 0, 0, 1, 0, 0],
+        ['draw', image, 0, 0, 390, 844, false], 'restore',
+    ]);
+    assert.equal(ctx.imageSmoothingEnabled, true, 'Do not change downstream HUD drawing');
+    ctx.drawImage = () => { throw Error('context unavailable'); };
+    assert.throws(() => compositeHuntGpuFrame(ctx, image), /context unavailable/);
+    assert.equal(calls.at(-1), 'restore', 'A failed GPU composite must still unwind Canvas state');
 });
