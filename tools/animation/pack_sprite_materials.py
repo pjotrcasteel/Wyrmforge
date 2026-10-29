@@ -30,6 +30,15 @@ for name,c in m['clips'].items():
   if mode=='normal':
    pixels=np.array(atlas);mask=pixels[:,:,3]>0;v=pixels[:,:,:3][mask].astype(float)/127.5-1;length=np.linalg.norm(v,axis=1)
    if np.any(length<=math.sqrt(3)/255):raise ValueError('Source normal below quantization precision')
+   opaque=pixels[:,:,3]>=128;toward=pixels[:,:,2][opaque].astype(float)/127.5-1
+   # A few source folds/backfaces may face away. A reversed camera basis makes
+   # the visible surface predominantly negative, as the rejected export did.
+   for row,direction in enumerate(m['directions']):
+    for frame in range(c['frames']):
+     x=(frame%columns)*w;y=(row*rows+frame//columns)*h;tile=pixels[y:y+h,x:x+w];visible=tile[:,:,2][tile[:,:,3]>=128].astype(float)/127.5-1
+     if len(visible) and np.median(visible)<=0:raise ValueError('Visible source normals predominantly point away from viewer: '+name+'/'+direction+'/'+str(frame))
+   c['opaqueNormalTowardRange']=[float(toward.min()),float(toward.max())] if len(toward) else None
+   c['opaqueNormalAwayFraction']=float(np.mean(toward<0)) if len(toward) else None
    pixels[:,:,:3][mask]=np.rint((v/length[:,None]+1)*127.5).clip(0,255).astype(np.uint8);atlas=Image.fromarray(pixels)
    c['sourceNormalPreNormalizationLengthRange']=[float(length.min()),float(length.max())]
   file=name+'-'+mode+'.png';atlas.save(a.out/file);item={'image':file,'sha256':hashlib.sha256((a.out/file).read_bytes()).hexdigest(),'basis':receipt['normalBasis'] if mode=='normal' else 'source-evaluated'}
@@ -37,6 +46,6 @@ for name,c in m['clips'].items():
   else:c['materials'][mode]=item
   decoded+=atlas.width*atlas.height*4
 if decoded>64*1024*1024:raise ValueError('Production sprite texture budget exceeded')
-shutil.copyfile(a.pack/'profile.json',a.out/'profile.json');shutil.copyfile(a.materials/'material-receipt.json',a.out/'material-receipt.json')
+shutil.copyfile(a.pack/'profile.json',a.out/'profile.json');(a.out/'material-receipt.json').write_text(json.dumps(receipt,indent=2)+'\n',newline='\n')
 m.update(productionReady=False,reviewLightingOnly=False,materialPassesAligned=True,normalBasisVersion=2,decodedTextureBytes=decoded,materialGate='Actual shared GPU lighting, depth/caster, mobile and owner acceptance remain open')
-(a.out/'manifest.json').write_text(json.dumps(m,indent=2)+'\n');print(json.dumps({'decodedTextureBytes':decoded,'alignedMaterials':True,'productionReady':False}))
+(a.out/'manifest.json').write_text(json.dumps(m,indent=2)+'\n',newline='\n');print(json.dumps({'decodedTextureBytes':decoded,'alignedMaterials':True,'productionReady':False}))

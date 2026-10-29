@@ -1,10 +1,10 @@
 {
   "schemaVersion": 2,
-  "profileSha256": "e8744fb1a81cadd877448943d20e487b7be0825ca0d975b3fd7ba068678469da",
+  "profileSha256": "8a04c90a82f0391e9c4b677876c95aa8eb543a67ac1cd8e97321cfec94bb1a76",
   "candidateNotApproved": true,
   "productionReady": false,
   "reviewLightingOnly": false,
-  "runtimeIntegrated": false,
+  "runtimeIntegrated": true,
   "directions": [
     "N",
     "NE",
@@ -38,7 +38,7 @@
       "materials": {
         "normal": {
           "image": "walk-normal.png",
-          "sha256": "b9147662498223a0c32d975bd2c321ec3a9b883d849ced0986abefe416c87867",
+          "sha256": "22788dc452fc147269d14c17f4ff6092cec5c7e2d7618fbdcd77aafcc5491e04",
           "basis": "camera-right/up/toward"
         },
         "emissive": {
@@ -48,9 +48,14 @@
         }
       },
       "colorRole": "albedo",
+      "opaqueNormalTowardRange": [
+        -0.0980392156862745,
+        1.0
+      ],
+      "opaqueNormalAwayFraction": 0.0001323260513906265,
       "sourceNormalPreNormalizationLengthRange": [
         0.05587375234813733,
-        1.0144287771670502
+        1.0138221973820913
       ]
     }
   },
@@ -558,5 +563,8 @@
   "representation": "baked-full-body-sprites",
   "sourceBlendSha256": "6c6bfbb0cd3dad0fbd8164d2cef31ab2043fd17b556e221233481caa9216e5ef",
   "materialPassesAligned": true,
-  "decodedTextureBytes": 6094848
+  "normalBasisVersion": 2,
+  "decodedTextureBytes": 6094848,
+  "runtimeScope": "explicit capture asset-root override through animationFoundation=sprite-walk",
+  "defaultAdopted": false
 }

@@ -22,6 +22,12 @@
   "cell": 96,
   "samples": 4,
   "normalBasis": "camera-right/up/toward",
-  "toolSha256": "533b373b9c7d9fa1d9b36ba0f45226b9906a450106c6108c18c9dbb784705b66",
+  "normalBasisVersion": 2,
+  "cyclesCameraToNormalBasis": [
+    1,
+    1,
+    -1
+  ],
+  "toolSha256": "f18217c303f3b946f1795edb6b739da0e916f5a5db8b041ed3439b97088fd6e0",
   "productionAccepted": false
 }

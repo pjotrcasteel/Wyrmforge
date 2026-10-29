@@ -51,9 +51,9 @@ profile=build_runtime_profile(m)
 if 'attack-travel' in m['clips']:
     clips.pop('attack',None)
     row_hashes.pop('attack',None)
-(out/'profile.json').write_text(json.dumps(profile,indent=2)+'\n')
+(out/'profile.json').write_text(json.dumps(profile,indent=2)+'\n',newline='\n')
 manifest={'schemaVersion':2,'profileSha256':hashlib.sha256((out/'profile.json').read_bytes()).hexdigest(),'candidateNotApproved':True,'productionReady':False,'reviewLightingOnly':True,'runtimeIntegrated':False,'directions':directions,'clips':clips,'sourceSignature':m['skeletonSignature'],'rowSha256':row_hashes,'sourceQC':m['clips'],'materialGate':'aligned unlit albedo/normal/depth/emissive export and actual Hunt GPU acceptance open'}
 manifest['representation']='baked-full-body-sprites'
 if (source/'hollow-foundation.blend').exists():manifest['sourceBlendSha256']=hashlib.sha256((source/'hollow-foundation.blend').read_bytes()).hexdigest()
-(out/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+(out/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n',newline='\n')
 print(json.dumps({'atlasBytes':sum((out/v['image']).stat().st_size for v in clips.values()),'eightDistinctRows':list(row_hashes),'gpuProductionReady':False}))

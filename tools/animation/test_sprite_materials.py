@@ -24,6 +24,8 @@ with tempfile.TemporaryDirectory(dir=root/'artifacts',prefix='sprite-material-te
  assert not result['productionReady']
  receipt['sourceBlendSha256']='b'*64;bad=run('wrong-source');assert bad.returncode and 'Blender mismatch' in bad.stderr
  receipt['sourceBlendSha256']='a'*64
+ image=Image.open(materials/'normal/walk/N/00.png');image.putpixel((48,48),(128,128,0,255));image.save(materials/'normal/walk/N/00.png')
+ bad=run('wrong-handedness');assert bad.returncode and 'away from viewer' in bad.stderr
  image=Image.open(materials/'normal/walk/N/00.png');image.putpixel((48,48),(128,128,255,0));image.save(materials/'normal/walk/N/00.png')
  bad=run('wrong-alpha');assert bad.returncode and 'alpha mismatch' in bad.stderr
  print('SPRITE_MATERIAL_PASS primary-albedo budget, source provenance and exact alpha rejection')

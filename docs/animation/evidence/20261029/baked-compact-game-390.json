@@ -1,0 +1,25 @@
+{
+  "foundationMode": "sprite-walk",
+  "representation": "baked-full-body-sprites",
+  "contactMeasurement": "unsnapped source markers; not evaluated skin soles",
+  "expectedWebglUnavailable": false,
+  "fallbackCanvasPixels": null,
+  "scene": "real-development-encounter",
+  "mobileEmulated": true,
+  "candidate": true,
+  "inspection": "lit",
+  "physicalDevice": false,
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "samples": 227,
+  "solveFailures": [],
+  "maximumProjectedSoleDrift": 1.1014182452845993,
+  "gpuErrors": [],
+  "errors": [],
+  "consoleErrors": [],
+  "failedResources": [],
+  "maximumNativeMarkerSlip": 1.1369478661002315,
+  "markerContactWithinOneNativePixel": false
+}

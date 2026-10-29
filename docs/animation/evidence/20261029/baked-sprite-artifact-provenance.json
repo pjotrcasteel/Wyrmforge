@@ -1,0 +1,61 @@
+{
+  "productionAccepted": false,
+  "physicalDevice": false,
+  "movie": "Provisional actual C# Enemy Lab, source-lit compact walk plus existing attack fallback; 3s initial loading trimmed, 11s retained; H264 Main3.1 yuv420p faststart. Not final AN4.",
+  "framebuffers": "Actual native shared GPU world pixels, vertically oriented without resampling; explicitly named developer material/light views.",
+  "sourceBlendSha256": "6c6bfbb0cd3dad0fbd8164d2cef31ab2043fd17b556e221233481caa9216e5ef",
+  "files": {
+    "baked-compact-walk-provisional-390.mp4": {
+      "bytes": 230889,
+      "sha256": "712df94ce70cd3498617f400e8a6af76ed6a738ef4e996a6d729004900d60df4"
+    },
+    "baked-sprite-materials/320-neutral-albedo.png": {
+      "bytes": 9841,
+      "sha256": "584e90c4fb92c389af2ed0d1418e724494b20147aa3ede8821a14060c184bbba"
+    },
+    "baked-sprite-materials/320-neutral-lit.png": {
+      "bytes": 24180,
+      "sha256": "77c4e1ed1ee10023ff6fed484bd6466ccdb0e59200744406f9048ed2292d478c"
+    },
+    "baked-sprite-materials/320-neutral-normals.png": {
+      "bytes": 8203,
+      "sha256": "d58b1991ae0ac1125ce38a2f7ea5bd7fe468992395b38e00e8aaa2b03d0b7fc0"
+    },
+    "baked-sprite-materials/320-neutral-shadow-visibility.png": {
+      "bytes": 6987,
+      "sha256": "8481b9d203097c406dd3f3ed2e27293af4b1a89f10c1a04e95d7a2464d0d754a"
+    },
+    "baked-sprite-materials/320-restored.png": {
+      "bytes": 24180,
+      "sha256": "77c4e1ed1ee10023ff6fed484bd6466ccdb0e59200744406f9048ed2292d478c"
+    },
+    "baked-sprite-materials/320-zero-light.png": {
+      "bytes": 4881,
+      "sha256": "2e7d012b7333928cdf6fb47f9894d985aa35b24ac863302f140765c630dcbba9"
+    },
+    "baked-sprite-materials/390-neutral-albedo.png": {
+      "bytes": 10743,
+      "sha256": "97b830889a55cfcbe7a2aa4a10fb836b06f6d380da6260b71e1a1da55c7bb2ff"
+    },
+    "baked-sprite-materials/390-neutral-lit.png": {
+      "bytes": 26466,
+      "sha256": "82ec33261a6398efff97720b0ffd182b948221e0e4fd6ed73516ca73e4f969e0"
+    },
+    "baked-sprite-materials/390-neutral-normals.png": {
+      "bytes": 8871,
+      "sha256": "c10bcec51f7684933344a6f1f5ca579fe8de4a3ee80190be5c296d48e294150a"
+    },
+    "baked-sprite-materials/390-neutral-shadow-visibility.png": {
+      "bytes": 7724,
+      "sha256": "701a682f580147fa9b2c0715096134a3390381fc2ae174c33d6dbf6da1ff10fd"
+    },
+    "baked-sprite-materials/390-restored.png": {
+      "bytes": 26466,
+      "sha256": "82ec33261a6398efff97720b0ffd182b948221e0e4fd6ed73516ca73e4f969e0"
+    },
+    "baked-sprite-materials/390-zero-light.png": {
+      "bytes": 5516,
+      "sha256": "e798d21f550168437d206b2bac3497af495cd4a3f98f41eaceba58f11327703e"
+    }
+  }
+}

@@ -15,7 +15,7 @@ the requested spritesheet representation. Do not silently replace that target.
 | AN2 | Editable cape-free sources and independent skin/sole/length/support checks exist. | A convincing baked gait, grounded start/stop/turn and actual C# contact proof. Torso-transfer discontinuity remains unresolved in the live-retargeting study. |
 | AN3 | Commitment, coupled source actions, pause/death/replay and recovery logic have evidence. | Validate the baked full-body claw and its authored entry/recovery/turn/chase transitions in the actual game. |
 | AN4 | Provisional eight-view/native/phone-scale recordings exist. | An excellent final spritesheet performance and final MP4; mesh research recordings do not close this gate. |
-| AN5 | Default parity, candidate gating and shared-GPU skin research are tested. | Spritesheet material/depth/caster adoption, actual Hunt proof and measured device limits. Skin-backend success is separate evidence. |
+| AN5 | Default parity, candidate gating and bounded actual baked-sprite GPU material proof exist. Corrected source normals, 320/390px zero-light and exact frozen restoration pass through the same LightingEngine. | Final Hunt sprite depth/caster/occlusion and physical-device/performance acceptance. The material-only base-walk proof does not close contact or action gates. |
 | AN6 | Draft PR, editable sources, API and handovers are preserved remotely. | Close the above engineering/visual-proof gaps so only owner visual approval remains. AN6 is not complete. |
 
 ## What spritesheets can and cannot do
@@ -57,6 +57,13 @@ does not. New moving-claw poses must independently fit the measured crop. These
 are evidence-led sizing estimates, not a promise of phone memory/performance or
 finished material/caster support. Frame bounds, streaming/LOD and the existing
 GPU material/depth contract must be validated before accepting a final layout.
+
+The later nine-heading, sixteen-frame walk study is a larger library than the
+baseline table: its measured 66x63 guarded crop consumes 18.27 MiB per RGBA map,
+54.82 MiB for three maps **before** actions. A combined final library therefore
+needs a separately measured bounded layout; do not reuse the smaller table as
+proof that all new clips fit. The completed bounded base-walk material proof uses
+6,094,848 decoded bytes. See the [current execution receipt](spritesheet-walk-proof-20261029.md).
 
 ## Continuation order
 

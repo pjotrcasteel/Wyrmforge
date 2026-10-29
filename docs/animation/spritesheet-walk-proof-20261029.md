@@ -1,5 +1,31 @@
 # Baked sprite walk: contact and facing follow-up
 
+## Latest checkpoint — 29 October 2026
+
+The 2.5D spritesheet route remains viable for bounded source-authored whole-body
+motion and discrete transitions. AN6 is **not complete**. Current main
+`f72f4aa10` is integrated; draft #387 remains unmerged.
+
+- Shared full-frame motion-library selection, one gait clock, exact pause,
+  atomic loading, source-matched material export and shared Hunt GPU sprite
+  binding are implemented. No mandatory live character mesh is introduced.
+- Editable sources and genuine eight-view walk atlases are preserved, including
+  the separate compact-stride candidate. Its actual 390px capture remains above
+  the contact limit (1.13695 native pixels); no candidate is silently promoted.
+- Corrected Cycles normal export passes six independent analytic geometry/camera
+  render checks. Actual native 320/390px world framebuffers pass aligned map
+  inspection, zero-light RGB=0 and exact paused restoration, with no browser
+  errors. [Framebuffer evidence](evidence/20261029/baked-sprite-materials/README.md).
+- JavaScript 614/614, Application 694/694, Domain 405/405 and web compilation pass.
+  These do not establish physical-phone performance or final art acceptance.
+- Grounded start/stop/turn, non-base heading entry into the moving claw, actual
+  crossing-target/recovery/chase, combined-library texture budgeting, final Hunt
+  depth/occlusion, physical phones and the final excellent MP4 remain open.
+
+[Provisional actual C# compact-walk MP4](evidence/20261029/baked-compact-walk-provisional-390.mp4)
+uses source-lit review sprites and the existing attack fallback; it is not AN4
+acceptance. Earlier sections below preserve the failures and their resolution.
+
 The first actual Canvas encounter rendered the real eight-facing walk sheet
 without browser errors, but reported 102.88 world pixels of source-marker drift.
 It is not accepted as grounded animation.
@@ -174,4 +200,34 @@ right/up/toward. Six independently oriented analytic plane/camera render checks
 pass against geometric world/camera rotations. The material packer and primary
 albedo loader now reject the old/unverified convention. Regeneration and renewed
 framebuffer inspection are required; earlier dark captures remain rejected.
+
+Corrected regeneration and repeated actual framebuffer inspection now pass at
+both sizes; native maps and renderer diagnostics are preserved in the linked
+evidence folder. The packer also checks each source frame/view for reversed
+normal handedness, recording the actual small fraction of backfacing fold
+samples rather than assuming every covered edge points strictly forward.
+The analytic projection check remains independent of this aggregate guard.
+
+## Remaining execution order
+
+1. Finish grounded source-supported start/stop/turn and verify actual C# motion
+   at 320/390px. Do not widen the one-pixel root bound, reset contacts at every
+   clip switch or change C# movement to make the art appear to pass.
+2. Bake and assess the preserved compact full-body claw, including non-base
+   heading entry, crossing targets, recovery and chase. Current captures still
+   use the approved attack fallback; the source grid is not rendered acceptance.
+3. Measure the complete material/action/heading library against the actual
+   texture budget. The single material clip and nine-walk review pack are
+   separate bounded proofs; adding their full libraries is not yet budgeted.
+4. Extend the actual shared-GPU Hunt proof with accepted sprite frames, real
+   occlusion/depth/caster evidence, matching maps and default/reduced/WebGL
+   fallback comparison. Preserve concurrent AR/G work and the reproduced ground
+   fallback; do not invent missing source paintings.
+5. Obtain physical iOS/Android pacing, memory and thermal evidence, produce the
+   final excellent performance MP4 and complete AN6 so only owner visual approval
+   remains. No physical-phone or final-art acceptance is claimed here.
+
+The unattended continuation goal reports `usageLimited` at this checkpoint.
+No goal or milestone has been marked complete because of that limit. All
+completed slices are remotely checkpointed on the existing draft PR.
 

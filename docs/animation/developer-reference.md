@@ -44,6 +44,21 @@ LightingEngine/material/shadow registry as all other world surfaces. These are
 camera-facing sprite cutouts; no runtime character mesh is required. Sprite-plane
 shadow limitations and source depth still need explicit real-Hunt acceptance.
 Unlit primary albedo is GPU data: the Canvas draw path returns to existing art.
+
+Primary-albedo packs with normals declare `normalBasisVersion: 2`: camera
+right/up/toward, matching the receiving sprite tangent frame. The loader rejects
+the initial unverified convention. The Blender material exporter explicitly
+converts Cycles camera Z; `test_material_normal_basis.py` checks independent
+analytic world/camera rotations, and `pack_sprite_materials.py` rejects reversed
+per-frame/view handedness as well as mismatched alpha/source provenance.
+This is a normal-space contract, not a mandatory Blender/runtime-mesh dependency.
+
+Developer-only `setArenaLightingInspection(canvas, 'zero-light')` disables all
+world illumination and emission. `neutral-lit`, `neutral-albedo`,
+`neutral-normals` and `neutral-shadow-visibility` retain the declared inspection
+light. `readArenaLightingPixels` reads the existing engine framebuffer; these
+APIs never alter C# state or claim production night lighting. Reproduce the
+actual 320/390px checks with `tools/animation/check_baked_sprite_gpu.cjs`.
 Canon: [art](../canon/art-and-animation.md#universal-animation-foundation--an0an6-27-october-2026),
 [authority](../canon/architecture-and-quality.md#locked--unified-engine-ownership-and-event-authority-27-october-2026).
 

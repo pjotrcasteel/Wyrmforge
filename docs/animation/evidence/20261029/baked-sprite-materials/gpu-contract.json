@@ -1,0 +1,630 @@
+{
+  "results": [
+    {
+      "width": 320,
+      "physicalDevice": false,
+      "scope": "actual paused C# encounter; source-derived sprite materials through shared GPU; no contact/art acceptance",
+      "accepted": true,
+      "errors": [],
+      "views": {
+        "neutral-lit": {
+          "maxRGB": 204,
+          "nonblack": 257706,
+          "hash": "a5ebfaa786cd9474d74219173e3eb10d8b06cd409a68e427fc6dc48ddf77d7b2",
+          "framebuffer": [
+            298,
+            488
+          ],
+          "gpu": {
+            "backend": "WebGL2 / Three 0.186.1",
+            "view": "lit",
+            "depthSource": "developer-inspection:key",
+            "framebuffer": [
+              298,
+              488
+            ],
+            "objects": 4,
+            "lights": [
+              {
+                "id": "developer-inspection:key",
+                "ownerId": "developer-inspection",
+                "type": "point",
+                "position": [
+                  2.1729166666666666,
+                  -6.463605081973088,
+                  2
+                ],
+                "intensity": 16,
+                "shadow": true,
+                "views": 6
+              }
+            ],
+            "drawCalls": 13,
+            "triangles": 26,
+            "textures": 8,
+            "geometries": 3,
+            "inspectedReceiver": null,
+            "materialBudget": {
+              "maps": 6,
+              "transmissive": 0,
+              "ao": 0
+            },
+            "fogEnabled": false,
+            "productionPathsMigrated": 0,
+            "bakedSpriteResources": 1,
+            "bakedSpriteActors": 1
+          },
+          "lighting": {
+            "mode": "developer-neutral-inspection",
+            "darkness": 0.9,
+            "source": "developer-inspection-over-csharp-snapshot"
+          }
+        },
+        "neutral-albedo": {
+          "maxRGB": 210,
+          "nonblack": 436263,
+          "hash": "2c21783eba1d96104095aaaf1b889d066a7bbcf2d16a516fd2b462728028a330",
+          "framebuffer": [
+            298,
+            488
+          ],
+          "gpu": {
+            "backend": "WebGL2 / Three 0.186.1",
+            "view": "albedo",
+            "depthSource": "developer-inspection:key",
+            "framebuffer": [
+              298,
+              488
+            ],
+            "objects": 4,
+            "lights": [
+              {
+                "id": "developer-inspection:key",
+                "ownerId": "developer-inspection",
+                "type": "point",
+                "position": [
+                  2.1729166666666666,
+                  -6.463605081973088,
+                  2
+                ],
+                "intensity": 16,
+                "shadow": true,
+                "views": 6
+              }
+            ],
+            "drawCalls": 4,
+            "triangles": 8,
+            "textures": 8,
+            "geometries": 3,
+            "inspectedReceiver": null,
+            "materialBudget": {
+              "maps": 6,
+              "transmissive": 0,
+              "ao": 0
+            },
+            "fogEnabled": false,
+            "productionPathsMigrated": 0,
+            "bakedSpriteResources": 1,
+            "bakedSpriteActors": 1
+          },
+          "lighting": {
+            "mode": "developer-neutral-inspection",
+            "darkness": 0.9,
+            "source": "developer-inspection-over-csharp-snapshot"
+          }
+        },
+        "neutral-normals": {
+          "maxRGB": 255,
+          "nonblack": 436272,
+          "hash": "2bd6ee3a3e1280778af47ed70ecb2afe86401cccbea3af12caf6b0e77afc7e9d",
+          "framebuffer": [
+            298,
+            488
+          ],
+          "gpu": {
+            "backend": "WebGL2 / Three 0.186.1",
+            "view": "normals",
+            "depthSource": "developer-inspection:key",
+            "framebuffer": [
+              298,
+              488
+            ],
+            "objects": 4,
+            "lights": [
+              {
+                "id": "developer-inspection:key",
+                "ownerId": "developer-inspection",
+                "type": "point",
+                "position": [
+                  2.1729166666666666,
+                  -6.463605081973088,
+                  2
+                ],
+                "intensity": 16,
+                "shadow": true,
+                "views": 6
+              }
+            ],
+            "drawCalls": 4,
+            "triangles": 8,
+            "textures": 8,
+            "geometries": 3,
+            "inspectedReceiver": null,
+            "materialBudget": {
+              "maps": 6,
+              "transmissive": 0,
+              "ao": 0
+            },
+            "fogEnabled": false,
+            "productionPathsMigrated": 0,
+            "bakedSpriteResources": 1,
+            "bakedSpriteActors": 1
+          },
+          "lighting": {
+            "mode": "developer-neutral-inspection",
+            "darkness": 0.9,
+            "source": "developer-inspection-over-csharp-snapshot"
+          }
+        },
+        "neutral-shadow-visibility": {
+          "maxRGB": 255,
+          "nonblack": 434379,
+          "hash": "640f9f3b547305f9ef4326c646310808eb25ccb9d287a0ff1189157238cab1d2",
+          "framebuffer": [
+            298,
+            488
+          ],
+          "gpu": {
+            "backend": "WebGL2 / Three 0.186.1",
+            "view": "shadow-visibility",
+            "depthSource": "developer-inspection:key",
+            "framebuffer": [
+              298,
+              488
+            ],
+            "objects": 4,
+            "lights": [
+              {
+                "id": "developer-inspection:key",
+                "ownerId": "developer-inspection",
+                "type": "point",
+                "position": [
+                  2.1729166666666666,
+                  -6.463605081973088,
+                  2
+                ],
+                "intensity": 16,
+                "shadow": true,
+                "views": 6
+              }
+            ],
+            "drawCalls": 4,
+            "triangles": 8,
+            "textures": 8,
+            "geometries": 3,
+            "inspectedReceiver": null,
+            "materialBudget": {
+              "maps": 6,
+              "transmissive": 0,
+              "ao": 0
+            },
+            "fogEnabled": false,
+            "productionPathsMigrated": 0,
+            "bakedSpriteResources": 1,
+            "bakedSpriteActors": 1
+          },
+          "lighting": {
+            "mode": "developer-neutral-inspection",
+            "darkness": 0.9,
+            "source": "developer-inspection-over-csharp-snapshot"
+          }
+        },
+        "zero-light": {
+          "maxRGB": 0,
+          "nonblack": 0,
+          "hash": "32c036bcbd89f00d8c8cfce9fcf3bdc8d7bd696faa9f3d48e43fb2e182b3fcb0",
+          "framebuffer": [
+            298,
+            488
+          ],
+          "gpu": {
+            "backend": "WebGL2 / Three 0.186.1",
+            "view": "lit",
+            "depthSource": null,
+            "framebuffer": [
+              298,
+              488
+            ],
+            "objects": 4,
+            "lights": [],
+            "drawCalls": 4,
+            "triangles": 8,
+            "textures": 7,
+            "geometries": 3,
+            "inspectedReceiver": null,
+            "materialBudget": {
+              "maps": 6,
+              "transmissive": 0,
+              "ao": 0
+            },
+            "fogEnabled": false,
+            "productionPathsMigrated": 0,
+            "bakedSpriteResources": 1,
+            "bakedSpriteActors": 1
+          },
+          "lighting": {
+            "mode": "developer-zero-light-inspection",
+            "darkness": 0.9,
+            "source": "developer-inspection-over-csharp-snapshot"
+          }
+        },
+        "restored": {
+          "maxRGB": 204,
+          "nonblack": 257706,
+          "hash": "a5ebfaa786cd9474d74219173e3eb10d8b06cd409a68e427fc6dc48ddf77d7b2",
+          "framebuffer": [
+            298,
+            488
+          ],
+          "gpu": {
+            "backend": "WebGL2 / Three 0.186.1",
+            "view": "lit",
+            "depthSource": "developer-inspection:key",
+            "framebuffer": [
+              298,
+              488
+            ],
+            "objects": 4,
+            "lights": [
+              {
+                "id": "developer-inspection:key",
+                "ownerId": "developer-inspection",
+                "type": "point",
+                "position": [
+                  2.1729166666666666,
+                  -6.463605081973088,
+                  2
+                ],
+                "intensity": 16,
+                "shadow": true,
+                "views": 6
+              }
+            ],
+            "drawCalls": 13,
+            "triangles": 26,
+            "textures": 8,
+            "geometries": 3,
+            "inspectedReceiver": null,
+            "materialBudget": {
+              "maps": 6,
+              "transmissive": 0,
+              "ao": 0
+            },
+            "fogEnabled": false,
+            "productionPathsMigrated": 0,
+            "bakedSpriteResources": 1,
+            "bakedSpriteActors": 1
+          },
+          "lighting": {
+            "mode": "developer-neutral-inspection",
+            "darkness": 0.9,
+            "source": "developer-inspection-over-csharp-snapshot"
+          }
+        }
+      }
+    },
+    {
+      "width": 390,
+      "physicalDevice": false,
+      "scope": "actual paused C# encounter; source-derived sprite materials through shared GPU; no contact/art acceptance",
+      "accepted": true,
+      "errors": [],
+      "views": {
+        "neutral-lit": {
+          "maxRGB": 204,
+          "nonblack": 308154,
+          "hash": "8cd4ce05f5ceba70621110857227562d8536ce8022e960abb2bf7f36b7a0e8af",
+          "framebuffer": [
+            368,
+            488
+          ],
+          "gpu": {
+            "backend": "WebGL2 / Three 0.186.1",
+            "view": "lit",
+            "depthSource": "developer-inspection:key",
+            "framebuffer": [
+              368,
+              488
+            ],
+            "objects": 4,
+            "lights": [
+              {
+                "id": "developer-inspection:key",
+                "ownerId": "developer-inspection",
+                "type": "point",
+                "position": [
+                  2.683333333333333,
+                  -6.463605081973088,
+                  2
+                ],
+                "intensity": 16,
+                "shadow": true,
+                "views": 6
+              }
+            ],
+            "drawCalls": 13,
+            "triangles": 26,
+            "textures": 8,
+            "geometries": 3,
+            "inspectedReceiver": null,
+            "materialBudget": {
+              "maps": 6,
+              "transmissive": 0,
+              "ao": 0
+            },
+            "fogEnabled": false,
+            "productionPathsMigrated": 0,
+            "bakedSpriteResources": 1,
+            "bakedSpriteActors": 1
+          },
+          "lighting": {
+            "mode": "developer-neutral-inspection",
+            "darkness": 0.9,
+            "source": "developer-inspection-over-csharp-snapshot"
+          }
+        },
+        "neutral-albedo": {
+          "maxRGB": 210,
+          "nonblack": 538743,
+          "hash": "ebcca88df6f0430b8d613e3be4f9870f4305a250482d016e0057c64ed570c723",
+          "framebuffer": [
+            368,
+            488
+          ],
+          "gpu": {
+            "backend": "WebGL2 / Three 0.186.1",
+            "view": "albedo",
+            "depthSource": "developer-inspection:key",
+            "framebuffer": [
+              368,
+              488
+            ],
+            "objects": 4,
+            "lights": [
+              {
+                "id": "developer-inspection:key",
+                "ownerId": "developer-inspection",
+                "type": "point",
+                "position": [
+                  2.683333333333333,
+                  -6.463605081973088,
+                  2
+                ],
+                "intensity": 16,
+                "shadow": true,
+                "views": 6
+              }
+            ],
+            "drawCalls": 4,
+            "triangles": 8,
+            "textures": 8,
+            "geometries": 3,
+            "inspectedReceiver": null,
+            "materialBudget": {
+              "maps": 6,
+              "transmissive": 0,
+              "ao": 0
+            },
+            "fogEnabled": false,
+            "productionPathsMigrated": 0,
+            "bakedSpriteResources": 1,
+            "bakedSpriteActors": 1
+          },
+          "lighting": {
+            "mode": "developer-neutral-inspection",
+            "darkness": 0.9,
+            "source": "developer-inspection-over-csharp-snapshot"
+          }
+        },
+        "neutral-normals": {
+          "maxRGB": 255,
+          "nonblack": 538752,
+          "hash": "585e0aabb51da34eebd16c3a318b72eeba9260a273f047e3e2a4807b12a57874",
+          "framebuffer": [
+            368,
+            488
+          ],
+          "gpu": {
+            "backend": "WebGL2 / Three 0.186.1",
+            "view": "normals",
+            "depthSource": "developer-inspection:key",
+            "framebuffer": [
+              368,
+              488
+            ],
+            "objects": 4,
+            "lights": [
+              {
+                "id": "developer-inspection:key",
+                "ownerId": "developer-inspection",
+                "type": "point",
+                "position": [
+                  2.683333333333333,
+                  -6.463605081973088,
+                  2
+                ],
+                "intensity": 16,
+                "shadow": true,
+                "views": 6
+              }
+            ],
+            "drawCalls": 4,
+            "triangles": 8,
+            "textures": 8,
+            "geometries": 3,
+            "inspectedReceiver": null,
+            "materialBudget": {
+              "maps": 6,
+              "transmissive": 0,
+              "ao": 0
+            },
+            "fogEnabled": false,
+            "productionPathsMigrated": 0,
+            "bakedSpriteResources": 1,
+            "bakedSpriteActors": 1
+          },
+          "lighting": {
+            "mode": "developer-neutral-inspection",
+            "darkness": 0.9,
+            "source": "developer-inspection-over-csharp-snapshot"
+          }
+        },
+        "neutral-shadow-visibility": {
+          "maxRGB": 255,
+          "nonblack": 536655,
+          "hash": "1c413c3a611c131509fac34f3c6aba1b1b9d96fd59ed219c128b4efe1d8cc563",
+          "framebuffer": [
+            368,
+            488
+          ],
+          "gpu": {
+            "backend": "WebGL2 / Three 0.186.1",
+            "view": "shadow-visibility",
+            "depthSource": "developer-inspection:key",
+            "framebuffer": [
+              368,
+              488
+            ],
+            "objects": 4,
+            "lights": [
+              {
+                "id": "developer-inspection:key",
+                "ownerId": "developer-inspection",
+                "type": "point",
+                "position": [
+                  2.683333333333333,
+                  -6.463605081973088,
+                  2
+                ],
+                "intensity": 16,
+                "shadow": true,
+                "views": 6
+              }
+            ],
+            "drawCalls": 4,
+            "triangles": 8,
+            "textures": 8,
+            "geometries": 3,
+            "inspectedReceiver": null,
+            "materialBudget": {
+              "maps": 6,
+              "transmissive": 0,
+              "ao": 0
+            },
+            "fogEnabled": false,
+            "productionPathsMigrated": 0,
+            "bakedSpriteResources": 1,
+            "bakedSpriteActors": 1
+          },
+          "lighting": {
+            "mode": "developer-neutral-inspection",
+            "darkness": 0.9,
+            "source": "developer-inspection-over-csharp-snapshot"
+          }
+        },
+        "zero-light": {
+          "maxRGB": 0,
+          "nonblack": 0,
+          "hash": "936510de517b6011a0194fefeed1963af20d8afd9518d4f7cbf6dbd2ecaf34d5",
+          "framebuffer": [
+            368,
+            488
+          ],
+          "gpu": {
+            "backend": "WebGL2 / Three 0.186.1",
+            "view": "lit",
+            "depthSource": null,
+            "framebuffer": [
+              368,
+              488
+            ],
+            "objects": 4,
+            "lights": [],
+            "drawCalls": 4,
+            "triangles": 8,
+            "textures": 7,
+            "geometries": 3,
+            "inspectedReceiver": null,
+            "materialBudget": {
+              "maps": 6,
+              "transmissive": 0,
+              "ao": 0
+            },
+            "fogEnabled": false,
+            "productionPathsMigrated": 0,
+            "bakedSpriteResources": 1,
+            "bakedSpriteActors": 1
+          },
+          "lighting": {
+            "mode": "developer-zero-light-inspection",
+            "darkness": 0.9,
+            "source": "developer-inspection-over-csharp-snapshot"
+          }
+        },
+        "restored": {
+          "maxRGB": 204,
+          "nonblack": 308154,
+          "hash": "8cd4ce05f5ceba70621110857227562d8536ce8022e960abb2bf7f36b7a0e8af",
+          "framebuffer": [
+            368,
+            488
+          ],
+          "gpu": {
+            "backend": "WebGL2 / Three 0.186.1",
+            "view": "lit",
+            "depthSource": "developer-inspection:key",
+            "framebuffer": [
+              368,
+              488
+            ],
+            "objects": 4,
+            "lights": [
+              {
+                "id": "developer-inspection:key",
+                "ownerId": "developer-inspection",
+                "type": "point",
+                "position": [
+                  2.683333333333333,
+                  -6.463605081973088,
+                  2
+                ],
+                "intensity": 16,
+                "shadow": true,
+                "views": 6
+              }
+            ],
+            "drawCalls": 13,
+            "triangles": 26,
+            "textures": 8,
+            "geometries": 3,
+            "inspectedReceiver": null,
+            "materialBudget": {
+              "maps": 6,
+              "transmissive": 0,
+              "ao": 0
+            },
+            "fogEnabled": false,
+            "productionPathsMigrated": 0,
+            "bakedSpriteResources": 1,
+            "bakedSpriteActors": 1
+          },
+          "lighting": {
+            "mode": "developer-neutral-inspection",
+            "darkness": 0.9,
+            "source": "developer-inspection-over-csharp-snapshot"
+          }
+        }
+      }
+    }
+  ]
+}
