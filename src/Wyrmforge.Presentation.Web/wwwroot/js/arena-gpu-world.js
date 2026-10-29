@@ -70,6 +70,7 @@ export class HuntGpuWorld {
         this.used = new Set();
         this.dirtyTextures = new Set();
         this.lastFrameUploads = { dynamicTextures: 0, dynamicPixels: 0 };
+        this.lastFrameTopUploads = [];
     }
     /** Preloaded art textures and authored geometry are registered once, not captured each frame. */
     registerAssetTexture(id, texture, colorData = true) {
@@ -94,6 +95,7 @@ export class HuntGpuWorld {
     }
     diagnostics() {
         return { ...this.engine.diagnostics(), quality: this.quality, textureUploads: this.lastFrameUploads,
+            largestDynamicUploads: this.lastFrameTopUploads,
             authoredTextures: this.engine.textures.size - this.layers.size, canvasCaptures: this.layers.size,
             // CPU submission only. True GPU time, thermals and battery need physical devices.
             submissionCpu: this.submissionCpu ?? { frames: 0, lastMs: 0, meanMs: 0, peakMs: 0 } };
@@ -164,10 +166,18 @@ export class HuntGpuWorld {
                     mesh.material[mapKey].needsUpdate = true;
             }
         }
+        const uploaded = [];
         for (const id of this.dirtyTextures) {
             const pixels = this.layers.get(id)?.pixels;
-            if (pixels) updatedPixels += pixels.width * pixels.height;
+            if (!pixels) continue;
+            const count = pixels.width * pixels.height;
+            updatedPixels += count;
+            uploaded.push({ id, width: pixels.width, height: pixels.height, pixels: count });
         }
+        // Report resource cost by generic ID: the engine neither knows nor cares
+        // whether a surface came from a tree, actor, ground layer or VFX atlas.
+        this.lastFrameTopUploads = uploaded.sort((a, b) => b.pixels - a.pixels ||
+            a.id.localeCompare(b.id)).slice(0, 5);
         this.lastFrameUploads = { dynamicTextures: this.dirtyTextures.size, dynamicPixels: updatedPixels };
         this.dirtyTextures.clear();
         engine.halfWidth = this.width / UNIT / 2;
