@@ -11,7 +11,8 @@ export function replayUnifiedClaw(profile,{rates=[15,30,60,120],entryPhases=[0,.
     if(!grid||grid.travel!=='facing-projection'||!grid.stanceVelocityByDirection){
         throw new TypeError('Authored whole-body moving-claw grid with measured travel required');
     }
-    if(!paths.length||paths.some(p=>!['forward','lateral','crossing'].includes(p)))throw new RangeError('Invalid source motion path');
+    if(!rates.length||!entryPhases.length||!paths.length)throw new RangeError('Claw replay matrix must contain cases');
+    if(paths.some(p=>!['forward','lateral','crossing'].includes(p)))throw new RangeError('Invalid source motion path');
     const directions=profile.facing.directions,results=[];
     for(const hz of rates){
         if(!Number.isSafeInteger(hz)||hz<=0)throw new RangeError('Positive integer source replay rate required');
