@@ -252,11 +252,12 @@ def author_motion(rig, body, original_low):
                                  frame=frame,group=bone.name)
         rig.pose.bones["H_Root"].keyframe_insert(data_path="location",frame=frame,
                                                  group="H_Root")
-        footsteps.append({"frame":frame,"ground_z":round(float(low.z),5)})
+        footsteps.append({"frame":frame,"ground_z":round(float(low.z),5),
+                          "root_correction":round(delta,6)})
     # Seamless loop on true original bone controls, not a sprite crossfade.
     scene.frame_set(49)
     set_pose(rig,0)
-    rig.pose.bones["H_Root"].location.z=footsteps[0]["ground_z"]-original_low.z
+    rig.pose.bones["H_Root"].location.z=footsteps[0]["root_correction"]
     for bone in rig.pose.bones:
         bone.keyframe_insert(data_path="rotation_quaternion",frame=49,group=bone.name)
     rig.pose.bones["H_Root"].keyframe_insert(data_path="location",frame=49,
