@@ -103,6 +103,42 @@ test('static cloister walls reuse GPU texture uploads across render frames and c
 });
 
 
+test('animated territory walls upload only on actual rune changes, gate changes and atlas reloads', () => {
+    const barrier = { kind: 'ruin', x: .1, y: .3, width: .4, height: .035, open: false };
+    const layer = { kind: 'masonry', style: 'territory', barrier,
+        width: 1280, height: 1600, wallStyle: 'valley', school: 'fire', seconds: 0 };
+    const original = structuredClone(layer);
+    const base = huntLayerRevision(layer, true, 7);
+    assert.ok(base);
+    assert.equal(base, huntLayerRevision({ ...layer, seconds: .0001 }, true, 7),
+        'Subframe phase drift cannot trigger redundant texture uploads');
+    assert.notEqual(base, huntLayerRevision({ ...layer, school: 'frost' }, true, 7),
+        'School swap must change atlas material appearance');
+    assert.notEqual(base, huntLayerRevision(layer, true, 8),
+        'Reloaded authored atlas must invalidate the GPU capture');
+    assert.notEqual(base, huntLayerRevision({ ...layer, barrier: { ...barrier, kind: 'gate' } }, true, 7),
+        'A gate must replace its rune arrangement and stone silhouette');
+    assert.equal(huntLayerRevision(layer, false, 7), undefined,
+        'Unloaded art must not be cached as a complete territory wall');
+    const transition = Array.from({ length: 2000 }, (_, i) => (i + 1) * .05)
+        .find(seconds => huntLayerRevision({ ...layer, seconds }, true, 7) !== base);
+    assert.ok(Number.isFinite(transition), 'A real animated rune must eventually change its authored frame');
+    const next = huntLayerRevision({ ...layer, seconds: transition }, true, 7);
+    assert.notEqual(next, base, 'Lit/dim transitions must invalidate immediately');
+
+    const c = fakeCapture();
+    c.capture(base);
+    c.world.dirtyTextures.clear();
+    c.capture(huntLayerRevision({ ...layer, seconds: .0001 }, true, 7));
+    assert.equal(c.drawings, 1);
+    assert.equal(c.world.dirtyTextures.size, 0, 'No upload between rune transitions');
+    c.capture(next);
+    assert.equal(c.drawings, 2, 'The changed rune is repainted exactly once');
+    assert.deepEqual([...c.world.dirtyTextures], ['prop']);
+    assert.deepEqual(layer, original, 'GPU presentation cannot mutate authoritative barriers');
+});
+
+
 test('shared scratch canvas keeps bitmap allocation and isolates world-space paint state', () => {
     const calls = [], resets = [];
     const ctx = {
