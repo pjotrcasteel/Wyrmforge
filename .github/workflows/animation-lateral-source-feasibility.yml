@@ -12,7 +12,8 @@ permissions:
   contents: read
 concurrency:
   group: animation-lateral-gait-feasibility-${{ github.ref }}
-  cancel-in-progress: true
+  # Long-running Blender contact studies must finish even when new commits land.
+  cancel-in-progress: false
 jobs:
   test-orthogonal-source-gait:
     name: Orthogonal ${{ matrix.mode }} ${{ matrix.heading }} degrees
