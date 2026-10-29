@@ -8,6 +8,15 @@ on:
       - 'tools/animation/render_saved_clips.py'
       - 'tools/animation/export_atlases.py'
       - 'tools/animation/check_baked_atlas_budget.mjs'
+      - 'tools/animation/check_baked_turn_entry.py'
+      - 'tools/animation/replay_unified_baked.mjs'
+      - 'tools/animation/runtime_profile.py'
+      - 'tools/animation/kinematics.py'
+      - 'tools/animation/source_contacts.py'
+      - 'tools/animation/capture-hunt.cjs'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/sprite-animation.js'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/hollow-sprites.js'
+      - 'art/source/animation-foundation/baked-compact-claw-20261029/**'
   workflow_dispatch:
 permissions:
   contents: read
