@@ -5,6 +5,10 @@ public sealed record PlayerRenderSnapshot(double X, double Y, double Radius, boo
     public double AimAngle { get; init; }
     public bool ManualAim { get; init; }
     public int? AimTargetId { get; init; }
+    public int? AimPropId { get; init; }
+
+    /// <summary>The primary school selected by the C# run; authoritative for school-specific target-sigil artwork.</summary>
+    public string ActiveSchool { get; init; } = "Arcane";
 
     public int FocusCharge { get; init; }
 

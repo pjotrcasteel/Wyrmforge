@@ -12,11 +12,12 @@ public sealed partial class RunSimulation
     {
         if(delta<=0)return ashfangFlight.Active;
         var completed=ashfangFlight.Tick(delta);
+        var observedTarget=KnownAshfangTarget(active);
         if(!ashfangFlight.Active)
         {
-            if(!completed||ashfangBehavior.Committed)return false;
+            if(!completed||ashfangBehavior.Committed||ashfangAgent is not null && ashfangAgent.Perception.Inspect().Contact is null)return false;
             var margin=active.Radius+24;
-            var landing=new Vector2D(Math.Clamp(player.Position.X,margin,Math.Max(margin,arenaWidth-margin)),Math.Clamp(player.Position.Y-150,margin,Math.Max(margin,arenaHeight-margin)));
+            var landing=new Vector2D(Math.Clamp(observedTarget.X,margin,Math.Max(margin,arenaWidth-margin)),Math.Clamp(observedTarget.Y-150,margin,Math.Max(margin,arenaHeight-margin)));
             if(arenaEnvironment is not null)landing=arenaEnvironment.RestrictMovement(active.Position,landing,arenaWidth,arenaHeight,active.Radius);
             ashfangFlight.Begin(active.Position,landing);ashfangBehavior.Interrupt();active.TelegraphRemaining=0;dragonHuntHazards.Clear();ashfangRainRemaining=.25;
             return true;
@@ -26,7 +27,7 @@ public sealed partial class RunSimulation
             if(ashfangFlight.Stage=="overhead")
             {
                 var margin=active.Radius+24;
-                var landing=new Vector2D(Math.Clamp(player.Position.X,margin,Math.Max(margin,arenaWidth-margin)),Math.Clamp(player.Position.Y,margin,Math.Max(margin,arenaHeight-margin)));
+                var landing=new Vector2D(Math.Clamp(observedTarget.X,margin,Math.Max(margin,arenaWidth-margin)),Math.Clamp(observedTarget.Y,margin,Math.Max(margin,arenaHeight-margin)));
                 if(arenaEnvironment is not null)landing=arenaEnvironment.RestrictMovement(ashfangFlight.Origin,landing,arenaWidth,arenaHeight,active.Radius);
                 ashfangFlight.LockLanding(landing);
             }
@@ -52,7 +53,7 @@ public sealed partial class RunSimulation
                 // The paired scatter strike leaves most of the arena open.
                 var pressure=dragonHuntState.Profile!.Pressure;
                 var radius=Math.Min(52,pressure.Radius.For(active.Phase)*.55);
-                dragonHuntHazards.Add(new DragonHuntHazardState(player.Position,radius,pressure.Damage.For(active.Phase)*depthState.DragonDamageMultiplier,1.05,0,SpellId.FireBolt,active.Definition.School,null,true));
+                dragonHuntHazards.Add(new DragonHuntHazardState(observedTarget,radius,pressure.Damage.For(active.Phase)*depthState.DragonDamageMultiplier,1.05,0,SpellId.FireBolt,active.Definition.School,null,true));
                 var scatter=RandomArenaPosition(arenaWidth,arenaHeight,radius);
                 dragonHuntHazards.Add(new DragonHuntHazardState(scatter,radius,pressure.Damage.For(active.Phase)*depthState.DragonDamageMultiplier,1.15,0,SpellId.FireBolt,active.Definition.School,null,true));
             }

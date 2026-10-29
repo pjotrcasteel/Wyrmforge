@@ -52,7 +52,7 @@
     </section>
     </details>
     <section class="hunt-lab-surface" aria-label="Live developer Wyrm encounter">
-        <canvas @ref="canvas" class="hunt-lab-canvas" aria-label="Automated live Wyrm arena"></canvas>
+        <canvas @ref="canvas" class="hunt-lab-canvas" aria-label="Automated live Wyrm arena" data-arena-module="@ArenaModulePath"></canvas>
         <div class="hunt-lab-stage" aria-live="polite">
             <strong>@status</strong>
             <span>@(paused ? "PAUSED" : ManualControl ? invulnerable ? "LIVE CONTROLS • INVULNERABLE PRACTICE" : "LIVE CONTROLS • FULL DAMAGE" : invulnerable ? "AUTOPILOT • PRACTICE • NO PROGRESS" : "AUTOPILOT • FULL DAMAGE • NO PROGRESS")</span>
@@ -61,12 +61,35 @@
     <p class="hunt-lab-note">This uses the game's real canvas renderer for cinematic inspection. The agent may lose when invulnerability is disabled. Balance Lab measures repeatable portrait/landscape outcomes independently; an autopilot is not proof of human comfort or fun.</p>
 </main>
 
+@if (AdaptiveAgents)
+{
+    <details class="boss-agent-panel"><summary>Boss AI inspector</summary>
+        <button @onclick="InspectBoss">Refresh boss AI inspector</button>
+        <pre data-testid="boss-agent-inspector">@bossInspection</pre>
+    </details>
+}
+
 @code {
+    private string bossInspection = "";
+    private void InspectBoss() => bossInspection = System.Text.Json.JsonSerializer.Serialize(
+        new
+        {
+            Agent = simulation?.InspectBossAgent(),
+            Adaptation = simulation?.InspectBossAdaptation(),
+            HunterHealthPressure = new
+            {
+                Total = simulation?.InspectAgentPerformance().TotalHunterHealthDamage ?? 0,
+                PeakPerTick = simulation?.InspectAgentPerformance().MaximumHunterHealthDamagePerStep ?? 0
+            }
+        },
+        new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
     [Inject] private IJSRuntime JavaScript { get; set; } = null!;
     [Parameter, SupplyParameterFromQuery(Name = "wyrm")] public string? WyrmQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "ascendant")] public bool? AscendantQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "phase")] public int? PhaseQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "seed")] public int? SeedQuery { get; set; }
+
+    private static string ArenaModulePath => $"./js/arena.js?v={AppBuildInfo.Version}-{AppBuildInfo.Commit}";
 
     private ElementReference canvas;
     private IJSObjectReference? arenaModule;
@@ -83,6 +106,7 @@
     private bool invulnerable;
     [Parameter, SupplyParameterFromQuery(Name = "play")] public bool ManualControl { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "cast")] public bool? CastingQuery { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "ai5")] public bool AdaptiveAgents { get; set; }
     private bool Casting = true;
     private bool paused;
     private string status = "PREPARING THE WYRMREALM";
@@ -102,20 +126,20 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
-        arenaModule = await JavaScript.InvokeAsync<IJSObjectReference>("import", "./js/arena.js");
+        arenaModule = await JavaScript.InvokeAsync<IJSObjectReference>("import", ArenaModulePath);
         reference = DotNetObjectReference.Create(this);
         await arenaModule.InvokeVoidAsync("initializeArena", canvas, reference);
     }
 
     [JSInvokable]
-    public Task<RunRenderSnapshot> Frame(double delta, double width, double height, double movementX, double movementY, double aimX = 0, double aimY = 0)
+    public Task<RunRenderSnapshot> Frame(double delta, double width, double height, double movementX, double movementY, double aimX = 0, double aimY = 0, int? focusPropId = null, bool stickSnap = false)
     {
         if (simulation is null) CreateEncounter(width, height);
         var current = simulation!;
         var snapshot = current.CreateSnapshot();
         if (paused || current.IsEnded || snapshot.Dragon is null) return Task.FromResult(snapshot with { Paused = paused || snapshot.Paused, PresentationPaused = paused });
         var observation = new RunAgentObservation(snapshot, [], [], [], [], [], current.Depth, 0, false);
-        snapshot = current.Tick(delta, ManualControl ? new MovementInput(movementX, movementY, aimX, aimY) : agent!.ChooseMovement(observation), width, height);
+        snapshot = current.Tick(delta, ManualControl ? new MovementInput(movementX, movementY, aimX, aimY, focusPropId, stickSnap) : agent!.ChooseMovement(observation), width, height);
         var nextStatus = snapshot.Dragon is { } boss ? $"{boss.Name} • P{boss.Phase} • {Math.Ceiling(boss.Health)} HP"
             : current.CreateEvaluationSummary().DragonIds.Contains(selectedWyrm) ? "WYRM DEFEATED • NO TROPHY AWARDED" : "ENCOUNTER COMPLETE";
         if (current.IsEnded) nextStatus = "AGENT DEFEATED • RESTART TO WATCH AGAIN";
@@ -140,7 +164,7 @@
         var build = SelfPlayBuildCatalog.All.First();
         var nodes = loadout == "stress" ? build.SelectedNodes : new HashSet<string>();
         var setup = new DevelopmentHuntSetup(wyrm, variant == "ascendant" && AscendantRiteCatalog.IsAvailable(wyrm), phase, spell, seed,
-            Math.Max(240, width), Math.Max(240, height), invulnerable) { Casting = Casting, Environment = true, BossReadySpell = loadout == "stress" };
+            Math.Max(240, width), Math.Max(240, height), invulnerable) { AdaptiveAgents = AdaptiveAgents, Casting = Casting, Environment = true, BossReadySpell = loadout == "stress" };
         simulation = new RunSimulationFactory(new SeededRandomSource(1)).CreateDevelopmentHunt(nodes, setup);
         agent = new HeuristicRunAgent(personality, seed, build.PreferredSchool);
         status = $"INVOCATION • {(setup.Ascendant ? "ASCENDANT " : string.Empty)}{wyrm}";

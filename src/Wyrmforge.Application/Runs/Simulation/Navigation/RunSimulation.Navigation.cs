@@ -128,6 +128,8 @@ public sealed partial class RunSimulation
 
     private void ClearMapEncounterField(bool preserveEnvironment = false)
     {
+        selectedPropId = null;
+        aimedPropId = null;
         entryGraceRemaining = 0;
         powerBurstRemaining = 0;
         CollectLooseExperienceShards();
@@ -149,6 +151,7 @@ public sealed partial class RunSimulation
         splashPulses.Clear();
         elementalImpacts.Clear();
         deathBursts.Clear();
+        damageNumbers.Clear();
         unstableRiftState.Reset();
         encounterPlan = null;
         encounterPlanIndex = 0;

@@ -12,6 +12,8 @@ on:
       - 'Wyrmforge.slnx'
       - 'Directory.Build.props'
       - '.github/workflows/**'
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -23,6 +25,34 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Determine art and simulation regression scope
+        id: scope
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          if [[ -z "$BASE_REF" ]]; then
+            echo "art=true" >> "$GITHUB_OUTPUT"
+            echo "balance=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git diff --name-only "origin/$BASE_REF...HEAD" > "$RUNNER_TEMP/changed-files.txt"
+          echo "Changes in this PR:"
+          cat "$RUNNER_TEMP/changed-files.txt"
+          # Unrecognized scope is conservative: only known presentation/test-only
+          # changes skip art or simulation checks.
+          if grep -Eq '^(art/|tools/art/|tools/sprite-lab/|src/Wyrmforge.Presentation.Web/wwwroot/(art/|sprite-lab/)|\.github/workflows/csharp\.yml)' "$RUNNER_TEMP/changed-files.txt"; then
+            echo "art=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "art=false" >> "$GITHUB_OUTPUT"
+          fi
+          if grep -Eq '^(src/Wyrmforge\.(Application|Domain|BalanceLab)/|tests/Wyrmforge\.(Application|Domain)\.Tests/|\.github/workflows/csharp\.yml)' "$RUNNER_TEMP/changed-files.txt"; then
+            echo "balance=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "balance=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Use preinstalled .NET 10 SDK
         run: |
@@ -34,6 +64,7 @@ jobs:
         run: dotnet restore Wyrmforge.slnx
 
       - name: Verify reproducible sprite atlases
+        if: steps.scope.outputs.art == 'true'
         run: |
           python3 -m pip install -r tools/art/painted-requirements.txt
           python3 tools/art/build_grass_moss_art_candidates.py --output src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-source-backed/v1/grass-moss-art-candidates
@@ -80,20 +111,24 @@ jobs:
         run: dotnet publish src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -c Release --no-restore
 
       - name: Run quick balance sample
+        if: steps.scope.outputs.balance == 'true'
         run: |
           dotnet run --project src/Wyrmforge.BalanceLab/Wyrmforge.BalanceLab.csproj -c Release --no-build --             --runs-per-combination 2             --max-seconds 240             --output artifacts/balance-quick
 
       - name: Run portrait first-hunt samples
+        if: steps.scope.outputs.balance == 'true'
         run: |
           dotnet run --project src/Wyrmforge.BalanceLab -c Release --no-build -- --fresh-hunter --arena-width 390 --arena-height 700 --runs-per-combination 4 --seed-start 9100 --max-seconds 180 --output artifacts/balance-quick/fresh-portrait
           dotnet run --project src/Wyrmforge.BalanceLab -c Release --no-build -- --arena-width 390 --arena-height 700 --runs-per-combination 3 --seed-start 9100 --max-seconds 180 --output artifacts/balance-quick/established-portrait
 
       - name: Run extended portrait hunts
+        if: steps.scope.outputs.balance == 'true'
         run: |
           dotnet run --project src/Wyrmforge.BalanceLab -c Release --no-build -- --fresh-hunter --arena-width 390 --arena-height 700 --runs-per-combination 4 --seed-start 9100 --max-seconds 360 --output artifacts/balance-quick/fresh-extended
           dotnet run --project src/Wyrmforge.BalanceLab -c Release --no-build -- --arena-width 390 --arena-height 700 --runs-per-combination 3 --seed-start 9100 --max-seconds 360 --output artifacts/balance-quick/established-extended
 
       - name: Upload quick balance evidence
+        if: steps.scope.outputs.balance == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: wyrmforge-balance-quick-${{ github.sha }}

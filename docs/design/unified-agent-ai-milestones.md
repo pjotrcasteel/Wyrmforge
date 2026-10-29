@@ -23,7 +23,7 @@ Each agent has a stable identity, archetype/faction, sensing profile, short-term
 
 ### AI0 — Agent foundation and simulation contract
 
-**Implementation checkpoint, 25 October 2026:** [PR #348](https://github.com/pjotrcasteel/Wyrmforge/pull/348) supplies the common C# core, Hollow/Mire Hound compatibility adapters, replay tests and real enemy-lab inspector. Local exit evidence is recorded in [AI0 foundation](../engineering/ai0-foundation.md). This is opt-in and not yet merged; CI remains a merge gate. AI1–AI6 remain open.
+**Implementation checkpoint, 25 October 2026:** [PR #348](https://github.com/pjotrcasteel/Wyrmforge/pull/348) supplies the common C# core, Hollow/Mire Hound compatibility adapters, replay tests and real enemy-lab inspector. Local exit evidence is recorded in [AI0 foundation](../engineering/ai0-foundation.md). AI0 and AI1 are merged (#348, #362), with opt-in rollout. AI2–AI6 implementation continues in [PR #364](https://github.com/pjotrcasteel/Wyrmforge/pull/364). See [implementation and acceptance evidence](../engineering/ai2-ai6-implementation.md); automated implementation evidence is distinct from mobile/gameplay acceptance.
 
 - Inventory existing Town NPC and enemy/Wyrm behavior paths; define migration/adapters without replacing live behavior prematurely.
 - Build common agent identity, lifecycle, blackboard, observations, goal/action interfaces, seeded scheduler and deterministic test harness.
@@ -66,6 +66,12 @@ Each agent has a stable identity, archetype/faction, sensing profile, short-term
 - Run balance/playtesting across early hunts, advanced hunts and Wyrm encounters; ship behind flags with fallback.
 - **Exit:** validated mobile budgets, combat fairness, stable Town behavior, reproducible regression suite and gameplay sign-off.
 
+### AI-LAB — shared engine playground (AI6 exit deliverable, 29 October 2026)
+
+The single first engine lab is `/engine-labs/ai` (hub: `/engine-labs`). It must reuse actual AI0–AI6 opt-in scenarios rather than simulate fake decisions in the presentation shell: Town residents with the approved painted 2D scene, earned perception, reactive tactics, eight-agent pressure, encounter-local elite adaptation, Ashfang's authored phase II and a bounded 64-agent stress case. Expose repeatable seed options where existing simulations support them, visible inspectors and trace/performance state, a true legacy fallback, and the option to open the full real scene on a phone. The Town seed remains governed by the existing Town simulator and is not overwritten by the lab seed input.
+
+**Exit:** independently navigable lab URLs for every engine, AI scenario selection and restart tests at 390px, actual simulation/diagnostic browser evidence, no save/gameplay-authority regression, sensible mobile resource use, and physical iPhone/Android plus human fairness/visual approval. Lab routes alone or embedded simulation links do **not** satisfy AI2–AI6 gameplay acceptance. Other engine labs are tracked in the canonical roadmap and developed only by their owner workstreams. Keep AN0–AN6 and PR #387 untouched.
+
 ## Progressive enemy intelligence
 
 | Tier | Behavior capability | Example |
@@ -80,7 +86,7 @@ An ordinary enemy may remain Tier I late in the game. Intelligence tiers are ass
 
 ## Cross-workstream interface with Town
 
-Town T1/T3/T5 own **world-space scene IDs, collision/navmesh, semantic destinations, interaction/occupancy slots and scene-state events**. AI1/AI2 consume these contracts later. Town does **not** implement sensing, memory, planning, utility scoring, dialogue or behavior trees. Combat AI uses the same agent core with Hunt-specific navigation and action modules.
+The **approved painted 2D Town** owns world-space scene IDs, walking masks, A* navigation, semantic destinations, interaction/occupancy slots and active/vacant building state. AI1/AI2 consume those existing contracts; there is **no dependency on the cancelled 3D Town T0–T6 workstream**. Town does not implement sensing, memory, planning, utility scoring, dialogue or behavior trees. Combat AI uses the same shared core with Hunt-specific navigation and execution modules.
 
 ## Non-goals and release safeguards
 

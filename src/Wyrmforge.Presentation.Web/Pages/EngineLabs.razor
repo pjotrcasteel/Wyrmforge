@@ -1,0 +1,142 @@
+@page "/engine-labs"
+@page "/engine-labs/{Engine}"
+@using Microsoft.AspNetCore.Components
+
+<main class="engine-labs">
+    <header class="labs-heading">
+        <span>WYRMFORGE / DEVELOPMENT LABS / NO PROGRESS REWARDS</span>
+        <h1>@(Selected is null ? "Engine Development Labs" : $"{Selected.Name} Lab")</h1>
+        <p>Inspect actual WyrmForge engine integrations. These development surfaces do not certify iOS or Android performance, visual quality or production rollout.</p>
+    </header>
+
+    <nav class="engine-navigation" aria-label="Engine labs">
+        <a href="engine-labs" aria-current="@(Selected is null ? "page" : null)">All engines</a>
+        @foreach (var lab in Labs)
+        {
+            <a href="@($"engine-labs/{lab.Slug}")" aria-current="@(Selected?.Slug == lab.Slug ? "page" : null)">@lab.Name</a>
+        }
+    </nav>
+
+    @if (Engine is null)
+    {
+        <section class="engine-index" aria-label="Choose an engine">
+            @foreach (var lab in Labs)
+            {
+                <article>
+                    <h2><a href="@($"engine-labs/{lab.Slug}")">@lab.Name</a></h2>
+                    <p>@lab.Description</p>
+                    <small>@lab.Status</small>
+                </article>
+            }
+        </section>
+    }
+    else if (Selected?.Slug == "ai")
+    {
+        <section class="lab-controls" aria-label="AI test setup">
+            <div>
+                <h2>Authoritative C# AI scenarios</h2>
+                <p>Run one existing Town, Enemy or Wyrm simulation at a time. Inspect actual agents inside the preview, then repeat with the same seed to compare decisions.</p>
+            </div>
+            <label for="ai-scenario">Scenario
+                <select id="ai-scenario" @bind="Scenario" data-testid="ai-scenario">
+                    <option value="civilian">AI2 · Painted Town residents and schedules</option>
+                    <option value="perception">AI1 · Earned vision and memory</option>
+                    <option value="reactive">AI3 · Reactive Mire Hound</option>
+                    <option value="pack">AI4 · Eight tactical Hounds</option>
+                    <option value="elite">AI5 · Adaptive elite Hound</option>
+                    <option value="boss">AI5 · Ashfang phase II</option>
+                    <option value="stress">AI6 · 64-agent CPU and pressure stress</option>
+                    <option value="legacy">AI0 · Legacy-safe Hollow fallback</option>
+                </select>
+            </label>
+            <label for="ai-seed">Replay seed
+                <input id="ai-seed" type="number" @bind="Seed" @bind:event="oninput" min="1" max="2147483647" />
+            </label>
+            <button type="button" @onclick="RestartPreview">Restart same scenario</button>
+            <a class="full-page" href="@PreviewUrl" target="_blank" rel="noopener noreferrer">Open actual scenario full screen</a>
+        </section>
+        <p class="lab-note" data-testid="ai-lab-notes">@ScenarioNotes</p>
+        <section class="ai-preview" aria-label="Live AI engine preview">
+            <iframe @key="PreviewKey" src="@PreviewUrl" title="Live authoritative engine preview" loading="eager"></iframe>
+        </section>
+        <section class="lab-notes">
+            <h2>How to verify</h2>
+            <p>Inside the real simulation, choose <strong>Refresh AI inspector</strong> (Enemy), <strong>Boss AI inspector</strong> (Ashfang), or <strong>Town AI inspector</strong> (Town). Compare perception, selected actions, expired memory, group pressure and measured timing with the same seed. The 64-agent scenario intentionally raises workload: use a desktop first and compare phones separately.</p>
+            <p>The Town uses its existing painted 2D spatial contracts. Enemy and Wyrm scenarios use existing authoritative combat tick and renderer paths. No new agent simulation runs in this lab shell. Some embedded controls may need the full-screen link on small phones.</p>
+            <p><a href="engine-labs">Back to all engines</a> · <a href="https://github.com/pjotrcasteel/Wyrmforge/pull/364" target="_blank" rel="noopener noreferrer">AI implementation and acceptance PR</a></p>
+        </section>
+    }
+    else if (Selected is not null)
+    {
+        <section class="lab-notes">
+            <h2>Dedicated @Selected.Name lab contract</h2>
+            <p>@Selected.Description</p>
+            <p><strong>Status:</strong> @Selected.Status. This route is reserved for a genuinely interactive, engine-backed development playground; a link to an older demonstration does not count as lab acceptance.</p>
+            @if (Selected.ExistingPreview is not null)
+            {
+                <p><a href="@Selected.ExistingPreview">Open existing related real preview</a> (existing implementation, not the new dedicated lab acceptance)</p>
+            }
+            <p><a href="engine-labs">Back to all engines</a></p>
+        </section>
+    }
+    else
+    {
+        <section class="lab-notes" role="alert"><h2>Unknown engine</h2><p><a href="engine-labs">Choose a supported engine lab</a>.</p></section>
+    }
+</main>
+
+@code {
+    [Parameter] public string? Engine { get; set; }
+
+    private sealed record EngineLabDefinition(string Slug, string Name, string Status, string Description, string? ExistingPreview);
+
+    private static readonly EngineLabDefinition[] Labs =
+    [
+        new("ai", "AI", "Interactive AI2–AI6 lab; rollout and device gates remain open",
+            "Civilian schedules, earned sensing, tactical packs, adaptation and C# simulation diagnostics.", "enemy-lab"),
+        new("lighting", "Lighting", "Dedicated lab pending; shared GPU proof already available",
+            "Generic emitters, receivers, shadows, black-world and mobile GPU budgets.", "arena-light-engine"),
+        new("animation", "Animation", "Dedicated lab pending; AN0–AN6 is developed separately in PR #387",
+            "Authoritative action timing, authored rigs, support contacts and mobile-scale transitions.", "enemy-lab"),
+        new("gameplay", "Gameplay physics", "Dedicated lab pending",
+            "Authoritative damage, collision, movement, projectile, event and replay testing.", "combat-lab"),
+        new("visual-physics", "Visual physics", "Dedicated lab pending",
+            "Cosmetic debris and physically grounded effects without changing gameplay physics.", "combat-lab"),
+        new("vfx", "VFX", "Dedicated lab pending",
+            "Reusable event-driven elemental and environmental VFX lifecycle, pooling and budgets.", "combat-lab"),
+        new("audio", "Audio and haptics", "Dedicated lab pending",
+            "One semantic sound/haptic event path, voice limits, listening and mobile accessibility.", null)
+    ];
+
+    private EngineLabDefinition? Selected =>
+        Array.Find(Labs, lab => string.Equals(lab.Slug, Engine, StringComparison.OrdinalIgnoreCase));
+
+    private string Scenario = "pack";
+    private int Seed = 42;
+    private int Revision;
+
+    private string PreviewUrl => Scenario switch
+    {
+        "civilian" => "?townAi2=1",
+        "perception" => $"enemy-lab?kind=MireHound&ai1=true&autoplay=false&cast=false&seed={Seed}",
+        "reactive" => $"enemy-lab?kind=MireHound&tier=2&count=1&autoplay=false&cast=false&seed={Seed}",
+        "elite" => $"enemy-lab?kind=MireHound&tier=4&count=1&autoplay=false&cast=false&seed={Seed}",
+        "boss" => $"hunt-lab?wyrm=Ashfang&ai5=true&phase=2&play=true&cast=false&invulnerable=true&seed={Seed}",
+        "stress" => $"enemy-lab?kind=MireHound&tier=3&count=64&autoplay=false&cast=false&seed={Seed}",
+        "legacy" => $"enemy-lab?kind=Hollow&ai0=true&autoplay=false&cast=false&seed={Seed}",
+        _ => $"enemy-lab?kind=MireHound&tier=3&count=8&autoplay=false&cast=false&seed={Seed}"
+    };
+
+    private string PreviewKey => $"{Scenario}/{Seed}/{Revision}";
+
+    private string ScenarioNotes => Scenario switch
+    {
+        "civilian" => "The resident preview uses the real Town opt-in. Its existing Town seed and saved-profile behavior are unchanged; the seed field does not override this Town simulation.",
+        "stress" => "Load test: 64 Hounds. Record the agent performance inspector and measure on physical devices before accepting mobile budgets.",
+        "boss" => "Authored Ashfang phase II remains authoritative. Inspect its bounded observation confidence, permitted tactics and resolved hunter HP loss.",
+        "legacy" => "AI0 comparison: check that current production-friendly fallback stays available.",
+        _ => "Read live agent decisions and budgets through the existing simulation inspector. Repeating a scenario uses the same seed and options."
+    };
+
+    private void RestartPreview() => Revision++;
+}

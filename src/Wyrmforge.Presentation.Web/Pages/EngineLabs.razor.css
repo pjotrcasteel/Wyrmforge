@@ -1,0 +1,19 @@
+.engine-labs{min-height:100vh;padding:clamp(14px,3vw,32px);background:linear-gradient(150deg,#101219,#1a2028);color:#e5e3da;font:16px/1.5 system-ui,sans-serif}
+.labs-heading{max-width:980px;margin:0 auto 22px}.labs-heading span{font-size:.75rem;letter-spacing:.12em;color:#b4a28b}.labs-heading h1{font-size:clamp(1.8rem,5vw,2.8rem);margin:8px 0}.labs-heading p{max-width:65ch;color:#c8c4ba}
+.engine-navigation{display:flex;gap:8px;max-width:1200px;margin:0 auto 22px;overflow-x:auto;padding:5px 0 10px;scrollbar-width:thin}
+.engine-navigation a{flex-shrink:0;border:1px solid #59616b;border-radius:7px;padding:8px 12px;color:#e5e3da;text-decoration:none;min-height:44px;display:inline-flex;align-items:center}
+.engine-navigation a[aria-current=page]{border-color:#e0c693;background:#37372f}
+.engine-index{max-width:1200px;margin:auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:16px}
+.engine-index article,.lab-controls,.lab-notes{padding:18px;border:1px solid #3e4650;border-radius:10px;background:#202831}
+.engine-index h2,.lab-notes h2,.lab-controls h2{font-size:1.25rem;margin:0 0 8px}.engine-index p,.lab-notes p,.lab-controls p{margin:8px 0 12px;color:#d1cdc4}
+.engine-index a,.lab-notes a,.lab-controls a{color:#f1d19e}.engine-index small{color:#b3bfc1}
+.lab-controls{display:flex;flex-wrap:wrap;gap:12px;align-items:end;max-width:1200px;margin:0 auto 12px}
+.lab-controls>div{flex-basis:100%}.lab-controls label{display:grid;gap:4px;min-width:120px;max-width:100%;font-size:.85rem}
+.lab-controls select,.lab-controls input,.lab-controls button,.lab-controls .full-page{background:#101720;color:#f3efe7;border:1px solid #78818d;border-radius:6px;padding:10px;min-height:44px;font:inherit}
+.lab-controls select{max-width:min(92vw,380px)}.lab-controls button{cursor:pointer;background:#695638}.lab-controls button:hover{background:#826e4b}
+.lab-controls .full-page{display:inline-flex;align-items:center}
+.lab-note{max-width:1200px;margin:0 auto 12px;color:#d1c2a5}
+.ai-preview{width:100%;max-width:1200px;margin:0 auto 20px;border:1px solid #59616b;border-radius:9px;overflow:hidden;background:#0b1018}
+.ai-preview iframe{display:block;width:100%;height:min(75vh,850px);min-height:430px;border:0}
+.lab-notes{max-width:1200px;margin:0 auto 20px}
+@media(max-width:580px){.engine-labs{padding:10px}.lab-controls{padding:14px}.lab-controls label{width:100%}.lab-controls select{width:100%;max-width:100%}.ai-preview iframe{height:75vh;min-height:500px}.lab-controls button,.lab-controls .full-page{width:100%;justify-content:center}}

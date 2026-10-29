@@ -15,6 +15,20 @@ class CollectorDashboardTests(unittest.TestCase):
         self.assertNotIn("<img src=x", result)
         self.assertNotIn("script src=", result)
 
+    def test_private_dashboard_displays_aggregate_ai_cost_without_raw_session_data(self):
+        result = dashboard({
+            "aggregate": {"reports": 2, "sharedRunSamples": 2},
+            "ai": {"runs": 2, "meanP95Ms": 8.5, "peakMs": 24,
+                   "maxPopulation": 64, "maxCommitted": 2,
+                   "maxSightQueries": 32, "maxPathQueries": 32},
+        })
+        self.assertIn("Consented AI playtest profiling", result)
+        self.assertIn("8.5", result)
+        self.assertIn("Largest AI population", result)
+        self.assertIn("64", result)
+        self.assertNotIn("runId", result)
+        self.assertNotIn("seed", result)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -7,6 +7,7 @@
 @using Wyrmforge.Application.Runs.SelfPlay
 @using Wyrmforge.Application.Runs.Simulation
 @using Wyrmforge.Application.Runs.Simulation.Snapshots
+@using Wyrmforge.Domain.Agents
 @using Wyrmforge.Domain.Combat.Enemies
 
 <main class="enemy-lab">
@@ -52,12 +53,13 @@
     <section class="enemy-lab-surface"><canvas @ref="canvas" aria-label="Live enemy encounter"></canvas>
         <div class="status">@kind • @(paused ? "PAUSED" : autoplay ? "AGENT" : "MANUAL") • @(kind == EnemyKind.MireHound && mireStyle == "pixel" ? "PIXEL ART PREVIEW" : "PUBLISHED ART") • INVULNERABLE • NO PROGRESS</div>
     </section>
-    @if (agentFoundation || agentPerception)
+    @if (agentFoundation || agentPerception || intelligence is not null)
     {
         <section class="note">
             <button @onclick="InspectAgents">Refresh AI inspector</button>
-            <p>@(agentPerception ? "AI1: bounded vision, occlusion and expiring last-known locations. Profile values are provisional lab tuning." : "AI0: existing execution with legacy exact-target information.") Pause the encounter to inspect a fixed decision.</p>
+            <p>@(intelligence is not null ? $"Capability tier {intelligence}: earned perception, bounded pressure and authored attack locks." : agentPerception ? "AI1: bounded vision, occlusion and expiring last-known locations. Profile values are provisional lab tuning." : "AI0: existing execution with legacy exact-target information.") Pause the encounter to inspect a fixed decision.</p>
             <p data-testid="agent-summary">@agentSummary</p>
+            <pre data-testid="agent-performance">@agentPerformance</pre>
             <pre style="max-height:28rem;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere" data-testid="agent-inspector">@agentInspection</pre>
         </section>
     }
@@ -85,10 +87,15 @@
     private bool autoplay = true;
     private bool casting;
     [Parameter, SupplyParameterFromQuery(Name = "ai1")] public bool? AgentPerceptionQuery { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "tier")] public int? TierQuery { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "count")] public int? CountQuery { get; set; }
+    private AgentTier? intelligence;
+    private int enemyCount = 1;
     private bool agentPerception;
     private bool agentFoundation;
     private string agentInspection = "Run the encounter, then refresh to inspect its agents.";
     private string agentSummary = "";
+    private string agentPerformance = "";
     private string mireStyle = "painted";
     private bool paused;
     private double simulationSeconds;
@@ -103,6 +110,8 @@
         if (PausedQuery is { } pause) paused = pause;
         if (AgentFoundationQuery is { } ai0) agentFoundation = ai0;
         if (AgentPerceptionQuery is { } ai1) agentPerception = ai1;
+        intelligence = TierQuery is >= 1 and <= 5 ? (AgentTier)TierQuery.Value : null;
+        enemyCount = kind is EnemyKind.Hollow or EnemyKind.MireHound ? Math.Clamp(CountQuery ?? 1, 1, 64) : 1;
         mireStyle = MireStyleQuery == "pixel" ? "pixel" : "painted";
     }
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -134,13 +143,13 @@
         await StartArena(retry: true);
     }
     [JSInvokable]
-    public Task<RunRenderSnapshot> Frame(double delta, double width, double height, double movementX, double movementY, double aimX = 0, double aimY = 0)
+    public Task<RunRenderSnapshot> Frame(double delta, double width, double height, double movementX, double movementY, double aimX = 0, double aimY = 0, int? focusPropId = null, bool stickSnap = false)
     {
         if (simulation is null)
         {
             var build = SelfPlayBuildCatalog.All.First();
             simulation = new RunSimulationFactory(new SeededRandomSource(1)).CreateDevelopmentEnemy(build.SelectedNodes,
-                new DevelopmentEnemySetup(kind, seed, Math.Clamp(width, 240, 2560), Math.Clamp(height, 240, 2560), casting, agentFoundation, agentPerception));
+                new DevelopmentEnemySetup(kind, seed, Math.Clamp(width, 240, 2560), Math.Clamp(height, 240, 2560), casting, agentFoundation, agentPerception) { Intelligence = intelligence, Count = enemyCount });
             agent = new HeuristicRunAgent(RunAgentPersonality.Kiter, seed, build.PreferredSchool);
         }
         var snapshot = simulation.CreateSnapshot();
@@ -148,7 +157,7 @@
         if (SecondsQuery is { } limit && double.IsFinite(limit) && simulationSeconds >= Math.Max(0, limit)) return Task.FromResult(snapshot with { Paused = true });
         var movement = autoplay
             ? agent!.ChooseMovement(new RunAgentObservation(snapshot, [], [], [], [], [], simulation.Depth, 0, false))
-            : new MovementInput(movementX, movementY, aimX, aimY);
+            : new MovementInput(movementX, movementY, aimX, aimY, focusPropId, stickSnap);
         simulationSeconds += Math.Clamp(delta, 0, .05);
         return Task.FromResult(simulation.Tick(delta, movement, width, height));
     }
@@ -163,7 +172,9 @@
             ["autoplay"] = autoplay,
             ["cast"] = casting,
             ["ai0"] = agentFoundation,
-            ["ai1"] = agentPerception
+            ["ai1"] = agentPerception,
+            ["tier"] = (int?)intelligence,
+            ["count"] = enemyCount
         });
         Navigation.NavigateTo(url, replace: true);
     }
@@ -176,6 +187,11 @@
     private void InspectAgents()
     {
         var states = simulation?.InspectEnemyAgents();
+        agentPerformance = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            Cost = simulation?.InspectAgentPerformance(), Pack = simulation?.InspectAgentPack(),
+            RecentTraces = states?.Select(AgentTraceMetrics.From).ToArray()
+        });
         agentSummary = states is null ? "Encounter not started." : states.Count == 0 ? "No supported live AI0 agents." :
             string.Join(" · ", states.Select(s => $"{s.Identity.Archetype}: {s.CurrentAction?.Goal} / {s.CurrentAction?.Action} — {s.CurrentAction?.Reason}; executor: {s.LastResult?.Reason}"));
         agentInspection = System.Text.Json.JsonSerializer.Serialize(states, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });

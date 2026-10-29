@@ -1,9 +1,11 @@
 import { createSpellBadge } from './spell-hud.js';
 import { createSoundEventTracker, collectSoundEvents } from './sound-events.js';
-import { disposeArena as disposeBaseArena, initializeArena as initializeBaseArena } from './arena.js?v=20261026-organic-ground-v2';
+import { disposeArena as disposeBaseArena, initializeArena as initializeBaseArena, readArenaDiagnostics as readBaseArenaDiagnostics } from './arena.js?v=20261028-school-palette-v1';
 import { resolveArenaCamera } from './arena-camera.js';
 
 const frameStates = new WeakMap();
+// Diagnostics must read the same module instance that owns the actual Hunt canvas.
+export const readArenaDiagnostics = canvas => readBaseArenaDiagnostics(canvas);
 const activeSimulationIntervalMilliseconds = 1000 / 60;
 const pausedSimulationIntervalMilliseconds = 100;
 const statusVisuals = [
