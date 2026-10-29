@@ -116,7 +116,7 @@
                 </svg>
                 @foreach (var node in Nodes.OrderBy(node => node.Stage).ThenBy(node => node.Lane))
                 {
-                    <button class="@NodeClass(node)" style="@NodeMapStyle(node)" data-road="@node.Site?.RoadId" data-site-id="@node.Geography?.SiteId" data-site-version="@node.Geography?.Version" data-site-ports="@node.Geography?.Ports.Count" data-stage="@node.Stage" data-current="@(IsCurrent(node) ? "true" : "false")" aria-label="@NodeAriaLabel(node)" aria-pressed="@(selectedNode?.Id == node.Id)" @onclick="() => SelectNode(node)">
+                    <button class="@NodeClass(node)" style="@NodeMapStyle(node)" data-road="@node.Site?.RoadId" data-site-id="@node.Geography?.SiteId" data-site-version="@node.Geography?.Version" data-site-ports="@node.Geography?.Ports.Count" data-site-kind="@node.Geography?.Landscape?.Kind" data-site-obstacles="@node.Geography?.Landscape?.Obstacles.Count" data-stage="@node.Stage" data-current="@(IsCurrent(node) ? "true" : "false")" aria-label="@NodeAriaLabel(node)" aria-pressed="@(selectedNode?.Id == node.Id)" @onclick="() => SelectNode(node)">
                         @if (IsCurrent(node)) { <span class="current-marker">YOU</span> }
                         <span class="node-core">
                             <svg class="node-main-icon" viewBox="0 0 46 34" aria-hidden="true"><path d="@LandmarkPath(node)" /></svg>
