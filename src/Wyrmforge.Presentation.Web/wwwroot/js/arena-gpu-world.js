@@ -42,6 +42,7 @@ export function huntSurfaceRenderable(id, x, y, width, height, castsShadow, surf
         receivesShadow: surface.receivesShadow ?? true,
         receivesLight: surface.receivesLight ?? true,
         ...(surface.occluderGeometry ? { occluderGeometry: surface.occluderGeometry } : {}),
+        ...(surface.frame ? { frame: surface.frame } : {}),
     };
 }
 
