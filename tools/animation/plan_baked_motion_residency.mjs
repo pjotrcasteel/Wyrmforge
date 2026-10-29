@@ -19,14 +19,21 @@ export function planBakedMotionResidency(manifest) {
     }
     const measured=auditBakedAtlasBudget(manifest,{requiredMaps:['normal','emissive']});
     if(measured.maxDecodedBytes!==DEFAULT_BAKED_TEXTURE_BUDGET)throw new Error('Unexpected source budget');
-    const proposed=(name,frames)=>({
-        ...source,image:name+'.png',frames,columns:Math.min(32,frames),
-        // These do not yet exist as production atlases.
-        materials:{normal:{hypothetical:true},emissive:{hypothetical:true}}
-    });
-    const bytes=frames=>{
-        const layout=spriteAtlasLayout(proposed('directional',frames),eight);
-        return layout.width*layout.height*4*3;
+    const plannedLayout=frames=>{
+        let best=null;
+        for(let columns=1;columns<=Math.min(frames,32);columns++){
+            const layout=spriteAtlasLayout({...source,frames,columns},eight);
+            if(layout.width>4096||layout.height>4096)continue;
+            const decodedBytes=layout.width*layout.height*4*3;
+            const largestDimension=Math.max(layout.width,layout.height);
+            if(!best||decodedBytes<best.decodedBytes||
+                (decodedBytes===best.decodedBytes&&largestDimension<best.largestDimension)){
+                best={columns,rowsPerDirection:layout.rowsPerDirection,decodedBytes,
+                    width:layout.width,height:layout.height,largestDimension};
+            }
+        }
+        if(!best)throw new RangeError('No WebGL-safe native source atlas layout under 4096px');
+        return best;
     };
     const neutral=Object.fromEntries(Object.entries(manifest.clips).filter(([name])=>name!=='attack-travel'));
     const nonAction=auditBakedAtlasBudget({...manifest,clips:neutral},{requiredMaps:['normal','emissive']}).decodedBytes;
@@ -35,9 +42,12 @@ export function planBakedMotionResidency(manifest) {
     // directions. Travel heading is distinct from committed body facing.
     for(const phases of [8,16])for(const stages of [4,6,8,16]){
         const perClipFrames=phases*stages;
-        const perClipBytes=bytes(perClipFrames);
+        const layout=plannedLayout(perClipFrames);
+        const perClipBytes=layout.decodedBytes;
         const totalBytes=nonAction+3*perClipBytes;
         options.push({gaitPhases:phases,actionStages:stages,actionVariants:3,framesPerDirection:perClipFrames,
+            proposedColumns:layout.columns,proposedRowsPerDirection:layout.rowsPerDirection,
+            proposedAtlasWidth:layout.width,proposedAtlasHeight:layout.height,
             proposedClawBytes:perClipBytes,proposedTotalDecodedBytes:totalBytes,
             remainingBytes:DEFAULT_BAKED_TEXTURE_BUDGET-totalBytes,
             withinMemoryLimit:totalBytes<=DEFAULT_BAKED_TEXTURE_BUDGET,
@@ -45,7 +55,7 @@ export function planBakedMotionResidency(manifest) {
     }
     // An unchanged first-generation whole-body claw plus even one additional
     // side source cannot be called a complete resident directional library.
-    const originalPlusSide=measured.decodedBytes+bytes(source.frames);
+    const originalPlusSide=measured.decodedBytes+plannedLayout(source.frames).decodedBytes;
     return {
         measurement:'what-if decoded three-RGBA-map eight-view atlas memory, with current measured source crop; does not imply source or runtime acceptance',
         runtimeAccepted:false,
@@ -58,6 +68,9 @@ export function planBakedMotionResidency(manifest) {
         nonActionDecodedBytes:nonAction,
         sourceCrop:source.crop,
         candidateMemoryLowerBound:true,
+        // Does NOT count new lateral walk-only clips or weight-transfer
+        // transitions. They must share frames or fit separately before adoption.
+        additionalLateralWalkAndTransitionCostIncluded:false,
         // Lateral swing silhouettes may require a WIDER crop, so this plan
         // can only reject, never authorize material or game integration.
         options
