@@ -97,7 +97,8 @@ test('live Hunt maintains one legacy enemy draw and one shared GPU path after ma
     const url = new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena.js', import.meta.url);
     const code = await readFile(url, 'utf8');
     const begin = code.indexOf("} else if (layer.kind === 'enemy') {");
-    const end = code.indexOf("} else {\n            drawMage(", begin);
+    const mageBranch = /}\s*else\s*\{\s*\n\s*drawMage\(/.exec(code.slice(begin));
+    const end = mageBranch ? begin + mageBranch.index : -1;
     assert.ok(begin >= 0 && end > begin, 'Enemy rendering must remain depth-sorted');
     const enemyBranch = code.slice(begin, end);
     assert.equal((enemyBranch.match(/drawActorWithEmitter\(/g) ?? []).length, 1,
