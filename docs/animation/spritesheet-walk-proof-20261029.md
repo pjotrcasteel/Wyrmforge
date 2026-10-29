@@ -134,3 +134,10 @@ color texture. Unknown roles fail before publication; existing packs retain
 their prior behavior. All 612 JavaScript checks pass. Material rendering and
 actual GPU acceptance remain open.
 
+The compact full-body claw source passes independent saved-mesh QC, including
+all sixteen base-gait entry/exit phases (maximum whole-skin discontinuity
+0.000001481m) and four negative mutations. This is source evidence only;
+non-base heading entry, arbitrary action travel, raster timing and actual
+crossing-target performance remain open. Eight action stages over 1.333 seconds
+must be visually assessed before accepting this bounded export size.
+

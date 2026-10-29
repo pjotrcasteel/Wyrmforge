@@ -1,0 +1,66 @@
+{
+  "walk": {
+    "measurement": "evaluated skinned sole vertices",
+    "maxSavedActionSlipMetres": 2.6624751665004546e-07,
+    "toleranceMetres": 0.004036458333333334,
+    "maxBoneLengthErrorMetres": 1.6165506577792144e-07,
+    "jointRanges": {
+      "knee-L": [
+        58.24998426088978,
+        122.17879270340327
+      ],
+      "elbow-L": [
+        38.00781365549197,
+        40.315341840162006
+      ],
+      "knee-R": [
+        58.65567700702103,
+        122.53355272889374
+      ],
+      "elbow-R": [
+        49.18841327016889,
+        61.40533358194975
+      ]
+    },
+    "minimumIndependentMassMarginMetres": 0.009788103185380441,
+    "maximumActualSoleGroundErrorMetres": 4.470348358154297e-07,
+    "maximumGroundPatchBandMetres": 0.00402379035949707,
+    "sampledStanceVertices": 4050,
+    "uniqueSoleVertices": 405
+  },
+  "attack-travel": {
+    "measurement": "evaluated skinned sole vertices",
+    "maxSavedActionSlipMetres": 4.824502638745927e-07,
+    "toleranceMetres": 0.004036458333333334,
+    "maxBoneLengthErrorMetres": 1.9451508839751774e-07,
+    "jointRanges": {
+      "knee-L": [
+        51.92892763689354,
+        126.61144887095814
+      ],
+      "elbow-L": [
+        38.007789749829875,
+        40.31537940620244
+      ],
+      "knee-R": [
+        52.339732779618544,
+        126.6038263798444
+      ],
+      "elbow-R": [
+        32.19902804943585,
+        137.2190878218248
+      ]
+    },
+    "minimumIndependentMassMarginMetres": 0.008266382456678796,
+    "maximumActualSoleGroundErrorMetres": 4.76837158203125e-07,
+    "maximumGroundPatchBandMetres": 0.004023879766464233,
+    "sampledStanceVertices": 32400,
+    "uniqueSoleVertices": 405,
+    "transition": {
+      "reference": "walk",
+      "phaseSamples": 16,
+      "maximumEvaluatedSkinDiscontinuityMetres": 1.4806810552328545e-06,
+      "toleranceMetres": 0.004036458333333334
+    }
+  }
+}

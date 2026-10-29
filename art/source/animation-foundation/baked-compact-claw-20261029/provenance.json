@@ -1,0 +1,28 @@
+{
+  "candidateNotApproved": true,
+  "runtimeIntegrated": false,
+  "sourceFiles": {
+    "hollow-foundation.blend": "920c4f7ce34abfa61eb112fdb91e18a4f8cb03abf59cdca5f70903d31016b58a",
+    "source-manifest.json": "80eafb9709a87744b7b836fa537ebe1a518bb5a03f205eda5758a21e67ede030",
+    "source-preflight.json": "16870e29932dcbbf76c9c4dbbdf0c001ebc86dca007baf492aa665e449a39274",
+    "independent-source-qc.json": "ca6ccd4054d39153d2b4198d2db3b3ac7b8a6a1139f80091ac12475582d5654d",
+    "negative-source-qc.json": "ee2f3b344788ae0f900138f09cc8f98268bcb64be606d1d392c54d490eadcd5b"
+  },
+  "authorArguments": [
+    "--only",
+    "walk,attack-travel",
+    "--phase-samples",
+    "16",
+    "--action-samples",
+    "8",
+    "--stride-metres",
+    "0.5",
+    "--stance-fraction",
+    "0.6",
+    "--flexion-reserve-pixels",
+    "2",
+    "--pelvis-drop-metres",
+    "0.075",
+    "--compress-source"
+  ]
+}
