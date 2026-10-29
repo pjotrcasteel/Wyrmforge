@@ -1,3 +1,9 @@
+# Update — 29 October 2026, direct owner override
+
+**The owner has explicitly revisited the same genuine Blender Rotwalker render and selected the model as a preferred foundation.** The original audit below remains as a historical pre-owner subjective critique, **not the current art direction**. Its upright/T-pose and lack of ghoul hair/wretched damage are the exact elements the owner asks us to change. The authored torso, skull, torn garment, feet and general undead identity are worth preserving rather than starting over again. This is **approval to use Rotwalker as the modeling basis**, **not** approval of the finished Hollowed, the existing pose, its topology for mobile, its skinning, or its appearance at game scale. Source is unrigged according to its creator; do not claim it has a compatible skeleton. The latest direction is in [OWNER-SELECTED-ROTWalker-BASE-2026-10-29.md](OWNER-SELECTED-ROTWalker-BASE-2026-10-29.md).
+
+---
+
 # Artist-source screening 1 — Rotwalker is REJECTED as Hollowed (29 Oct 2026)
 
 The owner rejected H1's generic mannequin and explicitly demanded the character in the supplied front / side / back reference, not another trivial retrofit. V2 was therefore created cleanly from main with **zero prior H1 model/rig reuse**.
