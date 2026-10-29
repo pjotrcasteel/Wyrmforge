@@ -1,6 +1,6 @@
 # Vision, world and story
 
-> **Canonical WyrmForge specification · updated 20 October 2026.** Product identity and narrative choices, including deliberately unresolved mysteries.
+> **Canonical WyrmForge specification · updated 29 October 2026.** Product identity and narrative choices, including deliberately unresolved mysteries.
 > [Canonical index](README.md) · Only explicitly marked **LOCKED/approved** requirements are commitments. Proposed values, old milestones and drafts are not evidence of shipped code. Verify current `main`, PRs and tests.
 
 ## 1. Core vision, art and player loops

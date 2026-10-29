@@ -1,6 +1,6 @@
 # Art identity and character animation
 
-> **Canonical WyrmForge specification · updated 20 October 2026.** Owner-approved art and one repeatable animated-character production pipeline.
+> **Canonical WyrmForge specification · updated 29 October 2026.** Owner-approved art and one repeatable animated-character production pipeline.
 > [Canonical index](README.md) · Only explicitly marked **LOCKED/approved** requirements are commitments. Proposed values, old milestones and drafts are not evidence of shipped code. Verify current `main`, PRs and tests.
 
 ## Pixel-first authoring and gameplay output — LOCKED (29 October 2026)
@@ -387,10 +387,13 @@ ProduceCreature(card, gameplayContract, exportProfile):
     ValidateSourceRightsAndDependencies(character)
     RequireReview(RenderReferencePose(character), "identity at game size")
 
-    rig = BindAndValidateDeformation(character, brief.rigFamily)
-    RequireReview(RenderPoseTests(rig), "joint deformation and silhouette")
+    if character.usesRig:
+        ValidateRigAndDeformation(character, brief.rigFamily)
+    else:
+        ValidateHandAuthoredPoseConsistency(character, brief)
+    RequireReview(RenderPoseTests(character), "anatomy and silhouette")
 
-    walk = AuthorWalkFromSuitableMotion(rig, brief)
+    walk = AuthorWalkFromSuitableMotion(character, brief)
     RequireReview(RenderSingleViewWalkAndStrideTest(walk), "convincing gait")
     CheckpointRemote(character, rig, walk, record)
 
@@ -495,6 +498,12 @@ a runtime integration and suitable runtime licensing; exporting PNGs alone does
 not retain the skeleton in the game.
 
 ### 6. Stage C — rig and deformation validation
+
+**This stage's bone-binding and skin-weight steps apply only if the chosen
+source actually uses a rig (2D or offline 3D).** Full-frame hand-authored sprite
+sources instead verify coherent pose-to-pose anatomy, eight-direction volume,
+ground anchors and contact timing directly. They do not need a skeletal rig
+to make a valid final spritesheet.
 
 1. Choose a compatible rig family: humanoid, canine/quadruped, arachnid, winged,
    serpentine or a creature-specific design. Reuse within compatible anatomy;
