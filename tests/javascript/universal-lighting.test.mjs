@@ -148,3 +148,32 @@ test('camera-aware budget validates bounds and remains stable across permutation
     assert.throws(() => selectLights(snapshot(lights), 6, 2, { ...view, minX: 7 }), RangeError);
     assert.throws(() => selectLights(snapshot(lights), 6, 2, { ...view, maxY: NaN }), TypeError);
 });
+
+test('atlas transforms reset on full-frame transitions without redundant GPU matrix updates', async () => {
+    const { synchronizeAtlasFrame } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/engine.js');
+    const maps = [new T.Texture(), new T.Texture(), new T.Texture()];
+    const updateCounts = [0, 0, 0];
+    for (const [index, texture] of maps.entries()) {
+        const update = texture.updateMatrix.bind(texture);
+        texture.updateMatrix = () => { updateCounts[index]++; update(); };
+    }
+    const material = { map: maps[0], normalMap: maps[1], emissiveMap: maps[2] };
+    synchronizeAtlasFrame(material, null);
+    assert.deepEqual(updateCounts, [0, 0, 0]);
+    const frame = { offset: [.5, .25], repeat: [.125, .5] };
+    synchronizeAtlasFrame(material, frame);
+    assert.deepEqual(updateCounts, [1, 1, 1]);
+    for (const map of maps) {
+        assert.deepEqual(map.offset.toArray(), [.5, .25]);
+        assert.deepEqual(map.repeat.toArray(), [.125, .5]);
+    }
+    synchronizeAtlasFrame(material, frame);
+    assert.deepEqual(updateCounts, [1, 1, 1], 'Unchanged atlas UVs must not trigger matrix updates');
+    synchronizeAtlasFrame(material, undefined);
+    assert.deepEqual(updateCounts, [2, 2, 2], 'Removing atlas metadata restores the full texture');
+    for (const map of maps) {
+        assert.deepEqual(map.offset.toArray(), [0, 0]);
+        assert.deepEqual(map.repeat.toArray(), [1, 1]);
+        map.dispose();
+    }
+});
