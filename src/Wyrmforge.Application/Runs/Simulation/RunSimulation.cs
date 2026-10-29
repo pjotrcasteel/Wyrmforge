@@ -427,6 +427,7 @@ public sealed partial class RunSimulation
             new LightingEnvironment("gothic-night", "#8c9cbb", 0.012));
         var combined = LightingSceneComposer.Compose(snapshot.SceneId, snapshot.SimulationTick,
             snapshot.Environment, snapshot.Emitters,
+            [HunterVisibilityLightingProjection.Capture(player.Position)],
             SpellEffectLightingProjection.Capture(CreateCastMotionSnapshot(),
                 elementalImpacts.Select(impact => new ElementalImpactRenderSnapshot(impact.Position.X, impact.Position.Y, impact.Spell, impact.Progress)),
                 CreateFieryAreaSnapshots()),
