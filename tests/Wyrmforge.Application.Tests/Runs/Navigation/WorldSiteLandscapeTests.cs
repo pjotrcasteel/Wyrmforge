@@ -83,8 +83,10 @@ public sealed class WorldSiteLandscapeTests
             var physicalSnapshot = physical.Snapshot();
             Assert.IsFalse(normalSnapshot.GeographyActive);
             Assert.IsTrue(physicalSnapshot.GeographyActive);
-            Assert.AreEqual(JsonSerializer.Serialize(normalSnapshot.Geography),
-                JsonSerializer.Serialize(physicalSnapshot.Geography));
+            Assert.AreEqual(normalSnapshot.Geography!.SiteId, physicalSnapshot.Geography!.SiteId);
+            CollectionAssert.AreEqual(normalSnapshot.Geography.Ports.ToArray(), physicalSnapshot.Geography.Ports.ToArray());
+            Assert.IsNull(normalSnapshot.Geography.Landscape);
+            Assert.IsNotNull(physicalSnapshot.Geography.Landscape);
             Assert.AreEqual(normalSnapshot.Supplies.Count, physicalSnapshot.Supplies.Count);
             Assert.IsTrue(normalSnapshot.Props.All(prop => prop.Kind is "barrel" or "crate"));
             Assert.IsTrue(physicalSnapshot.Props.All(prop => prop.Kind is "barrel" or "crate"),
