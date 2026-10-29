@@ -3,11 +3,35 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
-import {createSpriteAnimationState,updateSpriteAnimation} from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/sprite-animation.js';
+import {createSpriteAnimationState,updateSpriteAnimation,validateCreatureRigProfile} from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/sprite-animation.js';
 const root=new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/',import.meta.url);
 const pack=new URL('../art/review/animation-foundation-sprite-walk/',root);
 const profile=JSON.parse(readFileSync(new URL('profile.json',pack),'utf8'));
 const manifest=JSON.parse(readFileSync(new URL('manifest.json',pack),'utf8'));
+function variantProfile(){
+ const p=structuredClone(profile),v=structuredClone(p.locomotion);v.clip='metadata-heading';
+ for(const value of Object.values(v.stanceVelocityByDirection)){
+  const {x,y}=value;value.x=x*Math.cos(.1)-y*Math.sin(.1);value.y=x*Math.sin(.1)+y*Math.cos(.1);
+ }
+ p.locomotion.motionVariants=[v];return p;
+}
+
+test('bounded full-body motion selection retains one gait phase and the frozen source clip',()=>{
+ const p=variantProfile();validateCreatureRigProfile(p);const state=createSpriteAnimationState();
+ const v=p.locomotion.motionVariants[0].stanceVelocityByDirection.E;
+ const intent={entityId:9,timestamp:0,travel:0,world:{x:0,y:0},direction:'E',moving:true,velocity:{x:-v.x,y:-v.y}};
+ const first=updateSpriteAnimation(state,p,intent);assert.equal(first.clip,'metadata-heading');
+ const next=updateSpriteAnimation(state,p,{...intent,timestamp:.1,travel:Math.hypot(v.x,v.y)*.1,world:{x:-v.x*.1,y:-v.y*.1}});
+ assert.ok(Math.abs(next.phase-.1)<1e-8);assert.equal(next.baseClip,'metadata-heading');
+ const frozen=updateSpriteAnimation(state,p,{...intent,timestamp:.2,travel:Math.hypot(v.x,v.y)*.1,world:{x:-v.x*.1,y:-v.y*.1},paused:true,direction:'W'});
+ assert.equal(frozen.clip,next.clip);assert.equal(frozen.frame,next.frame);assert.equal(frozen.phase,next.phase);
+});
+
+test('motion libraries reject changed contact schedules, incomplete vectors and incompatible playback',()=>{
+ for(const mutate of [p=>p.locomotion.motionVariants[0].samples[0].contacts.pop(),p=>delete p.locomotion.motionVariants[0].stanceVelocityByDirection.N,p=>p.locomotion.motionVariants[0].fps++,p=>p.facing.transition='source-pivot']){
+  const p=variantProfile();mutate(p);assert.throws(()=>validateCreatureRigProfile(p));
+ }
+});
 const uri=s=>'data:text/javascript;base64,'+Buffer.from(s).toString('base64');
 const stub=uri(`export function createCreatureAnimationAssets(){return {ready:()=>true,manifest:${JSON.stringify(manifest)},profile:${JSON.stringify(profile)},draw:()=>false};}`);
 const source=readFileSync(new URL('hollow-sprites.js',root),'utf8')

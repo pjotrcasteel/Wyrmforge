@@ -24,7 +24,7 @@ export function createCreatureAnimationAssets(baseUrl,{maxDecodedBytes=64*1024*1
         validateCreatureRigProfile(profile);
         if(profile.rig.signature!=null&&profile.rig.signature!==manifest.sourceSignature)throw new TypeError('Rig/source signature mismatch');
         if(manifest.schemaVersion!==2||manifest.directions.length!==8)throw new TypeError('Invalid animation atlas manifest');
-        const specs=[profile.locomotion,...Object.values(profile.actions),...Object.values(profile.pivots??{}),...(profile.pivot?[profile.pivot]:[])];
+        const specs=[profile.locomotion,...(profile.locomotion.motionVariants??[]),...Object.values(profile.actions),...Object.values(profile.pivots??{}),...(profile.pivot?[profile.pivot]:[])];
         for(const spec of specs)if(manifest.clips[spec.clip]?.frames!==spec.frames)throw new TypeError(`Profile/atlas mismatch: ${spec.clip}`);
         if(manifest.skin){
             if(!profile.sourceSupport)throw new TypeError('Source skin requires shared source support profile');

@@ -78,3 +78,15 @@ grandfathered by canon; the boundary audit permits that module only and still
 rejects additional model loaders. All 608 JavaScript checks pass and the web
 project builds without warnings. Full Application validation is running.
 
+## Bounded baked motion selection
+
+The shared controller and atomic atlas owner accept optional
+`locomotion.motionVariants`: complete same-frame-count/fps/contact-schedule
+source clips, maximum sixteen. Projected source travel selects both the view
+and complete clip while retaining one gait clock; pause retains its source
+frame. Actions keep their existing commitment. This capability is restricted to
+explicit baked row profiles and cannot silently alter source-skin playback.
+All 610 JavaScript checks pass, including invalid-library and frozen-selection
+checks. The first S-view source bake is inspected; the eight-view atlas,
+switching contact residuals and actual C# Hunt acceptance are still pending.
+

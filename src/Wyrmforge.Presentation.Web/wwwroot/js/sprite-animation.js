@@ -112,7 +112,10 @@ export function validateCreatureRigProfile(profile) {
     }))fail('projected facing requires complete measured source stride vectors');
     if(!Number.isFinite(profile.locomotion?.stride)||!(profile.locomotion?.stride>0))fail('positive authored stride required');
     for(const [name,expected] of [['positive',1],['negative',-1]])if(profile.pivots?.[name]?.facingStep!=null&&profile.pivots[name].facingStep!==expected)fail(`source turn faces the wrong direction: ${name}`);
-    const specs=[profile.locomotion,...Object.values(profile.actions??{}),...(profile.pivot?[profile.pivot]:[]),...Object.values(profile.pivots??{})];
+    const variants=profile.locomotion.motionVariants??[];
+    if(!Array.isArray(variants)||variants.length>16)fail('bounded motion variant array required');
+    if(variants.length&&(profile.sourceSupport||profile.facing.selection!=='projected-motion'||profile.facing.transition!=='row'))fail('motion variants require baked projected-motion row profiles');
+    const specs=[profile.locomotion,...variants,...Object.values(profile.actions??{}),...(profile.pivot?[profile.pivot]:[]),...Object.values(profile.pivots??{})];
     for(const clip of specs){
         if(typeof clip.clip!=='string'||!clip.clip||!Number.isSafeInteger(clip.frames)||clip.frames<1||!Number.isFinite(clip.fps)||!(clip.fps>0))fail('invalid clip dimensions/time');
         if(clip.poseGrid){
@@ -141,6 +144,10 @@ export function validateCreatureRigProfile(profile) {
             }
             if(!ids.size&&!['flight','catch','fall'].includes(sample.balance))fail(`unsupported pose lacks explicit momentum state: ${clip.clip}`);
         }
+    }
+    const schedule=clip=>[clip.samples,...directions.map(d=>clip.facingSamples?.[d]??clip.samples)].map(samples=>samples.map(s=>(s.contacts??[]).map(c=>c.id).sort().join(',')).join(';')).join('|');
+    for(const clip of variants){
+        if(clip.clip===profile.locomotion.clip||variants.filter(c=>c.clip===clip.clip).length!==1||clip.frames!==profile.locomotion.frames||clip.fps!==profile.locomotion.fps||clip.phaseSampling!=='nearest'||!clip.stanceVelocityByDirection||!clip.strideByDirection||schedule(clip)!==schedule(profile.locomotion))fail('motion variants require unique complete same-phase locomotion clips');
     }
     if(!(profile.maxRootOffset>=0)||profile.maxRootOffset>profile.unitsPerPixel)fail('root correction exceeds one source pixel');
     if(profile.sourceSupport){
@@ -280,15 +287,18 @@ function updateContactAnimation(state,profile,input){
     state.timestamp=input.timestamp;state.travel=input.travel;state.stopped=stopped;
     state.time+=dt;
     let requestedFacing=profile.facing.directions.indexOf(input.direction);
+    const motionClips=[profile.locomotion,...(profile.locomotion.motionVariants??[])];
+    let locomotion=motionClips.find(c=>c.clip===state.motionClip)??profile.locomotion;
     const newAction=input.action&&Object.hasOwn(profile.actions,input.action.name)&&input.action.token!==state.lastToken;
     if(!profile.sourceSupport&&profile.facing.selection==='projected-motion'&&!state.action&&!newAction&&!stopped){
         const observed=Math.hypot(displacement.x,displacement.y)>1e-10?displacement:input.velocity;
         if(observed&&Math.hypot(observed.x,observed.y)>1e-10){
             let best=-Infinity;
-            for(const [index,direction] of profile.facing.directions.entries()){
-                const v=profile.locomotion.stanceVelocityByDirection[direction],score=-(observed.x*v.x+observed.y*v.y)/Math.hypot(v.x,v.y);
-                if(score>best){best=score;requestedFacing=index;}
+            for(const candidate of motionClips)for(const [index,direction] of profile.facing.directions.entries()){
+                const v=candidate.stanceVelocityByDirection[direction],score=-(observed.x*v.x+observed.y*v.y)/Math.hypot(v.x,v.y);
+                if(score>best){best=score;requestedFacing=index;locomotion=candidate;}
             }
+            state.motionClip=locomotion.clip;
         }
     }
     if(!profile.sourceSupport&&profile.facing.transition==='row'&&!state.action&&!stopped){
@@ -299,7 +309,7 @@ function updateContactAnimation(state,profile,input){
             state.facingIndex=row;state.contacts=Object.create(null);state.pivotTime=0;state.pivotSign=null;
         }
     }
-    const stride=profile.locomotion.strideByDirection?.[profile.facing.directions[state.action?state.actionDirection:state.facingIndex]]??profile.locomotion.stride;
+    const stride=locomotion.strideByDirection?.[profile.facing.directions[state.action?state.actionDirection:state.facingIndex]]??profile.locomotion.stride;
     let sourceCycleBefore=null;
     if(profile.sourceSupport){
         const s=profile.sourceSupport,zero=profile.facing.directions.indexOf(s.facingZero);
@@ -346,7 +356,7 @@ function updateContactAnimation(state,profile,input){
     }else if(!stopped){
         // Calibrated source motion consumes actual signed root displacement.
         // Cumulative path length remains the compatibility input for old packs.
-        const v=profile.locomotion.stanceVelocityByDirection?.[profile.facing.directions[state.action?state.actionDirection:state.facingIndex]];
+        const v=locomotion.stanceVelocityByDirection?.[profile.facing.directions[state.action?state.actionDirection:state.facingIndex]];
         const advance=v?-(displacement.x*v.x+displacement.y*v.y)/((v.x*v.x+v.y*v.y)*actorScale):distance/(stride*actorScale);
         state.phase=((state.phase+advance)%1+1)%1;
     }
@@ -406,7 +416,7 @@ function updateContactAnimation(state,profile,input){
         sourceSupport={yaw:state.sourceYaw,warpYaw:state.sourceWarpYaw??0,phaseCycles:state.sourceSupportPhaseCycles,phaseAdvance:sourceAdvance,phaseDirection:state.sourcePhaseDirection??1,axisWorld:{...state.sourceAxisWorld},
             groundBasis:[b[0]*cos+b[1]*sin,-b[0]*sin+b[1]*cos,b[2]*cos+b[3]*sin,-b[2]*sin+b[3]*cos],reducedMotion:Boolean(input.reducedMotion)};
     }
-    const locomotionFrame=profile.locomotion.phaseSampling==='nearest'?Math.round(state.phase*profile.locomotion.frames)%profile.locomotion.frames:Math.min(profile.locomotion.frames-1,Math.floor(state.phase*profile.locomotion.frames));
+    const locomotionFrame=locomotion.phaseSampling==='nearest'?Math.round(state.phase*locomotion.frames)%locomotion.frames:Math.min(locomotion.frames-1,Math.floor(state.phase*locomotion.frames));
     const turning=!profile.sourceSupport&&!actionSpec&&target>=0&&target!==state.facingIndex;
     let pivotFrame=null;
     const turnDelta=(target-state.facingIndex+12)%8-4;
@@ -428,13 +438,13 @@ function updateContactAnimation(state,profile,input){
     // Completing the final support step must not replay pivot frame zero in
     // the new facing. Use the continuing gait in this very sample.
     const activePivot=turning&&pivotSpec&&state.facingIndex!==target;
-    let clipSpec=actionSpec??(activePivot?pivotSpec:profile.locomotion);
+    let clipSpec=actionSpec??(activePivot?pivotSpec:locomotion);
     let frame=actionSpec?(actionSpec.poseGrid?poseGridFrame(actionSpec,contactPhase,actionProgress):Math.min(actionSpec.frames-1,Math.floor(actionProgress*actionSpec.frames))):
         pivotFrame??(input.moving?locomotionFrame:(profile.locomotion.idleFrame??locomotionFrame));
     if(stopped&&state.sample&&!actionSpec?.terminal){
         // A changed target while frozen cannot select a different source clip
         // under the retained frame number (which may even exceed its length).
-        clipSpec=[profile.locomotion,...Object.values(profile.actions),...Object.values(profile.pivots??{}),profile.pivot].find(c=>c?.clip===state.sample.clip)??clipSpec;
+        clipSpec=[...motionClips,...Object.values(profile.actions),...Object.values(profile.pivots??{}),profile.pivot].find(c=>c?.clip===state.sample.clip)??clipSpec;
         frame=state.sample.frame;
         state.facingIndex=profile.facing.directions.indexOf(state.sample.direction);
     }
@@ -448,7 +458,7 @@ function updateContactAnimation(state,profile,input){
     const phaseError=(contactPhase-(frame%phaseFrames)/phaseFrames+1.5)%1-.5;
     const sourcePhaseOffset=!sourceSupport&&!input.reducedMotion&&stanceVelocity&&(clipSpec.poseGrid||clipSpec.phaseSampling==='nearest')?
         {x:stanceVelocity.x*phaseError*actorScale,y:stanceVelocity.y*phaseError*actorScale}:{x:0,y:0};
-    state.sample={baseClip:profile.locomotion.clip,baseFrame:locomotionFrame,phase:state.phase,clip:clipSpec.clip,frame,
+    state.sample={baseClip:locomotion.clip,baseFrame:locomotionFrame,phase:state.phase,clip:clipSpec.clip,frame,
         direction:profile.facing.directions[state.facingIndex],layered:false,actionToken:state.action?.token??null,
         actionProgress,contactPhase,sourcePhaseOffset,rootOffset:{...state.rootOffset},material:clipSpec.material??null,debug,seed:state.seed,...(sourceSupport?{sourceSupport}:{})};
     return state.sample;

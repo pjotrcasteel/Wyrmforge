@@ -39,7 +39,7 @@ def build_runtime_profile(m):
             stance={d:{'x':-(p[0]*root_stride[0]+p[1]*root_stride[1])*pixel_scale,'y':-(p[4]*root_stride[0]+p[5]*root_stride[1])*pixel_scale} for d,p in m['projectionByDirection'].items()}
             if c['strideMetres']>0:
                 result['strideByDirection']={d:math.hypot(v['x'],v['y']) for d,v in stance.items()}
-            if name=='walk':
+            if name=='walk' or c.get('motionVariantOf')=='walk':
                 result['phaseSampling']='nearest'
                 result['stanceVelocityByDirection']=stance
             if c.get('poseGrid'):
@@ -54,6 +54,8 @@ def build_runtime_profile(m):
      'actions':{}}
     if 'attack' in m['clips']:
         profile['actions']['attack']={**runtime_clip('attack'),'mode':'fullBody','priority':10,'commitUntil':1,'reducedFrame':8,'visualTimingOnly':True}
+    variants=[runtime_clip(name) for name,c in m['clips'].items() if c.get('motionVariantOf')=='walk']
+    if variants:profile['locomotion']['motionVariants']=variants
     if 'pivot' in m['clips']:profile['pivot']=runtime_clip('pivot')
     if 'pivot-negative' in m['clips']:
         profile['pivot']=runtime_clip('pivot-negative')
