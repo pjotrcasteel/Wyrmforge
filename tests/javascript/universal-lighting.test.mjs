@@ -109,3 +109,42 @@ test('presentation loop stops, resumes visibility without catch-up and disposes 
     loop.setActive(true); advance(20000); assert.equal(deltas.at(-1), 0);
     loop.dispose(); loop.setActive(true); loop.setVisible(true); assert.equal(queued.size, 0);
 });
+
+test('camera-aware light budgets prefer visible contribution without overriding C# priority', () => {
+    const distant = emitter('a-distant', { position: [10, 0, 1], range: 12, intensity: 5, castsShadow: true });
+    const explosion = emitter('z-explosion', { position: [0, 0, 1], range: 12, intensity: 5, castsShadow: true });
+    const original = snapshot([distant, explosion]);
+    const preserved = structuredClone(original);
+    const view = { minX: -5, maxX: 5, minY: -5, maxY: 5 };
+    assert.deepEqual(selectLights(original, 6, 1).map(l => l.id), ['a-distant'],
+        'Inspection views without a camera keep historical deterministic ID order');
+    assert.deepEqual(selectLights(original, 6, 1, view).map(l => l.id), ['z-explosion'],
+        'A bright centered explosion must not lose its limited mobile slot to an ID-sorted edge light');
+    const shifted = { minX: 10, maxX: 20, minY: -5, maxY: 5 };
+    assert.deepEqual(selectLights(original, 6, 1, shifted).map(l => l.id), ['a-distant']);
+    assert.deepEqual(original, preserved, 'View-based ranking may not mutate authoritative source data');
+
+    const higherPriority = snapshot([{ ...distant, priority: 2 }, explosion]);
+    assert.deepEqual(selectLights(higherPriority, 6, 1, view).map(l => l.id), ['a-distant'],
+        'Viewport ranking only breaks ties; C# source priority always wins');
+    const culled = snapshot([{ ...distant, position: [200, 0, 1], priority: 100 }, explosion]);
+    assert.deepEqual(selectLights(culled, 6, 1, view).map(l => l.id), ['z-explosion'],
+        'A high-priority source outside its influence range cannot exhaust the visible GPU budget');
+    const directional = snapshot([{ ...distant, type: 'directional', direction: [1, 0, 0] }, explosion]);
+    assert.deepEqual(selectLights(directional, 6, 1, view).map(l => l.id), ['a-distant'],
+        'Unbounded directional sources remain eligible in every camera view');
+});
+
+test('camera-aware budget validates bounds and remains stable across permutations', () => {
+    const lights = [
+        emitter('z', { position: [0, 0, 1], intensity: 4, range: 10 }),
+        emitter('a', { position: [0, 0, 1], intensity: 4, range: 10 }),
+        emitter('m', { position: [2, 0, 1], intensity: 4, range: 10 }),
+    ];
+    const view = { minX: -5, maxX: 5, minY: -5, maxY: 5 };
+    const expected = selectLights(snapshot(lights), 6, 2, view).map(l => l.id);
+    assert.deepEqual(expected, ['a', 'z'], 'Equal contribution must use deterministic ID tie breaking');
+    assert.deepEqual(selectLights(snapshot(lights.reverse()), 6, 2, view).map(l => l.id), expected);
+    assert.throws(() => selectLights(snapshot(lights), 6, 2, { ...view, minX: 7 }), RangeError);
+    assert.throws(() => selectLights(snapshot(lights), 6, 2, { ...view, maxY: NaN }), TypeError);
+});
