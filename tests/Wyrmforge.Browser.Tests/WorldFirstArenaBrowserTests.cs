@@ -65,4 +65,55 @@ public sealed class WorldFirstArenaBrowserTests : PageTest
         Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
         await Page.ScreenshotAsync(new() { Path = Path.Combine(output, $"ar0-live-hunt-{width}.png"), FullPage = false });
     }
+    [TestMethod]
+    [DataRow(320, 568, "forest-fork")]
+    [DataRow(390, 844, "forest-fork")]
+    [DataRow(320, 568, "mountain-pass")]
+    [DataRow(390, 844, "mountain-pass")]
+    public async Task Ar1_ForestAndMountain_AuthoritativeSiteShapesAppearInActualPlayableHunts(int width, int height, string kind)
+    {
+        var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
+        var output = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS")
+            ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
+        Directory.CreateDirectory(output);
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.AddInitScriptAsync("""
+            localStorage.setItem('wyrmforge.firstHunt.v1','3');
+            localStorage.setItem('wyrmforge.characterSchool.v1','Pyromancer');
+            """);
+        var errors = new List<string>();
+        Page.PageError += (_, error) => errors.Add(error);
+        await Page.GotoAsync(root + "/?ar1Geography=1&arenaTerrain=semantic&ar1SiteKind=" + kind,
+            new() { WaitUntil = WaitUntilState.NetworkIdle });
+        var start = Page.GetByRole(AriaRole.Button, new() { NameRegex = new System.Text.RegularExpressions.Regex("^START GAME") });
+        await start.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 45000 });
+        await start.ClickAsync();
+        if (await Page.Locator(".character-creation").IsVisibleAsync())
+            await Page.GetByRole(AriaRole.Button, new() { Name = "Choose Pyromancer" }).ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Region, new() { Name = "Town square" })).ToBeVisibleAsync();
+        await Page.Locator(".refuge-town-spot--gate").ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Enter Free Play" }).ClickAsync();
+        await Page.Locator(".gate-action--primary").ClickAsync();
+        await Page.Locator(".gate-lineage--fire").ClickAsync();
+        await Page.Locator(".gate-tier--ready").First.ClickAsync();
+        await Expect(Page.GetByText("Choose your trail.", new() { Exact = true })).ToBeVisibleAsync();
+        var node = Page.Locator("button.route-node.available").First;
+        Assert.AreEqual(kind, await node.GetAttributeAsync("data-site-kind"));
+        Assert.IsGreaterThan(0, int.Parse((await node.GetAttributeAsync("data-site-obstacles"))!));
+        var siteId = (await node.GetAttributeAsync("data-site-id"))!;
+        await Page.ScreenshotAsync(new() { Path = Path.Combine(output, $"ar1-{kind}-chart-{width}.png"), FullPage = false });
+
+        await node.ClickAsync();
+        await Page.GetByRole(AriaRole.Button,
+            new() { NameRegex = new System.Text.RegularExpressions.Regex("^Enter (rare )?trail$") }).ClickAsync();
+        await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
+        await Page.WaitForFunctionAsync("expected => window.__wyrmforgeAr0Geography?.siteId === expected", siteId,
+            new() { Timeout = 45000 });
+        Assert.AreEqual(true, await Page.EvaluateAsync<bool>("() => window.__wyrmforgeAr0Geography.geographyActive"));
+        Assert.AreEqual(kind, await Page.EvaluateAsync<string>("() => window.__wyrmforgeAr0Geography.kind"));
+        Assert.IsGreaterThan(0, await Page.EvaluateAsync<int>("() => window.__wyrmforgeAr0Geography.obstacleCount"));
+        Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
+        await Page.ScreenshotAsync(new() { Path = Path.Combine(output, $"ar1-{kind}-live-hunt-{width}.png"), FullPage = false });
+    }
+
 }
