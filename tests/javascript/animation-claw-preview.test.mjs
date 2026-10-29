@@ -14,7 +14,7 @@ const stub=uri(`export function createCreatureAnimationAssets(url) {
 }`);
 const source=readFileSync(new URL('hollow-sprites.js',root),'utf8')
  .replaceAll('import.meta.url',"'https://example.test/js/hollow-sprites.js'")
- .replace(/from '(\\.\\/[^']+)'/g,(_,p)=>'from '+JSON.stringify(
+ .replace(/from '(\.\/[^']+)'/g,(_,p)=>'from '+JSON.stringify(
      p==='./creature-animation-assets.js'?stub:uri(readFileSync(new URL(p,root),'utf8'))));
 const original=globalThis.location;
 globalThis.location={search:'?animationFoundation=sprite-claw'};
