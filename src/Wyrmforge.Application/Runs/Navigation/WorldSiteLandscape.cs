@@ -204,13 +204,26 @@ public static class WorldSiteFootprintCollision
         double width, double height, double radius = 0)
     {
         if (recipe is null || width <= 0 || height <= 0) return false;
-        return recipe.Obstacles.Any(obstacle =>
-            Contains(obstacle, from, width, height, radius) ||
-            Contains(obstacle, to, width, height, radius) ||
-            obstacle.Outline.Zip(obstacle.Outline.Skip(1).Append(obstacle.Outline[0]))
-                .Any(edge => SegmentsDistanceSquared(from, to,
-                    new Vector2D(edge.First.X * width, edge.First.Y * height),
-                    new Vector2D(edge.Second.X * width, edge.Second.Y * height)) <= radius * radius));
+        // Projectile sweeps and visibility raycasts run on the gameplay hot path.
+        // Iterate existing C# polygons without Zip/Skip/Append iterator allocations.
+        var radiusSquared = radius * radius;
+        foreach (var obstacle in recipe.Obstacles)
+        {
+            if (Contains(obstacle, from, width, height, radius) ||
+                Contains(obstacle, to, width, height, radius))
+                return true;
+            var outline = obstacle.Outline;
+            for (var index = 0; index < outline.Count; index++)
+            {
+                var a = outline[index];
+                var b = outline[(index + 1) % outline.Count];
+                if (SegmentsDistanceSquared(from, to,
+                    new Vector2D(a.X * width, a.Y * height),
+                    new Vector2D(b.X * width, b.Y * height)) <= radiusSquared)
+                    return true;
+            }
+        }
+        return false;
     }
 
     /// <summary>True when a physical point or circle lies inside a site polygon.</summary>
