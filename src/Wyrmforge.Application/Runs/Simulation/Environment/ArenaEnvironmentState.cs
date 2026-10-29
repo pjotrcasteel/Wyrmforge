@@ -23,6 +23,7 @@ public sealed class ArenaEnvironmentState
     private readonly bool preLair;
     private readonly bool generatorPreview;
     private readonly HuntArenaGenerator.WetForestRecipe? wetForest;
+    private WorldSiteGeography? geography;
     private EncounterPhase phase = EncounterPhase.Pressure;
 
     private sealed class Supply(string kind, double x, double y, EncounterPhase unlockPhase)
@@ -79,7 +80,10 @@ public sealed class ArenaEnvironmentState
         var districtIndex = ((mapSeed & int.MaxValue) % 3 + stage + node.Lane + (node.Site?.RoadIndex ?? 0)) % 3;
         var district = new[] { "causeway", "sanctuary", "rift" }[districtIndex];
         var habitat = node.Habitat.ToString();
-        var environment = new ArenaEnvironmentState(seed, biome, element, stage, landmark, district, habitat, node.PreLair, generatorPreview);
+        var environment = new ArenaEnvironmentState(seed, biome, element, stage, landmark, district, habitat, node.PreLair, generatorPreview)
+        {
+            geography = node.Geography,
+        };
         if (node.Type != WyrmrealmNodeType.Combat) return environment;
 
         // The old fixed gated encounter remains part of current Hunts ONLY.
@@ -148,6 +152,7 @@ public sealed class ArenaEnvironmentState
         Corruption = HuntArenaGenerator.WyrmInfluence(stage, generatorPreview && preLair),
         GeneratorPreview = generatorPreview,
         WetForest = wetForest,
+        Geography = geography,
         Props = destructibles.Where(prop => prop.Health > 0)
             .Select(prop => new ArenaPropRenderSnapshot(prop.Spec.Id, prop.Spec.Kind, prop.Spec.X, prop.Spec.Y, prop.Spec.Radius,
                 prop.Health / prop.Spec.Health)).ToArray(),
