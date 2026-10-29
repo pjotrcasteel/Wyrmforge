@@ -1,4 +1,5 @@
 // Stable presentation resources derived from existing authoritative scene records.
+import { territoryWallVisualRevision } from './arena-territory-walls.js';
 export function huntLayerCapture(layer, player, dragonDeath = null) {
     let actor, id, size;
     if (layer.kind === 'masonry' && layer.prop) {
@@ -25,9 +26,20 @@ export function huntLayerCapture(layer, player, dragonDeath = null) {
  * Dynamic foliage, VFX and moving actors always redraw. No lighting behavior
  * depends on these names; the generic GPU engine accepts opaque revision keys.
  */
-export function huntLayerRevision(layer, artAvailable = false) {
-    if (layer.kind !== 'masonry' || layer.style !== 'destructible' || layer.wetForest || !layer.prop)
-        return undefined;
+export function huntLayerRevision(layer, artAvailable = false, artRevision = 0) {
+    if (layer.kind !== 'masonry') return undefined;
+    // Cloister walls are drawn solely from immutable world geometry and colors.
+    // Avoid re-rasterizing and uploading four large, unchanged cutouts every frame.
+    // Other masonry styles may animate and must retain the dynamic fallback.
+    if (layer.style === undefined && layer.barrier && !layer.wetForest) {
+        return JSON.stringify(['cloister-wall-v1', layer.barrier, layer.width, layer.height]);
+    }
+    // Animated territory runes change art only at lit/dim transitions, not every tick.
+    // Keep the authored timer and exact rune-state selection in the territory adapter.
+    if (layer.style === 'territory' && layer.barrier && !layer.wetForest && artAvailable) {
+        return territoryWallVisualRevision(layer, artRevision);
+    }
+    if (layer.style !== 'destructible' || layer.wetForest || !layer.prop) return undefined;
     // Damage, geometry, identity and late-loaded art each invalidate the capture.
     return JSON.stringify([layer.prop, layer.width, layer.height, Boolean(artAvailable)]);
 }
@@ -84,7 +96,13 @@ export class HuntGpuScratchPool {
             canvas.height = pixels;
             this.created++;
             if (this.surfaces.size >= this.capacity) {
-                this.surfaces.delete(this.surfaces.keys().next().value);
+                const oldest = this.surfaces.keys().next().value;
+                const retired = this.surfaces.get(oldest);
+                this.surfaces.delete(oldest);
+                // Dropping the key alone retains a full-size Canvas bitmap until GC.
+                // This staging surface is no longer in use, so release its pixels now.
+                retired.width = 0;
+                retired.height = 0;
                 this.evicted++;
             }
         }
@@ -99,6 +117,10 @@ export class HuntGpuScratchPool {
             estimatedBytes: pixels * 4 };
     }
     clear() {
+        for (const canvas of this.surfaces.values()) {
+            canvas.width = 0;
+            canvas.height = 0;
+        }
         this.surfaces.clear();
     }
 }

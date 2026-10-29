@@ -5,6 +5,26 @@ import { lightsIntersectingView } from './lighting/registry.js';
 import { lightingQualityBudget } from './lighting/quality.js';
 const UNIT = 48;
 const GROUND_Y = Math.SQRT2;
+
+/** The live Hunt consumes its WebGL frame immediately in a 2D canvas.
+ * Keep diagnostic/lab retention unchanged, but avoid preserving the mobile GPU
+ * drawing buffer after composition. This is a renderer setting, not a new path.
+ */
+export function huntGpuRendererBudget(quality = 'balanced') {
+    return { ...lightingQualityBudget(quality), preserveDrawingBuffer: false };
+}
+
+/** Composite exactly once with native nearest-neighbor pixel sampling. */
+export function compositeHuntGpuFrame(ctx, source) {
+    ctx.save();
+    try {
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(source, 0, 0, ctx.canvas.width, ctx.canvas.height);
+    } finally {
+        ctx.restore();
+    }
+}
 function projectLightDirection(direction) {
     const projected = [direction[0], -direction[1] * GROUND_Y, direction[2]];
     const length = Math.hypot(...projected);
@@ -63,7 +83,7 @@ export class HuntGpuWorld {
     constructor({ quality = 'balanced' } = {}) {
         this.canvas = document.createElement('canvas');
         this.quality = quality;
-        this.engine = new LightingEngine(this.canvas, lightingQualityBudget(quality));
+        this.engine = new LightingEngine(this.canvas, huntGpuRendererBudget(quality));
         this.engine.registerGeometry('hunt-plane', new T.PlaneGeometry(1, 1));
         this.engine.registerGeometry('hunt-billboard', huntActorGeometry());
         this.layers = new Map();
@@ -134,6 +154,7 @@ export class HuntGpuWorld {
                 if (layer.pixels.width !== Math.ceil(width)) layer.pixels.width = Math.ceil(width);
                 if (layer.pixels.height !== Math.ceil(height)) layer.pixels.height = Math.ceil(height);
                 const ctx = layer.pixels.getContext('2d');
+                ctx.imageSmoothingEnabled = false;
                 ctx.clearRect(0, 0, layer.pixels.width, layer.pixels.height);
                 ctx.drawImage(source, 0, 0, layer.pixels.width, layer.pixels.height);
                 layer.texture.needsUpdate = true;
@@ -186,8 +207,7 @@ export class HuntGpuWorld {
         engine.camera.position.set(this.width / UNIT / 2, centerY - 30, 30);
         engine.camera.lookAt(this.width / UNIT / 2, centerY, 0);
         engine.render(this.width, this.height);
-        ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.drawImage(this.canvas, 0, 0, ctx.canvas.width, ctx.canvas.height); ctx.restore();
+        compositeHuntGpuFrame(ctx, this.canvas);
         for (const [id, layer] of this.layers) if (!this.used.has(id)) {
             engine.textures.delete(id); layer.texture.dispose(); this.layers.delete(id);
         }

@@ -21,7 +21,7 @@ import { drawReliquaryGround, drawReliquaryEmergence, drawReliquaryHushVeil, dra
 import { drawBellWardenGround, drawBellWardenEntrance, drawBellWardenBar } from './arena-bellwarden-vfx.js';
 import { drawWinterBellGround, drawWinterBellAir } from './arena-winterbell-vfx.js';
 import { drawGlassReliquaryGround, drawGlassReliquaryAir } from './arena-glass-reliquary-vfx.js';
-import { loadArt, artReady, hasArtFrame, drawArtFrame } from './art-atlas.js';
+import { loadArt, artReady, artGeneration, hasArtFrame, drawArtFrame } from './art-atlas.js';
 import { buildSpellLights, drawSpellLightSpill, sampleSpellLight, drawActorWithEmitter } from './arena-spell-lighting.js?v=20261028-ground-light-v3';
 import { gothicNightLightSources, gothicNightPlan, drawGothicNight, GOTHIC_NIGHT } from './arena-night-lighting.js';
 import { createWetForestFirelightPlan } from './arena-wet-forest-dressing.js';
@@ -374,7 +374,7 @@ function draw(state, snapshot, width, height) {
             ({ x: tileX, y: tileY, size: tileSize } = capture);
             if (tileX + tileSize < camera.x - 384 || tileY + tileSize < camera.y - 384 ||
                 tileX > camera.x + width + 384 || tileY > camera.y + height + 384) continue;
-            revision = huntLayerRevision(layer, artReady());
+            revision = huntLayerRevision(layer, artReady(), artGeneration());
             reuse = gpu.canReuseCapture(capture.id, revision, tileSize, tileSize);
             tile = (state.gpuScratchPool ??= new HuntGpuScratchPool(4)).acquire(tileSize);
             if (!reuse) {

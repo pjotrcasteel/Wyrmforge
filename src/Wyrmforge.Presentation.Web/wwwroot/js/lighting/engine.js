@@ -21,10 +21,11 @@ export function synchronizeAtlasFrame(material, frame) {
 
 /** Shared GPU adapter; accepts resource IDs and descriptors, never entity kinds. */
 export class LightingEngine {
-    constructor(canvas, { shadowViews = 8, maxLights = 8, shadowMapSize = 512 } = {}) {
+    constructor(canvas, { shadowViews = 8, maxLights = 8, shadowMapSize = 512, preserveDrawingBuffer = true } = {}) {
+        if (typeof preserveDrawingBuffer !== 'boolean') throw new TypeError('Invalid framebuffer retention policy');
         if (![128, 256, 512, 1024].includes(shadowMapSize)) throw new RangeError('Unsupported shadow map size');
         this.canvas = canvas;
-        this.renderer = new T.WebGLRenderer({ canvas, antialias: false, alpha: false, preserveDrawingBuffer: true });
+        this.renderer = new T.WebGLRenderer({ canvas, antialias: false, alpha: false, preserveDrawingBuffer });
         this.renderer.outputColorSpace = T.SRGBColorSpace;
         this.renderer.toneMapping = T.NeutralToneMapping;
         this.renderer.shadowMap.enabled = true;
@@ -41,6 +42,7 @@ export class LightingEngine {
         this.objects = new Map(); this.lights = new Map();
         this.geometries = new Map(); this.textures = new Map();
         this.shadowViews = shadowViews; this.maxLights = maxLights; this.shadowMapSize = shadowMapSize;
+        this.preserveDrawingBuffer = preserveDrawingBuffer;
         this.alive = true;
         this.debugView = 'lit';
         this.halfWidth = 5;
@@ -278,7 +280,8 @@ float proofShadowVisibility() {
             textures: this.renderer.info.memory.textures, geometries: this.renderer.info.memory.geometries,
             inspectedReceiver: this.snapshot?.objects.find(o => o.id === this.inspectionObject) ?? null,
             materialBudget: this.materialBudget, fogEnabled: !!this.scene.fog,
-            budgets: { maxLights: this.maxLights, shadowViews: this.shadowViews, shadowMapSize: this.shadowMapSize },
+            budgets: { maxLights: this.maxLights, shadowViews: this.shadowViews, shadowMapSize: this.shadowMapSize,
+                preserveDrawingBuffer: this.preserveDrawingBuffer },
             productionPathsMigrated: 0 };
     }
     dispose() {
