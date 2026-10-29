@@ -1,8 +1,8 @@
 // Opt-in physical-device evidence recorder for the existing Hunt renderer.
 // Measures browser requestAnimationFrame pacing; never claims GPU time, VRAM,
 // battery draw, thermal state or a gameplay simulation result.
-const MAX_INTERVALS = 36000;
-const MAX_DURATION_MS = 5 * 60 * 1000;
+const MAX_INTERVALS = 72000;
+const MAX_DURATION_MS = 10 * 60 * 1000;
 const percentile = (sorted, percentage) => sorted.length
     ? sorted[Math.min(sorted.length - 1, Math.ceil(sorted.length * percentage) - 1)] : null;
 const round = value => Number.isFinite(value) ? Math.round(value * 100) / 100 : null;
@@ -139,7 +139,7 @@ export function mountG4DeviceReview(canvas, getGpu, mode = 'canvas', quality = n
     header.style.cursor = 'pointer';
     panel.appendChild(header);
     const help = document.createElement('p');
-    help.textContent = `${mode === 'gpu' ? `GPU (${quality})` : 'Canvas'} · Play continuously for 2–5 minutes. Stop and export JSON. Record battery/temperature separately.`;
+    help.textContent = `${mode === 'gpu' ? `GPU (${quality})` : 'Canvas'} · Play 5–10 minutes, then Stop and Export JSON. Note battery and device warmth separately.`;
     panel.appendChild(help);
     const status = document.createElement('p');
     status.setAttribute('data-g4-status', '');
@@ -169,8 +169,14 @@ export function mountG4DeviceReview(canvas, getGpu, mode = 'canvas', quality = n
         gpuTimeMs: null, gpuMemoryBytes: null, batteryDraw: null, thermalState: null,
     });
     const updateStatus = now => {
+        // Do not sort thousands of samples every second while profiling a phone.
+        if (session.recording) {
+            header.textContent = 'G4 PHONE TEST · recording';
+            status.textContent = `${Math.round((now - session.startedAt) / 1000)}s · ${session.intervals.length} frame intervals`;
+            return;
+        }
         const info = session.summary(now);
-        header.textContent = `G4 PHONE TEST · ${session.recording ? 'recording' : info.frameIntervals ? 'stopped' : 'idle'}`;
+        header.textContent = `G4 PHONE TEST · ${info.frameIntervals ? 'stopped' : 'idle'}`;
         status.textContent = `${info.elapsedSeconds}s · ${info.frameIntervals} intervals · p95 ${info.frameMsP95 ?? 'n/a'}ms · ${info.observedFps ?? 0} FPS`;
     };
     button('Start', () => { session.start(getNow()); updateStatus(getNow()); panel.open = false; });
