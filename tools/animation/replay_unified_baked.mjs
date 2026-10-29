@@ -16,6 +16,7 @@ export function replayUnifiedTurns(profile,{rates=[15,30,60,120],entryPhases=[0,
         {from:direction,to:directions[(index+1)%8]},
         {from:direction,to:directions[(index+7)%8]}
     ]);
+    if(!rates.length||!entryPhases.length||!pairs.length)throw new RangeError('Turn replay matrix must contain cases');
     const tests=[];
     for(const hz of rates){
         if(!Number.isSafeInteger(hz)||hz<=0)throw new RangeError('Positive integer replay Hz required');
