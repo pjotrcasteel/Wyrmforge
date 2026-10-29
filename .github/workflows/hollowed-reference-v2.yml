@@ -45,6 +45,7 @@ jobs:
           python -m py_compile tools/art/hollowed-reference-v2/audit_fresh_character_blender.py
           python -m py_compile tools/art/hollowed-reference-v2/sculpt_rotwalker_m1_pose_blender.py
           python -m py_compile tools/art/hollowed-reference-v2/rig_rotwalker_m1_organic_blender.py
+          python -m py_compile tools/art/hollowed-reference-v2/fit_owner_reference_2d_skeleton_blender.py
           python -m py_compile tools/art/hollowed-reference-v2/sculpt_rotwalker_m2_ghoul_silhouette_blender.py
           python -m py_compile tools/art/hollowed-reference-v2/render_mobile_candidate_blender.py
           python - <<'PY'
@@ -176,34 +177,36 @@ jobs:
           assert q["owner_approved"] is False,q
           print("Articulated source-only 3D character motion evidence; visually unapproved.")
           PY
-      - name: M2 source-art only - attach real 3D matted scalp and existing-source finger talons
+      - name: M1 owner REFERENCE front-side landmark skeleton 3D fit + articulated motion
         shell: bash
         run: |
           set -euo pipefail
-          python tools/art/hollowed-reference-v2/sculpt_rotwalker_m2_ghoul_silhouette_blender.py \
+          python tools/art/hollowed-reference-v2/fit_owner_reference_2d_skeleton_blender.py \
             --input artifacts/hollowed-reference-v2/audit/model-m1-rig/Hollowed-M1-ANATOMICAL-ART-RIG-REAL-MOTION-UNAPPROVED.blend \
-            --output artifacts/hollowed-reference-v2/audit/model-m2
-          test -s artifacts/hollowed-reference-v2/audit/model-m2/Hollowed-M2-HAIR-CLAWS-ACTUAL-3D-SOURCE-UNAPPROVED.blend
-          test -s artifacts/hollowed-reference-v2/audit/model-m2/REAL-3D-M2-material-FRONT-SIDE-BACK.png
-          test -s artifacts/hollowed-reference-v2/audit/model-m2/REAL-3D-M2-clay-FRONT-SIDE-BACK.png
+            --reference art/source/enemies/hollow/reference-v2/owner-reference-pose-landmarks-2026-10-29.json \
+            --output artifacts/hollowed-reference-v2/audit/model-m1-reference
+          test -s artifacts/hollowed-reference-v2/audit/model-m1-reference/Hollowed-M1-OWNER-2D-POSE-FITTED-REAL-3D-UNAPPROVED.blend
+          test -s artifacts/hollowed-reference-v2/audit/model-m1-reference/M1-REFERENCE-FITTED-REAL-3D-FRONT-SIDE-BACK.png
+          test -s artifacts/hollowed-reference-v2/audit/model-m1-reference/M1-ACTUAL-BONES-VERSUS-2D-REFERENCE-JOINTS.png
+          test -s artifacts/hollowed-reference-v2/audit/model-m1-reference/M1-REFERENCE-3D-SIDE-MOTION.png
           python - <<'PY'
           import json
           from pathlib import Path
-          p=Path('artifacts/hollowed-reference-v2/audit/model-m2/M2-3D-source-QC.json')
-          d=json.loads(p.read_text(encoding='utf-8'))
-          assert d['hair']['original_3d_locks']>=70,d
-          assert d['hair']['rooted_to_artist_actual_skull'] is True,d
-          assert all(d['claws'][side]['tapered_claw_extensions']==4
-                     for side in ('L','R')),d
-          assert d['rig_bones']==20,d
-          assert d['body_source_vertices_preserved']>=31000,d
-          assert d['old_H1_model_used'] is False,d
-          assert d['universal_animation_engine_modified'] is False,d
-          assert d['universal_lighting_engine_modified'] is False,d
-          assert d['pixel_conversion_performed'] is False,d
+          d=json.loads(Path('artifacts/hollowed-reference-v2/audit/model-m1-reference/owner-2d-3d-reference-fit-qc.json').read_text())
+          assert d['fit']['fitted_bones']>=19,d
+          assert d['fit']['measured_head_forward_vs_pelvis_m']>.43,d
+          assert all(d['fit']['real_3d_claw_reach'][s]['forward_from_shoulder_m']>.4 for s in ('L','R')),d
+          assert d['images']['actual_blender_3d_views']==8,d
+          assert d['source_rig_bone_count']==20,d
+          assert d['source_rotwalker_topology_preserved'] is True,d
+          assert d['single_universal_animation_engine_untouched'] is True,d
+          assert d['gameplay_modified'] is False and d['pixel_export_performed'] is False,d
           assert d['owner_approved'] is False,d
-          print('M2 true 3D rig-skin source silhouette captured. Owner review STILL REQUIRED.')
+          print('Real owner-landmark to 3D skeleton fit is technically reproducible. Visual gate still OPEN.')
           PY
+      # M2 ghoul hair/claws source script is retained but DISCONNECTED until
+      # the owner approves the new reference-matched M1 3D pose. Do not add
+      # details over another inaccurate pose or pixelize unfinished source.
       - name: Validate source identity in reopened Blender file
         run: |
           python - <<'PY'
@@ -231,6 +234,6 @@ jobs:
             artifacts/hollowed-reference-v2/audit/downloaded/source-provenance.txt
             artifacts/hollowed-reference-v2/audit/review/
             artifacts/hollowed-reference-v2/audit/model-m1-rig/
-            artifacts/hollowed-reference-v2/audit/model-m2/
+            artifacts/hollowed-reference-v2/audit/model-m1-reference/
           if-no-files-found: warn
           retention-days: 21
