@@ -80,3 +80,10 @@ Before this checkpoint, the recorded browser workflow at PR head's synthetic mer
 
 The lab remains a developer-facing browser preview, not physical iOS/Android validation, nor gameplay, visual or AI6 rollout acceptance. Keep all production defaults and the draft PR unchanged until gates pass.
 
+
+## Automated AI6 playtest telemetry — 29 October 2026
+
+- In the actual `ArenaView.Frame` loop, inspect authoritative `AgentPerformanceSnapshot` and bounded `AgentTraceMetrics` at most once per 300 AI frames and at run completion. Sampling is read-only and never alters C# agent decisions.
+- `playtest.js` aggregates privacy-minimized statistics in the current local run. `finishRun` automatically uploads **only when the tester explicitly opted in beforehand**. Consent is off by default, revocable, and reset by the local-history erase action. Manual feedback consent stays independent.
+- The existing Cloudflare collector allowlists the AI data in `sanitizeAi`; private D1 summary and offline owner dashboard expose aggregate-only AI timing, population and pressure. No new unauthenticated collector endpoint, telemetry service, persistent player ID, or raw coordinates.
+- Automated Node tests cover no-consent/no-send, opt-in auto upload, revocation, compact report payload, collector sanitization and private summary. Physical iOS/Android measurements, fairness review and live collector receipt remain open acceptance gates. PR #364 stays draft until authorized.
