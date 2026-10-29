@@ -63,7 +63,7 @@ test('AR0 diagnostics remain projections, not a second JS gameplay or geographic
     const renderer = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js', import.meta.url), 'utf8');
     assert.match(application, /WorldSiteGeographyProjection/);
     assert.match(application, /WorldSeed/);
-    assert.match(renderer, /drawSemanticSiteFloor\(ctx, environment\.geography, width, height\)/);
+    assert.match(renderer, /drawSemanticSiteFloor\(ctx, environment\.geography, width, height, environment\.geographyActive === true\)/);
     assert.match(renderer, /if \(texture\) ctx\.drawImage\(texture\.image/);
     const liveScene = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena.js', import.meta.url), 'utf8');
     assert.match(liveScene, /semanticSiteModeEnabled\(\) && snapshot\.environment\?\.geography\?\.version === 1/);
