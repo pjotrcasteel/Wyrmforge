@@ -85,3 +85,73 @@ jobs:
             artifacts/an6-compact-claw-source/source-manifest.json
           if-no-files-found: warn
           retention-days: 14
+ 
+  capture-real-csharp-encounter:
+    name: Actual C# Enemy Lab compact-claw capture
+    needs: render-authored-frames
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - name: Restore published runtime art
+        run: |
+          git lfs pull --include="src/Wyrmforge.Presentation.Web/wwwroot/**" --exclude=""
+          python3 tools/development/verify_web_assets.py
+      - name: Rebuild required source-backed terrain for actual C# lab
+        run: |
+          python3 -m pip install -r tools/art/painted-requirements.txt
+          python3 tools/art/build_grass_moss_art_candidates.py --output src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-source-backed/v1/grass-moss-art-candidates
+          python3 tools/art/build_wet_mud_art_candidates.py --output src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-source-backed/v1/wet-mud-art-candidates
+          python3 tools/art/build_trampled_earth_art_candidates.py --output src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-source-backed/v1/trampled-earth-art-candidates
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - name: Verify .NET 10 and publish the real Blazor game
+        run: |
+          dotnet --list-sdks | grep -Eq '^10\\.0\\.' || { echo '::error::Missing .NET 10 SDK'; exit 1; }
+          dotnet restore src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj
+          dotnet publish src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -c Release --no-restore -o artifacts/web
+      - name: Install review browser
+        run: |
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - uses: actions/download-artifact@v4
+        with:
+          name: an6-compact-claw-real-source-frames
+          path: artifacts
+      - name: Capture actual moving-claw encounters in both native phone widths
+        shell: bash
+        run: |
+          set -euo pipefail
+          for width in 320 390; do
+            AN_FOUNDATION_MODE=sprite-claw AN_MOBILE=1 AN_WIDTH="$width" \\
+            AN_CAPTURE_DIR="artifacts/an6-compact-claw-hunt-$width" \\
+            AN_ASSET_ROOT="artifacts/an6-compact-claw-atlas" \\
+            node tools/animation/capture-hunt.cjs
+          done
+          node - <<'NODE'
+          const fs=require('fs');
+          for(const width of [320,390]){
+            const root=`artifacts/an6-compact-claw-hunt-${width}`;
+            const summary=JSON.parse(fs.readFileSync(root+'/capture-summary.json','utf8'));
+            const trace=JSON.parse(fs.readFileSync(root+'/motion-trace.json','utf8'));
+            const actionSamples=trace.flatMap(t=>t.hollow?.entities??[])
+              .filter(e=>e.foundation?.clip==='attack-travel').length;
+            const result={width,scene:summary.scene,physicalDevice:false,sourceLitOnly:true,
+              actionSamples,maximumNativeMarkerSlip:summary.maximumNativeMarkerSlip,
+              markerContactWithinOneNativePixel:summary.markerContactWithinOneNativePixel,
+              browserErrors:summary.errors,resourceErrors:summary.failedResources.length};
+            fs.writeFileSync(root+'/claw-proof.json',JSON.stringify(result,null,2)+'\\n');
+            console.log(JSON.stringify(result));
+            if(!actionSamples)throw Error('No actual source-claw actor frames were rendered at '+width+'px');
+          }
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: an6-compact-claw-real-csharp-hunt
+          path: |
+            artifacts/an6-compact-claw-hunt-320/
+            artifacts/an6-compact-claw-hunt-390/
+          if-no-files-found: warn
+          retention-days: 14
