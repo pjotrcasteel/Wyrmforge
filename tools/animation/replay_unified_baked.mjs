@@ -6,7 +6,7 @@ import {resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createSpriteAnimationState,updateSpriteAnimation,validateCreatureRigProfile} from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/sprite-animation.js';
 
-export function replayUnifiedTurns(profile,{rates=[15,30,60,120],targets}={}){
+export function replayUnifiedTurns(profile,{rates=[15,30,60,120],entryPhases=[0,.25,.5,.75],targets}={}){
     validateCreatureRigProfile(profile);
     if(profile.facing.transition!=='source-pivot'||!profile.pivots?.positive||!profile.pivots?.negative){
         throw new TypeError('Bidirectional authored pivot pack required');
@@ -19,25 +19,33 @@ export function replayUnifiedTurns(profile,{rates=[15,30,60,120],targets}={}){
     const tests=[];
     for(const hz of rates){
         if(!Number.isSafeInteger(hz)||hz<=0)throw new RangeError('Positive integer replay Hz required');
-        for(const {from,to} of pairs){
+        for(const {from,to} of pairs)for(const entryPhase of entryPhases){
             if(!directions.includes(from)||!directions.includes(to)||from===to)throw new RangeError('Invalid direction pair');
-            const state=createSpriteAnimationState(),entityId='AN6-turn-'+from+'-'+to;
-            const motion=(timestamp,direction)=>({entityId,timestamp,travel:0,
-                world:{x:0,y:0},moving:false,direction});
-            let pose=updateSpriteAnimation(state,profile,motion(0,from));
+            if(!Number.isFinite(entryPhase)||entryPhase<0||entryPhase>=1)throw new RangeError('Entry gait phase must be in [0,1)');
+            const state=createSpriteAnimationState(),entityId='AN6-turn-'+from+'-'+to+'-'+entryPhase;
+            const vector=profile.locomotion.stanceVelocityByDirection?.[from];
+            if(entryPhase&&!vector)throw new TypeError('Calibrated source travel required for nonzero gait entry');
+            const advanced={x:-(vector?.x??0)*entryPhase,y:-(vector?.y??0)*entryPhase};
+            const distance=Math.hypot(advanced.x,advanced.y);
+            const entryTime=entryPhase?0.25:0;
+            const motion=(timestamp,direction,moving=false)=>({entityId,timestamp,travel:distance,
+                world:advanced,moving,direction});
+            let pose=updateSpriteAnimation(state,profile,{entityId,timestamp:0,travel:0,
+                world:{x:0,y:0},moving:false,direction:from});
+            if(entryPhase)pose=updateSpriteAnimation(state,profile,motion(entryTime,from,true));
             const initial=pose.clip, samples=[],nativeUnit=profile.unitsPerPixel;
             const stepCount=Math.ceil(hz*4),expected=profile.pivots[
                 (directions.indexOf(to)-directions.indexOf(from)+8)%8===1?'positive':'negative'].clip;
             for(let step=1;step<=stepCount;step++){
-                pose=updateSpriteAnimation(state,profile,motion(step/hz,to));
-                samples.push({at:step/hz,clip:pose.clip,direction:pose.direction,frame:pose.frame,
+                pose=updateSpriteAnimation(state,profile,motion(entryTime+step/hz,to));
+                samples.push({at:entryTime+step/hz,clip:pose.clip,direction:pose.direction,frame:pose.frame,
                     slip:pose.debug.maxSlip/nativeUnit,correctionSaturated:pose.debug.correctionSaturated});
                 if(pose.direction===to&&pose.clip===profile.locomotion.clip)break;
             }
             const turnFrames=samples.filter(s=>s.clip===expected);
             const peak=Math.max(0,...samples.map(s=>s.slip??0));
             const end=samples.at(-1);
-            tests.push({hz,from,to,initial,expectedTurnClip:expected,turnFrames:turnFrames.length,
+            tests.push({hz,from,to,entryPhase,initial,expectedTurnClip:expected,turnFrames:turnFrames.length,
                 firstTurnFrame:turnFrames[0]?.frame??null,lastTurnFrame:turnFrames.at(-1)?.frame??null,
                 completed:end?.clip===profile.locomotion.clip&&end.direction===to,
                 completedAt:end?.at??null,peakNativeSlip:peak,contactWithinOneNativePixel:peak<=1,
