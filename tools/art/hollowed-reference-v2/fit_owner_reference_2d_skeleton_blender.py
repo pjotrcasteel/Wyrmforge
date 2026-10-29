@@ -131,85 +131,139 @@ def rotate_real_bone_to_target(rig, bone_name, target, max_scale):
 
 
 def fit_real_source_boot_contact(rig, body):
-    """Pitch/roll real weighted foot controls until both soles are supported.
+    """Fit true artist-defined toe AND heel to the same ground plane.
 
-    The illustrated toe landmark is an approximate reference. Final boot
-    orientation must be decided using the actual evaluated 3D source mesh.
-    A pelvis-height-only contact check allowed toe-only floating feet.
+    Previous low-vertex "contact patch" check permitted a downward-tilted
+    boot standing on its tip. Source-toe/source-heel identity is defined
+    in the ORIGINAL unposed mesh, then measured on its actually evaluated
+    3D SKINNED points as the independent foot joint rotates.
     """
-    indices={}
+    modifiers=[m for m in body.modifiers if m.type=="ARMATURE"]
+    if len(modifiers)!=1:
+        raise ValueError("One independently controlled source skin is required")
+    original_show=modifiers[0].show_viewport
+    modifiers[0].show_viewport=False
+    bpy.context.view_layer.update()
+    try:
+        rest=evaluated_world_vertices(body)
+    finally:
+        modifiers[0].show_viewport=original_show
+        bpy.context.view_layer.update()
+
+    split={}
     for side in ("L","R"):
         group=body.vertex_groups.get(f"H_Foot_{side}")
         if group is None:
-            raise ValueError(f"Source artist's foot skin weights absent for {side}")
-        indices[side]=[
-            v.index for v in body.data.vertices
-            if any(g.group==group.index and g.weight>.13 for g in v.groups)
-        ]
-        if len(indices[side])<40:
-            raise ValueError(f"Not enough original skinned foot geometry {side}: {len(indices[side])}")
+            raise ValueError(f"Missing original skinned source foot {side}")
+        influenced=[v.index for v in body.data.vertices if
+                    any(g.group==group.index and g.weight>.20
+                        for g in v.groups)]
+        if len(influenced)<100:
+            raise ValueError(f"Too few real source boot vertices: {side}")
+        foot_floor=min(rest[i].z for i in influenced)
+        sole=[i for i in influenced if rest[i].z<foot_floor+.23]
+        if len(sole)<50:
+            raise ValueError(f"Cannot determine true boot sole: {side}")
+        # Source foot forward is -Y. Low-percentile original source Y
+        # identifies toes even after the skeleton rotates in 3D.
+        original_y=sorted(sole,key=lambda i:rest[i].y)
+        take=max(15,len(original_y)//4)
+        toe=original_y[:take]
+        heel=original_y[-take:]
+        if rest[heel[0]].y-rest[toe[-1]].y < .06:
+            raise ValueError(f"Creator foot geometry cannot separate toe and heel {side}")
+        split[side]={
+            "all":influenced,
+            "toe":toe,
+            "heel":heel,
+            "source_y_span_m":round(float(rest[original_y[-1]].y-
+                                          rest[original_y[0]].y),4)
+        }
 
-    def measure(world, side):
-        foot=[world[i] for i in indices[side]]
-        low=min(v.z for v in foot)
-        near=[v for v in foot if v.z<low+.095]
-        length=(max(v.y for v in near)-min(v.y for v in near)) if len(near)>1 else 0.
-        return float(low),float(length),len(near)
+    def lower_fraction(values,portion=.14):
+        s=sorted(values)
+        return float(s[max(0,int((len(s)-1)*portion))])
 
-    source_world=evaluated_world_vertices(body)
-    base={side:measure(source_world,side) for side in ("L","R")}
+    def measure(points, side):
+        data=split[side]
+        toe_z=lower_fraction([points[i].z for i in data["toe"]])
+        heel_z=lower_fraction([points[i].z for i in data["heel"]])
+        overall=min(points[i].z for i in data["all"])
+        near=[i for i in data["all"] if points[i].z<overall+.095]
+        y_length=(max(points[i].y for i in near)-
+                  min(points[i].y for i in near)) if len(near)>1 else 0.
+        return {"toe_z":toe_z,"heel_z":heel_z,
+                "difference":toe_z-heel_z,"lowest":float(overall),
+                "contact_patch_m":float(y_length),
+                "near_vertices":len(near)}
+
+    initial=evaluated_world_vertices(body)
+    base={side:measure(initial,side) for side in ("L","R")}
     results={}
     for side in ("L","R"):
-        other="R" if side=="L" else "L"
         pb=rig.pose.bones[f"H_Foot_{side}"]
         original=pb.rotation_quaternion.copy()
-        world_rot=(rig.matrix_world @ pb.matrix).to_quaternion()
-        pitch_axis=world_rot.inverted() @ Vector((1,0,0))
-        roll_axis=world_rot.inverted() @ Vector((0,1,0))
-        pitch_axis.normalize()
-        roll_axis.normalize()
-        opposite_z=base[other][0]
+        world_rotation=(rig.matrix_world @ pb.matrix).to_quaternion()
+        pitch_axis=(world_rotation.inverted()@Vector((1,0,0))).normalized()
+        roll_axis=(world_rotation.inverted()@Vector((0,1,0))).normalized()
+        other="R" if side=="L" else "L"
+        other_low=base[other]["lowest"]
         best=None
-        for pitch_step in range(-10,11):
-            pitch=pitch_step*.075
-            for roll_step in (-2,0,2):
-                roll=roll_step*.09
+        for step in range(-18,19):
+            pitch=step*.075
+            for roll_step in (-3,0,3):
+                roll=roll_step*.075
                 pb.rotation_quaternion=(original
                     @ Quaternion(pitch_axis,pitch)
                     @ Quaternion(roll_axis,roll))
                 bpy.context.view_layer.update()
-                low,length,count=measure(evaluated_world_vertices(body),side)
-                # Prefer broad actual heel/toe ground evidence and
-                # preserved two-foot vertical alignment. Never reward
-                # extreme rotations merely for matching the target.
-                score=(5.0*max(0.,.17-length)
-                    + 2.5*max(0.,abs(low-opposite_z)-.035)
-                    + .038*abs(pitch) + .03*abs(roll))
+                m=measure(evaluated_world_vertices(body),side)
+                # Heel/toe coplanarity is authoritative. Ground height and
+                # sole span are separate constraints. Penalize unnatural
+                # extreme ankle twists rather than rewarding one toe.
+                score=(9.0*abs(m["difference"])
+                    + 3.0*max(0.,abs(m["lowest"]-other_low)-.05)
+                    + 1.4*max(0.,.14-m["contact_patch_m"])
+                    + .045*abs(pitch)+.035*abs(roll))
                 if best is None or score<best[0]:
-                    best=(score,pitch,roll,low,length,count)
-        _,pitch,roll,low,length,count=best
+                    best=(score,pitch,roll,m)
+        if best is None:
+            raise ValueError(f"No anatomical ankle candidate {side}")
+        _,pitch,roll,m=best
         pb.rotation_quaternion=(original
             @ Quaternion(pitch_axis,pitch)
             @ Quaternion(roll_axis,roll))
         bpy.context.view_layer.update()
         base[side]=measure(evaluated_world_vertices(body),side)
         results[side]={
-            "initial_near_floor_patch_m":round(base[side][1],4),
+            "original_heel_to_toe_height_difference_m":round(
+                measure(initial,side)["difference"],5),
+            "real_source_toe_vertices":len(split[side]["toe"]),
+            "real_source_heel_vertices":len(split[side]["heel"]),
+            "original_source_sole_y_span_m":split[side]["source_y_span_m"],
             "fitted_pitch_radians":round(pitch,4),
             "fitted_roll_radians":round(roll,4),
-            "actual_heel_to_toe_patch_m":round(length,4),
-            "actual_foot_sole_min_world_z":round(low,5),
-            "actual_foot_source_vertices":len(indices[side]),
-            "near_floor_vertex_count":count,
         }
 
-    # After optimizing both sides, record the true coupled outcome.
-    updated=evaluated_world_vertices(body)
+    actual=evaluated_world_vertices(body)
     for side in ("L","R"):
-        low,length,count=measure(updated,side)
-        results[side]["actual_heel_to_toe_patch_m"]=round(length,4)
-        results[side]["actual_foot_sole_min_world_z"]=round(low,5)
-        results[side]["near_floor_vertex_count"]=count
+        m=measure(actual,side)
+        results[side].update({
+            "real_source_toe_low_world_z":round(m["toe_z"],5),
+            "real_source_heel_low_world_z":round(m["heel_z"],5),
+            "heel_to_toe_height_difference_m":round(m["difference"],5),
+            "real_contact_patch_length_m":round(m["contact_patch_m"],4),
+            "lowest_source_foot_world_z":round(m["lowest"],5),
+            "real_near_floor_foot_vertices":m["near_vertices"],
+            "sole_ends_coplanar_within_65mm":abs(m["difference"])<.065,
+        })
+    if any(not r["sole_ends_coplanar_within_65mm"]
+           for r in results.values()):
+        raise ValueError("Original source heel and toe remain at distinct "
+                         f"heights after real ankle fitting: {results}")
+    if abs(results["L"]["lowest_source_foot_world_z"]-
+           results["R"]["lowest_source_foot_world_z"])>.085:
+        raise ValueError(f"Feet remain at different global heights: {results}")
     return results
 
 
