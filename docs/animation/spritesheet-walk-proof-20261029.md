@@ -128,3 +128,9 @@ rejected. No limits or correction bounds were widened. The compact source is
 preserved separately for baking and actual-game comparison. Metadata-only
 captured-root replay is explicitly undersampled and cannot replace live proof.
 
+The atomic asset owner now supports explicit primary `colorRole: albedo`, reusing
+that image in the shared GPU descriptor rather than requiring a fourth review
+color texture. Unknown roles fail before publication; existing packs retain
+their prior behavior. All 612 JavaScript checks pass. Material rendering and
+actual GPU acceptance remain open.
+

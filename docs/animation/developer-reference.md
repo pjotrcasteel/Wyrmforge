@@ -29,6 +29,13 @@ all selected clips/frames/views, adds one native pixel of guard and copies pixel
 without resampling. Cell and anchor remain in the original coordinate system;
 the existing atlas layout contract applies the crop. Actual new pose bounds and
 all production material maps still count toward the decoded asset budget.
+
+An atlas clip may declare `colorRole: albedo` when its primary image is actual
+unlit source albedo. The material descriptor reuses that loaded image alongside
+normal/emissive maps, avoiding a duplicate beauty-color texture. The default
+role remains review color and cannot silently claim an albedo binding. Unknown
+roles fail before texture publication. This binding capability does not mark a
+pack production-ready or prove its normals, depth, lighting or mobile budgets.
 Canon: [art](../canon/art-and-animation.md#universal-animation-foundation--an0an6-27-october-2026),
 [authority](../canon/architecture-and-quality.md#locked--unified-engine-ownership-and-event-authority-27-october-2026).
 

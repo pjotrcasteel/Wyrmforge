@@ -33,6 +33,19 @@ test('tampered bytes fail without publishing a partly loaded pack and retain mea
  mock(t,m=>m.clips.rest.sha256='0'.repeat(64));const a=create(new URL('https://example.test/'));
  assert.equal(await a.preload(),false);assert.equal(a.ready(),false);assert.match(a.error,/hash mismatch/);
 });
+
+test('explicit primary albedo shares its existing texture with GPU material binding',async t=>{
+ mock(t,m=>Object.assign(m.clips.rest,{colorRole:'albedo',materials:{normal:{image:'normal.png',sha256:hash},emissive:{image:'emissive.png',sha256:hash}}}));
+ const a=create(new URL('https://example.test/'));assert.equal(await a.preload(),true);
+ assert.equal(a.stats.textures,3);assert.equal(a.stats.decodedBytes,64*256*4*3);
+ const sample={clip:'rest',frame:1,direction:'S'},render=a.renderDescriptor(sample);
+ assert.ok(render.material.albedo);assert.equal(render.gpuMaterialComplete,true);assert.equal(render.productionAccepted,false);
+});
+
+test('unknown primary color roles fail before any texture is published',async t=>{
+ mock(t,m=>m.clips.rest.colorRole='painted-as-normal');const a=create(new URL('https://example.test/'));
+ assert.equal(await a.preload(),false);assert.match(a.error,/color role/);assert.equal(a.stats.textures,0);
+});
 test('profile mismatch and memory budget fail before decoding',async t=>{
  const m=mock(t,m=>m.clips.rest.frames=3);const a=create(new URL('https://example.test/'));assert.equal(await a.preload(),false);assert.match(a.error,/Profile\/atlas mismatch/);
  m.clips.rest.frames=2;const b=create(new URL('https://example.test/'),{maxDecodedBytes:1});assert.equal(await b.preload(),false);assert.match(b.error,/budget/);

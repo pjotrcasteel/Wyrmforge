@@ -26,6 +26,7 @@ export function createCreatureAnimationAssets(baseUrl,{maxDecodedBytes=64*1024*1
         if(manifest.schemaVersion!==2||manifest.directions.length!==8)throw new TypeError('Invalid animation atlas manifest');
         const specs=[profile.locomotion,...(profile.locomotion.motionVariants??[]),...Object.values(profile.actions),...Object.values(profile.pivots??{}),...(profile.pivot?[profile.pivot]:[])];
         for(const spec of specs)if(manifest.clips[spec.clip]?.frames!==spec.frames)throw new TypeError(`Profile/atlas mismatch: ${spec.clip}`);
+        for(const clip of Object.values(manifest.clips))if(clip.colorRole!=null&&!['albedo','review-lit'].includes(clip.colorRole))throw new TypeError('Unknown primary sprite color role');
         if(manifest.skin){
             if(!profile.sourceSupport)throw new TypeError('Source skin requires shared source support profile');
             const skin=await loadSourceSkinResources(baseUrl,manifest.skin,{maxDecodedBytes});
@@ -127,9 +128,10 @@ export function createCreatureAnimationAssets(baseUrl,{maxDecodedBytes=64*1024*1
             const clip=data.manifest.clips[sample.clip];
             if(!clip)throw new RangeError('Unknown source clip');
             const maps={};for(const kind of Object.keys(clip.materials??{}))maps[kind]=data.images.get(`${sample.clip}:${kind}`);
+            const albedo=maps.albedo??(clip.colorRole==='albedo'?data.images.get(sample.clip):null);
             return {frame:spriteFrame(data.manifest,sample),clip,sourceSignature:data.manifest.sourceSignature,
-                material:{albedo:maps.albedo??null,normal:maps.normal??null,emissiveMap:maps.emissive??null},
-                gpuMaterialComplete:Boolean(maps.albedo&&maps.normal&&maps.emissive),productionAccepted:data.manifest.productionReady===true};
+                material:{albedo,normal:maps.normal??null,emissiveMap:maps.emissive??null},
+                gpuMaterialComplete:Boolean(albedo&&maps.normal&&maps.emissive),productionAccepted:data.manifest.productionReady===true};
         },
         draw(ctx,sample,x,y,radius,opacity=1){
             const clip=data?.manifest.clips[sample?.clip],image=data?.images.get(sample?.clip);
