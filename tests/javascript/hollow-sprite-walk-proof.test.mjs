@@ -3,6 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
+import {createSpriteAnimationState,updateSpriteAnimation} from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/sprite-animation.js';
 const root=new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/',import.meta.url);
 const pack=new URL('../art/review/animation-foundation-sprite-walk/',root);
 const profile=JSON.parse(readFileSync(new URL('profile.json',pack),'utf8'));
@@ -32,4 +33,13 @@ test('sprite proof contains genuine complete eight-facing atlas data and no live
  assert.equal(manifest.clips.walk.frames,16);assert.deepEqual(profile.actions,{});
  const hash=path=>createHash('sha256').update(readFileSync(new URL(path,pack))).digest('hex');
  assert.equal(hash('walk.png'),manifest.clips.walk.sha256);assert.equal(hash('profile.json'),manifest.profileSha256);
+});
+
+test('an explicit row-switch profile preserves gait phase and starts new facing contacts without missing pivot art',()=>{
+ assert.equal(profile.facing.transition,'row');const state=createSpriteAnimationState();
+ const first=updateSpriteAnimation(state,profile,{entityId:5,timestamp:0,travel:0,world:{x:0,y:0},direction:'S',moving:true});
+ for(const [i,direction] of ['E','N','W','S'].entries()){
+  const sample=updateSpriteAnimation(state,profile,{entityId:5,timestamp:(i+1)*.1,travel:0,world:{x:0,y:0},direction,moving:true});
+  assert.equal(sample.direction,direction);assert.equal(sample.phase,first.phase);assert.ok(sample.debug.maxSlip<1e-8);
+ }
 });

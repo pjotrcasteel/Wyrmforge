@@ -81,6 +81,15 @@ experiments must not be promoted as alternative engines.
 
 ## Public entry points
 
+For a baked v2 profile, `facing.transition: 'row'` permits explicit discrete
+facing-row selection while retaining gait phase and starting new source-contact
+epochs. `'source-pivot'` uses the declared turn clips. The exporter chooses row
+selection for a walk-only proof; missing pivot art must not leave its facing
+permanently stuck. Row selection is not a replacement for AN2's authored,
+weight-bearing turn. Profiles without this optional field retain prior behavior.
+The [baked-walk receipt](spritesheet-walk-proof-20261029.md) records the current
+contact/facing findings without replacing the older source research evidence.
+
 `wwwroot/js/sprite-animation.js` is the shared playback owner. Existing schema-v1
 profiles continue to use its existing API. No species switch belongs in this module.
 

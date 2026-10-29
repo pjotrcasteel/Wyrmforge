@@ -105,6 +105,7 @@ export function validateCreatureRigProfile(profile) {
     for(const socket of Object.values(rig.sockets??{}))if(!bones.has(socket.bone))fail('socket on missing bone');
     const directions=profile.facing?.directions;
     if(!Array.isArray(directions)||directions.length!==8||!directions.every(d=>typeof d==='string'&&d.length>0)||new Set(directions).size!==8)fail('eight unique facing rows required');
+    if(profile.facing.transition!=null&&!['row','source-pivot'].includes(profile.facing.transition))fail('invalid facing transition policy');
     if(!Number.isFinite(profile.locomotion?.stride)||!(profile.locomotion?.stride>0))fail('positive authored stride required');
     for(const [name,expected] of [['positive',1],['negative',-1]])if(profile.pivots?.[name]?.facingStep!=null&&profile.pivots[name].facingStep!==expected)fail(`source turn faces the wrong direction: ${name}`);
     const specs=[profile.locomotion,...Object.values(profile.actions??{}),...(profile.pivot?[profile.pivot]:[]),...Object.values(profile.pivots??{})];
@@ -274,6 +275,14 @@ function updateContactAnimation(state,profile,input){
     state.previousWorld={...input.world};
     state.timestamp=input.timestamp;state.travel=input.travel;state.stopped=stopped;
     state.time+=dt;
+    if(!profile.sourceSupport&&profile.facing.transition==='row'&&!state.action&&!stopped){
+        const row=profile.facing.directions.indexOf(input.direction);
+        if(row>=0&&row!==state.facingIndex){
+            // Explicit discrete atlas policy: preserve gait phase, but a new
+            // source view begins new contact epochs. This is not a baked turn.
+            state.facingIndex=row;state.contacts=Object.create(null);state.pivotTime=0;state.pivotSign=null;
+        }
+    }
     const stride=profile.locomotion.strideByDirection?.[profile.facing.directions[state.action?state.actionDirection:state.facingIndex]]??profile.locomotion.stride;
     let sourceCycleBefore=null;
     if(profile.sourceSupport){

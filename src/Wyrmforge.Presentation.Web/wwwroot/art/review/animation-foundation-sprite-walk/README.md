@@ -4,6 +4,8 @@ Opt in with `/enemy-lab?kind=Hollow&seed=42&autoplay=false&cast=false&entityId=5
 This proof uses the existing sprite controller and full-frame atlas renderer.
 It contains 16 complete source poses in each of eight genuinely rendered views.
 No live skin, per-limb cutout or runtime PNG warp is used by this asset pack.
+Its explicit row-switch policy preserves gait phase; it does not claim a
+source-authored weight-bearing turn. Contact validation is still in progress.
 
 The source is `art/source/animation-foundation/catch-step-20261029/`.
 `manifest.json` records its blend hash, rig signature and eight distinct row
