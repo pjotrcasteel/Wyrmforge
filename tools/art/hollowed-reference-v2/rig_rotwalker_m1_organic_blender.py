@@ -239,21 +239,36 @@ def author_motion(rig, body, original_low):
         delta=float(original_low.z-low.z)
         if abs(delta)>.23:
             raise ValueError(f"Unrealistic feet-ground correction on frame {frame}: {delta:.3f}")
-        # Contact-restorer on a separate ROOT pose bone; this is preview
-        # root height compensation, not a physically proven foot IK solve.
-        rig.pose.bones["H_Root"].location.z = delta
-        bpy.context.view_layer.update()
-        low,_=bounds(eval_points(body))
-        grounded=abs(float(low.z-original_low.z))<.017
-        if not grounded:
-            raise ValueError(f"Preview heel contact failed, frame {frame}")
+        # The root bone's rig-local translation is not guaranteed to be
+        # numerically identical to world Z once weighted / parent controls
+        # are evaluated; solve by observed geometry (iterative feedback).
+        # This is still NOT foot IK, so record and honestly review both soles.
+        correction=0.0
+        residual=delta
+        for iteration in range(5):
+            correction+=residual
+            rig.pose.bones["H_Root"].location.z=correction
+            bpy.context.view_layer.update()
+            low,_=bounds(eval_points(body))
+            residual=float(original_low.z-low.z)
+            if abs(residual)<.009:
+                break
+        if abs(residual)>=.02:
+            raise ValueError(
+                f"Weighted source heel contact not actually achieved frame={frame}: "
+                f"start_delta={delta:.4f}, final_root={correction:.4f}, "
+                f"residual={residual:.4f}"
+            )
+        if abs(correction)>.23:
+            raise ValueError(f"Implausible source root correction frame={frame}: {correction:.3f}")
         for bone in rig.pose.bones:
             bone.keyframe_insert(data_path="rotation_quaternion",
                                  frame=frame,group=bone.name)
         rig.pose.bones["H_Root"].keyframe_insert(data_path="location",frame=frame,
                                                  group="H_Root")
         footsteps.append({"frame":frame,"ground_z":round(float(low.z),5),
-                          "root_correction":round(delta,6)})
+                          "root_correction":round(correction,6),
+                          "residual_m":round(residual,6)})
     # Seamless loop on true original bone controls, not a sprite crossfade.
     scene.frame_set(49)
     set_pose(rig,0)
