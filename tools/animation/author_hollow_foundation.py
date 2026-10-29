@@ -149,7 +149,13 @@ for clip_id,clip,heading in entries:
                 sole=Vector((sign*.085,-.06 if side=='L' else .055,SOLE_Z));stance=True
             elif clip.startswith('pivot'):
                 # Two actual weight-bearing steps complete one 45 degree turn.
-                start=Vector((sign*.085,0,SOLE_Z))
+                # Preserve the ACTUAL walk's frame-zero planted sole positions
+                # (left back, right ahead) on entering the source pivot. Resetting
+                # both feet to neutral displaced the silhouette by 4–8 native
+                # pixels before a single authored turn step occurred.
+                # The new pivot starts at the same supported walk phase; each
+                # foot then swings around the body without a contact teleport.
+                start,_=foot_target(side,0)
                 end=Matrix.Rotation(turn_sign*math.pi/4,4,'Z') @ start
                 begin,finish=(.48,.96) if side=='L' else (.04,.48)
                 a=max(0,min(1,(p-begin)/(finish-begin)))
