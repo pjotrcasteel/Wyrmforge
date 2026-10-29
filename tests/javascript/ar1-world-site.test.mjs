@@ -40,7 +40,7 @@ test('AR1 live diagnostic uses the same C# polygon outline as physical collision
 
 test('AR1 mountain and lair semantic shapes have distinct physical material identities', () => {
     for (const [kind, expected] of [
-        ['cliff', '#56636d'], ['glacier-cliff', '#859eae'],
+        ['cliff', '#42525d'], ['glacier-cliff', '#7d9bac'],
         ['wyrm-rib', '#55434a'], ['ice-spire', '#b1d5e5'],
     ]) {
         const { ctx, colors } = canvas();
