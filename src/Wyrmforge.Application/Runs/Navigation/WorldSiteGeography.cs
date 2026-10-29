@@ -11,6 +11,7 @@ public enum WorldSiteSurfaceId
     Mud,
     Rock,
     ShallowWater,
+    GlacialIce,
 }
 
 /// <summary>Non-visual geographic properties, independent of a particular render material or palette.</summary>
@@ -111,7 +112,9 @@ public static class WorldSiteGeographyProjection
             var substrate = Substrate(node.Habitat);
             var corridors = ports.Select(port => new WorldSiteCorridor(port.EdgeId, WorldSiteSurfaceId.Road, .09,
                 [new HuntPoint(.5, .5), port.LocalPoint])).ToArray();
-            var landmarks = node.Type == WyrmrealmNodeType.Dragon ? new[] { "wyrm-lair" }
+            var landmarks = node.Type == WyrmrealmNodeType.Dragon ? region == SpellSchool.Frost
+                ? new[] { "wyrm-lair", "glacier-throne" }
+                : new[] { "wyrm-lair", "ashen-spine" }
                 : node.Refuge ? ["reclaimable-refuge"]
                 : node.Watchtower ? ["scouting-watchtower"]
                 : node.PreLair ? ["lair-approach"]
@@ -141,7 +144,8 @@ public static class WorldSiteGeographyProjection
                 },
                 "wyrm-lair" => substrate with
                 {
-                    Material = WorldSiteSurfaceId.Rock, Height = .57, Slope = .26, Wear = .65,
+                    Material = region == SpellSchool.Frost ? WorldSiteSurfaceId.GlacialIce : WorldSiteSurfaceId.Rock,
+                    Height = .57, Slope = .26, Wear = .65,
                 },
                 _ => substrate,
             };
