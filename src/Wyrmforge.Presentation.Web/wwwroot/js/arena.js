@@ -366,7 +366,8 @@ function draw(state, snapshot, width, height) {
             gpu.render(ctx, state.fractureGpuFrame);
         }
         catch (error) {
-            state.gpuError = String(error); gpu.dispose(); state.gpuWorld = null; gpu = null;
+            gpuFireballs.clear();
+            state.gpuError = String(error); gpu.dispose(); state.gpuWorld = null; state.gpuFireball = null; gpu = null;
         }
     }
     drawReliquaryEmergence(ctx, snapshot.reliquary);
