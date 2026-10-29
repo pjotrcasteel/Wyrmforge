@@ -110,7 +110,11 @@ for clip_id,clip,heading in entries:
     for index in range(frame_count if grid else frame_count+1):
         scene.frame_set(index+1)
         gait_index=index%GRID_PHASES if grid else index
-        p=gait_index/(GRID_PHASES if grid or clip=='walk' else 16);t=(index//GRID_PHASES)/(GRID_ACTIONS-1) if grid else (index/15 if index<16 else 1)
+        # Pivot source samples include their fully planted terminal pose at
+        # frame 15. Advancing to the next walk facing must not teleport the
+        # still-swinging last foot (frame 15/16 of the older turn source).
+        p=min(1,index/15) if clip.startswith('pivot') else gait_index/(GRID_PHASES if grid or clip=='walk' else 16)
+        t=(index//GRID_PHASES)/(GRID_ACTIONS-1) if grid else (index/15 if index<16 else 1)
         # A grid is a sampled whole-body surface, not a sequential action.
         # Each row starts a new gait/contact experiment at a fixed action time.
         if grid and gait_index==0:last_points={}
@@ -290,6 +294,16 @@ if 'walk' in records:
         if mismatch>1e-5:
             raise ValueError(f'{turn_name} first-frame sole marker discontinuity: {mismatch:.9f} m')
         records[turn_name]['authoredWalkEntryMaxSourceContactDeltaMetres']=mismatch
+        # The LAST rendered pivot frame (not an unrendered frame 16) must
+        # end in the next facing's supported walk gait. Both soles must land,
+        # with real source marker positions returning to walk phase zero.
+        turn_exit={c['id']:Vector((c['x'],c['y'],c['z'])) for c in records[turn_name]['samples'][-1]['contacts']}
+        if walk_entry.keys()!=turn_exit.keys():
+            raise ValueError(f'{turn_name} exits with an unplanted foot')
+        exit_delta=max((walk_entry[k]-turn_exit[k]).length for k in walk_entry)
+        if exit_delta>1e-5:
+            raise ValueError(f'{turn_name} final rendered contact does not meet walk: {exit_delta:.9f} m')
+        records[turn_name]['authoredWalkExitMaxSourceContactDeltaMetres']=exit_delta
 # Pack images into editable source rather than depending on another workstation.
 bpy.ops.file.pack_all()
 if 'walk' in actions:rig.animation_data.action=actions['walk']
