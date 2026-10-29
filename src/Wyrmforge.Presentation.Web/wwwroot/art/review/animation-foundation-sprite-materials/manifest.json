@@ -1,0 +1,562 @@
+{
+  "schemaVersion": 2,
+  "profileSha256": "e8744fb1a81cadd877448943d20e487b7be0825ca0d975b3fd7ba068678469da",
+  "candidateNotApproved": true,
+  "productionReady": false,
+  "reviewLightingOnly": false,
+  "runtimeIntegrated": false,
+  "directions": [
+    "N",
+    "NE",
+    "E",
+    "SE",
+    "S",
+    "SW",
+    "W",
+    "NW"
+  ],
+  "clips": {
+    "walk": {
+      "image": "walk-albedo.png",
+      "sha256": "cf8f9c3939113cf25ed62229a041310db2dc98a2a44f1884eab1a88ac9f1af77",
+      "frames": 16,
+      "cell": 96,
+      "columns": 16,
+      "crop": [
+        16,
+        22,
+        80,
+        84
+      ],
+      "anchor": [
+        48,
+        72
+      ],
+      "worldSize": 93,
+      "reviewLightingOnly": false,
+      "reviewColorSha256": "642c9c9fa4d12eefa7d72bbb398998c6becfeb1d9bab4189c12e0c1dfd9759ce",
+      "materials": {
+        "normal": {
+          "image": "walk-normal.png",
+          "sha256": "b9147662498223a0c32d975bd2c321ec3a9b883d849ced0986abefe416c87867",
+          "basis": "camera-right/up/toward"
+        },
+        "emissive": {
+          "image": "walk-emissive.png",
+          "sha256": "14ed43a56a1bfcf6445644ed1aaf5fda9a871e8b2579bea2b3961e357c6fc1c4",
+          "basis": "source-evaluated"
+        }
+      },
+      "colorRole": "albedo",
+      "sourceNormalPreNormalizationLengthRange": [
+        0.05587375234813733,
+        1.0144287771670502
+      ]
+    }
+  },
+  "sourceSignature": "75a1698be134b6e83192912ca0b0ceaf4f26f1c774d4734a2fdb3299abd7eb59",
+  "rowSha256": {
+    "walk": [
+      "1f6e3e0305c5d8bfedc5797090a75f5c77b988263ca0a5918801f49a135409d9",
+      "2c2045ad4987971c278ff26038c98a4e4bef8882a7d09feebe0bf03f112a1a7a",
+      "612c93ee20558ac0a5289fd080def0e8575ee506628eb930c7354f83bce64162",
+      "f53a581851c7d8a610d89cbdfabcb229226aeb9e774362d18dae40c8e573a56a",
+      "dcc33522e7e49d29123ef1821c132cc7781eb6711e57d243238ed819c22f551b",
+      "b79691b21b7d37337c237122ac70a1bc4b40d730eade22a84ff4f0ccc1858d4b",
+      "4d73e01bb5e621e455ce3ce3574848de632e5ea762c558739d59b56606909586",
+      "2869dcd5cd20687a93c9456c3dc7096829e24df98849dd40b1315d333e475786"
+    ]
+  },
+  "sourceQC": {
+    "walk": {
+      "samples": [
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08499998599290848,
+              "y": -0.1499999612569809,
+              "z": -0.5
+            },
+            {
+              "id": "foot-R",
+              "x": -0.08500000089406967,
+              "y": 0.1000000387430191,
+              "z": -0.5
+            }
+          ],
+          "com": [
+            -0.00011643185280263424,
+            -0.032765697687864304
+          ],
+          "supportMargin": 0.046136444838235195,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation",
+          "rootTravelMetres": 0.0,
+          "rootTravelVectorMetres": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "gaitPhase": 0.0,
+          "actionProgress": null
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08500003069639206,
+              "y": -0.1187499612569809,
+              "z": -0.5
+            },
+            {
+              "id": "foot-R",
+              "x": -0.08499997109174728,
+              "y": 0.1312500387430191,
+              "z": -0.5000000596046448
+            }
+          ],
+          "com": [
+            0.02559478208422661,
+            -0.028696872293949127
+          ],
+          "supportMargin": 0.04310507487054952,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation",
+          "rootTravelMetres": 0.03125,
+          "rootTravelVectorMetres": [
+            0.0,
+            -0.03125,
+            0.0
+          ],
+          "gaitPhase": 0.0625,
+          "actionProgress": null
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08500003814697266,
+              "y": -0.0874999389052391,
+              "z": -0.4999999701976776
+            }
+          ],
+          "com": [
+            0.07678806036710739,
+            -0.07422709465026855
+          ],
+          "supportMargin": 0.016319683897538597,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation",
+          "rootTravelMetres": 0.0625,
+          "rootTravelVectorMetres": [
+            0.0,
+            -0.0625,
+            0.0
+          ],
+          "gaitPhase": 0.125,
+          "actionProgress": null
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08500007539987564,
+              "y": -0.0562499463558197,
+              "z": -0.5
+            }
+          ],
+          "com": [
+            0.07265420258045197,
+            -0.041470661759376526
+          ],
+          "supportMargin": 0.01196422961388128,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation",
+          "rootTravelMetres": 0.09375,
+          "rootTravelVectorMetres": [
+            0.0,
+            -0.09375,
+            0.0
+          ],
+          "gaitPhase": 0.1875,
+          "actionProgress": null
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08500009775161743,
+              "y": -0.024999946355819702,
+              "z": -0.4999999403953552
+            }
+          ],
+          "com": [
+            0.06495483219623566,
+            -0.027954991906881332
+          ],
+          "supportMargin": 0.013547137803078653,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation",
+          "rootTravelMetres": 0.125,
+          "rootTravelVectorMetres": [
+            0.0,
+            -0.125,
+            0.0
+          ],
+          "gaitPhase": 0.25,
+          "actionProgress": null
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08500008285045624,
+              "y": 0.006250068545341492,
+              "z": -0.49999988079071045
+            }
+          ],
+          "com": [
+            0.06051242724061012,
+            -0.030839785933494568
+          ],
+          "supportMargin": 0.01839128716902579,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation",
+          "rootTravelMetres": 0.15625,
+          "rootTravelVectorMetres": [
+            0.0,
+            -0.15625,
+            0.0
+          ],
+          "gaitPhase": 0.3125,
+          "actionProgress": null
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08500004559755325,
+              "y": 0.03750007972121239,
+              "z": -0.4999999701976776
+            }
+          ],
+          "com": [
+            0.06775697320699692,
+            0.004939063917845488
+          ],
+          "supportMargin": 0.020935815018099845,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation",
+          "rootTravelMetres": 0.1875,
+          "rootTravelVectorMetres": [
+            0.0,
+            -0.1875,
+            0.0
+          ],
+          "gaitPhase": 0.375,
+          "actionProgress": null
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08499998599290848,
+              "y": 0.0687500387430191,
+              "z": -0.49999991059303284
+            }
+          ],
+          "com": [
+            0.0575188472867012,
+            0.02272489108145237
+          ],
+          "supportMargin": 0.009788044442795508,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation",
+          "rootTravelMetres": 0.21875,
+          "rootTravelVectorMetres": [
+            0.0,
+            -0.21875,
+            0.0
+          ],
+          "gaitPhase": 0.4375,
+          "actionProgress": null
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08499998599290848,
+              "y": 0.10000001639127731,
+              "z": -0.49999991059303284
+            },
+            {
+              "id": "foot-R",
+              "x": -0.08500002324581146,
+              "y": -0.1499999761581421,
+              "z": -0.5
+            }
+          ],
+          "com": [
+            -0.0008847594144754112,
+            -0.03182085230946541
+          ],
+          "supportMargin": 0.04714393591639525,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation",
+          "rootTravelMetres": 0.25,
+          "rootTravelVectorMetres": [
+            0.0,
+            -0.25,
+            0.0
+          ],
+          "gaitPhase": 0.5,
+          "actionProgress": null
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-L",
+              "x": 0.08500001579523087,
+              "y": 0.13125000894069672,
+              "z": -0.4999999403953552
+            },
+            {
+              "id": "foot-R",
+              "x": -0.08499999344348907,
+              "y": -0.11874996870756149,
+              "z": -0.5
+            }
+          ],
+          "com": [
+            -0.026585690677165985,
+            -0.028320612385869026
+          ],
+          "supportMargin": 0.0428097437603618,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation",
+          "rootTravelMetres": 0.28125,
+          "rootTravelVectorMetres": [
+            0.0,
+            -0.28125,
+            0.0
+          ],
+          "gaitPhase": 0.5625,
+          "actionProgress": null
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-R",
+              "x": -0.08500002324581146,
+              "y": -0.08749996870756149,
+              "z": -0.5
+            }
+          ],
+          "com": [
+            -0.07711269706487656,
+            -0.07443597167730331
+          ],
+          "supportMargin": 0.015456027758281182,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation",
+          "rootTravelMetres": 0.3125,
+          "rootTravelVectorMetres": [
+            0.0,
+            -0.3125,
+            0.0
+          ],
+          "gaitPhase": 0.625,
+          "actionProgress": null
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-R",
+              "x": -0.08499998599290848,
+              "y": -0.0562499575316906,
+              "z": -0.4999999701976776
+            }
+          ],
+          "com": [
+            -0.07336845993995667,
+            -0.04215727001428604
+          ],
+          "supportMargin": 0.011702755100314094,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation",
+          "rootTravelMetres": 0.34375,
+          "rootTravelVectorMetres": [
+            0.0,
+            -0.34375,
+            0.0
+          ],
+          "gaitPhase": 0.6875,
+          "actionProgress": null
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-R",
+              "x": -0.08500002324581146,
+              "y": -0.024999987334012985,
+              "z": -0.5000001192092896
+            }
+          ],
+          "com": [
+            -0.06594493240118027,
+            -0.029301442205905914
+          ],
+          "supportMargin": 0.014543511100830353,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation",
+          "rootTravelMetres": 0.375,
+          "rootTravelVectorMetres": [
+            0.0,
+            -0.375,
+            0.0
+          ],
+          "gaitPhase": 0.75,
+          "actionProgress": null
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-R",
+              "x": -0.08500000834465027,
+              "y": 0.006250034552067518,
+              "z": -0.5
+            }
+          ],
+          "com": [
+            -0.061514176428318024,
+            -0.03243310749530792
+          ],
+          "supportMargin": 0.013974236827472892,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation",
+          "rootTravelMetres": 0.40625,
+          "rootTravelVectorMetres": [
+            0.0,
+            -0.40625,
+            0.0
+          ],
+          "gaitPhase": 0.8125,
+          "actionProgress": null
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-R",
+              "x": -0.08500001579523087,
+              "y": 0.03750001639127731,
+              "z": -0.5
+            }
+          ],
+          "com": [
+            -0.06807566434144974,
+            0.0037626384291797876
+          ],
+          "supportMargin": 0.016914536411155336,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation",
+          "rootTravelMetres": 0.4375,
+          "rootTravelVectorMetres": [
+            0.0,
+            -0.4375,
+            0.0
+          ],
+          "gaitPhase": 0.875,
+          "actionProgress": null
+        },
+        {
+          "contacts": [
+            {
+              "id": "foot-R",
+              "x": -0.08500000834465027,
+              "y": 0.0687500387430191,
+              "z": -0.5
+            }
+          ],
+          "com": [
+            -0.06885192543268204,
+            0.04083230718970299
+          ],
+          "supportMargin": 0.022145404185237087,
+          "balance": "supported",
+          "authoredYawRadians": 0,
+          "massModel": "authored-segment-centres-approximation",
+          "rootTravelMetres": 0.46875,
+          "rootTravelVectorMetres": [
+            0.0,
+            -0.46875,
+            0.0
+          ],
+          "gaitPhase": 0.9375,
+          "actionProgress": null
+        }
+      ],
+      "maxStanceSlipMetres": 1.564621925354004e-07,
+      "maxBoneLengthErrorMetres": 1.6165506577792144e-07,
+      "jointRangesDegrees": {
+        "knee-L": [
+          58.249987948978344,
+          122.17875380506567
+        ],
+        "knee-R": [
+          58.65567774105335,
+          122.53352824823835
+        ],
+        "elbow-L": [
+          38.007785656595445,
+          40.31534196566773
+        ],
+        "elbow-R": [
+          49.18843648543262,
+          61.40533261126589
+        ]
+      },
+      "strideMetres": 0.5,
+      "frames": 16,
+      "fps": 12.0,
+      "rootStrideVectorMetres": [
+        0.0,
+        -0.5,
+        0.0
+      ],
+      "travelHeadingDegrees": 0,
+      "contactPoleById": {
+        "foot-L": [
+          0.09000000357627869,
+          -0.5,
+          -0.20000000298023224
+        ],
+        "foot-R": [
+          -0.09000000357627869,
+          -0.5,
+          -0.20000000298023224
+        ]
+      }
+    }
+  },
+  "materialGate": "Actual shared GPU lighting, depth/caster, mobile and owner acceptance remain open",
+  "representation": "baked-full-body-sprites",
+  "sourceBlendSha256": "6c6bfbb0cd3dad0fbd8164d2cef31ab2043fd17b556e221233481caa9216e5ef",
+  "materialPassesAligned": true,
+  "decodedTextureBytes": 6094848
+}

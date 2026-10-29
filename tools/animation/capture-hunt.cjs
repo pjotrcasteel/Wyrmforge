@@ -4,7 +4,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const published=path.resolve(process.env.WYRMFORGE_PUBLISHED_ROOT||'artifacts/web/wwwroot');
 const source=path.resolve(__dirname,'../../src/Wyrmforge.Presentation.Web/wwwroot');
 const out=path.resolve(process.env.AN_CAPTURE_DIR||'artifacts/animation-hunt');fs.mkdirSync(out,{recursive:true});
-const foundationMode=process.env.AN_FOUNDATION_MODE||'1',expectsGpu=foundationMode!=='sprite-walk';
+const foundationMode=process.env.AN_FOUNDATION_MODE||'1',expectsGpu=foundationMode!=='sprite-walk'||process.env.AN_SPRITE_GPU==='1';
 const candidate=process.env.AN_CANDIDATE!=='0',width=Number(process.env.AN_WIDTH||390),liveTrail=process.env.AN_SCENE==='trail',selector=liveTrail?'canvas.game-canvas':'.enemy-lab canvas';
 const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json','.wasm':'application/wasm','.png':'image/png','.svg':'image/svg+xml','.ogg':'audio/ogg','.mp3':'audio/mpeg','.bin':'application/octet-stream'};
 let browser;
@@ -62,7 +62,7 @@ const server=http.createServer((req,res)=>{
   const m=await import(window.__anModulePath??'/js/arena.js');window.__anTrace=[];
   window.__anTraceTimer=setInterval(()=>{const d=m.readArenaDiagnostics(document.querySelector(window.__anCanvasSelector));if(d)window.__anTrace.push({at:performance.now(),simulationTimeSeconds:d.simulationTimeSeconds,enemies:d.enemies,player:d.player,hollow:d.hollow,performance:d.performance,gpuWorld:d.gpuWorld});},50);
  });
- if(candidate&&foundationMode==='sprite-walk')await page.evaluate(()=>{const label=document.createElement('div');label.textContent='SOURCE-LIT BAKED SPRITESHEET WALK PROOF / EXISTING ATTACK FALLBACK';label.style='position:fixed;bottom:0;left:0;background:#fff;color:#000;font:11px sans-serif;padding:5px;z-index:9999';document.body.appendChild(label);});
+ if(candidate&&foundationMode==='sprite-walk')await page.evaluate(gpu=>{const label=document.createElement('div');label.textContent=gpu?'BAKED SPRITE MATERIALS / SHARED GPU / EXISTING ATTACK FALLBACK':'SOURCE-LIT BAKED SPRITESHEET WALK PROOF / EXISTING ATTACK FALLBACK';label.style='position:fixed;bottom:0;left:0;background:#fff;color:#000;font:11px sans-serif;padding:5px;z-index:9999';document.body.appendChild(label);},expectsGpu);
  const initial=await page.evaluate(async()=>{const m=await import(window.__anModulePath??'/js/arena.js');return m.readArenaDiagnostics(document.querySelector(window.__anCanvasSelector));});
  fs.writeFileSync(path.join(out,'initial-diagnostics.json'),JSON.stringify(initial,null,2));
  await page.screenshot({path:path.join(out,'hunt-ready.png')});

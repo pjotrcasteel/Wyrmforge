@@ -148,3 +148,9 @@ Its primary image is unlit albedo, with two additional maps, rather than a
 duplicate review-color image. Synthetic provenance/alpha/budget tests pass;
 real material export, GPU/depth and physical-device evidence remain open.
 
+Real source material export and exact alpha packing now pass for the bounded
+base walk in all eight views. Three maps decode to 6,094,848 bytes. Shared Hunt
+GPU sprite binding is implemented through LightingEngine, with frame/anchor/map
+resource-sharing checks; all 613 JavaScript tests pass. The first real GPU
+capture is pending; this does not close lighting/depth/caster or device gates.
+

@@ -100,3 +100,17 @@ test('source projection is scene configuration data and rejects incompatible cam
  const positions=Array.from(world.billboardGeometry.attributes.position.array);world.configureSourceProjection(descriptor);assert.deepEqual(Array.from(world.billboardGeometry.attributes.position.array),positions);
  assert.throws(()=>world.configureSourceProjection({...descriptor,projection:{...descriptor.projection,groundBasis:[0,80,-40,0]}}),/canonical orthographic/);assert.equal(world.groundY,2);world.billboardGeometry.dispose();
 });
+
+test('full-body sprite materials share one GPU resource while each actor retains its exact atlas frame and root',async()=>{
+ const {HuntGpuWorld}=await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js');
+ const registered=[],geometries=[];
+ const world=Object.create(HuntGpuWorld.prototype);Object.assign(world,{groundY:Math.SQRT2,elevation:Math.PI/4,sprites:new Map(),materials:[],objects:[],engine:{registerTexture:(...args)=>registered.push(args),registerGeometry:(...args)=>geometries.push(args)}});
+ const descriptor={gpuMaterialComplete:true,sourceSignature:'arbitrary-source',clip:{sha256:'unique-atlas',worldSize:96,cell:96,frames:16,crop:[16,16,80,88],anchor:[48,72]},material:{albedo:{},normal:{},emissiveMap:{}},rootOffset:{x:1,y:-1},frame:{offset:[.25,.5],repeat:[1/16,1/8]}};
+ world.captureSprite('one',descriptor,48,96,1.25);world.captureSprite('two',{...descriptor,frame:{offset:[0,0],repeat:[1/16,1/8]}},96,144,1);
+ assert.equal(registered.length,3);assert.equal(geometries.length,1);assert.equal(world.materials.length,1);
+ assert.deepEqual(world.objects[0].frame,descriptor.frame);assert.notDeepEqual(world.objects[1].frame,descriptor.frame);
+ assert.deepEqual(world.objects[0].position,[49/48,-95*Math.SQRT2/48,.001]);assert.deepEqual(world.objects[0].scale,[1.25,1.25,1.25]);
+ assert.ok(world.objects.every(o=>o.castsShadow&&o.receivesLight&&o.receivesShadow&&!o.skinPose));
+ assert.throws(()=>world.captureSprite('bad',{...descriptor,gpuMaterialComplete:false},0,0),/aligned sprite/);
+ geometries[0][1].dispose();for(const [,texture] of registered)texture.dispose();
+});

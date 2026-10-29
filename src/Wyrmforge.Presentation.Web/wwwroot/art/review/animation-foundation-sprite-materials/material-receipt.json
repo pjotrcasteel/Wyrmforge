@@ -1,0 +1,27 @@
+{
+  "sourceBlendSha256": "6c6bfbb0cd3dad0fbd8164d2cef31ab2043fd17b556e221233481caa9216e5ef",
+  "sourceManifestSha256": "137ad4f6d6414b70364ec9dd3c2b9ae24eac02cb44e5e35e2df9228f8a2e2bd0",
+  "clips": [
+    "walk"
+  ],
+  "directions": [
+    "N",
+    "NE",
+    "E",
+    "SE",
+    "S",
+    "SW",
+    "W",
+    "NW"
+  ],
+  "modes": [
+    "albedo",
+    "normal",
+    "emissive"
+  ],
+  "cell": 96,
+  "samples": 4,
+  "normalBasis": "camera-right/up/toward",
+  "toolSha256": "533b373b9c7d9fa1d9b36ba0f45226b9906a450106c6108c18c9dbb784705b66",
+  "productionAccepted": false
+}

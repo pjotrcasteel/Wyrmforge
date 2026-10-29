@@ -36,6 +36,14 @@ normal/emissive maps, avoiding a duplicate beauty-color texture. The default
 role remains review color and cannot silently claim an albedo binding. Unknown
 roles fail before texture publication. This binding capability does not mark a
 pack production-ready or prove its normals, depth, lighting or mobile budgets.
+
+The existing `HuntGpuWorld.captureSprite` adapter accepts the descriptor's complete
+aligned maps, frame UVs and source anchor. It shares textures/geometry across
+actors, retaining per-actor frame and bounded root offset, and uses the same
+LightingEngine/material/shadow registry as all other world surfaces. These are
+camera-facing sprite cutouts; no runtime character mesh is required. Sprite-plane
+shadow limitations and source depth still need explicit real-Hunt acceptance.
+Unlit primary albedo is GPU data: the Canvas draw path returns to existing art.
 Canon: [art](../canon/art-and-animation.md#universal-animation-foundation--an0an6-27-october-2026),
 [authority](../canon/architecture-and-quality.md#locked--unified-engine-ownership-and-event-authority-27-october-2026).
 

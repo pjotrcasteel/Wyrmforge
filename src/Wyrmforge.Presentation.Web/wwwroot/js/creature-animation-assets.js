@@ -135,7 +135,7 @@ export function createCreatureAnimationAssets(baseUrl,{maxDecodedBytes=64*1024*1
         },
         draw(ctx,sample,x,y,radius,opacity=1){
             const clip=data?.manifest.clips[sample?.clip],image=data?.images.get(sample?.clip);
-            if(!clip||!image)return false;
+            if(!clip||!image||clip.colorRole==='albedo')return false; // Unlit production data requires the shared GPU; keep the existing Canvas art fallback.
             const row=data.manifest.directions.indexOf(sample.direction);if(row<0)return false;
             const size=clip.worldSize*Math.max(.65,Math.min(1.8,(Number(radius)||11)/11));
             ctx.save();ctx.globalAlpha*=opacity;ctx.imageSmoothingEnabled=false;

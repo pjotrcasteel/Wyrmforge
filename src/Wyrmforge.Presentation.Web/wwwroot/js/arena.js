@@ -11,7 +11,7 @@ import { drawSpellCastMotion, drawSpellProjectile, drawSpellImpact } from './are
 import { drawMage, updateMageWalk } from './arena-mage.js';
 import { drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions, enemyFacing } from './arena-enemy-art.js';
 import { preloadPaintedEnemies, drawPaintedEnemy, drawPaintedWyrm, updatePaintedCorpses, drawPaintedCorpses, mireHoundPixelPreviewEnabled } from './painted-enemies.js';
-import { preloadHollowSprites, hollowSpritesReady, createHollowState, updateHollowSprites, drawHollowEnemy, drawHollowCorpses, hollowDiagnostics, hollowSkinDescriptor, drawHollowSkinSupportOverlay } from './hollow-sprites.js';
+import { preloadHollowSprites, hollowSpritesReady, createHollowState, updateHollowSprites, drawHollowEnemy, drawHollowCorpses, hollowDiagnostics, hollowSkinDescriptor, hollowSpriteDescriptor, drawHollowSkinSupportOverlay } from './hollow-sprites.js';
 import { hollowFractureEmitters, hollowFractureCanvasLights, withHollowFractureLightingFrame } from './hollow-fracture.js';
 import { preloadAshfang, createAshfangState, updateAshfang, drawAshfang, drawAshfangDeath, ashfangSockets, ashfangDiagnostics } from './ashfang-sprites.js';
 import { drawAshfangWarning, drawAshfangGroundEffects, drawAshfangAirEffects, ashfangVfxDiagnostics } from './ashfang-vfx.js';
@@ -366,13 +366,14 @@ function draw(state, snapshot, width, height) {
     }
     const worldContext=ctx;
     for (const layer of sortSceneDepthLayers(depthLayers)) {
-        let tile,capture,skin=null;
+        let tile,capture,skin=null,sprite=null;
         if(gpu){
             capture=huntLayerCapture(layer,snapshot.player,state.ashfang.death);if(!capture)continue;
             if(capture.x+capture.size<camera.x-384||capture.y+capture.size<camera.y-384||capture.x>camera.x+width+384||capture.y>camera.y+height+384)continue;
             tile=state.gpuActorScratch??=document.createElement('canvas');tile.width=tile.height=Math.ceil(capture.size);
             ctx=tile.getContext('2d');ctx.imageSmoothingEnabled=false;ctx.translate(-capture.x,-capture.y);
             if(layer.kind==='enemy'&&gpu.skinCount<gpu.maxSkinActors)skin=hollowSkinDescriptor(layer.enemy,state.hollow);
+            if(layer.kind==='enemy'&&!skin)sprite=hollowSpriteDescriptor(layer.enemy,state.hollow);
         }
         if (layer.kind === 'masonry') {
             drawArenaCloisterElevation(ctx, layer);
@@ -386,7 +387,7 @@ function draw(state, snapshot, width, height) {
                 enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId),state.hollow,state.ashling);
             // The same point emitter illuminates opaque Hollowed, Ashling and fallback sprites.
             // A reusable source-atop material pass preserves silhouette/alpha occlusion.
-            if(!skin){if(gpu)paintEnemy(ctx);else drawActorWithEmitter(ctx, state.actorLightBuffer, enemy, selectionEmitter, paintEnemy);}
+            if(!skin&&!sprite){if(gpu)paintEnemy(ctx);else drawActorWithEmitter(ctx, state.actorLightBuffer, enemy, selectionEmitter, paintEnemy);}
             drawEliteCrest(ctx, enemy, visualSeconds, state.reducedMotion.matches);
         } else {
             drawMage(ctx, snapshot.player, snapshot.castMotion, danger.hit, state.reducedMotion.matches,
@@ -396,7 +397,8 @@ function draw(state, snapshot, width, height) {
         }
         if(gpu){
             if(skin)gpu.captureSkin(capture.id+'-skin',skin,layer.enemy.x-camera.x,layer.enemy.y-camera.y,skin.scale);
-            gpu.capture(capture.id,tile,capture.x-camera.x,capture.y-camera.y,capture.size,capture.size,.12+Math.max(0,Math.min(1,layer.depth/worldHeight))*.1,!skin,true);
+            if(sprite)gpu.captureSprite(capture.id+'-sprite',sprite,layer.enemy.x-camera.x,layer.enemy.y-camera.y,sprite.scale);
+            gpu.capture(capture.id,tile,capture.x-camera.x,capture.y-camera.y,capture.size,capture.size,.12+Math.max(0,Math.min(1,layer.depth/worldHeight))*.1,!skin&&!sprite,true);
             ctx=worldContext;
         }
     }

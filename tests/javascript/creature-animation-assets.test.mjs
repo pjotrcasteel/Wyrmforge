@@ -40,6 +40,7 @@ test('explicit primary albedo shares its existing texture with GPU material bind
  assert.equal(a.stats.textures,3);assert.equal(a.stats.decodedBytes,64*256*4*3);
  const sample={clip:'rest',frame:1,direction:'S'},render=a.renderDescriptor(sample);
  assert.ok(render.material.albedo);assert.equal(render.gpuMaterialComplete,true);assert.equal(render.productionAccepted,false);
+ assert.equal(a.draw({},sample,0,0,11),false,'Unlit albedo keeps the existing Canvas art fallback.');
 });
 
 test('unknown primary color roles fail before any texture is published',async t=>{

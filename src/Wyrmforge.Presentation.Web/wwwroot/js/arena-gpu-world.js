@@ -2,6 +2,7 @@
 import * as T from './lighting/vendor/three.module.js';
 import { LightingEngine } from './lighting/engine.js';
 import { lightsIntersectingView } from './lighting/registry.js';
+import {spritePlaneGeometry} from './lighting/lit-sprite.js';
 const UNIT = 48;
 const GROUND_Y = Math.SQRT2;
 function projectLightDirection(direction,groundY=GROUND_Y) {
@@ -42,6 +43,7 @@ export class HuntGpuWorld {
         const billboard=this.billboardGeometry=huntActorGeometry();
         this.engine.registerGeometry('hunt-billboard', billboard);
         this.skins=new Map();
+        this.sprites=new Map();
         this.layers = new Map();
         this.used = new Set();
     }
@@ -88,6 +90,24 @@ export class HuntGpuWorld {
         const modelScale=descriptor.worldUnitsPerMetre/UNIT*scale;
         this.objects.push({id,ownerId:id,geometry:key,material:key,position:[x/UNIT,-y*this.groundY/UNIT,-descriptor.groundZ*modelScale],rotation:[0,0,descriptor.yaw],scale:[modelScale,modelScale,modelScale],castsShadow:true,receivesShadow:true,receivesLight:true,skinPose:descriptor.skinPose});
     }
+    captureSprite(id,descriptor,x,y,scale=1){
+        if(!descriptor.gpuMaterialComplete||!descriptor.material?.albedo||!descriptor.material.normal||!descriptor.material.emissiveMap)throw new TypeError('Complete aligned sprite materials required');
+        const key='sprite-'+descriptor.sourceSignature+'-'+descriptor.clip.sha256;
+        if(!this.sprites.has(key)){
+            const maps={};
+            for(const [kind,image] of Object.entries(descriptor.material)){
+                const texture=new T.Texture(image);texture.needsUpdate=true;
+                maps[kind]=key+'-'+kind;this.engine.registerTexture(maps[kind],texture,kind!=='normal');
+            }
+            this.engine.registerGeometry(key,spritePlaneGeometry(T,descriptor.clip,1/UNIT,[0,-Math.cos(this.elevation),Math.sin(this.elevation)]));
+            this.sprites.set(key,{...material(key),...maps,emissionIntensity:1});
+        }
+        if(!this.materials.some(m=>m.id===key))this.materials.push(this.sprites.get(key));
+        const offset=descriptor.rootOffset??{x:0,y:0};
+        this.objects.push({id,ownerId:id,geometry:key,material:key,frame:descriptor.frame,
+            position:[(x+offset.x)/UNIT,-(y+offset.y)*this.groundY/UNIT,.001],rotation:[0,0,0],scale:[scale,scale,scale],
+            castsShadow:true,receivesShadow:true,receivesLight:true});
+    }
     configureSourceProjection(descriptor){
         if(!this.sourceCamera)return;
         const units=descriptor.worldUnitsPerMetre,b=descriptor.projection?.groundBasis,h=descriptor.projection?.heightProjection;
@@ -118,5 +138,5 @@ export class HuntGpuWorld {
             engine.textures.delete(id); layer.texture.dispose(); this.layers.delete(id);
         }
     }
-    dispose() { this.engine.dispose(); this.layers.clear(); }
+    dispose() { this.engine.dispose(); this.layers.clear(); this.sprites.clear(); }
 }

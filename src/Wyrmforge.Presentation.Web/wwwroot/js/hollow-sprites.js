@@ -241,6 +241,13 @@ export function hollowSkinDescriptor(enemy,state){
     if(!foundationEnabled||!pose?.foundationSample?.skinPose||pose.foundationError||pose.foundationSample.sourceSupport?.reducedMotion||enemy.hitFlash||enemy.frozen)return null;
     return {...foundation.renderDescriptor(pose.foundationSample),scale:Math.max(.65,Math.min(1.8,(Number(enemy.radius)||11)/11))*pose.visualScale};
 }
+export function hollowSpriteDescriptor(enemy,state){
+    const pose=state.entities.get(enemy.entityId),sample=pose?.foundationSample;
+    if(!foundationEnabled||!sample||sample.skinPose||sample.parts||pose.foundationError||enemy.hitFlash||enemy.frozen)return null;
+    const descriptor=foundation.renderDescriptor(sample);
+    if(!descriptor.gpuMaterialComplete)return null;
+    return {...descriptor,rootOffset:sample.rootOffset,scale:pose.foundationActorScale};
+}
 export function drawHollowSkinSupportOverlay(ctx,state){
     if(new URLSearchParams(globalThis.location?.search??'').get('animationContacts')!=='1')return;
     ctx.save();ctx.lineWidth=.65;ctx.font='8px monospace';
