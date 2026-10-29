@@ -218,10 +218,16 @@
         if (!endpoint || !getAiAutoConsent()) return 'unavailable';
         // No stable player identifier, free text, coordinates, account or full device fingerprint.
         // The isolated report/run IDs exist solely for duplicate handling and deletion.
-        const sanitizedRun = { ...run, runId: newId() };
+        const sanitizedRun = {
+            runId: newId(), outcome: run.outcome, seed: run.seed, durationSeconds: run.durationSeconds,
+            depth: run.depth, level: run.level, kills: run.kills, ascendantRite: run.ascendantRite,
+            perf: run.perf, ai: run.ai
+        };
+        const device = context();
         const report = {
-            ...buildReport({ includeRuns: false }),
-            id: newId(),
+            schema: 'wyrmforge.playtest.report.v1', id: newId(),
+            gameVersion: document.querySelector('[data-game-version]')?.getAttribute('data-game-version') ?? '0.0.80',
+            device: { kind: device.kind, standalone: device.standalone },
             feedback: { enjoyment: null, clarity: null, replay: null, troubleArea: null, bestMoment: '', improvement: '' },
             stats: { starts: 0, completedRuns: 0, interruptedRuns: 0, trailsEntered: 0, wyrmGatesEntered: 0 },
             recentRuns: [sanitizedRun]

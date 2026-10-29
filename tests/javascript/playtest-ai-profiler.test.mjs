@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { randomUUID, webcrypto } from 'node:crypto';
+import { webcrypto } from 'node:crypto';
 import { runInNewContext } from 'node:vm';
 
 const source = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/playtest.js', import.meta.url), 'utf8');
@@ -75,9 +75,11 @@ test('one explicit opt-in sends each completed AI run without free text, stable 
     assert.equal(h.sent[0].report.recentRuns[0].ai.committedMax, 2);
     assert.equal(h.sent[0].report.feedback.bestMoment, '');
     assert.equal(h.sent[0].report.stats.starts, 0);
-    assert.equal(h.sent[0].report.device.viewport, '390x844');
-    // Viewport stays client-side in the outgoing report; strict collector sanitizer
-    // removes it before persistence along with unknown fields.
+    assert.equal(h.sent[0].report.device.viewport, undefined,
+        'Do not transmit full viewport dimensions or device fingerprint for automatic AI reports.');
+    assert.equal(h.sent[0].report.recentRuns[0].startedAt, undefined);
+    assert.equal(h.sent[0].report.recentRuns[0].milestones, undefined);
+    assert.equal(h.sent[0].report.createdUtc, undefined);
     assert.equal(h.sent[0].report.recentRuns[0].ai.playerName, undefined);
     const sentRunId = h.sent[0].report.recentRuns[0].runId;
     assert.notEqual(sentRunId, h.api.buildReport({ includeRuns: true }).recentRuns[0].runId);
