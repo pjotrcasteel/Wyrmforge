@@ -2,6 +2,7 @@
 import * as T from './lighting/vendor/three.module.js';
 import { LightingEngine } from './lighting/engine.js';
 import { lightsIntersectingView } from './lighting/registry.js';
+import { lightingQualityBudget } from './lighting/quality.js';
 const UNIT = 48;
 const GROUND_Y = Math.SQRT2;
 function projectLightDirection(direction) {
@@ -59,9 +60,10 @@ export function huntActorGeometry() {
     return actor;
 }
 export class HuntGpuWorld {
-    constructor() {
+    constructor({ quality = 'balanced' } = {}) {
         this.canvas = document.createElement('canvas');
-        this.engine = new LightingEngine(this.canvas, { shadowViews: 6, maxLights: 8 });
+        this.quality = quality;
+        this.engine = new LightingEngine(this.canvas, lightingQualityBudget(quality));
         this.engine.registerGeometry('hunt-plane', new T.PlaneGeometry(1, 1));
         this.engine.registerGeometry('hunt-billboard', huntActorGeometry());
         this.layers = new Map();
@@ -91,7 +93,7 @@ export class HuntGpuWorld {
         this.objects.push(renderable);
     }
     diagnostics() {
-        return { ...this.engine.diagnostics(), textureUploads: this.lastFrameUploads,
+        return { ...this.engine.diagnostics(), quality: this.quality, textureUploads: this.lastFrameUploads,
             authoredTextures: this.engine.textures.size - this.layers.size, canvasCaptures: this.layers.size,
             // CPU submission only. True GPU time, thermals and battery need physical devices.
             submissionCpu: this.submissionCpu ?? { frames: 0, lastMs: 0, meanMs: 0, peakMs: 0 } };
