@@ -25,3 +25,12 @@
 - Site mountains use physically blocked cliff polygons plus typed height/slope fields; future continuous gradients, full slope-sensitive movement and ecological material weights are AR3 extensions, not evidence that a generic tinted rectangle is complete.
 - The Lair inherits real `WyrmrealmMapNode` identity, geography and obstacles; no invented gear system, route RNG, no secondary renderer.
 - AR1 must stop at the mandatory owner visual gate; do not merge while visuals remain unapproved.
+
+## Incremental mobile readability pass — owner direction: slow and steady
+
+- Existing actual-Hunt screenshots from commit `205cf23e` at 390px showed that the first Hunt camera often displayed nothing except a large flat substrate and road, while authored obstacles remained outside the visible crop. This is a **visibility failure**, not permission to bake additional props into JS.
+- `WorldSiteLandscapeGenerator.AddNearRoadShoulders` now places a few seed-stable obstacle polygons on both sides of existing C# road corridors, outside C#-reserved road clearance and the player/boss central safe envelope. These polygons use **exactly the same source geometry** for C# movement/sight/spawn and the existing Hunt Canvas. No CSS, palette or query choice changes world topology.
+- The semantic renderer gives real rooted footprints a small visible core, and existing cliff polygons a directional rock seam, **inside** their C# footprint. These are identification hatches for the owner inspection, not a second light/collision/material engine.
+- A new seeded property test requires forest/mountain physical footprints near the mobile starting-camera envelope, while existing swept 12px radius tests ensure roads remain unobstructed. Additional browser screenshots `ar1-{kind}-traversal-{width}.png` follow actual keyboard movement in the live Hunt at both 320px and 390px.
+- This iteration is **not AR3**: no continuous material weights, no new source art, no alternative procedural painting, no FXP physics. The Wyrm Lair remains pending an honest end-to-end actual-Hunt gameplay capture.
+
