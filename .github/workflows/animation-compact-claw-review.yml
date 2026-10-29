@@ -1,0 +1,87 @@
+name: Animation compact claw source-frame review
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/animation-compact-claw-review.yml'
+      - 'tools/animation/**'
+      - 'art/source/animation-foundation/baked-compact-claw-20261029/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: animation-compact-claw-review-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  render-authored-frames:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          sparse-checkout: |
+            tools/animation
+            src/Wyrmforge.Presentation.Web/wwwroot/js
+            src/Wyrmforge.Presentation.Web/wwwroot/art/review/animation-foundation-sprite-compact-motion
+            art/source/animation-foundation/baked-compact-claw-20261029
+      - uses: actions/cache@v4
+        id: blender
+        with:
+          path: .cache/blender-4.5.3-linux-x64
+          key: animation-source-blender-4.5.3-linux-x64-975c58fc
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - name: Restore pinned official Blender runtime
+        if: steps.blender.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .cache
+          curl --fail --location --retry 2 https://download.blender.org/release/Blender4.5/blender-4.5.3-linux-x64.tar.xz -o .cache/blender.tar.xz
+          echo '975c58fcb244273838534bba771e64ad87739216b0f9b39a888531a49a72d845  .cache/blender.tar.xz' | sha256sum --check
+          tar --no-same-owner -xf .cache/blender.tar.xz -C .cache
+          rm .cache/blender.tar.xz
+      - name: Reopen saved compact claw and bake its actual full-body source frames
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install Pillow==12.0.0
+          BLENDER_BIN="$PWD/.cache/blender-4.5.3-linux-x64/blender"
+          SOURCE=artifacts/an6-compact-claw-source
+          REVIEW=artifacts/an6-compact-claw-atlas
+          mkdir -p "$SOURCE" "$REVIEW"
+          cp art/source/animation-foundation/baked-compact-claw-20261029/{hollow-foundation.blend,source-manifest.json} "$SOURCE/"
+          "$BLENDER_BIN" -b -t 2 --python-exit-code 1 --python tools/animation/validate_source.py -- "$SOURCE"
+          "$BLENDER_BIN" -b -t 2 --python-exit-code 1 --python tools/animation/render_saved_clips.py -- "$SOURCE" --clips walk,attack-travel
+          python3 tools/animation/export_atlases.py "$SOURCE" --out "$REVIEW" --tight-crop --clips walk,attack-travel
+          node tools/animation/audit_baked_transitions.mjs "$REVIEW/profile.json" --diagnostic > "$REVIEW/transition-diagnostics.json"
+          # A contact or source-content failure is not a rendering/asset pass.
+          # Preserve budget failure explicitly; do not widen the 64 MiB contract.
+          set +e
+          node tools/animation/check_baked_atlas_budget.mjs --production-maps "$REVIEW/manifest.json" > "$REVIEW/prospective-three-map-budget.json"
+          status=$?
+          set -e
+          if (( status > 1 )); then exit "$status"; fi
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          report=Path('artifacts/an6-compact-claw-atlas/prospective-three-map-budget.json')
+          budget=json.loads(report.read_text())
+          manifest=json.loads(Path('artifacts/an6-compact-claw-atlas/manifest.json').read_text())
+          assert set(manifest['clips'])=={'walk','attack-travel'}
+          assert manifest['clips']['attack-travel']['frames']==128
+          assert len(manifest['directions'])==8
+          assert manifest['productionReady'] is False
+          assert budget['decodedBytes']>0 and budget['maxDecodedBytes']==67108864
+          print('Only real baked frames are included. C# Hunt, materials, depth, motion contact and user visual acceptance remain open.')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: an6-compact-claw-real-source-frames
+          path: |
+            artifacts/an6-compact-claw-atlas/
+            artifacts/an6-compact-claw-source/render-receipt.json
+            artifacts/an6-compact-claw-source/source-manifest.json
+          if-no-files-found: warn
+          retention-days: 14
