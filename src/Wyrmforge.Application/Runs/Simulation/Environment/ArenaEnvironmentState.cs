@@ -160,7 +160,9 @@ public sealed class ArenaEnvironmentState
         Corruption = HuntArenaGenerator.WyrmInfluence(stage, generatorPreview && preLair),
         GeneratorPreview = generatorPreview,
         WetForest = wetForest,
-        Geography = geography,
+        // The normal Hunt needs AR0 site identity and port topology, not dozens of
+        // inactive geometry vertices serialized on every mobile render frame.
+        Geography = worldFirstGeography ? geography : geography is null ? null : geography with { Landscape = null },
         GeographyActive = worldFirstGeography,
         Props = destructibles.Where(prop => prop.Health > 0)
             .Select(prop => new ArenaPropRenderSnapshot(prop.Spec.Id, prop.Spec.Kind, prop.Spec.X, prop.Spec.Y, prop.Spec.Radius,
