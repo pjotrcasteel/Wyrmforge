@@ -145,6 +145,7 @@ jobs:
             console.log(JSON.stringify(result));
             if(!actionSamples||!renderedClawFrames)throw Error('Claw was not both sampled AND drawn at '+width+'px');
             if(summary.errors.length||summary.failedResources.length)throw Error('Captured scene has browser or missing-resource errors at '+width+'px');
+            if(result.markerContactWithinOneNativePixel!==true)throw Error('Real drawn claw fails the strict one-native-pixel contact gate at '+width+'px');
           }
           NODE
       - uses: actions/upload-artifact@v4
