@@ -206,7 +206,10 @@ def real_views(output, body):
     delta = upper - lower
     if not 2.65 < float(delta.z) < 3.8:
         raise ValueError(f"Full-body source height out of expected range: {delta}")
-    if not 0.0 <= float(lower.z) <= .4:
+    # The source heel rests 2.9mm below the imported zero plane. A strict
+    # nonnegative bound is not a meaningful deformation test; reject only
+    # substantial foot-ground penetration or actual hovering instead.
+    if not -.025 <= float(lower.z) <= .06:
         raise ValueError(f"Original feet/legs are displaced off ground: {lower.z:.4f}")
     center = (lower + upper) / 2
     center.z += .05
