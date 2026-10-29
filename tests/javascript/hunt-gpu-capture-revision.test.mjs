@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { HuntGpuWorld } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js';
-import { huntLayerRevision } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/hunt-gpu-layers.js';
+import { huntLayerRevision, prepareHuntGpuScratch } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/hunt-gpu-layers.js';
 
 function fakeCapture() {
     let drawings = 0;
@@ -65,4 +65,49 @@ test('only safe static props supply revisions; damage and late art invalidate th
     assert.equal(huntLayerRevision({ ...staticLayer, kind: 'enemy' }, false), undefined);
     assert.equal(huntLayerRevision({ ...staticLayer, style: 'territory' }, false), undefined);
     assert.deepEqual(staticLayer, original, 'No gameplay or asset state mutation');
+});
+
+
+test('shared scratch canvas keeps bitmap allocation and isolates world-space paint state', () => {
+    const calls = [], resets = [];
+    const ctx = {
+        setTransform(...args) { calls.push(['reset-transform', ...args]); },
+        clearRect(...args) { calls.push(['clear', ...args]); },
+        save() { calls.push(['save']); },
+        translate(...args) { calls.push(['translate', ...args]); },
+        restore() { calls.push(['restore']); },
+        imageSmoothingEnabled: true,
+    };
+    let width = 160, height = 160;
+    const canvas = {
+        get width() { return width; },
+        set width(value) { width = value; resets.push('width'); },
+        get height() { return height; },
+        set height(value) { height = value; resets.push('height'); },
+        getContext(type) { assert.equal(type, '2d'); return ctx; },
+    };
+    assert.equal(prepareHuntGpuScratch(canvas, 160, 100, 200), ctx);
+    ctx.restore();
+    assert.deepEqual(resets, [], 'Same-sized actors must not reallocate the bitmap');
+    assert.deepEqual(calls, [
+        ['reset-transform', 1, 0, 0, 1, 0, 0],
+        ['clear', 0, 0, 160, 160],
+        ['save'], ['translate', -100, -200], ['restore'],
+    ]);
+    assert.equal(ctx.imageSmoothingEnabled, false);
+    calls.length = 0;
+    prepareHuntGpuScratch(canvas, 160, 350, 700);
+    ctx.restore();
+    assert.deepEqual(resets, [], 'Camera movement must reuse existing pixel storage');
+    assert.deepEqual(calls[1], ['clear', 0, 0, 160, 160]);
+    assert.deepEqual(calls[3], ['translate', -350, -700],
+        'Every new actor needs its own correct world origin, never the previous transform');
+
+    prepareHuntGpuScratch(canvas, 96.4, 0, 0);
+    ctx.restore();
+    assert.deepEqual(resets, ['width', 'height']);
+    assert.deepEqual([width, height], [97, 97]);
+    assert.throws(() => prepareHuntGpuScratch(canvas, 0, 0, 0), RangeError);
+    assert.throws(() => prepareHuntGpuScratch(canvas, 160, Number.NaN, 0), RangeError);
+    assert.deepEqual(resets, ['width', 'height']);
 });
