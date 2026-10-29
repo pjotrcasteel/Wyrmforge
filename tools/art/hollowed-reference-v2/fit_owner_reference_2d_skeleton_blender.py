@@ -466,6 +466,15 @@ def actual_render(output,scene,rig,body,target):
     scene.render.film_transparent=False
     scene.render.image_settings.file_format="PNG"
     scene.render.image_settings.color_mode="RGBA"
+    # Review-only real floor with contact shadows. It is explicitly
+    # removed before the editable Blender SOURCE is saved. Earlier clay
+    # previews had no floor and visually concealed floating/sweeping feet.
+    bpy.ops.mesh.primitive_plane_add(size=8,
+                                      location=(center.x,center.y,-.025))
+    review_floor=bpy.context.object
+    review_floor.name="REVIEW ONLY ground for genuine boot contact"
+    floor_mat=studio_mat("REVIEW only neutral untextured floor",(.17,.17,.19))
+    review_floor.data.materials.append(floor_mat)
     bpy.context.view_layer.material_override=studio_mat(
         "owner pose 3D true clay / no material distraction",(.61,.57,.52))
     def render(name,angle,frame,draw_targets=False):
@@ -520,9 +529,41 @@ def actual_render(output,scene,rig,body,target):
         imgs[0].save(output/f"M1-REFERENCE-3D-{direction.upper()}-MOTION.gif",
                      save_all=True,append_images=imgs[1:],
                      duration=120,loop=0,optimize=False)
+    # Two real Blender camera zooms around the problem geometry, NOT
+    # generated illustrations, not cropped output or manipulated sprites.
+    # Review both boots and both source forearm/hand masses in 3D.
+    stored_scale=float(camera_data.ortho_scale)
+    closeups=[]
+    for label,angle,height,scale in (
+        ("feet-front",0,.28,1.35),
+        ("feet-side",math.pi/2,.28,1.35),
+        ("arms-front",0,1.81,1.70),
+        ("arms-side",math.pi/2,1.81,1.70),
+    ):
+        scene.frame_set(1)
+        focus=Vector((center.x,center.y,height))
+        camera_data.ortho_scale=scale
+        camera.location=(focus.x+5.2*math.sin(angle),
+                         focus.y-5.2*math.cos(angle),focus.z+.34)
+        look_at(camera,focus)
+        filename=output/f"M1-REAL-SOURCE-DETAIL-{label}.png"
+        scene.render.filepath=str(filename)
+        bpy.ops.render.render(write_still=True)
+        with Image.open(filename) as source:
+            img=source.convert("RGB")
+        ImageDraw.Draw(img).text((8,8),"REAL 3D "+label.upper(),fill=(245,245,245))
+        closeups.append(img)
+    closeup_sheet=Image.new("RGB",(380*2,460*2),(16,17,20))
+    for i,img in enumerate(closeups):
+        closeup_sheet.paste(img,((i%2)*380,(i//2)*460))
+    closeup_sheet.save(output/"M1-REAL-BLENDER-BOOT-AND-ARM-CLOSEUPS.png")
+    camera_data.ortho_scale=stored_scale
     bpy.context.view_layer.material_override=None
+    bpy.data.objects.remove(review_floor,do_unlink=True)
     return {"actual_blender_3d_views":8,"bone_vs_target_overlay":True,
-            "real_3d_motion_views":16,"pixel_rendering":False}
+            "real_3d_motion_views":16,"pixel_rendering":False,
+            "real_3d_boot_and_hand_closeups":4,
+            "floor_is_review_only_and_removed_from_editable_sculpt":True}
 
 
 def main():
