@@ -45,7 +45,8 @@ public sealed partial class RunSimulation
     private bool ApplyStatusDamage(ICombatTarget target, double delta)
     {
         var damagePerSecond = target.Statuses.DamagePerSecond();
-        return damagePerSecond > 0 && DamageTarget(target, damagePerSecond * delta,
-            spellId: target.Statuses.Has(CombatStatusId.Burning) ? SpellId.FireBolt : null, periodic: true);
+        return damagePerSecond > 0 && DamageTargetWithFeedback(target, damagePerSecond * delta,
+            spellId: target.Statuses.Has(CombatStatusId.Burning) ? SpellId.FireBolt : null,
+            periodic: true, feedbackFlavor: target.Statuses.Has(CombatStatusId.Burning) ? "Burn" : null);
     }
 }
