@@ -350,7 +350,43 @@ public sealed class ArenaEnvironmentState
             var offset = Math.Max(24, gate.Height * height * .5 + radius + 8);
             return new Vector2D(width * .5, crossingY + (hunter.Y < crossingY ? -offset : offset));
         }
-        return AvoidDestructible(enemy, hunter, width, height, radius);
+        return AvoidWorldSiteObstacle(enemy, AvoidDestructible(enemy, hunter, width, height, radius), width, height, radius);
+    }
+
+    // Extend the EXISTING C# navigation policy with the same physical polygons used for
+    // collision, rather than starting a competing terrain pathfinding/physics engine.
+    private Vector2D AvoidWorldSiteObstacle(Vector2D enemy, Vector2D destination, double width, double height, double radius)
+    {
+        if (!worldFirstGeography || geography?.Landscape is not { } landscape ||
+            !WorldSiteFootprintCollision.BlocksSegment(landscape, enemy, destination, width, height, radius))
+            return destination;
+
+        var best = destination;
+        var bestLength = double.PositiveInfinity;
+        foreach (var obstacle in landscape.Obstacles)
+        {
+            if (obstacle.Outline.Count < 3) continue;
+            var centerX = obstacle.Outline.Average(point => point.X) * width;
+            var centerY = obstacle.Outline.Average(point => point.Y) * height;
+            foreach (var vertex in obstacle.Outline)
+            {
+                var point = new Vector2D(vertex.X * width, vertex.Y * height);
+                var delta = point - new Vector2D(centerX, centerY);
+                var length = Math.Sqrt(delta.X * delta.X + delta.Y * delta.Y);
+                if (length < 1e-6) continue;
+                var clearance = radius + 16;
+                var waypoint = point + delta * (clearance / length);
+                if (waypoint.X <= radius || waypoint.Y <= radius ||
+                    waypoint.X >= width - radius || waypoint.Y >= height - radius ||
+                    IsBlocked(waypoint, width, height, radius) ||
+                    BlocksSegment(enemy, waypoint, width, height, radius)) continue;
+                var score = Vector2D.Distance(enemy, waypoint) + Vector2D.Distance(waypoint, destination);
+                if (score >= bestLength) continue;
+                bestLength = score;
+                best = waypoint;
+            }
+        }
+        return best;
     }
 
     /// <summary>
