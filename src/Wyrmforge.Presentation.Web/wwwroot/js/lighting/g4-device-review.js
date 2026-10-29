@@ -84,7 +84,7 @@ export class G4DeviceReviewSession {
         const ordered = [...this.intervals].sort((a, b) => a - b);
         const slow = this.intervals.filter(ms => ms > 1000 / 30).length;
         const gpuPixels = this.gpuSamples.map(sample => sample.dynamicPixels).filter(Number.isFinite);
-        const time = now ?? this.startedAt;
+        const time = this.recording ? (now ?? this.startedAt) : (this.stoppedAt ?? this.startedAt);
         return {
             mode: this.mode, quality: this.quality, recording: this.recording,
             elapsedSeconds: round(this.startedAt === null ? 0 : Math.max(0, time - this.startedAt) / 1000),
