@@ -35,12 +35,12 @@ public sealed class UniversalLightingBrowserTests : PageTest
         var blackWorld = await PixelHashAsync(canvas);
         var warning = Page.GetByLabel("Screen-space warning", new() { Exact = true });
         await warning.SetCheckedAsync(true);
-        await Expect(Page.GetByRole(AriaRole.Status)).ToHaveTextAsync("LAB WARNING · Incoming attack");
-        await Expect(Page.GetByRole(AriaRole.Status)).ToBeVisibleAsync();
+        await Expect(Page.Locator(".readability-cue[role=status]")).ToHaveTextAsync("LAB WARNING · Incoming attack");
+        await Expect(Page.Locator(".readability-cue[role=status]")).ToBeVisibleAsync();
         Assert.AreEqual(blackWorld, await PixelHashAsync(canvas), "A screen-space warning must never illuminate world pixels.");
         await CaptureAsync(width, "zero-with-warning");
         await warning.SetCheckedAsync(false);
-        await Expect(Page.GetByRole(AriaRole.Status)).ToHaveCountAsync(0);
+        await Expect(Page.Locator(".readability-cue[role=status]")).ToHaveCountAsync(0);
         Assert.AreEqual(blackWorld, await PixelHashAsync(canvas));
 
         await ConfigureAsync(canvas, new { profile = "night", rune = false });

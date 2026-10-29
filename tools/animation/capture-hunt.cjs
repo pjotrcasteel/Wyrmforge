@@ -21,8 +21,9 @@ const server=http.createServer((req,res)=>{
  res.setHeader('Content-Type',mime[path.extname(file)]||'application/octet-stream');fs.createReadStream(file).pipe(res);
 });
 (async()=>{
- await new Promise(r=>server.listen(0,'127.0.0.1',r));
- browser=await chromium.launch({executablePath:process.env.CHROMIUM_EXECUTABLE,args:['--no-sandbox','--disable-dev-shm-usage']});
+ await new Promise(r=>server.listen(Number(process.env.AN_SERVE_PORT||0),'127.0.0.1',r));
+ if(process.env.AN_SERVE_ONLY){console.log('AN review server http://127.0.0.1:'+server.address().port);return;}
+ browser=await chromium.launch({executablePath:process.env.CHROMIUM_EXECUTABLE,args:['--no-sandbox','--disable-dev-shm-usage',...(process.env.AN_NO_WEBGL?['--disable-webgl']:[])]});
  const errors=[],consoleErrors=[],failedResources=[];
  const page=await browser.newPage({viewport:{width,height:844},isMobile:process.env.AN_MOBILE==='1',hasTouch:process.env.AN_MOBILE==='1',deviceScaleFactor:process.env.AN_MOBILE==='1'?3:1,recordVideo:{dir:out,size:{width,height:844}}});
  page.on('response',response=>{if(response.status()>=400)failedResources.push({url:response.url(),status:response.status()});});
@@ -42,10 +43,10 @@ const server=http.createServer((req,res)=>{
 
  await page.locator(selector).waitFor({timeout:60000});
  await page.locator('#wyrmforge-ignition').waitFor({state:'hidden',timeout:60000});
- if(candidate)await page.waitForFunction(async()=>{
+ if(candidate)await page.waitForFunction(async noWebgl=>{
   const m=await import(window.__anModulePath??'/js/arena.js'),d=m.readArenaDiagnostics(document.querySelector(window.__anCanvasSelector));
-  return d?.hollow?.foundation?.ready===true&&d?.gpuWorld?.backend;
- },{},{timeout:60000});
+  return d?.hollow?.foundation?.ready===true&&(noWebgl?d?.gpuWorld?.error:d?.gpuWorld?.backend);
+ },Boolean(process.env.AN_NO_WEBGL),{timeout:60000});
  if(process.env.AN_INSPECTION)await page.evaluate(async view=>{
   const m=await import(window.__anModulePath??'/js/arena.js');m.setArenaLightingInspection(document.querySelector(window.__anCanvasSelector),view);
   const label=document.createElement('div');label.textContent='DEVELOPER '+view.toUpperCase()+' INSPECTION / ACTUAL C# ENCOUNTER';
@@ -69,9 +70,11 @@ const server=http.createServer((req,res)=>{
  const trace=await page.evaluate(()=>{clearInterval(window.__anTraceTimer);return window.__anTrace;});
  fs.writeFileSync(path.join(out,'motion-trace.json'),JSON.stringify(trace,null,2));
  fs.writeFileSync(path.join(out,'browser-errors.json'),JSON.stringify({errors,consoleErrors,failedResources},null,2));
+ const fallbackCanvasPixels=process.env.AN_NO_WEBGL?await page.evaluate(selector=>{const c=document.querySelector(selector),p=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let lit=0;for(let i=0;i<p.length;i+=4)if(p[i]+p[i+1]+p[i+2])lit++;return lit;},selector):null;
  const video=await page.video().path();await page.close();await browser.close();server.close();
- const summary={scene:liveTrail?'real-first-trail':'real-development-encounter',mobileEmulated:process.env.AN_MOBILE==='1',candidate,inspection:process.env.AN_INSPECTION??'lit',physicalDevice:false,viewport:{width,height:844},samples:trace.length,solveFailures:trace.flatMap(r=>r.hollow.entities.filter(e=>e.foundationError).map(e=>({time:r.simulationTimeSeconds,error:e.foundationError}))),maximumProjectedSoleDrift:Math.max(...trace.flatMap(r=>r.hollow.entities.map(e=>e.foundation?.maxSlip??0))),gpuErrors:trace.filter(r=>r.gpuWorld?.error),video,errors,consoleErrors,failedResources};
+
+ const summary={expectedWebglUnavailable:Boolean(process.env.AN_NO_WEBGL),fallbackCanvasPixels,scene:liveTrail?'real-first-trail':'real-development-encounter',mobileEmulated:process.env.AN_MOBILE==='1',candidate,inspection:process.env.AN_INSPECTION??'lit',physicalDevice:false,viewport:{width,height:844},samples:trace.length,solveFailures:trace.flatMap(r=>r.hollow.entities.filter(e=>e.foundationError).map(e=>({time:r.simulationTimeSeconds,error:e.foundationError}))),maximumProjectedSoleDrift:Math.max(...trace.flatMap(r=>r.hollow.entities.map(e=>e.foundation?.maxSlip??0))),gpuErrors:trace.filter(r=>r.gpuWorld?.error),video,errors,consoleErrors,failedResources};
  fs.writeFileSync(path.join(out,'capture-summary.json'),JSON.stringify(summary,null,2));
- if(errors.length||summary.solveFailures.length||summary.gpuErrors.length)throw Error(JSON.stringify(summary));
+ if(errors.length||summary.solveFailures.length||(!process.env.AN_NO_WEBGL&&summary.gpuErrors.length)||(process.env.AN_NO_WEBGL&&!fallbackCanvasPixels))throw Error(JSON.stringify(summary));
  console.log(JSON.stringify(summary,null,2));
 })().catch(async e=>{console.error(e);await browser?.close();server.close();process.exitCode=1;});

@@ -99,7 +99,9 @@ export function solveSupportedSourcePose(frame,targets,options){
                 const ankle=target.point.map((n,i)=>n+(r?offset.reduce((s,v,j)=>s+r[i*3+j]*v,0):offset[i]));
                 const hip=plus(bones[c.upper].head,bodyShift),delta=ankle.map((n,i)=>n-hip[i]),length=Math.hypot(...delta);
                 const maximum=Math.sqrt(c.upperLength**2+c.lowerLength**2+2*c.upperLength*c.lowerLength*Math.cos(Math.max(.1,c.limits[0])*Math.PI/180))*(1-1e-5);
-                if(length>maximum)bodyShift=bodyShift.map((n,i)=>n+delta[i]*(length-maximum)/length);
+                const minimum=Math.sqrt(c.upperLength**2+c.lowerLength**2+2*c.upperLength*c.lowerLength*Math.cos(c.limits[1]*Math.PI/180))*(1+1e-5);
+                const reachable=Math.max(minimum,Math.min(maximum,length));
+                if(Math.abs(length-reachable)>1e-9){if(length<1e-8)throw new RangeError('Singular source planted reach');bodyShift=bodyShift.map((n,i)=>n+delta[i]*(length-reachable)/length);}
             }
             if(Math.hypot(...bodyShift)>maxBodyTranslation)throw new RangeError('Authored source reach/body translation envelope exceeded');
         }
@@ -176,7 +178,9 @@ export function solveSupportedSourcePose(frame,targets,options){
             }
             dx=(desired[0]-center[0])*1.25;dy=(desired[1]-center[1])*1.25;
         }
-        if(joint&&pass>=24){
+        const distance=Math.hypot(dx,dy);if(distance>.025){dx*=.025/distance;dy*=.025/distance;}
+        const next=[bodyShift[0]+dx,bodyShift[1]+dy,bodyShift[2]];
+        if(joint&&(pass>=24||Math.hypot(...next)>maxBodyTranslation)){
             const pivot=posed[joint.bone].head;
             const lever=joint.descendants.reduce((sum,id)=>sum+(massWeights[id]??0)*((posed[id].head[2]+posed[id].tail[2])/2-pivot[2]),0)/totalMass;
             if(lever<=1e-5)throw new RangeError('Source balance joint has no positive mass lever');
@@ -184,8 +188,6 @@ export function solveSupportedSourcePose(frame,targets,options){
             const angle=Math.hypot(...bodyTilt);if(angle>joint.maxRadians)bodyTilt=bodyTilt.map(n=>n*joint.maxRadians/angle);
             continue;
         }
-        const distance=Math.hypot(dx,dy);if(distance>.025){dx*=.025/distance;dy*=.025/distance;}
-        const next=[bodyShift[0]+dx,bodyShift[1]+dy,bodyShift[2]];
         if(Math.hypot(...next)>maxBodyTranslation){const error=new RangeError('Authored source body translation envelope exceeded');error.sourcePoseFailure={bodyShift,next,center,support,targets};throw error;}
         bodyShift=next;
     }
