@@ -141,3 +141,10 @@ non-base heading entry, arbitrary action travel, raster timing and actual
 crossing-target performance remain open. Eight action stages over 1.333 seconds
 must be visually assessed before accepting this bounded export size.
 
+The standalone material packer now requires a matching Blender hash and complete
+eight-view albedo/normal/emission receipts, checks exact source alpha alignment,
+normalizes evaluated geometry normals and enforces the decoded 64 MiB limit.
+Its primary image is unlit albedo, with two additional maps, rather than a
+duplicate review-color image. Synthetic provenance/alpha/budget tests pass;
+real material export, GPU/depth and physical-device evidence remain open.
+

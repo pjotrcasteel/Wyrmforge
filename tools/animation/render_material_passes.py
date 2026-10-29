@@ -3,7 +3,7 @@
 No RGB-derived normals. One Blender scene, same rig/action/camera/frame for
 all material passes. Depth/caster geometry remains a separate open gate.
 """
-import bpy,sys,argparse,math,json
+import bpy,sys,argparse,math,json,hashlib
 from pathlib import Path
 p=argparse.ArgumentParser();p.add_argument('source');p.add_argument('--out',required=True);p.add_argument('--clips',default='walk,attack');p.add_argument('--directions',default='N,NE,E,SE,S,SW,W,NW');a=p.parse_args(sys.argv[sys.argv.index('--')+1:])
 bpy.ops.wm.open_mainfile(filepath=str(Path(a.source).resolve()))
@@ -53,3 +53,4 @@ for clip in a.clips.split(','):
                 scene.render.filepath=str(folder/f'{index:02d}.png');bpy.ops.render.render(write_still=True)
         print('AN_MATERIAL',clip,direction,flush=True)
 print('AN_MATERIAL_OUTPUT',str(out),flush=True)
+(out/'material-receipt.json').write_text(json.dumps({'sourceBlendSha256':hashlib.sha256(Path(a.source).read_bytes()).hexdigest(),'sourceManifestSha256':hashlib.sha256((Path(a.source).resolve().parent/'source-manifest.json').read_bytes()).hexdigest(),'clips':a.clips.split(','),'directions':a.directions.split(','),'modes':list(materials),'cell':96,'samples':scene.cycles.samples,'normalBasis':'camera-right/up/toward','toolSha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'productionAccepted':False},indent=2)+'\n')
