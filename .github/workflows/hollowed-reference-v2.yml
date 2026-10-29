@@ -41,7 +41,7 @@ jobs:
               raise SystemExit("Unreviewed source binary was checked into clean V2")
           PY
           git fetch --no-tags --depth=1 origin main
-          changed="$(git diff --name-only origin/main...HEAD)"
+          changed="$(git diff --name-only origin/main HEAD)"
           echo "$changed"
           if echo "$changed" | grep -vE '^(docs/art/evidence/hollowed-reference-v2/|art/source/enemies/hollow/reference-v2/|tools/art/hollowed-reference-v2/|\.github/workflows/hollowed-reference-v2.yml)' ; then
             echo "Forbidden gameplay/animation/old H1 source edit"
