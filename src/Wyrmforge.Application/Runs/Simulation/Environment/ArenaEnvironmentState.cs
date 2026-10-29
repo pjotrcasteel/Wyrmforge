@@ -326,7 +326,12 @@ public sealed class ArenaEnvironmentState
                 var candidate = new Vector2D(origin.X + Math.Cos(angle) * reach, origin.Y + Math.Sin(angle) * reach);
                 if (candidate.X < minX || candidate.X > maxX || candidate.Y < minY || candidate.Y > maxY) continue;
                 if (Vector2D.Distance(candidate, hunter) < MinimumSpawnDistance + radius) continue;
-                if (!IsBlocked(candidate, width, height, radius)) return candidate;
+                if (IsBlocked(candidate, width, height, radius)) continue;
+                // New cliffs and rooted forest masses are authoritative C# colliders.
+                // Don't materialize an enemy behind one without a navigable route.
+                // This preview safety rule does not alter the existing normal Hunt.
+                if (worldFirstGeography && BlocksSegment(candidate, hunter, width, height, radius)) continue;
+                return candidate;
             }
         }
         return null;
