@@ -1,4 +1,4 @@
-import { huntLayerCapture, huntLayerRevision, prepareHuntGpuScratch } from './hunt-gpu-layers.js';
+import { huntLayerCapture, huntLayerRevision, prepareHuntGpuScratch, HuntGpuScratchPool } from './hunt-gpu-layers.js';
 import { preloadFireballV5 } from './arena-fireball-v5.js';
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
 import { attachArenaInput, getArenaMovement, getArenaAim, isArenaStickAim, getArenaPropFocus } from './arena-input.js';
@@ -114,7 +114,9 @@ export function readArenaDiagnostics(canvas) {
         performance: { fps:state.displayFps, simulationHz:state.displaySimulationHz, simulationMilliseconds:state.displaySimulationMilliseconds, bridgeMilliseconds:state.displayBridgeMilliseconds },
         renderingFailed: Boolean(state.renderingFailed),
         sharedLighting: state.sharedLightingFrame ?? state.latestSnapshot?.lighting ?? null,
-        gpuWorld: state.gpuWorld?.diagnostics() ?? { error: state.gpuError ?? null },
+        gpuWorld: state.gpuWorld
+            ? { ...state.gpuWorld.diagnostics(), scratchPool: state.gpuScratchPool?.diagnostics() ?? null }
+            : { error: state.gpuError ?? null },
         hollowFractureGpuEmitters: state.fractureGpuEmitters ?? [],
         wetForestGround: state.latestSnapshot?.environment?.wetForest
             ? liveWetForestMaterialDiagnostics(state.latestSnapshot.environment.seed) : null,
@@ -130,6 +132,7 @@ export function disposeArena(canvas) {
     state.detachInput?.();
     if (state.damageNumberSettings) state.damageNumberSettings.removeEventListener('change', state.onDamageNumberModeChanged);
     state.gpuWorld?.dispose();
+    state.gpuScratchPool?.clear();
     arenas.delete(canvas);
 }
 
@@ -373,7 +376,7 @@ function draw(state, snapshot, width, height) {
                 tileX > camera.x + width + 384 || tileY > camera.y + height + 384) continue;
             revision = huntLayerRevision(layer, artReady());
             reuse = gpu.canReuseCapture(capture.id, revision, tileSize, tileSize);
-            tile = state.gpuActorScratch ??= document.createElement('canvas');
+            tile = (state.gpuScratchPool ??= new HuntGpuScratchPool(4)).acquire(tileSize);
             if (!reuse) {
                 ctx = prepareHuntGpuScratch(tile, tileSize, tileX, tileY);
             }
