@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.Playwright;
 using Microsoft.Playwright.MSTest;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -122,5 +123,39 @@ public sealed class EngineLabsBrowserTests : PageTest
         await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Lighting Lab" })).ToBeVisibleAsync();
         await Page.Locator("nav[aria-label='Engine labs'] a[href='engine-labs/ai']").ClickAsync();
         await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "AI Lab" })).ToBeVisibleAsync();
+    }
+
+    [TestMethod]
+    public async Task Ai6_64AgentBrowserStress_RespectsSightPathAndPressureBudgets()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.GotoAsync(
+            $"{BaseUrl}/enemy-lab?kind=MireHound&tier=3&count=64&autoplay=false&cast=false&seconds=5&seed=42");
+
+        await Page.EvaluateAsync("async () => { window.ai64Arena = await import('./js/arena.js'); }");
+        await Page.WaitForFunctionAsync(
+            "() => window.ai64Arena.readArenaDiagnostics(document.querySelector('.enemy-lab canvas'))?.hud?.seconds >= 5",
+            null, new() { Timeout = 60000 });
+
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Refresh AI inspector" }).ClickAsync();
+        var snapshot = JsonSerializer.Deserialize<JsonElement>(await Page.GetByTestId("agent-performance").InnerTextAsync());
+        Assert.AreEqual(64, snapshot.GetProperty("Population").GetInt32(),
+            "This must exercise the real 64-agent simulation, not a small visual approximation.");
+        Assert.IsGreaterThan(snapshot.GetProperty("Frames").GetInt64(), 0);
+        Assert.IsLessThanOrEqualTo(32, snapshot.GetProperty("MaxSightQueries").GetInt32());
+        Assert.IsLessThanOrEqualTo(32, snapshot.GetProperty("MaxPathQueries").GetInt32());
+        Assert.IsLessThanOrEqualTo(2, snapshot.GetProperty("MaxCommittedThreats").GetInt32());
+
+        var width = await Page.EvaluateAsync<int>("() => document.documentElement.scrollWidth");
+        Assert.IsLessThanOrEqualTo(391, width);
+
+        var output = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ??
+            Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
+        Directory.CreateDirectory(output);
+        await Page.ScreenshotAsync(new()
+        {
+            Path = Path.Combine(output, "ai6-64-hound-stress-390.png"),
+            FullPage = true
+        });
     }
 }
