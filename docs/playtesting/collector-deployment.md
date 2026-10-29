@@ -9,7 +9,7 @@ The Cloudflare Worker accepts only explicitly consented reports: manual feedback
 **Important:** Like any web server, Cloudflare infrastructure can have operational logs. No guarantee of absolute anonymity can be made. Free text may contain identifying information volunteered by a tester; tell testers not to include personal details.
 
 
-## AI6 automatic profiling for opted-in playtesting (draft PR #364)
+## AI6 automatic profiling for opted-in playtesting (merged PR #364)
 
 During live Hunts with the AI opt-in enabled (`?agents=1`), the authoritative C# simulation samples about once every 300 AI frames (~5 seconds at 60 Hz) and at the end of the run. Samples summarize the agent-update frame count, population, rolling mean/p95 and peak CPU cost, maximum line-of-sight/path query counts, simultaneous threat slots, actual resolved hunter HP damage and bounded agent-trace diversity/decision latency. The ordinary browser run profiler continues to record slow frames and main-thread simulation/bridge sampling independently.
 
@@ -19,7 +19,7 @@ The collector stores **only compact allowlisted numeric AI summaries**, with no 
 
 **Privacy boundaries:** transport requests inevitably involve transient network metadata (such as a source IP) at Cloudflare, and coarse gameplay values may still be personal data when combined. Do not claim legal anonymity solely because names are omitted. The existing 30-day retention and temporary HMAC rate limiting apply. Confirm transparency, data-protection arrangements and applicable lawful basis before inviting external testers. There is no behavioral advertising, cross-device tracking or persistent telemetry identifier.
 
-**Deployment and acceptance:** changes are in **draft PR #364**, not deployed to the public Pages game or Cloudflare Worker until approved/merged and the collector deployment workflow runs. CI runs `node --test tests/javascript/playtest-ai-profiler.test.mjs`, the collector sanitizer tests and the normal C#/browser suite. End-to-end real-device consent/upload/receipt and private dashboard verification remain required before declaring AI6 user testing ready.
+**Deployment and acceptance:** [PR #364](https://github.com/pjotrcasteel/Wyrmforge/pull/364) was merged to `main` on 29 October 2026. The `main` Pages and private Cloudflare collector deployment workflows succeeded on merge commit `e60a4ba8`; this does **not** prove an end-to-end consented report was received on a physical phone. The [post-merge frame-pacing follow-up #400](https://github.com/pjotrcasteel/Wyrmforge/pull/400) is a separate draft and must pass CI before release. CI runs `node --test tests/javascript/playtest-ai-profiler.test.mjs`, the collector sanitizer tests and the normal C#/browser suite. End-to-end real-device consent/upload/receipt and private dashboard verification remain required before declaring AI6 user testing ready.
 
 ## One-time Cloudflare setup (requires account owner)
 

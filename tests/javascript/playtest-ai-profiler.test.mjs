@@ -104,3 +104,43 @@ test('opt-in without AI frames never uploads empty or unrelated gameplay', async
     await tick();
     assert.equal(h.sent.length, 0);
 });
+
+test('active Hunt frame pacing captures every sample, bounded p95, and worst stall', () => {
+    const h = harness();
+    h.api.startRun(false);
+    for (let i = 0; i < 90; i++) h.api.performanceSample(16.7, 2.4);
+    for (let i = 0; i < 10; i++) h.api.performanceSample(58.2, 7.7);
+    h.api.performanceSample(Number.NaN, 1);
+    h.api.performanceSample(-1, 1);
+    h.api.performanceSample(1500, 1);
+    h.api.finishRun(summary());
+    const run = h.api.buildReport({ includeRuns: true }).recentRuns[0];
+    assert.equal(run.perf.samples, 100);
+    assert.equal(run.perf.slowFrames, 10);
+    assert.equal(run.perf.p95FrameMs, 59);
+    assert.equal(run.perf.maxFrameMs, 58.2);
+    assert.equal(run.perf.maxBridgeMs, 8);
+    assert.equal(run.perf.frameBuckets, undefined, 'No raw frame histogram survives a completed run.');
+});
+
+test('interrupted Hunts finalize pacing data without leaking into the next run', () => {
+    const h = harness();
+    h.api.startRun(false);
+    h.api.performanceSample(50, 5);
+    h.api.startRun(false);
+    h.api.performanceSample(16.7, 2);
+    h.api.finishRun(summary());
+    const runs = h.api.buildReport({ includeRuns: true }).recentRuns;
+    assert.equal(runs[0].outcome, 'Interrupted');
+    assert.equal(runs[0].perf.p95FrameMs, 51);
+    assert.equal(runs[0].perf.frameBuckets, undefined);
+    assert.equal(runs[1].perf.p95FrameMs, 17);
+    assert.equal(runs[1].perf.maxFrameMs, 16.7);
+});
+
+test('Hunt bridge samples every active visible frame, not one sample per five seconds', () => {
+    const arena = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-performance.js', import.meta.url), 'utf8');
+    assert.match(arena, /!snapshot\.paused && !snapshot\.ended && !document\.hidden/);
+    assert.match(arena, /performanceSample\(interval, snapshot\.simulationMilliseconds \?\? 0\)/);
+    assert.doesNotMatch(arena, /lastPlaytestSample|> 5000/);
+});

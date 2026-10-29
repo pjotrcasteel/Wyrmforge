@@ -19,11 +19,15 @@ class CollectorDashboardTests(unittest.TestCase):
         result = dashboard({
             "aggregate": {"reports": 2, "sharedRunSamples": 2},
             "ai": {"runs": 2, "meanP95Ms": 8.5, "peakMs": 24,
+                   "meanFrameP95Ms": 17, "maxFrameMs": 58.2,
                    "maxPopulation": 64, "maxCommitted": 2,
                    "maxSightQueries": 32, "maxPathQueries": 32},
         })
         self.assertIn("Consented AI playtest profiling", result)
         self.assertIn("8.5", result)
+        self.assertIn("Mean phone/browser frame p95 (ms)", result)
+        self.assertIn("Worst phone/browser frame (ms)", result)
+        self.assertIn("58.2", result)
         self.assertIn("Largest AI population", result)
         self.assertIn("64", result)
         self.assertNotIn("runId", result)

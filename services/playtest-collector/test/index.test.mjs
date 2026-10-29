@@ -120,7 +120,13 @@ test('Accept bounded AI summaries while stripping raw locations, decision traces
         recordedDecisions: 125, actionDiversity: 25, maxDecisionLatencyTicks: 4,
         playerName: 'never store me', coordinates: [10, 20], trace: [{ action: 'attack', position: [1, 2] }]
     };
-    const saved = sanitizeReport(submitted).recentRuns[0].ai;
+    submitted.recentRuns[0].perf = { samples: 100, slowFrames: 10, maxBridgeMs: 8,
+        p95FrameMs: 59, maxFrameMs: 58.2, rawFrames: [1, 2, 3] };
+    const sanitized = sanitizeReport(submitted).recentRuns[0];
+    assert.equal(sanitized.perf.p95FrameMs, 59);
+    assert.equal(sanitized.perf.maxFrameMs, 58.2);
+    assert.equal(sanitized.perf.rawFrames, undefined);
+    const saved = sanitized.ai;
     assert.equal(saved.population, 64);
     assert.equal(saved.p95Ms, 7.4);
     assert.equal(saved.committedMax, 2);

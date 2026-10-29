@@ -69,7 +69,8 @@ export function sanitizeReport(report) {
             spellEvolutions: Array.isArray(run.spellEvolutions) ?
                 run.spellEvolutions.filter(v => typeof v === 'string').map(v => string(v, 40)).slice(0, 12) : [],
             perf: { samples: int(run.perf?.samples), slowFrames: int(run.perf?.slowFrames),
-                maxBridgeMs: int(run.perf?.maxBridgeMs, 10000) },
+                maxBridgeMs: int(run.perf?.maxBridgeMs, 10000),
+                p95FrameMs: aiNumber(run.perf?.p95FrameMs), maxFrameMs: aiNumber(run.perf?.maxFrameMs) },
             ai: sanitizeAi(run.ai)
         });
     }
@@ -204,6 +205,8 @@ async function admin(request, env, url) {
         const ai = await env.DB.prepare(`SELECT COUNT(*) AS runs,
             ROUND(AVG(json_extract(j.value, '$.ai.p95Ms')), 1) AS meanP95Ms,
             ROUND(MAX(json_extract(j.value, '$.ai.maxMs')), 1) AS peakMs,
+            ROUND(AVG(NULLIF(json_extract(j.value, '$.perf.p95FrameMs'), 0)), 1) AS meanFrameP95Ms,
+            ROUND(MAX(json_extract(j.value, '$.perf.maxFrameMs')), 1) AS maxFrameMs,
             MAX(json_extract(j.value, '$.ai.population')) AS maxPopulation,
             MAX(json_extract(j.value, '$.ai.committedMax')) AS maxCommitted,
             MAX(json_extract(j.value, '$.ai.sightQueriesMax')) AS maxSightQueries,
