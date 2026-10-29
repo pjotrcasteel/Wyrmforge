@@ -1,0 +1,426 @@
+name: Hollowed isolated visual source gate
+
+on:
+  push:
+    branches:
+      - art/hollowed-new-model-20261028
+    paths:
+      - 'art/source/enemies/hollow/rebuild-v1/**'
+      - 'tools/art/hollow-rebuild/**'
+      - 'docs/art/evidence/hollow-rebuild-v1/**'
+      - '.github/workflows/hollow-rebuild-art.yml'
+  pull_request:
+    paths:
+      - 'art/source/enemies/hollow/rebuild-v1/**'
+      - 'tools/art/hollow-rebuild/**'
+      - 'docs/art/evidence/hollow-rebuild-v1/**'
+      - '.github/workflows/hollow-rebuild-art.yml'
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: hollowed-rebuild-scope-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  source-boundary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            .github/workflows/hollow-rebuild-art.yml
+            art/source/enemies/hollow/rebuild-v1/
+            tools/art/hollow-rebuild/
+            docs/art/evidence/hollow-rebuild-v1/
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Verify entire PR file list — no animation/gameplay/runtime edits
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python tools/art/hollow-rebuild/check-scope.py --pr 391
+      - name: Verify source-guard syntax
+        run: |
+          python -m py_compile tools/art/hollow-rebuild/check-scope.py
+          python -m py_compile tools/art/hollow-rebuild/qc_h1_geometry.py
+          python -m py_compile tools/art/hollow-rebuild/evaluate_free_character_blender.py
+          python -m py_compile tools/art/hollow-rebuild/sculpt_reference_hollowed_h1_blender.py
+          python -m py_compile tools/art/hollow-rebuild/sculpt_body_pose_h1_blender.py
+      - name: Verify new source-only anatomical sculpt constraints
+        run: python tools/art/hollow-rebuild/test_feral_source_shape.py
+
+# This workflow does not touch, test, import, trigger or modify the shared
+# universal animation engine. It does not build or deploy the game.
+
+  cc0-horror-creature-primary-source:
+    name: Author-made CC0 horror creature — real 3D and editable rig screening
+    needs: source-boundary
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '2'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            tools/art/hollow-rebuild/
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install real Blender and PNG review dependencies
+        run: |
+          python -m pip install --disable-pip-version-check bpy==4.5.15 Pillow==11.3.0
+          python -c "import bpy; print('Real Blender:',bpy.app.version_string)"
+      - name: Fetch CC0 original Horror Game Maker model; inspect archive before importing
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/hollow-rebuild/horror-original
+          curl --fail --location --silent --show-error --retry 3 --max-time 180 \
+            --user-agent "WyrmForge-Hollowed-Source-Research/1.0" \
+            'https://opengameart.org/sites/default/files/Poses.zip' \
+            -o artifacts/hollow-rebuild/horror-original/source.zip
+          test "$(stat -c%s artifacts/hollow-rebuild/horror-original/source.zip)" -gt 10000000
+          python - <<'PY'
+          import hashlib,json,zipfile
+          from pathlib import Path
+          root=Path('artifacts/hollow-rebuild/horror-original')
+          src=root/'source.zip'
+          with zipfile.ZipFile(src) as archive:
+              names=archive.infolist()
+              if len(names)>600 or sum(x.file_size for x in names)>1_500_000_000:
+                  raise ValueError('CC0 creator archive unexpectedly large')
+              if any('..' in Path(item.filename).parts or item.filename.startswith('/') for item in names):
+                  raise ValueError('Creator archive has unsafe filename')
+              print('CREATOR ARCHIVE FIRST FILES:',[(item.filename,item.file_size) for item in names[:100]])
+              assets=[item for item in names if item.filename.lower().endswith(('.fbx','.blend','.glb','.gltf','.obj','.dae'))]
+              if not assets:
+                  raise ValueError('No editable FBX/BLEND/GLB/OBJ/DAE in Poses.zip; source unavailable')
+              # Never pick a standalone "Run" or "Attack" animation file;
+              # choose the largest *character* mesh-bearing FBX instead.
+              excluded=('animation','walk','run','jump','attack','idle','death','pose','dance','sprint')
+              models=[i for i in assets if not any(x in Path(i.filename).stem.lower() for x in excluded)]
+              if not models:
+                  # Rigged animated character poses may be individual FBXs
+                  # that still carry a complete skinned mesh. Import source
+                  # geometry only; strip all animation actions.
+                  models=assets
+                  print('ALL CREATOR SOURCE NAMES WERE POSES; evaluating mesh-bearing source instead')
+              models.sort(key=lambda item: (item.file_size, '.blend' in item.filename.lower()),reverse=True)
+              selected=models[0]
+              # Extract only original artist's chosen character source plus PNGs;
+              # ignore additional animations and any scripts/executables.
+              textures=[item for item in names if item.filename.lower().endswith(('.png','.jpg','.jpeg','.tga'))]
+              for item in [selected]+textures:
+                  archive.extract(item,root/'extracted')
+              model=(root/'extracted'/selected.filename).resolve()
+              (root/'model-path.txt').write_text(str(model),encoding='utf-8')
+              (root/'source-list.json').write_text(
+                  json.dumps({'source_filename':selected.filename,'source_size':selected.file_size,
+                              'other_models':[i.filename for i in models],
+                              'texture_count':len(textures),
+                              'sha256':hashlib.sha256(src.read_bytes()).hexdigest()},indent=2)+'\n',encoding='utf-8')
+              (root/'creator-LICENSE.txt').write_text(
+                  'Original: 3D Horror Game Monster / Horror Game Maker\n'
+                  'Creator: City Building Game Art\n'
+                  'OpenGameArt license: Creative Commons Zero (CC0 1.0 Universal)\n'
+                  'https://opengameart.org/content/3d-horror-game-monster\n'
+                  'https://creativecommons.org/publicdomain/zero/1.0/\n'
+                  'CC0 model sourced from artist original Poses.zip; evaluation strips all animations.\n'
+                  'Original ZIP SHA256: '+hashlib.sha256(src.read_bytes()).hexdigest()+'\n',
+                  encoding='utf-8')
+              print('SELECTED CREATOR SOURCE',selected.filename,'SIZE',selected.file_size)
+              print('OTHER MODEL FILENAMES', [i.filename for i in models][:30])
+              print('ORIGINAL TEXTURES',len(textures))
+          PY
+      - name: Screen actual CC0 character model, armature and eight neutral Blender angles
+        run: |
+          source_path="$(cat artifacts/hollow-rebuild/horror-original/model-path.txt)"
+          python tools/art/hollow-rebuild/evaluate_free_character_blender.py \
+            --input "$source_path" \
+            --license-file artifacts/hollow-rebuild/horror-original/creator-LICENSE.txt \
+            --license CC0-1.0 --author 'City Building Game Art' \
+            --source-url 'https://opengameart.org/content/3d-horror-game-monster' \
+            --output artifacts/hollow-rebuild/horror-source-review
+          test -s artifacts/hollow-rebuild/horror-source-review/source-clay-8views-BLENDER.png
+          test -s artifacts/hollow-rebuild/horror-source-review/source-material-native96-BLENDER.png
+          test -s artifacts/hollow-rebuild/horror-source-review/imported-hollowed-source-UNAPPROVED.blend
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data=json.loads(Path('artifacts/hollow-rebuild/horror-source-review/source-review.json').read_text())
+          assert data['actions_remaining']==0 and data['owner_approved'] is False, data
+          assert data['animation_engine_modified'] is False, data
+          print('Only source art assessed; no attack clips transferred',data)
+          PY
+      - name: Author reversible Hollowed source sculpt, ash-rot materials and 8-view real Blender review
+        run: |
+          python -m py_compile tools/art/hollow-rebuild/sculpt_cc0_horror_hollowed_h1_blender.py
+          python tools/art/hollow-rebuild/sculpt_cc0_horror_hollowed_h1_blender.py \
+            --input artifacts/hollow-rebuild/horror-source-review/imported-hollowed-source-UNAPPROVED.blend \
+            --output artifacts/hollow-rebuild/horror-hollowed-h1
+          test -s artifacts/hollow-rebuild/horror-hollowed-h1/hollowed-horror-cc0-original-anatomy-H1-UNAPPROVED.blend
+          test -s artifacts/hollow-rebuild/horror-hollowed-h1/source-clay-native96-BLENDER.png
+          test -s artifacts/hollow-rebuild/horror-hollowed-h1/source-material-8views-BLENDER.png
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          qc=json.loads(Path('artifacts/hollow-rebuild/horror-hollowed-h1/h1-authored-source-qc.json').read_text())
+          assert qc['editable_shape_keys']==2, qc
+          assert qc['sculpted_vertices']>600, qc
+          assert qc['front_wound_faces']>=4, qc
+          assert qc['source_armatures']>=1 and qc['source_vertex_groups']>0, qc
+          assert qc['actions']==0 and qc['new_animation_clips']==0, qc
+          assert qc['production_game_code_changed'] is False and qc['owner_approved'] is False
+          print('Blender original Hollowed source passes technical gate only. VISUAL OWNER APPROVAL NOT GIVEN.')
+          PY
+      - name: Inspect existing armature bone hierarchy for artist-authored static feral rest shape
+        run: |
+          python -m py_compile tools/art/hollow-rebuild/inspect_source_rig_blender.py
+          python tools/art/hollow-rebuild/inspect_source_rig_blender.py \
+            --input artifacts/hollow-rebuild/horror-hollowed-h1/hollowed-horror-cc0-original-anatomy-H1-UNAPPROVED.blend \
+            --output artifacts/hollow-rebuild/horror-hollowed-h1/source-armature-anatomy.json
+          test -s artifacts/hollow-rebuild/horror-hollowed-h1/source-armature-anatomy.json
+      - name: Author connected armature feral claw resting stance — no animation clips, engine or keyframes
+        run: |
+          python -m py_compile tools/art/hollow-rebuild/pose_feral_rest_source_blender.py
+          python tools/art/hollow-rebuild/pose_feral_rest_source_blender.py \
+            --input artifacts/hollow-rebuild/horror-hollowed-h1/hollowed-horror-cc0-original-anatomy-H1-UNAPPROVED.blend \
+            --output artifacts/hollow-rebuild/horror-feral-rest-h1
+          test -s artifacts/hollow-rebuild/horror-feral-rest-h1/hollowed-h1-feral-rest-source-UNAPPROVED.blend
+          test -s artifacts/hollow-rebuild/horror-feral-rest-h1/source-clay-8views-BLENDER.png
+          test -s artifacts/hollow-rebuild/horror-feral-rest-h1/source-material-native96-BLENDER.png
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('artifacts/hollow-rebuild/horror-feral-rest-h1/rest-source-qc.json')
+          d=json.loads(p.read_text(encoding='utf-8'))
+          assert d['source_bones']==70 and d['skin_meshes']==1, d
+          assert d['source_actions']==0 and d['attack_clips_created']==0, d
+          assert all(v>=.22 for v in d['actual_wrist_drop_metres'].values()), d
+          assert d['animation_engine_modified'] is False and d['owner_approved'] is False
+          print('PASS geometry source-only stance, still ART UNAPPROVED.')
+          PY
+      - name: BODY FIRST – original 70-bone body proportions and resting pose (no detail layers)
+        run: |
+          python -m py_compile tools/art/hollow-rebuild/sculpt_body_pose_h1_blender.py
+          python tools/art/hollow-rebuild/sculpt_body_pose_h1_blender.py \
+            --input artifacts/hollow-rebuild/horror-feral-rest-h1/hollowed-h1-feral-rest-source-UNAPPROVED.blend \
+            --output artifacts/hollow-rebuild/horror-body-pose-h1
+          test -s artifacts/hollow-rebuild/horror-body-pose-h1/Hollowed-H1-body-pose-source-NOT-APPROVED.blend
+          test -s artifacts/hollow-rebuild/horror-body-pose-h1/real-body-clay-FRONT-SIDE-BACK-BLENDER.png
+          test -s artifacts/hollow-rebuild/horror-body-pose-h1/real-body-silhouette-8views-BLENDER.png
+          test -s artifacts/hollow-rebuild/horror-body-pose-h1/real-body-clay-native96-BLENDER.png
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('artifacts/hollow-rebuild/horror-body-pose-h1/body-pose-QC.json')
+          d=json.loads(p.read_text(encoding='utf-8'))
+          assert d['original_connected_topology_and_weights_preserved'] is True,d
+          assert d['pose']['original_rig_bones']==70,d
+          assert d['proportions']['changed_connected_skin_vertices']>200,d
+          assert d['views']['native_96px_views']==8,d
+          assert d['actions']==0 and d['animation_engine_modified'] is False,d
+          assert d['runtime_modified'] is False and d['approved'] is False,d
+          print('Body and feral pose blockout DONE. ART VISUAL APPROVAL STILL REQUIRED.')
+          PY
+      - name: Sculpt actual connected thoracic cavity, curved source-rig ribs and 3D fingertip talons
+        run: |
+          python -m py_compile tools/art/hollow-rebuild/sculpt_anatomical_cutaway_h1_blender.py
+          python tools/art/hollow-rebuild/sculpt_anatomical_cutaway_h1_blender.py \
+            --input artifacts/hollow-rebuild/horror-feral-rest-h1/hollowed-h1-feral-rest-source-UNAPPROVED.blend \
+            --output artifacts/hollow-rebuild/horror-anatomical-h1
+          test -s artifacts/hollow-rebuild/horror-anatomical-h1/hollowed-h1-real-anatomy-ribs-claws-UNAPPROVED.blend
+          test -s artifacts/hollow-rebuild/horror-anatomical-h1/source-clay-native96-BLENDER.png
+          test -s artifacts/hollow-rebuild/horror-anatomical-h1/source-material-8views-BLENDER.png
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('artifacts/hollow-rebuild/horror-anatomical-h1/h1-anatomical-source-qc.json')
+          d=json.loads(p.read_text(encoding='utf-8'))
+          assert d['real_skin_cavity_deformed_vertices']>=14,d
+          assert d['deep_cavity_m']>=.07,d
+          assert d['source_bone_ribs']>=4,d
+          assert d['finger_bone_talons']==0 and d['detached_talon_meshes']==0,d
+          assert d['connected_claw_vertices']>=12,d
+          assert d['finger_bone_groups_used']>=9,d
+          assert d['original_topology_preserved'] is True,d
+          assert d['actions']==0 and d['animation_engine_modified'] is False,d
+          assert d['owner_approved'] is False,d
+          print('PASS source-only anatomical geometry; owner visual approval NOT GIVEN')
+          PY
+      - name: Sculpt connected human facial planes without dark orbital masks
+        run: |
+          python -m py_compile tools/art/hollow-rebuild/sculpt_facial_planes_v2_blender.py
+          python tools/art/hollow-rebuild/sculpt_facial_planes_v2_blender.py \
+            --input artifacts/hollow-rebuild/horror-anatomical-h1/hollowed-h1-real-anatomy-ribs-claws-UNAPPROVED.blend \
+            --output artifacts/hollow-rebuild/horror-facial-v2
+          test -s artifacts/hollow-rebuild/horror-facial-v2/hollowed-h1-sculpted-facial-planes-v2-UNAPPROVED.blend
+          test -s artifacts/hollow-rebuild/horror-facial-v2/source-clay-8views-BLENDER.png
+          test -s artifacts/hollow-rebuild/horror-facial-v2/source-material-native96-BLENDER.png
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          q=json.loads(Path('artifacts/hollow-rebuild/horror-facial-v2/h1-facial-planes-source-qc.json').read_text())
+          assert q['connected_skull_vertices_sculpted']>=10,q
+          assert q['facial_landmark_vertices']>=5,q
+          assert q['added_dark_orbital_mask_faces']==0 and q['dark_face_materials_added']==0,q
+          assert q['original_source_skin_topology_preserved'] is True,q
+          assert q['created_mesh_fragments']==0 and q['source_animation_actions']==0,q
+          assert q['game_engine_modified'] is False and q['owner_approved'] is False,q
+          print('PASS static face geometry QC only; ART NOT OWNER APPROVED.')
+          PY
+      - name: Replace blank head with genuine human skull, damaged FACE and articulated jaw (source art only)
+        run: |
+          mkdir -p artifacts/hollow-rebuild/head-original
+          curl --fail --location --silent --show-error --retry 3 --max-time 90 \
+            'https://opengameart.org/sites/default/files/head_1.blend' \
+            -o artifacts/hollow-rebuild/head-original/head-original.blend
+          python -m py_compile tools/art/hollow-rebuild/graft_real_cc0_head_h1_blender.py
+          python tools/art/hollow-rebuild/graft_real_cc0_head_h1_blender.py \
+            --body artifacts/hollow-rebuild/horror-facial-v2/hollowed-h1-sculpted-facial-planes-v2-UNAPPROVED.blend \
+            --head-source artifacts/hollow-rebuild/head-original/head-original.blend \
+            --output artifacts/hollow-rebuild/horror-real-head-h1
+          test -s artifacts/hollow-rebuild/horror-real-head-h1/hollowed-h1-cc0-REAL-FACE-SKULL-JAW-UNAPPROVED.blend
+          test -s artifacts/hollow-rebuild/horror-real-head-h1/source-clay-8views-BLENDER.png
+          test -s artifacts/hollow-rebuild/horror-real-head-h1/genuine-anatomical-head-closeup-front.png
+          test -s artifacts/hollow-rebuild/horror-real-head-h1/genuine-anatomical-head-closeup-three-quarter.png
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('artifacts/hollow-rebuild/horror-real-head-h1/real-human-head-graft-qc.json')
+          q=json.loads(p.read_text())
+          assert q['source_only_replaced_head'] is True and q['head_3d_is_donor_geometry'] is True,q
+          assert q['original_rig_bones']==70 and q['body_cut']['old_head_vertices_removed']>35,q
+          assert q['face_skull_jaw']['face']['damaged_face_polygons_removed']>=8,q
+          assert q['dark_eye_mask_material_faces']==0,q
+          assert q['added_animation_actions']==0 and q['animation_engine_touched'] is False,q
+          assert q['gameplay_or_runtime_touched'] is False and q['owner_approved'] is False,q
+          print('Source-only anatomical graft passed technical QC. ART NOT APPROVED.')
+          PY
+      - name: Model owner's 29 Oct feral appearance silhouette on existing source only
+        run: |
+          python -m py_compile tools/art/hollow-rebuild/sculpt_reference_hollowed_h1_blender.py
+          python tools/art/hollow-rebuild/sculpt_reference_hollowed_h1_blender.py \
+            --input artifacts/hollow-rebuild/horror-real-head-h1/hollowed-h1-cc0-REAL-FACE-SKULL-JAW-UNAPPROVED.blend \
+            --output artifacts/hollow-rebuild/horror-owner-reference-h1
+          test -s artifacts/hollow-rebuild/horror-owner-reference-h1/hollowed-H1-owner-reference-SOURCE-UNAPPROVED.blend
+          test -s artifacts/hollow-rebuild/horror-owner-reference-h1/source-clay-8views-BLENDER.png
+          test -s artifacts/hollow-rebuild/horror-owner-reference-h1/source-material-8views-BLENDER.png
+          test -s artifacts/hollow-rebuild/horror-owner-reference-h1/source-material-native96-BLENDER.png
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('artifacts/hollow-rebuild/horror-owner-reference-h1/owner-reference-source-qc.json')
+          d=json.loads(p.read_text(encoding='utf-8'))
+          assert d['existing_bones']==70 and d['existing_shape_keys_preserved'],d
+          assert d['hair']['strands']>=75 and d['hair']['vertices']<5000,d
+          assert d['waist_wrap']['panels']>=15,d
+          assert d['char_back']['embedded_spines']>=10,d
+          assert d['animation_actions']==0 and d['animation_engine_modified'] is False,d
+          assert d['gameplay_modified'] is False and d['owner_approved'] is False,d
+          assert d['visual_parity_not_claimed'] is True,d
+          print('SOURCE GENERATED for owner reference. Genuine visual approval NOT implied.')
+          PY
+      - name: Preserve 3D evidence; never ship candidate into WyrmForge runtime
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hollowed-h1-HORROR-CC0-author-model-source-UNAPPROVED
+          path: |
+            artifacts/hollow-rebuild/horror-original/source-list.json
+            artifacts/hollow-rebuild/horror-original/creator-LICENSE.txt
+            artifacts/hollow-rebuild/horror-source-review/
+            artifacts/hollow-rebuild/horror-hollowed-h1/
+            artifacts/hollow-rebuild/horror-feral-rest-h1/
+            artifacts/hollow-rebuild/horror-body-pose-h1/
+            artifacts/hollow-rebuild/horror-anatomical-h1/
+            artifacts/hollow-rebuild/horror-facial-v2/
+            artifacts/hollow-rebuild/horror-real-head-h1/
+            artifacts/hollow-rebuild/horror-owner-reference-h1/
+          if-no-files-found: warn
+          retention-days: 30
+
+  cc0-anatomical-head-audit:
+    name: Anatomically accurate CC0 face and skull — isolated real Blender screening
+    needs: source-boundary
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '2'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            tools/art/hollow-rebuild/
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install real Blender 4.5 and reference image compositor
+        run: |
+          python -m pip install --disable-pip-version-check bpy==4.5.15 Pillow==11.3.0
+          python -c "import bpy; print('Anatomy source audit Blender',bpy.app.version_string)"
+      - name: Download original MRI-derived CC0 human skull AND facial skin layer
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/hollow-rebuild/head-original
+          curl --fail --location --silent --show-error --retry 3 --max-time 120 \
+            --user-agent 'WyrmForge-Hollowed-Source-Research/1.0' \
+            'https://opengameart.org/sites/default/files/head_1.blend' \
+            -o artifacts/hollow-rebuild/head-original/head-original.blend
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib
+          p=Path('artifacts/hollow-rebuild/head-original/head-original.blend')
+          assert p.stat().st_size>300000
+          assert p.read_bytes()[:7]==b'BLENDER'
+          (p.parent/'LICENSE-CC0.txt').write_text(
+            'Author: Drummyfish\nTitle: Brain and Skull (includes human face skin)\n'
+            'License: CC0 1.0 Universal\n'
+            'https://opengameart.org/content/brain-and-skull\n'
+            'https://creativecommons.org/publicdomain/zero/1.0/\n'
+            'Original source SHA256: '+hashlib.sha256(p.read_bytes()).hexdigest()+'\n',
+            encoding='utf-8')
+          print('True original anatomical Blender source',p.stat().st_size)
+          PY
+      - name: Independently render exact original skull and face geometry, with source inventory
+        run: |
+          python -m py_compile tools/art/hollow-rebuild/inspect_cc0_anatomical_head_blender.py
+          python tools/art/hollow-rebuild/inspect_cc0_anatomical_head_blender.py \
+            --input artifacts/hollow-rebuild/head-original/head-original.blend \
+            --output artifacts/hollow-rebuild/head-reference-review
+          test -s artifacts/hollow-rebuild/head-reference-review/source-clay-8views-BLENDER.png
+          test -s artifacts/hollow-rebuild/head-reference-review/source-clay-native96-BLENDER.png
+          test -s artifacts/hollow-rebuild/head-reference-review/external-anatomical-head-only-UNAPPROVED.blend
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          j=json.loads(Path('artifacts/hollow-rebuild/head-reference-review/head-source-audit.json').read_text())
+          assert j['mesh_count']>=2 and j['total_vertices']>500
+          assert j['animation_actions']==0 and j['candidate_approved'] is False
+          print('Independent real anatomical model verified; actual graft not yet done')
+          PY
+      - name: Preserve original head inventory, genuine renders and CC0 attribution
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hollowed-h1-cc0-ANATOMICAL-HUMAN-HEAD-SOURCE-REVIEW-UNAPPROVED
+          path: |
+            artifacts/hollow-rebuild/head-original/LICENSE-CC0.txt
+            artifacts/hollow-rebuild/head-reference-review/
+          if-no-files-found: warn
+          retention-days: 30
