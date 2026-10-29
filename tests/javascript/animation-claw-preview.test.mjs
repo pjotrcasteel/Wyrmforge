@@ -10,7 +10,7 @@ const manifest=JSON.parse(readFileSync(new URL('../art/review/animation-foundati
 const uri=s=>'data:text/javascript;base64,'+Buffer.from(s).toString('base64');
 const stub=uri(`export function createCreatureAnimationAssets(url) {
   globalThis.__anReviewAssetPath=String(url);
-  return {ready:()=>true,manifest:${JSON.stringify(manifest)},profile:${JSON.stringify(profile)},draw:()=>false};
+  return {ready:()=>true,manifest:${JSON.stringify(manifest)},profile:${JSON.stringify(profile)},draw:()=>true};
 }`);
 const source=readFileSync(new URL('hollow-sprites.js',root),'utf8')
  .replaceAll('import.meta.url',"'https://example.test/js/hollow-sprites.js'")
@@ -25,6 +25,20 @@ try {
         assert.equal(typeof module.createHollowState,'function');
         assert.equal(selectedAssetPath,
             'https://example.test/art/review/animation-foundation-sprite-claw/');
+    });
+    test('review telemetry counts only successful atlas draws, including the claw',()=>{
+        const state=module.createHollowState();
+        const pose={visualScale:1,foundationSample:{clip:'attack-travel'}};
+        state.entities.set(29,pose);
+        const enemy={entityId:29,kind:0,x:0,y:0,radius:11};
+        assert.equal(module.drawHollowEnemy({},enemy,state),true);
+        assert.equal(pose.foundationDrawnFrames,1);
+        assert.equal(pose.foundationClawDrawnFrames,1);
+        assert.equal(pose.foundationRenderedClip,'attack-travel');
+        pose.foundationSample={clip:'walk'};
+        assert.equal(module.drawHollowEnemy({},enemy,state),true);
+        assert.equal(pose.foundationDrawnFrames,2);
+        assert.equal(pose.foundationClawDrawnFrames,1);
     });
 } finally {
     globalThis.location=original;
