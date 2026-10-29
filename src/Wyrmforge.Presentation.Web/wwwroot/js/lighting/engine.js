@@ -2,6 +2,23 @@ import * as T from './vendor/three.module.js';
 import { LightingInspection } from './inspection.js';
 import { validateSnapshot, selectLights } from './registry.js';
 
+/**
+ * All authored channels share one atlas transform; returning to a non-atlas
+ * surface must restore full UVs. Avoid touching matrices on unchanged frames.
+ */
+export function synchronizeAtlasFrame(material, frame) {
+    const [u, v] = frame?.offset ?? [0, 0];
+    const [w, h] = frame?.repeat ?? [1, 1];
+    for (const map of [material.map, material.normalMap, material.roughnessMap,
+        material.aoMap, material.emissiveMap]) {
+        if (!map || map.offset.x === u && map.offset.y === v &&
+            map.repeat.x === w && map.repeat.y === h) continue;
+        map.offset.set(u, v);
+        map.repeat.set(w, h);
+        map.updateMatrix();
+    }
+}
+
 /** Shared GPU adapter; accepts resource IDs and descriptors, never entity kinds. */
 export class LightingEngine {
     constructor(canvas, { shadowViews = 8, maxLights = 8, shadowMapSize = 512 } = {}) {
@@ -158,9 +175,7 @@ export class LightingEngine {
             // Environment probes contain prelit radiance; disable them for the absolute darkness diagnostic.
             object.mesh.material.envMapIntensity = s.environment.ambient === 0 && selected.length === 0
                 ? 0 : md.reflection === 'probe' ? md.specular : 0;
-            if (d.frame) for (const map of [object.mesh.material.map, object.mesh.material.normalMap, object.mesh.material.roughnessMap, object.mesh.material.aoMap, object.mesh.material.emissiveMap]) if (map) {
-                map.offset.fromArray(d.frame.offset); map.repeat.fromArray(d.frame.repeat); map.updateMatrix();
-            }
+            synchronizeAtlasFrame(object.mesh.material, d.frame);
         }
         // Fog is a bounded distance approximation, not a volumetric light simulation.
         // The zero-light diagnostic must not reveal silhouettes through fog.
