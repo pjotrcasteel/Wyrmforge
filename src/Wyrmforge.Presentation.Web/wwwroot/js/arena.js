@@ -382,27 +382,27 @@ function draw(state, snapshot, width, height) {
         }
         if (!reuse) {
             if (layer.kind === 'masonry') {
-            drawArenaCloisterElevation(ctx, layer);
-        } else if (layer.kind === 'dragon') {
-            drawDragon(ctx, layer.dragon, state.reducedMotion.matches, snapshot.dragonBreath, state.ashfang);
-        } else if (layer.kind === 'dragonDeath') {
-            drawAshfangDeath(ctx,state.ashfang);
-        } else if (layer.kind === 'enemy') {
-            const enemy = layer.enemy;
-            if (gpu) {
-                drawEnemy(ctx, enemy, null,
-                    enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId),state.hollow,state.ashling);
+                drawArenaCloisterElevation(ctx, layer);
+            } else if (layer.kind === 'dragon') {
+                drawDragon(ctx, layer.dragon, state.reducedMotion.matches, snapshot.dragonBreath, state.ashfang);
+            } else if (layer.kind === 'dragonDeath') {
+                drawAshfangDeath(ctx,state.ashfang);
+            } else if (layer.kind === 'enemy') {
+                const enemy = layer.enemy;
+                if (gpu) {
+                    drawEnemy(ctx, enemy, null,
+                        enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId),state.hollow,state.ashling);
+                } else {
+                    const paintEnemy = surface => drawEnemy(surface, enemy, sampleSpellLight(spellLights, enemy.x, enemy.y),
+                        enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId),state.hollow,state.ashling);
+                    drawActorWithEmitter(ctx, state.actorLightBuffer, enemy, selectionEmitter, paintEnemy);
+                }
+                drawEliteCrest(ctx, enemy, visualSeconds, state.reducedMotion.matches);
             } else {
-                const paintEnemy = surface => drawEnemy(surface, enemy, sampleSpellLight(spellLights, enemy.x, enemy.y),
-                    enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId),state.hollow,state.ashling);
-                drawActorWithEmitter(ctx, state.actorLightBuffer, enemy, selectionEmitter, paintEnemy);
-            }
-            drawEliteCrest(ctx, enemy, visualSeconds, state.reducedMotion.matches);
-        } else {
-            drawMage(ctx, snapshot.player, snapshot.castMotion, danger.hit, state.reducedMotion.matches,
-                gpu ? null : sampleSpellLight(spellLights, snapshot.player.x, snapshot.player.y),
-                updateMageWalk(state.mageWalk, snapshot.player, visualSeconds, state.reducedMotion.matches),
-                state.mageWalk.facing);
+                drawMage(ctx, snapshot.player, snapshot.castMotion, danger.hit, state.reducedMotion.matches,
+                    gpu ? null : sampleSpellLight(spellLights, snapshot.player.x, snapshot.player.y),
+                    updateMageWalk(state.mageWalk, snapshot.player, visualSeconds, state.reducedMotion.matches),
+                    state.mageWalk.facing);
             }
         }
         if (gpu) {
