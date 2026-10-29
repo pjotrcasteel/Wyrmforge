@@ -104,6 +104,9 @@ public partial class ArenaView : IAsyncDisposable
         var agentPreview = new Uri(Navigation.Uri).Query.TrimStart('?').Split('&')
             .Any(value => string.Equals(value, "agents=1", StringComparison.OrdinalIgnoreCase));
         simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt, researchLead: ResearchLead, preparedMutations: PreparedMutations, fireballMutations: FireballMutations, contextualSpell: ContextualSpell, region: Region, regionOpening: RegionOpening, hunt: Hunt, amplifierAssignments: MutationAmplifierAssignments, fireballLevel: FireballLevel, agents: agentPreview ? new(true, true) : null);
+        if (new Uri(Navigation.Uri).Query.TrimStart('?').Split('&')
+            .Any(value => string.Equals(value, "ar1Geography=1", StringComparison.OrdinalIgnoreCase)))
+            simulation.EnableWorldSiteGeography();
         if (RewardCache) simulation.OpenRewardCache();
     }
 
