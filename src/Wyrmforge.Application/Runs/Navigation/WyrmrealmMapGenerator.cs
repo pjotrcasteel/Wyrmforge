@@ -139,7 +139,7 @@ public static class WyrmrealmMapGenerator
             Features = features.Select(f => f with { Center = Flip(f.Center) }).ToArray() };
         var created = WyrmrealmRouteGenerator.CreateNodes(tierThree ? 3 : tierTwo ? 2 : depth, drafts, new Random(unchecked(seed * 733 ^ depth * 104729))).ToArray();
         var lairRoads = created.Where(node => node.Type == WyrmrealmNodeType.Dragon).SelectMany(node => node.PreviousNodeIds).ToHashSet(StringComparer.Ordinal);
-        return created
+        var mapped = created
             .Select(node =>
             {
                 var draft = drafts.Single(d => d.Id == node.Id);
@@ -150,6 +150,7 @@ public static class WyrmrealmMapGenerator
                     Site = site with { Point = Flip(site.Point), IncomingTrail = site.IncomingTrail.Select(Flip).ToArray() },
                     Territory = territory, Habitat = WyrmrealmHabitatCatalog.ForSchool(draft.Habitat, region), PreLair = node.Type == WyrmrealmNodeType.Combat && lairRoads.Contains(node.Id) };
             }).ToArray();
+        return WorldSiteGeographyProjection.Attach(mapped, seed, region);
 
         void Add(string suffix, int stage, int lane, IReadOnlyList<string> previous, HuntPoint point, IReadOnlyList<HuntPoint> trail,
             string? roadId = null, int index = 0, bool bonus = false, SpellSchool? school = null, WyrmrealmHabitat habitat = WyrmrealmHabitat.Outskirts,
