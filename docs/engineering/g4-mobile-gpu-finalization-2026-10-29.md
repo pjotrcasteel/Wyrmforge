@@ -16,7 +16,19 @@ G4 optimizes the **single shared LightingEngine** for mobile-first 2.5D pixel-ar
 - The existing renderer-owned mobile/balanced/high shadow/light tiers, authoritative C# light IDs, source expiry, static-capture revisions, diagnostics, texture-upload accounting and fallback remain in place.
 - Node regressions specifically exercise buffer policy, sampling, Canvas state restoration, invalid quality, released staging pixels, source-revision invalidation and unchanged art.
 
-This slice is a **measurable mobile-renderer improvement attempt**, not proof of improved FPS, GPU time, battery life, or total VRAM usage. The desktop-hosted Chromium 390px baseline in PR #381 was roughly 1.4–1.5 million dynamic pixels uploaded per frame and poor CPU submission frame time. The new rune-state-aware territory wall cache should reduce repeated uploads in comparable wall-heavy Hunts between actual animated frame changes, but exact-head frame capture and measurement are pending; moving actor artwork remains legacy Canvas-captured pending G5 asset adoption.
+This slice is a **measurable mobile-renderer improvement attempt**, not proof of improved FPS, GPU time, battery life, or total VRAM usage. The desktop-hosted Chromium 390px baseline in PR #381 was roughly 1.4–1.5 million dynamic pixels uploaded per frame and poor CPU submission frame time. The new rune-state-aware territory wall cache should reduce repeated uploads in comparable wall-heavy Hunts between actual animated frame changes, and its repeated-upload reduction is now confirmed in Chromium; moving actor artwork remains legacy Canvas-captured pending G5 asset adoption.
+
+## Exact-head Chromium proof — completed
+
+The implementation head `95d2b507855c1eb79de12ac287b50146fb159551` passed [shared-GPU proof 40932535977](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40932535977) and [Gothic Night review 40932535989](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40932535989). Genuine moving-Hunt diagnostic artifacts were compared with the passed pre-rune-cache proof [40929996097](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40929996097).
+
+| Chromium viewport | Before texture pixels/frame | With rune-aware cache | Reduction | Before sample FPS | After sample FPS |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 320 mobile | 1,160,822 | 286,784 | 75.3% | 36 | 44 |
+| 390 balanced | 1,434,762 | 408,584 | 71.5% | 18 | 18 |
+| 390 mobile | 1,383,150 | 629,484 | 54.5% | 18 | 20 |
+
+The final capture's top-five uploads contained **no territory wall** at 320/mobile or 390/balanced; the 390/mobile sample contained exactly one wall experiencing an actual rune transition. Other 320/390 browser smoke, true shadow/zero-light assertions, and the .NET browser test build passed. The comparison uses different randomly generated Hunt seeds, gameplay state and CI load; it demonstrates removed repeated uploads, **not a controlled FPS uplift**. GPU timing, VRAM and thermals are not measured by this evidence, and production G5 render adoption remains deliberately opt-in.
 
 ## Acceptance / evidence checklist (not all satisfied)
 
@@ -28,4 +40,4 @@ This slice is a **measurable mobile-renderer improvement attempt**, not proof of
 
 ## Status
 
-Code is committed on PR #409; GitHub GPU proof for the initial test head: [run 40929350507](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40929350507). Check its **conclusion and exact SHA** before relying on it. This document makes no physical-device or visual owner-approval claim. No cross-engine changes.
+Code is committed on PR #409; the exact functional head has passed [run 40932535977](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40932535977). This document makes no physical-device or visual owner-approval claim. No cross-engine changes.
