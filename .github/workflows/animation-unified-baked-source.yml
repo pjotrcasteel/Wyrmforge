@@ -122,7 +122,7 @@ jobs:
           assert full['clips']['attack-travel']['sha256']==half['clips']['attack-travel']['sha256']
           for name in ('pivot','pivot-negative'):
               assert full['clips'][name]['frames']==16 and half['clips'][name]['frames']==8
-              assert half['clips'][name]['experimentalSourceFrameIndices']==list(range(0,16,2))
+              assert half['clips'][name]['experimentalSourceFrameIndices']==[round(i*15/7) for i in range(8)]
               assert half['sourceQC'][name]['frames']==16, 'Must retain full independent source QC'
           assert budget['maxDecodedBytes']==64*1024*1024
           print('Eight-native-frame turn review (not runtime accepted):',budget['decodedBytes'],
