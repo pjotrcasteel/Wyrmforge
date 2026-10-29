@@ -142,8 +142,8 @@ test('automatic private report contains only compact measurements, never raw dev
 test('G4 arena passes finished lifecycle and keeps its local recording when Blazor disposes canvas', async () => {
     const { readFile } = await import('node:fs/promises');
     const file = await readFile(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena.js', import.meta.url), 'utf8');
-    assert.match(file, /ended: Boolean\\(state\\.latestSnapshot\\?\\.ended\\)/);
-    assert.match(file, /state\\.g4Review\\?\\.dispose\\(\\)/);
+    assert.ok(file.includes('ended: Boolean(state.latestSnapshot?.ended)'));
+    assert.ok(file.includes('state.g4Review?.dispose()'));
 });
 
 test('G4 reviewer only attaches to optional real Hunt integration and not default rendering', async () => {
