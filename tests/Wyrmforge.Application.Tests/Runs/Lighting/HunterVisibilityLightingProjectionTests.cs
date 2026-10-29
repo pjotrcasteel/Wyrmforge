@@ -28,6 +28,29 @@ public sealed class HunterVisibilityLightingProjectionTests
     }
 
     [TestMethod]
+    public void NightSky_UsesTheSameGenericLightingContractAndCannotLeakIntoAbsoluteDarknessProof()
+    {
+        var sky = NightSkyLightingProjection.Capture();
+        Assert.AreEqual(NightSkyLightingProjection.SourceId, sky.Id);
+        Assert.AreEqual("night-sky", sky.OwnerId);
+        Assert.AreEqual("directional", sky.Type);
+        Assert.AreEqual(0d, sky.DirectionX);
+        Assert.AreEqual(0d, sky.DirectionY);
+        Assert.IsTrue(sky.DirectionZ < 0);
+        Assert.IsFalse(sky.CastsShadows);
+        Assert.IsTrue(sky.Intensity > 0);
+
+        var environment = new LightingEnvironment("gothic-night", "#8c9cbb", .24);
+        var snapshot = LightingSceneComposer.Compose("hunt", 6, environment, [sky],
+            [HunterVisibilityLightingProjection.Capture(new Vector2D(100, 200))]);
+        var gpu = GpuLightingFrameProjection.FromSnapshot(snapshot, 6);
+        Assert.IsTrue(gpu.Lights.Any(source => source.Id == NightSkyLightingProjection.SourceId));
+        Assert.AreEqual(.24, gpu.Environment.Ambient);
+        Assert.AreEqual(0, LightingSceneComposer.Compose("zero-light-proof", 0,
+            new LightingEnvironment("zero", "#000000", 0), []).Emitters.Count);
+    }
+
+    [TestMethod]
     public void Capture_ComposesWithOtherAuthoritativeSourcesWithoutChangingZeroLightLab()
     {
         var hunter = HunterVisibilityLightingProjection.Capture(new Vector2D(100, 200));
