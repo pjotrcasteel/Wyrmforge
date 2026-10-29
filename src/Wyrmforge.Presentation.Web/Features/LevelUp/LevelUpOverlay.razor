@@ -1,138 +1,62 @@
-@implements IDisposable
 @using Wyrmforge.Domain.Spells
-@using Wyrmforge.Domain.Spells.Evolutions
 
-<div class="level-up run-overlay @(EvolutionDraft ? "evolution-draft" : string.Empty)">
-    @if (EvolutionDraft)
-    {
-        <div class="evo-stage school-@SchoolClass">
-            <section class="evo-ceremony @(revealing ? "evo-visible" : "evo-withdrawn")" role="status" aria-label="Spell evolving" aria-hidden="@(!revealing)">
-                <div class="evo-ceremony-content">
-                    <div class="evo-overline">RANK III • MASTERED</div>
-                    <div class="evo-transformation">
-                        <div class="evo-ring outer"></div>
-                        <div class="evo-ring inner"></div>
-                        <div class="evo-original-icon"><GameIcon Glyph="@EvolutionSpellIcon" Size="lg" /></div>
-                        <div class="evo-possible-forms">
-                            @foreach (var choice in Choices)
-                            {
-                                <span><GameIcon Glyph="@(choice.Icon)" /></span>
-                            }
-                        </div>
-                    </div>
-                    <h2>@EvolutionSpellName</h2>
-                    <p>IS EVOLVING...</p>
-                    <div class="evo-ceremony-instruction">NEW FORMS ARE AWAKENING</div>
-                </div>
-                @if (revealing)
-                {
-                    <button class="evo-skip" @onclick="SkipReveal" aria-label="Skip spell evolution animation">Skip animation <span>»</span></button>
-                }
-            </section>
-
-            <section class="level-up-card run-overlay-surface evo-crossroads @(Choices.Count > 2 ? "evo-many-branches" : string.Empty) @(revealing || confirmingChoice is not null ? "evo-withdrawn" : "evo-visible")"
-                     aria-hidden="@(revealing || confirmingChoice is not null)">
-                <div class="eyebrow">SPELL EVOLUTION • @EvolutionSpellName</div>
-                <h2>Choose what the spell becomes</h2>
-                <p>Choose one of @Choices.Count permanent forms for this hunt. The other paths close.</p>
-                <div class="upgrade-choices">
-                    @foreach (var choice in Choices)
+<div class="level-up run-overlay" data-hunt-upgrade-design="temporary">
+    <section class="level-up-card run-overlay-surface">
+        <div class="eyebrow">@(RewardSchool is { } school ? $"{school.ToString().ToUpperInvariant()} TRAIL REWARD"
+            : Level > 0 && Level % 5 == 0 ? $"LEVEL {Level} • BREAKTHROUGH" : $"LEVEL {Level} • REFINEMENT")</div>
+        <h2>@(RewardSchool.HasValue ? "Strengthen your hunt" : Level > 0 && Level % 5 == 0 ? "Choose a major power" : "Refine your magic")</h2>
+        @if (Fateweave is { } weave)
+        {
+            <div class="fateweave-purse" aria-label="@($"Fateweave: {weave.Charges} of {weave.Capacity} rerolls left this hunt")"
+                 title="Fateweave: reroll a single card. Charges last the whole hunt; each card can be rerolled once per level-up.">
+                <span class="fateweave-label">FATEWEAVE</span>
+                <span class="fateweave-pips" aria-hidden="true">
+                    @for (var pip = 0; pip < weave.Capacity; pip++)
                     {
-                        <button class="run-upgrade choice-@LevelChoicePresentation.KindClass(choice) rarity-@LevelChoicePresentation.RarityClass(choice)"
-                                disabled="@(revealing || confirmingChoice is not null)" @onclick="() => ChooseAsync(choice)">
-                            <span class="choice-card-header">
-                                <span class="choice-badge">@LevelChoicePresentation.Badge(choice)</span>
-                                <span class="choice-rarity">@choice.Rarity</span>
-                            </span>
-                            <span class="upgrade-icon"><GameIcon Glyph="@(choice.Icon)" /></span>
-                            <span class="upgrade-rank">@LevelChoicePresentation.Rank(choice)</span>
-                            <strong>@choice.Name</strong>
-                            <span class="choice-delta">@LevelChoicePresentation.Delta(choice)</span>
-                            <small>@choice.Description</small>
-                            @if (!string.IsNullOrWhiteSpace(choice.Hint))
-                            {
-                                <span class="draft-hint">@choice.Hint</span>
-                            }
-                            <span class="choice-footer">@LevelChoicePresentation.Footer(choice)</span>
-                        </button>
+                        <i class="@(pip < weave.Charges ? "full" : "empty")"></i>
                     }
-                </div>
-                <p class="evo-crossroads-warning">ONE PATH FOR THIS HUNT • NO SECOND CHANCE</p>
-            </section>
-
-            @if (confirmingChoice is { } selected)
+                </span>
+                <span class="fateweave-count">@weave.Charges/@weave.Capacity</span>
+            </div>
+        }
+        <div class="upgrade-choices">
+            @for (var index = 0; index < Choices.Count; index++)
             {
-                <section class="evo-ceremony evo-confirmation @(finishing ? "evo-withdrawn" : "evo-visible")" role="status" aria-live="polite">
-                    <div class="evo-ceremony-content">
-                        <div class="evo-overline">A NEW FORM IS FORGED</div>
-                        <div class="evo-confirm-icon"><GameIcon Glyph="@(selected.Icon)" /></div>
-                        <h2>@selected.Name</h2>
-                        <p>@EvolutionSpellName HAS EVOLVED</p>
-                        <div class="evo-ceremony-instruction">THIS FORM IS YOURS FOR THE REST OF THE HUNT</div>
-                    </div>
-                </section>
+                var choice = Choices[index];
+                var slot = index;
+                var weaveSlot = Fateweave is { } purse && slot < purse.Slots.Count ? purse.Slots[slot] : null;
+                <div class="choice-slot">
+                <button class="run-upgrade choice-@LevelChoicePresentation.KindClass(choice) rarity-@LevelChoicePresentation.RarityClass(choice) @(choice.Gilded ? "choice-gilded" : string.Empty)"
+                        @onclick="() => ChooseAsync(choice)">
+                    <span class="draft-role role-@choice.Role.ToString().ToLowerInvariant()">@choice.Role</span>
+                    <span class="choice-card-header">
+                        <span class="choice-badge">@LevelChoicePresentation.Badge(choice)</span>
+                        <span class="choice-rarity">@choice.Rarity</span>
+                    </span>
+                    <span class="upgrade-icon"><GameIcon Glyph="@(choice.Icon)" /></span>
+                    <span class="upgrade-rank">@LevelChoicePresentation.Rank(choice)</span>
+                    <strong>@choice.Name</strong>
+                    <span class="choice-delta">@LevelChoicePresentation.Delta(choice)</span>
+                    <small>@choice.Description</small>
+                    @if (!string.IsNullOrWhiteSpace(choice.Hint))
+                    {
+                        <span class="draft-hint">@choice.Hint</span>
+                    }
+                    <span class="choice-footer">@LevelChoicePresentation.Footer(choice)</span>
+                </button>
+                @if (weaveSlot is { } control)
+                {
+                    <button class="fateweave-reroll @(control.Golden ? "gilded" : string.Empty) @(control.Used ? "spent" : string.Empty)"
+                            disabled="@(!control.Available)" @onclick="() => OnReroll.InvokeAsync(slot)"
+                            aria-label="@RerollLabel(control, choice)" title="@RerollTitle(control)">
+                        <span class="fateweave-glyph" aria-hidden="true">@(control.Golden ? "✦" : "↻")</span>
+                        <span>@(control.Used ? "Rewoven" : control.Golden ? "Gilded reroll" : "Reroll")</span>
+                    </button>
+                }
+                </div>
             }
         </div>
-    }
-    else
-    {
-        <section class="level-up-card run-overlay-surface">
-            <div class="eyebrow">@(RewardSchool is { } school ? $"{school.ToString().ToUpperInvariant()} TRAIL REWARD"
-                : Level > 0 && Level % 5 == 0 ? $"LEVEL {Level} • BREAKTHROUGH" : $"LEVEL {Level} • REFINEMENT")</div>
-            <h2>@(RewardSchool.HasValue ? "Strengthen your hunt" : Level > 0 && Level % 5 == 0 ? "Choose a major power" : "Refine your magic")</h2>
-            @if (Fateweave is { } weave)
-            {
-                <div class="fateweave-purse" aria-label="@($"Fateweave: {weave.Charges} of {weave.Capacity} rerolls left this hunt")"
-                     title="Fateweave: reroll a single card. Charges last the whole hunt; each card can be rerolled once per level-up.">
-                    <span class="fateweave-label">FATEWEAVE</span>
-                    <span class="fateweave-pips" aria-hidden="true">
-                        @for (var pip = 0; pip < weave.Capacity; pip++)
-                        {
-                            <i class="@(pip < weave.Charges ? "full" : "empty")"></i>
-                        }
-                    </span>
-                    <span class="fateweave-count">@weave.Charges/@weave.Capacity</span>
-                </div>
-            }
-            <div class="upgrade-choices">
-                @for (var index = 0; index < Choices.Count; index++)
-                {
-                    var choice = Choices[index];
-                    var slot = index;
-                    var weaveSlot = Fateweave is { } purse && slot < purse.Slots.Count ? purse.Slots[slot] : null;
-                    <div class="choice-slot">
-                    <button class="run-upgrade choice-@LevelChoicePresentation.KindClass(choice) rarity-@LevelChoicePresentation.RarityClass(choice) @(choice.Gilded ? "choice-gilded" : string.Empty)"
-                            @onclick="() => ChooseAsync(choice)">
-                        <span class="draft-role role-@choice.Role.ToString().ToLowerInvariant()">@choice.Role</span>
-                        <span class="choice-card-header">
-                            <span class="choice-badge">@LevelChoicePresentation.Badge(choice)</span>
-                            <span class="choice-rarity">@choice.Rarity</span>
-                        </span>
-                        <span class="upgrade-icon"><GameIcon Glyph="@(choice.Icon)" /></span>
-                        <span class="upgrade-rank">@LevelChoicePresentation.Rank(choice)</span>
-                        <strong>@choice.Name</strong>
-                        <span class="choice-delta">@LevelChoicePresentation.Delta(choice)</span>
-                        <small>@choice.Description</small>
-                        @if (!string.IsNullOrWhiteSpace(choice.Hint))
-                        {
-                            <span class="draft-hint">@choice.Hint</span>
-                        }
-                        <span class="choice-footer">@LevelChoicePresentation.Footer(choice)</span>
-                    </button>
-                    @if (weaveSlot is { } control)
-                    {
-                        <button class="fateweave-reroll @(control.Golden ? "gilded" : string.Empty) @(control.Used ? "spent" : string.Empty)"
-                                disabled="@(!control.Available)" @onclick="() => OnReroll.InvokeAsync(slot)"
-                                aria-label="@RerollLabel(control, choice)" title="@RerollTitle(control)">
-                            <span class="fateweave-glyph" aria-hidden="true">@(control.Golden ? "✦" : "↻")</span>
-                            <span>@(control.Used ? "Rewoven" : control.Golden ? "Gilded reroll" : "Reroll")</span>
-                        </button>
-                    }
-                    </div>
-                }
-            </div>
-        </section>
-    }
+    </section>
 </div>
 
 @code {
@@ -143,70 +67,7 @@
     [Parameter] public FateweaveSnapshot? Fateweave { get; set; }
     [Parameter] public EventCallback<int> OnReroll { get; set; }
 
-    private const int RevealDurationMilliseconds = 1950;
-    private const int ConfirmationDurationMilliseconds = 690;
-    private const int ConfirmationFadeMilliseconds = 220;
-    private string? currentDraft;
-    private int revealVersion;
-    private bool revealing;
-    private bool finishing;
-    private bool disposed;
-    private LevelChoice? confirmingChoice;
-
-    private bool EvolutionDraft => Choices.Count > 0 && Choices.All(choice => choice.Kind == LevelChoiceKind.Evolution);
-    private string EvolutionSpellName => EvolutionDraft ? LevelChoicePresentation.EvolutionSpellName(Choices[0]) : string.Empty;
-    private SpellId EvolutionSpellId => SpellEvolutionCatalog.Get(Enum.Parse<SpellEvolutionId>(Choices[0].Id[10..])).Spell;
-    private string EvolutionSpellIcon => EvolutionDraft ? SpellCatalog.Get(EvolutionSpellId).Icon : string.Empty;
-    private string SchoolClass => EvolutionDraft ? SpellCatalog.Get(EvolutionSpellId).School.ToString().ToLowerInvariant() : "arcane";
-
-    protected override void OnParametersSet()
-    {
-        var nextDraft = EvolutionDraft ? string.Join("|", Choices.Select(choice => choice.Id)) : null;
-        if (nextDraft == currentDraft) return;
-        currentDraft = nextDraft;
-        revealing = nextDraft is not null;
-        confirmingChoice = null;
-        finishing = false;
-        var version = ++revealVersion;
-        if (revealing) _ = CompleteRevealAsync(version);
-    }
-
-    private async Task CompleteRevealAsync(int version)
-    {
-        await Task.Delay(RevealDurationMilliseconds);
-        if (disposed || version != revealVersion) return;
-        await InvokeAsync(() =>
-        {
-            if (disposed || version != revealVersion) return;
-            revealing = false;
-            StateHasChanged();
-        });
-    }
-
-    private void SkipReveal()
-    {
-        ++revealVersion;
-        revealing = false;
-    }
-
-    private async Task ChooseAsync(LevelChoice choice)
-    {
-        if (confirmingChoice is not null || (EvolutionDraft && revealing)) return;
-        if (!EvolutionDraft)
-        {
-            await OnChoose.InvokeAsync(choice.Id);
-            return;
-        }
-
-        confirmingChoice = choice;
-        await InvokeAsync(StateHasChanged);
-        await Task.Delay(ConfirmationDurationMilliseconds);
-        if (disposed) return;
-        finishing = true;
-        await InvokeAsync(StateHasChanged);
-        await Task.Delay(ConfirmationFadeMilliseconds);
-        if (!disposed) await OnChoose.InvokeAsync(choice.Id);
-    }
+    private Task ChooseAsync(LevelChoice choice) => OnChoose.InvokeAsync(choice.Id);
 
     private static string RerollLabel(FateweaveSlotSnapshot slot, LevelChoice choice) =>
         slot.Used ? $"{choice.Name} was already rerolled this level-up"
@@ -219,10 +80,4 @@
         : slot.Golden ? "Gilded Fateweave: same single charge, but the new card is stronger within this level's limits."
         : "Replace only this card. The other cards stay.";
 
-    public void Dispose()
-    {
-        disposed = true;
-        ++revealVersion;
-        GC.SuppressFinalize(this);
-    }
 }

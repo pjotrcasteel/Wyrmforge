@@ -25,6 +25,8 @@ public sealed record RunRenderSnapshot(
     IReadOnlyList<ExperiencePickupRenderSnapshot>? ExperiencePickups = null)
 {
     public IReadOnlyList<AshfangEffectRenderSnapshot> AshfangEffects { get; init; } = [];
+
+    public IReadOnlyList<DamageNumberRenderSnapshot> DamageNumbers { get; init; } = [];
     public bool PresentationPaused { get; init; }
     /// <summary>Read-only simulation sample time for presentation/replay. It is not an attack or damage cue.</summary>
     public double SimulationTimeSeconds { get; init; }

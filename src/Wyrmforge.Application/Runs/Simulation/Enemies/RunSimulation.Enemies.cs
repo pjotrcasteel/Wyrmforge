@@ -194,7 +194,9 @@ public sealed partial class RunSimulation
 
     private void UpdateEnemies(double delta)
     {
+        var agentStarted = agentFoundationEnabled ? System.Diagnostics.Stopwatch.GetTimestamp() : 0;
         PruneEnemyAgents();
+        UpdateAgentPack(delta);
         var sensingBudget = agentPerceptionEnabled ? new Wyrmforge.Domain.Agents.AgentQueryBudget(32) : null;
         var pathBudget = agentPerceptionEnabled ? new Wyrmforge.Domain.Agents.AgentQueryBudget(32) : null;
         var agentNavigation = agentPerceptionEnabled ? new HuntAgentNavigation(arenaEnvironment, arenaWidth, arenaHeight) : null;
@@ -207,6 +209,9 @@ public sealed partial class RunSimulation
         RefreshPackbloodLeaders();
         UpdateSubmergedWraiths(delta, ref committed, committedCap);
         // Raised Ashlings are appended mid-loop; walking the frame's original count lets them start acting next frame.
+        var packMembers = agentTier is >= Wyrmforge.Domain.Agents.AgentTier.Tactical
+            ? enemies.Where(e => e.Health > 0 && e.Kind == EnemyKind.MireHound).Take(256).ToArray() : [];
+        var packCenter = packMembers.Aggregate(Vector2D.Zero, (sum, e) => sum + e.Position) * (1d / Math.Max(1, packMembers.Length));
         var admissionOffset = agentPerceptionEnabled && enemies.Count > 0 ? (int)(agentAdmissionTick++ % enemies.Count) : 0;
         for (int index = 0, count = enemies.Count; index < count; index++)
         {
@@ -229,8 +234,17 @@ public sealed partial class RunSimulation
                     (from, to) => arenaEnvironment?.HasLineOfSight(from, to, arenaWidth, arenaHeight) ?? true, sensingBudget!,
                     agentSpellSound is { } sound ? [sound with { Tick = agent.Runtime.Inspect().Tick + 1 }] : []);
             var knownTarget = sensed is null ? player.Position : sensed.Contact?.Position ?? enemy.Position;
+            var packSupport = agent?.Capabilities?.Coordinate == true && enemy.Kind == EnemyKind.MireHound && !agentPack.HasSlot(enemy.Id);
+            var navigationGoal = knownTarget;
+            if (packSupport && sensed?.Contact is not null && enemy.MireHound?.Phase == MireHoundPhase.Stalk)
+            {
+                // Reserve the rear half-plane as an escape route; support holds a visible staging arc.
+                var radial = Vector2D.DirectionTo(knownTarget, packCenter);
+                if (radial == Vector2D.Zero) radial = new(0, -1);
+                navigationGoal = knownTarget + Vector2D.Rotate(radial, (enemy.Id % 3 - 1) * .65) * 155;
+            }
             var path = sensed is not null
-                ? agentNavigation!.Query(new(enemy.Position, knownTarget, enemy.Radius), pathBudget!) : null;
+                ? agentNavigation!.Query(new(enemy.Position, navigationGoal, enemy.Radius), pathBudget!) : null;
             var target = path is not null ? path.Waypoint : mapState.EncounterActive && arenaEnvironment is not null
                 ? arenaEnvironment.EnemyNavigationTarget(enemy.Position, knownTarget, arenaWidth, arenaHeight, enemy.Radius)
                 : knownTarget;
@@ -261,7 +275,7 @@ public sealed partial class RunSimulation
             }
             else if (agent is not null)
             {
-                var result = agent.Step(scaledDelta, knownTarget, target, speed, !crossing && committed < committedCap, sensed, path);
+                var result = agent.Step(scaledDelta, knownTarget, target, speed, !crossing && !packSupport && committed < committedCap, sensed, path, packSupport ? "support-regroup" : "engage");
                 direction = result.Direction;
                 speed = result.Speed;
                 if (result.Committed) committed++;
@@ -336,7 +350,7 @@ public sealed partial class RunSimulation
             {
                 var previous = enemy.Position;
                 var proposed = previous + direction * speed * scaledDelta;
-                enemy.Position = mapState.EncounterActive && arenaEnvironment is not null
+                enemy.Position = (mapState.EncounterActive || agentPerceptionEnabled) && arenaEnvironment is not null
                     ? arenaEnvironment.RestrictMovement(previous, proposed, arenaWidth, arenaHeight, enemy.Radius)
                     : proposed;
             }
@@ -351,6 +365,9 @@ public sealed partial class RunSimulation
         UpdateBellShockwaves(delta);
         UpdateWinterBellHazards(delta);
         UpdateFrostHazards(delta);
+        if (agentFoundationEnabled) agentPerformance.Record(System.Diagnostics.Stopwatch.GetElapsedTime(agentStarted).TotalMilliseconds,
+            enemyAgents.Count, sensingBudget is null ? 0 : 32 - sensingBudget.Remaining,
+            pathBudget is null ? 0 : 32 - pathBudget.Remaining, CommittedThreatCount());
     }
 
     private void ResolveEnemyContacts(double delta)

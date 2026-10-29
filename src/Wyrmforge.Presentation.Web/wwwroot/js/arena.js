@@ -28,6 +28,7 @@ import { createWetForestFirelightPlan } from './arena-wet-forest-dressing.js';
 import { resolveArenaCamera, drawExitGuide } from './arena-camera.js';
 import { drawEliteGround, drawEliteCrest } from './arena-elite-vfx.js';
 import { drawLightningTrace } from './arena-lightning-vfx.js';
+import { drawDamageNumbers, loadDamageNumberMode, normalizeDamageNumberMode, saveDamageNumberMode } from './arena-damage-numbers.js';
 import { drawBlackIce, drawSplinterBloom, drawIceLance, drawPlayerChill, drawAvalancheWave, drawSnowCloud, drawRimeHusk, drawRimeArmor } from './arena-frost-vfx.js';
 
 const arenas = new WeakMap();
@@ -42,6 +43,16 @@ export function initializeArena(canvas, dotNetReference) {
     ashlingSprites.preload();
     preloadAshfang();
     const state = createState(canvas, dotNetReference);
+    const settings = canvas.closest('.game-screen')?.querySelector('[data-damage-numbers]');
+    if (settings) {
+        settings.value = state.damageNumberMode;
+        state.damageNumberSettings = settings;
+        state.onDamageNumberModeChanged = () => {
+            state.damageNumberMode = normalizeDamageNumberMode(settings.value);
+            saveDamageNumberMode(window.localStorage, state.damageNumberMode);
+        };
+        settings.addEventListener('change', state.onDamageNumberModeChanged);
+    }
     arenas.set(canvas, state);
     state.detachInput = attachArenaInput(state);
     if(new URLSearchParams(location.search).get('arenaGpu')==='1')void import('./arena-gpu-world.js').then(({HuntGpuWorld})=>{
@@ -82,6 +93,8 @@ export function readArenaDiagnostics(canvas) {
         exit: state.latestSnapshot?.exit ?? null,
         enemies: state.latestSnapshot?.enemies ?? [],
         deathBursts: state.latestSnapshot?.deathBursts ?? [],
+        damageNumbers: state.latestSnapshot?.damageNumbers ?? [],
+        damageNumberMode: state.damageNumberMode,
         hollow: hollowDiagnostics(state.hollow),
         ashling: ashlingSprites.diagnostics(state.ashling),
         ashfang: ashfangDiagnostics(state.ashfang),
@@ -114,6 +127,7 @@ export function disposeArena(canvas) {
     cancelAnimationFrame(state.animationFrame);
     state.detachInput?.();
     state.gpuWorld?.dispose();
+    if (state.damageNumberSettings) state.damageNumberSettings.removeEventListener('change', state.onDamageNumberModeChanged);
     arenas.delete(canvas);
 }
 
@@ -124,6 +138,7 @@ function createState(canvas, dotNetReference) {
         nightMask: document.createElement('canvas'),
         actorLightBuffer: document.createElement('canvas'),
         targetSigilArt: preloadTargetSigilArt(),
+        damageNumberMode: loadDamageNumberMode(window.localStorage),
         targetSigil: { key: null, activeMarker: null, lastOpacity: 0, enteredAt: 0, exitedAt: null, exitMarker: null },
         dotNetReference,
         active: true,
@@ -458,6 +473,9 @@ function draw(state, snapshot, width, height) {
 
     if (snapshot.extraction) drawExtractionRitual(ctx, snapshot.extraction);
     for (const pickup of snapshot.experiencePickups ?? []) drawExperiencePickup(ctx, pickup);
+
+    // Draw readable non-emissive combat UI above the Gothic night pass; it never changes combat or animation.
+    drawDamageNumbers(ctx, snapshot.damageNumbers, state.damageNumberMode, state.reducedMotion.matches, lightViewport);
 
     // Cast VFX stay in the spell pass; they do not alter collision or cast timing.
     drawSpellCastMotion(ctx, snapshot.castMotion, state.reducedMotion.matches);

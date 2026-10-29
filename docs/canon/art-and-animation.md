@@ -1,7 +1,13 @@
 # Art identity and character animation
 
-> **Canonical WyrmForge specification · updated 20 October 2026.** Owner-approved art and one repeatable animated-character production pipeline.
+> **Canonical WyrmForge specification · updated 29 October 2026.** Owner-approved art and one repeatable animated-character production pipeline.
 > [Canonical index](README.md) · Only explicitly marked **LOCKED/approved** requirements are commitments. Proposed values, old milestones and drafts are not evidence of shipped code. Verify current `main`, PRs and tests.
+
+## Pixel-first authoring and gameplay output — LOCKED (29 October 2026)
+
+**The required product is a mobile-first 2.5D pixel-art game, not a live 3D model viewer.** Final actors, props and environments must read as pixel-consistent world-anchored sprites/surfaces with grounded foot/contact points, coherent 2.5D perspective, correct occlusion and native pixel readability at 320px/390px. A fully modeled mesh is **never automatically required** for a new creature, terrain tile, building or animation.
+
+**Default for new character production:** first test a small authored 2D directional sprite/pose set or editable layered 2D rig and its true motion in the existing sprite runtime. Use a textured **3D model only as an optional offline authoring source** when an existing approved rig is worth preserving or a concrete view/motion requirement demonstrably benefits from it. The required output remains pixel-correct presentation and real-game proof; do not mandate a live 3D scene, 3D skeleton or Blender-only pipeline. **Existing AN0–AN6 [PR #387](https://github.com/pjotrcasteel/Wyrmforge/pull/387) is grandfathered as an opt-in source-skin study integrated with the shared renderer, not the default asset pipeline.** Compare quality, development effort and mobile cost before choosing the more complex route. Preserve approved Ashfang source assets, ongoing Hollowed and AN source/rig/tests; do not discard or merge those independent branches as part of this rule.
 
 ## Present-day approved identity (20 October 2026)
 
@@ -136,14 +142,14 @@ shares Hollowed/Ashling sprite architecture.
 | **G1 — generic GPU lighting (NEXT)** | Common engine supports point/spot/directional lights, independent emitters, multiple receivers, moving/overlapping/extinguished lights, specular/reflective material response, lit Hollowed, water/puddle, and real depth shadows. Oak foliage self-shadowing remains mandatory alongside rock/wall and approved ground. | New emitter without changing engine code; water reflection and Hollowed enter/exit light comparisons; mobile lights on/off and shadow/depth captures. |
 | **G2 — authoritative C# integration** | Snapshot-driven light sources for actual spells, burning entities, Wyrm breath and scene fixtures, no JS gameplay authority. | Deterministic movement, expiry/replay, no combat-state mutation. |
 | **G3 — richer materials and atmosphere** | AO, bark/stone/foliage response, optional leaf transmission, subtle wet highlights and mist, extended-source approximation where justified. | Diverse materials react to the **same** light consistently without global wash or fake local effect stacks. |
-| **G4 — mobile optimization** | Shadow budgets/culling/LOD, renderer portability and stable fallbacks. | Actual iOS/Android device frame time, battery, thermal, overdraw and readability evidence. |
-| **G5 — scoped scene adoption (owner revision 26 Oct)** | One renderer for Hunts, Hollowed/Ashling/other actors, replacement mage and supported world VFX/fixtures and future non-Town biomes. The Town remains its approved 2D presentation and is excluded from cutover. | Black-world tests for supported scenes, all-Hunt regressions, actual mobile-device and art review; no Town replacement required. |
+| **G4 — mobile optimization** | Shadow budgets/culling/LOD, **pixel-safe sprite atlas sampling, native pixel-to-world proportions, correctly aligned normal/depth/caster maps, camera-motion stability** and stable fallbacks. | Genuine 320/390px moving-Hunt pixel inspection (no blurred silhouettes, shimmering/crawling pixel grid, atlas edge bleed or shadow/actor mismatch), plus actual iOS/Android frame time, battery, thermal, overdraw and readability evidence. |
+| **G5 — scoped scene adoption (owner revision 26 Oct)** | One renderer for Hunts, Hollowed/Ashling/other actors, replacement mage and supported world VFX/fixtures and future non-Town biomes. Keep **one approved coherent Gothic pixel scale**, correct foot/foliage occlusion and dynamic material-lighting composition, with no second Canvas lighting pass. Town remains painted 2D and excluded from cutover. | Actual moving Wet Forest Hunt, 320/390px default-vs-GPU side-by-side and native pixel crops: character/foliage/material frame fidelity, fire/torch shadow behavior and readable night combat, plus black-world and real mobile-device acceptance. No Town replacement. |
 
 Previous L0–L3 Canvas/night/root/material effects and #327 tree-specific projections are **interim evidence**, not the lighting system. Neither a projected ground shadow nor a single firelit tree satisfies a reusable engine acceptance test.
 
 **Preserve approved foundation:** Step 1's six painted materials/blends and Step 2's connected ground-only trail candidates remain protected. The rejected old trees/cobblestone/camp/prop/collision systems must never return through a lighting shortcut. Do not modify live Hunts or treat the new asset foundry as shipped: [source-only Step 3 PR #307](https://github.com/pjotrcasteel/Wyrmforge/pull/307) includes the two review candidates and Blender authoring workflow, not a new lighting engine.
 
-**Acceptance authority:** Automated checks validate file integrity, deterministic settings and regression behavior; visual approval requires the *actual* arena renderer on 320/390px portrait plus physical iOS/Android performance/readability evidence. A passing CI run, appealing image or green pixel-diff check alone does not approve artwork or lighting.
+**Acceptance authority:** Automated checks validate file integrity, deterministic settings and regression behavior; visual approval requires the *actual* arena renderer on 320/390px portrait plus physical iOS/Android performance/readability evidence. The [cross-engine pixel-art milestone contract](roadmap.md#locked--actual-25d-pixel-art-acceptance-for-every-visual-milestone-29-october-2026) defines per-asset scaling, atlas filtering, frame-aligned maps, rooted 2.5D occlusion, Gothic appearance and real-Hunt acceptance for G4/G5, AR4/AR5 and AN; do not approve from isolated model or engine-lab proof. A passing CI run, appealing image or green pixel-diff check alone does not approve artwork or lighting.
 
 **Change note — 23 Oct 2026:** The owner required a reusable lighting engine for **all scene objects** and clarified that reflective water, normal-lit existing Hollowed and near-black enemies outside actual light are part of that same system. Normal maps inform surface shading; real occlusion still requires shadow-capable geometry/depth. The oak's internal shadows, moving water reflections and enemy visibility transitions are G1 acceptance tests, not separate per-object lighting implementations. This remains a P5 rendering dependency and does not imply shipped engine code.
 
@@ -288,11 +294,14 @@ The owner requested a detailed, repeatable method after rejecting generated-fram
 and rigid-cutout Hollow animations. This document describes how to produce and
 evaluate future assets. It does not certify the existing animations.
 
-The default authoring route is **one textured, deformable 3D character with an
-animation rig, rendered into 2D sprites**. The editable character and motion are
-the source; a spritesheet is a derived export. A properly prepared Spine project
-is an alternative when preserving painted 2D artwork is more important than
-inexpensive multi-direction rendering. Do not switch routes silently.
+The default authoring route for **new** characters is **authored directional 2D
+sprites or an editable layered/mesh 2D rig**, with actual motion and an eight-facing
+export where required. A textured 3D character with a rig is an **optional offline
+source-to-sprite route** where it measurably improves quality or reuses already
+approved work (including Ashfang and in-flight Hollowed). The editable artwork
+and motion are the source; a spritesheet is the runtime export. Select the
+simplest convincing route at mobile gameplay size, document the choice and do
+not switch routes silently.
 
 ### 1. Scope, authority and delivery rules
 
@@ -341,7 +350,8 @@ art/source/enemies/<id>/
   references/                 # Original card or reference to its canonical path; crops
   production.json             # Identity, versions, dependencies and stage status
   design-brief.md             # Visual invariants, unresolved details and motion brief
-  model/character.blend        # Mesh, materials, armature, actions and render setup
+  artwork/                     # Editable 2D directions, poses and/or layered 2D rig
+  model/character.blend        # Optional offline 3D mesh/rig source, when chosen
   motion/                     # Original imported motion and attribution
   review/                     # Clips, stills, notes and rejection records
   export-profile.json         # Camera, scale, directions, sampling and packing
@@ -377,10 +387,13 @@ ProduceCreature(card, gameplayContract, exportProfile):
     ValidateSourceRightsAndDependencies(character)
     RequireReview(RenderReferencePose(character), "identity at game size")
 
-    rig = BindAndValidateDeformation(character, brief.rigFamily)
-    RequireReview(RenderPoseTests(rig), "joint deformation and silhouette")
+    if character.usesRig:
+        ValidateRigAndDeformation(character, brief.rigFamily)
+    else:
+        ValidateHandAuthoredPoseConsistency(character, brief)
+    RequireReview(RenderPoseTests(character), "anatomy and silhouette")
 
-    walk = AuthorWalkFromSuitableMotion(rig, brief)
+    walk = AuthorWalkFromSuitableMotion(character, brief)
     RequireReview(RenderSingleViewWalkAndStrideTest(walk), "convincing gait")
     CheckpointRemote(character, rig, walk, record)
 
@@ -437,7 +450,13 @@ the only available image cannot establish a usable character specification.
 
 ### 5. Stage B — create the persistent character
 
-#### Default route: textured 3D mesh
+**Start with a small 2D mobile-scale identity + motion proof;** use only the
+complexity that is actually necessary to achieve a coherent turnaround, planted
+feet and believable movement. The 3D route below is for justified offline source
+production, not a runtime requirement. Existing approved 3D rigs may continue
+through that route; do not throw away accepted Ashfang or ongoing Hollowed work.
+
+#### Optional offline route: textured 3D mesh
 
 1. Select an original commissioned model, a suitably licensed existing model, or
    an AI-assisted initial mesh. Record origin and dependencies. Image-to-3D is an
@@ -465,9 +484,11 @@ the only available image cannot establish a usable character specification.
 size. If a suitable model cannot be obtained or authored, report this as the
 remaining art task; do not pretend an export script solves it.
 
-#### Alternative route: authored 2D mesh rig
+#### Default route: authored 2D frames or mesh rig
 
-A Spine-style source needs separately painted parts with hidden overlap, sensible
+Hand-authored directional sprites may use full replacement frames or layered parts;
+the chosen representation must supply real poses, correct perspective and planted
+feet rather than pixel warping. A Spine-style source needs separately painted parts with hidden overlap, sensible
 pivots, weighted deforming meshes and corrective/replacement drawings for large
 pose changes. Paint missing surfaces revealed by motion. Prepare appropriate
 draw order, foreshortening and additional direction artwork. A single chopped-up
@@ -477,6 +498,12 @@ a runtime integration and suitable runtime licensing; exporting PNGs alone does
 not retain the skeleton in the game.
 
 ### 6. Stage C — rig and deformation validation
+
+**This stage's bone-binding and skin-weight steps apply only if the chosen
+source actually uses a rig (2D or offline 3D).** Full-frame hand-authored sprite
+sources instead verify coherent pose-to-pose anatomy, eight-direction volume,
+ground anchors and contact timing directly. They do not need a skeletal rig
+to make a valid final spritesheet.
 
 1. Choose a compatible rig family: humanoid, canine/quadruped, arachnid, winged,
    serpentine or a creature-specific design. Reuse within compatible anatomy;
@@ -606,12 +633,17 @@ Use deliberate transitions instead:
 #### True continuous mixing and layering
 
 If the requirement is arbitrary pose blending, a walk with an upper-body attack,
-or continuous directional interpolation, keep a live skeleton in the renderer
-(3D or an appropriate 2D skeletal runtime). Blend compatible transforms and apply
-bone masks/additive reactions; keep contact constraints and gameplay event rules.
-Blender can preview/bake blends, but baked PNGs cannot retain arbitrary runtime
-mixing. This is a renderer/product choice requiring a separate integration slice,
-not a capability unlocked by adding a `blend` field to atlas JSON.
+or continuous directional interpolation, start by evaluating authored 2D pose
+layers and directional sprite frames against the actual 2.5D presentation need.
+When that is insufficient, an **optional** live skeletal/whole-skin path may
+blend compatible transforms with masks/additive reactions, correct grounded
+contacts and shared C# action events. **AN0–AN6 PR #387 already studies this
+advanced source-skin route inside the existing shared GPU LightingEngine**;
+retain it for evidence-based review rather than discarding or duplicating it.
+Blender can preview/bake blends, but flattened PNGs cannot arbitrarily mix hidden
+poses. Any opt-in live source-skin adapter must preserve pixel-art identity,
+mobile budgets, original sprite fallback and one animation lifecycle, with
+separate actual-Hunt and owner visual approval before default adoption.
 
 **Gate F:** transition behavior is chosen, bounded and demonstrated. Mark a
 spritesheet build as discrete playback, not as a live skeletal animation system.
@@ -624,12 +656,14 @@ spritesheet build as discrete playback, not as a live skeletal animation system.
 2. Define world axes and facing angles. For a source using +Y forward/+Z up, use
    a documented mapping to screen directions; verify with a visible forward marker.
    Atlas rows are ordered **N, NE, E, SE, S, SW, W, NW**, where screen north is up.
-3. Render eight real orientations of the same 3D model; preserve asymmetry and
-   consistent world lighting. Do not flip a lit weapon or costume and call it a
-   separately authored direction. A single-view milestone lists only that view.
-4. Keep camera, scale, color management, material setup and light rig fixed across
-   clips. Rotate actor/root for facing while keeping world lights coherent; render
-   background/world shadows separately if needed.
+3. Export eight genuinely authored orientations from the selected 2D source or
+   optional offline 3D rig. Preserve anatomical volume, asymmetry and consistent
+   world lighting. Do not flip a lit weapon or costume and call it a separately
+   authored direction. A single-view milestone lists only that view.
+4. Keep projected scale, color management, material appearance and world lighting
+   coherent across clips. When the chosen source is 3D, use one fixed camera and
+   rotate its actor/root for facings; for hand-authored 2D, maintain the same view
+   conventions and pixel scale. Render background/world shadows separately.
 5. Set transparent film/background output to lossless RGBA PNG. No labels, borders,
    backdrop, baked ground plane or magenta residue belongs in production frames.
 6. Render at a documented oversampling factor if needed, then use one reproducible

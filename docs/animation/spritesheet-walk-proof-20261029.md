@@ -68,3 +68,13 @@ walk/moving-claw guide-authoring regression also passes. This closes source
 authoring for the bounded heading experiment only; baking, shared-controller
 selection, boundary continuity and actual game contact proof remain open.
 
+## Current-main reconciliation
+
+Integrated main `f72f4aa10`, including its locked pixel-first acceptance matrix.
+Preserved both animation entity identity and current AI tier/pack controls in
+Enemy Lab, both simulation time and damage-number snapshots, and both renderer
+and damage-settings disposal. The exact optional source-skin research module is
+grandfathered by canon; the boundary audit permits that module only and still
+rejects additional model loaders. All 608 JavaScript checks pass and the web
+project builds without warnings. Full Application validation is running.
+

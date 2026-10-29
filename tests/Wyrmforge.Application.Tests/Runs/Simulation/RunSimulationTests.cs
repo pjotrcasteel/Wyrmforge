@@ -56,6 +56,18 @@ public sealed class RunSimulationTests
     }
 
     [TestMethod]
+    public void DamageNumberFeedback_PreservesReflectionMethodContracts()
+    {
+        var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+        var damage = typeof(RunSimulation).GetMethod("DamageTarget", flags);
+        var splash = typeof(RunSimulation).GetMethod("Splash", flags);
+        Assert.IsNotNull(damage);
+        Assert.IsNotNull(splash);
+        Assert.AreEqual(4, damage.GetParameters().Length, "Existing reflected combat integration must remain compatible.");
+        Assert.AreEqual(4, splash.GetParameters().Length);
+    }
+
+    [TestMethod]
     public void Tick_WhenEnemyTakesDamage_ExposesCombatFeedback()
     {
         var random = new FirstRandomSource();
@@ -63,12 +75,20 @@ public sealed class RunSimulationTests
         StartFirstMapEncounter(simulation);
         EnemyRenderSnapshot? damagedEnemy = null;
         ElementalImpactRenderSnapshot? impact = null;
+        DamageNumberRenderSnapshot? damageNumber = null;
 
-        for (var tick = 0; tick < 65 && damagedEnemy is null; tick++)
+        // Auto-targeting now correctly excludes enemies outside the visible, unobstructed
+        // camera area. This test must use a representative Hunt viewport rather than
+        // expecting an off-screen attack to land inside a 200x200 inspection window.
+        for (var tick = 0; tick < 120 && damagedEnemy is null; tick++)
         {
-            var snapshot = simulation.Tick(0.05, default, 200, 200);
+            var snapshot = simulation.Tick(0.05, default, 800, 600);
             damagedEnemy = snapshot.Enemies.FirstOrDefault(enemy => enemy.HealthRatio < 1);
-            if (damagedEnemy is not null) impact = snapshot.ElementalImpacts.FirstOrDefault();
+            if (damagedEnemy is not null)
+            {
+                impact = snapshot.ElementalImpacts.FirstOrDefault();
+                damageNumber = snapshot.DamageNumbers.FirstOrDefault(number => number.Amount > 0);
+            }
         }
 
         Assert.IsNotNull(damagedEnemy);
@@ -78,6 +98,13 @@ public sealed class RunSimulationTests
         Assert.IsNotNull(impact);
         Assert.AreEqual(SpellId.ArcaneOrb, impact.Spell);
         Assert.IsTrue(impact.Progress >= 0 && impact.Progress <= 1);
+        Assert.IsNotNull(damageNumber, "Real health loss must publish a floating damage number.");
+        Assert.IsGreaterThan(0, damageNumber.Amount);
+        Assert.AreEqual("Arcane", damageNumber.School);
+        Assert.AreEqual("Impact", damageNumber.Flavor);
+        Assert.IsFalse(damageNumber.Periodic);
+        Assert.IsTrue(damageNumber.Progress >= 0 && damageNumber.Progress < 1);
+        Assert.IsLessThan(damagedEnemy.Y, damageNumber.Y, "Damage text begins above the target's feet.");
     }
 
     [TestMethod]
@@ -86,17 +113,21 @@ public sealed class RunSimulationTests
         var simulation = new RunSimulationFactory(new FirstRandomSource()).Create(new HashSet<string>(), seed: 1204);
         StartFirstMapEncounter(simulation);
         DeathBurstRenderSnapshot? deathBurst = null;
+        DamageNumberRenderSnapshot? finishingNumber = null;
 
         for (var tick = 0; tick < 400 && deathBurst is null; tick++)
         {
             var snapshot = simulation.Tick(0.05, default, 800, 600);
             deathBurst = snapshot.DeathBursts.FirstOrDefault();
+            if (deathBurst is not null) finishingNumber = snapshot.DamageNumbers.FirstOrDefault(number => number.Finisher);
         }
 
         Assert.IsNotNull(deathBurst);
         Assert.IsGreaterThan(0, deathBurst.Radius);
         Assert.IsGreaterThanOrEqualTo(1, deathBurst.Intensity);
         Assert.IsTrue(deathBurst.Progress >= 0 && deathBurst.Progress <= 1);
+        Assert.IsNotNull(finishingNumber, "The killing blow should remain visible after the enemy leaves the actor list.");
+        Assert.IsGreaterThan(0, finishingNumber.Amount);
     }
 
     [TestMethod]
@@ -118,9 +149,11 @@ public sealed class RunSimulationTests
         StartFirstMapEncounter(simulation);
         SplashPulseRenderSnapshot? detonation = null;
 
-        for (var tick = 0; tick < 120 && detonation is null; tick++)
+        // The fourth confirmed hit must use legitimately visible targets after
+        // the visibility/LOS aim restrictions, not attacks at offscreen spawns.
+        for (var tick = 0; tick < 250 && detonation is null; tick++)
         {
-            var snapshot = simulation.Tick(0.05, default, 200, 200);
+            var snapshot = simulation.Tick(0.05, default, 800, 600);
             detonation = snapshot.SplashPulses.FirstOrDefault(pulse => Math.Abs(pulse.Radius - 58) < 0.01);
         }
 
@@ -136,9 +169,11 @@ public sealed class RunSimulationTests
         StartFirstMapEncounter(simulation);
         SplashPulseRenderSnapshot? splashPulse = null;
 
-        for (var tick = 0; tick < 65 && splashPulse is null; tick++)
+        // Wildfire requires a real, visible first hit; preserve the authored
+        // 64-unit pulse without making invisible targets eligible for auto-aim.
+        for (var tick = 0; tick < 120 && splashPulse is null; tick++)
         {
-            var snapshot = simulation.Tick(0.05, default, 200, 200);
+            var snapshot = simulation.Tick(0.05, default, 800, 600);
             splashPulse = snapshot.SplashPulses.FirstOrDefault();
         }
 

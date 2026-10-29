@@ -12,6 +12,18 @@
         <span class="leave-run-label">RETREAT</span>
     </button>
 
+    <details class="damage-number-settings" aria-label="Combat feedback options">
+        <summary title="Damage number settings">DMG</summary>
+        <div class="damage-number-settings-panel">
+            <label for="damage-numbers-mode">Floating damage numbers</label>
+            <select id="damage-numbers-mode" data-damage-numbers aria-label="Floating damage numbers">
+                <option value="full">Full</option>
+                <option value="minimal">Minimal</option>
+                <option value="off">Off</option>
+            </select>
+        </div>
+    </details>
+
     @if (trailTransition)
     {
         <div class="trail-clear-transition" role="dialog" aria-modal="true" aria-label="Trail cleared">

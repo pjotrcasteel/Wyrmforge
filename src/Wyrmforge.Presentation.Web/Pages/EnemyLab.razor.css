@@ -3,3 +3,40 @@
 /* Selecting one actor must remain usable at the actual iPhone viewport. */
 .settings select{max-width:100%;min-width:170px}.settings button,.settings a{touch-action:manipulation}
 @media(max-width:650px){.settings label:first-child{flex:1 1 100%;justify-content:space-between}.settings label:first-child select{flex:1;max-width:70%}}
+
+/* AI4/AI6 inspector JSON must never increase the full-page width at 320/390px.
+   Keep traces readable within a bounded, copyable, scrollable diagnostic surface. */
+.enemy-lab .note{min-width:0;max-width:1100px}
+.enemy-lab .note pre{
+    box-sizing:border-box;
+    display:block;
+    max-width:100%;
+    min-width:0;
+    overflow-x:auto;
+    white-space:pre-wrap;
+    overflow-wrap:anywhere;
+}
+
+/* A 64-agent diagnostic must stay browsable on a phone instead of turning
+   the document into thousands of unstructured lines. Scrolling is confined
+   to the readable inspector surfaces; all observations remain copyable. */
+.enemy-lab .note [data-testid="agent-summary"]{
+    box-sizing:border-box;
+    max-height:13rem;
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    overflow-wrap:anywhere;
+    padding:8px;
+    border:1px solid #463655;
+    border-radius:8px;
+}
+.enemy-lab .note [data-testid="agent-performance"]{
+    box-sizing:border-box;
+    max-height:18rem;
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    padding:10px;
+    border:1px solid #463655;
+    border-radius:8px;
+    background:#100d15;
+}

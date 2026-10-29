@@ -64,20 +64,20 @@ public sealed partial class RunSimulation
             // The source point sits one second back along the flight path, so the shield reads where the shot came from.
             var shield = ShieldMultiplier(target, projectile.Position - projectile.Velocity, damage);
             var killed = DamageTarget(target, damage * shield, projectile, spawnedForHit);
-            if (detonation is not null) Splash(target.Position, damage, detonation.Radius, target.Id);
+            if (detonation is not null) SplashWithFeedback(target.Position, damage, detonation.Radius, target.Id, projectile.Spell);
             ApplyDragonEssenceImpactEffects(target, damage, ref killed);
             if (!killed) ApplyProjectileStatus(projectile, target);
             if (!killed) ApplyHitRules(projectile.Spell, target);
 
-            if (projectile.SplashRadius > 0) Splash(target.Position, damage * 0.4, projectile.SplashRadius, target.Id);
+            if (projectile.SplashRadius > 0) SplashWithFeedback(target.Position, damage * 0.4, projectile.SplashRadius, target.Id, projectile.Spell);
             foreach (var interaction in interactions)
             {
                 if (interaction.SplashRadius > 0 && interaction.SplashDamageMultiplier > 0 && TrySpendReactionEvent())
                 {
-                    Splash(target.Position, damage * interaction.SplashDamageMultiplier, interaction.SplashRadius, target.Id);
+                    SplashWithFeedback(target.Position, damage * interaction.SplashDamageMultiplier, interaction.SplashRadius, target.Id, projectile.Spell);
                 }
             }
-            if (passiveProfile.Wildfire) Splash(target.Position, damage * 0.35, passiveProfile.Volcanic ? 90 : 64, target.Id);
+            if (passiveProfile.Wildfire) SplashWithFeedback(target.Position, damage * 0.35, passiveProfile.Volcanic ? 90 : 64, target.Id, projectile.Spell);
 
             if (projectile.Spell == SpellId.ArcaneOrb)
             {
@@ -111,7 +111,13 @@ public sealed partial class RunSimulation
         }
     }
 
-    private bool DamageTarget(ICombatTarget target, double damage, ProjectileState? source = null, List<ProjectileState>? spawned = null)
+    // Preserve the four-argument entry point: existing run/test tooling invokes it through reflection.
+    private bool DamageTarget(ICombatTarget target, double damage, ProjectileState? source = null, List<ProjectileState>? spawned = null) =>
+        DamageTargetWithFeedback(target, damage, source, spawned);
+
+    private bool DamageTargetWithFeedback(ICombatTarget target, double damage, ProjectileState? source = null,
+        List<ProjectileState>? spawned = null, SpellId? spellId = null, bool periodic = false, bool empowered = false,
+        string? feedbackFlavor = null)
     {
         if (target.Health <= 0 || damage <= 0) return false;
         if (target is DragonState protectedDragon)
@@ -119,7 +125,11 @@ public sealed partial class RunSimulation
             if (!CanTargetActiveDragon) return false;
             if (dragonHuntState.TryStartPhaseBreakForDamage(protectedDragon.Health, damage, protectedDragon.MaxHealth))
             {
+                var healthBeforeBreak = protectedDragon.Health;
                 protectedDragon.Health = protectedDragon.MaxHealth * 0.5;
+                RegisterDamageNumber(target, Math.Max(0, healthBeforeBreak - protectedDragon.Health),
+                    source?.Spell ?? spellId, finisher: false, empowered: source?.Surge == true || empowered,
+                    periodic: periodic, flavor: feedbackFlavor);
                 RegisterTargetHit(protectedDragon);
                 BeginDragonPhaseBreak(protectedDragon);
                 return false;
@@ -145,7 +155,10 @@ public sealed partial class RunSimulation
             return false;
         }
         var shatters = source is not null && FrostShatter.Triggers(source.Spell, target.Statuses.Has(CombatStatusId.Frozen));
+        var healthBeforeHit = target.Health;
         target.Health -= damage;
+        RegisterDamageNumber(target, Math.Min(healthBeforeHit, damage), source?.Spell ?? spellId,
+            target.Health <= 0, source?.Surge == true || empowered, periodic, feedbackFlavor);
         if (target is EnemyState { BellWarden: { } bell } cracking && bell.TryBeginCrack(cracking.Health, cracking.MaxHealth)) BellWardenCracks++;
         if (target is EnemyState { WinterBell: { } winter } rimed && winter.TryBeginRime(rimed.Health, rimed.MaxHealth)) BeginWinterRime();
         RegisterTargetHit(target);
@@ -207,11 +220,16 @@ public sealed partial class RunSimulation
         return true;
     }
 
-    private void Splash(Vector2D position, double damage, double radius, int ignoreId)
+    // Keep the original method callable by encounter tests and map scripts.
+    private void Splash(Vector2D position, double damage, double radius, int ignoreId) =>
+        SplashWithFeedback(position, damage, radius, ignoreId, null);
+
+    private void SplashWithFeedback(Vector2D position, double damage, double radius, int ignoreId, SpellId? spellId)
     {
         RegisterSplashPulse(position, radius);
         combatSpatialIndex.CollectWithinRadius(position, radius, ignoreId, spatialQueryBuffer);
-        foreach (var target in spatialQueryBuffer) DamageTarget(target, damage * ShieldMultiplier(target, position, damage));
+        foreach (var target in spatialQueryBuffer)
+            DamageTargetWithFeedback(target, damage * ShieldMultiplier(target, position, damage), spellId: spellId);
         arenaEnvironment?.DamagePropsInRadius(position, arenaWidth, arenaHeight, radius, damage);
     }
 

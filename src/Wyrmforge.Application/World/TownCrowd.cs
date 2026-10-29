@@ -1,3 +1,6 @@
+using System.Collections.Immutable;
+using Wyrmforge.Domain.Agents;
+
 namespace Wyrmforge.Application.World;
 
 /// <summary>A Refuge pedestrian; feet use authored scene pixels, never viewport CSS coordinates.</summary>
@@ -62,6 +65,18 @@ public sealed class TownCrowd
     private readonly TownNavigationMap _navigation;
     private readonly HashSet<string> _openBuildings;
     private uint _randomState;
+    private readonly bool _agentActivities;
+    private readonly int _agentSeed;
+    private double _activitySeconds;
+    private readonly Dictionary<int, (AgentRuntime Runtime, CitizenPolicy Policy)> _agents = [];
+    public IReadOnlyList<AgentSnapshot> InspectAgents() => _agents.OrderBy(p => p.Key).Select(p => p.Value.Runtime.Inspect()).ToArray();
+    private sealed class CitizenPolicy : IAgentPolicy
+    {
+        public ImmutableArray<AgentAlternative> Alternatives { get; set; } = [];
+        public ImmutableArray<AgentAlternative> Evaluate(AgentContext context) => Alternatives;
+    }
+    private readonly Dictionary<int, CivilianActivitySelection> _activityDecisions = [];
+    public IReadOnlyDictionary<int, CivilianActivitySelection> InspectActivities() => new Dictionary<int, CivilianActivitySelection>(_activityDecisions);
     public int PathfindCount { get; private set; }
     public double PathfindTotalMilliseconds { get; private set; }
     public int LastStepPathSearches { get; private set; }
@@ -110,7 +125,7 @@ public sealed class TownCrowd
     }
 
     public TownCrowd(TownNavigationMap navigation, int seed = 205, int citizenCount = 7,
-        IEnumerable<string>? openBuildings = null)
+        IEnumerable<string>? openBuildings = null, bool agentActivities = false)
     {
         ArgumentNullException.ThrowIfNull(navigation);
         ArgumentOutOfRangeException.ThrowIfNegative(citizenCount);
@@ -118,6 +133,8 @@ public sealed class TownCrowd
             throw new ArgumentOutOfRangeException(nameof(citizenCount), "Every citizen needs a separate starting place.");
 
         _navigation = navigation;
+        _agentActivities = agentActivities;
+        _agentSeed = seed;
         _openBuildings = new HashSet<string>(openBuildings ?? [], StringComparer.Ordinal);
         _randomState = seed == 0 ? 0xA341316Cu : unchecked((uint)seed);
         // Reuse the existing seven actors: opening a building relocates an initial
@@ -293,6 +310,7 @@ public sealed class TownCrowd
         var seconds = (float)Math.Clamp(elapsed.TotalSeconds, 0d, .1d);
         if (seconds <= 0) return;
         LastStepPathSearches = 0;
+        _activitySeconds += seconds;
 
         foreach (var citizen in _citizens)
         {
@@ -544,6 +562,7 @@ public sealed class TownCrowd
 
     private void ChooseNextStop(TownCitizen citizen)
     {
+        if (_agentActivities) { ChooseActivity(citizen); return; }
         // An initial seeded departure makes every public exit observable in playtests.
         // Subsequent trips use the same autonomous weighted decision logic for everyone.
         if (!citizen.IsReturning && citizen.DepartureCount == 0 && citizen.Id <= 4)
@@ -582,6 +601,65 @@ public sealed class TownCrowd
               _navigation.Destinations[index].BuildingId is null).ToArray();
         var secondary = candidates.Except(primary).ToArray();
         if (TryChoose(citizen, primary) || TryChoose(citizen, secondary)) return;
+        citizen.IdleSeconds = .6f;
+    }
+
+    private void ChooseActivity(TownCitizen citizen)
+    {
+        var preferredActivity = CivilianSchedule.Preferred(_activitySeconds, _agentSeed, citizen.Id, citizen.AssignedWorkNode >= 0);
+        var candidates = Enumerable.Range(0, _navigation.Destinations.Count)
+            .Where(i => i != citizen.CurrentNode && (!citizen.IsReturning || !_navigation.Destinations[i].IsExit))
+            .OrderBy(i => i == citizen.AssignedWorkNode ? 0 : 1)
+            .ThenBy(i => i == citizen.PreviousNode ? 1 : 0)
+            .ThenBy(i => Distance(citizen.Position, _navigation.Destinations[i].Position))
+            .Take(CivilianActivitySelector.OptionLimit - 1).ToArray();
+        var options = candidates.Select(i =>
+        {
+            var place = _navigation.Destinations[i];
+            var work = i == citizen.AssignedWorkNode;
+            var activity = work ? CivilianActivity.Work : place.IsExit ? CivilianActivity.Visit : CivilianActivity.Socialize;
+            var open = place.BuildingId is null || _openBuildings.Contains(place.BuildingId) && work;
+            var available = !_citizens.Any(other => other != citizen && (other.DestinationNode == i
+                || other.IsPresent && !other.IsWalking && other.CurrentNode == i));
+            var utility = (activity == preferredActivity ? 4 : 1) + 1d / (1 + Distance(citizen.Position, place.Position));
+            if (i == citizen.PreviousNode) utility *= .25;
+            return new CivilianActivityOption(place.Id, activity, utility, open, available);
+        }).Append(new CivilianActivityOption("rest-in-place", CivilianActivity.Rest,
+            preferredActivity == CivilianActivity.Rest && !citizen.IsReturning ? 6 : 0, true, true)).ToImmutableArray();
+        var choice = CivilianActivitySelector.Select(options);
+        if (!_agents.TryGetValue(citizen.Id, out var agent))
+        {
+            var policy = new CitizenPolicy();
+            agent = (new AgentRuntime(new(citizen.Id, "citizen", "refuge"), _agentSeed, policy, 1), policy);
+            _agents.Add(citizen.Id, agent);
+        }
+        agent.Policy.Alternatives = choice.Alternatives;
+        var tick = agent.Runtime.Inspect().Tick + 1;
+        var request = agent.Runtime.Step([
+            new("schedule", preferredActivity.ToString(), tick, "seeded-local-schedule"),
+            new("assigned-building", citizen.AssignedBuildingId ?? "none", tick, "town-assignment"),
+            new("current-place", _navigation.Destinations[citizen.CurrentNode].Id, tick, "authoritative-town"),
+            new("navigation-revision", _navigation.Revision.ToString(System.Globalization.CultureInfo.InvariantCulture), tick, "town-spatial-data")]);
+        _activityDecisions[citizen.Id] = choice;
+        if (request?.Action == "rest-in-place")
+        {
+            citizen.CurrentActivity = "rest";
+            citizen.WorkBuildingId = null;
+            citizen.IdleSeconds = 5;
+            agent.Runtime.Report(new(request.Sequence, AgentActionStatus.Completed, "rest-in-reserved-current-place"));
+            return;
+        }
+        if (request?.Action is { } id && id != "wait")
+        {
+            var destination = _navigation.Destinations.FindIndex(p => p.Id == id);
+            if (destination >= 0 && TryChoose(citizen, [destination]))
+            {
+                if (request is not null) agent.Runtime.Report(new(request.Sequence, AgentActionStatus.Completed, "destination-reserved-route-accepted"));
+                return;
+            }
+        }
+        if (request is not null) agent.Runtime.Report(new(request.Sequence, AgentActionStatus.Rejected, "no-available-route-or-slot-retry"));
+        citizen.CurrentActivity = "wait";
         citizen.IdleSeconds = .6f;
     }
 

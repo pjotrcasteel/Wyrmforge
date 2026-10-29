@@ -1,7 +1,18 @@
 # Architecture, persistence and validation
 
-> **Canonical WyrmForge specification · updated 27 October 2026.** Keep gameplay deterministic and platform-agnostic; distinguish simulator truth from client rendering.
+> **Canonical WyrmForge specification · updated 29 October 2026.** Keep gameplay deterministic and platform-agnostic; distinguish simulator truth from client rendering.
 > [Canonical index](README.md) · Only explicitly marked **LOCKED/approved** requirements are commitments. Proposed values, old milestones and drafts are not evidence of shipped code. Verify current `main`, PRs and tests.
+
+## LOCKED — pixel-first 2.5D runtime contract (29 October 2026)
+
+**Every engine implements the same target: a mobile-first, world-anchored 2.5D pixel-art game.** Use the existing C# simulation and shared presentation pipelines, with authored 2D/2.5D sprites, terrain surfaces, layers, depth ordering and optional per-object elevation; do not add a general-purpose 3D scene or runtime skeletal mesh as a required platform dependency. 2.5D permits world-height math, slope/height fields, screen-space projection and GPU shaders without requiring fully modeled 3D assets.
+
+- **Gameplay/AI/AR:** C# remains authoritative for 2D ground-plane geography, navigation, collision, routes and gameplay heights. Elevation, cliffs and overlaps are typed data and collision/occlusion contracts, not a requirement to build 3D terrain meshes.
+- **Animation:** the delivered mobile actor must read as pixel-consistent, world-anchored 2.5D art. Directional sprites/layered sprites remain the default; offline 3D rigs may generate them. The existing [AN0–AN6 source-skin PR #387](https://github.com/pjotrcasteel/Wyrmforge/pull/387) is a protected **optional shared-engine GPU presentation experiment**, not a mandatory 3D gameplay or character-production pipeline. Its skinned geometry may be evaluated through the existing LightingEngine/animation ownership, with strict visual/mobile gates and unmodified production sprite fallback. Preserve the draft source rigs, tests and evidence.
+- **Lighting/materials:** the shared GPU lighting engine lights 2.5D sprites/surfaces using albedo, optional normal/roughness/emissive maps, occluder silhouettes and depth/height metadata. Normal maps alone are not volumetric shadow geometry; use proper occlusion contracts. No parallel mesh-based renderer.
+- **FXP/VFX/audio:** use shared typed gameplay events and lightweight 2.5D positions, layers, pixels and bounded visual effects; do not introduce full 3D rigid-body physics, volumetric particles or positional-audio engines merely to simulate appearance.
+
+**Complexity gate:** use the [locked per-milestone 2.5D pixel-art acceptance matrix](roadmap.md#locked--actual-25d-pixel-art-acceptance-for-every-visual-milestone-29-october-2026) for all relevant GPU, animation, Arena, visual-FX and consolidation work. Check authored pixel density, sprite sampling and alpha, camera/world scale, frame-aligned normal/depth/caster maps, root/foot occlusion and genuine game captures in addition to functional checks. Choose the simplest asset/runtime representation that produces correct anatomy, motion, materials, occlusion and lighting in an **actual Hunt at 320px and 390px**. A proposed mandatory 3D capability needs a measured, visible shortcoming of the existing 2.5D approach, a smaller-option comparison, mobile cost evidence and explicit owner approval. Offline Blender/3D-to-sprite authoring remains allowed where it demonstrably helps. This decision neither cancels previously approved Ashfang source work nor rewrites the current Hollowed, GPU or Arena Generator branches.
 
 ## LOCKED — unified engine ownership and event authority (27 October 2026)
 
@@ -10,6 +21,21 @@
 On one authoritative event (e.g. Fireball impact → C# damage/death), publish or project typed, replayable **source event facts** with stable event/actor IDs, tick/time, transform/direction, traits/status and source lifecycle. Let lighting, VFX, animation, cosmetic 2.5D physics and sound consume those facts without introducing extra hits, deaths, loot, navigation/collision changes or gameplay RNG. C# agent/AI uses real observations and executes through established simulation boundaries. A shared contract does not require one giant orchestrator or identical tick rates.
 
 Before adding an engine or extending a scene, inspect existing code and active PRs, select the current owner and reuse its registry/adapter path; supply an additional profile, not a second implementation. Preserve current gameplay, saves, visuals, sound, approved assets, painted 2D Town and mobile fallbacks. Exercise lifecycle, deterministic replay/duplicate delivery, pause/resume, entity expiry, reduced-effects, device budgets and cross-creature/spell coverage. The binding roadmap, sequencing and migration milestones are in [the engine architecture and ENG0–ENG4 consolidation section](roadmap.md#locked--one-reusable-engine-per-responsibility-owner-decision-27-october-2026).
+
+### Geographic site and surface interaction ownership — LOCKED (29 October 2026)
+
+**Location truth runs from world/site data into both the Hunter's Chart and actual ArenaRecipe.** Existing C# `WyrmrealmMapNode` / routes / `HuntArenaGenerator` / environment snapshots are the starting seam; grow them via a **versioned typed geographic/site contract** where needed, not a new world generation or physics engine. A stable site ID and frame ties map routes and landmarks to local arena entrances/exits, valid connected paths, elevation/water/cliff barriers, region history, material classes and legal optional discoveries. The map art is a projection of the same C# geography; rendering must not reverse-engineer arena geometry from a PNG. Prove the map and scene can be regenerated from one saved/versioned world seed without independent JS topology or consuming combat RNG.
+
+**Physical responsibility matrix:** 
+- C# RunSimulation/Domain: authoritative movement, collision, gameplay foot/impact facts, hazard/friction if any, collision-changing terrain, loot/damage, permanent world change, save/replay and reward/route eligibility.
+- Shared **FXP** runtime: cosmetic fixed-step physical responses and contact dynamics, including later **FXP7–FXP8** flex, loose debris, splash/displacement. FXP never moves gameplay colliders or creates reward state.
+- Shared **G** renderer: all surface albedo/normal/roughness/reflectivity, shadows, visibility and proper wet reflections. No arena-only alternative renderer.
+- Shared **animation/VFX**: pose/foot-ground contact markers consistent with the C# actor location and elemental visual events; not duplicate event authority.
+- **AR0–AR7 environment layer**: classify/place semantic terrain, provide solid-color diagnostic display, blend approved material weights, anchor static vegetation/site assets and display bounded material-specific physical aftermath from typed source events. AR may select a visual response profile or cache a temporary decal but must **not** calculate its own physical dynamics or re-authorize a gameplay hazard.
+
+**Contract example (not a new required class name):** C# `SiteGeography` / `SurfaceDefinition` descriptors contain stable IDs, local frame, route-port graph correspondence, mandatory landmark footprints, environmental fields, typed surface ID and optional deformation/appearance properties. The same immutable arena snapshot is first renderable as flat diagnostic colors and then as shared-GPU material surfaces. Swapping appearance must not alter topology, collisions, grants, AI or coordinate origin. An authoritative contact/impact event can be consumed by FXP for motion, AR for footprint/scorch visual accumulation, VFX for particles and G for transient emitters/shading—**one gameplay source event; multiple specialized consumers**.
+
+**Execution and test sequencing:** [Roadmap AR0–AR7](roadmap.md#world-authored-arenas-and-groundmaterial-fidelity--ar0ar7-owner-decision-29-october-2026-locked) is world-first: AR0–AR3 must be visually accepted in **flat colors** before detailed material work AR4–AR5. AR6 is gated by common FXP capabilities, not a pretext to implement a parallel simulation. Prove node/edge-to-port mapping and real map↔scene screenshot pairs for forest fork, mountain route and Wyrm Lair; use varied seeds, actual game camera, nav/spawn/exits, reward idempotence and mobile budgets. **AR0–AR3 work is explicitly exempt from unrelated Hollowed/ENG/G5/AI/FXP acceptance gates and must start immediately** using the existing C# Hunt world authority and existing live rendering/debug adapters; keep those other tracks and open PRs untouched. AR4/AR5 material development follows AR3 owner approval, while G5 only gates the final live GPU cutover; AR6 physical dynamics require FXP7–FXP8. Preserve active PRs.
 
 ## 10. Suggested architecture / repo touchpoints — implementation guidance, not new API orders
 
@@ -37,7 +63,8 @@ A useful causal shape:
 Versioned Region/World state + Hunter Knowledge
             -> HuntRequest (mode, target envelope, seed)
             -> validated GeneratedHuntPlan (directed graph and physical paths)
-            -> selected EncounterSiteProfile / ArenaRecipe
+            -> selected SiteGeography (same authoritative chart/node identity, ports, landmarks)
+            -> validated ArenaRecipe (terrain and physical exits, semantic surfaces)
             -> authoritative RunSimulation C# + authored waves/events
             -> deterministic visual snapshots (Blazor/JS/SVG/canvas)
             -> transactional results: run rewards, map knowledge, world consequences
@@ -132,15 +159,18 @@ The current presentation uses Blazor WebAssembly and a canvas-based JavaScript r
 - **`LitRenderable` / `LitMaterial`:** world transform/height, render mesh or authored 2.5D depth, albedo, normal map, optionally height/depth, roughness/AO, **specular/reflectivity and reflection strategy**, transparency/water settings, alpha cutoff/double-sided rules, independently selectable `ReceivesLight`, `CastsShadow`, `ReceivesShadow`, relevant layer mask. Bark, stone, wet mud/water, spell VFX, existing **Hollowed** and other enemies/players/trees share the **same renderer path**, parameterized by material rather than C# entity subtype. Normal maps change local light response and specular highlights; **actual cast shadows require additional geometry/light-space depth or appropriate authored depth/height representation**, not a normal texture alone.
 - **Renderer adapter:** central light registration/update/removal, visible-source selection, GPU shadows/depth, geometric occlusion, material light response, **material-dependent direct specular and reflection capture/probes where configured**, light accumulation, near-black visibility policy and debug outputs. **No per-object-type code** to illuminate an object when a new emitting prop is introduced. Light/caster budgeting, especially expensive point-light shadows, must be stable, observable and appropriate for mobile devices.
 - **Authoritative lifecycle:** C# `RunSimulation`/scene state determines real gameplay emitters, positions, durations and extinction, collisions and timing. Renderers are visual-only; do not add client-side gameplay/physics/RNG. During isolated G1, test-only emitters are allowed but labeled; G2 wires typed authoritative snapshots.
-- **Platform boundary:** G1 can use isolated WebGL2/Three.js or another documented GPU renderer but must **not** turn WyrmForge into a permanent browser game or force the existing .NET 10 gameplay into an incompatible native runtime. Preserve a platform-neutral scene contract, original source Blender geometry and the six approved ground materials.
+- **Platform boundary:** G1 can use isolated WebGL2/Three.js or another documented GPU renderer but must **not** turn WyrmForge into a permanent browser game or force the existing .NET 10 gameplay into an incompatible native runtime. Preserve a platform-neutral 2.5D scene contract, existing approved source art (including any optional Blender rigs), and the six approved ground materials.
 - **G1 proof:** moving Fireball, static torch, directional/spot example, overlapping sources, and a newly added glowing fixture **without modifying engine renderer code**. Approved ground, reflective puddle/water, rock/wall, actual existing Hollowed and original 3D tree all receive one shared light. Water's specular light follows source position, with reflection OFF A/B; Hollowed enters/exits illumination, shades across authored normals and casts a ground shadow without its own lighting code. Rock and leaf layers cast dynamic shadows; leaf-on-leaf/tree-on-trunk, light-space depth/visibility, near-black/no-light enemy behavior and 320/390px evidence are mandatory. Provide separate *world illumination* and *combat readability/telegraph* passes so dark encounters stay fair without faking daylight.
 - **G4 device gate:** profiling on real iOS/Android is required for frame times, battery, memory, overdraw, LOD, caster budgets and compatibility. Render every light with real shadows only when affordable; non-shadowed light still illuminates as a documented fallback, without faking physics or global daylight.
 
 ### Scene-wide lighting/visibility and rendering cutover — LOCKED, 23 October 2026
 
 The **one central GPU lighting engine** must be the only authority for
-illumination/visibility of **ALL world-space objects** in Town, Hunts,
-other biomes and future interior scenes. Ordinary world albedo must not
+illumination/visibility of **ALL world-space objects in supported GPU scenes**:
+Hunts, applicable future biomes and interior scenes. The approved painted 2D
+Town is expressly excluded from GPU scene migration under the 26 October
+owner override; its existing day/night paintings and presentation remain.
+Ordinary world albedo in supported GPU scenes must not
 bypass illumination simply because it is drawn as a static DOM \`img\`,
 rigged sprite frame, alpha-mask cutout, Canvas overlay or 3D mesh.
 The lit material path (including shading, depth/occlusion, reflections
