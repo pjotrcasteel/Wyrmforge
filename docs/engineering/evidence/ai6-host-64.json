@@ -1,0 +1,17 @@
+{
+  "environment": "Linux .NET 10 host; NOT physical mobile hardware",
+  "scenario": "64 Tactical Mire Hounds; seed 42; 800x600; 400 steps of .025 seconds; casting disabled",
+  "metrics": {
+    "Frames": 400,
+    "Population": 64,
+    "SightQueries": 12,
+    "PathQueries": 32,
+    "MaxSightQueries": 32,
+    "MaxPathQueries": 32,
+    "CommittedThreats": 0,
+    "MaxCommittedThreats": 2,
+    "MeanMilliseconds": 1.6864002499999984,
+    "P95Milliseconds": 2.7193,
+    "MaximumMilliseconds": 11.0887
+  }
+}

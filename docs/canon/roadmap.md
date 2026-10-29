@@ -21,6 +21,24 @@
 
 **Modularity and performance:** one reusable contract does not prohibit scene-specific art, enemy-specific behavior, elemental profiles, separate render backends, or intentionally staged legacy fallbacks. It prohibits **parallel authoritative engines** and unbounded per-feature pipelines. Provide mobile budgets, culling, LOD, pooling, fallbacks, deterministic tests, device captures and instrumentation for any new engine capability. Refactor in behavior-preserving vertical slices; never replace working assets or the accepted painted Town just to satisfy an abstraction.
 
+### LOCKED — accessible per-engine development labs (owner decision, 29 October 2026)
+
+**Every engine has a stable URL and its own interactive development playground.** The hub is `/engine-labs`; dedicated destinations are `/engine-labs/ai`, `/engine-labs/lighting`, `/engine-labs/animation`, `/engine-labs/gameplay`, `/engine-labs/visual-physics`, `/engine-labs/vfx` and `/engine-labs/audio`. Every page must link to the hub and every other engine, work at 320/390px, and be usable with touch. Routes are development contracts, **not** evidence that a pending engine or lab has passed acceptance. These are paths on the deployed WyrmForge site; an unmerged draft branch cannot be assumed to be published to GitHub Pages.
+
+**No duplicate authority:** labs exercise actual engine interfaces, C# authoritative decisions/events and existing web/mobile presentation adapters, not a separate gameplay implementation. Each completed lab must provide controllable scenario inputs, deterministic seeds/replay where relevant, pause/restart, real diagnostics or traces, limits/failure/fallback views, representative art/behavior, and tests/captures. Host/browser timings are not iOS/Android hardware evidence. Keep development surfaces isolated from production saves, rewards and defaults; do not load multiple heavyweight scenes simultaneously on phones.
+
+| Owning engine roadmap | Dedicated lab delivery gate |
+|---|---|
+| **AI0–AI6** | **First lab: AI scenarios through existing Town/Hunt/Enemy integrations**, seeded pack/boss behavior and civilian opt-in, shared-core inspectors and pressure/performance counters; AI6 exit still requires live mobile and human balance evidence. |
+| **G0–G5 lighting** | Lighting lab exposes generic emitters, receivers/casters, reflections, black-world and debug views, GPU cost, dynamic scenes and scene-cutover verification. Existing `/arena-light-engine` is source evidence, not automatic G5 sign-off. |
+| **AN0–AN6 / ANIM1–ANIM4 animation** | Animation lab exercises real supported rig/body plans, action/turn/contact/interrupt, failed pose diagnostics, actual sequences, visual captures and fallback. **Do not change active PR #387 here.** |
+| **C# gameplay physics / ENG0–ENG4** | Gameplay lab compares authoritative collision/damage/event/replay outcomes and confirms save/reward isolation; existing `/combat-lab` may be reused without adding a gameplay engine. |
+| **FXP1–FXP6 visual physics** | Debris lab runs source-derived pieces, fixed-timestep impacts, bounces, school traits, seeded replay, budget/LOD and fallback tests. |
+| **VFX1–VFX4** | VFX lab runs typed effect events, lifecycle/pause/reset, multiple schools, light/debris bridging, pooling, reduced-effects and mobile budget probes. |
+| **AUD1–AUD3** | Audio/haptics lab offers explicit user-gesture playback, semantic events, voice limits, variation, mute/accessibility, haptic support reporting and device listening capture. |
+
+**Rollout:** AI Lab is implemented first in existing [AI2–AI6 draft #364](https://github.com/pjotrcasteel/Wyrmforge/pull/364). Other stable routes may initially show honestly labelled pending status and links to existing proofs. Their **interactive demo acceptance** belongs to the owning engine PR/milestones; do not claim it completed by providing only a placeholder or an iframe.
+
 ### Post-Hollowed unified-engine consolidation — ENG0–ENG4 (next architectural checkpoint)
 
 **Trigger:** after the current cape-free Hollowed animation/appearance improvements, including [#385](https://github.com/pjotrcasteel/Wyrmforge/pull/385) and relevant parallel animation work, have completed their tests **and received owner visual approval**. In-progress Hollowed art is not to be interrupted or merged prematurely. This checkpoint is **one of the very first pieces of work after Hollowed**, before adding new feature-specific physics/VFX/animation implementations.

@@ -64,9 +64,12 @@ public sealed class RunSimulationTests
         EnemyRenderSnapshot? damagedEnemy = null;
         ElementalImpactRenderSnapshot? impact = null;
 
-        for (var tick = 0; tick < 65 && damagedEnemy is null; tick++)
+        // Auto-targeting now correctly excludes enemies outside the visible, unobstructed
+        // camera area. This test must use a representative Hunt viewport rather than
+        // expecting an off-screen attack to land inside a 200x200 inspection window.
+        for (var tick = 0; tick < 120 && damagedEnemy is null; tick++)
         {
-            var snapshot = simulation.Tick(0.05, default, 200, 200);
+            var snapshot = simulation.Tick(0.05, default, 800, 600);
             damagedEnemy = snapshot.Enemies.FirstOrDefault(enemy => enemy.HealthRatio < 1);
             if (damagedEnemy is not null) impact = snapshot.ElementalImpacts.FirstOrDefault();
         }
@@ -118,9 +121,11 @@ public sealed class RunSimulationTests
         StartFirstMapEncounter(simulation);
         SplashPulseRenderSnapshot? detonation = null;
 
-        for (var tick = 0; tick < 120 && detonation is null; tick++)
+        // The fourth confirmed hit must use legitimately visible targets after
+        // the visibility/LOS aim restrictions, not attacks at offscreen spawns.
+        for (var tick = 0; tick < 250 && detonation is null; tick++)
         {
-            var snapshot = simulation.Tick(0.05, default, 200, 200);
+            var snapshot = simulation.Tick(0.05, default, 800, 600);
             detonation = snapshot.SplashPulses.FirstOrDefault(pulse => Math.Abs(pulse.Radius - 58) < 0.01);
         }
 
@@ -136,9 +141,11 @@ public sealed class RunSimulationTests
         StartFirstMapEncounter(simulation);
         SplashPulseRenderSnapshot? splashPulse = null;
 
-        for (var tick = 0; tick < 65 && splashPulse is null; tick++)
+        // Wildfire requires a real, visible first hit; preserve the authored
+        // 64-unit pulse without making invisible targets eligible for auto-aim.
+        for (var tick = 0; tick < 120 && splashPulse is null; tick++)
         {
-            var snapshot = simulation.Tick(0.05, default, 200, 200);
+            var snapshot = simulation.Tick(0.05, default, 800, 600);
             splashPulse = snapshot.SplashPulses.FirstOrDefault();
         }
 

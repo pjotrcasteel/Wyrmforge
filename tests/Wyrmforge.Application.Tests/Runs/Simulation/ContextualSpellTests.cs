@@ -40,6 +40,10 @@ public sealed class ContextualSpellTests
     public void Crowd_IsShovedOutward_AndThePulseSpendsThePrimaryCast()
     {
         var (simulation, player, enemies) = Encounter();
+        // This test verifies the spell's exact impulse in an obstacle-free arena.
+        // Generated world obstacles correctly stop knockback early and are tested separately.
+        typeof(RunSimulation).GetField("arenaEnvironment", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .SetValue(simulation, null);
         for (var index = 0; index < 4; index++)
         {
             var angle = index * Math.PI / 2;
@@ -57,7 +61,9 @@ public sealed class ContextualSpellTests
         Assert.IsTrue(cooldowns.Values.Any(value => value > 0), "The primary waits a full interval: one shared cast budget.");
         Assert.IsEmpty(simulation.CreateSnapshot().Projectiles, "No primary bolt fired on the pulse's tick.");
         for (var index = 0; index < enemies.Count; index++)
-            Assert.IsGreaterThan(Vector2D.Distance(before[index], player.Position) + 70, Vector2D.Distance(enemies[index].Position, player.Position));
+            Assert.AreEqual(Vector2D.Distance(before[index], player.Position) + WardingPulse.PushDistance,
+                Vector2D.Distance(enemies[index].Position, player.Position), 0.5,
+                "Every unobstructed enemy must receive the entire authored pulse displacement.");
         Assert.IsNotNull(simulation.CreateSnapshot().WardPulse);
         Assert.AreEqual(0d, simulation.CreateSnapshot().Player.WardCharge!.Value, 1e-9);
     }

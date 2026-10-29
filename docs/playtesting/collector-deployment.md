@@ -4,9 +4,22 @@
 
 The **collector is deployed on Cloudflare** at `https://wyrmforge-feedback-collector.pjotr-2.workers.dev`, with D1 migrations and Worker secrets applied by GitHub Actions run #2. The public, non-secret intake URL is now part of the game's checked-in configuration, with optional override via `WYRMFORGE_FEEDBACK_ENDPOINT`. GitHub Pages itself remains a read-only host; do not place a private token in the web project.
 
-The Cloudflare Worker accepts *only actively submitted, explicitly consented* reports. There is no passive telemetry upload. It validates and allowlists fields, uses D1 storage, HMAC IP-based rate limiting (no raw IP persisted), private Bearer-token administrator endpoints and 30-day scheduled deletion.
+The Cloudflare Worker accepts only explicitly consented reports: manual feedback submissions, or compact AI profiling reports uploaded automatically **after a tester deliberately enables the separate opt-in** in the playtest feedback dialog. Merely starting or playing the game never authorizes an upload. Automatic profiling occurs locally before consent and is never automatically uploaded while the option is off. It validates and allowlists fields, uses D1 storage, HMAC IP-based rate limiting (no raw IP persisted), private Bearer-token administrator endpoints and 30-day scheduled deletion.
 
 **Important:** Like any web server, Cloudflare infrastructure can have operational logs. No guarantee of absolute anonymity can be made. Free text may contain identifying information volunteered by a tester; tell testers not to include personal details.
+
+
+## AI6 automatic profiling for opted-in playtesting (draft PR #364)
+
+During live Hunts with the AI opt-in enabled (`?agents=1`), the authoritative C# simulation samples about once every 300 AI frames (~5 seconds at 60 Hz) and at the end of the run. Samples summarize the agent-update frame count, population, rolling mean/p95 and peak CPU cost, maximum line-of-sight/path query counts, simultaneous threat slots, actual resolved hunter HP damage and bounded agent-trace diversity/decision latency. The ordinary browser run profiler continues to record slow frames and main-thread simulation/bridge sampling independently.
+
+The collector stores **only compact allowlisted numeric AI summaries**, with no player/world coordinates, raw observations, detailed decision traces, names, free text, full user-agent string or precise viewport in automatic uploads. Its administrator-only summary aggregates submitted AI runs in D1; the optional local `collector_admin.py` dashboard shows AI p95, maximum frame cost, populations and query pressure. These are host-side measurements until tested on physical iOS and Android devices.
+
+**Explicit choice and revocation:** from the Town/Forge playtest feedback dialog, an unticked option reads "Automatically send limited AI performance and combat summaries after each future Hunt." Ticking it stores an opt-in on that browser; each subsequent completed run with recorded AI metrics submits a single minimized report to the existing HTTPS collector. Unticking it stops future uploads, and **Erase my local playtest history** also revokes that choice. No opt-in means no background network upload. The normal manual feedback report still requires its own one-time checkbox before being sent. Failed automatic submissions never block play and local JSON export remains available.
+
+**Privacy boundaries:** transport requests inevitably involve transient network metadata (such as a source IP) at Cloudflare, and coarse gameplay values may still be personal data when combined. Do not claim legal anonymity solely because names are omitted. The existing 30-day retention and temporary HMAC rate limiting apply. Confirm transparency, data-protection arrangements and applicable lawful basis before inviting external testers. There is no behavioral advertising, cross-device tracking or persistent telemetry identifier.
+
+**Deployment and acceptance:** changes are in **draft PR #364**, not deployed to the public Pages game or Cloudflare Worker until approved/merged and the collector deployment workflow runs. CI runs `node --test tests/javascript/playtest-ai-profiler.test.mjs`, the collector sanitizer tests and the normal C#/browser suite. End-to-end real-device consent/upload/receipt and private dashboard verification remain required before declaring AI6 user testing ready.
 
 ## One-time Cloudflare setup (requires account owner)
 

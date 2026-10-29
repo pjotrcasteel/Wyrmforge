@@ -202,7 +202,12 @@ public sealed partial class RunSimulation
         ResolveRelicDefeatBursts();
         enemies.RemoveAll(enemy => enemy.Health <= 0);
         CompleteMapEncounterCleanup();
+        // All hostile attacks buffer their strongest hit until this exact resolution point.
+        // Sampling HP earlier in UpdateEnemies would incorrectly report zero actual damage.
+        var hunterHealthBeforeResolution = player.Health;
         ResolvePlayerDamage();
+        if (agentFoundationEnabled || adaptiveAshfangEnabled)
+            agentPerformance.RecordResolvedHunterDamage(hunterHealthBeforeResolution - player.Health);
         if (player.Health <= 0)
         {
             if (extractionState.IsActive) DeathsDuringExtraction++;

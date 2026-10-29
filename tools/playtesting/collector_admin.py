@@ -30,6 +30,7 @@ def dashboard(summary):
     totals = summary.get("aggregate", {})
     issues = summary.get("issues", [])
     intent = summary.get("replayIntent", [])
+    ai = summary.get("ai") or {}
     def metric(title, value):
         return f'<article><span>{escape(title)}</span><strong>{escape(str(value if value is not None else "—"))}</strong></article>'
     def bars(title, records, label):
@@ -60,6 +61,17 @@ article span{{display:block;color:#b7a1c4;font-size:.78rem}}article strong{{disp
 {metric("Clarity / 5", totals.get("clarity"))}
 {metric("Run samples shared", totals.get("sharedRunSamples", 0))}
 </div>
+<section><h2>Consented AI playtest profiling</h2>
+<p>Aggregate-only measurements from sessions with the optional AI upload enabled. A browser-host estimate is not an iPhone or Android benchmark.</p>
+<div class="grid">
+{metric("AI runs", ai.get("runs", 0))}
+{metric("Mean per-run AI p95 (ms)", ai.get("meanP95Ms"))}
+{metric("Highest AI update (ms)", ai.get("peakMs"))}
+{metric("Largest AI population", ai.get("maxPopulation"))}
+{metric("Peak committed attacks", ai.get("maxCommitted"))}
+{metric("Max sight queries", ai.get("maxSightQueries"))}
+{metric("Max path queries", ai.get("maxPathQueries"))}
+</div></section>
 {bars("What needs attention", issues, "area")}
 {bars("Would they play again?", intent, "replay")}
 <small>Do not publish this dashboard or exported reports. Keep raw comments in restricted files only.</small>

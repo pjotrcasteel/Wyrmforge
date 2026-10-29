@@ -35,7 +35,7 @@ public sealed class RunSimulationFactory(IRandomSource seedSource)
         return simulation;
     }
 
-    public RunSimulation Create(IReadOnlySet<string> selectedNodes, DragonEssenceId? offering = null, int? seed = null, ForgeProgressionState? progression = null, SpellMasteryState? masteries = null, bool ascendantAshfang = false, DragonId? ascendantWyrm = null, bool firstHunt = false, LaboratoryMutationId? preparedMutation = null, DragonId? researchLead = null, IReadOnlyCollection<LaboratoryMutationId>? preparedMutations = null, bool contextualSpell = false, RegionId? region = null, bool regionOpening = false, IReadOnlyCollection<FireballMutationId>? fireballMutations = null, HuntSelection? hunt = null, IReadOnlyCollection<MutationAmplifierAssignment>? amplifierAssignments = null, int fireballLevel = 1)
+    public RunSimulation Create(IReadOnlySet<string> selectedNodes, DragonEssenceId? offering = null, int? seed = null, ForgeProgressionState? progression = null, SpellMasteryState? masteries = null, bool ascendantAshfang = false, DragonId? ascendantWyrm = null, bool firstHunt = false, LaboratoryMutationId? preparedMutation = null, DragonId? researchLead = null, IReadOnlyCollection<LaboratoryMutationId>? preparedMutations = null, bool contextualSpell = false, RegionId? region = null, bool regionOpening = false, IReadOnlyCollection<FireballMutationId>? fireballMutations = null, HuntSelection? hunt = null, IReadOnlyCollection<MutationAmplifierAssignment>? amplifierAssignments = null, int fireballLevel = 1, AgentRolloutOptions? agents = null)
     {
         hunt?.Validate();
         if (hunt is not null && (ascendantAshfang || ascendantWyrm is not null || region is { } selectedRegion && selectedRegion != hunt.Region))
@@ -46,6 +46,7 @@ public sealed class RunSimulationFactory(IRandomSource seedSource)
         var levelChoiceService = new LevelChoiceService(randomSource, content.Spells, content.Evolutions);
         var simulation = new RunSimulation(selectedNodes, levelChoiceService, randomSource, offering);
         simulation.InitializeRunSeed(runSeed);
+        simulation.ConfigureAgents(agents, runSeed);
         simulation.EnableAscendantRite(ascendantWyrm ?? (ascendantAshfang ? DragonId.Ashfang : null));
         simulation.EnterRegion(region is { } regionId ? RegionCatalog.Get(regionId) : RegionCatalog.Starting);
         simulation.SelectHunt(hunt);

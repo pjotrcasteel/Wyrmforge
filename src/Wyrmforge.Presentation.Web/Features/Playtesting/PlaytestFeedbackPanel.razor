@@ -49,6 +49,12 @@
         <p class="playtest-privacy">Your report stays on this device until you choose to send or share it. The report contains no name, email, IP address or full device identifier. Please avoid personal details in free-text answers.</p>
         @if (collectorAvailable)
         {
+            <label class="playtest-include">
+                <input type="checkbox" @bind="autoAiConsent" @bind:after="SaveAutoAiConsentAsync" />
+                <span>Automatically send limited AI performance and combat summaries after each future Hunt.
+                    This is optional, off by default, and can be turned off here at any time.
+                    No chat, name, location, exact device identifier or movement coordinates are included.</span>
+            </label>
             <label class="playtest-consent"><input type="checkbox" @bind="consentToSend" /><span>I agree to send my answers and @(includeRuns ? "recent gameplay evidence" : "summary gameplay counts") to the private WyrmForge playtest collector. Reports are kept for up to 30 days and can be deleted by the organizer.</span></label>
         }
         </div>
@@ -87,6 +93,7 @@
     private string improvement = "";
     private bool includeRuns = true;
     private bool collectorAvailable;
+    private bool autoAiConsent;
     private bool consentToSend;
     private bool sending;
     private bool submitted;
@@ -95,9 +102,30 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
-        try { collectorAvailable = await JavaScript.InvokeAsync<bool>("wyrmforgePlaytest.collectorReady", CancellationToken.None); }
-        catch (JSException) { collectorAvailable = false; }
+        try
+        {
+            collectorAvailable = await JavaScript.InvokeAsync<bool>("wyrmforgePlaytest.collectorReady", CancellationToken.None);
+            autoAiConsent = await JavaScript.InvokeAsync<bool>("wyrmforgePlaytest.getAiAutoConsent", CancellationToken.None);
+        }
+        catch (JSException) { collectorAvailable = false; autoAiConsent = false; }
         await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task SaveAutoAiConsentAsync()
+    {
+        try
+        {
+            autoAiConsent = await JavaScript.InvokeAsync<bool>("wyrmforgePlaytest.setAiAutoConsent",
+                CancellationToken.None, autoAiConsent);
+            status = autoAiConsent
+                ? "Automatic AI summaries are enabled for future Hunts. You can turn this off here."
+                : "Automatic AI uploads are disabled; local playtest history remains available.";
+        }
+        catch (JSException)
+        {
+            autoAiConsent = false;
+            status = "Could not save this choice. Automatic uploads remain disabled.";
+        }
     }
 
     private async Task SendAsync()
@@ -151,6 +179,7 @@
         try
         {
             await JavaScript.InvokeVoidAsync("wyrmforgePlaytest.clear", CancellationToken.None);
+            autoAiConsent = false;
             status = "Local playtest history erased. Your game progress and Forge unlocks are unchanged.";
         }
         catch (JSException) { status = "Could not erase local playtest history in this browser."; }
