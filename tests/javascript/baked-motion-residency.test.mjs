@@ -13,7 +13,7 @@ test('real three-map projected memory never overrides 64MiB limit or asserts app
     const r=planBakedMotionResidency(fixture());
     assert.equal(r.runtimeAccepted,false);
     assert.equal(r.budgetBytes,64*1024*1024);
-    assert.equal(r.options.length,8);
+    assert.equal(r.options.length,10);
     assert.deepEqual(new Set(r.options.map(x=>x.actionVariants)),new Set([3]));
     assert.ok(r.originalPlusOneLateralBytes>r.originalDecodedBytes);
     assert.ok(r.options.every(x=>!x.actualSourceClipsExist&&!x.contactAndVisualAccepted));
@@ -41,4 +41,17 @@ test('planner rejects absent real atlas or malformed measured source crop',()=>{
     assert.throws(()=>planBakedMotionResidency(broken),TypeError);
     const invalid=fixture();invalid.clips['attack-travel'].crop=[0,0,0,0];
     assert.throws(()=>planBakedMotionResidency(invalid),RangeError);
+});
+
+test('native measured 68x63 crop can accommodate a five-stage layout only as an UNAPPROVED memory study',()=>{
+    const r=planBakedMotionResidency(fixture([14,21,82,84]));
+    const five=r.options.find(x=>x.gaitPhases===8&&x.actionStages===5);
+    const six=r.options.find(x=>x.gaitPhases===8&&x.actionStages===6);
+    assert.equal(five.framesPerDirection,40);
+    assert.equal(five.proposedColumns*five.proposedRowsPerDirection,40);
+    assert.equal(five.proposedTotalDecodedBytes,62512128);
+    assert.equal(five.withinMemoryLimit,true);
+    assert.equal(six.withinMemoryLimit,false);
+    assert.equal(r.additionalLateralWalkAndTransitionCostIncluded,false);
+    assert.equal(five.actualSourceClipsExist,false);
 });
