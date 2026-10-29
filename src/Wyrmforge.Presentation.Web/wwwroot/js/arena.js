@@ -44,9 +44,13 @@ export function initializeArena(canvas, dotNetReference) {
     arenas.set(canvas, state);
     state.detachInput = attachArenaInput(state);
     if (new URLSearchParams(location.search).get('arenaGpu') === '1') {
-        void import('./arena-gpu-world.js').then(({ HuntGpuWorld }) => {
-            if (state.active) state.gpuWorld = new HuntGpuWorld();
-        }).catch(error => { state.gpuError = String(error); });
+        void Promise.all([import('./arena-gpu-world.js'), import('./arena-gpu-fireball.js')])
+            .then(([{ HuntGpuWorld }, fireball]) => {
+                if (state.active) {
+                    state.gpuWorld = new HuntGpuWorld();
+                    state.gpuFireball = fireball;
+                }
+            }).catch(error => { state.gpuError = String(error); });
     }
     const now = performance.now();
     state.lastSimulationTimestamp = now;
@@ -354,8 +358,13 @@ function draw(state, snapshot, width, height) {
             ctx = worldContext;
         }
     }
+    let gpuFireballs = new Set();
     if (gpu) {
-        try { gpu.render(ctx, state.fractureGpuFrame); }
+        try {
+            gpuFireballs = state.gpuFireball?.submitGpuFireballs(gpu, snapshot.projectiles, camera,
+                visualSeconds, state.reducedMotion.matches) ?? gpuFireballs;
+            gpu.render(ctx, state.fractureGpuFrame);
+        }
         catch (error) {
             state.gpuError = String(error); gpu.dispose(); state.gpuWorld = null; gpu = null;
         }
@@ -402,7 +411,8 @@ function draw(state, snapshot, width, height) {
     drawWinterBellAir(ctx, snapshot);
     drawGlassReliquaryAir(ctx, snapshot, state.reducedMotion.matches ? 0 : visualSeconds);
     for (const cloud of snapshot.snowClouds ?? []) drawSnowCloud(ctx, cloud, state.reducedMotion.matches ? 0 : visualSeconds);
-    for (const projectile of snapshot.projectiles) drawSpellProjectile(ctx, projectile, state.reducedMotion.matches, visualSeconds);
+    for (const projectile of snapshot.projectiles) if (!gpuFireballs.has(projectile))
+        drawSpellProjectile(ctx, projectile, state.reducedMotion.matches, visualSeconds);
 
     for (const trace of snapshot.lightning) drawLightningTrace(ctx, trace, visualSeconds, state.reducedMotion.matches);
 
