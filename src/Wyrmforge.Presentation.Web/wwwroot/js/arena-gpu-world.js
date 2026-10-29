@@ -119,7 +119,10 @@ export class HuntGpuWorld {
     }
     render(ctx, frame) {
         const engine = this.engine;
-        if(this.inspectionLighting){
+        if(this.inspectionLighting==='zero'){
+            const environment={...frame.environment,ambient:0,emission:false};delete environment.fog;
+            frame={...frame,environment,lights:[]};
+        }else if(this.inspectionLighting){
             const environment={...frame.environment,ambient:.35,color:'#aebaca',exposure:1,emission:true};delete environment.fog;
             frame={...frame,environment,lights:[...frame.lights,{id:'developer-inspection:key',ownerId:'developer-inspection',type:'point',enabled:true,position:[this.camera.x+this.width*.35,this.camera.y+this.height*.45,96],direction:[0,0,-1],color:'#fff3dc',intensity:16,range:720,coneAngle:.7,penumbra:0,castsShadow:true,priority:1000}]};
         }

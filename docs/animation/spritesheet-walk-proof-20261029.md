@@ -154,3 +154,11 @@ GPU sprite binding is implemented through LightingEngine, with frame/anchor/map
 resource-sharing checks; all 613 JavaScript tests pass. The first real GPU
 capture is pending; this does not close lighting/depth/caster or device gates.
 
+The first real 390px GPU material capture runs with no page, console, resource
+or GPU errors. It intentionally uses only the base walk for material isolation;
+its 3.7794-native-pixel contact failure is retained and does not replace the
+denser-heading contact pack. New diagnostics count actual baked sprite GPU
+actors/resources. A read-only framebuffer check now exercises actual C# paused
+encounters at 320/390px, aligned albedo/normal views, true zero-light (including
+emission off) and exact frozen restoration. Results are pending.
+

@@ -62,7 +62,7 @@ const server=http.createServer((req,res)=>{
   const m=await import(window.__anModulePath??'/js/arena.js');window.__anTrace=[];
   window.__anTraceTimer=setInterval(()=>{const d=m.readArenaDiagnostics(document.querySelector(window.__anCanvasSelector));if(d)window.__anTrace.push({at:performance.now(),simulationTimeSeconds:d.simulationTimeSeconds,enemies:d.enemies,player:d.player,hollow:d.hollow,performance:d.performance,gpuWorld:d.gpuWorld});},50);
  });
- if(candidate&&foundationMode==='sprite-walk')await page.evaluate(gpu=>{const label=document.createElement('div');label.textContent=gpu?'BAKED SPRITE MATERIALS / SHARED GPU / EXISTING ATTACK FALLBACK':'SOURCE-LIT BAKED SPRITESHEET WALK PROOF / EXISTING ATTACK FALLBACK';label.style='position:fixed;bottom:0;left:0;background:#fff;color:#000;font:11px sans-serif;padding:5px;z-index:9999';document.body.appendChild(label);},expectsGpu);
+ if(candidate&&foundationMode==='sprite-walk'&&!process.env.AN_INSPECTION)await page.evaluate(gpu=>{const label=document.createElement('div');label.textContent=gpu?'BAKED SPRITE MATERIALS / SHARED GPU / EXISTING ATTACK FALLBACK':'SOURCE-LIT BAKED SPRITESHEET WALK PROOF / EXISTING ATTACK FALLBACK';label.style='position:fixed;bottom:0;left:0;background:#fff;color:#000;font:11px sans-serif;padding:5px;z-index:9999';document.body.appendChild(label);},expectsGpu);
  const initial=await page.evaluate(async()=>{const m=await import(window.__anModulePath??'/js/arena.js');return m.readArenaDiagnostics(document.querySelector(window.__anCanvasSelector));});
  fs.writeFileSync(path.join(out,'initial-diagnostics.json'),JSON.stringify(initial,null,2));
  await page.screenshot({path:path.join(out,'hunt-ready.png')});

@@ -107,18 +107,19 @@ export function readArenaDiagnostics(canvas) {
         performance: { fps:state.displayFps, simulationHz:state.displaySimulationHz, simulationMilliseconds:state.displaySimulationMilliseconds, bridgeMilliseconds:state.displayBridgeMilliseconds },
         renderingFailed: Boolean(state.renderingFailed),
         sharedLighting: state.sharedLightingFrame ?? state.latestSnapshot?.lighting ?? null,
-        gpuWorld:state.gpuWorld?.engine.diagnostics()??{error:state.gpuError??null},
+        gpuWorld:state.gpuWorld?{...state.gpuWorld.engine.diagnostics(),bakedSpriteResources:state.gpuWorld.sprites.size,bakedSpriteActors:state.gpuWorld.objects.filter(o=>o.id.endsWith('-sprite')).length}:{error:state.gpuError??null},
         hollowFractureGpuEmitters: state.fractureGpuEmitters ?? [],
         wetForestGround: state.latestSnapshot?.environment?.wetForest
             ? liveWetForestMaterialDiagnostics(state.latestSnapshot.environment.seed) : null,
-        lighting: { mode: state.gpuWorld?.inspectionLighting?'developer-neutral-inspection':'night', darkness: GOTHIC_NIGHT.darkness, source: state.gpuWorld?.inspectionLighting?'developer-inspection-over-csharp-snapshot':'authoritative-csharp-snapshot' },
+        lighting: { mode: state.gpuWorld?.inspectionLighting==='zero'?'developer-zero-light-inspection':state.gpuWorld?.inspectionLighting?'developer-neutral-inspection':'night', darkness: GOTHIC_NIGHT.darkness, source: state.gpuWorld?.inspectionLighting?'developer-inspection-over-csharp-snapshot':'authoritative-csharp-snapshot' },
     };
 }
 // Explicit developer inspection; never changes the authoritative light frame.
 export function setArenaLightingInspection(canvas,view='lit'){
     const world=arenas.get(canvas)?.gpuWorld;if(!world)return false;
-    world.engine.setDebugView(view==='neutral-lit'?'lit':view);world.inspectionLighting=view==='neutral-lit';return true;
+    world.engine.setDebugView(['neutral-lit','zero-light'].includes(view)?'lit':view);world.inspectionLighting=view==='zero-light'?'zero':view==='neutral-lit';return true;
 }
+export function readArenaLightingPixels(canvas){return arenas.get(canvas)?.gpuWorld?.engine.pixels()??null;}
 
 export function disposeArena(canvas) {
     const state = arenas.get(canvas);
