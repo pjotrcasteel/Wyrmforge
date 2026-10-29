@@ -140,14 +140,14 @@ export function mountG4DeviceReview(canvas, getGpu, mode = 'canvas', quality = n
     const panel = document.createElement('details');
     panel.setAttribute('data-g4-device-review', '');
     Object.assign(panel.style, {
-        position: 'fixed', right: '8px', top: '8px', zIndex: '10000',
-        width: 'min(240px, 74vw)', maxHeight: '48vh', overflow: 'auto',
+        position: 'fixed', right: '8px', bottom: 'max(112px, env(safe-area-inset-bottom))', zIndex: '10000',
+        width: 'max-content', maxWidth: 'min(240px, 74vw)', maxHeight: '44vh', overflow: 'auto',
         background: 'rgba(16,21,26,.94)', color: '#f3eee8',
         border: '1px solid #ad976e', borderRadius: '6px', padding: '8px',
         font: '12px/1.5 system-ui,sans-serif', boxSizing: 'border-box',
     });
     const header = document.createElement('summary');
-    header.textContent = 'G4 PHONE TEST · idle';
+    header.textContent = 'G4 · READY';
     header.style.cursor = 'pointer';
     panel.appendChild(header);
     const help = document.createElement('p');
@@ -183,12 +183,12 @@ export function mountG4DeviceReview(canvas, getGpu, mode = 'canvas', quality = n
     const updateStatus = now => {
         // Do not sort thousands of samples every second while profiling a phone.
         if (session.recording) {
-            header.textContent = 'G4 PHONE TEST · recording';
+            header.textContent = 'G4 · REC';
             status.textContent = `${Math.round((now - session.startedAt) / 1000)}s · ${session.intervals.length} frame intervals`;
             return;
         }
         const info = session.summary(now);
-        header.textContent = `G4 PHONE TEST · ${info.frameIntervals ? 'stopped' : 'idle'}`;
+        header.textContent = `G4 · ${info.frameIntervals ? 'DONE' : 'READY'}`;
         status.textContent = `${info.elapsedSeconds}s · ${info.frameIntervals} intervals · p95 ${info.frameMsP95 ?? 'n/a'}ms · ${info.observedFps ?? 0} FPS`;
     };
     button('Start', () => { session.start(getNow()); updateStatus(getNow()); panel.open = false; });

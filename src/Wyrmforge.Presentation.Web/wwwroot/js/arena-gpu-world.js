@@ -10,8 +10,18 @@ const GROUND_Y = Math.SQRT2;
  * Keep diagnostic/lab retention unchanged, but avoid preserving the mobile GPU
  * drawing buffer after composition. This is a renderer setting, not a new path.
  */
-export function huntGpuRendererBudget(quality = 'balanced') {
-    return { ...lightingQualityBudget(quality), preserveDrawingBuffer: false };
+/**
+ * iOS WebKit can discard an unpreserved offscreen WebGL drawing buffer before
+ * drawImage copies it into the visible Canvas. Retain that frame only for iOS
+ * WebKit; other browsers keep the existing G4 memory optimization.
+ */
+export function needsRetainedHuntBuffer(userAgent = '', maxTouchPoints = 0) {
+    return /iPhone|iPad|iPod/i.test(userAgent) ||
+        /Macintosh/i.test(userAgent) && maxTouchPoints > 1;
+}
+export function huntGpuRendererBudget(quality = 'balanced', preserveDrawingBuffer = false) {
+    if (typeof preserveDrawingBuffer !== 'boolean') throw new TypeError('Invalid Hunt buffer policy');
+    return { ...lightingQualityBudget(quality), preserveDrawingBuffer };
 }
 
 /** Composite exactly once with native nearest-neighbor pixel sampling. */
@@ -83,7 +93,9 @@ export class HuntGpuWorld {
     constructor({ quality = 'balanced' } = {}) {
         this.canvas = document.createElement('canvas');
         this.quality = quality;
-        this.engine = new LightingEngine(this.canvas, huntGpuRendererBudget(quality));
+        const device = typeof navigator === 'undefined' ? null : navigator;
+        this.engine = new LightingEngine(this.canvas, huntGpuRendererBudget(quality,
+            needsRetainedHuntBuffer(device?.userAgent, device?.maxTouchPoints)));
         this.engine.registerGeometry('hunt-plane', new T.PlaneGeometry(1, 1));
         this.engine.registerGeometry('hunt-billboard', huntActorGeometry());
         this.layers = new Map();
