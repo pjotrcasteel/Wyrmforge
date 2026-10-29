@@ -64,9 +64,19 @@ export function buildSpellLights(snapshot, elapsed = 0, reducedMotion = false, v
     for (const impact of snapshot.elementalImpacts ?? [])
         add(impact, 'impact', .8 * (1 - clamp(Number(impact.progress) || 0, 0, 1)), 106);
 
+    // Transitional Canvas adapter only. Boss lifecycle/positions come from the same
+    // C# descriptors as the universal GPU engine, never a second light simulation.
+    for (const source of snapshot.lighting?.lights ?? []) {
+        if (!source.ownerId?.startsWith('ashfang:') && !source.ownerId?.startsWith('ashfang-effect:')) continue;
+        if (!source.enabled || !/^#[0-9a-f]{6}$/i.test(source.color)) continue;
+        const center = [1, 3, 5].map(i => parseInt(source.color.slice(i, i + 2), 16));
+        candidates.push({ x: source.position?.[0], y: source.position?.[1], radius: source.range,
+            strength: source.intensity, type: 'boss-source', surge: false,
+            family: 'fire', center, edge: palette.fire.edge });
+    }
     // Bound the worst-case cost when several projectiles and impacts overlap on mobile.
     // Impact gets priority over an older projectile only when it is visibly brighter.
-    return candidates.filter(light => !viewport ||
+    return candidates.filter(light => Number.isFinite(light.x)&&Number.isFinite(light.y)&&Number.isFinite(light.radius)&&Number.isFinite(light.strength)&&light.radius>0).filter(light => !viewport ||
         (light.x + light.radius >= viewport.x && light.x - light.radius <= viewport.x + viewport.width &&
          light.y + light.radius >= viewport.y && light.y - light.radius <= viewport.y + viewport.height))
         .sort((a, b) => b.strength - a.strength).slice(0, maximumLights);
@@ -117,4 +127,66 @@ export function drawSpellLightSpill(ctx, lights, camera, surface = 'terrain') {
     }
     ctx.restore();
     return painted;
+}
+
+
+// The Canvas Hunt is transitional. This is a MATERIAL response to one existing
+// GPU-frame point emitter, not a new light source or a screen-space spotlight.
+// Render only the affected actor into one reusable alpha-isolated buffer, so
+// source-atop lighting cannot brighten the ground or paint through other sprites.
+export function drawActorWithEmitter(ctx, buffer, actor, emitter, paintActor) {
+    const x = Number(actor?.x), y = Number(actor?.y), radius = Number(actor?.radius);
+    const lx = emitter?.position?.[0], ly = emitter?.position?.[1];
+    const range = Number(emitter?.range), intensity = Number(emitter?.intensity);
+    const color = emitter?.color;
+    const distance = Math.hypot(x - lx, y - ly);
+    if (!emitter?.enabled || emitter.type !== 'point' ||
+        ![x, y, radius, lx, ly, range, intensity].every(Number.isFinite) ||
+        radius <= 0 || range <= 0 || intensity <= 0 || distance >= range ||
+        !/^#[0-9a-f]{6}$/i.test(color ?? '') || !buffer?.getContext) {
+        paintActor(ctx);
+        return false;
+    }
+
+    const width = Math.ceil(Math.max(192, radius * 17));
+    const height = Math.ceil(Math.max(216, radius * 20));
+    const left = Math.floor(x - width / 2);
+    const top = Math.floor(y - height * .72);
+    if (buffer.width !== width) buffer.width = width;
+    if (buffer.height !== height) buffer.height = height;
+    const surface = buffer.getContext('2d');
+    if (!surface) {
+        paintActor(ctx);
+        return false;
+    }
+
+    surface.save();
+    surface.setTransform(1, 0, 0, 1, -left, -top);
+    surface.clearRect(left, top, width, height);
+    paintActor(surface);
+    surface.restore();
+
+    const falloff = Math.pow(1 - distance / range, 2);
+    const alpha = clamp(intensity * falloff * 1.05, 0, .55);
+    const r = parseInt(color.slice(1, 3), 16);
+    const g = parseInt(color.slice(3, 5), 16);
+    const b = parseInt(color.slice(5, 7), 16);
+    surface.save();
+    surface.globalCompositeOperation = 'source-atop';
+    // The emitter sits at the seal by the feet, so illumination travels upward.
+    const beam = surface.createLinearGradient(0, 0, 0, height);
+    beam.addColorStop(0, 'rgba(0,0,0,0)');
+    beam.addColorStop(.40, `rgba(${r},${g},${b},0)`);
+    beam.addColorStop(.67, `rgba(${r},${g},${b},${(alpha * .25).toFixed(3)})`);
+    beam.addColorStop(.85, `rgba(${r},${g},${b},${alpha.toFixed(3)})`);
+    beam.addColorStop(1, `rgba(${r},${g},${b},${(alpha * .85).toFixed(3)})`);
+    surface.fillStyle = beam;
+    surface.fillRect(0, 0, width, height);
+    surface.restore();
+
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(buffer, left, top);
+    ctx.restore();
+    return true;
 }

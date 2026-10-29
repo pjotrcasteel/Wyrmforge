@@ -1,0 +1,49 @@
+name: Bake canonical Nexus school assets
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/art/build-nexus-school-assets.py'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/art/town/night-active.webp'
+      - '.github/workflows/nexus-art-bake.yml'
+permissions:
+  contents: write
+jobs:
+  bake:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          persist-credentials: true
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Install image dependencies
+        run: python -m pip install Pillow==12.3.0 numpy==2.3.5
+      - name: Bake six real Nexus paintings
+        run: python tools/art/build-nexus-school-assets.py
+      - name: Verify six assets and unchanged canonical source
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          root=Path('src/Wyrmforge.Presentation.Web/wwwroot/art/town/nexus-schools')
+          for school in ('arcane','fire','frost','storm','death','binding'):
+              with Image.open(root/f'{school}.png') as png:
+                  assert png.size==(1672,941)
+                  assert png.mode=='RGBA'
+          PY
+          git diff --exit-code -- src/Wyrmforge.Presentation.Web/wwwroot/art/town/night-active.webp
+      - name: Commit first-party PNG paintings
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/Wyrmforge.Presentation.Web/wwwroot/art/town/nexus-schools/*.png
+          if git diff --cached --quiet; then
+            echo "Six assets already current"
+          else
+            git commit -m "art(nexus): bake six first-party school image assets"
+            git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
+          fi

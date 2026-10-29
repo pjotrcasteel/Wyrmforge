@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "wyrmforge-ashfang-production/1",
+  "sourceCreator": "Seth Santos (Seth7Santos)",
+  "license": "CC-BY-4.0",
+  "download": "C:/WyrmForgeAssets/Zagmatorah",
+  "archive": "archive/",
+  "storage": "Git LFS; user confirmed available capacity 2026-10-23",
+  "blender": "4.5.14 LTS",
+  "renderer": "Cycles OptiX RTX 5090; all 41 actions in eight directions rendered",
+  "currentCandidate": "archive/motion-foundation-002-packed/ashfang-animation-foundation.blend",
+  "immutableOriginal": "archive/M0-001/original/zagmatorah-original-import.blend",
+  "originalSource": "archive/M0-001/original/download/source/Zagmatorah.fbx",
+  "M0": "Import, packed dependency reopen, remote LFS retrieval and SHA256 verification passed. Structural issues documented; deformation/motion not validated.",
+  "M1": "Skin pass rendered: clean charcoal scale shaders, scorched oxblood membranes and selective ember fractures on the exact owner-approved source anatomy. Material proposal is not owner-approved.",
+  "ownerAccepted": false,
+  "runtimeIntegrated": false,
+  "remaining": [
+    "Owner motion review",
+    "Game integration and separate VFX",
+    "Actual Hunt and physical-phone validation"
+  ],
+  "ownerAcceptedAnatomy": true,
+  "ownerAcceptedMaterials": false,
+  "skinWorkStatus": "Skin proposal prepared for visual review; final render and remote retrieval evidence recorded in reviews/tier-I-skin-010.",
+  "fireAndSmoke": "Reserved for game VFX; no flame, smoke, particle or cinder geometry in the character master.",
+  "M2": "Preserved original 112-bone deform hierarchy; temporary IK controls baked and removed. Source motion checks pass.",
+  "M3": "Aggressive revision 002: 41 actions with predatory attention snaps, raised diagonal rakes, forward bite/clamp/wrench, braced roar, bounding run and staged deaths.",
+  "M4": "Aggressive revision 002 complete: 7736 frames, 328 lossless 512px master atlases and 328 runtime 256px atlases; every master cell pixel-verified, zero empty/clipped frames.",
+  "M5": "Full offline Edge review passes all 328 runtime atlases / 7736 frames, pause/step/phase carry/eight views/death hold, 23-state hunt performance sequence and 390px layout. All-action contact sheets inspected. No actual Hunt/physical-phone acceptance.",
+  "M6": "Revised scale-two idle, walk and flight comparison passes for projected poses/pivots/attachments and root travel. No higher-tier geometry authored.",
+  "M7": "No game integration or physical-device acceptance.",
+  "remoteVerification": {
+    "assetCheckpoint": "f132c46b114bd70bde7ffa2d66739a1a44eb198c",
+    "playerCheckpoint": "aace0d49c0297dacfc573da76409311ea713d410",
+    "independentlyRetrievedAndSha256VerifiedLfsObjects": 1465,
+    "allFinalAtlases": 656,
+    "packedMasterSha256": "c4c83b1e00be3a4c23dd6f040052d96a5f9c749f647300c2bb206e563c9463df",
+    "receipt": "remote-lfs-verification.json",
+    "finalEvidenceCheckpoint": "3064b0ff4024cf4c00a0597bc5247da88b2fbac2",
+    "allTrackedLfsObjectsVerified": true
+  }
+}

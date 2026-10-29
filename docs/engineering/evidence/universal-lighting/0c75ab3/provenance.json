@@ -1,0 +1,13 @@
+{
+  "head": "0c75ab3c1a02bcaff289c713d9292f75674ec0e9",
+  "testedMerge": "41bf834496efa2749775a7ba44f335930ef49bd7",
+  "run": 40171667444,
+  "artifact": 12591145405,
+  "artifactSha256": "3ba20fa4ac8570b0bb856d09263ddb5362b83d3a30691dc054dd7ddb0a3a0c9a",
+  "files": {
+    "gpu-320-temporal-comparison.json": "2276e22407f34e24f8e681e73005bb60e67f4ac3d333446137568a8f8d2a9b1b",
+    "gpu-390-temporal-comparison.json": "f2f69e15eb1ba8eb3eae66154805f0f078e7f63880472bf331076829c35c948f",
+    "gpu-390-temporal-actors-origin.png": "9e43f77cb870dd81f402d423508c189691216d2281c89c8231e8e3d66644a21e",
+    "gpu-320-temporal-oak-origin.png": "5717036e07a46578fe18fc8ebd9b58a1486d859e97917a7c67730a4ccc81aac8"
+  }
+}

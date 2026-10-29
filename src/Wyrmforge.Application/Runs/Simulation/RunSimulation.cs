@@ -7,6 +7,7 @@ using Wyrmforge.Application.Runs.LevelUp;
 using Wyrmforge.Application.Runs.Navigation;
 using Wyrmforge.Application.Runs.Offerings;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
+using Wyrmforge.Application.Runs.Simulation.Lighting;
 using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Combat.Enemies;
 using Wyrmforge.Domain.Combat.Player;
@@ -45,6 +46,8 @@ public sealed partial class RunSimulation
     private readonly PlayerState player = new();
     private readonly List<EnemyState> enemies = [];
     private readonly List<ProjectileState> projectiles = [];
+    private readonly ProjectileLightIdentityRegistry projectileLightIdentities = new();
+    private long lightingSnapshotTick;
     private readonly List<LightningTrace> lightning = [];
     private readonly List<EssenceBurstState> essenceBursts = [];
     private readonly List<EssenceBoltState> essenceBolts = [];
@@ -155,6 +158,9 @@ public sealed partial class RunSimulation
             // A paused choice/map is an input boundary, not a latched manual heading.
             manualAimEngaged = false;
             automaticTargetId = null;
+            rightStickTargetId = null;
+            selectedPropId = null;
+            aimedPropId = null;
             return CreateSnapshot();
         }
         if (trailExitPending)
@@ -183,6 +189,7 @@ public sealed partial class RunSimulation
         UpdateDragonEncounter(delta, width, height);
         UpdateSpawn(delta, width, height);
         UpdateAim(movement);
+        agentSpellSound = null;
         UpdateSpellcasting(delta, movement.IsMoving);
         UpdateContextualEffects(delta);
         // The Reliquary's hush: one held breath in which nothing hostile moves or strikes.
@@ -328,6 +335,8 @@ public sealed partial class RunSimulation
                 AimAngle = Math.Atan2(effectiveAim.Y, effectiveAim.X),
                 ManualAim = manualAimEngaged,
                 AimTargetId = automaticTargetId,
+                AimPropId = aimedPropId,
+                ActiveSchool = SpellCatalog.Get(build.Spells.ActiveSpell).School.ToString(),
                 FocusCharge = primaryCastCounts[build.Spells.ActiveSpell] % FocusedSurgeProfile.CastInterval,
                 WardCharge = WardCharge,
                 Chill = player.Chill.Stacks,
@@ -374,6 +383,8 @@ public sealed partial class RunSimulation
             ExperienceShards: experienceShards.Shards.Select(shard => new ExperienceShardRenderSnapshot(shard.Position.X, shard.Position.Y, shard.Value)).ToArray(),
             ExperiencePickups: experiencePickupPulses.Select(pulse => new ExperiencePickupRenderSnapshot(pulse.Position.X, pulse.Position.Y, pulse.Value, pulse.Progress)).ToArray())
         {
+            DragonDefeat = dragonDefeat,
+            AshfangEffects = CreateAshfangEffects(),
             Trail = CreateTrailSnapshot(),
             PowerBurst = CreatePowerBurstSnapshot(),
             Environment = arenaEnvironment?.Snapshot(),
@@ -399,7 +410,19 @@ public sealed partial class RunSimulation
             SnowClouds = CreateSnowCloudSnapshots(),
             RimeHusks = CreateRimeHuskSnapshots(),
             AvalancheRings = CreateAvalancheRingSnapshots(),
+            Lighting = CreateLightingFrame(),
         };
+    }
+
+    private GpuLightingFrame CreateLightingFrame()
+    {
+        var snapshot = ProjectileLightingProjection.Capture(
+            "hunt", lightingSnapshotTick++, projectiles, projectileLightIdentities,
+            new LightingEnvironment("gothic-night", "#8c9cbb", 0.012));
+        var combined = LightingSceneComposer.Compose(snapshot.SceneId, snapshot.SimulationTick,
+            snapshot.Environment, snapshot.Emitters,
+            AshfangLightingProjection.Capture(CreateDragonSnapshot(), CreateAshfangEffects()));
+        return GpuLightingFrameProjection.FromSnapshot(combined, elapsed);
     }
 
     private CastMotionRenderSnapshot? CreateCastMotionSnapshot()

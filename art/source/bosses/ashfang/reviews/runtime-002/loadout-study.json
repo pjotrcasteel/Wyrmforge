@@ -1,0 +1,509 @@
+[
+  {
+    "seed": 42,
+    "loadout": "tier1",
+    "maxHealth": 1100,
+    "victory": true,
+    "duration": 51,
+    "damageEvents": 32,
+    "firstHits": [
+      {
+        "at": 3.1,
+        "damage": 30,
+        "remaining": 1070
+      },
+      {
+        "at": 4.1,
+        "damage": 30,
+        "remaining": 1040
+      },
+      {
+        "at": 5.25,
+        "damage": 30,
+        "remaining": 1010
+      },
+      {
+        "at": 6.25,
+        "damage": 49.5,
+        "remaining": 960.5
+      },
+      {
+        "at": 7.4,
+        "damage": 30,
+        "remaining": 930.5
+      },
+      {
+        "at": 8.5,
+        "damage": 30,
+        "remaining": 900.5
+      },
+      {
+        "at": 9.65,
+        "damage": 30,
+        "remaining": 870.5
+      },
+      {
+        "at": 10.8,
+        "damage": 49.5,
+        "remaining": 821
+      }
+    ],
+    "actions": [
+      "breath",
+      "claw_right",
+      "bite"
+    ],
+    "flights": 2,
+    "phaseBreaks": 1
+  },
+  {
+    "seed": 42,
+    "loadout": "evolved",
+    "maxHealth": 1100,
+    "victory": true,
+    "duration": 7.95,
+    "damageEvents": 26,
+    "firstHits": [
+      {
+        "at": 3.05,
+        "damage": 147.31,
+        "remaining": 952.69
+      },
+      {
+        "at": 3.35,
+        "damage": 17.68,
+        "remaining": 935.01
+      },
+      {
+        "at": 3.65,
+        "damage": 17.68,
+        "remaining": 917.33
+      },
+      {
+        "at": 3.95,
+        "damage": 17.68,
+        "remaining": 899.66
+      },
+      {
+        "at": 4.2,
+        "damage": 147.31,
+        "remaining": 752.34
+      },
+      {
+        "at": 4.25,
+        "damage": 17.68,
+        "remaining": 734.67
+      },
+      {
+        "at": 4.5,
+        "damage": 17.68,
+        "remaining": 716.99
+      },
+      {
+        "at": 4.55,
+        "damage": 17.68,
+        "remaining": 699.31
+      }
+    ],
+    "actions": [
+      "breath",
+      "claw_right"
+    ],
+    "flights": 0,
+    "phaseBreaks": 1
+  },
+  {
+    "seed": 42,
+    "loadout": "stress",
+    "maxHealth": 1100,
+    "victory": true,
+    "duration": 7.3,
+    "damageEvents": 18,
+    "firstHits": [
+      {
+        "at": 3.05,
+        "damage": 188.04,
+        "remaining": 911.96
+      },
+      {
+        "at": 3.35,
+        "damage": 22.57,
+        "remaining": 889.39
+      },
+      {
+        "at": 3.65,
+        "damage": 22.57,
+        "remaining": 866.83
+      },
+      {
+        "at": 3.95,
+        "damage": 22.57,
+        "remaining": 844.26
+      },
+      {
+        "at": 4.2,
+        "damage": 188.04,
+        "remaining": 656.22
+      },
+      {
+        "at": 4.25,
+        "damage": 22.57,
+        "remaining": 633.65
+      },
+      {
+        "at": 4.5,
+        "damage": 22.57,
+        "remaining": 611.09
+      },
+      {
+        "at": 4.55,
+        "damage": 22.57,
+        "remaining": 588.52
+      }
+    ],
+    "actions": [
+      "breath",
+      "claw_right"
+    ],
+    "flights": 0,
+    "phaseBreaks": 1
+  },
+  {
+    "seed": 721,
+    "loadout": "tier1",
+    "maxHealth": 1100,
+    "victory": true,
+    "duration": 51,
+    "damageEvents": 32,
+    "firstHits": [
+      {
+        "at": 3.1,
+        "damage": 30,
+        "remaining": 1070
+      },
+      {
+        "at": 4.1,
+        "damage": 30,
+        "remaining": 1040
+      },
+      {
+        "at": 5.25,
+        "damage": 30,
+        "remaining": 1010
+      },
+      {
+        "at": 6.25,
+        "damage": 49.5,
+        "remaining": 960.5
+      },
+      {
+        "at": 7.4,
+        "damage": 30,
+        "remaining": 930.5
+      },
+      {
+        "at": 8.5,
+        "damage": 30,
+        "remaining": 900.5
+      },
+      {
+        "at": 9.65,
+        "damage": 30,
+        "remaining": 870.5
+      },
+      {
+        "at": 10.8,
+        "damage": 49.5,
+        "remaining": 821
+      }
+    ],
+    "actions": [
+      "breath",
+      "claw_right",
+      "bite"
+    ],
+    "flights": 2,
+    "phaseBreaks": 1
+  },
+  {
+    "seed": 721,
+    "loadout": "evolved",
+    "maxHealth": 1100,
+    "victory": true,
+    "duration": 7.95,
+    "damageEvents": 26,
+    "firstHits": [
+      {
+        "at": 3.05,
+        "damage": 147.31,
+        "remaining": 952.69
+      },
+      {
+        "at": 3.35,
+        "damage": 17.68,
+        "remaining": 935.01
+      },
+      {
+        "at": 3.65,
+        "damage": 17.68,
+        "remaining": 917.33
+      },
+      {
+        "at": 3.95,
+        "damage": 17.68,
+        "remaining": 899.66
+      },
+      {
+        "at": 4.2,
+        "damage": 147.31,
+        "remaining": 752.34
+      },
+      {
+        "at": 4.25,
+        "damage": 17.68,
+        "remaining": 734.67
+      },
+      {
+        "at": 4.5,
+        "damage": 17.68,
+        "remaining": 716.99
+      },
+      {
+        "at": 4.55,
+        "damage": 17.68,
+        "remaining": 699.31
+      }
+    ],
+    "actions": [
+      "breath",
+      "claw_right"
+    ],
+    "flights": 0,
+    "phaseBreaks": 1
+  },
+  {
+    "seed": 721,
+    "loadout": "stress",
+    "maxHealth": 1100,
+    "victory": true,
+    "duration": 7.3,
+    "damageEvents": 18,
+    "firstHits": [
+      {
+        "at": 3.05,
+        "damage": 188.04,
+        "remaining": 911.96
+      },
+      {
+        "at": 3.35,
+        "damage": 22.57,
+        "remaining": 889.39
+      },
+      {
+        "at": 3.65,
+        "damage": 22.57,
+        "remaining": 866.83
+      },
+      {
+        "at": 3.95,
+        "damage": 22.57,
+        "remaining": 844.26
+      },
+      {
+        "at": 4.2,
+        "damage": 188.04,
+        "remaining": 656.22
+      },
+      {
+        "at": 4.25,
+        "damage": 22.57,
+        "remaining": 633.65
+      },
+      {
+        "at": 4.5,
+        "damage": 22.57,
+        "remaining": 611.09
+      },
+      {
+        "at": 4.55,
+        "damage": 22.57,
+        "remaining": 588.52
+      }
+    ],
+    "actions": [
+      "breath",
+      "claw_right"
+    ],
+    "flights": 0,
+    "phaseBreaks": 1
+  },
+  {
+    "seed": 1337,
+    "loadout": "tier1",
+    "maxHealth": 1100,
+    "victory": true,
+    "duration": 51,
+    "damageEvents": 32,
+    "firstHits": [
+      {
+        "at": 3.1,
+        "damage": 30,
+        "remaining": 1070
+      },
+      {
+        "at": 4.1,
+        "damage": 30,
+        "remaining": 1040
+      },
+      {
+        "at": 5.25,
+        "damage": 30,
+        "remaining": 1010
+      },
+      {
+        "at": 6.25,
+        "damage": 49.5,
+        "remaining": 960.5
+      },
+      {
+        "at": 7.4,
+        "damage": 30,
+        "remaining": 930.5
+      },
+      {
+        "at": 8.5,
+        "damage": 30,
+        "remaining": 900.5
+      },
+      {
+        "at": 9.65,
+        "damage": 30,
+        "remaining": 870.5
+      },
+      {
+        "at": 10.8,
+        "damage": 49.5,
+        "remaining": 821
+      }
+    ],
+    "actions": [
+      "breath",
+      "claw_right",
+      "bite"
+    ],
+    "flights": 2,
+    "phaseBreaks": 1
+  },
+  {
+    "seed": 1337,
+    "loadout": "evolved",
+    "maxHealth": 1100,
+    "victory": true,
+    "duration": 7.95,
+    "damageEvents": 26,
+    "firstHits": [
+      {
+        "at": 3.05,
+        "damage": 147.31,
+        "remaining": 952.69
+      },
+      {
+        "at": 3.35,
+        "damage": 17.68,
+        "remaining": 935.01
+      },
+      {
+        "at": 3.65,
+        "damage": 17.68,
+        "remaining": 917.33
+      },
+      {
+        "at": 3.95,
+        "damage": 17.68,
+        "remaining": 899.66
+      },
+      {
+        "at": 4.2,
+        "damage": 147.31,
+        "remaining": 752.34
+      },
+      {
+        "at": 4.25,
+        "damage": 17.68,
+        "remaining": 734.67
+      },
+      {
+        "at": 4.5,
+        "damage": 17.68,
+        "remaining": 716.99
+      },
+      {
+        "at": 4.55,
+        "damage": 17.68,
+        "remaining": 699.31
+      }
+    ],
+    "actions": [
+      "breath",
+      "claw_right"
+    ],
+    "flights": 0,
+    "phaseBreaks": 1
+  },
+  {
+    "seed": 1337,
+    "loadout": "stress",
+    "maxHealth": 1100,
+    "victory": true,
+    "duration": 7.3,
+    "damageEvents": 18,
+    "firstHits": [
+      {
+        "at": 3.05,
+        "damage": 188.04,
+        "remaining": 911.96
+      },
+      {
+        "at": 3.35,
+        "damage": 22.57,
+        "remaining": 889.39
+      },
+      {
+        "at": 3.65,
+        "damage": 22.57,
+        "remaining": 866.83
+      },
+      {
+        "at": 3.95,
+        "damage": 22.57,
+        "remaining": 844.26
+      },
+      {
+        "at": 4.2,
+        "damage": 188.04,
+        "remaining": 656.22
+      },
+      {
+        "at": 4.25,
+        "damage": 22.57,
+        "remaining": 633.65
+      },
+      {
+        "at": 4.5,
+        "damage": 22.57,
+        "remaining": 611.09
+      },
+      {
+        "at": 4.55,
+        "damage": 22.57,
+        "remaining": 588.52
+      }
+    ],
+    "actions": [
+      "breath",
+      "claw_right"
+    ],
+    "flights": 0,
+    "phaseBreaks": 1
+  }
+]

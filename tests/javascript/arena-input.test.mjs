@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { attachArenaInput, getArenaMovement, getArenaAim } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-input.js';
+import { attachArenaInput, getArenaMovement, getArenaAim, isArenaStickAim, getArenaPropFocus } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-input.js';
 
 class FakeTarget {
     listeners = new Map();
@@ -225,5 +225,76 @@ test('right thumb can aim west with a short drag while remaining on the right ha
     a.canvas.dispatch('touchmove', { touches: [{ ...left, clientX: 110 }, { ...right, clientX: 340 }] });
     assert.deepEqual(getArenaMovement(a.state), { x: 1, y: 0 });
     assert.deepEqual(getArenaAim(a.state), { x: -1, y: 0 });
+    assert.equal(isArenaStickAim(a.state, getArenaAim(a.state)), true, 'Mobile right-thumb drags use the same snap as gamepads.');
+    a.canvas.dispatch('touchend', { changedTouches: [{ ...right, clientX: 340 }] });
+    assert.equal(isArenaStickAim(a.state, getArenaAim(a.state)), false);
+    a.detach();
+});
+
+test('a tap on a registered destructible requests its stable ID once, without latching aim', () => {
+    const a = aimedArena();
+    a.state.latestSnapshot.environment = {
+        props: [{ id: 41, kind: 'barrel', x: .675, y: 700 / 1800, radius: 16, healthFraction: 1 }],
+    };
+    a.canvas.dispatch('pointerdown', { pointerType: 'mouse', clientX: 380, clientY: 370 });
+    a.win.dispatch('pointerup', { pointerType: 'mouse', clientX: 380, clientY: 370 });
+    assert.equal(getArenaPropFocus(a.state), 41);
+    assert.equal(getArenaPropFocus(a.state), null, 'Requests must not be replayed each frame.');
+    assert.deepEqual(getArenaAim(a.state), { x: 0, y: 0 });
+
+    // Eligibility is structural, not coupled to the named art asset.
+    a.state.latestSnapshot.environment.props = [
+        { id: 73, kind: 'future-breakable-relic', x: .675, y: 700 / 1800, radius: 16, healthFraction: 1 },
+    ];
+    const tap = touchAt(18, 380, 370);
+    a.canvas.dispatch('touchstart', { changedTouches: [tap] });
+    a.canvas.dispatch('touchend', { changedTouches: [tap] });
+    assert.equal(getArenaPropFocus(a.state), 73);
+    assert.deepEqual(getArenaAim(a.state), { x: 0, y: 0 });
+    a.detach();
+});
+
+test('movement drag, dead props, missed taps and cancelled input never request prop focus', () => {
+    const a = aimedArena(), tap = touchAt(17, 110, 520);
+    a.state.latestSnapshot.environment = {
+        props: [{ id: 7, kind: 'crate', x: .405, y: 850 / 1800, radius: 20, healthFraction: 0 }],
+    };
+    a.canvas.dispatch('touchstart', { changedTouches: [tap] });
+    a.canvas.dispatch('touchend', { changedTouches: [tap] });
+    assert.equal(getArenaPropFocus(a.state), null);
+
+    a.state.latestSnapshot.environment.props[0].healthFraction = 1;
+    a.canvas.dispatch('touchstart', { changedTouches: [tap] });
+    a.canvas.dispatch('touchmove', { touches: [{ ...tap, clientX: 145 }] });
+    a.canvas.dispatch('touchend', { changedTouches: [{ ...tap, clientX: 145 }] });
+    assert.equal(getArenaPropFocus(a.state), null);
+    a.canvas.dispatch('touchstart', { changedTouches: [tap] });
+    a.canvas.dispatch('touchcancel', { changedTouches: [tap] });
+    assert.equal(getArenaPropFocus(a.state), null);
+    a.detach();
+});
+
+test('focus is dropped on input reset and pause', () => {
+    const a = aimedArena();
+    a.state.pendingPropId = 123;
+    a.win.dispatch('blur');
+    assert.equal(getArenaPropFocus(a.state), null);
+    a.state.inputSuspended = false;
+    a.state.pendingPropId = 123;
+    a.state.latestSnapshot.paused = true;
+    assert.equal(getArenaPropFocus(a.state), null);
+    a.detach();
+});
+
+test('only active controller aiming requests target snap, not mouse or touch', () => {
+    const a = aimedArena();
+    a.state.gamepads = () => [{ connected: true, axes: [0, 0, 1, 0] }];
+    assert.equal(isArenaStickAim(a.state, getArenaAim(a.state)), true);
+    a.canvas.dispatch('pointerdown', { pointerType: 'mouse', clientX: 390, clientY: 370 });
+    assert.equal(isArenaStickAim(a.state, getArenaAim(a.state)), false);
+    a.win.dispatch('pointerup', { pointerType: 'mouse' });
+    assert.equal(isArenaStickAim(a.state, getArenaAim(a.state)), true);
+    a.state.gamepads = () => [{ connected: true, axes: [0, 0, .1, .1] }];
+    assert.equal(isArenaStickAim(a.state, getArenaAim(a.state)), false);
     a.detach();
 });

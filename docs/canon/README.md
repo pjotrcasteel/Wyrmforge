@@ -15,6 +15,10 @@
 | Platform and engineering | [Architecture & quality](architecture-and-quality.md) | C# simulation ownership, platform ports, tests, saves, integration quality |
 | Priorities | [Roadmap](roadmap.md) | Ordered product outcomes, open decisions and delivery gates |
 
+## Active Wet Forest visual-workstream handoff (23 October 2026)
+
+**Revised lighting scope (26 Oct 2026):** implement a reusable GPU lighting/visibility engine for approved Hunts, actors, effects and future non-Town world scenes. **The existing painted 2D Town is excluded from scene migration or replacement.** For supported GPU scenes, real light determines visibility; with all ambient/local/emission OFF, ordinary world art must be black (HUD/accessible warnings are separate). Prototype Fireball/torch/spot plus reflective water, original oak's leaf-on-leaf shadows, existing Hollowed/Ashling and **a mini Town corner with a lantern, wall, NPC, paving and well/foreground test**. Any new emitter is configured by data alone; normal maps do NOT themselves cast 3D shadows. The current mage art is temporary; **its replacement uses the Hollowed/Ashling sprite/animation/material pipeline**. **OWNER OVERRIDE (26 October 2026): the 3D Town rebuild and relightable Town replacement are CANCELLED. The approved 2D Town and its day/night/building/NPC art are to stay as the live presentation.** Generic GPU lighting research for Hunts/actors can continue without migrating the Town. See [current painted-Town canon](town-and-ux.md#approved-painted-2d-town--owner-decision-26-october-2026-locked) and the [revised roadmap](roadmap.md). This is the intended direction, **not shipped renderer functionality**.
+
 ## Authority and maintenance rules
 
 1. **Game source code at current HEAD** is the truth about what exists. Canonical topic documents express intended behavior, including unimplemented features. An open PR is **not shipped**. Never silently promote proposals or dated statuses into accepted requirements.

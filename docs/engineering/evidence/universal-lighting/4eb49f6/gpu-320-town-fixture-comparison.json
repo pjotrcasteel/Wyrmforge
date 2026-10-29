@@ -1,0 +1,79 @@
+[
+  {
+    "school": "fire",
+    "receiver": "wall",
+    "lowMasteryMeanRgb": 28.66940844134264,
+    "highMasteryMeanRgb": 51.42156862745098
+  },
+  {
+    "school": "fire",
+    "receiver": "npc-binding-proxy",
+    "lowMasteryMeanRgb": 24.88,
+    "highMasteryMeanRgb": 44.621587301587304
+  },
+  {
+    "school": "frost",
+    "receiver": "wall",
+    "lowMasteryMeanRgb": 37.7241054613936,
+    "highMasteryMeanRgb": 71.74628891104464
+  },
+  {
+    "school": "frost",
+    "receiver": "npc-binding-proxy",
+    "lowMasteryMeanRgb": 19.65142857142857,
+    "highMasteryMeanRgb": 43.65777777777778
+  },
+  {
+    "school": "storm",
+    "receiver": "wall",
+    "lowMasteryMeanRgb": 34.11360363354381,
+    "highMasteryMeanRgb": 61.39451091170932
+  },
+  {
+    "school": "storm",
+    "receiver": "npc-binding-proxy",
+    "lowMasteryMeanRgb": 28.217777777777776,
+    "highMasteryMeanRgb": 50.397460317460315
+  },
+  {
+    "school": "arcane",
+    "receiver": "wall",
+    "lowMasteryMeanRgb": 33.19012407222776,
+    "highMasteryMeanRgb": 67.41511576381966
+  },
+  {
+    "school": "arcane",
+    "receiver": "npc-binding-proxy",
+    "lowMasteryMeanRgb": 23.02285714285714,
+    "highMasteryMeanRgb": 46.30285714285714
+  },
+  {
+    "school": "death",
+    "receiver": "wall",
+    "lowMasteryMeanRgb": 16.778054724714746,
+    "highMasteryMeanRgb": 32.88587016727595
+  },
+  {
+    "school": "death",
+    "receiver": "npc-binding-proxy",
+    "lowMasteryMeanRgb": 10.12063492063492,
+    "highMasteryMeanRgb": 21.706666666666667
+  },
+  {
+    "school": "binding",
+    "receiver": "wall",
+    "lowMasteryMeanRgb": 26.059238949817214,
+    "highMasteryMeanRgb": 45.81319929101584
+  },
+  {
+    "school": "binding",
+    "receiver": "npc-binding-proxy",
+    "lowMasteryMeanRgb": 14.208253968253969,
+    "highMasteryMeanRgb": 27.569523809523808
+  },
+  {
+    "caster": "roof",
+    "receiver": "wall",
+    "changedShadowPixels": 11123
+  }
+]

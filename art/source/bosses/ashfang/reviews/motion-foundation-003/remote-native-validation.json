@@ -1,0 +1,751 @@
+{
+  "geometry": "f8b86efb488d86aea081f504e98669c732de872c8e0c5e2596a47032e7202ca5",
+  "uv": "c97da615c59384f82d9bfb8fa9ef4bbfabad1da0b3c67a9c89e9c4425c67e684",
+  "weights": "b8989f8309920c69dc2061eba0ebb03f4cf2fda07a11e65c96a7ee27f5f07205",
+  "bones": "65fd1f700fb8dd1776348246e890e3da145751a7e69156add8eba2e5e4c04374",
+  "boneHierarchy": [
+    [
+      "Spine03",
+      null
+    ],
+    [
+      "Spine02",
+      "Spine03"
+    ],
+    [
+      "Spine01",
+      "Spine02"
+    ],
+    [
+      "Neck03",
+      "Spine01"
+    ],
+    [
+      "Neck02",
+      "Neck03"
+    ],
+    [
+      "Neck01",
+      "Neck02"
+    ],
+    [
+      "Head",
+      "Neck01"
+    ],
+    [
+      "UpperHead",
+      "Head"
+    ],
+    [
+      "Eye_r",
+      "UpperHead"
+    ],
+    [
+      "Eye_r_end",
+      "Eye_r"
+    ],
+    [
+      "Eye_l",
+      "UpperHead"
+    ],
+    [
+      "Eye_l_end",
+      "Eye_l"
+    ],
+    [
+      "LowerHead",
+      "Head"
+    ],
+    [
+      "LowerHead_end",
+      "LowerHead"
+    ],
+    [
+      "Tongue01",
+      "Head"
+    ],
+    [
+      "Tongue02",
+      "Tongue01"
+    ],
+    [
+      "Tongue02_end",
+      "Tongue02"
+    ],
+    [
+      "Shoulder_r",
+      "Spine01"
+    ],
+    [
+      "UpperArm_r",
+      "Shoulder_r"
+    ],
+    [
+      "ArmConnection_r",
+      "UpperArm_r"
+    ],
+    [
+      "Wing0401_r",
+      "ArmConnection_r"
+    ],
+    [
+      "Wing0402_r",
+      "Wing0401_r"
+    ],
+    [
+      "Wing0402_r_end",
+      "Wing0402_r"
+    ],
+    [
+      "ForeArm_r",
+      "ArmConnection_r"
+    ],
+    [
+      "Arm_r",
+      "ForeArm_r"
+    ],
+    [
+      "Wing0301_r",
+      "Arm_r"
+    ],
+    [
+      "Wing0302_r",
+      "Wing0301_r"
+    ],
+    [
+      "Wing0303_r",
+      "Wing0302_r"
+    ],
+    [
+      "Wing0303_r_end",
+      "Wing0303_r"
+    ],
+    [
+      "Wing0201_r",
+      "Arm_r"
+    ],
+    [
+      "Wing0202_r",
+      "Wing0201_r"
+    ],
+    [
+      "Wing0203_r",
+      "Wing0202_r"
+    ],
+    [
+      "Wing0203_r_end",
+      "Wing0203_r"
+    ],
+    [
+      "Wing0101_r",
+      "Arm_r"
+    ],
+    [
+      "Wing0102_r",
+      "Wing0101_r"
+    ],
+    [
+      "Wing0103_r",
+      "Wing0102_r"
+    ],
+    [
+      "Wing0103_r_end",
+      "Wing0103_r"
+    ],
+    [
+      "Finger_r",
+      "Arm_r"
+    ],
+    [
+      "Finger_r_end",
+      "Finger_r"
+    ],
+    [
+      "Shoulder_l",
+      "Spine01"
+    ],
+    [
+      "UpperArm_l",
+      "Shoulder_l"
+    ],
+    [
+      "ArmConnection_l",
+      "UpperArm_l"
+    ],
+    [
+      "Wing0401_l",
+      "ArmConnection_l"
+    ],
+    [
+      "Wing0402_l",
+      "Wing0401_l"
+    ],
+    [
+      "Wing0402_l_end",
+      "Wing0402_l"
+    ],
+    [
+      "ForeArm_l",
+      "ArmConnection_l"
+    ],
+    [
+      "Arm_l",
+      "ForeArm_l"
+    ],
+    [
+      "Wing0301_l",
+      "Arm_l"
+    ],
+    [
+      "Wing0302_l",
+      "Wing0301_l"
+    ],
+    [
+      "Wing0303_l",
+      "Wing0302_l"
+    ],
+    [
+      "Wing0303_l_end",
+      "Wing0303_l"
+    ],
+    [
+      "Wing0201_l",
+      "Arm_l"
+    ],
+    [
+      "Wing0202_l",
+      "Wing0201_l"
+    ],
+    [
+      "Wing0203_l",
+      "Wing0202_l"
+    ],
+    [
+      "Wing0203_l_end",
+      "Wing0203_l"
+    ],
+    [
+      "Wing0101_l",
+      "Arm_l"
+    ],
+    [
+      "Wing0102_l",
+      "Wing0101_l"
+    ],
+    [
+      "Wing0103_l",
+      "Wing0102_l"
+    ],
+    [
+      "Wing0103_l_end",
+      "Wing0103_l"
+    ],
+    [
+      "Finger_l",
+      "Arm_l"
+    ],
+    [
+      "Finger_l_end",
+      "Finger_l"
+    ],
+    [
+      "UpperLeg_l",
+      "Spine03"
+    ],
+    [
+      "LegConnection_l",
+      "UpperLeg_l"
+    ],
+    [
+      "ForeLeg_l",
+      "LegConnection_l"
+    ],
+    [
+      "ForeLegConnection_l",
+      "ForeLeg_l"
+    ],
+    [
+      "FeetConnection_l",
+      "ForeLegConnection_l"
+    ],
+    [
+      "Feet_l",
+      "FeetConnection_l"
+    ],
+    [
+      "Claw02_l",
+      "Feet_l"
+    ],
+    [
+      "Claw02_l_end",
+      "Claw02_l"
+    ],
+    [
+      "Claw01_l",
+      "Feet_l"
+    ],
+    [
+      "Claw01_l_end",
+      "Claw01_l"
+    ],
+    [
+      "Claw03_l",
+      "Feet_l"
+    ],
+    [
+      "Claw03_l_end",
+      "Claw03_l"
+    ],
+    [
+      "Claw04_l",
+      "Feet_l"
+    ],
+    [
+      "Claw04_l_end",
+      "Claw04_l"
+    ],
+    [
+      "UpperLeg_r",
+      "Spine03"
+    ],
+    [
+      "LegConnection_r",
+      "UpperLeg_r"
+    ],
+    [
+      "ForeLeg_r",
+      "LegConnection_r"
+    ],
+    [
+      "ForeLegConnection_r",
+      "ForeLeg_r"
+    ],
+    [
+      "FeetConnection_r",
+      "ForeLegConnection_r"
+    ],
+    [
+      "Feet_r",
+      "FeetConnection_r"
+    ],
+    [
+      "Claw02_r",
+      "Feet_r"
+    ],
+    [
+      "Claw02_r_end",
+      "Claw02_r"
+    ],
+    [
+      "Claw01_r",
+      "Feet_r"
+    ],
+    [
+      "Claw01_r_end",
+      "Claw01_r"
+    ],
+    [
+      "Claw03_r",
+      "Feet_r"
+    ],
+    [
+      "Claw03_r_end",
+      "Claw03_r"
+    ],
+    [
+      "Claw04_r",
+      "Feet_r"
+    ],
+    [
+      "Claw04_r_end",
+      "Claw04_r"
+    ],
+    [
+      "Tail01",
+      "Spine03"
+    ],
+    [
+      "Tail02",
+      "Tail01"
+    ],
+    [
+      "Tail03",
+      "Tail02"
+    ],
+    [
+      "Tail04",
+      "Tail03"
+    ],
+    [
+      "Tail05",
+      "Tail04"
+    ],
+    [
+      "Tail06",
+      "Tail05"
+    ],
+    [
+      "Tail07",
+      "Tail06"
+    ],
+    [
+      "Tail08",
+      "Tail07"
+    ],
+    [
+      "Tail09",
+      "Tail08"
+    ],
+    [
+      "Tail10",
+      "Tail09"
+    ],
+    [
+      "Tail10_end",
+      "Tail10"
+    ],
+    [
+      "LowerTail01_l",
+      "Tail09"
+    ],
+    [
+      "LowerTail02_l",
+      "LowerTail01_l"
+    ],
+    [
+      "LowerTail02_l_end",
+      "LowerTail02_l"
+    ],
+    [
+      "LowerTail01_r",
+      "Tail09"
+    ],
+    [
+      "LowerTail02_r",
+      "LowerTail01_r"
+    ],
+    [
+      "LowerTail02_r_end",
+      "LowerTail02_r"
+    ],
+    [
+      "UpperTail01_l",
+      "Tail08"
+    ],
+    [
+      "UpperTail02_l",
+      "UpperTail01_l"
+    ],
+    [
+      "UpperTail02_l_end",
+      "UpperTail02_l"
+    ],
+    [
+      "UpperTail01_r",
+      "Tail08"
+    ],
+    [
+      "UpperTail02_r",
+      "UpperTail01_r"
+    ],
+    [
+      "UpperTail02_r_end",
+      "UpperTail02_r"
+    ]
+  ],
+  "objects": [
+    [
+      "Zagmatorah",
+      "MESH"
+    ],
+    [
+      "Zahmatorah_Skeleton",
+      "ARMATURE"
+    ]
+  ],
+  "transforms": {
+    "Zagmatorah": [
+      [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        1.0,
+        1.6292067073209182e-07,
+        0.0
+      ],
+      [
+        0.0,
+        -1.6292067073209182e-07,
+        1.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "Zahmatorah_Skeleton": [
+      [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        1.0,
+        1.6292067073209182e-07,
+        0.0
+      ],
+      [
+        0.0,
+        -1.6292067073209182e-07,
+        1.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ]
+  },
+  "vertices": 19841,
+  "polygons": 19588,
+  "boneCount": 112,
+  "tailMask": [
+    [
+      "Remove tail fan - reversible owner edit",
+      "MASK",
+      "Ashfang retain body and tapered tail"
+    ]
+  ],
+  "baselineChecks": {
+    "geometry": true,
+    "uv": true,
+    "weights": true,
+    "bones": true,
+    "boneHierarchy": true,
+    "objects": true,
+    "vertices": true,
+    "polygons": true,
+    "boneCount": true,
+    "tailMask": true,
+    "transforms": true
+  },
+  "transformTolerance": 1e-06,
+  "transformMaxAbsError": 0.0,
+  "missingDependencies": [],
+  "packedImages": 20,
+  "images": [
+    {
+      "name": "DragonEye_Albedo.png",
+      "path": "//..\\M0-001\\original\\download\\textures\\DragonEye_Albedo.png",
+      "size": [
+        4096,
+        4096
+      ],
+      "packed": true,
+      "exists": false
+    },
+    {
+      "name": "DragonEye_Normal.png",
+      "path": "//..\\M0-001\\original\\download\\textures\\DragonEye_Normal.png",
+      "size": [
+        4096,
+        4096
+      ],
+      "packed": true,
+      "exists": false
+    },
+    {
+      "name": "DragonEye_Opacity.png",
+      "path": "//..\\M0-001\\original\\download\\textures\\DragonEye_Opacity.png",
+      "size": [
+        4096,
+        4096
+      ],
+      "packed": true,
+      "exists": false
+    },
+    {
+      "name": "DragonEye_Roughness.png",
+      "path": "//..\\M0-001\\original\\download\\textures\\DragonEye_Roughness.png",
+      "size": [
+        4096,
+        4096
+      ],
+      "packed": true,
+      "exists": false
+    },
+    {
+      "name": "DragonSkin_Albedo.png",
+      "path": "//..\\M0-001\\original\\download\\textures\\DragonSkin_Albedo.png",
+      "size": [
+        4096,
+        4096
+      ],
+      "packed": true,
+      "exists": false
+    },
+    {
+      "name": "DragonSkin_Albedo.png.001",
+      "path": "//..\\M0-001\\original\\download\\textures\\DragonSkin_Albedo.png",
+      "size": [
+        4096,
+        4096
+      ],
+      "packed": true,
+      "exists": false
+    },
+    {
+      "name": "DragonSkin_AO.png",
+      "path": "//..\\M0-001\\original\\download\\textures\\DragonSkin_AO.png",
+      "size": [
+        4096,
+        4096
+      ],
+      "packed": true,
+      "exists": false
+    },
+    {
+      "name": "DragonSkin_Normal.png",
+      "path": "//..\\M0-001\\original\\download\\textures\\DragonSkin_Normal.png",
+      "size": [
+        4096,
+        4096
+      ],
+      "packed": true,
+      "exists": false
+    },
+    {
+      "name": "DragonSkin_Normal.png.001",
+      "path": "//..\\M0-001\\original\\download\\textures\\DragonSkin_Normal.png",
+      "size": [
+        4096,
+        4096
+      ],
+      "packed": true,
+      "exists": false
+    },
+    {
+      "name": "DragonSkin_Roughness.png",
+      "path": "//..\\M0-001\\original\\download\\textures\\DragonSkin_Roughness.png",
+      "size": [
+        4096,
+        4096
+      ],
+      "packed": true,
+      "exists": false
+    },
+    {
+      "name": "DragonSkin_Roughness.png.001",
+      "path": "//..\\M0-001\\original\\download\\textures\\DragonSkin_Roughness.png",
+      "size": [
+        4096,
+        4096
+      ],
+      "packed": true,
+      "exists": false
+    },
+    {
+      "name": "DragonWing_Albedo.png",
+      "path": "//..\\M0-001\\original\\download\\textures\\DragonWing_Albedo.png",
+      "size": [
+        4096,
+        4096
+      ],
+      "packed": true,
+      "exists": false
+    },
+    {
+      "name": "DragonWing_Albedo.png.001",
+      "path": "//..\\M0-001\\original\\download\\textures\\DragonWing_Albedo.png",
+      "size": [
+        4096,
+        4096
+      ],
+      "packed": true,
+      "exists": false
+    },
+    {
+      "name": "DragonWing_AO.png",
+      "path": "//..\\M0-001\\original\\download\\textures\\DragonWing_AO.png",
+      "size": [
+        4096,
+        4096
+      ],
+      "packed": true,
+      "exists": false
+    },
+    {
+      "name": "DragonWing_Normal.png",
+      "path": "//..\\M0-001\\original\\download\\textures\\DragonWing_Normal.png",
+      "size": [
+        4096,
+        4096
+      ],
+      "packed": true,
+      "exists": false
+    },
+    {
+      "name": "DragonWing_Normal.png.001",
+      "path": "//..\\M0-001\\original\\download\\textures\\DragonWing_Normal.png",
+      "size": [
+        4096,
+        4096
+      ],
+      "packed": true,
+      "exists": false
+    },
+    {
+      "name": "DragonWing_Opacity.png",
+      "path": "//..\\M0-001\\original\\download\\textures\\DragonWing_Opacity.png",
+      "size": [
+        4096,
+        4096
+      ],
+      "packed": true,
+      "exists": false
+    },
+    {
+      "name": "DragonWing_Opacity.png.001",
+      "path": "//..\\M0-001\\original\\download\\textures\\DragonWing_Opacity.png",
+      "size": [
+        4096,
+        4096
+      ],
+      "packed": true,
+      "exists": false
+    },
+    {
+      "name": "DragonWing_Roughness.png",
+      "path": "//..\\M0-001\\original\\download\\textures\\DragonWing_Roughness.png",
+      "size": [
+        4096,
+        4096
+      ],
+      "packed": true,
+      "exists": false
+    },
+    {
+      "name": "DragonWing_Roughness.png.001",
+      "path": "//..\\M0-001\\original\\download\\textures\\DragonWing_Roughness.png",
+      "size": [
+        4096,
+        4096
+      ],
+      "packed": true,
+      "exists": false
+    }
+  ],
+  "source": "C:\\Wyrmforge\\ashfang-zagmatorah\\artifacts\\ashfang\\remote-foundation-003.blend",
+  "sourceSha256": "13173a60ee0f71276f75abe52ed22b9c17f74680d33bf6e2bbaa123aa886bed0"
+}

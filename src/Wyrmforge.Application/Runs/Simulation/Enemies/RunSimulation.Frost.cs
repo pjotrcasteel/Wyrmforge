@@ -47,8 +47,6 @@ public sealed partial class RunSimulation
     private Vector2D FrostMovementVelocity(Vector2D desired, double delta)
     {
         player.Chill.Tick(delta);
-        // The Whitefang reads which way the hunter is going; a standing hunter has no heading.
-        playerHeading = desired == Vector2D.Zero ? Vector2D.Zero : Vector2D.DirectionTo(Vector2D.Zero, desired);
         desired *= player.Chill.SpeedMultiplier;
         if (!PlayerOnBlackIce)
         {
@@ -113,7 +111,11 @@ public sealed partial class RunSimulation
         Vector2D direction, double speed, ref int committed, int committedCap)
     {
         var feintFrom = enemy.Position;
-        switch (stalker.Tick(delta, enemy.Position, player.Position, playerHeading, !crossing && committed < committedCap))
+        // A stalker can react to visible physical displacement, never unexecuted movement input.
+        var observedHeading = Vector2D.Distance(enemy.Position, player.Position) <= 360
+            && (arenaEnvironment?.HasLineOfSight(enemy.Position, player.Position, arenaWidth, arenaHeight) ?? true)
+            ? playerHeading : Vector2D.Zero;
+        switch (stalker.Tick(delta, enemy.Position, player.Position, observedHeading, !crossing && committed < committedCap))
         {
             case WhitefangEvent.FeintStarted:
                 committed++;

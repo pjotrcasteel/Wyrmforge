@@ -116,7 +116,7 @@ public sealed partial class RunSimulation
         if (target.Health <= 0 || damage <= 0) return false;
         if (target is DragonState protectedDragon)
         {
-            if (!dragonHuntState.CanTargetDragon) return false;
+            if (!CanTargetActiveDragon) return false;
             if (dragonHuntState.TryStartPhaseBreakForDamage(protectedDragon.Health, damage, protectedDragon.MaxHealth))
             {
                 protectedDragon.Health = protectedDragon.MaxHealth * 0.5;

@@ -1,0 +1,24 @@
+[
+  {
+    "id": "hollowed",
+    "sourceRig": "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-pixel-v3/hollow-rigged.blend",
+    "sourcePoseSha256": "a033ebe51fcd95c7e5d82f42d432c2a86ad4f5afdc2b376a150137c12829f8e9",
+    "albedoSha256": "efa6ac701a7b7030288fb6b4cc2ba9c23500f552b6ffba55873d995460f6e165",
+    "normalSpace": "sprite-tangent (authored camera right/up/toward)",
+    "frames": 128,
+    "minimumSilhouetteIoU": 0.9856957087126138,
+    "caster": "pose-synchronous original alpha silhouette; not volumetric mesh",
+    "scope": "walk only; attack/death remain pending; no production adoption"
+  },
+  {
+    "id": "ashling",
+    "sourceRig": "art/source/enemies/ashling/model/local-appearance-002/rigged-block-v4a/ashling-rigged.blend",
+    "sourcePoseSha256": "a1db8e543f460fa95491a9c32d23c4e50951d1d1a8ba827783beab68657c8f07",
+    "albedoSha256": "b81916287a5cf3a58f82f6ecee29975a833b39d67adc4787af210ee12191d770",
+    "normalSpace": "sprite-tangent (authored camera right/up/toward)",
+    "frames": 128,
+    "minimumSilhouetteIoU": 0.9852941176470589,
+    "caster": "pose-synchronous original alpha silhouette; not volumetric mesh",
+    "scope": "walk only; attack/death remain pending; no production adoption"
+  }
+]

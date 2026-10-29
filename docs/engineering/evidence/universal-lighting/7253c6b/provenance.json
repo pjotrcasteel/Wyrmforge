@@ -1,0 +1,13 @@
+{
+  "head": "7253c6b668d8b3ec9c34b1cc47acc8269af1e293",
+  "testedMerge": "e577f65512e0a3b97e2b7274097031b9da26b00b",
+  "run": 40165163066,
+  "artifact": 12588420799,
+  "artifactSha256": "3527ae95164dd5d3c233ea34f17092f616ee90fd3d1585c8cfdd68035ecf6c2e",
+  "files": {
+    "gpu-390-hollowed-source-near.png": "a51e35e387710697b1bf27331053748f6361e82d7239d76d6736443c0fc4ff76",
+    "gpu-390-ashling-source-overlap.png": "5bd5087f7893f9640da8e7147c3adee9a244a07e9b7e767067ec1cae74b11c4c",
+    "gpu-320-actor-source-lifecycle-comparison.json": "7e64460ae88adefe3a233ebfa114ddd6410012270718def3edadd1cf98137e84",
+    "gpu-390-actor-source-lifecycle-comparison.json": "c9a29a7b6197e0e9871836ba33f1fe6d7ead65bf328034bda32e8e1695cc22f5"
+  }
+}

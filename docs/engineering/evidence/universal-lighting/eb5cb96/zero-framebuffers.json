@@ -1,0 +1,142 @@
+[
+  {
+    "capture": "gpu-320-close-actors-zero.json",
+    "framebuffer": [
+      296,
+      409
+    ],
+    "rgbChannels": 363192,
+    "maxRgb": 0,
+    "nonzeroPixels": 0
+  },
+  {
+    "capture": "gpu-320-close-oak-zero.json",
+    "framebuffer": [
+      296,
+      409
+    ],
+    "rgbChannels": 363192,
+    "maxRgb": 0,
+    "nonzeroPixels": 0
+  },
+  {
+    "capture": "gpu-320-close-town-zero.json",
+    "framebuffer": [
+      296,
+      409
+    ],
+    "rgbChannels": 363192,
+    "maxRgb": 0,
+    "nonzeroPixels": 0
+  },
+  {
+    "capture": "gpu-320-close-water-zero.json",
+    "framebuffer": [
+      296,
+      409
+    ],
+    "rgbChannels": 363192,
+    "maxRgb": 0,
+    "nonzeroPixels": 0
+  },
+  {
+    "capture": "gpu-320-cutout-zero.json",
+    "framebuffer": [
+      296,
+      409
+    ],
+    "rgbChannels": 363192,
+    "maxRgb": 0,
+    "nonzeroPixels": 0
+  },
+  {
+    "capture": "gpu-320-inspection-key-zero.json",
+    "framebuffer": [
+      296,
+      409
+    ],
+    "rgbChannels": 363192,
+    "maxRgb": 0,
+    "nonzeroPixels": 0
+  },
+  {
+    "capture": "gpu-320-zero.json",
+    "framebuffer": [
+      296,
+      409
+    ],
+    "rgbChannels": 363192,
+    "maxRgb": 0,
+    "nonzeroPixels": 0
+  },
+  {
+    "capture": "gpu-390-close-actors-zero.json",
+    "framebuffer": [
+      366,
+      608
+    ],
+    "rgbChannels": 667584,
+    "maxRgb": 0,
+    "nonzeroPixels": 0
+  },
+  {
+    "capture": "gpu-390-close-oak-zero.json",
+    "framebuffer": [
+      366,
+      608
+    ],
+    "rgbChannels": 667584,
+    "maxRgb": 0,
+    "nonzeroPixels": 0
+  },
+  {
+    "capture": "gpu-390-close-town-zero.json",
+    "framebuffer": [
+      366,
+      608
+    ],
+    "rgbChannels": 667584,
+    "maxRgb": 0,
+    "nonzeroPixels": 0
+  },
+  {
+    "capture": "gpu-390-close-water-zero.json",
+    "framebuffer": [
+      366,
+      608
+    ],
+    "rgbChannels": 667584,
+    "maxRgb": 0,
+    "nonzeroPixels": 0
+  },
+  {
+    "capture": "gpu-390-cutout-zero.json",
+    "framebuffer": [
+      366,
+      608
+    ],
+    "rgbChannels": 667584,
+    "maxRgb": 0,
+    "nonzeroPixels": 0
+  },
+  {
+    "capture": "gpu-390-inspection-key-zero.json",
+    "framebuffer": [
+      366,
+      608
+    ],
+    "rgbChannels": 667584,
+    "maxRgb": 0,
+    "nonzeroPixels": 0
+  },
+  {
+    "capture": "gpu-390-zero.json",
+    "framebuffer": [
+      366,
+      608
+    ],
+    "rgbChannels": 667584,
+    "maxRgb": 0,
+    "nonzeroPixels": 0
+  }
+]

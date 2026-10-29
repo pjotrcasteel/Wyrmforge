@@ -1,0 +1,16 @@
+{
+  "head": "4eb49f68f573dd3f92892562cb89fc7dca0d9fed",
+  "testedMerge": "faee19ffc706860d4fd87b1bec49f88f0f21017d",
+  "run": 40167497344,
+  "artifact": 12588774219,
+  "artifactSha256": "eb7757125a49b9ea946c738a16d6e0fa4fbfc1d67b29ebcbec3d6f3dfbbd53fc",
+  "files": {
+    "gpu-390-town-arcane-mastery.png": "77c3031e7cee2acb47b8ed786c79b12eff7f1c99f1397c0ea9ad0bb347d5882b",
+    "gpu-390-town-roof-shadow-on-wall.png": "ec97c5c9314af97f4eb9abb7d0976edeeb4074826cdd6de3b254409ae786025b",
+    "gpu-390-town-roof-cast-off.png": "51af1ec553d5aa84d40882e5775c0b8e519cb40b001130ef0451c2bcb71055df",
+    "gpu-320-town-fixture-comparison.json": "a168ca493a5452577d490b35b1e0b69e1775614db3b0857ad817bbee48e1754e",
+    "gpu-390-town-fixture-comparison.json": "ac029e49368bc57b737f7c4d9d4ede71f36b8b71293fa87e42187335dafee807",
+    "gpu-390-town-vacant.json": "47ff89a7b20e55d809e79b9973b02c6756723063032eeb2303ac591e7b6d0267",
+    "gpu-390-town-fixture-day.json": "7b50c7f7a332d9d22acd2910cb6c7194a8dcc2cf25362bea071ce2d13c5ca929"
+  }
+}

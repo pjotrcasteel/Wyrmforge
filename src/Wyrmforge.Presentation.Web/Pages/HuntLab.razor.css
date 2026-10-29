@@ -16,3 +16,10 @@
 .hunt-lab-stage span{font-size:.55rem;letter-spacing:.08em;color:#c6b2d6}
 .hunt-lab-note{max-width:1100px;margin:8px auto;color:#968aa3;font-size:.7rem;line-height:1.45}
 @media(max-width:650px){.hunt-lab{padding:10px}.hunt-lab-head{display:grid}.hunt-lab-actions{gap:6px}.hunt-lab-settings{gap:7px}.hunt-lab-settings label:not(.practice-toggle){flex:1 1 29%}.hunt-lab-settings select,.hunt-lab-settings input[type=number]{width:100%}.hunt-lab-settings>button{flex:1}.hunt-lab-surface{height:57dvh;min-height:380px}.hunt-lab-stage{top:5px;left:5px}}
+
+.hunt-lab-options{max-width:1100px;margin:0 auto 10px;border:1px solid #463655;border-radius:8px;padding:8px 12px}
+.hunt-lab-options summary{cursor:pointer;min-height:28px;align-content:center;font-size:.75rem;color:#cbbbd4}
+.hunt-lab-options[open] .hunt-lab-settings{margin-top:12px}
+.hunt-lab-surface{height:min(75dvh,850px)}
+.hunt-lab-stage{font-size:.65rem;padding:5px 8px;max-width:220px}
+@media(max-width:650px){.hunt-lab-head{gap:9px;margin-bottom:9px}.hunt-lab-head h1{font-size:1.35rem}.hunt-lab-head p{font-size:.7rem;line-height:1.35}.hunt-lab-actions a{display:none}.hunt-lab-surface{height:calc(100dvh - 245px);min-height:420px}.hunt-lab-note{font-size:.6rem}.hunt-lab-stage{max-width:190px}}

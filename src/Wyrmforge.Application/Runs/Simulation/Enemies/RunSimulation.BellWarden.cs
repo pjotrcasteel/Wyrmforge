@@ -142,6 +142,7 @@ public sealed partial class RunSimulation
     {
         var definition = EnemyCatalog.Get(bellRoadKind);
         var (health, speed) = EnemyStats(definition);
+        if (IsFireTierOneHunt && bellRoadKind == EnemyKind.BellWarden) health *= FireTierOneBellWardenDurability;
         bellWarden = new EnemyState(++enemyId, bellWardenSpot, definition.Radius, health, speed, bellRoadKind);
         enemies.Add(bellWarden);
         RecordEnemyEncounter(bellRoadKind);

@@ -1,0 +1,10 @@
+{
+  "source": "../motion-library-014/ashfang-animations.blend",
+  "master": "ashfang-animation-foundation.blend",
+  "sha256": "c4c83b1e00be3a4c23dd6f040052d96a5f9c749f647300c2bb206e563c9463df",
+  "actions": 41,
+  "bones": 112,
+  "packed": true,
+  "ownerAcceptedMotion": false,
+  "runtimeIntegrated": false
+}

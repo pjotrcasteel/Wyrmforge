@@ -236,77 +236,54 @@
 .game-shell.refuge-home .refuge-town-v2-toolbar output {max-width:150px;overflow-wrap:anywhere}
 
 
-/* Recolor the painted SPELL EMITTERS only: the open dome aperture and portal.
-   Color blending preserves their existing luminance/detail and leaves masonry untouched.
-   These are two independently feathered masks, not a filter over canonical artwork. */
-.game-shell.refuge-home .refuge-town-nexus-chroma {
-    --nexus-emitter: 255 177 59;
-    position:absolute;left:3.8%;top:7.5%;width:28%;height:29.5%;
-    z-index:1;pointer-events:none;user-select:none;
-    background:rgb(var(--nexus-emitter));
-    opacity:.86;mix-blend-mode:color;
-    -webkit-mask-image:
-        radial-gradient(ellipse 11% 19% at 53% 17%,#000 51%,transparent 100%),
-        radial-gradient(ellipse 8% 20% at 76% 82%,#000 54%,transparent 100%);
-    mask-image:
-        radial-gradient(ellipse 11% 19% at 53% 17%,#000 51%,transparent 100%),
-        radial-gradient(ellipse 8% 20% at 76% 82%,#000 54%,transparent 100%);
+/* Six independently painted, user-approved Nexus building variants.
+   Alpha plate pixels are in the left 560 x 450 of the authoritative 1672 x 941
+   night town panorama. Other buildings, vacant artwork and navigation are untouched. */
+.game-shell.refuge-home .refuge-town-nexus-school-art {
+    position:absolute;left:0;top:0;z-index:1;
+    display:block;width:33.49282%;height:47.82147%;
+    object-fit:fill;pointer-events:none;user-select:none;-webkit-user-drag:none;
 }
-.game-shell.refuge-home .refuge-town-nexus-chroma[data-nexus-school="fire"] { --nexus-emitter:255 177 59 }
-.game-shell.refuge-home .refuge-town-nexus-chroma[data-nexus-school="frost"] { --nexus-emitter:160 238 255 }
-.game-shell.refuge-home .refuge-town-nexus-chroma[data-nexus-school="storm"] { --nexus-emitter:240 225 138 }
-.game-shell.refuge-home .refuge-town-nexus-chroma[data-nexus-school="arcane"] { --nexus-emitter:222 170 255 }
-.game-shell.refuge-home .refuge-town-nexus-chroma[data-nexus-school="death"] { --nexus-emitter:186 247 151 }
-.game-shell.refuge-home .refuge-town-nexus-chroma[data-nexus-school="binding"] { --nexus-emitter:175 251 231 }
-
-/* Arcane Nexus magic grows with points invested in the currently followed school.
-   The approved town image and vacant/active artwork remain completely unchanged.
-   This painted light sits UNDER NPCs, cutouts, navigation and the V2 canvas. */
-.game-shell.refuge-home .refuge-town-nexus-radiance {
-    --nexus-light: 244 115 55;
-    --nexus-light-core: 255 194 93;
-    position:absolute;left:3.8%;top:7.5%;width:28%;height:29.5%;
-    z-index:1;pointer-events:none;user-select:none;
-    opacity:var(--nexus-radiance-strength, .16);
+.game-shell.refuge-home .refuge-town-nexus-school-art--mastery {
+    opacity:calc(var(--nexus-radiance-strength, .16) * .20);
     mix-blend-mode:screen;
-    /* Two magic emitters in the approved painting: the Nexus dome and portal.
-       Light the actual spellwork, not a generic blob across the masonry. */
-    background:
-        radial-gradient(ellipse 16% 24% at 53% 17%, rgb(var(--nexus-light-core) / .94), transparent 95%),
-        radial-gradient(ellipse 13% 25% at 76% 82%, rgb(var(--nexus-light-core) / .91), transparent 96%),
-        radial-gradient(ellipse 24% 32% at 76% 82%, rgb(var(--nexus-light) / .51), transparent 98%),
-        radial-gradient(ellipse 23% 29% at 53% 17%, rgb(var(--nexus-light) / .34), transparent 98%);
-    transform-origin:49% 45%;
-    animation:nexus-magical-light 7s ease-in-out infinite;
-}
-.game-shell.refuge-home .refuge-town-nexus-radiance[data-nexus-school="fire"] {
-    --nexus-light: 242 83 32;
-    --nexus-light-core: 255 177 59;
-}
-.game-shell.refuge-home .refuge-town-nexus-radiance[data-nexus-school="frost"] {
-    --nexus-light: 71 191 247;
-    --nexus-light-core: 185 241 255;
-}
-.game-shell.refuge-home .refuge-town-nexus-radiance[data-nexus-school="storm"] {
-    --nexus-light: 105 141 252;
-    --nexus-light-core: 240 225 138;
-}
-.game-shell.refuge-home .refuge-town-nexus-radiance[data-nexus-school="arcane"] {
-    --nexus-light: 153 96 242;
-    --nexus-light-core: 222 170 255;
-}
-.game-shell.refuge-home .refuge-town-nexus-radiance[data-nexus-school="death"] {
-    --nexus-light: 102 202 137;
-    --nexus-light-core: 186 247 151;
-}
-.game-shell.refuge-home .refuge-town-nexus-radiance[data-nexus-school="binding"] {
-    --nexus-light: 78 202 187;
-    --nexus-light-core: 175 251 231;
-}
-@keyframes nexus-magical-light {
-    0%,100% { transform:scale(.98); }
-    50% { transform:scale(1.035); }
+    /* Illuminate only existing magical crystals, portals and runes—not roofs,
+       masonry, other buildings or the ground. These are lighting masks, not
+       color filters; all six source paintings are already different artwork. */
+    -webkit-mask-image:
+        radial-gradient(ellipse 8% 10% at 55% 28%,#000 48%,transparent 100%),
+        radial-gradient(ellipse 7% 12% at 76% 65%,#000 48%,transparent 100%),
+        radial-gradient(ellipse 7% 8% at 42% 83%,#000 46%,transparent 100%),
+        radial-gradient(ellipse 5% 6% at 11% 75%,#000 43%,transparent 100%);
+    mask-image:
+        radial-gradient(ellipse 8% 10% at 55% 28%,#000 48%,transparent 100%),
+        radial-gradient(ellipse 7% 12% at 76% 65%,#000 48%,transparent 100%),
+        radial-gradient(ellipse 7% 8% at 42% 83%,#000 46%,transparent 100%),
+        radial-gradient(ellipse 5% 6% at 11% 75%,#000 43%,transparent 100%);
 }
 @media (prefers-reduced-motion:reduce) {
-    .game-shell.refuge-home .refuge-town-nexus-radiance { animation:none; }
+    .game-shell.refuge-home .refuge-town-nexus-school-art--mastery {animation:none;}
 }
+
+/* Only when Settings > Debug selects a preview. Never changes game/unlock hitboxes. */
+.game-shell.refuge-home .refuge-town-nexus-preview-controls {
+    position:fixed;left:8px;bottom:calc(73px + env(safe-area-inset-bottom, 0px));
+    z-index:12051;display:flex;flex-wrap:wrap;gap:4px;
+    max-width:min(355px,calc(100vw - 16px));padding:5px;
+    border:1px solid #d1af8a9c;border-radius:7px;
+    background:#101824f2;box-shadow:0 4px 16px #0008;
+    pointer-events:auto;touch-action:manipulation;
+}
+.game-shell.refuge-home .refuge-town-nexus-preview-controls button {
+    min-height:42px;padding:6px 9px;border:1px solid #aa9578a0;
+    border-radius:4px;background:#283240;color:#f3e5cc;
+    font:600 11px/1.2 system-ui,sans-serif;cursor:pointer;
+    touch-action:manipulation;
+}
+.game-shell.refuge-home .refuge-town-nexus-preview-controls button[aria-pressed="true"] {
+    border-color:#fff;background:#a1815b;color:#101824;
+}
+.game-shell.refuge-home .refuge-town-nexus-preview-controls button:focus-visible {
+    outline:2px solid #fff;outline-offset:2px;
+}
+

@@ -1,0 +1,53 @@
+{
+  "pass": true,
+  "actualArenaGround": true,
+  "actualMageRenderer": true,
+  "actualHollowRenderer": true,
+  "atlasFiles": 160,
+  "screenScales": [
+    {
+      "width": 320,
+      "viewport": 296,
+      "bodyToPlayer": 5,
+      "bodyScreenHeight": 126,
+      "playerScreenHeight": 25.2,
+      "lod": "fine"
+    },
+    {
+      "width": 390,
+      "viewport": 366,
+      "bodyToPlayer": 5,
+      "bodyScreenHeight": 126,
+      "playerScreenHeight": 25.2,
+      "lod": "fine"
+    },
+    {
+      "width": 440,
+      "viewport": 416,
+      "bodyToPlayer": 5,
+      "bodyScreenHeight": 126,
+      "playerScreenHeight": 25.2,
+      "lod": "fine"
+    },
+    {
+      "width": 1100,
+      "viewport": 1056,
+      "bodyToPlayer": 5,
+      "bodyScreenHeight": 210,
+      "playerScreenHeight": 42,
+      "lod": "fine"
+    }
+  ],
+  "phasePreservingFacing": true,
+  "step": true,
+  "pause": true,
+  "depthToggle": true,
+  "mobileViewport": [
+    390,
+    844
+  ],
+  "horizontalOverflow": false,
+  "physicalPhoneAcceptance": false,
+  "runtimeIntegrated": false,
+  "errors": []
+}

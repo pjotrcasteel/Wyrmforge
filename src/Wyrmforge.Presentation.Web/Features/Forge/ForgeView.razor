@@ -106,6 +106,8 @@
                                        FirstHunt="@Progress.TutorialRun"
                                        NexusPointsAvailable="@(Selection.PointBudget > Selection.SpentPoints)"
                                        NexusSchool="@TownNexusSchool"
+                                        NexusPreviewSchool="@nexusPreviewSchool"
+                                        OnNexusPreviewChanged="SelectNexusPreview"
                                        NexusMasteryPoints="@TownNexusMasteryPoints"
                                        OnGate="() => ActivateTownLocationAsync(ShellSection.Gate)"
                                         OnBuilding="ActivateCanonicalBuildingAsync" />
@@ -195,7 +197,7 @@
                         }
                         <button @onclick="() => OnFeedback.InvokeAsync()">Feedback</button>
                         <a href="combat-lab">Developer Combat Lab</a>
-                        <DebugResetCharacter OnReset="OnResetCharacter" />
+                        <DebugResetCharacter OnReset="OnResetCharacter" NexusPreviewSchool="@nexusPreviewSchool" OnNexusPreviewChanged="SelectNexusPreview" />
                     </section>
                 </div>
                 break;
@@ -283,6 +285,8 @@
 
     private ShellSection section = ShellSection.Run;
     private string? nexusFocus;
+    private PassiveSchool? nexusPreviewSchool;
+    private void SelectNexusPreview(PassiveSchool? school) => nexusPreviewSchool = school;
     private NexusFacet facet = NexusFacet.Signature;
     private LaboratoryMutationId? spellcraftFocus;
     private static readonly NavigationItem[] Navigation =
@@ -295,7 +299,7 @@
     ];
 
     private PassiveSchool? TownNexusSchool => CharacterSchool is { } school ? ArcaneSchoolCatalog.For(school) : null;
-    private int TownNexusMasteryPoints => TownNexusSchool is { } school
+    private int TownNexusMasteryPoints => (nexusPreviewSchool ?? TownNexusSchool) is { } school
         ? TownNexusRadiance.Points(school, Selection.Selected)
         : 0;
 

@@ -1,6 +1,7 @@
 using Wyrmforge.Application.Runs.Navigation;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
 using Wyrmforge.Domain.Combat.Geometry;
+using Wyrmforge.Domain.Spells;
 
 namespace Wyrmforge.Application.Runs.Simulation;
 
@@ -21,6 +22,7 @@ public sealed class ArenaEnvironmentState
     private readonly string habitat;
     private readonly bool preLair;
     private readonly bool generatorPreview;
+    private readonly HuntArenaGenerator.WetForestRecipe? wetForest;
     private EncounterPhase phase = EncounterPhase.Pressure;
 
     private sealed class Supply(string kind, double x, double y, EncounterPhase unlockPhase)
@@ -45,6 +47,12 @@ public sealed class ArenaEnvironmentState
         this.habitat = habitat;
         this.preLair = preLair;
         this.generatorPreview = generatorPreview;
+        // Preserve the first Fire Hunt's Old Road identity and combat gates,
+        // but give its floor the same original source-backed woodland materials
+        // as later Wet Forest encounters. Old Road Lab previews are unchanged.
+        var usesForestGround = habitat == nameof(WyrmrealmHabitat.WetForest) ||
+            (habitat == nameof(WyrmrealmHabitat.Outskirts) && !generatorPreview);
+        wetForest = usesForestGround ? HuntArenaGenerator.GenerateWetForest(seed) : null;
         this.seed = seed;
         this.biome = biome;
         this.element = element;
@@ -53,7 +61,7 @@ public sealed class ArenaEnvironmentState
         this.district = district;
     }
 
-    public static ArenaEnvironmentState Create(int mapSeed, WyrmrealmMapNode node, bool generatorPreview = false)
+    public static ArenaEnvironmentState Create(int mapSeed, WyrmrealmMapNode node, bool generatorPreview = false, SpellSchool? regionSchool = null)
     {
         ArgumentNullException.ThrowIfNull(node);
         var stage = node.Stage;
@@ -64,8 +72,8 @@ public sealed class ArenaEnvironmentState
         var biome = node.Territory?.Name ?? "River valley";
         var landmark = WyrmrealmHabitatCatalog.DisplayName(node.Habitat);
         // Region/Wyrm ecology owns environmental magic; reward attunement must never repaint the land.
-        var element = generatorPreview ? WyrmrealmHabitatCatalog.School(node.Habitat).ToString().ToLowerInvariant()
-            : node.AttunementSchool?.ToString().ToLowerInvariant() ?? "arcane";
+        var element = regionSchool?.ToString().ToLowerInvariant() ?? (generatorPreview ? WyrmrealmHabitatCatalog.School(node.Habitat).ToString().ToLowerInvariant()
+            : node.AttunementSchool?.ToString().ToLowerInvariant() ?? "arcane");
         // Each node belongs to a different local district even when its overarching biome is unchanged.
         // No combat RNG is consumed, and adjacent opening stages alternate instead of replaying one scene.
         var districtIndex = ((mapSeed & int.MaxValue) % 3 + stage + node.Lane + (node.Site?.RoadIndex ?? 0)) % 3;
@@ -108,6 +116,28 @@ public sealed class ArenaEnvironmentState
         if (current > phase) phase = current;
     }
 
+    /// <summary>Find a live attackable prop, independent of its visual kind. The candidate itself does not obstruct its sight line.</summary>
+    public (int Id, Vector2D Position)? FindTargetableProp(Vector2D origin, double width, double height, double range,
+        int? requestedId = null, Func<Vector2D, bool>? isVisible = null)
+    {
+        (int Id, Vector2D Position)? best = null;
+        var bestDistance = double.PositiveInfinity;
+        foreach (var prop in destructibles)
+        {
+            if (prop.Health <= 0 || (requestedId is not null && prop.Spec.Id != requestedId)) continue;
+            var position = new Vector2D(prop.Spec.X * width, prop.Spec.Y * height);
+            var distance = Vector2D.Distance(origin, position);
+            if (distance > range || distance > bestDistance || isVisible?.Invoke(position) == false ||
+                BlocksSegment(origin, position, width, height, ignoredPropId: prop.Spec.Id)) continue;
+            if (best is null || distance < bestDistance || prop.Spec.Id < best.Value.Id)
+            {
+                best = (prop.Spec.Id, position);
+                bestDistance = distance;
+            }
+        }
+        return best;
+    }
+
     public ArenaEnvironmentRenderSnapshot Snapshot() => new(seed, biome, element, stage, landmark,
         supplies.Where(supply => !supply.Collected)
             .Select(supply => new ArenaSupplyRenderSnapshot(supply.Kind, supply.X, supply.Y, IsOpen(supply)))
@@ -117,8 +147,7 @@ public sealed class ArenaEnvironmentState
     {
         Corruption = HuntArenaGenerator.WyrmInfluence(stage, generatorPreview && preLair),
         GeneratorPreview = generatorPreview,
-        WetForest = generatorPreview && habitat == nameof(WyrmrealmHabitat.WetForest)
-            ? HuntArenaGenerator.GenerateWetForest(seed) : null,
+        WetForest = wetForest,
         Props = destructibles.Where(prop => prop.Health > 0)
             .Select(prop => new ArenaPropRenderSnapshot(prop.Spec.Id, prop.Spec.Kind, prop.Spec.X, prop.Spec.Y, prop.Spec.Radius,
                 prop.Health / prop.Spec.Health)).ToArray(),
@@ -139,7 +168,7 @@ public sealed class ArenaEnvironmentState
         !BlocksSegment(from, to, width, height);
 
     /// <summary>Continuous swept-circle collision; thin barriers cannot be skipped by a fast projectile.</summary>
-    public bool BlocksSegment(Vector2D from, Vector2D to, double width, double height, double radius = 0)
+    public bool BlocksSegment(Vector2D from, Vector2D to, double width, double height, double radius = 0, int? ignoredPropId = null)
     {
         if (width <= 0 || height <= 0) return false;
         foreach (var barrier in barriers)
@@ -161,7 +190,7 @@ public sealed class ArenaEnvironmentState
         }
         foreach (var prop in destructibles)
         {
-            if (prop.Health <= 0) continue;
+            if (prop.Health <= 0 || prop.Spec.Id == ignoredPropId) continue;
             var footprint = new Vector2D(prop.Spec.X * width, prop.Spec.Y * height);
             var combinedRadius = prop.Spec.Radius + radius;
             if (SegmentDistanceSquared(footprint, from, to) <= combinedRadius * combinedRadius) return true;

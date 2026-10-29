@@ -1,0 +1,14 @@
+{
+  "source": "C:\\Wyrmforge\\ashfang-zagmatorah\\art\\source\\bosses\\ashfang\\archive\\source-fidelity-001\\ashfang-master-working.blend",
+  "sourceSha256": "81e0bb96e05b15b43478ca6e033b8a67097ac66546409dc42509b841616ce98c",
+  "sha256": "ec559320ac3741bfccbc7c289a36f11a473ae2334dea1bb86f8d8cc654f371fd",
+  "approvedBodyGeometrySha256": "9b9d87decdf1034d5e72e06114fdde7d7e1995e8c64a360549bc34f44d046ed3",
+  "resultBodyGeometrySha256": "9b9d87decdf1034d5e72e06114fdde7d7e1995e8c64a360549bc34f44d046ed3",
+  "anatomyUnchanged": true,
+  "bones": 112,
+  "originalUVsUnchanged": true,
+  "fireAndSmoke": "Runtime VFX only; no character effects objects",
+  "ownerAcceptedAnatomy": true,
+  "ownerAcceptedMaterials": false,
+  "materialIntent": "Dielectric charcoal scales, scorched oxblood membranes, selective subscale ember fissures"
+}

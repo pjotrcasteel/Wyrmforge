@@ -1,0 +1,33 @@
+{
+  "status": "Paused at owner request",
+  "nativeSource": "archive/motion-library-008/ashfang-animations.blend",
+  "authoredClips": 41,
+  "sourceValidation": "reviews/motion-library-008/source-validation.json",
+  "sourceValidationPass": true,
+  "requiredDirectionalFrames": 7448,
+  "savedCompletedPngFrames": {
+    "batch-a": 730,
+    "batch-b": 229
+  },
+  "completedClips": {
+    "batch-a": [
+      "idle",
+      "alert",
+      "look"
+    ],
+    "batch-b": [
+      "tail_right"
+    ]
+  },
+  "checkpointZipSha256": "600bc2c26102f3f342cb414a4aab3e8e51b13ec2aebf9a2e3b07382e02d617a4",
+  "gpuJobsStopped": true,
+  "remaining": [
+    "Finish both independent render batches",
+    "Review all directions and complete motion playback",
+    "Pack master/runtime spritesheets and attachment/event metadata",
+    "Build and verify review player",
+    "Pack and verify standalone animated Blender source",
+    "Remote retrieval verification and final delivery"
+  ],
+  "resume": "Extract render-progress.zip batch-a into artifacts/ashfang/motion-library-008/full-render, batch-b into .../full-render-b. Run render-animations.py on motion-library-008, first 20 clips for batch A and remaining 21 for batch B. Size512 samples24 all8directions. Completed PNGs are reused only if PNG footer is valid."
+}

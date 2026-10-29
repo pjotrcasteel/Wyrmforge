@@ -1858,3 +1858,10 @@
 @media(prefers-reduced-motion:reduce) {
  .web-layout .node-inspector { transition:none; }
 }
+/* Keep the mutation socket full-width beneath the two-column mobile inspector header. */
+@media (max-width: 760px) {
+    .web-layout .node-inspector .web-amplifier-socket {
+        grid-column: 1 / -1;
+        min-width: 0;
+    }
+}

@@ -1,0 +1,105 @@
+{
+  "framebuffer": [
+    366,
+    608
+  ],
+  "rgbChannels": 667584,
+  "maxRgb": 254,
+  "nonzeroPixels": 221508,
+  "hash": 4029755762,
+  "options": {
+    "profile": "day",
+    "fireball": false,
+    "torch": false,
+    "spot": false,
+    "lighting": "town-fixture",
+    "townActive": true,
+    "aboveRoof": false,
+    "school": "arcane",
+    "mastery": 1,
+    "sourceDistance": 24,
+    "behind": false,
+    "cutouts": false,
+    "cutoutAlpha": true,
+    "rune": false,
+    "shadows": true,
+    "reflections": true,
+    "progress": 0.5,
+    "frame": 0,
+    "animate": false,
+    "view": "lit",
+    "focus": "town",
+    "inspectObject": "wall",
+    "castsShadow": true,
+    "receivesShadow": true,
+    "receivesLight": true,
+    "normals": true
+  },
+  "diagnostics": {
+    "backend": "WebGL2 / Three 0.186.1",
+    "view": "lit",
+    "depthSource": "town-nexus-fixture",
+    "framebuffer": [
+      366,
+      608
+    ],
+    "objects": 16,
+    "lights": [
+      {
+        "id": "town-nexus-fixture",
+        "ownerId": "town-nexus",
+        "type": "point",
+        "position": [
+          -2,
+          0.4,
+          1.7
+        ],
+        "intensity": 24,
+        "shadow": true,
+        "views": 6
+      },
+      {
+        "id": "moon",
+        "ownerId": "moon",
+        "type": "directional",
+        "position": [
+          -4,
+          -3,
+          8
+        ],
+        "intensity": 1.2,
+        "shadow": true,
+        "views": 1
+      }
+    ],
+    "drawCalls": 75,
+    "triangles": 149404,
+    "textures": 9,
+    "geometries": 13,
+    "inspectedReceiver": {
+      "id": "wall",
+      "ownerId": "wall",
+      "geometry": "box",
+      "material": "stone",
+      "position": [
+        -2,
+        2.5,
+        1.1
+      ],
+      "scale": [
+        3.8,
+        0.35,
+        2.2
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "receivesLight": true,
+      "receivesShadow": true,
+      "castsShadow": true
+    },
+    "productionPathsMigrated": 0
+  }
+}

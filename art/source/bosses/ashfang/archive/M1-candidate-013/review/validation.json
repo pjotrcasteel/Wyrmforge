@@ -1,0 +1,2762 @@
+{
+  "blender": "4.5.14 LTS",
+  "objects": [
+    {
+      "name": "Ashfang articulated cranial and thoracic armor",
+      "type": "MESH",
+      "dimensions": [
+        6.735892295837402,
+        2.526005744934082,
+        1.6417262554168701
+      ],
+      "vertices": 390,
+      "polygons": 390,
+      "triangles": 660,
+      "uvMaps": [],
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "unweightedVertices": 0,
+      "vertexGroups": [
+        "UpperHead",
+        "Head",
+        "Neck01",
+        "Neck02",
+        "Neck03",
+        "Spine01",
+        "Spine02",
+        "Spine03"
+      ],
+      "materials": [
+        "Ashfang fractured obsidian armor"
+      ],
+      "armatures": [
+        "Zahmatorah_Skeleton"
+      ]
+    },
+    {
+      "name": "Ashfang internal mouth illumination",
+      "type": "LIGHT",
+      "dimensions": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "Ashfang layered anatomical plate hide",
+      "type": "MESH",
+      "dimensions": [
+        5.626417636871338,
+        3.439610242843628,
+        2.531252861022949
+      ],
+      "vertices": 2431,
+      "polygons": 2431,
+      "triangles": 4114,
+      "uvMaps": [],
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "unweightedVertices": 0,
+      "vertexGroups": [
+        "Neck01",
+        "Neck02",
+        "Neck03",
+        "Spine01",
+        "Spine02",
+        "Spine03"
+      ],
+      "materials": [
+        "Ashfang fractured obsidian armor"
+      ],
+      "armatures": [
+        "Zahmatorah_Skeleton"
+      ]
+    },
+    {
+      "name": "Ashfang provisional foreleg l",
+      "type": "MESH",
+      "dimensions": [
+        1.2389848232269287,
+        1.4166570901870728,
+        2.9207446575164795
+      ],
+      "vertices": 19841,
+      "polygons": 19588,
+      "triangles": 38378,
+      "uvMaps": [
+        "UVMap"
+      ],
+      "boundaryEdges": 1074,
+      "nonManifoldEdges": 1079,
+      "finite": true,
+      "unweightedVertices": 18767,
+      "vertexGroups": [
+        "AshfangForeRoot_l",
+        "AshfangFore_UpperLeg_l",
+        "AshfangFore_LegConnection_l",
+        "AshfangFore_ForeLeg_l",
+        "AshfangFore_ForeLegConnection_l",
+        "AshfangFore_FeetConnection_l",
+        "AshfangFore_Feet_l",
+        "AshfangFore_Claw02_l",
+        "AshfangFore_Claw01_l",
+        "AshfangFore_Claw03_l",
+        "AshfangFore_Claw04_l",
+        "AshfangFore_Claw02_l_end",
+        "AshfangFore_Claw01_l_end",
+        "AshfangFore_Claw03_l_end",
+        "AshfangFore_Claw04_l_end",
+        "Foreleg source-topology isolation"
+      ],
+      "materials": [
+        "DragonEye",
+        "DragonSkin",
+        "DragonWing"
+      ],
+      "armatures": [
+        "Zahmatorah_Skeleton"
+      ]
+    },
+    {
+      "name": "Ashfang provisional foreleg r",
+      "type": "MESH",
+      "dimensions": [
+        1.120552659034729,
+        1.4267222881317139,
+        2.927901268005371
+      ],
+      "vertices": 19841,
+      "polygons": 19588,
+      "triangles": 38378,
+      "uvMaps": [
+        "UVMap"
+      ],
+      "boundaryEdges": 1074,
+      "nonManifoldEdges": 1079,
+      "finite": true,
+      "unweightedVertices": 18769,
+      "vertexGroups": [
+        "AshfangForeRoot_r",
+        "AshfangFore_UpperLeg_r",
+        "AshfangFore_LegConnection_r",
+        "AshfangFore_ForeLeg_r",
+        "AshfangFore_ForeLegConnection_r",
+        "AshfangFore_FeetConnection_r",
+        "AshfangFore_Feet_r",
+        "AshfangFore_Claw02_r",
+        "AshfangFore_Claw01_r",
+        "AshfangFore_Claw03_r",
+        "AshfangFore_Claw04_r",
+        "AshfangFore_Claw02_r_end",
+        "AshfangFore_Claw01_r_end",
+        "AshfangFore_Claw03_r_end",
+        "AshfangFore_Claw04_r_end",
+        "Foreleg source-topology isolation"
+      ],
+      "materials": [
+        "DragonEye",
+        "DragonSkin",
+        "DragonWing"
+      ],
+      "armatures": [
+        "Zahmatorah_Skeleton"
+      ]
+    },
+    {
+      "name": "Ashfang recessed anatomical molten fissures",
+      "type": "MESH",
+      "dimensions": [
+        4.01423454284668,
+        3.51556658744812,
+        2.1222496032714844
+      ],
+      "vertices": 3306,
+      "polygons": 2766,
+      "triangles": 5772,
+      "uvMaps": [],
+      "boundaryEdges": 600,
+      "nonManifoldEdges": 600,
+      "finite": true,
+      "unweightedVertices": 0,
+      "vertexGroups": [
+        "Head",
+        "Neck01",
+        "Neck02",
+        "Neck03",
+        "Spine01",
+        "Spine02",
+        "Spine03"
+      ],
+      "materials": [
+        "Ashfang deep molten fracture core"
+      ],
+      "armatures": [
+        "Zahmatorah_Skeleton"
+      ]
+    },
+    {
+      "name": "Ashfang recessed molten throat",
+      "type": "MESH",
+      "dimensions": [
+        0.3192000687122345,
+        0.18240001797676086,
+        0.134399875998497
+      ],
+      "vertices": 222,
+      "polygons": 240,
+      "triangles": 440,
+      "uvMaps": [
+        "UVMap"
+      ],
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "unweightedVertices": 0,
+      "vertexGroups": [
+        "UpperHead"
+      ],
+      "materials": [
+        "Ashfang internal throat heat"
+      ],
+      "armatures": [
+        "Zahmatorah_Skeleton"
+      ]
+    },
+    {
+      "name": "Ashfang swept crown horn l",
+      "type": "MESH",
+      "dimensions": [
+        1.6423354148864746,
+        0.6468640565872192,
+        1.3850762844085693
+      ],
+      "vertices": 72,
+      "polygons": 62,
+      "triangles": 140,
+      "uvMaps": [],
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "unweightedVertices": 0,
+      "vertexGroups": [
+        "UpperHead"
+      ],
+      "materials": [
+        "Ashfang fractured obsidian armor"
+      ],
+      "armatures": [
+        "Zahmatorah_Skeleton"
+      ]
+    },
+    {
+      "name": "Ashfang swept crown horn r",
+      "type": "MESH",
+      "dimensions": [
+        1.6423354148864746,
+        0.6468640565872192,
+        1.3850762844085693
+      ],
+      "vertices": 72,
+      "polygons": 62,
+      "triangles": 140,
+      "uvMaps": [],
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "unweightedVertices": 0,
+      "vertexGroups": [
+        "UpperHead"
+      ],
+      "materials": [
+        "Ashfang fractured obsidian armor"
+      ],
+      "armatures": [
+        "Zahmatorah_Skeleton"
+      ]
+    },
+    {
+      "name": "Zagmatorah",
+      "type": "MESH",
+      "dimensions": [
+        14.427928924560547,
+        12.750161170959473,
+        5.904453277587891
+      ],
+      "vertices": 19841,
+      "polygons": 19588,
+      "triangles": 38378,
+      "uvMaps": [
+        "UVMap"
+      ],
+      "boundaryEdges": 1074,
+      "nonManifoldEdges": 1079,
+      "finite": true,
+      "unweightedVertices": 0,
+      "vertexGroups": [
+        "Spine03",
+        "Spine02",
+        "Spine01",
+        "Neck03",
+        "Neck02",
+        "Neck01",
+        "Head",
+        "UpperHead",
+        "Eye_r",
+        "Eye_l",
+        "LowerHead",
+        "Tongue01",
+        "Tongue02",
+        "Shoulder_r",
+        "UpperArm_r",
+        "ArmConnection_r",
+        "Wing0401_r",
+        "Wing0402_r",
+        "ForeArm_r",
+        "Arm_r",
+        "Wing0301_r",
+        "Wing0302_r",
+        "Wing0303_r",
+        "Wing0201_r",
+        "Wing0202_r",
+        "Wing0203_r",
+        "Wing0101_r",
+        "Wing0102_r",
+        "Wing0103_r",
+        "Finger_r",
+        "Shoulder_l",
+        "UpperArm_l",
+        "ArmConnection_l",
+        "Wing0401_l",
+        "Wing0402_l",
+        "ForeArm_l",
+        "Arm_l",
+        "Wing0301_l",
+        "Wing0302_l",
+        "Wing0303_l",
+        "Wing0201_l",
+        "Wing0202_l",
+        "Wing0203_l",
+        "Wing0101_l",
+        "Wing0102_l",
+        "Wing0103_l",
+        "Finger_l",
+        "UpperLeg_l",
+        "LegConnection_l",
+        "ForeLeg_l",
+        "ForeLegConnection_l",
+        "FeetConnection_l",
+        "Feet_l",
+        "Claw02_l",
+        "Claw01_l",
+        "Claw03_l",
+        "Claw04_l",
+        "UpperLeg_r",
+        "LegConnection_r",
+        "ForeLeg_r",
+        "ForeLegConnection_r",
+        "FeetConnection_r",
+        "Feet_r",
+        "Claw02_r",
+        "Claw01_r",
+        "Claw03_r",
+        "Claw04_r",
+        "Tail01",
+        "Tail02",
+        "Tail03",
+        "Tail04",
+        "Tail05",
+        "Tail06",
+        "Tail07",
+        "Tail08",
+        "Tail09",
+        "Tail10",
+        "LowerTail01_l",
+        "LowerTail02_l",
+        "LowerTail01_r",
+        "LowerTail02_r",
+        "UpperTail01_l",
+        "UpperTail02_l",
+        "UpperTail01_r",
+        "UpperTail02_r",
+        "Ashfang retain body and tapered tail"
+      ],
+      "materials": [
+        "DragonEye",
+        "DragonSkin",
+        "DragonWing"
+      ],
+      "armatures": [
+        "Zahmatorah_Skeleton"
+      ]
+    },
+    {
+      "name": "Zahmatorah_Skeleton",
+      "type": "ARMATURE",
+      "dimensions": [
+        15.336925506591797,
+        13.440116882324219,
+        6.332982063293457
+      ],
+      "bones": [
+        {
+          "name": "Spine03",
+          "parent": null,
+          "head": [
+            2.1877055168151855,
+            -9.131115064064943e-08,
+            2.3800885677337646
+          ],
+          "tail": [
+            1.6017518043518066,
+            -1.6563767246680072e-08,
+            2.422327756881714
+          ],
+          "deform": true
+        },
+        {
+          "name": "Spine02",
+          "parent": "Spine03",
+          "head": [
+            0.9925699234008789,
+            6.11467143585287e-08,
+            2.476271390914917
+          ],
+          "tail": [
+            0.14685982465744019,
+            5.367581934478949e-08,
+            2.537447452545166
+          ],
+          "deform": true
+        },
+        {
+          "name": "Spine01",
+          "parent": "Spine02",
+          "head": [
+            0.14685982465744019,
+            5.367581934478949e-08,
+            2.537447452545166
+          ],
+          "tail": [
+            -0.8994470238685608,
+            3.1443313730505906e-08,
+            2.7053873538970947
+          ],
+          "deform": true
+        },
+        {
+          "name": "Neck03",
+          "parent": "Spine01",
+          "head": [
+            -0.9469926953315735,
+            3.043317775563992e-08,
+            2.7122483253479004
+          ],
+          "tail": [
+            -1.8585374355316162,
+            -2.4372713625098186e-08,
+            3.0265934467315674
+          ],
+          "deform": true
+        },
+        {
+          "name": "Neck02",
+          "parent": "Neck03",
+          "head": [
+            -1.858537197113037,
+            -2.437312041081441e-08,
+            3.0265941619873047
+          ],
+          "tail": [
+            -2.658669948577881,
+            -7.640704069444837e-08,
+            3.2794032096862793
+          ],
+          "deform": true
+        },
+        {
+          "name": "Neck01",
+          "parent": "Neck02",
+          "head": [
+            -2.65867018699646,
+            -7.640650778739655e-08,
+            3.279402494430542
+          ],
+          "tail": [
+            -3.2125964164733887,
+            -8.56284216865788e-08,
+            3.3041815757751465
+          ],
+          "deform": true
+        },
+        {
+          "name": "Head",
+          "parent": "Neck01",
+          "head": [
+            -3.2125964164733887,
+            -8.562830089431372e-08,
+            3.3041815757751465
+          ],
+          "tail": [
+            -3.679278612136841,
+            -4.810662446175229e-08,
+            3.098033905029297
+          ],
+          "deform": true
+        },
+        {
+          "name": "UpperHead",
+          "parent": "Head",
+          "head": [
+            -3.583611488342285,
+            -3.2914016401264234e-08,
+            3.218827247619629
+          ],
+          "tail": [
+            -4.012480735778809,
+            -4.864135760840327e-09,
+            3.0457682609558105
+          ],
+          "deform": true
+        },
+        {
+          "name": "Eye_r",
+          "parent": "UpperHead",
+          "head": [
+            -3.871339797973633,
+            0.45799338817596436,
+            3.2395713329315186
+          ],
+          "tail": [
+            -3.871237277984619,
+            0.5827391743659973,
+            3.2394394874572754
+          ],
+          "deform": true
+        },
+        {
+          "name": "Eye_r_end",
+          "parent": "Eye_r",
+          "head": [
+            -3.871237277984619,
+            0.5827391743659973,
+            3.2394394874572754
+          ],
+          "tail": [
+            -3.8711347579956055,
+            0.7074849605560303,
+            3.2393076419830322
+          ],
+          "deform": true
+        },
+        {
+          "name": "Eye_l",
+          "parent": "UpperHead",
+          "head": [
+            -3.868252992630005,
+            -0.45304256677627563,
+            3.2498044967651367
+          ],
+          "tail": [
+            -3.8681178092956543,
+            -0.5536116361618042,
+            3.2444498538970947
+          ],
+          "deform": true
+        },
+        {
+          "name": "Eye_l_end",
+          "parent": "Eye_l",
+          "head": [
+            -3.8681178092956543,
+            -0.5536116361618042,
+            3.2444498538970947
+          ],
+          "tail": [
+            -3.867982864379883,
+            -0.654180645942688,
+            3.2390952110290527
+          ],
+          "deform": true
+        },
+        {
+          "name": "LowerHead",
+          "parent": "Head",
+          "head": [
+            -3.4445793628692627,
+            3.7634695360111436e-08,
+            2.985046148300171
+          ],
+          "tail": [
+            -4.570958137512207,
+            6.60880346003978e-08,
+            2.4775331020355225
+          ],
+          "deform": true
+        },
+        {
+          "name": "LowerHead_end",
+          "parent": "LowerHead",
+          "head": [
+            -4.570958137512207,
+            6.60880346003978e-08,
+            2.4775331020355225
+          ],
+          "tail": [
+            -5.697336196899414,
+            9.448358895269848e-08,
+            1.970020055770874
+          ],
+          "deform": true
+        },
+        {
+          "name": "Tongue01",
+          "parent": "Head",
+          "head": [
+            -3.7966935634613037,
+            -8.028847808816408e-09,
+            2.8801958560943604
+          ],
+          "tail": [
+            -4.159529209136963,
+            1.1095783847281382e-08,
+            2.7762856483459473
+          ],
+          "deform": true
+        },
+        {
+          "name": "Tongue02",
+          "parent": "Tongue01",
+          "head": [
+            -4.159529209136963,
+            1.1094423157942401e-08,
+            2.7762858867645264
+          ],
+          "tail": [
+            -4.441716194152832,
+            3.378453428126704e-08,
+            2.6530187129974365
+          ],
+          "deform": true
+        },
+        {
+          "name": "Tongue02_end",
+          "parent": "Tongue02",
+          "head": [
+            -4.441716194152832,
+            3.378453428126704e-08,
+            2.6530187129974365
+          ],
+          "tail": [
+            -4.723903179168701,
+            5.647468270808531e-08,
+            2.5297515392303467
+          ],
+          "deform": true
+        },
+        {
+          "name": "Shoulder_r",
+          "parent": "Spine01",
+          "head": [
+            -0.8313943147659302,
+            0.3023450970649719,
+            2.573894500732422
+          ],
+          "tail": [
+            -0.6041259765625,
+            0.9872643351554871,
+            2.7729852199554443
+          ],
+          "deform": true
+        },
+        {
+          "name": "UpperArm_r",
+          "parent": "Shoulder_r",
+          "head": [
+            -0.6041259765625,
+            0.9872643351554871,
+            2.7729852199554443
+          ],
+          "tail": [
+            -0.17641553282737732,
+            3.2695822715759277,
+            1.9637616872787476
+          ],
+          "deform": true
+        },
+        {
+          "name": "ArmConnection_r",
+          "parent": "UpperArm_r",
+          "head": [
+            -0.1764153242111206,
+            3.269582748413086,
+            1.9637616872787476
+          ],
+          "tail": [
+            -0.24855950474739075,
+            3.49906325340271,
+            1.864819884300232
+          ],
+          "deform": true
+        },
+        {
+          "name": "Wing0401_r",
+          "parent": "ArmConnection_r",
+          "head": [
+            -0.18448756635189056,
+            3.4582111835479736,
+            1.9414339065551758
+          ],
+          "tail": [
+            0.6795064806938171,
+            4.469516277313232,
+            2.163437604904175
+          ],
+          "deform": true
+        },
+        {
+          "name": "Wing0402_r",
+          "parent": "Wing0401_r",
+          "head": [
+            0.6795064806938171,
+            4.469516277313232,
+            2.163437604904175
+          ],
+          "tail": [
+            2.149231195449829,
+            5.058981895446777,
+            2.117046356201172
+          ],
+          "deform": true
+        },
+        {
+          "name": "Wing0402_r_end",
+          "parent": "Wing0402_r",
+          "head": [
+            2.149231195449829,
+            5.058981895446777,
+            2.117046356201172
+          ],
+          "tail": [
+            3.1923210620880127,
+            5.6484479904174805,
+            2.0266411304473877
+          ],
+          "deform": true
+        },
+        {
+          "name": "ForeArm_r",
+          "parent": "ArmConnection_r",
+          "head": [
+            -0.27578359842300415,
+            3.585658073425293,
+            1.828060269355774
+          ],
+          "tail": [
+            -0.9892590045928955,
+            2.970559597015381,
+            1.2302407026290894
+          ],
+          "deform": true
+        },
+        {
+          "name": "Arm_r",
+          "parent": "ForeArm_r",
+          "head": [
+            -0.9892590045928955,
+            2.970559597015381,
+            1.2302407026290894
+          ],
+          "tail": [
+            -1.5060303211212158,
+            2.4514424800872803,
+            0.538909375667572
+          ],
+          "deform": true
+        },
+        {
+          "name": "Wing0301_r",
+          "parent": "Arm_r",
+          "head": [
+            -1.3268680572509766,
+            2.970623016357422,
+            0.6509144306182861
+          ],
+          "tail": [
+            -0.0010491609573364258,
+            4.068789005279541,
+            0.9287383556365967
+          ],
+          "deform": true
+        },
+        {
+          "name": "Wing0302_r",
+          "parent": "Wing0301_r",
+          "head": [
+            -0.0010490298736840487,
+            4.068788528442383,
+            0.9287382364273071
+          ],
+          "tail": [
+            1.500608205795288,
+            4.800690174102783,
+            1.224261999130249
+          ],
+          "deform": true
+        },
+        {
+          "name": "Wing0303_r",
+          "parent": "Wing0302_r",
+          "head": [
+            1.500608205795288,
+            4.800690174102783,
+            1.224261999130249
+          ],
+          "tail": [
+            2.480590581893921,
+            5.103676795959473,
+            1.442140817642212
+          ],
+          "deform": true
+        },
+        {
+          "name": "Wing0303_r_end",
+          "parent": "Wing0303_r",
+          "head": [
+            2.480590581893921,
+            5.103676795959473,
+            1.442140817642212
+          ],
+          "tail": [
+            3.1457860469818115,
+            5.4066619873046875,
+            1.639123797416687
+          ],
+          "deform": true
+        },
+        {
+          "name": "Wing0201_r",
+          "parent": "Arm_r",
+          "head": [
+            -1.3887630701065063,
+            2.577666759490967,
+            0.48562660813331604
+          ],
+          "tail": [
+            -0.12442147731781006,
+            4.057465076446533,
+            0.44037359952926636
+          ],
+          "deform": true
+        },
+        {
+          "name": "Wing0202_r",
+          "parent": "Wing0201_r",
+          "head": [
+            -0.12442147731781006,
+            4.057465076446533,
+            0.44037359952926636
+          ],
+          "tail": [
+            1.4443402290344238,
+            5.225175857543945,
+            0.3449557423591614
+          ],
+          "deform": true
+        },
+        {
+          "name": "Wing0203_r",
+          "parent": "Wing0202_r",
+          "head": [
+            1.4443402290344238,
+            5.225175857543945,
+            0.3449557423591614
+          ],
+          "tail": [
+            2.5029923915863037,
+            5.661333084106445,
+            0.3238550126552582
+          ],
+          "deform": true
+        },
+        {
+          "name": "Wing0203_r_end",
+          "parent": "Wing0203_r",
+          "head": [
+            2.5029923915863037,
+            5.661333084106445,
+            0.3238550126552582
+          ],
+          "tail": [
+            3.2271642684936523,
+            6.097488880157471,
+            0.30275434255599976
+          ],
+          "deform": true
+        },
+        {
+          "name": "Wing0101_r",
+          "parent": "Arm_r",
+          "head": [
+            -1.4267221689224243,
+            2.5632121562957764,
+            0.34012287855148315
+          ],
+          "tail": [
+            -0.2625432014465332,
+            4.036567687988281,
+            -0.01595357060432434
+          ],
+          "deform": true
+        },
+        {
+          "name": "Wing0102_r",
+          "parent": "Wing0101_r",
+          "head": [
+            -0.2625431418418884,
+            4.036567211151123,
+            -0.015953728929162025
+          ],
+          "tail": [
+            1.139277458190918,
+            5.0684733390808105,
+            -0.18124152719974518
+          ],
+          "deform": true
+        },
+        {
+          "name": "Wing0103_r",
+          "parent": "Wing0102_r",
+          "head": [
+            1.139277458190918,
+            5.0684733390808105,
+            -0.18124152719974518
+          ],
+          "tail": [
+            2.5874669551849365,
+            5.722298622131348,
+            -0.38169729709625244
+          ],
+          "deform": true
+        },
+        {
+          "name": "Wing0103_r_end",
+          "parent": "Wing0103_r",
+          "head": [
+            2.5874669551849365,
+            5.722298622131348,
+            -0.38169729709625244
+          ],
+          "tail": [
+            3.5944037437438965,
+            6.376123905181885,
+            -0.5821530222892761
+          ],
+          "deform": true
+        },
+        {
+          "name": "Finger_r",
+          "parent": "Arm_r",
+          "head": [
+            -1.6416345834732056,
+            2.4213707447052,
+            0.46797776222229004
+          ],
+          "tail": [
+            -1.2516313791275024,
+            2.33571457862854,
+            0.35761749744415283
+          ],
+          "deform": true
+        },
+        {
+          "name": "Finger_r_end",
+          "parent": "Finger_r",
+          "head": [
+            -1.2516313791275024,
+            2.33571457862854,
+            0.35761749744415283
+          ],
+          "tail": [
+            -0.8616280555725098,
+            2.2503981590270996,
+            0.24725718796253204
+          ],
+          "deform": true
+        },
+        {
+          "name": "Shoulder_l",
+          "parent": "Spine01",
+          "head": [
+            -0.8752566576004028,
+            -0.30454978346824646,
+            2.5735700130462646
+          ],
+          "tail": [
+            -0.6479886174201965,
+            -0.9894687533378601,
+            2.772763967514038
+          ],
+          "deform": true
+        },
+        {
+          "name": "UpperArm_l",
+          "parent": "Shoulder_l",
+          "head": [
+            -0.6479886174201965,
+            -0.9894687533378601,
+            2.772763967514038
+          ],
+          "tail": [
+            -0.22027787566184998,
+            -3.273085832595825,
+            1.9637620449066162
+          ],
+          "deform": true
+        },
+        {
+          "name": "ArmConnection_l",
+          "parent": "UpperArm_l",
+          "head": [
+            -0.22027787566184998,
+            -3.273085832595825,
+            1.9637620449066162
+          ],
+          "tail": [
+            -0.29242169857025146,
+            -3.5025670528411865,
+            1.8648253679275513
+          ],
+          "deform": true
+        },
+        {
+          "name": "Wing0401_l",
+          "parent": "ArmConnection_l",
+          "head": [
+            -0.22834935784339905,
+            -3.461714744567871,
+            1.9414353370666504
+          ],
+          "tail": [
+            0.6356441974639893,
+            -4.473019599914551,
+            2.1627838611602783
+          ],
+          "deform": true
+        },
+        {
+          "name": "Wing0402_l",
+          "parent": "Wing0401_l",
+          "head": [
+            0.6356441974639893,
+            -4.473019599914551,
+            2.1627838611602783
+          ],
+          "tail": [
+            2.1053693294525146,
+            -5.062484264373779,
+            2.116663694381714
+          ],
+          "deform": true
+        },
+        {
+          "name": "Wing0402_l_end",
+          "parent": "Wing0402_l",
+          "head": [
+            2.1053693294525146,
+            -5.062484264373779,
+            2.116663694381714
+          ],
+          "tail": [
+            3.163811206817627,
+            -5.651949405670166,
+            2.026642084121704
+          ],
+          "deform": true
+        },
+        {
+          "name": "ForeArm_l",
+          "parent": "ArmConnection_l",
+          "head": [
+            -0.31964555382728577,
+            -3.589162826538086,
+            1.8280715942382812
+          ],
+          "tail": [
+            -1.0331209897994995,
+            -2.974067211151123,
+            1.231509804725647
+          ],
+          "deform": true
+        },
+        {
+          "name": "Arm_l",
+          "parent": "ForeArm_l",
+          "head": [
+            -1.0331209897994995,
+            -2.974067211151123,
+            1.231509804725647
+          ],
+          "tail": [
+            -1.5498926639556885,
+            -2.4550037384033203,
+            0.5389097929000854
+          ],
+          "deform": true
+        },
+        {
+          "name": "Wing0301_l",
+          "parent": "Arm_l",
+          "head": [
+            -1.3707302808761597,
+            -2.9741504192352295,
+            0.6509146690368652
+          ],
+          "tail": [
+            -0.04491114616394043,
+            -4.072294235229492,
+            0.9287385940551758
+          ],
+          "deform": true
+        },
+        {
+          "name": "Wing0302_l",
+          "parent": "Wing0301_l",
+          "head": [
+            -0.04491114616394043,
+            -4.072294235229492,
+            0.9287385940551758
+          ],
+          "tail": [
+            1.4567468166351318,
+            -4.804195880889893,
+            1.2216887474060059
+          ],
+          "deform": true
+        },
+        {
+          "name": "Wing0303_l",
+          "parent": "Wing0302_l",
+          "head": [
+            1.4567468166351318,
+            -4.804195880889893,
+            1.2216887474060059
+          ],
+          "tail": [
+            2.4520809650421143,
+            -5.107181072235107,
+            1.4421119689941406
+          ],
+          "deform": true
+        },
+        {
+          "name": "Wing0303_l_end",
+          "parent": "Wing0303_l",
+          "head": [
+            2.4520809650421143,
+            -5.107181072235107,
+            1.4421119689941406
+          ],
+          "tail": [
+            3.117276430130005,
+            -5.410166263580322,
+            1.639123558998108
+          ],
+          "deform": true
+        },
+        {
+          "name": "Wing0201_l",
+          "parent": "Arm_l",
+          "head": [
+            -1.4326252937316895,
+            -2.5812015533447266,
+            0.4856269061565399
+          ],
+          "tail": [
+            -0.16828382015228271,
+            -4.060969352722168,
+            0.44037389755249023
+          ],
+          "deform": true
+        },
+        {
+          "name": "Wing0202_l",
+          "parent": "Wing0201_l",
+          "head": [
+            -0.16828382015228271,
+            -4.060969352722168,
+            0.44037389755249023
+          ],
+          "tail": [
+            1.4004778861999512,
+            -5.228679656982422,
+            0.34495583176612854
+          ],
+          "deform": true
+        },
+        {
+          "name": "Wing0203_l",
+          "parent": "Wing0202_l",
+          "head": [
+            1.4004778861999512,
+            -5.228679656982422,
+            0.34495583176612854
+          ],
+          "tail": [
+            2.4744820594787598,
+            -5.664834976196289,
+            0.32385510206222534
+          ],
+          "deform": true
+        },
+        {
+          "name": "Wing0203_l_end",
+          "parent": "Wing0203_l",
+          "head": [
+            2.4744820594787598,
+            -5.664834976196289,
+            0.32385510206222534
+          ],
+          "tail": [
+            3.1986536979675293,
+            -6.100989818572998,
+            0.30275437235832214
+          ],
+          "deform": true
+        },
+        {
+          "name": "Wing0101_l",
+          "parent": "Arm_l",
+          "head": [
+            -1.4705840349197388,
+            -2.566753625869751,
+            0.34012314677238464
+          ],
+          "tail": [
+            -0.3064049482345581,
+            -4.040072917938232,
+            -0.01595333218574524
+          ],
+          "deform": true
+        },
+        {
+          "name": "Wing0102_l",
+          "parent": "Wing0101_l",
+          "head": [
+            -0.30640488862991333,
+            -4.040072441101074,
+            -0.015953481197357178
+          ],
+          "tail": [
+            1.0954153537750244,
+            -5.071978569030762,
+            -0.18124139308929443
+          ],
+          "deform": true
+        },
+        {
+          "name": "Wing0103_l",
+          "parent": "Wing0102_l",
+          "head": [
+            1.0954153537750244,
+            -5.071978569030762,
+            -0.18124139308929443
+          ],
+          "tail": [
+            2.5589563846588135,
+            -5.725802898406982,
+            -0.3816969394683838
+          ],
+          "deform": true
+        },
+        {
+          "name": "Wing0103_l_end",
+          "parent": "Wing0103_l",
+          "head": [
+            2.5589563846588135,
+            -5.725802898406982,
+            -0.3816969394683838
+          ],
+          "tail": [
+            3.5658926963806152,
+            -6.379627704620361,
+            -0.5821524262428284
+          ],
+          "deform": true
+        },
+        {
+          "name": "Finger_l",
+          "parent": "Arm_l",
+          "head": [
+            -1.6854972839355469,
+            -2.4250011444091797,
+            0.467977911233902
+          ],
+          "tail": [
+            -1.2954940795898438,
+            -2.3392317295074463,
+            0.3576176166534424
+          ],
+          "deform": true
+        },
+        {
+          "name": "Finger_l_end",
+          "parent": "Finger_l",
+          "head": [
+            -1.2954940795898438,
+            -2.3392317295074463,
+            0.3576176166534424
+          ],
+          "tail": [
+            -0.9054908752441406,
+            -2.253904342651367,
+            0.2472573220729828
+          ],
+          "deform": true
+        },
+        {
+          "name": "AshfangForeRoot_l",
+          "parent": "Spine01",
+          "head": [
+            -0.681065022945404,
+            -1.0957344898088195e-07,
+            2.541964054107666
+          ],
+          "tail": [
+            -1.208423376083374,
+            -1.9876837953347604e-08,
+            2.58984375
+          ],
+          "deform": true
+        },
+        {
+          "name": "AshfangFore_UpperLeg_l",
+          "parent": "AshfangForeRoot_l",
+          "head": [
+            -0.8454344272613525,
+            -0.8099501729011536,
+            2.5259439945220947
+          ],
+          "tail": [
+            -1.442386507987976,
+            -1.3391770124435425,
+            1.3471641540527344
+          ],
+          "deform": true
+        },
+        {
+          "name": "AshfangFore_LegConnection_l",
+          "parent": "AshfangFore_UpperLeg_l",
+          "head": [
+            -1.442386507987976,
+            -1.3391770124435425,
+            1.3471641540527344
+          ],
+          "tail": [
+            -1.3466743230819702,
+            -1.357399344444275,
+            1.1580359935760498
+          ],
+          "deform": true
+        },
+        {
+          "name": "AshfangFore_ForeLeg_l",
+          "parent": "AshfangFore_LegConnection_l",
+          "head": [
+            -1.3466743230819702,
+            -1.357399344444275,
+            1.1580359935760498
+          ],
+          "tail": [
+            -0.6903622150421143,
+            -1.6501716375350952,
+            0.695713222026825
+          ],
+          "deform": true
+        },
+        {
+          "name": "AshfangFore_ForeLegConnection_l",
+          "parent": "AshfangFore_ForeLeg_l",
+          "head": [
+            -0.6903622150421143,
+            -1.6501716375350952,
+            0.695713222026825
+          ],
+          "tail": [
+            -0.672131359577179,
+            -1.678830623626709,
+            0.5454095602035522
+          ],
+          "deform": true
+        },
+        {
+          "name": "AshfangFore_FeetConnection_l",
+          "parent": "AshfangFore_ForeLegConnection_l",
+          "head": [
+            -0.672131359577179,
+            -1.678830623626709,
+            0.5454095602035522
+          ],
+          "tail": [
+            -0.8544406890869141,
+            -1.5857176780700684,
+            0.18575459718704224
+          ],
+          "deform": true
+        },
+        {
+          "name": "AshfangFore_Feet_l",
+          "parent": "AshfangFore_FeetConnection_l",
+          "head": [
+            -0.8544406890869141,
+            -1.5857176780700684,
+            0.18575459718704224
+          ],
+          "tail": [
+            -1.0396041870117188,
+            -1.6092767715454102,
+            0.16828984022140503
+          ],
+          "deform": true
+        },
+        {
+          "name": "AshfangFore_Claw02_l",
+          "parent": "AshfangFore_Feet_l",
+          "head": [
+            -1.0729079246520996,
+            -1.5857261419296265,
+            0.1857544183731079
+          ],
+          "tail": [
+            -1.29343843460083,
+            -1.597687005996704,
+            0.09208056330680847
+          ],
+          "deform": true
+        },
+        {
+          "name": "AshfangFore_Claw02_l_end",
+          "parent": "AshfangFore_Claw02_l",
+          "head": [
+            -1.29343843460083,
+            -1.597687005996704,
+            0.09208056330680847
+          ],
+          "tail": [
+            -1.51396906375885,
+            -1.6097346544265747,
+            -0.001593304332345724
+          ],
+          "deform": true
+        },
+        {
+          "name": "AshfangFore_Claw01_l",
+          "parent": "AshfangFore_Feet_l",
+          "head": [
+            -1.0788220167160034,
+            -1.7368884086608887,
+            0.18575440347194672
+          ],
+          "tail": [
+            -1.2750616073608398,
+            -1.8579050302505493,
+            0.11155394464731216
+          ],
+          "deform": true
+        },
+        {
+          "name": "AshfangFore_Claw01_l_end",
+          "parent": "AshfangFore_Claw01_l",
+          "head": [
+            -1.2750616073608398,
+            -1.8579050302505493,
+            0.11155394464731216
+          ],
+          "tail": [
+            -1.4713010787963867,
+            -1.9789986610412598,
+            0.037353478372097015
+          ],
+          "deform": true
+        },
+        {
+          "name": "AshfangFore_Claw03_l",
+          "parent": "AshfangFore_Feet_l",
+          "head": [
+            -1.0500394105911255,
+            -1.454592227935791,
+            0.18409675359725952
+          ],
+          "tail": [
+            -1.2661231756210327,
+            -1.286860466003418,
+            0.1332114338874817
+          ],
+          "deform": true
+        },
+        {
+          "name": "AshfangFore_Claw03_l_end",
+          "parent": "AshfangFore_Claw03_l",
+          "head": [
+            -1.2661231756210327,
+            -1.286860466003418,
+            0.1332114338874817
+          ],
+          "tail": [
+            -1.48220694065094,
+            -1.1191718578338623,
+            0.08232612907886505
+          ],
+          "deform": true
+        },
+        {
+          "name": "AshfangFore_Claw04_l",
+          "parent": "AshfangFore_Feet_l",
+          "head": [
+            -0.8510947823524475,
+            -1.468119502067566,
+            0.18409676849842072
+          ],
+          "tail": [
+            -0.8278011679649353,
+            -1.1179654598236084,
+            0.13321152329444885
+          ],
+          "deform": true
+        },
+        {
+          "name": "AshfangFore_Claw04_l_end",
+          "parent": "AshfangFore_Claw04_l",
+          "head": [
+            -0.8278011679649353,
+            -1.1179654598236084,
+            0.13321152329444885
+          ],
+          "tail": [
+            -0.8045076131820679,
+            -0.7678115367889404,
+            0.0823262482881546
+          ],
+          "deform": true
+        },
+        {
+          "name": "AshfangForeRoot_r",
+          "parent": "Spine01",
+          "head": [
+            -0.681065022945404,
+            -1.0957344898088195e-07,
+            2.541964054107666
+          ],
+          "tail": [
+            -1.208423376083374,
+            -1.9876837953347604e-08,
+            2.58984375
+          ],
+          "deform": true
+        },
+        {
+          "name": "AshfangFore_UpperLeg_r",
+          "parent": "AshfangForeRoot_r",
+          "head": [
+            -0.8059581518173218,
+            0.8073053956031799,
+            2.526132583618164
+          ],
+          "tail": [
+            -1.4029103517532349,
+            1.3365132808685303,
+            1.3437082767486572
+          ],
+          "deform": true
+        },
+        {
+          "name": "AshfangFore_LegConnection_r",
+          "parent": "AshfangFore_UpperLeg_r",
+          "head": [
+            -1.4029103517532349,
+            1.3365132808685303,
+            1.3437082767486572
+          ],
+          "tail": [
+            -1.3071985244750977,
+            1.3547440767288208,
+            1.156557321548462
+          ],
+          "deform": true
+        },
+        {
+          "name": "AshfangFore_ForeLeg_r",
+          "parent": "AshfangFore_LegConnection_r",
+          "head": [
+            -1.3071985244750977,
+            1.3547440767288208,
+            1.156557321548462
+          ],
+          "tail": [
+            -0.6508865356445312,
+            1.647526502609253,
+            0.6957128643989563
+          ],
+          "deform": true
+        },
+        {
+          "name": "AshfangFore_ForeLegConnection_r",
+          "parent": "AshfangFore_ForeLeg_r",
+          "head": [
+            -0.6508865356445312,
+            1.647526502609253,
+            0.6957128643989563
+          ],
+          "tail": [
+            -0.6326554417610168,
+            1.6761857271194458,
+            0.5454093813896179
+          ],
+          "deform": true
+        },
+        {
+          "name": "AshfangFore_FeetConnection_r",
+          "parent": "AshfangFore_ForeLegConnection_r",
+          "head": [
+            -0.6326554417610168,
+            1.6761857271194458,
+            0.5454093813896179
+          ],
+          "tail": [
+            -0.814964771270752,
+            1.5830724239349365,
+            0.18575462698936462
+          ],
+          "deform": true
+        },
+        {
+          "name": "AshfangFore_Feet_r",
+          "parent": "AshfangFore_FeetConnection_r",
+          "head": [
+            -0.8149643540382385,
+            1.5830721855163574,
+            0.18575438857078552
+          ],
+          "tail": [
+            -1.000127911567688,
+            1.6066298484802246,
+            0.1682896912097931
+          ],
+          "deform": true
+        },
+        {
+          "name": "AshfangFore_Claw02_r",
+          "parent": "AshfangFore_Feet_r",
+          "head": [
+            -1.0334315299987793,
+            1.5830787420272827,
+            0.18575440347194672
+          ],
+          "tail": [
+            -1.2539621591567993,
+            1.5950326919555664,
+            0.09208064526319504
+          ],
+          "deform": true
+        },
+        {
+          "name": "AshfangFore_Claw02_r_end",
+          "parent": "AshfangFore_Claw02_r",
+          "head": [
+            -1.2539621591567993,
+            1.5950326919555664,
+            0.09208064526319504
+          ],
+          "tail": [
+            -1.4744926691055298,
+            1.6070548295974731,
+            -0.001593114691786468
+          ],
+          "deform": true
+        },
+        {
+          "name": "AshfangFore_Claw01_r",
+          "parent": "AshfangFore_Feet_r",
+          "head": [
+            -1.0393457412719727,
+            1.734240174293518,
+            0.1857544183731079
+          ],
+          "tail": [
+            -1.2355852127075195,
+            1.8552501201629639,
+            0.11155398935079575
+          ],
+          "deform": true
+        },
+        {
+          "name": "AshfangFore_Claw01_r_end",
+          "parent": "AshfangFore_Claw01_r",
+          "head": [
+            -1.2355852127075195,
+            1.8552501201629639,
+            0.11155398935079575
+          ],
+          "tail": [
+            -1.4318246841430664,
+            1.9763211011886597,
+            0.03735358268022537
+          ],
+          "deform": true
+        },
+        {
+          "name": "AshfangFore_Claw03_r",
+          "parent": "AshfangFore_Feet_r",
+          "head": [
+            -1.0105628967285156,
+            1.4519450664520264,
+            0.1840968132019043
+          ],
+          "tail": [
+            -1.2266464233398438,
+            1.28420889377594,
+            0.13321153819561005
+          ],
+          "deform": true
+        },
+        {
+          "name": "AshfangFore_Claw03_r_end",
+          "parent": "AshfangFore_Claw03_r",
+          "head": [
+            -1.2266464233398438,
+            1.28420889377594,
+            0.13321153819561005
+          ],
+          "tail": [
+            -1.4427298307418823,
+            1.1165066957473755,
+            0.0823262482881546
+          ],
+          "deform": true
+        },
+        {
+          "name": "AshfangFore_Claw04_r",
+          "parent": "AshfangFore_Feet_r",
+          "head": [
+            -0.811618447303772,
+            1.4654734134674072,
+            0.1840967983007431
+          ],
+          "tail": [
+            -0.7883246541023254,
+            1.1153196096420288,
+            0.13321152329444885
+          ],
+          "deform": true
+        },
+        {
+          "name": "AshfangFore_Claw04_r_end",
+          "parent": "AshfangFore_Claw04_r",
+          "head": [
+            -0.7883246541023254,
+            1.1153196096420288,
+            0.13321152329444885
+          ],
+          "tail": [
+            -0.7650308609008789,
+            0.7651659846305847,
+            0.0823262482881546
+          ],
+          "deform": true
+        },
+        {
+          "name": "UpperLeg_l",
+          "parent": "Spine03",
+          "head": [
+            2.005072832107544,
+            -0.6749572157859802,
+            2.3682658672332764
+          ],
+          "tail": [
+            1.3417928218841553,
+            -1.1159082651138306,
+            1.3021984100341797
+          ],
+          "deform": true
+        },
+        {
+          "name": "LegConnection_l",
+          "parent": "UpperLeg_l",
+          "head": [
+            1.3417928218841553,
+            -1.1159082651138306,
+            1.3021984100341797
+          ],
+          "tail": [
+            1.4481396675109863,
+            -1.13112473487854,
+            1.1250330209732056
+          ],
+          "deform": true
+        },
+        {
+          "name": "ForeLeg_l",
+          "parent": "LegConnection_l",
+          "head": [
+            1.4481396675109863,
+            -1.13112473487854,
+            1.1250330209732056
+          ],
+          "tail": [
+            2.177375316619873,
+            -1.3751420974731445,
+            0.6657671928405762
+          ],
+          "deform": true
+        },
+        {
+          "name": "ForeLegConnection_l",
+          "parent": "ForeLeg_l",
+          "head": [
+            2.177375316619873,
+            -1.3751420974731445,
+            0.6657671928405762
+          ],
+          "tail": [
+            2.1976318359375,
+            -1.3990246057510376,
+            0.5239712595939636
+          ],
+          "deform": true
+        },
+        {
+          "name": "FeetConnection_l",
+          "parent": "ForeLegConnection_l",
+          "head": [
+            2.1976318359375,
+            -1.3990246057510376,
+            0.5239712595939636
+          ],
+          "tail": [
+            1.9950659275054932,
+            -1.3214287757873535,
+            0.18467414379119873
+          ],
+          "deform": true
+        },
+        {
+          "name": "Feet_l",
+          "parent": "FeetConnection_l",
+          "head": [
+            1.9950659275054932,
+            -1.3214287757873535,
+            0.18467414379119873
+          ],
+          "tail": [
+            1.789328694343567,
+            -1.3410561084747314,
+            0.16819795966148376
+          ],
+          "deform": true
+        },
+        {
+          "name": "Claw02_l",
+          "parent": "Feet_l",
+          "head": [
+            1.7523244619369507,
+            -1.3214291334152222,
+            0.1846739798784256
+          ],
+          "tail": [
+            1.5072906017303467,
+            -1.33137047290802,
+            0.09630241990089417
+          ],
+          "deform": true
+        },
+        {
+          "name": "Claw02_l_end",
+          "parent": "Claw02_l",
+          "head": [
+            1.5072906017303467,
+            -1.33137047290802,
+            0.09630241990089417
+          ],
+          "tail": [
+            1.2622566223144531,
+            -1.3413118124008179,
+            0.007930845022201538
+          ],
+          "deform": true
+        },
+        {
+          "name": "Claw01_l",
+          "parent": "Feet_l",
+          "head": [
+            1.745753288269043,
+            -1.4473963975906372,
+            0.1846739649772644
+          ],
+          "tail": [
+            1.5277093648910522,
+            -1.5482172966003418,
+            0.11467353254556656
+          ],
+          "deform": true
+        },
+        {
+          "name": "Claw01_l_end",
+          "parent": "Claw01_l",
+          "head": [
+            1.5277093648910522,
+            -1.5482172966003418,
+            0.11467353254556656
+          ],
+          "tail": [
+            1.3096654415130615,
+            -1.6490381956100464,
+            0.044673092663288116
+          ],
+          "deform": true
+        },
+        {
+          "name": "Claw03_l",
+          "parent": "Feet_l",
+          "head": [
+            1.7777340412139893,
+            -1.2121527194976807,
+            0.18311014771461487
+          ],
+          "tail": [
+            1.537640929222107,
+            -1.072359561920166,
+            0.13510513305664062
+          ],
+          "deform": true
+        },
+        {
+          "name": "Claw03_l_end",
+          "parent": "Claw03_l",
+          "head": [
+            1.537640929222107,
+            -1.072359561920166,
+            0.13510513305664062
+          ],
+          "tail": [
+            1.2975478172302246,
+            -0.9325663447380066,
+            0.08710011839866638
+          ],
+          "deform": true
+        },
+        {
+          "name": "Claw04_l",
+          "parent": "Feet_l",
+          "head": [
+            1.9987835884094238,
+            -1.2234306335449219,
+            0.18311016261577606
+          ],
+          "tail": [
+            2.024665355682373,
+            -0.9316363334655762,
+            0.1351052075624466
+          ],
+          "deform": true
+        },
+        {
+          "name": "Claw04_l_end",
+          "parent": "Claw04_l",
+          "head": [
+            2.024665355682373,
+            -0.9316363334655762,
+            0.1351052075624466
+          ],
+          "tail": [
+            2.0505471229553223,
+            -0.6398420333862305,
+            0.08710023760795593
+          ],
+          "deform": true
+        },
+        {
+          "name": "UpperLeg_r",
+          "parent": "Spine03",
+          "head": [
+            2.0489354133605957,
+            0.6727535128593445,
+            2.3683393001556396
+          ],
+          "tail": [
+            1.385655164718628,
+            1.1137040853500366,
+            1.3059381246566772
+          ],
+          "deform": true
+        },
+        {
+          "name": "LegConnection_r",
+          "parent": "UpperLeg_r",
+          "head": [
+            1.385655164718628,
+            1.1137040853500366,
+            1.3059381246566772
+          ],
+          "tail": [
+            1.4920016527175903,
+            1.1289207935333252,
+            1.1262919902801514
+          ],
+          "deform": true
+        },
+        {
+          "name": "ForeLeg_r",
+          "parent": "LegConnection_r",
+          "head": [
+            1.4920016527175903,
+            1.1289207935333252,
+            1.1262919902801514
+          ],
+          "tail": [
+            2.2212371826171875,
+            1.3729380369186401,
+            0.6657668352127075
+          ],
+          "deform": true
+        },
+        {
+          "name": "ForeLegConnection_r",
+          "parent": "ForeLeg_r",
+          "head": [
+            2.2212371826171875,
+            1.3729380369186401,
+            0.6657668352127075
+          ],
+          "tail": [
+            2.2414939403533936,
+            1.3968206644058228,
+            0.5239711403846741
+          ],
+          "deform": true
+        },
+        {
+          "name": "FeetConnection_r",
+          "parent": "ForeLegConnection_r",
+          "head": [
+            2.2414939403533936,
+            1.3968206644058228,
+            0.5239711403846741
+          ],
+          "tail": [
+            2.0389280319213867,
+            1.3192249536514282,
+            0.18467417359352112
+          ],
+          "deform": true
+        },
+        {
+          "name": "Feet_r",
+          "parent": "FeetConnection_r",
+          "head": [
+            2.038928508758545,
+            1.3192248344421387,
+            0.1846739500761032
+          ],
+          "tail": [
+            1.833191156387329,
+            1.338852047920227,
+            0.16819782555103302
+          ],
+          "deform": true
+        },
+        {
+          "name": "Claw02_r",
+          "parent": "Feet_r",
+          "head": [
+            1.796187162399292,
+            1.3192248344421387,
+            0.1846739649772644
+          ],
+          "tail": [
+            1.5511531829833984,
+            1.3291659355163574,
+            0.09630249440670013
+          ],
+          "deform": true
+        },
+        {
+          "name": "Claw02_r_end",
+          "parent": "Claw02_r",
+          "head": [
+            1.5511531829833984,
+            1.3291659355163574,
+            0.09630249440670013
+          ],
+          "tail": [
+            1.3061192035675049,
+            1.3391070365905762,
+            0.007931023836135864
+          ],
+          "deform": true
+        },
+        {
+          "name": "Claw01_r",
+          "parent": "Feet_r",
+          "head": [
+            1.7896158695220947,
+            1.445191740989685,
+            0.1846739798784256
+          ],
+          "tail": [
+            1.571571946144104,
+            1.5460127592086792,
+            0.11467357724905014
+          ],
+          "deform": true
+        },
+        {
+          "name": "Claw01_r_end",
+          "parent": "Claw01_r",
+          "head": [
+            1.571571946144104,
+            1.5460127592086792,
+            0.11467357724905014
+          ],
+          "tail": [
+            1.3535281419754028,
+            1.6468337774276733,
+            0.044673189520835876
+          ],
+          "deform": true
+        },
+        {
+          "name": "Claw03_r",
+          "parent": "Feet_r",
+          "head": [
+            1.8215967416763306,
+            1.2099483013153076,
+            0.18311020731925964
+          ],
+          "tail": [
+            1.581503987312317,
+            1.0701550245285034,
+            0.1351052224636078
+          ],
+          "deform": true
+        },
+        {
+          "name": "Claw03_r_end",
+          "parent": "Claw03_r",
+          "head": [
+            1.581503987312317,
+            1.0701550245285034,
+            0.1351052224636078
+          ],
+          "tail": [
+            1.3414112329483032,
+            0.9303616881370544,
+            0.08710023760795593
+          ],
+          "deform": true
+        },
+        {
+          "name": "Claw04_r",
+          "parent": "Feet_r",
+          "head": [
+            2.0426461696624756,
+            1.2212259769439697,
+            0.18311019241809845
+          ],
+          "tail": [
+            2.068528175354004,
+            0.9294317960739136,
+            0.1351052075624466
+          ],
+          "deform": true
+        },
+        {
+          "name": "Claw04_r_end",
+          "parent": "Claw04_r",
+          "head": [
+            2.068528175354004,
+            0.9294317960739136,
+            0.1351052075624466
+          ],
+          "tail": [
+            2.0944101810455322,
+            0.6376376152038574,
+            0.08710023760795593
+          ],
+          "deform": true
+        },
+        {
+          "name": "Tail01",
+          "parent": "Spine03",
+          "head": [
+            2.1877052783966064,
+            -8.910165405495718e-08,
+            2.380089044570923
+          ],
+          "tail": [
+            2.835767984390259,
+            5.241893674678977e-08,
+            1.5959056615829468
+          ],
+          "deform": true
+        },
+        {
+          "name": "Tail02",
+          "parent": "Tail01",
+          "head": [
+            2.8357675075531006,
+            5.241886569251619e-08,
+            1.5959053039550781
+          ],
+          "tail": [
+            3.523730516433716,
+            1.993468714545088e-07,
+            0.6995534896850586
+          ],
+          "deform": true
+        },
+        {
+          "name": "Tail03",
+          "parent": "Tail02",
+          "head": [
+            3.523730516433716,
+            1.993468714545088e-07,
+            0.6995534896850586
+          ],
+          "tail": [
+            4.2215681076049805,
+            2.541335391015309e-07,
+            0.36532095074653625
+          ],
+          "deform": true
+        },
+        {
+          "name": "Tail04",
+          "parent": "Tail03",
+          "head": [
+            4.2215681076049805,
+            2.541335391015309e-07,
+            0.36532095074653625
+          ],
+          "tail": [
+            5.347326755523682,
+            2.2757025419650745e-07,
+            0.5273736715316772
+          ],
+          "deform": true
+        },
+        {
+          "name": "Tail05",
+          "parent": "Tail04",
+          "head": [
+            5.347326755523682,
+            2.2757025419650745e-07,
+            0.5273736715316772
+          ],
+          "tail": [
+            6.114290714263916,
+            1.221474263957134e-07,
+            1.1705186367034912
+          ],
+          "deform": true
+        },
+        {
+          "name": "Tail06",
+          "parent": "Tail05",
+          "head": [
+            6.114290714263916,
+            1.221474263957134e-07,
+            1.1705186367034912
+          ],
+          "tail": [
+            6.706793785095215,
+            6.819091424858925e-08,
+            1.4996870756149292
+          ],
+          "deform": true
+        },
+        {
+          "name": "Tail07",
+          "parent": "Tail06",
+          "head": [
+            6.706793785095215,
+            6.81908218780336e-08,
+            1.4996870756149292
+          ],
+          "tail": [
+            7.469367980957031,
+            4.882177861986747e-08,
+            1.6178500652313232
+          ],
+          "deform": true
+        },
+        {
+          "name": "Tail08",
+          "parent": "Tail07",
+          "head": [
+            7.469367980957031,
+            4.882189941213255e-08,
+            1.6178503036499023
+          ],
+          "tail": [
+            8.0414400100708,
+            4.835914069190039e-08,
+            1.6206732988357544
+          ],
+          "deform": true
+        },
+        {
+          "name": "Tail09",
+          "parent": "Tail08",
+          "head": [
+            8.039471626281738,
+            4.8360735860342174e-08,
+            1.6206635236740112
+          ],
+          "tail": [
+            8.559488296508789,
+            5.951014259153453e-08,
+            1.5526450872421265
+          ],
+          "deform": true
+        },
+        {
+          "name": "Tail10",
+          "parent": "Tail09",
+          "head": [
+            8.604087829589844,
+            6.046649758673084e-08,
+            1.5468112230300903
+          ],
+          "tail": [
+            9.47501277923584,
+            8.006610840993744e-08,
+            1.3423174619674683
+          ],
+          "deform": true
+        },
+        {
+          "name": "Tail10_end",
+          "parent": "Tail10",
+          "head": [
+            9.47501277923584,
+            8.006610840993744e-08,
+            1.3423174619674683
+          ],
+          "tail": [
+            10.345938682556152,
+            9.96657263385714e-08,
+            1.1378237009048462
+          ],
+          "deform": true
+        },
+        {
+          "name": "LowerTail01_l",
+          "parent": "Tail09",
+          "head": [
+            8.522597312927246,
+            -0.08755199611186981,
+            1.6206631660461426
+          ],
+          "tail": [
+            9.023906707763672,
+            -0.7379378080368042,
+            1.5468112230300903
+          ],
+          "deform": true
+        },
+        {
+          "name": "LowerTail02_l",
+          "parent": "LowerTail01_l",
+          "head": [
+            9.023906707763672,
+            -0.7379387617111206,
+            1.5468114614486694
+          ],
+          "tail": [
+            9.4575777053833,
+            -1.4696240425109863,
+            1.4192545413970947
+          ],
+          "deform": true
+        },
+        {
+          "name": "LowerTail02_l_end",
+          "parent": "LowerTail02_l",
+          "head": [
+            9.4575777053833,
+            -1.4696240425109863,
+            1.4192545413970947
+          ],
+          "tail": [
+            9.891249656677246,
+            -2.2013094425201416,
+            1.29169762134552
+          ],
+          "deform": true
+        },
+        {
+          "name": "LowerTail01_r",
+          "parent": "Tail09",
+          "head": [
+            8.551108360290527,
+            0.08534987270832062,
+            1.6206631660461426
+          ],
+          "tail": [
+            9.052416801452637,
+            0.7357355952262878,
+            1.5468112230300903
+          ],
+          "deform": true
+        },
+        {
+          "name": "LowerTail02_r",
+          "parent": "LowerTail01_r",
+          "head": [
+            9.052416801452637,
+            0.7357364296913147,
+            1.5468119382858276
+          ],
+          "tail": [
+            9.486089706420898,
+            1.4674218893051147,
+            1.419255018234253
+          ],
+          "deform": true
+        },
+        {
+          "name": "LowerTail02_r_end",
+          "parent": "LowerTail02_r",
+          "head": [
+            9.486089706420898,
+            1.4674218893051147,
+            1.419255018234253
+          ],
+          "tail": [
+            9.919760704040527,
+            2.1991074085235596,
+            1.2916982173919678
+          ],
+          "deform": true
+        },
+        {
+          "name": "UpperTail01_l",
+          "parent": "Tail08",
+          "head": [
+            8.019479751586914,
+            -0.18761150538921356,
+            1.6206635236740112
+          ],
+          "tail": [
+            8.4441556930542,
+            -1.0881456136703491,
+            1.546811580657959
+          ],
+          "deform": true
+        },
+        {
+          "name": "UpperTail02_l",
+          "parent": "UpperTail01_l",
+          "head": [
+            8.444154739379883,
+            -1.0881483554840088,
+            1.5468116998672485
+          ],
+          "tail": [
+            8.768014907836914,
+            -1.9811797142028809,
+            1.4855337142944336
+          ],
+          "deform": true
+        },
+        {
+          "name": "UpperTail02_l_end",
+          "parent": "UpperTail02_l",
+          "head": [
+            8.768014907836914,
+            -1.9811797142028809,
+            1.4855337142944336
+          ],
+          "tail": [
+            9.091876029968262,
+            -2.874211072921753,
+            1.4242557287216187
+          ],
+          "deform": true
+        },
+        {
+          "name": "UpperTail01_r",
+          "parent": "Tail08",
+          "head": [
+            8.047990798950195,
+            0.1854090541601181,
+            1.6206635236740112
+          ],
+          "tail": [
+            8.472667694091797,
+            1.0859440565109253,
+            1.546811580657959
+          ],
+          "deform": true
+        },
+        {
+          "name": "UpperTail02_r",
+          "parent": "UpperTail01_r",
+          "head": [
+            8.472667694091797,
+            1.0859440565109253,
+            1.546811580657959
+          ],
+          "tail": [
+            8.796527862548828,
+            1.9789761304855347,
+            1.4855332374572754
+          ],
+          "deform": true
+        },
+        {
+          "name": "UpperTail02_r_end",
+          "parent": "UpperTail02_r",
+          "head": [
+            8.796527862548828,
+            1.9789761304855347,
+            1.4855332374572754
+          ],
+          "tail": [
+            9.120388984680176,
+            2.8720076084136963,
+            1.42425537109375
+          ],
+          "deform": true
+        }
+      ],
+      "constraints": []
+    }
+  ],
+  "actions": [
+    {
+      "name": "Zahmatorah_Skeleton|Zahmatorah_Skeleton|S",
+      "frames": [
+        1.0,
+        2.0
+      ]
+    },
+    {
+      "name": "Zahmatorah_Skeleton|Zahmatorah_Skeleton|StaticPose",
+      "frames": [
+        1.0,
+        2.0
+      ]
+    },
+    {
+      "name": "Zahmatorah_Skeleton|Zahmatorah_Skeleton|Zahmatorah_SkeletonAct",
+      "frames": [
+        1.0,
+        51.0
+      ]
+    },
+    {
+      "name": "Zahmatorah_Skeleton|Zahmatorah_Skeleton|Zahmatorah_SkeletonActi",
+      "frames": [
+        1.0,
+        2.0
+      ]
+    }
+  ],
+  "images": [
+    {
+      "name": "DragonEye_Albedo.png",
+      "path": "//..\\M0-001\\original\\download\\textures\\DragonEye_Albedo.png",
+      "size": [
+        4096,
+        4096
+      ],
+      "packed": false,
+      "exists": true
+    },
+    {
+      "name": "DragonEye_Normal.png",
+      "path": "//..\\M0-001\\original\\download\\textures\\DragonEye_Normal.png",
+      "size": [
+        4096,
+        4096
+      ],
+      "packed": false,
+      "exists": true
+    },
+    {
+      "name": "DragonEye_Opacity.png",
+      "path": "//..\\M0-001\\original\\download\\textures\\DragonEye_Opacity.png",
+      "size": [
+        4096,
+        4096
+      ],
+      "packed": false,
+      "exists": true
+    },
+    {
+      "name": "DragonEye_Roughness.png",
+      "path": "//..\\M0-001\\original\\download\\textures\\DragonEye_Roughness.png",
+      "size": [
+        4096,
+        4096
+      ],
+      "packed": false,
+      "exists": true
+    },
+    {
+      "name": "DragonSkin_Albedo.png.001",
+      "path": "//..\\M0-001\\original\\download\\textures\\DragonSkin_Albedo.png",
+      "size": [
+        4096,
+        4096
+      ],
+      "packed": false,
+      "exists": true
+    },
+    {
+      "name": "DragonSkin_Normal.png.001",
+      "path": "//..\\M0-001\\original\\download\\textures\\DragonSkin_Normal.png",
+      "size": [
+        4096,
+        4096
+      ],
+      "packed": false,
+      "exists": true
+    },
+    {
+      "name": "DragonSkin_Roughness.png.001",
+      "path": "//..\\M0-001\\original\\download\\textures\\DragonSkin_Roughness.png",
+      "size": [
+        4096,
+        4096
+      ],
+      "packed": false,
+      "exists": true
+    },
+    {
+      "name": "DragonWing_Albedo.png",
+      "path": "//..\\M0-001\\original\\download\\textures\\DragonWing_Albedo.png",
+      "size": [
+        4096,
+        4096
+      ],
+      "packed": false,
+      "exists": true
+    },
+    {
+      "name": "DragonWing_Normal.png",
+      "path": "//..\\M0-001\\original\\download\\textures\\DragonWing_Normal.png",
+      "size": [
+        4096,
+        4096
+      ],
+      "packed": false,
+      "exists": true
+    },
+    {
+      "name": "DragonWing_Opacity.png",
+      "path": "//..\\M0-001\\original\\download\\textures\\DragonWing_Opacity.png",
+      "size": [
+        4096,
+        4096
+      ],
+      "packed": false,
+      "exists": true
+    },
+    {
+      "name": "DragonWing_Roughness.png",
+      "path": "//..\\M0-001\\original\\download\\textures\\DragonWing_Roughness.png",
+      "size": [
+        4096,
+        4096
+      ],
+      "packed": false,
+      "exists": true
+    }
+  ],
+  "materials": [
+    {
+      "name": "Ashfang deep molten fracture core",
+      "textures": []
+    },
+    {
+      "name": "Ashfang fractured obsidian armor",
+      "textures": []
+    },
+    {
+      "name": "Ashfang internal throat heat",
+      "textures": []
+    },
+    {
+      "name": "DragonEye",
+      "textures": [
+        "DragonEye_Albedo.png",
+        "DragonEye_Opacity.png",
+        "DragonEye_Albedo.png",
+        "DragonEye_Normal.png",
+        "DragonEye_Roughness.png"
+      ]
+    },
+    {
+      "name": "DragonSkin",
+      "textures": [
+        "DragonSkin_Albedo.png.001",
+        "DragonSkin_Normal.png.001",
+        "DragonSkin_Roughness.png.001"
+      ]
+    },
+    {
+      "name": "DragonWing",
+      "textures": [
+        "DragonWing_Albedo.png",
+        "DragonWing_Opacity.png",
+        "DragonWing_Normal.png",
+        "DragonWing_Roughness.png"
+      ]
+    }
+  ],
+  "source": "C:\\Wyrmforge\\ashfang-zagmatorah\\artifacts\\ashfang\\M1-candidate-013\\ashfang-master-working.blend",
+  "sourceSha256": "8afb2002f627cd6cf89a3a53c62d10b17024f23fd80beaac3b6e047c894ac6f7",
+  "missingDependencies": [],
+  "packedDependencies": 0,
+  "animationSamples": [
+    {
+      "name": "Zahmatorah_Skeleton|Zahmatorah_Skeleton|S",
+      "maxSampledVertexTravel": 0.0,
+      "sampleFrames": [
+        1.0,
+        1.5,
+        2.0
+      ]
+    },
+    {
+      "name": "Zahmatorah_Skeleton|Zahmatorah_Skeleton|StaticPose",
+      "maxSampledVertexTravel": 0.0,
+      "sampleFrames": [
+        1.0,
+        1.5,
+        2.0
+      ]
+    },
+    {
+      "name": "Zahmatorah_Skeleton|Zahmatorah_Skeleton|Zahmatorah_SkeletonAct",
+      "maxSampledVertexTravel": 0.0,
+      "sampleFrames": [
+        1.0,
+        26.0,
+        51.0
+      ]
+    },
+    {
+      "name": "Zahmatorah_Skeleton|Zahmatorah_Skeleton|Zahmatorah_SkeletonActi",
+      "maxSampledVertexTravel": 0.0,
+      "sampleFrames": [
+        1.0,
+        1.5,
+        2.0
+      ]
+    }
+  ]
+}

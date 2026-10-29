@@ -1,0 +1,29 @@
+.lighting-lab{min-height:100dvh;padding:14px;background:#0c1010;color:#eee8df;font:14px/1.5 system-ui,sans-serif}
+.lighting-lab header,.lighting-controls,.lighting-layout{max-width:1210px;margin:0 auto 13px}
+.lighting-lab header{display:flex;justify-content:space-between;align-items:center;gap:18px}
+.lighting-lab .eyebrow{color:#bfa17d;font-size:10px;letter-spacing:.14em;font-weight:700}
+.lighting-lab h1{font-size:clamp(22px,3.2vw,34px);margin:3px 0 6px}
+.lighting-lab p{font-size:12px;color:#c0bab0;line-height:1.6;max-width:660px}
+.lighting-lab a{color:#ebc99e}
+.lighting-controls{display:flex;flex-wrap:wrap;align-items:center;gap:13px;padding:12px;background:#171d1c;border:1px solid #465147;border-radius:9px}
+.lighting-controls label,.lighting-inspector label{display:grid;gap:4px;font-size:12px;color:#dbd1c1;min-width:145px}
+.lighting-controls .switch{display:flex;align-items:center;gap:7px;min-width:unset}
+.lighting-controls input[type=checkbox]{accent-color:#b8956b;width:20px;height:20px}
+.lighting-controls input[type=range]{accent-color:#b8956b;width:160px;max-width:100%}
+.lighting-controls input[type=number]{color:#f1e5d2;background:#232b28;border:1px solid #536157;border-radius:6px;min-height:37px;padding:5px}
+.lighting-controls button{background:#65482f;color:#f8efe2;border:1px solid #b3926d;padding:10px 12px;border-radius:7px;cursor:pointer;min-height:42px}
+.lighting-layout{display:grid;grid-template-columns:minmax(0,1fr) 260px;align-items:start;gap:13px}
+.lighting-stage{position:relative;height:min(72dvh,790px);min-height:440px;background:#0d1714;border:1px solid #5c584b;border-radius:11px;overflow:hidden;touch-action:none}
+.lighting-stage canvas{display:block;width:100%;height:100%;touch-action:none;overscroll-behavior:contain}
+.lighting-help,.lighting-status{position:absolute;pointer-events:none;background:#0d1717df;border:1px solid #615343;border-radius:6px;padding:7px 10px;font-size:11px;color:#e8d4b9}
+.lighting-help{top:10px;left:10px}.lighting-status{bottom:10px;right:10px}
+.lighting-inspector{background:#171d1c;border:1px solid #465147;border-radius:9px;padding:14px}
+.lighting-inspector h2{margin:0 0 9px;font-size:17px}.lighting-inspector h3{font-size:14px;margin:18px 0 5px}
+.lighting-inspector input[type=file]{font-size:11px;color:#dfd3bd;width:100%;max-width:100%}
+.lighting-inspector .feedback{display:block;color:#b4bbad;font-size:11px;margin:4px 0 14px}
+.lighting-inspector .notice{border-top:1px solid #434b41;padding-top:12px}
+@media(max-width:760px){.lighting-lab{padding:9px}.lighting-lab header{display:block}.lighting-layout{grid-template-columns:1fr}
+.lighting-stage{height:57dvh;min-height:380px}.lighting-controls{gap:10px}
+.lighting-controls label:not(.switch){flex:1 1 41%;min-width:0}
+.lighting-controls .switch{flex:1 1 41%}
+.lighting-controls input[type=range]{width:100%}}

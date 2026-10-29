@@ -12,7 +12,13 @@ public sealed partial class RunSimulation
     private readonly HashSet<string> rewardedRouteNodeIds = new(StringComparer.Ordinal);
     private RefugeMark? refuge;
 
+    // Owner playtest 2026-10-25: Tier-I bosses need meaningful time alive, not higher damage.
+    // Local to Fire Tier I so the established Ascendant/Elder multipliers remain unchanged.
+    public const double FireTierOneBellWardenDurability = 2.5;
+    public const double FireTierOneAshfangDurability = 3.0;
+
     public HuntSelection? SelectedHunt { get; private set; }
+    private bool IsFireTierOneHunt => SelectedHunt == HuntSelection.FireTierOne;
     /// <summary>The reclaimed refuge a fall now returns to, or null while none is held.</summary>
     public string? RefugeNodeId => refuge?.NodeId;
     public int RefugeReturns { get; private set; }

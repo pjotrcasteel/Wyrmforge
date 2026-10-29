@@ -128,6 +128,8 @@ public sealed partial class RunSimulation
 
     private void ClearMapEncounterField(bool preserveEnvironment = false)
     {
+        selectedPropId = null;
+        aimedPropId = null;
         entryGraceRemaining = 0;
         powerBurstRemaining = 0;
         CollectLooseExperienceShards();

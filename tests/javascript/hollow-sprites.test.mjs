@@ -2,10 +2,19 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
+import {selectHollowDeathStyle} from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/hollow-bone-burst.js';
 const root=new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/',import.meta.url);
 const moduleUri=name=>'data:text/javascript;base64,'+Buffer.from(readFileSync(new URL('js/'+name,root),'utf8')).toString('base64');
 const source=readFileSync(new URL('js/hollow-sprites.js',root),'utf8').replace("new URL('../art/enemies/hollow-rigged/', import.meta.url)","new URL('https://example.test/art/enemies/hollow-rigged/')")
- .replace("'./sprite-animation.js'",JSON.stringify(moduleUri('sprite-animation.js'))).replace("'./sprite-layer-compositor.js'",JSON.stringify(moduleUri('sprite-layer-compositor.js')));
+ .replace("'./sprite-animation.js'",JSON.stringify(moduleUri('sprite-animation.js'))).replace("'./sprite-layer-compositor.js'",JSON.stringify(moduleUri('sprite-layer-compositor.js')))
+ .replace("'./hollow-injury-variants.js'",JSON.stringify(moduleUri('hollow-injury-variants.js')))
+ .replace("'./hollow-arm-variants.js'",JSON.stringify(moduleUri('hollow-arm-variants.js')))
+ .replace("'./hollow-motion.js'",JSON.stringify(moduleUri('hollow-motion.js')))
+ .replace("'./hollow-variation.js'",JSON.stringify(moduleUri('hollow-variation.js')))
+ .replace("'./hollow-death.js'",JSON.stringify(moduleUri('hollow-death.js')))
+ .replace("'./hollow-injury-death.js'",JSON.stringify(moduleUri('hollow-injury-death.js')))
+ .replace("'./hollow-bone-burst.js'",JSON.stringify(moduleUri('hollow-bone-burst.js')))
+ .replace("'./hollow-fracture.js'",JSON.stringify(moduleUri('hollow-fracture.js')));
 const mod=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
 const enemy=(values={})=>({entityId:7,kind:0,x:20,y:20,radius:11,...values});
 const snapshot=(values={})=>({enemies:[enemy()],player:{x:200,y:200,radius:9},deathBursts:[],...values});
@@ -22,7 +31,7 @@ test('walk follows travelled distance and survives duplicate render snapshots',(
  const moved=snapshot({enemies:[enemy({x:25})]});mod.updateHollowSprites(state,moved,.05);
  const frame=state.entities.get(7).frame;assert.ok(frame>0);
  mod.updateHollowSprites(state,moved,.066);assert.equal(state.entities.get(7).frame,frame);
- advance(state,moved,.1,.3);assert.equal(state.entities.get(7).frame,0);
+ advance(state,moved,.1,.3);assert.equal(state.entities.get(7).frame,state.entities.get(7).idleFrame);
  mod.updateHollowSprites(state,snapshot({enemies:[]}),.35);assert.equal(state.entities.size,0);assert.equal(state.corpses.size,0);
 });
 test('contact only drives presentation; attack freezes and recovers',()=>{
@@ -64,6 +73,34 @@ test('packed runtime assets preserve approved source bytes and cache hashes',()=
   assert.equal(c.worldSize/c.cell,93/96);
  }
 });
+test('stable injury appearance is presentation-only and survives attack, death and pause',()=>{
+ const state=mod.createHollowState();
+ const injury=enemy({entityId:4});
+ mod.updateHollowSprites(state,snapshot({enemies:[injury]}),0);
+ assert.equal(state.entities.get(4).injuryVariant,'broken-leg-left');
+ assert.equal(state.entities.get(4).deathInjury,'broken-leg-left');
+ const position={x:injury.x,y:injury.y,radius:injury.radius};
+ const contact=snapshot({enemies:[injury],player:{x:38,y:20,radius:9}});
+ mod.updateHollowSprites(state,contact,.05);
+ assert.equal(state.entities.get(4).clip,'attack');
+ assert.equal(state.entities.get(4).injuryVariant,'broken-leg-left');
+ advance(state,contact,.1,.4);
+ const p=state.entities.get(4);
+ const frame=p.frame;
+ mod.updateHollowSprites(state,{...contact,enemies:[{...injury,frozen:true}]},.45);
+ assert.equal(p.frame,frame);
+ advance(state,snapshot({enemies:[injury]}),.5,2);
+ assert.equal(p.clip,'walk');
+ assert.deepEqual(position,{x:20,y:20,radius:11});
+ const killed=snapshot({enemies:[],deathBursts:[{entityId:4,kind:0,x:20,y:20,bodyRadius:11}]});
+ // Corpse must retain the actual injured silhouette after the live actor despawns.
+
+ mod.updateHollowSprites(state,killed,2.05);
+ assert.equal(mod.hollowDiagnostics(state).corpses.length,1);
+ assert.equal(mod.hollowDiagnostics(state).corpses[0].deathInjury,'broken-leg-left');
+ assert.equal(state.entities.has(4),false);
+});
+
 test('nearest-neighbor renderer selects an actual direction row and original pivot',async()=>{
  const m=JSON.parse(readFileSync(new URL('art/enemies/hollow-rigged/manifest.json',root)));
  const originalFetch=globalThis.fetch,originalImage=globalThis.Image;
@@ -74,7 +111,190 @@ test('nearest-neighbor renderer selects an actual direction row and original piv
   const state=mod.createHollowState();mod.updateHollowSprites(state,snapshot(),0);state.entities.get(7).direction='NW';
   const calls=[];const ctx={globalAlpha:1,save(){},restore(){},drawImage(...args){calls.push(args);}};
   assert.equal(mod.drawHollowEnemy(ctx,enemy(),state),true);assert.equal(ctx.imageSmoothingEnabled,false);
-  assert.equal(calls[0][2],96*7);assert.equal(calls[0][6],20-72/96*93);
+  assert.equal(calls[0][2],96*7);assert.ok(Math.abs(calls[0][6]-(20-72/96*93*state.entities.get(7).visualScale))<1e-9);
   assert.equal(mod.drawHollowEnemy(ctx,enemy({kind:1}),state),false);
  }finally{globalThis.fetch=originalFetch;globalThis.Image=originalImage;}
+});
+
+test('every Hollowed uses a source-derived no-cape atlas for walk/attack and the corpse never reverts to cape',async()=>{
+ const originals={fetch:globalThis.fetch,Image:globalThis.Image};
+ const basePath='art/enemies/hollow-rigged/';
+ const baseManifest=JSON.parse(readFileSync(new URL(basePath+'manifest.json',root)));
+ const armsManifest=JSON.parse(readFileSync(new URL(basePath+'arms/manifest.json',root)));
+ const injuriesManifest=JSON.parse(readFileSync(new URL(basePath+'injuries/manifest.json',root)));
+ const layers=JSON.parse(readFileSync(new URL(basePath+'layers.json',root)));
+ const animationProfile=JSON.parse(readFileSync(new URL(basePath+'animation-profile.json',root)));
+ try {
+  globalThis.fetch=async url=>{
+   const path=String(url);
+   const data=path.includes('/arms/')?armsManifest:path.includes('/injuries/')?injuriesManifest:
+    path.endsWith('layers.json')?layers:path.endsWith('animation-profile.json')?animationProfile:baseManifest;
+   return {ok:true,json:async()=>data};
+  };
+  globalThis.Image=class {
+   set src(url){
+    this.url=String(url);
+    const path=this.url;
+    const clips=path.includes('/arms/')?Object.values(armsManifest.clips).flatMap(x=>Object.values(x)):
+     path.includes('/injuries/')?Object.values(injuriesManifest.clips):Object.values(baseManifest.clips);
+    const entry=clips.find(x=>path.includes('/'+x.image+'?'));
+    assert.ok(entry,'unexpected sprite source: '+path);
+    this.naturalWidth=entry.cell*entry.frames;this.naturalHeight=entry.cell*8;
+    queueMicrotask(()=>this.onload());
+   }
+  };
+  const isolated=await import('data:text/javascript;base64,'+Buffer.from(source+String.fromCharCode(10)+'// no-cape regression').toString('base64'));
+  assert.equal(await isolated.preloadHollowSprites(),true);
+  assert.equal(isolated.hollowDiagnostics(isolated.createHollowState()).capeFreeReady,true);
+  for(let id=0;id<12;id++){
+   const e=enemy({entityId:id});
+   const state=isolated.createHollowState();
+   isolated.updateHollowSprites(state,snapshot({enemies:[e]}),0);
+   const calls=[];
+   const ctx={globalAlpha:1,save(){},restore(){},translate(){},rotate(){},drawImage(...args){calls.push(args);}};
+   assert.equal(isolated.drawHollowEnemy(ctx,e,state),true);
+   assert.equal(calls.length,1);
+   assert.ok(calls[0][0].url.includes('/arms/')||calls[0][0].url.includes('/injuries/'),'caped base atlas used');
+   state.entities.get(id).clip='attack';
+   assert.equal(isolated.drawHollowEnemy(ctx,e,state),true);
+   assert.ok(calls[1][0].url.includes('/arms/')||calls[1][0].url.includes('/injuries/'),'caped base attack used');
+   isolated.updateHollowSprites(state,snapshot({enemies:[],deathBursts:[{entityId:id,kind:0,x:20,y:20,bodyRadius:11}]}),.1);
+   isolated.drawHollowCorpses(ctx,state);
+   assert.ok(calls[2][0].url.includes('/arms/')||calls[2][0].url.includes('/injuries/'),
+    'if 3D source injury atlas is not loaded, fallback must retain a cape-free injured actor');
+  }
+ } finally {globalThis.fetch=originals.fetch;globalThis.Image=originals.Image;}
+});
+
+test('a real Hollow death renders authored 3D frames, not a rotated walking sprite, in all facings',async()=>{
+ const oldFetch=globalThis.fetch,oldImage=globalThis.Image;
+ const artPath=name=>new URL('art/enemies/hollow-rigged/'+name,root);
+ const base=JSON.parse(readFileSync(artPath('manifest.json')));
+ const arms=JSON.parse(readFileSync(artPath('arms/manifest.json')));
+ const injury=JSON.parse(readFileSync(artPath('injuries/manifest.json')));
+ const death=JSON.parse(readFileSync(artPath('death/manifest.json')));
+ const layers=JSON.parse(readFileSync(artPath('layers.json')));
+ const animation=JSON.parse(readFileSync(artPath('animation-profile.json')));
+ try{
+  globalThis.fetch=async url=>{
+   const path=String(url);
+   const body=path.includes('/arms/')?arms:path.includes('/injuries/')?injury:
+    path.includes('/death/')?death:path.endsWith('layers.json')?layers:
+    path.endsWith('animation-profile.json')?animation:base;
+   return {ok:true,json:async()=>body};
+  };
+  globalThis.Image=class {
+   set src(url){
+    this.url=String(url);
+    const path=this.url;
+    const clips=path.includes('/arms/')?Object.values(arms.clips).flatMap(x=>Object.values(x)):
+     path.includes('/injuries/')?Object.values(injury.clips):
+     path.includes('/death/')?Object.values(death.clips).map(c=>({...c,cell:death.cell,frames:death.frames})):Object.values(base.clips);
+    const clip=clips.find(c=>path.includes('/'+c.image+'?'));
+    assert.ok(clip,'unexpected clip URL: '+path);
+    this.naturalWidth=clip.cell*clip.frames;
+    this.naturalHeight=clip.cell*8;
+    queueMicrotask(()=>this.onload());
+   }
+  };
+  const isolated=await import('data:text/javascript;base64,'+
+    Buffer.from(source+String.fromCharCode(10)+'// skeletal death integration').toString('base64'));
+  assert.equal(await isolated.preloadHollowSprites(),true);
+  assert.equal(isolated.hollowDiagnostics(isolated.createHollowState()).skeletalDeathReady,true);
+  for(const facing of ['N','NE','E','SE','S','SW','W','NW']){
+   const e=enemy({entityId:5,x:20,y:20});
+   const state=isolated.createHollowState();
+   isolated.updateHollowSprites(state,snapshot({enemies:[e]}),0);
+   state.entities.get(5).direction=facing;
+   const dead=snapshot({enemies:[],deathBursts:[{entityId:5,kind:0,x:20,y:20,bodyRadius:11}]});
+   isolated.updateHollowSprites(state,dead,.05);
+   const calls=[];
+   const ctx={globalAlpha:1,save(){},restore(){},rotate(){throw Error('death must use skeletal frames');},
+    translate(){throw Error('death must not move with 2D transforms');},
+    drawImage(...values){calls.push(values);}};
+   isolated.drawHollowCorpses(ctx,state);
+   assert.equal(calls.length,1);
+   assert.ok(calls[0][0].url.includes('/death/'+death.clips[isolated.hollowDiagnostics(state).corpses[0].deathVariant].image+'?'),
+    'must draw selected 3D death clip');
+   assert.equal(calls[0][1],0);
+   assert.equal(calls[0][2],death.directions.indexOf(facing)*128);
+   isolated.updateHollowSprites(state,{...dead,deathBursts:[]},1.05);
+   isolated.drawHollowCorpses(ctx,state);
+   assert.ok(calls.at(-1)[1]>0,'death pose must advance with time');
+  }
+ }finally{globalThis.fetch=oldFetch;globalThis.Image=oldImage;}
+});
+
+test('rejected bone sprites are lab-only: every production Hollowed corpse uses an authored collapse',()=>{
+ const ids=Array.from({length:128},(_,id)=>id);
+ const rejected=ids.filter(id=>selectHollowDeathStyle(id)!=='collapse');
+ assert.ok(rejected.some(id=>selectHollowDeathStyle(id)==='shatter-burst'));
+ assert.ok(rejected.some(id=>selectHollowDeathStyle(id)==='buckle-burst'));
+ for(const id of rejected.slice(0,24)){
+  const state=mod.createHollowState(),e=enemy({entityId:id});
+  mod.updateHollowSprites(state,snapshot({enemies:[e]}),0);
+  const dead=snapshot({enemies:[],deathBursts:[{entityId:id,kind:0,x:20,y:20,bodyRadius:11}]});
+  advance(state,dead,.05,.75);
+  const corpse=mod.hollowDiagnostics(state).corpses[0];
+  assert.equal(corpse.deathStyle,'collapse','rejected procedural variants must never reach Hunts');
+  const ctx={globalAlpha:1,save(){},restore(){},
+   translate(){throw Error('procedural bone fragments must not translate')},
+   rotate(){throw Error('procedural bone fragments must not rotate')},
+   scale(){throw Error('procedural bone fragments must not scale')},
+   fillRect(){throw Error('procedural bone fragments and dust must not render')},
+   drawImage(){}};
+  assert.doesNotThrow(()=>mod.drawHollowCorpses(ctx,state));
+  const before=state.clock;
+  mod.updateHollowSprites(state,{...dead,paused:true},.85);
+  assert.equal(state.clock,before,'corpse playback remains frozen during pause');
+ }
+ const runtime=readFileSync(new URL('js/hollow-sprites.js',root),'utf8');
+ assert.equal(runtime.includes('drawHollowBoneBurst'),false,'no rejected effect imported into production');
+ assert.equal(runtime.includes('selectHollowDeathStyle'),false,'no rejected death style selected in production');
+});
+
+test('approved source-mesh fracture really replaces eligible healthy deaths, never injured corpses',async()=>{
+ const previous={fetch:globalThis.fetch,Image:globalThis.Image};
+ const directions=['N','NE','E','SE','S','SW','W','NW'];
+ const approved={
+  schemaVersion:1,actor:'hollowed',clip:'fracture',ownerApproved:true,
+  sourceGeometry:'original-skinned-blender-mesh',injury:'standard',
+  frames:24,fps:12,cell:128,worldSize:124,anchor:[64,88],directions,
+  atlases:Object.fromEntries(directions.map(d=>[d,{file:'fracture-'+d+'.png',sha256:'a'.repeat(64)}]))
+ };
+ try{
+  globalThis.fetch=async uri=>String(uri).includes('/death/fracture/manifest.json')?
+   {ok:true,json:async()=>approved}:{ok:false};
+  globalThis.Image=class {
+   set src(url){this.url=String(url);this.naturalWidth=3072;this.naturalHeight=128;
+    queueMicrotask(()=>this.onload());}
+  };
+  const isolated=await import('data:text/javascript;base64,'+
+   Buffer.from(source+String.fromCharCode(10)+'// approved source fracture integration').toString('base64'));
+  await isolated.preloadHollowSprites();
+  assert.equal(await isolated.preloadHollowFracture(),true,'all eight source atlases must finish decoding');
+  assert.equal(isolated.hollowDiagnostics(isolated.createHollowState()).fractureReady,true);
+  let fractured=0,injured=0;
+  for(let id=0;id<128;id++){
+   const state=isolated.createHollowState(),e=enemy({entityId:id});
+   isolated.updateHollowSprites(state,snapshot({enemies:[e]}),0);
+   const old=state.entities.get(id);
+   const death=snapshot({enemies:[],deathBursts:[{entityId:id,kind:0,x:20,y:20,bodyRadius:11}]});
+   isolated.updateHollowSprites(state,death,.1);
+   const corpse=[...state.corpses.values()][0];
+   if(old.deathInjury!=='standard'){
+    assert.equal(corpse.deathStyle,'collapse','injured Hollowed must never regenerate a healthy fracture');
+    injured++;continue;
+   }
+   if(corpse.deathStyle!=='fracture')continue;
+   fractured++;
+   const images=[],ctx={globalAlpha:1,save(){},restore(){},drawImage(...args){images.push(args)}};
+   isolated.drawHollowCorpses(ctx,state);
+   assert.equal(images.length,1);
+   assert.ok(images[0][0].url.includes('/death/fracture/fracture-S.png?'),
+    'the actual authored 3D atlas is drawn, not a generated pixel-bone or old death');
+  }
+  assert.ok(fractured>=3,'original skin selection must allow some real explosions');
+  assert.ok(injured>=15,'injuries remain part of the original visual distribution');
+ }finally{globalThis.fetch=previous.fetch;globalThis.Image=previous.Image;}
 });

@@ -1,0 +1,27 @@
+{
+  "source": "C:\\Wyrmforge\\ashfang-zagmatorah\\artifacts\\ashfang\\M0-001\\master\\ashfang-master-working.blend",
+  "sourceSha256": "2b7504c26b3cbe44ea908fb8e5dd0d53355f1d92494d1d5dcbcdfafbcd084463",
+  "candidateSha256": "43fd4c11115e0245dbad672a672df2ac09f086cc6a53fbfa320aaefc8ad4ad12",
+  "changes": [
+    "Reversible weighted shoulder/neck inflation and crown shape key",
+    "Charred source albedo tint, retained normals and opacity",
+    "Anatomically weighted procedural fracture emission, provisional pattern"
+  ],
+  "limitations": [
+    "Wyvern anatomy differs from approved four-legged card",
+    "No animated source actions",
+    "Procedural fissure pattern requires authored art review",
+    "Not deformation validated or owner accepted"
+  ],
+  "config": {
+    "revision": "M1-candidate-002",
+    "shoulderInflation": 0.18,
+    "neckInflation": 0.09,
+    "headWidth": 1.12,
+    "hornGrowth": 1.16,
+    "fractureScale": 2.6,
+    "fractureWidth": 0.022,
+    "emissionStrength": 5.0,
+    "ownerAccepted": false
+  }
+}

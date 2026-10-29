@@ -1,0 +1,10 @@
+{
+  "source": "../tier-I-skin-010/ashfang-tier-I-working.blend",
+  "master": "ashfang-tier-I.blend",
+  "sha256": "155bf614ebd5f73bfa06ea77d67858fcc1ef417ff95afc4517d39a78aad5011a",
+  "selfContained": true,
+  "packedImages": 20,
+  "approvedAnatomyUnchanged": true,
+  "ownerAcceptedMaterials": false,
+  "fireAndSmoke": "Runtime VFX only; absent from master"
+}

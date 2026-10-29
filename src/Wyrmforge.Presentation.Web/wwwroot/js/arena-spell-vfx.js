@@ -1,3 +1,4 @@
+import { drawFireballV5 } from './arena-fireball-v5.js';
 import { drawFirePixelProjectile, drawFirePixelImpact } from './arena-fire-pixels.js';
 
 // Simulation-authoritative spell identities and cast progress; all effects are cosmetic.
@@ -96,14 +97,14 @@ export function drawSpellCastMotion(ctx, cast, reducedMotion = false) {
     ctx.restore();
 }
 
-export function drawSpellProjectile(ctx, projectile, reducedMotion = false) {
+export function drawSpellProjectile(ctx, projectile, reducedMotion = false, visualSeconds = 0) {
     const family = spellFamily(projectile.spell, projectile.combination);
     const radius = Math.max(2, projectile.radius);
     ctx.save();
     ctx.translate(projectile.x, projectile.y);
     ctx.rotate(Number(projectile.angle) || 0);
     if (family === 'fire') {
-        drawFirePixelProjectile(ctx, projectile, reducedMotion);
+        if (!drawFireballV5(ctx, projectile, visualSeconds, reducedMotion)) drawFirePixelProjectile(ctx, projectile, reducedMotion);
         ctx.restore();
         return;
     }

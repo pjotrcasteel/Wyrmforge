@@ -1,0 +1,604 @@
+[
+  {
+    "Identity": {
+      "Id": 1,
+      "Archetype": "Hollow",
+      "Faction": "hostile"
+    },
+    "Seed": 42,
+    "DecisionIntervalTicks": 6,
+    "Lifecycle": 0,
+    "Tick": 177,
+    "NextDecisionTick": 183,
+    "Sequence": 31,
+    "Observations": [
+      {
+        "Key": "target",
+        "Value": "184,243.7578125",
+        "ObservedTick": 177,
+        "Source": "legacy-exact-target/world-units"
+      },
+      {
+        "Key": "navigation",
+        "Value": "184,243.7578125",
+        "ObservedTick": 177,
+        "Source": "existing-hunt-navigation"
+      },
+      {
+        "Key": "phase",
+        "Value": "Chase",
+        "ObservedTick": 177,
+        "Source": "authoritative-executor"
+      },
+      {
+        "Key": "cooldown",
+        "Value": "0",
+        "ObservedTick": 177,
+        "Source": "authoritative-executor"
+      },
+      {
+        "Key": "may-commit",
+        "Value": "True",
+        "ObservedTick": 177,
+        "Source": "existing-pressure-budget"
+      }
+    ],
+    "Memory": [
+      {
+        "Key": "cooldown",
+        "Value": "0",
+        "ObservedTick": 177,
+        "Source": "authoritative-executor"
+      },
+      {
+        "Key": "may-commit",
+        "Value": "True",
+        "ObservedTick": 177,
+        "Source": "existing-pressure-budget"
+      },
+      {
+        "Key": "navigation",
+        "Value": "184,243.7578125",
+        "ObservedTick": 177,
+        "Source": "existing-hunt-navigation"
+      },
+      {
+        "Key": "phase",
+        "Value": "Chase",
+        "ObservedTick": 177,
+        "Source": "authoritative-executor"
+      },
+      {
+        "Key": "target",
+        "Value": "184,243.7578125",
+        "ObservedTick": 177,
+        "Source": "legacy-exact-target/world-units"
+      }
+    ],
+    "CurrentAction": {
+      "Sequence": 31,
+      "Goal": "pursue",
+      "Action": "chase",
+      "Reason": "instinctive-direct-pursuit"
+    },
+    "LastResult": {
+      "Sequence": 31,
+      "Status": 0,
+      "Reason": "Chase"
+    },
+    "Trace": [
+      {
+        "Tick": 87,
+        "Alternatives": [
+          {
+            "Goal": "pursue",
+            "Action": "chase",
+            "Score": 1,
+            "Allowed": true,
+            "Reason": "instinctive-direct-pursuit"
+          },
+          {
+            "Goal": "flank-and-pounce",
+            "Action": "hound-cycle",
+            "Score": 1,
+            "Allowed": false,
+            "Reason": "archetype-has-no-pounce"
+          },
+          {
+            "Goal": "idle",
+            "Action": "wait",
+            "Score": 0,
+            "Allowed": true,
+            "Reason": "fallback-only"
+          }
+        ],
+        "Chosen": {
+          "Sequence": 16,
+          "Goal": "pursue",
+          "Action": "chase",
+          "Reason": "instinctive-direct-pursuit"
+        }
+      },
+      {
+        "Tick": 93,
+        "Alternatives": [
+          {
+            "Goal": "pursue",
+            "Action": "chase",
+            "Score": 1,
+            "Allowed": true,
+            "Reason": "instinctive-direct-pursuit"
+          },
+          {
+            "Goal": "flank-and-pounce",
+            "Action": "hound-cycle",
+            "Score": 1,
+            "Allowed": false,
+            "Reason": "archetype-has-no-pounce"
+          },
+          {
+            "Goal": "idle",
+            "Action": "wait",
+            "Score": 0,
+            "Allowed": true,
+            "Reason": "fallback-only"
+          }
+        ],
+        "Chosen": {
+          "Sequence": 17,
+          "Goal": "pursue",
+          "Action": "chase",
+          "Reason": "instinctive-direct-pursuit"
+        }
+      },
+      {
+        "Tick": 99,
+        "Alternatives": [
+          {
+            "Goal": "pursue",
+            "Action": "chase",
+            "Score": 1,
+            "Allowed": true,
+            "Reason": "instinctive-direct-pursuit"
+          },
+          {
+            "Goal": "flank-and-pounce",
+            "Action": "hound-cycle",
+            "Score": 1,
+            "Allowed": false,
+            "Reason": "archetype-has-no-pounce"
+          },
+          {
+            "Goal": "idle",
+            "Action": "wait",
+            "Score": 0,
+            "Allowed": true,
+            "Reason": "fallback-only"
+          }
+        ],
+        "Chosen": {
+          "Sequence": 18,
+          "Goal": "pursue",
+          "Action": "chase",
+          "Reason": "instinctive-direct-pursuit"
+        }
+      },
+      {
+        "Tick": 105,
+        "Alternatives": [
+          {
+            "Goal": "pursue",
+            "Action": "chase",
+            "Score": 1,
+            "Allowed": true,
+            "Reason": "instinctive-direct-pursuit"
+          },
+          {
+            "Goal": "flank-and-pounce",
+            "Action": "hound-cycle",
+            "Score": 1,
+            "Allowed": false,
+            "Reason": "archetype-has-no-pounce"
+          },
+          {
+            "Goal": "idle",
+            "Action": "wait",
+            "Score": 0,
+            "Allowed": true,
+            "Reason": "fallback-only"
+          }
+        ],
+        "Chosen": {
+          "Sequence": 19,
+          "Goal": "pursue",
+          "Action": "chase",
+          "Reason": "instinctive-direct-pursuit"
+        }
+      },
+      {
+        "Tick": 111,
+        "Alternatives": [
+          {
+            "Goal": "pursue",
+            "Action": "chase",
+            "Score": 1,
+            "Allowed": true,
+            "Reason": "instinctive-direct-pursuit"
+          },
+          {
+            "Goal": "flank-and-pounce",
+            "Action": "hound-cycle",
+            "Score": 1,
+            "Allowed": false,
+            "Reason": "archetype-has-no-pounce"
+          },
+          {
+            "Goal": "idle",
+            "Action": "wait",
+            "Score": 0,
+            "Allowed": true,
+            "Reason": "fallback-only"
+          }
+        ],
+        "Chosen": {
+          "Sequence": 20,
+          "Goal": "pursue",
+          "Action": "chase",
+          "Reason": "instinctive-direct-pursuit"
+        }
+      },
+      {
+        "Tick": 117,
+        "Alternatives": [
+          {
+            "Goal": "pursue",
+            "Action": "chase",
+            "Score": 1,
+            "Allowed": true,
+            "Reason": "instinctive-direct-pursuit"
+          },
+          {
+            "Goal": "flank-and-pounce",
+            "Action": "hound-cycle",
+            "Score": 1,
+            "Allowed": false,
+            "Reason": "archetype-has-no-pounce"
+          },
+          {
+            "Goal": "idle",
+            "Action": "wait",
+            "Score": 0,
+            "Allowed": true,
+            "Reason": "fallback-only"
+          }
+        ],
+        "Chosen": {
+          "Sequence": 21,
+          "Goal": "pursue",
+          "Action": "chase",
+          "Reason": "instinctive-direct-pursuit"
+        }
+      },
+      {
+        "Tick": 123,
+        "Alternatives": [
+          {
+            "Goal": "pursue",
+            "Action": "chase",
+            "Score": 1,
+            "Allowed": true,
+            "Reason": "instinctive-direct-pursuit"
+          },
+          {
+            "Goal": "flank-and-pounce",
+            "Action": "hound-cycle",
+            "Score": 1,
+            "Allowed": false,
+            "Reason": "archetype-has-no-pounce"
+          },
+          {
+            "Goal": "idle",
+            "Action": "wait",
+            "Score": 0,
+            "Allowed": true,
+            "Reason": "fallback-only"
+          }
+        ],
+        "Chosen": {
+          "Sequence": 22,
+          "Goal": "pursue",
+          "Action": "chase",
+          "Reason": "instinctive-direct-pursuit"
+        }
+      },
+      {
+        "Tick": 129,
+        "Alternatives": [
+          {
+            "Goal": "pursue",
+            "Action": "chase",
+            "Score": 1,
+            "Allowed": true,
+            "Reason": "instinctive-direct-pursuit"
+          },
+          {
+            "Goal": "flank-and-pounce",
+            "Action": "hound-cycle",
+            "Score": 1,
+            "Allowed": false,
+            "Reason": "archetype-has-no-pounce"
+          },
+          {
+            "Goal": "idle",
+            "Action": "wait",
+            "Score": 0,
+            "Allowed": true,
+            "Reason": "fallback-only"
+          }
+        ],
+        "Chosen": {
+          "Sequence": 23,
+          "Goal": "pursue",
+          "Action": "chase",
+          "Reason": "instinctive-direct-pursuit"
+        }
+      },
+      {
+        "Tick": 135,
+        "Alternatives": [
+          {
+            "Goal": "pursue",
+            "Action": "chase",
+            "Score": 1,
+            "Allowed": true,
+            "Reason": "instinctive-direct-pursuit"
+          },
+          {
+            "Goal": "flank-and-pounce",
+            "Action": "hound-cycle",
+            "Score": 1,
+            "Allowed": false,
+            "Reason": "archetype-has-no-pounce"
+          },
+          {
+            "Goal": "idle",
+            "Action": "wait",
+            "Score": 0,
+            "Allowed": true,
+            "Reason": "fallback-only"
+          }
+        ],
+        "Chosen": {
+          "Sequence": 24,
+          "Goal": "pursue",
+          "Action": "chase",
+          "Reason": "instinctive-direct-pursuit"
+        }
+      },
+      {
+        "Tick": 141,
+        "Alternatives": [
+          {
+            "Goal": "pursue",
+            "Action": "chase",
+            "Score": 1,
+            "Allowed": true,
+            "Reason": "instinctive-direct-pursuit"
+          },
+          {
+            "Goal": "flank-and-pounce",
+            "Action": "hound-cycle",
+            "Score": 1,
+            "Allowed": false,
+            "Reason": "archetype-has-no-pounce"
+          },
+          {
+            "Goal": "idle",
+            "Action": "wait",
+            "Score": 0,
+            "Allowed": true,
+            "Reason": "fallback-only"
+          }
+        ],
+        "Chosen": {
+          "Sequence": 25,
+          "Goal": "pursue",
+          "Action": "chase",
+          "Reason": "instinctive-direct-pursuit"
+        }
+      },
+      {
+        "Tick": 147,
+        "Alternatives": [
+          {
+            "Goal": "pursue",
+            "Action": "chase",
+            "Score": 1,
+            "Allowed": true,
+            "Reason": "instinctive-direct-pursuit"
+          },
+          {
+            "Goal": "flank-and-pounce",
+            "Action": "hound-cycle",
+            "Score": 1,
+            "Allowed": false,
+            "Reason": "archetype-has-no-pounce"
+          },
+          {
+            "Goal": "idle",
+            "Action": "wait",
+            "Score": 0,
+            "Allowed": true,
+            "Reason": "fallback-only"
+          }
+        ],
+        "Chosen": {
+          "Sequence": 26,
+          "Goal": "pursue",
+          "Action": "chase",
+          "Reason": "instinctive-direct-pursuit"
+        }
+      },
+      {
+        "Tick": 153,
+        "Alternatives": [
+          {
+            "Goal": "pursue",
+            "Action": "chase",
+            "Score": 1,
+            "Allowed": true,
+            "Reason": "instinctive-direct-pursuit"
+          },
+          {
+            "Goal": "flank-and-pounce",
+            "Action": "hound-cycle",
+            "Score": 1,
+            "Allowed": false,
+            "Reason": "archetype-has-no-pounce"
+          },
+          {
+            "Goal": "idle",
+            "Action": "wait",
+            "Score": 0,
+            "Allowed": true,
+            "Reason": "fallback-only"
+          }
+        ],
+        "Chosen": {
+          "Sequence": 27,
+          "Goal": "pursue",
+          "Action": "chase",
+          "Reason": "instinctive-direct-pursuit"
+        }
+      },
+      {
+        "Tick": 159,
+        "Alternatives": [
+          {
+            "Goal": "pursue",
+            "Action": "chase",
+            "Score": 1,
+            "Allowed": true,
+            "Reason": "instinctive-direct-pursuit"
+          },
+          {
+            "Goal": "flank-and-pounce",
+            "Action": "hound-cycle",
+            "Score": 1,
+            "Allowed": false,
+            "Reason": "archetype-has-no-pounce"
+          },
+          {
+            "Goal": "idle",
+            "Action": "wait",
+            "Score": 0,
+            "Allowed": true,
+            "Reason": "fallback-only"
+          }
+        ],
+        "Chosen": {
+          "Sequence": 28,
+          "Goal": "pursue",
+          "Action": "chase",
+          "Reason": "instinctive-direct-pursuit"
+        }
+      },
+      {
+        "Tick": 165,
+        "Alternatives": [
+          {
+            "Goal": "pursue",
+            "Action": "chase",
+            "Score": 1,
+            "Allowed": true,
+            "Reason": "instinctive-direct-pursuit"
+          },
+          {
+            "Goal": "flank-and-pounce",
+            "Action": "hound-cycle",
+            "Score": 1,
+            "Allowed": false,
+            "Reason": "archetype-has-no-pounce"
+          },
+          {
+            "Goal": "idle",
+            "Action": "wait",
+            "Score": 0,
+            "Allowed": true,
+            "Reason": "fallback-only"
+          }
+        ],
+        "Chosen": {
+          "Sequence": 29,
+          "Goal": "pursue",
+          "Action": "chase",
+          "Reason": "instinctive-direct-pursuit"
+        }
+      },
+      {
+        "Tick": 171,
+        "Alternatives": [
+          {
+            "Goal": "pursue",
+            "Action": "chase",
+            "Score": 1,
+            "Allowed": true,
+            "Reason": "instinctive-direct-pursuit"
+          },
+          {
+            "Goal": "flank-and-pounce",
+            "Action": "hound-cycle",
+            "Score": 1,
+            "Allowed": false,
+            "Reason": "archetype-has-no-pounce"
+          },
+          {
+            "Goal": "idle",
+            "Action": "wait",
+            "Score": 0,
+            "Allowed": true,
+            "Reason": "fallback-only"
+          }
+        ],
+        "Chosen": {
+          "Sequence": 30,
+          "Goal": "pursue",
+          "Action": "chase",
+          "Reason": "instinctive-direct-pursuit"
+        }
+      },
+      {
+        "Tick": 177,
+        "Alternatives": [
+          {
+            "Goal": "pursue",
+            "Action": "chase",
+            "Score": 1,
+            "Allowed": true,
+            "Reason": "instinctive-direct-pursuit"
+          },
+          {
+            "Goal": "flank-and-pounce",
+            "Action": "hound-cycle",
+            "Score": 1,
+            "Allowed": false,
+            "Reason": "archetype-has-no-pounce"
+          },
+          {
+            "Goal": "idle",
+            "Action": "wait",
+            "Score": 0,
+            "Allowed": true,
+            "Reason": "fallback-only"
+          }
+        ],
+        "Chosen": {
+          "Sequence": 31,
+          "Goal": "pursue",
+          "Action": "chase",
+          "Reason": "instinctive-direct-pursuit"
+        }
+      }
+    ]
+  }
+]

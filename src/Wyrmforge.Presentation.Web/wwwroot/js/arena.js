@@ -1,6 +1,9 @@
+import { preloadFireballV5 } from './arena-fireball-v5.js';
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
-import { attachArenaInput, getArenaMovement, getArenaAim } from './arena-input.js';
-import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, drawArenaCloisterElevation } from './arena-environment.js';
+import { attachArenaInput, getArenaMovement, getArenaAim, isArenaStickAim, getArenaPropFocus } from './arena-input.js';
+import { resolveTargetIndicator, presentTargetSigil, drawTargetIndicator, preloadTargetSigilArt, targetSelectionLightEmitter, targetSelectionCanvasLight, actorLightsWithoutSigilOverlay } from './arena-target-indicator.js?v=20261028-feet-centered-v3';
+import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, drawArenaCloisterElevation } from './arena-environment.js?v=20261026-compact-ground-v1';
+import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
 import { drawRecoveryGuide } from './arena-recovery.js';
 import { drawSpellCastMotion, drawSpellProjectile, drawSpellImpact } from './arena-spell-vfx.js';
@@ -8,6 +11,9 @@ import { drawMage, updateMageWalk } from './arena-mage.js';
 import { drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions, enemyFacing } from './arena-enemy-art.js';
 import { preloadPaintedEnemies, drawPaintedEnemy, drawPaintedWyrm, updatePaintedCorpses, drawPaintedCorpses, mireHoundPixelPreviewEnabled } from './painted-enemies.js';
 import { preloadHollowSprites, hollowSpritesReady, createHollowState, updateHollowSprites, drawHollowEnemy, drawHollowCorpses, hollowDiagnostics } from './hollow-sprites.js';
+import { hollowFractureEmitters, hollowFractureCanvasLights, withHollowFractureLightingFrame } from './hollow-fracture.js';
+import { preloadAshfang, createAshfangState, updateAshfang, drawAshfang, drawAshfangDeath, ashfangSockets, ashfangDiagnostics } from './ashfang-sprites.js';
+import { drawAshfangWarning, drawAshfangGroundEffects, drawAshfangAirEffects, ashfangVfxDiagnostics } from './ashfang-vfx.js';
 import { ashlingSprites } from './ashling-sprites.js';
 import { drawEnemyTelegraph, drawHostileProjectileGround, drawHostileProjectileEmber, drawShieldGuard, drawAshRemains, drawWraithRipple } from './arena-enemy-telegraphs.js';
 import { drawReliquaryGround, drawReliquaryEmergence, drawReliquaryHushVeil, drawReliquaryBar } from './arena-reliquary-vfx.js';
@@ -15,7 +21,9 @@ import { drawBellWardenGround, drawBellWardenEntrance, drawBellWardenBar } from 
 import { drawWinterBellGround, drawWinterBellAir } from './arena-winterbell-vfx.js';
 import { drawGlassReliquaryGround, drawGlassReliquaryAir } from './arena-glass-reliquary-vfx.js';
 import { loadArt, artReady, hasArtFrame, drawArtFrame } from './art-atlas.js';
-import { buildSpellLights, drawSpellLightSpill, sampleSpellLight } from './arena-spell-lighting.js';
+import { buildSpellLights, drawSpellLightSpill, sampleSpellLight, drawActorWithEmitter } from './arena-spell-lighting.js?v=20261028-ground-light-v3';
+import { gothicNightLightSources, gothicNightPlan, drawGothicNight, GOTHIC_NIGHT } from './arena-night-lighting.js';
+import { createWetForestFirelightPlan } from './arena-wet-forest-dressing.js';
 import { resolveArenaCamera, drawExitGuide } from './arena-camera.js';
 import { drawEliteGround, drawEliteCrest } from './arena-elite-vfx.js';
 import { drawLightningTrace } from './arena-lightning-vfx.js';
@@ -27,9 +35,11 @@ export function initializeArena(canvas, dotNetReference) {
     disposeArena(canvas);
     // Atlases stream in; until they decode, every layer uses its code-painted fallback.
     loadArt(new URL('../art/', import.meta.url).href);
+    preloadFireballV5();
     preloadPaintedEnemies();
     preloadHollowSprites();
     ashlingSprites.preload();
+    preloadAshfang();
     const state = createState(canvas, dotNetReference);
     arenas.set(canvas, state);
     state.detachInput = attachArenaInput(state);
@@ -45,9 +55,20 @@ export function readArenaDiagnostics(canvas) {
     if (!state) return null;
     return {
         active: state.active,
+        hud: state.latestSnapshot?.hud??null,
+        paused: state.latestSnapshot?.paused??false,
+        ended: state.latestSnapshot?.ended??false,
         movement: getArenaMovement(state),
         aim: getArenaAim(state),
+        pendingPropId: state.pendingPropId,
+        aimedPropId: state.latestSnapshot?.player?.aimPropId ?? null,
         projectiles: state.latestSnapshot?.projectiles ?? [],
+        // Read-only visual provenance for real-Hunt evidence captures.
+        // These never modify the original scene, C# simulation, or VFX renderer.
+        fireballVisual: state.latestSnapshot?.fireballVisual ?? null,
+        elementalImpacts: state.latestSnapshot?.elementalImpacts ?? [],
+        burningGrounds: state.latestSnapshot?.burningGrounds ?? [],
+        essenceBursts: state.latestSnapshot?.essenceBursts ?? [],
         castMotion: state.latestSnapshot?.castMotion ?? null,
         pointerId: state.pointerId,
         touchId: state.touchId,
@@ -58,10 +79,20 @@ export function readArenaDiagnostics(canvas) {
         deathBursts: state.latestSnapshot?.deathBursts ?? [],
         hollow: hollowDiagnostics(state.hollow),
         ashling: ashlingSprites.diagnostics(state.ashling),
+        ashfang: ashfangDiagnostics(state.ashfang),
+        ashfangVfx: ashfangVfxDiagnostics(state.latestSnapshot??{},ashfangSockets(state.ashfang)),
+        ashfangEffects: state.latestSnapshot?.ashfangEffects??[],
         dragon: state.latestSnapshot?.dragon ?? null,
         dragonBreath: state.latestSnapshot?.dragonBreath ?? null,
+        huntHazards: state.latestSnapshot?.huntHazards ?? [],
+        hunt: state.latestSnapshot?.hunt ?? null,
         performance: { fps:state.displayFps, simulationHz:state.displaySimulationHz, simulationMilliseconds:state.displaySimulationMilliseconds, bridgeMilliseconds:state.displayBridgeMilliseconds },
         renderingFailed: Boolean(state.renderingFailed),
+        sharedLighting: state.sharedLightingFrame ?? state.latestSnapshot?.lighting ?? null,
+        hollowFractureGpuEmitters: state.fractureGpuEmitters ?? [],
+        wetForestGround: state.latestSnapshot?.environment?.wetForest
+            ? liveWetForestMaterialDiagnostics(state.latestSnapshot.environment.seed) : null,
+        lighting: { mode: 'night', darkness: GOTHIC_NIGHT.darkness, source: 'authoritative-csharp-snapshot' },
     };
 }
 
@@ -78,6 +109,10 @@ function createState(canvas, dotNetReference) {
     return {
         canvas,
         context: canvas.getContext('2d'),
+        nightMask: document.createElement('canvas'),
+        actorLightBuffer: document.createElement('canvas'),
+        targetSigilArt: preloadTargetSigilArt(),
+        targetSigil: { key: null, activeMarker: null, lastOpacity: 0, enteredAt: 0, exitedAt: null, exitMarker: null },
         dotNetReference,
         active: true,
         simulationBusy: false,
@@ -88,6 +123,7 @@ function createState(canvas, dotNetReference) {
         paintedCorpses: {},
         hollow: createHollowState(),
         ashling: ashlingSprites.createState(),
+        ashfang: createAshfangState(),
         reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)'),
         keys: new Set(),
         pointerId: null,
@@ -121,6 +157,9 @@ function frame(state, timestamp) {
         if (!state.renderingFailed) console.error('Wyrmforge arena drawing failed; simulation continues.', error);
         state.renderingFailed = true;
         // Canvas rendering must never silently stop player movement and the C# simulation.
+        // Reset the canvas state stack as well as its transform: a failed
+        // nested light/effect must not leave later frames in screen blending.
+        state.canvas.width = state.canvas.width;
         state.context.setTransform(1, 0, 0, 1, 0, 0);
         state.context.fillStyle = '#14111b';
         state.context.fillRect(0, 0, state.canvas.width, state.canvas.height);
@@ -139,7 +178,7 @@ function startSimulationFrame(state, timestamp, rect) {
     const aim = getArenaAim(state);
     const bridgeStarted = performance.now();
 
-    state.dotNetReference.invokeMethodAsync('Frame', delta, rect.width, rect.height, movement.x, movement.y, aim.x, aim.y)
+    state.dotNetReference.invokeMethodAsync('Frame', delta, rect.width, rect.height, movement.x, movement.y, aim.x, aim.y, getArenaPropFocus(state), isArenaStickAim(state, aim))
         .then(snapshot => {
             if (!state.active) return;
             updatePlayerDanger(state.playerDanger, snapshot, performance.now());
@@ -194,13 +233,34 @@ function drawWaiting(state, width, height) {
 
 function draw(state, snapshot, width, height) {
     const ctx = state.context;
+    ctx.globalAlpha=1;ctx.filter='none';ctx.globalCompositeOperation='source-over';
     const danger = playerDangerPresentation(state.playerDanger, snapshot, performance.now(), state.reducedMotion.matches);
     const camera = resolveArenaCamera(snapshot.world, snapshot.player, width, height);
+    const selectedTarget = resolveTargetIndicator(snapshot);
     const visualSeconds = performance.now() / 1000;
+    const targetId = snapshot.player?.aimPropId ?? snapshot.player?.aimTargetId;
+    const targetIndicator = presentTargetSigil(state.targetSigil, selectedTarget, targetId,
+        visualSeconds, state.reducedMotion.matches);
     const worldWidth = camera.width;
     const worldHeight = camera.height;
     const lightViewport = { x: camera.x, y: camera.y, width, height };
-    const spellLights = buildSpellLights(snapshot, visualSeconds, state.reducedMotion.matches, lightViewport);
+    updateHollowSprites(state.hollow,snapshot,visualSeconds,state.reducedMotion.matches);
+    // Source-derived death geometry and a shared GPU-compatible emitter; never procedural bones.
+    const fractureEmitters = hollowFractureEmitters(state.hollow.corpses,state.hollow.clock,state.reducedMotion.matches);
+    // Every illumination cue uses the SAME authoritative lighting frame.
+    // The selected target supplies the SAME generic emitter, colored from the
+    // C# active school. No independent lighting system or false school selection.
+    const selectionEmitter = targetSelectionLightEmitter(targetIndicator, snapshot.lighting,
+        snapshot.player?.activeSchool);
+    state.fractureGpuEmitters = fractureEmitters;
+    state.selectionGpuEmitter = selectionEmitter;
+    state.sharedLightingFrame = withHollowFractureLightingFrame(snapshot.lighting,
+        selectionEmitter ? [...fractureEmitters,selectionEmitter] : fractureEmitters);
+    const spellLights = [
+        ...buildSpellLights(snapshot, visualSeconds, state.reducedMotion.matches, lightViewport),
+        ...hollowFractureCanvasLights(fractureEmitters,snapshot.lighting),
+        ...targetSelectionCanvasLight(selectionEmitter)
+    ];
     ctx.clearRect(0, 0, width, height);
     ctx.save();
     ctx.translate(-camera.x, -camera.y);
@@ -218,7 +278,7 @@ function draw(state, snapshot, width, height) {
     drawArenaExit(ctx, snapshot.exit, visualSeconds);
     drawRecoveryGuide(ctx, snapshot, camera, width, height, visualSeconds, state.reducedMotion.matches);
 
-    for (const hazard of snapshot.huntHazards ?? []) drawHuntHazard(ctx, hazard);
+    drawAshfangGroundEffects(ctx,snapshot,state.reducedMotion.matches);
     for (const remains of snapshot.ashRemains ?? []) drawAshRemains(ctx, remains);
     for (const ripple of snapshot.wraithRipples ?? []) drawWraithRipple(ctx, ripple, visualSeconds);
     for (const patch of snapshot.blackIce ?? []) drawBlackIce(ctx, patch, state.reducedMotion.matches ? 0 : visualSeconds);
@@ -231,22 +291,27 @@ function draw(state, snapshot, width, height) {
     for (const enemy of snapshot.enemies) {
         drawEliteGround(ctx, enemy, visualSeconds, state.reducedMotion.matches);
         drawShieldGuard(ctx, enemy);
-        drawEnemyTelegraph(ctx, enemy);
     }
     for (const ember of snapshot.hostileProjectiles ?? []) drawHostileProjectileGround(ctx, ember);
     for (const bloom of snapshot.splinterBlooms ?? []) drawSplinterBloom(ctx, bloom);
     for (const wave of snapshot.avalancheRings ?? []) drawAvalancheWave(ctx, wave);
     drawPlayerChill(ctx, snapshot.player, state.reducedMotion.matches ? 0 : visualSeconds);
     for (const shard of snapshot.experienceShards ?? []) drawExperienceShard(ctx, shard);
-    if (snapshot.dragonBreath) drawDragonBreath(ctx, snapshot.dragonBreath, snapshot.dragon?.school ?? snapshot.hunt?.school);
     for (const pulse of snapshot.splashPulses) drawSplashPulse(ctx, pulse, snapshot.dragon?.school);
+    // A floor decal: the actor's C# ground pivot sits at the sigil center.
+    // Paint BOTH halves before depth-sorted actors. Opaque legs/body naturally mask
+    // the back arc; never composite bright sigil artwork over the sprite afterward.
+    drawTargetIndicator(ctx, targetIndicator, 'ground', visualSeconds, state.reducedMotion.matches,
+        state.targetSigilArt, snapshot.player?.activeSchool);
+    drawTargetIndicator(ctx, targetIndicator, 'contrast', visualSeconds, state.reducedMotion.matches,
+        state.targetSigilArt, snapshot.player?.activeSchool);
     drawAimRune(ctx, snapshot.player);
     drawWardReadiness(ctx, snapshot.player, visualSeconds, state.reducedMotion.matches);
     if (snapshot.wardPulse) drawWardPulse(ctx, snapshot.wardPulse, state.reducedMotion.matches);
     updatePaintedCorpses(state.paintedCorpses, snapshot.deathBursts, state.enemyMotion, visualSeconds);
     const enemyPoses = updateEnemyMotions(state.enemyMotion, snapshot.enemies, visualSeconds, state.reducedMotion.matches);
-    updateHollowSprites(state.hollow,snapshot,visualSeconds,state.reducedMotion.matches);
     ashlingSprites.update(state.ashling,snapshot,visualSeconds,state.reducedMotion.matches);
+    updateAshfang(state.ashfang,snapshot,visualSeconds,state.reducedMotion.matches);
     drawPaintedCorpses(ctx, state.paintedCorpses, visualSeconds,hollowSpritesReady(),ashlingSprites.ready());
     drawHollowCorpses(ctx,state.hollow,state.reducedMotion.matches);
     ashlingSprites.drawCorpses(ctx,state.ashling,state.reducedMotion.matches);
@@ -258,7 +323,10 @@ function draw(state, snapshot, width, height) {
                 null, 7, corpse.facing);
     // Correct 2.5D ordering by WORLD foot position. A mage/enemy walking north of
     // a ruined wall goes behind its facade; walking south brings it forward.
+    const entranceOmen = snapshot.hunt?.stage === 1 && snapshot.hunt?.entranceBeat === 1;
     const depthLayers = [
+        ...(snapshot.dragon && !entranceOmen ? [{kind: 'dragon', depth:state.ashfang.entity?.shadow?Number.NEGATIVE_INFINITY:snapshot.dragon.y, dragon:snapshot.dragon}] : []),
+        ...(state.ashfang.death ? [{kind:'dragonDeath',depth:state.ashfang.death.y}] : []),
         ...snapshot.enemies.map(enemy => ({ kind: 'enemy', depth: enemy.y + (enemy.radius || 0), enemy })),
         { kind: 'mage', depth: snapshot.player.y + (snapshot.player.radius || 0) },
         ...getArenaCloisterElevations(snapshot.environment, worldWidth, worldHeight, visualSeconds),
@@ -266,10 +334,17 @@ function draw(state, snapshot, width, height) {
     for (const layer of sortSceneDepthLayers(depthLayers)) {
         if (layer.kind === 'masonry') {
             drawArenaCloisterElevation(ctx, layer);
+        } else if (layer.kind === 'dragon') {
+            drawDragon(ctx, layer.dragon, state.reducedMotion.matches, snapshot.dragonBreath, state.ashfang);
+        } else if (layer.kind === 'dragonDeath') {
+            drawAshfangDeath(ctx,state.ashfang);
         } else if (layer.kind === 'enemy') {
             const enemy = layer.enemy;
-            drawEnemy(ctx, enemy, sampleSpellLight(spellLights, enemy.x, enemy.y),
+            const paintEnemy = surface => drawEnemy(surface, enemy, sampleSpellLight(spellLights, enemy.x, enemy.y),
                 enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId),state.hollow,state.ashling);
+            // The same point emitter illuminates opaque Hollowed, Ashling and fallback sprites.
+            // A reusable source-atop material pass preserves silhouette/alpha occlusion.
+            drawActorWithEmitter(ctx, state.actorLightBuffer, enemy, selectionEmitter, paintEnemy);
             drawEliteCrest(ctx, enemy, visualSeconds, state.reducedMotion.matches);
         } else {
             drawMage(ctx, snapshot.player, snapshot.castMotion, danger.hit, state.reducedMotion.matches,
@@ -293,10 +368,28 @@ function draw(state, snapshot, width, height) {
         ctx.stroke();
         ctx.restore();
     }
-    const entranceOmen = snapshot.hunt?.stage === 1 && snapshot.hunt?.entranceBeat === 1;
-    if (snapshot.dragon && !entranceOmen) drawDragon(ctx, snapshot.dragon, state.reducedMotion.matches, snapshot.dragonBreath);
-    // A second weaker pass tints nearby monster silhouettes without washing out their attacks.
-    drawSpellLightSpill(ctx, spellLights, lightViewport, 'actors');
+    // The WORLD is always at night. Render the SAME darkness across ground,
+    // physical scenery, enemies, mage and Wyrm. Real fire/elemental cast,
+    // impacts, burning trees and Fire Wyrm breath cut light into all layers.
+    // Keep high-priority attack tells and magical VFX ABOVE the veil.
+    const realFires = createWetForestFirelightPlan(snapshot.environment, worldWidth, worldHeight);
+    const nightSources = gothicNightLightSources(snapshot, spellLights, worldWidth, worldHeight, realFires);
+    drawGothicNight(ctx, gothicNightPlan(snapshot.player, nightSources, lightViewport), state.nightMask);
+    // Never redraw the floor seal over enemies after the night pass.
+    // Tactical telegraphs must remain readable even when the ground is nearly
+    // black. They are presentation cues, not physical light emitters.
+    for (const hazard of snapshot.huntHazards ?? []) {
+        if(Number(snapshot.dragon?.school)===1)drawAshfangWarning(ctx,hazard,state.reducedMotion.matches);
+        else drawHuntHazard(ctx,hazard);
+    }
+    for (const enemy of snapshot.enemies) drawEnemyTelegraph(ctx, enemy);
+    if (snapshot.dragonBreath) drawDragonBreath(ctx, snapshot.dragonBreath,
+        snapshot.dragon?.school ?? snapshot.hunt?.school, snapshot.dragon);
+    // A second weaker pass colors nearby silhouettes without whitening shadows.
+    drawAshfangAirEffects(ctx,snapshot,ashfangSockets(state.ashfang),state.reducedMotion.matches);
+    // Selection light illuminates the terrain and the selected sprite's alpha-isolated
+    // material pass above. Do not screen-blend it over all actors after occlusion.
+    drawSpellLightSpill(ctx, actorLightsWithoutSigilOverlay(spellLights), lightViewport, 'actors');
     for (const impact of snapshot.elementalImpacts) drawSpellImpact(ctx, impact, state.reducedMotion.matches);
     for (const death of snapshot.deathBursts) drawDeathBurst(ctx, death);
 
@@ -305,7 +398,7 @@ function draw(state, snapshot, width, height) {
     drawWinterBellAir(ctx, snapshot);
     drawGlassReliquaryAir(ctx, snapshot, state.reducedMotion.matches ? 0 : visualSeconds);
     for (const cloud of snapshot.snowClouds ?? []) drawSnowCloud(ctx, cloud, state.reducedMotion.matches ? 0 : visualSeconds);
-    for (const projectile of snapshot.projectiles) drawSpellProjectile(ctx, projectile, state.reducedMotion.matches);
+    for (const projectile of snapshot.projectiles) drawSpellProjectile(ctx, projectile, state.reducedMotion.matches, visualSeconds);
 
     for (const trace of snapshot.lightning) drawLightningTrace(ctx, trace, visualSeconds, state.reducedMotion.matches);
 
@@ -337,12 +430,13 @@ function draw(state, snapshot, width, height) {
 
     ctx.restore();
     const battleActive = Boolean(snapshot.dragon) && (!snapshot.hunt || snapshot.hunt.stage === 2);
+    ctx.globalAlpha=1;ctx.filter='none';ctx.globalCompositeOperation='source-over';
     drawPlayerDanger(ctx, { ...snapshot.player, x: snapshot.player.x - camera.x, y: snapshot.player.y - camera.y }, danger, width, height);
     // Draw navigation above the world but under the HUD. The arrow is not a touch target.
     drawExitGuide(ctx, snapshot.exit, camera, width, height);
     // Combat vitals now share one accessible responsive HTML HUD with the encounter objective.
     drawReliquaryHushVeil(ctx, snapshot.reliquary, width, height);
-    if (battleActive) drawBossBar(ctx, snapshot.dragon, snapshot.hunt, width);
+    if (battleActive) drawBossBar(ctx, snapshot.dragon, snapshot.hunt, width, state.ashfang.hpTrail);
     else {
         drawReliquaryBar(ctx, snapshot.reliquary, width);
         drawBellWardenBar(ctx, snapshot.bellWarden, width);
@@ -999,21 +1093,27 @@ function drawImpactCross(ctx, x, y, radius, color, rotation) {
     ctx.restore();
 }
 
-function drawDragonBreath(ctx, breath, school) {
+function drawDragonBreath(ctx, breath, school, dragon = null) {
+    if(dragon?.action==='pounce'){
+        ctx.save();ctx.strokeStyle='rgba(239,167,78,.8)';ctx.fillStyle='rgba(222,128,63,.12)';ctx.lineWidth=2;
+        ctx.beginPath();ctx.arc(dragon.attackTargetX,dragon.attackTargetY,70,0,Math.PI*2);ctx.fill();ctx.stroke();
+        ctx.setLineDash([7,6]);ctx.beginPath();ctx.moveTo(dragon.x,dragon.y);ctx.lineTo(dragon.attackTargetX,dragon.attackTargetY);ctx.stroke();ctx.restore();return;
+    }
     const palette = schoolPalette(school ?? 1);
     const angle = Math.atan2(breath.directionY, breath.directionX);
     ctx.beginPath();
     ctx.moveTo(breath.x, breath.y);
     ctx.arc(breath.x, breath.y, breath.range, angle - breath.halfAngle, angle + breath.halfAngle);
     ctx.closePath();
-    ctx.fillStyle = `rgba(${palette.rgb}, 0.16)`;
+    ctx.fillStyle = `rgba(${palette.rgb}, ${breath.active?.05:.16})`;
     ctx.fill();
-    ctx.strokeStyle = `rgba(${palette.rgb}, 0.65)`;
+    ctx.strokeStyle = `rgba(${palette.rgb}, ${breath.active?.4:.65})`;
     ctx.lineWidth = 2;
     ctx.stroke();
 }
 
-function drawDragon(ctx, dragon, reducedMotion = false, breath = null) {
+function drawDragon(ctx, dragon, reducedMotion = false, breath = null, ashfang = null) {
+    if (ashfang && drawAshfang(ctx,ashfang)) return;
     const palette = schoolPalette(dragon.school);
     ctx.save();
     ctx.translate(dragon.x, dragon.y);
@@ -1158,7 +1258,7 @@ function drawDragonEyes(ctx, radius, palette) {
     ctx.fill();
 }
 
-function drawBossBar(ctx, dragon, hunt, width) {
+function drawBossBar(ctx, dragon, hunt, width, healthTrail = null) {
     const palette = schoolPalette(dragon.school);
     const outerWidth = Math.min(350, width - 132);
     const x = (width - outerWidth) / 2;
@@ -1182,7 +1282,8 @@ function drawBossBar(ctx, dragon, hunt, width) {
         ctx.textAlign = 'right';
         ctx.fillStyle = palette.edge;
         ctx.font = '800 8px system-ui, sans-serif';
-        ctx.fillText(hunt.signatureName.toUpperCase(), x + outerWidth - 9, y + 12);
+        const aerial=dragon.flightStage==='takeoff'?'TAKING FLIGHT':dragon.flightStage==='overhead'?'FIRE RAIN':dragon.flightStage==='land'?'LANDING':dragon.flightStage==='recover'?'EXPOSED':null;
+        ctx.fillText(aerial??hunt.signatureName.toUpperCase(), x + outerWidth - 9, y + 12);
     }
 
     const innerX = x + 9;
@@ -1190,6 +1291,7 @@ function drawBossBar(ctx, dragon, hunt, width) {
     ctx.fillStyle = 'rgba(9, 7, 12, 0.88)';
     roundRect(ctx, innerX, barY, innerWidth, 8, 4);
     ctx.fill();
+    if(Number(dragon.school)===1&&healthTrail!=null){ctx.fillStyle='#d6ad79';roundRect(ctx,innerX,barY,innerWidth*healthTrail,8,4);ctx.fill();}
     ctx.fillStyle = dragon.phase === 2 ? palette.phase : palette.body;
     roundRect(ctx, innerX, barY, innerWidth * Math.max(0, dragon.health / dragon.maxHealth), 8, 4);
     ctx.fill();
@@ -1273,7 +1375,7 @@ function roundRect(ctx, x, y, width, height, radius) {
 
 // Snapshot direction is the same C# direction used to launch the primary spell.
 function drawAimRune(ctx, player) {
-    if (!Number.isFinite(player.aimAngle) || (!player.manualAim && player.aimTargetId == null)) return;
+    if (!Number.isFinite(player.aimAngle) || (!player.manualAim && player.aimTargetId == null && player.aimPropId == null)) return;
     ctx.save();
     ctx.translate(player.x, player.y + 7);
     ctx.rotate(player.aimAngle);

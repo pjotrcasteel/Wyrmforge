@@ -1,4 +1,5 @@
 using Wyrmforge.Domain.Combat.Enemies;
+using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Combat.Geometry;
 using Wyrmforge.Domain.Combat.Targets;
 using Wyrmforge.Domain.Spells;
@@ -19,6 +20,8 @@ public sealed partial class RunSimulation
 
     private void UpdateCombatFeedback(double delta)
     {
+        foreach (var effect in ashfangEffects) effect.Life -= delta;
+        ashfangEffects.RemoveAll(effect => effect.Life <= 0);
         powerBurstRemaining = Math.Max(0, powerBurstRemaining - delta);
         foreach (var id in hitFlashRemaining.Keys.ToArray())
         {
@@ -39,7 +42,7 @@ public sealed partial class RunSimulation
 
     private void RegisterTargetHit(ICombatTarget target)
     {
-        if (target is EnemyState) hitFlashRemaining[target.Id] = HitFlashSeconds;
+        if (target is EnemyState or DragonState) hitFlashRemaining[target.Id] = HitFlashSeconds;
     }
 
     private void RegisterSplashPulse(Vector2D position, double radius, double duration = SplashPulseSeconds) => splashPulses.Add(new SplashPulseState(position, radius, duration));

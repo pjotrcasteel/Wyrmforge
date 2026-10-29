@@ -1,3 +1,5 @@
+using Wyrmforge.Application.Runs.Simulation.Lighting;
+
 namespace Wyrmforge.Application.Runs.Simulation.Snapshots;
 
 public sealed record RunRenderSnapshot(
@@ -22,6 +24,11 @@ public sealed record RunRenderSnapshot(
     IReadOnlyList<ExperienceShardRenderSnapshot>? ExperienceShards = null,
     IReadOnlyList<ExperiencePickupRenderSnapshot>? ExperiencePickups = null)
 {
+    public IReadOnlyList<AshfangEffectRenderSnapshot> AshfangEffects { get; init; } = [];
+    public bool PresentationPaused { get; init; }
+    public DragonRenderSnapshot? DragonDefeat { get; init; }
+    public GpuLightingFrame? Lighting { get; init; }
+
     public SplashPulseRenderSnapshot? PowerBurst { get; init; }
     public TrailRenderSnapshot? Trail { get; init; }
     public ArenaEnvironmentRenderSnapshot? Environment { get; init; }

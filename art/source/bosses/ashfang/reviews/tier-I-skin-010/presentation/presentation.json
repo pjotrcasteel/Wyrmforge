@@ -1,0 +1,13 @@
+{
+  "source": "C:\\Wyrmforge\\ashfang-zagmatorah\\art\\source\\bosses\\ashfang\\archive\\tier-I-skin-010-packed\\ashfang-tier-I.blend",
+  "device": "OPTIX",
+  "samples": 128,
+  "views": [
+    "hero",
+    "portrait",
+    "side",
+    "head"
+  ],
+  "masterAnatomyChanged": false,
+  "stageSavedIntoMaster": false
+}

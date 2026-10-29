@@ -1,0 +1,79 @@
+name: Hollowed no-cape death 3D production
+
+on:
+  push:
+    branches: [art/hollow-no-cape-death-3d-production]
+    paths:
+      - '.github/workflows/hollow-no-cape-death-production.yml'
+      - 'tools/sprite-lab/render-hollow-no-cape-death.py'
+      - 'art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-zombie-reach-v3-standard/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: hollow-no-cape-death-art
+  cancel-in-progress: true
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          lfs: true
+          persist-credentials: true
+      - name: Restore source Blender models
+        run: |
+          git lfs pull --include="art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-death-v5/**,art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-zombie-reach-v3-standard/**" --exclude=""
+          test -s art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-death-v5/hollow-death.blend
+          test -s art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-zombie-reach-v3-standard/hollow-rigged.blend
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install Blender 4.5 LTS Python runtime
+        run: |
+          python -m pip install --disable-pip-version-check bpy==4.5.15 Pillow==11.3.0
+          python -c "import bpy; print('Blender', bpy.app.version_string)"
+      - name: Render 24 actual skeletal poses in 8 directions
+        env:
+          OMP_NUM_THREADS: 4
+        run: python tools/sprite-lab/render-hollow-no-cape-death.py
+      - name: Save source, runtime candidate and QC previews
+        run: |
+          set -euo pipefail
+          source=artifacts/hollow-no-cape-death
+          atlas=src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/hollow-rigged/death
+          reviews=docs/art/evidence/hollow-no-cape-death-2026-10-25
+          editable=art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-death-no-cape-standard
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # A concurrent art review may advance the PR during an expensive render.
+          # Generated outputs are retained in untracked artifacts/, so replay the
+          # exact deterministic outputs on the newest remote commit; never force-push.
+          for attempt in 1 2 3 4; do
+            git fetch origin art/hollow-no-cape-death-3d-production
+            git reset --hard FETCH_HEAD
+            mkdir -p "$atlas" "$reviews" "$editable"
+            cp "$source"/death*.png "$source/manifest.json" "$atlas/"
+            cp "$source"/death-contact-sheet*.png "$source"/death-south-review*.gif "$reviews/"
+            cp "$source/hollow-no-cape-death.blend" "$editable/hollow-death.blend"
+            git add -f "$atlas"/death*.png "$atlas/manifest.json" "$reviews"/death-contact-sheet*.png "$reviews"/death-south-review*.gif "$editable/hollow-death.blend"
+            if git diff --cached --quiet; then echo "Identical atlases already committed"; exit 0; fi
+            git commit -m "art(hollowed): export two 3D no-cape death poses, atlases, and QC evidence [skip ci]"
+            if git push origin "HEAD:refs/heads/art/hollow-no-cape-death-3d-production"; then exit 0; fi
+            echo "Concurrent branch update; retrying artifact-only commit"
+          done
+          exit 1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hollow-no-cape-death-preview
+          path: |
+            artifacts/hollow-no-cape-death/death-contact-sheet*.png
+            artifacts/hollow-no-cape-death/death-south-review*.gif
+            artifacts/hollow-no-cape-death/manifest.json
+          if-no-files-found: warn
+          retention-days: 14

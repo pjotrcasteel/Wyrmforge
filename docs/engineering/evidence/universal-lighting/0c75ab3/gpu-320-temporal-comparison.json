@@ -1,0 +1,129 @@
+{
+  "camera": [
+    {
+      "focus": "actors",
+      "panPixels": 1,
+      "translationMismatchFraction": 0.0010303558690655465
+    },
+    {
+      "focus": "actors",
+      "panPixels": 2,
+      "translationMismatchFraction": 0.00022016151048409114
+    },
+    {
+      "focus": "actors",
+      "panPixels": 4,
+      "translationMismatchFraction": 0.0005988393085167279
+    },
+    {
+      "focus": "actors",
+      "panPixels": 8,
+      "translationMismatchFraction": 0.0009070654231944555
+    },
+    {
+      "focus": "actors",
+      "panPixels": 4,
+      "translationMismatchFraction": 0.0005988393085167279
+    },
+    {
+      "focus": "actors",
+      "panPixels": 2,
+      "translationMismatchFraction": 0.00022016151048409114
+    },
+    {
+      "focus": "actors",
+      "panPixels": 1,
+      "translationMismatchFraction": 0.0010303558690655465
+    },
+    {
+      "focus": "oak",
+      "panPixels": 1,
+      "translationMismatchFraction": 0.001391420746259456
+    },
+    {
+      "focus": "oak",
+      "panPixels": 2,
+      "translationMismatchFraction": 0.0004491294813875459
+    },
+    {
+      "focus": "oak",
+      "panPixels": 4,
+      "translationMismatchFraction": 0.0010743881711623648
+    },
+    {
+      "focus": "oak",
+      "panPixels": 8,
+      "translationMismatchFraction": 0.0017436791630340018
+    },
+    {
+      "focus": "oak",
+      "panPixels": 4,
+      "translationMismatchFraction": 0.0010743881711623648
+    },
+    {
+      "focus": "oak",
+      "panPixels": 2,
+      "translationMismatchFraction": 0.0004491294813875459
+    },
+    {
+      "focus": "oak",
+      "panPixels": 1,
+      "translationMismatchFraction": 0.001391420746259456
+    },
+    {
+      "focus": "water",
+      "panPixels": 1,
+      "translationMismatchFraction": 0.0006780974522910007
+    },
+    {
+      "focus": "water",
+      "panPixels": 2,
+      "translationMismatchFraction": 0.0001761292083872729
+    },
+    {
+      "focus": "water",
+      "panPixels": 4,
+      "translationMismatchFraction": 0.00047554886264563684
+    },
+    {
+      "focus": "water",
+      "panPixels": 8,
+      "translationMismatchFraction": 0.0008542266606782736
+    },
+    {
+      "focus": "water",
+      "panPixels": 4,
+      "translationMismatchFraction": 0.00047554886264563684
+    },
+    {
+      "focus": "water",
+      "panPixels": 2,
+      "translationMismatchFraction": 0.0001761292083872729
+    },
+    {
+      "focus": "water",
+      "panPixels": 1,
+      "translationMismatchFraction": 0.0006780974522910007
+    }
+  ],
+  "replayHashes": [
+    "1112018179",
+    "2435499425",
+    "1636960687",
+    "1473092624",
+    "2491075180",
+    "1124066189",
+    "4003975840",
+    "3386345261",
+    "2346892625",
+    "151314690",
+    "1853126141",
+    "1269392047",
+    "3083842830",
+    "2874184008",
+    "3681535247",
+    "3444184365"
+  ],
+  "exactReplay": true,
+  "exactResizeRestore": true
+}

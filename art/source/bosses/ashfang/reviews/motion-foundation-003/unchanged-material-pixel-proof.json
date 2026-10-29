@@ -1,0 +1,9 @@
+{
+  "pass": true,
+  "sample": "idle SE source frame1",
+  "previousPath": "artifacts\\ashfang\\motion-library-014\\batch-2\\idle\\SE\\000.png",
+  "newPath": "artifacts/ashfang/motion-library-018/review/idle/SE/000.png",
+  "pixelSha256": "b84fddcb7127838192647611cb0b2bf08c30b555fb07a31e2eb185611de03bfc",
+  "identicalRGBA": true,
+  "condition": "Native same-material emission multiplier equals1 in all39 living actions;30 unaffected native actions proven exact."
+}

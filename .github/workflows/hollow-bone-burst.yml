@@ -1,0 +1,43 @@
+name: Hollowed bone-burst death regression
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/hollow-bone-burst.js'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/hollow-sprites.js'
+      - 'tests/javascript/hollow-bone-burst.test.mjs'
+      - 'tests/javascript/hollow-sprites.test.mjs'
+      - '.github/workflows/hollow-bone-burst.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/hollow-bone-burst.js'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/hollow-sprites.js'
+      - 'tests/javascript/hollow-bone-burst.test.mjs'
+      - 'tests/javascript/hollow-sprites.test.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bone-shatter:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          lfs: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate the pixel-bone renderer and deterministic selection
+        run: |
+          node --check src/Wyrmforge.Presentation.Web/wwwroot/js/hollow-bone-burst.js
+          node --check src/Wyrmforge.Presentation.Web/wwwroot/js/hollow-sprites.js
+          node --test tests/javascript/hollow-bone-burst.test.mjs
+      - name: Validate actual Hollowed walking, injuries and corpse rendering
+        run: |
+          git lfs pull --include="art/source/enemies/hollow/rigged-poc/exports/**" --exclude=""
+          node --test tests/javascript/hollow-sprites.test.mjs

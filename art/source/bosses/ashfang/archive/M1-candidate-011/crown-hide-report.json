@@ -1,0 +1,15 @@
+{
+  "source": "C:\\Wyrmforge\\ashfang-zagmatorah\\art\\source\\bosses\\ashfang\\archive\\M1-candidate-010\\ashfang-master-working.blend",
+  "sourceSha256": "ac95bef3dcb037e05a2233a10d1c925004dfb4e44c3f50ef9028c334f44f9cdc",
+  "sha256": "1f98eb8ab9c96d5a612c7804d579af2d3191c56fd42afaa69e20fe1c43fe076b",
+  "newConformingScales": 187,
+  "crownHorns": 2,
+  "wingFingerSpread": "16/-10/-34 degrees mirrored, articulated pose",
+  "recessedThroatHeat": true,
+  "ownerAccepted": false,
+  "limits": [
+    "Surface projection and plate overlap need close visual review",
+    "Horn attachment and mouth cavity require inspection",
+    "No animation or final rig acceptance"
+  ]
+}
