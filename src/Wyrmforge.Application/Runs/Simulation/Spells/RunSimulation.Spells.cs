@@ -181,7 +181,7 @@ public sealed partial class RunSimulation
             lightning.Add(new LightningTrace(current, target.Position, 0.12));
             var hitDamage = ApplyChainInteractions(spell.Id, target, damage, ref jumps, ref bonusJumpsTriggered);
             RegisterElementalImpact(target.Position, spell.Id, rank, combination, surgeProfile.IsSurge);
-            var killed = DamageTarget(target, hitDamage);
+            var killed = DamageTarget(target, hitDamage, spellId: spell.Id, empowered: surgeProfile.IsSurge);
             if (!killed) ApplyAbilityStatus(spell, rank, target, firstLink: jump == 0);
             if (!killed) ApplyHitRules(spell.Id, target);
 
