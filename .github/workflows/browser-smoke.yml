@@ -51,6 +51,9 @@ jobs:
           test -s src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-source-backed/v1/grass-moss-art-candidates/grass-moss-ART-CANDIDATE-01.png
           test -s src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-source-backed/v1/wet-mud-art-candidates/wet-mud-INDEPENDENT-ART-CANDIDATE-01.png
           test -s src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-source-backed/v1/trampled-earth-art-candidates/trampled-earth-INDEPENDENT-ART-CANDIDATE-01.png
+      - name: Validate generic Hunt GPU asset contract
+        run: node --test tests/javascript/arena-gpu-world.test.mjs tests/javascript/hunt-gpu-surface-contract.test.mjs
+
       - name: Restore browser tests
         run: dotnet restore tests/Wyrmforge.Browser.Tests/Wyrmforge.Browser.Tests.csproj
 
