@@ -69,6 +69,40 @@ test('only safe static props supply revisions; damage and late art invalidate th
 });
 
 
+test('static cloister walls reuse GPU texture uploads across render frames and camera travel', () => {
+    const barrier = { kind: 'ruin', x: .15, y: .35, width: .32, height: .05, open: false };
+    const wall = { kind: 'masonry', barrier, width: 1280, height: 1600, depth: 640 };
+    const original = structuredClone(wall);
+    const revision = huntLayerRevision(wall, false);
+    assert.equal(revision, huntLayerRevision({ ...wall, seconds: 12345 }, true),
+        'Cloister wall pixels do not depend on time, camera or late character art');
+    assert.ok(revision, 'A static masonry receiver must have an explicit GPU capture revision');
+    assert.notEqual(revision, huntLayerRevision({ ...wall, barrier: { ...barrier, open: true } }),
+        'Opening a C# gate must invalidate its old art');
+    assert.notEqual(revision, huntLayerRevision({ ...wall, barrier: { ...barrier, kind: 'gate' } }),
+        'Changed wall geometry/type must repaint');
+    assert.notEqual(revision, huntLayerRevision({ ...wall, width: 1440 }),
+        'World scale changes must repaint');
+    assert.equal(huntLayerRevision({ ...wall, style: 'territory', seconds: 1 }), undefined,
+        'Animated territory masonry must still repaint');
+    assert.equal(huntLayerRevision({ ...wall, wetForest: true }), undefined,
+        'Potentially animated forest art must never be cached as a cloister wall');
+    assert.equal(huntLayerRevision({ ...wall, style: 'destructible' }), undefined,
+        'Unknown destructible walls must remain dynamic');
+    assert.deepEqual(wall, original);
+    const c = fakeCapture();
+    c.capture(revision);
+    assert.equal(c.drawings, 1);
+    c.world.dirtyTextures.clear();
+    c.capture(huntLayerRevision({ ...wall, seconds: 500 }));
+    assert.equal(c.drawings, 1, 'Unchanged wall skips the CPU Canvas copy');
+    assert.equal(c.world.dirtyTextures.size, 0, 'Unchanged wall skips its GPU texture upload');
+    c.capture(huntLayerRevision({ ...wall, barrier: { ...barrier, kind: 'gate' } }));
+    assert.equal(c.drawings, 2, 'A new wall visual revision repaints');
+    assert.deepEqual([...c.world.dirtyTextures], ['prop']);
+});
+
+
 test('shared scratch canvas keeps bitmap allocation and isolates world-space paint state', () => {
     const calls = [], resets = [];
     const ctx = {
