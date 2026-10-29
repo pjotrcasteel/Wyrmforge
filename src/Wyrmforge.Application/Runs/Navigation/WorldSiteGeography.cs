@@ -51,6 +51,9 @@ public sealed record WorldSiteGeography(
     IReadOnlyList<string> MandatoryLandmarks)
 {
     public const int CurrentVersion = 1;
+
+    /// <summary>Authoritative C# site footprints, independent of visual palette.</summary>
+    public WorldSiteLandscapeRecipe? Landscape { get; init; }
 }
 
 /// <summary>
@@ -114,20 +117,19 @@ public static class WorldSiteGeographyProjection
                 : node.PreLair ? ["lair-approach"]
                 : Array.Empty<string>();
 
-            return node with
-            {
-                Geography = new WorldSiteGeography(
-                    WorldSiteGeography.CurrentVersion,
-                    worldSeed,
-                    region.ToString().ToLowerInvariant(),
-                    $"{region.ToString().ToLowerInvariant()}:{node.Id}",
-                    node.Habitat.ToString(),
-                    node.Site.Point,
-                    substrate,
-                    ports,
-                    corridors,
-                    landmarks),
-            };
+            var geography = new WorldSiteGeography(
+                WorldSiteGeography.CurrentVersion,
+                worldSeed,
+                region.ToString().ToLowerInvariant(),
+                $"{region.ToString().ToLowerInvariant()}:{node.Id}",
+                node.Habitat.ToString(),
+                node.Site.Point,
+                substrate,
+                ports,
+                corridors,
+                landmarks);
+            geography = geography with { Landscape = WorldSiteLandscapeGenerator.Generate(node, geography) };
+            return node with { Geography = geography };
         }).ToArray();
     }
 
