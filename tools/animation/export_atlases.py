@@ -35,7 +35,11 @@ if a.tight_crop:
     boxes=[]
     for name,clip in m['clips'].items():
         for direction in directions:
-            for frame in indices[name]:
+            # Crop against the complete independently validated native source,
+            # not only the sparsely selected review frames. Otherwise a
+            # different one-pixel union changes every walk/claw atlas hash,
+            # breaks shared root anchors and invalidates pack comparison.
+            for frame in range(original_source_qc[name]['frames']):
                 with Image.open(source/'frames'/name/direction/f'{frame:02d}.png') as image:
                     assert image.size==(96,96),'Unexpected native source cell'
                     box=image.convert('RGBA').getchannel('A').getbbox()
