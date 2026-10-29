@@ -123,7 +123,7 @@ public sealed partial class RunSimulation
                 var healthBeforeBreak = protectedDragon.Health;
                 protectedDragon.Health = protectedDragon.MaxHealth * 0.5;
                 RegisterDamageNumber(target, Math.Max(0, healthBeforeBreak - protectedDragon.Health),
-                    source?.Spell ?? spellId, finisher: false, source?.Surge == true || empowered, periodic);
+                    source?.Spell ?? spellId, finisher: false, empowered: source?.Surge == true || empowered, periodic: periodic);
                 RegisterTargetHit(protectedDragon);
                 BeginDragonPhaseBreak(protectedDragon);
                 return false;
