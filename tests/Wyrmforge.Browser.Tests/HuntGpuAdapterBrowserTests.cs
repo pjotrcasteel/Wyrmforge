@@ -66,4 +66,72 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
         });
         await Page.EvaluateAsync("() => window.__huntGpuAdapterProof.dispose()");
     }
+
+    [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
+    public async Task HuntAdapter_AuthoredFireballAtlas_EmitsWithoutCanvasCapture_AndZeroEmissionIsBlack(int width, int height)
+    {
+        var root = Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL");
+        if (string.IsNullOrWhiteSpace(root)) { Assert.Inconclusive("Requires published game."); return; }
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.GotoAsync(root.TrimEnd('/') + "/arena-material-kit", new() { WaitUntil = WaitUntilState.NetworkIdle });
+        var result = await Page.EvaluateAsync<int[]>(@"async ({width,height}) => {
+            const { HuntGpuWorld } = await import('./js/arena-gpu-world.js');
+            const { submitGpuFireballs } = await import('./js/arena-gpu-fireball.js');
+            const { installFireballV5ForTesting } = await import('./js/arena-fireball-v5.js');
+            const load = async path => {
+                const image = new Image();
+                image.src = path;
+                await image.decode();
+                return image;
+            };
+            const albedo = await load('./art/fireball-v5-albedo.png');
+            const emissive = await load('./art/fireball-v5-emissive.png');
+            installFireballV5ForTesting(albedo, emissive);
+            const canvas = document.createElement('canvas');
+            canvas.width = width; canvas.height = height;
+            canvas.id = 'hunt-gpu-fireball-proof';
+            Object.assign(canvas.style, { position:'fixed', left:'0', top:'0', zIndex:'99999' });
+            document.body.appendChild(canvas);
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#777777'; ctx.fillRect(0, 0, width, height);
+            const world = new HuntGpuWorld();
+            const environment = { ambient:0, color:'#ffffff', exposure:1, emission:true };
+            const frame = { version:1, time:0, environment, lights:[], materials:[], objects:[] };
+            world.begin(ctx, {x:0,y:0}, width, height);
+            const submitted = submitGpuFireballs(world, [{
+                spell:1, combination:null, x:width/2, y:height/2,
+                radius:14, angle:0, fireballSourceId:17,
+            }], {x:0,y:0}, 0);
+            world.render(ctx, frame);
+            const luminous = world.engine.pixels();
+            let peak = 0;
+            for(let i=0;i<luminous.length;i+=4)
+                peak = Math.max(peak,luminous[i],luminous[i+1],luminous[i+2]);
+            world.render(ctx, {...frame, environment:{...environment, emission:false}});
+            const zero = world.engine.pixels();
+            let dark = 0;
+            for(let i=0;i<zero.length;i+=4)
+                dark = Math.max(dark,zero[i],zero[i+1],zero[i+2]);
+            world.render(ctx, frame);
+            const diagnostics = world.diagnostics();
+            window.__huntGpuFireballProof = world;
+            return [submitted.size, peak, dark, diagnostics.authoredTextures,
+                diagnostics.textureUploads.dynamicTextures];
+        }", new { width, height });
+        Assert.AreEqual(1, result[0], "Fireball must be bound through its authored GPU material.");
+        Assert.IsTrue(result[1] > 0, "The authored emissive channel must survive actual GPU composition.");
+        Assert.AreEqual(0, result[2], "Zero sources, ambient and emission must leave black world pixels.");
+        Assert.AreEqual(2, result[3], "Exactly the authored albedo and emissive textures are registered.");
+        Assert.AreEqual(0, result[4], "Unchanged GPU atlas resources cannot be recaptured as Canvas.");
+        var artifacts = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
+        Directory.CreateDirectory(artifacts);
+        await Page.Locator("#hunt-gpu-fireball-proof").ScreenshotAsync(new()
+        {
+            Path = Path.Combine(artifacts, $"hunt-gpu-fireball-{width}.png"),
+        });
+        await Page.EvaluateAsync("() => window.__huntGpuFireballProof.dispose()");
+    }
+
 }
