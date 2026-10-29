@@ -314,3 +314,32 @@ test('projected baked recovery immediately follows crossing-target C# movement, 
  assert.equal(recovered.direction,'N','current observed movement must select recovery facing on the exit tick');
  assert.equal(recovered.baseClip,'walk');
 });
+
+test('authored pivot finishes its planted step when the target returns to the original facing',()=>{
+ const p=fixture();p.facing.transition='source-pivot';
+ p.pivots={positive:{...p.pivot,clip:'pivot-right',facingStep:1},negative:{...p.pivot,clip:'pivot-left',facingStep:-1}};
+ validate(p);const s=create();
+ update(s,p,intent(0,{direction:'E'}));
+ assert.equal(update(s,p,intent(.1,{direction:'SE'})).clip,'pivot-right');
+ assert.equal(update(s,p,intent(.2,{direction:'E'})).clip,'pivot-right','must not drop a planted step mid-clip');
+ const returning=update(s,p,intent(.61,{direction:'E'}));
+ assert.equal(returning.clip,'pivot-left','the next step re-plans toward the current target');
+ assert.equal(returning.direction,'SE');
+ const recovered=update(s,p,intent(1.12,{direction:'E'}));
+ assert.equal(recovered.clip,'walk');assert.equal(recovered.direction,'E');
+});
+test('authored pivot re-plans its direction only at the next planted boundary',()=>{
+ const p=fixture();p.facing.transition='source-pivot';
+ p.pivots={positive:{...p.pivot,clip:'pivot-right',facingStep:1},negative:{...p.pivot,clip:'pivot-left',facingStep:-1}};
+ validate(p);const s=create();
+ update(s,p,intent(0,{direction:'E'}));
+ assert.equal(update(s,p,intent(.1,{direction:'SE'})).clip,'pivot-right');
+ const crossing=update(s,p,intent(.25,{direction:'NW'}));
+ assert.equal(crossing.clip,'pivot-right','crossing must not reverse the planted pose mid-step');
+ const next=update(s,p,intent(.6,{direction:'NW'}));
+ assert.equal(next.clip,'pivot-left');assert.equal(next.direction,'SE');
+ let settled=next;
+ for(let i=1;i<=8&&settled.direction!=='NW';i++)settled=update(s,p,intent(.6+i*.5,{direction:'NW'}));
+ assert.equal(settled.direction,'NW');
+ assert.equal(settled.clip,'walk');
+});
