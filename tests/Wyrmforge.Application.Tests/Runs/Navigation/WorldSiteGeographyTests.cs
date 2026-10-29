@@ -73,7 +73,9 @@ public sealed class WorldSiteGeographyTests
             {
                 var environment = ArenaEnvironmentState.Create(first.Seed, node).Snapshot();
                 Assert.IsNotNull(environment.Geography);
-                Assert.AreEqual(node.Geography, environment.Geography);
+                Assert.AreEqual(node.Geography!.SiteId, environment.Geography!.SiteId);
+                CollectionAssert.AreEqual(node.Geography.Ports.ToArray(), environment.Geography.Ports.ToArray());
+                Assert.IsNull(environment.Geography.Landscape, "Disabled AR1 geometry must not inflate every normal Hunt frame.");
                 Assert.AreEqual(JsonSerializer.Serialize(node.Geography),
                     JsonSerializer.Serialize(replay.Nodes.Single(other => other.Id == node.Id).Geography));
                 Assert.AreEqual(JsonSerializer.Serialize(environment),
@@ -91,8 +93,10 @@ public sealed class WorldSiteGeographyTests
         var normal = ArenaEnvironmentState.Create(first.Seed, node).Snapshot();
         var preview = ArenaEnvironmentState.Create(first.Seed, node, generatorPreview: true).Snapshot();
 
-        Assert.AreEqual(before, JsonSerializer.Serialize(normal.Geography));
-        Assert.AreEqual(before, JsonSerializer.Serialize(preview.Geography));
+        Assert.AreEqual(before, JsonSerializer.Serialize(node.Geography));
+        Assert.AreEqual(JsonSerializer.Serialize(normal.Geography), JsonSerializer.Serialize(preview.Geography));
+        Assert.IsNull(normal.Geography!.Landscape);
+        Assert.IsNull(preview.Geography!.Landscape);
         Assert.AreEqual(normal.Geography!.WorldSeed, preview.Geography!.WorldSeed);
         Assert.AreEqual(normal.Geography!.SiteId, preview.Geography!.SiteId);
     }
