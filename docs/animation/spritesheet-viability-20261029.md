@@ -65,6 +65,44 @@ needs a separately measured bounded layout; do not reuse the smaller table as
 proof that all new clips fit. The completed bounded base-walk material proof uses
 6,094,848 decoded bytes. See the [current execution receipt](spritesheet-walk-proof-20261029.md).
 
+## Measured unified four-clip outcome — 29 October 2026
+
+The smaller baseline packing table above is a **planning estimate**, not acceptance
+of the latest single-rig walk/claw/bidirectional-turn pack. The completed
+[unified source workflow](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40964288628)
+measured all eight genuine facings with the same guarded native crop:
+
+| Actually rendered variant | Three-map decoded bytes | 64 MiB result |
+|---|---:|---|
+| Full 16-frame pivots, 16 walk, 128 moving claw | 72,382,464 | Rejected: exceeds by 5,273,600 B |
+| End-point-preserving 8-frame pivots, same walk/claw | 65,802,240 | Fits by 1,306,624 B; **source study only** |
+
+Both versions pass the limited source-authored pivot *phase-zero* entry and exit
+checks in every direction; those checks do not prove an arbitrary walk entry.
+In the shared runtime controller, both variants fail **192/256** turns: every
+25/50/75% gait-phase entry, up to 22.225811 native pixels of slip. The new
+moving-claw replay fails **256/384** trajectories: all 128 lateral and all
+128 crossing-heading cases, up to 29.96775 and 14.48388 native pixels.
+All 128 forward-aligned moving-claw cases pass with less than 0.001 pixel
+slip. This demonstrates that the authored claw itself is correctly coupled
+to the forward gait, but not to arbitrary C# movement.
+
+Genuine mobile-width C# Enemy Lab captures at 320px and 390px draw the
+claw and sample the pivots, but fail strict contact acceptance at about
+101.17 and 104.36 native pixels. Browser and resource errors were zero.
+Screenshots/MP4s in the workflow artifact are **diagnostic evidence only**,
+not final owner-approval footage or physical-phone performance.
+
+**Required AN2/AN3 source direction:** author weight-bearing, phase-aware
+walk-to-turn and committed-attack trajectories that can follow observed
+lateral/crossing C# movement while retaining the separate attack facing.
+Keep one animation engine, the one shared LightingEngine adapter, native
+2.5D pixel sprites, the authored rest rig and C# gameplay authority. Do not
+resurrect the rejected rigid-region warp or substitute unmeasured per-frame
+root resets. Every proposed new atlas/material layout must re-prove the
+unchanged **67,108,864 B resident decoded limit**, source contact and actual
+C# playback before promotion.
+
 ## Continuation order
 
 1. Prove one full-body baked walk in one view through the existing sprite API.
