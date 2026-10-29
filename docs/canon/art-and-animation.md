@@ -651,12 +651,14 @@ spritesheet build as discrete playback, not as a live skeletal animation system.
 2. Define world axes and facing angles. For a source using +Y forward/+Z up, use
    a documented mapping to screen directions; verify with a visible forward marker.
    Atlas rows are ordered **N, NE, E, SE, S, SW, W, NW**, where screen north is up.
-3. Render eight real orientations of the same 3D model; preserve asymmetry and
-   consistent world lighting. Do not flip a lit weapon or costume and call it a
-   separately authored direction. A single-view milestone lists only that view.
-4. Keep camera, scale, color management, material setup and light rig fixed across
-   clips. Rotate actor/root for facing while keeping world lights coherent; render
-   background/world shadows separately if needed.
+3. Export eight genuinely authored orientations from the selected 2D source or
+   optional offline 3D rig. Preserve anatomical volume, asymmetry and consistent
+   world lighting. Do not flip a lit weapon or costume and call it a separately
+   authored direction. A single-view milestone lists only that view.
+4. Keep projected scale, color management, material appearance and world lighting
+   coherent across clips. When the chosen source is 3D, use one fixed camera and
+   rotate its actor/root for facings; for hand-authored 2D, maintain the same view
+   conventions and pixel scale. Render background/world shadows separately.
 5. Set transparent film/background output to lossless RGBA PNG. No labels, borders,
    backdrop, baked ground plane or magenta residue belongs in production frames.
 6. Render at a documented oversampling factor if needed, then use one reproducible
