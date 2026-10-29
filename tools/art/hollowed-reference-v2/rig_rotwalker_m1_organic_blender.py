@@ -116,6 +116,83 @@ def sculpt_original_arm_proportions(body):
     }
 
 
+def soften_anatomical_skinning(body, rig_bone_names):
+    """Blend neighboring deformation weights across original sculpt topology.
+
+    The previous source rig assigned almost pointwise XY/Z masks, creating
+    rigid shoulder shelves and sharp ankle/elbow folds. This smooths *only*
+    the actual body's connected edges in its bind pose; no silhouette cards,
+    detached shape meshes or original faces are added. Preserve weighted
+    body/head regions, with stronger smoothing near articulated hinges.
+    """
+    vertex_count=len(body.data.vertices)
+    index_to_group={g.index:g.name for g in body.vertex_groups
+                    if g.name in rig_bone_names}
+    if len(index_to_group)<18:
+        raise ValueError("Cannot smooth unweighted original anatomical source")
+    neighbors=[set() for _ in range(vertex_count)]
+    for edge in body.data.edges:
+        a,b=edge.vertices
+        neighbors[a].add(b)
+        neighbors[b].add(a)
+    vertex_weights=[{
+        index_to_group[group.group]:float(group.weight)
+        for group in vertex.groups if group.group in index_to_group
+    } for vertex in body.data.vertices]
+    original=[dict(w) for w in vertex_weights]
+    # Five short diffusion passes soften pinched deltoid/wrist/ankle joints
+    # without deleting the owner's source topology or moving any original
+    # vertex. Neighbor relations cannot jump gaps between separate shells.
+    for _ in range(5):
+        next_weights=[]
+        for i,values in enumerate(vertex_weights):
+            adj=neighbors[i]
+            if not adj:
+                next_weights.append(values)
+                continue
+            mean={}
+            for j in adj:
+                for bone,weight in vertex_weights[j].items():
+                    mean[bone]=mean.get(bone,0.)+weight/len(adj)
+            keys=set(values)|set(mean)
+            blended={
+                name:.64*values.get(name,0.)+.36*mean.get(name,0.)
+                for name in keys
+            }
+            # Keep groups sparse, normalized and anatomically positive.
+            blended={name:w for name,w in blended.items() if w>.002}
+            total=sum(blended.values())
+            if total<.1:
+                raise ValueError(f"Anatomical source vertex lost its skin weights: {i}")
+            next_weights.append({name:w/total for name,w in blended.items()})
+        vertex_weights=next_weights
+
+    groups={name:body.vertex_groups.get(name) for name in rig_bone_names}
+    edited=0
+    for i,after in enumerate(vertex_weights):
+        before=original[i]
+        union=set(before)|set(after)
+        if max(abs(after.get(n,0.)-before.get(n,0.)) for n in union) < .004:
+            continue
+        for name in union:
+            old=before.get(name,0.)
+            value=after.get(name,0.)
+            if abs(old-value)<.002:
+                continue
+            if value<.0025:
+                groups[name].remove([i])
+            else:
+                groups[name].add([i],value,"REPLACE")
+        edited+=1
+    if edited<100 or edited>vertex_count:
+        raise ValueError(f"Skin smoothing did not touch connected hinges: {edited}")
+    return {"real_source_vertices_weight_blended":edited,
+            "topology_edges":len(body.data.edges),
+            "source_vertices":vertex_count,
+            "diffusion_passes":5,
+            "method":"connected mesh Laplacian; original vertex order preserved"}
+
+
 def create_rig(body, base):
     """Real Blender skinning hierarchy for an *unrigged* artist source mesh."""
     lo,hi=bounds(base)
@@ -225,14 +302,20 @@ def create_rig(body, base):
         for group,w in weights.items():
             groups[group].add([index],w/total,"REPLACE")
 
+    skinning=soften_anatomical_skinning(body,set(spec))
     arm_mod=body.modifiers.new("M1 3D source ARTICULATED deformation","ARMATURE")
     arm_mod.object=rig
     arm_mod.use_vertex_groups=True
+    # Dual-quaternion volume preservation prevents flattened shoulders and
+    # flattened wrist/ankle cross-sections when the ghoul bends deeply.
+    arm_mod.use_deform_preserve_volume=True
     scene=bpy.context.scene
     scene["m1_source_rig_bones"]=len(spec)
     scene["m1_not_game_animation_engine"]=True
     rig.show_in_front=False
     return rig,{"bone_count":len(spec),"total_skin_weights":len(groups),
+                "skin_weight_blending":skinning,
+                "dual_quaternion_preserve_volume":arm_mod.use_deform_preserve_volume,
                 "original_vertices":len(base),"original_polygons":len(body.data.polygons),
                 "old_H1_rig_reused":False}
 
