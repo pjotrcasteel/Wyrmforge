@@ -3610,6 +3610,10 @@ public sealed class WyrmforgeBrowserTests : PageTest
             new() { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
         await EnterFirstTrailAsync("BEGIN FIRST HUNT");
+        await Page.EvaluateAsync(@"async () => {
+            const arena = await import(new URL('js/arena.js?v=20261028-school-palette-v1', document.baseURI).href);
+            window.__huntGpuRead = () => arena.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
+        }");
 
         var panel = Page.Locator("[data-g4-device-review]");
         await Expect(panel).ToBeVisibleAsync();
