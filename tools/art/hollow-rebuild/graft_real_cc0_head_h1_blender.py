@@ -178,6 +178,44 @@ def hole_in_real_face(mesh):
     return len(faces)
 
 
+def retain_only_anatomical_neck_tissue(mesh):
+    """Use true skull/bone facial anatomy instead of a half-human face mask.
+
+    Remove the *facial skin* above the throat, retain the CC0 neck section
+    and flare its existing topology to meet the injured shoulder area.
+    There is no black mask, hidden human head, or detached cosmetic overlay.
+    """
+    bm=bmesh.new()
+    bm.from_mesh(mesh)
+    total=len(bm.faces)
+    removed=[face for face in bm.faces
+             if face.calc_center_median().z > -22.0]
+    if not total*.65<len(removed)<total*.99:
+        bm.free()
+        raise ValueError(
+            f"Neck preservation unexpectedly retained a normal face: {len(removed)}/{total}")
+    bmesh.ops.delete(bm,geom=removed,context="FACES")
+    # Discard truly orphaned cut-skin vertices: otherwise disconnected
+    # landmarks can survive the cut as little bright spots above the skull.
+    loose=[v for v in bm.verts if not v.link_faces]
+    if loose:
+        bmesh.ops.delete(bm,geom=loose,context="VERTS")
+    flared=0
+    for vert in bm.verts:
+        x,y,z=vert.co
+        if z< -22:
+            taper=max(0.0,min(1.0,(-22-z)/35))
+            vert.co.x=x*(1+.38*taper)
+            vert.co.y=y*(1+.31*taper)
+            flared+=1
+    bm.to_mesh(mesh)
+    bm.free()
+    mesh.update()
+    if flared<20 or not mesh.polygons:
+        raise ValueError("Skull-dominant candidate lost the physical neck tissue")
+    return len(removed)
+
+
 def fracture_surviving_skin(mesh):
     """Original asymmetric deformation of the surviving CC0 facial tissue.
 
@@ -207,7 +245,7 @@ def fracture_surviving_skin(mesh):
     return altered
 
 
-def graft_obj(source,part,rig,target_transform,material_obj,body):
+def graft_obj(source,part,rig,target_transform,material_obj,body,variant):
     """Bake imported original head coordinates into the ORIGINAL rig rest map.
 
     The body rig is already in a static feral pose. Convert target world
@@ -222,8 +260,14 @@ def graft_obj(source,part,rig,target_transform,material_obj,body):
                  @ rig.matrix_world.inverted())
     invert=rest_to_pos.inverted()
     clone=source.data.copy()
-    cut=hole_in_real_face(clone) if part=="face" else 0
-    changed_skin=fracture_surviving_skin(clone) if part=="face" else 0
+    cut=0
+    changed_skin=0
+    if part=="face":
+        if variant=="skull-dominant":
+            cut=retain_only_anatomical_neck_tissue(clone)
+        else:
+            cut=hole_in_real_face(clone)
+            changed_skin=fracture_surviving_skin(clone)
     verts=[]
     source_world=source.matrix_world.copy()
     for v in clone.vertices:
@@ -266,6 +310,8 @@ def main():
     p.add_argument("--body",type=Path,required=True)
     p.add_argument("--head-source",type=Path,required=True)
     p.add_argument("--output",type=Path,required=True)
+    p.add_argument("--variant",choices=("skull-dominant","facial-cutaway"),
+                   default="skull-dominant")
     args=p.parse_args()
     out=args.output.resolve()
     root=(Path.cwd()/"artifacts/hollow-rebuild").resolve()
@@ -301,7 +347,7 @@ def main():
     made={}
     for part,mat in (("face",surface_material),("skull",bone_material),
                      ("jaw",jaw_material)):
-        obj,meta=graft_obj(donor[part],part,rig,transformation,mat,body)
+        obj,meta=graft_obj(donor[part],part,rig,transformation,mat,body,args.variant)
         made[part]=meta
     if made["face"]["damaged_face_polygons_removed"]<8:
         raise ValueError("No real skin opening, old fake skull has returned")
@@ -309,6 +355,8 @@ def main():
     # framing or silently remain as giant offstage source parts in the .blend.
     for original in donor.values():
         bpy.data.objects.remove(original,do_unlink=True)
+    if args.variant=="skull-dominant" and made["face"]["sculpted_surviving_face_vertices"]!=0:
+        raise ValueError("Skull candidate must not keep the old half-human face sculpt")
     if len(bpy.data.actions)>0:
         raise ValueError("An animation action was created by head source graft")
 
@@ -358,6 +406,7 @@ def main():
       "source_only_replaced_head":True,
       "dark_eye_mask_material_faces":0,
       "head_3d_is_donor_geometry":True,
+      "head_appearance_variant":args.variant,
       "active_visible_source_meshes":len(live),
       "framed_model_height_m":round(float(dims.z),4),
       "framed_model_width_m":round(float(dims.x),4),
