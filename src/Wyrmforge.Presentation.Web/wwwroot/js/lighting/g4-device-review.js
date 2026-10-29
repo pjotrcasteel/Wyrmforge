@@ -18,7 +18,7 @@ const consented = () => {
 
 /** Only bounded numeric aggregation is sent. No full UA, coordinates, DPR, or individual frame samples. */
 export function buildG4CollectorReport(record) {
-    if (!hasG4Evidence(record)) return null;
+    if (!hasG4Evidence(record) || record.recording === true) return null;
     const keys = ['frameIntervals', 'elapsedSeconds', 'measuredPlayingSeconds', 'observedFps',
         'frameMsP50', 'frameMsP95', 'frameMsP99', 'over33msPercent',
         'renderingFailures', 'missingGpuFrames', 'gpuSamples', 'sampledDynamicPixelsMean'];
@@ -42,7 +42,7 @@ export function buildG4CollectorReport(record) {
 async function sendPendingG4Evidence(setStatus = () => {}) {
     if (!consented()) return;
     const record = readJson(G4_PENDING_KEY);
-    if (!record || !hasG4Evidence(record)) return;
+    if (!record || !hasG4Evidence(record) || record.recording === true) return;
     const report = buildG4CollectorReport(record);
     if (!report) return;
     try {
@@ -307,7 +307,8 @@ export function mountG4DeviceReview(canvas, getGpu, mode = 'canvas', quality = n
         } catch { consentBox.checked = false; }
         if (consentBox.checked) {
             const previousResult = readJson(G4_LAST_RECORD_KEY);
-            if (hasG4Evidence(previousResult)) writeJson(G4_PENDING_KEY, previousResult);
+            if (hasG4Evidence(previousResult) && previousResult.recording === false)
+                writeJson(G4_PENDING_KEY, previousResult);
             void sendPendingG4Evidence(setStatus);
         }
         setStatus(consentBox.checked
