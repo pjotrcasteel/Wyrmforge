@@ -130,6 +130,89 @@ def rotate_real_bone_to_target(rig, bone_name, target, max_scale):
     }
 
 
+def fit_real_source_boot_contact(rig, body):
+    """Pitch/roll real weighted foot controls until both soles are supported.
+
+    The illustrated toe landmark is an approximate reference. Final boot
+    orientation must be decided using the actual evaluated 3D source mesh.
+    A pelvis-height-only contact check allowed toe-only floating feet.
+    """
+    indices={}
+    for side in ("L","R"):
+        group=body.vertex_groups.get(f"H_Foot_{side}")
+        if group is None:
+            raise ValueError(f"Source artist's foot skin weights absent for {side}")
+        indices[side]=[
+            v.index for v in body.data.vertices
+            if any(g.group==group.index and g.weight>.13 for g in v.groups)
+        ]
+        if len(indices[side])<40:
+            raise ValueError(f"Not enough original skinned foot geometry {side}: {len(indices[side])}")
+
+    def measure(world, side):
+        foot=[world[i] for i in indices[side]]
+        low=min(v.z for v in foot)
+        near=[v for v in foot if v.z<low+.095]
+        length=(max(v.y for v in near)-min(v.y for v in near)) if len(near)>1 else 0.
+        return float(low),float(length),len(near)
+
+    source_world=evaluated_world_vertices(body)
+    base={side:measure(source_world,side) for side in ("L","R")}
+    results={}
+    for side in ("L","R"):
+        other="R" if side=="L" else "L"
+        pb=rig.pose.bones[f"H_Foot_{side}"]
+        original=pb.rotation_quaternion.copy()
+        world_rot=(rig.matrix_world @ pb.matrix).to_quaternion()
+        pitch_axis=world_rot.inverted() @ Vector((1,0,0))
+        roll_axis=world_rot.inverted() @ Vector((0,1,0))
+        pitch_axis.normalize()
+        roll_axis.normalize()
+        opposite_z=base[other][0]
+        best=None
+        for pitch_step in range(-10,11):
+            pitch=pitch_step*.075
+            for roll_step in (-2,0,2):
+                roll=roll_step*.09
+                pb.rotation_quaternion=(original
+                    @ Quaternion(pitch_axis,pitch)
+                    @ Quaternion(roll_axis,roll))
+                bpy.context.view_layer.update()
+                low,length,count=measure(evaluated_world_vertices(body),side)
+                # Prefer broad actual heel/toe ground evidence and
+                # preserved two-foot vertical alignment. Never reward
+                # extreme rotations merely for matching the target.
+                score=(5.0*max(0.,.17-length)
+                    + 2.5*max(0.,abs(low-opposite_z)-.035)
+                    + .038*abs(pitch) + .03*abs(roll))
+                if best is None or score<best[0]:
+                    best=(score,pitch,roll,low,length,count)
+        _,pitch,roll,low,length,count=best
+        pb.rotation_quaternion=(original
+            @ Quaternion(pitch_axis,pitch)
+            @ Quaternion(roll_axis,roll))
+        bpy.context.view_layer.update()
+        base[side]=measure(evaluated_world_vertices(body),side)
+        results[side]={
+            "initial_near_floor_patch_m":round(base[side][1],4),
+            "fitted_pitch_radians":round(pitch,4),
+            "fitted_roll_radians":round(roll,4),
+            "actual_heel_to_toe_patch_m":round(length,4),
+            "actual_foot_sole_min_world_z":round(low,5),
+            "actual_foot_source_vertices":len(indices[side]),
+            "near_floor_vertex_count":count,
+        }
+
+    # After optimizing both sides, record the true coupled outcome.
+    updated=evaluated_world_vertices(body)
+    for side in ("L","R"):
+        low,length,count=measure(updated,side)
+        results[side]["actual_heel_to_toe_patch_m"]=round(length,4)
+        results[side]["actual_foot_sole_min_world_z"]=round(low,5)
+        results[side]["near_floor_vertex_count"]=count
+    return results
+
+
 def fit_full_reference_pose(rig, body, global_root, data, target):
     # The old idle generated via uncalibrated rotations is not the new
     # authoritative pose. Clear ONLY source-art actions on NEW art rig.
@@ -175,6 +258,9 @@ def fit_full_reference_pose(rig, body, global_root, data, target):
             name in ("H_Shin_L","H_Foot_L")
         )
 
+    # Owner's foot landmarks drive location. Actual source artist's boot
+    # skin weights decide which ankle pitch/roll produces heel + toe support.
+    fitted_boots=fit_real_source_boot_contact(rig,body)
     initial_lo,_=extents(evaluated_world_vertices(body))
     global_root.location.z -= float(initial_lo.z)
     bpy.context.view_layer.update()
@@ -250,6 +336,7 @@ def fit_full_reference_pose(rig, body, global_root, data, target):
             k:round(v,5) for k,v in contacts.items()
         },
         "real_weight_bearing_sole_patches": foot_patches,
+        "anatomical_boot_rotation_fit":fitted_boots,
         "owner_traced_targets_preserved":True,
         "limb_bone_stretch_anatomically_bounded":True,
         "old_incremental_pose_discarded":True,
