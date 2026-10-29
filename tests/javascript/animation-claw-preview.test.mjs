@@ -20,9 +20,10 @@ const original=globalThis.location;
 globalThis.location={search:'?animationFoundation=sprite-claw'};
 try {
     const module=await import(uri(source));
+    const selectedAssetPath=globalThis.__anReviewAssetPath;
     test('baked claw proof uses the same shared adapter and dedicated opt-in assets',()=>{
         assert.equal(typeof module.createHollowState,'function');
-        assert.equal(globalThis.__anReviewAssetPath,
+        assert.equal(selectedAssetPath,
             'https://example.test/art/review/animation-foundation-sprite-claw/');
     });
 } finally {
