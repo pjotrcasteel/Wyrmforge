@@ -44,13 +44,14 @@ export function initializeArena(canvas, dotNetReference) {
     arenas.set(canvas, state);
     state.detachInput = attachArenaInput(state);
     if (new URLSearchParams(location.search).get('arenaGpu') === '1') {
-        void Promise.all([import('./arena-gpu-world.js'), import('./arena-gpu-fireball.js')])
-            .then(([{ HuntGpuWorld }, fireball]) => {
-                if (state.active) {
-                    state.gpuWorld = new HuntGpuWorld();
-                    state.gpuFireball = fireball;
-                }
-            }).catch(error => { state.gpuError = String(error); });
+        void import('./arena-gpu-world.js').then(({ HuntGpuWorld }) => {
+            if (!state.active) return;
+            state.gpuWorld = new HuntGpuWorld();
+            // Optional authored asset adapters cannot disable the shared renderer.
+            return import('./arena-gpu-fireball.js')
+                .then(fireball => { if (state.active) state.gpuFireball = fireball; })
+                .catch(error => { state.gpuFireballError = String(error); });
+        }).catch(error => { state.gpuError = String(error); });
     }
     const now = performance.now();
     state.lastSimulationTimestamp = now;
