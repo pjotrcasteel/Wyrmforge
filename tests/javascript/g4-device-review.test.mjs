@@ -75,7 +75,7 @@ test('device review is bounded, reject invalid timestamps, restart resets all sa
     session.start(100);
     assert.throws(() => session.record(Infinity), TypeError);
     session.record(100, { gpuAvailable: false });
-    session.record(300100, { gpuAvailable: true });
+    session.record(600100, { gpuAvailable: true });
     assert.equal(session.recording, false);
     assert.equal(session.summary().missingGpuFrames, 1);
     session.start(500000);
