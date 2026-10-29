@@ -3,6 +3,17 @@
 > **Canonical WyrmForge specification · updated 29 October 2026.** Keep gameplay deterministic and platform-agnostic; distinguish simulator truth from client rendering.
 > [Canonical index](README.md) · Only explicitly marked **LOCKED/approved** requirements are commitments. Proposed values, old milestones and drafts are not evidence of shipped code. Verify current `main`, PRs and tests.
 
+## LOCKED — pixel-first 2.5D runtime contract (29 October 2026)
+
+**Every engine implements the same target: a mobile-first, world-anchored 2.5D pixel-art game.** Use the existing C# simulation and shared presentation pipelines, with authored 2D/2.5D sprites, terrain surfaces, layers, depth ordering and optional per-object elevation; do not add a general-purpose 3D scene or runtime skeletal mesh as a required platform dependency. 2.5D permits world-height math, slope/height fields, screen-space projection and GPU shaders without requiring fully modeled 3D assets.
+
+- **Gameplay/AI/AR:** C# remains authoritative for 2D ground-plane geography, navigation, collision, routes and gameplay heights. Elevation, cliffs and overlaps are typed data and collision/occlusion contracts, not a requirement to build 3D terrain meshes.
+- **Animation:** the delivered mobile actor is a pixel-consistent directional sprite or authored layered-sprite presentation. A 2D rig or an offline 3D model may generate its source frames; full live 3D skeleton/rendering is an exception, not an assumption. Preserve accepted source rigs and ongoing branches.
+- **Lighting/materials:** the shared GPU lighting engine lights 2.5D sprites/surfaces using albedo, optional normal/roughness/emissive maps, occluder silhouettes and depth/height metadata. Normal maps alone are not volumetric shadow geometry; use proper occlusion contracts. No parallel mesh-based renderer.
+- **FXP/VFX/audio:** use shared typed gameplay events and lightweight 2.5D positions, layers, pixels and bounded visual effects; do not introduce full 3D rigid-body physics, volumetric particles or positional-audio engines merely to simulate appearance.
+
+**Complexity gate:** choose the simplest asset/runtime representation that produces correct anatomy, motion, materials, occlusion and lighting in an **actual Hunt at 320px and 390px**. A proposed mandatory 3D capability needs a measured, visible shortcoming of the existing 2.5D approach, a smaller-option comparison, mobile cost evidence and explicit owner approval. Offline Blender/3D-to-sprite authoring remains allowed where it demonstrably helps. This decision neither cancels previously approved Ashfang source work nor rewrites the current Hollowed, GPU or Arena Generator branches.
+
 ## LOCKED — unified engine ownership and event authority (27 October 2026)
 
 **One reusable engine per responsibility.** The C# `RunSimulation`/Domain + Application core owns every gameplay outcome; one shared lighting, AI, animation, cosmetic physics, VFX and audio runtime/contract family respectively owns its presentation or agent concern. Do not create alternate enemy-, spell-, school- or scene-local *engines* for behavior that belongs to those shared services. Scene- and creature-specific data, authored motion, effect profiles, adapters, backend implementations and temporary migrations are allowed; duplicate gameplay decision-makers or independent shared-feature runtimes are not.

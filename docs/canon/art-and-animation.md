@@ -3,6 +3,12 @@
 > **Canonical WyrmForge specification · updated 20 October 2026.** Owner-approved art and one repeatable animated-character production pipeline.
 > [Canonical index](README.md) · Only explicitly marked **LOCKED/approved** requirements are commitments. Proposed values, old milestones and drafts are not evidence of shipped code. Verify current `main`, PRs and tests.
 
+## Pixel-first authoring and gameplay output — LOCKED (29 October 2026)
+
+**The required product is a mobile-first 2.5D pixel-art game, not a live 3D model viewer.** Final actors, props and environments must read as pixel-consistent world-anchored sprites/surfaces with grounded foot/contact points, coherent 2.5D perspective, correct occlusion and native pixel readability at 320px/390px. A fully modeled mesh is **never automatically required** for a new creature, terrain tile, building or animation.
+
+**Default for new character production:** first test a small authored 2D directional sprite/pose set or editable layered 2D rig and its true motion in the existing sprite runtime. Use a textured **3D model only as an optional offline authoring source** when an existing approved rig is worth preserving or a concrete view/motion requirement demonstrably benefits from it. The required output remains pixel sprites/metadata and real-game proof; do not mandate a live 3D scene, 3D skeleton or Blender-only pipeline. Compare quality, development effort and mobile cost before choosing the more complex route. Preserve approved Ashfang source assets and ongoing Hollowed work; do not discard or merge those independent art branches as part of this rule.
+
 ## Present-day approved identity (20 October 2026)
 
 - Gothic, grounded, readable dark fantasy. Prefer coherent real building geometry and material, limited meaningful magical light, and believable people/creatures over ornamental AI-generated clutter. Real game visual acceptance at mobile scale is required.
@@ -288,11 +294,14 @@ The owner requested a detailed, repeatable method after rejecting generated-fram
 and rigid-cutout Hollow animations. This document describes how to produce and
 evaluate future assets. It does not certify the existing animations.
 
-The default authoring route is **one textured, deformable 3D character with an
-animation rig, rendered into 2D sprites**. The editable character and motion are
-the source; a spritesheet is a derived export. A properly prepared Spine project
-is an alternative when preserving painted 2D artwork is more important than
-inexpensive multi-direction rendering. Do not switch routes silently.
+The default authoring route for **new** characters is **authored directional 2D
+sprites or an editable layered/mesh 2D rig**, with actual motion and an eight-facing
+export where required. A textured 3D character with a rig is an **optional offline
+source-to-sprite route** where it measurably improves quality or reuses already
+approved work (including Ashfang and in-flight Hollowed). The editable artwork
+and motion are the source; a spritesheet is the runtime export. Select the
+simplest convincing route at mobile gameplay size, document the choice and do
+not switch routes silently.
 
 ### 1. Scope, authority and delivery rules
 
@@ -341,7 +350,8 @@ art/source/enemies/<id>/
   references/                 # Original card or reference to its canonical path; crops
   production.json             # Identity, versions, dependencies and stage status
   design-brief.md             # Visual invariants, unresolved details and motion brief
-  model/character.blend        # Mesh, materials, armature, actions and render setup
+  artwork/                     # Editable 2D directions, poses and/or layered 2D rig
+  model/character.blend        # Optional offline 3D mesh/rig source, when chosen
   motion/                     # Original imported motion and attribution
   review/                     # Clips, stills, notes and rejection records
   export-profile.json         # Camera, scale, directions, sampling and packing
@@ -437,7 +447,13 @@ the only available image cannot establish a usable character specification.
 
 ### 5. Stage B — create the persistent character
 
-#### Default route: textured 3D mesh
+**Start with a small 2D mobile-scale identity + motion proof;** use only the
+complexity that is actually necessary to achieve a coherent turnaround, planted
+feet and believable movement. The 3D route below is for justified offline source
+production, not a runtime requirement. Existing approved 3D rigs may continue
+through that route; do not throw away accepted Ashfang or ongoing Hollowed work.
+
+#### Optional offline route: textured 3D mesh
 
 1. Select an original commissioned model, a suitably licensed existing model, or
    an AI-assisted initial mesh. Record origin and dependencies. Image-to-3D is an
@@ -465,9 +481,11 @@ the only available image cannot establish a usable character specification.
 size. If a suitable model cannot be obtained or authored, report this as the
 remaining art task; do not pretend an export script solves it.
 
-#### Alternative route: authored 2D mesh rig
+#### Default route: authored 2D frames or mesh rig
 
-A Spine-style source needs separately painted parts with hidden overlap, sensible
+Hand-authored directional sprites may use full replacement frames or layered parts;
+the chosen representation must supply real poses, correct perspective and planted
+feet rather than pixel warping. A Spine-style source needs separately painted parts with hidden overlap, sensible
 pivots, weighted deforming meshes and corrective/replacement drawings for large
 pose changes. Paint missing surfaces revealed by motion. Prepare appropriate
 draw order, foreshortening and additional direction artwork. A single chopped-up
