@@ -243,18 +243,18 @@
     "H_Head": 1,
     "H_Clavicle_L": 1.25,
     "H_Clavicle_R": 1.25,
-    "H_UpperArm_L": 1.4,
-    "H_UpperArm_R": 1.4,
-    "H_ForeArm_L": 1.5,
-    "H_ForeArm_R": 1.5,
-    "H_ClawsRoot_L": 1.35,
-    "H_ClawsRoot_R": 1.35,
-    "H_Thigh_L": 1.22,
-    "H_Thigh_R": 1.22,
-    "H_Shin_L": 1.27,
-    "H_Shin_R": 1.27,
-    "H_Foot_L": 1.45,
-    "H_Foot_R": 1.45
+    "H_UpperArm_L": 1.13,
+    "H_UpperArm_R": 1.13,
+    "H_ForeArm_L": 1.16,
+    "H_ForeArm_R": 1.16,
+    "H_ClawsRoot_L": 1.08,
+    "H_ClawsRoot_R": 1.08,
+    "H_Thigh_L": 1.17,
+    "H_Thigh_R": 1.17,
+    "H_Shin_L": 1.23,
+    "H_Shin_R": 1.23,
+    "H_Foot_L": 1.13,
+    "H_Foot_R": 1.13
   },
   "notes": [
     "Landmarks manually inspected on actual owner art. Front and side depictions are illustrative, not calibrated orthographic photographs.",
@@ -269,16 +269,28 @@
     "limb_reach": "reference bone directions drive pose, with soft-error residual when original artist limb length is insufficient",
     "both_feet": "two independent ground contacts required; no single-minimum false pass",
     "left_ankle_effective_target_m_relative_to_body_center": [
-      -0.61,
-      0.34,
-      0.23
+      -0.56,
+      0.26,
+      0.145
     ],
     "left_toe_effective_target_m_relative_to_body_center": [
-      -0.78,
-      0.42,
-      0.055
+      -0.59,
+      0.46,
+      0.093
     ],
     "elbow_and_shoulder_refinement": "owner-traced original target stays visible; physical source topology takes precedence over destructive stretching",
-    "note": "effective left leg placement is an initial anatomy constraint, NOT an alteration to owner image or an approved redesign"
+    "note": "effective left leg placement is an initial anatomy constraint, NOT an alteration to owner image or an approved redesign",
+    "right_ankle_effective_target_m_relative_to_body_center": [
+      0.57,
+      -0.24,
+      0.145
+    ],
+    "right_toe_effective_target_m_relative_to_body_center": [
+      0.61,
+      -0.44,
+      0.093
+    ],
+    "foot_plant": "both ankles above the floor, foot bones near horizontal; toe/heel area check mandatory; illustrated points preserved in source",
+    "proportions": "source sculpt first. prevent animation pose bone scaling to disguise too-short limbs"
   }
 }
