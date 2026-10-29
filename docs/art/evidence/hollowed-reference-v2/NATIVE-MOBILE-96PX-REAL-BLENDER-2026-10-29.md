@@ -1,3 +1,5 @@
+> **HISTORICAL 96px PIPELINE TEST ONLY.** Owner's latest direction is 3D model/pose/details **first**, Blender pixel conversion **after finished 3D source visual approval**. Do not repeat this unfinished source T-pose preview during M1–M4. [Canonical M1–M6 plan](HOLLOWED-3D-FIRST-PRODUCTION-ORDER.md).
+
 # Hollowed V2 — genuine 96×96 mobile fidelity baseline
 
 **29 Oct 2026; source candidate stage; owner has selected Rotwalker as the modeling base, but has NOT approved the finished model.**
@@ -39,6 +41,6 @@ No mandatory exact hand/hair pixel widths are approved yet; test distinguishabil
 
 - **Approved:** Rotwalker as art *foundation*, mobile native-96px review technique.
 - **Not approved:** current pose, materials, facial appearance, hair, claws, deformation, runtime camera calibration, actual pixel atlas, in-game animation or mobile device performance.
-- **Next visual checkpoint:** genuine Blender posed front/side/back + eight native 96px sheets *of an edited 3D source*, not artificially re-drawn sprites. Owner steers from that evidence.
+- **Next visual checkpoint (superseded):** genuine full-resolution Blender posed front/side/back views of a fully edited 3D source; no native pixel export until M5, after owner reviews the finished 3D model. Output sprites must still come directly from that single modeled source.
 
 [Owner decision and mobile-first contract](OWNER-SELECTED-ROTWalker-BASE-2026-10-29.md). PR #399 stays draft, PR #387 animation engine and all existing game assets untouched.
