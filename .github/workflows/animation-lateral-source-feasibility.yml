@@ -123,7 +123,9 @@ jobs:
           from pathlib import Path
           path=Path(f"artifacts/an6-side-step-{os.environ['HEADING']}-attack/direction-switch-qc.json")
           result=json.loads(path.read_text())
-          assert result['scenarios']==144 and result['runtimeAccepted'] is False
+          manifest=json.loads(Path(f"artifacts/an6-side-step-{os.environ['HEADING']}-attack/source-manifest.json").read_text())
+          expected=sum(manifest['clips'][clip]['frames'] for clip in ('walk','attack-travel'))
+          assert result['scenarios']==expected and expected>16 and result['runtimeAccepted'] is False
           assert result['lateralHeadingDegrees']==float(os.environ['HEADING'])
           assert result['failedScenarios']==sum(not x['withinOneNativePixel'] for x in result['results'])
           print('REAL SOURCE SWITCH',result['scenarios'],'contacts compared,',
