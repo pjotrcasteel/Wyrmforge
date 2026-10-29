@@ -205,7 +205,7 @@ async function admin(request, env, url) {
         const ai = await env.DB.prepare(`SELECT COUNT(*) AS runs,
             ROUND(AVG(json_extract(j.value, '$.ai.p95Ms')), 1) AS meanP95Ms,
             ROUND(MAX(json_extract(j.value, '$.ai.maxMs')), 1) AS peakMs,
-            ROUND(AVG(json_extract(j.value, '$.perf.p95FrameMs')), 1) AS meanFrameP95Ms,
+            ROUND(AVG(NULLIF(json_extract(j.value, '$.perf.p95FrameMs'), 0)), 1) AS meanFrameP95Ms,
             ROUND(MAX(json_extract(j.value, '$.perf.maxFrameMs')), 1) AS maxFrameMs,
             MAX(json_extract(j.value, '$.ai.population')) AS maxPopulation,
             MAX(json_extract(j.value, '$.ai.committedMax')) AS maxCommitted,
