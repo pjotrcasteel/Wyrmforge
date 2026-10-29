@@ -1,4 +1,5 @@
 import { huntLayerCapture, huntLayerRevision, prepareHuntGpuScratch, HuntGpuScratchPool } from './hunt-gpu-layers.js';
+import { mountG4DeviceReview } from './lighting/g4-device-review.js';
 import { preloadFireballV5 } from './arena-fireball-v5.js';
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
 import { attachArenaInput, getArenaMovement, getArenaAim, isArenaStickAim, getArenaPropFocus } from './arena-input.js';
@@ -55,7 +56,13 @@ export function initializeArena(canvas, dotNetReference) {
     }
     arenas.set(canvas, state);
     state.detachInput = attachArenaInput(state);
-    if (new URLSearchParams(location.search).get('arenaGpu') === '1') {
+    const params = new URLSearchParams(location.search);
+    if (params.get('g4Review') === '1') {
+        const gpuRequested = params.get('arenaGpu') === '1';
+        state.g4Review = mountG4DeviceReview(canvas, () => state.gpuWorld?.diagnostics(),
+            gpuRequested ? 'gpu' : 'canvas', gpuRequested ? params.get('gpuQuality') ?? 'balanced' : null);
+    }
+    if (params.get('arenaGpu') === '1') {
         const quality = new URLSearchParams(location.search).get('gpuQuality') ?? 'balanced';
         void import('./arena-gpu-world.js').then(({ HuntGpuWorld }) => {
             if (!state.active) return;
@@ -131,6 +138,7 @@ export function disposeArena(canvas) {
     cancelAnimationFrame(state.animationFrame);
     state.detachInput?.();
     if (state.damageNumberSettings) state.damageNumberSettings.removeEventListener('change', state.onDamageNumberModeChanged);
+    state.g4Review?.dispose();
     state.gpuWorld?.dispose();
     state.gpuScratchPool?.clear();
     arenas.delete(canvas);
@@ -197,6 +205,11 @@ function frame(state, timestamp) {
         state.context.fillRect(0, 0, state.canvas.width, state.canvas.height);
     }
 
+    state.g4Review?.record(timestamp, {
+        playing: Boolean(state.latestSnapshot && !state.latestSnapshot.paused && !state.latestSnapshot.ended),
+        renderingFailed: Boolean(state.renderingFailed),
+        gpuAvailable: Boolean(state.gpuWorld && state.latestSnapshot?.lighting),
+    });
     startSimulationFrame(state, timestamp, rect);
     if (state.active) state.animationFrame = requestAnimationFrame(next => frame(state, next));
 }

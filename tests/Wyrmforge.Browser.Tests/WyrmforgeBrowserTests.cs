@@ -3600,6 +3600,45 @@ public sealed class WyrmforgeBrowserTests : PageTest
         }
     }
 
+    [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
+    public async Task Mobile_G4DeviceReview_RecordsRealHuntAndExportsEvidence(int width, int height)
+    {
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/?arenaGpu=1&gpuQuality=mobile&g4Review=1",
+            new() { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await EnterFirstTrailAsync("BEGIN FIRST HUNT");
+
+        var panel = Page.Locator("[data-g4-device-review]");
+        await Expect(panel).ToBeVisibleAsync();
+        await panel.Locator("summary").ClickAsync();
+        await panel.GetByRole(AriaRole.Button, new() { Name = "Start", Exact = true }).ClickAsync();
+
+        // Observe actual animation frames in the real Hunt, not a synthetic profiler fixture.
+        await Page.WaitForFunctionAsync(@"() => {
+            const text = document.querySelector('[data-g4-status]')?.textContent ?? '';
+            const match = text.match(/(\d+) frame intervals/);
+            return match && Number(match[1]) >= 12;
+        }", null, new() { Timeout = 30000 });
+
+        await panel.Locator("summary").ClickAsync();
+        await panel.GetByRole(AriaRole.Button, new() { Name = "Stop", Exact = true }).ClickAsync();
+        var download = await Page.RunAndWaitForDownloadAsync(() =>
+            panel.GetByRole(AriaRole.Button, new() { Name = "Export JSON" }).ClickAsync());
+        using var json = JsonDocument.Parse(await File.ReadAllTextAsync(await download.PathAsync()));
+        var evidence = json.RootElement;
+        Assert.AreEqual("wyrmforge.g4-device-review.v1", evidence.GetProperty("schema").GetString());
+        Assert.AreEqual("gpu", evidence.GetProperty("mode").GetString());
+        Assert.AreEqual("mobile", evidence.GetProperty("quality").GetString());
+        Assert.IsTrue(evidence.GetProperty("frameIntervals").GetInt32() >= 12);
+        Assert.IsTrue(evidence.GetProperty("frameMsP95").GetDouble() > 0);
+        Assert.IsTrue(evidence.GetProperty("elapsedSeconds").GetDouble() > 0);
+        Assert.IsTrue(evidence.GetProperty("device").GetProperty("viewport").GetProperty("width").GetInt32() > 0);
+        Assert.IsTrue(evidence.GetProperty("limitations").GetArrayLength() >= 4);
+    }
+
     private async Task EnterFirstTrailAsync(string gateLabel = "BEGIN HUNT")
     {
         var back = Page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" });
