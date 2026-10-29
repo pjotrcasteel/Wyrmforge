@@ -77,14 +77,15 @@ public static class WorldSiteLandscapeGenerator
                 continue;
             var material = kind switch
             {
-                "mountain-pass" or "wyrm-lair" => WorldSiteSurfaceId.Rock,
+                "mountain-pass" or "wyrm-lair" => geography.RegionId == "frost"
+                    ? WorldSiteSurfaceId.GlacialIce : WorldSiteSurfaceId.Rock,
                 "forest-fork" or "forest-trail" => WorldSiteSurfaceId.Grass,
                 _ => geography.Substrate.Material,
             };
             var obstacleKind = kind switch
             {
-                "mountain-pass" => "cliff",
-                "wyrm-lair" => "wyrm-rib",
+                "mountain-pass" => geography.RegionId == "frost" ? "glacier-cliff" : "cliff",
+                "wyrm-lair" => geography.RegionId == "frost" ? "ice-spire" : "wyrm-rib",
                 "forest-fork" or "forest-trail" => "tree-root",
                 _ => "rock",
             };
