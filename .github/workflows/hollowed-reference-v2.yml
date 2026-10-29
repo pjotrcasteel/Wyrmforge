@@ -40,6 +40,7 @@ jobs:
           set -euo pipefail
           python -m py_compile tools/art/hollowed-reference-v2/verify_source_identity.py
           python -m py_compile tools/art/hollowed-reference-v2/audit_fresh_character_blender.py
+          python -m py_compile tools/art/hollowed-reference-v2/render_mobile_candidate_blender.py
           python - <<'PY'
           from pathlib import Path
           root = Path("art/source/enemies/hollow/reference-v2")
@@ -128,6 +129,40 @@ jobs:
           assert d['gameplay_modified'] is False,d
           assert d['source_vertex_count']>=1000,d
           print('Actual Blender candidate inspection ready; no artistic approval implied')
+          PY
+      - name: Render 8 TRUE native 96px directions for pixel-sharp mobile review
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile tools/art/hollowed-reference-v2/render_mobile_candidate_blender.py
+          python tools/art/hollowed-reference-v2/render_mobile_candidate_blender.py \
+            --input artifacts/hollowed-reference-v2/audit/review/ROTWalker-CANDIDATE-NOT-HOLLOWED-NOT-APPROVED.blend \
+            --output artifacts/hollowed-reference-v2/audit/review/mobile-native96
+          test -s artifacts/hollowed-reference-v2/audit/review/mobile-native96/pixel-96x96-8ways-TRANSPARENT.png
+          test -s artifacts/hollowed-reference-v2/audit/review/mobile-native96/pixel-96x96-8ways-DARK-4x-NEAREST.png
+          test -s artifacts/hollowed-reference-v2/audit/review/mobile-native96/pixel-96x96-8ways-SILHOUETTE.png
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from PIL import Image
+          root=Path('artifacts/hollowed-reference-v2/audit/review/mobile-native96')
+          d=json.loads((root/'mobile-pixel-proof.json').read_text(encoding='utf-8'))
+          assert d['cell_px']==[96,96],d
+          assert d['direct_blender_native_96px_renders'] is True,d
+          assert len(d['eight_views'])==8,d
+          assert d['actual_colors_used']<=48 and d['alpha_binary'] is True,d
+          assert d['preview_upscaling']=='NEAREST ×4 only',d
+          assert all(52<=v['actor_height_px']<=68 for v in d['eight_views']),d
+          assert d['existing_universal_lighting_engine_unmodified'] is True,d
+          assert d['existing_universal_animation_engine_unmodified'] is True,d
+          assert d['gameplay_or_existing_atlas_modified'] is False,d
+          assert d['owner_approved'] is False,d
+          for facing in ('front','front-right','right','back-right',
+                         'back','back-left','left','front-left'):
+              img=Image.open(root/f'pixel-96x96-{facing}.png').convert('RGBA')
+              assert img.size==(96,96)
+              assert set(img.getchannel('A').getdata())<={0,255}
+          print('Native mobile-source raster QC passes. ART / GAME APPROVAL NOT GIVEN.')
           PY
       - name: Validate source identity in reopened Blender file
         run: |
