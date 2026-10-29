@@ -69,14 +69,28 @@ def sculpt_original_arm_proportions(body):
     local_from_world=body.matrix_world.inverted().to_3x3()
     moved=0
     maximum=0.
+    shoulder_sculpted=0
+    cy=float((lo.y+hi.y)/2)
     for i,p in enumerate(original):
         xx=abs(float(p.x-center_x))
         height_offset=abs(float(p.z-floor-2.14))
         influence=1.0-smooth(height_offset,.20,.64)
         extension=max(0.,xx-.38)*.39*influence
         direction=1 if p.x>=center_x else -1
-        delta=Vector((direction*extension,0,0))
+
+        # Compress the blocky armor/deltoid shelf around the real source
+        # shoulder girdle into a more continuous, rolling back arch.
+        # Restrict to broad anatomical mass; don't deform hands/legs.
+        shoulder_height=1.0-smooth(abs(float(p.z-floor-2.26)),.14,.42)
+        shoulder_width=smooth(xx,.30,.43)*(1.0-smooth(xx,.64,.86))
+        shoulder=shoulder_height*shoulder_width
+        inward=-direction*.078*shoulder
+        slope=-.039*shoulder + .018*shoulder*(1 if direction<0 else -1)
+        scapula_y=(.047*shoulder if p.y>cy else -.018*shoulder)
+        delta=Vector((direction*extension+inward,scapula_y,slope))
         sculpt.data[i].co=basis.data[i].co + local_from_world @ delta
+        if shoulder>.10:
+            shoulder_sculpted+=1
         if extension>.006:
             moved+=1
             maximum=max(maximum,extension)
@@ -94,6 +108,7 @@ def sculpt_original_arm_proportions(body):
         "original_artist_armspan_m":round(width,4),
         "anatomical_sculpt_armspan_m":round(float(h2.x-l2.x),4),
         "source_vertices_softly_resculpted":moved,
+        "shoulder_girdle_vertices_rest_sculpted":shoulder_sculpted,
         "max_rest_length_extension_m":round(maximum,4),
         "original_basis_retained":True,
         "topology_or_triangles_added":False,
