@@ -471,19 +471,91 @@ function drawWetForestProp(ctx, prop, x, y, size) {
     return true;
 }
 
+// AR0 diagnostic mode uses the existing Hunt renderer and the C# world-site snapshot.
+// These named colors are presentation-only: never derive collision, rewards or topology from them.
+const siteSurfaceColors = Object.freeze({
+    Soil: '#6f5040',
+    Grass: '#3c6749',
+    Road: '#af9170',
+    Mud: '#564b45',
+    Rock: '#728088',
+    ShallowWater: '#387f9d',
+});
+const siteSurfaceNames = Object.freeze(['Soil', 'Grass', 'Road', 'Mud', 'Rock', 'ShallowWater']);
+
+export function semanticSiteModeEnabled() {
+    return new URLSearchParams(globalThis.location?.search ?? '').get('arenaTerrain') === 'semantic';
+}
+
+function semanticMaterialName(material) {
+    return typeof material === 'number' ? siteSurfaceNames[material] : material;
+}
+
+export function drawSemanticSiteFloor(ctx, geography, width, height) {
+    if (!geography || geography.version !== 1 || !Array.isArray(geography.ports) ||
+        !Array.isArray(geography.corridors)) return false;
+    const substrate = semanticMaterialName(geography.substrate?.material);
+    if (!(substrate in siteSurfaceColors)) return false;
+
+    ctx.save();
+    ctx.fillStyle = siteSurfaceColors[substrate];
+    ctx.fillRect(0, 0, width, height);
+    for (const corridor of geography.corridors) {
+        const material = semanticMaterialName(corridor.material);
+        if (!(material in siteSurfaceColors) || corridor.points?.length < 2) continue;
+        ctx.beginPath();
+        ctx.moveTo(corridor.points[0].x * width, corridor.points[0].y * height);
+        for (const point of corridor.points.slice(1)) ctx.lineTo(point.x * width, point.y * height);
+        ctx.strokeStyle = siteSurfaceColors[material];
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = Math.min(width, height) * corridor.width;
+        ctx.stroke();
+    }
+
+    for (const port of geography.ports) {
+        const x = port.localPoint.x * width;
+        const y = port.localPoint.y * height;
+        ctx.fillStyle = port.entrance ? '#f7d99e' : '#8be9e1';
+        ctx.beginPath();
+        ctx.arc(x, y, 11, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#18232a';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.font = 'bold 12px system-ui';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#fff';
+        ctx.fillText(port.direction, x, y - 17);
+    }
+    ctx.restore();
+    return true;
+}
+
 export function drawArenaEnvironment(ctx, environment, width, height, elapsedSeconds = 0, approvedAtlas = null) {
     if (!environment) return false;
-    const texture = terrainTexture(environment, width, height, approvedAtlas);
-    ctx.drawImage(texture.image, 0, 0, width, height);
+    const semantic = semanticSiteModeEnabled() && drawSemanticSiteFloor(ctx, environment.geography, width, height);
+    const texture = semantic ? null : terrainTexture(environment, width, height, approvedAtlas);
+    if (texture) ctx.drawImage(texture.image, 0, 0, width, height);
+    if (semantic) {
+        globalThis.__wyrmforgeAr0Geography = {
+            siteId: environment.geography.siteId,
+            regionId: environment.geography.regionId,
+            seed: environment.geography.worldSeed,
+            version: environment.geography.version,
+            edges: environment.geography.ports.map(port => port.edgeId),
+            material: semanticMaterialName(environment.geography.substrate.material),
+        };
+    }
     // Render low-angle shadows from CURRENT physical props, never frozen floor art:
     // destroyed trees and ruins lose their shadows in the same C# simulation frame.
-    if (environment.habitat === 'WetForest' && environment.wetForest) {
+    if (!semantic && environment.habitat === 'WetForest' && environment.wetForest) {
         drawWetForestCastShadows(ctx, environment.seed, environment.props ?? [], width, height);
         drawWetForestFirelight(ctx, environment, width, height, elapsedSeconds);
     }
-    const cloister = texture.cloister;
+    const cloister = texture?.cloister ?? null;
     // With the atlas loaded, closed territory walls are depth-sorted layers (getArenaCloisterElevations).
-    const spriteWalls = !cloister && artReady();
+    const spriteWalls = !semantic && !cloister && artReady();
     for (const barrier of environment.barriers ?? []) {
         if (spriteWalls) {
             if (barrier.open && barrier.kind === 'gate') drawOpenedGateRubble(ctx, barrier, width, height);
@@ -493,8 +565,10 @@ export function drawArenaEnvironment(ctx, environment, width, height, elapsedSec
             drawTerritoryBarrier(ctx, barrier, environment.element, width, height, elapsedSeconds);
     }
     for (const supply of environment.supplies ?? []) drawSupply(ctx, supply, width, height, elapsedSeconds);
-    drawTerritoryMotes(ctx, environment, width, height, elapsedSeconds);
-    drawCloisterMist(ctx, cloister, elapsedSeconds);
+    if (!semantic) {
+        drawTerritoryMotes(ctx, environment, width, height, elapsedSeconds);
+        drawCloisterMist(ctx, cloister, elapsedSeconds);
+    }
     return true;
 }
 
