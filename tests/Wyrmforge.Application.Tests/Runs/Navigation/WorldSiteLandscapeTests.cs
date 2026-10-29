@@ -178,6 +178,37 @@ public sealed class WorldSiteLandscapeTests
     }
 
     [TestMethod]
+    public void FireAndFrostLairs_PreserveBossTelegraphAndApproachCorridor()
+    {
+        const double width = 950;
+        const double height = 1550;
+        var bossCenter = new Vector2D(width * .5, height * .5);
+        foreach (var region in new[] { SpellSchool.Fire, SpellSchool.Frost })
+        {
+            for (var seed = 0; seed < 24; seed++)
+            {
+                var lair = WyrmrealmMapGenerator.Generate(1, seed, region)
+                    .Single(node => node.Type == WyrmrealmNodeType.Dragon).Geography!;
+                var landscape = lair.Landscape!;
+                Assert.AreEqual("wyrm-lair", landscape.Kind);
+                Assert.IsGreaterThan(2, landscape.Obstacles.Count,
+                    "A Wyrm lair must have physical rock or ice beyond an empty clearing.");
+                Assert.IsFalse(landscape.Obstacles.Any(obstacle =>
+                    WorldSiteFootprintCollision.Contains(obstacle, bossCenter, width, height, radius: 95)),
+                    "No authoritative rock/ice footprint may encroach on the boss telegraph envelope.");
+                foreach (var corridor in lair.Corridors)
+                {
+                    Assert.IsFalse(WorldSiteFootprintCollision.BlocksSegment(landscape,
+                        new Vector2D(corridor.Points[0].X * width, corridor.Points[0].Y * height),
+                        new Vector2D(corridor.Points[^1].X * width, corridor.Points[^1].Y * height),
+                        width, height, radius: 12),
+                        $"Region {region}, seed {seed}: the lair entry must stay traversable.");
+                }
+            }
+        }
+    }
+
+    [TestMethod]
     public void ForestFork_ExposesDistinctOutgoingGraphEdgesWithDirectionalPhysicalPorts()
     {
         var fork = Enumerable.Range(0, 100)
