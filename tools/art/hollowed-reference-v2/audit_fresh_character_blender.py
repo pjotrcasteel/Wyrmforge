@@ -93,6 +93,8 @@ def render_views(path,meshes):
     scene.render.resolution_percentage=100
     scene.render.image_settings.file_format="PNG"
     scene.render.film_transparent=False
+    if scene.world is None:
+        scene.world=bpy.data.worlds.new("Neutral candidate model inspection")
     scene.world.use_nodes=True
     background=scene.world.node_tree.nodes.get("Background")
     clay=material("V2 candidate only NEUTRAL CLAY",(.63,.61,.57))
