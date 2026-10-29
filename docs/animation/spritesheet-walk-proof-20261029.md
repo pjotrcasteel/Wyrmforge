@@ -4,7 +4,7 @@
 
 The 2.5D spritesheet route remains viable for bounded source-authored whole-body
 motion and discrete transitions. AN6 is **not complete**. Current main
-`f72f4aa10` is integrated; draft #387 remains unmerged.
+`0653cbfd8` is integrated; draft #387 remains unmerged.
 
 - Shared full-frame motion-library selection, one gait clock, exact pause,
   atomic loading, source-matched material export and shared Hunt GPU sprite
@@ -231,3 +231,10 @@ The unattended continuation goal reports `usageLimited` at this checkpoint.
 No goal or milestone has been marked complete because of that limit. All
 completed slices are remotely checkpointed on the existing draft PR.
 
+
+Final remote audit observed main `0653cbfd8`: its only addition since validated
+`f72f4aa10` is the separate pinned G4 Pages-preview workflow. That workflow is
+integrated unchanged; it does not deploy this animation draft or change the
+validated C#/JS runtime. The Pages workflow names the existing source-backed
+ground generators for restoring the three omitted local validation assets;
+use those source tools in the next Hunt validation rather than inventing art.
