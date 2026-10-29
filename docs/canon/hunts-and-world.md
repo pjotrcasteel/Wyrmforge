@@ -1,6 +1,6 @@
 # Hunts, maps and living world
 
-> **Canonical WyrmForge specification · updated 20 October 2026.** Connected geography and physically authoritative combat places, not decorative disconnected stage cards.
+> **Canonical WyrmForge specification · updated 29 October 2026.** Connected geography and physically authoritative combat places, not decorative disconnected stage cards.
 > [Canonical index](README.md) · Only explicitly marked **LOCKED/approved** requirements are commitments. Proposed values, old milestones and drafts are not evidence of shipped code. Verify current `main`, PRs and tests.
 
 ## 4. Region architecture, Wyrm hierarchy and Hunt Director
