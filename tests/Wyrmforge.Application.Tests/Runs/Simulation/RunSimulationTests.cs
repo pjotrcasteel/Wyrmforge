@@ -56,6 +56,18 @@ public sealed class RunSimulationTests
     }
 
     [TestMethod]
+    public void DamageNumberFeedback_PreservesReflectionMethodContracts()
+    {
+        var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+        var damage = typeof(RunSimulation).GetMethod("DamageTarget", flags);
+        var splash = typeof(RunSimulation).GetMethod("Splash", flags);
+        Assert.IsNotNull(damage);
+        Assert.IsNotNull(splash);
+        Assert.AreEqual(4, damage.GetParameters().Length, "Existing reflected combat integration must remain compatible.");
+        Assert.AreEqual(4, splash.GetParameters().Length);
+    }
+
+    [TestMethod]
     public void Tick_WhenEnemyTakesDamage_ExposesCombatFeedback()
     {
         var random = new FirstRandomSource();
@@ -86,6 +98,8 @@ public sealed class RunSimulationTests
         Assert.IsNotNull(damageNumber, "Real health loss must publish a floating damage number.");
         Assert.IsGreaterThan(0, damageNumber.Amount);
         Assert.AreEqual("Arcane", damageNumber.School);
+        Assert.AreEqual("Impact", damageNumber.Flavor);
+        Assert.IsFalse(damageNumber.Periodic);
         Assert.IsTrue(damageNumber.Progress >= 0 && damageNumber.Progress < 1);
         Assert.IsLessThan(damagedEnemy.Y, damageNumber.Y, "Damage text begins above the target's feet.");
     }
