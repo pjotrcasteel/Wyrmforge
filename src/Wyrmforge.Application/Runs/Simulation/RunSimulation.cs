@@ -424,7 +424,7 @@ public sealed partial class RunSimulation
     {
         var snapshot = ProjectileLightingProjection.Capture(
             "hunt", lightingSnapshotTick++, projectiles, projectileLightIdentities,
-            new LightingEnvironment("gothic-night", "#8c9cbb", 0.012));
+            new LightingEnvironment("gothic-night", "#8c9cbb", 0.24));
         var combined = LightingSceneComposer.Compose(snapshot.SceneId, snapshot.SimulationTick,
             snapshot.Environment, snapshot.Emitters,
             [HunterVisibilityLightingProjection.Capture(player.Position)],
