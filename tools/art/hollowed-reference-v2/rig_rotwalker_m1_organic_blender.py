@@ -291,7 +291,27 @@ def calibrate_arms_on_true_3d_bones(rig):
     return results
 
 
-def author_motion(rig, body, original_low):
+def attach_shared_world_motion_root(rig, body):
+    """Move SOURCE and skeleton as one real global reference frame.
+
+    Rotwalker's imported mesh has a scaled original parent; moving only the
+    armature/pose root is cancelled by the skin modifier's bind transforms.
+    Use an external common world-root shared by BOTH actual objects.
+    """
+    if body.parent is None:
+        raise ValueError("Expected artist import root hierarchy, not a flattened mesh")
+    existing_root=body.parent
+    motion_root=bpy.data.objects.new("Hollowed M1 SOURCE WORLD contact master",None)
+    bpy.context.scene.collection.objects.link(motion_root)
+    for source in (existing_root,rig):
+        world=source.matrix_world.copy()
+        source.parent=motion_root
+        source.matrix_world=world
+    bpy.context.view_layer.update()
+    return motion_root
+
+
+def author_motion(rig, body, original_low, motion_root):
     scene=bpy.context.scene
     scene.render.fps=12
     scene.frame_start=1
@@ -302,7 +322,7 @@ def author_motion(rig, body, original_low):
         # World-space armature location is the actual root motion authority.
         # Previous local pose-bone translation did not move all skinned source
         # geometry consistently, leaving genuine heel-contact failures.
-        rig.location.z=0.0
+        motion_root.location.z=0.0
         phase=(frame-1)/48.0*math.tau
         set_pose(rig,phase)
         bpy.context.view_layer.update()
@@ -330,7 +350,7 @@ def author_motion(rig, body, original_low):
         residual=delta
         for iteration in range(5):
             correction+=residual
-            rig.location.z=correction
+            motion_root.location.z=correction
             bpy.context.view_layer.update()
             low,_=bounds(eval_points(body))
             residual=float(original_low.z-low.z)
@@ -347,19 +367,19 @@ def author_motion(rig, body, original_low):
         for bone in rig.pose.bones:
             bone.keyframe_insert(data_path="rotation_quaternion",
                                  frame=frame,group=bone.name)
-        rig.keyframe_insert(data_path="location",frame=frame,
-                             group="H_Root_WORLD")
+        motion_root.keyframe_insert(data_path="location",frame=frame,
+                                     group="H_WorldRoot")
         footsteps.append({"frame":frame,"ground_z":round(float(low.z),5),
                           "root_correction":round(correction,6),
                           "residual_m":round(residual,6)})
     # Seamless loop on true original bone controls, not a sprite crossfade.
     scene.frame_set(49)
     set_pose(rig,0)
-    rig.location.z=footsteps[0]["root_correction"]
+    motion_root.location.z=footsteps[0]["root_correction"]
     for bone in rig.pose.bones:
         bone.keyframe_insert(data_path="rotation_quaternion",frame=49,group=bone.name)
-    rig.keyframe_insert(data_path="location",frame=49,
-                         group="H_Root_WORLD")
+    motion_root.keyframe_insert(data_path="location",frame=49,
+                                 group="H_WorldRoot")
     scene.frame_set(1)
     if not bpy.data.actions:
         raise ValueError("No actual editable armature animation was authored")
@@ -499,7 +519,8 @@ def main():
     initial_lo,_=bounds(baseline)
     rig,rig_report=create_rig(body[0],baseline)
     calibrated=calibrate_arms_on_true_3d_bones(rig)
-    movement=author_motion(rig,body[0],initial_lo)
+    global_motion_root=attach_shared_world_motion_root(rig,body[0])
+    movement=author_motion(rig,body[0],initial_lo,global_motion_root)
     views=screenshot(out,body[0])
     if len(body[0].data.vertices)!=rig_report["original_vertices"]:
         raise ValueError("Original artist sculpt topology was changed")
@@ -519,6 +540,7 @@ def main():
       "original_mesh_preserved":True,
       "rig":rig_report,
       "calibrated_reaching_arms":calibrated,
+      "shared_global_world_motion_parent":global_motion_root.name,
       "motion":movement,
       "render":views,
       "old_H1_source_used":False,
