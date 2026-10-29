@@ -1,4 +1,4 @@
-import { huntLayerCapture } from './hunt-gpu-layers.js';
+import { huntLayerCapture, huntLayerRevision } from './hunt-gpu-layers.js';
 import { preloadFireballV5 } from './arena-fireball-v5.js';
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
 import { attachArenaInput, getArenaMovement, getArenaAim, isArenaStickAim, getArenaPropFocus } from './arena-input.js';
@@ -364,19 +364,24 @@ function draw(state, snapshot, width, height) {
     if (gpu) gpu.begin(ctx, camera, width, height);
     const worldContext = ctx;
     for (const layer of sortSceneDepthLayers(depthLayers)) {
-        let tile, tileX, tileY, tileSize, capture;
+        let tile, tileX, tileY, tileSize, capture, revision, reuse = false;
         if (gpu) {
             capture = huntLayerCapture(layer, snapshot.player, state.ashfang.death);
             if (!capture) continue;
             ({ x: tileX, y: tileY, size: tileSize } = capture);
             if (tileX + tileSize < camera.x - 384 || tileY + tileSize < camera.y - 384 ||
                 tileX > camera.x + width + 384 || tileY > camera.y + height + 384) continue;
+            revision = huntLayerRevision(layer, artReady());
+            reuse = gpu.canReuseCapture(capture.id, revision, tileSize, tileSize);
             tile = state.gpuActorScratch ??= document.createElement('canvas');
-            tile.width = tile.height = Math.ceil(tileSize);
-            ctx = tile.getContext('2d'); ctx.imageSmoothingEnabled = false;
-            ctx.translate(-tileX, -tileY);
+            if (!reuse) {
+                tile.width = tile.height = Math.ceil(tileSize);
+                ctx = tile.getContext('2d'); ctx.imageSmoothingEnabled = false;
+                ctx.translate(-tileX, -tileY);
+            }
         }
-        if (layer.kind === 'masonry') {
+        if (!reuse) {
+            if (layer.kind === 'masonry') {
             drawArenaCloisterElevation(ctx, layer);
         } else if (layer.kind === 'dragon') {
             drawDragon(ctx, layer.dragon, state.reducedMotion.matches, snapshot.dragonBreath, state.ashfang);
@@ -398,11 +403,13 @@ function draw(state, snapshot, width, height) {
                 gpu ? null : sampleSpellLight(spellLights, snapshot.player.x, snapshot.player.y),
                 updateMageWalk(state.mageWalk, snapshot.player, visualSeconds, state.reducedMotion.matches),
                 state.mageWalk.facing);
+            }
         }
         if (gpu) {
             gpu.capture(capture.id,
                 tile, tileX - camera.x, tileY - camera.y, tileSize, tileSize,
-                .12 + Math.max(0, Math.min(1, layer.depth / worldHeight)) * .1);
+                .12 + Math.max(0, Math.min(1, layer.depth / worldHeight)) * .1,
+                true, { revision });
             ctx = worldContext;
         }
     }
