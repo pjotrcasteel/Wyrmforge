@@ -249,12 +249,12 @@
     "H_ForeArm_R": 1.16,
     "H_ClawsRoot_L": 1.08,
     "H_ClawsRoot_R": 1.08,
-    "H_Thigh_L": 1.17,
-    "H_Thigh_R": 1.17,
-    "H_Shin_L": 1.23,
-    "H_Shin_R": 1.23,
-    "H_Foot_L": 1.13,
-    "H_Foot_R": 1.13
+    "H_Thigh_L": 1.22,
+    "H_Thigh_R": 1.22,
+    "H_Shin_L": 1.27,
+    "H_Shin_R": 1.27,
+    "H_Foot_L": 1.45,
+    "H_Foot_R": 1.45
   },
   "notes": [
     "Landmarks manually inspected on actual owner art. Front and side depictions are illustrative, not calibrated orthographic photographs.",
@@ -291,6 +291,7 @@
       0.093
     ],
     "foot_plant": "Actual source rig tested left ankle/toe positions restored from last working both-foot contact. Stricter sole patch/heel + toe coverage required; DO NOT claim source approved based on lowest vertex only.",
-    "proportions": "source sculpt first. prevent animation pose bone scaling to disguise too-short limbs"
+    "proportions": "source sculpt first. prevent animation pose bone scaling to disguise too-short limbs",
+    "leg_scale_recovery": "Restored last genuinely two-foot grounded lower-leg bone stretch limits; only arms remain strongly restricted to prevent flat stretched fingers"
   }
 }
