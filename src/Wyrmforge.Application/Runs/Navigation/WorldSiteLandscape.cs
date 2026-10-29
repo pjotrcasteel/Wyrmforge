@@ -47,7 +47,7 @@ public static class WorldSiteLandscapeGenerator
             var side = index % 2 == 0 ? 1d : -1d;
             var center = kind switch
             {
-                "mountain-pass" => new HuntPoint(.5 + side * (.315 + random.NextDouble() * .13),
+                "mountain-pass" => new HuntPoint(.5 + side * (.285 + random.NextDouble() * .025),
                     .09 + (index / (double)count) * .82 + (random.NextDouble() - .5) * .11),
                 "wyrm-lair" => new HuntPoint(.5 + Math.Cos(angle) * (.32 + random.NextDouble() * .08),
                     .5 + Math.Sin(angle) * (.29 + random.NextDouble() * .1)),
@@ -55,14 +55,14 @@ public static class WorldSiteLandscapeGenerator
             };
             var radiusX = kind switch
             {
-                "mountain-pass" => .16 + random.NextDouble() * .065,
+                "mountain-pass" => .15 + random.NextDouble() * .018,
                 "wyrm-lair" => .064 + random.NextDouble() * .045,
                 "forest-fork" or "forest-trail" => .052 + random.NextDouble() * .042,
                 _ => .045 + random.NextDouble() * .042,
             };
             var radiusY = kind switch
             {
-                "mountain-pass" => .13 + random.NextDouble() * .07,
+                "mountain-pass" => .13 + random.NextDouble() * .025,
                 "wyrm-lair" => .055 + random.NextDouble() * .047,
                 _ => .04 + random.NextDouble() * .045,
             };
