@@ -21,6 +21,14 @@
 
 **Modularity and performance:** one reusable contract does not prohibit scene-specific art, enemy-specific behavior, elemental profiles, separate render backends, or intentionally staged legacy fallbacks. It prohibits **parallel authoritative engines** and unbounded per-feature pipelines. Provide mobile budgets, culling, LOD, pooling, fallbacks, deterministic tests, device captures and instrumentation for any new engine capability. Refactor in behavior-preserving vertical slices; never replace working assets or the accepted painted Town just to satisfy an abstraction.
 
+### Combat Feedback & Damage Numbers — CF1 (additive slice; PR #398)
+
+**Owner-approved gameplay presentation addition, 29 October 2026.** Floating damage numbers are a consumer of the **existing authoritative C# combat simulation**, not a new damage or animation engine. C# publishes actual post-defense HP loss with stable sequence, target location, school, surge and killing-blow traits through the existing run snapshot. A reusable Canvas presentation module handles movement, pixel-sized typography, Gothic contrast, 320/390px layout, reduced motion, pooling/budget and Full / Minimal / Off preference.
+
+**Current state:** implementation and C#/JS tests proposed in [PR #398](https://github.com/pjotrcasteel/Wyrmforge/pull/398). **Not yet marked visually approved, merged or released.** Critical-hit colors/size must only activate if the combat authority actually gains a genuine critical-hit signal; do not synthesize criticals in JavaScript. Aggregate periodic damage, cap on-screen numbers, preserve C# deterministic replay and never draw over target sigils before sprite occlusion. Real iPhone portrait in-Hunt review and CI green remain the acceptance gates.
+
+**Dependency rule:** do not modify the in-flight Hollowed art, shared animation engine, universal lighting renderer or AI milestones. CF1 is an isolated presentation adapter and does not reorder the locked ENG → G4/G5 → AI priorities.
+
 ### Post-Hollowed unified-engine consolidation — ENG0–ENG4 (next architectural checkpoint)
 
 **Trigger:** after the current cape-free Hollowed animation/appearance improvements, including [#385](https://github.com/pjotrcasteel/Wyrmforge/pull/385) and relevant parallel animation work, have completed their tests **and received owner visual approval**. In-progress Hollowed art is not to be interrupted or merged prematurely. This checkpoint is **one of the very first pieces of work after Hollowed**, before adding new feature-specific physics/VFX/animation implementations.
