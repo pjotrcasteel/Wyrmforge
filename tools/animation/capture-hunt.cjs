@@ -4,14 +4,14 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const published=path.resolve(process.env.WYRMFORGE_PUBLISHED_ROOT||'artifacts/web/wwwroot');
 const source=path.resolve(__dirname,'../../src/Wyrmforge.Presentation.Web/wwwroot');
 const out=path.resolve(process.env.AN_CAPTURE_DIR||'artifacts/animation-hunt');fs.mkdirSync(out,{recursive:true});
-const foundationMode=process.env.AN_FOUNDATION_MODE||'1',expectsGpu=foundationMode!=='sprite-walk'||process.env.AN_SPRITE_GPU==='1';
+const foundationMode=process.env.AN_FOUNDATION_MODE||'1',bakedSpriteMode=foundationMode==='sprite-walk'||foundationMode==='sprite-claw',expectsGpu=!bakedSpriteMode||process.env.AN_SPRITE_GPU==='1';
 const candidate=process.env.AN_CANDIDATE!=='0',width=Number(process.env.AN_WIDTH||390),liveTrail=process.env.AN_SCENE==='trail',selector=liveTrail?'canvas.game-canvas':'.enemy-lab canvas';
 const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json','.wasm':'application/wasm','.png':'image/png','.svg':'image/svg+xml','.ogg':'audio/ogg','.mp3':'audio/mpeg','.bin':'application/octet-stream'};
 let browser;
 const server=http.createServer((req,res)=>{
  const route=decodeURIComponent(new URL(req.url,'http://localhost').pathname);
  if(route.includes('..')){res.writeHead(403);return res.end();}
- const assetPrefix=foundationMode==='sprite-walk'?'/art/review/animation-foundation-sprite-walk/':'/art/review/animation-foundation-skin/';
+ const assetPrefix=foundationMode==='sprite-claw'?'/art/review/animation-foundation-sprite-claw/':foundationMode==='sprite-walk'?'/art/review/animation-foundation-sprite-walk/':'/art/review/animation-foundation-skin/';
  if(process.env.AN_ASSET_ROOT&&route.startsWith(assetPrefix)){
   const asset=path.join(path.resolve(process.env.AN_ASSET_ROOT),route.slice(assetPrefix.length));
   if(fs.existsSync(asset)){res.setHeader('Content-Type',mime[path.extname(asset)]||'application/octet-stream');fs.createReadStream(asset).pipe(res);return;}
@@ -62,7 +62,7 @@ const server=http.createServer((req,res)=>{
   const m=await import(window.__anModulePath??'/js/arena.js');window.__anTrace=[];
   window.__anTraceTimer=setInterval(()=>{const d=m.readArenaDiagnostics(document.querySelector(window.__anCanvasSelector));if(d)window.__anTrace.push({at:performance.now(),simulationTimeSeconds:d.simulationTimeSeconds,enemies:d.enemies,player:d.player,hollow:d.hollow,performance:d.performance,gpuWorld:d.gpuWorld});},50);
  });
- if(candidate&&foundationMode==='sprite-walk'&&!process.env.AN_INSPECTION)await page.evaluate(gpu=>{const label=document.createElement('div');label.textContent=gpu?'BAKED SPRITE MATERIALS / SHARED GPU / EXISTING ATTACK FALLBACK':'SOURCE-LIT BAKED SPRITESHEET WALK PROOF / EXISTING ATTACK FALLBACK';label.style='position:fixed;bottom:0;left:0;background:#fff;color:#000;font:11px sans-serif;padding:5px;z-index:9999';document.body.appendChild(label);},expectsGpu);
+ if(candidate&&bakedSpriteMode&&!process.env.AN_INSPECTION)await page.evaluate(({gpu,claw})=>{const label=document.createElement('div');label.textContent=claw?'SOURCE-LIT BAKED WHOLE-BODY CLAW / NOT ACCEPTED':gpu?'BAKED SPRITE MATERIALS / SHARED GPU / EXISTING ATTACK FALLBACK':'SOURCE-LIT BAKED SPRITESHEET WALK PROOF / EXISTING ATTACK FALLBACK';label.style='position:fixed;bottom:0;left:0;background:#fff;color:#000;font:11px sans-serif;padding:5px;z-index:9999';document.body.appendChild(label);},{gpu:expectsGpu,claw:foundationMode==='sprite-claw'});
  const initial=await page.evaluate(async()=>{const m=await import(window.__anModulePath??'/js/arena.js');return m.readArenaDiagnostics(document.querySelector(window.__anCanvasSelector));});
  fs.writeFileSync(path.join(out,'initial-diagnostics.json'),JSON.stringify(initial,null,2));
  await page.screenshot({path:path.join(out,'hunt-ready.png')});
@@ -80,8 +80,8 @@ const server=http.createServer((req,res)=>{
  const fallbackCanvasPixels=process.env.AN_NO_WEBGL?await page.evaluate(selector=>{const c=document.querySelector(selector),p=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let lit=0;for(let i=0;i<p.length;i+=4)if(p[i]+p[i+1]+p[i+2])lit++;return lit;},selector):null;
  const video=await page.video().path();await page.close();await browser.close();server.close();
 
- const summary={foundationMode,representation:!candidate?'default-production-sprites':foundationMode==='sprite-walk'?'baked-full-body-sprites':'source-skin-research',contactMeasurement:!candidate?'candidate markers not active':foundationMode==='sprite-walk'?'unsnapped source markers; not evaluated skin soles':'source-skin diagnostics',expectedWebglUnavailable:Boolean(process.env.AN_NO_WEBGL),fallbackCanvasPixels,scene:liveTrail?'real-first-trail':'real-development-encounter',mobileEmulated:process.env.AN_MOBILE==='1',candidate,inspection:process.env.AN_INSPECTION??'lit',physicalDevice:false,viewport:{width,height:844},samples:trace.length,solveFailures:trace.flatMap(r=>r.hollow.entities.filter(e=>e.foundationError).map(e=>({time:r.simulationTimeSeconds,error:e.foundationError}))),maximumProjectedSoleDrift:Math.max(...trace.flatMap(r=>r.hollow.entities.map(e=>e.foundation?.maxSlip??0))),gpuErrors:trace.filter(r=>r.gpuWorld?.error),video,errors,consoleErrors,failedResources};
- summary.maximumNativeMarkerSlip=candidate&&foundationMode==='sprite-walk'?Math.max(0,...trace.flatMap(r=>r.hollow.entities.map(e=>e.foundation?.maxNativeMarkerSlip??0))):null;
+ const summary={foundationMode,representation:!candidate?'default-production-sprites':bakedSpriteMode?'baked-full-body-sprites':'source-skin-research',contactMeasurement:!candidate?'candidate markers not active':bakedSpriteMode?'unsnapped source markers; not evaluated skin soles':'source-skin diagnostics',expectedWebglUnavailable:Boolean(process.env.AN_NO_WEBGL),fallbackCanvasPixels,scene:liveTrail?'real-first-trail':'real-development-encounter',mobileEmulated:process.env.AN_MOBILE==='1',candidate,inspection:process.env.AN_INSPECTION??'lit',physicalDevice:false,viewport:{width,height:844},samples:trace.length,solveFailures:trace.flatMap(r=>r.hollow.entities.filter(e=>e.foundationError).map(e=>({time:r.simulationTimeSeconds,error:e.foundationError}))),maximumProjectedSoleDrift:Math.max(...trace.flatMap(r=>r.hollow.entities.map(e=>e.foundation?.maxSlip??0))),gpuErrors:trace.filter(r=>r.gpuWorld?.error),video,errors,consoleErrors,failedResources};
+ summary.maximumNativeMarkerSlip=candidate&&bakedSpriteMode?Math.max(0,...trace.flatMap(r=>r.hollow.entities.map(e=>e.foundation?.maxNativeMarkerSlip??0))):null;
  summary.markerContactWithinOneNativePixel=summary.maximumNativeMarkerSlip==null?null:summary.maximumNativeMarkerSlip<=1;
  fs.writeFileSync(path.join(out,'capture-summary.json'),JSON.stringify(summary,null,2));
  if(errors.length||summary.solveFailures.length||(!process.env.AN_NO_WEBGL&&summary.gpuErrors.length)||(process.env.AN_NO_WEBGL&&!fallbackCanvasPixels))throw Error(JSON.stringify(summary));
