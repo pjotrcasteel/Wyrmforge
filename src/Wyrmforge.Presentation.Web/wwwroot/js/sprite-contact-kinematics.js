@@ -18,11 +18,24 @@ export function solveTwoBoneContact(input, output={middle:[0,0,0],flexDegrees:0}
     const flex=180-Math.acos(Math.max(-1,Math.min(1,(a*a+b*b-distance*distance)/(2*a*b))))*180/Math.PI;
     if(flex<limits[0]||flex>limits[1])throw new RangeError('Source contact joint limit exceeded');
     const along=(a*a-b*b+distance*distance)/(2*distance),height=Math.sqrt(Math.max(0,a*a-along*along));
+    let bend=[bx/bendLength,by/bendLength,bz/bendLength];
+    if(input.minimumMiddleZ!=null){
+        if(!Number.isFinite(input.minimumMiddleZ))throw new TypeError('Finite middle-joint ground clearance required');
+        const required=(input.minimumMiddleZ-root[2]-z*along)/height;
+        if(bend[2]<required){
+            const maximum=Math.hypot(x,y);
+            if(required>maximum+1e-8||maximum<1e-8)throw new RangeError('No source joint bend above the ground envelope');
+            const up=[-x*z/maximum,-y*z/maximum,maximum],side=[-y/maximum,x/maximum,0];
+            const vertical=Math.max(-1,Math.min(1,required/maximum)),horizontal=Math.sqrt(Math.max(0,1-vertical*vertical));
+            const sign=bend.reduce((sum,n,i)=>sum+n*side[i],0)<0?-1:1;
+            bend=up.map((n,i)=>n*vertical+side[i]*horizontal*sign);
+        }
+    }
     const middle=output.middle;
     if(!Array.isArray(middle)||middle.length!==3)throw new TypeError('Contact output requires a reusable three-vector');
-    middle[0]=root[0]+x*along+bx/bendLength*height;
-    middle[1]=root[1]+y*along+by/bendLength*height;
-    middle[2]=root[2]+z*along+bz/bendLength*height;
+    middle[0]=root[0]+x*along+bend[0]*height;
+    middle[1]=root[1]+y*along+bend[1]*height;
+    middle[2]=root[2]+z*along+bend[2]*height;
     output.flexDegrees=flex;
     return output;
 }
@@ -120,7 +133,7 @@ export function solveSupportedSourcePose(frame,targets,options){
             const move=point=>rotation?target.point.map((v,row)=>v+point.reduce((s,n,col)=>s+rotation[row*3+col]*(n-c.sourceContact[col]),0)):plus(point,delta);
             const ankle=move(bones[c.end].head),root=posed[c.upper].head;
             let solved;
-            try{solved=solveTwoBoneContact({root,target:ankle,pole:plus(c.pole,bodyShift),upperLength:c.upperLength,lowerLength:c.lowerLength,limits:c.limits});}
+            try{solved=solveTwoBoneContact({root,target:ankle,pole:plus(c.pole,bodyShift),upperLength:c.upperLength,lowerLength:c.lowerLength,limits:c.limits,minimumMiddleZ:c.minimumMiddleGroundClearance!=null&&options.groundZ!=null?options.groundZ+c.minimumMiddleGroundClearance:undefined});}
             catch(error){error.sourcePoseFailure={contactId:id,root,target:ankle,bodyShift:[...bodyShift],supportPoint:target.point};throw error;}
             posed[c.upper]={head:root,tail:[...solved.middle]};
             posed[c.middle]={head:[...solved.middle],tail:ankle};

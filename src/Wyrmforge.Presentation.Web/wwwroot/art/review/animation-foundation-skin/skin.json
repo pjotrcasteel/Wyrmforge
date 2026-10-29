@@ -1,68 +1,69 @@
 {
   "version": 1,
+  "skinningMode": "dual-quaternion",
   "sourceSignature": "75a1698be134b6e83192912ca0b0ceaf4f26f1c774d4734a2fdb3299abd7eb59",
-  "sourceBlendSha256": "7fd3aa88aea9dd4f2caad0f0c1860d10eece936900e5c332771c298e2acfa89e",
+  "sourceBlendSha256": "427cc4571ae160f81be09784f7e081279629b47a9d546a524a074b1387b828e3",
   "buffer": "skin.bin",
-  "bufferSha256": "039ab0700184629939bae46054b8176386ff27186d1aa1fe2c42f823dcef8ca1",
+  "bufferSha256": "7a8acbf5f11db4de8ac07bf10e55eb1d278ba65c01cc767816782aa22774ecfe",
   "attributes": {
     "position": {
       "offset": 0,
-      "bytes": 159600,
+      "bytes": 150660,
       "component": "f",
       "itemSize": 3,
-      "count": 13300
+      "count": 12555
     },
     "normal": {
-      "offset": 159600,
-      "bytes": 159600,
+      "offset": 150660,
+      "bytes": 150660,
       "component": "f",
       "itemSize": 3,
-      "count": 13300
+      "count": 12555
     },
     "uv": {
-      "offset": 319200,
-      "bytes": 106400,
+      "offset": 301320,
+      "bytes": 100440,
       "component": "f",
       "itemSize": 2,
-      "count": 13300
+      "count": 12555
     },
     "skinIndex": {
-      "offset": 425600,
-      "bytes": 106400,
+      "offset": 401760,
+      "bytes": 100440,
       "component": "H",
       "itemSize": 4,
-      "count": 13300
+      "count": 12555
     },
     "skinWeight": {
-      "offset": 532000,
-      "bytes": 212800,
+      "offset": 502200,
+      "bytes": 200880,
       "component": "f",
       "itemSize": 4,
-      "count": 13300
+      "count": 12555
     },
     "skinIndex2": {
-      "offset": 744800,
-      "bytes": 106400,
+      "offset": 703080,
+      "bytes": 100440,
       "component": "H",
       "itemSize": 4,
-      "count": 13300
+      "count": 12555
     },
     "skinWeight2": {
-      "offset": 851200,
-      "bytes": 212800,
+      "offset": 803520,
+      "bytes": 200880,
       "component": "f",
       "itemSize": 4,
-      "count": 13300
+      "count": 12555
     },
     "sourceEmission": {
-      "offset": 1064000,
-      "bytes": 53200,
+      "offset": 1004400,
+      "bytes": 50220,
       "component": "f",
       "itemSize": 1,
-      "count": 13300
+      "count": 12555
     },
     "index": {
-      "offset": 1117200,
+      "offset": 1054620,
       "bytes": 144000,
       "component": "I",
       "itemSize": 1,
@@ -70,14 +71,14 @@
     }
   },
   "poses": "poses.json",
-  "posesSha256": "2555a52cdb0e9ae6b599202d09e5004e547e2ff910427eb2e68821a59b233d88",
+  "posesSha256": "e1de6bbaed7083f410c8efdfe223e6c30115bcd93809b06a18496caeb24b37ea",
   "albedo": "albedo.png",
   "albedoSha256": "51e38c94175cdc8de688758ba6a9e5b5aea28a1b11bdb5e992bf606512a9dae0",
   "albedoSize": [
     1024,
     1024
   ],
-  "vertices": 13300,
+  "vertices": 12555,
   "triangles": 12000,
   "influenceSets": 2,
   "flatShading": false,
@@ -88,5 +89,6 @@
   "sourceUnits": "metres",
   "candidateNotApproved": true,
   "runtimeAccepted": false,
+  "protectedContactSurfaces": true,
   "protectedAnatomyGroups": []
 }

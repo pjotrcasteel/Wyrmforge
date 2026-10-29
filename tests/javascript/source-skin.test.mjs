@@ -6,8 +6,15 @@ import {decodeSourceSkinGeometry as decode} from '../../src/Wyrmforge.Presentati
 import {solveSupportedSourcePose as repose} from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/sprite-contact-kinematics.js';
 import {createSkinnedRenderable,applySourceSkinPose,validateSkinPose} from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/source-skin.js';
 import * as T from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/vendor/three.module.js';
+import {solveTwoBoneContact} from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/sprite-contact-kinematics.js';
 const data=()=>JSON.parse(readFileSync(new URL('../fixtures/animation/compact-source-skin.json',import.meta.url)));
 const distance=(a,b)=>Math.hypot(...a.map((n,i)=>n-b[i]));
+
+test('source joint skin envelope raises the bend without stretching or moving planted endpoints',()=>{
+ const input={root:[0,0,0],target:[1,0,0],pole:[0,0,-1],upperLength:1,lowerLength:1,limits:[0,150],minimumMiddleZ:.2};
+ const solved=solveTwoBoneContact(input);assert.ok(Math.abs(solved.middle[2]-.2)<1e-12);assert.ok(Math.abs(distance(input.root,solved.middle)-1)<1e-12);assert.ok(Math.abs(distance(input.target,solved.middle)-1)<1e-12);
+ assert.throws(()=>solveTwoBoneContact({...input,minimumMiddleZ:2}),/ground envelope/);assert.throws(()=>solveTwoBoneContact({...input,minimumMiddleZ:NaN}),/clearance/);
+});
 
 test('declared preserve-volume skin retains a blended joint radius and isolates actor textures',()=>{
  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute([1,0,0],3));g.setAttribute('skinIndex',new T.Uint16BufferAttribute([0,1,0,0],4));g.setAttribute('skinWeight',new T.Float32BufferAttribute([.5,.5,0,0],4));

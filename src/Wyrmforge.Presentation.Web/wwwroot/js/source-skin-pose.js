@@ -59,6 +59,7 @@ export function validateSourceSkinSurface(surface){
         for(const name of [c.upper,c.middle,c.end])used.add(name);ids.add(c.id);
         if(surface.bones.find(b=>b.id===c.middle).parent!==surface.bones.findIndex(b=>b.id===c.upper)||surface.bones.find(b=>b.id===c.end).parent!==surface.bones.findIndex(b=>b.id===c.middle))fail('disconnected source chain');
         for(const p of [c.pole,c.restContactPoint,...(c.restHull??[])])if(!Array.isArray(p)||p.length!==3||!p.every(Number.isFinite))fail('source support');
+        if(c.minimumMiddleGroundClearance!=null&&(!Number.isFinite(c.minimumMiddleGroundClearance)||c.minimumMiddleGroundClearance<0||c.minimumMiddleGroundClearance>.25))fail('contact middle ground envelope');
         if(c.restHull?.length<3||![c.upperLength,c.lowerLength].every(v=>Number.isFinite(v)&&v>0)||!Array.isArray(c.limits)||c.limits.length!==2||!c.limits.every(Number.isFinite)||c.limits[0]<0||c.limits[1]>180||c.limits[0]>c.limits[1])fail('contact lengths/limits');
     }
     for(const c of surface.contactCycles)if(!ids.has(c.id)||!Number.isFinite(c.phaseOffset)||c.phaseOffset<0||c.phaseOffset>=1||!Number.isFinite(c.stanceFraction)||c.stanceFraction<=0||c.stanceFraction>1||!Array.isArray(c.neutral)||c.neutral.length!==3||!c.neutral.every(Number.isFinite)||!Number.isFinite(c.liftMetres)||c.liftMetres<0)fail('contact cycles');

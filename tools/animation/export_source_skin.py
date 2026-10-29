@@ -17,8 +17,10 @@ p.add_argument('--lateral-stride-metres',type=float,default=0,help='Authored sid
 p.add_argument('--guide-poses',action='store_true',help='Export the saved pre-balance guide actions; runtime full-body support solve is mandatory.')
 p.add_argument('--orientation-warp-degrees',type=float,default=0,help='Authored pelvis/upper-chain orientation allowance; 0 disables the shared whole-body orientation warp.')
 p.add_argument('--balance-joint-degrees',type=float,default=0,help='Authored spine balance allowance after leg/body projection; 0 disables it.')
+p.add_argument('--middle-ground-clearance-metres',type=float,default=0,help='Authored finite knee/elbow skin-envelope clearance over the ground, without changing lengths or planted soles.')
 p.add_argument('--protect-contact-surfaces',action='store_true',help='Exclude actual source contact patches and their one-native-pixel guard band from LOD edge collapse.')
 a=p.parse_args(sys.argv[sys.argv.index('--')+1:]);a.out.mkdir(parents=True,exist_ok=True)
+if not math.isfinite(a.middle_ground_clearance_metres) or not 0<=a.middle_ground_clearance_metres<=.25:p.error('Middle clearance must be within 0..0.25 metres')
 if not math.isfinite(a.load_ramp_fraction) or not 0<=a.load_ramp_fraction<=.5:p.error('load ramp must be finite and within 0..0.5 cycles')
 if not math.isfinite(a.lateral_stride_metres) or a.lateral_stride_metres<0:p.error('lateral stride must be finite and nonnegative')
 if not math.isfinite(a.orientation_warp_degrees) or not 0<=a.orientation_warp_degrees<=90:p.error('orientation allowance must be within 0..90 degrees')
@@ -59,7 +61,7 @@ for name,clip in m['clips'].items():
 contacts=[]
 for chain in m['contactChains']:
  patch=next(patch for patch in m['solePatches'].values() if patch['bone']==chain['end'])
- contacts.append({**chain,'orientationMode':'ground-yaw','restHull':patch['restHull'],'upperLength':r.data.bones[chain['upper']].length,'lowerLength':r.data.bones[chain['middle']].length})
+ contacts.append({**chain,**({'minimumMiddleGroundClearance':a.middle_ground_clearance_metres} if a.middle_ground_clearance_metres else {}),'orientationMode':'ground-yaw','restHull':patch['restHull'],'upperLength':r.data.bones[chain['upper']].length,'lowerLength':r.data.bones[chain['middle']].length})
 surface={'version':1,'skinningMode':skinning_mode,'sourceSignature':m['skeletonSignature'],'sourceBlendSha256':hashlib.sha256(blend.read_bytes()).hexdigest(),
  'rootBone':'root','bodyBone':'pelvis','transformStride':10,'bones':rig,'massWeights':m['massWeights'],'contacts':contacts,'contactCycles':m.get('contactCycles',[]),
  'minimumSupportMarginMetres':m['minimumSupportMarginMetres'],'groundZMetres':m['groundZMetres'],'unitsPerPixel':m['unitsPerPixel'],

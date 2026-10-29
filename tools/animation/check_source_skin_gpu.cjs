@@ -45,6 +45,15 @@ const server=http.createServer((req,res)=>{
   };
   const gl=engine.renderer.getContext(),info=gl.getExtension('WEBGL_debug_renderer_info');
   window.__stressSkin=(count)=>{window.__renderSkin(.27,.56,{});const body=engine.snapshot.objects.find(o=>o.id==='body'),floor=engine.snapshot.objects.find(o=>o.id==='floor'),frame=engine.snapshot;const times=[];for(let tick=0;tick<30;tick++){const start=performance.now();const source=sampleSourceSkinSurface(resource.surface,{clip:'attack-travel',gaitPhase:tick/30,actionProgress:.56}),matrices=sourceSkinPoseMatrices(resource.surface,source,source);engine.apply({...frame,objects:[floor,...Array.from({length:count},(_,i)=>({...body,id:'stress-'+i,skinPose:matrices,position:[(i%8-3.5)*.36,(Math.floor(i/8)-1.5)*.36,.625]}))]});engine.render(390,390);gl.finish();if(tick>=6)times.push(performance.now()-start);}times.sort((a,b)=>a-b);return {actors:count,samples:times.length,meanMilliseconds:times.reduce((s,n)=>s+n,0)/times.length,p95Milliseconds:times[Math.floor(times.length*.95)],diagnostics:engine.diagnostics(),sharedPoseRendererStudy:true};};
+  window.__compareWeightedGpu=matrices=>{
+   window.__renderSkin(.27,.56,{view:'albedo'});
+   const frame=engine.snapshot,objects=frame.objects.map(o=>o.id==='body'?{...o,skinPose:matrices}:o);
+   engine.apply({...frame,objects});engine.render(390,390);const gpu=engine.pixels().slice(),mesh=engine.objects.get('body').mesh,cpu=geometry.clone(),position=cpu.attributes.position;
+   const v=new T.Vector3();for(let i=0;i<position.count;i++){v.fromBufferAttribute(geometry.attributes.position,i);mesh.applyBoneTransform(i,v);position.setXYZ(i,v.x,v.y,v.z);}position.needsUpdate=true;
+   const cpuId='evaluated-cpu-'+engine.geometries.size;engine.registerGeometry(cpuId,cpu);engine.apply({...frame,objects:objects.map(o=>{if(o.id!=='body')return o;const copy={...o,geometry:cpuId};delete copy.skinPose;return copy;})});engine.render(390,390);
+   const reference=engine.pixels();let differentPixels=0,maximumChannelError=0;for(let i=0;i<gpu.length;i+=4){let differs=false;for(let c=0;c<3;c++){const error=Math.abs(gpu[i+c]-reference[i+c]);maximumChannelError=Math.max(maximumChannelError,error);differs||=error>2;}if(differs)differentPixels++;}
+   return {differentPixels,maximumChannelError,totalPixels:390*390};
+  };
   return {graphics:info?{vendor:gl.getParameter(info.UNMASKED_VENDOR_WEBGL),renderer:gl.getParameter(info.UNMASKED_RENDERER_WEBGL)}:null,browser:navigator.userAgent,sourceBytes:resource.decodedBytes,sourceVertices:resource.manifest.vertices,triangles:resource.manifest.triangles};
  });
  await page.evaluate(()=>window.__renderSkin(.27,.56,{}));
@@ -59,6 +68,8 @@ const server=http.createServer((req,res)=>{
  if(cases.claw.nonblack<100||cases.normals.nonblack<100)throw Error('Source skin or normal pass did not render');
  if(cases.claw.sum===cases.bodyless.sum||cases.mask.nonblack<20)throw Error('Only the fixture floor rendered; source skin is absent');
  const performance=process.env.AN_GPU_STRESS?await page.evaluate(()=>[1,12,32].map(n=>window.__stressSkin(n))):null;
- const data={performance,sourceStudyOnly:true,huntAccepted:false,physicalDevice:false,setup,cases,errors};fs.writeFileSync(path.join(out,'gpu-proof.json'),JSON.stringify(data,null,2));
+ const weightedGpu=[];
+ if(process.env.AN_GPU_POSES){const study=JSON.parse(fs.readFileSync(process.env.AN_GPU_POSES));for(const name of ['forward','side','corner','arc']){const poses=study.poses.filter(p=>p.sequence===name),pose=poses[Math.floor(poses.length*.32)];const result=await page.evaluate(m=>window.__compareWeightedGpu(m),pose.matrices);weightedGpu.push({sequence:name,timestamp:pose.timestamp,...result});if(result.differentPixels>20)throw Error('GPU and evaluated CPU skin disagree: '+JSON.stringify(result));}}
+ const data={performance,weightedGpu,sourceStudyOnly:true,huntAccepted:false,physicalDevice:false,setup,cases,errors};fs.writeFileSync(path.join(out,'gpu-proof.json'),JSON.stringify(data,null,2));
  await browser.close();server.close();if(errors.length)throw Error(JSON.stringify(errors));console.log(JSON.stringify(data,null,2));
 })().catch(async e=>{console.error(e);await activeBrowser?.close();server.close();process.exitCode=1;});

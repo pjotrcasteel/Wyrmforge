@@ -1,0 +1,8 @@
+{
+  "parentBlendSha256": "427cc4571ae160f81be09784f7e081279629b47a9d546a524a074b1387b828e3",
+  "derivativeBlendSha256": "506d9e02d153b0b7a01896507d3db4621d7e7dcfb446571a50a682ba60072c7f",
+  "runtimeGeometrySha256": "7a8acbf5f11db4de8ac07bf10e55eb1d278ba65c01cc767816782aa22774ecfe",
+  "skinningMode": "dual-quaternion",
+  "minimumMiddleGroundClearanceMetres": 0.1,
+  "ownerApproved": false
+}

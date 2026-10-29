@@ -11,10 +11,10 @@
     "W",
     "NW"
   ],
-  "profileSha256": "463be98f5fd7e229651f7763b88d603cf92316af2a684396afb18b7d8af9880d",
+  "profileSha256": "181e873fbd22051f58f5ec3f2d0715ed890b4cddc1559765d72ad756edc95696",
   "skin": {
     "manifest": "skin.json",
-    "sha256": "375a42889681d7ee9a7129fc4f263732b646bf71135615eae533c5f7412fe53b"
+    "sha256": "dd598a947eaf4f391e0f98079ed377878282b049883cc520d53729e2f541bd2b"
   },
   "clips": {
     "walk": {

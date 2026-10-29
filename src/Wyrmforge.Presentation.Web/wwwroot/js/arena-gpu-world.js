@@ -76,7 +76,7 @@ export class HuntGpuWorld {
     captureSkin(id,descriptor,x,y,scale=1){
         if(this.skinCount>=this.maxSkinActors)throw new RangeError('Hunt skin budget exceeded');
         this.skinCount++;
-        const resource=descriptor.skin,key='source-skin-'+resource.manifest.bufferSha256;
+        const resource=descriptor.skin,key='source-skin-'+resource.manifest.sourceSignature+'-'+(resource.manifest.skinningMode??'linear')+'-'+resource.manifest.bufferSha256;
         if(!this.skins.has(key)){
             const geometry=new T.BufferGeometry();
             for(const [name,a] of Object.entries(resource.attributes))if(name==='index')geometry.setIndex(new T.BufferAttribute(a.array,a.itemSize));else geometry.setAttribute(name,new T.BufferAttribute(a.array,a.itemSize));

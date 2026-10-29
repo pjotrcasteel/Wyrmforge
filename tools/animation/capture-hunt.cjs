@@ -23,8 +23,9 @@ const server=http.createServer((req,res)=>{
 (async()=>{
  await new Promise(r=>server.listen(0,'127.0.0.1',r));
  browser=await chromium.launch({executablePath:process.env.CHROMIUM_EXECUTABLE,args:['--no-sandbox','--disable-dev-shm-usage']});
- const errors=[],consoleErrors=[];
+ const errors=[],consoleErrors=[],failedResources=[];
  const page=await browser.newPage({viewport:{width,height:844},isMobile:process.env.AN_MOBILE==='1',hasTouch:process.env.AN_MOBILE==='1',deviceScaleFactor:process.env.AN_MOBILE==='1'?3:1,recordVideo:{dir:out,size:{width,height:844}}});
+ page.on('response',response=>{if(response.status()>=400)failedResources.push({url:response.url(),status:response.status()});});
  page.on('pageerror',e=>errors.push(e.message));page.on('crash',()=>errors.push('renderer crash'));
  page.on('console',m=>{if(m.type()==='error')consoleErrors.push(m.text().slice(0,400));});
  await page.addInitScript(({trail,selector})=>{window.__anCanvasSelector=selector;window.__anModulePath=trail?'/js/arena-performance.js':'/js/arena.js';if(trail){localStorage.setItem('wyrmforge.firstHunt.v1','2');localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:24,Nodes:[]}));localStorage.setItem('wyrmforge.characterSchool.v1','Pyromancer');}},{trail:liveTrail,selector});
@@ -67,9 +68,9 @@ const server=http.createServer((req,res)=>{
  await page.screenshot({path:path.join(out,'hunt-passby.png')});
  const trace=await page.evaluate(()=>{clearInterval(window.__anTraceTimer);return window.__anTrace;});
  fs.writeFileSync(path.join(out,'motion-trace.json'),JSON.stringify(trace,null,2));
- fs.writeFileSync(path.join(out,'browser-errors.json'),JSON.stringify({errors,consoleErrors},null,2));
+ fs.writeFileSync(path.join(out,'browser-errors.json'),JSON.stringify({errors,consoleErrors,failedResources},null,2));
  const video=await page.video().path();await page.close();await browser.close();server.close();
- const summary={scene:liveTrail?'real-first-trail':'real-development-encounter',mobileEmulated:process.env.AN_MOBILE==='1',candidate,inspection:process.env.AN_INSPECTION??'lit',physicalDevice:false,viewport:{width,height:844},samples:trace.length,solveFailures:trace.flatMap(r=>r.hollow.entities.filter(e=>e.foundationError).map(e=>({time:r.simulationTimeSeconds,error:e.foundationError}))),maximumProjectedSoleDrift:Math.max(...trace.flatMap(r=>r.hollow.entities.map(e=>e.foundation?.maxSlip??0))),gpuErrors:trace.filter(r=>r.gpuWorld?.error),video,errors,consoleErrors};
+ const summary={scene:liveTrail?'real-first-trail':'real-development-encounter',mobileEmulated:process.env.AN_MOBILE==='1',candidate,inspection:process.env.AN_INSPECTION??'lit',physicalDevice:false,viewport:{width,height:844},samples:trace.length,solveFailures:trace.flatMap(r=>r.hollow.entities.filter(e=>e.foundationError).map(e=>({time:r.simulationTimeSeconds,error:e.foundationError}))),maximumProjectedSoleDrift:Math.max(...trace.flatMap(r=>r.hollow.entities.map(e=>e.foundation?.maxSlip??0))),gpuErrors:trace.filter(r=>r.gpuWorld?.error),video,errors,consoleErrors,failedResources};
  fs.writeFileSync(path.join(out,'capture-summary.json'),JSON.stringify(summary,null,2));
  if(errors.length||summary.solveFailures.length||summary.gpuErrors.length)throw Error(JSON.stringify(summary));
  console.log(JSON.stringify(summary,null,2));
