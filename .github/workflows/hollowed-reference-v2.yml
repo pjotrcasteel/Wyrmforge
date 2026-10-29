@@ -143,34 +143,9 @@ jobs:
       # tools/art/hollowed-reference-v2/render_mobile_candidate_blender.py.
       # It will be wired to the completed full-detail 3D .blend only at M5
       # after the owner has visually accepted the production 3D source.
-      - name: M1 genuinely deform selected Rotwalker 3D anatomy and render full-size pose
-        shell: bash
-        run: |
-          set -euo pipefail
-          python -m py_compile tools/art/hollowed-reference-v2/sculpt_rotwalker_m1_pose_blender.py
-          python tools/art/hollowed-reference-v2/sculpt_rotwalker_m1_pose_blender.py \
-            --input artifacts/hollowed-reference-v2/audit/review/ROTWalker-CANDIDATE-NOT-HOLLOWED-NOT-APPROVED.blend \
-            --output artifacts/hollowed-reference-v2/audit/model-m1
-          test -s artifacts/hollowed-reference-v2/audit/model-m1/Rotwalker-Hollowed-M1-feral-POSE-REAL-3D-UNAPPROVED.blend
-          test -s artifacts/hollowed-reference-v2/audit/model-m1/REAL-M1-FRONT-SIDE-BACK.png
-          test -s artifacts/hollowed-reference-v2/audit/model-m1/REAL-M1-clay-EIGHT-ANGLES.png
-          test -s artifacts/hollowed-reference-v2/audit/model-m1/REAL-M1-silhouette-EIGHT-ANGLES.png
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          p=Path('artifacts/hollowed-reference-v2/audit/model-m1/REAL-M1-body-pose-qc.json')
-          d=json.loads(p.read_text(encoding='utf8'))
-          assert d['metrics']['source_vertices_preserved']>=31000,d
-          assert d['metrics']['old_arms_span_m']>d['metrics']['new_arms_span_m'],d
-          assert d['metrics']['head_forward_m']>.18,d
-          assert d['metrics']['original_shape_keys_retained'] is True,d
-          assert d['views']['eight_directions'] is True,d
-          assert d['animation_actions_created']==0,d
-          assert d['gameplay_modified'] is False,d
-          assert d['pixel_export_performed'] is False,d
-          assert d['owner_approved'] is False,d
-          print('M1 new source-based pose technically valid; STILL NEEDS visual approval')
-          PY
+      # Superseded rigid shape-key pose experiment remains in repository for
+      # audit; it is NOT the source for this articulated model. Do not render
+      # the stiff legacy test on every iteration of genuine 3D skinning.
       - name: M1 biological movement review - REAL weighted 3D skeleton, not H1 and not runtime engine
         shell: bash
         run: |
@@ -226,7 +201,6 @@ jobs:
           path: |
             artifacts/hollowed-reference-v2/audit/downloaded/source-provenance.txt
             artifacts/hollowed-reference-v2/audit/review/
-            artifacts/hollowed-reference-v2/audit/model-m1/
             artifacts/hollowed-reference-v2/audit/model-m1-rig/
           if-no-files-found: warn
           retention-days: 21
