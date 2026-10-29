@@ -36,7 +36,7 @@ public sealed partial class RunSimulation
             for (var tick = 0; tick < ticks; tick++)
             {
                 combatSpatialIndex.CollectWithinRadius(ground.Position, ground.EffectiveRadius, int.MinValue, spatialQueryBuffer);
-                foreach (var target in spatialQueryBuffer) DamageTarget(target, ground.DamagePerTick, spellId: SpellId.FireBolt, periodic: true);
+                foreach (var target in spatialQueryBuffer) DamageTargetWithFeedback(target, ground.DamagePerTick, spellId: SpellId.FireBolt, periodic: true, feedbackFlavor: "Scorch");
             }
         }
 
