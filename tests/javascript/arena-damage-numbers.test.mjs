@@ -42,9 +42,9 @@ test('finishing blows are highlighted, surges amplified, schools distinct, motio
     const normal = presentDamageNumber(hit(), 'full', true);
     const finishing = presentDamageNumber(hit({ finisher: true }), 'full', true);
     const empowered = presentDamageNumber(hit({ empowered: true }), 'full', true);
-    assert.equal(normal.x, 320);
+    assert.equal(normal.x, 311, 'Reduced motion keeps a stationary lane to avoid number overlap.');
     assert.equal(normal.y, 420);
-    assert.equal(finishing.text, '24!');
+    assert.equal(finishing.text, '24', 'No arcade punctuation for finishers.');
     assert.ok(finishing.fontSize > normal.fontSize);
     assert.ok(empowered.fontSize > normal.fontSize);
     assert.notEqual(finishing.color, normal.color);
@@ -58,6 +58,36 @@ test('finishing blows are highlighted, surges amplified, schools distinct, motio
     assert.ok(moving.opacity < 1);
     assert.equal(presentDamageNumber(hit({ progress: 1 })), null);
     assert.ok(presentDamageNumber(hit(), 'minimal').fontSize < normal.fontSize);
+});
+
+test('real burning and scorched-ground ticks have different restrained elastic motion', () => {
+    const burn = hit({ periodic: true, flavor: 'Burn', school: 'Fire', progress: .15 });
+    const scorch = { ...burn, flavor: 'Scorch' };
+    const burnView = presentDamageNumber(burn);
+    const scorchView = presentDamageNumber(scorch);
+    assert.equal(burnView.family, 'burn');
+    assert.equal(scorchView.family, 'scorch');
+    assert.notEqual(burnView.color, scorchView.color);
+    assert.ok(burnView.fontSize < presentDamageNumber(hit()).fontSize);
+    assert.notEqual(burnView.y, scorchView.y);
+    assert.ok(Math.abs(burnView.x - burn.x) < 35);
+    assert.equal(presentDamageNumber(burn, 'minimal'), null);
+    assert.equal(presentDamageNumber(burn, 'full', true).y, burn.y);
+    assert.equal(presentDamageNumber({ ...burn, finisher: true }).text, '24');
+});
+
+test('future periodic schools share the same feedback adapter without faking damage events', () => {
+    const frost = presentDamageNumber(hit({ periodic: true, flavor: 'Frost', school: 'Frost' }));
+    const storm = presentDamageNumber(hit({ periodic: true, flavor: 'Storm', school: 'Storm' }));
+    const necrotic = presentDamageNumber(hit({ periodic: true, flavor: 'Necrotic', school: 'Necromancer' }));
+    for (const item of [frost, storm, necrotic]) {
+        assert.ok(item.periodic);
+        assert.ok(item.fontSize > 0);
+        assert.notEqual(item.family, 'impact');
+    }
+    assert.equal(new Set([frost.color, storm.color, necrotic.color]).size, 3);
+    assert.notEqual(frost.y, storm.y);
+    assert.notEqual(storm.y, necrotic.y);
 });
 
 test('canvas draws once per visible number without compositing lights or leaving global state', () => {
