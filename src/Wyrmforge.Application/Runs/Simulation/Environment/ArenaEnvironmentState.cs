@@ -22,6 +22,7 @@ public sealed class ArenaEnvironmentState
     private readonly string habitat;
     private readonly bool preLair;
     private readonly bool generatorPreview;
+    private readonly bool worldFirstGeography;
     private readonly HuntArenaGenerator.WetForestRecipe? wetForest;
     private WorldSiteGeography? geography;
     private EncounterPhase phase = EncounterPhase.Pressure;
@@ -43,11 +44,12 @@ public sealed class ArenaEnvironmentState
         public double Health { get; set; } = spec.Health;
     }
 
-    private ArenaEnvironmentState(int seed, string biome, string element, int stage, string landmark, string district, string habitat, bool preLair, bool generatorPreview)
+    private ArenaEnvironmentState(int seed, string biome, string element, int stage, string landmark, string district, string habitat, bool preLair, bool generatorPreview, bool worldFirstGeography)
     {
         this.habitat = habitat;
         this.preLair = preLair;
         this.generatorPreview = generatorPreview;
+        this.worldFirstGeography = worldFirstGeography;
         // Preserve the first Fire Hunt's Old Road identity and combat gates,
         // but give its floor the same original source-backed woodland materials
         // as later Wet Forest encounters. Old Road Lab previews are unchanged.
@@ -62,7 +64,7 @@ public sealed class ArenaEnvironmentState
         this.district = district;
     }
 
-    public static ArenaEnvironmentState Create(int mapSeed, WyrmrealmMapNode node, bool generatorPreview = false, SpellSchool? regionSchool = null)
+    public static ArenaEnvironmentState Create(int mapSeed, WyrmrealmMapNode node, bool generatorPreview = false, SpellSchool? regionSchool = null, bool worldFirstGeography = false)
     {
         ArgumentNullException.ThrowIfNull(node);
         var stage = node.Stage;
@@ -80,7 +82,7 @@ public sealed class ArenaEnvironmentState
         var districtIndex = ((mapSeed & int.MaxValue) % 3 + stage + node.Lane + (node.Site?.RoadIndex ?? 0)) % 3;
         var district = new[] { "causeway", "sanctuary", "rift" }[districtIndex];
         var habitat = node.Habitat.ToString();
-        var environment = new ArenaEnvironmentState(seed, biome, element, stage, landmark, district, habitat, node.PreLair, generatorPreview)
+        var environment = new ArenaEnvironmentState(seed, biome, element, stage, landmark, district, habitat, node.PreLair, generatorPreview, worldFirstGeography)
         {
             geography = node.Geography,
         };
@@ -153,6 +155,7 @@ public sealed class ArenaEnvironmentState
         GeneratorPreview = generatorPreview,
         WetForest = wetForest,
         Geography = geography,
+        GeographyActive = worldFirstGeography,
         Props = destructibles.Where(prop => prop.Health > 0)
             .Select(prop => new ArenaPropRenderSnapshot(prop.Spec.Id, prop.Spec.Kind, prop.Spec.X, prop.Spec.Y, prop.Spec.Radius,
                 prop.Health / prop.Spec.Health)).ToArray(),
@@ -176,6 +179,8 @@ public sealed class ArenaEnvironmentState
     public bool BlocksSegment(Vector2D from, Vector2D to, double width, double height, double radius = 0, int? ignoredPropId = null)
     {
         if (width <= 0 || height <= 0) return false;
+        if (worldFirstGeography && WorldSiteFootprintCollision.BlocksSegment(geography?.Landscape, from, to, width, height, radius))
+            return true;
         foreach (var barrier in barriers)
         {
             if (IsOpen(barrier)) continue;
@@ -257,6 +262,9 @@ public sealed class ArenaEnvironmentState
 
     public bool IsBlocked(Vector2D position, double width, double height, double radius = 0)
     {
+        if (worldFirstGeography && geography?.Landscape is { } landscape &&
+            landscape.Obstacles.Any(obstacle => WorldSiteFootprintCollision.Contains(obstacle, position, width, height, radius)))
+            return true;
         foreach (var barrier in barriers)
         {
             if (IsOpen(barrier)) continue;
