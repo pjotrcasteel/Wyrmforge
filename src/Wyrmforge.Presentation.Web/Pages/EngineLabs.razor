@@ -50,7 +50,7 @@
                 </select>
             </label>
             <label for="ai-seed">Replay seed
-                <input id="ai-seed" type="number" @bind="Seed" min="1" max="2147483647" />
+                <input id="ai-seed" type="number" @bind="Seed" @bind:event="oninput" min="1" max="2147483647" />
             </label>
             <button type="button" @onclick="RestartPreview">Restart same scenario</button>
             <a class="full-page" href="@PreviewUrl" target="_blank" rel="noopener noreferrer">Open actual scenario full screen</a>

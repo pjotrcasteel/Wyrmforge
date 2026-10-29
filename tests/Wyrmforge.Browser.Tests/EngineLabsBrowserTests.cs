@@ -120,9 +120,9 @@ public sealed class EngineLabsBrowserTests : PageTest
         });
 
         await Page.Locator("nav[aria-label='Engine labs'] a[href='engine-labs/lighting']").ClickAsync();
-        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Lighting Lab" })).ToBeVisibleAsync();
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Lighting Lab", Exact = true })).ToBeVisibleAsync();
         await Page.Locator("nav[aria-label='Engine labs'] a[href='engine-labs/ai']").ClickAsync();
-        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "AI Lab" })).ToBeVisibleAsync();
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "AI Lab", Exact = true })).ToBeVisibleAsync();
     }
 
     [TestMethod]
@@ -144,7 +144,7 @@ public sealed class EngineLabsBrowserTests : PageTest
         var traces = diagnostics.GetProperty("RecentTraces");
         Assert.AreEqual(64, cost.GetProperty("Population").GetInt32(),
             "This must exercise the real 64-agent simulation, not a small visual approximation.");
-        Assert.IsGreaterThan(cost.GetProperty("Frames").GetInt64(), 0);
+        Assert.IsGreaterThan(0L, cost.GetProperty("Frames").GetInt64());
         Assert.IsLessThanOrEqualTo(32, cost.GetProperty("MaxSightQueries").GetInt32());
         Assert.IsLessThanOrEqualTo(32, cost.GetProperty("MaxPathQueries").GetInt32());
         Assert.IsLessThanOrEqualTo(2, cost.GetProperty("MaxCommittedThreats").GetInt32());
