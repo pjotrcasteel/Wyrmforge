@@ -276,6 +276,8 @@ function draw(state, snapshot, width, height) {
     drawArenaCloisterReflections(ctx, snapshot.environment, worldWidth, worldHeight,
         spellLights, visualSeconds, state.reducedMotion.matches);
     drawArenaExit(ctx, snapshot.exit, visualSeconds);
+    // Same physical outgoing ports the C# simulation accepts after a cleared AR1 trail.
+    for (const port of snapshot.exitPorts ?? []) drawArenaExit(ctx, port, visualSeconds);
     drawRecoveryGuide(ctx, snapshot, camera, width, height, visualSeconds, state.reducedMotion.matches);
 
     drawAshfangGroundEffects(ctx,snapshot,state.reducedMotion.matches);
