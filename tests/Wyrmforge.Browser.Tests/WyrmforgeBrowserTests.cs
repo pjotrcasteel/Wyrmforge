@@ -3612,6 +3612,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await EnterFirstTrailAsync("BEGIN FIRST HUNT");
         await Page.EvaluateAsync(@"async () => {
             const arena = await import(new URL('js/arena.js?v=20261028-school-palette-v1', document.baseURI).href);
+            window.__huntGpuArena = arena;
             window.__huntGpuRead = () => arena.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
         }");
 
