@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { HuntGpuWorld } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js';
-import { huntLayerRevision, prepareHuntGpuScratch } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/hunt-gpu-layers.js';
+import { huntLayerRevision, prepareHuntGpuScratch, HuntGpuScratchPool } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/hunt-gpu-layers.js';
 
 function fakeCapture() {
     let drawings = 0;
@@ -110,4 +110,37 @@ test('shared scratch canvas keeps bitmap allocation and isolates world-space pai
     assert.throws(() => prepareHuntGpuScratch(canvas, 0, 0, 0), RangeError);
     assert.throws(() => prepareHuntGpuScratch(canvas, 160, Number.NaN, 0), RangeError);
     assert.deepEqual(resets, ['width', 'height']);
+});
+
+
+test('bounded Hunt raster pool reuses different actor sizes and evicts the least recently used surface', () => {
+    const created = [];
+    const pool = new HuntGpuScratchPool(2, () => {
+        const canvas = { width: 0, height: 0 };
+        created.push(canvas);
+        return canvas;
+    });
+    const one = pool.acquire(160);
+    const two = pool.acquire(96);
+    assert.equal(pool.acquire(160), one);
+    assert.equal(pool.acquire(96), two, 'Switching between sizes never reallocates a reusable bitmap');
+    assert.deepEqual(pool.diagnostics(), {
+        capacity: 2, active: 2, created: 2, reused: 2, evicted: 0,
+        estimatedBytes: (160 * 160 + 96 * 96) * 4,
+    });
+    pool.acquire(320);
+    assert.equal(pool.diagnostics().evicted, 1);
+    assert.equal(pool.acquire(160), one,
+        'Most-recently-used size remains available when another surface is evicted');
+    const replacement = pool.acquire(96);
+    assert.notEqual(replacement, two, 'Evicted sizes must be recreated when later needed');
+    assert.equal(created.length, 4);
+    assert.equal(pool.diagnostics().active, 2);
+    assert.ok(pool.diagnostics().estimatedBytes <= (320 * 320 + 160 * 160) * 4);
+    pool.clear();
+    assert.equal(pool.diagnostics().active, 0);
+    assert.equal(pool.diagnostics().estimatedBytes, 0);
+    assert.throws(() => new HuntGpuScratchPool(0, () => ({})), RangeError);
+    assert.throws(() => new HuntGpuScratchPool(9, () => ({})), RangeError);
+    assert.throws(() => pool.acquire(-1), RangeError);
 });
