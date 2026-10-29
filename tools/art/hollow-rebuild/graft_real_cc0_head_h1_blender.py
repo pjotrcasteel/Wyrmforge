@@ -84,15 +84,33 @@ def detach_old_head(body):
     bm.from_mesh(body.data)
     bm.verts.ensure_lookup_table()
     deleted=[bm.verts[i] for i,v in enumerate(world) if float(v.z)>cut_z]
-    if not 35<len(deleted)<600:
+    # The CC0 face is substantially denser than the earlier mannequin.
+    # Audit the spatial extent and the percentage of the ORIGINAL source
+    # skin instead of assuming a head always has <600 vertices.
+    removed_world=[world[v.index] for v in deleted]
+    outer=[p for p in removed_world
+           if abs(p.x)>.46 or abs(p.y)>.52]
+    max_allowed=min(950,int(before*.52))
+    print("HEAD CUT AUDIT",{
+        "all_skin_vertices":before,
+        "vertices_above_neck":len(deleted),
+        "max_allowed":max_allowed,
+        "out_of_head_envelope":len(outer),
+        "world_cut_z":cut_z,
+        "min_world_z":round(min(p.z for p in removed_world),5),
+        "max_world_z":round(max(p.z for p in removed_world),5),
+    })
+    if not 100<len(deleted)<max_allowed or outer:
         bm.free()
-        raise ValueError(f"Unsafe source-head cutoff: {len(deleted)} vertices")
+        raise ValueError(
+            f"Unsafe source-head cutoff: {len(deleted)}/{before} vertices, "
+            f"{len(outer)} outside the allowed anatomical head envelope")
     bmesh.ops.delete(bm,geom=deleted,context="VERTS")
     bm.to_mesh(body.data)
     bm.free()
     body.data.update()
     remaining=len(body.data.vertices)
-    if remaining>=before or remaining<before-650:
+    if remaining>=before or remaining<before-max_allowed:
         raise ValueError("Old head cutoff damaged body anatomy")
     body.name="WyrmForge Hollowed H1 true body/neck — OLD HEAD CUT"
     return {"old_head_vertices_removed":before-remaining,
