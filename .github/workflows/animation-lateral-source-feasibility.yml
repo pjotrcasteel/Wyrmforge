@@ -14,13 +14,14 @@ concurrency:
   cancel-in-progress: true
 jobs:
   test-orthogonal-source-gait:
-    name: Orthogonal saved-rig gait ${{ matrix.heading }} degrees
+    name: Orthogonal ${{ matrix.mode }} ${{ matrix.heading }} degrees
     runs-on: ubuntu-latest
     timeout-minutes: 18
     strategy:
       fail-fast: false
       matrix:
         heading: [90, -90]
+        mode: [walk, attack]
     steps:
       - uses: actions/checkout@v6
         with:
@@ -46,26 +47,34 @@ jobs:
         shell: bash
         env:
           HEADING: ${{ matrix.heading }}
+          MODE: ${{ matrix.mode }}
         run: |
           set -euo pipefail
-          SOURCE="artifacts/an6-side-step-${HEADING}"
+          SOURCE="artifacts/an6-side-step-${HEADING}-${MODE}"
+          CLIPS=walk
+          if [ "$MODE" = attack ]; then CLIPS=walk,attack-travel; fi
           BLENDER="$PWD/.cache/blender-4.5.3-linux-x64/blender"
           mkdir -p "$SOURCE"
           set +e
-          "$BLENDER" -b -t 2 --python-exit-code 1 --python tools/animation/author_hollow_foundation.py -- --out "$SOURCE" --only walk --travel-heading-degrees "$HEADING" --experimental-lateral-motion --stride-metres .28 --stance-fraction .6 --flexion-reserve-pixels 2 --pelvis-drop-metres .075 --compress-source > "$SOURCE/author.log" 2>&1
+          "$BLENDER" -b -t 2 --python-exit-code 1 --python tools/animation/author_hollow_foundation.py -- --out "$SOURCE" --only "$CLIPS" --travel-heading-degrees "$HEADING" --experimental-lateral-motion --stride-metres .28 --stance-fraction .6 --flexion-reserve-pixels 2 --pelvis-drop-metres .075 --compress-source > "$SOURCE/author.log" 2>&1
           AUTHOR_EXIT=$?
           SOURCE_QC_EXIT=99
           MUTATIONS_EXIT=99
+          ENVELOPE_EXIT=99
           if [ "$AUTHOR_EXIT" -eq 0 ]; then
             "$BLENDER" -b -t 2 --python-exit-code 1 --python tools/animation/validate_source.py -- "$SOURCE" > "$SOURCE/independent-validate.log" 2>&1
             SOURCE_QC_EXIT=$?
             if [ "$SOURCE_QC_EXIT" -eq 0 ]; then
               python3 tools/animation/test_source_qc.py "$SOURCE" --blender "$BLENDER" > "$SOURCE/mutation-tests.log" 2>&1
               MUTATIONS_EXIT=$?
+              if [ "$MODE" = attack ] && [ "$MUTATIONS_EXIT" -eq 0 ]; then
+                "$BLENDER" -b -t 2 --python-exit-code 1 --python tools/animation/validate_motion_envelope.py -- "$SOURCE" > "$SOURCE/source-envelope.log" 2>&1
+                ENVELOPE_EXIT=$?
+              fi
             fi
           fi
           set -e
-          export SOURCE AUTHOR_EXIT SOURCE_QC_EXIT MUTATIONS_EXIT
+          export SOURCE AUTHOR_EXIT SOURCE_QC_EXIT MUTATIONS_EXIT ENVELOPE_EXIT
           python3 - <<'PY'
           import json,os
           from pathlib import Path
@@ -74,10 +83,12 @@ jobs:
           a=int(os.environ['AUTHOR_EXIT'])
           q=int(os.environ['SOURCE_QC_EXIT'])
           n=int(os.environ['MUTATIONS_EXIT'])
-          feasible=a==q==n==0
+          envelope=int(os.environ['ENVELOPE_EXIT'])
+          feasible=a==q==n==0 and (os.environ['MODE']=='walk' or envelope==0)
           report={'sourceStudyOnly':True,'runtimeAccepted':False,'productionAsset':False,
-                  'headingDegrees':heading,'strideMetres':.28,'oneNativePixelBudgetUnchanged':True,
+                  'headingDegrees':heading,'study':os.environ['MODE'],'strideMetres':.28,'oneNativePixelBudgetUnchanged':True,
                   'authorExit':a,'independentSourceQCExit':q,'negativeMutationQCExit':n,
+                  'sourceMotionEnvelopeExit':envelope if os.environ['MODE']=='attack' else None,
                   'sourceRigFeasible':feasible,'requiresEightDirectionMaterialAndCsharpProof':True}
           if (source/'source-manifest.json').exists():
               m=json.loads((source/'source-manifest.json').read_text())
@@ -89,18 +100,18 @@ jobs:
           PY
           # A diagnostic red result is not a successful gait; the summary
           # is machine-readable and preserved rather than raising tolerances.
-          if [ "$AUTHOR_EXIT" -ne 0 ] || [ "$SOURCE_QC_EXIT" -ne 0 ] || [ "$MUTATIONS_EXIT" -ne 0 ]; then
+          if [ "$AUTHOR_EXIT" -ne 0 ] || [ "$SOURCE_QC_EXIT" -ne 0 ] || [ "$MUTATIONS_EXIT" -ne 0 ] || { [ "$MODE" = attack ] && [ "$ENVELOPE_EXIT" -ne 0 ]; }; then
             echo "::warning::Orthogonal whole-body source is NOT anatomically validated; see uploaded diagnosis."
           fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: an6-orthogonal-source-study-${{ matrix.heading }}
+          name: an6-orthogonal-source-study-${{ matrix.heading }}-${{ matrix.mode }}
           path: |
-            artifacts/an6-side-step-${{ matrix.heading }}/source-feasibility.json
-            artifacts/an6-side-step-${{ matrix.heading }}/*.log
-            artifacts/an6-side-step-${{ matrix.heading }}/independent-source-qc.json
-            artifacts/an6-side-step-${{ matrix.heading }}/negative-source-qc.json
-            artifacts/an6-side-step-${{ matrix.heading }}/source-manifest.json
+            artifacts/an6-side-step-${{ matrix.heading }}-${{ matrix.mode }}/source-feasibility.json
+            artifacts/an6-side-step-${{ matrix.heading }}-${{ matrix.mode }}/*.log
+            artifacts/an6-side-step-${{ matrix.heading }}-${{ matrix.mode }}/independent-source-qc.json
+            artifacts/an6-side-step-${{ matrix.heading }}-${{ matrix.mode }}/negative-source-qc.json
+            artifacts/an6-side-step-${{ matrix.heading }}-${{ matrix.mode }}/source-manifest.json
           if-no-files-found: error
           retention-days: 14
