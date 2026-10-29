@@ -7,7 +7,7 @@
 
 **The required product is a mobile-first 2.5D pixel-art game, not a live 3D model viewer.** Final actors, props and environments must read as pixel-consistent world-anchored sprites/surfaces with grounded foot/contact points, coherent 2.5D perspective, correct occlusion and native pixel readability at 320px/390px. A fully modeled mesh is **never automatically required** for a new creature, terrain tile, building or animation.
 
-**Default for new character production:** first test a small authored 2D directional sprite/pose set or editable layered 2D rig and its true motion in the existing sprite runtime. Use a textured **3D model only as an optional offline authoring source** when an existing approved rig is worth preserving or a concrete view/motion requirement demonstrably benefits from it. The required output remains pixel sprites/metadata and real-game proof; do not mandate a live 3D scene, 3D skeleton or Blender-only pipeline. Compare quality, development effort and mobile cost before choosing the more complex route. Preserve approved Ashfang source assets and ongoing Hollowed work; do not discard or merge those independent art branches as part of this rule.
+**Default for new character production:** first test a small authored 2D directional sprite/pose set or editable layered 2D rig and its true motion in the existing sprite runtime. Use a textured **3D model only as an optional offline authoring source** when an existing approved rig is worth preserving or a concrete view/motion requirement demonstrably benefits from it. The required output remains pixel-correct presentation and real-game proof; do not mandate a live 3D scene, 3D skeleton or Blender-only pipeline. **Existing AN0–AN6 [PR #387](https://github.com/pjotrcasteel/Wyrmforge/pull/387) is grandfathered as an opt-in source-skin study integrated with the shared renderer, not the default asset pipeline.** Compare quality, development effort and mobile cost before choosing the more complex route. Preserve approved Ashfang source assets, ongoing Hollowed and AN source/rig/tests; do not discard or merge those independent branches as part of this rule.
 
 ## Present-day approved identity (20 October 2026)
 
@@ -633,12 +633,17 @@ Use deliberate transitions instead:
 #### True continuous mixing and layering
 
 If the requirement is arbitrary pose blending, a walk with an upper-body attack,
-or continuous directional interpolation, keep a live skeleton in the renderer
-(3D or an appropriate 2D skeletal runtime). Blend compatible transforms and apply
-bone masks/additive reactions; keep contact constraints and gameplay event rules.
-Blender can preview/bake blends, but baked PNGs cannot retain arbitrary runtime
-mixing. This is a renderer/product choice requiring a separate integration slice,
-not a capability unlocked by adding a `blend` field to atlas JSON.
+or continuous directional interpolation, start by evaluating authored 2D pose
+layers and directional sprite frames against the actual 2.5D presentation need.
+When that is insufficient, an **optional** live skeletal/whole-skin path may
+blend compatible transforms with masks/additive reactions, correct grounded
+contacts and shared C# action events. **AN0–AN6 PR #387 already studies this
+advanced source-skin route inside the existing shared GPU LightingEngine**;
+retain it for evidence-based review rather than discarding or duplicating it.
+Blender can preview/bake blends, but flattened PNGs cannot arbitrarily mix hidden
+poses. Any opt-in live source-skin adapter must preserve pixel-art identity,
+mobile budgets, original sprite fallback and one animation lifecycle, with
+separate actual-Hunt and owner visual approval before default adoption.
 
 **Gate F:** transition behavior is chosen, bounded and demonstrated. Mark a
 spritesheet build as discrete playback, not as a live skeletal animation system.

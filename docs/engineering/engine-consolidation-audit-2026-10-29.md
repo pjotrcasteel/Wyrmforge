@@ -39,3 +39,7 @@
 - **Mobile gate:** real 320/390px gameplay captures and physical-device budgets. Source scans and desktop CI are not visual/gameplay acceptance.
 
 **Validation:** The repository CI `.github/workflows/csharp.yml` invokes `node --test tests/javascript/*.test.mjs` and .NET build/test. A green CI confirms this checkpoint's test and syntax regression checks, **not** G5/Hollowed/phone acceptance. No runtime sources changed in this PR.
+
+## AN0–AN6 preservation clarification (29 October 2026)
+
+Draft [PR #387](https://github.com/pjotrcasteel/Wyrmforge/pull/387) carries substantive shared source-contact, authored locomotion/turn/attack, source-skin/dual-quaternion GPU materials, motion validation and real-Hunt review work. It is **not** an obsolete 3D renderer and must not be deleted or converted into a competing animation engine by ENG cleanup. Its optional complete-skin path uses the existing LightingEngine and a shared animation clock; preserve source assets, tests, failure diagnostics and the flag-off sprite fallback. The older static boundary test prohibits newly introduced *mandatory generic 3D model loaders*, not this explicitly scoped, opt-in source-skin candidate. AN0–AN6 is still a draft and does not meet owner motion/mobile acceptance. Follow [canonical AN preservation gate](../canon/roadmap.md#an0an6--preserve-and-finish-the-existing-universal-animation-engine-29-october-2026-locked).
