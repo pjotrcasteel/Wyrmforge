@@ -27,8 +27,8 @@ function scenario(profile,name,time,speed) {
         return {world:{x:0,y:0},travel:0,moving:false,
             direction:time<.5?'E':'N',velocity:{x:0,y:0}};
     }
-    if(name==='curved-chase') {
-        const rate=.6,position={x:speed/rate*Math.sin(rate*time),y:speed/rate*(1-Math.cos(rate*time))};
+    if(name==='curved-chase'||name==='fast-curve-chase') {
+        const rate=name==='fast-curve-chase'?1.2:.6,position={x:speed/rate*Math.sin(rate*time),y:speed/rate*(1-Math.cos(rate*time))};
         const velocity={x:speed*Math.cos(rate*time),y:speed*Math.sin(rate*time)};
         return {world:position,travel:speed*time,moving:true,direction:'E',velocity};
     }
@@ -39,7 +39,7 @@ export function auditBakedTransitions(profile,{rates=RATES,speeds=SPEEDS}={}) {
     if(profile.sourceSupport||profile.facing.selection!=='projected-motion'||profile.facing.transition!=='row')
         throw new TypeError('AN6 baked audit requires a projected-motion row profile');
     const results=[];
-    for(const name of ['stop-restart','stationary-turn','curved-chase'])for(const hz of rates)for(const speed of speeds) {
+    for(const name of ['stop-restart','stationary-turn','curved-chase','fast-curve-chase'])for(const hz of rates)for(const speed of speeds) {
         if(!Number.isSafeInteger(hz)||hz<=0||!Number.isFinite(speed)||speed<=0)throw new RangeError('Invalid audit sampling rate/speed');
         const state=createSpriteAnimationState();
         let peak=0,unsupportedSamples=0,firstUnsupported=null,previous=null,stopFrame=null;
