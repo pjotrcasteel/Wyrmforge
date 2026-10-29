@@ -98,12 +98,40 @@ jobs:
           print('Unified AN6 source budget:',budget['decodedBytes'], 'overBudget:',budget['overBudget'])
           print('Source and actual render evidence ONLY; no runtime, one-pixel, lighting or owner acceptance.')
           PY
+          # Experimental native-pixel study: retain the source-verified 16
+          # frames but render every second source turn pose at 6 FPS in a
+          # separate review pack. Never call it accepted without a turn replay.
+          SMALL=artifacts/an6-unified-half-pivot-atlas
+          python3 tools/animation/export_atlases.py "$SOURCE" --out "$SMALL" --tight-crop --clips walk,attack-travel,pivot,pivot-negative --experimental-half-pivots
+          set +e
+          node tools/animation/check_baked_atlas_budget.mjs --production-maps "$SMALL/manifest.json" > "$SMALL/three-map-budget.json"
+          SMALL_BUDGET_EXIT=$?
+          set -e
+          if [ "$SMALL_BUDGET_EXIT" -gt 1 ]; then exit "$SMALL_BUDGET_EXIT"; fi
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          full=json.loads(Path('artifacts/an6-unified-atlas/manifest.json').read_text())
+          half=json.loads(Path('artifacts/an6-unified-half-pivot-atlas/manifest.json').read_text())
+          budget=json.loads(Path('artifacts/an6-unified-half-pivot-atlas/three-map-budget.json').read_text())
+          assert half['experimentalHalfPivotFrames'] and not half['productionReady']
+          assert full['clips']['walk']['sha256']==half['clips']['walk']['sha256']
+          assert full['clips']['attack-travel']['sha256']==half['clips']['attack-travel']['sha256']
+          for name in ('pivot','pivot-negative'):
+              assert full['clips'][name]['frames']==16 and half['clips'][name]['frames']==8
+              assert half['clips'][name]['experimentalSourceFrameIndices']==list(range(0,16,2))
+              assert half['sourceQC'][name]['frames']==16, 'Must retain full independent source QC'
+          assert budget['maxDecodedBytes']==64*1024*1024
+          print('Eight-native-frame turn review (not runtime accepted):',budget['decodedBytes'],
+                'bytes; over budget:',budget['overBudget'])
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: an6-unified-real-source-four-clip-study
           path: |
             artifacts/an6-unified-atlas/
+            artifacts/an6-unified-half-pivot-atlas/
             artifacts/an6-unified-source/source-manifest.json
             artifacts/an6-unified-source/independent-source-qc.json
             artifacts/an6-unified-source/negative-source-qc.json
