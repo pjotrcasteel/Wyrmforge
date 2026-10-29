@@ -148,3 +148,87 @@ jobs:
             artifacts/an6-unified-source/render-receipt.json
           if-no-files-found: warn
           retention-days: 14
+
+  capture-unified-csharp-review:
+    name: Real C# 320/390px unified claw and pivot capture
+    needs: unified-single-rig-source
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - name: Restore source art used by the real game
+        shell: bash
+        run: |
+          set -euo pipefail
+          git lfs pull --include="src/Wyrmforge.Presentation.Web/wwwroot/**" --exclude=""
+          python3 tools/development/verify_web_assets.py
+      - name: Rebuild source-backed Wet Forest ground for real C# lab
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install -r tools/art/painted-requirements.txt
+          python3 tools/art/build_grass_moss_art_candidates.py --output src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-source-backed/v1/grass-moss-art-candidates
+          python3 tools/art/build_wet_mud_art_candidates.py --output src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-source-backed/v1/wet-mud-art-candidates
+          python3 tools/art/build_trampled_earth_art_candidates.py --output src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-source-backed/v1/trampled-earth-art-candidates
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Publish the actual C# game
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet --list-sdks | grep -Eq '^10[.]0[.]' || { echo '::error::Missing .NET 10 SDK'; exit 1; }
+          dotnet restore src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj
+          dotnet publish src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -c Release --no-restore -o artifacts/web
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - name: Install actual browser
+        shell: bash
+        run: |
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - uses: actions/download-artifact@v4
+        with:
+          name: an6-unified-real-source-four-clip-study
+          path: artifacts
+      - name: Capture both mobile framebuffer widths using unified native-pivot atlas
+        shell: bash
+        run: |
+          set -euo pipefail
+          for width in 320 390; do
+            AN_FOUNDATION_MODE=sprite-claw AN_MOBILE=1 AN_WIDTH="$width" AN_CAPTURE_DIR="artifacts/an6-unified-csharp-$width" AN_ASSET_ROOT="artifacts/an6-unified-half-pivot-atlas" node tools/animation/capture-hunt.cjs
+          done
+          node - <<'NODE'
+          const fs=require('fs');
+          for(const width of [320,390]){
+            const root=`artifacts/an6-unified-csharp-${width}`;
+            const summary=JSON.parse(fs.readFileSync(root+'/capture-summary.json','utf8'));
+            const trace=JSON.parse(fs.readFileSync(root+'/motion-trace.json','utf8'));
+            const entities=trace.flatMap(sample=>sample.hollow?.entities??[]);
+            const actionSamples=entities.filter(entity=>entity.foundation?.clip==='attack-travel').length;
+            const drawnClawFrames=Math.max(0,...entities.map(entity=>entity.foundationClawDrawnFrames??0));
+            const pivotSamples=entities.filter(entity=>['pivot','pivot-negative'].includes(entity.foundation?.clip)).length;
+            const drawnSpriteFrames=Math.max(0,...entities.map(entity=>entity.foundationDrawnFrames??0));
+            const report={width,scene:summary.scene,physicalDevice:false,sourceLitOnly:true,
+              actionSamples,drawnClawFrames,pivotSamples,drawnSpriteFrames,
+              maxNativeMarkerSlip:summary.maximumNativeMarkerSlip,
+              withinOneNativePixel:summary.markerContactWithinOneNativePixel===true,
+              errors:summary.errors,missingResources:summary.failedResources};
+            fs.writeFileSync(root+'/unified-csharp-proof.json',JSON.stringify(report,null,2)+'\n');
+            console.log(JSON.stringify({width,actionSamples,drawnClawFrames,pivotSamples,
+              maxNativeMarkerSlip:report.maxNativeMarkerSlip,withinOneNativePixel:report.withinOneNativePixel}));
+            if(!actionSamples||!drawnClawFrames)throw Error('No actual drawn full-body claw at '+width+' native pixels');
+            if(!report.withinOneNativePixel)throw Error('Unacceptable C# source marker drift at '+width+' native pixels');
+            if(report.errors.length||report.missingResources.length)throw Error('C# capture contains browser or asset errors at '+width+' native pixels');
+          }
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: an6-unified-real-csharp-enemy-lab
+          path: |
+            artifacts/an6-unified-csharp-320/
+            artifacts/an6-unified-csharp-390/
+          if-no-files-found: warn
+          retention-days: 14
