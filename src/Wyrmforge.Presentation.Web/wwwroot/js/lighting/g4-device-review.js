@@ -108,7 +108,7 @@ export class G4DeviceReviewSession {
     }
     report(now = this.stoppedAt, device = {}) {
         return {
-            schema: 'wyrmforge.g4-device-review.v1',
+            schema: 'g4-device-review.v1',
             generatedAtUtc: new Date().toISOString(),
             device,
             ...this.summary(now),
