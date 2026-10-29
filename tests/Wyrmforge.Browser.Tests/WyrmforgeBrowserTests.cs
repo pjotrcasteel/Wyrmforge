@@ -3617,13 +3617,10 @@ public sealed class WyrmforgeBrowserTests : PageTest
 
         var panel = Page.Locator("[data-g4-device-review]");
         await Expect(panel).ToBeVisibleAsync();
-        await panel.Locator("summary").ClickAsync();
-        await panel.GetByRole(AriaRole.Button, new() { Name = "Start", Exact = true }).ClickAsync();
-
-        // Observe actual animation frames in the real Hunt, not a synthetic profiler fixture.
+        // No button presses or manual exports: G4 records automatically in live gameplay.
         await Page.WaitForFunctionAsync(@"() => {
             const text = document.querySelector('[data-g4-status]')?.textContent ?? '';
-            const match = text.match(/(\d+) frame intervals/);
+            const match = text.match(/(\d+) frames/);
             return match && Number(match[1]) >= 12;
         }", null, new() { Timeout = 30000 });
 
@@ -3652,20 +3649,28 @@ public sealed class WyrmforgeBrowserTests : PageTest
             return readablePixels >= count * .16 && totalBrightness >= count * 14;
         }", null, new() { Timeout = 30000 });
 
-        await panel.Locator("summary").ClickAsync();
-        await panel.GetByRole(AriaRole.Button, new() { Name = "Stop", Exact = true }).ClickAsync();
-        var download = await Page.RunAndWaitForDownloadAsync(() =>
-            panel.GetByRole(AriaRole.Button, new() { Name = "Export JSON" }).ClickAsync());
-        using var json = JsonDocument.Parse(await File.ReadAllTextAsync(await download.PathAsync()));
-        var evidence = json.RootElement;
-        Assert.AreEqual("g4-device-review.v1", evidence.GetProperty("schema").GetString());
+        // Simulate the same Blazor teardown that happens on death. The last
+        // real gameplay sample must persist and the control must remain usable.
+        var result = await Page.EvaluateAsync<JsonElement>(@"() => {
+            window.__huntGpuArena.disposeArena(document.querySelector('canvas.game-canvas'));
+            const saved = JSON.parse(localStorage.getItem('wyrmforge.g4.lastRecord.v1') ?? 'null');
+            const panel = document.querySelector('[data-g4-device-review]');
+            return { saved, panelAlive: Boolean(panel && panel.isConnected),
+                title: panel?.querySelector('summary')?.textContent ?? '' };
+        }");
+        Assert.IsTrue(result.GetProperty("panelAlive").GetBoolean(),
+            "A defeated player's recorder summary must survive Hunt component teardown.");
+        StringAssert.Contains(result.GetProperty("title").GetString() ?? "", "SAVED");
+        var evidence = result.GetProperty("saved");
+        Assert.AreEqual("gpu", evidence.GetProperty("mode").GetString());
+        Assert.IsTrue(evidence.GetProperty("id").GetString()?.Length > 10);
         Assert.AreEqual("gpu", evidence.GetProperty("mode").GetString());
         Assert.AreEqual("mobile", evidence.GetProperty("quality").GetString());
         Assert.IsTrue(evidence.GetProperty("frameIntervals").GetInt32() >= 12);
         Assert.IsTrue(evidence.GetProperty("frameMsP95").GetDouble() > 0);
         Assert.IsTrue(evidence.GetProperty("elapsedSeconds").GetDouble() > 0);
-        Assert.IsTrue(evidence.GetProperty("device").GetProperty("viewport").GetProperty("width").GetInt32() > 0);
-        Assert.IsTrue(evidence.GetProperty("limitations").GetArrayLength() >= 4);
+        Assert.AreEqual(false, evidence.GetProperty("recording").GetBoolean());
+        Assert.IsTrue(evidence.GetProperty("recordedAtUtc").GetString()?.Length > 10);
     }
 
     private async Task EnterFirstTrailAsync(string gateLabel = "BEGIN HUNT")
