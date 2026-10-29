@@ -53,7 +53,7 @@ def material(name, color):
     return m
 
 
-def detach_old_head(body,rig):
+def detach_old_head(body):
     """Bake previous source art on a COPY, delete previous blank head vertices.
 
     The artist's earlier source .blend remains untouched, as does the existing
@@ -83,31 +83,7 @@ def detach_old_head(body,rig):
     bm=bmesh.new()
     bm.from_mesh(body.data)
     bm.verts.ensure_lookup_table()
-    # The earlier horizontal Z-only cut also amputated high shoulder
-    # geometry. This time only skin influenced by original HEAD-family
-    # bones can be removed. The source remains one rig; no new action.
-    joint=rig.data.bones.get("joint4")
-    if joint is None:
-        bm.free()
-        raise ValueError("Missing original source head bone joint4")
-    head_names={joint.name}|{child.name for child in joint.children_recursive}
-    head_ids={group.index for group in body.vertex_groups
-              if group.name in head_names}
-    if not head_ids:
-        bm.free()
-        raise ValueError("Original source head skin weights missing")
-    removed=[]
-    preserved_shoulder=0
-    for i,p in enumerate(world):
-        if float(p.z)<=cut_z:
-            continue
-        weight=sum(g.weight for g in body.data.vertices[i].groups
-                   if g.group in head_ids)
-        if weight>=.20 and abs(p.x)<.36 and abs(p.y)<.43:
-            removed.append(i)
-        else:
-            preserved_shoulder+=1
-    deleted=[bm.verts[i] for i in removed]
+    deleted=[bm.verts[i] for i,v in enumerate(world) if float(v.z)>cut_z]
     # The CC0 face is substantially denser than the earlier mannequin.
     # Audit the spatial extent and the percentage of the ORIGINAL source
     # skin instead of assuming a head always has <600 vertices.
@@ -117,9 +93,7 @@ def detach_old_head(body,rig):
     max_allowed=min(950,int(before*.52))
     print("HEAD CUT AUDIT",{
         "all_skin_vertices":before,
-        "head_skin_vertices_removed":len(deleted),
-        "high_shoulder_or_neck_vertices_preserved":preserved_shoulder,
-        "original_head_bones":sorted(head_names),
+        "vertices_above_neck":len(deleted),
         "max_allowed":max_allowed,
         "out_of_head_envelope":len(outer),
         "world_cut_z":cut_z,
@@ -140,8 +114,6 @@ def detach_old_head(body,rig):
         raise ValueError("Old head cutoff damaged body anatomy")
     body.name="WyrmForge Hollowed H1 true body/neck — OLD HEAD CUT"
     return {"old_head_vertices_removed":before-remaining,
-            "high_shoulder_or_neck_vertices_preserved":preserved_shoulder,
-            "head_bone_weight_threshold":.20,
             "cut_height_world_m":cut_z,
             "body_vertices_remaining":remaining}
 
@@ -357,7 +329,7 @@ def main():
         raise ValueError("Current H1 true source body or existing 70-bone rig missing")
     if len(bpy.data.actions):
         raise ValueError("Original source contains animation actions")
-    baseline=detach_old_head(body,rig)
+    baseline=detach_old_head(body)
     donor=imported_anatomy(args.head_source.resolve())
 
     # Donor measured from original artist: face x[-87,+80], y[-96,+111],
