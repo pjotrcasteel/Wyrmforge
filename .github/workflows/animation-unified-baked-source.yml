@@ -113,6 +113,11 @@ jobs:
           # passed source gate does NOT imply in-Hunt or art acceptance.
           python3 tools/animation/check_baked_turn_entry.py "$REVIEW/profile.json" > "$REVIEW/pivot-entry-diagnostics.json"
           python3 tools/animation/check_baked_turn_entry.py "$SMALL/profile.json" > "$SMALL/pivot-entry-diagnostics.json"
+          # The authored Blender contact transition is not enough. Replay
+          # the real exported clip/controller at 15,30,60,120Hz and retain
+          # the one-pixel correction failures in both native atlas variants.
+          node tools/animation/replay_unified_baked.mjs "$REVIEW/profile.json" "$REVIEW/runtime-turn-replay.json" --diagnostic
+          node tools/animation/replay_unified_baked.mjs "$SMALL/profile.json" "$SMALL/runtime-turn-replay.json" --diagnostic
           python3 - <<'PY'
           import json
           from pathlib import Path
