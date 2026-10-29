@@ -3629,7 +3629,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
             panel.GetByRole(AriaRole.Button, new() { Name = "Export JSON" }).ClickAsync());
         using var json = JsonDocument.Parse(await File.ReadAllTextAsync(await download.PathAsync()));
         var evidence = json.RootElement;
-        Assert.AreEqual("wyrmforge.g4-device-review.v1", evidence.GetProperty("schema").GetString());
+        Assert.AreEqual("g4-device-review.v1", evidence.GetProperty("schema").GetString());
         Assert.AreEqual("gpu", evidence.GetProperty("mode").GetString());
         Assert.AreEqual("mobile", evidence.GetProperty("quality").GetString());
         Assert.IsTrue(evidence.GetProperty("frameIntervals").GetInt32() >= 12);
