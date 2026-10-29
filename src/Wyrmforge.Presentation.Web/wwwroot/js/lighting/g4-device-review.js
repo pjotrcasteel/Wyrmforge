@@ -21,6 +21,7 @@ export class G4DeviceReviewSession {
         this.stoppedAt = null;
         this.lastFrameAt = null;
         this.intervals = [];
+        this.minuteIntervals = [];
         this.playedMs = 0;
         this.pausedFrames = 0;
         this.renderFailures = 0;
@@ -61,6 +62,8 @@ export class G4DeviceReviewSession {
             const delta = now - this.lastFrameAt;
             if (delta > 0 && delta <= 1000) {
                 this.intervals.push(delta);
+                const minute = Math.min(9, Math.floor((now - this.startedAt) / 60000));
+                (this.minuteIntervals[minute] ??= []).push(delta);
                 this.playedMs += delta;
             }
         }
@@ -109,6 +112,15 @@ export class G4DeviceReviewSession {
             generatedAtUtc: new Date().toISOString(),
             device,
             ...this.summary(now),
+            // Per-minute browser frame-pacing distribution permits warm-up comparisons
+            // without claiming to read a physical device's temperature sensors.
+            framePacingByMinute: this.minuteIntervals.map((intervals, index) => {
+                const sorted = [...intervals].sort((a, b) => a - b);
+                const played = intervals.reduce((sum, ms) => sum + ms, 0);
+                return { minute: index + 1, intervals: intervals.length,
+                    observedFps: round(played ? intervals.length * 1000 / played : 0),
+                    frameMsP95: round(percentile(sorted, .95)) };
+            }).filter(Boolean),
             // Subsampled once a second; do not assume these are sustained per-frame uploads.
             samples: this.gpuSamples.map(sample => ({ ...sample })),
             limitations: [
