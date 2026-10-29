@@ -103,6 +103,13 @@ public sealed class WorldFirstArenaBrowserTests : PageTest
         var siteId = (await node.GetAttributeAsync("data-site-id"))!;
         await Page.ScreenshotAsync(new() { Path = Path.Combine(output, $"ar1-{kind}-chart-{width}.png"), FullPage = false });
 
+        // The game's route transitions may replace the query; keep the diagnostic
+        // palette explicit while the C# whole-run geometry authority stays fixed.
+        await Page.EvaluateAsync(@"() => {
+            const url = new URL(location.href);
+            url.searchParams.set('arenaTerrain', 'semantic');
+            history.replaceState(null, '', url);
+        }");
         await node.ClickAsync();
         await Page.GetByRole(AriaRole.Button,
             new() { NameRegex = new System.Text.RegularExpressions.Regex("^Enter (rare )?trail$") }).ClickAsync();
