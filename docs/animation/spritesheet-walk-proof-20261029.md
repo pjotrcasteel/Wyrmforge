@@ -104,3 +104,14 @@ matching maps would be 54.8174 MiB before actions. The review pack contains only
 source-lit color. Both source libraries pass the real exporter, lossless-pixel
 crop checks, independent projected derivatives and runtime-profile validation.
 
+## Actual merged-main encounter
+
+Real C# Enemy Lab, nine-clip source-backed pack, phone/touch/DPR3 emulation:
+390px has 226 samples and 0.9904 world pixels of maximum marker residual;
+320px has 226 samples and 1.2846. At this actor's scale 1 these are 1.0224 and
+1.3260 native pixels, so both remain above the one-pixel acceptance limit.
+Neither has page, console, resource, adapter or GPU errors. Default 390px also
+loads without errors. These are source-marker diagnostics and source-lit Canvas
+sprites, not evaluated live-skin soles, production GPU materials or phone hardware.
+Application 694/694, Domain 405/405 and JavaScript 610/610 pass on integrated main.
+

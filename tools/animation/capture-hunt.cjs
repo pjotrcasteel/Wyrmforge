@@ -50,6 +50,9 @@ const server=http.createServer((req,res)=>{
   return d?.hollow?.foundation?.ready===true&&(!gpu|| (noWebgl?d?.gpuWorld?.error:d?.gpuWorld?.backend));
  },{noWebgl:Boolean(process.env.AN_NO_WEBGL),gpu:expectsGpu},{timeout:60000});
  if(process.env.AN_INSPECTION&&!expectsGpu)throw Error('GPU inspection is not a source-lit spritesheet acceptance test');
+ // Capture the actual mobile play surface, rather than spending most of the
+ // portrait video on developer controls above it. No layout or art is changed.
+ if(!liveTrail)await page.locator(selector).evaluate(canvas=>canvas.scrollIntoView({block:'start'}));
  if(process.env.AN_INSPECTION)await page.evaluate(async view=>{
   const m=await import(window.__anModulePath??'/js/arena.js');m.setArenaLightingInspection(document.querySelector(window.__anCanvasSelector),view);
   const label=document.createElement('div');label.textContent='DEVELOPER '+view.toUpperCase()+' INSPECTION / ACTUAL C# ENCOUNTER';
@@ -78,6 +81,8 @@ const server=http.createServer((req,res)=>{
  const video=await page.video().path();await page.close();await browser.close();server.close();
 
  const summary={foundationMode,representation:!candidate?'default-production-sprites':foundationMode==='sprite-walk'?'baked-full-body-sprites':'source-skin-research',contactMeasurement:!candidate?'candidate markers not active':foundationMode==='sprite-walk'?'unsnapped source markers; not evaluated skin soles':'source-skin diagnostics',expectedWebglUnavailable:Boolean(process.env.AN_NO_WEBGL),fallbackCanvasPixels,scene:liveTrail?'real-first-trail':'real-development-encounter',mobileEmulated:process.env.AN_MOBILE==='1',candidate,inspection:process.env.AN_INSPECTION??'lit',physicalDevice:false,viewport:{width,height:844},samples:trace.length,solveFailures:trace.flatMap(r=>r.hollow.entities.filter(e=>e.foundationError).map(e=>({time:r.simulationTimeSeconds,error:e.foundationError}))),maximumProjectedSoleDrift:Math.max(...trace.flatMap(r=>r.hollow.entities.map(e=>e.foundation?.maxSlip??0))),gpuErrors:trace.filter(r=>r.gpuWorld?.error),video,errors,consoleErrors,failedResources};
+ summary.maximumNativeMarkerSlip=candidate&&foundationMode==='sprite-walk'?Math.max(0,...trace.flatMap(r=>r.hollow.entities.map(e=>e.foundation?.maxNativeMarkerSlip??0))):null;
+ summary.markerContactWithinOneNativePixel=summary.maximumNativeMarkerSlip==null?null:summary.maximumNativeMarkerSlip<=1;
  fs.writeFileSync(path.join(out,'capture-summary.json'),JSON.stringify(summary,null,2));
  if(errors.length||summary.solveFailures.length||(!process.env.AN_NO_WEBGL&&summary.gpuErrors.length)||(process.env.AN_NO_WEBGL&&!fallbackCanvasPixels))throw Error(JSON.stringify(summary));
  console.log(JSON.stringify(summary,null,2));
