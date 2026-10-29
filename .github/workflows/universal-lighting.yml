@@ -53,7 +53,7 @@ jobs:
             if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then break; fi
             sleep 1
           done
-          dotnet test tests/Wyrmforge.Browser.Tests -c Release --no-build --filter 'FullyQualifiedName~UniversalLightingBrowserTests|FullyQualifiedName~HuntGpuAdapterBrowserTests'
+          dotnet test tests/Wyrmforge.Browser.Tests -c Release --no-build --filter 'FullyQualifiedName~UniversalLightingBrowserTests|FullyQualifiedName~HuntGpuAdapterBrowserTests|FullyQualifiedName~Mobile_LiveHuntGpu_RendersActorsAndKeepsSimulationMoving'
       - name: Preserve mobile viewport captures (not physical-device evidence)
         if: always()
         uses: actions/upload-artifact@v4
