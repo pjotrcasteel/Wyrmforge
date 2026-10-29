@@ -1,3 +1,4 @@
+using Wyrmforge.Application.Runs.Simulation.Snapshots;
 using Wyrmforge.Domain.Combat.Enemies;
 using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Combat.Geometry;
@@ -17,6 +18,11 @@ public sealed partial class RunSimulation
     private readonly List<ElementalImpactState> elementalImpacts = [];
     private readonly List<DeathBurstState> deathBursts = [];
     private readonly List<ExperiencePickupPulseState> experiencePickupPulses = [];
+
+    private const int MaxDamageNumbers = 48;
+    private const double DamageNumberDuration = 0.8;
+    private readonly List<DamageNumberState> damageNumbers = [];
+    private long nextDamageNumberSequence;
 
     private void UpdateCombatFeedback(double delta)
     {
@@ -38,12 +44,39 @@ public sealed partial class RunSimulation
         deathBursts.RemoveAll(burst => burst.Life <= 0);
         foreach (var pickup in experiencePickupPulses) pickup.Life -= delta;
         experiencePickupPulses.RemoveAll(pickup => pickup.Life <= 0);
+        foreach (var number in damageNumbers) number.Life -= delta;
+        damageNumbers.RemoveAll(number => number.Life <= 0);
     }
 
     private void RegisterTargetHit(ICombatTarget target)
     {
         if (target is EnemyState or DragonState) hitFlashRemaining[target.Id] = HitFlashSeconds;
     }
+
+    private void RegisterDamageNumber(ICombatTarget target, double amount, SpellId? spell, bool finisher, bool empowered, bool periodic)
+    {
+        if (amount <= 0) return;
+        var school = SpellCatalog.Get(spell ?? build.Spells.ActiveSpell).School.ToString();
+        var matching = damageNumbers.LastOrDefault(number =>
+            number.TargetId == target.Id && number.IsDragon == (target is DragonState) &&
+            number.School == school && number.Periodic == periodic && !number.Finisher &&
+            number.Age <= (periodic ? 0.30 : 0.12));
+
+        if (matching is not null)
+        {
+            matching.Amount += amount;
+            matching.Finisher |= finisher;
+            matching.Empowered |= empowered;
+            return;
+        }
+
+        if (damageNumbers.Count >= MaxDamageNumbers) damageNumbers.RemoveAt(0);
+        damageNumbers.Add(new DamageNumberState(++nextDamageNumberSequence, target, amount, school, finisher, empowered, periodic));
+    }
+
+    private IReadOnlyList<DamageNumberRenderSnapshot> CreateDamageNumberSnapshots() =>
+        damageNumbers.Select(number => new DamageNumberRenderSnapshot(number.Sequence, number.X, number.Y,
+            number.Amount, number.School, number.Progress, number.Finisher, number.Empowered, number.Periodic)).ToArray();
 
     private void RegisterSplashPulse(Vector2D position, double radius, double duration = SplashPulseSeconds) => splashPulses.Add(new SplashPulseState(position, radius, duration));
 
@@ -61,6 +94,24 @@ public sealed partial class RunSimulation
     private void RegisterExperiencePickup(int value)
     {
         if (value > 0) experiencePickupPulses.Add(new ExperiencePickupPulseState(player.Position, value, ExperiencePickupPulseSeconds));
+    }
+
+    private sealed class DamageNumberState(long sequence, ICombatTarget target, double amount, string school, bool finisher,
+        bool empowered, bool periodic)
+    {
+        public long Sequence { get; } = sequence;
+        public int TargetId { get; } = target.Id;
+        public bool IsDragon { get; } = target is DragonState;
+        public double X { get; } = target.Position.X;
+        public double Y { get; } = target.Position.Y - Math.Min(36, target.Radius * 1.1 + 6);
+        public string School { get; } = school;
+        public bool Periodic { get; } = periodic;
+        public double Amount { get; set; } = amount;
+        public bool Finisher { get; set; } = finisher;
+        public bool Empowered { get; set; } = empowered;
+        public double Life { get; set; } = DamageNumberDuration;
+        public double Age => DamageNumberDuration - Life;
+        public double Progress => Math.Clamp(Age / DamageNumberDuration, 0, 1);
     }
 
     private sealed class SplashPulseState(Vector2D position, double radius, double duration)
