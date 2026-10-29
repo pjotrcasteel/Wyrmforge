@@ -189,13 +189,13 @@ def set_pose(rig, phase):
     later=math.sin(phase-.90)
     rig.pose.bones["H_Root"].location=(0,0,0)
     axis_turn(rig,"H_Pelvis",[((0,1,0), .030 + .030*follow),
-                              ((1,0,0), .075+.023*wave)])
-    axis_turn(rig,"H_SpineLumbar",[((1,0,0), .59 + .038*wave),
+                              ((1,0,0), .055+.030*wave)])
+    axis_turn(rig,"H_SpineLumbar",[((1,0,0), .39 + .060*wave),
                                    ((0,0,1), .040*later)])
-    axis_turn(rig,"H_SpineThoracic",[((1,0,0), .39 + .050*follow),
+    axis_turn(rig,"H_SpineThoracic",[((1,0,0), .30 + .065*follow),
                                      ((0,0,1), -.038*wave)])
-    axis_turn(rig,"H_Neck",[((1,0,0), -.28 + .030*later)])
-    axis_turn(rig,"H_Head",[((1,0,0), -.18 + .036*math.sin(phase-.78)),
+    axis_turn(rig,"H_Neck",[((1,0,0), -.18 + .045*later)])
+    axis_turn(rig,"H_Head",[((1,0,0), -.16 + .055*math.sin(phase-.78)),
                             ((0,0,1), -.055+.025*later)])
     # Arms do NOT swing together: one reaches around the side of the
     # collapsed body; the opposite claw trails with different timing.
@@ -203,10 +203,10 @@ def set_pose(rig, phase):
                                   ((0,0,1), .065+.018*follow)])
     axis_turn(rig,"H_Clavicle_R",[((1,0,0), .085+.045*follow),
                                   ((0,0,1), -.10-.028*later)])
-    axis_turn(rig,"H_UpperArm_L",[((0,0,1), .44+.050*wave),
-                                 ((0,1,0), -.98+.075*later)])
-    axis_turn(rig,"H_UpperArm_R",[((0,0,1), -.50-.065*follow),
-                                 ((0,1,0), 1.30+.070*wave)])
+    axis_turn(rig,"H_UpperArm_L",[((0,0,1), .90+.085*wave),
+                                 ((0,1,0), -1.02+.080*later)])
+    axis_turn(rig,"H_UpperArm_R",[((0,0,1), -1.10-.090*follow),
+                                 ((0,1,0), 1.10+.085*wave)])
     axis_turn(rig,"H_ForeArm_L",[((0,1,0), -.27+.070*later),
                                 ((1,0,0), -.16-.025*follow)])
     axis_turn(rig,"H_ForeArm_R",[((0,1,0), .17-.080*later),
@@ -214,13 +214,13 @@ def set_pose(rig, phase):
     axis_turn(rig,"H_ClawsRoot_L",[((0,1,0), -.16+.08*later)])
     axis_turn(rig,"H_ClawsRoot_R",[((0,1,0), .12-.07*follow)])
     # Broken-kneed stance: asymmetric pelvis-counter thigh/shin angles.
-    axis_turn(rig,"H_Thigh_L",[((1,0,0), -.38+.024*wave),
+    axis_turn(rig,"H_Thigh_L",[((1,0,0), -.50+.045*wave),
                               ((0,1,0), -.045)])
-    axis_turn(rig,"H_Thigh_R",[((1,0,0), .27-.022*follow),
+    axis_turn(rig,"H_Thigh_R",[((1,0,0), .24-.035*follow),
                               ((0,1,0), .038)])
-    axis_turn(rig,"H_Shin_L",[((1,0,0), .62+.025*follow)])
-    axis_turn(rig,"H_Shin_R",[((1,0,0), -.36-.025*wave)])
-    axis_turn(rig,"H_Foot_L",[((1,0,0), -.24)])
+    axis_turn(rig,"H_Shin_L",[((1,0,0), .70+.060*follow)])
+    axis_turn(rig,"H_Shin_R",[((1,0,0), -.39-.060*wave)])
+    axis_turn(rig,"H_Foot_L",[((1,0,0), -.30)])
     axis_turn(rig,"H_Foot_R",[((1,0,0), .12)])
 
 
@@ -235,6 +235,18 @@ def author_motion(rig, body, original_low):
         phase=(frame-1)/48.0*math.tau
         set_pose(rig,phase)
         bpy.context.view_layer.update()
+        # Real bone-tail movement must move the claws DOWN and FORWARD,
+        # independently of any render camera or procedural silhouette.
+        for side in ("L", "R"):
+            shoulder=rig.matrix_world @ rig.pose.bones[f"H_UpperArm_{side}"].head
+            claw=rig.matrix_world @ rig.pose.bones[f"H_ClawsRoot_{side}"].tail
+            forward=float(shoulder.y-claw.y)
+            downward=float(shoulder.z-claw.z)
+            if forward < .09 or downward < .43:
+                raise ValueError(
+                    f"Feral hand is behind/back of rib cage on frame {frame} {side}: "
+                    f"forward={forward:.4f}, drop={downward:.4f}"
+                )
         low,_=bounds(eval_points(body))
         delta=float(original_low.z-low.z)
         if abs(delta)>.23:
