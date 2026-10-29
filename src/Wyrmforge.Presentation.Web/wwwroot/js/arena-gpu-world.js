@@ -128,6 +128,10 @@ export class HuntGpuWorld {
     render(ctx, frame) {
         const began = performance.now();
         const engine = this.engine;
+        // In renderer coordinates (Z up): derive relevance from the actual camera
+        // window, not source IDs or assumptions about creatures/spell schools.
+        engine.lightViewBounds = { minX: 0, maxX: this.width / UNIT,
+            minY: -this.height * GROUND_Y / UNIT, maxY: 0 };
         engine.apply({ ...huntLightFrame(frame, this.camera, { width: this.width, height: this.height }), materials: this.materials, objects: this.objects });
         // Only repainted Canvas sources need a new upload. Static authored textures and
         // atlas frames retain their GPU allocations across Hunt frames.
