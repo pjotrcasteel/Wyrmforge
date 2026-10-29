@@ -140,7 +140,12 @@ jobs:
           spec=importlib.util.spec_from_file_location('v2_source_gate',f)
           m=importlib.util.module_from_spec(spec)
           spec.loader.exec_module(m)
-          print('Independent source-only lineage gate:',m.verify())
+          try:
+              m.verify()
+              raise AssertionError('Candidate passed production lineage gate, unsafe')
+          except RuntimeError as e:
+              assert 'Only a screened candidate' in str(e),str(e)
+          print('Independent SOURCE AUDIT ONLY:',m.verify(allow_candidate=True))
           PY
       - name: Preserve 3D candidate evidence — never ship into running game
         if: always()
