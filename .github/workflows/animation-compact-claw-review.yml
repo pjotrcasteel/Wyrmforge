@@ -108,7 +108,7 @@ jobs:
           node-version: '24'
       - name: Verify .NET 10 and publish the real Blazor game
         run: |
-          dotnet --list-sdks | grep -Eq '^10\\.0\\.' || { echo '::error::Missing .NET 10 SDK'; exit 1; }
+          dotnet --list-sdks | grep -Eq '^10[.]0[.]' || { echo '::error::Missing .NET 10 SDK'; exit 1; }
           dotnet restore src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj
           dotnet publish src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -c Release --no-restore -o artifacts/web
       - name: Install review browser
