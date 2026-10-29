@@ -92,8 +92,14 @@ public sealed class ArenaEnvironmentState
         // Arena Lab previews have natural continuous ground: no synthetic cross-walls or wave checkpoints.
         if (!generatorPreview)
         {
-            environment.AddCrossing(.315 + random.NextDouble() * .035, EncounterPhase.BreathingRoom);
-            environment.AddCrossing(.675 + random.NextDouble() * .035, EncounterPhase.Surge);
+            // AR1 is an isolated full-run preview of graph-authored terrain; do not block
+            // its mapped routes with the legacy horizontal checkpoint masonry.
+            // Normal Hunts retain both physical stage gates and their existing pacing.
+            if (!worldFirstGeography)
+            {
+                environment.AddCrossing(.315 + random.NextDouble() * .035, EncounterPhase.BreathingRoom);
+                environment.AddCrossing(.675 + random.NextDouble() * .035, EncounterPhase.Surge);
+            }
             environment.supplies.Add(new Supply("experience", 0.50, 0.20 + random.NextDouble() * 0.05, EncounterPhase.BreathingRoom));
             environment.supplies.Add(new Supply("health", 0.50, 0.81 + random.NextDouble() * 0.05, EncounterPhase.Surge));
         }
