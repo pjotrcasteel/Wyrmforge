@@ -269,3 +269,43 @@ CI/build status must be checked independently; the new regression suite
 does not establish actual in-Hunt contact, caster/depth parity or phone cost.
 The non-base heading claw, grounded turn and all remaining execution gates
 above remain open. **AN6 is still incomplete and PR #387 remains draft.**
+
+## AN6 continuation — actual compact-claw capture pipeline (29 October)
+
+The latest source-backed diagnostic exercises four paths through the shared
+animation controller at 15/30/60/120 Hz and 30/60 world px/s: stop/restart,
+stationary change of facing, 0.6-radian/s curved chase and 1.2-radian/s
+fast curved chase. Replayed against the preserved nine-heading atlas:
+
+- Moderate curves stay below the strict one-native-pixel source-marker gate in
+  this particular replay; **fast curves still fail**, peaking at about
+  **1.7147 native marker pixels**. This does not contradict the earlier
+  more diverse 40-curve and actual C# measurements.
+- Stationary E-to-N facing changes with no authored weight-bearing pivot;
+  the audit records that as missing source, not a grounded turn.
+- No authored start, stop/idle, pivot or moving-claw clip exists in the
+  preserved **nine-heading walk pack**. The separate compact-claw Blender
+  source remains source-only until the new eight-view material is rendered.
+
+Reproduce the metadata/source-marker negative via:
+    node tools/animation/audit_baked_transitions.mjs src/Wyrmforge.Presentation.Web/wwwroot/art/review/animation-foundation-sprite-motion/profile.json --diagnostic
+
+Without --diagnostic, unresolved source/contact gates cause a nonzero exit.
+The new baked-transitions tests check these negatives without weakening the
+root bound or falsely promoting source art.
+
+The new GitHub Actions animation-compact-claw-review.yml workflow owns the next
+actual evidence: reopen the preserved saved Blender source, validate it, bake
+the full eight-view 16-gait-phase by 8-action-stage source, pack the real
+review-color atlas, publish the C# game and capture opt-in sprite-claw
+Enemy Lab scenes at native 320/390px. The existing shared Hollowed animation
+adapter and capture helper are reused. The capture explicitly requires
+real attack-travel actor samples. Evidence is retained as GitHub Actions
+artifacts, **not** deployed to public GitHub Pages or substituted with
+AI-generated imagery.
+
+**CI review is initiated, not yet proven successful.** The captured claw,
+source-material alignment, one-pixel contact gate, grounded transitions,
+rendered depth/occlusion, physical mobile performance and owner art approval
+are all separate mandatory checks. Do not request owner visual acceptance
+until there is a genuine in-game claw capture. Keep PR #387 draft and unmerged.
