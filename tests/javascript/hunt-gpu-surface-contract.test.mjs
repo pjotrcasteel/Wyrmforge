@@ -51,3 +51,76 @@ test('geometry and shadow roles do not depend on being an actor or using Canvas 
     assert.equal(flatColor.emission, '#000000');
     assert.equal(huntSurfaceMaterial('t', { id: 'bad-override' }).id, 't', 'IDs are resource authority');
 });
+
+test('preloaded GPU resources stay registered without texture-capture repainting', async () => {
+    const { HuntGpuWorld } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js');
+    const registrations = [];
+    const fake = { engine: {
+        registerTexture: (...args) => registrations.push(['texture', ...args]),
+        registerGeometry: (...args) => registrations.push(['geometry', ...args]),
+    }, objects: [], materials: [] };
+    const tex = { isTexture: true, needsUpdate: false };
+    const geometry = { isBufferGeometry: true };
+    HuntGpuWorld.prototype.registerAssetTexture.call(fake, 'albedo', tex);
+    HuntGpuWorld.prototype.registerAssetGeometry.call(fake, 'tree-geometry', geometry);
+    assert.equal(tex.needsUpdate, true);
+    assert.deepEqual(registrations, [['texture', 'albedo', tex, true], ['geometry', 'tree-geometry', geometry]]);
+    assert.throws(() => HuntGpuWorld.prototype.registerAssetTexture.call(fake, 'bad', {}), TypeError);
+    assert.throws(() => HuntGpuWorld.prototype.registerAssetGeometry.call(fake, 'bad', {}), TypeError);
+
+    const surface = huntSurfaceRenderable('tree-1', 0, 0, 48, 48, true,
+        { geometry: 'tree-geometry', ownerId: 'tree' });
+    const descriptor = huntSurfaceMaterial('foliage', { albedo: 'albedo', normal: 'tree-normal' }, false);
+    surface.material = descriptor.id;
+    HuntGpuWorld.prototype.submitSurface.call(fake, surface, descriptor);
+    HuntGpuWorld.prototype.submitSurface.call(fake, { ...surface, id: 'tree-2' }, descriptor);
+    assert.equal(fake.objects.length, 2);
+    assert.equal(fake.materials.length, 1, 'Shared authored materials must not duplicate per actor');
+    assert.throws(() => HuntGpuWorld.prototype.submitSurface.call(fake, surface,
+        { ...descriptor, color: '#112233' }), TypeError);
+});
+
+test('only changed Canvas pixels trigger shared GPU texture uploads', async () => {
+    const { HuntGpuWorld } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js');
+    const allMaterials = [];
+    const engine = {
+        objects: new Map(), textures: new Map(),
+        camera: { up: { set() {} }, position: { set() {} }, lookAt() {} },
+        apply(snapshot) {
+            engine.objects = new Map(snapshot.objects.map(object => {
+                const material = snapshot.materials.find(value => value.id === object.material);
+                const map = material.albedo ? { needsUpdate: false } : null;
+                const normalMap = material.normal ? { needsUpdate: false } : null;
+                const mesh = { material: { map, normalMap } };
+                allMaterials.push({ id: object.id, mesh });
+                return [object.id, { mesh }];
+            }));
+        },
+        render() {},
+    };
+    const ctx = { canvas: { width: 320, height: 568 },
+        save() {}, setTransform() {}, drawImage() {}, restore() {} };
+    const world = { engine, canvas: {}, camera: { x: 0, y: 0 }, width: 320, height: 568,
+        used: new Set(['repainted']), layers: new Map([
+            ['repainted', { pixels: { width: 96, height: 64 }, texture: { dispose() {} } }],
+        ]), dirtyTextures: new Set(['repainted']),
+        materials: [
+            huntSurfaceMaterial('repainted'),
+            huntSurfaceMaterial('static', { albedo: 'authored', normal: 'normal' }, false),
+        ], objects: [
+            huntSurfaceRenderable('repainted', 0, 0, 96, 64, true),
+            huntSurfaceRenderable('static', 96, 0, 96, 64, true),
+        ] };
+    const frame = { version: 1, time: 0, lights: [],
+        environment: { ambient: 0, color: '#ffffff', exposure: 1, emission: false } };
+    HuntGpuWorld.prototype.render.call(world, ctx, frame);
+    assert.equal(engine.objects.get('repainted').mesh.material.map.needsUpdate, true);
+    assert.equal(engine.objects.get('static').mesh.material.map.needsUpdate, false);
+    assert.equal(engine.objects.get('static').mesh.material.normalMap.needsUpdate, false);
+    assert.deepEqual(world.lastFrameUploads, { dynamicTextures: 1, dynamicPixels: 96 * 64 });
+    assert.equal(world.dirtyTextures.size, 0);
+    HuntGpuWorld.prototype.render.call(world, ctx, frame);
+    assert.equal(engine.objects.get('repainted').mesh.material.map.needsUpdate, false,
+        'An unchanged source must not be uploaded on the next frame');
+    assert.deepEqual(world.lastFrameUploads, { dynamicTextures: 0, dynamicPixels: 0 });
+});
