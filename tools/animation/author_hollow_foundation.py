@@ -18,6 +18,7 @@ ROOT=Path(__file__).resolve().parents[2]
 SOURCE=ROOT/'art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-zombie-reach-v3-standard/hollow-rigged.blend'
 parser=argparse.ArgumentParser();parser.add_argument('--out',default='artifacts/animation');parser.add_argument('--render',action='store_true');parser.add_argument('--all',action='store_true');parser.add_argument('--only',default='walk,attack,pivot,pivot-negative');parser.add_argument('--samples',type=int,default=4);parser.add_argument('--phase-samples',type=int,choices=[8,16,32],default=16);parser.add_argument('--action-samples',type=int,choices=[8,16],default=16)
 parser.add_argument('--travel-heading-degrees',type=float,default=0,help='Source-authored travel direction relative to the committed body facing; study only.')
+parser.add_argument('--experimental-lateral-motion',action='store_true',help='Source-only 45..90 degree lateral gait feasibility; NEVER production/runtime approval.')
 parser.add_argument('--stride-metres',type=float,default=.36,help='Authored source gait distance per cycle, not a gameplay speed.')
 parser.add_argument('--flexion-reserve-pixels',type=float,default=0,help='Lower the authored source pelvis to reserve knee flexion; native source pixels, not runtime root correction.')
 parser.add_argument('--pelvis-drop-metres',type=float,default=0,help='Explicit authored crouch height for longer source strides; no change to contact tolerances.')
@@ -26,7 +27,8 @@ parser.add_argument('--guides',action='store_true',help='Preserve pre-balance wh
 parser.add_argument('--motion-headings',default='',help='Additional nonzero walk headings in degrees, comma-separated, in the same editable character. Use --motion-headings=-a,b for negative values.')
 parser.add_argument('--compress-source',action='store_true',help='Save the editable Blender source with lossless native compression.')
 args=parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
-if not math.isfinite(args.travel_heading_degrees) or abs(args.travel_heading_degrees)>45:parser.error('travel heading must be finite and within -45..45 degrees')
+if not math.isfinite(args.travel_heading_degrees) or abs(args.travel_heading_degrees)>(90 if args.experimental_lateral_motion else 45):parser.error('travel heading must be finite and within -45..45 degrees (or -90..90 in explicit source-only lateral study)')
+if args.experimental_lateral_motion and (abs(args.travel_heading_degrees)<=45 or args.stride_metres>.28 or args.only!='walk'):parser.error('lateral feasibility requires 45<abs(heading)<=90, --only walk and stride <=0.28m; source-only')
 if not math.isfinite(args.stride_metres) or args.stride_metres<=0:parser.error('source stride must be finite and positive')
 if not math.isfinite(args.flexion_reserve_pixels) or not 0<=args.flexion_reserve_pixels<=2:parser.error('source flexion reserve must be finite and within 0..2 native pixels')
 if not math.isfinite(args.pelvis_drop_metres) or not 0<=args.pelvis_drop_metres<=.10:parser.error('source crouch must be finite and within 0..0.10 metres')
@@ -321,6 +323,7 @@ manifest={'schemaVersion':2,'groundZMetres':SOLE_Z,'bindRepair':bind_repair,'sol
 manifest['contactCycles']=[{'id':'foot-'+side,'phaseOffset':offset,'stanceFraction':args.stance_fraction,'neutral':[sign*.085,0,SOLE_Z],'liftMetres':.055} for side,sign,offset in [('L',1,0),('R',-1,.5)]]
 manifest['flexionReserveMetres']=args.flexion_reserve_pixels*1.55/96
 manifest['authoredPelvisDropMetres']=args.pelvis_drop_metres
+if args.experimental_lateral_motion:manifest['experimentalLateralMotion']={'sourceStudyOnly':True,'headingDegrees':args.travel_heading_degrees,'acceptedForRuntime':False}
 manifest['turnSupport']={'radians':math.pi/4,'durationSeconds':16/12,'phaseCycles':1}
 reference_rotation=Matrix.Rotation(math.radians(args.travel_heading_degrees),4,'Z')
 for chain in manifest['contactChains']:
