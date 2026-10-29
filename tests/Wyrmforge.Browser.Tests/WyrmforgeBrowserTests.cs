@@ -2957,7 +2957,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.AreEqual("Abandoned", root.GetProperty("recentRuns")[0].GetProperty("outcome").GetString());
         Assert.IsGreaterThanOrEqualTo(1, root.GetProperty("stats").GetProperty("trailsEntered").GetInt32());
 
-        await Page.Locator("label.playtest-include input").UncheckAsync();
+        await Page.GetByRole(AriaRole.Checkbox, new() { Name = "Include my last 12 run summaries, seeds, gameplay milestones and sampled performance." }).UncheckAsync();
         var emptyDownload = await Page.RunAndWaitForDownloadAsync(async () =>
             await Page.GetByRole(AriaRole.Button, new() { Name = "SHARE / DOWNLOAD JSON" }).ClickAsync());
         var optedOutPath = Path.Combine(ArtifactDirectory, "playtest-opted-out.json");
@@ -3005,7 +3005,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
 
         await Page.Locator("#playtest-fun").SelectOptionAsync("5");
         await Page.Locator("#playtest-area").SelectOptionAsync("onboarding");
-        await Page.Locator("label.playtest-include input").UncheckAsync();
+        await Page.GetByRole(AriaRole.Checkbox, new() { Name = "Include my last 12 run summaries, seeds, gameplay milestones and sampled performance." }).UncheckAsync();
         await Page.Locator("label.playtest-consent input").CheckAsync();
         await Expect(send).ToBeEnabledAsync();
         await send.ClickAsync();
