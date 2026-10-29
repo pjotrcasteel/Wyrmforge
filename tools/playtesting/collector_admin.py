@@ -66,6 +66,8 @@ article span{{display:block;color:#b7a1c4;font-size:.78rem}}article strong{{disp
 <div class="grid">
 {metric("AI runs", ai.get("runs", 0))}
 {metric("Mean per-run AI p95 (ms)", ai.get("meanP95Ms"))}
+{metric("Mean phone/browser frame p95 (ms)", ai.get("meanFrameP95Ms"))}
+{metric("Worst phone/browser frame (ms)", ai.get("maxFrameMs"))}
 {metric("Highest AI update (ms)", ai.get("peakMs"))}
 {metric("Largest AI population", ai.get("maxPopulation"))}
 {metric("Peak committed attacks", ai.get("maxCommitted"))}
