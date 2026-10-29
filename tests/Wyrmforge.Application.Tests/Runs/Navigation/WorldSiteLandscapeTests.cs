@@ -103,6 +103,36 @@ public sealed class WorldSiteLandscapeTests
     }
 
     [TestMethod]
+    public void WorldFirstSpawnRepair_NeverPlacesAnEnemyBehindItsOwnImpassableCliffOrRoot()
+    {
+        const double width = 950, height = 1550;
+        var found = 0;
+        for (var seed = 0; seed < 20; seed++)
+        {
+            var node = WyrmrealmMapGenerator.GenerateFireHunt(seed, WyrmTier.Wyrm)
+                .Single(candidate => candidate.Stage == 1);
+            var environment = ArenaEnvironmentState.Create(seed, node, worldFirstGeography: true);
+            var hunter = new Vector2D(width * .5, height * .5);
+            foreach (var requested in new[]
+            {
+                new Vector2D(width * .2, height * .14),
+                new Vector2D(width * .8, height * .23),
+                new Vector2D(width * .28, height * .79),
+            })
+            {
+                var spawn = environment.AdjustSpawnPosition(requested, hunter, width, height, 12);
+                if (spawn is not { } safe) continue;
+                found++;
+                Assert.IsFalse(environment.IsBlocked(safe, width, height, 12));
+                Assert.IsFalse(environment.BlocksSegment(safe, hunter, width, height, 12));
+                Assert.IsGreaterThanOrEqualTo(ArenaEnvironmentState.MinimumSpawnDistance + 12,
+                    Vector2D.Distance(safe, hunter));
+            }
+        }
+        Assert.IsGreaterThan(0, found, "At least some legal and reachable spawns must survive the geography.");
+    }
+
+    [TestMethod]
     public void FireAndFrostLairs_HaveDifferentAuthoritativeGeologyAndPhysicalLandmarks()
     {
         var fire = WyrmrealmMapGenerator.Generate(1, 1204, SpellSchool.Fire)
