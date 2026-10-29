@@ -23,7 +23,7 @@
     function startRun(rite) {
         if (state.active) {
             state.interrupted++;
-            state.runs.push({ ...state.active, outcome: 'Interrupted', durationSeconds: safeNumber((Date.now() - state.active.startedAt) / 1000) });
+            state.runs.push({ ...state.active, perf: finalizedPerf(state.active.perf), outcome: 'Interrupted', durationSeconds: safeNumber((Date.now() - state.active.startedAt) / 1000) });
         }
         state.started++;
         state.active = { runId: newId(), startedAt: Date.now(), ascendantRite: !!rite, milestones: [], perf: { samples: 0, slowFrames: 0, maxBridgeMs: 0 } };
@@ -40,12 +40,33 @@
         persist();
     }
     function performanceSample(frameIntervalMs, simulationMs) {
-        if (!state.active) return;
+        if (!state.active || !Number.isFinite(frameIntervalMs) || frameIntervalMs <= 0 || frameIntervalMs > 1000) return;
         const perf = state.active.perf;
         perf.samples++;
         if (frameIntervalMs > 34) perf.slowFrames++;
-        perf.maxBridgeMs = Math.max(perf.maxBridgeMs, Math.min(10000, safeNumber(simulationMs)));
+        perf.maxFrameMs = Math.max(perf.maxFrameMs ?? 0, Math.round(frameIntervalMs * 10) / 10);
+        // Fixed-size histogram, capped at 120 ms. Retained only while a run is active.
+        const buckets = perf.frameBuckets ??= Array(121).fill(0);
+        buckets[Math.min(120, Math.floor(frameIntervalMs))]++;
+        if (Number.isFinite(simulationMs))
+            perf.maxBridgeMs = Math.max(perf.maxBridgeMs, Math.min(10000, safeNumber(simulationMs)));
         // In-memory during combat. Persist only at a milestone or when the run ends.
+    }
+    function finalizedPerf(perf) {
+        const { frameBuckets, ...summary } = perf ?? { samples: 0, slowFrames: 0, maxBridgeMs: 0 };
+        if (!Array.isArray(frameBuckets) || frameBuckets.length !== 121) return summary;
+        const total = frameBuckets.reduce((sum, count) => sum + count, 0);
+        if (total < 1) return summary;
+        const rank = Math.ceil(total * .95);
+        let count = 0;
+        for (let bucket = 0; bucket < frameBuckets.length; bucket++) {
+            count += frameBuckets[bucket];
+            if (count >= rank) {
+                summary.p95FrameMs = Math.min(120, bucket + 1);
+                break;
+            }
+        }
+        return summary;
     }
     function cleanDraft(draft) {
         const schools = ['Arcane', 'Fire', 'Frost', 'Storm', 'Neutral'];
@@ -104,7 +125,7 @@
         const active = state.active ?? { runId: newId(), startedAt: Date.now(), ascendantRite: false, milestones: [], perf: { samples: 0, slowFrames: 0, maxBridgeMs: 0 } };
         const allowedOutcome = ['Extracted', 'Defeated', 'Abandoned'].includes(report.outcome) ? report.outcome : 'Unknown';
         state.runs.push({
-            ...active, outcome: allowedOutcome, seed: safeNumber(report.seed), score: safeNumber(report.score),
+            ...active, perf: finalizedPerf(active.perf), outcome: allowedOutcome, seed: safeNumber(report.seed), score: safeNumber(report.score),
             durationSeconds: safeNumber(report.seconds), depth: safeNumber(report.depth), level: safeNumber(report.level),
             kills: safeNumber(report.kills), trailsCompleted: safeNumber(report.trailsCompleted),
             rareTrails: safeNumber(report.rareTrails), wyrmsDefeated: safeNumber(report.wyrmsDefeated),
