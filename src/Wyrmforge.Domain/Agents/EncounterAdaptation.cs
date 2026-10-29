@@ -11,7 +11,13 @@ public sealed class EncounterAdaptation
     public AdaptationSnapshot Inspect() => state;
     public void Observe(double delta, Vector2D origin, Vector2D? seenTarget, bool sightNotResampled = false)
     {
-        if (!double.IsFinite(delta) || delta < 0) throw new ArgumentOutOfRangeException(nameof(delta));
+        if (!double.IsFinite(delta) || delta < 0 || !double.IsFinite(state.Clock + delta))
+            throw new ArgumentOutOfRangeException(nameof(delta));
+        if (!double.IsFinite(origin.X) || !double.IsFinite(origin.Y))
+            throw new ArgumentException("Observation origin must be finite.", nameof(origin));
+        if (seenTarget is { } observed && (!double.IsFinite(observed.X) || !double.IsFinite(observed.Y)))
+            throw new ArgumentException("Confirmed sight position must be finite.", nameof(seenTarget));
+
         var clock = state.Clock + delta;
         var decay = Math.Exp(-delta / 8);
         state = state with { Clock = clock, Near = state.Near * decay, Far = state.Far * decay,
@@ -42,6 +48,7 @@ public sealed class EncounterAdaptation
         if (!double.IsFinite(snapshot.Clock) || snapshot.Clock < 0 || !double.IsFinite(snapshot.NextSample) || snapshot.NextSample < 0
             || new[] { snapshot.Near, snapshot.Far, snapshot.Left, snapshot.Right }.Any(v => !double.IsFinite(v) || v < 0 || v > 16)
             || !double.IsFinite(snapshot.Confidence) || snapshot.Confidence < 0 || snapshot.Confidence > 1
+            || snapshot.Counter is not ("none" or "circle-left" or "circle-right" or "close-distance" or "hold-space")
             || snapshot.Previous is { } p && (!double.IsFinite(p.X) || !double.IsFinite(p.Y)))
             throw new ArgumentException("Invalid adaptation snapshot.", nameof(snapshot));
         state = snapshot;

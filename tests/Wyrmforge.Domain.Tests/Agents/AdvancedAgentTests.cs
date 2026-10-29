@@ -94,6 +94,41 @@ public sealed class AdvancedAgentTests
     }
 
     [TestMethod]
+    public void Adaptation_RejectsInvalidSensingWithoutChangingEncounterMemory()
+    {
+        var adaptation = new EncounterAdaptation();
+        adaptation.Observe(.5, Vector2D.Zero, new Vector2D(120, 0));
+        var before = adaptation.Inspect();
+
+        Assert.ThrowsExactly<ArgumentException>(() =>
+            adaptation.Observe(.5, new Vector2D(double.NaN, 0), new Vector2D(120, 0)));
+        Assert.ThrowsExactly<ArgumentException>(() =>
+            adaptation.Observe(.5, Vector2D.Zero, new Vector2D(double.PositiveInfinity, 0)));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
+            adaptation.Observe(double.MaxValue, Vector2D.Zero, null));
+        Assert.AreEqual(before, adaptation.Inspect(),
+            "Invalid sensing must not poison the clock, confidence or saved replay state.");
+
+        var replay = new EncounterAdaptation();
+        replay.Restore(before);
+        adaptation.Observe(.5, Vector2D.Zero, new Vector2D(120, 5));
+        replay.Observe(.5, Vector2D.Zero, new Vector2D(120, 5));
+        Assert.AreEqual(adaptation.Inspect(), replay.Inspect());
+    }
+
+    [TestMethod]
+    public void Adaptation_RejectsUnknownReplayCounterWithoutOverwritingState()
+    {
+        var adaptation = new EncounterAdaptation();
+        adaptation.Observe(.5, Vector2D.Zero, new Vector2D(120, 0));
+        var before = adaptation.Inspect();
+        Assert.ThrowsExactly<ArgumentException>(() =>
+            adaptation.Restore(before with { Counter = "unapproved-unbounded-counter" }));
+        Assert.AreEqual(before, adaptation.Inspect(),
+            "The restore boundary cannot invent new boss actions or overwrite valid observations.");
+    }
+
+    [TestMethod]
     public void Tactics_NoVisibleTarget_DoesNotAllowAttack()
     {
         var runtime = new AgentRuntime(new(1, "hound", "hostile"), 42, new CombatTacticPolicy(CombatCapabilities.For(AgentTier.Adaptive), true), 1);
