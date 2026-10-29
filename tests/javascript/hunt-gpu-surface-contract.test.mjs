@@ -118,11 +118,13 @@ test('only changed Canvas pixels trigger shared GPU texture uploads', async () =
     assert.equal(engine.objects.get('static').mesh.material.map.needsUpdate, false);
     assert.equal(engine.objects.get('static').mesh.material.normalMap.needsUpdate, false);
     assert.deepEqual(world.lastFrameUploads, { dynamicTextures: 1, dynamicPixels: 96 * 64 });
+    assert.deepEqual(world.lastFrameTopUploads, [{ id: 'repainted', width: 96, height: 64, pixels: 96 * 64 }]);
     assert.equal(world.dirtyTextures.size, 0);
     HuntGpuWorld.prototype.render.call(world, ctx, frame);
     assert.equal(engine.objects.get('repainted').mesh.material.map.needsUpdate, false,
         'An unchanged source must not be uploaded on the next frame');
     assert.deepEqual(world.lastFrameUploads, { dynamicTextures: 0, dynamicPixels: 0 });
+    assert.deepEqual(world.lastFrameTopUploads, [], 'Static authored maps must not show up as per-frame uploads');
     assert.equal(world.submissionCpu.frames, 2, 'GPU submission timing tracks actual rendered frames');
     assert.ok(Number.isFinite(world.submissionCpu.lastMs) && world.submissionCpu.lastMs >= 0);
     assert.ok(world.submissionCpu.meanMs >= 0);
