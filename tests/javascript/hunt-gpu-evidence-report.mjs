@@ -29,6 +29,13 @@ export function formatGpuEvidenceReport(records) {
         lines.push(`### ${record.width}px — ${record.quality}`, '',
             `![Genuine Hunt ${name}](live-hunt-shared-gpu-${name}.png)`, '',
             `![Unmodified center crop ${name}](live-hunt-light-focus-${name}.png)`, '');
+        const largest = record.diagnostics.gpuWorld?.largestDynamicUploads ?? [];
+        if (largest.length) {
+            lines.push('**Largest per-frame texture uploads** (GPU resource IDs, not game-engine categories):', '');
+            for (const surface of largest)
+                lines.push(`- \`${surface.id}\`: ${surface.width} × ${surface.height} = ${surface.pixels.toLocaleString('en-US')} pixels`);
+            lines.push('');
+        }
     }
     lines.push('## Interpretation and limitations', '',
         '- Black space beyond the light radius is expected in the current Gothic-night lighting setup, but this is **not** visual-quality approval.',
