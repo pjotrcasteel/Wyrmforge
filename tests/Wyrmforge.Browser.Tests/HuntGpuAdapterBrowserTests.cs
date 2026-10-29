@@ -96,7 +96,7 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
             document.body.appendChild(canvas);
             const ctx = canvas.getContext('2d');
             ctx.fillStyle = '#777777'; ctx.fillRect(0, 0, width, height);
-            const world = new HuntGpuWorld();
+            const world = new HuntGpuWorld({ quality: width === 320 ? 'mobile' : 'balanced' });
             const environment = { ambient:0, color:'#ffffff', exposure:1, emission:true };
             const frame = { version:1, time:0, environment, lights:[], materials:[], objects:[] };
             world.begin(ctx, {x:0,y:0}, width, height);
@@ -118,13 +118,14 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
             const diagnostics = world.diagnostics();
             window.__huntGpuFireballProof = world;
             return [submitted.size, peak, dark, diagnostics.authoredTextures,
-                diagnostics.textureUploads.dynamicTextures];
+                diagnostics.textureUploads.dynamicTextures, diagnostics.budgets.shadowMapSize];
         }", new { width, height });
         Assert.AreEqual(1, result[0], "Fireball must be bound through its authored GPU material.");
         Assert.IsTrue(result[1] > 0, "The authored emissive channel must survive actual GPU composition.");
         Assert.AreEqual(0, result[2], "Zero sources, ambient and emission must leave black world pixels.");
         Assert.AreEqual(2, result[3], "Exactly the authored albedo and emissive textures are registered.");
         Assert.AreEqual(0, result[4], "Unchanged GPU atlas resources cannot be recaptured as Canvas.");
+        Assert.AreEqual(width == 320 ? 256 : 512, result[5], "Shared GPU quality tier must control actual renderer shadow allocations.");
         var artifacts = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
         Directory.CreateDirectory(artifacts);
         await Page.Locator("#hunt-gpu-fireball-proof").ScreenshotAsync(new()
