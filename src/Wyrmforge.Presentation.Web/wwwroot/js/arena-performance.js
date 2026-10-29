@@ -33,7 +33,6 @@ export function initializeArena(canvas, dotNetReference) {
         statusCanvas: createStatusCanvas(),
         combatHud: getCombatHud(canvas),
         lastHudUpdate: 0,
-        lastPlaytestSample: 0,
         lastSampleFrame: 0,
         soundEvents: createSoundEventTracker(),
     };
@@ -102,12 +101,16 @@ async function invokeFrame(state, args) {
         for (const cue of collectSoundEvents(state.soundEvents, snapshot, now)) window.wyrmforgeAudio?.play(cue);
         drawStatusOverlay(state, snapshot);
         updateCombatHud(state, snapshot);
-        if (!snapshot.paused && now - state.lastPlaytestSample > 5000) {
-            const previousFrame = state.lastSampleFrame || now;
-            window.wyrmforgePlaytest?.performanceSample(now - previousFrame, snapshot.simulationMilliseconds ?? 0);
-            state.lastPlaytestSample = now;
+        // Record every active simulation frame, not one frame every five seconds.
+        // Pauses, game-over and hidden tabs do not count as mobile gameplay stutters.
+        if (!snapshot.paused && !snapshot.ended && !document.hidden) {
+            const interval = now - state.lastSampleFrame;
+            if (state.lastSampleFrame > 0 && interval > 0 && interval <= 1000)
+                window.wyrmforgePlaytest?.performanceSample(interval, snapshot.simulationMilliseconds ?? 0);
+            state.lastSampleFrame = now;
+        } else {
+            state.lastSampleFrame = 0;
         }
-        state.lastSampleFrame = now;
     }
     return snapshot;
 }
