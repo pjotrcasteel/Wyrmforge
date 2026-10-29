@@ -207,8 +207,9 @@ export function mountG4DeviceReview(canvas, getGpu, mode = 'canvas', quality = n
     return {
         session,
         record(timestamp, { playing, renderingFailed, gpuAvailable }) {
+            const wasRecording = session.recording;
             session.record(timestamp, { playing, renderingFailed, gpuAvailable, getGpu });
-            if (session.recording && timestamp - (this.lastDisplayAt ?? -Infinity) > 1000) {
+            if (wasRecording && (!session.recording || timestamp - (this.lastDisplayAt ?? -Infinity) > 1000)) {
                 updateStatus(timestamp);
                 this.lastDisplayAt = timestamp;
             }
