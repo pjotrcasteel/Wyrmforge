@@ -116,7 +116,7 @@ export function presentDamageNumber(number, mode = 'full', reducedMotion = false
     if (progress >= 1) return null;
     const periodic = Boolean(number.periodic);
     const family = tickFamily(number);
-    const prominent = Boolean(number.finisher || number.empowered);
+    const prominent = Boolean(number.finisher || number.empowered || number.heavy);
     const school = String(number.school ?? '').toLowerCase();
     const lane = ((Number(number.sequence) || 0) % 5 + 5) % 5 - 2;
     const motion = getMotion(family, progress, lane, reducedMotion, prominent);
@@ -129,7 +129,7 @@ export function presentDamageNumber(number, mode = 'full', reducedMotion = false
     // Finishers have strong typographic weight but no punctuation. A periodic finishing
     // tick keeps its heat/shiver/decay motion, never masquerading as a projectile impact.
     const color = number.finisher ? '#ffe5b1' :
-        !periodic && number.empowered ? '#f3d4a4' :
+        !periodic && (number.empowered || number.heavy) ? '#f3d4a4' :
         periodic ? TICK_PALETTES[family] : SCHOOL_COLORS[school] ?? '#ece6e3';
     const opacity = clamp((1 - progress) * (periodic ? 2.9 : prominent ? 3.8 : 3.2), 0, 1);
     const fontSize = clamp(size * intensity * motion.scale * (number.finisher && periodic ? 1.16 : 1), 9, 26);
