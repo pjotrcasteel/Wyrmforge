@@ -14,6 +14,7 @@ on:
       - 'tests/javascript/hunt-gpu-capture-revision.test.mjs'
       - 'tests/javascript/hunt-gpu-evidence-report.mjs'
       - 'tests/javascript/hunt-gpu-evidence-report.test.mjs'
+      - 'tests/javascript/g4-device-review.test.mjs'
       - 'tests/javascript/arena-gpu-fireball.test.mjs'
       - 'tests/Wyrmforge.Browser.Tests/HuntGpuAdapterBrowserTests.cs'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/art/lighting-proof/**'
@@ -39,7 +40,7 @@ jobs:
         with:
           dotnet-version: '10.0.x'
       - name: Registry and sprite binding regression tests
-        run: node --test tests/javascript/universal-lighting.test.mjs tests/javascript/arena-gpu-world.test.mjs tests/javascript/hunt-gpu-surface-contract.test.mjs tests/javascript/hunt-gpu-capture-revision.test.mjs tests/javascript/hunt-gpu-evidence-report.test.mjs tests/javascript/arena-gpu-fireball.test.mjs
+        run: node --test tests/javascript/universal-lighting.test.mjs tests/javascript/arena-gpu-world.test.mjs tests/javascript/hunt-gpu-surface-contract.test.mjs tests/javascript/hunt-gpu-capture-revision.test.mjs tests/javascript/hunt-gpu-evidence-report.test.mjs tests/javascript/arena-gpu-fireball.test.mjs tests/javascript/g4-device-review.test.mjs
       - name: Build tests and publish actual application
         run: |
           dotnet build tests/Wyrmforge.Browser.Tests -c Release
@@ -56,7 +57,7 @@ jobs:
             if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then break; fi
             sleep 1
           done
-          dotnet test tests/Wyrmforge.Browser.Tests -c Release --no-build --filter 'FullyQualifiedName~UniversalLightingBrowserTests|FullyQualifiedName~HuntGpuAdapterBrowserTests|FullyQualifiedName~Mobile_LiveHuntGpu_RendersActorsAndKeepsSimulationMoving'
+          dotnet test tests/Wyrmforge.Browser.Tests -c Release --no-build --filter 'FullyQualifiedName~UniversalLightingBrowserTests|FullyQualifiedName~HuntGpuAdapterBrowserTests|FullyQualifiedName~Mobile_LiveHuntGpu_RendersActorsAndKeepsSimulationMoving|FullyQualifiedName~Mobile_G4DeviceReview_RecordsRealHuntAndExportsEvidence'
       - name: Summarize real-game lighting evidence with quality and runtime metrics
         if: success()
         run: node tests/javascript/hunt-gpu-evidence-report.mjs artifacts/gpu-proof
