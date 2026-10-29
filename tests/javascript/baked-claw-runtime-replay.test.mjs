@@ -36,6 +36,8 @@ test('claw replay refuses missing pose grids or invalid render rates and motion 
     const p=fixture();delete p.actions.attack.poseGrid;
     assert.throws(()=>replayUnifiedClaw(p),TypeError);
     assert.throws(()=>replayUnifiedClaw(fixture(),{rates:[0]}),RangeError);
+    assert.throws(()=>replayUnifiedClaw(fixture(),{rates:[]}),RangeError);
+    assert.throws(()=>replayUnifiedClaw(fixture(),{entryPhases:[]}),RangeError);
     assert.throws(()=>replayUnifiedClaw(fixture(),{entryPhases:[1]}),RangeError);
     assert.throws(()=>replayUnifiedClaw(fixture(),{paths:['teleport']}),RangeError);
 });
