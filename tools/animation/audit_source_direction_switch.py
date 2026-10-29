@@ -89,7 +89,8 @@ def self_test():
         walk=clip([sample(x) for _ in range(16)])
         action=clip([sample(x) for _ in range(32)])
         action['poseGrid']={'phaseFrames':16,'actionFrames':2}
-        d={'skeleton':skeleton,'unitsPerPixel':.02,
+        # Distinct fixtures must not alias the same mutable rig dictionary.
+        d={'skeleton':[dict(b,rest=list(b['rest'])) for b in skeleton],'unitsPerPixel':.02,
            'clips':{'walk':walk,'attack-travel':action}}
         if lateral:d['experimentalLateralMotion']={'sourceStudyOnly':True,'acceptedForRuntime':False,'headingDegrees':90}
         return d
