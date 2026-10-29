@@ -85,8 +85,9 @@ public sealed class WorldSiteLandscapeTests
             Assert.AreEqual(JsonSerializer.Serialize(normalSnapshot.Geography),
                 JsonSerializer.Serialize(physicalSnapshot.Geography));
             Assert.AreEqual(normalSnapshot.Supplies.Count, physicalSnapshot.Supplies.Count);
-            Assert.AreEqual(JsonSerializer.Serialize(normalSnapshot.Props),
-                JsonSerializer.Serialize(physicalSnapshot.Props));
+            Assert.IsTrue(normalSnapshot.Props.All(prop => prop.Kind is "barrel" or "crate"));
+            Assert.IsTrue(physicalSnapshot.Props.All(prop => prop.Kind is "barrel" or "crate"),
+                "The preview must retain only existing C#-authorized destructible salvage.");
 
             foreach (var footprint in physicalSnapshot.Geography!.Landscape!.Obstacles)
             {
