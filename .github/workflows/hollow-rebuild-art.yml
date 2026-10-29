@@ -51,6 +51,7 @@ jobs:
           python -m py_compile tools/art/hollow-rebuild/check-scope.py
           python -m py_compile tools/art/hollow-rebuild/qc_h1_geometry.py
           python -m py_compile tools/art/hollow-rebuild/evaluate_free_character_blender.py
+          python -m py_compile tools/art/hollow-rebuild/sculpt_reference_hollowed_h1_blender.py
       - name: Verify new source-only anatomical sculpt constraints
         run: python tools/art/hollow-rebuild/test_feral_source_shape.py
 
@@ -283,6 +284,30 @@ jobs:
           assert q['gameplay_or_runtime_touched'] is False and q['owner_approved'] is False,q
           print('Source-only anatomical graft passed technical QC. ART NOT APPROVED.')
           PY
+      - name: Model owner's 29 Oct feral appearance silhouette on existing source only
+        run: |
+          python -m py_compile tools/art/hollow-rebuild/sculpt_reference_hollowed_h1_blender.py
+          python tools/art/hollow-rebuild/sculpt_reference_hollowed_h1_blender.py \
+            --input artifacts/hollow-rebuild/horror-real-head-h1/hollowed-h1-cc0-REAL-FACE-SKULL-JAW-UNAPPROVED.blend \
+            --output artifacts/hollow-rebuild/horror-owner-reference-h1
+          test -s artifacts/hollow-rebuild/horror-owner-reference-h1/hollowed-H1-owner-reference-SOURCE-UNAPPROVED.blend
+          test -s artifacts/hollow-rebuild/horror-owner-reference-h1/source-clay-8views-BLENDER.png
+          test -s artifacts/hollow-rebuild/horror-owner-reference-h1/source-material-8views-BLENDER.png
+          test -s artifacts/hollow-rebuild/horror-owner-reference-h1/source-material-native96-BLENDER.png
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('artifacts/hollow-rebuild/horror-owner-reference-h1/owner-reference-source-qc.json')
+          d=json.loads(p.read_text(encoding='utf-8'))
+          assert d['existing_bones']==70 and d['existing_shape_keys_preserved'],d
+          assert d['hair']['strands']>=75 and d['hair']['vertices']<5000,d
+          assert d['waist_wrap']['panels']>=15,d
+          assert d['char_back']['embedded_spines']>=10,d
+          assert d['animation_actions']==0 and d['animation_engine_modified'] is False,d
+          assert d['gameplay_modified'] is False and d['owner_approved'] is False,d
+          assert d['visual_parity_not_claimed'] is True,d
+          print('SOURCE GENERATED for owner reference. Genuine visual approval NOT implied.')
+          PY
       - name: Preserve 3D evidence; never ship candidate into WyrmForge runtime
         if: always()
         uses: actions/upload-artifact@v4
@@ -297,6 +322,7 @@ jobs:
             artifacts/hollow-rebuild/horror-anatomical-h1/
             artifacts/hollow-rebuild/horror-facial-v2/
             artifacts/hollow-rebuild/horror-real-head-h1/
+            artifacts/hollow-rebuild/horror-owner-reference-h1/
           if-no-files-found: warn
           retention-days: 30
 
