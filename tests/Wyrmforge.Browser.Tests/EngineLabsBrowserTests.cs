@@ -30,6 +30,20 @@ public sealed class EngineLabsBrowserTests : PageTest
                 await Expect(Page.GetByText("Dedicated", new() { Exact = false }).First)
                     .ToBeVisibleAsync();
                 await Expect(Page.Locator("iframe")).ToHaveCountAsync(0);
+
+                // GitHub Pages serves the application under /Wyrmforge/.
+                // Related real demos must not escape the Blazor document base.
+                var existingPreview = Page.GetByRole(AriaRole.Link, new() { Name = "Open existing related real preview" });
+                if (engine == "audio")
+                {
+                    await Expect(existingPreview).ToHaveCountAsync(0);
+                }
+                else
+                {
+                    var expected = engine == "lighting" ? "arena-light-engine" :
+                        engine == "animation" ? "enemy-lab" : "combat-lab";
+                    await Expect(existingPreview).ToHaveAttributeAsync("href", expected);
+                }
             }
         }
     }
