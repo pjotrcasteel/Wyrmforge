@@ -1,5 +1,6 @@
 ﻿using Wyrmforge.Domain.Combat.Projectiles;
 using Wyrmforge.Domain.Combat.Targets;
+using Wyrmforge.Domain.Combat.Statuses;
 using Wyrmforge.Domain.Spells;
 using Wyrmforge.Domain.Spells.Evolutions;
 using Wyrmforge.Domain.Spells.Synergies;
@@ -44,6 +45,8 @@ public sealed partial class RunSimulation
     private bool ApplyStatusDamage(ICombatTarget target, double delta)
     {
         var damagePerSecond = target.Statuses.DamagePerSecond();
-        return damagePerSecond > 0 && DamageTarget(target, damagePerSecond * delta);
+        return damagePerSecond > 0 && DamageTargetWithFeedback(target, damagePerSecond * delta,
+            spellId: target.Statuses.Has(CombatStatusId.Burning) ? SpellId.FireBolt : null,
+            periodic: true, feedbackFlavor: target.Statuses.Has(CombatStatusId.Burning) ? "Burn" : null);
     }
 }

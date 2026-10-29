@@ -52,6 +52,7 @@ public static class SaveLayout
         ["wyrmforge.hall-of-fame.pending.v1"] = SaveDomain.Endgame,
         ["wyrmforge.preferredPrimary.v1"] = SaveDomain.Preferences,
         ["wyrmforge.townLighting.v1"] = SaveDomain.Preferences,
+        ["wyrmforge.damage-numbers.v1"] = SaveDomain.Preferences,
         ["wyrmforge.reviewPrompt.v1"] = SaveDomain.Preferences,
         ["wyrmforge.audio.enabled.v1"] = SaveDomain.Preferences,
         ["wyrmforge.audio.combat.v1"] = SaveDomain.Preferences,

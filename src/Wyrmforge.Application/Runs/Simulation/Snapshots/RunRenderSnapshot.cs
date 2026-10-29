@@ -25,6 +25,8 @@ public sealed record RunRenderSnapshot(
     IReadOnlyList<ExperiencePickupRenderSnapshot>? ExperiencePickups = null)
 {
     public IReadOnlyList<AshfangEffectRenderSnapshot> AshfangEffects { get; init; } = [];
+
+    public IReadOnlyList<DamageNumberRenderSnapshot> DamageNumbers { get; init; } = [];
     public bool PresentationPaused { get; init; }
     public DragonRenderSnapshot? DragonDefeat { get; init; }
     public GpuLightingFrame? Lighting { get; init; }

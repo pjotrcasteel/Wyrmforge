@@ -39,6 +39,14 @@
 
 **Rollout:** AI Lab was introduced through [AI2–AI6 PR #364](https://github.com/pjotrcasteel/Wyrmforge/pull/364), merged 29 October 2026 (lab and device acceptance still require verification). Other stable routes may initially show honestly labelled pending status and links to existing proofs. Their **interactive demo acceptance** belongs to the owning engine PR/milestones; do not claim it completed by providing only a placeholder or an iframe.
 
+### Combat Feedback & Damage Numbers — CF1 (additive slice; PR #398)
+
+**Owner-approved gameplay presentation addition, 29 October 2026.** Floating damage numbers are a consumer of the **existing authoritative C# combat simulation**, not a new damage or animation engine. C# publishes actual post-defense HP loss with stable sequence, target location, school, surge and killing-blow traits through the existing run snapshot. A reusable Canvas presentation module handles movement, pixel-sized typography, Gothic contrast, 320/390px layout, reduced motion, pooling/budget and Full / Minimal / Off preference.
+
+**Current state:** CF1 implemented and CI validated in [PR #398](https://github.com/pjotrcasteel/Wyrmforge/pull/398). Owner authorized merging this working version on 29 October 2026; further visual refinement and genuine-device performance review remain follow-up tasks. Damage labels use actual C# combat results and never invent critical hits or periodic status damage.
+
+**Dependency rule:** do not modify the in-flight Hollowed art, shared animation engine, universal lighting renderer or AI milestones. CF1 is an isolated presentation adapter and does not reorder the locked ENG → G4/G5 → AI priorities.
+
 ### Post-Hollowed unified-engine consolidation — ENG0–ENG4 (next architectural checkpoint)
 
 **Trigger:** after the current cape-free Hollowed animation/appearance improvements, including [#385](https://github.com/pjotrcasteel/Wyrmforge/pull/385) and relevant parallel animation work, have completed their tests **and received owner visual approval**. In-progress Hollowed art is not to be interrupted or merged prematurely. This checkpoint is **one of the very first pieces of work after Hollowed**, before adding new feature-specific physics/VFX/animation implementations.
