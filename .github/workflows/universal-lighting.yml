@@ -6,9 +6,12 @@ on:
     paths:
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/**'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-fireball.js'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/arena-fireball-v5.js'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/hunt-gpu-layers.js'
       - 'tests/javascript/arena-gpu-world.test.mjs'
       - 'tests/javascript/hunt-gpu-surface-contract.test.mjs'
+      - 'tests/javascript/arena-gpu-fireball.test.mjs'
       - 'tests/Wyrmforge.Browser.Tests/HuntGpuAdapterBrowserTests.cs'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/art/lighting-proof/**'
       - 'src/Wyrmforge.Presentation.Web/Pages/ArenaLightEngine*'
@@ -33,7 +36,7 @@ jobs:
         with:
           dotnet-version: '10.0.x'
       - name: Registry and sprite binding regression tests
-        run: node --test tests/javascript/universal-lighting.test.mjs tests/javascript/arena-gpu-world.test.mjs tests/javascript/hunt-gpu-surface-contract.test.mjs
+        run: node --test tests/javascript/universal-lighting.test.mjs tests/javascript/arena-gpu-world.test.mjs tests/javascript/hunt-gpu-surface-contract.test.mjs tests/javascript/arena-gpu-fireball.test.mjs
       - name: Build tests and publish actual application
         run: |
           dotnet build tests/Wyrmforge.Browser.Tests -c Release
