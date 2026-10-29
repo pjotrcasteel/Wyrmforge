@@ -53,13 +53,16 @@ public sealed partial class RunSimulation
         if (target is EnemyState or DragonState) hitFlashRemaining[target.Id] = HitFlashSeconds;
     }
 
-    private void RegisterDamageNumber(ICombatTarget target, double amount, SpellId? spell, bool finisher, bool empowered, bool periodic)
+    private void RegisterDamageNumber(ICombatTarget target, double amount, SpellId? spell, bool finisher, bool empowered,
+        bool periodic, string? flavor = null)
     {
         if (amount <= 0) return;
         var school = SpellCatalog.Get(spell ?? build.Spells.ActiveSpell).School.ToString();
+        // No synthetic crits or elemental ailments: these labels describe damage the simulation actually applied.
+        var kind = flavor ?? (periodic ? "Periodic" : "Impact");
         var matching = damageNumbers.LastOrDefault(number =>
             number.TargetId == target.Id && number.IsDragon == (target is DragonState) &&
-            number.School == school && number.Periodic == periodic && !number.Finisher &&
+            number.School == school && number.Flavor == kind && number.Periodic == periodic && !number.Finisher &&
             number.Age <= (periodic ? 0.30 : 0.12));
 
         if (matching is not null)
@@ -71,12 +74,13 @@ public sealed partial class RunSimulation
         }
 
         if (damageNumbers.Count >= MaxDamageNumbers) damageNumbers.RemoveAt(0);
-        damageNumbers.Add(new DamageNumberState(++nextDamageNumberSequence, target, amount, school, finisher, empowered, periodic));
+        damageNumbers.Add(new DamageNumberState(++nextDamageNumberSequence, target, amount, school, kind, finisher, empowered, periodic));
     }
 
     private IReadOnlyList<DamageNumberRenderSnapshot> CreateDamageNumberSnapshots() =>
         damageNumbers.Select(number => new DamageNumberRenderSnapshot(number.Sequence, number.X, number.Y,
-            number.Amount, number.School, number.Progress, number.Finisher, number.Empowered, number.Periodic)).ToArray();
+            number.Amount, number.School, number.Progress, number.Finisher, number.Empowered, number.Periodic)
+            { Flavor = number.Flavor }).ToArray();
 
     private void RegisterSplashPulse(Vector2D position, double radius, double duration = SplashPulseSeconds) => splashPulses.Add(new SplashPulseState(position, radius, duration));
 
@@ -96,15 +100,17 @@ public sealed partial class RunSimulation
         if (value > 0) experiencePickupPulses.Add(new ExperiencePickupPulseState(player.Position, value, ExperiencePickupPulseSeconds));
     }
 
-    private sealed class DamageNumberState(long sequence, ICombatTarget target, double amount, string school, bool finisher,
-        bool empowered, bool periodic)
+    private sealed class DamageNumberState(long sequence, ICombatTarget target, double amount, string school, string flavor,
+        bool finisher, bool empowered, bool periodic)
     {
         public long Sequence { get; } = sequence;
         public int TargetId { get; } = target.Id;
         public bool IsDragon { get; } = target is DragonState;
         public double X { get; } = target.Position.X;
-        public double Y { get; } = target.Position.Y - Math.Min(36, target.Radius * 1.1 + 6);
+        // Numbers originate ABOVE the shoulders so the foot-centered targeting sigil remains unobstructed.
+        public double Y { get; } = target.Position.Y - Math.Min(54, target.Radius * 1.35 + 17);
         public string School { get; } = school;
+        public string Flavor { get; } = flavor;
         public bool Periodic { get; } = periodic;
         public double Amount { get; set; } = amount;
         public bool Finisher { get; set; } = finisher;
