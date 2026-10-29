@@ -92,7 +92,9 @@ export class HuntGpuWorld {
     }
     diagnostics() {
         return { ...this.engine.diagnostics(), textureUploads: this.lastFrameUploads,
-            authoredTextures: this.engine.textures.size - this.layers.size, canvasCaptures: this.layers.size };
+            authoredTextures: this.engine.textures.size - this.layers.size, canvasCaptures: this.layers.size,
+            // CPU submission only. True GPU time, thermals and battery need physical devices.
+            submissionCpu: this.submissionCpu ?? { frames: 0, lastMs: 0, meanMs: 0, peakMs: 0 } };
     }
     begin(ctx, camera, width, height) {
         this.camera = camera; this.width = width; this.height = height;
@@ -124,6 +126,7 @@ export class HuntGpuWorld {
             huntSurfaceMaterial(id, surface.material, Boolean(source)));
     }
     render(ctx, frame) {
+        const began = performance.now();
         const engine = this.engine;
         engine.apply({ ...huntLightFrame(frame, this.camera, { width: this.width, height: this.height }), materials: this.materials, objects: this.objects });
         // Only repainted Canvas sources need a new upload. Static authored textures and
@@ -157,6 +160,11 @@ export class HuntGpuWorld {
         for (const [id, layer] of this.layers) if (!this.used.has(id)) {
             engine.textures.delete(id); layer.texture.dispose(); this.layers.delete(id);
         }
+        const elapsed = Math.max(0, performance.now() - began);
+        const previous = this.submissionCpu;
+        this.submissionCpu = { frames: (previous?.frames ?? 0) + 1, lastMs: elapsed,
+            meanMs: previous?.frames ? previous.meanMs * .9 + elapsed * .1 : elapsed,
+            peakMs: Math.max(previous?.peakMs ?? 0, elapsed) };
     }
     dispose() { this.engine.dispose(); this.layers.clear(); }
 }
