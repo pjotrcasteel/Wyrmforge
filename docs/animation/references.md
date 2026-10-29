@@ -12,3 +12,15 @@ These principles are applied to the existing cape-free skinned Hollowed, UVs and
 ## 29 October — orientation / stride constraints
 
 [Unreal Engine pose warping documentation](https://dev.epicgames.com/documentation/en-us/unreal-engine/pose-warping-in-unreal-engine) describes aligning lower-body IK with locomotion and distributing counter-rotation along spine joints while preserving upper-body facing. The transferable principle is constrained skeletal orientation and source-referenced stride adaptation; no Unreal code, assets or Blueprint runtime is imported. Wyrmforge keeps one existing animation clock, actual C# root motion, explicit profile limits and independent saved-skin verification. The earlier [Spine IK reference](https://esotericsoftware.com/spine-ik-constraints) remains relevant to fixed-length constrained limb solving. Neither reference establishes this candidate's visual acceptance.
+
+## 29 October - actual skin deformation
+
+[Kavan et al., Skinning with Dual Quaternions (2007)](https://users.cs.utah.edu/~ladislav/kavan07skinning/kavan07skinning.pdf)
+is the primary mathematical reference for blending rigid rotation/translation
+without the joint collapse of linear matrix blending. The original saved
+Blender Armature modifier actually enables preserve volume. Our implementation
+declares that mode, aligns quaternion hemispheres, normalizes the weighted pair
+and rejects unsupported nonrigid bone transforms. No source code or assets were
+copied. The independent NumPy reference is checked against every evaluated vertex
+in sampled saved-Blender poses, then GPU raster output is compared with CPU
+evaluation. Matching bone endpoints or pure-foot vertices alone was insufficient.

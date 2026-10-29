@@ -1,0 +1,36 @@
+{
+  "scene": "real-first-trail",
+  "mobileEmulated": false,
+  "candidate": false,
+  "inspection": "lit",
+  "physicalDevice": false,
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "samples": 223,
+  "solveFailures": [],
+  "maximumProjectedSoleDrift": 0,
+  "gpuErrors": [],
+  "video": "C:\\Wyrmforge\\artifacts\\an-final-first-trail-baseline\\page@9c5f4b4a1a5fc483fca7c1aeaf322e75.webm",
+  "errors": [],
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "failedResources": [
+    {
+      "url": "http://127.0.0.1:50940/art/environment/wet-forest-source-backed/v1/grass-moss-art-candidates/grass-moss-ART-CANDIDATE-02.png",
+      "status": 404
+    },
+    {
+      "url": "http://127.0.0.1:50940/art/environment/wet-forest-source-backed/v1/wet-mud-art-candidates/wet-mud-INDEPENDENT-ART-CANDIDATE-02.png",
+      "status": 404
+    },
+    {
+      "url": "http://127.0.0.1:50940/art/environment/wet-forest-source-backed/v1/trampled-earth-art-candidates/trampled-earth-INDEPENDENT-ART-CANDIDATE-02.png",
+      "status": 404
+    }
+  ]
+}

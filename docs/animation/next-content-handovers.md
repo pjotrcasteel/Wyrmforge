@@ -1,7 +1,18 @@
-# Next content handovers — blocked until AN0–AN6 is actually accepted
+# Next content handovers - after owner acceptance of the AN review candidate
 
-These are bounded future content tasks, not authorization to skip the foundation's
-current failed runtime contact gate. Read docs/animation/AN-status.md first.
+The foundation now has an independently checked source-skin review package.
+Read [current status](AN-status.md), [developer API](developer-reference.md) and
+[final evidence](evidence/20261029/README.md). These are future content tasks;
+owner visual acceptance is still required. After acceptance, execute the bounded
+[ENG0-ENG4 consolidation checkpoint](../canon/roadmap.md#post-hollowed-unified-engine-consolidation--eng0eng4-next-architectural-checkpoint)
+before extending feature-specific systems. Preserve parallel #390/#391 art,
+#385 variants and #381 Hunt-GPU work; this PR does not approve their content.
+
+Current source: `art/source/animation-foundation/catch-step-20261029/`.
+Reuse its actual Armature deformation declaration, protected contact surfaces,
+one shared lifecycle and full-body support/renderer contracts. Do not revive the
+rejected linear-skin, holed decimation or regional affine PNG studies. Re-run
+actual weighted-vertex source comparison as well as bone/sole checks for new art.
 
 ## Remaining upright Hollowed
 Use only sprite-animation.js, the shared compositor, rig/profile metadata and

@@ -363,7 +363,9 @@ function updateContactAnimation(state,profile,input){
             const yawStep=Math.max(-s.turnRadiansPerSecond*dt,Math.min(s.turnRadiansPerSecond*dt,difference));
             state.sourceYaw+=yawStep;
             const motionAdvance=state.sourceSupportPhaseCycles-sourceCycleBefore,phaseSign=motionAdvance?Math.sign(motionAdvance):state.sourcePhaseDirection??1;
-            state.sourceSupportPhaseCycles+=Math.abs(yawStep)*s.turnCyclesPerRadian*phaseSign;
+            // Translation and turning use the same step, rather than charging
+            // two gait cycles for simultaneous motion of the same feet.
+            state.sourceSupportPhaseCycles+=Math.max(0,Math.abs(yawStep)*s.turnCyclesPerRadian-Math.abs(motionAdvance))*phaseSign;
             state.phase=(state.sourceSupportPhaseCycles%1+1)%1;
         }
         const sourceAdvance=state.sourceSupportPhaseCycles-sourceCycleBefore;if(sourceAdvance)state.sourcePhaseDirection=Math.sign(sourceAdvance);

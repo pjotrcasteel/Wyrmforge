@@ -1,10 +1,12 @@
 // Replays captured C# observations through the real adapter in an isolated state.
 // Does not issue gameplay input or change the simulation.
-const fs=require('fs'),{chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
+const fs=require('fs'),path=require('path'),{chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 (async()=>{
  const browser=await chromium.launch({executablePath:process.env.CHROMIUM_EXECUTABLE,args:['--no-sandbox']});
  try{
-  const page=await browser.newPage();await page.goto((process.env.WYRMFORGE_BASE_URL||'http://127.0.0.1:4173')+'/?animationFoundation=1');
+  const page=await browser.newPage();
+  if(process.env.AN_ASSET_ROOT)await page.route('**/art/review/animation-foundation-skin/**',route=>route.fulfill({path:path.join(process.env.AN_ASSET_ROOT,path.basename(new URL(route.request().url()).pathname))}));
+  await page.goto((process.env.WYRMFORGE_BASE_URL||'http://127.0.0.1:4173')+'/?animationFoundation=1');
   await page.evaluate(async()=>{window.__h=await import('/js/hollow-sprites.js');await window.__h.preloadHollowSprites();});
   await page.waitForFunction(()=>window.__h.hollowDiagnostics(window.__h.createHollowState()).foundation.ready,{},{timeout:60000});
   const trace=JSON.parse(fs.readFileSync(process.argv[2])),result=await page.evaluate(async ({trace,capturePoses})=>{

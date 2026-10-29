@@ -1,0 +1,21 @@
+{
+  "expectedWebglUnavailable": false,
+  "fallbackCanvasPixels": null,
+  "scene": "real-development-encounter",
+  "mobileEmulated": true,
+  "candidate": true,
+  "inspection": "neutral-lit",
+  "physicalDevice": false,
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "samples": 231,
+  "solveFailures": [],
+  "maximumProjectedSoleDrift": 6.355297129704656e-14,
+  "gpuErrors": [],
+  "video": "C:\\Wyrmforge\\artifacts\\an-review-catch-390\\page@5602c8d5518072dbea60e315d70f1168.webm",
+  "errors": [],
+  "consoleErrors": [],
+  "failedResources": []
+}

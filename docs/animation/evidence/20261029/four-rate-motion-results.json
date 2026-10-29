@@ -1,0 +1,290 @@
+[
+  {
+    "entityId": 1,
+    "name": "forward",
+    "hz": 15,
+    "count": 61,
+    "maxShift": 0.12412201228150133,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "forward",
+    "hz": 30,
+    "count": 121,
+    "maxShift": 0.12412201228150133,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "forward",
+    "hz": 60,
+    "count": 241,
+    "maxShift": 0.12412201228150133,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "forward",
+    "hz": 120,
+    "count": 481,
+    "maxShift": 0.12412201228150133,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "side",
+    "hz": 15,
+    "count": 61,
+    "maxShift": 0.1435796316675879,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "side",
+    "hz": 30,
+    "count": 121,
+    "maxShift": 0.14143716780407312,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "side",
+    "hz": 60,
+    "count": 241,
+    "maxShift": 0.1576536850321881,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "side",
+    "hz": 120,
+    "count": 481,
+    "maxShift": 0.15449999813498216,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "back",
+    "hz": 15,
+    "count": 61,
+    "maxShift": 0.12412201228150133,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "back",
+    "hz": 30,
+    "count": 121,
+    "maxShift": 0.12531056978034483,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "back",
+    "hz": 60,
+    "count": 241,
+    "maxShift": 0.12412201228150133,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "back",
+    "hz": 120,
+    "count": 481,
+    "maxShift": 0.12412201228150133,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "corner",
+    "hz": 15,
+    "count": 61,
+    "maxShift": 0.21411875107472858,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "corner",
+    "hz": 30,
+    "count": 121,
+    "maxShift": 0.24800716823250596,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "corner",
+    "hz": 60,
+    "count": 241,
+    "maxShift": 0.26146542509373016,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "corner",
+    "hz": 120,
+    "count": 481,
+    "maxShift": 0.2697314777178694,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "reverse",
+    "hz": 15,
+    "count": 61,
+    "maxShift": 0.1251183652130575,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "reverse",
+    "hz": 30,
+    "count": 121,
+    "maxShift": 0.12519007372371532,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "reverse",
+    "hz": 60,
+    "count": 241,
+    "maxShift": 0.12412201228150133,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "reverse",
+    "hz": 120,
+    "count": 481,
+    "maxShift": 0.12412201228150133,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "idle",
+    "hz": 15,
+    "count": 61,
+    "maxShift": 0.127279860790834,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "idle",
+    "hz": 30,
+    "count": 121,
+    "maxShift": 0.127279860790834,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "idle",
+    "hz": 60,
+    "count": 241,
+    "maxShift": 0.127279860790834,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "idle",
+    "hz": 120,
+    "count": 481,
+    "maxShift": 0.127279860790834,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "turn",
+    "hz": 15,
+    "count": 61,
+    "maxShift": 0.14681804441509727,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "turn",
+    "hz": 30,
+    "count": 121,
+    "maxShift": 0.14985801393078185,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "turn",
+    "hz": 60,
+    "count": 241,
+    "maxShift": 0.1500202588319719,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "turn",
+    "hz": 120,
+    "count": 481,
+    "maxShift": 0.14999821057284018,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "arc",
+    "hz": 15,
+    "count": 61,
+    "maxShift": 0.13601728135266075,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "arc",
+    "hz": 30,
+    "count": 121,
+    "maxShift": 0.14770153864788374,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "arc",
+    "hz": 60,
+    "count": 241,
+    "maxShift": 0.14314490581337555,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "arc",
+    "hz": 120,
+    "count": 481,
+    "maxShift": 0.14125791163410473,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "startstop",
+    "hz": 15,
+    "count": 61,
+    "maxShift": 0.12412201228150133,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "startstop",
+    "hz": 30,
+    "count": 121,
+    "maxShift": 0.12412201228150133,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "startstop",
+    "hz": 60,
+    "count": 241,
+    "maxShift": 0.12412201228150133,
+    "error": null
+  },
+  {
+    "entityId": 1,
+    "name": "startstop",
+    "hz": 120,
+    "count": 481,
+    "maxShift": 0.12412201228150133,
+    "error": null
+  }
+]

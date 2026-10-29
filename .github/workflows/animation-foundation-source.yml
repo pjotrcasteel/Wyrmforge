@@ -3,6 +3,12 @@ on:
   pull_request:
     paths:
       - 'tools/animation/**'
+      - 'art/source/animation-foundation/**'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/source-skin*.js'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/source-skin*.js'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/sprite-animation.js'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/sprite-contact-kinematics.js'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/art/review/animation-foundation-skin/**'
       - 'art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-zombie-reach-v3-standard/**'
       - '.github/workflows/animation-foundation-source.yml'
   workflow_dispatch:
@@ -21,12 +27,16 @@ jobs:
           sparse-checkout: |
             tools/animation
             src/Wyrmforge.Presentation.Web/wwwroot/js
+            art/source/animation-foundation/catch-step-20261029
             art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-zombie-reach-v3-standard
       - uses: actions/cache@v4
         id: blender
         with:
           path: .cache/blender-4.5.3-linux-x64
           key: animation-source-blender-4.5.3-linux-x64-975c58fc
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
       - name: Restore pinned official Blender runtime
         if: steps.blender.outputs.cache-hit != 'true'
         shell: bash
@@ -104,10 +114,25 @@ jobs:
           "$BLENDER_BIN" -b -t 2 --python-exit-code 1 --python tools/animation/export_pose_metadata.py -- "$SOURCE" --out "$SOURCE/pose-data.json"
           node tools/animation/check_supported_trajectories.mjs "$SOURCE/pose-data.json" "$SOURCE/source-follow-study.json" --source-follow
           "$BLENDER_BIN" -b -t 2 --python-exit-code 1 --python tools/animation/validate_reposed_skin.py -- "$SOURCE" "$SOURCE/source-follow-study.json" --raster-every 20
+      - name: Verify final preserve-volume catch-step source and actual weighted runtime mesh
+        shell: bash
+        run: |
+          set -euo pipefail
+          BLENDER_BIN="$PWD/.cache/blender-4.5.3-linux-x64/blender"
+          SOURCE=art/source/animation-foundation/catch-step-20261029
+          PACK=artifacts/animation-catch-step-ci
+          python3 -m pip install numpy==2.3.3
+          "$BLENDER_BIN" -b -t 2 --python-exit-code 1 --python tools/animation/validate_source.py -- "$SOURCE"
+          python3 tools/animation/test_source_qc.py "$SOURCE" --blender "$BLENDER_BIN"
+          "$BLENDER_BIN" -b -t 2 --python-exit-code 1 --python tools/animation/export_source_skin.py -- "$SOURCE" --out "$PACK" --triangles 12000 --load-ramp-fraction 0.15 --lateral-stride-metres 0.22 --guide-poses --orientation-warp-degrees 60 --balance-joint-degrees 10 --protect-contact-surfaces --middle-ground-clearance-metres 0.1
+          AN_SEEDS=32 AN_CAPTURE_ENTITY=29 AN_INITIAL_MOVING=1 node tools/animation/check_shared_skin_trajectories.mjs "$PACK" "$PACK/runtime-poses.json" > "$PACK/seed-results.json"
+          python3 tools/animation/validate_runtime_skin_geometry.py "$PACK" "$PACK/runtime-poses.json" --out "$PACK/weighted-runtime-qc.json"
+          "$BLENDER_BIN" -b -t 2 --python-exit-code 1 --python tools/animation/validate_preserve_volume_mesh.py -- "$PACK" "$PACK/runtime-poses.json" --out "$PACK/evaluated-blender-qc.json"
       - uses: actions/upload-artifact@v4
         with:
           name: animation-foundation-editable-source-and-actual-mesh-qc
           path: |
+            artifacts/animation-catch-step-ci/
             artifacts/animation-source-ci/hollow-foundation.blend
             artifacts/animation-source-ci/source-manifest.json
             artifacts/animation-source-ci/independent-source-qc.json

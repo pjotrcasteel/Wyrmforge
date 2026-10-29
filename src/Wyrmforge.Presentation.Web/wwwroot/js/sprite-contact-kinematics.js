@@ -180,6 +180,10 @@ export function solveSupportedSourcePose(frame,targets,options){
         }
         const distance=Math.hypot(dx,dy);if(distance>.025){dx*=.025/distance;dy*=.025/distance;}
         const next=[bodyShift[0]+dx,bodyShift[1]+dy,bodyShift[2]];
+        const nextLength=Math.hypot(...next);
+        if(joint&&pass<24&&nextLength>maxBodyTranslation&&Math.hypot(...bodyShift)<maxBodyTranslation-1e-7){
+            bodyShift=next.map(n=>n*maxBodyTranslation/nextLength);continue;
+        }
         if(joint&&(pass>=24||Math.hypot(...next)>maxBodyTranslation)){
             const pivot=posed[joint.bone].head;
             const lever=joint.descendants.reduce((sum,id)=>sum+(massWeights[id]??0)*((posed[id].head[2]+posed[id].tail[2])/2-pivot[2]),0)/totalMass;

@@ -1,0 +1,8 @@
+{
+  "mode": "dual-quaternion",
+  "poses": 47,
+  "verticesPerPose": 12555,
+  "maximumEvaluatedVertexErrorMetres": 2.087652674822652e-06,
+  "geometrySha256": "7a8acbf5f11db4de8ac07bf10e55eb1d278ba65c01cc767816782aa22774ecfe",
+  "runtimeAccepted": false
+}

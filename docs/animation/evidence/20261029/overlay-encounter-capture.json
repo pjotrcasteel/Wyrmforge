@@ -1,0 +1,21 @@
+{
+  "expectedWebglUnavailable": false,
+  "fallbackCanvasPixels": null,
+  "scene": "real-development-encounter",
+  "mobileEmulated": false,
+  "candidate": true,
+  "inspection": "albedo",
+  "physicalDevice": false,
+  "viewport": {
+    "width": 320,
+    "height": 844
+  },
+  "samples": 225,
+  "solveFailures": [],
+  "maximumProjectedSoleDrift": 6.355289856662315e-14,
+  "gpuErrors": [],
+  "video": "C:\\Wyrmforge\\artifacts\\an-review-catch-320-overlay\\page@7a421c45d74f8a7c0d353f74bf851138.webm",
+  "errors": [],
+  "consoleErrors": [],
+  "failedResources": []
+}

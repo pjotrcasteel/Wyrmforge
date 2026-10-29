@@ -2,7 +2,25 @@
 
 **NOT FINISHED. Keep PR #387 draft and unmerged. No final visual approval requested.**
 
-## Preserve-volume audit — 29 October 2026 (in progress)
+## Current continuity audit - 29 October 2026
+
+The public candidate is the 0.65-duty catch-step source preserved at `0c57b3e12`.
+Its complete weighted skin, actual sole geometry, source deformation mode and
+real C# Hunt captures pass their checks. The later continuity audit still finds
+abrupt torso transfers. This remains an AN4/AN6 blocker, not artistic acceptance.
+The provisional [movies, native views and receipts](evidence/20261029/README.md)
+are preserved. Retaining the previous body fit did not solve the problem and is
+rejected. Shorter-stride, longer-stance and slower-orientation studies have
+reach/support failures on seeds or actual roots and are not promoted.
+
+The shared lifecycle no longer charges simultaneous translation and turning as
+two gait steps. Bounded fitting consumes remaining translation space before
+using the authored spine allowance. Current JS: 585/585. These changes need
+fresh source/Hunt/continuity validation before final owner review. Main remains
+`750e56ab7`, already merged. Parallel #390/#391 art, #385 variants and #381 GPU
+work remain intact. Keep working; this checkpoint does not close AN6.
+
+## Preserve-volume audit â€” 29 October 2026 (in progress)
 
 The source Armature modifier uses preserve-volume dual-quaternion deformation.
 The earlier linear GPU backend matched bones and pure-foot patches but did not

@@ -1,8 +1,79 @@
 # Shared character animation developer reference
 
-Status: candidate API in draft PR #387. [Acceptance evidence and open gates](AN-status.md).
+Status: source-skin review candidate in draft PR #387. [Gate audit and evidence](AN-status.md).
 Canon: [art](../canon/art-and-animation.md#universal-animation-foundation--an0an6-27-october-2026),
 [authority](../canon/architecture-and-quality.md#locked--unified-engine-ownership-and-event-authority-27-october-2026).
+
+## Current source-skin path - 29 October 2026
+
+The supported candidate uses the complete saved rig, not the earlier regional
+PNG deformation experiments documented later in this file. Its editable source
+is [catch-step-20261029](../../art/source/animation-foundation/catch-step-20261029/README.md).
+The [review package](evidence/20261029/README.md) includes actual C# Hunt movies,
+native eight-view comparisons, source/contact overlays and reproduction commands.
+Final visual acceptance remains with the owner; keep the PR draft.
+
+Use `createCreatureAnimationAssets(baseUrl)` in `creature-animation-assets.js`
+as the sole resource owner. `await assets.preload()` atomically checks the hashes
+of `manifest.json`, `profile.json`, `skin.json`, `skin.bin`, `poses.json` and the
+original albedo. Failure retains the adapter's existing approved presentation.
+Do not load a second atlas or start a separate source animation timer.
+
+```js
+const state = createSpriteAnimationState(); // one per stable actor
+const contacts = {};                       // same lifetime as that actor
+const sample = updateSpriteAnimation(state, assets.profile, intent);
+const supported = assets.updateSkin(contacts, sample, {
+  timestamp: intent.timestamp, world: intent.world, scale: intent.scale,
+  paused: intent.paused, frozen: intent.frozen
+});
+const descriptor = assets.renderDescriptor(supported);
+// Existing scene adapter registers descriptor.skin geometry/material once,
+// then submits supported.skinPose through LightingEngine's skinPose contract.
+```
+
+The one shared lifecycle owns gait phase, signed observed travel, source yaw,
+bounded hip/spine orientation, action commitment, recovery and stopped settling.
+`source-skin-support.js` consumes that sample; it does not advance time or choose
+an action. `sprite-contact-kinematics.js` fits the complete skeleton to retained
+world soles, actual joint limits, finite support hulls and source segment masses.
+An optional `minimumMiddleGroundClearance` on each source chain constrains its
+knee/elbow bend around the fixed hip/ankle axis. It cannot stretch either segment
+or move the planted sole. Torso balance has an explicit source angular bound.
+The solver checks both minimum and maximum planted reach before fitting mass.
+
+`LightingEngine.registerGeometry(id, geometry, {skinBinding})` accepts the
+`SourceSkinBinding` contract in `lighting/contracts.d.ts`: ordered bones with
+global rest matrices, 1-4 influence sets (4-16 weights), motion bounds and declared
+`linear` or `dual-quaternion` deformation. The geometry and pose manifests must
+agree on that mode. Dual-quaternion skinning requires rigid bone deformations;
+animated bone scale/shear is rejected rather than discarded. Uniform actor
+scale remains a scene transform. All original weights are retained.
+
+Each actor has its own skeleton and preserve-volume texture. Lit, normal,
+depth, distance and inspection passes use the same weighted skin deformation;
+CPU bounds/raycast skin queries agree with it. Disposal releases actor textures,
+skeletons and custom shadow materials. A texture/normal map never substitutes
+for a real geometric caster. All-light/ambient/emission OFF renders black.
+
+The reused `HuntGpuWorld` adapter derives camera elevation, ground basis,
+height projection, ground offset and model units from the source descriptor.
+Do not introduce creature-specific renderer constants. The current gate is
+`?animationFoundation=1&arenaGpu=1`; without it, default production art is used.
+Only healthy standard proof bodies participate, with the nearest 12 CPU/GPU
+actors bounded together. Injuries, hit/frozen/reduced-motion presentation,
+overflow and rejected solves retain their approved existing art. A replay seek,
+teleport, actor scale change or budget re-entry starts fresh contact state.
+
+`?animationContacts=1` draws the actual source bones, sole patches and mass.
+`setArenaLightingInspection(canvas, 'neutral-lit')` adds a clearly diagnosed
+developer light through the existing light registry. `'albedo'`, `'normals'`
+and other inspection views use that same engine. `'lit'` restores actual C#
+lighting. These are inspection controls, not gameplay or production light data.
+
+The following sections preserve older API/export studies. Their regional-raster
+limits do not describe the current complete-skin backend, and their failed
+experiments must not be promoted as alternative engines.
 
 ## Public entry points
 

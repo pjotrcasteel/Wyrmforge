@@ -1,0 +1,4 @@
+Test run for C:\Wyrmforge\tests\Wyrmforge.Domain.Tests\bin\Debug\net10.0\Wyrmforge.Domain.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:   393, Skipped:     0, Total:   393, Duration: 445 ms - Wyrmforge.Domain.Tests.dll (net10.0)

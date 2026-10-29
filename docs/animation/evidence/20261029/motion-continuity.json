@@ -1,0 +1,227 @@
+{
+  "sourceStudyOnly": true,
+  "visualAccepted": false,
+  "measurement": "projected complete-pose pelvis and actual sole landmark; native source pixels",
+  "samples": 3240,
+  "largestPelvisSteps": [
+    {
+      "scenario": "arc",
+      "time": 2.533333333333333,
+      "id": "pelvis",
+      "dt": 0.033333333333333215,
+      "nativePixels": 7.607592671741946,
+      "nativePixelsPerSecond": 228.2277801522592,
+      "planted": null
+    },
+    {
+      "scenario": "corner",
+      "time": 1.3666666666666667,
+      "id": "pelvis",
+      "dt": 0.03333333333333344,
+      "nativePixels": 7.281484750036264,
+      "nativePixelsPerSecond": 218.44454250108726,
+      "planted": null
+    },
+    {
+      "scenario": "arc",
+      "time": 3.533333333333333,
+      "id": "pelvis",
+      "dt": 0.033333333333333215,
+      "nativePixels": 6.892571299720528,
+      "nativePixelsPerSecond": 206.77713899161657,
+      "planted": null
+    },
+    {
+      "scenario": "arc",
+      "time": 2.2333333333333334,
+      "id": "pelvis",
+      "dt": 0.033333333333333215,
+      "nativePixels": 6.6999571898312205,
+      "nativePixelsPerSecond": 200.99871569493732,
+      "planted": null
+    },
+    {
+      "scenario": "side",
+      "time": 1.8666666666666667,
+      "id": "pelvis",
+      "dt": 0.03333333333333344,
+      "nativePixels": 6.6027931906052375,
+      "nativePixelsPerSecond": 198.08379571815652,
+      "planted": null
+    },
+    {
+      "scenario": "back",
+      "time": 1.3,
+      "id": "pelvis",
+      "dt": 0.03333333333333344,
+      "nativePixels": 6.573324838598238,
+      "nativePixelsPerSecond": 197.19974515794652,
+      "planted": null
+    },
+    {
+      "scenario": "forward",
+      "time": 3.1333333333333333,
+      "id": "pelvis",
+      "dt": 0.033333333333333215,
+      "nativePixels": 6.559231409878927,
+      "nativePixelsPerSecond": 196.7769422963685,
+      "planted": null
+    },
+    {
+      "scenario": "back",
+      "time": 1.9333333333333333,
+      "id": "pelvis",
+      "dt": 0.03333333333333344,
+      "nativePixels": 6.50996640113624,
+      "nativePixelsPerSecond": 195.2989920340866,
+      "planted": null
+    },
+    {
+      "scenario": "back",
+      "time": 0.6666666666666666,
+      "id": "pelvis",
+      "dt": 0.033333333333333326,
+      "nativePixels": 6.503036968045297,
+      "nativePixelsPerSecond": 195.09110904135895,
+      "planted": null
+    },
+    {
+      "scenario": "reverse",
+      "time": 2.6666666666666665,
+      "id": "pelvis",
+      "dt": 0.033333333333333215,
+      "nativePixels": 6.503036968045275,
+      "nativePixelsPerSecond": 195.09110904135895,
+      "planted": null
+    },
+    {
+      "scenario": "reverse",
+      "time": 3.3,
+      "id": "pelvis",
+      "dt": 0.033333333333333215,
+      "nativePixels": 6.4617271701796914,
+      "nativePixelsPerSecond": 193.85181510539144,
+      "planted": null
+    },
+    {
+      "scenario": "side",
+      "time": 1.8,
+      "id": "pelvis",
+      "dt": 0.03333333333333344,
+      "nativePixels": 6.396173942466271,
+      "nativePixelsPerSecond": 191.88521827398753,
+      "planted": null
+    }
+  ],
+  "largestSwingSteps": [
+    {
+      "scenario": "arc",
+      "time": 3.1666666666666665,
+      "id": "foot-R",
+      "dt": 0.033333333333333215,
+      "nativePixels": 9.281710381810033,
+      "nativePixelsPerSecond": 278.45131145430196,
+      "planted": false
+    },
+    {
+      "scenario": "corner",
+      "time": 1.0333333333333334,
+      "id": "foot-R",
+      "dt": 0.03333333333333344,
+      "nativePixels": 7.893478486364193,
+      "nativePixelsPerSecond": 236.80435459092507,
+      "planted": false
+    },
+    {
+      "scenario": "corner",
+      "time": 1.6333333333333333,
+      "id": "foot-R",
+      "dt": 0.033333333333333215,
+      "nativePixels": 6.3279880838826355,
+      "nativePixelsPerSecond": 189.83964251647973,
+      "planted": false
+    },
+    {
+      "scenario": "arc",
+      "time": 2.3333333333333335,
+      "id": "foot-R",
+      "dt": 0.03333333333333366,
+      "nativePixels": 6.078312536080473,
+      "nativePixelsPerSecond": 182.3493760824124,
+      "planted": false
+    },
+    {
+      "scenario": "back",
+      "time": 2.1,
+      "id": "foot-R",
+      "dt": 0.033333333333333215,
+      "nativePixels": 6.062810564184438,
+      "nativePixelsPerSecond": 181.88431692553377,
+      "planted": false
+    },
+    {
+      "scenario": "reverse",
+      "time": 1.9,
+      "id": "foot-L",
+      "dt": 0.033333333333333215,
+      "nativePixels": 6.059623034012861,
+      "nativePixelsPerSecond": 181.7886910203865,
+      "planted": false
+    },
+    {
+      "scenario": "back",
+      "time": 3.6666666666666665,
+      "id": "foot-L",
+      "dt": 0.033333333333333215,
+      "nativePixels": 6.050706826897288,
+      "nativePixelsPerSecond": 181.5212048069193,
+      "planted": false
+    },
+    {
+      "scenario": "back",
+      "time": 1.4666666666666666,
+      "id": "foot-R",
+      "dt": 0.033333333333333215,
+      "nativePixels": 6.040817481334605,
+      "nativePixelsPerSecond": 181.22452444003878,
+      "planted": false
+    },
+    {
+      "scenario": "reverse",
+      "time": 3.466666666666667,
+      "id": "foot-R",
+      "dt": 0.03333333333333366,
+      "nativePixels": 6.0393438484759665,
+      "nativePixelsPerSecond": 181.18031545427723,
+      "planted": false
+    },
+    {
+      "scenario": "arc",
+      "time": 1.7666666666666666,
+      "id": "foot-L",
+      "dt": 0.033333333333333215,
+      "nativePixels": 5.9938151544405684,
+      "nativePixelsPerSecond": 179.81445463321768,
+      "planted": false
+    },
+    {
+      "scenario": "arc",
+      "time": 1.7333333333333334,
+      "id": "foot-L",
+      "dt": 0.03333333333333344,
+      "nativePixels": 5.988602276055713,
+      "nativePixelsPerSecond": 179.65806828167084,
+      "planted": false
+    },
+    {
+      "scenario": "reverse",
+      "time": 1.2666666666666666,
+      "id": "foot-L",
+      "dt": 0.033333333333333215,
+      "nativePixels": 5.911679396821136,
+      "nativePixelsPerSecond": 177.35038190463473,
+      "planted": false
+    }
+  ],
+  "maximumRetainedProjectedSoleDrift": 7.334634691717163e-15
+}

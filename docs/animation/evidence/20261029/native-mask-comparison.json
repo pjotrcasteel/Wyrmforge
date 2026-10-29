@@ -1,0 +1,42 @@
+[
+  {
+    "direction": "N",
+    "maskIoU": 0.9657853810264385,
+    "differingPixels": 22
+  },
+  {
+    "direction": "NE",
+    "maskIoU": 0.9777777777777777,
+    "differingPixels": 13
+  },
+  {
+    "direction": "E",
+    "maskIoU": 0.9763513513513513,
+    "differingPixels": 14
+  },
+  {
+    "direction": "SE",
+    "maskIoU": 0.9854862119013063,
+    "differingPixels": 10
+  },
+  {
+    "direction": "S",
+    "maskIoU": 0.9826302729528535,
+    "differingPixels": 14
+  },
+  {
+    "direction": "SW",
+    "maskIoU": 0.9751724137931035,
+    "differingPixels": 18
+  },
+  {
+    "direction": "W",
+    "maskIoU": 0.9681020733652312,
+    "differingPixels": 20
+  },
+  {
+    "direction": "NW",
+    "maskIoU": 0.96875,
+    "differingPixels": 18
+  }
+]

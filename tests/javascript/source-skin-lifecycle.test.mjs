@@ -5,6 +5,14 @@ import {createSpriteAnimationState,updateSpriteAnimation,validateCreatureRigProf
 import {updateSourceSkinSupport} from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/source-skin-support.js';
 const pack=new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/art/review/animation-foundation-skin/',import.meta.url);
 const profile=validateCreatureRigProfile(JSON.parse(readFileSync(new URL('profile.json',pack)))),surface=JSON.parse(readFileSync(new URL('poses.json',pack)));
+
+test('simultaneous source translation and turn consume one shared gait step',()=>{
+ const state=createSpriteAnimationState();
+ updateSpriteAnimation(state,profile,{entityId:1,timestamp:0,travel:0,world:{x:0,y:0},direction:'S',moving:false});
+ const sample=updateSpriteAnimation(state,profile,{entityId:1,timestamp:.1,travel:.5,world:{x:0,y:.5},direction:'E',moving:true});
+ const turn=profile.sourceSupport.turnRadiansPerSecond*.1*profile.sourceSupport.turnCyclesPerRadian;
+ assert.ok(Math.abs(sample.sourceSupport.phaseAdvance-turn)<1e-8,'The larger turn requirement contains the smaller translation step; it must not be added twice.');
+});
 test('real source idle starts in double support and settles after sideways stop without enlarging the source envelope',()=>{
  for(const id of [1,10,20,32]){
   const state=createSpriteAnimationState(),contacts={};let travel=0,last;

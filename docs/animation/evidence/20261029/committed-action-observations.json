@@ -1,0 +1,14 @@
+[
+  {
+    "token": "proximity-5-0",
+    "samples": 26,
+    "yawRangeRadians": 0,
+    "maximumActionProgress": 0.9624749999999993
+  },
+  {
+    "token": "proximity-5-1",
+    "samples": 27,
+    "yawRangeRadians": 0,
+    "maximumActionProgress": 0.999974999999998
+  }
+]

@@ -1,5 +1,13 @@
 /** Portable scene data. No DOM, Three.js or gameplay types. X/Y ground, Z up, metres. */
 export type Vector3 = [number, number, number];
+/** Source-rig binding registered once with geometry; no animation clock. */
+export interface SourceSkinBinding {
+    bones: {id:string;parent:number;rest:number[]}[];
+    influenceSets?:1|2|3|4;
+    /** Must match the saved Armature deformation mode. Missing means legacy linear. */
+    skinningMode?:'linear'|'dual-quaternion';
+    motionRadius?:number;
+}
 export interface LightEmitter {
     id: string; ownerId: string; type: 'point' | 'spot' | 'directional'; enabled: boolean;
     position: Vector3; direction: Vector3; color: string; intensity: number; range: number;

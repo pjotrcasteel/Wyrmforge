@@ -1,0 +1,38 @@
+{
+  "expectedWebglUnavailable": false,
+  "fallbackCanvasPixels": null,
+  "scene": "real-first-trail",
+  "mobileEmulated": true,
+  "candidate": true,
+  "inspection": "lit",
+  "physicalDevice": false,
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "samples": 194,
+  "solveFailures": [],
+  "maximumProjectedSoleDrift": 2.2737370254828476e-13,
+  "gpuErrors": [],
+  "video": "C:\\Wyrmforge\\artifacts\\an-catch-step-first-trail-night\\page@f40af853ad39e36ce9b1b1bb495f356e.webm",
+  "errors": [],
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "failedResources": [
+    {
+      "url": "http://127.0.0.1:54754/art/environment/wet-forest-source-backed/v1/grass-moss-art-candidates/grass-moss-ART-CANDIDATE-02.png",
+      "status": 404
+    },
+    {
+      "url": "http://127.0.0.1:54754/art/environment/wet-forest-source-backed/v1/wet-mud-art-candidates/wet-mud-INDEPENDENT-ART-CANDIDATE-02.png",
+      "status": 404
+    },
+    {
+      "url": "http://127.0.0.1:54754/art/environment/wet-forest-source-backed/v1/trampled-earth-art-candidates/trampled-earth-INDEPENDENT-ART-CANDIDATE-02.png",
+      "status": 404
+    }
+  ]
+}

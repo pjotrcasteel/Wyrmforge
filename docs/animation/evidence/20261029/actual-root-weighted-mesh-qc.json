@@ -1,0 +1,18 @@
+{
+  "sourceStudyOnly": true,
+  "runtimeAccepted": false,
+  "geometrySha256": "7a8acbf5f11db4de8ac07bf10e55eb1d278ba65c01cc767816782aa22774ecfe",
+  "vertices": 12555,
+  "triangles": 12000,
+  "poses": 250,
+  "maximumAnyVertexGroundPenetrationMetres": 6.40766928405867e-09,
+  "maximumSoleGroundErrorMetres": 0.004023639963357584,
+  "maximumRetainedWorldSoleDriftMetres": 1.6806561588694177e-08,
+  "minimumActualRuntimeSoleSupportMarginMetres": 0.008084048760388271,
+  "maximumMassDiscrepancyMetres": 8.022030733268788e-09,
+  "groundToleranceMetres": 0.004036458333333334,
+  "solePatchVertexCounts": {
+    "foot-L": 225,
+    "foot-R": 180
+  }
+}
