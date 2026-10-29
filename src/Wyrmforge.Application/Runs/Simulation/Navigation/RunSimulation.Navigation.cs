@@ -9,6 +9,10 @@ public sealed partial class RunSimulation
     private readonly Queue<SpellSchool> pendingAttunements = new();
     private readonly EncounterDirector encounterDirector = new();
     private ArenaEnvironmentState? arenaEnvironment;
+    private bool worldSiteGeographyEnabled;
+
+    /// <summary>Opt in to the AR1 physical terrain preview for this run; normal Hunts keep their approved fallback.</summary>
+    public void EnableWorldSiteGeography() => worldSiteGeographyEnabled = true;
     private WyrmrealmEncounterModifierSet encounterModifiers = WyrmrealmEncounterModifierSet.Empty;
     private bool mapEncounterCleanupPending;
     private int trailExperienceAtEntry;
@@ -55,7 +59,7 @@ public sealed partial class RunSimulation
         trailExperienceAtEntry = experienceEarned;
         materialCargoState.BeginTrail();
         playerPositionInitialized = false;
-        arenaEnvironment = ArenaEnvironmentState.Create(mapState.Seed, node);
+        arenaEnvironment = ArenaEnvironmentState.Create(mapState.Seed, node, worldFirstGeography: worldSiteGeographyEnabled);
         PrepareBellWardenNode(node);
         PrepareReliquaryNode(node);
         RollNodeElite(node);
