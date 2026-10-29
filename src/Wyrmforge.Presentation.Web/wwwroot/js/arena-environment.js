@@ -499,8 +499,8 @@ export function drawWorldSiteLandscape(ctx, geography, width, height) {
     if (!landscape || !Array.isArray(landscape.obstacles)) return false;
     const palette = {
         'tree-root': ['#264a34', '#172d24'],
-        cliff: ['#56636d', '#9aa4ac'],
-        'glacier-cliff': ['#859eae', '#d3dde7'],
+        cliff: ['#42525d', '#a3acb5'],
+        'glacier-cliff': ['#7d9bac', '#d3dde7'],
         'ice-spire': ['#b1d5e5', '#e5f2f8'],
         'wyrm-rib': ['#55434a', '#92747a'],
         rock: ['#737673', '#343d44'],
@@ -521,6 +521,28 @@ export function drawWorldSiteLandscape(ctx, geography, width, height) {
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
+        // Show an unobtrusive landmark *inside* the precise C# footprint.
+        // This is diagnostic hatching, not added collision, illumination or a
+        // second procedural decorator. Nothing extends beyond the authored shape.
+        const center = obstacle.outline.reduce((sum, point) => ({
+            x: sum.x + point.x * width / obstacle.outline.length,
+            y: sum.y + point.y * height / obstacle.outline.length,
+        }), { x: 0, y: 0 });
+        if (obstacle.kind === 'tree-root') {
+            ctx.beginPath();
+            ctx.arc(center.x, center.y, Math.max(3, Math.min(width, height) * .007), 0, Math.PI * 2);
+            ctx.fillStyle = '#826d52';
+            ctx.fill();
+        } else if (obstacle.kind === 'cliff' || obstacle.kind === 'glacier-cliff' ||
+                   obstacle.kind === 'wyrm-rib' || obstacle.kind === 'ice-spire') {
+            const first = obstacle.outline[0];
+            ctx.beginPath();
+            ctx.moveTo(center.x, center.y);
+            ctx.lineTo(first.x * width, first.y * height);
+            ctx.strokeStyle = colors[1];
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+        }
     }
     ctx.restore();
     return true;
