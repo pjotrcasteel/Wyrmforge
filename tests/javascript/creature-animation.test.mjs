@@ -284,3 +284,33 @@ test('canonical pose export treats finite GPU matrix channels as explicit JSON a
  const matrices=new Float32Array([1,.5,0,-2]);assert.equal(serialize({matrices}),serialize({matrices:Array.from(matrices)}));
  assert.throws(()=>serialize(new Float32Array([NaN])));assert.throws(()=>serialize(new DataView(new ArrayBuffer(16))));assert.throws(()=>serialize(new BigInt64Array([1n])));
 });
+
+test('baked whole-body claw recovers into the current turn row on the completing sample',()=>{
+ const p=fixture();p.facing.transition='row';validate(p);
+ const s=create();assert.equal(update(s,p,intent(0,{direction:'E',action:strike()})).direction,'E');
+ const committed=update(s,p,intent(.5,{direction:'N',action:strike(1),travel:4,world:{x:0,y:-4},moving:true}));
+ assert.equal(committed.clip,'strike');assert.equal(committed.direction,'E');assert.equal(committed.actionToken,'claw-0');
+ const recovered=update(s,p,intent(1,{direction:'N',travel:6,world:{x:0,y:-6},moving:true}));
+ assert.equal(recovered.actionToken,null);
+ assert.equal(recovered.clip,'walk','first recovery sample must not replay the claw');
+ assert.equal(recovered.direction,'N','first recovery sample must not retain stale attack facing');
+ assert.equal(s.facingIndex,p.facing.directions.indexOf('N'));
+ assert.equal(update(s,p,intent(1.1,{direction:'N',travel:7,world:{x:0,y:-7},moving:true})).direction,'N');
+});
+
+test('projected baked recovery immediately follows crossing-target C# movement, not stale intent',()=>{
+ const p=fixture();
+ p.facing.transition='row';p.facing.selection='projected-motion';
+ p.locomotion.stanceVelocityByDirection=Object.fromEntries(p.facing.directions.map((direction,index)=>{
+  const angle=index*Math.PI/4;return [direction,{x:-Math.cos(angle),y:-Math.sin(angle)}];
+ }));
+ validate(p);
+ const s=create();
+ update(s,p,intent(0,{direction:'E',action:strike()}));
+ const committed=update(s,p,intent(.5,{direction:'E',travel:3,world:{x:0,y:-3},moving:true,action:strike(1)}));
+ assert.equal(committed.direction,'E');assert.equal(committed.actionToken,'claw-0');
+ const recovered=update(s,p,intent(1,{direction:'E',travel:6,world:{x:0,y:-6},moving:true}));
+ assert.equal(recovered.clip,'walk');assert.equal(recovered.actionToken,null);
+ assert.equal(recovered.direction,'N','current observed movement must select recovery facing on the exit tick');
+ assert.equal(recovered.baseClip,'walk');
+});
