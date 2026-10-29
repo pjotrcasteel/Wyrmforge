@@ -1,0 +1,112 @@
+name: Animation unified baked locomotion-claw-turn source
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/animation-unified-baked-source.yml'
+      - 'tools/animation/author_hollow_foundation.py'
+      - 'tools/animation/validate_source.py'
+      - 'tools/animation/render_saved_clips.py'
+      - 'tools/animation/export_atlases.py'
+      - 'tools/animation/check_baked_atlas_budget.mjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: animation-unified-baked-source-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  unified-single-rig-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          sparse-checkout: |
+            tools/animation
+            art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-zombie-reach-v3-standard
+            art/source/animation-foundation/baked-compact-claw-20261029/source-manifest.json
+            src/Wyrmforge.Presentation.Web/wwwroot/js
+      - uses: actions/cache@v4
+        id: blender
+        with:
+          path: .cache/blender-4.5.3-linux-x64
+          key: animation-source-blender-4.5.3-linux-x64-975c58fc
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - name: Restore pinned Blender
+        if: steps.blender.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .cache
+          curl --fail --location --retry 2 https://download.blender.org/release/Blender4.5/blender-4.5.3-linux-x64.tar.xz -o .cache/blender.tar.xz
+          echo '975c58fcb244273838534bba771e64ad87739216b0f9b39a888531a49a72d845  .cache/blender.tar.xz' | sha256sum --check
+          tar --no-same-owner -xf .cache/blender.tar.xz -C .cache
+          rm .cache/blender.tar.xz
+      - name: Author walk claw and both real turning clips on the SAME editable rig
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install Pillow==12.0.0
+          BLENDER_BIN="$PWD/.cache/blender-4.5.3-linux-x64/blender"
+          SOURCE=artifacts/an6-unified-source
+          REVIEW=artifacts/an6-unified-atlas
+          "$BLENDER_BIN" -b -t 2 --python-exit-code 1 --python tools/animation/author_hollow_foundation.py -- --out "$SOURCE" --only walk,attack-travel,pivot,pivot-negative --phase-samples 16 --action-samples 8 --stride-metres 0.5 --stance-fraction 0.6 --flexion-reserve-pixels 2 --pelvis-drop-metres 0.075 --compress-source
+          "$BLENDER_BIN" -b -t 2 --python-exit-code 1 --python tools/animation/validate_source.py -- "$SOURCE"
+          python3 tools/animation/test_source_qc.py "$SOURCE" --blender "$BLENDER_BIN"
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          source=json.loads(Path('artifacts/an6-unified-source/source-manifest.json').read_text())
+          original=json.loads(Path('art/source/animation-foundation/baked-compact-claw-20261029/source-manifest.json').read_text())
+          assert set(source['clips'])=={'walk','attack-travel','pivot','pivot-negative'}
+          assert source['clips']['attack-travel']['frames']==128
+          assert len(source['skeleton'])==len(original['skeleton'])==22
+          max_rest=0
+          for current,baseline in zip(source['skeleton'],original['skeleton']):
+              assert (current['id'],current['parent'])==(baseline['id'],baseline['parent'])
+              max_rest=max(max_rest,max(abs(a-b) for a,b in zip(current['rest'],baseline['rest'])),
+                           abs(current['length']-baseline['length']))
+          assert max_rest<=5e-7,('Source changed saved claw rest rig',max_rest)
+          assert source['candidateNotApproved'] and not source['runtimeIntegrated']
+          print('Single-rig source with four clips; maximum saved claw rest delta:',max_rest)
+          PY
+          "$BLENDER_BIN" -b -t 2 --python-exit-code 1 --python tools/animation/render_saved_clips.py -- "$SOURCE" --clips walk,attack-travel,pivot,pivot-negative
+          python3 tools/animation/export_atlases.py "$SOURCE" --out "$REVIEW" --tight-crop --clips walk,attack-travel,pivot,pivot-negative
+          # Record the complete 3-map texture projection; never increase the
+          # 64MiB bound, drop material passes, or falsely certify this source.
+          set +e
+          node tools/animation/check_baked_atlas_budget.mjs --production-maps "$REVIEW/manifest.json" > "$REVIEW/three-map-budget.json"
+          BUDGET_EXIT=$?
+          set -e
+          if [ "$BUDGET_EXIT" -gt 1 ]; then
+            echo 'Budget checker failed to parse the source pack.'
+            exit "$BUDGET_EXIT"
+          fi
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('artifacts/an6-unified-atlas')
+          manifest=json.loads((root/'manifest.json').read_text())
+          budget=json.loads((root/'three-map-budget.json').read_text())
+          assert set(manifest['clips'])=={'walk','attack-travel','pivot','pivot-negative'}
+          assert len(manifest['directions'])==8
+          assert not manifest['productionReady'] and not manifest['runtimeIntegrated']
+          assert budget['maxDecodedBytes']==64*1024*1024
+          assert budget['overBudget']==(budget['decodedBytes']>budget['maxDecodedBytes'])
+          print('Unified AN6 source budget:',budget['decodedBytes'], 'overBudget:',budget['overBudget'])
+          print('Source and actual render evidence ONLY; no runtime, one-pixel, lighting or owner acceptance.')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: an6-unified-real-source-four-clip-study
+          path: |
+            artifacts/an6-unified-atlas/
+            artifacts/an6-unified-source/source-manifest.json
+            artifacts/an6-unified-source/independent-source-qc.json
+            artifacts/an6-unified-source/negative-source-qc.json
+            artifacts/an6-unified-source/render-receipt.json
+          if-no-files-found: warn
+          retention-days: 14
