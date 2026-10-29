@@ -111,3 +111,42 @@ test('live Hunt maintains one legacy enemy draw and one shared GPU path after ma
     assert.match(code, /drawDamageNumbers\(ctx, snapshot\.damageNumbers/);
     assert.match(code, /drawTargetIndicator\(ctx, targetIndicator, 'ground'/);
 });
+
+
+test('GPU light quality profiles retain mobile shadow budgets without asset decisions', async () => {
+    const { lightingQualityBudget } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/quality.js');
+    const mobile = lightingQualityBudget('mobile'), balanced = lightingQualityBudget(), high = lightingQualityBudget('high');
+    assert.deepEqual(balanced, { maxLights: 8, shadowViews: 6, shadowMapSize: 512 },
+        'Existing Hunt quality must not change without explicit opt-in');
+    assert.deepEqual(mobile, { maxLights: 6, shadowViews: 6, shadowMapSize: 256 });
+    assert.deepEqual(high, { maxLights: 12, shadowViews: 8, shadowMapSize: 1024 });
+    assert.ok(mobile.maxLights <= balanced.maxLights && balanced.maxLights <= high.maxLights);
+    mobile.shadowMapSize = 4096;
+    assert.equal(lightingQualityBudget('mobile').shadowMapSize, 256,
+        'Renderer budgets must not be mutable through an asset descriptor');
+    assert.throws(() => lightingQualityBudget('invalid'), RangeError);
+    assert.throws(() => lightingQualityBudget('toString'), RangeError);
+});
+
+test('camera-relative Hunt light budget tracks the GPU view and maintains shadow cost', async () => {
+    const { selectLights } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/registry.js');
+    const budget = { maxLights: 1, shadowViews: 6 };
+    const light = (id, x, intensity = 8) => ({
+        id, ownerId: id, enabled: true, type: 'point', color: '#ffccaa',
+        position: [x, 320, 24], direction: [0, 0, -1], range: 160,
+        intensity, coneAngle: .5, penumbra: 0, priority: 1, castsShadow: true,
+    });
+    const sources = { version: 1, time: 0, lights: [light('a-left', 140), light('z-right', 340)] };
+    const view = { minX: 0, maxX: 390 / 48, minY: -844 * Math.SQRT2 / 48, maxY: 0 };
+    const selectForCamera = camera => {
+        const projected = huntLightFrame(sources, camera, { width: 390, height: 844 });
+        return selectLights(projected, budget.shadowViews, budget.maxLights, view);
+    };
+    const first = selectForCamera({ x: 0, y: 0 });
+    const second = selectForCamera({ x: 200, y: 0 });
+    assert.deepEqual(first.map(l => l.id), ['a-left']);
+    assert.deepEqual(second.map(l => l.id), ['z-right']);
+    assert.deepEqual(first.map(l => l.shadowViews), [6]);
+    assert.deepEqual(second.map(l => l.shadowViews), [6]);
+    assert.equal(sources.lights[0].position[0], 140);
+});
