@@ -97,6 +97,51 @@ jobs:
           grep -q "${GITHUB_SHA}" ./artifacts/web/wwwroot/index.html
           ! grep -q '__WYRMFORGE_BUILD__' ./artifacts/web/wwwroot/index.html
 
+      # Experimental G4 build occupies a separate URL subtree. Never replace the
+      # production main site with a draft GPU renderer or deploy a floating PR head.
+      - name: Checkout pinned G4 mobile review build
+        uses: actions/checkout@v6
+        with:
+          ref: d59494822a0081c99031b8064fa85a80caeebb11
+          path: g4-preview-source
+
+      - name: Restore G4 runtime art
+        working-directory: g4-preview-source
+        run: |
+          git lfs pull --include="src/Wyrmforge.Presentation.Web/wwwroot/**" --exclude=""
+          python3 tools/development/verify_web_assets.py
+
+      - name: Regenerate G4 source-backed environment art
+        working-directory: g4-preview-source
+        run: |
+          python3 -m pip install -r tools/art/painted-requirements.txt
+          python3 tools/art/build_grass_moss_art_candidates.py --output src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-source-backed/v1/grass-moss-art-candidates
+          python3 tools/art/build_wet_mud_art_candidates.py --output src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-source-backed/v1/wet-mud-art-candidates
+          python3 tools/art/build_trampled_earth_art_candidates.py --output src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-source-backed/v1/trampled-earth-art-candidates
+
+      - name: Publish experimental G4 game alongside main
+        working-directory: g4-preview-source
+        run: |
+          dotnet restore src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj
+          dotnet publish src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -c Release --no-restore -o "$GITHUB_WORKSPACE/artifacts/g4-preview-web" -p:SourceRevisionId=d59494822a0081c99031b8064fa85a80caeebb11
+          test -s "$GITHUB_WORKSPACE/artifacts/g4-preview-web/wwwroot/js/lighting/g4-device-review.js"
+
+      - name: Prepare isolated G4 GitHub Pages route
+        run: |
+          mkdir -p artifacts/web/wwwroot/g4-preview
+          cp -a artifacts/g4-preview-web/wwwroot/. artifacts/web/wwwroot/g4-preview/
+          sed -i 's#<base href="/" />#<base href="/Wyrmforge/g4-preview/" />#' artifacts/web/wwwroot/g4-preview/index.html
+          sed -i 's#__WYRMFORGE_BUILD__#d59494822a0081c99031b8064fa85a80caeebb11#g' artifacts/web/wwwroot/g4-preview/index.html
+          cp artifacts/web/wwwroot/g4-preview/index.html artifacts/web/wwwroot/g4-preview/404.html
+          printf 'G4 opt-in candidate: d59494822a0081c99031b8064fa85a80caeebb11\n' > artifacts/web/wwwroot/g4-preview/build-id.txt
+          grep -q '<base href="/Wyrmforge/g4-preview/" />' artifacts/web/wwwroot/g4-preview/index.html
+          grep -q 'd59494822a0081c99031b8064fa85a80caeebb11' artifacts/web/wwwroot/g4-preview/index.html
+          ! grep -q '__WYRMFORGE_BUILD__' artifacts/web/wwwroot/g4-preview/index.html
+          test -s artifacts/web/wwwroot/g4-preview/_framework/blazor.webassembly.js
+          test -s artifacts/web/wwwroot/g4-preview/js/lighting/g4-device-review.js
+          # Do not alter the main game's root index or default Canvas renderer.
+          grep -q '<base href="/Wyrmforge/" />' artifacts/web/wwwroot/index.html
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
