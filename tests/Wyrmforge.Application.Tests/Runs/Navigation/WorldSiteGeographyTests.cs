@@ -86,7 +86,7 @@ public sealed class WorldSiteGeographyTests
     public void DifferentVisualPresentationCannotAlterTheCSharpGeographicRecipe()
     {
         var first = new WyrmrealmMapState(seed: 1204, introductoryFire: true);
-        var node = first.Nodes.Single(node => node.Type == WyrmrealmNodeType.Combat);
+        var node = first.Nodes.First(node => node.Type == WyrmrealmNodeType.Combat);
         var before = JsonSerializer.Serialize(node.Geography);
         var normal = ArenaEnvironmentState.Create(first.Seed, node).Snapshot();
         var preview = ArenaEnvironmentState.Create(first.Seed, node, generatorPreview: true).Snapshot();
