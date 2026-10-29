@@ -56,6 +56,15 @@ class MemoryDb {
         throw Error('Unexpected SQL: ' + sql);
     }
     async first(sql) {
+        if (sql.includes('COUNT(*) AS runs') && sql.includes('json_each')) {
+            const values = [...this.reports.values()].flatMap(row =>
+                JSON.parse(row.data).recentRuns.map(run => run.ai).filter(ai => ai?.samples > 0));
+            const average = values.length ? values.reduce((sum, ai) => sum + ai.p95Ms, 0) / values.length : null;
+            const maximum = key => values.length ? Math.max(...values.map(ai => ai[key])) : null;
+            return { runs: values.length, meanP95Ms: average, peakMs: maximum('maxMs'),
+                maxPopulation: maximum('population'), maxCommitted: maximum('committedMax'),
+                maxSightQueries: maximum('sightQueriesMax'), maxPathQueries: maximum('pathQueriesMax') };
+        }
         assert.match(sql, /COUNT\(\*\) AS reports/);
         const rows = [...this.reports.values()];
         const avg = key => {
@@ -124,6 +133,10 @@ test('Accept bounded AI summaries while stripping raw locations, decision traces
     assert.equal((await post(e, { consent: false, report: submitted })).status, 400);
     assert.equal((await post(e, { consent: true, report: submitted })).status, 202);
     assert.equal(JSON.parse(e.DB.reports.values().next().value.data).recentRuns[0].ai.population, 64);
+    const summary = await (await admin(e, '/v1/admin/summary')).json();
+    assert.equal(summary.ai.runs, 1);
+    assert.equal(summary.ai.maxPopulation, 64);
+    assert.equal(summary.ai.maxCommitted, 2);
 });
 
 test('Discard unexpected properties, identifiers and detailed viewport/fingerprint data', async () => {

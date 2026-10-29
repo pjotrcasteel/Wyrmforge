@@ -199,7 +199,18 @@ async function admin(request, env, url) {
             WHERE trouble_area IS NOT NULL GROUP BY trouble_area ORDER BY count DESC`).all();
         const intent = await env.DB.prepare(`SELECT replay,COUNT(*) AS count FROM reports
             WHERE replay IS NOT NULL GROUP BY replay ORDER BY count DESC`).all();
-        return json({ aggregate, issues: issues.results, replayIntent: intent.results });
+        // Aggregate inside D1. No per-run AI traces, seeds, IDs or free text
+        // are returned to the private summary or public insights workflow.
+        const ai = await env.DB.prepare(`SELECT COUNT(*) AS runs,
+            ROUND(AVG(json_extract(j.value, '$.ai.p95Ms')), 1) AS meanP95Ms,
+            ROUND(MAX(json_extract(j.value, '$.ai.maxMs')), 1) AS peakMs,
+            MAX(json_extract(j.value, '$.ai.population')) AS maxPopulation,
+            MAX(json_extract(j.value, '$.ai.committedMax')) AS maxCommitted,
+            MAX(json_extract(j.value, '$.ai.sightQueriesMax')) AS maxSightQueries,
+            MAX(json_extract(j.value, '$.ai.pathQueriesMax')) AS maxPathQueries
+            FROM reports r JOIN json_each(r.data, '$.recentRuns') j
+            WHERE json_extract(j.value, '$.ai.samples') > 0`).first();
+        return json({ aggregate, issues: issues.results, replayIntent: intent.results, ai });
     }
     if (request.method === 'GET' && url.pathname === '/v1/admin/leaderboard') {
         const scores = await env.DB.prepare('SELECT id,nickname,score,game_version,created_at FROM leaderboard_entries ORDER BY created_at DESC LIMIT 100').all();
