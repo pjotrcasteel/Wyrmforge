@@ -17,4 +17,7 @@ public sealed record DamageNumberRenderSnapshot(
 {
     /// <summary>Authoritative damage classification; a cosmetic renderer may style it but never decide it.</summary>
     public string Flavor { get; init; } = "Impact";
+
+    /// <summary>True when a hit removes a substantial portion of the target's maximum health.</summary>
+    public bool Heavy { get; init; }
 }
