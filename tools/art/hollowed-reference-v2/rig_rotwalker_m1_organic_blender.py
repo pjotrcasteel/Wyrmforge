@@ -87,7 +87,24 @@ def sculpt_original_arm_proportions(body):
         inward=-direction*.078*shoulder
         slope=-.039*shoulder + .018*shoulder*(1 if direction<0 else -1)
         scapula_y=(.047*shoulder if p.y>cy else -.018*shoulder)
-        delta=Vector((direction*extension+inward,scapula_y,slope))
+        # Source-integrated hand/forearm mass: preserve an actual VOLUME
+        # at the long-finger ends rather than using 2x bone-scale and
+        # flattening the glove. Work in the original unposed 3D rest mesh.
+        hand_band=smooth(xx,1.03,1.33)*influence
+        forearm_band=smooth(xx,.63,.86)*(1.0-smooth(xx,1.17,1.39))*influence
+        axial_z=float(p.z-floor-2.14)
+        axial_y=float(p.y-cy)
+        organic_bulk=(.19*forearm_band+.31*hand_band)
+        hand_y=organic_bulk*axial_y
+        hand_z=organic_bulk*axial_z
+        # A continuous, slightly downward-hooked distal finger shape.
+        # This is a true source vertex position edit, not a 2D render hack.
+        fingertip=smooth(xx,1.22,1.52)*influence
+        tip_growth=direction*.105*fingertip
+        tip_drop=-.075*fingertip
+        delta=Vector((direction*extension+inward+tip_growth,
+                      scapula_y+hand_y,
+                      slope+hand_z+tip_drop))
         sculpt.data[i].co=basis.data[i].co + local_from_world @ delta
         if shoulder>.10:
             shoulder_sculpted+=1
@@ -100,7 +117,7 @@ def sculpt_original_arm_proportions(body):
     l2,h2=bounds(new)
     if moved<500 or not .25<maximum<.45:
         raise ValueError(f"Anatomical extension absent or destructive: {moved}, {maximum}")
-    if not width+.45<float(h2.x-l2.x)<width+.85:
+    if not width+.45<float(h2.x-l2.x)<width+1.05:
         raise ValueError("Source-based arm reach extension outside safe anatomy envelope")
     if len(original)!=len(new):
         raise ValueError("Original source topology changed")
@@ -109,6 +126,9 @@ def sculpt_original_arm_proportions(body):
         "anatomical_sculpt_armspan_m":round(float(h2.x-l2.x),4),
         "source_vertices_softly_resculpted":moved,
         "shoulder_girdle_vertices_rest_sculpted":shoulder_sculpted,
+        "hand_forearm_volume_sculpted_in_original_3d_source":True,
+        "max_distal_hand_growth_m":0.105,
+        "physical_hook_bend_m":0.075,
         "max_rest_length_extension_m":round(maximum,4),
         "original_basis_retained":True,
         "topology_or_triangles_added":False,
