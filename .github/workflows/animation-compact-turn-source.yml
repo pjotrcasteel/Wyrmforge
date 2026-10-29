@@ -1,0 +1,91 @@
+name: Animation compact grounded-turn source study
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/animation-compact-turn-source.yml'
+      - 'tools/animation/author_hollow_foundation.py'
+      - 'tools/animation/validate_source.py'
+      - 'tools/animation/render_saved_clips.py'
+      - 'tools/animation/export_atlases.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: animation-compact-turn-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  preserved-source-pivots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          sparse-checkout: |
+            tools/animation
+            art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-zombie-reach-v3-standard
+            art/source/animation-foundation/baked-compact-claw-20261029/source-manifest.json
+            src/Wyrmforge.Presentation.Web/wwwroot/js
+      - uses: actions/cache@v4
+        id: blender
+        with:
+          path: .cache/blender-4.5.3-linux-x64
+          key: animation-source-blender-4.5.3-linux-x64-975c58fc
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - name: Restore verified official Blender
+        if: steps.blender.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .cache
+          curl --fail --location --retry 2 https://download.blender.org/release/Blender4.5/blender-4.5.3-linux-x64.tar.xz -o .cache/blender.tar.xz
+          echo '975c58fcb244273838534bba771e64ad87739216b0f9b39a888531a49a72d845  .cache/blender.tar.xz' | sha256sum --check
+          tar --no-same-owner -xf .cache/blender.tar.xz -C .cache
+          rm .cache/blender.tar.xz
+      - name: Author real left/right weight-bearing steps from preserved compact parameters
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install Pillow==12.0.0
+          BLENDER_BIN="$PWD/.cache/blender-4.5.3-linux-x64/blender"
+          SOURCE=artifacts/an6-compact-turn-source
+          REVIEW=artifacts/an6-compact-turn-atlas
+          "$BLENDER_BIN" -b -t 2 --python-exit-code 1 --python tools/animation/author_hollow_foundation.py -- --out "$SOURCE" --only walk,pivot,pivot-negative --phase-samples 16 --stride-metres 0.5 --stance-fraction 0.6 --flexion-reserve-pixels 2 --pelvis-drop-metres 0.075 --compress-source
+          "$BLENDER_BIN" -b -t 2 --python-exit-code 1 --python tools/animation/validate_source.py -- "$SOURCE"
+          python3 tools/animation/test_source_qc.py "$SOURCE" --blender "$BLENDER_BIN"
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          source=json.loads(Path('artifacts/an6-compact-turn-source/source-manifest.json').read_text())
+          original=json.loads(Path('art/source/animation-foundation/baked-compact-claw-20261029/source-manifest.json').read_text())
+          assert source['skeletonSignature']==original['skeletonSignature'], 'Compact-turn study changed the saved claw skeleton'
+          assert set(source['clips'])=={'walk','pivot','pivot-negative'}
+          assert source['turnSupport']['phaseCycles']>0
+          assert all(source['clips'][name]['frames']==16 for name in ['pivot','pivot-negative'])
+          assert source['candidateNotApproved'] and not source['runtimeIntegrated']
+          print('Both weight-bearing pivot clips source-validated against the same authored skeleton; not yet transition accepted.')
+          PY
+          "$BLENDER_BIN" -b -t 2 --python-exit-code 1 --python tools/animation/render_saved_clips.py -- "$SOURCE" --clips walk,pivot,pivot-negative
+          python3 tools/animation/export_atlases.py "$SOURCE" --out "$REVIEW" --tight-crop --clips walk,pivot,pivot-negative
+          node tools/animation/check_baked_atlas_budget.mjs --production-maps "$REVIEW/manifest.json" > "$REVIEW/prospective-three-map-budget.json"
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          m=json.loads(Path('artifacts/an6-compact-turn-atlas/manifest.json').read_text())
+          assert set(m['clips'])=={'walk','pivot','pivot-negative'} and len(m['directions'])==8
+          assert not m['productionReady'] and m['representation']=='baked-full-body-sprites'
+          print('Source-authored directional turn atlas ready for separate in-game phase-entry/contact tests, NOT accepted for production.')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: an6-compact-grounded-turn-source-study
+          path: |
+            artifacts/an6-compact-turn-atlas/
+            artifacts/an6-compact-turn-source/source-manifest.json
+            artifacts/an6-compact-turn-source/independent-source-qc.json
+            artifacts/an6-compact-turn-source/negative-source-qc.json
+            artifacts/an6-compact-turn-source/render-receipt.json
+          if-no-files-found: warn
+          retention-days: 14
