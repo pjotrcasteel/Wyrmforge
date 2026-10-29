@@ -4,6 +4,7 @@ using Wyrmforge.Application.Runs.Navigation;
 using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Combat.Geometry;
+using Wyrmforge.Domain.Spells;
 
 namespace Wyrmforge.Application.Tests.Runs.Navigation;
 
@@ -99,6 +100,24 @@ public sealed class WorldSiteLandscapeTests
                     "The same C# site geometry must obstruct projectiles and sight lines.");
             }
         }
+    }
+
+    [TestMethod]
+    public void FireAndFrostLairs_HaveDifferentAuthoritativeGeologyAndPhysicalLandmarks()
+    {
+        var fire = WyrmrealmMapGenerator.Generate(1, 1204, SpellSchool.Fire)
+            .Single(node => node.Type == WyrmrealmNodeType.Dragon).Geography!;
+        var frost = WyrmrealmMapGenerator.Generate(1, 1204, SpellSchool.Frost)
+            .Single(node => node.Type == WyrmrealmNodeType.Dragon).Geography!;
+        Assert.AreEqual("wyrm-lair", fire.Landscape!.Kind);
+        Assert.AreEqual("wyrm-lair", frost.Landscape!.Kind);
+        Assert.AreEqual(WorldSiteSurfaceId.Rock, fire.Substrate.Material);
+        Assert.AreEqual(WorldSiteSurfaceId.GlacialIce, frost.Substrate.Material);
+        CollectionAssert.Contains(fire.MandatoryLandmarks.ToArray(), "ashen-spine");
+        CollectionAssert.Contains(frost.MandatoryLandmarks.ToArray(), "glacier-throne");
+        Assert.IsTrue(fire.Landscape.Obstacles.All(obstacle => obstacle.Kind == "wyrm-rib"));
+        Assert.IsTrue(frost.Landscape.Obstacles.All(obstacle => obstacle.Kind == "ice-spire"));
+        Assert.AreEqual(fire.Ports.Count, frost.Ports.Count);
     }
 
     [TestMethod]
