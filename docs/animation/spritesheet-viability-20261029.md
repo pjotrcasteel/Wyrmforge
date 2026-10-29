@@ -65,6 +65,27 @@ needs a separately measured bounded layout; do not reuse the smaller table as
 proof that all new clips fit. The completed bounded base-walk material proof uses
 6,094,848 decoded bytes. See the [current execution receipt](spritesheet-walk-proof-20261029.md).
 
+## Orthogonal animation-source feasibility — strict experiment
+
+The new [lateral source study](https://github.com/pjotrcasteel/Wyrmforge/actions/workflows/animation-lateral-source-study.yml)
+tests genuine **−90° and +90° travel relative to an unchanged body facing**
+on the same editable Blender rig. It is intentionally restricted to an isolated
+walk-only source, 0.24 m stride, and full fixed-length/sole/support validation.
+The study retains the unchanged knee limits, minimum support margin, native
+pixel resolution and runtime one-pixel correction budget.
+
+The source manifest marks both results `sourceStudyOnly=true` and
+`acceptedForRuntime=false`, irrespective of a successful Blender bake.
+A source feasibility pass is only evidence that such a side-step *can* be
+authored without joint distortion; it is not a claim that the 128-frame claw
+can follow it. A failure must be preserved as a genuine reach/support
+constraint, never turned green by changing C# movement or loosening limits.
+
+No new lateral sprite atlas has been promoted to the game. Before AN6 can
+accept it, it must be expanded into an authored body/claw support family and
+pass all native memory, gait-entry/recovery, real-C# 320/390px, sprite GPU
+material/occlusion, and physical-phone visual gates.
+
 ## Measured unified four-clip outcome — 29 October 2026
 
 The smaller baseline packing table above is a **planning estimate**, not acceptance
