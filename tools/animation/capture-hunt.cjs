@@ -4,6 +4,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const published=path.resolve(process.env.WYRMFORGE_PUBLISHED_ROOT||'artifacts/web/wwwroot');
 const source=path.resolve(__dirname,'../../src/Wyrmforge.Presentation.Web/wwwroot');
 const out=path.resolve(process.env.AN_CAPTURE_DIR||'artifacts/animation-hunt');fs.mkdirSync(out,{recursive:true});
+const foundationMode=process.env.AN_FOUNDATION_MODE||'1',expectsGpu=foundationMode!=='sprite-walk';
 const candidate=process.env.AN_CANDIDATE!=='0',width=Number(process.env.AN_WIDTH||390),liveTrail=process.env.AN_SCENE==='trail',selector=liveTrail?'canvas.game-canvas':'.enemy-lab canvas';
 const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json','.wasm':'application/wasm','.png':'image/png','.svg':'image/svg+xml','.ogg':'audio/ogg','.mp3':'audio/mpeg','.bin':'application/octet-stream'};
 let browser;
@@ -14,7 +15,7 @@ const server=http.createServer((req,res)=>{
   const asset=path.join(path.resolve(process.env.AN_ASSET_ROOT),route.slice('/art/review/animation-foundation-skin/'.length));
   if(fs.existsSync(asset)){res.setHeader('Content-Type',mime[path.extname(asset)]||'application/octet-stream');fs.createReadStream(asset).pipe(res);return;}
  }
- const base=route.startsWith('/js/')||route.startsWith('/art/review/animation-foundation-skin/')?source:published;
+ const base=route.startsWith('/js/')||route.startsWith('/art/review/animation-foundation')?source:published;
  let file=path.join(base,route.endsWith('/')?route+'index.html':route);
  if(!path.extname(file)&&!fs.existsSync(file))file=path.join(published,'index.html');
  if(!fs.existsSync(file)){res.writeHead(404);return res.end();}
@@ -30,7 +31,7 @@ const server=http.createServer((req,res)=>{
  page.on('pageerror',e=>errors.push(e.message));page.on('crash',()=>errors.push('renderer crash'));
  page.on('console',m=>{if(m.type()==='error')consoleErrors.push(m.text().slice(0,400));});
  await page.addInitScript(({trail,selector})=>{window.__anCanvasSelector=selector;window.__anModulePath=trail?'/js/arena-performance.js':'/js/arena.js';if(trail){localStorage.setItem('wyrmforge.firstHunt.v1','2');localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:24,Nodes:[]}));localStorage.setItem('wyrmforge.characterSchool.v1','Pyromancer');}},{trail:liveTrail,selector});
- const flags=candidate?'&animationFoundation=1&arenaGpu=1':'';
+ const flags=candidate?'&animationFoundation='+encodeURIComponent(foundationMode)+(expectsGpu?'&arenaGpu=1':''):'';
  const route=liveTrail?`/?${flags.slice(1)}`:`/enemy-lab?kind=Hollow&seed=42&autoplay=false&cast=false&paused=true&entityId=5${flags}`;
  await page.goto(`http://127.0.0.1:${server.address().port}${route}${process.env.AN_CONTACTS?'&animationContacts=1':''}`);
  if(liveTrail){
@@ -43,10 +44,11 @@ const server=http.createServer((req,res)=>{
 
  await page.locator(selector).waitFor({timeout:60000});
  await page.locator('#wyrmforge-ignition').waitFor({state:'hidden',timeout:60000});
- if(candidate)await page.waitForFunction(async noWebgl=>{
+ if(candidate)await page.waitForFunction(async ({noWebgl,gpu})=>{
   const m=await import(window.__anModulePath??'/js/arena.js'),d=m.readArenaDiagnostics(document.querySelector(window.__anCanvasSelector));
-  return d?.hollow?.foundation?.ready===true&&(noWebgl?d?.gpuWorld?.error:d?.gpuWorld?.backend);
- },Boolean(process.env.AN_NO_WEBGL),{timeout:60000});
+  return d?.hollow?.foundation?.ready===true&&(!gpu|| (noWebgl?d?.gpuWorld?.error:d?.gpuWorld?.backend));
+ },{noWebgl:Boolean(process.env.AN_NO_WEBGL),gpu:expectsGpu},{timeout:60000});
+ if(process.env.AN_INSPECTION&&!expectsGpu)throw Error('GPU inspection is not a source-lit spritesheet acceptance test');
  if(process.env.AN_INSPECTION)await page.evaluate(async view=>{
   const m=await import(window.__anModulePath??'/js/arena.js');m.setArenaLightingInspection(document.querySelector(window.__anCanvasSelector),view);
   const label=document.createElement('div');label.textContent='DEVELOPER '+view.toUpperCase()+' INSPECTION / ACTUAL C# ENCOUNTER';
@@ -56,6 +58,7 @@ const server=http.createServer((req,res)=>{
   const m=await import(window.__anModulePath??'/js/arena.js');window.__anTrace=[];
   window.__anTraceTimer=setInterval(()=>{const d=m.readArenaDiagnostics(document.querySelector(window.__anCanvasSelector));if(d)window.__anTrace.push({at:performance.now(),simulationTimeSeconds:d.simulationTimeSeconds,enemies:d.enemies,player:d.player,hollow:d.hollow,performance:d.performance,gpuWorld:d.gpuWorld});},50);
  });
+ if(foundationMode==='sprite-walk')await page.evaluate(()=>{const label=document.createElement('div');label.textContent='SOURCE-LIT BAKED SPRITESHEET WALK PROOF / EXISTING ATTACK FALLBACK';label.style='position:fixed;bottom:0;left:0;background:#fff;color:#000;font:11px sans-serif;padding:5px;z-index:9999';document.body.appendChild(label);});
  const initial=await page.evaluate(async()=>{const m=await import(window.__anModulePath??'/js/arena.js');return m.readArenaDiagnostics(document.querySelector(window.__anCanvasSelector));});
  fs.writeFileSync(path.join(out,'initial-diagnostics.json'),JSON.stringify(initial,null,2));
  await page.screenshot({path:path.join(out,'hunt-ready.png')});
@@ -73,7 +76,7 @@ const server=http.createServer((req,res)=>{
  const fallbackCanvasPixels=process.env.AN_NO_WEBGL?await page.evaluate(selector=>{const c=document.querySelector(selector),p=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let lit=0;for(let i=0;i<p.length;i+=4)if(p[i]+p[i+1]+p[i+2])lit++;return lit;},selector):null;
  const video=await page.video().path();await page.close();await browser.close();server.close();
 
- const summary={expectedWebglUnavailable:Boolean(process.env.AN_NO_WEBGL),fallbackCanvasPixels,scene:liveTrail?'real-first-trail':'real-development-encounter',mobileEmulated:process.env.AN_MOBILE==='1',candidate,inspection:process.env.AN_INSPECTION??'lit',physicalDevice:false,viewport:{width,height:844},samples:trace.length,solveFailures:trace.flatMap(r=>r.hollow.entities.filter(e=>e.foundationError).map(e=>({time:r.simulationTimeSeconds,error:e.foundationError}))),maximumProjectedSoleDrift:Math.max(...trace.flatMap(r=>r.hollow.entities.map(e=>e.foundation?.maxSlip??0))),gpuErrors:trace.filter(r=>r.gpuWorld?.error),video,errors,consoleErrors,failedResources};
+ const summary={foundationMode,representation:foundationMode==='sprite-walk'?'baked-full-body-sprites':'source-skin-research',expectedWebglUnavailable:Boolean(process.env.AN_NO_WEBGL),fallbackCanvasPixels,scene:liveTrail?'real-first-trail':'real-development-encounter',mobileEmulated:process.env.AN_MOBILE==='1',candidate,inspection:process.env.AN_INSPECTION??'lit',physicalDevice:false,viewport:{width,height:844},samples:trace.length,solveFailures:trace.flatMap(r=>r.hollow.entities.filter(e=>e.foundationError).map(e=>({time:r.simulationTimeSeconds,error:e.foundationError}))),maximumProjectedSoleDrift:Math.max(...trace.flatMap(r=>r.hollow.entities.map(e=>e.foundation?.maxSlip??0))),gpuErrors:trace.filter(r=>r.gpuWorld?.error),video,errors,consoleErrors,failedResources};
  fs.writeFileSync(path.join(out,'capture-summary.json'),JSON.stringify(summary,null,2));
  if(errors.length||summary.solveFailures.length||(!process.env.AN_NO_WEBGL&&summary.gpuErrors.length)||(process.env.AN_NO_WEBGL&&!fallbackCanvasPixels))throw Error(JSON.stringify(summary));
  console.log(JSON.stringify(summary,null,2));

@@ -7,9 +7,13 @@ albedo/normal/depth/material passes and actual Hunt renderer validation.
 from pathlib import Path
 import argparse,json,hashlib,math
 from PIL import Image
-p=argparse.ArgumentParser();p.add_argument('source');p.add_argument('--out',required=True);p.add_argument('--full-cells',action='store_true');a=p.parse_args()
+p=argparse.ArgumentParser();p.add_argument('source');p.add_argument('--out',required=True);p.add_argument('--full-cells',action='store_true');p.add_argument('--clips',help='Explicit complete clip subset for a bounded source proof; walk is required.');a=p.parse_args()
 source=Path(a.source);out=Path(a.out);out.mkdir(parents=True,exist_ok=True)
 m=json.loads((source/'source-manifest.json').read_text());directions=m['directions'];scale=93/1.55
+if a.clips:
+    selected=a.clips.split(',')
+    if 'walk' not in selected or len(set(selected))!=len(selected) or any(name not in m['clips'] for name in selected):p.error('A unique existing clip subset including walk is required')
+    m={**m,'clips':{name:m['clips'][name] for name in selected}}
 clips={};row_hashes={}
 for name,clip in m['clips'].items():
     count=clip['frames'];grid=clip.get('poseGrid');crop=(16,12,80,84) if grid and not a.full_cells else (0,0,96,96);columns=min(count,32);rows=math.ceil(count/columns);width,height=crop[2]-crop[0],crop[3]-crop[1]
@@ -36,5 +40,7 @@ if 'attack-travel' in m['clips']:
     row_hashes.pop('attack',None)
 (out/'profile.json').write_text(json.dumps(profile,indent=2)+'\n')
 manifest={'schemaVersion':2,'profileSha256':hashlib.sha256((out/'profile.json').read_bytes()).hexdigest(),'candidateNotApproved':True,'productionReady':False,'reviewLightingOnly':True,'runtimeIntegrated':False,'directions':directions,'clips':clips,'sourceSignature':m['skeletonSignature'],'rowSha256':row_hashes,'sourceQC':m['clips'],'materialGate':'aligned unlit albedo/normal/depth/emissive export and actual Hunt GPU acceptance open'}
+manifest['representation']='baked-full-body-sprites'
+if (source/'hollow-foundation.blend').exists():manifest['sourceBlendSha256']=hashlib.sha256((source/'hollow-foundation.blend').read_bytes()).hexdigest()
 (out/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
 print(json.dumps({'atlasBytes':sum((out/v['image']).stat().st_size for v in clips.values()),'eightDistinctRows':list(row_hashes),'gpuProductionReady':False}))

@@ -11,8 +11,11 @@ import { createHollowInjuryDeathAssets, selectHollowDeathInjury } from './hollow
 import { createHollowFractureAssets, eligibleHollowFracture } from './hollow-fracture.js';
 // The rejected procedural bone-burst proof is intentionally lab-only.
 // Production deaths exclusively use the Hollowed's source-authored 3D atlases.
-const foundationEnabled=new URLSearchParams(globalThis.location?.search??'').get('animationFoundation')==='1';
-const foundation=createCreatureAnimationAssets(new URL('../art/review/animation-foundation-skin/',import.meta.url));
+const foundationMode=new URLSearchParams(globalThis.location?.search??'').get('animationFoundation');
+const foundationEnabled=foundationMode==='1'||foundationMode==='sprite-walk';
+const foundation=createCreatureAnimationAssets(foundationMode==='sprite-walk'
+    ?new URL('../art/review/animation-foundation-sprite-walk/',import.meta.url)
+    :new URL('../art/review/animation-foundation-skin/',import.meta.url));
 const base = new URL('../art/enemies/hollow-rigged/', import.meta.url);
 const rows = ['N','NE','E','SE','S','SW','W','NW'];
 const headings = ['E','SE','S','SW','W','NW','N','NE'];
@@ -155,7 +158,7 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
             pose.foundationAnimation??=createSpriteAnimationState();
             // The shared lifecycle owns action completion. Legacy render-age
             // expiration must not enqueue a second cue against C# sample time.
-            if(advancing&&touching&&!pose.foundationAnimation.action){
+            if(advancing&&touching&&!pose.foundationAnimation.action&&foundation.profile.actions?.attack){
                 pose.foundationSequence=(pose.foundationSequence??-1)+1;
                 pose.foundationCue={name:'attack',token:`proximity-${id}-${pose.foundationSequence}`,sequence:pose.foundationSequence};
             }
@@ -164,6 +167,9 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
                 velocity:{x:dt>0?dx/dt:0,y:dt>0?dy/dt:0},
                 moving:locomotion.moving,paused:snapshot.paused||snapshot.ended,frozen:enemy.frozen,reducedMotion,
                 action:pose.foundationCue??null});
+            // A walk-only source proof does not claim an unrendered attack.
+            // Continue its shared phase while the existing attack art is shown.
+            if(pose.attackAt!=null&&!foundation.profile.actions?.attack)pose.foundationSample=null;
             if(enemy.hitFlash&&foundation.manifest.skin){
                 // Confirmed C# impact presentation uses the existing hit art.
                 // Keep the one action clock, but rebind sole epochs after the

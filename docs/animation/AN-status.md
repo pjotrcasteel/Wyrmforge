@@ -11,6 +11,18 @@ skinned-mesh proof is research, not completion of that representation. See the
 Continue through the existing sprite controller/export/material path; do not
 silently substitute a live skeletal renderer or promise arbitrary PNG blending.
 
+### First full-body sprite walk proof
+
+A fresh saved-source walk has now been rendered as 128 complete frames: 16 poses
+in eight genuine views. The explicit `animationFoundation=sprite-walk` proof
+selects that atlas through the existing asset/controller/draw path; it does not
+use live skin or regional PNG deformation. A walk-only pack never claims an
+unrendered claw: the existing attack presentation remains in use while the
+shared gait phase continues. The 4.5 MiB decoded color sheet is source-lit review
+art only. Source/GPU materials, actual contact and final visual acceptance are
+still open. All 587 JavaScript checks pass, including the real baked-profile
+adapter and eight-row/provenance tests. Current first-walk browser capture is next.
+
 ## Current continuity audit - 29 October 2026
 
 The public candidate is the 0.65-duty catch-step source preserved at `0c57b3e12`.
