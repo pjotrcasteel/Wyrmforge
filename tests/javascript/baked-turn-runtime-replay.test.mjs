@@ -42,3 +42,15 @@ test('replay requires both authored pivot directions and rejects bad sampling',(
     assert.throws(()=>replayUnifiedTurns(fixture(),{rates:[0]}),RangeError);
     assert.throws(()=>replayUnifiedTurns(fixture(),{entryPhases:[1]}),RangeError);
 });
+
+test('authored phase-zero pivot cannot claim a grounded mid-stride entry',()=>{
+ const p=fixture();
+ p.locomotion.stanceVelocityByDirection=Object.fromEntries(directions.map(d=>[d,{x:-30,y:0}]));
+ p.locomotion.samples=p.locomotion.samples.map((sample,index)=>({
+     ...sample,contacts:[{id:'support',x:-index*7.5,y:0}]}));
+ const r=replayUnifiedTurns(p,{rates:[60],entryPhases:[0,.25],targets:[{from:'E',to:'SE'}]});
+ assert.equal(r.results[0].contactWithinOneNativePixel,true);
+ assert.equal(r.results[1].contactWithinOneNativePixel,false);
+ assert.equal(r.results[1].correctionSaturated,true);
+ assert.equal(r.sourceRuntimeGatePassed,false);
+});
