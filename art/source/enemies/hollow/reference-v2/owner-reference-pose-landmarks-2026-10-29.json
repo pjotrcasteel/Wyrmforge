@@ -269,14 +269,14 @@
     "limb_reach": "reference bone directions drive pose, with soft-error residual when original artist limb length is insufficient",
     "both_feet": "two independent ground contacts required; no single-minimum false pass",
     "left_ankle_effective_target_m_relative_to_body_center": [
-      -0.56,
-      0.26,
-      0.145
+      -0.61,
+      0.34,
+      0.23
     ],
     "left_toe_effective_target_m_relative_to_body_center": [
-      -0.59,
-      0.46,
-      0.093
+      -0.78,
+      0.42,
+      0.055
     ],
     "elbow_and_shoulder_refinement": "owner-traced original target stays visible; physical source topology takes precedence over destructive stretching",
     "note": "effective left leg placement is an initial anatomy constraint, NOT an alteration to owner image or an approved redesign",
@@ -290,7 +290,7 @@
       -0.44,
       0.093
     ],
-    "foot_plant": "both ankles above the floor, foot bones near horizontal; toe/heel area check mandatory; illustrated points preserved in source",
+    "foot_plant": "Actual source rig tested left ankle/toe positions restored from last working both-foot contact. Stricter sole patch/heel + toe coverage required; DO NOT claim source approved based on lowest vertex only.",
     "proportions": "source sculpt first. prevent animation pose bone scaling to disguise too-short limbs"
   }
 }
