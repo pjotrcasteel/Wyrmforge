@@ -115,3 +115,16 @@ loads without errors. These are source-marker diagnostics and source-lit Canvas
 sprites, not evaluated live-skin soles, production GPU materials or phone hardware.
 Application 694/694, Domain 405/405 and JavaScript 610/610 pass on integrated main.
 
+Actual first Wet Forest Hunt: 230 captured samples, 1.5359 native marker pixels,
+no adapter/page errors, and the same three missing ground candidates already
+reproduced flag-off. This is not Hunt/GPU acceptance. Sanitized summary receipts
+are preserved beside the heading and curve diagnostics.
+
+An alternate compact source (0.50m stride, 0.60 stance) passes independent mesh
+QC and negative mutations. It reduces curve residuals and passes the tested
+constant curves through 0.6 radians/second, but faster curves still fail, maximum
+2.374 native pixels. A 0.55-stance/0.56m attempt failed real limb reach and was
+rejected. No limits or correction bounds were widened. The compact source is
+preserved separately for baking and actual-game comparison. Metadata-only
+captured-root replay is explicitly undersampled and cannot replace live proof.
+

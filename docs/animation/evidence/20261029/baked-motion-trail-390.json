@@ -1,0 +1,42 @@
+{
+  "foundationMode": "sprite-walk",
+  "representation": "baked-full-body-sprites",
+  "contactMeasurement": "unsnapped source markers; not evaluated skin soles",
+  "expectedWebglUnavailable": false,
+  "fallbackCanvasPixels": null,
+  "scene": "real-first-trail",
+  "mobileEmulated": true,
+  "candidate": true,
+  "inspection": "lit",
+  "physicalDevice": false,
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "samples": 230,
+  "solveFailures": [],
+  "maximumProjectedSoleDrift": 1.4879078604170497,
+  "gpuErrors": [],
+  "errors": [],
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "failedResources": [
+    {
+      "url": "/art/environment/wet-forest-source-backed/v1/grass-moss-art-candidates/grass-moss-ART-CANDIDATE-06.png",
+      "status": 404
+    },
+    {
+      "url": "/art/environment/wet-forest-source-backed/v1/wet-mud-art-candidates/wet-mud-INDEPENDENT-ART-CANDIDATE-06.png",
+      "status": 404
+    },
+    {
+      "url": "/art/environment/wet-forest-source-backed/v1/trampled-earth-art-candidates/trampled-earth-INDEPENDENT-ART-CANDIDATE-06.png",
+      "status": 404
+    }
+  ],
+  "maximumNativeMarkerSlip": 1.5359048881724384,
+  "markerContactWithinOneNativePixel": false
+}

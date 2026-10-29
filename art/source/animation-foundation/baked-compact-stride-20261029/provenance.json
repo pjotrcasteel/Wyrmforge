@@ -1,0 +1,26 @@
+{
+  "candidateNotApproved": true,
+  "runtimeIntegrated": false,
+  "sameCharacterRig": true,
+  "strideMetres": 0.5,
+  "stanceFraction": 0.6,
+  "headingDegrees": [
+    -19.6875,
+    -14.0625,
+    -8.4375,
+    -2.8125,
+    2.8125,
+    8.4375,
+    14.0625,
+    19.6875
+  ],
+  "sourceFiles": {
+    "hollow-foundation.blend": "6c6bfbb0cd3dad0fbd8164d2cef31ab2043fd17b556e221233481caa9216e5ef",
+    "source-manifest.json": "137ad4f6d6414b70364ec9dd3c2b9ae24eac02cb44e5e35e2df9228f8a2e2bd0",
+    "source-preflight.json": "16870e29932dcbbf76c9c4dbbdf0c001ebc86dca007baf492aa665e449a39274",
+    "independent-source-qc.json": "f92002d45944787218d94cbecb22eca2f7a19c306a588e0dd56c04ce60e6eb0b",
+    "negative-source-qc.json": "d57500eca0a6ea6eb57098fe61d6ba5ff0e14d8f597139fa45619a397ad20dd4"
+  },
+  "maxSoleSlipMetres": 5.170643887539979e-07,
+  "minimumMassMarginMetres": 0.00827573102898314
+}

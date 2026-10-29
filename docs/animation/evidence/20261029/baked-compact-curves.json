@@ -1,0 +1,286 @@
+{
+  "runtimeAccepted": false,
+  "measurement": "source markers on curved C#-style root paths; not raster proof",
+  "results": [
+    {
+      "rate": 0.1,
+      "hz": 15,
+      "speed": 30,
+      "maxNativeSlip": 0.5273802840500639,
+      "switches": 12
+    },
+    {
+      "rate": 0.1,
+      "hz": 15,
+      "speed": 60,
+      "maxNativeSlip": 0.21377455708809692,
+      "switches": 12
+    },
+    {
+      "rate": 0.1,
+      "hz": 30,
+      "speed": 30,
+      "maxNativeSlip": 0.5207945966480394,
+      "switches": 12
+    },
+    {
+      "rate": 0.1,
+      "hz": 30,
+      "speed": 60,
+      "maxNativeSlip": 0.4969300154814793,
+      "switches": 12
+    },
+    {
+      "rate": 0.1,
+      "hz": 60,
+      "speed": 30,
+      "maxNativeSlip": 0.5276491743375449,
+      "switches": 12
+    },
+    {
+      "rate": 0.1,
+      "hz": 60,
+      "speed": 60,
+      "maxNativeSlip": 0.48466407108175885,
+      "switches": 12
+    },
+    {
+      "rate": 0.1,
+      "hz": 120,
+      "speed": 30,
+      "maxNativeSlip": 0.52634674336474,
+      "switches": 12
+    },
+    {
+      "rate": 0.1,
+      "hz": 120,
+      "speed": 60,
+      "maxNativeSlip": 0.48782908189527147,
+      "switches": 12
+    },
+    {
+      "rate": 0.3,
+      "hz": 15,
+      "speed": 30,
+      "maxNativeSlip": 0.5594044338457584,
+      "switches": 24
+    },
+    {
+      "rate": 0.3,
+      "hz": 15,
+      "speed": 60,
+      "maxNativeSlip": 0.27992278010933047,
+      "switches": 24
+    },
+    {
+      "rate": 0.3,
+      "hz": 30,
+      "speed": 30,
+      "maxNativeSlip": 0.5061289466072043,
+      "switches": 24
+    },
+    {
+      "rate": 0.3,
+      "hz": 30,
+      "speed": 60,
+      "maxNativeSlip": 0.49327744058913037,
+      "switches": 24
+    },
+    {
+      "rate": 0.3,
+      "hz": 60,
+      "speed": 30,
+      "maxNativeSlip": 0.694154102303766,
+      "switches": 24
+    },
+    {
+      "rate": 0.3,
+      "hz": 60,
+      "speed": 60,
+      "maxNativeSlip": 0.5029905693060291,
+      "switches": 24
+    },
+    {
+      "rate": 0.3,
+      "hz": 120,
+      "speed": 30,
+      "maxNativeSlip": 0.694154102303766,
+      "switches": 24
+    },
+    {
+      "rate": 0.3,
+      "hz": 120,
+      "speed": 60,
+      "maxNativeSlip": 0.5415615252855319,
+      "switches": 24
+    },
+    {
+      "rate": 0.6,
+      "hz": 15,
+      "speed": 30,
+      "maxNativeSlip": 0.5190817218451508,
+      "switches": 55
+    },
+    {
+      "rate": 0.6,
+      "hz": 15,
+      "speed": 60,
+      "maxNativeSlip": 0.4138301508737106,
+      "switches": 55
+    },
+    {
+      "rate": 0.6,
+      "hz": 30,
+      "speed": 30,
+      "maxNativeSlip": 0.6730165933283326,
+      "switches": 55
+    },
+    {
+      "rate": 0.6,
+      "hz": 30,
+      "speed": 60,
+      "maxNativeSlip": 0.5594044338457584,
+      "switches": 55
+    },
+    {
+      "rate": 0.6,
+      "hz": 60,
+      "speed": 30,
+      "maxNativeSlip": 0.6805220157908493,
+      "switches": 55
+    },
+    {
+      "rate": 0.6,
+      "hz": 60,
+      "speed": 60,
+      "maxNativeSlip": 0.5061289466072043,
+      "switches": 55
+    },
+    {
+      "rate": 0.6,
+      "hz": 120,
+      "speed": 30,
+      "maxNativeSlip": 0.6870073678974093,
+      "switches": 55
+    },
+    {
+      "rate": 0.6,
+      "hz": 120,
+      "speed": 60,
+      "maxNativeSlip": 0.694154102303766,
+      "switches": 55
+    },
+    {
+      "rate": 1.2,
+      "hz": 15,
+      "speed": 30,
+      "maxNativeSlip": 1.4039313784157843,
+      "switches": 93
+    },
+    {
+      "rate": 1.2,
+      "hz": 15,
+      "speed": 60,
+      "maxNativeSlip": 0.5417558680577991,
+      "switches": 93
+    },
+    {
+      "rate": 1.2,
+      "hz": 30,
+      "speed": 30,
+      "maxNativeSlip": 1.2951503079740978,
+      "switches": 110
+    },
+    {
+      "rate": 1.2,
+      "hz": 30,
+      "speed": 60,
+      "maxNativeSlip": 0.6625912690816249,
+      "switches": 110
+    },
+    {
+      "rate": 1.2,
+      "hz": 60,
+      "speed": 30,
+      "maxNativeSlip": 1.4045125670450584,
+      "switches": 111
+    },
+    {
+      "rate": 1.2,
+      "hz": 60,
+      "speed": 60,
+      "maxNativeSlip": 0.7577941585922692,
+      "switches": 111
+    },
+    {
+      "rate": 1.2,
+      "hz": 120,
+      "speed": 30,
+      "maxNativeSlip": 1.4912919654433496,
+      "switches": 112
+    },
+    {
+      "rate": 1.2,
+      "hz": 120,
+      "speed": 60,
+      "maxNativeSlip": 0.7472251627516531,
+      "switches": 112
+    },
+    {
+      "rate": 2.4,
+      "hz": 15,
+      "speed": 30,
+      "maxNativeSlip": 2.3596841531410666,
+      "switches": 120
+    },
+    {
+      "rate": 2.4,
+      "hz": 15,
+      "speed": 60,
+      "maxNativeSlip": 2.281704680558519,
+      "switches": 120
+    },
+    {
+      "rate": 2.4,
+      "hz": 30,
+      "speed": 30,
+      "maxNativeSlip": 2.2105850984904545,
+      "switches": 185
+    },
+    {
+      "rate": 2.4,
+      "hz": 30,
+      "speed": 60,
+      "maxNativeSlip": 1.4039313784157843,
+      "switches": 185
+    },
+    {
+      "rate": 2.4,
+      "hz": 60,
+      "speed": 30,
+      "maxNativeSlip": 2.273233526287871,
+      "switches": 221
+    },
+    {
+      "rate": 2.4,
+      "hz": 60,
+      "speed": 60,
+      "maxNativeSlip": 1.2951503079740978,
+      "switches": 221
+    },
+    {
+      "rate": 2.4,
+      "hz": 120,
+      "speed": 30,
+      "maxNativeSlip": 2.373977046143694,
+      "switches": 222
+    },
+    {
+      "rate": 2.4,
+      "hz": 120,
+      "speed": 60,
+      "maxNativeSlip": 1.4045125670450584,
+      "switches": 222
+    }
+  ]
+}
