@@ -4,7 +4,8 @@ import { validateSnapshot, selectLights } from './registry.js';
 
 /** Shared GPU adapter; accepts resource IDs and descriptors, never entity kinds. */
 export class LightingEngine {
-    constructor(canvas, { shadowViews = 8, maxLights = 8 } = {}) {
+    constructor(canvas, { shadowViews = 8, maxLights = 8, shadowMapSize = 512 } = {}) {
+        if (![128, 256, 512, 1024].includes(shadowMapSize)) throw new RangeError('Unsupported shadow map size');
         this.canvas = canvas;
         this.renderer = new T.WebGLRenderer({ canvas, antialias: false, alpha: false, preserveDrawingBuffer: true });
         this.renderer.outputColorSpace = T.SRGBColorSpace;
@@ -22,7 +23,7 @@ export class LightingEngine {
         this.scene.add(this.ambient);
         this.objects = new Map(); this.lights = new Map();
         this.geometries = new Map(); this.textures = new Map();
-        this.shadowViews = shadowViews; this.maxLights = maxLights;
+        this.shadowViews = shadowViews; this.maxLights = maxLights; this.shadowMapSize = shadowMapSize;
         this.alive = true;
         this.debugView = 'lit';
         this.halfWidth = 5;
@@ -103,14 +104,15 @@ export class LightingEngine {
         for (const o of s.objects) for (const key of ['geometry', 'occluderGeometry'])
             if (o[key] && !this.geometries.has(o[key])) throw new Error(`Missing geometry ${o[key]}`);
         const selected = selectLights(s, this.shadowViews, this.maxLights);
-        for (const id of this.lights.keys()) if (!selected.some(l => l.id === id)) this.removeLight(id);
+        const selectedIds = new Set(selected.map(light => light.id));
+        for (const id of this.lights.keys()) if (!selectedIds.has(id)) this.removeLight(id);
         for (const d of selected) {
             let light = this.lights.get(d.id);
             if (light && light.userData.type !== d.type) { this.removeLight(d.id); light = null; }
             if (!light) {
                 const constructors = { point: T.PointLight, spot: T.SpotLight, directional: T.DirectionalLight };
                 light = new constructors[d.type](); light.userData.type = d.type;
-                light.shadow.mapSize.set(512, 512); light.shadow.bias = -.00015; light.shadow.normalBias = .025;
+                light.shadow.mapSize.set(this.shadowMapSize, this.shadowMapSize); light.shadow.bias = -.00015; light.shadow.normalBias = .025;
                 light.shadow.camera.near = .05;
                 if (d.type === 'directional') Object.assign(light.shadow.camera, { left: -9, right: 9, top: 9, bottom: -9 });
                 this.scene.add(light); if (light.target) this.scene.add(light.target);
@@ -123,10 +125,12 @@ export class LightingEngine {
             if (light.isSpotLight) { light.angle = d.coneAngle; light.penumbra = d.penumbra; }
         }
         const materialById = new Map(s.materials.map(m => [m.id, m]));
-        for (const id of this.objects.keys()) if (!s.objects.some(o => o.id === id)) this.removeObject(id);
+        const materialSignatures = new Map(s.materials.map(m => [m.id, JSON.stringify(m)]));
+        const activeObjectIds = new Set(s.objects.map(object => object.id));
+        for (const id of this.objects.keys()) if (!activeObjectIds.has(id)) this.removeObject(id);
         for (const d of s.objects) {
             const md = materialById.get(d.material);
-            const signature = JSON.stringify([d.geometry, d.occluderGeometry, md, d.receivesLight]);
+            const signature = JSON.stringify([d.geometry, d.occluderGeometry, materialSignatures.get(d.material), d.receivesLight]);
             let object = this.objects.get(d.id);
             if (object && object.signature !== signature) { this.removeObject(d.id); object = null; }
             if (!object) {
@@ -255,6 +259,7 @@ float proofShadowVisibility() {
             textures: this.renderer.info.memory.textures, geometries: this.renderer.info.memory.geometries,
             inspectedReceiver: this.snapshot?.objects.find(o => o.id === this.inspectionObject) ?? null,
             materialBudget: this.materialBudget, fogEnabled: !!this.scene.fog,
+            budgets: { maxLights: this.maxLights, shadowViews: this.shadowViews, shadowMapSize: this.shadowMapSize },
             productionPathsMigrated: 0 };
     }
     dispose() {
