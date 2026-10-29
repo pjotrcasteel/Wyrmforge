@@ -1,5 +1,10 @@
 # Source-evaluated baked sprite materials — review only
 
+**Rejected initial normal basis:** this first export omitted Cycles camera Z
+conversion. Its normal map is not accepted. The loader now rejects this old
+convention; corrected-map regeneration is pending. Preserve the failure in Git
+history and use the source normal-basis QC before accepting a replacement.
+
 One complete sixteen-frame walk in eight genuine views. Editable source:
 `art/source/animation-foundation/baked-compact-stride-20261029/`.
 The primary image is unlit albedo; matching evaluated geometry normals and

@@ -14,7 +14,7 @@ with tempfile.TemporaryDirectory(dir=root/'artifacts',prefix='sprite-material-te
     image=Image.new('RGBA',(96,96));image.putpixel((48,48),color);image.save(folder/f'{f:02d}.png')
  atlas.save(pack/'walk.png');manifest={'directions':directions,'sourceBlendSha256':'a'*64,'clips':{'walk':{'frames':2,'cell':96,'columns':2,'crop':[40,40,56,56],'image':'walk.png','sha256':hashlib.sha256((pack/'walk.png').read_bytes()).hexdigest()}}}
  (pack/'manifest.json').write_text(json.dumps(manifest));(pack/'profile.json').write_text('{}')
- receipt={'sourceBlendSha256':'a'*64,'directions':directions,'cell':96,'normalBasis':'camera-right/up/toward','clips':['walk'],'modes':['albedo','normal','emissive']}
+ receipt={'sourceBlendSha256':'a'*64,'directions':directions,'cell':96,'normalBasis':'camera-right/up/toward','normalBasisVersion':2,'cyclesCameraToNormalBasis':[1,1,-1],'clips':['walk'],'modes':['albedo','normal','emissive']}
  def run(label):
   (materials/'material-receipt.json').write_text(json.dumps(receipt))
   return subprocess.run([sys.executable,str(root/'tools/animation/pack_sprite_materials.py'),str(pack),'--materials',str(materials),'--out',str(p/label)],capture_output=True,text=True)

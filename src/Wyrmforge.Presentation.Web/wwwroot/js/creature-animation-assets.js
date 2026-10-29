@@ -27,6 +27,7 @@ export function createCreatureAnimationAssets(baseUrl,{maxDecodedBytes=64*1024*1
         const specs=[profile.locomotion,...(profile.locomotion.motionVariants??[]),...Object.values(profile.actions),...Object.values(profile.pivots??{}),...(profile.pivot?[profile.pivot]:[])];
         for(const spec of specs)if(manifest.clips[spec.clip]?.frames!==spec.frames)throw new TypeError(`Profile/atlas mismatch: ${spec.clip}`);
         for(const clip of Object.values(manifest.clips))if(clip.colorRole!=null&&!['albedo','review-lit'].includes(clip.colorRole))throw new TypeError('Unknown primary sprite color role');
+        for(const clip of Object.values(manifest.clips))if(clip.colorRole==='albedo'&&clip.materials?.normal&&manifest.normalBasisVersion!==2)throw new TypeError('Verified camera-right/up/toward sprite normal basis required');
         if(manifest.skin){
             if(!profile.sourceSupport)throw new TypeError('Source skin requires shared source support profile');
             const skin=await loadSourceSkinResources(baseUrl,manifest.skin,{maxDecodedBytes});

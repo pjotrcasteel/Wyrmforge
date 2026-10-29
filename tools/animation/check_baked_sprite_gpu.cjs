@@ -13,12 +13,14 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
    const page=await browser.newPage({viewport:{width,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:3}),errors=[];
    page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});page.on('response',r=>{if(r.status()>=400)errors.push(r.status()+' '+new URL(r.url()).pathname);});
    await page.goto(url+'/enemy-lab?kind=Hollow&seed=42&autoplay=false&cast=false&paused=true&entityId=5&animationFoundation=sprite-walk&arenaGpu=1');
+   await page.locator('#wyrmforge-ignition').waitFor({state:'hidden',timeout:60000});
    await page.waitForFunction(async()=>{const m=await import('/js/arena.js'),d=m.readArenaDiagnostics(document.querySelector('.enemy-lab canvas'));return d?.gpuWorld?.bakedSpriteActors>0;},{},{timeout:60000});
    const views={};
-   for(const view of ['neutral-lit','albedo','normal','zero-light','neutral-lit']){
+   for(const view of ['neutral-lit','neutral-albedo','neutral-normals','neutral-shadow-visibility','zero-light','neutral-lit']){
     const result=await page.evaluate(async view=>{
      const m=await import('/js/arena.js'),c=document.querySelector('.enemy-lab canvas');m.setArenaLightingInspection(c,view);await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
-     const d=m.readArenaDiagnostics(c),pixels=m.readArenaLightingPixels(c),[w,h]=d.gpuWorld.framebuffer;let maxRGB=0,nonblack=0;
+     const d=m.readArenaDiagnostics(c);if(!d.gpuWorld.framebuffer)throw Error(JSON.stringify({view,gpu:d.gpuWorld,lighting:d.lighting}));
+     const pixels=m.readArenaLightingPixels(c),[w,h]=d.gpuWorld.framebuffer;let maxRGB=0,nonblack=0;
      for(let i=0;i<pixels.length;i++)if(i%4!==3){maxRGB=Math.max(maxRGB,pixels[i]);if(pixels[i])nonblack++;}
      const hash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',pixels))].map(v=>v.toString(16).padStart(2,'0')).join('');
      const image=document.createElement('canvas');image.width=w;image.height=h;const ctx=image.getContext('2d'),data=ctx.createImageData(w,h);
@@ -28,7 +30,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
     const label=view==='neutral-lit'&&views[view]?'restored':view;
     fs.writeFileSync(path.join(out,width+'-'+label+'.png'),Buffer.from(result.png,'base64'));delete result.png;views[label]=result;
    }
-   const accepted=views['neutral-lit'].nonblack>0&&views.albedo.hash!==views.normal.hash&&views['zero-light'].maxRGB===0&&views.restored.hash===views['neutral-lit'].hash&&errors.length===0;
+   const accepted=views['neutral-lit'].nonblack>0&&views['neutral-albedo'].hash!==views['neutral-normals'].hash&&views['zero-light'].maxRGB===0&&views.restored.hash===views['neutral-lit'].hash&&errors.length===0;
    results.push({width,physicalDevice:false,scope:'actual paused C# encounter; source-derived sprite materials through shared GPU; no contact/art acceptance',accepted,errors,views});await page.close();
   }
   fs.writeFileSync(path.join(out,'gpu-contract.json'),JSON.stringify({results},null,2));console.log(JSON.stringify(results.map(r=>({width:r.width,accepted:r.accepted,errors:r.errors,zeroMaximum:r.views['zero-light'].maxRGB,restored:r.views.restored.hash===r.views['neutral-lit'].hash})),null,2));

@@ -10,6 +10,7 @@ from PIL import Image,ImageChops
 p=argparse.ArgumentParser();p.add_argument('pack',type=Path);p.add_argument('--materials',type=Path,required=True);p.add_argument('--out',type=Path,required=True);a=p.parse_args()
 m=json.loads((a.pack/'manifest.json').read_text());receipt=json.loads((a.materials/'material-receipt.json').read_text())
 if m.get('skin') or m.get('regions'):raise ValueError('Complete baked sprites required')
+if receipt.get('normalBasisVersion')!=2 or receipt.get('cyclesCameraToNormalBasis')!=[1,1,-1]:raise ValueError('Material normal basis requires verified Cycles camera Z conversion')
 if receipt['sourceBlendSha256']!=m.get('sourceBlendSha256'):raise ValueError('Material/source Blender mismatch')
 if set(receipt['directions'])!=set(m['directions']) or receipt['cell']!=96 or receipt['normalBasis']!='camera-right/up/toward':raise ValueError('Material view/basis mismatch')
 if not set(m['clips'])<=set(receipt['clips']) or set(receipt['modes'])!={'albedo','normal','emissive'}:raise ValueError('Incomplete declared material passes')
@@ -37,5 +38,5 @@ for name,c in m['clips'].items():
   decoded+=atlas.width*atlas.height*4
 if decoded>64*1024*1024:raise ValueError('Production sprite texture budget exceeded')
 shutil.copyfile(a.pack/'profile.json',a.out/'profile.json');shutil.copyfile(a.materials/'material-receipt.json',a.out/'material-receipt.json')
-m.update(productionReady=False,reviewLightingOnly=False,materialPassesAligned=True,decodedTextureBytes=decoded,materialGate='Actual shared GPU lighting, depth/caster, mobile and owner acceptance remain open')
+m.update(productionReady=False,reviewLightingOnly=False,materialPassesAligned=True,normalBasisVersion=2,decodedTextureBytes=decoded,materialGate='Actual shared GPU lighting, depth/caster, mobile and owner acceptance remain open')
 (a.out/'manifest.json').write_text(json.dumps(m,indent=2)+'\n');print(json.dumps({'decodedTextureBytes':decoded,'alignedMaterials':True,'productionReady':False}))

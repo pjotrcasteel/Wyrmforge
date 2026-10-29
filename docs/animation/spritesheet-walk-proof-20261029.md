@@ -162,3 +162,16 @@ actors/resources. A read-only framebuffer check now exercises actual C# paused
 encounters at 320/390px, aligned albedo/normal views, true zero-light (including
 emission off) and exact frozen restoration. Results are pending.
 
+## Normal-basis correction
+
+The first actual framebuffer checks pass exact zero light and restoration at
+320/390px, but the initial material export is rejected: visible source normals
+all have negative camera-toward Z, making the lit actor too dark. This is a real
+exporter fault, not successful material acceptance. Cycles reverses Blender
+camera Z in its [camera conversion](https://github.com/blender/blender/blob/v4.5.3/intern/cycles/blender/camera.cpp#L296).
+The corrected exporter explicitly converts camera right/up/forward to
+right/up/toward. Six independently oriented analytic plane/camera render checks
+pass against geometric world/camera rotations. The material packer and primary
+albedo loader now reject the old/unverified convention. Regeneration and renewed
+framebuffer inspection are required; earlier dark captures remain rejected.
+

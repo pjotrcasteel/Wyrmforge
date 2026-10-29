@@ -5,6 +5,8 @@ all material passes. Depth/caster geometry remains a separate open gate.
 """
 import bpy,sys,argparse,math,json,hashlib
 from pathlib import Path
+sys.path.insert(0,str(Path(__file__).resolve().parent))
+from source_material_normals import camera_normal_colour
 p=argparse.ArgumentParser();p.add_argument('source');p.add_argument('--out',required=True);p.add_argument('--clips',default='walk,attack');p.add_argument('--directions',default='N,NE,E,SE,S,SW,W,NW');a=p.parse_args(sys.argv[sys.argv.index('--')+1:])
 bpy.ops.wm.open_mainfile(filepath=str(Path(a.source).resolve()))
 source_manifest=json.loads((Path(a.source).resolve().parent/'source-manifest.json').read_text())
@@ -28,10 +30,8 @@ for mode in ['albedo','normal','emissive']:
             if bsdf.inputs['Base Color'].is_linked:tree.links.new(bsdf.inputs['Base Color'].links[0].from_socket,emission.inputs['Color'])
             else:emission.inputs['Color'].default_value=bsdf.inputs['Base Color'].default_value
         elif mode=='normal':
-            geometry=tree.nodes.new('ShaderNodeNewGeometry');transform=tree.nodes.new('ShaderNodeVectorTransform');transform.vector_type='NORMAL';transform.convert_from='WORLD';transform.convert_to='CAMERA'
-            tree.links.new(geometry.outputs['Normal'],transform.inputs['Vector'])
-            mapping=tree.nodes.new('ShaderNodeVectorMath');mapping.operation='MULTIPLY_ADD';mapping.inputs[1].default_value=(.5,.5,.5);mapping.inputs[2].default_value=(.5,.5,.5)
-            tree.links.new(transform.outputs[0],mapping.inputs[0]);tree.links.new(mapping.outputs[0],emission.inputs['Color'])
+            geometry=tree.nodes.new('ShaderNodeNewGeometry')
+            tree.links.new(camera_normal_colour(tree,geometry.outputs['Normal']),emission.inputs['Color'])
         else:
             attribute=tree.nodes.new('ShaderNodeAttribute');attribute.attribute_name='hollow_inner_fire'
             colour=tree.nodes.new('ShaderNodeMixRGB');colour.blend_type='MULTIPLY';colour.inputs[0].default_value=1;colour.inputs[2].default_value=(1,.23,.018,1)
@@ -53,4 +53,4 @@ for clip in a.clips.split(','):
                 scene.render.filepath=str(folder/f'{index:02d}.png');bpy.ops.render.render(write_still=True)
         print('AN_MATERIAL',clip,direction,flush=True)
 print('AN_MATERIAL_OUTPUT',str(out),flush=True)
-(out/'material-receipt.json').write_text(json.dumps({'sourceBlendSha256':hashlib.sha256(Path(a.source).read_bytes()).hexdigest(),'sourceManifestSha256':hashlib.sha256((Path(a.source).resolve().parent/'source-manifest.json').read_bytes()).hexdigest(),'clips':a.clips.split(','),'directions':a.directions.split(','),'modes':list(materials),'cell':96,'samples':scene.cycles.samples,'normalBasis':'camera-right/up/toward','toolSha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'productionAccepted':False},indent=2)+'\n')
+(out/'material-receipt.json').write_text(json.dumps({'sourceBlendSha256':hashlib.sha256(Path(a.source).read_bytes()).hexdigest(),'sourceManifestSha256':hashlib.sha256((Path(a.source).resolve().parent/'source-manifest.json').read_bytes()).hexdigest(),'clips':a.clips.split(','),'directions':a.directions.split(','),'modes':list(materials),'cell':96,'samples':scene.cycles.samples,'normalBasis':'camera-right/up/toward','normalBasisVersion':2,'cyclesCameraToNormalBasis':[1,1,-1],'toolSha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'productionAccepted':False},indent=2)+'\n')

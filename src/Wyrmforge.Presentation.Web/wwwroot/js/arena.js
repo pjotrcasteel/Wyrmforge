@@ -117,7 +117,8 @@ export function readArenaDiagnostics(canvas) {
 // Explicit developer inspection; never changes the authoritative light frame.
 export function setArenaLightingInspection(canvas,view='lit'){
     const world=arenas.get(canvas)?.gpuWorld;if(!world)return false;
-    world.engine.setDebugView(['neutral-lit','zero-light'].includes(view)?'lit':view);world.inspectionLighting=view==='zero-light'?'zero':view==='neutral-lit';return true;
+    const neutral=view.startsWith('neutral-');
+    world.engine.setDebugView(view==='zero-light'?'lit':neutral?view.slice('neutral-'.length):view);world.inspectionLighting=view==='zero-light'?'zero':neutral;return true;
 }
 export function readArenaLightingPixels(canvas){return arenas.get(canvas)?.gpuWorld?.engine.pixels()??null;}
 
