@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 concurrency:
   group: hollowed-v2-candidate-${{ github.ref }}
@@ -36,6 +37,8 @@ jobs:
           python-version: "3.11"
       - name: Reject any legacy H1 code or game/animation changes
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           python -m py_compile tools/art/hollowed-reference-v2/verify_source_identity.py
@@ -48,10 +51,12 @@ jobs:
                  for p in root.rglob("*")):
               raise SystemExit("Unreviewed source binary was checked into clean V2")
           PY
-          git fetch --no-tags --depth=1 origin main
-          changed="$(git diff --name-only origin/main HEAD)"
-          echo "$changed"
-          if echo "$changed" | grep -vE '^(docs/art/evidence/hollowed-reference-v2/|art/source/enemies/hollow/reference-v2/|tools/art/hollowed-reference-v2/|\.github/workflows/hollowed-reference-v2.yml)' ; then
+          # The canonical main branch moves independently (arena work etc).
+          # Comparing its current tip to HEAD falsely flags unrelated main changes.
+          # Inspect exactly the changed files belonging to draft PR #399 instead.
+          changed="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/pulls/399/files?per_page=100" --jq '.[].filename')"
+          printf '%s\n' "$changed"
+          if printf '%s\n' "$changed" | sed '/^$/d' | grep -vE '^(docs/art/evidence/hollowed-reference-v2/|art/source/enemies/hollow/reference-v2/|tools/art/hollowed-reference-v2/|\.github/workflows/hollowed-reference-v2.yml$)' ; then
             echo "Forbidden gameplay/animation/old H1 source edit"
             exit 1
           fi
