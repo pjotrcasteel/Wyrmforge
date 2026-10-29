@@ -109,8 +109,10 @@ jobs:
           set -e
           if [ "$SMALL_BUDGET_EXIT" -gt 1 ]; then exit "$SMALL_BUDGET_EXIT"; fi
           python3 tools/animation/check_baked_turn_entry.py --self-test
-          python3 tools/animation/check_baked_turn_entry.py "$REVIEW/profile.json" --diagnostic > "$REVIEW/pivot-entry-diagnostics.json"
-          python3 tools/animation/check_baked_turn_entry.py "$SMALL/profile.json" --diagnostic > "$SMALL/pivot-entry-diagnostics.json"
+          # Source marker continuity is a strict mandatory gate. Even a
+          # passed source gate does NOT imply in-Hunt or art acceptance.
+          python3 tools/animation/check_baked_turn_entry.py "$REVIEW/profile.json" > "$REVIEW/pivot-entry-diagnostics.json"
+          python3 tools/animation/check_baked_turn_entry.py "$SMALL/profile.json" > "$SMALL/pivot-entry-diagnostics.json"
           python3 - <<'PY'
           import json
           from pathlib import Path
