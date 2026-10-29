@@ -1,6 +1,6 @@
 # Hunts, maps and living world
 
-> **Canonical WyrmForge specification · updated 20 October 2026.** Connected geography and physically authoritative combat places, not decorative disconnected stage cards.
+> **Canonical WyrmForge specification · updated 29 October 2026.** Connected geography and physically authoritative combat places, not decorative disconnected stage cards.
 > [Canonical index](README.md) · Only explicitly marked **LOCKED/approved** requirements are commitments. Proposed values, old milestones and drafts are not evidence of shipped code. Verify current `main`, PRs and tests.
 
 ## 4. Region architecture, Wyrm hierarchy and Hunt Director
@@ -48,7 +48,7 @@ Don't equate *all generated nodes* with fights in a chosen route, don't make eve
 2. **HuntRequest / HuntPacingProfile:** mode, seed/rules version, depth, intended threat tier, chosen/unknown target, combat-path budgets, detour/reward/rarity/extraction constraints, story anchors.
 3. **GeneratedHuntPlan:** directed connected routes with actual geometry/path traversability, node identity, incoming/outgoing links, mandatory authored Chronicle sites, meaningful optional dead ends, eventual lair and exit.
 4. **EncounterSiteProfile:** site's purpose and visual history (chapel, causeway, village, watchtower, sanctuary), region dominant magic, justified encounter influence, real enemies/objective/reward/clues.
-5. **ArenaRecipe:** deterministic physically playable environment for the exact chosen site; see §5.
+5. **ArenaRecipe:** deterministic physically playable environment for the exact chosen site; see §5 and the **29 October map-to-arena geographic fidelity decision** in §5.0.
 
 Rules: all playable starts/required selections have lawful continuation; branches **commit** the player and unchosen branches' rewards become unavailable; reconnections are actual walkable paths, not misleading screen lines. Optional dead-end excursions are permitted only if clearly marked and with a legal way to continue after their resolution. Roads intersect waterways only at a valid bridge/ford, actual in-world structure and tested navigation. A broken bridge removes that edge (or opens an authored safe alternative) in the SAME authoritative graph and drawing. Scouting/camera/labels cannot reveal hidden legal topologies before earned.
 
@@ -65,6 +65,24 @@ Normal Hunts, campaign and Eternal have distinct one-time reward/extraction/save
 ---
 
 ## 5. Arena Generator, procedural combat and transforms
+
+### 5.0 Map-to-arena geographic fidelity and discovery — LOCKED (owner decision, 29 October 2026)
+
+**World-first source of truth:** A Hunter's Chart location and its live Hunt arena are two **projections of the same versioned geographic site**, not two seeded generators trying to imitate each other. The map's *art image* is not parsed into geometry; the shared authoritative C# region/site/route plan drives both the map painter and the ArenaRecipe. If the chart shows a forest fork, mountain pass, bridge/river, ruined chapel or Wyrm Lair, the playable scene must contain that location with its **mandatory physical layout and meaningful entrance/exit relationships**. No re-rolled arena that contradicts a previously seen landmark or silently generates a different biome.
+
+**Contract sketch (conceptual; extend existing types rather than invent a second engine):**
+- **Identity and time:** stable region/site/node IDs, location name, source-generation version, deterministic seed, persistent world-state revision and recorded prior visits/knowledge. Distinguish geography from temporary enemy occupation, weather, damage and eligible reward state.
+- **Local geography:** site archetype (road fork, forest glade, mountain pass, causeway, village, Wyrm Lair, etc.), biome, landform/elevation/slope, drainage/rivers/bridges, vegetation, moisture, travel wear, sheltered areas, stable local coordinate origin/orientation and scale. These fields govern terrain class; no random decorative mud circles that lack ecological cause.
+- **Route topology:** world-graph edge identity mapped to a stable local entrance/exit port and traversable road/path geometry; incoming/outgoing direction, forks/joins, bridges/ford constraints, passable/cliff/river boundaries and commitment eligibility. Drawing two road branches does not grant the right to loot both after a committed choice. Connect site ports to the correct neighboring graph edges. Visual path and physical collision/exit always agree.
+- **Landmarks and site purpose:** authoritatively defined physical placements/footprints for mandatory chart-recognizable structures and spatial relations, plus legal optional detail envelopes. A mountain node is a mountain arena (not arbitrary grass); a lair node has a believable approach/arena matching the chosen Wyrm lineage and threat stage. Different seeds vary local composition without erasing the promise.
+- **Encounter and exploration:** encounter objectives/enemy ecology and safe spawn constraints, optional side pockets and discovery clues, tier-eligible material/relic/knowledge possibilities, actual prop/pickup positions, one-time flags, extraction/refuge rules and save boundaries. Environmental narrative must be legible: a broken cart near a road, graves near ruins, moss in sheltered damp places. **Chance** of interesting findings and worthwhile risk are desirable; treasure/gear are not guaranteed on every node. No new equipment economy without a separate approved design.
+- **Material semantics:** stable surface IDs, material-weight fields and optional authored presentation profiles. The initial debug renderer colors each class uniformly (forest floor, worn path, wet mud, stone, water, impassable land). **These solid colors never encode physical game rules**; authored material textures can later replace them while preserving site geometry exactly.
+
+**Examples to validate before materials:** (1) An illustrated woodland split yields a physically navigable fork with two correct neighboring exits, meaningful surrounding cover, and no fake additional road; (2) an illustrated mountain route yields constrained traversable ridges/slopes and non-traversable cliffs with safe combat room, not a flat square tinted gray; (3) a visible Wyrm Lair yields its real approach, entry, boss space and correct finale; (4) a bridge drawn on a river actually spans the water and connects real banks. A map painted with artistic perspective can simplify metric geometry but **must** keep topology, identity and prominent landmark relationships true.
+
+**Rendering/physics ownership:** the existing C# game and Hunt generator own geometry, collision, real contact/footfall events, hazards, gameplay deformation and loot; AR0–AR7 in [roadmap](roadmap.md#world-authored-arenas-and-groundmaterial-fidelity--ar0ar7-owner-decision-29-october-2026-locked) own geographic presentation, ecological classification, source-backed material display and grounded static dressing; the shared G renderer owns material illumination, normal/roughness, shadows and reflections; the same shared FXP visual-physics engine (FXP7–FXP8 extensions) owns cosmetic flex, debris motion and splashes, with animation/VFX providing their existing signals and rendering. AR6 is **integration**, never a second physics engine. If a mark changes traversal, damage, loot or persists as gameplay state, C# authorizes and saves it. Use flat-color semantic display to approve geography **before** texture production.
+
+**Map/arena acceptance:** test at least forest fork, mountain pass and lineage-specific Wyrm Lair at several seeds, both map and live arena screenshots in the same version, 320px/390px mobile camera, independent orientation changes, safe movement, player/enemy spawn, exit adjacency, objective/reward access, possible hidden discoveries and valid directed graph connectivity. Validate no duplicate reward after reload, return to refuge or route bypass. Capture visual pairs and obtain human approval at the AR0, AR1, AR3 and AR4–AR5 gates; passing a snapshot unit test or isolated art lab is not art acceptance. Reuse existing live gameplay and avoid changes to Tier-I–III progression until a versioned migration is proven.
 
 ### 5.1 Real locations, real physical rules — LOCKED
 

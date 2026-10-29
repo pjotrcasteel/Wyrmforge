@@ -1,6 +1,6 @@
 # Architecture, persistence and validation
 
-> **Canonical WyrmForge specification · updated 27 October 2026.** Keep gameplay deterministic and platform-agnostic; distinguish simulator truth from client rendering.
+> **Canonical WyrmForge specification · updated 29 October 2026.** Keep gameplay deterministic and platform-agnostic; distinguish simulator truth from client rendering.
 > [Canonical index](README.md) · Only explicitly marked **LOCKED/approved** requirements are commitments. Proposed values, old milestones and drafts are not evidence of shipped code. Verify current `main`, PRs and tests.
 
 ## LOCKED — unified engine ownership and event authority (27 October 2026)
@@ -10,6 +10,21 @@
 On one authoritative event (e.g. Fireball impact → C# damage/death), publish or project typed, replayable **source event facts** with stable event/actor IDs, tick/time, transform/direction, traits/status and source lifecycle. Let lighting, VFX, animation, cosmetic 2.5D physics and sound consume those facts without introducing extra hits, deaths, loot, navigation/collision changes or gameplay RNG. C# agent/AI uses real observations and executes through established simulation boundaries. A shared contract does not require one giant orchestrator or identical tick rates.
 
 Before adding an engine or extending a scene, inspect existing code and active PRs, select the current owner and reuse its registry/adapter path; supply an additional profile, not a second implementation. Preserve current gameplay, saves, visuals, sound, approved assets, painted 2D Town and mobile fallbacks. Exercise lifecycle, deterministic replay/duplicate delivery, pause/resume, entity expiry, reduced-effects, device budgets and cross-creature/spell coverage. The binding roadmap, sequencing and migration milestones are in [the engine architecture and ENG0–ENG4 consolidation section](roadmap.md#locked--one-reusable-engine-per-responsibility-owner-decision-27-october-2026).
+
+### Geographic site and surface interaction ownership — LOCKED (29 October 2026)
+
+**Location truth runs from world/site data into both the Hunter's Chart and actual ArenaRecipe.** Existing C# `WyrmrealmMapNode` / routes / `HuntArenaGenerator` / environment snapshots are the starting seam; grow them via a **versioned typed geographic/site contract** where needed, not a new world generation or physics engine. A stable site ID and frame ties map routes and landmarks to local arena entrances/exits, valid connected paths, elevation/water/cliff barriers, region history, material classes and legal optional discoveries. The map art is a projection of the same C# geography; rendering must not reverse-engineer arena geometry from a PNG. Prove the map and scene can be regenerated from one saved/versioned world seed without independent JS topology or consuming combat RNG.
+
+**Physical responsibility matrix:** 
+- C# RunSimulation/Domain: authoritative movement, collision, gameplay foot/impact facts, hazard/friction if any, collision-changing terrain, loot/damage, permanent world change, save/replay and reward/route eligibility.
+- Shared **FXP** runtime: cosmetic fixed-step physical responses and contact dynamics, including later **FXP7–FXP8** flex, loose debris, splash/displacement. FXP never moves gameplay colliders or creates reward state.
+- Shared **G** renderer: all surface albedo/normal/roughness/reflectivity, shadows, visibility and proper wet reflections. No arena-only alternative renderer.
+- Shared **animation/VFX**: pose/foot-ground contact markers consistent with the C# actor location and elemental visual events; not duplicate event authority.
+- **AR0–AR7 environment layer**: classify/place semantic terrain, provide solid-color diagnostic display, blend approved material weights, anchor static vegetation/site assets and display bounded material-specific physical aftermath from typed source events. AR may select a visual response profile or cache a temporary decal but must **not** calculate its own physical dynamics or re-authorize a gameplay hazard.
+
+**Contract example (not a new required class name):** C# `SiteGeography` / `SurfaceDefinition` descriptors contain stable IDs, local frame, route-port graph correspondence, mandatory landmark footprints, environmental fields, typed surface ID and optional deformation/appearance properties. The same immutable arena snapshot is first renderable as flat diagnostic colors and then as shared-GPU material surfaces. Swapping appearance must not alter topology, collisions, grants, AI or coordinate origin. An authoritative contact/impact event can be consumed by FXP for motion, AR for footprint/scorch visual accumulation, VFX for particles and G for transient emitters/shading—**one gameplay source event; multiple specialized consumers**.
+
+**Execution and test sequencing:** [Roadmap AR0–AR7](roadmap.md#world-authored-arenas-and-groundmaterial-fidelity--ar0ar7-owner-decision-29-october-2026-locked) is world-first: AR0–AR3 must be visually accepted in **flat colors** before detailed material work AR4–AR5. AR6 is gated by common FXP capabilities, not a pretext to implement a parallel simulation. Prove node/edge-to-port mapping and real map↔scene screenshot pairs for forest fork, mountain route and Wyrm Lair; use varied seeds, actual game camera, nav/spawn/exits, reward idempotence and mobile budgets. Maintain existing G/AI/ENG focus gates and preserve active PRs.
 
 ## 10. Suggested architecture / repo touchpoints — implementation guidance, not new API orders
 
@@ -37,7 +52,8 @@ A useful causal shape:
 Versioned Region/World state + Hunter Knowledge
             -> HuntRequest (mode, target envelope, seed)
             -> validated GeneratedHuntPlan (directed graph and physical paths)
-            -> selected EncounterSiteProfile / ArenaRecipe
+            -> selected SiteGeography (same authoritative chart/node identity, ports, landmarks)
+            -> validated ArenaRecipe (terrain and physical exits, semantic surfaces)
             -> authoritative RunSimulation C# + authored waves/events
             -> deterministic visual snapshots (Blazor/JS/SVG/canvas)
             -> transactional results: run rewards, map knowledge, world consequences
