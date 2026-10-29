@@ -119,7 +119,7 @@ public static class WorldSiteLandscapeGenerator
             // portrait camera starts. Candidate placement stays entirely in C#.
             var progress = .36 + random.NextDouble() * .22;
             var center = new HuntPoint(from.X + progress * dx, from.Y + progress * dy);
-            var offset = kind == "mountain-pass" ? .16 : .155;
+            var offset = kind == "mountain-pass" ? .19 : .18;
             var radiusX = kind == "mountain-pass" ? .065 : .045;
             var radiusY = kind == "mountain-pass" ? .075 : .055;
             foreach (var side in new[] { -1d, 1d })
