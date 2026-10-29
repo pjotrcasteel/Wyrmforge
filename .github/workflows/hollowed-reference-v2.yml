@@ -44,6 +44,7 @@ jobs:
           python -m py_compile tools/art/hollowed-reference-v2/verify_source_identity.py
           python -m py_compile tools/art/hollowed-reference-v2/audit_fresh_character_blender.py
           python -m py_compile tools/art/hollowed-reference-v2/sculpt_rotwalker_m1_pose_blender.py
+          python -m py_compile tools/art/hollowed-reference-v2/rig_rotwalker_m1_organic_blender.py
           python -m py_compile tools/art/hollowed-reference-v2/render_mobile_candidate_blender.py
           python - <<'PY'
           from pathlib import Path
@@ -170,6 +171,35 @@ jobs:
           assert d['owner_approved'] is False,d
           print('M1 new source-based pose technically valid; STILL NEEDS visual approval')
           PY
+      - name: M1 biological movement review - REAL weighted 3D skeleton, not H1 and not runtime engine
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/art/hollowed-reference-v2/rig_rotwalker_m1_organic_blender.py \
+            --input artifacts/hollowed-reference-v2/audit/review/ROTWalker-CANDIDATE-NOT-HOLLOWED-NOT-APPROVED.blend \
+            --output artifacts/hollowed-reference-v2/audit/model-m1-rig
+          test -s artifacts/hollowed-reference-v2/audit/model-m1-rig/Hollowed-M1-ANATOMICAL-ART-RIG-REAL-MOTION-UNAPPROVED.blend
+          test -s artifacts/hollowed-reference-v2/audit/model-m1-rig/M1-REAL-3D-RIG-FRONT-SIDE-BACK.png
+          test -s artifacts/hollowed-reference-v2/audit/model-m1-rig/M1-REAL-3D-RIG-SIDE-EIGHT-POSES.png
+          test -s artifacts/hollowed-reference-v2/audit/model-m1-rig/M1-REAL-3D-RIG-FRONT-MOTION.gif
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("artifacts/hollowed-reference-v2/audit/model-m1-rig/M1-RIG-motion-QC.json")
+          q=json.loads(p.read_text(encoding="utf-8"))
+          assert q["original_mesh_preserved"] is True,q
+          assert q["rig"]["bone_count"]>=18,q
+          assert q["rig"]["original_vertices"]>=31000,q
+          assert q["rig"]["old_H1_rig_reused"] is False,q
+          assert q["motion"]["source_demo_actions"]>=1,q
+          assert q["motion"]["source_motion_frames"]>=49,q
+          assert q["motion"]["animation_engine_modified"] is False,q
+          assert q["render"]["genuine_source_motion_frames_rendered"]>=16,q
+          assert q["universal_animation_engine_modified"] is False,q
+          assert q["pixel_export_performed"] is False,q
+          assert q["owner_approved"] is False,q
+          print("Articulated source-only 3D character motion evidence; visually unapproved.")
+          PY
       - name: Validate source identity in reopened Blender file
         run: |
           python - <<'PY'
@@ -197,5 +227,6 @@ jobs:
             artifacts/hollowed-reference-v2/audit/downloaded/source-provenance.txt
             artifacts/hollowed-reference-v2/audit/review/
             artifacts/hollowed-reference-v2/audit/model-m1/
+            artifacts/hollowed-reference-v2/audit/model-m1-rig/
           if-no-files-found: warn
           retention-days: 21
