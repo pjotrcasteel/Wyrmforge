@@ -1,0 +1,34 @@
+{
+  "foundationMode": "sprite-walk",
+  "representation": "baked-full-body-sprites",
+  "expectedWebglUnavailable": false,
+  "fallbackCanvasPixels": null,
+  "scene": "real-development-encounter",
+  "mobileEmulated": true,
+  "candidate": true,
+  "inspection": "lit",
+  "physicalDevice": false,
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "samples": 226,
+  "solveFailures": [],
+  "maximumProjectedSoleDrift": 11.284241789834375,
+  "gpuErrors": [],
+  "errors": [],
+  "consoleErrors": [],
+  "failedResources": [],
+  "contactMeasurement": "unsnapped source-marker world projection, not evaluated weighted skin soles",
+  "contactGatePassed": false,
+  "sourceAtlasFacingsObserved": [
+    "E",
+    "N",
+    "NE",
+    "NW",
+    "S",
+    "W"
+  ],
+  "spriteActorSamples": 172,
+  "recordingArtifact": "artifacts/an-sprite-walk-row-390"
+}
