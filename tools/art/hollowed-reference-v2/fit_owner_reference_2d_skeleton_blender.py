@@ -157,6 +157,8 @@ def fit_full_reference_pose(rig, body, global_root, data, target):
     for key,bone in (
         ("left_ankle_effective_target_m_relative_to_body_center","H_Shin_L"),
         ("left_toe_effective_target_m_relative_to_body_center","H_Foot_L"),
+        ("right_ankle_effective_target_m_relative_to_body_center","H_Shin_R"),
+        ("right_toe_effective_target_m_relative_to_body_center","H_Foot_R"),
     ):
         effective_target[bone]=body_center+Vector(data["constraints"][key])
     results={}
@@ -172,7 +174,7 @@ def fit_full_reference_pose(rig, body, global_root, data, target):
             float((target[name]-(rig.matrix_world@rig.pose.bones[name].tail)).length),4
         )
         results[name]["anatomy_constrained_target_used"] = (
-            name in ("H_Shin_L","H_Foot_L")
+            name in ("H_Shin_L","H_Foot_L","H_Shin_R","H_Foot_R")
         )
 
     initial_lo,_=extents(evaluated_world_vertices(body))
@@ -192,11 +194,29 @@ def fit_full_reference_pose(rig, body, global_root, data, target):
         if not candidates:
             raise ValueError(f"No real source vertices near {side} foot")
         contacts[side]=float(min(candidates))
-    if abs(contacts["L"]-contacts["R"])>.11:
+    if abs(contacts["L"]-contacts["R"])>.085:
         raise ValueError(
             f"Owner pose has only one supported foot, not stable gait: "
             f"left_z={contacts['L']:.4f}, right_z={contacts['R']:.4f}"
         )
+    # Protect a *sole patch*, not just one lowest protruding toe. Genuine
+    # deformed source mesh vertices close to the floor must show front-to-
+    # back coverage on BOTH boots. Report the exact patch evidence.
+    foot_patches={}
+    for side,sign in (("L",-1),("R",1)):
+        near=[v for v in body_coordinates
+              if sign*(v.x-xmid)>.28 and v.z<contacts[side]+.095]
+        if len(near)<8:
+            raise ValueError(f"Only isolated toe touches source ground: {side}, count={len(near)}")
+        footprint=round(float(max(v.y for v in near)-min(v.y for v in near)),4)
+        if footprint < .095:
+            raise ValueError(
+                f"Standing on a boot tip, not a planted foot: {side} "
+                f"source vertices={len(near)}, contact longitudinal footprint={footprint}m"
+            )
+        foot_patches[side]={"source_vertices_near_floor":len(near),
+                            "longitudinal_footprint_m":footprint}
+
 
     # Check the specific OWNER visual identity, not small rotation deltas.
     head_world=rig.matrix_world @ rig.pose.bones["H_Head"].head
@@ -231,6 +251,7 @@ def fit_full_reference_pose(rig, body, global_root, data, target):
         "per_foot_real_mesh_ground_contact_z": {
             k:round(v,5) for k,v in contacts.items()
         },
+        "real_weight_bearing_sole_patches": foot_patches,
         "owner_traced_targets_preserved":True,
         "limb_bone_stretch_anatomically_bounded":True,
         "old_incremental_pose_discarded":True,
