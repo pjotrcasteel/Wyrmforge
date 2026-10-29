@@ -70,10 +70,12 @@ export function auditBakedTransitions(profile,{rates=RATES,speeds=SPEEDS}={}) {
         movingClaw:!Object.values(profile.actions??{}).some(a=>a.poseGrid)
     };
     const contactPassed=results.every(r=>r.contactPassed);
-    const runtimeAccepted=contactPassed&&Object.values(missingSource).every(missing=>!missing)&&
+    const sourceDataGatePassed=contactPassed&&Object.values(missingSource).every(missing=>!missing)&&
         results.every(r=>r.unsupportedTurnSamples===0);
+    // The metadata audit cannot certify rendered soles, C# gameplay captures,
+    // native device performance or owner-reviewed art, even when this passes.
     return {measurement:'real source marker metadata through shared controller; not raster, in-Hunt, physical phone or aesthetic acceptance',
-        runtimeAccepted,contactPassed,missingSource,results};
+        runtimeAccepted:false,sourceDataGatePassed,contactPassed,missingSource,results};
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)) {
     const profilePath=process.argv[2],diagnostic=process.argv[3]==='--diagnostic';
@@ -84,7 +86,7 @@ if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)) {
         try {
             const report=auditBakedTransitions(JSON.parse(readFileSync(profilePath,'utf8')));
             console.log(JSON.stringify(report,null,2));
-            if(!report.runtimeAccepted&&!diagnostic)process.exitCode=1;
+            if(!report.sourceDataGatePassed&&!diagnostic)process.exitCode=1;
         } catch(error) {
             console.error(error.stack??error.message);process.exitCode=2;
         }
