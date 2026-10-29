@@ -43,6 +43,8 @@ export function validateSnapshot(input) {
         for (const field of ['albedo', 'normal', 'roughnessMap', 'aoMap', 'emissiveMap', 'reflectionProbe'])
             if (m[field] !== undefined && (typeof m[field] !== 'string' || !m[field].trim()))
                 throw new TypeError(`Invalid ${field}`);
+        if (m.blendMode !== undefined && !['cutout', 'alpha', 'additive'].includes(m.blendMode))
+            throw new TypeError('Unsupported world material blend mode');
         if (!['off', 'direct', 'probe'].includes(m.reflection)) throw new TypeError('Unsupported reflection tier');
         if (m.reflection === 'probe' && !m.reflectionProbe) throw new TypeError('Probe reflection requires a texture ID');
     }
