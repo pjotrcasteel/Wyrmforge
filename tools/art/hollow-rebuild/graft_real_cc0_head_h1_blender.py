@@ -26,8 +26,8 @@ import json
 import math
 from pathlib import Path
 
+import bpy  # Register Blender's bundled native Python modules first.
 import bmesh
-import bpy
 from mathutils import Matrix, Vector
 
 
