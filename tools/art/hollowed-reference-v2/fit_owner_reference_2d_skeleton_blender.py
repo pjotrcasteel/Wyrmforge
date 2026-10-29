@@ -303,11 +303,17 @@ def level_source_leg_chain_to_real_sole(rig, body):
 
     joint=rig.pose.bones[f"H_Thigh_{high}"]
     origin=joint.location.copy()
+    # Bone pose translations are in SOURCE BONE-REST coordinates, not world
+    # XYZ. The previous attempt to translate local Z could move a leg
+    # sideways; use the measured original bone rest basis for world-up.
+    local_basis=rig.matrix_world.to_3x3() @ joint.bone.matrix_local.to_3x3()
+    world_up_in_bone_rest=local_basis.inverted() @ Vector((0,0,1))
+    world_up_in_bone_rest.normalize()
     joint_head_before=(rig.matrix_world @ joint.head).copy()
     best=None
     for n in range(-14,15):
         offset=n*.0125
-        joint.location=origin+Vector((0,0,offset))
+        joint.location=origin+world_up_in_bone_rest*offset
         bpy.context.view_layer.update()
         changed=evaluated_world_vertices(body)
         actual=sole_height(changed,high)
@@ -318,7 +324,7 @@ def level_source_leg_chain_to_real_sole(rig, body):
         if best is None or score<best[0]:
             best=(score,offset,actual)
     _,offset,actual=best
-    joint.location=origin+Vector((0,0,offset))
+    joint.location=origin+world_up_in_bone_rest*offset
     bpy.context.view_layer.update()
     points=evaluated_world_vertices(body)
     updated={side:sole_height(points,side) for side in ("L","R")}
