@@ -107,7 +107,7 @@ export class LightingEngine {
             throw new TypeError(`Reflection probe ${m.reflectionProbe} must be a cube texture`);
         for (const o of s.objects) for (const key of ['geometry', 'occluderGeometry'])
             if (o[key] && !this.geometries.has(o[key])) throw new Error(`Missing geometry ${o[key]}`);
-        const selected = selectLights(s, this.shadowViews, this.maxLights);
+        const selected = selectLights(s, this.shadowViews, this.maxLights, this.lightViewBounds);
         const selectedIds = new Set(selected.map(light => light.id));
         for (const id of this.lights.keys()) if (!selectedIds.has(id)) this.removeLight(id);
         for (const d of selected) {
