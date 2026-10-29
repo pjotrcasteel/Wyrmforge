@@ -1,4 +1,4 @@
-import { huntLayerCapture, huntLayerRevision } from './hunt-gpu-layers.js';
+import { huntLayerCapture, huntLayerRevision, prepareHuntGpuScratch } from './hunt-gpu-layers.js';
 import { preloadFireballV5 } from './arena-fireball-v5.js';
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
 import { attachArenaInput, getArenaMovement, getArenaAim, isArenaStickAim, getArenaPropFocus } from './arena-input.js';
@@ -375,9 +375,7 @@ function draw(state, snapshot, width, height) {
             reuse = gpu.canReuseCapture(capture.id, revision, tileSize, tileSize);
             tile = state.gpuActorScratch ??= document.createElement('canvas');
             if (!reuse) {
-                tile.width = tile.height = Math.ceil(tileSize);
-                ctx = tile.getContext('2d'); ctx.imageSmoothingEnabled = false;
-                ctx.translate(-tileX, -tileY);
+                ctx = prepareHuntGpuScratch(tile, tileSize, tileX, tileY);
             }
         }
         if (!reuse) {
@@ -406,6 +404,7 @@ function draw(state, snapshot, width, height) {
             }
         }
         if (gpu) {
+            if (!reuse) ctx.restore();
             gpu.capture(capture.id,
                 tile, tileX - camera.x, tileY - camera.y, tileSize, tileSize,
                 .12 + Math.max(0, Math.min(1, layer.depth / worldHeight)) * .1,
