@@ -85,6 +85,21 @@ test('device review is bounded, reject invalid timestamps, restart resets all sa
     session.stop(500100);
 });
 
+test('minute-by-minute pacing captures later slowdowns without pretending to read device temperature', () => {
+    const session = new G4DeviceReviewSession('canvas');
+    session.start(0);
+    session.record(0);
+    session.record(16);
+    session.record(60000);
+    session.record(60050);
+    session.stop(60100);
+    const report = session.report();
+    assert.deepEqual(report.framePacingByMinute.map(window => window.minute), [1, 2]);
+    assert.deepEqual(report.framePacingByMinute.map(window => window.frameMsP95), [16, 50]);
+    assert.ok(report.framePacingByMinute[1].observedFps < report.framePacingByMinute[0].observedFps);
+    assert.ok(report.limitations.some(note => note.includes('thermal throttling')));
+});
+
 test('G4 reviewer only attaches to optional real Hunt integration and not default rendering', async () => {
     const { readFile } = await import('node:fs/promises');
     const source = await readFile(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena.js', import.meta.url), 'utf8');
