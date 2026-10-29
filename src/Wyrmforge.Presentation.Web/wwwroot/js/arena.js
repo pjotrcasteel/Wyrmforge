@@ -209,6 +209,7 @@ function frame(state, timestamp) {
         playing: Boolean(state.latestSnapshot && !state.latestSnapshot.paused && !state.latestSnapshot.ended),
         renderingFailed: Boolean(state.renderingFailed),
         gpuAvailable: Boolean(state.gpuWorld && state.latestSnapshot?.lighting),
+        ended: Boolean(state.latestSnapshot?.ended),
     });
     startSimulationFrame(state, timestamp, rect);
     if (state.active) state.animationFrame = requestAnimationFrame(next => frame(state, next));

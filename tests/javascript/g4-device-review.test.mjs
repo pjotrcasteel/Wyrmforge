@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { G4DeviceReviewSession } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/g4-device-review.js';
+import { G4DeviceReviewSession, hasG4Evidence, buildG4CollectorReport } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/g4-device-review.js';
 
 test('device review measures real animation-frame intervals and freezes when stopped', () => {
     const session = new G4DeviceReviewSession('canvas');
@@ -98,6 +98,54 @@ test('minute-by-minute pacing captures later slowdowns without pretending to rea
     assert.deepEqual(report.framePacingByMinute.map(window => window.frameMsP95), [16, 50]);
     assert.ok(report.framePacingByMinute[1].observedFps < report.framePacingByMinute[0].observedFps);
     assert.ok(report.limitations.some(note => note.includes('thermal throttling')));
+});
+
+test('empty exported proof is rejected: death-proof collection needs at least ten real gameplay intervals', () => {
+    const empty = new G4DeviceReviewSession('gpu', 'mobile').summary();
+    assert.equal(hasG4Evidence(empty), false);
+    assert.equal(hasG4Evidence({ ...empty, frameIntervals: 11, observedFps: 50, frameMsP95: 20 }), true);
+    assert.equal(hasG4Evidence({ ...empty, frameIntervals: 11, observedFps: 0, frameMsP95: null }), false);
+    assert.equal(buildG4CollectorReport(empty), null);
+});
+
+test('automatic private report contains only compact measurements, never raw device identity', () => {
+    const deviceRecord = {
+        id: '7bff7fbf-a928-4c97-87ef-734cd33d1e1c', outcome: 'Defeated',
+        mode: 'gpu', quality: 'mobile', frameIntervals: 200, observedFps: 29.7,
+        frameMsP50: 32, frameMsP95: 56, frameMsP99: 80,
+        measuredPlayingSeconds: 6.7, elapsedSeconds: 8,
+        over33msPercent: 25, renderingFailures: 0, missingGpuFrames: 0,
+        gpuSamples: 6, sampledDynamicPixelsMean: 100000,
+        userAgent: 'PRIVATE', viewport: { width: 402, height: 656 },
+        samples: [{ coordinates: [45, 51] }], batteryPercent: 52
+    };
+    const oldDocument = globalThis.document;
+    const oldMatchMedia = globalThis.matchMedia;
+    try {
+        globalThis.document = { querySelector: () => null };
+        globalThis.matchMedia = () => ({ matches: false });
+        const report = buildG4CollectorReport(deviceRecord);
+        assert.equal(report.schema, 'wyrmforge.playtest.report.v1');
+        assert.equal(report.recentRuns[0].outcome, 'Defeated');
+        assert.equal(report.recentRuns[0].g4.frameMsP95, 56);
+        assert.equal(report.recentRuns[0].g4.userAgent, undefined);
+        assert.equal(report.recentRuns[0].g4.viewport, undefined);
+        assert.equal(report.recentRuns[0].g4.samples, undefined);
+        assert.equal(report.recentRuns[0].g4.batteryPercent, undefined);
+        assert.equal(JSON.stringify(report).includes('PRIVATE'), false);
+        assert.equal(buildG4CollectorReport({ ...deviceRecord, recording: true }), null,
+            'Automatic uploads must never send an incomplete checkpoint as a completed Hunt');
+    } finally {
+        globalThis.document = oldDocument;
+        globalThis.matchMedia = oldMatchMedia;
+    }
+});
+
+test('G4 arena passes finished lifecycle and keeps its local recording when Blazor disposes canvas', async () => {
+    const { readFile } = await import('node:fs/promises');
+    const file = await readFile(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena.js', import.meta.url), 'utf8');
+    assert.ok(file.includes('ended: Boolean(state.latestSnapshot?.ended)'));
+    assert.ok(file.includes('state.g4Review?.dispose()'));
 });
 
 test('G4 reviewer only attaches to optional real Hunt integration and not default rendering', async () => {

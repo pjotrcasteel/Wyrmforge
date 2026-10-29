@@ -1,3 +1,80 @@
+// G4 evidence is local-first: death/navigation must never destroy a finished run.
+export const G4_LAST_RECORD_KEY = 'wyrmforge.g4.lastRecord.v1';
+const G4_PENDING_KEY = 'wyrmforge.g4.pendingRecord.v1';
+const G4_RECEIPT_KEY = 'wyrmforge.g4.lastReceipt.v1';
+const G4_CONSENT_KEY = 'wyrmforge.g4.autoSendConsent.v1';
+const minimumIntervals = 10;
+const readJson = key => {
+    try { return JSON.parse(localStorage.getItem(key) ?? 'null'); } catch { return null; }
+};
+const writeJson = (key, value) => {
+    try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch { return false; }
+};
+export const hasG4Evidence = value => value?.frameIntervals >= minimumIntervals &&
+    Number.isFinite(value?.observedFps) && Number.isFinite(value?.frameMsP95);
+const consented = () => {
+    try { return localStorage.getItem(G4_CONSENT_KEY) === 'yes'; } catch { return false; }
+};
+
+/** Only bounded numeric aggregation is sent. No full UA, coordinates, DPR, or individual frame samples. */
+export function buildG4CollectorReport(record) {
+    if (!hasG4Evidence(record) || record.recording === true) return null;
+    const keys = ['frameIntervals', 'elapsedSeconds', 'measuredPlayingSeconds', 'observedFps',
+        'frameMsP50', 'frameMsP95', 'frameMsP99', 'over33msPercent',
+        'renderingFailures', 'missingGpuFrames', 'gpuSamples', 'sampledDynamicPixelsMean'];
+    const g4 = Object.fromEntries(keys.map(key => [key, record[key] ?? null]));
+    g4.mode = record.mode;
+    g4.quality = record.quality;
+    return {
+        schema: 'wyrmforge.playtest.report.v1',
+        id: record.id,
+        gameVersion: document.querySelector('[data-game-version]')?.getAttribute('data-game-version') ?? '0.0.180',
+        device: { kind: 'touch', standalone: matchMedia('(display-mode: standalone)').matches },
+        feedback: { enjoyment: null, clarity: null, replay: null, troubleArea: null, bestMoment: '', improvement: '' },
+        stats: { starts: 0, completedRuns: 0, interruptedRuns: 0, trailsEntered: 0, wyrmGatesEntered: 0 },
+        recentRuns: [{ runId: record.id, outcome: record.outcome === 'Defeated' ? 'Defeated' :
+            record.outcome === 'Abandoned' ? 'Abandoned' : 'Interrupted',
+            perf: { samples: record.frameIntervals, slowFrames: Math.round(record.frameIntervals *
+                record.over33msPercent / 100), maxBridgeMs: 0 }, g4 }]
+    };
+}
+
+async function sendPendingG4Evidence(setStatus = () => {}) {
+    if (!consented()) return;
+    const record = readJson(G4_PENDING_KEY);
+    if (!record || !hasG4Evidence(record) || record.recording === true) return;
+    const report = buildG4CollectorReport(record);
+    if (!report) return;
+    try {
+        const configuration = await fetch(new URL('playtest-collector-config.json', document.baseURI),
+            { cache: 'no-store', credentials: 'omit' });
+        if (!configuration.ok || !consented()) { setStatus('G4 saved locally · collector offline'); return; }
+        const { endpoint } = await configuration.json();
+        const uri = new URL(endpoint);
+        if (uri.protocol !== 'https:' || uri.pathname !== '/v1/reports' || uri.search || uri.hash ||
+            uri.username || uri.password) return;
+        const response = await fetch(uri.href, {
+            method: 'POST', mode: 'cors', credentials: 'omit', cache: 'no-store',
+            redirect: 'error', referrerPolicy: 'no-referrer', keepalive: true,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ consent: true, report })
+        });
+        const receipt = response.ok ? await response.json() : null;
+        if (receipt?.accepted && receipt.id === record.id) {
+            const active = readJson(G4_PENDING_KEY);
+            if (active?.id === record.id) {
+                writeJson(G4_RECEIPT_KEY, { id: record.id, status: 'received' });
+                try { localStorage.removeItem(G4_PENDING_KEY); } catch { /* Read-only private browsing. */ }
+            }
+            setStatus('G4 saved and privately received');
+        } else {
+            setStatus('G4 saved locally · sending unavailable');
+        }
+    } catch {
+        setStatus('G4 saved locally · sending unavailable');
+    }
+}
+
 // Opt-in physical-device evidence recorder for the existing Hunt renderer.
 // Measures browser requestAnimationFrame pacing; never claims GPU time, VRAM,
 // battery draw, thermal state or a gameplay simulation result.
@@ -134,98 +211,161 @@ export class G4DeviceReviewSession {
     }
 }
 
-/** Touch-accessible opt-in UI; never displayed during ordinary Hunts. */
+/** Persistent, opt-in G4 control: Hunt death must not delete the last result. */
 export function mountG4DeviceReview(canvas, getGpu, mode = 'canvas', quality = null) {
+    // The real-Hunt Blazor screen is destroyed on death. The control is therefore
+    // attached to document.body, not to the transient screen it is measuring.
+    document.querySelector('[data-g4-device-review]')?.remove();
     const session = new G4DeviceReviewSession(mode, quality);
+    const getNow = () => performance.now();
+    let recordId = crypto.randomUUID();
+    let completed = false;
+    let lastCheckpointAt = -Infinity;
     const panel = document.createElement('details');
     panel.setAttribute('data-g4-device-review', '');
     Object.assign(panel.style, {
-        position: 'fixed', right: '8px', bottom: 'max(112px, env(safe-area-inset-bottom))', zIndex: '10000',
-        width: 'max-content', maxWidth: 'min(240px, 74vw)', maxHeight: '44vh', overflow: 'auto',
-        background: 'rgba(16,21,26,.94)', color: '#f3eee8',
-        border: '1px solid #ad976e', borderRadius: '6px', padding: '8px',
-        font: '12px/1.5 system-ui,sans-serif', boxSizing: 'border-box',
+        position: 'fixed', right: '8px', bottom: 'max(112px, env(safe-area-inset-bottom))',
+        zIndex: '10000', width: 'max-content', maxWidth: 'min(270px, 82vw)',
+        maxHeight: '48vh', overflow: 'auto', background: 'rgba(16,21,26,.94)',
+        color: '#f3eee8', border: '1px solid #ad976e', borderRadius: '6px',
+        padding: '8px', font: '12px/1.5 system-ui,sans-serif', boxSizing: 'border-box'
     });
     const header = document.createElement('summary');
-    header.textContent = 'G4 · READY';
     header.style.cursor = 'pointer';
     panel.appendChild(header);
     const help = document.createElement('p');
-    help.textContent = `${mode === 'gpu' ? `GPU (${quality})` : 'Canvas'} · Play 5–10 minutes, then Stop and Export JSON. Note battery and device warmth separately.`;
+    help.textContent = 'G4 records automatically during gameplay. Death and navigation save the result. No export needed.';
     panel.appendChild(help);
     const status = document.createElement('p');
     status.setAttribute('data-g4-status', '');
-    status.textContent = 'Not started';
     panel.appendChild(status);
+    const previous = document.createElement('p');
+    previous.setAttribute('data-g4-last-result', '');
+    panel.appendChild(previous);
+    const consentLabel = document.createElement('label');
+    consentLabel.style.display = 'block';
+    const consentBox = document.createElement('input');
+    consentBox.type = 'checkbox';
+    consentBox.setAttribute('data-g4-consent', '');
+    consentBox.checked = consented();
+    consentLabel.appendChild(consentBox);
+    consentLabel.append(' Automatically send compact G4 frame-timing results to the private WyrmForge collector after a Hunt. No device identifier, location or per-frame traces. Stored up to 30 days. Off by default.');
+    panel.appendChild(consentLabel);
     const controls = document.createElement('div');
-    Object.assign(controls.style, { display: 'flex', flexWrap: 'wrap', gap: '6px' });
+    Object.assign(controls.style, { display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' });
     const button = (label, action) => {
         const item = document.createElement('button');
         item.type = 'button';
         item.textContent = label;
         Object.assign(item.style, {
             background: '#504333', color: 'white', border: '1px solid #ad976e',
-            padding: '8px', borderRadius: '4px', minHeight: '36px', cursor: 'pointer',
+            padding: '8px', borderRadius: '4px', minHeight: '36px', cursor: 'pointer'
         });
         item.addEventListener('click', action);
         controls.appendChild(item);
         return item;
     };
-    const getNow = () => performance.now();
-    const metadata = () => ({
-        userAgent: navigator.userAgent, viewport: { width: window.innerWidth, height: window.innerHeight },
-        dpr: window.devicePixelRatio || 1,
-        estimatedDeviceMemoryGiB: navigator.deviceMemory ?? null,
-        jsHeapUsedBytes: performance.memory?.usedJSHeapSize ?? null,
-        // These are unavailable through a standardized, reliable browser API.
-        gpuTimeMs: null, gpuMemoryBytes: null, batteryDraw: null, thermalState: null,
-    });
-    const updateStatus = now => {
-        // Do not sort thousands of samples every second while profiling a phone.
-        if (session.recording) {
-            header.textContent = 'G4 · REC';
-            status.textContent = `${Math.round((now - session.startedAt) / 1000)}s · ${session.intervals.length} frame intervals`;
-            return;
-        }
-        const info = session.summary(now);
-        header.textContent = `G4 · ${info.frameIntervals ? 'DONE' : 'READY'}`;
-        status.textContent = `${info.elapsedSeconds}s · ${info.frameIntervals} intervals · p95 ${info.frameMsP95 ?? 'n/a'}ms · ${info.observedFps ?? 0} FPS`;
+    const latestLabel = () => {
+        const latest = readJson(G4_LAST_RECORD_KEY);
+        const receipt = readJson(G4_RECEIPT_KEY);
+        previous.textContent = hasG4Evidence(latest)
+            ? `Last Hunt: ${latest.elapsedSeconds}s · ${latest.observedFps} FPS · p95 ${latest.frameMsP95}ms
+               · ${receipt?.id === latest.id ? 'received privately' : 'saved on this phone'}`
+            : 'No completed G4 samples yet.';
     };
-    button('Start', () => { session.start(getNow()); updateStatus(getNow()); panel.open = false; });
-    button('Stop', () => { session.stop(getNow()); updateStatus(getNow()); });
-    button('Export JSON', () => {
-        const payload = JSON.stringify(session.report(getNow(), metadata()), null, 2);
-        const blob = new Blob([payload], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `wyrmforge-g4-${mode}-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        // Release URL after the browser handles the user-triggered download.
-        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    const setStatus = message => { status.textContent = message; latestLabel(); };
+    const persist = outcome => {
+        const summary = session.summary(getNow());
+        if (!hasG4Evidence(summary)) return false;
+        const record = { ...summary, id: recordId, outcome, recordedAtUtc: new Date().toISOString() };
+        const saved = writeJson(G4_LAST_RECORD_KEY, record);
+        if (!saved) { setStatus('Browser storage unavailable · G4 evidence not saved'); return false; }
+        latestLabel();
+        return true;
+    };
+    const finish = (outcome = 'Interrupted') => {
+        if (completed) return;
+        completed = true;
+        session.stop(getNow());
+        if (persist(outcome)) {
+            header.textContent = 'G4 · SAVED';
+            status.textContent = 'Your G4 result survived the Hunt. No export required.';
+            if (consented()) {
+                const saved = readJson(G4_LAST_RECORD_KEY);
+                writeJson(G4_PENDING_KEY, saved);
+                void sendPendingG4Evidence(setStatus);
+            }
+        } else {
+            header.textContent = 'G4 · NO FRAMES';
+            status.textContent = 'No usable gameplay frames were recorded.';
+        }
+    };
+    consentBox.addEventListener('change', () => {
+        try {
+            if (consentBox.checked) localStorage.setItem(G4_CONSENT_KEY, 'yes');
+            else localStorage.removeItem(G4_CONSENT_KEY);
+        } catch { consentBox.checked = false; }
+        if (consentBox.checked) {
+            const previousResult = readJson(G4_LAST_RECORD_KEY);
+            if (hasG4Evidence(previousResult) && previousResult.recording === false)
+                writeJson(G4_PENDING_KEY, previousResult);
+            void sendPendingG4Evidence(setStatus);
+        }
+        setStatus(consentBox.checked
+            ? 'G4 automatic private delivery enabled. Existing results remain on your phone.'
+            : 'G4 private delivery disabled. Local results remain.');
     });
-    button('Copy summary', () => {
-        const info = session.summary(getNow());
-        const message = `G4 ${mode} ${quality ?? ''}: ${JSON.stringify(info)}`;
-        navigator.clipboard?.writeText(message).then(() => {
-            status.textContent = 'Summary copied';
-        }).catch(() => { status.textContent = 'Clipboard unavailable; export JSON instead'; });
-        if (!navigator.clipboard) status.textContent = 'Clipboard unavailable; export JSON instead';
+    button('Save now', () => finish('Interrupted'));
+    button('New sample', () => {
+        recordId = crypto.randomUUID();
+        completed = false;
+        lastCheckpointAt = -Infinity;
+        session.start(getNow());
+        header.textContent = 'G4 · REC';
+        status.textContent = 'Recording real Hunt frames';
+    });
+    button('Erase G4 data', () => {
+        for (const key of [G4_LAST_RECORD_KEY, G4_PENDING_KEY, G4_RECEIPT_KEY, G4_CONSENT_KEY]) {
+            try { localStorage.removeItem(key); } catch { /* Storage may be disabled. */ }
+        }
+        consentBox.checked = false;
+        latestLabel();
+        status.textContent = 'Local G4 data and future upload consent erased.';
     });
     panel.appendChild(controls);
-    canvas.closest('.game-screen')?.appendChild(panel) ?? document.body.appendChild(panel);
+    document.body.appendChild(panel);
+    session.start(getNow());
+    header.textContent = 'G4 · REC';
+    status.textContent = 'Automatically recording gameplay';
+    latestLabel();
+    if (consented()) void sendPendingG4Evidence(setStatus);
+
+    const pagehide = () => finish('Interrupted');
+    window.addEventListener('pagehide', pagehide);
     return {
         session,
-        record(timestamp, { playing, renderingFailed, gpuAvailable }) {
-            const wasRecording = session.recording;
+        record(timestamp, { playing, renderingFailed, gpuAvailable, ended = false }) {
+            if (completed) return;
             session.record(timestamp, { playing, renderingFailed, gpuAvailable, getGpu });
-            if (wasRecording && (!session.recording || timestamp - (this.lastDisplayAt ?? -Infinity) > 1000)) {
-                updateStatus(timestamp);
+            if (ended || !session.recording) {
+                finish(ended ? 'Defeated' : 'Interrupted');
+                return;
+            }
+            if (timestamp - lastCheckpointAt >= 5000 && hasG4Evidence(session.summary(timestamp))) {
+                persist('Interrupted');
+                lastCheckpointAt = timestamp;
+            }
+            if (timestamp - (this.lastDisplayAt ?? -Infinity) >= 1000) {
+                header.textContent = 'G4 · REC';
+                status.textContent = `${Math.round((timestamp - session.startedAt) / 1000)}s · ${session.intervals.length} frames`;
                 this.lastDisplayAt = timestamp;
             }
         },
-        dispose() { panel.remove(); },
+        dispose() {
+            window.removeEventListener('pagehide', pagehide);
+            finish('Interrupted');
+            // Deliberately keep the compact result visible after Blazor removes the Hunt.
+            // The next Hunt replaces this panel and reads the local saved result.
+        }
     };
 }
