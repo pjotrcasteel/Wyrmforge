@@ -2,7 +2,23 @@
 
 **NOT A MODEL RELEASE.** This directory is reserved for genuinely new, editable 3D anatomical source art. See [H0 audit](../../../../../docs/art/evidence/hollow-rebuild-v1/README.md) and [draft PR #391](https://github.com/pjotrcasteel/Wyrmforge/pull/391).
 
-## Locked design
+## Owner's updated visual reference (29 October 2026) — takes precedence
+
+The owner explicitly selected a new **front / side / back feral undead image**.
+See [exact design criteria and implementation acceptance](../../../../../docs/art/evidence/hollow-rebuild-v1/owner-reference-2026-10-29.md).
+It includes long tangled hanging hair, visibly charred back spines, a snarling
+burnt skull with glowing **interior** facial wounds, hooked claws, strapped legs
+and **short tattered leather waist panels**. This intentional short waist
+wrapping *overrides* the earlier blanket prohibition on any skirt-like fabric.
+A cape, long coat, robes and obscuring back cloth are still rejected.
+
+The previous bald skull study is **not** owner-approved. It is an editable
+starting point only. The first procedurally assembled appearance study is
+also **not** a claim of final character fidelity or acceptance; the reference
+is a high-detail appearance direction, not ready-to-rig topology. No runtime
+migration or animation work is permitted here.
+
+## Previous H0 baseline direction (historical, superseded where conflicting)
 
 **Feral, rabid, anatomically corrupted human undead**, at the same polish and readable material quality as the approved Ashling, but with no demon anatomy. Strongly recognizable skull and jaw, true shoulder/ribcage/pelvis volume, damaged asymmetric limbs, planted weight and authored claws. No cape, coat, robes, skirt, backpack silhouette, detached fabric strands, stray glowing particles, or orange face dots.
 
