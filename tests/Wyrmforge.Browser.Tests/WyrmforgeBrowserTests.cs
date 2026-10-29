@@ -3623,6 +3623,26 @@ public sealed class WyrmforgeBrowserTests : PageTest
             return match && Number(match[1]) >= 12;
         }", null, new() { Timeout = 30000 });
 
+        // The prior GPU candidate could be technically green while its actual
+        // Hunt was black. Require C#-owned hunter visibility AND a lit area in
+        // the live composited Canvas, away from the HTML HUD and boss overlays.
+        await Page.WaitForFunctionAsync(@"() => {
+            const frame = window.__huntGpuRead?.();
+            const visible = frame?.gpuWorld?.lights?.some(light => light.id === 'hunter:night-visibility');
+            const canvas = document.querySelector('canvas.game-canvas');
+            if (!visible || !canvas?.width || !canvas?.height) return false;
+            const startX = Math.floor(canvas.width * .18);
+            const startY = Math.floor(canvas.height * .25);
+            const w = Math.floor(canvas.width * .64);
+            const h = Math.floor(canvas.height * .5);
+            const pixels = canvas.getContext('2d').getImageData(startX, startY, w, h).data;
+            let visiblePixels = 0;
+            for (let i = 0; i < pixels.length; i += 4)
+                if (pixels[i] + pixels[i + 1] + pixels[i + 2] >= 72)
+                    visiblePixels++;
+            return visiblePixels >= 600;
+        }", null, new() { Timeout = 30000 });
+
         await panel.Locator("summary").ClickAsync();
         await panel.GetByRole(AriaRole.Button, new() { Name = "Stop", Exact = true }).ClickAsync();
         var download = await Page.RunAndWaitForDownloadAsync(() =>
