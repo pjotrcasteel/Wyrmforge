@@ -31,7 +31,7 @@ For each available target, **iPhone Safari** and **Android Chrome** (actual hard
 5. Repeat with the **Canvas reference** on the **same phone**, as similar a scene/actions as reasonably practical. These are *not seed-matched controlled experiments*; avoid deriving causal FPS gains from one run.
 6. Repeat on the other phone platform if available. If both phones are unavailable, mark the relevant hardware gate **unverified**, not failed or passed.
 
-The G4 JSON contains `observedFps`, p50/p95/p99 **browser frame intervals**, proportion over 33ms, missed GPU frames, render errors, texture-upload samples, quality tier, dimensions and DPR. It explicitly does **not** measure GPU execution, true VRAM, battery draw, power draw or thermal state; battery/heat must be recorded separately.
+The G4 JSON contains `observedFps`, p50/p95/p99 **browser frame intervals**, **per-minute FPS and p95 pacing** for detecting degradation as the phone warms, proportion over 33ms, missed GPU frames, render errors, texture-upload samples, quality tier, dimensions and DPR. It explicitly does **not** measure GPU execution, true VRAM, battery draw, power draw or thermal state; battery/heat must be recorded separately.
 
 ## What to send for explicit acceptance
 
