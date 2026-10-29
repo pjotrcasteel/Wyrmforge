@@ -116,7 +116,7 @@
                 </svg>
                 @foreach (var node in Nodes.OrderBy(node => node.Stage).ThenBy(node => node.Lane))
                 {
-                    <button class="@NodeClass(node)" style="@NodeMapStyle(node)" data-road="@node.Site?.RoadId" data-stage="@node.Stage" data-current="@(IsCurrent(node) ? "true" : "false")" aria-label="@NodeAriaLabel(node)" aria-pressed="@(selectedNode?.Id == node.Id)" @onclick="() => SelectNode(node)">
+                    <button class="@NodeClass(node)" style="@NodeMapStyle(node)" data-road="@node.Site?.RoadId" data-site-id="@node.Geography?.SiteId" data-site-version="@node.Geography?.Version" data-site-ports="@node.Geography?.Ports.Count" data-stage="@node.Stage" data-current="@(IsCurrent(node) ? "true" : "false")" aria-label="@NodeAriaLabel(node)" aria-pressed="@(selectedNode?.Id == node.Id)" @onclick="() => SelectNode(node)">
                         @if (IsCurrent(node)) { <span class="current-marker">YOU</span> }
                         <span class="node-core">
                             <svg class="node-main-icon" viewBox="0 0 46 34" aria-hidden="true"><path d="@LandmarkPath(node)" /></svg>
@@ -306,8 +306,8 @@
     private string EntryConnectionPath(WyrmrealmMapNode node) => TrailPath(node.Site?.IncomingTrail ?? [new(EntryX, EntryY), new(NodeX(node), NodeY(node))]);
     private string ConnectionPath(WyrmrealmMapNode from, WyrmrealmMapNode to)
         => TrailPath(to.Site is { IncomingTrail.Count: > 0 } site && site.IncomingTrail[0] == from.Site?.Point ? site.IncomingTrail : [new(NodeX(from), NodeY(from)), new(NodeX(to), NodeY(to))]);
-    private double NodeX(WyrmrealmMapNode node) => node.Site?.Point.X ?? 50;
-    private static double NodeY(WyrmrealmMapNode node) => node.Site?.Point.Y ?? 5;
+    private double NodeX(WyrmrealmMapNode node) => node.Geography?.ChartCenter.X ?? node.Site?.Point.X ?? 50;
+    private static double NodeY(WyrmrealmMapNode node) => node.Geography?.ChartCenter.Y ?? node.Site?.Point.Y ?? 5;
     private static string FeatureStyle(HuntFeature feature) => FormattableString.Invariant($"left:{feature.Center.X:0.#}%;top:{feature.Center.Y:0.#}%;width:{feature.RadiusX * 2:0.#}%;height:{feature.RadiusY * 2:0.#}%");
     private string RoadLabelStyle(WyrmrealmMapNode node) => FormattableString.Invariant($"left:{NodeX(node):0.#}%;top:{NodeY(node) - 3:0.#}%");
     private static string TrailPath(IReadOnlyList<HuntPoint> points)
