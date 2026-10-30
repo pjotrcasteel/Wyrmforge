@@ -12,6 +12,7 @@ parser.add_argument('--source', default='art/source/characters/grey-wizard/nativ
 parser.add_argument('--zoom', type=int, default=4)
 parser.add_argument('--title', default='SOUTH WALK SOURCE STUDY')
 parser.add_argument('--name', default='south-walk')
+parser.add_argument('--background', default='#30333b')
 args = parser.parse_args()
 root = pathlib.Path(__file__).resolve().parents[3]
 source = root / args.source
@@ -27,7 +28,7 @@ for i in range(16):
     height = max(400, sprite.height * zoom + 110)
     width += width % 2
     height += height % 2
-    board = Image.new('RGB', (width, height), '#30333b')
+    board = Image.new('RGB', (width, height), args.background)
     draw = ImageDraw.Draw(board)
     draw.text((16, 12), args.title + ' - NOT GAMEPLAY / NOT APPROVED', fill='#d8d8cf')
     draw.text((16, 32), f'Native x1 | inspection x{zoom} | 16 authored frames / 12 fps', fill='#b6b8bf')

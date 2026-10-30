@@ -98,6 +98,21 @@ function render(p){
     const dst=new Bitmap(size,size);
     for(const name of project.drawOrder)dst.blit(warp(bleed[name],name,p),0,0);
     for(const name of project.drawOrder)dst.blit(warp(layers[name],name,p),0,0);
+    if(project.cleanIslandsMaxPixels){
+        const seen=new Set();
+        for(let y=0;y<size;y++)for(let x=0;x<size;x++){
+            const key=y*size+x;if(!dst.alpha(x,y)||seen.has(key))continue;
+            const part=[key];seen.add(key);
+            for(let i=0;i<part.length;i++){
+                const px=part[i]%size,py=Math.floor(part[i]/size);
+                for(let oy=-1;oy<=1;oy++)for(let ox=-1;ox<=1;ox++){
+                    const nx=px+ox,ny=py+oy,k=ny*size+nx;
+                    if(dst.inside(nx,ny)&&dst.alpha(nx,ny)&&!seen.has(k)){seen.add(k);part.push(k);}
+                }
+            }
+            if(part.length<=project.cleanIslandsMaxPixels)for(const k of part)dst.clear(k%size,Math.floor(k/size));
+        }
+    }
     return dst;
 }
 function up(b,factor){const r=new Bitmap(b.width*factor,b.height*factor);for(let y=0;y<r.height;y++)for(let x=0;x<r.width;x++)r.set(x,y,b.get(Math.floor(x/factor),Math.floor(y/factor)));return r;}

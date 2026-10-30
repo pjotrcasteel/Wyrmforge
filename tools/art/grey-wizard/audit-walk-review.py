@@ -22,7 +22,7 @@ with zipfile.ZipFile(ora) as z:
     assert z.read('mimetype')==b'image/openraster'
     tree=ET.fromstring(z.read('stack.xml'))
     layers=tree.findall('./stack/layer')
-    assert len(layers)==12
+    assert len(layers)==len(project['layers'])
     assert z.read('mergedimage.png')==(source/'source-master.png').read_bytes()
     for layer,expected in zip(layers,reversed(project['layers'])):
         assert layer.attrib['name']==expected['name']
@@ -40,7 +40,7 @@ text=player_file.read_text()
 base_speed=float(re.search(r'public double Speed \{ get; \} = ([\d.]+)',text).group(1))
 stride=profile['locomotion']['stride']
 report=dict(scope='source media/packaging and numeric cadence audit only',
-            openRasterLayers=12,sourceLayerBytesExact=True,gifFrames=16,gifMilliseconds=duration,mp4Decode=True,
+            openRasterLayers=len(layers),sourceLayerBytesExact=True,gifFrames=16,gifMilliseconds=duration,mp4Decode=True,
             sourceFps=project['fps'],sourceWorldStride=stride,
             sourceGuideSpeed=stride*project['fps']/16,
             csharpBaseSpeed=base_speed,csharpSpeedSource=str(player_file.relative_to(root)),

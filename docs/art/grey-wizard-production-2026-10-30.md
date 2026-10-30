@@ -628,3 +628,12 @@ sleeve lag taper smoothly away from the grip, and explicitly paints a322px hidde
 robe strip from adjacent source pigment behind the vacated staff. Idle source
 still recomposes exactly. Inspect all16 frames against light background; source
 contact/cadence limitations remain. No production cutover or acceptance implied.
+
+### Repair review package
+
+V008 includes complete sleeve mask, tapered lower-sleeve influence, explicit
+hidden robe painting and removal of tiny disconnected raster islands (<=6px).
+Re-inspected16 frames on light background and regenerated grey-background3x
+GIF/MP4. OpenRaster13 exact layers, GIF16frames and MP4 decode pass;25 deterministic
+exports pass and v007 remains unchanged. No artistic acceptance inferred from
+numeric tests; live cadence and other production gates remain open.
