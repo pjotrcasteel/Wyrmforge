@@ -637,3 +637,14 @@ Re-inspected16 frames on light background and regenerated grey-background3x
 GIF/MP4. OpenRaster13 exact layers, GIF16frames and MP4 decode pass;25 deterministic
 exports pass and v007 remains unchanged. No artistic acceptance inferred from
 numeric tests; live cadence and other production gates remain open.
+
+## Owner artifact report: v009 overlap correction
+
+Second owner crop identifies the remaining dark rectangular wrist patch. Layer
+inspection traced it to v008's robe-under-staff underpainting starting at y70:
+it copied dark sleeve pixels into open air above the actual cape. Not solved by
+small-island removal. V009 restricts hidden painting to the true lower cape/shaft
+overlap y96–126 (159pixels versus322). All original source/pose data preserved.
+Inspected16 numbered frames on light background; rectangular patch is removed.
+Staff plant, grip and foot keys unchanged. V008 remains rejected art history;
+source contact checks alone are not acceptance. Checkpoint before new media.
