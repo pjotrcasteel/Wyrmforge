@@ -87,6 +87,9 @@ export function huntSurfaceRenderable(id, x, y, width, height, castsShadow, surf
         receivesShadow: surface.receivesShadow ?? true,
         receivesLight: surface.receivesLight ?? true,
         ...(surface.occluderGeometry ? { occluderGeometry: surface.occluderGeometry } : {}),
+        ...(surface.occluderPosition ? { occluderPosition: surface.occluderPosition } : {}),
+        ...(surface.occluderRotation ? { occluderRotation: surface.occluderRotation } : {}),
+        ...(surface.occluderScale ? { occluderScale: surface.occluderScale } : {}),
         ...(frame ? { frame } : {}),
     };
 }
@@ -117,7 +120,8 @@ export function alignHuntActorBillboards(objects, engine) {
         const registered = engine.objects.get(descriptor.id);
         if (!registered) continue;
         registered.mesh.quaternion.copy(engine.camera.quaternion);
-        registered.caster?.quaternion.copy(engine.camera.quaternion);
+        // Only the painted billboard follows the camera. A solid caster remains
+        // in world space so a low Fireball projects its volume onto the floor.
     }
 }
 export class HuntGpuWorld {
@@ -129,6 +133,13 @@ export class HuntGpuWorld {
             needsRetainedHuntBuffer(device?.userAgent, device?.maxTouchPoints)));
         this.engine.registerGeometry('hunt-plane', new T.PlaneGeometry(1, 1));
         this.engine.registerGeometry('hunt-billboard', huntActorGeometry());
+        // Temporary G4 bridge for legacy Canvas captures until WF/AR deliver
+        // independently authored 2.5D occluders. A tapered solid at each
+        // artwork foot generates an actual ground shadow, not a painted blob.
+        const standIn = new T.CylinderGeometry(.055, .09, 1, 8);
+        standIn.rotateX(Math.PI / 2);
+        standIn.translate(0, 0, .5);
+        this.engine.registerGeometry('hunt-shadow-standin', standIn);
         this.layers = new Map();
         this.used = new Set();
         this.dirtyTextures = new Set();
@@ -205,7 +216,19 @@ export class HuntGpuWorld {
                 layer.revision = revision;
             }
         }
-        this.submitSurface(huntSurfaceRenderable(id, x, y, width, height, castsShadow, surface),
+        // Legacy screen-aligned captures have no 3D shadow volume. Keep the
+        // appearance plane unchanged and attach a generic ground-anchored
+        // stand-in through the shared authored-caster contract. Explicit asset
+        // geometry/occluders always take precedence over this G4 bridge.
+        const capturedSurface = castsShadow && !surface.geometry && !surface.occluderGeometry
+            ? { ...surface,
+                occluderGeometry: 'hunt-shadow-standin',
+                occluderPosition: [(x + width / 2) / UNIT,
+                    -(y + height * (surface.footFraction ?? .75)) * GROUND_Y / UNIT, 0],
+                occluderRotation: [0, 0, 0],
+                occluderScale: [width / UNIT, height * GROUND_Y / UNIT, .25],
+            } : surface;
+        this.submitSurface(huntSurfaceRenderable(id, x, y, width, height, castsShadow, capturedSurface),
             huntSurfaceMaterial(id, surface.material, Boolean(source)));
     }
     render(ctx, frame) {
