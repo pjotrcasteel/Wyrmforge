@@ -33,6 +33,11 @@ The attachment is authoritative over the earlier provisional v001/v002 concepts.
   attached grips; school identity is concentrated in the gem and its individual
   setting/design, rather than transforming the entire shaft into school material.
   Gems are physical stones, not school-icon sculptures, skulls or bear heads.
+  **Owner setting refinement:** gems are grown into or deliberately crafted into
+  the staff structure according to each design, with convincing enclosing wood/
+  roots or fitted sockets. Avoid gems perched on top or suspended between open
+  prongs. The v004 cape hues and embroidery direction is accepted; staff settings
+  require this further refinement while preserving distinct designs and colours.
   The first icon-topped comparison is rejected, not an approved variant library.
   Keep the approved grey wizard identity. The base reference remains preserved.
   **Owner refinement:** cape emblems are visibly faded/weathered into the grey

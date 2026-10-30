@@ -245,3 +245,14 @@ v003; native faded-thread consistency remains a production concern. Appearance
 review remains pending; no game/material/animation or device validation claimed.
 Exact edit prompt, input and SHA256 provenance preserved. Source dimensions/hash
 and `git diff --check` checked; no runtime changes or gameplay tests.
+
+### V005 staff-setting refinement
+
+Owner accepted v004 cape/character direction and requested gems grown or crafted
+into each staff, rather than separate stones held at the top. V004 staff settings
+remain unapproved. V005 targets only heads/short shaft transitions: recessed stone
+faces enclosed by continuous wood/root or fitted metal sockets, wood/metal overlaps
+gem edges and extends above it. Fire split burl, Frost silver-lined mortise, Storm
+fitted copper sleeve, Arcane enclosing spiral knot, Necromancy recessed deadwood/
+iron band, Summoner root-engulfed amber are proposed constructions. Preserve v004
+cape hues/faded embroidery. Exact brief: `school-variants-v005-prompt.txt`.
