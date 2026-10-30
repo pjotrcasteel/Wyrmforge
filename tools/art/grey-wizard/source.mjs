@@ -1,3 +1,4 @@
+// REJECTED by owner: too cartoony for Gothic identity. Archive/study only.
 // Original editable 2D pixel source. Reuses the established Bitmap painter.
 // Authored pose keys, not a live animation/physics engine; C# remains authoritative.
 export const cell = [64, 80];

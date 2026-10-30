@@ -68,7 +68,7 @@ for(let y=0;y<40;y++)for(let x=0;x<32;x++){const c=candidate.get(x*2,y*2);if(c[3
 png('scale-study-390.png',scaleBoard);
 json('source-layers.json',{schemaVersion:1,source:'tools/art/grey-wizard/source.mjs',cell,pivot,palette,idle,walk:specs});
 json('animation-profile.json',profile);
-json('manifest.json',{schemaVersion:1,directions:['S'],status:'source review, not runtime approved',clips:{idle:{image:'idle.png',frames:1,cell:80,anchor,worldSize:40},walk:{image:'walk.png',frames:16,cell:80,anchor,worldSize:40}},emission:{walk:'walk-emission.png'},sourceExport:'art/source/characters/grey-wizard/native-south-v001'});
+json('manifest.json',{schemaVersion:1,directions:['S'],status:'REJECTED by owner: too cartoony. Archive only; no runtime promotion.',clips:{idle:{image:'idle.png',frames:1,cell:80,anchor,worldSize:40},walk:{image:'walk.png',frames:16,cell:80,anchor,worldSize:40}},emission:{walk:'walk-emission.png'},sourceExport:'art/source/characters/grey-wizard/native-south-v001'});
 
 // Asset/contract verification: pixel alpha/palette, bounds, diversity and shared
 // playback (including pause). These do not claim convincing artistic motion.

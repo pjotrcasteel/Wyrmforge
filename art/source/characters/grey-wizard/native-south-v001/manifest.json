@@ -3,7 +3,7 @@
   "directions": [
     "S"
   ],
-  "status": "source review, not runtime approved",
+  "status": "REJECTED by owner: too cartoony. Archive only; no runtime promotion.",
   "clips": {
     "idle": {
       "image": "idle.png",

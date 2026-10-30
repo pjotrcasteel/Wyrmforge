@@ -374,3 +374,15 @@ velocity, stance slip, start/stop/turn, casting, other views and actual Hunt dep
 lighting/physical phones remain open. First native sprite and one-view walk need
 owner visual review before expanding into a larger directional/action library.
 Evidence/source: `art/source/characters/grey-wizard/native-south-v001/`.
+
+## Native study rejection and Gothic reconstruction
+
+Owner rejected native-south-v001: "too cartoony", Gothic/Diablo-like setting.
+That study remains archived only; its green technical checks do not authorize art
+or motion continuation. Main faults: shortened/chunky human reading, simplified
+flat cluster/face treatment, insufficient long heavy robe/material fidelity.
+Approved base wizard, cape and staff decisions remain intact. Re-establish a single
+faithful static Gothic appearance before further motion. New built-in ImageGen
+study uses the approved base and selected staff reference, without third-party pack
+inputs. Prompt `gothic-reconstruction-v002-prompt.txt`; no runtime acceptance or
+native dimensions, editable pose library or animation inferred from a generated still.

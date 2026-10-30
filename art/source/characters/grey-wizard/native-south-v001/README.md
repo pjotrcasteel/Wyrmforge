@@ -1,4 +1,8 @@
-# Native south-facing wizard study
+# Native south-facing wizard study — REJECTED
+
+Owner rejected this reconstruction as too cartoony for the Gothic/Diablo-like
+setting. Preserve source/evidence, do not continue or promote this art. Passing
+format tests are historical technical checks, not appearance approval.
 
 In production, not approved sprite art or runtime replacement. References: approved
 base wizard, v004 cape, v007 staff identity, v009 staff proportions. Art canon and

@@ -67,6 +67,12 @@ The attachment is authoritative over the earlier provisional v001/v002 concepts.
   incidental brighter embroidery in generated composites does not replace it.
   This closes the source-concept proportion review, not native sprite, animation,
   shared material/lighting integration or actual phone acceptance.
+  **Native reconstruction rejection:** the owner rejected `native-south-v001` as
+  too cartoony for the Diablo-like Gothic setting. Preserve its source/tests as a
+  rejected study only; do not expand its action library or promote it. Native
+  translation must retain the approved reference's grounded human proportions,
+  long heavy layered robe, weathered face/materials and restrained realistic pixel
+  treatment. Technical format/playback checks cannot overrule this art rejection.
   The first icon-topped comparison is rejected, not an approved variant library.
   Keep the approved grey wizard identity. The base reference remains preserved.
   **Owner refinement:** cape emblems are visibly faded/weathered into the grey
