@@ -261,5 +261,36 @@ export class HuntGpuWorld {
             meanMs: previous?.frames ? previous.meanMs * .9 + elapsed * .1 : elapsed,
             peakMs: Math.max(previous?.peakMs ?? 0, elapsed) };
     }
+    /**
+     * Diagnostic only: compare the same authoritative frame with one real GPU
+     * light's shadow enabled/disabled. No synthetic caster, source, or gameplay
+     * state is introduced. Restore the renderer before normal presentation.
+     */
+    shadowPixelProof(sourceId) {
+        const engine = this.engine;
+        const light = engine.lights.get(sourceId);
+        if (!light?.castShadow) return { sourceId, available: false, changedPixels: 0, maxPixelDelta: 0 };
+        let shadowed, unshadowed;
+        try {
+            engine.render(this.width, this.height);
+            shadowed = engine.pixels();
+            light.castShadow = false;
+            engine.render(this.width, this.height);
+            unshadowed = engine.pixels();
+        } finally {
+            light.castShadow = true;
+            engine.render(this.width, this.height);
+        }
+        let changedPixels = 0, maxPixelDelta = 0;
+        for (let i = 0; i < shadowed.length; i += 4) {
+            const delta = Math.abs(shadowed[i] - unshadowed[i]) +
+                Math.abs(shadowed[i + 1] - unshadowed[i + 1]) +
+                Math.abs(shadowed[i + 2] - unshadowed[i + 2]);
+            if (delta >= 24) changedPixels++;
+            maxPixelDelta = Math.max(maxPixelDelta, delta);
+        }
+        return { sourceId, available: true, changedPixels, maxPixelDelta,
+            framebuffer: [engine.canvas.width, engine.canvas.height] };
+    }
     dispose() { this.engine.dispose(); this.layers.clear(); }
 }
