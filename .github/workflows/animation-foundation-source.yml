@@ -230,16 +230,20 @@ jobs:
             const rows=JSON.parse(fs.readFileSync(root+'/motion-trace.json','utf8'));
             const entities=rows.flatMap(r=>r.hollow?.entities??[]);
             const samples=entities.filter(e=>e.foundation?.clip==='attack-travel').length;
-            const drawn=Math.max(0,...entities.map(e=>e.foundationDrawnFrames??0));
+            const skinFrames=rows.filter(r=>r.gpuWorld?.sourceSkinActors>0).length;
+            const maxSkinActors=Math.max(0,...rows.map(r=>r.gpuWorld?.sourceSkinActors??0));
+            const sourceYawSamples=entities.filter(e=>Number.isFinite(e.foundation?.sourceYaw)).length;
             const report={width,source:'real-C#-Hunt/EnemyLab',representation:'source-skinned mesh on existing LightingEngine',
               isOptionalResearch:true,sourceOnly:true,physicalDevice:false,
-              actualRenderSamples:entities.length,clawActionSamples:samples,drawnFrames:drawn,
+              actualRenderSamples:entities.length,clawActionSamples:samples,
+              gpuSkinFrames:skinFrames,maxGpuSkinActors:maxSkinActors,sourceYawSamples,
               maxActualSourceContactSlip:d.maximumProjectedSoleDrift,
               browserErrors:d.errors,failedResources:d.failedResources,gpuErrors:d.gpuErrors,
               finalAcceptance:false,ownerVisualApproval:false};
             fs.writeFileSync(root+'/source-skin-csharp-proof.json',JSON.stringify(report,null,2)+'\n');
             console.log(JSON.stringify(report));
-            if(!samples||!drawn)throw Error('No real drawn moving-claw source-skin frames at '+width+'px');
+            if(!samples||!skinFrames||!maxSkinActors||!sourceYawSamples)
+              throw Error('No real GPU skin and moving-claw C# samples at '+width+'px');
             if(d.errors.length||d.failedResources.length||d.gpuErrors.length)
               throw Error('Actual opt-in source-skin game failed browser/GPU validation at '+width+'px');
           }
