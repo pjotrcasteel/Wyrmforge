@@ -3611,7 +3611,8 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.SetViewportSizeAsync(width, height);
         // A Pages visit may skip character creation; keep this real-Hunt Fireball proof
         // on the Pyromancer selected by the normal first-visit character flow.
-        await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.characterSchool.v1','Pyromancer');");
+        await Page.AddInitScriptAsync(@"localStorage.setItem('wyrmforge.characterSchool.v1','Pyromancer');
+            localStorage.setItem('wyrmforge.preferredPrimary.v1','FireBolt');");
         var terrainQuery = paintedGround ? "&g4PaintedGround=1" : "";
         await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/?arenaGpu=1&gpuQuality=mobile&g4Review=1" + terrainQuery,
             new() { WaitUntil = WaitUntilState.NetworkIdle });
@@ -3631,6 +3632,9 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.AreEqual("no", await Page.EvaluateAsync<string>(
             "() => localStorage.getItem('wyrmforge.g4.autoSendConsent.v1')"));
         await EnterTownIfNeededAsync();
+        // The region chosen at the World Gate is independent of the character school.
+        // Verify the town has loaded the Fire character before the C# Hunt is created.
+        await Expect(Page.Locator(".refuge-canonical-scene")).ToHaveAttributeAsync("data-nexus-school", "fire");
         await EnterFirstTrailAsync("BEGIN FIRST HUNT");
         await Page.EvaluateAsync(@"async () => {
             // Use the exact versioned wrapper module already imported by ArenaView.
