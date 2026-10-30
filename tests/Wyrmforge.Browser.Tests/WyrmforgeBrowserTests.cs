@@ -3686,6 +3686,40 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await File.WriteAllTextAsync(Path.Combine(ArtifactDirectory,
             name + ".json"), reviewDiagnostics.ToString());
 
+        // A nonblack opening frame cannot prove an active projectile casts shadows.
+        // Capture one genuine SAME-FRAME painted-Hunt view only when the C# Fireball
+        // source is registered AND the generic mobile GPU gives it a shadow view.
+        // Never draw a synthetic projectile, light or caster in this browser test.
+        if (width == 390 && !flatGround)
+        {
+            await Page.WaitForFunctionAsync(@"() => {
+                const diagnostics = window.__huntGpuRead?.();
+                const light = diagnostics?.gpuWorld?.lights?.find(source =>
+                    source.shadow === true && (source.id?.startsWith('projectile:') ||
+                        source.id?.startsWith('impact:FireBolt:')));
+                const canvas = document.querySelector('canvas.game-canvas');
+                if (!light || !canvas?.width || !canvas?.height) return false;
+                window.__g4LiveFireShadowProof = {
+                    sourceId: light.id,
+                    shadowViews: light.views,
+                    image: canvas.toDataURL('image/png')
+                };
+                return true;
+            }", null, new() { Timeout = 30000 });
+            var fireProof = await Page.EvaluateAsync<JsonElement>(
+                "() => window.__g4LiveFireShadowProof");
+            Assert.IsTrue(fireProof.GetProperty("shadowViews").GetInt32() > 0,
+                "A real C# Fireball must have a generic mobile GPU shadow view.");
+            var png = fireProof.GetProperty("image").GetString() ?? "";
+            StringAssert.StartsWith(png, "data:image/png;base64,");
+            await File.WriteAllBytesAsync(Path.Combine(ArtifactDirectory,
+                "live-g4-review-fireball-shadow-390-mobile.png"),
+                Convert.FromBase64String(png["data:image/png;base64,".Length..]));
+            await File.WriteAllTextAsync(Path.Combine(ArtifactDirectory,
+                "live-g4-review-fireball-shadow-390-mobile.txt"),
+                fireProof.GetProperty("sourceId").GetString() ?? "");
+        }
+
         // Reproduce the owner's phone: G4 diagnostics were expanded when the
         // Hunt ended and covered rewards. Disposal must collapse and re-dock.
         await panel.EvaluateAsync("el => { el.open = true; }");
