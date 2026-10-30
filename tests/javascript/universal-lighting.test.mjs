@@ -206,6 +206,35 @@ test('mobile shadow camera only recomputes its projection when light range chang
 });
 
 
+test('G4 only updates the shared orthographic projection when viewport or zoom changes', async () => {
+    const { synchronizeOrthographicProjection } =
+        await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/engine.js');
+    const camera = new T.OrthographicCamera(-5, 5, 7, -7, .1, 80);
+    const update = camera.updateProjectionMatrix.bind(camera);
+    let updates = 0;
+    camera.updateProjectionMatrix = () => { updates++; update(); };
+
+    for (let frame = 0; frame < 120; frame++)
+        assert.equal(synchronizeOrthographicProjection(camera, -5, 5, 7, -7), false);
+    assert.equal(updates, 0, 'Unchanged mobile frames must reuse the existing camera projection.');
+
+    assert.equal(synchronizeOrthographicProjection(camera, -5, 5, 8, -8), true,
+        'Rotating the device changes the view aspect and must refresh the projection.');
+    assert.equal(updates, 1);
+    assert.equal(camera.top, 8);
+    assert.equal(camera.bottom, -8);
+    assert.equal(synchronizeOrthographicProjection(camera, -5, 5, 8, -8), false);
+
+    assert.equal(synchronizeOrthographicProjection(camera, -4, 4, 8, -8), true,
+        'Camera zoom must update even at unchanged framebuffer dimensions.');
+    assert.equal(updates, 2);
+    assert.equal(camera.left, -4);
+    assert.equal(camera.right, 4);
+    assert.equal(synchronizeOrthographicProjection(camera, -4, 4, 8, -8), false);
+    assert.equal(updates, 2);
+});
+
+
 test('G4 reuses fog across night frames and never lights zero-light darkness', async () => {
     const { synchronizeEnvironmentFog } =
         await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/engine.js');
