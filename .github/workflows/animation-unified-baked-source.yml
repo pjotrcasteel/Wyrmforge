@@ -211,6 +211,7 @@ jobs:
           set -euo pipefail
           for width in 320 390; do
             AN_FOUNDATION_MODE=sprite-claw AN_MOBILE=1 AN_WIDTH="$width" AN_CAPTURE_DIR="artifacts/an6-unified-csharp-$width" AN_ASSET_ROOT="artifacts/an6-unified-half-pivot-atlas" node tools/animation/capture-hunt.cjs
+            node tools/animation/diagnose_hunt_contact.mjs "artifacts/an6-unified-csharp-$width"
           done
           node - <<'NODE'
           const fs=require('fs');
