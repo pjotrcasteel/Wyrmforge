@@ -202,3 +202,13 @@ places; this is not cloth-deformation or native sprite acceptance. No claim of
 byte-identical icon reproduction, animation or in-Hunt proof. Appearance review
 remains open. V001 retained explicitly as rejected, never as an approved variant.
 Source hash/dimensions and `git diff --check` verified; no runtime changes/tests.
+
+### V003 requested refinement
+
+Owner approved the v002 direction ("perfect") and requested more faded cape
+images plus stronger school influence in the staff. Preserve v002 as the accepted
+directional checkpoint, not final sprite/runtime acceptance. V003 targeted edit:
+weathered lower-contrast thread only (not whole image), and more substantial
+school material transformation throughout the wooden shafts. Preserve crook,
+grip, grey costume and no-icon-topper boundary. Prompt:
+`school-variants-v003-prompt.txt`. Candidate appearance remains subject to review.

@@ -34,6 +34,10 @@ The attachment is authoritative over the earlier provisional v001/v002 concepts.
   orb emblems on top**. Preserve the approved natural staff silhouette and grip.
   The first icon-topped comparison is rejected, not an approved variant library.
   Keep the approved grey wizard identity. The base reference remains preserved.
+  **Owner refinement:** cape emblems are visibly faded/weathered into the grey
+  cloth; school influence on staff material must be stronger and recognisable
+  along the shaft, while retaining natural wood, slender scale and the original
+  crooked tip. Do not achieve stronger identity by restoring icon-shaped toppers.
   Cape symbols reuse the canonical six-school emblem identities, not new sigils.
   They belong to the character's school, not the region/Wyrm selected for a Hunt.
   Specific placement, size and staff variants require appearance review and mobile
