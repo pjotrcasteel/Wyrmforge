@@ -102,7 +102,7 @@ jobs:
       - name: Checkout pinned G4 mobile review build
         uses: actions/checkout@v6
         with:
-          ref: 77dea8c63fec558fd87565b55a5c37c37e44c7fe
+          ref: a239ed847fdf2e9f6f56b6b7ce2ce372fb6f5618
           path: g4-preview-source
 
       - name: Restore G4 runtime art
@@ -123,7 +123,7 @@ jobs:
         working-directory: g4-preview-source
         run: |
           dotnet restore src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj
-          dotnet publish src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -c Release --no-restore -o "$GITHUB_WORKSPACE/artifacts/g4-preview-web" -p:SourceRevisionId=77dea8c63fec558fd87565b55a5c37c37e44c7fe
+          dotnet publish src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -c Release --no-restore -o "$GITHUB_WORKSPACE/artifacts/g4-preview-web" -p:SourceRevisionId=a239ed847fdf2e9f6f56b6b7ce2ce372fb6f5618
           test -s "$GITHUB_WORKSPACE/artifacts/g4-preview-web/wwwroot/js/lighting/g4-device-review.js"
 
       - name: Prepare isolated G4 GitHub Pages route
@@ -131,14 +131,16 @@ jobs:
           mkdir -p artifacts/web/wwwroot/g4-preview
           cp -a artifacts/g4-preview-web/wwwroot/. artifacts/web/wwwroot/g4-preview/
           sed -i 's#<base href="/" />#<base href="/Wyrmforge/g4-preview/" />#' artifacts/web/wwwroot/g4-preview/index.html
-          sed -i 's#__WYRMFORGE_BUILD__#77dea8c63fec558fd87565b55a5c37c37e44c7fe#g' artifacts/web/wwwroot/g4-preview/index.html
+          sed -i 's#__WYRMFORGE_BUILD__#a239ed847fdf2e9f6f56b6b7ce2ce372fb6f5618#g' artifacts/web/wwwroot/g4-preview/index.html
           cp artifacts/web/wwwroot/g4-preview/index.html artifacts/web/wwwroot/g4-preview/404.html
-          printf 'G4 opt-in candidate: 77dea8c63fec558fd87565b55a5c37c37e44c7fe\n' > artifacts/web/wwwroot/g4-preview/build-id.txt
+          printf 'G4 opt-in candidate: a239ed847fdf2e9f6f56b6b7ce2ce372fb6f5618\n' > artifacts/web/wwwroot/g4-preview/build-id.txt
           grep -q '<base href="/Wyrmforge/g4-preview/" />' artifacts/web/wwwroot/g4-preview/index.html
-          grep -q '77dea8c63fec558fd87565b55a5c37c37e44c7fe' artifacts/web/wwwroot/g4-preview/index.html
+          grep -q 'a239ed847fdf2e9f6f56b6b7ce2ce372fb6f5618' artifacts/web/wwwroot/g4-preview/index.html
           ! grep -q '__WYRMFORGE_BUILD__' artifacts/web/wwwroot/g4-preview/index.html
           test -s artifacts/web/wwwroot/g4-preview/_framework/blazor.webassembly.js
           test -s artifacts/web/wwwroot/g4-preview/js/lighting/g4-device-review.js
+          grep -q 'Share results privately' artifacts/web/wwwroot/g4-preview/js/lighting/g4-device-review.js
+          grep -q 'Keep on my phone' artifacts/web/wwwroot/g4-preview/js/lighting/g4-device-review.js
           # Do not alter the main game's root index or default Canvas renderer.
           grep -q '<base href="/Wyrmforge/" />' artifacts/web/wwwroot/index.html
 
@@ -206,7 +208,7 @@ jobs:
                   return response.read().decode("utf-8")
           assert "<base href=\"/Wyrmforge/\" />" in read("")
           assert "<base href=\"/Wyrmforge/g4-preview/\" />" in read("g4-preview/")
-          assert "77dea8c63fec558fd87565b55a5c37c37e44c7fe" in read("g4-preview/build-id.txt")
+          assert "a239ed847fdf2e9f6f56b6b7ce2ce372fb6f5618" in read("g4-preview/build-id.txt")
           assert "class G4DeviceReviewSession" in read("g4-preview/js/lighting/g4-device-review.js")
           print("Production index and separate pinned G4 phone-preview path are both online.")
           PY
@@ -214,7 +216,7 @@ jobs:
       - name: Checkout pinned G4 real-Hunt browser test
         uses: actions/checkout@v6
         with:
-          ref: 77dea8c63fec558fd87565b55a5c37c37e44c7fe
+          ref: a239ed847fdf2e9f6f56b6b7ce2ce372fb6f5618
           path: g4-browser-tests
 
       - name: Build G4 browser test
