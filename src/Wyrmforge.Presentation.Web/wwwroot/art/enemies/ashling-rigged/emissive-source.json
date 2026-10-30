@@ -1,0 +1,37 @@
+{
+  "schema": "sprite-emissive-diff.v1",
+  "description": "Ashling author-approved fiery eye colors: delta from pre-eye animations. No creature-specific lighting engine logic.",
+  "channels": [
+    {
+      "approvedExport": "art/source/enemies/ashling/exports/movement-fiery-eyes-v1",
+      "output": "src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/ashling-rigged/walk-emissive.png",
+      "cell": 96,
+      "frames": 16,
+      "maxPixelsPerFrame": 8,
+      "unlitDirections": [
+        "N"
+      ]
+    },
+    {
+      "approvedExport": "art/source/enemies/ashling/exports/attack-fiery-eyes-v1",
+      "output": "src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/ashling-rigged/attack-emissive.png",
+      "cell": 128,
+      "frames": 22,
+      "maxPixelsPerFrame": 7,
+      "unlitDirections": [
+        "N"
+      ]
+    },
+    {
+      "approvedExport": "art/source/enemies/ashling/exports/death-fiery-eyes-v1",
+      "output": "src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/ashling-rigged/death-emissive.png",
+      "cell": 128,
+      "frames": 28,
+      "maxPixelsPerFrame": 7,
+      "unlitDirections": [
+        "N"
+      ],
+      "extinguishedFromFrame": 13
+    }
+  ]
+}
