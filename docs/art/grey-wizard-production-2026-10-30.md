@@ -256,3 +256,12 @@ gem edges and extends above it. Fire split burl, Frost silver-lined mortise, Sto
 fitted copper sleeve, Arcane enclosing spiral knot, Necromancy recessed deadwood/
 iron band, Summoner root-engulfed amber are proposed constructions. Preserve v004
 cape hues/faded embroidery. Exact brief: `school-variants-v005-prompt.txt`.
+
+V005 preserved as `school-variants-v005.png`, 1536x1024. Gems visibly recessed in
+enclosing wood or crafted sockets. Generated board altered cape contrast/detail;
+retain v004 as approved cape direction, not those incidental changes. Owner says
+good direction and requests staffs more unique: repeated pointed/leaf frames are
+still too similar. V006 isolates six full staffs for better inspection, with distinct
+blunt burl / angular stepped head / open copper crook / sideways spiral knot /
+narrow splintered deadwood / squat living-root burl. Gem integration stays; colour
+alone is not enough. Prompt `staff-designs-v006-prompt.txt`. No runtime change.

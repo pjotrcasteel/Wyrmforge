@@ -109,5 +109,19 @@
     ],
     "prompt": "school-variants-v004-prompt.txt",
     "status": "Subtly school-tinted grey capes and distinct gemstone staff candidate; owner review pending"
+  },
+  "schoolVariantsRevision5": {
+    "file": "school-variants-v005.png",
+    "sha256": "cd18f77f3315f53f96b53fd2fd703316761580189a43a57d2d006c1a200a1d23",
+    "size": [
+      1536,
+      1024
+    ],
+    "generator": "built-in image_gen edit",
+    "inputs": [
+      "school-variants-v004.png"
+    ],
+    "prompt": "school-variants-v005-prompt.txt",
+    "status": "Owner accepted integrated-gem direction, requests more unique designs. Staff study only; cape drift not approved, retain v004 capes."
   }
 }

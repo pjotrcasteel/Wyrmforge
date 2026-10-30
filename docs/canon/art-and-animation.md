@@ -38,6 +38,9 @@ The attachment is authoritative over the earlier provisional v001/v002 concepts.
   roots or fitted sockets. Avoid gems perched on top or suspended between open
   prongs. The v004 cape hues and embroidery direction is accepted; staff settings
   require this further refinement while preserving distinct designs and colours.
+  Subsequent owner feedback accepts the integrated-gem direction and requests
+  stronger uniqueness: each staff needs a distinct silhouette and construction,
+  not the same pointed/leaf-shaped gem frame recoloured for all six schools.
   The first icon-topped comparison is rejected, not an approved variant library.
   Keep the approved grey wizard identity. The base reference remains preserved.
   **Owner refinement:** cape emblems are visibly faded/weathered into the grey
