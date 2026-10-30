@@ -48,7 +48,7 @@ def generate_channel(root: Path, channel: dict) -> dict:
         raise ValueError("Approved atlas cell size changed")
     if int(prior.get("cell", prior.get("source", {}).get("frameWidth", 0))) != cell:
         raise ValueError("Source atlas cell size changed")
-    filename = f"ashling-{animation}.png"
+    filename = channel["atlasFilename"]
     before = _validated_atlas(prior_dir / filename, prior, cell, frames, directions)
     after = _validated_atlas(approved_dir / filename, approved, cell, frames, directions)
     if not np.array_equal(before[:, :, 3], after[:, :, 3]):
