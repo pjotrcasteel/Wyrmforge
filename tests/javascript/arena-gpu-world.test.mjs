@@ -57,9 +57,11 @@ test('mage, Warden and Wyrm retain their own painted foot line without ground pe
         assert.equal(mesh.geometry, 'hunt-billboard');
         assert.ok(capture.footFraction > .75 && capture.footFraction <= 1,
             'Painted ankles, bell body and wyrm tail must remain in the texture');
-        assert.equal(mesh.scale[1], capture.size * capture.footFraction / 48);
-        assert.deepEqual(mesh.frame.offset, [0, 1 - capture.footFraction]);
-        assert.deepEqual(mesh.frame.repeat, [1, capture.footFraction]);
+        assert.equal(mesh.scale[1], capture.size / 48,
+            'The full source sprite height must survive every painted-foot pivot.');
+        assert.equal(mesh.scale[0], mesh.scale[1],
+            'Square captures must never be squashed by the grounding adapter.');
+        assert.equal(mesh.frame, undefined, 'Do not crop authored legs or tail artwork.');
         const footY = capture.y + capture.size * capture.footFraction;
         assert.ok(Math.abs(-mesh.position[1] * 48 / Math.SQRT2 - footY) < 1e-8,
             'Physical billboard foot contact must coincide with its own painted foot line');
