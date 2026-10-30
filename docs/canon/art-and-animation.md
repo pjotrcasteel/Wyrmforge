@@ -73,6 +73,14 @@ The attachment is authoritative over the earlier provisional v001/v002 concepts.
   translation must retain the approved reference's grounded human proportions,
   long heavy layered robe, weathered face/materials and restrained realistic pixel
   treatment. Technical format/playback checks cannot overrule this art rejection.
+  **Relative body scale / 2.5D (owner clarification):** the wizard and normal
+  Hollowed should have equal anatomical stature if the hunched Hollowed stood
+  upright. Exclude wizard hat, staff, transparent cell padding and temporary
+  pose/elite variation from that comparison. Judge projected body height through
+  the shared elevated 2.5D camera, world-ground foot anchors, elevation and depth/
+  occlusion, not independent image widths or source-pixel preview magnifications.
+  Native 2D sprite layers remain authoring surfaces; the required presentation is
+  world-anchored 2.5D. A flat sheet alone cannot approve scale or perspective.
   The first icon-topped comparison is rejected, not an approved variant library.
   Keep the approved grey wizard identity. The base reference remains preserved.
   **Owner refinement:** cape emblems are visibly faded/weathered into the grey

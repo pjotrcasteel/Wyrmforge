@@ -2,6 +2,7 @@
 // Gameplay/physics never reads animation geometry.
 import { drawMagePixelFrame, mageFrameKey } from './arena-mage-frames.js';
 import { artReady, hasArtFrame, drawArtFrame } from './art-atlas.js';
+import { wizardScaleStudy } from './wizard-scale-study.js';
 
 const cloak = '#485b73';
 const cloakEdge = '#1b2637';
@@ -23,7 +24,8 @@ export function magePose(cast, reducedMotion = false) {
     };
 }
 
-export function updateMageWalk(motion, player, seconds, reducedMotion = false) {
+export function updateMageWalk(motion, player, seconds, reducedMotion = false, paused = false) {
+    wizardScaleStudy.update(player,seconds,reducedMotion,paused);
     if (!motion || !player || !Number.isFinite(seconds)) return 0;
     if (Number.isFinite(motion.x) && Number.isFinite(motion.y)) {
         const distance = Math.hypot(player.x - motion.x, player.y - motion.y);
@@ -88,6 +90,7 @@ function paintPixelShaft(ctx, from, to, thickness, pigment) {
 
 export function drawMage(ctx, player, cast, hit = false, reducedMotion = false, lighting = null, walkPhase = 0, facing = 'S') {
     if (!player) return;
+    if (wizardScaleStudy.draw(ctx,player,cast)) return;
     const scale = Math.max(.7, Math.min(1.45, (Number(player.radius) || 12) / 12));
 
     ctx.save();

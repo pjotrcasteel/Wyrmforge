@@ -13,7 +13,7 @@
         56,
         141
       ],
-      "worldSize": 40
+      "worldSize": 72.944643
     },
     "walk": {
       "image": "walk.png",
@@ -23,7 +23,7 @@
         56,
         141
       ],
-      "worldSize": 40
+      "worldSize": 72.944643
     }
   },
   "emission": {

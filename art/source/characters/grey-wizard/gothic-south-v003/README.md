@@ -32,8 +32,12 @@ authoring/export, **not** a new runtime animation/physics/lighting engine. Baked
 full frames use the existing shared sprite controller/atlas contract.
 
 160x160 padded cells, [56,141] pivot, 16 south-facing frames, separate diagnostic
-emission map. Provisional worldSize 40 keeps roughly the old mage's body world
-height; it is not approved final pixel density. Albedo + emission: 3276800 decoded
+emission map. `scale-calibration.json` now derives a provisional worldSize from
+equal upright Hollowed/wizard anatomical stature (excluding hat/staff). It replaces
+the earlier 40-world-unit guess; source-native previews were not game scale.
+Calibration uses preserved source rest extent/camera and an explicit hidden-crown
+landmark estimate, not a new upright Hollowed render or approved V2 body.
+It is not approved final pixel density. Albedo + emission: 3276800 decoded
 bytes. Other directions/actions/schools, normals, roughness and depth are unmade.
 
 The declared source stance translates soles against 2 native pixels of root travel
@@ -61,3 +65,15 @@ native look, actual motion and real Hunt/device gates pass.
 - Focused existing mage/controller JavaScript tests: 16/16 pass. Atlas rebuild
   `--check`: 25/25 outputs byte-identical. GIF has 16 frames, MP4 decode passes,
   OpenRaster has twelve layers. No production code changes or new art acceptance.
+
+## Opt-in real 2.5D arena scale review
+
+`/enemy-lab?kind=Hollow&autoplay=false&cast=false&wizardStudy=gothic-south-v003`
+loads this actor through the existing C# Enemy Lab and arena depth/camera path.
+Default Hunts and other pages keep the live mage. The study is south-facing only;
+unsupported casting uses the old mage fallback. Source art/materials/perspective
+are not automatically accepted by this lab switch. Shared sprite controller handles
+phase/pause; C# still owns world root, radius, movement, enemies and collision.
+Review assets are explicit copies made by `publish-review.mjs`, no default actor
+cutover or separate lighting/simulation/animation engine. Source-lit albedo is
+still unapproved as a relightable material. Real Hunt and device gates remain open.

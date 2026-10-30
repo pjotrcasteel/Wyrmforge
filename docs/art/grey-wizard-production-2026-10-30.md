@@ -445,3 +445,29 @@ but hidden anatomy/edge fills, motion quality, source density and actual C# stri
 calibration need acceptance. No live mage replacement or other direction/action
 library work before this one-view review. Current work is not real Hunt/device
 proof, production relightable materials or completed character animation.
+
+## Upright Hollowed parity and 2.5D scale review
+
+Owner accepted the Gothic direction, asked for human size parity with Hollowed if
+it stood upright, and reaffirmed 2.5D. Source GIF 1x/2x panels were native source
+pixels, not common game/world scale. Actual baseline current no-cape Hollowed is
+arms/standard-walk.png, cell96/worldSize93, radius11, visualScale1 (variation +/-5%).
+The legacy caped sheet is a fallback, not the primary comparator. Pending #399 V2
+has no accepted replacement body and is preserved untouched.
+
+Provisional standing-body guide comes from parent neutral mesh vertical extent and
+its saved source camera projection, not a stretched/relabelled hunched image. Result
+~49.69 projected world units. Wizard source crown under hat is estimated y22 to
+sole y131 (109 native pixels). Candidate worldSize ~72.944643 yields same body
+height, excluding hat/staff. Old export worldSize40 produced only27.25 anatomical
+world units despite its large source GIF. This corrects the mixed preview units;
+not a final approved physical-phone scale decision. Exact inputs/hashes/limitations
+are recorded in scale-calibration.json. Native pixels/pose geometry unchanged.
+
+Add a strictly opt-in existing /enemy-lab source consumer via wizardStudy query:
+shared controller, real C# root/radius and arena camera/depth, no new engine. Only
+that developer route can load the actor; default Hunts remain unchanged. South
+view only, unavailable art/cast uses existing fallback. Lab note makes limitations
+visible. Source-lit art is not accepted GPU/material/perspective proof. A real
+Hunt/elevation/occlusion/phone matrix still remains; 2D layers are authoring data,
+not a flat 2D product direction. No source rigs/Hollowed/G/AN branches altered.

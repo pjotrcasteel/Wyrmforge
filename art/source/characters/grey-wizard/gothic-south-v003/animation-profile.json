@@ -11,7 +11,7 @@
   "locomotion": {
     "clip": "walk",
     "frames": 16,
-    "stride": 8,
+    "stride": 14.5889286,
     "sourceFps": 12,
     "calibration": "source stride only; actual C# speed and frame cadence not accepted"
   },
