@@ -139,3 +139,38 @@ shadow when the Fireball passes, the mage/Bell Warden/Wyrm at native proportions
 camera scroll without tearing, and saved FPS/p95 compared with the original
 ~49 FPS / 33ms p95. Maintain flat-vs-painted terrain A/B, iPhone/Android
 temperature gates, and unreadable Trail 2 as open issues. No JSON export.
+
+
+## G4 physical iPhone projection regression — 30 October 2026
+
+The owner supplied another genuine iPhone Safari screenshot of the deployed
+`v0.0.180-g4-preview · eca7e51` showing that Fireball effects were improved
+but the overall actor/game presentation was still visually compressed/squished.
+This screenshot is real user evidence, not an AI-generated preview.
+
+**Root cause found in the shared G4 adapter:** the legacy source is an
+already-painted, camera-relative Canvas capture with exact `x/y/width/height`.
+The GPU billboard kept its full image but translated its bottom to
+`y + footFraction * height`, shifting the *whole image* vertically by
+`(1 - footFraction) * height` relative to the original Canvas renderer.
+The foot fraction describes a point *inside* the art, not its clipping,
+aspect ratio, or rectangle origin.
+
+**G4 fix:** preserve the complete capture at its original pixel rectangle,
+and anchor the GPU billboard bottom at `y + height`. Keep the same
+orthographic camera, source world geometry, 45-degree upright cutout plane,
+lighting material, C# actor positions, and image dimensions. Leave internal
+painted foot metadata intact for future separate caster/occlusion work;
+it must not move or compress visible image pixels.
+
+**Deterministic regression:** project the real Three.js `huntActorGeometry`
+through the exact G4 orthographic camera at **320x568, 390x844, 402x656,
+844x390** and verify the resulting on-screen rectangle equals the authored
+Canvas capture within 0.001 pixels for the mage, Warden and Wyrm. No
+CSS stretching, new renderer, or C#/animation changes.
+
+**Acceptance remains open:** the owner must check a real iPhone snapshot
+after the newly pinned preview deploy and approve actor silhouette
+proportions and ground contact. Mobile FPS/p95, Fireball-to-Hollowed shadows,
+Trail 2 readability, tearing and Android power/thermals remain independent
+open G4 gates. Do not infer physical device acceptance from browser tests.
