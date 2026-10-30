@@ -503,6 +503,8 @@ export function drawWorldSiteLandscape(ctx, geography, width, height) {
         'glacier-cliff': ['#7d9bac', '#d3dde7'],
         'ice-spire': ['#b1d5e5', '#e5f2f8'],
         'wyrm-rib': ['#55434a', '#92747a'],
+        'monastery-wall': ['#8d847b', '#d2bba4'],
+        'monastery-hall': ['#675c56', '#bba99a'],
         rock: ['#737673', '#343d44'],
     };
     ctx.save();
@@ -560,7 +562,9 @@ export function drawSemanticSiteFloor(ctx, geography, width, height, geographyAc
     ctx.fillStyle = siteSurfaceColors[substrate];
     ctx.fillRect(0, 0, width, height);
     if (geographyActive && geography.landscape) drawWorldSiteLandscape(ctx, geography, width, height);
-    for (const corridor of geography.corridors) {
+    // Chart edges define travel permissions, never the visible number of roads.
+    // Only C#-seeded local paths are painted in the arena.
+    for (const corridor of geography.scenicPaths?.length ? geography.scenicPaths : geography.corridors) {
         const material = semanticMaterialName(corridor.material);
         if (!(material in siteSurfaceColors) || corridor.points?.length < 2) continue;
         ctx.beginPath();

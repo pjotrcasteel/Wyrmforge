@@ -146,9 +146,28 @@ public static class WyrmrealmMapGenerator
                 var site = draft.Site;
                 var name = introductoryFire && node.Type == WyrmrealmNodeType.Dragon ? DragonCatalog.Get(DragonId.Ashfang).Name
                     : draft.Refuge ? RefugeName : draft.Watchtower ? WatchtowerName : node.Name;
+                var habitat = WyrmrealmHabitatCatalog.ForSchool(draft.Habitat, region);
+                // Chart supplies only environmental context. An edge fork never
+                // dictates a matching Y-shaped road in the local Hunt arena.
+                var landform = habitat switch
+                {
+                    WyrmrealmHabitat.ScorchedApproach or WyrmrealmHabitat.GlacierApproach => WorldSiteLandform.Mountain,
+                    WyrmrealmHabitat.FloodedCloister or WyrmrealmHabitat.MirrorMere => WorldSiteLandform.Wetland,
+                    _ => biome == 1 ? WorldSiteLandform.Mountain : WorldSiteLandform.Lowland,
+                };
+                var landmark = node.Type == WyrmrealmNodeType.Dragon
+                    ? WorldSiteLandmark.WyrmLair
+                    : habitat switch
+                    {
+                        WyrmrealmHabitat.MonasteryGrounds or WyrmrealmHabitat.FloodedCloister => WorldSiteLandmark.Monastery,
+                        WyrmrealmHabitat.DesertedVillage or WyrmrealmHabitat.BuriedHamlet => WorldSiteLandmark.Village,
+                        _ => draft.Watchtower ? WorldSiteLandmark.Watchtower : WorldSiteLandmark.None,
+                    };
                 return node with { Name = name, Refuge = draft.Refuge, Watchtower = draft.Watchtower,
                     Site = site with { Point = Flip(site.Point), IncomingTrail = site.IncomingTrail.Select(Flip).ToArray() },
-                    Territory = territory, Habitat = WyrmrealmHabitatCatalog.ForSchool(draft.Habitat, region), PreLair = node.Type == WyrmrealmNodeType.Combat && lairRoads.Contains(node.Id) };
+                    Territory = territory, Habitat = habitat,
+                    GenerationProfile = new WorldSiteGenerationProfile(landform, landmark),
+                    PreLair = node.Type == WyrmrealmNodeType.Combat && lairRoads.Contains(node.Id) };
             }).ToArray();
         return WorldSiteGeographyProjection.Attach(mapped, seed, region);
 

@@ -23,6 +23,15 @@ public sealed record WorldSiteSurface(
     double Wear,
     double Shelter);
 
+/// <summary>Broad topography requested by the Chart, not an arena road layout.</summary>
+public enum WorldSiteLandform { Lowland, Wetland, Mountain }
+
+/// <summary>A required physical point of interest, independently composable with landform.</summary>
+public enum WorldSiteLandmark { None, Monastery, Village, Watchtower, WyrmLair }
+
+/// <summary>Site-generation input: the Chart describes the place; C# generates its local terrain.</summary>
+public sealed record WorldSiteGenerationProfile(WorldSiteLandform Landform, WorldSiteLandmark Landmark);
+
 /// <summary>A directed incidence of a world-graph edge on the site's normalized local boundary.</summary>
 public sealed record WorldSitePort(
     string EdgeId,
@@ -55,6 +64,12 @@ public sealed record WorldSiteGeography(
 
     /// <summary>Authoritative C# site footprints, independent of visual palette.</summary>
     public WorldSiteLandscapeRecipe? Landscape { get; init; }
+
+    /// <summary>Broad landform and landmark metadata, independent of graph branching.</summary>
+    public WorldSiteGenerationProfile? GenerationProfile { get; init; }
+
+    /// <summary>Locally generated visible trails; world-graph corridors remain clearance/exit constraints.</summary>
+    public IReadOnlyList<WorldSiteCorridor> ScenicPaths { get; init; } = [];
 }
 
 /// <summary>
@@ -131,6 +146,13 @@ public static class WorldSiteGeographyProjection
                 ports,
                 corridors,
                 landmarks);
+            var profile = node.GenerationProfile ?? new WorldSiteGenerationProfile(
+                WorldSiteLandform.Lowland, WorldSiteLandmark.None);
+            geography = geography with
+            {
+                GenerationProfile = profile,
+                ScenicPaths = CreateScenicPaths(worldSeed, geography.SiteId, profile),
+            };
             var landscape = WorldSiteLandscapeGenerator.Generate(node, geography);
             var localSurface = landscape.Kind switch
             {
@@ -138,7 +160,7 @@ public static class WorldSiteGeographyProjection
                 {
                     Material = WorldSiteSurfaceId.Grass, Moisture = .72, Shelter = .7, Slope = .08,
                 },
-                "mountain-pass" => substrate with
+                "mountain-pass" or "mountain-monastery" => substrate with
                 {
                     Material = WorldSiteSurfaceId.Rock, Height = .72, Slope = .62, Moisture = .21,
                 },
@@ -152,6 +174,45 @@ public static class WorldSiteGeographyProjection
             geography = geography with { Landscape = landscape, Substrate = localSurface };
             return node with { Geography = geography };
         }).ToArray();
+    }
+
+    // Visible trails follow the site's seeded landform, not the number/directions
+    // of Chart edges. Ports still determine actual reachable destinations.
+    private static IReadOnlyList<WorldSiteCorridor> CreateScenicPaths(
+        int worldSeed, string siteId, WorldSiteGenerationProfile profile)
+    {
+        var seed = unchecked(worldSeed * 16777619 + 216613626);
+        foreach (var character in siteId)
+            seed = unchecked(seed * 31 + character);
+        var random = new Random(seed);
+        var bend = (random.NextDouble() - .5) * .16;
+        var head = (random.NextDouble() - .5) * .18;
+        var material = profile.Landform == WorldSiteLandform.Wetland
+            ? WorldSiteSurfaceId.Mud : WorldSiteSurfaceId.Road;
+        var trails = new List<WorldSiteCorridor>
+        {
+            new("site-main-trail", material, .068,
+            [
+                new HuntPoint(.46 + bend, .94),
+                new HuntPoint(.46 + bend * .7, .72),
+                new HuntPoint(.5, .5),
+                new HuntPoint(.51 + head * .5, .27),
+                new HuntPoint(.51 + head, .06),
+            ]),
+        };
+        // Some forest terrain naturally has side tracks, regardless of whether
+        // the Hunter's Chart branches here. A mountain monastery needn't.
+        if (profile.Landform != WorldSiteLandform.Mountain && random.Next(4) == 0)
+        {
+            var side = random.Next(2) == 0 ? -1d : 1d;
+            trails.Add(new WorldSiteCorridor("site-side-track", material, .045,
+            [
+                new HuntPoint(.5, .5),
+                new HuntPoint(.5 + side * .18, .4),
+                new HuntPoint(.5 + side * .39, .29),
+            ]));
+        }
+        return trails;
     }
 
     private static string Compass(double dx, double dy)

@@ -15,25 +15,28 @@ public sealed record WorldSiteLandscapeRecipe(
     string Kind,
     IReadOnlyList<WorldSiteObstacle> Obstacles);
 
-/// <summary>Deterministic site composition from the canonical route graph, without using combat or reward RNG.</summary>
+/// <summary>Deterministic local scenery from world-map habitat and landmark metadata, without consuming combat or reward RNG.</summary>
 public static class WorldSiteLandscapeGenerator
 {
-    /// <summary>Produces bounded forest, ridge and lair footprints while reserving every mapped route corridor.</summary>
+    /// <summary>Creates seeded place geometry while reserving mapped exit clearance and local scenic trails.</summary>
     public static WorldSiteLandscapeRecipe Generate(WyrmrealmMapNode node, WorldSiteGeography geography)
     {
         ArgumentNullException.ThrowIfNull(node);
         ArgumentNullException.ThrowIfNull(geography);
-        var kind = SelectKind(node, geography);
         var seed = unchecked(geography.WorldSeed * 486187739 + 19);
         foreach (var character in geography.SiteId)
             seed = unchecked(seed * 31 + character);
         var random = new Random(seed);
+        var kind = SelectKind(node, geography);
+        var mountain = kind is "mountain-pass" or "mountain-monastery";
         var obstacles = new List<WorldSiteObstacle>();
         var count = kind switch
         {
             "forest-fork" => 24,
             "forest-trail" => 19,
             "mountain-pass" => 16,
+            "mountain-monastery" => 12,
+            "monastery-grounds" => 10,
             "wyrm-lair" => 18,
             _ => 12,
         };
@@ -47,7 +50,7 @@ public static class WorldSiteLandscapeGenerator
             var side = index % 2 == 0 ? 1d : -1d;
             var center = kind switch
             {
-                "mountain-pass" => new HuntPoint(.5 + side * (.285 + random.NextDouble() * .025),
+                "mountain-pass" or "mountain-monastery" => new HuntPoint(.5 + side * (.285 + random.NextDouble() * .025),
                     .09 + (index / (double)count) * .82 + (random.NextDouble() - .5) * .11),
                 "wyrm-lair" => new HuntPoint(.5 + Math.Cos(angle) * (.32 + random.NextDouble() * .08),
                     .5 + Math.Sin(angle) * (.29 + random.NextDouble() * .1)),
@@ -55,21 +58,21 @@ public static class WorldSiteLandscapeGenerator
             };
             var radiusX = kind switch
             {
-                "mountain-pass" => .15 + random.NextDouble() * .018,
+                "mountain-pass" or "mountain-monastery" => .15 + random.NextDouble() * .018,
                 "wyrm-lair" => .064 + random.NextDouble() * .045,
                 "forest-fork" or "forest-trail" => .052 + random.NextDouble() * .042,
                 _ => .045 + random.NextDouble() * .042,
             };
             var radiusY = kind switch
             {
-                "mountain-pass" => .13 + random.NextDouble() * .025,
+                "mountain-pass" or "mountain-monastery" => .13 + random.NextDouble() * .025,
                 "wyrm-lair" => .055 + random.NextDouble() * .047,
                 _ => .04 + random.NextDouble() * .045,
             };
             if (center.X - radiusX < .012 || center.X + radiusX > .988 ||
                 center.Y - radiusY < .012 || center.Y + radiusY > .988)
                 continue;
-            if (geography.Corridors.Any(corridor => CorridorDistance(center, corridor.Points) < 
+            if (geography.Corridors.Concat(geography.ScenicPaths).Any(corridor => CorridorDistance(center, corridor.Points) < 
                 Math.Max(radiusX, radiusY) + corridor.Width * .5 + .065))
                 continue;
             // No player spawn, boss telegraph or obligatory encounter crossing is obstructed.
@@ -77,35 +80,36 @@ public static class WorldSiteLandscapeGenerator
                 continue;
             var material = kind switch
             {
-                "mountain-pass" or "wyrm-lair" => geography.RegionId == "frost"
+                "mountain-pass" or "mountain-monastery" or "wyrm-lair" => geography.RegionId == "frost"
                     ? WorldSiteSurfaceId.GlacialIce : WorldSiteSurfaceId.Rock,
                 "forest-fork" or "forest-trail" => WorldSiteSurfaceId.Grass,
                 _ => geography.Substrate.Material,
             };
             var obstacleKind = kind switch
             {
-                "mountain-pass" => geography.RegionId == "frost" ? "glacier-cliff" : "cliff",
+                "mountain-pass" or "mountain-monastery" => geography.RegionId == "frost" ? "glacier-cliff" : "cliff",
                 "wyrm-lair" => geography.RegionId == "frost" ? "ice-spire" : "wyrm-rib",
                 "forest-fork" or "forest-trail" => "tree-root",
                 _ => "rock",
             };
             var outline = Polygon(center, radiusX, radiusY, random);
             obstacles.Add(new WorldSiteObstacle(obstacleKind, material,
-                kind == "mountain-pass" ? 2.2 : kind == "wyrm-lair" ? 1.4 : .5, outline));
+                mountain ? 2.2 : kind == "wyrm-lair" ? 1.4 : .5, outline));
         }
-        // The camera begins at the road junction. Reserve a few real C#-collision
-        // shoulders *beside* graph corridors so mobile players can read the place
-        // immediately, without inventing scenery in the JavaScript renderer.
-        if (kind is "forest-fork" or "forest-trail" or "mountain-pass")
-            AddNearRoadShoulders(geography, kind, random, obstacles);
+        // Small grounded features flank locally generated paths. The number of
+        // Chart edges does not determine how many visible roads the arena draws.
+        if (kind is "forest-fork" or "forest-trail" or "mountain-pass" or "mountain-monastery")
+            AddNearRoadShoulders(geography, mountain, random, obstacles);
+        if (geography.GenerationProfile?.Landmark == WorldSiteLandmark.Monastery)
+            AddMonasteryBuilding(geography, obstacles);
 
         return new WorldSiteLandscapeRecipe(kind, obstacles);
     }
 
     private static void AddNearRoadShoulders(
-        WorldSiteGeography site, string kind, Random random, List<WorldSiteObstacle> obstacles)
+        WorldSiteGeography site, bool mountain, Random random, List<WorldSiteObstacle> obstacles)
     {
-        foreach (var corridor in site.Corridors)
+        foreach (var corridor in site.ScenicPaths)
         {
             if (corridor.Points.Count < 2) continue;
             var from = corridor.Points[0];
@@ -119,9 +123,9 @@ public static class WorldSiteLandscapeGenerator
             // portrait camera starts. Candidate placement stays entirely in C#.
             var progress = .36 + random.NextDouble() * .22;
             var center = new HuntPoint(from.X + progress * dx, from.Y + progress * dy);
-            var offset = kind == "mountain-pass" ? .19 : .18;
-            var radiusX = kind == "mountain-pass" ? .065 : .045;
-            var radiusY = kind == "mountain-pass" ? .075 : .055;
+            var offset = mountain ? .19 : .18;
+            var radiusX = mountain ? .065 : .045;
+            var radiusY = mountain ? .075 : .055;
             foreach (var side in new[] { -1d, 1d })
             {
                 var point = new HuntPoint(
@@ -130,37 +134,94 @@ public static class WorldSiteLandscapeGenerator
                 if (point.X - radiusX < .02 || point.X + radiusX > .98 ||
                     point.Y - radiusY < .02 || point.Y + radiusY > .98)
                     continue;
-                if (site.Corridors.Any(route =>
+                if (site.Corridors.Concat(site.ScenicPaths).Any(route =>
                     CorridorDistance(point, route.Points) < Math.Max(radiusX, radiusY) + route.Width * .5 + .055))
                     continue;
                 if (Math.Abs(point.X - .5) < radiusX + .10 &&
                     Math.Abs(point.Y - .5) < radiusY + .11)
                     continue;
-                var material = kind == "mountain-pass"
+                var material = mountain
                     ? site.RegionId == "frost" ? WorldSiteSurfaceId.GlacialIce : WorldSiteSurfaceId.Rock
                     : WorldSiteSurfaceId.Grass;
-                var obstacleKind = kind == "mountain-pass"
+                var obstacleKind = mountain
                     ? site.RegionId == "frost" ? "glacier-cliff" : "cliff"
                     : "tree-root";
                 obstacles.Add(new WorldSiteObstacle(obstacleKind, material,
-                    kind == "mountain-pass" ? 1.5 : .7, Polygon(point, radiusX, radiusY, random)));
+                    mountain ? 1.5 : .7, Polygon(point, radiusX, radiusY, random)));
             }
         }
     }
 
     private static string SelectKind(WyrmrealmMapNode node, WorldSiteGeography geography)
     {
-        if (node.Type == WyrmrealmNodeType.Dragon) return "wyrm-lair";
-        if (node.Habitat is WyrmrealmHabitat.ScorchedApproach or WyrmrealmHabitat.GlacierApproach ||
-            node.Territory?.Name.Contains("ridge", StringComparison.OrdinalIgnoreCase) == true ||
-            node.Territory?.Name.Contains("heights", StringComparison.OrdinalIgnoreCase) == true)
+        if (node.Type == WyrmrealmNodeType.Dragon)
+            return "wyrm-lair";
+        var profile = geography.GenerationProfile;
+        if (profile?.Landmark == WorldSiteLandmark.Monastery)
+            return profile.Landform == WorldSiteLandform.Mountain ? "mountain-monastery" : "monastery-grounds";
+        if (profile?.Landform == WorldSiteLandform.Mountain)
             return "mountain-pass";
-        var forward = geography.Ports.Count(port => !port.Entrance);
-        if (forward >= 2 && node.Habitat is WyrmrealmHabitat.Outskirts or WyrmrealmHabitat.WetForest or WyrmrealmHabitat.SnowboundPines)
-            return "forest-fork";
-        return node.Habitat is WyrmrealmHabitat.Outskirts or WyrmrealmHabitat.WetForest or WyrmrealmHabitat.SnowboundPines
-            ? "forest-trail" : "historic-site";
+        if (node.Habitat is WyrmrealmHabitat.Outskirts or WyrmrealmHabitat.WetForest
+            or WyrmrealmHabitat.SnowboundPines or WyrmrealmHabitat.FrozenRoad)
+            return geography.ScenicPaths.Count > 1 ? "forest-fork" : "forest-trail";
+        return node.Habitat is WyrmrealmHabitat.DesertedVillage or WyrmrealmHabitat.BuriedHamlet
+            ? "village-site" : "historic-site";
     }
+
+    // The monastery is a real C# collision layout: a hall and surrounding walls
+    // with an open south entrance and navigable courtyard. AR4/AR5 own art/depth.
+    private static void AddMonasteryBuilding(WorldSiteGeography site, List<WorldSiteObstacle> obstacles)
+    {
+        var candidates = new[]
+        {
+            new HuntPoint(.22, .2), new HuntPoint(.78, .2),
+            new HuntPoint(.22, .78), new HuntPoint(.78, .78),
+            new HuntPoint(.18, .48), new HuntPoint(.82, .48),
+        };
+        var best = candidates
+            .Select(center => new
+            {
+                Center = center,
+                Clearance = site.Corridors.Concat(site.ScenicPaths)
+                    .Min(route => CorridorDistance(center, route.Points) - route.Width * .5),
+            })
+            .OrderByDescending(candidate => candidate.Clearance)
+            .First();
+        // A smaller cloister fits narrow routes; never displace mandatory exits.
+        var halfWidth = Math.Clamp(best.Clearance * .38, .045, .105);
+        var halfHeight = Math.Clamp(best.Clearance * .30, .04, .085);
+        var cx = best.Center.X;
+        var cy = best.Center.Y;
+        var stone = site.RegionId == "frost" ? WorldSiteSurfaceId.GlacialIce : WorldSiteSurfaceId.Rock;
+        var left = cx - halfWidth;
+        var right = cx + halfWidth;
+        var north = cy - halfHeight;
+        var south = cy + halfHeight;
+        var thickness = Math.Min(.017, halfWidth * .20);
+        // Eliminate incidental small rocks/roots on the real structure footprint.
+        obstacles.RemoveAll(obstacle => obstacle.Outline.Any(point =>
+            point.X > left - .03 && point.X < right + .03 &&
+            point.Y > north - .03 && point.Y < south + .03));
+        obstacles.Add(new WorldSiteObstacle("monastery-hall", stone, 1.8,
+            Rectangle(cx - halfWidth * .63, north + thickness, cx + halfWidth * .63, cy - halfHeight * .1)));
+        obstacles.Add(new WorldSiteObstacle("monastery-wall", stone, 1.4,
+            Rectangle(left, north, right, north + thickness)));
+        obstacles.Add(new WorldSiteObstacle("monastery-wall", stone, 1.4,
+            Rectangle(left, north, left + thickness, south)));
+        obstacles.Add(new WorldSiteObstacle("monastery-wall", stone, 1.4,
+            Rectangle(right - thickness, north, right, south)));
+        // Split the southern wall into two real colliders to create an open gate.
+        obstacles.Add(new WorldSiteObstacle("monastery-wall", stone, 1.4,
+            Rectangle(left, south - thickness, cx - thickness * 1.4, south)));
+        obstacles.Add(new WorldSiteObstacle("monastery-wall", stone, 1.4,
+            Rectangle(cx + thickness * 1.4, south - thickness, right, south)));
+    }
+
+    private static IReadOnlyList<HuntPoint> Rectangle(double left, double top, double right, double bottom) =>
+    [
+        new HuntPoint(left, top), new HuntPoint(right, top),
+        new HuntPoint(right, bottom), new HuntPoint(left, bottom),
+    ];
 
     private static IReadOnlyList<HuntPoint> Polygon(HuntPoint center, double radiusX, double radiusY, Random random)
     {

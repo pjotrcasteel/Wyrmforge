@@ -209,18 +209,49 @@ public sealed class WorldSiteLandscapeTests
     }
 
     [TestMethod]
-    public void ForestFork_ExposesDistinctOutgoingGraphEdgesWithDirectionalPhysicalPorts()
+    public void ScenicForestForks_AreGeneratedIndependentlyOfChartBranches()
     {
-        var fork = Enumerable.Range(0, 100)
-            .SelectMany(seed => WyrmrealmMapGenerator.GenerateFireHunt(seed, WyrmTier.Wyrm))
-            .First(node => node.Geography?.Landscape?.Kind == "forest-fork");
-        var site = fork.Geography!;
-        var outgoing = site.Ports.Where(port => !port.Entrance).ToArray();
-        Assert.IsGreaterThanOrEqualTo(2, outgoing.Length);
-        Assert.AreEqual(outgoing.Length, outgoing.Select(port => port.EdgeId).Distinct().Count());
-        Assert.AreEqual(outgoing.Length, outgoing.Select(port => port.LocalPoint).Distinct().Count(),
-            "Two chart roads must not point to the same exit location.");
-        foreach (var port in outgoing)
-            Assert.IsTrue(site.Corridors.Any(c => c.EdgeId == port.EdgeId && c.Points[^1] == port.LocalPoint));
+        var forests = Enumerable.Range(0, 100)
+            .SelectMany(seed => WyrmrealmMapGenerator.GenerateFireHunt(seed, WyrmTier.Ascendant))
+            .Where(node => node.Geography?.Landscape?.Kind == "forest-fork")
+            .ToArray();
+        Assert.IsGreaterThan(0, forests.Length);
+        Assert.IsTrue(forests.Any(node => node.Geography!.Ports.Count(port => !port.Entrance) < 2),
+            "A visible forest fork must be possible even without a Chart graph fork.");
+        foreach (var node in forests)
+        {
+            var site = node.Geography!;
+            Assert.AreEqual(2, site.ScenicPaths.Count);
+            Assert.IsTrue(site.ScenicPaths.All(path => site.Ports.All(port => port.EdgeId != path.EdgeId)),
+                "Visible paths must be local generation, not copies of graph edges.");
+            Assert.AreEqual(site.Ports.Count, site.Ports.Select(port => port.EdgeId).Distinct().Count());
+        }
+    }
+
+    [TestMethod]
+    public void MountainMonastery_CreatesRealHallWallsAndWalkableCourtyardFromNodeMetadata()
+    {
+        var mountainMonastery = Enumerable.Range(0, 150)
+            .SelectMany(seed => WyrmrealmMapGenerator.GenerateFireHunt(seed, WyrmTier.Ascendant))
+            .First(node => node.GenerationProfile is
+            {
+                Landform: WorldSiteLandform.Mountain,
+                Landmark: WorldSiteLandmark.Monastery,
+            });
+        var site = mountainMonastery.Geography!;
+        Assert.AreEqual("mountain-monastery", site.Landscape!.Kind);
+        Assert.AreEqual(WorldSiteLandmark.Monastery, site.GenerationProfile!.Landmark);
+        Assert.AreEqual(1, site.Landscape.Obstacles.Count(obstacle => obstacle.Kind == "monastery-hall"));
+        Assert.AreEqual(5, site.Landscape.Obstacles.Count(obstacle => obstacle.Kind == "monastery-wall"));
+        const double width = 950, height = 1550;
+        var hall = site.Landscape.Obstacles.Single(obstacle => obstacle.Kind == "monastery-hall");
+        var centroid = new Vector2D(hall.Outline.Average(point => point.X) * width,
+            hall.Outline.Average(point => point.Y) * height);
+        Assert.IsTrue(WorldSiteFootprintCollision.Contains(hall, centroid, width, height));
+        foreach (var corridor in site.Corridors)
+            Assert.IsFalse(WorldSiteFootprintCollision.BlocksSegment(site.Landscape,
+                new Vector2D(corridor.Points[0].X * width, corridor.Points[0].Y * height),
+                new Vector2D(corridor.Points[^1].X * width, corridor.Points[^1].Y * height),
+                width, height, radius: 12));
     }
 }

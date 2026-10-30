@@ -51,3 +51,18 @@ test('AR1 mountain and lair semantic shapes have distinct physical material iden
         assert.ok(colors.includes(expected), `Missing solid authored material for ${kind}`);
     }
 });
+
+test('AR1 local scenic roads are generated independently of Chart edge corridors', () => {
+    const local = {
+        ...site,
+        scenicPaths: [{ edgeId: 'site-main-trail', material: 2, width: .07,
+            points: [{ x: .21, y: .91 }, { x: .42, y: .62 }, { x: .61, y: .09 }] }],
+    };
+    const { ctx, paths } = canvas();
+    assert.equal(drawSemanticSiteFloor(ctx, local, 390, 844, true), true);
+    assert.ok(paths.some(point => Array.isArray(point) && point[0] === 'move' &&
+        Math.abs(point[1] - .21 * 390) < .01 && Math.abs(point[2] - .91 * 844) < .01));
+    assert.ok(!paths.some(point => Array.isArray(point) && point[0] === 'move' &&
+        Math.abs(point[1] - .5 * 390) < .01 && Math.abs(point[2] - .5 * 844) < .01),
+        'Graph-derived road must not appear as the local terrain path.');
+});
