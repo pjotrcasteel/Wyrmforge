@@ -3727,10 +3727,10 @@ public sealed class WyrmforgeBrowserTests : PageTest
             name + ".json"), reviewDiagnostics.ToString());
 
         // A nonblack opening frame cannot prove an active projectile casts shadows.
-        // Capture one genuine SAME-FRAME painted-Hunt view only when the C# Fireball
+        // Capture one genuine SAME-FRAME Hunt view (including painted A/B) only when the C# Fireball
         // source is registered AND the generic mobile GPU gives it a shadow view.
         // Never draw a synthetic projectile, light or caster in this browser test.
-        if (width == 390 && !flatGround)
+        if (width == 390 && paintedGround)
         {
             await Page.WaitForFunctionAsync(@"() => {
                 const diagnostics = window.__huntGpuRead?.();
