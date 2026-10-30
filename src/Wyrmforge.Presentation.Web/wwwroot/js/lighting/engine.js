@@ -33,6 +33,25 @@ export function synchronizeShadowProjection(light, range, force = false) {
     return true;
 }
 
+const fogAmbientColor = new T.Color();
+
+/** Reuse fog resources on unchanged snapshots without altering black-world rules. */
+export function synchronizeEnvironmentFog(scene, environment) {
+    const descriptor = environment.fog;
+    if (!descriptor || environment.ambient <= 0) {
+        scene.fog = null;
+        return;
+    }
+    const fog = scene.fog?.isFog
+        ? scene.fog : new T.Fog(descriptor.color, descriptor.near, descriptor.far);
+    fog.color.set(descriptor.color)
+        .multiply(fogAmbientColor.set(environment.color))
+        .multiplyScalar(Math.min(1, environment.ambient));
+    fog.near = descriptor.near;
+    fog.far = descriptor.far;
+    scene.fog = fog;
+}
+
 /** Shared GPU adapter; accepts resource IDs and descriptors, never entity kinds. */
 export class LightingEngine {
     constructor(canvas, { shadowViews = 8, maxLights = 8, shadowMapSize = 512, preserveDrawingBuffer = true } = {}) {
@@ -196,13 +215,10 @@ export class LightingEngine {
         }
         // Fog is a bounded distance approximation, not a volumetric light simulation.
         // The zero-light diagnostic must not reveal silhouettes through fog.
-        const fog = s.environment.fog;
-        // Three.js scene fog is unlit and otherwise introduces its own full-bright color.
-        // Disable it when ambient is zero; direct-light-only fog needs a lit-volume pass.
-        this.scene.fog = fog && s.environment.ambient > 0 ? new T.Fog(
-            new T.Color(fog.color).multiply(new T.Color(s.environment.color))
-                .multiplyScalar(Math.min(1, s.environment.ambient)),
-            fog.near, fog.far) : null;
+        // Three.js fog is unlit; never reveal black-world silhouettes.
+        // Reuse the same fog object while its boundaries/colors animate instead
+        // of allocating multiple Color/Fog objects on every mobile frame.
+        synchronizeEnvironmentFog(this.scene, s.environment);
         this.ambient.color.set(s.environment.color); this.ambient.intensity = s.environment.ambient;
         this.renderer.toneMappingExposure = s.environment.exposure;
         this.materialBudget = {
