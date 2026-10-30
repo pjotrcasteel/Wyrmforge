@@ -6,11 +6,14 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Bitmap } from '../lib/painter.mjs';
 import { decodePng, encodePng } from '../lib/png.mjs';
-import { createWorldBoundaryWindow } from './terrain-world-variation.mjs';
+import { createWorldArtWindowCache } from './terrain-world-window-cache.mjs';
 import { makeEcology25DProp, PIXELS_PER_WORLD_UNIT } from './terrain-ecology-props-25d.mjs';
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 const ART_ROOT = join(REPO_ROOT, 'src/Wyrmforge.Presentation.Web/wwwroot/art/enemies');
+// The same approved P1i world pixels can be reused across multiple offline reviews.
+// The bounded cache returns defensive copies and never owns production terrain.
+const reviewWorldCache = createWorldArtWindowCache({maxEntries: 4, maxBytes: 8 * 1024 * 1024});
 export const ACTOR_REFERENCE_CONFIG = Object.freeze({
     hollowed: Object.freeze({
         directory: 'hollow-rigged/arms',
@@ -117,7 +120,7 @@ function nearest3x(source) {
 
 export function buildCharacterScaleReview() {
     const actors = [loadReference('hollowed'), loadReference('ashling')];
-    const field = createWorldBoundaryWindow('flagstone', 'grass', {
+    const field = reviewWorldCache.boundary('flagstone', 'grass', {
         seed: 2211, state: 'reclaimed', role: 'left',
         boundaryX: 23, boundaryY: 128, originX: 0, originY: 0,
         width: 384, height: 256
@@ -197,7 +200,7 @@ export function buildAllVariantScaleReview(width=390){
     const actors=[loadReference('hollowed'),loadReference('ashling')];
     // Terrain generation is tile-aligned; the phone review itself need not be.
     const align32=value=>Math.ceil(value/32)*32;
-    const background=createWorldBoundaryWindow('flagstone','grass',{
+    const background=reviewWorldCache.boundary('flagstone','grass',{
         seed:2211,state:'reclaimed',role:'left',boundaryX:16,boundaryY:240,
         originX:0,originY:0,width:align32(width),height:align32(height)
     });
