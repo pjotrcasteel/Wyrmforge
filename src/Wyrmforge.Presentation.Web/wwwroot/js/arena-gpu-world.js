@@ -97,13 +97,28 @@ export function huntSurfaceMaterial(id, overrides = {}, hasAlbedoSource = true) 
     return descriptor;
 }
 export function huntActorGeometry() {
-    // Feet touch Z=0 without crossing underneath the ground depth buffer.
-    // The generic object atlas frame separately chooses each painted foot
-    // line; no Warden/Wyrm/mage-specific geometry or secondary engine.
+    // The visual capture is already projected 2D artwork. Translate its bottom
+    // edge to the origin, then face the actual GPU camera each frame. A fixed
+    // 45-degree pitch silently shortened the screen-space image by ~35% on
+    // iPhone, irrespective of the capture's unchanged width and height.
     const actor = new T.PlaneGeometry(1, 1);
     actor.translate(0, .5, 0);
-    actor.rotateX(Math.PI / 4);
     return actor;
+}
+
+/**
+ * Generic G4 cutouts use the same camera-facing rotation as the renderer's
+ * view plane. Do not change the shared lighting engine's object semantics or
+ * rotate any authored world plane, scenery, collider or physical emitter.
+ */
+export function alignHuntActorBillboards(objects, engine) {
+    for (const descriptor of objects) {
+        if (descriptor.geometry !== 'hunt-billboard') continue;
+        const registered = engine.objects.get(descriptor.id);
+        if (!registered) continue;
+        registered.mesh.quaternion.copy(engine.camera.quaternion);
+        registered.caster?.quaternion.copy(engine.camera.quaternion);
+    }
 }
 export class HuntGpuWorld {
     constructor({ quality = 'balanced' } = {}) {
@@ -234,6 +249,7 @@ export class HuntGpuWorld {
         const centerY = -this.height * GROUND_Y / UNIT / 2;
         engine.camera.position.set(this.width / UNIT / 2, centerY - 30, 30);
         engine.camera.lookAt(this.width / UNIT / 2, centerY, 0);
+        alignHuntActorBillboards(this.objects, engine);
         engine.render(this.width, this.height);
         compositeHuntGpuFrame(ctx, this.canvas);
         for (const [id, layer] of this.layers) if (!this.used.has(id)) {
