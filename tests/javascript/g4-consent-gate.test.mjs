@@ -77,3 +77,26 @@ test('if iPhone private storage blocks consent, sharing is never silently enable
     assert.equal(await promise, 'no');
     assert.equal(body.children.length, 0);
 });
+
+
+test('G4 still opens with Keep private when browser denies reading localStorage itself', async () => {
+    const { doc, body } = setup();
+    const original = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+    Object.defineProperty(globalThis, 'localStorage', {
+        configurable: true,
+        get() { throw new Error('SecurityError: storage is blocked'); }
+    });
+    try {
+        const decision = showG4PreflightChoice({ doc });
+        const card = body.children[0].children[0];
+        const buttons = card.children.filter(child => child.tagName === 'button');
+        buttons[0].click();
+        assert.match(card.children.at(-1).textContent, /cannot be enabled/);
+        buttons[1].click();
+        assert.equal(await decision, 'no');
+        assert.equal(body.children.length, 0);
+    } finally {
+        if (original) Object.defineProperty(globalThis, 'localStorage', original);
+        else delete globalThis.localStorage;
+    }
+});
