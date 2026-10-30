@@ -1,6 +1,41 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { huntLightFrame } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js';
+import { huntLightFrame, withAnimationReviewLights } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js';
+
+test('AN6 neutral inspection uses two broad key/fill lights without mutating Gothic-night production or creating shadow maps', () => {
+    const original={version:1,time:10,environment:{ambient:.012,color:'#8c9cbb',exposure:1,emission:true,
+        fog:{color:'#0a1014',near:50,far:900}},lights:[{
+        id:'production',ownerId:'C#',type:'point',enabled:true,position:[44,45,20],
+        direction:[0,0,-1],color:'#ffddaa',intensity:3,range:210,coneAngle:.7,
+        penumbra:0,castsShadow:true,priority:2
+    }]};
+    const untouched=structuredClone(original);
+    const camera={x:100,y:210},review=withAnimationReviewLights(original,camera,390,844);
+    assert.deepEqual(original,untouched,'opt-in inspection must never modify the actual C# frame');
+    assert.equal(review.lights.length,3);
+    assert.deepEqual(review.lights[0],original.lights[0]);
+    assert.ok(review.environment.ambient>original.environment.ambient);
+    assert.equal(review.environment.fog,undefined);
+    const added=review.lights.slice(1);
+    assert.equal(added.length,2);
+    assert.deepEqual(added.map(l=>l.id),[
+        'developer-animation-inspection:key','developer-animation-inspection:fill']);
+    assert.ok(added.every(l=>l.enabled&&l.type==='point'&&!l.castsShadow&&l.range>=1000));
+    assert.ok(added.every(l=>l.intensity>0&&l.priority>original.lights[0].priority));
+    assert.deepEqual(added[0].position,[217,210+844*.39,90]);
+    assert.deepEqual(added[1].position,[100+390*.73,210+844*.54,105]);
+    const projected=huntLightFrame(review,camera,{width:390,height:844});
+    assert.equal(projected.lights.length,3);
+    assert.ok(projected.lights.slice(1).every(l=>l.range>20&&l.intensity>0));
+});
+
+test('AN6 review lights reject incomplete world/viewport data and never enable automatically',()=>{
+    const frame={environment:{ambient:.012},lights:[]};
+    assert.throws(()=>withAnimationReviewLights(frame,{x:0,y:0},0,844),TypeError);
+    assert.throws(()=>withAnimationReviewLights(frame,{x:NaN,y:0},390,844),TypeError);
+    assert.throws(()=>withAnimationReviewLights({environment:{ambient:.012}}, {x:0,y:0},390,844),TypeError);
+    assert.equal(frame.lights.length,0);
+});
 
 test('Hunt lights track camera with the same world scale and handedness as receivers', () => {
     const frame = { version: 1, time: 2, environment: { ambient: 0 }, lights: [{
