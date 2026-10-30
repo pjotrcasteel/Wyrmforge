@@ -165,6 +165,20 @@
       "staff-designs-v007.png"
     ],
     "prompt": "wizards-held-staffs-v008-prompt.txt",
-    "status": "Six held-staff wizard appearance composite; review pending, not runtime acceptance"
+    "status": "Owner rejected oversized staff proportions; retain design provenance only"
+  },
+  "heldStaffsRevision9": {
+    "file": "wizards-held-staffs-v009.png",
+    "sha256": "d0236189e3efff7c24f4c375793a5b8f75b506f4d8466e02f7092420cba7cc3a",
+    "size": [
+      1536,
+      1024
+    ],
+    "generator": "built-in image_gen edit",
+    "inputs": [
+      "wizards-held-staffs-v008.png"
+    ],
+    "prompt": "wizards-held-staffs-v009-prompt.txt",
+    "status": "Slimmer shafts and compact heads beside wizards; scale review pending; v004 remains cape reference"
   }
 }

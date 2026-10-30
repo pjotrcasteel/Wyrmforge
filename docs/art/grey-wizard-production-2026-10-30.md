@@ -313,3 +313,12 @@ roughly half head dimensions while keeping walking-staff length, attached right
 grips, crystal readability and compact unique shapes. Hat-relative head size and
 finger-relative shaft thickness provide character context, not final runtime
 numeric budgets. Prompt `wizards-held-staffs-v009-prompt.txt`; cape/body unchanged.
+
+V009 output preserved as `wizards-held-staffs-v009.png`, 1536x1024. Visually checked:
+all six shafts noticeably slimmer, heads compact relative to hats, hands wrap the
+shafts and complete staffs remain beside boots. Magical cores/unique silhouettes
+retained. Output also shifts embroidery brightness despite targeted prompt, so
+v004 remains cape reference; those incidental changes are not a new approval.
+V009 proportion/appearance review pending, not native sprite or gameplay acceptance.
+Hashes/dimensions, exact prompt/input and original output preserved. Git diff check
+passes; no runtime edits or gameplay tests.
