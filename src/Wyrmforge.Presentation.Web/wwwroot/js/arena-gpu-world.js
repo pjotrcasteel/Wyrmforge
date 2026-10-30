@@ -294,6 +294,15 @@ export class HuntGpuWorld {
         const light = engine.lights.get(sourceId);
         if (!light?.castShadow) return { sourceId, available: false, changedPixels: 0, maxPixelDelta: 0 };
         let shadowed, unshadowed;
+        // Prove shadows specifically on the ground receiver. Visible actors can
+        // otherwise change their own pixels in the shadow toggle and yield a
+        // false positive while the floor has no shadows (as on the iPhone).
+        const hiddenMeshes = [];
+        for (const [id, object] of engine.objects) {
+            if (id === 'hunt-ground' || !object.caster) continue;
+            hiddenMeshes.push([object.mesh, object.mesh.visible]);
+            object.mesh.visible = false;
+        }
         try {
             engine.render(this.width, this.height);
             shadowed = engine.pixels();
@@ -302,6 +311,7 @@ export class HuntGpuWorld {
             unshadowed = engine.pixels();
         } finally {
             light.castShadow = true;
+            for (const [mesh, visible] of hiddenMeshes) mesh.visible = visible;
             engine.render(this.width, this.height);
         }
         let changedPixels = 0, maxPixelDelta = 0;
@@ -313,7 +323,7 @@ export class HuntGpuWorld {
             maxPixelDelta = Math.max(maxPixelDelta, delta);
         }
         return { sourceId, available: true, changedPixels, maxPixelDelta,
-            framebuffer: [engine.canvas.width, engine.canvas.height] };
+            groundOnly: true, framebuffer: [engine.canvas.width, engine.canvas.height] };
     }
     dispose() { this.engine.dispose(); this.layers.clear(); }
 }
