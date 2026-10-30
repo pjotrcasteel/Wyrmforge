@@ -259,8 +259,6 @@ export class HuntGpuWorld {
                 if (this.dirtyTextures.has(material[key]) && mesh.material[mapKey])
                     mesh.material[mapKey].needsUpdate = true;
             }
-            const casterMap = engine.objects.get(entry.id)?.caster?.material.map;
-            if (casterMap && this.dirtyTextures.has(material.albedo)) casterMap.needsUpdate = true;
         }
         const uploaded = [];
         for (const id of this.dirtyTextures) {
