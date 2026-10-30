@@ -92,3 +92,31 @@ Default generated output: `docs/art/previews/wet-forest-32/atlas.png`, `contact-
 ### Known limitations / next gate
 
 A 256px authored sample period remains visually repetitive when stamped over a large playable map. This material grammar does not infer road location or terrain state from artwork: AR3 C# site material-weight fields must drive real-world selection and dynamic boundaries. More complex structural transitions, inner corners, ecological prop placement, physically authored relief maps, shared G live texture registration and real-device profiling remain open. WF32-P1e does **not** pass owner aesthetic acceptance, AR3 acceptance or AR4 integration.
+
+## WF32-P1f — line-language refinement (30 October 2026)
+
+**Scope:** respond specifically to owner criticism of overly continuous, hand-drawn contour lines in the flagstone/cobble material studies. The broader material/boundary grammar and approved art direction remain unchanged. This is an opt-in source-only candidate; owner visual sign-off remains open.
+
+### Why the previous approach failed
+
+The original Voronoi/stone illustrator used a dark outline for almost every stone, and the edge-erosion pass inferred individual stones by flood-filling pixels selected by their exact visible colors. This meant making the stonework less outlined could merge several stone identities and break whole-stone deletion. The correct fix was **not** to preserve drawn ink for physics: it was to decouple authored stone topology from the displayed surface.
+
+### Implementation
+
+- `createMasonrySurface(type,seed)` returns `{bitmap,stoneIds}` for original flagstone and cobble patterns; `createMasonryField` preserves the historical bitmap-only API for atlas tools. Each nonmissing stone has a stable ID even if its visible joint is fully suppressed.
+- `classifyStoneInstances(bitmap,stoneIds)` now accepts explicit IDs where provided (the previous visible-pixel flood fill is retained for legacy/brick source). Whole-stone erosion and structural hard/hard transitions use that topology and keep arrays sized to the maximum ID, not the number of nonempty stones.
+- Thin, complete Voronoi contour strokes are replaced with **interrupted, low-contrast** soil/moss joins, a narrower shaded chip band, and localized stone patina clusters. Faces are shaded in a restricted dark range, keeping normal dark-fantasy legibility without outlining every polygon.
+- Soft organic palette transitions now use deterministic 3px threshold clusters, avoiding the artificially closed color contours produced by broad quantization. The painter still authors a coherent 256px phase field before cutting 32px cells.
+- The shared G engine's `albedo`, `normal`, `roughnessMap` + scalar `specular` contract is unchanged. No runtime lighting or C# gameplay integration was made.
+
+### Checks and acceptance
+
+- The source and preview generator still run with:
+  `node tools/art/prototypes/build-terrain-grammar-review.mjs <output-directory>`.
+- Previous Node test suites remain active; `terrain-material-grammar-line-language.test.mjs` adds five test cases verifying stability under arbitrary recoloring, continued whole-stone removal on two boundary orientations, and exact 32px reconstruction of the G-compatible maps.
+- **20/20 local tests pass**. Source-art before/after review is available; GitHub CI and real-Hunt mobile verification are separate.
+- Visual approval is **not** assumed. The remaining art question is whether subtle edge implication, surface weathering and color differencing strike the right balance versus the now-weaker outlines.
+
+### Follow-up
+
+WF32-P1g will address world-scale repetition across 256px patches, inner corners, additional material pairings and ecologically authored detail placement **after** owner P1f art review. Production GPU material-adapter integration remains gated by approved AR3 geography and its shared G renderer.
