@@ -117,3 +117,18 @@ test('G4 terrain mode reaches ground, cached elevations and reflections without 
     assert.match(hunt, /getArenaCloisterElevations\(snapshot\.environment, worldWidth, worldHeight, visualSeconds, null, state\.g4FlatGround\)/);
     assert.match(hunt, /drawArenaCloisterReflections\(ctx, snapshot\.environment, worldWidth, worldHeight,[\s\S]*?state\.g4FlatGround\)/);
 });
+
+
+test('G4 flat-ground world, reflections and elevations all reuse the same terrain cache', () => {
+    const environment = readFileSync(
+        new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js', import.meta.url), 'utf8');
+    const main = environment.slice(environment.indexOf('export function drawArenaEnvironment('));
+    const reflect = environment.slice(environment.indexOf('export function drawArenaCloisterReflections('));
+    const elevations = environment.slice(environment.indexOf('export function getArenaCloisterElevations('));
+    assert.match(main, /const texture = terrainTexture\(environment, width, height, approvedAtlas, flatColorsOnly\)/,
+        'Main G4 ground must not silently bake the painted 900px tiles when flat terrain was selected.');
+    assert.match(reflect, /terrainTexture\(environment, width, height, null, flatColorsOnly\)/);
+    assert.match(elevations, /terrainTexture\(environment, width, height, approvedAtlas, flatColorsOnly\)/);
+    assert.match(environment, /flatColorsOnly \? 'flat-ground-v1' : 'painted-ground'/,
+        'Distinct cache identities preserve the optional painted A/B without cross-contamination.');
+});
