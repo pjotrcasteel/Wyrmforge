@@ -47,5 +47,15 @@
       "worldSize": 108.8,
       "sourceExport": "art\\source\\enemies\\ashling\\exports\\death-fiery-eyes-v1"
     }
+  },
+  "emission": {
+    "colors": [
+      "#911e0a",
+      "#d63709",
+      "#ff640c",
+      "#ffcc3a",
+      "#fffbd3"
+    ],
+    "intensity": 1.4
   }
 }
