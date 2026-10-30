@@ -45,6 +45,7 @@ jobs:
             sleep 1
           done
           dotnet test tests/Wyrmforge.Browser.Tests -c Release --no-build --filter FullyQualifiedName~UniversalLightingBrowserTests
+          dotnet test tests/Wyrmforge.Browser.Tests -c Release --no-build --filter FullyQualifiedName~Mobile_AshlingEyes_UseBoundedAuthoritativeLightSources
       - name: Preserve mobile viewport captures (not physical-device evidence)
         if: always()
         uses: actions/upload-artifact@v4
