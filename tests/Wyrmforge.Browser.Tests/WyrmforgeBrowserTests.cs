@@ -3634,6 +3634,14 @@ public sealed class WyrmforgeBrowserTests : PageTest
             window.__huntGpuArena = arena;
             window.__huntGpuRead = () => arena.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
         }");
+        // The visible Canvas can exist while C# still reports its bootstrap
+        // 800x600 world, Arcane school and no terrain. Those frames are not a
+        // valid Fire-Hunt shadow or frame-presentation acceptance sample.
+        await Page.WaitForFunctionAsync(@"() => {
+            const game = window.__huntGpuRead?.();
+            return game?.worldReady && game.player?.activeSchool === 'Fire' &&
+                game.hud?.spells?.some(spell => spell.name === 'Fire Bolt');
+        }", null, new() { Timeout = 45000 });
 
         var panel = Page.Locator("[data-g4-device-review]");
         await Expect(panel).ToBeVisibleAsync();
