@@ -1,0 +1,226 @@
+{
+  "status": "NE source motion and embroidery review; not live locomotion/material/phone acceptance",
+  "sourceLayerRecompositionExact": true,
+  "idleRasterExact": true,
+  "uniqueFrames": 16,
+  "binaryAlpha": true,
+  "paletteSize": 96,
+  "sourceBounds": {
+    "minX": 40,
+    "minY": 14,
+    "maxX": 121,
+    "maxY": 145
+  },
+  "cell": 160,
+  "anchor": [
+    78,
+    136
+  ],
+  "decodedAlbedoBytes": 1638400,
+  "decodedEmissionBytes": 1638400,
+  "sharedControllerSequence": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "pause": true,
+  "reducedMotion": true,
+  "contacts": [
+    {
+      "name": "boot-left",
+      "frames": [
+        0,
+        7
+      ],
+      "sourceRasterSoleWorldXY": [
+        {
+          "x": 103,
+          "y": 137
+        },
+        {
+          "x": 103,
+          "y": 137
+        },
+        {
+          "x": 103,
+          "y": 137
+        },
+        {
+          "x": 103,
+          "y": 137
+        },
+        {
+          "x": 103,
+          "y": 137
+        },
+        {
+          "x": 103,
+          "y": 137
+        },
+        {
+          "x": 103,
+          "y": 137
+        },
+        {
+          "x": 103,
+          "y": 137
+        }
+      ],
+      "maxSpreadNativePixels": 0
+    },
+    {
+      "name": "boot-right",
+      "frames": [
+        8,
+        15
+      ],
+      "sourceRasterSoleWorldXY": [
+        {
+          "x": 86,
+          "y": 120
+        },
+        {
+          "x": 86,
+          "y": 120
+        },
+        {
+          "x": 86,
+          "y": 120
+        },
+        {
+          "x": 86,
+          "y": 120
+        },
+        {
+          "x": 86,
+          "y": 120
+        },
+        {
+          "x": 86,
+          "y": 120
+        },
+        {
+          "x": 86,
+          "y": 120
+        },
+        {
+          "x": 86,
+          "y": 120
+        }
+      ],
+      "maxSpreadNativePixels": 0
+    },
+    {
+      "name": "staff-tip",
+      "frames": [
+        7,
+        15
+      ],
+      "sourceWorldTipXY": [
+        {
+          "x": 113.5,
+          "y": 117
+        },
+        {
+          "x": 113.5,
+          "y": 117
+        },
+        {
+          "x": 113.5,
+          "y": 117
+        },
+        {
+          "x": 113.5,
+          "y": 117
+        },
+        {
+          "x": 113.5,
+          "y": 117
+        },
+        {
+          "x": 113.5,
+          "y": 117
+        },
+        {
+          "x": 113.5,
+          "y": 117
+        },
+        {
+          "x": 113.5,
+          "y": 117
+        },
+        {
+          "x": 113.5,
+          "y": 117
+        }
+      ],
+      "sourceRasterBottomXY": [
+        {
+          "x": 113.5,
+          "y": 117
+        },
+        {
+          "x": 113.5,
+          "y": 117
+        },
+        {
+          "x": 113.5,
+          "y": 117
+        },
+        {
+          "x": 113.5,
+          "y": 117
+        },
+        {
+          "x": 113.5,
+          "y": 117
+        },
+        {
+          "x": 113.5,
+          "y": 117
+        },
+        {
+          "x": 113.5,
+          "y": 117
+        },
+        {
+          "x": 113.5,
+          "y": 117
+        },
+        {
+          "x": 113.5,
+          "y": 117
+        }
+      ],
+      "maxSpreadNativePixels": 0,
+      "analyticalDrift": 0,
+      "staffHandGripError": 0,
+      "scope": "source-only under root[i,-i], same ground plane with explicit forward/right offset, not C# fit"
+    }
+  ],
+  "sourceProjectSha256": "c047b5cbf37157bdfa359ecf162c6d4fd953ef72b743c909a50529be53ceb4f5",
+  "controllerSha256": "a3b9bc9a6e9c89262ef3d83e69344566f653f013ef8f66c23e648dce5e5d8fb4",
+  "runtimeIntegrated": false,
+  "artisticallyApproved": false,
+  "physicalDeviceTested": false,
+  "limitations": [
+    "diagnostic extracted emission; source-light still baked in albedo",
+    "two-pixel hidden edge fills, not fully painted hidden anatomy",
+    "single source view only",
+    "source-only contact does not establish C# root-speed fitting",
+    "native world scale and actual phones open"
+  ]
+}

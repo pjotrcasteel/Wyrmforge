@@ -23,7 +23,7 @@ for index, layer in enumerate(reversed(project['layers'])):
     data = (source / layer['file']).read_bytes()
     assert Image.open(source / layer['file']).size == (w, h)
     entries.append((name, data))
-facing = {'S':'south','SE':'southeast','E':'east'}[project['direction']]
+facing = {'S':'south','SE':'southeast','E':'east','NE':'northeast'}[project['direction']]
 filename = 'grey-wizard-fire-' + facing + '.ora'
 with zipfile.ZipFile(source / filename, 'w') as archive:
     def put(name, data, compression=zipfile.ZIP_DEFLATED):

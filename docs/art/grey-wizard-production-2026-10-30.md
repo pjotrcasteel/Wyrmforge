@@ -797,3 +797,27 @@ Live source-stride gap remains explicit: E10.9417world units/cycle at12fps gives
 8.2063world units/sec; C# base190 would demand17.3648cycles/sec. No source profile
 promoted, no C# movement changes, no final Hunt/material/phone acceptance claimed.
 Remaining facings/actions and live locomotion fit remain required production work.
+
+## Northeast walking-stick source — v014
+
+Owner requested continuation after E. Authored16 NE poses from the preserved v005
+rear-three-quarter native source. Source projects reuse gait phase timing with
+explicit NE foot progression, cloth sway and separate staff tip/angle keys.
+Both visible boots receive lower-leg coverage under the robe.11 editable layers,
+95 source pigments within the96 budget,160cell, guide anchor78,136 and inherited
+worldSize72.944643; actual arena/phone scale acceptance remains separate.
+
+The faded school pigment remains in the same cloak-left cloth layer, so the
+motif follows folds/deformation rather than a badge. New cape-detail16-frame crop
+and regression verify source motif ownership and no cape emission. First full
+review caught12 warm head/finger pixels outside staff/hand masks; corrected
+ownership before preview generation. No warm staff-region pigments remain on
+stationary body. Source component scan16/16 single/binary-alpha/unclipped;
+feet/grip/cape crops and light full-frame sheet inspected, not artistic approval.
+
+NE ground uses root[i,-i]. Native tip100.5,130 is explicitly14.25px forward and
+8.25px right of root78,136 in this projection. Its higher screen row is forward
+placement on the ground, not a floating vertical height or a mandatory3D engine.
+Support7–15 fixes source-world113.5,117; analytical/raster tip, boot sole extents
+and grip drift0px in this narrow source replay. No actual C# stride-fit claim.
+Checkpoint before editable-source packaging, media and browser review.

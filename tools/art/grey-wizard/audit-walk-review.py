@@ -17,7 +17,7 @@ root=Path(__file__).resolve().parents[3]
 source=root/args.source
 project=json.loads((source/'project.json').read_text())
 profile=json.loads((source/'animation-profile.json').read_text())
-facing={'S':'south','SE':'southeast','E':'east'}[project['direction']]
+facing={'S':'south','SE':'southeast','E':'east','NE':'northeast'}[project['direction']]
 ora=source/('grey-wizard-fire-'+facing+'.ora')
 with zipfile.ZipFile(ora) as z:
     assert z.read('mimetype')==b'image/openraster'

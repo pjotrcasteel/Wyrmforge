@@ -56,6 +56,13 @@ for i,im in enumerate(frames):
     detail=im.crop(foot_crop).resize((fw,fh),Image.Resampling.NEAREST);xy=((i%4)*fw,(i//4)*fh)
     board.paste(detail,xy,detail);draw.text((xy[0]+5,xy[1]+5),str(i),fill='white')
 board.save(out/'feet-detail.png')
+if 'clothReviewCrop' in project:
+    box=project['clothReviewCrop'];cw,ch=(box[2]-box[0])*4,(box[3]-box[1])*4
+    board=Image.new('RGB',(cw*4,ch*4),'#b8b2a5');draw=ImageDraw.Draw(board)
+    for i,im in enumerate(frames):
+        detail=im.crop(box).resize((cw,ch),Image.Resampling.NEAREST);xy=((i%4)*cw,(i//4)*ch)
+        board.paste(detail,xy,detail);draw.text((xy[0]+5,xy[1]+5),str(i),fill='black')
+    board.save(out/'cape-detail.png')
 report=dict(scope='source raster diagnostics, NOT artistic approval or actual Hunt/device acceptance',
             detachedPixelRule='8-connected alpha; extra components require inspection, never silently called accepted',
             direction=project['direction'],reviewCrop=crop,feetReviewCrop=foot_crop,frames=reports,

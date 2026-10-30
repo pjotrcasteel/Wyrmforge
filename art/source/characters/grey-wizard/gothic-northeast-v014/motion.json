@@ -1,0 +1,362 @@
+{
+  "source": "tools/art/grey-wizard/gothic-northeast-project.mjs",
+  "coordinates": "native source x/y; no gameplay authority",
+  "poses": [
+    [
+      0.13999999999999999,
+      0,
+      4,
+      0,
+      0,
+      -4,
+      0,
+      -0.039,
+      -0.3,
+      -3,
+      2,
+      0.045
+    ],
+    [
+      0.06999999999999999,
+      0.21,
+      3,
+      0,
+      0,
+      -4,
+      1.4,
+      -0.052000000000000005,
+      -0.2,
+      -3,
+      0,
+      0.04
+    ],
+    [
+      0,
+      0.42,
+      2,
+      0,
+      0,
+      -3,
+      2.8,
+      -0.039,
+      0,
+      -2,
+      -3,
+      0.025
+    ],
+    [
+      -0.06999999999999999,
+      0.48999999999999994,
+      1,
+      0,
+      0,
+      -2,
+      3.5,
+      -0.0195,
+      0.2,
+      0,
+      -6,
+      0
+    ],
+    [
+      -0.13999999999999999,
+      0.35,
+      0,
+      0,
+      0,
+      0,
+      3.5,
+      0,
+      0.3,
+      2,
+      -8,
+      -0.025
+    ],
+    [
+      -0.06999999999999999,
+      0.13999999999999999,
+      -1,
+      0,
+      0,
+      2,
+      2.8,
+      0.026000000000000002,
+      0.4,
+      4,
+      -8,
+      -0.055
+    ],
+    [
+      0,
+      -0.06999999999999999,
+      -2,
+      0,
+      0,
+      3,
+      1.4,
+      0.0325,
+      0.3,
+      6,
+      -8,
+      -0.08
+    ],
+    [
+      0.06999999999999999,
+      -0.06999999999999999,
+      -3,
+      0,
+      0,
+      4,
+      0,
+      0,
+      0.1,
+      6,
+      -6,
+      -0.08
+    ],
+    [
+      0.13999999999999999,
+      0,
+      -4,
+      0,
+      -0.039,
+      4,
+      0,
+      0,
+      -0.3,
+      5,
+      -5,
+      -0.065
+    ],
+    [
+      0.06999999999999999,
+      0.21,
+      -4,
+      1.4,
+      -0.052000000000000005,
+      3,
+      0,
+      0,
+      -0.2,
+      4,
+      -4,
+      -0.05
+    ],
+    [
+      0,
+      0.42,
+      -3,
+      2.8,
+      -0.039,
+      2,
+      0,
+      0,
+      0,
+      3,
+      -3,
+      -0.03
+    ],
+    [
+      -0.06999999999999999,
+      0.48999999999999994,
+      -2,
+      3.5,
+      -0.0195,
+      1,
+      0,
+      0,
+      0.2,
+      2,
+      -2,
+      -0.015
+    ],
+    [
+      -0.13999999999999999,
+      0.35,
+      0,
+      3.5,
+      0,
+      0,
+      0,
+      0,
+      0.3,
+      1,
+      -1,
+      0
+    ],
+    [
+      -0.06999999999999999,
+      0.13999999999999999,
+      2,
+      2.8,
+      0.026000000000000002,
+      -1,
+      0,
+      0,
+      0.4,
+      0,
+      0,
+      0.015
+    ],
+    [
+      0,
+      -0.06999999999999999,
+      3,
+      1.4,
+      0.0325,
+      -2,
+      0,
+      0,
+      0.3,
+      -1,
+      1,
+      0.03
+    ],
+    [
+      0.06999999999999999,
+      -0.06999999999999999,
+      4,
+      0,
+      0,
+      -3,
+      0,
+      0,
+      0.1,
+      -2,
+      2,
+      0.04
+    ]
+  ],
+  "sourceStride": 22.627416997969522,
+  "sourceContacts": [
+    {
+      "frame": 0,
+      "left": true,
+      "right": false,
+      "staffPlanted": false,
+      "rootX": 0,
+      "rootY": 0
+    },
+    {
+      "frame": 1,
+      "left": true,
+      "right": false,
+      "staffPlanted": false,
+      "rootX": 1,
+      "rootY": -1
+    },
+    {
+      "frame": 2,
+      "left": true,
+      "right": false,
+      "staffPlanted": false,
+      "rootX": 2,
+      "rootY": -2
+    },
+    {
+      "frame": 3,
+      "left": true,
+      "right": false,
+      "staffPlanted": false,
+      "rootX": 3,
+      "rootY": -3
+    },
+    {
+      "frame": 4,
+      "left": true,
+      "right": false,
+      "staffPlanted": false,
+      "rootX": 4,
+      "rootY": -4
+    },
+    {
+      "frame": 5,
+      "left": true,
+      "right": false,
+      "staffPlanted": false,
+      "rootX": 5,
+      "rootY": -5
+    },
+    {
+      "frame": 6,
+      "left": true,
+      "right": false,
+      "staffPlanted": false,
+      "rootX": 6,
+      "rootY": -6
+    },
+    {
+      "frame": 7,
+      "left": true,
+      "right": false,
+      "staffPlanted": true,
+      "rootX": 7,
+      "rootY": -7
+    },
+    {
+      "frame": 8,
+      "left": false,
+      "right": true,
+      "staffPlanted": true,
+      "rootX": 8,
+      "rootY": -8
+    },
+    {
+      "frame": 9,
+      "left": false,
+      "right": true,
+      "staffPlanted": true,
+      "rootX": 9,
+      "rootY": -9
+    },
+    {
+      "frame": 10,
+      "left": false,
+      "right": true,
+      "staffPlanted": true,
+      "rootX": 10,
+      "rootY": -10
+    },
+    {
+      "frame": 11,
+      "left": false,
+      "right": true,
+      "staffPlanted": true,
+      "rootX": 11,
+      "rootY": -11
+    },
+    {
+      "frame": 12,
+      "left": false,
+      "right": true,
+      "staffPlanted": true,
+      "rootX": 12,
+      "rootY": -12
+    },
+    {
+      "frame": 13,
+      "left": false,
+      "right": true,
+      "staffPlanted": true,
+      "rootX": 13,
+      "rootY": -13
+    },
+    {
+      "frame": 14,
+      "left": false,
+      "right": true,
+      "staffPlanted": true,
+      "rootX": 14,
+      "rootY": -14
+    },
+    {
+      "frame": 15,
+      "left": false,
+      "right": true,
+      "staffPlanted": true,
+      "rootX": 15,
+      "rootY": -15
+    }
+  ],
+  "scope": "authored 2D study only; masks, overlap, foot fit and source art need review"
+}
