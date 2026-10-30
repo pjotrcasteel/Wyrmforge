@@ -2,9 +2,9 @@
 // authoritative geography, collisions and weights always come from C# AR3.
 // Reuses WyrmForge's existing Bitmap + shared LightingEngine material contract.
 import { Bitmap, hex, rng } from '../lib/painter.mjs';
-import { createMasonryField, MASONRY_PERIOD } from './wet-forest-masonry.mjs';
+import { createMasonryField, createMasonrySurface, MASONRY_PERIOD } from './wet-forest-masonry.mjs';
 
-export const GRAMMAR_VERSION = 'wf32-terrain-grammar.v1.1';
+export const GRAMMAR_VERSION = 'wf32-terrain-grammar.v1.2';
 export const CELL = 32;
 export const TERRAIN_MATERIALS = Object.freeze({
     grass: { kind: 'soft', palette: ['#1b2820','#283a2b','#344932','#45613e','#627450'], roughness: .94, specular: .08, height: 24, details: ['mushroom','pebble','twig','leaf'] },
@@ -90,8 +90,11 @@ export function makeSoftField(material, seed=137) {
         const broad=periodicNoise(x,y,5,seed+31);
         const medium=periodicNoise(x,y,13,seed+83);
         const fine=hash(Math.floor(x/3),Math.floor(y/3),seed+91);
-        const n=.64*broad+.27*medium+.09*fine;
-        const idx=clamp(Math.floor(n*p.length),0,p.length-1);
+        const n=.55*broad+.29*medium+.16*fine;
+        // Low-frequency value bands are texture mass, not drawn contours: dither
+        // their thresholds using coherent 3px material clusters, not smooth blur.
+        const threshold=(hash(Math.floor(x/3),Math.floor(y/3),seed+719)-.5)*.17;
+        const idx=clamp(Math.floor((n+threshold)*p.length),0,p.length-1);
         b.set(x,y,p[idx]);
     }
     if(material==='grass') {
@@ -165,7 +168,21 @@ export function addMicroDetails(base, material, seed=371, density=1) {
     return out;
 }
 
-export function classifyStoneInstances(field) {
+export function classifyStoneInstances(field, authoredIds = null) {
+    if (authoredIds !== null) {
+        if (!(authoredIds instanceof Int32Array) || authoredIds.length !== 65536)
+            throw new TypeError('Expected 256px stone identity buffer');
+        const ids = new Int32Array(authoredIds);
+        const byId = new Map();
+        for (let index=0;index<ids.length;index++) {
+            const id=ids[index];
+            if (id===0) continue;
+            if (!byId.has(id)) byId.set(id, []);
+            byId.get(id).push(index);
+        }
+        const components=Array.from(byId, ([id,points])=>({id,size:points.length,points}));
+        return {ids,components};
+    }
     if(!(field instanceof Bitmap)||field.width!==256||field.height!==256)
         throw new TypeError('Expected 256px masonry source');
     // Flood-fill connected stone faces with TOROIDAL neighbors: stones can cross the
@@ -216,7 +233,7 @@ export function blendWorldPatch(primary,secondary,mask,{policy='soft-mingle',sto
     let keep=null;
     if(policy==='whole-stone-erosion') {
         if(!stoneInstances)throw new TypeError('Whole-stone boundary requires stone instances');
-        keep=new Uint8Array(stoneInstances.components.length+1);
+        keep=new Uint8Array(Math.max(0,...stoneInstances.components.map(c=>c.id))+1);
         for(const c of stoneInstances.components) {
             // A stone touching the soft region is removed in its ENTIRETY.
             // No clipped half-slabs against grass, mud or soil.
@@ -248,15 +265,15 @@ export function createBoundaryReview({primary='flagstone',secondary='grass',dire
     const first=TERRAIN_MATERIALS[primary],second=TERRAIN_MATERIALS[secondary];
     if(!first||!second||primary===secondary)throw new RangeError('Invalid material pair');
     const policy=boundaryKind(primary,secondary);
-    const primarySource=first.kind==='hard'?createMasonryField(first.masonry,seed)
-        :addMicroDetails(makeSoftField(primary,seed),primary,seed+402,.85);
-    const secondarySource=second.kind==='hard'?createMasonryField(second.masonry,seed)
-        :addMicroDetails(makeSoftField(secondary,seed),secondary,seed+811,.85);
+    const firstHard=first.kind==='hard'?createMasonrySurface(first.masonry,seed):null;
+    const secondHard=second.kind==='hard'?createMasonrySurface(second.masonry,seed):null;
+    const primarySource=firstHard?.bitmap??addMicroDetails(makeSoftField(primary,seed),primary,seed+402,.85);
+    const secondarySource=secondHard?.bitmap??addMicroDetails(makeSoftField(secondary,seed),secondary,seed+811,.85);
     const mask=makeBoundaryMask(direction,seed);
     // Erosion must always treat the HARD material as the primary mask owner.
     if(policy==='whole-stone-erosion'&&first.kind==='soft') {
         const reversed=new Uint8Array(mask.map(v=>1-v));
-        const topology=classifyStoneInstances(secondarySource);
+        const topology=classifyStoneInstances(secondarySource,secondHard?.stoneIds);
         const res=blendWorldPatch(secondarySource,primarySource,reversed,{policy,stoneInstances:topology,seed});
         // Owner zero denotes source secondary (hard) in this inverted call.
         // Restore the original primary/secondary meaning for material maps.
@@ -266,8 +283,10 @@ export function createBoundaryReview({primary='flagstone',secondary='grass',dire
     if (policy === 'structural-junction') {
         // Both sets of stones survive only when their complete exposed footprint
         // fits their assigned side. Earth fills the joint; never saw-cut slabs.
-        const a=classifyStoneInstances(primarySource),b=classifyStoneInstances(secondarySource);
-        const keepA=new Uint8Array(a.components.length+1),keepB=new Uint8Array(b.components.length+1);
+        const a=classifyStoneInstances(primarySource,firstHard?.stoneIds),
+            b=classifyStoneInstances(secondarySource,secondHard?.stoneIds);
+        const keepA=new Uint8Array(Math.max(0,...a.components.map(c=>c.id))+1),
+            keepB=new Uint8Array(Math.max(0,...b.components.map(c=>c.id))+1);
         for(const c of a.components)keepA[c.id]=c.points.every(i=>mask[i]===1)?1:0;
         for(const c of b.components)keepB[c.id]=c.points.every(i=>mask[i]===0)?1:0;
         const infill=makeSoftField('soil',seed+7),out=new Bitmap(256,256),owner=new Uint8Array(65536);
@@ -281,7 +300,7 @@ export function createBoundaryReview({primary='flagstone',secondary='grass',dire
         }
         return {albedo:out,owner,policy,primary,secondary,direction,hardIds:a.ids,secondaryHardIds:b.ids};
     }
-    const topology=first.kind==='hard'?classifyStoneInstances(primarySource):null;
+    const topology=first.kind==='hard'?classifyStoneInstances(primarySource,firstHard?.stoneIds):null;
     const result=blendWorldPatch(primarySource,secondarySource,mask,{policy,stoneInstances:topology,seed});
     return {...result,policy,primary,secondary,direction,hardIds:topology?.ids??null};
 }
