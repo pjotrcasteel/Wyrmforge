@@ -67,13 +67,20 @@ export function huntSurfaceRenderable(id, x, y, width, height, castsShadow, surf
     const footFraction = standing ? surface.footFraction ?? .75 : 1;
     if (!Number.isFinite(footFraction) || footFraction <= 0 || footFraction > 1)
         throw new RangeError('Invalid authored sprite foot fraction');
-    // The painted-foot fraction is ONLY a placement anchor. Cropping the
-    // capture and shortening its plane compressed the mage, Warden and Wyrm.
-    // Preserve full source pixels and original width:height proportions.
+    // A captured actor is already painted into an exact x/y/width/height
+    // screen rectangle by the existing Canvas renderer. The old "footFraction"
+    // moved the whole upright plane up by (1 - footFraction) * height despite
+    // retaining its entire texture: pixels no longer matched their 2D positions
+    // and actors appeared disconnected/squashed against the terrain and sigil.
+    // Billboard geometry starts at its bottom edge and rises one full unit;
+    // position that edge at the source capture's BOTTOM, not its internal foot
+    // marker. Foot metadata is retained for future separate shadow/occlusion
+    // authoring, but cannot distort or shift the visible sprite.
     const frame = surface.frame;
     return {
         id, ownerId: surface.ownerId ?? id, geometry, material: id,
-        position: surface.position ?? [(x + width / 2) / UNIT, -(y + height * (standing ? footFraction : .5)) * GROUND_Y / UNIT, standing ? .001 : 0],
+        position: surface.position ?? [(x + width / 2) / UNIT,
+            -(y + height * (standing ? 1 : .5)) * GROUND_Y / UNIT, standing ? .001 : 0],
         rotation: surface.rotation ?? [0, 0, 0],
         scale: surface.scale ?? [width / UNIT, height * (standing ? 1 : GROUND_Y) / UNIT, 1],
         castsShadow: surface.castsShadow ?? castsShadow,
@@ -90,13 +97,28 @@ export function huntSurfaceMaterial(id, overrides = {}, hasAlbedoSource = true) 
     return descriptor;
 }
 export function huntActorGeometry() {
-    // Feet touch Z=0 without crossing underneath the ground depth buffer.
-    // The generic object atlas frame separately chooses each painted foot
-    // line; no Warden/Wyrm/mage-specific geometry or secondary engine.
+    // The visual capture is already projected 2D artwork. Translate its bottom
+    // edge to the origin, then face the actual GPU camera each frame. A fixed
+    // 45-degree pitch silently shortened the screen-space image by ~35% on
+    // iPhone, irrespective of the capture's unchanged width and height.
     const actor = new T.PlaneGeometry(1, 1);
     actor.translate(0, .5, 0);
-    actor.rotateX(Math.PI / 4);
     return actor;
+}
+
+/**
+ * Generic G4 cutouts use the same camera-facing rotation as the renderer's
+ * view plane. Do not change the shared lighting engine's object semantics or
+ * rotate any authored world plane, scenery, collider or physical emitter.
+ */
+export function alignHuntActorBillboards(objects, engine) {
+    for (const descriptor of objects) {
+        if (descriptor.geometry !== 'hunt-billboard') continue;
+        const registered = engine.objects.get(descriptor.id);
+        if (!registered) continue;
+        registered.mesh.quaternion.copy(engine.camera.quaternion);
+        registered.caster?.quaternion.copy(engine.camera.quaternion);
+    }
 }
 export class HuntGpuWorld {
     constructor({ quality = 'balanced' } = {}) {
@@ -227,6 +249,7 @@ export class HuntGpuWorld {
         const centerY = -this.height * GROUND_Y / UNIT / 2;
         engine.camera.position.set(this.width / UNIT / 2, centerY - 30, 30);
         engine.camera.lookAt(this.width / UNIT / 2, centerY, 0);
+        alignHuntActorBillboards(this.objects, engine);
         engine.render(this.width, this.height);
         compositeHuntGpuFrame(ctx, this.canvas);
         for (const [id, layer] of this.layers) if (!this.used.has(id)) {

@@ -85,13 +85,18 @@ test('only changed Canvas pixels trigger shared GPU texture uploads', async () =
     const allMaterials = [];
     const engine = {
         objects: new Map(), textures: new Map(),
-        camera: { up: { set() {} }, position: { set() {} }, lookAt() {} },
+        camera: { up: { set() {} }, position: { set() {} }, lookAt() {},
+            quaternion: { source: 'active-camera' } },
         apply(snapshot) {
             engine.objects = new Map(snapshot.objects.map(object => {
                 const material = snapshot.materials.find(value => value.id === object.material);
                 const map = material.albedo ? { needsUpdate: false } : null;
                 const normalMap = material.normal ? { needsUpdate: false } : null;
-                const mesh = { material: { map, normalMap } };
+                const mesh = { material: { map, normalMap },
+                    quaternion: { copy(value) {
+                        assert.equal(value, engine.camera.quaternion,
+                            'Standing sprite must face the actual GPU camera.');
+                    } } };
                 allMaterials.push({ id: object.id, mesh });
                 return [object.id, { mesh }];
             }));

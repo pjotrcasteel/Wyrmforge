@@ -23,15 +23,15 @@ test('authored sprite foot anchor stays on the ground and its billboard faces th
     const T = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/vendor/three.module.js');
     const geometry = huntActorGeometry();
     const normal = new T.Vector3().fromBufferAttribute(geometry.attributes.normal, 0);
-    const toward = new T.Vector3(0, -1, 1).normalize();
-    assert.ok(normal.dot(toward) > .99999);
+    assert.ok(normal.dot(new T.Vector3(0, 0, 1)) > .99999,
+        'Billboard geometry remains unpitched until the actual camera orientation is applied.');
     const top = new T.Vector3().fromBufferAttribute(geometry.attributes.position, 0);
     const bottom = new T.Vector3().fromBufferAttribute(geometry.attributes.position, 2);
-    const up = new T.Vector3(0, 1, 1).normalize();
+    const up = new T.Vector3(0, 1, 0);
     assert.ok(Math.abs(bottom.y) < 1e-8 && Math.abs(bottom.z) < 1e-8,
-        'The sprite foot edge must contact terrain (its X position remains at the left corner).');
+        'The unrotated sprite foot edge is the local origin, never a vertical image crop.');
     assert.ok(Math.abs(top.clone().sub(bottom).dot(up) - 1) < 1e-6,
-        'The cropped billboard keeps exactly one projected unit of height.');
+        'The original sprite has exactly one full unit of local height.');
     for (let i = 0; i < geometry.attributes.position.count; i++) {
         const vertex = new T.Vector3().fromBufferAttribute(geometry.attributes.position, i);
         assert.ok(vertex.z >= -1e-8, 'No actor pixels may be hidden underneath the ground mesh.');
@@ -40,6 +40,29 @@ test('authored sprite foot anchor stays on the ground and its billboard faces th
     assert.equal(uv.getY(2), 0, 'Atlas bounds, not shared geometry, specify the painted foot crop.');
     assert.equal(uv.getY(0), 1, 'The source sprite head must never be cropped.');
     geometry.dispose();
+});
+
+test('G4 aligns only standing actor planes to the live camera without altering ground and lights', async () => {
+    const T = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/vendor/three.module.js');
+    const { alignHuntActorBillboards } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js');
+    const camera = new T.Object3D();
+    camera.quaternion.setFromAxisAngle(new T.Vector3(1, 0, 0), 1.1);
+    const actor = { quaternion: new T.Quaternion() };
+    const caster = { quaternion: new T.Quaternion() };
+    const ground = { quaternion: new T.Quaternion() };
+    const engine = { camera, objects: new Map([
+        ['actor', { mesh: actor, caster }],
+        ['ground', { mesh: ground }],
+    ]) };
+    alignHuntActorBillboards([
+        { id: 'actor', geometry: 'hunt-billboard' },
+        { id: 'ground', geometry: 'hunt-plane' },
+        { id: 'missing', geometry: 'hunt-billboard' },
+    ], engine);
+    assert.ok(actor.quaternion.angleTo(camera.quaternion) < 1e-7);
+    assert.ok(caster.quaternion.angleTo(camera.quaternion) < 1e-7);
+    assert.ok(ground.quaternion.angleTo(new T.Quaternion()) < 1e-7,
+        'Terrain receiver must retain its original world orientation.');
 });
 
 test('mage, Warden and Wyrm retain their own painted foot line without ground penetration', async () => {
@@ -62,12 +85,76 @@ test('mage, Warden and Wyrm retain their own painted foot line without ground pe
         assert.equal(mesh.scale[0], mesh.scale[1],
             'Square captures must never be squashed by the grounding adapter.');
         assert.equal(mesh.frame, undefined, 'Do not crop authored legs or tail artwork.');
-        const footY = capture.y + capture.size * capture.footFraction;
-        assert.ok(Math.abs(-mesh.position[1] * 48 / Math.SQRT2 - footY) < 1e-8,
-            'Physical billboard foot contact must coincide with its own painted foot line');
+        const sourceBottomY = capture.y + capture.size;
+        assert.ok(Math.abs(-mesh.position[1] * 48 / Math.SQRT2 - sourceBottomY) < 1e-8,
+            'Visible sprite bottom must match the exact existing Canvas capture rectangle.');
     }
     const invalid = () => huntSurfaceRenderable('bad', 0, 0, 100, 100, true, { footFraction: 1.5 });
     assert.throws(invalid, RangeError);
+});
+
+test('G4 mage Warden Wyrm project to exact Canvas source pixels at every phone aspect ratio', async () => {
+    const T = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/vendor/three.module.js');
+    const { huntActorGeometry, huntSurfaceRenderable } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js');
+    const { huntLayerCapture } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/hunt-gpu-layers.js');
+    const geometry = huntActorGeometry();
+    try {
+        for (const [viewportWidth, viewportHeight] of [[320, 568], [390, 844], [402, 656], [844, 390]]) {
+            const halfWidth = viewportWidth / 48 / 2;
+            const centerY = -viewportHeight * Math.SQRT2 / 48 / 2;
+            const camera = new T.OrthographicCamera(-halfWidth, halfWidth,
+                halfWidth * viewportHeight / viewportWidth,
+                -halfWidth * viewportHeight / viewportWidth, .1, 80);
+            camera.up.set(0, 0, 1);
+            camera.position.set(halfWidth, centerY - 30, 30);
+            camera.lookAt(halfWidth, centerY, 0);
+            camera.updateProjectionMatrix();
+            camera.updateMatrixWorld();
+
+            for (const layer of [
+                { kind: 'mage', depth: 320 },
+                { kind: 'enemy', enemy: { entityId: 'bell-warden', x: 210, y: 320, radius: 44 } },
+                { kind: 'dragon', dragon: { entityId: 'ashfang-wyrm', x: 210, y: 320, radius: 90 } },
+            ]) {
+                const actor = layer.enemy ?? layer.dragon ?? { x: 210, y: 320, radius: 12 };
+                const capture = huntLayerCapture(layer, actor);
+                const x = capture.x - 50, y = capture.y - 70;
+                const sprite = huntSurfaceRenderable(capture.id, x, y,
+                    capture.size, capture.size, true, { footFraction: capture.footFraction });
+                const pixels = [];
+                for (let index = 0; index < geometry.attributes.position.count; index++) {
+                    const vertex = new T.Vector3().fromBufferAttribute(geometry.attributes.position, index);
+                    vertex.multiply(new T.Vector3(...sprite.scale))
+                        .applyQuaternion(camera.quaternion)
+                        .add(new T.Vector3(...sprite.position))
+                        .project(camera);
+                    pixels.push({
+                        x: (vertex.x + 1) * viewportWidth / 2,
+                        y: (1 - vertex.y) * viewportHeight / 2,
+                    });
+                }
+                const bounds = {
+                    left: Math.min(...pixels.map(point => point.x)),
+                    right: Math.max(...pixels.map(point => point.x)),
+                    top: Math.min(...pixels.map(point => point.y)),
+                    bottom: Math.max(...pixels.map(point => point.y)),
+                };
+                const error = Math.max(
+                    Math.abs(bounds.left - x),
+                    Math.abs(bounds.right - (x + capture.size)),
+                    Math.abs(bounds.top - y),
+                    Math.abs(bounds.bottom - (y + capture.size)));
+                // The 0.001-unit Z lift avoids depth fighting and shifts the
+                // projected image by only ~0.034px; no actual texel is stretched.
+                assert.ok(error < .05,
+                    layer.kind + ' at ' + viewportWidth + 'x' + viewportHeight +
+                    ' shifted or distorted by ' + error + 'px: ' +
+                    JSON.stringify({ source: { x, y, size: capture.size }, bounds }));
+            }
+        }
+    } finally {
+        geometry.dispose();
+    }
 });
 
 test('same-depth walls keep distinct stable GPU IDs and crop their own footprints', async () => {
