@@ -67,13 +67,20 @@ export function huntSurfaceRenderable(id, x, y, width, height, castsShadow, surf
     const footFraction = standing ? surface.footFraction ?? .75 : 1;
     if (!Number.isFinite(footFraction) || footFraction <= 0 || footFraction > 1)
         throw new RangeError('Invalid authored sprite foot fraction');
-    // The painted-foot fraction is ONLY a placement anchor. Cropping the
-    // capture and shortening its plane compressed the mage, Warden and Wyrm.
-    // Preserve full source pixels and original width:height proportions.
+    // A captured actor is already painted into an exact x/y/width/height
+    // screen rectangle by the existing Canvas renderer. The old "footFraction"
+    // moved the whole upright plane up by (1 - footFraction) * height despite
+    // retaining its entire texture: pixels no longer matched their 2D positions
+    // and actors appeared disconnected/squashed against the terrain and sigil.
+    // Billboard geometry starts at its bottom edge and rises one full unit;
+    // position that edge at the source capture's BOTTOM, not its internal foot
+    // marker. Foot metadata is retained for future separate shadow/occlusion
+    // authoring, but cannot distort or shift the visible sprite.
     const frame = surface.frame;
     return {
         id, ownerId: surface.ownerId ?? id, geometry, material: id,
-        position: surface.position ?? [(x + width / 2) / UNIT, -(y + height * (standing ? footFraction : .5)) * GROUND_Y / UNIT, standing ? .001 : 0],
+        position: surface.position ?? [(x + width / 2) / UNIT,
+            -(y + height * (standing ? 1 : .5)) * GROUND_Y / UNIT, standing ? .001 : 0],
         rotation: surface.rotation ?? [0, 0, 0],
         scale: surface.scale ?? [width / UNIT, height * (standing ? 1 : GROUND_Y) / UNIT, 1],
         castsShadow: surface.castsShadow ?? castsShadow,
