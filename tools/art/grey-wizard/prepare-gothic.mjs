@@ -39,6 +39,13 @@ for(let p=0;p<rgba.length;p+=4)if(rgba[p+3]){
     master.data.set([...palette[index],255],p);
 }
 for(const [x,y]of project.clearPixels??[]){assert.ok(master.alpha(x,y),'authored cleanup pixel missing');master.clear(x,y);}
+if(project.extendStaffToGround){
+    const p=project.extendStaffToGround;
+    for(let y=p.fromY;y<=p.toY;y++)for(let x=p.left+(y===p.toY?1:0);x<p.right;x++){
+        const pigment=master.get(x,p.donorY+(y-p.fromY)%p.donorRows);
+        assert.ok(pigment[3],'staff extension donor missing');master.set(x,y,pigment);
+    }
+}
 if(project.cleanIslandsMaxPixels){
     const seen=new Set();
     for(let y=0;y<height;y++)for(let x=0;x<width;x++){
@@ -58,9 +65,12 @@ const names=[...project.masks.map(m=>m.name),'torso',...(project.underpaint??[])
 const layers=Object.fromEntries(names.map(n=>[n,new Bitmap(width,height)]));
 const owner=new Array(width*height).fill(null);
 const staffRows=new Map((project.staffRows??[]).map(([y,left,right])=>[y,[left,right]]));
+if(project.extendStaffToGround){const p=project.extendStaffToGround;for(let y=p.fromY;y<=p.toY;y++)staffRows.set(y,[p.left+(y===p.toY?1:0),p.right]);}
 const inside=(x,y,poly)=>{let yes=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a[1]>y)!==(b[1]>y)&&x<(b[0]-a[0])*(y-a[1])/(b[1]-a[1])+a[0])yes=!yes;}return yes;};
 for(let y=0;y<height;y++)for(let x=0;x<width;x++)if(master.alpha(x,y)){
-    const name=project.masks.find(m=>m.name==='staff'&&staffRows.has(y)?x>=staffRows.get(y)[0]&&x<staffRows.get(y)[1]:inside(x+.5,y+.5,m.polygon))?.name||'torso';
+    const extension=project.extendStaffToGround;
+    const extendedStaff=extension&&y>=extension.fromY&&y<=extension.toY&&staffRows.has(y)&&x>=staffRows.get(y)[0]&&x<staffRows.get(y)[1];
+    const name=extendedStaff?'staff':project.masks.find(m=>m.name==='staff'&&staffRows.has(y)?x>=staffRows.get(y)[0]&&x<staffRows.get(y)[1]:inside(x+.5,y+.5,m.polygon))?.name||'torso';
     layers[name].set(x,y,master.get(x,y));owner[y*width+x]=name;
 }
 for(const trim of project.trimLayerContours??[])for(let y=0;y<height;y++)for(let x=0;x<width;x++){

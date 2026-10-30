@@ -17,7 +17,8 @@ root=Path(__file__).resolve().parents[3]
 source=root/args.source
 project=json.loads((source/'project.json').read_text())
 profile=json.loads((source/'animation-profile.json').read_text())
-ora=source/('grey-wizard-fire-southeast.ora' if project['direction']=='SE' else 'grey-wizard-fire-south.ora')
+facing={'S':'south','SE':'southeast','E':'east'}[project['direction']]
+ora=source/('grey-wizard-fire-'+facing+'.ora')
 with zipfile.ZipFile(ora) as z:
     assert z.read('mimetype')==b'image/openraster'
     tree=ET.fromstring(z.read('stack.xml'))
@@ -27,7 +28,7 @@ with zipfile.ZipFile(ora) as z:
     for layer,expected in zip(layers,reversed(project['layers'])):
         assert layer.attrib['name']==expected['name']
         assert z.read(layer.attrib['src'])==(source/expected['file']).read_bytes()
-name='southeast-walk' if project['direction']=='SE' else 'south-walk'
+name=facing+'-walk'
 with Image.open(source/'review'/(name+'.gif')) as gif:
     assert gif.n_frames==16
     duration=0

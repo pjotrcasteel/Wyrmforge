@@ -767,8 +767,18 @@ feet/grip sheets inspected through16poses; diagnostics now report one connected
 binary-alpha/unclipped silhouette per frame. These are supplemental diagnostics,
 not artistic acceptance. Original S/SE source exports preserved unchanged.
 
-E support7–15 stays analytically fixed at117,134 under root[1.5i,0]. Raster staff
+E support7–15 stays analytically fixed at117,141 under root[1.5i,0]. Raster staff
 tip spread1px and boot stance extent spread0.5px reflect native rounding; grip
 error0. Real C# speed/stride, world perspective/occlusion, material/phone gates
 remain OPEN. No runtime/gameplay/engine changes or production cutover.
 Checkpoint before review media and browser playback.
+
+### East ground/contact review refinement
+
+Full-frame inspection found the original neutral staff ended7 source pixels
+above the near boot sole. Extended the narrow wood tip with explicit existing
+wood donor pigments to y141, retaining compact head/grip proportions. Authoring
+ownership gives those tip pixels to staff, not overlapping boot masks; far-boot
+reconstruction cannot copy shaft pixels. Analytical support now117,141, on the
+near-foot ground row. Earlier pre-media source checkpoint remains historical.
+No claim that an arbitrary fixed tip point alone establishes ground contact.

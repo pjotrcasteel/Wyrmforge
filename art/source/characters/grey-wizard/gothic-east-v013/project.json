@@ -33,6 +33,14 @@
   ],
   "noBleedBelowSourceY": 126,
   "protectStaffFootprint": true,
+  "extendStaffToGround": {
+    "fromY": 135,
+    "toY": 141,
+    "left": 95,
+    "right": 98,
+    "donorY": 130,
+    "donorRows": 4
+  },
   "trimLayerContours": [
     {
       "names": [
@@ -1162,7 +1170,7 @@
     {
       "name": "torso",
       "file": "source-layers/torso.png",
-      "pixels": 1078
+      "pixels": 1076
     },
     {
       "name": "cloak-left",
@@ -1197,7 +1205,7 @@
     {
       "name": "staff",
       "file": "source-layers/staff.png",
-      "pixels": 538
+      "pixels": 558
     },
     {
       "name": "staff-hand",
@@ -1206,7 +1214,7 @@
     }
   ],
   "sourceSha256": "5c5bfde67e50dfdfc3c88993e00fbd015ee97f2a6bae60cba89fcb16b7155de7",
-  "sourcePixels": 4999,
+  "sourcePixels": 5017,
   "restRecompositionExact": true,
   "scope": "native palette/semantic source only; masks and hidden areas need art review; no runtime approval"
 }

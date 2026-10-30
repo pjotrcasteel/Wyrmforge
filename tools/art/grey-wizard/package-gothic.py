@@ -23,7 +23,8 @@ for index, layer in enumerate(reversed(project['layers'])):
     data = (source / layer['file']).read_bytes()
     assert Image.open(source / layer['file']).size == (w, h)
     entries.append((name, data))
-filename = 'grey-wizard-fire-southeast.ora' if project['direction'] == 'SE' else 'grey-wizard-fire-south.ora'
+facing = {'S':'south','SE':'southeast','E':'east'}[project['direction']]
+filename = 'grey-wizard-fire-' + facing + '.ora'
 with zipfile.ZipFile(source / filename, 'w') as archive:
     def put(name, data, compression=zipfile.ZIP_DEFLATED):
         info = zipfile.ZipInfo(name, (1980, 1, 1, 0, 0, 0))
