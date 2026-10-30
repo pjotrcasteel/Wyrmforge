@@ -178,3 +178,24 @@ after the newly pinned preview deploy and approve actor silhouette
 proportions and ground contact. Mobile FPS/p95, Fireball-to-Hollowed shadows,
 Trail 2 readability, tearing and Android power/thermals remain independent
 open G4 gates. Do not infer physical device acceptance from browser tests.
+
+## Owner acceptance: Fireball lighting is generic, not Hollowed-only — 30 October 2026
+
+The owner **confirmed in actual gameplay** that moving Fireballs illuminate Hollowed
+and cast visible shadows. **Mark this specific previously open visual check PASS.**
+Do not reopen it as an outstanding Hollowed-specific rendering defect.
+
+Hollowed is only the observed test receiver. The shared renderer already uses
+registered lights plus generic renderable/caster/receiver material and geometry
+descriptors for eligible objects; no Fireball/Hollowed-specific shadow path
+is allowed. Supported receivers include world floor, scenery, foliage, walls,
+enemies and player sprites as they are adopted through those descriptors.
+This owner confirmation does **not** assert that every unconverted G5 world asset
+is already migrated, nor that every light can afford six point-light shadow
+views simultaneously on a mobile GPU. Shadow-view budget overflow retains light
+illumination without shadow casting for the excess lights.
+
+G4 **remaining** acceptance must be scoped to latest-head CI, sustained device
+frame pacing / p95 and thermal/battery observations, readable Trail 2,
+visible actor proportions and absence of camera-motion tearing, and Android
+compatibility. Keep default production Canvas and the painted 2D Town intact.
