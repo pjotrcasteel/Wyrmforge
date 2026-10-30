@@ -29,11 +29,12 @@ test('more authored pose samples monotonically increase projected same-crop resi
         }
     }
 });
-test('optimistic source-crop estimate does not hide a truly oversized texture library',()=>{
-    const r=planBakedMotionResidency(fixture([0,0,96,96]));
-    assert.equal(r.originalWithinBudget,false);
-    assert.equal(r.originalPlusOneLateralFits,false);
-    assert.ok(r.options.some(x=>!x.withinMemoryLimit));
+test('oversized native source rejects every non-4096px-safe layout instead of claiming a budget pass',()=>{
+    // 96x96 and 128 action frames require an atlas taller than 4096px
+    // at the narrow column counts. The planner must fail closed, not
+    // invent a valid 3-map layout when none exists under the GPU cap.
+    assert.throws(()=>planBakedMotionResidency(fixture([0,0,96,96])),
+        /No WebGL-safe native source atlas layout under 4096px/);
 });
 test('planner rejects absent real atlas or malformed measured source crop',()=>{
     assert.throws(()=>planBakedMotionResidency(null),TypeError);
