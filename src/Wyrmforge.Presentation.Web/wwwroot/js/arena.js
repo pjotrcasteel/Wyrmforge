@@ -74,6 +74,11 @@ export function initializeArena(canvas, dotNetReference) {
         void import('./arena-gpu-world.js').then(({ HuntGpuWorld }) => {
             if (!state.active) return;
             state.gpuWorld = new HuntGpuWorld({ quality });
+            // Asset-authored emission is lazy and independent of ordinary
+            // Canvas animation. No enemy light sources or extra shadow views.
+            void ashlingSprites.preloadEmission().then(ready => {
+                if (state.active) state.gpuEmissionReady = ready;
+            });
             // The G4 GPU renderer owns the world and its authoritative C# light
             // emitters. Fireball artwork stays in the existing directional
             // 2D projectile pass until an oriented GPU cutout passes 360° QC.
@@ -450,10 +455,20 @@ function draw(state, snapshot, width, height) {
         }
         if (gpu) {
             if (!reuse) ctx.restore();
+            let emissiveSource = null;
+            // Art adapter selects a declared sprite channel. The GPU engine
+            // still receives a generic material and has no creature branches.
+            if (layer.kind === 'enemy' && Number(layer.enemy.kind) === 2 && state.gpuEmissionReady) {
+                const emissionCanvas = state.gpuEmissionScratch ??= document.createElement('canvas');
+                const emissionContext = prepareHuntGpuScratch(emissionCanvas, tileSize, tileX, tileY);
+                if (ashlingSprites.drawEnemyEmission(emissionContext, layer.enemy, state.ashling))
+                    emissiveSource = emissionCanvas;
+                emissionContext.restore();
+            }
             gpu.capture(capture.id,
                 tile, tileX - camera.x, tileY - camera.y, tileSize, tileSize,
                 .12 + Math.max(0, Math.min(1, layer.depth / worldHeight)) * .1,
-                true, { revision, footFraction: capture.footFraction });
+                true, { revision, footFraction: capture.footFraction, emissiveSource });
             ctx = worldContext;
         }
     }
