@@ -129,6 +129,6 @@ test('G4 flat-ground world, reflections and elevations all reuse the same terrai
         'Main G4 ground must not silently bake the painted 900px tiles when flat terrain was selected.');
     assert.match(reflect, /terrainTexture\(environment, width, height, null, flatColorsOnly\)/);
     assert.match(elevations, /terrainTexture\(environment, width, height, approvedAtlas, flatColorsOnly\)/);
-    assert.match(environment, /flatColorsOnly \? 'flat-ground-v1' : 'painted-ground'/,
+    assert.match(environment, /flatColorsOnly \? 'neutral-grey-v1' : 'painted-ground'/,
         'Distinct cache identities preserve the optional painted A/B without cross-contamination.');
 });
