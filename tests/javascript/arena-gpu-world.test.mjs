@@ -308,8 +308,10 @@ test('live GPU shadow pixel proof isolates one real light and restores its rende
     const frames = [];
     const lit = Uint8Array.from([0, 0, 0, 255, 200, 200, 200, 255]);
     const unshadowed = Uint8Array.from([30, 30, 30, 255, 200, 200, 200, 255]);
+    const actor = { visible: true };
     const engine = {
         lights: new Map([['projectile:proof', light]]),
+        objects: new Map([['hunt-ground', { mesh: { visible: true } }], ['hunt-enemy:proof', { mesh: actor }]]),
         canvas: { width: 2, height: 1 },
         render() { frames.push(light.castShadow); },
         pixels() { return light.castShadow ? lit : unshadowed; },
@@ -318,10 +320,11 @@ test('live GPU shadow pixel proof isolates one real light and restores its rende
     const measured = HuntGpuWorld.prototype.shadowPixelProof.call(world, 'projectile:proof');
     assert.deepEqual(measured, {
         sourceId: 'projectile:proof', available: true, changedPixels: 1,
-        maxPixelDelta: 90, framebuffer: [2, 1],
+        maxPixelDelta: 90, groundOnly: true, framebuffer: [2, 1],
     });
     assert.deepEqual(frames, [true, false, true],
         'The test renders the same scene with one source shadow disabled, then restores it.');
     assert.equal(light.castShadow, true, 'A visual proof cannot alter subsequent gameplay frames.');
+    assert.equal(actor.visible, true, 'A ground-only proof must restore actor presentation.');
     assert.equal(HuntGpuWorld.prototype.shadowPixelProof.call(world, 'unknown').available, false);
 });
