@@ -79,8 +79,8 @@ test('G4 Canvas pose shadows use bounded alpha silhouettes attached to real pain
             assert.equal(caster.occluderGeometry, 'hunt-shadow-silhouette');
             assert.ok(caster.occluderScale[1] >= .06 && caster.occluderScale[1] <= .14,
                 'Captured artwork must not create giant point-light wedge shadows.');
-            assert.ok(caster.occluderScale[0] <= .9,
-                'The source capture rectangle is not a full-width solid shadow.');
+            assert.equal(caster.occluderScale[0], height / 48,
+                'Alpha transparency—not the padded capture rectangle—determines the real shadow width.');
             assert.equal(caster.occluderPosition[0], (100 + height / 2) / 48);
             assert.ok(Math.abs(caster.occluderPosition[1] + (200 + height * footFraction) * Math.SQRT2 / 48) < 1e-12,
                 'The silhouette ground anchor must use the actual authored foot.');
