@@ -10,6 +10,33 @@ public sealed class GpuLightingFrameProjectionTests
     private static readonly LightingEnvironment Environment = new("night", "#8c9cbb", 0.012);
 
     [TestMethod]
+    public void FromProjectile_FireSource_UsesWorldPixelRadiusAndPositiveHeight()
+    {
+        var projectile = new Wyrmforge.Domain.Combat.Projectiles.ProjectileState(
+            new Wyrmforge.Domain.Combat.Geometry.Vector2D(144, 240),
+            new Wyrmforge.Domain.Combat.Geometry.Vector2D(1, 0),
+            1, 1, Wyrmforge.Domain.Spells.SpellId.FireBolt, default!);
+
+        var source = ProjectileLightingProjection.FromProjectile(projectile, "fire-test");
+
+        Assert.IsNotNull(source);
+        Assert.AreEqual(144d, source.X);
+        Assert.AreEqual(240d, source.Y);
+        Assert.AreEqual(144d, source.Radius);
+        Assert.AreEqual(24d, source.Z);
+        Assert.IsTrue(source.Intensity >= 5,
+            "The authoritative Fireball must illuminate actors against mobile Gothic night.");
+        Assert.IsTrue(source.CastsShadows,
+            "Hollowed should receive an actual GPU occlusion shadow from the Fireball point emitter.");
+        var projected = GpuLightingFrameProjection.FromSnapshot(
+            ProjectileLightingProjection.Capture("hunt", 1,
+                [("fire-test", projectile)], Environment), .5);
+        Assert.IsTrue(projected.Lights.Any(light =>
+            light.Id == "projectile:fire-test" && light.CastsShadow &&
+            light.Intensity >= 5 && light.Range == 144));
+    }
+
+    [TestMethod]
     public void FromSnapshot_ExpiredEmitter_ExcludesLight()
     {
         var snapshot = CreateSnapshot(10,

@@ -69,15 +69,25 @@
             // A real first download can exceed nine seconds on mobile. Never reload a
             // healthy, still-progressing WASM download: it would discard all progress.
             retry.addEventListener("click", () => window.location.reload());
-            const slowStartupTimer = window.setTimeout(() => {
-                if (!started) status.textContent = "FIRST LAUNCH MAY TAKE A MOMENT";
-            }, 8000);
-            const recoveryTimer = window.setTimeout(() => {
-                if (!started) fail(new Error("Startup still incomplete. Manual retry available."));
-            }, 90000);
+            let slowStartupTimer;
+            let recoveryTimer;
 
             Promise.resolve()
-                .then(() => {
+                .then(async () => {
+                    // G4-only consent is the FIRST screen, before Blazor/Gate/Hunt
+                    // creates any other menus. Ordinary WyrmForge never loads it.
+                    if (new URLSearchParams(location.search).get("g4Review") === "1") {
+                        const uri = new URL("js/lighting/g4-consent-gate.js", document.baseURI);
+                        uri.searchParams.set("v", build);
+                        const { showG4PreflightChoice } = await import(uri.href);
+                        await showG4PreflightChoice();
+                    }
+                    slowStartupTimer = window.setTimeout(() => {
+                        if (!started) status.textContent = "FIRST LAUNCH MAY TAKE A MOMENT";
+                    }, 8000);
+                    recoveryTimer = window.setTimeout(() => {
+                        if (!started) fail(new Error("Startup still incomplete. Manual retry available."));
+                    }, 90000);
                     if (!window.Blazor) throw new Error("Blazor bootstrap was not loaded.");
                     return window.Blazor.start({ loadBootResource: versionedResource });
                 })

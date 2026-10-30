@@ -1,4 +1,4 @@
-import { territoryBiome, createTerritoryStoryPlan, drawTerritoryGround, drawTerritoryLandmarks, drawTerritoryMotes } from './arena-territory-art.js?v=20261026-compact-ground-v1';
+import { territoryBiome, createTerritoryStoryPlan, drawTerritoryGround, drawTerritoryLandmarks, drawTerritoryMotes } from './arena-territory-art.js?v=20261026-organic-ground-v2';
 import { drawWetForestDressing, drawWetForestCastShadows, drawWetForestFirelight } from './arena-wet-forest-dressing.js';
 import { wetForestTreeFrame, drawWetForestTreeAccents, drawWetForestTreeArt } from './arena-wet-forest-vegetation.js';
 import { drawWetForestStoryArt } from './arena-wet-forest-sites.js';
@@ -55,7 +55,7 @@ export function createTerrainPlan(environment, width, height) {
         story, forestProps: story.wetForest ? environment.props ?? [] : [] };
 }
 
-function drawTerrain(ctx, plan, width, height, approvedAtlas = null) {
+function drawTerrain(ctx, plan, width, height, approvedAtlas = null, flatColorsOnly = false) {
     const ash = plan.biome === 'ash';
     const ridge = plan.biome === 'ridge';
     const snow = plan.biome === 'snow';
@@ -67,7 +67,7 @@ function drawTerrain(ctx, plan, width, height, approvedAtlas = null) {
     gradient.addColorStop(1, colors[2]);
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, width, height);
-    const tile = artReady() ? artTilePattern(ctx, `tile.${plan.biome}`) : null;
+    const tile = !flatColorsOnly && artReady() ? artTilePattern(ctx, `tile.${plan.biome}`) : null;
     if (tile) {
         // Hand-authored seamless ground texture; the old gradient stays as a mood wash on top.
         ctx.fillStyle = tile;
@@ -77,7 +77,7 @@ function drawTerrain(ctx, plan, width, height, approvedAtlas = null) {
         ctx.fillRect(0, 0, width, height);
         ctx.globalAlpha = 1;
     }
-    drawTerritoryGround(ctx, plan.story, approvedAtlas);
+    drawTerritoryGround(ctx, plan.story, approvedAtlas, flatColorsOnly);
     // The existing PR #340 source paintings already contain pebbles, grasses
     // and leaf details; don't hide the real ground under legacy tiled decals.
     if (tile && !plan.story.wetForest) drawGroundDecals(ctx, plan, width, height);
@@ -220,16 +220,16 @@ export function habitatTint(habitat) {
     return habitatTints[habitat] ?? null;
 }
 
-function terrainTexture(environment, width, height, approvedAtlas = null) {
+function terrainTexture(environment, width, height, approvedAtlas = null, flatColorsOnly = false) {
     // Art generation is part of the key: the bake refreshes once the atlases finish loading.
-    const key = [environment.seed, environment.biome, environment.element, environment.district, environment.habitat, environment.stage, environment.corruption, environment.generatorPreview, environment.wetForest?.site, width, height, artGeneration(), liveWetForestArtworkGeneration(),
+    const key = [environment.seed, environment.biome, environment.element, environment.district, environment.habitat, environment.stage, environment.corruption, environment.generatorPreview, environment.wetForest?.site, width, height, flatColorsOnly ? 'flat-ground-v1' : 'painted-ground', artGeneration(), flatColorsOnly ? 0 : liveWetForestArtworkGeneration(),
         approvedAtlas ? 'approvedGroundPreview' : 'canonicalGround'].join(':');
     if (textures.has(key)) return textures.get(key);
     const image = document.createElement('canvas');
     image.width = Math.max(1, Math.round(width));
     image.height = Math.max(1, Math.round(height));
     const plan = createTerrainPlan(environment, image.width, image.height);
-    drawTerrain(image.getContext('2d'), plan, image.width, image.height, approvedAtlas);
+    drawTerrain(image.getContext('2d'), plan, image.width, image.height, approvedAtlas, flatColorsOnly);
     // Keep at most two world textures on mobile; a whole territory is larger than one viewport.
     if (textures.size >= 2) textures.delete(textures.keys().next().value);
     const texture = { image, cloister: plan.story.cloister, plan };
@@ -287,17 +287,17 @@ function drawForestEdges(ctx, plan, width, height) {
 }
 
 // Read the already-cached environment plan, without rerolling its procedural art.
-export function drawArenaCloisterReflections(ctx, environment, width, height, lights, seconds = 0, reducedMotion = false) {
+export function drawArenaCloisterReflections(ctx, environment, width, height, lights, seconds = 0, reducedMotion = false, flatColorsOnly = false) {
     if (!environment) return 0;
-    return drawCloisterReflections(ctx, terrainTexture(environment, width, height).cloister, lights, seconds, reducedMotion);
+    return drawCloisterReflections(ctx, terrainTexture(environment, width, height, null, flatColorsOnly).cloister, lights, seconds, reducedMotion);
 }
 
 
 // Cache owns the cloister's fixed plan; these lightweight wall items sort with
 // actor foot positions in world space rather than being pasted over the viewport.
-export function getArenaCloisterElevations(environment, width, height, seconds = 0, approvedAtlas = null) {
+export function getArenaCloisterElevations(environment, width, height, seconds = 0, approvedAtlas = null, flatColorsOnly = false) {
     if (!environment) return [];
-    const texture = terrainTexture(environment, width, height, approvedAtlas);
+    const texture = terrainTexture(environment, width, height, approvedAtlas, flatColorsOnly);
     const cloister = texture.cloister;
     const masonry = !cloister
         ? createTerritoryWallLayers(environment, texture.plan, width, height, seconds)
@@ -471,13 +471,16 @@ function drawWetForestProp(ctx, prop, x, y, size) {
     return true;
 }
 
-export function drawArenaEnvironment(ctx, environment, width, height, elapsedSeconds = 0, approvedAtlas = null) {
+export function drawArenaEnvironment(ctx, environment, width, height, elapsedSeconds = 0, approvedAtlas = null, lightingMode = 'canvas', flatColorsOnly = false) {
     if (!environment) return false;
-    const texture = terrainTexture(environment, width, height, approvedAtlas);
+    // Use the SAME terrain mode as reflections and elevations. Omitting it
+    // silently built the full painted tile atlas in a supposedly tile-free
+    // G4 Hunt, retaining two world-sized cache entries on portrait phones.
+    const texture = terrainTexture(environment, width, height, approvedAtlas, flatColorsOnly);
     ctx.drawImage(texture.image, 0, 0, width, height);
     // Render low-angle shadows from CURRENT physical props, never frozen floor art:
     // destroyed trees and ruins lose their shadows in the same C# simulation frame.
-    if (environment.habitat === 'WetForest' && environment.wetForest) {
+    if (lightingMode !== 'gpu' && environment.habitat === 'WetForest' && environment.wetForest) {
         drawWetForestCastShadows(ctx, environment.seed, environment.props ?? [], width, height);
         drawWetForestFirelight(ctx, environment, width, height, elapsedSeconds);
     }

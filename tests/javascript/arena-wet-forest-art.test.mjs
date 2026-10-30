@@ -63,7 +63,7 @@ test('the painter is restricted to the Wet Forest Lab and never writes gameplay 
     const ground = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-wet-forest-art.js', import.meta.url), 'utf8');
     const territory = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-territory-art.js', import.meta.url), 'utf8');
     const environment = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js', import.meta.url), 'utf8');
-    assert.match(territory, /if \(plan\.wetForest\) return drawWetForestGround\(ctx, plan, approvedAtlas\)/);
+    assert.match(territory, /if \(plan\.wetForest\) return drawWetForestGround\(ctx, plan, approvedAtlas, flatColorsOnly\)/);
     assert.match(environment, /if \(plan\.story\.wetForest\) drawWetForestDressing/);
     assert.match(ground, /const CELL = 12/);
     assert.doesNotMatch(ground, /DamagePropsInRadius|RestrictMovement|Math\.random|setInterval|new Image\(/);
@@ -225,4 +225,49 @@ test('Wet Forest cobbles have subtle occasional relief instead of bold outlines'
         m.y + m.height <= size.height), 'Relief is a bounded floor-only texture');
     const source = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-wet-forest-art.js', import.meta.url), 'utf8');
     assert.doesNotMatch(source, /TryDamageProp|RestrictMovement|DamagePropsInRadius/);
+});
+
+
+test('G4 flat Wet Forest paints recipe colors without decoding tile images or building 12px mosaics', () => {
+    const source = { wetForest: recipe, width: 950, height: 1550, seed: 1204,
+        forestProps: [], corruption: 0, element: 'fire' };
+    const previousImage = globalThis.Image;
+    let materialImageRequests = 0, backgroundFills = 0, ellipses = 0, roadVertices = 0;
+    const colors = [];
+    globalThis.Image = class { set src(_url) { materialImageRequests++; } };
+    const ctx = {
+        save() {}, restore() {},
+        set globalAlpha(value) { assert.ok(value >= 0 && value <= 1); },
+        set fillStyle(value) { colors.push(value); },
+        fillRect(x, y, w, h) {
+            backgroundFills++;
+            assert.deepEqual([x, y, w, h], [0, 0, source.width, source.height]);
+        },
+        beginPath() {}, ellipse() { ellipses++; }, fill() {},
+        moveTo() { roadVertices++; }, lineTo() { roadVertices++; }, closePath() {},
+    };
+    const before = structuredClone(source);
+    try {
+        assert.equal(drawWetForestGround(ctx, source, null, true), true);
+        assert.equal(materialImageRequests, 0, 'No PR340 texture decoding in the flat GPU preview');
+        assert.equal(backgroundFills, 1, 'One plain soil fill, not thousands of tiles');
+        assert.ok(ellipses >= recipe.ground.length + 1, 'C# patches and the site remain visible');
+        assert.ok(roadVertices > 12, 'C# trail remains one connected source-defined road');
+        assert.ok(colors.includes('#484137'), 'Road must remain legible as a separate soil color');
+        assert.deepEqual(source, before, 'GPU review never mutates C# geography');
+    } finally {
+        globalThis.Image = previousImage;
+    }
+});
+
+test('G4 painted Wet Forest remains an explicit A/B option and production keeps source-art path', async () => {
+    const { readFile } = await import('node:fs/promises');
+    const arena = await readFile(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena.js', import.meta.url), 'utf8');
+    const environment = await readFile(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js', import.meta.url), 'utf8');
+    assert.match(arena, /params\.get\('g4PaintedGround'\) !== '1'/);
+    assert.match(arena, /params\.get\('arenaGpu'\) === '1'/);
+    assert.match(arena, /drawArenaEnvironment\(ctx, snapshot\.environment[\s\S]*state\.g4FlatGround\)/);
+    assert.match(environment, /const tile = !flatColorsOnly && artReady\(\)/);
+    assert.match(environment, /flatColorsOnly \? 0 : liveWetForestArtworkGeneration\(\)/);
+    assert.match(environment, /drawTerritoryGround\(ctx, plan\.story, approvedAtlas, flatColorsOnly\)/);
 });

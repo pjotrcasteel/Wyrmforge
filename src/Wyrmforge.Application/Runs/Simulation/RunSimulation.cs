@@ -424,9 +424,14 @@ public sealed partial class RunSimulation
     {
         var snapshot = ProjectileLightingProjection.Capture(
             "hunt", lightingSnapshotTick++, projectiles, projectileLightIdentities,
-            new LightingEnvironment("gothic-night", "#8c9cbb", 0.012));
+            new LightingEnvironment("gothic-night", "#8c9cbb", 0.24));
         var combined = LightingSceneComposer.Compose(snapshot.SceneId, snapshot.SimulationTick,
             snapshot.Environment, snapshot.Emitters,
+            [NightSkyLightingProjection.Capture()],
+            [HunterVisibilityLightingProjection.Capture(player.Position)],
+            SpellEffectLightingProjection.Capture(CreateCastMotionSnapshot(),
+                elementalImpacts.Select(impact => new ElementalImpactRenderSnapshot(impact.Position.X, impact.Position.Y, impact.Spell, impact.Progress)),
+                CreateFieryAreaSnapshots()),
             AshfangLightingProjection.Capture(CreateDragonSnapshot(), CreateAshfangEffects()));
         return GpuLightingFrameProjection.FromSnapshot(combined, elapsed);
     }

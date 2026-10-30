@@ -110,6 +110,18 @@ The engine pass is a **short, implementation-led consolidation of existing infra
 
 ## How to choose the next slice
 
+### Arena-first lighting — owner update, 27 October 2026
+
+Town relighting T0–T2 is now **paused**, alongside deferred T3–T6. Keep the current
+painted 2D Town and preserve draft #368 for a later revisit. This supersedes the
+active Town acceptance sequencing below: no Town milestone blocks G4/G5.
+Continue the existing arena integration draft #381 and shared GPU engine, prioritizing
+moving projectiles, short-lived explosion lights, persistent/environment emitters and
+directional sources through generic descriptors. Preserve C# event ownership and
+actor/AI work in other PRs. Completion still requires actual Hunt shadow/occlusion,
+zero-light, fallback and mobile performance evidence; point-source demos alone do not
+establish complete dynamic combat-lighting adoption.
+
 ### FOCUS GATE — lighting and unified AI engines (owner decision, 26 October 2026; LOCKED active sequencing)
 
 **Binding delivery sequence (27 October; amended 29 October):** for **shared feature-engine consolidation and adoption**, finish independent Hollowed art approval → ENG0–ENG4 → G4/G5 → outstanding AI2–AI6 acceptance. **Exception with equal canonical authority: start AR0–AR3 immediately and independently**; these use current C# Hunt authority and the **current live arena renderer** for semantic solid-color proof. Do not demand Hollowed approval, ENG sign-off, a completed G5 migration, FXP or real-device AI sign-off to begin or complete AR0–AR3. Maintain separate branches and nonconflicting changes. The two engine priorities remain:

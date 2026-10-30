@@ -66,6 +66,10 @@ public static class SaveLayout
         ["wyrmforge.playtest.report.v1"] = SaveDomain.Telemetry,
         ["wyrmforge.playtest.lastReceipt.v1"] = SaveDomain.Telemetry,
         ["wyrmforge.playtest.pendingReceipt.v1"] = SaveDomain.Telemetry,
+        ["wyrmforge.g4.lastRecord.v1"] = SaveDomain.Telemetry,
+        ["wyrmforge.g4.pendingRecord.v1"] = SaveDomain.Telemetry,
+        ["wyrmforge.g4.lastReceipt.v1"] = SaveDomain.Telemetry,
+        ["wyrmforge.g4.autoSendConsent.v1"] = SaveDomain.Preferences,
     };
 
     public static SaveDomain? DomainOf(string key) => Keys.TryGetValue(key, out var domain) ? domain : null;

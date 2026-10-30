@@ -67,3 +67,42 @@ test('existing renderer handles V5 only for actual base Fireball, preserving oth
     drawSpellProjectile(ctx,{spell:1,x:20,y:30,angle:0,radius:7},true,23);
     assert.ok(calls.some(c => c[0] === 'fillRect'));
 });
+
+
+test('G4 Fireball is fully visible for eight C# firing directions with original art proportions', () => {
+    const albedo = { naturalWidth: 1920, naturalHeight: 72 };
+    const emissive = { naturalWidth: 1920, naturalHeight: 72 };
+    installFireballV5ForTesting(albedo, emissive);
+    try {
+        for (let facing = 0; facing < 8; facing++) {
+            const angle = facing * Math.PI / 4;
+            const { ctx, calls } = capture();
+            drawSpellProjectile(ctx, { spell: 1, x: 240, y: 300, angle, radius: 14,
+                fireballSourceId: 42 }, false, 1);
+            assert.deepEqual(calls.find(call => call[0] === 'translate'),
+                ['translate', 240, 300], 'The real projectile position must be preserved.');
+            assert.deepEqual(calls.find(call => call[0] === 'rotate'),
+                ['rotate', angle], 'The 2D sprite must face the full C# aim direction.');
+            const draws = calls.filter(call => call[0] === 'drawImage');
+            assert.equal(draws.length, 2, 'Both Fireball and glow remain visible at every angle.');
+            assert.deepEqual(draws[0].slice(-4), [-87, -36, 120, 72],
+                'No angle can squash or mirror the native sprite frame.');
+            assert.deepEqual(draws[1].slice(2), draws[0].slice(2),
+                'Both authored channels sample the same animation frame.');
+        }
+    } finally {
+        resetFireballV5ForTesting();
+    }
+});
+
+test('the G4 Hunt draws projectile art after GPU world shading without edge-on GPU sprite culling', async () => {
+    const { readFile } = await import('node:fs/promises');
+    const source = await readFile(
+        new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena.js', import.meta.url), 'utf8');
+    assert.match(source, /for \(const projectile of snapshot\.projectiles\)\s*drawSpellProjectile\(/);
+    assert.doesNotMatch(source, /submitGpuFireballs\(gpu/);
+    assert.ok(source.indexOf('gpu.render(ctx, state.sharedLightingFrame)') <
+        source.indexOf('for (const projectile of snapshot.projectiles)\n        drawSpellProjectile('));
+    assert.match(source, /params\.get\('g4StageFrames'\) === '1'/,
+        'High-bandwidth staging is now opt-in only, rather than a phone default.');
+});

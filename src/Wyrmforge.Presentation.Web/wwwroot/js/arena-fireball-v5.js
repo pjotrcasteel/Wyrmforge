@@ -58,5 +58,10 @@ export function drawFireballV5(ctx, projectile, seconds = 0, reducedMotion = fal
     return true;
 }
 
+/** Art data only: consumers register these two immutable sheets in the shared GPU renderer. */
+export function fireballV5GpuAssets() {
+    return albedo && emissive ? { albedo, emissive } : null;
+}
+
 export function installFireballV5ForTesting(a, e) { albedo = a; emissive = e; }
 export function resetFireballV5ForTesting() { albedo = null; emissive = null; loading = null; }
