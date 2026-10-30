@@ -1,0 +1,102 @@
+name: Animation compact native-foot phase handoff study
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/animation-compact-phase-handoff.yml'
+      - 'tools/animation/author_hollow_foundation.py'
+      - 'tools/animation/validate_source.py'
+      - 'tools/animation/validate_motion_envelope.py'
+      - 'tools/animation/audit_source_direction_switch.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: animation-compact-phase-handoff-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  independently-supported-transition-epochs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          sparse-checkout: |
+            tools/animation
+            art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-zombie-reach-v3-standard
+      - uses: actions/cache@v4
+        id: blender
+        with:
+          path: .cache/blender-4.5.3-linux-x64
+          key: animation-source-blender-4.5.3-linux-x64-975c58fc
+      - name: Restore pinned Blender
+        if: steps.blender.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .cache
+          curl --fail --location --retry 2 https://download.blender.org/release/Blender4.5/blender-4.5.3-linux-x64.tar.xz -o .cache/blender.tar.xz
+          echo '975c58fcb244273838534bba771e64ad87739216b0f9b39a888531a49a72d845  .cache/blender.tar.xz' | sha256sum --check
+          tar --no-same-owner -xf .cache/blender.tar.xz -C .cache
+          rm .cache/blender.tar.xz
+      - name: Author 8-phase 5-stage forward and both lateral source clips with a genuine shuffling stride
+        shell: bash
+        run: |
+          set -euo pipefail
+          BLENDER="$PWD/.cache/blender-4.5.3-linux-x64/blender"
+          for heading in 0 90 -90; do
+            OUT="artifacts/an6-transfer-${heading}"
+            mkdir -p "$OUT"
+            EXTRA=()
+            if [ "$heading" != 0 ]; then EXTRA+=(--experimental-lateral-motion); fi
+            "$BLENDER" -b -t 2 --python-exit-code 1 --python tools/animation/author_hollow_foundation.py -- \
+              --out "$OUT" --only walk,attack-travel --phase-samples 8 --action-samples 5 \
+              --travel-heading-degrees "$heading" "${EXTRA[@]}" --stride-metres .22 \
+              --stance-fraction .6 --flexion-reserve-pixels 2 --pelvis-drop-metres .075 \
+              --compress-source > "$OUT/author.log" 2>&1
+            "$BLENDER" -b -t 2 --python-exit-code 1 --python tools/animation/validate_source.py -- "$OUT" > "$OUT/independent-skin.log" 2>&1
+            python3 tools/animation/test_source_qc.py "$OUT" --blender "$BLENDER" > "$OUT/negative-mutants.log" 2>&1
+            "$BLENDER" -b -t 2 --python-exit-code 1 --python tools/animation/validate_motion_envelope.py -- "$OUT" > "$OUT/motion-envelope.log" 2>&1
+          done
+      - name: Measure whether true native sole contacts support phase-safe static handoffs
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/animation/audit_source_direction_switch.py --self-test
+          for heading in 90 -90; do
+            python3 tools/animation/audit_source_direction_switch.py \
+              artifacts/an6-transfer-0/source-manifest.json \
+              "artifacts/an6-transfer-${heading}/source-manifest.json" \
+              --diagnostic --out "artifacts/an6-transfer-${heading}/contact-handoff.json"
+          done
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          for heading in ('90','-90'):
+              root=Path(f'artifacts/an6-transfer-{heading}')
+              m=json.loads((root/'source-manifest.json').read_text())
+              qc=json.loads((root/'contact-handoff.json').read_text())
+              assert m['candidateNotApproved'] and not m['runtimeIntegrated']
+              assert qc['scenarios']==48 and not qc['runtimeAccepted']
+              assert qc['failedScenarios']==sum(not s['withinOneNativePixel'] for s in qc['results'])
+              print('NATIVE SOURCE STATIC HANDOFF',heading,qc['safeStaticSourceSwitchPhaseIndices'],
+                    'worst jump',qc['worstSourceNativeJump'],
+                    'not moving C# Hunt acceptance')
+              # Require a real nonempty source-safe phase intersection in
+              # both walk and attack; do not falsely call the remaining
+              # arbitrary timing or sideways gameplay motion validated.
+              assert len(qc['safeStaticSourceSwitchPhaseIndices']['walk'])>=2
+              assert len(qc['safeStaticSourceSwitchPhaseIndices']['attack-travel'])>=2
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: an6-actual-native-foot-transfer-phase-study
+          path: |
+            artifacts/an6-transfer-*/source-manifest.json
+            artifacts/an6-transfer-*/contact-handoff.json
+            artifacts/an6-transfer-*/*.log
+            artifacts/an6-transfer-*/independent-source-qc.json
+            artifacts/an6-transfer-*/negative-source-qc.json
+            artifacts/an6-transfer-*/motion-envelope-qc.json
+          if-no-files-found: warn
+          retention-days: 14
