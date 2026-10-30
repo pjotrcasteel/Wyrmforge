@@ -126,6 +126,7 @@ export function readArenaDiagnostics(canvas) {
         hunt: state.latestSnapshot?.hunt ?? null,
         performance: { fps:state.displayFps, simulationHz:state.displaySimulationHz, simulationMilliseconds:state.displaySimulationMilliseconds, bridgeMilliseconds:state.displayBridgeMilliseconds },
         renderingFailed: Boolean(state.renderingFailed),
+        renderingError: state.renderingError ?? null,
         sharedLighting: state.sharedLightingFrame ?? state.latestSnapshot?.lighting ?? null,
         gpuWorld: state.gpuWorld
             ? { ...state.gpuWorld.diagnostics(), scratchPool: state.gpuScratchPool?.diagnostics() ?? null }
@@ -208,9 +209,11 @@ function frame(state, timestamp) {
         if (state.latestSnapshot) draw(state, state.latestSnapshot, rect.width, rect.height);
         else drawWaiting(state, rect.width, rect.height);
         state.renderingFailed = false;
+        state.renderingError = null;
     } catch (error) {
         if (!state.renderingFailed) console.error('Wyrmforge arena drawing failed; simulation continues.', error);
         state.renderingFailed = true;
+        state.renderingError = error?.stack ?? String(error);
         // Canvas rendering must never silently stop player movement and the C# simulation.
         // Reset the canvas state stack as well as its transform: a failed
         // nested light/effect must not leave later frames in screen blending.
