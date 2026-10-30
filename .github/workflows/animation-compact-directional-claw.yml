@@ -134,3 +134,35 @@ jobs:
             artifacts/an6-compact-directional-atlas-${{ matrix.heading }}/
           if-no-files-found: warn
           retention-days: 14
+
+  compare-real-directional-atlases:
+    name: Actual three-direction crop, residency and sole-switch audit
+    needs: compact-five-stage-whole-body-source
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          sparse-checkout: |
+            tools/animation
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: an6-compact-five-stage-source-*
+          path: artifacts/an6-direction-assembly
+          merge-multiple: false
+      - name: Compare all three independently saved and real rendered direction sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install Pillow==12.0.0
+          python3 tools/animation/audit_compact_directional_bundle.py \
+            artifacts/an6-direction-assembly \
+            --out artifacts/an6-compact-directional-library-review.json
+          test -s artifacts/an6-compact-directional-library-review.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: an6-compact-real-directional-library-audit
+          path: artifacts/an6-compact-directional-library-review.json
+          if-no-files-found: warn
+          retention-days: 14
