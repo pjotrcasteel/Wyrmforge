@@ -265,12 +265,15 @@ test('G4 flat Wet Forest paints recipe colors without decoding tile images or bu
     }
 });
 
-test('G4 painted Wet Forest remains an explicit A/B option and production keeps source-art path', async () => {
+test('G4 painted Wet Forest is the default; flat ground is an explicit A/B only', async () => {
     const { readFile } = await import('node:fs/promises');
     const arena = await readFile(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena.js', import.meta.url), 'utf8');
     const environment = await readFile(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js', import.meta.url), 'utf8');
-    assert.match(arena, /params\.get\('g4PaintedGround'\) !== '1'/);
-    assert.match(arena, /params\.get\('arenaGpu'\) === '1'/);
+    assert.match(arena, /params\.get\('g4Review'\) === '1'/);
+    assert.match(arena, /params\.get\('g4FlatGround'\) === '1' && params\.get\('g4PaintedGround'\) !== '1'/,
+        'Flat ground is an explicit review-only comparison, never the default iPhone/production mode.');
+    assert.doesNotMatch(arena, /params\.get\('arenaGpu'\) === '1' && params\.get\('g4PaintedGround'\) !== '1'/,
+        'GPU review must not silently choose unreadable flat ground.');
     assert.match(arena, /drawArenaEnvironment\(ctx, snapshot\.environment[\s\S]*state\.g4FlatGround\)/);
     assert.match(environment, /const tile = !flatColorsOnly && artReady\(\)/);
     assert.match(environment, /flatColorsOnly \? 0 : liveWetForestArtworkGeneration\(\)/);
