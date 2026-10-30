@@ -212,3 +212,13 @@ weathered lower-contrast thread only (not whole image), and more substantial
 school material transformation throughout the wooden shafts. Preserve crook,
 grip, grey costume and no-icon-topper boundary. Prompt:
 `school-variants-v003-prompt.txt`. Candidate appearance remains subject to review.
+
+Saved `school-variants-v003.png`, original 1536x1024 built-in edit of v002. Visually
+inspected all six: cape motifs are lower contrast/desaturated, while full-shaft
+staff treatments are stronger. Fire char/ember fissures, Frost blue-white rime,
+Storm yellow/copper grain, Arcane violet channels, Necromancy pale deadwood/green
+cavities, Summoner living root/moss/leaf buds. Natural crooked tips preserved; no
+mounted symbols. V003 owner appearance approval remains pending. Partial-alpha
+source concepts are not clean native sprite/material packs or in-Hunt/device proof.
+Exact prompt, input, image hashes/dimensions and production status preserved.
+`git diff --check` verified; no runtime changes or gameplay tests in this slice.

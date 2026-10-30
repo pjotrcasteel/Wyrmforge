@@ -80,6 +80,20 @@
       "src/Wyrmforge.Presentation.Web/wwwroot/art/divine-lineage-sigils.webp"
     ],
     "prompt": "school-variants-v002-prompt.txt",
-    "status": "Corrected material-integrated staff and woven cape concept; owner review pending"
+    "status": "Owner approved direction; requested further faded emblems and stronger staff material influence"
+  },
+  "schoolVariantsRevision3": {
+    "file": "school-variants-v003.png",
+    "sha256": "a58d938e977baf875d2784285fa92f26514d8aea8d07c2a3af58c3c1e64615f3",
+    "size": [
+      1536,
+      1024
+    ],
+    "generator": "built-in image_gen edit",
+    "inputs": [
+      "school-variants-v002.png"
+    ],
+    "prompt": "school-variants-v003-prompt.txt",
+    "status": "Faded cape embroidery and stronger full-shaft school material candidate; owner review pending"
   }
 }
