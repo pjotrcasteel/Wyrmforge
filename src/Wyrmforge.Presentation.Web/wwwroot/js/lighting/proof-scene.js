@@ -7,6 +7,7 @@ import { LightingEngine } from './engine.js';
 import { environmentProfile } from './registry.js';
 import { createSpriteAnimationState, updateSpriteAnimation } from '../sprite-animation.js';
 import { spriteFrame, spritePlaneGeometry } from './lit-sprite.js';
+import { createPaletteEmissionAtlas } from './sprite-emission.js';
 import { GROUND_ATLAS_URL, buildGroundQuiltAtlas, drawReferenceGroundBoard, drawGroundMaterialTransitions } from '../arena-materials.js';
 import { groundFoundationBoard, FOUNDATION_COLUMNS, FOUNDATION_ROWS, FOUNDATION_WIDTH, FOUNDATION_HEIGHT } from '../arena-ground-foundation.js';
 
@@ -40,6 +41,11 @@ async function actorResources(engine, id, folder) {
     const clip = manifest.clips.walk;
     const texture = await new T.TextureLoader().loadAsync(new URL(clip.image, base).href);
     engine.registerTexture(id, texture);
+    if (manifest.emission?.colors?.length) {
+        // Shared material data; same UVs and atlas frame as the approved albedo pixels.
+        const emissive = createPaletteEmissionAtlas(texture.image, manifest.emission.colors);
+        engine.registerTexture(`${id}-emissive`, new T.CanvasTexture(emissive));
+    }
     const normal = await new T.TextureLoader().loadAsync(new URL(`../../art/lighting-proof/${id}-walk-normal.png`, import.meta.url).href);
     engine.registerTexture(`${id}-normal`, normal, false);
     engine.registerGeometry(id, spritePlaneGeometry(T, clip, 1 / 48, engine.camera.getWorldDirection(new T.Vector3()).negate().toArray()));
@@ -65,10 +71,16 @@ export async function initializeProof(canvas) {
         for (const [id, folder] of [['hollowed', 'hollow-rigged'], ['ashling', 'ashling-rigged']])
             { state.manifests[id] = await actorResources(engine, id, folder); state.animation[id] = createSpriteAnimationState(); }
         if (!state.alive) { engine.dispose(); return; }
+        const actorMaterial = (id, roughness) => {
+            const emission = state.manifests[id].emission;
+            return material(id, '#ffffff', roughness, { albedo: id, normal: `${id}-normal`,
+                ...(emission ? { emissiveMap: `${id}-emissive`, emission: '#ffffff',
+                    emissionIntensity: emission.intensity } : {}) });
+        };
         state.materials = [material('terrain', '#ffffff', .9, { albedo: 'ground' }), material('stone', '#777b80'),
             material('cutout-upper', '#ffffff', .9, { albedo: 'cutout-test' }),
             material('cutout-lower', '#ffffff', .9, { albedo: 'cutout-test' }), material('wood', '#68503a'), material('water', '#1a3034', .11, { specular: 1 }),
-            material('hollowed', '#ffffff', .8, { albedo: 'hollowed', normal: 'hollowed-normal' }), material('ashling', '#ffffff', .9, { albedo: 'ashling', normal: 'ashling-normal' }),
+            actorMaterial('hollowed', .8), actorMaterial('ashling', .9),
             material('flame', '#321200', .7, { emission: '#ff792d', emissionIntensity: 2 }),
             material('rune', '#124138', .6, { emission: '#35edbc', emissionIntensity: 1 })];
         state.objects = [object('approved-ground', 'plane', 'terrain', [0, 0, 0], [16, 20, 1]),
@@ -119,6 +131,7 @@ export function configureProof(canvas, options) {
     const p = state.options, zero = p.profile === 'zero';
     const firePosition = [-3.5 + p.progress * 7, p.behind ? 4 : -1.6, p.behind ? 3.6 : 2.4];
     const environment = environmentProfile(p.profile);
+    if (p.emission === false) environment.emission = false;
     if (p.fog) environment.fog = { color: '#343b4a', near: 3, far: 18 };
     const objects = structuredClone(state.objects);
     if (p.cutouts) objects.push(

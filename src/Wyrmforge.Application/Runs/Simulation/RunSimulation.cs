@@ -427,7 +427,8 @@ public sealed partial class RunSimulation
             new LightingEnvironment("gothic-night", "#8c9cbb", 0.012));
         var combined = LightingSceneComposer.Compose(snapshot.SceneId, snapshot.SimulationTick,
             snapshot.Environment, snapshot.Emitters,
-            AshfangLightingProjection.Capture(CreateDragonSnapshot(), CreateAshfangEffects()));
+            AshfangLightingProjection.Capture(CreateDragonSnapshot(), CreateAshfangEffects()),
+            ActorAppearanceLightingProjection.Capture(enemies, player.Position.X, player.Position.Y));
         return GpuLightingFrameProjection.FromSnapshot(combined, elapsed);
     }
 
