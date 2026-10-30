@@ -106,3 +106,14 @@ test('woodland tree props use atlas-backed authored tree silhouettes and world f
     assert.equal(layers[0].depth, .44 * 1550);
     assert.equal(layers[0].prop.kind, 'dead-tree');
 });
+
+
+test('G4 terrain mode reaches ground, cached elevations and reflections without undeclared bindings', () => {
+    const env = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js', import.meta.url), 'utf8');
+    const hunt = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena.js', import.meta.url), 'utf8');
+    assert.match(env, /function terrainTexture\(environment, width, height, approvedAtlas = null, flatColorsOnly = false\)/);
+    assert.match(env, /function getArenaCloisterElevations\(environment, width, height, seconds = 0, approvedAtlas = null, flatColorsOnly = false\)/);
+    assert.match(env, /terrainTexture\(environment, width, height, approvedAtlas, flatColorsOnly\)/);
+    assert.match(hunt, /getArenaCloisterElevations\(snapshot\.environment, worldWidth, worldHeight, visualSeconds, null, state\.g4FlatGround\)/);
+    assert.match(hunt, /drawArenaCloisterReflections\(ctx, snapshot\.environment, worldWidth, worldHeight,[\s\S]*?state\.g4FlatGround\)/);
+});
