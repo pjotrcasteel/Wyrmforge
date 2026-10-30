@@ -4,7 +4,7 @@
 import { Bitmap, hex, rng } from '../lib/painter.mjs';
 import { createMasonryField, MASONRY_PERIOD } from './wet-forest-masonry.mjs';
 
-export const GRAMMAR_VERSION = 'wf32-terrain-grammar.v1';
+export const GRAMMAR_VERSION = 'wf32-terrain-grammar.v1.1';
 export const CELL = 32;
 export const TERRAIN_MATERIALS = Object.freeze({
     grass: { kind: 'soft', palette: ['#1b2820','#283a2b','#344932','#45613e','#627450'], roughness: .94, specular: .08, height: 24, details: ['mushroom','pebble','twig','leaf'] },
@@ -13,6 +13,29 @@ export const TERRAIN_MATERIALS = Object.freeze({
     flagstone: { kind: 'hard', masonry: 'flagstone', roughness: .78, specular: .17, height: 65, details: ['moss','pebble','leaf'] },
     cobble: { kind: 'hard', masonry: 'cobble', roughness: .76, specular: .18, height: 75, details: ['moss','leaf'] },
     brick: { kind: 'hard', masonry: 'brick', roughness: .80, specular: .15, height: 63, details: ['moss','leaf'] },
+});
+// One generic grammar; a material does not need hand-authored edge tiles for every other material.
+// Loose scatter and wetness are overlays, never independent C# terrain authority.
+export const TERRAIN_CLASSES = Object.freeze({
+    soft: Object.freeze({ label: 'soft organic', edge: 'mingle' }),
+    hard: Object.freeze({ label: 'hard placed', edge: 'whole-object erosion' }),
+    loose: Object.freeze({ label: 'loose scatter', edge: 'overlay' }),
+    wet: Object.freeze({ label: 'wet / reflective modifier', edge: 'overlay' }),
+});
+export const TILE_ROLES = Object.freeze({
+    base: ['fill'],
+    directional: ['left', 'right', 'top', 'bottom'],
+    corner: ['northwest', 'northeast', 'southwest', 'southeast'],
+    conditional: ['broken-edge', 'transition-filler'],
+});
+export const DETAIL_CATALOG = Object.freeze({
+    mushroom: { class: 'loose', footprint: 5 }, pebble: { class: 'loose', footprint: 4 },
+    twig: { class: 'loose', footprint: 7 }, leaf: { class: 'loose', footprint: 5 },
+    root: { class: 'loose', footprint: 8 }, moss: { class: 'loose', footprint: 5 },
+});
+export const SURFACE_MODIFIERS = Object.freeze({
+    damp: { class: 'wet', roughnessMultiplier: .67 },
+    saturated: { class: 'wet', roughnessMultiplier: .36 },
 });
 export const BOUNDARY_RULES = Object.freeze({
     'soft:soft': 'soft-mingle',
@@ -47,39 +70,72 @@ export function checkDetailAllowed(material, detail) {
     return entry.details.includes(detail);
 }
 
+// Periodic low-frequency clusters provide material-scale relief. Their phase follows
+// world coordinates, never an arbitrary 32px cell. This is albedo, not baked lighting.
+function periodicNoise(x, y, cells, seed) {
+    const u=x/256*cells,v=y/256*cells,ix=Math.floor(u),iy=Math.floor(v);
+    const tx=(u-ix)**2*(3-2*(u-ix)),ty=(v-iy)**2*(3-2*(v-iy));
+    const sample=(dx,dy)=>hash(wrap(ix+dx,cells),wrap(iy+dy,cells),seed);
+    const upper=sample(0,0)*(1-tx)+sample(1,0)*tx;
+    const lower=sample(0,1)*(1-tx)+sample(1,1)*tx;
+    return upper*(1-ty)+lower*ty;
+}
 export function makeSoftField(material, seed=137) {
     const spec=TERRAIN_MATERIALS[material];
     if(!spec||spec.kind!=='soft')throw new RangeError('Expected a soft material');
-    const b=new Bitmap(MASONRY_PERIOD,MASONRY_PERIOD);const p=spec.palette;
-    b.rect(0,0,b.width,b.height,p[1]);
-    // Draw clustered detail in 256px *world* coordinates; no per-tile resets.
-    const r=rng(seed ^ (material==='grass'?314159:material==='mud'?271828:161803));
-    for(let i=0;i<2500;i++) {
-        const x=Math.floor(r()*256),y=Math.floor(r()*256);
-        const shade=p[Math.floor(r()*p.length)];
-        b.rect(x,y,1+Math.floor(r()*4),r()<.17?2:1,shade);
+    const b=new Bitmap(MASONRY_PERIOD,MASONRY_PERIOD),p=spec.palette;
+    const r=rng(seed^(material==='grass'?314159:material==='mud'?271828:161803));
+    // Continuous moss hummocks / compressed mud / forest litter, not uniform per-cell noise.
+    for(let y=0;y<256;y++)for(let x=0;x<256;x++) {
+        const broad=periodicNoise(x,y,5,seed+31);
+        const medium=periodicNoise(x,y,13,seed+83);
+        const fine=hash(Math.floor(x/3),Math.floor(y/3),seed+91);
+        const n=.64*broad+.27*medium+.09*fine;
+        const idx=clamp(Math.floor(n*p.length),0,p.length-1);
+        b.set(x,y,p[idx]);
     }
     if(material==='grass') {
-        for(let i=0;i<280;i++) {
+        // Tufts grow in pockets; clearings stay quiet enough to see actors and spells.
+        for(let i=0;i<430;i++) {
             const x=Math.floor(r()*256),y=Math.floor(r()*256);
-            const height=2+Math.floor(r()*4);
+            const density=periodicNoise(x,y,5,seed+31);
+            if(density<.38||r()>(.22+.65*density))continue;
+            const height=2+Math.floor(r()*5);
             b.line(x,y,x-2,y-height,p[3]);b.line(x+1,y,x+2,y-height+1,p[4]);
+            if(r()<.3)b.line(x,y,x,y-height-1,p[4]);
             b.set(x,y+1,p[0]);
         }
+        // A few exposed earth pockets break up monotonous green without inventing geometry.
+        for(let i=0;i<28;i++) {
+            const x=Math.floor(r()*250),y=Math.floor(r()*250);
+            if(periodicNoise(x,y,5,seed+31)>.46)continue;
+            b.rect(x,y,3+Math.floor(r()*5),r()<.5?2:1,'#242a23');
+        }
     } else if(material==='mud') {
-        for(let i=0;i<120;i++) {
-            const x=Math.floor(r()*248),y=Math.floor(r()*253),len=4+Math.floor(r()*8);
-            b.line(x,y,x+len,y,p[0]);b.line(x+1,y+1,x+len-1,y+1,p[2]);
+        // Shallow depressed seams run in coherent, curved patches rather than scratch noise.
+        for(let i=0;i<24;i++) {
+            const cx=Math.floor(r()*256),cy=Math.floor(r()*256),len=13+Math.floor(r()*25);
+            const angle=r()*Math.PI*2;
+            for(let t=0;t<len;t++) {
+                const curve=Math.sin(t*.18+i)*2;
+                const x=Math.round(cx+Math.cos(angle)*t-Math.sin(angle)*curve);
+                const y=Math.round(cy+Math.sin(angle)*t+Math.cos(angle)*curve);
+                b.set(x,y,p[0]);b.set(x+1,y+1,p[2]);
+            }
+        }
+        for(let i=0;i<25;i++) {
+            const x=Math.floor(r()*251),y=Math.floor(r()*253);
+            b.rect(x,y,3+Math.floor(r()*6),r()<.45?2:1,p[0]);
         }
     } else {
-        for(let i=0;i<115;i++) {
+        for(let i=0;i<125;i++) {
             const x=Math.floor(r()*250),y=Math.floor(r()*250);
-            b.line(x,y,x+4,y+1,p[0]);b.set(x+2,y-1,p[3]);
+            b.line(x,y,x+2+Math.floor(r()*3),y+1,p[0]);
+            if(r()<.6)b.set(x+2,y-1,p[3]);
         }
     }
     return b;
 }
-
 export function addMicroDetails(base, material, seed=371, density=1) {
     if(!(base instanceof Bitmap)||base.width!==256||base.height!==256)
         throw new TypeError('Expected one 256px review world patch');
@@ -171,9 +227,16 @@ export function blendWorldPatch(primary,secondary,mask,{policy='soft-mingle',sto
         const i=y*256+x;
         let choosePrimary=Boolean(mask[i]);
         if(policy==='whole-stone-erosion'&&stoneInstances.ids[i]) choosePrimary=Boolean(keep[stoneInstances.ids[i]]);
-        if(policy==='soft-mingle'&&Math.abs(x-128)<20) {
-            // At soft interfaces, contiguous pixel clusters mix at the world scale.
-            if(hash(Math.floor(x/4),Math.floor(y/4),seed)>.77) choosePrimary=!choosePrimary;
+        if(policy==='soft-mingle') {
+            // Discover the boundary's orientation from the mask itself; never assume
+            // transitions are vertical. Whole 4px clusters invade either source.
+            let near=false;
+            for(const [dx,dy] of [[-8,0],[8,0],[0,-8],[0,8]]) {
+                const nx=clamp(x+dx,0,255),ny=clamp(y+dy,0,255);
+                if(mask[ny*256+nx]!==mask[i]) { near=true; break; }
+            }
+            if(near&&hash(Math.floor(x/4),Math.floor(y/4),seed)>.77)
+                choosePrimary=!choosePrimary;
         }
         owner[i]=choosePrimary?1:0;
         output.set(x,y,(choosePrimary?primary:secondary).get(x,y));
@@ -250,6 +313,25 @@ export function buildLightingMaps(review) {
         normal.set(x,y,[clamp(Math.round(128-127*dx/len),0,255),clamp(Math.round(128-127*dy/len),0,255),clamp(Math.round(128+127/len),0,255),255]);
     }
     return {albedo,normal,roughnessMap:roughness,specularGuide,height};
+}
+
+// Wetness modifies the material response, NOT the base material ID or its albedo.
+// The shared GPU renderer consumes the resulting roughnessMap; specular remains scalar.
+export function applySurfaceModifier(maps, kind, mask) {
+    const modifier=SURFACE_MODIFIERS[kind];
+    if(!modifier)throw new RangeError('Unknown surface modifier');
+    if(!(maps.roughnessMap instanceof Bitmap)||!(mask instanceof Uint8Array)||mask.length!==65536)
+        throw new TypeError('Expected a per-pixel 256px modifier mask');
+    const roughnessMap=maps.roughnessMap.clone();
+    for(let i=0;i<65536;i++) {
+        const value=mask[i]/255;
+        const scale=1-value*(1-modifier.roughnessMultiplier);
+        const o=i*4,roughness=Math.round(roughnessMap.data[o+1]*scale);
+        roughnessMap.data[o]=roughness;
+        roughnessMap.data[o+1]=roughness;
+        roughnessMap.data[o+2]=roughness;
+    }
+    return {...maps,roughnessMap};
 }
 
 export function cutReviewInto32(bitmap) {
