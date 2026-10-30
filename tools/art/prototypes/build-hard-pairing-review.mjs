@@ -1,5 +1,6 @@
 // Native-pixel review of genuine original source stones, NOT a playable Hunt capture.
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Bitmap } from '../lib/painter.mjs';
@@ -16,6 +17,7 @@ const FONT = Object.freeze({
     E: ['111','100','110','100','111'], F: ['111','100','110','100','100'],
     G: ['111','100','101','101','111'], I: ['111','010','010','010','111'],
     K: ['101','101','110','101','101'], L: ['100','100','100','100','111'],
+    M: ['101','111','111','101','101'],
     N: ['101','111','111','111','101'], O: ['111','101','101','101','111'],
     R: ['110','101','110','101','101'], S: ['111','100','111','001','111'],
     T: ['111','010','010','010','010']
@@ -46,6 +48,67 @@ function nearest3x(source) {
         }
     }
     return out;
+}
+
+const VARIATION_PAIRS = Object.freeze([
+    ['flagstone', 'cobble'], ['cobble', 'brick'], ['brick', 'flagstone']
+]);
+const VARIATION_SERIES = Object.freeze([
+    {name: 'degradation', rows: [
+        {label: 'INTACT', seed: 2111, state: 'intact'},
+        {label: 'BROKEN', seed: 2111, state: 'broken'},
+        {label: 'RECLAIMED', seed: 2111, state: 'reclaimed'}
+    ]},
+    {name: 'seeds', rows: [
+        {label: 'SEED A', seed: 2111, state: 'worn'},
+        {label: 'SEED B', seed: 4709, state: 'worn'},
+        {label: 'SEED C', seed: 8933, state: 'worn'}
+    ]}
+]);
+
+/** P1k-H3: independent material stress studies; no C# terrain distribution.
+ * The same world window shows distinct physical degradation and seeded masonry
+ * without changing the owner-liked H1 mixing gallery or any G renderer inputs.
+ */
+export function buildHardPairingVariationReview() {
+    const panelWidth = 256, panelHeight = 224, artHeight = 192;
+    const reviews = [];
+    for (const series of VARIATION_SERIES) {
+        const scene = new Bitmap(panelWidth * 3, panelHeight * series.rows.length);
+        scene.rect(0, 0, scene.width, scene.height, '#17231c');
+        const panels = [];
+        for (let row = 0; row < series.rows.length; row++) {
+            const {label: stateLabel, seed, state} = series.rows[row];
+            for (let column = 0; column < VARIATION_PAIRS.length; column++) {
+                const [primary, secondary] = VARIATION_PAIRS[column];
+                const field = createHardPairingWindow(primary, secondary, {
+                    seed, state, originX: 0, originY: 0, width: panelWidth,
+                    height: artHeight, role: 'left', boundaryX: panelWidth / 2,
+                    boundaryY: artHeight / 2, seamMaterial: 'soil'
+                });
+                const x = column * panelWidth, y = row * panelHeight;
+                label(scene, primary + ' > ' + secondary, x + 7, y + 7);
+                label(scene, stateLabel, x + 7, y + 14);
+                scene.blit(field.albedo, x, y + 20);
+                const counts = [0, 0, 0];
+                for (const tag of field.sourceTags) {
+                    counts[tag]++;
+                }
+                panels.push({primary, secondary, seed, state, row, column,
+                    stonePixelsPrimary: counts[1], stonePixelsSecondary: counts[2],
+                    infillPixels: counts[0],
+                    sourceAlbedoSha256: createHash('sha256').update(field.albedo.data).digest('hex')});
+            }
+        }
+        reviews.push({name: series.name, scene, enlarged: nearest3x(scene), panels});
+    }
+    return {reviews, manifest: {
+        schema: 'wf32-hard-pairing-variation-review.v1',
+        sourceVersion: HARD_PAIRING_VERSION, nativePixelScale: 1,
+        panelSize: [panelWidth, artHeight],
+        series: reviews.map(({name, panels}) => ({name, panels})),
+        status: 'OFFLINE SOURCE-ONLY SEED AND WEAR ART; NOT LIVE AR3, DEPTH, G SHADOWS OR PHYSICS'
+    }};
 }
 
 export function buildHardPairingReview() {
@@ -95,6 +158,7 @@ export function buildHardPairingReview() {
 
 export function writeHardPairingReview(directory) {
     const review = buildHardPairingReview();
+    const variations = buildHardPairingVariationReview();
     mkdirSync(directory, {recursive: true});
     const writeImage = (name, bitmap) => writeFileSync(join(directory, name),
         encodePng(bitmap.width, bitmap.height, bitmap.data));
@@ -104,6 +168,11 @@ export function writeHardPairingReview(directory) {
     writeImage('flagstone-cobble-roughness.png', review.representative.roughnessMap);
     writeImage('flagstone-cobble-elevation.png', review.relief.heightmap);
     writeImage('flagstone-cobble-caster-alpha.png', review.relief.casterAlpha);
+    for (const series of variations.reviews) {
+        writeImage(`hard-pairing-${series.name}-native.png`, series.scene);
+        writeImage(`hard-pairing-${series.name}-3x.png`, series.enlarged);
+    }
+    review.manifest.variationReview = variations.manifest;
     writeFileSync(join(directory, 'manifest.json'), JSON.stringify(review.manifest, null, 2) + '\n');
     return review.manifest;
 }
