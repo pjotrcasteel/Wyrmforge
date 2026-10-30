@@ -402,7 +402,7 @@ function draw(state, snapshot, width, height) {
         ...(state.ashfang.death ? [{kind:'dragonDeath',depth:state.ashfang.death.y}] : []),
         ...snapshot.enemies.map(enemy => ({ kind: 'enemy', depth: enemy.y + (enemy.radius || 0), enemy })),
         { kind: 'mage', depth: snapshot.player.y + (snapshot.player.radius || 0) },
-        ...getArenaCloisterElevations(snapshot.environment, worldWidth, worldHeight, visualSeconds),
+        ...getArenaCloisterElevations(snapshot.environment, worldWidth, worldHeight, visualSeconds, null, state.g4FlatGround),
     ];
     if (gpu) gpu.begin(ctx, camera, width, height);
     const worldContext = ctx;
