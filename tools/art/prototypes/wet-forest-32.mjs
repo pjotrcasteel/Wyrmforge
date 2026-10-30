@@ -1,13 +1,14 @@
 // Original WyrmForge 32px surface art: deliberate pixel forms, no third-party pixels.
 // Source-only AR4 candidate. The C# arena recipe and shared G renderer retain authority.
 import { Bitmap, packAtlas, rng } from '../lib/painter.mjs';
+import { originalMasonryTileSet, reassembleMasonry } from './wet-forest-masonry.mjs';
 import { encodePng } from '../lib/png.mjs';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const WET_FOREST_TILE_SIZE = 32;
-export const WET_FOREST_PROTO_VERSION = 'wf-original-32.v2';
+export const WET_FOREST_PROTO_VERSION = 'wf-original-32.v3';
 // Six restrained values per material, with no baked directional light or glowing highlights.
 export const WET_FOREST_PALETTES = Object.freeze({
     soil: Object.freeze(['#1b1e1c', '#272824', '#34342c', '#434033', '#555041', '#696252']),
@@ -165,13 +166,13 @@ function materialTile(material, variant) {
 
 function materialEdge(from, to, orientation) {
     if (!names.includes(from) || !names.includes(to) || from === to ||
-        !['vertical', 'horizontal'].includes(orientation)) throw new RangeError('Unknown surface boundary');
+        !['left', 'right', 'top', 'bottom'].includes(orientation)) throw new RangeError('Unknown surface boundary');
     const first = materialTile(from, 1), second = materialTile(to, 1);
     const out = new Bitmap(32, 32);
-    const vertical = orientation === 'vertical';
+    const vertical = orientation === 'left' || orientation === 'right';
+    const reverse = orientation === 'right' || orientation === 'bottom';
     const seed = (names.indexOf(from) + 1) * 319 + (names.indexOf(to) + 1) * 173 + (vertical ? 37 : 97);
     const random = rng(seed);
-    // Bounded random walk between neighboring pixels; no blur, feather alpha, or wave stamp.
     const profile = [];
     let center = 15;
     for (let i = 0; i < 32; i++) {
@@ -179,15 +180,17 @@ function materialEdge(from, to, orientation) {
         profile.push(center);
     }
     for (let y = 0; y < 32; y++) for (let x = 0; x < 32; x++) {
-        const along = vertical ? y : x, across = vertical ? x : y;
-        const leftSide = across < profile[along];
-        const nearEdge = Math.abs(across - profile[along]) < 3;
-        const material = leftSide ? first : second;
-        out.set(x, y, material.get(x, y));
-        // A few isolated grains of each side, to stop the transition looking razor-cut.
-        if (nearEdge && random() < .26) {
-            const source = leftSide ? WET_FOREST_PALETTES[to] : WET_FOREST_PALETTES[from];
-            point(out, x, y, source[2 + randomInt(random, 2)]);
+        const along = vertical ? y : x;
+        const across = vertical ? x : y;
+        // All directions explicitly state which side belongs to 'from'. Mirroring a completed
+        // tile reverses the material's pixel art and is NOT a safe composition rule.
+        const coordinate = reverse ? 31 - across : across;
+        const fromSide = coordinate < profile[along];
+        const source = fromSide ? first : second;
+        out.set(x, y, source.get(x, y));
+        if (Math.abs(coordinate - profile[along]) < 3 && random() < .26) {
+            const accent = fromSide ? WET_FOREST_PALETTES[to] : WET_FOREST_PALETTES[from];
+            out.set(x, y, accent[2 + randomInt(random, 2)]);
         }
     }
     return out;
@@ -229,22 +232,25 @@ function groundDetail(kind) {
 
 export function wetForestPrototypeTiles() {
     const tiles = {};
+    // The three base stone studies remain as historical art references, NOT free-placeable
+    // road paving: actual masonry must use coherent world-phase keys below.
     for (const name of names) for (let variant = 0; variant < 3; variant++)
         tiles[`wetforest.${name}.${variant}`] = materialTile(name, variant);
     for (const [from, to] of [['grass', 'mud'], ['grass', 'soil'], ['soil', 'mud'], ['soil', 'stone']]) {
-        for (const direction of ['vertical', 'horizontal']) {
+        for (const direction of ['left', 'right', 'top', 'bottom'])
             tiles[`wetforest.edge.${from}-${to}.${direction}`] = materialEdge(from, to, direction);
-        }
     }
     tiles['wetforest.detail.root'] = groundDetail('root');
     tiles['wetforest.detail.fern'] = groundDetail('fern');
+    // Phase-keyed surfaces: atlas frames are small; the stone artwork is CONTINUOUS.
+    Object.assign(tiles, originalMasonryTileSet());
     return tiles;
 }
 
 export function wetForestPrototypeAtlas() {
     return packAtlas(Object.entries(wetForestPrototypeTiles()).map(([name, bitmap]) => ({
         name, bitmap, anchor: [0, 0],
-    })), 256, 1);
+    })), 512, 1);
 }
 
 // Grid contact sheet: exact native pixels with 4x nearest-neighbour magnification only.
@@ -253,20 +259,20 @@ export function wetForestPrototypeBoard() {
     const order = [
         ...names.flatMap(name => [0, 1, 2].map(i => `wetforest.${name}.${i}`)),
         ...[['grass', 'mud'], ['grass', 'soil'], ['soil', 'mud'], ['soil', 'stone']].flatMap(
-            ([from, to]) => ['vertical', 'horizontal'].map(d => `wetforest.edge.${from}-${to}.${d}`)),
+            ([from, to]) => ['left', 'right', 'top', 'bottom'].map(d => `wetforest.edge.${from}-${to}.${d}`)),
         'wetforest.detail.root', 'wetforest.detail.fern',
     ];
-    const board = new Bitmap(4 * 32, 6 * 32);
+    const board = new Bitmap(5 * 32, 6 * 32);
     for (let i = 0; i < order.length; i++) {
-        const x = (i % 4) * 32, y = Math.floor(i / 4) * 32;
+        const x = (i % 5) * 32, y = Math.floor(i / 5) * 32;
         board.rect(x, y, 32, 32, '#29352c');
         board.blit(collection[order[i]], x, y);
     }
     return { board, order };
 }
 
-// A deliberately NON-GAMEPLAY composition test for visual seams, repetition and density.
-// No paths, collision, seed, geometry or award rules are read back from this image.
+// Art-only composition proof: all masonry frames are sampled from ONE continuous world-space
+// pattern; replacing randomly selected 32px stone variants is forbidden for paved surfaces.
 export function wetForestCompositionStudy() {
     const tiles = wetForestPrototypeTiles();
     const board = new Bitmap(512, 384);
@@ -277,13 +283,21 @@ export function wetForestCompositionStudy() {
         const choice = (row * 7 + col * 11 + randomInt(random, 3)) % 3;
         const roadMaterial = row > 5 ? 'mud' : 'soil';
         let tile;
-        if (col === left) tile = tiles[`wetforest.edge.grass-${roadMaterial}.vertical`];
-        else if (col === right) {
-            tile = new Bitmap(32, 32).blit(tiles[`wetforest.edge.grass-${roadMaterial}.vertical`], 0, 0, true);
-        } else if (col > left && col < right) tile = tiles[`wetforest.${roadMaterial}.${choice}`];
-        else tile = tiles[`wetforest.grass.${choice}`];
-        // Paving sample stays intentionally separate from the C# authored geographical road.
-        if (col > 11 && row < 5) tile = tiles[`wetforest.stone.${choice}`];
+        if (col === left) {
+            tile = tiles[`wetforest.edge.grass-${roadMaterial}.left`];
+        } else if (col === right) {
+            tile = tiles[`wetforest.edge.grass-${roadMaterial}.right`];
+        } else if (col > left && col < right) {
+            tile = tiles[`wetforest.${roadMaterial}.${choice}`];
+        } else {
+            tile = tiles[`wetforest.grass.${choice}`];
+        }
+        // Two genuinely different, continuously keyed stonework panels at their native 32px
+        // phase. These are only texture studies; C# remains sole authority for real geography.
+        if (col >= 11 && row < 5)
+            tile = tiles[`wetforest.masonry.flagstone.${col % 8}.${row % 8}`];
+        if (col >= 12 && row >= 8)
+            tile = tiles[`wetforest.masonry.cobble.${col % 8}.${row % 8}`];
         board.blit(tile, col * 32, row * 32);
         if (col < left - 1 && (row * 11 + col * 17) % 29 === 0)
             board.blit(tiles['wetforest.detail.fern'], col * 32, row * 32);
@@ -302,12 +316,18 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     for (let y = 0; y < scaled.height; y++) for (let x = 0; x < scaled.width; x++)
         scaled.set(x, y, board.get(Math.floor(x / 4), Math.floor(y / 4)));
     const scene = wetForestCompositionStudy();
+    const surfaces = wetForestPrototypeTiles();
     mkdirSync(output, { recursive: true });
-    for (const [name, bitmap] of [['atlas.png', atlas], ['contact-4x.png', scaled], ['composition-study.png', scene]])
+    for (const [name, bitmap] of [['atlas.png', atlas], ['contact-4x.png', scaled], ['composition-study.png', scene],
+        ['flagstone-field.png', reassembleMasonry(surfaces, 'flagstone')],
+        ['cobble-field.png', reassembleMasonry(surfaces, 'cobble')],
+        ['brick-field.png', reassembleMasonry(surfaces, 'brick')]])
         writeFileSync(join(output, name), encodePng(bitmap.width, bitmap.height, bitmap.data));
     writeFileSync(join(output, 'manifest.json'), `${JSON.stringify({
         version: WET_FOREST_PROTO_VERSION, tilePixels: 32, status: 'prototype-only',
         atlas: 'atlas.png', frames, order, composition: 'composition-study.png',
+        masonry: { phaseCells: 8, periodPixels: 256, types: ['brick', 'flagstone', 'cobble'],
+            ordering: 'world-grid phase, never arbitrary random variants' },
         provenance: 'Original source-authored pixels; no reference pack files copied.',
     }, null, 2)}\n`);
     console.log(`Wrote ${Object.keys(frames).length} original Wet Forest frames to ${output}`);
