@@ -259,6 +259,7 @@ export function mountG4DeviceReview(canvas, getGpu, mode = 'canvas', quality = n
         if (completed) return;
         completed = true;
         session.stop(now());
+        const summary = session.summary();
         if (persist(outcome)) {
             // The collapsed chip remains visible after Hunt teardown. Show the
             // useful measurements right here, never behind another menu.
