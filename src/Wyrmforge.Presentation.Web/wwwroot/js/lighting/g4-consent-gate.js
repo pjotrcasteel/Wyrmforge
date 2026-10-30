@@ -7,8 +7,14 @@ export const G4_SHARING_KEY = 'wyrmforge.g4.autoSendConsent.v1';
  */
 export function showG4PreflightChoice({
     doc = document,
-    storage = localStorage,
+    storage = null,
 } = {}) {
+    // Some privacy modes throw just from reading window.localStorage.
+    // The local-only choice must still allow the G4 test to start.
+    let resolvedStorage = storage;
+    if (!resolvedStorage) {
+        try { resolvedStorage = globalThis.localStorage; } catch { resolvedStorage = null; }
+    }
     if (doc.querySelector('[data-g4-preflight]')) {
         throw new Error('G4 sharing preflight is already mounted');
     }
@@ -53,9 +59,9 @@ export function showG4PreflightChoice({
             });
             button.addEventListener('click', () => {
                 try {
-                    storage.setItem(G4_SHARING_KEY, value);
+                    resolvedStorage?.setItem(G4_SHARING_KEY, value);
                     // The choice must be retained; do not falsely report upload consent.
-                    if (storage.getItem(G4_SHARING_KEY) !== value) throw new Error('storage unavailable');
+                    if (resolvedStorage?.getItem(G4_SHARING_KEY) !== value) throw new Error('storage unavailable');
                 } catch {
                     if (value === 'yes') {
                         status.textContent = 'Sharing cannot be enabled in this browser. Choose Keep private to play without uploading.';
