@@ -22,7 +22,7 @@ public static class ActorAppearanceLightingProjection
             .Take(MaximumLocalActorLights)
             .Select(actor => new LightingEmitter(
                 $"actor-eye:{actor.Id}", $"actor:{actor.Id}", "point",
-                actor.Position.X, actor.Position.Y - actor.Radius * 3.1, actor.Radius * 1.4,
+                actor.Position.X, actor.Position.Y, actor.Radius * 3.1,
                 "#ff9d53", .30, actor.Radius * 3.2, CastsShadows: false))
             .ToArray();
     }
