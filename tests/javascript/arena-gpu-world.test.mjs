@@ -25,16 +25,38 @@ test('authored sprite foot anchor stays on the ground and its billboard faces th
     const normal = new T.Vector3().fromBufferAttribute(geometry.attributes.normal, 0);
     const toward = new T.Vector3(0, -1, 1).normalize();
     assert.ok(normal.dot(toward) > .99999);
-    const anchor = new T.Vector3(0, -.25, 0).add(new T.Vector3(0, .25, 0));
-    anchor.applyAxisAngle(new T.Vector3(1, 0, 0), Math.PI / 4);
-    assert.ok(anchor.length() < 1e-8);
     const top = new T.Vector3().fromBufferAttribute(geometry.attributes.position, 0);
     const bottom = new T.Vector3().fromBufferAttribute(geometry.attributes.position, 2);
     const up = new T.Vector3(0, 1, 1).normalize();
+    assert.ok(bottom.length() < 1e-8, 'The sprite foot edge must contact, never penetrate, the terrain.');
     assert.ok(Math.abs(top.clone().sub(bottom).dot(up) - 1) < 1e-6,
-        'An already projected sprite must retain its full apparent height.');
-    assert.ok(top.z > 0, 'Standing cutout geometry must rise above ground to cast a directional shadow.');
+        'The cropped billboard keeps exactly one projected unit of height.');
+    for (let i = 0; i < geometry.attributes.position.count; i++) {
+        const vertex = new T.Vector3().fromBufferAttribute(geometry.attributes.position, i);
+        assert.ok(vertex.z >= -1e-8, 'No actor pixels may be hidden underneath the ground mesh.');
+    }
+    const uv = geometry.getAttribute('uv');
+    assert.equal(uv.getY(2), .25, 'The GPU cuts the unused source below the world-space feet pivot.');
+    assert.equal(uv.getY(0), 1, 'The source sprite head must never be cropped.');
     geometry.dispose();
+});
+
+test('all legacy standing captures ground their feet at the shared 75% sprite pivot', async () => {
+    const { huntSurfaceRenderable } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js');
+    const { huntLayerCapture } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/hunt-gpu-layers.js');
+    for (const layer of [
+        { kind: 'mage', depth: 320 },
+        { kind: 'enemy', enemy: { entityId: 'warden', x: 400, y: 320, radius: 44 } },
+        { kind: 'dragon', dragon: { entityId: 'wyrm', x: 400, y: 320, radius: 90 } },
+    ]) {
+        const actor = layer.enemy ?? layer.dragon ?? { x: 400, y: 320, radius: 12 };
+        const capture = huntLayerCapture(layer, actor);
+        const mesh = huntSurfaceRenderable(capture.id, capture.x, capture.y, capture.size, capture.size, true);
+        assert.equal(mesh.geometry, 'hunt-billboard');
+        assert.equal(mesh.scale[1], capture.size * .75 / 48);
+        assert.ok(Math.abs(-mesh.position[1] * 48 / Math.SQRT2 - actor.y) < 1e-8,
+            'Actual scene feet must align to C# entity coordinates regardless of sprite scale.');
+    }
 });
 
 test('same-depth walls keep distinct stable GPU IDs and crop their own footprints', async () => {
