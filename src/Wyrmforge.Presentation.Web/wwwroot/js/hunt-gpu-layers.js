@@ -124,3 +124,41 @@ export class HuntGpuScratchPool {
         this.surfaces.clear();
     }
 }
+
+
+/**
+ * Safari must not present a half-painted frame when WebGL terrain, actor
+ * cutouts and later Canvas combat effects are composed in separate passes.
+ * Finish all GPU/Canvas work offscreen and commit exactly one full-size,
+ * non-interpolated image to the visible interactive Hunt canvas.
+ * This is a presentation staging surface, not a second lighting engine.
+ */
+export function prepareHuntGpuPresentation(canvas, width, height, dpr) {
+    if (!canvas || ![width, height, dpr].every(Number.isFinite) ||
+        width <= 0 || height <= 0 || dpr <= 0) throw new RangeError('Invalid G4 presentation dimensions');
+    const pixelsX = Math.max(1, Math.round(width * dpr));
+    const pixelsY = Math.max(1, Math.round(height * dpr));
+    if (canvas.width !== pixelsX) canvas.width = pixelsX;
+    if (canvas.height !== pixelsY) canvas.height = pixelsY;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('G4 frame staging requires Canvas2D');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.imageSmoothingEnabled = false;
+    return ctx;
+}
+
+export function presentCompletedHuntGpuFrame(ctx, source) {
+    if (!source?.width || !source?.height) throw new TypeError('Missing completed G4 frame');
+    ctx.save();
+    try {
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = 'copy';
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(source, 0, 0);
+    } finally {
+        ctx.restore();
+    }
+}
