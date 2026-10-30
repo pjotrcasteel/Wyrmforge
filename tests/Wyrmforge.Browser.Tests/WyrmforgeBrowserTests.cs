@@ -3734,7 +3734,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         // Capture one genuine SAME-FRAME Hunt view (including painted A/B) only when the C# Fireball
         // source is registered AND the generic mobile GPU gives it a shadow view.
         // Never draw a synthetic projectile, light or caster in this browser test.
-        if (width == 390 && paintedGround)
+        if (width == 390)
         {
             await Page.WaitForFunctionAsync(@"() => {
                 const diagnostics = window.__huntGpuRead?.();
@@ -3746,7 +3746,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
                 const shadowPixels = window.__huntGpuArena.readArenaShadowPixelProof(canvas, light.id);
                 // Allocating a shadow map is insufficient: a live Fireball must
                 // visibly change actual framebuffer pixels through occlusion.
-                if (!shadowPixels?.available || shadowPixels.changedPixels < 64) return false;
+                if (!shadowPixels?.available || !shadowPixels.groundOnly || shadowPixels.changedPixels < 64) return false;
                 window.__g4LiveFireShadowProof = {
                     sourceId: light.id,
                     shadowViews: light.views,
@@ -3759,15 +3759,17 @@ public sealed class WyrmforgeBrowserTests : PageTest
                 "() => window.__g4LiveFireShadowProof");
             Assert.IsTrue(fireProof.GetProperty("shadowViews").GetInt32() > 0,
                 "A real C# Fireball must have a generic mobile GPU shadow view.");
+            Assert.IsTrue(fireProof.GetProperty("shadowPixels").GetProperty("groundOnly").GetBoolean(),
+                "The shadow proof must isolate ground receivers; self-shading actors alone must not pass.");
             Assert.IsTrue(fireProof.GetProperty("shadowPixels").GetProperty("changedPixels").GetInt32() >= 64,
-                "An active real-Hunt Fireball must cast an actually visible GPU shadow, not merely allocate a view.");
+                "An active real-Hunt Fireball must darken actual ground pixels behind world casters.");
             var png = fireProof.GetProperty("image").GetString() ?? "";
             StringAssert.StartsWith(png, "data:image/png;base64,");
             await File.WriteAllBytesAsync(Path.Combine(ArtifactDirectory,
-                "live-g4-review-fireball-shadow-390-mobile.png"),
+                $"live-g4-review-fireball-shadow-{expectedTerrain}-390-mobile.png"),
                 Convert.FromBase64String(png["data:image/png;base64,".Length..]));
             await File.WriteAllTextAsync(Path.Combine(ArtifactDirectory,
-                "live-g4-review-fireball-shadow-390-mobile.txt"),
+                $"live-g4-review-fireball-shadow-{expectedTerrain}-390-mobile.txt"),
                 fireProof.GetProperty("sourceId").GetString() ?? "");
         }
 
