@@ -68,3 +68,27 @@ Default generated output: `docs/art/previews/wet-forest-32/atlas.png`, `contact-
 2. AR3 C# geographic/site/material-weight owner approval before any production material cutover.
 3. Add 256px repeat-resistant world-scale variation and test inner-corner topology.
 4. Use the *existing* G material registry and renderer for a genuine 320/390px same-site A/B comparison; record iPhone/Android FPS, shadow response, pixel sampling and memory before claiming AR4 or P2 complete.
+
+## WF32-P1e — terrain grammar v1.1 and art-quality response (30 October 2026)
+
+**Still a source-only art candidate.** Owner feedback remains binding: stone joins should not read as perfect dark lines; paving must appear physically eroded and grass/mud must not look flat. Nothing here constitutes owner visual approval or in-Hunt lighting acceptance.
+
+### Generic system commitments
+
+- Four reusable classes: **soft organic**, **hard placed**, **loose scatter** (detail), and **wet reflective** (modifier). The last two never become independent C# terrain authority by adding a cosmetic overlay.
+- Tile roles: fill, optional four cardinal edges, optional outer/inner corners, broken edges and transition fillers; do **not** require every material to export every possible permutation. A world-space boundary mask maps into the necessary roles.
+- Generic boundary policies remain soft↔soft mingle; hard↔soft whole-stone removal with soil/moss infill; hard↔hard structural transition. A soft blend no longer assumes its edge is vertical. Directional masks support four edges and outer corners; inner-corner fit and world-wide repetition are pending.
+- Microdetail compatibility includes pebbles, mushrooms, fallen leaves, twigs, roots and moss. Wetness overlay changes non-color G-channel roughness and preserves albedo/normal/identity, without a new GPU shader or fake specular texture binding.
+- Lighting output remains albedo (sRGB), normal (linear), roughnessMap (linear/G channel) and scalar specular. The specular-guide PNG is an art reference **only**; the real LitMaterial does not accept a specularMap.
+
+### Concrete art quality changes
+
+- **Hard surfaces:** weakened contrast in joints; more fully absent, broken and sunken stone faces; dark mortar filled with warm packed earth or moss rather than outlining every slab.
+- **Grass:** periodic multi-scale clusters, uneven tuft density and exposed soil pockets; no tile-local reset.
+- **Mud:** broad tone variation and curved packed channels, retaining lighting-neutral albedo; damping can be layered as roughness, not a prepainted glint.
+- **Review:** opt-in `build-terrain-grammar-review.mjs` still exports 4 example compositions, native normal/roughness and specular guide sheets; additionally exports `mud-damp-roughness.png` and versioned grammar metadata.
+- **Regression checks:** 15 local Node test groups passed (11 existing + 4 new in `terrain-material-grammar-v1-1.test.mjs`). GitHub CI is independent and should be checked before merge.
+
+### Known limitations / next gate
+
+A 256px authored sample period remains visually repetitive when stamped over a large playable map. This material grammar does not infer road location or terrain state from artwork: AR3 C# site material-weight fields must drive real-world selection and dynamic boundaries. More complex structural transitions, inner corners, ecological prop placement, physically authored relief maps, shared G live texture registration and real-device profiling remain open. WF32-P1e does **not** pass owner aesthetic acceptance, AR3 acceptance or AR4 integration.
