@@ -386,3 +386,18 @@ faithful static Gothic appearance before further motion. New built-in ImageGen
 study uses the approved base and selected staff reference, without third-party pack
 inputs. Prompt `gothic-reconstruction-v002-prompt.txt`; no runtime acceptance or
 native dimensions, editable pose library or animation inferred from a generated still.
+
+Saved `gothic-reconstruction-v002.png`, 1024x1536 original built-in image edit,
+with exact prompt/inputs/SHA256. Inspection: longer human proportions, heavy
+ankle-length drape, aged severe face and material detail closer to approved source.
+This remains a static candidate, not an animation repair or new owner approval.
+
+Added explicit diagnostic nearest samples at 64/96/128 visible-pixel heights under
+`gothic-sampling-v002`. Same source/shape across sizes; threshold 200 removes
+diffuse concept alpha from the diagnostic bounds while original stays untouched.
+Pixel counts/colour counts/crop reported. At 64px much facial/material information
+is lost; 96/128 retain more identity but unclean texture noise remains. No production
+density chosen or budget relaxed. These are raw sampling studies, not authored
+native palette/cluster cleanup, editable layers or accepted runtime material maps.
+The original source walker remains REJECTED; no new walk/action library authored.
+Verification: PNG decode/export, bounds/dimensions/hash and git diff check only.

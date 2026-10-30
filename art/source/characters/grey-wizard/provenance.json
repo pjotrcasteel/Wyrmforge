@@ -180,5 +180,24 @@
     ],
     "prompt": "wizards-held-staffs-v009-prompt.txt",
     "status": "Owner-approved staff proportions relative to wizard, 2026-10-30: sure this is fine. Source-concept acceptance only; v004 remains cape reference; sprite/animation/runtime/device validation pending."
+  },
+  "nativeSouthV1": {
+    "source": "native-south-v001",
+    "status": "REJECTED by owner: too cartoony for Gothic/Diablo-like setting. Technical tests do not approve art; preserve archive only."
+  },
+  "gothicReconstructionV2": {
+    "file": "gothic-reconstruction-v002.png",
+    "sha256": "d0a8e4b5f25d39f73d024c41c41aa238aac294c6e66de70ed6de2fa8eb3ed036",
+    "size": [
+      1024,
+      1536
+    ],
+    "generator": "built-in image_gen edit",
+    "inputs": [
+      "approved-default-reference.png",
+      "staff-designs-v007.png"
+    ],
+    "prompt": "gothic-reconstruction-v002-prompt.txt",
+    "status": "Static Gothic appearance correction candidate. Not a native layered sprite/rig or animation. Review pending."
   }
 }
