@@ -15,11 +15,6 @@ export const hasG4Evidence = value => value?.frameIntervals >= minimumIntervals 
 const consented = () => {
     try { return localStorage.getItem(G4_CONSENT_KEY) === 'yes'; } catch { return false; }
 };
-// Distinguish an explicit local-only choice from a first-time, undecided visitor.
-const hasSharingChoice = () => {
-    try { return ['yes', 'no'].includes(localStorage.getItem(G4_CONSENT_KEY)); } catch { return false; }
-};
-
 /** Only bounded numeric aggregation is sent. No full UA, coordinates, DPR, or individual frame samples. */
 export function buildG4CollectorReport(record) {
     if (!hasG4Evidence(record) || record.recording === true) return null;
@@ -215,168 +210,76 @@ export class G4DeviceReviewSession {
     }
 }
 
-/** Persistent, opt-in G4 control: Hunt death must not delete the last result. */
+/** Small read-only performance indicator. Consent lives ONLY on the first G4 screen. */
 export function mountG4DeviceReview(canvas, getGpu, mode = 'canvas', quality = null) {
-    // The real-Hunt Blazor screen is destroyed on death. The control is therefore
-    // attached to document.body, not to the transient screen it is measuring.
+    // Persist the previous Hunt's final result across Blazor's death-screen teardown.
     document.querySelector('[data-g4-device-review]')?.remove();
     const session = new G4DeviceReviewSession(mode, quality);
-    const getNow = () => performance.now();
-    let recordId = crypto.randomUUID();
+    const now = () => performance.now();
+    const recordId = crypto.randomUUID();
     let completed = false;
     let lastCheckpointAt = -Infinity;
+    let lastDisplayAt = -Infinity;
+
     const panel = document.createElement('details');
     panel.setAttribute('data-g4-device-review', '');
-    panel.setAttribute('aria-label', 'G4 phone performance results and private sharing');
+    panel.setAttribute('aria-label', 'G4 performance status');
     Object.assign(panel.style, {
         position: 'fixed', right: '8px', bottom: 'max(112px, env(safe-area-inset-bottom))',
-        zIndex: '10000', width: 'max-content', maxWidth: 'min(270px, 82vw)',
-        maxHeight: '48vh', overflow: 'auto', background: 'rgba(16,21,26,.94)',
-        color: '#f3eee8', border: '1px solid #ad976e', borderRadius: '6px',
-        padding: '8px', font: '12px/1.5 system-ui,sans-serif', boxSizing: 'border-box'
+        zIndex: '10000', maxWidth: 'min(240px, 65vw)',
+        background: 'rgba(16,21,26,.94)', color: '#f3eee8',
+        border: '1px solid #ad976e', borderRadius: '6px',
+        padding: '6px 10px', font: '12px/1.5 system-ui,sans-serif'
     });
     const header = document.createElement('summary');
-    Object.assign(header.style, { cursor: 'pointer', minHeight: '36px', fontWeight: '700', fontSize: '14px' });
+    Object.assign(header.style, { cursor: 'pointer', minHeight: '32px', fontSize: '13px', fontWeight: '700' });
     panel.appendChild(header);
-    const help = document.createElement('p');
-    help.textContent = 'Recording starts automatically. Death saves your results on this phone. Sharing is optional.';
-    panel.appendChild(help);
     const status = document.createElement('p');
     status.setAttribute('data-g4-status', '');
     panel.appendChild(status);
     const previous = document.createElement('p');
     previous.setAttribute('data-g4-last-result', '');
     panel.appendChild(previous);
-    const consentLabel = document.createElement('label');
-    Object.assign(consentLabel.style, { display: 'block', padding: '6px 0', fontSize: '14px' });
-    const consentBox = document.createElement('input');
-    consentBox.type = 'checkbox';
-    consentBox.setAttribute('data-g4-consent', '');
-    Object.assign(consentBox.style, { width: '22px', height: '22px', verticalAlign: 'middle', marginRight: '8px' });
-    consentBox.checked = consented();
-    consentLabel.appendChild(consentBox);
-    consentLabel.append(' Send G4 performance results privately after each Hunt (optional). No device identifiers, location or gameplay traces.');
-    panel.appendChild(consentLabel);
-    const controls = document.createElement('div');
-    Object.assign(controls.style, { display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' });
-    const button = (label, action) => {
-        const item = document.createElement('button');
-        item.type = 'button';
-        item.textContent = label;
-        Object.assign(item.style, {
-            background: '#504333', color: 'white', border: '1px solid #ad976e',
-            padding: '8px', borderRadius: '4px', minHeight: '36px', cursor: 'pointer'
-        });
-        item.addEventListener('click', action);
-        controls.appendChild(item);
-        return item;
-    };
     const latestLabel = () => {
-        const latest = readJson(G4_LAST_RECORD_KEY);
+        const saved = readJson(G4_LAST_RECORD_KEY);
         const receipt = readJson(G4_RECEIPT_KEY);
-        previous.textContent = hasG4Evidence(latest)
-            ? `Last Hunt: ${latest.elapsedSeconds}s · ${latest.observedFps} FPS · p95 ${latest.frameMsP95}ms
-               · ${receipt?.id === latest.id ? 'received privately' : 'saved on this phone'}`
-            : 'No completed G4 samples yet.';
+        previous.textContent = hasG4Evidence(saved)
+            ? `Last Hunt: ${saved.elapsedSeconds}s · ${saved.observedFps} FPS · p95 ${saved.frameMsP95}ms · ${receipt?.id === saved.id ? 'sent privately' : 'on this phone'}`
+            : 'No completed Hunt measurements yet.';
     };
-    const setStatus = message => { status.textContent = message; latestLabel(); };
+    const updateStatus = message => { status.textContent = message; latestLabel(); };
     const persist = outcome => {
-        const summary = session.summary(getNow());
+        const summary = session.summary(now());
         if (!hasG4Evidence(summary)) return false;
-        const record = { ...summary, id: recordId, outcome, recordedAtUtc: new Date().toISOString() };
-        const saved = writeJson(G4_LAST_RECORD_KEY, record);
-        if (!saved) { setStatus('Browser storage unavailable · G4 evidence not saved'); return false; }
-        latestLabel();
-        return true;
+        return writeJson(G4_LAST_RECORD_KEY, {
+            ...summary, id: recordId, outcome, recordedAtUtc: new Date().toISOString()
+        });
     };
     const finish = (outcome = 'Interrupted') => {
         if (completed) return;
         completed = true;
-        session.stop(getNow());
+        session.stop(now());
         if (persist(outcome)) {
             header.textContent = 'G4 · SAVED';
-            status.textContent = 'Your G4 result survived the Hunt. No export required.';
+            updateStatus('Performance saved after the Hunt; no export needed.');
             if (consented()) {
-                const saved = readJson(G4_LAST_RECORD_KEY);
-                writeJson(G4_PENDING_KEY, saved);
-                void sendPendingG4Evidence(setStatus);
+                writeJson(G4_PENDING_KEY, readJson(G4_LAST_RECORD_KEY));
+                void sendPendingG4Evidence(updateStatus);
             }
         } else {
             header.textContent = 'G4 · NO FRAMES';
-            status.textContent = 'No usable gameplay frames were recorded.';
+            updateStatus('Not enough gameplay frames to measure.');
         }
     };
-    consentBox.addEventListener('change', () => {
-        try {
-            localStorage.setItem(G4_CONSENT_KEY, consentBox.checked ? 'yes' : 'no');
-        } catch { consentBox.checked = false; }
-        sharingChoice.style.display = 'none';
-        if (consentBox.checked) {
-            const previousResult = readJson(G4_LAST_RECORD_KEY);
-            if (hasG4Evidence(previousResult) && previousResult.recording === false)
-                writeJson(G4_PENDING_KEY, previousResult);
-            void sendPendingG4Evidence(setStatus);
-        }
-        setStatus(consentBox.checked
-            ? 'G4 automatic private delivery enabled. Existing results remain on your phone.'
-            : 'G4 private delivery disabled. Local results remain.');
-    });
-    // First-run choice stays in plain sight instead of inside a collapsed debug pill.
-    // Either choice is intentional: local evidence works without uploading anything.
-    const sharingChoice = document.createElement('div');
-    sharingChoice.setAttribute('data-g4-sharing-choice', '');
-    Object.assign(sharingChoice.style, { display: 'flex', flexWrap: 'wrap', gap: '8px', padding: '6px 0' });
-    const makeChoiceButton = (label, share) => {
-        const control = document.createElement('button');
-        control.type = 'button';
-        control.textContent = label;
-        Object.assign(control.style, {
-            padding: '10px', minHeight: '44px', fontSize: '13px', fontWeight: '600',
-            color: '#fff', background: share ? '#356a5a' : '#504333',
-            border: '1px solid #ad976e', borderRadius: '5px', cursor: 'pointer',
-        });
-        control.addEventListener('click', () => {
-            consentBox.checked = share;
-            consentBox.dispatchEvent(new Event('change'));
-            panel.open = false;
-        });
-        sharingChoice.appendChild(control);
-    };
-    makeChoiceButton('Share results privately', true);
-    makeChoiceButton('Keep on my phone', false);
-    panel.insertBefore(sharingChoice, help);
-    sharingChoice.style.display = hasSharingChoice() ? 'none' : 'flex';
-
-    button('Save now', () => finish('Interrupted'));
-    button('New sample', () => {
-        recordId = crypto.randomUUID();
-        completed = false;
-        lastCheckpointAt = -Infinity;
-        session.start(getNow());
-        header.textContent = 'G4 · REC';
-        status.textContent = 'Recording real Hunt frames';
-    });
-    button('Erase G4 data', () => {
-        for (const key of [G4_LAST_RECORD_KEY, G4_PENDING_KEY, G4_RECEIPT_KEY, G4_CONSENT_KEY]) {
-            try { localStorage.removeItem(key); } catch { /* Storage may be disabled. */ }
-        }
-        consentBox.checked = false;
-        sharingChoice.style.display = 'flex';
-        panel.open = true;
-        latestLabel();
-        status.textContent = 'G4 data erased. Choose whether to share future performance results.';
-    });
-    panel.appendChild(controls);
     document.body.appendChild(panel);
-    panel.open = !hasSharingChoice();
-    session.start(getNow());
+    panel.open = false;
+    session.start(now());
     header.textContent = 'G4 · REC';
-    status.textContent = hasSharingChoice() ? 'Automatically recording gameplay' : 'Choose how to keep your performance results';
-    latestLabel();
-    if (consented()) void sendPendingG4Evidence(setStatus);
-
+    updateStatus('Recording automatically. Sharing choice was made before the game started.');
+    if (consented()) void sendPendingG4Evidence(updateStatus);
     const pagehide = () => finish('Interrupted');
     window.addEventListener('pagehide', pagehide);
+
     return {
         session,
         record(timestamp, { playing, renderingFailed, gpuAvailable, ended = false }) {
@@ -390,17 +293,16 @@ export function mountG4DeviceReview(canvas, getGpu, mode = 'canvas', quality = n
                 persist('Interrupted');
                 lastCheckpointAt = timestamp;
             }
-            if (timestamp - (this.lastDisplayAt ?? -Infinity) >= 1000) {
+            if (timestamp - lastDisplayAt >= 1000) {
                 header.textContent = 'G4 · REC';
                 status.textContent = `${Math.round((timestamp - session.startedAt) / 1000)}s · ${session.intervals.length} frames`;
-                this.lastDisplayAt = timestamp;
+                lastDisplayAt = timestamp;
             }
         },
         dispose() {
             window.removeEventListener('pagehide', pagehide);
             finish('Interrupted');
-            // Deliberately keep the compact result visible after Blazor removes the Hunt.
-            // The next Hunt replaces this panel and reads the local saved result.
+            // Leave the tiny saved-result chip accessible after Blazor removes the Hunt.
         }
     };
 }
