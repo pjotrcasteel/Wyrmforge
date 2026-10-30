@@ -8,7 +8,7 @@ export function spriteDirection(dx,dy,previous='S'){
     return headings[Math.round(angle/45)%8];
 }
 export function createRiggedSpriteRenderer({kind,base,fallbackProfile}){
-    let manifest,profile=fallbackProfile,loading;const textures=new Map();
+    let manifest,profile=fallbackProfile,loading,emissiveLoading;const textures=new Map(),emissiveTextures=new Map();
     const ready=()=>Boolean(manifest&&textures.size===Object.keys(manifest.clips).length);
     const createState=()=>({entities:new Map(),corpses:new Map(),seen:new Set(),clock:0,last:null,lastHud:0});
     function preload(){return loading??=Promise.all(['manifest.json','animation-profile.json'].map(file=>fetch(new URL(file,base)).then(r=>{if(!r.ok)throw Error('Sprite bundle unavailable');return r.json();}))).then(async([m,p])=>{
@@ -17,6 +17,27 @@ export function createRiggedSpriteRenderer({kind,base,fallbackProfile}){
         })));
         if(decoded.every(Boolean)){manifest=m;profile=p;}return ready();
     }).catch(()=>false);}
+    // Optional generic emission channel: exactly aligned atlas pixels supplied
+    // by asset authoring. It is loaded only when GPU rendering is requested;
+    // ordinary Canvas animation does not download extra texture data.
+    function preloadEmission(){
+        return emissiveLoading??=preload().then(async ok=>{
+            if(!ok)return false;
+            const results=await Promise.all(Object.entries(manifest.clips).map(([name,clip])=>new Promise(resolve=>{
+                if(!clip.emissiveMap){resolve(true);return;}
+                const image=new Image();
+                image.onload=()=>{
+                    const valid=image.naturalWidth===clip.cell*clip.frames&&
+                        image.naturalHeight===clip.cell*manifest.directions.length;
+                    if(valid)emissiveTextures.set(name,image);
+                    resolve(valid);
+                };
+                image.onerror=()=>resolve(false);
+                image.src=new URL(`${clip.emissiveMap}?v=${clip.hash}-emissive-v1`,base).href;
+            })));
+            return results.every(Boolean);
+        }).catch(()=>false);
+    }
     function update(state,snapshot,seconds,reducedMotion=false){
         const hud=Number(snapshot.hud?.seconds??0);
         if(seconds<state.last||hud<state.lastHud)Object.assign(state,createState());
@@ -61,8 +82,8 @@ export function createRiggedSpriteRenderer({kind,base,fallbackProfile}){
         }
         for(const id of state.entities.keys())if(!present.has(id))state.entities.delete(id);
     }
-    function draw(ctx,name,frame,direction,x,y,radius,opacity=1,filter='none'){
-        if(!ready())return false;const c=manifest.clips[name],image=textures.get(name);if(!c||!image)return false;
+    function draw(ctx,name,frame,direction,x,y,radius,opacity=1,filter='none',emissive=false){
+        if(!ready())return false;const c=manifest.clips[name],image=(emissive?emissiveTextures:textures).get(name);if(!c||!image)return false;
         const scale=Math.max(.65,Math.min(1.8,(Number(radius)||11)/11)),size=c.worldSize*scale;
         ctx.save();ctx.globalAlpha*=Math.max(0,Math.min(1,opacity));ctx.imageSmoothingEnabled=false;ctx.filter=filter;
         ctx.drawImage(image,Math.max(0,Math.min(c.frames-1,frame))*c.cell,Math.max(0,manifest.directions.indexOf(direction))*c.cell,c.cell,c.cell,x-c.anchor[0]/c.cell*size,y-c.anchor[1]/c.cell*size,size,size);ctx.restore();return true;
@@ -71,9 +92,18 @@ export function createRiggedSpriteRenderer({kind,base,fallbackProfile}){
         if(Number(enemy.kind)!==kind)return false;const p=state.entities.get(enemy.entityId);if(!p)return false;
         return draw(ctx,p.clip,p.frame,p.direction,p.drawX,p.drawY,enemy.radius,enemy.opacity??1,enemy.hitFlash?'brightness(1.8) saturate(.25)':enemy.frozen?'sepia(1) saturate(1.7) hue-rotate(135deg)':'none');
     }
+    // All rigged sprites can supply this same optional material channel;
+    // the lighting engine has no knowledge of eyes, enemies or species.
+    function drawEnemyEmission(ctx,enemy,state){
+        if(Number(enemy.kind)!==kind)return false;
+        const p=state.entities.get(enemy.entityId);
+        if(!p)return false;
+        return draw(ctx,p.clip,p.frame,p.direction,p.drawX,p.drawY,
+            enemy.radius,enemy.opacity??1,'none',true);
+    }
     function drawCorpses(ctx,state,reducedMotion=false){const spec=profile.actions.death;
         for(const c of state.corpses.values()){const age=state.clock-c.at;draw(ctx,'death',reducedMotion?spec.frames-1:Math.min(spec.frames-1,Math.floor(age*spec.fps)),c.direction,c.x,c.y,c.radius,age<3?1:4-age);}
     }
     function diagnostics(state){return{ready:ready(),entities:[...state.entities].map(([entityId,p])=>({entityId,clip:p.clip,frame:p.frame,direction:p.direction,baseFrame:p.baseFrame,phase:p.animation.phase,layered:p.layered,drawX:p.drawX,drawY:p.drawY,x:p.x,y:p.y})),corpses:[...state.corpses.values()].map(c=>({entityId:c.entityId,direction:c.direction,age:state.clock-c.at,frame:Math.min(profile.actions.death.frames-1,Math.floor((state.clock-c.at)*profile.actions.death.fps))}))};}
-    return{preload,ready,createState,update,drawEnemy,drawCorpses,diagnostics};
+    return{preload,preloadEmission,ready,createState,update,drawEnemy,drawEnemyEmission,drawCorpses,diagnostics};
 }
