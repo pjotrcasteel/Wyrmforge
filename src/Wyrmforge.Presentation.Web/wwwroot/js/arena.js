@@ -58,6 +58,11 @@ export function initializeArena(canvas, dotNetReference) {
     arenas.set(canvas, state);
     state.detachInput = attachArenaInput(state);
     const params = new URLSearchParams(location.search);
+    // The isolated G4 GPU review defaults to plain source-defined colors.
+    // g4PaintedGround=1 is the opt-in A/B control; normal Hunts keep their art.
+    state.g4FlatGround = params.get('g4Review') === '1' &&
+        (params.get('g4FlatGround') === '1' ||
+            params.get('arenaGpu') === '1' && params.get('g4PaintedGround') !== '1');
     if (params.get('g4Review') === '1') {
         const gpuRequested = params.get('arenaGpu') === '1';
         state.g4Review = mountG4DeviceReview(canvas, () => state.gpuWorld?.diagnostics(),
@@ -121,13 +126,17 @@ export function readArenaDiagnostics(canvas) {
         hunt: state.latestSnapshot?.hunt ?? null,
         performance: { fps:state.displayFps, simulationHz:state.displaySimulationHz, simulationMilliseconds:state.displaySimulationMilliseconds, bridgeMilliseconds:state.displayBridgeMilliseconds },
         renderingFailed: Boolean(state.renderingFailed),
+        renderingError: state.renderingError ?? null,
         sharedLighting: state.sharedLightingFrame ?? state.latestSnapshot?.lighting ?? null,
         gpuWorld: state.gpuWorld
             ? { ...state.gpuWorld.diagnostics(), scratchPool: state.gpuScratchPool?.diagnostics() ?? null }
             : { error: state.gpuError ?? null },
         hollowFractureGpuEmitters: state.fractureGpuEmitters ?? [],
         wetForestGround: state.latestSnapshot?.environment?.wetForest
-            ? liveWetForestMaterialDiagnostics(state.latestSnapshot.environment.seed) : null,
+            ? state.g4FlatGround
+                ? { status: 'flat-colors', source: 'C# recipe', variant: null }
+                : liveWetForestMaterialDiagnostics(state.latestSnapshot.environment.seed) : null,
+        terrainPresentation: state.g4FlatGround ? 'flat-colors' : 'painted',
         lighting: { mode: 'night', darkness: GOTHIC_NIGHT.darkness, source: 'authoritative-csharp-snapshot' },
     };
 }
@@ -200,9 +209,11 @@ function frame(state, timestamp) {
         if (state.latestSnapshot) draw(state, state.latestSnapshot, rect.width, rect.height);
         else drawWaiting(state, rect.width, rect.height);
         state.renderingFailed = false;
+        state.renderingError = null;
     } catch (error) {
         if (!state.renderingFailed) console.error('Wyrmforge arena drawing failed; simulation continues.', error);
         state.renderingFailed = true;
+        state.renderingError = error?.stack ?? String(error);
         // Canvas rendering must never silently stop player movement and the C# simulation.
         // Reset the canvas state stack as well as its transform: a failed
         // nested light/effect must not leave later frames in screen blending.
@@ -325,7 +336,8 @@ function draw(state, snapshot, width, height) {
     ctx.clearRect(0, 0, width, height);
     ctx.save();
     ctx.translate(-camera.x, -camera.y);
-    if (!drawArenaEnvironment(ctx, snapshot.environment, worldWidth, worldHeight, visualSeconds, null, gpu ? 'gpu' : 'canvas')) {
+    if (!drawArenaEnvironment(ctx, snapshot.environment, worldWidth, worldHeight, visualSeconds, null,
+        gpu ? 'gpu' : 'canvas', state.g4FlatGround)) {
         ctx.fillStyle = '#14111b';
         ctx.fillRect(0, 0, worldWidth, worldHeight);
         drawGrid(ctx, worldWidth, worldHeight);
@@ -335,7 +347,7 @@ function draw(state, snapshot, width, height) {
     if (!gpu) drawSpellLightSpill(ctx, spellLights, lightViewport, 'terrain');
     // Actual spell sources streak across nearby cloister water, not unrelated UI bloom.
     drawArenaCloisterReflections(ctx, snapshot.environment, worldWidth, worldHeight,
-        spellLights, visualSeconds, state.reducedMotion.matches);
+        spellLights, visualSeconds, state.reducedMotion.matches, state.g4FlatGround);
     drawArenaExit(ctx, snapshot.exit, visualSeconds);
     drawRecoveryGuide(ctx, snapshot, camera, width, height, visualSeconds, state.reducedMotion.matches);
 
@@ -390,7 +402,7 @@ function draw(state, snapshot, width, height) {
         ...(state.ashfang.death ? [{kind:'dragonDeath',depth:state.ashfang.death.y}] : []),
         ...snapshot.enemies.map(enemy => ({ kind: 'enemy', depth: enemy.y + (enemy.radius || 0), enemy })),
         { kind: 'mage', depth: snapshot.player.y + (snapshot.player.radius || 0) },
-        ...getArenaCloisterElevations(snapshot.environment, worldWidth, worldHeight, visualSeconds),
+        ...getArenaCloisterElevations(snapshot.environment, worldWidth, worldHeight, visualSeconds, null, state.g4FlatGround),
     ];
     if (gpu) gpu.begin(ctx, camera, width, height);
     const worldContext = ctx;

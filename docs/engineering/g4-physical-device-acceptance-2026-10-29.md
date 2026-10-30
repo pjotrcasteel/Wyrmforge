@@ -68,3 +68,34 @@ The same iPhone review reports **the mage partially buried in the ground, Bell W
 - **Other G4 review UI:** the post-Hunt G4 report collapses/moves away from the rewards; the separate preboot consent and private delivery remain intact.
 
 **Acceptance remains open:** The above are source-backed repairs, not visual owner approval or proof of zero tearing on iPhone. Rebuild the isolated pinned Pages candidate **only after the exact-head tests pass**, obtain real iPhone screenshot/video proof of an upright mage, Bell Warden and Wyrm with correct foot contact and no frame tearing under camera movement, and verify p95 frame pacing has not regressed versus the prior 33 ms result. Do not fold GPU defaults into production or close G4 prematurely. The dark Trail 2 scene is still an outstanding independent visual concern.
+
+
+## G4 low-cost terrain isolation — 30 October 2026 (owner-requested)
+
+The owner reported the updated GPU iPhone preview remained slow, with squashed actors
+and no visible Fireball light affecting the Hollowed. They suspect the high-resolution
+Wet Forest tile images and asked to **temporarily remove those images**.
+
+The experimental G4 **GPU review** (`?arenaGpu=1&gpuQuality=mobile&g4Review=1`)
+now defaults to **flat terrain colors from the existing C# ground recipe**. On
+Wet Forest it skips all PR #340 900px material image requests/decodes, the
+source-backed atlas mosaic, 12px classification array, and synthetic microtile
+stamps. It paints a single soil color, broad ground patches and the connected
+source-defined trail and site. Other G4 terrain skips the legacy art-tile pattern.
+No environment collision, walkability, seed, C# authority, actors, lighting
+emitters, shadow engine, VFX, or approved source image is deleted.
+
+- **Default low-cost G4 GPU:** `/g4-preview/?arenaGpu=1&gpuQuality=mobile&g4Review=1`
+- **Same GPU with previous painted ground:** append `&g4PaintedGround=1`
+- **Canvas A/B with the same flat ground:** `/g4-preview/?g4Review=1&g4FlatGround=1`
+- **Production:** unchanged full art; this simplification is *not* enabled for
+  normal Hunts or the existing art/material labs.
+
+This isolates *tile-image decode/terrain-bake cost*. It does **not** yet remove
+the large GPU ground Canvas capture and its per-frame upload/compositing cost, so
+improved sustained FPS is a **hypothesis**, not a promised result. Use the
+existing automatically saved G4 p95/FPS report; compare with the prior observed
+48.98 FPS / p95 33ms on iPhone, noting that different runs are not controlled.
+The reported mage/Warden/Wyrm squash, missing Fireball illumination/shadow on
+Hollowed, and tearing/heat remain **open separate visual acceptance problems**.
+Do not mark G4 or production GPU cutover complete based on a flat-ground build.

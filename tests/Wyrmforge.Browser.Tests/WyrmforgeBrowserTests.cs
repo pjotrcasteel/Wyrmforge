@@ -3560,7 +3560,8 @@ public sealed class WyrmforgeBrowserTests : PageTest
                 return d && (d.gpuWorld?.objects>1 || d.gpuWorld?.error || d.renderingFailed);
             }", null, new() { Timeout = 30000 });
             var startup = await Page.EvaluateAsync<JsonElement>("() => window.__huntGpuRead()");
-            Assert.IsFalse(startup.GetProperty("renderingFailed").GetBoolean());
+            Assert.IsFalse(startup.GetProperty("renderingFailed").GetBoolean(),
+                startup.TryGetProperty("renderingError", out var renderError) ? renderError.GetString() : "Rendering failed without diagnostics");
             Assert.AreEqual(quality, startup.GetProperty("gpuWorld").GetProperty("quality").GetString());
             Assert.AreEqual(quality == "mobile" ? 256 : 512,
                 startup.GetProperty("gpuWorld").GetProperty("budgets").GetProperty("shadowMapSize").GetInt32());
@@ -3577,7 +3578,8 @@ public sealed class WyrmforgeBrowserTests : PageTest
             finally { await Page.Keyboard.UpAsync("ArrowRight"); }
             await Page.WaitForFunctionAsync("() => window.__huntGpuRead().enemies.length > 0");
             var diagnostics = await Page.EvaluateAsync<JsonElement>("() => window.__huntGpuRead()");
-            Assert.IsFalse(diagnostics.GetProperty("renderingFailed").GetBoolean());
+            Assert.IsFalse(diagnostics.GetProperty("renderingFailed").GetBoolean(),
+                diagnostics.TryGetProperty("renderingError", out var laterRenderError) ? laterRenderError.GetString() : "Rendering failed without diagnostics");
             Assert.IsTrue(diagnostics.GetProperty("gpuWorld").GetProperty("objects").GetInt32() > 2);
         }
         finally
