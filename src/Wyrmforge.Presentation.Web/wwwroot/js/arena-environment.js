@@ -295,7 +295,7 @@ export function drawArenaCloisterReflections(ctx, environment, width, height, li
 
 // Cache owns the cloister's fixed plan; these lightweight wall items sort with
 // actor foot positions in world space rather than being pasted over the viewport.
-export function getArenaCloisterElevations(environment, width, height, seconds = 0, approvedAtlas = null) {
+export function getArenaCloisterElevations(environment, width, height, seconds = 0, approvedAtlas = null, flatColorsOnly = false) {
     if (!environment) return [];
     const texture = terrainTexture(environment, width, height, approvedAtlas, flatColorsOnly);
     const cloister = texture.cloister;
