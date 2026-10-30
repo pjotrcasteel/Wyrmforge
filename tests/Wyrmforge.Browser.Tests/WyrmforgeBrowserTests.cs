@@ -3670,6 +3670,18 @@ public sealed class WyrmforgeBrowserTests : PageTest
             return readablePixels >= count * .16 && totalBrightness >= count * 14;
         }", null, new() { Timeout = 30000 });
 
+        // Visual review MUST capture the exact iPhone G4 mode. The earlier live-Hunt
+        // proof omitted g4Review=1 and therefore rendered painted terrain instead
+        // of the flat floor deployed to the owner's phone. A nonblack check alone
+        // cannot approve this frame: preserve genuine unmodified gameplay evidence.
+        var reviewDiagnostics = await Page.EvaluateAsync<JsonElement>("() => window.__huntGpuRead()");
+        Assert.AreEqual("flat-colors", reviewDiagnostics.GetProperty("terrainPresentation").GetString(),
+            "The G4 phone proof must inspect the deployed flat-ground path, not painted terrain.");
+        Directory.CreateDirectory(ArtifactDirectory);
+        await ScreenshotAsync($"live-g4-review-flat-ground-{width}-mobile.png");
+        await File.WriteAllTextAsync(Path.Combine(ArtifactDirectory,
+            $"live-g4-review-flat-ground-{width}-mobile.json"), reviewDiagnostics.ToString());
+
         // Reproduce the owner's phone: G4 diagnostics were expanded when the
         // Hunt ended and covered rewards. Disposal must collapse and re-dock.
         await panel.EvaluateAsync("el => { el.open = true; }");
