@@ -25,5 +25,27 @@ test('genuine lighting evidence keeps mobile/balanced measurements labeled and l
     assert.match(report, /not a measured GPU timestamp/);
     assert.match(report, /not an iOS\/Android performance result/);
     assert.match(report, /do not claim causal speedups/);
+    const g4PhoneModes = [
+        { width: 390, terrain: 'painted', diagnostics: {
+            terrainPresentation: 'painted',
+            gpuWorld: { quality: 'mobile', submissionCpu: { meanMs: 43.75 },
+                textureUploads: { dynamicPixels: 329160 } },
+        } },
+        { width: 390, terrain: 'flat-colors', diagnostics: {
+            terrainPresentation: 'flat-colors',
+            gpuWorld: { quality: 'mobile', submissionCpu: { meanMs: 29.6 },
+                textureUploads: { dynamicPixels: 550060 } },
+        } },
+    ];
+    const reviewCopy = structuredClone(g4PhoneModes);
+    const g4Report = formatGpuEvidenceReport(evidence, g4PhoneModes);
+    assert.match(g4Report, /Exact G4 phone-review terrain modes/);
+    assert.match(g4Report, /\| 390px \| painted \| 43\.8 ms \| 329,160 \|/);
+    assert.match(g4Report, /\| 390px \| flat-colors \| 29\.6 ms \| 550,060 \|/);
+    assert.match(g4Report, /live-g4-review-painted-390-mobile\.png/);
+    assert.match(g4Report, /live-g4-review-flat-colors-390-mobile\.png/);
+    assert.match(g4Report, /not causal FPS/);
+    assert.deepEqual(g4PhoneModes, reviewCopy, 'Reporting never mutates phone-review evidence');
+
     assert.deepEqual(evidence, inputCopy, 'Evidence formatting never changes measurements or state');
 });
