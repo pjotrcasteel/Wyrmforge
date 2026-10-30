@@ -60,7 +60,7 @@ jobs:
             if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then break; fi
             sleep 1
           done
-          dotnet test tests/Wyrmforge.Browser.Tests -c Release --no-build --filter 'FullyQualifiedName~UniversalLightingBrowserTests|FullyQualifiedName~HuntGpuAdapterBrowserTests|FullyQualifiedName~Mobile_LiveHuntGpu_RendersActorsAndKeepsSimulationMoving|FullyQualifiedName~Mobile_G4DeviceReview_RecordsRealHuntAndExportsEvidence'
+          dotnet test tests/Wyrmforge.Browser.Tests -c Release --no-build --filter 'FullyQualifiedName~UniversalLightingBrowserTests|FullyQualifiedName~HuntGpuAdapterBrowserTests|FullyQualifiedName~Mobile_LiveHuntGpu_RendersActorsAndKeepsSimulationMoving|FullyQualifiedName~Mobile_G4DeviceReview_RecordsRealHuntAndExportsEvidence|FullyQualifiedName~Mobile_G4Consent_IsAnObviousSingleChoiceBeforeGameMenus'
       - name: Summarize real-game lighting evidence with quality and runtime metrics
         if: success()
         run: node tests/javascript/hunt-gpu-evidence-report.mjs artifacts/gpu-proof
