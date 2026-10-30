@@ -46,10 +46,10 @@ export function build25DReview(root) {
     draw(rock,80,122,'footprint');draw(rock,80,122,'rear');
     draw(tall,155,126,'footprint');draw(tall,155,126,'rear');
     // Pure review silhouette to show the foreground depth slice interacting with another actor.
-    study.ellipse(115,120,10,3,'#3b4034');
-    study.rect(111,90,9,26,'#8b8172');
-    study.ellipse(115,82,6,7,'#b6a69a');
-    study.line(111,113,108,120,'#a8a398',2);study.line(118,113,121,120,'#a8a398',2);
+    study.ellipse(155,125,10,3,'#3b4034');
+    study.rect(151,94,9,26,'#8b8172');
+    study.ellipse(155,86,6,7,'#b6a69a');
+    study.line(151,116,148,125,'#a8a398',2);study.line(158,116,161,125,'#a8a398',2);
     draw(rock,80,122,'front');draw(tall,155,126,'front');
     write(root,'depth-occlusion-study',study);
     const manifest={version:ECOLOGY_25D_VERSION,status:'authoring-only / no live Hunt integration',
