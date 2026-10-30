@@ -607,3 +607,14 @@ both prior foot-contact extents0px. Original south and SEv006 exports remain25/2
 byte-identical. This is source contact under authored travel, NOT live C# cadence
 acceptance: prior stride/run-fit gap remains. No production/lab cutover.
 Checkpoint before media/browser review and editable-source packaging.
+
+### Walking-stick review validation
+
+Large swing exposed residual staff/crystal pixels in body/hat masks. Corrected
+staff ownership polygon; source rest still exact, no remaining strong fire pixels
+in other layers near original head position. Inspected16-frame contact sheet.
+Packaged12-layer OpenRaster and new GIF/MP4; GIF16frames/MP4 decode pass.
+Existing Sprite Lab import/play/pause passes320/390 without page errors;19 focused
+controller/mage/lab tests pass. v007 export25/25 byte-identical after cleanup.
+Support analytical and raster tip remain0px drift; hand/shaft share exact grip.
+Live cadence gap remains explicitly open in audit; no C# speed or engine changes.
