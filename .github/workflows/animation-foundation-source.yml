@@ -272,7 +272,26 @@ jobs:
           assert report['inspection']=='neutral-lit'
           assert not report['errors'] and not report['gpuErrors']
           assert (root/'hunt-canvas-passby.png').stat().st_size>0
-          print('Neutral-light real C# source-skin diagnostic captured; not user/production approval.')
+          from PIL import Image
+          with Image.open(root/'hunt-canvas-passby.png') as picture:
+              rgb=picture.convert('RGB')
+              samples=list(rgb.getdata())
+          n=len(samples)
+          mean=sum((.2126*r+.7152*g+.0722*b) for r,g,b in samples)/n
+          visible=sum(.2126*r+.7152*g+.0722*b>32 for r,g,b in samples)/n
+          # The old Gothic-night framebuffer was mean ~2.36 and only ~1%
+          # of pixels exceeded 24 luma. A review scene must be *viewable*.
+          assert mean>=10 and visible>=.04,('Review remains too dark',mean,visible)
+          trace=json.loads((root/'motion-trace.json').read_text())
+          inspected=[r for r in trace if r.get('gpuWorld',{}).get('lights')]
+          assert inspected,'No actual GPU lighting diagnostic frames'
+          ids={'developer-animation-inspection:key','developer-animation-inspection:fill'}
+          assert any(ids.issubset({l['id'] for l in row['gpuWorld']['lights']}) for row in inspected), 'Two real review lights were never selected by the GPU'
+          (root/'visibility-review.json').write_text(json.dumps({
+              'scene':'actual-C#-Hollowed','mode':'neutral-lit','renderedFrame':True,
+              'meanLuminance':mean,'fractionAbove32':visible,'twoInspectionLightsSelected':True,
+              'visualOwnerApproved':False,'productionLightingChanged':False},indent=2)+'\\n')
+          print('ACTUAL BRIGHT REVIEW:',round(mean,2),round(visible*100,1),'% visible pixels; two GPU lights selected; owner approval pending.')
           PY
       - uses: actions/upload-artifact@v4
         if: always()
