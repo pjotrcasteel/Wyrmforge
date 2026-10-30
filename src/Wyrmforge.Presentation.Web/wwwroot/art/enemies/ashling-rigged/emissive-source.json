@@ -10,7 +10,8 @@
       "maxPixelsPerFrame": 8,
       "unlitDirections": [
         "N"
-      ]
+      ],
+      "atlasFilename": "ashling-movement.png"
     },
     {
       "approvedExport": "art/source/enemies/ashling/exports/attack-fiery-eyes-v1",
@@ -20,7 +21,8 @@
       "maxPixelsPerFrame": 7,
       "unlitDirections": [
         "N"
-      ]
+      ],
+      "atlasFilename": "ashling-attack.png"
     },
     {
       "approvedExport": "art/source/enemies/ashling/exports/death-fiery-eyes-v1",
@@ -31,7 +33,8 @@
       "unlitDirections": [
         "N"
       ],
-      "extinguishedFromFrame": 13
+      "extinguishedFromFrame": 13,
+      "atlasFilename": "ashling-death.png"
     }
   ]
 }
