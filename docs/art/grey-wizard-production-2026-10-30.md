@@ -235,3 +235,13 @@ amber Summoner. Distinct natural wood/metal settings and gem cuts; no icon sculp
 Capes remain grey with muted warm/cool/ochre/violet/olive/earth undertones.
 V004 exact edit brief saved as `school-variants-v004-prompt.txt`; prior candidates
 remain preserved. No runtime change or approval of an ungenerated candidate implied.
+
+Saved `school-variants-v004.png`, original 1536x1024 built-in edit of v003. Inspected
+all six: capes remain grey with subtle school hue; physical faceted top gems are
+red-orange/cyan/yellow/violet/green/amber; distinct carved/twisted/root wood and
+metal settings replace transformed full shafts. Right-hand grips preserved.
+Emblems retain woven/fold appearance, though some contrast increased relative to
+v003; native faded-thread consistency remains a production concern. Appearance
+review remains pending; no game/material/animation or device validation claimed.
+Exact edit prompt, input and SHA256 provenance preserved. Source dimensions/hash
+and `git diff --check` checked; no runtime changes or gameplay tests.

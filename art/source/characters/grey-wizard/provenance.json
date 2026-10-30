@@ -94,6 +94,20 @@
       "school-variants-v002.png"
     ],
     "prompt": "school-variants-v003-prompt.txt",
-    "status": "Faded cape embroidery and stronger full-shaft school material candidate; owner review pending"
+    "status": "Preserved prior study; full-shaft material approach superseded by owner-requested top gems and distinct designs"
+  },
+  "schoolVariantsRevision4": {
+    "file": "school-variants-v004.png",
+    "sha256": "3091a9b4ec1bfc4270fad67cc06e228a9d010a459a94ac72cb7e276603cfe738",
+    "size": [
+      1536,
+      1024
+    ],
+    "generator": "built-in image_gen edit",
+    "inputs": [
+      "school-variants-v003.png"
+    ],
+    "prompt": "school-variants-v004-prompt.txt",
+    "status": "Subtly school-tinted grey capes and distinct gemstone staff candidate; owner review pending"
   }
 }
