@@ -1,6 +1,47 @@
 # AN0–AN6 execution record — 28 October 2026
 
-**NOT FINISHED. Keep PR #387 draft and unmerged. No final visual approval requested.**
+**ARCHIVED / DEFERRED BY OWNER — 30 October 2026.** AN0–AN6
+source-skin research has **not** passed gameplay or visual acceptance, and is
+**not required** for the pixel-first 2.5D animation baseline. PR #387 is to be
+closed **without merging**, preserving this branch, source rig, tests and
+genuine captures only as optional research. This is a **scope cancellation**,
+not a claim that AN6 was completed.
+
+### Binding owner direction — unlock sprite-first game development
+
+The extra complexity of runtime source-skinned actors, 3D skeletal deformation,
+continuous IK, expensive Blender biomechanical authoring, universal
+contact solvers and full-body directional motion-mixing has not demonstrated
+adequate visual value for WyrmForge. It must **not** block the game, Arena,
+Hollowed V2 art, lighting, combat, or mobile work. Do not add AN6 runtime
+dependencies to the default Hunt or automatically reopen PR #387.
+
+**Keep:** the existing merged `sprite-animation.js` controller and sprite
+layer compositor, authoritative C# movement/attack/death events, basic
+animation timing, stable entity foot anchors, 8-direction sprite selection,
+frame-rate-independent frame scheduling, cancellation/fallback, and normal
+render/GPU light/depth integration for authored 2.5D pixel sprites.
+
+**Next practical sprite-first slices (existing one animation engine):**
+1. Create/approve a character silhouette and actual readable 96px/320–390px
+   source sprites; do not confuse rejected AN6 fixture with Hollowed V2.
+2. Import independently authored walk, idle, attack, hit, death and recovery
+   directions into the existing sprite-atlas/layer pipeline, without a new
+   animation engine or mandatory Blender/3D model.
+3. Drive deterministic transitions and attack events using existing C# state;
+   preserve stable visible foot anchors and occlusion rather than seeking
+   1px physical full-body IK solutions for every arbitrary movement vector.
+4. Inspect genuine in-Hunt mobile-width playback and performance, then adjust
+   authored frames/animation timing based on **visual evidence**.
+
+**Revisit AN6 only by a new explicit owner decision** after a concrete sprite
+limitation is demonstrated, a minimal candidate is contrasted with actual
+pixel-first results, and mobile memory/performance costs are justified.
+The previous rigid 64MiB and one-pixel technical study results remain in the
+archive as measurements, **not** mandatory acceptance dependencies for all
+ordinary 2D sprites.
+
+
 
 ## 30 October 2026 — OWNER VISUAL REJECTION (blocking)
 
