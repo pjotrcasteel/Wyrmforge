@@ -1,10 +1,10 @@
 // WF32-P1d: reusable authoring-only terrain grammar. Material IDs are visual;
 // authoritative geography, collisions and weights always come from C# AR3.
 // Reuses WyrmForge's existing Bitmap + shared LightingEngine material contract.
-import { Bitmap, hex, rng } from '../lib/painter.mjs';
+import { Bitmap, hex, mix, rng } from '../lib/painter.mjs';
 import { createMasonryField, createMasonrySurface, MASONRY_PERIOD } from './wet-forest-masonry.mjs';
 
-export const GRAMMAR_VERSION = 'wf32-terrain-grammar.v1.2';
+export const GRAMMAR_VERSION = 'wf32-terrain-grammar.v1.3';
 export const CELL = 32;
 export const TERRAIN_MATERIALS = Object.freeze({
     grass: { kind: 'soft', palette: ['#1b2820','#283a2b','#344932','#45613e','#627450'], roughness: .94, specular: .08, height: 24, details: ['mushroom','pebble','twig','leaf'] },
@@ -80,65 +80,86 @@ function periodicNoise(x, y, cells, seed) {
     const lower=sample(0,1)*(1-tx)+sample(1,1)*tx;
     return upper*(1-ty)+lower*ty;
 }
+// Soft terrain is mixed from continuous value masses, rather than discrete contours.
+// The tiny 3px clusters vary the interiors of each mass without outlining its perimeter.
 export function makeSoftField(material, seed=137) {
     const spec=TERRAIN_MATERIALS[material];
     if(!spec||spec.kind!=='soft')throw new RangeError('Expected a soft material');
     const b=new Bitmap(MASONRY_PERIOD,MASONRY_PERIOD),p=spec.palette;
     const r=rng(seed^(material==='grass'?314159:material==='mud'?271828:161803));
-    // Continuous moss hummocks / compressed mud / forest litter, not uniform per-cell noise.
+    const phase=material==='grass'?173:material==='mud'?319:457;
     for(let y=0;y<256;y++)for(let x=0;x<256;x++) {
-        const broad=periodicNoise(x,y,5,seed+31);
-        const medium=periodicNoise(x,y,13,seed+83);
-        const fine=hash(Math.floor(x/3),Math.floor(y/3),seed+91);
-        const n=.55*broad+.29*medium+.16*fine;
-        // Low-frequency value bands are texture mass, not drawn contours: dither
-        // their thresholds using coherent 3px material clusters, not smooth blur.
-        const threshold=(hash(Math.floor(x/3),Math.floor(y/3),seed+719)-.5)*.17;
-        const idx=clamp(Math.floor((n+threshold)*p.length),0,p.length-1);
-        b.set(x,y,p[idx]);
+        const wide=periodicNoise(x,y,4,seed+31);
+        const pockets=periodicNoise(x,y,10,seed+83);
+        const fragments=periodicNoise(x,y,25,seed+137);
+        // Smooth mixing eliminates isolines; 3px clustered variation keeps pixel texture.
+        const cluster=hash(Math.floor(x/3),Math.floor(y/3),seed+phase)-.5;
+        const shade=clamp((.56*wide+.31*pockets+.13*fragments-.28)*1.48+cluster*.075,0,1);
+        const color=mix(p[1],p[material==='mud'?3:4],shade);
+        // Small contiguous grit/moss clusters preserve crisp pixel-art readability
+        // without promoting large value masses into polygonal contour strokes.
+        const fleck=hash(Math.floor(x/2),Math.floor(y/2),seed+phase+711);
+        const grit=hash(Math.floor(x/4),Math.floor(y/3),seed+phase+837);
+        const contrast=material==='grass'?9:material==='mud'?8:11;
+        const delta=fleck<.31?-contrast:fleck>.77?contrast:0;
+        const pocket=grit<.15?-5:grit>.83?5:0;
+        b.set(x,y,color.map((v,i)=>i===3?v:clamp(Math.round((v+delta+pocket)/3)*3,0,255)));
     }
     if(material==='grass') {
-        // Tufts grow in pockets; clearings stay quiet enough to see actors and spells.
-        for(let i=0;i<430;i++) {
-            const x=Math.floor(r()*256),y=Math.floor(r()*256);
+        // Tufts are short connected shapes, concentrated around organic pockets.
+        for(let i=0;i<980;i++) {
+            const x=Math.floor(r()*254),y=4+Math.floor(r()*250);
             const density=periodicNoise(x,y,5,seed+31);
-            if(density<.38||r()>(.22+.65*density))continue;
-            const height=2+Math.floor(r()*5);
-            b.line(x,y,x-2,y-height,p[3]);b.line(x+1,y,x+2,y-height+1,p[4]);
-            if(r()<.3)b.line(x,y,x,y-height-1,p[4]);
-            b.set(x,y+1,p[0]);
+            if(r()>.23+.67*density)continue;
+            b.rect(x-1,y,3,1,p[1]);
+            b.set(x,y-1,p[3]);
+            if(r()<.74)b.set(x-1,y-2,p[3]);
+            if(r()<.65)b.set(x+1,y-2,p[4]);
+            if(r()<.24)b.set(x+1,y-3,p[4]);
+            if(r()<.30)b.set(x-2,y-1,p[2]);
         }
-        // A few exposed earth pockets break up monotonous green without inventing geometry.
-        for(let i=0;i<28;i++) {
-            const x=Math.floor(r()*250),y=Math.floor(r()*250);
-            if(periodicNoise(x,y,5,seed+31)>.46)continue;
-            b.rect(x,y,3+Math.floor(r()*5),r()<.5?2:1,'#242a23');
+        // Distinct patchy soil shows under low vegetation without a traced rim.
+        for(let i=0;i<45;i++) {
+            const x=Math.floor(r()*251),y=Math.floor(r()*253);
+            if(periodicNoise(x,y,5,seed+31)>.52)continue;
+            b.rect(x,y,2+Math.floor(r()*4),1,'#273228');
+            if(r()<.55)b.set(x+2,y+1,'#384233');
         }
     } else if(material==='mud') {
-        // Shallow depressed seams run in coherent, curved patches rather than scratch noise.
-        for(let i=0;i<24;i++) {
-            const cx=Math.floor(r()*256),cy=Math.floor(r()*256),len=13+Math.floor(r()*25);
-            const angle=r()*Math.PI*2;
-            for(let t=0;t<len;t++) {
-                const curve=Math.sin(t*.18+i)*2;
-                const x=Math.round(cx+Math.cos(angle)*t-Math.sin(angle)*curve);
-                const y=Math.round(cy+Math.sin(angle)*t+Math.cos(angle)*curve);
-                b.set(x,y,p[0]);b.set(x+1,y+1,p[2]);
+        // Small connected depressions and compacted clods. Long drawn rut lines
+        // belong to authored roads / AR3 geography, never the generic mud texture.
+        for(let i=0;i<170;i++) {
+            const x=5+Math.floor(r()*246),y=4+Math.floor(r()*247);
+            const length=2+Math.floor(r()*7),height=1+Math.floor(r()*3);
+            if(periodicNoise(x,y,5,seed+83)<.40) {
+                b.ellipse(x,y,length/2,height,p[0]);
+                if(r()<.65)b.rect(x,y+1,Math.min(4,length),1,p[2]);
+            } else {
+                b.rect(x,y,2+Math.floor(r()*3),1,p[3]);
+                if(r()<.30)b.set(x+1,y-1,p[4]);
             }
         }
-        for(let i=0;i<25;i++) {
-            const x=Math.floor(r()*251),y=Math.floor(r()*253);
-            b.rect(x,y,3+Math.floor(r()*6),r()<.45?2:1,p[0]);
+        // Rare scattered crushed grit, avoiding concentric ring patterns.
+        for(let i=0;i<90;i++) {
+            const x=Math.floor(r()*255),y=Math.floor(r()*255);
+            b.set(x,y,r()<.72?p[2]:p[4]);
         }
     } else {
-        for(let i=0;i<125;i++) {
-            const x=Math.floor(r()*250),y=Math.floor(r()*250);
-            b.line(x,y,x+2+Math.floor(r()*3),y+1,p[0]);
-            if(r()<.6)b.set(x+2,y-1,p[3]);
+        // Forest soil is layered grit, small leaf clumps and earth chips: no drawn cracks.
+        for(let i=0;i<430;i++) {
+            const x=Math.floor(r()*252),y=Math.floor(r()*253);
+            if(r()<.45) {
+                b.rect(x,y,2+Math.floor(r()*3),1,p[0]);
+                if(r()<.33)b.set(x+1,y+1,p[1]);
+            } else {
+                b.rect(x,y,2+Math.floor(r()*3),1,p[3]);
+                if(r()<.4)b.set(x+2,y-1,p[4]);
+            }
         }
     }
     return b;
 }
+
 export function addMicroDetails(base, material, seed=371, density=1) {
     if(!(base instanceof Bitmap)||base.width!==256||base.height!==256)
         throw new TypeError('Expected one 256px review world patch');
