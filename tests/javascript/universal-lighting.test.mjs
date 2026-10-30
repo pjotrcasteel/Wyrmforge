@@ -179,32 +179,28 @@ test('atlas transforms reset on full-frame transitions without redundant GPU mat
 });
 
 
-test('mobile shadow camera only recomputes its projection when light range changes', async () => {
+test('G4 keeps every active shadow projection current while live device acceptance is open', async () => {
     const { synchronizeShadowProjection } =
         await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/engine.js');
     for (const light of [new T.PointLight(), new T.SpotLight(), new T.DirectionalLight()]) {
         const camera = light.shadow.camera;
-        const realUpdate = camera.updateProjectionMatrix.bind(camera);
+        const update = camera.updateProjectionMatrix.bind(camera);
         let updates = 0;
-        camera.updateProjectionMatrix = () => { updates++; realUpdate(); };
+        camera.updateProjectionMatrix = () => { updates++; update(); };
         try {
-            assert.equal(synchronizeShadowProjection(light, 144, true), true,
-                'New shadow cameras must initialize the authored range and bounds.');
-            assert.equal(updates, 1);
-            for (let i = 0; i < 120; i++)
-                assert.equal(synchronizeShadowProjection(light, 144), false);
-            assert.equal(updates, 1, 'A stationary Fireball light must not rebuild shadow projection on 120 frames.');
+            for (let frame = 0; frame < 120; frame++)
+                assert.equal(synchronizeShadowProjection(light, 144), true);
+            assert.equal(updates, 120,
+                'Live shadow-camera projections must not retain stale state across moving Hunt frames.');
             assert.equal(synchronizeShadowProjection(light, 200), true,
-                'C# projectile range changes must update projection immediately.');
+                'Changing authoritative light range must update shadow projection immediately.');
             assert.equal(camera.far, 200);
-            assert.equal(updates, 2);
-            assert.equal(synchronizeShadowProjection(light, 200), false);
+            assert.equal(updates, 121);
         } finally {
             light.dispose();
         }
     }
 });
-
 
 test('G4 only updates the shared orthographic projection when viewport or zoom changes', async () => {
     const { synchronizeOrthographicProjection } =
