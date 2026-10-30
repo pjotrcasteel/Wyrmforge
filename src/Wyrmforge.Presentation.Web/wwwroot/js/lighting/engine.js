@@ -35,6 +35,15 @@ export function synchronizeShadowProjection(light, range, force = false) {
 
 const fogAmbientColor = new T.Color();
 
+/** Recompute the view projection only when viewport dimensions or camera zoom actually change. */
+export function synchronizeOrthographicProjection(camera, left, right, top, bottom) {
+    if (camera.left === left && camera.right === right && camera.top === top && camera.bottom === bottom)
+        return false;
+    camera.left = left; camera.right = right; camera.top = top; camera.bottom = bottom;
+    camera.updateProjectionMatrix();
+    return true;
+}
+
 /** Reuse fog resources on unchanged snapshots without altering black-world rules. */
 export function synchronizeEnvironmentFog(scene, environment) {
     const descriptor = environment.fog;
@@ -273,9 +282,8 @@ float proofShadowVisibility() {
         // One world sample per CSS pixel at 390px, bounded regardless of device DPR.
         const w = Math.max(1, Math.min(390, Math.round(width))), h = Math.max(1, Math.round(height * w / width));
         if (this.canvas.width !== w || this.canvas.height !== h) this.renderer.setSize(w, h, false);
-        this.camera.left = -this.halfWidth; this.camera.right = this.halfWidth;
-        this.camera.top = this.halfWidth * h / w; this.camera.bottom = -this.halfWidth * h / w;
-        this.camera.updateProjectionMatrix();
+        const halfHeight = this.halfWidth * h / w;
+        synchronizeOrthographicProjection(this.camera, -this.halfWidth, this.halfWidth, halfHeight, -halfHeight);
         if (this.debugView === 'light-depth') {
             const source = this.selected?.find(l => l.shadow);
             this.inspection.depth(this.renderer, this.lights.get(source?.id));
