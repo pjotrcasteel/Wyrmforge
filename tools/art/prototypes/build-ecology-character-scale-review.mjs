@@ -195,11 +195,13 @@ export function buildAllVariantScaleReview(width=390){
     if(width!==320&&width!==390)throw new RangeError('Expected a 320 or 390px native-width review');
     const height=28+4*120;
     const actors=[loadReference('hollowed'),loadReference('ashling')];
+    // Terrain generation is tile-aligned; the phone review itself need not be.
+    const align32=value=>Math.ceil(value/32)*32;
     const background=createWorldBoundaryWindow('flagstone','grass',{
         seed:2211,state:'reclaimed',role:'left',boundaryX:16,boundaryY:240,
-        originX:0,originY:0,width,height
+        originX:0,originY:0,width:align32(width),height:align32(height)
     });
-    const scene=background.albedo.clone();
+    const scene=new Bitmap(width,height).blit(background.albedo,0,0);
     const points=width===320?[104,160,216]:[130,195,260];
     const hollowX=width===320?29:38,ashlingX=width===320?289:354;
     const labels=['ROCK SMALL','ROCK CLUSTER','GRASS MEDIUM','GRASS TALL'];
