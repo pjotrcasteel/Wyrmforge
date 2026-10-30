@@ -64,22 +64,26 @@ const material = id => ({ id, albedo: id, color: '#ffffff', roughness: .95, meta
 export function huntSurfaceRenderable(id, x, y, width, height, castsShadow, surface = {}) {
     const geometry = surface.geometry ?? (castsShadow ? 'hunt-billboard' : 'hunt-plane');
     const standing = surface.standing ?? geometry === 'hunt-billboard';
+    const footFraction = standing ? surface.footFraction ?? .75 : 1;
+    if (!Number.isFinite(footFraction) || footFraction <= 0 || footFraction > 1)
+        throw new RangeError('Invalid authored sprite foot fraction');
+    // Each captured sprite can supply its own painted foot line. Material atlas
+    // sampling skips only the pixels BELOW the foot; all visible body, legs,
+    // mage staff and wyrm tail retain their correct authored proportions.
+    const frame = surface.frame ?? (standing
+        ? { offset: [0, 1 - footFraction], repeat: [1, footFraction] } : undefined);
     return {
         id, ownerId: surface.ownerId ?? id, geometry, material: id,
-        position: surface.position ?? [(x + width / 2) / UNIT, -(y + height * (standing ? .75 : .5)) * GROUND_Y / UNIT, standing ? .001 : 0],
+        position: surface.position ?? [(x + width / 2) / UNIT, -(y + height * (standing ? footFraction : .5)) * GROUND_Y / UNIT, standing ? .001 : 0],
         rotation: surface.rotation ?? [0, 0, 0],
-        // Captured actor pixels above their 75%-height feet pivot form the
-        // vertical cutout. Lower source pixels represent subfloor spill and
-        // must not intersect the ground receiver or bury boss silhouettes.
-        scale: surface.scale ?? [width / UNIT, height * (standing ? .75 : GROUND_Y) / UNIT, 1],
+        scale: surface.scale ?? [width / UNIT, height * (standing ? footFraction : GROUND_Y) / UNIT, 1],
         castsShadow: surface.castsShadow ?? castsShadow,
         receivesShadow: surface.receivesShadow ?? true,
         receivesLight: surface.receivesLight ?? true,
         ...(surface.occluderGeometry ? { occluderGeometry: surface.occluderGeometry } : {}),
-        ...(surface.frame ? { frame: surface.frame } : {}),
+        ...(frame ? { frame } : {}),
     };
 }
-
 /** Keeps asset-specific appearance data separate from lighting calculations. */
 export function huntSurfaceMaterial(id, overrides = {}, hasAlbedoSource = true) {
     const descriptor = { ...material(id), ...overrides, id };
@@ -87,15 +91,10 @@ export function huntSurfaceMaterial(id, overrides = {}, hasAlbedoSource = true) 
     return descriptor;
 }
 export function huntActorGeometry() {
-    // Source captures put the authoritative C# feet pivot at 75% of their
-    // height. The previous centered plane crossed Z=0 and buried its bottom
-    // quarter in the lit terrain's depth buffer (especially visible on the
-    // mage, Warden and Wyrm). Keep the upper 75% of the captured texture and
-    // raise it *from* the ground rather than through it. Generic actor
-    // geometry; no creature-specific renderer or animation changes.
+    // Feet touch Z=0 without crossing underneath the ground depth buffer.
+    // The generic object atlas frame separately chooses each painted foot
+    // line; no Warden/Wyrm/mage-specific geometry or secondary engine.
     const actor = new T.PlaneGeometry(1, 1);
-    const uv = actor.getAttribute('uv');
-    for (let i = 0; i < uv.count; i++) uv.setY(i, .25 + uv.getY(i) * .75);
     actor.translate(0, .5, 0);
     actor.rotateX(Math.PI / 4);
     return actor;
