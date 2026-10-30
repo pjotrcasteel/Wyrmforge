@@ -304,3 +304,12 @@ need native-scale/gameplay clearance review; no animated hands, lighting, materi
 passes, gameplay or physical-phone validation claimed. Composite appearance review
 pending. Exact prompt/inputs and source SHA256/dimensions preserved. Git diff check
 and file checks only; no executable changes or gameplay tests.
+
+### V009 owner scale correction
+
+Owner rejects v008 staff scale as much too big. Design identity remains selected,
+but not those head/shaft proportions. V009 targets about half shaft thickness and
+roughly half head dimensions while keeping walking-staff length, attached right
+grips, crystal readability and compact unique shapes. Hat-relative head size and
+finger-relative shaft thickness provide character context, not final runtime
+numeric budgets. Prompt `wizards-held-staffs-v009-prompt.txt`; cape/body unchanged.

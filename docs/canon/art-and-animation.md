@@ -54,6 +54,11 @@ The attachment is authoritative over the earlier provisional v001/v002 concepts.
   selected image governs staff appearance over earlier provisional text/studies;
   character-scale grip, sprite, light/VFX separation and phone acceptance remain
   production gates, not implied by source-concept approval.
+  **Owner character-scale correction:** v008 held staffs are oversized. Retain the
+  selected design identities but reduce head bulk and shaft thickness to believable
+  one-handed wizard proportions. Crystal readability is not permission for heads
+  approaching the wizard's hat width or heavy pole-sized shafts. V008 scale is not
+  approved; review corrected proportions beside actual characters before export.
   The first icon-topped comparison is rejected, not an approved variant library.
   Keep the approved grey wizard identity. The base reference remains preserved.
   **Owner refinement:** cape emblems are visibly faded/weathered into the grey
