@@ -120,3 +120,27 @@ The original Voronoi/stone illustrator used a dark outline for almost every ston
 ### Follow-up
 
 WF32-P1g will address world-scale repetition across 256px patches, inner corners, additional material pairings and ecologically authored detail placement **after** owner P1f art review. Production GPU material-adapter integration remains gated by approved AR3 geography and its shared G renderer.
+
+## WF32-P1g — line-free organic texture and subtle stone patina (30 October 2026)
+
+**User feedback:** the lower half of the P1f image was preferred, but the grass and soil still contained graphic contour lines and the stone faced looked flat. The approved material/boundary grammar and stone shapes are preserved. This is a source-art iteration, not approval of visuals or gameplay.
+
+### What changed
+
+- Soft ground no longer quantizes smooth noise into discrete color bands, which previously created long artificial isolines. Instead, a continuous blend between existing muted palette values is textured with native 2–4px contiguous pixel clusters and short surface details. The broad shade fields remain deterministic at world phase, independent of 32px atlas cells.
+- Grass: short grouped blades and sparse exposed earth pockets; no long continuous stems or traced patch boundaries. Forest soil: compact granules and organic clods instead of long scratch strokes. Mud: shallow short depressions and crushed grit instead of long random channels (traversal ruts remain future **C# AR3** site geography).
+- Flagstone/cobble receive very subtle clustered face patina and small tonal variation, without returning to the rejected dark, complete contours.
+- **Material maps** (albedo in sRGB, normal and roughness non-color) are still generated through the same shared G material contract; no new renderer or alpha/lighting tricks.
+
+### Technical checkpoint / validation
+
+- `GRAMMAR_VERSION = wf32-terrain-grammar.v1.3`.
+- Added `tests/javascript/terrain-material-grammar-soft-relief.test.mjs` with three regression tests: deterministic soft fields and no uninterrupted 12px dark ink strokes, variation across the eight-by-eight 32px world phases, and exact 32px reassembly of albedo, tangent-space normal and roughness outputs.
+- Previous 20 tests still pass; **23 local tests passed** using the repository's painter-compatible authoring harness. GitHub CI, real GPU material light response and iPhone/Android performance are not established by local image tests.
+- Preview generator remains opt-in: `node tools/art/prototypes/build-terrain-grammar-review.mjs <output-directory>`; this is a source-art comparison, **not an in-Hunt screenshot**.
+
+### Open gates
+
+- Owner P1g pixel-art visual approval at 1x and 320px/390px, especially whether the new granular shading maintains enough character without restoring fake contour lines.
+- P1h large-world phase/repetition, material-weight blending, inner corners and ecological scatter placement.
+- Production AR4 material integration remains dependent on approved AR3 geography; do not alter live Hunts or G4/G5 lighting-engine ownership.
