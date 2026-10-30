@@ -136,8 +136,8 @@ export class HuntGpuScratchPool {
 export function prepareHuntGpuPresentation(canvas, width, height, dpr) {
     if (!canvas || ![width, height, dpr].every(Number.isFinite) ||
         width <= 0 || height <= 0 || dpr <= 0) throw new RangeError('Invalid G4 presentation dimensions');
-    const pixelsX = Math.max(1, Math.round(width * dpr));
-    const pixelsY = Math.max(1, Math.round(height * dpr));
+    const pixelsX = Math.max(1, Math.floor(width * dpr));
+    const pixelsY = Math.max(1, Math.floor(height * dpr));
     if (canvas.width !== pixelsX) canvas.width = pixelsX;
     if (canvas.height !== pixelsY) canvas.height = pixelsY;
     const ctx = canvas.getContext('2d');
