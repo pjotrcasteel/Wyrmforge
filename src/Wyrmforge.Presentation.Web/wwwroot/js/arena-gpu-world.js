@@ -64,19 +64,26 @@ const material = id => ({ id, albedo: id, color: '#ffffff', roughness: .95, meta
 export function huntSurfaceRenderable(id, x, y, width, height, castsShadow, surface = {}) {
     const geometry = surface.geometry ?? (castsShadow ? 'hunt-billboard' : 'hunt-plane');
     const standing = surface.standing ?? geometry === 'hunt-billboard';
+    const footFraction = standing ? surface.footFraction ?? .75 : 1;
+    if (!Number.isFinite(footFraction) || footFraction <= 0 || footFraction > 1)
+        throw new RangeError('Invalid authored sprite foot fraction');
+    // Each captured sprite can supply its own painted foot line. Material atlas
+    // sampling skips only the pixels BELOW the foot; all visible body, legs,
+    // mage staff and wyrm tail retain their correct authored proportions.
+    const frame = surface.frame ?? (standing
+        ? { offset: [0, 1 - footFraction], repeat: [1, footFraction] } : undefined);
     return {
         id, ownerId: surface.ownerId ?? id, geometry, material: id,
-        position: surface.position ?? [(x + width / 2) / UNIT, -(y + height * (standing ? .75 : .5)) * GROUND_Y / UNIT, standing ? .001 : 0],
+        position: surface.position ?? [(x + width / 2) / UNIT, -(y + height * (standing ? footFraction : .5)) * GROUND_Y / UNIT, standing ? .001 : 0],
         rotation: surface.rotation ?? [0, 0, 0],
-        scale: surface.scale ?? [width / UNIT, height * (standing ? 1 : GROUND_Y) / UNIT, 1],
+        scale: surface.scale ?? [width / UNIT, height * (standing ? footFraction : GROUND_Y) / UNIT, 1],
         castsShadow: surface.castsShadow ?? castsShadow,
         receivesShadow: surface.receivesShadow ?? true,
         receivesLight: surface.receivesLight ?? true,
         ...(surface.occluderGeometry ? { occluderGeometry: surface.occluderGeometry } : {}),
-        ...(surface.frame ? { frame: surface.frame } : {}),
+        ...(frame ? { frame } : {}),
     };
 }
-
 /** Keeps asset-specific appearance data separate from lighting calculations. */
 export function huntSurfaceMaterial(id, overrides = {}, hasAlbedoSource = true) {
     const descriptor = { ...material(id), ...overrides, id };
@@ -84,8 +91,11 @@ export function huntSurfaceMaterial(id, overrides = {}, hasAlbedoSource = true) 
     return descriptor;
 }
 export function huntActorGeometry() {
+    // Feet touch Z=0 without crossing underneath the ground depth buffer.
+    // The generic object atlas frame separately chooses each painted foot
+    // line; no Warden/Wyrm/mage-specific geometry or secondary engine.
     const actor = new T.PlaneGeometry(1, 1);
-    actor.translate(0, .25, 0);
+    actor.translate(0, .5, 0);
     actor.rotateX(Math.PI / 4);
     return actor;
 }

@@ -18,7 +18,27 @@ export function huntLayerCapture(layer, player, dragonDeath = null) {
         id = `${layer.kind}:${actor.entityId ?? actor.id ?? 'primary'}`;
         size = Math.max(160, Math.min(768, (actor.radius || 20) * 12));
     }
-    return { id: 'hunt-' + id, x: actor.x - size / 2, y: actor.y - size * .75, size };
+    // The capture extends below the C# position to leave room for painted feet,
+    // shadows and articulated bosses. Supply this artwork-dependent pivot to
+    // the generic GPU billboard rather than burying that part below ground.
+    // These are existing Canvas paint extents, not physics or collision changes.
+    let footOffset = null;
+    switch (layer.kind) {
+        case 'mage':
+            footOffset = 12 * Math.max(.7, Math.min(1.45, (actor.radius || 12) / 12));
+            break;
+        case 'enemy':
+            footOffset = 24 * Math.max(.62, Math.min(1.9, (actor.radius || 12) / 12));
+            break;
+        case 'dragon':
+            footOffset = (actor.radius || 34) * 1.6;
+            break;
+        default:
+            break;
+    }
+    const footFraction = footOffset === null ? undefined : Math.min(1, .75 + footOffset / size);
+    return { id: 'hunt-' + id, x: actor.x - size / 2, y: actor.y - size * .75, size,
+        ...(footFraction !== undefined ? { footFraction } : {}) };
 }
 
 /**
@@ -122,5 +142,43 @@ export class HuntGpuScratchPool {
             canvas.height = 0;
         }
         this.surfaces.clear();
+    }
+}
+
+
+/**
+ * Safari must not present a half-painted frame when WebGL terrain, actor
+ * cutouts and later Canvas combat effects are composed in separate passes.
+ * Finish all GPU/Canvas work offscreen and commit exactly one full-size,
+ * non-interpolated image to the visible interactive Hunt canvas.
+ * This is a presentation staging surface, not a second lighting engine.
+ */
+export function prepareHuntGpuPresentation(canvas, width, height, dpr) {
+    if (!canvas || ![width, height, dpr].every(Number.isFinite) ||
+        width <= 0 || height <= 0 || dpr <= 0) throw new RangeError('Invalid G4 presentation dimensions');
+    const pixelsX = Math.max(1, Math.floor(width * dpr));
+    const pixelsY = Math.max(1, Math.floor(height * dpr));
+    if (canvas.width !== pixelsX) canvas.width = pixelsX;
+    if (canvas.height !== pixelsY) canvas.height = pixelsY;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('G4 frame staging requires Canvas2D');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.imageSmoothingEnabled = false;
+    return ctx;
+}
+
+export function presentCompletedHuntGpuFrame(ctx, source) {
+    if (!source?.width || !source?.height) throw new TypeError('Missing completed G4 frame');
+    ctx.save();
+    try {
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = 'copy';
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(source, 0, 0);
+    } finally {
+        ctx.restore();
     }
 }

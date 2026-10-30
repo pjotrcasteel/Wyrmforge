@@ -25,16 +25,47 @@ test('authored sprite foot anchor stays on the ground and its billboard faces th
     const normal = new T.Vector3().fromBufferAttribute(geometry.attributes.normal, 0);
     const toward = new T.Vector3(0, -1, 1).normalize();
     assert.ok(normal.dot(toward) > .99999);
-    const anchor = new T.Vector3(0, -.25, 0).add(new T.Vector3(0, .25, 0));
-    anchor.applyAxisAngle(new T.Vector3(1, 0, 0), Math.PI / 4);
-    assert.ok(anchor.length() < 1e-8);
     const top = new T.Vector3().fromBufferAttribute(geometry.attributes.position, 0);
     const bottom = new T.Vector3().fromBufferAttribute(geometry.attributes.position, 2);
     const up = new T.Vector3(0, 1, 1).normalize();
+    assert.ok(Math.abs(bottom.y) < 1e-8 && Math.abs(bottom.z) < 1e-8,
+        'The sprite foot edge must contact terrain (its X position remains at the left corner).');
     assert.ok(Math.abs(top.clone().sub(bottom).dot(up) - 1) < 1e-6,
-        'An already projected sprite must retain its full apparent height.');
-    assert.ok(top.z > 0, 'Standing cutout geometry must rise above ground to cast a directional shadow.');
+        'The cropped billboard keeps exactly one projected unit of height.');
+    for (let i = 0; i < geometry.attributes.position.count; i++) {
+        const vertex = new T.Vector3().fromBufferAttribute(geometry.attributes.position, i);
+        assert.ok(vertex.z >= -1e-8, 'No actor pixels may be hidden underneath the ground mesh.');
+    }
+    const uv = geometry.getAttribute('uv');
+    assert.equal(uv.getY(2), 0, 'Atlas bounds, not shared geometry, specify the painted foot crop.');
+    assert.equal(uv.getY(0), 1, 'The source sprite head must never be cropped.');
     geometry.dispose();
+});
+
+test('mage, Warden and Wyrm retain their own painted foot line without ground penetration', async () => {
+    const { huntSurfaceRenderable } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js');
+    const { huntLayerCapture } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/hunt-gpu-layers.js');
+    for (const layer of [
+        { kind: 'mage', depth: 320 },
+        { kind: 'enemy', enemy: { entityId: 'warden', x: 400, y: 320, radius: 44 } },
+        { kind: 'dragon', dragon: { entityId: 'wyrm', x: 400, y: 320, radius: 90 } },
+    ]) {
+        const actor = layer.enemy ?? layer.dragon ?? { x: 400, y: 320, radius: 12 };
+        const capture = huntLayerCapture(layer, actor);
+        const mesh = huntSurfaceRenderable(capture.id, capture.x, capture.y,
+            capture.size, capture.size, true, { footFraction: capture.footFraction });
+        assert.equal(mesh.geometry, 'hunt-billboard');
+        assert.ok(capture.footFraction > .75 && capture.footFraction <= 1,
+            'Painted ankles, bell body and wyrm tail must remain in the texture');
+        assert.equal(mesh.scale[1], capture.size * capture.footFraction / 48);
+        assert.deepEqual(mesh.frame.offset, [0, 1 - capture.footFraction]);
+        assert.deepEqual(mesh.frame.repeat, [1, capture.footFraction]);
+        const footY = capture.y + capture.size * capture.footFraction;
+        assert.ok(Math.abs(-mesh.position[1] * 48 / Math.SQRT2 - footY) < 1e-8,
+            'Physical billboard foot contact must coincide with its own painted foot line');
+    }
+    const invalid = () => huntSurfaceRenderable('bad', 0, 0, 100, 100, true, { footFraction: 1.5 });
+    assert.throws(invalid, RangeError);
 });
 
 test('same-depth walls keep distinct stable GPU IDs and crop their own footprints', async () => {

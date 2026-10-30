@@ -38,7 +38,7 @@ test('unhashed bootstrap resources still invalidate by build SHA', () => {
 
 test('slow first startup never silently reloads during a healthy download', () => {
     assert.match(source, /FIRST LAUNCH MAY TAKE A MOMENT/);
-    assert.match(source, /recoveryTimer = window\\.setTimeout/);
+    assert.match(source, /recoveryTimer = window\.setTimeout/);
     const choiceAt = source.indexOf('await showG4PreflightChoice()');
     const watchdogAt = source.indexOf('recoveryTimer = window.setTimeout');
     assert.ok(choiceAt >= 0 && watchdogAt > choiceAt,

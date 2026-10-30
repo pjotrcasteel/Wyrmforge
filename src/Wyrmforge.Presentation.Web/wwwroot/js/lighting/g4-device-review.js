@@ -259,11 +259,20 @@ export function mountG4DeviceReview(canvas, getGpu, mode = 'canvas', quality = n
         if (completed) return;
         completed = true;
         session.stop(now());
+        // Results screen has reward and navigation buttons. A player can leave
+        // the live diagnostic expanded when dying; collapse it and move the
+        // saved summary into the quiet lower-left footer instead of covering
+        // the results actions. Keep the saved FPS and p95 readable.
+        panel.open = false;
+        panel.style.right = 'auto';
+        panel.style.left = '8px';
+        panel.style.bottom = 'max(8px, env(safe-area-inset-bottom))';
+        panel.style.maxWidth = 'min(240px, 72vw)';
         const summary = session.summary();
         if (persist(outcome)) {
             // The collapsed chip remains visible after Hunt teardown. Show the
             // useful measurements right here, never behind another menu.
-            header.textContent = `G4 · ${Math.round(summary.observedFps)} FPS · p95 ${Math.round(summary.frameMsP95)}ms · SAVED`;
+            header.textContent = `G4 · SAVED · ${Math.round(summary.observedFps)} FPS · p95 ${Math.round(summary.frameMsP95)}ms`;
             updateStatus('Performance saved after the Hunt; no export needed.');
             if (consented()) {
                 writeJson(G4_PENDING_KEY, readJson(G4_LAST_RECORD_KEY));

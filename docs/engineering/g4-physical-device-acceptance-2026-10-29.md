@@ -29,3 +29,42 @@ No file export is required. With private delivery consent enabled, the frame pac
 The JSON measures **requestAnimationFrame timing** (p50/p95/p99; per-minute warm-up trends), sampled CPU submission and GPU-upload counts, renderer-fallback/missing frames and runtime errors. It cannot measure genuine GPU time, GPU VRAM, GPU temperature, battery power draw or thermal throttling directly. Those require physical instrumentation or user observations.
 
 The G4 milestone remains **unaccepted** until mobile visual quality and sustained real iOS/Android performance meet agreed budgets. G5 default renderer cutover, the painted Town, AN0–AN6 and the AI/Arena engines are independent and unaffected.
+
+
+## First real iPhone acceptance evidence — 30 October 2026 (PARTIAL, not sign-off)
+
+The owner supplied **four unmodified, real iPhone screenshots** from the isolated Pages
+candidate `v0.0.180-g4-preview · 4244d63`. The screenshots were supplied in the
+review conversation; no AI-generated images or desktop mockups are used as evidence.
+The separate Pages deploy and smoke run [41017988776](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/41017988776)
+passed. Shared GPU proof runs [41017896048](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/41017896048)
+and [41017902579](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/41017902579)
+also passed on the integrated branch.
+
+| Actual iPhone observation | Evidence / finding |
+| --- | --- |
+| Recorder persistence and consented delivery | Run-lost screen shows **G4 · 49 FPS · p95 33ms · SAVED**, plus **G4 saved and privately received**. **PASS**: no export and no loss on death. Collector receipt is screen-confirmed; detailed private per-run data was not retrieved by the reviewer. |
+| Timing | Saved panel reports **48.98 observed FPS, 33ms p95, 282.22s recording elapsed**. The gameplay results screen separately shows **219s** for that run. These are different clocks; do not call the whole 282.22s active gameplay or infer GPU execution timing from rAF pacing. |
+| Actual play | The results screen shows **73 kills across four trails**, with player-controlled movement, enemies and spells visible in the preceding screenshots. |
+| World readability | Trail 1 (Abandoned Road) and Trail 3 (Wet Forest) show clear terrain and the hunter in the middle of combat. **Trail 2 (Wet Forest)** is much darker: most of the world outside the narrow hunter light radius is difficult to discern. This is an **open visual regression/acceptance concern**, not an approved Gothic night. Require source-based lighting investigation and a new *real-Hunt* screenshot after any fix. |
+| Post-death presentation | An **expanded G4 diagnostic overlay visibly covers portions of the rewards/actions screen**. Follow-up code in the same G4 workstream collapses and re-docks the saved summary at Hunt completion; validate on mobile before calling the overlay accepted. |
+| Battery and temperature | The iPhone battery indicator shows a charging symbol and an increase from about **25% to 29%** between captures. Consequently the screenshots cannot establish battery *drain*. No device thermal or power instrumentation is provided. |
+| Other required acceptance | No matched Canvas comparison, Android physical-device run, sustained 10-minute thermal/battery trace, input-latency assessment, GPU memory/time instrumentation, or owner approval of the dark Trail 2 appearance is included in these screenshots. These gates remain **OPEN**. |
+
+**Disposition:** The previously blocked *recording + death persistence + private receipt*
+acceptance slice is now confirmed by **real-device** proof. G4 overall remains
+**partially accepted, not complete**, because scene-wide readability and sustained
+cross-device performance/thermal acceptance remain open. G5 production cutover is
+a separate milestone. Preserve the painted Town, C# source authority, other engine
+work and the default Canvas Hunt. Do not ask for another JSON export.
+
+
+## Follow-up mobile GPU visual defects — 30 October 2026
+
+The same iPhone review reports **the mage partially buried in the ground, Bell Warden and Wyrm silhouettes distorted or sunk, and frequent screen tearing/flicker**. These were not approved by the owner. The G4 presentation fixes are staged in [PR #424](https://github.com/pjotrcasteel/Wyrmforge/pull/424), after the owner screenshot evidence:
+
+- **Generic sprite-foot geometry:** source captures originally put the C# position at 75% of the texture height, but the painted feet and boss tails extend farther down. The old default billboard translated its plane by only 25% before tilt, placing its lower quarter *below* Z=0, where terrain depth could hide it. The single shared upright plane now starts on Z=0. The Hunt's existing Canvas paint extents give each actor a **data-driven painted-foot fraction** (mage, standard enemy including Bell Warden, Wyrm), which the existing generic atlas-frame binding crops and scales without discarding visible legs or tails. Unit tests cover grounding, per-source crop UVs and no negative-Z vertices. This is a renderer adaptation, not an animation or C# collision change.
+- **Mobile tear prevention:** compose complete GPU-world, actors, VFX, HUD and overlays into a reusable correctly DPR-sized Canvas staging surface, then copy that completed frame **once** to the visible interactive Canvas with nearest-neighbor sampling. This preserves the existing single shared GPU lighting renderer and gameplay authority. The extra staging copy can cost mobile memory/bandwidth: the device-level frame pacing gate remains required. Unit tests check reuse, transforms, no interpolation and single visible presentation. No GPU timer or memory measurement is invented.
+- **Other G4 review UI:** the post-Hunt G4 report collapses/moves away from the rewards; the separate preboot consent and private delivery remain intact.
+
+**Acceptance remains open:** The above are source-backed repairs, not visual owner approval or proof of zero tearing on iPhone. Rebuild the isolated pinned Pages candidate **only after the exact-head tests pass**, obtain real iPhone screenshot/video proof of an upright mage, Bell Warden and Wyrm with correct foot contact and no frame tearing under camera movement, and verify p95 frame pacing has not regressed versus the prior 33 ms result. Do not fold GPU defaults into production or close G4 prematurely. The dark Trail 2 scene is still an outstanding independent visual concern.

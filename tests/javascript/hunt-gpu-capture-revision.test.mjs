@@ -265,3 +265,56 @@ test('WebGL-to-Hunt composite always uses nearest pixel sampling and restores ca
     assert.throws(() => compositeHuntGpuFrame(ctx, image), /context unavailable/);
     assert.equal(calls.at(-1), 'restore', 'A failed GPU composite must still unwind Canvas state');
 });
+
+
+test('G4 presents a complete WebGL/Canvas frame only once after all combat layers', async () => {
+    const { prepareHuntGpuPresentation, presentCompletedHuntGpuFrame } =
+        await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/hunt-gpu-layers.js');
+    const events = [];
+    const stageContext = {
+        setTransform(...values) { events.push(['stage-transform', ...values]); },
+        get globalAlpha() { return this._alpha; }, set globalAlpha(value) { this._alpha = value; },
+        get imageSmoothingEnabled() { return this._smoothing; },
+        set imageSmoothingEnabled(value) { this._smoothing = value; },
+        set globalCompositeOperation(value) { this._blend = value; },
+    };
+    const stage = {
+        width: 0, height: 0,
+        getContext(mode) { assert.equal(mode, '2d'); return stageContext; }
+    };
+    const first = prepareHuntGpuPresentation(stage, 402.3, 656.2, 2);
+    assert.equal(first, stageContext);
+    assert.equal(stage.width, 804);
+    assert.equal(stage.height, 1312);
+    assert.equal(first.imageSmoothingEnabled, false);
+    assert.equal(first._blend, 'source-over');
+    prepareHuntGpuPresentation(stage, 402.3, 656.2, 2);
+    assert.equal(stage.width, 804, 'stable mobile dimensions must not realloc the bitmap');
+    assert.throws(() => prepareHuntGpuPresentation(stage, 0, 656, 2), RangeError);
+
+    const visible = {
+        save() { events.push(['save']); },
+        restore() { events.push(['restore']); },
+        setTransform(...values) { events.push(['visible-transform', ...values]); },
+        set globalAlpha(value) { events.push(['alpha', value]); },
+        set globalCompositeOperation(value) { events.push(['blend', value]); },
+        set imageSmoothingEnabled(value) { events.push(['smoothing', value]); },
+        drawImage(...values) { events.push(['present', ...values]); },
+    };
+    presentCompletedHuntGpuFrame(visible, stage);
+    assert.equal(events.filter(e => e[0] === 'present').length, 1);
+    assert.deepEqual(events.find(e => e[0] === 'present'), ['present', stage, 0, 0]);
+    assert.ok(events.find(e => e[0] === 'blend' && e[1] === 'copy'));
+    assert.ok(events.find(e => e[0] === 'smoothing' && e[1] === false));
+    assert.equal(events.at(-1)[0], 'restore');
+    assert.throws(() => presentCompletedHuntGpuFrame(visible, null), TypeError);
+
+    const { readFile } = await import('node:fs/promises');
+    const arena = await readFile(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena.js', import.meta.url), 'utf8');
+    const after = arena.slice(arena.indexOf('function draw(state, snapshot'));
+    assert.match(after, /prepareHuntGpuPresentation\(presentation, width, height, state\.pixelRatio\)/);
+    assert.match(after, /if \(presentation\) presentCompletedHuntGpuFrame\(state\.context, presentation\)/);
+    assert.ok(after.indexOf('drawPerformanceCounter(state, ctx, snapshot') <
+        after.indexOf('presentCompletedHuntGpuFrame(state.context, presentation)'),
+        'Terrain, actor silhouettes, VFX and overlays must finish before the only visible commit');
+});

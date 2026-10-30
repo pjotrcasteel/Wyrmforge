@@ -192,10 +192,15 @@ test('after Hunt death the collapsed G4 chip itself shows FPS and p95 without an
         for (let i = 1; i <= 25; i++) {
             recorder.record(start + i * 16, { playing: true, renderingFailed: false, gpuAvailable: false });
         }
+        // A player may have expanded diagnostics before being defeated.
+        elements[0].open = true;
         recorder.dispose();
         assert.equal(elements.length, 1);
-        assert.equal(elements[0].open, false, 'the G4 chip remains compact');
-        assert.match(elements[0].children[0].textContent, /G4 · \d+ FPS · p95 \d+ms · SAVED/);
+        assert.equal(elements[0].open, false, 'the G4 chip collapses on the death screen');
+        assert.equal(elements[0].style.left, '8px', 'dock away from results actions');
+        assert.equal(elements[0].style.right, 'auto');
+        assert.match(elements[0].style.bottom, /8px/);
+        assert.match(elements[0].children[0].textContent, /G4 · SAVED · \d+ FPS · p95 \d+ms/);
         assert.ok(JSON.parse(saved.get(G4_LAST_RECORD_KEY)).frameIntervals >= 10);
     } finally {
         globalThis.document = oldDocument;
