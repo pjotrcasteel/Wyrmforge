@@ -151,5 +151,20 @@
     ],
     "prompt": "staff-designs-v007-prompt.txt",
     "status": "Owner-approved staff appearance direction: keep here and have wizards hold them. Runtime/material/effect acceptance pending."
+  },
+  "heldStaffsRevision8": {
+    "file": "wizards-held-staffs-v008.png",
+    "sha256": "2a5eadad0da8ee88b7d4dc1170dc902511a980941e9257610ffeca6cd5b89908",
+    "size": [
+      1536,
+      1024
+    ],
+    "generator": "built-in image_gen edit",
+    "inputs": [
+      "school-variants-v004.png",
+      "staff-designs-v007.png"
+    ],
+    "prompt": "wizards-held-staffs-v008-prompt.txt",
+    "status": "Six held-staff wizard appearance composite; review pending, not runtime acceptance"
   }
 }

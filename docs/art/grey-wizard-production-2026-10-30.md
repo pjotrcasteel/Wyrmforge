@@ -293,3 +293,14 @@ glow/partial alpha; future material/emission/effect separation remains mandatory
 V008 composite brief combines v004 character/capes with v007 staffs at human scale,
 same right-hand grips, complete staffs from ground to just above the hat. Exact
 prompt `wizards-held-staffs-v008-prompt.txt`; no new character/staff redesign intended.
+
+V008 saved as `wizards-held-staffs-v008.png`, 1536x1024 original built-in edit.
+Inspected all six: corresponding v007 identities retained, staffs visibly held in
+right hands with continuous shafts down beside boots; complete figures and heads
+in frame. Grey school cape studies retained in the composition, with incidental
+generated thread/contrast differences; source references remain v004 capes and
+v007 staffs, not automatically replaced by this composite. Large magical heads
+need native-scale/gameplay clearance review; no animated hands, lighting, material
+passes, gameplay or physical-phone validation claimed. Composite appearance review
+pending. Exact prompt/inputs and source SHA256/dimensions preserved. Git diff check
+and file checks only; no executable changes or gameplay tests.
