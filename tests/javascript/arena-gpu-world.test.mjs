@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { huntLightFrame } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js';
+import { huntLightFrame, HuntGpuWorld } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js';
 
 test('Hunt lights track camera with the same world scale and handedness as receivers', () => {
     const frame = { version: 1, time: 2, environment: { ambient: 0 }, lights: [{
@@ -300,4 +300,27 @@ test('authoritative projectile point light retains one mobile shadow budget and 
     assert.equal(hollowed.receivesShadow, true);
     assert.equal(hollowed.castsShadow, true);
     assert.equal(hollowed.frame, undefined, 'Actor should not be compressed or cropped.');
+});
+
+test('live GPU shadow pixel proof isolates one real light and restores its renderer state', () => {
+    const light = { castShadow: true };
+    const frames = [];
+    const lit = Uint8Array.from([0, 0, 0, 255, 200, 200, 200, 255]);
+    const unshadowed = Uint8Array.from([30, 30, 30, 255, 200, 200, 200, 255]);
+    const engine = {
+        lights: new Map([['projectile:proof', light]]),
+        canvas: { width: 2, height: 1 },
+        render() { frames.push(light.castShadow); },
+        pixels() { return light.castShadow ? lit : unshadowed; },
+    };
+    const world = { engine, width: 2, height: 1 };
+    const measured = HuntGpuWorld.prototype.shadowPixelProof.call(world, 'projectile:proof');
+    assert.deepEqual(measured, {
+        sourceId: 'projectile:proof', available: true, changedPixels: 1,
+        maxPixelDelta: 90, framebuffer: [2, 1],
+    });
+    assert.deepEqual(frames, [true, false, true],
+        'The test renders the same scene with one source shadow disabled, then restores it.');
+    assert.equal(light.castShadow, true, 'A visual proof cannot alter subsequent gameplay frames.');
+    assert.equal(HuntGpuWorld.prototype.shadowPixelProof.call(world, 'unknown').available, false);
 });
