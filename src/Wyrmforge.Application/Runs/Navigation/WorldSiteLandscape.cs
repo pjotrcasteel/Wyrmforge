@@ -100,6 +100,8 @@ public static class WorldSiteLandscapeGenerator
         // Chart edges does not determine how many visible roads the arena draws.
         if (kind is "forest-fork" or "forest-trail" or "mountain-pass" or "mountain-monastery")
             AddNearRoadShoulders(geography, mountain, random, obstacles);
+        if (mountain)
+            AddMountainAnchors(geography, random, obstacles);
         if (geography.GenerationProfile?.Landmark == WorldSiteLandmark.Monastery)
             AddMonasteryBuilding(geography, obstacles);
 
@@ -149,6 +151,42 @@ public static class WorldSiteLandscapeGenerator
                 obstacles.Add(new WorldSiteObstacle(obstacleKind, material,
                     mountain ? 1.5 : .7, Polygon(point, radiusX, radiusY, random)));
             }
+        }
+    }
+
+    // Tall, physically blocking ridge masses must be present even when a seed
+    // has multiple exit-clearance lanes. They are placed in free terrain, never
+    // by copying the Chart's graph degree into a fork-shaped mountain road.
+    private static void AddMountainAnchors(
+        WorldSiteGeography site, Random random, List<WorldSiteObstacle> obstacles)
+    {
+        var lanes = site.Corridors.Concat(site.ScenicPaths).ToArray();
+        var candidates = new[]
+        {
+            new HuntPoint(.22, .22), new HuntPoint(.78, .22),
+            new HuntPoint(.22, .78), new HuntPoint(.78, .78),
+            new HuntPoint(.20, .43), new HuntPoint(.80, .43),
+            new HuntPoint(.20, .62), new HuntPoint(.80, .62),
+            new HuntPoint(.33, .24), new HuntPoint(.67, .24),
+        };
+        var anchors = candidates.Select(point => new
+        {
+            Point = point,
+            Clearance = lanes.Min(lane => CorridorDistance(point, lane.Points) - lane.Width * .5),
+        }).OrderByDescending(candidate => candidate.Clearance).ToArray();
+        var selected = new List<HuntPoint>();
+        var material = site.RegionId == "frost" ? WorldSiteSurfaceId.GlacialIce : WorldSiteSurfaceId.Rock;
+        var kind = site.RegionId == "frost" ? "glacier-cliff" : "cliff";
+        foreach (var candidate in anchors)
+        {
+            if (selected.Count == 4) break;
+            if (candidate.Clearance < .055 ||
+                selected.Any(point => Math.Hypot(point.X - candidate.Point.X, point.Y - candidate.Point.Y) < .19))
+                continue;
+            var radius = Math.Clamp(candidate.Clearance * .38, .025, .075);
+            obstacles.Add(new WorldSiteObstacle(kind, material, 2.3,
+                Polygon(candidate.Point, radius, radius * 1.12, random)));
+            selected.Add(candidate.Point);
         }
     }
 
