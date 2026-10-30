@@ -97,9 +97,29 @@ using the adjacent exact `concept-prompt.txt`. No pack images were generation in
 Original output is preserved byte-for-byte. Three-view costume/identity concept:
 recognisable aged face, grey pointed hat, beard, layered cloak, wooden staff and boots.
 Inspection: attractive costume direction but far too detailed for a native sprite;
-generated dark background despite transparency request, long hem may hide steps,
+alpha has transparent background plus partial-alpha regions (not a clean binary
+cutout), long hem may hide steps,
 beard is more tapered than split, side view is closer to profile than elevated game
 camera. This is a concept only, not an atlas, animation or alpha-ready runtime art.
 Next targeted refinement: genuinely transparent background and much simpler,
 consistent pixel clusters at small actor scale; retain the identity and proportions.
 Visual/art approval, editable native layers, motion and game/device proof remain open.
+
+## Appearance candidate v002 / review gate
+
+Targeted built-in ImageGen edit of v001, no external pack inputs. Preserved original
+`appearance-concept-v002.png`, exact `refinement-prompt.txt`, and SHA256/dimensions/
+alpha statistics for both in `provenance.json`. The three-view 1536x1024 study has
+simpler grey folds, brighter beard and clearer separate boots. It is still a
+generated high-resolution concept: not a validated 64x80 grid, restricted palette,
+binary cutout, shared-anchor pack or editable pixel layers. Do not ship by shrinking
+it and calling it finished pixel art. Front/side/back staff views retain the same
+right-hand identity; view silhouettes and perspective need native reconstruction.
+
+Current deliverable is ready for the appearance review described in stage 1.
+Unapproved appearance stays outside runtime. Next: editable native front-facing
+sprite, world-scale comparison, then the genuine south walk proof. No old wizard
+rig, animation engine or live mage replacement was introduced. No tests were run
+because this checkpoint contains documentation and source concepts only; file
+dimensions, alpha, hashes and visual contents were checked. Native/mobile game
+and physical-device validation are pending, not implied by these source images.

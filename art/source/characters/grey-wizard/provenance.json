@@ -1,0 +1,35 @@
+{
+  "generator": "built-in image_gen",
+  "externalAssetImagesAsInputs": false,
+  "candidate2Input": "appearance-concept-v001.png",
+  "candidates": [
+    {
+      "file": "appearance-concept-v001.png",
+      "sha256": "71f757e7111c722bb9428bd7a3c41e35c23e6f42e4ff70db2e7275cad8b7f018",
+      "bytes": 2156526,
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparentPixels": 727043,
+      "opaquePixels": 0,
+      "partialAlphaPixels": 845821,
+      "status": "appearance concept, not production sprite or approved art"
+    },
+    {
+      "file": "appearance-concept-v002.png",
+      "sha256": "3a30cbc4849346076cc794f44908b3188ee2851b30ff81c04955560dcc1f58d1",
+      "bytes": 1632249,
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparentPixels": 660463,
+      "opaquePixels": 0,
+      "partialAlphaPixels": 912401,
+      "status": "appearance concept, not production sprite or approved art"
+    }
+  ]
+}
