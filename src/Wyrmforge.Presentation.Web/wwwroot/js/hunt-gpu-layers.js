@@ -153,6 +153,12 @@ export class HuntGpuScratchPool {
  * non-interpolated image to the visible interactive Hunt canvas.
  * This is a presentation staging surface, not a second lighting engine.
  */
+/** A G4 review frame is fully staged before it is presented to Safari. */
+export function shouldStageHuntGpuReviewFrame(params, gpuRequested) {
+    return gpuRequested && params.get('g4Review') === '1' &&
+        params.get('g4StageFrames') !== '0';
+}
+
 export function prepareHuntGpuPresentation(canvas, width, height, dpr) {
     if (!canvas || ![width, height, dpr].every(Number.isFinite) ||
         width <= 0 || height <= 0 || dpr <= 0) throw new RangeError('Invalid G4 presentation dimensions');
