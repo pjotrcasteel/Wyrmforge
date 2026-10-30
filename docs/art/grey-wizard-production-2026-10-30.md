@@ -163,3 +163,19 @@ Research principles, no copied museum motifs:
 Pixel/mobile requirement: compare badge and staff silhouettes at actual native
 actor scale later; this high-resolution board cannot establish Hunt readability.
 No gameplay availability, casting effects or new spells are implied by six designs.
+
+### Six-school comparison v001
+
+Saved `art/source/characters/grey-wizard/school-variants-v001.png` (1536x1024),
+original built-in edit output, with exact prompt, inputs and SHA256 in provenance.
+Visually inspected: all six back badges visible below hood, grey costume preserved,
+school-coloured compact staff heads, same grip and no baked flame. Fire/Frost/Storm
+top row; Arcane/Necromancy/Summoner bottom row. Summoner is a bear head, not a paw.
+The image interprets the atlas motifs on cloth; it is not a byte-identical emblem
+export and must not replace the existing canonical atlas. Native production must
+reuse the approved emblem source/layers rather than extracting newly generated
+symbols from this board. Broad glow/partial alpha and high-resolution detail remain
+concept limitations; do not claim material, transparency or mobile validation.
+No runtime files changed. `git diff --check`, source dimensions and hashes checked;
+no gameplay tests applicable to this source-art/docs slice. Variant appearance
+approval remains open; the approved base reference stays unchanged.

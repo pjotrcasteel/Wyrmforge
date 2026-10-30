@@ -45,5 +45,26 @@
     "approvedOn": "2026-10-30",
     "approval": "Canonical default mage appearance; supersedes slate-blue hooded default and both provisional concept candidates",
     "scope": "Visual identity approval only; native sprite, animation, materials, integration and device acceptance remain pending"
+  },
+  "schoolVariants": {
+    "file": "school-variants-v001.png",
+    "sha256": "cce962aef48a76ec35c78f169dbf096014eef09e0830b87f5541ae939cf48087",
+    "size": [
+      1536,
+      1024
+    ],
+    "mode": "RGBA",
+    "generator": "built-in image_gen edit",
+    "inputs": [
+      "approved-default-reference.png",
+      "src/Wyrmforge.Presentation.Web/wwwroot/art/divine-lineage-sigils.webp"
+    ],
+    "prompt": "school-variants-prompt.txt",
+    "status": "Six-school cape/staff appearance proposal; visual approval and native production pending",
+    "alphaCounts": {
+      "transparent": 961977,
+      "opaque": 0,
+      "partial": 610887
+    }
   }
 }
