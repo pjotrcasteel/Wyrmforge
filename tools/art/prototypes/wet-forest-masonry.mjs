@@ -22,7 +22,7 @@ function drawChip(paint, x, y, width, height, rnd, tone) {
     }
 }
 
-function stoneFace(paint, x, y, w, h, rand, type) {
+function stoneFace(paint, x, y, w, h, rand, type, stoneIds = null, stoneId = 0) {
     // Polygon-like softened corners; mortar is the continuous dark base underneath.
     const r = rand();
     const sunken = r < (type === 'flagstone' ? .18 : .13);
@@ -53,6 +53,16 @@ function stoneFace(paint, x, y, w, h, rand, type) {
         paint.line(fx, fy, fx + (rand() < .5 ? -3 : 3), fy + 2, STONE[0]);
         paint.line(fx + 2, fy + 1, fx + 4, fy + 1, STONE[1]);
     }
+    // Stable brick IDs follow the authored face, never the changing pixel color.
+    // Completely missing bricks remain unoccupied so a generic degradation rule
+    // can remove them without drawing a straight atlas-cell boundary.
+    if (stoneIds) {
+        for (let dy = 1; dy < h - 1; dy++) for (let dx = inset; dx < w - inset; dx++) {
+            const xx = ((x + dx) % MASONRY_PERIOD + MASONRY_PERIOD) % MASONRY_PERIOD;
+            const yy = ((y + dy) % MASONRY_PERIOD + MASONRY_PERIOD) % MASONRY_PERIOD;
+            stoneIds[yy * MASONRY_PERIOD + xx] = stoneId;
+        }
+    }
     drawChip(paint, x, y, w, h, rand, STONE[1]);
     if (rand() < .55) {
         // Moss grows out of a joint, not in random rectangular patches.
@@ -66,10 +76,12 @@ function stoneFace(paint, x, y, w, h, rand, type) {
 
 // A period is an artwork palette/phase domain; 8×8 phase-aware 32px cells reconstruct
 // ONE coherent 256px surface. Do not randomly reorder individual cells in a renderer.
-function createBrickMasonryField(type = 'brick', seed = 1387) {
+function createBrickMasonrySurface(type = 'brick', seed = 1387) {
     if (type !== 'brick') throw new RangeError(`Invalid masonry type: ${type}`);
     const r = rng(seed ^ (type === 'cobble' ? 0x452369 : 0x89abcdef));
     const b = new Bitmap(MASONRY_PERIOD, MASONRY_PERIOD);
+    const stoneIds = new Int32Array(MASONRY_PERIOD * MASONRY_PERIOD);
+    let nextId = 1;
     b.wrap = true;
     // Worn mortar approaches the surrounding soil; avoid dark graphic outlines.
     b.rect(0, 0, MASONRY_PERIOD, MASONRY_PERIOD, STONE[1]);
@@ -102,7 +114,7 @@ function createBrickMasonryField(type = 'brick', seed = 1387) {
         const joints = new Set();
         for (const width of widths) {
             // Repeated use of x±256 is unnecessary: Bitmap wrapping maps coordinates to phase.
-            stoneFace(b, x, y, width, height, r, type);
+            stoneFace(b, x, y, width, height, r, type, stoneIds, nextId++);
             joints.add(x % MASONRY_PERIOD);
             x += width;
         }
@@ -120,7 +132,7 @@ function createBrickMasonryField(type = 'brick', seed = 1387) {
             b.rect(x, y, 2, 2, SOIL[0]);
         }
     }
-    return b;
+    return {bitmap: b, stoneIds};
 }
 
 
@@ -221,7 +233,7 @@ function createOrganicMasonryField(type, seed) {
 }
 
 export function createMasonrySurface(type = 'flagstone', seed = 1387) {
-    if (type === 'brick') return {bitmap:createBrickMasonryField(type, seed),stoneIds:null};
+    if (type === 'brick') return createBrickMasonrySurface(type, seed);
     if (type === 'flagstone' || type === 'cobble') return createOrganicMasonryField(type, seed);
     throw new RangeError(`Invalid masonry type: ${type}`);
 }
