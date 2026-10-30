@@ -204,3 +204,29 @@ test('mobile shadow camera only recomputes its projection when light range chang
         }
     }
 });
+
+
+test('G4 reuses fog across night frames and never lights zero-light darkness', async () => {
+    const { synchronizeEnvironmentFog } =
+        await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/engine.js');
+    const scene = { fog: null };
+    const night = { ambient: .15, color: '#8c9cbb',
+        fog: { color: '#304030', near: 2, far: 20 } };
+    synchronizeEnvironmentFog(scene, night);
+    const first = scene.fog;
+    assert.ok(first?.isFog);
+    const expected = new T.Color('#304030')
+        .multiply(new T.Color('#8c9cbb')).multiplyScalar(.15);
+    assert.ok(first.color.equals(expected), 'Fog color uses environment radiance, not a bright standalone layer.');
+    assert.equal(first.near, 2);
+    synchronizeEnvironmentFog(scene, night);
+    assert.equal(scene.fog, first, 'Constant night parameters must not allocate a new Fog per animation frame.');
+    synchronizeEnvironmentFog(scene, { ...night, fog: { ...night.fog, near: 5, far: 12 } });
+    assert.equal(scene.fog, first, 'Moving boundaries only update current fog fields.');
+    assert.equal(first.near, 5);
+    assert.equal(first.far, 12);
+    synchronizeEnvironmentFog(scene, { ...night, ambient: 0 });
+    assert.equal(scene.fog, null, 'A zero-light world must never show bright fog silhouettes.');
+    synchronizeEnvironmentFog(scene, night);
+    assert.ok(scene.fog?.isFog, 'Fog can return on a subsequent lit scene.');
+});
