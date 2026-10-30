@@ -177,3 +177,56 @@ test('atlas transforms reset on full-frame transitions without redundant GPU mat
         map.dispose();
     }
 });
+
+
+test('mobile shadow camera only recomputes its projection when light range changes', async () => {
+    const { synchronizeShadowProjection } =
+        await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/engine.js');
+    for (const light of [new T.PointLight(), new T.SpotLight(), new T.DirectionalLight()]) {
+        const camera = light.shadow.camera;
+        const realUpdate = camera.updateProjectionMatrix.bind(camera);
+        let updates = 0;
+        camera.updateProjectionMatrix = () => { updates++; realUpdate(); };
+        try {
+            assert.equal(synchronizeShadowProjection(light, 144, true), true,
+                'New shadow cameras must initialize the authored range and bounds.');
+            assert.equal(updates, 1);
+            for (let i = 0; i < 120; i++)
+                assert.equal(synchronizeShadowProjection(light, 144), false);
+            assert.equal(updates, 1, 'A stationary Fireball light must not rebuild shadow projection on 120 frames.');
+            assert.equal(synchronizeShadowProjection(light, 200), true,
+                'C# projectile range changes must update projection immediately.');
+            assert.equal(camera.far, 200);
+            assert.equal(updates, 2);
+            assert.equal(synchronizeShadowProjection(light, 200), false);
+        } finally {
+            light.dispose();
+        }
+    }
+});
+
+
+test('G4 reuses fog across night frames and never lights zero-light darkness', async () => {
+    const { synchronizeEnvironmentFog } =
+        await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/engine.js');
+    const scene = { fog: null };
+    const night = { ambient: .15, color: '#8c9cbb',
+        fog: { color: '#304030', near: 2, far: 20 } };
+    synchronizeEnvironmentFog(scene, night);
+    const first = scene.fog;
+    assert.ok(first?.isFog);
+    const expected = new T.Color('#304030')
+        .multiply(new T.Color('#8c9cbb')).multiplyScalar(.15);
+    assert.ok(first.color.equals(expected), 'Fog color uses environment radiance, not a bright standalone layer.');
+    assert.equal(first.near, 2);
+    synchronizeEnvironmentFog(scene, night);
+    assert.equal(scene.fog, first, 'Constant night parameters must not allocate a new Fog per animation frame.');
+    synchronizeEnvironmentFog(scene, { ...night, fog: { ...night.fog, near: 5, far: 12 } });
+    assert.equal(scene.fog, first, 'Moving boundaries only update current fog fields.');
+    assert.equal(first.near, 5);
+    assert.equal(first.far, 12);
+    synchronizeEnvironmentFog(scene, { ...night, ambient: 0 });
+    assert.equal(scene.fog, null, 'A zero-light world must never show bright fog silhouettes.');
+    synchronizeEnvironmentFog(scene, night);
+    assert.ok(scene.fog?.isFog, 'Fog can return on a subsequent lit scene.');
+});

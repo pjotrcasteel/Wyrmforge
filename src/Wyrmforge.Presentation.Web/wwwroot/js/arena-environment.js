@@ -473,7 +473,10 @@ function drawWetForestProp(ctx, prop, x, y, size) {
 
 export function drawArenaEnvironment(ctx, environment, width, height, elapsedSeconds = 0, approvedAtlas = null, lightingMode = 'canvas', flatColorsOnly = false) {
     if (!environment) return false;
-    const texture = terrainTexture(environment, width, height, approvedAtlas);
+    // Use the SAME terrain mode as reflections and elevations. Omitting it
+    // silently built the full painted tile atlas in a supposedly tile-free
+    // G4 Hunt, retaining two world-sized cache entries on portrait phones.
+    const texture = terrainTexture(environment, width, height, approvedAtlas, flatColorsOnly);
     ctx.drawImage(texture.image, 0, 0, width, height);
     // Render low-angle shadows from CURRENT physical props, never frozen floor art:
     // destroyed trees and ruins lose their shadows in the same C# simulation frame.
