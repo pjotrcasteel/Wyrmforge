@@ -11,6 +11,18 @@ character. Do not present the successful GPU draw/Blender contact workflow as
 AN6 completion, do not merge/cut over the character, and do not replay the
 same clip as positive artistic evidence.
 
+**Confirmed art/source mismatch:** current AN6 real-rig source and CI
+`author_hollow_foundation.py` still read
+`art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-zombie-reach-v3-standard`.
+The owner's separate [Hollowed V2 source-art reset PR #399](https://github.com/pjotrcasteel/Wyrmforge/pull/399)
+explicitly rejects the obsolete mannequin-style body, requires a new
+owner-approved reference-matching body/pose before a new character rig, and
+has no approved replacement source yet. **Do not mistake the retained AN6
+technical reference rig for approved Hollowed art, and do not migrate PR
+#399's unapproved content into the engine branch.** Continue shared engine
+correctness with the existing source as a technical fixture only; integrate
+the real Hollowed art once that separate gate passes.
+
 The real 390px capture shows:
 - A very small, poorly readable silhouette at native gameplay scale; enlarged
   images do not establish 320/390px native readability.
