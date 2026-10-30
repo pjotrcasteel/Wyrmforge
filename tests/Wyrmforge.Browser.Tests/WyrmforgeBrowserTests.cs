@@ -3668,6 +3668,9 @@ public sealed class WyrmforgeBrowserTests : PageTest
             return readablePixels >= count * .16 && totalBrightness >= count * 14;
         }", null, new() { Timeout = 30000 });
 
+        // Reproduce the owner's phone: G4 diagnostics were expanded when the
+        // Hunt ended and covered rewards. Disposal must collapse and re-dock.
+        await panel.EvaluateAsync("el => { el.open = true; }");
         // Simulate the same Blazor teardown that happens on death. The last
         // real gameplay sample must persist and the control must remain usable.
         var result = await Page.EvaluateAsync<JsonElement>(@"() => {
@@ -3675,11 +3678,17 @@ public sealed class WyrmforgeBrowserTests : PageTest
             const saved = JSON.parse(localStorage.getItem('wyrmforge.g4.lastRecord.v1') ?? 'null');
             const panel = document.querySelector('[data-g4-device-review]');
             return { saved, panelAlive: Boolean(panel && panel.isConnected),
-                title: panel?.querySelector('summary')?.textContent ?? '' };
+                title: panel?.querySelector('summary')?.textContent ?? '',
+                collapsed: panel?.open === false,
+                bottomLeft: panel?.style.left === '8px' && panel?.style.right === 'auto' };
         }");
         Assert.IsTrue(result.GetProperty("panelAlive").GetBoolean(),
             "A defeated player's recorder summary must survive Hunt component teardown.");
         StringAssert.Contains(result.GetProperty("title").GetString() ?? "", "SAVED");
+        Assert.IsTrue(result.GetProperty("collapsed").GetBoolean(),
+            "Expanded G4 diagnostics must collapse when the results screen appears.");
+        Assert.IsTrue(result.GetProperty("bottomLeft").GetBoolean(),
+            "Saved G4 chip must move away from the results reward and navigation actions.");
         var evidence = result.GetProperty("saved");
         Assert.AreEqual("gpu", evidence.GetProperty("mode").GetString());
         Assert.IsTrue(evidence.GetProperty("id").GetString()?.Length > 10);
