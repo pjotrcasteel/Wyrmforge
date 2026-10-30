@@ -13,7 +13,7 @@ const southeast=walkingStick||process.argv.includes('--southeast');
 const legCoverage=process.argv.includes('--leg-coverage');
 const bootCleanup=legCoverage||process.argv.includes('--boot-cleanup');
 const southStick=bootCleanup||process.argv.includes('--south-stick');
-const sourceModule=legCoverage?'./gothic-south-legs.mjs':bootCleanup?'./gothic-south-boots.mjs':southStick?'./gothic-south-stick.mjs':overlap?'./gothic-walking-stick-overlap.mjs':repair?'./gothic-walking-stick-repair.mjs':walkingStick?'./gothic-walking-stick-project.mjs':southeast?'./gothic-southeast-project.mjs':'./gothic-project.mjs';
+const sourceModule=process.argv.includes('--east')?'./gothic-east-project.mjs':legCoverage?'./gothic-south-legs.mjs':bootCleanup?'./gothic-south-boots.mjs':southStick?'./gothic-south-stick.mjs':overlap?'./gothic-walking-stick-overlap.mjs':repair?'./gothic-walking-stick-repair.mjs':walkingStick?'./gothic-walking-stick-project.mjs':southeast?'./gothic-southeast-project.mjs':'./gothic-project.mjs';
 const source=await import(sourceModule),{project,poses,idle}=source;
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../../..');
 const out=join(root,'art/source/characters/grey-wizard',project.outputDirectory??'gothic-south-v003');
@@ -62,6 +62,8 @@ function hiddenBleed(b){
     // This is seam support, not invented anatomy or reviewed hidden-source painting.
     const r=new Bitmap(b.width,b.height);
     for(let y=0;y<b.height;y++)for(let x=0;x<b.width;x++)if(master.alpha(x,y)&&!b.alpha(x,y)){
+        if(project.noBleedBelowSourceY!=null&&y>=project.noBleedBelowSourceY)continue;
+        if(project.protectStaffFootprint&&(layers.staff.alpha(x,y)||layers['staff-hand'].alpha(x,y)))continue;
         let chosen=null,best=Infinity;
         for(let oy=-project.bleed;oy<=project.bleed;oy++)for(let ox=-project.bleed;ox<=project.bleed;ox++)if(b.alpha(x+ox,y+oy)){
             const d=ox*ox+oy*oy;if(d<best){best=d;chosen=b.get(x+ox,y+oy);}
@@ -143,7 +145,7 @@ assert.ok(Math.abs((calibration.wizardSourceSoleY-calibration.wizardSourceCrownY
 const profile={schemaVersion:1,maxDeltaSeconds:.1,facing:{directions:[project.direction],degreesPerSecond:360,hysteresisDegrees:3},locomotion:{clip:'walk',frames:16,stride:project.sourceStride*worldSize/size,sourceFps:project.fps,calibration:'source stride only; actual C# speed and frame cadence not accepted'},actions:{}};
 json('animation-profile.json',profile);
 json('manifest.json',{schemaVersion:1,directions:[project.direction],status:project.status,clips:{idle:{image:'idle.png',frames:1,cell:size,anchor,worldSize},walk:{image:'walk.png',frames:16,cell:size,anchor,worldSize}},emission:{walk:'walk-emission.png'},sourceExport:'art/source/characters/grey-wizard/'+(project.outputDirectory??'gothic-south-v003')});
-json('motion.json',{source:'tools/art/grey-wizard/'+sourceModule.slice(2),coordinates:'native source x/y; no gameplay authority',poses,sourceStride:project.sourceStride,sourceContacts:poses.map((p,i)=>({frame:i,left:i<8,right:i>=8,...(walkingStick||southStick?{staffPlanted:i>=7}:{}),...(southeast?{rootX:i,rootY:i}:{rootY:2*i})})),scope:'authored 2D study only; masks, overlap, foot fit and source art need review'});
+json('motion.json',{source:'tools/art/grey-wizard/'+sourceModule.slice(2),coordinates:'native source x/y; no gameplay authority',poses,sourceStride:project.sourceStride,sourceContacts:poses.map((p,i)=>({frame:i,left:i<8,right:i>=8,...(walkingStick||southStick||project.walkingStick?{staffPlanted:i>=7}:{}),...(project.rootPerFrame?{rootX:project.rootPerFrame[0]*i,rootY:project.rootPerFrame[1]*i}:southeast?{rootX:i,rootY:i}:{rootY:2*i})})),scope:'authored 2D study only; masks, overlap, foot fit and source art need review'});
 // Measure source boot raster sole during its declared stance. This is NOT a
 // C# root replay, general biomechanics validation or real Hunt contact proof.
 const contacts=source.sourceContacts?source.sourceContacts(warp,layers):[];

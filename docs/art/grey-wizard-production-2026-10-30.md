@@ -747,3 +747,28 @@ GIF/MP4.14 exact OpenRaster layers, GIF16frames, MP4 decode, new25/25 exports,
 prior v01125/25 unchanged and22 focused tests pass. Existing Sprite Lab320/390
 import/play/pause passes without page errors. Prior source cadences and full
 Hunt/material/phone acceptance remain open; this repair is not final-art approval.
+
+## East-facing source walk — v013
+
+Owner accepted south leg/hem repair and requested continuation. Authored16 E pose
+keys from v005 E native reference, preserving Gothic costume/staff handedness.
+The far foot was hidden: reconstructed editable far boot/shaft from native near
+boot pigments, offset[-2,-2], palette shade0.85, separately keyed/occluded behind
+near foot/body. Explicit lower-leg coverage avoids the prior ankle coverage gap.
+New neutral master includes that small far-heel extension; original E input stays
+preserved.11 source layers,160cell, provisional anchor80,139, worldSize72.944643.
+
+First pre-delivery artifact review caught shaft remnants, missing cloak-fringe
+ownership and seam padding painting shadows into the old shaft footprint. Fixed
+with explicit per-row shaft contours, corrected fringe mask, protected staff
+footprint, and28 native body/fringe pixels trimmed at the true front panel edge.
+No neutral-body cutout is left as an unexplained floating rectangle. Enlarged
+feet/grip sheets inspected through16poses; diagnostics now report one connected
+binary-alpha/unclipped silhouette per frame. These are supplemental diagnostics,
+not artistic acceptance. Original S/SE source exports preserved unchanged.
+
+E support7–15 stays analytically fixed at117,134 under root[1.5i,0]. Raster staff
+tip spread1px and boot stance extent spread0.5px reflect native rounding; grip
+error0. Real C# speed/stride, world perspective/occlusion, material/phone gates
+remain OPEN. No runtime/gameplay/engine changes or production cutover.
+Checkpoint before review media and browser playback.

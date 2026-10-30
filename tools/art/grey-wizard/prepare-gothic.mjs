@@ -6,7 +6,7 @@ import {createHash} from 'node:crypto';
 import assert from 'node:assert/strict';
 import {decodePng,encodePng} from '../lib/png.mjs';
 import {Bitmap} from '../lib/painter.mjs';
-const {project}=await import(process.argv.includes('--leg-coverage')?'./gothic-south-legs.mjs':process.argv.includes('--boot-cleanup')?'./gothic-south-boots.mjs':process.argv.includes('--south-stick')?'./gothic-south-stick.mjs':process.argv.includes('--overlap-fix')?'./gothic-walking-stick-overlap.mjs':process.argv.includes('--repair-stick')?'./gothic-walking-stick-repair.mjs':process.argv.includes('--walking-stick')?'./gothic-walking-stick-project.mjs':process.argv.includes('--southeast')?'./gothic-southeast-project.mjs':'./gothic-project.mjs');
+const {project}=await import(process.argv.includes('--east')?'./gothic-east-project.mjs':process.argv.includes('--leg-coverage')?'./gothic-south-legs.mjs':process.argv.includes('--boot-cleanup')?'./gothic-south-boots.mjs':process.argv.includes('--south-stick')?'./gothic-south-stick.mjs':process.argv.includes('--overlap-fix')?'./gothic-walking-stick-overlap.mjs':process.argv.includes('--repair-stick')?'./gothic-walking-stick-repair.mjs':process.argv.includes('--walking-stick')?'./gothic-walking-stick-project.mjs':process.argv.includes('--southeast')?'./gothic-southeast-project.mjs':'./gothic-project.mjs');
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../../..');
 const base=join(root,'art/source/characters/grey-wizard'),out=join(base,project.outputDirectory??'gothic-south-v003');
 mkdirSync(join(out,'source-layers'),{recursive:true});
@@ -57,10 +57,15 @@ if(project.cleanIslandsMaxPixels){
 const names=[...project.masks.map(m=>m.name),'torso',...(project.underpaint??[]).map(p=>p.name)];
 const layers=Object.fromEntries(names.map(n=>[n,new Bitmap(width,height)]));
 const owner=new Array(width*height).fill(null);
+const staffRows=new Map((project.staffRows??[]).map(([y,left,right])=>[y,[left,right]]));
 const inside=(x,y,poly)=>{let yes=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a[1]>y)!==(b[1]>y)&&x<(b[0]-a[0])*(y-a[1])/(b[1]-a[1])+a[0])yes=!yes;}return yes;};
 for(let y=0;y<height;y++)for(let x=0;x<width;x++)if(master.alpha(x,y)){
-    const name=project.masks.find(m=>inside(x+.5,y+.5,m.polygon))?.name||'torso';
+    const name=project.masks.find(m=>m.name==='staff'&&staffRows.has(y)?x>=staffRows.get(y)[0]&&x<staffRows.get(y)[1]:inside(x+.5,y+.5,m.polygon))?.name||'torso';
     layers[name].set(x,y,master.get(x,y));owner[y*width+x]=name;
+}
+for(const trim of project.trimLayerContours??[])for(let y=0;y<height;y++)for(let x=0;x<width;x++){
+    if(!inside(x+.5,y+.5,trim.polygon))continue;
+    for(const name of trim.names)if(layers[name].alpha(x,y)){layers[name].clear(x,y);master.clear(x,y);}
 }
 // Explicit source painting behind an occluding staff; existing source pigments only.
 // Filled pixels are hidden in the resting source, exposed by authored staff travel.
@@ -82,6 +87,20 @@ for(let y=0;y<height;y++)for(let x=0;x<width;x++){
     const [sx,sy,sw,sh]=leg.donor,pigment=master.get(sx+(x%sw),sy+(y%sh));
     assert.ok(pigment[3],'leg pigment donor missing');layers[leg.name].set(x,y,pigment);
 }
+}
+// Reconstruct an occluded limb as editable native source; keep body and near limb
+// in front. Any newly exposed rest silhouette is explicitly part of the master.
+for(const copy of project.hiddenCopies??[]){
+    const original=layers[copy.from],target=layers[copy.name];
+    for(let y=0;y<height;y++)for(let x=0;x<width;x++)if(original.alpha(x,y)){
+        const tx=x+copy.offset[0],ty=y+copy.offset[1];if(!target.inside(tx,ty))continue;
+        const color=original.get(x,y),shade=copy.shade??1;let pigment=color;
+        if(shade!==1){
+            let distance=Infinity;
+            for(const rgb of palette){const d=rgb.reduce((s,c,k)=>s+(c-color[k]*shade)**2,0);if(d<distance){distance=d;pigment=[...rgb,255];}}
+        }
+        target.set(tx,ty,pigment);if(!master.alpha(tx,ty))master.set(tx,ty,pigment);
+    }
 }
 for(const n of project.drawOrder){const b=layers[n];counts[n]=b.count();assert.ok(counts[n]>0,'empty authored layer '+n);recomposed.blit(b,0,0);writeFileSync(join(out,'source-layers',n+'.png'),encodePng(width,height,b.data));}
 assert.deepEqual(recomposed.data,master.data,'semantic layers alter resting appearance');
