@@ -148,6 +148,7 @@ export class LightingEngine {
         if (o.caster) this.scene.remove(o.caster);
         for (const map of [o.mesh.material.map, o.mesh.material.normalMap, o.mesh.material.roughnessMap, o.mesh.material.aoMap, o.mesh.material.emissiveMap]) map?.dispose();
         for (const material of o.debugMaterials?.values() ?? []) material.dispose();
+        o.caster?.material.map?.dispose();
         o.mesh.material.dispose(); o.caster?.material.dispose();
         this.objects.delete(id);
     }
@@ -201,8 +202,14 @@ export class LightingEngine {
                 const mesh = new T.Mesh(this.geometries.get(d.geometry), this.material(md, d.receivesLight));
                 let caster;
                 if (d.occluderGeometry) {
-                    // Separate authored solid caster; never reuses collision or infers volume from albedo.
-                    const hidden = new T.MeshBasicMaterial({ colorWrite: false, depthWrite: false });
+                    // Shadow-only geometry can carry the same alpha-cutout silhouette as its
+                    // visible material. Color/depth writes remain disabled in the main pass;
+                    // the shared shadow pass still samples transparent sprite pixels.
+                    const cutout = md.albedo ? this.textures.get(md.albedo)?.clone() : null;
+                    const hidden = new T.MeshBasicMaterial({ map: cutout, alphaTest: md.alphaCutoff,
+                        side: md.doubleSided ? T.DoubleSide : T.FrontSide,
+                        colorWrite: false, depthWrite: false });
+                    if (cutout) cutout.needsUpdate = true;
                     caster = new T.Mesh(this.geometries.get(d.occluderGeometry), hidden);
                     this.scene.add(caster);
                 }
