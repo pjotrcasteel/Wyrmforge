@@ -123,5 +123,19 @@
     ],
     "prompt": "school-variants-v005-prompt.txt",
     "status": "Owner accepted integrated-gem direction, requests more unique designs. Staff study only; cape drift not approved, retain v004 capes."
+  },
+  "staffDesignsRevision6": {
+    "file": "staff-designs-v006.png",
+    "sha256": "2ab4f36ec6f1618ae4d174097cfc28bee69ebf3bbf400bfc814daadfc9bc2b43",
+    "size": [
+      1536,
+      1024
+    ],
+    "generator": "built-in image_gen edit",
+    "inputs": [
+      "school-variants-v005.png"
+    ],
+    "prompt": "staff-designs-v006-prompt.txt",
+    "status": "Six unique integrated-gem staff constructions; owner appearance review pending; v004 cape reference unchanged"
   }
 }

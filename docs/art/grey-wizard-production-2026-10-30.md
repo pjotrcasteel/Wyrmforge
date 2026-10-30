@@ -265,3 +265,13 @@ still too similar. V006 isolates six full staffs for better inspection, with dis
 blunt burl / angular stepped head / open copper crook / sideways spiral knot /
 narrow splintered deadwood / squat living-root burl. Gem integration stays; colour
 alone is not enough. Prompt `staff-designs-v006-prompt.txt`. No runtime change.
+
+V006 delivered as `staff-designs-v006.png`, a 1536x1024 staff-only comparison.
+Visually inspected six complete constructions: Fire burnt burl, Frost angular inset,
+Storm copper crook, Arcane sideways spiral, Necromancy jagged deadwood, Summoner
+living-root knot. Embedded gem faces retained; unlike previous repeated frames,
+head silhouettes now differ. This does not alter the accepted v004 cape reference.
+Exact ImageGen prompt/input and SHA256 recorded. Appearance approval pending;
+head proportions must still be calibrated beside the mage at native gameplay scale.
+Not a runtime atlas, material map or phone acceptance proof. File dimensions/hash
+and git diff --check verified; no executable changes or gameplay tests.
