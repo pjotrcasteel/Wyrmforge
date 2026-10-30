@@ -3635,7 +3635,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
             // instance with an empty WeakMap, making a real Hunt look uninitialized.
             const resource = performance.getEntriesByType('resource')
                 .map(entry => entry.name)
-                .find(url => /\\/js\\/arena-performance\\.js\\?v=/.test(url));
+                .find(url => url.includes('/js/arena-performance.js?v='));
             if (!resource) throw new Error('Active Arena performance module was not loaded');
             const performanceArena = await import(resource);
             const arena = await import(new URL('js/arena.js?v=20261028-school-palette-v1', document.baseURI).href);
