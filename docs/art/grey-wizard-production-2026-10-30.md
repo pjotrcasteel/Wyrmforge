@@ -222,3 +222,16 @@ mounted symbols. V003 owner appearance approval remains pending. Partial-alpha
 source concepts are not clean native sprite/material packs or in-Hunt/device proof.
 Exact prompt, input, image hashes/dimensions and production status preserved.
 `git diff --check` verified; no runtime changes or gameplay tests in this slice.
+
+### V004 owner change — subtle cape hue, distinct gem-topped staffs
+
+Owner requested a small hint of school hue in the grey cape and, instead of the
+whole staff resembling the school, a school-coloured top gem with a distinct staff
+design per school. This supersedes v003 full-shaft treatments, not the faded cloth
+embroidery or approved wizard identity. Current canon rewritten to match the latest
+direction rather than retaining conflicting staff constraints. Proposed gemstones:
+red-orange Fire, cyan Frost, yellow Storm, violet Arcane, green Necromancy, earthy
+amber Summoner. Distinct natural wood/metal settings and gem cuts; no icon sculptures.
+Capes remain grey with muted warm/cool/ochre/violet/olive/earth undertones.
+V004 exact edit brief saved as `school-variants-v004-prompt.txt`; prior candidates
+remain preserved. No runtime change or approval of an ungenerated candidate implied.

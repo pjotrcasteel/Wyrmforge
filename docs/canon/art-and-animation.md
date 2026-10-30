@@ -28,16 +28,17 @@ The attachment is authoritative over the earlier provisional v001/v002 concepts.
   symbol on the back of the cape and a matching school-specific staff treatment.
   **Owner correction:** cape symbols are integrated embroidery/weave, following
   fabric curvature, folds, occlusion and shading; no flat floating badge, sticker
-  or glowing UI icon. Staff school identity is integrated into the crooked wooden
-  staff's material, grain, fissures/inlays and restrained magical character across
-  its length; **do not mount school icons, lightning bolts, skulls, bear heads or
-  orb emblems on top**. Preserve the approved natural staff silhouette and grip.
+  or glowing UI icon. **Latest owner direction:** each staff has a distinct design
+  and a school-coloured gem at its top. Preserve slender functional shafts and
+  attached grips; school identity is concentrated in the gem and its individual
+  setting/design, rather than transforming the entire shaft into school material.
+  Gems are physical stones, not school-icon sculptures, skulls or bear heads.
   The first icon-topped comparison is rejected, not an approved variant library.
   Keep the approved grey wizard identity. The base reference remains preserved.
   **Owner refinement:** cape emblems are visibly faded/weathered into the grey
-  cloth; school influence on staff material must be stronger and recognisable
-  along the shaft, while retaining natural wood, slender scale and the original
-  crooked tip. Do not achieve stronger identity by restoring icon-shaped toppers.
+  cloth; each cape also carries a subtle hint of its school's hue while staying
+  predominantly grey. The top-gem/distinct-design direction supersedes the earlier
+  full-shaft school-material experiment; preserve those studies as history.
   Cape symbols reuse the canonical six-school emblem identities, not new sigils.
   They belong to the character's school, not the region/Wyrm selected for a Hunt.
   Specific placement, size and staff variants require appearance review and mobile
