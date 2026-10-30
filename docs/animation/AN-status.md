@@ -2,6 +2,45 @@
 
 **NOT FINISHED. Keep PR #387 draft and unmerged. No final visual approval requested.**
 
+## 30 October 2026 — OWNER VISUAL REJECTION (blocking)
+
+**REJECTED by owner after inspecting the genuine two-light C# Hollowed animation footage.**
+The rendered result was described as **"absolutely horrible"**. This is not an
+approved source-skin/Hollowed appearance, animation showcase or mobile-ready
+character. Do not present the successful GPU draw/Blender contact workflow as
+AN6 completion, do not merge/cut over the character, and do not replay the
+same clip as positive artistic evidence.
+
+The real 390px capture shows:
+- A very small, poorly readable silhouette at native gameplay scale; enlarged
+  images do not establish 320/390px native readability.
+- A thin human-like, awkwardly proportioned character rather than the
+  distinctive Hollowed creature silhouette and coherent pixel-art direction.
+- Stiff, disconnected-looking poses and moving-claw articulation; movement
+  does not convincingly communicate weight, locomotion, attack and recovery.
+- Weak or confusing visual identity/materials; two neutral inspection lights
+  improved brightness, **not** anatomy, sprite readability or animation quality.
+- An experimental source-skin presentation integrated with existing GPU
+  LightingEngine, **not** an accepted default/mobile replacement.
+
+The source QC, 22-bone rest rig, supported foot contacts and source-skin
+render registration remain useful **technical** evidence. They must remain
+distinct from visual acceptance. Do not silently change unrelated Hollowed
+art branches or replace the owner's reference design with a prettier
+render of the wrong silhouette.
+
+**Required visual rework before next owner gate:** preserve source/engine work;
+reconcile the current authoritative cape-free, ash-influenced Hollowed artwork
+and owner-approved reference through its separate art workstream; explicitly
+validate creature proportions, ghoul hair/face, no long coat, internal fire
+accents, native pixel readability, grounded organic action variations and
+attack→recovery→turn→chase in the actual C# game. Show genuine, reasonably
+framed 320/390px playback (not upscaled as proof), and obtain explicit owner
+visual approval **after** objective runtime contact/texture/GPU checks.
+PR #387 stays **draft/unmerged**. This entry records a decision, **not**
+the completion of those fixes.
+
+
 ## 30 October follow-up — independently verified safe source handoff phases
 
 The [0.22m real rig source study](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/41016411094)
