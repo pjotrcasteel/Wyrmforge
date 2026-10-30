@@ -24,7 +24,7 @@ const window = cache.boundary('flagstone', 'grass', {
 // All original albedo, relief and roughness data can be read from window.
 ```
 
-This is a source-art helper and **is not wired into the live rendering loop**. A later runtime cache must be owned by the shared G/material subsystem and respect C# AR3 site identity; this authoring module must not become a competing per-frame renderer.
+The existing `build-ecology-character-scale-review.mjs` now uses a smaller 4-entry / 8 MiB instance for repeated source-art terrain requests. Every generated B5/B6 image and manifest was re-rendered and compared byte-for-byte against the pre-cache verified gallery: **zero differences**. This is a source-art helper and **is not wired into the live rendering loop**. A later runtime cache must be owned by the shared G/material subsystem and respect C# AR3 site identity; this authoring module must not become a competing per-frame renderer.
 
 ### Verification
 
