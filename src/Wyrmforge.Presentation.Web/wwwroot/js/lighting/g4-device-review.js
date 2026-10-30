@@ -15,6 +15,10 @@ export const hasG4Evidence = value => value?.frameIntervals >= minimumIntervals 
 const consented = () => {
     try { return localStorage.getItem(G4_CONSENT_KEY) === 'yes'; } catch { return false; }
 };
+// Distinguish an explicit local-only choice from a first-time, undecided visitor.
+const hasSharingChoice = () => {
+    try { return ['yes', 'no'].includes(localStorage.getItem(G4_CONSENT_KEY)); } catch { return false; }
+};
 
 /** Only bounded numeric aggregation is sent. No full UA, coordinates, DPR, or individual frame samples. */
 export function buildG4CollectorReport(record) {
@@ -234,7 +238,7 @@ export function mountG4DeviceReview(canvas, getGpu, mode = 'canvas', quality = n
     header.style.cursor = 'pointer';
     panel.appendChild(header);
     const help = document.createElement('p');
-    help.textContent = 'G4 records automatically during gameplay. Death and navigation save the result. No export needed.';
+    help.textContent = 'Recording starts automatically. Death saves your results on this phone. Sharing is optional.';
     panel.appendChild(help);
     const status = document.createElement('p');
     status.setAttribute('data-g4-status', '');
@@ -243,13 +247,14 @@ export function mountG4DeviceReview(canvas, getGpu, mode = 'canvas', quality = n
     previous.setAttribute('data-g4-last-result', '');
     panel.appendChild(previous);
     const consentLabel = document.createElement('label');
-    consentLabel.style.display = 'block';
+    Object.assign(consentLabel.style, { display: 'block', padding: '6px 0', fontSize: '14px' });
     const consentBox = document.createElement('input');
     consentBox.type = 'checkbox';
     consentBox.setAttribute('data-g4-consent', '');
+    Object.assign(consentBox.style, { width: '22px', height: '22px', verticalAlign: 'middle', marginRight: '8px' });
     consentBox.checked = consented();
     consentLabel.appendChild(consentBox);
-    consentLabel.append(' Automatically send compact G4 frame-timing results to the private WyrmForge collector after a Hunt. No device identifier, location or per-frame traces. Stored up to 30 days. Off by default.');
+    consentLabel.append(' Send G4 performance results privately after each Hunt (optional). No device identifiers, location or gameplay traces.');
     panel.appendChild(consentLabel);
     const controls = document.createElement('div');
     Object.assign(controls.style, { display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' });
@@ -302,9 +307,9 @@ export function mountG4DeviceReview(canvas, getGpu, mode = 'canvas', quality = n
     };
     consentBox.addEventListener('change', () => {
         try {
-            if (consentBox.checked) localStorage.setItem(G4_CONSENT_KEY, 'yes');
-            else localStorage.removeItem(G4_CONSENT_KEY);
+            localStorage.setItem(G4_CONSENT_KEY, consentBox.checked ? 'yes' : 'no');
         } catch { consentBox.checked = false; }
+        sharingChoice.hidden = true;
         if (consentBox.checked) {
             const previousResult = readJson(G4_LAST_RECORD_KEY);
             if (hasG4Evidence(previousResult) && previousResult.recording === false)
@@ -315,6 +320,32 @@ export function mountG4DeviceReview(canvas, getGpu, mode = 'canvas', quality = n
             ? 'G4 automatic private delivery enabled. Existing results remain on your phone.'
             : 'G4 private delivery disabled. Local results remain.');
     });
+    // First-run choice stays in plain sight instead of inside a collapsed debug pill.
+    // Either choice is intentional: local evidence works without uploading anything.
+    const sharingChoice = document.createElement('div');
+    sharingChoice.setAttribute('data-g4-sharing-choice', '');
+    Object.assign(sharingChoice.style, { display: 'flex', flexWrap: 'wrap', gap: '8px', padding: '6px 0' });
+    const makeChoiceButton = (label, share) => {
+        const control = document.createElement('button');
+        control.type = 'button';
+        control.textContent = label;
+        Object.assign(control.style, {
+            padding: '10px', minHeight: '44px', fontSize: '13px', fontWeight: '600',
+            color: '#fff', background: share ? '#356a5a' : '#504333',
+            border: '1px solid #ad976e', borderRadius: '5px', cursor: 'pointer',
+        });
+        control.addEventListener('click', () => {
+            consentBox.checked = share;
+            consentBox.dispatchEvent(new Event('change'));
+            panel.open = false;
+        });
+        sharingChoice.appendChild(control);
+    };
+    makeChoiceButton('Share results privately', true);
+    makeChoiceButton('Keep on my phone', false);
+    panel.insertBefore(sharingChoice, help);
+    sharingChoice.hidden = hasSharingChoice();
+
     button('Save now', () => finish('Interrupted'));
     button('New sample', () => {
         recordId = crypto.randomUUID();
@@ -329,14 +360,17 @@ export function mountG4DeviceReview(canvas, getGpu, mode = 'canvas', quality = n
             try { localStorage.removeItem(key); } catch { /* Storage may be disabled. */ }
         }
         consentBox.checked = false;
+        sharingChoice.hidden = false;
+        panel.open = true;
         latestLabel();
-        status.textContent = 'Local G4 data and future upload consent erased.';
+        status.textContent = 'G4 data erased. Choose whether to share future performance results.';
     });
     panel.appendChild(controls);
     document.body.appendChild(panel);
+    panel.open = !hasSharingChoice();
     session.start(getNow());
     header.textContent = 'G4 · REC';
-    status.textContent = 'Automatically recording gameplay';
+    status.textContent = hasSharingChoice() ? 'Automatically recording gameplay' : 'Choose how to keep your performance results';
     latestLabel();
     if (consented()) void sendPendingG4Evidence(setStatus);
 
