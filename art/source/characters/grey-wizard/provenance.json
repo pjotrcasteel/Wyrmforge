@@ -137,5 +137,19 @@
     ],
     "prompt": "staff-designs-v006-prompt.txt",
     "status": "Six unique integrated-gem staff constructions; owner appearance review pending; v004 cape reference unchanged"
+  },
+  "staffDesignsRevision7": {
+    "file": "staff-designs-v007.png",
+    "sha256": "30dc01759c750c1bcc5324a2027d66ff11088b7008b6a036c3bacefe8d57cc67",
+    "size": [
+      1536,
+      1024
+    ],
+    "generator": "built-in image_gen edit",
+    "inputs": [
+      "staff-designs-v006.png"
+    ],
+    "prompt": "staff-designs-v007-prompt.txt",
+    "status": "Owner-approved staff appearance direction: keep here and have wizards hold them. Runtime/material/effect acceptance pending."
   }
 }

@@ -46,6 +46,14 @@ The attachment is authoritative over the earlier provisional v001/v002 concepts.
   strengthen local magical character while preserving embedded support and unique
   construction. Any actual emitted light/animated effects remain shared-runtime
   presentation driven by authoritative events, not baked gameplay effects.
+  **Staff appearance selection:** owner selected the
+  [v007 crystal staff lineup](../../art/source/characters/grey-wizard/staff-designs-v007.png)
+  ("keep it here") and requested these held by the wizards. Use these six distinct
+  crystal/wood/metal constructions as the chosen staff appearance reference,
+  together with v004 cape hues/embroidery and the approved base wizard. This
+  selected image governs staff appearance over earlier provisional text/studies;
+  character-scale grip, sprite, light/VFX separation and phone acceptance remain
+  production gates, not implied by source-concept approval.
   The first icon-topped comparison is rejected, not an approved variant library.
   Keep the approved grey wizard identity. The base reference remains preserved.
   **Owner refinement:** cape emblems are visibly faded/weathered into the grey

@@ -284,3 +284,12 @@ small local magical accents, preserving structural wood/metal/root support. Exac
 edit brief `staff-designs-v007-prompt.txt`. This remains a concept study; any future
 dynamic effects/light use existing shared presentation events/renderer, not baked
 gameplay or a separate lighting engine. Cape reference remains v004 unchanged.
+
+V007 saved as `staff-designs-v007.png`, 1536x1024; larger crystal cores and school
+energy accents visibly increase magical identity while retaining six constructions.
+Owner selected this staff direction ("keep it here") and asked wizards to hold them.
+Record source approval, not runtime acceptance. Staff-only source has broad concept
+glow/partial alpha; future material/emission/effect separation remains mandatory.
+V008 composite brief combines v004 character/capes with v007 staffs at human scale,
+same right-hand grips, complete staffs from ground to just above the hat. Exact
+prompt `wizards-held-staffs-v008-prompt.txt`; no new character/staff redesign intended.
