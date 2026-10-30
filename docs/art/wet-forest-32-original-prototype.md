@@ -157,3 +157,7 @@ See [P1h source specification and verification](wf32-p1h-hard-surface-degradatio
 The owner explicitly liked the P1i grass/soil/mud ↔ hard-surface blends and corner transitions. Preserve the existing world-coordinate edge treatment: remove complete stone identities, fill with neighboring soft material, use natural rather than straight clipped outlines, retain continuity across 32px phase cells and overlapping windows. Future P1j environmental decals, richer region wear and palette changes must not degrade these blends.
 
 **Not approved by this statement:** every material's final look, brightness/lighting, the full P1i review, performance, AR3-generated geography, or production live-Hunt integration. The art remains in opt-in PR #429 pending the specific gates above.
+
+## WF32-P1j — context-aware ecology review (30 October 2026)
+
+Seven reusable microdetails, world-coordinate 20px placement, moisture/shelter/wear/density eligibility and lighting-compatible pixel-normal/roughness outputs are now implemented in the existing authoring grammar. The owner-approved P1i blending is protected at each drawn pixel, not merely the detail anchor. Tests explicitly reject painting across a hard-soft boundary. Local tests: **48/48 passing** (41 previous and 7 P1j). **Owner P1j visual approval remains open**; no live Hunt or G cutover. Next is P1k richer biome and performance constraints, not another renderer. See [P1j ecological details and test record](wf32-p1j-ecology.md).
