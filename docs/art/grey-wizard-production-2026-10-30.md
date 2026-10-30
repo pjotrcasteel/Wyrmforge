@@ -700,3 +700,17 @@ keys, staff and contacts. Feet-detail sheet now part of every artifact review.
 16 one-component/binary-alpha/unclipped frames;0 source foot/staff contact drift.
 Visual heel hook is removed; original S/SE pose/runtime/cadence gates stay open.
 Checkpoint before updated media and continued directional source authoring.
+
+### Boot cleanup validation and continued review
+
+Final mask correction moves previously misassigned heel pixels with the boot;
+explicit9pixel corner cleanup and no boot seam dilation remove the spur. Source
+regression reproduces15 old heel-remnant pixels in frames6–10 and verifies clear
+after repair.21 focused tests pass (including prior wrist regression). New25/25
+exports pass; v01025/25 unchanged.14-layer OpenRaster bytes/GIF16frames/MP4 decode
+pass. Inspected all16 light/dark full frames and enlarged feet; generic report
+shows16 connected/binary-alpha/unclipped silhouettes. No automatic all-pixel or
+artistic acceptance claim. Continued direction-source inspection includes E view:
+its far boot is occluded in neutral source, so must author hidden boot/sleeve
+coverage before extending motion; do not blindly warp/duplicate the single visible
+foot into a finished walk. Live stride fit and production gates remain open.
