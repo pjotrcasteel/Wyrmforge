@@ -689,3 +689,14 @@ S source14.5889world stride at12fps corresponds10.9417world units/sec; base190
 would require13.0236cycles/sec. Live walk/run fit remains OPEN. No production
 renderer/C# or active engine work changed. Next source work: remaining facings,
 repeated artifact inspection and credible live-speed locomotion before cutover.
+
+## South boot-edge report and v011 cleanup
+
+Owner crop identified a small dark heel spur. Enlarged16-frame foot review traced
+it to boot-edge pixels assigned to the robe plus hidden-edge padding. Expanded
+boot ownership, disabled extra boot edge dilation, and explicitly beveled9 source
+corner pixels. Original v010 retained. New source5433pixels; same palette/scale,
+keys, staff and contacts. Feet-detail sheet now part of every artifact review.
+16 one-component/binary-alpha/unclipped frames;0 source foot/staff contact drift.
+Visual heel hook is removed; original S/SE pose/runtime/cadence gates stay open.
+Checkpoint before updated media and continued directional source authoring.

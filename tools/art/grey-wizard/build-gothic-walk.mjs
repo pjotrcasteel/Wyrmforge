@@ -10,8 +10,9 @@ const overlap=process.argv.includes('--overlap-fix');
 const repair=overlap||process.argv.includes('--repair-stick');
 const walkingStick=repair||process.argv.includes('--walking-stick');
 const southeast=walkingStick||process.argv.includes('--southeast');
-const southStick=process.argv.includes('--south-stick');
-const sourceModule=southStick?'./gothic-south-stick.mjs':overlap?'./gothic-walking-stick-overlap.mjs':repair?'./gothic-walking-stick-repair.mjs':walkingStick?'./gothic-walking-stick-project.mjs':southeast?'./gothic-southeast-project.mjs':'./gothic-project.mjs';
+const bootCleanup=process.argv.includes('--boot-cleanup');
+const southStick=bootCleanup||process.argv.includes('--south-stick');
+const sourceModule=bootCleanup?'./gothic-south-boots.mjs':southStick?'./gothic-south-stick.mjs':overlap?'./gothic-walking-stick-overlap.mjs':repair?'./gothic-walking-stick-repair.mjs':walkingStick?'./gothic-walking-stick-project.mjs':southeast?'./gothic-southeast-project.mjs':'./gothic-project.mjs';
 const source=await import(sourceModule),{project,poses,idle}=source;
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../../..');
 const out=join(root,'art/source/characters/grey-wizard',project.outputDirectory??'gothic-south-v003');
@@ -68,7 +69,7 @@ function hiddenBleed(b){
     }
     return r;
 }
-const bleed=Object.fromEntries(project.drawOrder.map(n=>[n,hiddenBleed(layers[n])]));
+const bleed=Object.fromEntries(project.drawOrder.map(n=>[n,project.noBleedLayers?.includes(n)?new Bitmap(...project.sourceCell):hiddenBleed(layers[n])]));
 const cross=(a,b,c)=>(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);
 function triangle(dst,texture,uv,xy){
     const det=cross(xy[0],xy[1],xy[2]);if(Math.abs(det)<1e-8)return;

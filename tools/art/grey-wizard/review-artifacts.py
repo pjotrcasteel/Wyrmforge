@@ -45,9 +45,20 @@ for i,im in enumerate(frames):
     detail=im.crop(crop).resize((w,h),Image.Resampling.NEAREST);xy=((i%4)*w,(i//4)*h)
     board.paste(detail,xy,detail);draw.text((xy[0]+5,xy[1]+5),str(i),fill='black')
 board.save(out/'grip-sleeve-detail.png')
+feet=[]
+for name in ('boot-left','boot-right'):
+    box=Image.open(source/'source-layers'/(name+'.png')).getbbox();feet.append(box)
+foot_crop=(max(0,min(b[0] for b in feet)+ox-10),max(0,min(b[1] for b in feet)+oy-10),
+           min(cell,max(b[2] for b in feet)+ox+10),min(cell,max(b[3] for b in feet)+oy+12))
+fw,fh=(foot_crop[2]-foot_crop[0])*4,(foot_crop[3]-foot_crop[1])*4
+board=Image.new('RGB',(fw*4,fh*4),'#85888c');draw=ImageDraw.Draw(board)
+for i,im in enumerate(frames):
+    detail=im.crop(foot_crop).resize((fw,fh),Image.Resampling.NEAREST);xy=((i%4)*fw,(i//4)*fh)
+    board.paste(detail,xy,detail);draw.text((xy[0]+5,xy[1]+5),str(i),fill='white')
+board.save(out/'feet-detail.png')
 report=dict(scope='source raster diagnostics, NOT artistic approval or actual Hunt/device acceptance',
             detachedPixelRule='8-connected alpha; extra components require inspection, never silently called accepted',
-            direction=project['direction'],reviewCrop=crop,frames=reports,
+            direction=project['direction'],reviewCrop=crop,feetReviewCrop=foot_crop,frames=reports,
             flaggedFrames=[r['frame'] for r in reports if r['flagged']])
 (out/'artifact-report.json').write_text(json.dumps(report,indent=2)+'\n')
 print(json.dumps(dict(direction=project['direction'],flaggedFrames=report['flaggedFrames'],components=[len(r['components']) for r in reports])))
