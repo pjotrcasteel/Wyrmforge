@@ -471,3 +471,29 @@ view only, unavailable art/cast uses existing fallback. Lab note makes limitatio
 visible. Source-lit art is not accepted GPU/material/perspective proof. A real
 Hunt/elevation/occlusion/phone matrix still remains; 2D layers are authoring data,
 not a flat 2D product direction. No source rigs/Hollowed/G/AN branches altered.
+
+### Actual C# arena scale capture — 30 October 2026
+
+Captured opt-in Enemy Lab at 320/390px desktop Chromium using existing C# simulation,
+arena camera, actor depth path and no-cape Hollowed. See source
+`gothic-south-v003/scale-review/arena-report.json` and both canvas PNGs. Movement
+measured 104.48/101.33 world units; no browser page errors or rendering failures.
+The capture retries transient canvas replacement without modifying gameplay.
+
+Capture exposed a radius normalization mistake: the actual player radius is14,
+not the legacy drawing assumption12. Candidate now normalizes to14, so the
+72.944643 worldSize applies to the ordinary player instead of enlarging it by
+16.7%. Test uses the real14 baseline. Source frames remain unchanged.
+
+Visual assessment: current Enemy Lab is very dark; sprites are separated in depth
+and only the wizard south view exists. These are genuine arena captures, but do
+not prove final perspective, clean material integration, close side-by-side body
+parity, elevation/occlusion, production Hunt acceptance or physical-phone budgets.
+The Hollowed can select injury/arm and +/-5% size variations; report preserves the
+actual variant rather than silently representing it as standard neutral anatomy.
+Upright parity remains a provisional source-camera guide pending visual review.
+
+Validation: 3/3 scale consumer tests; 25/25 deterministic source exports; actual
+320/390 C# movement/draw/readiness checks. This slice preserves the default mage,
+C# simulation, existing approved sources and concurrent engine work. Draft PR439
+is a review checkpoint, not a production cutover or complete character library.
