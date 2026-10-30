@@ -99,3 +99,43 @@ existing automatically saved G4 p95/FPS report; compare with the prior observed
 The reported mage/Warden/Wyrm squash, missing Fireball illumination/shadow on
 Hollowed, and tearing/heat remain **open separate visual acceptance problems**.
 Do not mark G4 or production GPU cutover complete based on a flat-ground build.
+
+
+## Owner rejection: Fireball directions, missing lighting and mobile performance (30 Oct 2026)
+
+After the first GPU contact/atomic-present candidate, the owner reported **visibly
+squashed mage, Bell Warden and Wyrm**, **very poor performance**, **Fireballs
+vanishing in some aim directions**, and no convincing Fireball light/shadow
+response on the Hollowed. The source-backed tile-free test has been committed
+separately; it removes 900px ground images but cannot fix these independent bugs.
+
+Follow-up draft repair (review gate still OPEN):
+
+- The C# Fireball stays authoritative for travel, position, heading, lifetime and
+  **actual GPU light and shadow**. Its authored 16-frame V5 albedo/emission art
+  is drawn in the existing **camera-independent 2D directional sprite pass after
+  GPU world shading**. Do not also submit the rotated GPU projectile plane and
+  suppress its Canvas image: a camera-facing billboard must not disappear when
+  rotated. Tests exercise eight directions, both V5 channels and the same frame.
+- The shared GPU actor geometry stays ground-contacted but uses the **entire
+  source sprite's original height**. Per-artwork foot metadata may position the
+  object; it must never shorten/crop its vertical artwork. JS regressions cover
+  mage, enemy/Hollowed, Bell Warden and Wyrm aspect.
+- The existing C# Fire projectile light retains its 144px radius and real
+  shadow flag but uses **higher direct-light intensity (6)** for meaningful
+  contrast against moonlight and the hunter's visibility source. No second
+  client-side light or invented hit effect is created. Regression checks that
+  the mobile six-view shadow budget selects the real emitter and Hollowed
+  cutouts receive light/shadow.
+- The additional full-screen 2D presentation staging pass is disabled by
+  default; Safari's preserved WebGL source buffer and a synchronous single-rAF
+  visible Canvas remain. For A/B, `&g4StageFrames=1` explicitly restores
+  staging on the opt-in G4 review. This targets unnecessary framebuffer copies;
+  do not claim zero tearing or improved iPhone p95 without device measurements.
+
+**Must validate before accepting G4:** genuine iPhone playback showing all
+eight Fireball headings, Hollowed visibly illuminated with correct opposing
+shadow when the Fireball passes, the mage/Bell Warden/Wyrm at native proportions,
+camera scroll without tearing, and saved FPS/p95 compared with the original
+~49 FPS / 33ms p95. Maintain flat-vs-painted terrain A/B, iPhone/Android
+temperature gates, and unreadable Trail 2 as open issues. No JSON export.
