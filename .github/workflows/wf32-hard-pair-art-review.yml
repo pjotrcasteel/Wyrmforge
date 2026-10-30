@@ -9,6 +9,7 @@ on:
       - 'tools/art/prototypes/build-hard-pairing-review.mjs'
       - 'tests/javascript/terrain-hard-pairings.test.mjs'
       - 'tests/javascript/terrain-hard-pairing-relief.test.mjs'
+      - 'tests/javascript/terrain-hard-pairing-variation.test.mjs'
       - 'docs/art/wf32-p1k-hard-pairings.md'
       - '.github/workflows/wf32-hard-pair-art-review.yml'
   workflow_dispatch:
@@ -24,8 +25,8 @@ jobs:
       - name: Checkout original source materials
         uses: actions/checkout@v4
       - name: Verify whole-stone seams and world-coordinate continuity
-        run: node --test tests/javascript/terrain-hard-pairings.test.mjs tests/javascript/terrain-hard-pairing-relief.test.mjs tests/javascript/terrain-world-variation.test.mjs
-      - name: Render native/3x pairing gallery and unlit elevation/caster diagnostics
+        run: node --test tests/javascript/terrain-hard-pairings.test.mjs tests/javascript/terrain-hard-pairing-relief.test.mjs tests/javascript/terrain-hard-pairing-variation.test.mjs tests/javascript/terrain-world-variation.test.mjs
+      - name: Render original source pair, elevation, degradation and seed-variation reviews
         run: node tools/art/prototypes/build-hard-pairing-review.mjs artifacts/wf32-hard-pairings
       - name: Publish original source-art review (not running Hunt capture)
         uses: actions/upload-artifact@v4
