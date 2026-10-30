@@ -67,16 +67,15 @@ export function huntSurfaceRenderable(id, x, y, width, height, castsShadow, surf
     const footFraction = standing ? surface.footFraction ?? .75 : 1;
     if (!Number.isFinite(footFraction) || footFraction <= 0 || footFraction > 1)
         throw new RangeError('Invalid authored sprite foot fraction');
-    // Each captured sprite can supply its own painted foot line. Material atlas
-    // sampling skips only the pixels BELOW the foot; all visible body, legs,
-    // mage staff and wyrm tail retain their correct authored proportions.
-    const frame = surface.frame ?? (standing
-        ? { offset: [0, 1 - footFraction], repeat: [1, footFraction] } : undefined);
+    // The painted-foot fraction is ONLY a placement anchor. Cropping the
+    // capture and shortening its plane compressed the mage, Warden and Wyrm.
+    // Preserve full source pixels and original width:height proportions.
+    const frame = surface.frame;
     return {
         id, ownerId: surface.ownerId ?? id, geometry, material: id,
         position: surface.position ?? [(x + width / 2) / UNIT, -(y + height * (standing ? footFraction : .5)) * GROUND_Y / UNIT, standing ? .001 : 0],
         rotation: surface.rotation ?? [0, 0, 0],
-        scale: surface.scale ?? [width / UNIT, height * (standing ? footFraction : GROUND_Y) / UNIT, 1],
+        scale: surface.scale ?? [width / UNIT, height * (standing ? 1 : GROUND_Y) / UNIT, 1],
         castsShadow: surface.castsShadow ?? castsShadow,
         receivesShadow: surface.receivesShadow ?? true,
         receivesLight: surface.receivesLight ?? true,
