@@ -28,7 +28,8 @@ test('authored sprite foot anchor stays on the ground and its billboard faces th
     const top = new T.Vector3().fromBufferAttribute(geometry.attributes.position, 0);
     const bottom = new T.Vector3().fromBufferAttribute(geometry.attributes.position, 2);
     const up = new T.Vector3(0, 1, 1).normalize();
-    assert.ok(bottom.length() < 1e-8, 'The sprite foot edge must contact, never penetrate, the terrain.');
+    assert.ok(Math.abs(bottom.y) < 1e-8 && Math.abs(bottom.z) < 1e-8,
+        'The sprite foot edge must contact terrain (its X position remains at the left corner).');
     assert.ok(Math.abs(top.clone().sub(bottom).dot(up) - 1) < 1e-6,
         'The cropped billboard keeps exactly one projected unit of height.');
     for (let i = 0; i < geometry.attributes.position.count; i++) {
