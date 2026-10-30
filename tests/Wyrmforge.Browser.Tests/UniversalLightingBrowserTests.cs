@@ -114,6 +114,37 @@ public sealed class UniversalLightingBrowserTests : PageTest
     [TestMethod]
     [DataRow(320, 568)]
     [DataRow(390, 844)]
+    public async Task SharedGpu_AshlingEyeEmission_SurvivesNightAndCanBeExtinguished(int width, int height)
+    {
+        var root = Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL");
+        if (string.IsNullOrWhiteSpace(root)) { Assert.Inconclusive("Requires the published Blazor application."); return; }
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.GotoAsync(root.TrimEnd('/') + "/arena-light-engine");
+        var canvas = Page.Locator(".gpu-proof canvas");
+        await Expect(canvas).ToHaveAttributeAsync("data-ready", "true", new() { Timeout = 90000 });
+        await Page.EvaluateAsync("async () => { window.gpuProof = await import('./js/lighting/proof-scene.js'); }");
+
+        await ConfigureAsync(canvas, new { profile = "night", focus = "actors",
+            fireball = false, torch = false, spot = false, rune = false, emission = true });
+        var glowing = await PixelHashAsync(canvas);
+        await CaptureAsync(width, "ashling-eyes-emission-on");
+
+        await ConfigureAsync(canvas, new { emission = false });
+        var extinguished = await PixelHashAsync(canvas);
+        Assert.AreNotEqual(glowing, extinguished, "The approved eye pixels must contribute actual emissive GPU output.");
+        await CaptureAsync(width, "ashling-eyes-emission-off");
+
+        await ConfigureAsync(canvas, new { emission = true });
+        Assert.AreEqual(glowing, await PixelHashAsync(canvas), "The emissive mask must restore with identical atlas UVs.");
+        await ConfigureAsync(canvas, new { profile = "zero" });
+        Assert.IsTrue(await canvas.EvaluateAsync<bool>(
+            "c => gpuProof.proofPixels(c).every((value,index) => index%4===3 || value===0)"),
+            "Zero-light diagnostic must extinguish emission as well.");
+    }
+
+    [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
     public async Task SharedGpu_G3WetnessAndFog_ProduceReversibleMaterialComparisons(int width, int height)
     {
         var root = Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL");
