@@ -41,3 +41,40 @@ The final capture's top-five uploads contained **no territory wall** at 320/mobi
 ## Status
 
 Code is committed on PR #409; the exact functional head has passed [run 40932535977](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40932535977). This document makes no physical-device or visual owner-approval claim. No cross-engine changes.
+
+
+## G4 finishing pass: main-ground cache and shadow-camera CPU churn — 30 October 2026
+
+Two generic renderer-level issues remained after the iPhone projection fix:
+
+1. **Tile-free GPU preview was not truly tile-free.** `drawArenaEnvironment`
+   accepted `flatColorsOnly` but passed **no** such argument to the main
+   `terrainTexture()` call. Other same-frame consumers (reflections and
+   elevation layers) requested the flat terrain. This could maintain both a
+   **full-size painted floor and flat floor cache simultaneously**, loading
+   painted material images and paying for additional terrain preparation
+   even though G4's selected floor was `flat-ground-v1`. The main world draw
+   now passes the flag, using the same world cache as reflections/elevations.
+   The explicit `g4PaintedGround=1` comparison and normal Canvas production
+   painted floor remain unchanged.
+2. **Redundant shadow-camera projection updates.** Every applied C# lighting
+   frame rebuilt the perspective/orthographic projection of every selected
+   point/spot/directional source, even with an unchanged radius. The shared
+   `LightingEngine` now initializes new shadow cameras once and updates
+   their projection only if the authoritative light range changes. This
+   preserves dynamic caster movement, source identity, light expiry, shadows
+   and all quality-tier view limits. A regression exercises 120 same-radius
+   frames, a changed projectile range, and all three light classes.
+
+This removes redundant CPU work and a source-art cache path; **it does not
+demonstrate any particular iPhone FPS uplift or GPU-time saving**. The Hunt
+still rasterizes and uploads dynamic layers when they actually change.
+Run the shared GPU browser proof and pinned Pages release validation, then
+compare real-device p95/FPS against prior iPhone evidence. Ashling-eye
+emissive work remains explicitly **outside this branch**.
+
+**G4 acceptance:** The user's current iPhone screenshot establishes that
+native actor proportions are visually restored, but Android thermal/power,
+sustained device performance, Trail 2 darkness, and Fireball/Hollowed lighting
+checks remain separate open gates. Do not close G4 or enable G5 production GPU
+based only on hosted Chromium checks.
