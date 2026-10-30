@@ -138,8 +138,16 @@ export function readArenaDiagnostics(canvas) {
                 ? { status: 'flat-colors', source: 'C# recipe', variant: null }
                 : liveWetForestMaterialDiagnostics(state.latestSnapshot.environment.seed) : null,
         terrainPresentation: state.g4FlatGround ? 'flat-colors' : 'painted',
+        framePresentation: state.g4StageFrames ? 'staged' : 'direct',
         lighting: { mode: 'night', darkness: GOTHIC_NIGHT.darkness, source: 'authoritative-csharp-snapshot' },
     };
+}
+
+/** Browser-only G4 review proof; compares real GPU shadow pixels without advancing C# gameplay. */
+export function readArenaShadowPixelProof(canvas, sourceId) {
+    const state = arenas.get(canvas);
+    if (!state?.g4Review || !state.gpuWorld || typeof sourceId !== 'string') return null;
+    return state.gpuWorld.shadowPixelProof(sourceId);
 }
 
 export function disposeArena(canvas) {
