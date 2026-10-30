@@ -13,6 +13,7 @@ const ART_ROOT = join(REPO_ROOT, 'src/Wyrmforge.Presentation.Web/wwwroot/art/ene
 export const ACTOR_REFERENCE_CONFIG = Object.freeze({
     hollowed: Object.freeze({
         directory: 'hollow-rigged/arms',
+        catalogKind: 'Hollow',
         manifest: 'manifest.json',
         variant: 'standard',
         clip: 'walk',
@@ -22,6 +23,7 @@ export const ACTOR_REFERENCE_CONFIG = Object.freeze({
     }),
     ashling: Object.freeze({
         directory: 'ashling-rigged',
+        catalogKind: 'Ashling',
         manifest: 'manifest.json',
         clip: 'walk',
         direction: 'S',
@@ -40,19 +42,47 @@ function loadReference(name) {
     if (!clip || directionIndex < 0 || !Array.isArray(clip.anchor) ||
         !Number.isFinite(clip.worldSize) || clip.worldSize <= 0)
         throw new Error('Invalid runtime actor reference: ' + name);
+
+    // C# owns the gameplay body radius. Read that authority, never use an
+    // invented common radius that makes small swarmers look like adult Hollowed.
+    const catalog = readFileSync(join(REPO_ROOT,
+        'src/Wyrmforge.Domain/Combat/Enemies/EnemyCatalog.cs'), 'utf8');
+    const pattern = new RegExp('new\\(EnemyKind\\.' + spec.catalogKind +
+        '\\s*,\\s*EnemyRole\\.[A-Za-z]+\\s*,\\s*\\d+\\s*,\\s*(\\d+(?:\\.\\d+)?)');
+    const match = catalog.match(pattern);
+    if (!match) throw new Error('C# enemy radius not found: ' + name);
+    const gameplayRadius = Number(match[1]);
+    if (!(gameplayRadius > 0)) throw new Error('Invalid C# enemy radius: ' + name);
+
     const atlas = decodePng(readFileSync(join(directory, clip.image)));
     if (atlas.width !== clip.cell * clip.frames || atlas.height !== clip.cell * manifest.directions.length)
         throw new Error('Runtime atlas shape mismatch: ' + name);
-    return {name, spec, clip, atlas, directionIndex,
-        sourcePath: 'src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/' +
+    // Visible sprite height is NOT the transparent 96px cell height. Compare
+    // the actual opaque south-facing source frame, with both foot anchors.
+    let left=clip.cell, top=clip.cell, right=-1, bottom=-1;
+    for (let y=0; y<clip.cell; y++) for (let x=0; x<clip.cell; x++) {
+        const i=((directionIndex * clip.cell+y)*atlas.width + spec.frame*clip.cell+x)*4+3;
+        if (!atlas.rgba[i]) continue;
+        left=Math.min(left,x);top=Math.min(top,y);
+        right=Math.max(right,x);bottom=Math.max(bottom,y);
+    }
+    if (right < 0) throw new Error('Opaque runtime frame missing: ' + name);
+    const opaqueBounds={x:left,y:top,width:right-left+1,height:bottom-top+1};
+    const normalRadius=11; // Shared Hollow/rigged renderer's documented divisor.
+    const gameScale=Math.max(.65,Math.min(1.8,gameplayRadius/normalRadius));
+    const renderedCellPixels=clip.worldSize*gameScale;
+    const renderedVisibleHeightPixels=renderedCellPixels*opaqueBounds.height/clip.cell;
+    return {name,spec,clip,atlas,directionIndex,gameplayRadius,opaqueBounds,
+        renderedCellPixels,renderedVisibleHeightPixels,
+        sourcePath:'src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/' +
             spec.directory + '/' + clip.image};
 }
 
 // Exactly the production Canvas sprite frame/anchor sizing, sampled nearest-neighbour.
 // Inputs are the immutable PNG and manifest referenced by each real runtime actor.
-function drawReferenceFrame(canvas, actor) {
+function drawReferenceFrame(canvas, actor, appearanceMultiplier=1) {
     const {spec, clip, atlas, directionIndex} = actor;
-    const size = clip.worldSize; // Production at radius=11; no independent scaling.
+    const size = actor.renderedCellPixels * appearanceMultiplier; // Real C# body radius; target multiplier is review-only.
     const left = spec.anchor[0] - clip.anchor[0] / clip.cell * size;
     const top = spec.anchor[1] - clip.anchor[1] / clip.cell * size;
     for (let y = Math.floor(top); y < Math.ceil(top + size); y++)
@@ -91,45 +121,66 @@ export function buildCharacterScaleReview() {
         boundaryX: 23, boundaryY: 128, originX: 0, originY: 0,
         width: 384, height: 256
     });
-    const scene = field.albedo.clone(); // Existing approved terrain source; never mutate it.
     const props = [
         {kind: 'grass-medium', variant: 1, x: 126, y: 188},
         {kind: 'rock-small', variant: 2, x: 169, y: 188},
         {kind: 'rock-cluster', variant: 1, x: 216, y: 188},
         {kind: 'grass-tall', variant: 1, x: 264, y: 188}
     ];
-    // Ground contacts first, rear silhouette behind actor, foreground across feet.
-    for (const layer of ['footprint', 'rear'])
-        for (const p of props) drawProp(scene, p.kind, p.variant, p.x, p.y, layer);
-    for (const actor of actors) drawReferenceFrame(scene, actor);
-    for (const p of props) drawProp(scene, p.kind, p.variant, p.x, p.y, 'front');
-    const metadata = {
-        schema: 'wf32-character-scale-review.v1',
-        kind: 'OFFLINE ORIGINAL ART COMPOSITION - NOT A LIVE HUNT SCREENSHOT',
-        camera: '384x256 orthographic / native source pixels, nearest-neighbour',
-        gameWorldPixelScale: PIXELS_PER_WORLD_UNIT,
-        actorScale: 'exact Canvas runtime manifest worldSize at reference radius 11',
-        actors: actors.map(a => ({
-            kind: a.name, image: a.sourcePath, direction: a.spec.direction,
-            frame: a.spec.frame, cell: a.clip.cell, renderedCellPixels: a.clip.worldSize,
-            footAnchor: a.spec.anchor, sourceFootAnchor: a.clip.anchor
-        })),
-        props: props.map(p => ({
-            ...p, projectedHeightPixels: makeEcology25DProp(p.kind, p.variant).geometry.projectedHeightPixels
-        })),
-        restrictions: 'No gameplay, physics, runtime renderer, terrain blend, or approved actor art changed.'
+    const runtimeVisibleRatio=actors[0].renderedVisibleHeightPixels/actors[1].renderedVisibleHeightPixels;
+    const targetVisibleRatio=2; // Owner's new art direction, pending game presentation ownership.
+    const hollowTargetMultiplier=targetVisibleRatio/runtimeVisibleRatio;
+    const compose=(hollowMultiplier)=>{
+        const scene=field.albedo.clone(); // P1i approved ground remains immutable.
+        // Ground contacts, rear silhouette, actors, then the prop foreground slice.
+        for (const layer of ['footprint', 'rear'])
+            for (const p of props) drawProp(scene, p.kind, p.variant, p.x, p.y, layer);
+        for (const actor of actors)
+            drawReferenceFrame(scene, actor, actor.name==='hollowed' ? hollowMultiplier : 1);
+        for (const p of props) drawProp(scene, p.kind, p.variant, p.x, p.y, 'front');
+        return scene;
     };
-    return {scene, enlarged: nearest3x(scene), metadata};
+    const scene=compose(1); // As shipped: source manifests + actual C# body radii.
+    const targetScene=compose(hollowTargetMultiplier); // Review-only 2x silhouette target.
+    const metadata = {
+        schema:'wf32-character-scale-review.v2',
+        kind:'OFFLINE ORIGINAL ART COMPOSITIONS - NOT LIVE HUNT SCREENSHOTS',
+        camera:'384x256 orthographic / native source pixels, nearest-neighbour',
+        gameWorldPixelScale:PIXELS_PER_WORLD_UNIT,
+        actorScale:'production Canvas manifest worldSize × clamp(C# EnemyCatalog radius / 11, .65, 1.8)',
+        actors:actors.map(a=>({
+            kind:a.name, image:a.sourcePath, direction:a.spec.direction,
+            frame:a.spec.frame, sourceCellPixels:a.clip.cell,
+            manifestCellPixels:a.clip.worldSize, gameplayRadius:a.gameplayRadius,
+            renderedCellPixels:a.renderedCellPixels,
+            opaqueSourceBounds:a.opaqueBounds, renderedVisibleHeightPixels:a.renderedVisibleHeightPixels,
+            footAnchor:a.spec.anchor, sourceFootAnchor:a.clip.anchor
+        })),
+        silhouettes:{
+            runtimeHollowToAshlingHeightRatio:runtimeVisibleRatio,
+            ownerTargetHollowToAshlingHeightRatio:targetVisibleRatio,
+            hollowTargetAppearanceMultiplier:hollowTargetMultiplier,
+            ashlingAppearanceMultiplier:1,
+            targetIsRuntimeChange:false
+        },
+        props:props.map(p=>({
+            ...p,projectedHeightPixels:makeEcology25DProp(p.kind,p.variant).geometry.projectedHeightPixels
+        })),
+        restrictions:'No gameplay, physics, runtime renderer, terrain blend, or approved actor art changed.'
+    };
+    return {scene,enlarged:nearest3x(scene),targetScene,targetEnlarged:nearest3x(targetScene),metadata};
 }
 export function writeCharacterScaleReview(outputDirectory) {
     mkdirSync(outputDirectory, {recursive:true});
-    const {scene, enlarged, metadata} = buildCharacterScaleReview();
-    for (const [name, image] of [
-        ['character-scale-native.png', scene],
-        ['character-scale-3x.png', enlarged]
-    ]) writeFileSync(join(outputDirectory, name), encodePng(image.width, image.height, image.data));
-    writeFileSync(join(outputDirectory, 'character-scale-manifest.json'),
-        JSON.stringify(metadata, null, 2) + '\n');
+    const {scene,enlarged,targetScene,targetEnlarged,metadata}=buildCharacterScaleReview();
+    for(const [name,image] of [
+        ['character-scale-native.png',scene],
+        ['character-scale-3x.png',enlarged],
+        ['character-scale-target-2x-native.png',targetScene],
+        ['character-scale-target-2x-3x.png',targetEnlarged]
+    ]) writeFileSync(join(outputDirectory,name),encodePng(image.width,image.height,image.data));
+    writeFileSync(join(outputDirectory,'character-scale-manifest.json'),
+        JSON.stringify(metadata,null,2)+'\n');
     return metadata;
 }
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url))
