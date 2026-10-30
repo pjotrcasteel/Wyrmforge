@@ -227,6 +227,7 @@ export function mountG4DeviceReview(canvas, getGpu, mode = 'canvas', quality = n
     let lastCheckpointAt = -Infinity;
     const panel = document.createElement('details');
     panel.setAttribute('data-g4-device-review', '');
+    panel.setAttribute('aria-label', 'G4 phone performance results and private sharing');
     Object.assign(panel.style, {
         position: 'fixed', right: '8px', bottom: 'max(112px, env(safe-area-inset-bottom))',
         zIndex: '10000', width: 'max-content', maxWidth: 'min(270px, 82vw)',
@@ -235,7 +236,7 @@ export function mountG4DeviceReview(canvas, getGpu, mode = 'canvas', quality = n
         padding: '8px', font: '12px/1.5 system-ui,sans-serif', boxSizing: 'border-box'
     });
     const header = document.createElement('summary');
-    header.style.cursor = 'pointer';
+    Object.assign(header.style, { cursor: 'pointer', minHeight: '36px', fontWeight: '700', fontSize: '14px' });
     panel.appendChild(header);
     const help = document.createElement('p');
     help.textContent = 'Recording starts automatically. Death saves your results on this phone. Sharing is optional.';
@@ -309,7 +310,7 @@ export function mountG4DeviceReview(canvas, getGpu, mode = 'canvas', quality = n
         try {
             localStorage.setItem(G4_CONSENT_KEY, consentBox.checked ? 'yes' : 'no');
         } catch { consentBox.checked = false; }
-        sharingChoice.hidden = true;
+        sharingChoice.style.display = 'none';
         if (consentBox.checked) {
             const previousResult = readJson(G4_LAST_RECORD_KEY);
             if (hasG4Evidence(previousResult) && previousResult.recording === false)
@@ -344,7 +345,7 @@ export function mountG4DeviceReview(canvas, getGpu, mode = 'canvas', quality = n
     makeChoiceButton('Share results privately', true);
     makeChoiceButton('Keep on my phone', false);
     panel.insertBefore(sharingChoice, help);
-    sharingChoice.hidden = hasSharingChoice();
+    sharingChoice.style.display = hasSharingChoice() ? 'none' : 'flex';
 
     button('Save now', () => finish('Interrupted'));
     button('New sample', () => {
@@ -360,7 +361,7 @@ export function mountG4DeviceReview(canvas, getGpu, mode = 'canvas', quality = n
             try { localStorage.removeItem(key); } catch { /* Storage may be disabled. */ }
         }
         consentBox.checked = false;
-        sharingChoice.hidden = false;
+        sharingChoice.style.display = 'flex';
         panel.open = true;
         latestLabel();
         status.textContent = 'G4 data erased. Choose whether to share future performance results.';
