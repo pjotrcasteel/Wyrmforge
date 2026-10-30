@@ -48,8 +48,8 @@ def audit_sources(forward, sideways):
         if a.get('poseGrid')!=b.get('poseGrid'):
             raise ValueError('Action-gait source sampling grids differ')
         phases=a.get('poseGrid',{}).get('phaseFrames',a['frames'])
-        if phases!=16 or a['frames']%phases!=0:
-            raise ValueError('Only genuine 16-phase whole-body grid comparisons supported')
+        if phases not in (8,16) or a['frames']%phases!=0:
+            raise ValueError('Only genuine 8- or 16-phase whole-body source grids supported')
         for frame,(source,target) in enumerate(zip(a['samples'],b['samples'])):
             source_contacts={c['id']:c for c in source['contacts']}
             target_contacts={c['id']:c for c in target['contacts']}
@@ -68,7 +68,16 @@ def audit_sources(forward, sideways):
                 'worstNativeContactJump':jump,'withinOneNativePixel':jump<=1})
     if not results:
         raise ValueError('Nonempty real source switch matrix required')
+    # A matched static support pose does not authorize lateral travel during
+    # the handoff: this is solely an authored pose switch feasibility mask.
+    safe_phases={}
+    for clip in ('walk','attack-travel'):
+        rows=[r for r in results if r['clip']==clip]
+        all_phases=sorted(set(r['phaseIndex'] for r in rows))
+        safe_phases[clip]=[phase for phase in all_phases if all(
+            row['withinOneNativePixel'] for row in rows if row['phaseIndex']==phase)]
     out={
+        'safeStaticSourceSwitchPhaseIndices':safe_phases,
         'measurement':'saved Blender source same-body local sole contact discontinuity when source travel direction changes; not raster, C# or phone proof',
         'lateralHeadingDegrees':meta['headingDegrees'],'nativePixelSourceMetres':native,
         'scenarios':len(results),'runtimeAccepted':False,
@@ -97,6 +106,19 @@ def self_test():
     assert audit_sources(pack(0),pack(0,lateral=True))['sourceDirectionSwitchGatePassed']
     result=audit_sources(pack(0),pack(.1,lateral=True))
     assert not result['sourceDirectionSwitchGatePassed'] and result['worstSourceNativeJump']>=5
+    # A smaller true authored phase lattice must remain independent of the
+    # 16-pose study, including every action stage.
+    compact=pack(0);compact_lateral=pack(0,lateral=True)
+    for candidate in (compact,compact_lateral):
+        candidate['clips']['walk']['frames']=8
+        candidate['clips']['walk']['samples']=candidate['clips']['walk']['samples'][:8]
+        candidate['clips']['attack-travel']['frames']=16
+        candidate['clips']['attack-travel']['samples']=candidate['clips']['attack-travel']['samples'][:16]
+        candidate['clips']['attack-travel']['poseGrid']['phaseFrames']=8
+    compact_report=audit_sources(compact,compact_lateral)
+    assert compact_report['scenarios']==24
+    assert compact_report['safeStaticSourceSwitchPhaseIndices']=={
+        'walk':list(range(8)),'attack-travel':list(range(8))}
     no_support=pack(0,lateral=True)
     no_support['clips']['walk']['samples'][2]['contacts']=[]
     assert not audit_sources(pack(0),no_support)['sourceDirectionSwitchGatePassed']
