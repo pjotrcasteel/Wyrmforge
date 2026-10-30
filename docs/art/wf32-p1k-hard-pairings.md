@@ -22,11 +22,20 @@ Owner review of H1: **"the mix and variation looks great"**, but the preview is 
 
 The new `flagstone-cobble-elevation.png` and `flagstone-cobble-caster-alpha.png` artifacts are labeled **unlit diagnostics**. They demonstrate data availability and coverage, not visual depth. **Only a real running Hunt capture with a moving Fireball and verified stone/prop/actor shadows** can close the 2.5D visual gate. The runtime G integration, performance, collision and physics work remain outside this source-art slice.
 
+### H3 — independent seed and weathering variations (source-only)
+
+Without altering the owner-liked H1 gallery, `buildHardPairingVariationReview()` now produces two 3×3 original-source comparisons for flagstone→cobble, cobble→brick and brick→flagstone:
+
+1. **Weathering control:** one fixed seed (`2111`) at `intact`, `broken` and `reclaimed`. It shows whole-stone disappearance, irregular fractured faces and progressive soil exposure without baking a path into an unrelated material tile.
+2. **Seed diversity:** three independently generated seeds (`2111`, `4709`, `8933`) at the same `worn` state. It shows variation in stone identity, crack placement, soil breaks and the material meeting without altering the same world-coordinate source rules.
+
+Both sheets have native-pixel and exact 3× nearest-neighbour outputs. Their manifest records every seed, degradation state, primary/secondary stone coverage, soil infill coverage and SHA-256 of the unlit albedo bitmap. The variations are review candidates; **the owner has not approved these new wear extremes or seed examples**. They do not assign material distributions or biome roles, which are AR3 C# decisions. Neither the accepted H1 blending gallery nor the H2 elevation diagnostics change. This is not source evidence of physical height, shadow casting, game collision or AR3 readiness.
+
 ### Reproduce the gallery and tests
 
 ```sh
 node tools/art/prototypes/build-hard-pairing-review.mjs artifacts/wf32-hard-pairings
-node --test tests/javascript/terrain-hard-pairings.test.mjs tests/javascript/terrain-hard-pairing-relief.test.mjs tests/javascript/terrain-world-variation.test.mjs
+node --test tests/javascript/terrain-hard-pairings.test.mjs tests/javascript/terrain-hard-pairing-relief.test.mjs tests/javascript/terrain-hard-pairing-variation.test.mjs tests/javascript/terrain-world-variation.test.mjs
 ```
 
 Review outputs:
@@ -35,6 +44,8 @@ Review outputs:
 - `hard-pairing-gallery-3x.png` (nearest-neighbour pixel inspection)
 - `flagstone-cobble-normal.png` and `flagstone-cobble-roughness.png` (existing G material channels)
 - `flagstone-cobble-elevation.png` and `flagstone-cobble-caster-alpha.png` (H2 source elevation/mask diagnostics, **not** live shadows)
-- `manifest.json` (source tags, coverage and limitations)
+- `hard-pairing-degradation-native.png` and `hard-pairing-degradation-3x.png` (H3 original-stone weathering comparison)
+- `hard-pairing-seeds-native.png` and `hard-pairing-seeds-3x.png` (H3 seed-diversity comparison)
+- `manifest.json` (source tags, coverage, H3 source image hashes and limitations)
 
-Eight H1 hard-pairing tests check all three pair kinds and both orientations, stone identity and no-clipping, world-window overlap continuity, vertical inner corners, 32px source-tile reassembly, material map coherence, unchanged original source data and invalid-input rejection. Five H2 tests check source-masked elevation, exact caster spans, world-coordinate overlap, rejection of corrupt identities and honest review metadata. Owner has positively reviewed the H1 **mixing/variation direction**; the height/shadow and mobile-scale appearance are unapproved. The separate AR3/G/real-device and physics gates remain fully open.
+Eight H1 hard-pairing tests check all three pair kinds and both orientations, stone identity and no-clipping, world-window overlap continuity, vertical inner corners, 32px source-tile reassembly, material map coherence, unchanged original source data and invalid-input rejection. Five H2 tests check source-masked elevation, exact caster spans, world-coordinate overlap, rejection of corrupt identities and honest review metadata. Four H3 tests require material loss to grow with degradation, source seed diversity with deterministic replay, exact source masks for all three weathering states and two honest native/3× review sheets. Owner has positively reviewed the H1 **mixing/variation direction**; H3 wear extremes, height/shadow and mobile-scale appearance are unapproved. The separate AR3/G/real-device and physics gates remain fully open.
