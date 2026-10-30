@@ -75,3 +75,9 @@ No physics-engine changes or new rendering pipeline. Future lighting and depth w
 - JavaScript tests pin the two C# radii, opaque sprite measurements, the target ratio, and unchanged Ashling/right-half composition. Approved P1i ground blending, P1j-B3 foliage, original rock pixels, scene candidates, animation, physics and G lighting stay intact.
 
 **Gate:** Pjotr approves or revises the relative silhouette target visually. A production character-scale change must later go through the existing character presentation owner and normal tests; this art PR does not own that workstream.
+
+## Owner visual-direction confirmation (30 October 2026)
+
+Pjotr reviewed the corrected real-character scale composition showing medium/tall grass, a small rock and a rock cluster against the production Hollowed and Ashling sprites, and replied: **“Grass and stuff looks good!”** This accepts the **visual direction of the represented P1j-B3 grass and rock props**. Keep the current texture, layer and relative prop-size baseline while proceeding; do not reopen thorn-like grass variants without new feedback.
+
+This sign-off is intentionally narrow. It is **not** approval of every unseen variant or biome placement, the separate Hollowed appearance/2× target, C# collision sites, real-Hunt lighting/occlusion, mobile performance, or merging this source-only art PR. The P1i blending approval remains independently preserved. The full prop gallery/mobile and AR3/G integration gates stay open.
