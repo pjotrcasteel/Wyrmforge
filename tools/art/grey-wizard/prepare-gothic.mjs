@@ -6,7 +6,7 @@ import {createHash} from 'node:crypto';
 import assert from 'node:assert/strict';
 import {decodePng,encodePng} from '../lib/png.mjs';
 import {Bitmap} from '../lib/painter.mjs';
-const {project}=await import(process.argv.includes('--walking-stick')?'./gothic-walking-stick-project.mjs':process.argv.includes('--southeast')?'./gothic-southeast-project.mjs':'./gothic-project.mjs');
+const {project}=await import(process.argv.includes('--repair-stick')?'./gothic-walking-stick-repair.mjs':process.argv.includes('--walking-stick')?'./gothic-walking-stick-project.mjs':process.argv.includes('--southeast')?'./gothic-southeast-project.mjs':'./gothic-project.mjs');
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../../..');
 const base=join(root,'art/source/characters/grey-wizard'),out=join(base,project.outputDirectory??'gothic-south-v003');
 mkdirSync(join(out,'source-layers'),{recursive:true});
@@ -38,13 +38,35 @@ for(let p=0;p<rgba.length;p+=4)if(rgba[p+3]){
     const key=(rgba[p]<<16)|(rgba[p+1]<<8)|rgba[p+2],index=nearest.get(key);indices[p/4]=index;
     master.data.set([...palette[index],255],p);
 }
-const names=[...project.masks.map(m=>m.name),'torso'];
+if(project.cleanIslandsMaxPixels){
+    const seen=new Set();
+    for(let y=0;y<height;y++)for(let x=0;x<width;x++){
+        const key=y*width+x;if(!master.alpha(x,y)||seen.has(key))continue;
+        const component=[key];seen.add(key);
+        for(let i=0;i<component.length;i++){
+            const px=component[i]%width,py=Math.floor(component[i]/width);
+            for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+                const nx=px+dx,ny=py+dy,k=ny*width+nx;
+                if(master.inside(nx,ny)&&master.alpha(nx,ny)&&!seen.has(k)){seen.add(k);component.push(k);}
+            }
+        }
+        if(component.length<=project.cleanIslandsMaxPixels)for(const k of component)master.clear(k%width,Math.floor(k/width));
+    }
+}
+const names=[...project.masks.map(m=>m.name),'torso',...(project.underpaint??[]).map(p=>p.name)];
 const layers=Object.fromEntries(names.map(n=>[n,new Bitmap(width,height)]));
 const owner=new Array(width*height).fill(null);
 const inside=(x,y,poly)=>{let yes=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a[1]>y)!==(b[1]>y)&&x<(b[0]-a[0])*(y-a[1])/(b[1]-a[1])+a[0])yes=!yes;}return yes;};
 for(let y=0;y<height;y++)for(let x=0;x<width;x++)if(master.alpha(x,y)){
     const name=project.masks.find(m=>inside(x+.5,y+.5,m.polygon))?.name||'torso';
     layers[name].set(x,y,master.get(x,y));owner[y*width+x]=name;
+}
+// Explicit source painting behind an occluding staff; existing source pigments only.
+// Filled pixels are hidden in the resting source, exposed by authored staff travel.
+for(const paint of project.underpaint??[])for(let y=0;y<height;y++)for(let x=0;x<width;x++){
+    if(!layers[paint.owner].alpha(x,y)||!inside(x+.5,y+.5,paint.polygon))continue;
+    const pigment=master.get(x+paint.sampleOffset[0],y+paint.sampleOffset[1]);
+    assert.ok(pigment[3],'underpaint donor missing');layers[paint.name].set(x,y,pigment);
 }
 const counts={};let recomposed=new Bitmap(width,height);
 for(const n of project.drawOrder){const b=layers[n];counts[n]=b.count();assert.ok(counts[n]>0,'empty authored layer '+n);recomposed.blit(b,0,0);writeFileSync(join(out,'source-layers',n+'.png'),encodePng(width,height,b.data));}

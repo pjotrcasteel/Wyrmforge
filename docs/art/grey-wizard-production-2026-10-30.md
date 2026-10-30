@@ -618,3 +618,13 @@ Existing Sprite Lab import/play/pause passes320/390 without page errors;19 focus
 controller/mage/lab tests pass. v007 export25/25 byte-identical after cleanup.
 Support analytical and raster tip remain0px drift; hand/shaft share exact grip.
 Live cadence gap remains explicitly open in audit; no C# speed or engine changes.
+
+## Owner rejection of walking-stick v007 / v008 repair
+
+Owner screenshot shows torn sleeve/old-position fragments. v007 is NOT accepted;
+prior numeric contact checks did not establish coherent source art. Retain it as
+rejected review. V008 repairs the entire hanging sleeve ownership, makes lower
+sleeve lag taper smoothly away from the grip, and explicitly paints a322px hidden
+robe strip from adjacent source pigment behind the vacated staff. Idle source
+still recomposes exactly. Inspect all16 frames against light background; source
+contact/cadence limitations remain. No production cutover or acceptance implied.
