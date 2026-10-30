@@ -3618,6 +3618,31 @@ public sealed class WyrmforgeBrowserTests : PageTest
 
         var panel = Page.Locator("[data-g4-device-review]");
         await Expect(panel).ToBeVisibleAsync();
+        // The owner could not find consent because it was hidden in a closed
+        // debug pill. On first mobile use, both choices must be visibly tappable.
+        Assert.IsTrue(await panel.EvaluateAsync<bool>("el => el.open"),
+            "First-run G4 sharing choice must open automatically.");
+        await Expect(panel.GetByRole(AriaRole.Button, new() { Name = "Share results privately" }))
+            .ToBeVisibleAsync();
+        await Expect(panel.GetByRole(AriaRole.Button, new() { Name = "Keep on my phone" }))
+            .ToBeVisibleAsync();
+        Assert.IsNull(await Page.EvaluateAsync<string?>(
+            "() => localStorage.getItem('wyrmforge.g4.autoSendConsent.v1')"),
+            "Reviewing gameplay must not silently grant upload consent.");
+        await panel.GetByRole(AriaRole.Button, new() { Name = "Keep on my phone" }).ClickAsync();
+        Assert.IsFalse(await panel.EvaluateAsync<bool>("el => el.open"));
+        Assert.AreEqual("no", await Page.EvaluateAsync<string>(
+            "() => localStorage.getItem('wyrmforge.g4.autoSendConsent.v1')"));
+        await panel.Locator("summary").ClickAsync();
+        await Expect(panel.Locator("[data-g4-consent]")).ToBeVisibleAsync();
+        await panel.Locator("[data-g4-consent]").CheckAsync();
+        Assert.AreEqual("yes", await Page.EvaluateAsync<string>(
+            "() => localStorage.getItem('wyrmforge.g4.autoSendConsent.v1')"));
+        await panel.Locator("[data-g4-consent]").UncheckAsync();
+        Assert.AreEqual("no", await Page.EvaluateAsync<string>(
+            "() => localStorage.getItem('wyrmforge.g4.autoSendConsent.v1')"));
+        await panel.Locator("summary").ClickAsync();
+
         // No button presses or manual exports: G4 records automatically in live gameplay.
         await Page.WaitForFunctionAsync(@"() => {
             const text = document.querySelector('[data-g4-status]')?.textContent ?? '';
