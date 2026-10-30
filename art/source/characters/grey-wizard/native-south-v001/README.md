@@ -23,3 +23,24 @@ Check: `node tools/art/grey-wizard/build.mjs --check`
 Review motion through the existing shared `sprite-animation.js` controller.
 GIF/contact sheet are source review, never actual in-Hunt footage. Native sprite
 identity and walk quality need visual review before expanding the library.
+
+## First validation receipt
+
+- `build.mjs --check`: 38 exports byte-match; 16 unique poses, 31-pigment palette,
+  binary alpha, unclipped silhouette; packed albedo + emission 819200 decoded bytes.
+- Existing shared controller samples frames 0..15, pause and reduced motion pass.
+  Existing focused controller/mage tests: 16/16 pass; no production code changed.
+- `capture.cjs`: actual existing Sprite Lab import, playback and pause pass in
+  desktop Chromium at 320/390px, no page errors. `review/browser-report.json`.
+  Existing lab hardcodes THE HOLLOW / a generic SE single-view label; this source
+  is S, not a new Hollowed or additional facing. Do not reuse its exported mapping.
+- `review/south-walk.gif`: all 16 poses, 12fps average, native 1x and nearest 4x.
+  `review/south-walk.mp4`: four repeats, 64 frames, FFmpeg decode verified.
+- These clips show the authored source cycle in place. Root travel/stride fitting,
+  firm world foot contact, turns, action blending and in-Hunt material/occlusion
+  are **not verified**. The source's first appearance and walk are unapproved.
+
+Review scripts use external developer tools, not runtime dependencies:
+`capture.cjs` reads `WYRMFORGE_PLAYWRIGHT_MODULE` and optional
+`WYRMFORGE_CHROMIUM`; `video.py --ffmpeg PATH` needs Pillow and FFmpeg/libx264.
+No new game engine, offline 3D requirement or live asset replacement is introduced.

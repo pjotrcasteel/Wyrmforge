@@ -350,3 +350,27 @@ unclipped bounds, same shared sprite controller frames 0..15, pause/reduced-moti
 Combined two runtime maps 819200 decoded bytes. This is not visual motion/contact
 acceptance; first inspection, GIF/video, real Hunt/phone and materials remain open.
 No live renderer/simulation/production atlas changes; no old wizard/AN rig imported.
+
+### First native source review package
+
+Generated GIF, full 16-pose contact sheet, native/4x MP4 and old-mage body scale
+study. Existing Sprite Lab imports the square-cell atlas and advances/pauses at
+320/390px in real desktop Chromium without page errors. Native source is labelled
+S; the old lab hardcodes THE HOLLOW/SE and its generic chase is not C# gameplay.
+Do not infer real Hunt acceptance from these screenshots.
+
+Actual checks: deterministic rebuild 38/38 exports; 16 unique poses; 31 pigments;
+binary alpha; no clipping; shared controller sequence/pause/reduced motion; 16/16
+existing focused JS controller/mage tests; GIF 16-frame count and MP4 decode pass.
+Initial browser launch needed explicit installed Chromium path, then loopback access
+outside sandbox; both corrected and 320/390 checks passed. FFmpeg helper installed
+only under task output folder for video encoding, not game/runtime dependencies.
+
+Visual findings: small sprite retains pointed hat, beard, layered grey clothing,
+boots and held staff; fine source-concept details simplify heavily at this scale.
+This is an unapproved native reconstruction and initial authored movement proof,
+not final appearance or convincing grounded walk acceptance. Gait length/world
+velocity, stance slip, start/stop/turn, casting, other views and actual Hunt depth/
+lighting/physical phones remain open. First native sprite and one-view walk need
+owner visual review before expanding into a larger directional/action library.
+Evidence/source: `art/source/characters/grey-wizard/native-south-v001/`.
