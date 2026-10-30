@@ -782,3 +782,18 @@ ownership gives those tip pixels to staff, not overlapping boot masks; far-boot
 reconstruction cannot copy shaft pixels. Analytical support now117,141, on the
 near-foot ground row. Earlier pre-media source checkpoint remains historical.
 No claim that an arbitrary fixed tip point alone establishes ground contact.
+
+### East review delivery validation
+
+Reviewed corrected16-frame light/dark full sheets plus enlarged feet/grip before
+media delivery.11-layer OpenRaster bytes and neutral-layer composition exact;
+GIF16frames/1330ms and MP4 decode pass. Existing Sprite Lab import/play/pause at
+320/390 passes with zero page errors.24 focused tests pass including new ground
+plane/no-wood-in-boot and vacated-shaft-gap regressions. E25/25 deterministic
+exports pass; corrected S/SE remain25/25 unchanged each. All16 E frames have one
+connected binary-alpha/unclipped silhouette; this does not replace visual review.
+
+Live source-stride gap remains explicit: E10.9417world units/cycle at12fps gives
+8.2063world units/sec; C# base190 would demand17.3648cycles/sec. No source profile
+promoted, no C# movement changes, no final Hunt/material/phone acceptance claimed.
+Remaining facings/actions and live locomotion fit remain required production work.

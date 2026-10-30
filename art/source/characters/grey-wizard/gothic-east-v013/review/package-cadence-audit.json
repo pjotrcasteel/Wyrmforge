@@ -1,0 +1,18 @@
+{
+  "scope": "source media/packaging and numeric cadence audit only",
+  "openRasterLayers": 11,
+  "sourceLayerBytesExact": true,
+  "gifFrames": 16,
+  "gifMilliseconds": 1330,
+  "mp4Decode": true,
+  "sourceFps": 12,
+  "sourceWorldStride": 10.94169645,
+  "sourceGuideSpeed": 8.2062723375,
+  "csharpBaseSpeed": 190.0,
+  "csharpSpeedSource": "src\\Wyrmforge.Domain\\Combat\\Player\\PlayerState.cs",
+  "csharpSpeedSourceSha256": "be0f9819d800484bddf18cf35489576449e880a4228292aae4820248a9663747",
+  "liveFramesPerSecondAtBaseSpeed": 277.83625819742053,
+  "liveCyclesPerSecondAtBaseSpeed": 17.364766137338783,
+  "sourceIsGameplayFit": false,
+  "limitation": "Base speed excludes build/status modifiers. Native12fps source is NOT a walk/run fit at live speed. Do not cut over or alter gameplay speed to hide this mismatch."
+}
