@@ -3606,12 +3606,28 @@ public sealed class WyrmforgeBrowserTests : PageTest
     [DataRow(320, 568, false)]
     [DataRow(390, 844, false)]
     [DataRow(390, 844, true)]
-    public async Task Mobile_G4DeviceReview_RecordsRealHuntAndExportsEvidence(int width, int height, bool flatGround)
+    public async Task Mobile_G4DeviceReview_RecordsRealHuntAndExportsEvidence(int width, int height, bool paintedGround)
     {
         await Page.SetViewportSizeAsync(width, height);
-        var terrainQuery = flatGround ? "&g4FlatGround=1" : "";
+        // A Pages visit may skip character creation; keep this real-Hunt Fireball proof
+        // on the Pyromancer selected by the normal first-visit character flow.
+        await Page.AddInitScriptAsync(@"localStorage.setItem('wyrmforge.characterSchool.v1','Pyromancer');
+            localStorage.setItem('wyrmforge.preferredPrimary.v1','FireBolt');");
+        var terrainQuery = paintedGround ? "&g4PaintedGround=1" : "";
         await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/?arenaGpu=1&gpuQuality=mobile&g4Review=1" + terrainQuery,
             new() { WaitUntil = WaitUntilState.NetworkIdle });
+        // Seed on the actual Pages origin and reload so Blazor sees the chosen
+        // character before startup. AddInitScript alone can race first startup
+        // on a deployed subpath and silently leave the old Arcane signature.
+        await Page.EvaluateAsync(@"() => {
+            localStorage.setItem('wyrmforge.characterSchool.v1','Pyromancer');
+            localStorage.setItem('wyrmforge.preferredPrimary.v1','FireBolt');
+        }");
+        await Page.ReloadAsync(new() { WaitUntil = WaitUntilState.NetworkIdle });
+        Assert.AreEqual("Pyromancer", await Page.EvaluateAsync<string>(
+            "() => localStorage.getItem('wyrmforge.characterSchool.v1')"));
+        Assert.AreEqual("FireBolt", await Page.EvaluateAsync<string>(
+            "() => localStorage.getItem('wyrmforge.preferredPrimary.v1')"));
         // Consent is the FIRST screen, before any Gate/Town/Hunt menus can load.
         var consent = Page.Locator("[data-g4-preflight]");
         await Expect(consent).ToBeVisibleAsync();
@@ -3628,12 +3644,51 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.AreEqual("no", await Page.EvaluateAsync<string>(
             "() => localStorage.getItem('wyrmforge.g4.autoSendConsent.v1')"));
         await EnterTownIfNeededAsync();
+        // The region chosen at the World Gate is independent of the character school.
+        // Verify the town has loaded the Fire character before the C# Hunt is created.
+        await Expect(Page.Locator(".refuge-canonical-scene")).ToHaveAttributeAsync("data-nexus-school", "fire");
         await EnterFirstTrailAsync("BEGIN FIRST HUNT");
         await Page.EvaluateAsync(@"async () => {
+            // Use the exact versioned wrapper module already imported by ArenaView.
+            // Importing an independently guessed URL may create a second module
+            // instance with an empty WeakMap, making a real Hunt look uninitialized.
+            const resource = performance.getEntriesByType('resource')
+                .map(entry => entry.name)
+                .find(url => url.includes('/js/arena-performance.js?v='));
+            if (!resource) throw new Error('Active Arena performance module was not loaded');
+            const performanceArena = await import(resource);
             const arena = await import(new URL('js/arena.js?v=20261028-school-palette-v1', document.baseURI).href);
             window.__huntGpuArena = arena;
-            window.__huntGpuRead = () => arena.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
+            window.__huntGpuRead = () => performanceArena.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
         }");
+        // Wait for the real C# Hunt, not a bootstrap Arcane placeholder.
+        // When this fails, preserve the actual observed diagnostic state in CI.
+        try
+        {
+            await Page.WaitForFunctionAsync(@"() => {
+                const game = window.__huntGpuRead?.();
+                return game?.worldReady && game.player?.activeSchool === 'Fire' &&
+                    game.hud?.spells?.some(spell => spell.name === 'Fire Bolt');
+            }", null, new() { Timeout = 45000 });
+        }
+        catch (TimeoutException)
+        {
+            var observed = await Page.EvaluateAsync<string>(@"() => {
+                const game = window.__huntGpuRead?.();
+                return JSON.stringify({
+                    moduleLoaded: Boolean(window.__huntGpuArena),
+                    diagnosticsAvailable: Boolean(game),
+                    active: game?.active,
+                    worldReady: game?.worldReady,
+                    playerSchool: game?.player?.activeSchool,
+                    spells: game?.hud?.spells?.map(spell => spell.name),
+                    hasWorld: Boolean(game?.world),
+                    renderingError: game?.renderingError,
+                    gpuError: game?.gpuWorld?.error
+                });
+            }");
+            Assert.Fail($"Deployed G4 never reached the authoritative Fire Hunt: {observed}");
+        }
 
         var panel = Page.Locator("[data-g4-device-review]");
         await Expect(panel).ToBeVisibleAsync();
@@ -3672,14 +3727,15 @@ public sealed class WyrmforgeBrowserTests : PageTest
             return readablePixels >= count * .16 && totalBrightness >= count * 14;
         }", null, new() { Timeout = 30000 });
 
-        // The default phone review must stay on readable painted ground.
-        // Also capture the explicit flat-ground A/B: neither path may silently
-        // substitute for the other. These are genuine full-game screenshots,
-        // not an isolated lab's nonblack framebuffer assertion.
+        // The default G4 review must show neutral grey, free of ground paintings.
+        // Keep an explicit painted A/B for diagnostic comparison only. Both cases
+        // are genuine full-game screenshots, not isolated light-lab assertions.
         var reviewDiagnostics = await Page.EvaluateAsync<JsonElement>("() => window.__huntGpuRead()");
-        var expectedTerrain = flatGround ? "flat-colors" : "painted";
+        var expectedTerrain = paintedGround ? "painted" : "neutral-grey";
         Assert.AreEqual(expectedTerrain, reviewDiagnostics.GetProperty("terrainPresentation").GetString(),
             "The G4 phone proof must record the actual selected ground, not assume a different review mode.");
+        Assert.AreEqual("staged", reviewDiagnostics.GetProperty("framePresentation").GetString(),
+            "G4 phone review must compose a full GPU/Canvas frame before presenting it.");
         Directory.CreateDirectory(ArtifactDirectory);
         var name = $"live-g4-review-{expectedTerrain}-{width}-mobile";
         await ScreenshotAsync(name + ".png");
@@ -3687,10 +3743,10 @@ public sealed class WyrmforgeBrowserTests : PageTest
             name + ".json"), reviewDiagnostics.ToString());
 
         // A nonblack opening frame cannot prove an active projectile casts shadows.
-        // Capture one genuine SAME-FRAME painted-Hunt view only when the C# Fireball
+        // Capture one genuine SAME-FRAME Hunt view (including painted A/B) only when the C# Fireball
         // source is registered AND the generic mobile GPU gives it a shadow view.
         // Never draw a synthetic projectile, light or caster in this browser test.
-        if (width == 390 && !flatGround)
+        if (width == 390)
         {
             await Page.WaitForFunctionAsync(@"() => {
                 const diagnostics = window.__huntGpuRead?.();
@@ -3699,9 +3755,14 @@ public sealed class WyrmforgeBrowserTests : PageTest
                         source.id?.startsWith('impact:FireBolt:')));
                 const canvas = document.querySelector('canvas.game-canvas');
                 if (!light || !canvas?.width || !canvas?.height) return false;
+                const shadowPixels = window.__huntGpuArena.readArenaShadowPixelProof(canvas, light.id);
+                // Allocating a shadow map is insufficient: a live Fireball must
+                // visibly change actual framebuffer pixels through occlusion.
+                if (!shadowPixels?.available || !shadowPixels.groundOnly || shadowPixels.changedPixels < 64) return false;
                 window.__g4LiveFireShadowProof = {
                     sourceId: light.id,
                     shadowViews: light.views,
+                    shadowPixels,
                     image: canvas.toDataURL('image/png')
                 };
                 return true;
@@ -3710,13 +3771,17 @@ public sealed class WyrmforgeBrowserTests : PageTest
                 "() => window.__g4LiveFireShadowProof");
             Assert.IsTrue(fireProof.GetProperty("shadowViews").GetInt32() > 0,
                 "A real C# Fireball must have a generic mobile GPU shadow view.");
+            Assert.IsTrue(fireProof.GetProperty("shadowPixels").GetProperty("groundOnly").GetBoolean(),
+                "The shadow proof must isolate ground receivers; self-shading actors alone must not pass.");
+            Assert.IsTrue(fireProof.GetProperty("shadowPixels").GetProperty("changedPixels").GetInt32() >= 64,
+                "An active real-Hunt Fireball must darken actual ground pixels behind world casters.");
             var png = fireProof.GetProperty("image").GetString() ?? "";
             StringAssert.StartsWith(png, "data:image/png;base64,");
             await File.WriteAllBytesAsync(Path.Combine(ArtifactDirectory,
-                "live-g4-review-fireball-shadow-390-mobile.png"),
+                $"live-g4-review-fireball-shadow-{expectedTerrain}-390-mobile.png"),
                 Convert.FromBase64String(png["data:image/png;base64,".Length..]));
             await File.WriteAllTextAsync(Path.Combine(ArtifactDirectory,
-                "live-g4-review-fireball-shadow-390-mobile.txt"),
+                $"live-g4-review-fireball-shadow-{expectedTerrain}-390-mobile.txt"),
                 fireProof.GetProperty("sourceId").GetString() ?? "");
         }
 

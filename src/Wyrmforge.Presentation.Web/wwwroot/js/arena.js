@@ -1,5 +1,5 @@
 import { huntLayerCapture, huntLayerRevision, prepareHuntGpuScratch, HuntGpuScratchPool,
-    prepareHuntGpuPresentation, presentCompletedHuntGpuFrame } from './hunt-gpu-layers.js';
+    prepareHuntGpuPresentation, presentCompletedHuntGpuFrame, shouldStageHuntGpuReviewFrame, shouldUseG4NeutralGround } from './hunt-gpu-layers.js';
 import { mountG4DeviceReview } from './lighting/g4-device-review.js';
 import { preloadFireballV5 } from './arena-fireball-v5.js';
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
@@ -58,13 +58,11 @@ export function initializeArena(canvas, dotNetReference) {
     arenas.set(canvas, state);
     state.detachInput = attachArenaInput(state);
     const params = new URLSearchParams(location.search);
-    // The previous automatic flat-ground review looked like large black shadow
-    // patches on real iPhone captures. Keep the readable painted floor by default.
-    // Flat terrain is now an EXPLICIT opt-in performance A/B, never production.
-    // The existing painted override wins if both comparison flags are provided.
-    state.g4FlatGround = params.get('g4Review') === '1' &&
-        params.get('g4FlatGround') === '1' && params.get('g4PaintedGround') !== '1';
-    state.g4StageFrames = params.get('g4Review') === '1' && params.get('g4StageFrames') === '1';
+    // For G4 testing, remove authored ground paintings and procedural dressing.
+    // A uniform neutral receiver exposes actual lighting/shadow defects.
+    // Production and the ordinary Canvas game retain their existing terrain.
+    state.g4FlatGround = shouldUseG4NeutralGround(params, params.get('arenaGpu') === '1');
+    state.g4StageFrames = shouldStageHuntGpuReviewFrame(params, params.get('arenaGpu') === '1');
     if (params.get('g4Review') === '1') {
         const gpuRequested = params.get('arenaGpu') === '1';
         state.g4Review = mountG4DeviceReview(canvas, () => state.gpuWorld?.diagnostics(),
@@ -92,6 +90,7 @@ export function readArenaDiagnostics(canvas) {
     if (!state) return null;
     return {
         active: state.active,
+        worldReady: hasAuthoritativeHuntWorld(state.latestSnapshot),
         hud: state.latestSnapshot?.hud??null,
         paused: state.latestSnapshot?.paused??false,
         ended: state.latestSnapshot?.ended??false,
@@ -137,9 +136,17 @@ export function readArenaDiagnostics(canvas) {
             ? state.g4FlatGround
                 ? { status: 'flat-colors', source: 'C# recipe', variant: null }
                 : liveWetForestMaterialDiagnostics(state.latestSnapshot.environment.seed) : null,
-        terrainPresentation: state.g4FlatGround ? 'flat-colors' : 'painted',
+        terrainPresentation: state.g4FlatGround ? 'neutral-grey' : 'painted',
+        framePresentation: state.g4StageFrames ? 'staged' : 'direct',
         lighting: { mode: 'night', darkness: GOTHIC_NIGHT.darkness, source: 'authoritative-csharp-snapshot' },
     };
+}
+
+/** Browser-only G4 review proof; compares real GPU shadow pixels without advancing C# gameplay. */
+export function readArenaShadowPixelProof(canvas, sourceId) {
+    const state = arenas.get(canvas);
+    if (!state?.g4Review || !state.gpuWorld || typeof sourceId !== 'string') return null;
+    return state.gpuWorld.shadowPixelProof(sourceId);
 }
 
 export function disposeArena(canvas) {
@@ -207,7 +214,10 @@ function frame(state, timestamp) {
     recordRenderFrame(state, timestamp);
 
     try {
-        if (state.latestSnapshot) draw(state, state.latestSnapshot, rect.width, rect.height);
+        // A C# bootstrap snapshot can carry a placeholder 800x600 world, Arcane
+        // school and no terrain. Do not show it as a torn/black G4 Hunt frame.
+        const waitingForWorld = state.g4StageFrames && !hasAuthoritativeHuntWorld(state.latestSnapshot);
+        if (state.latestSnapshot && !waitingForWorld) draw(state, state.latestSnapshot, rect.width, rect.height);
         else drawWaiting(state, rect.width, rect.height);
         state.renderingFailed = false;
         state.renderingError = null;
@@ -225,7 +235,8 @@ function frame(state, timestamp) {
     }
 
     state.g4Review?.record(timestamp, {
-        playing: Boolean(state.latestSnapshot && !state.latestSnapshot.paused && !state.latestSnapshot.ended),
+        playing: Boolean(state.latestSnapshot && !state.latestSnapshot.paused && !state.latestSnapshot.ended &&
+            (!state.g4StageFrames || hasAuthoritativeHuntWorld(state.latestSnapshot))),
         renderingFailed: Boolean(state.renderingFailed),
         gpuAvailable: Boolean(state.gpuWorld && state.latestSnapshot?.lighting),
         ended: Boolean(state.latestSnapshot?.ended),
@@ -288,6 +299,10 @@ function resizeCanvas(state, rect) {
     state.context.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
+function hasAuthoritativeHuntWorld(snapshot) {
+    return Boolean(snapshot?.world && snapshot?.player && snapshot?.environment && snapshot?.lighting);
+}
+
 function drawWaiting(state, width, height) {
     const ctx = state.context;
     ctx.clearRect(0, 0, width, height);
@@ -345,7 +360,7 @@ function draw(state, snapshot, width, height) {
         ctx.fillRect(0, 0, worldWidth, worldHeight);
         drawGrid(ctx, worldWidth, worldHeight);
     }
-    if (snapshot.hunt) drawHuntArena(ctx, snapshot.hunt, worldWidth, worldHeight);
+    if (snapshot.hunt && !state.g4FlatGround) drawHuntArena(ctx, snapshot.hunt, worldWidth, worldHeight);
     // World-space diffuse spell spill reaches actual masonry, terrain and the ground fog.
     if (!gpu) drawSpellLightSpill(ctx, spellLights, lightViewport, 'terrain');
     // Actual spell sources streak across nearby cloister water, not unrelated UI bloom.

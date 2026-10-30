@@ -35,6 +35,15 @@ test('any authored asset can supply independent shape, casting, shading and norm
     assert.equal(validated.materials[0].normal, 'tree-normal');
     assert.equal(validated.materials[0].roughnessMap, 'tree-roughness');
     assert.deepEqual(validated.objects[0].position, [2, -3, 0]);
+    const independentlyPlaced = {
+        ...object, occluderPosition: [2, -3, 0], occluderRotation: [0, 0, 0], occluderScale: [1, 1, .25],
+    };
+    assert.deepEqual(validateSnapshot({ ...snapshot, objects: [independentlyPlaced] }).objects[0].occluderScale,
+        [1, 1, .25]);
+    assert.throws(() => validateSnapshot({ ...snapshot, objects: [{ ...independentlyPlaced, occluderScale: [1, 1, 0] }] }),
+        /Nonpositive occluder scale/);
+    assert.throws(() => validateSnapshot({ ...snapshot, objects: [{ ...independentlyPlaced, occluderGeometry: undefined }] }),
+        /Caster transform requires occluder geometry/);
     assert.deepEqual(snapshot, validated, 'Generic descriptor validation never mutates input');
 });
 

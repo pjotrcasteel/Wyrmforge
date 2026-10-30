@@ -52,6 +52,12 @@ export function validateSnapshot(input) {
         if (!materials.has(o.material) || !o.geometry || !o.ownerId) throw new TypeError('Unresolved renderable');
         vector(o.position, 'position'); vector(o.rotation, 'rotation'); vector(o.scale, 'scale');
         if (o.scale.some(n => n <= 0)) throw new TypeError('Nonpositive scale');
+        for (const key of ['occluderPosition', 'occluderRotation', 'occluderScale']) {
+            if (o[key] === undefined) continue;
+            if (!o.occluderGeometry) throw new TypeError('Caster transform requires occluder geometry');
+            vector(o[key], key);
+        }
+        if (o.occluderScale?.some(n => n <= 0)) throw new TypeError('Nonpositive occluder scale');
         for (const flag of ['castsShadow', 'receivesLight', 'receivesShadow'])
             if (typeof o[flag] !== 'boolean') throw new TypeError(`Missing ${flag}`);
         if (o.frame) for (const key of ['offset', 'repeat']) {

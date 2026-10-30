@@ -31,8 +31,8 @@ test('genuine lighting evidence keeps mobile/balanced measurements labeled and l
             gpuWorld: { quality: 'mobile', submissionCpu: { meanMs: 43.75 },
                 textureUploads: { dynamicPixels: 329160 } },
         } },
-        { width: 390, terrain: 'flat-colors', diagnostics: {
-            terrainPresentation: 'flat-colors',
+        { width: 390, terrain: 'neutral-grey', diagnostics: {
+            terrainPresentation: 'neutral-grey',
             gpuWorld: { quality: 'mobile', submissionCpu: { meanMs: 29.6 },
                 textureUploads: { dynamicPixels: 550060 } },
         } },
@@ -41,9 +41,9 @@ test('genuine lighting evidence keeps mobile/balanced measurements labeled and l
     const g4Report = formatGpuEvidenceReport(evidence, g4PhoneModes);
     assert.match(g4Report, /Exact G4 phone-review terrain modes/);
     assert.match(g4Report, /\| 390px \| painted \| 43\.8 ms \| 329,160 \|/);
-    assert.match(g4Report, /\| 390px \| flat-colors \| 29\.6 ms \| 550,060 \|/);
+    assert.match(g4Report, /\| 390px \| neutral-grey \| 29\.6 ms \| 550,060 \|/);
     assert.match(g4Report, /live-g4-review-painted-390-mobile\.png/);
-    assert.match(g4Report, /live-g4-review-flat-colors-390-mobile\.png/);
+    assert.match(g4Report, /live-g4-review-neutral-grey-390-mobile\.png/);
     assert.match(g4Report, /not causal FPS/);
     assert.deepEqual(g4PhoneModes, reviewCopy, 'Reporting never mutates phone-review evidence');
 

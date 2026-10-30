@@ -87,6 +87,9 @@ export function huntSurfaceRenderable(id, x, y, width, height, castsShadow, surf
         receivesShadow: surface.receivesShadow ?? true,
         receivesLight: surface.receivesLight ?? true,
         ...(surface.occluderGeometry ? { occluderGeometry: surface.occluderGeometry } : {}),
+        ...(surface.occluderPosition ? { occluderPosition: surface.occluderPosition } : {}),
+        ...(surface.occluderRotation ? { occluderRotation: surface.occluderRotation } : {}),
+        ...(surface.occluderScale ? { occluderScale: surface.occluderScale } : {}),
         ...(frame ? { frame } : {}),
     };
 }
@@ -117,7 +120,8 @@ export function alignHuntActorBillboards(objects, engine) {
         const registered = engine.objects.get(descriptor.id);
         if (!registered) continue;
         registered.mesh.quaternion.copy(engine.camera.quaternion);
-        registered.caster?.quaternion.copy(engine.camera.quaternion);
+        // Only the painted billboard follows the camera. A solid caster remains
+        // in world space so a low Fireball projects its volume onto the floor.
     }
 }
 export class HuntGpuWorld {
@@ -129,6 +133,13 @@ export class HuntGpuWorld {
             needsRetainedHuntBuffer(device?.userAgent, device?.maxTouchPoints)));
         this.engine.registerGeometry('hunt-plane', new T.PlaneGeometry(1, 1));
         this.engine.registerGeometry('hunt-billboard', huntActorGeometry());
+        // Temporary G4 bridge for legacy Canvas captures until WF/AR deliver
+        // independently authored 2.5D occluders. A tapered solid at each
+        // artwork foot generates an actual ground shadow, not a painted blob.
+        const standIn = new T.CylinderGeometry(.055, .09, 1, 8);
+        standIn.rotateX(Math.PI / 2);
+        standIn.translate(0, 0, .5);
+        this.engine.registerGeometry('hunt-shadow-standin', standIn);
         this.layers = new Map();
         this.used = new Set();
         this.dirtyTextures = new Set();
@@ -205,7 +216,19 @@ export class HuntGpuWorld {
                 layer.revision = revision;
             }
         }
-        this.submitSurface(huntSurfaceRenderable(id, x, y, width, height, castsShadow, surface),
+        // Legacy screen-aligned captures have no 3D shadow volume. Keep the
+        // appearance plane unchanged and attach a generic ground-anchored
+        // stand-in through the shared authored-caster contract. Explicit asset
+        // geometry/occluders always take precedence over this G4 bridge.
+        const capturedSurface = castsShadow && !surface.geometry && !surface.occluderGeometry
+            ? { ...surface,
+                occluderGeometry: 'hunt-shadow-standin',
+                occluderPosition: [(x + width / 2) / UNIT,
+                    -(y + height * (surface.footFraction ?? .75)) * GROUND_Y / UNIT, 0],
+                occluderRotation: [0, 0, 0],
+                occluderScale: [width / UNIT, height * GROUND_Y / UNIT, .25],
+            } : surface;
+        this.submitSurface(huntSurfaceRenderable(id, x, y, width, height, castsShadow, capturedSurface),
             huntSurfaceMaterial(id, surface.material, Boolean(source)));
     }
     render(ctx, frame) {
@@ -260,6 +283,47 @@ export class HuntGpuWorld {
         this.submissionCpu = { frames: (previous?.frames ?? 0) + 1, lastMs: elapsed,
             meanMs: previous?.frames ? previous.meanMs * .9 + elapsed * .1 : elapsed,
             peakMs: Math.max(previous?.peakMs ?? 0, elapsed) };
+    }
+    /**
+     * Diagnostic only: compare the same authoritative frame with one real GPU
+     * light's shadow enabled/disabled. No synthetic caster, source, or gameplay
+     * state is introduced. Restore the renderer before normal presentation.
+     */
+    shadowPixelProof(sourceId) {
+        const engine = this.engine;
+        const light = engine.lights.get(sourceId);
+        if (!light?.castShadow) return { sourceId, available: false, changedPixels: 0, maxPixelDelta: 0 };
+        let shadowed, unshadowed;
+        // Prove shadows specifically on the ground receiver. Visible actors can
+        // otherwise change their own pixels in the shadow toggle and yield a
+        // false positive while the floor has no shadows (as on the iPhone).
+        const hiddenMeshes = [];
+        for (const [id, object] of engine.objects) {
+            if (id === 'hunt-ground') continue;
+            hiddenMeshes.push([object.mesh, object.mesh.visible]);
+            object.mesh.visible = false;
+        }
+        try {
+            engine.render(this.width, this.height);
+            shadowed = engine.pixels();
+            light.castShadow = false;
+            engine.render(this.width, this.height);
+            unshadowed = engine.pixels();
+        } finally {
+            light.castShadow = true;
+            for (const [mesh, visible] of hiddenMeshes) mesh.visible = visible;
+            engine.render(this.width, this.height);
+        }
+        let changedPixels = 0, maxPixelDelta = 0;
+        for (let i = 0; i < shadowed.length; i += 4) {
+            const delta = Math.abs(shadowed[i] - unshadowed[i]) +
+                Math.abs(shadowed[i + 1] - unshadowed[i + 1]) +
+                Math.abs(shadowed[i + 2] - unshadowed[i + 2]);
+            if (delta >= 24) changedPixels++;
+            maxPixelDelta = Math.max(maxPixelDelta, delta);
+        }
+        return { sourceId, available: true, changedPixels, maxPixelDelta,
+            groundOnly: true, framebuffer: [engine.canvas.width, engine.canvas.height] };
     }
     dispose() { this.engine.dispose(); this.layers.clear(); }
 }

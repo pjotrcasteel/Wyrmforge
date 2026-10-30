@@ -56,6 +56,13 @@ export function createTerrainPlan(environment, width, height) {
 }
 
 function drawTerrain(ctx, plan, width, height, approvedAtlas = null, flatColorsOnly = false) {
+    if (flatColorsOnly) {
+        // G4's isolated neutral-albedo receiver: no terrain texture, gradients,
+        // scattered detail, or baked shadows may contaminate the light test.
+        ctx.fillStyle = '#969696';
+        ctx.fillRect(0, 0, width, height);
+        return;
+    }
     const ash = plan.biome === 'ash';
     const ridge = plan.biome === 'ridge';
     const snow = plan.biome === 'snow';
@@ -222,7 +229,7 @@ export function habitatTint(habitat) {
 
 function terrainTexture(environment, width, height, approvedAtlas = null, flatColorsOnly = false) {
     // Art generation is part of the key: the bake refreshes once the atlases finish loading.
-    const key = [environment.seed, environment.biome, environment.element, environment.district, environment.habitat, environment.stage, environment.corruption, environment.generatorPreview, environment.wetForest?.site, width, height, flatColorsOnly ? 'flat-ground-v1' : 'painted-ground', artGeneration(), flatColorsOnly ? 0 : liveWetForestArtworkGeneration(),
+    const key = [environment.seed, environment.biome, environment.element, environment.district, environment.habitat, environment.stage, environment.corruption, environment.generatorPreview, environment.wetForest?.site, width, height, flatColorsOnly ? 'neutral-grey-v1' : 'painted-ground', artGeneration(), flatColorsOnly ? 0 : liveWetForestArtworkGeneration(),
         approvedAtlas ? 'approvedGroundPreview' : 'canonicalGround'].join(':');
     if (textures.has(key)) return textures.get(key);
     const image = document.createElement('canvas');
@@ -288,7 +295,7 @@ function drawForestEdges(ctx, plan, width, height) {
 
 // Read the already-cached environment plan, without rerolling its procedural art.
 export function drawArenaCloisterReflections(ctx, environment, width, height, lights, seconds = 0, reducedMotion = false, flatColorsOnly = false) {
-    if (!environment) return 0;
+    if (!environment || flatColorsOnly) return 0;
     return drawCloisterReflections(ctx, terrainTexture(environment, width, height, null, flatColorsOnly).cloister, lights, seconds, reducedMotion);
 }
 
@@ -496,8 +503,10 @@ export function drawArenaEnvironment(ctx, environment, width, height, elapsedSec
             drawTerritoryBarrier(ctx, barrier, environment.element, width, height, elapsedSeconds);
     }
     for (const supply of environment.supplies ?? []) drawSupply(ctx, supply, width, height, elapsedSeconds);
-    drawTerritoryMotes(ctx, environment, width, height, elapsedSeconds);
-    drawCloisterMist(ctx, cloister, elapsedSeconds);
+    if (!flatColorsOnly) {
+        drawTerritoryMotes(ctx, environment, width, height, elapsedSeconds);
+        drawCloisterMist(ctx, cloister, elapsedSeconds);
+    }
     return true;
 }
 

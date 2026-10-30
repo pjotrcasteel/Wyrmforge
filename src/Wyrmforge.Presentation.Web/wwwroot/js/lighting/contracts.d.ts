@@ -26,6 +26,8 @@ export interface LitRenderable {
     castsShadow: boolean; receivesShadow: boolean; receivesLight: boolean;
     /** Optional independent authored caster. Normal maps alone are NOT casters. */
     occluderGeometry?: string;
+    /** Independent world-space caster transform: never camera-align a physical shadow proxy. */
+    occluderPosition?: Vector3; occluderRotation?: Vector3; occluderScale?: Vector3;
     /** Same normalized atlas region for albedo/normal and shadow alpha. */
     frame?: { offset: [number, number]; repeat: [number, number] };
 }

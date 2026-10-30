@@ -85,3 +85,32 @@ native actor proportions are visually restored, but Android thermal/power,
 sustained device performance, Trail 2 darkness, and Fireball/Hollowed lighting
 checks remain separate open gates. Do not close G4 or enable G5 production GPU
 based only on hosted Chromium checks.
+
+
+## Rejected iPhone G4 preview and shadow/frame repair gate — 30 October 2026
+
+The owner **rejected** the public `g4-preview` build pinned at
+`0fc77a0`: shadows were not visible and tearing returned. The rollback
+workflow still automatically selected tile-free ground when `arenaGpu=1`;
+that published version must not be described as a verified working candidate.
+The later draft #381 restores painted terrain by default, but remains unmerged.
+
+[Draft repair PR #441](https://github.com/pjotrcasteel/Wyrmforge/pull/441)
+stacks only on the existing G4 branch. Its G4 reviewer now stages all GPU,
+terrain, actors, overlays and UI on an offscreen 2D surface before one final
+visible frame presentation. `g4StageFrames=0` remains a deliberate A/B
+opt-out; production Canvas and the later G5 default are unchanged.
+
+A new **same-frame shadow pixel differential** temporarily disables one
+actual C#-authored GPU light's shadow after a frame render, reads pixels
+with/without that single shadow, then restores and re-renders the untouched
+presentation state. The real 390px Fireball browser proof now requires at
+least 64 visibly changed pixels, instead of merely counting shadow views.
+The comparison introduces no synthetic lights/casters or gameplay changes.
+
+**Unaccepted:** PR #441's exact-head JS/.NET/WebGL workflow must pass, its
+authentic live-Hunt captures need visual review, and physical iOS Safari must
+show readable terrain, visible moving shadows and stable fully presented frames.
+Desktop-hosted Chromium and a WebGL-disabled cloud browser cannot substitute
+for owner iPhone acceptance. Keep G4 draft, never silently merge to production,
+and keep Town/AI/animation/physics unchanged.

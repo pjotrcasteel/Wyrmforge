@@ -208,8 +208,13 @@ export class LightingEngine {
                 }
                 object = { id: d.id, mesh, caster, signature }; this.objects.set(d.id, object); this.scene.add(mesh);
             }
-            for (const mesh of [object.mesh, object.caster].filter(Boolean)) {
-                mesh.position.fromArray(d.position); mesh.rotation.set(...d.rotation); mesh.scale.fromArray(d.scale);
+            object.mesh.position.fromArray(d.position);
+            object.mesh.rotation.set(...d.rotation);
+            object.mesh.scale.fromArray(d.scale);
+            if (object.caster) {
+                object.caster.position.fromArray(d.occluderPosition ?? d.position);
+                object.caster.rotation.set(...(d.occluderRotation ?? d.rotation));
+                object.caster.scale.fromArray(d.occluderScale ?? d.scale);
             }
             object.mesh.castShadow = d.castsShadow && !object.caster;
             if (object.caster) object.caster.castShadow = d.castsShadow;

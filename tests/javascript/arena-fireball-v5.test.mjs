@@ -103,6 +103,6 @@ test('the G4 Hunt draws projectile art after GPU world shading without edge-on G
     assert.doesNotMatch(source, /submitGpuFireballs\(gpu/);
     assert.ok(source.indexOf('gpu.render(ctx, state.sharedLightingFrame)') <
         source.indexOf('for (const projectile of snapshot.projectiles)\n        drawSpellProjectile('));
-    assert.match(source, /params\.get\('g4StageFrames'\) === '1'/,
-        'High-bandwidth staging is now opt-in only, rather than a phone default.');
+    assert.match(source, /shouldStageHuntGpuReviewFrame\(params, params\.get\('arenaGpu'\) === '1'\)/,
+        'G4 GPU review should atomically stage complete frames; production remains unchanged.');
 });
