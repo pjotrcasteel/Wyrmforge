@@ -439,7 +439,7 @@ function draw(state, snapshot, width, height) {
             gpu.capture(capture.id,
                 tile, tileX - camera.x, tileY - camera.y, tileSize, tileSize,
                 .12 + Math.max(0, Math.min(1, layer.depth / worldHeight)) * .1,
-                true, { revision });
+                true, { revision, footFraction: capture.footFraction });
             ctx = worldContext;
         }
     }
