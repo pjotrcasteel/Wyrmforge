@@ -7,7 +7,8 @@ albedo/normal/depth/material passes and actual Hunt renderer validation.
 from pathlib import Path
 import argparse,json,hashlib,math
 from PIL import Image
-p=argparse.ArgumentParser();p.add_argument('source');p.add_argument('--out',required=True);p.add_argument('--full-cells',action='store_true');p.add_argument('--tight-crop',action='store_true',help='Lossless common alpha union with one native pixel of guard; no rescaling.');p.add_argument('--clips',help='Explicit complete clip subset for a bounded source proof; walk is required.');p.add_argument('--experimental-half-pivots',action='store_true',help='Native source-frame study: sample 8 of 16 true pivot poses without resampling images; unapproved.');a=p.parse_args()
+p=argparse.ArgumentParser();p.add_argument('source');p.add_argument('--out',required=True);p.add_argument('--full-cells',action='store_true');p.add_argument('--tight-crop',action='store_true',help='Lossless common alpha union with one native pixel of guard; no rescaling.');p.add_argument('--clips',help='Explicit complete clip subset for a bounded source proof; walk is required.');p.add_argument('--experimental-half-pivots',action='store_true',help='Native source-frame study: sample 8 of 16 true pivot poses without resampling images; unapproved.')
+p.add_argument('--optimized-columns',action='store_true',help='Lossless native-frame compact column layout under 4096px; candidate only, never runtime approval.');a=p.parse_args()
 if a.full_cells and a.tight_crop:p.error('Choose full cells or measured crop')
 source=Path(a.source);out=Path(a.out);out.mkdir(parents=True,exist_ok=True)
 m=json.loads((source/'source-manifest.json').read_text());directions=m['directions'];scale=93/1.55
@@ -48,7 +49,20 @@ if a.tight_crop:
     common_crop=(min(b[0] for b in boxes)-1,min(b[1] for b in boxes)-1,max(b[2] for b in boxes)+1,max(b[3] for b in boxes)+1)
 clips={};row_hashes={}
 for name,clip in m['clips'].items():
-    count=clip['frames'];grid=clip.get('poseGrid');crop=common_crop or ((16,12,80,84) if grid and not a.full_cells else (0,0,96,96));columns=min(count,32);rows=math.ceil(count/columns);width,height=crop[2]-crop[0],crop[3]-crop[1]
+    count=clip['frames'];grid=clip.get('poseGrid');crop=common_crop or ((16,12,80,84) if grid and not a.full_cells else (0,0,96,96))
+    width,height=crop[2]-crop[0],crop[3]-crop[1]
+    columns=min(count,32)
+    if a.optimized_columns:
+        choices=[]
+        for col in range(1,min(count,32)+1):
+            rows_candidate=math.ceil(count/col)
+            atlas_width=width*col
+            atlas_height=height*rows_candidate*len(directions)
+            if atlas_width<=4096 and atlas_height<=4096:
+                choices.append((col*rows_candidate,max(atlas_width,atlas_height),col))
+        if not choices:p.error('No native 4096px-safe source atlas column layout')
+        columns=min(choices)[2]
+    rows=math.ceil(count/columns)
     atlas=Image.new('RGBA',(width*columns,height*rows*8));hashes=[]
     for row,direction in enumerate(directions):
         frames=[]
@@ -63,6 +77,7 @@ for name,clip in m['clips'].items():
     assert len(set(hashes))==8,('identical labelled facings',name,hashes)
     filename=name+'.png';atlas.save(out/filename)
     clips[name]={'image':filename,'sha256':hashlib.sha256((out/filename).read_bytes()).hexdigest(),'frames':count,'cell':96,'columns':columns,'crop':list(crop),'anchor':[48,72],'worldSize':93,'reviewLightingOnly':True}
+    if a.optimized_columns:clips[name]['optimizedNativePacking']=True
     if a.experimental_half_pivots and name in ('pivot','pivot-negative'):
         clips[name]['experimentalSourceFrameIndices']=indices[name]
     row_hashes[name]=hashes
@@ -76,6 +91,7 @@ if 'attack-travel' in m['clips']:
 manifest={'schemaVersion':2,'profileSha256':hashlib.sha256((out/'profile.json').read_bytes()).hexdigest(),'candidateNotApproved':True,'productionReady':False,'reviewLightingOnly':True,'runtimeIntegrated':False,'directions':directions,'clips':clips,'sourceSignature':m['skeletonSignature'],'rowSha256':row_hashes,'sourceQC':original_source_qc,'materialGate':'aligned unlit albedo/normal/depth/emissive export and actual Hunt GPU acceptance open'}
 manifest['representation']='baked-full-body-sprites'
 if a.experimental_half_pivots:manifest['experimentalHalfPivotFrames']=True
+if a.optimized_columns:manifest['optimizedNativeColumnsOnly']=True
 if (source/'hollow-foundation.blend').exists():manifest['sourceBlendSha256']=hashlib.sha256((source/'hollow-foundation.blend').read_bytes()).hexdigest()
 (out/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n',newline='\n')
 print(json.dumps({'atlasBytes':sum((out/v['image']).stat().st_size for v in clips.values()),'eightDistinctRows':list(row_hashes),'gpuProductionReady':False}))
