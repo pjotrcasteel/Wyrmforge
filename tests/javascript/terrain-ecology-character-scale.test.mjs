@@ -7,7 +7,7 @@ import { ACTOR_REFERENCE_CONFIG, buildCharacterScaleReview } from
 test('art comparison samples the actual production Hollowed and Ashling, not stand-ins', () => {
     const {scene, enlarged, targetScene, targetEnlarged, metadata} = buildCharacterScaleReview();
     assert.equal(metadata.schema, 'wf32-character-scale-review.v2');
-    assert.match(metadata.kind, /NOT A LIVE HUNT/);
+    assert.match(metadata.kind, /NOT LIVE HUNT SCREENSHOTS/);
     assert.equal(scene.width, 384);
     assert.equal(scene.height, 256);
     assert.equal(enlarged.width, scene.width * 3);
