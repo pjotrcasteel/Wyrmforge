@@ -144,16 +144,19 @@ function createOrganicMasonryField(type, seed) {
         return {
             x: (gx + .5) * cell + dx,
             y: (gy + .5) * cell + dy,
-            shade: 2 + Math.floor(r() * 4),
+            shade: r() < .23 ? 4 : (r() < .55 ? 3 : 2),
             missing: material < (cobble ? .125 : .19),
             fractured: material >= (cobble ? .125 : .19) && material < (cobble ? .42 : .54),
             mossy: r() < .30,
         };
     });
     const bitmap = new Bitmap(MASONRY_PERIOD, MASONRY_PERIOD);
+    // Art and physical stone identity are intentionally independent. A stone's ID
+    // remains stable even where a visible joint fades into its neighbour.
+    const stoneIds = new Int32Array(MASONRY_PERIOD * MASONRY_PERIOD);
     for (let y = 0; y < MASONRY_PERIOD; y++) for (let x = 0; x < MASONRY_PERIOD; x++) {
         const gx = Math.floor(x / cell), gy = Math.floor(y / cell);
-        let first = Infinity, second = Infinity, best = null, cx = 0, cy = 0;
+        let first = Infinity, second = Infinity, best = null, bestId = 0, cx = 0, cy = 0;
         for (let iy = -1; iy <= 1; iy++) for (let ix = -1; ix <= 1; ix++) {
             const mx = organicMod(gx + ix, count), my = organicMod(gy + iy, count);
             const stone = centers[my * count + mx];
@@ -164,18 +167,10 @@ function createOrganicMasonryField(type, seed) {
             if (dy > MASONRY_PERIOD / 2) dy -= MASONRY_PERIOD;
             if (dy < -MASONRY_PERIOD / 2) dy += MASONRY_PERIOD;
             const d = dx * dx + dy * dy;
-            if (d < first) { second = first; first = d; best = stone; cx = dx; cy = dy; }
+            if (d < first) { second = first; first = d; best = stone; bestId = my * count + mx + 1; cx = dx; cy = dy; }
             else if (d < second) second = d;
         }
         const random = pixelHash(x, y, seed);
-        const seam = Math.sqrt(second) - Math.sqrt(first) < (cobble ? 1.35 : 1.15);
-        if (seam) {
-            const mossy = random < .16;
-            // Broken-up low-contrast joints disappear into packed earth and moss.
-            bitmap.set(x, y, mossy ? MOSS[Math.floor(random * 19) % MOSS.length] :
-                random > .72 ? STONE[1] : SOIL[1]);
-            continue;
-        }
         if (best.missing) {
             // Genuinely absent, sunken stones; soil collects within the worn pavement.
             const soilShade = random < .20 ? SOIL[0] : random < .77 ? SOIL[1] : SOIL[2];
@@ -183,14 +178,24 @@ function createOrganicMasonryField(type, seed) {
             if (random < .055) bitmap.set(x, y, MOSS[0]);
             continue;
         }
+        // Keep exact instance topology independent of painted pixel color.
+        stoneIds[y * MASONRY_PERIOD + x] = bestId;
+        const nearJoin = Math.sqrt(second) - Math.sqrt(first);
+        // Join visibility is an interrupted, world-space clump, never a complete
+        // polygon contour. Most joint pixels retain the adjacent stone face.
+        const infillCluster = pixelHash(Math.floor(x / 7), Math.floor(y / 8), seed ^ 0x5a1c3b72);
+        if (nearJoin < (cobble ? 1.6 : 1.45) && infillCluster < .27) {
+            // No black ink: packed damp soil or thin moss, with no lighting baked in.
+            bitmap.set(x, y, infillCluster < .065 ? MOSS[0] : SOIL[2]);
+            continue;
+        }
         let shade = best.shade;
-        if (random < .08) shade = Math.max(1, shade - 2);
-        else if (random > .952) shade = Math.min(6, shade + 1);
-        // A chipped, irregular rim belongs to the stone itself. Avoid arbitrary
-        // straight scratch lines through the centre of the slab.
-        if (best.fractured && Math.sqrt(second) - Math.sqrt(first) < (cobble ? 3.2 : 4.4) &&
-            random < .33 && ((cx > 0 && cy < 0) || (cx < 0 && cy > 0))) {
-            bitmap.set(x, y, random < .18 ? SOIL[1] : STONE[1]);
+        if (random < .055) shade = Math.max(2, shade - 1);
+        else if (random > .972) shade = Math.min(4, shade + 1);
+        // Edge damage is occasional clustered chipping, not a connected dark rim.
+        if (best.fractured && nearJoin < (cobble ? 2.4 : 3.1) &&
+            infillCluster > .77 && random < .18 && ((cx > 0 && cy < 0) || (cx < 0 && cy > 0))) {
+            bitmap.set(x, y, STONE[Math.max(2, shade - 1)]);
             continue;
         }
         if (best.mossy && random < .055 &&
@@ -198,15 +203,24 @@ function createOrganicMasonryField(type, seed) {
             bitmap.set(x, y, choose(rng(Math.floor(random * 2e9) + seed), MOSS));
             continue;
         }
-        bitmap.set(x, y, STONE[shade]);
+        // Pixel clusters show weathered pores, lichens and embedded grime without
+        // tracing the perimeter of every stone.
+        const patina = pixelHash(Math.floor(x / 3), Math.floor(y / 3), seed ^ 0x3b798c52);
+        if (patina < .105 && random < .82) bitmap.set(x, y, STONE[Math.max(1, shade - 1)]);
+        else if (patina > .965 && best.mossy && random < .65) bitmap.set(x, y, MOSS[0]);
+        else if (random < .095) bitmap.set(x, y, STONE[Math.max(2, shade - 1)]);
+        else bitmap.set(x, y, STONE[shade]);
     }
-    return bitmap;
+    return {bitmap, stoneIds};
 }
 
-export function createMasonryField(type = 'flagstone', seed = 1387) {
-    if (type === 'brick') return createBrickMasonryField(type, seed);
+export function createMasonrySurface(type = 'flagstone', seed = 1387) {
+    if (type === 'brick') return {bitmap:createBrickMasonryField(type, seed),stoneIds:null};
     if (type === 'flagstone' || type === 'cobble') return createOrganicMasonryField(type, seed);
     throw new RangeError(`Invalid masonry type: ${type}`);
+}
+export function createMasonryField(type = 'flagstone', seed = 1387) {
+    return createMasonrySurface(type,seed).bitmap;
 }
 
 export function masonryPhaseTile(field, col, row) {
