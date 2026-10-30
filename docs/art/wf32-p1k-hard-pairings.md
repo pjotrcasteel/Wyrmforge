@@ -31,11 +31,27 @@ Without altering the owner-liked H1 gallery, `buildHardPairingVariationReview()`
 
 Both sheets have native-pixel and exact 3× nearest-neighbour outputs. Their manifest records every seed, degradation state, primary/secondary stone coverage, soil infill coverage and SHA-256 of the unlit albedo bitmap. The variations are review candidates; **the owner has not approved these new wear extremes or seed examples**. They do not assign material distributions or biome roles, which are AR3 C# decisions. Neither the accepted H1 blending gallery nor the H2 elevation diagnostics change. This is not source evidence of physical height, shadow casting, game collision or AR3 readiness.
 
+### H4 — deterministic AR4 source-material handoff (no runtime integration)
+
+`export-hard-pairing-source-bundle.mjs` packages the unchanged H1 `worn`/seed `2111` source recipe in **both directions for all three hard-material pairs**. Each native 256×192 sample has five pixel-aligned channels: original `albedo`, `normal` and `roughness` from the existing `worldLightingMaps`, plus H2 **candidate** `elevation` and `caster-alpha`. The bundle contains exact original-stone caster-footprint row spans as separate JSON per sample. Each channel and footprint has a SHA-256 digest in `source-bundle-manifest.json`, along with the 32px native cell size, 48px per world unit, bounded candidate rise scale, recipe, 0/1/2 material coverage and engine ownership.
+
+This provides **authoring inputs**, not an API for arbitrary AR3 material weights. AR3 C# still chooses and owns road layout, regions, IDs and blend weights; AR4 may bind reviewed source materials only *after* AR3 approval. Only the existing G engine may convert reviewed source candidates into properly registered caster geometry and lighting. Alpha or a height texture by itself **does not cast a shadow**. H4 does not modify the H1/H2/H3 review outputs, select unapproved H3 wear extremes, place colliders, create a runtime cache or touch actual Hunt rendering.
+
+Reproduce the H4 bundle independently:
+
+```sh
+node tools/art/prototypes/export-hard-pairing-source-bundle.mjs artifacts/wf32-hard-pairing-source-bundle
+node --test tests/javascript/terrain-hard-pairing-bundle.test.mjs
+```
+
+H4 adds three tests for six directed material pairs and channel hashes, exact original-ID caster occupancy from spans, and deterministic PNG/manifest replay. The five-file input pattern per pair is intentionally separate from any production atlas layout or G shader/material registration.
+
 ### Reproduce the gallery and tests
 
 ```sh
 node tools/art/prototypes/build-hard-pairing-review.mjs artifacts/wf32-hard-pairings
-node --test tests/javascript/terrain-hard-pairings.test.mjs tests/javascript/terrain-hard-pairing-relief.test.mjs tests/javascript/terrain-hard-pairing-variation.test.mjs tests/javascript/terrain-world-variation.test.mjs
+node tools/art/prototypes/export-hard-pairing-source-bundle.mjs artifacts/wf32-hard-pairing-source-bundle
+node --test tests/javascript/terrain-hard-pairings.test.mjs tests/javascript/terrain-hard-pairing-relief.test.mjs tests/javascript/terrain-hard-pairing-variation.test.mjs tests/javascript/terrain-hard-pairing-bundle.test.mjs tests/javascript/terrain-world-variation.test.mjs
 ```
 
 Review outputs:
@@ -47,5 +63,6 @@ Review outputs:
 - `hard-pairing-degradation-native.png` and `hard-pairing-degradation-3x.png` (H3 original-stone weathering comparison)
 - `hard-pairing-seeds-native.png` and `hard-pairing-seeds-3x.png` (H3 seed-diversity comparison)
 - `manifest.json` (source tags, coverage, H3 source image hashes and limitations)
+- `artifacts/wf32-hard-pairing-source-bundle/` (H4 six-pair versioned source package: 30 native PNGs, six original-stone footprint JSON files and one SHA-256/checkpoint manifest; no production use)
 
-Eight H1 hard-pairing tests check all three pair kinds and both orientations, stone identity and no-clipping, world-window overlap continuity, vertical inner corners, 32px source-tile reassembly, material map coherence, unchanged original source data and invalid-input rejection. Five H2 tests check source-masked elevation, exact caster spans, world-coordinate overlap, rejection of corrupt identities and honest review metadata. Four H3 tests require material loss to grow with degradation, source seed diversity with deterministic replay, exact source masks for all three weathering states and two honest native/3× review sheets. Owner has positively reviewed the H1 **mixing/variation direction**; H3 wear extremes, height/shadow and mobile-scale appearance are unapproved. The separate AR3/G/real-device and physics gates remain fully open.
+Eight H1 hard-pairing tests check all three pair kinds and both orientations, stone identity and no-clipping, world-window overlap continuity, vertical inner corners, 32px source-tile reassembly, material map coherence, unchanged original source data and invalid-input rejection. Five H2 tests check source-masked elevation, exact caster spans, world-coordinate overlap, rejection of corrupt identities and honest review metadata. Four H3 tests require material loss to grow with degradation, source seed diversity with deterministic replay, exact source masks for all three weathering states and two honest native/3× review sheets. Three H4 tests cover six complete paired material bundles, exact candidate caster occupancy and byte-identical source package replay; **27/27 focused tests pass locally**. Owner has positively reviewed the H1 **mixing/variation direction**; H3 wear extremes, height/shadow and mobile-scale appearance are unapproved. The separate AR3/G/real-device and physics gates remain fully open.
