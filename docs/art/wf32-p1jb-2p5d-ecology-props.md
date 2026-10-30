@@ -30,3 +30,16 @@ node tools/art/prototypes/build-ecology-25d-review.mjs docs/art/previews/wf32-ec
 - Visual acceptance still with owner. The first source shapes deliberately prioritize structural art correctness and require eventual art refinement (rock volume, irregular natural silhouettes, more organic grass clumps).
 
 **Scope boundary:** no physics, gameplay, C# world generation, AN/AI, or GPU engine implementation changes. This adds authoring/data source only to existing draft PR #429.
+
+## P1j-B3 — thinner grass without thorn-like branches (30 October 2026)
+
+**Owner feedback:** grass transitions into terrain are visually successful, but the medium/tall 2.5D prop blades were too thick and looked like thorns. Preserve all previous layering and blend constraints; refine foliage silhouette only.
+
+- `ECOLOGY_25D_VERSION` is now `wf32-ecology-props-2p5d.v1.1`.
+- Medium/tall grass uses individual gently bowed pixel blades, with three-pixel root clusters, primarily two-pixel lower-mid leaves and one-pixel upper tips. The old triangular 5–7 pixel side shoots are gone.
+- Leaf count is slightly reduced to reveal ground and rear silhouettes; foot contact remains covered by short, non-casting crown pixels. Each blade still writes the same albedo, normal, roughness and shadow-alpha channels into the existing rear or front layer.
+- The original rock-small and rock-cluster variants are **bit-for-bit unchanged** across all channels and layers (regression SHA-256 locked); P1i blended ground, placement and C# collision policy unchanged.
+- Focused offline Node tests: **14/14 passing locally** (the prior 12 plus upper-blade density / width and unchanged rock texture checks). Full CI status must be checked separately.
+- Before/after crop and static composition are offline source art, not gameplay capture. **Owner aesthetic approval and real Hunt G/camera/occlusion/mobile acceptance remain pending.**
+
+No physics-engine changes or new rendering pipeline. Future lighting and depth work belongs to existing AR3 and shared G owners.
