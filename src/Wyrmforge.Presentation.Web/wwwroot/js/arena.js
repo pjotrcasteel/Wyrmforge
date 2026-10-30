@@ -107,7 +107,7 @@ export function readArenaDiagnostics(canvas) {
         performance: { fps:state.displayFps, simulationHz:state.displaySimulationHz, simulationMilliseconds:state.displaySimulationMilliseconds, bridgeMilliseconds:state.displayBridgeMilliseconds },
         renderingFailed: Boolean(state.renderingFailed),
         sharedLighting: state.sharedLightingFrame ?? state.latestSnapshot?.lighting ?? null,
-        gpuWorld:state.gpuWorld?{...state.gpuWorld.engine.diagnostics(),bakedSpriteResources:state.gpuWorld.sprites.size,bakedSpriteActors:state.gpuWorld.objects.filter(o=>o.id.endsWith('-sprite')).length}:{error:state.gpuError??null},
+        gpuWorld:state.gpuWorld?{...state.gpuWorld.engine.diagnostics(),bakedSpriteResources:state.gpuWorld.sprites.size,bakedSpriteActors:state.gpuWorld.objects.filter(o=>o.id.endsWith('-sprite')).length,sourceSkinActors:state.gpuWorld.objects.filter(o=>o.id.endsWith('-skin')&&o.skinPose).length}:{error:state.gpuError??null},
         hollowFractureGpuEmitters: state.fractureGpuEmitters ?? [],
         wetForestGround: state.latestSnapshot?.environment?.wetForest
             ? liveWetForestMaterialDiagnostics(state.latestSnapshot.environment.seed) : null,
