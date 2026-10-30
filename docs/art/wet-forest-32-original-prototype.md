@@ -144,3 +144,9 @@ WF32-P1g will address world-scale repetition across 256px patches, inner corners
 - Owner P1g pixel-art visual approval at 1x and 320px/390px, especially whether the new granular shading maintains enough character without restoring fake contour lines.
 - P1h large-world phase/repetition, material-weight blending, inner corners and ecological scatter placement.
 - Production AR4 material integration remains dependent on approved AR3 geography; do not alter live Hunts or G4/G5 lighting-engine ownership.
+
+## WF32-P1h — hard-surface degradation (30 October 2026)
+
+Five reusable, **cosmetic** degradation states are now implemented for flagstone, cobble and brick road, each with source-authored numeric stone IDs. Damage includes fully missing stones, irregular partially surviving faces, packed earth/moss infill and reclaimed edges; the latter continue using the generic whole-stone erosion rule, so no half-stone is clipped by the grass/soil/mud interface. Material companions include physically meaningful height-derived normals and roughness in the existing shared G contract, with scalar rather than per-pixel specular configuration. Local validation: 34 Node tests passing (11 new P1h). The art and comparative matrix await owner visual review; no live-game GPU cutover or C# terrain authority changed.
+
+See [P1h source specification and verification](wf32-p1h-hard-surface-degradation.md). World-scale nonrepetition and inner corner support are explicitly deferred to P1i; brickwork's remaining regular structure is an open aesthetic concern.
