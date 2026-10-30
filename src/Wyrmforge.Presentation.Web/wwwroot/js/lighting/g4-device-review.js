@@ -260,15 +260,18 @@ export function mountG4DeviceReview(canvas, getGpu, mode = 'canvas', quality = n
         completed = true;
         session.stop(now());
         if (persist(outcome)) {
-            header.textContent = 'G4 · SAVED';
+            // The collapsed chip remains visible after Hunt teardown. Show the
+            // useful measurements right here, never behind another menu.
+            header.textContent = `G4 · ${Math.round(summary.observedFps)} FPS · p95 ${Math.round(summary.frameMsP95)}ms · SAVED`;
             updateStatus('Performance saved after the Hunt; no export needed.');
             if (consented()) {
                 writeJson(G4_PENDING_KEY, readJson(G4_LAST_RECORD_KEY));
                 void sendPendingG4Evidence(updateStatus);
             }
         } else {
-            header.textContent = 'G4 · NO FRAMES';
-            updateStatus('Not enough gameplay frames to measure.');
+            const unavailable = hasG4Evidence(summary);
+            header.textContent = unavailable ? 'G4 · STORAGE BLOCKED' : 'G4 · NO FRAMES';
+            updateStatus(unavailable ? 'This phone blocked saving the result.' : 'Not enough gameplay frames to measure.');
         }
     };
     document.body.appendChild(panel);
