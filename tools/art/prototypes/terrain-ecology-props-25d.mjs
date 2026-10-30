@@ -4,7 +4,7 @@
 import { Bitmap, packAtlas } from '../lib/painter.mjs';
 import { ECOLOGY_PROP_DEFINITIONS, proposeEcologyProps } from './terrain-ecology-props.mjs';
 
-export const ECOLOGY_25D_VERSION = 'wf32-ecology-props-2p5d.v1';
+export const ECOLOGY_25D_VERSION = 'wf32-ecology-props-2p5d.v1.1';
 export const PROP_LAYER_ORDER = Object.freeze(['footprint', 'rear', 'front']);
 export const PIXELS_PER_WORLD_UNIT = 48; // shared LitSprite's current default authoring scale
 const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
@@ -67,34 +67,52 @@ function rock(layers, cx, fy, radius, height, seed) {
         if(v>.83)ink(layers.rear,x,y,v>.95?'#677369':'#4a6050',[117,126,242],211);
     }
 }
+// Narrow leaves, with a soft curved silhouette rather than thorn-like spikes.
+// In pixel space the foliage is mostly one pixel wide, two toward the base,
+// occasionally three at the root. No branching triangular polygons.
+export const GRASS_BLADE_STYLE = Object.freeze({baseMaxWidth:3, tipMaxWidth:1, sideBranches:false});
 function blade(layer, baseX, baseY, length, bend, seed, highlight) {
-    // Broad overlapping blade with a visible front/rear side and grounded base.
-    const tipX=baseX+bend,tipY=baseY-length;
-    const midX=Math.round(baseX+bend*.45),midY=Math.round(baseY-length*.57);
-    const pale=highlight?'#5e7556':'#3b5740';
-    paintPoly(layer,[[baseX-2,baseY],[baseX+2,baseY],[midX+1,midY],
-        [tipX,tipY],[midX-1,midY+2]],pale,
-    [bend<0?109:151,142,230],234);
-    if(length>18) {
-        const off=hash(baseX,baseY,seed)>.5?1:-1;
-        const x=Math.round(baseX+bend*.29),y=baseY-Math.round(length*.39);
-        paintPoly(layer,[[x,y],[x+off*7,y-6],[x+off*5,y-2],[x,y+2]],
-            highlight?'#627a56':'#2e4933',[off>0?155:105,145,224],237);
+    const main=highlight?'#607b58':'#49664a';
+    const dark=highlight?'#3d5c41':'#314e38';
+    const curve=(hash(seed,baseX,baseY)-.5)*3;
+    const normal=[bend<0?113:143,138,240];
+    const count=Math.max(8,Math.round(length));
+    for(let k=0;k<=count;k++) {
+        const t=k/count;
+        // A bowed, gently arcing blade. It grows upward out of the root cluster,
+        // with a near-vertical tip instead of an arrowhead or sharp side twig.
+        const sweep=t*t*(3-2*t);
+        const x=Math.round(baseX+bend*sweep+curve*Math.sin(Math.PI*t));
+        const y=baseY-Math.round(length*t);
+        const width=t<.12?3:t<.47?2:1;
+        const inkColor=t<.2?dark:main;
+        for(let offset=0;offset<width;offset++)
+            ink(layer,x+offset-(width===3?1:0),y,inkColor,normal,236);
+        // Sparse single-pixel flecks suggest folded leaf surfaces, not thorns.
+        if(t>.23&&t<.58&&width===2&&hash(k,seed,11)>.78)
+            ink(layer,x,y,highlight?'#718765':'#55714f',[126,139,242],239);
     }
 }
 function grass(layers, kind, variant, spec) {
     const [cx,cy]=spec.anchor;
     const tall=kind==='grass-tall';
     const maxHeight=tall?42:26;
-    const count=tall?23:16;
-    // Rear and forward stands are physically distinct sprite depth slices.
+    const count=tall?17:12;
+    // Discrete leaves lean different ways; some remain nearly upright. Their
+    // sparse top halves show the ground between them rather than forming a fan.
     for(let i=0;i<count;i++) {
-        const v=hash(i,variant,418), w=hash(i,variant,491);
-        const x=cx+Math.round((v-.5)*(tall?24:19));
-        const by=cy-(i%3===0?4:1)+(i%4);
-        const len=Math.round(maxHeight*(.48+.52*hash(i,variant,577)));
-        const bend=Math.round((w-.5)*(tall?20:13));
-        blade(i%3===0?layers.rear:layers.front,x,by,len,bend,variant*211+i,i%4===0);
+        const v=hash(i,variant,418),w=hash(i,variant,491);
+        const x=cx+Math.round((v-.5)*(tall?27:20));
+        const by=cy-(i%3===0?3:1)+(i%4);
+        const len=Math.round(maxHeight*(.42+.58*hash(i,variant,577)));
+        const bend=Math.round((w-.5)*(tall?15:10));
+        blade(i%3===0?layers.rear:layers.front,x,by,len,bend,variant*211+i,i%5===0);
+    }
+    // Natural low crown masks individual root contact without adding spikes.
+    for(let i=0;i<(tall?10:7);i++) {
+        const x=cx+Math.round((hash(i,variant,606)-.5)*(tall?20:15));
+        const y=cy-1-(i%3);
+        ink(layers.front,x,y,i%4===0?'#56704d':'#3a5740',[126,139,243],240);
     }
 }
 /** Source-art volume/depth contract. Layers remain 2D atlases but occupy
