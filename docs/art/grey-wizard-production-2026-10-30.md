@@ -548,3 +548,26 @@ This resolves the near-duplicate rear-facing source issue provisionally; exact
 angles, foot/anatomical registration, costume/staff consistency and actual scene
 acceptance remain. No engine/gameplay changes, no production switch, and no claim
 of finished directional animation. Current v003 south/lab baseline preserved.
+
+## Southeast source walk — v006 checkpoint
+
+Owner requested continuation. Authored a separate SE16-key offline layer project
+from v005 SE native source, retaining Gothic palette/shape. Twelve editable PNG
+layers, new diagonal foot-contact keys, shoulder/arm weighting, robe panel grid
+deformation, beard lag and bound staff/hand. Source feet move against [1,1] native
+root guide per frame, matching current canvas ground x/y convention (no extra
+2:1 root projection). SE foot midpoint anchor90,136 is an explicit estimate;
+accepted worldSize72.944643 is inherited, crown32/sole141 guide still109px.
+
+Existing source exporter accepts SE project data; no runtime engine was added.
+Original south export remains25/25 byte-identical. SE export25/25 passes,16 unique
+frames, binary alpha/unclipped bounds, exact layer/idle recomposition and shared
+controller sampling/pause/reduced motion. Declared stance sole extents stay fixed
+in both axes under the narrow source root guide; this is NOT a C# stride proof.
+
+Timing finding: existing source strides are very short relative to actual player
+travel. Source-only12fps is an appearance/motion inspection speed, not a gameplay
+fit. Do not promote these walk profiles directly or describe cadence as validated.
+Retain current opt-in v003 lab baseline and default production mage while source
+motion/stride and later walk/run adaptation are reviewed. No C# speed changes.
+Checkpoint before GIF/MP4, OpenRaster packaging and browser validation.

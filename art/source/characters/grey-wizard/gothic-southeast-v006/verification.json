@@ -1,0 +1,139 @@
+{
+  "status": "diagonal source-motion study; not live stride, material or artistic acceptance",
+  "sourceLayerRecompositionExact": true,
+  "idleRasterExact": true,
+  "uniqueFrames": 16,
+  "binaryAlpha": true,
+  "paletteSize": 96,
+  "sourceBounds": {
+    "minX": 43,
+    "minY": 14,
+    "maxX": 117,
+    "maxY": 145
+  },
+  "cell": 160,
+  "anchor": [
+    90,
+    136
+  ],
+  "decodedAlbedoBytes": 1638400,
+  "decodedEmissionBytes": 1638400,
+  "sharedControllerSequence": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "pause": true,
+  "reducedMotion": true,
+  "contacts": [
+    {
+      "name": "boot-left",
+      "frames": [
+        0,
+        7
+      ],
+      "sourceRasterSoleWorldXY": [
+        {
+          "x": 86,
+          "y": 145
+        },
+        {
+          "x": 86,
+          "y": 145
+        },
+        {
+          "x": 86,
+          "y": 145
+        },
+        {
+          "x": 86,
+          "y": 145
+        },
+        {
+          "x": 86,
+          "y": 145
+        },
+        {
+          "x": 86,
+          "y": 145
+        },
+        {
+          "x": 86,
+          "y": 145
+        },
+        {
+          "x": 86,
+          "y": 145
+        }
+      ],
+      "maxSpreadNativePixels": 0
+    },
+    {
+      "name": "boot-right",
+      "frames": [
+        8,
+        15
+      ],
+      "sourceRasterSoleWorldXY": [
+        {
+          "x": 123,
+          "y": 143
+        },
+        {
+          "x": 123,
+          "y": 143
+        },
+        {
+          "x": 123,
+          "y": 143
+        },
+        {
+          "x": 123,
+          "y": 143
+        },
+        {
+          "x": 123,
+          "y": 143
+        },
+        {
+          "x": 123,
+          "y": 143
+        },
+        {
+          "x": 123,
+          "y": 143
+        },
+        {
+          "x": 123,
+          "y": 143
+        }
+      ],
+      "maxSpreadNativePixels": 0
+    }
+  ],
+  "sourceProjectSha256": "b32e7dffb5c2f3937c7ad887da0d0b577901b1c3f328f5f4510f8dda55e5c6cc",
+  "controllerSha256": "a3b9bc9a6e9c89262ef3d83e69344566f653f013ef8f66c23e648dce5e5d8fb4",
+  "runtimeIntegrated": false,
+  "artisticallyApproved": false,
+  "physicalDeviceTested": false,
+  "limitations": [
+    "diagnostic extracted emission; source-light still baked in albedo",
+    "two-pixel hidden edge fills, not fully painted hidden anatomy",
+    "single source view only",
+    "source-only contact does not establish C# root-speed fitting",
+    "native world scale and actual phones open"
+  ]
+}

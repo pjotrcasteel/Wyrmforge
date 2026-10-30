@@ -6,9 +6,11 @@ import {createHash} from 'node:crypto';
 import assert from 'node:assert/strict';
 import {Bitmap} from '../lib/painter.mjs';
 import {decodePng,encodePng} from '../lib/png.mjs';
-import {project,poses,idle} from './gothic-project.mjs';
+const southeast=process.argv.includes('--southeast');
+const sourceModule=southeast?'./gothic-southeast-project.mjs':'./gothic-project.mjs';
+const source=await import(sourceModule),{project,poses,idle}=source;
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../../..');
-const out=join(root,'art/source/characters/grey-wizard/gothic-south-v003');
+const out=join(root,'art/source/characters/grey-wizard',project.outputDirectory??'gothic-south-v003');
 const check=process.argv.includes('--check'),files=new Map(),size=project.exportCell;
 const hash=x=>createHash('sha256').update(x).digest('hex');
 const readBitmap=name=>{const d=decodePng(readFileSync(join(out,name)));const b=new Bitmap(d.width,d.height);b.data.set(d.rgba);return b;};
@@ -20,6 +22,7 @@ const clamp=x=>Math.max(0,Math.min(1,x));
 const lerp=(a,b,t)=>a+(b-a)*clamp(t);
 function turn(x,y,cx,cy,a){const dx=x-cx,dy=y-cy;return [cx+dx*Math.cos(a)-dy*Math.sin(a),cy+dx*Math.sin(a)+dy*Math.cos(a)];}
 function transform(name,x,y,p){
+    if(source.transform)return source.transform(name,x,y,p);
     const [bx,by,lx,ly,la,rx,ry,ra,free,hand,angle,beard,hem]=p;
     let dx=bx,dy=by;
     if(name==='boot-left'||name==='boot-right'){
@@ -116,25 +119,26 @@ const anchor=project.sourcePivot.map((v,i)=>v+project.offset[i]);
 const calibration=JSON.parse(readFileSync(join(out,'scale-calibration.json'),'utf8'));
 const worldSize=calibration.wizardWorldSize;
 assert.ok(Math.abs((calibration.wizardSourceSoleY-calibration.wizardSourceCrownY)*worldSize/size-calibration.standingBodyWorldHeight)<.001,'body-scale calibration mismatch');
-const profile={schemaVersion:1,maxDeltaSeconds:.1,facing:{directions:['S'],degreesPerSecond:360,hysteresisDegrees:3},locomotion:{clip:'walk',frames:16,stride:project.sourceStride*worldSize/size,sourceFps:project.fps,calibration:'source stride only; actual C# speed and frame cadence not accepted'},actions:{}};
+const profile={schemaVersion:1,maxDeltaSeconds:.1,facing:{directions:[project.direction],degreesPerSecond:360,hysteresisDegrees:3},locomotion:{clip:'walk',frames:16,stride:project.sourceStride*worldSize/size,sourceFps:project.fps,calibration:'source stride only; actual C# speed and frame cadence not accepted'},actions:{}};
 json('animation-profile.json',profile);
-json('manifest.json',{schemaVersion:1,directions:['S'],status:project.status,clips:{idle:{image:'idle.png',frames:1,cell:size,anchor,worldSize},walk:{image:'walk.png',frames:16,cell:size,anchor,worldSize}},emission:{walk:'walk-emission.png'},sourceExport:'art/source/characters/grey-wizard/gothic-south-v003'});
-json('motion.json',{source:'tools/art/grey-wizard/gothic-project.mjs',coordinates:'native source x/y; no gameplay authority',poses,sourceStride:project.sourceStride,sourceContacts:poses.map((p,i)=>({frame:i,left:i<8,right:i>=8,rootY:2*i})),scope:'authored 2D study only; masks, overlap, foot fit and source art need review'});
+json('manifest.json',{schemaVersion:1,directions:[project.direction],status:project.status,clips:{idle:{image:'idle.png',frames:1,cell:size,anchor,worldSize},walk:{image:'walk.png',frames:16,cell:size,anchor,worldSize}},emission:{walk:'walk-emission.png'},sourceExport:'art/source/characters/grey-wizard/'+(project.outputDirectory??'gothic-south-v003')});
+json('motion.json',{source:'tools/art/grey-wizard/'+(southeast?'gothic-southeast-project.mjs':'gothic-project.mjs'),coordinates:'native source x/y; no gameplay authority',poses,sourceStride:project.sourceStride,sourceContacts:poses.map((p,i)=>({frame:i,left:i<8,right:i>=8,...(southeast?{rootX:i,rootY:i}:{rootY:2*i})})),scope:'authored 2D study only; masks, overlap, foot fit and source art need review'});
 // Measure source boot raster sole during its declared stance. This is NOT a
 // C# root replay, general biomechanics validation or real Hunt contact proof.
-const contacts=[];
-for(const [name,start]of [['boot-left',0],['boot-right',8]]){
+const contacts=source.sourceContacts?source.sourceContacts(warp,layers):[];
+for(const [name,start]of source.sourceContacts?[]:[['boot-left',0],['boot-right',8]]){
     const sole=[];for(let i=start;i<start+8;i++){const b=warp(layers[name],name,poses[i]);const q=b.opaqueBounds();sole.push(q.y+q.h-1+2*i);}
     const drift=Math.max(...sole)-Math.min(...sole);assert.ok(drift<=1,'source raster stance drift '+name);
     contacts.push({name,frames:[start,start+7],sourceRasterSoleWorldY:sole,maxSpreadNativePixels:drift});
 }
+for(const contact of contacts)assert.ok(contact.maxSpreadNativePixels<=1,'source raster stance drift '+contact.name);
 const shared=readFileSync(join(root,'src/Wyrmforge.Presentation.Web/wwwroot/js/sprite-animation.js'),'utf8');
 const {createSpriteAnimationState,updateSpriteAnimation}=await import('data:text/javascript;base64,'+Buffer.from(shared).toString('base64'));
 const state=createSpriteAnimationState(),sequence=[];
-for(let i=0;i<16;i++)sequence.push(updateSpriteAnimation(state,profile,{direction:'S',distance:i?profile.locomotion.stride/16:0,deltaSeconds:1/project.fps,moving:true}).baseFrame);
+for(let i=0;i<16;i++)sequence.push(updateSpriteAnimation(state,profile,{direction:project.direction,distance:i?profile.locomotion.stride/16:0,deltaSeconds:1/project.fps,moving:true}).baseFrame);
 assert.deepEqual(sequence,Array.from({length:16},(_,i)=>i));
 const paused=updateSpriteAnimation(state,profile,{direction:'S',distance:10,deltaSeconds:.1,moving:true,paused:true});assert.equal(paused.baseFrame,15);
 const reduced=updateSpriteAnimation(state,profile,{direction:'S',distance:0,deltaSeconds:0,moving:true,reducedMotion:true});assert.equal(reduced.baseFrame,0);
-json('verification.json',{status:project.status,sourceLayerRecompositionExact:true,idleRasterExact:true,uniqueFrames:unique.size,binaryAlpha:true,paletteSize:project.paletteSize,sourceBounds:{minX,minY,maxX,maxY},cell:size,anchor,decodedAlbedoBytes:atlas.data.length,decodedEmissionBytes:emission.data.length,sharedControllerSequence:sequence,pause:true,reducedMotion:true,contacts,sourceProjectSha256:hash(readFileSync(new URL('./gothic-project.mjs',import.meta.url))),controllerSha256:hash(shared),runtimeIntegrated:false,artisticallyApproved:false,physicalDeviceTested:false,limitations:['diagnostic extracted emission; source-light still baked in albedo','two-pixel hidden edge fills, not fully painted hidden anatomy','single source view only','source-only contact does not establish C# root-speed fitting','native world scale and actual phones open']});
+json('verification.json',{status:project.status,sourceLayerRecompositionExact:true,idleRasterExact:true,uniqueFrames:unique.size,binaryAlpha:true,paletteSize:project.paletteSize,sourceBounds:{minX,minY,maxX,maxY},cell:size,anchor,decodedAlbedoBytes:atlas.data.length,decodedEmissionBytes:emission.data.length,sharedControllerSequence:sequence,pause:true,reducedMotion:true,contacts,sourceProjectSha256:hash(readFileSync(new URL(sourceModule,import.meta.url))),controllerSha256:hash(shared),runtimeIntegrated:false,artisticallyApproved:false,physicalDeviceTested:false,limitations:['diagnostic extracted emission; source-light still baked in albedo','two-pixel hidden edge fills, not fully painted hidden anatomy','single source view only','source-only contact does not establish C# root-speed fitting','native world scale and actual phones open']});
 for(const[name,data]of files){const path=join(out,name);if(check){assert.ok(existsSync(path),'missing '+name);assert.deepEqual(readFileSync(path),data,'stale '+name);}else{mkdirSync(dirname(path),{recursive:true});writeFileSync(path,data);}}
 console.log(JSON.stringify({mode:check?'check':'build',files:files.size,frames:unique.size,contacts,mapsDecodedBytes:atlas.data.length+emission.data.length}));

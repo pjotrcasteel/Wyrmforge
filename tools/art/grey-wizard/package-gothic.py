@@ -1,12 +1,16 @@
 """Package editable PNG source layers as OpenRaster; no pose/image edits."""
 import pathlib
+import argparse
 import json
 import zipfile
 import xml.etree.ElementTree as ET
 from PIL import Image
 
+parser = argparse.ArgumentParser()
+parser.add_argument('--source', default='art/source/characters/grey-wizard/gothic-south-v003')
+args = parser.parse_args()
 root = pathlib.Path(__file__).resolve().parents[3]
-source = root / 'art/source/characters/grey-wizard/gothic-south-v003'
+source = root / args.source
 project = json.loads((source / 'project.json').read_text())
 w, h = project['sourceCell']
 image = ET.Element('image', {'w': str(w), 'h': str(h), 'name': project['id'], 'version': '0.0.3'})
@@ -19,7 +23,8 @@ for index, layer in enumerate(reversed(project['layers'])):
     data = (source / layer['file']).read_bytes()
     assert Image.open(source / layer['file']).size == (w, h)
     entries.append((name, data))
-with zipfile.ZipFile(source / 'grey-wizard-fire-south.ora', 'w') as archive:
+filename = 'grey-wizard-fire-southeast.ora' if project['direction'] == 'SE' else 'grey-wizard-fire-south.ora'
+with zipfile.ZipFile(source / filename, 'w') as archive:
     def put(name, data, compression=zipfile.ZIP_DEFLATED):
         info = zipfile.ZipInfo(name, (1980, 1, 1, 0, 0, 0))
         info.compress_type = compression
@@ -29,4 +34,4 @@ with zipfile.ZipFile(source / 'grey-wizard-fire-south.ora', 'w') as archive:
     put('mergedimage.png', (source / 'source-master.png').read_bytes())
     for name, data in entries:
         put(name, data)
-print(source / 'grey-wizard-fire-south.ora')
+print(source / filename)
