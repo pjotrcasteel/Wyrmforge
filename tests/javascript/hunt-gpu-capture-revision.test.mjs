@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { HuntGpuWorld, compositeHuntGpuFrame, huntGpuRendererBudget, needsRetainedHuntBuffer } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js';
-import { huntLayerRevision, prepareHuntGpuScratch, HuntGpuScratchPool, shouldStageHuntGpuReviewFrame } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/hunt-gpu-layers.js';
+import { huntLayerRevision, prepareHuntGpuScratch, HuntGpuScratchPool, shouldStageHuntGpuReviewFrame, shouldUseG4NeutralGround } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/hunt-gpu-layers.js';
 
 function fakeCapture() {
     let drawings = 0;
@@ -330,4 +330,13 @@ test('G4 GPU review presents complete staged frames by default, with an explicit
         'Canvas baseline never allocates a GPU presentation stage.');
     assert.equal(shouldStageHuntGpuReviewFrame(query('arenaGpu=1'), true), false,
         'Normal gameplay/G5 renderer adoption remains unchanged.');
+});
+
+test('G4 GPU review defaults to neutral-grey terrain while production keeps authored art', () => {
+    const query = value => new URLSearchParams(value);
+    assert.equal(shouldUseG4NeutralGround(query('arenaGpu=1&g4Review=1'), true), true);
+    assert.equal(shouldUseG4NeutralGround(query('arenaGpu=1&g4Review=1&g4FlatGround=0'), true), true);
+    assert.equal(shouldUseG4NeutralGround(query('arenaGpu=1&g4Review=1&g4PaintedGround=1'), true), false);
+    assert.equal(shouldUseG4NeutralGround(query('g4Review=1'), false), false);
+    assert.equal(shouldUseG4NeutralGround(query('arenaGpu=1'), true), false);
 });
