@@ -81,6 +81,42 @@ public sealed class AshlingBrowserTests : PageTest
         Assert.IsFalse(await Page.EvaluateAsync<bool>("() => localStorage.getItem('wyrmforge.firstHunt.v1') !== null"));
     }
 
+    [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
+    public async Task Mobile_AshlingEyes_UseBoundedAuthoritativeLightSources(int width, int height)
+    {
+        var baseUrl = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
+        var artifacts = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
+        Directory.CreateDirectory(artifacts);
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.GotoAsync(baseUrl + "/enemy-lab?kind=Ashling&seed=42&autoplay=true&cast=false");
+        await AttachDiagnosticsAsync();
+        await Page.WaitForFunctionAsync(@"() => {
+            const d=window.__ashlingArena.readArenaDiagnostics(document.querySelector('.enemy-lab canvas'));
+            return d?.ashling.ready && !d.renderingFailed &&
+                d?.sharedLighting?.lights?.some(light=>light.ownerId?.startsWith('actor:'));
+        }");
+
+        var evidence = await Page.EvaluateAsync<System.Text.Json.JsonElement>(@"() => {
+            const d=window.__ashlingArena.readArenaDiagnostics(document.querySelector('.enemy-lab canvas'));
+            return { actors:d.ashling.entities.length,
+                sources:d.sharedLighting.lights.filter(light=>light.ownerId?.startsWith('actor:')) };
+        }");
+        var sources = evidence.GetProperty("sources");
+        Assert.IsTrue(sources.GetArrayLength() > 0 && sources.GetArrayLength() <= 2,
+            "The shared C# emitter frame must bound local eye lights on mobile.");
+        foreach (var source in sources.EnumerateArray())
+        {
+            Assert.AreEqual("point", source.GetProperty("type").GetString());
+            Assert.IsFalse(source.GetProperty("castsShadow").GetBoolean());
+            Assert.IsGreaterThan(0, source.GetProperty("position")[2].GetDouble(),
+                "Eyes must remain elevated above the creature's world-foot position.");
+        }
+
+        await Page.ScreenshotAsync(new() { Path = Path.Combine(artifacts, $"ashling-eyes-hunt-{width}.png"), FullPage = true });
+    }
+
     private async Task AttachDiagnosticsAsync()
     {
         await Page.Locator(".enemy-lab canvas").WaitForAsync();
