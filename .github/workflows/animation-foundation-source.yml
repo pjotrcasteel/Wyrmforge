@@ -219,7 +219,8 @@ jobs:
             ROOT="artifacts/an6-real-source-skin-csharp-$width"
             AN_FOUNDATION_MODE=1 AN_MOBILE=1 AN_WIDTH="$width" AN_CAPTURE_DIR="$ROOT" \
               AN_ASSET_ROOT=artifacts/animation-catch-step-ci node tools/animation/capture-hunt.cjs
-            node tools/animation/diagnose_hunt_contact.mjs "$ROOT"
+            # Source-skin uses actual mesh contacts, not baked native source markers.
+            # Keep its independent C# support/slip fields in the dedicated proof.
           done
           node - <<'NODE'
           const fs=require('fs');
