@@ -29,7 +29,12 @@ The attachment is authoritative over the earlier provisional v001/v002 concepts.
   grip and arm follow the anchored shaft. Preserve this across walking facings.
   Contact is authored presentation consistent with C# root movement, not a new
   gameplay collider or character-specific physics engine.
-  preserve its slender wooden shaft and grip. **Owner addition, 30 October 2026:**
+  **Owner quality requirement, 30 October 2026:** continue checking every authored
+  frame for stray pixels, torn sleeves, false cloth overlaps and other implausible
+  fragments. Inspect light/dark backgrounds and enlarged grip/sleeve/feet areas
+  throughout production. Contact or connected-component tests supplement visual
+  inspection; they never establish that all pixels make artistic sense.
+  Preserve its slender wooden shaft and grip. **Owner addition, 30 October 2026:**
   the character's chosen Divine school is shown by its existing approved school
   symbol on the back of the cape and a matching school-specific staff treatment.
   **Owner correction:** cape symbols are integrated embroidery/weave, following

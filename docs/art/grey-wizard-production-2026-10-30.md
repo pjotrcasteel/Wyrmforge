@@ -654,3 +654,25 @@ at reported wrist region across frames5–10, and no cape-underpaint alpha above
 y96. New25/25 deterministic exports pass, prior v00825/25 unchanged. Exact13-layer
 OpenRaster/GIF16frames/MP4 decode pass. These prove the reported patch correction,
 not full artistic or live-animation acceptance. New gray-background GIF retained.
+
+## Ongoing artifact review and south walking-stick source — v010
+
+Owner authorized continuation while continuously checking nonsensical pixels.
+Canon now records that requirement. Added repeatable review-artifacts.py: light/
+dark numbered16-frame sheets,4x wrist/sleeve crops,8-connected alpha components,
+clipping/binary-alpha diagnostics. Applied to corrected SEv009 and new Sv010:
+both16frames each have one connected silhouette, binary alpha and unclipped
+bounds. These diagnostics do NOT establish artistic correctness of connected
+pixels. Earlier wrist-specific18probe regression remains passing.
+
+South uses preserved v003 source/palette/foot motion, adds explicit staff plant,
+support weight transfer, lift/recovery and exact hand transform. First enlarged
+review exposed incomplete hanging sleeve ownership; corrected full sleeve mask,
+tapered influence and separate sleeve/cape underpainting at actual source overlap.
+Inspected light/dark full sheets and grip crops before media. Source plant7–15:
+analytical and raster tip fixed at33.5,162 under root[0,2i],0px grip/stance drift.
+14 editable layers, same accepted working worldSize72.944643/anchor56,141.
+Source stride/cadence remains unfit for live base speed; no production cutover.
+Original S and SEv009 remain25/25 byte-identical. New source is a review study,
+not completed directional motion/material/Hunt or physical-phone acceptance.
+Checkpoint before longer video/browser review.
