@@ -26,6 +26,7 @@ jobs:
         with:
           sparse-checkout: |
             tools/animation
+            src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/lit-sprite.js
             art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-hollow-zombie-reach-v3-standard
       - uses: actions/cache@v4
         id: blender
