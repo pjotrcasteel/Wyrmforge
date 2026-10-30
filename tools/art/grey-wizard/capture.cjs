@@ -3,7 +3,8 @@ const {chromium}=require(process.env.WYRMFORGE_PLAYWRIGHT_MODULE||'playwright');
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const {spawn}=require('node:child_process');
 const root=path.resolve(__dirname,'../../..');
-const source=path.join(root,'art/source/characters/grey-wizard/native-south-v001');
+const source=path.resolve(root,process.argv[2]||'art/source/characters/grey-wizard/native-south-v001');
+const expectedCell=JSON.parse(fs.readFileSync(path.join(source,'manifest.json'),'utf8')).clips.walk.cell;
 const output=path.join(source,'review');fs.mkdirSync(output,{recursive:true});
 (async()=>{
     const server=spawn(process.execPath,['tools/sprite-lab/serve-review.cjs'],{cwd:root,stdio:'pipe'});
@@ -20,7 +21,7 @@ const output=path.join(source,'review');fs.mkdirSync(output,{recursive:true});
             await page.waitForFunction(()=>document.querySelector('#footerState').textContent.includes('Loaded walk.png'));
             assert.equal(await page.locator('#columns').inputValue(),'16');
             assert.equal(await page.locator('#rows').inputValue(),'1');
-            assert.equal(await page.locator('#frameWidth').inputValue(),'80');
+            assert.equal(await page.locator('#frameWidth').inputValue(),String(expectedCell));
             await page.locator('#fps').fill('12');await page.locator('#fps').dispatchEvent('input');
             // Existing lab's 40% minimum is an inspection scale, not Hunt world size.
             await page.locator('#scale').fill('40');await page.locator('#scale').dispatchEvent('input');
@@ -32,7 +33,7 @@ const output=path.join(source,'review');fs.mkdirSync(output,{recursive:true});
             await page.waitForTimeout(180);assert.equal(await page.locator('#frameIndicator').textContent(),paused,'pause changed frame');
             await page.locator('#stageCanvas').screenshot({path:path.join(output,`sprite-lab-${width}.png`)});
             assert.deepEqual(errors,[]);
-            reports.push({width,columns:16,rows:1,cell:80,observedFrames:frames,pausedFrame:paused,errors,
+            reports.push({width,columns:16,rows:1,cell:expectedCell,observedFrames:frames,pausedFrame:paused,errors,
                 scope:'existing Sprite Lab import/play/pause only; desktop Chromium, not Hunt or physical phone',
                 sourceFacing:'S',labCompassLimitation:'single-view lab labels its row SE; no new facing is implied'});
             await page.close();

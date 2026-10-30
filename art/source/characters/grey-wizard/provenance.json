@@ -199,5 +199,21 @@
     ],
     "prompt": "gothic-reconstruction-v002-prompt.txt",
     "status": "Static Gothic appearance correction candidate. Not a native layered sprite/rig or animation. Review pending."
+  },
+  "gothicNativeV3": {
+    "source": "gothic-south-v003",
+    "reference": "gothic-reconstruction-v002.png via documented 128px source study",
+    "sourceMasterSha256": "0987bd332672fddabf9cc94105ac134cf2163e07ee0ccf29f1a1d7c9b010c9fe",
+    "sourceSize": [
+      72,
+      136
+    ],
+    "paletteEntries": 96,
+    "editableLayers": 12,
+    "openRaster": "grey-wizard-fire-south.ora",
+    "poses": 16,
+    "direction": "S",
+    "status": "Gothic native layered source and authored walk review pending; rejected cartoon source not reused",
+    "scope": "Offline 2D layered deformation/export through shared sprite profile; no runtime integration or physical phone acceptance"
   }
 }

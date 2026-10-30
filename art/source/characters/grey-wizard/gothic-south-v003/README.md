@@ -17,7 +17,8 @@ single-view animation study, not a new concept approval or shipped player asset.
   masks, pixel coordinates, pivot, draw order and sixteen editable pose keys.
   Do not rerun preparation after hand-editing layer PNGs without preserving edits.
 - Optional OpenRaster package is an editing convenience; export edited layer PNGs
-  with unchanged dimensions/names before rebuilding the walk.
+  with unchanged dimensions/names and the updated merged `source-master.png`
+  before rebuilding the walk. The builder checks source/rest fidelity.
 
 Source preparation: `node tools/art/grey-wizard/prepare-gothic.mjs`.
 Pose export: `node tools/art/grey-wizard/build-gothic-walk.mjs`.
@@ -44,3 +45,19 @@ extensions cover layer seams; full hidden/source repaint remains a visual concer
 The source still has baked review lighting. Extracted crystal emission is diagnostic,
 not accepted relightable material production. Hold live mage replacement until the
 native look, actual motion and real Hunt/device gates pass.
+
+## Review evidence
+
+- `grey-wizard-fire-south.ora`: standard OpenRaster, twelve named native layers,
+  merged preview. Packaged without image/pose modifications.
+- `review/south-walk.gif` and `.mp4`: sixteen source poses at 12fps, 1x native and
+  nearest-neighbour 2x inspection; source cycle only, not gameplay footage.
+- `walk-contact-2x.png`: all sixteen poses, no missing frame substitution.
+- `review/browser-report.json`: existing Sprite Lab atlas import/play/pause passes
+  at desktop Chromium widths 320/390, no page errors. Existing lab hardcodes
+  THE HOLLOW/SE for imports; this source is S and its export mapping is not reused.
+- `verification.json`: exact source/idle recomposition, binary alpha, sixteen unique
+  frames, common anchor, source-only stance measurements and shared controller.
+- Focused existing mage/controller JavaScript tests: 16/16 pass. Atlas rebuild
+  `--check`: 25/25 outputs byte-identical. GIF has 16 frames, MP4 decode passes,
+  OpenRaster has twelve layers. No production code changes or new art acceptance.

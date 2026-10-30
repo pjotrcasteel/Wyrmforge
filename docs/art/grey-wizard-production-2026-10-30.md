@@ -425,3 +425,23 @@ to 3276800 bytes; real source materials/Hunt/phone gates stay open.
 Checkpoint before visual/browser/video validation: new texture-based layered
 source and first one-view pose export only. Do not promote or extend the rejected
 cartoony source. No production renderer/mage/atlas/simulation files changed.
+
+### Gothic v003 review package validation
+
+Delivered `grey-wizard-fire-south.ora` (twelve named native layers), 16-frame contact
+sheet, native/2x GIF and MP4, and existing Sprite Lab import/play/pause captures at
+320/390 desktop Chromium. Existing lab THE HOLLOW/SE captions are generic/hardcoded;
+source is S and no new facing/Hunt acceptance is inferred. Shared controller and
+Bitmap painter match freshly inspected main; no duplicate runtime engine added.
+
+Checks passed: 25/25 deterministic pose exports, exact resting layer recomposition,
+16 unique frames, binary alpha/unclipped bounds, source-only 0px stance raster
+spread, shared playback/pause/reduced motion, 16/16 existing focused JS tests,
+320/390 actual lab import/play/pause with zero page errors, 16-frame GIF count,
+MP4 decode, twelve-layer OpenRaster structure. Two decoded maps: 3276800 bytes.
+
+Visual review remains OPEN: this restores the Gothic source texture/proportions,
+but hidden anatomy/edge fills, motion quality, source density and actual C# stride
+calibration need acceptance. No live mage replacement or other direction/action
+library work before this one-view review. Current work is not real Hunt/device
+proof, production relightable materials or completed character animation.
