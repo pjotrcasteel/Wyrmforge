@@ -16,7 +16,7 @@ jobs:
   compact-five-stage-whole-body-source:
     name: 8 gait x 5 claw at ${{ matrix.heading }} degrees
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
@@ -81,6 +81,41 @@ jobs:
           (s/'feasibility.json').write_text(json.dumps(report,indent=2)+'\n')
           print(json.dumps(report))
           PY
+      - name: Render actual eight camera headings and export native pixel source review atlas
+        shell: bash
+        env:
+          HEADING: ${{ matrix.heading }}
+        run: |
+          set -euo pipefail
+          python3 -m pip install Pillow==12.0.0
+          SOURCE="artifacts/an6-compact-directional-${HEADING}"
+          REVIEW="artifacts/an6-compact-directional-atlas-${HEADING}"
+          BLENDER="$PWD/.cache/blender-4.5.3-linux-x64/blender"
+          "$BLENDER" -b -t 2 --python-exit-code 1 --python tools/animation/render_saved_clips.py -- "$SOURCE" --clips walk,attack-travel > "$SOURCE/eight-view-render.log" 2>&1
+          python3 tools/animation/export_atlases.py "$SOURCE" --out "$REVIEW" --tight-crop --clips walk,attack-travel
+          node tools/animation/check_baked_atlas_budget.mjs --production-maps "$REVIEW/manifest.json" > "$REVIEW/review-three-map-budget.json"
+          REVIEW="$REVIEW" HEADING="$HEADING" python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          from PIL import Image
+          root=Path(os.environ['REVIEW'])
+          manifest=json.loads((root/'manifest.json').read_text())
+          assert manifest['representation']=='baked-full-body-sprites'
+          assert not manifest['productionReady'] and not manifest['runtimeIntegrated']
+          assert len(manifest['directions'])==8 and set(manifest['clips'])=={'walk','attack-travel'}
+          assert all(len(manifest['rowSha256'][name])==8 for name in ('walk','attack-travel'))
+          for name,frames in (('walk',8),('attack-travel',40)):
+              spec=manifest['clips'][name]
+              assert spec['frames']==frames
+              with Image.open(root/spec['image']) as image:
+                  assert image.mode=='RGBA' and image.size[0]>0 and image.size[1]>0
+          budget=json.loads((root/'review-three-map-budget.json').read_text())
+          assert not budget['overBudget'] and budget['maxDecodedBytes']==64*1024*1024
+          print('ACTUAL EIGHT-VIEW RASTER:',os.environ['HEADING'],
+                'source-literal RGBA crop:',manifest['clips']['walk']['crop'],
+                'source-only review texture bytes:',budget['decodedBytes'],
+                'NOT game accepted')
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -92,5 +127,8 @@ jobs:
             artifacts/an6-compact-directional-${{ matrix.heading }}/independent-source-qc.json
             artifacts/an6-compact-directional-${{ matrix.heading }}/negative-source-qc.json
             artifacts/an6-compact-directional-${{ matrix.heading }}/motion-envelope-qc.json
+            artifacts/an6-compact-directional-${{ matrix.heading }}/eight-view-render.log
+            artifacts/an6-compact-directional-${{ matrix.heading }}/render-receipt.json
+            artifacts/an6-compact-directional-atlas-${{ matrix.heading }}/
           if-no-files-found: warn
           retention-days: 14
