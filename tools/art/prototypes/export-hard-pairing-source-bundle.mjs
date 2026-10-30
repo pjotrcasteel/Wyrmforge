@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { Bitmap } from '../lib/painter.mjs';
 import { encodePng } from '../lib/png.mjs';
 import { createHardPairingWindow, HARD_PAIRING_FAMILIES, HARD_PAIRING_VERSION } from './terrain-hard-pairings.mjs';
 import { buildHardPairingRelief, HARD_PAIRING_RISE_PIXELS } from './terrain-hard-pairing-relief.mjs';
@@ -13,8 +14,36 @@ export const HARD_PAIRING_BUNDLE_SCHEMA = 'wf32-hard-pairing-source-bundle.v1';
 const RECIPE = Object.freeze({seed: 2111, state: 'worn', originX: 0, originY: 0,
     width: 256, height: 192, role: 'left', boundaryX: 128, boundaryY: 96, seamMaterial: 'soil'});
 const CHANNELS = Object.freeze(['albedo', 'normal', 'roughness', 'candidateElevation', 'candidateCasterAlpha']);
+const NORMAL_HALO = WORLD_CELL;
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 const json = value => JSON.stringify(value, null, 2) + '\n';
+
+/** Crop a 32px world-space halo after computing normal derivatives.
+ * The original review function intentionally clamps at image bounds; this
+ * source-bundle variant avoids a false normal-map seam between AR4 windows.
+ */
+export function worldAlignedPairingLightingMaps(field) {
+    if (!field || !Number.isInteger(field.width) || !Number.isInteger(field.height) ||
+        field.width + NORMAL_HALO * 2 > 1152 || field.height + NORMAL_HALO * 2 > 1152) {
+        throw new RangeError('Source window cannot fit the required normal-map sample halo');
+    }
+    const base = worldLightingMaps(field);
+    const extended = createHardPairingWindow(field.primary, field.secondary, {
+        seed: field.seed, state: field.state,
+        originX: field.originX - NORMAL_HALO, originY: field.originY - NORMAL_HALO,
+        width: field.width + NORMAL_HALO * 2, height: field.height + NORMAL_HALO * 2,
+        role: field.role, boundaryX: field.boundaryX, boundaryY: field.boundaryY,
+        seamMaterial: field.seamMaterial
+    });
+    const paddedNormal = worldLightingMaps(extended).normal;
+    const normal = new Bitmap(field.width, field.height);
+    for (let y = 0; y < field.height; y++) {
+        for (let x = 0; x < field.width; x++) {
+            normal.set(x, y, paddedNormal.get(x + NORMAL_HALO, y + NORMAL_HALO));
+        }
+    }
+    return {...base, normal};
+}
 
 /** Produce exact native-pixel source maps for each directed material meeting.
  * This does not allocate a runtime atlas, place AR3 terrain or register G lights.
@@ -28,7 +57,7 @@ export function buildHardPairingSourceBundle() {
                 continue;
             }
             const field = createHardPairingWindow(primary, secondary, RECIPE);
-            const maps = worldLightingMaps(field);
+            const maps = worldAlignedPairingLightingMaps(field);
             const relief = buildHardPairingRelief(field);
             const channels = {
                 albedo: maps.albedo,
@@ -74,6 +103,7 @@ export function buildHardPairingSourceBundle() {
         schema: HARD_PAIRING_BUNDLE_SCHEMA,
         provenance: {sourceVersion: HARD_PAIRING_VERSION, recipe: RECIPE},
         nativePixelTileSize: WORLD_CELL,
+        normalSourceHaloPixels: NORMAL_HALO,
         pixelsPerWorldUnit: 48,
         candidateRisePixels: HARD_PAIRING_RISE_PIXELS,
         elevationEncoding: 'grayscale = round(255 * sixteenthsOfNativePixel / 128); candidate only',
