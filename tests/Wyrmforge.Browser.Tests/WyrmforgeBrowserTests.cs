@@ -3603,12 +3603,14 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
-    [DataRow(320, 568)]
-    [DataRow(390, 844)]
-    public async Task Mobile_G4DeviceReview_RecordsRealHuntAndExportsEvidence(int width, int height)
+    [DataRow(320, 568, false)]
+    [DataRow(390, 844, false)]
+    [DataRow(390, 844, true)]
+    public async Task Mobile_G4DeviceReview_RecordsRealHuntAndExportsEvidence(int width, int height, bool flatGround)
     {
         await Page.SetViewportSizeAsync(width, height);
-        await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/?arenaGpu=1&gpuQuality=mobile&g4Review=1",
+        var terrainQuery = flatGround ? "&g4FlatGround=1" : "";
+        await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/?arenaGpu=1&gpuQuality=mobile&g4Review=1" + terrainQuery,
             new() { WaitUntil = WaitUntilState.NetworkIdle });
         // Consent is the FIRST screen, before any Gate/Town/Hunt menus can load.
         var consent = Page.Locator("[data-g4-preflight]");
@@ -3670,17 +3672,19 @@ public sealed class WyrmforgeBrowserTests : PageTest
             return readablePixels >= count * .16 && totalBrightness >= count * 14;
         }", null, new() { Timeout = 30000 });
 
-        // Visual review MUST capture the exact iPhone G4 mode. The earlier live-Hunt
-        // proof omitted g4Review=1 and therefore rendered painted terrain instead
-        // of the flat floor deployed to the owner's phone. A nonblack check alone
-        // cannot approve this frame: preserve genuine unmodified gameplay evidence.
+        // The default phone review must stay on readable painted ground.
+        // Also capture the explicit flat-ground A/B: neither path may silently
+        // substitute for the other. These are genuine full-game screenshots,
+        // not an isolated lab's nonblack framebuffer assertion.
         var reviewDiagnostics = await Page.EvaluateAsync<JsonElement>("() => window.__huntGpuRead()");
-        Assert.AreEqual("flat-colors", reviewDiagnostics.GetProperty("terrainPresentation").GetString(),
-            "The G4 phone proof must inspect the deployed flat-ground path, not painted terrain.");
+        var expectedTerrain = flatGround ? "flat-colors" : "painted";
+        Assert.AreEqual(expectedTerrain, reviewDiagnostics.GetProperty("terrainPresentation").GetString(),
+            "The G4 phone proof must record the actual selected ground, not assume a different review mode.");
         Directory.CreateDirectory(ArtifactDirectory);
-        await ScreenshotAsync($"live-g4-review-flat-ground-{width}-mobile.png");
+        var name = $"live-g4-review-{expectedTerrain}-{width}-mobile";
+        await ScreenshotAsync(name + ".png");
         await File.WriteAllTextAsync(Path.Combine(ArtifactDirectory,
-            $"live-g4-review-flat-ground-{width}-mobile.json"), reviewDiagnostics.ToString());
+            name + ".json"), reviewDiagnostics.ToString());
 
         // Reproduce the owner's phone: G4 diagnostics were expanded when the
         // Hunt ended and covered rewards. Disposal must collapse and re-dock.
