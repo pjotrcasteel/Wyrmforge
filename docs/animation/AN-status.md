@@ -2,6 +2,66 @@
 
 **NOT FINISHED. Keep PR #387 draft and unmerged. No final visual approval requested.**
 
+## 30 October 2026 — three-heading compact full-body source and actual C# blocker
+
+**AN0–AN6 is not complete and must not be merged yet.** Independent
+[compact five-stage source CI](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40972380943)
+passed 3/3 real saved Blender rig authoring and independent evaluated
+skinned-sole/support/mutation tests, plus the 96-case motion envelope for each
+heading (0°, +90°, −90°). Each experimental moving-claw action has **8
+walking phases × 5 claw stages = 40 actual source poses**, at a 0.25m
+**authored** stride, not a change to C# speed, source pixel density or the
+one-pixel correction budget.
+
+Critically, **individually supported clips cannot yet switch during actual
+travel**: direct forward→±90° tests on saved 8-phase/5-stage source report
+**48/48 phase/stage cases unsafe for each side**. Worst contact-point mismatch
+is about **6.57 native pixels**, and even the nearest nominal phase is about
+**1.09 pixels**, above the fixed 1px criterion. A clear support-transfer
+transition is mandatory; neither switching animation rows nor a bigger root
+offset qualifies. The existing 16-phase/16-stage direct lateral test recorded
+238/272 unsafe source handoffs, worst 7.36 px. The new atlas pipeline computes
+this from real original source manifests and will not claim runtime acceptance
+on an isolated source QC pass.
+
+Actual C# 390px run [40968468105](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40968468105)
+sampled the earlier forward/bidirectional-pivot review pack:
+**walk 1.33px peak**, **moving claw 66.99px**, **pivot 100.99px**.
+Pivot is authored in place while the C# root keeps travelling, explaining
+the large cumulative planted-foot error. Native-frame/source phase-zero tests
+are NOT evidence of moving pivot acceptance. Both previous full C# 320/390px
+capture workflows remain correctly red. A new source-only per-clip analyzer
+`tools/animation/diagnose_hunt_contact.mjs` preserves those metrics on every
+new real capture and its own regression tests reject empty/false-green data.
+
+The actual pixel source crop for the previous review is 68×63 at 96px
+source cells. An optimistic three-heading 8×5 compact layout was projected
+at **62,512,128 bytes (59.62MiB)**, including the previous walking/turn
+budget, but **without new transition atlas costs**. It is **not** an approved
+resident set; material maps, native sprite appearance and actual gameplay
+still require proofs. `export_atlases.py --optimized-columns` now offers
+explicit lossless WebGL-safe native packing without changing the default.
+The separately gated compact source workflow renders full 8-view genuine
+color frames for three directions; its follow-up job audits the actual
+cropped atlases and true forward/sideways support handoffs. At this
+checkpoint, that **new** all-view rendering/aggregation is queued, not passed.
+
+Per canonical [roadmap](../canon/roadmap.md), **one animation engine** remains
+authoritative. Preserve the default 2.5D pixel sprite/gameplay path and
+separate G4/AI/AR work. An optional shared source-skin representation may
+be investigated only within the same engine and existing LightingEngine
+adapter, in 2.5D pixel-art appearance, if discrete sprites cannot resolve
+arbitrary moving pivot/attack anatomy and within genuine mobile budgets.
+Never silently promote it to a mandatory 3D actor engine.
+
+**Still mandatory:** authored contact-safe moving entry/exit, moving claw
+under crossing/sideways C# motion, moving pivots at arbitrary gait phase,
+actual source material/occlusion/depth, 320/390px genuine gameplay frames,
+physical-phone CPU/GPU/thermal/memory evaluation, owner visual approval
+and PR integration tests. No fabricated images, no raising the one-pixel or
+64MiB limits, no production default cutover and no merge before the gates.
+
+
 ## 29 October 2026 — measured compact atlas, real controller and C# blocker
 
 **AN6 remains open.** The four-clip Blender source job passed on
