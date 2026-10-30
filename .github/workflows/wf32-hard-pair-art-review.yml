@@ -6,10 +6,12 @@ on:
     paths:
       - 'tools/art/prototypes/terrain-hard-pairings.mjs'
       - 'tools/art/prototypes/terrain-hard-pairing-relief.mjs'
+      - 'tools/art/prototypes/export-hard-pairing-source-bundle.mjs'
       - 'tools/art/prototypes/build-hard-pairing-review.mjs'
       - 'tests/javascript/terrain-hard-pairings.test.mjs'
       - 'tests/javascript/terrain-hard-pairing-relief.test.mjs'
       - 'tests/javascript/terrain-hard-pairing-variation.test.mjs'
+      - 'tests/javascript/terrain-hard-pairing-bundle.test.mjs'
       - 'docs/art/wf32-p1k-hard-pairings.md'
       - '.github/workflows/wf32-hard-pair-art-review.yml'
   workflow_dispatch:
@@ -25,13 +27,22 @@ jobs:
       - name: Checkout original source materials
         uses: actions/checkout@v4
       - name: Verify whole-stone seams and world-coordinate continuity
-        run: node --test tests/javascript/terrain-hard-pairings.test.mjs tests/javascript/terrain-hard-pairing-relief.test.mjs tests/javascript/terrain-hard-pairing-variation.test.mjs tests/javascript/terrain-world-variation.test.mjs
+        run: node --test tests/javascript/terrain-hard-pairings.test.mjs tests/javascript/terrain-hard-pairing-relief.test.mjs tests/javascript/terrain-hard-pairing-variation.test.mjs tests/javascript/terrain-hard-pairing-bundle.test.mjs tests/javascript/terrain-world-variation.test.mjs
       - name: Render original source pair, elevation, degradation and seed-variation reviews
         run: node tools/art/prototypes/build-hard-pairing-review.mjs artifacts/wf32-hard-pairings
+      - name: Export six directed candidate material packages with source-only metadata
+        run: node tools/art/prototypes/export-hard-pairing-source-bundle.mjs artifacts/wf32-hard-pairing-source-bundle
       - name: Publish original source-art review (not running Hunt capture)
         uses: actions/upload-artifact@v4
         with:
           name: wf32-hard-pairings-source-review
           path: artifacts/wf32-hard-pairings/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Publish candidate H4 bundle (not a runtime material atlas)
+        uses: actions/upload-artifact@v4
+        with:
+          name: wf32-hard-pairing-source-bundle
+          path: artifacts/wf32-hard-pairing-source-bundle/
           if-no-files-found: error
           retention-days: 14
