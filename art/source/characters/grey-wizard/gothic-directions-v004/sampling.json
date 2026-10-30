@@ -1,0 +1,203 @@
+{
+  "status": "unapproved directional idle study; not production animation",
+  "sourceSha256": "6fcf15826e3be157859aa4971477297a0d0f31f5aefb0f749539b3aa1fa0bfd7",
+  "directions": [
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E",
+    "SE"
+  ],
+  "cell": 160,
+  "alphaThreshold": 128,
+  "paletteSource": "gothic-south-v003/project.json",
+  "paletteSize": 96,
+  "worldSizeGuide": 72.944643,
+  "records": [
+    {
+      "direction": "S",
+      "sourcePanel": [
+        0,
+        0,
+        384,
+        496
+      ],
+      "alphaBounds": [
+        97,
+        8,
+        374,
+        488
+      ],
+      "scale": 0.2661122661122661,
+      "visibleHeight": 128,
+      "anchor": [
+        80,
+        141
+      ],
+      "limitation": "Silhouette-height normalization only; anatomical crown/stance registration needs review"
+    },
+    {
+      "direction": "SW",
+      "sourcePanel": [
+        384,
+        0,
+        384,
+        496
+      ],
+      "alphaBounds": [
+        89,
+        12,
+        358,
+        493
+      ],
+      "scale": 0.26556016597510373,
+      "visibleHeight": 128,
+      "anchor": [
+        80,
+        141
+      ],
+      "limitation": "Silhouette-height normalization only; anatomical crown/stance registration needs review"
+    },
+    {
+      "direction": "W",
+      "sourcePanel": [
+        768,
+        0,
+        384,
+        496
+      ],
+      "alphaBounds": [
+        80,
+        10,
+        324,
+        495
+      ],
+      "scale": 0.26337448559670784,
+      "visibleHeight": 128,
+      "anchor": [
+        80,
+        141
+      ],
+      "limitation": "Silhouette-height normalization only; anatomical crown/stance registration needs review"
+    },
+    {
+      "direction": "NW",
+      "sourcePanel": [
+        1152,
+        0,
+        384,
+        496
+      ],
+      "alphaBounds": [
+        32,
+        9,
+        309,
+        489
+      ],
+      "scale": 0.2661122661122661,
+      "visibleHeight": 128,
+      "anchor": [
+        80,
+        141
+      ],
+      "limitation": "Silhouette-height normalization only; anatomical crown/stance registration needs review"
+    },
+    {
+      "direction": "N",
+      "sourcePanel": [
+        0,
+        496,
+        384,
+        528
+      ],
+      "alphaBounds": [
+        72,
+        3,
+        371,
+        477
+      ],
+      "scale": 0.2694736842105263,
+      "visibleHeight": 128,
+      "anchor": [
+        80,
+        141
+      ],
+      "limitation": "Silhouette-height normalization only; anatomical crown/stance registration needs review"
+    },
+    {
+      "direction": "NE",
+      "sourcePanel": [
+        384,
+        496,
+        384,
+        528
+      ],
+      "alphaBounds": [
+        67,
+        3,
+        343,
+        484
+      ],
+      "scale": 0.26556016597510373,
+      "visibleHeight": 128,
+      "anchor": [
+        80,
+        141
+      ],
+      "limitation": "Silhouette-height normalization only; anatomical crown/stance registration needs review"
+    },
+    {
+      "direction": "E",
+      "sourcePanel": [
+        768,
+        496,
+        384,
+        528
+      ],
+      "alphaBounds": [
+        74,
+        0,
+        326,
+        492
+      ],
+      "scale": 0.25963488843813387,
+      "visibleHeight": 128,
+      "anchor": [
+        80,
+        141
+      ],
+      "limitation": "Silhouette-height normalization only; anatomical crown/stance registration needs review"
+    },
+    {
+      "direction": "SE",
+      "sourcePanel": [
+        1152,
+        496,
+        384,
+        528
+      ],
+      "alphaBounds": [
+        22,
+        5,
+        301,
+        495
+      ],
+      "scale": 0.2606924643584521,
+      "visibleHeight": 128,
+      "anchor": [
+        80,
+        141
+      ],
+      "limitation": "Silhouette-height normalization only; anatomical crown/stance registration needs review"
+    }
+  ],
+  "openIssues": [
+    "NW approaches N; distinct three-quarter rear perspective unresolved",
+    "Source garment/staff details drift across directions",
+    "128px visible height matches source density only; anatomical alignment not established",
+    "No directional walk, cast, hurt, death or material maps created"
+  ]
+}

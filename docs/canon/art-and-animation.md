@@ -81,6 +81,11 @@ The attachment is authoritative over the earlier provisional v001/v002 concepts.
   occlusion, not independent image widths or source-pixel preview magnifications.
   Native 2D sprite layers remain authoring surfaces; the required presentation is
   world-anchored 2.5D. A flat sheet alone cannot approve scale or perspective.
+  **Working scale baseline accepted, 30 October 2026:** after the corrected
+  320/390px Enemy Lab captures, the owner approved continuing at v003 worldSize
+  72.944643, normalized to the actual player radius14. Preserve this working
+  body-scale baseline while refining facings/actions. This does not close the
+  remaining perspective, material, occlusion or physical-phone acceptance gates.
   The first icon-topped comparison is rejected, not an approved variant library.
   Keep the approved grey wizard identity. The base reference remains preserved.
   **Owner refinement:** cape emblems are visibly faded/weathered into the grey

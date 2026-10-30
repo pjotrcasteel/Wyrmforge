@@ -509,3 +509,22 @@ This will be a source study, not eight finished animations or a live cutover.
 Preserve existing south motion and all approved references. Review direction,
 handedness, silhouette and scale before authoring directional walk/action frames.
 Existing independent research/reference review applies; no new third-party art.
+
+### Eight-direction native idle study checkpoint
+
+Built-in ImageGen generated original 4x2 turnaround from approved Gothic v002
+and held-staff v009 proportions; a targeted edit corrected apparent hand changes
+in NW/SE. Exact prompts, both originals and SHA256/alpha audit are preserved as
+`gothic-directions-v004-*`. No pack artwork or old rejected wizard rig used.
+Alpha inspection corrected the initial preview impression: original files DO
+contain transparent backgrounds, with fractional alpha on edges, not opaque
+runtime backdrops. Native sampler thresholds alpha and uses the existing96-colour
+palette, explicit cell crop bounds and128px silhouette height. Inspected contact
+sheet and corrected row boundary to prevent adjacent hat pixels leaking into cells.
+
+`prepare-directions.mjs --check` passes11 byte-identical outputs: eight neutral
+views, atlas, contact sheet and sampling metadata. NW is too similar to N; other
+rear perspective and costume/staff consistency still require refinement. Native
+silhouette normalization is not yet anatomical landmark registration. Do not use
+as finished eight-direction animation or overwrite v003 south motion/runtime.
+No gameplay/engine changes; actual world-scale/depth and phone review remain open.

@@ -1,0 +1,37 @@
+{
+  "status": "source study only, not runtime-ready",
+  "images": [
+    {
+      "file": "gothic-directions-v004-study.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "alphaExtrema": [
+        0,
+        254
+      ],
+      "sha256": "8303fb94ea1fb64a1ae6e60061f1f851f08d042552f668aabd06479541558cb3"
+    },
+    {
+      "file": "gothic-directions-v004-corrected-study.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "alphaExtrema": [
+        0,
+        254
+      ],
+      "sha256": "6fcf15826e3be157859aa4971477297a0d0f31f5aefb0f749539b3aa1fa0bfd7"
+    }
+  ],
+  "issues": [
+    "Background is genuinely transparent by alpha inspection; preview exposed hidden RGB. Source semi-transparent edges normalized to binary alpha in native study.",
+    "Corrected NW approaches back view; distinct NW versus N perspective needs further work",
+    "Costume details and staff shape drift between views; not frame-registered",
+    "No native-grid cleanup, common foot pivots, animation, materials or mobile acceptance implied"
+  ]
+}
