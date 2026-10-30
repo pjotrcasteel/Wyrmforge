@@ -68,7 +68,10 @@ export function huntSurfaceRenderable(id, x, y, width, height, castsShadow, surf
         id, ownerId: surface.ownerId ?? id, geometry, material: id,
         position: surface.position ?? [(x + width / 2) / UNIT, -(y + height * (standing ? .75 : .5)) * GROUND_Y / UNIT, standing ? .001 : 0],
         rotation: surface.rotation ?? [0, 0, 0],
-        scale: surface.scale ?? [width / UNIT, height * (standing ? 1 : GROUND_Y) / UNIT, 1],
+        // Captured actor pixels above their 75%-height feet pivot form the
+        // vertical cutout. Lower source pixels represent subfloor spill and
+        // must not intersect the ground receiver or bury boss silhouettes.
+        scale: surface.scale ?? [width / UNIT, height * (standing ? .75 : GROUND_Y) / UNIT, 1],
         castsShadow: surface.castsShadow ?? castsShadow,
         receivesShadow: surface.receivesShadow ?? true,
         receivesLight: surface.receivesLight ?? true,
@@ -84,8 +87,16 @@ export function huntSurfaceMaterial(id, overrides = {}, hasAlbedoSource = true) 
     return descriptor;
 }
 export function huntActorGeometry() {
+    // Source captures put the authoritative C# feet pivot at 75% of their
+    // height. The previous centered plane crossed Z=0 and buried its bottom
+    // quarter in the lit terrain's depth buffer (especially visible on the
+    // mage, Warden and Wyrm). Keep the upper 75% of the captured texture and
+    // raise it *from* the ground rather than through it. Generic actor
+    // geometry; no creature-specific renderer or animation changes.
     const actor = new T.PlaneGeometry(1, 1);
-    actor.translate(0, .25, 0);
+    const uv = actor.getAttribute('uv');
+    for (let i = 0; i < uv.count; i++) uv.setY(i, .25 + uv.getY(i) * .75);
+    actor.translate(0, .5, 0);
     actor.rotateX(Math.PI / 4);
     return actor;
 }
