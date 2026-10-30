@@ -331,3 +331,22 @@ hue/faded woven symbols; v007 staff identities/crystal character; v009 held scal
 Record these complementary references, not a new redesign. Native editable sprite
 and material layers, genuine motion, real Hunt 320/390 and phone validation remain
 pending. No production integration or animation completion claimed.
+
+## Native south walk production started
+
+Owner requested next steps after source-concept approval. Current main refreshed:
+`69abbe571`. Active draft #439 retained; original AN checkout untouched.
+Added editable native 2D source `tools/art/grey-wizard/source.mjs` using the existing
+Bitmap painter, explicit 16 authored poses and separate pixel layers. This is a
+new unapproved source reconstruction, not a claim it matches the approved art yet.
+First scope Fire/S only; other directions/actions/schools not authored.
+64x80 source padded losslessly into 80x80 square cells for the existing sprite
+manifest contract, common [42,70] packed anchor; provisional worldSize 40.
+Build script exports albedo/emission, separate layer atlases, editable command JSON,
+source frame PNGs and scale/contact sheets under `native-south-v001`.
+
+Initial format/controller checks: 16 unique frames, binary alpha, explicit palette,
+unclipped bounds, same shared sprite controller frames 0..15, pause/reduced-motion.
+Combined two runtime maps 819200 decoded bytes. This is not visual motion/contact
+acceptance; first inspection, GIF/video, real Hunt/phone and materials remain open.
+No live renderer/simulation/production atlas changes; no old wizard/AN rig imported.
