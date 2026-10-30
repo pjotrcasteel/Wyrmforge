@@ -648,3 +648,9 @@ overlap y96–126 (159pixels versus322). All original source/pose data preserved
 Inspected16 numbered frames on light background; rectangular patch is removed.
 Staff plant, grip and foot keys unchanged. V008 remains rejected art history;
 source contact checks alone are not acceptance. Checkpoint before new media.
+
+V009 validation: targeted pixel regression passes18 old-opaque/new-clear probes
+at reported wrist region across frames5–10, and no cape-underpaint alpha above
+y96. New25/25 deterministic exports pass, prior v00825/25 unchanged. Exact13-layer
+OpenRaster/GIF16frames/MP4 decode pass. These prove the reported patch correction,
+not full artistic or live-animation acceptance. New gray-background GIF retained.
