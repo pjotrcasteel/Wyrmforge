@@ -3608,6 +3608,21 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.SetViewportSizeAsync(width, height);
         await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/?arenaGpu=1&gpuQuality=mobile&g4Review=1",
             new() { WaitUntil = WaitUntilState.NetworkIdle });
+        // Consent is the FIRST screen, before any Gate/Town/Hunt menus can load.
+        var consent = Page.Locator("[data-g4-preflight]");
+        await Expect(consent).ToBeVisibleAsync();
+        await Expect(consent.GetByRole(AriaRole.Button, new() { Name = "Share performance results privately" }))
+            .ToBeVisibleAsync();
+        await Expect(consent.GetByRole(AriaRole.Button, new() { Name = "Keep private on this phone" }))
+            .ToBeVisibleAsync();
+        Assert.AreEqual(0, await Page.Locator(".world-gate").CountAsync(),
+            "G4 decision must precede all game menus, not compete with them.");
+        Assert.IsNull(await Page.EvaluateAsync<string?>(
+            "() => localStorage.getItem('wyrmforge.g4.autoSendConsent.v1')"));
+        await consent.GetByRole(AriaRole.Button, new() { Name = "Keep private on this phone" }).ClickAsync();
+        await Expect(consent).ToHaveCountAsync(0);
+        Assert.AreEqual("no", await Page.EvaluateAsync<string>(
+            "() => localStorage.getItem('wyrmforge.g4.autoSendConsent.v1')"));
         await EnterTownIfNeededAsync();
         await EnterFirstTrailAsync("BEGIN FIRST HUNT");
         await Page.EvaluateAsync(@"async () => {
@@ -3618,31 +3633,9 @@ public sealed class WyrmforgeBrowserTests : PageTest
 
         var panel = Page.Locator("[data-g4-device-review]");
         await Expect(panel).ToBeVisibleAsync();
-        // The owner could not find consent because it was hidden in a closed
-        // debug pill. On first mobile use, both choices must be visibly tappable.
-        Assert.IsTrue(await panel.EvaluateAsync<bool>("el => el.open"),
-            "First-run G4 sharing choice must open automatically.");
-        await Expect(panel.GetByRole(AriaRole.Button, new() { Name = "Share results privately" }))
-            .ToBeVisibleAsync();
-        await Expect(panel.GetByRole(AriaRole.Button, new() { Name = "Keep on my phone" }))
-            .ToBeVisibleAsync();
-        Assert.IsNull(await Page.EvaluateAsync<string?>(
-            "() => localStorage.getItem('wyrmforge.g4.autoSendConsent.v1')"),
-            "Reviewing gameplay must not silently grant upload consent.");
-        await panel.GetByRole(AriaRole.Button, new() { Name = "Keep on my phone" }).ClickAsync();
         Assert.IsFalse(await panel.EvaluateAsync<bool>("el => el.open"));
-        Assert.AreEqual("no", await Page.EvaluateAsync<string>(
-            "() => localStorage.getItem('wyrmforge.g4.autoSendConsent.v1')"));
-        await panel.Locator("summary").ClickAsync();
-        await Expect(panel.Locator("[data-g4-consent]")).ToBeVisibleAsync();
-        await panel.Locator("[data-g4-consent]").CheckAsync();
-        Assert.AreEqual("yes", await Page.EvaluateAsync<string>(
-            "() => localStorage.getItem('wyrmforge.g4.autoSendConsent.v1')"));
-        await panel.Locator("[data-g4-consent]").UncheckAsync();
-        Assert.AreEqual("no", await Page.EvaluateAsync<string>(
-            "() => localStorage.getItem('wyrmforge.g4.autoSendConsent.v1')"));
-        await panel.Locator("summary").ClickAsync();
-
+        Assert.AreEqual(0, await panel.Locator("[data-g4-consent], [data-g4-sharing-choice]").CountAsync(),
+            "No other consent/settings menus should be layered over gameplay.");
         // No button presses or manual exports: G4 records automatically in live gameplay.
         await Page.WaitForFunctionAsync(@"() => {
             const text = document.querySelector('[data-g4-status]')?.textContent ?? '';
@@ -3697,6 +3690,24 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.IsTrue(evidence.GetProperty("elapsedSeconds").GetDouble() > 0);
         Assert.AreEqual(false, evidence.GetProperty("recording").GetBoolean());
         Assert.IsTrue(evidence.GetProperty("recordedAtUtc").GetString()?.Length > 10);
+    }
+
+    [TestMethod]
+    public async Task Mobile_G4Consent_IsAnObviousSingleChoiceBeforeGameMenus()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/?arenaGpu=1&gpuQuality=mobile&g4Review=1",
+            new() { WaitUntil = WaitUntilState.NetworkIdle });
+        var gate = Page.Locator("[data-g4-preflight]");
+        await Expect(gate).ToBeVisibleAsync();
+        Assert.AreEqual(0, await Page.Locator(".world-gate").CountAsync());
+        await gate.GetByRole(AriaRole.Button, new() { Name = "Share performance results privately" }).ClickAsync();
+        await Expect(gate).ToHaveCountAsync(0);
+        Assert.AreEqual("yes", await Page.EvaluateAsync<string>(
+            "() => localStorage.getItem('wyrmforge.g4.autoSendConsent.v1')"));
+        // A normal (non-review) page never displays the testing consent screen.
+        await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/", new() { WaitUntil = WaitUntilState.NetworkIdle });
+        Assert.AreEqual(0, await Page.Locator("[data-g4-preflight]").CountAsync());
     }
 
     private async Task EnterFirstTrailAsync(string gateLabel = "BEGIN HUNT")
