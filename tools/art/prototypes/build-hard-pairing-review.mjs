@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { Bitmap } from '../lib/painter.mjs';
 import { encodePng } from '../lib/png.mjs';
 import { createHardPairingWindow, HARD_PAIRING_VERSION } from './terrain-hard-pairings.mjs';
+import { buildHardPairingRelief, HARD_PAIRING_RISE_PIXELS } from './terrain-hard-pairing-relief.mjs';
 import { worldLightingMaps } from './terrain-world-variation.mjs';
 
 const FONT = Object.freeze({
@@ -54,6 +55,7 @@ export function buildHardPairingReview() {
     const base = [['flagstone','cobble'],['cobble','brick'],['brick','flagstone']];
     const panels = [];
     let representative = null;
+    let relief = null;
     for (let row = 0; row < 2; row++) {
         for (let col = 0; col < 3; col++) {
             const [first, second] = base[col];
@@ -74,15 +76,21 @@ export function buildHardPairingReview() {
                 infillPixels: field.sourceTags.filter(v => v === 0).length});
             if (row === 0 && col === 0) {
                 representative = worldLightingMaps(field);
+                relief = buildHardPairingRelief(field);
             }
         }
     }
-    return {scene, enlarged: nearest3x(scene), representative,
+    return {scene, enlarged: nearest3x(scene), representative, relief,
         manifest: {schema: 'wf32-hard-pairing-review.v1', version: HARD_PAIRING_VERSION,
             status: 'OFFLINE ORIGINAL SOURCE ART - NOT A LIVE HUNT SCREENSHOT',
             nativePixelScale: 1, panelSize: [panelWidth, artHeight],
             panelRows: 2, panelColumns: 3, panels,
-            limitations: 'No AR3 placement, physics, G runtime, shadows, or mobile performance acceptance.'}};
+            relief: {status: relief.status, risePixels: HARD_PAIRING_RISE_PIXELS,
+                pixelsPerWorldUnit: relief.pixelsPerWorldUnit,
+                heightUnitsPerPixel: relief.heightUnitsPerPixel,
+                representativeCasterFootprints: relief.candidateCasterFootprints.length,
+                maps: ['flagstone-cobble-elevation.png', 'flagstone-cobble-caster-alpha.png']},
+            limitations: 'Candidate elevation only. No AR3 placement, physics, G runtime, cast shadows, or mobile performance acceptance.'}};
 }
 
 export function writeHardPairingReview(directory) {
@@ -94,6 +102,8 @@ export function writeHardPairingReview(directory) {
     writeImage('hard-pairing-gallery-3x.png', review.enlarged);
     writeImage('flagstone-cobble-normal.png', review.representative.normal);
     writeImage('flagstone-cobble-roughness.png', review.representative.roughnessMap);
+    writeImage('flagstone-cobble-elevation.png', review.relief.heightmap);
+    writeImage('flagstone-cobble-caster-alpha.png', review.relief.casterAlpha);
     writeFileSync(join(directory, 'manifest.json'), JSON.stringify(review.manifest, null, 2) + '\n');
     return review.manifest;
 }
