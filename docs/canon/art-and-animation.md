@@ -23,8 +23,16 @@ The attachment is authoritative over the earlier provisional v001/v002 concepts.
   worn brown leather belt/pouch and visible worn boots. Preserve the reference's
   silhouette, proportions, material character and restrained Gothic appearance.
 - Thin crooked natural wooden walking/casting staff, continuous through the hand;
-  preserve its shape and grip. Elemental cast effects remain separate event-driven
-  presentation, not permanently baked flames or a different default staff design.
+  preserve its slender wooden shaft and grip. **Owner addition, 30 October 2026:**
+  the character's chosen Divine school is shown by its existing approved school
+  symbol on the back of the cape and a matching school-specific staff treatment.
+  Keep the approved grey wizard identity; allow a distinctive school finial/inlay
+  and restrained school colour on the staff. The base reference remains preserved.
+  Cape symbols reuse the canonical six-school emblem identities, not new sigils.
+  They belong to the character's school, not the region/Wyrm selected for a Hunt.
+  Specific placement, size and staff variants require appearance review and mobile
+  readability validation. Elemental cast effects remain separate event-driven
+  presentation, not permanently baked flames.
 - This supersedes the **slate-blue hood, pale collar and shadowed-face default**
   in older artwork/workflow descriptions below. Preserve those sources as historical
   scene/runtime evidence; they no longer govern new protagonist appearance.

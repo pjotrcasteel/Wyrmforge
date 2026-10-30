@@ -135,3 +135,31 @@ Its identity now governs the canonical art and vision topics. Both generated
 candidates and prompts remain preserved as production history. Their earlier
 unapproved statuses above describe those checkpoints, not the newly approved
 attached reference. No additional animation or runtime implementation in this slice.
+
+## School cape/staff addition — 30 October 2026, production started
+
+Owner requested the school symbol on the back of the cape and school-identifying
+staffs. Recorded in art canon without replacing the approved base attachment.
+Use character school, not Hunt region; preserve canonical emblem identities from
+`wwwroot/art/divine-lineage-sigils.webp`: Fire/flame orange-red, Frost/snowflake
+cyan, Storm/lightning yellow, Arcane/orb violet, Necromancy/skull green,
+Summoner/bear earth tones. Six variants share grey costume, body and grip.
+
+Comparison-board brief: back badge below hood; slender wooden staffs with compact
+school finials (ember stone, ice crystal, lightning inlay, orbital orb, bone skull,
+carved bear). These specific treatments/size are proposals for review, not approved
+production assets. No permanent flame, full-robe tint or new lighting engine.
+Exact prompt preserved as `school-variants-prompt.txt`; edit inputs are the approved
+wizard and existing emblem atlas, never supplied third-party packs.
+
+Research principles, no copied museum motifs:
+- [V&A medieval embroidery](https://www.vam.ac.uk/articles/the-syon-cope): pictorial
+  coloured-thread motifs belong to the fabric rather than floating over it. Use
+  restrained stitched appearance following folds, not copied religious imagery.
+- [Met carved wooden staff](https://www.metmuseum.org/art/collection/search/314578):
+  slender continuous wood can support a legible sculptural finial. Apply the
+  structure/material principle, not the object's cultural motifs or triangle design.
+
+Pixel/mobile requirement: compare badge and staff silhouettes at actual native
+actor scale later; this high-resolution board cannot establish Hunt readability.
+No gameplay availability, casting effects or new spells are implied by six designs.
