@@ -2,6 +2,46 @@
 
 **NOT FINISHED. Keep PR #387 draft and unmerged. No final visual approval requested.**
 
+## 30 October follow-up — independently verified safe source handoff phases
+
+The [0.22m real rig source study](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/41016411094)
+**passed** source authoring, independently reopened 405-sole-vertex
+skin/contact support, negative mutants, and source motion-envelope tests
+for forward, +90° and −90° moving claw. The strict phase-resolved
+forward↔sideways source audit now finds **supported handoff phases 2 and
+6 of the eight-phase gait** for BOTH ordinary walk and every action
+stage of the full-body claw, on BOTH sides. The old 0.25m source had
+no safe static phase. At all other phases, worst direct switch mismatch
+is still approximately **5.78 native pixels**; runtime cannot switch
+unconditionally or pretend the moving C# root has stopped.
+
+The protected `animation-compact-directional-claw.yml` source-only
+pipeline now generates true eight-camera, native-resolution Blender
+atlases with a *lossless* minimum-padding layout (8-column walk and
+20-column, 40-frame claw) and compares genuine saved source handoffs.
+A further report measures all three color atlas dimensions with a
+projected normal/emissive allocation, plus an explicit historical
+pivot-map reservation; it is NOT proof that source materials/real
+mobile residency have been accepted. The actual all-view pack and C#
+moving-claw gate are pending.
+
+The already implemented shared optional source-skin path has separate
+independent evaluated-weighted-mesh evidence, but its **actual GPU
+presentation in the authoritative C# Hunt** was not previously accepted.
+The new `animation-foundation-source.yml` job now performs 320px and
+390px C# opt-in source-skin captures on the existing LightingEngine,
+with actual GPU registered skin-actor counts and genuine canvases/videos.
+Canvas sprite-draw counters are **not** used as fake skin GPU evidence;
+independent Blender sole values are labelled separately from gameplay
+contact data. This is an experimental second presentation mode inside
+the **same** animation engine—not a second lighting renderer, mandatory
+3D character pipeline or production default.
+
+**Mandatory remaining gates are unchanged:** continuous moving
+pivot/claw/recovery/chase on real C# world motion, pixel-style/occlusion
+and cross-engine lighting, actual target iPhone/Android load, owner
+visual approval. Do not merge PR #387 until those are met.
+
 ## 30 October 2026 — three-heading compact full-body source and actual C# blocker
 
 **AN0–AN6 is not complete and must not be merged yet.** Independent
