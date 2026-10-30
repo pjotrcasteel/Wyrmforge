@@ -1,5 +1,5 @@
-// WyrmForge original pixel art study. No third-party image pixels or generative-image inputs.
-// Optional AR4 candidate; deliberately NOT wired to the live terrain renderer before AR3 approval.
+// Original WyrmForge 32px surface art: deliberate pixel forms, no third-party pixels.
+// Source-only AR4 candidate. The C# arena recipe and shared G renderer retain authority.
 import { Bitmap, packAtlas, rng } from '../lib/painter.mjs';
 import { encodePng } from '../lib/png.mjs';
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -7,74 +7,188 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const WET_FOREST_TILE_SIZE = 32;
-export const WET_FOREST_PROTO_VERSION = 'wf-original-32.v1';
-const palettes = Object.freeze({
-    soil: ['#292723', '#302d28', '#39342d', '#464039', '#514b40', '#605649'],
-    grass: ['#222b24', '#2b362c', '#344536', '#3c503d', '#4d6045', '#627054'],
-    mud: ['#211f1e', '#292724', '#34302a', '#413a31', '#514538', '#635445'],
-    stone: ['#282d2d', '#313737', '#3b4240', '#494e49', '#565c54', '#65685d'],
+export const WET_FOREST_PROTO_VERSION = 'wf-original-32.v2';
+// Six restrained values per material, with no baked directional light or glowing highlights.
+export const WET_FOREST_PALETTES = Object.freeze({
+    soil: Object.freeze(['#1b1e1c', '#272824', '#34342c', '#434033', '#555041', '#696252']),
+    grass: Object.freeze(['#1d2923', '#29372b', '#354733', '#475b3e', '#5b704a', '#79815d']),
+    mud: Object.freeze(['#1b211f', '#282b27', '#34322b', '#463d32', '#5c4f3e', '#75634e']),
+    stone: Object.freeze(['#202725', '#2d3532', '#3c4540', '#50574e', '#666b5e', '#7e8170']),
 });
-const names = Object.freeze(Object.keys(palettes));
-const point = (b, x, y, c) => b.rect(x, y, 1, 1, c);
+const names = Object.freeze(Object.keys(WET_FOREST_PALETTES));
+const point = (b, x, y, color) => b.set(x, y, color);
+const randomInt = (random, max) => Math.floor(random() * max);
+
+function baseClusters(bitmap, palette, random, count) {
+    // Clustered marks rather than independent per-pixel white noise.
+    for (let i = 0; i < count; i++) {
+        const x = randomInt(random, 32), y = randomInt(random, 32);
+        const shade = palette[1 + randomInt(random, 4)];
+        const width = 2 + randomInt(random, 3);
+        bitmap.rect(x, y, width, random() < .28 ? 2 : 1, shade);
+        if (random() < .48) bitmap.rect(x + 1, y + 1, width > 2 ? 2 : 1, 1, shade);
+    }
+}
+
+function fallenLeaf(bitmap, x, y, palette, orientation) {
+    // Angular curled leaf, explicitly shaped rather than an ellipse.
+    const sign = orientation ? -1 : 1;
+    bitmap.line(x - 2 * sign, y, x + 2 * sign, y + 1, palette[4]);
+    bitmap.line(x, y - 1, x + sign, y + 2, palette[3]);
+    point(bitmap, x - 2 * sign, y + 1, palette[1]);
+}
+
+function soilDetails(bitmap, palette, random, variant) {
+    // Soil is coarse-grained earth: dry leaf fragments, fine root fibres, and tiny stones.
+    for (let i = 0; i < 8 + variant * 2; i++) {
+        const x = randomInt(random, 32), y = randomInt(random, 32);
+        fallenLeaf(bitmap, x, y, palette, random() < .5);
+    }
+    for (let i = 0; i < 9; i++) {
+        const x = randomInt(random, 32), y = randomInt(random, 32);
+        bitmap.line(x, y, x + 2 + randomInt(random, 4), y + (i % 3 === 0 ? 1 : 0), palette[0]);
+        if (random() < .48) point(bitmap, x + 1, y - 1, palette[5]);
+    }
+    for (let i = 0; i < 4; i++) {
+        const x = randomInt(random, 32), y = randomInt(random, 32);
+        bitmap.rect(x, y, 3, 2, palette[3]);
+        bitmap.line(x + 1, y + 2, x + 3, y + 2, palette[0]);
+    }
+}
+
+function grassTuft(bitmap, x, y, palette, large) {
+    const height = large ? 6 : 4;
+    bitmap.line(x, y, x - 2, y - height, palette[3]);
+    bitmap.line(x + 1, y, x + 2, y - height + 1, palette[4]);
+    bitmap.line(x, y, x, y - height + 1, palette[5]);
+    bitmap.line(x - 2, y + 1, x + 2, y + 1, palette[1]);
+    point(bitmap, x - 2, y - height, palette[5]);
+    point(bitmap, x + 2, y - height, palette[3]);
+}
+
+function grassDetails(bitmap, palette, random, variant) {
+    // Uneven tuft clusters, with visually quiet negative space for combat readability.
+    for (let i = 0; i < 13 + variant * 3; i++) {
+        const x = randomInt(random, 32), y = randomInt(random, 32);
+        if (i % 4 === 0) {
+            bitmap.rect(x - 3, y - 1, 7, 3, palette[2]);
+            bitmap.rect(x - 1, y + 1, 4, 2, palette[3]);
+        }
+        grassTuft(bitmap, x, y, palette, i % 4 === 0);
+    }
+    // Isolated small moss islands, not a bright fluorescent carpet.
+    for (let i = 0; i < 5; i++) {
+        const x = randomInt(random, 32), y = randomInt(random, 32);
+        bitmap.rect(x, y, 3 + randomInt(random, 3), 2, palette[2]);
+        point(bitmap, x + 1, y - 1, palette[4]);
+    }
+}
+
+function mudDetails(bitmap, palette, random, variant) {
+    // Packed wet clay with compressed linear ruts, not luminous pre-rendered puddles.
+    for (let i = 0; i < 9 + variant; i++) {
+        const x = randomInt(random, 32), y = randomInt(random, 32);
+        const length = 4 + randomInt(random, 7);
+        bitmap.line(x, y, x + length, y, palette[0]);
+        bitmap.line(x + 1, y + 1, x + length - 1, y + 1, palette[2]);
+        if (i % 3 === 0) bitmap.line(x + 2, y - 1, x + length - 2, y - 1, palette[3]);
+    }
+    for (let i = 0; i < 5; i++) {
+        const x = randomInt(random, 32), y = randomInt(random, 32);
+        bitmap.rect(x, y, 5 + randomInt(random, 4), 2, palette[1]);
+        bitmap.line(x + 2, y + 2, x + 5, y + 2, palette[3]);
+    }
+    // Occasional straw and small clods prove scale without pretending to be a light map.
+    for (let i = 0; i < 4; i++) {
+        const x = randomInt(random, 32), y = randomInt(random, 32);
+        bitmap.line(x, y, x + 3, y - 1, palette[4]);
+        point(bitmap, x + 4, y, palette[0]);
+    }
+}
+
+function masonry(bitmap, palette, random, variant) {
+    // Interlocking, chipped flagstone faces with narrow mortar joints; one art pixel remains one art pixel.
+    const rowHeight = [9, 8, 9, 7];
+    let top = -5 + variant;
+    for (let row = 0; row < 5; row++) {
+        const height = rowHeight[row % rowHeight.length];
+        let left = row % 2 ? -13 : -5;
+        while (left < 37) {
+            const width = 10 + randomInt(random, 10);
+            bitmap.rect(left, top, width, height, palette[0]);
+            const face = palette[2 + randomInt(random, 3)];
+            bitmap.rect(left + 1, top + 1, width - 2, height - 2, face);
+            if (random() < .17) {
+                // Absent or sunken flagstones break up the mechanically straight masonry.
+                bitmap.rect(left + 1, top + 1, width - 2, height - 2, palette[1]);
+                bitmap.rect(left + 3, top + 2, Math.max(2, width - 7), 2, palette[2]);
+                bitmap.line(left + 2, top + height - 2, left + width - 3, top + height - 2, '#34412e');
+            }
+            if ((left + row + variant) % 3 === 0) {
+                bitmap.rect(left + 2, top + 1, 2, 1, palette[1]);
+                point(bitmap, left + width - 3, top + height - 2, palette[1]);
+            }
+            if (random() < .54) {
+                const cx = left + 3 + randomInt(random, Math.max(1, width - 6));
+                bitmap.line(cx, top + 3, cx + 2, top + 4, palette[1]);
+                point(bitmap, cx + 2, top + 5, palette[1]);
+            }
+            if (random() < .4) {
+                point(bitmap, left + width - 2, top + 2, '#47583d');
+                point(bitmap, left + width - 3, top + 2, '#34462f');
+            }
+            left += width;
+        }
+        top += height;
+    }
+}
 
 function materialTile(material, variant) {
     if (!names.includes(material) || !Number.isInteger(variant) || variant < 0 || variant > 2)
         throw new RangeError('Unknown Wet Forest material or variant');
-    const p = palettes[material];
-    const b = new Bitmap(WET_FOREST_TILE_SIZE, WET_FOREST_TILE_SIZE);
-    b.wrap = true;
-    b.rect(0, 0, 32, 32, p[1]);
-    const random = rng(101 + names.indexOf(material) * 997 + variant * 117);
-    // Tiny authored-looking clusters; never broad gradients, halos or prelit reflections.
-    for (let i = 0; i < 75; i++) {
-        const x = Math.floor(random() * 32), y = Math.floor(random() * 32);
-        const tone = p[Math.floor(random() * 5)];
-        const w = 1 + Math.floor(random() * 3);
-        const h = random() < .23 ? 2 : 1;
-        b.rect(x, y, w, h, tone);
-        if (random() < .33) point(b, x + w, y + 1, p[2]);
-    }
-    // Surface-specific hand-authored vocabulary; all positions wrap at tile boundaries.
-    if (material === 'grass') {
-        for (let i = 0; i < 18; i++) {
-            const x = Math.floor(random() * 32), y = Math.floor(random() * 32);
-            b.line(x, y + 2, x - 1, y - (2 + Math.floor(random() * 3)), p[3]);
-            b.line(x + 1, y + 2, x + 2, y - 2, p[4]);
-            point(b, x, y + 1, p[0]);
-        }
-    } else if (material === 'soil') {
-        for (let i = 0; i < 13; i++) {
-            const x = Math.floor(random() * 32), y = Math.floor(random() * 32);
-            b.line(x, y, x + 3 + Math.floor(random() * 4), y + (random() < .5 ? 0 : 1), p[0]);
-            if (random() < .45) point(b, x + 2, y - 1, p[4]);
-        }
-    } else if (material === 'mud') {
-        for (let i = 0; i < 9; i++) {
-            const x = Math.floor(random() * 32), y = Math.floor(random() * 32);
-            b.rect(x, y, 4 + Math.floor(random() * 4), 2, p[0]);
-            b.line(x + 1, y + 2, x + 4, y + 2, p[3]);
-            // Wet surfaces have a muted neutral light response, never a painted blue mirror.
-        }
-    } else if (material === 'stone') {
-        for (let i = 0; i < 7; i++) {
-            const x = Math.floor(random() * 32), y = Math.floor(random() * 32);
-            b.line(x, y, x + 2, y + 1, p[0]);
-            b.line(x + 2, y + 1, x + 3, y + 3, p[0]);
-            point(b, x + 1, y - 1, p[4]);
+    const p = WET_FOREST_PALETTES[material];
+    const bitmap = new Bitmap(WET_FOREST_TILE_SIZE, WET_FOREST_TILE_SIZE);
+    bitmap.wrap = true;
+    bitmap.rect(0, 0, 32, 32, p[2]);
+    const random = rng(2011 + names.indexOf(material) * 1009 + variant * 163);
+    if (material === 'stone') masonry(bitmap, p, random, variant);
+    else {
+        baseClusters(bitmap, p, random, material === 'grass' ? 30 : 36);
+        switch (material) {
+            case 'soil': soilDetails(bitmap, p, random, variant); break;
+            case 'grass': grassDetails(bitmap, p, random, variant); break;
+            case 'mud': mudDetails(bitmap, p, random, variant); break;
         }
     }
-    return b;
+    return bitmap;
 }
 
-function materialEdge(orientation) {
-    const left = materialTile('grass', 1), right = materialTile('mud', 1);
+function materialEdge(from, to, orientation) {
+    if (!names.includes(from) || !names.includes(to) || from === to ||
+        !['vertical', 'horizontal'].includes(orientation)) throw new RangeError('Unknown surface boundary');
+    const first = materialTile(from, 1), second = materialTile(to, 1);
     const out = new Bitmap(32, 32);
+    const vertical = orientation === 'vertical';
+    const seed = (names.indexOf(from) + 1) * 319 + (names.indexOf(to) + 1) * 173 + (vertical ? 37 : 97);
+    const random = rng(seed);
+    // Bounded random walk between neighboring pixels; no blur, feather alpha, or wave stamp.
+    const profile = [];
+    let center = 15;
+    for (let i = 0; i < 32; i++) {
+        if (i % 2 === 0) center = Math.max(11, Math.min(20, center + randomInt(random, 5) - 2));
+        profile.push(center);
+    }
     for (let y = 0; y < 32; y++) for (let x = 0; x < 32; x++) {
-        const along = orientation === 'vertical' ? y : x;
-        const across = orientation === 'vertical' ? x : y;
-        // Pixel-stepped organic boundary, as an art sample. Final blending uses C# weight maps.
-        const boundary = 16 + Math.round(3 * Math.sin(along * .38) + 2 * Math.sin(along * .91));
-        out.set(x, y, (across < boundary ? left : right).get(x, y));
+        const along = vertical ? y : x, across = vertical ? x : y;
+        const leftSide = across < profile[along];
+        const nearEdge = Math.abs(across - profile[along]) < 3;
+        const material = leftSide ? first : second;
+        out.set(x, y, material.get(x, y));
+        // A few isolated grains of each side, to stop the transition looking razor-cut.
+        if (nearEdge && random() < .26) {
+            const source = leftSide ? WET_FOREST_PALETTES[to] : WET_FOREST_PALETTES[from];
+            point(out, x, y, source[2 + randomInt(random, 2)]);
+        }
     }
     return out;
 }
@@ -82,18 +196,33 @@ function materialEdge(orientation) {
 function groundDetail(kind) {
     const b = new Bitmap(32, 32);
     if (kind === 'root') {
-        b.line(2, 12, 16, 17, '#312b25', 2);
-        b.line(16, 17, 29, 11, '#443c30', 2);
-        b.line(15, 17, 21, 27, '#302b26');
-        b.line(9, 14, 6, 23, '#514538');
-        b.line(16, 16, 26, 13, '#625543');
+        // Buried forked old root; one anchored branching motif, not a long floating stick.
+        b.line(1, 11, 13, 18, '#292a25', 4);
+        b.line(12, 18, 29, 7, '#2a2924', 3);
+        b.line(13, 18, 23, 29, '#282823', 3);
+        b.line(8, 15, 5, 25, '#323028', 2);
+        b.line(2, 10, 13, 17, '#594b37', 2);
+        b.line(13, 17, 29, 7, '#5d4b35', 2);
+        b.line(13, 18, 22, 28, '#4e4233', 2);
+        b.line(8, 15, 5, 24, '#6b5a40');
+        for (const [x, y] of [[10, 16], [17, 14], [21, 12], [18, 23]]) point(b, x, y + 1, '#20251f');
     } else {
-        b.rect(5, 16, 4, 2, '#4d5a41');
-        b.line(8, 16, 4, 11, '#344d35');
-        b.line(17, 21, 13, 13, '#425a3c');
-        b.line(17, 21, 23, 12, '#4b6346');
-        b.line(24, 20, 26, 14, '#344a33');
-        for (const [x, y] of [[4, 10], [13, 12], [23, 11], [26, 13]]) point(b, x, y, '#6b7959');
+        // Two bent fronds, pairwise leaflets and a clearly separated base.
+        b.line(15, 27, 10, 11, '#3e5639');
+        b.line(15, 27, 23, 8, '#4b6543');
+        for (let i = 0; i < 5; i++) {
+            const yy = 13 + i * 3;
+            const xx = 11 + Math.floor(i / 2);
+            b.line(xx, yy, xx - 4, yy - 3, '#455f3b');
+            b.line(xx + 1, yy + 1, xx + 4, yy - 3, '#597148');
+            const rx = 22 - i;
+            const ry = 10 + i * 3;
+            b.line(rx, ry, rx - 4, ry - 2, '#587347');
+            b.line(rx, ry, rx + 3, ry - 3, '#3d5738');
+        }
+        b.rect(13, 26, 5, 2, '#2c3a2c');
+        point(b, 21, 8, '#75845c');
+        point(b, 10, 11, '#71825b');
     }
     return b;
 }
@@ -102,8 +231,11 @@ export function wetForestPrototypeTiles() {
     const tiles = {};
     for (const name of names) for (let variant = 0; variant < 3; variant++)
         tiles[`wetforest.${name}.${variant}`] = materialTile(name, variant);
-    tiles['wetforest.edge.grass-mud.vertical'] = materialEdge('vertical');
-    tiles['wetforest.edge.grass-mud.horizontal'] = materialEdge('horizontal');
+    for (const [from, to] of [['grass', 'mud'], ['grass', 'soil'], ['soil', 'mud'], ['soil', 'stone']]) {
+        for (const direction of ['vertical', 'horizontal']) {
+            tiles[`wetforest.edge.${from}-${to}.${direction}`] = materialEdge(from, to, direction);
+        }
+    }
     tiles['wetforest.detail.root'] = groundDetail('root');
     tiles['wetforest.detail.fern'] = groundDetail('fern');
     return tiles;
@@ -115,36 +247,67 @@ export function wetForestPrototypeAtlas() {
     })), 256, 1);
 }
 
-// Deterministic study board, NOT an in-game arena or an authoritative terrain recipe.
+// Grid contact sheet: exact native pixels with 4x nearest-neighbour magnification only.
 export function wetForestPrototypeBoard() {
     const collection = wetForestPrototypeTiles();
     const order = [
         ...names.flatMap(name => [0, 1, 2].map(i => `wetforest.${name}.${i}`)),
-        'wetforest.edge.grass-mud.vertical', 'wetforest.edge.grass-mud.horizontal',
+        ...[['grass', 'mud'], ['grass', 'soil'], ['soil', 'mud'], ['soil', 'stone']].flatMap(
+            ([from, to]) => ['vertical', 'horizontal'].map(d => `wetforest.edge.${from}-${to}.${d}`)),
         'wetforest.detail.root', 'wetforest.detail.fern',
     ];
-    const board = new Bitmap(4 * 32, 4 * 32);
+    const board = new Bitmap(4 * 32, 6 * 32);
     for (let i = 0; i < order.length; i++) {
         const x = (i % 4) * 32, y = Math.floor(i / 4) * 32;
-        board.rect(x, y, 32, 32, '#2b3029');
+        board.rect(x, y, 32, 32, '#29352c');
         board.blit(collection[order[i]], x, y);
     }
     return { board, order };
 }
 
-// Generates files only when run as a CLI; importing this module has no side effects.
+// A deliberately NON-GAMEPLAY composition test for visual seams, repetition and density.
+// No paths, collision, seed, geometry or award rules are read back from this image.
+export function wetForestCompositionStudy() {
+    const tiles = wetForestPrototypeTiles();
+    const board = new Bitmap(512, 384);
+    const random = rng(700331);
+    for (let row = 0; row < 12; row++) for (let col = 0; col < 16; col++) {
+        const center = 7.3 + Math.sin(row * .39) * 1.35;
+        const left = Math.round(center - 2.5), right = Math.round(center + 2.5);
+        const choice = (row * 7 + col * 11 + randomInt(random, 3)) % 3;
+        const roadMaterial = row > 5 ? 'mud' : 'soil';
+        let tile;
+        if (col === left) tile = tiles[`wetforest.edge.grass-${roadMaterial}.vertical`];
+        else if (col === right) {
+            tile = new Bitmap(32, 32).blit(tiles[`wetforest.edge.grass-${roadMaterial}.vertical`], 0, 0, true);
+        } else if (col > left && col < right) tile = tiles[`wetforest.${roadMaterial}.${choice}`];
+        else tile = tiles[`wetforest.grass.${choice}`];
+        // Paving sample stays intentionally separate from the C# authored geographical road.
+        if (col > 11 && row < 5) tile = tiles[`wetforest.stone.${choice}`];
+        board.blit(tile, col * 32, row * 32);
+        if (col < left - 1 && (row * 11 + col * 17) % 29 === 0)
+            board.blit(tiles['wetforest.detail.fern'], col * 32, row * 32);
+        if (col > left && col < right && (row * 7 + col * 19) % 17 === 0)
+            board.blit(tiles['wetforest.detail.root'], col * 32, row * 32);
+    }
+    return board;
+}
+
+// Generates files only when run as CLI; importing has zero filesystem effects.
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     const output = process.argv[2] || 'docs/art/previews/wet-forest-32';
     const { atlas, frames } = wetForestPrototypeAtlas();
     const { board, order } = wetForestPrototypeBoard();
-    const scaled = new Bitmap(512, 512);
-    for (let y = 0; y < 512; y++) for (let x = 0; x < 512; x++) scaled.set(x, y, board.get(Math.floor(x / 4), Math.floor(y / 4)));
+    const scaled = new Bitmap(board.width * 4, board.height * 4);
+    for (let y = 0; y < scaled.height; y++) for (let x = 0; x < scaled.width; x++)
+        scaled.set(x, y, board.get(Math.floor(x / 4), Math.floor(y / 4)));
+    const scene = wetForestCompositionStudy();
     mkdirSync(output, { recursive: true });
-    writeFileSync(join(output, 'atlas.png'), encodePng(atlas.width, atlas.height, atlas.data));
-    writeFileSync(join(output, 'contact-4x.png'), encodePng(scaled.width, scaled.height, scaled.data));
+    for (const [name, bitmap] of [['atlas.png', atlas], ['contact-4x.png', scaled], ['composition-study.png', scene]])
+        writeFileSync(join(output, name), encodePng(bitmap.width, bitmap.height, bitmap.data));
     writeFileSync(join(output, 'manifest.json'), `${JSON.stringify({
         version: WET_FOREST_PROTO_VERSION, tilePixels: 32, status: 'prototype-only',
-        atlas: 'atlas.png', frames, order,
+        atlas: 'atlas.png', frames, order, composition: 'composition-study.png',
         provenance: 'Original source-authored pixels; no reference pack files copied.',
     }, null, 2)}\n`);
     console.log(`Wrote ${Object.keys(frames).length} original Wet Forest frames to ${output}`);
