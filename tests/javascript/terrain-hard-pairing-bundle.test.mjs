@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {createHardPairingWindow} from '../../tools/art/prototypes/terrain-hard-pairings.mjs';
 import {buildHardPairingRelief} from '../../tools/art/prototypes/terrain-hard-pairing-relief.mjs';
-import {buildHardPairingSourceBundle, HARD_PAIRING_BUNDLE_SCHEMA} from
+import {buildHardPairingSourceBundle, worldAlignedPairingLightingMaps, HARD_PAIRING_BUNDLE_SCHEMA} from
     '../../tools/art/prototypes/export-hard-pairing-source-bundle.mjs';
 
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -12,6 +12,7 @@ test('H4 exports all six directed source-only pairs with five exactly aligned 32
     const {manifest, files} = buildHardPairingSourceBundle();
     assert.equal(manifest.schema, HARD_PAIRING_BUNDLE_SCHEMA);
     assert.equal(manifest.nativePixelTileSize, 32);
+    assert.equal(manifest.normalSourceHaloPixels, 32);
     assert.equal(manifest.pixelsPerWorldUnit, 48);
     assert.equal(manifest.pairs.length, 6);
     assert.equal(files.size, 37); // 5 PNG + one footprint per pair, plus manifest.
@@ -39,6 +40,22 @@ test('H4 exports all six directed source-only pairs with five exactly aligned 32
     const serialized = files.get('source-bundle-manifest.json').toString();
     assert.deepEqual(JSON.parse(serialized), manifest);
     assert.ok(serialized.endsWith('\n'));
+});
+
+test('H4 source normals have no artificial seam at edges of overlapping world windows', () => {
+    const config = {seed: 2111, state: 'worn', originY: 0,
+        width: 256, height: 192, role: 'left', boundaryX: 192, boundaryY: 96};
+    const west = worldAlignedPairingLightingMaps(createHardPairingWindow('flagstone', 'cobble',
+        {...config, originX: 0}));
+    const east = worldAlignedPairingLightingMaps(createHardPairingWindow('flagstone', 'cobble',
+        {...config, originX: 128}));
+    for (let y = 0; y < 192; y++) {
+        for (let x = 0; x < 128; x++) {
+            assert.deepEqual(west.normal.get(x + 128, y), east.normal.get(x, y));
+            assert.deepEqual(west.albedo.get(x + 128, y), east.albedo.get(x, y));
+            assert.deepEqual(west.roughnessMap.get(x + 128, y), east.roughnessMap.get(x, y));
+        }
+    }
 });
 
 test('H4 original-stone footprint files exactly reconstruct the candidate caster mask', () => {
