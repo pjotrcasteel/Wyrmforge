@@ -635,15 +635,16 @@ Use deliberate transitions instead:
 If the requirement is arbitrary pose blending, a walk with an upper-body attack,
 or continuous directional interpolation, start by evaluating authored 2D pose
 layers and directional sprite frames against the actual 2.5D presentation need.
-When that is insufficient, an **optional** live skeletal/whole-skin path may
-blend compatible transforms with masks/additive reactions, correct grounded
-contacts and shared C# action events. **AN0–AN6 PR #387 already studies this
-advanced source-skin route inside the existing shared GPU LightingEngine**;
-retain it for evidence-based review rather than discarding or duplicating it.
-Blender can preview/bake blends, but flattened PNGs cannot arbitrarily mix hidden
-poses. Any opt-in live source-skin adapter must preserve pixel-art identity,
-mobile budgets, original sprite fallback and one animation lifecycle, with
-separate actual-Hunt and owner visual approval before default adoption.
+When that is insufficient for a **concrete playable feature**, first
+try a few extra authored directional keyframes, layered sprite regions, frame
+timing or a simple discrete transition on the existing animation controller.
+Arbitrary live skeletal blending is **not required** for our mobile-first 2.5D
+game. Advanced whole-skin experiments in archived [PR #387](https://github.com/pjotrcasteel/Wyrmforge/pull/387)
+failed visual acceptance and are deferred; they must not resume automatically
+or delay ordinary sprites. Blender may still author and bake approved sprite
+frames offline. A future owner-approved revisit would require a demonstrated
+shortcoming of sprite playback, a smaller visual comparison, real Hunt proof
+and a mobile performance case, without replacing the shared sprite fallback.
 
 **Gate F:** transition behavior is chosen, bounded and demonstrated. Mark a
 spritesheet build as discrete playback, not as a live skeletal animation system.
