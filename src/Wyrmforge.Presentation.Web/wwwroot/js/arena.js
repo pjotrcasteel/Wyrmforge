@@ -58,11 +58,12 @@ export function initializeArena(canvas, dotNetReference) {
     arenas.set(canvas, state);
     state.detachInput = attachArenaInput(state);
     const params = new URLSearchParams(location.search);
-    // The isolated G4 GPU review defaults to plain source-defined colors.
-    // g4PaintedGround=1 is the opt-in A/B control; normal Hunts keep their art.
+    // The previous automatic flat-ground review looked like large black shadow
+    // patches on real iPhone captures. Keep the readable painted floor by default.
+    // Flat terrain is now an EXPLICIT opt-in performance A/B, never production.
+    // The existing painted override wins if both comparison flags are provided.
     state.g4FlatGround = params.get('g4Review') === '1' &&
-        (params.get('g4FlatGround') === '1' ||
-            params.get('arenaGpu') === '1' && params.get('g4PaintedGround') !== '1');
+        params.get('g4FlatGround') === '1' && params.get('g4PaintedGround') !== '1';
     state.g4StageFrames = params.get('g4Review') === '1' && params.get('g4StageFrames') === '1';
     if (params.get('g4Review') === '1') {
         const gpuRequested = params.get('arenaGpu') === '1';
