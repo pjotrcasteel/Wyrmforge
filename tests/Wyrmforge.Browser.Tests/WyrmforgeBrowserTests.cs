@@ -3630,18 +3630,46 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await EnterTownIfNeededAsync();
         await EnterFirstTrailAsync("BEGIN FIRST HUNT");
         await Page.EvaluateAsync(@"async () => {
+            // Use the exact versioned wrapper module already imported by ArenaView.
+            // Importing an independently guessed URL may create a second module
+            // instance with an empty WeakMap, making a real Hunt look uninitialized.
+            const resource = performance.getEntriesByType('resource')
+                .map(entry => entry.name)
+                .find(url => /\\/js\\/arena-performance\\.js\\?v=/.test(url));
+            if (!resource) throw new Error('Active Arena performance module was not loaded');
+            const performanceArena = await import(resource);
             const arena = await import(new URL('js/arena.js?v=20261028-school-palette-v1', document.baseURI).href);
             window.__huntGpuArena = arena;
-            window.__huntGpuRead = () => arena.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
+            window.__huntGpuRead = () => performanceArena.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
         }");
-        // The visible Canvas can exist while C# still reports its bootstrap
-        // 800x600 world, Arcane school and no terrain. Those frames are not a
-        // valid Fire-Hunt shadow or frame-presentation acceptance sample.
-        await Page.WaitForFunctionAsync(@"() => {
-            const game = window.__huntGpuRead?.();
-            return game?.worldReady && game.player?.activeSchool === 'Fire' &&
-                game.hud?.spells?.some(spell => spell.name === 'Fire Bolt');
-        }", null, new() { Timeout = 45000 });
+        // Wait for the real C# Hunt, not a bootstrap Arcane placeholder.
+        // When this fails, preserve the actual observed diagnostic state in CI.
+        try
+        {
+            await Page.WaitForFunctionAsync(@"() => {
+                const game = window.__huntGpuRead?.();
+                return game?.worldReady && game.player?.activeSchool === 'Fire' &&
+                    game.hud?.spells?.some(spell => spell.name === 'Fire Bolt');
+            }", null, new() { Timeout = 45000 });
+        }
+        catch (TimeoutException)
+        {
+            var observed = await Page.EvaluateAsync<string>(@"() => {
+                const game = window.__huntGpuRead?.();
+                return JSON.stringify({
+                    moduleLoaded: Boolean(window.__huntGpuArena),
+                    diagnosticsAvailable: Boolean(game),
+                    active: game?.active,
+                    worldReady: game?.worldReady,
+                    playerSchool: game?.player?.activeSchool,
+                    spells: game?.hud?.spells?.map(spell => spell.name),
+                    hasWorld: Boolean(game?.world),
+                    renderingError: game?.renderingError,
+                    gpuError: game?.gpuWorld?.error
+                });
+            }");
+            Assert.Fail($"Deployed G4 never reached the authoritative Fire Hunt: {observed}");
+        }
 
         var panel = Page.Locator("[data-g4-device-review]");
         await Expect(panel).ToBeVisibleAsync();
