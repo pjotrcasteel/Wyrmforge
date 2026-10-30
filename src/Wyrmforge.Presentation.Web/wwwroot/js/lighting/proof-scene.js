@@ -131,6 +131,7 @@ export function configureProof(canvas, options) {
     const p = state.options, zero = p.profile === 'zero';
     const firePosition = [-3.5 + p.progress * 7, p.behind ? 4 : -1.6, p.behind ? 3.6 : 2.4];
     const environment = environmentProfile(p.profile);
+    if (p.emission === false) environment.emission = false;
     if (p.fog) environment.fog = { color: '#343b4a', near: 3, far: 18 };
     const objects = structuredClone(state.objects);
     if (p.cutouts) objects.push(
