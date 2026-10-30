@@ -62,12 +62,73 @@ test('mage, Warden and Wyrm retain their own painted foot line without ground pe
         assert.equal(mesh.scale[0], mesh.scale[1],
             'Square captures must never be squashed by the grounding adapter.');
         assert.equal(mesh.frame, undefined, 'Do not crop authored legs or tail artwork.');
-        const footY = capture.y + capture.size * capture.footFraction;
-        assert.ok(Math.abs(-mesh.position[1] * 48 / Math.SQRT2 - footY) < 1e-8,
-            'Physical billboard foot contact must coincide with its own painted foot line');
+        const sourceBottomY = capture.y + capture.size;
+        assert.ok(Math.abs(-mesh.position[1] * 48 / Math.SQRT2 - sourceBottomY) < 1e-8,
+            'Visible sprite bottom must match the exact existing Canvas capture rectangle.');
     }
     const invalid = () => huntSurfaceRenderable('bad', 0, 0, 100, 100, true, { footFraction: 1.5 });
     assert.throws(invalid, RangeError);
+});
+
+test('G4 mage Warden Wyrm project to exact Canvas source pixels at every phone aspect ratio', async () => {
+    const T = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/vendor/three.module.js');
+    const { huntActorGeometry, huntSurfaceRenderable } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js');
+    const { huntLayerCapture } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/hunt-gpu-layers.js');
+    const geometry = huntActorGeometry();
+    try {
+        for (const [viewportWidth, viewportHeight] of [[320, 568], [390, 844], [402, 656], [844, 390]]) {
+            const halfWidth = viewportWidth / 48 / 2;
+            const centerY = -viewportHeight * Math.SQRT2 / 48 / 2;
+            const camera = new T.OrthographicCamera(-halfWidth, halfWidth,
+                halfWidth * viewportHeight / viewportWidth,
+                -halfWidth * viewportHeight / viewportWidth, .1, 80);
+            camera.up.set(0, 0, 1);
+            camera.position.set(halfWidth, centerY - 30, 30);
+            camera.lookAt(halfWidth, centerY, 0);
+            camera.updateProjectionMatrix();
+            camera.updateMatrixWorld();
+
+            for (const layer of [
+                { kind: 'mage', depth: 320 },
+                { kind: 'enemy', enemy: { entityId: 'bell-warden', x: 210, y: 320, radius: 44 } },
+                { kind: 'dragon', dragon: { entityId: 'ashfang-wyrm', x: 210, y: 320, radius: 90 } },
+            ]) {
+                const actor = layer.enemy ?? layer.dragon ?? { x: 210, y: 320, radius: 12 };
+                const capture = huntLayerCapture(layer, actor);
+                const x = capture.x - 50, y = capture.y - 70;
+                const sprite = huntSurfaceRenderable(capture.id, x, y,
+                    capture.size, capture.size, true, { footFraction: capture.footFraction });
+                const pixels = [];
+                for (let index = 0; index < geometry.attributes.position.count; index++) {
+                    const vertex = new T.Vector3().fromBufferAttribute(geometry.attributes.position, index);
+                    vertex.multiply(new T.Vector3(...sprite.scale))
+                        .add(new T.Vector3(...sprite.position))
+                        .project(camera);
+                    pixels.push({
+                        x: (vertex.x + 1) * viewportWidth / 2,
+                        y: (1 - vertex.y) * viewportHeight / 2,
+                    });
+                }
+                const bounds = {
+                    left: Math.min(...pixels.map(point => point.x)),
+                    right: Math.max(...pixels.map(point => point.x)),
+                    top: Math.min(...pixels.map(point => point.y)),
+                    bottom: Math.max(...pixels.map(point => point.y)),
+                };
+                const error = Math.max(
+                    Math.abs(bounds.left - x),
+                    Math.abs(bounds.right - (x + capture.size)),
+                    Math.abs(bounds.top - y),
+                    Math.abs(bounds.bottom - (y + capture.size)));
+                assert.ok(error < .001,
+                    layer.kind + ' at ' + viewportWidth + 'x' + viewportHeight +
+                    ' shifted or distorted by ' + error + 'px: ' +
+                    JSON.stringify({ source: { x, y, size: capture.size }, bounds }));
+            }
+        }
+    } finally {
+        geometry.dispose();
+    }
 });
 
 test('same-depth walls keep distinct stable GPU IDs and crop their own footprints', async () => {
