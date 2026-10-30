@@ -230,3 +230,34 @@ test('G4 reuses fog across night frames and never lights zero-light darkness', a
     synchronizeEnvironmentFog(scene, night);
     assert.ok(scene.fog?.isFog, 'Fog can return on a subsequent lit scene.');
 });
+
+test('G4 shared camera projection avoids unchanged-frame CPU rebuilds but tracks zoom and rotation', async () => {
+    const { synchronizeCameraProjection } =
+        await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/engine.js');
+    const camera = new T.OrthographicCamera(-5, 5, 7, -7, .1, 80);
+    const realUpdate = camera.updateProjectionMatrix.bind(camera);
+    let updates = 0;
+    camera.updateProjectionMatrix = () => { updates++; realUpdate(); };
+
+    assert.equal(synchronizeCameraProjection(camera, 5, 390, 844), true);
+    assert.equal(updates, 1);
+    const frozenProjection = camera.projectionMatrix.clone();
+    for (let frame = 0; frame < 120; frame++) {
+        camera.position.set(frame / 10, 0, 12);
+        assert.equal(synchronizeCameraProjection(camera, 5, 390, 844), false);
+    }
+    assert.equal(updates, 1, 'Moving the scene camera must not rebuild an unchanged projection');
+    assert.ok(camera.projectionMatrix.equals(frozenProjection));
+
+    assert.equal(synchronizeCameraProjection(camera, 6, 390, 844), true,
+        'Zoom changes must update the projection immediately');
+    assert.equal(updates, 2);
+    assert.equal(camera.left, -6);
+    assert.equal(camera.top, 6 * 844 / 390);
+    assert.equal(synchronizeCameraProjection(camera, 6, 844, 390), true,
+        'Landscape orientation must update the projection immediately');
+    assert.equal(updates, 3);
+    assert.equal(camera.top, 6 * 390 / 844);
+    assert.equal(synchronizeCameraProjection(camera, 6, 844, 390), false);
+    assert.equal(updates, 3);
+});
