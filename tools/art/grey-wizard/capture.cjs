@@ -4,7 +4,8 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
 const {spawn}=require('node:child_process');
 const root=path.resolve(__dirname,'../../..');
 const source=path.resolve(root,process.argv[2]||'art/source/characters/grey-wizard/native-south-v001');
-const expectedCell=JSON.parse(fs.readFileSync(path.join(source,'manifest.json'),'utf8')).clips.walk.cell;
+const sourceManifest=JSON.parse(fs.readFileSync(path.join(source,'manifest.json'),'utf8'));
+const expectedCell=sourceManifest.clips.walk.cell;
 const output=path.join(source,'review');fs.mkdirSync(output,{recursive:true});
 (async()=>{
     const server=spawn(process.execPath,['tools/sprite-lab/serve-review.cjs'],{cwd:root,stdio:'pipe'});
@@ -35,7 +36,7 @@ const output=path.join(source,'review');fs.mkdirSync(output,{recursive:true});
             assert.deepEqual(errors,[]);
             reports.push({width,columns:16,rows:1,cell:expectedCell,observedFrames:frames,pausedFrame:paused,errors,
                 scope:'existing Sprite Lab import/play/pause only; desktop Chromium, not Hunt or physical phone',
-                sourceFacing:'S',labCompassLimitation:'single-view lab labels its row SE; no new facing is implied'});
+                sourceFacing:sourceManifest.directions[0],labCompassLimitation:'single-view lab labels its row SE; source manifest governs actual authored facing'});
             await page.close();
         }
         fs.writeFileSync(path.join(output,'browser-report.json'),JSON.stringify(reports,null,2)+'\n');

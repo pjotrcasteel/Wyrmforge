@@ -571,3 +571,21 @@ fit. Do not promote these walk profiles directly or describe cadence as validate
 Retain current opt-in v003 lab baseline and default production mage while source
 motion/stride and later walk/run adaptation are reviewed. No C# speed changes.
 Checkpoint before GIF/MP4, OpenRaster packaging and browser validation.
+
+### Southeast review validation
+
+Delivered12-layer OpenRaster,16-frame contact sheet, native/2x GIF and MP4, and
+existing Sprite Lab import/play/pause captures at320/390 desktop Chromium.
+19 focused shared-controller/mage/lab tests passed; source export25/25 matches
+and original south25/25 stays identical. Packaged12layer bytes and merged source
+match, GIF16frames/1330ms verified, MP4 decodes, zero browser page errors.
+Sprite Lab THE HOLLOW caption remains generic; source manifest correctly says SE.
+
+Numeric audit reads C# PlayerState.Speed190 (before build/status modifiers): SE
+source stride10.31593world units/cycle gives7.73695world units/sec at12fps. At base
+C# speed the profile would demand18.418cycles/sec (~294.69frames/sec). This is a
+material unresolved animation-fit issue, not a production-ready walk. Report is
+`review/package-cadence-audit.json`; current C# code/source hash recorded. Do not
+hide it with a new clock or change gameplay speed. Future source locomotion needs
+an appropriate run/stride solution reviewed at real root travel, preserving scale.
+No production integration, source-material acceptance or physical-phone claim.
