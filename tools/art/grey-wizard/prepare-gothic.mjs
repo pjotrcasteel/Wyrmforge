@@ -6,7 +6,7 @@ import {createHash} from 'node:crypto';
 import assert from 'node:assert/strict';
 import {decodePng,encodePng} from '../lib/png.mjs';
 import {Bitmap} from '../lib/painter.mjs';
-const {project}=await import(process.argv.includes('--boot-cleanup')?'./gothic-south-boots.mjs':process.argv.includes('--south-stick')?'./gothic-south-stick.mjs':process.argv.includes('--overlap-fix')?'./gothic-walking-stick-overlap.mjs':process.argv.includes('--repair-stick')?'./gothic-walking-stick-repair.mjs':process.argv.includes('--walking-stick')?'./gothic-walking-stick-project.mjs':process.argv.includes('--southeast')?'./gothic-southeast-project.mjs':'./gothic-project.mjs');
+const {project}=await import(process.argv.includes('--leg-coverage')?'./gothic-south-legs.mjs':process.argv.includes('--boot-cleanup')?'./gothic-south-boots.mjs':process.argv.includes('--south-stick')?'./gothic-south-stick.mjs':process.argv.includes('--overlap-fix')?'./gothic-walking-stick-overlap.mjs':process.argv.includes('--repair-stick')?'./gothic-walking-stick-repair.mjs':process.argv.includes('--walking-stick')?'./gothic-walking-stick-project.mjs':process.argv.includes('--southeast')?'./gothic-southeast-project.mjs':'./gothic-project.mjs');
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../../..');
 const base=join(root,'art/source/characters/grey-wizard'),out=join(base,project.outputDirectory??'gothic-south-v003');
 mkdirSync(join(out,'source-layers'),{recursive:true});
@@ -70,6 +70,19 @@ for(const paint of project.underpaint??[])for(let y=0;y<height;y++)for(let x=0;x
     assert.ok(pigment[3],'underpaint donor missing');layers[paint.name].set(x,y,pigment);
 }
 const counts={};let recomposed=new Bitmap(width,height);
+// Extend the painted boot shafts under the opaque neutral robe. The existing
+// body layers occlude these at rest; when a foot advances they expose real leg
+// coverage instead of a transparent bar. Source donor rectangles are explicit.
+for(const leg of project.occludedLegs??[]){
+for(let y=0;y<(leg.garmentAboveY??0);y++)for(let x=0;x<width;x++)if(layers[leg.name].alpha(x,y)){
+    layers.torso.set(x,y,layers[leg.name].get(x,y));layers[leg.name].clear(x,y);
+}
+for(let y=0;y<height;y++)for(let x=0;x<width;x++){
+    if(!master.alpha(x,y)||layers[leg.name].alpha(x,y)||!inside(x+.5,y+.5,leg.polygon))continue;
+    const [sx,sy,sw,sh]=leg.donor,pigment=master.get(sx+(x%sw),sy+(y%sh));
+    assert.ok(pigment[3],'leg pigment donor missing');layers[leg.name].set(x,y,pigment);
+}
+}
 for(const n of project.drawOrder){const b=layers[n];counts[n]=b.count();assert.ok(counts[n]>0,'empty authored layer '+n);recomposed.blit(b,0,0);writeFileSync(join(out,'source-layers',n+'.png'),encodePng(width,height,b.data));}
 assert.deepEqual(recomposed.data,master.data,'semantic layers alter resting appearance');
 writeFileSync(join(out,'source-master.png'),encodePng(width,height,master.data));

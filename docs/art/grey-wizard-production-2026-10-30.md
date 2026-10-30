@@ -718,3 +718,22 @@ foot into a finished walk. Live stride fit and production gates remain open.
 V011 existing Sprite Lab320/390 import/play/pause also passes without page errors.
 Browser screenshots/report retained. No new direction animation or live C# stride
 fit is implied by this cleanup checkpoint.
+
+## Owner rejection of v011 leg/hem coverage — v012 repair
+
+Owner correctly reports the lower-body overlap still visibly wrong and asks for
+inspection before delivery. Previous connected-component and heel tests did NOT
+establish coherent anatomy. V011 is not accepted final motion. Root cause:
+neutral robe-edge pixels were assigned to boot shafts and travelled as a grey
+bar; hidden source legs were too short when boots moved forward. V012 reassigns
+garment above sourcey116 to body, authors longer lower-leg coverage beneath the
+opaque robe using explicit native leather donor regions, and retains source
+layer ordering (legs behind cloth). No automatic front-layer overlay or gameplay
+changes. Neutral source recomposition remains exact; pose keys/scale unchanged.
+
+Inspected all16 enlarged lower-body frames; grey travelling ankle strip removed
+and missing shaft coverage filled. Added targeted before/after tests for4 missing
+coverage probes and2 grey-to-leather probes in both contact extremes. Source-only
+foot/staff support contacts0px; original v011 remains unchanged for traceability.
+Do not call passing tests or one connected silhouette artistic acceptance.
+Checkpoint before review media/package validation.
