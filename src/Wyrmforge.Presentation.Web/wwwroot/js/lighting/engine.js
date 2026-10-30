@@ -33,6 +33,21 @@ export function synchronizeShadowProjection(light, range, force = false) {
     return true;
 }
 
+/**
+ * Keep camera projection matrices stable across unchanged viewport/zoom frames.
+ * Dynamic camera motion still updates the view matrix in Three.js itself.
+ */
+export function synchronizeCameraProjection(camera, halfWidth, width, height) {
+    const left = -halfWidth, right = halfWidth;
+    const top = halfWidth * height / width, bottom = -top;
+    if (camera.left === left && camera.right === right &&
+        camera.top === top && camera.bottom === bottom) return false;
+    camera.left = left; camera.right = right;
+    camera.top = top; camera.bottom = bottom;
+    camera.updateProjectionMatrix();
+    return true;
+}
+
 const fogAmbientColor = new T.Color();
 
 /** Reuse fog resources on unchanged snapshots without altering black-world rules. */
@@ -273,9 +288,7 @@ float proofShadowVisibility() {
         // One world sample per CSS pixel at 390px, bounded regardless of device DPR.
         const w = Math.max(1, Math.min(390, Math.round(width))), h = Math.max(1, Math.round(height * w / width));
         if (this.canvas.width !== w || this.canvas.height !== h) this.renderer.setSize(w, h, false);
-        this.camera.left = -this.halfWidth; this.camera.right = this.halfWidth;
-        this.camera.top = this.halfWidth * h / w; this.camera.bottom = -this.halfWidth * h / w;
-        this.camera.updateProjectionMatrix();
+        synchronizeCameraProjection(this.camera, this.halfWidth, w, h);
         if (this.debugView === 'light-depth') {
             const source = this.selected?.find(l => l.shadow);
             this.inspection.depth(this.renderer, this.lights.get(source?.id));
