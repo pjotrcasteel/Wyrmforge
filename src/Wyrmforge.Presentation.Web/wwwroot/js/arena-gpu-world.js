@@ -175,38 +175,46 @@ export class HuntGpuWorld {
             layer.pixels.width === Math.max(1, Math.ceil(width)) &&
             layer.pixels.height === Math.max(1, Math.ceil(height));
     }
+    /** Every captured material channel uses the same typed texture resource path. */
+    captureTexture(id, source, width, height, revision) {
+        if (!source) return;
+        if (revision !== undefined && (typeof revision !== 'string' &&
+            !(typeof revision === 'number' && Number.isFinite(revision))))
+            throw new TypeError('Capture revision must be a stable string or finite number');
+        this.used.add(id);
+        let layer = this.layers.get(id);
+        const unchanged = this.canReuseCapture(id, revision, width, height);
+        if (!layer) {
+            const pixels = document.createElement('canvas');
+            pixels.width = Math.max(1, Math.ceil(width)); pixels.height = Math.max(1, Math.ceil(height));
+            const texture = new T.CanvasTexture(pixels);
+            this.engine.registerTexture(id, texture);
+            layer = { pixels, texture }; this.layers.set(id, layer);
+        }
+        if (unchanged) return;
+        if (layer.pixels.width !== Math.ceil(width)) layer.pixels.width = Math.ceil(width);
+        if (layer.pixels.height !== Math.ceil(height)) layer.pixels.height = Math.ceil(height);
+        const ctx = layer.pixels.getContext('2d');
+        ctx.imageSmoothingEnabled = false;
+        ctx.clearRect(0, 0, layer.pixels.width, layer.pixels.height);
+        ctx.drawImage(source, 0, 0, layer.pixels.width, layer.pixels.height);
+        layer.texture.needsUpdate = true;
+        this.dirtyTextures.add(id);
+        layer.revision = revision;
+    }
     capture(id, source, x, y, width, height, elevation = 0, castsShadow = true, surface = {}) {
-        // Existing Canvas layers remain a migration fallback. New renderables may instead
-        // reference registered GPU texture IDs, authored geometry and surface channels.
-        if (source) {
-            const revision = surface.revision;
-            if (revision !== undefined && (typeof revision !== 'string' &&
-                !(typeof revision === 'number' && Number.isFinite(revision))))
-                throw new TypeError('Capture revision must be a stable string or finite number');
-            this.used.add(id);
-            let layer = this.layers.get(id);
-            const unchanged = this.canReuseCapture(id, revision, width, height);
-            if (!layer) {
-                const pixels = document.createElement('canvas');
-                pixels.width = Math.max(1, Math.ceil(width)); pixels.height = Math.max(1, Math.ceil(height));
-                const texture = new T.CanvasTexture(pixels);
-                this.engine.registerTexture(id, texture);
-                layer = { pixels, texture }; this.layers.set(id, layer);
-            }
-            if (!unchanged) {
-                if (layer.pixels.width !== Math.ceil(width)) layer.pixels.width = Math.ceil(width);
-                if (layer.pixels.height !== Math.ceil(height)) layer.pixels.height = Math.ceil(height);
-                const ctx = layer.pixels.getContext('2d');
-                ctx.imageSmoothingEnabled = false;
-                ctx.clearRect(0, 0, layer.pixels.width, layer.pixels.height);
-                ctx.drawImage(source, 0, 0, layer.pixels.width, layer.pixels.height);
-                layer.texture.needsUpdate = true;
-                this.dirtyTextures.add(id);
-                layer.revision = revision;
-            }
+        // Emission is a second material texture, not a light. The shared GPU
+        // engine still handles both maps and never needs to know asset kinds.
+        this.captureTexture(id, source, width, height, surface.revision);
+        let materialOptions = surface.material;
+        if (surface.emissiveSource) {
+            const emissiveId = id + ':emissive';
+            this.captureTexture(emissiveId, surface.emissiveSource, width, height, surface.revision);
+            materialOptions = { ...surface.material, emissiveMap: emissiveId,
+                emission: '#ffffff', emissionIntensity: surface.emissionIntensity ?? 1.6 };
         }
         this.submitSurface(huntSurfaceRenderable(id, x, y, width, height, castsShadow, surface),
-            huntSurfaceMaterial(id, surface.material, Boolean(source)));
+            huntSurfaceMaterial(id, materialOptions, Boolean(source)));
     }
     render(ctx, frame) {
         const began = performance.now();
