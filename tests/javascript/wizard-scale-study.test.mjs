@@ -12,7 +12,7 @@ test('study uses source manifest anchor/world size and paused shared frame, neve
     class Picture {set src(url){const name=new URL(url).pathname.split('/').pop();this.naturalWidth=name==='walk.png'?2560:160;this.naturalHeight=160;queueMicrotask(()=>this.onload());}}
     const study=createWizardScaleStudy({enabled:true,base,ImageType:Picture,fetcher:async url=>({ok:true,json:async()=>JSON.parse(readFileSync(url,'utf8'))})});
     assert.equal(await study.preload(),true);
-    const player=Object.freeze({x:100,y:200,radius:12});study.update(player,1);study.update({...player,y:201},1.05);const frame=study.diagnostics().frame;
+    const player=Object.freeze({x:100,y:200,radius:14});study.update(player,1);study.update({...player,y:201},1.05);const frame=study.diagnostics().frame;
     study.update({...player,y:201},1.1,false,true);assert.equal(study.diagnostics().frame,frame);
     const calls=[];const ctx={save(){},restore(){},beginPath(){},ellipse(){},fill(){},drawImage(...a){calls.push(a);}};
     assert.equal(study.draw(ctx,player,null),true);

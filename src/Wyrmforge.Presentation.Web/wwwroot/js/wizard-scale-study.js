@@ -37,7 +37,7 @@ export function createWizardScaleStudy({enabled=false,fetcher=globalThis.fetch,I
         // casting; if someone enables it, original production mage stays fallback.
         if(cast&&Number.isFinite(cast.progress)&&cast.progress>=0&&cast.progress<1)return false;
         const name=moving?'walk':'idle',clip=manifest.clips[name],frame=moving?(animation.sample?.frame??0):0;
-        const size=clip.worldSize*Math.max(.7,Math.min(1.45,(Number(player.radius)||12)/12));
+        const size=clip.worldSize*Math.max(.7,Math.min(1.45,(Number(player.radius)||14)/14));
         ctx.save();ctx.imageSmoothingEnabled=false;
         ctx.fillStyle='rgba(7,9,14,.38)';ctx.beginPath();ctx.ellipse(player.x,player.y,9,3,0,0,Math.PI*2);ctx.fill();
         ctx.drawImage(images.get(name),frame*clip.cell,0,clip.cell,clip.cell,
