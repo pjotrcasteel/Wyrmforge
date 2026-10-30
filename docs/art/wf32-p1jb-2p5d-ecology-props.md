@@ -62,3 +62,16 @@ No physics-engine changes or new rendering pipeline. Future lighting and depth w
 **Evidence limits:** This is an *offline composition of actual checked-in sprites*, not a screenshot of a running Hunt. It proves relative authored pixel scale and layered compositing only; real scene registration, dynamic G illumination, engine-driven depth, shadow casting, physical collision and 320/390px device acceptance remain separately gated under their existing owners. The reference does not change the approved P1i blending, actor sprite assets, game engine, physics or AR3 geography.
 
 **Visual gate:** owner to inspect the generated reference before we lock the grass/rock proportions. Grass may need additional soft irregularity after that review, but do not enlarge or simplify it based on a stand-in character.
+
+
+## P1j-B5 — correct C# enemy radii and owner 2× Hollowed scale direction (30 October 2026)
+
+**Owner correction:** the earlier B4 image falsely treated both actors as radius 11, inflating the Ashling. The Hollowed is meant to read as **twice the Ashling's visible height**, while the approved Ashling appearance remains unchanged. This is new art direction, not authorization to alter the character/animation renderer.
+
+- The reference builder now reads authoritative body radii from src/Wyrmforge.Domain/Combat/Enemies/EnemyCatalog.cs (Hollow 11, Ashling 8), applying the actual shared Canvas clamp radius/11 before source-to-pixel rasterization. A true 1× image uses those values, not matching reference radii.
+- The source frame's opaque alpha bounds (Hollow 49px high, Ashling 44px high for south walk frame 0) are measured from real runtime PNG bytes. Comparing only their full 96px *transparent* cells is incorrect.
+- Current visible silhouette height ratio is approximately **1.75:1** at the nominal game radii. A separate target image computes the exact per-frame multiplier needed to make Hollowed **2.0:1** against unchanged Ashling; roughly +15% Hollowed appearance scale is sufficient. Never double Hollowed's already-larger sprite or alter its collision radius for this art study.
+- Outputs include both current 1×/3× production-proportion comparisons and target-2× 1×/3× previews. Each is clearly recorded in the manifest; the target is not runtime implementation, acceptance, or a live Hunt screenshot.
+- JavaScript tests pin the two C# radii, opaque sprite measurements, the target ratio, and unchanged Ashling/right-half composition. Approved P1i ground blending, P1j-B3 foliage, original rock pixels, scene candidates, animation, physics and G lighting stay intact.
+
+**Gate:** Pjotr approves or revises the relative silhouette target visually. A production character-scale change must later go through the existing character presentation owner and normal tests; this art PR does not own that workstream.
