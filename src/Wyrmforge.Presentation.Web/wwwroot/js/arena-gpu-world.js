@@ -299,7 +299,7 @@ export class HuntGpuWorld {
         // false positive while the floor has no shadows (as on the iPhone).
         const hiddenMeshes = [];
         for (const [id, object] of engine.objects) {
-            if (id === 'hunt-ground' || !object.caster) continue;
+            if (id === 'hunt-ground') continue;
             hiddenMeshes.push([object.mesh, object.mesh.visible]);
             object.mesh.visible = false;
         }
