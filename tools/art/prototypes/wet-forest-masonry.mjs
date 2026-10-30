@@ -25,8 +25,8 @@ function drawChip(paint, x, y, width, height, rnd, tone) {
 function stoneFace(paint, x, y, w, h, rand, type) {
     // Polygon-like softened corners; mortar is the continuous dark base underneath.
     const r = rand();
-    const sunken = r < (type === 'flagstone' ? .11 : .06);
-    const broken = r >= .11 && r < (type === 'flagstone' ? .32 : .23);
+    const sunken = r < (type === 'flagstone' ? .18 : .13);
+    const broken = r >= (type === 'flagstone' ? .18 : .13) && r < (type === 'flagstone' ? .49 : .37);
     const face = choose(rand, STONE.slice(2, 6));
     if (sunken) {
         // Missing slab exposes earth and crushed aggregate in the same footprint.
@@ -71,7 +71,8 @@ function createBrickMasonryField(type = 'brick', seed = 1387) {
     const r = rng(seed ^ (type === 'cobble' ? 0x452369 : 0x89abcdef));
     const b = new Bitmap(MASONRY_PERIOD, MASONRY_PERIOD);
     b.wrap = true;
-    b.rect(0, 0, MASONRY_PERIOD, MASONRY_PERIOD, STONE[0]);
+    // Worn mortar approaches the surrounding soil; avoid dark graphic outlines.
+    b.rect(0, 0, MASONRY_PERIOD, MASONRY_PERIOD, STONE[1]);
     const heights = [];
     let remaining = MASONRY_PERIOD;
     while (remaining > 0) {
@@ -144,8 +145,8 @@ function createOrganicMasonryField(type, seed) {
             x: (gx + .5) * cell + dx,
             y: (gy + .5) * cell + dy,
             shade: 2 + Math.floor(r() * 4),
-            missing: material < (cobble ? .075 : .105),
-            fractured: material >= .105 && material < (cobble ? .30 : .38),
+            missing: material < (cobble ? .125 : .19),
+            fractured: material >= (cobble ? .125 : .19) && material < (cobble ? .42 : .54),
             mossy: r() < .30,
         };
     });
@@ -167,10 +168,12 @@ function createOrganicMasonryField(type, seed) {
             else if (d < second) second = d;
         }
         const random = pixelHash(x, y, seed);
-        const seam = Math.sqrt(second) - Math.sqrt(first) < (cobble ? 1.75 : 1.55);
+        const seam = Math.sqrt(second) - Math.sqrt(first) < (cobble ? 1.35 : 1.15);
         if (seam) {
             const mossy = random < .16;
-            bitmap.set(x, y, mossy ? MOSS[Math.floor(random * 19) % MOSS.length] : STONE[0]);
+            // Broken-up low-contrast joints disappear into packed earth and moss.
+            bitmap.set(x, y, mossy ? MOSS[Math.floor(random * 19) % MOSS.length] :
+                random > .72 ? STONE[1] : SOIL[1]);
             continue;
         }
         if (best.missing) {
@@ -187,7 +190,7 @@ function createOrganicMasonryField(type, seed) {
         // straight scratch lines through the centre of the slab.
         if (best.fractured && Math.sqrt(second) - Math.sqrt(first) < (cobble ? 3.2 : 4.4) &&
             random < .33 && ((cx > 0 && cy < 0) || (cx < 0 && cy > 0))) {
-            bitmap.set(x, y, STONE[0]);
+            bitmap.set(x, y, random < .18 ? SOIL[1] : STONE[1]);
             continue;
         }
         if (best.mossy && random < .055 &&
