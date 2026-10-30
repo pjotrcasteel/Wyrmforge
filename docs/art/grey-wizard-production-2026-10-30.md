@@ -589,3 +589,21 @@ material unresolved animation-fit issue, not a production-ready walk. Report is
 hide it with a new clock or change gameplay speed. Future source locomotion needs
 an appropriate run/stride solution reviewed at real root travel, preserving scale.
 No production integration, source-material acceptance or physical-phone claim.
+
+## Staff as walking stick — owner correction, v007
+
+Owner approved the direction but requires staff use as a walking stick. Canon now
+requires planted support, weight transfer, lift/recovery, attached grip/arm and
+world-ground consistency for walking facings. SE revision v007 preserves v006
+source layers and foot keys, adds16 explicit tip/angle keys and a shared rigid
+staff/hand transform about the actual source tip59.5,133. Sleeve follows the
+moving grip while shoulder remains attached; mild load transfer toward support.
+Frames7–15 plant at constant source-world72.5,146 under root[i,i]; frames0–6 lift
+(up to6nativepx), advance, and lower into the next plant. No new physics/engine.
+
+First source checks pass:16 unique binary-alpha/unclipped frames, exact idle
+recomposition, planted tip analytical AND raster-bottom drift0px, grip error0,
+both prior foot-contact extents0px. Original south and SEv006 exports remain25/25
+byte-identical. This is source contact under authored travel, NOT live C# cadence
+acceptance: prior stride/run-fit gap remains. No production/lab cutover.
+Checkpoint before media/browser review and editable-source packaging.

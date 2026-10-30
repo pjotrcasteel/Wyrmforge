@@ -23,6 +23,12 @@ The attachment is authoritative over the earlier provisional v001/v002 concepts.
   worn brown leather belt/pouch and visible worn boots. Preserve the reference's
   silhouette, proportions, material character and restrained Gothic appearance.
 - Thin crooked natural wooden walking/casting staff, continuous through the hand;
+  **Owner locomotion requirement, 30 October 2026:** use the staff as a walking
+  stick: visibly plant its tip, transfer support, then lift and advance it for
+  the next plant. During support it stays fixed on the same world-ground point;
+  grip and arm follow the anchored shaft. Preserve this across walking facings.
+  Contact is authored presentation consistent with C# root movement, not a new
+  gameplay collider or character-specific physics engine.
   preserve its slender wooden shaft and grip. **Owner addition, 30 October 2026:**
   the character's chosen Divine school is shown by its existing approved school
   symbol on the back of the cape and a matching school-specific staff treatment.

@@ -6,7 +6,7 @@ import {createHash} from 'node:crypto';
 import assert from 'node:assert/strict';
 import {decodePng,encodePng} from '../lib/png.mjs';
 import {Bitmap} from '../lib/painter.mjs';
-const {project}=await import(process.argv.includes('--southeast')?'./gothic-southeast-project.mjs':'./gothic-project.mjs');
+const {project}=await import(process.argv.includes('--walking-stick')?'./gothic-walking-stick-project.mjs':process.argv.includes('--southeast')?'./gothic-southeast-project.mjs':'./gothic-project.mjs');
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../../..');
 const base=join(root,'art/source/characters/grey-wizard'),out=join(base,project.outputDirectory??'gothic-south-v003');
 mkdirSync(join(out,'source-layers'),{recursive:true});

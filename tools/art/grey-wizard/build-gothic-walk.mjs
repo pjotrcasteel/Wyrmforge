@@ -6,8 +6,9 @@ import {createHash} from 'node:crypto';
 import assert from 'node:assert/strict';
 import {Bitmap} from '../lib/painter.mjs';
 import {decodePng,encodePng} from '../lib/png.mjs';
-const southeast=process.argv.includes('--southeast');
-const sourceModule=southeast?'./gothic-southeast-project.mjs':'./gothic-project.mjs';
+const walkingStick=process.argv.includes('--walking-stick');
+const southeast=walkingStick||process.argv.includes('--southeast');
+const sourceModule=walkingStick?'./gothic-walking-stick-project.mjs':southeast?'./gothic-southeast-project.mjs':'./gothic-project.mjs';
 const source=await import(sourceModule),{project,poses,idle}=source;
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../../..');
 const out=join(root,'art/source/characters/grey-wizard',project.outputDirectory??'gothic-south-v003');
@@ -122,7 +123,7 @@ assert.ok(Math.abs((calibration.wizardSourceSoleY-calibration.wizardSourceCrownY
 const profile={schemaVersion:1,maxDeltaSeconds:.1,facing:{directions:[project.direction],degreesPerSecond:360,hysteresisDegrees:3},locomotion:{clip:'walk',frames:16,stride:project.sourceStride*worldSize/size,sourceFps:project.fps,calibration:'source stride only; actual C# speed and frame cadence not accepted'},actions:{}};
 json('animation-profile.json',profile);
 json('manifest.json',{schemaVersion:1,directions:[project.direction],status:project.status,clips:{idle:{image:'idle.png',frames:1,cell:size,anchor,worldSize},walk:{image:'walk.png',frames:16,cell:size,anchor,worldSize}},emission:{walk:'walk-emission.png'},sourceExport:'art/source/characters/grey-wizard/'+(project.outputDirectory??'gothic-south-v003')});
-json('motion.json',{source:'tools/art/grey-wizard/'+(southeast?'gothic-southeast-project.mjs':'gothic-project.mjs'),coordinates:'native source x/y; no gameplay authority',poses,sourceStride:project.sourceStride,sourceContacts:poses.map((p,i)=>({frame:i,left:i<8,right:i>=8,...(southeast?{rootX:i,rootY:i}:{rootY:2*i})})),scope:'authored 2D study only; masks, overlap, foot fit and source art need review'});
+json('motion.json',{source:'tools/art/grey-wizard/'+sourceModule.slice(2),coordinates:'native source x/y; no gameplay authority',poses,sourceStride:project.sourceStride,sourceContacts:poses.map((p,i)=>({frame:i,left:i<8,right:i>=8,...(walkingStick?{staffPlanted:i>=7}:{}),...(southeast?{rootX:i,rootY:i}:{rootY:2*i})})),scope:'authored 2D study only; masks, overlap, foot fit and source art need review'});
 // Measure source boot raster sole during its declared stance. This is NOT a
 // C# root replay, general biomechanics validation or real Hunt contact proof.
 const contacts=source.sourceContacts?source.sourceContacts(warp,layers):[];
