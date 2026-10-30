@@ -102,7 +102,7 @@ jobs:
       - name: Checkout pinned G4 mobile review build
         uses: actions/checkout@v6
         with:
-          ref: 7250d0a0e09f35e17a95f26bb5566045eb5f0997
+          ref: 754af1bb2f84e7411999fa181da0f532ca7a992b
           path: g4-preview-source
 
       - name: Restore G4 runtime art
@@ -126,7 +126,7 @@ jobs:
           set -euo pipefail
           dotnet restore src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj
           dotnet msbuild src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -getProperty:Version -p:VersionSuffix=g4-preview | grep -Fxq '0.0.180-g4-preview'
-          dotnet publish src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -c Release --no-restore -o "$GITHUB_WORKSPACE/artifacts/g4-preview-web" -p:VersionSuffix=g4-preview -p:SourceRevisionId=7250d0a0e09f35e17a95f26bb5566045eb5f0997
+          dotnet publish src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -c Release --no-restore -o "$GITHUB_WORKSPACE/artifacts/g4-preview-web" -p:VersionSuffix=g4-preview -p:SourceRevisionId=754af1bb2f84e7411999fa181da0f532ca7a992b
           test -s "$GITHUB_WORKSPACE/artifacts/g4-preview-web/wwwroot/js/lighting/g4-device-review.js"
 
       - name: Prepare isolated G4 GitHub Pages route
@@ -134,11 +134,11 @@ jobs:
           mkdir -p artifacts/web/wwwroot/g4-preview
           cp -a artifacts/g4-preview-web/wwwroot/. artifacts/web/wwwroot/g4-preview/
           sed -i 's#<base href="/" />#<base href="/Wyrmforge/g4-preview/" />#' artifacts/web/wwwroot/g4-preview/index.html
-          sed -i 's#__WYRMFORGE_BUILD__#7250d0a0e09f35e17a95f26bb5566045eb5f0997#g' artifacts/web/wwwroot/g4-preview/index.html
+          sed -i 's#__WYRMFORGE_BUILD__#754af1bb2f84e7411999fa181da0f532ca7a992b#g' artifacts/web/wwwroot/g4-preview/index.html
           cp artifacts/web/wwwroot/g4-preview/index.html artifacts/web/wwwroot/g4-preview/404.html
-          printf 'G4 PREVIEW (not production): v0.0.180-g4-preview; source 7250d0a0e09f35e17a95f26bb5566045eb5f0997\n' > artifacts/web/wwwroot/g4-preview/build-id.txt
+          printf 'G4 PREVIEW (not production): v0.0.180-g4-preview; source 754af1bb2f84e7411999fa181da0f532ca7a992b\n' > artifacts/web/wwwroot/g4-preview/build-id.txt
           grep -q '<base href="/Wyrmforge/g4-preview/" />' artifacts/web/wwwroot/g4-preview/index.html
-          grep -q '7250d0a0e09f35e17a95f26bb5566045eb5f0997' artifacts/web/wwwroot/g4-preview/index.html
+          grep -q '754af1bb2f84e7411999fa181da0f532ca7a992b' artifacts/web/wwwroot/g4-preview/index.html
           ! grep -q '__WYRMFORGE_BUILD__' artifacts/web/wwwroot/g4-preview/index.html
           test -s artifacts/web/wwwroot/g4-preview/_framework/blazor.webassembly.js
           test -s artifacts/web/wwwroot/g4-preview/js/lighting/g4-device-review.js
@@ -213,7 +213,7 @@ jobs:
                   return response.read().decode("utf-8")
           assert "<base href=\"/Wyrmforge/\" />" in read("")
           assert "<base href=\"/Wyrmforge/g4-preview/\" />" in read("g4-preview/")
-          assert "7250d0a0e09f35e17a95f26bb5566045eb5f0997" in read("g4-preview/build-id.txt")
+          assert "754af1bb2f84e7411999fa181da0f532ca7a992b" in read("g4-preview/build-id.txt")
           assert "v0.0.180-g4-preview" in read("g4-preview/build-id.txt")
           assert "class G4DeviceReviewSession" in read("g4-preview/js/lighting/g4-device-review.js")
           assert "showG4PreflightChoice" in read("g4-preview/js/lighting/g4-consent-gate.js")
@@ -224,7 +224,7 @@ jobs:
       - name: Checkout pinned G4 real-Hunt browser test
         uses: actions/checkout@v6
         with:
-          ref: 7250d0a0e09f35e17a95f26bb5566045eb5f0997
+          ref: 754af1bb2f84e7411999fa181da0f532ca7a992b
           path: g4-browser-tests
 
       - name: Build G4 browser test
