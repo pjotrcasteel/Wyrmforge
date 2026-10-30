@@ -1,16 +1,17 @@
+import { createHash } from 'node:crypto';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createWorldBoundaryWindow } from '../../tools/art/prototypes/terrain-world-variation.mjs';
 import { ECOLOGY_PROP_DEFINITIONS, proposeEcologyProps } from '../../tools/art/prototypes/terrain-ecology-props.mjs';
 import { ECOLOGY_25D_VERSION, PROP_LAYER_ORDER, PIXELS_PER_WORLD_UNIT,
-    makeEcology25DProp, buildEcology25DAtlases, ecology25DSceneCandidates }
+    makeEcology25DProp, buildEcology25DAtlases, ecology25DSceneCandidates, GRASS_BLADE_STYLE }
     from '../../tools/art/prototypes/terrain-ecology-props-25d.mjs';
 
 const types = Object.keys(ECOLOGY_PROP_DEFINITIONS);
 
 test('2.5D volume source has genuine ground, rear and front sprite regions', () => {
-    assert.equal(ECOLOGY_25D_VERSION, 'wf32-ecology-props-2p5d.v1');
+    assert.equal(ECOLOGY_25D_VERSION, 'wf32-ecology-props-2p5d.v1.1');
     assert.deepEqual(PROP_LAYER_ORDER,['footprint','rear','front']);
     for(const type of types)for(let v=0;v<3;v++){
         const p=makeEcology25DProp(type,v),spec=ECOLOGY_PROP_DEFINITIONS[type];
@@ -100,4 +101,39 @@ test('no new collision/physics/GPU engine and retains shared authoring contracts
     assert.ok(types.length===4);
     assert.throws(()=>makeEcology25DProp('unknown'),RangeError);
     assert.throws(()=>makeEcology25DProp('grass-tall',7),RangeError);
+});
+test('medium and tall grass taper to thin tips instead of forming thorn-like silhouettes',()=>{
+    assert.deepEqual(GRASS_BLADE_STYLE,{baseMaxWidth:3,tipMaxWidth:1,sideBranches:false});
+    for(const kind of ['grass-medium','grass-tall'])for(let variant=0;variant<3;variant++){
+        const prop=makeEcology25DProp(kind,variant);
+        const anchorY=prop.anchor[1],width=prop.layers.front.albedo.width;
+        const topStart=Math.max(0,anchorY-(kind==='grass-tall'?45:28));
+        const upper=[],lower=[];
+        for(let y=topStart;y<anchorY;y++){
+            let count=0,run=0,maxRun=0;
+            for(let x=0;x<width;x++){
+                const covered=['rear','front'].some(layer=>prop.layers[layer].albedo.alpha(x,y)>0);
+                if(covered){ count++;run++;maxRun=Math.max(maxRun,run); }
+                else run=0;
+            }
+            if(y<anchorY-12 && count>0)upper.push({count,maxRun});
+            if(y>=anchorY-9 && count>0)lower.push({count,maxRun});
+        }
+        assert.ok(upper.length>4 && lower.length>4);
+        const avg=rows=>rows.reduce((sum,row)=>sum+row.count,0)/rows.length;
+        assert.ok(avg(upper)<avg(lower)*.76,`${kind} ${variant} upper silhouette too dense`);
+        assert.ok(Math.max(...upper.map(row=>row.maxRun)) <= (kind==='grass-tall'?8:5),
+            `${kind} ${variant} upper silhouette too thick`);
+    }
+});
+
+test('rock geometry and all lighting texture channels remain bit-for-bit unchanged',()=>{
+    const sha=createHash('sha256');
+    for(const kind of ['rock-small','rock-cluster'])for(let variant=0;variant<3;variant++){
+        const prop=makeEcology25DProp(kind,variant);
+        for(const layer of PROP_LAYER_ORDER)
+            for(const channel of ['albedo','normal','roughnessMap','shadowAlpha'])
+                sha.update(prop.layers[layer][channel].data);
+    }
+    assert.equal(sha.digest('hex'),'cb3c5de5ce908d852d08be38b2415eb52c225589aca216f460434e5b7e0e756d');
 });
