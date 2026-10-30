@@ -179,3 +179,16 @@ concept limitations; do not claim material, transparency or mobile validation.
 No runtime files changed. `git diff --check`, source dimensions and hashes checked;
 no gameplay tests applicable to this source-art/docs slice. Variant appearance
 approval remains open; the approved base reference stays unchanged.
+
+### Owner rejection/correction of v001
+
+Owner rejected the mounted-icon staff approach and flat-looking cape symbols.
+V001 is retained only as a rejected production record. Updated art canon: weave
+symbols into cloth so folds compress/occlude and shade them; keep the original
+crooked wooden staff and express school through its grain/material and restrained
+magic along its length. No icon-shaped topper, skull, bear head or orbital finial.
+V002 brief uses scorched ember fissures, frost rime, copper/yellow charge seams,
+violet grain channels, bleached decayed wood/green crevices, and living root/moss/
+amber sap respectively. These treatments are proposals, not owner-approved details.
+Exact prompt saved as `school-variants-v002-prompt.txt`. Generate from the approved
+base and canonical atlas, not from the rejected board. No runtime changes.

@@ -26,8 +26,14 @@ The attachment is authoritative over the earlier provisional v001/v002 concepts.
   preserve its slender wooden shaft and grip. **Owner addition, 30 October 2026:**
   the character's chosen Divine school is shown by its existing approved school
   symbol on the back of the cape and a matching school-specific staff treatment.
-  Keep the approved grey wizard identity; allow a distinctive school finial/inlay
-  and restrained school colour on the staff. The base reference remains preserved.
+  **Owner correction:** cape symbols are integrated embroidery/weave, following
+  fabric curvature, folds, occlusion and shading; no flat floating badge, sticker
+  or glowing UI icon. Staff school identity is integrated into the crooked wooden
+  staff's material, grain, fissures/inlays and restrained magical character across
+  its length; **do not mount school icons, lightning bolts, skulls, bear heads or
+  orb emblems on top**. Preserve the approved natural staff silhouette and grip.
+  The first icon-topped comparison is rejected, not an approved variant library.
+  Keep the approved grey wizard identity. The base reference remains preserved.
   Cape symbols reuse the canonical six-school emblem identities, not new sigils.
   They belong to the character's school, not the region/Wyrm selected for a Hunt.
   Specific placement, size and staff variants require appearance review and mobile
