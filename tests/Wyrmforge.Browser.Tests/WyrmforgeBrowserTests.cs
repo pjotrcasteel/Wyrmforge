@@ -3616,6 +3616,18 @@ public sealed class WyrmforgeBrowserTests : PageTest
         var terrainQuery = paintedGround ? "&g4PaintedGround=1" : "";
         await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/?arenaGpu=1&gpuQuality=mobile&g4Review=1" + terrainQuery,
             new() { WaitUntil = WaitUntilState.NetworkIdle });
+        // Seed on the actual Pages origin and reload so Blazor sees the chosen
+        // character before startup. AddInitScript alone can race first startup
+        // on a deployed subpath and silently leave the old Arcane signature.
+        await Page.EvaluateAsync(@"() => {
+            localStorage.setItem('wyrmforge.characterSchool.v1','Pyromancer');
+            localStorage.setItem('wyrmforge.preferredPrimary.v1','FireBolt');
+        }");
+        await Page.ReloadAsync(new() { WaitUntil = WaitUntilState.NetworkIdle });
+        Assert.AreEqual("Pyromancer", await Page.EvaluateAsync<string>(
+            "() => localStorage.getItem('wyrmforge.characterSchool.v1')"));
+        Assert.AreEqual("FireBolt", await Page.EvaluateAsync<string>(
+            "() => localStorage.getItem('wyrmforge.preferredPrimary.v1')"));
         // Consent is the FIRST screen, before any Gate/Town/Hunt menus can load.
         var consent = Page.Locator("[data-g4-preflight]");
         await Expect(consent).ToBeVisibleAsync();
