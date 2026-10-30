@@ -7,7 +7,8 @@ import { encodePng } from '../lib/png.mjs';
 import { createMasonryField } from './wet-forest-masonry.mjs';
 import { GRAMMAR_VERSION, createBoundaryReview, buildLightingMaps, cutReviewInto32,
     addMicroDetails, makeSoftField, materialDescriptor, TERRAIN_MATERIALS,
-    LIGHTING_MAP_CONTRACT, boundaryKind } from './terrain-material-grammar.mjs';
+    LIGHTING_MAP_CONTRACT, boundaryKind, TERRAIN_CLASSES, TILE_ROLES,
+    SURFACE_MODIFIERS, applySurfaceModifier } from './terrain-material-grammar.mjs';
 
 export const REVIEW_SAMPLES = Object.freeze([
     { name: 'flagstone-grass', primary: 'flagstone', secondary: 'grass', direction: 'left', seed: 143 },
@@ -46,9 +47,19 @@ export function createTerrainGrammarReview(outputDir) {
     for(const name of ['brick','flagstone','cobble'])exportPng(join(outputDir,`${name}-continuous.png`),createMasonryField(name,1387));
     const decoratedGrass=addMicroDetails(makeSoftField('grass',116),'grass',789,1);
     exportPng(join(outputDir,'grass-microdetails.png'),decoratedGrass);
+    // Wetness is a shared roughness-only overlay; do not invent painted-in reflections.
+    const wetReview=createBoundaryReview({primary:'mud',secondary:'grass',direction:'left',seed:344});
+    const wetMaps=buildLightingMaps(wetReview);
+    const wetMask=new Uint8Array(65536);
+    for(let y=0;y<256;y++)for(let x=0;x<256;x++) {
+        const dist=Math.abs(y-(120+16*Math.sin(x*.03)));
+        wetMask[y*256+x]=dist<27?Math.round(255*(1-dist/27)):0;
+    }
+    exportPng(join(outputDir,'mud-damp-roughness.png'),applySurfaceModifier(wetMaps,'damp',wetMask).roughnessMap);
     const manifest={version:GRAMMAR_VERSION,status:'source-only, not in live Hunt',source:'original authored pixels; no imported art packs',
-        lightingContract:LIGHTING_MAP_CONTRACT,availableMaterials:Object.keys(TERRAIN_MATERIALS),
-        samples:entries,previewFiles:['composition-512.png','normal-512.png','roughness-512.png','grass-microdetails.png'],
+        lightingContract:LIGHTING_MAP_CONTRACT,classes:TERRAIN_CLASSES,tileRoles:TILE_ROLES,modifiers:SURFACE_MODIFIERS,
+        availableMaterials:Object.keys(TERRAIN_MATERIALS),
+        samples:entries,previewFiles:['composition-512.png','normal-512.png','roughness-512.png','grass-microdetails.png','mud-damp-roughness.png'],
         approvals:{art:false,ar3Geography:false,gpuIntegration:false,phoneValidation:false}};
     writeFileSync(join(outputDir,'manifest.json'),JSON.stringify(manifest,null,2)+'\n');
     return manifest;
