@@ -60,7 +60,8 @@ test('G4 aligns only standing actor planes to the live camera without altering g
         { id: 'missing', geometry: 'hunt-billboard' },
     ], engine);
     assert.ok(actor.quaternion.angleTo(camera.quaternion) < 1e-7);
-    assert.ok(caster.quaternion.angleTo(camera.quaternion) < 1e-7);
+    assert.ok(caster.quaternion.angleTo(new T.Quaternion()) < 1e-7,
+        'The occluder must remain world-aligned even while the sprite faces the camera.');
     assert.ok(ground.quaternion.angleTo(new T.Quaternion()) < 1e-7,
         'Terrain receiver must retain its original world orientation.');
 });
