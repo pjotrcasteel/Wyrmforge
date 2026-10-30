@@ -29,3 +29,31 @@ No file export is required. With private delivery consent enabled, the frame pac
 The JSON measures **requestAnimationFrame timing** (p50/p95/p99; per-minute warm-up trends), sampled CPU submission and GPU-upload counts, renderer-fallback/missing frames and runtime errors. It cannot measure genuine GPU time, GPU VRAM, GPU temperature, battery power draw or thermal throttling directly. Those require physical instrumentation or user observations.
 
 The G4 milestone remains **unaccepted** until mobile visual quality and sustained real iOS/Android performance meet agreed budgets. G5 default renderer cutover, the painted Town, AN0–AN6 and the AI/Arena engines are independent and unaffected.
+
+
+## First real iPhone acceptance evidence — 30 October 2026 (PARTIAL, not sign-off)
+
+The owner supplied **four unmodified, real iPhone screenshots** from the isolated Pages
+candidate `v0.0.180-g4-preview · 4244d63`. The screenshots were supplied in the
+review conversation; no AI-generated images or desktop mockups are used as evidence.
+The separate Pages deploy and smoke run [41017988776](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/41017988776)
+passed. Shared GPU proof runs [41017896048](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/41017896048)
+and [41017902579](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/41017902579)
+also passed on the integrated branch.
+
+| Actual iPhone observation | Evidence / finding |
+| --- | --- |
+| Recorder persistence and consented delivery | Run-lost screen shows **G4 · 49 FPS · p95 33ms · SAVED**, plus **G4 saved and privately received**. **PASS**: no export and no loss on death. Collector receipt is screen-confirmed; detailed private per-run data was not retrieved by the reviewer. |
+| Timing | Saved panel reports **48.98 observed FPS, 33ms p95, 282.22s recording elapsed**. The gameplay results screen separately shows **219s** for that run. These are different clocks; do not call the whole 282.22s active gameplay or infer GPU execution timing from rAF pacing. |
+| Actual play | The results screen shows **73 kills across four trails**, with player-controlled movement, enemies and spells visible in the preceding screenshots. |
+| World readability | Trail 1 (Abandoned Road) and Trail 3 (Wet Forest) show clear terrain and the hunter in the middle of combat. **Trail 2 (Wet Forest)** is much darker: most of the world outside the narrow hunter light radius is difficult to discern. This is an **open visual regression/acceptance concern**, not an approved Gothic night. Require source-based lighting investigation and a new *real-Hunt* screenshot after any fix. |
+| Post-death presentation | An **expanded G4 diagnostic overlay visibly covers portions of the rewards/actions screen**. Follow-up code in the same G4 workstream collapses and re-docks the saved summary at Hunt completion; validate on mobile before calling the overlay accepted. |
+| Battery and temperature | The iPhone battery indicator shows a charging symbol and an increase from about **25% to 29%** between captures. Consequently the screenshots cannot establish battery *drain*. No device thermal or power instrumentation is provided. |
+| Other required acceptance | No matched Canvas comparison, Android physical-device run, sustained 10-minute thermal/battery trace, input-latency assessment, GPU memory/time instrumentation, or owner approval of the dark Trail 2 appearance is included in these screenshots. These gates remain **OPEN**. |
+
+**Disposition:** The previously blocked *recording + death persistence + private receipt*
+acceptance slice is now confirmed by **real-device** proof. G4 overall remains
+**partially accepted, not complete**, because scene-wide readability and sustained
+cross-device performance/thermal acceptance remain open. G5 production cutover is
+a separate milestone. Preserve the painted Town, C# source authority, other engine
+work and the default Canvas Hunt. Do not ask for another JSON export.
