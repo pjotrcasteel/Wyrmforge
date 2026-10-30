@@ -153,6 +153,12 @@ export class HuntGpuScratchPool {
  * non-interpolated image to the visible interactive Hunt canvas.
  * This is a presentation staging surface, not a second lighting engine.
  */
+/** The isolated GPU review uses neutral albedo; normal gameplay keeps authored ground. */
+export function shouldUseG4NeutralGround(params, gpuRequested) {
+    return gpuRequested && params.get('g4Review') === '1' &&
+        params.get('g4PaintedGround') !== '1';
+}
+
 /** A G4 review frame is fully staged before it is presented to Safari. */
 export function shouldStageHuntGpuReviewFrame(params, gpuRequested) {
     return gpuRequested && params.get('g4Review') === '1' &&
