@@ -204,3 +204,38 @@ are not a measured iPhone FPS gain. The remaining G4 gates are real-device
 sustained FPS/p95 and thermal/battery, Android compatibility, Trail 2 darkness,
 camera-motion tearing, and full game visual approval. Keep G5 production cutover,
 Ashling emissive-eye art, animation, AI and the painted Town untouched.
+
+## Owner rejection — deployed flat-ground/shadow-optimization candidate (30 October 2026)
+
+A real iPhone Safari screenshot identifies deployed source `fb1b974` and shows
+large opaque black oval floor patches, very dark world regions, and an owner
+report that Fireball light/shadow behavior regressed. **This build is
+REJECTED**, regardless of successful JavaScript, Chromium or .NET tests.
+The prior owner Fireball/Hollowed approval applies to an earlier build and
+must not be transferred to `fb1b974`.
+
+Source-backed terrain cause: the main floor draw was corrected to respect
+`flatColorsOnly`, which exposed previously hidden, fully opaque elliptical
+C#-recipe patches in `drawWetForestFlatGround`. Under GPU night shading
+these resemble fake black cast shadows rather than legible terrain. The
+development candidate now keeps the same C# patch locations with subtle
+blended tints and still skips painted 900px artwork. This does not change
+collision, generation, projectile gameplay, light sources or production art.
+
+The concurrent shadow-camera projection memoization also lacked actual
+iPhone visual proof. It is now conservatively reverted to per-frame
+point/spot/directional projection updates, preserving original behavior
+while the shadow-correctness investigation remains open. The memoization
+is **not** proven to be the cause of missing shadows; do not claim so.
+
+[Pages rollback PR #440](https://github.com/pjotrcasteel/Wyrmforge/pull/440)
+re-pins **only** the isolated G4 preview from `fb1b974` back to previously
+reviewed `0fc77a0`. Do not label the rollback deployed until Pages CI
+and deployed smoke pass. Neither the rollback nor these G4 development fixes
+are owner approval or final G4/G5 completion.
+
+**Mandatory next acceptance:** genuine game screenshot with readable ground,
+visible Fireball illumination AND bounded, correctly positioned dynamic
+shadows on Hollowed and other registered scenery, plus iPhone p95/FPS,
+camera tearing, dark Trail 2 and Android thermal/compatibility gates.
+A Chromium nonblack or pixel-count assertion alone is insufficient.
