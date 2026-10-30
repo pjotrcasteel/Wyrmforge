@@ -233,17 +233,18 @@ test('G4 flat Wet Forest paints recipe colors without decoding tile images or bu
         forestProps: [], corruption: 0, element: 'fire' };
     const previousImage = globalThis.Image;
     let materialImageRequests = 0, backgroundFills = 0, ellipses = 0, roadVertices = 0;
-    const colors = [];
+    let alpha = 1;
+    const colors = [], fills = [];
     globalThis.Image = class { set src(_url) { materialImageRequests++; } };
     const ctx = {
         save() {}, restore() {},
-        set globalAlpha(value) { assert.ok(value >= 0 && value <= 1); },
+        set globalAlpha(value) { assert.ok(value >= 0 && value <= 1); alpha = value; },
         set fillStyle(value) { colors.push(value); },
         fillRect(x, y, w, h) {
             backgroundFills++;
             assert.deepEqual([x, y, w, h], [0, 0, source.width, source.height]);
         },
-        beginPath() {}, ellipse() { ellipses++; }, fill() {},
+        beginPath() {}, ellipse() { ellipses++; }, fill() { fills.push(alpha); },
         moveTo() { roadVertices++; }, lineTo() { roadVertices++; }, closePath() {},
     };
     const before = structuredClone(source);
@@ -252,6 +253,10 @@ test('G4 flat Wet Forest paints recipe colors without decoding tile images or bu
         assert.equal(materialImageRequests, 0, 'No PR340 texture decoding in the flat GPU preview');
         assert.equal(backgroundFills, 1, 'One plain soil fill, not thousands of tiles');
         assert.ok(ellipses >= recipe.ground.length + 1, 'C# patches and the site remain visible');
+        assert.ok(fills.slice(0, recipe.ground.length).every(value => value <= .2),
+            'Large flat-color terrain patches must be subdued floor tints, not opaque black shadow blobs.');
+        assert.equal(fills[recipe.ground.length], 1, 'The source-defined road must remain legible and solid.');
+        assert.ok(fills.at(-1) <= .35, 'The site floor must not read as a pitch-black oval shadow.');
         assert.ok(roadVertices > 12, 'C# trail remains one connected source-defined road');
         assert.ok(colors.includes('#484137'), 'Road must remain legible as a separate soil color');
         assert.deepEqual(source, before, 'GPU review never mutates C# geography');
