@@ -59,6 +59,14 @@ The attachment is authoritative over the earlier provisional v001/v002 concepts.
   one-handed wizard proportions. Crystal readability is not permission for heads
   approaching the wizard's hat width or heavy pole-sized shafts. V008 scale is not
   approved; review corrected proportions beside actual characters before export.
+  **Owner proportion approval, 30 October 2026:**
+  [held-staff revision 9](../../art/source/characters/grey-wizard/wizards-held-staffs-v009.png)
+  is accepted ("sure this is fine") for staff size relative to the wizard. Use
+  its slim shafts and compact head proportions with the selected v007 staff
+  identities. V004 remains the accepted cape hue/faded-embroidery reference;
+  incidental brighter embroidery in generated composites does not replace it.
+  This closes the source-concept proportion review, not native sprite, animation,
+  shared material/lighting integration or actual phone acceptance.
   The first icon-topped comparison is rejected, not an approved variant library.
   Keep the approved grey wizard identity. The base reference remains preserved.
   **Owner refinement:** cape emblems are visibly faded/weathered into the grey

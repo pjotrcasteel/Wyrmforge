@@ -322,3 +322,12 @@ v004 remains cape reference; those incidental changes are not a new approval.
 V009 proportion/appearance review pending, not native sprite or gameplay acceptance.
 Hashes/dimensions, exact prompt/input and original output preserved. Git diff check
 passes; no runtime edits or gameplay tests.
+
+### Owner acceptance of corrected proportions — 30 October 2026
+
+Owner accepted v009 ("sure this is fine"). Staff scale/proportions are approved
+for the source concept. Reference stack: exact approved base wizard; v004 cape
+hue/faded woven symbols; v007 staff identities/crystal character; v009 held scale.
+Record these complementary references, not a new redesign. Native editable sprite
+and material layers, genuine motion, real Hunt 320/390 and phone validation remain
+pending. No production integration or animation completion claimed.
