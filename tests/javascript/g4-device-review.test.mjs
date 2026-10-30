@@ -159,3 +159,48 @@ test('G4 reviewer only attaches to optional real Hunt integration and not defaul
     assert.doesNotMatch(source, /new G4DeviceReviewSession\(/,
         'All report policy belongs to the reusable reviewer, not the gameplay loop');
 });
+
+
+test('after Hunt death the collapsed G4 chip itself shows FPS and p95 without another menu', async () => {
+    const { mountG4DeviceReview, G4_LAST_RECORD_KEY } =
+        await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/g4-device-review.js');
+    const oldDocument = globalThis.document;
+    const oldWindow = globalThis.window;
+    const oldStorage = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+    const saved = new Map();
+    const elements = [];
+    class Element {
+        constructor() { this.style = {}; this.children = []; this.textContent = ''; }
+        setAttribute() {}
+        appendChild(item) { this.children.push(item); }
+        remove() {}
+    }
+    try {
+        globalThis.document = {
+            querySelector: () => null,
+            createElement: () => new Element(),
+            body: { appendChild: el => elements.push(el) }
+        };
+        globalThis.window = { addEventListener() {}, removeEventListener() {} };
+        Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: {
+            getItem: key => saved.get(key) ?? null,
+            setItem: (key, value) => saved.set(key, value),
+            removeItem: key => saved.delete(key)
+        } });
+        const recorder = mountG4DeviceReview({}, null, 'canvas');
+        const start = recorder.session.startedAt;
+        for (let i = 1; i <= 25; i++) {
+            recorder.record(start + i * 16, { playing: true, renderingFailed: false, gpuAvailable: false });
+        }
+        recorder.dispose();
+        assert.equal(elements.length, 1);
+        assert.equal(elements[0].open, false, 'the G4 chip remains compact');
+        assert.match(elements[0].children[0].textContent, /G4 · \d+ FPS · p95 \d+ms · SAVED/);
+        assert.ok(JSON.parse(saved.get(G4_LAST_RECORD_KEY)).frameIntervals >= 10);
+    } finally {
+        globalThis.document = oldDocument;
+        globalThis.window = oldWindow;
+        if (oldStorage) Object.defineProperty(globalThis, 'localStorage', oldStorage);
+        else delete globalThis.localStorage;
+    }
+});
