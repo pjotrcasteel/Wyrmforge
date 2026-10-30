@@ -22,7 +22,8 @@ public sealed class ActorAppearanceLightingProjectionTests
         Assert.AreEqual("point", source.Type);
         Assert.IsFalse(source.CastsShadows);
         Assert.AreEqual(50, source.X);
-        Assert.AreEqual(80 - 11 * 3.1, source.Y, 0.001);
+        Assert.AreEqual(80, source.Y);
+        Assert.AreEqual(11 * 3.1, source.Z, 0.001);
     }
 
     [TestMethod]
