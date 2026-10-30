@@ -58,6 +58,11 @@ export function initializeArena(canvas, dotNetReference) {
     arenas.set(canvas, state);
     state.detachInput = attachArenaInput(state);
     const params = new URLSearchParams(location.search);
+    // The isolated G4 GPU review defaults to plain source-defined colors.
+    // g4PaintedGround=1 is the opt-in A/B control; normal Hunts keep their art.
+    state.g4FlatGround = params.get('g4Review') === '1' &&
+        (params.get('g4FlatGround') === '1' ||
+            params.get('arenaGpu') === '1' && params.get('g4PaintedGround') !== '1');
     if (params.get('g4Review') === '1') {
         const gpuRequested = params.get('arenaGpu') === '1';
         state.g4Review = mountG4DeviceReview(canvas, () => state.gpuWorld?.diagnostics(),
@@ -127,7 +132,10 @@ export function readArenaDiagnostics(canvas) {
             : { error: state.gpuError ?? null },
         hollowFractureGpuEmitters: state.fractureGpuEmitters ?? [],
         wetForestGround: state.latestSnapshot?.environment?.wetForest
-            ? liveWetForestMaterialDiagnostics(state.latestSnapshot.environment.seed) : null,
+            ? state.g4FlatGround
+                ? { status: 'flat-colors', source: 'C# recipe', variant: null }
+                : liveWetForestMaterialDiagnostics(state.latestSnapshot.environment.seed) : null,
+        terrainPresentation: state.g4FlatGround ? 'flat-colors' : 'painted',
         lighting: { mode: 'night', darkness: GOTHIC_NIGHT.darkness, source: 'authoritative-csharp-snapshot' },
     };
 }
@@ -325,7 +333,8 @@ function draw(state, snapshot, width, height) {
     ctx.clearRect(0, 0, width, height);
     ctx.save();
     ctx.translate(-camera.x, -camera.y);
-    if (!drawArenaEnvironment(ctx, snapshot.environment, worldWidth, worldHeight, visualSeconds, null, gpu ? 'gpu' : 'canvas')) {
+    if (!drawArenaEnvironment(ctx, snapshot.environment, worldWidth, worldHeight, visualSeconds, null,
+        gpu ? 'gpu' : 'canvas', state.g4FlatGround)) {
         ctx.fillStyle = '#14111b';
         ctx.fillRect(0, 0, worldWidth, worldHeight);
         drawGrid(ctx, worldWidth, worldHeight);
@@ -335,7 +344,7 @@ function draw(state, snapshot, width, height) {
     if (!gpu) drawSpellLightSpill(ctx, spellLights, lightViewport, 'terrain');
     // Actual spell sources streak across nearby cloister water, not unrelated UI bloom.
     drawArenaCloisterReflections(ctx, snapshot.environment, worldWidth, worldHeight,
-        spellLights, visualSeconds, state.reducedMotion.matches);
+        spellLights, visualSeconds, state.reducedMotion.matches, state.g4FlatGround);
     drawArenaExit(ctx, snapshot.exit, visualSeconds);
     drawRecoveryGuide(ctx, snapshot, camera, width, height, visualSeconds, state.reducedMotion.matches);
 
