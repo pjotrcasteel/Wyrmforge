@@ -16,7 +16,8 @@ permissions:
   contents: read
 concurrency:
   group: animation-source-${{ github.ref }}
-  cancel-in-progress: true
+  # Source mesh validation is expensive; preserve a running result across new commits.
+  cancel-in-progress: false
 jobs:
   actual-mesh-contacts:
     runs-on: ubuntu-latest
@@ -162,4 +163,92 @@ jobs:
             artifacts/animation-steering-source-ci/source-follow-study.skin-qc.json
             artifacts/animation-steering-source-ci/source-follow-study.raster-geometry-qc.json
           if-no-files-found: error
+          retention-days: 14
+
+  actual-source-skin-csharp-capture:
+    name: Real 320/390px C# Hunt opt-in source-skin GPU capture
+    needs: actual-mesh-contacts
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - name: Restore true game art
+        shell: bash
+        run: |
+          set -euo pipefail
+          git lfs pull --include="src/Wyrmforge.Presentation.Web/wwwroot/**" --exclude=""
+          python3 tools/development/verify_web_assets.py
+      - name: Restore painted Wet Forest source-backed ground for actual C# scene
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install -r tools/art/painted-requirements.txt
+          python3 tools/art/build_grass_moss_art_candidates.py --output src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-source-backed/v1/grass-moss-art-candidates
+          python3 tools/art/build_wet_mud_art_candidates.py --output src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-source-backed/v1/wet-mud-art-candidates
+          python3 tools/art/build_trampled_earth_art_candidates.py --output src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-source-backed/v1/trampled-earth-art-candidates
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Publish actual C# WebAssembly game with existing GPU renderer
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet --list-sdks | grep -Eq '^10[.]0[.]'
+          dotnet restore src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj
+          dotnet publish src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -c Release --no-restore -o artifacts/web
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - name: Install real browser
+        shell: bash
+        run: |
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - uses: actions/download-artifact@v4
+        with:
+          name: animation-foundation-editable-source-and-actual-mesh-qc
+          path: artifacts
+      - name: Capture actual source-skin Hollowed in C# Enemy Lab using shared LightingEngine
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s artifacts/animation-catch-step-ci/manifest.json
+          test -s artifacts/animation-catch-step-ci/skin.bin
+          test -s artifacts/animation-catch-step-ci/albedo.png
+          for width in 320 390; do
+            ROOT="artifacts/an6-real-source-skin-csharp-$width"
+            AN_FOUNDATION_MODE=1 AN_MOBILE=1 AN_WIDTH="$width" AN_CAPTURE_DIR="$ROOT" \
+              AN_ASSET_ROOT=artifacts/animation-catch-step-ci node tools/animation/capture-hunt.cjs
+            node tools/animation/diagnose_hunt_contact.mjs "$ROOT"
+          done
+          node - <<'NODE'
+          const fs=require('fs');
+          for(const width of [320,390]){
+            const root=`artifacts/an6-real-source-skin-csharp-${width}`;
+            const d=JSON.parse(fs.readFileSync(root+'/capture-summary.json','utf8'));
+            const rows=JSON.parse(fs.readFileSync(root+'/motion-trace.json','utf8'));
+            const entities=rows.flatMap(r=>r.hollow?.entities??[]);
+            const samples=entities.filter(e=>e.foundation?.clip==='attack-travel').length;
+            const drawn=Math.max(0,...entities.map(e=>e.foundationDrawnFrames??0));
+            const report={width,source:'real-C#-Hunt/EnemyLab',representation:'source-skinned mesh on existing LightingEngine',
+              isOptionalResearch:true,sourceOnly:true,physicalDevice:false,
+              actualRenderSamples:entities.length,clawActionSamples:samples,drawnFrames:drawn,
+              maxActualSourceContactSlip:d.maximumProjectedSoleDrift,
+              browserErrors:d.errors,failedResources:d.failedResources,gpuErrors:d.gpuErrors,
+              finalAcceptance:false,ownerVisualApproval:false};
+            fs.writeFileSync(root+'/source-skin-csharp-proof.json',JSON.stringify(report,null,2)+'\n');
+            console.log(JSON.stringify(report));
+            if(!samples||!drawn)throw Error('No real drawn moving-claw source-skin frames at '+width+'px');
+            if(d.errors.length||d.failedResources.length||d.gpuErrors.length)
+              throw Error('Actual opt-in source-skin game failed browser/GPU validation at '+width+'px');
+          }
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: an6-real-source-skin-csharp-phone-widths
+          path: |
+            artifacts/an6-real-source-skin-csharp-320/
+            artifacts/an6-real-source-skin-csharp-390/
+          if-no-files-found: warn
           retention-days: 14
