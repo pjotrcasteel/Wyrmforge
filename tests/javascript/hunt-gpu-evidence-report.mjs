@@ -40,7 +40,7 @@ export function formatGpuEvidenceReport(records, reviewRecords = []) {
     if (reviewRecords.length) {
         lines.push('## Exact G4 phone-review terrain modes', '',
             'These screenshots come from the **actual g4Review=1 Hunt URL**, not the ordinary painted GPU smoke test.',
-            'The default painted mode and explicitly requested flat-color mode are distinct: a green nonblack pixel check is not visual approval.',
+            'The default neutral-grey mode and explicitly requested painted A/B are distinct: a green nonblack pixel check is not visual approval.',
             '',
             '| Viewport | Terrain mode | Submission CPU mean | Dynamic pixels/frame |',
             '| --- | --- | ---: | ---: |');
@@ -64,7 +64,7 @@ export function formatGpuEvidenceReport(records, reviewRecords = []) {
         '- The CPU number includes JavaScript scene submission, WebGL render calls and Canvas composition; **it is not a measured GPU timestamp**.',
         '- Browser FPS is a short sample from hosted desktop Chromium, not an iOS/Android performance result.',
         '- Different test runs have different combat snapshots; do not claim causal speedups from a single row comparison.',
-        '- Painted-versus-flat phone-review captures may differ in C# scene seed/time; compare rendering modes and upload costs, not causal FPS.',
+        '- Neutral-grey-versus-painted phone-review captures may differ in C# scene seed/time; compare rendering modes and upload costs, not causal FPS.',
         '- Source-authoritative projectiles, collision, aiming, AI and animations are outside the Lighting Engine ownership boundary.',
         '');
     return lines.join('\n');
@@ -85,17 +85,17 @@ async function main(directory) {
     }
     const reviewRecords = [];
     for (const name of namesAll.filter(name =>
-        /^live-g4-review-(painted|flat-colors)-\d+-mobile\.json$/.test(name))) {
-        const match = /^live-g4-review-(painted|flat-colors)-(\d+)-mobile\.json$/.exec(name);
+        /^live-g4-review-(painted|neutral-grey)-\d+-mobile\.json$/.test(name))) {
+        const match = /^live-g4-review-(painted|neutral-grey)-(\d+)-mobile\.json$/.exec(name);
         const diagnostics = JSON.parse(await readFile(join(directory, name), 'utf8'));
         if (diagnostics.terrainPresentation !== match[1] || diagnostics.gpuWorld?.quality !== 'mobile' ||
             diagnostics.renderingFailed)
             throw new Error(`Wrong G4 phone-review terrain/quality mode: ${name}`);
         reviewRecords.push({ width: Number(match[2]), terrain: match[1], diagnostics });
     }
-    if (!['painted', 'flat-colors'].every(mode =>
+    if (!['painted', 'neutral-grey'].every(mode =>
         reviewRecords.some(record => record.width === 390 && record.terrain === mode)))
-        throw new Error('G4 proof must contain both painted-default and flat-opt-in real 390px Hunts');
+        throw new Error('G4 proof must contain both neutral-grey-default and painted-opt-in real 390px Hunts');
     const report = formatGpuEvidenceReport(records, reviewRecords);
     await writeFile(join(directory, 'README-lighting-review.md'), report, 'utf8');
     process.stdout.write(report);
