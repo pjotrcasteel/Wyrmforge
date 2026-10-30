@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { HuntGpuWorld, compositeHuntGpuFrame, huntGpuRendererBudget, needsRetainedHuntBuffer } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js';
-import { huntLayerRevision, prepareHuntGpuScratch, HuntGpuScratchPool } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/hunt-gpu-layers.js';
+import { huntLayerRevision, prepareHuntGpuScratch, HuntGpuScratchPool, shouldStageHuntGpuReviewFrame } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/hunt-gpu-layers.js';
 
 function fakeCapture() {
     let drawings = 0;
@@ -317,4 +317,17 @@ test('G4 presents a complete WebGL/Canvas frame only once after all combat layer
     assert.ok(after.indexOf('drawPerformanceCounter(state, ctx, snapshot') <
         after.indexOf('presentCompletedHuntGpuFrame(state.context, presentation)'),
         'Terrain, actor silhouettes, VFX and overlays must finish before the only visible commit');
+});
+
+test('G4 GPU review presents complete staged frames by default, with an explicit diagnostic opt-out', () => {
+    const query = value => new URLSearchParams(value);
+    assert.equal(shouldStageHuntGpuReviewFrame(query('arenaGpu=1&g4Review=1'), true), true,
+        'Owner iPhone review must not expose intermediate GPU/Canvas passes.');
+    assert.equal(shouldStageHuntGpuReviewFrame(query('g4Review=1&g4StageFrames=1'), true), true);
+    assert.equal(shouldStageHuntGpuReviewFrame(query('g4Review=1&g4StageFrames=0'), true), false,
+        'Comparison remains possible without changing production presentation.');
+    assert.equal(shouldStageHuntGpuReviewFrame(query('g4Review=1'), false), false,
+        'Canvas baseline never allocates a GPU presentation stage.');
+    assert.equal(shouldStageHuntGpuReviewFrame(query('arenaGpu=1'), true), false,
+        'Normal gameplay/G5 renderer adoption remains unchanged.');
 });
