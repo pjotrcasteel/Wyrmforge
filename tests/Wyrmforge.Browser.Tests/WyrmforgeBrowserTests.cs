@@ -3609,6 +3609,9 @@ public sealed class WyrmforgeBrowserTests : PageTest
     public async Task Mobile_G4DeviceReview_RecordsRealHuntAndExportsEvidence(int width, int height, bool flatGround)
     {
         await Page.SetViewportSizeAsync(width, height);
+        // A Pages visit may skip character creation; keep this real-Hunt Fireball proof
+        // on the Pyromancer selected by the normal first-visit character flow.
+        await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.characterSchool.v1','Pyromancer');");
         var terrainQuery = flatGround ? "&g4FlatGround=1" : "";
         await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/?arenaGpu=1&gpuQuality=mobile&g4Review=1" + terrainQuery,
             new() { WaitUntil = WaitUntilState.NetworkIdle });
