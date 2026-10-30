@@ -271,7 +271,8 @@ Read current `main`, open PRs, CI and runtime before taking the next priority. D
 - [x] **WF32-P0 source:** 16 original native 32×32 candidates (soil/grass/mud/stone × 3; grass-to-mud vertical/horizontal studies; rooted details), editable deterministic source in `tools/art/prototypes/wet-forest-32.mjs`.
 - [x] **Build and tests:** opt-in local PNG atlas/contact-sheet/manifest exporter and `tests/javascript/wet-forest-32.test.mjs` for tile size, variant diversity, determinism, transparent details and reproducible output.
 - [x] **Isolation:** no normal Hunt/terrain/GPU/actor modifications or third-party atlas copies; source-only independent branch, preserving all concurrent AR/G/AN work.
-- [ ] **WF32-P1 art approval:** inspect 1×/4× pixels and mobile-size readability; refine this early technical study rather than claiming artistic acceptance.
+- [x] **WF32-P1 technical iteration (30 Oct):** 22 original native 32×32 assets; richer soil/grass/mud/stone pixel vocabulary, four material-boundary pairs (eight candidate orientations), two grounded decals, composition preview and updated reproducibility tests. This is a **candidate only**, not approved game art.
+- [ ] **WF32-P1 owner art approval:** inspect the 1×/4× source sheet and 512×384 art-only composition; review mobile-size contrast, obvious paving repeats, real corner transition needs and Gothic identity. This remains **open**.
 - [ ] **AR3 owner sign-off:** required before applying real terrain artwork to gameplay geography; AR0–AR3 continue independently.
 - [ ] **WF32-P2 shared G material adapter:** after the AR3 gate, bind C# site material IDs/weights to original atlases through the existing shared GPU renderer, with proper scale, sampling, light/shadow response and no prelit water.
 - [ ] **WF32-P3 in-Hunt A/B:** actual chart ↔ playable site, same seed flat vs textured, movement, occlusion, G lighting, 320/390px capture and mobile frame/memory budgets; no benchmark claimed yet.
