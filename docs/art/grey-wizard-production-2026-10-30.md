@@ -714,3 +714,7 @@ artistic acceptance claim. Continued direction-source inspection includes E view
 its far boot is occluded in neutral source, so must author hidden boot/sleeve
 coverage before extending motion; do not blindly warp/duplicate the single visible
 foot into a finished walk. Live stride fit and production gates remain open.
+
+V011 existing Sprite Lab320/390 import/play/pause also passes without page errors.
+Browser screenshots/report retained. No new direction animation or live C# stride
+fit is implied by this cleanup checkpoint.
