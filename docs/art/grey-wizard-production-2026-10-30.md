@@ -89,3 +89,17 @@ These dimensions are provisional, not approved balance or production resolution.
    Appearance and motion approval precede production replacement; retain live mage.
 
 Checkpoint before generation: review and plan only. No code/tests/runtime changed.
+
+## Appearance candidate v001
+
+Built-in ImageGen produced `art/source/characters/grey-wizard/appearance-concept-v001.png`
+using the adjacent exact `concept-prompt.txt`. No pack images were generation inputs.
+Original output is preserved byte-for-byte. Three-view costume/identity concept:
+recognisable aged face, grey pointed hat, beard, layered cloak, wooden staff and boots.
+Inspection: attractive costume direction but far too detailed for a native sprite;
+generated dark background despite transparency request, long hem may hide steps,
+beard is more tapered than split, side view is closer to profile than elevated game
+camera. This is a concept only, not an atlas, animation or alpha-ready runtime art.
+Next targeted refinement: genuinely transparent background and much simpler,
+consistent pixel clusters at small actor scale; retain the identity and proportions.
+Visual/art approval, editable native layers, motion and game/device proof remain open.
