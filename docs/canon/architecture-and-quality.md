@@ -1,6 +1,6 @@
 # Architecture, persistence and validation
 
-> **Canonical WyrmForge specification · updated 29 October 2026.** Keep gameplay deterministic and platform-agnostic; distinguish simulator truth from client rendering.
+> **Canonical WyrmForge specification · updated 30 October 2026.** Keep gameplay deterministic and platform-agnostic; distinguish simulator truth from client rendering.
 > [Canonical index](README.md) · Only explicitly marked **LOCKED/approved** requirements are commitments. Proposed values, old milestones and drafts are not evidence of shipped code. Verify current `main`, PRs and tests.
 
 ## LOCKED — pixel-first 2.5D runtime contract (29 October 2026)
@@ -8,7 +8,7 @@
 **Every engine implements the same target: a mobile-first, world-anchored 2.5D pixel-art game.** Use the existing C# simulation and shared presentation pipelines, with authored 2D/2.5D sprites, terrain surfaces, layers, depth ordering and optional per-object elevation; do not add a general-purpose 3D scene or runtime skeletal mesh as a required platform dependency. 2.5D permits world-height math, slope/height fields, screen-space projection and GPU shaders without requiring fully modeled 3D assets.
 
 - **Gameplay/AI/AR:** C# remains authoritative for 2D ground-plane geography, navigation, collision, routes and gameplay heights. Elevation, cliffs and overlaps are typed data and collision/occlusion contracts, not a requirement to build 3D terrain meshes.
-- **Animation:** the delivered mobile actor must read as pixel-consistent, world-anchored 2.5D art. Directional sprites/layered sprites remain the default; offline 3D rigs may generate them. The existing [AN0–AN6 source-skin PR #387](https://github.com/pjotrcasteel/Wyrmforge/pull/387) is a protected **optional shared-engine GPU presentation experiment**, not a mandatory 3D gameplay or character-production pipeline. Its skinned geometry may be evaluated through the existing LightingEngine/animation ownership, with strict visual/mobile gates and unmodified production sprite fallback. Preserve the draft source rigs, tests and evidence.
+- **Animation:** mobile actors use pixel-consistent, world-anchored, authored 2.5D sprites or layered sprites through the **existing** shared sprite controller/compositor and C# action events. Offline 3D rigs may optionally export approved pixel sprites. Advanced live source-skin/IK research from [AN0–AN6 PR #387](https://github.com/pjotrcasteel/Wyrmforge/pull/387) was **closed unmerged and deferred by owner on 30 October 2026** after visual rejection. Preserve its archive, not a runtime prerequisite. No source-skin, skeletal GPU integration or old Hollowed technical mesh can block sprite animation, other engines or game features.
 - **Lighting/materials:** the shared GPU lighting engine lights 2.5D sprites/surfaces using albedo, optional normal/roughness/emissive maps, occluder silhouettes and depth/height metadata. Normal maps alone are not volumetric shadow geometry; use proper occlusion contracts. No parallel mesh-based renderer.
 - **FXP/VFX/audio:** use shared typed gameplay events and lightweight 2.5D positions, layers, pixels and bounded visual effects; do not introduce full 3D rigid-body physics, volumetric particles or positional-audio engines merely to simulate appearance.
 
