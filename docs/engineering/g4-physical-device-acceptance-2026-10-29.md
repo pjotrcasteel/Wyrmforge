@@ -156,12 +156,16 @@ The GPU billboard kept its full image but translated its bottom to
 The foot fraction describes a point *inside* the art, not its clipping,
 aspect ratio, or rectangle origin.
 
-**G4 fix:** preserve the complete capture at its original pixel rectangle,
-and anchor the GPU billboard bottom at `y + height`. Keep the same
-orthographic camera, source world geometry, 45-degree upright cutout plane,
-lighting material, C# actor positions, and image dimensions. Leave internal
-painted foot metadata intact for future separate caster/occlusion work;
-it must not move or compress visible image pixels.
+**G4 fix (validated by a failing camera-projection test first):** the
+original 45-degree upright plane was also **not screen-facing in the real
+Three.js G4 camera**. A 160px-tall mage capture at 320x568 projected to
+only ~104px (35% vertical compression). The new unpitched actor geometry
+aligns to the **actual orthographic camera quaternion every frame**,
+preserving the entire capture and anchoring the visible image at its
+original `y + height` bottom edge. Source world geometry, ground receivers,
+light emitters, C# actor positions, and original image dimensions remain
+unchanged. Internal painted foot metadata is retained for possible separate
+caster/occlusion work; it never distorts visible image pixels.
 
 **Deterministic regression:** project the real Three.js `huntActorGeometry`
 through the exact G4 orthographic camera at **320x568, 390x844, 402x656,
