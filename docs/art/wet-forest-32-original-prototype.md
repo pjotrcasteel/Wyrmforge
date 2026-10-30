@@ -46,3 +46,25 @@ Default generated output: `docs/art/previews/wet-forest-32/atlas.png`, `contact-
 - **Source and tests:** `tools/art/prototypes/wet-forest-32.mjs` / `tests/javascript/wet-forest-32.test.mjs`.
 
 **Visual limitations still open:** some paving patterns remain recognizable on repeated tiling; transition strips have no four-way corner support; native mobile player/monster contrast and G renderer lighting/shadows are untested. No material is owner-approved and no gameplay change should be merged from this study before the AR3 owner gate.
+
+## WF32-P1d — generic terrain grammar (30 October 2026)
+
+**Developer checkpoint only; art and AR4 gameplay adoption remain unapproved.** The four material transition studies are opt-in source images, not a playable Hunt screenshot.
+
+### Implementation and ownership
+
+- Source: `tools/art/prototypes/terrain-material-grammar.mjs`; `tools/art/prototypes/wet-forest-masonry.mjs`; `tools/art/prototypes/build-terrain-grammar-review.mjs`. The already authored `wet-forest-32.mjs` prototype is preserved.
+- Material definitions: grass, soil, mud (soft) and flagstone, cobble, brick (hard). Every new material declares kind, relief and roughness/specular hints, plus allowed microdetail types. Material names are visual descriptions; C# still owns map/geography and gameplay meaning.
+- Generic boundary policies: soft↔soft uses organic pixel-cluster mixing; hard↔soft removes **entire connected stone faces** intersecting soft material, retaining continuous masonry elsewhere; hard↔hard uses a structural junction with missing faces revealing underlying soil. Direction masks cover four edges and outer corners; arbitrary per-tile flipping is forbidden.
+- The art painter generates one coherent 256px world field before cutting 32px cells. The 256px period is an authoring phase; a later runtime adapter must avoid stamping the same period across the entire world.
+- Small mushrooms, pebbles, dead leaves, twigs, moss and roots are reusable overlays with per-material compatibility and deterministic world placement rather than duplicates inside every base tile.
+- The existing shared G engine contract is `LitMaterial.albedo`, `normal`, `roughnessMap`, and **scalar** `specular`. Current G does *not* accept `specularMap`. Produce normal and roughness textures and a separate non-runtime specular reference guide. Roughness is non-color data in green channel. No new shader or lighting engine is introduced.
+- Generator: `node tools/art/prototypes/build-terrain-grammar-review.mjs docs/art/previews/wet-forest-grammar-v1`. Outputs four review sample material bundles, PNG map triplets, extra specular guides, and a manifest that explicitly marks all approvals false. No generated images are loaded by live Hunts.
+- Verification: 11 local Node test groups pass across the P1c masonry and P1d generic suites, including whole-stone deletion, 32px exact map reconstruction and deterministic exports. Full repo CI and real mobile screenshot/performance acceptance are separate gates.
+
+### Next acceptance gates
+
+1. Owner visual inspection of the original rendered contact/composition/maps (no tracing or imported pack sprites).
+2. AR3 C# geographic/site/material-weight owner approval before any production material cutover.
+3. Add 256px repeat-resistant world-scale variation and test inner-corner topology.
+4. Use the *existing* G material registry and renderer for a genuine 320/390px same-site A/B comparison; record iPhone/Android FPS, shadow response, pixel sampling and memory before claiming AR4 or P2 complete.
