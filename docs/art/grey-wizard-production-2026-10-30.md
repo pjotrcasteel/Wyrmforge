@@ -737,3 +737,13 @@ coverage probes and2 grey-to-leather probes in both contact extremes. Source-onl
 foot/staff support contacts0px; original v011 remains unchanged for traceability.
 Do not call passing tests or one connected silhouette artistic acceptance.
 Checkpoint before review media/package validation.
+
+### V012 pre-delivery review
+
+Inspected16 enlarged lower-body poses, full light/dark contact sheets and the
+before/after comparison (frames0,7,8,15). Garment grey now stays with the robe;
+leather leg coverage replaces exposed gaps. Retained comparison PNG and full
+GIF/MP4.14 exact OpenRaster layers, GIF16frames, MP4 decode, new25/25 exports,
+prior v01125/25 unchanged and22 focused tests pass. Existing Sprite Lab320/390
+import/play/pause passes without page errors. Prior source cadences and full
+Hunt/material/phone acceptance remain open; this repair is not final-art approval.

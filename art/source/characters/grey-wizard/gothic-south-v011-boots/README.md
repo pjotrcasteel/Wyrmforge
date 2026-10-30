@@ -1,5 +1,8 @@
 # South boot-edge cleanup
 
+Superseded by v012: the owner rejected the remaining lower-leg/robe overlap.
+This version preserves the heel cleanup history, not accepted final motion.
+
 Owner identified a small trailing heel artifact. V011 expands the boot mask to
 own the actual boot edge, disables extra boot edge padding, and explicitly bevels
 9 corner pixels. Motion, staff support, scale and14-layer source stay unchanged.

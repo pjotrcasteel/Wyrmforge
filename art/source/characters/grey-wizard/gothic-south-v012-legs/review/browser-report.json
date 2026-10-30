@@ -1,0 +1,44 @@
+[
+  {
+    "width": 320,
+    "columns": 16,
+    "rows": 1,
+    "cell": 160,
+    "observedFrames": [
+      "02 / 16",
+      "03 / 16",
+      "04 / 16",
+      "06 / 16",
+      "07 / 16",
+      "08 / 16",
+      "10 / 16",
+      "11 / 16"
+    ],
+    "pausedFrame": "11 / 16",
+    "errors": [],
+    "scope": "existing Sprite Lab import/play/pause only; desktop Chromium, not Hunt or physical phone",
+    "sourceFacing": "S",
+    "labCompassLimitation": "single-view lab labels its row SE; source manifest governs actual authored facing"
+  },
+  {
+    "width": 390,
+    "columns": 16,
+    "rows": 1,
+    "cell": 160,
+    "observedFrames": [
+      "02 / 16",
+      "04 / 16",
+      "05 / 16",
+      "06 / 16",
+      "07 / 16",
+      "09 / 16",
+      "10 / 16",
+      "11 / 16"
+    ],
+    "pausedFrame": "12 / 16",
+    "errors": [],
+    "scope": "existing Sprite Lab import/play/pause only; desktop Chromium, not Hunt or physical phone",
+    "sourceFacing": "S",
+    "labCompassLimitation": "single-view lab labels its row SE; source manifest governs actual authored facing"
+  }
+]
