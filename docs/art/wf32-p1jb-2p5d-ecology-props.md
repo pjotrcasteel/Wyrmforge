@@ -81,3 +81,14 @@ No physics-engine changes or new rendering pipeline. Future lighting and depth w
 Pjotr reviewed the corrected real-character scale composition showing medium/tall grass, a small rock and a rock cluster against the production Hollowed and Ashling sprites, and replied: **“Grass and stuff looks good!”** This accepts the **visual direction of the represented P1j-B3 grass and rock props**. Keep the current texture, layer and relative prop-size baseline while proceeding; do not reopen thorn-like grass variants without new feedback.
 
 This sign-off is intentionally narrow. It is **not** approval of every unseen variant or biome placement, the separate Hollowed appearance/2× target, C# collision sites, real-Hunt lighting/occlusion, mobile performance, or merging this source-only art PR. The P1i blending approval remains independently preserved. The full prop gallery/mobile and AR3/G integration gates stay open.
+
+
+## P1j-B6 — complete grass/rock variant gallery, native mobile-width review (30 October 2026)
+
+The owner approved the visual direction of the *shown* P1j-B3 foliage and stones; the remaining variants still need a trustworthy review. No source sprite or terrain-painter changes are needed for this checkpoint.
+
+- The existing character-scale review builder now exports native 320px and 390px wide galleries showing **all 4 prop families × 3 variants** against the real Hollowed and Ashling source frames on each row, using actual C# body radii and the approved world-ground source. A 3× nearest-neighbour enlargement is generated from the 390px source.
+- Four labelled rows (small rock / rock cluster / medium grass / tall grass) and V0–V2 columns expose repeated forms and the real 2.5D footprint/rear/actor/front layering. Every reviewed prop is reconstructed from the same existing P1j-B3 authoring function; no art proxy or AI image is introduced.
+- Source fingerprints across **all four aligned channels on all three depth slices** make each of the 12 original variants independently identifiable. Tests verify uniqueness and exact source identity across viewport widths; 320/390 are art-canvas dimensions, **not claims of real-device screenshots**.
+- Reproduce: run the existing build-ecology-character-scale-review.mjs CLI and inspect all-variants-320-native.png, all-variants-390-native.png, all-variants-390-3x.png and their manifests.
+- This is a **source-only quality checkpoint** on the same draft PR #429. Do not change grass or rocks that the owner already liked. Await remaining-variant aesthetic review before declaring the full 12-variant set approved. C# AR3 placement, physics, G engine integration, live shadows/occlusion and device performance remain separate gates.
