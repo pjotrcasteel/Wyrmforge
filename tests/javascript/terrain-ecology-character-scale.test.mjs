@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createWorldBoundaryWindow } from '../../tools/art/prototypes/terrain-world-variation.mjs';
-import { ACTOR_REFERENCE_CONFIG, buildCharacterScaleReview } from
+import { ACTOR_REFERENCE_CONFIG, buildCharacterScaleReview,
+    ECOLOGY_VARIANT_REVIEW_ORDER, buildAllVariantScaleReview } from
     '../../tools/art/prototypes/build-ecology-character-scale-review.mjs';
 
 test('art comparison samples the actual production Hollowed and Ashling, not stand-ins', () => {
@@ -69,4 +70,34 @@ test('actors are visible at native game-art scale on unchanged P1i terrain, with
     for(let y=0;y<scene.height;y++)for(let x=240;x<scene.width;x++)
         assert.deepEqual(targetScene.get(x,y),scene.get(x,y));
 
+});
+
+test('all twelve 2.5D variants are individually visible at actual 320/390px actor scale',()=>{
+    const narrow=buildAllVariantScaleReview(320),wide=buildAllVariantScaleReview(390);
+    assert.deepEqual(ECOLOGY_VARIANT_REVIEW_ORDER,
+        ['rock-small','rock-cluster','grass-medium','grass-tall']);
+    for(const [width,result] of [[320,narrow],[390,wide]]){
+        assert.equal(result.scene.width,width);
+        assert.equal(result.scene.height,508);
+        assert.equal(result.enlarged.width,width*3);
+        assert.equal(result.enlarged.height,1524);
+        assert.equal(result.metadata.schema,'wf32-ecology-all-variants-mobile.v1');
+        assert.match(result.metadata.kind,/NOT A LIVE HUNT SCREENSHOT/);
+        assert.equal(result.metadata.nativeDisplayPixelScale,1);
+        assert.deepEqual(result.metadata.actors.map(a=>a.gameplayRadius),[11,8]);
+        assert.equal(result.metadata.variants.length,12);
+        assert.deepEqual(result.metadata.variants.map(p=>p.kind),ECOLOGY_VARIANT_REVIEW_ORDER.flatMap(k=>[k,k,k]));
+        assert.deepEqual(result.metadata.variants.map(p=>p.variant),
+            [0,1,2,0,1,2,0,1,2,0,1,2]);
+        assert.equal(new Set(result.metadata.variants.map(p=>p.sourceFingerprint)).size,12,
+            'all twelve variants must be genuinely different');
+        assert.ok(result.metadata.variants.every(p=>p.footAnchor[1]>28&&
+            p.footAnchor[1]<result.scene.height));
+        assert.deepEqual(result.scene.get(160,250),result.enlarged.get(480,750));
+        assert.match(result.metadata.gates,/G shadows\/occlusion/);
+    }
+    assert.deepEqual(narrow.metadata.variants.map(v=>v.sourceFingerprint),
+        wide.metadata.variants.map(v=>v.sourceFingerprint),
+        'review viewport must not change original 2.5D art bytes');
+    assert.throws(()=>buildAllVariantScaleReview(360),RangeError);
 });
