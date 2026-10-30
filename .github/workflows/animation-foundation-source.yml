@@ -260,7 +260,7 @@ jobs:
           # Separate opt-in diagnostic: do NOT substitute neutral inspection
           # lighting for the normal night scene or accept it as final art.
           AN_FOUNDATION_MODE=1 AN_MOBILE=1 AN_WIDTH=390 \
-            AN_INSPECTION=neutral \
+            AN_INSPECTION=neutral-lit \
             AN_CAPTURE_DIR=artifacts/an6-real-source-skin-neutral-390 \
             AN_ASSET_ROOT=artifacts/animation-catch-step-ci \
             node tools/animation/capture-hunt.cjs
@@ -269,7 +269,7 @@ jobs:
           from pathlib import Path
           root=Path('artifacts/an6-real-source-skin-neutral-390')
           report=json.loads((root/'capture-summary.json').read_text())
-          assert report['inspection']=='neutral'
+          assert report['inspection']=='neutral-lit'
           assert not report['errors'] and not report['gpuErrors']
           assert (root/'hunt-canvas-passby.png').stat().st_size>0
           print('Neutral-light real C# source-skin diagnostic captured; not user/production approval.')
