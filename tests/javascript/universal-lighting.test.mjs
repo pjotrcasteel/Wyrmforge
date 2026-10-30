@@ -214,9 +214,13 @@ test('G4 only updates the shared orthographic projection when viewport or zoom c
     let updates = 0;
     camera.updateProjectionMatrix = () => { updates++; update(); };
 
-    for (let frame = 0; frame < 120; frame++)
+    const fixedProjection = camera.projectionMatrix.clone();
+    for (let frame = 0; frame < 120; frame++) {
+        camera.position.set(frame / 10, 0, 12);
         assert.equal(synchronizeOrthographicProjection(camera, -5, 5, 7, -7), false);
-    assert.equal(updates, 0, 'Unchanged mobile frames must reuse the existing camera projection.');
+    }
+    assert.equal(updates, 0, 'Moving the camera must reuse an unchanged projection.');
+    assert.ok(camera.projectionMatrix.equals(fixedProjection));
 
     assert.equal(synchronizeOrthographicProjection(camera, -5, 5, 8, -8), true,
         'Rotating the device changes the view aspect and must refresh the projection.');
