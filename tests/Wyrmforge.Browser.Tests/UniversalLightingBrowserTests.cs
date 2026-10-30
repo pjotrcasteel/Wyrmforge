@@ -567,7 +567,7 @@ public sealed class UniversalLightingBrowserTests : PageTest
         var values = System.Text.Json.JsonSerializer.SerializeToElement(options);
         foreach (var property in values.EnumerateObject())
         {
-            if (property.Name is "wetness" or "fog")
+            if (property.Name is "wetness" or "fog" or "emission")
             {
                 await canvas.EvaluateAsync("(c,setting) => gpuProof.configureProof(c, setting)",
                     new Dictionary<string, object> { [property.Name] = property.Value.ValueKind == System.Text.Json.JsonValueKind.Number
