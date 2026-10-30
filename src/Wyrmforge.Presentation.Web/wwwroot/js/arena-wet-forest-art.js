@@ -409,7 +409,69 @@ function groundSite(ctx, site, x, y, seed) {
     ctx.restore();
 }
 
-export function drawWetForestGround(ctx, plan, approvedAtlas = null) {
+/**
+ * Lightweight G4 performance-isolation floor. This uses only broad colors and
+ * the existing C# Wet Forest recipe; it never creates 12px tile arrays,
+ * requests 900px material images or bakes texture atlas copies.
+ * It changes presentation only, never walkability or collision.
+ */
+export function drawWetForestFlatGround(ctx, plan) {
+    const recipe = plan?.wetForest;
+    if (!recipe) return false;
+    const { width, height } = plan;
+    if (!(width > 0 && height > 0)) return false;
+    ctx.save();
+    try {
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = '#283029';
+        ctx.fillRect(0, 0, width, height);
+        for (const patch of recipe.ground ?? []) {
+            const color = {
+                moss: '#304334', mud: '#34312a', puddle: '#1a292a',
+                leafbed: '#40362c', clearing: '#3b3b32', loam: '#283029',
+            }[patch.kind] ?? '#283029';
+            ctx.beginPath();
+            ctx.ellipse(patch.x * width, patch.y * height,
+                Math.max(2, patch.radiusX * width), Math.max(2, patch.radiusY * height),
+                0, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+        }
+        // One connected, source-defined road polygon instead of material-image
+        // mosaics or thousands of brush/tile operations.
+        const left = [], right = [];
+        for (let y = 0; y <= height; y += 24) {
+            const actualY = Math.min(y, height);
+            const trail = wetForestTrailAt(recipe.trail, actualY / height);
+            const center = trail.x * width;
+            const half = trail.width * width * .5;
+            left.push([center - half, actualY]);
+            right.push([center + half, actualY]);
+        }
+        if (left.at(-1)?.[1] !== height) {
+            const trail = wetForestTrailAt(recipe.trail, 1);
+            left.push([(trail.x - trail.width * .5) * width, height]);
+            right.push([(trail.x + trail.width * .5) * width, height]);
+        }
+        ctx.beginPath();
+        ctx.moveTo(...left[0]);
+        for (let i = 1; i < left.length; i++) ctx.lineTo(...left[i]);
+        for (let i = right.length - 1; i >= 0; i--) ctx.lineTo(...right[i]);
+        ctx.closePath();
+        ctx.fillStyle = '#484137';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(recipe.siteX * width, recipe.siteY * height, 83, 46, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#3b3b32';
+        ctx.fill();
+    } finally {
+        ctx.restore();
+    }
+    return true;
+}
+
+export function drawWetForestGround(ctx, plan, approvedAtlas = null, flatColorsOnly = false) {
+    if (flatColorsOnly) return drawWetForestFlatGround(ctx, plan);
     const recipe = plan?.wetForest;
     if (!recipe) return;
     const width = plan.width, height = plan.height, seed = plan.seed | 0;
