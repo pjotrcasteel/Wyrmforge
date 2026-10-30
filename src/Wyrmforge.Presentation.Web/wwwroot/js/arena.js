@@ -3,6 +3,7 @@ import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, 
 import { attachArenaInput, getArenaMovement, getArenaAim, isArenaStickAim, getArenaPropFocus } from './arena-input.js';
 import { resolveTargetIndicator, presentTargetSigil, drawTargetIndicator, preloadTargetSigilArt, targetSelectionLightEmitter, targetSelectionCanvasLight, actorLightsWithoutSigilOverlay } from './arena-target-indicator.js?v=20261028-feet-centered-v3';
 import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, drawArenaCloisterElevation, semanticSiteModeEnabled } from './arena-environment.js?v=20261029-world-first-ar0';
+import { drawAr1GeographyReview } from './arena-ar1-geography-review.js?v=20261030-ar1-review';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
 import { drawRecoveryGuide } from './arena-recovery.js';
@@ -441,6 +442,15 @@ function draw(state, snapshot, width, height) {
     drawPlayerDanger(ctx, { ...snapshot.player, x: snapshot.player.x - camera.x, y: snapshot.player.y - camera.y }, danger, width, height);
     // Draw navigation above the world but under the HUD. The arrow is not a touch target.
     drawExitGuide(ctx, snapshot.exit, camera, width, height);
+    // Opt-in map context is presented on the real Hunt canvas. Default play is untouched.
+    if (location.search.includes('ar1Review=1') &&
+        drawAr1GeographyReview(ctx, snapshot.environment?.geography,
+            snapshot.environment?.geographyActive === true, snapshot.player, camera, width, height)) {
+        globalThis.__wyrmforgeAr1Review = {
+            siteId: snapshot.environment.geography.siteId,
+            kind: snapshot.environment.geography.landscape.kind,
+        };
+    }
     // Combat vitals now share one accessible responsive HTML HUD with the encounter objective.
     drawReliquaryHushVeil(ctx, snapshot.reliquary, width, height);
     if (battleActive) drawBossBar(ctx, snapshot.dragon, snapshot.hunt, width, state.ashfang.hpTrail);
