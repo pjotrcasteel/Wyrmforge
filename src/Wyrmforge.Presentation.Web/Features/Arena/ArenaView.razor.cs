@@ -31,6 +31,7 @@ public partial class ArenaView : IAsyncDisposable
     private IJSObjectReference? arenaModule;
     private DotNetObjectReference<ArenaView>? dotNetReference;
     private bool gameOverSent;
+    private bool previewMountainMonastery;
     private long lastAiProfilingFrame;
     private bool ChoosingPrimary => simulation is { PrimaryCommitted: false };
 
@@ -106,8 +107,10 @@ public partial class ArenaView : IAsyncDisposable
         var geographyPreview = query.Any(value => string.Equals(value, "ar1Geography=1", StringComparison.OrdinalIgnoreCase));
         var requestedSite = query.FirstOrDefault(value => value.StartsWith("ar1SiteKind=", StringComparison.OrdinalIgnoreCase))
             ?.Split('=', 2).Last();
-        var previewSeed = geographyPreview && requestedSite is "forest-fork" or "mountain-pass"
-            ? FindWorldSiteReviewSeed(requestedSite)
+        previewMountainMonastery = geographyPreview && requestedSite == "mountain-monastery";
+        var seedKind = previewMountainMonastery ? "mountain-pass" : requestedSite;
+        var previewSeed = geographyPreview && seedKind is "forest-fork" or "mountain-pass"
+            ? FindWorldSiteReviewSeed(seedKind)
             : RunSeed;
         simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, previewSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt, researchLead: ResearchLead, preparedMutations: PreparedMutations, fireballMutations: FireballMutations, contextualSpell: ContextualSpell, region: Region, regionOpening: RegionOpening, hunt: Hunt, amplifierAssignments: MutationAmplifierAssignments, fireballLevel: FireballLevel, agents: agentPreview ? new(true, true) : null);
         if (geographyPreview) simulation.EnableWorldSiteGeography();
@@ -345,6 +348,8 @@ public partial class ArenaView : IAsyncDisposable
     {
         var node = MapNodes.SingleOrDefault(candidate => candidate.Id == id);
         if (node is null || simulation?.ChooseMapNode(id) != true) return;
+        if (previewMountainMonastery && !simulation.PreviewMountainMonasteryForReview())
+            throw new InvalidOperationException("The AR1 monastery review requires an authentic C# mountain monastery site.");
         ShowMapMoment(node);
         await TryPlayAudioAsync(node.Type == WyrmrealmNodeType.Dragon ? "wyrm" : "trail-enter");
         await TryRecordPlaytestMilestoneAsync(node.Type == WyrmrealmNodeType.Dragon ? "wyrm_entered" : "trail_entered");

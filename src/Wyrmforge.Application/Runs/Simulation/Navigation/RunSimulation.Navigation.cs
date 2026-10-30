@@ -1,6 +1,7 @@
 using Wyrmforge.Application.Runs.Navigation;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
 using Wyrmforge.Domain.Spells;
+using Wyrmforge.Domain.Combat.Dragons;
 
 namespace Wyrmforge.Application.Runs.Simulation;
 
@@ -14,6 +15,22 @@ public sealed partial class RunSimulation
 
     /// <summary>Opt in to the AR1 physical terrain preview for this run; normal Hunts keep their approved fallback.</summary>
     public void EnableWorldSiteGeography() => worldSiteGeographyEnabled = true;
+
+    /// <summary>
+    /// Displays an authentic generated Elder-route mountain monastery in a geography-review Hunt.
+    /// This changes only the opt-in review environment, never map progression or saved rewards.
+    /// </summary>
+    public bool PreviewMountainMonasteryForReview()
+    {
+        if (!worldSiteGeographyEnabled || !mapState.EncounterActive) return false;
+        var monastery = WyrmrealmMapGenerator.GenerateFireHunt(mapState.Seed, WyrmTier.Elder)
+            .SingleOrDefault(node => node.GenerationProfile is
+                { Landform: WorldSiteLandform.Mountain, Landmark: WorldSiteLandmark.Monastery });
+        if (monastery is null) return false;
+        arenaEnvironment = ArenaEnvironmentState.Create(mapState.Seed, monastery, worldFirstGeography: true);
+        playerPositionInitialized = false;
+        return true;
+    }
     private WyrmrealmEncounterModifierSet encounterModifiers = WyrmrealmEncounterModifierSet.Empty;
     private bool mapEncounterCleanupPending;
     private int trailExperienceAtEntry;

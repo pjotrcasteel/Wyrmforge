@@ -70,6 +70,7 @@ public sealed class WorldFirstArenaBrowserTests : PageTest
     [DataRow(390, 844, "forest-fork")]
     [DataRow(320, 568, "mountain-pass")]
     [DataRow(390, 844, "mountain-pass")]
+    [DataRow(390, 844, "mountain-monastery")]
     public async Task Ar1_ForestAndMountain_AuthoritativeSiteShapesAppearInActualPlayableHunts(int width, int height, string kind)
     {
         var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
@@ -98,7 +99,8 @@ public sealed class WorldFirstArenaBrowserTests : PageTest
         await Page.Locator(".gate-tier--ready").First.ClickAsync();
         await Expect(Page.GetByText("Choose your trail.", new() { Exact = true })).ToBeVisibleAsync();
         var node = Page.Locator("button.route-node.available").First;
-        Assert.AreEqual(kind, await node.GetAttributeAsync("data-site-kind"));
+        var monasteryReview = kind == "mountain-monastery";
+        Assert.AreEqual(monasteryReview ? "mountain-pass" : kind, await node.GetAttributeAsync("data-site-kind"));
         Assert.IsGreaterThan(0, int.Parse((await node.GetAttributeAsync("data-site-obstacles"))!));
         var siteId = (await node.GetAttributeAsync("data-site-id"))!;
         await Page.ScreenshotAsync(new() { Path = Path.Combine(output, $"ar1-{kind}-chart-{width}.png"), FullPage = false });
@@ -114,11 +116,17 @@ public sealed class WorldFirstArenaBrowserTests : PageTest
         await Page.GetByRole(AriaRole.Button,
             new() { NameRegex = new System.Text.RegularExpressions.Regex("^Enter (rare )?trail$") }).ClickAsync();
         await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
-        await Page.WaitForFunctionAsync("expected => window.__wyrmforgeAr0Geography?.siteId === expected", siteId,
+        await Page.WaitForFunctionAsync("expected => window.__wyrmforgeAr0Geography?.kind === expected", kind,
             new() { Timeout = 45000 });
         Assert.AreEqual(true, await Page.EvaluateAsync<bool>("() => window.__wyrmforgeAr0Geography.geographyActive"));
         Assert.AreEqual(kind, await Page.EvaluateAsync<string>("() => window.__wyrmforgeAr0Geography.kind"));
         Assert.IsGreaterThan(0, await Page.EvaluateAsync<int>("() => window.__wyrmforgeAr0Geography.obstacleCount"));
+        var renderedSiteId = await Page.EvaluateAsync<string>("() => window.__wyrmforgeAr0Geography.siteId");
+        if (monasteryReview)
+        {
+            Assert.AreNotEqual(siteId, renderedSiteId, "Review must display the real generated Elder monastery site, not an opening-trail repaint.");
+            Assert.IsGreaterThanOrEqualTo(6, await Page.EvaluateAsync<int>("() => window.__wyrmforgeAr0Geography.obstacleCount"));
+        }
         Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
         await Page.ScreenshotAsync(new() { Path = Path.Combine(output, $"ar1-{kind}-live-hunt-{width}.png"), FullPage = false });
 
@@ -130,7 +138,7 @@ public sealed class WorldFirstArenaBrowserTests : PageTest
             history.replaceState(null, '', url);
         }");
         await Page.WaitForFunctionAsync("expected => window.__wyrmforgeAr1Review?.siteId === expected",
-            siteId, new() { Timeout = 45000 });
+            renderedSiteId, new() { Timeout = 45000 });
         await Page.ScreenshotAsync(new() { Path = Path.Combine(output, $"ar1-{kind}-geography-review-{width}.png"),
             FullPage = false });
         await Page.EvaluateAsync(@"() => {
@@ -147,7 +155,7 @@ public sealed class WorldFirstArenaBrowserTests : PageTest
         await Page.Keyboard.DownAsync("d");
         await Page.WaitForTimeoutAsync(800);
         await Page.Keyboard.UpAsync("d");
-        Assert.AreEqual(siteId, await Page.EvaluateAsync<string>("() => window.__wyrmforgeAr0Geography.siteId"));
+        Assert.AreEqual(renderedSiteId, await Page.EvaluateAsync<string>("() => window.__wyrmforgeAr0Geography.siteId"));
         Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
         await Page.ScreenshotAsync(new() { Path = Path.Combine(output, $"ar1-{kind}-traversal-{width}.png"), FullPage = false });
     }
