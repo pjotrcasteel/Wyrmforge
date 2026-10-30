@@ -122,76 +122,60 @@
       "name": "staff",
       "polygon": [
         [
-          54,
-          28
-        ],
-        [
-          60,
-          28
+          50,
+          26
         ],
         [
           64,
-          37
+          26
+        ],
+        [
+          65,
+          49
         ],
         [
           62,
-          44
+          58
         ],
         [
-          60,
-          51
-        ],
-        [
-          62,
-          67
-        ],
-        [
-          63,
+          64,
           81
-        ],
-        [
-          64,
-          98
         ],
         [
           64,
           115
         ],
         [
-          61,
-          139
+          62,
+          137
         ],
         [
           57,
-          139
+          137
         ],
         [
           58,
-          118
+          117
         ],
         [
           59,
           100
         ],
         [
-          59,
+          58,
           82
         ],
         [
-          56,
-          70
+          55,
+          69
         ],
         [
           54,
-          53
+          52
         ],
         [
-          54,
-          43
-        ],
-        [
-          52,
-          37
+          50,
+          48
         ]
       ]
     },
@@ -609,12 +593,12 @@
     {
       "name": "torso",
       "file": "source-layers/torso.png",
-      "pixels": 1876
+      "pixels": 1826
     },
     {
       "name": "cloak-left",
       "file": "source-layers/cloak-left.png",
-      "pixels": 979
+      "pixels": 957
     },
     {
       "name": "cloak-right",
@@ -624,7 +608,7 @@
     {
       "name": "arm-staff",
       "file": "source-layers/arm-staff.png",
-      "pixels": 300
+      "pixels": 283
     },
     {
       "name": "arm-free",
@@ -644,12 +628,12 @@
     {
       "name": "hat",
       "file": "source-layers/hat.png",
-      "pixels": 729
+      "pixels": 726
     },
     {
       "name": "staff",
       "file": "source-layers/staff.png",
-      "pixels": 544
+      "pixels": 636
     },
     {
       "name": "staff-hand",

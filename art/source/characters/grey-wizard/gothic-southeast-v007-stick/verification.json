@@ -216,7 +216,7 @@
       "scope": "source-only contact, not C# world fitting, collision or a new physics solver"
     }
   ],
-  "sourceProjectSha256": "fc65f464e207b6eb750cc6d273e727618455a0d61fc87dd85d48898fba9b254a",
+  "sourceProjectSha256": "3a17c387b440fb34115b3d11a506846f2d1e9b80755d2823f4ff6101ad7f80f2",
   "controllerSha256": "a3b9bc9a6e9c89262ef3d83e69344566f653f013ef8f66c23e648dce5e5d8fb4",
   "runtimeIntegrated": false,
   "artisticallyApproved": false,

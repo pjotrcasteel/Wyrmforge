@@ -1,6 +1,7 @@
 // Offline revision of SE: one planted support and one lifted recovery per stride.
 import {project as previous,poses as previousPoses,transform as previousTransform,sourceContacts as bootContacts} from './gothic-southeast-project.mjs';
 export const project={...previous,id:'grey-wizard-fire-southeast-walking-stick-v007',outputDirectory:'gothic-southeast-v007-stick',
+ masks:previous.masks.map(mask=>mask.name==='staff'?{name:'staff',polygon:[[50,26],[64,26],[65,49],[62,58],[64,81],[64,115],[62,137],[57,137],[58,117],[59,100],[58,82],[55,69],[54,52],[50,48]]}:mask),
  status:'walking-stick source-motion revision; live stride/material/phone acceptance open'};
 // Tip travel is relative to root [i,i]. Frames7..15 share world tip [13,13].
 // Recovery lifts the tip clear, advances it, then lowers it into the next plant.
