@@ -49,21 +49,49 @@ test('G4 aligns only standing actor planes to the live camera without altering g
     camera.quaternion.setFromAxisAngle(new T.Vector3(1, 0, 0), 1.1);
     const actor = { quaternion: new T.Quaternion() };
     const caster = { quaternion: new T.Quaternion() };
+    const authoredCaster = { quaternion: new T.Quaternion() };
     const ground = { quaternion: new T.Quaternion() };
     const engine = { camera, objects: new Map([
         ['actor', { mesh: actor, caster }],
+        ['authored', { mesh: { quaternion: new T.Quaternion() }, caster: authoredCaster }],
         ['ground', { mesh: ground }],
     ]) };
     alignHuntActorBillboards([
-        { id: 'actor', geometry: 'hunt-billboard' },
+        { id: 'actor', geometry: 'hunt-billboard', occluderGeometry: 'hunt-shadow-silhouette' },
+        { id: 'authored', geometry: 'hunt-billboard', occluderGeometry: 'custom-3d-caster' },
         { id: 'ground', geometry: 'hunt-plane' },
         { id: 'missing', geometry: 'hunt-billboard' },
     ], engine);
     assert.ok(actor.quaternion.angleTo(camera.quaternion) < 1e-7);
-    assert.ok(caster.quaternion.angleTo(new T.Quaternion()) < 1e-7,
-        'The occluder must remain world-aligned even while the sprite faces the camera.');
+    assert.ok(caster.quaternion.angleTo(camera.quaternion) < 1e-7,
+        'The alpha-cutout pose caster must face the camera as in the accepted G1 proof.');
+    assert.ok(authoredCaster.quaternion.angleTo(new T.Quaternion()) < 1e-7,
+        'An independently authored 3D occluder retains its own world rotation.');
     assert.ok(ground.quaternion.angleTo(new T.Quaternion()) < 1e-7,
         'Terrain receiver must retain its original world orientation.');
+});
+
+test('G4 Canvas pose shadows use bounded alpha silhouettes attached to real painted feet', async () => {
+    const { huntCaptureSilhouetteCaster } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js');
+    for (const height of [32, 64, 96, 160, 320]) {
+        for (const footFraction of [.75, .92, 1]) {
+            const caster = huntCaptureSilhouetteCaster(100, 200, height, height, footFraction);
+            assert.equal(caster.occluderGeometry, 'hunt-shadow-silhouette');
+            assert.ok(caster.occluderScale[1] >= .06 && caster.occluderScale[1] <= .14,
+                'Captured artwork must not create giant point-light wedge shadows.');
+            assert.ok(caster.occluderScale[0] <= .9,
+                'The source capture rectangle is not a full-width solid shadow.');
+            assert.equal(caster.occluderPosition[0], (100 + height / 2) / 48);
+            assert.ok(Math.abs(caster.occluderPosition[1] + (200 + height * footFraction) * Math.SQRT2 / 48) < 1e-12,
+                'The silhouette ground anchor must use the actual authored foot.');
+            assert.ok(caster.occluderPosition[2] <= 0,
+                'Sprite alpha beneath the foot may not float above the floor.');
+            const fireballWorldHeight = 24 / 48;
+            const farthestProjectionRatio = caster.occluderScale[1] / (fireballWorldHeight - caster.occluderScale[1]);
+            assert.ok(farthestProjectionRatio < .4,
+                'Even a maximum-size sprite cannot throw a stretched triangle from a real 24px-high Fireball.');
+        }
+    }
 });
 
 test('mage, Warden and Wyrm retain their own painted foot line without ground penetration', async () => {
