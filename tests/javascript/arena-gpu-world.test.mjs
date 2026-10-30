@@ -36,12 +36,12 @@ test('authored sprite foot anchor stays on the ground and its billboard faces th
         assert.ok(vertex.z >= -1e-8, 'No actor pixels may be hidden underneath the ground mesh.');
     }
     const uv = geometry.getAttribute('uv');
-    assert.equal(uv.getY(2), .25, 'The GPU cuts the unused source below the world-space feet pivot.');
+    assert.equal(uv.getY(2), 0, 'Atlas bounds, not shared geometry, specify the painted foot crop.');
     assert.equal(uv.getY(0), 1, 'The source sprite head must never be cropped.');
     geometry.dispose();
 });
 
-test('all legacy standing captures ground their feet at the shared 75% sprite pivot', async () => {
+test('mage, Warden and Wyrm retain their own painted foot line without ground penetration', async () => {
     const { huntSurfaceRenderable } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js');
     const { huntLayerCapture } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/hunt-gpu-layers.js');
     for (const layer of [
@@ -51,12 +51,20 @@ test('all legacy standing captures ground their feet at the shared 75% sprite pi
     ]) {
         const actor = layer.enemy ?? layer.dragon ?? { x: 400, y: 320, radius: 12 };
         const capture = huntLayerCapture(layer, actor);
-        const mesh = huntSurfaceRenderable(capture.id, capture.x, capture.y, capture.size, capture.size, true);
+        const mesh = huntSurfaceRenderable(capture.id, capture.x, capture.y,
+            capture.size, capture.size, true, { footFraction: capture.footFraction });
         assert.equal(mesh.geometry, 'hunt-billboard');
-        assert.equal(mesh.scale[1], capture.size * .75 / 48);
-        assert.ok(Math.abs(-mesh.position[1] * 48 / Math.SQRT2 - actor.y) < 1e-8,
-            'Actual scene feet must align to C# entity coordinates regardless of sprite scale.');
+        assert.ok(capture.footFraction > .75 && capture.footFraction <= 1,
+            'Painted ankles, bell body and wyrm tail must remain in the texture');
+        assert.equal(mesh.scale[1], capture.size * capture.footFraction / 48);
+        assert.deepEqual(mesh.frame.offset, [0, 1 - capture.footFraction]);
+        assert.deepEqual(mesh.frame.repeat, [1, capture.footFraction]);
+        const footY = capture.y + capture.size * capture.footFraction;
+        assert.ok(Math.abs(-mesh.position[1] * 48 / Math.SQRT2 - footY) < 1e-8,
+            'Physical billboard foot contact must coincide with its own painted foot line');
     }
+    const invalid = () => huntSurfaceRenderable('bad', 0, 0, 100, 100, true, { footFraction: 1.5 });
+    assert.throws(invalid, RangeError);
 });
 
 test('same-depth walls keep distinct stable GPU IDs and crop their own footprints', async () => {
