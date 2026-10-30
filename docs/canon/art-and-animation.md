@@ -9,6 +9,32 @@
 
 **Default for new character production:** first test a small authored 2D directional sprite/pose set or editable layered 2D rig and its true motion in the existing sprite runtime. Use a textured **3D model only as an optional offline authoring source** when an existing approved rig is worth preserving or a concrete view/motion requirement demonstrably benefits from it. The required output remains pixel-correct presentation and real-game proof; do not mandate a live 3D scene, 3D skeleton or Blender-only pipeline. **Archived [AN0–AN6 PR #387](https://github.com/pjotrcasteel/Wyrmforge/pull/387) was closed unmerged by owner on 30 October 2026.** Its rejected source-skin/3D biomechanical presentation is an optional research archive only: no active character-art dependency, no live 3D animation prerequisite, no automatic cutover. Continue creating and refining native 2.5D directional pixel sprites on the already merged shared animation player. Compare quality, development effort and mobile cost before choosing the more complex route. Preserve approved Ashfang source assets, ongoing Hollowed and AN source/rig/tests; do not discard or merge those independent branches as part of this rule.
 
+## Canonical default mage — LOCKED (owner approval, 30 October 2026)
+
+The owner approved the attached three-view grey wizard as the **canonical default
+main-character appearance** before further production. Preserve the
+[exact attached image](../../art/source/characters/grey-wizard/approved-default-reference.png)
+without alteration; SHA256 `1867f2819eff1c1f0a8b2a08a2fe74a4958dfc41012f001712d235ab10d49dc6`.
+[Source provenance](../../art/source/characters/grey-wizard/provenance.json).
+The attachment is authoritative over the earlier provisional v001/v002 concepts.
+
+- Elderly human, weathered face, long grey-white beard and hair; natural proportions.
+- Bent pointed broad-brim grey hat, heavy layered grey cloak over charcoal robes,
+  worn brown leather belt/pouch and visible worn boots. Preserve the reference's
+  silhouette, proportions, material character and restrained Gothic appearance.
+- Thin crooked natural wooden walking/casting staff, continuous through the hand;
+  preserve its shape and grip. Elemental cast effects remain separate event-driven
+  presentation, not permanently baked flames or a different default staff design.
+- This supersedes the **slate-blue hood, pale collar and shadowed-face default**
+  in older artwork/workflow descriptions below. Preserve those sources as historical
+  scene/runtime evidence; they no longer govern new protagonist appearance.
+- Approval covers visual identity. Native directional sprites, editable layers,
+  genuine walk/cast/hurt/death motion, pixel scale, alpha/materials, lighting,
+  occlusion and actual Hunt/phone acceptance remain separate production gates.
+  The live temporary mage stays until its replacement passes integration gates.
+  Use the existing shared sprite/animation/material pipeline, without reviving
+  rejected wizard #335 or deferred source-skin #387 implementations.
+
 ## Present-day approved identity (20 October 2026)
 
 - Gothic, grounded, readable dark fantasy. Prefer coherent real building geometry and material, limited meaningful magical light, and believable people/creatures over ornamental AI-generated clutter. Real game visual acceptance at mobile scale is required.
@@ -209,7 +235,7 @@ It uses a persistent editable character and reviewed motion, with rendered sheet
 as exports. The existing code-authored pipeline below describes legacy/current
 assets; it is not the production method for the new detailed monster animations.
 
-Before every new artwork, research relevant real-world or game references and inspect the approved GitHub artwork. Preserve the mage's established slate-blue cloak, pale collar and staff silhouette. Use reference images directly; do not guess character colours from memory.
+Before every new artwork, research relevant real-world or game references and inspect the approved GitHub artwork. For the protagonist, preserve the canonical grey wizard appearance approved 30 October 2026 above; older slate-blue scene studies remain historical references. Use the approved reference directly; do not guess character colours from memory.
 
 #### Mandatory structural review — 15 October 2026
 

@@ -1,6 +1,7 @@
 # Grey wizard — reference review and production checkpoint
 
-Status: appearance production started; no runtime integration or visual approval.
+Status: canonical default appearance approved by owner on 30 October 2026; native
+sprite production, motion and runtime/device acceptance remain pending.
 Owner request: elderly main-character mage, pointed hat, long grey cloak and staff;
 review the entire supplied reference archive before starting. This authorizes a
 fresh sprite-first attempt, not revival of abandoned wizard PR #335.
@@ -123,3 +124,14 @@ rig, animation engine or live mage replacement was introduced. No tests were run
 because this checkpoint contains documentation and source concepts only; file
 dimensions, alpha, hashes and visual contents were checked. Native/mobile game
 and physical-device validation are pending, not implied by these source images.
+
+## Owner appearance approval — 30 October 2026
+
+Owner: "yes perfect" and request to store as canonical default before continuing.
+The accompanying attachment is the exact selected reference, not automatically
+v002: copied byte-for-byte as `approved-default-reference.png`, SHA256
+`1867f2819eff1c1f0a8b2a08a2fe74a4958dfc41012f001712d235ab10d49dc6`.
+Its identity now governs the canonical art and vision topics. Both generated
+candidates and prompts remain preserved as production history. Their earlier
+unapproved statuses above describe those checkpoints, not the newly approved
+attached reference. No additional animation or runtime implementation in this slice.
