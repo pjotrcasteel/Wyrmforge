@@ -92,6 +92,7 @@ export function readArenaDiagnostics(canvas) {
     if (!state) return null;
     return {
         active: state.active,
+        worldReady: hasAuthoritativeHuntWorld(state.latestSnapshot),
         hud: state.latestSnapshot?.hud??null,
         paused: state.latestSnapshot?.paused??false,
         ended: state.latestSnapshot?.ended??false,
@@ -215,7 +216,10 @@ function frame(state, timestamp) {
     recordRenderFrame(state, timestamp);
 
     try {
-        if (state.latestSnapshot) draw(state, state.latestSnapshot, rect.width, rect.height);
+        // A C# bootstrap snapshot can carry a placeholder 800x600 world, Arcane
+        // school and no terrain. Do not show it as a torn/black G4 Hunt frame.
+        const waitingForWorld = state.g4StageFrames && !hasAuthoritativeHuntWorld(state.latestSnapshot);
+        if (state.latestSnapshot && !waitingForWorld) draw(state, state.latestSnapshot, rect.width, rect.height);
         else drawWaiting(state, rect.width, rect.height);
         state.renderingFailed = false;
         state.renderingError = null;
@@ -233,7 +237,8 @@ function frame(state, timestamp) {
     }
 
     state.g4Review?.record(timestamp, {
-        playing: Boolean(state.latestSnapshot && !state.latestSnapshot.paused && !state.latestSnapshot.ended),
+        playing: Boolean(state.latestSnapshot && !state.latestSnapshot.paused && !state.latestSnapshot.ended &&
+            (!state.g4StageFrames || hasAuthoritativeHuntWorld(state.latestSnapshot))),
         renderingFailed: Boolean(state.renderingFailed),
         gpuAvailable: Boolean(state.gpuWorld && state.latestSnapshot?.lighting),
         ended: Boolean(state.latestSnapshot?.ended),
@@ -294,6 +299,10 @@ function resizeCanvas(state, rect) {
     }
     state.pixelRatio = dpr;
     state.context.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function hasAuthoritativeHuntWorld(snapshot) {
+    return Boolean(snapshot?.world && snapshot?.player && snapshot?.environment && snapshot?.lighting);
 }
 
 function drawWaiting(state, width, height) {
