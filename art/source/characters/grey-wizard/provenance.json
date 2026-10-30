@@ -60,11 +60,26 @@
       "src/Wyrmforge.Presentation.Web/wwwroot/art/divine-lineage-sigils.webp"
     ],
     "prompt": "school-variants-prompt.txt",
-    "status": "Six-school cape/staff appearance proposal; visual approval and native production pending",
+    "status": "REJECTED by owner: flat cape badges and literal icon-topped staffs",
     "alphaCounts": {
       "transparent": 961977,
       "opaque": 0,
       "partial": 610887
     }
+  },
+  "schoolVariantsRevision2": {
+    "file": "school-variants-v002.png",
+    "sha256": "446491e9c1ffac8f3eaba57dfa716a67def6cd72526cfe11248e3a5c9a350b78",
+    "size": [
+      1536,
+      1024
+    ],
+    "generator": "built-in image_gen edit",
+    "inputs": [
+      "approved-default-reference.png",
+      "src/Wyrmforge.Presentation.Web/wwwroot/art/divine-lineage-sigils.webp"
+    ],
+    "prompt": "school-variants-v002-prompt.txt",
+    "status": "Corrected material-integrated staff and woven cape concept; owner review pending"
   }
 }

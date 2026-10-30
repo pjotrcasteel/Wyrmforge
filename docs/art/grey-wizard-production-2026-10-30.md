@@ -192,3 +192,13 @@ violet grain channels, bleached decayed wood/green crevices, and living root/mos
 amber sap respectively. These treatments are proposals, not owner-approved details.
 Exact prompt saved as `school-variants-v002-prompt.txt`. Generate from the approved
 base and canonical atlas, not from the rejected board. No runtime changes.
+
+V002 produced and preserved as `school-variants-v002.png`, exact built-in ImageGen
+output with SHA256 in provenance. Inspected all six: no mounted icon heads; natural
+wooden crooks restored, school character carried by grain/fissures/rime/metal/root
+material. Cape motifs now have muted thread texture and central fold shading.
+Fold occlusion is still limited and motif shapes remain comparatively flat in
+places; this is not cloth-deformation or native sprite acceptance. No claim of
+byte-identical icon reproduction, animation or in-Hunt proof. Appearance review
+remains open. V001 retained explicitly as rejected, never as an approved variant.
+Source hash/dimensions and `git diff --check` verified; no runtime changes/tests.
