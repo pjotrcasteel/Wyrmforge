@@ -122,6 +122,23 @@ public sealed class WorldFirstArenaBrowserTests : PageTest
         Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
         await Page.ScreenshotAsync(new() { Path = Path.Combine(output, $"ar1-{kind}-live-hunt-{width}.png"), FullPage = false });
 
+        // Review-only geography inset: same live Hunt canvas, same C# polygons,
+        // with an explicit viewport rectangle and player position for context.
+        await Page.EvaluateAsync(@"() => {
+            const url = new URL(location.href);
+            url.searchParams.set('ar1Review', '1');
+            history.replaceState(null, '', url);
+        }");
+        await Page.WaitForFunctionAsync("expected => window.__wyrmforgeAr1Review?.siteId === expected",
+            siteId, new() { Timeout = 45000 });
+        await Page.ScreenshotAsync(new() { Path = Path.Combine(output, $"ar1-{kind}-geography-review-{width}.png"),
+            FullPage = false });
+        await Page.EvaluateAsync(@"() => {
+            const url = new URL(location.href);
+            url.searchParams.delete('ar1Review');
+            history.replaceState(null, '', url);
+        }");
+
         // Move the real C# hunter through the actual Hunt simulation and camera.
         // This must never be a fabricated overview or a still from a separate lab.
         await Page.Keyboard.DownAsync("w");
