@@ -3606,13 +3606,13 @@ public sealed class WyrmforgeBrowserTests : PageTest
     [DataRow(320, 568, false)]
     [DataRow(390, 844, false)]
     [DataRow(390, 844, true)]
-    public async Task Mobile_G4DeviceReview_RecordsRealHuntAndExportsEvidence(int width, int height, bool flatGround)
+    public async Task Mobile_G4DeviceReview_RecordsRealHuntAndExportsEvidence(int width, int height, bool paintedGround)
     {
         await Page.SetViewportSizeAsync(width, height);
         // A Pages visit may skip character creation; keep this real-Hunt Fireball proof
         // on the Pyromancer selected by the normal first-visit character flow.
         await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.characterSchool.v1','Pyromancer');");
-        var terrainQuery = flatGround ? "&g4FlatGround=1" : "";
+        var terrainQuery = paintedGround ? "&g4PaintedGround=1" : "";
         await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/?arenaGpu=1&gpuQuality=mobile&g4Review=1" + terrainQuery,
             new() { WaitUntil = WaitUntilState.NetworkIdle });
         // Consent is the FIRST screen, before any Gate/Town/Hunt menus can load.
@@ -3711,12 +3711,11 @@ public sealed class WyrmforgeBrowserTests : PageTest
             return readablePixels >= count * .16 && totalBrightness >= count * 14;
         }", null, new() { Timeout = 30000 });
 
-        // The default phone review must stay on readable painted ground.
-        // Also capture the explicit flat-ground A/B: neither path may silently
-        // substitute for the other. These are genuine full-game screenshots,
-        // not an isolated lab's nonblack framebuffer assertion.
+        // The default G4 review must show neutral grey, free of ground paintings.
+        // Keep an explicit painted A/B for diagnostic comparison only. Both cases
+        // are genuine full-game screenshots, not isolated light-lab assertions.
         var reviewDiagnostics = await Page.EvaluateAsync<JsonElement>("() => window.__huntGpuRead()");
-        var expectedTerrain = flatGround ? "flat-colors" : "painted";
+        var expectedTerrain = paintedGround ? "painted" : "neutral-grey";
         Assert.AreEqual(expectedTerrain, reviewDiagnostics.GetProperty("terrainPresentation").GetString(),
             "The G4 phone proof must record the actual selected ground, not assume a different review mode.");
         Assert.AreEqual("staged", reviewDiagnostics.GetProperty("framePresentation").GetString(),
