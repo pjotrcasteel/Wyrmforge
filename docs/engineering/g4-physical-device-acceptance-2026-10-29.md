@@ -57,3 +57,14 @@ acceptance slice is now confirmed by **real-device** proof. G4 overall remains
 cross-device performance/thermal acceptance remain open. G5 production cutover is
 a separate milestone. Preserve the painted Town, C# source authority, other engine
 work and the default Canvas Hunt. Do not ask for another JSON export.
+
+
+## Follow-up mobile GPU visual defects — 30 October 2026
+
+The same iPhone review reports **the mage partially buried in the ground, Bell Warden and Wyrm silhouettes distorted or sunk, and frequent screen tearing/flicker**. These were not approved by the owner. The G4 presentation fixes are staged in [PR #424](https://github.com/pjotrcasteel/Wyrmforge/pull/424), after the owner screenshot evidence:
+
+- **Generic sprite-foot geometry:** captured standing sprite tiles have their C# feet pivot at 75% of the capture height. The old default billboard translated the plane by only 25% before its tilt, placing the lower quarter *below* Z=0 where the ground depth buffer could hide it. One shared actor billboard now crops the sub-foot 25% UV strip, moves its bottom edge onto Z=0 and scales the remaining vertical projection to 75%; no mage/Warden/Wyrm-specific mesh engine or animation changes. Unit tests check all three actor kinds against C# world coordinates and prove no negative-Z vertices.
+- **Mobile tear prevention:** compose complete GPU-world, actors, VFX, HUD and overlays into a reusable correctly DPR-sized Canvas staging surface, then copy that completed frame **once** to the visible interactive Canvas with nearest-neighbor sampling. This preserves the existing single shared GPU lighting renderer and gameplay authority. The extra staging copy can cost mobile memory/bandwidth: the device-level frame pacing gate remains required. Unit tests check reuse, transforms, no interpolation and single visible presentation. No GPU timer or memory measurement is invented.
+- **Other G4 review UI:** the post-Hunt G4 report collapses/moves away from the rewards; the separate preboot consent and private delivery remain intact.
+
+**Acceptance remains open:** The above are source-backed repairs, not visual owner approval or proof of zero tearing on iPhone. Rebuild the isolated pinned Pages candidate **only after the exact-head tests pass**, obtain real iPhone screenshot/video proof of an upright mage, Bell Warden and Wyrm with correct foot contact and no frame tearing under camera movement, and verify p95 frame pacing has not regressed versus the prior 33 ms result. Do not fold GPU defaults into production or close G4 prematurely. The dark Trail 2 scene is still an outstanding independent visual concern.
