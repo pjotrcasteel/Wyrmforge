@@ -1,0 +1,182 @@
+{
+  "status": "south walking-stick source review; live locomotion/material/phone acceptance open",
+  "sourceLayerRecompositionExact": true,
+  "idleRasterExact": true,
+  "uniqueFrames": 16,
+  "binaryAlpha": true,
+  "paletteSize": 96,
+  "sourceBounds": {
+    "minX": 23,
+    "minY": 13,
+    "maxX": 88,
+    "maxY": 149
+  },
+  "cell": 160,
+  "anchor": [
+    56,
+    141
+  ],
+  "decodedAlbedoBytes": 1638400,
+  "decodedEmissionBytes": 1638400,
+  "sharedControllerSequence": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "pause": true,
+  "reducedMotion": true,
+  "contacts": [
+    {
+      "name": "boot-left",
+      "frames": [
+        0,
+        7
+      ],
+      "sourceRasterSoleWorldY": [
+        148,
+        148,
+        148,
+        148,
+        148,
+        148,
+        148,
+        148
+      ],
+      "maxSpreadNativePixels": 0
+    },
+    {
+      "name": "boot-right",
+      "frames": [
+        8,
+        15
+      ],
+      "sourceRasterSoleWorldY": [
+        165,
+        165,
+        165,
+        165,
+        165,
+        165,
+        165,
+        165
+      ],
+      "maxSpreadNativePixels": 0
+    },
+    {
+      "name": "staff-tip",
+      "frames": [
+        7,
+        15
+      ],
+      "sourceWorldTipXY": [
+        {
+          "x": 33.5,
+          "y": 162
+        },
+        {
+          "x": 33.5,
+          "y": 162
+        },
+        {
+          "x": 33.5,
+          "y": 162
+        },
+        {
+          "x": 33.5,
+          "y": 162
+        },
+        {
+          "x": 33.5,
+          "y": 162
+        },
+        {
+          "x": 33.5,
+          "y": 162
+        },
+        {
+          "x": 33.5,
+          "y": 162
+        },
+        {
+          "x": 33.5,
+          "y": 162
+        },
+        {
+          "x": 33.5,
+          "y": 162
+        }
+      ],
+      "sourceRasterBottomXY": [
+        {
+          "x": 33.5,
+          "y": 162
+        },
+        {
+          "x": 33.5,
+          "y": 162
+        },
+        {
+          "x": 33.5,
+          "y": 162
+        },
+        {
+          "x": 33.5,
+          "y": 162
+        },
+        {
+          "x": 33.5,
+          "y": 162
+        },
+        {
+          "x": 33.5,
+          "y": 162
+        },
+        {
+          "x": 33.5,
+          "y": 162
+        },
+        {
+          "x": 33.5,
+          "y": 162
+        },
+        {
+          "x": 33.5,
+          "y": 162
+        }
+      ],
+      "maxSpreadNativePixels": 0,
+      "analyticalDrift": 0,
+      "staffHandGripError": 0,
+      "recoveryFrames": [
+        0,
+        6
+      ],
+      "scope": "source-only contact under root[0,2i]; live C# fitting not accepted"
+    }
+  ],
+  "sourceProjectSha256": "3b02637e2d357f736929cf52b811cb3f727e7e5a8d50bacf449f8858a617da97",
+  "controllerSha256": "a3b9bc9a6e9c89262ef3d83e69344566f653f013ef8f66c23e648dce5e5d8fb4",
+  "runtimeIntegrated": false,
+  "artisticallyApproved": false,
+  "physicalDeviceTested": false,
+  "limitations": [
+    "diagnostic extracted emission; source-light still baked in albedo",
+    "two-pixel hidden edge fills, not fully painted hidden anatomy",
+    "single source view only",
+    "source-only contact does not establish C# root-speed fitting",
+    "native world scale and actual phones open"
+  ]
+}

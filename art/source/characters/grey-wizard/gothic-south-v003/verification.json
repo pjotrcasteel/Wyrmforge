@@ -1,0 +1,91 @@
+{
+  "status": "appearance/motion study; NOT artistically or runtime approved",
+  "sourceLayerRecompositionExact": true,
+  "idleRasterExact": true,
+  "uniqueFrames": 16,
+  "binaryAlpha": true,
+  "paletteSize": 96,
+  "sourceBounds": {
+    "minX": 23,
+    "minY": 14,
+    "maxX": 88,
+    "maxY": 149
+  },
+  "cell": 160,
+  "anchor": [
+    56,
+    141
+  ],
+  "decodedAlbedoBytes": 1638400,
+  "decodedEmissionBytes": 1638400,
+  "sharedControllerSequence": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "pause": true,
+  "reducedMotion": true,
+  "contacts": [
+    {
+      "name": "boot-left",
+      "frames": [
+        0,
+        7
+      ],
+      "sourceRasterSoleWorldY": [
+        148,
+        148,
+        148,
+        148,
+        148,
+        148,
+        148,
+        148
+      ],
+      "maxSpreadNativePixels": 0
+    },
+    {
+      "name": "boot-right",
+      "frames": [
+        8,
+        15
+      ],
+      "sourceRasterSoleWorldY": [
+        165,
+        165,
+        165,
+        165,
+        165,
+        165,
+        165,
+        165
+      ],
+      "maxSpreadNativePixels": 0
+    }
+  ],
+  "sourceProjectSha256": "be06a68f03e11bedd1d508c4cd93242f073c582ae364e66e61e93df2ce8aa7e0",
+  "controllerSha256": "a3b9bc9a6e9c89262ef3d83e69344566f653f013ef8f66c23e648dce5e5d8fb4",
+  "runtimeIntegrated": false,
+  "artisticallyApproved": false,
+  "physicalDeviceTested": false,
+  "limitations": [
+    "diagnostic extracted emission; source-light still baked in albedo",
+    "two-pixel hidden edge fills, not fully painted hidden anatomy",
+    "single source view only",
+    "source-only contact does not establish C# root-speed fitting",
+    "native world scale and actual phones open"
+  ]
+}

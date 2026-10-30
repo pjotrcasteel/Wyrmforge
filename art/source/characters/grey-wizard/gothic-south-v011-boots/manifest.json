@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "directions": [
+    "S"
+  ],
+  "status": "south walking-stick boot-edge cleanup; source review only",
+  "clips": {
+    "idle": {
+      "image": "idle.png",
+      "frames": 1,
+      "cell": 160,
+      "anchor": [
+        56,
+        141
+      ],
+      "worldSize": 72.944643
+    },
+    "walk": {
+      "image": "walk.png",
+      "frames": 16,
+      "cell": 160,
+      "anchor": [
+        56,
+        141
+      ],
+      "worldSize": 72.944643
+    }
+  },
+  "emission": {
+    "walk": "walk-emission.png"
+  },
+  "sourceExport": "art/source/characters/grey-wizard/gothic-south-v011-boots"
+}

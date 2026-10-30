@@ -1,0 +1,767 @@
+{
+  "id": "grey-wizard-fire-south-walking-stick-v010",
+  "source": "gothic-sampling-v002/gothic-128px.png",
+  "sourceCell": [
+    72,
+    136
+  ],
+  "exportCell": 160,
+  "offset": [
+    20,
+    10
+  ],
+  "sourcePivot": [
+    36,
+    131
+  ],
+  "paletteSize": 96,
+  "bleed": 2,
+  "direction": "S",
+  "frames": 16,
+  "fps": 12,
+  "sourceStride": 32,
+  "status": "south walking-stick source review; live locomotion/material/phone acceptance open",
+  "masks": [
+    {
+      "name": "boot-left",
+      "polygon": [
+        [
+          20,
+          115
+        ],
+        [
+          28,
+          115
+        ],
+        [
+          30,
+          122
+        ],
+        [
+          30,
+          129
+        ],
+        [
+          26,
+          133
+        ],
+        [
+          16,
+          133
+        ],
+        [
+          16,
+          128
+        ],
+        [
+          20,
+          123
+        ]
+      ]
+    },
+    {
+      "name": "boot-right",
+      "polygon": [
+        [
+          43,
+          115
+        ],
+        [
+          51,
+          115
+        ],
+        [
+          53,
+          123
+        ],
+        [
+          57,
+          128
+        ],
+        [
+          57,
+          133
+        ],
+        [
+          45,
+          133
+        ],
+        [
+          41,
+          129
+        ],
+        [
+          43,
+          122
+        ]
+      ]
+    },
+    {
+      "name": "staff-hand",
+      "polygon": [
+        [
+          8,
+          48
+        ],
+        [
+          14,
+          48
+        ],
+        [
+          15,
+          55
+        ],
+        [
+          12,
+          57
+        ],
+        [
+          8,
+          55
+        ]
+      ]
+    },
+    {
+      "name": "staff",
+      "polygon": [
+        [
+          8,
+          12
+        ],
+        [
+          15,
+          13
+        ],
+        [
+          17,
+          28
+        ],
+        [
+          15,
+          36
+        ],
+        [
+          14,
+          47
+        ],
+        [
+          15,
+          64
+        ],
+        [
+          16,
+          92
+        ],
+        [
+          16,
+          132
+        ],
+        [
+          10,
+          132
+        ],
+        [
+          11,
+          104
+        ],
+        [
+          10,
+          78
+        ],
+        [
+          9,
+          58
+        ],
+        [
+          7,
+          42
+        ],
+        [
+          6,
+          29
+        ],
+        [
+          6,
+          20
+        ]
+      ]
+    },
+    {
+      "name": "hat",
+      "polygon": [
+        [
+          16,
+          2
+        ],
+        [
+          51,
+          2
+        ],
+        [
+          55,
+          23
+        ],
+        [
+          52,
+          27
+        ],
+        [
+          43,
+          27
+        ],
+        [
+          30,
+          27
+        ],
+        [
+          18,
+          26
+        ],
+        [
+          14,
+          23
+        ]
+      ]
+    },
+    {
+      "name": "beard",
+      "polygon": [
+        [
+          29,
+          29
+        ],
+        [
+          40,
+          29
+        ],
+        [
+          41,
+          36
+        ],
+        [
+          38,
+          43
+        ],
+        [
+          34,
+          49
+        ],
+        [
+          31,
+          43
+        ],
+        [
+          29,
+          37
+        ]
+      ]
+    },
+    {
+      "name": "head-hair",
+      "polygon": [
+        [
+          23,
+          22
+        ],
+        [
+          43,
+          22
+        ],
+        [
+          46,
+          30
+        ],
+        [
+          45,
+          36
+        ],
+        [
+          40,
+          39
+        ],
+        [
+          28,
+          39
+        ],
+        [
+          22,
+          34
+        ]
+      ]
+    },
+    {
+      "name": "arm-staff",
+      "polygon": [
+        [
+          20,
+          33
+        ],
+        [
+          27,
+          36
+        ],
+        [
+          28,
+          48
+        ],
+        [
+          24,
+          66
+        ],
+        [
+          22,
+          85
+        ],
+        [
+          16,
+          98
+        ],
+        [
+          9,
+          100
+        ],
+        [
+          6,
+          90
+        ],
+        [
+          6,
+          72
+        ],
+        [
+          5,
+          60
+        ],
+        [
+          9,
+          46
+        ],
+        [
+          16,
+          36
+        ]
+      ]
+    },
+    {
+      "name": "arm-free",
+      "polygon": [
+        [
+          50,
+          42
+        ],
+        [
+          54,
+          46
+        ],
+        [
+          58,
+          56
+        ],
+        [
+          61,
+          65
+        ],
+        [
+          64,
+          72
+        ],
+        [
+          63,
+          79
+        ],
+        [
+          59,
+          82
+        ],
+        [
+          55,
+          78
+        ],
+        [
+          55,
+          70
+        ],
+        [
+          51,
+          65
+        ]
+      ]
+    },
+    {
+      "name": "cloak-left",
+      "polygon": [
+        [
+          24,
+          41
+        ],
+        [
+          30,
+          43
+        ],
+        [
+          28,
+          62
+        ],
+        [
+          26,
+          81
+        ],
+        [
+          27,
+          99
+        ],
+        [
+          25,
+          116
+        ],
+        [
+          21,
+          123
+        ],
+        [
+          15,
+          123
+        ],
+        [
+          12,
+          116
+        ],
+        [
+          5,
+          116
+        ],
+        [
+          3,
+          107
+        ],
+        [
+          6,
+          93
+        ],
+        [
+          10,
+          79
+        ],
+        [
+          14,
+          63
+        ],
+        [
+          18,
+          49
+        ]
+      ]
+    },
+    {
+      "name": "cloak-right",
+      "polygon": [
+        [
+          42,
+          38
+        ],
+        [
+          49,
+          38
+        ],
+        [
+          53,
+          44
+        ],
+        [
+          54,
+          60
+        ],
+        [
+          57,
+          73
+        ],
+        [
+          60,
+          86
+        ],
+        [
+          64,
+          99
+        ],
+        [
+          69,
+          115
+        ],
+        [
+          66,
+          124
+        ],
+        [
+          57,
+          126
+        ],
+        [
+          51,
+          122
+        ],
+        [
+          48,
+          120
+        ],
+        [
+          46,
+          106
+        ],
+        [
+          44,
+          87
+        ],
+        [
+          44,
+          63
+        ]
+      ]
+    }
+  ],
+  "drawOrder": [
+    "sleeve-under-staff",
+    "robe-under-staff",
+    "boot-left",
+    "boot-right",
+    "torso",
+    "cloak-left",
+    "cloak-right",
+    "arm-staff",
+    "arm-free",
+    "head-hair",
+    "beard",
+    "hat",
+    "staff",
+    "staff-hand"
+  ],
+  "outputDirectory": "gothic-south-v010-stick",
+  "cleanIslandsMaxPixels": 6,
+  "underpaint": [
+    {
+      "name": "sleeve-under-staff",
+      "polygon": [
+        [
+          8,
+          60
+        ],
+        [
+          16,
+          60
+        ],
+        [
+          16,
+          81
+        ],
+        [
+          8,
+          81
+        ]
+      ],
+      "owner": "staff",
+      "sampleOffset": [
+        8,
+        0
+      ]
+    },
+    {
+      "name": "robe-under-staff",
+      "polygon": [
+        [
+          10,
+          82
+        ],
+        [
+          16,
+          82
+        ],
+        [
+          16,
+          110
+        ],
+        [
+          10,
+          110
+        ]
+      ],
+      "owner": "staff",
+      "sampleOffset": [
+        8,
+        0
+      ]
+    }
+  ],
+  "palette": [
+    "#685e59",
+    "#837368",
+    "#88796c",
+    "#6f635d",
+    "#a99786",
+    "#675b54",
+    "#9d8a7a",
+    "#8f7b6b",
+    "#6f6058",
+    "#66554e",
+    "#a08e7d",
+    "#9e6e4f",
+    "#322f30",
+    "#5b3d29",
+    "#6f503b",
+    "#896044",
+    "#795037",
+    "#b9a797",
+    "#c68d69",
+    "#a4907f",
+    "#2d292a",
+    "#e72103",
+    "#e45211",
+    "#3c3738",
+    "#433c3d",
+    "#694932",
+    "#995b3d",
+    "#b8815d",
+    "#7c6f66",
+    "#8e7e71",
+    "#232021",
+    "#282627",
+    "#494241",
+    "#4d4747",
+    "#5a514f",
+    "#605653",
+    "#b37251",
+    "#190f0d",
+    "#583524",
+    "#cdbcae",
+    "#e1d2c6",
+    "#89553a",
+    "#2e1a11",
+    "#3e160e",
+    "#704831",
+    "#b29379",
+    "#dda079",
+    "#772918",
+    "#7a4933",
+    "#342217",
+    "#3f2417",
+    "#faaf22",
+    "#050303",
+    "#0a0a0a",
+    "#312828",
+    "#41291d",
+    "#c3b0a1",
+    "#ebb08b",
+    "#5a4336",
+    "#534948",
+    "#c56d39",
+    "#fa7004",
+    "#b57a56",
+    "#ce7c46",
+    "#682616",
+    "#67412d",
+    "#73675f",
+    "#796a60",
+    "#7b563c",
+    "#786051",
+    "#877364",
+    "#87756b",
+    "#958374",
+    "#978779",
+    "#a11908",
+    "#a53f22",
+    "#171617",
+    "#1c1c1d",
+    "#e98a3b",
+    "#c18760",
+    "#58160a",
+    "#592e1e",
+    "#544c4b",
+    "#594e4a",
+    "#3b302c",
+    "#393334",
+    "#8a1805",
+    "#89462b",
+    "#1e1611",
+    "#281910",
+    "#492f21",
+    "#4a3429",
+    "#6f1c0c",
+    "#6f3e27",
+    "#100e0e",
+    "#121213"
+  ],
+  "layers": [
+    {
+      "name": "sleeve-under-staff",
+      "file": "source-layers/sleeve-under-staff.png",
+      "pixels": 112
+    },
+    {
+      "name": "robe-under-staff",
+      "file": "source-layers/robe-under-staff.png",
+      "pixels": 149
+    },
+    {
+      "name": "boot-left",
+      "file": "source-layers/boot-left.png",
+      "pixels": 134
+    },
+    {
+      "name": "boot-right",
+      "file": "source-layers/boot-right.png",
+      "pixels": 154
+    },
+    {
+      "name": "torso",
+      "file": "source-layers/torso.png",
+      "pixels": 1489
+    },
+    {
+      "name": "cloak-left",
+      "file": "source-layers/cloak-left.png",
+      "pixels": 514
+    },
+    {
+      "name": "cloak-right",
+      "file": "source-layers/cloak-right.png",
+      "pixels": 1042
+    },
+    {
+      "name": "arm-staff",
+      "file": "source-layers/arm-staff.png",
+      "pixels": 584
+    },
+    {
+      "name": "arm-free",
+      "file": "source-layers/arm-free.png",
+      "pixels": 262
+    },
+    {
+      "name": "head-hair",
+      "file": "source-layers/head-hair.png",
+      "pixels": 132
+    },
+    {
+      "name": "beard",
+      "file": "source-layers/beard.png",
+      "pixels": 169
+    },
+    {
+      "name": "hat",
+      "file": "source-layers/hat.png",
+      "pixels": 371
+    },
+    {
+      "name": "staff",
+      "file": "source-layers/staff.png",
+      "pixels": 549
+    },
+    {
+      "name": "staff-hand",
+      "file": "source-layers/staff-hand.png",
+      "pixels": 42
+    }
+  ],
+  "sourceSha256": "16042cbe7dc62906a1d01e038c74e9ef617c19daf5e033061bce625065434361",
+  "sourcePixels": 5442,
+  "restRecompositionExact": true,
+  "scope": "native palette/semantic source only; masks and hidden areas need art review; no runtime approval"
+}

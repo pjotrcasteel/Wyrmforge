@@ -1,0 +1,372 @@
+{
+  "scope": "source raster diagnostics, NOT artistic approval or actual Hunt/device acceptance",
+  "detachedPixelRule": "8-connected alpha; extra components require inspection, never silently called accepted",
+  "direction": "E",
+  "reviewCrop": [
+    77,
+    52,
+    133,
+    114
+  ],
+  "feetReviewCrop": [
+    56,
+    100,
+    103,
+    154
+  ],
+  "frames": [
+    {
+      "frame": 0,
+      "binaryAlpha": true,
+      "bounds": [
+        46,
+        16,
+        114,
+        142
+      ],
+      "components": [
+        {
+          "pixels": 5129,
+          "bounds": [
+            46,
+            16,
+            113,
+            141
+          ]
+        }
+      ],
+      "flagged": false
+    },
+    {
+      "frame": 1,
+      "binaryAlpha": true,
+      "bounds": [
+        46,
+        16,
+        113,
+        142
+      ],
+      "components": [
+        {
+          "pixels": 5081,
+          "bounds": [
+            46,
+            16,
+            112,
+            141
+          ]
+        }
+      ],
+      "flagged": false
+    },
+    {
+      "frame": 2,
+      "binaryAlpha": true,
+      "bounds": [
+        46,
+        17,
+        112,
+        142
+      ],
+      "components": [
+        {
+          "pixels": 5046,
+          "bounds": [
+            46,
+            17,
+            111,
+            141
+          ]
+        }
+      ],
+      "flagged": false
+    },
+    {
+      "frame": 3,
+      "binaryAlpha": true,
+      "bounds": [
+        47,
+        17,
+        112,
+        142
+      ],
+      "components": [
+        {
+          "pixels": 5056,
+          "bounds": [
+            47,
+            17,
+            111,
+            141
+          ]
+        }
+      ],
+      "flagged": false
+    },
+    {
+      "frame": 4,
+      "binaryAlpha": true,
+      "bounds": [
+        47,
+        16,
+        112,
+        142
+      ],
+      "components": [
+        {
+          "pixels": 5109,
+          "bounds": [
+            47,
+            16,
+            111,
+            141
+          ]
+        }
+      ],
+      "flagged": false
+    },
+    {
+      "frame": 5,
+      "binaryAlpha": true,
+      "bounds": [
+        47,
+        16,
+        112,
+        142
+      ],
+      "components": [
+        {
+          "pixels": 5116,
+          "bounds": [
+            47,
+            16,
+            111,
+            141
+          ]
+        }
+      ],
+      "flagged": false
+    },
+    {
+      "frame": 6,
+      "binaryAlpha": true,
+      "bounds": [
+        47,
+        16,
+        112,
+        142
+      ],
+      "components": [
+        {
+          "pixels": 5143,
+          "bounds": [
+            47,
+            16,
+            111,
+            141
+          ]
+        }
+      ],
+      "flagged": false
+    },
+    {
+      "frame": 7,
+      "binaryAlpha": true,
+      "bounds": [
+        47,
+        16,
+        112,
+        142
+      ],
+      "components": [
+        {
+          "pixels": 5152,
+          "bounds": [
+            47,
+            16,
+            111,
+            141
+          ]
+        }
+      ],
+      "flagged": false
+    },
+    {
+      "frame": 8,
+      "binaryAlpha": true,
+      "bounds": [
+        47,
+        16,
+        112,
+        142
+      ],
+      "components": [
+        {
+          "pixels": 5136,
+          "bounds": [
+            47,
+            16,
+            111,
+            141
+          ]
+        }
+      ],
+      "flagged": false
+    },
+    {
+      "frame": 9,
+      "binaryAlpha": true,
+      "bounds": [
+        47,
+        16,
+        112,
+        142
+      ],
+      "components": [
+        {
+          "pixels": 5066,
+          "bounds": [
+            47,
+            16,
+            111,
+            141
+          ]
+        }
+      ],
+      "flagged": false
+    },
+    {
+      "frame": 10,
+      "binaryAlpha": true,
+      "bounds": [
+        47,
+        17,
+        113,
+        142
+      ],
+      "components": [
+        {
+          "pixels": 5008,
+          "bounds": [
+            47,
+            17,
+            112,
+            141
+          ]
+        }
+      ],
+      "flagged": false
+    },
+    {
+      "frame": 11,
+      "binaryAlpha": true,
+      "bounds": [
+        47,
+        17,
+        113,
+        142
+      ],
+      "components": [
+        {
+          "pixels": 5019,
+          "bounds": [
+            47,
+            17,
+            112,
+            141
+          ]
+        }
+      ],
+      "flagged": false
+    },
+    {
+      "frame": 12,
+      "binaryAlpha": true,
+      "bounds": [
+        47,
+        16,
+        114,
+        142
+      ],
+      "components": [
+        {
+          "pixels": 5052,
+          "bounds": [
+            47,
+            16,
+            113,
+            141
+          ]
+        }
+      ],
+      "flagged": false
+    },
+    {
+      "frame": 13,
+      "binaryAlpha": true,
+      "bounds": [
+        47,
+        16,
+        114,
+        142
+      ],
+      "components": [
+        {
+          "pixels": 5090,
+          "bounds": [
+            47,
+            16,
+            113,
+            141
+          ]
+        }
+      ],
+      "flagged": false
+    },
+    {
+      "frame": 14,
+      "binaryAlpha": true,
+      "bounds": [
+        47,
+        16,
+        114,
+        142
+      ],
+      "components": [
+        {
+          "pixels": 5105,
+          "bounds": [
+            47,
+            16,
+            113,
+            141
+          ]
+        }
+      ],
+      "flagged": false
+    },
+    {
+      "frame": 15,
+      "binaryAlpha": true,
+      "bounds": [
+        46,
+        16,
+        115,
+        142
+      ],
+      "components": [
+        {
+          "pixels": 5147,
+          "bounds": [
+            46,
+            16,
+            114,
+            141
+          ]
+        }
+      ],
+      "flagged": false
+    }
+  ],
+  "flaggedFrames": []
+}

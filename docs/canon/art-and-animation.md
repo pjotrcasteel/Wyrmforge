@@ -9,6 +9,115 @@
 
 **Default for new character production:** first test a small authored 2D directional sprite/pose set or editable layered 2D rig and its true motion in the existing sprite runtime. Use a textured **3D model only as an optional offline authoring source** when an existing approved rig is worth preserving or a concrete view/motion requirement demonstrably benefits from it. The required output remains pixel-correct presentation and real-game proof; do not mandate a live 3D scene, 3D skeleton or Blender-only pipeline. **Archived [AN0–AN6 PR #387](https://github.com/pjotrcasteel/Wyrmforge/pull/387) was closed unmerged by owner on 30 October 2026.** Its rejected source-skin/3D biomechanical presentation is an optional research archive only: no active character-art dependency, no live 3D animation prerequisite, no automatic cutover. Continue creating and refining native 2.5D directional pixel sprites on the already merged shared animation player. Compare quality, development effort and mobile cost before choosing the more complex route. Preserve approved Ashfang source assets, ongoing Hollowed and AN source/rig/tests; do not discard or merge those independent branches as part of this rule.
 
+## Canonical default mage — LOCKED (owner approval, 30 October 2026)
+
+The owner approved the attached three-view grey wizard as the **canonical default
+main-character appearance** before further production. Preserve the
+[exact attached image](../../art/source/characters/grey-wizard/approved-default-reference.png)
+without alteration; SHA256 `1867f2819eff1c1f0a8b2a08a2fe74a4958dfc41012f001712d235ab10d49dc6`.
+[Source provenance](../../art/source/characters/grey-wizard/provenance.json).
+The attachment is authoritative over the earlier provisional v001/v002 concepts.
+
+- Elderly human, weathered face, long grey-white beard and hair; natural proportions.
+- Bent pointed broad-brim grey hat, heavy layered grey cloak over charcoal robes,
+  worn brown leather belt/pouch and visible worn boots. Preserve the reference's
+  silhouette, proportions, material character and restrained Gothic appearance.
+- Thin crooked natural wooden walking/casting staff, continuous through the hand;
+  **Owner locomotion requirement, 30 October 2026:** use the staff as a walking
+  stick: visibly plant its tip, transfer support, then lift and advance it for
+  the next plant. During support it stays fixed on the same world-ground point;
+  grip and arm follow the anchored shaft. Preserve this across walking facings.
+  Contact is authored presentation consistent with C# root movement, not a new
+  gameplay collider or character-specific physics engine.
+  **Owner quality requirement, 30 October 2026:** continue checking every authored
+  frame for stray pixels, torn sleeves, false cloth overlaps and other implausible
+  fragments. Inspect light/dark backgrounds and enlarged grip/sleeve/feet areas
+  throughout production. Contact or connected-component tests supplement visual
+  inspection; they never establish that all pixels make artistic sense.
+  Preserve its slender wooden shaft and grip. **Owner addition, 30 October 2026:**
+  the character's chosen Divine school is shown by its existing approved school
+  symbol on the back of the cape and a matching school-specific staff treatment.
+  **Owner correction:** cape symbols are integrated embroidery/weave, following
+  fabric curvature, folds, occlusion and shading; no flat floating badge, sticker
+  or glowing UI icon. **Latest owner direction:** each staff has a distinct design
+  and a school-coloured gem at its top. Preserve slender functional shafts and
+  attached grips; school identity is concentrated in the gem and its individual
+  setting/design, rather than transforming the entire shaft into school material.
+  Gems are physical stones, not school-icon sculptures, skulls or bear heads.
+  **Owner setting refinement:** gems are grown into or deliberately crafted into
+  the staff structure according to each design, with convincing enclosing wood/
+  roots or fitted sockets. Avoid gems perched on top or suspended between open
+  prongs. The v004 cape hues and embroidery direction is accepted; staff settings
+  require this further refinement while preserving distinct designs and colours.
+  Subsequent owner feedback accepts the integrated-gem direction and requests
+  stronger uniqueness: each staff needs a distinct silhouette and construction,
+  not the same pointed/leaf-shaped gem frame recoloured for all six schools.
+  **Owner readability refinement:** crystal and elemental magic must be more
+  apparent on the staffs: expose more recognisable school-coloured crystal and
+  strengthen local magical character while preserving embedded support and unique
+  construction. Any actual emitted light/animated effects remain shared-runtime
+  presentation driven by authoritative events, not baked gameplay effects.
+  **Staff appearance selection:** owner selected the
+  [v007 crystal staff lineup](../../art/source/characters/grey-wizard/staff-designs-v007.png)
+  ("keep it here") and requested these held by the wizards. Use these six distinct
+  crystal/wood/metal constructions as the chosen staff appearance reference,
+  together with v004 cape hues/embroidery and the approved base wizard. This
+  selected image governs staff appearance over earlier provisional text/studies;
+  character-scale grip, sprite, light/VFX separation and phone acceptance remain
+  production gates, not implied by source-concept approval.
+  **Owner character-scale correction:** v008 held staffs are oversized. Retain the
+  selected design identities but reduce head bulk and shaft thickness to believable
+  one-handed wizard proportions. Crystal readability is not permission for heads
+  approaching the wizard's hat width or heavy pole-sized shafts. V008 scale is not
+  approved; review corrected proportions beside actual characters before export.
+  **Owner proportion approval, 30 October 2026:**
+  [held-staff revision 9](../../art/source/characters/grey-wizard/wizards-held-staffs-v009.png)
+  is accepted ("sure this is fine") for staff size relative to the wizard. Use
+  its slim shafts and compact head proportions with the selected v007 staff
+  identities. V004 remains the accepted cape hue/faded-embroidery reference;
+  incidental brighter embroidery in generated composites does not replace it.
+  This closes the source-concept proportion review, not native sprite, animation,
+  shared material/lighting integration or actual phone acceptance.
+  **Native reconstruction rejection:** the owner rejected `native-south-v001` as
+  too cartoony for the Diablo-like Gothic setting. Preserve its source/tests as a
+  rejected study only; do not expand its action library or promote it. Native
+  translation must retain the approved reference's grounded human proportions,
+  long heavy layered robe, weathered face/materials and restrained realistic pixel
+  treatment. Technical format/playback checks cannot overrule this art rejection.
+  **Relative body scale / 2.5D (owner clarification):** the wizard and normal
+  Hollowed should have equal anatomical stature if the hunched Hollowed stood
+  upright. Exclude wizard hat, staff, transparent cell padding and temporary
+  pose/elite variation from that comparison. Judge projected body height through
+  the shared elevated 2.5D camera, world-ground foot anchors, elevation and depth/
+  occlusion, not independent image widths or source-pixel preview magnifications.
+  Native 2D sprite layers remain authoring surfaces; the required presentation is
+  world-anchored 2.5D. A flat sheet alone cannot approve scale or perspective.
+  **Working scale baseline accepted, 30 October 2026:** after the corrected
+  320/390px Enemy Lab captures, the owner approved continuing at v003 worldSize
+  72.944643, normalized to the actual player radius14. Preserve this working
+  body-scale baseline while refining facings/actions. This does not close the
+  remaining perspective, material, occlusion or physical-phone acceptance gates.
+  The first icon-topped comparison is rejected, not an approved variant library.
+  Keep the approved grey wizard identity. The base reference remains preserved.
+  **Owner refinement:** cape emblems are visibly faded/weathered into the grey
+  cloth; each cape also carries a subtle hint of its school's hue while staying
+  predominantly grey. The top-gem/distinct-design direction supersedes the earlier
+  full-shaft school-material experiment; preserve those studies as history.
+  Cape symbols reuse the canonical six-school emblem identities, not new sigils.
+  They belong to the character's school, not the region/Wyrm selected for a Hunt.
+  Specific placement, size and staff variants require appearance review and mobile
+  readability validation. Elemental cast effects remain separate event-driven
+  presentation, not permanently baked flames.
+- This supersedes the **slate-blue hood, pale collar and shadowed-face default**
+  in older artwork/workflow descriptions below. Preserve those sources as historical
+  scene/runtime evidence; they no longer govern new protagonist appearance.
+- Approval covers visual identity. Native directional sprites, editable layers,
+  genuine walk/cast/hurt/death motion, pixel scale, alpha/materials, lighting,
+  occlusion and actual Hunt/phone acceptance remain separate production gates.
+  The live temporary mage stays until its replacement passes integration gates.
+  Use the existing shared sprite/animation/material pipeline, without reviving
+  rejected wizard #335 or deferred source-skin #387 implementations.
+
 ## Present-day approved identity (20 October 2026)
 
 - Gothic, grounded, readable dark fantasy. Prefer coherent real building geometry and material, limited meaningful magical light, and believable people/creatures over ornamental AI-generated clutter. Real game visual acceptance at mobile scale is required.
@@ -209,7 +318,7 @@ It uses a persistent editable character and reviewed motion, with rendered sheet
 as exports. The existing code-authored pipeline below describes legacy/current
 assets; it is not the production method for the new detailed monster animations.
 
-Before every new artwork, research relevant real-world or game references and inspect the approved GitHub artwork. Preserve the mage's established slate-blue cloak, pale collar and staff silhouette. Use reference images directly; do not guess character colours from memory.
+Before every new artwork, research relevant real-world or game references and inspect the approved GitHub artwork. For the protagonist, preserve the canonical grey wizard appearance approved 30 October 2026 above; older slate-blue scene studies remain historical references. Use the approved reference directly; do not guess character colours from memory.
 
 #### Mandatory structural review — 15 October 2026
 

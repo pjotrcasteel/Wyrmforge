@@ -364,7 +364,7 @@ function draw(state, snapshot, width, height) {
         } else {
             drawMage(ctx, snapshot.player, snapshot.castMotion, danger.hit, state.reducedMotion.matches,
                 sampleSpellLight(spellLights, snapshot.player.x, snapshot.player.y),
-                updateMageWalk(state.mageWalk, snapshot.player, visualSeconds, state.reducedMotion.matches),
+                updateMageWalk(state.mageWalk, snapshot.player, visualSeconds, state.reducedMotion.matches, snapshot.paused),
                 state.mageWalk.facing);
         }
     }

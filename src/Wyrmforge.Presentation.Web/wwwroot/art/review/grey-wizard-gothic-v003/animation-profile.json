@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "maxDeltaSeconds": 0.1,
+  "facing": {
+    "directions": [
+      "S"
+    ],
+    "degreesPerSecond": 360,
+    "hysteresisDegrees": 3
+  },
+  "locomotion": {
+    "clip": "walk",
+    "frames": 16,
+    "stride": 14.5889286,
+    "sourceFps": 12,
+    "calibration": "source stride only; actual C# speed and frame cadence not accepted"
+  },
+  "actions": {}
+}

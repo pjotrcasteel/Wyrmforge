@@ -1,0 +1,546 @@
+[
+  {
+    "width": 320,
+    "scope": "actual C# Enemy Lab/arena camera and depth path, desktop Chromium; not real Hunt/physical phone",
+    "moved": 104.48100000000011,
+    "errors": [],
+    "before": {
+      "player": {
+        "x": 149,
+        "y": 243.7578125,
+        "radius": 14,
+        "barrier": false,
+        "aimAngle": -1.402605294230339,
+        "manualAim": false,
+        "aimTargetId": 1,
+        "aimPropId": null,
+        "activeSchool": "Fire",
+        "focusCharge": 0,
+        "wardCharge": null,
+        "chill": 0,
+        "onBlackIce": false
+      },
+      "enemies": [
+        {
+          "x": 163.88607238809564,
+          "y": 156.08702598094067,
+          "radius": 11,
+          "frozen": false,
+          "healthRatio": 1,
+          "hitFlash": false,
+          "statuses": [],
+          "kind": 0,
+          "entityId": 1,
+          "telegraph": null,
+          "shieldFacing": null,
+          "routed": false,
+          "revived": false,
+          "opacity": 1,
+          "elite": null,
+          "empowered": false,
+          "rimeArmor": 0
+        }
+      ],
+      "hollow": {
+        "ready": false,
+        "fractureReady": false,
+        "capeFreeReady": false,
+        "skeletalDeathReady": false,
+        "injuryDeathAtlasesLoaded": 0,
+        "injuriesReady": false,
+        "armsReady": false,
+        "injuryLabReview": false,
+        "layers": null,
+        "entities": [
+          {
+            "entityId": 1,
+            "injuryVariant": "standard",
+            "armVariant": "one-arm-left",
+            "deathInjury": "one-arm-left",
+            "signature": "one-arm-left",
+            "visualScale": 1.05,
+            "idleFrame": 8,
+            "runSpeed": null,
+            "observedDistance": 0,
+            "visualDistance": 0,
+            "injuryDrawn": false,
+            "clip": "walk",
+            "frame": 8,
+            "direction": "S",
+            "baseFrame": 0,
+            "phase": 0,
+            "layered": false
+          }
+        ],
+        "corpses": []
+      },
+      "paused": false,
+      "world": null,
+      "study": {
+        "enabled": true,
+        "ready": false,
+        "error": null,
+        "draws": 0,
+        "frame": 0,
+        "moving": false,
+        "worldSize": null,
+        "scope": "enemy-lab-only S-facing scale/perspective study; not full 2.5D/material acceptance"
+      },
+      "renderingFailed": false
+    },
+    "after": {
+      "player": {
+        "x": 149,
+        "y": 348.2388125000001,
+        "radius": 14,
+        "barrier": false,
+        "aimAngle": -1.499955720527038,
+        "manualAim": false,
+        "aimTargetId": 1,
+        "aimPropId": null,
+        "activeSchool": "Fire",
+        "focusCharge": 0,
+        "wardCharge": null,
+        "chill": 0,
+        "onBlackIce": false
+      },
+      "enemies": [
+        {
+          "x": 160.37451165951268,
+          "y": 187.9426400346898,
+          "radius": 11,
+          "frozen": false,
+          "healthRatio": 1,
+          "hitFlash": false,
+          "statuses": [],
+          "kind": 0,
+          "entityId": 1,
+          "telegraph": null,
+          "shieldFacing": null,
+          "routed": false,
+          "revived": false,
+          "opacity": 1,
+          "elite": null,
+          "empowered": false,
+          "rimeArmor": 0
+        }
+      ],
+      "hollow": {
+        "ready": true,
+        "fractureReady": true,
+        "capeFreeReady": true,
+        "skeletalDeathReady": true,
+        "injuryDeathAtlasesLoaded": 1,
+        "injuriesReady": true,
+        "armsReady": true,
+        "injuryLabReview": false,
+        "layers": {
+          "hits": 0,
+          "misses": 0,
+          "evictions": 0,
+          "tiles": 0,
+          "allocatedTiles": 0,
+          "estimatedBytes": 0
+        },
+        "entities": [
+          {
+            "entityId": 1,
+            "injuryVariant": "standard",
+            "armVariant": "one-arm-left",
+            "deathInjury": "one-arm-left",
+            "signature": "one-arm-left",
+            "visualScale": 1.05,
+            "idleFrame": 8,
+            "runSpeed": 52.14217701048608,
+            "observedDistance": 31.19479999999999,
+            "visualDistance": 31.194966740440748,
+            "injuryDrawn": false,
+            "clip": "walk",
+            "frame": 14,
+            "direction": "S",
+            "baseFrame": 14,
+            "phase": 0.9373487602295898,
+            "layered": false
+          }
+        ],
+        "corpses": []
+      },
+      "paused": false,
+      "world": null,
+      "study": {
+        "enabled": true,
+        "ready": true,
+        "error": null,
+        "draws": 30,
+        "frame": 2,
+        "moving": true,
+        "worldSize": 72.944643,
+        "scope": "enemy-lab-only S-facing scale/perspective study; not full 2.5D/material acceptance"
+      },
+      "renderingFailed": false
+    },
+    "final": {
+      "player": {
+        "x": 149,
+        "y": 348.2388125000001,
+        "radius": 14,
+        "barrier": false,
+        "aimAngle": -1.499955720527037,
+        "manualAim": false,
+        "aimTargetId": 1,
+        "aimPropId": null,
+        "activeSchool": "Fire",
+        "focusCharge": 0,
+        "wardCharge": null,
+        "chill": 0,
+        "onBlackIce": false
+      },
+      "enemies": [
+        {
+          "x": 158.96372570221848,
+          "y": 207.8242486603192,
+          "radius": 11,
+          "frozen": false,
+          "healthRatio": 1,
+          "hitFlash": false,
+          "statuses": [],
+          "kind": 0,
+          "entityId": 1,
+          "telegraph": null,
+          "shieldFacing": null,
+          "routed": false,
+          "revived": false,
+          "opacity": 1,
+          "elite": null,
+          "empowered": false,
+          "rimeArmor": 0
+        }
+      ],
+      "hollow": {
+        "ready": true,
+        "fractureReady": true,
+        "capeFreeReady": true,
+        "skeletalDeathReady": true,
+        "injuryDeathAtlasesLoaded": 1,
+        "injuriesReady": true,
+        "armsReady": true,
+        "injuryLabReview": false,
+        "layers": {
+          "hits": 0,
+          "misses": 0,
+          "evictions": 0,
+          "tiles": 0,
+          "allocatedTiles": 0,
+          "estimatedBytes": 0
+        },
+        "entities": [
+          {
+            "entityId": 1,
+            "injuryVariant": "standard",
+            "armVariant": "one-arm-left",
+            "deathInjury": "one-arm-left",
+            "signature": "one-arm-left",
+            "visualScale": 1.05,
+            "idleFrame": 8,
+            "runSpeed": 51.26340658090438,
+            "observedDistance": 51.126400000000004,
+            "visualDistance": 51.12690251719027,
+            "injuryDrawn": false,
+            "clip": "walk",
+            "frame": 8,
+            "direction": "S",
+            "baseFrame": 8,
+            "phase": 0.5362650996751881,
+            "layered": false
+          }
+        ],
+        "corpses": []
+      },
+      "paused": false,
+      "world": null,
+      "study": {
+        "enabled": true,
+        "ready": true,
+        "error": null,
+        "draws": 53,
+        "frame": 0,
+        "moving": false,
+        "worldSize": 72.944643,
+        "scope": "enemy-lab-only S-facing scale/perspective study; not full 2.5D/material acceptance"
+      },
+      "renderingFailed": false
+    }
+  },
+  {
+    "width": 390,
+    "scope": "actual C# Enemy Lab/arena camera and depth path, desktop Chromium; not real Hunt/physical phone",
+    "moved": 101.32699999999994,
+    "errors": [],
+    "before": {
+      "player": {
+        "x": 184,
+        "y": 243.7578125,
+        "radius": 14,
+        "barrier": false,
+        "aimAngle": -1.3641107425012802,
+        "manualAim": false,
+        "aimTargetId": 1,
+        "aimPropId": null,
+        "activeSchool": "Fire",
+        "focusCharge": 0,
+        "wardCharge": null,
+        "chill": 0,
+        "onBlackIce": false
+      },
+      "enemies": [
+        {
+          "x": 202.4,
+          "y": 156.005,
+          "radius": 11,
+          "frozen": false,
+          "healthRatio": 1,
+          "hitFlash": false,
+          "statuses": [],
+          "kind": 0,
+          "entityId": 1,
+          "telegraph": null,
+          "shieldFacing": null,
+          "routed": false,
+          "revived": false,
+          "opacity": 1,
+          "elite": null,
+          "empowered": false,
+          "rimeArmor": 0
+        }
+      ],
+      "hollow": {
+        "ready": false,
+        "fractureReady": false,
+        "capeFreeReady": false,
+        "skeletalDeathReady": false,
+        "injuryDeathAtlasesLoaded": 0,
+        "injuriesReady": false,
+        "armsReady": false,
+        "injuryLabReview": false,
+        "layers": null,
+        "entities": [
+          {
+            "entityId": 1,
+            "injuryVariant": "standard",
+            "armVariant": "one-arm-left",
+            "deathInjury": "one-arm-left",
+            "signature": "one-arm-left",
+            "visualScale": 1.05,
+            "idleFrame": 8,
+            "runSpeed": null,
+            "observedDistance": 0,
+            "visualDistance": 0,
+            "injuryDrawn": false,
+            "clip": "walk",
+            "frame": 8,
+            "direction": "S",
+            "baseFrame": 0,
+            "phase": 0,
+            "layered": false
+          }
+        ],
+        "corpses": []
+      },
+      "paused": false,
+      "world": null,
+      "study": {
+        "enabled": true,
+        "ready": false,
+        "error": null,
+        "draws": 0,
+        "frame": 0,
+        "moving": false,
+        "worldSize": null,
+        "scope": "enemy-lab-only S-facing scale/perspective study; not full 2.5D/material acceptance"
+      },
+      "renderingFailed": false
+    },
+    "after": {
+      "player": {
+        "x": 184,
+        "y": 345.08481249999994,
+        "radius": 14,
+        "barrier": false,
+        "aimAngle": -1.481594790539783,
+        "manualAim": false,
+        "aimTargetId": 1,
+        "aimPropId": null,
+        "activeSchool": "Fire",
+        "focusCharge": 0,
+        "wardCharge": null,
+        "chill": 0,
+        "onBlackIce": false
+      },
+      "enemies": [
+        {
+          "x": 198.14898107760817,
+          "y": 186.88760716873944,
+          "radius": 11,
+          "frozen": false,
+          "healthRatio": 1,
+          "hitFlash": false,
+          "statuses": [],
+          "kind": 0,
+          "entityId": 1,
+          "telegraph": null,
+          "shieldFacing": null,
+          "routed": false,
+          "revived": false,
+          "opacity": 1,
+          "elite": null,
+          "empowered": false,
+          "rimeArmor": 0
+        }
+      ],
+      "hollow": {
+        "ready": true,
+        "fractureReady": true,
+        "capeFreeReady": true,
+        "skeletalDeathReady": true,
+        "injuryDeathAtlasesLoaded": 1,
+        "injuriesReady": true,
+        "armsReady": true,
+        "injuryLabReview": false,
+        "layers": {
+          "hits": 0,
+          "misses": 0,
+          "evictions": 0,
+          "tiles": 0,
+          "allocatedTiles": 0,
+          "estimatedBytes": 0
+        },
+        "entities": [
+          {
+            "entityId": 1,
+            "injuryVariant": "standard",
+            "armVariant": "one-arm-left",
+            "deathInjury": "one-arm-left",
+            "signature": "one-arm-left",
+            "visualScale": 1.05,
+            "idleFrame": 8,
+            "runSpeed": 51.702898024988244,
+            "observedDistance": 30.33159999999998,
+            "visualDistance": 30.326287376025043,
+            "injuryDrawn": false,
+            "clip": "walk",
+            "frame": 14,
+            "direction": "S",
+            "baseFrame": 14,
+            "phase": 0.911246615866137,
+            "layered": false
+          }
+        ],
+        "corpses": []
+      },
+      "paused": false,
+      "world": null,
+      "study": {
+        "enabled": true,
+        "ready": true,
+        "error": null,
+        "draws": 31,
+        "frame": 15,
+        "moving": true,
+        "worldSize": 72.944643,
+        "scope": "enemy-lab-only S-facing scale/perspective study; not full 2.5D/material acceptance"
+      },
+      "renderingFailed": false
+    },
+    "final": {
+      "player": {
+        "x": 184,
+        "y": 345.08481249999994,
+        "radius": 14,
+        "barrier": false,
+        "aimAngle": -1.481594790539783,
+        "manualAim": false,
+        "aimTargetId": 1,
+        "aimPropId": null,
+        "activeSchool": "Fire",
+        "focusCharge": 0,
+        "wardCharge": null,
+        "chill": 0,
+        "onBlackIce": false
+      },
+      "enemies": [
+        {
+          "x": 196.37294537178428,
+          "y": 206.7451420462521,
+          "radius": 11,
+          "frozen": false,
+          "healthRatio": 1,
+          "hitFlash": false,
+          "statuses": [],
+          "kind": 0,
+          "entityId": 1,
+          "telegraph": null,
+          "shieldFacing": null,
+          "routed": false,
+          "revived": false,
+          "opacity": 1,
+          "elite": null,
+          "empowered": false,
+          "rimeArmor": 0
+        }
+      ],
+      "hollow": {
+        "ready": true,
+        "fractureReady": true,
+        "capeFreeReady": true,
+        "skeletalDeathReady": true,
+        "injuryDeathAtlasesLoaded": 1,
+        "injuriesReady": true,
+        "armsReady": true,
+        "injuryLabReview": false,
+        "layers": {
+          "hits": 0,
+          "misses": 0,
+          "evictions": 0,
+          "tiles": 0,
+          "allocatedTiles": 0,
+          "estimatedBytes": 0
+        },
+        "entities": [
+          {
+            "entityId": 1,
+            "injuryVariant": "standard",
+            "armVariant": "one-arm-left",
+            "deathInjury": "one-arm-left",
+            "signature": "one-arm-left",
+            "visualScale": 1.05,
+            "idleFrame": 8,
+            "runSpeed": 51.909657302318834,
+            "observedDistance": 50.26319999999985,
+            "visualDistance": 50.25483405567365,
+            "injuryDrawn": false,
+            "clip": "walk",
+            "frame": 8,
+            "direction": "S",
+            "baseFrame": 8,
+            "phase": 0.5100611194613478,
+            "layered": false
+          }
+        ],
+        "corpses": []
+      },
+      "paused": false,
+      "world": null,
+      "study": {
+        "enabled": true,
+        "ready": true,
+        "error": null,
+        "draws": 54,
+        "frame": 0,
+        "moving": false,
+        "worldSize": 72.944643,
+        "scope": "enemy-lab-only S-facing scale/perspective study; not full 2.5D/material acceptance"
+      },
+      "renderingFailed": false
+    }
+  }
+]

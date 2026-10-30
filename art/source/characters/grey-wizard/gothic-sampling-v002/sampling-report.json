@@ -1,0 +1,45 @@
+{
+  "status": "STATIC SAMPLING STUDY ONLY: no layered source/motion/runtime acceptance",
+  "sourceSha256": "d0a8e4b5f25d39f73d024c41c41aa238aac294c6e66de70ed6de2fa8eb3ed036",
+  "method": "pixel-centred nearest-neighbour",
+  "alphaCutoff": 200,
+  "bounds": {
+    "x": 160,
+    "y": 66,
+    "w": 704,
+    "h": 1407
+  },
+  "samples": [
+    {
+      "file": "gothic-64px.png",
+      "width": 40,
+      "height": 72,
+      "visibleTargetHeight": 64,
+      "uniqueColours": 1246,
+      "decodedBytes": 11520
+    },
+    {
+      "file": "gothic-96px.png",
+      "width": 56,
+      "height": 104,
+      "visibleTargetHeight": 96,
+      "uniqueColours": 2640,
+      "decodedBytes": 23296
+    },
+    {
+      "file": "gothic-128px.png",
+      "width": 72,
+      "height": 136,
+      "visibleTargetHeight": 128,
+      "uniqueColours": 4300,
+      "decodedBytes": 39168
+    }
+  ],
+  "limitations": [
+    "source-lit concept, not relightable material",
+    "no palette/cluster cleanup or editable reconstruction",
+    "no production density/world-scale decision",
+    "not game captures",
+    "no motion authored"
+  ]
+}

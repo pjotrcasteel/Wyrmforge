@@ -1,0 +1,41 @@
+{
+  "status": "provisional 2.5D body-scale calibration; owner/real-arena review open",
+  "rule": "wizard and standard Hollowed have equal un-hunched anatomical stature; exclude hat/staff",
+  "reference": "current live no-cape standard Hollowed, radius11, visualScale1; not pending V2 art",
+  "hollowManifest": "src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/hollow-rigged/arms/manifest.json",
+  "hollowClip": {
+    "image": "standard-walk.png",
+    "gitBlobSha": "740d9d3e6a1687781b5788f00c5b0d57d9c37895",
+    "frames": 16,
+    "cell": 96,
+    "anchor": [
+      48,
+      72
+    ],
+    "worldSize": 93
+  },
+  "neutralSource": "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/textured-rgb-v2/textured-mesh.npz",
+  "sourceCamera": "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-pixel-v3/sampled-walk.npz",
+  "sourceSha256": {
+    "textured-mesh.npz": "2a7b55f508d60db25fe161ec3729908a7766238f094a1a6a9af323801f817f6c",
+    "sampled-walk.npz": "a033ebe51fcd95c7e5d82f42d432c2a86ad4f5afdc2b376a150137c12829f8e9",
+    "manifest.json": "f4dd5118f69de239b9c07d63199d9d98d3b3ea0da6552608cf8880a9472891c9"
+  },
+  "restSourceHeight": 1.0002961158752441,
+  "verticalProjectionNativePixels": 51.29655539077339,
+  "standingBodyWorldHeight": 49.69353803481172,
+  "wizardSourceCrownY": 22,
+  "wizardSourceSoleY": 131,
+  "wizardCell": 160,
+  "wizardWorldSize": 72.944643,
+  "previousWizardWorldSize": 40,
+  "previousWizardBodyWorldHeight": 27.25,
+  "limitations": [
+    "upright Hollowed is a guide from preserved parent rest source/camera, NOT a new straightened pose render",
+    "wizard anatomical crown beneath hat is an explicit landmark estimate",
+    "current Hollowed visual variation +/-5 percent and crouched stride are not new stature targets",
+    "source camera applies projected height, not a flat side-view bounding box",
+    "pending Hollowed V2 has no approved replacement body; recheck when it does",
+    "sprite perspective/elevation/material/depth and actual Hunt/device acceptance remain separate"
+  ]
+}

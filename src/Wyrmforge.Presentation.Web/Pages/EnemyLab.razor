@@ -50,6 +50,10 @@
             <button @onclick="RetryStartup">Retry encounter startup</button>
         </section>
     }
+    @if (WizardStudyQuery == "gothic-south-v003")
+    {
+        <p class="note">Wizard source scale study • SOUTH VIEW ONLY • real C# arena camera, world roots and depth sorting. Cape-free Hollowed is the stature reference. Turn off Autocast. This is not final perspective, material, lighting or phone acceptance.</p>
+    }
     <section class="enemy-lab-surface"><canvas @ref="canvas" aria-label="Live enemy encounter"></canvas>
         <div class="status">@kind • @(paused ? "PAUSED" : autoplay ? "AGENT" : "MANUAL") • @(kind == EnemyKind.MireHound && mireStyle == "pixel" ? "PIXEL ART PREVIEW" : "PUBLISHED ART") • INVULNERABLE • NO PROGRESS</div>
     </section>
@@ -70,6 +74,7 @@
     [Inject] private IJSRuntime JavaScript { get; set; } = null!;
     [Inject] private NavigationManager Navigation { get; set; } = null!;
     [Parameter, SupplyParameterFromQuery(Name = "kind")] public string? KindQuery { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "wizardStudy")] public string? WizardStudyQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "seed")] public int? SeedQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "autoplay")] public bool? AutoplayQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "cast")] public bool? CastQuery { get; set; }

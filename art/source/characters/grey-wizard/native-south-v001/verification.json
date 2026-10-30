@@ -1,0 +1,49 @@
+{
+  "status": "source/format contracts only; visual and real-Hunt gates OPEN",
+  "sourceSha256": "89ef74e561db3ff83d661e31488cc1f8c1490b0d65c7648909f68f25aae3ccd6",
+  "controllerSha256": "a3b9bc9a6e9c89262ef3d83e69344566f653f013ef8f66c23e648dce5e5d8fb4",
+  "frames": 16,
+  "uniqueFrames": 16,
+  "paletteColours": 31,
+  "binaryAlpha": true,
+  "sourceBounds": {
+    "min": {
+      "x": 10,
+      "y": 6
+    },
+    "max": {
+      "x": 50,
+      "y": 70
+    }
+  },
+  "packedCell": 80,
+  "anchor": [
+    42,
+    70
+  ],
+  "sharedControllerSequence": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "pause": true,
+  "reducedMotion": true,
+  "decodedAlbedoBytes": 409600,
+  "decodedEmissionBytes": 409600,
+  "artisticallyApproved": false,
+  "runtimeIntegrated": false,
+  "physicalDeviceTested": false
+}

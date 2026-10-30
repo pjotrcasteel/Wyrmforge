@@ -1,0 +1,219 @@
+{
+  "generator": "built-in image_gen",
+  "externalAssetImagesAsInputs": false,
+  "candidate2Input": "appearance-concept-v001.png",
+  "candidates": [
+    {
+      "file": "appearance-concept-v001.png",
+      "sha256": "71f757e7111c722bb9428bd7a3c41e35c23e6f42e4ff70db2e7275cad8b7f018",
+      "bytes": 2156526,
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparentPixels": 727043,
+      "opaquePixels": 0,
+      "partialAlphaPixels": 845821,
+      "status": "appearance concept, not production sprite or approved art"
+    },
+    {
+      "file": "appearance-concept-v002.png",
+      "sha256": "3a30cbc4849346076cc794f44908b3188ee2851b30ff81c04955560dcc1f58d1",
+      "bytes": 1632249,
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "transparentPixels": 660463,
+      "opaquePixels": 0,
+      "partialAlphaPixels": 912401,
+      "status": "appearance concept, not production sprite or approved art"
+    }
+  ],
+  "approvedDefault": {
+    "file": "approved-default-reference.png",
+    "sha256": "1867f2819eff1c1f0a8b2a08a2fe74a4958dfc41012f001712d235ab10d49dc6",
+    "bytes": 1872917,
+    "size": [
+      1536,
+      1024
+    ],
+    "mode": "RGBA",
+    "source": "Exact owner-attached image codex-clipboard-ac7056d0-e0b2-4611-ac30-163c26128ab1.png, copied without modification",
+    "approvedOn": "2026-10-30",
+    "approval": "Canonical default mage appearance; supersedes slate-blue hooded default and both provisional concept candidates",
+    "scope": "Visual identity approval only; native sprite, animation, materials, integration and device acceptance remain pending"
+  },
+  "schoolVariants": {
+    "file": "school-variants-v001.png",
+    "sha256": "cce962aef48a76ec35c78f169dbf096014eef09e0830b87f5541ae939cf48087",
+    "size": [
+      1536,
+      1024
+    ],
+    "mode": "RGBA",
+    "generator": "built-in image_gen edit",
+    "inputs": [
+      "approved-default-reference.png",
+      "src/Wyrmforge.Presentation.Web/wwwroot/art/divine-lineage-sigils.webp"
+    ],
+    "prompt": "school-variants-prompt.txt",
+    "status": "REJECTED by owner: flat cape badges and literal icon-topped staffs",
+    "alphaCounts": {
+      "transparent": 961977,
+      "opaque": 0,
+      "partial": 610887
+    }
+  },
+  "schoolVariantsRevision2": {
+    "file": "school-variants-v002.png",
+    "sha256": "446491e9c1ffac8f3eaba57dfa716a67def6cd72526cfe11248e3a5c9a350b78",
+    "size": [
+      1536,
+      1024
+    ],
+    "generator": "built-in image_gen edit",
+    "inputs": [
+      "approved-default-reference.png",
+      "src/Wyrmforge.Presentation.Web/wwwroot/art/divine-lineage-sigils.webp"
+    ],
+    "prompt": "school-variants-v002-prompt.txt",
+    "status": "Owner approved direction; requested further faded emblems and stronger staff material influence"
+  },
+  "schoolVariantsRevision3": {
+    "file": "school-variants-v003.png",
+    "sha256": "a58d938e977baf875d2784285fa92f26514d8aea8d07c2a3af58c3c1e64615f3",
+    "size": [
+      1536,
+      1024
+    ],
+    "generator": "built-in image_gen edit",
+    "inputs": [
+      "school-variants-v002.png"
+    ],
+    "prompt": "school-variants-v003-prompt.txt",
+    "status": "Preserved prior study; full-shaft material approach superseded by owner-requested top gems and distinct designs"
+  },
+  "schoolVariantsRevision4": {
+    "file": "school-variants-v004.png",
+    "sha256": "3091a9b4ec1bfc4270fad67cc06e228a9d010a459a94ac72cb7e276603cfe738",
+    "size": [
+      1536,
+      1024
+    ],
+    "generator": "built-in image_gen edit",
+    "inputs": [
+      "school-variants-v003.png"
+    ],
+    "prompt": "school-variants-v004-prompt.txt",
+    "status": "Subtly school-tinted grey capes and distinct gemstone staff candidate; owner review pending"
+  },
+  "schoolVariantsRevision5": {
+    "file": "school-variants-v005.png",
+    "sha256": "cd18f77f3315f53f96b53fd2fd703316761580189a43a57d2d006c1a200a1d23",
+    "size": [
+      1536,
+      1024
+    ],
+    "generator": "built-in image_gen edit",
+    "inputs": [
+      "school-variants-v004.png"
+    ],
+    "prompt": "school-variants-v005-prompt.txt",
+    "status": "Owner accepted integrated-gem direction, requests more unique designs. Staff study only; cape drift not approved, retain v004 capes."
+  },
+  "staffDesignsRevision6": {
+    "file": "staff-designs-v006.png",
+    "sha256": "2ab4f36ec6f1618ae4d174097cfc28bee69ebf3bbf400bfc814daadfc9bc2b43",
+    "size": [
+      1536,
+      1024
+    ],
+    "generator": "built-in image_gen edit",
+    "inputs": [
+      "school-variants-v005.png"
+    ],
+    "prompt": "staff-designs-v006-prompt.txt",
+    "status": "Six unique integrated-gem staff constructions; owner appearance review pending; v004 cape reference unchanged"
+  },
+  "staffDesignsRevision7": {
+    "file": "staff-designs-v007.png",
+    "sha256": "30dc01759c750c1bcc5324a2027d66ff11088b7008b6a036c3bacefe8d57cc67",
+    "size": [
+      1536,
+      1024
+    ],
+    "generator": "built-in image_gen edit",
+    "inputs": [
+      "staff-designs-v006.png"
+    ],
+    "prompt": "staff-designs-v007-prompt.txt",
+    "status": "Owner-approved staff appearance direction: keep here and have wizards hold them. Runtime/material/effect acceptance pending."
+  },
+  "heldStaffsRevision8": {
+    "file": "wizards-held-staffs-v008.png",
+    "sha256": "2a5eadad0da8ee88b7d4dc1170dc902511a980941e9257610ffeca6cd5b89908",
+    "size": [
+      1536,
+      1024
+    ],
+    "generator": "built-in image_gen edit",
+    "inputs": [
+      "school-variants-v004.png",
+      "staff-designs-v007.png"
+    ],
+    "prompt": "wizards-held-staffs-v008-prompt.txt",
+    "status": "Owner rejected oversized staff proportions; retain design provenance only"
+  },
+  "heldStaffsRevision9": {
+    "file": "wizards-held-staffs-v009.png",
+    "sha256": "d0236189e3efff7c24f4c375793a5b8f75b506f4d8466e02f7092420cba7cc3a",
+    "size": [
+      1536,
+      1024
+    ],
+    "generator": "built-in image_gen edit",
+    "inputs": [
+      "wizards-held-staffs-v008.png"
+    ],
+    "prompt": "wizards-held-staffs-v009-prompt.txt",
+    "status": "Owner-approved staff proportions relative to wizard, 2026-10-30: sure this is fine. Source-concept acceptance only; v004 remains cape reference; sprite/animation/runtime/device validation pending."
+  },
+  "nativeSouthV1": {
+    "source": "native-south-v001",
+    "status": "REJECTED by owner: too cartoony for Gothic/Diablo-like setting. Technical tests do not approve art; preserve archive only."
+  },
+  "gothicReconstructionV2": {
+    "file": "gothic-reconstruction-v002.png",
+    "sha256": "d0a8e4b5f25d39f73d024c41c41aa238aac294c6e66de70ed6de2fa8eb3ed036",
+    "size": [
+      1024,
+      1536
+    ],
+    "generator": "built-in image_gen edit",
+    "inputs": [
+      "approved-default-reference.png",
+      "staff-designs-v007.png"
+    ],
+    "prompt": "gothic-reconstruction-v002-prompt.txt",
+    "status": "Static Gothic appearance correction candidate. Not a native layered sprite/rig or animation. Review pending."
+  },
+  "gothicNativeV3": {
+    "source": "gothic-south-v003",
+    "reference": "gothic-reconstruction-v002.png via documented 128px source study",
+    "sourceMasterSha256": "0987bd332672fddabf9cc94105ac134cf2163e07ee0ccf29f1a1d7c9b010c9fe",
+    "sourceSize": [
+      72,
+      136
+    ],
+    "paletteEntries": 96,
+    "editableLayers": 12,
+    "openRaster": "grey-wizard-fire-south.ora",
+    "poses": 16,
+    "direction": "S",
+    "status": "Gothic native layered source and authored walk review pending; rejected cartoon source not reused",
+    "scope": "Offline 2D layered deformation/export through shared sprite profile; no runtime integration or physical phone acceptance"
+  }
+}
