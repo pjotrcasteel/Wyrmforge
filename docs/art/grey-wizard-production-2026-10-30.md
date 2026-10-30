@@ -275,3 +275,12 @@ Exact ImageGen prompt/input and SHA256 recorded. Appearance approval pending;
 head proportions must still be calibrated beside the mage at native gameplay scale.
 Not a runtime atlas, material map or phone acceptance proof. File dimensions/hash
 and git diff --check verified; no executable changes or gameplay tests.
+
+### V007 crystal/magic readability request
+
+Owner asks crystal/elemental magic more apparent. V006 unique constructions retained;
+propose larger exposed faceted mineral cores, stronger internal school radiance and
+small local magical accents, preserving structural wood/metal/root support. Exact
+edit brief `staff-designs-v007-prompt.txt`. This remains a concept study; any future
+dynamic effects/light use existing shared presentation events/renderer, not baked
+gameplay or a separate lighting engine. Cape reference remains v004 unchanged.

@@ -41,6 +41,11 @@ The attachment is authoritative over the earlier provisional v001/v002 concepts.
   Subsequent owner feedback accepts the integrated-gem direction and requests
   stronger uniqueness: each staff needs a distinct silhouette and construction,
   not the same pointed/leaf-shaped gem frame recoloured for all six schools.
+  **Owner readability refinement:** crystal and elemental magic must be more
+  apparent on the staffs: expose more recognisable school-coloured crystal and
+  strengthen local magical character while preserving embedded support and unique
+  construction. Any actual emitted light/animated effects remain shared-runtime
+  presentation driven by authoritative events, not baked gameplay effects.
   The first icon-topped comparison is rejected, not an approved variant library.
   Keep the approved grey wizard identity. The base reference remains preserved.
   **Owner refinement:** cape emblems are visibly faded/weathered into the grey
