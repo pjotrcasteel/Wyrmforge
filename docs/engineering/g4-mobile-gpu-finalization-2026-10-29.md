@@ -66,6 +66,13 @@ Two generic renderer-level issues remained after the iPhone projection fix:
    and all quality-tier view limits. A regression exercises 120 same-radius
    frames, a changed projectile range, and all three light classes.
 
+3. **Avoid allocating new fog on every frame.** Dynamic fog near/far and
+   its environment-tinted color now update the existing Three.js fog object
+   instead of reconstructing fog and temporary colors for every GPU snapshot.
+   The zero-ambient diagnostic still disables fog entirely, and subsequent lit
+   worlds can re-enable it. This does not add atmospheric lighting or override
+   the existing Gothic Night balance.
+
 This removes redundant CPU work and a source-art cache path; **it does not
 demonstrate any particular iPhone FPS uplift or GPU-time saving**. The Hunt
 still rasterizes and uploads dynamic layers when they actually change.
