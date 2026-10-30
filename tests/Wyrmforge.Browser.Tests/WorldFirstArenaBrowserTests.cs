@@ -116,6 +116,13 @@ public sealed class WorldFirstArenaBrowserTests : PageTest
         await Page.GetByRole(AriaRole.Button,
             new() { NameRegex = new System.Text.RegularExpressions.Regex("^Enter (rare )?trail$") }).ClickAsync();
         await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
+        if (monasteryReview)
+        {
+            await Page.WaitForFunctionAsync("() => window.__wyrmforgeAr0Geography?.kind !== undefined",
+                null, new() { Timeout = 15000 });
+            await Page.ScreenshotAsync(new() { Path = Path.Combine(output, $"ar1-{kind}-diagnostic-{width}.png"),
+                FullPage = false });
+        }
         await Page.WaitForFunctionAsync("expected => window.__wyrmforgeAr0Geography?.kind === expected", kind,
             new() { Timeout = 45000 });
         Assert.AreEqual(true, await Page.EvaluateAsync<bool>("() => window.__wyrmforgeAr0Geography.geographyActive"));

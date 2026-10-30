@@ -24,9 +24,9 @@ public sealed partial class RunSimulation
     {
         if (!worldSiteGeographyEnabled || !mapState.EncounterActive) return false;
         var monastery = WyrmrealmMapGenerator.GenerateFireHunt(mapState.Seed, WyrmTier.Elder)
-            .SingleOrDefault(node => node.GenerationProfile is
-                { Landform: WorldSiteLandform.Mountain, Landmark: WorldSiteLandmark.Monastery });
-        if (monastery is null) return false;
+            .Single(node => node.Id.EndsWith("-crossroads", StringComparison.Ordinal));
+        if (monastery.GenerationProfile is not
+            { Landform: WorldSiteLandform.Mountain, Landmark: WorldSiteLandmark.Monastery }) return false;
         arenaEnvironment = ArenaEnvironmentState.Create(mapState.Seed, monastery, worldFirstGeography: true);
         playerPositionInitialized = false;
         return true;
