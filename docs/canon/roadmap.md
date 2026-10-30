@@ -264,6 +264,21 @@ Read current `main`, open PRs, CI and runtime before taking the next priority. D
 
 **Preservation and Work rule:** the LOCKED 2.5D pixel-art visual acceptance matrix above applies to all art/rendering phases; AR0–AR3 remain flat-color topology proofs and must not be blocked by AR4/G5 visual material work. Treat AR0–AR7 and FXP7–FXP8 as *future requirements*, not claims of current implementation. Review active [#338](https://github.com/pjotrcasteel/Wyrmforge/pull/338), [#340](https://github.com/pjotrcasteel/Wyrmforge/pull/340), [#381](https://github.com/pjotrcasteel/Wyrmforge/pull/381) and the existing live floor before touching shared code. Favor isolated adapters/versioned migrations with existing C# and JS tests. Never reset, delete or overwrite parallel work or turn a debug material color into gameplay data. Stop at the **explicit owner approval gates**, not at every commit; push each complete vertical slice and keep the draft PR current. The [Hunts & world §4.3 / §5](hunts-and-world.md#43-one-geographicaltopological-truth--locked) establishes location behavior; [Architecture & quality](architecture-and-quality.md#locked--unified-engine-ownership-and-event-authority-27-october-2026) establishes engine ownership.
 
+#### AR4 / WF32-P0 — original 32×32 Wet Forest art-source checkpoint (30 October 2026)
+
+**Status: technical source prototype, not AR4 owner approval or production adoption.** User-supplied third-party free/licensed packs are references for pixel technique only; production artwork must be independently authored and must not contain copied/recolored/traced pixels. Some reference licenses restrict AI-tool usage; keep reference files and rights review outside generated-game assets. The Gothic 2.5D art identity and AR0–AR3 geography gates are unchanged.
+
+- [x] **WF32-P0 source:** 16 original native 32×32 candidates (soil/grass/mud/stone × 3; grass-to-mud vertical/horizontal studies; rooted details), editable deterministic source in `tools/art/prototypes/wet-forest-32.mjs`.
+- [x] **Build and tests:** opt-in local PNG atlas/contact-sheet/manifest exporter and `tests/javascript/wet-forest-32.test.mjs` for tile size, variant diversity, determinism, transparent details and reproducible output.
+- [x] **Isolation:** no normal Hunt/terrain/GPU/actor modifications or third-party atlas copies; source-only independent branch, preserving all concurrent AR/G/AN work.
+- [ ] **WF32-P1 art approval:** inspect 1×/4× pixels and mobile-size readability; refine this early technical study rather than claiming artistic acceptance.
+- [ ] **AR3 owner sign-off:** required before applying real terrain artwork to gameplay geography; AR0–AR3 continue independently.
+- [ ] **WF32-P2 shared G material adapter:** after the AR3 gate, bind C# site material IDs/weights to original atlases through the existing shared GPU renderer, with proper scale, sampling, light/shadow response and no prelit water.
+- [ ] **WF32-P3 in-Hunt A/B:** actual chart ↔ playable site, same seed flat vs textured, movement, occlusion, G lighting, 320/390px capture and mobile frame/memory budgets; no benchmark claimed yet.
+- [ ] **WF32-P4 AR4 material acceptance:** owner approval before 84-piece expansion and AR5 ecology/collision adoption.
+
+[Art and implementation record](../art/wet-forest-32-original-prototype.md). These WF32 micro-checkpoints sit **inside** existing AR4; they are not a new competing world or renderer engine.
+
 ### Combat impact and Hunt variety — CV1–CV5 (owner direction, 26 October 2026)
 
 **Goal:** make successive Hunt encounters feel different and make successful hits/deaths feel powerful, rather than solving repetition by adding more base enemy kinds, increasing HP or covering the screen with particles. The intended experience blends Diablo-like physical impact with Vampire Survivors-style satisfying crowd clears while retaining WyrmForge's restrained Gothic silhouette and readable mobile combat. A memorable change of pace roughly every **30–60 seconds is a playtest hypothesis**, not a new rigid spawn timer.
