@@ -497,3 +497,15 @@ Validation: 3/3 scale consumer tests; 25/25 deterministic source exports; actual
 320/390 C# movement/draw/readiness checks. This slice preserves the default mage,
 C# simulation, existing approved sources and concurrent engine work. Draft PR439
 is a review checkpoint, not a production cutover or complete character library.
+
+## Directional source milestone — 30 October 2026
+
+Owner responded very nice to corrected arena scale and requested continuation.
+Keep current radius14/worldSize72.944643 as the accepted working scale baseline;
+physical-phone, material and perspective gates remain open. Next bounded slice:
+original eight-direction neutral idle source at elevated game perspective,
+faithful Gothic materials, fixed right-hand staff and faded Fire cape embroidery.
+This will be a source study, not eight finished animations or a live cutover.
+Preserve existing south motion and all approved references. Review direction,
+handedness, silhouette and scale before authoring directional walk/action frames.
+Existing independent research/reference review applies; no new third-party art.
