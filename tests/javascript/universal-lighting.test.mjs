@@ -177,3 +177,30 @@ test('atlas transforms reset on full-frame transitions without redundant GPU mat
         map.dispose();
     }
 });
+
+
+test('mobile shadow camera only recomputes its projection when light range changes', async () => {
+    const { synchronizeShadowProjection } =
+        await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/engine.js');
+    for (const light of [new T.PointLight(), new T.SpotLight(), new T.DirectionalLight()]) {
+        const camera = light.shadow.camera;
+        const realUpdate = camera.updateProjectionMatrix.bind(camera);
+        let updates = 0;
+        camera.updateProjectionMatrix = () => { updates++; realUpdate(); };
+        try {
+            assert.equal(synchronizeShadowProjection(light, 144, true), true,
+                'New shadow cameras must initialize the authored range and bounds.');
+            assert.equal(updates, 1);
+            for (let i = 0; i < 120; i++)
+                assert.equal(synchronizeShadowProjection(light, 144), false);
+            assert.equal(updates, 1, 'A stationary Fireball light must not rebuild shadow projection on 120 frames.');
+            assert.equal(synchronizeShadowProjection(light, 200), true,
+                'C# projectile range changes must update projection immediately.');
+            assert.equal(camera.far, 200);
+            assert.equal(updates, 2);
+            assert.equal(synchronizeShadowProjection(light, 200), false);
+        } finally {
+            light.dispose();
+        }
+    }
+});
