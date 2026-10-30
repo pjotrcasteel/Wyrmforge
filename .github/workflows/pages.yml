@@ -239,7 +239,7 @@ jobs:
         run: >-
           dotnet test g4-browser-tests/tests/Wyrmforge.Browser.Tests/Wyrmforge.Browser.Tests.csproj
           -c Release --no-build
-          --filter "Mobile_G4DeviceReview_RecordsRealHuntAndExportsEvidence"
+          --filter "Mobile_G4DeviceReview_RecordsRealHuntAndExportsEvidence|Mobile_G4Consent_IsAnObviousSingleChoiceBeforeGameMenus"
 
       - name: Verify live playtest collector connection
         env:
