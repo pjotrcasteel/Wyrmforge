@@ -1,5 +1,5 @@
 import { huntLayerCapture, huntLayerRevision, prepareHuntGpuScratch, HuntGpuScratchPool,
-    prepareHuntGpuPresentation, presentCompletedHuntGpuFrame } from './hunt-gpu-layers.js';
+    prepareHuntGpuPresentation, presentCompletedHuntGpuFrame, shouldStageHuntGpuReviewFrame } from './hunt-gpu-layers.js';
 import { mountG4DeviceReview } from './lighting/g4-device-review.js';
 import { preloadFireballV5 } from './arena-fireball-v5.js';
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
@@ -64,7 +64,7 @@ export function initializeArena(canvas, dotNetReference) {
     // The existing painted override wins if both comparison flags are provided.
     state.g4FlatGround = params.get('g4Review') === '1' &&
         params.get('g4FlatGround') === '1' && params.get('g4PaintedGround') !== '1';
-    state.g4StageFrames = params.get('g4Review') === '1' && params.get('g4StageFrames') === '1';
+    state.g4StageFrames = shouldStageHuntGpuReviewFrame(params, params.get('arenaGpu') === '1');
     if (params.get('g4Review') === '1') {
         const gpuRequested = params.get('arenaGpu') === '1';
         state.g4Review = mountG4DeviceReview(canvas, () => state.gpuWorld?.diagnostics(),
