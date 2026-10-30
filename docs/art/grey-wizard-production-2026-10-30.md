@@ -401,3 +401,27 @@ density chosen or budget relaxed. These are raw sampling studies, not authored
 native palette/cluster cleanup, editable layers or accepted runtime material maps.
 The original source walker remains REJECTED; no new walk/action library authored.
 Verification: PNG decode/export, bounds/dimensions/hash and git diff check only.
+
+## Gothic native layered production v003
+
+Owner requested continuing sprites from the Gothic correction. Refreshed main at
+`3d3fc32aa` (G4 preview rollback); art branch and concurrent work preserved.
+New source `gothic-south-v003` derives its shape/texture from faithful Gothic v002,
+not rejected primitive v001. Median-cut shared 96-pigment native palette; 72x136
+editable source (128px visible height), twelve PNG layers + project masks/coordinates.
+All layers exactly recompose the native master; no claim that quantisation alone
+completes native pixel cleanup. Working source density is provisional, not a phone
+budget change. Source texture/shape must be reviewed at actual world scale.
+
+Sixteen explicit offline 2D pose keys deform cloth/arm grids, articulate boot/ankle
+motion and bind staff/hand. No new runtime engine, live meshes or C# authority.
+160px padded atlas cells, common [56,141] anchor, worldSize 40 provisional. Shared
+controller samples all sixteen frames and pauses/reduces safely. Binary alpha,
+unclipped bounds and 16 unique frames pass. Source boot raster soles show 0px
+spread during each declared stance under the authored 2px/frame root translation;
+this is NOT actual C# gameplay/contact/stride fitting. Two diagnostic maps decode
+to 3276800 bytes; real source materials/Hunt/phone gates stay open.
+
+Checkpoint before visual/browser/video validation: new texture-based layered
+source and first one-view pose export only. Do not promote or extend the rejected
+cartoony source. No production renderer/mage/atlas/simulation files changed.
