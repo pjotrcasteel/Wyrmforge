@@ -676,3 +676,16 @@ Source stride/cadence remains unfit for live base speed; no production cutover.
 Original S and SEv009 remain25/25 byte-identical. New source is a review study,
 not completed directional motion/material/Hunt or physical-phone acceptance.
 Checkpoint before longer video/browser review.
+
+### South support-loop review validation
+
+Packaged14-layer OpenRaster, native/3x gray-background GIF/MP4 and existing Sprite
+Lab320/390 import/play/pause captures without page errors. Exact14 layer bytes,
+GIF16frames/1330ms, MP4 decode verified.20 focused JS tests pass; Sv01025/25
+exports pass. Generic artifact reports for S/SE each show16 single connected,
+binary-alpha/unclipped silhouettes; light/dark/grip sheets inspected separately.
+Do not equate an empty flag list with artistic acceptance or all-pixel correctness.
+S source14.5889world stride at12fps corresponds10.9417world units/sec; base190
+would require13.0236cycles/sec. Live walk/run fit remains OPEN. No production
+renderer/C# or active engine work changed. Next source work: remaining facings,
+repeated artifact inspection and credible live-speed locomotion before cutover.
