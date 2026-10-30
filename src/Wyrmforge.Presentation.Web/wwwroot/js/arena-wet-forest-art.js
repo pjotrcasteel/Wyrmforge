@@ -434,9 +434,14 @@ export function drawWetForestFlatGround(ctx, plan) {
             ctx.ellipse(patch.x * width, patch.y * height,
                 Math.max(2, patch.radiusX * width), Math.max(2, patch.radiusY * height),
                 0, 0, Math.PI * 2);
+            // Flat-color mode is a performance probe, not a shadow painter.
+            // Broad opaque ellipses become black holes under Gothic lighting;
+            // retain source terrain zones as restrained, blended floor tint.
+            ctx.globalAlpha = .18;
             ctx.fillStyle = color;
             ctx.fill();
         }
+        ctx.globalAlpha = 1;
         // One connected, source-defined road polygon instead of material-image
         // mosaics or thousands of brush/tile operations.
         const left = [], right = [];
@@ -462,6 +467,7 @@ export function drawWetForestFlatGround(ctx, plan) {
         ctx.fill();
         ctx.beginPath();
         ctx.ellipse(recipe.siteX * width, recipe.siteY * height, 83, 46, 0, 0, Math.PI * 2);
+        ctx.globalAlpha = .3;
         ctx.fillStyle = '#3b3b32';
         ctx.fill();
     } finally {
