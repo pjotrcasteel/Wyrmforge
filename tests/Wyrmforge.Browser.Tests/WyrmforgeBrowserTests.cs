@@ -3680,6 +3680,8 @@ public sealed class WyrmforgeBrowserTests : PageTest
         var expectedTerrain = flatGround ? "flat-colors" : "painted";
         Assert.AreEqual(expectedTerrain, reviewDiagnostics.GetProperty("terrainPresentation").GetString(),
             "The G4 phone proof must record the actual selected ground, not assume a different review mode.");
+        Assert.AreEqual("staged", reviewDiagnostics.GetProperty("framePresentation").GetString(),
+            "G4 phone review must compose a full GPU/Canvas frame before presenting it.");
         Directory.CreateDirectory(ArtifactDirectory);
         var name = $"live-g4-review-{expectedTerrain}-{width}-mobile";
         await ScreenshotAsync(name + ".png");
@@ -3699,9 +3701,14 @@ public sealed class WyrmforgeBrowserTests : PageTest
                         source.id?.startsWith('impact:FireBolt:')));
                 const canvas = document.querySelector('canvas.game-canvas');
                 if (!light || !canvas?.width || !canvas?.height) return false;
+                const shadowPixels = window.__huntGpuArena.readArenaShadowPixelProof(canvas, light.id);
+                // Allocating a shadow map is insufficient: a live Fireball must
+                // visibly change actual framebuffer pixels through occlusion.
+                if (!shadowPixels?.available || shadowPixels.changedPixels < 64) return false;
                 window.__g4LiveFireShadowProof = {
                     sourceId: light.id,
                     shadowViews: light.views,
+                    shadowPixels,
                     image: canvas.toDataURL('image/png')
                 };
                 return true;
@@ -3710,6 +3717,8 @@ public sealed class WyrmforgeBrowserTests : PageTest
                 "() => window.__g4LiveFireShadowProof");
             Assert.IsTrue(fireProof.GetProperty("shadowViews").GetInt32() > 0,
                 "A real C# Fireball must have a generic mobile GPU shadow view.");
+            Assert.IsTrue(fireProof.GetProperty("shadowPixels").GetProperty("changedPixels").GetInt32() >= 64,
+                "An active real-Hunt Fireball must cast an actually visible GPU shadow, not merely allocate a view.");
             var png = fireProof.GetProperty("image").GetString() ?? "";
             StringAssert.StartsWith(png, "data:image/png;base64,");
             await File.WriteAllBytesAsync(Path.Combine(ArtifactDirectory,
