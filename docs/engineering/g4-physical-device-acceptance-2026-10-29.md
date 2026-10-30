@@ -178,3 +178,29 @@ after the newly pinned preview deploy and approve actor silhouette
 proportions and ground contact. Mobile FPS/p95, Fireball-to-Hollowed shadows,
 Trail 2 readability, tearing and Android power/thermals remain independent
 open G4 gates. Do not infer physical device acceptance from browser tests.
+
+## Owner confirmation and G4 mobile CPU continuation — 30 October 2026
+
+The owner confirmed from actual gameplay that moving Fireballs illuminate and cast
+visible shadows on Hollowed. **That observed Fireball/Hollowed visual gate passes.**
+Hollowed was a test receiver, not a special-case engine target: the common scene
+uses C#-authored light registrations and generic cast/receive material and
+geometry descriptors. All registered supported objects can participate in shared
+lighting/shadowing subject to mobile light/shadow-view budgets and G5 asset adoption.
+Do not reopen this confirmed observation or claim every future asset has shipped.
+
+Additional shared G4 performance work on the draft integration branch now keeps
+the orthographic view projection unchanged across frames with the same dimensions
+and zoom; changes in aspect ratio or zoom update immediately while camera motion
+retains its dynamic view transform. New JS regression covers 120 unchanged moving
+frames plus viewport and zoom changes. A stale lingering-Fireball .NET test has
+also been corrected to read the canonical C# fire light profile (intensity 6)
+rather than hardcoding the previous source intensity 1. No lighting or gameplay
+values were changed by that test correction.
+
+The dedicated shared-GPU proof for the matching separate G4 candidate PR #438
+passed, but exact integrated-head CI must still be verified. These CPU savings
+are not a measured iPhone FPS gain. The remaining G4 gates are real-device
+sustained FPS/p95 and thermal/battery, Android compatibility, Trail 2 darkness,
+camera-motion tearing, and full game visual approval. Keep G5 production cutover,
+Ashling emissive-eye art, animation, AI and the painted Town untouched.
