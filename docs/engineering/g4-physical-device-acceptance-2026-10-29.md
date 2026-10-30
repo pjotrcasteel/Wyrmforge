@@ -170,7 +170,7 @@ caster/occlusion work; it never distorts visible image pixels.
 **Deterministic regression:** project the real Three.js `huntActorGeometry`
 through the exact G4 orthographic camera at **320x568, 390x844, 402x656,
 844x390** and verify the resulting on-screen rectangle equals the authored
-Canvas capture within 0.001 pixels for the mage, Warden and Wyrm. No
+Canvas capture within 0.05 pixels (including the intentional tiny Z lift) for the mage, Warden and Wyrm. No
 CSS stretching, new renderer, or C#/animation changes.
 
 **Acceptance remains open:** the owner must check a real iPhone snapshot
