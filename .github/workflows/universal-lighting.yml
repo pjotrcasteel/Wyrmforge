@@ -26,6 +26,9 @@ on:
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/g4-consent-gate.js'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/index.html'
       - 'tests/javascript/arena-gpu-fireball.test.mjs'
+      - 'tests/javascript/arena-fireball-v5.test.mjs'
+      - 'src/Wyrmforge.Application/Runs/Simulation/Lighting/ProjectileLightingProjection.cs'
+      - 'tests/Wyrmforge.Application.Tests/Runs/Lighting/GpuLightingFrameProjectionTests.cs'
       - 'tests/Wyrmforge.Browser.Tests/HuntGpuAdapterBrowserTests.cs'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/art/lighting-proof/**'
       - 'src/Wyrmforge.Presentation.Web/Pages/ArenaLightEngine*'
@@ -50,9 +53,10 @@ jobs:
         with:
           dotnet-version: '10.0.x'
       - name: Registry and sprite binding regression tests
-        run: node --test tests/javascript/arena-wet-forest-art.test.mjs tests/javascript/arena-environment.test.mjs tests/javascript/universal-lighting.test.mjs tests/javascript/arena-gpu-world.test.mjs tests/javascript/hunt-gpu-surface-contract.test.mjs tests/javascript/hunt-gpu-capture-revision.test.mjs tests/javascript/hunt-gpu-evidence-report.test.mjs tests/javascript/arena-gpu-fireball.test.mjs tests/javascript/g4-device-review.test.mjs tests/javascript/g4-consent-gate.test.mjs
+        run: node --test tests/javascript/arena-wet-forest-art.test.mjs tests/javascript/arena-environment.test.mjs tests/javascript/universal-lighting.test.mjs tests/javascript/arena-gpu-world.test.mjs tests/javascript/hunt-gpu-surface-contract.test.mjs tests/javascript/hunt-gpu-capture-revision.test.mjs tests/javascript/hunt-gpu-evidence-report.test.mjs tests/javascript/arena-gpu-fireball.test.mjs tests/javascript/arena-fireball-v5.test.mjs tests/javascript/g4-device-review.test.mjs tests/javascript/g4-consent-gate.test.mjs
       - name: Build tests and publish actual application
         run: |
+          dotnet test tests/Wyrmforge.Application.Tests -c Release --filter FullyQualifiedName~GpuLightingFrameProjectionTests
           dotnet build tests/Wyrmforge.Browser.Tests -c Release
           dotnet publish src/Wyrmforge.Presentation.Web -c Release -o artifacts/web
       - name: Install Chromium

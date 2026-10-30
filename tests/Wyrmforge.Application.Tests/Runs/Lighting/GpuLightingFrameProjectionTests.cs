@@ -24,6 +24,16 @@ public sealed class GpuLightingFrameProjectionTests
         Assert.AreEqual(240d, source.Y);
         Assert.AreEqual(144d, source.Radius);
         Assert.AreEqual(24d, source.Z);
+        Assert.IsTrue(source.Intensity >= 5,
+            "The authoritative Fireball must illuminate actors against mobile Gothic night.");
+        Assert.IsTrue(source.CastsShadows,
+            "Hollowed should receive an actual GPU occlusion shadow from the Fireball point emitter.");
+        var projected = GpuLightingFrameProjection.FromSnapshot(
+            ProjectileLightingProjection.Capture("hunt", 1,
+                [("fire-test", projectile)], Environment), .5);
+        Assert.IsTrue(projected.Lights.Any(light =>
+            light.Id == "projectile:fire-test" && light.CastsShadow &&
+            light.Intensity >= 5 && light.Range == 144));
     }
 
     [TestMethod]

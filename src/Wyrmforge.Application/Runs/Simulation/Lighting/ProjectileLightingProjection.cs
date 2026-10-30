@@ -12,7 +12,7 @@ public static class LightingSourceCatalog
     private static readonly IReadOnlyDictionary<SpellSchool, LightSourceProfile> Schools =
         new Dictionary<SpellSchool, LightSourceProfile>
         {
-            [SpellSchool.Fire] = new("#ff7835", 1, 144),
+            [SpellSchool.Fire] = new("#ff7835", 6, 144),
             [SpellSchool.Frost] = new("#8bdfff", 0.8, 144),
             [SpellSchool.Storm] = new("#ffe36a", 1, 144),
             [SpellSchool.Arcane] = new("#b79aff", 0.8, 144),

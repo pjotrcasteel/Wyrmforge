@@ -63,6 +63,7 @@ export function initializeArena(canvas, dotNetReference) {
     state.g4FlatGround = params.get('g4Review') === '1' &&
         (params.get('g4FlatGround') === '1' ||
             params.get('arenaGpu') === '1' && params.get('g4PaintedGround') !== '1');
+    state.g4StageFrames = params.get('g4Review') === '1' && params.get('g4StageFrames') === '1';
     if (params.get('g4Review') === '1') {
         const gpuRequested = params.get('arenaGpu') === '1';
         state.g4Review = mountG4DeviceReview(canvas, () => state.gpuWorld?.diagnostics(),
@@ -73,10 +74,9 @@ export function initializeArena(canvas, dotNetReference) {
         void import('./arena-gpu-world.js').then(({ HuntGpuWorld }) => {
             if (!state.active) return;
             state.gpuWorld = new HuntGpuWorld({ quality });
-            // Optional authored asset adapters cannot disable the shared renderer.
-            return import('./arena-gpu-fireball.js')
-                .then(fireball => { if (state.active) state.gpuFireball = fireball; })
-                .catch(error => { state.gpuFireballError = String(error); });
+            // The G4 GPU renderer owns the world and its authoritative C# light
+            // emitters. Fireball artwork stays in the existing directional
+            // 2D projectile pass until an oriented GPU cutout passes 360° QC.
         }).catch(error => { state.gpuError = String(error); });
     }
     const now = performance.now();
@@ -298,10 +298,12 @@ function drawWaiting(state, width, height) {
 
 function draw(state, snapshot, width, height) {
     let gpu = snapshot.lighting && state.gpuWorld;
-    // On iPhone an interactive Canvas could expose terrain before all actor
-    // and combat passes were ready. Compose the entire opt-in GPU Hunt offscreen;
-    // one final native-pixel copy presents a single coherent frame.
-    const presentation = gpu ? (state.gpuPresentation ??= document.createElement('canvas')) : null;
+    // Safari already retains the WebGL source buffer through HuntGpuWorld.
+    // The extra full-size Canvas stage adds expensive mobile memory bandwidth.
+    // Retain it only as a diagnostic A/B switch; the default draws synchronously
+    // into the visible Canvas in one requestAnimationFrame.
+    const presentation = gpu && state.g4StageFrames
+        ? (state.gpuPresentation ??= document.createElement('canvas')) : null;
     let ctx = presentation
         ? prepareHuntGpuPresentation(presentation, width, height, state.pixelRatio)
         : state.context;
@@ -455,16 +457,11 @@ function draw(state, snapshot, width, height) {
             ctx = worldContext;
         }
     }
-    let gpuFireballs = new Set();
     if (gpu) {
         try {
-            gpuFireballs = state.gpuFireball?.submitGpuFireballs(gpu, snapshot.projectiles, camera,
-                visualSeconds, state.reducedMotion.matches) ?? gpuFireballs;
             gpu.render(ctx, state.sharedLightingFrame);
-        }
-        catch (error) {
-            gpuFireballs.clear();
-            state.gpuError = String(error); gpu.dispose(); state.gpuWorld = null; state.gpuFireball = null; gpu = null;
+        } catch (error) {
+            state.gpuError = String(error); gpu.dispose(); state.gpuWorld = null; gpu = null;
         }
     }
     drawReliquaryEmergence(ctx, snapshot.reliquary);
@@ -511,7 +508,10 @@ function draw(state, snapshot, width, height) {
     drawWinterBellAir(ctx, snapshot);
     drawGlassReliquaryAir(ctx, snapshot, state.reducedMotion.matches ? 0 : visualSeconds);
     for (const cloud of snapshot.snowClouds ?? []) drawSnowCloud(ctx, cloud, state.reducedMotion.matches ? 0 : visualSeconds);
-    for (const projectile of snapshot.projectiles) if (!gpuFireballs.has(projectile))
+    // The same authored V5 Fireball sprite now appears for every C# aim
+    // direction. The GPU world still receives its C# projectile light and
+    // casts shadows; never suppress the projectile graphic after GPU shading.
+    for (const projectile of snapshot.projectiles)
         drawSpellProjectile(ctx, projectile, state.reducedMotion.matches, visualSeconds);
 
     for (const trace of snapshot.lightning) drawLightningTrace(ctx, trace, visualSeconds, state.reducedMotion.matches);

@@ -57,9 +57,11 @@ test('mage, Warden and Wyrm retain their own painted foot line without ground pe
         assert.equal(mesh.geometry, 'hunt-billboard');
         assert.ok(capture.footFraction > .75 && capture.footFraction <= 1,
             'Painted ankles, bell body and wyrm tail must remain in the texture');
-        assert.equal(mesh.scale[1], capture.size * capture.footFraction / 48);
-        assert.deepEqual(mesh.frame.offset, [0, 1 - capture.footFraction]);
-        assert.deepEqual(mesh.frame.repeat, [1, capture.footFraction]);
+        assert.equal(mesh.scale[1], capture.size / 48,
+            'The full source sprite height must survive every painted-foot pivot.');
+        assert.equal(mesh.scale[0], mesh.scale[1],
+            'Square captures must never be squashed by the grounding adapter.');
+        assert.equal(mesh.frame, undefined, 'Do not crop authored legs or tail artwork.');
         const footY = capture.y + capture.size * capture.footFraction;
         assert.ok(Math.abs(-mesh.position[1] * 48 / Math.SQRT2 - footY) < 1e-8,
             'Physical billboard foot contact must coincide with its own painted foot line');
@@ -181,4 +183,34 @@ test('camera-relative Hunt light budget tracks the GPU view and maintains shadow
     assert.deepEqual(first.map(l => l.shadowViews), [6]);
     assert.deepEqual(second.map(l => l.shadowViews), [6]);
     assert.equal(sources.lights[0].position[0], 140);
+});
+
+
+test('authoritative projectile point light retains one mobile shadow budget and lit Hollowed cutout', async () => {
+    const { selectLights } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/registry.js');
+    const { huntSurfaceRenderable } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js');
+    const snapshot = { version: 1, time: 3, lights: [
+        { id: 'sky:moon', ownerId: 'night-sky', type: 'directional', enabled: true,
+            position: [0, 0, 256], direction: [0, 0, -1], color: '#91a6c5',
+            intensity: 2.2, range: 8192, castsShadow: false, priority: 0 },
+        { id: 'hunter:night-visibility', ownerId: 'hunter', type: 'point', enabled: true,
+            position: [180, 200, 64], direction: [0, 0, 0], color: '#bfc9dc',
+            intensity: 14, range: 210, castsShadow: false, priority: 0 },
+        { id: 'projectile:fire-test', ownerId: 'fire-test', type: 'point', enabled: true,
+            position: [240, 220, 24], direction: [0, 0, 0], color: '#ff7835',
+            intensity: 6, range: 144, castsShadow: true, priority: 0 },
+    ] };
+    const projected = huntLightFrame(snapshot, { x: 0, y: 0 },
+        { width: 390, height: 844 });
+    const selected = selectLights(projected, 6, 6,
+        { minX: 0, maxX: 390 / 48, minY: -844 * Math.SQRT2 / 48, maxY: 0 });
+    const fire = selected.find(light => light.id === 'projectile:fire-test');
+    assert.ok(fire && fire.shadow && fire.shadowViews === 6,
+        'Fireball casts a point shadow rather than being silently budgeted out.');
+    const hollowed = huntSurfaceRenderable('hunt-enemy:hollowed', 190, 120, 160, 160,
+        true, { footFraction: .8 });
+    assert.equal(hollowed.receivesLight, true);
+    assert.equal(hollowed.receivesShadow, true);
+    assert.equal(hollowed.castsShadow, true);
+    assert.equal(hollowed.frame, undefined, 'Actor should not be compressed or cropped.');
 });
