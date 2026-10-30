@@ -150,3 +150,10 @@ WF32-P1g will address world-scale repetition across 256px patches, inner corners
 Five reusable, **cosmetic** degradation states are now implemented for flagstone, cobble and brick road, each with source-authored numeric stone IDs. Damage includes fully missing stones, irregular partially surviving faces, packed earth/moss infill and reclaimed edges; the latter continue using the generic whole-stone erosion rule, so no half-stone is clipped by the grass/soil/mud interface. Material companions include physically meaningful height-derived normals and roughness in the existing shared G contract, with scalar rather than per-pixel specular configuration. Local validation: 34 Node tests passing (11 new P1h). The art and comparative matrix await owner visual review; no live-game GPU cutover or C# terrain authority changed.
 
 See [P1h source specification and verification](wf32-p1h-hard-surface-degradation.md). World-scale nonrepetition and inner corner support are explicitly deferred to P1i; brickwork's remaining regular structure is an open aesthetic concern.
+
+## WF32-P1i — blending-direction owner review (30 October 2026)
+
+**Approved visual direction — narrowly scoped to blended terrain edges and corners.**
+The owner explicitly liked the P1i grass/soil/mud ↔ hard-surface blends and corner transitions. Preserve the existing world-coordinate edge treatment: remove complete stone identities, fill with neighboring soft material, use natural rather than straight clipped outlines, retain continuity across 32px phase cells and overlapping windows. Future P1j environmental decals, richer region wear and palette changes must not degrade these blends.
+
+**Not approved by this statement:** every material's final look, brightness/lighting, the full P1i review, performance, AR3-generated geography, or production live-Hunt integration. The art remains in opt-in PR #429 pending the specific gates above.
