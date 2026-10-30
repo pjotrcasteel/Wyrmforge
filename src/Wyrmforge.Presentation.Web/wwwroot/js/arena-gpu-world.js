@@ -61,6 +61,20 @@ const material = id => ({ id, albedo: id, color: '#ffffff', roughness: .95, meta
  * participation. The shared LightingEngine remains ignorant of creature/terrain kinds.
  * A custom geometry is registered once via LightingEngine.registerGeometry().
  */
+/** Compact, alpha-cutout pose caster for an as-yet-unmigrated Canvas sprite.
+ * The current 24px-high projectile source must never project a full actor-height
+ * solid across the floor. WF/AR-authored 2.5D geometry overrides this fallback.
+ */
+export function huntCaptureSilhouetteCaster(x, y, width, height, footFraction = .75) {
+    const heightWorld = Math.min(.14, Math.max(.06, height / UNIT * .05));
+    return { occluderGeometry: 'hunt-shadow-silhouette',
+        occluderPosition: [(x + width / 2) / UNIT,
+            -(y + height * footFraction) * GROUND_Y / UNIT,
+            -(1 - footFraction) * heightWorld * Math.SQRT1_2],
+        occluderRotation: [0, 0, 0],
+        occluderScale: [Math.min(.9, Math.max(.18, width / UNIT * .38)), heightWorld, 1],
+    };
+}
 export function huntSurfaceRenderable(id, x, y, width, height, castsShadow, surface = {}) {
     const geometry = surface.geometry ?? (castsShadow ? 'hunt-billboard' : 'hunt-plane');
     const standing = surface.standing ?? geometry === 'hunt-billboard';
@@ -120,8 +134,10 @@ export function alignHuntActorBillboards(objects, engine) {
         const registered = engine.objects.get(descriptor.id);
         if (!registered) continue;
         registered.mesh.quaternion.copy(engine.camera.quaternion);
-        // Only the painted billboard follows the camera. A solid caster remains
-        // in world space so a low Fireball projects its volume onto the floor.
+        // Match the G1 pose-aware sprite shadow: its alpha-cutout caster faces the
+        // camera too. Explicit WF/AR solid occluders keep their authored rotation.
+        if (descriptor.occluderGeometry === 'hunt-shadow-silhouette' && registered.caster)
+            registered.caster.quaternion.copy(engine.camera.quaternion);
     }
 }
 export class HuntGpuWorld {
@@ -133,13 +149,9 @@ export class HuntGpuWorld {
             needsRetainedHuntBuffer(device?.userAgent, device?.maxTouchPoints)));
         this.engine.registerGeometry('hunt-plane', new T.PlaneGeometry(1, 1));
         this.engine.registerGeometry('hunt-billboard', huntActorGeometry());
-        // Temporary G4 bridge for legacy Canvas captures until WF/AR deliver
-        // independently authored 2.5D occluders. A tapered solid at each
-        // artwork foot generates an actual ground shadow, not a painted blob.
-        const standIn = new T.CylinderGeometry(.055, .09, 1, 8);
-        standIn.rotateX(Math.PI / 2);
-        standIn.translate(0, 0, .5);
-        this.engine.registerGeometry('hunt-shadow-standin', standIn);
+        // G1-style alpha-cutout sprite silhouettes, bounded to a compact
+        // foot-grounded caster until WF/AR provide authored 2.5D geometry.
+        this.engine.registerGeometry('hunt-shadow-silhouette', huntActorGeometry());
         this.layers = new Map();
         this.used = new Set();
         this.dirtyTextures = new Set();
@@ -216,18 +228,11 @@ export class HuntGpuWorld {
                 layer.revision = revision;
             }
         }
-        // Legacy screen-aligned captures have no 3D shadow volume. Keep the
-        // appearance plane unchanged and attach a generic ground-anchored
-        // stand-in through the shared authored-caster contract. Explicit asset
-        // geometry/occluders always take precedence over this G4 bridge.
+        // Reuse the captured alpha pose instead of manufacturing a hard-edged
+        // solid wedge. Explicit authored occluders always take precedence.
         const capturedSurface = castsShadow && !surface.geometry && !surface.occluderGeometry
-            ? { ...surface,
-                occluderGeometry: 'hunt-shadow-standin',
-                occluderPosition: [(x + width / 2) / UNIT,
-                    -(y + height * (surface.footFraction ?? .75)) * GROUND_Y / UNIT, 0],
-                occluderRotation: [0, 0, 0],
-                occluderScale: [width / UNIT, height * GROUND_Y / UNIT, .25],
-            } : surface;
+            ? { ...surface, ...huntCaptureSilhouetteCaster(x, y, width, height, surface.footFraction ?? .75) }
+            : surface;
         this.submitSurface(huntSurfaceRenderable(id, x, y, width, height, castsShadow, capturedSurface),
             huntSurfaceMaterial(id, surface.material, Boolean(source)));
     }
@@ -252,6 +257,8 @@ export class HuntGpuWorld {
                 if (this.dirtyTextures.has(material[key]) && mesh.material[mapKey])
                     mesh.material[mapKey].needsUpdate = true;
             }
+            const casterMap = engine.objects.get(entry.id)?.caster?.material.map;
+            if (casterMap && this.dirtyTextures.has(material.albedo)) casterMap.needsUpdate = true;
         }
         const uploaded = [];
         for (const id of this.dirtyTextures) {
