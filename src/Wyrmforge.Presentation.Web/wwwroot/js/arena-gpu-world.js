@@ -72,7 +72,9 @@ export function huntCaptureSilhouetteCaster(x, y, width, height, footFraction = 
             -(y + height * footFraction) * GROUND_Y / UNIT,
             -(1 - footFraction) * heightWorld * Math.SQRT1_2],
         occluderRotation: [0, 0, 0],
-        occluderScale: [Math.min(.9, Math.max(.18, width / UNIT * .38)), heightWorld, 1],
+        // Preserve capture width so the alpha mask, not its padded rectangle,
+        // defines the actual silhouette footprint (also for long masonry layers).
+        occluderScale: [width / UNIT, heightWorld, 1],
     };
 }
 export function huntSurfaceRenderable(id, x, y, width, height, castsShadow, surface = {}) {
