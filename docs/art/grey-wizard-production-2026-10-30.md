@@ -528,3 +528,23 @@ rear perspective and costume/staff consistency still require refinement. Native
 silhouette normalization is not yet anatomical landmark registration. Do not use
 as finished eight-direction animation or overwrite v003 south motion/runtime.
 No gameplay/engine changes; actual world-scale/depth and phone review remain open.
+
+### Rear-direction correction and facing flipbook — v005
+
+Owner requested continuation. Corrected NW/NE whole-body orientation with built-in
+ImageGen using only v004 source. Rear three-quarter views now expose opposite
+profile/beard edges and differ visibly from N at native size; NW staff is partially
+occluded by the cloak. Retained six original native views byte-for-byte instead of
+accepting generator drift elsewhere. Original output and exact prompt preserved.
+
+Export `gothic-directions-v005`: eleven deterministic sampling files plus native
+8-held-facing GIF and verification. The GIF is a facing flipbook, not authored
+turn interpolation, locomotion, arena footage or phone proof. Inspected native
+contact sheet. Checks pass: v004 unchanged11/11, v005 deterministic11/11, eight
+GIF frames decode to exact opaque source colours/alpha, shared96-colour palette,
+binary alpha/unclipped bounds, six unchanged native directions.
+
+This resolves the near-duplicate rear-facing source issue provisionally; exact
+angles, foot/anatomical registration, costume/staff consistency and actual scene
+acceptance remain. No engine/gameplay changes, no production switch, and no claim
+of finished directional animation. Current v003 south/lab baseline preserved.

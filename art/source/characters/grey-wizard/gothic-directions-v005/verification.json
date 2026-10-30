@@ -1,0 +1,30 @@
+{
+  "status": "native directional source review, not animation acceptance",
+  "scope": "eight 500ms held facings, no walk/interpolation; not an arena or phone capture",
+  "directions": [
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E",
+    "SE"
+  ],
+  "cell": [
+    160,
+    160
+  ],
+  "paletteSize": 96,
+  "binaryAlpha": true,
+  "unchangedFromV004": [
+    "S",
+    "SW",
+    "W",
+    "N",
+    "E",
+    "SE"
+  ],
+  "framesVerified": 8,
+  "sha256": "493877b1f01c3c9dc60dfe79043035dd16357e2648eb01ee1bdd14a950619b7b"
+}

@@ -1,0 +1,212 @@
+{
+  "status": "unapproved directional idle study; not production animation",
+  "sourceSha256": "6fcf15826e3be157859aa4971477297a0d0f31f5aefb0f749539b3aa1fa0bfd7",
+  "rearSourceSha256": "8f4aedeaaf2c1f64142c4e3135fe89de98d9e6f91013e5fd4c91f535186bc72d",
+  "directions": [
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E",
+    "SE"
+  ],
+  "cell": 160,
+  "alphaThreshold": 128,
+  "paletteSource": "gothic-south-v003/project.json",
+  "paletteSize": 96,
+  "worldSizeGuide": 72.944643,
+  "records": [
+    {
+      "direction": "S",
+      "source": "gothic-directions-v004-corrected-study.png",
+      "sourcePanel": [
+        0,
+        0,
+        384,
+        496
+      ],
+      "alphaBounds": [
+        97,
+        8,
+        374,
+        488
+      ],
+      "scale": 0.2661122661122661,
+      "visibleHeight": 128,
+      "anchor": [
+        80,
+        141
+      ],
+      "limitation": "Silhouette-height normalization only; anatomical crown/stance registration needs review"
+    },
+    {
+      "direction": "SW",
+      "source": "gothic-directions-v004-corrected-study.png",
+      "sourcePanel": [
+        384,
+        0,
+        384,
+        496
+      ],
+      "alphaBounds": [
+        89,
+        12,
+        358,
+        493
+      ],
+      "scale": 0.26556016597510373,
+      "visibleHeight": 128,
+      "anchor": [
+        80,
+        141
+      ],
+      "limitation": "Silhouette-height normalization only; anatomical crown/stance registration needs review"
+    },
+    {
+      "direction": "W",
+      "source": "gothic-directions-v004-corrected-study.png",
+      "sourcePanel": [
+        768,
+        0,
+        384,
+        496
+      ],
+      "alphaBounds": [
+        80,
+        10,
+        324,
+        495
+      ],
+      "scale": 0.26337448559670784,
+      "visibleHeight": 128,
+      "anchor": [
+        80,
+        141
+      ],
+      "limitation": "Silhouette-height normalization only; anatomical crown/stance registration needs review"
+    },
+    {
+      "direction": "NW",
+      "source": "gothic-directions-v005-rear-study.png",
+      "sourcePanel": [
+        1152,
+        0,
+        384,
+        496
+      ],
+      "alphaBounds": [
+        36,
+        10,
+        284,
+        488
+      ],
+      "scale": 0.267223382045929,
+      "visibleHeight": 128,
+      "anchor": [
+        80,
+        141
+      ],
+      "limitation": "Silhouette-height normalization only; anatomical crown/stance registration needs review"
+    },
+    {
+      "direction": "N",
+      "source": "gothic-directions-v004-corrected-study.png",
+      "sourcePanel": [
+        0,
+        496,
+        384,
+        528
+      ],
+      "alphaBounds": [
+        72,
+        3,
+        371,
+        477
+      ],
+      "scale": 0.2694736842105263,
+      "visibleHeight": 128,
+      "anchor": [
+        80,
+        141
+      ],
+      "limitation": "Silhouette-height normalization only; anatomical crown/stance registration needs review"
+    },
+    {
+      "direction": "NE",
+      "source": "gothic-directions-v005-rear-study.png",
+      "sourcePanel": [
+        384,
+        496,
+        384,
+        528
+      ],
+      "alphaBounds": [
+        53,
+        3,
+        354,
+        487
+      ],
+      "scale": 0.2639175257731959,
+      "visibleHeight": 128,
+      "anchor": [
+        80,
+        141
+      ],
+      "limitation": "Silhouette-height normalization only; anatomical crown/stance registration needs review"
+    },
+    {
+      "direction": "E",
+      "source": "gothic-directions-v004-corrected-study.png",
+      "sourcePanel": [
+        768,
+        496,
+        384,
+        528
+      ],
+      "alphaBounds": [
+        74,
+        0,
+        326,
+        492
+      ],
+      "scale": 0.25963488843813387,
+      "visibleHeight": 128,
+      "anchor": [
+        80,
+        141
+      ],
+      "limitation": "Silhouette-height normalization only; anatomical crown/stance registration needs review"
+    },
+    {
+      "direction": "SE",
+      "source": "gothic-directions-v004-corrected-study.png",
+      "sourcePanel": [
+        1152,
+        496,
+        384,
+        528
+      ],
+      "alphaBounds": [
+        22,
+        5,
+        301,
+        495
+      ],
+      "scale": 0.2606924643584521,
+      "visibleHeight": 128,
+      "anchor": [
+        80,
+        141
+      ],
+      "limitation": "Silhouette-height normalization only; anatomical crown/stance registration needs review"
+    }
+  ],
+  "openIssues": [
+    "Rear facings now distinct; exact angle/projection still needs scene review",
+    "Source garment/staff details drift across directions",
+    "128px visible height matches source density only; anatomical alignment not established",
+    "No directional walk, cast, hurt, death or material maps created"
+  ]
+}
