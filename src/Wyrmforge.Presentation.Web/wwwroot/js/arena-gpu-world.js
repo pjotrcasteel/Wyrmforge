@@ -23,6 +23,25 @@ export function huntLightFrame(frame, camera, viewport = null,groundY=GROUND_Y) 
         range: light.range / UNIT, intensity: light.intensity,
     })) };
 }
+/** Opt-in 2-light inspection rig, never used by the production Gothic-night frame. */
+export function withAnimationReviewLights(frame,camera,width,height) {
+    if(!frame?.environment||!Array.isArray(frame.lights)||!Number.isFinite(camera?.x)||
+        !Number.isFinite(camera?.y)||!Number.isFinite(width)||!Number.isFinite(height)||
+        width<=0||height<=0)throw new TypeError('Real Hunt lighting and viewport required for animation inspection');
+    const environment={...frame.environment,ambient:.6,color:'#dce3eb',exposure:1.25,emission:true};
+    delete environment.fog;
+    const light=(id,x,y,z,color,intensity)=>({
+        id:'developer-animation-inspection:'+id,ownerId:'developer-animation-inspection',
+        type:'point',enabled:true,position:[camera.x+width*x,camera.y+height*y,z],
+        direction:[0,0,-1],color,intensity,range:1600,coneAngle:.7,penumbra:0,
+        castsShadow:false,priority:1000
+    });
+    return {...frame,environment,lights:[
+        ...frame.lights,
+        light('key',.30,.39,90,'#fff1df',95),
+        light('fill',.73,.54,105,'#e1ebff',78)
+    ]};
+}
 const material = id => ({ id, albedo: id, color: '#ffffff', roughness: .95, metalness: 0,
     specular: .15, reflection: 'direct', emission: '#000000', emissionIntensity: 0,
     alphaCutoff: .1, doubleSided: true });
@@ -123,8 +142,10 @@ export class HuntGpuWorld {
             const environment={...frame.environment,ambient:0,emission:false};delete environment.fog;
             frame={...frame,environment,lights:[]};
         }else if(this.inspectionLighting){
-            const environment={...frame.environment,ambient:.35,color:'#aebaca',exposure:1,emission:true};delete environment.fog;
-            frame={...frame,environment,lights:[...frame.lights,{id:'developer-inspection:key',ownerId:'developer-inspection',type:'point',enabled:true,position:[this.camera.x+this.width*.35,this.camera.y+this.height*.45,96],direction:[0,0,-1],color:'#fff3dc',intensity:16,range:720,coneAngle:.7,penumbra:0,castsShadow:true,priority:1000}]};
+            // AN6 developer review only: two broad neutral key/fill lights expose
+            // the true pixel silhouette without overriding C# authoritative
+            // gameplay, touching production lighting or allocating shadow maps.
+            frame=withAnimationReviewLights(frame,this.camera,this.width,this.height);
         }
         engine.apply({ ...huntLightFrame(frame, this.camera, { width: this.width, height: this.height },this.groundY), materials: this.materials, objects: this.objects });
         // CanvasTexture clones share pixels, but each GPU map needs an upload notification.
