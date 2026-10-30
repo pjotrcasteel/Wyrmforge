@@ -20,14 +20,13 @@ export function synchronizeAtlasFrame(material, frame) {
 }
 
 /**
- * Updating a shadow-camera projection matrix incurs CPU work and invalidates
- * renderer camera state. Keep the existing projection between unchanged light
- * ranges, while still refreshing new cameras and changing C# light ranges.
+ * A mobile shadow view must refresh with each authoritative lighting frame.
+ * Range-only memoization was introduced without live iPhone shadow proof;
+ * correctness takes priority over the speculative projection CPU saving.
  */
-export function synchronizeShadowProjection(light, range, force = false) {
+export function synchronizeShadowProjection(light, range) {
     const camera = light.shadow?.camera;
     if (!camera) return false;
-    if (!force && camera.far === range) return false;
     camera.far = range;
     camera.updateProjectionMatrix();
     return true;
@@ -174,7 +173,6 @@ export class LightingEngine {
         for (const d of selected) {
             let light = this.lights.get(d.id);
             if (light && light.userData.type !== d.type) { this.removeLight(d.id); light = null; }
-            const newlyCreated = !light;
             if (!light) {
                 const constructors = { point: T.PointLight, spot: T.SpotLight, directional: T.DirectionalLight };
                 light = new constructors[d.type](); light.userData.type = d.type;
@@ -186,7 +184,7 @@ export class LightingEngine {
             }
             light.color.set(d.color); light.intensity = d.intensity; light.distance = d.range; light.decay = 2;
             light.position.fromArray(d.position); light.castShadow = d.shadow;
-            synchronizeShadowProjection(light, d.range, newlyCreated);
+            synchronizeShadowProjection(light, d.range);
             if (light.target) light.target.position.copy(light.position).add(new T.Vector3(...d.direction));
             if (light.isSpotLight) { light.angle = d.coneAngle; light.penumbra = d.penumbra; }
         }
