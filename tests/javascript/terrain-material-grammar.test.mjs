@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { createMasonryField } from '../../tools/art/prototypes/wet-forest-masonry.mjs';
+import { createMasonryField, createMasonrySurface } from '../../tools/art/prototypes/wet-forest-masonry.mjs';
 import { createTerrainGrammarReview } from '../../tools/art/prototypes/build-terrain-grammar-review.mjs';
 import { TERRAIN_MATERIALS, boundaryKind, makeBoundaryMask, classifyStoneInstances,
     makeSoftField, blendWorldPatch, buildLightingMaps, cutReviewInto32, createBoundaryReview,
@@ -23,8 +23,8 @@ test('generic material grammar maps classes to boundary rules and reusable detai
 });
 
 test('whole-stone erosion never leaves half-stones at soft-boundary intersections', () => {
-    const stone=createMasonryField('flagstone',143),soil=makeSoftField('soil',143);
-    const topology=classifyStoneInstances(stone),mask=makeBoundaryMask('left',143);
+    const {bitmap:stone,stoneIds}=createMasonrySurface('flagstone',143),soil=makeSoftField('soil',143);
+    const topology=classifyStoneInstances(stone,stoneIds),mask=makeBoundaryMask('left',143);
     const result=blendWorldPatch(stone,soil,mask,{policy:'whole-stone-erosion',stoneInstances:topology});
     let removed=0,retained=0;
     for(const component of topology.components){
