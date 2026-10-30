@@ -122,8 +122,11 @@ jobs:
       - name: Publish experimental G4 game alongside main
         working-directory: g4-preview-source
         run: |
+          # This pinned G4 candidate is not the production Pages release.
+          set -euo pipefail
           dotnet restore src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj
-          dotnet publish src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -c Release --no-restore -o "$GITHUB_WORKSPACE/artifacts/g4-preview-web" -p:SourceRevisionId=a7a7ec1f32b714f6800647df56b7dbb1121b6805
+          dotnet msbuild src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -getProperty:Version -p:VersionSuffix=g4-preview | grep -Fxq '0.0.180-g4-preview'
+          dotnet publish src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -c Release --no-restore -o "$GITHUB_WORKSPACE/artifacts/g4-preview-web" -p:VersionSuffix=g4-preview -p:SourceRevisionId=a7a7ec1f32b714f6800647df56b7dbb1121b6805
           test -s "$GITHUB_WORKSPACE/artifacts/g4-preview-web/wwwroot/js/lighting/g4-device-review.js"
 
       - name: Prepare isolated G4 GitHub Pages route
@@ -133,7 +136,7 @@ jobs:
           sed -i 's#<base href="/" />#<base href="/Wyrmforge/g4-preview/" />#' artifacts/web/wwwroot/g4-preview/index.html
           sed -i 's#__WYRMFORGE_BUILD__#a7a7ec1f32b714f6800647df56b7dbb1121b6805#g' artifacts/web/wwwroot/g4-preview/index.html
           cp artifacts/web/wwwroot/g4-preview/index.html artifacts/web/wwwroot/g4-preview/404.html
-          printf 'G4 opt-in candidate: a7a7ec1f32b714f6800647df56b7dbb1121b6805\n' > artifacts/web/wwwroot/g4-preview/build-id.txt
+          printf 'G4 PREVIEW (not production): v0.0.180-g4-preview; source a7a7ec1f32b714f6800647df56b7dbb1121b6805\n' > artifacts/web/wwwroot/g4-preview/build-id.txt
           grep -q '<base href="/Wyrmforge/g4-preview/" />' artifacts/web/wwwroot/g4-preview/index.html
           grep -q 'a7a7ec1f32b714f6800647df56b7dbb1121b6805' artifacts/web/wwwroot/g4-preview/index.html
           ! grep -q '__WYRMFORGE_BUILD__' artifacts/web/wwwroot/g4-preview/index.html
@@ -211,6 +214,7 @@ jobs:
           assert "<base href=\"/Wyrmforge/\" />" in read("")
           assert "<base href=\"/Wyrmforge/g4-preview/\" />" in read("g4-preview/")
           assert "a7a7ec1f32b714f6800647df56b7dbb1121b6805" in read("g4-preview/build-id.txt")
+          assert "v0.0.180-g4-preview" in read("g4-preview/build-id.txt")
           assert "class G4DeviceReviewSession" in read("g4-preview/js/lighting/g4-device-review.js")
           assert "showG4PreflightChoice" in read("g4-preview/js/lighting/g4-consent-gate.js")
           assert "g4-consent-gate.js" in read("g4-preview/")
