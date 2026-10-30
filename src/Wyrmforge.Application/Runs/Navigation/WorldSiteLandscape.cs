@@ -181,7 +181,7 @@ public static class WorldSiteLandscapeGenerator
         {
             if (selected.Count == 4) break;
             if (candidate.Clearance < .055 ||
-                selected.Any(point => Math.Hypot(point.X - candidate.Point.X, point.Y - candidate.Point.Y) < .19))
+                selected.Any(point => Math.Sqrt(Math.Pow(point.X - candidate.Point.X, 2) + Math.Pow(point.Y - candidate.Point.Y, 2)) < .19))
                 continue;
             var radius = Math.Clamp(candidate.Clearance * .38, .025, .075);
             obstacles.Add(new WorldSiteObstacle(kind, material, 2.3,
