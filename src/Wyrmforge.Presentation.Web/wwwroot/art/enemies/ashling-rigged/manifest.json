@@ -21,7 +21,8 @@
         70
       ],
       "worldSize": 81.6,
-      "sourceExport": "art\\source\\enemies\\ashling\\exports\\movement-fiery-eyes-v1"
+      "sourceExport": "art\\source\\enemies\\ashling\\exports\\movement-fiery-eyes-v1",
+      "emissiveMap": "walk-emissive.png"
     },
     "attack": {
       "image": "attack.png",
@@ -33,7 +34,8 @@
         86
       ],
       "worldSize": 108.8,
-      "sourceExport": "art\\source\\enemies\\ashling\\exports\\attack-fiery-eyes-v1"
+      "sourceExport": "art\\source\\enemies\\ashling\\exports\\attack-fiery-eyes-v1",
+      "emissiveMap": "attack-emissive.png"
     },
     "death": {
       "image": "death.png",
@@ -45,7 +47,8 @@
         86
       ],
       "worldSize": 108.8,
-      "sourceExport": "art\\source\\enemies\\ashling\\exports\\death-fiery-eyes-v1"
+      "sourceExport": "art\\source\\enemies\\ashling\\exports\\death-fiery-eyes-v1",
+      "emissiveMap": "death-emissive.png"
     }
   }
 }
