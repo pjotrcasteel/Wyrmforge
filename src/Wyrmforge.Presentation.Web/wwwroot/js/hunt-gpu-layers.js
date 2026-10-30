@@ -18,7 +18,18 @@ export function huntLayerCapture(layer, player, dragonDeath = null) {
         id = `${layer.kind}:${actor.entityId ?? actor.id ?? 'primary'}`;
         size = Math.max(160, Math.min(768, (actor.radius || 20) * 12));
     }
-    return { id: 'hunt-' + id, x: actor.x - size / 2, y: actor.y - size * .75, size };
+    // The capture extends below the C# position to leave room for painted feet,
+    // shadows and articulated bosses. Supply this artwork-dependent pivot to
+    // the generic GPU billboard rather than burying that part below ground.
+    // These are existing Canvas paint extents, not physics or collision changes.
+    const footOffset = layer.kind === 'mage'
+        ? 12 * Math.max(.7, Math.min(1.45, (actor.radius || 12) / 12))
+        : layer.kind === 'enemy'
+            ? 24 * Math.max(.62, Math.min(1.9, (actor.radius || 12) / 12))
+            : layer.kind === 'dragon' ? (actor.radius || 34) * 1.6 : null;
+    const footFraction = footOffset === null ? undefined : Math.min(1, .75 + footOffset / size);
+    return { id: 'hunt-' + id, x: actor.x - size / 2, y: actor.y - size * .75, size,
+        ...(footFraction !== undefined ? { footFraction } : {}) };
 }
 
 /**
