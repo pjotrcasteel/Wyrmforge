@@ -43,3 +43,22 @@ node tools/art/prototypes/build-ecology-25d-review.mjs docs/art/previews/wf32-ec
 - Before/after crop and static composition are offline source art, not gameplay capture. **Owner aesthetic approval and real Hunt G/camera/occlusion/mobile acceptance remain pending.**
 
 No physics-engine changes or new rendering pipeline. Future lighting and depth work belongs to existing AR3 and shared G owners.
+
+
+## P1j-B4 — authentic Hollowed / Ashling scale reference (30 October 2026)
+
+**Owner feedback:** grass/rock size is difficult to judge without the actual enemies alongside it. The required reference is production game art at production sprite scale—not a drawn proxy, a stretched atlas frame, or an AI-generated illustration.
+
+- Added tools/art/prototypes/build-ecology-character-scale-review.mjs, producing character-scale-native.png (384×256), character-scale-3x.png (1152×768 nearest-neighbour), and character-scale-manifest.json.
+- The Hollowed is the **cape-free production standard** hollow-rigged/arms/standard-walk.png, frame 0, south direction; the Ashling is the **actual fiery-eye production** ashling-rigged/walk.png, frame 0, south direction. Both are read directly from the checked-in runtime PNGs and their manifests.
+- The drawing operation reproduces Canvas pixel-art sampling and source foot anchors at reference enemy radius 11: Hollowed 93px cell with [48,72] source anchor, Ashling 81.6px with [48,70]. No guessed resizing or silhouette replacement. Characters and props share an explicit 1× pixel coordinate system.
+- Medium grass (28px projected height), tall grass (45px), small stone (12px) and stone cluster (17px) sit at the same ground baseline. A terrain-backed rear → actors → foreground compositing pass makes true overlaps visible, with an exact 3× review for zooming in.
+- Separate JavaScript regression tests ensure authentic PNG/manifest provenance, stable world-scale dimensions, native pixel canvas size, actual actor pixels rendered and non-mutating approved ground composition.
+- Reproduce without a browser session: run the commands below.
+
+    node tools/art/prototypes/build-ecology-character-scale-review.mjs docs/art/previews/wf32-character-scale
+    node --test tests/javascript/terrain-ecology-character-scale.test.mjs tests/javascript/terrain-ecology-props-25d.test.mjs tests/javascript/terrain-ecology-props.test.mjs
+
+**Evidence limits:** This is an *offline composition of actual checked-in sprites*, not a screenshot of a running Hunt. It proves relative authored pixel scale and layered compositing only; real scene registration, dynamic G illumination, engine-driven depth, shadow casting, physical collision and 320/390px device acceptance remain separately gated under their existing owners. The reference does not change the approved P1i blending, actor sprite assets, game engine, physics or AR3 geography.
+
+**Visual gate:** owner to inspect the generated reference before we lock the grass/rock proportions. Grass may need additional soft irregularity after that review, but do not enlarge or simplify it based on a stand-in character.
