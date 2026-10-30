@@ -190,8 +190,14 @@ function createOrganicMasonryField(type, seed) {
             continue;
         }
         let shade = best.shade;
-        if (random < .055) shade = Math.max(2, shade - 1);
-        else if (random > .972) shade = Math.min(4, shade + 1);
+        // Small per-face relief, not a directional painted highlight or closed contour.
+        // Grouped pores and lichen make broad faces legible even in zero special light.
+        const facePatina = pixelHash(Math.floor(x / 5), Math.floor(y / 4), seed ^ 0x3ac598d1);
+        const localRadius = Math.hypot(cx, cy) / (cell * .8);
+        if (localRadius < .56 && facePatina > .83 && random > .28)
+            shade = Math.min(5, shade + 1);
+        else if (facePatina < .12 && random < .67) shade = Math.max(2, shade - 1);
+        if (random < .027) shade = Math.max(2, shade - 1);
         // Edge damage is occasional clustered chipping, not a connected dark rim.
         if (best.fractured && nearJoin < (cobble ? 2.4 : 3.1) &&
             infillCluster > .77 && random < .18 && ((cx > 0 && cy < 0) || (cx < 0 && cy > 0))) {
