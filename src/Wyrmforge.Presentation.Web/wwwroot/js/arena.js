@@ -1,4 +1,5 @@
-import { huntLayerCapture, huntLayerRevision, prepareHuntGpuScratch, HuntGpuScratchPool } from './hunt-gpu-layers.js';
+import { huntLayerCapture, huntLayerRevision, prepareHuntGpuScratch, HuntGpuScratchPool,
+    prepareHuntGpuPresentation, presentCompletedHuntGpuFrame } from './hunt-gpu-layers.js';
 import { mountG4DeviceReview } from './lighting/g4-device-review.js';
 import { preloadFireballV5 } from './arena-fireball-v5.js';
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
@@ -141,6 +142,10 @@ export function disposeArena(canvas) {
     state.g4Review?.dispose();
     state.gpuWorld?.dispose();
     state.gpuScratchPool?.clear();
+    if (state.gpuPresentation) {
+        state.gpuPresentation.width = 0;
+        state.gpuPresentation.height = 0;
+    }
     arenas.delete(canvas);
 }
 
@@ -148,6 +153,8 @@ function createState(canvas, dotNetReference) {
     return {
         canvas,
         context: canvas.getContext('2d'),
+        gpuPresentation: null,
+        pixelRatio: 1,
         nightMask: document.createElement('canvas'),
         actorLightBuffer: document.createElement('canvas'),
         targetSigilArt: preloadTargetSigilArt(),
@@ -265,6 +272,7 @@ function resizeCanvas(state, rect) {
         state.canvas.width = width;
         state.canvas.height = height;
     }
+    state.pixelRatio = dpr;
     state.context.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
@@ -278,8 +286,14 @@ function drawWaiting(state, width, height) {
 }
 
 function draw(state, snapshot, width, height) {
-    let ctx = state.context;
     let gpu = snapshot.lighting && state.gpuWorld;
+    // On iPhone an interactive Canvas could expose terrain before all actor
+    // and combat passes were ready. Compose the entire opt-in GPU Hunt offscreen;
+    // one final native-pixel copy presents a single coherent frame.
+    const presentation = gpu ? (state.gpuPresentation ??= document.createElement('canvas')) : null;
+    let ctx = presentation
+        ? prepareHuntGpuPresentation(presentation, width, height, state.pixelRatio)
+        : state.context;
     ctx.globalAlpha=1;ctx.filter='none';ctx.globalCompositeOperation='source-over';
     const danger = playerDangerPresentation(state.playerDanger, snapshot, performance.now(), state.reducedMotion.matches);
     const camera = resolveArenaCamera(snapshot.world, snapshot.player, width, height);
@@ -535,6 +549,7 @@ function draw(state, snapshot, width, height) {
     if (snapshot.hunt && snapshot.hunt.stage !== 2) drawHuntStageBanner(ctx, snapshot.hunt, snapshot.dragon, width, height);
     drawTouchIndicator(state, ctx);
     drawPerformanceCounter(state, ctx, snapshot, width, height);
+    if (presentation) presentCompletedHuntGpuFrame(state.context, presentation);
 }
 
 function drawHuntArena(ctx, hunt, width, height) {
