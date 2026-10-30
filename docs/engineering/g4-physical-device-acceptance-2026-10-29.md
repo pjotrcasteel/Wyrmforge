@@ -239,3 +239,40 @@ visible Fireball illumination AND bounded, correctly positioned dynamic
 shadows on Hollowed and other registered scenery, plus iPhone p95/FPS,
 camera tearing, dark Trail 2 and Android thermal/compatibility gates.
 A Chromium nonblack or pixel-count assertion alone is insufficient.
+
+## G4 post-rollback correction — retain painted ground in the default phone review (30 October 2026)
+
+The owner verified the earlier, painted-terrain rollback candidate `0fc77a0`
+works again in a real iPhone Hunt. The full rollback Pages/deployed-browser
+checks also passed. This is a recovered working **review baseline**, not
+G4 performance acceptance or permission to cut over production rendering.
+
+New exact-head Chromium evidence for the experimental flat mode
+(`2b55e714`, run [41077909916](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/41077909916))
+still showed a harsh, almost-black vertical terrain/road divide even
+after reducing opaque ellipse tint. Its generic GPU input diagnostics
+showed 329,160 ground pixels uploaded on a 390×844 mobile frame,
+alongside a 220,900-pixel wall update in that captured frame. This
+demonstrates why removing the painted ground texture does not eliminate
+the dominant full-frame GPU input/composite cost. Browser timing is
+hosted Chromium, **not iPhone FPS**.
+
+The default `?arenaGpu=1&gpuQuality=mobile&g4Review=1` now deliberately
+uses the **readable painted ground**, matching the owner-reviewed rollback
+and avoiding another silent visual downgrade. Flat colors remain opt-in
+at `&g4FlatGround=1`, for *diagnostic A/B only*. `&g4PaintedGround=1`
+remains an explicit compatibility override if both switches are present.
+Normal production and terrain art are unchanged. Do not treat the flat
+mode as a default G4 optimization or as approved new world geography.
+
+The shared-GPU real-Hunt CI now captures both **default painted**
+and **explicit flat** review modes at mobile 390px, plus default
+painted at 320px, recording exact terrain mode and genuine screenshots.
+A basic nonblack/luminance assertion is **not visual approval**.
+The owner still must approve any future candidate on real iPhone and
+check Fireball light/shadow, motion, p95 FPS, Trail 2, and Android thermals.
+
+Follow-on efficiency work must target actual measured per-frame GPU input
+uploads/CPU submission, especially the ground layer, without turning the
+lighting engine into a terrain-authoring or gameplay engine. Do not remove
+dynamic C#-authored changes from the current ground capture to force reuse.
