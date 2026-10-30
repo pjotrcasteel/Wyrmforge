@@ -92,7 +92,7 @@ jobs:
           REVIEW="artifacts/an6-compact-directional-atlas-${HEADING}"
           BLENDER="$PWD/.cache/blender-4.5.3-linux-x64/blender"
           "$BLENDER" -b -t 2 --python-exit-code 1 --python tools/animation/render_saved_clips.py -- "$SOURCE" --clips walk,attack-travel > "$SOURCE/eight-view-render.log" 2>&1
-          python3 tools/animation/export_atlases.py "$SOURCE" --out "$REVIEW" --tight-crop --clips walk,attack-travel
+          python3 tools/animation/export_atlases.py "$SOURCE" --out "$REVIEW" --tight-crop --optimized-columns --clips walk,attack-travel
           node tools/animation/check_baked_atlas_budget.mjs --production-maps "$REVIEW/manifest.json" > "$REVIEW/review-three-map-budget.json"
           REVIEW="$REVIEW" HEADING="$HEADING" python3 - <<'PY'
           import json,os
@@ -107,6 +107,8 @@ jobs:
           for name,frames in (('walk',8),('attack-travel',40)):
               spec=manifest['clips'][name]
               assert spec['frames']==frames
+              assert spec['optimizedNativePacking'] is True
+              assert spec['columns']==(8 if name=='walk' else 20)
               with Image.open(root/spec['image']) as image:
                   assert image.mode=='RGBA' and image.size[0]>0 and image.size[1]>0
           budget=json.loads((root/'review-three-map-budget.json').read_text())
