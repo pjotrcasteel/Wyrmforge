@@ -212,9 +212,12 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
                     if(bodyHeight===32)gallery.appendChild(evidence);
                     world.render(ctx,{...base,lights:[{...light,castsShadow:false}]});
                     const clear=world.engine.pixels();
+                    world.render(ctx,{...base,lights:[]});
+                    const ambientOnly=world.engine.pixels();
 
                     let weight=0, project=0, opposite=0, changed=0, farPixels=0, farthest=0;
                     let strongPixels=0, veryStrongPixels=0, peakDelta=0;
+                    let blockedInAffected=0, directInAffected=0;
                     for(let i=0;i<shadowed.length;i+=4){
                         const x=(i/4)%width, y=height-1-Math.floor(i/4/width);
                         const sx=Math.floor(x-left),sy=Math.floor(y-top);
@@ -223,6 +226,10 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
                             Math.max(0,clear[i+1]-shadowed[i+1])+
                             Math.max(0,clear[i+2]-shadowed[i+2]);
                         if(delta<24)continue;
+                        const direct=Math.max(0,clear[i]-ambientOnly[i])+
+                            Math.max(0,clear[i+1]-ambientOnly[i+1])+
+                            Math.max(0,clear[i+2]-ambientOnly[i+2]);
+                        blockedInAffected+=delta;directInAffected+=direct;
                         if(delta>=72)strongPixels++;
                         if(delta>=144)veryStrongPixels++;
                         peakDelta=Math.max(peakDelta,delta);
@@ -234,7 +241,9 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
                         changed++;
                     }
                     samples.push([changed,weight?project/weight:0,weight?opposite/weight:1,farPixels,farthest,
-                        strongPixels,veryStrongPixels,peakDelta,changed?weight/changed:0,bodyHeight]);
+                        strongPixels,veryStrongPixels,peakDelta,changed?weight/changed:0,bodyHeight,
+                        directInAffected?blockedInAffected/directInAffected:0,
+                        changed?directInAffected/changed:0]);
                 }
                 }
                 }
