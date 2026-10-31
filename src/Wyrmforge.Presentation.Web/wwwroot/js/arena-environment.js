@@ -8,6 +8,7 @@ import { createTerritoryWallLayers, drawTerritoryWall, drawOpenedGateRubble } fr
 import { liveWetForestArtworkGeneration } from './arena-live-wet-forest-materials.js';
 import { WORLD_SITE_MATERIALS, worldSiteMaterialName, normalizeWorldSiteMaterialWeights,
     worldSiteMaterialCacheKey, worldSiteSourceBindings } from './world-site-material-binding.js';
+import { worldSiteMaterialModeEnabled, drawWorldSiteNeutralAlbedo } from './world-site-neutral-albedo.js';
 
 // The world is projected from canonical C# terrain state. Drawing never changes simulation outcomes.
 const textures = new Map();
@@ -754,19 +755,29 @@ export function drawSemanticSiteFloor(ctx, geography, width, height, geographyAc
 
 export function drawArenaEnvironment(ctx, environment, width, height, elapsedSeconds = 0, approvedAtlas = null) {
     if (!environment) return false;
-    const semantic = semanticSiteModeEnabled() && drawSemanticSiteFloor(ctx, environment.geography, width, height, environment.geographyActive === true);
-    const texture = semantic ? null : terrainTexture(environment, width, height, approvedAtlas);
+    const neutral = environment.geographyActive === true &&
+        drawWorldSiteNeutralAlbedo(ctx, environment.geography, width, height);
+    // Until approved offline source art arrives, the opt-in material view remains a clear AR3 semantic fallback.
+    const semantic = !neutral && (semanticSiteModeEnabled() || worldSiteMaterialModeEnabled()) &&
+        drawSemanticSiteFloor(ctx, environment.geography, width, height, environment.geographyActive === true);
+    const texture = neutral || semantic ? null : terrainTexture(environment, width, height, approvedAtlas);
     if (texture) ctx.drawImage(texture.image, 0, 0, width, height);
     // On the AR1 run-wide geometry preview, painted and semantic palettes display
     // the same C# colliders. The default Hunt never activates these new obstacles.
-    if (!semantic && environment.geographyActive) {
+    if (!semantic && !neutral && environment.geographyActive) {
         drawWorldSiteTopography(ctx, environment.geography, width, height);
         drawWorldSitePaths(ctx, environment.geography?.landscape?.localPaths, width, height);
         drawWorldSiteLandscape(ctx, environment.geography, width, height);
         drawWorldSiteDiscoveries(ctx, environment.geography, width, height);
     }
-    if (semantic) {
+    if (neutral) {
+        // Native source floor already encodes C# road weights; only C#-authored obstacles and discoveries sit above it.
+        drawWorldSiteLandscape(ctx, environment.geography, width, height);
+        drawWorldSiteDiscoveries(ctx, environment.geography, width, height);
+    }
+    if (semantic || neutral) {
         globalThis.__wyrmforgeAr0Geography = {
+            materialView: neutral ? 'albedo' : worldSiteMaterialModeEnabled() ? 'missing-source-fallback' : 'semantic',
             siteId: environment.geography.siteId,
             regionId: environment.geography.regionId,
             seed: environment.geography.worldSeed,
@@ -798,13 +809,13 @@ export function drawArenaEnvironment(ctx, environment, width, height, elapsedSec
     }
     // Render low-angle shadows from CURRENT physical props, never frozen floor art:
     // destroyed trees and ruins lose their shadows in the same C# simulation frame.
-    if (!semantic && environment.habitat === 'WetForest' && environment.wetForest) {
+    if (!semantic && !neutral && environment.habitat === 'WetForest' && environment.wetForest) {
         drawWetForestCastShadows(ctx, environment.seed, environment.props ?? [], width, height);
         drawWetForestFirelight(ctx, environment, width, height, elapsedSeconds);
     }
     const cloister = texture?.cloister ?? null;
     // With the atlas loaded, closed territory walls are depth-sorted layers (getArenaCloisterElevations).
-    const spriteWalls = !semantic && !cloister && artReady();
+    const spriteWalls = !semantic && !neutral && !cloister && artReady();
     for (const barrier of environment.barriers ?? []) {
         if (spriteWalls) {
             if (barrier.open && barrier.kind === 'gate') drawOpenedGateRubble(ctx, barrier, width, height);
@@ -814,7 +825,7 @@ export function drawArenaEnvironment(ctx, environment, width, height, elapsedSec
             drawTerritoryBarrier(ctx, barrier, environment.element, width, height, elapsedSeconds);
     }
     for (const supply of environment.supplies ?? []) drawSupply(ctx, supply, width, height, elapsedSeconds);
-    if (!semantic) {
+    if (!semantic && !neutral) {
         drawTerritoryMotes(ctx, environment, width, height, elapsedSeconds);
         drawCloisterMist(ctx, cloister, elapsedSeconds);
     }
