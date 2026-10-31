@@ -45,8 +45,9 @@ to create a unique mountain location with a real monastery footprint, not a Y ju
 ### Mountain readability correction — 31 October
 
 The first genuine mountain-monastery screenshot exposed a flat grey floor with one tiny
-rock and an undersized rectangular footprint. It was **not approved**. In the same C#
-site recipe, mountain nodes now generate overlapping, seeded foothill, shoulder and crest
+rock and an undersized rectangular footprint. It was **not approved**. The second capture
+showed repeated disconnected oval slopes, so the same C# site generator now creates two
+continuous, seeded and irregular ridge spines, each with foothill, shoulder and crest
 surfaces with explicit elevations and slopes. These are **discrete traversable grades**,
 not AR3 continuous height/material weights or a new physics authority. Physically
 blocking cliff polygons remain the sole source of collision and line-of-sight occlusion.

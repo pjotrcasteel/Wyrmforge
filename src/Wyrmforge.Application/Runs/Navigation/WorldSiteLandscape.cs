@@ -131,27 +131,47 @@ public static class WorldSiteLandscapeGenerator
         };
     }
 
-    // Broad, overlapping foothill/shoulder/crest surfaces make the landform
-    // legible before WF32 textures or G4 illumination exist. Only explicit
-    // cliff footprints block movement; a shaded grade is still traversable.
+    // Connected foothill/shoulder/crest ribbons follow one seeded mountain
+    // spine per side. A ridge is continuous land, not a repeated row of dark
+    // rocks. Only explicit cliff footprints block movement: grade is traversable.
     private static void AddMountainElevationBands(
         WorldSiteGeography site, Random random, List<WorldSiteTerrainPatch> terrain)
     {
         var rock = site.RegionId == "frost" ? WorldSiteSurfaceId.GlacialIce : WorldSiteSurfaceId.Rock;
         for (var side = -1; side <= 1; side += 2)
         {
-            for (var segment = 0; segment < 4; segment++)
+            var phase = random.NextDouble() * Math.PI * 2;
+            var bends = Enumerable.Range(0, 13)
+                .Select(index => Math.Sin(phase + index * .61) * .018 + (random.NextDouble() - .5) * .026)
+                .ToArray();
+            foreach (var (kind, height, slope, inner) in new[]
             {
-                var center = new HuntPoint(.5 + side * (.285 + (random.NextDouble() - .5) * .016),
-                    .16 + segment * .225 + (random.NextDouble() - .5) * .025);
-                terrain.Add(new WorldSiteTerrainPatch("mountain-foothill", rock, .31, .24,
-                    Polygon(center, .188, .128, random)));
-                terrain.Add(new WorldSiteTerrainPatch("mountain-shoulder", rock, .58, .49,
-                    Polygon(new HuntPoint(center.X + side * .045, center.Y - .012), .163, .119, random)));
-                terrain.Add(new WorldSiteTerrainPatch("mountain-crest", rock, .84, .76,
-                    Polygon(new HuntPoint(center.X + side * .085, center.Y - .021), .098, .085, random)));
-            }
+                ("mountain-foothill", .31, .24, .10),
+                ("mountain-shoulder", .58, .49, .22),
+                ("mountain-crest", .84, .76, .34),
+            })
+                terrain.Add(new WorldSiteTerrainPatch(kind, rock, height, slope,
+                    MountainRidgeStrip(side, inner, bends, random)));
         }
+    }
+
+    private static IReadOnlyList<HuntPoint> MountainRidgeStrip(int side, double inner,
+        IReadOnlyList<double> bends, Random random)
+    {
+        var innerEdge = new List<HuntPoint>(bends.Count);
+        var outerEdge = new List<HuntPoint>(bends.Count);
+        for (var index = 0; index < bends.Count; index++)
+        {
+            var y = .025 + index / (double)(bends.Count - 1) * .95;
+            var drift = bends[index] + (random.NextDouble() - .5) * .012;
+            var near = Math.Clamp(inner + drift, .08, .46);
+            var far = Math.Clamp(.487 + drift * .35, .465, .489);
+            innerEdge.Add(new HuntPoint(.5 + side * near, y));
+            outerEdge.Add(new HuntPoint(.5 + side * far, y));
+        }
+        outerEdge.Reverse();
+        innerEdge.AddRange(outerEdge);
+        return innerEdge;
     }
 
     private static void AddNearRoadShoulders(

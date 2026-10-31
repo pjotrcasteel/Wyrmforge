@@ -252,7 +252,14 @@ public sealed class WorldSiteLandscapeTests
         Assert.AreEqual(5, site.Landscape.Obstacles.Count(obstacle => obstacle.Kind == "monastery-wall"));
         Assert.AreEqual(2, site.Landscape.Obstacles.Count(obstacle => obstacle.Kind == "monastery-wing"));
         Assert.AreEqual(1, site.Landscape.Obstacles.Count(obstacle => obstacle.Kind == "monastery-tower"));
-        Assert.IsGreaterThanOrEqualTo(24, site.Landscape.TerrainPatches.Count(patch => patch.Kind.StartsWith("mountain-")));
+        Assert.AreEqual(6, site.Landscape.TerrainPatches.Count(patch => patch.Kind.StartsWith("mountain-")));
+        foreach (var grade in new[] { "mountain-foothill", "mountain-shoulder", "mountain-crest" })
+        {
+            var ridges = site.Landscape.TerrainPatches.Where(patch => patch.Kind == grade).ToArray();
+            Assert.AreEqual(2, ridges.Length, $"There must be one connected {grade} ridge on each side.");
+            Assert.IsTrue(ridges.All(patch => patch.Outline.Min(point => point.Y) < .04 &&
+                patch.Outline.Max(point => point.Y) > .96), $"{grade} must extend across the site, not form islands.");
+        }
         Assert.AreEqual(1, site.Landscape.TerrainPatches.Count(patch => patch.Kind == "monastery-terrace"));
         Assert.AreEqual(1, site.Landscape.LocalPaths.Count(path => path.EdgeId == "monastery-approach"));
         Assert.IsTrue(site.Landscape.LocalPaths.All(path => site.Ports.All(port => path.EdgeId != port.EdgeId)),
@@ -281,8 +288,8 @@ public sealed class WorldSiteLandscapeTests
             if (site.Landscape!.Kind != "mountain-monastery") continue;
             reviewed++;
             var terrain = site.Landscape.TerrainPatches;
-            Assert.IsGreaterThan(20, terrain.Count,
-                $"seed {seed}: a mountain must have broad surface elevation, not just scattered rocks");
+            Assert.IsGreaterThanOrEqualTo(6, terrain.Count,
+                $"seed {seed}: a mountain must have continuous graded ridge surfaces");
             Assert.IsTrue(terrain.Any(patch => patch.Height >= .8 && patch.Slope >= .7),
                 $"seed {seed}: the ridge needs a steep, high crest");
             Assert.IsTrue(terrain.Any(patch => patch.Kind == "monastery-terrace"),

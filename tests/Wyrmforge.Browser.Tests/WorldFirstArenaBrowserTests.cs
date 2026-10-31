@@ -133,7 +133,7 @@ public sealed class WorldFirstArenaBrowserTests : PageTest
         {
             Assert.AreNotEqual(siteId, renderedSiteId, "Review must display the real generated Elder monastery site, not an opening-trail repaint.");
             Assert.IsGreaterThanOrEqualTo(9, await Page.EvaluateAsync<int>("() => window.__wyrmforgeAr0Geography.monasteryStructureCount"));
-            Assert.IsGreaterThan(20, await Page.EvaluateAsync<int>("() => window.__wyrmforgeAr0Geography.terrainPatchCount"));
+            Assert.IsGreaterThanOrEqualTo(6, await Page.EvaluateAsync<int>("() => window.__wyrmforgeAr0Geography.terrainPatchCount"));
         }
         Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
         await Page.ScreenshotAsync(new() { Path = Path.Combine(output, $"ar1-{kind}-live-hunt-{width}.png"), FullPage = false });
