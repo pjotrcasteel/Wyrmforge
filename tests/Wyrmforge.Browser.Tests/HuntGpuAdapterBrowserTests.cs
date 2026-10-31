@@ -191,9 +191,10 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
                     materials:[],objects:[]};
                 const alpha=tile.getContext('2d').getImageData(0,0,160,160).data;
                 const samples=[];
+                for(const sourceHeight of [24,48,96,144]){
                 for(const [dx,dy] of [[0,48],[0,-48],[48,0],[-48,0]]){
                     const light={id:'moving-fireball',ownerId:'test',type:'point',enabled:true,
-                        position:[footX+dx,footY+dy,24],direction:[0,0,-1],color:'#ff7835',
+                        position:[footX+dx,footY+dy,sourceHeight],direction:[0,0,-1],color:'#ff7835',
                         intensity:6,range:144,coneAngle:.5,penumbra:0,castsShadow:true,priority:1};
                     world.render(ctx,{...base,lights:[light]});
                     const shadowed=world.engine.pixels();
@@ -202,7 +203,7 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
                     const evidence=document.createElement('canvas');
                     evidence.width=width;evidence.height=height;
                     evidence.getContext('2d').drawImage(canvas,0,0);
-                    gallery.appendChild(evidence);
+                    if(sourceHeight===24)gallery.appendChild(evidence);
                     world.render(ctx,{...base,lights:[{...light,castsShadow:false}]});
                     const clear=world.engine.pixels();
 
@@ -224,6 +225,7 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
                     }
                     samples.push([changed,weight?project/weight:0,weight?opposite/weight:1,farPixels,farthest]);
                 }
+                }
                 window.__huntGpuDirectionalWorld=world;
                 return samples;
             }
@@ -233,13 +235,14 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
             ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
         Directory.CreateDirectory(artifacts);
         await File.WriteAllTextAsync(Path.Combine(artifacts, "g4-shadow-direction-metrics.json"),
-            System.Text.Json.JsonSerializer.Serialize(measurements));
+            System.Text.Json.JsonSerializer.Serialize(new { sourceHeights = new[] { 24, 48, 96, 144 },
+                sides = new[] { "south", "north", "east", "west" }, measurements }));
         await Page.Locator("#hunt-gpu-direction-shadow-gallery").ScreenshotAsync(new()
         {
             Path = Path.Combine(artifacts, "g4-shadow-direction.png"),
         });
         var sides = new[] { "south", "north", "east", "west" };
-        for (var i = 0; i < measurements.Length; i++)
+        for (var i = 0; i < sides.Length; i++)
         {
             var sample = measurements[i];
             Assert.IsGreaterThan(80, sample[0], $"A {sides[i]} Fireball must cast a readable alpha silhouette on grey ground.");
