@@ -354,15 +354,44 @@ public sealed class WorldSiteLandscapeTests
             var site = node.Geography!;
             Assert.IsTrue(site.Landscape!.Discoveries.Any(discovery => discovery.Kind == "overgrown-ruins"),
                 "A forest fork needs a real ruins destination, not a wandering dead end.");
-            Assert.IsTrue(site.ScenicPaths.All(path => site.Ports.All(port => port.EdgeId != path.EdgeId)),
-                "Path shapes must remain local generation, even though they reach real Chart ports.");
-            foreach (var port in site.Ports)
-            {
-                Assert.IsTrue(site.ScenicPaths.Any(path => path.Points[0] == port.LocalPoint ||
-                    path.Points[^1] == port.LocalPoint), "Every painted road endpoint must be a legal Chart access port.");
-            }
+            Assert.AreEqual(1, site.ScenicPaths.Count,
+                "A Chart junction must not generate radial roads into every abstract exit.");
+            var regionalRoad = site.ScenicPaths.Single();
+            Assert.AreEqual("site-main-trail", regionalRoad.EdgeId);
+            Assert.AreEqual(new HuntPoint(.5, .5), regionalRoad.Points[2]);
+            Assert.IsTrue(site.Landscape.LocalPaths.Any(path => path.EdgeId.EndsWith(":trace:access", StringComparison.Ordinal)),
+                "A real C# ruins destination, not Chart degree, is what justifies the scenic branch.");
             Assert.AreEqual(site.Ports.Count, site.Ports.Select(port => port.EdgeId).Distinct().Count());
         }
+    }
+
+    [TestMethod]
+    public void MountainMonastery_RoadsAscendFromSouthernValleyToWindingGateWithoutChartSpokes()
+    {
+        var reviewed = 0;
+        for (var seed = 0; seed < 65; seed++)
+        {
+            foreach (var node in WyrmrealmMapGenerator.GenerateFireHunt(seed, WyrmTier.Elder))
+            {
+                var site = node.Geography!;
+                if (site.Landscape?.Kind != "mountain-monastery") continue;
+                reviewed++;
+                Assert.AreEqual(1, site.ScenicPaths.Count,
+                    "The count of Chart exits must never turn a mountain into a road star.");
+                var road = site.ScenicPaths.Single();
+                Assert.AreEqual("site-main-trail", road.EdgeId);
+                Assert.AreEqual(25, road.Points.Count);
+                Assert.AreEqual(.965, road.Points[0].Y, 1e-9, "Main path enters from the southern valley.");
+                Assert.AreEqual(new HuntPoint(.5, .5), road.Points[^1]);
+                Assert.IsTrue(road.Points.Any(point => point.X < .49) &&
+                    road.Points.Any(point => point.X > .51), "The ascending valley path should curve naturally.");
+                var monastery = site.Landscape.LocalPaths.Single(path => path.EdgeId == "monastery-approach");
+                Assert.AreEqual(road.Points[^1], monastery.Points[0],
+                    "The scenic ascent must join the actual C# monastery approach.");
+                Assert.IsTrue(site.ScenicPaths.All(path => !path.EdgeId.StartsWith("site-port-access-", StringComparison.Ordinal)));
+            }
+        }
+        Assert.IsGreaterThan(4, reviewed);
     }
 
     [TestMethod]

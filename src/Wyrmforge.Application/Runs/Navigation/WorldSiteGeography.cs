@@ -188,40 +188,42 @@ public static class WorldSiteGeographyProjection
         var material = profile.Landform == WorldSiteLandform.Wetland
             ? WorldSiteSurfaceId.Mud : WorldSiteSurfaceId.Road;
         var center = new HuntPoint(.5, .5);
+
+        // Chart connections are travel permissions, not physical roads. The
+        // landscape owns one believable regional trail regardless of graph degree;
+        // only real site destinations may introduce additional paths.
+        if (profile.Landform == WorldSiteLandform.Mountain &&
+            profile.Landmark == WorldSiteLandmark.Monastery)
+        {
+            // Enter from the low southern valley, meander gently uphill, and
+            // join the separately authored switchback to the monastery gate.
+            var swing = (random.Next(2) == 0 ? -1 : 1) * (.032 + random.NextDouble() * .012);
+            var ascent = Enumerable.Range(0, 25)
+                .Select(index =>
+                {
+                    var t = index / 24d;
+                    return new HuntPoint(.5 + swing * Math.Sin(t * Math.PI * 2), .965 - .465 * t);
+                })
+                .ToArray();
+            return [new WorldSiteCorridor("site-main-trail", material, .04, ascent)];
+        }
+
         var entry = ports.FirstOrDefault(port => port.Entrance) ?? ports.FirstOrDefault();
-        var exit = ports.FirstOrDefault(port => !port.Entrance);
-        var trails = new List<WorldSiteCorridor>();
+        var exit = ports.FirstOrDefault(port => !port.Entrance && port.EdgeId != entry?.EdgeId);
+        var from = entry?.LocalPoint ?? new HuntPoint(.5, .965);
+        // A terminal site may lie on a regional route even if the abstract
+        // Chart has no next node. Continue to the opposite map boundary.
+        var to = exit?.LocalPoint ?? new HuntPoint(
+            Math.Clamp(1 - from.X, .025, .975), Math.Clamp(1 - from.Y, .025, .975));
 
-        if (entry is not null)
-        {
-            var points = new List<HuntPoint>
-            {
-                entry.LocalPoint,
-                TrailBend(entry.LocalPoint, center, (random.NextDouble() - .5) * .16),
-                center,
-            };
-            if (exit is not null && exit.EdgeId != entry.EdgeId)
-            {
-                points.Add(TrailBend(center, exit.LocalPoint, (random.NextDouble() - .5) * .16));
-                points.Add(exit.LocalPoint);
-            }
-            trails.Add(new WorldSiteCorridor("site-main-trail", material, .068, points));
-        }
-
-        // The Chart defines where a route may leave the site. All other physical
-        // access ports remain connected to the road, but *extra scenic forks*
-        // are generated only for real local destinations, not from graph degree.
-        foreach (var port in ports)
-        {
-            if (port.EdgeId == entry?.EdgeId || port.EdgeId == exit?.EdgeId) continue;
-            trails.Add(new WorldSiteCorridor($"site-port-access-{trails.Count}", material, .045,
-            [
-                center,
-                TrailBend(center, port.LocalPoint, (random.NextDouble() - .5) * .10),
-                port.LocalPoint,
-            ]));
-        }
-        return trails;
+        return [new WorldSiteCorridor("site-main-trail", material, .06,
+        [
+            from,
+            TrailBend(from, center, (random.NextDouble() - .5) * .16),
+            center,
+            TrailBend(center, to, (random.NextDouble() - .5) * .16),
+            to,
+        ])];
     }
 
     private static HuntPoint TrailBend(HuntPoint from, HuntPoint to, double offset) =>

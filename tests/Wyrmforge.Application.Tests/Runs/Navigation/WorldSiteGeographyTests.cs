@@ -31,7 +31,8 @@ public sealed class WorldSiteGeographyTests
                     Assert.AreEqual(node.Habitat.ToString(), site.Archetype);
                     Assert.AreEqual(site.Ports.Count, site.Corridors.Count);
                     Assert.IsNotNull(site.GenerationProfile);
-                    Assert.IsGreaterThan(0, site.ScenicPaths.Count);
+                    Assert.AreEqual(1, site.ScenicPaths.Count,
+                        "A site's visible regional road must not multiply with Chart edge count.");
                     Assert.IsTrue(site.ScenicPaths.All(path => site.Ports.All(port => port.EdgeId != path.EdgeId)),
                         "An arena's scenic trail must not be a copy of the Chart's travel graph.");
                     Assert.AreEqual(site.Ports.Count, site.Ports.Select(port => port.EdgeId).Distinct().Count());
