@@ -171,6 +171,10 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
                 document.body.appendChild(canvas);
                 const ctx = canvas.getContext('2d');
                 ctx.fillStyle='#777777';ctx.fillRect(0,0,width,height);
+                const gallery=document.createElement('div');
+                gallery.id='hunt-gpu-direction-shadow-gallery';
+                Object.assign(gallery.style,{position:'absolute',left:'0',top:'0',zIndex:'100000',display:'grid',background:'#777777'});
+                document.body.appendChild(gallery);
 
                 // Real Hollowed alpha, the exact 160px padded capture path used in the Hunt.
                 const actor = new Image();
@@ -193,6 +197,12 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
                         intensity:6,range:144,coneAngle:.5,penumbra:0,castsShadow:true,priority:1};
                     world.render(ctx,{...base,lights:[light]});
                     const shadowed=world.engine.pixels();
+                    // Preserve the actual rendered GPU frame for all four directions,
+                    // including failure runs (the final world frame has shadows disabled).
+                    const evidence=document.createElement('canvas');
+                    evidence.width=width;evidence.height=height;
+                    evidence.getContext('2d').drawImage(canvas,0,0);
+                    gallery.appendChild(evidence);
                     world.render(ctx,{...base,lights:[{...light,castsShadow:false}]});
                     const clear=world.engine.pixels();
 
@@ -217,6 +227,15 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
             }
             """, new { width, height });
 
+        var artifacts = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS")
+            ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
+        Directory.CreateDirectory(artifacts);
+        await File.WriteAllTextAsync(Path.Combine(artifacts, "g4-shadow-direction-metrics.json"),
+            System.Text.Json.JsonSerializer.Serialize(measurements));
+        await Page.Locator("#hunt-gpu-direction-shadow-gallery").ScreenshotAsync(new()
+        {
+            Path = Path.Combine(artifacts, "g4-shadow-direction.png"),
+        });
         var sides = new[] { "south", "north", "east", "west" };
         for (var i = 0; i < measurements.Length; i++)
         {
@@ -228,15 +247,6 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
                 $"A {sides[i]} Fireball must not place most shadow pixels on the illuminated side.");
         }
 
-        var artifacts = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS")
-            ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
-        Directory.CreateDirectory(artifacts);
-        await File.WriteAllTextAsync(Path.Combine(artifacts, "g4-shadow-direction-metrics.json"),
-            System.Text.Json.JsonSerializer.Serialize(measurements));
-        await Page.Locator("#hunt-gpu-direction-shadow-proof").ScreenshotAsync(new()
-        {
-            Path = Path.Combine(artifacts, "g4-shadow-direction.png"),
-        });
         await Page.EvaluateAsync("() => window.__huntGpuDirectionalWorld.dispose()");
     }
 
