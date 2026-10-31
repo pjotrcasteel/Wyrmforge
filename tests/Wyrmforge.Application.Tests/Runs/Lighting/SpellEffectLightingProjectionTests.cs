@@ -85,6 +85,8 @@ public sealed class SpellEffectLightingProjectionTests
         Assert.AreEqual(100d, lights[0].X);
         Assert.AreEqual(200d, lights[0].Y);
         Assert.AreEqual(68d, lights[0].Radius);
+        Assert.IsFalse(lights[0].CastsShadows,
+            "Floor-level burning ground must not request a point cubemap inside an enemy caster.");
         Assert.AreEqual(LightingSourceCatalog.ForSpell(SpellId.FireBolt)!.Intensity * .5, lights[0].Intensity);
         Assert.AreEqual(.1, area.Life);
         Assert.IsEmpty(SpellEffectLightingProjection.Capture(null, [], []));
