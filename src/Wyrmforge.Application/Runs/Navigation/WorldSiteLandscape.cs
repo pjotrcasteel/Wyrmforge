@@ -375,18 +375,12 @@ public static class WorldSiteLandscapeGenerator
             Polygon(best.Center, halfWidth + .045, halfHeight + .05, random)));
         terrain.Add(new WorldSiteTerrainPatch("monastery-courtyard", stone, .67, .02,
             Rectangle(left + thickness, north + thickness, right - thickness, south - thickness)));
-        // Ascend through a seeded switchback rather than cutting straight through
-        // a cliff. The generated physical cliff faces reserve this exact route.
-        var bend = (random.NextDouble() - .5) * .055;
+        // Generate a visible, smooth mountain switchback. The path meanders
+        // through the central low ground, then curves around the outer wall
+        // before approaching the monastery gate from the south.
         var lowPassY = Math.Min(.955, south + .11);
         paths.Add(new WorldSiteCorridor("monastery-approach", WorldSiteSurfaceId.Road, .04,
-        [
-            new HuntPoint(.5, .5),
-            new HuntPoint(.5 + bend * .35, .5 + (lowPassY - .5) * .55),
-            new HuntPoint(.5 + bend, lowPassY),
-            new HuntPoint(cx, lowPassY),
-            new HuntPoint(cx, south + .005),
-        ]));
+            CreateWindingMonasteryApproach(cx, south, lowPassY, random)));
         // Eliminate incidental small rocks/roots on the real structure footprint.
         obstacles.RemoveAll(obstacle => obstacle.Outline.Any(point =>
             point.X > left - .03 && point.X < right + .03 &&
@@ -413,6 +407,50 @@ public static class WorldSiteLandscapeGenerator
             Rectangle(left, south - thickness, cx - gateHalfWidth, south)));
         obstacles.Add(new WorldSiteObstacle("monastery-wall", stone, 1.4,
             Rectangle(cx + gateHalfWidth, south - thickness, right, south)));
+    }
+
+    // This path is C# world geometry, not a decorative JS road. Every sampled
+    // section is reserved through the existing obstacle/corridor clearance logic.
+    private static IReadOnlyList<HuntPoint> CreateWindingMonasteryApproach(double cx, double south,
+        double lowPassY, Random random)
+    {
+        var direction = Math.Sign(cx - .5);
+        var swing = .078 + (random.NextDouble() - .5) * .014;
+        var ascent = lowPassY - .5;
+        var start = new HuntPoint(.5, .5);
+        var firstBend = new HuntPoint(.5 + direction * swing, .5 + ascent * .30);
+        var secondBend = new HuntPoint(.5 - direction * swing * .90, .5 + ascent * .70);
+        var saddle = new HuntPoint(.5, lowPassY);
+        var gate = new HuntPoint(cx, south + .005);
+        var path = new List<HuntPoint> { start };
+
+        AppendCubicPath(path, start,
+            new HuntPoint(.5 + direction * swing * .85, .5 + ascent * .08),
+            new HuntPoint(firstBend.X, .5 + ascent * .20), firstBend);
+        AppendCubicPath(path, firstBend,
+            new HuntPoint(firstBend.X, .5 + ascent * .47),
+            new HuntPoint(secondBend.X, .5 + ascent * .53), secondBend);
+        AppendCubicPath(path, secondBend,
+            new HuntPoint(secondBend.X, .5 + ascent * .85),
+            new HuntPoint(.5 - direction * swing * .35, lowPassY), saddle);
+        AppendCubicPath(path, saddle,
+            new HuntPoint(.5 + (cx - .5) * .32, lowPassY),
+            new HuntPoint(cx, lowPassY), gate);
+        return path;
+    }
+
+    private static void AppendCubicPath(List<HuntPoint> path, HuntPoint start, HuntPoint controlA,
+        HuntPoint controlB, HuntPoint end)
+    {
+        const int Steps = 8;
+        for (var index = 1; index <= Steps; index++)
+        {
+            var t = index / (double)Steps;
+            var u = 1 - t;
+            path.Add(new HuntPoint(
+                u * u * u * start.X + 3 * u * u * t * controlA.X + 3 * u * t * t * controlB.X + t * t * t * end.X,
+                u * u * u * start.Y + 3 * u * u * t * controlA.Y + 3 * u * t * t * controlB.Y + t * t * t * end.Y));
+        }
     }
 
     private static IReadOnlyList<HuntPoint> Rectangle(double left, double top, double right, double bottom) =>
