@@ -180,8 +180,12 @@ test('mage, Warden and Wyrm retain their own painted foot line without ground pe
         const mesh = huntSurfaceRenderable(capture.id, capture.x, capture.y,
             capture.size, capture.size, true, { footFraction: capture.footFraction });
         assert.equal(mesh.geometry, 'hunt-billboard');
-        assert.ok(capture.footFraction > .75 && capture.footFraction <= 1,
-            'Painted ankles, bell body and wyrm tail must remain in the texture');
+        assert.ok(layer.kind === 'enemy' ? capture.footFraction === .75 :
+            capture.footFraction > .75 && capture.footFraction <= 1,
+            'Enemy sprite atlas anchors use canonical C# feet; mage/Wyrm retain legacy painted offsets');
+        if (layer.kind === 'enemy')
+            assert.equal(capture.y + capture.size * capture.footFraction, actor.y,
+                'The enemy shadow caster is planted at the same authoritative Y as its sprite and target sigil.');
         assert.equal(mesh.scale[1], capture.size / 48,
             'The full source sprite height must survive every painted-foot pivot.');
         assert.equal(mesh.scale[0], mesh.scale[1],
@@ -193,6 +197,22 @@ test('mage, Warden and Wyrm retain their own painted foot line without ground pe
     }
     const invalid = () => huntSurfaceRenderable('bad', 0, 0, 100, 100, true, { footFraction: 1.5 });
     assert.throws(invalid, RangeError);
+});
+
+
+test('Hollowed and Ashling shadow anchors do not drift south as capture sizes vary', async () => {
+    const { huntLayerCapture } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/hunt-gpu-layers.js');
+    const { huntCaptureSilhouetteCaster } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js');
+    for (const radius of [8, 11, 24, 44]) {
+        const enemy = { entityId: radius, x: 260, y: 340, radius };
+        const capture = huntLayerCapture({ kind: 'enemy', enemy }, null);
+        assert.equal(capture.footFraction, .75);
+        assert.equal(capture.y + capture.size * capture.footFraction, enemy.y);
+        const caster = huntCaptureSilhouetteCaster(capture.x, capture.y, capture.size,
+            capture.size, capture.footFraction, capture.occluderHeightPx);
+        assert.ok(Math.abs(-caster.occluderPosition[1] * 48 / Math.SQRT2 - enemy.y) < 1e-10,
+            'The projected GPU caster foot must coincide with the canonical world foot.');
+    }
 });
 
 test('G4 mage Warden Wyrm project to exact Canvas source pixels at every phone aspect ratio', async () => {
