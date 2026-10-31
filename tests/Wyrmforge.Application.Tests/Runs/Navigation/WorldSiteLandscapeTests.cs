@@ -52,10 +52,13 @@ public sealed class WorldSiteLandscapeTests
                 if (layout.Kind is not ("mountain-monastery" or "mountain-pass")) continue;
                 reviewed++;
                 var faces = layout.Obstacles.Where(obstacle => obstacle.Kind is "cliff-face" or "glacier-cliff-face").ToArray();
-                Assert.IsGreaterThan(5, faces.Length);
+                Assert.IsGreaterThan(1, faces.Length);
                 Assert.IsTrue(faces.All(face => face.Height >= 1 && face.Height <= 3));
                 Assert.IsTrue(faces.All(face => face.Outline.Count >= 6),
                     "Rock faces need irregular outlines, never four-corner wall strips.");
+                Assert.IsTrue(faces.Any(face => face.Outline.Count > 6 &&
+                    face.Outline.Max(point => point.Y) - face.Outline.Min(point => point.Y) > .08),
+                    "A natural escarpment must connect rock shelves into a long continuous ledge.");
                 Assert.IsTrue(faces.Select(face => Math.Round(face.Height, 1)).Distinct().Count() > 1,
                     "An entire mountain must not be a uniform-height fence.");
             }

@@ -313,9 +313,9 @@ public static class WorldSiteLandscapeGenerator
     private static void AddMountainCliffFaces(WorldSiteGeography site,
         IReadOnlyList<WorldSiteCorridor> localPaths, Random random, List<WorldSiteObstacle> obstacles)
     {
-        // Natural rock shelves are broken, tapered and staggered along contour;
-        // a repeated 20-section rectangle wall is neither geology nor a useful
-        // 2.5D height cue. Each exposed step represents 1–3 metres of relief.
+        // A natural escarpment is one contour with occasional saddles and trail
+        // breaks, not a fence assembled from separate rectangular pillars.
+        // Merge successive collision-safe rock faces into continuous jagged shelves.
         const int Sections = 18;
         const double Edge = .023;
         var routes = site.Corridors.Concat(site.ScenicPaths).Concat(localPaths).ToArray();
@@ -327,39 +327,61 @@ public static class WorldSiteLandscapeGenerator
         foreach (var side in new[] { -1d, 1d })
         {
             var phase = random.NextDouble() * Math.PI * 2;
+            var continuousFaces = new List<WorldSiteObstacle>();
+
+            void FlushRockShelf()
+            {
+                if (continuousFaces.Count == 0) return;
+
+                // Three points per segment trace the uphill lip; the opposite
+                // contour returns downhill. There are no internal fence seams.
+                var contour = continuousFaces.SelectMany(face => face.Outline.Take(3))
+                    .Concat(continuousFaces.AsEnumerable().Reverse().SelectMany(face => face.Outline.Skip(3)))
+                    .ToArray();
+                var shelf = new WorldSiteObstacle(kind, material, 1 + random.NextDouble() * 2, contour);
+                if (!TouchesReservedRoute(shelf, routes) &&
+                    !monastery.Any(building => BoundsOverlap(shelf, building, .025)))
+                {
+                    obstacles.Add(shelf);
+                }
+                continuousFaces.Clear();
+            }
+
             for (var index = 0; index < Sections; index++)
             {
-                // Leave occasional natural breaks and additional safe saddles.
-                // Reserved C# chart and monastery approaches always win.
-                if (random.NextDouble() < .12) continue;
-                var fromY = Edge + index * (1 - 2 * Edge) / Sections + .003;
-                var toY = Edge + (index + 1) * (1 - 2 * Edge) / Sections - .003;
+                // Small natural saddles and explicit trails interrupt a cliff.
+                if (random.NextDouble() < .12)
+                {
+                    FlushRockShelf();
+                    continue;
+                }
+
+                var fromY = Edge + index * (1 - 2 * Edge) / Sections;
+                var toY = Edge + (index + 1) * (1 - 2 * Edge) / Sections;
                 var midY = (fromY + toY) * .5;
-                var contour = .179 + Math.Sin(phase + index * .46) * .025;
-                var nextContour = .179 + Math.Sin(phase + (index + 1) * .46) * .025;
-                var lowRelief = .024 + random.NextDouble() * .016;
-                var highRelief = .032 + random.NextDouble() * .016;
-                var fromX = .5 + side * contour;
-                var toX = .5 + side * nextContour;
-                var face = new WorldSiteObstacle(kind, material, 1 + random.NextDouble() * 2,
+                var innerFrom = .179 + Math.Sin(phase + index * .46) * .025;
+                var innerTo = .179 + Math.Sin(phase + (index + 1) * .46) * .025;
+                var outerFrom = .024 + random.NextDouble() * .016;
+                var outerTo = .032 + random.NextDouble() * .016;
+                var face = new WorldSiteObstacle(kind, material, 1,
                 [
-                    // Ragged inner lip and wider weathered rock beneath it.
-                    new HuntPoint(fromX - side * .006, fromY + .004),
-                    new HuntPoint(.5 + side * ((contour + nextContour) * .5 - .012), midY),
-                    new HuntPoint(toX - side * .003, toY - .002),
-                    new HuntPoint(toX + side * highRelief, toY - .006),
-                    new HuntPoint(.5 + side * ((contour + nextContour) * .5 + highRelief + .008), midY + .007),
-                    new HuntPoint(fromX + side * lowRelief, fromY),
+                    new HuntPoint(.5 + side * (innerFrom - .006), fromY),
+                    new HuntPoint(.5 + side * ((innerFrom + innerTo) * .5 - .012), midY),
+                    new HuntPoint(.5 + side * (innerTo - .003), toY),
+                    new HuntPoint(.5 + side * (innerTo + outerTo), toY),
+                    new HuntPoint(.5 + side * ((innerFrom + innerTo) * .5 + outerTo + .008), midY),
+                    new HuntPoint(.5 + side * (innerFrom + outerFrom), fromY),
                 ]);
 
                 if (TouchesReservedRoute(face, routes) ||
                     monastery.Any(building => BoundsOverlap(face, building, .025)))
                 {
+                    FlushRockShelf();
                     continue;
                 }
-
-                obstacles.Add(face);
+                continuousFaces.Add(face);
             }
+            FlushRockShelf();
         }
     }
 

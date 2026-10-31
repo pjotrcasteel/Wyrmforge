@@ -577,7 +577,20 @@ export function drawWorldSiteLandscape(ctx, geography, width, height) {
         }
         ctx.closePath();
         ctx.fill();
-        ctx.stroke();
+        if (obstacle.kind.endsWith('cliff-face')) {
+            // A 1–3 m escarpment reads as a continuous weathered rock lip,
+            // not as outlined blocks or a man-made wall. Geometry is C# owned.
+            ctx.beginPath();
+            const lipLength = obstacle.outline.length / 2;
+            for (let i = 0; i < lipLength; i++) {
+                const point = obstacle.outline[i];
+                if (i === 0) ctx.moveTo(point.x * width, point.y * height);
+                else ctx.lineTo(point.x * width, point.y * height);
+            }
+            ctx.stroke();
+        } else {
+            ctx.stroke();
+        }
         // Show an unobtrusive landmark *inside* the precise C# footprint.
         // This is diagnostic hatching, not added collision, illumination or a
         // second procedural decorator. Nothing extends beyond the authored shape.
