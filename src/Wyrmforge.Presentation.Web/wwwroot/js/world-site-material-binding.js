@@ -92,8 +92,9 @@ export function worldSiteSourceBindings(geography) {
         return Object.freeze({
             id: spec.id, material: spec.name, weight: spec.weight,
             sourceFamily, sourceGate, fallback: spec.fallback,
+            // This is *art-source* approval, not proof that runtime texture files exist.
             // Stone boundaries and 2.5D rocks are not yet approved for live site rendering.
-            sourceReady: ['Soil', 'Grass', 'Mud'].includes(spec.name),
+            sourceApproved: ['Soil', 'Grass', 'Mud'].includes(spec.name),
         });
     });
 }
