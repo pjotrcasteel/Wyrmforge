@@ -72,6 +72,32 @@ test('Only visible actor billboards face the Hunt camera; shadow casters stay in
         'Terrain receiver keeps its world rotation.');
 });
 
+test('Crossed shadow impostor has two perpendicular alpha faces and one GPU geometry', async () => {
+    const T = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/vendor/three.module.js');
+    const { huntCrossedShadowGeometry } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js');
+    const geometry = huntCrossedShadowGeometry();
+    try {
+        assert.equal(geometry.getAttribute('position').count, 8);
+        assert.equal(geometry.index.count, 12, 'Two quads merge into one indexed shadow draw call.');
+        const n = geometry.getAttribute('normal');
+        const faceA = new T.Vector3().fromBufferAttribute(n, 0);
+        const faceB = new T.Vector3().fromBufferAttribute(n, 4);
+        assert.ok(Math.abs(faceA.dot(faceB)) < 1e-7,
+            'Lights from X or Y must see an alpha face; one infinitely thin billboard cannot provide it.');
+        const uv = geometry.getAttribute('uv');
+        for (let i = 0; i < 4; i++) {
+            assert.equal(uv.getX(i), uv.getX(i + 4));
+            assert.equal(uv.getY(i), uv.getY(i + 4));
+        }
+        const p = geometry.getAttribute('position');
+        for (let i = 0; i < p.count; i++)
+            assert.ok(p.getY(i) >= -1e-7 && p.getY(i) <= 1 + 1e-7,
+                'The shared foot line and whole sprite height survive both rotated faces.');
+    } finally {
+        geometry.dispose();
+    }
+});
+
 test('World-upright alpha casters preserve source pixels and meet the authored foot anchor', async () => {
     const { huntCaptureSilhouetteCaster } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js');
     for (const height of [32, 64, 96, 160, 320]) {

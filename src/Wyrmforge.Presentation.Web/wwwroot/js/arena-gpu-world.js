@@ -130,6 +130,38 @@ export function huntActorGeometry() {
     return actor;
 }
 
+/** Two perpendicular alpha-cutout planes form a camera-independent 2.5D
+ * shadow impostor. A single flat plane is edge-on to lights approaching from
+ * its sides, and cannot cast 360-degree shadows regardless of light height.
+ * Both faces reuse the same animated texture and are one shared GPU mesh.
+ * Authored 3D/heightfield occluders bypass this fallback entirely.
+ */
+export function huntCrossedShadowGeometry() {
+    const front = huntActorGeometry();
+    const side = front.clone();
+    side.rotateY(Math.PI / 2);
+    const positions = [], normals = [], uvs = [], indices = [];
+    for (const source of [front, side]) {
+        const base = positions.length / 3;
+        const position = source.getAttribute('position');
+        const normal = source.getAttribute('normal');
+        const uv = source.getAttribute('uv');
+        for (let i = 0; i < position.count; i++) {
+            positions.push(position.getX(i), position.getY(i), position.getZ(i));
+            normals.push(normal.getX(i), normal.getY(i), normal.getZ(i));
+            uvs.push(uv.getX(i), uv.getY(i));
+        }
+        for (let i = 0; i < source.index.count; i++) indices.push(base + source.index.getX(i));
+    }
+    front.dispose(); side.dispose();
+    const merged = new T.BufferGeometry();
+    merged.setAttribute('position', new T.Float32BufferAttribute(positions, 3));
+    merged.setAttribute('normal', new T.Float32BufferAttribute(normals, 3));
+    merged.setAttribute('uv', new T.Float32BufferAttribute(uvs, 2));
+    merged.setIndex(indices);
+    return merged;
+}
+
 /** Visible capture quads follow the camera; their separate GPU shadow
  * occluders retain the authored world rotation and exact foot anchor.
  * Neither pose height nor shadow geometry depends on active light selection.
@@ -151,7 +183,7 @@ export class HuntGpuWorld {
         this.engine.registerGeometry('hunt-billboard', huntActorGeometry());
         // G1-style alpha-cutout sprite silhouettes retain source-pixel scale
         // until WF/AR supply authored 2.5D geometry.
-        this.engine.registerGeometry('hunt-shadow-silhouette', huntActorGeometry());
+        this.engine.registerGeometry('hunt-shadow-silhouette', huntCrossedShadowGeometry());
         this.layers = new Map();
         this.used = new Set();
         this.dirtyTextures = new Set();
