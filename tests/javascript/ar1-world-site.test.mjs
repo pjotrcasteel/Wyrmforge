@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { drawSemanticSiteFloor, drawWorldSiteLandscape } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js';
+import { drawSemanticSiteFloor, drawWorldSiteElevation, drawWorldSiteLandscape } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js';
 
 function canvas() {
     const paths = [];
@@ -133,4 +133,52 @@ test('AR2 a local side road ends at visible ruins, never an invisible dead end',
     const off = canvas();
     assert.equal(drawSemanticSiteFloor(off.ctx, ground, 390, 844, false), true);
     assert.ok(!off.colors.includes('#9d9b89'), 'Inactive C# geography must not paint a fictitious ruin.');
+});
+
+test('AR3 displays C# height/grade/material samples without generating terrain in JavaScript', () => {
+    const previousDocument = globalThis.document;
+    const images = [];
+    globalThis.document = {
+        createElement(kind) {
+            assert.equal(kind, 'canvas');
+            return {
+                width: 0, height: 0,
+                getContext() {
+                    return {
+                        createImageData(columns, rows) {
+                            return { data: new Uint8ClampedArray(columns * rows * 4) };
+                        },
+                        putImageData(data) { images.push(data); },
+                    };
+                },
+            };
+        },
+    };
+    try {
+        const preview = {
+            columns: 2, rows: 2,
+            samples: Array.from({ length: 4 }, (_, index) => ({
+                heightMeters: index, grade: .08, soilWeight: 0, grassWeight: 0,
+                roadWeight: 1, mudWeight: 0, rockWeight: 0, iceWeight: 0,
+            })),
+        };
+        const drawn = [];
+        const ctx = { save() {}, restore() {},
+            drawImage(canvas, x, y, width, height) { drawn.push({ canvas, x, y, width, height }); } };
+        assert.equal(drawWorldSiteElevation(ctx, { siteId: 'ar3-test', worldSeed: 999,
+            landscape: { elevation: preview } }, 390, 844), true);
+        assert.equal(drawWorldSiteElevation(ctx, { siteId: 'ar3-test', worldSeed: 999,
+            landscape: { elevation: preview } }, 390, 844), true);
+        assert.equal(drawn.length, 2, 'A second frame must use the same cached terrain raster');
+        assert.equal(drawn[0].canvas, drawn[1].canvas);
+        assert.equal(drawn[0].canvas.width, 2);
+        assert.equal(drawn[0].canvas.height, 2);
+        assert.deepEqual([drawn[0].width, drawn[0].height], [390, 844]);
+        assert.equal(images.length, 1);
+        assert.equal(images[0].data.length, 16);
+        assert.ok(images[0].data[0] > 100, 'C# RoadWeight must control the generated pixel');
+        assert.equal(images[0].data[3], 255);
+    } finally {
+        globalThis.document = previousDocument;
+    }
 });

@@ -168,7 +168,17 @@ public sealed class ArenaEnvironmentState
         return best;
     }
 
-    public ArenaEnvironmentRenderSnapshot Snapshot() => new(seed, biome, element, stage, landmark,
+    public ArenaEnvironmentRenderSnapshot Snapshot()
+    {
+        // Bake the AR3 display lattice only for the explicit world-first preview.
+        // Normal Hunts never serialize it; movement samples the same C# field directly.
+        if (worldFirstGeography && geography?.Landscape is { Elevation: null } landscape)
+            geography = geography with { Landscape = landscape with
+            {
+                Elevation = WorldSiteElevationField.CreatePreview(geography),
+            } };
+
+        return new(seed, biome, element, stage, landmark,
         supplies.Where(supply => !supply.Collected)
             .Select(supply => new ArenaSupplyRenderSnapshot(supply.Kind, supply.X, supply.Y, IsOpen(supply))
             { DiscoveryId = supply.DiscoveryId })
@@ -187,15 +197,25 @@ public sealed class ArenaEnvironmentState
             .Select(prop => new ArenaPropRenderSnapshot(prop.Spec.Id, prop.Spec.Kind, prop.Spec.X, prop.Spec.Y, prop.Spec.Radius,
                 prop.Health / prop.Spec.Health)).ToArray(),
     };
+    }
 
     public Vector2D RestrictMovement(Vector2D previous, Vector2D proposed, double width, double height, double radius = 0)
     {
-        if (!IsBlocked(proposed, width, height, radius)) return proposed;
+        if (!IsBlocked(proposed, width, height, radius) &&
+            !(worldFirstGeography && geography is not null &&
+              WorldSiteElevationField.BlocksTraversal(geography, previous, proposed, width, height)))
+            return proposed;
         // Resolve independently along each axis so the hunter can slide along masonry toward a gap.
         var horizontal = new Vector2D(proposed.X, previous.Y);
-        if (IsBlocked(horizontal, width, height, radius)) horizontal = previous;
+        if (IsBlocked(horizontal, width, height, radius) ||
+            (worldFirstGeography && geography is not null &&
+             WorldSiteElevationField.BlocksTraversal(geography, previous, horizontal, width, height)))
+            horizontal = previous;
         var vertical = new Vector2D(horizontal.X, proposed.Y);
-        return IsBlocked(vertical, width, height, radius) ? horizontal : vertical;
+        return IsBlocked(vertical, width, height, radius) ||
+            (worldFirstGeography && geography is not null &&
+             WorldSiteElevationField.BlocksTraversal(geography, horizontal, vertical, width, height))
+            ? horizontal : vertical;
     }
 
     /// <summary>Acquisition and projectile physics share the actual closed obstacles.</summary>
@@ -289,6 +309,9 @@ public sealed class ArenaEnvironmentState
 
     public bool IsBlocked(Vector2D position, double width, double height, double radius = 0)
     {
+        if (worldFirstGeography && geography is not null && width > 0 && height > 0 &&
+            !WorldSiteElevationField.IsWalkable(geography, new HuntPoint(position.X / width, position.Y / height)))
+            return true;
         if (worldFirstGeography && geography?.Landscape is { } landscape &&
             landscape.Obstacles.Any(obstacle => WorldSiteFootprintCollision.Contains(obstacle, position, width, height, radius)))
             return true;
