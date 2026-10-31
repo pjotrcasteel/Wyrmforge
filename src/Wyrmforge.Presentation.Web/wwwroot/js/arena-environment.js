@@ -494,6 +494,57 @@ function semanticMaterialName(material) {
 
 // Visualize the exact C# polygon used by movement, sight and projectile collision.
 // Authoring debug is an opt-in view of gameplay truth, never a substitute physics mask.
+export function drawWorldSiteTopography(ctx, geography, width, height) {
+    const patches = geography?.landscape?.terrainPatches;
+    if (!Array.isArray(patches) || patches.length === 0) return false;
+    const palette = {
+        'mountain-foothill': ['#66747c', '#84929a'],
+        'mountain-shoulder': ['#4d5b65', '#74858f'],
+        'mountain-crest': ['#33434d', '#61737e'],
+        'monastery-terrace': ['#918b7e', '#c4b7a2'],
+        'monastery-courtyard': ['#77796f', '#a8ae9f'],
+    };
+    ctx.save();
+    // A single C# elevation definition controls drawing order and grades.
+    // The built terrace stays legible above distant ridge tones.
+    const ordered = [...patches].sort((left, right) =>
+        Number(left.kind?.startsWith('monastery')) - Number(right.kind?.startsWith('monastery')) ||
+        left.height - right.height);
+    for (const patch of ordered) {
+        if (!Array.isArray(patch.outline) || patch.outline.length < 3) continue;
+        const colors = palette[patch.kind];
+        if (!colors) continue;
+        ctx.beginPath();
+        patch.outline.forEach((point, index) => {
+            if (index === 0) ctx.moveTo(point.x * width, point.y * height);
+            else ctx.lineTo(point.x * width, point.y * height);
+        });
+        ctx.closePath();
+        ctx.fillStyle = colors[0];
+        ctx.strokeStyle = colors[1];
+        ctx.lineWidth = Math.max(2, Math.min(width, height) * .003);
+        ctx.fill();
+        ctx.stroke();
+    }
+    ctx.restore();
+    return true;
+}
+
+function drawWorldSitePaths(ctx, paths, width, height) {
+    for (const path of paths ?? []) {
+        const material = semanticMaterialName(path.material);
+        if (!(material in siteSurfaceColors) || path.points?.length < 2) continue;
+        ctx.beginPath();
+        ctx.moveTo(path.points[0].x * width, path.points[0].y * height);
+        for (const point of path.points.slice(1)) ctx.lineTo(point.x * width, point.y * height);
+        ctx.strokeStyle = siteSurfaceColors[material];
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = Math.min(width, height) * path.width;
+        ctx.stroke();
+    }
+}
+
 export function drawWorldSiteLandscape(ctx, geography, width, height) {
     const landscape = geography?.landscape;
     if (!landscape || !Array.isArray(landscape.obstacles)) return false;
@@ -505,6 +556,8 @@ export function drawWorldSiteLandscape(ctx, geography, width, height) {
         'wyrm-rib': ['#55434a', '#92747a'],
         'monastery-wall': ['#8d847b', '#d2bba4'],
         'monastery-hall': ['#675c56', '#bba99a'],
+        'monastery-wing': ['#786c60', '#c7b8a2'],
+        'monastery-tower': ['#5a504a', '#e0c9a5'],
         rock: ['#737673', '#343d44'],
     };
     ctx.save();
@@ -561,20 +614,14 @@ export function drawSemanticSiteFloor(ctx, geography, width, height, geographyAc
     ctx.save();
     ctx.fillStyle = siteSurfaceColors[substrate];
     ctx.fillRect(0, 0, width, height);
-    if (geographyActive && geography.landscape) drawWorldSiteLandscape(ctx, geography, width, height);
+    if (geographyActive && geography.landscape) drawWorldSiteTopography(ctx, geography, width, height);
     // Chart edges define travel permissions, never the visible number of roads.
     // Only C#-seeded local paths are painted in the arena.
-    for (const corridor of geography.scenicPaths?.length ? geography.scenicPaths : geography.corridors) {
-        const material = semanticMaterialName(corridor.material);
-        if (!(material in siteSurfaceColors) || corridor.points?.length < 2) continue;
-        ctx.beginPath();
-        ctx.moveTo(corridor.points[0].x * width, corridor.points[0].y * height);
-        for (const point of corridor.points.slice(1)) ctx.lineTo(point.x * width, point.y * height);
-        ctx.strokeStyle = siteSurfaceColors[material];
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        ctx.lineWidth = Math.min(width, height) * corridor.width;
-        ctx.stroke();
+    drawWorldSitePaths(ctx, geography.scenicPaths?.length ? geography.scenicPaths : geography.corridors, width, height);
+    if (geographyActive && geography.landscape) {
+        drawWorldSitePaths(ctx, geography.landscape.localPaths, width, height);
+        // Physical cliffs and masonry always paint on top of paths and slopes.
+        drawWorldSiteLandscape(ctx, geography, width, height);
     }
 
     for (const port of geography.ports) {
@@ -603,7 +650,11 @@ export function drawArenaEnvironment(ctx, environment, width, height, elapsedSec
     if (texture) ctx.drawImage(texture.image, 0, 0, width, height);
     // On the AR1 run-wide geometry preview, painted and semantic palettes display
     // the same C# colliders. The default Hunt never activates these new obstacles.
-    if (!semantic && environment.geographyActive) drawWorldSiteLandscape(ctx, environment.geography, width, height);
+    if (!semantic && environment.geographyActive) {
+        drawWorldSiteTopography(ctx, environment.geography, width, height);
+        drawWorldSitePaths(ctx, environment.geography?.landscape?.localPaths, width, height);
+        drawWorldSiteLandscape(ctx, environment.geography, width, height);
+    }
     if (semantic) {
         globalThis.__wyrmforgeAr0Geography = {
             siteId: environment.geography.siteId,
@@ -614,6 +665,9 @@ export function drawArenaEnvironment(ctx, environment, width, height, elapsedSec
             material: semanticMaterialName(environment.geography.substrate.material),
             kind: environment.geography.landscape?.kind ?? null,
             obstacleCount: environment.geography.landscape?.obstacles?.length ?? 0,
+            terrainPatchCount: environment.geography.landscape?.terrainPatches?.length ?? 0,
+            monasteryStructureCount: environment.geography.landscape?.obstacles?.filter(
+                obstacle => obstacle.kind?.startsWith('monastery-')).length ?? 0,
             geographyActive: environment.geographyActive === true,
         };
     }

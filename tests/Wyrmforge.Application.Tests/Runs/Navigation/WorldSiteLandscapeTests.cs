@@ -38,6 +38,13 @@ public sealed class WorldSiteLandscapeTests
                 Assert.AreEqual(site.Site!.Point, site.Geography!.ChartCenter);
                 Assert.AreEqual(site.Geography.Ports.Count, site.Geography.Corridors.Count);
                 Assert.IsTrue(site.Geography.Landscape!.Obstacles.All(obstacle => obstacle.Outline.Count >= 3));
+                Assert.IsTrue(site.Geography.Landscape.TerrainPatches.All(patch => patch.Outline.Count >= 3));
+                foreach (var patch in site.Geography.Landscape.TerrainPatches)
+                {
+                    Assert.IsTrue(patch.Outline.All(point =>
+                        point.X > 0 && point.X < 1 && point.Y > 0 && point.Y < 1),
+                        $"seed {seed} site {site.Id}: elevation outside physical world");
+                }
                 foreach (var obstacle in site.Geography.Landscape.Obstacles)
                 {
                     Assert.IsTrue(obstacle.Outline.All(point =>
@@ -243,6 +250,13 @@ public sealed class WorldSiteLandscapeTests
         Assert.AreEqual(WorldSiteLandmark.Monastery, site.GenerationProfile!.Landmark);
         Assert.AreEqual(1, site.Landscape.Obstacles.Count(obstacle => obstacle.Kind == "monastery-hall"));
         Assert.AreEqual(5, site.Landscape.Obstacles.Count(obstacle => obstacle.Kind == "monastery-wall"));
+        Assert.AreEqual(2, site.Landscape.Obstacles.Count(obstacle => obstacle.Kind == "monastery-wing"));
+        Assert.AreEqual(1, site.Landscape.Obstacles.Count(obstacle => obstacle.Kind == "monastery-tower"));
+        Assert.IsGreaterThanOrEqualTo(24, site.Landscape.TerrainPatches.Count(patch => patch.Kind.StartsWith("mountain-")));
+        Assert.AreEqual(1, site.Landscape.TerrainPatches.Count(patch => patch.Kind == "monastery-terrace"));
+        Assert.AreEqual(1, site.Landscape.LocalPaths.Count(path => path.EdgeId == "monastery-approach"));
+        Assert.IsTrue(site.Landscape.LocalPaths.All(path => site.Ports.All(port => path.EdgeId != port.EdgeId)),
+            "Local monastery access must never be copied from a Chart connection.");
         const double width = 950, height = 1550;
         var hall = site.Landscape.Obstacles.Single(obstacle => obstacle.Kind == "monastery-hall");
         var centroid = new Vector2D(hall.Outline.Average(point => point.X) * width,
@@ -253,5 +267,36 @@ public sealed class WorldSiteLandscapeTests
                 new Vector2D(corridor.Points[0].X * width, corridor.Points[0].Y * height),
                 new Vector2D(corridor.Points[^1].X * width, corridor.Points[^1].Y * height),
                 width, height, radius: 12));
+    }
+
+    [TestMethod]
+    public void MountainMonastery_TerrainHasVisibleHighlandBandsAndWalkableMappedExitsAcrossSeeds()
+    {
+        const double width = 950, height = 1550;
+        var reviewed = 0;
+        for (var seed = 0; seed < 65; seed++)
+        {
+            var site = WyrmrealmMapGenerator.GenerateFireHunt(seed, WyrmTier.Elder)
+                .Single(node => node.Id.EndsWith("-crossroads", StringComparison.Ordinal)).Geography!;
+            if (site.Landscape!.Kind != "mountain-monastery") continue;
+            reviewed++;
+            var terrain = site.Landscape.TerrainPatches;
+            Assert.IsGreaterThan(20, terrain.Count,
+                $"seed {seed}: a mountain must have broad surface elevation, not just scattered rocks");
+            Assert.IsTrue(terrain.Any(patch => patch.Height >= .8 && patch.Slope >= .7),
+                $"seed {seed}: the ridge needs a steep, high crest");
+            Assert.IsTrue(terrain.Any(patch => patch.Kind == "monastery-terrace"),
+                $"seed {seed}: monastery architecture requires a graded plateau");
+            Assert.IsTrue(site.Landscape.Obstacles.Any(obstacle => obstacle.Kind == "cliff"),
+                $"seed {seed}: the mountain must contain physical cliffs");
+            foreach (var corridor in site.Corridors)
+            {
+                var from = new Vector2D(corridor.Points[0].X * width, corridor.Points[0].Y * height);
+                var to = new Vector2D(corridor.Points[^1].X * width, corridor.Points[^1].Y * height);
+                Assert.IsFalse(WorldSiteFootprintCollision.BlocksSegment(site.Landscape, from, to, width, height, radius: 12),
+                    $"seed {seed}: generated mountain/monastery blocked Chart exit {corridor.EdgeId}");
+            }
+        }
+        Assert.IsGreaterThan(4, reviewed, "The reviewed Elder map must produce genuine mountain monasteries.");
     }
 }

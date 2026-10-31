@@ -66,3 +66,35 @@ test('AR1 local scenic roads are generated independently of Chart edge corridors
         Math.abs(point[1] - .5 * 390) < .01 && Math.abs(point[2] - .5 * 844) < .01),
         'Graph-derived road must not appear as the local terrain path.');
 });
+
+test('AR1 mountain terraces and monastery masonry render from C# patches with solid walls above trails', () => {
+    const structure = {
+        ...site,
+        landscape: {
+            kind: 'mountain-monastery',
+            terrainPatches: [
+                { kind: 'mountain-crest', height: .84, slope: .76, material: 4,
+                    outline: [{ x: .1, y: .1 }, { x: .3, y: .1 }, { x: .3, y: .3 }] },
+                { kind: 'monastery-terrace', height: .65, slope: .07, material: 4,
+                    outline: [{ x: .72, y: .1 }, { x: .92, y: .1 }, { x: .92, y: .36 }] },
+            ],
+            localPaths: [{ edgeId: 'monastery-approach', material: 2, width: .03,
+                points: [{ x: .5, y: .5 }, { x: .8, y: .36 }] }],
+            obstacles: [{ kind: 'monastery-wall', material: 4, height: 1.4,
+                outline: [{ x: .75, y: .15 }, { x: .87, y: .15 }, { x: .87, y: .17 }] }],
+        },
+    };
+    const on = canvas();
+    assert.equal(drawSemanticSiteFloor(on.ctx, structure, 390, 844, true), true);
+    assert.ok(on.colors.includes('#33434d'), 'A high crest must be visible, not flat grey ground');
+    assert.ok(on.colors.includes('#918b7e'), 'The monastery must rest on a generated terrace');
+    assert.ok(on.colors.indexOf('#8d847b') > on.colors.indexOf('#918b7e'),
+        'Structural collision footprints must render above the terrace');
+    assert.ok(on.paths.some(point => Array.isArray(point) && point[0] === 'move' &&
+        Math.abs(point[1] - .5 * 390) < .01 && Math.abs(point[2] - .5 * 844) < .01),
+        'The local approach must be drawn from the C#-authored path.');
+    const off = canvas();
+    assert.equal(drawSemanticSiteFloor(off.ctx, structure, 390, 844, false), true);
+    assert.ok(!off.colors.includes('#33434d') && !off.colors.includes('#8d847b'),
+        'Inactive AR1 geography must never draw its extra surfaces or physical barriers');
+});
