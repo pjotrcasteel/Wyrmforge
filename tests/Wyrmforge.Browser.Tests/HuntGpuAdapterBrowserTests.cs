@@ -191,6 +191,12 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
                     materials:[],objects:[]};
                 const alpha=tile.getContext('2d').getImageData(0,0,160,160).data;
                 const samples=[];
+                for(const bodyHeight of [32,40,48,64,80,96]){
+                if(bodyHeight!==32){
+                    ctx.fillStyle='#777777';ctx.fillRect(0,0,width,height);
+                    world.begin(ctx,{x:0,y:0},width,height);
+                    world.capture('hollow',tile,left,top,160,160,0,true,{footFraction:132/160,occluderHeightPx:bodyHeight});
+                }
                 for(const sourceHeight of [24]){
                 for(const [dx,dy] of [[0,48],[0,-48],[48,0],[-48,0]]){
                     const light={id:'moving-fireball',ownerId:'test',type:'point',enabled:true,
@@ -203,7 +209,7 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
                     const evidence=document.createElement('canvas');
                     evidence.width=width;evidence.height=height;
                     evidence.getContext('2d').drawImage(canvas,0,0);
-                    if(sourceHeight===24)gallery.appendChild(evidence);
+                    if(bodyHeight===32)gallery.appendChild(evidence);
                     world.render(ctx,{...base,lights:[{...light,castsShadow:false}]});
                     const clear=world.engine.pixels();
 
@@ -228,7 +234,8 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
                         changed++;
                     }
                     samples.push([changed,weight?project/weight:0,weight?opposite/weight:1,farPixels,farthest,
-                        strongPixels,veryStrongPixels,peakDelta,changed?weight/changed:0]);
+                        strongPixels,veryStrongPixels,peakDelta,changed?weight/changed:0,bodyHeight]);
+                }
                 }
                 }
                 window.__huntGpuDirectionalWorld=world;
@@ -241,7 +248,9 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
         Directory.CreateDirectory(artifacts);
         await File.WriteAllTextAsync(Path.Combine(artifacts, "g4-shadow-direction-metrics.json"),
             System.Text.Json.JsonSerializer.Serialize(new { sourceHeights = new[] { 24 }, physicalCasterHeightPx = 32,
-                sides = new[] { "south", "north", "east", "west" }, measurements }));
+                sides = new[] { "south", "north", "east", "west" }, measurements = measurements.Take(4).ToArray(),
+                casterHeightSweepPx = new[] { 32, 40, 48, 64, 80, 96 },
+                heightSweep = measurements.Chunk(4).ToArray() }));
         await Page.Locator("#hunt-gpu-direction-shadow-gallery").ScreenshotAsync(new()
         {
             Path = Path.Combine(artifacts, "g4-shadow-direction.png"),
