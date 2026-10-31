@@ -61,12 +61,12 @@ const material = id => ({ id, albedo: id, color: '#ffffff', roughness: .95, meta
  * participation. The shared LightingEngine remains ignorant of creature/terrain kinds.
  * A custom geometry is registered once via LightingEngine.registerGeometry().
  */
-/** Compact, alpha-cutout pose caster for an as-yet-unmigrated Canvas sprite.
- * The current 24px-high projectile source must never project a full actor-height
- * solid across the floor. WF/AR-authored 2.5D geometry overrides this fallback.
+/** Alpha-cutout pose caster for an as-yet-unmigrated Canvas sprite.
+ * Its actual height is bounded against the selected source at render time to
+ * keep Fireball shadows visible without the old solid wedge projection.
  */
 export function huntCaptureSilhouetteCaster(x, y, width, height, footFraction = .75) {
-    const heightWorld = Math.min(.14, Math.max(.06, height / UNIT * .05));
+    const heightWorld = Math.min(1.15, Math.max(.24, height * GROUND_Y / UNIT * .38));
     return { occluderGeometry: 'hunt-shadow-silhouette',
         occluderPosition: [(x + width / 2) / UNIT,
             -(y + height * footFraction) * GROUND_Y / UNIT,
@@ -130,7 +130,18 @@ export function huntActorGeometry() {
  * view plane. Do not change the shared lighting engine's object semantics or
  * rotate any authored world plane, scenery, collider or physical emitter.
  */
+/** A low point light must not project a tall proxy across the entire Hunt.
+ * Clamp its projected height to half the source altitude; higher fixtures can
+ * still cast a visible silhouette beyond the sprite's opaque body.
+ */
+export function boundedHuntShadowHeight(spriteHeightWorld, lightHeightWorld) {
+    if (!(lightHeightWorld > 0)) return spriteHeightWorld;
+    return Math.min(spriteHeightWorld, lightHeightWorld * .5);
+}
 export function alignHuntActorBillboards(objects, engine) {
+    const shadowHeight = Math.min(...(engine.selected ?? [])
+        .filter(light => light.shadow && light.type === 'point' && light.position[2] > 0)
+        .map(light => light.position[2]));
     for (const descriptor of objects) {
         if (descriptor.geometry !== 'hunt-billboard') continue;
         const registered = engine.objects.get(descriptor.id);
@@ -138,8 +149,17 @@ export function alignHuntActorBillboards(objects, engine) {
         registered.mesh.quaternion.copy(engine.camera.quaternion);
         // Match the G1 pose-aware sprite shadow: its alpha-cutout caster faces the
         // camera too. Explicit WF/AR solid occluders keep their authored rotation.
-        if (descriptor.occluderGeometry === 'hunt-shadow-silhouette' && registered.caster)
-            registered.caster.quaternion.copy(engine.camera.quaternion);
+        if (descriptor.occluderGeometry === 'hunt-shadow-silhouette' && registered.caster) {
+            const caster = registered.caster;
+            caster.quaternion.copy(engine.camera.quaternion);
+            if (Number.isFinite(shadowHeight)) {
+                const baseHeight = descriptor.occluderScale[1];
+                const height = boundedHuntShadowHeight(baseHeight, shadowHeight);
+                caster.scale.y = height;
+                // Preserve the authored foot even after light-height clamping.
+                caster.position.z = descriptor.occluderPosition[2] * height / baseHeight;
+            }
+        }
     }
 }
 export class HuntGpuWorld {
