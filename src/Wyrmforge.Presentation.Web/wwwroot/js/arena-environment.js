@@ -194,14 +194,18 @@ function drawTerrain(ctx, plan, width, height, approvedAtlas = null, flatColorsO
         ctx.fillStyle = tint;
         ctx.fillRect(0, 0, width, height);
     }
-    // Edge fog produces depth without obscuring attack telegraphs or the player's immediate surroundings.
-    const vignette = ctx.createRadialGradient(width * .5, height * .49, Math.min(width, height) * .2,
-        width * .5, height * .49, Math.max(width, height) * .7);
-    vignette.addColorStop(0, 'rgba(0,0,0,0)');
-    vignette.addColorStop(1, plan.story.wetForest ? 'rgba(1,4,6,.3)' :
-        plan.story.cloister ? 'rgba(1,3,7,.37)' : 'rgba(1,3,7,.56)');
-    ctx.fillStyle = vignette;
-    ctx.fillRect(0, 0, width, height);
+    // The painted Canvas floor retains its authored edge fog. GPU terrain is
+    // physical albedo: a baked dark vignette would be multiplied by the shared
+    // lighting pass again and create false near-black areas without occluders.
+    if (!gpuAlbedo) {
+        const vignette = ctx.createRadialGradient(width * .5, height * .49, Math.min(width, height) * .2,
+            width * .5, height * .49, Math.max(width, height) * .7);
+        vignette.addColorStop(0, 'rgba(0,0,0,0)');
+        vignette.addColorStop(1, plan.story.wetForest ? 'rgba(1,4,6,.3)' :
+            plan.story.cloister ? 'rgba(1,3,7,.37)' : 'rgba(1,3,7,.56)');
+        ctx.fillStyle = vignette;
+        ctx.fillRect(0, 0, width, height);
+    }
 }
 
 const habitatTints = {
