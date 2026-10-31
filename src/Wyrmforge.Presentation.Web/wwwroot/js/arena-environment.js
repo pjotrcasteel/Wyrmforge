@@ -55,7 +55,7 @@ export function createTerrainPlan(environment, width, height) {
         story, forestProps: story.wetForest ? environment.props ?? [] : [] };
 }
 
-function drawTerrain(ctx, plan, width, height, approvedAtlas = null, flatColorsOnly = false) {
+function drawTerrain(ctx, plan, width, height, approvedAtlas = null, flatColorsOnly = false, gpuAlbedo = false) {
     if (flatColorsOnly) {
         // G4's isolated neutral-albedo receiver: no terrain texture, gradients,
         // scattered detail, or baked shadows may contaminate the light test.
@@ -84,16 +84,16 @@ function drawTerrain(ctx, plan, width, height, approvedAtlas = null, flatColorsO
         ctx.fillRect(0, 0, width, height);
         ctx.globalAlpha = 1;
     }
-    drawTerritoryGround(ctx, plan.story, approvedAtlas, flatColorsOnly);
+    drawTerritoryGround(ctx, plan.story, approvedAtlas, flatColorsOnly, gpuAlbedo);
     // The existing PR #340 source paintings already contain pebbles, grasses
     // and leaf details; don't hide the real ground under legacy tiled decals.
     if (tile && !plan.story.wetForest) drawGroundDecals(ctx, plan, width, height);
-    if (plan.story.wetForest) drawWetForestDressing(ctx, plan.story, plan.forestProps, width, height);
+    if (plan.story.wetForest) drawWetForestDressing(ctx, plan.story, plan.forestProps, width, height, gpuAlbedo);
 
     // No shared road overlay: the canonical encounter district now owns the entire
     // large-scale ground composition through its deterministic territory story plan.
     // Ominous cliff shadows and a broken outer horizon; no bright rectangular grid.
-    for (const side of [-1, 1]) {
+    if (!gpuAlbedo) for (const side of [-1, 1]) {
         ctx.beginPath();
         const origin = side === -1 ? 0 : width;
         ctx.moveTo(origin, 0);
@@ -227,16 +227,16 @@ export function habitatTint(habitat) {
     return habitatTints[habitat] ?? null;
 }
 
-function terrainTexture(environment, width, height, approvedAtlas = null, flatColorsOnly = false) {
+function terrainTexture(environment, width, height, approvedAtlas = null, flatColorsOnly = false, gpuAlbedo = false) {
     // Art generation is part of the key: the bake refreshes once the atlases finish loading.
-    const key = [environment.seed, environment.biome, environment.element, environment.district, environment.habitat, environment.stage, environment.corruption, environment.generatorPreview, environment.wetForest?.site, width, height, flatColorsOnly ? 'neutral-grey-v1' : 'painted-ground', artGeneration(), flatColorsOnly ? 0 : liveWetForestArtworkGeneration(),
+    const key = [environment.seed, environment.biome, environment.element, environment.district, environment.habitat, environment.stage, environment.corruption, environment.generatorPreview, environment.wetForest?.site, width, height, flatColorsOnly ? 'neutral-grey-v1' : gpuAlbedo ? 'gpu-neutral-albedo-v1' : 'painted-ground', artGeneration(), flatColorsOnly || gpuAlbedo ? 0 : liveWetForestArtworkGeneration(),
         approvedAtlas ? 'approvedGroundPreview' : 'canonicalGround'].join(':');
     if (textures.has(key)) return textures.get(key);
     const image = document.createElement('canvas');
     image.width = Math.max(1, Math.round(width));
     image.height = Math.max(1, Math.round(height));
     const plan = createTerrainPlan(environment, image.width, image.height);
-    drawTerrain(image.getContext('2d'), plan, image.width, image.height, approvedAtlas, flatColorsOnly);
+    drawTerrain(image.getContext('2d'), plan, image.width, image.height, approvedAtlas, flatColorsOnly, gpuAlbedo);
     // Keep at most two world textures on mobile; a whole territory is larger than one viewport.
     if (textures.size >= 2) textures.delete(textures.keys().next().value);
     const texture = { image, cloister: plan.story.cloister, plan };
@@ -294,17 +294,17 @@ function drawForestEdges(ctx, plan, width, height) {
 }
 
 // Read the already-cached environment plan, without rerolling its procedural art.
-export function drawArenaCloisterReflections(ctx, environment, width, height, lights, seconds = 0, reducedMotion = false, flatColorsOnly = false) {
+export function drawArenaCloisterReflections(ctx, environment, width, height, lights, seconds = 0, reducedMotion = false, flatColorsOnly = false, gpuAlbedo = false) {
     if (!environment || flatColorsOnly) return 0;
-    return drawCloisterReflections(ctx, terrainTexture(environment, width, height, null, flatColorsOnly).cloister, lights, seconds, reducedMotion);
+    return drawCloisterReflections(ctx, terrainTexture(environment, width, height, null, flatColorsOnly, gpuAlbedo).cloister, lights, seconds, reducedMotion);
 }
 
 
 // Cache owns the cloister's fixed plan; these lightweight wall items sort with
 // actor foot positions in world space rather than being pasted over the viewport.
-export function getArenaCloisterElevations(environment, width, height, seconds = 0, approvedAtlas = null, flatColorsOnly = false) {
+export function getArenaCloisterElevations(environment, width, height, seconds = 0, approvedAtlas = null, flatColorsOnly = false, gpuAlbedo = false) {
     if (!environment) return [];
-    const texture = terrainTexture(environment, width, height, approvedAtlas, flatColorsOnly);
+    const texture = terrainTexture(environment, width, height, approvedAtlas, flatColorsOnly, gpuAlbedo);
     const cloister = texture.cloister;
     const masonry = !cloister
         ? createTerritoryWallLayers(environment, texture.plan, width, height, seconds)
@@ -483,7 +483,7 @@ export function drawArenaEnvironment(ctx, environment, width, height, elapsedSec
     // Use the SAME terrain mode as reflections and elevations. Omitting it
     // silently built the full painted tile atlas in a supposedly tile-free
     // G4 Hunt, retaining two world-sized cache entries on portrait phones.
-    const texture = terrainTexture(environment, width, height, approvedAtlas, flatColorsOnly);
+    const texture = terrainTexture(environment, width, height, approvedAtlas, flatColorsOnly, lightingMode === 'gpu');
     ctx.drawImage(texture.image, 0, 0, width, height);
     // Render low-angle shadows from CURRENT physical props, never frozen floor art:
     // destroyed trees and ruins lose their shadows in the same C# simulation frame.
