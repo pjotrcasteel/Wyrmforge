@@ -96,6 +96,10 @@ jobs:
           source=artifacts/gpu-proof/live-hunt-g4-directional-shadow-390.webm
           output=artifacts/gpu-proof/live-hunt-g4-directional-shadow-390.mp4
           if [ -s "$source" ]; then
+            if ! command -v ffmpeg >/dev/null 2>&1; then
+              sudo apt-get update -qq
+              sudo apt-get install -y -qq ffmpeg
+            fi
             ffmpeg -hide_banner -loglevel error -y -i "$source" -an -c:v libx264               -pix_fmt yuv420p -preset veryfast -crf 21 -movflags +faststart "$output"
             ffprobe -v error -select_streams v:0 -show_entries stream=width,height,nb_frames,duration               -of default=noprint_wrappers=1 "$output"
             test -s "$output"
