@@ -133,12 +133,12 @@ export function huntActorGeometry() {
  */
 /** The captured image is mostly transparent padding. Bound the full plane
  * against a light's height without crushing the actual alpha silhouette.
- * 1.4x source altitude allows a normal 160px actor capture to retain its
+ * 1.1x source altitude keeps a padded 160px capture readable while
  * painted height while keeping low-lying effects from making infinite wedges.
  */
 export function boundedHuntShadowHeight(spriteHeightWorld, lightHeightWorld) {
     if (!(lightHeightWorld > 0)) return spriteHeightWorld;
-    return Math.min(spriteHeightWorld, lightHeightWorld * 1.4);
+    return Math.min(spriteHeightWorld, lightHeightWorld * 1.1);
 }
 export function alignHuntActorBillboards(objects, engine) {
     const shadowHeight = Math.min(...(engine.selected ?? [])
