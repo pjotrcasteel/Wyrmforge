@@ -191,8 +191,10 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
                     materials:[],objects:[]};
                 const alpha=tile.getContext('2d').getImageData(0,0,160,160).data;
                 const samples=[];
-                const bodyHeight=32;
-                for(const sourceHeight of [24,36,48,64]){
+                const caster=world.objects.find(object => object.id === 'hollow');
+                for(const [bodyHeight,sourceHeight] of [[32,24],[40,36],[48,48],[64,64]]){
+                    caster.occluderScale[1]=bodyHeight/48;
+                    caster.occluderPosition[2]=-(1-132/160)*bodyHeight/48;
                 for(const [dx,dy] of [[0,48],[0,-48],[48,0],[-48,0]]){
                     const light={id:'moving-fireball',ownerId:'test',type:'point',enabled:true,
                         position:[footX+dx,footY+dy,sourceHeight],direction:[0,0,-1],color:'#ff7835',
@@ -250,9 +252,9 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
             ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
         Directory.CreateDirectory(artifacts);
         await File.WriteAllTextAsync(Path.Combine(artifacts, "g4-shadow-direction-metrics.json"),
-            System.Text.Json.JsonSerializer.Serialize(new { sourceHeights = new[] { 24, 36, 48, 64 }, physicalCasterHeightPx = 32,
+            System.Text.Json.JsonSerializer.Serialize(new { heightPairs = new[] { new[] { 32, 24 }, new[] { 40, 36 }, new[] { 48, 48 }, new[] { 64, 64 } },
                 sides = new[] { "south", "north", "east", "west" }, measurements = measurements.Take(4).ToArray(),
-                sourceHeightSweep = measurements.Chunk(4).ToArray() }));
+                coupledHeightSweep = measurements.Chunk(4).ToArray() }));
         await Page.Locator("#hunt-gpu-direction-shadow-gallery").ScreenshotAsync(new()
         {
             Path = Path.Combine(artifacts, "g4-shadow-direction.png"),
