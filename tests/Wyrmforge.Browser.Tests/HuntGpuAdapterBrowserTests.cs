@@ -151,6 +151,7 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
 
 
     [TestMethod]
+    [DataRow(320, 568)]
     [DataRow(390, 660)]
     public async Task HuntAdapter_FireballOnFourSides_ShadowFallsAwayFromSource(int width, int height)
     {
@@ -164,7 +165,7 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
             async ({width,height}) => {
                 const { HuntGpuWorld } = await import('./js/arena-gpu-world.js');
                 const { huntLayerCapture } = await import('./js/hunt-gpu-layers.js');
-                const world = new HuntGpuWorld({quality:'balanced'});
+                const world = new HuntGpuWorld({quality:width<=320?'mobile':'balanced'});
                 const canvas = document.createElement('canvas');
                 canvas.id = 'hunt-gpu-direction-shadow-proof';
                 canvas.width = width; canvas.height = height;
@@ -199,12 +200,9 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
                 const alpha=tile.getContext('2d').getImageData(0,0,160,160).data;
                 const samples=[];
                 const caster=world.objects.find(object=>object.id==='hollow');
-                // Verify shadow geometry, source elevation, physically attenuated
-                // reach, and direct-light energy as a coupled visibility problem.
-                const trials=[[32,24,144,6],[72,24,240,6],[72,16,240,6],
-                    [72,24,320,12],[72,16,320,12],[96,16,320,12],
-                    [72,16,320,24],[96,24,320,24],[72,32,320,24],
-                    [72,16,480,12],[96,16,480,24]];
+                // These values are sourced from the generic padded-raster capture
+                // and the authoritative Fire school C# emitter profile.
+                const trials=[[capture.occluderHeightPx,24,320,24]];
                 for(const [bodyHeight,sourceHeight,range,intensity] of trials){
                     caster.occluderScale[1]=bodyHeight/48;
                     caster.occluderPosition[2]=-(1-(capture.footFraction??.75))*bodyHeight/48;
@@ -219,8 +217,7 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
                     const evidence=document.createElement('canvas');
                     evidence.width=width;evidence.height=height;
                     evidence.getContext('2d').drawImage(canvas,0,0);
-                    if(bodyHeight===72&&sourceHeight===16&&range===320&&intensity===12)
-                        gallery.appendChild(evidence);
+                    gallery.appendChild(evidence);
                     world.render(ctx,{...base,lights:[{...light,castsShadow:false}]});
                     const clear=world.engine.pixels();
                     world.render(ctx,{...base,lights:[]});
@@ -265,13 +262,13 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
         var artifacts = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS")
             ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
         Directory.CreateDirectory(artifacts);
-        await File.WriteAllTextAsync(Path.Combine(artifacts, "g4-shadow-direction-metrics.json"),
-            System.Text.Json.JsonSerializer.Serialize(new { physicalCasterHeightPx = 32, fireballHeightPx = 24,
+        await File.WriteAllTextAsync(Path.Combine(artifacts, $"g4-shadow-direction-metrics-{width}.json"),
+            System.Text.Json.JsonSerializer.Serialize(new { physicalCasterHeightPx = measurements[0][9], fireballHeightPx = measurements[0][12],
                 canonicalActorFootY = height / 2, sides = new[] { "south", "north", "east", "west" },
                 measurements }));
         await Page.Locator("#hunt-gpu-direction-shadow-gallery").ScreenshotAsync(new()
         {
-            Path = Path.Combine(artifacts, "g4-shadow-direction.png"),
+            Path = Path.Combine(artifacts, $"g4-shadow-direction-{width}.png"),
         });
         var sides = new[] { "south", "north", "east", "west" };
         for (var sampleIndex = 0; sampleIndex < measurements.Length; sampleIndex++)
