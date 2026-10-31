@@ -497,46 +497,56 @@ function semanticMaterialName(material) {
 // This is a visualization of the C#-sampled continuous field, not a JS terrain generator.
 // Small raster nodes are blended by the canvas; all elevations and material weights
 // arrive from the server's immutable site coordinates.
+const elevationImages = new Map();
+
 export function drawWorldSiteElevation(ctx, geography, width, height) {
     const preview = geography?.landscape?.elevation;
     if (!preview || preview.columns < 2 || preview.rows < 2 ||
         preview.samples?.length !== preview.columns * preview.rows ||
         typeof document === 'undefined') return false;
 
-    const canvas = document.createElement('canvas');
-    canvas.width = preview.columns;
-    canvas.height = preview.rows;
-    const target = canvas.getContext('2d');
-    if (!target) return false;
-    const image = target.createImageData(preview.columns, preview.rows);
-    const palette = [
-        [88, 91, 82],   // soil
-        [79, 107, 80],  // grass
-        [158, 139, 105],// road
-        [79, 89, 92],   // mud
-        [80, 96, 108],  // rock
-        [171, 190, 202],// glacial ice
-    ];
-    const weights = ['soilWeight', 'grassWeight', 'roadWeight', 'mudWeight', 'rockWeight', 'iceWeight'];
-    let highest = 0;
-    for (const sample of preview.samples)
-        highest = Math.max(highest, Number(sample.heightMeters) || 0);
-    const maxHeight = Math.max(2, highest);
+    const cacheKey = `${geography.siteId ?? ''}:${geography.worldSeed ?? ''}:${preview.columns}x${preview.rows}`;
+    let canvas = elevationImages.get(cacheKey);
+    if (!canvas) {
+        canvas = document.createElement('canvas');
+        canvas.width = preview.columns;
+        canvas.height = preview.rows;
+        const target = canvas.getContext('2d');
+        if (!target) return false;
+        const image = target.createImageData(preview.columns, preview.rows);
+        const palette = [
+            [88, 91, 82],   // soil
+            [79, 107, 80],  // grass
+            [158, 139, 105],// road
+            [79, 89, 92],   // mud
+            [80, 96, 108],  // rock
+            [75, 112, 124], // shallow water
+            [171, 190, 202],// glacial ice
+        ];
+        const weights = ['soilWeight', 'grassWeight', 'roadWeight', 'mudWeight', 'rockWeight',
+            'waterWeight', 'iceWeight'];
+        let highest = 0;
+        for (const sample of preview.samples)
+            highest = Math.max(highest, Number(sample.heightMeters) || 0);
+        const maxHeight = Math.max(2, highest);
 
-    for (let index = 0; index < preview.samples.length; index++) {
-        const sample = preview.samples[index];
-        const elevation = Math.max(0, Math.min(1, sample.heightMeters / maxHeight));
-        const grade = Math.max(0, Math.min(1, sample.grade));
-        const shade = .82 + elevation * .18 - grade * .16;
-        for (let channel = 0; channel < 3; channel++) {
-            let tone = 0;
-            for (let material = 0; material < palette.length; material++)
-                tone += palette[material][channel] * Math.max(0, sample[weights[material]] ?? 0);
-            image.data[index * 4 + channel] = Math.max(0, Math.min(255, Math.round(tone * shade)));
+        for (let index = 0; index < preview.samples.length; index++) {
+            const sample = preview.samples[index];
+            const elevation = Math.max(0, Math.min(1, sample.heightMeters / maxHeight));
+            const grade = Math.max(0, Math.min(1, sample.grade));
+            const shade = .82 + elevation * .18 - grade * .16;
+            for (let channel = 0; channel < 3; channel++) {
+                let tone = 0;
+                for (let material = 0; material < palette.length; material++)
+                    tone += palette[material][channel] * Math.max(0, sample[weights[material]] ?? 0);
+                image.data[index * 4 + channel] = Math.max(0, Math.min(255, Math.round(tone * shade)));
+            }
+            image.data[index * 4 + 3] = 255;
         }
-        image.data[index * 4 + 3] = 255;
+        target.putImageData(image, 0, 0);
+        elevationImages.set(cacheKey, canvas);
+        if (elevationImages.size > 8) elevationImages.delete(elevationImages.keys().next().value);
     }
-    target.putImageData(image, 0, 0);
     ctx.save();
     ctx.imageSmoothingEnabled = true;
     ctx.drawImage(canvas, 0, 0, width, height);

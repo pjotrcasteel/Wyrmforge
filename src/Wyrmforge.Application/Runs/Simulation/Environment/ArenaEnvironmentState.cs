@@ -310,7 +310,7 @@ public sealed class ArenaEnvironmentState
     public bool IsBlocked(Vector2D position, double width, double height, double radius = 0)
     {
         if (worldFirstGeography && geography is not null && width > 0 && height > 0 &&
-            !WorldSiteElevationField.Sample(geography, new HuntPoint(position.X / width, position.Y / height)).Walkable)
+            !WorldSiteElevationField.IsWalkable(geography, new HuntPoint(position.X / width, position.Y / height)))
             return true;
         if (worldFirstGeography && geography?.Landscape is { } landscape &&
             landscape.Obstacles.Any(obstacle => WorldSiteFootprintCollision.Contains(obstacle, position, width, height, radius)))

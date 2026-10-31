@@ -14,12 +14,13 @@ public sealed class WorldSiteLandscapeTests
     [TestMethod]
     public void Ar3ContinuousElevation_HighlandIsRaisedAndStableAcrossReplays()
     {
-        var seed = 53;
-        var first = WyrmrealmMapGenerator.GenerateFireHunt(seed, WyrmTier.Elder);
-        var replay = WyrmrealmMapGenerator.GenerateFireHunt(seed, WyrmTier.Elder);
-        var mountain = first.First(node => node.Geography?.Landscape?.Kind is "mountain-monastery" or "mountain-pass");
+        var match = Enumerable.Range(0, 80)
+            .Select(seed => (Seed: seed, Nodes: WyrmrealmMapGenerator.GenerateFireHunt(seed, WyrmTier.Elder)))
+            .First(result => result.Nodes.Any(node => node.Geography?.Landscape?.Kind is "mountain-monastery" or "mountain-pass"));
+        var mountain = match.Nodes.First(node => node.Geography?.Landscape?.Kind is "mountain-monastery" or "mountain-pass");
         var site = mountain.Geography!;
-        var copy = replay.Single(node => node.Id == mountain.Id).Geography!;
+        var copy = WyrmrealmMapGenerator.GenerateFireHunt(match.Seed, WyrmTier.Elder)
+            .Single(node => node.Id == mountain.Id).Geography!;
         var valley = WorldSiteElevationField.Sample(site, new HuntPoint(.5, .5));
         var ridge = WorldSiteElevationField.Sample(site, new HuntPoint(.42, .5));
         Assert.IsGreaterThan(valley.HeightMeters + .4, ridge.HeightMeters,
@@ -48,7 +49,7 @@ public sealed class WorldSiteLandscapeTests
         foreach (var sample in new[] { onTrail, offTrail, WorldSiteElevationField.Sample(site, new HuntPoint(.3, .71)) })
         {
             var total = sample.SoilWeight + sample.GrassWeight + sample.RoadWeight +
-                sample.MudWeight + sample.RockWeight + sample.IceWeight;
+                sample.MudWeight + sample.RockWeight + sample.WaterWeight + sample.IceWeight;
             Assert.AreEqual(1, total, 1e-10);
             Assert.IsTrue(sample.Moisture is >= 0 and <= 1);
             Assert.IsTrue(double.IsFinite(sample.HeightMeters));

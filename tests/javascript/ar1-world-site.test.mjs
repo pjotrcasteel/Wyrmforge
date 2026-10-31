@@ -165,8 +165,12 @@ test('AR3 displays C# height/grade/material samples without generating terrain i
         const drawn = [];
         const ctx = { save() {}, restore() {},
             drawImage(canvas, x, y, width, height) { drawn.push({ canvas, x, y, width, height }); } };
-        assert.equal(drawWorldSiteElevation(ctx, { landscape: { elevation: preview } }, 390, 844), true);
-        assert.equal(drawn.length, 1);
+        assert.equal(drawWorldSiteElevation(ctx, { siteId: 'ar3-test', worldSeed: 999,
+            landscape: { elevation: preview } }, 390, 844), true);
+        assert.equal(drawWorldSiteElevation(ctx, { siteId: 'ar3-test', worldSeed: 999,
+            landscape: { elevation: preview } }, 390, 844), true);
+        assert.equal(drawn.length, 2, 'A second frame must use the same cached terrain raster');
+        assert.equal(drawn[0].canvas, drawn[1].canvas);
         assert.equal(drawn[0].canvas.width, 2);
         assert.equal(drawn[0].canvas.height, 2);
         assert.deepEqual([drawn[0].width, drawn[0].height], [390, 844]);

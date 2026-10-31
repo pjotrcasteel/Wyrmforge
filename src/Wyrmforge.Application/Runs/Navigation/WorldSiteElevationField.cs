@@ -12,6 +12,7 @@ public sealed record WorldSiteElevationSample(
     double RoadWeight,
     double MudWeight,
     double RockWeight,
+    double WaterWeight,
     double IceWeight,
     double Moisture,
     bool Walkable);
@@ -45,14 +46,7 @@ public static class WorldSiteElevationField
         var x = Math.Clamp(point.X, 0, 1);
         var y = Math.Clamp(point.Y, 0, 1);
         var height = HeightAt(geography, x, y);
-        const double Delta = .0015;
-        var west = HeightAt(geography, Math.Max(0, x - Delta), y);
-        var east = HeightAt(geography, Math.Min(1, x + Delta), y);
-        var north = HeightAt(geography, x, Math.Max(0, y - Delta));
-        var south = HeightAt(geography, x, Math.Min(1, y + Delta));
-        var dx = (east - west) / (Math.Min(1, x + Delta) - Math.Max(0, x - Delta)) / SiteWidthMeters;
-        var dy = (south - north) / (Math.Min(1, y + Delta) - Math.Max(0, y - Delta)) / SiteLengthMeters;
-        var grade = Math.Sqrt(dx * dx + dy * dy);
+        var grade = GradeAt(geography, x, y);
 
         // A wet low point collects runoff; high exposed rock sheds it. These
         // continuous weights are semantic material inputs, not friction rules.
@@ -68,19 +62,27 @@ public static class WorldSiteElevationField
             * (.65 + sheltered * .38) * (1 - ridge * .68);
         var mud = Math.Max(0, moisture - .48) * (geography.Substrate.Material == WorldSiteSurfaceId.Mud ? 1.45 : .6);
         var soil = .42 + (geography.Substrate.Material == WorldSiteSurfaceId.Soil ? .33 : 0);
+        var shallowBasin = Math.Clamp((.9 - height) / .6, 0, 1);
+        var water = (geography.Substrate.Material == WorldSiteSurfaceId.ShallowWater ? 1.4 : 0)
+            + Math.Max(0, moisture - .82) * 1.8 * shallowBasin;
+        var wear = Math.Clamp(geography.Substrate.Wear + trail * .5, 0, 1);
+        grass *= 1 - wear * .22;
+        mud *= 1 + wear * .25;
         var road = trail * 2.4;
         var uncovered = 1 - trail * .75;
         soil *= uncovered;
         grass *= uncovered;
         mud *= uncovered;
         rock *= uncovered;
+        water *= 1 - trail * .85;
         ice *= uncovered;
-        var total = soil + grass + road + mud + rock + ice;
+        var total = soil + grass + road + mud + rock + water + ice;
         soil /= total;
         grass /= total;
         road /= total;
         mud /= total;
         rock /= total;
+        water /= total;
         ice /= total;
         var dominant = new[]
         {
@@ -89,10 +91,18 @@ public static class WorldSiteElevationField
             (Material: WorldSiteSurfaceId.Road, Weight: road),
             (Material: WorldSiteSurfaceId.Mud, Weight: mud),
             (Material: WorldSiteSurfaceId.Rock, Weight: rock),
+            (Material: WorldSiteSurfaceId.ShallowWater, Weight: water),
             (Material: WorldSiteSurfaceId.GlacialIce, Weight: ice),
         }.MaxBy(candidate => candidate.Weight).Material;
         return new WorldSiteElevationSample(height, grade, dominant, soil, grass, road,
-            mud, rock, ice, moisture, grade <= MaxWalkableGrade);
+            mud, rock, water, ice, moisture, grade <= MaxWalkableGrade);
+    }
+
+    /// <summary>Movement-grade predicate without calculating visual material weights on every physics tick.</summary>
+    public static bool IsWalkable(WorldSiteGeography geography, HuntPoint point)
+    {
+        ArgumentNullException.ThrowIfNull(geography);
+        return GradeAt(geography, Math.Clamp(point.X, 0, 1), Math.Clamp(point.Y, 0, 1)) <= MaxWalkableGrade;
     }
 
     /// <summary>Physical slope check used by the existing movement boundary, independently of visual sampling.</summary>
@@ -108,7 +118,7 @@ public static class WorldSiteElevationField
             var t = index / (double)steps;
             var point = new HuntPoint((from.X + (to.X - from.X) * t) / width,
                 (from.Y + (to.Y - from.Y) * t) / height);
-            if (!Sample(geography, point).Walkable) return true;
+            if (!IsWalkable(geography, point)) return true;
         }
         return false;
     }
@@ -128,6 +138,18 @@ public static class WorldSiteElevationField
                     y / (double)(rows - 1)));
         }
         return new WorldSiteElevationPreview(columns, rows, samples);
+    }
+
+    private static double GradeAt(WorldSiteGeography geography, double x, double y)
+    {
+        const double Delta = .0015;
+        var west = HeightAt(geography, Math.Max(0, x - Delta), y);
+        var east = HeightAt(geography, Math.Min(1, x + Delta), y);
+        var north = HeightAt(geography, x, Math.Max(0, y - Delta));
+        var south = HeightAt(geography, x, Math.Min(1, y + Delta));
+        var dx = (east - west) / (Math.Min(1, x + Delta) - Math.Max(0, x - Delta)) / SiteWidthMeters;
+        var dy = (south - north) / (Math.Min(1, y + Delta) - Math.Max(0, y - Delta)) / SiteLengthMeters;
+        return Math.Sqrt(dx * dx + dy * dy);
     }
 
     private static double HeightAt(WorldSiteGeography geography, double x, double y)
