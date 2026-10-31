@@ -1,6 +1,7 @@
 using Wyrmforge.Application.Runs.Navigation;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
 using Wyrmforge.Domain.Spells;
+using Wyrmforge.Domain.Combat.Dragons;
 
 namespace Wyrmforge.Application.Runs.Simulation;
 
@@ -9,6 +10,27 @@ public sealed partial class RunSimulation
     private readonly Queue<SpellSchool> pendingAttunements = new();
     private readonly EncounterDirector encounterDirector = new();
     private ArenaEnvironmentState? arenaEnvironment;
+    private bool worldSiteGeographyEnabled;
+    private string? walkedExitNodeId;
+
+    /// <summary>Opt in to the AR1 physical terrain preview for this run; normal Hunts keep their approved fallback.</summary>
+    public void EnableWorldSiteGeography() => worldSiteGeographyEnabled = true;
+
+    /// <summary>
+    /// Displays an authentic generated Elder-route mountain monastery in a geography-review Hunt.
+    /// This changes only the opt-in review environment, never map progression or saved rewards.
+    /// </summary>
+    public bool PreviewMountainMonasteryForReview()
+    {
+        if (!worldSiteGeographyEnabled || !mapState.EncounterActive) return false;
+        var monastery = WyrmrealmMapGenerator.GenerateFireHunt(mapState.Seed, WyrmTier.Elder)
+            .Single(node => node.Id.EndsWith("-crossroads", StringComparison.Ordinal));
+        if (monastery.GenerationProfile is not
+            { Landform: WorldSiteLandform.Mountain, Landmark: WorldSiteLandmark.Monastery }) return false;
+        arenaEnvironment = ArenaEnvironmentState.Create(mapState.Seed, monastery, worldFirstGeography: true);
+        playerPositionInitialized = false;
+        return true;
+    }
     private WyrmrealmEncounterModifierSet encounterModifiers = WyrmrealmEncounterModifierSet.Empty;
     private bool mapEncounterCleanupPending;
     private int trailExperienceAtEntry;
@@ -48,14 +70,16 @@ public sealed partial class RunSimulation
 
     public bool ChooseMapNode(string id)
     {
-        if (dragonEncounterStarted || trailExitPending) return false;
+        if (dragonEncounterStarted || trailExitPending || (worldSiteGeographyEnabled && walkedExitNodeId is { } exitId && exitId != id))
+            return false;
         var node = mapState.Choose(id);
         if (node is null) return false;
+        walkedExitNodeId = null;
         ClearMapEncounterField();
         trailExperienceAtEntry = experienceEarned;
         materialCargoState.BeginTrail();
         playerPositionInitialized = false;
-        arenaEnvironment = ArenaEnvironmentState.Create(mapState.Seed, node);
+        arenaEnvironment = ArenaEnvironmentState.Create(mapState.Seed, node, worldFirstGeography: worldSiteGeographyEnabled);
         PrepareBellWardenNode(node);
         PrepareReliquaryNode(node);
         RollNodeElite(node);

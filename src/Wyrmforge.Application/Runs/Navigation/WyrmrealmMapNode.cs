@@ -11,8 +11,12 @@ public sealed record WyrmrealmMapNode(
     WyrmrealmNodeGraph Graph)
 {
     public HuntSite? Site { get; init; }
+    /// <summary>Same versioned geographic source used by Chart and live Hunt arena snapshots.</summary>
+    public WorldSiteGeography? Geography { get; init; }
     public WyrmrealmTerritory? Territory { get; init; }
     public WyrmrealmHabitat Habitat { get; init; } = WyrmrealmHabitat.Outskirts;
+    /// <summary>World-map description for procedural local terrain; never a prescribed road graph.</summary>
+    public WorldSiteGenerationProfile? GenerationProfile { get; init; }
     /// <summary>A combat road that leads straight into a Wyrm's lair (route-graph semantics, not a stage number): the Bell Warden's road.</summary>
     public bool PreLair { get; init; }
     /// <summary>An optional, harder hold. Once reclaimed, a fall later in the Hunt returns the hunter here instead of ending it.</summary>

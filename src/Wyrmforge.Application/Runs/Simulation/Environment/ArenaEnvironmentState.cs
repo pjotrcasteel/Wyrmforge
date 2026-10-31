@@ -22,7 +22,9 @@ public sealed class ArenaEnvironmentState
     private readonly string habitat;
     private readonly bool preLair;
     private readonly bool generatorPreview;
+    private readonly bool worldFirstGeography;
     private readonly HuntArenaGenerator.WetForestRecipe? wetForest;
+    private WorldSiteGeography? geography;
     private EncounterPhase phase = EncounterPhase.Pressure;
 
     private sealed class Supply(string kind, double x, double y, EncounterPhase unlockPhase)
@@ -42,11 +44,12 @@ public sealed class ArenaEnvironmentState
         public double Health { get; set; } = spec.Health;
     }
 
-    private ArenaEnvironmentState(int seed, string biome, string element, int stage, string landmark, string district, string habitat, bool preLair, bool generatorPreview)
+    private ArenaEnvironmentState(int seed, string biome, string element, int stage, string landmark, string district, string habitat, bool preLair, bool generatorPreview, bool worldFirstGeography)
     {
         this.habitat = habitat;
         this.preLair = preLair;
         this.generatorPreview = generatorPreview;
+        this.worldFirstGeography = worldFirstGeography;
         // Preserve the first Fire Hunt's Old Road identity and combat gates,
         // but give its floor the same original source-backed woodland materials
         // as later Wet Forest encounters. Old Road Lab previews are unchanged.
@@ -61,7 +64,7 @@ public sealed class ArenaEnvironmentState
         this.district = district;
     }
 
-    public static ArenaEnvironmentState Create(int mapSeed, WyrmrealmMapNode node, bool generatorPreview = false, SpellSchool? regionSchool = null)
+    public static ArenaEnvironmentState Create(int mapSeed, WyrmrealmMapNode node, bool generatorPreview = false, SpellSchool? regionSchool = null, bool worldFirstGeography = false)
     {
         ArgumentNullException.ThrowIfNull(node);
         var stage = node.Stage;
@@ -79,15 +82,24 @@ public sealed class ArenaEnvironmentState
         var districtIndex = ((mapSeed & int.MaxValue) % 3 + stage + node.Lane + (node.Site?.RoadIndex ?? 0)) % 3;
         var district = new[] { "causeway", "sanctuary", "rift" }[districtIndex];
         var habitat = node.Habitat.ToString();
-        var environment = new ArenaEnvironmentState(seed, biome, element, stage, landmark, district, habitat, node.PreLair, generatorPreview);
+        var environment = new ArenaEnvironmentState(seed, biome, element, stage, landmark, district, habitat, node.PreLair, generatorPreview, worldFirstGeography)
+        {
+            geography = node.Geography,
+        };
         if (node.Type != WyrmrealmNodeType.Combat) return environment;
 
         // The old fixed gated encounter remains part of current Hunts ONLY.
         // Arena Lab previews have natural continuous ground: no synthetic cross-walls or wave checkpoints.
         if (!generatorPreview)
         {
-            environment.AddCrossing(.315 + random.NextDouble() * .035, EncounterPhase.BreathingRoom);
-            environment.AddCrossing(.675 + random.NextDouble() * .035, EncounterPhase.Surge);
+            // AR1 is an isolated full-run preview of graph-authored terrain; do not block
+            // its mapped routes with the legacy horizontal checkpoint masonry.
+            // Normal Hunts retain both physical stage gates and their existing pacing.
+            if (!worldFirstGeography)
+            {
+                environment.AddCrossing(.315 + random.NextDouble() * .035, EncounterPhase.BreathingRoom);
+                environment.AddCrossing(.675 + random.NextDouble() * .035, EncounterPhase.Surge);
+            }
             environment.supplies.Add(new Supply("experience", 0.50, 0.20 + random.NextDouble() * 0.05, EncounterPhase.BreathingRoom));
             environment.supplies.Add(new Supply("health", 0.50, 0.81 + random.NextDouble() * 0.05, EncounterPhase.Surge));
         }
@@ -148,6 +160,10 @@ public sealed class ArenaEnvironmentState
         Corruption = HuntArenaGenerator.WyrmInfluence(stage, generatorPreview && preLair),
         GeneratorPreview = generatorPreview,
         WetForest = wetForest,
+        // The normal Hunt needs AR0 site identity and port topology, not dozens of
+        // inactive geometry vertices serialized on every mobile render frame.
+        Geography = worldFirstGeography ? geography : geography is null ? null : geography with { Landscape = null },
+        GeographyActive = worldFirstGeography,
         Props = destructibles.Where(prop => prop.Health > 0)
             .Select(prop => new ArenaPropRenderSnapshot(prop.Spec.Id, prop.Spec.Kind, prop.Spec.X, prop.Spec.Y, prop.Spec.Radius,
                 prop.Health / prop.Spec.Health)).ToArray(),
@@ -171,6 +187,8 @@ public sealed class ArenaEnvironmentState
     public bool BlocksSegment(Vector2D from, Vector2D to, double width, double height, double radius = 0, int? ignoredPropId = null)
     {
         if (width <= 0 || height <= 0) return false;
+        if (worldFirstGeography && WorldSiteFootprintCollision.BlocksSegment(geography?.Landscape, from, to, width, height, radius))
+            return true;
         foreach (var barrier in barriers)
         {
             if (IsOpen(barrier)) continue;
@@ -252,6 +270,9 @@ public sealed class ArenaEnvironmentState
 
     public bool IsBlocked(Vector2D position, double width, double height, double radius = 0)
     {
+        if (worldFirstGeography && geography?.Landscape is { } landscape &&
+            landscape.Obstacles.Any(obstacle => WorldSiteFootprintCollision.Contains(obstacle, position, width, height, radius)))
+            return true;
         foreach (var barrier in barriers)
         {
             if (IsOpen(barrier)) continue;
@@ -307,7 +328,12 @@ public sealed class ArenaEnvironmentState
                 var candidate = new Vector2D(origin.X + Math.Cos(angle) * reach, origin.Y + Math.Sin(angle) * reach);
                 if (candidate.X < minX || candidate.X > maxX || candidate.Y < minY || candidate.Y > maxY) continue;
                 if (Vector2D.Distance(candidate, hunter) < MinimumSpawnDistance + radius) continue;
-                if (!IsBlocked(candidate, width, height, radius)) return candidate;
+                if (IsBlocked(candidate, width, height, radius)) continue;
+                // New cliffs and rooted forest masses are authoritative C# colliders.
+                // Don't materialize an enemy behind one without a navigable route.
+                // This preview safety rule does not alter the existing normal Hunt.
+                if (worldFirstGeography && BlocksSegment(candidate, hunter, width, height, radius)) continue;
+                return candidate;
             }
         }
         return null;
@@ -326,7 +352,43 @@ public sealed class ArenaEnvironmentState
             var offset = Math.Max(24, gate.Height * height * .5 + radius + 8);
             return new Vector2D(width * .5, crossingY + (hunter.Y < crossingY ? -offset : offset));
         }
-        return AvoidDestructible(enemy, hunter, width, height, radius);
+        return AvoidWorldSiteObstacle(enemy, AvoidDestructible(enemy, hunter, width, height, radius), width, height, radius);
+    }
+
+    // Extend the EXISTING C# navigation policy with the same physical polygons used for
+    // collision, rather than starting a competing terrain pathfinding/physics engine.
+    private Vector2D AvoidWorldSiteObstacle(Vector2D enemy, Vector2D destination, double width, double height, double radius)
+    {
+        if (!worldFirstGeography || geography?.Landscape is not { } landscape ||
+            !WorldSiteFootprintCollision.BlocksSegment(landscape, enemy, destination, width, height, radius))
+            return destination;
+
+        var best = destination;
+        var bestLength = double.PositiveInfinity;
+        foreach (var obstacle in landscape.Obstacles)
+        {
+            if (obstacle.Outline.Count < 3) continue;
+            var centerX = obstacle.Outline.Average(point => point.X) * width;
+            var centerY = obstacle.Outline.Average(point => point.Y) * height;
+            foreach (var vertex in obstacle.Outline)
+            {
+                var point = new Vector2D(vertex.X * width, vertex.Y * height);
+                var delta = point - new Vector2D(centerX, centerY);
+                var length = Math.Sqrt(delta.X * delta.X + delta.Y * delta.Y);
+                if (length < 1e-6) continue;
+                var clearance = radius + 16;
+                var waypoint = point + delta * (clearance / length);
+                if (waypoint.X <= radius || waypoint.Y <= radius ||
+                    waypoint.X >= width - radius || waypoint.Y >= height - radius ||
+                    IsBlocked(waypoint, width, height, radius) ||
+                    BlocksSegment(enemy, waypoint, width, height, radius)) continue;
+                var score = Vector2D.Distance(enemy, waypoint) + Vector2D.Distance(waypoint, destination);
+                if (score >= bestLength) continue;
+                bestLength = score;
+                best = waypoint;
+            }
+        }
+        return best;
     }
 
     /// <summary>

@@ -1,4 +1,5 @@
 using Wyrmforge.Application.Runs.Simulation;
+using Wyrmforge.Application.Runs.Navigation;
 
 namespace Wyrmforge.Application.Runs.Simulation.Snapshots;
 
@@ -22,5 +23,9 @@ public sealed record ArenaEnvironmentRenderSnapshot(
     public double Corruption { get; init; }
     public bool GeneratorPreview { get; init; }
     public HuntArenaGenerator.WetForestRecipe? WetForest { get; init; }
+    /// <summary>Versioned site/edge/material identity; presentation must not generate a second graph.</summary>
+    public WorldSiteGeography? Geography { get; init; }
+    /// <summary>True when the C# landscape obstacles are actual gameplay colliders.</summary>
+    public bool GeographyActive { get; init; }
     public IReadOnlyList<ArenaPropRenderSnapshot> Props { get; init; } = [];
 }

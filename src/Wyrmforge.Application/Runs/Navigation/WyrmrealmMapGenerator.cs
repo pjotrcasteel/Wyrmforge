@@ -139,17 +139,37 @@ public static class WyrmrealmMapGenerator
             Features = features.Select(f => f with { Center = Flip(f.Center) }).ToArray() };
         var created = WyrmrealmRouteGenerator.CreateNodes(tierThree ? 3 : tierTwo ? 2 : depth, drafts, new Random(unchecked(seed * 733 ^ depth * 104729))).ToArray();
         var lairRoads = created.Where(node => node.Type == WyrmrealmNodeType.Dragon).SelectMany(node => node.PreviousNodeIds).ToHashSet(StringComparer.Ordinal);
-        return created
+        var mapped = created
             .Select(node =>
             {
                 var draft = drafts.Single(d => d.Id == node.Id);
                 var site = draft.Site;
                 var name = introductoryFire && node.Type == WyrmrealmNodeType.Dragon ? DragonCatalog.Get(DragonId.Ashfang).Name
                     : draft.Refuge ? RefugeName : draft.Watchtower ? WatchtowerName : node.Name;
+                var habitat = WyrmrealmHabitatCatalog.ForSchool(draft.Habitat, region);
+                // Chart supplies only environmental context. An edge fork never
+                // dictates a matching Y-shaped road in the local Hunt arena.
+                var landform = habitat switch
+                {
+                    WyrmrealmHabitat.ScorchedApproach or WyrmrealmHabitat.GlacierApproach => WorldSiteLandform.Mountain,
+                    WyrmrealmHabitat.FloodedCloister or WyrmrealmHabitat.MirrorMere => WorldSiteLandform.Wetland,
+                    _ => biome == 1 ? WorldSiteLandform.Mountain : WorldSiteLandform.Lowland,
+                };
+                var landmark = node.Type == WyrmrealmNodeType.Dragon
+                    ? WorldSiteLandmark.WyrmLair
+                    : habitat switch
+                    {
+                        WyrmrealmHabitat.MonasteryGrounds or WyrmrealmHabitat.FloodedCloister => WorldSiteLandmark.Monastery,
+                        WyrmrealmHabitat.DesertedVillage or WyrmrealmHabitat.BuriedHamlet => WorldSiteLandmark.Village,
+                        _ => draft.Watchtower ? WorldSiteLandmark.Watchtower : WorldSiteLandmark.None,
+                    };
                 return node with { Name = name, Refuge = draft.Refuge, Watchtower = draft.Watchtower,
                     Site = site with { Point = Flip(site.Point), IncomingTrail = site.IncomingTrail.Select(Flip).ToArray() },
-                    Territory = territory, Habitat = WyrmrealmHabitatCatalog.ForSchool(draft.Habitat, region), PreLair = node.Type == WyrmrealmNodeType.Combat && lairRoads.Contains(node.Id) };
+                    Territory = territory, Habitat = habitat,
+                    GenerationProfile = new WorldSiteGenerationProfile(landform, landmark),
+                    PreLair = node.Type == WyrmrealmNodeType.Combat && lairRoads.Contains(node.Id) };
             }).ToArray();
+        return WorldSiteGeographyProjection.Attach(mapped, seed, region);
 
         void Add(string suffix, int stage, int lane, IReadOnlyList<string> previous, HuntPoint point, IReadOnlyList<HuntPoint> trail,
             string? roadId = null, int index = 0, bool bonus = false, SpellSchool? school = null, WyrmrealmHabitat habitat = WyrmrealmHabitat.Outskirts,

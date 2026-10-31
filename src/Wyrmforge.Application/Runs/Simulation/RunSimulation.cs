@@ -116,7 +116,8 @@ public sealed partial class RunSimulation
     public IReadOnlyList<DragonEssenceDefinition> PendingDragonEssenceChoices => pendingDragonEssenceChoices;
     public IReadOnlyList<DragonEssenceDefinition> SelectedDragonEssences => build.DragonEssences.Selected.Select(DragonEssenceCatalog.Get).ToArray();
     public IReadOnlyList<WyrmrealmMapNode> MapNodes => mapState.Nodes;
-    public IReadOnlyList<WyrmrealmMapNode> AvailableMapNodes => mapState.AvailableNodes;
+    public IReadOnlyList<WyrmrealmMapNode> AvailableMapNodes => walkedExitNodeId is { } next && worldSiteGeographyEnabled
+        ? mapState.AvailableNodes.Where(node => node.Id == next).ToArray() : mapState.AvailableNodes;
     public IReadOnlyList<WyrmrealmMapNode> CompletedMapNodes => mapState.CompletedNodes;
     public WyrmrealmMapNode? CurrentMapNode => mapState.CurrentNode;
     public DragonEssenceId? Offering { get; }
@@ -395,6 +396,7 @@ public sealed partial class RunSimulation
             PowerBurst = CreatePowerBurstSnapshot(),
             Environment = arenaEnvironment?.Snapshot(),
             Exit = CreateTrailExitSnapshot(),
+            ExitPorts = CreateWorldSiteExitSnapshots(),
             World = arenaEnvironment is not null && (mapState.EncounterActive || trailExitPending) ? new ArenaWorldRenderSnapshot(arenaWidth, arenaHeight) : null,
             CastMotion = CreateCastMotionSnapshot(),
             HostileProjectiles = CreateHostileProjectileSnapshots(),
