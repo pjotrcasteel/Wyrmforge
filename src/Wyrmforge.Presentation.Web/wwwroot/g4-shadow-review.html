@@ -22,11 +22,12 @@ small{display:block;color:#c8becf;margin-top:6px}
 </head>
 <body>
 <h1>G4 · Hollowed directional shadows</h1>
-<p>Real Hollowed sprite and the live <code>HuntGpuWorld</code> adapter rendered by the shared GPU lighting engine. Grey ground; actual Fireball light parameters and a world-height shadow caster derived from Hollowed collision radius (11px, ~1.5× diameter (4px world units)). The small orange cross is a <strong>source-position diagnostic</strong>, not a game projectile. Every shadow should extend <em>away</em> from its cross.</p>
+<p>Real Hollowed sprite and the live <code>HuntGpuWorld</code> adapter rendered by the shared GPU lighting engine. Grey ground; actual Fireball light parameters and a world-height shadow caster derived from Hollowed collision radius (11px, 1.5× diameter, rounded to 4px) and the exact live sprite foot anchor. The small orange cross is a <strong>source-position diagnostic</strong>, not a game projectile. Every shadow should extend <em>away</em> from its cross.</p>
 <div id="status" role="status">Preparing one GPU scene…</div>
 <div id="gallery" class="grid"></div>
 <script type="module">
 import { HuntGpuWorld } from './js/arena-gpu-world.js';
+import { huntLayerCapture } from './js/hunt-gpu-layers.js';
 const width=390,height=390,footX=195,footY=210;
 const status=document.getElementById('status'),gallery=document.getElementById('gallery');
 let world;
@@ -34,18 +35,22 @@ try{
     const actor=new Image();
     actor.src='./art/enemies/hollow-rigged/arms/standard-walk.png';
     await actor.decode();
+    const capture=huntLayerCapture({kind:'enemy',
+        enemy:{entityId:42,x:footX,y:footY,radius:11}},null);
     const tile=document.createElement('canvas');
-    tile.width=160;tile.height=160;
+    tile.width=tile.height=capture.size;
     const painter=tile.getContext('2d');
     painter.imageSmoothingEnabled=false;
-    painter.drawImage(actor,0,4*96,96,96,32,36,96,96);
+    painter.drawImage(actor,0,4*96,96,96,
+        footX-48/96*93-capture.x,footY-72/96*93-capture.y,93,93);
     const source=document.createElement('canvas');
     source.width=width;source.height=height;
     const ctx=source.getContext('2d');
     ctx.fillStyle='#777777';ctx.fillRect(0,0,width,height);
     world=new HuntGpuWorld({quality:'balanced'});
     world.begin(ctx,{x:0,y:0},width,height);
-    world.capture('hollow',tile,footX-80,footY-132,160,160,0,true,{footFraction:132/160,occluderHeightPx:32});
+    world.capture('hollow',tile,capture.x,capture.y,capture.size,capture.size,0,true,
+        {footFraction:capture.footFraction,occluderHeightPx:capture.occluderHeightPx});
     const base={version:1,time:0,environment:{ambient:.12,color:'#ffffff',exposure:1,emission:false},materials:[],objects:[]};
     for(const [name,dx,dy] of [['Fireball SOUTH',0,48],['Fireball NORTH',0,-48],['Fireball EAST',48,0],['Fireball WEST',-48,0]]){
         const light={id:'fireball',ownerId:'proof',type:'point',enabled:true,position:[footX+dx,footY+dy,24],direction:[0,0,-1],color:'#ff7835',intensity:6,range:144,coneAngle:.5,penumbra:0,castsShadow:true,priority:1};
