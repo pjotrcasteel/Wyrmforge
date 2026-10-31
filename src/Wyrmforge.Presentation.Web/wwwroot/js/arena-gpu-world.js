@@ -173,6 +173,27 @@ export function alignHuntActorBillboards(objects, engine) {
         engine.objects.get(descriptor.id)?.mesh.quaternion.copy(engine.camera.quaternion);
     }
 }
+/** Reveal which authoritative emitters actually received scarce point-shadow views.
+ * A visible glow never proves the same source got a GPU shadow map.
+ * This report observes the shared renderer; it does not alter light priority.
+ */
+export function huntShadowAllocationReport(lights = [], selected = [], capacity = 0) {
+    const requested = lights.filter(light => light.enabled && light.castsShadow &&
+        light.intensity > 0);
+    const byId = new Map(selected.map(light => [light.id, light]));
+    const shadowed = requested.filter(light => byId.get(light.id)?.shadow);
+    return {
+        requestedIds: requested.map(light => light.id),
+        shadowedIds: shadowed.map(light => light.id),
+        notSelectedIds: requested.filter(light => !byId.has(light.id)).map(light => light.id),
+        selectedWithoutShadowIds: requested.filter(light => byId.has(light.id) &&
+            !byId.get(light.id).shadow).map(light => light.id),
+        allocatedViews: shadowed.reduce((total, light) =>
+            total + (byId.get(light.id).shadowViews ?? 0), 0),
+        capacity,
+    };
+}
+
 export class HuntGpuWorld {
     constructor({ quality = 'balanced' } = {}) {
         this.canvas = document.createElement('canvas');
@@ -213,7 +234,10 @@ export class HuntGpuWorld {
         this.objects.push(renderable);
     }
     diagnostics() {
-        return { ...this.engine.diagnostics(), quality: this.quality, textureUploads: this.lastFrameUploads,
+        return { ...this.engine.diagnostics(), quality: this.quality,
+            shadowAllocation: huntShadowAllocationReport(this.engine.snapshot?.lights ?? [],
+                this.engine.selected ?? [], this.engine.shadowViews),
+            textureUploads: this.lastFrameUploads,
             largestDynamicUploads: this.lastFrameTopUploads,
             authoredTextures: this.engine.textures.size - this.layers.size, canvasCaptures: this.layers.size,
             // CPU submission only. True GPU time, thermals and battery need physical devices.
