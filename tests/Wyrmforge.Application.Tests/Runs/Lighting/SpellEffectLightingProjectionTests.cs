@@ -27,6 +27,35 @@ public sealed class SpellEffectLightingProjectionTests
     }
 
     [TestMethod]
+    public void Capture_TargetCenteredFireballImpact_KeepsLightButCannotCastBackwardsShadow()
+    {
+        // Projectile impact snapshots are anchored to target.Position, which is
+        // inside the target's upright shadow caster. The transient flash must not
+        // request a cubemap there, even though the flying projectile still does.
+        var profile = LightingSourceCatalog.ForSpell(SpellId.FireBolt)!;
+        Assert.IsTrue(profile.CastsShadows, "Moving Fireballs still cast directional shadows.");
+
+        var cast = new CastMotionRenderSnapshot(50, 60, SpellId.FireBolt, 1, null, 0, .5);
+        var impact = new ElementalImpactRenderSnapshot(100, 120, SpellId.FireBolt, 0);
+        var emitters = SpellEffectLightingProjection.Capture(cast, [impact], []);
+
+        Assert.HasCount(2, emitters);
+        Assert.IsTrue(emitters[0].CastsShadows, "A free-standing cast can still use the shadow map.");
+        Assert.IsFalse(emitters[1].CastsShadows, "An embedded impact flash cannot project the struck mob toward its caster.");
+        Assert.AreEqual(100d, emitters[1].X);
+        Assert.AreEqual(120d, emitters[1].Y);
+        Assert.AreEqual(24d, emitters[1].Z);
+        Assert.AreEqual(profile.Intensity, emitters[1].Intensity, "The flash still illuminates on contact.");
+
+        var frame = GpuLightingFrameProjection.FromSnapshot(
+            LightingSceneComposer.Compose("hunt", 2,
+                new LightingEnvironment("gothic-night", "#8c9cbb", .24), emitters), .25);
+        Assert.IsTrue(frame.Lights.Any(light => light.Id == "cast:player" && light.CastsShadow));
+        Assert.IsTrue(frame.Lights.Any(light => light.Id.StartsWith("impact:") && !light.CastsShadow &&
+            light.Enabled && light.Intensity == profile.Intensity));
+    }
+
+    [TestMethod]
     public void Capture_ExpiredEffects_LeaveNoSources()
     {
         var cast = new CastMotionRenderSnapshot(50, 60, SpellId.FireBolt, 1, null, 0, 1);
