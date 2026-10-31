@@ -105,6 +105,8 @@ public partial class ArenaView : IAsyncDisposable
         var query = new Uri(Navigation.Uri).Query.TrimStart('?').Split('&');
         var agentPreview = query.Any(value => string.Equals(value, "agents=1", StringComparison.OrdinalIgnoreCase));
         var geographyPreview = query.Any(value => string.Equals(value, "ar1Geography=1", StringComparison.OrdinalIgnoreCase));
+        var lighting01 = query.Any(value => string.Equals(value, "lighting01=1", StringComparison.OrdinalIgnoreCase)) &&
+            query.Any(value => string.Equals(value, "arenaGpu=1", StringComparison.OrdinalIgnoreCase));
         var requestedSite = query.FirstOrDefault(value => value.StartsWith("ar1SiteKind=", StringComparison.OrdinalIgnoreCase))
             ?.Split('=', 2).Last();
         previewMountainMonastery = geographyPreview && requestedSite == "mountain-monastery";
@@ -114,6 +116,7 @@ public partial class ArenaView : IAsyncDisposable
             : RunSeed;
         simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, previewSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt, researchLead: ResearchLead, preparedMutations: PreparedMutations, fireballMutations: FireballMutations, contextualSpell: ContextualSpell, region: Region, regionOpening: RegionOpening, hunt: Hunt, amplifierAssignments: MutationAmplifierAssignments, fireballLevel: FireballLevel, agents: agentPreview ? new(true, true) : null);
         if (geographyPreview) simulation.EnableWorldSiteGeography();
+        if (lighting01) simulation.EnableLightingComposition01();
         if (RewardCache) simulation.OpenRewardCache();
     }
 

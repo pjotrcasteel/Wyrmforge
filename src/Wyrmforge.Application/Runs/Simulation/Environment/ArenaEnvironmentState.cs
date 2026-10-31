@@ -27,6 +27,9 @@ public sealed class ArenaEnvironmentState
     private WorldSiteGeography? geography;
     private EncounterPhase phase = EncounterPhase.Pressure;
 
+    /// <summary>Read-only C# fixture geometry for the optional shared G5 light projection.</summary>
+    public HuntArenaGenerator.WetForestRecipe? LightingRecipe => wetForest;
+
     private sealed class Supply(string kind, double x, double y, EncounterPhase unlockPhase)
     {
         public string Kind { get; } = kind;

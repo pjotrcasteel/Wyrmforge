@@ -3540,6 +3540,47 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
+    public async Task Mobile_G5Lighting01_RealWetForestComposesFixedTorchAndMovingFireball(int width, int height)
+    {
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/?arenaGpu=1&lighting01=1&gpuQuality=mobile&g4PaintedGround=1",
+            new() { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await EnterFirstTrailAsync("BEGIN FIRST HUNT");
+        await Page.EvaluateAsync("""
+            async () => {
+                const arena = await import(new URL('js/arena.js?v=20261031-lighting-01-v1', document.baseURI).href);
+                window.__g5Read = () => arena.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
+            }
+            """);
+        await Page.WaitForFunctionAsync("""
+            () => {
+                const d = window.__g5Read?.();
+                return d?.lighting01?.enabled && d.lighting01.fixedFixtures === 1 &&
+                    d.gpuWorld?.objects > 2 && !d.gpuWorld.error && !d.renderingFailed &&
+                    d.sharedLighting?.lights?.some(light =>
+                        light.id?.startsWith('wet-forest:torch:') && light.enabled &&
+                        light.castsShadow === false);
+            }
+            """, null, new() { Timeout = 30000 });
+        // This must be a live C# moving light in the actual Hunt, never a JS test source.
+        await Page.WaitForFunctionAsync("""
+            () => window.__g5Read?.()?.sharedLighting?.lights?.some(light =>
+                light.id?.startsWith('projectile:') || light.id?.startsWith('impact:FireBolt:'))
+            """, null, new() { Timeout = 30000 });
+        var proof = await Page.EvaluateAsync<JsonElement>("() => window.__g5Read()");
+        Assert.AreEqual(1, proof.GetProperty("lighting01").GetProperty("fixedFixtures").GetInt32());
+        Assert.IsFalse(proof.GetProperty("renderingFailed").GetBoolean());
+        Directory.CreateDirectory(ArtifactDirectory);
+        await Page.Locator("canvas.game-canvas").ScreenshotAsync(new()
+        {
+            Path = Path.Combine(ArtifactDirectory, $"g5-lighting01-real-wet-forest-{width}.png"),
+        });
+    }
+
+    [TestMethod]
     [DataRow(320, 568, "mobile")]
     [DataRow(390, 844, "mobile")]
     [DataRow(390, 844, "balanced")]
@@ -3552,7 +3593,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         {
             await EnterFirstTrailAsync("BEGIN FIRST HUNT");
             await Page.EvaluateAsync(@"async () => {
-                window.__huntGpuArena = await import(new URL('js/arena.js?v=20261028-school-palette-v1', document.baseURI).href);
+                window.__huntGpuArena = await import(new URL('js/arena.js?v=20261031-lighting-01-v1', document.baseURI).href);
                 window.__huntGpuRead = () => window.__huntGpuArena.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
             }");
             await Page.WaitForFunctionAsync(@"() => {
@@ -3695,7 +3736,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
                 .find(url => url.includes('/js/arena-performance.js?v='));
             if (!resource) throw new Error('Active Arena performance module was not loaded');
             const performanceArena = await import(resource);
-            const arena = await import(new URL('js/arena.js?v=20261028-school-palette-v1', document.baseURI).href);
+            const arena = await import(new URL('js/arena.js?v=20261031-lighting-01-v1', document.baseURI).href);
             window.__huntGpuArena = arena;
             window.__huntGpuRead = () => performanceArena.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
         }");

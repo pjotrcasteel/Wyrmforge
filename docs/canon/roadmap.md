@@ -378,6 +378,14 @@ UI/menus/explicit combat telegraphs have separate readable passes.
 11. **G9 — native 32px presentation and sustained mobile budgets (Lighting 1.0 track):** validate sampling, camera travel/zoom, integer/native pixel clusters, atlas edge padding, stable shadow grids and 320/390px iOS/Android real-Hunt visuals. Profile sustained device frame pacing, CPU/GPU cost where available, texture uploads, memory, battery/thermals, static/dynamic caster budgets and adaptive reduced-quality tiers. Smooth illumination is permitted; blurry/crawling source pixels or full-bright bypass are not.
 12. **G10 — Lighting Engine 1.0 / approved production cutover:** complete default-GPU adoption for approved non-Town Hunts, actors, foliage, terrain, water and world VFX through the same descriptor registry, with real fixed/moving-light cast/receive shadows, height-aware occlusion, material reflections and consistent exposure. Require Canvas-vs-GPU A/B video and genuine 320/390px moving Wet Forest Hunt evidence, zero-light world-black diagnostics, actual iOS/Android performance and explicit owner visual approval. Keep a working fallback during rollout; only retire duplicate Canvas world-light passes per approved scene. The existing painted 2D Town is excluded and must not be replaced. **Only G10 may be called Lighting 1.0.**
 
+**G4/G5 integration checkpoint (31 October 2026):** The owner-approved G4 painted-Hunt
+shadow/albedo stack was integrated into `main` by merged [#462](https://github.com/pjotrcasteel/Wyrmforge/pull/462),
+with its pinned [#456](https://github.com/pjotrcasteel/Wyrmforge/pull/456) phone-review candidate preserved.
+[G5 composition PR #463](https://github.com/pjotrcasteel/Wyrmforge/pull/463) now proposes the
+separately opt-in Lighting 0.1 contract, C#-authored fixed Wet Forest fixtures and moving-fire
+composition. The [G5 contract and limitations](../lighting-01-composition.md) distinguish its
+browser proof from visual owner acceptance; G6–G10 and default production GPU cutover remain open.
+
 #### After G5 0.1 — Hollowed appearances can compose; complete 1.0 material parity in G7/G10
 
 **Staged dependency:** after G5's opt-in 0.1 composition interface is available, Hollowed injury/appearance assets may bind to it without waiting for perfect shadows. Complete true per-pose normal/depth/caster/material parity and live-Hunt correctness as part of G7 and G10 **before Lighting 1.0 sign-off**. This does not block ongoing enemy art or gameplay and must not introduce Hollowed-specific light/shader paths.
