@@ -58,6 +58,9 @@ export function validateSnapshot(input) {
             vector(o[key], key);
         }
         if (o.occluderScale?.some(n => n <= 0)) throw new TypeError('Nonpositive occluder scale');
+        if (o.occluderAlphaSource !== undefined &&
+            (typeof o.occluderAlphaSource !== 'boolean' || !o.occluderGeometry))
+            throw new TypeError('Invalid caster alpha mode');
         for (const flag of ['castsShadow', 'receivesLight', 'receivesShadow'])
             if (typeof o[flag] !== 'boolean') throw new TypeError(`Missing ${flag}`);
         if (o.frame) for (const key of ['offset', 'repeat']) {
