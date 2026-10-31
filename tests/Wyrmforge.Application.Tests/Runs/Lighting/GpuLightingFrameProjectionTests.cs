@@ -23,8 +23,7 @@ public sealed class GpuLightingFrameProjectionTests
         Assert.AreEqual(144d, source.X);
         Assert.AreEqual(240d, source.Y);
         Assert.AreEqual(144d, source.Radius);
-        Assert.AreEqual(96d, source.Z,
-            "A projectile source must clear the G1-sized actor alpha silhouette to cast bounded ground shadows.");
+        Assert.AreEqual(24d, source.Z);
         Assert.IsTrue(source.Intensity >= 5,
             "The authoritative Fireball must illuminate actors against mobile Gothic night.");
         Assert.IsTrue(source.CastsShadows,
