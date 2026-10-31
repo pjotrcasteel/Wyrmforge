@@ -3,12 +3,12 @@
 import { WORLD_SITE_MATERIALS, normalizeWorldSiteMaterialWeights,
     worldSiteMaterialCacheKey, worldSiteSourceBindings } from './world-site-material-binding.js';
 
-const SOURCE_REVISION = 'wf32-p1i-soft.v1';
-const SOURCE_URLS = Object.freeze({
-    soil: new URL('../art/terrain/wf32/p1i/soil-world.png', import.meta.url),
-    grass: new URL('../art/terrain/wf32/p1i/grass-world.png', import.meta.url),
-    mud: new URL('../art/terrain/wf32/p1i/mud-world.png', import.meta.url),
-});
+const SOURCE_REVISION = 'wf32-p1i-soft.seed1387.1024x1568.v1';
+const SOURCE_BANDS = Object.freeze([
+    Object.freeze({ suffix: 'top', originY: 0, height: 800 }),
+    Object.freeze({ suffix: 'bottom', originY: 800, height: 768 }),
+]);
+const SOURCE_FAMILIES = Object.freeze(['soil', 'grass', 'mud']);
 const CACHE_LIMIT = 1;
 const siteImages = new Map();
 let sourceState = 'idle';
@@ -22,32 +22,52 @@ export function worldSiteMaterialModeEnabled() {
     return new URLSearchParams(globalThis.location?.search ?? '').get('arenaTerrain') === 'materials';
 }
 
-/** Decode source images once for the opt-in neutral review. Missing files stay a safe flat-color fallback. */
+/** Reassemble contiguous offline-authored world windows, preserving their absolute 32px source phase. */
+export function stitchWorldSiteSourceBands(bands) {
+    if (!Array.isArray(bands) || bands.length !== SOURCE_BANDS.length) return null;
+    const width = bands[0]?.width;
+    if (!Number.isInteger(width) || width < 32 || width % 32 !== 0) return null;
+    const height = SOURCE_BANDS.reduce((total, spec) => total + spec.height, 0);
+    const data = new Uint8ClampedArray(width * height * 4);
+    for (let index = 0; index < bands.length; index++) {
+        const band = bands[index];
+        if (band?.width !== width || band.height !== SOURCE_BANDS[index].height ||
+            band.data?.length !== width * band.height * 4) return null;
+        data.set(band.data, SOURCE_BANDS[index].originY * width * 4);
+    }
+    return { width, height, data };
+}
+
+/** Decode source images once for opt-in review; source generation never runs in the frame loop. */
 function requestSources() {
     if (sourceState !== 'idle' || typeof document === 'undefined' || typeof Image === 'undefined') return;
     sourceState = 'loading';
-    const names = Object.keys(SOURCE_URLS);
-    const pending = names.map(name => new Promise((resolve, reject) => {
-        const image = new Image();
-        image.onload = () => {
-            if (image.naturalWidth % 32 !== 0 || image.naturalHeight % 32 !== 0) {
-                reject(new Error('WF32 source must be native 32px-aligned'));
-                return;
-            }
-            const canvas = document.createElement('canvas');
-            canvas.width = image.naturalWidth;
-            canvas.height = image.naturalHeight;
-            const context = canvas.getContext('2d', { willReadFrequently: true });
-            if (!context) {
-                reject(new Error('Cannot decode WF32 canvas'));
-                return;
-            }
-            context.drawImage(image, 0, 0);
-            resolve([name, context.getImageData(0, 0, canvas.width, canvas.height)]);
-        };
-        image.onerror = () => reject(new Error('WF32 source unavailable'));
-        image.src = SOURCE_URLS[name].href;
-    }));
+    const pending = SOURCE_FAMILIES.map(async family => {
+        const images = await Promise.all(SOURCE_BANDS.map(band => new Promise((resolve, reject) => {
+            const image = new Image();
+            image.onload = () => {
+                if (image.naturalWidth % 32 !== 0 || image.naturalHeight !== band.height) {
+                    reject(new Error('WF32 source must retain its native 32px band dimensions'));
+                    return;
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = image.naturalWidth;
+                canvas.height = image.naturalHeight;
+                const context = canvas.getContext('2d', { willReadFrequently: true });
+                if (!context) {
+                    reject(new Error('Cannot decode WF32 canvas'));
+                    return;
+                }
+                context.drawImage(image, 0, 0);
+                resolve(context.getImageData(0, 0, canvas.width, canvas.height));
+            };
+            image.onerror = () => reject(new Error('WF32 source unavailable'));
+            image.src = new URL(`../art/terrain/wf32/p1i/${family}-world-${band.suffix}.png`, import.meta.url).href;
+        })));
+        const stitched = stitchWorldSiteSourceBands(images);
+        if (!stitched) throw new Error('WF32 source bands do not share a continuous world grid');
+        return [family, stitched];
+    });
     Promise.all(pending).then(entries => {
         decodedSources = Object.fromEntries(entries);
         sourceState = 'ready';
