@@ -792,7 +792,7 @@ export function drawArenaEnvironment(ctx, environment, width, height, elapsedSec
             geographyActive: environment.geographyActive === true,
             materialSources: worldSiteSourceBindings(environment.geography).map(source => ({
                 material: source.material, family: source.sourceFamily,
-                gate: source.sourceGate, ready: source.sourceReady,
+                gate: source.sourceGate, sourceApproved: source.sourceApproved,
             })),
         };
     }
