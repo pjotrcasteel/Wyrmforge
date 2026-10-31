@@ -470,7 +470,8 @@ function draw(state, snapshot, width, height) {
                 tile, tileX - camera.x, tileY - camera.y, tileSize, tileSize,
                 .12 + Math.max(0, Math.min(1, layer.depth / worldHeight)) * .1,
                 true, { revision, footFraction: capture.footFraction,
-                    occluderHeightPx: capture.occluderHeightPx });
+                    occluderHeightPx: capture.occluderHeightPx,
+                    physicalVolume: capture.physicalVolume });
             ctx = worldContext;
         }
     }
