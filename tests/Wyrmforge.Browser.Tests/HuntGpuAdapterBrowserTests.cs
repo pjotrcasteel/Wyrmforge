@@ -163,6 +163,7 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
             """
             async ({width,height}) => {
                 const { HuntGpuWorld } = await import('./js/arena-gpu-world.js');
+                const { huntLayerCapture } = await import('./js/hunt-gpu-layers.js');
                 const world = new HuntGpuWorld({quality:'balanced'});
                 const canvas = document.createElement('canvas');
                 canvas.id = 'hunt-gpu-direction-shadow-proof';
@@ -176,22 +177,28 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
                 Object.assign(gallery.style,{position:'absolute',left:'0',top:'0',zIndex:'100000',display:'grid',background:'#777777'});
                 document.body.appendChild(gallery);
 
-                // Real Hollowed alpha, the exact 160px padded capture path used in the Hunt.
+                // Reproduce the actual Hunt capture and the authored Hollowed atlas
+                // pivot, rather than an approximately positioned padded test sprite.
+                const footX=width/2, footY=height/2;
+                const capture=huntLayerCapture({kind:'enemy',
+                    enemy:{entityId:42,x:footX,y:footY,radius:11}},null);
                 const actor = new Image();
                 actor.src='./art/enemies/hollow-rigged/arms/standard-walk.png';
                 await actor.decode();
                 const tile=document.createElement('canvas');
-                tile.width=160;tile.height=160;
-                tile.getContext('2d').drawImage(actor,0,4*96,96,96,32,36,96,96);
-                const footX=width/2, footY=height/2, left=footX-80, top=footY-132;
+                tile.width=tile.height=capture.size;
+                tile.getContext('2d').drawImage(actor,0,4*96,96,96,
+                    footX-48/96*93-capture.x,footY-72/96*93-capture.y,93,93);
+                const left=capture.x, top=capture.y;
                 world.begin(ctx,{x:0,y:0},width,height);
-                world.capture('hollow',tile,left,top,160,160,0,true,{footFraction:132/160,occluderHeightPx:32});
+                world.capture('hollow',tile,left,top,capture.size,capture.size,0,true,
+                    {footFraction:capture.footFraction,occluderHeightPx:capture.occluderHeightPx});
 
                 const base={version:1,time:0,environment:{ambient:.12,color:'#ffffff',exposure:1,emission:false},
                     materials:[],objects:[]};
                 const alpha=tile.getContext('2d').getImageData(0,0,160,160).data;
                 const samples=[];
-                const bodyHeight=32;
+                const bodyHeight=capture.occluderHeightPx;
                 const sourceHeight=24;
                 for(const [dx,dy] of [[0,48],[0,-48],[48,0],[-48,0]]){
                     const light={id:'moving-fireball',ownerId:'test',type:'point',enabled:true,
@@ -249,7 +256,7 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
             ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
         Directory.CreateDirectory(artifacts);
         await File.WriteAllTextAsync(Path.Combine(artifacts, "g4-shadow-direction-metrics.json"),
-            System.Text.Json.JsonSerializer.Serialize(new { physicalCasterHeightPx = 32, fireballHeightPx = 24,
+            System.Text.Json.JsonSerializer.Serialize(new { physicalCasterHeightPx = 32, fireballHeightPx = 24, canonicalActorFootY = height / 2,
                 sides = new[] { "south", "north", "east", "west" }, measurements }));
         await Page.Locator("#hunt-gpu-direction-shadow-gallery").ScreenshotAsync(new()
         {
