@@ -22,7 +22,7 @@ small{display:block;color:#c8becf;margin-top:6px}
 </head>
 <body>
 <h1>G4 · Hollowed directional shadows</h1>
-<p>Real Hollowed sprite and the live <code>HuntGpuWorld</code> adapter rendered by the shared GPU lighting engine. Grey ground; actual Fireball light parameters and a world-height shadow caster derived from Hollowed collision radius (11px, 2× diameter). The small orange cross is a <strong>source-position diagnostic</strong>, not a game projectile. Every shadow should extend <em>away</em> from its cross.</p>
+<p>Real Hollowed sprite and the live <code>HuntGpuWorld</code> adapter rendered by the shared GPU lighting engine. Grey ground; actual Fireball light parameters and a world-height shadow caster derived from Hollowed collision radius (11px, 1.8× diameter). The small orange cross is a <strong>source-position diagnostic</strong>, not a game projectile. Every shadow should extend <em>away</em> from its cross.</p>
 <div id="status" role="status">Preparing one GPU scene…</div>
 <div id="gallery" class="grid"></div>
 <script type="module">
@@ -45,7 +45,7 @@ try{
     ctx.fillStyle='#777777';ctx.fillRect(0,0,width,height);
     world=new HuntGpuWorld({quality:'balanced'});
     world.begin(ctx,{x:0,y:0},width,height);
-    world.capture('hollow',tile,footX-80,footY-132,160,160,0,true,{footFraction:132/160,occluderHeightPx:44});
+    world.capture('hollow',tile,footX-80,footY-132,160,160,0,true,{footFraction:132/160,occluderHeightPx:40});
     const base={version:1,time:0,environment:{ambient:.12,color:'#ffffff',exposure:1,emission:false},materials:[],objects:[]};
     for(const [name,dx,dy] of [['Fireball SOUTH',0,48],['Fireball NORTH',0,-48],['Fireball EAST',48,0],['Fireball WEST',-48,0]]){
         const light={id:'fireball',ownerId:'proof',type:'point',enabled:true,position:[footX+dx,footY+dy,24],direction:[0,0,-1],color:'#ff7835',intensity:6,range:144,coneAngle:.5,penumbra:0,castsShadow:true,priority:1};
