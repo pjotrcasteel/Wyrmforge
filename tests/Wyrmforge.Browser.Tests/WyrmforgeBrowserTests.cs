@@ -3581,6 +3581,53 @@ public sealed class WyrmforgeBrowserTests : PageTest
             Assert.IsFalse(diagnostics.GetProperty("renderingFailed").GetBoolean(),
                 diagnostics.TryGetProperty("renderingError", out var laterRenderError) ? laterRenderError.GetString() : "Rendering failed without diagnostics");
             Assert.IsTrue(diagnostics.GetProperty("gpuWorld").GetProperty("objects").GetInt32() > 2);
+            if (width == 390 && quality == "mobile")
+            {
+                // Record the real running Hunt canvas, including moving C# actors
+                // and emitted Fireballs. No synthetic shadow test geometry is used.
+                // The WebM is converted to a phone-playable MP4 by the G4 CI job.
+                var encoded = await Page.EvaluateAsync<string>(
+                    """
+                    async () => {
+                        const canvas=document.querySelector('canvas.game-canvas');
+                        if(!canvas?.captureStream||typeof MediaRecorder==='undefined')
+                            throw new Error('Real Hunt canvas video recording unavailable');
+                        const mime=MediaRecorder.isTypeSupported('video/webm;codecs=vp8')
+                            ? 'video/webm;codecs=vp8' : 'video/webm';
+                        if(!MediaRecorder.isTypeSupported(mime))
+                            throw new Error('WebM MediaRecorder not supported by test browser');
+                        const stream=canvas.captureStream(24);
+                        const chunks=[];
+                        const recorder=new MediaRecorder(stream,
+                            {mimeType:mime,videoBitsPerSecond:900000});
+                        const completed=new Promise((resolve,reject)=>{
+                            recorder.onerror=event=>reject(event.error);
+                            recorder.ondataavailable=event=>{
+                                if(event.data.size>0)chunks.push(event.data);
+                            };
+                            recorder.onstop=()=>{
+                                const blob=new Blob(chunks,{type:mime});
+                                const reader=new FileReader();
+                                reader.onerror=()=>reject(reader.error);
+                                reader.onload=()=>resolve(String(reader.result).split(',')[1]);
+                                reader.readAsDataURL(blob);
+                            };
+                        });
+                        recorder.start(250);
+                        await new Promise(resolve=>setTimeout(resolve,6000));
+                        recorder.stop();
+                        const encoded=await completed;
+                        stream.getTracks().forEach(track=>track.stop());
+                        return encoded;
+                    }
+                    """);
+                var video = Convert.FromBase64String(encoded);
+                Assert.IsGreaterThan(4096, video.Length,
+                    "The proof must contain recorded game frames, not a zero-byte placeholder.");
+                Directory.CreateDirectory(ArtifactDirectory);
+                await File.WriteAllBytesAsync(Path.Combine(ArtifactDirectory,
+                    "live-hunt-g4-directional-shadow-390.webm"), video);
+            }
         }
         finally
         {
