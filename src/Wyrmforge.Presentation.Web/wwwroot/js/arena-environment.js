@@ -551,9 +551,9 @@ export function drawWorldSiteLandscape(ctx, geography, width, height) {
     const palette = {
         'tree-root': ['#264a34', '#172d24'],
         cliff: ['#42525d', '#a3acb5'],
-        'cliff-face': ['#2a3138', '#697780'],
+        'cliff-face': ['#424c52', '#77848b'],
         'glacier-cliff': ['#7d9bac', '#d3dde7'],
-        'glacier-cliff-face': ['#506674', '#a1bccb'],
+        'glacier-cliff-face': ['#657d8b', '#b3c6d2'],
         'ice-spire': ['#b1d5e5', '#e5f2f8'],
         'wyrm-rib': ['#55434a', '#92747a'],
         'monastery-wall': ['#8d847b', '#d2bba4'],
@@ -568,7 +568,7 @@ export function drawWorldSiteLandscape(ctx, geography, width, height) {
         const colors = palette[obstacle.kind] ?? [siteSurfaceColors[semanticMaterialName(obstacle.material)], '#151e23'];
         ctx.fillStyle = colors[0];
         ctx.strokeStyle = colors[1];
-        ctx.lineWidth = obstacle.kind.includes('cliff') ? 3 : 2;
+        ctx.lineWidth = obstacle.kind.endsWith('cliff-face') ? 1.5 : 2;
         ctx.beginPath();
         for (let i = 0; i < obstacle.outline.length; i++) {
             const point = obstacle.outline[i];
@@ -593,7 +593,6 @@ export function drawWorldSiteLandscape(ctx, geography, width, height) {
             ctx.fillStyle = '#826d52';
             ctx.fill();
         } else if (obstacle.kind === 'cliff' || obstacle.kind === 'glacier-cliff' ||
-                   obstacle.kind === 'cliff-face' || obstacle.kind === 'glacier-cliff-face' ||
                    obstacle.kind === 'wyrm-rib' || obstacle.kind === 'ice-spire') {
             const first = obstacle.outline[0];
             ctx.beginPath();
@@ -618,6 +617,17 @@ function drawWorldSiteDiscoveries(ctx, geography, width, height) {
         const x = point.x * width;
         const y = point.y * height;
         // Flat-color historic traces from C# world data. Never create a reward or landmark in JS.
+        if (discovery.kind === 'overgrown-ruins') {
+            // Recognizable broken foundations at the C#-authored road endpoint.
+            ctx.fillStyle = '#39433b';
+            ctx.fillRect(x - 11, y - 8, 22, 16);
+            ctx.fillStyle = '#9d9b89';
+            ctx.fillRect(x - 11, y - 8, 7, 4);
+            ctx.fillRect(x + 3, y - 8, 8, 4);
+            ctx.fillRect(x - 11, y + 3, 5, 5);
+            ctx.fillRect(x + 5, y + 4, 6, 4);
+            continue;
+        }
         ctx.fillStyle = '#2b2928';
         ctx.fillRect(x - 7, y - 5, 14, 10);
         ctx.fillStyle = discovery.materialReward === null ? '#786958' : '#b9a07a';

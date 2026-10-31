@@ -151,7 +151,7 @@ public static class WorldSiteGeographyProjection
             geography = geography with
             {
                 GenerationProfile = profile,
-                ScenicPaths = CreateScenicPaths(worldSeed, geography.SiteId, profile),
+                ScenicPaths = CreateScenicPaths(worldSeed, geography.SiteId, profile, geography.Ports),
             };
             var landscape = WorldSiteLandscapeGenerator.Generate(node, geography);
             var localSurface = landscape.Kind switch
@@ -179,41 +179,54 @@ public static class WorldSiteGeographyProjection
     // Visible trails follow the site's seeded landform, not the number/directions
     // of Chart edges. Ports still determine actual reachable destinations.
     private static IReadOnlyList<WorldSiteCorridor> CreateScenicPaths(
-        int worldSeed, string siteId, WorldSiteGenerationProfile profile)
+        int worldSeed, string siteId, WorldSiteGenerationProfile profile, IReadOnlyList<WorldSitePort> ports)
     {
         var seed = unchecked(worldSeed * 16777619 + 216613626);
         foreach (var character in siteId)
             seed = unchecked(seed * 31 + character);
         var random = new Random(seed);
-        var bend = (random.NextDouble() - .5) * .16;
-        var head = (random.NextDouble() - .5) * .18;
         var material = profile.Landform == WorldSiteLandform.Wetland
             ? WorldSiteSurfaceId.Mud : WorldSiteSurfaceId.Road;
-        var trails = new List<WorldSiteCorridor>
+        var center = new HuntPoint(.5, .5);
+        var entry = ports.FirstOrDefault(port => port.Entrance) ?? ports.FirstOrDefault();
+        var exit = ports.FirstOrDefault(port => !port.Entrance);
+        var trails = new List<WorldSiteCorridor>();
+
+        if (entry is not null)
         {
-            new("site-main-trail", material, .068,
-            [
-                new HuntPoint(.46 + bend, .94),
-                new HuntPoint(.46 + bend * .7, .72),
-                new HuntPoint(.5, .5),
-                new HuntPoint(.51 + head * .5, .27),
-                new HuntPoint(.51 + head, .06),
-            ]),
-        };
-        // Some forest terrain naturally has side tracks, regardless of whether
-        // the Hunter's Chart branches here. A mountain monastery needn't.
-        if (profile.Landform != WorldSiteLandform.Mountain && random.Next(4) == 0)
+            var points = new List<HuntPoint>
+            {
+                entry.LocalPoint,
+                TrailBend(entry.LocalPoint, center, (random.NextDouble() - .5) * .16),
+                center,
+            };
+            if (exit is not null && exit.EdgeId != entry.EdgeId)
+            {
+                points.Add(TrailBend(center, exit.LocalPoint, (random.NextDouble() - .5) * .16));
+                points.Add(exit.LocalPoint);
+            }
+            trails.Add(new WorldSiteCorridor("site-main-trail", material, .068, points));
+        }
+
+        // The Chart defines where a route may leave the site. All other physical
+        // access ports remain connected to the road, but *extra scenic forks*
+        // are generated only for real local destinations, not from graph degree.
+        foreach (var port in ports)
         {
-            var side = random.Next(2) == 0 ? -1d : 1d;
-            trails.Add(new WorldSiteCorridor("site-side-track", material, .045,
+            if (port.EdgeId == entry?.EdgeId || port.EdgeId == exit?.EdgeId) continue;
+            trails.Add(new WorldSiteCorridor($"site-port-access-{trails.Count}", material, .045,
             [
-                new HuntPoint(.5, .5),
-                new HuntPoint(.5 + side * .18, .4),
-                new HuntPoint(.5 + side * .39, .29),
+                center,
+                TrailBend(center, port.LocalPoint, (random.NextDouble() - .5) * .10),
+                port.LocalPoint,
             ]));
         }
         return trails;
     }
+
+    private static HuntPoint TrailBend(HuntPoint from, HuntPoint to, double offset) =>
+        new(Math.Clamp((from.X + to.X) * .5 - (to.Y - from.Y) * offset, .025, .975),
+            Math.Clamp((from.Y + to.Y) * .5 + (to.X - from.X) * offset, .025, .975));
 
     private static string Compass(double dx, double dy)
     {

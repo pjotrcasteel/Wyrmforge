@@ -148,7 +148,7 @@ public static class WorldSiteLandscapeGenerator
         WorldSiteGeography site, string kind, Random random, IReadOnlyList<WorldSiteObstacle> obstacles,
         List<WorldSiteCorridor> localPaths)
     {
-        if (random.NextDouble() >= .68) return [];
+        if (kind != "forest-fork" && random.NextDouble() >= .68) return [];
 
         const double Width = 950;
         const double Height = 1550;
@@ -158,14 +158,15 @@ public static class WorldSiteLandscapeGenerator
         {
             "mountain-pass" or "mountain-monastery" => "fallen-pilgrim-cache",
             "wyrm-lair" => "scorched-offering",
-            "forest-fork" or "forest-trail" => "forgotten-waystone",
+            "forest-fork" => "overgrown-ruins",
+            "forest-trail" => "forgotten-waystone",
             _ => "abandoned-supplies",
         };
 
-        for (var attempt = 0; attempt < 18; attempt++)
+        for (var attempt = 0; attempt < (kind == "forest-fork" ? 64 : 18); attempt++)
         {
             var angle = random.NextDouble() * Math.PI * 2;
-            var distance = .17 + random.NextDouble() * .13;
+            var distance = kind == "forest-fork" ? .13 + random.NextDouble() * .17 : .17 + random.NextDouble() * .13;
             var pocket = new HuntPoint(.5 + Math.Cos(angle) * distance, .5 + Math.Sin(angle) * distance);
             var from = new Vector2D(origin.X * Width, origin.Y * Height);
             var destination = new Vector2D(pocket.X * Width, pocket.Y * Height);
@@ -312,8 +313,11 @@ public static class WorldSiteLandscapeGenerator
     private static void AddMountainCliffFaces(WorldSiteGeography site,
         IReadOnlyList<WorldSiteCorridor> localPaths, Random random, List<WorldSiteObstacle> obstacles)
     {
-        const int Sections = 20;
-        const double Edge = .012;
+        // Natural rock shelves are broken, tapered and staggered along contour;
+        // a repeated 20-section rectangle wall is neither geology nor a useful
+        // 2.5D height cue. Each exposed step represents 1–3 metres of relief.
+        const int Sections = 18;
+        const double Edge = .023;
         var routes = site.Corridors.Concat(site.ScenicPaths).Concat(localPaths).ToArray();
         var material = site.RegionId == "frost" ? WorldSiteSurfaceId.GlacialIce : WorldSiteSurfaceId.Rock;
         var kind = site.RegionId == "frost" ? "glacier-cliff-face" : "cliff-face";
@@ -325,24 +329,36 @@ public static class WorldSiteLandscapeGenerator
             var phase = random.NextDouble() * Math.PI * 2;
             for (var index = 0; index < Sections; index++)
             {
-                var fromY = Edge + index * (1 - 2 * Edge) / Sections;
-                var toY = Edge + (index + 1) * (1 - 2 * Edge) / Sections;
-                var fromX = .5 + side * (.165 + Math.Sin(phase + index * .44) * .012);
-                var toX = .5 + side * (.165 + Math.Sin(phase + (index + 1) * .44) * .012);
-                var cliff = new WorldSiteObstacle(kind, material, 2.4,
+                // Leave occasional natural breaks and additional safe saddles.
+                // Reserved C# chart and monastery approaches always win.
+                if (random.NextDouble() < .12) continue;
+                var fromY = Edge + index * (1 - 2 * Edge) / Sections + .003;
+                var toY = Edge + (index + 1) * (1 - 2 * Edge) / Sections - .003;
+                var midY = (fromY + toY) * .5;
+                var contour = .179 + Math.Sin(phase + index * .46) * .025;
+                var nextContour = .179 + Math.Sin(phase + (index + 1) * .46) * .025;
+                var lowRelief = .024 + random.NextDouble() * .016;
+                var highRelief = .032 + random.NextDouble() * .016;
+                var fromX = .5 + side * contour;
+                var toX = .5 + side * nextContour;
+                var face = new WorldSiteObstacle(kind, material, 1 + random.NextDouble() * 2,
                 [
-                    new HuntPoint(fromX - .012, fromY),
-                    new HuntPoint(fromX + .012, fromY),
-                    new HuntPoint(toX + .012, toY),
-                    new HuntPoint(toX - .012, toY),
+                    // Ragged inner lip and wider weathered rock beneath it.
+                    new HuntPoint(fromX - side * .006, fromY + .004),
+                    new HuntPoint(.5 + side * ((contour + nextContour) * .5 - .012), midY),
+                    new HuntPoint(toX - side * .003, toY - .002),
+                    new HuntPoint(toX + side * highRelief, toY - .006),
+                    new HuntPoint(.5 + side * ((contour + nextContour) * .5 + highRelief + .008), midY + .007),
+                    new HuntPoint(fromX + side * lowRelief, fromY),
                 ]);
 
-                if (TouchesReservedRoute(cliff, routes) || monastery.Any(building => BoundsOverlap(cliff, building, .025)))
+                if (TouchesReservedRoute(face, routes) ||
+                    monastery.Any(building => BoundsOverlap(face, building, .025)))
                 {
                     continue;
                 }
 
-                obstacles.Add(cliff);
+                obstacles.Add(face);
             }
         }
     }
@@ -385,7 +401,8 @@ public static class WorldSiteLandscapeGenerator
             return "mountain-pass";
         if (node.Habitat is WyrmrealmHabitat.Outskirts or WyrmrealmHabitat.WetForest
             or WyrmrealmHabitat.SnowboundPines or WyrmrealmHabitat.FrozenRoad)
-            return geography.ScenicPaths.Count > 1 ? "forest-fork" : "forest-trail";
+            return (unchecked(geography.WorldSeed * 16777619 + node.Stage * 31 + node.Lane * 131) & 3) == 0
+                ? "forest-fork" : "forest-trail";
         return node.Habitat is WyrmrealmHabitat.DesertedVillage or WyrmrealmHabitat.BuriedHamlet
             ? "village-site" : "historic-site";
     }

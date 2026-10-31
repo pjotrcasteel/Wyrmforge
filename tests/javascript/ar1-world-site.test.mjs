@@ -41,7 +41,7 @@ test('AR1 live diagnostic uses the same C# polygon outline as physical collision
 test('AR1 mountain and lair semantic shapes have distinct physical material identities', () => {
     for (const [kind, expected] of [
         ['cliff', '#42525d'], ['glacier-cliff', '#7d9bac'],
-        ['cliff-face', '#2a3138'], ['glacier-cliff-face', '#506674'],
+        ['cliff-face', '#424c52'], ['glacier-cliff-face', '#657d8b'],
         ['wyrm-rib', '#55434a'], ['ice-spire', '#b1d5e5'],
     ]) {
         const { ctx, colors } = canvas();
@@ -115,4 +115,22 @@ test('AR2 optional C# discovery renders a grounded trace only while geography is
     const off = canvas();
     assert.equal(drawSemanticSiteFloor(off.ctx, ground, 390, 844, false), true);
     assert.ok(!off.colors.includes('#786958'), 'Inactive AR geometry cannot paint optional discoveries');
+});
+
+
+test('AR2 a local side road ends at visible ruins, never an invisible dead end', () => {
+    const ground = {
+        ...site,
+        landscape: { obstacles: [], localPaths: [{ edgeId: 'fire:opening:trace:access', material: 2, width: .028,
+            points: [{ x: .5, y: .5 }, { x: .69, y: .4 }] }], discoveries: [{
+            id: 'fire:opening:ruins', kind: 'overgrown-ruins', materialReward: null,
+            localPoint: { x: .69, y: .4 },
+        }] },
+    };
+    const on = canvas();
+    assert.equal(drawSemanticSiteFloor(on.ctx, ground, 390, 844, true), true);
+    assert.ok(on.colors.includes('#9d9b89'), 'The actual ruins destination must read as broken stone foundations.');
+    const off = canvas();
+    assert.equal(drawSemanticSiteFloor(off.ctx, ground, 390, 844, false), true);
+    assert.ok(!off.colors.includes('#9d9b89'), 'Inactive C# geography must not paint a fictitious ruin.');
 });

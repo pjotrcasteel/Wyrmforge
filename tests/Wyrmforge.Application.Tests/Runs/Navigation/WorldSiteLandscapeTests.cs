@@ -12,6 +12,58 @@ namespace Wyrmforge.Application.Tests.Runs.Navigation;
 public sealed class WorldSiteLandscapeTests
 {
     [TestMethod]
+    public void EverySeededScenicFork_LeadsToReachableRuinsInsteadOfEmptyGround()
+    {
+        const double width = 950, height = 1550;
+        var reviewed = 0;
+        for (var seed = 0; seed < 60; seed++)
+        {
+            foreach (var node in WyrmrealmMapGenerator.GenerateFireHunt(seed, WyrmTier.Wyrm))
+            {
+                var site = node.Geography!;
+                var layout = site.Landscape!;
+                if (layout.Kind != "forest-fork") continue;
+                reviewed++;
+                var ruins = layout.Discoveries.Single(discovery => discovery.Kind == "overgrown-ruins");
+                var branch = layout.LocalPaths.Single(path => path.EdgeId == $"{ruins.Id}:access");
+                Assert.AreEqual(ruins.LocalPoint, branch.Points[^1]);
+                Assert.AreEqual(new HuntPoint(.5, .5), branch.Points[0]);
+                for (var index = 1; index < branch.Points.Count; index++)
+                {
+                    var from = new Vector2D(branch.Points[index - 1].X * width, branch.Points[index - 1].Y * height);
+                    var to = new Vector2D(branch.Points[index].X * width, branch.Points[index].Y * height);
+                    Assert.IsFalse(WorldSiteFootprintCollision.BlocksSegment(layout, from, to, width, height, 14),
+                        $"Seed {seed}, {site.SiteId}: the ruins approach must stay physically open.");
+                }
+            }
+        }
+        Assert.IsGreaterThan(10, reviewed, "A visible forest fork should lead to a discoverable ruin.");
+    }
+
+    [TestMethod]
+    public void MountainEscarpments_AreNaturalIrregularLedgesOfOneToThreeMetres()
+    {
+        var reviewed = 0;
+        for (var seed = 0; seed < 40; seed++)
+        {
+            foreach (var node in WyrmrealmMapGenerator.GenerateFireHunt(seed, WyrmTier.Elder))
+            {
+                var layout = node.Geography!.Landscape!;
+                if (layout.Kind is not ("mountain-monastery" or "mountain-pass")) continue;
+                reviewed++;
+                var faces = layout.Obstacles.Where(obstacle => obstacle.Kind is "cliff-face" or "glacier-cliff-face").ToArray();
+                Assert.IsGreaterThan(5, faces.Length);
+                Assert.IsTrue(faces.All(face => face.Height >= 1 && face.Height <= 3));
+                Assert.IsTrue(faces.All(face => face.Outline.Count >= 6),
+                    "Rock faces need irregular outlines, never four-corner wall strips.");
+                Assert.IsTrue(faces.Select(face => Math.Round(face.Height, 1)).Distinct().Count() > 1,
+                    "An entire mountain must not be a uniform-height fence.");
+            }
+        }
+        Assert.IsGreaterThan(5, reviewed);
+    }
+
+    [TestMethod]
     public void OptionalDiscoveries_AreDeterministicAndGenuinelyReachableThroughCSharpCollision()
     {
         const double width = 950, height = 1550;
@@ -297,9 +349,15 @@ public sealed class WorldSiteLandscapeTests
         foreach (var node in forests)
         {
             var site = node.Geography!;
-            Assert.AreEqual(2, site.ScenicPaths.Count);
+            Assert.IsTrue(site.Landscape!.Discoveries.Any(discovery => discovery.Kind == "overgrown-ruins"),
+                "A forest fork needs a real ruins destination, not a wandering dead end.");
             Assert.IsTrue(site.ScenicPaths.All(path => site.Ports.All(port => port.EdgeId != path.EdgeId)),
-                "Visible paths must be local generation, not copies of graph edges.");
+                "Path shapes must remain local generation, even though they reach real Chart ports.");
+            foreach (var port in site.Ports)
+            {
+                Assert.IsTrue(site.ScenicPaths.Any(path => path.Points[0] == port.LocalPoint ||
+                    path.Points[^1] == port.LocalPoint), "Every painted road endpoint must be a legal Chart access port.");
+            }
             Assert.AreEqual(site.Ports.Count, site.Ports.Select(port => port.EdgeId).Distinct().Count());
         }
     }
