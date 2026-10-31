@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { composeWorldSiteNeutralAlbedo, worldSiteMaterialModeEnabled } from
+import { composeWorldSiteNeutralAlbedo, stitchWorldSiteSourceBands, worldSiteMaterialModeEnabled } from
     '../../src/Wyrmforge.Presentation.Web/wwwroot/js/world-site-neutral-albedo.js';
 
 const image = (r, g, b, width = 32, height = 32) => {
@@ -72,4 +72,18 @@ test('AR4-A2 material review is explicitly opt-in, not the normal Hunt or AR3 se
         if (old === undefined) delete globalThis.location;
         else globalThis.location = old;
     }
+});
+
+test('AR4-A2 stitches original absolute-world source windows without a 256px repeat or phase reset', () => {
+    const top = image(45, 60, 75, 32, 800);
+    const bottom = image(140, 110, 90, 32, 768);
+    const source = stitchWorldSiteSourceBands([top, bottom]);
+    assert.equal(source.width, 32);
+    assert.equal(source.height, 1568);
+    assert.deepEqual([...source.data.slice(0, 4)], [45, 60, 75, 255]);
+    assert.deepEqual([...source.data.slice(799 * 32 * 4, 799 * 32 * 4 + 4)], [45, 60, 75, 255]);
+    assert.deepEqual([...source.data.slice(800 * 32 * 4, 800 * 32 * 4 + 4)], [140, 110, 90, 255]);
+    assert.deepEqual([...source.data.slice(1567 * 32 * 4, 1567 * 32 * 4 + 4)], [140, 110, 90, 255]);
+    assert.equal(stitchWorldSiteSourceBands([top, image(0, 0, 0, 32, 800)]), null);
+    assert.equal(stitchWorldSiteSourceBands([top]), null);
 });
