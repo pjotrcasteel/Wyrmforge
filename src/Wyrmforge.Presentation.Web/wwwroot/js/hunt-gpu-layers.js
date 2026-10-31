@@ -49,7 +49,12 @@ export function huntLayerCapture(layer, player, dragonDeath = null) {
     // creature-specific shadow or a moving-light-dependent impostor.
     // Explicit authored 2.5D meshes/heightfields always take precedence.
     const occluderHeightPx = layer.kind === 'masonry' ? undefined : Math.max(4, Math.round(size * .6 / 4) * 4);
+    const physicalVolume = layer.kind === 'masonry' && layer.barrier && layer.physicalHeightPx > 0
+        ? { x: layer.barrier.x * layer.width, y: layer.barrier.y * layer.height,
+            width: layer.barrier.width * layer.width, depth: layer.barrier.height * layer.height,
+            height: layer.physicalHeightPx } : null;
     return { id: 'hunt-' + id, x: actor.x - size / 2, y: actor.y - size * .75, size,
+        ...(physicalVolume ? { physicalVolume } : {}),
         ...(footFraction !== undefined ? { footFraction } : {}),
         ...(occluderHeightPx !== undefined ? { occluderHeightPx } : {}) };
 }
