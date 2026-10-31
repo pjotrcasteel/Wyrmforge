@@ -121,16 +121,24 @@ test('World-upright alpha casters preserve source pixels and meet the authored f
         }
     }
     assert.throws(() => huntCaptureSilhouetteCaster(0, 0, 160, 160, 0), RangeError);
+    assert.throws(() => huntCaptureSilhouetteCaster(0, 0, 160, 160, .8, 0), RangeError);
+    assert.throws(() => huntCaptureSilhouetteCaster(0, 0, 160, 160, .8, NaN), RangeError);
+    const physical = huntCaptureSilhouetteCaster(100, 200, 160, 160, .825, 44);
+    assert.equal(physical.occluderScale[1], 44 / 48,
+        'The collision/asset world height controls the shadow, not transparent capture padding.');
+    assert.equal(physical.occluderScale[0], 160 / 48,
+        'The alpha source maintains its full original width and UVs.');
+    assert.ok(Math.abs(physical.occluderPosition[2] + .175 * 44 / 48) < 1e-12);
 });
 
 test('A padded enemy silhouette has an independent physical height, not a light-height clamp', async () => {
     const { huntCaptureSilhouetteCaster } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js');
-    const caster = huntCaptureSilhouetteCaster(20, 100, 160, 160, .9);
-    const visibleOpaqueFraction = .55;
-    const opaqueWorldHeight = visibleOpaqueFraction * caster.occluderScale[1];
-    assert.ok(Math.abs(opaqueWorldHeight - .55 * 160 * Math.SQRT2 / 48) < 1e-12);
-    assert.ok(opaqueWorldHeight > 24 / 48,
-        'A tall Hollowed must not physically shrink just because a Fireball flies near the floor.');
+    const caster = huntCaptureSilhouetteCaster(20, 100, 160, 160, .9, 44);
+    assert.equal(caster.occluderScale[1], 44 / 48,
+        'Physical caster dimensions must come from the standing-body contract.');
+    assert.equal(caster.occluderScale[0], 160 / 48);
+    assert.ok(caster.occluderScale[1] < 160 * Math.SQRT2 / 48,
+        'Transparent capture padding is not physical world height.');
 });
 
 test('Moving and differently elevated lights cannot resize or reorient an actor silhouette', async () => {
@@ -167,6 +175,8 @@ test('mage, Warden and Wyrm retain their own painted foot line without ground pe
     ]) {
         const actor = layer.enemy ?? layer.dragon ?? { x: 400, y: 320, radius: 12 };
         const capture = huntLayerCapture(layer, actor);
+        assert.equal(capture.occluderHeightPx, 4 * actor.radius,
+            'Standing fallbacks use physical collision diameter, independent of the art capture size.');
         const mesh = huntSurfaceRenderable(capture.id, capture.x, capture.y,
             capture.size, capture.size, true, { footFraction: capture.footFraction });
         assert.equal(mesh.geometry, 'hunt-billboard');
