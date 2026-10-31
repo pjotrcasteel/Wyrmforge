@@ -59,16 +59,16 @@ test('AR4-A1 visual interpolation only samples immutable C# site-space weights',
     assert.equal(sampleWorldSiteMaterialWeights(preview, NaN, 0), null);
 });
 
-test('AR4-A1 source choices expose unavailable classes rather than invented textures', () => {
+test('AR4-A1 source approvals expose unavailable classes rather than invented textures', () => {
     const defaultBindings = worldSiteSourceBindings(world);
-    assert.deepEqual(defaultBindings.map(binding => binding.sourceReady),
+    assert.deepEqual(defaultBindings.map(binding => binding.sourceApproved),
         [true, true, false, true, false, false, false]);
     assert.equal(defaultBindings[2].sourceFamily, 'soil');
     assert.equal(defaultBindings[4].sourceFamily, null);
     assert.equal(defaultBindings[5].sourceGate, 'water-not-approved');
     const monastery = worldSiteSourceBindings({ landscape: { kind: 'mountain-monastery' } });
     assert.equal(monastery[2].sourceFamily, 'flagstone');
-    assert.equal(monastery[2].sourceReady, false, 'whole-stone boundaries cannot be faked by pixel alpha');
+    assert.equal(monastery[2].sourceApproved, false, 'whole-stone boundaries cannot be faked by pixel alpha');
 });
 
 test('AR4-A1 cache identity is anchored to site, grid, source revision, not the camera', () => {
