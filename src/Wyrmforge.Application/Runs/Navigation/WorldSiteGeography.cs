@@ -201,6 +201,7 @@ public static class WorldSiteGeographyProjection
             var ascent = Enumerable.Range(0, 25)
                 .Select(index =>
                 {
+                    if (index == 24) return center;
                     var t = index / 24d;
                     return new HuntPoint(.5 + swing * Math.Sin(t * Math.PI * 2), .965 - .465 * t);
                 })
