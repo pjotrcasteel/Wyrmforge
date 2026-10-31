@@ -12,7 +12,9 @@ public static class LightingSourceCatalog
     private static readonly IReadOnlyDictionary<SpellSchool, LightSourceProfile> Schools =
         new Dictionary<SpellSchool, LightSourceProfile>
         {
-            [SpellSchool.Fire] = new("#ff7835", 6, 144),
+            // G1-calibrated reach and direct energy for the physically attenuated shared GPU light.
+            // The old Hunt profile (6 / 144 px) lit only a contact smear behind alpha actors.
+            [SpellSchool.Fire] = new("#ff7835", 24, 320),
             [SpellSchool.Frost] = new("#8bdfff", 0.8, 144),
             [SpellSchool.Storm] = new("#ffe36a", 1, 144),
             [SpellSchool.Arcane] = new("#b79aff", 0.8, 144),
