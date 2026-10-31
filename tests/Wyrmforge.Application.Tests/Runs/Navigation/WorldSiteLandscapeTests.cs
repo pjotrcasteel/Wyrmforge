@@ -12,6 +12,123 @@ namespace Wyrmforge.Application.Tests.Runs.Navigation;
 public sealed class WorldSiteLandscapeTests
 {
     [TestMethod]
+    public void EverySeededScenicFork_LeadsToReachableRuinsInsteadOfEmptyGround()
+    {
+        const double width = 950, height = 1550;
+        var reviewed = 0;
+        for (var seed = 0; seed < 60; seed++)
+        {
+            foreach (var node in WyrmrealmMapGenerator.GenerateFireHunt(seed, WyrmTier.Wyrm))
+            {
+                var site = node.Geography!;
+                var layout = site.Landscape!;
+                if (layout.Kind != "forest-fork") continue;
+                reviewed++;
+                var ruins = layout.Discoveries.Single(discovery => discovery.Kind == "overgrown-ruins");
+                var branch = layout.LocalPaths.Single(path => path.EdgeId == $"{ruins.Id}:access");
+                Assert.AreEqual(ruins.LocalPoint, branch.Points[^1]);
+                Assert.AreEqual(new HuntPoint(.5, .5), branch.Points[0]);
+                for (var index = 1; index < branch.Points.Count; index++)
+                {
+                    var from = new Vector2D(branch.Points[index - 1].X * width, branch.Points[index - 1].Y * height);
+                    var to = new Vector2D(branch.Points[index].X * width, branch.Points[index].Y * height);
+                    Assert.IsFalse(WorldSiteFootprintCollision.BlocksSegment(layout, from, to, width, height, 14),
+                        $"Seed {seed}, {site.SiteId}: the ruins approach must stay physically open.");
+                }
+            }
+        }
+        Assert.IsGreaterThan(10, reviewed, "A visible forest fork should lead to a discoverable ruin.");
+    }
+
+    [TestMethod]
+    public void MountainEscarpments_AreNaturalIrregularLedgesOfOneToThreeMetres()
+    {
+        var reviewed = 0;
+        for (var seed = 0; seed < 40; seed++)
+        {
+            foreach (var node in WyrmrealmMapGenerator.GenerateFireHunt(seed, WyrmTier.Elder))
+            {
+                var layout = node.Geography!.Landscape!;
+                if (layout.Kind is not ("mountain-monastery" or "mountain-pass")) continue;
+                reviewed++;
+                var faces = layout.Obstacles.Where(obstacle => obstacle.Kind is "cliff-face" or "glacier-cliff-face").ToArray();
+                Assert.IsGreaterThan(1, faces.Length);
+                Assert.IsTrue(faces.All(face => face.Height >= 1 && face.Height <= 3));
+                Assert.IsTrue(faces.All(face => face.Outline.Count >= 6),
+                    "Rock faces need irregular outlines, never four-corner wall strips.");
+                Assert.IsTrue(faces.Any(face => face.Outline.Count > 6 &&
+                    face.Outline.Max(point => point.Y) - face.Outline.Min(point => point.Y) > .08),
+                    "A natural escarpment must connect rock shelves into a long continuous ledge.");
+                Assert.IsTrue(faces.Select(face => Math.Round(face.Height, 1)).Distinct().Count() > 1,
+                    "An entire mountain must not be a uniform-height fence.");
+            }
+        }
+        Assert.IsGreaterThan(5, reviewed);
+    }
+
+    [TestMethod]
+    public void OptionalDiscoveries_AreDeterministicAndGenuinelyReachableThroughCSharpCollision()
+    {
+        const double width = 950, height = 1550;
+        var discoveries = 0;
+        var empty = 0;
+        var rewarded = 0;
+        for (var seed = 0; seed < 32; seed++)
+        {
+            var nodes = WyrmrealmMapGenerator.GenerateFireHunt(seed, WyrmTier.Wyrm);
+            var replay = WyrmrealmMapGenerator.GenerateFireHunt(seed, WyrmTier.Wyrm);
+            foreach (var node in nodes)
+            {
+                var site = node.Geography!;
+                var layout = site.Landscape!;
+                var repeated = replay.Single(other => other.Id == node.Id).Geography!.Landscape!;
+                Assert.AreEqual(JsonSerializer.Serialize(layout.Discoveries), JsonSerializer.Serialize(repeated.Discoveries));
+                foreach (var discovery in layout.Discoveries)
+                {
+                    discoveries++;
+                    Assert.AreEqual($"{site.SiteId}:trace", discovery.Id);
+                    Assert.IsTrue(layout.LocalPaths.Any(path => path.EdgeId == $"{discovery.Id}:access"),
+                        "An optional site needs an actual C# route, not a UI marker.");
+                    var from = new Vector2D(width * .5, height * .5);
+                    var to = new Vector2D(width * discovery.LocalPoint.X, height * discovery.LocalPoint.Y);
+                    Assert.IsFalse(WorldSiteFootprintCollision.BlocksSegment(layout, from, to, width, height, radius: 17),
+                        $"Seed {seed}, {site.SiteId}: trace is behind an impassable cliff or building.");
+                    if (discovery.MaterialReward is null) empty++;
+                    else rewarded++;
+                }
+            }
+        }
+        Assert.IsGreaterThan(10, discoveries, "World exploration needs discoverable optional sites.");
+        Assert.IsGreaterThan(0, empty, "Some human traces should be honestly picked clean.");
+        Assert.IsGreaterThan(0, rewarded, "Other sites should contain tier-legal common salvage.");
+    }
+
+    [TestMethod]
+    public void ClaimedDiscovery_IsPaidOnceAndNotRecreatedAfterRefugeReturn()
+    {
+        const double width = 950, height = 1550;
+        var match = Enumerable.Range(0, 100)
+            .SelectMany(seed => WyrmrealmMapGenerator.GenerateFireHunt(seed, WyrmTier.Wyrm)
+                .Where(node => node.Type == WyrmrealmNodeType.Combat)
+                .Select(node => (Seed: seed, Node: node,
+                    Discovery: node.Geography!.Landscape!.Discoveries.FirstOrDefault(found => found.MaterialReward is not null))))
+            .First(candidate => candidate.Discovery is not null);
+        var discovery = match.Discovery!;
+        var environment = ArenaEnvironmentState.Create(match.Seed, match.Node, worldFirstGeography: true);
+        var location = new Vector2D(discovery.LocalPoint.X * width, discovery.LocalPoint.Y * height);
+        var collected = environment.TryCollect(location, width, height, playerRadius: 0, needsHealing: false);
+        Assert.IsNotNull(collected);
+        Assert.AreEqual(discovery.Id, collected.DiscoveryId);
+        Assert.AreEqual($"material:{discovery.MaterialReward}", collected.Kind);
+        Assert.IsNull(environment.TryCollect(location, width, height, playerRadius: 0, needsHealing: false)?.DiscoveryId);
+
+        var claimed = new HashSet<string>(StringComparer.Ordinal) { discovery.Id };
+        var revisited = ArenaEnvironmentState.Create(match.Seed, match.Node, worldFirstGeography: true,
+            claimedDiscoveries: claimed);
+        Assert.IsFalse(revisited.Snapshot().Supplies.Any(supply => supply.DiscoveryId == discovery.Id));
+    }
+
+    [TestMethod]
     public void FireHunt_HasRealForestForkMountainPassAndWyrmLairAcrossWorldSeeds()
     {
         var kinds = new HashSet<string>(StringComparer.Ordinal);
@@ -119,7 +236,14 @@ public sealed class WorldSiteLandscapeTests
             CollectionAssert.AreEqual(normalSnapshot.Geography.Ports.ToArray(), physicalSnapshot.Geography.Ports.ToArray());
             Assert.IsNull(normalSnapshot.Geography.Landscape);
             Assert.IsNotNull(physicalSnapshot.Geography.Landscape);
-            Assert.AreEqual(normalSnapshot.Supplies.Count, physicalSnapshot.Supplies.Count);
+            Assert.AreEqual(normalSnapshot.Supplies.Count,
+                physicalSnapshot.Supplies.Count(supply => supply.DiscoveryId is null),
+                "World-first preview must preserve every legacy supply unchanged.");
+            var expectedFinds = node.Type == WyrmrealmNodeType.Combat
+                ? physicalSnapshot.Geography.Landscape.Discoveries.Count(discovery => discovery.MaterialReward is not null)
+                : 0;
+            Assert.AreEqual(expectedFinds, physicalSnapshot.Supplies.Count(supply => supply.DiscoveryId is not null),
+                "Only C#-authorized unclaimed discoveries may add optional pickups.");
             Assert.IsTrue(normalSnapshot.Props.All(prop => prop.Kind is "barrel" or "crate"));
             Assert.IsTrue(physicalSnapshot.Props.All(prop => prop.Kind is "barrel" or "crate"),
                 "The preview must retain only existing C#-authorized destructible salvage.");
@@ -228,11 +352,46 @@ public sealed class WorldSiteLandscapeTests
         foreach (var node in forests)
         {
             var site = node.Geography!;
-            Assert.AreEqual(2, site.ScenicPaths.Count);
-            Assert.IsTrue(site.ScenicPaths.All(path => site.Ports.All(port => port.EdgeId != path.EdgeId)),
-                "Visible paths must be local generation, not copies of graph edges.");
+            Assert.IsTrue(site.Landscape!.Discoveries.Any(discovery => discovery.Kind == "overgrown-ruins"),
+                "A forest fork needs a real ruins destination, not a wandering dead end.");
+            Assert.AreEqual(1, site.ScenicPaths.Count,
+                "A Chart junction must not generate radial roads into every abstract exit.");
+            var regionalRoad = site.ScenicPaths.Single();
+            Assert.AreEqual("site-main-trail", regionalRoad.EdgeId);
+            Assert.AreEqual(new HuntPoint(.5, .5), regionalRoad.Points[2]);
+            Assert.IsTrue(site.Landscape.LocalPaths.Any(path => path.EdgeId.EndsWith(":trace:access", StringComparison.Ordinal)),
+                "A real C# ruins destination, not Chart degree, is what justifies the scenic branch.");
             Assert.AreEqual(site.Ports.Count, site.Ports.Select(port => port.EdgeId).Distinct().Count());
         }
+    }
+
+    [TestMethod]
+    public void MountainMonastery_RoadsAscendFromSouthernValleyToWindingGateWithoutChartSpokes()
+    {
+        var reviewed = 0;
+        for (var seed = 0; seed < 65; seed++)
+        {
+            foreach (var node in WyrmrealmMapGenerator.GenerateFireHunt(seed, WyrmTier.Elder))
+            {
+                var site = node.Geography!;
+                if (site.Landscape?.Kind != "mountain-monastery") continue;
+                reviewed++;
+                Assert.AreEqual(1, site.ScenicPaths.Count,
+                    "The count of Chart exits must never turn a mountain into a road star.");
+                var road = site.ScenicPaths.Single();
+                Assert.AreEqual("site-main-trail", road.EdgeId);
+                Assert.AreEqual(25, road.Points.Count);
+                Assert.AreEqual(.965, road.Points[0].Y, 1e-9, "Main path enters from the southern valley.");
+                Assert.AreEqual(new HuntPoint(.5, .5), road.Points[^1]);
+                Assert.IsTrue(road.Points.Any(point => point.X < .49) &&
+                    road.Points.Any(point => point.X > .51), "The ascending valley path should curve naturally.");
+                var monastery = site.Landscape.LocalPaths.Single(path => path.EdgeId == "monastery-approach");
+                Assert.AreEqual(road.Points[^1], monastery.Points[0],
+                    "The scenic ascent must join the actual C# monastery approach.");
+                Assert.IsTrue(site.ScenicPaths.All(path => !path.EdgeId.StartsWith("site-port-access-", StringComparison.Ordinal)));
+            }
+        }
+        Assert.IsGreaterThan(4, reviewed);
     }
 
     [TestMethod]
@@ -324,7 +483,7 @@ public sealed class WorldSiteLandscapeTests
 
             reviewed++;
             var cliffFaces = layout.Obstacles.Where(obstacle => obstacle.Kind == "cliff-face").ToArray();
-            Assert.IsGreaterThan(5, cliffFaces.Length, $"seed {seed}: highland needs real C# cliff barriers");
+            Assert.IsGreaterThan(1, cliffFaces.Length, $"seed {seed}: highland needs real C# cliff barriers on both sides");
             Assert.IsTrue(cliffFaces.Any(obstacle => obstacle.Outline.Average(point => point.X) < .5));
             Assert.IsTrue(cliffFaces.Any(obstacle => obstacle.Outline.Average(point => point.X) > .5));
             var faceOnly = new WorldSiteLandscapeRecipe(layout.Kind, cliffFaces);

@@ -149,6 +149,13 @@ public sealed class WorldFirstArenaBrowserTests : PageTest
             renderedSiteId, new() { Timeout = 45000 });
         await Page.ScreenshotAsync(new() { Path = Path.Combine(output, $"ar1-{kind}-geography-review-{width}.png"),
             FullPage = false });
+        // Capture the optional AR2 discovery in the *real* playable Hunt whenever
+        // this seed has one. No synthetic fixture or lab renderer is substituted.
+        if (await Page.EvaluateAsync<int>("() => window.__wyrmforgeAr0Geography.discoveryCount") > 0)
+        {
+            await Page.ScreenshotAsync(new() { Path = Path.Combine(output,
+                $"ar2-{kind}-discovery-review-{width}.png"), FullPage = false });
+        }
         await Page.EvaluateAsync(@"() => {
             const url = new URL(location.href);
             url.searchParams.delete('ar1Review');

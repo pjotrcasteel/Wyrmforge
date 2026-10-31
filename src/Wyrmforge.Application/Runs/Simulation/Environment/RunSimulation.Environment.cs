@@ -13,7 +13,9 @@ public sealed partial class RunSimulation
         if (collected.Kind.StartsWith("material:", StringComparison.Ordinal) &&
             Enum.TryParse<HuntMaterialId>(collected.Kind["material:".Length..], out var material))
         {
-            materialCargoState.Collect(material);
+            // A return to refuge must not re-pay a discovered side cache.
+            if (collected.DiscoveryId is null || collectedSiteDiscoveryIds.Add(collected.DiscoveryId))
+                materialCargoState.Collect(material);
             return;
         }
 

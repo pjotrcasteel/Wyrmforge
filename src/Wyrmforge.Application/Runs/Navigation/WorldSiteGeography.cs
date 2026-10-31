@@ -151,7 +151,7 @@ public static class WorldSiteGeographyProjection
             geography = geography with
             {
                 GenerationProfile = profile,
-                ScenicPaths = CreateScenicPaths(worldSeed, geography.SiteId, profile),
+                ScenicPaths = CreateScenicPaths(worldSeed, geography.SiteId, profile, geography.Ports),
             };
             var landscape = WorldSiteLandscapeGenerator.Generate(node, geography);
             var localSurface = landscape.Kind switch
@@ -179,41 +179,57 @@ public static class WorldSiteGeographyProjection
     // Visible trails follow the site's seeded landform, not the number/directions
     // of Chart edges. Ports still determine actual reachable destinations.
     private static IReadOnlyList<WorldSiteCorridor> CreateScenicPaths(
-        int worldSeed, string siteId, WorldSiteGenerationProfile profile)
+        int worldSeed, string siteId, WorldSiteGenerationProfile profile, IReadOnlyList<WorldSitePort> ports)
     {
         var seed = unchecked(worldSeed * 16777619 + 216613626);
         foreach (var character in siteId)
             seed = unchecked(seed * 31 + character);
         var random = new Random(seed);
-        var bend = (random.NextDouble() - .5) * .16;
-        var head = (random.NextDouble() - .5) * .18;
         var material = profile.Landform == WorldSiteLandform.Wetland
             ? WorldSiteSurfaceId.Mud : WorldSiteSurfaceId.Road;
-        var trails = new List<WorldSiteCorridor>
+        var center = new HuntPoint(.5, .5);
+
+        // Chart connections are travel permissions, not physical roads. The
+        // landscape owns one believable regional trail regardless of graph degree;
+        // only real site destinations may introduce additional paths.
+        if (profile.Landform == WorldSiteLandform.Mountain &&
+            profile.Landmark == WorldSiteLandmark.Monastery)
         {
-            new("site-main-trail", material, .068,
-            [
-                new HuntPoint(.46 + bend, .94),
-                new HuntPoint(.46 + bend * .7, .72),
-                new HuntPoint(.5, .5),
-                new HuntPoint(.51 + head * .5, .27),
-                new HuntPoint(.51 + head, .06),
-            ]),
-        };
-        // Some forest terrain naturally has side tracks, regardless of whether
-        // the Hunter's Chart branches here. A mountain monastery needn't.
-        if (profile.Landform != WorldSiteLandform.Mountain && random.Next(4) == 0)
-        {
-            var side = random.Next(2) == 0 ? -1d : 1d;
-            trails.Add(new WorldSiteCorridor("site-side-track", material, .045,
-            [
-                new HuntPoint(.5, .5),
-                new HuntPoint(.5 + side * .18, .4),
-                new HuntPoint(.5 + side * .39, .29),
-            ]));
+            // Enter from the low southern valley, meander gently uphill, and
+            // join the separately authored switchback to the monastery gate.
+            var swing = (random.Next(2) == 0 ? -1 : 1) * (.032 + random.NextDouble() * .012);
+            var ascent = Enumerable.Range(0, 25)
+                .Select(index =>
+                {
+                    if (index == 24) return center;
+                    var t = index / 24d;
+                    return new HuntPoint(.5 + swing * Math.Sin(t * Math.PI * 2), .965 - .465 * t);
+                })
+                .ToArray();
+            return [new WorldSiteCorridor("site-main-trail", material, .04, ascent)];
         }
-        return trails;
+
+        var entry = ports.FirstOrDefault(port => port.Entrance) ?? ports.FirstOrDefault();
+        var exit = ports.FirstOrDefault(port => !port.Entrance && port.EdgeId != entry?.EdgeId);
+        var from = entry?.LocalPoint ?? new HuntPoint(.5, .965);
+        // A terminal site may lie on a regional route even if the abstract
+        // Chart has no next node. Continue to the opposite map boundary.
+        var to = exit?.LocalPoint ?? new HuntPoint(
+            Math.Clamp(1 - from.X, .025, .975), Math.Clamp(1 - from.Y, .025, .975));
+
+        return [new WorldSiteCorridor("site-main-trail", material, .06,
+        [
+            from,
+            TrailBend(from, center, (random.NextDouble() - .5) * .16),
+            center,
+            TrailBend(center, to, (random.NextDouble() - .5) * .16),
+            to,
+        ])];
     }
+
+    private static HuntPoint TrailBend(HuntPoint from, HuntPoint to, double offset) =>
+        new(Math.Clamp((from.X + to.X) * .5 - (to.Y - from.Y) * offset, .025, .975),
+            Math.Clamp((from.Y + to.Y) * .5 + (to.X - from.X) * offset, .025, .975));
 
     private static string Compass(double dx, double dy)
     {

@@ -3,7 +3,11 @@ using Wyrmforge.Application.Runs.Navigation;
 
 namespace Wyrmforge.Application.Runs.Simulation.Snapshots;
 
-public sealed record ArenaSupplyRenderSnapshot(string Kind, double X, double Y, bool Open);
+public sealed record ArenaSupplyRenderSnapshot(string Kind, double X, double Y, bool Open)
+{
+    /// <summary>Stable C# site identity for one-time optional finds; null for ordinary supplies.</summary>
+    public string? DiscoveryId { get; init; }
+}
 
 public sealed record ArenaBarrierRenderSnapshot(double X, double Y, double Width, double Height, bool Open, string Kind);
 

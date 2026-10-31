@@ -1,4 +1,5 @@
 using Wyrmforge.Domain.Combat.Geometry;
+using Wyrmforge.Domain.Progression.Signature;
 using Wyrmforge.Application.Runs.Navigation;
 
 namespace Wyrmforge.Application.Runs.Navigation;
@@ -18,6 +19,9 @@ public sealed record WorldSiteTerrainPatch(
     double Slope,
     IReadOnlyList<HuntPoint> Outline);
 
+/// <summary>A seed-stable optional point of interest. Reward identity belongs to this physical site, not to renderer art.</summary>
+public sealed record WorldSiteDiscovery(string Id, string Kind, HuntPoint LocalPoint, HuntMaterialId? MaterialReward);
+
 /// <summary>A landmark-shaped site plan, not a new simulation or rendering engine.</summary>
 public sealed record WorldSiteLandscapeRecipe(
     string Kind,
@@ -28,6 +32,9 @@ public sealed record WorldSiteLandscapeRecipe(
 
     /// <summary>Local access paths chosen by the site generator, unrelated to Chart graph edges.</summary>
     public IReadOnlyList<WorldSiteCorridor> LocalPaths { get; init; } = [];
+
+    /// <summary>Optional grounded sites, possibly empty; the Hunt decides whether an unclaimed reward can be collected.</summary>
+    public IReadOnlyList<WorldSiteDiscovery> Discoveries { get; init; } = [];
 }
 
 /// <summary>Deterministic local scenery from world-map habitat and landmark metadata, without consuming combat or reward RNG.</summary>
@@ -126,11 +133,57 @@ public static class WorldSiteLandscapeGenerator
         if (mountain)
             AddMountainCliffFaces(geography, localPaths, random, obstacles);
 
+        // Small seeded side sites share the same C# collision footprints and legal roads.
+        // A trace is not a guaranteed reward: some places have already been picked clean.
+        var discoveries = AddOptionalDiscoveries(geography, kind, random, obstacles, localPaths);
         return new WorldSiteLandscapeRecipe(kind, obstacles)
         {
             TerrainPatches = terrainPatches,
             LocalPaths = localPaths,
+            Discoveries = discoveries,
         };
+    }
+
+    private static IReadOnlyList<WorldSiteDiscovery> AddOptionalDiscoveries(
+        WorldSiteGeography site, string kind, Random random, IReadOnlyList<WorldSiteObstacle> obstacles,
+        List<WorldSiteCorridor> localPaths)
+    {
+        if (kind != "forest-fork" && random.NextDouble() >= .68) return [];
+
+        const double Width = 950;
+        const double Height = 1550;
+        var layout = new WorldSiteLandscapeRecipe(kind, obstacles);
+        var origin = new HuntPoint(.5, .5);
+        var traceKind = kind switch
+        {
+            "mountain-pass" or "mountain-monastery" => "fallen-pilgrim-cache",
+            "wyrm-lair" => "scorched-offering",
+            "forest-fork" => "overgrown-ruins",
+            "forest-trail" => "forgotten-waystone",
+            _ => "abandoned-supplies",
+        };
+
+        for (var attempt = 0; attempt < (kind == "forest-fork" ? 64 : 18); attempt++)
+        {
+            var angle = random.NextDouble() * Math.PI * 2;
+            var distance = kind == "forest-fork" ? .13 + random.NextDouble() * .17 : .17 + random.NextDouble() * .13;
+            var pocket = new HuntPoint(.5 + Math.Cos(angle) * distance, .5 + Math.Sin(angle) * distance);
+            var from = new Vector2D(origin.X * Width, origin.Y * Height);
+            var destination = new Vector2D(pocket.X * Width, pocket.Y * Height);
+            if (pocket.X is < .1 or > .9 || pocket.Y is < .1 or > .9 ||
+                WorldSiteFootprintCollision.BlocksSegment(layout, from, destination, Width, Height, radius: 17))
+            {
+                continue;
+            }
+
+            var id = $"{site.SiteId}:trace";
+            localPaths.Add(new WorldSiteCorridor($"{id}:access", WorldSiteSurfaceId.Road, .028, [origin, pocket]));
+            // Common salvage only: a site detour cannot bypass Hunt-tier rarity eligibility.
+            var material = random.NextDouble() < .43 ? HuntMaterialId.CharredScrap : (HuntMaterialId?)null;
+            return [new WorldSiteDiscovery(id, traceKind, pocket, material)];
+        }
+
+        return [];
     }
 
     // Connected foothill/shoulder/crest ribbons follow one seeded mountain
@@ -260,8 +313,11 @@ public static class WorldSiteLandscapeGenerator
     private static void AddMountainCliffFaces(WorldSiteGeography site,
         IReadOnlyList<WorldSiteCorridor> localPaths, Random random, List<WorldSiteObstacle> obstacles)
     {
-        const int Sections = 20;
-        const double Edge = .012;
+        // A natural escarpment is one contour with occasional saddles and trail
+        // breaks, not a fence assembled from separate rectangular pillars.
+        // Merge successive collision-safe rock faces into continuous jagged shelves.
+        const int Sections = 18;
+        const double Edge = .023;
         var routes = site.Corridors.Concat(site.ScenicPaths).Concat(localPaths).ToArray();
         var material = site.RegionId == "frost" ? WorldSiteSurfaceId.GlacialIce : WorldSiteSurfaceId.Rock;
         var kind = site.RegionId == "frost" ? "glacier-cliff-face" : "cliff-face";
@@ -271,27 +327,61 @@ public static class WorldSiteLandscapeGenerator
         foreach (var side in new[] { -1d, 1d })
         {
             var phase = random.NextDouble() * Math.PI * 2;
+            var continuousFaces = new List<WorldSiteObstacle>();
+
+            void FlushRockShelf()
+            {
+                if (continuousFaces.Count == 0) return;
+
+                // Three points per segment trace the uphill lip; the opposite
+                // contour returns downhill. There are no internal fence seams.
+                var contour = continuousFaces.SelectMany(face => face.Outline.Take(3))
+                    .Concat(continuousFaces.AsEnumerable().Reverse().SelectMany(face => face.Outline.Skip(3)))
+                    .ToArray();
+                var shelf = new WorldSiteObstacle(kind, material, 1 + random.NextDouble() * 2, contour);
+                if (!TouchesReservedRoute(shelf, routes) &&
+                    !monastery.Any(building => BoundsOverlap(shelf, building, .025)))
+                {
+                    obstacles.Add(shelf);
+                }
+                continuousFaces.Clear();
+            }
+
             for (var index = 0; index < Sections; index++)
             {
-                var fromY = Edge + index * (1 - 2 * Edge) / Sections;
-                var toY = Edge + (index + 1) * (1 - 2 * Edge) / Sections;
-                var fromX = .5 + side * (.165 + Math.Sin(phase + index * .44) * .012);
-                var toX = .5 + side * (.165 + Math.Sin(phase + (index + 1) * .44) * .012);
-                var cliff = new WorldSiteObstacle(kind, material, 2.4,
-                [
-                    new HuntPoint(fromX - .012, fromY),
-                    new HuntPoint(fromX + .012, fromY),
-                    new HuntPoint(toX + .012, toY),
-                    new HuntPoint(toX - .012, toY),
-                ]);
-
-                if (TouchesReservedRoute(cliff, routes) || monastery.Any(building => BoundsOverlap(cliff, building, .025)))
+                // Small natural saddles and explicit trails interrupt a cliff.
+                if (random.NextDouble() < .12)
                 {
+                    FlushRockShelf();
                     continue;
                 }
 
-                obstacles.Add(cliff);
+                var fromY = Edge + index * (1 - 2 * Edge) / Sections;
+                var toY = Edge + (index + 1) * (1 - 2 * Edge) / Sections;
+                var midY = (fromY + toY) * .5;
+                var innerFrom = .179 + Math.Sin(phase + index * .46) * .025;
+                var innerTo = .179 + Math.Sin(phase + (index + 1) * .46) * .025;
+                var outerFrom = .024 + random.NextDouble() * .016;
+                var outerTo = .032 + random.NextDouble() * .016;
+                var face = new WorldSiteObstacle(kind, material, 1,
+                [
+                    new HuntPoint(.5 + side * (innerFrom - .006), fromY),
+                    new HuntPoint(.5 + side * ((innerFrom + innerTo) * .5 - .012), midY),
+                    new HuntPoint(.5 + side * (innerTo - .003), toY),
+                    new HuntPoint(.5 + side * (innerTo + outerTo), toY),
+                    new HuntPoint(.5 + side * ((innerFrom + innerTo) * .5 + outerTo + .008), midY),
+                    new HuntPoint(.5 + side * (innerFrom + outerFrom), fromY),
+                ]);
+
+                if (TouchesReservedRoute(face, routes) ||
+                    monastery.Any(building => BoundsOverlap(face, building, .025)))
+                {
+                    FlushRockShelf();
+                    continue;
+                }
+                continuousFaces.Add(face);
             }
+            FlushRockShelf();
         }
     }
 
@@ -333,7 +423,8 @@ public static class WorldSiteLandscapeGenerator
             return "mountain-pass";
         if (node.Habitat is WyrmrealmHabitat.Outskirts or WyrmrealmHabitat.WetForest
             or WyrmrealmHabitat.SnowboundPines or WyrmrealmHabitat.FrozenRoad)
-            return geography.ScenicPaths.Count > 1 ? "forest-fork" : "forest-trail";
+            return (unchecked(geography.WorldSeed * 16777619 + node.Stage * 31 + node.Lane * 131) & 3) == 0
+                ? "forest-fork" : "forest-trail";
         return node.Habitat is WyrmrealmHabitat.DesertedVillage or WyrmrealmHabitat.BuriedHamlet
             ? "village-site" : "historic-site";
     }
