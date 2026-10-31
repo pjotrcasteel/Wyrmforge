@@ -107,6 +107,7 @@ export function huntSurfaceRenderable(id, x, y, width, height, castsShadow, surf
         ...(surface.occluderPosition ? { occluderPosition: surface.occluderPosition } : {}),
         ...(surface.occluderRotation ? { occluderRotation: surface.occluderRotation } : {}),
         ...(surface.occluderScale ? { occluderScale: surface.occluderScale } : {}),
+        ...(surface.shadowOpaqueBounds ? { shadowOpaqueBounds: surface.shadowOpaqueBounds } : {}),
         ...(frame ? { frame } : {}),
     };
 }
@@ -135,6 +136,45 @@ export function huntActorGeometry() {
  * against a light's height without crushing the actual alpha silhouette.
  * Keep the padded pose readable while limiting long wedges from low emitters.
  */
+/** Read the opaque pose bounds ONCE per raster resource, not every animated frame.
+ * This is a CPU Canvas fallback; the shared GPU renderer still owns all shadows.
+ * Ignore low-alpha ground glows and particles when finding the actor's feet.
+ */
+export function huntOpaqueCaptureBounds(canvas, minimumAlpha = 96) {
+    const width = canvas?.width, height = canvas?.height;
+    if (!(width > 0 && height > 0) || typeof canvas.getContext !== 'function') return null;
+    let pixels;
+    try { pixels = canvas.getContext('2d')?.getImageData(0, 0, width, height)?.data; }
+    catch { return null; }
+    if (!pixels) return null;
+    let top = height, bottom = 0;
+    for (let y = 0; y < height; y++) {
+        const offset = y * width * 4 + 3;
+        for (let x = 0; x < width; x++) {
+            if (pixels[offset + x * 4] < minimumAlpha) continue;
+            top = Math.min(top, y);
+            bottom = Math.max(bottom, y + 1);
+        }
+    }
+    return bottom > top ? { top, bottom, height } : null;
+}
+
+/** Scale the *opaque* pose, not the much larger transparent capture tile.
+ * Preserve its correct alpha cutout, place its lowest opaque row at ground level,
+ * and limit its world height relative to the actual dynamic light. The light's
+ * color, visible position, strength and falloff remain untouched.
+ */
+export function huntShadowOpaqueCasterPlan(bounds, lightHeightWorld, cameraUpZ = Math.SQRT1_2) {
+    if (!bounds || !(lightHeightWorld > 0) || !(cameraUpZ > .1)) return null;
+    const fraction = (bounds.bottom - bounds.top) / bounds.height;
+    if (!(fraction > 0 && fraction <= 1)) return null;
+    const unboundedHeight = (bounds.bottom - bounds.top) / UNIT * cameraUpZ;
+    const poseHeight = Math.min(unboundedHeight, lightHeightWorld * .42);
+    const scaleY = poseHeight / (fraction * cameraUpZ);
+    const offsetFromTileBottom = (1 - bounds.bottom / bounds.height) * scaleY;
+    return { scaleY, offsetFromTileBottom, poseHeight };
+}
+
 export function boundedHuntShadowHeight(spriteHeightWorld, lightHeightWorld) {
     if (!(lightHeightWorld > 0)) return spriteHeightWorld;
     return Math.min(spriteHeightWorld, lightHeightWorld * 1.1);
@@ -143,21 +183,29 @@ export function alignHuntActorBillboards(objects, engine) {
     const shadowHeight = Math.min(...(engine.selected ?? [])
         .filter(light => light.shadow && light.type === 'point' && light.position[2] > 0)
         .map(light => light.position[2]));
+    const cameraVertical = new T.Vector3(0, 1, 0).applyQuaternion(engine.camera.quaternion);
     for (const descriptor of objects) {
         if (descriptor.geometry !== 'hunt-billboard') continue;
         const registered = engine.objects.get(descriptor.id);
         if (!registered) continue;
         registered.mesh.quaternion.copy(engine.camera.quaternion);
-        // Match the G1 pose-aware sprite shadow: its alpha-cutout caster faces the
-        // camera too. Explicit WF/AR solid occluders keep their authored rotation.
+        // The alpha cutout shadows the real pose, while transparent raster margins
+        // must not consume nearly all of the allowed caster height.
         if (descriptor.occluderGeometry === 'hunt-shadow-silhouette' && registered.caster) {
             const caster = registered.caster;
             caster.quaternion.copy(engine.camera.quaternion);
-            if (Number.isFinite(shadowHeight)) {
+            if (!Number.isFinite(shadowHeight)) continue;
+            const plan = huntShadowOpaqueCasterPlan(descriptor.shadowOpaqueBounds,
+                shadowHeight, cameraVertical.z);
+            if (plan) {
+                caster.scale.y = plan.scaleY;
+                // Lowest opaque pixel, not the padded tile edge, touches ground.
+                caster.position.z = 0;
+                caster.position.addScaledVector(cameraVertical, -plan.offsetFromTileBottom);
+            } else {
                 const baseHeight = descriptor.occluderScale[1];
                 const height = boundedHuntShadowHeight(baseHeight, shadowHeight);
                 caster.scale.y = height;
-                // Preserve the authored foot even after light-height clamping.
                 caster.position.z = descriptor.occluderPosition[2] * height / baseHeight;
             }
         }
@@ -240,12 +288,16 @@ export class HuntGpuWorld {
                 layer = { pixels, texture }; this.layers.set(id, layer);
             }
             if (!unchanged) {
+                if (layer.pixels.width !== Math.ceil(width) || layer.pixels.height !== Math.ceil(height))
+                    layer.shadowOpaqueBounds = null;
                 if (layer.pixels.width !== Math.ceil(width)) layer.pixels.width = Math.ceil(width);
                 if (layer.pixels.height !== Math.ceil(height)) layer.pixels.height = Math.ceil(height);
                 const ctx = layer.pixels.getContext('2d');
                 ctx.imageSmoothingEnabled = false;
                 ctx.clearRect(0, 0, layer.pixels.width, layer.pixels.height);
                 ctx.drawImage(source, 0, 0, layer.pixels.width, layer.pixels.height);
+                if (castsShadow && !surface.geometry && !surface.occluderGeometry && !layer.shadowOpaqueBounds)
+                    layer.shadowOpaqueBounds = huntOpaqueCaptureBounds(layer.pixels);
                 layer.texture.needsUpdate = true;
                 this.dirtyTextures.add(id);
                 layer.revision = revision;
@@ -254,7 +306,9 @@ export class HuntGpuWorld {
         // Reuse the captured alpha pose instead of manufacturing a hard-edged
         // solid wedge. Explicit authored occluders always take precedence.
         const capturedSurface = castsShadow && !surface.geometry && !surface.occluderGeometry
-            ? { ...surface, ...huntCaptureSilhouetteCaster(x, y, width, height, surface.footFraction ?? .75) }
+            ? { ...surface, ...huntCaptureSilhouetteCaster(x, y, width, height, surface.footFraction ?? .75),
+                ...(this.layers.get(id)?.shadowOpaqueBounds
+                    ? { shadowOpaqueBounds: this.layers.get(id).shadowOpaqueBounds } : {}) }
             : surface;
         this.submitSurface(huntSurfaceRenderable(id, x, y, width, height, castsShadow, capturedSurface),
             huntSurfaceMaterial(id, surface.material, Boolean(source)));
