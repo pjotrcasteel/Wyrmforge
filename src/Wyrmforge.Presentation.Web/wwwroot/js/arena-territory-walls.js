@@ -21,7 +21,7 @@ export function createTerritoryWallLayers(environment, plan, width, height, seco
     const school = territoryRuneSchool(environment.element);
     return (environment.barriers ?? []).filter(barrier => !barrier.open && barrier.width > 0 && barrier.height > 0)
         .map(barrier => ({ kind: 'masonry', style: 'territory', depth: (barrier.y + barrier.height) * height,
-            barrier, width, height, wallStyle: style, school, seconds }));
+            barrier, width, height, physicalHeightPx: TERRITORY_WALL_RISE, wallStyle: style, school, seconds }));
 }
 
 // Each mounted rune keeps a slow deterministic failure rhythm: mostly lit, occasionally guttering.
