@@ -46,7 +46,7 @@
 
 **All arenas and Hunts take place at night.** The mood is Gothic high contrast: shadows should visually approach **true black** and fire is the dominant warm illumination, not broad daylight or a generic orange screen wash. Keep an intentionally small, neutral player-readability halo and render enemy attack warnings above the darkness; a black environment is **not** permission for invisible projectiles, unreadable enemies or inaccessible play on mobile.
 
-- In the **target renderer**, one shared world-space material/lighting/depth pass determines the visibility of approved ground, physical scenery, enemies, the **eventual replacement mage**, Wyrms and VFX together. Ground source painting stays preserved, but its albedo must be relightable; a global Canvas darkness mask is only historical prototype behavior. **Every Hunt/arena is night by default; Town retains its separately approved Day/Auto/Night environment profiles through the SAME engine.**
+- In the **target renderer**, one shared world-space material/lighting/depth pass determines the visibility of approved ground, physical scenery, enemies, the **eventual replacement mage**, Wyrms and VFX together. Ground source painting stays preserved, but its albedo must be relightable; a global Canvas darkness mask is only historical prototype behavior. **Every Hunt/arena is night by default; the painted Town retains its separately approved Day/Auto/Night presentation and is not currently migrated to the GPU engine.**
 - Only **explicitly registered world light** reveals otherwise unlit surfaces: controlled sky/moon ambient; actual C# cast/projectile/impact, burning trees and Wyrm breath; world/town fixtures and other colored elemental spells. An emissive material can glow independently but must register light to illuminate neighbours. No fake permanent light sources, undeclared full-bright characters or broad permanent ambient gradients.
 - Fire has locally warm color and intensity sufficient to reveal surfaces and silhouettes, with radial falloff. Extinguishing or moving the actual source immediately changes illumination. Background and deep shadows should remain near-black; prevent blown-out highlights and expensive screen-wide glow.
 - For portrait mobile combat, prioritize legibility of mage, foe silhouettes, telegraphs, pickups and navigational cues. Do not apply opaque night veils above HUD and essential combat warnings. Use one bounded, recyclable viewport mask and a strict cap on active dynamic sources.
@@ -73,11 +73,7 @@
 
 ### One engine controls visibility in every world scene — LOCKED, 23 October 2026
 
-**Highest-level visual rule:** no in-world surface—town panorama, building,
-Hollowed, Ashling, other enemy, Wyrm, player, town NPC, tree, water, smoke,
-wall, road, prop or in-world VFX—may remain full-bright simply because
-its existing painted pixels were drawn. It must pass through the SAME
-scene material/lighting/depth renderer. A genuinely unlit object becomes
+**Highest-level visual rule for approved GPU-supported world scenes (currently Hunts, actors and relevant props):** no in-world surface—Hollowed, Ashling, other enemy, Wyrm, player, tree, water, smoke, wall, road, prop or in-world VFX—may remain full-bright simply because its painted pixels were drawn. It must pass through the SAME shared scene material/lighting/depth renderer. **The owner-approved painted 2D Town is explicitly excluded from GPU migration; its separate existing day/night paintings remain live unless a new Town cutover is authorized.** A genuinely unlit object becomes
 nearly black; nearby real sources gradually reveal it, including its
 normal-mapped form, reflected highlights and received/cast shadows.
 **Zero ambient + zero emitter + zero material emission = black world pixels**
@@ -85,17 +81,14 @@ in a mandatory diagnostic preset. This is a *continuous radiance calculation*,
 not a crude hide/show threshold. HUD, text, menus and explicit accessibility/
 combat telegraphs are non-world passes and retain readability.
 
-- **ALL scenes:** this rule applies to Town Square, future indoor areas,
-  *all* Hunts/biomes, buildings, NPCs, player and creatures. The general
+- **All approved GPU scenes:** this rule applies to all authorized Hunts/biomes, actors, scenery and future approved interiors; Town migration remains excluded by the explicit override below. The general
   \`LightEmitter\` / \`LitRenderable\` / material and shadow contracts are
   shared. A new object registers data rather than receiving new per-kind
   shader/Canvas/CSS code. An emissive surface can glow while world is
   otherwise black, but must also register an emitter to light its neighbours.
 - **Artist-intended style:** use an explicit dim night sky/moon/environment
   profile for normal Gothic Hunts, rather than secret character illumination.
-  Day/Night/Auto in Town can use different environmental light profiles
-  **in the same renderer**; the existing owner-approved settings are not
-  revoked by the all-Hunts-at-night decision. Essential combat readability
+  The current painted Town retains its original Day/Night/Auto settings and imagery; any future lighting integration needs a new explicit owner decision. The all-Hunts-at-night rule does not revoke Town settings. Essential combat readability
   is preserved by explicit UI/telegraph/accessibility layers, not universal
   full-bright enemy art. Ensure fair warning before damage from darkness.
 - **Sprite actors:** use the **existing Hollowed/Ashling rigged-sprite
