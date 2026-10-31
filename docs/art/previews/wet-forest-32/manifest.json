@@ -1,0 +1,210 @@
+{
+  "version": "wf-original-32.v2",
+  "tilePixels": 32,
+  "status": "prototype-only",
+  "atlas": "atlas.png",
+  "frames": {
+    "wetforest.detail.fern": {
+      "x": 1,
+      "y": 1,
+      "w": 32,
+      "h": 32,
+      "ax": 0,
+      "ay": 0
+    },
+    "wetforest.detail.root": {
+      "x": 34,
+      "y": 1,
+      "w": 32,
+      "h": 32,
+      "ax": 0,
+      "ay": 0
+    },
+    "wetforest.edge.grass-mud.horizontal": {
+      "x": 67,
+      "y": 1,
+      "w": 32,
+      "h": 32,
+      "ax": 0,
+      "ay": 0
+    },
+    "wetforest.edge.grass-mud.vertical": {
+      "x": 100,
+      "y": 1,
+      "w": 32,
+      "h": 32,
+      "ax": 0,
+      "ay": 0
+    },
+    "wetforest.edge.grass-soil.horizontal": {
+      "x": 133,
+      "y": 1,
+      "w": 32,
+      "h": 32,
+      "ax": 0,
+      "ay": 0
+    },
+    "wetforest.edge.grass-soil.vertical": {
+      "x": 166,
+      "y": 1,
+      "w": 32,
+      "h": 32,
+      "ax": 0,
+      "ay": 0
+    },
+    "wetforest.edge.soil-mud.horizontal": {
+      "x": 199,
+      "y": 1,
+      "w": 32,
+      "h": 32,
+      "ax": 0,
+      "ay": 0
+    },
+    "wetforest.edge.soil-mud.vertical": {
+      "x": 1,
+      "y": 34,
+      "w": 32,
+      "h": 32,
+      "ax": 0,
+      "ay": 0
+    },
+    "wetforest.edge.soil-stone.horizontal": {
+      "x": 34,
+      "y": 34,
+      "w": 32,
+      "h": 32,
+      "ax": 0,
+      "ay": 0
+    },
+    "wetforest.edge.soil-stone.vertical": {
+      "x": 67,
+      "y": 34,
+      "w": 32,
+      "h": 32,
+      "ax": 0,
+      "ay": 0
+    },
+    "wetforest.grass.0": {
+      "x": 100,
+      "y": 34,
+      "w": 32,
+      "h": 32,
+      "ax": 0,
+      "ay": 0
+    },
+    "wetforest.grass.1": {
+      "x": 133,
+      "y": 34,
+      "w": 32,
+      "h": 32,
+      "ax": 0,
+      "ay": 0
+    },
+    "wetforest.grass.2": {
+      "x": 166,
+      "y": 34,
+      "w": 32,
+      "h": 32,
+      "ax": 0,
+      "ay": 0
+    },
+    "wetforest.mud.0": {
+      "x": 199,
+      "y": 34,
+      "w": 32,
+      "h": 32,
+      "ax": 0,
+      "ay": 0
+    },
+    "wetforest.mud.1": {
+      "x": 1,
+      "y": 67,
+      "w": 32,
+      "h": 32,
+      "ax": 0,
+      "ay": 0
+    },
+    "wetforest.mud.2": {
+      "x": 34,
+      "y": 67,
+      "w": 32,
+      "h": 32,
+      "ax": 0,
+      "ay": 0
+    },
+    "wetforest.soil.0": {
+      "x": 67,
+      "y": 67,
+      "w": 32,
+      "h": 32,
+      "ax": 0,
+      "ay": 0
+    },
+    "wetforest.soil.1": {
+      "x": 100,
+      "y": 67,
+      "w": 32,
+      "h": 32,
+      "ax": 0,
+      "ay": 0
+    },
+    "wetforest.soil.2": {
+      "x": 133,
+      "y": 67,
+      "w": 32,
+      "h": 32,
+      "ax": 0,
+      "ay": 0
+    },
+    "wetforest.stone.0": {
+      "x": 166,
+      "y": 67,
+      "w": 32,
+      "h": 32,
+      "ax": 0,
+      "ay": 0
+    },
+    "wetforest.stone.1": {
+      "x": 199,
+      "y": 67,
+      "w": 32,
+      "h": 32,
+      "ax": 0,
+      "ay": 0
+    },
+    "wetforest.stone.2": {
+      "x": 1,
+      "y": 100,
+      "w": 32,
+      "h": 32,
+      "ax": 0,
+      "ay": 0
+    }
+  },
+  "order": [
+    "wetforest.soil.0",
+    "wetforest.soil.1",
+    "wetforest.soil.2",
+    "wetforest.grass.0",
+    "wetforest.grass.1",
+    "wetforest.grass.2",
+    "wetforest.mud.0",
+    "wetforest.mud.1",
+    "wetforest.mud.2",
+    "wetforest.stone.0",
+    "wetforest.stone.1",
+    "wetforest.stone.2",
+    "wetforest.edge.grass-mud.vertical",
+    "wetforest.edge.grass-mud.horizontal",
+    "wetforest.edge.grass-soil.vertical",
+    "wetforest.edge.grass-soil.horizontal",
+    "wetforest.edge.soil-mud.vertical",
+    "wetforest.edge.soil-mud.horizontal",
+    "wetforest.edge.soil-stone.vertical",
+    "wetforest.edge.soil-stone.horizontal",
+    "wetforest.detail.root",
+    "wetforest.detail.fern"
+  ],
+  "composition": "composition-study.png",
+  "provenance": "Original source-authored pixels; no reference pack files copied."
+}
