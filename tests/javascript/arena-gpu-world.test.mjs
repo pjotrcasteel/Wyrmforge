@@ -464,3 +464,39 @@ test('live GPU shadow pixel proof isolates one real light and restores its rende
     assert.equal(actor.visible, true, 'A ground-only proof must restore actor presentation.');
     assert.equal(HuntGpuWorld.prototype.shadowPixelProof.call(world, 'unknown').available, false);
 });
+
+test('live Hunt reports authoritative shadow demand separately from the one-point-light mobile budget', async () => {
+    const { huntShadowAllocationReport } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js');
+    const { selectLights } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/registry.js');
+    const create=(id,x,y,intensity,castsShadow,priority=0,type='point')=>({
+        id,ownerId:id,type,enabled:true,position:[x,y,type==='directional'?256:24],
+        direction:[0,0,-1],color:'#ff7835',intensity,range:type==='directional'?8192:144,
+        coneAngle:Math.PI/4,penumbra:0,castsShadow,priority
+    });
+    // Mirrors the kinds of C# and presentation emitters coexisting during a
+    // Hunt. One mobile cubemap (six views) cannot shadow two Fireballs.
+    const frame={lights:[
+        create('sky:moon',0,0,2.2,false,0,'directional'),
+        create('hunter:night-visibility',195,320,14,false),
+        create('target-selection:underlight',225,300,.9,false,1),
+        create('projectile:one',195,282,6,true),
+        create('projectile:two',195,378,6,true),
+    ]};
+    const converted=huntLightFrame(frame,{x:0,y:0},{width:390,height:660});
+    const chosen=selectLights(converted,6,8,
+        {minX:0,maxX:390/48,minY:-660*Math.SQRT2/48,maxY:0});
+    const report=huntShadowAllocationReport(converted.lights,chosen,6);
+    assert.deepEqual(report.requestedIds,['projectile:one','projectile:two']);
+    assert.equal(report.shadowedIds.length,1,
+        'The real mobile budget physically supports one point-light cubemap, not two.');
+    assert.equal(report.allocatedViews,6);
+    assert.equal(report.capacity,6);
+    assert.deepEqual(report.notSelectedIds,[]);
+    assert.equal(report.selectedWithoutShadowIds.length,1,
+        'The second visible, luminous Fireball has no actual shadow map.');
+    assert.ok(report.shadowedIds[0].startsWith('projectile:'));
+    assert.deepEqual(huntShadowAllocationReport([],[],6),{
+        requestedIds:[],shadowedIds:[],notSelectedIds:[],
+        selectedWithoutShadowIds:[],allocatedViews:0,capacity:6
+    });
+});
