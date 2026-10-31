@@ -301,8 +301,15 @@ export class HuntGpuWorld {
         }
         // An explicit 2.5D/3D occluder always wins. Legacy Canvas captures
         // contribute their own alpha silhouette through the shared shadow maps.
+        // Capture quads and C# lights are projected into the camera viewport.
+        // Physical wall volumes originate in world space, so they must follow
+        // the same camera transform. Never mutate the source-authored geometry.
         const authoredSurface = surface.physicalVolume
-            ? { ...surface, ...huntSolidVolumeCaster(surface.physicalVolume) } : surface;
+            ? { ...surface, ...huntSolidVolumeCaster({
+                ...surface.physicalVolume,
+                x: surface.physicalVolume.x - this.camera.x,
+                y: surface.physicalVolume.y - this.camera.y,
+            }) } : surface;
         const capturedSurface = castsShadow && !authoredSurface.geometry && !authoredSurface.occluderGeometry
             ? { ...authoredSurface, ...huntCaptureSilhouetteCaster(x, y, width, height, authoredSurface.footFraction ?? .75,
                 authoredSurface.occluderHeightPx ?? height * GROUND_Y) }
