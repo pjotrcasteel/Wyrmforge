@@ -165,6 +165,9 @@ The current presentation uses Blazor WebAssembly and a canvas-based JavaScript r
 
 ### Scene-wide lighting/visibility and rendering cutover — LOCKED, 23 October 2026
 
+**Staged owner decision (31 October 2026):** the **same shared engine** now has two distinct release thresholds. **G5 = Lighting 0.1**, an opt-in world-composition adapter for WF32/AR4/AR5 with C#-owned static/dynamic lights and basic material response, permitted before shadow contrast, complete height-aware occlusion, reflected scenery and real-device performance are fully approved. Preserve documented fallback and prohibit catastrophic black-hole/wrong-side-wedge or gameplay regressions; imperfect shadow fidelity may be disabled or left as a known limitation. **G6–G10 deliver Lighting 1.0**, including shared AR3 height/surface scale (G6), universal shadows (G7), material/reflection fidelity (G8), native 32px pixel stability and mobile budgets (G9) and owner-approved production cutover (G10). The full scene-visibility and cutover obligations below apply to **G10**, not automatically to the bounded G5 composition release. This staging never creates a second renderer or changes the painted Town.
+
+
 The **one central GPU lighting engine** must be the only authority for
 illumination/visibility of **ALL world-space objects in supported GPU scenes**:
 Hunts, applicable future biomes and interior scenes. The approved painted 2D
