@@ -3551,7 +3551,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await EnterFirstTrailAsync("BEGIN FIRST HUNT");
         await Page.EvaluateAsync("""
             async () => {
-                const arena = await import(new URL('js/arena.js?v=20261028-school-palette-v1', document.baseURI).href);
+                const arena = await import(new URL('js/arena.js?v=20261031-lighting-01-v1', document.baseURI).href);
                 window.__g5Read = () => arena.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
             }
             """);
@@ -3593,7 +3593,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         {
             await EnterFirstTrailAsync("BEGIN FIRST HUNT");
             await Page.EvaluateAsync(@"async () => {
-                window.__huntGpuArena = await import(new URL('js/arena.js?v=20261028-school-palette-v1', document.baseURI).href);
+                window.__huntGpuArena = await import(new URL('js/arena.js?v=20261031-lighting-01-v1', document.baseURI).href);
                 window.__huntGpuRead = () => window.__huntGpuArena.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
             }");
             await Page.WaitForFunctionAsync(@"() => {
@@ -3736,7 +3736,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
                 .find(url => url.includes('/js/arena-performance.js?v='));
             if (!resource) throw new Error('Active Arena performance module was not loaded');
             const performanceArena = await import(resource);
-            const arena = await import(new URL('js/arena.js?v=20261028-school-palette-v1', document.baseURI).href);
+            const arena = await import(new URL('js/arena.js?v=20261031-lighting-01-v1', document.baseURI).href);
             window.__huntGpuArena = arena;
             window.__huntGpuRead = () => performanceArena.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
         }");
