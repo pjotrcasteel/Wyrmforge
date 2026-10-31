@@ -3609,25 +3609,12 @@ public sealed class WyrmforgeBrowserTests : PageTest
     public async Task Mobile_G4DeviceReview_RecordsRealHuntAndExportsEvidence(int width, int height, bool paintedGround)
     {
         await Page.SetViewportSizeAsync(width, height);
-        // A Pages visit may skip character creation; keep this real-Hunt Fireball proof
-        // on the Pyromancer selected by the normal first-visit character flow.
-        await Page.AddInitScriptAsync(@"localStorage.setItem('wyrmforge.characterSchool.v1','Pyromancer');
-            localStorage.setItem('wyrmforge.preferredPrimary.v1','FireBolt');");
+        // Exercise the normal first-visit school selection rather than only seeding
+        // localStorage. The UI can read those values while C# still starts the Hunt
+        // with its default Arcane school, invalidating the real Fireball proof.
         var terrainQuery = paintedGround ? "&g4PaintedGround=1" : "";
         await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/?arenaGpu=1&gpuQuality=mobile&g4Review=1" + terrainQuery,
             new() { WaitUntil = WaitUntilState.NetworkIdle });
-        // Seed on the actual Pages origin and reload so Blazor sees the chosen
-        // character before startup. AddInitScript alone can race first startup
-        // on a deployed subpath and silently leave the old Arcane signature.
-        await Page.EvaluateAsync(@"() => {
-            localStorage.setItem('wyrmforge.characterSchool.v1','Pyromancer');
-            localStorage.setItem('wyrmforge.preferredPrimary.v1','FireBolt');
-        }");
-        await Page.ReloadAsync(new() { WaitUntil = WaitUntilState.NetworkIdle });
-        Assert.AreEqual("Pyromancer", await Page.EvaluateAsync<string>(
-            "() => localStorage.getItem('wyrmforge.characterSchool.v1')"));
-        Assert.AreEqual("FireBolt", await Page.EvaluateAsync<string>(
-            "() => localStorage.getItem('wyrmforge.preferredPrimary.v1')"));
         // Consent is the FIRST screen, before any Gate/Town/Hunt menus can load.
         var consent = Page.Locator("[data-g4-preflight]");
         await Expect(consent).ToBeVisibleAsync();
@@ -3644,6 +3631,10 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.AreEqual("no", await Page.EvaluateAsync<string>(
             "() => localStorage.getItem('wyrmforge.g4.autoSendConsent.v1')"));
         await EnterTownIfNeededAsync();
+        Assert.AreEqual("Pyromancer", await Page.EvaluateAsync<string>(
+            "() => localStorage.getItem('wyrmforge.characterSchool.v1')"));
+        Assert.AreEqual("FireBolt", await Page.EvaluateAsync<string>(
+            "() => localStorage.getItem('wyrmforge.preferredPrimary.v1')"));
         // The region chosen at the World Gate is independent of the character school.
         // Verify the town has loaded the Fire character before the C# Hunt is created.
         await Expect(Page.Locator(".refuge-canonical-scene")).ToHaveAttributeAsync("data-nexus-school", "fire");
