@@ -192,7 +192,7 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
                 const alpha=tile.getContext('2d').getImageData(0,0,160,160).data;
                 const samples=[];
                 const bodyHeight=32;
-                for(const sourceHeight of [24]){
+                for(const sourceHeight of [24,36,48,64]){
                 for(const [dx,dy] of [[0,48],[0,-48],[48,0],[-48,0]]){
                     const light={id:'moving-fireball',ownerId:'test',type:'point',enabled:true,
                         position:[footX+dx,footY+dy,sourceHeight],direction:[0,0,-1],color:'#ff7835',
@@ -204,7 +204,7 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
                     const evidence=document.createElement('canvas');
                     evidence.width=width;evidence.height=height;
                     evidence.getContext('2d').drawImage(canvas,0,0);
-                    gallery.appendChild(evidence);
+                    if(sourceHeight===24)gallery.appendChild(evidence);
                     world.render(ctx,{...base,lights:[{...light,castsShadow:false}]});
                     const clear=world.engine.pixels();
                     world.render(ctx,{...base,lights:[]});
@@ -238,7 +238,7 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
                     samples.push([changed,weight?project/weight:0,weight?opposite/weight:1,farPixels,farthest,
                         strongPixels,veryStrongPixels,peakDelta,changed?weight/changed:0,bodyHeight,
                         directInAffected?blockedInAffected/directInAffected:0,
-                        changed?directInAffected/changed:0]);
+                        changed?directInAffected/changed:0,sourceHeight]);
                 }
                 }
                 window.__huntGpuDirectionalWorld=world;
@@ -250,8 +250,9 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
             ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
         Directory.CreateDirectory(artifacts);
         await File.WriteAllTextAsync(Path.Combine(artifacts, "g4-shadow-direction-metrics.json"),
-            System.Text.Json.JsonSerializer.Serialize(new { sourceHeights = new[] { 24 }, physicalCasterHeightPx = 32,
-                sides = new[] { "south", "north", "east", "west" }, measurements }));
+            System.Text.Json.JsonSerializer.Serialize(new { sourceHeights = new[] { 24, 36, 48, 64 }, physicalCasterHeightPx = 32,
+                sides = new[] { "south", "north", "east", "west" }, measurements = measurements.Take(4).ToArray(),
+                sourceHeightSweep = measurements.Chunk(4).ToArray() }));
         await Page.Locator("#hunt-gpu-direction-shadow-gallery").ScreenshotAsync(new()
         {
             Path = Path.Combine(artifacts, "g4-shadow-direction.png"),
