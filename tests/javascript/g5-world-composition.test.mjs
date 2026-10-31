@@ -23,12 +23,15 @@ test('Lighting 0.1 is opt-in only when the existing Hunt GPU backend is also sel
 
 test('fixed fixture location must match its C# emitter in the current frame', () => {
     assert.deepEqual(lighting01FixtureSpecs(environment, frame, 950, 1550),
-        [{ id: fixture.id, x: 399, y: 914.5, height: 28, color: '#ffac65' }]);
+        [{ id: fixture.id, x: 399, y: 914.5, height: 28, color: '#ffac65', ignited: true }]);
     const tallFrame = { ...frame, lights: [{ ...frame.lights[0], position: [425.88, 1244.9, 28] }] };
     assert.deepEqual(lighting01FixtureSpecs(environment, tallFrame, 1014, 2110),
-        [{ id: fixture.id, x: 425.88, y: 1244.9, height: 28, color: '#ffac65' }]);
-    assert.deepEqual(lighting01FixtureSpecs(environment, { ...frame, lights: [] }, 950, 1550), []);
-    assert.deepEqual(lighting01FixtureSpecs(environment, { ...frame, lights: [{ ...frame.lights[0], enabled: false }] }, 950, 1550), []);
+        [{ id: fixture.id, x: fixture.x * 1014, y: fixture.y * 2110,
+            height: 28, color: '#ffac65', ignited: true }]);
+    const unlit = [{ id: fixture.id, x: 399, y: 914.5, height: 28, color: '#ffac65', ignited: false }];
+    assert.deepEqual(lighting01FixtureSpecs(environment, { ...frame, lights: [] }, 950, 1550), unlit,
+        'Expired light removes illumination, not the physical torch receiver');
+    assert.deepEqual(lighting01FixtureSpecs(environment, { ...frame, lights: [{ ...frame.lights[0], enabled: false }] }, 950, 1550), unlit);
     assert.deepEqual(lighting01FixtureSpecs(environment, { ...frame, lights: [{ ...frame.lights[0], ownerId: 'other' }] }, 950, 1550), []);
     assert.deepEqual(lighting01FixtureSpecs(environment, { ...frame, lights: [{ ...frame.lights[0], position: [99, 914.5, 28] }] }, 950, 1550), []);
     assert.deepEqual(lighting01FixtureSpecs(null, frame, 950, 1550), []);
@@ -62,5 +65,11 @@ test('G5 fixture captures a 16x24 pixel-aligned light receiver, never creates a 
         assert.equal(captures[0][7], false, 'Decorative G5 torch uses the reduced/no-wedge caster tier');
         assert.equal(captures[0][8].material.emissionIntensity, .3);
         assert.equal(captures[0][8].material.emission, '#ffac65');
+        assert.equal(submitLighting01Fixtures(world, environment, { ...frame, lights: [] },
+            { x: 12, y: 20 }, 950, 1550), 1);
+        assert.equal(captures[1][8].material.emissionIntensity, 0,
+            'An expired source leaves an unlit receiver, never a ghost glow');
+        assert.notEqual(captures[0][8].revision, captures[1][8].revision,
+            'Changing the authored fixture state invalidates its cached GPU cutout');
     } finally { globalThis.document = originalDocument; }
 });
