@@ -195,7 +195,8 @@ export class LightingEngine {
         for (const id of this.objects.keys()) if (!activeObjectIds.has(id)) this.removeObject(id);
         for (const d of s.objects) {
             const md = materialById.get(d.material);
-            const signature = JSON.stringify([d.geometry, d.occluderGeometry, materialSignatures.get(d.material), d.receivesLight]);
+            const signature = JSON.stringify([d.geometry, d.occluderGeometry, materialSignatures.get(d.material),
+                d.receivesLight, d.occluderAlphaSource]);
             let object = this.objects.get(d.id);
             if (object && object.signature !== signature) { this.removeObject(d.id); object = null; }
             if (!object) {
@@ -207,8 +208,9 @@ export class LightingEngine {
                     // the shared shadow pass still samples transparent sprite pixels.
                     // Share the same GPU texture and animated alpha as the visible
                     // sprite: no second upload or per-actor shadow atlas allocation.
-                    const hidden = new T.MeshBasicMaterial({ map: mesh.material.map,
-                        alphaTest: md.alphaCutoff,
+                    const cutoutCaster = d.occluderAlphaSource !== false;
+                    const hidden = new T.MeshBasicMaterial({ map: cutoutCaster ? mesh.material.map : null,
+                        alphaTest: cutoutCaster ? md.alphaCutoff : 0,
                         side: md.doubleSided ? T.DoubleSide : T.FrontSide,
                         colorWrite: false, depthWrite: false });
                     caster = new T.Mesh(this.geometries.get(d.occluderGeometry), hidden);
