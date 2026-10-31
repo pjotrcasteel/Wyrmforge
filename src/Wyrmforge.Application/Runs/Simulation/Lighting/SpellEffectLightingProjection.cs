@@ -34,7 +34,11 @@ public static class SpellEffectLightingProjection
         {
             var id = FormattableString.Invariant($"fiery-area:{group.Key.X:R}:{group.Key.Y:R}");
             var strength = Math.Clamp(group.Max(area => area.Life) / .2, 0, 1);
-            lights.Add(Source(id, id, group.Key.X, group.Key.Y, 8, fire, strength, group.Max(area => area.Radius)));
+            // Ground-fire and essence bursts originate at floor level, frequently under
+            // the same collision volume as a hit. They emit ambient firelight,
+            // not a point-shadow cubemap from inside that solid caster.
+            lights.Add(Source(id, id, group.Key.X, group.Key.Y, 8, fire, strength,
+                group.Max(area => area.Radius), castsShadows: false));
         }
         return lights;
     }
