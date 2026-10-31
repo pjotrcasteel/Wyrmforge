@@ -18,10 +18,11 @@ export function huntLayerCapture(layer, player, dragonDeath = null) {
         id = `${layer.kind}:${actor.entityId ?? actor.id ?? 'primary'}`;
         size = Math.max(160, Math.min(768, (actor.radius || 20) * 12));
     }
-    // The capture extends below the C# position to leave room for painted feet,
-    // shadows and articulated bosses. Supply this artwork-dependent pivot to
-    // the generic GPU billboard rather than burying that part below ground.
-    // These are existing Canvas paint extents, not physics or collision changes.
+    // The capture canvas extends below the C# entity position for transparent
+    // padding, paint and articulated poses. Canvas bounds are NOT the planted
+    // feet: enemy atlas anchors already coincide with authoritative C# X/Y.
+    // Only older presentation assets that explicitly paint below their pivot
+    // retain an offset. These offsets never change gameplay or collision.
     let footOffset = null;
     switch (layer.kind) {
         case 'mage':
