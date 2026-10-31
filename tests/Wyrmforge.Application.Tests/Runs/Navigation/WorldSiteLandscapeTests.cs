@@ -181,7 +181,14 @@ public sealed class WorldSiteLandscapeTests
             CollectionAssert.AreEqual(normalSnapshot.Geography.Ports.ToArray(), physicalSnapshot.Geography.Ports.ToArray());
             Assert.IsNull(normalSnapshot.Geography.Landscape);
             Assert.IsNotNull(physicalSnapshot.Geography.Landscape);
-            Assert.AreEqual(normalSnapshot.Supplies.Count, physicalSnapshot.Supplies.Count);
+            Assert.AreEqual(normalSnapshot.Supplies.Count,
+                physicalSnapshot.Supplies.Count(supply => supply.DiscoveryId is null),
+                "World-first preview must preserve every legacy supply unchanged.");
+            var expectedFinds = node.Type == WyrmrealmNodeType.Combat
+                ? physicalSnapshot.Geography.Landscape.Discoveries.Count(discovery => discovery.MaterialReward is not null)
+                : 0;
+            Assert.AreEqual(expectedFinds, physicalSnapshot.Supplies.Count(supply => supply.DiscoveryId is not null),
+                "Only C#-authorized unclaimed discoveries may add optional pickups.");
             Assert.IsTrue(normalSnapshot.Props.All(prop => prop.Kind is "barrel" or "crate"));
             Assert.IsTrue(physicalSnapshot.Props.All(prop => prop.Kind is "barrel" or "crate"),
                 "The preview must retain only existing C#-authorized destructible salvage.");
