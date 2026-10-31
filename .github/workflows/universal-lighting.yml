@@ -75,11 +75,16 @@ jobs:
       - name: Report G4 four-direction shadow geometry before upload
         if: always()
         run: |
-          if [ -f artifacts/gpu-proof/g4-shadow-direction-metrics.json ]; then
-            printf 'G4 shadow direction [pixels,mean-away,source-side-fraction,far-pixels,max-away]: '
-            cat artifacts/gpu-proof/g4-shadow-direction-metrics.json
-            printf '\n'
-          else
+          found=0
+          for report in artifacts/gpu-proof/g4-shadow-direction-metrics-*.json; do
+            if [ -f "$report" ]; then
+              found=1
+              printf 'G4 real-WebGL directional shadow proof (%s): ' "$report"
+              cat "$report"
+              printf '\n'
+            fi
+          done
+          if [ "$found" -eq 0 ]; then
             printf 'G4 direction test produced no metrics; check test discovery.\n'
           fi
       - name: Summarize real-game lighting evidence with quality and runtime metrics
