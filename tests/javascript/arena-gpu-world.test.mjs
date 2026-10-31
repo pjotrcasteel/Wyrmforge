@@ -42,13 +42,14 @@ test('authored sprite foot anchor stays on the ground and its billboard faces th
     geometry.dispose();
 });
 
-test('G4 aligns only standing actor planes to the live camera without altering ground and lights', async () => {
+test('Only visible actor billboards face the Hunt camera; shadow casters stay in world space', async () => {
     const T = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/vendor/three.module.js');
     const { alignHuntActorBillboards } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js');
     const camera = new T.Object3D();
     camera.quaternion.setFromAxisAngle(new T.Vector3(1, 0, 0), 1.1);
     const actor = { quaternion: new T.Quaternion() };
-    const caster = { quaternion: new T.Quaternion() };
+    const vertical = new T.Quaternion().setFromAxisAngle(new T.Vector3(1, 0, 0), Math.PI / 2);
+    const caster = { quaternion: vertical.clone() };
     const authoredCaster = { quaternion: new T.Quaternion() };
     const ground = { quaternion: new T.Quaternion() };
     const engine = { camera, objects: new Map([
@@ -63,78 +64,71 @@ test('G4 aligns only standing actor planes to the live camera without altering g
         { id: 'missing', geometry: 'hunt-billboard' },
     ], engine);
     assert.ok(actor.quaternion.angleTo(camera.quaternion) < 1e-7);
-    assert.ok(caster.quaternion.angleTo(camera.quaternion) < 1e-7,
-        'The alpha-cutout pose caster must face the camera as in the accepted G1 proof.');
+    assert.ok(caster.quaternion.angleTo(vertical) < 1e-7,
+        'Sprite occluders must be upright in world space, independent of camera pitch.');
     assert.ok(authoredCaster.quaternion.angleTo(new T.Quaternion()) < 1e-7,
-        'An independently authored 3D occluder retains its own world rotation.');
+        'Authored 3D casters retain their own rotation.');
     assert.ok(ground.quaternion.angleTo(new T.Quaternion()) < 1e-7,
-        'Terrain receiver must retain its original world orientation.');
+        'Terrain receiver keeps its world rotation.');
 });
 
-test('G4 Canvas pose shadows preserve transparent capture pixels and painted feet', async () => {
-    const { huntCaptureSilhouetteCaster, boundedHuntShadowHeight } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js');
+test('World-upright alpha casters preserve source pixels and meet the authored foot anchor', async () => {
+    const { huntCaptureSilhouetteCaster } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js');
     for (const height of [32, 64, 96, 160, 320]) {
         for (const footFraction of [.75, .92, 1]) {
             const caster = huntCaptureSilhouetteCaster(100, 200, height, height, footFraction);
             assert.equal(caster.occluderGeometry, 'hunt-shadow-silhouette');
-            assert.equal(caster.occluderScale[1], height / 48,
-                'A capture tile contains transparent padding: its original world-pixel scale must be preserved.');
+            assert.deepEqual(caster.occluderRotation, [Math.PI / 2, 0, 0],
+                'The occluder stands vertically in world coordinates, not in camera space.');
+            assert.equal(caster.occluderScale[1], height * Math.SQRT2 / 48,
+                'Camera projection must restore the source-pixel vertical scale.');
             assert.equal(caster.occluderScale[0], height / 48,
-                'The GPU silhouette must preserve the source alpha image aspect ratio.');
+                'The alpha cutout retains source-pixel width and transparent padding.');
             assert.equal(caster.occluderPosition[0], (100 + height / 2) / 48);
-            assert.ok(Math.abs(caster.occluderPosition[1] + (200 + height * footFraction) * Math.SQRT2 / 48) < 1e-12,
-                'The silhouette foot anchor must use the existing painted sprite pivot.');
-            assert.ok(caster.occluderPosition[2] <= 0);
-            for (const sourceHeight of [24 / 48, 96 / 48]) {
-                const bounded = boundedHuntShadowHeight(caster.occluderScale[1], sourceHeight);
-                assert.equal(bounded, Math.min(height / 48, sourceHeight * 1.1));
-                // A plane faces the 45-degree camera. Its highest possible opaque
-                // pixel cannot rise above its actual light source and form a huge wedge.
-                const worstTop = bounded * Math.SQRT1_2 * footFraction;
-                assert.ok(worstTop < sourceHeight * .8,
-                    'Point-light shadow sources must remain above even an edge-to-edge silhouette.');
-            }
+            assert.ok(Math.abs(caster.occluderPosition[1] +
+                (200 + height * footFraction) * Math.SQRT2 / 48) < 1e-12);
+            const physicalFootZ = caster.occluderPosition[2] +
+                (1 - footFraction) * caster.occluderScale[1];
+            assert.ok(Math.abs(physicalFootZ) < 1e-12,
+                'The painted foot line touches z=0, regardless of transparent padding.');
+            assert.ok(caster.occluderScale[1] > 0);
         }
     }
+    assert.throws(() => huntCaptureSilhouetteCaster(0, 0, 160, 160, 0), RangeError);
 });
 
-test('G4 padded enemy tile creates a readable—not microscopic—Fireball shadow', async () => {
-    const { huntCaptureSilhouetteCaster, boundedHuntShadowHeight } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js');
-    // A 160px scratch capture contains a much smaller actual animated Hollowed.
-    // The old implementation compressed all 160px to 12px, reducing the painted
-    // pose to a subpixel stripe despite the browser pixel-change test passing.
+test('A padded enemy silhouette has an independent physical height, not a light-height clamp', async () => {
+    const { huntCaptureSilhouetteCaster } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js');
     const caster = huntCaptureSilhouetteCaster(20, 100, 160, 160, .9);
-    const sourceHeight = 24 / 48;
-    const planeHeight = boundedHuntShadowHeight(caster.occluderScale[1], sourceHeight);
-    const paintedHeadY = .65, paintedFootY = .10;
-    const projectedHeight = (paintedHeadY - paintedFootY) * planeHeight * Math.SQRT1_2;
-    const shadowLengthPixels = projectedHeight / (sourceHeight - projectedHeight) * 60;
-    assert.ok(shadowLengthPixels >= 25 && shadowLengthPixels <= 80,
-        'A nearby Fireball must produce a visible 25–80px pose shadow, not a 2px smear or huge wedge.');
+    const visibleOpaqueFraction = .55;
+    const opaqueWorldHeight = visibleOpaqueFraction * caster.occluderScale[1];
+    assert.ok(Math.abs(opaqueWorldHeight - .55 * 160 * Math.SQRT2 / 48) < 1e-12);
+    assert.ok(opaqueWorldHeight > 24 / 48,
+        'A tall Hollowed must not physically shrink just because a Fireball flies near the floor.');
 });
 
-test('G4 aligns sprite shadows to the camera and bounds height without floating feet', async () => {
+test('Moving and differently elevated lights cannot resize or reorient an actor silhouette', async () => {
     const T = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/vendor/three.module.js');
-    const { alignHuntActorBillboards, huntCaptureSilhouetteCaster } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js');
+    const { alignHuntActorBillboards, huntCaptureSilhouetteCaster } =
+        await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js');
     const descriptor = { id: 'actor', geometry: 'hunt-billboard',
         ...huntCaptureSilhouetteCaster(20, 100, 160, 160, .9) };
+    const expectedRotation = new T.Quaternion().setFromEuler(new T.Euler(...descriptor.occluderRotation));
     const mesh = { quaternion: new T.Quaternion() };
-    const caster = { quaternion: new T.Quaternion(), scale: { y: descriptor.occluderScale[1] },
+    const caster = { quaternion: expectedRotation.clone(), scale: { y: descriptor.occluderScale[1] },
         position: { z: descriptor.occluderPosition[2] } };
     const camera = new T.Object3D();
     camera.quaternion.setFromAxisAngle(new T.Vector3(1, 0, 0), .8);
     const engine = { camera, objects: new Map([['actor', { mesh, caster }]]),
-        selected: [{ shadow: true, type: 'point', position: [0, 0, .5] },
-            { shadow: false, type: 'point', position: [0, 0, .1] }] };
-    alignHuntActorBillboards([descriptor], engine);
-    assert.ok(Math.abs(caster.scale.y - .55) < 1e-10,
-        'A real Fireball retains the padded alpha footprint instead of crushing it to 12px.');
-    assert.ok(Math.abs(caster.position.z - descriptor.occluderPosition[2] * .55 / descriptor.occluderScale[1]) < 1e-12,
-        'The light-height cap must preserve the exact authored foot anchor.');
-    engine.selected[0].position[2] = 2;
-    alignHuntActorBillboards([descriptor], engine);
-    assert.ok(Math.abs(caster.scale.y - 2.2) < 1e-10);
-    assert.ok(caster.quaternion.angleTo(camera.quaternion) < 1e-7);
+        selected: [{ shadow: true, type: 'point', position: [0, 0, .5] }] };
+    for (const height of [.1, .5, 2, 10]) {
+        engine.selected[0].position[2] = height;
+        alignHuntActorBillboards([descriptor], engine);
+        assert.equal(caster.scale.y, descriptor.occluderScale[1]);
+        assert.equal(caster.position.z, descriptor.occluderPosition[2]);
+        assert.ok(caster.quaternion.angleTo(expectedRotation) < 1e-7);
+        assert.ok(mesh.quaternion.angleTo(camera.quaternion) < 1e-7);
+    }
 });
 
 test('mage, Warden and Wyrm retain their own painted foot line without ground penetration', async () => {
@@ -375,27 +369,18 @@ test('authoritative projectile point light retains one mobile shadow budget and 
 });
 
 
-test('Fireball shadow uses the opaque cutout, not transparent capture padding', async () => {
-    const { huntOpaqueCaptureBounds, huntShadowOpaqueCasterPlan } =
+test('A cutout keeps translucent padding out of the shadow while grounding the opaque feet', async () => {
+    const { huntCaptureSilhouetteCaster, huntSurfaceMaterial } =
         await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js');
-    const width = 160, height = 160;
-    const rgba = new Uint8ClampedArray(width * height * 4);
-    for (let y = 100; y < 146; y++) for (let x = 70; x < 112; x++)
-        rgba[(y * width + x) * 4 + 3] = 255;
-    // A translucent foot glow should not move the actor's physical shadow pivot.
-    rgba[(155 * width + 80) * 4 + 3] = 50;
-    const canvas = { width, height, getContext: () => ({ getImageData: () => ({ data: rgba }) }) };
-    const bounds = huntOpaqueCaptureBounds(canvas);
-    assert.deepEqual(bounds, { top: 100, bottom: 146, height: 160 });
-    const plan = huntShadowOpaqueCasterPlan(bounds, .5, Math.SQRT1_2);
-    assert.ok(plan, 'The alpha silhouette has a stable physical height and grounded pivot.');
-    const visibleWorldHeight = plan.scaleY * (bounds.bottom - bounds.top) / height * Math.SQRT1_2;
-    assert.ok(Math.abs(visibleWorldHeight - .21) < .000001,
-        'Exactly the opaque pixels occupy 42% of Fireball world height, rather than subpixel dust.');
-    assert.ok(plan.scaleY > 1, 'The padded 160px texture must not crush its 46px visible actor.');
-    assert.ok(plan.offsetFromTileBottom > 0, 'The empty rows beneath the feet must be discarded.');
-    assert.equal(huntOpaqueCaptureBounds({ width: 0, height: 0, getContext() {} }), null);
-    assert.equal(huntShadowOpaqueCasterPlan(null, .5), null);
+    const height = 160, footFraction = 146 / 160;
+    const caster = huntCaptureSilhouetteCaster(20, 100, 160, height, footFraction);
+    const alphaFootV = 1 - footFraction;
+    const opaqueFootZ = caster.occluderPosition[2] + alphaFootV * caster.occluderScale[1];
+    assert.ok(Math.abs(opaqueFootZ) < 1e-12);
+    const material = huntSurfaceMaterial('silhouette');
+    assert.ok(material.alphaCutoff > 0, 'G1 material alpha test discards transparent pixels in the depth pass.');
+    assert.equal(caster.occluderScale[0], 160 / 48);
+    assert.equal(caster.occluderScale[1], 160 * Math.SQRT2 / 48);
 });
 
 test('live GPU shadow pixel proof isolates one real light and restores its renderer state', () => {
