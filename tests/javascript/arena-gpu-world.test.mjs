@@ -501,3 +501,23 @@ test('live Hunt reports authoritative shadow demand separately from the one-poin
         selectedWithoutShadowIds:[],allocatedViews:0,capacity:6
     });
 });
+
+
+test('authored wall volumes cast from their actual physical footprint rather than padded captures', async () => {
+    const { huntSolidVolumeCaster } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js');
+    const { huntLayerCapture } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/hunt-gpu-layers.js');
+    const { createCloisterElevationLayers } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-cloister-art.js');
+    const barrier = { kind: 'wall', x: .18, y: .24, width: .64, height: .02 };
+    const layer = createCloisterElevationLayers({ seed: 1 }, [barrier], 1000, 800)[0];
+    const capture = huntLayerCapture(layer, { x: 500, y: 500 });
+    assert.ok(capture.size >= 704, 'A padded wall capture is large and must not set physical height.');
+    assert.ok(capture.physicalVolume.height >= 21 && capture.physicalVolume.height <= 34);
+    const caster = huntSolidVolumeCaster(capture.physicalVolume);
+    assert.equal(caster.occluderGeometry, 'hunt-solid-volume');
+    assert.equal(caster.occluderAlphaSource, false, 'Physical wall masonry is opaque; padded artwork is not its alpha mask.');
+    assert.ok(caster.occluderScale[2] <= 34 / 48);
+    assert.equal(caster.occluderScale[0], 640 / 48);
+    assert.ok(Math.abs(caster.occluderPosition[2] - capture.physicalVolume.height / 96) < 1e-12);
+    assert.ok(Math.abs(caster.occluderPosition[1] + (192 + 8) * Math.SQRT2 / 48) < 1e-12);
+    assert.throws(() => huntSolidVolumeCaster({ ...capture.physicalVolume, height: 0 }), RangeError);
+});
