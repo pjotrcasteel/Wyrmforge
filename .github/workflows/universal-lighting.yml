@@ -72,6 +72,16 @@ jobs:
             sleep 1
           done
           dotnet test tests/Wyrmforge.Browser.Tests -c Release --no-build --filter 'FullyQualifiedName~UniversalLightingBrowserTests|FullyQualifiedName~HuntGpuAdapterBrowserTests|FullyQualifiedName~Mobile_LiveHuntGpu_RendersActorsAndKeepsSimulationMoving|FullyQualifiedName~Mobile_G4DeviceReview_RecordsRealHuntAndExportsEvidence|FullyQualifiedName~Mobile_G4Consent_IsAnObviousSingleChoiceBeforeGameMenus'
+      - name: Report G4 four-direction shadow geometry before upload
+        if: always()
+        run: |
+          if [ -f artifacts/gpu-proof/g4-shadow-direction-metrics.json ]; then
+            printf 'G4 shadow direction [pixels,mean-away,source-side-fraction,far-pixels,max-away]: '
+            cat artifacts/gpu-proof/g4-shadow-direction-metrics.json
+            printf '\n'
+          else
+            printf 'G4 direction test produced no metrics; check test discovery.\n'
+          fi
       - name: Summarize real-game lighting evidence with quality and runtime metrics
         if: success()
         run: node tests/javascript/hunt-gpu-evidence-report.mjs artifacts/gpu-proof

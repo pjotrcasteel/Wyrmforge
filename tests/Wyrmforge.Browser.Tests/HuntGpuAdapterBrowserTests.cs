@@ -206,7 +206,7 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
                     world.render(ctx,{...base,lights:[{...light,castsShadow:false}]});
                     const clear=world.engine.pixels();
 
-                    let weight=0, project=0, opposite=0, changed=0;
+                    let weight=0, project=0, opposite=0, changed=0, farPixels=0, farthest=0;
                     for(let i=0;i<shadowed.length;i+=4){
                         const x=(i/4)%width, y=height-1-Math.floor(i/4/width);
                         const sx=Math.floor(x-left),sy=Math.floor(y-top);
@@ -218,9 +218,11 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
                         const away=((x-footX)*-dx+(y-footY)*-dy)/48;
                         weight+=delta;project+=delta*away;
                         if(away<0)opposite+=delta;
+                        if(away>=20)farPixels++;
+                        farthest=Math.max(farthest,away);
                         changed++;
                     }
-                    samples.push([changed,weight?project/weight:0,weight?opposite/weight:1]);
+                    samples.push([changed,weight?project/weight:0,weight?opposite/weight:1,farPixels,farthest]);
                 }
                 window.__huntGpuDirectionalWorld=world;
                 return samples;
@@ -245,6 +247,10 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
                 $"A {sides[i]} Fireball must cast the shadow AWAY from the source, not toward it or under the actor.");
             Assert.IsLessThan(.3, sample[2],
                 $"A {sides[i]} Fireball must not place most shadow pixels on the illuminated side.");
+            Assert.IsGreaterThan(100, sample[3],
+                $"A {sides[i]} Fireball must create a substantial shadow footprint at least 20 pixels behind the Hollowed.");
+            Assert.IsGreaterThan(30, sample[4],
+                $"A {sides[i]} Fireball cannot leave the Hollowed with only a tiny contact smear.");
         }
 
         await Page.EvaluateAsync("() => window.__huntGpuDirectionalWorld.dispose()");
