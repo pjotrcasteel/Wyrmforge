@@ -198,17 +198,8 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
                     materials:[],objects:[]};
                 const alpha=tile.getContext('2d').getImageData(0,0,160,160).data;
                 const samples=[];
-                const physicalBodyHeight=capture.occluderHeightPx;
-                // WorldSize=93, cell=96, authored atlas foot anchor y=72.
-                // The captured 160px canvas includes 90px of padding above/below
-                // the source artwork. Test real world-body vs whole-capture scaling.
-                const atlasFootToTop=93*72/96;
-                const calibratedCaptureHeight=physicalBodyHeight*capture.size/atlasFootToTop;
-                const caster=world.objects.find(item => item.id==='hollow');
+                const bodyHeight=capture.occluderHeightPx;
                 const sourceHeight=24;
-                for(const bodyHeight of [physicalBodyHeight,calibratedCaptureHeight]){
-                    caster.occluderScale[1]=bodyHeight/48;
-                    caster.occluderPosition[2]=-(1-capture.footFraction)*bodyHeight/48;
                 for(const [dx,dy] of [[0,48],[0,-48],[48,0],[-48,0]]){
                     const light={id:'moving-fireball',ownerId:'test',type:'point',enabled:true,
                         position:[footX+dx,footY+dy,sourceHeight],direction:[0,0,-1],color:'#ff7835',
@@ -220,7 +211,7 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
                     const evidence=document.createElement('canvas');
                     evidence.width=width;evidence.height=height;
                     evidence.getContext('2d').drawImage(canvas,0,0);
-                    if(bodyHeight===physicalBodyHeight)gallery.appendChild(evidence);
+                    gallery.appendChild(evidence);
                     world.render(ctx,{...base,lights:[{...light,castsShadow:false}]});
                     const clear=world.engine.pixels();
                     world.render(ctx,{...base,lights:[]});
@@ -256,7 +247,6 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
                         directInAffected?blockedInAffected/directInAffected:0,
                         changed?directInAffected/changed:0,sourceHeight]);
                 }
-                }
                 window.__huntGpuDirectionalWorld=world;
                 return samples;
             }
@@ -266,10 +256,9 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
             ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
         Directory.CreateDirectory(artifacts);
         await File.WriteAllTextAsync(Path.Combine(artifacts, "g4-shadow-direction-metrics.json"),
-            System.Text.Json.JsonSerializer.Serialize(new { physicalCasterHeightPx = 32, authoredAtlasFootToTopPx = 93.0 * 72 / 96,
-                calibratedFullCaptureHeightPx = 32.0 * 160 / (93.0 * 72 / 96), fireballHeightPx = 24,
+            System.Text.Json.JsonSerializer.Serialize(new { physicalCasterHeightPx = 32, fireballHeightPx = 24,
                 canonicalActorFootY = height / 2, sides = new[] { "south", "north", "east", "west" },
-                measurements = measurements.Take(4).ToArray(), physicalSpanSweep = measurements.Chunk(4).ToArray() }));
+                measurements }));
         await Page.Locator("#hunt-gpu-direction-shadow-gallery").ScreenshotAsync(new()
         {
             Path = Path.Combine(artifacts, "g4-shadow-direction.png"),
