@@ -9,6 +9,7 @@ function fakeCapture() {
     const pixels = { width: 64, height: 64, getContext() { return context; } };
     const layer = { pixels, texture: { needsUpdate: false }, revision: 'stable' };
     const world = {
+        camera: { x: 0, y: 0 },
         layers: new Map([['prop', layer]]), used: new Set(), dirtyTextures: new Set(),
         materials: [], objects: [],
         canReuseCapture: HuntGpuWorld.prototype.canReuseCapture,
