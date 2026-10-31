@@ -374,6 +374,30 @@ test('authoritative projectile point light retains one mobile shadow budget and 
     assert.equal(hollowed.frame, undefined, 'Actor should not be compressed or cropped.');
 });
 
+
+test('Fireball shadow uses the opaque cutout, not transparent capture padding', async () => {
+    const { huntOpaqueCaptureBounds, huntShadowOpaqueCasterPlan } =
+        await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js');
+    const width = 160, height = 160;
+    const rgba = new Uint8ClampedArray(width * height * 4);
+    for (let y = 100; y < 146; y++) for (let x = 70; x < 112; x++)
+        rgba[(y * width + x) * 4 + 3] = 255;
+    // A translucent foot glow should not move the actor's physical shadow pivot.
+    rgba[(155 * width + 80) * 4 + 3] = 50;
+    const canvas = { width, height, getContext: () => ({ getImageData: () => ({ data: rgba }) }) };
+    const bounds = huntOpaqueCaptureBounds(canvas);
+    assert.deepEqual(bounds, { top: 100, bottom: 146, height: 160 });
+    const plan = huntShadowOpaqueCasterPlan(bounds, .5, Math.SQRT1_2);
+    assert.ok(plan, 'The alpha silhouette has a stable physical height and grounded pivot.');
+    const visibleWorldHeight = plan.scaleY * (bounds.bottom - bounds.top) / height * Math.SQRT1_2;
+    assert.ok(Math.abs(visibleWorldHeight - .21) < .000001,
+        'Exactly the opaque pixels occupy 42% of Fireball world height, rather than subpixel dust.');
+    assert.ok(plan.scaleY > 1, 'The padded 160px texture must not crush its 46px visible actor.');
+    assert.ok(plan.offsetFromTileBottom > 0, 'The empty rows beneath the feet must be discarded.');
+    assert.equal(huntOpaqueCaptureBounds({ width: 0, height: 0, getContext() {} }), null);
+    assert.equal(huntShadowOpaqueCasterPlan(null, .5), null);
+});
+
 test('live GPU shadow pixel proof isolates one real light and restores its renderer state', () => {
     const light = { castShadow: true };
     const frames = [];
