@@ -175,8 +175,8 @@ test('mage, Warden and Wyrm retain their own painted foot line without ground pe
     ]) {
         const actor = layer.enemy ?? layer.dragon ?? { x: 400, y: 320, radius: 12 };
         const capture = huntLayerCapture(layer, actor);
-        assert.equal(capture.occluderHeightPx, Math.max(4, Math.round(3 * actor.radius / 4) * 4),
-            'Standing fallbacks use physical collision proportions, independent of art capture size.');
+        assert.equal(capture.occluderHeightPx, Math.max(4, Math.round(capture.size * .6 / 4) * 4),
+            'A padded raster silhouette must retain enough upright pixel coverage to cast a real shadow.');
         const mesh = huntSurfaceRenderable(capture.id, capture.x, capture.y,
             capture.size, capture.size, true, { footFraction: capture.footFraction });
         assert.equal(mesh.geometry, 'hunt-billboard');
@@ -207,6 +207,7 @@ test('Hollowed and Ashling shadow anchors do not drift south as capture sizes va
         const enemy = { entityId: radius, x: 260, y: 340, radius };
         const capture = huntLayerCapture({ kind: 'enemy', enemy }, null);
         assert.equal(capture.footFraction, .75);
+        assert.equal(capture.occluderHeightPx, Math.max(4, Math.round(capture.size * .6 / 4) * 4));
         assert.equal(capture.y + capture.size * capture.footFraction, enemy.y);
         const caster = huntCaptureSilhouetteCaster(capture.x, capture.y, capture.size,
             capture.size, capture.footFraction, capture.occluderHeightPx);
