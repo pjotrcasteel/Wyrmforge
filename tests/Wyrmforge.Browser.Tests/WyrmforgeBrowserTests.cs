@@ -3743,7 +3743,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         // The prior GPU candidate could be technically green while its actual
         // Hunt was black. Require C#-owned hunter visibility AND a lit area in
         // the live composited Canvas, away from the HTML HUD and boss overlays.
-        await Page.WaitForFunctionAsync(@"() => {
+        await Page.WaitForFunctionAsync(@"(painted) => {
             const frame = window.__huntGpuRead?.();
             const visible = frame?.gpuWorld?.lights?.some(light => light.id === 'hunter:night-visibility');
             const canvas = document.querySelector('canvas.game-canvas');
@@ -3755,15 +3755,21 @@ public sealed class WyrmforgeBrowserTests : PageTest
             const pixels = canvas.getContext('2d').getImageData(startX, startY, w, h).data;
             // A bright projectile/telegraph cannot make an otherwise-black
             // playfield pass. Require a distributed sky-lit terrain floor.
+            // Source-painted material candidates were nearly black even when
+            // the test's original nonblack-pixel check passed. Gate the real
+            // GPU albedo on DISTRIBUTED floor readability, not a bright Fireball.
+            const pixelMinimum = painted ? 90 : 30;
+            const coverageMinimum = painted ? .48 : .16;
+            const averageMinimum = painted ? 80 : 14;
             let readablePixels = 0, totalBrightness = 0;
             for (let i = 0; i < pixels.length; i += 4) {
                 const brightness = pixels[i] + pixels[i + 1] + pixels[i + 2];
                 totalBrightness += brightness;
-                if (brightness >= 30) readablePixels++;
+                if (brightness >= pixelMinimum) readablePixels++;
             }
             const count = pixels.length / 4;
-            return readablePixels >= count * .16 && totalBrightness >= count * 14;
-        }", null, new() { Timeout = 30000 });
+            return readablePixels >= count * coverageMinimum && totalBrightness >= count * averageMinimum;
+        }", paintedGround, new() { Timeout = 30000 });
 
         // The default G4 review must show neutral grey, free of ground paintings.
         // Keep an explicit painted A/B for diagnostic comparison only. Both cases
