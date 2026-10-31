@@ -83,6 +83,18 @@ export function huntCaptureSilhouetteCaster(x, y, width, height, footFraction = 
         occluderScale: [width / UNIT, verticalHeight, 1],
     };
 }
+/** A source-authored solid volume uses its real ground footprint and height.
+ * Its opaque geometry is independent of any padded 2D presentation capture.
+ */
+export function huntSolidVolumeCaster({ x, y, width, depth, height }) {
+    if (![x, y, width, depth, height].every(Number.isFinite) || width <= 0 || depth <= 0 || height <= 0)
+        throw new RangeError('Invalid physical caster volume');
+    return { occluderGeometry: 'hunt-solid-volume', occluderAlphaSource: false,
+        occluderPosition: [(x + width / 2) / UNIT, -(y + depth / 2) * GROUND_Y / UNIT, height / (2 * UNIT)],
+        occluderRotation: [0, 0, 0],
+        occluderScale: [width / UNIT, depth * GROUND_Y / UNIT, height / UNIT] };
+}
+
 export function huntSurfaceRenderable(id, x, y, width, height, castsShadow, surface = {}) {
     const geometry = surface.geometry ?? (castsShadow ? 'hunt-billboard' : 'hunt-plane');
     const standing = surface.standing ?? geometry === 'hunt-billboard';
@@ -112,6 +124,7 @@ export function huntSurfaceRenderable(id, x, y, width, height, castsShadow, surf
         ...(surface.occluderPosition ? { occluderPosition: surface.occluderPosition } : {}),
         ...(surface.occluderRotation ? { occluderRotation: surface.occluderRotation } : {}),
         ...(surface.occluderScale ? { occluderScale: surface.occluderScale } : {}),
+        ...(surface.occluderAlphaSource === false ? { occluderAlphaSource: false } : {}),
         ...(frame ? { frame } : {}),
     };
 }
@@ -206,6 +219,7 @@ export class HuntGpuWorld {
         // G1-style alpha-cutout sprite silhouettes retain source-pixel scale
         // until WF/AR supply authored 2.5D geometry.
         this.engine.registerGeometry('hunt-shadow-silhouette', huntCrossedShadowGeometry());
+        this.engine.registerGeometry('hunt-solid-volume', new T.BoxGeometry(1, 1, 1));
         this.layers = new Map();
         this.used = new Set();
         this.dirtyTextures = new Set();
@@ -287,10 +301,12 @@ export class HuntGpuWorld {
         }
         // An explicit 2.5D/3D occluder always wins. Legacy Canvas captures
         // contribute their own alpha silhouette through the shared shadow maps.
-        const capturedSurface = castsShadow && !surface.geometry && !surface.occluderGeometry
-            ? { ...surface, ...huntCaptureSilhouetteCaster(x, y, width, height, surface.footFraction ?? .75,
-                surface.occluderHeightPx ?? height * GROUND_Y) }
-            : surface;
+        const authoredSurface = surface.physicalVolume
+            ? { ...surface, ...huntSolidVolumeCaster(surface.physicalVolume) } : surface;
+        const capturedSurface = castsShadow && !authoredSurface.geometry && !authoredSurface.occluderGeometry
+            ? { ...authoredSurface, ...huntCaptureSilhouetteCaster(x, y, width, height, authoredSurface.footFraction ?? .75,
+                authoredSurface.occluderHeightPx ?? height * GROUND_Y) }
+            : authoredSurface;
         this.submitSurface(huntSurfaceRenderable(id, x, y, width, height, castsShadow, capturedSurface),
             huntSurfaceMaterial(id, surface.material, Boolean(source)));
     }
