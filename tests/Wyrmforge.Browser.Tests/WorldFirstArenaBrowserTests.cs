@@ -137,6 +137,20 @@ public sealed class WorldFirstArenaBrowserTests : PageTest
         }
         Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
         await Page.ScreenshotAsync(new() { Path = Path.Combine(output, $"ar1-{kind}-live-hunt-{width}.png"), FullPage = false });
+        // AR3 visual acceptance uses this exact running C# Hunt, not a separate mock renderer.
+        // Height/grade/material data must be present before its screenshot is recorded.
+        var heightField = await Page.EvaluateAsync<bool>(
+            "() => window.__wyrmforgeAr0Geography?.elevationGrid?.center?.heightMeters >= 0");
+        Assert.IsTrue(heightField, "AR3 preview needs authoritative sampled C# height and grade.");
+        Assert.IsTrue(await Page.EvaluateAsync<bool>(
+            "() => Number.isFinite(window.__wyrmforgeAr0Geography?.elevationGrid?.center?.grade)"));
+        await Page.ScreenshotAsync(new()
+        {
+            Path = Path.Combine(output, $"ar3-{kind}-continuous-elevation-{width}.png"),
+            FullPage = false,
+        });
+
+
 
         // Review-only geography inset: same live Hunt canvas, same C# polygons,
         // with an explicit viewport rectangle and player position for context.
