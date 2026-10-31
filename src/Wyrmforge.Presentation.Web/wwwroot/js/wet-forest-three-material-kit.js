@@ -238,8 +238,8 @@ export function bakeSourceBackedThreeMaterialGround(plan, images, seed, canvasFa
  * Playable-Hunt-only projection of the original 900px paintings. The archived
  * artwork is a SOURCE canvas, not a 900-world-pixel tile: displaying it 1:1
  * produced giant leaves, boulders and hard-looking material islands on phones.
- * Downsample 900 -> 252 world pixels (0.28x) and mirror neighbouring repeats
- * so that their sampled edge pixels touch without visible square seams.
+ * Sample at 0.28 world pixels per source pixel, using overlapping crops
+ * without reflected neighbouring repeats.
  * Review/lab source art and C# terrain regions remain untouched.
  */
 export const LIVE_SOURCE_TILE = 252;
@@ -248,20 +248,40 @@ export const LIVE_FEATHER_BANDS = Object.freeze([
     { radius: 5, alpha: .36 },
 ]);
 
-function copyLiveScaledArt(ctx, images, material, width, height, seed) {
-    const image = images[material];
-    const phase = (Math.abs(seed) % 16) * 7;
-    for (let y = -phase, row = 0; y < height; y += LIVE_SOURCE_TILE, row++) {
-        for (let x = -phase, col = 0; x < width; x += LIVE_SOURCE_TILE, col++) {
-            const flipX = col % 2 === 1, flipY = row % 2 === 1;
-            ctx.save();
-            ctx.translate(x + (flipX ? LIVE_SOURCE_TILE : 0),
-                y + (flipY ? LIVE_SOURCE_TILE : 0));
-            ctx.scale(flipX ? -1 : 1, flipY ? -1 : 1);
-            ctx.drawImage(image, 0, 0, REVIEW_TILE_SIZE, REVIEW_TILE_SIZE,
-                0, 0, LIVE_SOURCE_TILE, LIVE_SOURCE_TILE);
-            ctx.restore();
+export function liveGroundPatchPlan(width, height, seed, material) {
+    const patches = [];
+    const hash = (col, row, channel) => {
+        let n = (seed | 0) ^ Math.imul(col + 31, 0x85ebca6b) ^ Math.imul(row + 47, 0xc2b2ae35)
+            ^ Math.imul(material + channel * 7, 0x9e3779b1);
+        n = Math.imul(n ^ (n >>> 16), 0x7feb352d);
+        return ((n ^ (n >>> 15)) >>> 0) / 4294967296;
+    };
+    for (let row = 0, y = -48; y < height; row++, y += 120)
+        for (let col = 0, x = -48; x < width; col++, x += 120)
+            patches.push({ x, y, sx: Math.floor(hash(col, row, 0) * 301), sy: Math.floor(hash(col, row, 1) * 301) });
+    return patches;
+}
+
+function copyLiveScaledArt(ctx, images, material, width, height, seed, canvasFactory) {
+    // Preserve the compact 0.28 source scale, without reflected neighbouring
+    // copies. Overlapping independently sampled crops hide the source borders.
+    const scratch = canvasFactory();
+    scratch.width = scratch.height = 168;
+    const sc = scratch.getContext('2d');
+    for (const p of liveGroundPatchPlan(width, height, seed, material)) {
+        sc.clearRect(0, 0, 168, 168);
+        sc.globalCompositeOperation = 'source-over';
+        sc.drawImage(images[material], p.sx, p.sy, 600, 600, 0, 0, 168, 168);
+        sc.globalCompositeOperation = 'destination-in';
+        for (const horizontal of [true, false]) {
+            const mask = sc.createLinearGradient(0, 0, horizontal ? 168 : 0, horizontal ? 0 : 168);
+            mask.addColorStop(0, 'rgba(255,255,255,0)');
+            mask.addColorStop(48 / 168, 'white');
+            mask.addColorStop(1, 'white');
+            sc.fillStyle = mask;
+            sc.fillRect(0, 0, 168, 168);
         }
+        ctx.drawImage(scratch, p.x, p.y);
     }
 }
 
@@ -348,7 +368,7 @@ export function bakeSourceBackedThreeMaterialGroundBatched(plan, images, seed, c
         }
         if (rectangles) {
             ctx.clip();
-            copyLiveScaledArt(ctx, images, material, plan.width, plan.height, seed);
+            copyLiveScaledArt(ctx, images, material, plan.width, plan.height, seed, canvasFactory);
         }
         ctx.restore();
     }
@@ -363,7 +383,7 @@ export function bakeSourceBackedThreeMaterialGroundBatched(plan, images, seed, c
             if (addLiveFeatherMask(ctx, plan, material, radius, seed)) {
                 ctx.clip();
                 ctx.globalAlpha = alpha;
-                copyLiveScaledArt(ctx, images, material, plan.width, plan.height, seed);
+                copyLiveScaledArt(ctx, images, material, plan.width, plan.height, seed, canvasFactory);
             }
             ctx.restore();
         }

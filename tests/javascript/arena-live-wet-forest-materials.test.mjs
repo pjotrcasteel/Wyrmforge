@@ -8,6 +8,20 @@ import {
     preloadLiveWetForestMaterials, drawLiveWetForestMaterialBase,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-live-wet-forest-materials.js';
 
+// Separate scratch surface: never alias or clear the live world canvas.
+globalThis.OffscreenCanvas = class {
+    constructor(width, height) { this.width = width; this.height = height; }
+    getContext() { return {
+        clearRect() {}, fillRect() {},
+        createLinearGradient() { return { addColorStop() {} }; },
+        drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh) {
+            assert.equal(image.width, 900);
+            assert.ok(sx >= 0 && sy >= 0 && sx + sw <= 900 && sy + sh <= 900);
+            assert.equal(dw / sw, .28);
+        },
+    }; }
+};
+
 const recipe = Object.freeze({
     trail: [
         { x: .45, y: 0, width: .14 }, { x: .55, y: .5, width: .15 },
@@ -94,9 +108,8 @@ test('actual live fallback switches to the original PR340 paintings once decoded
             save() {}, restore() {}, beginPath() {}, rect() {}, clip() {}, translate() {}, scale() {},
             set imageSmoothingEnabled(v) { assert.equal(v, true); },
             drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh) {
-                assert.equal(image.width, 900);
-                assert.equal(image.height, 900);
-                assert.ok(sx >= 0 && sy >= 0 && sx + sw <= 900 && sy + sh <= 900);
+                assert.equal(image.width, 168);
+                assert.equal(image.height, 168);
                 calls.push([image, sx, sy, sw, sh, dx, dy, dw, dh]);
             },
         };
@@ -168,23 +181,19 @@ test('full playable-world source art scales and feathers materials with bounded 
             clip() { operations.clips++; },
             set imageSmoothingEnabled(value) { assert.equal(value, true); },
             drawImage(source, sx, sy, sw, sh, dx, dy, dw, dh) {
-                assert.equal(source.width, 900);
-                assert.equal(sw, 900);
-                assert.equal(sh, 900);
-                assert.equal(dw, 252);
-                assert.equal(dh, 252);
+                assert.equal(source.width, 168);
                 operations.scaled++;
                 operations.images++;
             },
         };
         assert.equal(drawLiveWetForestMaterialBase(ctx, world, seed, width, height), true);
         assert.ok(operations.rectangles > 100, 'Actual material regions and contacts must still exist.');
-        assert.ok(operations.images > 0 && operations.images <= 420,
+        assert.ok(operations.images > 0 && operations.images <= 2200,
             'Too many image copies for a single static mobile world bake: ' + operations.images);
         assert.ok(operations.clips >= 2 && operations.clips <= 10);
         assert.equal(operations.scaled, operations.images, '900px source motifs cannot stay 900 world pixels.');
         assert.ok(operations.feathered >= 2, 'Material edges must use a translucent feather.');
-        assert.ok(operations.mirrored > 0, 'Neighbouring small tiles must avoid hard repeat seams.');
+        assert.equal(operations.mirrored, 0, 'Ground crops must never reflect into symmetric motifs.');
         const first = { ...operations };
         operations.rectangles = operations.images = operations.clips = 0;
         operations.scaled = operations.feathered = operations.mirrored = 0;

@@ -1,4 +1,4 @@
-import { drawWetForestGround } from './arena-wet-forest-art.js?v=20261026-compact-ground-v1';
+import { drawWetForestGround } from './arena-wet-forest-art.js?v=20261026-organic-ground-v2';
 import { createCloisterPlan, drawCloisterFloor } from './arena-cloister-art.js';
 import { artReady, hasArtFrame, drawArtFrame } from './art-atlas.js';
 
@@ -116,8 +116,8 @@ function irregularShape(ctx, x, y, rx, ry, rotation, seed) {
     ctx.restore();
 }
 
-export function drawTerritoryGround(ctx, plan, approvedAtlas = null) {
-    if (plan.wetForest) return drawWetForestGround(ctx, plan, approvedAtlas);
+export function drawTerritoryGround(ctx, plan, approvedAtlas = null, flatColorsOnly = false, gpuAlbedo = false) {
+    if (plan.wetForest) return drawWetForestGround(ctx, plan, approvedAtlas, flatColorsOnly, gpuAlbedo);
     const { width, height, biome, seed } = plan;
     const colors = groundPalette[biome];
     for (const [i, patch] of plan.patches.entries()) {

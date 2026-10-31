@@ -61,6 +61,6 @@ test('ground-only arena lab does not promote old environment, trails or props in
     assert.match(ground, /naturalGroundPreview/);
     assert.doesNotMatch(ground, /arena-environment|arena-territory|wet-forest-art|arena-lab\.js/);
     const hunt = read('wwwroot/js/arena.js');
-    assert.match(hunt, /drawArenaEnvironment\(ctx, snapshot\.environment, worldWidth, worldHeight, visualSeconds\)/);
+    assert.match(hunt, /drawArenaEnvironment\(ctx, snapshot\.environment, worldWidth, worldHeight, visualSeconds, null,\s*gpu \? 'gpu' : 'canvas', state\.g4FlatGround\)/);
     assert.doesNotMatch(hunt, /groundFoundationBoard|arena-ground-foundation/);
 });

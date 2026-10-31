@@ -149,5 +149,14 @@ test('firelight is a canvas-only layer between physical shadows and sorted sprit
     assert.ok(env.indexOf('drawWetForestFirelight(ctx, environment') >
         env.indexOf('drawWetForestCastShadows(ctx, environment'));
     assert.ok(env.indexOf('drawWetForestFirelight(ctx, environment') <
-        env.lastIndexOf('const cloister = texture?.cloister ?? null'));
+        env.lastIndexOf('for (const barrier of environment.barriers ?? [])'));
+});
+
+test('GPU material capture retains foot contact but excludes legacy painted canopy shadows', () => {
+    const code = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-wet-forest-dressing.js', import.meta.url), 'utf8');
+    const canopy = code.slice(code.indexOf('if (root.kind ==='), code.indexOf('// Debris belongs'));
+    assert.match(canopy, /if \(!gpuAlbedo\)/);
+    assert.match(canopy, /ctx\.ellipse\(root\.x \+ 22, root\.y \+ 13, 34, 10/);
+    const integration = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js', import.meta.url), 'utf8');
+    assert.match(integration, /drawWetForestDressing\(ctx, plan\.story, plan\.forestProps, width, height, gpuAlbedo\)/);
 });

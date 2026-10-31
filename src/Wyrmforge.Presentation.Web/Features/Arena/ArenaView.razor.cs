@@ -134,12 +134,14 @@ public partial class ArenaView : IAsyncDisposable
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
+        // Commit the chosen signature before starting the JS frame loop. GPU initialization can
+        // otherwise delay this callback while browser proof observes the default Arcane snapshot.
+        // The Hunt must never simulate or render its opening frames under the wrong school.
+        if (PreferredPrimary is { } signature && ChoosingPrimary)
+            await ChoosePrimaryAsync(signature);
         arenaModule = await JavaScript.InvokeAsync<IJSObjectReference>("import", CancellationToken.None, $"./js/arena-performance.js?v={AppBuildInfo.Version}-{AppBuildInfo.Commit}");
         dotNetReference = DotNetObjectReference.Create(this);
         await arenaModule.InvokeVoidAsync("initializeArena", CancellationToken.None, canvas, dotNetReference);
-        // Character creation already chose the Divine school. Commit its signature without a Hunt overlay.
-        if (PreferredPrimary is { } signature && ChoosingPrimary)
-            await ChoosePrimaryAsync(signature);
     }
 
     [JSInvokable]

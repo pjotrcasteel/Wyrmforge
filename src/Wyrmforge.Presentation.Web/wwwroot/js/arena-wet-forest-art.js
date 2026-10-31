@@ -18,6 +18,21 @@ const MATERIALS = Object.freeze({
     road: ['#39362d', '#3b372e', '#3d392e', '#38352d'],
     clearing: ['#30312c', '#32332d', '#34342e', '#2e302b'],
 });
+// GPU-lit ground requires unlit diffuse reflectance, not the near-black,
+// painterly-shaded 900px source studies. Values remain colour-coded by soil type.
+const GPU_ALBEDO_MATERIALS = Object.freeze({
+    loam: ['#74766b', '#727468', '#77796c', '#707366'],
+    moss: ['#6d806b', '#70816b', '#72846e', '#6e7f69'],
+    mud: ['#796f65', '#7b7167', '#7d736a', '#776d64'],
+    leafbed: ['#8a7769', '#887467', '#8c796a', '#867366'],
+    puddle: ['#546469', '#56666b', '#58686c', '#526367'],
+    road: ['#8a806f', '#8d8270', '#8b806e', '#887d6e'],
+    clearing: ['#7d7a70', '#807c71', '#817e73', '#7b786e'],
+});
+const GPU_ALBEDO_GRAIN = Object.freeze({
+    loam: '#939587', moss: '#8ba28b', mud: '#958578',
+    leafbed: '#a6907e', puddle: '#718185', road: '#a49783', clearing: '#999587',
+});
 const GRAIN = Object.freeze({
     loam: '#464a3d', moss: '#495843', mud: '#4b4638', leafbed: '#62503a',
     puddle: '#455650', road: '#625543', clearing: '#505044',
@@ -409,7 +424,75 @@ function groundSite(ctx, site, x, y, seed) {
     ctx.restore();
 }
 
-export function drawWetForestGround(ctx, plan, approvedAtlas = null) {
+/**
+ * Lightweight G4 performance-isolation floor. This uses only broad colors and
+ * the existing C# Wet Forest recipe; it never creates 12px tile arrays,
+ * requests 900px material images or bakes texture atlas copies.
+ * It changes presentation only, never walkability or collision.
+ */
+export function drawWetForestFlatGround(ctx, plan) {
+    const recipe = plan?.wetForest;
+    if (!recipe) return false;
+    const { width, height } = plan;
+    if (!(width > 0 && height > 0)) return false;
+    ctx.save();
+    try {
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = '#283029';
+        ctx.fillRect(0, 0, width, height);
+        for (const patch of recipe.ground ?? []) {
+            const color = {
+                moss: '#304334', mud: '#34312a', puddle: '#1a292a',
+                leafbed: '#40362c', clearing: '#3b3b32', loam: '#283029',
+            }[patch.kind] ?? '#283029';
+            ctx.beginPath();
+            ctx.ellipse(patch.x * width, patch.y * height,
+                Math.max(2, patch.radiusX * width), Math.max(2, patch.radiusY * height),
+                0, 0, Math.PI * 2);
+            // Flat-color mode is a performance probe, not a shadow painter.
+            // Broad opaque ellipses become black holes under Gothic lighting;
+            // retain source terrain zones as restrained, blended floor tint.
+            ctx.globalAlpha = .18;
+            ctx.fillStyle = color;
+            ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+        // One connected, source-defined road polygon instead of material-image
+        // mosaics or thousands of brush/tile operations.
+        const left = [], right = [];
+        for (let y = 0; y <= height; y += 24) {
+            const actualY = Math.min(y, height);
+            const trail = wetForestTrailAt(recipe.trail, actualY / height);
+            const center = trail.x * width;
+            const half = trail.width * width * .5;
+            left.push([center - half, actualY]);
+            right.push([center + half, actualY]);
+        }
+        if (left.at(-1)?.[1] !== height) {
+            const trail = wetForestTrailAt(recipe.trail, 1);
+            left.push([(trail.x - trail.width * .5) * width, height]);
+            right.push([(trail.x + trail.width * .5) * width, height]);
+        }
+        ctx.beginPath();
+        ctx.moveTo(...left[0]);
+        for (let i = 1; i < left.length; i++) ctx.lineTo(...left[i]);
+        for (let i = right.length - 1; i >= 0; i--) ctx.lineTo(...right[i]);
+        ctx.closePath();
+        ctx.fillStyle = '#484137';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(recipe.siteX * width, recipe.siteY * height, 83, 46, 0, 0, Math.PI * 2);
+        ctx.globalAlpha = .3;
+        ctx.fillStyle = '#3b3b32';
+        ctx.fill();
+    } finally {
+        ctx.restore();
+    }
+    return true;
+}
+
+export function drawWetForestGround(ctx, plan, approvedAtlas = null, flatColorsOnly = false, gpuAlbedo = false) {
+    if (flatColorsOnly) return drawWetForestFlatGround(ctx, plan);
     const recipe = plan?.wetForest;
     if (!recipe) return;
     const width = plan.width, height = plan.height, seed = plan.seed | 0;
@@ -419,11 +502,12 @@ export function drawWetForestGround(ctx, plan, approvedAtlas = null) {
     // Production Hunts and the lab share the exact PR #340 source-backed
     // materials. The previous code-painted floor stays as a safe fallback
     // while asynchronous artwork decodes (or if an asset is unavailable).
-    const sourcePainted = !approvedAtlas && drawLiveWetForestMaterialBase(ctx, tiles, seed, width, height);
-    const painted = sourcePainted || (approvedAtlas && drawApprovedWetForestBase(ctx, tiles, approvedAtlas, seed, width, height));
+    const sourcePainted = !gpuAlbedo && !approvedAtlas && drawLiveWetForestMaterialBase(ctx, tiles, seed, width, height);
+    const painted = sourcePainted || (!gpuAlbedo && approvedAtlas && drawApprovedWetForestBase(ctx, tiles, approvedAtlas, seed, width, height));
     if (!painted) for (const tile of tiles) {
         const { x, y, material, variation } = tile;
-        const colors = MATERIALS[material] || MATERIALS.loam;
+        const palette = gpuAlbedo ? GPU_ALBEDO_MATERIALS : MATERIALS;
+        const colors = palette[material] || palette.loam;
         rect(ctx, x, y, Math.min(CELL, width - x), Math.min(CELL, height - y), colors[variation]);
         // Soil flecks must not reveal the underlying 12px tile grid. Keep the
         // visual noise sparse, seed-stable and contained in the original floor.
@@ -432,16 +516,17 @@ export function drawWetForestGround(ctx, plan, approvedAtlas = null) {
             const dx = 2 + Math.floor(grain * 5) * 2;
             const dy = 2 + Math.floor(hash(seed ^ 0x78a41f, y / CELL, x / CELL) * 4) * 2;
             ctx.globalAlpha = material === 'puddle' ? .16 : .2;
-            rect(ctx, x + dx, y + dy, grain < .15 ? 4 : 2, 2, GRAIN[material] || GRAIN.loam);
+            const grainPalette = gpuAlbedo ? GPU_ALBEDO_GRAIN : GRAIN;
+            rect(ctx, x + dx, y + dy, grain < .15 ? 4 : 2, 2, grainPalette[material] || grainPalette.loam);
             if (material === 'road' && grain < .12)
-                rect(ctx, x + dx + 2, y + 8, 4, 2, '#252923');
+                rect(ctx, x + dx + 2, y + 8, 4, 2, gpuAlbedo ? '#736e60' : '#252923');
             ctx.globalAlpha = 1;
         }
     }
     // The archived material paintings ALREADY contain soil/vegetation detail.
     // Keep older procedural flecks and rut stains only for the fallback.
     // Never draw synthetic old texture noise on top of the approved art study.
-    if (!sourcePainted) {
+    if (!sourcePainted && !gpuAlbedo) {
         // The floor uses a semantic material map: worn road margins and wet banks
         // blend locally rather than exposing an even grid of perfectly square cells.
         for (const mark of createWetForestMaterialEdges(tiles, seed, width, height)) {
@@ -476,7 +561,7 @@ export function drawWetForestGround(ctx, plan, approvedAtlas = null) {
     // The PR #340 paintings already supply worn soil, footprints and rocks.
     // Do not stamp the old synthetic rectangular site marks over that artwork.
     // Keep them only when the original fallback/atlas is being rendered.
-    if (!sourcePainted)
+    if (!sourcePainted && !gpuAlbedo)
         groundSite(ctx, recipe.site, recipe.siteX * width, recipe.siteY * height, seed);
     for (const mark of createWetForestScorchPlan(
         plan.forestProps, seed, width, height, clamp(plan.corruption || 0, 0, 1), plan.element)) {

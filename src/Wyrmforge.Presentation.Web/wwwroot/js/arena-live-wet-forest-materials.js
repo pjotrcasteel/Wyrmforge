@@ -2,7 +2,7 @@
 // The real C# snapshot remains the sole authority for trails, gates, props,
 // combat collision, pickups and water semantics. No new lighting pipeline.
 import { CELL as ATLAS_CELL } from './arena-materials.js';
-import { bakeSourceBackedThreeMaterialGroundBatched, sourceBackedUrl, SOURCE_BACKED_VARIANTS } from './wet-forest-three-material-kit.js?v=20261026-compact-ground-v1';
+import { bakeSourceBackedThreeMaterialGroundBatched, sourceBackedUrl, SOURCE_BACKED_VARIANTS } from './wet-forest-three-material-kit.js?v=20261026-organic-ground-v2';
 
 const SOURCE_CELL = 12; // canonical createWetForestTilePlan pixel grid
 const MATERIAL_ID = Object.freeze({
@@ -125,7 +125,12 @@ export function drawLiveWetForestMaterialBase(ctx, tiles, seed, width, height) {
     ctx.rect(0, 0, width, height);
     ctx.clip();
     try {
-        return Boolean(bakeSourceBackedThreeMaterialGroundBatched(plan, images, seed, () => target));
+        let firstCanvas = true;
+        const factory = () => {
+            if (firstCanvas) { firstCanvas = false; return target; }
+            return typeof OffscreenCanvas === 'function' ? new OffscreenCanvas(168, 168) : document.createElement('canvas');
+        };
+        return Boolean(bakeSourceBackedThreeMaterialGroundBatched(plan, images, seed, factory));
     } finally {
         ctx.restore();
     }
