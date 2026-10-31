@@ -153,7 +153,7 @@ jobs:
       - name: Checkout pinned G4 PR 456 test build
         uses: actions/checkout@v6
         with:
-          ref: ac58cf42ba892578fec96ab12a2c2e607ce4b778
+          ref: 84ba2c830e78b083a3cec479c9a299d426531d9b
           path: g4-pr-456-source
 
       - name: Restore PR 456 runtime art
@@ -174,18 +174,18 @@ jobs:
         working-directory: g4-pr-456-source
         run: |
           dotnet restore src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj
-          dotnet publish src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -c Release --no-restore -o "$GITHUB_WORKSPACE/artifacts/g4-pr-456-web" -p:VersionSuffix=g4-pr456 -p:SourceRevisionId=ac58cf42ba892578fec96ab12a2c2e607ce4b778
+          dotnet publish src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -c Release --no-restore -o "$GITHUB_WORKSPACE/artifacts/g4-pr-456-web" -p:VersionSuffix=g4-pr456 -p:SourceRevisionId=84ba2c830e78b083a3cec479c9a299d426531d9b
 
       - name: Prepare isolated G4 PR 456 GitHub Pages route
         run: |
           mkdir -p artifacts/web/wwwroot/g4-pr-456
           cp -a artifacts/g4-pr-456-web/wwwroot/. artifacts/web/wwwroot/g4-pr-456/
           sed -i 's#<base href="/" />#<base href="/Wyrmforge/g4-pr-456/" />#' artifacts/web/wwwroot/g4-pr-456/index.html
-          sed -i 's#__WYRMFORGE_BUILD__#ac58cf42ba892578fec96ab12a2c2e607ce4b778#g' artifacts/web/wwwroot/g4-pr-456/index.html
+          sed -i 's#__WYRMFORGE_BUILD__#84ba2c830e78b083a3cec479c9a299d426531d9b#g' artifacts/web/wwwroot/g4-pr-456/index.html
           cp artifacts/web/wwwroot/g4-pr-456/index.html artifacts/web/wwwroot/g4-pr-456/404.html
-          printf 'G4 PR 456 REVIEW (not production, not approved): ac58cf42ba892578fec96ab12a2c2e607ce4b778\n' > artifacts/web/wwwroot/g4-pr-456/build-id.txt
+          printf 'G4 PR 456 REVIEW (not production, not approved): 84ba2c830e78b083a3cec479c9a299d426531d9b\n' > artifacts/web/wwwroot/g4-pr-456/build-id.txt
           grep -q '<base href="/Wyrmforge/g4-pr-456/" />' artifacts/web/wwwroot/g4-pr-456/index.html
-          grep -q 'ac58cf42ba892578fec96ab12a2c2e607ce4b778' artifacts/web/wwwroot/g4-pr-456/index.html
+          grep -q '84ba2c830e78b083a3cec479c9a299d426531d9b' artifacts/web/wwwroot/g4-pr-456/index.html
           ! grep -q '__WYRMFORGE_BUILD__' artifacts/web/wwwroot/g4-pr-456/index.html
           test -s artifacts/web/wwwroot/g4-pr-456/_framework/blazor.webassembly.js
           test -s artifacts/web/wwwroot/g4-pr-456/js/lighting/g4-device-review.js
@@ -260,7 +260,7 @@ jobs:
           assert "fb38db9b2d17e38ff75b854e23e8dcbb4b06dc4b" in read("g4-preview/build-id.txt")
           assert "v0.0.180-g4-preview" in read("g4-preview/build-id.txt")
           assert "<base href=\"/Wyrmforge/g4-pr-456/\" />" in read("g4-pr-456/")
-          assert "ac58cf42ba892578fec96ab12a2c2e607ce4b778" in read("g4-pr-456/build-id.txt")
+          assert "84ba2c830e78b083a3cec479c9a299d426531d9b" in read("g4-pr-456/build-id.txt")
           assert "class G4DeviceReviewSession" in read("g4-pr-456/js/lighting/g4-device-review.js")
           assert "showG4PreflightChoice" in read("g4-pr-456/js/lighting/g4-consent-gate.js")
           assert "class G4DeviceReviewSession" in read("g4-preview/js/lighting/g4-device-review.js")
