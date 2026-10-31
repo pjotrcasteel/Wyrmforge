@@ -265,7 +265,7 @@ test('G4 flat Wet Forest paints recipe colors without decoding tile images or bu
     }
 });
 
-test('G4 review defaults to neutral grey while production retains painted Wet Forest', async () => {
+test('G4 review defaults to neutral grey while Canvas presentation retains painted Wet Forest', async () => {
     const { readFile } = await import('node:fs/promises');
     const arena = await readFile(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena.js', import.meta.url), 'utf8');
     const environment = await readFile(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js', import.meta.url), 'utf8');
@@ -275,8 +275,8 @@ test('G4 review defaults to neutral grey while production retains painted Wet Fo
         'The G4 receiver must use one uniform grey albedo, not a painted ground texture.');
     assert.match(arena, /drawArenaEnvironment\(ctx, snapshot\.environment[\s\S]*state\.g4FlatGround\)/);
     assert.match(environment, /const tile = !flatColorsOnly && artReady\(\)/);
-    assert.match(environment, /flatColorsOnly \? 0 : liveWetForestArtworkGeneration\(\)/);
-    assert.match(environment, /drawTerritoryGround\(ctx, plan\.story, approvedAtlas, flatColorsOnly\)/);
+    assert.match(environment, /flatColorsOnly \|\| gpuAlbedo \? 0 : liveWetForestArtworkGeneration\(\)/);
+    assert.match(environment, /drawTerritoryGround\(ctx, plan\.story, approvedAtlas, flatColorsOnly, gpuAlbedo\)/);
 });
 
 test('real GPU Hunt uses semantic relightable albedo without source-painted lighting', () => {
