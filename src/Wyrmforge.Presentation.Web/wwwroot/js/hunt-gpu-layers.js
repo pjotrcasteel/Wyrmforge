@@ -41,11 +41,14 @@ export function huntLayerCapture(layer, player, dragonDeath = null) {
             break;
     }
     const footFraction = footOffset === null ? undefined : Math.min(1, .75 + footOffset / size);
-    // The 2.5D image can be taller than its physical body and includes padding.
-    // A standing fallback is approximately 1.5 body diameters in world Z,
-    // snapped to the 4px pixel-art unit so all approach angles share stable samples.
-    // Authored heightfields/meshes take precedence once supplied by the asset.
-    const occluderHeightPx = layer.kind === 'masonry' ? undefined : Math.max(4, Math.round(3 * (actor.radius || 12) / 4) * 4);
+    // The legacy actor capture is a padded square with its feet at 75% height.
+    // Its alpha art occupies only part of that square. Scaling the WHOLE square
+    // to collision diameter left the actual shadow silhouette ~14px tall.
+    // Preserve a calibrated 3:5 screen-to-upright capture span, snapped to
+    // the 4px pixel-art grid. This is generic raster-capture geometry, not a
+    // creature-specific shadow or a moving-light-dependent impostor.
+    // Explicit authored 2.5D meshes/heightfields always take precedence.
+    const occluderHeightPx = layer.kind === 'masonry' ? undefined : Math.max(4, Math.round(size * .6 / 4) * 4);
     return { id: 'hunt-' + id, x: actor.x - size / 2, y: actor.y - size * .75, size,
         ...(footFraction !== undefined ? { footFraction } : {}),
         ...(occluderHeightPx !== undefined ? { occluderHeightPx } : {}) };
