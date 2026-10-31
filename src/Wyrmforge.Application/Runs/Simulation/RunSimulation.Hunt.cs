@@ -78,6 +78,7 @@ public sealed partial class RunSimulation
         ascendantActive = false;
         ResetDragonHunt();
         trailExitPending = false;
+        walkedExitNodeId = null;
         mapEncounterCleanupPending = false;
         ClearMapEncounterField();
         RefreshDragonEssenceModifiers();

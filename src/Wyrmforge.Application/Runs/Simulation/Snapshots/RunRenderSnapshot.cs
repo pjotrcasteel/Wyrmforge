@@ -35,6 +35,8 @@ public sealed record RunRenderSnapshot(
     public TrailRenderSnapshot? Trail { get; init; }
     public ArenaEnvironmentRenderSnapshot? Environment { get; init; }
     public ArenaExitRenderSnapshot? Exit { get; init; }
+    /// <summary>Multiple real world-graph exits after clearing an AR1 geographic site.</summary>
+    public IReadOnlyList<ArenaExitRenderSnapshot> ExitPorts { get; init; } = [];
     public ArenaWorldRenderSnapshot? World { get; init; }
     public CastMotionRenderSnapshot? CastMotion { get; init; }
     public IReadOnlyList<HostileProjectileRenderSnapshot> HostileProjectiles { get; init; } = [];

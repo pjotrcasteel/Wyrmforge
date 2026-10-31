@@ -53,10 +53,10 @@ jobs:
         with:
           dotnet-version: '10.0.x'
       - name: Registry and sprite binding regression tests
-        run: node --test tests/javascript/arena-wet-forest-art.test.mjs tests/javascript/arena-environment.test.mjs tests/javascript/universal-lighting.test.mjs tests/javascript/arena-gpu-world.test.mjs tests/javascript/hunt-gpu-surface-contract.test.mjs tests/javascript/hunt-gpu-capture-revision.test.mjs tests/javascript/hunt-gpu-evidence-report.test.mjs tests/javascript/arena-gpu-fireball.test.mjs tests/javascript/arena-fireball-v5.test.mjs tests/javascript/g4-device-review.test.mjs tests/javascript/g4-consent-gate.test.mjs
+        run: node --test tests/javascript/arena-wet-forest-art.test.mjs tests/javascript/arena-environment.test.mjs tests/javascript/universal-lighting.test.mjs tests/javascript/sprite-emission.test.mjs tests/javascript/arena-gpu-world.test.mjs tests/javascript/hunt-gpu-surface-contract.test.mjs tests/javascript/hunt-gpu-capture-revision.test.mjs tests/javascript/hunt-gpu-evidence-report.test.mjs tests/javascript/arena-gpu-fireball.test.mjs tests/javascript/arena-fireball-v5.test.mjs tests/javascript/g4-device-review.test.mjs tests/javascript/g4-consent-gate.test.mjs
       - name: Build tests and publish actual application
         run: |
-          dotnet test tests/Wyrmforge.Application.Tests -c Release --filter FullyQualifiedName~GpuLightingFrameProjectionTests
+          dotnet test tests/Wyrmforge.Application.Tests -c Release --filter 'FullyQualifiedName~GpuLightingFrameProjectionTests|FullyQualifiedName~ActorAppearanceLightingProjectionTests'
           dotnet build tests/Wyrmforge.Browser.Tests -c Release
           dotnet publish src/Wyrmforge.Presentation.Web -c Release -o artifacts/web
       - name: Install Chromium
@@ -71,7 +71,7 @@ jobs:
             if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then break; fi
             sleep 1
           done
-          dotnet test tests/Wyrmforge.Browser.Tests -c Release --no-build --filter 'FullyQualifiedName~UniversalLightingBrowserTests|FullyQualifiedName~HuntGpuAdapterBrowserTests|FullyQualifiedName~Mobile_LiveHuntGpu_RendersActorsAndKeepsSimulationMoving|FullyQualifiedName~Mobile_G4DeviceReview_RecordsRealHuntAndExportsEvidence|FullyQualifiedName~Mobile_G4Consent_IsAnObviousSingleChoiceBeforeGameMenus'
+          dotnet test tests/Wyrmforge.Browser.Tests -c Release --no-build --filter 'FullyQualifiedName~UniversalLightingBrowserTests|FullyQualifiedName~HuntGpuAdapterBrowserTests|FullyQualifiedName~Mobile_LiveHuntGpu_RendersActorsAndKeepsSimulationMoving|FullyQualifiedName~Mobile_G4DeviceReview_RecordsRealHuntAndExportsEvidence|FullyQualifiedName~Mobile_G4Consent_IsAnObviousSingleChoiceBeforeGameMenus|FullyQualifiedName~Mobile_AshlingEyes_UseBoundedAuthoritativeLightSources'
       - name: Report G4 four-direction shadow geometry before upload
         if: always()
         run: |

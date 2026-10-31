@@ -1,0 +1,184 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { drawSemanticSiteFloor, drawWorldSiteElevation, drawWorldSiteLandscape } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js';
+
+function canvas() {
+    const paths = [];
+    const colors = [];
+    const ctx = {
+        save() {}, restore() {}, beginPath() { paths.push('begin'); },
+        moveTo(x, y) { paths.push(['move', x, y]); },
+        lineTo(x, y) { paths.push(['line', x, y]); },
+        closePath() { paths.push('closed'); },
+        arc() {}, fill() { colors.push(this.fillStyle); }, stroke() {},
+        fillRect() { colors.push(this.fillStyle); }, fillText() {},
+    };
+    return { ctx, paths, colors };
+}
+
+const site = {
+    version: 1, siteId: 'fire:opening',
+    substrate: { material: 1 },
+    ports: [{ edgeId: 'opening|fork', neighborNodeId: 'fork', entrance: false,
+        direction: 'NE', localPoint: { x: .94, y: .06 } }],
+    corridors: [{ edgeId: 'opening|fork', material: 2, width: .09,
+        points: [{ x: .5, y: .5 }, { x: .94, y: .06 }] }],
+    landscape: { kind: 'forest-fork', obstacles: [{ kind: 'tree-root', material: 1, height: .5,
+        outline: [{ x: .12, y: .10 }, { x: .2, y: .10 }, { x: .2, y: .19 }, { x: .12, y: .19 }] }] },
+};
+
+test('AR1 live diagnostic uses the same C# polygon outline as physical collision, not random decoration', () => {
+    const on = canvas();
+    assert.equal(drawSemanticSiteFloor(on.ctx, site, 390, 844, true), true);
+    assert.ok(on.paths.includes('closed'), 'Actual C# footprint must close into one physical polygon');
+    assert.ok(on.colors.includes('#264a34'), 'Forest roots must use their typed solid surface');
+    const off = canvas();
+    assert.equal(drawSemanticSiteFloor(off.ctx, site, 390, 844, false), true);
+    assert.ok(!off.colors.includes('#264a34'),
+        'An AR0 palette toggle alone must never draw a collider that is inactive in C#');
+});
+
+test('AR1 mountain and lair semantic shapes have distinct physical material identities', () => {
+    for (const [kind, expected] of [
+        ['cliff', '#42525d'], ['glacier-cliff', '#7d9bac'],
+        ['cliff-face', '#424c52'], ['glacier-cliff-face', '#657d8b'],
+        ['wyrm-rib', '#55434a'], ['ice-spire', '#b1d5e5'],
+    ]) {
+        const { ctx, colors } = canvas();
+        assert.equal(drawWorldSiteLandscape(ctx, {
+            landscape: { kind: 'wyrm-lair', obstacles: [{ kind, material: 4, height: 2,
+                outline: [{ x: .1, y: .1 }, { x: .2, y: .1 }, { x: .2, y: .2 }] }] },
+        }, 390, 844), true);
+        assert.ok(colors.includes(expected), `Missing solid authored material for ${kind}`);
+    }
+});
+
+test('AR1 local scenic roads are generated independently of Chart edge corridors', () => {
+    const local = {
+        ...site,
+        scenicPaths: [{ edgeId: 'site-main-trail', material: 2, width: .07,
+            points: [{ x: .21, y: .91 }, { x: .42, y: .62 }, { x: .61, y: .09 }] }],
+    };
+    const { ctx, paths } = canvas();
+    assert.equal(drawSemanticSiteFloor(ctx, local, 390, 844, true), true);
+    assert.ok(paths.some(point => Array.isArray(point) && point[0] === 'move' &&
+        Math.abs(point[1] - .21 * 390) < .01 && Math.abs(point[2] - .91 * 844) < .01));
+    assert.ok(!paths.some(point => Array.isArray(point) && point[0] === 'move' &&
+        Math.abs(point[1] - .5 * 390) < .01 && Math.abs(point[2] - .5 * 844) < .01),
+        'Graph-derived road must not appear as the local terrain path.');
+});
+
+test('AR1 mountain terraces and monastery masonry render from C# patches with solid walls above trails', () => {
+    const structure = {
+        ...site,
+        landscape: {
+            kind: 'mountain-monastery',
+            terrainPatches: [
+                { kind: 'mountain-crest', height: .84, slope: .76, material: 4,
+                    outline: [{ x: .1, y: .1 }, { x: .3, y: .1 }, { x: .3, y: .3 }] },
+                { kind: 'monastery-terrace', height: .65, slope: .07, material: 4,
+                    outline: [{ x: .72, y: .1 }, { x: .92, y: .1 }, { x: .92, y: .36 }] },
+            ],
+            localPaths: [{ edgeId: 'monastery-approach', material: 2, width: .03,
+                points: [{ x: .5, y: .5 }, { x: .8, y: .36 }] }],
+            obstacles: [{ kind: 'monastery-wall', material: 4, height: 1.4,
+                outline: [{ x: .75, y: .15 }, { x: .87, y: .15 }, { x: .87, y: .17 }] }],
+        },
+    };
+    const on = canvas();
+    assert.equal(drawSemanticSiteFloor(on.ctx, structure, 390, 844, true), true);
+    assert.ok(on.colors.includes('#33434d'), 'A high crest must be visible, not flat grey ground');
+    assert.ok(on.colors.includes('#918b7e'), 'The monastery must rest on a generated terrace');
+    assert.ok(on.colors.indexOf('#8d847b') > on.colors.indexOf('#918b7e'),
+        'Structural collision footprints must render above the terrace');
+    assert.ok(on.paths.some(point => Array.isArray(point) && point[0] === 'move' &&
+        Math.abs(point[1] - .5 * 390) < .01 && Math.abs(point[2] - .5 * 844) < .01),
+        'The local approach must be drawn from the C#-authored path.');
+    const off = canvas();
+    assert.equal(drawSemanticSiteFloor(off.ctx, structure, 390, 844, false), true);
+    assert.ok(!off.colors.includes('#33434d') && !off.colors.includes('#8d847b'),
+        'Inactive AR1 geography must never draw its extra surfaces or physical barriers');
+});
+
+
+test('AR2 optional C# discovery renders a grounded trace only while geography is physically active', () => {
+    const ground = {
+        ...site,
+        landscape: { obstacles: [], discoveries: [
+            { id: 'fire:opening:trace', kind: 'forgotten-waystone', materialReward: null,
+                localPoint: { x: .68, y: .34 } },
+        ] },
+    };
+    const on = canvas();
+    assert.equal(drawSemanticSiteFloor(on.ctx, ground, 390, 844, true), true);
+    assert.ok(on.colors.includes('#786958'), 'Empty side sites still have real physical/historic traces');
+    const off = canvas();
+    assert.equal(drawSemanticSiteFloor(off.ctx, ground, 390, 844, false), true);
+    assert.ok(!off.colors.includes('#786958'), 'Inactive AR geometry cannot paint optional discoveries');
+});
+
+
+test('AR2 a local side road ends at visible ruins, never an invisible dead end', () => {
+    const ground = {
+        ...site,
+        landscape: { obstacles: [], localPaths: [{ edgeId: 'fire:opening:trace:access', material: 2, width: .028,
+            points: [{ x: .5, y: .5 }, { x: .69, y: .4 }] }], discoveries: [{
+            id: 'fire:opening:ruins', kind: 'overgrown-ruins', materialReward: null,
+            localPoint: { x: .69, y: .4 },
+        }] },
+    };
+    const on = canvas();
+    assert.equal(drawSemanticSiteFloor(on.ctx, ground, 390, 844, true), true);
+    assert.ok(on.colors.includes('#9d9b89'), 'The actual ruins destination must read as broken stone foundations.');
+    const off = canvas();
+    assert.equal(drawSemanticSiteFloor(off.ctx, ground, 390, 844, false), true);
+    assert.ok(!off.colors.includes('#9d9b89'), 'Inactive C# geography must not paint a fictitious ruin.');
+});
+
+test('AR3 displays C# height/grade/material samples without generating terrain in JavaScript', () => {
+    const previousDocument = globalThis.document;
+    const images = [];
+    globalThis.document = {
+        createElement(kind) {
+            assert.equal(kind, 'canvas');
+            return {
+                width: 0, height: 0,
+                getContext() {
+                    return {
+                        createImageData(columns, rows) {
+                            return { data: new Uint8ClampedArray(columns * rows * 4) };
+                        },
+                        putImageData(data) { images.push(data); },
+                    };
+                },
+            };
+        },
+    };
+    try {
+        const preview = {
+            columns: 2, rows: 2,
+            samples: Array.from({ length: 4 }, (_, index) => ({
+                heightMeters: index, grade: .08, soilWeight: 0, grassWeight: 0,
+                roadWeight: 1, mudWeight: 0, rockWeight: 0, iceWeight: 0,
+            })),
+        };
+        const drawn = [];
+        const ctx = { save() {}, restore() {},
+            drawImage(canvas, x, y, width, height) { drawn.push({ canvas, x, y, width, height }); } };
+        assert.equal(drawWorldSiteElevation(ctx, { siteId: 'ar3-test', worldSeed: 999,
+            landscape: { elevation: preview } }, 390, 844), true);
+        assert.equal(drawWorldSiteElevation(ctx, { siteId: 'ar3-test', worldSeed: 999,
+            landscape: { elevation: preview } }, 390, 844), true);
+        assert.equal(drawn.length, 2, 'A second frame must use the same cached terrain raster');
+        assert.equal(drawn[0].canvas, drawn[1].canvas);
+        assert.equal(drawn[0].canvas.width, 2);
+        assert.equal(drawn[0].canvas.height, 2);
+        assert.deepEqual([drawn[0].width, drawn[0].height], [390, 844]);
+        assert.equal(images.length, 1);
+        assert.equal(images[0].data.length, 16);
+        assert.ok(images[0].data[0] > 100, 'C# RoadWeight must control the generated pixel');
+        assert.equal(images[0].data[3], 255);
+    } finally {
+        globalThis.document = previousDocument;
+    }
+});

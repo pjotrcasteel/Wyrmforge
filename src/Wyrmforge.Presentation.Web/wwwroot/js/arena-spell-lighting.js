@@ -67,10 +67,18 @@ export function buildSpellLights(snapshot, elapsed = 0, reducedMotion = false, v
     // Transitional Canvas adapter only. Boss lifecycle/positions come from the same
     // C# descriptors as the universal GPU engine, never a second light simulation.
     for (const source of snapshot.lighting?.lights ?? []) {
-        if (!source.ownerId?.startsWith('ashfang:') && !source.ownerId?.startsWith('ashfang-effect:')) continue;
+        // All actor appearance lights use the same authoritative GPU emitter contract as boss sources.
+        // Restrict this legacy Canvas bridge to sources not already projected as spell lights.
+        if (!source.ownerId?.startsWith('ashfang:') &&
+            !source.ownerId?.startsWith('ashfang-effect:') &&
+            !source.ownerId?.startsWith('actor:')) continue;
         if (!source.enabled || !/^#[0-9a-f]{6}$/i.test(source.color)) continue;
         const center = [1, 3, 5].map(i => parseInt(source.color.slice(i, i + 2), 16));
-        candidates.push({ x: source.position?.[0], y: source.position?.[1], radius: source.range,
+        // Canvas draws elevated 2.5D actor features above their world-ground foot.
+        // The universal GPU scene consumes the original XYZ emitter unchanged.
+        const appearanceSource = source.ownerId.startsWith('actor:');
+        const y = appearanceSource ? source.position?.[1] - source.position?.[2] : source.position?.[1];
+        candidates.push({ x: source.position?.[0], y, radius: source.range,
             strength: source.intensity, type: 'boss-source', surge: false,
             family: 'fire', center, edge: palette.fire.edge });
     }

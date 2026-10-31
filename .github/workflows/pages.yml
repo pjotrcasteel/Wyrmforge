@@ -97,6 +97,102 @@ jobs:
           grep -q "${GITHUB_SHA}" ./artifacts/web/wwwroot/index.html
           ! grep -q '__WYRMFORGE_BUILD__' ./artifacts/web/wwwroot/index.html
 
+      # Experimental G4 build occupies a separate URL subtree. Never replace the
+      # production main site with a draft GPU renderer or deploy a floating PR head.
+      - name: Checkout pinned G4 mobile review build
+        uses: actions/checkout@v6
+        with:
+          ref: fb38db9b2d17e38ff75b854e23e8dcbb4b06dc4b
+          path: g4-preview-source
+
+      - name: Restore G4 runtime art
+        working-directory: g4-preview-source
+        run: |
+          git lfs pull --include="src/Wyrmforge.Presentation.Web/wwwroot/**" --exclude=""
+          python3 tools/development/verify_web_assets.py
+
+      - name: Regenerate G4 source-backed environment art
+        working-directory: g4-preview-source
+        run: |
+          python3 -m pip install -r tools/art/painted-requirements.txt
+          python3 tools/art/build_grass_moss_art_candidates.py --output src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-source-backed/v1/grass-moss-art-candidates
+          python3 tools/art/build_wet_mud_art_candidates.py --output src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-source-backed/v1/wet-mud-art-candidates
+          python3 tools/art/build_trampled_earth_art_candidates.py --output src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-source-backed/v1/trampled-earth-art-candidates
+
+      - name: Publish experimental G4 game alongside main
+        working-directory: g4-preview-source
+        run: |
+          # This pinned G4 candidate is not the production Pages release.
+          set -euo pipefail
+          dotnet restore src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj
+          dotnet msbuild src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -getProperty:Version -p:VersionSuffix=g4-preview | grep -Fxq '0.0.180-g4-preview'
+          dotnet publish src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -c Release --no-restore -o "$GITHUB_WORKSPACE/artifacts/g4-preview-web" -p:VersionSuffix=g4-preview -p:SourceRevisionId=fb38db9b2d17e38ff75b854e23e8dcbb4b06dc4b
+          test -s "$GITHUB_WORKSPACE/artifacts/g4-preview-web/wwwroot/js/lighting/g4-device-review.js"
+
+      - name: Prepare isolated G4 GitHub Pages route
+        run: |
+          mkdir -p artifacts/web/wwwroot/g4-preview
+          cp -a artifacts/g4-preview-web/wwwroot/. artifacts/web/wwwroot/g4-preview/
+          sed -i 's#<base href="/" />#<base href="/Wyrmforge/g4-preview/" />#' artifacts/web/wwwroot/g4-preview/index.html
+          sed -i 's#__WYRMFORGE_BUILD__#fb38db9b2d17e38ff75b854e23e8dcbb4b06dc4b#g' artifacts/web/wwwroot/g4-preview/index.html
+          cp artifacts/web/wwwroot/g4-preview/index.html artifacts/web/wwwroot/g4-preview/404.html
+          printf 'G4 PREVIEW (not production): v0.0.180-g4-preview; source fb38db9b2d17e38ff75b854e23e8dcbb4b06dc4b\n' > artifacts/web/wwwroot/g4-preview/build-id.txt
+          grep -q '<base href="/Wyrmforge/g4-preview/" />' artifacts/web/wwwroot/g4-preview/index.html
+          grep -q 'fb38db9b2d17e38ff75b854e23e8dcbb4b06dc4b' artifacts/web/wwwroot/g4-preview/index.html
+          ! grep -q '__WYRMFORGE_BUILD__' artifacts/web/wwwroot/g4-preview/index.html
+          test -s artifacts/web/wwwroot/g4-preview/_framework/blazor.webassembly.js
+          test -s artifacts/web/wwwroot/g4-preview/js/lighting/g4-device-review.js
+          test -s artifacts/web/wwwroot/g4-preview/js/lighting/g4-consent-gate.js
+          grep -q 'Share performance results privately' artifacts/web/wwwroot/g4-preview/js/lighting/g4-consent-gate.js
+          grep -q 'Keep private on this phone' artifacts/web/wwwroot/g4-preview/js/lighting/g4-consent-gate.js
+          grep -q 'g4-consent-gate.js' artifacts/web/wwwroot/g4-preview/index.html
+          # Do not alter the main game's root index or default Canvas renderer.
+          grep -q '<base href="/Wyrmforge/" />' artifacts/web/wwwroot/index.html
+
+      # Separately pinned, unapproved PR #456. Never replace the production or existing G4 preview.
+      - name: Checkout pinned G4 PR 456 test build
+        uses: actions/checkout@v6
+        with:
+          ref: 84ba2c830e78b083a3cec479c9a299d426531d9b
+          path: g4-pr-456-source
+
+      - name: Restore PR 456 runtime art
+        working-directory: g4-pr-456-source
+        run: |
+          git lfs pull --include="src/Wyrmforge.Presentation.Web/wwwroot/**" --exclude=""
+          python3 tools/development/verify_web_assets.py
+
+      - name: Regenerate PR 456 source-backed Wet Forest art
+        working-directory: g4-pr-456-source
+        run: |
+          python3 -m pip install -r tools/art/painted-requirements.txt
+          python3 tools/art/build_grass_moss_art_candidates.py --output src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-source-backed/v1/grass-moss-art-candidates
+          python3 tools/art/build_wet_mud_art_candidates.py --output src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-source-backed/v1/wet-mud-art-candidates
+          python3 tools/art/build_trampled_earth_art_candidates.py --output src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-source-backed/v1/trampled-earth-art-candidates
+
+      - name: Publish isolated G4 PR 456 game
+        working-directory: g4-pr-456-source
+        run: |
+          dotnet restore src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj
+          dotnet publish src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -c Release --no-restore -o "$GITHUB_WORKSPACE/artifacts/g4-pr-456-web" -p:VersionSuffix=g4-pr456 -p:SourceRevisionId=84ba2c830e78b083a3cec479c9a299d426531d9b
+
+      - name: Prepare isolated G4 PR 456 GitHub Pages route
+        run: |
+          mkdir -p artifacts/web/wwwroot/g4-pr-456
+          cp -a artifacts/g4-pr-456-web/wwwroot/. artifacts/web/wwwroot/g4-pr-456/
+          sed -i 's#<base href="/" />#<base href="/Wyrmforge/g4-pr-456/" />#' artifacts/web/wwwroot/g4-pr-456/index.html
+          sed -i 's#__WYRMFORGE_BUILD__#84ba2c830e78b083a3cec479c9a299d426531d9b#g' artifacts/web/wwwroot/g4-pr-456/index.html
+          cp artifacts/web/wwwroot/g4-pr-456/index.html artifacts/web/wwwroot/g4-pr-456/404.html
+          printf 'G4 PR 456 REVIEW (not production, not approved): 84ba2c830e78b083a3cec479c9a299d426531d9b\n' > artifacts/web/wwwroot/g4-pr-456/build-id.txt
+          grep -q '<base href="/Wyrmforge/g4-pr-456/" />' artifacts/web/wwwroot/g4-pr-456/index.html
+          grep -q '84ba2c830e78b083a3cec479c9a299d426531d9b' artifacts/web/wwwroot/g4-pr-456/index.html
+          ! grep -q '__WYRMFORGE_BUILD__' artifacts/web/wwwroot/g4-pr-456/index.html
+          test -s artifacts/web/wwwroot/g4-pr-456/_framework/blazor.webassembly.js
+          test -s artifacts/web/wwwroot/g4-pr-456/js/lighting/g4-device-review.js
+          test -s artifacts/web/wwwroot/g4-pr-456/js/lighting/g4-consent-gate.js
+          grep -q '<base href="/Wyrmforge/" />' artifacts/web/wwwroot/index.html
+          grep -q 'fb38db9b2d17e38ff75b854e23e8dcbb4b06dc4b' artifacts/web/wwwroot/g4-preview/build-id.txt
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
@@ -119,7 +215,7 @@ jobs:
   smoke:
     runs-on: ubuntu-latest
     needs: [build, deploy]
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -147,6 +243,60 @@ jobs:
           WYRMFORGE_EXPECTED_VERSION: ${{ needs.build.outputs.version }}
           WYRMFORGE_EXPECTED_COMMIT: ${{ github.sha }}
         run: dotnet test tests/Wyrmforge.Browser.Tests/Wyrmforge.Browser.Tests.csproj -c Release --no-build --filter "Desktop_HomeAndAtlas_RenderAtWideViewport|Mobile_ArenaLab_GeneratesPhysicalSeededWorldAndAcceptsTestControls|Mobile_ArenaLab_MalformedDeepLink_RecoversInsteadOfShowingBlackScreen|LiveArenaEnvironment_UsesArchivedPr340PixelsAfterDecode_WithoutReplacingGameplay"
+
+      - name: Verify real G4 Pages preview and untouched production entry
+        run: |
+          python3 - <<'PY'
+          import urllib.request
+          base = "https://pjotrcasteel.github.io/Wyrmforge/"
+          headers = {"User-Agent": "Wyrmforge-G4-Pages-Smoke/1.0"}
+          def read(path):
+              request = urllib.request.Request(base + path, headers=headers)
+              with urllib.request.urlopen(request, timeout=35) as response:
+                  assert response.status == 200, path
+                  return response.read().decode("utf-8")
+          assert "<base href=\"/Wyrmforge/\" />" in read("")
+          assert "<base href=\"/Wyrmforge/g4-preview/\" />" in read("g4-preview/")
+          assert "fb38db9b2d17e38ff75b854e23e8dcbb4b06dc4b" in read("g4-preview/build-id.txt")
+          assert "v0.0.180-g4-preview" in read("g4-preview/build-id.txt")
+          assert "<base href=\"/Wyrmforge/g4-pr-456/\" />" in read("g4-pr-456/")
+          assert "84ba2c830e78b083a3cec479c9a299d426531d9b" in read("g4-pr-456/build-id.txt")
+          assert "class G4DeviceReviewSession" in read("g4-pr-456/js/lighting/g4-device-review.js")
+          assert "showG4PreflightChoice" in read("g4-pr-456/js/lighting/g4-consent-gate.js")
+          assert "class G4DeviceReviewSession" in read("g4-preview/js/lighting/g4-device-review.js")
+          assert "showG4PreflightChoice" in read("g4-preview/js/lighting/g4-consent-gate.js")
+          assert "g4-consent-gate.js" in read("g4-preview/")
+          print("Production index and separate pinned G4 phone-preview path are both online.")
+          PY
+
+      - name: Checkout pinned G4 real-Hunt browser test
+        uses: actions/checkout@v6
+        with:
+          ref: fb38db9b2d17e38ff75b854e23e8dcbb4b06dc4b
+          path: g4-browser-tests
+
+      - name: Build G4 browser test
+        run: |
+          dotnet restore g4-browser-tests/tests/Wyrmforge.Browser.Tests/Wyrmforge.Browser.Tests.csproj
+          dotnet build g4-browser-tests/tests/Wyrmforge.Browser.Tests/Wyrmforge.Browser.Tests.csproj -c Release --no-restore
+
+      - name: Browser-test actual deployed G4 Pages phone capture
+        env:
+          WYRMFORGE_BASE_URL: https://pjotrcasteel.github.io/Wyrmforge/g4-preview/
+          WYRMFORGE_BROWSER_ARTIFACTS: ${{ github.workspace }}/artifacts/g4-pages-smoke
+        run: >-
+          dotnet test g4-browser-tests/tests/Wyrmforge.Browser.Tests/Wyrmforge.Browser.Tests.csproj
+          -c Release --no-build
+          --filter "Mobile_G4DeviceReview_RecordsRealHuntAndExportsEvidence|Mobile_G4Consent_IsAnObviousSingleChoiceBeforeGameMenus"
+
+      - name: Browser-test deployed PR 456 phone preview
+        env:
+          WYRMFORGE_BASE_URL: https://pjotrcasteel.github.io/Wyrmforge/g4-pr-456/
+          WYRMFORGE_BROWSER_ARTIFACTS: artifacts/g4-pr-456-pages-smoke
+        run: >-
+          dotnet test g4-browser-tests/tests/Wyrmforge.Browser.Tests/Wyrmforge.Browser.Tests.csproj
+          -c Release --no-build
+          --filter "Mobile_G4DeviceReview_RecordsRealHuntAndExportsEvidence|Mobile_G4Consent_IsAnObviousSingleChoiceBeforeGameMenus"
 
       - name: Verify live playtest collector connection
         env:
@@ -207,6 +357,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wyrmforge-pages-smoke-${{ github.sha }}
-          path: artifacts/pages-smoke
+          path: |
+            artifacts/pages-smoke
+            artifacts/g4-pages-smoke
+            artifacts/g4-pr-456-pages-smoke
           if-no-files-found: warn
           retention-days: 14

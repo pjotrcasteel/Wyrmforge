@@ -482,22 +482,342 @@ function drawWetForestProp(ctx, prop, x, y, size) {
     return true;
 }
 
-export function drawArenaEnvironment(ctx, environment, width, height, elapsedSeconds = 0, approvedAtlas = null, lightingMode = 'canvas', flatColorsOnly = false) {
+// AR0 diagnostic mode uses the existing Hunt renderer and the C# world-site snapshot.
+// These named colors are presentation-only: never derive collision, rewards or topology from them.
+const siteSurfaceColors = Object.freeze({
+    Soil: '#6f5040',
+    Grass: '#3c6749',
+    Road: '#af9170',
+    Mud: '#564b45',
+    Rock: '#728088',
+    ShallowWater: '#387f9d',
+    GlacialIce: '#a5bbc8',
+});
+const siteSurfaceNames = Object.freeze(['Soil', 'Grass', 'Road', 'Mud', 'Rock', 'ShallowWater', 'GlacialIce']);
+
+export function semanticSiteModeEnabled() {
+    return new URLSearchParams(globalThis.location?.search ?? '').get('arenaTerrain') === 'semantic';
+}
+
+function semanticMaterialName(material) {
+    return typeof material === 'number' ? siteSurfaceNames[material] : material;
+}
+
+// Visualize the exact C# polygon used by movement, sight and projectile collision.
+// Authoring debug is an opt-in view of gameplay truth, never a substitute physics mask.
+// This is a visualization of the C#-sampled continuous field, not a JS terrain generator.
+// Small raster nodes are blended by the canvas; all elevations and material weights
+// arrive from the server's immutable site coordinates.
+const elevationImages = new Map();
+
+export function drawWorldSiteElevation(ctx, geography, width, height) {
+    const preview = geography?.landscape?.elevation;
+    if (!preview || preview.columns < 2 || preview.rows < 2 ||
+        preview.samples?.length !== preview.columns * preview.rows ||
+        typeof document === 'undefined') return false;
+
+    const cacheKey = `${geography.siteId ?? ''}:${geography.worldSeed ?? ''}:${preview.columns}x${preview.rows}`;
+    let canvas = elevationImages.get(cacheKey);
+    if (!canvas) {
+        canvas = document.createElement('canvas');
+        canvas.width = preview.columns;
+        canvas.height = preview.rows;
+        const target = canvas.getContext('2d');
+        if (!target) return false;
+        const image = target.createImageData(preview.columns, preview.rows);
+        const palette = [
+            [88, 91, 82],   // soil
+            [79, 107, 80],  // grass
+            [158, 139, 105],// road
+            [79, 89, 92],   // mud
+            [80, 96, 108],  // rock
+            [75, 112, 124], // shallow water
+            [171, 190, 202],// glacial ice
+        ];
+        const weights = ['soilWeight', 'grassWeight', 'roadWeight', 'mudWeight', 'rockWeight',
+            'waterWeight', 'iceWeight'];
+        let highest = 0;
+        for (const sample of preview.samples)
+            highest = Math.max(highest, Number(sample.heightMeters) || 0);
+        const maxHeight = Math.max(2, highest);
+
+        for (let index = 0; index < preview.samples.length; index++) {
+            const sample = preview.samples[index];
+            const elevation = Math.max(0, Math.min(1, sample.heightMeters / maxHeight));
+            const grade = Math.max(0, Math.min(1, sample.grade));
+            const shade = .82 + elevation * .18 - grade * .16;
+            for (let channel = 0; channel < 3; channel++) {
+                let tone = 0;
+                for (let material = 0; material < palette.length; material++)
+                    tone += palette[material][channel] * Math.max(0, sample[weights[material]] ?? 0);
+                image.data[index * 4 + channel] = Math.max(0, Math.min(255, Math.round(tone * shade)));
+            }
+            image.data[index * 4 + 3] = 255;
+        }
+        target.putImageData(image, 0, 0);
+        elevationImages.set(cacheKey, canvas);
+        if (elevationImages.size > 8) elevationImages.delete(elevationImages.keys().next().value);
+    }
+    ctx.save();
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(canvas, 0, 0, width, height);
+    ctx.restore();
+    return true;
+}
+
+export function drawWorldSiteTopography(ctx, geography, width, height) {
+    if (drawWorldSiteElevation(ctx, geography, width, height)) return true;
+    const patches = geography?.landscape?.terrainPatches;
+    if (!Array.isArray(patches) || patches.length === 0) return false;
+    const palette = {
+        'mountain-foothill': ['#66747c', '#84929a'],
+        'mountain-shoulder': ['#4d5b65', '#74858f'],
+        'mountain-crest': ['#33434d', '#61737e'],
+        'monastery-terrace': ['#918b7e', '#c4b7a2'],
+        'monastery-courtyard': ['#77796f', '#a8ae9f'],
+    };
+    ctx.save();
+    // A single C# elevation definition controls drawing order and grades.
+    // The built terrace stays legible above distant ridge tones.
+    const ordered = [...patches].sort((left, right) =>
+        Number(left.kind?.startsWith('monastery')) - Number(right.kind?.startsWith('monastery')) ||
+        left.height - right.height);
+    for (const patch of ordered) {
+        if (!Array.isArray(patch.outline) || patch.outline.length < 3) continue;
+        const colors = palette[patch.kind];
+        if (!colors) continue;
+        ctx.beginPath();
+        patch.outline.forEach((point, index) => {
+            if (index === 0) ctx.moveTo(point.x * width, point.y * height);
+            else ctx.lineTo(point.x * width, point.y * height);
+        });
+        ctx.closePath();
+        ctx.fillStyle = colors[0];
+        ctx.strokeStyle = colors[1];
+        ctx.lineWidth = Math.max(2, Math.min(width, height) * .003);
+        ctx.fill();
+        ctx.stroke();
+    }
+    ctx.restore();
+    return true;
+}
+
+function drawWorldSitePaths(ctx, paths, width, height) {
+    for (const path of paths ?? []) {
+        const material = semanticMaterialName(path.material);
+        if (!(material in siteSurfaceColors) || path.points?.length < 2) continue;
+        ctx.beginPath();
+        ctx.moveTo(path.points[0].x * width, path.points[0].y * height);
+        for (const point of path.points.slice(1)) ctx.lineTo(point.x * width, point.y * height);
+        ctx.strokeStyle = siteSurfaceColors[material];
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = Math.min(width, height) * path.width;
+        ctx.stroke();
+    }
+}
+
+export function drawWorldSiteLandscape(ctx, geography, width, height) {
+    const landscape = geography?.landscape;
+    if (!landscape || !Array.isArray(landscape.obstacles)) return false;
+    const palette = {
+        'tree-root': ['#264a34', '#172d24'],
+        cliff: ['#42525d', '#a3acb5'],
+        'cliff-face': ['#424c52', '#77848b'],
+        'glacier-cliff': ['#7d9bac', '#d3dde7'],
+        'glacier-cliff-face': ['#657d8b', '#b3c6d2'],
+        'ice-spire': ['#b1d5e5', '#e5f2f8'],
+        'wyrm-rib': ['#55434a', '#92747a'],
+        'monastery-wall': ['#8d847b', '#d2bba4'],
+        'monastery-hall': ['#675c56', '#bba99a'],
+        'monastery-wing': ['#786c60', '#c7b8a2'],
+        'monastery-tower': ['#5a504a', '#e0c9a5'],
+        rock: ['#737673', '#343d44'],
+    };
+    ctx.save();
+    for (const obstacle of landscape.obstacles) {
+        if (!Array.isArray(obstacle.outline) || obstacle.outline.length < 3) continue;
+        const colors = palette[obstacle.kind] ?? [siteSurfaceColors[semanticMaterialName(obstacle.material)], '#151e23'];
+        ctx.fillStyle = colors[0];
+        ctx.strokeStyle = colors[1];
+        ctx.lineWidth = obstacle.kind.endsWith('cliff-face') ? 1.5 : 2;
+        ctx.beginPath();
+        for (let i = 0; i < obstacle.outline.length; i++) {
+            const point = obstacle.outline[i];
+            if (i === 0) ctx.moveTo(point.x * width, point.y * height);
+            else ctx.lineTo(point.x * width, point.y * height);
+        }
+        ctx.closePath();
+        ctx.fill();
+        if (obstacle.kind.endsWith('cliff-face')) {
+            // A 1–3 m escarpment reads as a continuous weathered rock lip,
+            // not as outlined blocks or a man-made wall. Geometry is C# owned.
+            ctx.beginPath();
+            const lipLength = obstacle.outline.length / 2;
+            for (let i = 0; i < lipLength; i++) {
+                const point = obstacle.outline[i];
+                if (i === 0) ctx.moveTo(point.x * width, point.y * height);
+                else ctx.lineTo(point.x * width, point.y * height);
+            }
+            ctx.stroke();
+        } else {
+            ctx.stroke();
+        }
+        // Show an unobtrusive landmark *inside* the precise C# footprint.
+        // This is diagnostic hatching, not added collision, illumination or a
+        // second procedural decorator. Nothing extends beyond the authored shape.
+        let centerX = 0;
+        let centerY = 0;
+        for (const point of obstacle.outline) {
+            centerX += point.x * width / obstacle.outline.length;
+            centerY += point.y * height / obstacle.outline.length;
+        }
+        if (obstacle.kind === 'tree-root') {
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, Math.max(3, Math.min(width, height) * .007), 0, Math.PI * 2);
+            ctx.fillStyle = '#826d52';
+            ctx.fill();
+        } else if (obstacle.kind === 'cliff' || obstacle.kind === 'glacier-cliff' ||
+                   obstacle.kind === 'wyrm-rib' || obstacle.kind === 'ice-spire') {
+            const first = obstacle.outline[0];
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(first.x * width, first.y * height);
+            ctx.strokeStyle = colors[1];
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+        }
+    }
+    ctx.restore();
+    return true;
+}
+
+function drawWorldSiteDiscoveries(ctx, geography, width, height) {
+    const discoveries = geography?.landscape?.discoveries;
+    if (!Array.isArray(discoveries)) return;
+    ctx.save();
+    for (const discovery of discoveries) {
+        const point = discovery?.localPoint;
+        if (!Number.isFinite(point?.x) || !Number.isFinite(point?.y)) continue;
+        const x = point.x * width;
+        const y = point.y * height;
+        // Flat-color historic traces from C# world data. Never create a reward or landmark in JS.
+        if (discovery.kind === 'overgrown-ruins') {
+            // Recognizable broken foundations at the C#-authored road endpoint.
+            ctx.fillStyle = '#39433b';
+            ctx.fillRect(x - 11, y - 8, 22, 16);
+            ctx.fillStyle = '#9d9b89';
+            ctx.fillRect(x - 11, y - 8, 7, 4);
+            ctx.fillRect(x + 3, y - 8, 8, 4);
+            ctx.fillRect(x - 11, y + 3, 5, 5);
+            ctx.fillRect(x + 5, y + 4, 6, 4);
+            continue;
+        }
+        ctx.fillStyle = '#2b2928';
+        ctx.fillRect(x - 7, y - 5, 14, 10);
+        ctx.fillStyle = discovery.materialReward === null ? '#786958' : '#b9a07a';
+        ctx.fillRect(x - 5, y - 3, 10, 6);
+        ctx.fillStyle = '#d3c6a4';
+        ctx.fillRect(x - 1, y - 8, 2, 9);
+    }
+    ctx.restore();
+}
+
+export function drawSemanticSiteFloor(ctx, geography, width, height, geographyActive = false) {
+    if (!geography || geography.version !== 1 || !Array.isArray(geography.ports) ||
+        !Array.isArray(geography.corridors)) return false;
+    const substrate = semanticMaterialName(geography.substrate?.material);
+    if (!(substrate in siteSurfaceColors)) return false;
+
+    ctx.save();
+    ctx.fillStyle = siteSurfaceColors[substrate];
+    ctx.fillRect(0, 0, width, height);
+    if (geographyActive && geography.landscape) drawWorldSiteTopography(ctx, geography, width, height);
+    // Chart edges define travel permissions, never the visible number of roads.
+    // Only C#-seeded local paths are painted in the arena.
+    drawWorldSitePaths(ctx, geography.scenicPaths?.length ? geography.scenicPaths : geography.corridors, width, height);
+    if (geographyActive && geography.landscape) {
+        drawWorldSitePaths(ctx, geography.landscape.localPaths, width, height);
+        // Physical cliffs and masonry always paint on top of paths and slopes.
+        drawWorldSiteLandscape(ctx, geography, width, height);
+        drawWorldSiteDiscoveries(ctx, geography, width, height);
+    }
+
+    for (const port of geography.ports) {
+        const x = port.localPoint.x * width;
+        const y = port.localPoint.y * height;
+        ctx.fillStyle = port.entrance ? '#f7d99e' : '#8be9e1';
+        ctx.beginPath();
+        ctx.arc(x, y, 11, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#18232a';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.font = 'bold 12px system-ui';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#fff';
+        ctx.fillText(port.direction, x, y - 17);
+    }
+    ctx.restore();
+    return true;
+}
+
+export function drawArenaEnvironment(ctx, environment, width, height, elapsedSeconds = 0,
+    approvedAtlas = null, lightingMode = 'canvas', flatColorsOnly = false) {
     if (!environment) return false;
-    // Use the SAME terrain mode as reflections and elevations. Omitting it
-    // silently built the full painted tile atlas in a supposedly tile-free
-    // G4 Hunt, retaining two world-sized cache entries on portrait phones.
-    const texture = terrainTexture(environment, width, height, approvedAtlas, flatColorsOnly, lightingMode === 'gpu');
-    ctx.drawImage(texture.image, 0, 0, width, height);
+    const semantic = semanticSiteModeEnabled() && drawSemanticSiteFloor(ctx, environment.geography, width, height, environment.geographyActive === true);
+    // GPU receivers sample source albedo, not already painted directional shadows.
+    // Use one terrain mode for the floor, reflections and elevations to avoid
+    // allocating a second world-sized atlas on a portrait device.
+    let cloister = null;
+    if (!semantic) {
+        const texture = terrainTexture(environment, width, height, approvedAtlas, flatColorsOnly, lightingMode === 'gpu');
+        ctx.drawImage(texture.image, 0, 0, width, height);
+        cloister = texture.cloister;
+    }
+    // On the AR1 run-wide geometry preview, painted and semantic palettes display
+    // the same C# colliders. The default Hunt never activates these new obstacles.
+    if (!semantic && environment.geographyActive) {
+        drawWorldSiteTopography(ctx, environment.geography, width, height);
+        drawWorldSitePaths(ctx, environment.geography?.landscape?.localPaths, width, height);
+        drawWorldSiteLandscape(ctx, environment.geography, width, height);
+        drawWorldSiteDiscoveries(ctx, environment.geography, width, height);
+    }
+    if (semantic) {
+        globalThis.__wyrmforgeAr0Geography = {
+            siteId: environment.geography.siteId,
+            regionId: environment.geography.regionId,
+            seed: environment.geography.worldSeed,
+            version: environment.geography.version,
+            edges: environment.geography.ports.map(port => port.edgeId),
+            material: semanticMaterialName(environment.geography.substrate.material),
+            kind: environment.geography.landscape?.kind ?? null,
+            obstacleCount: environment.geography.landscape?.obstacles?.length ?? 0,
+            terrainPatchCount: environment.geography.landscape?.terrainPatches?.length ?? 0,
+            elevationGrid: environment.geography.landscape?.elevation
+                ? {
+                    columns: environment.geography.landscape.elevation.columns,
+                    rows: environment.geography.landscape.elevation.rows,
+                    center: environment.geography.landscape.elevation.samples[
+                        Math.floor(environment.geography.landscape.elevation.rows / 2) *
+                            environment.geography.landscape.elevation.columns +
+                        Math.floor(environment.geography.landscape.elevation.columns / 2)],
+                }
+                : null,
+            discoveryCount: environment.geography.landscape?.discoveries?.length ?? 0,
+            monasteryStructureCount: environment.geography.landscape?.obstacles?.filter(
+                obstacle => obstacle.kind?.startsWith('monastery-')).length ?? 0,
+            geographyActive: environment.geographyActive === true,
+        };
+    }
     // Render low-angle shadows from CURRENT physical props, never frozen floor art:
     // destroyed trees and ruins lose their shadows in the same C# simulation frame.
-    if (lightingMode !== 'gpu' && environment.habitat === 'WetForest' && environment.wetForest) {
+    if (!semantic && lightingMode !== 'gpu' && environment.habitat === 'WetForest' && environment.wetForest) {
         drawWetForestCastShadows(ctx, environment.seed, environment.props ?? [], width, height);
         drawWetForestFirelight(ctx, environment, width, height, elapsedSeconds);
     }
-    const cloister = texture.cloister;
     // With the atlas loaded, closed territory walls are depth-sorted layers (getArenaCloisterElevations).
-    const spriteWalls = !cloister && artReady();
+    const spriteWalls = !semantic && !cloister && artReady();
     for (const barrier of environment.barriers ?? []) {
         if (spriteWalls) {
             if (barrier.open && barrier.kind === 'gate') drawOpenedGateRubble(ctx, barrier, width, height);
@@ -507,7 +827,7 @@ export function drawArenaEnvironment(ctx, environment, width, height, elapsedSec
             drawTerritoryBarrier(ctx, barrier, environment.element, width, height, elapsedSeconds);
     }
     for (const supply of environment.supplies ?? []) drawSupply(ctx, supply, width, height, elapsedSeconds);
-    if (!flatColorsOnly) {
+    if (!semantic && !flatColorsOnly) {
         drawTerritoryMotes(ctx, environment, width, height, elapsedSeconds);
         drawCloisterMist(ctx, cloister, elapsedSeconds);
     }

@@ -5,7 +5,8 @@ import { preloadFireballV5 } from './arena-fireball-v5.js';
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
 import { attachArenaInput, getArenaMovement, getArenaAim, isArenaStickAim, getArenaPropFocus } from './arena-input.js';
 import { resolveTargetIndicator, presentTargetSigil, drawTargetIndicator, preloadTargetSigilArt, targetSelectionLightEmitter, targetSelectionCanvasLight, actorLightsWithoutSigilOverlay } from './arena-target-indicator.js?v=20261028-feet-centered-v3';
-import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, drawArenaCloisterElevation } from './arena-environment.js?v=20261026-organic-ground-v2';
+import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, drawArenaCloisterElevation, semanticSiteModeEnabled } from './arena-environment.js?v=20261031-ar1-highlands-v1';
+import { drawAr1GeographyReview } from './arena-ar1-geography-review.js?v=20261031-ar1-site-detail-v1';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
 import { drawRecoveryGuide } from './arena-recovery.js';
@@ -367,6 +368,8 @@ function draw(state, snapshot, width, height) {
     drawArenaCloisterReflections(ctx, snapshot.environment, worldWidth, worldHeight,
         spellLights, visualSeconds, state.reducedMotion.matches, state.g4FlatGround, gpu);
     drawArenaExit(ctx, snapshot.exit, visualSeconds);
+    // Same physical outgoing ports the C# simulation accepts after a cleared AR1 trail.
+    for (const port of snapshot.exitPorts ?? []) drawArenaExit(ctx, port, visualSeconds);
     drawRecoveryGuide(ctx, snapshot, camera, width, height, visualSeconds, state.reducedMotion.matches);
 
     drawAshfangGroundEffects(ctx,snapshot,state.reducedMotion.matches);
@@ -501,9 +504,14 @@ function draw(state, snapshot, width, height) {
     // physical scenery, enemies, mage and Wyrm. Real fire/elemental cast,
     // impacts, burning trees and Fire Wyrm breath cut light into all layers.
     // Keep high-priority attack tells and magical VFX ABOVE the veil.
-    const realFires = createWetForestFirelightPlan(snapshot.environment, worldWidth, worldHeight);
-    const nightSources = gothicNightLightSources(snapshot, spellLights, worldWidth, worldHeight, realFires);
-    if (!gpu) drawGothicNight(ctx, gothicNightPlan(snapshot.player, nightSources, lightViewport), state.nightMask);
+    // AR0 authoring diagnostics must expose the actual C# material classes at mobile scale.
+    // Skip only the PRESENTATION night veil for the explicit semantic debug mode. No new
+    // light solver, no authority changes, and normal Hunts retain exactly the same night.
+    if (!gpu && !(semanticSiteModeEnabled() && snapshot.environment?.geography?.version === 1)) {
+        const realFires = createWetForestFirelightPlan(snapshot.environment, worldWidth, worldHeight);
+        const nightSources = gothicNightLightSources(snapshot, spellLights, worldWidth, worldHeight, realFires);
+        drawGothicNight(ctx, gothicNightPlan(snapshot.player, nightSources, lightViewport), state.nightMask);
+    }
     // Never redraw the floor seal over enemies after the night pass.
     // Tactical telegraphs must remain readable even when the ground is nearly
     // black. They are presentation cues, not physical light emitters.
@@ -569,6 +577,15 @@ function draw(state, snapshot, width, height) {
     drawPlayerDanger(ctx, { ...snapshot.player, x: snapshot.player.x - camera.x, y: snapshot.player.y - camera.y }, danger, width, height);
     // Draw navigation above the world but under the HUD. The arrow is not a touch target.
     drawExitGuide(ctx, snapshot.exit, camera, width, height);
+    // Opt-in map context is presented on the real Hunt canvas. Default play is untouched.
+    if (location.search.includes('ar1Review=1') &&
+        drawAr1GeographyReview(ctx, snapshot.environment?.geography,
+            snapshot.environment?.geographyActive === true, snapshot.player, camera, width, height)) {
+        globalThis.__wyrmforgeAr1Review = {
+            siteId: snapshot.environment.geography.siteId,
+            kind: snapshot.environment.geography.landscape.kind,
+        };
+    }
     // Combat vitals now share one accessible responsive HTML HUD with the encounter objective.
     drawReliquaryHushVeil(ctx, snapshot.reliquary, width, height);
     if (battleActive) drawBossBar(ctx, snapshot.dragon, snapshot.hunt, width, state.ashfang.hpTrail);
