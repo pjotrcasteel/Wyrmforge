@@ -20,7 +20,13 @@ public static class SpellEffectLightingProjection
             if (LightingSourceCatalog.ForSpell(group.Key.Spell) is not { } profile) continue;
             var strength = group.Max(impact => 1 - impact.Progress);
             var id = FormattableString.Invariant($"impact:{group.Key.Spell}:{group.Key.X:R}:{group.Key.Y:R}");
-            lights.Add(Source(id, id, group.Key.X, group.Key.Y, 24, profile, strength, profile.Radius));
+            // A confirmed hit is authored at the target's center (also for chains and area hits).
+            // A point-shadow cubemap placed inside a living target's silhouette projects
+            // its near-face geometry backwards toward the caster and creates an immense
+            // shadow wedge. The short surface flash illuminates without casting its own
+            // shadow; travelling projectiles remain real shadow-casting point sources.
+            lights.Add(Source(id, id, group.Key.X, group.Key.Y, 24, profile, strength,
+                profile.Radius, castsShadows: false));
         }
 
         var fire = LightingSourceCatalog.ForSpell(SpellId.FireBolt)!;
@@ -34,7 +40,7 @@ public static class SpellEffectLightingProjection
     }
 
     private static LightingEmitter Source(string id, string owner, double x, double y, double height,
-        LightSourceProfile profile, double strength, double radius) =>
+        LightSourceProfile profile, double strength, double radius, bool? castsShadows = null) =>
         new(id, owner, profile.Type, x, y, height, profile.Color, profile.Intensity * strength, radius,
-            CastsShadows: profile.CastsShadows);
+            CastsShadows: castsShadows ?? profile.CastsShadows);
 }
