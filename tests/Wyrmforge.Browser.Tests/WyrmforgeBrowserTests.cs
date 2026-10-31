@@ -3581,6 +3581,53 @@ public sealed class WyrmforgeBrowserTests : PageTest
             Assert.IsFalse(diagnostics.GetProperty("renderingFailed").GetBoolean(),
                 diagnostics.TryGetProperty("renderingError", out var laterRenderError) ? laterRenderError.GetString() : "Rendering failed without diagnostics");
             Assert.IsTrue(diagnostics.GetProperty("gpuWorld").GetProperty("objects").GetInt32() > 2);
+            if (width == 390 && quality == "mobile")
+            {
+                // Record the real running Hunt canvas, including moving C# actors
+                // and emitted Fireballs. No synthetic shadow test geometry is used.
+                // The WebM is converted to a phone-playable MP4 by the G4 CI job.
+                var encoded = await Page.EvaluateAsync<string>(
+                    """
+                    async () => {
+                        const canvas=document.querySelector('canvas.game-canvas');
+                        if(!canvas?.captureStream||typeof MediaRecorder==='undefined')
+                            throw new Error('Real Hunt canvas video recording unavailable');
+                        const mime=MediaRecorder.isTypeSupported('video/webm;codecs=vp8')
+                            ? 'video/webm;codecs=vp8' : 'video/webm';
+                        if(!MediaRecorder.isTypeSupported(mime))
+                            throw new Error('WebM MediaRecorder not supported by test browser');
+                        const stream=canvas.captureStream(24);
+                        const chunks=[];
+                        const recorder=new MediaRecorder(stream,
+                            {mimeType:mime,videoBitsPerSecond:900000});
+                        const completed=new Promise((resolve,reject)=>{
+                            recorder.onerror=event=>reject(event.error);
+                            recorder.ondataavailable=event=>{
+                                if(event.data.size>0)chunks.push(event.data);
+                            };
+                            recorder.onstop=()=>{
+                                const blob=new Blob(chunks,{type:mime});
+                                const reader=new FileReader();
+                                reader.onerror=()=>reject(reader.error);
+                                reader.onload=()=>resolve(String(reader.result).split(',')[1]);
+                                reader.readAsDataURL(blob);
+                            };
+                        });
+                        recorder.start(250);
+                        await new Promise(resolve=>setTimeout(resolve,6000));
+                        recorder.stop();
+                        const encoded=await completed;
+                        stream.getTracks().forEach(track=>track.stop());
+                        return encoded;
+                    }
+                    """);
+                var video = Convert.FromBase64String(encoded);
+                Assert.IsGreaterThan(4096, video.Length,
+                    "The proof must contain recorded game frames, not a zero-byte placeholder.");
+                Directory.CreateDirectory(ArtifactDirectory);
+                await File.WriteAllBytesAsync(Path.Combine(ArtifactDirectory,
+                    "live-hunt-g4-directional-shadow-390.webm"), video);
+            }
         }
         finally
         {
@@ -3696,7 +3743,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         // The prior GPU candidate could be technically green while its actual
         // Hunt was black. Require C#-owned hunter visibility AND a lit area in
         // the live composited Canvas, away from the HTML HUD and boss overlays.
-        await Page.WaitForFunctionAsync(@"() => {
+        await Page.WaitForFunctionAsync(@"(painted) => {
             const frame = window.__huntGpuRead?.();
             const visible = frame?.gpuWorld?.lights?.some(light => light.id === 'hunter:night-visibility');
             const canvas = document.querySelector('canvas.game-canvas');
@@ -3708,15 +3755,21 @@ public sealed class WyrmforgeBrowserTests : PageTest
             const pixels = canvas.getContext('2d').getImageData(startX, startY, w, h).data;
             // A bright projectile/telegraph cannot make an otherwise-black
             // playfield pass. Require a distributed sky-lit terrain floor.
+            // Source-painted material candidates were nearly black even when
+            // the test's original nonblack-pixel check passed. Gate the real
+            // GPU albedo on DISTRIBUTED floor readability, not a bright Fireball.
+            const pixelMinimum = painted ? 90 : 30;
+            const coverageMinimum = painted ? .48 : .16;
+            const averageMinimum = painted ? 80 : 14;
             let readablePixels = 0, totalBrightness = 0;
             for (let i = 0; i < pixels.length; i += 4) {
                 const brightness = pixels[i] + pixels[i + 1] + pixels[i + 2];
                 totalBrightness += brightness;
-                if (brightness >= 30) readablePixels++;
+                if (brightness >= pixelMinimum) readablePixels++;
             }
             const count = pixels.length / 4;
-            return readablePixels >= count * .16 && totalBrightness >= count * 14;
-        }", null, new() { Timeout = 30000 });
+            return readablePixels >= count * coverageMinimum && totalBrightness >= count * averageMinimum;
+        }", paintedGround, new() { Timeout = 30000 });
 
         // The default G4 review must show neutral grey, free of ground paintings.
         // Keep an explicit painted A/B for diagnostic comparison only. Both cases

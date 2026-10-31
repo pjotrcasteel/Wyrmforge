@@ -28,6 +28,8 @@ export interface LitRenderable {
     occluderGeometry?: string;
     /** Independent world-space caster transform: never camera-align a physical shadow proxy. */
     occluderPosition?: Vector3; occluderRotation?: Vector3; occluderScale?: Vector3;
+    /** False for opaque authored physical volumes; default uses source alpha cutout. */
+    occluderAlphaSource?: boolean;
     /** Same normalized atlas region for albedo/normal and shadow alpha. */
     frame?: { offset: [number, number]; repeat: [number, number] };
 }

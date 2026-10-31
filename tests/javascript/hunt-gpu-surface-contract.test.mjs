@@ -144,3 +144,21 @@ test('only changed Canvas pixels trigger shared GPU texture uploads', async () =
     assert.ok(world.submissionCpu.meanMs >= 0);
     assert.ok(world.submissionCpu.peakMs >= world.submissionCpu.lastMs);
 });
+
+
+test('a physical opaque caster keeps visible material alpha but validates independent shadow opacity', () => {
+    const material = huntSurfaceMaterial('wall', { alphaCutoff: .3 });
+    const wall = huntSurfaceRenderable('wall', 0, 0, 160, 160, true, {
+        occluderGeometry: 'hunt-solid-volume', occluderAlphaSource: false,
+        occluderPosition: [3, -5, .2], occluderScale: [4, .3, .4],
+    });
+    assert.equal(wall.occluderAlphaSource, false);
+    assert.equal(material.alphaCutoff, .3, 'Visible alpha remains independent of physical shadow opacity.');
+    const snapshot = { version: 1, time: 0, lights: [], materials: [material], objects: [wall],
+        environment: { ambient: .24, color: '#8c9cbb', exposure: 1, emission: true } };
+    assert.equal(validateSnapshot(snapshot).objects[0].occluderAlphaSource, false);
+    assert.throws(() => validateSnapshot({ ...snapshot, objects: [{ ...wall, occluderAlphaSource: 'opaque' }] }),
+        /Invalid caster alpha mode/);
+    assert.throws(() => validateSnapshot({ ...snapshot, objects: [{ ...wall, occluderGeometry: undefined }] }),
+        /Caster transform requires occluder geometry/);
+});

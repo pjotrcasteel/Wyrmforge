@@ -61,23 +61,40 @@ const material = id => ({ id, albedo: id, color: '#ffffff', roughness: .95, meta
  * participation. The shared LightingEngine remains ignorant of creature/terrain kinds.
  * A custom geometry is registered once via LightingEngine.registerGeometry().
  */
-/** Shadow-only alpha cutout for the captured pose.
- * The Canvas texture includes large transparent margins around each creature.
- * Keep its source-pixel scale: compressing the full tile to the actor's assumed
- * height makes the *opaque* pixels almost flat and erases ground shadows.
+/** The legacy Hunt capture is billboard art, but its *occluder* is world geometry.
+ * A camera-facing occluder has depth along the ground, which gives point lights
+ * view-dependent and even reversed projections. Stand the alpha cutout upright
+ * over its authored foot marker, independently of the moving light source.
+ *
+ * The Hunt camera is pitched 45 degrees: a physical vertical edge projects at
+ * sin(45 degrees). The reciprocal is the existing GROUND_Y screen/world scale.
+ * Transparent padding stays transparent; it cannot become a rectangle shadow.
  */
-export function huntCaptureSilhouetteCaster(x, y, width, height, footFraction = .75) {
-    const heightWorld = height / UNIT;
+export function huntCaptureSilhouetteCaster(x, y, width, height, footFraction = .75, occluderHeightPx = height * GROUND_Y) {
+    if (!(width > 0 && height > 0) || !Number.isFinite(footFraction) || footFraction <= 0 || footFraction > 1 ||
+        !Number.isFinite(occluderHeightPx) || occluderHeightPx <= 0)
+        throw new RangeError('Invalid silhouette dimensions, physical height or foot anchor');
+    const verticalHeight = occluderHeightPx / UNIT;
     return { occluderGeometry: 'hunt-shadow-silhouette',
         occluderPosition: [(x + width / 2) / UNIT,
             -(y + height * footFraction) * GROUND_Y / UNIT,
-            -(1 - footFraction) * heightWorld * Math.SQRT1_2],
-        occluderRotation: [0, 0, 0],
-        // Preserve capture width so the alpha mask, not its padded rectangle,
-        // defines the actual silhouette footprint (also for long masonry layers).
-        occluderScale: [width / UNIT, heightWorld, 1],
+            -(1 - footFraction) * verticalHeight],
+        occluderRotation: [Math.PI / 2, 0, 0],
+        occluderScale: [width / UNIT, verticalHeight, 1],
     };
 }
+/** A source-authored solid volume uses its real ground footprint and height.
+ * Its opaque geometry is independent of any padded 2D presentation capture.
+ */
+export function huntSolidVolumeCaster({ x, y, width, depth, height }) {
+    if (![x, y, width, depth, height].every(Number.isFinite) || width <= 0 || depth <= 0 || height <= 0)
+        throw new RangeError('Invalid physical caster volume');
+    return { occluderGeometry: 'hunt-solid-volume', occluderAlphaSource: false,
+        occluderPosition: [(x + width / 2) / UNIT, -(y + depth / 2) * GROUND_Y / UNIT, height / (2 * UNIT)],
+        occluderRotation: [0, 0, 0],
+        occluderScale: [width / UNIT, depth * GROUND_Y / UNIT, height / UNIT] };
+}
+
 export function huntSurfaceRenderable(id, x, y, width, height, castsShadow, surface = {}) {
     const geometry = surface.geometry ?? (castsShadow ? 'hunt-billboard' : 'hunt-plane');
     const standing = surface.standing ?? geometry === 'hunt-billboard';
@@ -107,7 +124,7 @@ export function huntSurfaceRenderable(id, x, y, width, height, castsShadow, surf
         ...(surface.occluderPosition ? { occluderPosition: surface.occluderPosition } : {}),
         ...(surface.occluderRotation ? { occluderRotation: surface.occluderRotation } : {}),
         ...(surface.occluderScale ? { occluderScale: surface.occluderScale } : {}),
-        ...(surface.shadowOpaqueBounds ? { shadowOpaqueBounds: surface.shadowOpaqueBounds } : {}),
+        ...(surface.occluderAlphaSource === false ? { occluderAlphaSource: false } : {}),
         ...(frame ? { frame } : {}),
     };
 }
@@ -127,90 +144,69 @@ export function huntActorGeometry() {
     return actor;
 }
 
-/**
- * Generic G4 cutouts use the same camera-facing rotation as the renderer's
- * view plane. Do not change the shared lighting engine's object semantics or
- * rotate any authored world plane, scenery, collider or physical emitter.
+/** Two perpendicular alpha-cutout planes form a camera-independent 2.5D
+ * shadow impostor. A single flat plane is edge-on to lights approaching from
+ * its sides, and cannot cast 360-degree shadows regardless of light height.
+ * Both faces reuse the same animated texture and are one shared GPU mesh.
+ * Authored 3D/heightfield occluders bypass this fallback entirely.
  */
-/** The captured image is mostly transparent padding. Bound the full plane
- * against a light's height without crushing the actual alpha silhouette.
- * Keep the padded pose readable while limiting long wedges from low emitters.
- */
-/** Read the opaque pose bounds ONCE per raster resource, not every animated frame.
- * This is a CPU Canvas fallback; the shared GPU renderer still owns all shadows.
- * Ignore low-alpha ground glows and particles when finding the actor's feet.
- */
-export function huntOpaqueCaptureBounds(canvas, minimumAlpha = 96) {
-    const width = canvas?.width, height = canvas?.height;
-    if (!(width > 0 && height > 0) || typeof canvas.getContext !== 'function') return null;
-    let pixels;
-    try { pixels = canvas.getContext('2d')?.getImageData(0, 0, width, height)?.data; }
-    catch { return null; }
-    if (!pixels) return null;
-    let top = height, bottom = 0;
-    for (let y = 0; y < height; y++) {
-        const offset = y * width * 4 + 3;
-        for (let x = 0; x < width; x++) {
-            if (pixels[offset + x * 4] < minimumAlpha) continue;
-            top = Math.min(top, y);
-            bottom = Math.max(bottom, y + 1);
+export function huntCrossedShadowGeometry() {
+    const front = huntActorGeometry();
+    const side = front.clone();
+    side.rotateY(Math.PI / 2);
+    const positions = [], normals = [], uvs = [], indices = [];
+    for (const source of [front, side]) {
+        const base = positions.length / 3;
+        const position = source.getAttribute('position');
+        const normal = source.getAttribute('normal');
+        const uv = source.getAttribute('uv');
+        for (let i = 0; i < position.count; i++) {
+            positions.push(position.getX(i), position.getY(i), position.getZ(i));
+            normals.push(normal.getX(i), normal.getY(i), normal.getZ(i));
+            uvs.push(uv.getX(i), uv.getY(i));
         }
+        for (let i = 0; i < source.index.count; i++) indices.push(base + source.index.getX(i));
     }
-    return bottom > top ? { top, bottom, height } : null;
+    front.dispose(); side.dispose();
+    const merged = new T.BufferGeometry();
+    merged.setAttribute('position', new T.Float32BufferAttribute(positions, 3));
+    merged.setAttribute('normal', new T.Float32BufferAttribute(normals, 3));
+    merged.setAttribute('uv', new T.Float32BufferAttribute(uvs, 2));
+    merged.setIndex(indices);
+    return merged;
 }
 
-/** Scale the *opaque* pose, not the much larger transparent capture tile.
- * Preserve its correct alpha cutout, place its lowest opaque row at ground level,
- * and limit its world height relative to the actual dynamic light. The light's
- * color, visible position, strength and falloff remain untouched.
+/** Visible capture quads follow the camera; their separate GPU shadow
+ * occluders retain the authored world rotation and exact foot anchor.
+ * Neither pose height nor shadow geometry depends on active light selection.
  */
-export function huntShadowOpaqueCasterPlan(bounds, lightHeightWorld, cameraUpZ = Math.SQRT1_2) {
-    if (!bounds || !(lightHeightWorld > 0) || !(cameraUpZ > .1)) return null;
-    const fraction = (bounds.bottom - bounds.top) / bounds.height;
-    if (!(fraction > 0 && fraction <= 1)) return null;
-    const unboundedHeight = (bounds.bottom - bounds.top) / UNIT * cameraUpZ;
-    const poseHeight = Math.min(unboundedHeight, lightHeightWorld * .42);
-    const scaleY = poseHeight / (fraction * cameraUpZ);
-    const offsetFromTileBottom = (1 - bounds.bottom / bounds.height) * scaleY;
-    return { scaleY, offsetFromTileBottom, poseHeight };
-}
-
-export function boundedHuntShadowHeight(spriteHeightWorld, lightHeightWorld) {
-    if (!(lightHeightWorld > 0)) return spriteHeightWorld;
-    return Math.min(spriteHeightWorld, lightHeightWorld * 1.1);
-}
 export function alignHuntActorBillboards(objects, engine) {
-    const shadowHeight = Math.min(...(engine.selected ?? [])
-        .filter(light => light.shadow && light.type === 'point' && light.position[2] > 0)
-        .map(light => light.position[2]));
-    const cameraVertical = new T.Vector3(0, 1, 0).applyQuaternion(engine.camera.quaternion);
     for (const descriptor of objects) {
         if (descriptor.geometry !== 'hunt-billboard') continue;
-        const registered = engine.objects.get(descriptor.id);
-        if (!registered) continue;
-        registered.mesh.quaternion.copy(engine.camera.quaternion);
-        // The alpha cutout shadows the real pose, while transparent raster margins
-        // must not consume nearly all of the allowed caster height.
-        if (descriptor.occluderGeometry === 'hunt-shadow-silhouette' && registered.caster) {
-            const caster = registered.caster;
-            caster.quaternion.copy(engine.camera.quaternion);
-            if (!Number.isFinite(shadowHeight)) continue;
-            const plan = huntShadowOpaqueCasterPlan(descriptor.shadowOpaqueBounds,
-                shadowHeight, cameraVertical.z);
-            if (plan) {
-                caster.scale.y = plan.scaleY;
-                // Lowest opaque pixel, not the padded tile edge, touches ground.
-                caster.position.z = 0;
-                caster.position.addScaledVector(cameraVertical, -plan.offsetFromTileBottom);
-            } else {
-                const baseHeight = descriptor.occluderScale[1];
-                const height = boundedHuntShadowHeight(baseHeight, shadowHeight);
-                caster.scale.y = height;
-                caster.position.z = descriptor.occluderPosition[2] * height / baseHeight;
-            }
-        }
+        engine.objects.get(descriptor.id)?.mesh.quaternion.copy(engine.camera.quaternion);
     }
 }
+/** Reveal which authoritative emitters actually received scarce point-shadow views.
+ * A visible glow never proves the same source got a GPU shadow map.
+ * This report observes the shared renderer; it does not alter light priority.
+ */
+export function huntShadowAllocationReport(lights = [], selected = [], capacity = 0) {
+    const requested = lights.filter(light => light.enabled && light.castsShadow &&
+        light.intensity > 0);
+    const byId = new Map(selected.map(light => [light.id, light]));
+    const shadowed = requested.filter(light => byId.get(light.id)?.shadow);
+    return {
+        requestedIds: requested.map(light => light.id),
+        shadowedIds: shadowed.map(light => light.id),
+        notSelectedIds: requested.filter(light => !byId.has(light.id)).map(light => light.id),
+        selectedWithoutShadowIds: requested.filter(light => byId.has(light.id) &&
+            !byId.get(light.id).shadow).map(light => light.id),
+        allocatedViews: shadowed.reduce((total, light) =>
+            total + (byId.get(light.id).shadowViews ?? 0), 0),
+        capacity,
+    };
+}
+
 export class HuntGpuWorld {
     constructor({ quality = 'balanced' } = {}) {
         this.canvas = document.createElement('canvas');
@@ -222,7 +218,8 @@ export class HuntGpuWorld {
         this.engine.registerGeometry('hunt-billboard', huntActorGeometry());
         // G1-style alpha-cutout sprite silhouettes retain source-pixel scale
         // until WF/AR supply authored 2.5D geometry.
-        this.engine.registerGeometry('hunt-shadow-silhouette', huntActorGeometry());
+        this.engine.registerGeometry('hunt-shadow-silhouette', huntCrossedShadowGeometry());
+        this.engine.registerGeometry('hunt-solid-volume', new T.BoxGeometry(1, 1, 1));
         this.layers = new Map();
         this.used = new Set();
         this.dirtyTextures = new Set();
@@ -251,7 +248,10 @@ export class HuntGpuWorld {
         this.objects.push(renderable);
     }
     diagnostics() {
-        return { ...this.engine.diagnostics(), quality: this.quality, textureUploads: this.lastFrameUploads,
+        return { ...this.engine.diagnostics(), quality: this.quality,
+            shadowAllocation: huntShadowAllocationReport(this.engine.snapshot?.lights ?? [],
+                this.engine.selected ?? [], this.engine.shadowViews),
+            textureUploads: this.lastFrameUploads,
             largestDynamicUploads: this.lastFrameTopUploads,
             authoredTextures: this.engine.textures.size - this.layers.size, canvasCaptures: this.layers.size,
             // CPU submission only. True GPU time, thermals and battery need physical devices.
@@ -288,28 +288,32 @@ export class HuntGpuWorld {
                 layer = { pixels, texture }; this.layers.set(id, layer);
             }
             if (!unchanged) {
-                if (layer.pixels.width !== Math.ceil(width) || layer.pixels.height !== Math.ceil(height))
-                    layer.shadowOpaqueBounds = null;
                 if (layer.pixels.width !== Math.ceil(width)) layer.pixels.width = Math.ceil(width);
                 if (layer.pixels.height !== Math.ceil(height)) layer.pixels.height = Math.ceil(height);
                 const ctx = layer.pixels.getContext('2d');
                 ctx.imageSmoothingEnabled = false;
                 ctx.clearRect(0, 0, layer.pixels.width, layer.pixels.height);
                 ctx.drawImage(source, 0, 0, layer.pixels.width, layer.pixels.height);
-                if (castsShadow && !surface.geometry && !surface.occluderGeometry && !layer.shadowOpaqueBounds)
-                    layer.shadowOpaqueBounds = huntOpaqueCaptureBounds(layer.pixels);
                 layer.texture.needsUpdate = true;
                 this.dirtyTextures.add(id);
                 layer.revision = revision;
             }
         }
-        // Reuse the captured alpha pose instead of manufacturing a hard-edged
-        // solid wedge. Explicit authored occluders always take precedence.
-        const capturedSurface = castsShadow && !surface.geometry && !surface.occluderGeometry
-            ? { ...surface, ...huntCaptureSilhouetteCaster(x, y, width, height, surface.footFraction ?? .75),
-                ...(this.layers.get(id)?.shadowOpaqueBounds
-                    ? { shadowOpaqueBounds: this.layers.get(id).shadowOpaqueBounds } : {}) }
-            : surface;
+        // An explicit 2.5D/3D occluder always wins. Legacy Canvas captures
+        // contribute their own alpha silhouette through the shared shadow maps.
+        // Capture quads and C# lights are projected into the camera viewport.
+        // Physical wall volumes originate in world space, so they must follow
+        // the same camera transform. Never mutate the source-authored geometry.
+        const authoredSurface = surface.physicalVolume
+            ? { ...surface, ...huntSolidVolumeCaster({
+                ...surface.physicalVolume,
+                x: surface.physicalVolume.x - this.camera.x,
+                y: surface.physicalVolume.y - this.camera.y,
+            }) } : surface;
+        const capturedSurface = castsShadow && !authoredSurface.geometry && !authoredSurface.occluderGeometry
+            ? { ...authoredSurface, ...huntCaptureSilhouetteCaster(x, y, width, height, authoredSurface.footFraction ?? .75,
+                authoredSurface.occluderHeightPx ?? height * GROUND_Y) }
+            : authoredSurface;
         this.submitSurface(huntSurfaceRenderable(id, x, y, width, height, castsShadow, capturedSurface),
             huntSurfaceMaterial(id, surface.material, Boolean(source)));
     }

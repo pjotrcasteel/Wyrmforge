@@ -18,17 +18,21 @@ export function huntLayerCapture(layer, player, dragonDeath = null) {
         id = `${layer.kind}:${actor.entityId ?? actor.id ?? 'primary'}`;
         size = Math.max(160, Math.min(768, (actor.radius || 20) * 12));
     }
-    // The capture extends below the C# position to leave room for painted feet,
-    // shadows and articulated bosses. Supply this artwork-dependent pivot to
-    // the generic GPU billboard rather than burying that part below ground.
-    // These are existing Canvas paint extents, not physics or collision changes.
+    // The capture canvas extends below the C# entity position for transparent
+    // padding, paint and articulated poses. Canvas bounds are NOT the planted
+    // feet: enemy atlas anchors already coincide with authoritative C# X/Y.
+    // Only older presentation assets that explicitly paint below their pivot
+    // retain an offset. These offsets never change gameplay or collision.
     let footOffset = null;
     switch (layer.kind) {
         case 'mage':
             footOffset = 12 * Math.max(.7, Math.min(1.45, (actor.radius || 12) / 12));
             break;
         case 'enemy':
-            footOffset = 24 * Math.max(.62, Math.min(1.9, (actor.radius || 12) / 12));
+            // Enemy atlas anchors and C# positions already identify the planted feet.
+            // Adding a painted-foot offset placed the actual shadow caster south of
+            // its Hollowed/Ashling, independently of the Fireball light direction.
+            footOffset = 0;
             break;
         case 'dragon':
             footOffset = (actor.radius || 34) * 1.6;
@@ -37,8 +41,22 @@ export function huntLayerCapture(layer, player, dragonDeath = null) {
             break;
     }
     const footFraction = footOffset === null ? undefined : Math.min(1, .75 + footOffset / size);
+    // The legacy actor capture is a padded square with its feet at 75% height.
+    // Its alpha art occupies only part of that square. Scaling the WHOLE square
+    // to collision diameter left the actual shadow silhouette ~14px tall.
+    // Preserve a calibrated 3:5 screen-to-upright capture span, snapped to
+    // the 4px pixel-art grid. This is generic raster-capture geometry, not a
+    // creature-specific shadow or a moving-light-dependent impostor.
+    // Explicit authored 2.5D meshes/heightfields always take precedence.
+    const occluderHeightPx = layer.kind === 'masonry' ? undefined : Math.max(4, Math.round(size * .6 / 4) * 4);
+    const physicalVolume = layer.kind === 'masonry' && layer.barrier && layer.physicalHeightPx > 0
+        ? { x: layer.barrier.x * layer.width, y: layer.barrier.y * layer.height,
+            width: layer.barrier.width * layer.width, depth: layer.barrier.height * layer.height,
+            height: layer.physicalHeightPx } : null;
     return { id: 'hunt-' + id, x: actor.x - size / 2, y: actor.y - size * .75, size,
-        ...(footFraction !== undefined ? { footFraction } : {}) };
+        ...(physicalVolume ? { physicalVolume } : {}),
+        ...(footFraction !== undefined ? { footFraction } : {}),
+        ...(occluderHeightPx !== undefined ? { occluderHeightPx } : {}) };
 }
 
 /**

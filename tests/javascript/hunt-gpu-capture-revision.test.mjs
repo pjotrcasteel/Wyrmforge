@@ -9,6 +9,7 @@ function fakeCapture() {
     const pixels = { width: 64, height: 64, getContext() { return context; } };
     const layer = { pixels, texture: { needsUpdate: false }, revision: 'stable' };
     const world = {
+        camera: { x: 0, y: 0 },
         layers: new Map([['prop', layer]]), used: new Set(), dirtyTextures: new Set(),
         materials: [], objects: [],
         canReuseCapture: HuntGpuWorld.prototype.canReuseCapture,
@@ -339,4 +340,19 @@ test('G4 GPU review defaults to neutral-grey terrain while production keeps auth
     assert.equal(shouldUseG4NeutralGround(query('arenaGpu=1&g4Review=1&g4PaintedGround=1'), true), false);
     assert.equal(shouldUseG4NeutralGround(query('g4Review=1'), false), false);
     assert.equal(shouldUseG4NeutralGround(query('arenaGpu=1'), true), false);
+});
+
+
+test('real masonry capture chooses the authored box rather than a skyscraper-sized raster caster', () => {
+    const c = fakeCapture();
+    const physicalVolume = { x: 12, y: 20, width: 380, depth: 18, height: 16 };
+    c.world.materials = []; c.world.objects = [];
+    HuntGpuWorld.prototype.capture.call(c.world, 'prop', {}, -20, -200, 540, 540, 0, true,
+        { physicalVolume });
+    const wall = c.world.objects[0];
+    assert.equal(wall.occluderGeometry, 'hunt-solid-volume');
+    assert.equal(wall.occluderAlphaSource, false);
+    assert.equal(wall.occluderScale[2], 16 / 48);
+    assert.equal(wall.occluderScale[0], 380 / 48);
+    assert.ok(wall.occluderScale[2] < 540 / 48 / 10);
 });

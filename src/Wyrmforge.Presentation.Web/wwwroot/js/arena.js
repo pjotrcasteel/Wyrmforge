@@ -360,12 +360,12 @@ function draw(state, snapshot, width, height) {
         ctx.fillRect(0, 0, worldWidth, worldHeight);
         drawGrid(ctx, worldWidth, worldHeight);
     }
-    if (snapshot.hunt && !state.g4FlatGround) drawHuntArena(ctx, snapshot.hunt, worldWidth, worldHeight);
+    if (snapshot.hunt && !state.g4FlatGround && !gpu) drawHuntArena(ctx, snapshot.hunt, worldWidth, worldHeight);
     // World-space diffuse spell spill reaches actual masonry, terrain and the ground fog.
     if (!gpu) drawSpellLightSpill(ctx, spellLights, lightViewport, 'terrain');
     // Actual spell sources streak across nearby cloister water, not unrelated UI bloom.
     drawArenaCloisterReflections(ctx, snapshot.environment, worldWidth, worldHeight,
-        spellLights, visualSeconds, state.reducedMotion.matches, state.g4FlatGround);
+        spellLights, visualSeconds, state.reducedMotion.matches, state.g4FlatGround, gpu);
     drawArenaExit(ctx, snapshot.exit, visualSeconds);
     drawRecoveryGuide(ctx, snapshot, camera, width, height, visualSeconds, state.reducedMotion.matches);
 
@@ -420,7 +420,7 @@ function draw(state, snapshot, width, height) {
         ...(state.ashfang.death ? [{kind:'dragonDeath',depth:state.ashfang.death.y}] : []),
         ...snapshot.enemies.map(enemy => ({ kind: 'enemy', depth: enemy.y + (enemy.radius || 0), enemy })),
         { kind: 'mage', depth: snapshot.player.y + (snapshot.player.radius || 0) },
-        ...getArenaCloisterElevations(snapshot.environment, worldWidth, worldHeight, visualSeconds, null, state.g4FlatGround),
+        ...getArenaCloisterElevations(snapshot.environment, worldWidth, worldHeight, visualSeconds, null, state.g4FlatGround, gpu),
     ];
     if (gpu) gpu.begin(ctx, camera, width, height);
     const worldContext = ctx;
@@ -469,7 +469,9 @@ function draw(state, snapshot, width, height) {
             gpu.capture(capture.id,
                 tile, tileX - camera.x, tileY - camera.y, tileSize, tileSize,
                 .12 + Math.max(0, Math.min(1, layer.depth / worldHeight)) * .1,
-                true, { revision, footFraction: capture.footFraction });
+                true, { revision, footFraction: capture.footFraction,
+                    occluderHeightPx: capture.occluderHeightPx,
+                    physicalVolume: capture.physicalVolume });
             ctx = worldContext;
         }
     }

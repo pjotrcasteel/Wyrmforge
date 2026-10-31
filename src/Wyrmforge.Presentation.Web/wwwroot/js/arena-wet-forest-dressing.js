@@ -75,7 +75,7 @@ export function createWetForestDressingPlan(seed, props = [], width = 950, heigh
         understory: createWetForestUnderstory(seed, roots) };
 }
 
-export function drawWetForestDressing(ctx, scene, props, width, height) {
+export function drawWetForestDressing(ctx, scene, props, width, height, gpuAlbedo = false) {
     if (!scene?.wetForest) return;
     const plan = createWetForestDressingPlan(scene.seed, props, width, height);
     ctx.save();
@@ -88,10 +88,12 @@ export function drawWetForestDressing(ctx, scene, props, width, height) {
         ctx.fillStyle = '#302b25'; ctx.globalAlpha = .27;
         ctx.beginPath(); ctx.ellipse(root.x, root.y, root.radius + 7, 5, 0, 0, 2 * Math.PI); ctx.fill();
         if (root.kind === 'pine' || root.kind === 'dead-tree') {
-            // The 70px-tall approved tree now casts a broad, low-contrast canopy shadow
-            // across the actual ground. It never reads as an impassable raised wall.
-            ctx.fillStyle = '#071413'; ctx.globalAlpha = .17;
-            ctx.beginPath(); ctx.ellipse(root.x + 22, root.y + 13, 34, 10, -.23, 0, 2 * Math.PI); ctx.fill();
+            // Canvas mode keeps its legacy art shadow; GPU albedo excludes it.
+            // Dynamic, source-anchored shadows belong to the LightingEngine.
+            if (!gpuAlbedo) {
+                ctx.fillStyle = '#071413'; ctx.globalAlpha = .17;
+                ctx.beginPath(); ctx.ellipse(root.x + 22, root.y + 13, 34, 10, -.23, 0, 2 * Math.PI); ctx.fill();
+            }
             ctx.fillStyle = '#314339'; ctx.globalAlpha = .28;
             for (const side of [-1, 1]) {
                 ctx.fillRect(root.x + side * (root.radius + 12), root.y - 3, 8, 3);

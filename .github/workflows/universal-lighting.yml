@@ -72,9 +72,40 @@ jobs:
             sleep 1
           done
           dotnet test tests/Wyrmforge.Browser.Tests -c Release --no-build --filter 'FullyQualifiedName~UniversalLightingBrowserTests|FullyQualifiedName~HuntGpuAdapterBrowserTests|FullyQualifiedName~Mobile_LiveHuntGpu_RendersActorsAndKeepsSimulationMoving|FullyQualifiedName~Mobile_G4DeviceReview_RecordsRealHuntAndExportsEvidence|FullyQualifiedName~Mobile_G4Consent_IsAnObviousSingleChoiceBeforeGameMenus'
+      - name: Report G4 four-direction shadow geometry before upload
+        if: always()
+        run: |
+          found=0
+          for report in artifacts/gpu-proof/g4-shadow-direction-metrics-*.json; do
+            if [ -f "$report" ]; then
+              found=1
+              printf 'G4 real-WebGL directional shadow proof (%s): ' "$report"
+              cat "$report"
+              printf '\n'
+            fi
+          done
+          if [ "$found" -eq 0 ]; then
+            printf 'G4 direction test produced no metrics; check test discovery.\n'
+          fi
       - name: Summarize real-game lighting evidence with quality and runtime metrics
         if: success()
         run: node tests/javascript/hunt-gpu-evidence-report.mjs artifacts/gpu-proof
+      - name: Encode genuine running-Hunt GPU recording for mobile playback
+        if: always()
+        run: |
+          source=artifacts/gpu-proof/live-hunt-g4-directional-shadow-390.webm
+          output=artifacts/gpu-proof/live-hunt-g4-directional-shadow-390.mp4
+          if [ -s "$source" ]; then
+            if ! command -v ffmpeg >/dev/null 2>&1; then
+              sudo apt-get update -qq
+              sudo apt-get install -y -qq ffmpeg
+            fi
+            ffmpeg -hide_banner -loglevel error -y -i "$source" -an -vf fps=24 -r 24 -c:v libx264 -pix_fmt yuv420p -preset veryfast -crf 21 -movflags +faststart "$output"
+            ffprobe -v error -select_streams v:0 -show_entries stream=width,height,nb_frames,duration               -of default=noprint_wrappers=1 "$output"
+            test -s "$output"
+          else
+            printf 'Live Hunt video not produced; inspect browser test recording failure.\n'
+          fi
       - name: Preserve mobile viewport captures (not physical-device evidence)
         if: always()
         uses: actions/upload-artifact@v4

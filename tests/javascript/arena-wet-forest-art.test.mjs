@@ -63,7 +63,7 @@ test('the painter is restricted to the Wet Forest Lab and never writes gameplay 
     const ground = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-wet-forest-art.js', import.meta.url), 'utf8');
     const territory = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-territory-art.js', import.meta.url), 'utf8');
     const environment = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js', import.meta.url), 'utf8');
-    assert.match(territory, /if \(plan\.wetForest\) return drawWetForestGround\(ctx, plan, approvedAtlas, flatColorsOnly\)/);
+    assert.match(territory, /if \(plan\.wetForest\) return drawWetForestGround\(ctx, plan, approvedAtlas, flatColorsOnly, gpuAlbedo\)/);
     assert.match(environment, /if \(plan\.story\.wetForest\) drawWetForestDressing/);
     assert.match(ground, /const CELL = 12/);
     assert.doesNotMatch(ground, /DamagePropsInRadius|RestrictMovement|Math\.random|setInterval|new Image\(/);
@@ -265,7 +265,7 @@ test('G4 flat Wet Forest paints recipe colors without decoding tile images or bu
     }
 });
 
-test('G4 review defaults to neutral grey while production retains painted Wet Forest', async () => {
+test('G4 review defaults to neutral grey while Canvas presentation retains painted Wet Forest', async () => {
     const { readFile } = await import('node:fs/promises');
     const arena = await readFile(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena.js', import.meta.url), 'utf8');
     const environment = await readFile(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js', import.meta.url), 'utf8');
@@ -275,6 +275,28 @@ test('G4 review defaults to neutral grey while production retains painted Wet Fo
         'The G4 receiver must use one uniform grey albedo, not a painted ground texture.');
     assert.match(arena, /drawArenaEnvironment\(ctx, snapshot\.environment[\s\S]*state\.g4FlatGround\)/);
     assert.match(environment, /const tile = !flatColorsOnly && artReady\(\)/);
-    assert.match(environment, /flatColorsOnly \? 0 : liveWetForestArtworkGeneration\(\)/);
-    assert.match(environment, /drawTerritoryGround\(ctx, plan\.story, approvedAtlas, flatColorsOnly\)/);
+    assert.match(environment, /flatColorsOnly \|\| gpuAlbedo \? 0 : liveWetForestArtworkGeneration\(\)/);
+    assert.match(environment, /drawTerritoryGround\(ctx, plan\.story, approvedAtlas, flatColorsOnly, gpuAlbedo\)/);
+});
+
+test('real GPU Hunt uses semantic relightable albedo without source-painted lighting', () => {
+    const cells = [];
+    let fillStyle;
+    const ctx = {
+        save() {}, restore() {},
+        set fillStyle(value) { fillStyle = value; },
+        set globalAlpha(_value) {},
+        fillRect(x, y, width, height) { cells.push({ x, y, width, height, fillStyle }); },
+    };
+    const plan = { wetForest: recipe, seed: 1204, width: 120, height: 180, corruption: 0 };
+    drawWetForestGround(ctx, plan, null, false, true);
+    assert.ok(cells.length > 150, 'Relightable ground retains the same seed-backed soil topology');
+    const colours = new Set(cells.map(cell => cell.fillStyle));
+    assert.ok(colours.has('#74766b'), 'Physical loam albedo must have diffuse reflectance above nearly black legacy paint');
+    assert.ok(colours.has('#8a806f'), 'Semantic road material remains readable and distinct');
+    assert.ok(!colours.has('#252c25'), 'Near-black Canvas material cannot leak into GPU albedo');
+    assert.ok(!colours.has('#071413'), 'Pre-baked canopy shadows cannot leak into GPU albedo');
+    const code = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-wet-forest-art.js', import.meta.url), 'utf8');
+    assert.match(code, /!gpuAlbedo && !approvedAtlas && drawLiveWetForestMaterialBase/);
+    assert.match(code, /!sourcePainted && !gpuAlbedo/, 'Canvas-only shading detail must not be baked into GPU albedo');
 });

@@ -149,4 +149,158 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
         await Page.EvaluateAsync("() => window.__huntGpuFireballProof.dispose()");
     }
 
+
+    [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 660)]
+    public async Task HuntAdapter_FireballOnFourSides_ShadowFallsAwayFromSource(int width, int height)
+    {
+        var root = Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL");
+        if (string.IsNullOrWhiteSpace(root)) { Assert.Inconclusive("Requires published game."); return; }
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.GotoAsync(root.TrimEnd('/') + "/arena-material-kit", new() { WaitUntil = WaitUntilState.NetworkIdle });
+
+        var measurements = await Page.EvaluateAsync<double[][]>(
+            """
+            async ({width,height}) => {
+                const { HuntGpuWorld } = await import('./js/arena-gpu-world.js');
+                const { huntLayerCapture } = await import('./js/hunt-gpu-layers.js');
+                const world = new HuntGpuWorld({quality:width<=320?'mobile':'balanced'});
+                const canvas = document.createElement('canvas');
+                canvas.id = 'hunt-gpu-direction-shadow-proof';
+                canvas.width = width; canvas.height = height;
+                Object.assign(canvas.style,{position:'fixed',left:'0',top:'0',zIndex:'99999'});
+                document.body.appendChild(canvas);
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle='#777777';ctx.fillRect(0,0,width,height);
+                const gallery=document.createElement('div');
+                gallery.id='hunt-gpu-direction-shadow-gallery';
+                Object.assign(gallery.style,{position:'absolute',left:'0',top:'0',zIndex:'100000',display:'grid',background:'#777777'});
+                document.body.appendChild(gallery);
+
+                // Reproduce the actual Hunt capture and the authored Hollowed atlas
+                // pivot, rather than an approximately positioned padded test sprite.
+                const footX=width/2, footY=height/2;
+                const capture=huntLayerCapture({kind:'enemy',
+                    enemy:{entityId:42,x:footX,y:footY,radius:11}},null);
+                const actor = new Image();
+                actor.src='./art/enemies/hollow-rigged/arms/standard-walk.png';
+                await actor.decode();
+                const tile=document.createElement('canvas');
+                tile.width=tile.height=capture.size;
+                tile.getContext('2d').drawImage(actor,0,4*96,96,96,
+                    footX-48/96*93-capture.x,footY-72/96*93-capture.y,93,93);
+                const left=capture.x, top=capture.y;
+                world.begin(ctx,{x:0,y:0},width,height);
+                world.capture('hollow',tile,left,top,capture.size,capture.size,0,true,
+                    {footFraction:capture.footFraction,occluderHeightPx:capture.occluderHeightPx});
+
+                const base={version:1,time:0,environment:{ambient:.12,color:'#ffffff',exposure:1,emission:false},
+                    materials:[],objects:[]};
+                const alpha=tile.getContext('2d').getImageData(0,0,160,160).data;
+                const samples=[];
+                const caster=world.objects.find(object=>object.id==='hollow');
+                // These values are sourced from the generic padded-raster capture
+                // and the authoritative Fire school C# emitter profile.
+                const trials=[[capture.occluderHeightPx,24,320,24]];
+                for(const [bodyHeight,sourceHeight,range,intensity] of trials){
+                    caster.occluderScale[1]=bodyHeight/48;
+                    caster.occluderPosition[2]=-(1-(capture.footFraction??.75))*bodyHeight/48;
+                for(const [dx,dy] of [[0,48],[0,-48],[48,0],[-48,0]]){
+                    const light={id:'moving-fireball',ownerId:'test',type:'point',enabled:true,
+                        position:[footX+dx,footY+dy,sourceHeight],direction:[0,0,-1],color:'#ff7835',
+                        intensity,range,coneAngle:.5,penumbra:0,castsShadow:true,priority:1};
+                    world.render(ctx,{...base,lights:[light]});
+                    const shadowed=world.engine.pixels();
+                    // Preserve the actual rendered GPU frame for all four directions,
+                    // including failure runs (the final world frame has shadows disabled).
+                    const evidence=document.createElement('canvas');
+                    evidence.width=width;evidence.height=height;
+                    evidence.getContext('2d').drawImage(canvas,0,0);
+                    gallery.appendChild(evidence);
+                    world.render(ctx,{...base,lights:[{...light,castsShadow:false}]});
+                    const clear=world.engine.pixels();
+                    world.render(ctx,{...base,lights:[]});
+                    const ambientOnly=world.engine.pixels();
+
+                    let weight=0, project=0, opposite=0, changed=0, farPixels=0, farthest=0;
+                    let strongPixels=0, veryStrongPixels=0, peakDelta=0;
+                    let blockedInAffected=0, directInAffected=0;
+                    for(let i=0;i<shadowed.length;i+=4){
+                        const x=(i/4)%width, y=height-1-Math.floor(i/4/width);
+                        const sx=Math.floor(x-left),sy=Math.floor(y-top);
+                        if(sx>=0&&sy>=0&&sx<160&&sy<160&&alpha[(sy*160+sx)*4+3]>=96)continue;
+                        const delta=Math.max(0,clear[i]-shadowed[i])+
+                            Math.max(0,clear[i+1]-shadowed[i+1])+
+                            Math.max(0,clear[i+2]-shadowed[i+2]);
+                        if(delta<24)continue;
+                        const direct=Math.max(0,clear[i]-ambientOnly[i])+
+                            Math.max(0,clear[i+1]-ambientOnly[i+1])+
+                            Math.max(0,clear[i+2]-ambientOnly[i+2]);
+                        blockedInAffected+=delta;directInAffected+=direct;
+                        if(delta>=72)strongPixels++;
+                        if(delta>=144)veryStrongPixels++;
+                        peakDelta=Math.max(peakDelta,delta);
+                        const away=((x-footX)*-dx+(y-footY)*-dy)/48;
+                        weight+=delta;project+=delta*away;
+                        if(away<0)opposite+=delta;
+                        if(away>=20)farPixels++;
+                        farthest=Math.max(farthest,away);
+                        changed++;
+                    }
+                    samples.push([changed,weight?project/weight:0,weight?opposite/weight:1,farPixels,farthest,
+                        strongPixels,veryStrongPixels,peakDelta,changed?weight/changed:0,bodyHeight,
+                        directInAffected?blockedInAffected/directInAffected:0,
+                        changed?directInAffected/changed:0,sourceHeight,range,intensity]);
+                }
+                }
+                window.__huntGpuDirectionalWorld=world;
+                return samples;
+            }
+            """, new { width, height });
+
+        var artifacts = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS")
+            ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
+        Directory.CreateDirectory(artifacts);
+        await File.WriteAllTextAsync(Path.Combine(artifacts, $"g4-shadow-direction-metrics-{width}.json"),
+            System.Text.Json.JsonSerializer.Serialize(new { physicalCasterHeightPx = measurements[0][9], fireballHeightPx = measurements[0][12],
+                canonicalActorFootY = height / 2, sides = new[] { "south", "north", "east", "west" },
+                measurements }));
+        await Page.Locator("#hunt-gpu-direction-shadow-gallery").ScreenshotAsync(new()
+        {
+            Path = Path.Combine(artifacts, $"g4-shadow-direction-{width}.png"),
+        });
+        var sides = new[] { "south", "north", "east", "west" };
+        for (var sampleIndex = 0; sampleIndex < measurements.Length; sampleIndex++)
+        {
+            var sweep = measurements[sampleIndex];
+            Console.WriteLine($"Sweep h={sweep[9]:F1}px z={sweep[12]:F0}px r={sweep[13]:F0}px i={sweep[14]:F0}, {sides[sampleIndex % 4]}: " +
+                $"shadowPixels={sweep[0]}, farPixels={sweep[3]}, reach={sweep[4]:F1}px, " +
+                $"darkPixels72={sweep[5]}, darkPixels144={sweep[6]}, peakRGBDelta={sweep[7]:F1}, away={sweep[1]:F1}, opposite={sweep[2]:F2}, blocked={sweep[10]:F2}");
+        }
+        for (var i = 0; i < sides.Length; i++)
+        {
+            var sample = measurements[i];
+            Console.WriteLine($"Hollowed {sides[i]}: shadowPixels={sample[0]}, farPixels={sample[3]}, reach={sample[4]:F1}px, " +
+                $"darkPixels72={sample[5]}, darkPixels144={sample[6]}, peakRGBDelta={sample[7]:F1}, avgRGBDelta={sample[8]:F1}");
+            Assert.IsGreaterThan(80, sample[0], $"A {sides[i]} Fireball must cast a readable alpha silhouette on grey ground.");
+            Assert.IsGreaterThan(5, sample[1],
+                $"A {sides[i]} Fireball must cast the shadow AWAY from the source, not toward it or under the actor.");
+            Assert.IsLessThan(.3, sample[2],
+                $"A {sides[i]} Fireball must not place most shadow pixels on the illuminated side.");
+            Assert.IsGreaterThan(100, sample[3],
+                $"A {sides[i]} Fireball must create a substantial shadow footprint at least 20 pixels behind the Hollowed.");
+            // The previous green direction test accepted shadows with only ~11 RGB levels of actual floor contrast.
+            // A readable mobile silhouette needs an appreciably darker core, not merely changed pixels.
+            Assert.IsGreaterThan(100, sample[5],
+                $"A {sides[i]} Fireball must darken at least 100 ground pixels by 72 combined RGB levels. Current opacity is not visually acceptable.");
+            Assert.IsGreaterThan(120, sample[7],
+                $"A {sides[i]} Fireball must produce a visibly dark shadow core (peak combined RGB delta > 120).");
+            Assert.IsGreaterThan(i < 2 ? 24 : 30, sample[4],
+                $"A {sides[i]} Fireball cannot leave the Hollowed with only a tiny contact smear.");
+        }
+
+        await Page.EvaluateAsync("() => window.__huntGpuDirectionalWorld.dispose()");
+    }
+
 }

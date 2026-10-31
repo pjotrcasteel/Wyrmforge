@@ -153,7 +153,7 @@ export function createCloisterElevationLayers(plan, barriers, width, height) {
     if (!plan) return [];
     return (barriers ?? []).filter(barrier => !barrier.open && barrier.width > 0 && barrier.height > 0)
         .map(barrier => ({ kind: 'masonry', depth: (barrier.y + barrier.height) * height,
-            barrier, width, height }));
+            barrier, width, height, physicalHeightPx: Math.min(34, Math.max(21, barrier.height * height * 1.25)) }));
 }
 
 // Actors whose feet are north of a wall must disappear behind its masonry;
