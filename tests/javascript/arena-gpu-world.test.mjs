@@ -521,3 +521,27 @@ test('authored wall volumes cast from their actual physical footprint rather tha
     assert.ok(Math.abs(caster.occluderPosition[1] + (192 + 8) * Math.SQRT2 / 48) < 1e-12);
     assert.throws(() => huntSolidVolumeCaster({ ...capture.physicalVolume, height: 0 }), RangeError);
 });
+
+test('world-space wall volume follows the moving Hunt camera without changing source geometry', async () => {
+    const { HuntGpuWorld } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js');
+    const physicalVolume = { x: 260, y: 420, width: 120, depth: 16, height: 24 };
+    const source = structuredClone(physicalVolume);
+    const captureAt = camera => {
+        const submitted = [];
+        const world = { camera, submitSurface(object, material) { submitted.push({ object, material }); } };
+        HuntGpuWorld.prototype.capture.call(world, 'wall', null, 0, 0, 160, 160, 0, true,
+            { physicalVolume });
+        assert.equal(submitted.length, 1);
+        return submitted[0].object;
+    };
+    const fixed = captureAt({ x: 0, y: 0 });
+    const panned = captureAt({ x: 210, y: 315 });
+    assert.deepEqual(panned.occluderScale, fixed.occluderScale,
+        'Camera travel cannot change authored wall size or physical shadow height');
+    assert.equal(panned.occluderPosition[0], (260 - 210 + 60) / 48);
+    assert.equal(panned.occluderPosition[1], -(420 - 315 + 8) * Math.SQRT2 / 48);
+    assert.equal(panned.occluderPosition[2], fixed.occluderPosition[2]);
+    assert.ok(Math.abs(fixed.occluderPosition[0] - panned.occluderPosition[0] - 210 / 48) < 1e-12);
+    assert.ok(Math.abs(fixed.occluderPosition[1] - panned.occluderPosition[1] + 315 * Math.SQRT2 / 48) < 1e-12);
+    assert.deepEqual(physicalVolume, source, 'GPU camera projection must not mutate authoritative C# wall data');
+});
