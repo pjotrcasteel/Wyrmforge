@@ -306,4 +306,56 @@ public sealed class WorldSiteLandscapeTests
         }
         Assert.IsGreaterThan(4, reviewed, "The reviewed Elder map must produce genuine mountain monasteries.");
     }
+    [TestMethod]
+    public void MountainMonastery_RealCliffFacesBlockTraversalButReserveWindingLowPasses()
+    {
+        const double width = 950, height = 1550;
+        var reviewed = 0;
+        for (var seed = 0; seed < 65; seed++)
+        {
+            var node = WyrmrealmMapGenerator.GenerateFireHunt(seed, WyrmTier.Elder)
+                .Single(candidate => candidate.Id.EndsWith("-crossroads", StringComparison.Ordinal));
+            var site = node.Geography!;
+            var layout = site.Landscape!;
+            if (layout.Kind != "mountain-monastery")
+            {
+                continue;
+            }
+
+            reviewed++;
+            var cliffFaces = layout.Obstacles.Where(obstacle => obstacle.Kind == "cliff-face").ToArray();
+            Assert.IsGreaterThan(5, cliffFaces.Length, $"seed {seed}: highland needs real C# cliff barriers");
+            Assert.IsTrue(cliffFaces.Any(obstacle => obstacle.Outline.Average(point => point.X) < .5));
+            Assert.IsTrue(cliffFaces.Any(obstacle => obstacle.Outline.Average(point => point.X) > .5));
+            var faceOnly = new WorldSiteLandscapeRecipe(layout.Kind, cliffFaces);
+            var environment = ArenaEnvironmentState.Create(seed, node, worldFirstGeography: true);
+
+            foreach (var route in site.Corridors.Concat(site.ScenicPaths).Concat(layout.LocalPaths))
+            {
+                for (var index = 1; index < route.Points.Count; index++)
+                {
+                    var from = new Vector2D(route.Points[index - 1].X * width, route.Points[index - 1].Y * height);
+                    var to = new Vector2D(route.Points[index].X * width, route.Points[index].Y * height);
+                    Assert.IsFalse(WorldSiteFootprintCollision.BlocksSegment(faceOnly, from, to, width, height, radius: 12),
+                        $"seed {seed}: C# ridge blocks reserved low pass {route.EdgeId}");
+                    if (route.EdgeId == "monastery-approach")
+                    {
+                        Assert.IsFalse(WorldSiteFootprintCollision.BlocksSegment(layout, from, to, width, height, radius: 12),
+                            $"seed {seed}: monastery switchback or gate is blocked");
+                    }
+                }
+            }
+
+            var solid = cliffFaces.First();
+            var x = solid.Outline.Average(point => point.X) * width;
+            var y = solid.Outline.Average(point => point.Y) * height;
+            Assert.IsTrue(environment.IsBlocked(new Vector2D(x, y), width, height, radius: 5),
+                $"seed {seed}: cliff shown in AR1 must block player and enemy collision");
+            Assert.IsTrue(environment.BlocksSegment(new Vector2D(x - 45, y), new Vector2D(x + 45, y),
+                width, height, radius: 5), $"seed {seed}: no direct shortcut through a sheer cliff");
+        }
+
+        Assert.IsGreaterThan(4, reviewed, "Elder sites need reviewed mountain-monastery examples.");
+    }
+
 }

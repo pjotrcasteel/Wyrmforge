@@ -123,6 +123,8 @@ public static class WorldSiteLandscapeGenerator
             AddMountainAnchors(geography, random, obstacles);
         if (geography.GenerationProfile?.Landmark == WorldSiteLandmark.Monastery)
             AddMonasteryBuilding(geography, random, obstacles, terrainPatches, localPaths);
+        if (mountain)
+            AddMountainCliffFaces(geography, localPaths, random, obstacles);
 
         return new WorldSiteLandscapeRecipe(kind, obstacles)
         {
@@ -252,6 +254,74 @@ public static class WorldSiteLandscapeGenerator
         }
     }
 
+    // The highland's inner escarpments are solid C# obstacles, unlike the AR1
+    // visual height bands. Only actual world exits, local trails and the
+    // monastery approach may cut safe passages through these cliff faces.
+    private static void AddMountainCliffFaces(WorldSiteGeography site,
+        IReadOnlyList<WorldSiteCorridor> localPaths, Random random, List<WorldSiteObstacle> obstacles)
+    {
+        const int Sections = 20;
+        const double Edge = .012;
+        var routes = site.Corridors.Concat(site.ScenicPaths).Concat(localPaths).ToArray();
+        var material = site.RegionId == "frost" ? WorldSiteSurfaceId.GlacialIce : WorldSiteSurfaceId.Rock;
+        var kind = site.RegionId == "frost" ? "glacier-cliff-face" : "cliff-face";
+        var monastery = obstacles.Where(obstacle => obstacle.Kind.StartsWith("monastery-", StringComparison.Ordinal))
+            .ToArray();
+
+        foreach (var side in new[] { -1d, 1d })
+        {
+            var phase = random.NextDouble() * Math.PI * 2;
+            for (var index = 0; index < Sections; index++)
+            {
+                var fromY = Edge + index * (1 - 2 * Edge) / Sections;
+                var toY = Edge + (index + 1) * (1 - 2 * Edge) / Sections;
+                var fromX = .5 + side * (.165 + Math.Sin(phase + index * .44) * .012);
+                var toX = .5 + side * (.165 + Math.Sin(phase + (index + 1) * .44) * .012);
+                var cliff = new WorldSiteObstacle(kind, material, 2.4,
+                [
+                    new HuntPoint(fromX - .012, fromY),
+                    new HuntPoint(fromX + .012, fromY),
+                    new HuntPoint(toX + .012, toY),
+                    new HuntPoint(toX - .012, toY),
+                ]);
+
+                if (TouchesReservedRoute(cliff, routes) || monastery.Any(building => BoundsOverlap(cliff, building, .025)))
+                {
+                    continue;
+                }
+
+                obstacles.Add(cliff);
+            }
+        }
+    }
+
+    private static bool TouchesReservedRoute(WorldSiteObstacle cliff, IReadOnlyList<WorldSiteCorridor> routes)
+    {
+        var candidate = new WorldSiteLandscapeRecipe("cliff-clearance", [cliff]);
+        foreach (var route in routes)
+        {
+            for (var index = 1; index < route.Points.Count; index++)
+            {
+                var from = route.Points[index - 1];
+                var to = route.Points[index];
+                if (WorldSiteFootprintCollision.BlocksSegment(candidate,
+                    new Vector2D(from.X, from.Y), new Vector2D(to.X, to.Y),
+                    1, 1, radius: route.Width * .5 + .027))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private static bool BoundsOverlap(WorldSiteObstacle first, WorldSiteObstacle second, double margin) =>
+        first.Outline.Min(point => point.X) < second.Outline.Max(point => point.X) + margin &&
+        first.Outline.Max(point => point.X) > second.Outline.Min(point => point.X) - margin &&
+        first.Outline.Min(point => point.Y) < second.Outline.Max(point => point.Y) + margin &&
+        first.Outline.Max(point => point.Y) > second.Outline.Min(point => point.Y) - margin;
+
     private static string SelectKind(WyrmrealmMapNode node, WorldSiteGeography geography)
     {
         if (node.Type == WyrmrealmNodeType.Dragon)
@@ -305,19 +375,21 @@ public static class WorldSiteLandscapeGenerator
             Polygon(best.Center, halfWidth + .045, halfHeight + .05, random)));
         terrain.Add(new WorldSiteTerrainPatch("monastery-courtyard", stone, .67, .02,
             Rectangle(left + thickness, north + thickness, right - thickness, south - thickness)));
-        paths.Add(new WorldSiteCorridor("monastery-approach", WorldSiteSurfaceId.Road, .028,
+        // Ascend through a seeded switchback rather than cutting straight through
+        // a cliff. The generated physical cliff faces reserve this exact route.
+        var bend = (random.NextDouble() - .5) * .055;
+        paths.Add(new WorldSiteCorridor("monastery-approach", WorldSiteSurfaceId.Road, .04,
         [
             new HuntPoint(.5, .5),
-            new HuntPoint(cx, Math.Clamp(south + .085, .08, .92)),
+            new HuntPoint(.5 + (cx - .5) * .39, .5 + (cy - .5) * .29 + bend),
+            new HuntPoint(cx + (.5 - cx) * .16, Math.Clamp(south + .11, .1, .93)),
             new HuntPoint(cx, south + .005),
         ]));
         // Eliminate incidental small rocks/roots on the real structure footprint.
         obstacles.RemoveAll(obstacle => obstacle.Outline.Any(point =>
             point.X > left - .03 && point.X < right + .03 &&
             point.Y > north - .03 && point.Y < south + .03) ||
-            paths.Any(path => CorridorDistance(
-                new HuntPoint(obstacle.Outline.Average(point => point.X), obstacle.Outline.Average(point => point.Y)),
-                path.Points) < .052));
+            TouchesReservedRoute(obstacle, paths));
         obstacles.Add(new WorldSiteObstacle("monastery-hall", stone, 1.8,
             Rectangle(cx - halfWidth * .67, north + thickness, cx + halfWidth * .67, cy - halfHeight * .25)));
         obstacles.Add(new WorldSiteObstacle("monastery-wing", stone, 1.25,

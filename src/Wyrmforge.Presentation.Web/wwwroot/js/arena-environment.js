@@ -551,7 +551,9 @@ export function drawWorldSiteLandscape(ctx, geography, width, height) {
     const palette = {
         'tree-root': ['#264a34', '#172d24'],
         cliff: ['#42525d', '#a3acb5'],
+        'cliff-face': ['#2a3138', '#697780'],
         'glacier-cliff': ['#7d9bac', '#d3dde7'],
+        'glacier-cliff-face': ['#506674', '#a1bccb'],
         'ice-spire': ['#b1d5e5', '#e5f2f8'],
         'wyrm-rib': ['#55434a', '#92747a'],
         'monastery-wall': ['#8d847b', '#d2bba4'],
@@ -566,7 +568,7 @@ export function drawWorldSiteLandscape(ctx, geography, width, height) {
         const colors = palette[obstacle.kind] ?? [siteSurfaceColors[semanticMaterialName(obstacle.material)], '#151e23'];
         ctx.fillStyle = colors[0];
         ctx.strokeStyle = colors[1];
-        ctx.lineWidth = obstacle.kind === 'cliff' ? 3 : 2;
+        ctx.lineWidth = obstacle.kind.includes('cliff') ? 3 : 2;
         ctx.beginPath();
         for (let i = 0; i < obstacle.outline.length; i++) {
             const point = obstacle.outline[i];
@@ -591,6 +593,7 @@ export function drawWorldSiteLandscape(ctx, geography, width, height) {
             ctx.fillStyle = '#826d52';
             ctx.fill();
         } else if (obstacle.kind === 'cliff' || obstacle.kind === 'glacier-cliff' ||
+                   obstacle.kind === 'cliff-face' || obstacle.kind === 'glacier-cliff-face' ||
                    obstacle.kind === 'wyrm-rib' || obstacle.kind === 'ice-spire') {
             const first = obstacle.outline[0];
             ctx.beginPath();

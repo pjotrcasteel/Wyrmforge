@@ -79,3 +79,10 @@ and the monastery site at mobile scale, route-clearance regressions, and owner a
   do not reuse them for approval. Re-capture genuine running gameplay after CI.
   Wyrm Lair end-to-end capture and owner AR1 sign-off remain mandatory.
 
+
+## Cliff-face traversability checkpoint — 31 October (code submitted for CI; owner gate remains open)
+
+- C# now generates **impassable escarpment segments** along the mountain ridges, with seed-stable bends. Unlike the existing colored foothill/shoulder/crest patches, these are actual `WorldSiteObstacle` polygons consumed by the current shared collision and sightline path. The semantic renderer paints these barriers in distinct dark charcoal; no visual-only collision is introduced.
+- Before placing a cliff segment, the generator checks every chart-port corridor, seeded scenic path and monastery local approach against the **same swept-footprint test** used by gameplay, and leaves a safe opening for each route. A seeded switchback leads from the valley to the open monastery gate. Existing rocky obstacles are also cleared when they intrude on that approach.
+- Tests cover cliff-face existence on both mountain flanks, blocked direct crossings in C# gameplay, unobstructed reserved low passes, a passable monastery switchback and preservation of normal Hunt mode.
+- This is still **AR1 discrete physical geometry**, not AR3 continuous sampled ground elevation. The C# AR3 grade/height field, lighting cast shadows, final 2.5D building artwork, actual mobile screenshot evidence and explicit owner sign-off are still separate.
