@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Application.Runs.Simulation.Lighting;
 
 namespace Wyrmforge.Application.Tests.Runs.Lighting;
@@ -34,6 +35,51 @@ public sealed class GpuLightingFrameProjectionTests
         Assert.IsTrue(projected.Lights.Any(light =>
             light.Id == "projectile:fire-test" && light.CastsShadow &&
             light.Intensity == 24 && light.Range == 320));
+    }
+
+    [TestMethod]
+    public void G5_AuthoredWetForestTorch_ComposesWithMovingProjectileWithoutNewEngine()
+    {
+        var recipe = HuntArenaGenerator.GenerateWetForest(91);
+        var fixture = recipe.LightFixtures.Single();
+        var sources = HuntFixtureLightingProjection.Capture(recipe, 950, 1550);
+        var fixedLight = sources.Single();
+        Assert.AreEqual(fixture.Id, fixedLight.Id);
+        Assert.AreEqual(fixture.X * 950, fixedLight.X);
+        Assert.AreEqual(fixture.Y * 1550, fixedLight.Y);
+        Assert.AreEqual(fixture.Color, fixedLight.Color);
+        Assert.AreEqual(fixture.Intensity, fixedLight.Intensity);
+        Assert.AreEqual(fixture.Range, fixedLight.Radius);
+        Assert.IsFalse(fixedLight.CastsShadows, "G5 decorative fixture deliberately uses the reduced shadow tier.");
+
+        var moving = new LightingEmitter("projectile:fireball", "fireball", "point", 110, 350, 24,
+            "#ff7835", 24, 320, ExpiresAtTick: 8);
+        var frame = GpuLightingFrameProjection.FromSnapshot(
+            LightingSceneComposer.Compose("hunt", 7, Environment, sources, [moving]), 1.4);
+        CollectionAssert.AreEquivalent(new[] { fixture.Id, moving.Id }, frame.Lights.Select(light => light.Id).ToArray());
+        Assert.AreEqual("point", frame.Lights.Single(light => light.Id == fixture.Id).Type);
+        Assert.IsTrue(frame.Lights.Single(light => light.Id == moving.Id).CastsShadow);
+        var expired = GpuLightingFrameProjection.FromSnapshot(
+            LightingSceneComposer.Compose("hunt", 8, Environment, sources, [moving]), 1.5);
+        Assert.AreEqual(fixture.Id, expired.Lights.Single().Id,
+            "An expired moving spell must not remove the independent fixed fixture.");
+        Assert.AreEqual(0, HuntFixtureLightingProjection.Capture(null, 950, 1550).Count,
+            "Non-Wet-Forest scenes never invent a torch.");
+
+        var switchedOff = recipe with { LightFixtures = [fixture with
+        {
+            Enabled = false,
+            Color = "#88ccff",
+            Intensity = 9,
+            Range = 160,
+            ExpiresAtTick = 9,
+        }] };
+        var controlled = HuntFixtureLightingProjection.Capture(switchedOff, 950, 1550).Single();
+        Assert.IsFalse(controlled.Enabled);
+        Assert.AreEqual("#88ccff", controlled.Color);
+        Assert.AreEqual(9d, controlled.Intensity);
+        Assert.AreEqual(160d, controlled.Radius);
+        Assert.AreEqual(9L, controlled.ExpiresAtTick);
     }
 
     [TestMethod]

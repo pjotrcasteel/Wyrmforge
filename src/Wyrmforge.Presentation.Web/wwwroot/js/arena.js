@@ -1,6 +1,7 @@
 import { huntLayerCapture, huntLayerRevision, prepareHuntGpuScratch, HuntGpuScratchPool,
     prepareHuntGpuPresentation, presentCompletedHuntGpuFrame, shouldStageHuntGpuReviewFrame, shouldUseG4NeutralGround } from './hunt-gpu-layers.js';
 import { mountG4DeviceReview } from './lighting/g4-device-review.js';
+import { lighting01Requested, submitLighting01Fixtures } from './lighting/g5-world-composition.js';
 import { preloadFireballV5 } from './arena-fireball-v5.js';
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
 import { attachArenaInput, getArenaMovement, getArenaAim, isArenaStickAim, getArenaPropFocus } from './arena-input.js';
@@ -59,6 +60,7 @@ export function initializeArena(canvas, dotNetReference) {
     arenas.set(canvas, state);
     state.detachInput = attachArenaInput(state);
     const params = new URLSearchParams(location.search);
+    state.lighting01 = lighting01Requested(params);
     // For G4 testing, remove authored ground paintings and procedural dressing.
     // A uniform neutral receiver exposes actual lighting/shadow defects.
     // Production and the ordinary Canvas game retain their existing terrain.
@@ -129,6 +131,7 @@ export function readArenaDiagnostics(canvas) {
         renderingFailed: Boolean(state.renderingFailed),
         renderingError: state.renderingError ?? null,
         sharedLighting: state.sharedLightingFrame ?? state.latestSnapshot?.lighting ?? null,
+        lighting01: { enabled: Boolean(state.lighting01), fixedFixtures: state.lighting01FixtureCount ?? 0 },
         gpuWorld: state.gpuWorld
             ? { ...state.gpuWorld.diagnostics(), scratchPool: state.gpuScratchPool?.diagnostics() ?? null }
             : { error: state.gpuError ?? null },
@@ -426,6 +429,9 @@ function draw(state, snapshot, width, height) {
         ...getArenaCloisterElevations(snapshot.environment, worldWidth, worldHeight, visualSeconds, null, state.g4FlatGround, gpu),
     ];
     if (gpu) gpu.begin(ctx, camera, width, height);
+    state.lighting01FixtureCount = gpu && state.lighting01
+        ? submitLighting01Fixtures(gpu, snapshot.environment, state.sharedLightingFrame,
+            camera, worldWidth, worldHeight) : 0;
     const worldContext = ctx;
     for (const layer of sortSceneDepthLayers(depthLayers)) {
         let tile, tileX, tileY, tileSize, capture, revision, reuse = false;
