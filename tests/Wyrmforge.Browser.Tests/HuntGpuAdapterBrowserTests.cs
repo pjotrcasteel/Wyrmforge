@@ -198,8 +198,13 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
                     materials:[],objects:[]};
                 const alpha=tile.getContext('2d').getImageData(0,0,160,160).data;
                 const samples=[];
-                const bodyHeight=capture.occluderHeightPx;
                 const sourceHeight=24;
+                const caster=world.objects.find(object=>object.id==='hollow');
+                // Controlled real-WebGL sweep: verify how transparent atlas padding
+                // changes the physical shadow volume before altering gameplay.
+                for(const bodyHeight of [capture.occluderHeightPx,96,160,160*Math.SQRT2]){
+                    caster.occluderScale[1]=bodyHeight/48;
+                    caster.occluderPosition[2]=-(1-(capture.footFraction??.75))*bodyHeight/48;
                 for(const [dx,dy] of [[0,48],[0,-48],[48,0],[-48,0]]){
                     const light={id:'moving-fireball',ownerId:'test',type:'point',enabled:true,
                         position:[footX+dx,footY+dy,sourceHeight],direction:[0,0,-1],color:'#ff7835',
@@ -247,6 +252,7 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
                         directInAffected?blockedInAffected/directInAffected:0,
                         changed?directInAffected/changed:0,sourceHeight]);
                 }
+                }
                 window.__huntGpuDirectionalWorld=world;
                 return samples;
             }
@@ -264,6 +270,13 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
             Path = Path.Combine(artifacts, "g4-shadow-direction.png"),
         });
         var sides = new[] { "south", "north", "east", "west" };
+        for (var sampleIndex = 0; sampleIndex < measurements.Length; sampleIndex++)
+        {
+            var sweep = measurements[sampleIndex];
+            Console.WriteLine($"Sweep h={sweep[9]:F1}px, {sides[sampleIndex % 4]}: " +
+                $"shadowPixels={sweep[0]}, farPixels={sweep[3]}, reach={sweep[4]:F1}px, " +
+                $"darkPixels72={sweep[5]}, darkPixels144={sweep[6]}, peakRGBDelta={sweep[7]:F1}");
+        }
         for (var i = 0; i < sides.Length; i++)
         {
             var sample = measurements[i];
