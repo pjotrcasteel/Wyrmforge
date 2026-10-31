@@ -22,11 +22,11 @@ public sealed class WorldSiteLandscapeTests
         var copy = WyrmrealmMapGenerator.GenerateFireHunt(match.Seed, WyrmTier.Elder)
             .Single(node => node.Id == mountain.Id).Geography!;
         var valley = WorldSiteElevationField.Sample(site, new HuntPoint(.5, .5));
-        var ridge = WorldSiteElevationField.Sample(site, new HuntPoint(.42, .5));
+        var ridge = WorldSiteElevationField.Sample(site, new HuntPoint(.08, .5));
         Assert.IsGreaterThan(valley.HeightMeters + .4, ridge.HeightMeters,
             "The actual C# height field must lift a mountain ridge above the low valley.");
-        Assert.AreEqual(ridge, WorldSiteElevationField.Sample(copy, new HuntPoint(.42, .5)));
-        var adjacent = WorldSiteElevationField.Sample(site, new HuntPoint(.4201, .5));
+        Assert.AreEqual(ridge, WorldSiteElevationField.Sample(copy, new HuntPoint(.08, .5)));
+        var adjacent = WorldSiteElevationField.Sample(site, new HuntPoint(.0801, .5));
         Assert.IsLessThan(.15, Math.Abs(ridge.HeightMeters - adjacent.HeightMeters),
             "Terrain elevation must change continuously without hard polygon boundaries.");
         Assert.IsTrue(double.IsFinite(ridge.Grade));
