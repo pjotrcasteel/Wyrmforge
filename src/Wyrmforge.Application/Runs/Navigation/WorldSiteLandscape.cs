@@ -1,4 +1,5 @@
 using Wyrmforge.Domain.Combat.Geometry;
+using Wyrmforge.Domain.Progression.Signature;
 using Wyrmforge.Application.Runs.Navigation;
 
 namespace Wyrmforge.Application.Runs.Navigation;
@@ -18,6 +19,9 @@ public sealed record WorldSiteTerrainPatch(
     double Slope,
     IReadOnlyList<HuntPoint> Outline);
 
+/// <summary>A seed-stable optional point of interest. Reward identity belongs to this physical site, not to renderer art.</summary>
+public sealed record WorldSiteDiscovery(string Id, string Kind, HuntPoint LocalPoint, HuntMaterialId? MaterialReward);
+
 /// <summary>A landmark-shaped site plan, not a new simulation or rendering engine.</summary>
 public sealed record WorldSiteLandscapeRecipe(
     string Kind,
@@ -28,6 +32,9 @@ public sealed record WorldSiteLandscapeRecipe(
 
     /// <summary>Local access paths chosen by the site generator, unrelated to Chart graph edges.</summary>
     public IReadOnlyList<WorldSiteCorridor> LocalPaths { get; init; } = [];
+
+    /// <summary>Optional grounded sites, possibly empty; the Hunt decides whether an unclaimed reward can be collected.</summary>
+    public IReadOnlyList<WorldSiteDiscovery> Discoveries { get; init; } = [];
 }
 
 /// <summary>Deterministic local scenery from world-map habitat and landmark metadata, without consuming combat or reward RNG.</summary>
@@ -126,11 +133,56 @@ public static class WorldSiteLandscapeGenerator
         if (mountain)
             AddMountainCliffFaces(geography, localPaths, random, obstacles);
 
+        // Small seeded side sites share the same C# collision footprints and legal roads.
+        // A trace is not a guaranteed reward: some places have already been picked clean.
+        var discoveries = AddOptionalDiscoveries(geography, kind, random, obstacles, localPaths);
         return new WorldSiteLandscapeRecipe(kind, obstacles)
         {
             TerrainPatches = terrainPatches,
             LocalPaths = localPaths,
+            Discoveries = discoveries,
         };
+    }
+
+    private static IReadOnlyList<WorldSiteDiscovery> AddOptionalDiscoveries(
+        WorldSiteGeography site, string kind, Random random, IReadOnlyList<WorldSiteObstacle> obstacles,
+        List<WorldSiteCorridor> localPaths)
+    {
+        if (random.NextDouble() >= .68) return [];
+
+        const double Width = 950;
+        const double Height = 1550;
+        var layout = new WorldSiteLandscapeRecipe(kind, obstacles);
+        var origin = new HuntPoint(.5, .5);
+        var traceKind = kind switch
+        {
+            "mountain-pass" or "mountain-monastery" => "fallen-pilgrim-cache",
+            "wyrm-lair" => "scorched-offering",
+            "forest-fork" or "forest-trail" => "forgotten-waystone",
+            _ => "abandoned-supplies",
+        };
+
+        for (var attempt = 0; attempt < 18; attempt++)
+        {
+            var angle = random.NextDouble() * Math.PI * 2;
+            var distance = .17 + random.NextDouble() * .13;
+            var pocket = new HuntPoint(.5 + Math.Cos(angle) * distance, .5 + Math.Sin(angle) * distance);
+            var from = new Vector2D(origin.X * Width, origin.Y * Height);
+            var destination = new Vector2D(pocket.X * Width, pocket.Y * Height);
+            if (pocket.X is < .1 or > .9 || pocket.Y is < .1 or > .9 ||
+                WorldSiteFootprintCollision.BlocksSegment(layout, from, destination, Width, Height, radius: 17))
+            {
+                continue;
+            }
+
+            var id = $"{site.SiteId}:trace";
+            localPaths.Add(new WorldSiteCorridor($"{id}:access", WorldSiteSurfaceId.Road, .028, [origin, pocket]));
+            // Common salvage only: a site detour cannot bypass Hunt-tier rarity eligibility.
+            var material = random.NextDouble() < .43 ? HuntMaterialId.CharredScrap : (HuntMaterialId?)null;
+            return [new WorldSiteDiscovery(id, traceKind, pocket, material)];
+        }
+
+        return [];
     }
 
     // Connected foothill/shoulder/crest ribbons follow one seeded mountain

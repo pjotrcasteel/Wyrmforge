@@ -7,6 +7,7 @@ namespace Wyrmforge.Application.Runs.Simulation;
 
 public sealed partial class RunSimulation
 {
+    private readonly HashSet<string> collectedSiteDiscoveryIds = new(StringComparer.Ordinal);
     private readonly Queue<SpellSchool> pendingAttunements = new();
     private readonly EncounterDirector encounterDirector = new();
     private ArenaEnvironmentState? arenaEnvironment;
@@ -27,7 +28,8 @@ public sealed partial class RunSimulation
             .Single(node => node.Id.EndsWith("-crossroads", StringComparison.Ordinal));
         if (monastery.GenerationProfile is not
             { Landform: WorldSiteLandform.Mountain, Landmark: WorldSiteLandmark.Monastery }) return false;
-        arenaEnvironment = ArenaEnvironmentState.Create(mapState.Seed, monastery, worldFirstGeography: true);
+        arenaEnvironment = ArenaEnvironmentState.Create(mapState.Seed, monastery, worldFirstGeography: true,
+            claimedDiscoveries: collectedSiteDiscoveryIds);
         playerPositionInitialized = false;
         return true;
     }
@@ -79,7 +81,8 @@ public sealed partial class RunSimulation
         trailExperienceAtEntry = experienceEarned;
         materialCargoState.BeginTrail();
         playerPositionInitialized = false;
-        arenaEnvironment = ArenaEnvironmentState.Create(mapState.Seed, node, worldFirstGeography: worldSiteGeographyEnabled);
+        arenaEnvironment = ArenaEnvironmentState.Create(mapState.Seed, node, worldFirstGeography: worldSiteGeographyEnabled,
+            claimedDiscoveries: collectedSiteDiscoveryIds);
         PrepareBellWardenNode(node);
         PrepareReliquaryNode(node);
         RollNodeElite(node);

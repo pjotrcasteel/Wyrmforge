@@ -608,6 +608,26 @@ export function drawWorldSiteLandscape(ctx, geography, width, height) {
     return true;
 }
 
+function drawWorldSiteDiscoveries(ctx, geography, width, height) {
+    const discoveries = geography?.landscape?.discoveries;
+    if (!Array.isArray(discoveries)) return;
+    ctx.save();
+    for (const discovery of discoveries) {
+        const point = discovery?.localPoint;
+        if (!Number.isFinite(point?.x) || !Number.isFinite(point?.y)) continue;
+        const x = point.x * width;
+        const y = point.y * height;
+        // Flat-color historic traces from C# world data. Never create a reward or landmark in JS.
+        ctx.fillStyle = '#2b2928';
+        ctx.fillRect(x - 7, y - 5, 14, 10);
+        ctx.fillStyle = discovery.materialReward === null ? '#786958' : '#b9a07a';
+        ctx.fillRect(x - 5, y - 3, 10, 6);
+        ctx.fillStyle = '#d3c6a4';
+        ctx.fillRect(x - 1, y - 8, 2, 9);
+    }
+    ctx.restore();
+}
+
 export function drawSemanticSiteFloor(ctx, geography, width, height, geographyActive = false) {
     if (!geography || geography.version !== 1 || !Array.isArray(geography.ports) ||
         !Array.isArray(geography.corridors)) return false;
@@ -625,6 +645,7 @@ export function drawSemanticSiteFloor(ctx, geography, width, height, geographyAc
         drawWorldSitePaths(ctx, geography.landscape.localPaths, width, height);
         // Physical cliffs and masonry always paint on top of paths and slopes.
         drawWorldSiteLandscape(ctx, geography, width, height);
+        drawWorldSiteDiscoveries(ctx, geography, width, height);
     }
 
     for (const port of geography.ports) {
@@ -657,6 +678,7 @@ export function drawArenaEnvironment(ctx, environment, width, height, elapsedSec
         drawWorldSiteTopography(ctx, environment.geography, width, height);
         drawWorldSitePaths(ctx, environment.geography?.landscape?.localPaths, width, height);
         drawWorldSiteLandscape(ctx, environment.geography, width, height);
+        drawWorldSiteDiscoveries(ctx, environment.geography, width, height);
     }
     if (semantic) {
         globalThis.__wyrmforgeAr0Geography = {
@@ -669,6 +691,7 @@ export function drawArenaEnvironment(ctx, environment, width, height, elapsedSec
             kind: environment.geography.landscape?.kind ?? null,
             obstacleCount: environment.geography.landscape?.obstacles?.length ?? 0,
             terrainPatchCount: environment.geography.landscape?.terrainPatches?.length ?? 0,
+            discoveryCount: environment.geography.landscape?.discoveries?.length ?? 0,
             monasteryStructureCount: environment.geography.landscape?.obstacles?.filter(
                 obstacle => obstacle.kind?.startsWith('monastery-')).length ?? 0,
             geographyActive: environment.geographyActive === true,

@@ -34,6 +34,7 @@ public sealed class ArenaEnvironmentState
         public double Y { get; } = y;
         public EncounterPhase UnlockPhase { get; } = unlockPhase;
         public bool Collected { get; set; }
+        public string? DiscoveryId { get; init; }
     }
 
     private sealed record Barrier(double X, double Y, double Width, double Height, EncounterPhase? UnlockPhase, string Kind);
@@ -64,7 +65,8 @@ public sealed class ArenaEnvironmentState
         this.district = district;
     }
 
-    public static ArenaEnvironmentState Create(int mapSeed, WyrmrealmMapNode node, bool generatorPreview = false, SpellSchool? regionSchool = null, bool worldFirstGeography = false)
+    public static ArenaEnvironmentState Create(int mapSeed, WyrmrealmMapNode node, bool generatorPreview = false, SpellSchool? regionSchool = null, bool worldFirstGeography = false,
+        IReadOnlySet<string>? claimedDiscoveries = null)
     {
         ArgumentNullException.ThrowIfNull(node);
         var stage = node.Stage;
@@ -117,7 +119,23 @@ public sealed class ArenaEnvironmentState
         {
             var center = new Vector2D(prop.X * 950, prop.Y * 1550);
             if (environment.IsBlocked(center, 950, 1550, prop.Radius + 4)) continue;
+            // Existing breakable props must not block a newly authored AR2 side approach.
+            if (worldFirstGeography && node.Geography?.Landscape?.LocalPaths.Any(path =>
+                path.EdgeId.EndsWith(":access", StringComparison.Ordinal) && path.Points.Count == 2 &&
+                SegmentDistanceSquared(center, new Vector2D(path.Points[0].X * 950, path.Points[0].Y * 1550),
+                    new Vector2D(path.Points[1].X * 950, path.Points[1].Y * 1550)) <
+                Math.Pow(prop.Radius + 22, 2)) == true) continue;
             environment.destructibles.Add(new DestructibleProp(prop));
+        }
+        if (worldFirstGeography && node.Geography?.Landscape is { } landscape)
+        {
+            foreach (var discovery in landscape.Discoveries)
+            {
+                if (discovery.MaterialReward is not { } material ||
+                    claimedDiscoveries?.Contains(discovery.Id) == true) continue;
+                environment.supplies.Add(new Supply($"material:{material}", discovery.LocalPoint.X,
+                    discovery.LocalPoint.Y, EncounterPhase.Pressure) { DiscoveryId = discovery.Id });
+            }
         }
         return environment;
     }
@@ -152,7 +170,8 @@ public sealed class ArenaEnvironmentState
 
     public ArenaEnvironmentRenderSnapshot Snapshot() => new(seed, biome, element, stage, landmark,
         supplies.Where(supply => !supply.Collected)
-            .Select(supply => new ArenaSupplyRenderSnapshot(supply.Kind, supply.X, supply.Y, IsOpen(supply)))
+            .Select(supply => new ArenaSupplyRenderSnapshot(supply.Kind, supply.X, supply.Y, IsOpen(supply))
+            { DiscoveryId = supply.DiscoveryId })
             .ToArray(),
         barriers.Select(barrier => new ArenaBarrierRenderSnapshot(barrier.X, barrier.Y, barrier.Width, barrier.Height,
             IsOpen(barrier), barrier.Kind)).ToArray(), district, habitat)
@@ -456,7 +475,8 @@ public sealed class ArenaEnvironmentState
             var center = new Vector2D(supply.X * width, supply.Y * height);
             if (Vector2D.Distance(position, center) > playerRadius + 16) continue;
             supply.Collected = true;
-            return new ArenaSupplyRenderSnapshot(supply.Kind, supply.X, supply.Y, true);
+            return new ArenaSupplyRenderSnapshot(supply.Kind, supply.X, supply.Y, true)
+            { DiscoveryId = supply.DiscoveryId };
         }
         return null;
     }

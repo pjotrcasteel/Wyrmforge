@@ -99,3 +99,20 @@ test('AR1 mountain terraces and monastery masonry render from C# patches with so
     assert.ok(!off.colors.includes('#33434d') && !off.colors.includes('#8d847b'),
         'Inactive AR1 geography must never draw its extra surfaces or physical barriers');
 });
+
+
+test('AR2 optional C# discovery renders a grounded trace only while geography is physically active', () => {
+    const ground = {
+        ...site,
+        landscape: { obstacles: [], discoveries: [
+            { id: 'fire:opening:trace', kind: 'forgotten-waystone', materialReward: null,
+                localPoint: { x: .68, y: .34 } },
+        ] },
+    };
+    const on = canvas();
+    assert.equal(drawSemanticSiteFloor(on.ctx, ground, 390, 844, true), true);
+    assert.ok(on.colors.includes('#786958'), 'Empty side sites still have real physical/historic traces');
+    const off = canvas();
+    assert.equal(drawSemanticSiteFloor(off.ctx, ground, 390, 844, false), true);
+    assert.ok(!off.colors.includes('#786958'), 'Inactive AR geometry cannot paint optional discoveries');
+});

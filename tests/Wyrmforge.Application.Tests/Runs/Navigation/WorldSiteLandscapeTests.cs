@@ -12,6 +12,68 @@ namespace Wyrmforge.Application.Tests.Runs.Navigation;
 public sealed class WorldSiteLandscapeTests
 {
     [TestMethod]
+    public void OptionalDiscoveries_AreDeterministicAndGenuinelyReachableThroughCSharpCollision()
+    {
+        const double width = 950, height = 1550;
+        var discoveries = 0;
+        var empty = 0;
+        var rewarded = 0;
+        for (var seed = 0; seed < 32; seed++)
+        {
+            var nodes = WyrmrealmMapGenerator.GenerateFireHunt(seed, WyrmTier.Wyrm);
+            var replay = WyrmrealmMapGenerator.GenerateFireHunt(seed, WyrmTier.Wyrm);
+            foreach (var node in nodes)
+            {
+                var site = node.Geography!;
+                var layout = site.Landscape!;
+                var repeated = replay.Single(other => other.Id == node.Id).Geography!.Landscape!;
+                Assert.AreEqual(JsonSerializer.Serialize(layout.Discoveries), JsonSerializer.Serialize(repeated.Discoveries));
+                foreach (var discovery in layout.Discoveries)
+                {
+                    discoveries++;
+                    Assert.AreEqual($"{site.SiteId}:trace", discovery.Id);
+                    Assert.IsTrue(layout.LocalPaths.Any(path => path.EdgeId == $"{discovery.Id}:access"),
+                        "An optional site needs an actual C# route, not a UI marker.");
+                    var from = new Vector2D(width * .5, height * .5);
+                    var to = new Vector2D(width * discovery.LocalPoint.X, height * discovery.LocalPoint.Y);
+                    Assert.IsFalse(WorldSiteFootprintCollision.BlocksSegment(layout, from, to, width, height, radius: 17),
+                        $"Seed {seed}, {site.SiteId}: trace is behind an impassable cliff or building.");
+                    if (discovery.MaterialReward is null) empty++;
+                    else rewarded++;
+                }
+            }
+        }
+        Assert.IsGreaterThan(10, discoveries, "World exploration needs discoverable optional sites.");
+        Assert.IsGreaterThan(0, empty, "Some human traces should be honestly picked clean.");
+        Assert.IsGreaterThan(0, rewarded, "Other sites should contain tier-legal common salvage.");
+    }
+
+    [TestMethod]
+    public void ClaimedDiscovery_IsPaidOnceAndNotRecreatedAfterRefugeReturn()
+    {
+        const double width = 950, height = 1550;
+        var match = Enumerable.Range(0, 100)
+            .SelectMany(seed => WyrmrealmMapGenerator.GenerateFireHunt(seed, WyrmTier.Wyrm)
+                .Where(node => node.Type == WyrmrealmNodeType.Combat)
+                .Select(node => (Seed: seed, Node: node,
+                    Discovery: node.Geography!.Landscape!.Discoveries.FirstOrDefault(found => found.MaterialReward is not null))))
+            .First(candidate => candidate.Discovery is not null);
+        var discovery = match.Discovery!;
+        var environment = ArenaEnvironmentState.Create(match.Seed, match.Node, worldFirstGeography: true);
+        var location = new Vector2D(discovery.LocalPoint.X * width, discovery.LocalPoint.Y * height);
+        var collected = environment.TryCollect(location, width, height, playerRadius: 0, needsHealing: false);
+        Assert.IsNotNull(collected);
+        Assert.AreEqual(discovery.Id, collected.DiscoveryId);
+        Assert.AreEqual($"material:{discovery.MaterialReward}", collected.Kind);
+        Assert.IsNull(environment.TryCollect(location, width, height, playerRadius: 0, needsHealing: false)?.DiscoveryId);
+
+        var claimed = new HashSet<string>(StringComparer.Ordinal) { discovery.Id };
+        var revisited = ArenaEnvironmentState.Create(match.Seed, match.Node, worldFirstGeography: true,
+            claimedDiscoveries: claimed);
+        Assert.IsFalse(revisited.Snapshot().Supplies.Any(supply => supply.DiscoveryId == discovery.Id));
+    }
+
+    [TestMethod]
     public void FireHunt_HasRealForestForkMountainPassAndWyrmLairAcrossWorldSeeds()
     {
         var kinds = new HashSet<string>(StringComparer.Ordinal);
