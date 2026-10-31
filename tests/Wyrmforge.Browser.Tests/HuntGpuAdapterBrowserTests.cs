@@ -191,12 +191,7 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
                     materials:[],objects:[]};
                 const alpha=tile.getContext('2d').getImageData(0,0,160,160).data;
                 const samples=[];
-                for(const bodyHeight of [32,40,48,64,80,96]){
-                if(bodyHeight!==32){
-                    ctx.fillStyle='#777777';ctx.fillRect(0,0,width,height);
-                    world.begin(ctx,{x:0,y:0},width,height);
-                    world.capture('hollow',tile,left,top,160,160,0,true,{footFraction:132/160,occluderHeightPx:bodyHeight});
-                }
+                const bodyHeight=32;
                 for(const sourceHeight of [24]){
                 for(const [dx,dy] of [[0,48],[0,-48],[48,0],[-48,0]]){
                     const light={id:'moving-fireball',ownerId:'test',type:'point',enabled:true,
@@ -209,7 +204,7 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
                     const evidence=document.createElement('canvas');
                     evidence.width=width;evidence.height=height;
                     evidence.getContext('2d').drawImage(canvas,0,0);
-                    if(bodyHeight===32)gallery.appendChild(evidence);
+                    gallery.appendChild(evidence);
                     world.render(ctx,{...base,lights:[{...light,castsShadow:false}]});
                     const clear=world.engine.pixels();
                     world.render(ctx,{...base,lights:[]});
@@ -246,7 +241,6 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
                         changed?directInAffected/changed:0]);
                 }
                 }
-                }
                 window.__huntGpuDirectionalWorld=world;
                 return samples;
             }
@@ -257,9 +251,7 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
         Directory.CreateDirectory(artifacts);
         await File.WriteAllTextAsync(Path.Combine(artifacts, "g4-shadow-direction-metrics.json"),
             System.Text.Json.JsonSerializer.Serialize(new { sourceHeights = new[] { 24 }, physicalCasterHeightPx = 32,
-                sides = new[] { "south", "north", "east", "west" }, measurements = measurements.Take(4).ToArray(),
-                casterHeightSweepPx = new[] { 32, 40, 48, 64, 80, 96 },
-                heightSweep = measurements.Chunk(4).ToArray() }));
+                sides = new[] { "south", "north", "east", "west" }, measurements }));
         await Page.Locator("#hunt-gpu-direction-shadow-gallery").ScreenshotAsync(new()
         {
             Path = Path.Combine(artifacts, "g4-shadow-direction.png"),
@@ -277,6 +269,12 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
                 $"A {sides[i]} Fireball must not place most shadow pixels on the illuminated side.");
             Assert.IsGreaterThan(100, sample[3],
                 $"A {sides[i]} Fireball must create a substantial shadow footprint at least 20 pixels behind the Hollowed.");
+            // The previous green direction test accepted shadows with only ~11 RGB levels of actual floor contrast.
+            // A readable mobile silhouette needs an appreciably darker core, not merely changed pixels.
+            Assert.IsGreaterThan(100, sample[5],
+                $"A {sides[i]} Fireball must darken at least 100 ground pixels by 72 combined RGB levels. Current opacity is not visually acceptable.");
+            Assert.IsGreaterThan(120, sample[7],
+                $"A {sides[i]} Fireball must produce a visibly dark shadow core (peak combined RGB delta > 120).");
             Assert.IsGreaterThan(i < 2 ? 24 : 30, sample[4],
                 $"A {sides[i]} Fireball cannot leave the Hollowed with only a tiny contact smear.");
         }
