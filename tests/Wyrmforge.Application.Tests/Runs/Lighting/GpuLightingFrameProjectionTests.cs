@@ -65,6 +65,10 @@ public sealed class GpuLightingFrameProjectionTests
             "An expired moving spell must not remove the independent fixed fixture.");
         Assert.AreEqual(0, HuntFixtureLightingProjection.Capture(null, 950, 1550).Count,
             "Non-Wet-Forest scenes never invent a torch.");
+        var portraitLight = HuntFixtureLightingProjection.Capture(recipe, 1014, 2110).Single();
+        Assert.AreEqual(fixture.X * 1014, portraitLight.X,
+            "The wider 390px Hunt must use its actual C# world dimensions, not a fixed 950px preview.");
+        Assert.AreEqual(fixture.Y * 2110, portraitLight.Y);
 
         var switchedOff = recipe with { LightFixtures = [fixture with
         {

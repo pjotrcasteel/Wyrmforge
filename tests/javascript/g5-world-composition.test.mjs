@@ -24,6 +24,9 @@ test('Lighting 0.1 is opt-in only when the existing Hunt GPU backend is also sel
 test('fixed fixture location must match its C# emitter in the current frame', () => {
     assert.deepEqual(lighting01FixtureSpecs(environment, frame, 950, 1550),
         [{ id: fixture.id, x: 399, y: 914.5, height: 28, color: '#ffac65' }]);
+    const tallFrame = { ...frame, lights: [{ ...frame.lights[0], position: [425.88, 1244.9, 28] }] };
+    assert.deepEqual(lighting01FixtureSpecs(environment, tallFrame, 1014, 2110),
+        [{ id: fixture.id, x: 425.88, y: 1244.9, height: 28, color: '#ffac65' }]);
     assert.deepEqual(lighting01FixtureSpecs(environment, { ...frame, lights: [] }, 950, 1550), []);
     assert.deepEqual(lighting01FixtureSpecs(environment, { ...frame, lights: [{ ...frame.lights[0], enabled: false }] }, 950, 1550), []);
     assert.deepEqual(lighting01FixtureSpecs(environment, { ...frame, lights: [{ ...frame.lights[0], ownerId: 'other' }] }, 950, 1550), []);

@@ -438,7 +438,7 @@ public sealed partial class RunSimulation
             AshfangLightingProjection.Capture(CreateDragonSnapshot(), CreateAshfangEffects()),
             ActorAppearanceLightingProjection.Capture(enemies, player.Position.X, player.Position.Y),
             lightingComposition01Enabled ? HuntFixtureLightingProjection.Capture(
-                arenaEnvironment?.LightingRecipe, 950, 1550) : []);
+                arenaEnvironment?.LightingRecipe, arenaWidth, arenaHeight) : []);
         return GpuLightingFrameProjection.FromSnapshot(combined, elapsed);
     }
 
