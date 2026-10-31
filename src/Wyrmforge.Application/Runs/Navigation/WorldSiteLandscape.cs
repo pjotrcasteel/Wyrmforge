@@ -378,11 +378,13 @@ public static class WorldSiteLandscapeGenerator
         // Ascend through a seeded switchback rather than cutting straight through
         // a cliff. The generated physical cliff faces reserve this exact route.
         var bend = (random.NextDouble() - .5) * .055;
+        var lowPassY = Math.Min(.955, south + .11);
         paths.Add(new WorldSiteCorridor("monastery-approach", WorldSiteSurfaceId.Road, .04,
         [
             new HuntPoint(.5, .5),
-            new HuntPoint(.5 + (cx - .5) * .39, .5 + (cy - .5) * .29 + bend),
-            new HuntPoint(cx + (.5 - cx) * .16, Math.Clamp(south + .11, .1, .93)),
+            new HuntPoint(.5 + bend * .35, .5 + (lowPassY - .5) * .55),
+            new HuntPoint(.5 + bend, lowPassY),
+            new HuntPoint(cx, lowPassY),
             new HuntPoint(cx, south + .005),
         ]));
         // Eliminate incidental small rocks/roots on the real structure footprint.
