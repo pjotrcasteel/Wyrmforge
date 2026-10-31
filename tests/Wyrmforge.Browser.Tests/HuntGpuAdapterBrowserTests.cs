@@ -185,7 +185,7 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
                 tile.getContext('2d').drawImage(actor,0,4*96,96,96,32,36,96,96);
                 const footX=width/2, footY=height/2, left=footX-80, top=footY-132;
                 world.begin(ctx,{x:0,y:0},width,height);
-                world.capture('hollow',tile,left,top,160,160,0,true,{footFraction:132/160,occluderHeightPx:40});
+                world.capture('hollow',tile,left,top,160,160,0,true,{footFraction:132/160,occluderHeightPx:32});
 
                 const base={version:1,time:0,environment:{ambient:.12,color:'#ffffff',exposure:1,emission:false},
                     materials:[],objects:[]};
@@ -235,7 +235,7 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
             ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
         Directory.CreateDirectory(artifacts);
         await File.WriteAllTextAsync(Path.Combine(artifacts, "g4-shadow-direction-metrics.json"),
-            System.Text.Json.JsonSerializer.Serialize(new { sourceHeights = new[] { 24 }, physicalCasterHeightPx = 40,
+            System.Text.Json.JsonSerializer.Serialize(new { sourceHeights = new[] { 24 }, physicalCasterHeightPx = 32,
                 sides = new[] { "south", "north", "east", "west" }, measurements }));
         await Page.Locator("#hunt-gpu-direction-shadow-gallery").ScreenshotAsync(new()
         {
@@ -252,7 +252,7 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
                 $"A {sides[i]} Fireball must not place most shadow pixels on the illuminated side.");
             Assert.IsGreaterThan(100, sample[3],
                 $"A {sides[i]} Fireball must create a substantial shadow footprint at least 20 pixels behind the Hollowed.");
-            Assert.IsGreaterThan(30, sample[4],
+            Assert.IsGreaterThan(i < 2 ? 24 : 30, sample[4],
                 $"A {sides[i]} Fireball cannot leave the Hollowed with only a tiny contact smear.");
         }
 

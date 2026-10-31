@@ -123,18 +123,18 @@ test('World-upright alpha casters preserve source pixels and meet the authored f
     assert.throws(() => huntCaptureSilhouetteCaster(0, 0, 160, 160, 0), RangeError);
     assert.throws(() => huntCaptureSilhouetteCaster(0, 0, 160, 160, .8, 0), RangeError);
     assert.throws(() => huntCaptureSilhouetteCaster(0, 0, 160, 160, .8, NaN), RangeError);
-    const physical = huntCaptureSilhouetteCaster(100, 200, 160, 160, .825, 40);
-    assert.equal(physical.occluderScale[1], 40 / 48,
+    const physical = huntCaptureSilhouetteCaster(100, 200, 160, 160, .825, 32);
+    assert.equal(physical.occluderScale[1], 32 / 48,
         'The collision/asset world height controls the shadow, not transparent capture padding.');
     assert.equal(physical.occluderScale[0], 160 / 48,
         'The alpha source maintains its full original width and UVs.');
-    assert.ok(Math.abs(physical.occluderPosition[2] + .175 * 40 / 48) < 1e-12);
+    assert.ok(Math.abs(physical.occluderPosition[2] + .175 * 32 / 48) < 1e-12);
 });
 
 test('A padded enemy silhouette has an independent physical height, not a light-height clamp', async () => {
     const { huntCaptureSilhouetteCaster } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js');
-    const caster = huntCaptureSilhouetteCaster(20, 100, 160, 160, .9, 40);
-    assert.equal(caster.occluderScale[1], 40 / 48,
+    const caster = huntCaptureSilhouetteCaster(20, 100, 160, 160, .9, 32);
+    assert.equal(caster.occluderScale[1], 32 / 48,
         'Physical caster dimensions must come from the standing-body contract.');
     assert.equal(caster.occluderScale[0], 160 / 48);
     assert.ok(caster.occluderScale[1] < 160 * Math.SQRT2 / 48,
@@ -175,7 +175,7 @@ test('mage, Warden and Wyrm retain their own painted foot line without ground pe
     ]) {
         const actor = layer.enemy ?? layer.dragon ?? { x: 400, y: 320, radius: 12 };
         const capture = huntLayerCapture(layer, actor);
-        assert.equal(capture.occluderHeightPx, Math.max(1, Math.round(3.6 * actor.radius)),
+        assert.equal(capture.occluderHeightPx, Math.max(4, Math.round(3 * actor.radius / 4) * 4),
             'Standing fallbacks use physical collision proportions, independent of art capture size.');
         const mesh = huntSurfaceRenderable(capture.id, capture.x, capture.y,
             capture.size, capture.size, true, { footFraction: capture.footFraction });

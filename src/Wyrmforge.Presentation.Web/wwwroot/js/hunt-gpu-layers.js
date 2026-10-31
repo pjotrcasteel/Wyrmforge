@@ -38,9 +38,10 @@ export function huntLayerCapture(layer, player, dragonDeath = null) {
     }
     const footFraction = footOffset === null ? undefined : Math.min(1, .75 + footOffset / size);
     // The 2.5D image can be taller than its physical body and includes padding.
-    // A standing fallback is approximately 1.8 body diameters tall in world Z.
+    // A standing fallback is approximately 1.5 body diameters in world Z,
+    // snapped to the 4px pixel-art unit so all approach angles share stable samples.
     // Authored heightfields/meshes take precedence once supplied by the asset.
-    const occluderHeightPx = layer.kind === 'masonry' ? undefined : Math.max(1, Math.round(3.6 * (actor.radius || 12)));
+    const occluderHeightPx = layer.kind === 'masonry' ? undefined : Math.max(4, Math.round(3 * (actor.radius || 12) / 4) * 4);
     return { id: 'hunt-' + id, x: actor.x - size / 2, y: actor.y - size * .75, size,
         ...(footFraction !== undefined ? { footFraction } : {}),
         ...(occluderHeightPx !== undefined ? { occluderHeightPx } : {}) };
