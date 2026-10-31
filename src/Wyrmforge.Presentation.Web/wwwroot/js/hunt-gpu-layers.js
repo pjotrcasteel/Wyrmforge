@@ -37,8 +37,13 @@ export function huntLayerCapture(layer, player, dragonDeath = null) {
             break;
     }
     const footFraction = footOffset === null ? undefined : Math.min(1, .75 + footOffset / size);
+    // The 2.5D image can be taller than its physical body and includes padding.
+    // A standing fallback occupies twice the collision diameter in world Z.
+    // Authored heightfields/meshes take precedence once supplied by the asset.
+    const occluderHeightPx = layer.kind === 'masonry' ? undefined : 4 * (actor.radius || 12);
     return { id: 'hunt-' + id, x: actor.x - size / 2, y: actor.y - size * .75, size,
-        ...(footFraction !== undefined ? { footFraction } : {}) };
+        ...(footFraction !== undefined ? { footFraction } : {}),
+        ...(occluderHeightPx !== undefined ? { occluderHeightPx } : {}) };
 }
 
 /**

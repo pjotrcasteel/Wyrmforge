@@ -70,10 +70,11 @@ const material = id => ({ id, albedo: id, color: '#ffffff', roughness: .95, meta
  * sin(45 degrees). The reciprocal is the existing GROUND_Y screen/world scale.
  * Transparent padding stays transparent; it cannot become a rectangle shadow.
  */
-export function huntCaptureSilhouetteCaster(x, y, width, height, footFraction = .75) {
-    if (!(width > 0 && height > 0) || !Number.isFinite(footFraction) || footFraction <= 0 || footFraction > 1)
-        throw new RangeError('Invalid silhouette dimensions or foot anchor');
-    const verticalHeight = height * GROUND_Y / UNIT;
+export function huntCaptureSilhouetteCaster(x, y, width, height, footFraction = .75, occluderHeightPx = height * GROUND_Y) {
+    if (!(width > 0 && height > 0) || !Number.isFinite(footFraction) || footFraction <= 0 || footFraction > 1 ||
+        !Number.isFinite(occluderHeightPx) || occluderHeightPx <= 0)
+        throw new RangeError('Invalid silhouette dimensions, physical height or foot anchor');
+    const verticalHeight = occluderHeightPx / UNIT;
     return { occluderGeometry: 'hunt-shadow-silhouette',
         occluderPosition: [(x + width / 2) / UNIT,
             -(y + height * footFraction) * GROUND_Y / UNIT,
@@ -263,7 +264,8 @@ export class HuntGpuWorld {
         // An explicit 2.5D/3D occluder always wins. Legacy Canvas captures
         // contribute their own alpha silhouette through the shared shadow maps.
         const capturedSurface = castsShadow && !surface.geometry && !surface.occluderGeometry
-            ? { ...surface, ...huntCaptureSilhouetteCaster(x, y, width, height, surface.footFraction ?? .75) }
+            ? { ...surface, ...huntCaptureSilhouetteCaster(x, y, width, height, surface.footFraction ?? .75,
+                surface.occluderHeightPx ?? height * GROUND_Y) }
             : surface;
         this.submitSurface(huntSurfaceRenderable(id, x, y, width, height, castsShadow, capturedSurface),
             huntSurfaceMaterial(id, surface.material, Boolean(source)));
