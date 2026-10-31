@@ -1,6 +1,6 @@
 # Art identity and character animation
 
-> **Canonical WyrmForge specification · updated 30 October 2026.** Owner-approved art and one repeatable animated-character production pipeline.
+> **Canonical WyrmForge specification · updated 31 October 2026.** Owner-approved art and one repeatable animated-character production pipeline.
 > [Canonical index](README.md) · Only explicitly marked **LOCKED/approved** requirements are commitments. Proposed values, old milestones and drafts are not evidence of shipped code. Verify current `main`, PRs and tests.
 
 ## Pixel-first authoring and gameplay output — LOCKED (29 October 2026)
@@ -8,6 +8,14 @@
 **The required product is a mobile-first 2.5D pixel-art game, not a live 3D model viewer.** Final actors, props and environments must read as pixel-consistent world-anchored sprites/surfaces with grounded foot/contact points, coherent 2.5D perspective, correct occlusion and native pixel readability at 320px/390px. A fully modeled mesh is **never automatically required** for a new creature, terrain tile, building or animation.
 
 **Default for new character production:** first test a small authored 2D directional sprite/pose set or editable layered 2D rig and its true motion in the existing sprite runtime. Use a textured **3D model only as an optional offline authoring source** when an existing approved rig is worth preserving or a concrete view/motion requirement demonstrably benefits from it. The required output remains pixel-correct presentation and real-game proof; do not mandate a live 3D scene, 3D skeleton or Blender-only pipeline. **Archived [AN0–AN6 PR #387](https://github.com/pjotrcasteel/Wyrmforge/pull/387) was closed unmerged by owner on 30 October 2026.** Its rejected source-skin/3D biomechanical presentation is an optional research archive only: no active character-art dependency, no live 3D animation prerequisite, no automatic cutover. Continue creating and refining native 2.5D directional pixel sprites on the already merged shared animation player. Compare quality, development effort and mobile cost before choosing the more complex route. Preserve approved Ashfang source assets, ongoing Hollowed and AN source/rig/tests; do not discard or merge those independent branches as part of this rule.
+
+## WF32 Wet Forest 2.5D asset handoff — 31 October 2026
+
+**WF32 is the existing terrain/tile/static-art workstream, not a second Arena Generator, physics engine or renderer.** Continue refining native-pixel ground surfaces, wet/muddy transitions, medium/tall grass, stones, rooted rocks and 2.5D-appropriate static details alongside AR1/AR3. Use game-world size and consistent authored pixel density against the actual mage/Ashling/Hollowed gameplay camera, including the owner's current request for the Hollowed's approximate **twice-Ashling silhouette scale** as a review constraint, not a completed scale acceptance. Grass should blend organically rather than read as bulky thorns. Avoid mirrored/blurred/stretched stamps and giant close-up texture objects.
+
+- **World and geometry authority:** the C# Arena Generator and AR1/AR3 own site identity, real monastery architecture footprints, walkability, cliff barriers, low passes, continuous elevation/slope and semantic ground/material IDs. WF32 supplies art and authored visual depth/normal/roughness maps **to consume that geometry**, not to replace it with fake height, paint a passable cliff or force Chart-node road forks.
+- **Visual handoff:** AR4 consumes approved native-pixel terrain/material sources after AR3's owner geography gate; AR5 places correctly scaled rooted grass, foliage, rocks and monastery/ruin visuals matching authoritative physical footprints. The shared G engine handles lights and shadows using real C# height/occlusion metadata; source visual height/normal texture maps alone cannot cast physical cliff shadows.
+- **Progress and visual gate:** production/refinement is in progress, not approved as integrated arena terrain. Preserve approved swatches and assets, inspect neutral/flat-color geography separately from art and G4 lighting, and require genuine 320px/390px Hunt captures with both avatar/enemy scale references for AR4/AR5 sign-off. WF32 source-art work need not wait for G4/G5 shadow completion or AR3 implementation; final live integration must use their shared contracts.
 
 ## Present-day approved identity (20 October 2026)
 
