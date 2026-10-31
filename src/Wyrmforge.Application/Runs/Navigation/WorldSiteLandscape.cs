@@ -415,8 +415,8 @@ public static class WorldSiteLandscapeGenerator
         double lowPassY, Random random)
     {
         var direction = Math.Sign(cx - .5);
-        var swing = .078 + (random.NextDouble() - .5) * .014;
         var ascent = lowPassY - .5;
+        var swing = Math.Clamp(Math.Abs(ascent) * .16 + (random.NextDouble() - .5) * .014, .018, .060);
         var start = new HuntPoint(.5, .5);
         var firstBend = new HuntPoint(.5 + direction * swing, .5 + ascent * .30);
         var secondBend = new HuntPoint(.5 - direction * swing * .90, .5 + ascent * .70);
@@ -435,7 +435,7 @@ public static class WorldSiteLandscapeGenerator
             new HuntPoint(.5 - direction * swing * .35, lowPassY), saddle);
         AppendCubicPath(path, saddle,
             new HuntPoint(.5 + (cx - .5) * .32, lowPassY),
-            new HuntPoint(cx, lowPassY), gate);
+            new HuntPoint(cx, lowPassY - Math.Min(.04, (lowPassY - south) * .45)), gate);
         return path;
     }
 

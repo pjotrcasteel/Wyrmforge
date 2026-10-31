@@ -331,9 +331,11 @@ public sealed class WorldSiteLandscapeTests
             var environment = ArenaEnvironmentState.Create(seed, node, worldFirstGeography: true);
             var approach = layout.LocalPaths.Single(path => path.EdgeId == "monastery-approach");
             Assert.IsGreaterThan(30, approach.Points.Count, $"seed {seed}: a mountain path must have smooth sampled bends");
-            Assert.IsTrue(approach.Points.Any(point => point.X < .44) &&
-                          approach.Points.Any(point => point.X > .56),
+            Assert.IsTrue(approach.Points.Any(point => point.X < .49) &&
+                          approach.Points.Any(point => point.X > .51),
                 $"seed {seed}: the monastery route must wind in both directions before reaching the gate");
+            Assert.IsTrue(approach.Points.Take(25).All(point => Math.Abs(point.X - .5) < .07),
+                $"seed {seed}: switchbacks must be gentle rather than tightly knotted");
 
             foreach (var route in site.Corridors.Concat(site.ScenicPaths).Concat(layout.LocalPaths))
             {
