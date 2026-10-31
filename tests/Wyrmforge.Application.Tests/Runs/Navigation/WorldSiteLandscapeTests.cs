@@ -12,6 +12,100 @@ namespace Wyrmforge.Application.Tests.Runs.Navigation;
 public sealed class WorldSiteLandscapeTests
 {
     [TestMethod]
+    public void Ar3ContinuousElevation_HighlandIsRaisedAndStableAcrossReplays()
+    {
+        var seed = 53;
+        var first = WyrmrealmMapGenerator.GenerateFireHunt(seed, WyrmTier.Elder);
+        var replay = WyrmrealmMapGenerator.GenerateFireHunt(seed, WyrmTier.Elder);
+        var mountain = first.First(node => node.Geography?.Landscape?.Kind is "mountain-monastery" or "mountain-pass");
+        var site = mountain.Geography!;
+        var copy = replay.Single(node => node.Id == mountain.Id).Geography!;
+        var valley = WorldSiteElevationField.Sample(site, new HuntPoint(.5, .5));
+        var ridge = WorldSiteElevationField.Sample(site, new HuntPoint(.42, .5));
+        Assert.IsGreaterThan(valley.HeightMeters + .4, ridge.HeightMeters,
+            "The actual C# height field must lift a mountain ridge above the low valley.");
+        Assert.AreEqual(ridge, WorldSiteElevationField.Sample(copy, new HuntPoint(.42, .5)));
+        var adjacent = WorldSiteElevationField.Sample(site, new HuntPoint(.4201, .5));
+        Assert.IsLessThan(.15, Math.Abs(ridge.HeightMeters - adjacent.HeightMeters),
+            "Terrain elevation must change continuously without hard polygon boundaries.");
+        Assert.IsTrue(double.IsFinite(ridge.Grade));
+        Assert.IsTrue(ridge.Grade >= 0);
+    }
+
+    [TestMethod]
+    public void Ar3MaterialWeights_AreContinuousNormalizedAndFollowActualLocalTrails()
+    {
+        var node = WyrmrealmMapGenerator.GenerateFireHunt(1204, WyrmTier.Wyrm)
+            .First(node => node.Type == WyrmrealmNodeType.Combat);
+        var site = node.Geography!;
+        var trail = site.ScenicPaths.Single();
+        var center = trail.Points[trail.Points.Count / 2];
+        var onTrail = WorldSiteElevationField.Sample(site, center);
+        var offTrail = WorldSiteElevationField.Sample(site,
+            new HuntPoint(Math.Clamp(center.X + .16, .01, .99), center.Y));
+        Assert.IsGreaterThan(offTrail.RoadWeight, onTrail.RoadWeight,
+            "Only physical, C#-authored local trails may create road material.");
+        foreach (var sample in new[] { onTrail, offTrail, WorldSiteElevationField.Sample(site, new HuntPoint(.3, .71)) })
+        {
+            var total = sample.SoilWeight + sample.GrassWeight + sample.RoadWeight +
+                sample.MudWeight + sample.RockWeight + sample.IceWeight;
+            Assert.AreEqual(1, total, 1e-10);
+            Assert.IsTrue(sample.Moisture is >= 0 and <= 1);
+            Assert.IsTrue(double.IsFinite(sample.HeightMeters));
+            Assert.IsTrue(double.IsFinite(sample.Grade));
+        }
+    }
+
+    [TestMethod]
+    public void Ar3MovementUsesContinuousGrade_WhileNormalHuntKeepsExistingBehavior()
+    {
+        var node = WyrmrealmMapGenerator.GenerateFireHunt(32, WyrmTier.Wyrm)
+            .First(node => node.Type == WyrmrealmNodeType.Combat);
+        var site = node.Geography!;
+        var steep = new WorldSiteTerrainPatch("mountain-crest", WorldSiteSurfaceId.Rock, 8, 1,
+        [
+            new HuntPoint(.49, .25), new HuntPoint(.51, .25),
+            new HuntPoint(.51, .75), new HuntPoint(.49, .75),
+        ]);
+        var artificial = site with
+        {
+            Landscape = new WorldSiteLandscapeRecipe("steep-test", [])
+            {
+                TerrainPatches = [steep],
+            },
+            ScenicPaths = [],
+        };
+        const double width = 950, height = 1550;
+        var from = new Vector2D(.41 * width, .5 * height);
+        var to = new Vector2D(.59 * width, .5 * height);
+        Assert.IsTrue(WorldSiteElevationField.BlocksTraversal(artificial, from, to, width, height),
+            "A steep ridge must block traversal through the C# field, not a JS or color mask.");
+        var normal = ArenaEnvironmentState.Create(32, node);
+        Assert.IsNull(normal.Snapshot().Geography!.Landscape,
+            "AR3 surface diagnostics must not inflate the normal Hunt.");
+    }
+
+    [TestMethod]
+    public void Ar3PreviewRaster_ExactlyMatchesCSharpWorldSamples()
+    {
+        var node = WyrmrealmMapGenerator.GenerateFireHunt(47, WyrmTier.Elder)
+            .First(node => node.Type == WyrmrealmNodeType.Combat);
+        var site = node.Geography!;
+        var preview = ArenaEnvironmentState.Create(47, node, worldFirstGeography: true).Snapshot()
+            .Geography!.Landscape!.Elevation;
+        Assert.IsNotNull(preview);
+        Assert.AreEqual(preview.Columns * preview.Rows, preview.Samples.Count);
+        var middleX = preview.Columns / 2;
+        var middleY = preview.Rows / 2;
+        var expected = WorldSiteElevationField.Sample(site,
+            new HuntPoint(middleX / (double)(preview.Columns - 1), middleY / (double)(preview.Rows - 1)));
+        Assert.AreEqual(expected, preview.Samples[middleY * preview.Columns + middleX],
+            "Rendered terrain must be C# samples of the very same field used by movement.");
+        Assert.AreEqual(JsonSerializer.Serialize(preview), JsonSerializer.Serialize(
+            ArenaEnvironmentState.Create(47, node, worldFirstGeography: true).Snapshot().Geography!.Landscape!.Elevation));
+    }
+
+    [TestMethod]
     public void EverySeededScenicFork_LeadsToReachableRuinsInsteadOfEmptyGround()
     {
         const double width = 950, height = 1550;

@@ -494,7 +494,58 @@ function semanticMaterialName(material) {
 
 // Visualize the exact C# polygon used by movement, sight and projectile collision.
 // Authoring debug is an opt-in view of gameplay truth, never a substitute physics mask.
+// This is a visualization of the C#-sampled continuous field, not a JS terrain generator.
+// Small raster nodes are blended by the canvas; all elevations and material weights
+// arrive from the server's immutable site coordinates.
+export function drawWorldSiteElevation(ctx, geography, width, height) {
+    const preview = geography?.landscape?.elevation;
+    if (!preview || preview.columns < 2 || preview.rows < 2 ||
+        preview.samples?.length !== preview.columns * preview.rows ||
+        typeof document === 'undefined') return false;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = preview.columns;
+    canvas.height = preview.rows;
+    const target = canvas.getContext('2d');
+    if (!target) return false;
+    const image = target.createImageData(preview.columns, preview.rows);
+    const palette = [
+        [88, 91, 82],   // soil
+        [79, 107, 80],  // grass
+        [158, 139, 105],// road
+        [79, 89, 92],   // mud
+        [80, 96, 108],  // rock
+        [171, 190, 202],// glacial ice
+    ];
+    const weights = ['soilWeight', 'grassWeight', 'roadWeight', 'mudWeight', 'rockWeight', 'iceWeight'];
+    let highest = 0;
+    for (const sample of preview.samples)
+        highest = Math.max(highest, Number(sample.heightMeters) || 0);
+    const maxHeight = Math.max(2, highest);
+
+    for (let index = 0; index < preview.samples.length; index++) {
+        const sample = preview.samples[index];
+        const elevation = Math.max(0, Math.min(1, sample.heightMeters / maxHeight));
+        const grade = Math.max(0, Math.min(1, sample.grade));
+        const shade = .82 + elevation * .18 - grade * .16;
+        for (let channel = 0; channel < 3; channel++) {
+            let tone = 0;
+            for (let material = 0; material < palette.length; material++)
+                tone += palette[material][channel] * Math.max(0, sample[weights[material]] ?? 0);
+            image.data[index * 4 + channel] = Math.max(0, Math.min(255, Math.round(tone * shade)));
+        }
+        image.data[index * 4 + 3] = 255;
+    }
+    target.putImageData(image, 0, 0);
+    ctx.save();
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(canvas, 0, 0, width, height);
+    ctx.restore();
+    return true;
+}
+
 export function drawWorldSiteTopography(ctx, geography, width, height) {
+    if (drawWorldSiteElevation(ctx, geography, width, height)) return true;
     const patches = geography?.landscape?.terrainPatches;
     if (!Array.isArray(patches) || patches.length === 0) return false;
     const palette = {
@@ -714,6 +765,16 @@ export function drawArenaEnvironment(ctx, environment, width, height, elapsedSec
             kind: environment.geography.landscape?.kind ?? null,
             obstacleCount: environment.geography.landscape?.obstacles?.length ?? 0,
             terrainPatchCount: environment.geography.landscape?.terrainPatches?.length ?? 0,
+            elevationGrid: environment.geography.landscape?.elevation
+                ? {
+                    columns: environment.geography.landscape.elevation.columns,
+                    rows: environment.geography.landscape.elevation.rows,
+                    center: environment.geography.landscape.elevation.samples[
+                        Math.floor(environment.geography.landscape.elevation.rows / 2) *
+                            environment.geography.landscape.elevation.columns +
+                        Math.floor(environment.geography.landscape.elevation.columns / 2)],
+                }
+                : null,
             discoveryCount: environment.geography.landscape?.discoveries?.length ?? 0,
             monasteryStructureCount: environment.geography.landscape?.obstacles?.filter(
                 obstacle => obstacle.kind?.startsWith('monastery-')).length ?? 0,

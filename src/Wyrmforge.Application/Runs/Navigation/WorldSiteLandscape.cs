@@ -35,6 +35,9 @@ public sealed record WorldSiteLandscapeRecipe(
 
     /// <summary>Optional grounded sites, possibly empty; the Hunt decides whether an unclaimed reward can be collected.</summary>
     public IReadOnlyList<WorldSiteDiscovery> Discoveries { get; init; } = [];
+
+    /// <summary>Optional AR3 display samples of the authoritative continuous elevation field.</summary>
+    public WorldSiteElevationPreview? Elevation { get; init; }
 }
 
 /// <summary>Deterministic local scenery from world-map habitat and landmark metadata, without consuming combat or reward RNG.</summary>
