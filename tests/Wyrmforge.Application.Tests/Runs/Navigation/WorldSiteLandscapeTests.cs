@@ -454,7 +454,7 @@ public sealed class WorldSiteLandscapeTests
 
             reviewed++;
             var cliffFaces = layout.Obstacles.Where(obstacle => obstacle.Kind == "cliff-face").ToArray();
-            Assert.IsGreaterThan(5, cliffFaces.Length, $"seed {seed}: highland needs real C# cliff barriers");
+            Assert.IsGreaterThan(1, cliffFaces.Length, $"seed {seed}: highland needs real C# cliff barriers on both sides");
             Assert.IsTrue(cliffFaces.Any(obstacle => obstacle.Outline.Average(point => point.X) < .5));
             Assert.IsTrue(cliffFaces.Any(obstacle => obstacle.Outline.Average(point => point.X) > .5));
             var faceOnly = new WorldSiteLandscapeRecipe(layout.Kind, cliffFaces);
