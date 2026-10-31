@@ -28,7 +28,10 @@ export function huntLayerCapture(layer, player, dragonDeath = null) {
             footOffset = 12 * Math.max(.7, Math.min(1.45, (actor.radius || 12) / 12));
             break;
         case 'enemy':
-            footOffset = 24 * Math.max(.62, Math.min(1.9, (actor.radius || 12) / 12));
+            // Enemy atlas anchors and C# positions already identify the planted feet.
+            // Adding a painted-foot offset placed the actual shadow caster south of
+            // its Hollowed/Ashling, independently of the Fireball light direction.
+            footOffset = 0;
             break;
         case 'dragon':
             footOffset = (actor.radius || 34) * 1.6;
