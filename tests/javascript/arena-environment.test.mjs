@@ -131,4 +131,8 @@ test('G4 flat-ground world, reflections and elevations all reuse the same terrai
     assert.match(elevations, /terrainTexture\(environment, width, height, approvedAtlas, flatColorsOnly, gpuAlbedo\)/);
     assert.match(environment, /flatColorsOnly \? 'neutral-grey-v1' : gpuAlbedo \? 'gpu-neutral-albedo-v1' : 'painted-ground'/,
         'Distinct cache identities preserve the optional painted A/B without cross-contamination.');
+    const vignette = environment.slice(environment.indexOf('// The painted Canvas floor retains its authored edge fog'),
+        environment.indexOf('const habitatTints'));
+    assert.match(vignette, /if \(!gpuAlbedo\) \{[\s\S]*?ctx\.createRadialGradient/,
+        'GPU albedo must not pre-bake the Canvas dark-edge vignette before real lighting.');
 });
