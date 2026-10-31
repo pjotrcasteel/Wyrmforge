@@ -133,8 +133,7 @@ export function huntActorGeometry() {
  */
 /** The captured image is mostly transparent padding. Bound the full plane
  * against a light's height without crushing the actual alpha silhouette.
- * 1.1x source altitude keeps a padded 160px capture readable while
- * painted height while keeping low-lying effects from making infinite wedges.
+ * Keep the padded pose readable while limiting long wedges from low emitters.
  */
 export function boundedHuntShadowHeight(spriteHeightWorld, lightHeightWorld) {
     if (!(lightHeightWorld > 0)) return spriteHeightWorld;
