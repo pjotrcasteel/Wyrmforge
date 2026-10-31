@@ -61,12 +61,13 @@ const material = id => ({ id, albedo: id, color: '#ffffff', roughness: .95, meta
  * participation. The shared LightingEngine remains ignorant of creature/terrain kinds.
  * A custom geometry is registered once via LightingEngine.registerGeometry().
  */
-/** Alpha-cutout pose caster for an as-yet-unmigrated Canvas sprite.
- * Its actual height is bounded against the selected source at render time to
- * keep Fireball shadows visible without the old solid wedge projection.
+/** Shadow-only alpha cutout for the captured pose.
+ * The Canvas texture includes large transparent margins around each creature.
+ * Keep its source-pixel scale: compressing the full tile to the actor's assumed
+ * height makes the *opaque* pixels almost flat and erases ground shadows.
  */
 export function huntCaptureSilhouetteCaster(x, y, width, height, footFraction = .75) {
-    const heightWorld = Math.min(1.15, Math.max(.24, height * GROUND_Y / UNIT * .38));
+    const heightWorld = height / UNIT;
     return { occluderGeometry: 'hunt-shadow-silhouette',
         occluderPosition: [(x + width / 2) / UNIT,
             -(y + height * footFraction) * GROUND_Y / UNIT,
@@ -130,13 +131,14 @@ export function huntActorGeometry() {
  * view plane. Do not change the shared lighting engine's object semantics or
  * rotate any authored world plane, scenery, collider or physical emitter.
  */
-/** A low point light must not project a tall proxy across the entire Hunt.
- * Clamp its projected height to half the source altitude; higher fixtures can
- * still cast a visible silhouette beyond the sprite's opaque body.
+/** The captured image is mostly transparent padding. Bound the full plane
+ * against a light's height without crushing the actual alpha silhouette.
+ * 1.4x source altitude allows a normal 160px actor capture to retain its
+ * painted height while keeping low-lying effects from making infinite wedges.
  */
 export function boundedHuntShadowHeight(spriteHeightWorld, lightHeightWorld) {
     if (!(lightHeightWorld > 0)) return spriteHeightWorld;
-    return Math.min(spriteHeightWorld, lightHeightWorld * .5);
+    return Math.min(spriteHeightWorld, lightHeightWorld * 1.4);
 }
 export function alignHuntActorBillboards(objects, engine) {
     const shadowHeight = Math.min(...(engine.selected ?? [])
@@ -171,8 +173,8 @@ export class HuntGpuWorld {
             needsRetainedHuntBuffer(device?.userAgent, device?.maxTouchPoints)));
         this.engine.registerGeometry('hunt-plane', new T.PlaneGeometry(1, 1));
         this.engine.registerGeometry('hunt-billboard', huntActorGeometry());
-        // G1-style alpha-cutout sprite silhouettes, bounded to a compact
-        // foot-grounded caster until WF/AR provide authored 2.5D geometry.
+        // G1-style alpha-cutout sprite silhouettes retain source-pixel scale
+        // until WF/AR supply authored 2.5D geometry.
         this.engine.registerGeometry('hunt-shadow-silhouette', huntActorGeometry());
         this.layers = new Map();
         this.used = new Set();
