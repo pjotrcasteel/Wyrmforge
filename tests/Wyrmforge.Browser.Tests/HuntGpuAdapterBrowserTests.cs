@@ -149,4 +149,95 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
         await Page.EvaluateAsync("() => window.__huntGpuFireballProof.dispose()");
     }
 
+
+    [TestMethod]
+    [DataRow(390, 660)]
+    public async Task HuntAdapter_FireballOnFourSides_ShadowFallsAwayFromSource(int width, int height)
+    {
+        var root = Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL");
+        if (string.IsNullOrWhiteSpace(root)) { Assert.Inconclusive("Requires published game."); return; }
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.GotoAsync(root.TrimEnd('/') + "/arena-material-kit", new() { WaitUntil = WaitUntilState.NetworkIdle });
+
+        var measurements = await Page.EvaluateAsync<double[][]>(
+            """
+            async ({width,height}) => {
+                const { HuntGpuWorld } = await import('./js/arena-gpu-world.js');
+                const world = new HuntGpuWorld({quality:'balanced'});
+                const canvas = document.createElement('canvas');
+                canvas.id = 'hunt-gpu-direction-shadow-proof';
+                canvas.width = width; canvas.height = height;
+                Object.assign(canvas.style,{position:'fixed',left:'0',top:'0',zIndex:'99999'});
+                document.body.appendChild(canvas);
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle='#777777';ctx.fillRect(0,0,width,height);
+
+                // Real Hollowed alpha, the exact 160px padded capture path used in the Hunt.
+                const actor = new Image();
+                actor.src='./art/enemies/hollow-rigged/arms/standard-walk.png';
+                await actor.decode();
+                const tile=document.createElement('canvas');
+                tile.width=160;tile.height=160;
+                tile.getContext('2d').drawImage(actor,0,4*96,96,96,32,36,96,96);
+                const footX=width/2, footY=height/2, left=footX-80, top=footY-132;
+                world.begin(ctx,{x:0,y:0},width,height);
+                world.capture('hollow',tile,left,top,160,160,0,true,{footFraction:132/160});
+
+                const base={version:1,time:0,environment:{ambient:.12,color:'#ffffff',exposure:1,emission:false},
+                    materials:[],objects:[]};
+                const alpha=tile.getContext('2d').getImageData(0,0,160,160).data;
+                const samples=[];
+                for(const [dx,dy] of [[0,48],[0,-48],[48,0],[-48,0]]){
+                    const light={id:'moving-fireball',ownerId:'test',type:'point',enabled:true,
+                        position:[footX+dx,footY+dy,24],direction:[0,0,-1],color:'#ff7835',
+                        intensity:6,range:144,coneAngle:.5,penumbra:0,castsShadow:true,priority:1};
+                    world.render(ctx,{...base,lights:[light]});
+                    const shadowed=world.engine.pixels();
+                    world.render(ctx,{...base,lights:[{...light,castsShadow:false}]});
+                    const clear=world.engine.pixels();
+
+                    let weight=0, project=0, opposite=0, changed=0;
+                    for(let i=0;i<shadowed.length;i+=4){
+                        const x=(i/4)%width, y=height-1-Math.floor(i/4/width);
+                        const sx=Math.floor(x-left),sy=Math.floor(y-top);
+                        if(sx>=0&&sy>=0&&sx<160&&sy<160&&alpha[(sy*160+sx)*4+3]>=96)continue;
+                        const delta=Math.max(0,clear[i]-shadowed[i])+
+                            Math.max(0,clear[i+1]-shadowed[i+1])+
+                            Math.max(0,clear[i+2]-shadowed[i+2]);
+                        if(delta<24)continue;
+                        const away=((x-footX)*-dx+(y-footY)*-dy)/48;
+                        weight+=delta;project+=delta*away;
+                        if(away<0)opposite+=delta;
+                        changed++;
+                    }
+                    samples.push([changed,weight?project/weight:0,weight?opposite/weight:1]);
+                }
+                window.__huntGpuDirectionalWorld=world;
+                return samples;
+            }
+            """, new { width, height });
+
+        var sides = new[] { "south", "north", "east", "west" };
+        for (var i = 0; i < measurements.Length; i++)
+        {
+            var sample = measurements[i];
+            Assert.IsGreaterThan(80, sample[0], $"A {sides[i]} Fireball must cast a readable alpha silhouette on grey ground.");
+            Assert.IsGreaterThan(5, sample[1],
+                $"A {sides[i]} Fireball must cast the shadow AWAY from the source, not toward it or under the actor.");
+            Assert.IsLessThan(.3, sample[2],
+                $"A {sides[i]} Fireball must not place most shadow pixels on the illuminated side.");
+        }
+
+        var artifacts = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS")
+            ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
+        Directory.CreateDirectory(artifacts);
+        await File.WriteAllTextAsync(Path.Combine(artifacts, "g4-shadow-direction-metrics.json"),
+            System.Text.Json.JsonSerializer.Serialize(measurements));
+        await Page.Locator("#hunt-gpu-direction-shadow-proof").ScreenshotAsync(new()
+        {
+            Path = Path.Combine(artifacts, "g4-shadow-direction.png"),
+        });
+        await Page.EvaluateAsync("() => window.__huntGpuDirectionalWorld.dispose()");
+    }
+
 }
