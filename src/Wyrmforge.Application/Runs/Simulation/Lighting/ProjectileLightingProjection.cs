@@ -36,7 +36,10 @@ public static class ProjectileLightingProjection
             Type: profile.Type,
             X: projectile.Position.X,
             Y: projectile.Position.Y,
-            Z: 24,
+            // The G1-approved cutout shadows require a source above the
+            // projected creature pose. At 24px the Fireball sits below its
+            // caster and produces either huge wedges or imperceptible streaks.
+            Z: 96,
             Color: profile.Color,
             Intensity: profile.Intensity,
             Radius: profile.Radius,
