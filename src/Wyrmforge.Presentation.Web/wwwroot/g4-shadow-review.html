@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WyrmForge · G4 directional shadow proof</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,sans-serif;background:#11101a;color:#f4edf6}
+*{box-sizing:border-box}
+body{margin:0 auto;padding:16px;max-width:990px}
+h1{font-size:1.45rem;margin:.3rem 0}
+p{color:#c8becf;line-height:1.45;margin:.5rem 0 1rem}
+code{color:#e9bd85}
+#status{padding:.65rem .85rem;background:#262131;border:1px solid #61516f;border-radius:8px;margin:12px 0}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+figure{margin:0;background:#1a1924;border:1px solid #61516f;border-radius:9px;overflow:hidden}
+figcaption{font-weight:650;padding:10px;font-size:.9rem}
+figure canvas{display:block;width:100%;height:auto;image-rendering:pixelated}
+small{display:block;color:#c8becf;margin-top:6px}
+@media(max-width:620px){.grid{grid-template-columns:1fr}body{padding:12px}}
+</style>
+</head>
+<body>
+<h1>G4 · Hollowed directional shadows</h1>
+<p>Real Hollowed sprite and the live <code>HuntGpuWorld</code> adapter rendered by the shared GPU lighting engine. Grey ground; actual Fireball light parameters. The small orange cross is a <strong>source-position diagnostic</strong>, not a game projectile. Every shadow should extend <em>away</em> from its cross.</p>
+<div id="status" role="status">Preparing one GPU scene…</div>
+<div id="gallery" class="grid"></div>
+<script type="module">
+import { HuntGpuWorld } from './js/arena-gpu-world.js';
+const width=390,height=390,footX=195,footY=210;
+const status=document.getElementById('status'),gallery=document.getElementById('gallery');
+let world;
+try{
+    const actor=new Image();
+    actor.src='./art/enemies/hollow-rigged/arms/standard-walk.png';
+    await actor.decode();
+    const tile=document.createElement('canvas');
+    tile.width=160;tile.height=160;
+    const painter=tile.getContext('2d');
+    painter.imageSmoothingEnabled=false;
+    painter.drawImage(actor,0,4*96,96,96,32,36,96,96);
+    const source=document.createElement('canvas');
+    source.width=width;source.height=height;
+    const ctx=source.getContext('2d');
+    ctx.fillStyle='#777777';ctx.fillRect(0,0,width,height);
+    world=new HuntGpuWorld({quality:'balanced'});
+    world.begin(ctx,{x:0,y:0},width,height);
+    world.capture('hollow',tile,footX-80,footY-132,160,160,0,true,{footFraction:132/160});
+    const base={version:1,time:0,environment:{ambient:.12,color:'#ffffff',exposure:1,emission:false},materials:[],objects:[]};
+    for(const [name,dx,dy] of [['Fireball SOUTH',0,48],['Fireball NORTH',0,-48],['Fireball EAST',48,0],['Fireball WEST',-48,0]]){
+        const light={id:'fireball',ownerId:'proof',type:'point',enabled:true,position:[footX+dx,footY+dy,24],direction:[0,0,-1],color:'#ff7835',intensity:6,range:144,coneAngle:.5,penumbra:0,castsShadow:true,priority:1};
+        world.render(ctx,{...base,lights:[light]});
+        const shown=document.createElement('canvas');
+        shown.width=width;shown.height=height;
+        const ink=shown.getContext('2d');
+        ink.imageSmoothingEnabled=false;
+        ink.drawImage(source,0,0);
+        const lx=footX+dx,ly=footY+dy;
+        ink.strokeStyle='#ffca68';ink.lineWidth=2;
+        ink.beginPath();ink.arc(lx,ly,8,0,2*Math.PI);ink.moveTo(lx-14,ly);ink.lineTo(lx+14,ly);ink.moveTo(lx,ly-14);ink.lineTo(lx,ly+14);ink.stroke();
+        const figure=document.createElement('figure');
+        const caption=document.createElement('figcaption');
+        caption.textContent=name;
+        const subtitle=document.createElement('small');
+        subtitle.textContent='Real GPU shadow · emitter cross must point toward the lit side';
+        caption.appendChild(subtitle);
+        figure.append(caption,shown);gallery.appendChild(figure);
+    }
+    status.textContent='Four real GPU renders completed. Check footprint, direction, softness and pose detail; this diagnostic is not a full Hunt screenshot.';
+} catch(error){
+    status.textContent='GPU proof failed: '+error.message;
+    status.style.borderColor='#f07171';
+} finally {world?.dispose();}
+</script>
+</body>
+</html>
