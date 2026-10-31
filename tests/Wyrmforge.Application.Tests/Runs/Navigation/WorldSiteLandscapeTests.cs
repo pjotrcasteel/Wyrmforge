@@ -340,8 +340,13 @@ public sealed class WorldSiteLandscapeTests
                         $"seed {seed}: C# ridge blocks reserved low pass {route.EdgeId}");
                     if (route.EdgeId == "monastery-approach")
                     {
-                        Assert.IsFalse(WorldSiteFootprintCollision.BlocksSegment(layout, from, to, width, height, radius: 12),
-                            $"seed {seed}: monastery switchback or gate is blocked");
+                        var blockedBy = layout.Obstacles.FirstOrDefault(obstacle =>
+                            WorldSiteFootprintCollision.BlocksSegment(
+                                new WorldSiteLandscapeRecipe(layout.Kind, [obstacle]), from, to,
+                                width, height, radius: 12));
+                        Assert.IsNull(blockedBy,
+                            $"seed {seed}: monastery switchback segment {index} is blocked by {blockedBy?.Kind} " +
+                            $"from {from} to {to}");
                     }
                 }
             }

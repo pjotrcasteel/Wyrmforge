@@ -404,11 +404,13 @@ public static class WorldSiteLandscapeGenerator
             Rectangle(left, north, left + thickness, south)));
         obstacles.Add(new WorldSiteObstacle("monastery-wall", stone, 1.4,
             Rectangle(right - thickness, north, right, south)));
-        // Split the southern wall into two real colliders to create an open gate.
+        // The gate must accommodate the existing player/enemy collision radius,
+        // including the approach angle, even in the smallest seeded monastery.
+        var gateHalfWidth = Math.Min(halfWidth - thickness * 1.5, Math.Max(.035, thickness * 2.6));
         obstacles.Add(new WorldSiteObstacle("monastery-wall", stone, 1.4,
-            Rectangle(left, south - thickness, cx - thickness * 1.4, south)));
+            Rectangle(left, south - thickness, cx - gateHalfWidth, south)));
         obstacles.Add(new WorldSiteObstacle("monastery-wall", stone, 1.4,
-            Rectangle(cx + thickness * 1.4, south - thickness, right, south)));
+            Rectangle(cx + gateHalfWidth, south - thickness, right, south)));
     }
 
     private static IReadOnlyList<HuntPoint> Rectangle(double left, double top, double right, double bottom) =>
