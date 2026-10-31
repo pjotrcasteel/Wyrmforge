@@ -198,17 +198,20 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
                     materials:[],objects:[]};
                 const alpha=tile.getContext('2d').getImageData(0,0,160,160).data;
                 const samples=[];
-                const sourceHeight=24;
                 const caster=world.objects.find(object=>object.id==='hollow');
-                // Controlled real-WebGL sweep: verify how transparent atlas padding
-                // changes the physical shadow volume before altering gameplay.
-                for(const bodyHeight of [capture.occluderHeightPx,96,160,160*Math.SQRT2]){
+                // Verify shadow geometry, source elevation, physically attenuated
+                // reach, and direct-light energy as a coupled visibility problem.
+                const trials=[[32,24,144,6],[72,24,240,6],[72,16,240,6],
+                    [72,24,320,12],[72,16,320,12],[96,16,320,12],
+                    [72,16,320,24],[96,24,320,24],[72,32,320,24],
+                    [72,16,480,12],[96,16,480,24]];
+                for(const [bodyHeight,sourceHeight,range,intensity] of trials){
                     caster.occluderScale[1]=bodyHeight/48;
                     caster.occluderPosition[2]=-(1-(capture.footFraction??.75))*bodyHeight/48;
                 for(const [dx,dy] of [[0,48],[0,-48],[48,0],[-48,0]]){
                     const light={id:'moving-fireball',ownerId:'test',type:'point',enabled:true,
                         position:[footX+dx,footY+dy,sourceHeight],direction:[0,0,-1],color:'#ff7835',
-                        intensity:6,range:144,coneAngle:.5,penumbra:0,castsShadow:true,priority:1};
+                        intensity,range,coneAngle:.5,penumbra:0,castsShadow:true,priority:1};
                     world.render(ctx,{...base,lights:[light]});
                     const shadowed=world.engine.pixels();
                     // Preserve the actual rendered GPU frame for all four directions,
@@ -216,7 +219,8 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
                     const evidence=document.createElement('canvas');
                     evidence.width=width;evidence.height=height;
                     evidence.getContext('2d').drawImage(canvas,0,0);
-                    gallery.appendChild(evidence);
+                    if(bodyHeight===72&&sourceHeight===16&&range===320&&intensity===12)
+                        gallery.appendChild(evidence);
                     world.render(ctx,{...base,lights:[{...light,castsShadow:false}]});
                     const clear=world.engine.pixels();
                     world.render(ctx,{...base,lights:[]});
@@ -250,7 +254,7 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
                     samples.push([changed,weight?project/weight:0,weight?opposite/weight:1,farPixels,farthest,
                         strongPixels,veryStrongPixels,peakDelta,changed?weight/changed:0,bodyHeight,
                         directInAffected?blockedInAffected/directInAffected:0,
-                        changed?directInAffected/changed:0,sourceHeight]);
+                        changed?directInAffected/changed:0,sourceHeight,range,intensity]);
                 }
                 }
                 window.__huntGpuDirectionalWorld=world;
@@ -273,9 +277,9 @@ public sealed class HuntGpuAdapterBrowserTests : PageTest
         for (var sampleIndex = 0; sampleIndex < measurements.Length; sampleIndex++)
         {
             var sweep = measurements[sampleIndex];
-            Console.WriteLine($"Sweep h={sweep[9]:F1}px, {sides[sampleIndex % 4]}: " +
+            Console.WriteLine($"Sweep h={sweep[9]:F1}px z={sweep[12]:F0}px r={sweep[13]:F0}px i={sweep[14]:F0}, {sides[sampleIndex % 4]}: " +
                 $"shadowPixels={sweep[0]}, farPixels={sweep[3]}, reach={sweep[4]:F1}px, " +
-                $"darkPixels72={sweep[5]}, darkPixels144={sweep[6]}, peakRGBDelta={sweep[7]:F1}");
+                $"darkPixels72={sweep[5]}, darkPixels144={sweep[6]}, peakRGBDelta={sweep[7]:F1}, away={sweep[1]:F1}, opposite={sweep[2]:F2}, blocked={sweep[10]:F2}");
         }
         for (var i = 0; i < sides.Length; i++)
         {
