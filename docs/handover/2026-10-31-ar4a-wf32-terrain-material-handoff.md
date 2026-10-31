@@ -1,6 +1,6 @@
 # AR4-A — WF32 terrain material binding after AR3 acceptance (31 October 2026)
 
-Status: **AR4-A1 source/weight seam implemented in draft PR #459 (six focused tests); AR4-A2 native source atlas and AR4-A3 live-Hunt visual proof remain open. No AR4-B owner art approval or AR4-C G lighting acceptance is claimed.**
+Status: **AR4-A1 complete, AR4-A2 opt-in neutral albedo adapter implemented (11 focused tests in draft PR #459), but the original full-site WF32 source bitmaps are not yet packaged for runtime. AR4-A3 real-Hunt visual proof and AR4-B owner acceptance remain open; AR4-C G lighting is deferred.**
 Start from merged GitHub `main` at/after [AR3 PR #458](https://github.com/pjotrcasteel/Wyrmforge/pull/458). Preserve the independent original source-art [WF32 draft PR #429](https://github.com/pjotrcasteel/Wyrmforge/pull/429) and all active [shared G4/G5 work](https://github.com/pjotrcasteel/Wyrmforge/pull/381).
 
 ## Ownership and nonnegotiable boundaries
@@ -33,4 +33,6 @@ Start from merged GitHub `main` at/after [AR3 PR #458](https://github.com/pjotrc
 - `world-site-material-binding.js` is the only AR4 presentation-side mapping of C# enum names/ordinals and seven normalized weights. It bilinearly samples the server-owned preview in site coordinates for visuals only and handles malformed source weights with safe semantic fallbacks.
 - `arena-environment.js` now consumes that shared mapping in the existing opt-in AR3 diagnostic, preserving its existing seven-color palette, native Hunts and geometry ownership. Debug snapshots expose which WF32 families have source-only or pending review gates.
 - Six focused Node tests pass for enum/weight fidelity, deterministic interpolation, invalid data, withheld rock/water/ice textures, monastery whole-stone boundary gating and site-anchored caching.
-- **Still missing:** source-authored WF32 texture delivery to runtime, native-pixel opt-in albedo view, real moving camera/mobile screenshots and owner AR4-B approval. Do not interpret the six A1 tests as those missing acceptance gates.
+- `world-site-neutral-albedo.js` implements an opt-in `?arenaTerrain=materials` adapter in the **existing** Hunt canvas. It composes C# weight blends against decoded *offline* WF32 soft albedo pixels in one cached site-space raster; the render loop never runs source generation. Source images smaller than the site are rejected (no repeating 256px stamps); only 1 decoded site raster is retained. Missing files fall back to the existing AR3 semantic visualization. The standard Hunt path remains untouched.
+- Five additional Node tests pass for blend math, world-anchored deterministic output, original-family gating, no synthetic rock/ice/water/shadows, missing/undersized sources and opt-in isolation: **11 focused tests total**.
+- **Still missing:** generate/package the source-approved P1i soft materials as sufficiently large native-32px source bitmaps, then real mobile-sized moving-camera Hunt screenshots, source seam proofs and AR4-B owner sign-off. The adapter is not evidence that any WF32 source bitmap has been deployed.
