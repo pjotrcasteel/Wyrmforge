@@ -1,0 +1,239 @@
+name: Hollowed V2 independent source candidate — NOT APPROVED
+
+on:
+  push:
+    branches:
+      - art/hollowed-reference-body-v2-20261029
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: hollowed-v2-candidate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  independent-artist-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      OPENBLAS_NUM_THREADS: "1"
+      OMP_NUM_THREADS: "2"
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            .github/workflows/hollowed-reference-v2.yml
+            art/source/enemies/hollow/reference-v2/
+            docs/art/evidence/hollowed-reference-v2/
+            tools/art/hollowed-reference-v2/
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: Reject any legacy H1 code or game/animation changes
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python -m py_compile tools/art/hollowed-reference-v2/verify_source_identity.py
+          python -m py_compile tools/art/hollowed-reference-v2/audit_fresh_character_blender.py
+          python -m py_compile tools/art/hollowed-reference-v2/sculpt_rotwalker_m1_pose_blender.py
+          python -m py_compile tools/art/hollowed-reference-v2/rig_rotwalker_m1_organic_blender.py
+          python -m py_compile tools/art/hollowed-reference-v2/fit_owner_reference_2d_skeleton_blender.py
+          python -m py_compile tools/art/hollowed-reference-v2/sculpt_rotwalker_m2_ghoul_silhouette_blender.py
+          python -m py_compile tools/art/hollowed-reference-v2/render_mobile_candidate_blender.py
+          python - <<'PY'
+          from pathlib import Path
+          root = Path("art/source/enemies/hollow/reference-v2")
+          if any(p.suffix.lower() in (".fbx", ".glb", ".blend", ".obj")
+                 for p in root.rglob("*")):
+              raise SystemExit("Unreviewed source binary was checked into clean V2")
+          PY
+          # The canonical main branch moves independently (arena work etc).
+          # Comparing its current tip to HEAD falsely flags unrelated main changes.
+          # Inspect exactly the changed files belonging to draft PR #399 instead.
+          changed="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/pulls/399/files?per_page=100" --jq '.[].filename')"
+          printf '%s\n' "$changed"
+          if printf '%s\n' "$changed" | sed '/^$/d' | grep -vE '^(docs/art/evidence/hollowed-reference-v2/|art/source/enemies/hollow/reference-v2/|tools/art/hollowed-reference-v2/|\.github/workflows/hollowed-reference-v2.yml$)' ; then
+            echo "Forbidden gameplay/animation/old H1 source edit"
+            exit 1
+          fi
+      - name: Install Blender 4.5 and source review dependencies
+        run: |
+          python -m pip install --disable-pip-version-check bpy==4.5.15 Pillow==11.3.0
+          python -c "import bpy; print('Authentic Blender',bpy.app.version_string)"
+      - name: Download and provenance-check NEW CC BY 4.0 artist model candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/hollowed-reference-v2/audit/downloaded
+          curl --fail --location --silent --show-error --retry 3 --max-time 290 \
+            --user-agent "WyrmForge-Independent-Model-Art-Audit/1.0" \
+            'https://sotudios.com/Assets/Undead-EnemyPack/downloads/undead-enemy-pack-v1.0.0.zip' \
+            -o artifacts/hollowed-reference-v2/audit/downloaded/source-package.zip
+          test "$(stat -c%s artifacts/hollowed-reference-v2/audit/downloaded/source-package.zip)" -gt 1000000
+          python - <<'PY'
+          import hashlib,zipfile
+          from pathlib import Path
+          root=Path('artifacts/hollowed-reference-v2/audit/downloaded')
+          archive_path=root/'source-package.zip'
+          with zipfile.ZipFile(archive_path) as z:
+              entries=z.infolist()
+              if len(entries)>2000 or sum(e.file_size for e in entries)>2_500_000_000:
+                  raise ValueError('Unreasonably large creator archive')
+              if any('..' in Path(e.filename).parts or e.filename.startswith('/')
+                     for e in entries):
+                  raise ValueError('Unsafe artist archive path')
+              choices=[e for e in entries if e.filename.lower().endswith('.fbx')
+                       and 'rotwalker' in e.filename.lower()]
+              print('SOURCE ARCHIVE FIRST ENTRIES',[(e.filename,e.file_size)
+                    for e in entries[:100]])
+              print('ROTWalker SOURCE CANDIDATES',[(e.filename,e.file_size)
+                    for e in choices])
+              if not choices:
+                  raise ValueError('Cannot find artist Rotwalker FBX — do not substitute old H1 or a random model')
+              chosen=max(choices,key=lambda e:e.file_size)
+              if chosen.file_size < 50000 or chosen.file_size > 300_000_000:
+                  raise ValueError('Selected FBX has implausible creator source size')
+              output=root/'selected'
+              z.extract(chosen,output)
+              absolute=(output/chosen.filename).resolve()
+              (root/'source-path.txt').write_text(str(absolute)+'\n',encoding='utf8')
+              sha=hashlib.sha256(archive_path.read_bytes()).hexdigest()
+              (root/'source-provenance.txt').write_text(
+                  'Art candidate: Rotwalker, from Sotudios Undead Enemy Pack v1.0.0\n'
+                  'Canonical source: https://sotudios.com/Assets/Undead-EnemyPack/\n'
+                  'License: CC BY 4.0. Sotudios attribution required.\n'
+                  'Archive SHA256: '+sha+'\n'
+                  'Selected genuine FBX: '+chosen.filename+'\n'
+                  'Research only, not a finished Hollowed or owner-approved model.\n',
+                  encoding='utf8')
+              print('AUDIT MODEL',absolute,'SOURCE SHA256',sha)
+          PY
+      - name: Inspect actual NEW 3D anatomy in Blender, never old mesh
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/art/hollowed-reference-v2/audit_fresh_character_blender.py \
+            --input "$(cat artifacts/hollowed-reference-v2/audit/downloaded/source-path.txt)" \
+            --license artifacts/hollowed-reference-v2/audit/downloaded/source-provenance.txt \
+            --output artifacts/hollowed-reference-v2/audit/review
+          test -s artifacts/hollowed-reference-v2/audit/review/ROTWalker-CANDIDATE-NOT-HOLLOWED-NOT-APPROVED.blend
+          test -s artifacts/hollowed-reference-v2/audit/review/candidate-FRONT-SIDE-BACK-REAL-BLENDER.png
+          test -s artifacts/hollowed-reference-v2/audit/review/candidate-silhouette-8VIEW-REAL-BLENDER.png
+          test -s artifacts/hollowed-reference-v2/audit/review/candidate-clay-NATIVE96-REAL-BLENDER.png
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('artifacts/hollowed-reference-v2/audit/review/candidate-audit.json')
+          d=json.loads(p.read_text(encoding='utf8'))
+          assert d['approved'] is False and d['reused_previous_h1'] is False,d
+          assert d['source_actions']==0 and d['animation_engine_modified'] is False,d
+          assert d['gameplay_modified'] is False,d
+          assert d['source_vertex_count']>=1000,d
+          print('Actual Blender candidate inspection ready; no artistic approval implied')
+          PY
+      # M1–M4: real 3D source-modeling, silhouette, pose and material reviews.
+      # Do not generate runtime-resolution pixel sprites from unfinished art.
+      # The native 96px renderer remains available at
+      # tools/art/hollowed-reference-v2/render_mobile_candidate_blender.py.
+      # It will be wired to the completed full-detail 3D .blend only at M5
+      # after the owner has visually accepted the production 3D source.
+      # Superseded rigid shape-key pose experiment remains in repository for
+      # audit; it is NOT the source for this articulated model. Do not render
+      # the stiff legacy test on every iteration of genuine 3D skinning.
+      - name: M1 biological movement review - REAL weighted 3D skeleton, not H1 and not runtime engine
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/art/hollowed-reference-v2/rig_rotwalker_m1_organic_blender.py \
+            --input artifacts/hollowed-reference-v2/audit/review/ROTWalker-CANDIDATE-NOT-HOLLOWED-NOT-APPROVED.blend \
+            --output artifacts/hollowed-reference-v2/audit/model-m1-rig
+          test -s artifacts/hollowed-reference-v2/audit/model-m1-rig/Hollowed-M1-ANATOMICAL-ART-RIG-REAL-MOTION-UNAPPROVED.blend
+          test -s artifacts/hollowed-reference-v2/audit/model-m1-rig/M1-REAL-3D-RIG-FRONT-SIDE-BACK.png
+          test -s artifacts/hollowed-reference-v2/audit/model-m1-rig/M1-REAL-3D-RIG-SIDE-EIGHT-POSES.png
+          test -s artifacts/hollowed-reference-v2/audit/model-m1-rig/M1-REAL-3D-RIG-FRONT-MOTION.gif
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("artifacts/hollowed-reference-v2/audit/model-m1-rig/M1-RIG-motion-QC.json")
+          q=json.loads(p.read_text(encoding="utf-8"))
+          assert q["original_mesh_preserved"] is True,q
+          assert q["rig"]["bone_count"]>=18,q
+          assert q["rig"]["original_vertices"]>=31000,q
+          assert q["rig"]["old_H1_rig_reused"] is False,q
+          assert q["motion"]["source_demo_actions"]>=1,q
+          assert q["motion"]["source_motion_frames"]>=49,q
+          assert q["motion"]["animation_engine_modified"] is False,q
+          assert q["render"]["genuine_source_motion_frames_rendered"]>=16,q
+          assert q["universal_animation_engine_modified"] is False,q
+          assert q["pixel_export_performed"] is False,q
+          assert q["owner_approved"] is False,q
+          print("Articulated source-only 3D character motion evidence; visually unapproved.")
+          PY
+      - name: M1 owner REFERENCE front-side landmark skeleton 3D fit + articulated motion
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/art/hollowed-reference-v2/fit_owner_reference_2d_skeleton_blender.py \
+            --input artifacts/hollowed-reference-v2/audit/model-m1-rig/Hollowed-M1-ANATOMICAL-ART-RIG-REAL-MOTION-UNAPPROVED.blend \
+            --reference art/source/enemies/hollow/reference-v2/owner-reference-pose-landmarks-2026-10-29.json \
+            --output artifacts/hollowed-reference-v2/audit/model-m1-reference
+          test -s artifacts/hollowed-reference-v2/audit/model-m1-reference/Hollowed-M1-OWNER-2D-POSE-FITTED-REAL-3D-UNAPPROVED.blend
+          test -s artifacts/hollowed-reference-v2/audit/model-m1-reference/M1-REFERENCE-FITTED-REAL-3D-FRONT-SIDE-BACK.png
+          test -s artifacts/hollowed-reference-v2/audit/model-m1-reference/M1-ACTUAL-BONES-VERSUS-2D-REFERENCE-JOINTS.png
+          test -s artifacts/hollowed-reference-v2/audit/model-m1-reference/M1-REFERENCE-3D-SIDE-MOTION.png
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('artifacts/hollowed-reference-v2/audit/model-m1-reference/owner-2d-3d-reference-fit-qc.json').read_text())
+          assert d['fit']['fitted_bones']>=19,d
+          assert d['fit']['measured_head_forward_vs_pelvis_m']>.43,d
+          assert all(d['fit']['real_3d_claw_reach'][s]['forward_from_shoulder_m']>.4 for s in ('L','R')),d
+          assert d['images']['actual_blender_3d_views']==8,d
+          assert d['source_rig_bone_count']==20,d
+          assert d['source_rotwalker_topology_preserved'] is True,d
+          assert d['single_universal_animation_engine_untouched'] is True,d
+          assert d['gameplay_modified'] is False and d['pixel_export_performed'] is False,d
+          assert d['owner_approved'] is False,d
+          print('Real owner-landmark to 3D skeleton fit is technically reproducible. Visual gate still OPEN.')
+          PY
+      # M2 ghoul hair/claws source script is retained but DISCONNECTED until
+      # the owner approves the new reference-matched M1 3D pose. Do not add
+      # details over another inaccurate pose or pixelize unfinished source.
+      - name: Validate source identity in reopened Blender file
+        run: |
+          python - <<'PY'
+          import bpy,importlib.util
+          from pathlib import Path
+          root=Path('artifacts/hollowed-reference-v2/audit/review')
+          bpy.ops.wm.open_mainfile(filepath=str((root/'ROTWalker-CANDIDATE-NOT-HOLLOWED-NOT-APPROVED.blend').resolve()),load_ui=False)
+          f=Path('tools/art/hollowed-reference-v2/verify_source_identity.py')
+          spec=importlib.util.spec_from_file_location('v2_source_gate',f)
+          m=importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(m)
+          try:
+              m.verify()
+              raise AssertionError('Candidate passed production lineage gate, unsafe')
+          except RuntimeError as e:
+              assert 'Only a screened candidate' in str(e),str(e)
+          print('Independent SOURCE AUDIT ONLY:',m.verify(allow_candidate=True))
+          PY
+      - name: Preserve 3D candidate evidence — never ship into running game
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hollowed-v2-independent-REAL-3D-source-CANDIDATE-NOT-APPROVED
+          path: |
+            artifacts/hollowed-reference-v2/audit/downloaded/source-provenance.txt
+            artifacts/hollowed-reference-v2/audit/review/
+            artifacts/hollowed-reference-v2/audit/model-m1-rig/
+            artifacts/hollowed-reference-v2/audit/model-m1-reference/
+          if-no-files-found: warn
+          retention-days: 21
