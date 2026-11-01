@@ -209,5 +209,30 @@ public sealed class Ar4WorldSiteMaterialsBrowserTests : PageTest
             Path = Path.Combine(output, $"ar4-{kind}-quiet-road-study-{width}.png"),
             FullPage = false,
         });
+
+        // World-continuous, genuinely non-stamped native 32px authored preview.
+        // Same C# geography, movement, obstacles and camera as preceding screenshots.
+        await Page.EvaluateAsync(@"() => {
+            const url = new URL(location.href);
+            url.searchParams.set('arenaTerrain', 'source32c');
+            history.replaceState(null, '', url);
+        }");
+        await Page.WaitForFunctionAsync(
+            "siteId => window.__wyrmforgeAr0Geography?.siteId === siteId && " +
+            "window.__wyrmforgeAr0Geography?.materialView === 'source32-world-study'",
+            siteId, new() { Timeout = 45000 });
+        Assert.AreEqual(seed, await Page.EvaluateAsync<int>(
+            "() => window.__wyrmforgeAr0Geography.seed"));
+        Assert.AreEqual(obstacles, await Page.EvaluateAsync<int>(
+            "() => window.__wyrmforgeAr0Geography.obstacleCount"));
+        Assert.IsTrue(await Page.EvaluateAsync<bool>(
+            "() => window.__wyrmforgeAr0Geography.sourceCoverage?.prototypeOnly === true && " +
+            "window.__wyrmforgeAr0Geography.sourceCoverage?.repeatedTiles === false"));
+        Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
+        await Page.ScreenshotAsync(new()
+        {
+            Path = Path.Combine(output, $"ar4-{kind}-world-source-{width}.png"),
+            FullPage = false,
+        });
     }
 }

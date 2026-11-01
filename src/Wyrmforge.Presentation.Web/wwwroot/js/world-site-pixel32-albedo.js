@@ -26,6 +26,17 @@ const QUIET_FRAMES = Object.freeze({
     corner: Object.freeze({ ne: [1, 1], nw: [34, 1], se: [67, 1], sw: [100, 1] }),
 });
 
+export const PIXEL32_WORLD = Object.freeze({
+    width: 1024, height: 2112, revision: 'ar4b-world-forest-road.v2.provisional',
+    seed: 1387, sourceOnly: true,
+});
+function validWorldSources(sources, width, height) {
+    return width <= PIXEL32_WORLD.width && height <= PIXEL32_WORLD.height &&
+        ['grass', 'road'].every(family => sources?.[family]?.width === PIXEL32_WORLD.width &&
+            sources[family].height === PIXEL32_WORLD.height &&
+            sources[family].data?.length === PIXEL32_WORLD.width * PIXEL32_WORLD.height * 4);
+}
+
 function validQuietAtlas(atlas) {
     return atlas?.width === PIXEL32_QUIET_ATLAS.width &&
         atlas?.height === PIXEL32_QUIET_ATLAS.height &&
@@ -39,7 +50,7 @@ function quietVariant(cellX, cellY, seed, count) {
     return (h >>> 0) % count;
 }
 
-function paintQuietForestRoad(pixels, width, height, atlas, labels, cellColumns, seed) {
+function paintQuietForestRoad(pixels, width, height, atlas, labels, cellColumns, seed, worldSources = null) {
     const blockSize = PIXEL32_ATLAS.cluster;
     const cellRows = Math.ceil(height / blockSize);
     const at = (col, row) => col >= 0 && row >= 0 && col < cellColumns && row < cellRows
@@ -80,11 +91,18 @@ function paintQuietForestRoad(pixels, width, height, atlas, labels, cellColumns,
             const sampleY = seamY !== null ? 16 + y - seamY : y % 32;
             // Each edge uses its source-authored central transition pixels in site phase.
             // No mirrored frame, RGB averaging, alpha-weight mixing or lighting lies.
-            const from = ((frame[1] + sampleY) * atlas.width + frame[0] + sampleX) * 4;
+            // Whole-world authoring samples absolute source coordinates. No 32px
+            // frame repetition or runtime texture synthesis; the authored edge kit
+            // still supplies the narrow C# grass/road boundary pixels.
+            const source = worldSources && !horizontal && !vertical
+                ? worldSources[index === 1 ? 'grass' : 'road'] : atlas;
+            const from = source === atlas
+                ? ((frame[1] + sampleY) * atlas.width + frame[0] + sampleX) * 4
+                : (y * source.width + x) * 4;
             const to = (y * width + x) * 4;
-            pixels[to] = atlas.data[from];
-            pixels[to + 1] = atlas.data[from + 1];
-            pixels[to + 2] = atlas.data[from + 2];
+            pixels[to] = source.data[from];
+            pixels[to + 1] = source.data[from + 1];
+            pixels[to + 2] = source.data[from + 2];
             pixels[to + 3] = 255;
         }
     }
@@ -113,7 +131,7 @@ function validAtlas(atlas) {
  * Road uses the original soil *as a visibly provisional study* (never an approved road source).
  * Monastery paving, rock, water and ice remain their declared diagnostics until art approval.
  */
-export function composeWorldSitePixel32Albedo(geography, width, height, atlas, quietAtlas = null) {
+export function composeWorldSitePixel32Albedo(geography, width, height, atlas, quietAtlas = null, worldSources = null) {
     const preview = geography?.landscape?.elevation;
     if (!validAtlas(atlas) || !Number.isInteger(width) || !Number.isInteger(height) ||
         width <= 0 || height <= 0 || width > 2048 || height > 3072 ||
@@ -123,6 +141,7 @@ export function composeWorldSitePixel32Albedo(geography, width, height, atlas, q
         return null;
 
     if (quietAtlas && !validQuietAtlas(quietAtlas)) return null;
+    if (worldSources && (!quietAtlas || !validWorldSources(worldSources, width, height))) return null;
     const monastery = geography.landscape.kind === 'mountain-monastery';
     const seed = Number.isInteger(geography.worldSeed) ? geography.worldSeed : 0;
     const sources = worldSiteSourceBindings(geography);
@@ -188,7 +207,8 @@ export function composeWorldSitePixel32Albedo(geography, width, height, atlas, q
             }
         }
     }
-    if (labels) paintQuietForestRoad(pixels, width, height, quietAtlas, labels, cellColumns, seed);
+    if (labels) paintQuietForestRoad(pixels, width, height, quietAtlas, labels, cellColumns, seed, worldSources);
     return { width, height, data: pixels, prototypeOnly: true,
-        artSource: quietAtlas ? PIXEL32_QUIET_ATLAS.revision : PIXEL32_ATLAS.revision };
+        artSource: worldSources ? PIXEL32_WORLD.revision
+            : quietAtlas ? PIXEL32_QUIET_ATLAS.revision : PIXEL32_ATLAS.revision };
 }

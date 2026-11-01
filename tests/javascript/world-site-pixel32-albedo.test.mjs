@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { PIXEL32_ATLAS, PIXEL32_QUIET_ATLAS, composeWorldSitePixel32Albedo } from
+import { PIXEL32_ATLAS, PIXEL32_QUIET_ATLAS, PIXEL32_WORLD, composeWorldSitePixel32Albedo } from
     '../../src/Wyrmforge.Presentation.Web/wwwroot/js/world-site-pixel32-albedo.js';
 
 const names = ['Soil', 'Grass', 'Road', 'Mud', 'Rock', 'ShallowWater', 'GlacialIce'];
@@ -195,4 +195,58 @@ test('AR4-B quiet study never changes C# monastery paving or draws without its s
     assert.deepEqual(a.data, b.data);
     assert.equal(composeWorldSitePixel32Albedo(site('Grass'), 32, 32,
         source).artSource, PIXEL32_ATLAS.revision, 'original source32 mode unchanged');
+});
+
+test('AR4-B world-continuous original-pixel windows are reproducible and cannot wrap as small tiles', async () => {
+    const base = '../../src/Wyrmforge.Presentation.Web/wwwroot/art/terrain/wf32/ar4b-world/';
+    const manifest = JSON.parse(readFileSync(new URL(base + 'manifest.json', import.meta.url), 'utf8'));
+    assert.equal(manifest.revision, PIXEL32_WORLD.revision);
+    assert.equal(manifest.approved, false);
+    assert.equal(manifest.width, PIXEL32_WORLD.width);
+    assert.equal(manifest.height, PIXEL32_WORLD.height);
+    assert.equal(manifest.tileGrid, 'none; no 32px or 256px wrapping');
+    const expected = {grass: '742d260abb107dfae32d0629977b788069bab5a4', road: 'd2248081002c773f10f831e000d85b2f8f6618ab'};
+    const {buildForestWorldStudy} = await import('../../tools/art/prototypes/ar4-wf32-forest-world-study.mjs');
+    const {encodePng} = await import('../../tools/art/lib/png.mjs');
+    const source = buildForestWorldStudy();
+    for (const family of ['grass','road']) {
+        const png = readFileSync(new URL(base + `${family}-world.png`, import.meta.url));
+        const sha = createHash('sha1').update(`blob ${png.length}\0`).update(png).digest('hex');
+        assert.equal(sha, expected[family]);
+        assert.equal(png.readUInt32BE(16), 1024);
+        assert.equal(png.readUInt32BE(20), 2112);
+        assert.deepEqual(encodePng(source[family].width, source[family].height, source[family].data), png,
+            'the checked-in study must be directly reproducible from its editable source');
+    }
+});
+
+test('AR4-B world mode samples native nonrepeating world-position pixels and preserves C# boundaries', () => {
+    const quiet = quietAtlas(), legacy = atlas();
+    const width = PIXEL32_WORLD.width, height = PIXEL32_WORLD.height;
+    const fill = red => {
+        const data = new Uint8ClampedArray(width * height * 4);
+        for (let y = 0; y < 96; y++) for (let x = 0; x < 96; x++) {
+            const i = (y * width + x) * 4;
+            data[i] = red; data[i+1] = x % 251; data[i+2] = y % 251; data[i+3] = 255;
+        }
+        return {width,height,data};
+    };
+    const authored = {grass:fill(37),road:fill(91)};
+    const forest = composeWorldSitePixel32Albedo(site('Grass'), 64, 64, legacy, quiet, authored);
+    assert.equal(forest.artSource, PIXEL32_WORLD.revision);
+    assert.deepEqual(pixel(forest, 20, 15), [37,20,15,255]);
+    assert.deepEqual(pixel(composeWorldSitePixel32Albedo(site('Road'), 64, 64,
+        legacy,quiet,authored), 20, 15), [91,20,15,255]);
+    const mixed=site('Grass');
+    mixed.landscape.elevation.samples[1]=sample('Road');
+    mixed.landscape.elevation.samples[3]=sample('Road');
+    const boundary=composeWorldSitePixel32Albedo(mixed,64,32,legacy,quiet,authored);
+    assert.equal(pixel(boundary,30,10)[0],quiet.marks.get('edge.grass-left'),
+        'source-authored edge still reflects a C# road/grass change');
+    assert.equal(pixel(boundary,24,10)[0],37);
+    assert.equal(pixel(boundary,40,10)[0],91);
+    assert.equal(composeWorldSitePixel32Albedo(site('Grass'), 1025, 32, legacy,quiet,authored), null,
+        'never stamp or stretch a source outside its authored world coverage');
+    assert.equal(composeWorldSitePixel32Albedo(site('Grass'), 64, 64,
+        legacy,quiet,{grass:authored.grass}), null);
 });

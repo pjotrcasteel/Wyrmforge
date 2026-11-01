@@ -143,7 +143,10 @@ jobs:
             "$evidence_dir/ar4-mountain-monastery-source32-prototype-390.png" \
             "$evidence_dir/ar4-forest-fork-quiet-road-study-320.png" \
             "$evidence_dir/ar4-mountain-pass-quiet-road-study-390.png" \
-            "$evidence_dir/ar4-mountain-monastery-quiet-road-study-390.png"; do
+            "$evidence_dir/ar4-mountain-monastery-quiet-road-study-390.png" \
+            "$evidence_dir/ar4-forest-fork-world-source-320.png" \
+            "$evidence_dir/ar4-mountain-pass-world-source-390.png" \
+            "$evidence_dir/ar4-mountain-monastery-world-source-390.png"; do
             if [ -s "$proof_file" ]; then
               printf 'AR4_IMAGE_BEGIN %s\n' "$(basename "$proof_file")"
               base64 -w 32768 "$proof_file"
