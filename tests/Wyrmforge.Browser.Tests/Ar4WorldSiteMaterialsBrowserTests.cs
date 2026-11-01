@@ -159,5 +159,30 @@ public sealed class Ar4WorldSiteMaterialsBrowserTests : PageTest
                 FullPage = false,
             });
         }
+
+        // AR4-B *candidate* review: separate, unapproved 32px atlas path. Keep all
+        // preceding P1i native-baseline captures unchanged for a fair A/B comparison.
+        await Page.EvaluateAsync(@"() => {
+            const url = new URL(location.href);
+            url.searchParams.set('arenaTerrain', 'source32');
+            history.replaceState(null, '', url);
+        }");
+        await Page.WaitForFunctionAsync(
+            "siteId => window.__wyrmforgeAr0Geography?.siteId === siteId && " +
+            "window.__wyrmforgeAr0Geography?.materialView === 'source32-prototype'",
+            siteId, new() { Timeout = 45000 });
+        Assert.AreEqual(seed, await Page.EvaluateAsync<int>(
+            "() => window.__wyrmforgeAr0Geography.seed"));
+        Assert.AreEqual(obstacles, await Page.EvaluateAsync<int>(
+            "() => window.__wyrmforgeAr0Geography.obstacleCount"));
+        Assert.IsTrue(await Page.EvaluateAsync<bool>(
+            "() => window.__wyrmforgeAr0Geography.sourceCoverage?.prototypeOnly === true && " +
+            "window.__wyrmforgeAr0Geography.sourceCoverage?.repeatedTiles === true"));
+        Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
+        await Page.ScreenshotAsync(new()
+        {
+            Path = Path.Combine(output, $"ar4-{kind}-source32-prototype-{width}.png"),
+            FullPage = false,
+        });
     }
 }
