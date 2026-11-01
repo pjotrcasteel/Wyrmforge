@@ -12,10 +12,14 @@ public sealed partial class RunSimulation
     private readonly EncounterDirector encounterDirector = new();
     private ArenaEnvironmentState? arenaEnvironment;
     private bool worldSiteGeographyEnabled;
+    private bool legacyArenaPreview;
     private string? walkedExitNodeId;
 
     /// <summary>Opt in to the AR1 physical terrain preview for this run; normal Hunts keep their approved fallback.</summary>
     public void EnableWorldSiteGeography() => worldSiteGeographyEnabled = true;
+
+    /// <summary>Keep explicitly requested historical visual review modes independent of the default greybox Hunt.</summary>
+    public void EnableLegacyArenaPreview() => legacyArenaPreview = true;
 
     /// <summary>
     /// Displays an authentic generated Elder-route mountain monastery in a geography-review Hunt.
@@ -29,7 +33,7 @@ public sealed partial class RunSimulation
         if (monastery.GenerationProfile is not
             { Landform: WorldSiteLandform.Mountain, Landmark: WorldSiteLandmark.Monastery }) return false;
         arenaEnvironment = ArenaEnvironmentState.Create(mapState.Seed, monastery, worldFirstGeography: true,
-            claimedDiscoveries: collectedSiteDiscoveryIds, greybox: true);
+            claimedDiscoveries: collectedSiteDiscoveryIds, greybox: !legacyArenaPreview && !worldSiteGeographyEnabled);
         playerPositionInitialized = false;
         return true;
     }
@@ -82,7 +86,7 @@ public sealed partial class RunSimulation
         materialCargoState.BeginTrail();
         playerPositionInitialized = false;
         arenaEnvironment = ArenaEnvironmentState.Create(mapState.Seed, node, worldFirstGeography: worldSiteGeographyEnabled,
-            claimedDiscoveries: collectedSiteDiscoveryIds, greybox: true);
+            claimedDiscoveries: collectedSiteDiscoveryIds, greybox: !legacyArenaPreview && !worldSiteGeographyEnabled);
         PrepareBellWardenNode(node);
         PrepareReliquaryNode(node);
         RollNodeElite(node);
