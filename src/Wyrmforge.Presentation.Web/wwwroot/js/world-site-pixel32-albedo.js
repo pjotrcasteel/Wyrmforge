@@ -14,6 +14,82 @@ const FRAMES = Object.freeze({
     soil: Object.freeze([[67, 67], [100, 67], [133, 67]]),
 });
 
+
+// Separate AR4-B authored study atlas. The entire #429 source bank remains unmodified;
+// these are new *offline painted* frames, not gameplay-generated texture or approved art.
+export const PIXEL32_QUIET_ATLAS = Object.freeze({ width: 496, height: 67, tile: 32,
+    revision: 'ar4b-quiet-grass-road.v1.provisional' });
+const QUIET_FRAMES = Object.freeze({
+    grass: Object.freeze([[265, 1], [298, 1], [331, 1], [364, 1], [397, 1], [430, 1]]),
+    road: Object.freeze([[463, 1], [1, 34], [34, 34], [67, 34]]),
+    edge: Object.freeze({ down: [133, 1], left: [166, 1], right: [199, 1], up: [232, 1] }),
+    corner: Object.freeze({ ne: [1, 1], nw: [34, 1], se: [67, 1], sw: [100, 1] }),
+});
+
+function validQuietAtlas(atlas) {
+    return atlas?.width === PIXEL32_QUIET_ATLAS.width &&
+        atlas?.height === PIXEL32_QUIET_ATLAS.height &&
+        atlas.data?.length === atlas.width * atlas.height * 4;
+}
+
+function quietVariant(cellX, cellY, seed, count) {
+    // A deterministic cell hash avoids the alternating checkerboard of the first study.
+    let h = Math.imul(cellX ^ seed, 0x45d9f3b) ^ Math.imul(cellY + seed, 0x119de1f3);
+    h ^= h >>> 16;
+    return (h >>> 0) % count;
+}
+
+function paintQuietForestRoad(pixels, width, height, atlas, labels, cellColumns, seed) {
+    const blockSize = PIXEL32_ATLAS.cluster;
+    const cellRows = Math.ceil(height / blockSize);
+    const at = (col, row) => col >= 0 && row >= 0 && col < cellColumns && row < cellRows
+        ? labels[row * cellColumns + col] : -1;
+    for (let row = 0; row < cellRows; row++) for (let col = 0; col < cellColumns; col++) {
+        const index = at(col, row);
+        if (index !== 1 && index !== 2) continue; // Only the forest grass and ordinary road.
+        const opposite = index === 1 ? 2 : 1;
+        const x0 = col * blockSize, y0 = row * blockSize;
+        const w = Math.min(blockSize, width - x0), h = Math.min(blockSize, height - y0);
+        const baseFrames = index === 1 ? QUIET_FRAMES.grass : QUIET_FRAMES.road;
+        const variant = quietVariant(Math.floor(x0 / 32), Math.floor(y0 / 32),
+            seed, baseFrames.length);
+        let frame = baseFrames[variant], seamX = null, seamY = null;
+        const left = at(col - 1, row) === opposite;
+        const right = at(col + 1, row) === opposite;
+        const up = at(col, row - 1) === opposite;
+        const down = at(col, row + 1) === opposite;
+        const horizontal = left ? 'left' : right ? 'right' : null;
+        const vertical = up ? 'up' : down ? 'down' : null;
+        if (horizontal) seamX = horizontal === 'left' ? x0 : x0 + w;
+        if (vertical) seamY = vertical === 'up' ? y0 : y0 + h;
+        if (horizontal && vertical) {
+            // Four authored convex/concave road corner frames; preserve C# curve topology.
+            const roadWest = index === 2 ? horizontal === 'right' : horizontal === 'left';
+            const roadNorth = index === 2 ? vertical === 'down' : vertical === 'up';
+            frame = QUIET_FRAMES.corner[(roadNorth ? 'n' : 's') + (roadWest ? 'w' : 'e')];
+        } else if (horizontal) {
+            const grassLeft = index === 1 ? horizontal === 'right' : horizontal === 'left';
+            frame = QUIET_FRAMES.edge[grassLeft ? 'left' : 'right'];
+        } else if (vertical) {
+            const grassUp = index === 1 ? vertical === 'down' : vertical === 'up';
+            frame = QUIET_FRAMES.edge[grassUp ? 'up' : 'down'];
+        }
+        for (let dy = 0; dy < h; dy++) for (let dx = 0; dx < w; dx++) {
+            const x = x0 + dx, y = y0 + dy;
+            const sampleX = seamX !== null ? 16 + x - seamX : x % 32;
+            const sampleY = seamY !== null ? 16 + y - seamY : y % 32;
+            // Each edge uses its source-authored central transition pixels in site phase.
+            // No mirrored frame, RGB averaging, alpha-weight mixing or lighting lies.
+            const from = ((frame[1] + sampleY) * atlas.width + frame[0] + sampleX) * 4;
+            const to = (y * width + x) * 4;
+            pixels[to] = atlas.data[from];
+            pixels[to + 1] = atlas.data[from + 1];
+            pixels[to + 2] = atlas.data[from + 2];
+            pixels[to + 3] = 255;
+        }
+    }
+}
+
 function rgb(hex) {
     return [1, 3, 5].map(index => Number.parseInt(hex.slice(index, index + 2), 16));
 }
@@ -37,7 +113,7 @@ function validAtlas(atlas) {
  * Road uses the original soil *as a visibly provisional study* (never an approved road source).
  * Monastery paving, rock, water and ice remain their declared diagnostics until art approval.
  */
-export function composeWorldSitePixel32Albedo(geography, width, height, atlas) {
+export function composeWorldSitePixel32Albedo(geography, width, height, atlas, quietAtlas = null) {
     const preview = geography?.landscape?.elevation;
     if (!validAtlas(atlas) || !Number.isInteger(width) || !Number.isInteger(height) ||
         width <= 0 || height <= 0 || width > 2048 || height > 3072 ||
@@ -46,6 +122,7 @@ export function composeWorldSitePixel32Albedo(geography, width, height, atlas) {
         !Array.isArray(preview.samples) || preview.samples.length !== preview.columns * preview.rows)
         return null;
 
+    if (quietAtlas && !validQuietAtlas(quietAtlas)) return null;
     const monastery = geography.landscape.kind === 'mountain-monastery';
     const seed = Number.isInteger(geography.worldSeed) ? geography.worldSeed : 0;
     const sources = worldSiteSourceBindings(geography);
@@ -62,6 +139,9 @@ export function composeWorldSitePixel32Albedo(geography, width, height, atlas) {
     }
     const pixels = new Uint8ClampedArray(width * height * 4);
     const blockSize = PIXEL32_ATLAS.cluster;
+    const cellColumns = Math.ceil(width / blockSize);
+    const labels = quietAtlas && !monastery
+        ? new Uint8Array(cellColumns * Math.ceil(height / blockSize)) : null;
     for (let top = 0; top < height; top += blockSize) {
         const blockHeight = Math.min(blockSize, height - top);
         const vy = (top + blockHeight / 2) / height * (preview.rows - 1);
@@ -85,6 +165,7 @@ export function composeWorldSitePixel32Albedo(geography, width, height, atlas) {
                     (grid[bl + index] * (1 - fx) + grid[br + index] * fx) * fy;
                 if (weight > maximum) { maximum = weight; dominant = index; }
             }
+            if (labels) labels[Math.floor(top / blockSize) * cellColumns + Math.floor(left / blockSize)] = dominant;
             const material = WORLD_SITE_MATERIALS[dominant].name;
             const family = material === 'Road' && !monastery ? 'soil'
                 : sources[dominant].sourceApproved ? sources[dominant].sourceFamily : null;
@@ -107,6 +188,7 @@ export function composeWorldSitePixel32Albedo(geography, width, height, atlas) {
             }
         }
     }
+    if (labels) paintQuietForestRoad(pixels, width, height, quietAtlas, labels, cellColumns, seed);
     return { width, height, data: pixels, prototypeOnly: true,
-        artSource: PIXEL32_ATLAS.revision };
+        artSource: quietAtlas ? PIXEL32_QUIET_ATLAS.revision : PIXEL32_ATLAS.revision };
 }

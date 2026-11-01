@@ -184,5 +184,30 @@ public sealed class Ar4WorldSiteMaterialsBrowserTests : PageTest
             Path = Path.Combine(output, $"ar4-{kind}-source32-prototype-{width}.png"),
             FullPage = false,
         });
+
+        // Separate v1 quieter grass / authored path-interior and seam study.
+        // This has the identical C# Hunt, player, seed, obstacles and camera as
+        // the semantic, soft P1i, and original-source32 captures above.
+        await Page.EvaluateAsync(@"() => {
+            const url = new URL(location.href);
+            url.searchParams.set('arenaTerrain', 'source32b');
+            history.replaceState(null, '', url);
+        }");
+        await Page.WaitForFunctionAsync(
+            "siteId => window.__wyrmforgeAr0Geography?.siteId === siteId && " +
+            "window.__wyrmforgeAr0Geography?.materialView === 'source32-quiet-study'",
+            siteId, new() { Timeout = 45000 });
+        Assert.AreEqual(seed, await Page.EvaluateAsync<int>(
+            "() => window.__wyrmforgeAr0Geography.seed"));
+        Assert.AreEqual(obstacles, await Page.EvaluateAsync<int>(
+            "() => window.__wyrmforgeAr0Geography.obstacleCount"));
+        Assert.IsTrue(await Page.EvaluateAsync<bool>(
+            "() => window.__wyrmforgeAr0Geography.sourceCoverage?.prototypeOnly === true"));
+        Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
+        await Page.ScreenshotAsync(new()
+        {
+            Path = Path.Combine(output, $"ar4-{kind}-quiet-road-study-{width}.png"),
+            FullPage = false,
+        });
     }
 }

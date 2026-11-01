@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { PIXEL32_ATLAS, composeWorldSitePixel32Albedo } from
+import { PIXEL32_ATLAS, PIXEL32_QUIET_ATLAS, composeWorldSitePixel32Albedo } from
     '../../src/Wyrmforge.Presentation.Web/wwwroot/js/world-site-pixel32-albedo.js';
 
 const names = ['Soil', 'Grass', 'Road', 'Mud', 'Rock', 'ShallowWater', 'GlacialIce'];
@@ -116,4 +116,83 @@ test('AR4-B candidate follows only C# sample weights and keeps boundaries on 4px
     assert.equal(pixel(result, 63, 8)[0], 30);
     for (let y = 0; y < 32; y++) for (let x = 0; x < 64; x++)
         assert.ok([30, 60].includes(pixel(result, x, y)[0]), 'never color-interpolate C# materials');
+});
+
+function quietAtlas() {
+    const { width, height } = PIXEL32_QUIET_ATLAS;
+    const data = new Uint8ClampedArray(width * height * 4);
+    const manifest = JSON.parse(readFileSync(new URL(
+        '../../src/Wyrmforge.Presentation.Web/wwwroot/art/terrain/wf32/ar4b-quiet/manifest.json',
+        import.meta.url), 'utf8'));
+    const marks = new Map();
+    for (const [name, frame] of Object.entries(manifest.frames)) {
+        const mark = name.startsWith('grass.') ? 120 + Number(name.split('.')[1])
+            : name.startsWith('road.') ? 200 + Number(name.split('.')[1])
+            : name.startsWith('edge.') ? 80 + ['left','right','up','down']
+                .indexOf(name.split('-')[1])
+            : 60 + ['nw','ne','sw','se'].indexOf(name.split('-')[1]);
+        marks.set(name, mark);
+        for (let y = 0; y < 32; y++) for (let x = 0; x < 32; x++) {
+            const i = ((frame.y + y) * width + frame.x + x) * 4;
+            data[i] = mark;
+            data[i + 1] = x;
+            data[i + 2] = y;
+            data[i + 3] = 255;
+        }
+    }
+    return { width, height, data, marks };
+}
+
+test('AR4-B quiet preview owns an independently authored reproducible source atlas, leaving #429 pristine', () => {
+    const base = '../../src/Wyrmforge.Presentation.Web/wwwroot/art/terrain/wf32/ar4b-quiet/';
+    const png = readFileSync(new URL(base + 'atlas.png', import.meta.url));
+    const manifest = JSON.parse(readFileSync(new URL(base + 'manifest.json', import.meta.url), 'utf8'));
+    const gitSha = createHash('sha1').update(`blob ${png.length}\0`).update(png).digest('hex');
+    assert.equal(gitSha, '849fb1f79d78de84759675f46b586df730a3a1cd');
+    assert.equal(png.readUInt32BE(16), PIXEL32_QUIET_ATLAS.width);
+    assert.equal(png.readUInt32BE(20), PIXEL32_QUIET_ATLAS.height);
+    assert.equal(manifest.revision, PIXEL32_QUIET_ATLAS.revision);
+    assert.equal(manifest.tilePixels, 32);
+    assert.equal(manifest.approved, false);
+    assert.equal(Object.keys(manifest.frames).length, 18);
+    for (const frame of Object.values(manifest.frames)) {
+        assert.equal(frame.w, 32);
+        assert.equal(frame.h, 32);
+        assert.ok(frame.x + 32 <= PIXEL32_QUIET_ATLAS.width);
+        assert.ok(frame.y + 32 <= PIXEL32_QUIET_ATLAS.height);
+    }
+});
+
+test('AR4-B quiet study has distinct 32px grass/path and authored 4px transition banks without RGB blur', () => {
+    const quiet = quietAtlas();
+    const forest = composeWorldSitePixel32Albedo(site('Grass'), 96, 64, atlas(), quiet);
+    assert.equal(forest.artSource, PIXEL32_QUIET_ATLAS.revision);
+    assert.ok(pixel(forest, 12, 12)[0] >= 120 && pixel(forest, 12, 12)[0] <= 125);
+    const road = composeWorldSitePixel32Albedo(site('Road'), 96, 64, atlas(), quiet);
+    assert.ok(pixel(road, 12, 12)[0] >= 200 && pixel(road, 12, 12)[0] <= 203);
+
+    const mixed = site('Grass');
+    mixed.landscape.elevation.samples[1] = sample('Road');
+    mixed.landscape.elevation.samples[3] = sample('Road');
+    const crossing = composeWorldSitePixel32Albedo(mixed, 64, 32, atlas(), quiet);
+    assert.equal(pixel(crossing, 30, 10)[0], quiet.marks.get('edge.grass-left'));
+    assert.equal(pixel(crossing, 33, 10)[0], quiet.marks.get('edge.grass-left'));
+    assert.deepEqual(pixel(crossing, 30, 10).slice(1), [14, 10, 255]);
+    assert.equal(pixel(crossing, 24, 10)[0] >= 120, true, 'interior remains authored grass');
+    assert.equal(pixel(crossing, 40, 10)[0] >= 200, true, 'interior remains authored road');
+});
+
+test('AR4-B quiet study never changes C# monastery paving or draws without its source', () => {
+    const source = atlas(), quiet = quietAtlas();
+    assert.equal(composeWorldSitePixel32Albedo(site('Road', 'mountain-monastery'),
+        8, 8, source, quiet).artSource, PIXEL32_QUIET_ATLAS.revision);
+    assert.deepEqual(pixel(composeWorldSitePixel32Albedo(site('Road', 'mountain-monastery'),
+        8, 8, source, quiet), 0, 0), [158, 139, 105, 255]);
+    assert.equal(composeWorldSitePixel32Albedo(site('Grass'), 32, 32,
+        source, { ...quiet, width: 495 }), null);
+    const a = composeWorldSitePixel32Albedo(site('Grass'), 64, 64, source, quiet);
+    const b = composeWorldSitePixel32Albedo(site('Grass'), 64, 64, source, quiet);
+    assert.deepEqual(a.data, b.data);
+    assert.equal(composeWorldSitePixel32Albedo(site('Grass'), 32, 32,
+        source).artSource, PIXEL32_ATLAS.revision, 'original source32 mode unchanged');
 });

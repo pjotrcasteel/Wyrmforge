@@ -2,7 +2,7 @@
 // It consumes C# AR3 preview weights and offline WF32 source pixels; no terrain, shader or shadow generation.
 import { WORLD_SITE_MATERIALS, normalizeWorldSiteMaterialWeights,
     worldSiteMaterialCacheKey, worldSiteSourceBindings } from './world-site-material-binding.js';
-import { PIXEL32_ATLAS, composeWorldSitePixel32Albedo } from './world-site-pixel32-albedo.js';
+import { PIXEL32_ATLAS, PIXEL32_QUIET_ATLAS, composeWorldSitePixel32Albedo } from './world-site-pixel32-albedo.js';
 
 const SOURCE_REVISION = 'wf32-p1i-soft.seed1387.1024x1568.v1';
 const SOURCE_BANDS = Object.freeze([
@@ -17,18 +17,26 @@ let sourceState = 'idle';
 let decodedSources = null;
 let pixel32State = 'idle';
 let decodedPixel32 = null;
+let quietPixelState = 'idle';
+let decodedQuietPixel = null;
 
 function rgb(hex) {
     return [1, 3, 5].map(offset => Number.parseInt(hex.slice(offset, offset + 2), 16));
 }
 
 export function worldSiteMaterialModeEnabled() {
-    return ['materials', 'source32'].includes(
+    return ['materials', 'source32', 'source32b'].includes(
         new URLSearchParams(globalThis.location?.search ?? '').get('arenaTerrain'));
 }
 
 export function worldSitePixel32ModeEnabled() {
-    return new URLSearchParams(globalThis.location?.search ?? '').get('arenaTerrain') === 'source32';
+    return ['source32', 'source32b'].includes(
+        new URLSearchParams(globalThis.location?.search ?? '').get('arenaTerrain'));
+}
+
+/** The quiet-grass/road study is opt-in and independent of both P1i and original #429 v2. */
+export function worldSiteQuietPixelModeEnabled() {
+    return new URLSearchParams(globalThis.location?.search ?? '').get('arenaTerrain') === 'source32b';
 }
 
 /** The exact #429 v2 atlas is reviewed separately; it is not an approved world-source bank. */
@@ -55,6 +63,30 @@ function requestPixel32Atlas() {
     };
     image.onerror = () => { pixel32State = 'unavailable'; };
     image.src = new URL('../art/terrain/wf32/prototype32/atlas.png', import.meta.url).href;
+}
+
+/** Extra source-authored offline frames for the quiet-grass / road seam experiment. */
+function requestQuietPixelAtlas() {
+    if (quietPixelState !== 'idle' || typeof document === 'undefined' || typeof Image === 'undefined') return;
+    quietPixelState = 'loading';
+    const image = new Image();
+    image.onload = () => {
+        if (image.naturalWidth !== PIXEL32_QUIET_ATLAS.width ||
+            image.naturalHeight !== PIXEL32_QUIET_ATLAS.height) {
+            quietPixelState = 'unavailable';
+            return;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = image.naturalWidth;
+        canvas.height = image.naturalHeight;
+        const context = canvas.getContext('2d', { willReadFrequently: true });
+        if (!context) { quietPixelState = 'unavailable'; return; }
+        context.drawImage(image, 0, 0);
+        decodedQuietPixel = context.getImageData(0, 0, canvas.width, canvas.height);
+        quietPixelState = 'ready';
+    };
+    image.onerror = () => { quietPixelState = 'unavailable'; };
+    image.src = new URL('../art/terrain/wf32/ar4b-quiet/atlas.png', import.meta.url).href;
 }
 
 /** Reassemble contiguous offline-authored world windows, preserving their absolute 32px source phase. */
@@ -185,7 +217,8 @@ export function composeWorldSiteNeutralAlbedo(geography, width, height, sources)
 /** The browser-review diagnostics report actual decoded source coverage, never implied complete art. */
 export function worldSiteNeutralSourceCoverage(width, height) {
     if (worldSitePixel32ModeEnabled()) {
-        if (pixel32State !== 'ready' || !decodedPixel32 || !(width > 0 && height > 0)) return null;
+        if (pixel32State !== 'ready' || !decodedPixel32 || !(width > 0 && height > 0) ||
+            (worldSiteQuietPixelModeEnabled() && (quietPixelState !== 'ready' || !decodedQuietPixel))) return null;
         return Object.freeze({ complete: true, width, height, fraction: 1,
             prototypeOnly: true, repeatedTiles: true });
     }
@@ -204,18 +237,22 @@ export function worldSiteNeutralSourceCoverage(width, height) {
 export function drawWorldSiteNeutralAlbedo(ctx, geography, width, height) {
     if (!worldSiteMaterialModeEnabled() || typeof document === 'undefined') return false;
     const prototype = worldSitePixel32ModeEnabled();
+    const quiet = worldSiteQuietPixelModeEnabled();
     if (prototype) requestPixel32Atlas();
+    if (quiet) requestQuietPixelAtlas();
     else requestSources();
+    if (quiet && (quietPixelState !== 'ready' || !decodedQuietPixel)) return false;
     if (prototype ? pixel32State !== 'ready' || !decodedPixel32
         : sourceState !== 'ready' || !decodedSources) return false;
     const pixelWidth = Math.round(width), pixelHeight = Math.round(height);
     const key = worldSiteMaterialCacheKey(geography, pixelWidth, pixelHeight,
-        prototype ? PIXEL32_ATLAS.revision : SOURCE_REVISION);
+        prototype ? (quiet ? PIXEL32_QUIET_ATLAS.revision : PIXEL32_ATLAS.revision) : SOURCE_REVISION);
     if (!key) return false;
     let texture = siteImages.get(key);
     if (!texture) {
         const pixels = prototype
-            ? composeWorldSitePixel32Albedo(geography, pixelWidth, pixelHeight, decodedPixel32)
+            ? composeWorldSitePixel32Albedo(geography, pixelWidth, pixelHeight, decodedPixel32,
+                quiet ? decodedQuietPixel : null)
             : composeWorldSiteNeutralAlbedo(geography, pixelWidth, pixelHeight, decodedSources);
         if (!pixels) return false;
         texture = document.createElement('canvas');
