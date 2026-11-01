@@ -52,9 +52,9 @@ public sealed class GreyboxHuntBrowserTests : PageTest
                 && state?.enemies?.length > 0;
         }", null, new() { Timeout = 45000 });
 
-        // Snapshot and Canvas render on adjacent asynchronous frames. The grid
-        // contract is stable, but a cold first frame can still be recovering
-        // from an atlas decode. Wait for a healthy authoritative frame.
+        // The grey C# receiver is painted by the same shared GPU LightingEngine
+        // that lights ordinary actors and projects C# shadows. A flat bypass
+        // or a second renderer must not satisfy this real-Hunt check.
         await Page.WaitForFunctionAsync(@"async () => {
             const module = await import('/js/arena-performance.js');
             const state = module.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
@@ -62,32 +62,30 @@ public sealed class GreyboxHuntBrowserTests : PageTest
             return grid?.cellSizeMeters === 1 && grid?.pixelsPerFace === 32
                 && grid?.microcellsPerAxis === 8 && grid?.groundBaseMeters === 0
                 && grid?.groundTopMeters === 1 && state?.wetForestGround == null
+                && state?.greyboxLighting === 'shared-gpu'
+                && state?.gpuWorld?.quality === 'mobile' && state.gpuWorld?.objects > 2
+                && state.gpuWorld?.lights?.some(light => light.id === 'hunter:night-visibility')
                 && !state?.renderingFailed;
-        }", null, new() { Timeout = 20000 });
+        }", null, new() { Timeout = 45000 });
 
-        // Most world pixels must be the exact neutral floor, even with the hunter,
-        // enemies, touch controls and exit guidance still rendered over it.
-        var greyFractionScript = @"() => {
+        // The source color stays untextured #808080, but lighting MUST change
+        // its pixels. Require a distributed lit floor, not merely a bright VFX pixel
+        // or a technically initialized GPU with a black output framebuffer.
+        await Page.WaitForFunctionAsync(@"() => {
             const canvas = document.querySelector('canvas.game-canvas');
-            const context = canvas.getContext('2d');
-            const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
-            let matched = 0, total = 0;
-            for (let y = 8; y < pixels.height; y += 16) {
-                for (let x = 8; x < pixels.width; x += 16) {
-                    const i = (y * pixels.width + x) * 4;
-                    total++;
-                    if (pixels.data[i] === 128 && pixels.data[i+1] === 128 &&
-                        pixels.data[i+2] === 128 && pixels.data[i+3] === 255) matched++;
-                }
+            if (!canvas?.width || !canvas?.height) return false;
+            const x = Math.floor(canvas.width * .18), y = Math.floor(canvas.height * .25);
+            const w = Math.floor(canvas.width * .64), h = Math.floor(canvas.height * .5);
+            const pixels = canvas.getContext('2d').getImageData(x, y, w, h).data;
+            let readable = 0, totalBrightness = 0;
+            for (let i = 0; i < pixels.length; i += 4) {
+                const brightness = pixels[i] + pixels[i + 1] + pixels[i + 2];
+                totalBrightness += brightness;
+                if (brightness >= 30) readable++;
             }
-            return total > 0 ? matched / total : 0;
-        }";
-        // The C# snapshot may arrive before the first Canvas paint on cold mobile startup.
-        // Wait for an ACTUAL grey frame; never silently accept a black/transparent frame.
-        await Page.WaitForFunctionAsync($"() => ({greyFractionScript})() > 0.35",
-            null, new() { Timeout = 15000 });
-        var greyFraction = await Page.EvaluateAsync<double>(greyFractionScript);
-        Assert.IsGreaterThan(0.35, greyFraction, "The actual playable Canvas should be dominated by untextured #808080 ground.");
+            const count = pixels.length / 4;
+            return readable >= count * .16 && totalBrightness >= count * 14;
+        }", null, new() { Timeout = 30000 });
         Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
         await Page.ScreenshotAsync(new() { Path = Path.Combine(output, $"default-greybox-hunt-{width}.png"), FullPage = false });
     }
