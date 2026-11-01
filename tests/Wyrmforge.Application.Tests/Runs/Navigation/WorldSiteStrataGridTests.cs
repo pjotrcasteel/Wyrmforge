@@ -89,7 +89,9 @@ public sealed class WorldSiteStrataGridTests
         Assert.AreEqual(32, WorldSiteStrataGrid.NativeSourceTilePixels);
         Assert.AreEqual(6.4d, WorldSiteStrataGrid.PreviewCellWidthMeters, 1e-9);
 
-        var top = grid.GetCell(100, 150, int.MaxValue);
+        // The sentinel query reports seeded SurfaceZ but is itself air above the site.
+        var seededTopZ = grid.GetCell(100, 150, int.MaxValue).SurfaceZ;
+        var top = grid.GetCell(100, 150, seededTopZ);
         var rock = grid.GetCell(100, 150, top.SurfaceZ - 1);
         Assert.IsFalse(top.IsEmpty);
         Assert.AreEqual(WorldSiteSurfaceId.Rock, rock.BodyMaterial!.Value);
