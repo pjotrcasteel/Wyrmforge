@@ -13,6 +13,14 @@ public sealed record ArenaBarrierRenderSnapshot(double X, double Y, double Width
 
 public sealed record ArenaPropRenderSnapshot(int Id, string Kind, double X, double Y, double Radius, double HealthFraction);
 
+/// <summary>A solid one-metre-thick XYZ ground layer, subdivided into exact four-pixel microcells.</summary>
+public sealed record ArenaGreyboxGridRenderSnapshot(
+    double CellSizeMeters, int PixelsPerFace, int MicrocellsPerAxis,
+    double GroundBaseMeters, double GroundTopMeters)
+{
+    public double MicrocellSizeMeters => CellSizeMeters / MicrocellsPerAxis;
+}
+
 public sealed record ArenaEnvironmentRenderSnapshot(
     int Seed,
     string Biome,
@@ -26,6 +34,8 @@ public sealed record ArenaEnvironmentRenderSnapshot(
 {
     public double Corruption { get; init; }
     public bool GeneratorPreview { get; init; }
+    /// <summary>Read-only flat XYZ ground contract; source-pixel density is not screen pixel size.</summary>
+    public ArenaGreyboxGridRenderSnapshot? Greybox { get; init; }
     public HuntArenaGenerator.WetForestRecipe? WetForest { get; init; }
     /// <summary>Versioned site/edge/material identity; presentation must not generate a second graph.</summary>
     public WorldSiteGeography? Geography { get; init; }
