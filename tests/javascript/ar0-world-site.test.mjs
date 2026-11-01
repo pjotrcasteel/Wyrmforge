@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { drawSemanticSiteFloor, semanticSiteModeEnabled } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js';
+import { drawSemanticSiteFloor, semanticSiteModeEnabled, matrixSiteModeEnabled } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js';
 
 function fakeCanvas() {
     const strokes = [];
@@ -48,10 +48,16 @@ test('AR0 opt-in stays inactive for the default game and activates only for the 
     try {
         globalThis.location = { search: '' };
         assert.equal(semanticSiteModeEnabled(), false);
+        assert.equal(matrixSiteModeEnabled(), false);
         globalThis.location = { search: '?arenaGpu=1&arenaTerrain=semantic' };
         assert.equal(semanticSiteModeEnabled(), true);
+        assert.equal(matrixSiteModeEnabled(), false);
+        globalThis.location = { search: '?arenaTerrain=xyzgrid' };
+        assert.equal(matrixSiteModeEnabled(), true);
+        assert.equal(semanticSiteModeEnabled(), false);
         globalThis.location = { search: '?arenaTerrain=source-art' };
         assert.equal(semanticSiteModeEnabled(), false);
+        assert.equal(matrixSiteModeEnabled(), false);
     } finally {
         if (previous === undefined) delete globalThis.location;
         else globalThis.location = previous;
@@ -64,10 +70,11 @@ test('AR0 diagnostics remain projections, not a second JS gameplay or geographic
     assert.match(application, /WorldSiteGeographyProjection/);
     assert.match(application, /WorldSeed/);
     assert.match(renderer, /drawSemanticSiteFloor\(ctx, environment\.geography, width, height, environment\.geographyActive === true\)/);
-    assert.match(renderer, /if \(!semantic\) \{[\s\S]*?const texture = terrainTexture\([\s\S]*?ctx\.drawImage\(texture\.image/,
-        'Semantic geography must not allocate or paint the legacy terrain atlas.');
+    assert.match(renderer, /if \(!semantic && !matrix\) \{[\s\S]*?const texture = terrainTexture\([\s\S]*?ctx\.drawImage\(texture\.image/,
+        'Neither semantic nor C# matrix reviews may allocate or paint the legacy terrain atlas.');
     const liveScene = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena.js', import.meta.url), 'utf8');
     assert.match(liveScene, /semanticSiteModeEnabled\(\) && snapshot\.environment\?\.geography\?\.version === 1/);
+    assert.match(liveScene, /matrixSiteModeEnabled\(\) && snapshot\.environment\?\.strata/);
     assert.match(liveScene, /drawGothicNight\(ctx, gothicNightPlan\(/,
         'Normal Hunts must retain the original night lighting engine.');
     assert.doesNotMatch(application, /#[0-9a-fA-F]{6}/, 'C# material IDs must not carry presentation colors');

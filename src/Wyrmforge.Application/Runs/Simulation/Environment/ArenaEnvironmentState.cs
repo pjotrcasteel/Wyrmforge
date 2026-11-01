@@ -25,6 +25,7 @@ public sealed class ArenaEnvironmentState
     private readonly bool worldFirstGeography;
     private readonly HuntArenaGenerator.WetForestRecipe? wetForest;
     private WorldSiteGeography? geography;
+    private WorldSiteStrataRenderSnapshot? strataReview;
     private EncounterPhase phase = EncounterPhase.Pressure;
 
     /// <summary>Read-only C# fixture geometry for the optional shared G5 light projection.</summary>
@@ -180,6 +181,10 @@ public sealed class ArenaEnvironmentState
             {
                 Elevation = WorldSiteElevationField.CreatePreview(geography),
             } };
+        // Bake once per site, not per render frame. The C# site and GetCell(x,y,z)
+        // retain authority; this readonly row-major snapshot is visual evidence only.
+        if (worldFirstGeography && geography?.Landscape is not null)
+            strataReview ??= WorldSiteStrataRenderSnapshot.FromGrid(new WorldSiteStrataGrid(geography));
 
         return new(seed, biome, element, stage, landmark,
         supplies.Where(supply => !supply.Collected)
@@ -195,6 +200,7 @@ public sealed class ArenaEnvironmentState
         // The normal Hunt needs AR0 site identity and port topology, not dozens of
         // inactive geometry vertices serialized on every mobile render frame.
         Geography = worldFirstGeography ? geography : geography is null ? null : geography with { Landscape = null },
+        Strata = worldFirstGeography ? strataReview : null,
         GeographyActive = worldFirstGeography,
         Props = destructibles.Where(prop => prop.Health > 0)
             .Select(prop => new ArenaPropRenderSnapshot(prop.Spec.Id, prop.Spec.Kind, prop.Spec.X, prop.Spec.Y, prop.Spec.Radius,

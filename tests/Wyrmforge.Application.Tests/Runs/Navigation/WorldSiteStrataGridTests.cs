@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Application.Runs.Navigation;
+using Wyrmforge.Application.Runs.Simulation.Snapshots;
 
 namespace Wyrmforge.Application.Tests.Runs.Navigation;
 
@@ -25,6 +26,33 @@ public sealed class WorldSiteStrataGridTests
             GenerationProfile = new WorldSiteGenerationProfile(WorldSiteLandform.Wetland, WorldSiteLandmark.None),
             Landscape = new WorldSiteLandscapeRecipe("forest-fork", []),
         };
+
+    [TestMethod]
+    public void Xyz0_ReadonlyRenderMatrixContainsExactlyTheAuthoritativeTopCells()
+    {
+        var grid = new WorldSiteStrataGrid(Forest(1224));
+        var rendered = WorldSiteStrataRenderSnapshot.FromGrid(grid);
+        Assert.AreEqual(grid.SiteId, rendered.SiteId);
+        Assert.AreEqual(grid.WorldSeed, rendered.WorldSeed);
+        Assert.AreEqual(32, rendered.TilePixels);
+        Assert.AreEqual(30, rendered.Columns);
+        Assert.AreEqual(49, rendered.Rows);
+        Assert.AreEqual(grid.Columns * grid.Rows, rendered.SurfaceMaterialIds.Length);
+        Assert.AreEqual(grid.Columns * grid.Rows, rendered.BodyMaterialIds.Length);
+        Assert.AreEqual(grid.Columns * grid.Rows, rendered.SurfaceZ.Length);
+
+        foreach (var (x, y) in new[] { (0, 0), (14, 24), (29, 48) })
+        {
+            var index = y * grid.Columns + x;
+            var top = grid.GetCell(x, y, rendered.SurfaceZ[index]);
+            Assert.AreEqual((int)top.SurfaceFinish!.Value, rendered.SurfaceMaterialIds[index]);
+            Assert.AreEqual(top.MaterialId, rendered.BodyMaterialIds[index]);
+            Assert.AreEqual(top.SurfaceZ, rendered.SurfaceZ[index]);
+            Assert.AreEqual(WorldSiteSurfaceId.Rock,
+                grid.GetCell(x, y, rendered.SurfaceZ[index] - 1).BodyMaterial,
+                "A drawn top face must retain the C#-owned stone layer underneath.");
+        }
+    }
 
     [TestMethod]
     public void Xyz0_Native32PxGridHasIndependentPhysicalAndVerticalUnits()

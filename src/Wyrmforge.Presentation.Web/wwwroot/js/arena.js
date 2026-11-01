@@ -6,7 +6,7 @@ import { preloadFireballV5 } from './arena-fireball-v5.js';
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
 import { attachArenaInput, getArenaMovement, getArenaAim, isArenaStickAim, getArenaPropFocus } from './arena-input.js';
 import { resolveTargetIndicator, presentTargetSigil, drawTargetIndicator, preloadTargetSigilArt, targetSelectionLightEmitter, targetSelectionCanvasLight, actorLightsWithoutSigilOverlay } from './arena-target-indicator.js?v=20261028-feet-centered-v3';
-import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, drawArenaCloisterElevation, semanticSiteModeEnabled } from './arena-environment.js?v=20261031-ar1-highlands-v1';
+import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, drawArenaCloisterElevation, semanticSiteModeEnabled, matrixSiteModeEnabled } from './arena-environment.js?v=20261101-xyz0-inset-v1';
 import { drawAr1GeographyReview } from './arena-ar1-geography-review.js?v=20261031-ar1-site-detail-v1';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
@@ -364,7 +364,8 @@ function draw(state, snapshot, width, height) {
         ctx.fillRect(0, 0, worldWidth, worldHeight);
         drawGrid(ctx, worldWidth, worldHeight);
     }
-    if (snapshot.hunt && !state.g4FlatGround && !gpu) drawHuntArena(ctx, snapshot.hunt, worldWidth, worldHeight);
+    if (snapshot.hunt && !state.g4FlatGround && !gpu && !matrixSiteModeEnabled())
+        drawHuntArena(ctx, snapshot.hunt, worldWidth, worldHeight);
     // World-space diffuse spell spill reaches actual masonry, terrain and the ground fog.
     if (!gpu) drawSpellLightSpill(ctx, spellLights, lightViewport, 'terrain');
     // Actual spell sources streak across nearby cloister water, not unrelated UI bloom.
@@ -513,7 +514,8 @@ function draw(state, snapshot, width, height) {
     // AR0 authoring diagnostics must expose the actual C# material classes at mobile scale.
     // Skip only the PRESENTATION night veil for the explicit semantic debug mode. No new
     // light solver, no authority changes, and normal Hunts retain exactly the same night.
-    if (!gpu && !(semanticSiteModeEnabled() && snapshot.environment?.geography?.version === 1)) {
+    if (!gpu && !(semanticSiteModeEnabled() && snapshot.environment?.geography?.version === 1) &&
+        !(matrixSiteModeEnabled() && snapshot.environment?.strata && snapshot.environment?.geographyActive)) {
         const realFires = createWetForestFirelightPlan(snapshot.environment, worldWidth, worldHeight);
         const nightSources = gothicNightLightSources(snapshot, spellLights, worldWidth, worldHeight, realFires);
         drawGothicNight(ctx, gothicNightPlan(snapshot.player, nightSources, lightViewport), state.nightMask);

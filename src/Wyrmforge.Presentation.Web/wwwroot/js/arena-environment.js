@@ -6,6 +6,7 @@ import { drawCloisterWall, drawCloisterMist, drawCloisterReflections, drawCloist
 import { artReady, artGeneration, artTilePattern, drawArtFrame } from './art-atlas.js';
 import { createTerritoryWallLayers, drawTerritoryWall, drawOpenedGateRubble } from './arena-territory-walls.js';
 import { liveWetForestArtworkGeneration } from './arena-live-wet-forest-materials.js';
+import { drawWorldSiteStrataGrid } from './world-site-strata-grid.js';
 
 // The world is projected from canonical C# terrain state. Drawing never changes simulation outcomes.
 const textures = new Map();
@@ -499,6 +500,10 @@ export function semanticSiteModeEnabled() {
     return new URLSearchParams(globalThis.location?.search ?? '').get('arenaTerrain') === 'semantic';
 }
 
+export function matrixSiteModeEnabled() {
+    return new URLSearchParams(globalThis.location?.search ?? '').get('arenaTerrain') === 'xyzgrid';
+}
+
 function semanticMaterialName(material) {
     return typeof material === 'number' ? siteSurfaceNames[material] : material;
 }
@@ -765,25 +770,28 @@ export function drawSemanticSiteFloor(ctx, geography, width, height, geographyAc
 export function drawArenaEnvironment(ctx, environment, width, height, elapsedSeconds = 0,
     approvedAtlas = null, lightingMode = 'canvas', flatColorsOnly = false) {
     if (!environment) return false;
-    const semantic = semanticSiteModeEnabled() && drawSemanticSiteFloor(ctx, environment.geography, width, height, environment.geographyActive === true);
+    const matrix = matrixSiteModeEnabled() && environment.geographyActive === true &&
+        drawWorldSiteStrataGrid(ctx, environment.strata, width, height);
+    const semantic = !matrix && semanticSiteModeEnabled() &&
+        drawSemanticSiteFloor(ctx, environment.geography, width, height, environment.geographyActive === true);
     // GPU receivers sample source albedo, not already painted directional shadows.
     // Use one terrain mode for the floor, reflections and elevations to avoid
     // allocating a second world-sized atlas on a portrait device.
     let cloister = null;
-    if (!semantic) {
+    if (!semantic && !matrix) {
         const texture = terrainTexture(environment, width, height, approvedAtlas, flatColorsOnly, lightingMode === 'gpu');
         ctx.drawImage(texture.image, 0, 0, width, height);
         cloister = texture.cloister;
     }
     // On the AR1 run-wide geometry preview, painted and semantic palettes display
     // the same C# colliders. The default Hunt never activates these new obstacles.
-    if (!semantic && environment.geographyActive) {
+    if (!semantic && !matrix && environment.geographyActive) {
         drawWorldSiteTopography(ctx, environment.geography, width, height);
         drawWorldSitePaths(ctx, environment.geography?.landscape?.localPaths, width, height);
         drawWorldSiteLandscape(ctx, environment.geography, width, height);
         drawWorldSiteDiscoveries(ctx, environment.geography, width, height);
     }
-    if (semantic) {
+    if (semantic || matrix) {
         globalThis.__wyrmforgeAr0Geography = {
             siteId: environment.geography.siteId,
             regionId: environment.geography.regionId,
@@ -808,16 +816,27 @@ export function drawArenaEnvironment(ctx, environment, width, height, elapsedSec
             monasteryStructureCount: environment.geography.landscape?.obstacles?.filter(
                 obstacle => obstacle.kind?.startsWith('monastery-')).length ?? 0,
             geographyActive: environment.geographyActive === true,
+            matrix: matrix ? {
+                columns: environment.strata.columns,
+                rows: environment.strata.rows,
+                tilePixels: environment.strata.tilePixels,
+                centerMaterialId: environment.strata.surfaceMaterialIds[
+                    Math.floor(environment.strata.rows / 2) * environment.strata.columns +
+                    Math.floor(environment.strata.columns / 2)],
+                centerZ: environment.strata.surfaceZ[
+                    Math.floor(environment.strata.rows / 2) * environment.strata.columns +
+                    Math.floor(environment.strata.columns / 2)],
+            } : null,
         };
     }
     // Render low-angle shadows from CURRENT physical props, never frozen floor art:
     // destroyed trees and ruins lose their shadows in the same C# simulation frame.
-    if (!semantic && lightingMode !== 'gpu' && environment.habitat === 'WetForest' && environment.wetForest) {
+    if (!semantic && !matrix && lightingMode !== 'gpu' && environment.habitat === 'WetForest' && environment.wetForest) {
         drawWetForestCastShadows(ctx, environment.seed, environment.props ?? [], width, height);
         drawWetForestFirelight(ctx, environment, width, height, elapsedSeconds);
     }
     // With the atlas loaded, closed territory walls are depth-sorted layers (getArenaCloisterElevations).
-    const spriteWalls = !semantic && !cloister && artReady();
+    const spriteWalls = !semantic && !matrix && !cloister && artReady();
     for (const barrier of environment.barriers ?? []) {
         if (spriteWalls) {
             if (barrier.open && barrier.kind === 'gate') drawOpenedGateRubble(ctx, barrier, width, height);
@@ -827,7 +846,7 @@ export function drawArenaEnvironment(ctx, environment, width, height, elapsedSec
             drawTerritoryBarrier(ctx, barrier, environment.element, width, height, elapsedSeconds);
     }
     for (const supply of environment.supplies ?? []) drawSupply(ctx, supply, width, height, elapsedSeconds);
-    if (!semantic && !flatColorsOnly) {
+    if (!semantic && !matrix && !flatColorsOnly) {
         drawTerritoryMotes(ctx, environment, width, height, elapsedSeconds);
         drawCloisterMist(ctx, cloister, elapsedSeconds);
     }
