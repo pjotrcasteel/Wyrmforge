@@ -64,7 +64,7 @@ public sealed class GreyboxHuntBrowserTests : PageTest
 
         // Most world pixels must be the exact neutral floor, even with the hunter,
         // enemies, touch controls and exit guidance still rendered over it.
-        var greyFraction = await Page.EvaluateAsync<double>(@"() => {
+        var greyFractionScript = @"() => {
             const canvas = document.querySelector('canvas.game-canvas');
             const context = canvas.getContext('2d');
             const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
@@ -78,7 +78,12 @@ public sealed class GreyboxHuntBrowserTests : PageTest
                 }
             }
             return total > 0 ? matched / total : 0;
-        }");
+        }";
+        // The C# snapshot may arrive before the first Canvas paint on cold mobile startup.
+        // Wait for an ACTUAL grey frame; never silently accept a black/transparent frame.
+        await Page.WaitForFunctionAsync($"() => ({greyFractionScript})() > 0.35",
+            null, new() { Timeout = 15000 });
+        var greyFraction = await Page.EvaluateAsync<double>(greyFractionScript);
         Assert.IsGreaterThan(0.35, greyFraction, "The actual playable Canvas should be dominated by untextured #808080 ground.");
         Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
         await Page.ScreenshotAsync(new() { Path = Path.Combine(output, $"default-greybox-hunt-{width}.png"), FullPage = false });
