@@ -14,8 +14,8 @@
 **WF32 is the existing terrain/tile/static-art workstream, not a second Arena Generator, physics engine or renderer.** AR3's owner-approved C# height/grade and semantic-material foundation is now merged ([#458](https://github.com/pjotrcasteel/Wyrmforge/pull/458)). Start AR4-A with the existing authored ground materials, wet/muddy transitions, stones and source-approved 12 grass/rock variants from draft [WF32 #429](https://github.com/pjotrcasteel/Wyrmforge/pull/429). Use game-world size and consistent authored pixel density against the actual mage/Ashling/Hollowed gameplay camera, including the owner's current request for the Hollowed's approximate **twice-Ashling silhouette scale** as a review constraint, not a completed scale acceptance. Grass should blend organically rather than read as bulky thorns. Avoid mirrored/blurred/stretched stamps and giant close-up texture objects.
 
 - **World and geometry authority:** the C# Arena Generator and AR1/AR3 own site identity, real monastery architecture footprints, walkability, cliff barriers, low passes, continuous elevation/slope and semantic ground/material IDs. WF32 supplies art and authored visual depth/normal/roughness maps **to consume that geometry**, not to replace it with fake height, paint a passable cliff or force Chart-node road forks.
-- **Visual handoff:** **AR4-A (unblocked)** binds AR3 authoritative C# material IDs/weights and world coordinates to approved WF32 albedo through the *existing* Hunt presentation adapter in an opt-in neutral view; preserve solid-color A/B. **AR4-B** obtains genuine 320/390px in-Hunt pixel-art review and owner material approval. **AR4-C (G4/G5-dependent)** registers matching normal/roughness/geometry/occluders through the one existing G renderer and proves real cast shadows. AR5 places correctly scaled rooted grass/rocks and site structures only after the applicable AR4 art approval. Source height/alpha alone cannot cast physical cliff shadows.
-- **Progress and visual gate:** AR3 geographic approval **does not** approve AR4 art, unreviewed H3 seed/wear extremes, actor-scale Hollowed visuals, G shadows or the merge of #429. Preserve approved P1i material blending and P1j grass/rock source variants, inspect true-scale neutral and flat-color live views now, and defer the *lit* sign-off until G4/G5 provides correct 2.5D shadows and device performance. No second JS terrain generator, CPU per-frame texture bake, fake pre-lit shadows, full-bright bypass or incompatible material renderer. [AR4-A execution handover](../handover/2026-10-31-ar4a-wf32-terrain-material-handoff.md).
+- **Visual handoff:** **AR4-A (unblocked)** binds AR3 authoritative C# material IDs/weights and world coordinates to approved WF32 albedo through the *existing* Hunt presentation adapter in an opt-in neutral view; preserve solid-color A/B. **AR4-B** obtains genuine 320/390px in-Hunt pixel-art review and owner material approval. **AR4-C (after merged G5, pending owner AR4-B approval)** registers matching normal/roughness/geometry/occluders through the one existing G renderer and proves real cast shadows. AR5 places correctly scaled rooted grass/rocks and site structures only after the applicable AR4 art approval. Source height/alpha alone cannot cast physical cliff shadows.
+- **Progress and visual gate:** AR3 geographic approval **does not** approve AR4 art, unreviewed H3 seed/wear extremes, actor-scale Hollowed visuals, G shadows or the merge of #429. Preserve approved P1i material blending and P1j grass/rock source variants, inspect true-scale neutral and flat-color live views now, and defer the *lit* sign-off until the shared G acceptance path proves complete 2.5D shadows and device performance. No second JS terrain generator, CPU per-frame texture bake, fake pre-lit shadows, full-bright bypass or incompatible material renderer. [AR4-A execution handover](../handover/2026-10-31-ar4a-wf32-terrain-material-handoff.md).
 
 ## Present-day approved identity (20 October 2026)
 
@@ -46,7 +46,7 @@
 
 **All arenas and Hunts take place at night.** The mood is Gothic high contrast: shadows should visually approach **true black** and fire is the dominant warm illumination, not broad daylight or a generic orange screen wash. Keep an intentionally small, neutral player-readability halo and render enemy attack warnings above the darkness; a black environment is **not** permission for invisible projectiles, unreadable enemies or inaccessible play on mobile.
 
-- In the **target renderer**, one shared world-space material/lighting/depth pass determines the visibility of approved ground, physical scenery, enemies, the **eventual replacement mage**, Wyrms and VFX together. Ground source painting stays preserved, but its albedo must be relightable; a global Canvas darkness mask is only historical prototype behavior. **Every Hunt/arena is night by default; Town retains its separately approved Day/Auto/Night environment profiles through the SAME engine.**
+- In the **target renderer**, one shared world-space material/lighting/depth pass determines the visibility of approved ground, physical scenery, enemies, the **eventual replacement mage**, Wyrms and VFX together. Ground source painting stays preserved, but its albedo must be relightable; a global Canvas darkness mask is only historical prototype behavior. **Every Hunt/arena is night by default; the painted Town retains its separately approved Day/Auto/Night presentation and is not currently migrated to the GPU engine.**
 - Only **explicitly registered world light** reveals otherwise unlit surfaces: controlled sky/moon ambient; actual C# cast/projectile/impact, burning trees and Wyrm breath; world/town fixtures and other colored elemental spells. An emissive material can glow independently but must register light to illuminate neighbours. No fake permanent light sources, undeclared full-bright characters or broad permanent ambient gradients.
 - Fire has locally warm color and intensity sufficient to reveal surfaces and silhouettes, with radial falloff. Extinguishing or moving the actual source immediately changes illumination. Background and deep shadows should remain near-black; prevent blown-out highlights and expensive screen-wide glow.
 - For portrait mobile combat, prioritize legibility of mage, foe silhouettes, telegraphs, pickups and navigational cues. Do not apply opaque night veils above HUD and essential combat warnings. Use one bounded, recyclable viewport mask and a strict cap on active dynamic sources.
@@ -73,11 +73,7 @@
 
 ### One engine controls visibility in every world scene — LOCKED, 23 October 2026
 
-**Highest-level visual rule:** no in-world surface—town panorama, building,
-Hollowed, Ashling, other enemy, Wyrm, player, town NPC, tree, water, smoke,
-wall, road, prop or in-world VFX—may remain full-bright simply because
-its existing painted pixels were drawn. It must pass through the SAME
-scene material/lighting/depth renderer. A genuinely unlit object becomes
+**Highest-level visual rule for approved GPU-supported world scenes (currently Hunts, actors and relevant props):** no in-world surface—Hollowed, Ashling, other enemy, Wyrm, player, tree, water, smoke, wall, road, prop or in-world VFX—may remain full-bright simply because its painted pixels were drawn. It must pass through the SAME shared scene material/lighting/depth renderer. **The owner-approved painted 2D Town is explicitly excluded from GPU migration; its separate existing day/night paintings remain live unless a new Town cutover is authorized.** A genuinely unlit object becomes
 nearly black; nearby real sources gradually reveal it, including its
 normal-mapped form, reflected highlights and received/cast shadows.
 **Zero ambient + zero emitter + zero material emission = black world pixels**
@@ -85,17 +81,14 @@ in a mandatory diagnostic preset. This is a *continuous radiance calculation*,
 not a crude hide/show threshold. HUD, text, menus and explicit accessibility/
 combat telegraphs are non-world passes and retain readability.
 
-- **ALL scenes:** this rule applies to Town Square, future indoor areas,
-  *all* Hunts/biomes, buildings, NPCs, player and creatures. The general
+- **All approved GPU scenes:** this rule applies to all authorized Hunts/biomes, actors, scenery and future approved interiors; Town migration remains excluded by the explicit override below. The general
   \`LightEmitter\` / \`LitRenderable\` / material and shadow contracts are
   shared. A new object registers data rather than receiving new per-kind
   shader/Canvas/CSS code. An emissive surface can glow while world is
   otherwise black, but must also register an emitter to light its neighbours.
 - **Artist-intended style:** use an explicit dim night sky/moon/environment
   profile for normal Gothic Hunts, rather than secret character illumination.
-  Day/Night/Auto in Town can use different environmental light profiles
-  **in the same renderer**; the existing owner-approved settings are not
-  revoked by the all-Hunts-at-night decision. Essential combat readability
+  The current painted Town retains its original Day/Night/Auto settings and imagery; any future lighting integration needs a new explicit owner decision. The all-Hunts-at-night rule does not revoke Town settings. Essential combat readability
   is preserved by explicit UI/telegraph/accessibility layers, not universal
   full-bright enemy art. Ensure fair warning before damage from darkness.
 - **Sprite actors:** use the **existing Hollowed/Ashling rigged-sprite

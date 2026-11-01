@@ -63,7 +63,7 @@ test('the painter is restricted to the Wet Forest Lab and never writes gameplay 
     const ground = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-wet-forest-art.js', import.meta.url), 'utf8');
     const territory = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-territory-art.js', import.meta.url), 'utf8');
     const environment = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js', import.meta.url), 'utf8');
-    assert.match(territory, /if \(plan\.wetForest\) return drawWetForestGround\(ctx, plan, approvedAtlas\)/);
+    assert.match(territory, /if \(plan\.wetForest\) return drawWetForestGround\(ctx, plan, approvedAtlas, flatColorsOnly, gpuAlbedo\)/);
     assert.match(environment, /if \(plan\.story\.wetForest\) drawWetForestDressing/);
     assert.match(ground, /const CELL = 12/);
     assert.doesNotMatch(ground, /DamagePropsInRadius|RestrictMovement|Math\.random|setInterval|new Image\(/);
@@ -225,4 +225,78 @@ test('Wet Forest cobbles have subtle occasional relief instead of bold outlines'
         m.y + m.height <= size.height), 'Relief is a bounded floor-only texture');
     const source = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-wet-forest-art.js', import.meta.url), 'utf8');
     assert.doesNotMatch(source, /TryDamageProp|RestrictMovement|DamagePropsInRadius/);
+});
+
+
+test('G4 flat Wet Forest paints recipe colors without decoding tile images or building 12px mosaics', () => {
+    const source = { wetForest: recipe, width: 950, height: 1550, seed: 1204,
+        forestProps: [], corruption: 0, element: 'fire' };
+    const previousImage = globalThis.Image;
+    let materialImageRequests = 0, backgroundFills = 0, ellipses = 0, roadVertices = 0;
+    let alpha = 1;
+    const colors = [], fills = [];
+    globalThis.Image = class { set src(_url) { materialImageRequests++; } };
+    const ctx = {
+        save() {}, restore() {},
+        set globalAlpha(value) { assert.ok(value >= 0 && value <= 1); alpha = value; },
+        set fillStyle(value) { colors.push(value); },
+        fillRect(x, y, w, h) {
+            backgroundFills++;
+            assert.deepEqual([x, y, w, h], [0, 0, source.width, source.height]);
+        },
+        beginPath() {}, ellipse() { ellipses++; }, fill() { fills.push(alpha); },
+        moveTo() { roadVertices++; }, lineTo() { roadVertices++; }, closePath() {},
+    };
+    const before = structuredClone(source);
+    try {
+        assert.equal(drawWetForestGround(ctx, source, null, true), true);
+        assert.equal(materialImageRequests, 0, 'No PR340 texture decoding in the flat GPU preview');
+        assert.equal(backgroundFills, 1, 'One plain soil fill, not thousands of tiles');
+        assert.ok(ellipses >= recipe.ground.length + 1, 'C# patches and the site remain visible');
+        assert.ok(fills.slice(0, recipe.ground.length).every(value => value <= .2),
+            'Large flat-color terrain patches must be subdued floor tints, not opaque black shadow blobs.');
+        assert.equal(fills[recipe.ground.length], 1, 'The source-defined road must remain legible and solid.');
+        assert.ok(fills.at(-1) <= .35, 'The site floor must not read as a pitch-black oval shadow.');
+        assert.ok(roadVertices > 12, 'C# trail remains one connected source-defined road');
+        assert.ok(colors.includes('#484137'), 'Road must remain legible as a separate soil color');
+        assert.deepEqual(source, before, 'GPU review never mutates C# geography');
+    } finally {
+        globalThis.Image = previousImage;
+    }
+});
+
+test('G4 review defaults to neutral grey while Canvas presentation retains painted Wet Forest', async () => {
+    const { readFile } = await import('node:fs/promises');
+    const arena = await readFile(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena.js', import.meta.url), 'utf8');
+    const environment = await readFile(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js', import.meta.url), 'utf8');
+    assert.match(arena, /shouldUseG4NeutralGround\(params, params\.get\('arenaGpu'\) === '1'\)/,
+        'Neutral grey must be the default only in the isolated GPU review mode.');
+    assert.match(environment, /ctx\.fillStyle = '#969696'/,
+        'The G4 receiver must use one uniform grey albedo, not a painted ground texture.');
+    assert.match(arena, /drawArenaEnvironment\(ctx, snapshot\.environment[\s\S]*state\.g4FlatGround\)/);
+    assert.match(environment, /const tile = !flatColorsOnly && artReady\(\)/);
+    assert.match(environment, /flatColorsOnly \|\| gpuAlbedo \? 0 : liveWetForestArtworkGeneration\(\)/);
+    assert.match(environment, /drawTerritoryGround\(ctx, plan\.story, approvedAtlas, flatColorsOnly, gpuAlbedo\)/);
+});
+
+test('real GPU Hunt uses semantic relightable albedo without source-painted lighting', () => {
+    const cells = [];
+    let fillStyle;
+    const ctx = {
+        save() {}, restore() {},
+        set fillStyle(value) { fillStyle = value; },
+        set globalAlpha(_value) {},
+        fillRect(x, y, width, height) { cells.push({ x, y, width, height, fillStyle }); },
+    };
+    const plan = { wetForest: recipe, seed: 1204, width: 120, height: 180, corruption: 0 };
+    drawWetForestGround(ctx, plan, null, false, true);
+    assert.ok(cells.length > 150, 'Relightable ground retains the same seed-backed soil topology');
+    const colours = new Set(cells.map(cell => cell.fillStyle));
+    assert.ok(colours.has('#74766b'), 'Physical loam albedo must have diffuse reflectance above nearly black legacy paint');
+    assert.ok(colours.has('#8a806f'), 'Semantic road material remains readable and distinct');
+    assert.ok(!colours.has('#252c25'), 'Near-black Canvas material cannot leak into GPU albedo');
+    assert.ok(!colours.has('#071413'), 'Pre-baked canopy shadows cannot leak into GPU albedo');
+    const code = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-wet-forest-art.js', import.meta.url), 'utf8');
+    assert.match(code, /!gpuAlbedo && !approvedAtlas && drawLiveWetForestMaterialBase/);
+    assert.match(code, /!sourcePainted && !gpuAlbedo/, 'Canvas-only shading detail must not be baked into GPU albedo');
 });

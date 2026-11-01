@@ -21,13 +21,34 @@ export function createTerritoryWallLayers(environment, plan, width, height, seco
     const school = territoryRuneSchool(environment.element);
     return (environment.barriers ?? []).filter(barrier => !barrier.open && barrier.width > 0 && barrier.height > 0)
         .map(barrier => ({ kind: 'masonry', style: 'territory', depth: (barrier.y + barrier.height) * height,
-            barrier, width, height, wallStyle: style, school, seconds }));
+            barrier, width, height, physicalHeightPx: TERRITORY_WALL_RISE, wallStyle: style, school, seconds }));
 }
 
 // Each mounted rune keeps a slow deterministic failure rhythm: mostly lit, occasionally guttering.
 export function runeLit(index, seconds, seed = 0) {
     const phase = Math.sin(seconds * .9 + index * 2.39 + seed * .013) + Math.sin(seconds * 2.3 + index * 1.7) * .35;
     return phase > -.95;
+}
+
+/** The exact discrete visual state of every authored wall rune.
+ * Only rune brightness changes with time; the stone, relief and frame geometry
+ * remain stable between those transitions. Shared by painting and GPU revisions.
+ */
+export function territoryWallRuneStates(layer) {
+    const { barrier, width, height, seconds } = layer;
+    if (!barrier || barrier.open) return [];
+    const x = Math.round(barrier.x * width), y = Math.round(barrier.y * height);
+    const w = Math.round(barrier.width * width), h = Math.round(barrier.height * height);
+    if (!(w > 0 && h > 0)) return [];
+    if (barrier.kind === 'gate') return [7, 8].map(index => runeLit(index, seconds, x));
+    const count = Math.max(0, Math.floor((w - 24) / 88));
+    return Array.from({ length: count }, (_, index) => runeLit(index, seconds, x + y));
+}
+
+/** Visual revision is stable until stone, art atlas or a rune's lit/dim frame changes. */
+export function territoryWallVisualRevision(layer, artRevision = 0) {
+    return JSON.stringify(['territory-wall-v1', layer.barrier, layer.width, layer.height,
+        layer.wallStyle, layer.school, artRevision, territoryWallRuneStates(layer)]);
 }
 
 export function drawTerritoryWall(ctx, layer) {
@@ -66,18 +87,19 @@ export function drawTerritoryWall(ctx, layer) {
     ctx.restore();
 
     ctx.save();
+    const runeStates = territoryWallRuneStates(layer);
     if (barrier.kind === 'gate') {
         // A sealed crossing: iron portcullis spans the gap, flanked by its two warding runes.
         const pw = 16, inset = Math.min(18, w * .2);
         for (let tx = x + inset; tx < x + w - inset; tx += pw) drawArtFrame(ctx, 'environment', 'wall.portcullis', Math.min(tx, x + w - inset - pw), faceTop);
         [x + inset - RUNE - 1, x + w - inset + 1].forEach((runeX, i) =>
-            drawArtFrame(ctx, 'environment', `rune.${school}.${runeLit(i + 7, seconds, x) ? 'lit' : 'dim'}`, Math.round(runeX), faceTop + 1));
+            drawArtFrame(ctx, 'environment', `rune.${school}.${runeStates[i] ? 'lit' : 'dim'}`, Math.round(runeX), faceTop + 1));
     } else {
         const spacing = 88;
         const count = Math.max(0, Math.floor((w - 24) / spacing));
         const start = x + (w - (count - 1) * spacing) / 2 - RUNE / 2;
         for (let i = 0; i < count; i++)
-            drawArtFrame(ctx, 'environment', `rune.${school}.${runeLit(i, seconds, x + y) ? 'lit' : 'dim'}`, Math.round(start + i * spacing), faceTop + 1);
+            drawArtFrame(ctx, 'environment', `rune.${school}.${runeStates[i] ? 'lit' : 'dim'}`, Math.round(start + i * spacing), faceTop + 1);
     }
     ctx.restore();
     return true;

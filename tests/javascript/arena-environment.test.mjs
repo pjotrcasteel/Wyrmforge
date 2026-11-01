@@ -106,3 +106,33 @@ test('woodland tree props use atlas-backed authored tree silhouettes and world f
     assert.equal(layers[0].depth, .44 * 1550);
     assert.equal(layers[0].prop.kind, 'dead-tree');
 });
+
+
+test('G4 terrain mode reaches ground, cached elevations and reflections without undeclared bindings', () => {
+    const env = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js', import.meta.url), 'utf8');
+    const hunt = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena.js', import.meta.url), 'utf8');
+    assert.match(env, /function terrainTexture\(environment, width, height, approvedAtlas = null, flatColorsOnly = false, gpuAlbedo = false\)/);
+    assert.match(env, /function getArenaCloisterElevations\(environment, width, height, seconds = 0, approvedAtlas = null, flatColorsOnly = false, gpuAlbedo = false\)/);
+    assert.match(env, /terrainTexture\(environment, width, height, approvedAtlas, flatColorsOnly, gpuAlbedo\)/);
+    assert.match(hunt, /getArenaCloisterElevations\(snapshot\.environment, worldWidth, worldHeight, visualSeconds, null, state\.g4FlatGround, gpu\)/);
+    assert.match(hunt, /drawArenaCloisterReflections\(ctx, snapshot\.environment, worldWidth, worldHeight,[\s\S]*?state\.g4FlatGround, gpu\)/);
+});
+
+
+test('G4 flat-ground world, reflections and elevations all reuse the same terrain cache', () => {
+    const environment = readFileSync(
+        new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js', import.meta.url), 'utf8');
+    const main = environment.slice(environment.indexOf('export function drawArenaEnvironment('));
+    const reflect = environment.slice(environment.indexOf('export function drawArenaCloisterReflections('));
+    const elevations = environment.slice(environment.indexOf('export function getArenaCloisterElevations('));
+    assert.match(main, /const texture = terrainTexture\(environment, width, height, approvedAtlas, flatColorsOnly, lightingMode === 'gpu'\)/,
+        'Main G4 ground must not silently bake the painted 900px tiles when flat terrain was selected.');
+    assert.match(reflect, /terrainTexture\(environment, width, height, null, flatColorsOnly, gpuAlbedo\)/);
+    assert.match(elevations, /terrainTexture\(environment, width, height, approvedAtlas, flatColorsOnly, gpuAlbedo\)/);
+    assert.match(environment, /flatColorsOnly \? 'neutral-grey-v1' : gpuAlbedo \? 'gpu-neutral-albedo-v1' : 'painted-ground'/,
+        'Distinct cache identities preserve the optional painted A/B without cross-contamination.');
+    const vignette = environment.slice(environment.indexOf('// The painted Canvas floor retains its authored edge fog'),
+        environment.indexOf('const habitatTints'));
+    assert.match(vignette, /if \(!gpuAlbedo\) \{[\s\S]*?ctx\.createRadialGradient/,
+        'GPU albedo must not pre-bake the Canvas dark-edge vignette before real lighting.');
+});

@@ -109,3 +109,153 @@ test('presentation loop stops, resumes visibility without catch-up and disposes 
     loop.setActive(true); advance(20000); assert.equal(deltas.at(-1), 0);
     loop.dispose(); loop.setActive(true); loop.setVisible(true); assert.equal(queued.size, 0);
 });
+
+test('camera-aware light budgets prefer visible contribution without overriding C# priority', () => {
+    const distant = emitter('a-distant', { position: [10, 0, 1], range: 12, intensity: 5, castsShadow: true });
+    const explosion = emitter('z-explosion', { position: [0, 0, 1], range: 12, intensity: 5, castsShadow: true });
+    const original = snapshot([distant, explosion]);
+    const preserved = structuredClone(original);
+    const view = { minX: -5, maxX: 5, minY: -5, maxY: 5 };
+    assert.deepEqual(selectLights(original, 6, 1).map(l => l.id), ['a-distant'],
+        'Inspection views without a camera keep historical deterministic ID order');
+    assert.deepEqual(selectLights(original, 6, 1, view).map(l => l.id), ['z-explosion'],
+        'A bright centered explosion must not lose its limited mobile slot to an ID-sorted edge light');
+    const shifted = { minX: 10, maxX: 20, minY: -5, maxY: 5 };
+    assert.deepEqual(selectLights(original, 6, 1, shifted).map(l => l.id), ['a-distant']);
+    assert.deepEqual(original, preserved, 'View-based ranking may not mutate authoritative source data');
+
+    const higherPriority = snapshot([{ ...distant, priority: 2 }, explosion]);
+    assert.deepEqual(selectLights(higherPriority, 6, 1, view).map(l => l.id), ['a-distant'],
+        'Viewport ranking only breaks ties; C# source priority always wins');
+    const culled = snapshot([{ ...distant, position: [200, 0, 1], priority: 100 }, explosion]);
+    assert.deepEqual(selectLights(culled, 6, 1, view).map(l => l.id), ['z-explosion'],
+        'A high-priority source outside its influence range cannot exhaust the visible GPU budget');
+    const directional = snapshot([{ ...distant, type: 'directional', direction: [1, 0, 0] }, explosion]);
+    assert.deepEqual(selectLights(directional, 6, 1, view).map(l => l.id), ['a-distant'],
+        'Unbounded directional sources remain eligible in every camera view');
+});
+
+test('camera-aware budget validates bounds and remains stable across permutations', () => {
+    const lights = [
+        emitter('z', { position: [0, 0, 1], intensity: 4, range: 10 }),
+        emitter('a', { position: [0, 0, 1], intensity: 4, range: 10 }),
+        emitter('m', { position: [2, 0, 1], intensity: 4, range: 10 }),
+    ];
+    const view = { minX: -5, maxX: 5, minY: -5, maxY: 5 };
+    const expected = selectLights(snapshot(lights), 6, 2, view).map(l => l.id);
+    assert.deepEqual(expected, ['a', 'z'], 'Equal contribution must use deterministic ID tie breaking');
+    assert.deepEqual(selectLights(snapshot(lights.reverse()), 6, 2, view).map(l => l.id), expected);
+    assert.throws(() => selectLights(snapshot(lights), 6, 2, { ...view, minX: 7 }), RangeError);
+    assert.throws(() => selectLights(snapshot(lights), 6, 2, { ...view, maxY: NaN }), TypeError);
+});
+
+test('atlas transforms reset on full-frame transitions without redundant GPU matrix updates', async () => {
+    const { synchronizeAtlasFrame } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/engine.js');
+    const maps = [new T.Texture(), new T.Texture(), new T.Texture()];
+    const updateCounts = [0, 0, 0];
+    for (const [index, texture] of maps.entries()) {
+        const update = texture.updateMatrix.bind(texture);
+        texture.updateMatrix = () => { updateCounts[index]++; update(); };
+    }
+    const material = { map: maps[0], normalMap: maps[1], emissiveMap: maps[2] };
+    synchronizeAtlasFrame(material, null);
+    assert.deepEqual(updateCounts, [0, 0, 0]);
+    const frame = { offset: [.5, .25], repeat: [.125, .5] };
+    synchronizeAtlasFrame(material, frame);
+    assert.deepEqual(updateCounts, [1, 1, 1]);
+    for (const map of maps) {
+        assert.deepEqual(map.offset.toArray(), [.5, .25]);
+        assert.deepEqual(map.repeat.toArray(), [.125, .5]);
+    }
+    synchronizeAtlasFrame(material, frame);
+    assert.deepEqual(updateCounts, [1, 1, 1], 'Unchanged atlas UVs must not trigger matrix updates');
+    synchronizeAtlasFrame(material, undefined);
+    assert.deepEqual(updateCounts, [2, 2, 2], 'Removing atlas metadata restores the full texture');
+    for (const map of maps) {
+        assert.deepEqual(map.offset.toArray(), [0, 0]);
+        assert.deepEqual(map.repeat.toArray(), [1, 1]);
+        map.dispose();
+    }
+});
+
+
+test('G4 keeps every active shadow projection current while live device acceptance is open', async () => {
+    const { synchronizeShadowProjection } =
+        await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/engine.js');
+    for (const light of [new T.PointLight(), new T.SpotLight(), new T.DirectionalLight()]) {
+        const camera = light.shadow.camera;
+        const update = camera.updateProjectionMatrix.bind(camera);
+        let updates = 0;
+        camera.updateProjectionMatrix = () => { updates++; update(); };
+        try {
+            for (let frame = 0; frame < 120; frame++)
+                assert.equal(synchronizeShadowProjection(light, 144), true);
+            assert.equal(updates, 120,
+                'Live shadow-camera projections must not retain stale state across moving Hunt frames.');
+            assert.equal(synchronizeShadowProjection(light, 200), true,
+                'Changing authoritative light range must update shadow projection immediately.');
+            assert.equal(camera.far, 200);
+            assert.equal(updates, 121);
+        } finally {
+            light.dispose();
+        }
+    }
+});
+
+test('G4 only updates the shared orthographic projection when viewport or zoom changes', async () => {
+    const { synchronizeOrthographicProjection } =
+        await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/engine.js');
+    const camera = new T.OrthographicCamera(-5, 5, 7, -7, .1, 80);
+    const update = camera.updateProjectionMatrix.bind(camera);
+    let updates = 0;
+    camera.updateProjectionMatrix = () => { updates++; update(); };
+
+    const fixedProjection = camera.projectionMatrix.clone();
+    for (let frame = 0; frame < 120; frame++) {
+        camera.position.set(frame / 10, 0, 12);
+        assert.equal(synchronizeOrthographicProjection(camera, -5, 5, 7, -7), false);
+    }
+    assert.equal(updates, 0, 'Moving the camera must reuse an unchanged projection.');
+    assert.ok(camera.projectionMatrix.equals(fixedProjection));
+
+    assert.equal(synchronizeOrthographicProjection(camera, -5, 5, 8, -8), true,
+        'Rotating the device changes the view aspect and must refresh the projection.');
+    assert.equal(updates, 1);
+    assert.equal(camera.top, 8);
+    assert.equal(camera.bottom, -8);
+    assert.equal(synchronizeOrthographicProjection(camera, -5, 5, 8, -8), false);
+
+    assert.equal(synchronizeOrthographicProjection(camera, -4, 4, 8, -8), true,
+        'Camera zoom must update even at unchanged framebuffer dimensions.');
+    assert.equal(updates, 2);
+    assert.equal(camera.left, -4);
+    assert.equal(camera.right, 4);
+    assert.equal(synchronizeOrthographicProjection(camera, -4, 4, 8, -8), false);
+    assert.equal(updates, 2);
+});
+
+
+test('G4 reuses fog across night frames and never lights zero-light darkness', async () => {
+    const { synchronizeEnvironmentFog } =
+        await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/lighting/engine.js');
+    const scene = { fog: null };
+    const night = { ambient: .15, color: '#8c9cbb',
+        fog: { color: '#304030', near: 2, far: 20 } };
+    synchronizeEnvironmentFog(scene, night);
+    const first = scene.fog;
+    assert.ok(first?.isFog);
+    const expected = new T.Color('#304030')
+        .multiply(new T.Color('#8c9cbb')).multiplyScalar(.15);
+    assert.ok(first.color.equals(expected), 'Fog color uses environment radiance, not a bright standalone layer.');
+    assert.equal(first.near, 2);
+    synchronizeEnvironmentFog(scene, night);
+    assert.equal(scene.fog, first, 'Constant night parameters must not allocate a new Fog per animation frame.');
+    synchronizeEnvironmentFog(scene, { ...night, fog: { ...night.fog, near: 5, far: 12 } });
+    assert.equal(scene.fog, first, 'Moving boundaries only update current fog fields.');
+    assert.equal(first.near, 5);
+    assert.equal(first.far, 12);
+    synchronizeEnvironmentFog(scene, { ...night, ambient: 0 });
+    assert.equal(scene.fog, null, 'A zero-light world must never show bright fog silhouettes.');
+    synchronizeEnvironmentFog(scene, night);
+    assert.ok(scene.fog?.isFog, 'Fog can return on a subsequent lit scene.');
+});

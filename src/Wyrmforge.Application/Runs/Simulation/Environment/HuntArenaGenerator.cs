@@ -19,8 +19,16 @@ public static class HuntArenaGenerator
     // Stable, independent woodland recipe consumed by the C# simulation AND the JS floor painter.
     public sealed record TrailPoint(double X, double Y, double Width);
     public sealed record GroundPatch(string Kind, double X, double Y, double RadiusX, double RadiusY);
+    /// <summary>Authored visual fixture location, not an extra gameplay collider or light simulator.</summary>
+    public sealed record WorldLightFixture(string Id, string Kind, double X, double Y, double Height,
+        string Color = "#ffac65", double Intensity = 14, double Range = 240,
+        bool Enabled = true, long? ExpiresAtTick = null);
     public sealed record WetForestRecipe(string Site, double SiteX, double SiteY,
-        IReadOnlyList<TrailPoint> Trail, IReadOnlyList<GroundPatch> Ground);
+        IReadOnlyList<TrailPoint> Trail, IReadOnlyList<GroundPatch> Ground)
+    {
+        /// <summary>Opt-in G5 composition fixtures. C# owns their identity and placement.</summary>
+        public IReadOnlyList<WorldLightFixture> LightFixtures { get; init; } = [];
+    }
 
     public static WetForestRecipe GenerateWetForest(int seed)
     {
@@ -67,7 +75,14 @@ public static class HuntArenaGenerator
                 gladeY = Math.Clamp(gladeY + (gladeY <= siteY ? -.14 : .14), .10, .90);
             ground.Add(new GroundPatch("clearing", gladeX, gladeY, .17, .105));
         }
-        return new WetForestRecipe(site, siteX, siteY, trail, ground);
+        // A single small, unlit-by-default torch at the authored site exercises
+        // fixed-light composition against moving C# Fireballs in real Hunts.
+        // Neither its light nor its sprite is enabled in the production Canvas path.
+        return new WetForestRecipe(site, siteX, siteY, trail, ground)
+        {
+            LightFixtures = [new WorldLightFixture($"wet-forest:torch:{seed}", "torch",
+                Math.Clamp(siteX + .025, .05, .95), siteY, 28)],
+        };
     }
 
     public static IReadOnlyList<Prop> Generate(int seed, WyrmrealmHabitat habitat, int stage, bool preLair)

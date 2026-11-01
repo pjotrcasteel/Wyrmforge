@@ -3539,17 +3539,398 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".combat-vitals-spells .combat-spell-badge")).ToHaveAttributeAsync("aria-label", "Frost Shard, rank 1");
     }
 
-    private async Task EnterFirstTrailAsync()
+    [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
+    public async Task Mobile_G5Lighting01_RealWetForestComposesFixedTorchAndMovingFireball(int width, int height)
+    {
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/?arenaGpu=1&lighting01=1&gpuQuality=mobile&g4PaintedGround=1",
+            new() { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await EnterFirstTrailAsync("BEGIN FIRST HUNT");
+        await Page.EvaluateAsync("""
+            async () => {
+                const arena = await import(new URL('js/arena.js?v=20261031-lighting-01-v1', document.baseURI).href);
+                window.__g5Read = () => arena.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
+            }
+            """);
+        await Page.WaitForFunctionAsync("""
+            () => {
+                const d = window.__g5Read?.();
+                return d?.lighting01?.enabled && d.lighting01.fixedFixtures === 1 &&
+                    d.gpuWorld?.objects > 2 && !d.gpuWorld.error && !d.renderingFailed &&
+                    d.sharedLighting?.lights?.some(light =>
+                        light.id?.startsWith('wet-forest:torch:') && light.enabled &&
+                        light.castsShadow === false);
+            }
+            """, null, new() { Timeout = 30000 });
+        // This must be a live C# moving light in the actual Hunt, never a JS test source.
+        await Page.WaitForFunctionAsync("""
+            () => window.__g5Read?.()?.sharedLighting?.lights?.some(light =>
+                light.id?.startsWith('projectile:') || light.id?.startsWith('impact:FireBolt:'))
+            """, null, new() { Timeout = 30000 });
+        var proof = await Page.EvaluateAsync<JsonElement>("() => window.__g5Read()");
+        Assert.AreEqual(1, proof.GetProperty("lighting01").GetProperty("fixedFixtures").GetInt32());
+        Assert.IsFalse(proof.GetProperty("renderingFailed").GetBoolean());
+        Directory.CreateDirectory(ArtifactDirectory);
+        await Page.Locator("canvas.game-canvas").ScreenshotAsync(new()
+        {
+            Path = Path.Combine(ArtifactDirectory, $"g5-lighting01-real-wet-forest-{width}.png"),
+        });
+    }
+
+    [TestMethod]
+    [DataRow(320, 568, "mobile")]
+    [DataRow(390, 844, "mobile")]
+    [DataRow(390, 844, "balanced")]
+    public async Task Mobile_LiveHuntGpu_RendersActorsAndKeepsSimulationMoving(int width, int height, string quality)
+    {
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.GotoAsync(BaseUrl.TrimEnd('/') + $"/?arenaGpu=1&gpuQuality={quality}", new() { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        try
+        {
+            await EnterFirstTrailAsync("BEGIN FIRST HUNT");
+            await Page.EvaluateAsync(@"async () => {
+                window.__huntGpuArena = await import(new URL('js/arena.js?v=20261031-lighting-01-v1', document.baseURI).href);
+                window.__huntGpuRead = () => window.__huntGpuArena.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
+            }");
+            await Page.WaitForFunctionAsync(@"() => {
+                const d=window.__huntGpuRead();
+                return d && (d.gpuWorld?.objects>1 || d.gpuWorld?.error || d.renderingFailed);
+            }", null, new() { Timeout = 30000 });
+            var startup = await Page.EvaluateAsync<JsonElement>("() => window.__huntGpuRead()");
+            Assert.IsFalse(startup.GetProperty("renderingFailed").GetBoolean(),
+                startup.TryGetProperty("renderingError", out var renderError) ? renderError.GetString() : "Rendering failed without diagnostics");
+            Assert.AreEqual(quality, startup.GetProperty("gpuWorld").GetProperty("quality").GetString());
+            Assert.AreEqual(quality == "mobile" ? 256 : 512,
+                startup.GetProperty("gpuWorld").GetProperty("budgets").GetProperty("shadowMapSize").GetInt32());
+            Assert.IsTrue(startup.GetProperty("gpuWorld").TryGetProperty("objects", out var objects) && objects.GetInt32() > 1,
+                startup.GetProperty("gpuWorld").ToString());
+            await Page.WaitForFunctionAsync("() => !window.__huntGpuRead().paused");
+            var before = await Page.EvaluateAsync<double>("() => window.__huntGpuRead().player.x");
+            await Page.Locator("canvas.game-canvas").FocusAsync();
+            await Page.Keyboard.DownAsync("ArrowRight");
+            try
+            {
+                await Page.WaitForFunctionAsync("x => window.__huntGpuRead().player.x > x + 20", before);
+            }
+            finally { await Page.Keyboard.UpAsync("ArrowRight"); }
+            await Page.WaitForFunctionAsync("() => window.__huntGpuRead().enemies.length > 0");
+            var diagnostics = await Page.EvaluateAsync<JsonElement>("() => window.__huntGpuRead()");
+            Assert.IsFalse(diagnostics.GetProperty("renderingFailed").GetBoolean(),
+                diagnostics.TryGetProperty("renderingError", out var laterRenderError) ? laterRenderError.GetString() : "Rendering failed without diagnostics");
+            Assert.IsTrue(diagnostics.GetProperty("gpuWorld").GetProperty("objects").GetInt32() > 2);
+            if (width == 390 && quality == "mobile")
+            {
+                // Record the real running Hunt canvas, including moving C# actors
+                // and emitted Fireballs. No synthetic shadow test geometry is used.
+                // The WebM is converted to a phone-playable MP4 by the G4 CI job.
+                var encoded = await Page.EvaluateAsync<string>(
+                    """
+                    async () => {
+                        const canvas=document.querySelector('canvas.game-canvas');
+                        if(!canvas?.captureStream||typeof MediaRecorder==='undefined')
+                            throw new Error('Real Hunt canvas video recording unavailable');
+                        const mime=MediaRecorder.isTypeSupported('video/webm;codecs=vp8')
+                            ? 'video/webm;codecs=vp8' : 'video/webm';
+                        if(!MediaRecorder.isTypeSupported(mime))
+                            throw new Error('WebM MediaRecorder not supported by test browser');
+                        const stream=canvas.captureStream(24);
+                        const chunks=[];
+                        const recorder=new MediaRecorder(stream,
+                            {mimeType:mime,videoBitsPerSecond:900000});
+                        const completed=new Promise((resolve,reject)=>{
+                            recorder.onerror=event=>reject(event.error);
+                            recorder.ondataavailable=event=>{
+                                if(event.data.size>0)chunks.push(event.data);
+                            };
+                            recorder.onstop=()=>{
+                                const blob=new Blob(chunks,{type:mime});
+                                const reader=new FileReader();
+                                reader.onerror=()=>reject(reader.error);
+                                reader.onload=()=>resolve(String(reader.result).split(',')[1]);
+                                reader.readAsDataURL(blob);
+                            };
+                        });
+                        recorder.start(250);
+                        await new Promise(resolve=>setTimeout(resolve,6000));
+                        recorder.stop();
+                        const encoded=await completed;
+                        stream.getTracks().forEach(track=>track.stop());
+                        return encoded;
+                    }
+                    """);
+                var video = Convert.FromBase64String(encoded);
+                Assert.IsGreaterThan(4096, video.Length,
+                    "The proof must contain recorded game frames, not a zero-byte placeholder.");
+                Directory.CreateDirectory(ArtifactDirectory);
+                await File.WriteAllBytesAsync(Path.Combine(ArtifactDirectory,
+                    "live-hunt-g4-directional-shadow-390.webm"), video);
+            }
+        }
+        finally
+        {
+            Directory.CreateDirectory(ArtifactDirectory);
+            await ScreenshotAsync($"live-hunt-shared-gpu-{width}-{quality}.png");
+            await Page.ScreenshotAsync(new()
+            {
+                Path = Path.Combine(ArtifactDirectory, $"live-hunt-light-focus-{width}-{quality}.png"),
+                Clip = new()
+                {
+                    X = (width - 240) / 2,
+                    Y = (height - 260) / 2,
+                    Width = 240,
+                    Height = 260,
+                },
+            });
+            var diagnostic = await Page.EvaluateAsync<string>("() => JSON.stringify(window.__huntGpuRead?.() ?? null)");
+            await File.WriteAllTextAsync(Path.Combine(ArtifactDirectory, $"live-hunt-shared-gpu-{width}-{quality}.json"), diagnostic);
+        }
+    }
+
+    [TestMethod]
+    [DataRow(320, 568, false)]
+    [DataRow(390, 844, false)]
+    [DataRow(390, 844, true)]
+    public async Task Mobile_G4DeviceReview_RecordsRealHuntAndExportsEvidence(int width, int height, bool paintedGround)
+    {
+        await Page.SetViewportSizeAsync(width, height);
+        // Exercise the normal first-visit school selection rather than only seeding
+        // localStorage. The UI can read those values while C# still starts the Hunt
+        // with its default Arcane school, invalidating the real Fireball proof.
+        var terrainQuery = paintedGround ? "&g4PaintedGround=1" : "";
+        await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/?arenaGpu=1&gpuQuality=mobile&g4Review=1" + terrainQuery,
+            new() { WaitUntil = WaitUntilState.NetworkIdle });
+        // Consent is the FIRST screen, before any Gate/Town/Hunt menus can load.
+        var consent = Page.Locator("[data-g4-preflight]");
+        await Expect(consent).ToBeVisibleAsync();
+        await Expect(consent.GetByRole(AriaRole.Button, new() { Name = "Share performance results privately" }))
+            .ToBeVisibleAsync();
+        await Expect(consent.GetByRole(AriaRole.Button, new() { Name = "Keep private on this phone" }))
+            .ToBeVisibleAsync();
+        Assert.AreEqual(0, await Page.Locator(".world-gate").CountAsync(),
+            "G4 decision must precede all game menus, not compete with them.");
+        Assert.IsNull(await Page.EvaluateAsync<string?>(
+            "() => localStorage.getItem('wyrmforge.g4.autoSendConsent.v1')"));
+        await consent.GetByRole(AriaRole.Button, new() { Name = "Keep private on this phone" }).ClickAsync();
+        await Expect(consent).ToHaveCountAsync(0);
+        Assert.AreEqual("no", await Page.EvaluateAsync<string>(
+            "() => localStorage.getItem('wyrmforge.g4.autoSendConsent.v1')"));
+        await EnterTownIfNeededAsync();
+        Assert.AreEqual("Pyromancer", await Page.EvaluateAsync<string>(
+            "() => localStorage.getItem('wyrmforge.characterSchool.v1')"));
+        Assert.AreEqual("FireBolt", await Page.EvaluateAsync<string>(
+            "() => localStorage.getItem('wyrmforge.preferredPrimary.v1')"));
+        // The region chosen at the World Gate is independent of the character school.
+        // Verify the town has loaded the Fire character before the C# Hunt is created.
+        await Expect(Page.Locator(".refuge-canonical-scene")).ToHaveAttributeAsync("data-nexus-school", "fire");
+        await EnterFirstTrailAsync("BEGIN FIRST HUNT");
+        await Page.EvaluateAsync(@"async () => {
+            // Use the exact versioned wrapper module already imported by ArenaView.
+            // Importing an independently guessed URL may create a second module
+            // instance with an empty WeakMap, making a real Hunt look uninitialized.
+            const resource = performance.getEntriesByType('resource')
+                .map(entry => entry.name)
+                .find(url => url.includes('/js/arena-performance.js?v='));
+            if (!resource) throw new Error('Active Arena performance module was not loaded');
+            const performanceArena = await import(resource);
+            const arena = await import(new URL('js/arena.js?v=20261031-lighting-01-v1', document.baseURI).href);
+            window.__huntGpuArena = arena;
+            window.__huntGpuRead = () => performanceArena.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
+        }");
+        // Wait for the real C# Hunt, not a bootstrap Arcane placeholder.
+        // When this fails, preserve the actual observed diagnostic state in CI.
+        try
+        {
+            await Page.WaitForFunctionAsync(@"() => {
+                const game = window.__huntGpuRead?.();
+                return game?.worldReady && game.player?.activeSchool === 'Fire' &&
+                    game.hud?.spells?.some(spell => spell.name === 'Fire Bolt');
+            }", null, new() { Timeout = 45000 });
+        }
+        catch (TimeoutException)
+        {
+            var observed = await Page.EvaluateAsync<string>(@"() => {
+                const game = window.__huntGpuRead?.();
+                return JSON.stringify({
+                    moduleLoaded: Boolean(window.__huntGpuArena),
+                    diagnosticsAvailable: Boolean(game),
+                    active: game?.active,
+                    worldReady: game?.worldReady,
+                    playerSchool: game?.player?.activeSchool,
+                    spells: game?.hud?.spells?.map(spell => spell.name),
+                    hasWorld: Boolean(game?.world),
+                    renderingError: game?.renderingError,
+                    gpuError: game?.gpuWorld?.error
+                });
+            }");
+            Assert.Fail($"Deployed G4 never reached the authoritative Fire Hunt: {observed}");
+        }
+
+        var panel = Page.Locator("[data-g4-device-review]");
+        await Expect(panel).ToBeVisibleAsync();
+        Assert.IsFalse(await panel.EvaluateAsync<bool>("el => el.open"));
+        Assert.AreEqual(0, await panel.Locator("[data-g4-consent], [data-g4-sharing-choice]").CountAsync(),
+            "No other consent/settings menus should be layered over gameplay.");
+        // No button presses or manual exports: G4 records automatically in live gameplay.
+        await Page.WaitForFunctionAsync(@"() => {
+            const text = document.querySelector('[data-g4-status]')?.textContent ?? '';
+            const match = text.match(/(\d+) frames/);
+            return match && Number(match[1]) >= 12;
+        }", null, new() { Timeout = 30000 });
+
+        // The prior GPU candidate could be technically green while its actual
+        // Hunt was black. Require C#-owned hunter visibility AND a lit area in
+        // the live composited Canvas, away from the HTML HUD and boss overlays.
+        await Page.WaitForFunctionAsync(@"(painted) => {
+            const frame = window.__huntGpuRead?.();
+            const visible = frame?.gpuWorld?.lights?.some(light => light.id === 'hunter:night-visibility');
+            const canvas = document.querySelector('canvas.game-canvas');
+            if (!visible || !canvas?.width || !canvas?.height) return false;
+            const startX = Math.floor(canvas.width * .18);
+            const startY = Math.floor(canvas.height * .25);
+            const w = Math.floor(canvas.width * .64);
+            const h = Math.floor(canvas.height * .5);
+            const pixels = canvas.getContext('2d').getImageData(startX, startY, w, h).data;
+            // A bright projectile/telegraph cannot make an otherwise-black
+            // playfield pass. Require a distributed sky-lit terrain floor.
+            // Source-painted material candidates were nearly black even when
+            // the test's original nonblack-pixel check passed. Gate the real
+            // GPU albedo on DISTRIBUTED floor readability, not a bright Fireball.
+            const pixelMinimum = painted ? 90 : 30;
+            const coverageMinimum = painted ? .48 : .16;
+            const averageMinimum = painted ? 80 : 14;
+            let readablePixels = 0, totalBrightness = 0;
+            for (let i = 0; i < pixels.length; i += 4) {
+                const brightness = pixels[i] + pixels[i + 1] + pixels[i + 2];
+                totalBrightness += brightness;
+                if (brightness >= pixelMinimum) readablePixels++;
+            }
+            const count = pixels.length / 4;
+            return readablePixels >= count * coverageMinimum && totalBrightness >= count * averageMinimum;
+        }", paintedGround, new() { Timeout = 30000 });
+
+        // The default G4 review must show neutral grey, free of ground paintings.
+        // Keep an explicit painted A/B for diagnostic comparison only. Both cases
+        // are genuine full-game screenshots, not isolated light-lab assertions.
+        var reviewDiagnostics = await Page.EvaluateAsync<JsonElement>("() => window.__huntGpuRead()");
+        var expectedTerrain = paintedGround ? "painted" : "neutral-grey";
+        Assert.AreEqual(expectedTerrain, reviewDiagnostics.GetProperty("terrainPresentation").GetString(),
+            "The G4 phone proof must record the actual selected ground, not assume a different review mode.");
+        Assert.AreEqual("staged", reviewDiagnostics.GetProperty("framePresentation").GetString(),
+            "G4 phone review must compose a full GPU/Canvas frame before presenting it.");
+        Directory.CreateDirectory(ArtifactDirectory);
+        var name = $"live-g4-review-{expectedTerrain}-{width}-mobile";
+        await ScreenshotAsync(name + ".png");
+        await File.WriteAllTextAsync(Path.Combine(ArtifactDirectory,
+            name + ".json"), reviewDiagnostics.ToString());
+
+        // A nonblack opening frame cannot prove an active projectile casts shadows.
+        // Capture one genuine SAME-FRAME Hunt view (including painted A/B) only when the C# Fireball
+        // source is registered AND the generic mobile GPU gives it a shadow view.
+        // Never draw a synthetic projectile, light or caster in this browser test.
+        if (width == 390)
+        {
+            await Page.WaitForFunctionAsync(@"() => {
+                const diagnostics = window.__huntGpuRead?.();
+                const light = diagnostics?.gpuWorld?.lights?.find(source =>
+                    source.shadow === true && (source.id?.startsWith('projectile:') ||
+                        source.id?.startsWith('impact:FireBolt:')));
+                const canvas = document.querySelector('canvas.game-canvas');
+                if (!light || !canvas?.width || !canvas?.height) return false;
+                const shadowPixels = window.__huntGpuArena.readArenaShadowPixelProof(canvas, light.id);
+                // Allocating a shadow map is insufficient: a live Fireball must
+                // visibly change actual framebuffer pixels through occlusion.
+                if (!shadowPixels?.available || !shadowPixels.groundOnly || shadowPixels.changedPixels < 64) return false;
+                window.__g4LiveFireShadowProof = {
+                    sourceId: light.id,
+                    shadowViews: light.views,
+                    shadowPixels,
+                    image: canvas.toDataURL('image/png')
+                };
+                return true;
+            }", null, new() { Timeout = 30000 });
+            var fireProof = await Page.EvaluateAsync<JsonElement>(
+                "() => window.__g4LiveFireShadowProof");
+            Assert.IsTrue(fireProof.GetProperty("shadowViews").GetInt32() > 0,
+                "A real C# Fireball must have a generic mobile GPU shadow view.");
+            Assert.IsTrue(fireProof.GetProperty("shadowPixels").GetProperty("groundOnly").GetBoolean(),
+                "The shadow proof must isolate ground receivers; self-shading actors alone must not pass.");
+            Assert.IsTrue(fireProof.GetProperty("shadowPixels").GetProperty("changedPixels").GetInt32() >= 64,
+                "An active real-Hunt Fireball must darken actual ground pixels behind world casters.");
+            var png = fireProof.GetProperty("image").GetString() ?? "";
+            StringAssert.StartsWith(png, "data:image/png;base64,");
+            await File.WriteAllBytesAsync(Path.Combine(ArtifactDirectory,
+                $"live-g4-review-fireball-shadow-{expectedTerrain}-390-mobile.png"),
+                Convert.FromBase64String(png["data:image/png;base64,".Length..]));
+            await File.WriteAllTextAsync(Path.Combine(ArtifactDirectory,
+                $"live-g4-review-fireball-shadow-{expectedTerrain}-390-mobile.txt"),
+                fireProof.GetProperty("sourceId").GetString() ?? "");
+        }
+
+        // Reproduce the owner's phone: G4 diagnostics were expanded when the
+        // Hunt ended and covered rewards. Disposal must collapse and re-dock.
+        await panel.EvaluateAsync("el => { el.open = true; }");
+        // Simulate the same Blazor teardown that happens on death. The last
+        // real gameplay sample must persist and the control must remain usable.
+        var result = await Page.EvaluateAsync<JsonElement>(@"() => {
+            window.__huntGpuArena.disposeArena(document.querySelector('canvas.game-canvas'));
+            const saved = JSON.parse(localStorage.getItem('wyrmforge.g4.lastRecord.v1') ?? 'null');
+            const panel = document.querySelector('[data-g4-device-review]');
+            return { saved, panelAlive: Boolean(panel && panel.isConnected),
+                title: panel?.querySelector('summary')?.textContent ?? '',
+                collapsed: panel?.open === false,
+                bottomLeft: panel?.style.left === '8px' && panel?.style.right === 'auto' };
+        }");
+        Assert.IsTrue(result.GetProperty("panelAlive").GetBoolean(),
+            "A defeated player's recorder summary must survive Hunt component teardown.");
+        StringAssert.Contains(result.GetProperty("title").GetString() ?? "", "SAVED");
+        Assert.IsTrue(result.GetProperty("collapsed").GetBoolean(),
+            "Expanded G4 diagnostics must collapse when the results screen appears.");
+        Assert.IsTrue(result.GetProperty("bottomLeft").GetBoolean(),
+            "Saved G4 chip must move away from the results reward and navigation actions.");
+        var evidence = result.GetProperty("saved");
+        Assert.AreEqual("gpu", evidence.GetProperty("mode").GetString());
+        Assert.IsTrue(evidence.GetProperty("id").GetString()?.Length > 10);
+        Assert.AreEqual("gpu", evidence.GetProperty("mode").GetString());
+        Assert.AreEqual("mobile", evidence.GetProperty("quality").GetString());
+        Assert.IsTrue(evidence.GetProperty("frameIntervals").GetInt32() >= 12);
+        Assert.IsTrue(evidence.GetProperty("frameMsP95").GetDouble() > 0);
+        Assert.IsTrue(evidence.GetProperty("elapsedSeconds").GetDouble() > 0);
+        Assert.AreEqual(false, evidence.GetProperty("recording").GetBoolean());
+        Assert.IsTrue(evidence.GetProperty("recordedAtUtc").GetString()?.Length > 10);
+    }
+
+    [TestMethod]
+    public async Task Mobile_G4Consent_IsAnObviousSingleChoiceBeforeGameMenus()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/?arenaGpu=1&gpuQuality=mobile&g4Review=1",
+            new() { WaitUntil = WaitUntilState.NetworkIdle });
+        var gate = Page.Locator("[data-g4-preflight]");
+        await Expect(gate).ToBeVisibleAsync();
+        Assert.AreEqual(0, await Page.Locator(".world-gate").CountAsync());
+        await gate.GetByRole(AriaRole.Button, new() { Name = "Share performance results privately" }).ClickAsync();
+        await Expect(gate).ToHaveCountAsync(0);
+        Assert.AreEqual("yes", await Page.EvaluateAsync<string>(
+            "() => localStorage.getItem('wyrmforge.g4.autoSendConsent.v1')"));
+        // A normal (non-review) page never displays the testing consent screen.
+        await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/", new() { WaitUntil = WaitUntilState.NetworkIdle });
+        Assert.AreEqual(0, await Page.Locator("[data-g4-preflight]").CountAsync());
+    }
+
+    private async Task EnterFirstTrailAsync(string gateLabel = "BEGIN HUNT")
     {
         var back = Page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" });
         if (await back.IsVisibleAsync()) await back.ClickAsync();
-        await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN HUNT", Exact = true }).ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = gateLabel, Exact = true }).ClickAsync();
         await ContinueThroughWorldGateAsync();
         await Expect(Page.GetByText("Choose your trail.", new() { Exact = true })).ToBeVisibleAsync();
-
         var route = Page.Locator("button.route-node.available").First;
         await route.ClickAsync();
-        await Page.GetByRole(AriaRole.Button, new() { NameRegex = new System.Text.RegularExpressions.Regex("^Enter (rare )?trail$") }).ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^Enter (rare )?trail$") }).ClickAsync();
         await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
     }
 

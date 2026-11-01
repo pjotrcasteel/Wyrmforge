@@ -101,7 +101,7 @@ public static class WorldSiteLandscapeGenerator
             if (center.X - radiusX < .012 || center.X + radiusX > .988 ||
                 center.Y - radiusY < .012 || center.Y + radiusY > .988)
                 continue;
-            if (geography.Corridors.Concat(geography.ScenicPaths).Any(corridor => CorridorDistance(center, corridor.Points) < 
+            if (geography.Corridors.Concat(geography.ScenicPaths).Any(corridor => CorridorDistance(center, corridor.Points) <
                 Math.Max(radiusX, radiusY) + corridor.Width * .5 + .065))
                 continue;
             // No player spawn, boss telegraph or obligatory encounter crossing is obstructed.

@@ -64,7 +64,8 @@ test('AR0 diagnostics remain projections, not a second JS gameplay or geographic
     assert.match(application, /WorldSiteGeographyProjection/);
     assert.match(application, /WorldSeed/);
     assert.match(renderer, /drawSemanticSiteFloor\(ctx, environment\.geography, width, height, environment\.geographyActive === true\)/);
-    assert.match(renderer, /if \(texture\) ctx\.drawImage\(texture\.image/);
+    assert.match(renderer, /if \(!semantic\) \{[\s\S]*?const texture = terrainTexture\([\s\S]*?ctx\.drawImage\(texture\.image/,
+        'Semantic geography must not allocate or paint the legacy terrain atlas.');
     const liveScene = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena.js', import.meta.url), 'utf8');
     assert.match(liveScene, /semanticSiteModeEnabled\(\) && snapshot\.environment\?\.geography\?\.version === 1/);
     assert.match(liveScene, /drawGothicNight\(ctx, gothicNightPlan\(/,

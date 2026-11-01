@@ -48,6 +48,7 @@ public sealed partial class RunSimulation
     private readonly List<ProjectileState> projectiles = [];
     private readonly ProjectileLightIdentityRegistry projectileLightIdentities = new();
     private long lightingSnapshotTick;
+    private bool lightingComposition01Enabled;
     private readonly List<LightningTrace> lightning = [];
     private readonly List<EssenceBurstState> essenceBursts = [];
     private readonly List<EssenceBoltState> essenceBolts = [];
@@ -426,13 +427,26 @@ public sealed partial class RunSimulation
     {
         var snapshot = ProjectileLightingProjection.Capture(
             "hunt", lightingSnapshotTick++, projectiles, projectileLightIdentities,
-            new LightingEnvironment("gothic-night", "#8c9cbb", 0.012));
+            new LightingEnvironment("gothic-night", "#8c9cbb", 0.24));
         var combined = LightingSceneComposer.Compose(snapshot.SceneId, snapshot.SimulationTick,
             snapshot.Environment, snapshot.Emitters,
+            [NightSkyLightingProjection.Capture()],
+            [HunterVisibilityLightingProjection.Capture(player.Position)],
+            SpellEffectLightingProjection.Capture(CreateCastMotionSnapshot(),
+                elementalImpacts.Select(impact => new ElementalImpactRenderSnapshot(impact.Position.X, impact.Position.Y, impact.Spell, impact.Progress)),
+                CreateFieryAreaSnapshots()),
             AshfangLightingProjection.Capture(CreateDragonSnapshot(), CreateAshfangEffects()),
-            ActorAppearanceLightingProjection.Capture(enemies, player.Position.X, player.Position.Y));
+            ActorAppearanceLightingProjection.Capture(enemies, player.Position.X, player.Position.Y),
+            lightingComposition01Enabled ? HuntFixtureLightingProjection.Capture(
+                arenaEnvironment?.LightingRecipe, arenaWidth, arenaHeight) : []);
         return GpuLightingFrameProjection.FromSnapshot(combined, elapsed);
     }
+
+    /// <summary>
+    /// Explicit Lighting 0.1 composition trial. Ordinary Hunts and the Canvas
+    /// fallback never enable fixture light sources through this switch.
+    /// </summary>
+    public void EnableLightingComposition01() => lightingComposition01Enabled = true;
 
     private CastMotionRenderSnapshot? CreateCastMotionSnapshot()
     {

@@ -2,11 +2,71 @@ import * as T from './vendor/three.module.js';
 import { LightingInspection } from './inspection.js';
 import { validateSnapshot, selectLights } from './registry.js';
 
+/**
+ * All authored channels share one atlas transform; returning to a non-atlas
+ * surface must restore full UVs. Avoid touching matrices on unchanged frames.
+ */
+export function synchronizeAtlasFrame(material, frame) {
+    const [u, v] = frame?.offset ?? [0, 0];
+    const [w, h] = frame?.repeat ?? [1, 1];
+    for (const map of [material.map, material.normalMap, material.roughnessMap,
+        material.aoMap, material.emissiveMap]) {
+        if (!map || map.offset.x === u && map.offset.y === v &&
+            map.repeat.x === w && map.repeat.y === h) continue;
+        map.offset.set(u, v);
+        map.repeat.set(w, h);
+        map.updateMatrix();
+    }
+}
+
+/**
+ * A mobile shadow view must refresh with each authoritative lighting frame.
+ * Range-only memoization was introduced without live iPhone shadow proof;
+ * correctness takes priority over the speculative projection CPU saving.
+ */
+export function synchronizeShadowProjection(light, range) {
+    const camera = light.shadow?.camera;
+    if (!camera) return false;
+    camera.far = range;
+    camera.updateProjectionMatrix();
+    return true;
+}
+
+const fogAmbientColor = new T.Color();
+
+/** Recompute the view projection only when viewport dimensions or camera zoom actually change. */
+export function synchronizeOrthographicProjection(camera, left, right, top, bottom) {
+    if (camera.left === left && camera.right === right && camera.top === top && camera.bottom === bottom)
+        return false;
+    camera.left = left; camera.right = right; camera.top = top; camera.bottom = bottom;
+    camera.updateProjectionMatrix();
+    return true;
+}
+
+/** Reuse fog resources on unchanged snapshots without altering black-world rules. */
+export function synchronizeEnvironmentFog(scene, environment) {
+    const descriptor = environment.fog;
+    if (!descriptor || environment.ambient <= 0) {
+        scene.fog = null;
+        return;
+    }
+    const fog = scene.fog?.isFog
+        ? scene.fog : new T.Fog(descriptor.color, descriptor.near, descriptor.far);
+    fog.color.set(descriptor.color)
+        .multiply(fogAmbientColor.set(environment.color))
+        .multiplyScalar(Math.min(1, environment.ambient));
+    fog.near = descriptor.near;
+    fog.far = descriptor.far;
+    scene.fog = fog;
+}
+
 /** Shared GPU adapter; accepts resource IDs and descriptors, never entity kinds. */
 export class LightingEngine {
-    constructor(canvas, { shadowViews = 8, maxLights = 8 } = {}) {
+    constructor(canvas, { shadowViews = 8, maxLights = 8, shadowMapSize = 512, preserveDrawingBuffer = true } = {}) {
+        if (typeof preserveDrawingBuffer !== 'boolean') throw new TypeError('Invalid framebuffer retention policy');
+        if (![128, 256, 512, 1024].includes(shadowMapSize)) throw new RangeError('Unsupported shadow map size');
         this.canvas = canvas;
-        this.renderer = new T.WebGLRenderer({ canvas, antialias: false, alpha: false, preserveDrawingBuffer: true });
+        this.renderer = new T.WebGLRenderer({ canvas, antialias: false, alpha: false, preserveDrawingBuffer });
         this.renderer.outputColorSpace = T.SRGBColorSpace;
         this.renderer.toneMapping = T.NeutralToneMapping;
         this.renderer.shadowMap.enabled = true;
@@ -22,7 +82,8 @@ export class LightingEngine {
         this.scene.add(this.ambient);
         this.objects = new Map(); this.lights = new Map();
         this.geometries = new Map(); this.textures = new Map();
-        this.shadowViews = shadowViews; this.maxLights = maxLights;
+        this.shadowViews = shadowViews; this.maxLights = maxLights; this.shadowMapSize = shadowMapSize;
+        this.preserveDrawingBuffer = preserveDrawingBuffer;
         this.alive = true;
         this.debugView = 'lit';
         this.halfWidth = 5;
@@ -61,7 +122,11 @@ export class LightingEngine {
             roughness: wetRoughness, metalness: receivesLight && descriptor.reflection !== 'off' ? descriptor.metalness : 0,
             specularIntensity: receivesLight && descriptor.reflection !== 'off' ? descriptor.specular : 0,
             emissive: descriptor.emission, emissiveIntensity: descriptor.emissionIntensity,
-            alphaTest: descriptor.alphaCutoff, side: descriptor.doubleSided ? T.DoubleSide : T.FrontSide,
+            alphaTest: descriptor.blendMode && descriptor.blendMode !== 'cutout' ? 0 : descriptor.alphaCutoff,
+            transparent: descriptor.blendMode === 'alpha' || descriptor.blendMode === 'additive',
+            blending: descriptor.blendMode === 'additive' ? T.AdditiveBlending : T.NormalBlending,
+            depthWrite: descriptor.blendMode !== 'alpha' && descriptor.blendMode !== 'additive',
+            side: descriptor.doubleSided ? T.DoubleSide : T.FrontSide,
         });
         if (descriptor.reflection === 'probe' && receivesLight) material.envMapIntensity = descriptor.specular;
         if (descriptor.normalScale !== undefined) material.normalScale.setScalar(descriptor.normalScale);
@@ -83,6 +148,7 @@ export class LightingEngine {
         if (o.caster) this.scene.remove(o.caster);
         for (const map of [o.mesh.material.map, o.mesh.material.normalMap, o.mesh.material.roughnessMap, o.mesh.material.aoMap, o.mesh.material.emissiveMap]) map?.dispose();
         for (const material of o.debugMaterials?.values() ?? []) material.dispose();
+        // The caster shares the visible sprite's texture; dispose it only once.
         o.mesh.material.dispose(); o.caster?.material.dispose();
         this.objects.delete(id);
     }
@@ -102,15 +168,16 @@ export class LightingEngine {
             throw new TypeError(`Reflection probe ${m.reflectionProbe} must be a cube texture`);
         for (const o of s.objects) for (const key of ['geometry', 'occluderGeometry'])
             if (o[key] && !this.geometries.has(o[key])) throw new Error(`Missing geometry ${o[key]}`);
-        const selected = selectLights(s, this.shadowViews, this.maxLights);
-        for (const id of this.lights.keys()) if (!selected.some(l => l.id === id)) this.removeLight(id);
+        const selected = selectLights(s, this.shadowViews, this.maxLights, this.lightViewBounds);
+        const selectedIds = new Set(selected.map(light => light.id));
+        for (const id of this.lights.keys()) if (!selectedIds.has(id)) this.removeLight(id);
         for (const d of selected) {
             let light = this.lights.get(d.id);
             if (light && light.userData.type !== d.type) { this.removeLight(d.id); light = null; }
             if (!light) {
                 const constructors = { point: T.PointLight, spot: T.SpotLight, directional: T.DirectionalLight };
                 light = new constructors[d.type](); light.userData.type = d.type;
-                light.shadow.mapSize.set(512, 512); light.shadow.bias = -.00015; light.shadow.normalBias = .025;
+                light.shadow.mapSize.set(this.shadowMapSize, this.shadowMapSize); light.shadow.bias = -.00015; light.shadow.normalBias = .025;
                 light.shadow.camera.near = .05;
                 if (d.type === 'directional') Object.assign(light.shadow.camera, { left: -9, right: 9, top: 9, bottom: -9 });
                 this.scene.add(light); if (light.target) this.scene.add(light.target);
@@ -118,30 +185,46 @@ export class LightingEngine {
             }
             light.color.set(d.color); light.intensity = d.intensity; light.distance = d.range; light.decay = 2;
             light.position.fromArray(d.position); light.castShadow = d.shadow;
-            light.shadow.camera.far = d.range; light.shadow.camera.updateProjectionMatrix();
+            synchronizeShadowProjection(light, d.range);
             if (light.target) light.target.position.copy(light.position).add(new T.Vector3(...d.direction));
             if (light.isSpotLight) { light.angle = d.coneAngle; light.penumbra = d.penumbra; }
         }
         const materialById = new Map(s.materials.map(m => [m.id, m]));
-        for (const id of this.objects.keys()) if (!s.objects.some(o => o.id === id)) this.removeObject(id);
+        const materialSignatures = new Map(s.materials.map(m => [m.id, JSON.stringify(m)]));
+        const activeObjectIds = new Set(s.objects.map(object => object.id));
+        for (const id of this.objects.keys()) if (!activeObjectIds.has(id)) this.removeObject(id);
         for (const d of s.objects) {
             const md = materialById.get(d.material);
-            const signature = JSON.stringify([d.geometry, d.occluderGeometry, md, d.receivesLight]);
+            const signature = JSON.stringify([d.geometry, d.occluderGeometry, materialSignatures.get(d.material),
+                d.receivesLight, d.occluderAlphaSource]);
             let object = this.objects.get(d.id);
             if (object && object.signature !== signature) { this.removeObject(d.id); object = null; }
             if (!object) {
                 const mesh = new T.Mesh(this.geometries.get(d.geometry), this.material(md, d.receivesLight));
                 let caster;
                 if (d.occluderGeometry) {
-                    // Separate authored solid caster; never reuses collision or infers volume from albedo.
-                    const hidden = new T.MeshBasicMaterial({ colorWrite: false, depthWrite: false });
+                    // Shadow-only geometry can carry the same alpha-cutout silhouette as its
+                    // visible material. Color/depth writes remain disabled in the main pass;
+                    // the shared shadow pass still samples transparent sprite pixels.
+                    // Share the same GPU texture and animated alpha as the visible
+                    // sprite: no second upload or per-actor shadow atlas allocation.
+                    const cutoutCaster = d.occluderAlphaSource !== false;
+                    const hidden = new T.MeshBasicMaterial({ map: cutoutCaster ? mesh.material.map : null,
+                        alphaTest: cutoutCaster ? md.alphaCutoff : 0,
+                        side: md.doubleSided ? T.DoubleSide : T.FrontSide,
+                        colorWrite: false, depthWrite: false });
                     caster = new T.Mesh(this.geometries.get(d.occluderGeometry), hidden);
                     this.scene.add(caster);
                 }
                 object = { id: d.id, mesh, caster, signature }; this.objects.set(d.id, object); this.scene.add(mesh);
             }
-            for (const mesh of [object.mesh, object.caster].filter(Boolean)) {
-                mesh.position.fromArray(d.position); mesh.rotation.set(...d.rotation); mesh.scale.fromArray(d.scale);
+            object.mesh.position.fromArray(d.position);
+            object.mesh.rotation.set(...d.rotation);
+            object.mesh.scale.fromArray(d.scale);
+            if (object.caster) {
+                object.caster.position.fromArray(d.occluderPosition ?? d.position);
+                object.caster.rotation.set(...(d.occluderRotation ?? d.rotation));
+                object.caster.scale.fromArray(d.occluderScale ?? d.scale);
             }
             object.mesh.castShadow = d.castsShadow && !object.caster;
             if (object.caster) object.caster.castShadow = d.castsShadow;
@@ -150,19 +233,14 @@ export class LightingEngine {
             // Environment probes contain prelit radiance; disable them for the absolute darkness diagnostic.
             object.mesh.material.envMapIntensity = s.environment.ambient === 0 && selected.length === 0
                 ? 0 : md.reflection === 'probe' ? md.specular : 0;
-            if (d.frame) for (const map of [object.mesh.material.map, object.mesh.material.normalMap, object.mesh.material.roughnessMap, object.mesh.material.aoMap, object.mesh.material.emissiveMap]) if (map) {
-                map.offset.fromArray(d.frame.offset); map.repeat.fromArray(d.frame.repeat); map.updateMatrix();
-            }
+            synchronizeAtlasFrame(object.mesh.material, d.frame);
         }
         // Fog is a bounded distance approximation, not a volumetric light simulation.
         // The zero-light diagnostic must not reveal silhouettes through fog.
-        const fog = s.environment.fog;
-        // Three.js scene fog is unlit and otherwise introduces its own full-bright color.
-        // Disable it when ambient is zero; direct-light-only fog needs a lit-volume pass.
-        this.scene.fog = fog && s.environment.ambient > 0 ? new T.Fog(
-            new T.Color(fog.color).multiply(new T.Color(s.environment.color))
-                .multiplyScalar(Math.min(1, s.environment.ambient)),
-            fog.near, fog.far) : null;
+        // Three.js fog is unlit; never reveal black-world silhouettes.
+        // Reuse the same fog object while its boundaries/colors animate instead
+        // of allocating multiple Color/Fog objects on every mobile frame.
+        synchronizeEnvironmentFog(this.scene, s.environment);
         this.ambient.color.set(s.environment.color); this.ambient.intensity = s.environment.ambient;
         this.renderer.toneMappingExposure = s.environment.exposure;
         this.materialBudget = {
@@ -217,9 +295,8 @@ float proofShadowVisibility() {
         // One world sample per CSS pixel at 390px, bounded regardless of device DPR.
         const w = Math.max(1, Math.min(390, Math.round(width))), h = Math.max(1, Math.round(height * w / width));
         if (this.canvas.width !== w || this.canvas.height !== h) this.renderer.setSize(w, h, false);
-        this.camera.left = -this.halfWidth; this.camera.right = this.halfWidth;
-        this.camera.top = this.halfWidth * h / w; this.camera.bottom = -this.halfWidth * h / w;
-        this.camera.updateProjectionMatrix();
+        const halfHeight = this.halfWidth * h / w;
+        synchronizeOrthographicProjection(this.camera, -this.halfWidth, this.halfWidth, halfHeight, -halfHeight);
         if (this.debugView === 'light-depth') {
             const source = this.selected?.find(l => l.shadow);
             this.inspection.depth(this.renderer, this.lights.get(source?.id));
@@ -255,6 +332,8 @@ float proofShadowVisibility() {
             textures: this.renderer.info.memory.textures, geometries: this.renderer.info.memory.geometries,
             inspectedReceiver: this.snapshot?.objects.find(o => o.id === this.inspectionObject) ?? null,
             materialBudget: this.materialBudget, fogEnabled: !!this.scene.fog,
+            budgets: { maxLights: this.maxLights, shadowViews: this.shadowViews, shadowMapSize: this.shadowMapSize,
+                preserveDrawingBuffer: this.preserveDrawingBuffer },
             productionPathsMigrated: 0 };
     }
     dispose() {

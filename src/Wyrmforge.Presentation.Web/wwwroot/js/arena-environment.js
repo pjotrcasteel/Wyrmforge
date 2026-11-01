@@ -1,4 +1,4 @@
-import { territoryBiome, createTerritoryStoryPlan, drawTerritoryGround, drawTerritoryLandmarks, drawTerritoryMotes } from './arena-territory-art.js?v=20261026-compact-ground-v1';
+import { territoryBiome, createTerritoryStoryPlan, drawTerritoryGround, drawTerritoryLandmarks, drawTerritoryMotes } from './arena-territory-art.js?v=20261026-organic-ground-v2';
 import { drawWetForestDressing, drawWetForestCastShadows, drawWetForestFirelight } from './arena-wet-forest-dressing.js';
 import { wetForestTreeFrame, drawWetForestTreeAccents, drawWetForestTreeArt } from './arena-wet-forest-vegetation.js';
 import { drawWetForestStoryArt } from './arena-wet-forest-sites.js';
@@ -58,7 +58,14 @@ export function createTerrainPlan(environment, width, height) {
         story, forestProps: story.wetForest ? environment.props ?? [] : [] };
 }
 
-function drawTerrain(ctx, plan, width, height, approvedAtlas = null) {
+function drawTerrain(ctx, plan, width, height, approvedAtlas = null, flatColorsOnly = false, gpuAlbedo = false) {
+    if (flatColorsOnly) {
+        // G4's isolated neutral-albedo receiver: no terrain texture, gradients,
+        // scattered detail, or baked shadows may contaminate the light test.
+        ctx.fillStyle = '#969696';
+        ctx.fillRect(0, 0, width, height);
+        return;
+    }
     const ash = plan.biome === 'ash';
     const ridge = plan.biome === 'ridge';
     const snow = plan.biome === 'snow';
@@ -70,7 +77,7 @@ function drawTerrain(ctx, plan, width, height, approvedAtlas = null) {
     gradient.addColorStop(1, colors[2]);
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, width, height);
-    const tile = artReady() ? artTilePattern(ctx, `tile.${plan.biome}`) : null;
+    const tile = !flatColorsOnly && artReady() ? artTilePattern(ctx, `tile.${plan.biome}`) : null;
     if (tile) {
         // Hand-authored seamless ground texture; the old gradient stays as a mood wash on top.
         ctx.fillStyle = tile;
@@ -80,16 +87,16 @@ function drawTerrain(ctx, plan, width, height, approvedAtlas = null) {
         ctx.fillRect(0, 0, width, height);
         ctx.globalAlpha = 1;
     }
-    drawTerritoryGround(ctx, plan.story, approvedAtlas);
+    drawTerritoryGround(ctx, plan.story, approvedAtlas, flatColorsOnly, gpuAlbedo);
     // The existing PR #340 source paintings already contain pebbles, grasses
     // and leaf details; don't hide the real ground under legacy tiled decals.
     if (tile && !plan.story.wetForest) drawGroundDecals(ctx, plan, width, height);
-    if (plan.story.wetForest) drawWetForestDressing(ctx, plan.story, plan.forestProps, width, height);
+    if (plan.story.wetForest) drawWetForestDressing(ctx, plan.story, plan.forestProps, width, height, gpuAlbedo);
 
     // No shared road overlay: the canonical encounter district now owns the entire
     // large-scale ground composition through its deterministic territory story plan.
     // Ominous cliff shadows and a broken outer horizon; no bright rectangular grid.
-    for (const side of [-1, 1]) {
+    if (!gpuAlbedo) for (const side of [-1, 1]) {
         ctx.beginPath();
         const origin = side === -1 ? 0 : width;
         ctx.moveTo(origin, 0);
@@ -190,14 +197,18 @@ function drawTerrain(ctx, plan, width, height, approvedAtlas = null) {
         ctx.fillStyle = tint;
         ctx.fillRect(0, 0, width, height);
     }
-    // Edge fog produces depth without obscuring attack telegraphs or the player's immediate surroundings.
-    const vignette = ctx.createRadialGradient(width * .5, height * .49, Math.min(width, height) * .2,
-        width * .5, height * .49, Math.max(width, height) * .7);
-    vignette.addColorStop(0, 'rgba(0,0,0,0)');
-    vignette.addColorStop(1, plan.story.wetForest ? 'rgba(1,4,6,.3)' :
-        plan.story.cloister ? 'rgba(1,3,7,.37)' : 'rgba(1,3,7,.56)');
-    ctx.fillStyle = vignette;
-    ctx.fillRect(0, 0, width, height);
+    // The painted Canvas floor retains its authored edge fog. GPU terrain is
+    // physical albedo: a baked dark vignette would be multiplied by the shared
+    // lighting pass again and create false near-black areas without occluders.
+    if (!gpuAlbedo) {
+        const vignette = ctx.createRadialGradient(width * .5, height * .49, Math.min(width, height) * .2,
+            width * .5, height * .49, Math.max(width, height) * .7);
+        vignette.addColorStop(0, 'rgba(0,0,0,0)');
+        vignette.addColorStop(1, plan.story.wetForest ? 'rgba(1,4,6,.3)' :
+            plan.story.cloister ? 'rgba(1,3,7,.37)' : 'rgba(1,3,7,.56)');
+        ctx.fillStyle = vignette;
+        ctx.fillRect(0, 0, width, height);
+    }
 }
 
 const habitatTints = {
@@ -223,16 +234,16 @@ export function habitatTint(habitat) {
     return habitatTints[habitat] ?? null;
 }
 
-function terrainTexture(environment, width, height, approvedAtlas = null) {
+function terrainTexture(environment, width, height, approvedAtlas = null, flatColorsOnly = false, gpuAlbedo = false) {
     // Art generation is part of the key: the bake refreshes once the atlases finish loading.
-    const key = [environment.seed, environment.biome, environment.element, environment.district, environment.habitat, environment.stage, environment.corruption, environment.generatorPreview, environment.wetForest?.site, width, height, artGeneration(), liveWetForestArtworkGeneration(),
+    const key = [environment.seed, environment.biome, environment.element, environment.district, environment.habitat, environment.stage, environment.corruption, environment.generatorPreview, environment.wetForest?.site, width, height, flatColorsOnly ? 'neutral-grey-v1' : gpuAlbedo ? 'gpu-neutral-albedo-v1' : 'painted-ground', artGeneration(), flatColorsOnly || gpuAlbedo ? 0 : liveWetForestArtworkGeneration(),
         approvedAtlas ? 'approvedGroundPreview' : 'canonicalGround'].join(':');
     if (textures.has(key)) return textures.get(key);
     const image = document.createElement('canvas');
     image.width = Math.max(1, Math.round(width));
     image.height = Math.max(1, Math.round(height));
     const plan = createTerrainPlan(environment, image.width, image.height);
-    drawTerrain(image.getContext('2d'), plan, image.width, image.height, approvedAtlas);
+    drawTerrain(image.getContext('2d'), plan, image.width, image.height, approvedAtlas, flatColorsOnly, gpuAlbedo);
     // Keep at most two world textures on mobile; a whole territory is larger than one viewport.
     if (textures.size >= 2) textures.delete(textures.keys().next().value);
     const texture = { image, cloister: plan.story.cloister, plan };
@@ -290,17 +301,17 @@ function drawForestEdges(ctx, plan, width, height) {
 }
 
 // Read the already-cached environment plan, without rerolling its procedural art.
-export function drawArenaCloisterReflections(ctx, environment, width, height, lights, seconds = 0, reducedMotion = false) {
-    if (!environment) return 0;
-    return drawCloisterReflections(ctx, terrainTexture(environment, width, height).cloister, lights, seconds, reducedMotion);
+export function drawArenaCloisterReflections(ctx, environment, width, height, lights, seconds = 0, reducedMotion = false, flatColorsOnly = false, gpuAlbedo = false) {
+    if (!environment || flatColorsOnly) return 0;
+    return drawCloisterReflections(ctx, terrainTexture(environment, width, height, null, flatColorsOnly, gpuAlbedo).cloister, lights, seconds, reducedMotion);
 }
 
 
 // Cache owns the cloister's fixed plan; these lightweight wall items sort with
 // actor foot positions in world space rather than being pasted over the viewport.
-export function getArenaCloisterElevations(environment, width, height, seconds = 0, approvedAtlas = null) {
+export function getArenaCloisterElevations(environment, width, height, seconds = 0, approvedAtlas = null, flatColorsOnly = false, gpuAlbedo = false) {
     if (!environment) return [];
-    const texture = terrainTexture(environment, width, height, approvedAtlas);
+    const texture = terrainTexture(environment, width, height, approvedAtlas, flatColorsOnly, gpuAlbedo);
     const cloister = texture.cloister;
     const masonry = !cloister
         ? createTerritoryWallLayers(environment, texture.plan, width, height, seconds)
@@ -753,15 +764,24 @@ export function drawSemanticSiteFloor(ctx, geography, width, height, geographyAc
     return true;
 }
 
-export function drawArenaEnvironment(ctx, environment, width, height, elapsedSeconds = 0, approvedAtlas = null) {
+export function drawArenaEnvironment(ctx, environment, width, height, elapsedSeconds = 0,
+    approvedAtlas = null, lightingMode = 'canvas', flatColorsOnly = false) {
     if (!environment) return false;
-    const neutral = environment.geographyActive === true &&
+    // AR4's native WF32 neutral view is opt-in and shares the already authoritative C# geography.
+    // The G5 GPU material/caster pipeline remains separate until AR4-C owner acceptance.
+    const neutral = lightingMode !== 'gpu' && environment.geographyActive === true &&
         drawWorldSiteNeutralAlbedo(ctx, environment.geography, width, height);
-    // Until approved offline source art arrives, the opt-in material view remains a clear AR3 semantic fallback.
     const semantic = !neutral && (semanticSiteModeEnabled() || worldSiteMaterialModeEnabled()) &&
         drawSemanticSiteFloor(ctx, environment.geography, width, height, environment.geographyActive === true);
-    const texture = neutral || semantic ? null : terrainTexture(environment, width, height, approvedAtlas);
-    if (texture) ctx.drawImage(texture.image, 0, 0, width, height);
+    // GPU receivers sample source albedo, not already painted directional shadows.
+    // Use one terrain mode for the floor, reflections and elevations to avoid
+    // allocating a second world-sized atlas on a portrait device.
+    let cloister = null;
+    if (!semantic && !neutral) {
+        const texture = terrainTexture(environment, width, height, approvedAtlas, flatColorsOnly, lightingMode === 'gpu');
+        ctx.drawImage(texture.image, 0, 0, width, height);
+        cloister = texture.cloister;
+    }
     // On the AR1 run-wide geometry preview, painted and semantic palettes display
     // the same C# colliders. The default Hunt never activates these new obstacles.
     if (!semantic && !neutral && environment.geographyActive) {
@@ -771,7 +791,7 @@ export function drawArenaEnvironment(ctx, environment, width, height, elapsedSec
         drawWorldSiteDiscoveries(ctx, environment.geography, width, height);
     }
     if (neutral) {
-        // Native source floor already encodes C# road weights; only C#-authored obstacles and discoveries sit above it.
+        // The source albedo encodes C# material weights; C# obstacles and discoveries still sit above it.
         drawWorldSiteLandscape(ctx, environment.geography, width, height);
         drawWorldSiteDiscoveries(ctx, environment.geography, width, height);
     }
@@ -809,11 +829,10 @@ export function drawArenaEnvironment(ctx, environment, width, height, elapsedSec
     }
     // Render low-angle shadows from CURRENT physical props, never frozen floor art:
     // destroyed trees and ruins lose their shadows in the same C# simulation frame.
-    if (!semantic && !neutral && environment.habitat === 'WetForest' && environment.wetForest) {
+    if (!semantic && !neutral && lightingMode !== 'gpu' && environment.habitat === 'WetForest' && environment.wetForest) {
         drawWetForestCastShadows(ctx, environment.seed, environment.props ?? [], width, height);
         drawWetForestFirelight(ctx, environment, width, height, elapsedSeconds);
     }
-    const cloister = texture?.cloister ?? null;
     // With the atlas loaded, closed territory walls are depth-sorted layers (getArenaCloisterElevations).
     const spriteWalls = !semantic && !neutral && !cloister && artReady();
     for (const barrier of environment.barriers ?? []) {
@@ -825,7 +844,7 @@ export function drawArenaEnvironment(ctx, environment, width, height, elapsedSec
             drawTerritoryBarrier(ctx, barrier, environment.element, width, height, elapsedSeconds);
     }
     for (const supply of environment.supplies ?? []) drawSupply(ctx, supply, width, height, elapsedSeconds);
-    if (!semantic && !neutral) {
+    if (!semantic && !neutral && !flatColorsOnly) {
         drawTerritoryMotes(ctx, environment, width, height, elapsedSeconds);
         drawCloisterMist(ctx, cloister, elapsedSeconds);
     }

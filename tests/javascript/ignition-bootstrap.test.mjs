@@ -38,7 +38,11 @@ test('unhashed bootstrap resources still invalidate by build SHA', () => {
 
 test('slow first startup never silently reloads during a healthy download', () => {
     assert.match(source, /FIRST LAUNCH MAY TAKE A MOMENT/);
-    assert.match(source, /const recoveryTimer = window\.setTimeout/);
+    assert.match(source, /recoveryTimer = window\.setTimeout/);
+    const choiceAt = source.indexOf('await showG4PreflightChoice()');
+    const watchdogAt = source.indexOf('recoveryTimer = window.setTimeout');
+    assert.ok(choiceAt >= 0 && watchdogAt > choiceAt,
+        'A user reading G4 consent must not trigger the 90-second boot watchdog');
     assert.match(source, /}, 90000\);/);
     assert.match(source, /retry\.addEventListener\("click", \(\) => window\.location\.reload\(\)\)/);
     assert.doesNotMatch(source, /location\.replace\(|sessionStorage\.setItem\(retryKey|}, 9000\);/);

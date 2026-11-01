@@ -17,6 +17,8 @@ export interface LitMaterial {
     /** 0 = authored dry roughness, 1 = wet microfacet response; never emits light. */
     wetness?: number;
     emission: string; emissionIntensity: number; alphaCutoff: number; doubleSided: boolean;
+    /** Cutout for solid sprites; alpha/additive for genuinely translucent world VFX. */
+    blendMode?: 'cutout' | 'alpha' | 'additive';
 }
 export interface LitRenderable {
     id: string; ownerId: string; geometry: string; material: string;
@@ -24,6 +26,10 @@ export interface LitRenderable {
     castsShadow: boolean; receivesShadow: boolean; receivesLight: boolean;
     /** Optional independent authored caster. Normal maps alone are NOT casters. */
     occluderGeometry?: string;
+    /** Independent world-space caster transform: never camera-align a physical shadow proxy. */
+    occluderPosition?: Vector3; occluderRotation?: Vector3; occluderScale?: Vector3;
+    /** False for opaque authored physical volumes; default uses source alpha cutout. */
+    occluderAlphaSource?: boolean;
     /** Same normalized atlas region for albedo/normal and shadow alpha. */
     frame?: { offset: [number, number]; repeat: [number, number] };
 }

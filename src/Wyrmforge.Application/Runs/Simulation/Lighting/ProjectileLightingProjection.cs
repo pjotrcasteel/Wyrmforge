@@ -12,10 +12,12 @@ public static class LightingSourceCatalog
     private static readonly IReadOnlyDictionary<SpellSchool, LightSourceProfile> Schools =
         new Dictionary<SpellSchool, LightSourceProfile>
         {
-            [SpellSchool.Fire] = new("#ff7835", 1, 3),
-            [SpellSchool.Frost] = new("#8bdfff", 0.8, 3),
-            [SpellSchool.Storm] = new("#ffe36a", 1, 3),
-            [SpellSchool.Arcane] = new("#b79aff", 0.8, 3),
+            // G1-calibrated reach and direct energy for the physically attenuated shared GPU light.
+            // The old Hunt profile (6 / 144 px) lit only a contact smear behind alpha actors.
+            [SpellSchool.Fire] = new("#ff7835", 24, 320),
+            [SpellSchool.Frost] = new("#8bdfff", 0.8, 144),
+            [SpellSchool.Storm] = new("#ffe36a", 1, 144),
+            [SpellSchool.Arcane] = new("#b79aff", 0.8, 144),
         };
 
     public static LightSourceProfile? ForSpell(SpellId spell) =>
@@ -36,7 +38,7 @@ public static class ProjectileLightingProjection
             Type: profile.Type,
             X: projectile.Position.X,
             Y: projectile.Position.Y,
-            Z: 0,
+            Z: 24,
             Color: profile.Color,
             Intensity: profile.Intensity,
             Radius: profile.Radius,

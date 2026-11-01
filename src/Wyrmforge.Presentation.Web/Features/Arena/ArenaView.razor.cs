@@ -105,6 +105,8 @@ public partial class ArenaView : IAsyncDisposable
         var query = new Uri(Navigation.Uri).Query.TrimStart('?').Split('&');
         var agentPreview = query.Any(value => string.Equals(value, "agents=1", StringComparison.OrdinalIgnoreCase));
         var geographyPreview = query.Any(value => string.Equals(value, "ar1Geography=1", StringComparison.OrdinalIgnoreCase));
+        var lighting01 = query.Any(value => string.Equals(value, "lighting01=1", StringComparison.OrdinalIgnoreCase)) &&
+            query.Any(value => string.Equals(value, "arenaGpu=1", StringComparison.OrdinalIgnoreCase));
         var requestedSite = query.FirstOrDefault(value => value.StartsWith("ar1SiteKind=", StringComparison.OrdinalIgnoreCase))
             ?.Split('=', 2).Last();
         previewMountainMonastery = geographyPreview && requestedSite == "mountain-monastery";
@@ -114,6 +116,7 @@ public partial class ArenaView : IAsyncDisposable
             : RunSeed;
         simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, previewSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt, researchLead: ResearchLead, preparedMutations: PreparedMutations, fireballMutations: FireballMutations, contextualSpell: ContextualSpell, region: Region, regionOpening: RegionOpening, hunt: Hunt, amplifierAssignments: MutationAmplifierAssignments, fireballLevel: FireballLevel, agents: agentPreview ? new(true, true) : null);
         if (geographyPreview) simulation.EnableWorldSiteGeography();
+        if (lighting01) simulation.EnableLightingComposition01();
         if (RewardCache) simulation.OpenRewardCache();
     }
 
@@ -134,12 +137,14 @@ public partial class ArenaView : IAsyncDisposable
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
+        // Commit the chosen signature before starting the JS frame loop. GPU initialization can
+        // otherwise delay this callback while browser proof observes the default Arcane snapshot.
+        // The Hunt must never simulate or render its opening frames under the wrong school.
+        if (PreferredPrimary is { } signature && ChoosingPrimary)
+            await ChoosePrimaryAsync(signature);
         arenaModule = await JavaScript.InvokeAsync<IJSObjectReference>("import", CancellationToken.None, $"./js/arena-performance.js?v={AppBuildInfo.Version}-{AppBuildInfo.Commit}");
         dotNetReference = DotNetObjectReference.Create(this);
         await arenaModule.InvokeVoidAsync("initializeArena", CancellationToken.None, canvas, dotNetReference);
-        // Character creation already chose the Divine school. Commit its signature without a Hunt overlay.
-        if (PreferredPrimary is { } signature && ChoosingPrimary)
-            await ChoosePrimaryAsync(signature);
     }
 
     [JSInvokable]
