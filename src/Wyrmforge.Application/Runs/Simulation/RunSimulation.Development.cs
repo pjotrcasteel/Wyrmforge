@@ -25,7 +25,7 @@ public sealed partial class RunSimulation
         mapState = CreateSeededMapState(depthState.Depth);
         EnsurePlayerPosition(setup.Width, setup.Height);
         if (setup.Environment)
-            arenaEnvironment = ArenaEnvironmentState.Create(mapState.Seed, mapState.Nodes.First(node => node.Type == WyrmrealmNodeType.Dragon), regionSchool: DragonCatalog.Get(setup.Wyrm).School);
+            arenaEnvironment = ArenaEnvironmentState.Create(mapState.Seed, mapState.Nodes.First(node => node.Type == WyrmrealmNodeType.Dragon), regionSchool: DragonCatalog.Get(setup.Wyrm).School, greybox: true);
 
         // A repeatable, evolved boss-ready spell; no Forge grants or saved progression.
         var spell = SpellCatalog.Get(setup.Spell);
