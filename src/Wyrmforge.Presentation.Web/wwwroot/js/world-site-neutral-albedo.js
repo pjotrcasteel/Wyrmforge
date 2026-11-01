@@ -279,9 +279,9 @@ export function drawWorldSiteNeutralAlbedo(ctx, geography, width, height) {
     const quiet = worldSiteQuietPixelModeEnabled();
     const world = worldSiteWorldPixelModeEnabled();
     if (prototype) requestPixel32Atlas();
+    else requestSources();
     if (quiet) requestQuietPixelAtlas();
     if (world) requestWorldPixelSources();
-    else requestSources();
     if (quiet && (quietPixelState !== 'ready' || !decodedQuietPixel)) return false;
     if (world && (worldPixelState !== 'ready' || !decodedWorldPixels)) return false;
     if (prototype ? pixel32State !== 'ready' || !decodedPixel32
