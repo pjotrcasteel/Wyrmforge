@@ -1,20 +1,30 @@
 using System.Text.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Application.Runs.Navigation;
-using Wyrmforge.Application.Runs.Simulation;
-using Wyrmforge.Domain.Combat.Dragons;
 
 namespace Wyrmforge.Application.Tests.Runs.Navigation;
 
 [TestClass]
 public sealed class WorldSiteStrataGridTests
 {
-    private static WorldSiteGeography Forest(int seed)
-    {
-        return WyrmrealmMapGenerator.GenerateFireHunt(seed, WyrmTier.Wyrm)
-            .Select(node => node.Geography!)
-            .First(site => site.Landscape?.Kind is "forest-fork" or "forest-trail");
-    }
+    // An explicit Wet Forest C# geography fixture: the Fire Hunt generator does not
+    // guarantee a Forest Fork/Trail node for every seed.
+    private static WorldSiteGeography Forest(int seed) =>
+        new(
+            WorldSiteGeography.CurrentVersion,
+            seed,
+            "fire",
+            $"fire:xyz0-forest-{seed}",
+            "WetForest",
+            new HuntPoint(.5, .5),
+            new WorldSiteSurface(WorldSiteSurfaceId.Grass, .2, .06, .78, .1, .7),
+            [],
+            [],
+            [])
+        {
+            GenerationProfile = new WorldSiteGenerationProfile(WorldSiteLandform.Wetland, WorldSiteLandmark.None),
+            Landscape = new WorldSiteLandscapeRecipe("forest-fork", []),
+        };
 
     [TestMethod]
     public void Xyz0_Native32PxGridHasIndependentPhysicalAndVerticalUnits()
