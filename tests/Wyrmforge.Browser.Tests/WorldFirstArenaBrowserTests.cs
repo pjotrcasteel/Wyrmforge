@@ -11,6 +11,66 @@ public sealed class WorldFirstArenaBrowserTests : PageTest
     [TestMethod]
     [DataRow(320, 568)]
     [DataRow(390, 844)]
+    public async Task Xyz0_WetForest_RealHuntShowsCSharp32PxMatrixWithInsetCellOutlines(int width, int height)
+    {
+        var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
+        var output = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS")
+            ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
+        Directory.CreateDirectory(output);
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.AddInitScriptAsync("""
+            localStorage.setItem('wyrmforge.firstHunt.v1','3');
+            localStorage.setItem('wyrmforge.characterSchool.v1','Pyromancer');
+            """);
+        var errors = new List<string>();
+        Page.PageError += (_, error) => errors.Add(error);
+        await Page.GotoAsync(root + "/?ar1Geography=1&ar1SiteKind=forest-fork&arenaTerrain=xyzgrid",
+            new() { WaitUntil = WaitUntilState.NetworkIdle });
+
+        var start = Page.GetByRole(AriaRole.Button, new() { NameRegex = new System.Text.RegularExpressions.Regex("^START GAME") });
+        await start.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 45000 });
+        await start.ClickAsync();
+        if (await Page.Locator(".character-creation").IsVisibleAsync())
+            await Page.GetByRole(AriaRole.Button, new() { Name = "Choose Pyromancer" }).ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Region, new() { Name = "Town square" })).ToBeVisibleAsync();
+        await Page.Locator(".refuge-town-spot--gate").ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Enter Free Play" }).ClickAsync();
+        await Page.Locator(".gate-action--primary").ClickAsync();
+        await Page.Locator(".gate-lineage--fire").ClickAsync();
+        await Page.Locator(".gate-tier--ready").First.ClickAsync();
+        await Expect(Page.GetByText("Choose your trail.", new() { Exact = true })).ToBeVisibleAsync();
+        var node = Page.Locator("button.route-node.available").First;
+        Assert.AreEqual("forest-fork", await node.GetAttributeAsync("data-site-kind"));
+        var siteId = (await node.GetAttributeAsync("data-site-id"))!;
+        await Page.EvaluateAsync(@"() => {
+            const url = new URL(location.href);
+            url.searchParams.set('arenaTerrain', 'xyzgrid');
+            history.replaceState(null, '', url);
+        }");
+        await node.ClickAsync();
+        await Page.GetByRole(AriaRole.Button,
+            new() { NameRegex = new System.Text.RegularExpressions.Regex("^Enter (rare )?trail$") }).ClickAsync();
+        await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
+        await Page.WaitForFunctionAsync("expected => window.__wyrmforgeAr0Geography?.siteId === expected && " +
+            "window.__wyrmforgeAr0Geography?.matrix?.tilePixels === 32", siteId,
+            new() { Timeout = 45000 });
+        Assert.AreEqual(30, await Page.EvaluateAsync<int>("() => window.__wyrmforgeAr0Geography.matrix.columns"));
+        Assert.AreEqual(49, await Page.EvaluateAsync<int>("() => window.__wyrmforgeAr0Geography.matrix.rows"));
+        Assert.AreEqual(950, await Page.EvaluateAsync<int>("() => window.__wyrmforgeAr0Geography.matrix.worldWidth"));
+        Assert.AreEqual(1550, await Page.EvaluateAsync<int>("() => window.__wyrmforgeAr0Geography.matrix.worldHeight"));
+        Assert.IsTrue(await Page.EvaluateAsync<bool>(
+            "() => Number.isInteger(window.__wyrmforgeAr0Geography.matrix.centerZ)"));
+        Assert.IsTrue(await Page.EvaluateAsync<bool>(
+            "() => Number.isInteger(window.__wyrmforgeAr0Geography.matrix.centerMaterialId)"));
+        Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
+        await Page.ScreenshotAsync(new() {
+            Path = Path.Combine(output, $"xyz0-wet-forest-matrix-insets-{width}.png"), FullPage = false,
+        });
+    }
+
+    [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
     public async Task Ar0_ChartNodeAndActualHuntUseSameVersionedSiteAtMobileWidth(int width, int height)
     {
         var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');

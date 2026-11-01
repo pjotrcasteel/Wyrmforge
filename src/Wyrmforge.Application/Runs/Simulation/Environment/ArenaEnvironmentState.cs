@@ -25,10 +25,14 @@ public sealed class ArenaEnvironmentState
     private readonly bool worldFirstGeography;
     private readonly HuntArenaGenerator.WetForestRecipe? wetForest;
     private WorldSiteGeography? geography;
+    private WorldSiteStrataRenderSnapshot? strataReview;
     private EncounterPhase phase = EncounterPhase.Pressure;
 
     /// <summary>Read-only C# fixture geometry for the optional shared G5 light projection.</summary>
     public HuntArenaGenerator.WetForestRecipe? LightingRecipe => wetForest;
+
+    /// <summary>Only the opt-in AR1+ C# site uses a fixed physical/logical grid across viewports.</summary>
+    public bool UsesFixedWorldSiteExtent => worldFirstGeography && geography?.Landscape is not null;
 
     private sealed class Supply(string kind, double x, double y, EncounterPhase unlockPhase)
     {
@@ -180,6 +184,14 @@ public sealed class ArenaEnvironmentState
             {
                 Elevation = WorldSiteElevationField.CreatePreview(geography),
             } };
+        // Bake once per site, not per render frame. The C# site and GetCell(x,y,z)
+        // retain authority; this readonly row-major snapshot is visual evidence only.
+        if (worldFirstGeography && geography?.Landscape is not null)
+            // Preserve the EXISTING review screenshots until a cropped, chunk-visible
+            // 1m-cell renderer replaces this full-frame 6.4m diagnostic compositor.
+            // Gameplay/default XYZ grids already use the owner-approved 1m block.
+            strataReview ??= WorldSiteStrataRenderSnapshot.FromGrid(new WorldSiteStrataGrid(
+                geography, cellWidthMeters: WorldSiteStrataGrid.PreviewCellWidthMeters));
 
         return new(seed, biome, element, stage, landmark,
         supplies.Where(supply => !supply.Collected)
@@ -195,6 +207,7 @@ public sealed class ArenaEnvironmentState
         // The normal Hunt needs AR0 site identity and port topology, not dozens of
         // inactive geometry vertices serialized on every mobile render frame.
         Geography = worldFirstGeography ? geography : geography is null ? null : geography with { Landscape = null },
+        Strata = worldFirstGeography ? strataReview : null,
         GeographyActive = worldFirstGeography,
         Props = destructibles.Where(prop => prop.Health > 0)
             .Select(prop => new ArenaPropRenderSnapshot(prop.Spec.Id, prop.Spec.Kind, prop.Spec.X, prop.Spec.Y, prop.Spec.Radius,

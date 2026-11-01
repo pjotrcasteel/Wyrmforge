@@ -29,6 +29,8 @@ public sealed record ArenaEnvironmentRenderSnapshot(
     public HuntArenaGenerator.WetForestRecipe? WetForest { get; init; }
     /// <summary>Versioned site/edge/material identity; presentation must not generate a second graph.</summary>
     public WorldSiteGeography? Geography { get; init; }
+    /// <summary>Optional C# XYZ top-face matrix for world-first reviews; absent in normal Hunts.</summary>
+    public WorldSiteStrataRenderSnapshot? Strata { get; init; }
     /// <summary>True when the C# landscape obstacles are actual gameplay colliders.</summary>
     public bool GeographyActive { get; init; }
     public IReadOnlyList<ArenaPropRenderSnapshot> Props { get; init; } = [];
