@@ -6,7 +6,7 @@ import {createHash} from 'node:crypto';
 import assert from 'node:assert/strict';
 import {decodePng,encodePng} from '../lib/png.mjs';
 import {Bitmap} from '../lib/painter.mjs';
-const {project}=await import(process.argv.includes('--north-arm')?'./gothic-north-arm.mjs':process.argv.includes('--north-rebuild')?'./gothic-north-rebuild.mjs':process.argv.includes('--north')?'./gothic-north-project.mjs':process.argv.includes('--northeast')?'./gothic-northeast-project.mjs':process.argv.includes('--east')?'./gothic-east-project.mjs':process.argv.includes('--leg-coverage')?'./gothic-south-legs.mjs':process.argv.includes('--boot-cleanup')?'./gothic-south-boots.mjs':process.argv.includes('--south-stick')?'./gothic-south-stick.mjs':process.argv.includes('--overlap-fix')?'./gothic-walking-stick-overlap.mjs':process.argv.includes('--repair-stick')?'./gothic-walking-stick-repair.mjs':process.argv.includes('--walking-stick')?'./gothic-walking-stick-project.mjs':process.argv.includes('--southeast')?'./gothic-southeast-project.mjs':'./gothic-project.mjs');
+const {project}=await import(process.argv.includes('--north-cloth')?'./gothic-north-cloth.mjs':process.argv.includes('--north-organic')?'./gothic-north-organic.mjs':process.argv.includes('--north-contact')?'./gothic-north-contact.mjs':process.argv.includes('--north-run')?'./gothic-north-run.mjs':process.argv.includes('--north-arm')?'./gothic-north-arm.mjs':process.argv.includes('--north-rebuild')?'./gothic-north-rebuild.mjs':process.argv.includes('--north')?'./gothic-north-project.mjs':process.argv.includes('--northeast')?'./gothic-northeast-project.mjs':process.argv.includes('--east')?'./gothic-east-project.mjs':process.argv.includes('--leg-coverage')?'./gothic-south-legs.mjs':process.argv.includes('--boot-cleanup')?'./gothic-south-boots.mjs':process.argv.includes('--south-stick')?'./gothic-south-stick.mjs':process.argv.includes('--overlap-fix')?'./gothic-walking-stick-overlap.mjs':process.argv.includes('--repair-stick')?'./gothic-walking-stick-repair.mjs':process.argv.includes('--walking-stick')?'./gothic-walking-stick-project.mjs':process.argv.includes('--southeast')?'./gothic-southeast-project.mjs':'./gothic-project.mjs');
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../../..');
 const base=join(root,'art/source/characters/grey-wizard'),out=join(base,project.outputDirectory??'gothic-south-v003');
 mkdirSync(join(out,'source-layers'),{recursive:true});
@@ -76,6 +76,12 @@ for(let y=0;y<height;y++)for(let x=0;x<width;x++)if(master.alpha(x,y)){
         if(!insideMask)return false;
         if(project.staffMaterialGuard&&m.name==='staff'&&y>=project.staffMaterialGuard.fromY){
             const [r,g,b]=master.get(x,y);
+            if(project.staffStrictWoodGuard&&y>=99){
+                // A warm-grey robe fold can pass a weak red-lead threshold.
+                // Reclassify ONLY genuine brown wood at the rear-view shaft.
+                return (r-g>=20&&r-b>=30)||
+                    (r<=100&&r-g>=12&&r-b>=18&&g<=65);
+            }
             if(y>=(project.staffMaterialGuard.strictFromY??Infinity))
                 return r-g>=project.staffMaterialGuard.minRedLead&&r-b>=project.staffMaterialGuard.minRedLead;
             return (r>g*1.14&&r>b*1.19)||(r<=project.staffMaterialGuard.darkMax&&g<r*1.08&&b<r*1.08);

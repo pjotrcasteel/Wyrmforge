@@ -13,10 +13,11 @@ const southeast=walkingStick||process.argv.includes('--southeast');
 const legCoverage=process.argv.includes('--leg-coverage');
 const bootCleanup=legCoverage||process.argv.includes('--boot-cleanup');
 const southStick=bootCleanup||process.argv.includes('--south-stick');
-const sourceModule=process.argv.includes('--north-arm')?'./gothic-north-arm.mjs':process.argv.includes('--north-rebuild')?'./gothic-north-rebuild.mjs':process.argv.includes('--north')?'./gothic-north-project.mjs':process.argv.includes('--northeast')?'./gothic-northeast-project.mjs':process.argv.includes('--east')?'./gothic-east-project.mjs':legCoverage?'./gothic-south-legs.mjs':bootCleanup?'./gothic-south-boots.mjs':southStick?'./gothic-south-stick.mjs':overlap?'./gothic-walking-stick-overlap.mjs':repair?'./gothic-walking-stick-repair.mjs':walkingStick?'./gothic-walking-stick-project.mjs':southeast?'./gothic-southeast-project.mjs':'./gothic-project.mjs';
+const sourceModule=process.argv.includes('--north-cloth')?'./gothic-north-cloth.mjs':process.argv.includes('--north-organic')?'./gothic-north-organic.mjs':process.argv.includes('--north-contact')?'./gothic-north-contact.mjs':process.argv.includes('--north-run')?'./gothic-north-run.mjs':process.argv.includes('--north-arm')?'./gothic-north-arm.mjs':process.argv.includes('--north-rebuild')?'./gothic-north-rebuild.mjs':process.argv.includes('--north')?'./gothic-north-project.mjs':process.argv.includes('--northeast')?'./gothic-northeast-project.mjs':process.argv.includes('--east')?'./gothic-east-project.mjs':legCoverage?'./gothic-south-legs.mjs':bootCleanup?'./gothic-south-boots.mjs':southStick?'./gothic-south-stick.mjs':overlap?'./gothic-walking-stick-overlap.mjs':repair?'./gothic-walking-stick-repair.mjs':walkingStick?'./gothic-walking-stick-project.mjs':southeast?'./gothic-southeast-project.mjs':'./gothic-project.mjs';
 const source=await import(sourceModule),{project,poses,idle}=source;
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../../..');
 const out=join(root,'art/source/characters/grey-wizard',project.outputDirectory??'gothic-south-v003');
+const clip=project.clipName??'walk';
 const check=process.argv.includes('--check'),files=new Map(),size=project.exportCell;
 const hash=x=>createHash('sha256').update(x).digest('hex');
 const readBitmap=name=>{const d=decodePng(readFileSync(join(out,name)));const b=new Bitmap(d.width,d.height);b.data.set(d.rgba);return b;};
@@ -88,6 +89,35 @@ function triangle(dst,texture,uv,xy){
 }
 function warp(texture,name,p){
     const dst=new Bitmap(size,size),step=4;
+    // Pull pixels from the SAME anatomical source layer, including its cloth
+    // folds, using inverse mapping. Forward rasterized 4px triangles leave
+    // cracks between adjacent bent panels. Inverse sampling owns every
+    // destination pixel once and never grabs pigment from another body part.
+    if(project.inversePixelLayers?.includes(name)){
+        for(let y=0;y<size;y++)for(let x=0;x<size;x++){
+            const targetX=x-project.offset[0],targetY=y-project.offset[1];
+            let sx=targetX,sy=targetY;
+            for(let n=0;n<7;n++){
+                const q=transform(name,sx,sy,p);
+                const ex=targetX-q[0],ey=targetY-q[1];
+                sx+=ex;sy+=ey;
+                if(Math.abs(ex)+Math.abs(ey)<.0001)break;
+            }
+            const px=Math.round(sx),py=Math.round(sy);
+            if(texture.alpha(px,py))dst.set(x,y,texture.get(px,py));
+        }
+        return dst;
+    }
+    // Pixel-art footwear must be a rigid bitmap. Triangulating sparse boot
+    // pixels at fractional contact offsets tears stitching into new islands.
+    if(project.rigidPixelLayers?.includes(name)){
+        for(let y=0;y<texture.height;y++)for(let x=0;x<texture.width;x++){
+            if(!texture.alpha(x,y))continue;
+            const xy=transform(name,x,y,p);
+            dst.set(Math.round(xy[0]+project.offset[0]),Math.round(xy[1]+project.offset[1]),texture.get(x,y));
+        }
+        return dst;
+    }
     for(let y=0;y<texture.height;y+=step)for(let x=0;x<texture.width;x+=step){
         const uv=[[x,y],[Math.min(texture.width,x+step),y],[Math.min(texture.width,x+step),Math.min(texture.height,y+step)],[x,Math.min(texture.height,y+step)]];
         const xy=uv.map(([u,v])=>{const q=transform(name,u,v,p);return [q[0]+project.offset[0],q[1]+project.offset[1]];});
@@ -103,8 +133,12 @@ for(let y=0;y<master.height;y++)for(let x=0;x<master.width;x++){
 function render(p){
     const dst=new Bitmap(size,size);
     for(const name of project.drawOrder)dst.blit(warp(bleed[name],name,p),0,0);
-    for(const name of project.drawOrder)dst.blit(warp(layers[name],name,p),0,0);
-    if(project.cleanIslandsMaxPixels){
+    for(const name of project.drawOrder){
+        if(name==='boot-left'&&source.paintDynamicShins)source.paintDynamicShins(dst,p);
+        dst.blit(warp(layers[name],name,p),0,0);
+    }
+    const islandLimit=project.renderCleanIslandsMaxPixels??project.cleanIslandsMaxPixels;
+    if(islandLimit){
         const seen=new Set();
         for(let y=0;y<size;y++)for(let x=0;x<size;x++){
             const key=y*size+x;if(!dst.alpha(x,y)||seen.has(key))continue;
@@ -116,7 +150,7 @@ function render(p){
                     if(dst.inside(nx,ny)&&dst.alpha(nx,ny)&&!seen.has(k)){seen.add(k);part.push(k);}
                 }
             }
-            if(part.length<=project.cleanIslandsMaxPixels)for(const k of part)dst.clear(k%size,Math.floor(k/size));
+            if(part.length<=islandLimit)for(const k of part)dst.clear(k%size,Math.floor(k/size));
         }
     }
     return dst;
@@ -133,19 +167,19 @@ for(let i=0;i<16;i++){
     assert.ok(bounds.x>2&&bounds.y>2&&bounds.x+bounds.w<size-2&&bounds.y+bounds.h<size-2,'clipped walk source');
     minX=Math.min(minX,bounds.x);minY=Math.min(minY,bounds.y);maxX=Math.max(maxX,bounds.x+bounds.w-1);maxY=Math.max(maxY,bounds.y+bounds.h-1);
     for(let p=3;p<b.data.length;p+=4)assert.ok(b.data[p]===0||b.data[p]===255);
-    atlas.blit(b,size*i,0);emission.blit(warp(emissionSource,'staff',poses[i]),size*i,0);emit(`frames/walk-${String(i).padStart(2,'0')}.png`,b);
+    atlas.blit(b,size*i,0);emission.blit(warp(emissionSource,'staff',poses[i]),size*i,0);emit(`frames/${clip}-${String(i).padStart(2,'0')}.png`,b);
 }
 assert.ok(unique.size>=(project.minUniqueFrames??16),'insufficient unique walk poses: '+unique.size+'/16; '+frames.map((b,i)=>[i,hash(b.data)]).filter(([i,h],_,all)=>all.findIndex(pair=>pair[1]===h)<i).map(([i,h])=>i+' duplicates '+frames.findIndex(b=>hash(b.data)===h)).join(','));
-emit('walk.png',atlas);emit('walk-emission.png',emission);
-const board=new Bitmap(size*4*2,size*4*2);for(let i=0;i<16;i++)board.blit(up(frames[i],2),(i%4)*size*2,Math.floor(i/4)*size*2);emit('walk-contact-2x.png',board);
+emit(`${clip}.png`,atlas);emit(`${clip}-emission.png`,emission);
+const board=new Bitmap(size*4*2,size*4*2);for(let i=0;i<16;i++)board.blit(up(frames[i],2),(i%4)*size*2,Math.floor(i/4)*size*2);emit(`${clip}-contact-2x.png`,board);
 const anchor=project.sourcePivot.map((v,i)=>v+project.offset[i]);
 const calibration=JSON.parse(readFileSync(join(out,'scale-calibration.json'),'utf8'));
 const worldSize=calibration.wizardWorldSize;
 assert.ok(Math.abs((calibration.wizardSourceSoleY-calibration.wizardSourceCrownY)*worldSize/size-calibration.standingBodyWorldHeight)<.001,'body-scale calibration mismatch');
-const profile={schemaVersion:1,maxDeltaSeconds:.1,facing:{directions:[project.direction],degreesPerSecond:360,hysteresisDegrees:3},locomotion:{clip:'walk',frames:16,stride:project.sourceStride*worldSize/size,sourceFps:project.fps,calibration:'source stride only; actual C# speed and frame cadence not accepted'},actions:{}};
+const profile={schemaVersion:1,maxDeltaSeconds:.1,facing:{directions:[project.direction],degreesPerSecond:360,hysteresisDegrees:3},locomotion:{clip,frames:16,stride:project.runtimeWorldStride??project.sourceStride*worldSize/size,sourceFps:project.fps,calibration:project.runtimeWorldStride?'distance phase fitted to C# base speed; source ground and Hunt visual gate still open':'source stride only; actual C# speed and frame cadence not accepted'},actions:{}};
 json('animation-profile.json',profile);
-json('manifest.json',{schemaVersion:1,directions:[project.direction],status:project.status,clips:{idle:{image:'idle.png',frames:1,cell:size,anchor,worldSize},walk:{image:'walk.png',frames:16,cell:size,anchor,worldSize}},emission:{walk:'walk-emission.png'},sourceExport:'art/source/characters/grey-wizard/'+(project.outputDirectory??'gothic-south-v003')});
-json('motion.json',{source:'tools/art/grey-wizard/'+sourceModule.slice(2),coordinates:'native source x/y; no gameplay authority',poses,sourceStride:project.sourceStride,sourceContacts:poses.map((p,i)=>({frame:i,left:i<8,right:i>=8,...(walkingStick||southStick||project.walkingStick?{staffPlanted:i>=(project.staffPlantStart??7)}:{}),...(project.rootPerFrame?{rootX:project.rootPerFrame[0]*i,rootY:project.rootPerFrame[1]*i}:southeast?{rootX:i,rootY:i}:{rootY:2*i})})),scope:'authored 2D study only; masks, overlap, foot fit and source art need review'});
+json('manifest.json',{schemaVersion:1,directions:[project.direction],status:project.status,clips:{idle:{image:'idle.png',frames:1,cell:size,anchor,worldSize},[clip]:{image:`${clip}.png`,frames:16,cell:size,anchor,worldSize}},emission:{[clip]:`${clip}-emission.png`},sourceExport:'art/source/characters/grey-wizard/'+(project.outputDirectory??'gothic-south-v003')});
+json('motion.json',{source:'tools/art/grey-wizard/'+sourceModule.slice(2),coordinates:'native source x/y; no gameplay authority',poses,sourceStride:project.sourceStride,sourceContacts:poses.map((p,i)=>({frame:i,left:i<8,right:i>=8,...(walkingStick||southStick||project.walkingStick?{staffPlanted:i>=(project.staffPlantStart??7)}:{}),...(project.rootPerFrame?{rootX:project.rootPerFrame[0]*i,rootY:project.rootPerFrame[1]*i}:southeast?{rootX:i,rootY:i}:{rootY:2*i})})),scope:project.runtimeWorldStride?'game-speed source-root review; owner/actual Hunt contact not yet accepted':'authored 2D study only; masks, overlap, foot fit and source art need review'});
 // Measure source boot raster sole during its declared stance. This is NOT a
 // C# root replay, general biomechanics validation or real Hunt contact proof.
 const contacts=source.sourceContacts?source.sourceContacts(warp,layers):[];

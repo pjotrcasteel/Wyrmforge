@@ -1,0 +1,19 @@
+{
+  "scope": "source media/packaging and numeric cadence audit only",
+  "openRasterLayers": 15,
+  "sourceLayerBytesExact": true,
+  "gifFrames": 16,
+  "gifMilliseconds": 500,
+  "mp4Decode": true,
+  "sourceFps": 32,
+  "sourceWorldStride": 95,
+  "sourceGuideSpeed": 190.0,
+  "csharpBaseSpeed": 190.0,
+  "csharpSpeedSource": "src/Wyrmforge.Domain/Combat/Player/PlayerState.cs",
+  "csharpSpeedSourceSha256": "49c5e1cf66a3ca5e22cc0b9e2a55ab3ced168e39e111e0397bad2999870bdee7",
+  "liveFramesPerSecondAtBaseSpeed": 32.0,
+  "liveCyclesPerSecondAtBaseSpeed": 2.0,
+  "cadenceMatchesBaseSpeed": true,
+  "sourceIsGameplayFit": false,
+  "limitation": "Speed-driven phase matches nominal C# base speed; frame/root contacts remain source-only, and actual Hunt/phone visual fit is unapproved."
+}

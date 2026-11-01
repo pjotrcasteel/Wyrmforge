@@ -17,7 +17,7 @@ root=Path(__file__).resolve().parents[3]
 source=root/args.source
 project=json.loads((source/'project.json').read_text())
 profile=json.loads((source/'animation-profile.json').read_text())
-facing={'S':'south','SE':'southeast','E':'east','NE':'northeast'}[project['direction']]
+facing={'S':'south','SE':'southeast','E':'east','NE':'northeast','N':'north'}[project['direction']]
 ora=source/('grey-wizard-fire-'+facing+'.ora')
 with zipfile.ZipFile(ora) as z:
     assert z.read('mimetype')==b'image/openraster'
@@ -28,13 +28,15 @@ with zipfile.ZipFile(ora) as z:
     for layer,expected in zip(layers,reversed(project['layers'])):
         assert layer.attrib['name']==expected['name']
         assert z.read(layer.attrib['src'])==(source/expected['file']).read_bytes()
-name=facing+'-walk'
+clip=project.get('clipName','walk')
+name=facing+'-'+clip
 with Image.open(source/'review'/(name+'.gif')) as gif:
     assert gif.n_frames==16
     duration=0
     for i in range(16):
         gif.seek(i);duration+=gif.info['duration']
-    assert duration==1330
+    expected_milliseconds=1330 if project['fps']==12 else round(16*1000/project['fps']/10)*10
+    assert duration==expected_milliseconds,(duration,expected_milliseconds)
 subprocess.run([args.ffmpeg,'-hide_banner','-loglevel','error','-i',str(source/'review'/(name+'.mp4')),'-f','null','-'],check=True)
 player_file=root/'src/Wyrmforge.Domain/Combat/Player/PlayerState.cs'
 text=player_file.read_text()
@@ -48,7 +50,10 @@ report=dict(scope='source media/packaging and numeric cadence audit only',
             csharpSpeedSourceSha256=hashlib.sha256(player_file.read_bytes()).hexdigest(),
             liveFramesPerSecondAtBaseSpeed=base_speed/stride*16,
             liveCyclesPerSecondAtBaseSpeed=base_speed/stride,
+            cadenceMatchesBaseSpeed=abs(stride*project['fps']/16-base_speed)<.01,
             sourceIsGameplayFit=False,
-            limitation='Base speed excludes build/status modifiers. Native12fps source is NOT a walk/run fit at live speed. Do not cut over or alter gameplay speed to hide this mismatch.')
+            limitation=('Speed-driven phase matches nominal C# base speed; frame/root contacts remain source-only, and actual Hunt/phone visual fit is unapproved.'
+                        if abs(stride*project['fps']/16-base_speed)<.01 else
+                        'Base speed excludes build/status modifiers. Native source is NOT a walk/run fit at live speed. Do not cut over or alter gameplay speed to hide this mismatch.'))
 (source/'review'/'package-cadence-audit.json').write_text(json.dumps(report,indent=2)+'\n')
 print(json.dumps(report))

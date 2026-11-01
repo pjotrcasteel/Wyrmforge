@@ -1,0 +1,13 @@
+{
+  "scope": "camera-follow source grid diagnostic; not Hunt footage or artistic acceptance",
+  "fps": 32,
+  "frames": 64,
+  "cycles": 4,
+  "basePlayerSpeed": 190,
+  "worldStridePerCycle": 95,
+  "nativeGroundTravelPerFrame": 13.02357460300409,
+  "sourceContactAccepted": true,
+  "gameplayContactApproved": false,
+  "gif": "n-run-ground-grid.gif",
+  "mp4": "n-run-ground-grid.mp4"
+}

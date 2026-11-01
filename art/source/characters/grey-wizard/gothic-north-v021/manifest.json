@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "directions": [
+    "N"
+  ],
+  "status": "N native-layer inverse cloth deformation, physically timed legs; owner visual review OPEN",
+  "clips": {
+    "idle": {
+      "image": "idle.png",
+      "frames": 1,
+      "cell": 160,
+      "anchor": [
+        77,
+        136
+      ],
+      "worldSize": 72.944643
+    },
+    "run": {
+      "image": "run.png",
+      "frames": 16,
+      "cell": 160,
+      "anchor": [
+        77,
+        136
+      ],
+      "worldSize": 72.944643
+    }
+  },
+  "emission": {
+    "run": "run-emission.png"
+  },
+  "sourceExport": "art/source/characters/grey-wizard/gothic-north-v021"
+}

@@ -1,0 +1,16 @@
+{
+  "status": "N 190world/s cloth inverse-warp source review; in-game approval OPEN",
+  "rule": "wizard and standard Hollowed have equal un-hunched anatomical stature; exclude hat and staff",
+  "reference": "gothic-south-v003/scale-calibration.json; 30 October owner-accepted working guide",
+  "standingBodyWorldHeight": 49.69353803481172,
+  "wizardSourceCrownY": 32,
+  "wizardSourceSoleY": 141,
+  "wizardCell": 160,
+  "wizardWorldSize": 72.944643,
+  "limitations": [
+    "continuous robe uses same-layer inverse pixel sampling to close warp cracks",
+    "delayed height/side folds are an authored approximation, not dynamic cloth physics",
+    "all original source-root foot-contact timing retained",
+    "no actual Hunt/mobile replay or owner aesthetic approval"
+  ]
+}

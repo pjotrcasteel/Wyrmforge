@@ -961,3 +961,119 @@ polygon. It is **not** proof of a naturally complete stride, 2.5D-ground staff
 occlusion or C# velocity fit. Source cadence still implies only 2.73542 world
 units/sec at 12fps vs player base speed 190. PR remains draft; no live asset
 cutover or merge without explicit owner acceptance and actual Hunt/device proof.
+
+### Normal-speed north run — v018/v019 (1 November; ART REVIEW ONLY)
+
+Owner correctly identified that the preceding 12fps/8-native-pixel short gait
+could not plausibly play at the **190-world-units/s** C# movement speed. The
+distance-driven shared sprite controller, not fixed-duration GIF playback,
+determines the runtime phase. With the source worldSize72.944643 and 160px
+cell, 190world/s corresponds to **416.754 native source px/s**. A 16-pose
+cycle at the old 3.647world-unit stride would demand **833.5 source poses/s**.
+Do not slow the player or falsify the stride to hide that mismatch.
+
+The standalone v018 `gothic-north-run.mjs` first established a mathematically
+calibrated normal-movement clip: 95world-unit stride, 16 frames, 32 source
+frames/sec or 2 cycles/sec at 190world/s. It preserved the original 13-part
+semantic layer ownership, continuous embroidered robe, correct slim staff,
+isolated shoes and separate slower walking-stick v017. It intentionally moved
+the boots only a few pixels and never claimed ground contact. The moving-grid
+MP4 exposed the resulting skating; v018 is a diagnostic, **not** a playable
+cycle. An early attempt to translate shoes by game-root distance without new
+anatomy generated long disconnected shins and was discarded.
+
+v019 `gothic-north-contact.mjs` preserves that base-speed cadence but adds a
+separate three-pose contact interval to each boot and a custom darker, tapered
+lower-leg cuff underpainting authored as trouser pigment, rather than shoe or
+robe pixel reuse. Each source sole stays within **0.048native px** of a fixed
+world position during its planted interval. An isolated 13-pixel toe contour
+becomes exposed while the boot recovers under the hem; per-render cleanup
+removes that occluded sliver without modifying the reference master or taking
+pixels from a different body part. Source idle still exactly recomposes the
+native reference; all 16 current poses are binary-alpha and form one raster
+component. The fire staff is carried for running; the v017 planted-staff slow
+walk is preserved as a separate authoring project.
+
+Source deliverables include 13-layer OpenRaster, 16-frame `run` atlas, game-
+speed profile, source-only foot contacts and verification, `north-run.gif`,
+`north-run.mp4`, and a 64-frame camera-follow moving-grid MP4/GIF using the
+**actual C# root-speed projection** of 13.02357 native px/frame at 32fps.
+The 16-frame GIF lasts 500ms; the MP4 preview repeats 4 cycles. The common
+controller test is movement-distance driven and remains unmodified. The
+replay proves only isolated sole/root arithmetic, not physical interaction
+with a game's collision surface or the visual quality of a sprint.
+
+**Still open:** v019 lower-leg folds and cape motion must be reviewed by the
+owner at native gameplay scale; no actual Hunt integration, 320/390 mobile
+capture, or 2.5D ground/occlusion acceptance has been performed. Source
+`sourceContactVerified` means *three-frame source-root maths only*;
+`gameplayContactApproved=false`, `runtimeIntegrated=false`,
+`artisticallyApproved=false`. PR #439 remains draft and no live sprite
+replacement or animation-speed gameplay change is authorized.
+
+### North organic run — v020 (owner review requested)
+
+Following owner feedback that the v019 shoes moved faster but the wizard's
+upper body looked static, built an independent v020 source stage. The physical
+root-speed/16-key cadence and three-frame boot support intervals from v019
+are identical; no C# movement, shared animation controller or gameplay assets
+changed. The new gait has two weight transfers per 16-key loop, shoulder
+counter-motion, actual left-arm swing around its shoulder, a subtle rigid
+hat/head bob, independent staff-carry/forearm travel and delayed *whole-robe*
+edge/hem folds. At the actual on-screen pixel size these changes are modest;
+the motion is deliberately less exaggerated than a cartoon run.
+
+`free-arm-underlay` adds 402 explicitly painted native grey cloth pixels behind
+the free sleeve to protect its shoulder seam during the counter-swing. Every
+underpaint pixel is covered by that exact anatomical sleeve in the approved
+rest image; none is sampled from the staff, boots or embroidered robe. The
+14-layer OpenRaster remains losslessly recomposable to the same source image.
+The source run has 16 unique frames, no detached pixel components, source
+contact drift under 0.05px for both boots and a 500ms GIF/32fps MP4. A separate
+64-frame MP4/GIF scrolls the ground by 13.02357 native px/frame as calculated
+from C# speed190 and the existing body scale.
+
+**Candidate only:** v020 is offered for aesthetic review, not an approved
+locomotion contract or integrated gameplay capture. The lower-leg folds, robe
+drag and transitions from stance to foot recovery still need subjective
+owner judgment and a genuine Hunt replay on mobile. `sourceIsGameplayFit` and
+`gameplayContactApproved` remain false; PR #439 stays draft.
+
+### Cloth and staff correction — v021 (owner review; v020 cracks rejected)
+
+The owner correctly identified black cracks appearing in the v020 draping
+garment. **Do not promote v020 as an artistically clean source.** The first
+cause was the rasterization method: each deforming 4px forward-triangulated
+cloth cell could leave small uncovered seams at shoulder and hem tension.
+`build-gothic-walk.mjs` now offers an opt-in, strictly same-layer inverse
+nearest-pixel mapper for deformable cloth. Each output pixel samples only its
+own semantic garment/staff layer, with no cross-part color bleed; previous
+directions still use the unchanged raster path. v021 also adds a mild height-
+and side-delayed wave over the *single* robe layer, producing trailing hem
+weight rather than translating the whole mantle as a rigid board. The source
+idle remains byte-exact and school embroidery stays in the continuous robe.
+
+Inspection of the isolated staff exposed a second, **real ownership bug**
+missed by earlier broad red-lead tests: 70 warm-grey robe pixels at the rear
+shaft were incorrectly assigned to the moving staff. A material-specific
+wood guard reassigns those pixels to the robe; 126 hand-painted true brown
+wood pixels of `staff-occluded` now lie *behind actual robe pixels* to support
+the hidden shaft when the staff is carried. This is an explicit fifteenth
+anatomical layer, not tiled robe texture or copied shoe pixels. Strict tests
+assert material identity, exact original source composition and that every
+occluded wood pixel is covered by the actual garment in the reference.
+
+The complete 15-layer OpenRaster package, standard 16-key run atlas, 500ms
+GIF and 32fps four-cycle MP4, plus a 190world/s moving-grid GIF/MP4 have been
+exported. All 16 v021 frames form a single 8-connected silhouette; source
+boot-root drift remains below 0.048px for short supports and the game-speed
+animation-phase audit passes. These checks **do not** constitute actual Hunt
+or mobile-device visual approval. No live animation or physics authority was
+changed and PR #439 must remain draft pending owner art acceptance.
+
+To keep this PR reviewable, **only the corrected v021 generated north-run
+assets** belong in the new PR checkpoint. The v018–v020 renders remain local
+diagnostic history because the rigid/incorrectly owned staff pigment and
+v020 garment gaps made them unsuitable as transferable art. Their small
+authoring modules remain in version control solely as the v021 dependency
+chain; the rejected v015 assets remain excluded as before.

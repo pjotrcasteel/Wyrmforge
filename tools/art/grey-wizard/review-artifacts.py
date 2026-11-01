@@ -10,7 +10,8 @@ args=parser.parse_args()
 root=Path(__file__).resolve().parents[3];source=root/args.source
 out=source/'review';out.mkdir(exist_ok=True)
 project=json.loads((source/'project.json').read_text())
-frames=[Image.open(source/f'frames/walk-{i:02}.png').convert('RGBA') for i in range(16)]
+clip=project.get('clipName','walk')
+frames=[Image.open(source/f'frames/{clip}-{i:02}.png').convert('RGBA') for i in range(16)]
 cell=project['exportCell'];reports=[]
 for i,im in enumerate(frames):
     alpha=im.getchannel('A');pixels=alpha.load();seen=set();parts=[]

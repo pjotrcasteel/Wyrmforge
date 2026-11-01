@@ -1,0 +1,83 @@
+{
+  "status": "N native-layer inverse cloth deformation, physically timed legs; owner visual review OPEN",
+  "sourceLayerRecompositionExact": true,
+  "idleRasterExact": true,
+  "uniqueFrames": 16,
+  "binaryAlpha": true,
+  "paletteSize": 96,
+  "sourceBounds": {
+    "minX": 38,
+    "minY": 12,
+    "maxX": 125,
+    "maxY": 153
+  },
+  "cell": 160,
+  "anchor": [
+    77,
+    136
+  ],
+  "decodedAlbedoBytes": 1638400,
+  "decodedEmissionBytes": 1638400,
+  "sharedControllerSequence": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "pause": true,
+  "reducedMotion": true,
+  "contacts": [
+    {
+      "name": "boot-left",
+      "frames": [
+        0,
+        2
+      ],
+      "sourceRasterSoleWorldY": [
+        127,
+        126.97642539699591,
+        126.95285079399181
+      ],
+      "maxSpreadNativePixels": 0.04714920600818573,
+      "scope": "isolated boot contact in source-root coordinates; not Hunt visual acceptance"
+    },
+    {
+      "name": "boot-right",
+      "frames": [
+        8,
+        10
+      ],
+      "sourceRasterSoleWorldY": [
+        22.811403175967286,
+        22.787828572963193,
+        22.7642539699591
+      ],
+      "maxSpreadNativePixels": 0.04714920600818573,
+      "scope": "isolated boot contact in source-root coordinates; not Hunt visual acceptance"
+    }
+  ],
+  "sourceProjectSha256": "b246dabce1073d41ed9c208fa4b9314230aa0610b7f1d62297e5641dbfa555e9",
+  "controllerSha256": "34fa61696b29693d8922266e3a4697d1d8c97cd58ce1972af57fe10ed62310d0",
+  "runtimeIntegrated": false,
+  "artisticallyApproved": false,
+  "physicalDeviceTested": false,
+  "limitations": [
+    "diagnostic extracted emission; source-light still baked in albedo",
+    "explicit hidden leather shins, but remaining covered anatomy needs visual review",
+    "single source view only",
+    "source-only contact does not establish C# root-speed fitting",
+    "native world scale and actual phones open"
+  ]
+}

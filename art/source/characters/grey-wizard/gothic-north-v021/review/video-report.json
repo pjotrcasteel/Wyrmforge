@@ -1,0 +1,11 @@
+{
+  "sourceFrames": 16,
+  "fps": 32,
+  "mp4Frames": 64,
+  "display": [
+    "1x",
+    "4x-nearest"
+  ],
+  "scope": "authored source cycle only, not real Hunt footage or artistic acceptance",
+  "encoding": "Pillow GIF, FFmpeg libx264 MP4"
+}
