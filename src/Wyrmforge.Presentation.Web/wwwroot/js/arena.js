@@ -8,6 +8,7 @@ import { attachArenaInput, getArenaMovement, getArenaAim, isArenaStickAim, getAr
 import { resolveTargetIndicator, presentTargetSigil, drawTargetIndicator, preloadTargetSigilArt, targetSelectionLightEmitter, targetSelectionCanvasLight, actorLightsWithoutSigilOverlay } from './arena-target-indicator.js?v=20261028-feet-centered-v3';
 import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, drawArenaCloisterElevation, semanticSiteModeEnabled } from './arena-environment.js?v=20261031-ar1-highlands-v1';
 import { drawAr1GeographyReview } from './arena-ar1-geography-review.js?v=20261031-ar1-site-detail-v1';
+import { drawGreyboxGround } from './arena-greybox-ground.js';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
 import { drawRecoveryGuide } from './arena-recovery.js';
@@ -136,11 +137,13 @@ export function readArenaDiagnostics(canvas) {
             ? { ...state.gpuWorld.diagnostics(), scratchPool: state.gpuScratchPool?.diagnostics() ?? null }
             : { error: state.gpuError ?? null },
         hollowFractureGpuEmitters: state.fractureGpuEmitters ?? [],
+        greybox: state.latestSnapshot?.environment?.greybox ?? null,
         wetForestGround: state.latestSnapshot?.environment?.wetForest
             ? state.g4FlatGround
                 ? { status: 'flat-colors', source: 'C# recipe', variant: null }
                 : liveWetForestMaterialDiagnostics(state.latestSnapshot.environment.seed) : null,
-        terrainPresentation: state.g4FlatGround ? 'neutral-grey' : 'painted',
+        terrainPresentation: state.latestSnapshot?.environment?.greybox
+            ? 'one-meter-greybox' : state.g4FlatGround ? 'neutral-grey' : 'painted',
         framePresentation: state.g4StageFrames ? 'staged' : 'direct',
         lighting: { mode: 'night', darkness: GOTHIC_NIGHT.darkness, source: 'authoritative-csharp-snapshot' },
     };
@@ -317,7 +320,8 @@ function drawWaiting(state, width, height) {
 }
 
 function draw(state, snapshot, width, height) {
-    let gpu = snapshot.lighting && state.gpuWorld;
+    const greybox = Boolean(snapshot.environment?.greybox);
+    let gpu = !greybox && snapshot.lighting && state.gpuWorld;
     // Safari already retains the WebGL source buffer through HuntGpuWorld.
     // The extra full-size Canvas stage adds expensive mobile memory bandwidth.
     // Retain it only as a diagnostic A/B switch; the default draws synchronously
@@ -358,18 +362,22 @@ function draw(state, snapshot, width, height) {
     ctx.clearRect(0, 0, width, height);
     ctx.save();
     ctx.translate(-camera.x, -camera.y);
-    if (!drawArenaEnvironment(ctx, snapshot.environment, worldWidth, worldHeight, visualSeconds, null,
-        gpu ? 'gpu' : 'canvas', state.g4FlatGround)) {
-        ctx.fillStyle = '#14111b';
-        ctx.fillRect(0, 0, worldWidth, worldHeight);
-        drawGrid(ctx, worldWidth, worldHeight);
+    if (greybox) {
+        // A texture-free, level one-metre XYZ foundation. No terrain painter, walls,
+        // reflected scenery, authored surface atlas or Canvas/GPU night overlay.
+        drawGreyboxGround(ctx, snapshot.environment.greybox, worldWidth, worldHeight);
+    } else {
+        if (!drawArenaEnvironment(ctx, snapshot.environment, worldWidth, worldHeight, visualSeconds, null,
+            gpu ? 'gpu' : 'canvas', state.g4FlatGround)) {
+            ctx.fillStyle = '#14111b';
+            ctx.fillRect(0, 0, worldWidth, worldHeight);
+            drawGrid(ctx, worldWidth, worldHeight);
+        }
+        if (snapshot.hunt && !state.g4FlatGround && !gpu) drawHuntArena(ctx, snapshot.hunt, worldWidth, worldHeight);
+        if (!gpu) drawSpellLightSpill(ctx, spellLights, lightViewport, 'terrain');
+        drawArenaCloisterReflections(ctx, snapshot.environment, worldWidth, worldHeight,
+            spellLights, visualSeconds, state.reducedMotion.matches, state.g4FlatGround, gpu);
     }
-    if (snapshot.hunt && !state.g4FlatGround && !gpu) drawHuntArena(ctx, snapshot.hunt, worldWidth, worldHeight);
-    // World-space diffuse spell spill reaches actual masonry, terrain and the ground fog.
-    if (!gpu) drawSpellLightSpill(ctx, spellLights, lightViewport, 'terrain');
-    // Actual spell sources streak across nearby cloister water, not unrelated UI bloom.
-    drawArenaCloisterReflections(ctx, snapshot.environment, worldWidth, worldHeight,
-        spellLights, visualSeconds, state.reducedMotion.matches, state.g4FlatGround, gpu);
     drawArenaExit(ctx, snapshot.exit, visualSeconds);
     // Same physical outgoing ports the C# simulation accepts after a cleared AR1 trail.
     for (const port of snapshot.exitPorts ?? []) drawArenaExit(ctx, port, visualSeconds);
@@ -426,7 +434,8 @@ function draw(state, snapshot, width, height) {
         ...(state.ashfang.death ? [{kind:'dragonDeath',depth:state.ashfang.death.y}] : []),
         ...snapshot.enemies.map(enemy => ({ kind: 'enemy', depth: enemy.y + (enemy.radius || 0), enemy })),
         { kind: 'mage', depth: snapshot.player.y + (snapshot.player.radius || 0) },
-        ...getArenaCloisterElevations(snapshot.environment, worldWidth, worldHeight, visualSeconds, null, state.g4FlatGround, gpu),
+        ...(greybox ? [] : getArenaCloisterElevations(snapshot.environment, worldWidth, worldHeight,
+            visualSeconds, null, state.g4FlatGround, gpu)),
     ];
     if (gpu) gpu.begin(ctx, camera, width, height);
     state.lighting01FixtureCount = gpu && state.lighting01
@@ -513,7 +522,7 @@ function draw(state, snapshot, width, height) {
     // AR0 authoring diagnostics must expose the actual C# material classes at mobile scale.
     // Skip only the PRESENTATION night veil for the explicit semantic debug mode. No new
     // light solver, no authority changes, and normal Hunts retain exactly the same night.
-    if (!gpu && !(semanticSiteModeEnabled() && snapshot.environment?.geography?.version === 1)) {
+    if (!greybox && !gpu && !(semanticSiteModeEnabled() && snapshot.environment?.geography?.version === 1)) {
         const realFires = createWetForestFirelightPlan(snapshot.environment, worldWidth, worldHeight);
         const nightSources = gothicNightLightSources(snapshot, spellLights, worldWidth, worldHeight, realFires);
         drawGothicNight(ctx, gothicNightPlan(snapshot.player, nightSources, lightViewport), state.nightMask);
@@ -584,7 +593,7 @@ function draw(state, snapshot, width, height) {
     // Draw navigation above the world but under the HUD. The arrow is not a touch target.
     drawExitGuide(ctx, snapshot.exit, camera, width, height);
     // Opt-in map context is presented on the real Hunt canvas. Default play is untouched.
-    if (location.search.includes('ar1Review=1') &&
+    if (!greybox && location.search.includes('ar1Review=1') &&
         drawAr1GeographyReview(ctx, snapshot.environment?.geography,
             snapshot.environment?.geographyActive === true, snapshot.player, camera, width, height)) {
         globalThis.__wyrmforgeAr1Review = {
