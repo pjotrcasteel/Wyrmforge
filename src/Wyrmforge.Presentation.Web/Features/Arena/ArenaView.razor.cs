@@ -107,6 +107,14 @@ public partial class ArenaView : IAsyncDisposable
         var geographyPreview = query.Any(value => string.Equals(value, "ar1Geography=1", StringComparison.OrdinalIgnoreCase));
         var lighting01 = query.Any(value => string.Equals(value, "lighting01=1", StringComparison.OrdinalIgnoreCase)) &&
             query.Any(value => string.Equals(value, "arenaGpu=1", StringComparison.OrdinalIgnoreCase));
+        // Historical AR/GPU/material proof URLs keep their original scene for regression analysis.
+        // Ordinary unparameterized Hunts now use the neutral one-metre greybox.
+        var legacyArenaReview = geographyPreview || query.Any(value =>
+            value.StartsWith("arenaTerrain=", StringComparison.OrdinalIgnoreCase) ||
+            value.StartsWith("arenaGpu=", StringComparison.OrdinalIgnoreCase) ||
+            value.StartsWith("g4", StringComparison.OrdinalIgnoreCase) ||
+            value.StartsWith("lighting01=", StringComparison.OrdinalIgnoreCase) ||
+            value.StartsWith("ar1Review=", StringComparison.OrdinalIgnoreCase));
         var requestedSite = query.FirstOrDefault(value => value.StartsWith("ar1SiteKind=", StringComparison.OrdinalIgnoreCase))
             ?.Split('=', 2).Last();
         previewMountainMonastery = geographyPreview && requestedSite == "mountain-monastery";
@@ -115,6 +123,7 @@ public partial class ArenaView : IAsyncDisposable
             ? FindWorldSiteReviewSeed(seedKind)
             : RunSeed;
         simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, previewSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt, researchLead: ResearchLead, preparedMutations: PreparedMutations, fireballMutations: FireballMutations, contextualSpell: ContextualSpell, region: Region, regionOpening: RegionOpening, hunt: Hunt, amplifierAssignments: MutationAmplifierAssignments, fireballLevel: FireballLevel, agents: agentPreview ? new(true, true) : null);
+        if (legacyArenaReview) simulation.EnableLegacyArenaPreview();
         if (geographyPreview) simulation.EnableWorldSiteGeography();
         if (lighting01) simulation.EnableLightingComposition01();
         if (RewardCache) simulation.OpenRewardCache();
