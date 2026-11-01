@@ -49,6 +49,8 @@ public sealed class WorldSiteStrataMutationState
 
     public long Revision => _revision;
     public int ChangedCellCount => _changes.Count;
+    /// <summary>The immutable C# geology used by this mutation state and its render projections.</summary>
+    public WorldSiteStrataGrid BaseGrid => _baseGrid;
 
     public WorldSiteStrataMutationState(WorldSiteStrataGrid baseGrid)
     {
@@ -155,6 +157,79 @@ public sealed class WorldSiteStrataMutationState
             remaining == 0 ? WorldSiteCellMutationKind.Removed : WorldSiteCellMutationKind.Damaged,
             remaining, _revision);
         return true;
+    }
+
+    /// <summary>
+    /// XYZ2 isolated C# radial excavation proof. Exactly one exposed top cell per
+    /// XY column receives a bounded, integer, squared-radius falloff. Solid covers
+    /// shield buried rock in the same impact; later impacts may reach exposed rock.
+    /// This has NO live Fireball, LOS/navigation, gameplay save-slot or collider
+    /// integration yet. Those remain separate, gated C# responsibilities.
+    /// </summary>
+    public WorldSiteStrataImpactResult ApplySurfaceImpact(WorldSiteStrataImpact impact)
+    {
+        ArgumentNullException.ThrowIfNull(impact);
+        if (string.IsNullOrWhiteSpace(impact.ImpactId))
+        {
+            throw new ArgumentException("An impact must have a caller-owned identity.", nameof(impact));
+        }
+
+        // Bound the area to 33x33 candidate columns, independent of seed or device.
+        if (impact.RadiusCells is < 0 or > 16 || impact.PeakDamage <= 0 ||
+            impact.SoilIntegrity <= 0 || impact.RockIntegrity <= 0 || impact.OtherIntegrity <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(impact));
+        }
+
+        var revisionBefore = _revision;
+        var changes = new List<WorldSiteStrataImpactChange>();
+        var radiusSquared = impact.RadiusCells * impact.RadiusCells;
+        for (var dy = -impact.RadiusCells; dy <= impact.RadiusCells; dy++)
+        for (var dx = -impact.RadiusCells; dx <= impact.RadiusCells; dx++)
+        {
+            var distanceSquared = dx * dx + dy * dy;
+            if (distanceSquared > radiusSquared)
+            {
+                continue;
+            }
+
+            // Widen before addition so out-of-range impact centers cannot wrap.
+            var x = (long)impact.CenterX + dx;
+            var y = (long)impact.CenterY + dy;
+            if (x < 0 || x >= _baseGrid.Columns || y < 0 || y >= _baseGrid.Rows)
+            {
+                continue;
+            }
+
+            var before = GetExposedSurfaceCell((int)x, (int)y);
+            if (before.IsEmpty || !before.Solid || before.BodyMaterial is not { } body)
+            {
+                continue;
+            }
+
+            var integrity = body switch
+            {
+                WorldSiteSurfaceId.Soil => impact.SoilIntegrity,
+                WorldSiteSurfaceId.Rock => impact.RockIntegrity,
+                _ => impact.OtherIntegrity,
+            };
+            // All operations are integer and ordered row-major for exact replay.
+            // The far edge can be hit weakly; center retains the peak strength.
+            var damage = (int)Math.Max(1L, (long)impact.PeakDamage *
+                (radiusSquared - distanceSquared + 1) / (radiusSquared + 1));
+            if (!TryDamageCell(before.Key, damage, integrity))
+            {
+                continue;
+            }
+
+            var delta = FindDelta(before.Key)!;
+            var exposed = GetExposedSurfaceCell((int)x, (int)y);
+            changes.Add(new WorldSiteStrataImpactChange(before.Key, damage, before.SurfaceFinish,
+                delta, exposed.Key, exposed.SurfaceFinish));
+        }
+
+        return new WorldSiteStrataImpactResult(impact.ImpactId, impact.CenterX, impact.CenterY,
+            impact.RadiusCells, revisionBefore, _revision, changes);
     }
 
     /// <summary>Capture a stable, ordered copy of only changed cells, suitable for C# save/replay.</summary>

@@ -68,7 +68,9 @@ const siteCanvases = new Map();
 
 export function drawWorldSiteStrataGrid(ctx, strata, width, height) {
     if (typeof document === 'undefined' || !strata) return false;
-    const key = `${strata.siteId}:${strata.worldSeed}:${strata.tilePixels}:${strata.columns}x${strata.rows}`;
+    // A cell-removal revision MUST invalidate the cached pixels. A new C# stone
+    // surface is never allowed to reuse the old soil/grass atlas image.
+    const key = `${strata.siteId}:${strata.worldSeed}:${strata.revision ?? 0}:${strata.tilePixels}:${strata.columns}x${strata.rows}`;
     let cached = siteCanvases.get(key);
     if (!cached || cached.width !== width || cached.height !== height) {
         const rgba = composeWorldSiteStrataPixels(strata, width, height);

@@ -1,4 +1,5 @@
 using Wyrmforge.Application.Runs.Navigation;
+using Wyrmforge.Application.Runs.Simulation;
 
 namespace Wyrmforge.Application.Runs.Simulation.Snapshots;
 
@@ -17,9 +18,30 @@ public sealed record WorldSiteStrataRenderSnapshot(
     int[] BodyMaterialIds,
     int[] SurfaceZ)
 {
+    /// <summary>Zero for seeded geology, increasing for a mutation-state projection.</summary>
+    public long Revision { get; init; }
+
+    /// <summary>Project the immutable seeded top layer without creating a second terrain sampler.</summary>
     public static WorldSiteStrataRenderSnapshot FromGrid(WorldSiteStrataGrid grid)
     {
         ArgumentNullException.ThrowIfNull(grid);
+        return Build(grid, (x, y) =>
+        {
+            var z = grid.GetCell(x, y, int.MaxValue).SurfaceZ;
+            return grid.GetCell(x, y, z);
+        }, revision: 0);
+    }
+
+    /// <summary>Project freshly exposed C# stone after damage/removal, without JS guessing layers.</summary>
+    public static WorldSiteStrataRenderSnapshot FromMutations(WorldSiteStrataMutationState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        return Build(state.BaseGrid, state.GetExposedSurfaceCell, state.Revision);
+    }
+
+    private static WorldSiteStrataRenderSnapshot Build(WorldSiteStrataGrid grid,
+        Func<int, int, WorldSiteStrataCell> topAt, long revision)
+    {
         var count = checked(grid.Columns * grid.Rows);
         var finishes = new int[count];
         var bodies = new int[count];
@@ -29,16 +51,13 @@ public sealed record WorldSiteStrataRenderSnapshot(
         for (var x = 0; x < grid.Columns; x++)
         {
             var index = y * grid.Columns + x;
-            // The air query exposes the authoritative sampled surface Z, and the
-            // following exact cell query resolves both top finish and soil/stone body.
-            var z = grid.GetCell(x, y, int.MaxValue).SurfaceZ;
-            var top = grid.GetCell(x, y, z);
-            levels[index] = z;
+            var top = topAt(x, y);
+            levels[index] = top.Key.Z;
             finishes[index] = top.SurfaceFinish is { } finish ? (int)finish : -1;
             bodies[index] = top.MaterialId;
         }
 
         return new(grid.SiteId, grid.WorldSeed, WorldSiteStrataGrid.NativeSourceTilePixels,
-            grid.Columns, grid.Rows, finishes, bodies, levels);
+            grid.Columns, grid.Rows, finishes, bodies, levels) { Revision = revision };
     }
 }

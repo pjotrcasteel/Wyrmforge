@@ -1,0 +1,18 @@
+# XYZ2 isolated C# radial excavation proof — 1 November 2026
+
+## Scope and honest acceptance state
+
+Owner direction: native 32px semantic world cells; a Fireball can remove dirt and nearby blocks, exposing real stone; later Wyrm fissures reuse that path. This checkpoint implements **an isolated C# impact operation only** on [draft PR #467](https://github.com/pjotrcasteel/Wyrmforge/pull/467). **XYZ2 is not complete.** In particular, this does not yet connect live Fireball/projectile hits, persistent gameplay save slots, C# world collision, line of sight, navigation, safe exits, hazards, FXP, G lighting or VFX. No production mode is changed.
+
+## C# contracts
+
+- `WorldSiteStrataMutationState.ApplySurfaceImpact(WorldSiteStrataImpact)` takes a caller-owned impact ID, integer XY center, bounded radius in **cell coordinates** and explicit integer peak strength plus soil/stone/other material integrity. **No physical metre scale is inferred** from 32 source pixels, and no Fireball balance value is hard-coded in the simulation.
+- The operation considers the current exposed top stratum at each C# `(x,y)` cell, not an arbitrary visual decal. An impact uses one 5×5 bounding square at radius 2, with integer squared-radius falloff and row-major deterministic ordering. Only the circular 13-cell footprint is eligible. The strongest hit removes center and immediately neighboring dirt; diagonal and outer neighbors can remain partly damaged. Covered stone is protected on the first impact; subsequent blasts can damage newly exposed stone against its own specified integrity.
+- The immutable C# geology is not overwritten; sparse `WorldSiteCellDelta` tombstones and the existing version-2 site/seed/grid-scale-scoped save continue to own persistence. The single `WorldSiteStrataImpactResult` v1 event supplies changed cell revisions, applied damage and newly exposed C# face material for future **existing** gameplay, G/FXP/VFX adapters.
+- `WorldSiteStrataRenderSnapshot.FromMutations` projects the actual surviving C# exposed finish/body/Z after damage. `Revision` invalidates the native 32px compositor cache when a grass/soil top becomes stone. This is a data/render contract, **not** a live battle implementation or accepted final art.
+
+## Verification and next gate
+
+- Isolated MSTest proof: impact at the center of a 5×5 footprint removes exactly five soil blocks, partially damages eight others, never damages the covered rock, exposes real stone, and survives JSON save/reload with identical C# render material IDs and Z. Replaying the same command sequence against the same site/seed yields identical ordered events/deltas. Invalid inputs and world-edge clipping are safe, including `int.MaxValue`/`int.MinValue` centers.
+- Native-pixel JavaScript test: one C# revision increment invalidates the old grass image cache and rerenders the new numbered rock face with the same 32px pitch and inset rules.
+- **Next authorized work is gated:** review physical XY/Z scale and connect actual C# combat hit, area collision/nav/LOS/safe-exit derivation and save-slot replay before calling this live excavation. AR4-B flat-color screenshots are visual debugging evidence only, not material approval. Wet Forest remains priority; mountain and monastery art stay parked. Do not merge PR #467 or #459 without owner approval.

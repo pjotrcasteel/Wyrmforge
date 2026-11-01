@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { composeWorldSiteStrataPixels, insetStrokeRgb } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/world-site-strata-grid.js';
+import { composeWorldSiteStrataPixels, drawWorldSiteStrataGrid, insetStrokeRgb } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/world-site-strata-grid.js';
 
 function pixel(data, width, x, y) {
     return [...data.subarray((y * width + x) * 4, (y * width + x) * 4 + 4)];
@@ -60,4 +60,45 @@ test('missing C# data or a non-32px tile is never rendered as a guessed grid', (
         tilePixels: 32, columns: 1, rows: 1,
         surfaceMaterialIds: [1], bodyMaterialIds: [], surfaceZ: [0],
     }, 32, 32), null);
+});
+
+test('a C# mutation revision invalidates a previously cached 32px soil face', () => {
+    const previous = globalThis.document;
+    const pixels = [];
+    try {
+        globalThis.document = {
+            createElement() {
+                return {
+                    width: 0, height: 0,
+                    getContext() {
+                        return {
+                            createImageData(width, height) {
+                                return { data: new Uint8ClampedArray(width * height * 4) };
+                            },
+                            putImageData(image) { pixels.push(image.data); },
+                        };
+                    },
+                };
+            },
+        };
+        const ctx = { save() {}, restore() {}, drawImage() {} };
+        const face = {
+            siteId: 'xyz-cache-revision-test', worldSeed: 19,
+            tilePixels: 32, columns: 1, rows: 1, revision: 0,
+            surfaceMaterialIds: [1], bodyMaterialIds: [0], surfaceZ: [2],
+        };
+        assert.equal(drawWorldSiteStrataGrid(ctx, face, 32, 32), true);
+        assert.equal(pixels.length, 1);
+        assert.deepEqual(pixel(pixels[0], 32, 15, 15), [60, 103, 73, 255]);
+        // Identical site+revision reuses the same cached pixels without re-baking.
+        assert.equal(drawWorldSiteStrataGrid(ctx, face, 32, 32), true);
+        assert.equal(pixels.length, 1);
+        const excavated = { ...face, revision: 1, surfaceMaterialIds: [4], bodyMaterialIds: [4], surfaceZ: [1] };
+        assert.equal(drawWorldSiteStrataGrid(ctx, excavated, 32, 32), true);
+        assert.equal(pixels.length, 2);
+        assert.deepEqual(pixel(pixels[1], 32, 15, 15), [114, 128, 136, 255]);
+    } finally {
+        if (previous === undefined) delete globalThis.document;
+        else globalThis.document = previous;
+    }
 });

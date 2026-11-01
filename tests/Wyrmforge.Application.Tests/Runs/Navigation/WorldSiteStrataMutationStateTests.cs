@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Application.Runs.Navigation;
 using Wyrmforge.Application.Runs.Simulation;
+using Wyrmforge.Application.Runs.Simulation.Snapshots;
 
 namespace Wyrmforge.Application.Tests.Runs.Navigation;
 
@@ -29,6 +30,125 @@ public sealed class WorldSiteStrataMutationStateTests
     {
         var surface = grid.GetCell(x, y, int.MaxValue);
         return new WorldSiteCellKey(x, y, surface.SurfaceZ);
+    }
+
+    [TestMethod]
+    public void Xyz2_OneFiveByFiveRadialImpactRemovesFiveSoilCellsButPreservesDamagedNeighborsAndStone()
+    {
+        var grid = new WorldSiteStrataGrid(Forest(4102));
+        var state = new WorldSiteStrataMutationState(grid);
+        var center = TopKey(grid, 14, 24);
+        var diagonal = TopKey(grid, 15, 25);
+        var edge = TopKey(grid, 16, 24);
+        var untouchedCorner = TopKey(grid, 16, 26);
+        var buriedStone = center with { Z = center.Z - 1 };
+
+        var before = WorldSiteStrataRenderSnapshot.FromGrid(grid);
+        var impact = new WorldSiteStrataImpact("fireball-demo-001", center.X, center.Y,
+            RadiusCells: 2, PeakDamage: 30, SoilIntegrity: 20, RockIntegrity: 80, OtherIntegrity: 40);
+        var result = state.ApplySurfaceImpact(impact);
+
+        Assert.AreEqual(13, result.Changes.Count, "Radius 2 contains 13 physical XY cell centers.");
+        Assert.AreEqual(5, result.Changes.Count(change => change.Delta.Kind == WorldSiteCellMutationKind.Removed));
+        Assert.AreEqual(8, result.Changes.Count(change => change.Delta.Kind == WorldSiteCellMutationKind.Damaged));
+        Assert.AreEqual(0L, result.RevisionBefore);
+        Assert.AreEqual(13L, result.RevisionAfter);
+        Assert.AreEqual(WorldSiteStrataImpactResult.CurrentVersion, result.Version);
+        Assert.AreEqual(13L, state.Revision);
+        Assert.IsTrue(state.GetCell(center).IsEmpty);
+        Assert.AreEqual(WorldSiteSurfaceId.Rock, state.GetExposedSurfaceCell(center.X, center.Y).SurfaceFinish!.Value);
+        Assert.AreEqual(WorldSiteSurfaceId.Rock, state.GetCell(buriedStone).BodyMaterial!.Value,
+            "One Fireball impact cannot drill through protected soil and stone in the same column.");
+        Assert.IsNull(state.FindDelta(buriedStone), "The first blast did not damage covered stone.");
+        Assert.AreEqual(2, state.FindDelta(diagonal)!.RemainingIntegrity,
+            "A diagonal neighbor gets a weaker 18-point hit and keeps 2 integrity.");
+        Assert.AreEqual(14, state.FindDelta(edge)!.RemainingIntegrity,
+            "At radius 2 the outer edge receives only 6 points.");
+        Assert.IsNull(state.FindDelta(untouchedCorner), "The 5x5 square corners lie outside radius 2.");
+
+        var projected = WorldSiteStrataRenderSnapshot.FromMutations(state);
+        var index = center.Y * grid.Columns + center.X;
+        Assert.AreEqual((int)WorldSiteSurfaceId.Grass, before.SurfaceMaterialIds[index]);
+        Assert.AreEqual((int)WorldSiteSurfaceId.Rock, projected.SurfaceMaterialIds[index]);
+        Assert.AreEqual((int)WorldSiteSurfaceId.Rock, projected.BodyMaterialIds[index]);
+        Assert.AreEqual(before.SurfaceZ[index] - 1, projected.SurfaceZ[index]);
+        Assert.AreEqual(result.RevisionAfter, projected.Revision,
+            "The pixel cache must invalidate when the authoritative exposed material changes.");
+        Assert.AreEqual((int)WorldSiteSurfaceId.Grass,
+            projected.SurfaceMaterialIds[diagonal.Y * grid.Columns + diagonal.X],
+            "A damaged but surviving cell keeps its original ground material.");
+
+        var saved = JsonSerializer.Deserialize<WorldSiteStrataMutationSave>(
+            JsonSerializer.Serialize(state.CaptureSave()))!;
+        var replay = WorldSiteStrataMutationState.Restore(new WorldSiteStrataGrid(Forest(4102)), saved);
+        Assert.AreEqual(JsonSerializer.Serialize(projected),
+            JsonSerializer.Serialize(WorldSiteStrataRenderSnapshot.FromMutations(replay)));
+    }
+
+    [TestMethod]
+    public void Xyz2_AreaEventHasDeterministicRowMajorOrderAndSeparateRockResistance()
+    {
+        var grid = new WorldSiteStrataGrid(Forest(851));
+        var first = new WorldSiteStrataMutationState(grid);
+        var second = new WorldSiteStrataMutationState(new WorldSiteStrataGrid(Forest(851)));
+        var request = new WorldSiteStrataImpact("scripted-impact", 14, 24,
+            RadiusCells: 2, PeakDamage: 30, SoilIntegrity: 20, RockIntegrity: 80, OtherIntegrity: 40);
+        var a = first.ApplySurfaceImpact(request);
+        var b = second.ApplySurfaceImpact(request);
+        Assert.AreEqual(JsonSerializer.Serialize(a), JsonSerializer.Serialize(b));
+        Assert.AreEqual(JsonSerializer.Serialize(first.CaptureSave()), JsonSerializer.Serialize(second.CaptureSave()));
+        Assert.AreEqual("scripted-impact", a.ImpactId);
+        CollectionAssert.AreEqual(Enumerable.Range(1, 13).Select(n => (long)n).ToArray(),
+            a.Changes.Select(change => change.Delta.Revision).ToArray());
+        Assert.IsTrue(a.Changes.Zip(a.Changes.Skip(1))
+            .All(pair => pair.First.Key.Y < pair.Second.Key.Y ||
+                (pair.First.Key.Y == pair.Second.Key.Y && pair.First.Key.X < pair.Second.Key.X)),
+            "Future G/FXP/VFX adapters must see replayable row-major changed-cell events.");
+
+        var center = first.GetExposedSurfaceCell(14, 24);
+        Assert.AreEqual(WorldSiteSurfaceId.Rock, center.SurfaceFinish!.Value);
+        var stoneOnly = first.ApplySurfaceImpact(request with
+        {
+            ImpactId = "second-impact",
+            RadiusCells = 0,
+            PeakDamage = 10,
+        });
+        Assert.AreEqual(1, stoneOnly.Changes.Count);
+        Assert.AreEqual(center.Key, stoneOnly.Changes[0].Key);
+        Assert.AreEqual(70, first.FindDelta(center.Key)!.RemainingIntegrity,
+            "Exposed stone is tougher than the removed soil in this explicit C# test profile.");
+        Assert.AreEqual(WorldSiteCellMutationKind.Damaged, stoneOnly.Changes[0].Delta.Kind);
+        Assert.AreEqual(WorldSiteSurfaceId.Rock, stoneOnly.Changes[0].ExposedMaterial!.Value);
+    }
+
+    [TestMethod]
+    public void Xyz2_BoundedAreaRejectsInvalidInputAndClipsPhysicalWorldEdgesWithoutWraparound()
+    {
+        var state = new WorldSiteStrataMutationState(new WorldSiteStrataGrid(Forest(157)));
+        var valid = new WorldSiteStrataImpact("bounded", 0, 0,
+            RadiusCells: 2, PeakDamage: 20, SoilIntegrity: 20, RockIntegrity: 80, OtherIntegrity: 40);
+        Assert.ThrowsExactly<ArgumentException>(() =>
+            state.ApplySurfaceImpact(valid with { ImpactId = " " }));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
+            state.ApplySurfaceImpact(valid with { RadiusCells = 17 }));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
+            state.ApplySurfaceImpact(valid with { PeakDamage = 0 }));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
+            state.ApplySurfaceImpact(valid with { RockIntegrity = 0 }));
+        Assert.AreEqual(0L, state.Revision);
+
+        var corner = state.ApplySurfaceImpact(valid);
+        Assert.AreEqual(6, corner.Changes.Count, "Only in-bounds cells of the circular 5x5 footprint mutate.");
+        Assert.IsTrue(corner.Changes.All(change => change.Key.X >= 0 && change.Key.Y >= 0));
+        var farOutside = state.ApplySurfaceImpact(valid with
+        {
+            ImpactId = "outside",
+            CenterX = int.MaxValue,
+            CenterY = int.MinValue,
+        });
+        Assert.AreEqual(0, farOutside.Changes.Count);
+        Assert.AreEqual(corner.RevisionAfter, farOutside.RevisionAfter);
+        Assert.AreEqual(corner.RevisionAfter, state.Revision);
     }
 
     [TestMethod]
