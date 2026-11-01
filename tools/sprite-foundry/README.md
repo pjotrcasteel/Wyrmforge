@@ -52,6 +52,10 @@ Output for every clip:
 
 The CLI returns a nonzero status if strict completeness, alpha, or sizing checks fail. In --allow-incomplete mode, missing authored frames stay transparent and are marked **incomplete**; malformed or contradictory art still fails.
 
+## Pinned Wizard identity reference
+
+The exact `references/approved-grey-wizard.png` blob is preserved from the **approved-default-reference.png** in draft Wizard PR #439 (blob SHA `022250517f90fa3b2c48c8078ef6c1c0a6161ea5`). It is the visual identity baseline, **not** a pose or animation acceptance. Use the review page's reference selector to compare every authored facing. The Foundry never modifies this source or guesses a replacement design.
+
 ## Production sequence — owner approval gates
 
 1. **Eight-direction silhouette:** start from the approved Gothic grey Wizard reference and the ongoing [Wizard draft PR #439](https://github.com/pjotrcasteel/Wyrmforge/pull/439); preserve hat, beard, robe, right-hand staff and proportions. Treat its source revisions as candidate material, not acceptance.
