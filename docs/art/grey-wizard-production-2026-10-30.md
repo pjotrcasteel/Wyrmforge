@@ -821,3 +821,32 @@ placement on the ground, not a floating vertical height or a mandatory3D engine.
 Support7–15 fixes source-world113.5,117; analytical/raster tip, boot sole extents
 and grip drift0px in this narrow source replay. No actual C# stride-fit claim.
 Checkpoint before editable-source packaging, media and browser review.
+
+### Northeast editable source and motion review — 1 November 2026
+
+Packaged the existing v014 native source as `grey-wizard-fire-northeast.ora`
+with 11 editable OpenRaster layers, source-identical layer bytes and an exact
+merged master. Exported the actual 16 authored NE frames to `northeast-walk.gif`
+(1330 ms at approximately 12 fps) and a decodable four-cycle MP4, both retained
+under `gothic-northeast-v014/review/`. No interpolation or generated replacement
+poses were introduced. The GIF is a source-motion review, not gameplay footage.
+
+Visual inspection of the complete light-background contact sheet finds the same
+Gothic silhouette, attached grip, staff support/recovery and cloth-carried faded
+Fire embroidery across all frames. Automated targeted regressions pass (7/7
+across NE/E/S repair files); package/media audit passes with 11 exact layers,
+16 GIF frames, 1330 ms total duration and successful MP4 decode. These checks
+do not establish artistic or physical-phone acceptance.
+
+**Open blocker:** C# `PlayerState.Speed` remains 190 world units/sec, while the
+NE source stride is 10.31593 world units/cycle, corresponding to just 7.73695
+world units/sec at source 12 fps. Replaying this walk at actual C# speed would
+require roughly 294.69 source frames/sec. Preserve simulation speed; author a
+credible travel/stride/cadence solution before any runtime cutover. Existing
+production mage, approved references and concurrent engines remain untouched.
+
+Sprite Lab browser capture at 320/390px is still pending in this environment:
+Playwright is present but its matching Chromium binary is missing, and the
+browser download returned an invalid archive. Do not count previously recorded
+E/S/SE browser runs as NE validation. NE artifacts remain available for direct
+owner review while browser verification is unresolved.
