@@ -10,6 +10,35 @@ namespace Wyrmforge.Application.Tests.Runs.Simulation;
 public sealed class ArenaEnvironmentStateTests
 {
     [TestMethod]
+    public void Create_Greybox_ExposesOneMetreEightCubedGridWithoutObstaclesOrSupplies()
+    {
+        var map = new WyrmrealmMapState(seed: 1204);
+        var terrain = ArenaEnvironmentState.Create(map.Seed, map.AvailableNodes[0],
+            worldFirstGeography: true, greybox: true);
+        var snapshot = terrain.Snapshot();
+
+        Assert.IsNotNull(snapshot.Greybox);
+        Assert.AreEqual(1d, snapshot.Greybox.CellSizeMeters);
+        Assert.AreEqual(32, snapshot.Greybox.PixelsPerFace);
+        Assert.AreEqual(8, snapshot.Greybox.MicrocellsPerAxis);
+        Assert.AreEqual(.125d, snapshot.Greybox.MicrocellSizeMeters);
+        Assert.AreEqual(0d, snapshot.Greybox.GroundBaseMeters);
+        Assert.AreEqual(1d, snapshot.Greybox.GroundTopMeters);
+        Assert.IsFalse(snapshot.GeographyActive);
+        Assert.AreEqual(0, snapshot.Barriers.Count);
+        Assert.AreEqual(0, snapshot.Props.Count);
+        Assert.AreEqual(0, snapshot.Supplies.Count);
+        Assert.IsNull(snapshot.WetForest);
+
+        var start = new Vector2D(475, 800);
+        var destination = new Vector2D(475, 200);
+        Assert.IsFalse(terrain.BlocksSegment(start, destination, 950, 1550));
+        Assert.AreEqual(destination, terrain.RestrictMovement(start, destination, 950, 1550, 12));
+        Assert.IsFalse(terrain.IsBlocked(destination, 950, 1550, 12));
+        Assert.IsNotNull(terrain.AdjustSpawnPosition(new Vector2D(100, 100), start, 950, 1550, 12));
+    }
+
+    [TestMethod]
     public void Create_SameSeedAndRoute_ReproducesTerrainWithoutChangingMap()
     {
         var map = new WyrmrealmMapState(seed: 1204);
@@ -337,6 +366,7 @@ public sealed class ArenaEnvironmentStateTests
         simulation.Tick(0, default, 390, 700);
         var first = simulation.AvailableMapNodes[0];
         Assert.IsTrue(simulation.ChooseMapNode(first.Id));
+        Assert.IsNotNull(simulation.CreateSnapshot().Environment?.Greybox);
 
         // Use the real map completion state to focus this test on traversal rather than enemy AI.
         var field = typeof(RunSimulation).GetField("mapState", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
