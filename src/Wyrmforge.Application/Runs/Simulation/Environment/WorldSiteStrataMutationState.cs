@@ -20,8 +20,27 @@ public sealed record WorldSiteCellDelta(
     long Revision);
 
 /// <summary>
+/// Exactly-once terrain impact identity. Persist even for a zero-change impact so
+/// a delayed duplicate cannot damage a later, newly exposed physical surface.
+/// </summary>
+public sealed record WorldSiteStrataAppliedImpact(string ImpactId, long RevisionAfter);
+
+/// <summary>
+/// C# source-of-truth contact height after excavation. The intact height uses
+/// AR3's continuous ground surface, with one physical stratum removed per Z drop.
+/// No walkability, actor radius, drop tolerance, or LOS policy is chosen here.
+/// </summary>
+public sealed record WorldSiteStrataGroundContact(
+    WorldSiteCellKey Key,
+    WorldSiteSurfaceId? Material,
+    double FloorHeightMeters,
+    bool Solid);
+
+/// <summary>
 /// A versioned, seed/site/grid-scale-scoped snapshot of changes, not a serialized 3D world or JS state.
-/// Prototype schema v2 prevents applying tombstones to a later resized XY/Z physical grid.
+/// Prototype schema v3 also persists impact identities for exactly-once replay.
+/// Older v2 snapshots contain only single-block mutations and restore with an
+/// empty impact registry; any new capture upgrades them to v3 without loss.
 /// </summary>
 public sealed record WorldSiteStrataMutationSave(
     int Version,
@@ -32,7 +51,10 @@ public sealed record WorldSiteStrataMutationSave(
     int Columns,
     int Rows,
     long Revision,
-    IReadOnlyList<WorldSiteCellDelta> Changes);
+    IReadOnlyList<WorldSiteCellDelta> Changes)
+{
+    public IReadOnlyList<WorldSiteStrataAppliedImpact> AppliedImpacts { get; init; } = [];
+}
 
 /// <summary>
 /// XYZ1 foundation: sparse, replayable damage/removal over the existing read-only AR3 geology.
@@ -41,14 +63,16 @@ public sealed record WorldSiteStrataMutationSave(
 /// </summary>
 public sealed class WorldSiteStrataMutationState
 {
-    public const int CurrentVersion = 2;
+    public const int CurrentVersion = 3;
 
     private readonly WorldSiteStrataGrid _baseGrid;
     private readonly Dictionary<WorldSiteCellKey, WorldSiteCellDelta> _changes = [];
+    private readonly Dictionary<string, long> _appliedImpacts = new(StringComparer.Ordinal);
     private long _revision;
 
     public long Revision => _revision;
     public int ChangedCellCount => _changes.Count;
+    public int AppliedImpactCount => _appliedImpacts.Count;
     /// <summary>The immutable C# geology used by this mutation state and its render projections.</summary>
     public WorldSiteStrataGrid BaseGrid => _baseGrid;
 
@@ -110,6 +134,25 @@ public sealed class WorldSiteStrataMutationState
         return GetCell(key);
     }
 
+    /// <summary>
+    /// Isolated physical contact projection for future C# movement/nav/LOS integration.
+    /// Do not infer a 32-metre cube from the 32-source-pixel tile, or overwrite the
+    /// seeded AR3 height when reporting the newly excavated floor.
+    /// </summary>
+    public WorldSiteStrataGroundContact GetGroundContact(int x, int y)
+    {
+        var exposed = GetExposedSurfaceCell(x, y);
+        if (exposed.IsEmpty)
+        {
+            return new WorldSiteStrataGroundContact(exposed.Key, null, 0, false);
+        }
+
+        var removedStrata = (long)exposed.SurfaceZ - exposed.Key.Z;
+        return new WorldSiteStrataGroundContact(exposed.Key, exposed.SurfaceFinish,
+            exposed.SurfaceHeightMeters - removedStrata * _baseGrid.StratumHeightMeters,
+            exposed.Solid);
+    }
+
     /// <summary>Return the change, if any. Null specifically means the seeded base is unchanged.</summary>
     public WorldSiteCellDelta? FindDelta(WorldSiteCellKey key)
     {
@@ -169,7 +212,7 @@ public sealed class WorldSiteStrataMutationState
     public WorldSiteStrataImpactResult ApplySurfaceImpact(WorldSiteStrataImpact impact)
     {
         ArgumentNullException.ThrowIfNull(impact);
-        if (string.IsNullOrWhiteSpace(impact.ImpactId))
+        if (string.IsNullOrWhiteSpace(impact.ImpactId) || impact.ImpactId.Length > 128)
         {
             throw new ArgumentException("An impact must have a caller-owned identity.", nameof(impact));
         }
@@ -179,6 +222,13 @@ public sealed class WorldSiteStrataMutationState
             impact.SoilIntegrity <= 0 || impact.RockIntegrity <= 0 || impact.OtherIntegrity <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(impact));
+        }
+
+
+        if (_appliedImpacts.ContainsKey(impact.ImpactId))
+        {
+            return new WorldSiteStrataImpactResult(impact.ImpactId, impact.CenterX, impact.CenterY,
+                impact.RadiusCells, _revision, _revision, []) { Duplicate = true };
         }
 
         var revisionBefore = _revision;
@@ -228,6 +278,7 @@ public sealed class WorldSiteStrataMutationState
                 delta, exposed.Key, exposed.SurfaceFinish));
         }
 
+        _appliedImpacts.Add(impact.ImpactId, _revision);
         return new WorldSiteStrataImpactResult(impact.ImpactId, impact.CenterX, impact.CenterY,
             impact.RadiusCells, revisionBefore, _revision, changes);
     }
@@ -237,7 +288,14 @@ public sealed class WorldSiteStrataMutationState
     {
         return new WorldSiteStrataMutationSave(CurrentVersion, _baseGrid.WorldSeed, _baseGrid.SiteId,
             _baseGrid.CellWidthMeters, _baseGrid.StratumHeightMeters, _baseGrid.Columns, _baseGrid.Rows,
-            _revision, _changes.Values.OrderBy(delta => delta.Revision).ToArray());
+            _revision, _changes.Values.OrderBy(delta => delta.Revision).ToArray())
+        {
+            AppliedImpacts = _appliedImpacts.Select(pair =>
+                    new WorldSiteStrataAppliedImpact(pair.Key, pair.Value))
+                .OrderBy(entry => entry.RevisionAfter)
+                .ThenBy(entry => entry.ImpactId, StringComparer.Ordinal)
+                .ToArray(),
+        };
     }
 
     /// <summary>
@@ -250,7 +308,7 @@ public sealed class WorldSiteStrataMutationState
     {
         ArgumentNullException.ThrowIfNull(baseGrid);
         ArgumentNullException.ThrowIfNull(save);
-        if (save.Version != CurrentVersion ||
+        if (save.Version is not (2 or CurrentVersion) ||
             save.WorldSeed != baseGrid.WorldSeed ||
             !string.Equals(save.SiteId, baseGrid.SiteId, StringComparison.Ordinal) ||
             save.CellWidthMeters != baseGrid.CellWidthMeters ||
@@ -258,7 +316,8 @@ public sealed class WorldSiteStrataMutationState
             save.Columns != baseGrid.Columns ||
             save.Rows != baseGrid.Rows ||
             save.Revision < 0 ||
-            save.Changes is null)
+            save.Changes is null || save.AppliedImpacts is null ||
+            (save.Version == 2 && save.AppliedImpacts.Count != 0))
         {
             throw new ArgumentException("The mutation save does not match this C# world site.", nameof(save));
         }
@@ -292,6 +351,17 @@ public sealed class WorldSiteStrataMutationState
         if (save.Changes.Count == 0 && save.Revision != 0)
         {
             throw new ArgumentException("An empty mutation save cannot carry a nonzero revision.", nameof(save));
+        }
+
+        foreach (var impact in save.AppliedImpacts)
+        {
+            if (impact is null || string.IsNullOrWhiteSpace(impact.ImpactId) ||
+                impact.ImpactId.Length > 128 || impact.RevisionAfter < 0 ||
+                impact.RevisionAfter > save.Revision ||
+                !state._appliedImpacts.TryAdd(impact.ImpactId, impact.RevisionAfter))
+            {
+                throw new ArgumentException("The mutation save contains an invalid impact identity.", nameof(save));
+            }
         }
 
         state._revision = save.Revision;

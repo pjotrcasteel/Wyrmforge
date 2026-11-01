@@ -152,6 +152,142 @@ public sealed class WorldSiteStrataMutationStateTests
     }
 
     [TestMethod]
+    public void Xyz2_DuplicateImpactIdIsExactlyOnceBeforeAndAfterSaveAndCannotHitNewlyExposedStone()
+    {
+        var grid = new WorldSiteStrataGrid(Forest(632));
+        var state = new WorldSiteStrataMutationState(grid);
+        var top = TopKey(grid, 14, 24);
+        var impact = new WorldSiteStrataImpact("fireball-exactly-once", top.X, top.Y,
+            RadiusCells: 0, PeakDamage: 30, SoilIntegrity: 20, RockIntegrity: 80, OtherIntegrity: 40);
+
+        var first = state.ApplySurfaceImpact(impact);
+        Assert.IsFalse(first.Duplicate);
+        Assert.AreEqual(1, first.Changes.Count);
+        Assert.AreEqual(WorldSiteSurfaceId.Rock,
+            state.GetExposedSurfaceCell(top.X, top.Y).SurfaceFinish!.Value);
+
+        var beforeDuplicate = JsonSerializer.Serialize(state.CaptureSave());
+        var duplicate = state.ApplySurfaceImpact(impact with
+        {
+            PeakDamage = int.MaxValue,
+            RockIntegrity = 1,
+        });
+        Assert.IsTrue(duplicate.Duplicate, "An old impact ID must not attack newly uncovered rock.");
+        Assert.AreEqual(0, duplicate.Changes.Count);
+        Assert.AreEqual(first.RevisionAfter, duplicate.RevisionBefore);
+        Assert.AreEqual(first.RevisionAfter, duplicate.RevisionAfter);
+        Assert.AreEqual(beforeDuplicate, JsonSerializer.Serialize(state.CaptureSave()));
+
+        var restored = WorldSiteStrataMutationState.Restore(grid,
+            JsonSerializer.Deserialize<WorldSiteStrataMutationSave>(beforeDuplicate)!);
+        Assert.AreEqual(1, restored.AppliedImpactCount);
+        var restoredDuplicate = restored.ApplySurfaceImpact(impact);
+        Assert.IsTrue(restoredDuplicate.Duplicate);
+        Assert.AreEqual(0, restoredDuplicate.Changes.Count);
+        Assert.AreEqual(beforeDuplicate, JsonSerializer.Serialize(restored.CaptureSave()));
+
+        var newImpact = restored.ApplySurfaceImpact(impact with
+        {
+            ImpactId = "different-fireball",
+            PeakDamage = 10,
+        });
+        Assert.IsFalse(newImpact.Duplicate);
+        Assert.AreEqual(1, newImpact.Changes.Count);
+        Assert.AreEqual(70, restored.FindDelta(newImpact.Changes[0].Key)!.RemainingIntegrity);
+        Assert.AreEqual(2, restored.AppliedImpactCount);
+    }
+
+    [TestMethod]
+    public void Xyz2_ContactHeightDerivesExactExcavationDepthFromSeededCSharpZNotSourcePixels()
+    {
+        var grid = new WorldSiteStrataGrid(Forest(633));
+        var state = new WorldSiteStrataMutationState(grid);
+        var top = TopKey(grid, 14, 24);
+        var before = state.GetGroundContact(top.X, top.Y);
+        Assert.AreEqual(top, before.Key);
+        Assert.AreEqual(WorldSiteSurfaceId.Grass, before.Material!.Value);
+        Assert.AreEqual(grid.GetCell(top.X, top.Y, top.Z).SurfaceHeightMeters,
+            before.FloorHeightMeters);
+        Assert.IsTrue(before.Solid);
+
+        state.ApplySurfaceImpact(new WorldSiteStrataImpact("excavate-soil", top.X, top.Y,
+            RadiusCells: 0, PeakDamage: 30, SoilIntegrity: 20, RockIntegrity: 80, OtherIntegrity: 40));
+        var firstFloor = state.GetGroundContact(top.X, top.Y);
+        Assert.AreEqual(top.Z - 1, firstFloor.Key.Z);
+        Assert.AreEqual(WorldSiteSurfaceId.Rock, firstFloor.Material!.Value);
+        Assert.AreEqual(before.FloorHeightMeters - grid.StratumHeightMeters,
+            firstFloor.FloorHeightMeters, 1e-9);
+
+        state.ApplySurfaceImpact(new WorldSiteStrataImpact("excavate-rock", top.X, top.Y,
+            RadiusCells: 0, PeakDamage: 90, SoilIntegrity: 20, RockIntegrity: 80, OtherIntegrity: 40));
+        var secondFloor = state.GetGroundContact(top.X, top.Y);
+        Assert.AreEqual(top.Z - 2, secondFloor.Key.Z);
+        Assert.AreEqual(before.FloorHeightMeters - 2 * grid.StratumHeightMeters,
+            secondFloor.FloorHeightMeters, 1e-9);
+
+        var restored = WorldSiteStrataMutationState.Restore(grid,
+            JsonSerializer.Deserialize<WorldSiteStrataMutationSave>(
+                JsonSerializer.Serialize(state.CaptureSave()))!);
+        Assert.AreEqual(secondFloor, restored.GetGroundContact(top.X, top.Y));
+        Assert.IsFalse(state.GetGroundContact(-1, -1).Solid);
+    }
+
+    [TestMethod]
+    public void Xyz2_ZeroChangeImpactsAreAlsoDeduplicatedAndMalformedImpactHistoryIsRejected()
+    {
+        var grid = new WorldSiteStrataGrid(Forest(634));
+        var state = new WorldSiteStrataMutationState(grid);
+        var outside = new WorldSiteStrataImpact("off-map", int.MaxValue, int.MinValue,
+            RadiusCells: 2, PeakDamage: 30, SoilIntegrity: 20, RockIntegrity: 80, OtherIntegrity: 40);
+        var noChange = state.ApplySurfaceImpact(outside);
+        Assert.AreEqual(0, noChange.Changes.Count);
+        Assert.AreEqual(0L, state.Revision);
+        Assert.AreEqual(1, state.AppliedImpactCount);
+        Assert.IsTrue(state.ApplySurfaceImpact(outside).Duplicate);
+        var save = state.CaptureSave();
+        Assert.AreEqual(1, save.AppliedImpacts.Count);
+
+        Assert.ThrowsExactly<ArgumentException>(() =>
+            WorldSiteStrataMutationState.Restore(grid, save with
+            {
+                AppliedImpacts = [save.AppliedImpacts[0], save.AppliedImpacts[0]],
+            }));
+        Assert.ThrowsExactly<ArgumentException>(() =>
+            WorldSiteStrataMutationState.Restore(grid, save with
+            {
+                AppliedImpacts = [save.AppliedImpacts[0] with { RevisionAfter = 1 }],
+            }));
+        Assert.ThrowsExactly<ArgumentException>(() =>
+            WorldSiteStrataMutationState.Restore(grid, save with
+            {
+                AppliedImpacts = [save.AppliedImpacts[0] with { ImpactId = " " }],
+            }));
+        Assert.ThrowsExactly<ArgumentException>(() =>
+            state.ApplySurfaceImpact(outside with { ImpactId = new string('x', 129) }));
+        Assert.AreEqual(0L, state.Revision);
+    }
+
+    [TestMethod]
+    public void Xyz2_PreImpactVersionTwoSaveRestoresItsSparseCellsAndUpgradesWithoutInventingEvents()
+    {
+        var grid = new WorldSiteStrataGrid(Forest(635));
+        var state = new WorldSiteStrataMutationState(grid);
+        var top = TopKey(grid, 14, 24);
+        Assert.IsTrue(state.TryDamageCell(top, 4, 20));
+        var oldSave = state.CaptureSave() with { Version = 2 };
+        var restored = WorldSiteStrataMutationState.Restore(grid, oldSave);
+        Assert.AreEqual(state.GetCell(top), restored.GetCell(top));
+        Assert.AreEqual(state.FindDelta(top), restored.FindDelta(top));
+        Assert.AreEqual(0, restored.AppliedImpactCount);
+        Assert.AreEqual(WorldSiteStrataMutationState.CurrentVersion, restored.CaptureSave().Version);
+        Assert.ThrowsExactly<ArgumentException>(() =>
+            WorldSiteStrataMutationState.Restore(grid, oldSave with
+            {
+                AppliedImpacts = [new WorldSiteStrataAppliedImpact("impossible-v2-impact", 1)],
+            }));
+    }
+
+    [TestMethod]
     public void Xyz1_DirtDamageAndRemovalExposeTrueStoneFromTheExistingCSharpBase()
     {
         var site = Forest(1204);

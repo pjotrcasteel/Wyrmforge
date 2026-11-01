@@ -46,4 +46,10 @@ public sealed record WorldSiteStrataImpactResult(
 
     /// <summary>Versioned event contract for a future existing C# gameplay/FX adapter.</summary>
     public int Version { get; init; } = CurrentVersion;
+
+    /// <summary>
+    /// A previously applied impact identity is a no-op, including after save/reload.
+    /// Consumers must not emit damage or cosmetic effects for this duplicate result.
+    /// </summary>
+    public bool Duplicate { get; init; }
 }
