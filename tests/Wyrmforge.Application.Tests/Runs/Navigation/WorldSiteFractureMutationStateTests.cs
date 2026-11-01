@@ -23,7 +23,7 @@ public sealed class WorldSiteFractureMutationStateTests
         new(x, y, grid.GetCell(x, y, int.MaxValue).SurfaceZ);
 
     [TestMethod]
-    public void Xyz3_OneMicrocolumnOpensRealStoneWithoutRemovingItsWholeSoilBlock()
+    public void XyzFracture_OneMicrocolumnOpensRealStoneWithoutRemovingItsWholeSoilBlock()
     {
         var grid = Forest(4201);
         var state = new WorldSiteStrataMutationState(grid);
@@ -70,7 +70,7 @@ public sealed class WorldSiteFractureMutationStateTests
     }
 
     [TestMethod]
-    public void Xyz3_SphericalImpactCrossesTrueOneMeterNeighborsAndReplaysExactlyOnce()
+    public void XyzFracture_SphericalImpactCrossesTrueOneMeterNeighborsAndReplaysExactlyOnce()
     {
         var grid = Forest(4202);
         var state = new WorldSiteStrataMutationState(grid);
@@ -121,7 +121,7 @@ public sealed class WorldSiteFractureMutationStateTests
     }
 
     [TestMethod]
-    public void Xyz3_FirstBlastShieldsBuriedRockSecondBlastCanHitTrulyExposedRock()
+    public void XyzFracture_FirstBlastShieldsBuriedRockSecondBlastCanHitTrulyExposedRock()
     {
         var grid = Forest(4203);
         var state = new WorldSiteStrataMutationState(grid);
@@ -153,7 +153,7 @@ public sealed class WorldSiteFractureMutationStateTests
     }
 
     [TestMethod]
-    public void Xyz3_FullyExcavatedMaskExposesWholeRockBlockAndSavesOnlyOneMask()
+    public void XyzFracture_FullyExcavatedMaskExposesWholeRockBlockAndSavesOnlyOneMask()
     {
         var grid = Forest(4204);
         var state = new WorldSiteStrataMutationState(grid);
@@ -181,7 +181,7 @@ public sealed class WorldSiteFractureMutationStateTests
     }
 
     [TestMethod]
-    public void Xyz3_RejectsCorruptFracturesAndPreservesLegacySaveSchemas()
+    public void XyzFracture_RejectsCorruptFracturesAndPreservesLegacySaveSchemas()
     {
         var grid = Forest(4205);
         var state = new WorldSiteStrataMutationState(grid);

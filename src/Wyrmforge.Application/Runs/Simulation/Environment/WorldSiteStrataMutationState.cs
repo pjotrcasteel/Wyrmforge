@@ -381,7 +381,7 @@ public sealed class WorldSiteStrataMutationState
     }
 
     /// <summary>
-    /// XYZ3 isolated 3D excavation proof. Bounded sphere crosses block boundaries
+    /// XYZ1/XYZ2 isolated 3D excavation proof. Bounded sphere crosses block boundaries
     /// at exact integer microcell coordinates. A rock block beneath an initially
     /// occupied top block is shielded for this entire impact, even if the blast
     /// removes soil during its own iteration. Subsequent distinct impacts can

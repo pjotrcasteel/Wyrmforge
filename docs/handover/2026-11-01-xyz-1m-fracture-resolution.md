@@ -8,14 +8,14 @@
 - C# `WorldSiteFractureGeometry.Pack(x,y,z)` and `Unpack(index)` supply exact 0–511 local indices; no dense 3D array is allocated. Unit tests verify all 512 positions, 4px alignment and out-of-range rejection.
 - Isolated follow-up: immutable C# `WorldSiteFractureMask` uses exactly eight `ulong` layer words (512 bits = 64 bytes) and represents a set bit as a removed microcell. Repeated removal is idempotent, other local cubes remain intact, bitmasks replay through C# JSON, and fully excavated blocks are distinguishable.
 
-## XYZ3 isolated C# fracture-state integration (draft, pending CI)
+## XYZ1/XYZ2 isolated C# fracture-state integration (draft, pending CI)
 
 The existing `WorldSiteStrataMutationState` now owns **only changed blocks'** `WorldSiteCellFracture` masks, via `TryExcavateMicrocell`, `FindFracture`, and `GetMicrocellContact`. One 12.5cm soil microcolumn can be removed without erasing its 1m parent; its newly exposed C# material is actual rock, not a road/ground decal. A fully excavated 512-bit block behaves as a removed soil stratum in whole-cell `GetCell` / `GetExposedSurfaceCell` / contact queries. Intact terrain has no microcell allocations.
 
 - `ApplyFractureImpact` accepts an explicit 1m parent/local integer center and a bounded 0–12 microcell-radius **3D** sphere. It can excavate adjacent 1m dirt blocks across true cell boundaries. The *pre-impact* top occupancy per microcolumn shields buried rock for the entire blast; a subsequent distinct impact can reach genuinely uncovered stone. Deterministic integer order and one shared exactly-once impact-ID registry allow replay without creating another combat engine.
 - The sparse C# mutation save upgrades to **v4** with a `Fractures` list (key, immutable mask, latest revision). v2/v3 snapshots restore unchanged and upgrade on new capture; malformed masks, versions, duplicate cells/revisions, and foreign physical scale are rejected.
 - Partial fractures do **not** silently mix with existing whole-cell integrity changes on the same block. `GetMicrocellContact` exposes the fine geometry, while the old block-level `GetGroundContact` remains intentionally conservative for partial holes. A future *existing C#* combat/collision/nav adapter must define combined integrity, actor footprint, stepping/falling, debris and LOS before any gameplay cutover.
-- This is still **experimental data and isolated impact logic only**: no in-Hunt Fireball hook, live destructible colliders, nav, world save slots, lighting/VFX, or source-art render pass. The physical subdivision remains a technically exercised proposal pending visual approval, **not approved final 32px material artwork**.
+- This is still **experimental data and isolated impact logic only**: no in-Hunt Fireball hook, live destructible colliders, nav, world save slots, lighting/VFX, or source-art render pass. The physical subdivision remains a technically exercised proposal pending visual approval, **not approved final 32px material artwork**. Canonical **XYZ3** remains the *future native-32px art and in-Hunt visual proof* milestone.
 
 ## Migration boundary and existing evidence
 
