@@ -11,6 +11,8 @@ These instructions apply to all code, tests, content tools, and documentation in
 5. When owner decisions change, update the **relevant canonical topic** in the same PR. Do not introduce a competing master spec, duplicate milestone numbering, or claim unfinished work is accepted.
 6. When a key convention is **not defined** (coordinate handedness, camera projection formula, normal-map tangent convention, etc.), inspect actual contracts, use the existing adapter, and document/ask for the decision. **Never assume Right-Handed/OpenGL just because an example says so.**
 
+**Milestone order (owner, 1 November 2026):** Hunt 1.0 (H0–H9 in `docs/canon/roadmap.md`) first, shared-engine consolidation (ENG0–ENG4) second, larger engine improvements (G7–G10 and similar) third. The neutral greybox below is the baseline and fallback; Hunt 1.0 adds metric oblique terrain and Wyrm Influence on top of it for Fire Tier-I.
+
 ## 1. Runtime and engine boundaries (non-negotiable)
 
 - Target **.NET 10**. The Domain/Application C# core, especially `src/Wyrmforge.Application/Runs/Simulation/`, is authoritative for deterministic gameplay, physics/collision, movement, AI decisions, targeting, hits, projectiles, damage, death, loot, progression, destructible terrain, navigation, save/replay, and legal exits.

@@ -26,6 +26,37 @@ This status/sequence index resolves older, superseded "NEXT" and "active" labels
 
 ---
 
+## LOCKED — Hunt 1.0 first, engine consolidation second, larger engine improvements third (owner direction, 1 November 2026)
+
+**Ordering.** Phase I is **one complete, enjoyable, visually consistent Fire Tier-I Hunt (H0–H9 below)**. Phase II brings every shared engine (gameplay physics/destruction, AI, sprite-first animation, cosmetic visual physics, VFX, audio/haptics, cross-engine events) to a first usable version, comparable to the Lighting 0.1 baseline, via ENG0–ENG4 starting after gate GH-F. Phase III covers Lighting 1.0 (G7–G10), authored terrain materials (BF/AR4-B/XYZ3), AR5 buildings, XYZ4 Wyrm fissure attacks, other Wyrm influence profiles, CV/FXP/AR6–AR7 and campaign terrain history. This supersedes the ordering in the execution index above wherever they conflict; the index remains the status record for individual drafts and PRs. **None of this marks any milestone implemented.**
+
+**Owner decisions (1 November 2026, LOCKED unless marked tunable).**
+- **Metric and projection.** One world block is 1 m × 1 m × 1 m with 32 × 32 native source pixels per visible face. Projection is oblique 2.5D: a 32×32 top face and a 32×32 front face, 1 m of height moves 32 px up the screen (`screenY = y − 32·z`). 1 m = 32 world units = 32 CSS px at 1× camera. A 12.5 cm microcell is 4 units (4 source px). The 6.4 m preview mapping from draft #467 is diagnostic only.
+- **Arena size (tunable).** Fixed in metres from site data and independent of the phone viewport: combat arenas ≈ 32 × 60 m, the Wyrm lair a single-screen duel ≈ 10 × 18 m. May change after playtests.
+- **Terrain destruction.** Fireball impacts progressively chip soil with a shallow per-hit cap; repeated hits dig pits that block movement when deep; stone is harder, bedrock never breaks; raised cover can be breached. C# owns occupancy, collision, navigation, line of sight, impact events and save/replay. Required routes, spawns and exits stay valid and the player can never be trapped. Auto-aim never targets terrain.
+- **Persistence.** Player-made terrain damage lasts for one arena visit; its record is keyed by site so a later campaign may add history. No mid-Hunt resume in Hunt 1.0; run and terrain state must remain serializable.
+- **Visuals.** Ground stays texture-free (flat pixel-safe colour ramps by material and influence band). Vegetation and landmarks are new authored 32 px sprites under their own owner art gate. The Hunter's Chart stays a 2D illustrated map, authored from C# geography and styled after the Arcane Nexus.
+- **Scope.** Hunt 1.0 terrain is the default only for Fire Tier-I; Tier II/III and Frost keep their existing flat greybox with salvage props. Tier-I has no route-removing events; hazards are telegraphed.
+
+**Wyrm Influence (Hunt 1.0, Fire first).** A single C# `WyrmInfluenceField` value per node, increasing monotonically toward the lair and changing by at most one band between neighbours, drives terrain, vegetation state, hazards, lighting emitters, enemy mix, fire-elite chance, realm-influence rules, ambient VFX/audio and the Chart wash. Fire bands (tunable): Wet < 0.25, Scorched < 0.55, Burning < 0.85, Volcanic ≥ 0.85. Other schools are added as data profiles on the same field, not as separate generators.
+
+| Milestone | Scope | Gate |
+|---|---|---|
+| **H0** | Canon update, full-loop C# test, full-loop browser test, baseline captures and performance counters | — |
+| **H1** | Restore salvage props in greybox Hunts; fixed metric arena envelopes replace viewport multiples; full loop (including Cinder Needle crafting) required in CI | — |
+| **H2** | `WorldMetric`, snapshot `Z`, shared oblique projection, GPU adapter metric mapping, debug inset overlay, calibration fixture; closes XYZ0 | GH-A scale and projection approval |
+| **H3** | `WyrmInfluenceField` and Fire profile; consolidate the three existing influence concepts | — |
+| **H4** | C# terrain grid, generator, movement/LOS/projectile queries and flow-field navigation behind a flag | — |
+| **H5** | Terrain Canvas and GPU presentation, authored 32 px vegetation, forbidden-legacy-asset test | GH-B terrain and vegetation approval |
+| **H6** | Progressive Fireball excavation, change events, per-visit terrain record | GH-C destruction feel approval |
+| **H7** | Influence hazards, lighting emitters within the mobile light budget, encounters, ambient effects | GH-D four-band progression approval |
+| **H8** | Hunter's Chart 1.0 (Nexus-consistent illustrated map) | GH-E Chart approval |
+| **H9** | Default for Fire Tier-I, performance hardening, real-device acceptance, final canon | GH-F Hunt 1.0 acceptance |
+
+**Superseded by this direction.** The BF Wet Forest lane (#459/#429) is parked; XYZ0–XYZ2 are delivered inside H2/H4/H6 and XYZ3/XYZ4 move to Phase III; default non-Town GPU is no longer withheld from Hunt 1.0 arenas until G10; G7–G10 move to Phase III; ENG0–ENG4 start after GH-F instead of after Hollowed approval; neutral-grey-only greybox remains only as the fallback and for other tiers. Drafts #459, #429, #467 and the Hollowed/wizard drafts are preserved unchanged.
+
+---
+
 ## LOCKED — one reusable engine per responsibility (owner decision, 27 October 2026)
 
 **Architectural invariant for all future WyrmForge changes:** maintain **one shared, extensible engine per responsibility**, not one implementation per creature, spell, arena, school or scene. A single engine may have specialized profiles, modules, render backends and platform adapters; it does **not** mean one giant class or a new catch-all runtime. New content supplies assets, typed configuration and adapters, rather than copying loops or creating feature-specific engines. Before accepting a new system, inventory the existing owner, reuse/extend its contract, and add cross-content regression coverage.
