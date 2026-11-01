@@ -1,5 +1,6 @@
 // AR4-A2 neutral albedo adapter for the *existing* Hunt canvas path.
 // It consumes C# AR3 preview weights and offline WF32 source pixels; no terrain, shader or shadow generation.
+import { WANG_ATLAS_SIZE, WANG_ATLAS_REVISION, validateAuthoredWang } from './world-site-authored-wang.js';
 import { WORLD_SITE_MATERIALS, normalizeWorldSiteMaterialWeights,
     worldSiteMaterialCacheKey, worldSiteSourceBindings } from './world-site-material-binding.js';
 import { PIXEL32_ATLAS, PIXEL32_QUIET_ATLAS, PIXEL32_WORLD, PIXEL32_STONE_GROUND,
@@ -24,35 +25,43 @@ let worldPixelState = 'idle';
 let decodedWorldPixels = null;
 let stonePixelState = 'idle';
 let decodedStonePixels = null;
+let wangState = 'idle';
+let decodedWang = null;
 
 function rgb(hex) {
     return [1, 3, 5].map(offset => Number.parseInt(hex.slice(offset, offset + 2), 16));
 }
 
 export function worldSiteMaterialModeEnabled() {
-    return ['materials', 'source32', 'source32b', 'source32c', 'source32d'].includes(
+    return ['materials', 'source32', 'source32b', 'source32c', 'source32d', 'source32wang'].includes(
         new URLSearchParams(globalThis.location?.search ?? '').get('arenaTerrain'));
 }
 
 export function worldSitePixel32ModeEnabled() {
-    return ['source32', 'source32b', 'source32c', 'source32d'].includes(
+    return ['source32', 'source32b', 'source32c', 'source32d', 'source32wang'].includes(
         new URLSearchParams(globalThis.location?.search ?? '').get('arenaTerrain'));
 }
 
 /** The quiet-grass/road study is opt-in and independent of both P1i and original #429 v2. */
 export function worldSiteQuietPixelModeEnabled() {
-    return ['source32b', 'source32c', 'source32d'].includes(
+    return ['source32b', 'source32c', 'source32d', 'source32wang'].includes(
         new URLSearchParams(globalThis.location?.search ?? '').get('arenaTerrain'));
 }
 
 export function worldSiteWorldPixelModeEnabled() {
-    return ['source32c', 'source32d'].includes(
+    return ['source32c', 'source32d', 'source32wang'].includes(
         new URLSearchParams(globalThis.location?.search ?? '').get('arenaTerrain'));
 }
 
 /** Ground-only provisional refinement: unchanged source32c forest baseline. */
 export function worldSiteStoneGroundModeEnabled() {
-    return new URLSearchParams(globalThis.location?.search ?? '').get('arenaTerrain') === 'source32d';
+    return ['source32d','source32wang'].includes(
+        new URLSearchParams(globalThis.location?.search ?? '').get('arenaTerrain'));
+}
+
+/** New authored 32px Wang atlas is never enabled in an ordinary Hunt. */
+export function worldSiteAuthoredWangModeEnabled() {
+    return new URLSearchParams(globalThis.location?.search ?? '').get('arenaTerrain') === 'source32wang';
 }
 
 /** The exact #429 v2 atlas is reviewed separately; it is not an approved world-source bank. */
@@ -103,6 +112,42 @@ function requestQuietPixelAtlas() {
     };
     image.onerror = () => { quietPixelState = 'unavailable'; };
     image.src = new URL('../art/terrain/wf32/ar4b-quiet/atlas.png', import.meta.url).href;
+}
+
+
+/** Decode the B1 authored tile atlas and its explicit Wang metadata once. */
+function requestAuthoredWangAtlas() {
+    if (wangState !== 'idle' || typeof document === 'undefined' ||
+        typeof Image === 'undefined' || typeof fetch === 'undefined') return;
+    wangState = 'loading';
+    const imagePromise = new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => {
+            if(image.naturalWidth !== WANG_ATLAS_SIZE.width ||
+                image.naturalHeight !== WANG_ATLAS_SIZE.height) {
+                reject(new Error('WF32 Wang atlas dimensions mismatch')); return;
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = image.naturalWidth;
+            canvas.height = image.naturalHeight;
+            const ctx = canvas.getContext('2d',{willReadFrequently:true});
+            if(!ctx){ reject(new Error('Cannot decode Wang atlas')); return; }
+            ctx.drawImage(image,0,0);
+            resolve(ctx.getImageData(0,0,canvas.width,canvas.height));
+        };
+        image.onerror = () => reject(new Error('WF32 Wang atlas unavailable'));
+        image.src = new URL('../art/terrain/wf32/ar4b-wang/atlas.png', import.meta.url).href;
+    });
+    const manifestPromise = fetch(new URL('../art/terrain/wf32/ar4b-wang/manifest.json', import.meta.url))
+        .then(response => {
+            if(!response.ok) throw new Error('WF32 Wang manifest unavailable');
+            return response.json();
+        });
+    Promise.all([imagePromise,manifestPromise]).then(([atlas,manifest]) => {
+        if(!validateAuthoredWang(atlas,manifest))
+            throw new Error('WF32 Wang source/manifest mismatch');
+        decodedWang = {atlas,manifest}; wangState='ready';
+    }).catch(() => { decodedWang=null;wangState='unavailable'; });
 }
 
 /** Full world-coordinate source windows are authored offline and decoded once. */
@@ -295,9 +340,10 @@ export function worldSiteNeutralSourceCoverage(width, height) {
         if (pixel32State !== 'ready' || !decodedPixel32 || !(width > 0 && height > 0) ||
             (worldSiteQuietPixelModeEnabled() && (quietPixelState !== 'ready' || !decodedQuietPixel)) ||
             (worldSiteWorldPixelModeEnabled() && (worldPixelState !== 'ready' || !decodedWorldPixels)) ||
-            (worldSiteStoneGroundModeEnabled() && (stonePixelState !== 'ready' || !decodedStonePixels))) return null;
+            (worldSiteStoneGroundModeEnabled() && (stonePixelState !== 'ready' || !decodedStonePixels)) ||
+            (worldSiteAuthoredWangModeEnabled() && (wangState !== 'ready' || !decodedWang))) return null;
         return Object.freeze({ complete: true, width, height, fraction: 1,
-            prototypeOnly: true, repeatedTiles: !worldSiteWorldPixelModeEnabled() });
+            prototypeOnly: true, repeatedTiles: worldSiteAuthoredWangModeEnabled() || !worldSiteWorldPixelModeEnabled() });
     }
     const source = decodedSources?.soil;
     if (sourceState !== 'ready' || !source || !(width > 0 && height > 0)) return null;
@@ -317,19 +363,22 @@ export function drawWorldSiteNeutralAlbedo(ctx, geography, width, height) {
     const quiet = worldSiteQuietPixelModeEnabled();
     const world = worldSiteWorldPixelModeEnabled();
     const stone = worldSiteStoneGroundModeEnabled();
+    const wang = worldSiteAuthoredWangModeEnabled();
     if (prototype) requestPixel32Atlas();
     else requestSources();
     if (quiet) requestQuietPixelAtlas();
     if (world) requestWorldPixelSources();
     if (stone) requestStoneGroundSources();
+    if (wang) requestAuthoredWangAtlas();
     if (quiet && (quietPixelState !== 'ready' || !decodedQuietPixel)) return false;
     if (world && (worldPixelState !== 'ready' || !decodedWorldPixels)) return false;
     if (stone && (stonePixelState !== 'ready' || !decodedStonePixels)) return false;
+    if (wang && (wangState !== 'ready' || !decodedWang)) return false;
     if (prototype ? pixel32State !== 'ready' || !decodedPixel32
         : sourceState !== 'ready' || !decodedSources) return false;
     const pixelWidth = Math.round(width), pixelHeight = Math.round(height);
     const key = worldSiteMaterialCacheKey(geography, pixelWidth, pixelHeight,
-        prototype ? (stone ? PIXEL32_STONE_GROUND.revision
+        prototype ? (wang ? WANG_ATLAS_REVISION : stone ? PIXEL32_STONE_GROUND.revision
             : world ? PIXEL32_WORLD.revision
             : quiet ? PIXEL32_QUIET_ATLAS.revision : PIXEL32_ATLAS.revision) : SOURCE_REVISION);
     if (!key) return false;
@@ -339,7 +388,8 @@ export function drawWorldSiteNeutralAlbedo(ctx, geography, width, height) {
             ? composeWorldSitePixel32Albedo(geography, pixelWidth, pixelHeight, decodedPixel32,
                 quiet ? decodedQuietPixel : null,
                 stone ? { ...decodedWorldPixels, ...decodedStonePixels } :
-                    world ? decodedWorldPixels : null)
+                    world ? decodedWorldPixels : null,
+                wang ? decodedWang : null)
             : composeWorldSiteNeutralAlbedo(geography, pixelWidth, pixelHeight, decodedSources);
         if (!pixels) return false;
         texture = document.createElement('canvas');

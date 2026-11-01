@@ -1,6 +1,7 @@
 // AR4-B candidate: a presentation-only comparison using original WF32 32x32 atlas frames.
 // This is NOT a replacement for the P1i world-continuous source, an approved road/stone kit,
 // or a second geography/lighting engine. All material decisions sample C# AR3 weights.
+import { paintAuthoredWangRoad, validateAuthoredWang, WANG_ATLAS_REVISION } from './world-site-authored-wang.js';
 import { WORLD_SITE_MATERIALS, normalizeWorldSiteMaterialWeights,
     worldSiteSourceBindings } from './world-site-material-binding.js';
 
@@ -181,7 +182,7 @@ function validAtlas(atlas) {
  * Road uses the original soil *as a visibly provisional study* (never an approved road source).
  * Monastery paving, rock, water and ice remain their declared diagnostics until art approval.
  */
-export function composeWorldSitePixel32Albedo(geography, width, height, atlas, quietAtlas = null, worldSources = null) {
+export function composeWorldSitePixel32Albedo(geography, width, height, atlas, quietAtlas = null, worldSources = null, wangKit = null) {
     const preview = geography?.landscape?.elevation;
     if (!validAtlas(atlas) || !Number.isInteger(width) || !Number.isInteger(height) ||
         width <= 0 || height <= 0 || width > 2048 || height > 3072 ||
@@ -191,6 +192,7 @@ export function composeWorldSitePixel32Albedo(geography, width, height, atlas, q
         return null;
 
     if (quietAtlas && !validQuietAtlas(quietAtlas)) return null;
+    if (wangKit && (!quietAtlas || !validateAuthoredWang(wangKit.atlas, wangKit.manifest))) return null;
     if (worldSources && (!quietAtlas || !validWorldSources(worldSources, width, height))) return null;
     const stoneGround = Boolean(worldSources?.rock || worldSources?.cliff || worldSources?.paving);
     if (stoneGround && !validStoneGroundSources(worldSources)) return null;
@@ -267,6 +269,8 @@ export function composeWorldSitePixel32Albedo(geography, width, height, atlas, q
         }
     }
     if (labels) paintQuietForestRoad(pixels, width, height, quietAtlas, labels, cellColumns, seed, worldSources);
+    if (labels && wangKit && !paintAuthoredWangRoad(pixels, width, height, wangKit.atlas,
+        wangKit.manifest, labels, cellColumns, seed)) return null;
     if (stoneGround) {
         // Monastery courtyard and terrace are C# terrain patches; this does not
         // assume buildings exist or introduce a procedural architecture layer.
@@ -280,7 +284,7 @@ export function composeWorldSitePixel32Albedo(geography, width, height, atlas, q
         }
     }
     return { width, height, data: pixels, prototypeOnly: true,
-        artSource: stoneGround ? PIXEL32_STONE_GROUND.revision
+        artSource: wangKit ? WANG_ATLAS_REVISION : stoneGround ? PIXEL32_STONE_GROUND.revision
             : worldSources ? PIXEL32_WORLD.revision
             : quietAtlas ? PIXEL32_QUIET_ATLAS.revision : PIXEL32_ATLAS.revision };
 }
