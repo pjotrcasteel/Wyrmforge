@@ -1,0 +1,35 @@
+name: Wet Forest ecology character-scale art review
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/art/prototypes/build-ecology-character-scale-review.mjs'
+      - 'tools/art/prototypes/terrain-ecology-props-25d.mjs'
+      - 'tools/art/prototypes/terrain-ecology-props.mjs'
+      - 'tests/javascript/terrain-ecology-character-scale.test.mjs'
+      - 'docs/art/wf32-p1jb-2p5d-ecology-props.md'
+      - '.github/workflows/wf32-character-scale-art-review.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  genuine-actor-scale-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout original source and production sprite atlases
+        uses: actions/checkout@v4
+      - name: Verify character provenance, foot anchors and prop contracts
+        run: node --test tests/javascript/terrain-ecology-character-scale.test.mjs tests/javascript/terrain-ecology-props-25d.test.mjs tests/javascript/terrain-ecology-props.test.mjs
+      - name: Render 1x and nearest-neighbour 3x comparison
+        run: node tools/art/prototypes/build-ecology-character-scale-review.mjs artifacts/wf32-character-scale
+      - name: Publish genuine source-asset review (not a running Hunt capture)
+        uses: actions/upload-artifact@v4
+        with:
+          name: wf32-hollowed-ashling-grass-rock-scale
+          path: artifacts/wf32-character-scale/
+          if-no-files-found: error
+          retention-days: 14
