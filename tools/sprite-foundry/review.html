@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WyrmForge Sprite Foundry — Review</title>
+<style>
+:root{color-scheme:dark;font:15px system-ui,sans-serif;background:#11151c;color:#e4e7ea}
+*{box-sizing:border-box}body{margin:0 auto;max-width:1080px;padding:20px}
+h1{font-size:1.6rem;margin:.2rem 0}h2{font-size:1rem;margin:0 0 12px}
+p{line-height:1.45;color:#b5becb}.warning{padding:12px;background:#302a1f;border:1px solid #79633d;border-radius:8px}
+.panel{border:1px solid #394450;background:#1a222d;border-radius:12px;padding:16px;margin:14px 0}
+.controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:12px}
+label{display:grid;gap:5px;font-size:.85rem;color:#c8d2dc}
+select,input,button{font:inherit;background:#293542;border:1px solid #66778a;color:white;border-radius:6px;padding:8px}
+button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #c291ff}
+.preview{display:flex;gap:12px;justify-content:space-evenly;flex-wrap:wrap}
+.stage{width:calc(50% - 8px);min-width:230px;min-height:320px;border:1px solid #4e5869;border-radius:10px;display:grid;place-items:center;position:relative;overflow:hidden}
+.stage.light{background:repeating-conic-gradient(#8b929b 0 25%,#b7bec5 0 50%) 50%/32px 32px}
+.stage.dark{background:repeating-conic-gradient(#1e262e 0 25%,#303943 0 50%) 50%/32px 32px}
+.stage span{position:absolute;top:8px;left:10px;background:#141a20b8;border-radius:5px;padding:3px 6px;font-size:.78rem}
+.stage canvas{image-rendering:pixelated;image-rendering:crisp-edges;max-width:100%}
+#status{white-space:pre-wrap;color:#c8d2dc}#frame{min-width:240px}
+.small{font-size:.82rem}a{color:#b7d6ff}
+</style>
+</head>
+<body>
+<h1>WyrmForge Sprite Foundry</h1>
+<p>Standalone sprite animation inspection. It does not load, modify, or publish any game assets.</p>
+<div class="warning"><strong>Review only.</strong> An atlas passing file checks is not proof of believable motion, correct lighting, or real mobile Hunt acceptance.</div>
+<section class="panel">
+  <h2>Load the exported package</h2>
+  <p class="small">Select <code>manifest.json</code> and the <code>*.albedo.png</code> atlases together. Files stay in your browser.</p>
+  <input id="files" type="file" accept=".json,.png" multiple>
+  <div class="controls">
+    <label>Animation <select id="clip" disabled></select></label>
+    <label>Direction <select id="direction" disabled></select></label>
+    <label>Preview width <select id="viewport"><option value="320">320px mobile</option><option value="390">390px mobile</option></select></label>
+    <label>Pixel zoom <select id="zoom"><option value="2">2×</option><option value="3" selected>3×</option><option value="4">4×</option></select></label>
+    <label><input id="anchor" type="checkbox" checked>Show debug feet anchor</label>
+  </div>
+  <div class="controls">
+    <button id="play" disabled>Play</button>
+    <button id="prev" disabled>Previous</button>
+    <button id="next" disabled>Next</button>
+    <input id="frame" type="range" min="0" max="0" value="0" disabled aria-label="Animation frame">
+    <span id="counter">No frames loaded</span>
+  </div>
+  <p id="status" role="status">Waiting for files.</p>
+</section>
+<section class="panel">
+  <h2>Character identity reference</h2>
+  <p class="small">Select <code>references/approved-grey-wizard.png</code> to compare the animation against the approved character. The source image is a visual identity reference, not an animation frame.</p>
+  <input id="reference" type="file" accept="image/png">
+  <div style="margin-top:12px"><img id="referenceImage" alt="Approved Wizard reference" style="max-width:100%;max-height:320px;object-fit:contain;display:none"></div>
+</section>
+<section class="panel">
+  <h2>Native-pixel review</h2>
+  <div class="preview">
+    <div class="stage light"><span>Light checker</span><canvas id="light"></canvas></div>
+    <div class="stage dark"><span>Dark checker</span><canvas id="dark"></canvas></div>
+  </div>
+  <p class="small">Debug feet cross is an overlay, never part of the exported image. Check staff side, feet, robe silhouette, and direction-change continuity. This is not a replacement for actual in-Hunt 320/390px captures.</p>
+</section>
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const state = {manifest:null, images:{}, frame:0, playing:false, last:0, raf:0};
+const directions = ["S","SE","E","NE","N","NW","W","SW"];
+function stop(){state.playing=false; $("play").textContent="Play"; if(state.raf)cancelAnimationFrame(state.raf);state.raf=0;}
+function current(){
+  if(!state.manifest)return null;
+  const clip=$("clip").value;
+  return {clip, config:state.manifest.clips[clip], direction:$("direction").value};
+}
+function draw(){
+  const active=current();
+  if(!active)return;
+  const {config,clip,direction}=active;
+  const img=state.images[config.atlases.albedo];
+  if(!img)return;
+  const [w,h]=state.manifest.cell;
+  const sourceX=state.frame*w,sourceY=directions.indexOf(direction)*h;
+  for(const id of ["light","dark"]){
+    const canvas=$(id);canvas.width=w;canvas.height=h;
+    canvas.style.width=(w*Number($("zoom").value))+"px";
+    canvas.style.height=(h*Number($("zoom").value))+"px";
+    const context=canvas.getContext("2d");context.imageSmoothingEnabled=false;
+    context.clearRect(0,0,w,h);
+    context.drawImage(img,sourceX,sourceY,w,h,0,0,w,h);
+    if($("anchor").checked){
+      const [x,y]=state.manifest.feetAnchor;
+      context.strokeStyle="#f4db63";context.lineWidth=1;
+      context.beginPath();context.moveTo(x-3,y+.5);context.lineTo(x+4,y+.5);
+      context.moveTo(x+.5,y-3);context.lineTo(x+.5,y+4);context.stroke();
+    }
+  }
+  $("frame").value=String(state.frame);
+  $("counter").textContent=clip+" / "+direction+" — "+(state.frame+1)+"/"+config.framesPerDirection;
+}
+function tick(time){
+  if(!state.playing)return;
+  const item=current();
+  if(!item){stop();return;}
+  const interval=1000/item.config.fps;
+  if(time-state.last>=interval){
+    const steps=Math.max(1,Math.floor((time-state.last)/interval));
+    state.frame=(state.frame+steps)%item.config.framesPerDirection;
+    state.last=time;draw();
+  }
+  state.raf=requestAnimationFrame(tick);
+}
+function selectClip(){
+  stop();state.frame=0;
+  const item=current();if(!item)return;
+  $("frame").max=String(item.config.framesPerDirection-1);
+  draw();
+}
+async function loadPackage(){
+  stop();state.manifest=null;state.images={};state.frame=0;
+  const entries=Array.from($("files").files);
+  const manifestFile=entries.find(f=>f.name==="manifest.json");
+  if(!manifestFile){$("status").textContent="Choose manifest.json alongside the PNG atlases.";return;}
+  try{
+    const manifest=JSON.parse(await manifestFile.text());
+    if(manifest.schema!=="wyrmforge.sprite-foundry.atlas.v1")throw Error("Unsupported manifest schema");
+    if(!Array.isArray(manifest.cell)||manifest.directions.join(",")!==directions.join(","))throw Error("Invalid sprite grid");
+    const required=new Set(Object.values(manifest.clips).map(c=>c.atlases.albedo));
+    for(const name of required){
+      const file=entries.find(f=>f.name===name);
+      if(!file)throw Error("Missing "+name);
+      const image=await createImageBitmap(file);
+      const clip=Object.values(manifest.clips).find(c=>c.atlases.albedo===name);
+      if(image.width!==clip.framesPerDirection*manifest.cell[0]||image.height!==8*manifest.cell[1])throw Error("Atlas size mismatch: "+name);
+      state.images[name]=image;
+    }
+    state.manifest=manifest;
+    $("clip").replaceChildren(...Object.keys(manifest.clips).map(name=>new Option(name,name)));
+    $("direction").replaceChildren(...directions.map(dir=>new Option(dir,dir)));
+    for(const id of ["clip","direction","play","prev","next","frame"])$(id).disabled=false;
+    $("status").textContent="Technical status: "+manifest.status+". Art approval: NOT APPROVED. Gameplay approval: NOT TESTED.";
+    selectClip();
+  }catch(error){$("status").textContent="Unable to load package: "+error.message;}
+}
+$("reference").addEventListener("change",()=>{const file=$("reference").files[0];const image=$("referenceImage");if(image.dataset.url)URL.revokeObjectURL(image.dataset.url);if(!file){image.style.display="none";return;}const url=URL.createObjectURL(file);image.dataset.url=url;image.src=url;image.style.display="block";});
+$("files").addEventListener("change",loadPackage);
+$("clip").addEventListener("change",selectClip);
+$("direction").addEventListener("change",()=>{state.frame=0;draw();});
+$("viewport").addEventListener("change",()=>{for(const node of document.querySelectorAll(".stage"))node.style.minWidth=$("viewport").value+"px";});
+$("zoom").addEventListener("change",draw);
+$("anchor").addEventListener("change",draw);
+$("frame").addEventListener("input",()=>{stop();state.frame=Number($("frame").value);draw();});
+$("prev").addEventListener("click",()=>{stop();const c=current();if(c){state.frame=(state.frame+c.config.framesPerDirection-1)%c.config.framesPerDirection;draw();}});
+$("next").addEventListener("click",()=>{stop();const c=current();if(c){state.frame=(state.frame+1)%c.config.framesPerDirection;draw();}});
+$("play").addEventListener("click",()=>{
+  if(state.playing){stop();return;}
+  if(!current())return;
+  state.playing=true;state.last=performance.now();$("play").textContent="Pause";state.raf=requestAnimationFrame(tick);
+});
+</script>
+</body>
+</html>
