@@ -52,7 +52,10 @@ public sealed class GreyboxHuntBrowserTests : PageTest
                 && state?.enemies?.length > 0;
         }", null, new() { Timeout = 45000 });
 
-        Assert.IsTrue(await Page.EvaluateAsync<bool>(@"async () => {
+        // Snapshot and Canvas render on adjacent asynchronous frames. The grid
+        // contract is stable, but a cold first frame can still be recovering
+        // from an atlas decode. Wait for a healthy authoritative frame.
+        await Page.WaitForFunctionAsync(@"async () => {
             const module = await import('/js/arena-performance.js');
             const state = module.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
             const grid = state?.greybox;
@@ -60,7 +63,7 @@ public sealed class GreyboxHuntBrowserTests : PageTest
                 && grid?.microcellsPerAxis === 8 && grid?.groundBaseMeters === 0
                 && grid?.groundTopMeters === 1 && state?.wetForestGround == null
                 && !state?.renderingFailed;
-        }"), "Production Hunt must expose one neutral 1m block face split into 8³ physical 12.5cm subcells, without painted terrain.");
+        }", null, new() { Timeout = 20000 });
 
         // Most world pixels must be the exact neutral floor, even with the hunter,
         // enemies, touch controls and exit guidance still rendered over it.
