@@ -44,6 +44,12 @@ public sealed class WorldSiteStrataGrid
 
     private readonly WorldSiteGeography _site;
 
+    /// <summary>Identity of the authoritative seed/site projected by this read-only grid.</summary>
+    public int WorldSeed => _site.WorldSeed;
+
+    /// <summary>Persistent C# site identity; independent of display atlas and camera.</summary>
+    public string SiteId => _site.SiteId;
+
     public double CellWidthMeters { get; }
     public double StratumHeightMeters { get; }
     public int Columns { get; }
