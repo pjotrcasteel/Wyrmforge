@@ -8,7 +8,8 @@ import { createTerritoryWallLayers, drawTerritoryWall, drawOpenedGateRubble } fr
 import { liveWetForestArtworkGeneration } from './arena-live-wet-forest-materials.js';
 import { WORLD_SITE_MATERIALS, worldSiteMaterialName, normalizeWorldSiteMaterialWeights,
     worldSiteMaterialCacheKey, worldSiteSourceBindings } from './world-site-material-binding.js';
-import { worldSiteMaterialModeEnabled, drawWorldSiteNeutralAlbedo } from './world-site-neutral-albedo.js';
+import { worldSiteMaterialModeEnabled, drawWorldSiteNeutralAlbedo,
+    worldSiteNeutralSourceCoverage } from './world-site-neutral-albedo.js';
 
 // The world is projected from canonical C# terrain state. Drawing never changes simulation outcomes.
 const textures = new Map();
@@ -796,8 +797,11 @@ export function drawArenaEnvironment(ctx, environment, width, height, elapsedSec
         drawWorldSiteDiscoveries(ctx, environment.geography, width, height);
     }
     if (semantic || neutral) {
+        const sourceCoverage = neutral ? worldSiteNeutralSourceCoverage(width, height) : null;
         globalThis.__wyrmforgeAr0Geography = {
-            materialView: neutral ? 'albedo' : worldSiteMaterialModeEnabled() ? 'missing-source-fallback' : 'semantic',
+            materialView: neutral ? (sourceCoverage?.complete ? 'albedo' : 'partial-albedo')
+                : worldSiteMaterialModeEnabled() ? 'missing-source-fallback' : 'semantic',
+            sourceCoverage,
             siteId: environment.geography.siteId,
             regionId: environment.geography.regionId,
             seed: environment.geography.worldSeed,

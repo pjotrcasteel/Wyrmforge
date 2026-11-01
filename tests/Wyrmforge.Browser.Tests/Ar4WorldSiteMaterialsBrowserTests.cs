@@ -86,8 +86,24 @@ public sealed class Ar4WorldSiteMaterialsBrowserTests : PageTest
         }");
         await Page.WaitForFunctionAsync(
             "siteId => window.__wyrmforgeAr0Geography?.siteId === siteId && " +
-            "window.__wyrmforgeAr0Geography?.materialView === 'albedo'",
-            siteId, new() { Timeout = 90000 });
+            "window.__wyrmforgeAr0Geography?.materialView?.endsWith('albedo')",
+            siteId, new() { Timeout = 45000 });
+        var expectedMaterialView = kind == "forest-fork" ? "albedo" : "partial-albedo";
+        Assert.AreEqual(expectedMaterialView, await Page.EvaluateAsync<string>(
+            "() => window.__wyrmforgeAr0Geography.materialView"));
+        var sourceFraction = await Page.EvaluateAsync<double>(
+            "() => window.__wyrmforgeAr0Geography.sourceCoverage.fraction");
+        Assert.IsTrue(sourceFraction > .70,
+            "The reviewed camera area must contain original WF32 source pixels.");
+        if (expectedMaterialView == "albedo")
+        {
+            Assert.AreEqual(1d, sourceFraction);
+        }
+        else
+        {
+            Assert.IsLessThan(1d, sourceFraction,
+                "Tall Hunt worlds must explicitly report the un-authored lower band.");
+        }
 
         Assert.AreEqual(seed, await Page.EvaluateAsync<int>("() => window.__wyrmforgeAr0Geography.seed"));
         Assert.AreEqual(obstacles, await Page.EvaluateAsync<int>(
@@ -109,7 +125,7 @@ public sealed class Ar4WorldSiteMaterialsBrowserTests : PageTest
         await Page.Keyboard.UpAsync("d");
         Assert.AreEqual(siteId, await Page.EvaluateAsync<string>(
             "() => window.__wyrmforgeAr0Geography.siteId"));
-        Assert.AreEqual("albedo", await Page.EvaluateAsync<string>(
+        Assert.AreEqual(expectedMaterialView, await Page.EvaluateAsync<string>(
             "() => window.__wyrmforgeAr0Geography.materialView"));
         Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
         await Page.ScreenshotAsync(new()

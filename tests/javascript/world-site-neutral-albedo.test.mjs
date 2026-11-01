@@ -87,3 +87,22 @@ test('AR4-A2 stitches original absolute-world source windows without a 256px rep
     assert.equal(stitchWorldSiteSourceBands([top, image(0, 0, 0, 32, 800)]), null);
     assert.equal(stitchWorldSiteSourceBands([top]), null);
 });
+
+test('AR4-A3 shows native authored pixels only within the 1568px WF32 window in a taller Hunt world', () => {
+    const tallSources = {
+        soil: image(100, 30, 20, 32, 1568),
+        grass: image(10, 200, 40, 32, 1568),
+        mud: image(20, 30, 180, 32, 1568),
+    };
+    const geography = site(Array.from({ length: 4 }, () => sample({ soilWeight: 1 })));
+    const result = composeWorldSiteNeutralAlbedo(geography, 32, 1600, tallSources);
+    assert.ok(result);
+    assert.deepEqual([...result.data.slice(0, 4)], [100, 30, 20, 255], 'authored native source at site origin');
+    assert.deepEqual([...result.data.slice(1567 * 32 * 4, 1567 * 32 * 4 + 4)], [100, 30, 20, 255]);
+    assert.deepEqual([...result.data.slice(1568 * 32 * 4, 1568 * 32 * 4 + 4)],
+        [88, 91, 82, 255], 'un-authored world remains the explicit diagnostic color');
+    assert.equal(result.sourceCoverage, 1568 / 1600);
+    assert.equal(composeWorldSiteNeutralAlbedo(geography, 32, 1600,
+        { ...tallSources, soil: image(100, 30, 20, 32, 1536) }), null,
+        'a truncated or damaged source is not silently filled');
+});

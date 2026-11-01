@@ -9,6 +9,7 @@ const SOURCE_BANDS = Object.freeze([
     Object.freeze({ suffix: 'bottom', originY: 800, height: 768 }),
 ]);
 const SOURCE_FAMILIES = Object.freeze(['soil', 'grass', 'mud']);
+const SOURCE_HEIGHT = SOURCE_BANDS.reduce((total, band) => total + band.height, 0);
 const CACHE_LIMIT = 1;
 const siteImages = new Map();
 let sourceState = 'idle';
@@ -79,7 +80,8 @@ function requestSources() {
 
 function validSource(source, width, height) {
     return source && Number.isInteger(source.width) && Number.isInteger(source.height) &&
-        source.width >= width && source.height >= height &&
+        source.width >= width && (source.height >= height ||
+            (height > SOURCE_HEIGHT && source.height === SOURCE_HEIGHT)) &&
         source.width % 32 === 0 && source.height % 32 === 0 &&
         source.data?.length === source.width * source.height * 4;
 }
@@ -127,8 +129,11 @@ export function composeWorldSiteNeutralAlbedo(geography, width, height, sources)
                     bl[name] * (1 - fx) * fy + br[name] * fx * fy;
                 if (weight <= 0) continue;
                 const image = sourceForIndex[m];
-                const from = image ? (y * image.width + x) * 4 : 0;
-                const color = image?.data ?? fallbacks[m];
+                // Never stretch, stamp or repeat the authored 32px world window. Outside
+                // its coverage, show the declared semantic diagnostic color.
+                const authored = image && y < image.height;
+                const from = authored ? (y * image.width + x) * 4 : 0;
+                const color = authored ? image.data : fallbacks[m];
                 red += color[from] * weight;
                 green += color[from + 1] * weight;
                 blue += color[from + 2] * weight;
@@ -139,7 +144,21 @@ export function composeWorldSiteNeutralAlbedo(geography, width, height, sources)
             pixels[pixel + 3] = 255;
         }
     }
-    return { width, height, data: pixels };
+    return { width, height, data: pixels,
+        sourceCoverage: Math.min(1, SOURCE_HEIGHT / height) };
+}
+
+/** The browser-review diagnostics report actual decoded source coverage, never implied complete art. */
+export function worldSiteNeutralSourceCoverage(width, height) {
+    const source = decodedSources?.soil;
+    if (sourceState !== 'ready' || !source || !(width > 0 && height > 0)) return null;
+    const coveredWidth = Math.min(width, source.width);
+    const coveredHeight = Math.min(height, source.height);
+    return Object.freeze({
+        complete: coveredWidth === width && coveredHeight === height,
+        width: coveredWidth, height: coveredHeight,
+        fraction: (coveredWidth / width) * (coveredHeight / height),
+    });
 }
 
 /** Draw only when all approved soft material files are present, otherwise let AR3 semantic mode explain the site. */
