@@ -1,8 +1,8 @@
-# WF32 / AR3 / AR4 — discrete XYZ tile and destructibility proposal (1 November 2026)
+# WF32 / AR3 / AR4 — owner-approved XYZ tile and destructibility architecture (1 November 2026)
 
-> **RFC / NOT LOCKED / no runtime implementation in this checkpoint.** Owner suggested a classic numbered tile matrix, neighbor-driven transition (“melding”) tiles, explicit height (x, y, z), and future physical destruction. Do not infer approval of a 3D runtime, CV2/FXP, changed collision or draft [PR #459](https://github.com/pjotrcasteel/Wyrmforge/pull/459). Related forest visual gate [#465](https://github.com/pjotrcasteel/Wyrmforge/issues/465) and separate future destruction proposal [#466](https://github.com/pjotrcasteel/Wyrmforge/issues/466).
+> **OWNER-APPROVED ARCHITECTURE DIRECTION (1 November 2026); staged implementation still pending.** Owner selected a classic numbered tile matrix, neighbor-driven transition (“melding”) tiles, explicit height (x, y, z), and future physical destruction. This approves the layered-C#-cell direction and future excavation milestones, **not** a full 3D runtime, immediate CV2/FXP rollout, untested live collision changes or draft [PR #459](https://github.com/pjotrcasteel/Wyrmforge/pull/459). Related forest visual gate [#465](https://github.com/pjotrcasteel/Wyrmforge/issues/465) and separate future destruction proposal [#466](https://github.com/pjotrcasteel/Wyrmforge/issues/466).
 
-## Decision under study
+## Accepted architecture direction (implementation choices still under study)
 
 Use **one C#-owned, site/seed-stable spatial index** with a dense logical **XY surface tile projection** and **sparse chunked XYZ occupancy for actual destructible solids**. The XY view controls 32×32 authored albedo atlas placement/transition masks. XYZ identifies which solid occupies a height level when a rock, wall or cliff block can lose durability or be removed. Do **not** allocate a full three-dimensional array for empty air or clone all world pixels into memory. This is an extension/view of the *existing* C# AR3 geography/physics authority—not a second world generator or new JS gameplay engine.
 
@@ -88,13 +88,17 @@ After Fireball (small immutable delta for modified coordinates)
 - [Godot — TileSet/terrain authoring](https://docs.godotengine.org/en/stable/tutorials/2d/using_tilesets.html): neighbor-connected authored terrain and tile alternatives; useful algorithmic precedent, **not** proposal to move engines.
 - [Godot — TileMapLayer](https://docs.godotengine.org/en/4.6/classes/class_tilemaplayer.html): mutating cells/terrain can update neighbor transitions; broad tile rebuilds cost time, so WyrmForge should invalidate bounded changed chunks only.
 
-## Phased proof, without expanding today's approval
+## Approved milestone order and staged proof (individual feature gates remain)
 
 - **WF32-BF0 (current):** freeze forest art scale and the 7 stable C# semantic surface IDs. Produce a readable 2D matrix debug inspector: integer `materialId`, corner/edge mask, atlas frame, seed/variant, and source tile coordinates per visible cell. Keep original rendering modes.
 - **WF32-BF1 (current):** use the matrix-derived neighbor contract to replace the inadequate road/bank atlas; prove straight/turn/T/X/end cases, grass↔road↔mud seams at 1×/3× and two real Hunt screenshots. This is an **art and adapter** task, not destruction gameplay.
-- **XYZ-0 (future, separate C# owner gate):** architect bounded destructible occupancy in C#, sparse delta serialization, immutable base projection, cell/prop collision reconciliation and versioned snapshot. Start with one 2×2 rock or simple destructible wall on a test scene, not forest floor excavation.
-- **XYZ-1 (future):** test Fireball hit, partial damage, removal, changed collision and path/LOS, save/reload/replay, duplicate events, observer systems and bounded dirty-cell rebuild. Defer structural collapse/large excavation until measurable need.
+- **XYZ0 (NEXT / approved to start):** establish a typed read-only C# XY/XYZ material-column API and bounded chunk representation over existing AR3 terrain, before mutating live physics.
+- **XYZ1–XYZ5 (staged):** implement C# persistence, actual Fireball neighborhood excavation, exposed-surface 32px art, Wyrm fissures and integrated owner proof, as detailed in the [canonical milestone table](../canon/roadmap.md#xyz0xyz5--layered-destructible-tile-world-milestones-owner-approved-direction-1-november-2026). Each behavior must earn its own gameplay/art/device gate.
 - **Gate:** forest owner must approve visuals from real gameplay. CV2/FXP physical destruction and the overall AR4-B merge gate remain **separate approvals**. Mountain/monastery art remain parked.
+
+## Milestone status (1 November 2026)
+
+**XYZ0 is now authorized to begin**, subject to existing C# physics and native-art boundaries. XYZ1–XYZ5 are authorized as staged objectives, not retrospectively completed or available in live Hunts. The Wet Forest-first art scope [#465](https://github.com/pjotrcasteel/Wyrmforge/issues/465) remains unchanged; Mountain Pass and monastery remain parked. See the [canonical XYZ milestone table](../canon/roadmap.md#xyz0xyz5--layered-destructible-tile-world-milestones-owner-approved-direction-1-november-2026) and [issue #466](https://github.com/pjotrcasteel/Wyrmforge/issues/466).
 
 ## Unanswered scale/engineering questions
 
