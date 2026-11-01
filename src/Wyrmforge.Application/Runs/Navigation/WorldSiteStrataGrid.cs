@@ -32,19 +32,22 @@ public readonly record struct WorldSiteStrataCell(
 public sealed class WorldSiteStrataGrid
 {
     public const int NativeSourceTilePixels = 32;
+    // LOCKED owner decision, 1 November: one physical XYZ block is 1x1x1m.
+    // The texture resolution does not determine world units or camera zoom.
+    public const double BlockEdgeMeters = 1;
     // Stable world-first C# site coordinate frame. Its physical 190x310m field
     // cannot silently grow when a taller phone enters the same Chart node.
     public const int PreviewSiteWidthPixels = 950;
     public const int PreviewSiteHeightPixels = 1550;
 
     // AR3's gameplay site uses 950x1550 logical units for 190x310 physical metres.
-    // At that established presentation density, one source 32px tile spans 6.4m.
-    // This is a PROVISIONAL visual-to-world scale, not an approved excavation unit.
+    // At that established presentation density, one diagnostic 32px tile spans 6.4m.
+    // This is LEGACY diagnostic framing only, never the approved 1m block size.
     public const double PreviewCellWidthMeters =
         NativeSourceTilePixels * (WorldSiteElevationField.SiteWidthMeters / PreviewSiteWidthPixels);
 
     // A separate physical vertical unit; never assume a top tile is a 32px-tall cube.
-    public const double PreviewStratumHeightMeters = 1;
+    public const double PreviewStratumHeightMeters = BlockEdgeMeters;
 
     private readonly WorldSiteGeography _site;
 
@@ -60,8 +63,8 @@ public sealed class WorldSiteStrataGrid
     public int Rows { get; }
 
     public WorldSiteStrataGrid(WorldSiteGeography site,
-        double cellWidthMeters = PreviewCellWidthMeters,
-        double stratumHeightMeters = PreviewStratumHeightMeters)
+        double cellWidthMeters = BlockEdgeMeters,
+        double stratumHeightMeters = BlockEdgeMeters)
     {
         ArgumentNullException.ThrowIfNull(site);
         if (!double.IsFinite(cellWidthMeters) || cellWidthMeters <= 0 ||

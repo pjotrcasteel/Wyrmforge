@@ -30,7 +30,10 @@ public sealed class WorldSiteStrataGridTests
     [TestMethod]
     public void Xyz0_ReadonlyRenderMatrixContainsExactlyTheAuthoritativeTopCells()
     {
-        var grid = new WorldSiteStrataGrid(Forest(1224));
+        // This test intentionally preserves the historical 6.4m *diagnostic* image
+        // until the 1m authoritative grid has a viewport-cropped compositor.
+        var grid = new WorldSiteStrataGrid(Forest(1224),
+            cellWidthMeters: WorldSiteStrataGrid.PreviewCellWidthMeters);
         var rendered = WorldSiteStrataRenderSnapshot.FromGrid(grid);
         Assert.AreEqual(grid.SiteId, rendered.SiteId);
         Assert.AreEqual(grid.WorldSeed, rendered.WorldSeed);
@@ -57,7 +60,8 @@ public sealed class WorldSiteStrataGridTests
     [TestMethod]
     public void Xyz0_Native32PxGridHasIndependentPhysicalAndVerticalUnits()
     {
-        var grid = new WorldSiteStrataGrid(Forest(1204));
+        var grid = new WorldSiteStrataGrid(Forest(1204),
+            cellWidthMeters: WorldSiteStrataGrid.PreviewCellWidthMeters);
         Assert.AreEqual(32, WorldSiteStrataGrid.NativeSourceTilePixels);
         Assert.AreEqual(950, WorldSiteStrataGrid.PreviewSiteWidthPixels);
         Assert.AreEqual(1550, WorldSiteStrataGrid.PreviewSiteHeightPixels);
@@ -71,6 +75,26 @@ public sealed class WorldSiteStrataGridTests
         Assert.IsTrue(grid.GetCell(0, grid.Rows, 0).IsEmpty);
         Assert.IsFalse(grid.GetCell(grid.Columns - 1, grid.Rows - 1, -4).IsEmpty,
             "A bounded partial edge tile must still sample the C# site and underlying stone.");
+    }
+
+    [TestMethod]
+    public void Xyz0_OwnerApprovedOneMetreCubesAreIndependentOfTheLegacyPreviewScale()
+    {
+        var grid = new WorldSiteStrataGrid(Forest(1204));
+        Assert.AreEqual(1d, WorldSiteStrataGrid.BlockEdgeMeters);
+        Assert.AreEqual(1d, grid.CellWidthMeters);
+        Assert.AreEqual(1d, grid.StratumHeightMeters);
+        Assert.AreEqual(190, grid.Columns);
+        Assert.AreEqual(310, grid.Rows);
+        Assert.AreEqual(32, WorldSiteStrataGrid.NativeSourceTilePixels);
+        Assert.AreEqual(6.4d, WorldSiteStrataGrid.PreviewCellWidthMeters, 1e-9);
+
+        var top = grid.GetCell(100, 150, int.MaxValue);
+        var rock = grid.GetCell(100, 150, top.SurfaceZ - 1);
+        Assert.IsFalse(top.IsEmpty);
+        Assert.AreEqual(WorldSiteSurfaceId.Rock, rock.BodyMaterial!.Value);
+        Assert.AreEqual(new WorldSiteCellKey(100, 150, top.SurfaceZ),
+            grid.GetCell(100, 150, top.SurfaceZ).Key);
     }
 
     [TestMethod]

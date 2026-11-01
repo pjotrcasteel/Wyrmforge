@@ -187,7 +187,11 @@ public sealed class ArenaEnvironmentState
         // Bake once per site, not per render frame. The C# site and GetCell(x,y,z)
         // retain authority; this readonly row-major snapshot is visual evidence only.
         if (worldFirstGeography && geography?.Landscape is not null)
-            strataReview ??= WorldSiteStrataRenderSnapshot.FromGrid(new WorldSiteStrataGrid(geography));
+            // Preserve the EXISTING review screenshots until a cropped, chunk-visible
+            // 1m-cell renderer replaces this full-frame 6.4m diagnostic compositor.
+            // Gameplay/default XYZ grids already use the owner-approved 1m block.
+            strataReview ??= WorldSiteStrataRenderSnapshot.FromGrid(new WorldSiteStrataGrid(
+                geography, cellWidthMeters: WorldSiteStrataGrid.PreviewCellWidthMeters));
 
         return new(seed, biome, element, stage, landmark,
         supplies.Where(supply => !supply.Collected)
