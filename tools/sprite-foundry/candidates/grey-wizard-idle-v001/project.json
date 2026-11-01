@@ -10,14 +10,14 @@
     74
   ],
   "directions": [
-    "S",
-    "SE",
-    "E",
-    "NE",
     "N",
-    "NW",
+    "NE",
+    "E",
+    "SE",
+    "S",
+    "SW",
     "W",
-    "SW"
+    "NW"
   ],
   "clips": {
     "idle": {

@@ -23,6 +23,10 @@ Run from the repo root:
 
 Remove the --allow-incomplete argument for the full technical gate. The output/ folder is generated and should not be mistaken for approved assets. Open tools/sprite-foundry/review.html locally; choose the generated manifest.json and all *.albedo.png atlases together.
 
+## Direction contract
+
+Atlas rows use the **existing Sprite Lab/runtime order:** N, NE, E, SE, S, SW, W, NW. This is distinct from the rejected first candidate's S-first presentation. A filename is not evidence that a sprite actually faces that direction: verify anatomy, staff side, boots and silhouette against the compass before approval. **The v001 Wizard directional study was rejected by the owner on 2 November for incorrect directions.**
+
 ## Input layout
 
 The project JSON states intended cell dimensions, eight canonical directions, foot anchor, frame counts and nominal preview FPS. Its initial **64×80 / 32×32-world** values are a proposed Wizard review format, not a redefinition of the runtime pixel/world scale or the native 160px source files on PR #439.

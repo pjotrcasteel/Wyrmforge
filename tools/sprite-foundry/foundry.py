@@ -10,7 +10,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw
 
-DIRECTIONS = ("S", "SE", "E", "NE", "N", "NW", "W", "SW")
+DIRECTIONS = ("N", "NE", "E", "SE", "S", "SW", "W", "NW")
 LAYERS = ("albedo", "normal", "roughness", "emission", "depth")
 
 
@@ -32,7 +32,7 @@ def read_project(path: Path) -> dict:
     ) or not (0 <= anchor[0] < size[0] and 0 <= anchor[1] < size[1]):
         raise ValueError("feetAnchor must be inside the cell")
     if data.get("directions") != list(DIRECTIONS):
-        raise ValueError("directions must follow the canonical S,SE,E,NE,N,NW,W,SW order")
+        raise ValueError("directions must follow WyrmForge's canonical N,NE,E,SE,S,SW,W,NW order")
     clips = data.get("clips")
     if not isinstance(clips, dict) or not clips:
         raise ValueError("clips must be a non-empty object")
@@ -159,6 +159,7 @@ def build(project: dict, source: Path, out: Path, allow_incomplete: bool) -> dic
         "technicalStatus": state,
         "artApproval": "NOT_APPROVED",
         "gameplayApproval": "NOT_TESTED",
+        "directionArtworkApproval": {direction: "NOT_REVIEWED" for direction in DIRECTIONS},
         "source": str(source),
         "missingFrames": missing_count,
         "warnings": warnings,

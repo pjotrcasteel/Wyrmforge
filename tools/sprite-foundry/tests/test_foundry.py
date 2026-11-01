@@ -19,7 +19,7 @@ def sample_project(frames=1):
         "character": "grey-wizard",
         "cell": [64, 80],
         "feetAnchor": [32, 74],
-        "directions": list(foundry.DIRECTIONS),
+        "directions": ["N", "NE", "E", "SE", "S", "SW", "W", "NW"],
         "clips": {"idle": {"frames": frames, "fps": 8}},
     }
 
@@ -90,6 +90,9 @@ class FoundryTests(unittest.TestCase):
         report = foundry.build(sample_project(), self.source, self.out, False)
         self.assertEqual("invalid", report["technicalStatus"])
         self.assertTrue(any("no transparent pixels" in issue for issue in report["errors"]))
+
+    def test_direction_order_matches_existing_sprite_lab(self):
+        self.assertEqual(("N", "NE", "E", "SE", "S", "SW", "W", "NW"), foundry.DIRECTIONS)
 
     def test_bad_manifest_rejected(self):
         project = sample_project()

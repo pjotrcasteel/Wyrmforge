@@ -66,7 +66,8 @@ button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visi
 "use strict";
 const $ = id => document.getElementById(id);
 const state = {manifest:null, images:{}, frame:0, playing:false, last:0, raf:0};
-const directions = ["S","SE","E","NE","N","NW","W","SW"];
+const directions = ["N","NE","E","SE","S","SW","W","NW"];
+const directionArrows = {N:"↑",NE:"↗",E:"→",SE:"↘",S:"↓",SW:"↙",W:"←",NW:"↖"};
 function stop(){state.playing=false; $("play").textContent="Play"; if(state.raf)cancelAnimationFrame(state.raf);state.raf=0;}
 function current(){
   if(!state.manifest)return null;
@@ -136,7 +137,7 @@ async function loadPackage(){
     }
     state.manifest=manifest;
     $("clip").replaceChildren(...Object.keys(manifest.clips).map(name=>new Option(name,name)));
-    $("direction").replaceChildren(...directions.map(dir=>new Option(dir,dir)));
+    $("direction").replaceChildren(...directions.map(dir=>new Option(dir+" "+directionArrows[dir],dir)));
     for(const id of ["clip","direction","play","prev","next","frame"])$(id).disabled=false;
     $("status").textContent="Technical status: "+manifest.status+". Art approval: NOT APPROVED. Gameplay approval: NOT TESTED.";
     selectClip();

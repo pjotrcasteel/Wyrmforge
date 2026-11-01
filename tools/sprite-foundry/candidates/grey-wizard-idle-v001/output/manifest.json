@@ -19,7 +19,7 @@
     "W",
     "SW"
   ],
-  "status": "technical-pass",
+  "status": "rejected-visual",
   "approved": false,
   "clips": {
     "idle": {
@@ -31,5 +31,6 @@
       "atlasColumns": 1,
       "atlasRows": 8
     }
-  }
+  },
+  "visualStatus": "rejected"
 }
