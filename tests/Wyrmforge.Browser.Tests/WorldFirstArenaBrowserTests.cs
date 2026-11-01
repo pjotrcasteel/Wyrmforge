@@ -56,6 +56,8 @@ public sealed class WorldFirstArenaBrowserTests : PageTest
             new() { Timeout = 45000 });
         Assert.AreEqual(30, await Page.EvaluateAsync<int>("() => window.__wyrmforgeAr0Geography.matrix.columns"));
         Assert.AreEqual(49, await Page.EvaluateAsync<int>("() => window.__wyrmforgeAr0Geography.matrix.rows"));
+        Assert.AreEqual(950, await Page.EvaluateAsync<int>("() => window.__wyrmforgeAr0Geography.matrix.worldWidth"));
+        Assert.AreEqual(1550, await Page.EvaluateAsync<int>("() => window.__wyrmforgeAr0Geography.matrix.worldHeight"));
         Assert.IsTrue(await Page.EvaluateAsync<bool>(
             "() => Number.isInteger(window.__wyrmforgeAr0Geography.matrix.centerZ)"));
         Assert.IsTrue(await Page.EvaluateAsync<bool>(

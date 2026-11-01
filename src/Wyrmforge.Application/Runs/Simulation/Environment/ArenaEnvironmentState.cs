@@ -31,6 +31,9 @@ public sealed class ArenaEnvironmentState
     /// <summary>Read-only C# fixture geometry for the optional shared G5 light projection.</summary>
     public HuntArenaGenerator.WetForestRecipe? LightingRecipe => wetForest;
 
+    /// <summary>Only the opt-in AR1+ C# site uses a fixed physical/logical grid across viewports.</summary>
+    public bool UsesFixedWorldSiteExtent => worldFirstGeography && geography?.Landscape is not null;
+
     private sealed class Supply(string kind, double x, double y, EncounterPhase unlockPhase)
     {
         public string Kind { get; } = kind;

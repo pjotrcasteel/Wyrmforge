@@ -59,6 +59,8 @@ public sealed class WorldSiteStrataGridTests
     {
         var grid = new WorldSiteStrataGrid(Forest(1204));
         Assert.AreEqual(32, WorldSiteStrataGrid.NativeSourceTilePixels);
+        Assert.AreEqual(950, WorldSiteStrataGrid.PreviewSiteWidthPixels);
+        Assert.AreEqual(1550, WorldSiteStrataGrid.PreviewSiteHeightPixels);
         Assert.AreEqual(6.4, grid.CellWidthMeters, .000001);
         Assert.AreEqual(1, grid.StratumHeightMeters, .000001);
         Assert.AreEqual(30, grid.Columns);

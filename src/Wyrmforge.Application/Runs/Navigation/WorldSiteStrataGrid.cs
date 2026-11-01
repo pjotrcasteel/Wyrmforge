@@ -32,12 +32,16 @@ public readonly record struct WorldSiteStrataCell(
 public sealed class WorldSiteStrataGrid
 {
     public const int NativeSourceTilePixels = 32;
+    // Stable world-first C# site coordinate frame. Its physical 190x310m field
+    // cannot silently grow when a taller phone enters the same Chart node.
+    public const int PreviewSiteWidthPixels = 950;
+    public const int PreviewSiteHeightPixels = 1550;
 
     // AR3's gameplay site uses 950x1550 logical units for 190x310 physical metres.
     // At that established presentation density, one source 32px tile spans 6.4m.
     // This is a PROVISIONAL visual-to-world scale, not an approved excavation unit.
     public const double PreviewCellWidthMeters =
-        NativeSourceTilePixels * (WorldSiteElevationField.SiteWidthMeters / 950d);
+        NativeSourceTilePixels * (WorldSiteElevationField.SiteWidthMeters / PreviewSiteWidthPixels);
 
     // A separate physical vertical unit; never assume a top tile is a 32px-tall cube.
     public const double PreviewStratumHeightMeters = 1;

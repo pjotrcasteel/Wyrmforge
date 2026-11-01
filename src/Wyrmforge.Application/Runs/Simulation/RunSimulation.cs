@@ -150,8 +150,15 @@ public sealed partial class RunSimulation
         viewportWidth = width;
         viewportHeight = height;
         var roaming = arenaEnvironment is not null && (mapState.EncounterActive || trailExitPending);
-        arenaWidth = roaming ? Math.Max(width * 2.6, 950) : width;
-        arenaHeight = roaming ? Math.Max(height * 2.5, 1550) : height;
+        // AR1+ world-first geography is ONE C# site in ONE native pixel frame.
+        // Scaling its logical world with the phone would make 32px XYZ cells
+        // stretch or disappear on 390x844 screens. Only the opt-in authored site
+        // is fixed; ordinary roaming Hunts retain their original viewport scaling.
+        var fixedSite = roaming && arenaEnvironment?.UsesFixedWorldSiteExtent == true;
+        arenaWidth = fixedSite ? WorldSiteStrataGrid.PreviewSiteWidthPixels :
+            roaming ? Math.Max(width * 2.6, 950) : width;
+        arenaHeight = fixedSite ? WorldSiteStrataGrid.PreviewSiteHeightPixels :
+            roaming ? Math.Max(height * 2.5, 1550) : height;
         width = arenaWidth;
         height = arenaHeight;
         EnsurePlayerPosition(width, height);

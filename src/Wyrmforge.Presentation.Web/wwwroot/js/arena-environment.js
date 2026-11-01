@@ -817,6 +817,8 @@ export function drawArenaEnvironment(ctx, environment, width, height, elapsedSec
                 obstacle => obstacle.kind?.startsWith('monastery-')).length ?? 0,
             geographyActive: environment.geographyActive === true,
             matrix: matrix ? {
+                worldWidth: width,
+                worldHeight: height,
                 columns: environment.strata.columns,
                 rows: environment.strata.rows,
                 tilePixels: environment.strata.tilePixels,
