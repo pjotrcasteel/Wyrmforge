@@ -434,8 +434,7 @@ function draw(state, snapshot, width, height) {
         ...(state.ashfang.death ? [{kind:'dragonDeath',depth:state.ashfang.death.y}] : []),
         ...snapshot.enemies.map(enemy => ({ kind: 'enemy', depth: enemy.y + (enemy.radius || 0), enemy })),
         { kind: 'mage', depth: snapshot.player.y + (snapshot.player.radius || 0) },
-        ...(greybox ? [] : getArenaCloisterElevations(snapshot.environment, worldWidth, worldHeight,
-            visualSeconds, null, state.g4FlatGround, gpu)),
+        ...(greybox ? [] : getArenaCloisterElevations(snapshot.environment, worldWidth, worldHeight, visualSeconds, null, state.g4FlatGround, gpu)),
     ];
     if (gpu) gpu.begin(ctx, camera, width, height);
     state.lighting01FixtureCount = gpu && state.lighting01
