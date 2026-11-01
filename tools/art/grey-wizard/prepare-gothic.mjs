@@ -6,7 +6,7 @@ import {createHash} from 'node:crypto';
 import assert from 'node:assert/strict';
 import {decodePng,encodePng} from '../lib/png.mjs';
 import {Bitmap} from '../lib/painter.mjs';
-const {project}=await import(process.argv.includes('--north-rebuild')?'./gothic-north-rebuild.mjs':process.argv.includes('--north')?'./gothic-north-project.mjs':process.argv.includes('--northeast')?'./gothic-northeast-project.mjs':process.argv.includes('--east')?'./gothic-east-project.mjs':process.argv.includes('--leg-coverage')?'./gothic-south-legs.mjs':process.argv.includes('--boot-cleanup')?'./gothic-south-boots.mjs':process.argv.includes('--south-stick')?'./gothic-south-stick.mjs':process.argv.includes('--overlap-fix')?'./gothic-walking-stick-overlap.mjs':process.argv.includes('--repair-stick')?'./gothic-walking-stick-repair.mjs':process.argv.includes('--walking-stick')?'./gothic-walking-stick-project.mjs':process.argv.includes('--southeast')?'./gothic-southeast-project.mjs':'./gothic-project.mjs');
+const {project}=await import(process.argv.includes('--north-arm')?'./gothic-north-arm.mjs':process.argv.includes('--north-rebuild')?'./gothic-north-rebuild.mjs':process.argv.includes('--north')?'./gothic-north-project.mjs':process.argv.includes('--northeast')?'./gothic-northeast-project.mjs':process.argv.includes('--east')?'./gothic-east-project.mjs':process.argv.includes('--leg-coverage')?'./gothic-south-legs.mjs':process.argv.includes('--boot-cleanup')?'./gothic-south-boots.mjs':process.argv.includes('--south-stick')?'./gothic-south-stick.mjs':process.argv.includes('--overlap-fix')?'./gothic-walking-stick-overlap.mjs':process.argv.includes('--repair-stick')?'./gothic-walking-stick-repair.mjs':process.argv.includes('--walking-stick')?'./gothic-walking-stick-project.mjs':process.argv.includes('--southeast')?'./gothic-southeast-project.mjs':'./gothic-project.mjs');
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../../..');
 const base=join(root,'art/source/characters/grey-wizard'),out=join(base,project.outputDirectory??'gothic-south-v003');
 mkdirSync(join(out,'source-layers'),{recursive:true});
@@ -105,6 +105,7 @@ for(const paint of project.paintedUnderlays??[]){
     for(const row of paint.rows){
         const [y,left,right]=row;
         for(let x=left;x<=right;x++){
+            if(paint.behind&&!paint.behind.some(name=>layers[name]?.alpha(x,y)))continue;
             assert.ok(master.alpha(x,y),'underlay must remain hidden under native silhouette');
             const colors=paint.colors;
             const color=x===left?colors.outline:x===right?colors.edge:x===left+2?colors.highlight:colors.leather;

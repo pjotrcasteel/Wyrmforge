@@ -1,0 +1,39 @@
+{
+  "scope": "diagnostic of existing ownership; no segmentation or animation approved",
+  "source": "art/source/characters/grey-wizard/gothic-north-v017",
+  "names": [
+    "shin-left",
+    "shin-right",
+    "boot-left",
+    "boot-right",
+    "robe",
+    "arm-free",
+    "head-hair",
+    "hat",
+    "sleeve-underlay",
+    "arm-staff",
+    "wrist-cuff",
+    "staff",
+    "staff-hand"
+  ],
+  "layerPixels": {
+    "shin-left": 108,
+    "shin-right": 121,
+    "boot-left": 183,
+    "boot-right": 188,
+    "robe": 3481,
+    "arm-free": 491,
+    "head-hair": 405,
+    "hat": 803,
+    "sleeve-underlay": 206,
+    "arm-staff": 544,
+    "wrist-cuff": 93,
+    "staff": 441,
+    "staff-hand": 110
+  },
+  "totalVisibleSourcePixels": 6739,
+  "output": [
+    "part-ownership.png",
+    "part-isolation.gif"
+  ]
+}

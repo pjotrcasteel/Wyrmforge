@@ -1,0 +1,15 @@
+{
+  "status": "inherited working-scale guide; N wrist/shoulder motion and phone fit unapproved",
+  "rule": "wizard and standard Hollowed have equal un-hunched anatomical stature; exclude hat and staff",
+  "reference": "gothic-south-v003/scale-calibration.json; 30 October owner-accepted working guide",
+  "standingBodyWorldHeight": 49.69353803481172,
+  "wizardSourceCrownY": 32,
+  "wizardSourceSoleY": 141,
+  "wizardCell": 160,
+  "wizardWorldSize": 72.944643,
+  "limitations": [
+    "N source wrist articulation is in visual review, not actual 2.5D/Hunt approval",
+    "rest source uses explicitly separate wrist cuff and hand-painted occluded shoulder",
+    "actual C# movement/cadence, elevation, material and physical phones require separate validation"
+  ]
+}

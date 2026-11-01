@@ -1,0 +1,136 @@
+{
+  "status": "N shoulder/wrist source articulation review; not artistically or runtime accepted",
+  "sourceLayerRecompositionExact": true,
+  "idleRasterExact": true,
+  "uniqueFrames": 16,
+  "binaryAlpha": true,
+  "paletteSize": 96,
+  "sourceBounds": {
+    "minX": 39,
+    "minY": 14,
+    "maxX": 120,
+    "maxY": 144
+  },
+  "cell": 160,
+  "anchor": [
+    77,
+    136
+  ],
+  "decodedAlbedoBytes": 1638400,
+  "decodedEmissionBytes": 1638400,
+  "sharedControllerSequence": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "pause": true,
+  "reducedMotion": true,
+  "contacts": [
+    {
+      "name": "boot-left",
+      "frames": [
+        0,
+        7
+      ],
+      "sourceRasterSoleWorldY": [
+        141,
+        140.5,
+        141,
+        140.5,
+        141,
+        140.5,
+        141,
+        140.5
+      ],
+      "maxSpreadNativePixels": 0.5
+    },
+    {
+      "name": "boot-right",
+      "frames": [
+        8,
+        15
+      ],
+      "sourceRasterSoleWorldY": [
+        137,
+        136.5,
+        137,
+        136.5,
+        137,
+        136.5,
+        137,
+        136.5
+      ],
+      "maxSpreadNativePixels": 0.5
+    },
+    {
+      "name": "staff-tip",
+      "frames": [
+        8,
+        15
+      ],
+      "sourceWorldTipXY": [
+        [
+          103.5,
+          137
+        ],
+        [
+          103.5,
+          137
+        ],
+        [
+          103.5,
+          137
+        ],
+        [
+          103.5,
+          137
+        ],
+        [
+          103.5,
+          137
+        ],
+        [
+          103.5,
+          137
+        ],
+        [
+          103.5,
+          137
+        ],
+        [
+          103.5,
+          137
+        ]
+      ],
+      "maxSpreadNativePixels": 0,
+      "analyticalDrift": 0,
+      "staffHandGripError": 0,
+      "scope": "source-root planted contact, C# speed unverified"
+    }
+  ],
+  "sourceProjectSha256": "e99bebc982e2b53bac04aceff0eefa2cf89e66d1c73c6bc348828542f2c59c44",
+  "controllerSha256": "34fa61696b29693d8922266e3a4697d1d8c97cd58ce1972af57fe10ed62310d0",
+  "runtimeIntegrated": false,
+  "artisticallyApproved": false,
+  "physicalDeviceTested": false,
+  "limitations": [
+    "diagnostic extracted emission; source-light still baked in albedo",
+    "explicit hidden leather shins, but remaining covered anatomy needs visual review",
+    "single source view only",
+    "source-only contact does not establish C# root-speed fitting",
+    "native world scale and actual phones open"
+  ]
+}

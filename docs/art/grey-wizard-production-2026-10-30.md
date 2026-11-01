@@ -937,3 +937,27 @@ source 12fps this implies 2.73542 world units/sec, whereas the C# base player
 speed is 190. Do **not** change gameplay speed or cut this source into live
 locomotion to hide that disconnect. The old v015 remains rejected and v016
 remains in art review pending an explicit owner decision.
+
+### North wrist/shoulder articulation — v017 (art review)
+
+Source v016 retains its own checkpoint. v017 adds a separate 93-pixel grey
+`wrist-cuff` from the actual gripping forearm and 206 *covered* native-palette
+pixels of `sleeve-underlay`, beneath the true right sleeve/cuff only. This
+underpaint is explicit grey garment anatomy rather than borrowing nearby boot,
+staff or robe pigment. The grip/cuff/staff share one transform; shoulder root
+stays attached to the robe while the forearm drape bends mildly toward the
+travelling hand. The hanging sleeve remains its own part instead of dragging a
+large arbitrary part of the embroidered back.
+
+v017 retains the exact standing N source, binary alpha, sole/staff world contact
+and full continuous robe. Its 13 editable OpenRaster layers and 16 poses pass
+source reconstruction, fingertip/cuff transform, covered underpaint and detached
+pixel inspections. Packaged `gothic-north-v017/grey-wizard-fire-north.ora`, a
+1.33s GIF, a decodable four-cycle MP4, and enlarged shoulder/foot/robe views.
+All 19 focused wizard JS tests pass across v017 and earlier reviewed directions.
+
+This pass closes only the worst sleeve gap caused by moving a broad sleeve
+polygon. It is **not** proof of a naturally complete stride, 2.5D-ground staff
+occlusion or C# velocity fit. Source cadence still implies only 2.73542 world
+units/sec at 12fps vs player base speed 190. PR remains draft; no live asset
+cutover or merge without explicit owner acceptance and actual Hunt/device proof.
