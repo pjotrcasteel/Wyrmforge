@@ -125,6 +125,25 @@ jobs:
           --logger "console;verbosity=normal"
           --blame-hang-timeout 7m --blame-hang-dump-type none
 
+      # AR4 owner gate: real PNGs from this Playwright session, readable individually
+      # even on mobile without downloading an artifact ZIP. PR-only diagnostic output.
+      - name: Expose AR4 in-Hunt review images for owner inspection
+        if: ${{ always() && matrix.shard == 1 && startsWith(github.head_ref, 'feat/ar4-wf32-material-binding-') }}
+        run: |
+          evidence_dir="artifacts/browser/shard-1"
+          for proof_file in \
+            "$evidence_dir/ar4-forest-fork-semantic-320.png" \
+            "$evidence_dir/ar4-forest-fork-native-wf32-320.png" \
+            "$evidence_dir/ar4-mountain-pass-native-wf32-390.png" \
+            "$evidence_dir/ar4-mountain-monastery-native-wf32-390.png" \
+            "$evidence_dir/ar4-mountain-pass-moving-camera-390.png"; do
+            if [ -s "$proof_file" ]; then
+              printf 'AR4_IMAGE_BEGIN %s\n' "$(basename "$proof_file")"
+              base64 -w 32768 "$proof_file"
+              printf '\nAR4_IMAGE_END\n'
+            fi
+          done
+
       - name: Preserve shard evidence
         if: always()
         uses: actions/upload-artifact@v4
