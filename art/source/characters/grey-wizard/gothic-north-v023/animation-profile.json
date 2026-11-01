@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "maxDeltaSeconds": 0.1,
+  "facing": {
+    "directions": [
+      "N"
+    ],
+    "degreesPerSecond": 360,
+    "hysteresisDegrees": 3
+  },
+  "locomotion": {
+    "clip": "run",
+    "frames": 16,
+    "stride": 95,
+    "sourceFps": 32,
+    "calibration": "distance phase fitted to C# base speed; source ground and Hunt visual gate still open"
+  },
+  "actions": {}
+}

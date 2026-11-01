@@ -1077,3 +1077,32 @@ diagnostic history because the rigid/incorrectly owned staff pigment and
 v020 garment gaps made them unsuitable as transferable art. Their small
 authoring modules remain in version control solely as the v021 dependency
 chain; the rejected v015 assets remain excluded as before.
+
+### North drape and ankle art — v022/v023 (owner review still open)
+
+The latest enlarged v021 foot crops still showed long, nearly rectangular
+grey trouser strips beneath a mostly steady robe hem. v022 changes the
+**single** continuous robe mesh, locally draping it down over the advancing
+left or right boot with smooth spatial weighting from hip to bottom fringe.
+The top of the garment remains anchored to the body. This is cloth inertia
+authored into the source animation, not a new cloth renderer, separate cape,
+or manipulation of the shoe pixels. Both original boot support positions and
+190-world-units/s distance-based frame phase are unchanged.
+
+v023 is a deliberately smaller refinement of the same source. It paints each
+exposed lower leg as a narrow, gently bent shaded cloth cuff with non-repeating
+shadow folds. These new trouser pixels belong only to the leg underlayer and
+never sample robe, shoe or wooden staff pigments. The prior strict 15-layer
+staff/robe source ownership, material guard, seam-free inverse source mapper
+and exact reference idle are all retained. The adjusted trousers appear only
+in motion when uncovered by the hem.
+
+Exports: `gothic-north-v023/grey-wizard-fire-north.ora`, 16-frame native run
+atlas, 500ms GIF, four-cycle 32fps MP4 and separate moving-grid MP4/GIF at
+13.02357 native pixels/frame. Source audits show every frame binary-alpha,
+one connected silhouette and unchanged three-frame source-root boot contacts
+with less than 0.048px drift. **34 focused wizard tests pass.** These metrics
+do not mean the movement has been approved for WyrmForge Hunt or physical
+phones. The v022 source media are local visual history; v023 is the current
+draft artwork to review, not a production asset. Do not merge or cut over
+the live player sprites until the owner approves a real Hunt visual pass.

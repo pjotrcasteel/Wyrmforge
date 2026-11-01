@@ -1,0 +1,15 @@
+{
+  "status": "north 190world/s jointed ankle/robe gait, owner review OPEN",
+  "rule": "wizard and standard Hollowed have equal un-hunched anatomical stature; exclude hat and staff",
+  "reference": "gothic-south-v003/scale-calibration.json; 30 October owner-accepted working guide",
+  "standingBodyWorldHeight": 49.69353803481172,
+  "wizardSourceCrownY": 32,
+  "wizardSourceSoleY": 141,
+  "wizardCell": 160,
+  "wizardWorldSize": 72.944643,
+  "limitations": [
+    "same v021 true staff/robe/boot source and exact sole contacts",
+    "v022 trailing single-fabric drape and v023 jointed calf silhouette are source studies",
+    "actual Hunt gameplay, mobile performance and owner motion approval not established"
+  ]
+}
