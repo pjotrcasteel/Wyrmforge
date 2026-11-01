@@ -59,3 +59,7 @@ Owner decision (1 November): **Wet Forest first.** Finish its 32px ground, compa
 ### 1 November owner sequencing follow-up
 
 **Do not continue cliff or monastery art while Wet Forest is unresolved.** The existing three-site Playwright regression cases may remain to guard against unintended rendering failures, but new review evidence and source work must target the Wet Forest first. Current issue tracker: [#465](https://github.com/pjotrcasteel/Wyrmforge/issues/465).
+
+### Wet Forest B1v2 source-only revision (1 November)
+
+A new **forest-only** `source32wang` study is planned to replace the rejected three-pebbles-per-tile road with sparse compacted-soil masses, occasional authored roots and low-frequency clasts. No C# terrain class or height changed. Original `source32c` forest base and earlier v1 image evidence remain available. [B1v2 native stress board](../art/previews/wf32-ar4b-road-v2/README.md) is an **unapproved source preview**, never a Hunt capture. The separately gated Mountain Pass and monastery are not revised by this iteration.

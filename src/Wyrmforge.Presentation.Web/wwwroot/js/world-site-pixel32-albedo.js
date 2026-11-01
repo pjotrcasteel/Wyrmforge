@@ -269,7 +269,8 @@ export function composeWorldSitePixel32Albedo(geography, width, height, atlas, q
         }
     }
     if (labels) paintQuietForestRoad(pixels, width, height, quietAtlas, labels, cellColumns, seed, worldSources);
-    if (labels && wangKit && !paintAuthoredWangRoad(pixels, width, height, wangKit.atlas,
+    if (labels && wangKit && ['forest-fork','forest-trail'].includes(geography.landscape.kind) &&
+        !paintAuthoredWangRoad(pixels, width, height, wangKit.atlas,
         wangKit.manifest, labels, cellColumns, seed)) return null;
     if (stoneGround) {
         // Monastery courtyard and terrace are C# terrain patches; this does not

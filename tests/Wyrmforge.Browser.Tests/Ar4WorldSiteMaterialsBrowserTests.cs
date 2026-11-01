@@ -285,5 +285,26 @@ public sealed class Ar4WorldSiteMaterialsBrowserTests : PageTest
             Path = Path.Combine(output, $"ar4-{kind}-wang-road-study-{width}.png"),
             FullPage = false,
         });
+        if (kind == "forest-fork")
+        {
+            // Forest-only B1 v2 review: real C# player/camera motion along the
+            // same authoritative site; other environments are parked for art.
+            await Page.Keyboard.DownAsync("a");
+            await Page.WaitForTimeoutAsync(800);
+            await Page.Keyboard.UpAsync("a");
+            await Page.Keyboard.DownAsync("s");
+            await Page.WaitForTimeoutAsync(450);
+            await Page.Keyboard.UpAsync("s");
+            Assert.AreEqual(siteId, await Page.EvaluateAsync<string>(
+                "() => window.__wyrmforgeAr0Geography.siteId"));
+            Assert.AreEqual(obstacles, await Page.EvaluateAsync<int>(
+                "() => window.__wyrmforgeAr0Geography.obstacleCount"));
+            Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
+            await Page.ScreenshotAsync(new()
+            {
+                Path = Path.Combine(output, "ar4-forest-fork-wang-road-v2-moving-320.png"),
+                FullPage = false,
+            });
+        }
     }
 }

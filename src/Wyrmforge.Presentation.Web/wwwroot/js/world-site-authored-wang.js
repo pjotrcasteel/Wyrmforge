@@ -1,6 +1,6 @@
 // WF32 AR4-B2: source-authored Wang atlas clipped to C# surface winners.
 // Presentation-only one-time site composition: no paths, collisions, or light.
-export const WANG_ATLAS_REVISION = 'wf32-road-wang-b1.v1.unapproved';
+export const WANG_ATLAS_REVISION = 'wf32-road-wang-b1.v2.unapproved';
 export const WANG_ATLAS_SIZE = Object.freeze({width:496,height:331,tile:32,variants:8,masks:16});
 const CLUSTER = 4;
 

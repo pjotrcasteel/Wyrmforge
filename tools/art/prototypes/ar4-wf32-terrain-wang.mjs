@@ -8,12 +8,12 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const TILE = 32;
-export const REVISION = 'wf32-road-wang-b1.v1.unapproved';
+export const REVISION = 'wf32-road-wang-b1.v2.unapproved';
 // Values are coordinated with WF32 #429 original soft palettes.
 // They are flat albedo; G owns actual light, shadows and occlusion.
 export const PALETTE = Object.freeze({
     grass: Object.freeze(['#1d2923','#29372b','#354733','#475b3e','#5b704a','#79815d']),
-    earth: Object.freeze(['#393429','#514634','#776448','#93805c','#b59a70','#d1b787']),
+    earth: Object.freeze(['#3d342a','#554332','#73563d','#8d6c4c','#aa875f','#c6a77b']),
     mud: Object.freeze(['#1b211f','#282b27','#34322b','#463d32','#5c4f3e','#75634e']),
     verge: Object.freeze(['#303829','#424735','#5a593f','#756448']),
 });
@@ -91,27 +91,40 @@ function grassBase(v) {
 }
 function earthBase(v) {
     const p=PALETTE.earth,b=new Bitmap(TILE,TILE);b.rect(0,0,TILE,TILE,p[2]);
-    // Hand-placed soft earth islands and gravel clusters, no road-wide scratch pattern.
-    // Irregular stepped clusters help roads read as worn soil instead of tiled wood.
+    // Deliberate *sparse* compacted-soil masses. Avoid one bright pebble every
+    // 32px: the previous regular chocolate-chip cadence failed actual Hunt QA.
     const patches=[
-      [[4,4,11,6],[19,18,10,7],[5,25,8,4]],
-      [[16,4,13,6],[3,15,12,7],[18,26,9,4]],
-      [[3,8,13,8],[18,4,11,5],[19,23,10,6]],
-      [[16,15,13,8],[4,4,13,6],[5,26,12,4]],
-      [[4,16,10,7],[17,5,11,8],[20,26,7,4]],
-      [[10,4,12,7],[4,22,14,7],[21,17,8,5]],
-      [[4,4,13,7],[18,13,11,8],[7,27,11,3]],
-      [[7,15,13,8],[19,5,11,6],[17,25,10,5]],
+      [[3,5,12,7],[18,21,10,5]],
+      [[16,4,12,8],[5,19,15,6],[22,28,6,3]],
+      [[7,12,15,9]],
+      [[4,5,15,6],[18,19,11,8]],
+      [[19,5,10,7],[4,16,12,9],[17,26,10,4]],
+      [[10,20,17,8]],
+      [[4,9,13,7],[18,20,10,5]],
+      [],
     ][v];
     for(let i=0;i<patches.length;i++){
-        const [x,y,w,h]=patches[i];
-        b.rect(x+2,y+1,w-3,h-1,p[i===1?1:3]);
-        b.rect(x,y+2,w-3,Math.max(2,h-3),p[i===1?1:3]);
-        b.rect(x+4,y+2,Math.max(2,w-6),Math.max(1,h-4),p[i===1?2:4]);
+        const [x,y,w,h]=patches[i],lo=i%2===0?p[1]:p[3],hi=i%2===0?p[3]:p[2];
+        b.rect(x+2,y,w-3,Math.max(2,h-2),lo);
+        b.rect(x,y+2,w-4,Math.max(2,h-3),lo);
+        b.rect(x+4,y+1,Math.max(2,w-7),2,hi);
         b.rect(x+w-2,y+h-2,2,1,p[1]);
     }
-    // Mineral inclusions are drawn as recognizable clasts, not speckle noise.
-    for(const [x,y,k] of ROAD_FEATURES[v])pebble(b,x,y,k);
+    // Roots, chipped clods and 5px crushed wheel depressions are purposefully
+    // rare. Most 32px cells contain quiet ground rather than repeated dots.
+    if(v===0 || v===5){
+        const ox=v===0?7:17,oy=v===0?24:9;
+        b.line(ox,oy,ox+11,oy-2,p[0],2);
+        b.line(ox+4,oy-1,ox+6,oy-5,p[1]);
+        b.set(ox+8,oy,p[3]);
+    }
+    if(v===2){
+        b.rect(18,6,8,4,p[1]);b.rect(20,7,5,2,p[0]);b.set(26,10,p[3]);
+    }
+    if(v===4)pebble(b,7,23,2);
+    if(v===6){
+        b.rect(21,7,6,3,p[1]);b.rect(22,7,4,1,p[4]);
+    }
     return b;
 }
 function mudBase(v) {
