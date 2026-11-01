@@ -1,0 +1,16 @@
+{
+  "revision": "ar4b-world-forest-road.v2.provisional",
+  "status": "prototype-only",
+  "approved": false,
+  "width": 1024,
+  "height": 2112,
+  "worldSeed": 1387,
+  "pixelSize": 1,
+  "tileGrid": "none; no 32px or 256px wrapping",
+  "pixels": "offline-authored native WF32 palette clusters, full world-coordinate phase",
+  "source": "WF32 #429 original terrain palette + morphology; review-only custom authored ecology",
+  "files": {
+    "grass": "grass-world.png",
+    "road": "road-world.png"
+  }
+}

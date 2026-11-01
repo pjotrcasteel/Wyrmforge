@@ -7,6 +7,7 @@ import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, 
 import { attachArenaInput, getArenaMovement, getArenaAim, isArenaStickAim, getArenaPropFocus } from './arena-input.js';
 import { resolveTargetIndicator, presentTargetSigil, drawTargetIndicator, preloadTargetSigilArt, targetSelectionLightEmitter, targetSelectionCanvasLight, actorLightsWithoutSigilOverlay } from './arena-target-indicator.js?v=20261028-feet-centered-v3';
 import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, drawArenaCloisterElevation, semanticSiteModeEnabled } from './arena-environment.js?v=20261031-ar1-highlands-v1';
+import { worldSiteMaterialModeEnabled } from './world-site-neutral-albedo.js';
 import { drawAr1GeographyReview } from './arena-ar1-geography-review.js?v=20261031-ar1-site-detail-v1';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
@@ -29,7 +30,7 @@ import { loadArt, artReady, artGeneration, hasArtFrame, drawArtFrame } from './a
 import { buildSpellLights, drawSpellLightSpill, sampleSpellLight, drawActorWithEmitter } from './arena-spell-lighting.js?v=20261028-ground-light-v3';
 import { gothicNightLightSources, gothicNightPlan, drawGothicNight, GOTHIC_NIGHT } from './arena-night-lighting.js';
 import { createWetForestFirelightPlan } from './arena-wet-forest-dressing.js';
-import { resolveArenaCamera, drawExitGuide } from './arena-camera.js';
+import { resolveArenaCamera, resolveMonasteryArtReviewCamera, drawExitGuide } from './arena-camera.js';
 import { drawEliteGround, drawEliteCrest } from './arena-elite-vfx.js';
 import { drawLightningTrace } from './arena-lightning-vfx.js';
 import { drawDamageNumbers, loadDamageNumberMode, normalizeDamageNumberMode, saveDamageNumberMode } from './arena-damage-numbers.js';
@@ -329,7 +330,19 @@ function draw(state, snapshot, width, height) {
         : state.context;
     ctx.globalAlpha=1;ctx.filter='none';ctx.globalCompositeOperation='source-over';
     const danger = playerDangerPresentation(state.playerDanger, snapshot, performance.now(), state.reducedMotion.matches);
-    const camera = resolveArenaCamera(snapshot.world, snapshot.player, width, height);
+    const requestedArtFocus = worldSiteMaterialModeEnabled() &&
+        new URLSearchParams(location.search).get('ar4ReviewFocus') === 'monastery';
+    const reviewCamera = requestedArtFocus
+        ? resolveMonasteryArtReviewCamera(snapshot.world, snapshot.environment?.geography, width, height)
+        : null;
+    const camera = reviewCamera ?? resolveArenaCamera(snapshot.world, snapshot.player, width, height);
+    globalThis.__wyrmforgeAr4ReviewCamera = reviewCamera ? {
+        siteId: snapshot.environment.geography.siteId,
+        kind: snapshot.environment.geography.landscape.kind,
+        buildingCount: reviewCamera.landmarkCount,
+        focusX: reviewCamera.focusX, focusY: reviewCamera.focusY,
+        x: reviewCamera.x, y: reviewCamera.y,
+    } : null;
     const selectedTarget = resolveTargetIndicator(snapshot);
     const visualSeconds = performance.now() / 1000;
     const targetId = snapshot.player?.aimPropId ?? snapshot.player?.aimTargetId;
@@ -510,10 +523,12 @@ function draw(state, snapshot, width, height) {
     // physical scenery, enemies, mage and Wyrm. Real fire/elemental cast,
     // impacts, burning trees and Fire Wyrm breath cut light into all layers.
     // Keep high-priority attack tells and magical VFX ABOVE the veil.
-    // AR0 authoring diagnostics must expose the actual C# material classes at mobile scale.
-    // Skip only the PRESENTATION night veil for the explicit semantic debug mode. No new
-    // light solver, no authority changes, and normal Hunts retain exactly the same night.
-    if (!gpu && !(semanticSiteModeEnabled() && snapshot.environment?.geography?.version === 1)) {
+    // AR0/AR4 authoring diagnostics must show actual C# material classes and WF32
+    // unlit source albedo at mobile scale. Skip only the PRESENTATION night veil
+    // for these explicit review modes. Normal Hunts and the G5 GPU path are untouched.
+    const unlitWorldSiteReview = snapshot.environment?.geography?.version === 1 &&
+        (semanticSiteModeEnabled() || worldSiteMaterialModeEnabled());
+    if (!gpu && !unlitWorldSiteReview) {
         const realFires = createWetForestFirelightPlan(snapshot.environment, worldWidth, worldHeight);
         const nightSources = gothicNightLightSources(snapshot, spellLights, worldWidth, worldHeight, realFires);
         drawGothicNight(ctx, gothicNightPlan(snapshot.player, nightSources, lightViewport), state.nightMask);
@@ -602,6 +617,15 @@ function draw(state, snapshot, width, height) {
     if (snapshot.hunt && snapshot.hunt.stage !== 2) drawHuntStageBanner(ctx, snapshot.hunt, snapshot.dragon, width, height);
     drawTouchIndicator(state, ctx);
     drawPerformanceCounter(state, ctx, snapshot, width, height);
+    if (reviewCamera) {
+        ctx.save();
+        ctx.fillStyle = 'rgba(15, 18, 27, .90)';
+        ctx.fillRect(9, height - 48, Math.min(width - 18, 325), 28);
+        ctx.font = 'bold 11px system-ui';
+        ctx.fillStyle = '#eedcb2';
+        ctx.fillText('AR4 SPECTATOR · C# MONASTERY', 17, height - 30);
+        ctx.restore();
+    }
     if (presentation) presentCompletedHuntGpuFrame(state.context, presentation);
 }
 
