@@ -6,7 +6,7 @@ import {createHash} from 'node:crypto';
 import assert from 'node:assert/strict';
 import {decodePng,encodePng} from '../lib/png.mjs';
 import {Bitmap} from '../lib/painter.mjs';
-const {project}=await import(process.argv.includes('--northeast')?'./gothic-northeast-project.mjs':process.argv.includes('--east')?'./gothic-east-project.mjs':process.argv.includes('--leg-coverage')?'./gothic-south-legs.mjs':process.argv.includes('--boot-cleanup')?'./gothic-south-boots.mjs':process.argv.includes('--south-stick')?'./gothic-south-stick.mjs':process.argv.includes('--overlap-fix')?'./gothic-walking-stick-overlap.mjs':process.argv.includes('--repair-stick')?'./gothic-walking-stick-repair.mjs':process.argv.includes('--walking-stick')?'./gothic-walking-stick-project.mjs':process.argv.includes('--southeast')?'./gothic-southeast-project.mjs':'./gothic-project.mjs');
+const {project}=await import(process.argv.includes('--north-rebuild')?'./gothic-north-rebuild.mjs':process.argv.includes('--north')?'./gothic-north-project.mjs':process.argv.includes('--northeast')?'./gothic-northeast-project.mjs':process.argv.includes('--east')?'./gothic-east-project.mjs':process.argv.includes('--leg-coverage')?'./gothic-south-legs.mjs':process.argv.includes('--boot-cleanup')?'./gothic-south-boots.mjs':process.argv.includes('--south-stick')?'./gothic-south-stick.mjs':process.argv.includes('--overlap-fix')?'./gothic-walking-stick-overlap.mjs':process.argv.includes('--repair-stick')?'./gothic-walking-stick-repair.mjs':process.argv.includes('--walking-stick')?'./gothic-walking-stick-project.mjs':process.argv.includes('--southeast')?'./gothic-southeast-project.mjs':'./gothic-project.mjs');
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../../..');
 const base=join(root,'art/source/characters/grey-wizard'),out=join(base,project.outputDirectory??'gothic-south-v003');
 mkdirSync(join(out,'source-layers'),{recursive:true});
@@ -61,7 +61,8 @@ if(project.cleanIslandsMaxPixels){
         if(component.length<=project.cleanIslandsMaxPixels)for(const k of component)master.clear(k%width,Math.floor(k/width));
     }
 }
-const names=[...project.masks.map(m=>m.name),'torso',...(project.underpaint??[]).map(p=>p.name)];
+const fallbackName=project.fallbackLayer??'torso';
+const names=[...new Set([...project.masks.map(m=>m.name),fallbackName,...(project.underpaint??[]).map(p=>p.name),...(project.paintedUnderlays??[]).map(p=>p.name)])];
 const layers=Object.fromEntries(names.map(n=>[n,new Bitmap(width,height)]));
 const owner=new Array(width*height).fill(null);
 const staffRows=new Map((project.staffRows??[]).map(([y,left,right])=>[y,[left,right]]));
@@ -70,7 +71,18 @@ const inside=(x,y,poly)=>{let yes=false;for(let i=0,j=poly.length-1;i<poly.lengt
 for(let y=0;y<height;y++)for(let x=0;x<width;x++)if(master.alpha(x,y)){
     const extension=project.extendStaffToGround;
     const extendedStaff=extension&&y>=extension.fromY&&y<=extension.toY&&staffRows.has(y)&&x>=staffRows.get(y)[0]&&x<staffRows.get(y)[1];
-    const name=extendedStaff?'staff':project.masks.find(m=>m.name==='staff'&&staffRows.has(y)?x>=staffRows.get(y)[0]&&x<staffRows.get(y)[1]:inside(x+.5,y+.5,m.polygon))?.name||'torso';
+    const matching=project.masks.find(m=>{
+        const insideMask=m.name==='staff'&&staffRows.has(y)?x>=staffRows.get(y)[0]&&x<staffRows.get(y)[1]:inside(x+.5,y+.5,m.polygon);
+        if(!insideMask)return false;
+        if(project.staffMaterialGuard&&m.name==='staff'&&y>=project.staffMaterialGuard.fromY){
+            const [r,g,b]=master.get(x,y);
+            if(y>=(project.staffMaterialGuard.strictFromY??Infinity))
+                return r-g>=project.staffMaterialGuard.minRedLead&&r-b>=project.staffMaterialGuard.minRedLead;
+            return (r>g*1.14&&r>b*1.19)||(r<=project.staffMaterialGuard.darkMax&&g<r*1.08&&b<r*1.08);
+        }
+        return true;
+    });
+    const name=extendedStaff?'staff':matching?.name||fallbackName;
     layers[name].set(x,y,master.get(x,y));owner[y*width+x]=name;
 }
 for(const trim of project.trimLayerContours??[])for(let y=0;y<height;y++)for(let x=0;x<width;x++){
@@ -83,6 +95,23 @@ for(const paint of project.underpaint??[])for(let y=0;y<height;y++)for(let x=0;x
     if(!layers[paint.owner].alpha(x,y)||!inside(x+.5,y+.5,paint.polygon))continue;
     const pigment=master.get(x+paint.sampleOffset[0],y+paint.sampleOffset[1]);
     assert.ok(pigment[3],'underpaint donor missing');layers[paint.name].set(x,y,pigment);
+}
+// Hand-painted, fully occluded anatomy. The brush's source palette colors are
+// intentional leather/shadow shades, not repeated pixels borrowed from shoes
+// or cloth. Only add underlayers where source fabric already hides them.
+for(const paint of project.paintedUnderlays??[]){
+    const target=layers[paint.name];
+    assert.ok(target,'missing painted part '+paint.name);
+    for(const row of paint.rows){
+        const [y,left,right]=row;
+        for(let x=left;x<=right;x++){
+            assert.ok(master.alpha(x,y),'underlay must remain hidden under native silhouette');
+            const colors=paint.colors;
+            const color=x===left?colors.outline:x===right?colors.edge:x===left+2?colors.highlight:colors.leather;
+            assert.ok(palette.some(rgb=>rgb.every((value,i)=>value===color[i])),'underlay brush must use native palette');
+            target.set(x,y,[...color,255]);
+        }
+    }
 }
 const counts={};let recomposed=new Bitmap(width,height);
 // Extend the painted boot shafts under the opaque neutral robe. The existing

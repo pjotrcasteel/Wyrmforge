@@ -850,3 +850,90 @@ Playwright is present but its matching Chromium binary is missing, and the
 browser download returned an invalid archive. Do not count previously recorded
 E/S/SE browser runs as NE validation. NE artifacts remain available for direct
 owner review while browser verification is unresolved.
+
+## North-facing walking-stick source — v015 (1 November 2026)
+
+**REJECTED BY OWNER. Historical local experiment only; do not merge, ship,
+or use this mask/animation as a production input.** The first automated audit
+missed semantic errors: broad staff polygons captured sleeve and robe pixels,
+arbitrary cloak halves tore the continuous embroidered fabric, and repeated
+shoe-pigment donors produced checkerboard shins. Binary alpha and single
+components are not substitutes for identifying actual anatomy. Rebuild v016
+below supersedes these claims. This rejected v015 was not pushed to PR #439.
+
+Authored a distinct N-facing16-key layered pixel study from the existing v005
+rear-view reference. It preserves the approved silhouette, faded Fire cape
+embroidery, slim crystal staff and the working worldSize72.944643. Native source
+is palette-limited to96 pigments with11 editable layers; no new renderer or
+gameplay authority is introduced. North source gait alternates two eight-key
+boot contacts and plants the staff on the same source-world ground coordinate
+for frames7–15, including an attached hand/grip. It is a provisional presentation
+cycle, not a run that fits C# movement.
+
+Pre-review found the concept staff tip stopped above the sole ground row: an
+initial short extension detached as a small raster island in frames8–15. V015
+now has an explicit continuous narrow wooden extension painted from existing
+native shaft pigments. Both analytical and actual raster staff contact now stay
+at exactly [103.5,134] in the source-world root replay, with zero drift. A second
+review found pale repetitive hidden-leg pixels exposed behind the moving boots;
+the lower-leg donor was corrected to darker original leather pigment. These are
+targeted sprite-source corrections, not generic alpha-component bandages.
+
+Delivered source layers, 25 deterministic atlas/metadata exports, exact11-layer
+OpenRaster package, actual16-frame north-walk GIF (1330ms), decodable MP4, light/
+dark full-frame sheets and enlarged wrist/feet/cape inspections. All16 frames
+are binary-alpha, unclipped and one 8-connected silhouette.10 focused JS tests
+pass, including three new N contact/art regressions. This does not prove artistic
+approval, 2.5D scene occlusion, physical-device budgets or credible live cadence.
+
+**Hard remaining blocker:** the N source stride is16 native units per cycle,
+7.29446 world units/cycle after current scale; its 12fps review gives only
+5.47085 world units/sec. C# base speed190 would require approximately416.75
+source frames/sec (26.05 cycles/sec). Do not promote it to production or alter
+the C# movement speed to conceal this mismatch. The shared locomotion-fit gate
+must be solved before expanding this source into full action integration.
+
+The matching Chromium binary remains unavailable here, so N Sprite Lab320/390
+browser capture was not performed. An NE `--check` also reveals a pre-existing
+stale controller hash in the stored NE verification record; this work has not
+regenerated or modified its NE source/export. Preserve that mismatch for a
+separate accurate validation pass, rather than silently updating unrelated art.
+
+## North semantic source rebuild — v016 (1 November 2026; review pending)
+
+After rejection of the v015 north motion, rebuilt its source segmentation as an
+**independent** project (`gothic-north-rebuild.mjs`): the complete rear robe and
+faded Fire embroidery are a *single* layer, separate from both boots, two
+purpose-painted hidden leather shins, two sleeves, hat, hair, grip/hand and a
+narrow material-guarded wooden staff. Removed the cross-part two-pixel bleed,
+the artificial robe split, and tiled donor shoe textures. The two shins use
+explicit native-palette leather brushes under existing opaque fabric, not a
+borrowed boot rectangle. Hand and staff follow the same transform; the staff
+does not carry broad grey sleeve pixels. The shoulder sleeve stays native
+until genuine bend geometry can be authored rather than pulling horizontal
+holes through cloth.
+
+Retained the 160px/96-pigment source and exact resting composite with 11
+editable layers. The sole source moves through a compact 8-native-pixel cycle;
+the opposite foot recovers with at most 1.5px lift, while the staff tip plants
+in source world space on frames 8–15. Both sole contacts drift at most 0.5px
+from integer raster rounding, staff mathematical contact 0px. A gentle 1.35px
+maximum bottom-only warp now sways the *whole* robe fabric without severing
+the embroidered back. All 16 poses are unique, binary-alpha, one connected
+silhouette; enlargement of hem, cape and wrist did not show the former torn
+center seam or copied leg swatches.
+
+Exported `gothic-north-v016/grey-wizard-fire-north.ora`, native layers and
+frame atlas, `review/north-walk.gif`, four-cycle MP4, isolation GIF and pixel
+ownership map. Exact OpenRaster layer audit, 16-frame/1330ms GIF, successful
+MP4 decoding, deterministic source export and five focused v016 tests pass.
+These are **source-art tests and visual previews, not owner acceptance**.
+
+**Gates still open:** organic upper-body/shoulder motion is deliberately
+limited while hidden anatomy is incomplete; actual in-game 2.5D preview,
+mobile-size material/light pass, staff-ground occlusion, and real C# cadence
+are unverified. The authored stride is only 3.64723 world units/cycle; at
+source 12fps this implies 2.73542 world units/sec, whereas the C# base player
+speed is 190. Do **not** change gameplay speed or cut this source into live
+locomotion to hide that disconnect. The old v015 remains rejected and v016
+remains in art review pending an explicit owner decision.

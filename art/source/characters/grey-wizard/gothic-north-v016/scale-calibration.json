@@ -1,0 +1,15 @@
+{
+  "status": "inherited working-scale guide; revised N anatomy and phone fit unapproved",
+  "rule": "wizard and standard Hollowed have equal un-hunched anatomical stature; exclude hat and staff",
+  "reference": "gothic-south-v003/scale-calibration.json; 30 October owner-accepted working guide",
+  "standingBodyWorldHeight": 49.69353803481172,
+  "wizardSourceCrownY": 32,
+  "wizardSourceSoleY": 141,
+  "wizardCell": 160,
+  "wizardWorldSize": 72.944643,
+  "limitations": [
+    "N native crown and sole are estimated; not actual 2.5D/Hunt approval",
+    "explicit semantic layer and leather-paint review precedes cadence or physical phones",
+    "actual C# movement/cadence, elevation, material, occlusion and physical phones require separate validation"
+  ]
+}
