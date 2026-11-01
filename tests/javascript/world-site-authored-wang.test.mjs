@@ -66,3 +66,27 @@ test('same C# labels / seed reproduce exactly; malformed atlas fails without mut
         {...manifest,revision:'wrong'},c.labels,c.columns,123),false);
     assert.deepEqual(c.pixels,before);
 });
+
+test('B1v3 preserves source-authored world road core while still treating C# road edges',()=>{
+    const baseline=fixture(),studied=fixture(),before=studied.pixels.slice();
+    assert.equal(paintAuthoredWangRoad(baseline.pixels,baseline.width,baseline.height,
+        atlas,manifest,baseline.labels,baseline.columns,1387),true);
+    assert.equal(paintAuthoredWangRoad(studied.pixels,studied.width,studied.height,
+        atlas,manifest,studied.labels,studied.columns,1387,true),true);
+    // This block is fully enclosed by C# Road labels and is not an authored edge.
+    const core=(32*studied.width+40)*4;
+    assert.deepEqual(studied.pixels.slice(core,core+4),before.slice(core,core+4));
+    assert.notDeepEqual(baseline.pixels.slice(core,core+4),before.slice(core,core+4));
+    let corePreserved=0,edgeRecolored=0;
+    for(let y=10;y<48;y++)for(let x=16;x<64;x++){
+        const offset=(y*studied.width+x)*4;
+        const retained=studied.pixels[offset]===before[offset] &&
+            studied.pixels[offset+1]===before[offset+1] &&
+            studied.pixels[offset+2]===before[offset+2];
+        if(x>=23 && x<57 && y>=17 && y<43 && retained)corePreserved++;
+        if(x<19 && !retained)edgeRecolored++;
+    }
+    assert.ok(corePreserved>700,'World-phase authored texture must survive across the road core');
+    assert.ok(edgeRecolored>20,'Wang edge treatment must remain bounded and visible');
+    assert.deepEqual(studied.labels,baseline.labels,'No art mode can rewrite C# material labels');
+});

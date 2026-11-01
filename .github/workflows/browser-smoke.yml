@@ -152,6 +152,8 @@ jobs:
             "$evidence_dir/ar4-mountain-monastery-stone-ground-study-390.png" \
             "$evidence_dir/ar4-forest-fork-wang-road-study-320.png" \
             "$evidence_dir/ar4-forest-fork-wang-road-v2-moving-320.png" \
+            "$evidence_dir/ar4-forest-fork-wang-world-core-320.png" \
+            "$evidence_dir/ar4-forest-fork-wang-world-core-moving-320.png" \
             "$evidence_dir/ar4-mountain-pass-wang-road-study-390.png" \
             "$evidence_dir/ar4-mountain-monastery-wang-road-study-390.png"; do
             if [ -s "$proof_file" ]; then

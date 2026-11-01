@@ -33,35 +33,41 @@ function rgb(hex) {
 }
 
 export function worldSiteMaterialModeEnabled() {
-    return ['materials', 'source32', 'source32b', 'source32c', 'source32d', 'source32wang'].includes(
+    return ['materials', 'source32', 'source32b', 'source32c', 'source32d', 'source32wang', 'source32wangcore'].includes(
         new URLSearchParams(globalThis.location?.search ?? '').get('arenaTerrain'));
 }
 
 export function worldSitePixel32ModeEnabled() {
-    return ['source32', 'source32b', 'source32c', 'source32d', 'source32wang'].includes(
+    return ['source32', 'source32b', 'source32c', 'source32d', 'source32wang', 'source32wangcore'].includes(
         new URLSearchParams(globalThis.location?.search ?? '').get('arenaTerrain'));
 }
 
 /** The quiet-grass/road study is opt-in and independent of both P1i and original #429 v2. */
 export function worldSiteQuietPixelModeEnabled() {
-    return ['source32b', 'source32c', 'source32d', 'source32wang'].includes(
+    return ['source32b', 'source32c', 'source32d', 'source32wang', 'source32wangcore'].includes(
         new URLSearchParams(globalThis.location?.search ?? '').get('arenaTerrain'));
 }
 
 export function worldSiteWorldPixelModeEnabled() {
-    return ['source32c', 'source32d', 'source32wang'].includes(
+    return ['source32c', 'source32d', 'source32wang', 'source32wangcore'].includes(
         new URLSearchParams(globalThis.location?.search ?? '').get('arenaTerrain'));
 }
 
 /** Ground-only provisional refinement: unchanged source32c forest baseline. */
 export function worldSiteStoneGroundModeEnabled() {
-    return ['source32d','source32wang'].includes(
+    return ['source32d','source32wang', 'source32wangcore'].includes(
         new URLSearchParams(globalThis.location?.search ?? '').get('arenaTerrain'));
 }
 
 /** New authored 32px Wang atlas is never enabled in an ordinary Hunt. */
 export function worldSiteAuthoredWangModeEnabled() {
-    return new URLSearchParams(globalThis.location?.search ?? '').get('arenaTerrain') === 'source32wang';
+    return ['source32wang', 'source32wangcore'].includes(
+        new URLSearchParams(globalThis.location?.search ?? '').get('arenaTerrain'));
+}
+
+/** B1v3 forest-only comparison: world-source core with bounded Wang transition edges. */
+export function worldSiteWangCoreModeEnabled() {
+    return new URLSearchParams(globalThis.location?.search ?? '').get('arenaTerrain') === 'source32wangcore';
 }
 
 /** The exact #429 v2 atlas is reviewed separately; it is not an approved world-source bank. */
@@ -378,7 +384,8 @@ export function drawWorldSiteNeutralAlbedo(ctx, geography, width, height) {
         : sourceState !== 'ready' || !decodedSources) return false;
     const pixelWidth = Math.round(width), pixelHeight = Math.round(height);
     const key = worldSiteMaterialCacheKey(geography, pixelWidth, pixelHeight,
-        prototype ? (wang ? WANG_ATLAS_REVISION : stone ? PIXEL32_STONE_GROUND.revision
+        prototype ? (wang ? WANG_ATLAS_REVISION + (worldSiteWangCoreModeEnabled() ? '.world-core' : '')
+            : stone ? PIXEL32_STONE_GROUND.revision
             : world ? PIXEL32_WORLD.revision
             : quiet ? PIXEL32_QUIET_ATLAS.revision : PIXEL32_ATLAS.revision) : SOURCE_REVISION);
     if (!key) return false;
@@ -389,7 +396,7 @@ export function drawWorldSiteNeutralAlbedo(ctx, geography, width, height) {
                 quiet ? decodedQuietPixel : null,
                 stone ? { ...decodedWorldPixels, ...decodedStonePixels } :
                     world ? decodedWorldPixels : null,
-                wang ? decodedWang : null)
+                wang ? { ...decodedWang, preserveWorldCore: worldSiteWangCoreModeEnabled() } : null)
             : composeWorldSiteNeutralAlbedo(geography, pixelWidth, pixelHeight, decodedSources);
         if (!pixels) return false;
         texture = document.createElement('canvas');

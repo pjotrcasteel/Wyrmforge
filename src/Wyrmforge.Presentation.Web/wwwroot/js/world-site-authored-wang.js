@@ -34,7 +34,8 @@ function variantAt(cx,cy,seed) {
  * Any disagreement is clipped back to the authored earth/grass interior.
  * Forest pixels outside the 4px road-adjacent lip stay from source32c.
  */
-export function paintAuthoredWangRoad(pixels,width,height,atlas,manifest,labels,cellColumns,seed=0) {
+export function paintAuthoredWangRoad(pixels,width,height,atlas,manifest,labels,cellColumns,seed=0,
+    preserveWorldCore=false) {
     if(!validateAuthoredWang(atlas,manifest) ||
         !Number.isInteger(width)||!Number.isInteger(height)||width<=0||height<=0 ||
         !Number.isInteger(cellColumns)||cellColumns!==Math.ceil(width/CLUSTER) ||
@@ -68,6 +69,9 @@ export function paintAuthoredWangRoad(pixels,width,height,atlas,manifest,labels,
                 : isRoad(Math.max(0,x-2),y)||isRoad(Math.min(width-1,x+2),y)||
                     isRoad(x,Math.max(0,y-2))||isRoad(x,Math.min(height-1,y+2));
             if(!roadPixel&&!hasNeighbor)continue; // Preserve positive forest ground.
+            // B1v3: retain already-composited 32px world-phase core texture; the
+            // original Wang pass replaced every road pixel with repeated pebble frames.
+            if(roadPixel && preserveWorldCore && !hasNeighbor)continue;
             const wangRoad=stencil[(y&31)>>2][(x&31)>>2]==='R';
             const sample=roadPixel?(wangRoad?frame:road):(wangRoad?grass:frame);
             const from=offset(sample,x,y),to=(y*width+x)*4;

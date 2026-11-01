@@ -305,6 +305,38 @@ public sealed class Ar4WorldSiteMaterialsBrowserTests : PageTest
                 Path = Path.Combine(output, "ar4-forest-fork-wang-road-v2-moving-320.png"),
                 FullPage = false,
             });
+            // B1v3 real C# Hunt comparison: same site after the v2 motion capture.
+            await Page.EvaluateAsync(@"() => {
+                const url = new URL(location.href);
+                url.searchParams.set('arenaTerrain', 'source32wangcore');
+                history.replaceState(null, '', url);
+            }");
+            await Page.WaitForFunctionAsync(
+                "siteId => window.__wyrmforgeAr0Geography?.siteId === siteId && " +
+                "window.__wyrmforgeAr0Geography?.materialView === 'source32-wang-core-study'",
+                siteId, new() { Timeout = 45000 });
+            Assert.AreEqual(seed, await Page.EvaluateAsync<int>(
+                "() => window.__wyrmforgeAr0Geography.seed"));
+            Assert.AreEqual(obstacles, await Page.EvaluateAsync<int>(
+                "() => window.__wyrmforgeAr0Geography.obstacleCount"));
+            Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
+            await Page.ScreenshotAsync(new()
+            {
+                Path = Path.Combine(output, "ar4-forest-fork-wang-world-core-320.png"),
+                FullPage = false,
+            });
+            await Page.Keyboard.DownAsync("d");
+            await Page.WaitForTimeoutAsync(450);
+            await Page.Keyboard.UpAsync("d");
+            Assert.AreEqual(siteId, await Page.EvaluateAsync<string>(
+                "() => window.__wyrmforgeAr0Geography.siteId"));
+            Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
+            await Page.ScreenshotAsync(new()
+            {
+                Path = Path.Combine(output, "ar4-forest-fork-wang-world-core-moving-320.png"),
+                FullPage = false,
+            });
+
         }
     }
 }

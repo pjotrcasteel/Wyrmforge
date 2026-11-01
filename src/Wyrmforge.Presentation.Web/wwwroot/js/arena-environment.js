@@ -8,7 +8,7 @@ import { createTerritoryWallLayers, drawTerritoryWall, drawOpenedGateRubble } fr
 import { liveWetForestArtworkGeneration } from './arena-live-wet-forest-materials.js';
 import { WORLD_SITE_MATERIALS, worldSiteMaterialName, normalizeWorldSiteMaterialWeights,
     worldSiteMaterialCacheKey, worldSiteSourceBindings } from './world-site-material-binding.js';
-import { worldSiteMaterialModeEnabled, worldSitePixel32ModeEnabled, worldSiteQuietPixelModeEnabled, worldSiteWorldPixelModeEnabled, worldSiteStoneGroundModeEnabled, worldSiteAuthoredWangModeEnabled, drawWorldSiteNeutralAlbedo,
+import { worldSiteMaterialModeEnabled, worldSitePixel32ModeEnabled, worldSiteQuietPixelModeEnabled, worldSiteWorldPixelModeEnabled, worldSiteStoneGroundModeEnabled, worldSiteAuthoredWangModeEnabled, worldSiteWangCoreModeEnabled, drawWorldSiteNeutralAlbedo,
     worldSiteNeutralSourceCoverage } from './world-site-neutral-albedo.js';
 
 // The world is projected from canonical C# terrain state. Drawing never changes simulation outcomes.
@@ -805,7 +805,8 @@ export function drawArenaEnvironment(ctx, environment, width, height, elapsedSec
     if (semantic || neutral) {
         const sourceCoverage = neutral ? worldSiteNeutralSourceCoverage(width, height) : null;
         globalThis.__wyrmforgeAr0Geography = {
-            materialView: neutral ? worldSiteAuthoredWangModeEnabled() ? 'source32-wang-study'
+            materialView: neutral ? worldSiteWangCoreModeEnabled() ? 'source32-wang-core-study'
+                : worldSiteAuthoredWangModeEnabled() ? 'source32-wang-study'
                 : worldSiteStoneGroundModeEnabled() ? 'source32-ground-study'
                 : worldSiteWorldPixelModeEnabled() ? 'source32-world-study'
                 : worldSiteQuietPixelModeEnabled() ? 'source32-quiet-study'
