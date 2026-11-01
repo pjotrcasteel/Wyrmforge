@@ -42,11 +42,11 @@ public sealed class WorldFirstArenaBrowserTests : PageTest
         var node = Page.Locator("button.route-node.available").First;
         Assert.AreEqual("forest-fork", await node.GetAttributeAsync("data-site-kind"));
         var siteId = (await node.GetAttributeAsync("data-site-id"))!;
-        await Page.EvaluateAsync("""() => {
+        await Page.EvaluateAsync(@"() => {
             const url = new URL(location.href);
             url.searchParams.set('arenaTerrain', 'xyzgrid');
             history.replaceState(null, '', url);
-        }""");
+        }");
         await node.ClickAsync();
         await Page.GetByRole(AriaRole.Button,
             new() { NameRegex = new System.Text.RegularExpressions.Regex("^Enter (rare )?trail$") }).ClickAsync();
