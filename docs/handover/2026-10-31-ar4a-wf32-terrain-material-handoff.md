@@ -126,3 +126,29 @@ Start from merged GitHub `main` at/after [AR3 PR #458](https://github.com/pjotrc
 - Preserve these captures, keep PR #459 **draft**, and stop at **AR4-B owner visual
   gate**. Do not merge, run AR4-C, claim stone source approval or conflate a green
   browser suite with acceptable visual art.
+
+## 2026-11-01 AR4-B world-continuous pixel source checkpoint — pending visual gate
+
+- Review-only code commit [`1859074`](https://github.com/pjotrcasteel/Wyrmforge/commit/185907464358a0b051d54c0eee246e630dfe2a3b)
+  adds `?arenaTerrain=source32c`: offline-authored, truly world-aligned
+  **1024×2112 single-pixel grass and road source windows** with no 32px/256px
+  stamp repetition. Follow-up [`e1c43b7`](https://github.com/pjotrcasteel/Wyrmforge/commit/e1c43b79e098b5b1e63930a0962753b7959a3300)
+  prevents wasteful loading of the unrelated P1i banks in this mode.
+  Previous `materials`, `source32` and `source32b` modes remain unchanged.
+- This is **code-authored source-only pixel art** reusing the original WF32
+  palette/shape vocabulary, not a replacement for #429, not a runtime
+  texture or C# geography engine, and not an accepted material.
+  The editable painter source and native banks are under
+  `tools/art/prototypes/ar4-wf32-forest-world-study.mjs` and
+  `wwwroot/art/terrain/wf32/ar4b-world/`. Tests independently reproduce
+  both exact PNG byte sequences from source.
+- New real browser snapshots captured via [run
+  41294058530](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/41294058530)
+  on e1c43b7, archived individually in
+  `docs/evidence/ar4-b-world-source-2026-11-01/`. At 320×568 the forest
+  **no longer displays a regular 32px material-tile grid**, but the art
+  is sparse, the C# road seam still needs authored organic transitions,
+  and mountain/monastery stone and 2.5D height remain flat diagnostics.
+- Owner `Yes` was pixel crispness ONLY. No AR4-B material/scene acceptance,
+  no stone approvals, no AR4-C, no merge. Pause for explicit owner visual
+  review and targeted source art direction before production promotion.
