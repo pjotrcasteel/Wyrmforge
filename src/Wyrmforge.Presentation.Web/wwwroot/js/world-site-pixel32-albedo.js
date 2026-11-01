@@ -30,11 +30,53 @@ export const PIXEL32_WORLD = Object.freeze({
     width: 1024, height: 2112, revision: 'ar4b-world-forest-road.v2.provisional',
     seed: 1387, sourceOnly: true,
 });
+// Optional ground-only follow-up. The original world forest screenshot remains source32c.
+export const PIXEL32_STONE_GROUND = Object.freeze({
+    revision: 'ar4b-ground-stone-road.v1.provisional', sourceOnly: true,
+});
 function validWorldSources(sources, width, height) {
     return width <= PIXEL32_WORLD.width && height <= PIXEL32_WORLD.height &&
         ['grass', 'road'].every(family => sources?.[family]?.width === PIXEL32_WORLD.width &&
             sources[family].height === PIXEL32_WORLD.height &&
             sources[family].data?.length === PIXEL32_WORLD.width * PIXEL32_WORLD.height * 4);
+}
+
+function validStoneGroundSources(sources) {
+    return ['rock', 'cliff', 'paving'].every(family =>
+        sources?.[family]?.width === PIXEL32_WORLD.width &&
+        sources?.[family]?.height === PIXEL32_WORLD.height &&
+        sources?.[family]?.data?.length === PIXEL32_WORLD.width * PIXEL32_WORLD.height * 4);
+}
+
+// Scanline clip of a *C#-authored* polygon onto already-authored source pixels.
+// Never authors obstacles, terrain heights, colors, collision, shadows or new paths.
+function paintWorldSourcePolygon(pixels, width, height, outline, source) {
+    if (!source || !Array.isArray(outline) || outline.length < 3) return;
+    if (!outline.every(point => Number.isFinite(point?.x) && Number.isFinite(point?.y))) return;
+    const vertices = outline.map(point => [point.x * width, point.y * height]);
+    const first = Math.max(0, Math.floor(Math.min(...vertices.map(point => point[1]))));
+    const last = Math.min(height - 1, Math.ceil(Math.max(...vertices.map(point => point[1]))));
+    for (let y = first; y <= last; y++) {
+        const crossings = [];
+        const scan = y + .5;
+        for (let k = 0; k < vertices.length; k++) {
+            const [ax, ay] = vertices[k], [bx, by] = vertices[(k + 1) % vertices.length];
+            if ((ay <= scan && by > scan) || (by <= scan && ay > scan))
+                crossings.push(ax + (scan - ay) * (bx - ax) / (by - ay));
+        }
+        crossings.sort((a, b) => a - b);
+        for (let k = 0; k + 1 < crossings.length; k += 2) {
+            const firstX = Math.max(0, Math.ceil(crossings[k] - .5));
+            const lastX = Math.min(width - 1, Math.floor(crossings[k + 1] - .5));
+            for (let x = firstX; x <= lastX; x++) {
+                const from = (y * source.width + x) * 4, to = (y * width + x) * 4;
+                pixels[to] = source.data[from];
+                pixels[to + 1] = source.data[from + 1];
+                pixels[to + 2] = source.data[from + 2];
+                pixels[to + 3] = 255;
+            }
+        }
+    }
 }
 
 function validQuietAtlas(atlas) {
@@ -94,11 +136,19 @@ function paintQuietForestRoad(pixels, width, height, atlas, labels, cellColumns,
             // Whole-world authoring samples absolute source coordinates. No 32px
             // frame repetition or runtime texture synthesis; the authored edge kit
             // still supplies the narrow C# grass/road boundary pixels.
-            const source = worldSources && !horizontal && !vertical
+            let source = worldSources && !horizontal && !vertical
                 ? worldSources[index === 1 ? 'grass' : 'road'] : atlas;
-            const from = source === atlas
+            let from = source === atlas
                 ? ((frame[1] + sampleY) * atlas.width + frame[0] + sampleX) * 4
                 : (y * source.width + x) * 4;
+            if (worldSources?.rock && source === atlas) {
+                // The authored #429-derived edge silhouette is kept, but its grass
+                // versus earth pixels select the same world-phase source palettes
+                // as the interior. No runtime texture marks or smooth blending.
+                const green = atlas.data[from + 1], red = atlas.data[from];
+                source = worldSources[green > red ? 'grass' : 'road'];
+                from = (y * source.width + x) * 4;
+            }
             const to = (y * width + x) * 4;
             pixels[to] = source.data[from];
             pixels[to + 1] = source.data[from + 1];
@@ -142,6 +192,8 @@ export function composeWorldSitePixel32Albedo(geography, width, height, atlas, q
 
     if (quietAtlas && !validQuietAtlas(quietAtlas)) return null;
     if (worldSources && (!quietAtlas || !validWorldSources(worldSources, width, height))) return null;
+    const stoneGround = Boolean(worldSources?.rock || worldSources?.cliff || worldSources?.paving);
+    if (stoneGround && !validStoneGroundSources(worldSources)) return null;
     const monastery = geography.landscape.kind === 'mountain-monastery';
     const seed = Number.isInteger(geography.worldSeed) ? geography.worldSeed : 0;
     const sources = worldSiteSourceBindings(geography);
@@ -186,14 +238,21 @@ export function composeWorldSitePixel32Albedo(geography, width, height, atlas, q
             }
             if (labels) labels[Math.floor(top / blockSize) * cellColumns + Math.floor(left / blockSize)] = dominant;
             const material = WORLD_SITE_MATERIALS[dominant].name;
-            const family = material === 'Road' && !monastery ? 'soil'
+            const groundSource = stoneGround && material === 'Rock' ? worldSources.rock
+                : stoneGround && monastery && material === 'Road' ? worldSources.paving : null;
+            const family = groundSource ? null : material === 'Road' && !monastery ? 'soil'
                 : sources[dominant].sourceApproved ? sources[dominant].sourceFamily : null;
             const cellX = Math.floor(left / 32), cellY = Math.floor(top / 32);
             const frame = family ? FRAMES[family][variantForCell(cellX, cellY, seed)] : null;
             for (let dy = 0; dy < blockHeight; dy++) for (let dx = 0; dx < blockWidth; dx++) {
                 const x = left + dx, y = top + dy;
                 const to = (y * width + x) * 4;
-                if (frame) {
+                if (groundSource) {
+                    const from = (y * groundSource.width + x) * 4;
+                    pixels[to] = groundSource.data[from];
+                    pixels[to + 1] = groundSource.data[from + 1];
+                    pixels[to + 2] = groundSource.data[from + 2];
+                } else if (frame) {
                     const from = ((frame[1] + y % 32) * atlas.width + frame[0] + x % 32) * 4;
                     pixels[to] = atlas.data[from];
                     pixels[to + 1] = atlas.data[from + 1];
@@ -208,7 +267,20 @@ export function composeWorldSitePixel32Albedo(geography, width, height, atlas, q
         }
     }
     if (labels) paintQuietForestRoad(pixels, width, height, quietAtlas, labels, cellColumns, seed, worldSources);
+    if (stoneGround) {
+        // Monastery courtyard and terrace are C# terrain patches; this does not
+        // assume buildings exist or introduce a procedural architecture layer.
+        if (monastery) for (const patch of geography.landscape.terrainPatches ?? []) {
+            if (patch.kind === 'monastery-courtyard' || patch.kind === 'monastery-terrace')
+                paintWorldSourcePolygon(pixels, width, height, patch.outline, worldSources.paving);
+        }
+        for (const obstacle of geography.landscape.obstacles ?? []) {
+            if (obstacle.kind === 'cliff' || obstacle.kind === 'cliff-face')
+                paintWorldSourcePolygon(pixels, width, height, obstacle.outline, worldSources.cliff);
+        }
+    }
     return { width, height, data: pixels, prototypeOnly: true,
-        artSource: worldSources ? PIXEL32_WORLD.revision
+        artSource: stoneGround ? PIXEL32_STONE_GROUND.revision
+            : worldSources ? PIXEL32_WORLD.revision
             : quietAtlas ? PIXEL32_QUIET_ATLAS.revision : PIXEL32_ATLAS.revision };
 }

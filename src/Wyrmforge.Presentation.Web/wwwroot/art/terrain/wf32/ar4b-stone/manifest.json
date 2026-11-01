@@ -1,0 +1,18 @@
+{
+  "revision": "ar4b-ground-stone-road.v1.provisional",
+  "status": "prototype-only",
+  "approved": false,
+  "width": 1024,
+  "height": 2112,
+  "worldSeed": 1387,
+  "pixelSize": 1,
+  "origin": "entire C# site, 1 authored pixel per site pixel; no runtime texture generation",
+  "models": "top-rock facets / bedded vertical cliff faces / running-bond ground paving / compressed earth",
+  "source": "WF32 review-only companion; original art branch #429 unchanged",
+  "families": [
+    "rock",
+    "cliff",
+    "paving",
+    "road"
+  ]
+}

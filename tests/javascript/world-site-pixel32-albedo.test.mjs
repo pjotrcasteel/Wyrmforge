@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { PIXEL32_ATLAS, PIXEL32_QUIET_ATLAS, PIXEL32_WORLD, composeWorldSitePixel32Albedo } from
+import { PIXEL32_ATLAS, PIXEL32_QUIET_ATLAS, PIXEL32_WORLD, PIXEL32_STONE_GROUND, composeWorldSitePixel32Albedo } from
     '../../src/Wyrmforge.Presentation.Web/wwwroot/js/world-site-pixel32-albedo.js';
 
 const names = ['Soil', 'Grass', 'Road', 'Mud', 'Rock', 'ShallowWater', 'GlacialIce'];
@@ -249,4 +249,62 @@ test('AR4-B world mode samples native nonrepeating world-position pixels and pre
         'never stamp or stretch a source outside its authored world coverage');
     assert.equal(composeWorldSitePixel32Albedo(site('Grass'), 64, 64,
         legacy,quiet,{grass:authored.grass}), null);
+});
+
+test('AR4-B ground-only follow-up uses source pixels inside authoritative C# rock, cliffs and courtyard', () => {
+    const make = red => {
+        const width=PIXEL32_WORLD.width,height=PIXEL32_WORLD.height;
+        const data=new Uint8ClampedArray(width*height*4);
+        for(let y=0;y<64;y++)for(let x=0;x<64;x++){
+            const at=(y*width+x)*4;
+            data[at]=red;data[at+1]=x;data[at+2]=y;data[at+3]=255;
+        }
+        return {width,height,data};
+    };
+    const world={grass:make(37),road:make(65),rock:make(44),cliff:make(99),paving:make(77)};
+    const square=(a,b,c,d)=>[{x:a,y:b},{x:c,y:b},{x:c,y:d},{x:a,y:d}];
+    const mountain=site('Rock','mountain-pass');
+    mountain.landscape.obstacles=[
+        {kind:'cliff-face',outline:square(.25,.25,.75,.75)},
+    ];
+    const render=composeWorldSitePixel32Albedo(mountain,64,64,atlas(),quietAtlas(),world);
+    assert.equal(render.artSource,PIXEL32_STONE_GROUND.revision);
+    assert.deepEqual(pixel(render,8,8),[44,8,8,255], 'unobstructed rock uses authored world pixels');
+    assert.deepEqual(pixel(render,20,20),[99,20,20,255], 'face is clipped to C# outline');
+    assert.deepEqual(pixel(render,51,20),[44,51,20,255], 'no new collision or texture beyond obstacle');
+    const monastery=site('Rock','mountain-monastery');
+    monastery.landscape.terrainPatches=[
+        {kind:'monastery-courtyard',outline:square(.25,.25,.75,.75)},
+    ];
+    const monastic=composeWorldSitePixel32Albedo(monastery,64,64,atlas(),quietAtlas(),world);
+    assert.deepEqual(pixel(monastic,8,8),[44,8,8,255]);
+    assert.deepEqual(pixel(monastic,32,32),[77,32,32,255],
+        'flagstone only where the C# author declared a courtyard');
+    assert.deepEqual(pixel(composeWorldSitePixel32Albedo(
+        site('Road','mountain-monastery'),64,64,atlas(),quietAtlas(),world),8,8),[77,8,8,255],
+        'monastery Road selects paving, not a fabricated building layer');
+    assert.equal(composeWorldSitePixel32Albedo(mountain,64,64,atlas(),quietAtlas(),
+        {...world,paving:{...world.paving,width:256}}),null,
+        'missing or malformed source banks never turn into stamped tiles');
+});
+
+test('AR4-B ground-only native stone, cliff, paving and road files are reproducible unapproved pixel art', async () => {
+    const folder='../../src/Wyrmforge.Presentation.Web/wwwroot/art/terrain/wf32/ar4b-stone/';
+    const manifest=JSON.parse(readFileSync(new URL(folder+'manifest.json',import.meta.url),'utf8'));
+    assert.equal(manifest.revision,PIXEL32_STONE_GROUND.revision);
+    assert.equal(manifest.approved,false);
+    assert.deepEqual(manifest.families,['rock','cliff','paving','road']);
+    assert.equal(manifest.width,1024);
+    assert.equal(manifest.height,2112);
+    const {buildStoneRoadStudy}=await import('../../tools/art/prototypes/ar4-wf32-stone-road-study.mjs');
+    const {encodePng}=await import('../../tools/art/lib/png.mjs');
+    const study=buildStoneRoadStudy();
+    for(const family of manifest.families){
+        const png=readFileSync(new URL(folder+family+'-world.png',import.meta.url));
+        assert.deepEqual([...png.subarray(0,8)],[137,80,78,71,13,10,26,10]);
+        assert.equal(png.readUInt32BE(16),1024);
+        assert.equal(png.readUInt32BE(20),2112);
+        assert.deepEqual(encodePng(study[family].width,study[family].height,study[family].data),png,
+            family+' world image must equal its editable offline source');
+    }
 });

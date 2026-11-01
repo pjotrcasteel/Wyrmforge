@@ -8,7 +8,7 @@ import { createTerritoryWallLayers, drawTerritoryWall, drawOpenedGateRubble } fr
 import { liveWetForestArtworkGeneration } from './arena-live-wet-forest-materials.js';
 import { WORLD_SITE_MATERIALS, worldSiteMaterialName, normalizeWorldSiteMaterialWeights,
     worldSiteMaterialCacheKey, worldSiteSourceBindings } from './world-site-material-binding.js';
-import { worldSiteMaterialModeEnabled, worldSitePixel32ModeEnabled, worldSiteQuietPixelModeEnabled, worldSiteWorldPixelModeEnabled, drawWorldSiteNeutralAlbedo,
+import { worldSiteMaterialModeEnabled, worldSitePixel32ModeEnabled, worldSiteQuietPixelModeEnabled, worldSiteWorldPixelModeEnabled, worldSiteStoneGroundModeEnabled, drawWorldSiteNeutralAlbedo,
     worldSiteNeutralSourceCoverage } from './world-site-neutral-albedo.js';
 
 // The world is projected from canonical C# terrain state. Drawing never changes simulation outcomes.
@@ -620,7 +620,7 @@ function drawWorldSitePaths(ctx, paths, width, height) {
     }
 }
 
-export function drawWorldSiteLandscape(ctx, geography, width, height) {
+export function drawWorldSiteLandscape(ctx, geography, width, height, sourceStoneGround = false) {
     const landscape = geography?.landscape;
     if (!landscape || !Array.isArray(landscape.obstacles)) return false;
     const palette = {
@@ -651,7 +651,11 @@ export function drawWorldSiteLandscape(ctx, geography, width, height) {
             else ctx.lineTo(point.x * width, point.y * height);
         }
         ctx.closePath();
-        ctx.fill();
+        const sourceCliff = sourceStoneGround && (obstacle.kind === 'cliff' ||
+            obstacle.kind === 'cliff-face');
+        // Source32d already clipped the authored rock-face pixels to this exact
+        // C# footprint in the one-time albedo. Do not cover them with flat paint.
+        if (!sourceCliff) ctx.fill();
         if (obstacle.kind.endsWith('cliff-face')) {
             // A 1–3 m escarpment reads as a continuous weathered rock lip,
             // not as outlined blocks or a man-made wall. Geometry is C# owned.
@@ -666,6 +670,7 @@ export function drawWorldSiteLandscape(ctx, geography, width, height) {
         } else {
             ctx.stroke();
         }
+        if (sourceCliff) continue;
         // Show an unobtrusive landmark *inside* the precise C# footprint.
         // This is diagnostic hatching, not added collision, illumination or a
         // second procedural decorator. Nothing extends beyond the authored shape.
@@ -793,13 +798,15 @@ export function drawArenaEnvironment(ctx, environment, width, height, elapsedSec
     }
     if (neutral) {
         // The source albedo encodes C# material weights; C# obstacles and discoveries still sit above it.
-        drawWorldSiteLandscape(ctx, environment.geography, width, height);
+        drawWorldSiteLandscape(ctx, environment.geography, width, height,
+            worldSiteStoneGroundModeEnabled());
         drawWorldSiteDiscoveries(ctx, environment.geography, width, height);
     }
     if (semantic || neutral) {
         const sourceCoverage = neutral ? worldSiteNeutralSourceCoverage(width, height) : null;
         globalThis.__wyrmforgeAr0Geography = {
-            materialView: neutral ? worldSiteWorldPixelModeEnabled() ? 'source32-world-study'
+            materialView: neutral ? worldSiteStoneGroundModeEnabled() ? 'source32-ground-study'
+                : worldSiteWorldPixelModeEnabled() ? 'source32-world-study'
                 : worldSiteQuietPixelModeEnabled() ? 'source32-quiet-study'
                 : worldSitePixel32ModeEnabled() ? 'source32-prototype'
                 : (sourceCoverage?.complete ? 'albedo' : 'partial-albedo')
