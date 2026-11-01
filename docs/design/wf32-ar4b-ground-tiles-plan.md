@@ -63,3 +63,11 @@ Owner decision (1 November): **Wet Forest first.** Finish its 32px ground, compa
 ### Wet Forest B1v2 source-only revision (1 November)
 
 A new **forest-only** `source32wang` study is planned to replace the rejected three-pebbles-per-tile road with sparse compacted-soil masses, occasional authored roots and low-frequency clasts. No C# terrain class or height changed. Original `source32c` forest base and earlier v1 image evidence remain available. [B1v2 native stress board](../art/previews/wf32-ar4b-road-v2/README.md) is an **unapproved source preview**, never a Hunt capture. The separately gated Mountain Pass and monastery are not revised by this iteration.
+
+### 1 November XYZ tile-grid / destruction design proposal (not an AR3 engine change)
+
+The owner proposed classic numbered XY tile IDs plus neighbor-selected transition (“melding”) tiles and asked how to support height and destructible terrain. A [scoped XYZ sparse occupancy RFC](./wf32-xyz-sparse-destructible-grid-proposal-2026-11-01.md) now (tracked separately in [#466](https://github.com/pjotrcasteel/Wyrmforge/issues/466)) details a **C#-owned** 2D semantic tile projection for Wet Forest and an optional future **sparse chunked 3D occupancy** for actual destructible blocks. This design is **not accepted or implemented** by the B1v2 texture study: existing AR3 continuous elevation, physics/collision/roads/saves and shared G/FXP/VFX ownership remain unchanged. Forest texture approval does not authorize CV2 destruction or a world-wide 3D rebuild.
+
+### 1 November B1v2 genuine CI gameplay checkpoint (visual gate still open)
+
+[Two individual true 320×568 Wet Forest Hunt PNGs and capture provenance](../evidence/ar4-b-wet-forest-v2-2026-11-01/README.md) come from [Browser smoke run 41301049496](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/41301049496), source `6a9542a`. All six source-commit CI workflows and four browser shards passed. **Visual rejection remains:** v2 improves the obvious repeated-pebble road rhythm but still has under-authored, sparse banks and ground. No source tile set, forest art or full AR4-B gate is owner approved; #459 stays draft/unmerged.
