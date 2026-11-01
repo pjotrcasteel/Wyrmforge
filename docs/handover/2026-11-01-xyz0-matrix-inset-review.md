@@ -22,3 +22,17 @@ The long-term terrain direction is a numbered, sparse C# XYZ grid, permitting di
 - Next steps: review actual rendered screenshots; build native 32px **source-authored material resolution** keyed to the C# IDs; connect the existing deterministic `WorldSiteStrataMutationState` to explicitly scoped Fireball terrain destruction and save/replay; update collision/exposed surfaces through existing C# gameplay services only. Separate matrix data acceptance from **AR4-B owner visual approval**.
 
 **Gate:** drafts [#467](https://github.com/pjotrcasteel/Wyrmforge/pull/467) and [#459](https://github.com/pjotrcasteel/Wyrmforge/pull/459) remain open/unmerged. AR4-B visual approval is pending; no production material or GPU cutover follows from this note.
+
+## Verified real-Hunt captures (CI, 1 November)
+
+The screenshot-test method `WorldFirstArenaBrowserTests.Xyz0_WetForest_RealHuntShowsCSharp32PxMatrixWithInsetCellOutlines` completed successfully **at both mobile sizes** on [Browser smoke run 41323180967](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/41323180967), where **all four browser shards passed**. The two files below are copied byte-for-byte from the run's `wyrmforge-browser-shard-1` artifact; neither is an editor mock-up or generated illustration. [C# validation 41323181015](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/41323181015) passed 405 Domain + 741 Application tests.
+
+### 320×568 real playable Hunt
+
+![Wet Forest C# XYZ tile matrix with 1px inset seams, live 320px Hunt](../review/xyz0-2026-11-01/wet-forest-matrix-insets-320.png)
+
+### 390×844 real playable Hunt
+
+![The same C# XYZ site and native 32px grid in a real 390px Hunt](../review/xyz0-2026-11-01/wet-forest-matrix-insets-390.png)
+
+These show a **diagnostic flat material palette**, not reviewed WF32 source-authored texture quality. The deliberate 1px inset must remain available as a review toggle when approved material artwork is bound. No AR4-B visual approval is assumed from CI success.
