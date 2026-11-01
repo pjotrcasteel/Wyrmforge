@@ -94,3 +94,35 @@ Start from merged GitHub `main` at/after [AR3 PR #458](https://github.com/pjotrc
 - The forest screenshot at **320×568** now contains actual crisp 32px authored pixel clusters. Its repeating grass tiles and 4px-blocky, insufficiently authored road transitions are still visually obvious. Do **not** confuse crisp sampling with polished terrain art.
 - The mountain pass and C# monastery focus at **390×844** expose important unfinished art: cliffs/rocks are still flat diagnostic polygons; monastery structures are taupe/tan outline blocks, not authored 2.5D roofs, walls or stone; roads are unconvincing. This is not an acceptable AR4-B target yet.
 - The next source-gated art pass requires non-repetitive grass/soil cluster composition, a full road boundary/corner/intersection grammar and genuine stone/architecture/height-matched props. The original P1i/P1j appearance gates and all C#/G engine boundaries remain mandatory. **Do not merge or mark AR4-B approved.**
+
+## 2026-11-01 AR4-B quiet-grass/road study checkpoint — visual approval still pending
+
+- The owner answered **“Yes” to the native 32px pixel density/crispness**, not to the
+  material artwork, terrain composition, mountains, monastery, or AR4-B gate.
+- Prototype code commit [`164d7ec`](https://github.com/pjotrcasteel/Wyrmforge/commit/164d7ec75679b0014d5bb47e591a09b5f7b46afc)
+  introduced the independent offline-authored quiet-grass/compacted-road atlas, with
+  four directional edges and four corners. It adds `?arenaTerrain=source32b` and
+  leaves `source32`, P1i materials, normal Hunts, all C# AR3 movement/geography,
+  G4/G5 shared lighting, and original WF32 #429 artwork untouched.
+- Follow-up code commit [`fa14eb1`](https://github.com/pjotrcasteel/Wyrmforge/commit/fa14eb1c3de96bebe6bbfe1553bac65b8b8b533c)
+  increases the bank to **12 quiet grass tiles, six road interiors, four directional
+  seams and four corners (26 32px frames)** and darkens authored earth/grass joins.
+  The independent atlas lives at `wwwroot/art/terrain/wf32/ar4b-quiet/atlas.png`;
+  its editable source is `tools/art/prototypes/ar4-wf32-quiet-road-study.mjs`.
+  Its provenance, PNG bytes and frame rectangles are tested.
+- All screenshots in `docs/evidence/ar4-b-quiet-road-2026-11-01/` are **genuine
+  CI Playwright Town→Chart→Hunt captures on `fa14eb1`**. [Browser run
+  41292452400](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/41292452400)
+  records the 320×568 Wet Forest Hunt, 390×844 mountain pass and monastery
+  spectator view individually. They are evidence of a technical presentation
+  experiment, not an art approval.
+- **Unresolved visual defects:** distinct square moss patterns persist despite
+  reduced grass density; the road still follows aliased C# winner contours and
+  needs a complete authored mixed edge/corner grammar; cliffs are large flat
+  slate-blue diagnostic polygons without WF32 authored faces or height cues;
+  monastery paving/building remain diagnostic and visually inadequate. 2.5D
+  scene composition, vegetation silhouettes, seed variety, mobile perf and
+  stonework are **not approved**.
+- Preserve these captures, keep PR #459 **draft**, and stop at **AR4-B owner visual
+  gate**. Do not merge, run AR4-C, claim stone source approval or conflate a green
+  browser suite with acceptable visual art.
