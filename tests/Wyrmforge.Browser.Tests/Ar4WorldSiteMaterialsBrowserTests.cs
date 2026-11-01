@@ -133,5 +133,31 @@ public sealed class Ar4WorldSiteMaterialsBrowserTests : PageTest
             Path = Path.Combine(output, $"ar4-{kind}-moving-camera-{width}.png"),
             FullPage = false,
         });
+
+        if (kind == "mountain-monastery")
+        {
+            // The original spawn view does not contain the distant C# building.
+            // This opt-in spectator frame uses its *real* obstacle outlines without teleporting the hunter.
+            await Page.EvaluateAsync(@"() => {
+                const url = new URL(location.href);
+                url.searchParams.set('ar4ReviewFocus', 'monastery');
+                history.replaceState(null, '', url);
+            }");
+            await Page.WaitForFunctionAsync(
+                "siteId => window.__wyrmforgeAr4ReviewCamera?.siteId === siteId && " +
+                "window.__wyrmforgeAr4ReviewCamera?.kind === 'mountain-monastery' && " +
+                "window.__wyrmforgeAr4ReviewCamera?.buildingCount >= 3",
+                siteId, new() { Timeout = 45000 });
+            Assert.AreEqual(seed, await Page.EvaluateAsync<int>(
+                "() => window.__wyrmforgeAr0Geography.seed"));
+            Assert.AreEqual(obstacles, await Page.EvaluateAsync<int>(
+                "() => window.__wyrmforgeAr0Geography.obstacleCount"));
+            Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
+            await Page.ScreenshotAsync(new()
+            {
+                Path = Path.Combine(output, "ar4-mountain-monastery-csharp-focus-390.png"),
+                FullPage = false,
+            });
+        }
     }
 }
