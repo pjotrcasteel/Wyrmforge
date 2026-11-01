@@ -1,0 +1,35 @@
+{
+  "schema": "wyrmforge.sprite-foundry.atlas.v1",
+  "character": "grey-wizard",
+  "cell": [
+    64,
+    80
+  ],
+  "feetAnchor": [
+    32,
+    74
+  ],
+  "directions": [
+    "S",
+    "SE",
+    "E",
+    "NE",
+    "N",
+    "NW",
+    "W",
+    "SW"
+  ],
+  "status": "technical-pass",
+  "approved": false,
+  "clips": {
+    "idle": {
+      "fps": 8,
+      "framesPerDirection": 1,
+      "atlases": {
+        "albedo": "idle.albedo.png"
+      },
+      "atlasColumns": 1,
+      "atlasRows": 8
+    }
+  }
+}
