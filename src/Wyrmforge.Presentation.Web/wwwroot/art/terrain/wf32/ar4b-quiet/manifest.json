@@ -1,5 +1,5 @@
 {
-  "revision": "ar4b-quiet-grass-road.v1.provisional",
+  "revision": "ar4b-quiet-grass-road.v2.provisional",
   "tilePixels": 32,
   "status": "prototype-only",
   "source": "Original WF32 #429 grass palette; separately authored quiet frames and road boundary studies",
@@ -85,7 +85,7 @@
       "ax": 0,
       "ay": 0
     },
-    "grass.2": {
+    "grass.10": {
       "x": 331,
       "y": 1,
       "w": 32,
@@ -93,7 +93,7 @@
       "ax": 0,
       "ay": 0
     },
-    "grass.3": {
+    "grass.11": {
       "x": 364,
       "y": 1,
       "w": 32,
@@ -101,7 +101,7 @@
       "ax": 0,
       "ay": 0
     },
-    "grass.4": {
+    "grass.2": {
       "x": 397,
       "y": 1,
       "w": 32,
@@ -109,7 +109,7 @@
       "ax": 0,
       "ay": 0
     },
-    "grass.5": {
+    "grass.3": {
       "x": 430,
       "y": 1,
       "w": 32,
@@ -117,7 +117,7 @@
       "ax": 0,
       "ay": 0
     },
-    "road.0": {
+    "grass.4": {
       "x": 463,
       "y": 1,
       "w": 32,
@@ -125,7 +125,7 @@
       "ax": 0,
       "ay": 0
     },
-    "road.1": {
+    "grass.5": {
       "x": 1,
       "y": 34,
       "w": 32,
@@ -133,7 +133,7 @@
       "ax": 0,
       "ay": 0
     },
-    "road.2": {
+    "grass.6": {
       "x": 34,
       "y": 34,
       "w": 32,
@@ -141,8 +141,72 @@
       "ax": 0,
       "ay": 0
     },
-    "road.3": {
+    "grass.7": {
       "x": 67,
+      "y": 34,
+      "w": 32,
+      "h": 32,
+      "ax": 0,
+      "ay": 0
+    },
+    "grass.8": {
+      "x": 100,
+      "y": 34,
+      "w": 32,
+      "h": 32,
+      "ax": 0,
+      "ay": 0
+    },
+    "grass.9": {
+      "x": 133,
+      "y": 34,
+      "w": 32,
+      "h": 32,
+      "ax": 0,
+      "ay": 0
+    },
+    "road.0": {
+      "x": 166,
+      "y": 34,
+      "w": 32,
+      "h": 32,
+      "ax": 0,
+      "ay": 0
+    },
+    "road.1": {
+      "x": 199,
+      "y": 34,
+      "w": 32,
+      "h": 32,
+      "ax": 0,
+      "ay": 0
+    },
+    "road.2": {
+      "x": 232,
+      "y": 34,
+      "w": 32,
+      "h": 32,
+      "ax": 0,
+      "ay": 0
+    },
+    "road.3": {
+      "x": 265,
+      "y": 34,
+      "w": 32,
+      "h": 32,
+      "ax": 0,
+      "ay": 0
+    },
+    "road.4": {
+      "x": 298,
+      "y": 34,
+      "w": 32,
+      "h": 32,
+      "ax": 0,
+      "ay": 0
+    },
+    "road.5": {
+      "x": 331,
       "y": 34,
       "w": 32,
       "h": 32,

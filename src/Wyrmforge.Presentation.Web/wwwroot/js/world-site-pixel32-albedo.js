@@ -18,10 +18,10 @@ const FRAMES = Object.freeze({
 // Separate AR4-B authored study atlas. The entire #429 source bank remains unmodified;
 // these are new *offline painted* frames, not gameplay-generated texture or approved art.
 export const PIXEL32_QUIET_ATLAS = Object.freeze({ width: 496, height: 67, tile: 32,
-    revision: 'ar4b-quiet-grass-road.v1.provisional' });
+    revision: 'ar4b-quiet-grass-road.v2.provisional' });
 const QUIET_FRAMES = Object.freeze({
-    grass: Object.freeze([[265, 1], [298, 1], [331, 1], [364, 1], [397, 1], [430, 1]]),
-    road: Object.freeze([[463, 1], [1, 34], [34, 34], [67, 34]]),
+    grass: Object.freeze([[265, 1], [298, 1], [397, 1], [430, 1], [463, 1], [1, 34], [34, 34], [67, 34], [100, 34], [133, 34], [331, 1], [364, 1]]),
+    road: Object.freeze([[166, 34], [199, 34], [232, 34], [265, 34], [298, 34], [331, 34]]),
     edge: Object.freeze({ down: [133, 1], left: [166, 1], right: [199, 1], up: [232, 1] }),
     corner: Object.freeze({ ne: [1, 1], nw: [34, 1], se: [67, 1], sw: [100, 1] }),
 });

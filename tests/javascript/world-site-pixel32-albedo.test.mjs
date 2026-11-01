@@ -148,13 +148,13 @@ test('AR4-B quiet preview owns an independently authored reproducible source atl
     const png = readFileSync(new URL(base + 'atlas.png', import.meta.url));
     const manifest = JSON.parse(readFileSync(new URL(base + 'manifest.json', import.meta.url), 'utf8'));
     const gitSha = createHash('sha1').update(`blob ${png.length}\0`).update(png).digest('hex');
-    assert.equal(gitSha, '849fb1f79d78de84759675f46b586df730a3a1cd');
+    assert.equal(gitSha, 'b806010dc2bfc4a33df6fa99cd65afc6feadefaf');
     assert.equal(png.readUInt32BE(16), PIXEL32_QUIET_ATLAS.width);
     assert.equal(png.readUInt32BE(20), PIXEL32_QUIET_ATLAS.height);
     assert.equal(manifest.revision, PIXEL32_QUIET_ATLAS.revision);
     assert.equal(manifest.tilePixels, 32);
     assert.equal(manifest.approved, false);
-    assert.equal(Object.keys(manifest.frames).length, 18);
+    assert.equal(Object.keys(manifest.frames).length, 26);
     for (const frame of Object.values(manifest.frames)) {
         assert.equal(frame.w, 32);
         assert.equal(frame.h, 32);

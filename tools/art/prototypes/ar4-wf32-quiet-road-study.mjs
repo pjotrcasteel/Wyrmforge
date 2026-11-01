@@ -8,8 +8,8 @@ import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 
 const GRASS = Object.freeze(['#1d2923', '#29372b', '#354733', '#475b3e', '#5b704a', '#79815d']);
-const EARTH = Object.freeze(['#2b2b27', '#413c30', '#60523d', '#786749', '#95805c', '#a99870']);
-export const REVISION = 'ar4b-quiet-grass-road.v1.provisional';
+const EARTH = Object.freeze(['#2f2c26', '#4b4030', '#715d40', '#8c754e', '#a78d60', '#b9a174']);
+export const REVISION = 'ar4b-quiet-grass-road.v2.provisional';
 export const TILE_SIZE = 32;
 
 // Stable hand-positioned clusters leave uninterrupted ground visible between landmarks.
@@ -20,6 +20,12 @@ const PATCHES = [
     [[19,11,9,4],[4,3,7,3],[8,27,8,2]],
     [[3,27,10,3],[15,6,11,4],[24,21,6,3]],
     [[3,11,7,4],[16,25,12,3],[22,3,6,2]],
+    [[2,7,15,7],[22,24,8,3]],
+    [[17,13,13,9],[2,26,11,4]],
+    [[3,21,16,7],[21,2,8,5]],
+    [[14,2,13,9],[3,16,8,4]],
+    [[2,3,14,9],[20,19,10,6]],
+    [[10,15,17,8],[1,27,8,3]],
 ];
 const TUFTS = [
     [[8,20],[25,7],[17,28]],
@@ -28,6 +34,12 @@ const TUFTS = [
     [[7,27],[24,12]],
     [[14,19],[27,7],[6,8]],
     [[8,6],[22,22]],
+    [[24,13]],
+    [[4,10],[27,29]],
+    [[14,8]],
+    [[25,26]],
+    [[9,26],[26,7]],
+    [[6,11]],
 ];
 function tuft(b, x, y, index) {
     const p = GRASS, tall = index % 3 === 0;
@@ -43,13 +55,36 @@ function grassTile(variant) {
     b.rect(0,0,32,32,GRASS[2]);
     for (const [x,y,w,h] of PATCHES[variant]) {
         b.rect(x,y,w,h,GRASS[1]);
-        b.rect(x+1,y+1,Math.max(2,w-3),Math.max(1,h-2),GRASS[3]);
-        b.rect(x+2,y+h-1,Math.max(2,w-4),1,GRASS[2]);
+        if (variant >= 6) {
+            // Larger irregular moss forms read as patches, not equally spaced grass dots.
+            b.rect(x+2,y+1,Math.max(2,w-4),Math.max(1,h-3),GRASS[2]);
+            b.rect(x+4,y+2,Math.max(2,w-7),2,GRASS[3]);
+            b.rect(x+w-3,y+h-2,4,2,GRASS[1]);
+            b.rect(x+1,y+3,3,2,GRASS[3]);
+        } else {
+            b.rect(x+1,y+1,Math.max(2,w-3),Math.max(1,h-2),GRASS[3]);
+            b.rect(x+2,y+h-1,Math.max(2,w-4),1,GRASS[2]);
+        }
     }
     TUFTS[variant].forEach(([x,y],i)=>tuft(b,x,y,variant+i));
     const seed = variant*7;
     b.rect((seed+11)%30, (seed+21)%30, 3,2,GRASS[4]);
     b.line((seed+2)%29, (seed+14)%29, (seed+5)%29, (seed+13)%29, GRASS[1]);
+    if (variant === 7 || variant === 10) {
+        // Sparse original-style bent fern fronds: eight-pixel recognisable foliage masses.
+        const fx = variant === 7 ? 24 : 7, fy = variant === 7 ? 25 : 23;
+        b.line(fx,fy,fx-3,fy-9,GRASS[4]);
+        b.line(fx-2,fy-5,fx-7,fy-9,GRASS[3]);
+        b.line(fx-2,fy-5,fx+2,fy-10,GRASS[5]);
+        b.line(fx-1,fy-2,fx-5,fy-5,GRASS[4]);
+        b.line(fx-1,fy-2,fx+4,fy-6,GRASS[3]);
+    }
+    if (variant === 8 || variant === 11) {
+        const lx = variant === 8 ? 7 : 19, ly = variant === 8 ? 11 : 8;
+        b.line(lx,ly,lx+8,ly+2,GRASS[1]);
+        b.rect(lx+2,ly+1,5,2,GRASS[4]);
+        b.set(lx+8,ly+3,GRASS[5]);
+    }
     return b;
 }
 const RUTS = [
@@ -57,12 +92,16 @@ const RUTS = [
     [[18,5,9,4],[3,19,12,5]],
     [[8,4,13,3],[20,20,10,5]],
     [[2,25,14,4],[17,9,12,4]],
+    [[6,8,19,6],[23,23,8,3]],
+    [[2,21,21,7],[15,5,12,4]],
 ];
 const PEBBLES = [
     [[7,23],[22,9],[28,27]],
     [[4,5],[17,15],[25,29]],
     [[14,12],[5,27],[26,7]],
     [[9,6],[22,26],[29,16]],
+    [[17,15],[4,27]],
+    [[6,7],[24,25]],
 ];
 function roadTile(variant) {
     const b=new Bitmap(32,32);b.wrap=true;
@@ -71,12 +110,12 @@ function roadTile(variant) {
         b.rect(x,y,w,h,EARTH[1]);b.rect(x+2,y+1,w-3,1,EARTH[3]);
         b.rect(x+3,y+h-1,Math.max(1,w-5),1,EARTH[2]);
     }
-    for(const [x,y] of PEBBLES[variant]) {
+    for(const [x,y] of PEBBLES[variant].slice(0,variant % 3 === 0 ? 2 : 3)) {
         b.rect(x,y+1,5,2,EARTH[0]);b.rect(x+1,y,4,2,EARTH[4]);
         b.rect(x+2,y+1,2,1,EARTH[3]);
     }
     b.line(2+variant*5,15+variant*3,7+variant*5,16+variant*3,EARTH[3]);
-    b.rect(24-variant*3,11+variant*3,3,2,EARTH[1]);
+    b.rect((24-variant*3+32)%32,(11+variant*3)%32,3,2,EARTH[1]);
     return b;
 }
 // Hand-tuned contour profiles; orientation is authored, never sprite-mirrored at runtime.
@@ -92,8 +131,10 @@ function edgeTile(grassSide) {
         b.set(x,y,isGrass?grass.get(x,y):road.get(x,y));
         // A few deliberately authored grass fingers bite into the packed earth.
         const distance=Math.abs(across-threshold);
-        if(distance===1&&(along===5||along===17||along===26))
-            b.set(x,y,isGrass?GRASS[4]:EARTH[1]);
+        if (!isGrass && distance < 2) b.set(x,y,EARTH[0]);
+        else if (isGrass && distance === 0) b.set(x,y,GRASS[4]);
+        if(distance===2&&(along===5||along===17||along===26))
+            b.set(x,y,isGrass?GRASS[5]:EARTH[1]);
     }
     return b;
 }
@@ -104,14 +145,16 @@ function cornerTile(roadCorner) {
         const isRoad=roadCorner==='nw'?west&&north:roadCorner==='ne'?!west&&north:
             roadCorner==='sw'?west&&!north:!west&&!north;
         b.set(x,y,isRoad?road.get(x,y):grass.get(x,y));
+        if (isRoad && (Math.abs(x-16-RIPPLE[y]) < 2 ||
+            Math.abs(y-16-RIPPLE[x]) < 2)) b.set(x,y,EARTH[0]);
     }
     return b;
 }
 export function buildAr4BQuietAtlas() {
     const entries=[];
     const put=(name,bitmap)=>entries.push({name,bitmap,anchor:[0,0]});
-    for(let i=0;i<6;i++)put(`grass.${i}`,grassTile(i));
-    for(let i=0;i<4;i++)put(`road.${i}`,roadTile(i));
+    for(let i=0;i<12;i++)put(`grass.${i}`,grassTile(i));
+    for(let i=0;i<6;i++)put(`road.${i}`,roadTile(i));
     for(const side of ['left','right','up','down'])put(`edge.grass-${side}`,edgeTile(side));
     for(const corner of ['nw','ne','sw','se'])put(`corner.road-${corner}`,cornerTile(corner));
     const {atlas,frames}=packAtlas(entries,512,1);
