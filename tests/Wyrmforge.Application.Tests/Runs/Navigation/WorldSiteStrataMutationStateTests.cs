@@ -65,6 +65,34 @@ public sealed class WorldSiteStrataMutationStateTests
     }
 
     [TestMethod]
+    public void Xyz1_ExposedSurfaceFollowsRemovedStackAndDeterministicSaveRestore()
+    {
+        var grid = new WorldSiteStrataGrid(Forest(1204));
+        var state = new WorldSiteStrataMutationState(grid);
+        var top = TopKey(grid, grid.Columns / 2, grid.Rows / 2);
+        var firstRock = top with { Z = top.Z - 1 };
+        var secondRock = top with { Z = top.Z - 2 };
+
+        Assert.AreEqual(top, state.GetExposedSurfaceCell(top.X, top.Y).Key);
+        Assert.IsTrue(state.TryDamageCell(top, damage: 12, initialIntegrity: 12));
+        Assert.AreEqual(firstRock, state.GetExposedSurfaceCell(top.X, top.Y).Key);
+        Assert.AreEqual(WorldSiteSurfaceId.Rock,
+            state.GetExposedSurfaceCell(top.X, top.Y).SurfaceFinish!.Value);
+        Assert.IsTrue(state.TryDamageCell(firstRock, damage: 50, initialIntegrity: 50));
+        Assert.AreEqual(secondRock, state.GetExposedSurfaceCell(top.X, top.Y).Key);
+        Assert.AreEqual(WorldSiteSurfaceId.Rock,
+            state.GetExposedSurfaceCell(top.X, top.Y).SurfaceFinish!.Value);
+        Assert.IsTrue(state.GetExposedSurfaceCell(-1, 0).IsEmpty);
+
+        var save = JsonSerializer.Deserialize<WorldSiteStrataMutationSave>(
+            JsonSerializer.Serialize(state.CaptureSave()))!;
+        var restored = WorldSiteStrataMutationState.Restore(new WorldSiteStrataGrid(Forest(1204)), save);
+        Assert.AreEqual(state.GetExposedSurfaceCell(top.X, top.Y),
+            restored.GetExposedSurfaceCell(top.X, top.Y));
+        Assert.AreEqual(state.GetCell(firstRock), restored.GetCell(firstRock));
+    }
+
+    [TestMethod]
     public void Xyz1_SeedAndSiteScopedSparseDeltasRoundTripThroughJsonWithoutSavingTheWholeWorld()
     {
         var originalSite = Forest(47);

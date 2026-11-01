@@ -81,6 +81,33 @@ public sealed class WorldSiteStrataMutationState
         return cell;
     }
 
+    /// <summary>
+    /// Resolve the current topmost material at one XY column after contiguous block removal.
+    /// The seeded top Z comes from AR3; removed blocks expose the next true physical stratum.
+    /// The returned SurfaceHeightMeters still records the unchanged seeded AR3 grade;
+    /// a later C# collision adapter must derive the excavated floor height explicitly.
+    /// This is a semantic query, not a renderer, crater decal or collision cutover.
+    /// </summary>
+    public WorldSiteStrataCell GetExposedSurfaceCell(int x, int y)
+    {
+        var seededTop = _baseGrid.GetCell(x, y, int.MaxValue);
+        if (x < 0 || y < 0 || x >= _baseGrid.Columns || y >= _baseGrid.Rows)
+        {
+            return seededTop;
+        }
+
+        var key = new WorldSiteCellKey(x, y, seededTop.SurfaceZ);
+        // With the current contiguous, rock-backed base geology, a finite sparse set of
+        // removed cells can only hide finitely many consecutive strata above solid rock.
+        while (_changes.TryGetValue(key, out var delta) &&
+               delta.Kind == WorldSiteCellMutationKind.Removed)
+        {
+            key = key with { Z = checked(key.Z - 1) };
+        }
+
+        return GetCell(key);
+    }
+
     /// <summary>Return the change, if any. Null specifically means the seeded base is unchanged.</summary>
     public WorldSiteCellDelta? FindDelta(WorldSiteCellKey key)
     {
