@@ -53,3 +53,34 @@ public sealed record WorldSiteStrataImpactResult(
     /// </summary>
     public bool Duplicate { get; init; }
 }
+
+/// <summary>
+/// An isolated C# microcell excavation review command. The sphere is measured
+/// in 12.5cm steps, centered on a 1m XYZ block plus integer local position.
+/// This is NOT Fireball balance, hit detection, live collision, or a runtime VFX.
+/// </summary>
+public sealed record WorldSiteFractureImpact(
+    string ImpactId,
+    WorldSiteCellKey Center,
+    int LocalX,
+    int LocalY,
+    int LocalZ,
+    int RadiusMicrocells);
+
+/// <summary>One C# occupancy change; FX consumers do not own excavation decisions.</summary>
+public sealed record WorldSiteFractureImpactChange(
+    WorldSiteCellKey Key,
+    int LocalX,
+    int LocalY,
+    int LocalZ,
+    WorldSiteSurfaceId BodyMaterial);
+
+/// <summary>Deterministic, exactly-once isolated C# fracture event.</summary>
+public sealed record WorldSiteFractureImpactResult(
+    string ImpactId,
+    long RevisionBefore,
+    long RevisionAfter,
+    IReadOnlyList<WorldSiteFractureImpactChange> Changes)
+{
+    public bool Duplicate { get; init; }
+}

@@ -25,6 +25,12 @@ public sealed record WorldSiteCellDelta(
 /// </summary>
 public sealed record WorldSiteStrataAppliedImpact(string ImpactId, long RevisionAfter);
 
+/// <summary>A physical block's sparse, immutable 12.5cm excavation mask at its last mutation.</summary>
+public sealed record WorldSiteCellFracture(
+    WorldSiteCellKey Key,
+    WorldSiteFractureMask Mask,
+    long Revision);
+
 /// <summary>
 /// C# source-of-truth contact height after excavation. The intact height uses
 /// AR3's continuous ground surface, with one physical stratum removed per Z drop.
@@ -37,10 +43,20 @@ public sealed record WorldSiteStrataGroundContact(
     bool Solid);
 
 /// <summary>
+/// The first physically occupied 12.5cm cube in a local XY microcolumn.
+/// This query is for isolated C# fracture review, not a Hunt collision adapter.
+/// </summary>
+public sealed record WorldSiteMicrocellContact(
+    WorldSiteCellKey Key,
+    int LocalZ,
+    WorldSiteSurfaceId? Material,
+    double FloorHeightMeters,
+    bool Solid);
+
+/// <summary>
 /// A versioned, seed/site/grid-scale-scoped snapshot of changes, not a serialized 3D world or JS state.
-/// Prototype schema v3 also persists impact identities for exactly-once replay.
-/// Older v2 snapshots contain only single-block mutations and restore with an
-/// empty impact registry; any new capture upgrades them to v3 without loss.
+/// Schema v4 adds sparse fracture masks to v3's exactly-once impact identities.
+/// Older v2/v3 saves restore without fractures and upgrade on capture.
 /// </summary>
 public sealed record WorldSiteStrataMutationSave(
     int Version,
@@ -54,6 +70,7 @@ public sealed record WorldSiteStrataMutationSave(
     IReadOnlyList<WorldSiteCellDelta> Changes)
 {
     public IReadOnlyList<WorldSiteStrataAppliedImpact> AppliedImpacts { get; init; } = [];
+    public IReadOnlyList<WorldSiteCellFracture> Fractures { get; init; } = [];
 }
 
 /// <summary>
@@ -63,15 +80,17 @@ public sealed record WorldSiteStrataMutationSave(
 /// </summary>
 public sealed class WorldSiteStrataMutationState
 {
-    public const int CurrentVersion = 3;
+    public const int CurrentVersion = 4;
 
     private readonly WorldSiteStrataGrid _baseGrid;
     private readonly Dictionary<WorldSiteCellKey, WorldSiteCellDelta> _changes = [];
+    private readonly Dictionary<WorldSiteCellKey, WorldSiteCellFracture> _fractures = [];
     private readonly Dictionary<string, long> _appliedImpacts = new(StringComparer.Ordinal);
     private long _revision;
 
     public long Revision => _revision;
     public int ChangedCellCount => _changes.Count;
+    public int FracturedCellCount => _fractures.Count;
     public int AppliedImpactCount => _appliedImpacts.Count;
     /// <summary>The immutable C# geology used by this mutation state and its render projections.</summary>
     public WorldSiteStrataGrid BaseGrid => _baseGrid;
@@ -125,8 +144,7 @@ public sealed class WorldSiteStrataMutationState
         var key = new WorldSiteCellKey(x, y, seededTop.SurfaceZ);
         // With the current contiguous, rock-backed base geology, a finite sparse set of
         // removed cells can only hide finitely many consecutive strata above solid rock.
-        while (_changes.TryGetValue(key, out var delta) &&
-               delta.Kind == WorldSiteCellMutationKind.Removed)
+        while (GetRawCell(key).IsEmpty)
         {
             key = key with { Z = checked(key.Z - 1) };
         }
@@ -159,6 +177,85 @@ public sealed class WorldSiteStrataMutationState
         return _changes.TryGetValue(key, out var delta) ? delta : null;
     }
 
+    /// <summary>Null means this physical block has no local fracture mask.</summary>
+    public WorldSiteCellFracture? FindFracture(WorldSiteCellKey key) =>
+        _fractures.TryGetValue(key, out var fracture) ? fracture : null;
+
+    /// <summary>
+    /// Remove precisely one previously present 12.5cm cube from an intact 1m block.
+    /// Whole-block damage and partial excavation deliberately cannot co-own one block
+    /// until a later single C# damage policy chooses how to combine their integrity.
+    /// The immutable mask is allocated only for modified blocks; no microcell entities.
+    /// </summary>
+    public bool TryExcavateMicrocell(WorldSiteCellKey key, int localX, int localY, int localZ)
+    {
+        _ = WorldSiteFractureGeometry.Pack(localX, localY, localZ);
+        EnsurePhysicalFractureScale();
+        var original = _baseGrid.GetCell(key.X, key.Y, key.Z);
+        if (original.IsEmpty || !original.Solid || _changes.ContainsKey(key))
+        {
+            return false;
+        }
+
+        var oldMask = _fractures.TryGetValue(key, out var previous)
+            ? previous.Mask : default;
+        if (oldMask.IsRemoved(localX, localY, localZ))
+        {
+            return false;
+        }
+
+        _revision = checked(_revision + 1);
+        _fractures[key] = new WorldSiteCellFracture(key,
+            oldMask.Remove(localX, localY, localZ), _revision);
+        return true;
+    }
+
+    /// <summary>
+    /// Resolve the actual per-microcolumn solid top, including a rock microcell
+    /// exposed through a partially fractured soil cover. The whole-block
+    /// GetGroundContact remains conservative until C# collision integration.
+    /// </summary>
+    public WorldSiteMicrocellContact GetMicrocellContact(int x, int y, int localX, int localY)
+    {
+        _ = WorldSiteFractureGeometry.Pack(localX, localY, 0);
+        EnsurePhysicalFractureScale();
+        var seeded = _baseGrid.GetCell(x, y, int.MaxValue);
+        if (x < 0 || y < 0 || x >= _baseGrid.Columns || y >= _baseGrid.Rows)
+        {
+            return new WorldSiteMicrocellContact(seeded.Key, 0, null, 0, false);
+        }
+
+        var z = seeded.SurfaceZ;
+        while (true)
+        {
+            var key = new WorldSiteCellKey(x, y, z);
+            var cell = GetRawCell(key);
+            if (cell.Solid)
+            {
+                for (var localZ = WorldSiteFractureGeometry.MicrocellsPerEdge - 1;
+                    localZ >= 0; localZ--)
+                {
+                    if (_fractures.TryGetValue(key, out var fracture) &&
+                        fracture.Mask.IsRemoved(localX, localY, localZ))
+                    {
+                        continue;
+                    }
+
+                    var material = z == seeded.SurfaceZ &&
+                        localZ == WorldSiteFractureGeometry.MicrocellsPerEdge - 1
+                            ? cell.SurfaceFinish : cell.BodyMaterial;
+                    var depth = (long)seeded.SurfaceZ - z +
+                        (double)(WorldSiteFractureGeometry.MicrocellsPerEdge - 1 - localZ) /
+                        WorldSiteFractureGeometry.MicrocellsPerEdge;
+                    return new WorldSiteMicrocellContact(key, localZ, material,
+                        seeded.SurfaceHeightMeters - depth * _baseGrid.StratumHeightMeters, true);
+                }
+            }
+
+            z = checked(z - 1);
+        }
+    }
+
     /// <summary>
     /// Apply one C#-authorized positive integer damage amount to one solid block.
     /// A future shared combat adapter decides material hardness, radial falloff and event identity.
@@ -178,7 +275,7 @@ public sealed class WorldSiteStrataMutationState
         }
 
         var baseCell = _baseGrid.GetCell(key.X, key.Y, key.Z);
-        if (baseCell.IsEmpty || !baseCell.Solid)
+        if (baseCell.IsEmpty || !baseCell.Solid || _fractures.ContainsKey(key))
         {
             return false;
         }
@@ -283,6 +380,104 @@ public sealed class WorldSiteStrataMutationState
             impact.RadiusCells, revisionBefore, _revision, changes);
     }
 
+    /// <summary>
+    /// XYZ3 isolated 3D excavation proof. Bounded sphere crosses block boundaries
+    /// at exact integer microcell coordinates. A rock block beneath an initially
+    /// occupied top block is shielded for this entire impact, even if the blast
+    /// removes soil during its own iteration. Subsequent distinct impacts can
+    /// reach rock through an actually excavated local microcolumn. No Hunt hook.
+    /// </summary>
+    public WorldSiteFractureImpactResult ApplyFractureImpact(WorldSiteFractureImpact impact)
+    {
+        ArgumentNullException.ThrowIfNull(impact);
+        if (string.IsNullOrWhiteSpace(impact.ImpactId) || impact.ImpactId.Length > 128)
+        {
+            throw new ArgumentException("A fracture impact needs a caller-owned identity.", nameof(impact));
+        }
+
+        _ = WorldSiteFractureGeometry.Pack(impact.LocalX, impact.LocalY, impact.LocalZ);
+        EnsurePhysicalFractureScale();
+        // At most 25^3 candidates / ~7,200 actual cubes; no unbounded explosion volume.
+        if (impact.RadiusMicrocells is < 0 or > 12)
+        {
+            throw new ArgumentOutOfRangeException(nameof(impact));
+        }
+
+        if (_appliedImpacts.ContainsKey(impact.ImpactId))
+        {
+            return new WorldSiteFractureImpactResult(impact.ImpactId, _revision, _revision, [])
+                { Duplicate = true };
+        }
+
+        var edge = WorldSiteFractureGeometry.MicrocellsPerEdge;
+        var cx = (long)impact.Center.X * edge + impact.LocalX;
+        var cy = (long)impact.Center.Y * edge + impact.LocalY;
+        var cz = (long)impact.Center.Z * edge + impact.LocalZ;
+        var radius = impact.RadiusMicrocells;
+        var radiusSquared = radius * radius;
+
+        // Capture the *pre-impact* top physical block per microcolumn, so this
+        // blast can excavate multiple soil sublayers but cannot tunnel through
+        // fresh soil holes and immediately damage protected rock in one event.
+        var originalSurfaceZ = new Dictionary<(long X, long Y), int>();
+        for (var dy = -radius; dy <= radius; dy++)
+        for (var dx = -radius; dx <= radius; dx++)
+        {
+            if (dx * dx + dy * dy > radiusSquared)
+            {
+                continue;
+            }
+
+            var mx = cx + dx;
+            var my = cy + dy;
+            if (!TryUnpackGlobalMicrocell(mx, out var x, out var localX) ||
+                !TryUnpackGlobalMicrocell(my, out var y, out var localY) ||
+                x < 0 || y < 0 || x >= _baseGrid.Columns || y >= _baseGrid.Rows)
+            {
+                continue;
+            }
+
+            originalSurfaceZ[(mx, my)] = GetMicrocellContact(x, y, localX, localY).Key.Z;
+        }
+
+        var revisionBefore = _revision;
+        var changes = new List<WorldSiteFractureImpactChange>();
+        // Fixed Z/Y/X order is portable and independent of dictionary enumeration.
+        for (var dz = radius; dz >= -radius; dz--)
+        for (var dy = -radius; dy <= radius; dy++)
+        for (var dx = -radius; dx <= radius; dx++)
+        {
+            if (dx * dx + dy * dy + dz * dz > radiusSquared)
+            {
+                continue;
+            }
+
+            var mx = cx + dx;
+            var my = cy + dy;
+            if (!originalSurfaceZ.TryGetValue((mx, my), out var uncoveredTopZ) ||
+                !TryUnpackGlobalMicrocell(mx, out var x, out var localX) ||
+                !TryUnpackGlobalMicrocell(my, out var y, out var localY) ||
+                !TryUnpackGlobalMicrocell(cz + dz, out var z, out var localZ) ||
+                z < uncoveredTopZ)
+            {
+                continue;
+            }
+
+            var key = new WorldSiteCellKey(x, y, z);
+            var body = _baseGrid.GetCell(x, y, z).BodyMaterial;
+            if (body is not { } material ||
+                !TryExcavateMicrocell(key, localX, localY, localZ))
+            {
+                continue;
+            }
+
+            changes.Add(new WorldSiteFractureImpactChange(key, localX, localY, localZ, material));
+        }
+
+        _appliedImpacts.Add(impact.ImpactId, _revision);
+        return new WorldSiteFractureImpactResult(impact.ImpactId, revisionBefore, _revision, changes);
+    }
+
     /// <summary>Capture a stable, ordered copy of only changed cells, suitable for C# save/replay.</summary>
     public WorldSiteStrataMutationSave CaptureSave()
     {
@@ -295,6 +490,7 @@ public sealed class WorldSiteStrataMutationState
                 .OrderBy(entry => entry.RevisionAfter)
                 .ThenBy(entry => entry.ImpactId, StringComparer.Ordinal)
                 .ToArray(),
+            Fractures = _fractures.Values.OrderBy(fracture => fracture.Revision).ToArray(),
         };
     }
 
@@ -308,7 +504,7 @@ public sealed class WorldSiteStrataMutationState
     {
         ArgumentNullException.ThrowIfNull(baseGrid);
         ArgumentNullException.ThrowIfNull(save);
-        if (save.Version is not (2 or CurrentVersion) ||
+        if (save.Version is not (2 or 3 or CurrentVersion) ||
             save.WorldSeed != baseGrid.WorldSeed ||
             !string.Equals(save.SiteId, baseGrid.SiteId, StringComparison.Ordinal) ||
             save.CellWidthMeters != baseGrid.CellWidthMeters ||
@@ -316,8 +512,9 @@ public sealed class WorldSiteStrataMutationState
             save.Columns != baseGrid.Columns ||
             save.Rows != baseGrid.Rows ||
             save.Revision < 0 ||
-            save.Changes is null || save.AppliedImpacts is null ||
-            (save.Version == 2 && save.AppliedImpacts.Count != 0))
+            save.Changes is null || save.AppliedImpacts is null || save.Fractures is null ||
+            (save.Version == 2 && save.AppliedImpacts.Count != 0) ||
+            (save.Version < CurrentVersion && save.Fractures.Count != 0))
         {
             throw new ArgumentException("The mutation save does not match this C# world site.", nameof(save));
         }
@@ -343,12 +540,37 @@ public sealed class WorldSiteStrataMutationState
             }
         }
 
-        if (save.Changes.Count > 0 && !revisions.Contains(save.Revision))
+        if (save.Fractures.Count > 0 &&
+            (baseGrid.CellWidthMeters != WorldSiteStrataGrid.BlockEdgeMeters ||
+             baseGrid.StratumHeightMeters != WorldSiteStrataGrid.BlockEdgeMeters))
+        {
+            throw new ArgumentException("Fracture masks require physical 1m C# blocks.", nameof(save));
+        }
+
+        foreach (var fracture in save.Fractures)
+        {
+            if (fracture is null || fracture.Revision <= 0 ||
+                fracture.Revision > save.Revision || !revisions.Add(fracture.Revision) ||
+                fracture.Mask.IsEmpty ||
+                state._changes.ContainsKey(fracture.Key))
+            {
+                throw new ArgumentException("The mutation save contains an invalid fracture.", nameof(save));
+            }
+
+            var baseCell = baseGrid.GetCell(fracture.Key.X, fracture.Key.Y, fracture.Key.Z);
+            if (baseCell.IsEmpty || !baseCell.Solid ||
+                !state._fractures.TryAdd(fracture.Key, fracture))
+            {
+                throw new ArgumentException("The mutation save contains an unknown or duplicate fracture.", nameof(save));
+            }
+        }
+
+        if (revisions.Count > 0 && !revisions.Contains(save.Revision))
         {
             throw new ArgumentException("The mutation revision does not match its final block change.", nameof(save));
         }
 
-        if (save.Changes.Count == 0 && save.Revision != 0)
+        if (revisions.Count == 0 && save.Revision != 0)
         {
             throw new ArgumentException("An empty mutation save cannot carry a nonzero revision.", nameof(save));
         }
@@ -371,8 +593,9 @@ public sealed class WorldSiteStrataMutationState
     private WorldSiteStrataCell GetRawCell(WorldSiteCellKey key)
     {
         var original = _baseGrid.GetCell(key.X, key.Y, key.Z);
-        if (_changes.TryGetValue(key, out var delta) &&
-            delta.Kind == WorldSiteCellMutationKind.Removed)
+        if ((_changes.TryGetValue(key, out var delta) &&
+             delta.Kind == WorldSiteCellMutationKind.Removed) ||
+            (_fractures.TryGetValue(key, out var fracture) && fracture.Mask.IsFullyExcavated))
         {
             return original with
             {
@@ -383,5 +606,36 @@ public sealed class WorldSiteStrataMutationState
         }
 
         return original;
+    }
+
+    private void EnsurePhysicalFractureScale()
+    {
+        if (_baseGrid.CellWidthMeters != WorldSiteStrataGrid.BlockEdgeMeters ||
+            _baseGrid.StratumHeightMeters != WorldSiteStrataGrid.BlockEdgeMeters)
+        {
+            throw new InvalidOperationException("12.5cm fracture cells require physical 1m XYZ blocks.");
+        }
+    }
+
+    private static bool TryUnpackGlobalMicrocell(long global, out int cell, out int local)
+    {
+        var quotient = Math.DivRem(global, WorldSiteFractureGeometry.MicrocellsPerEdge,
+            out var remainder);
+        if (remainder < 0)
+        {
+            quotient--;
+            remainder += WorldSiteFractureGeometry.MicrocellsPerEdge;
+        }
+
+        if (quotient < int.MinValue || quotient > int.MaxValue)
+        {
+            cell = 0;
+            local = 0;
+            return false;
+        }
+
+        cell = (int)quotient;
+        local = (int)remainder;
+        return true;
     }
 }
