@@ -38,6 +38,18 @@ import { drawBlackIce, drawSplinterBloom, drawIceLance, drawPlayerChill, drawAva
 
 const arenas = new WeakMap();
 
+// One shared engine for both authored scenes and the textureless default Hunt.
+// The actual C# snapshot identifies the greybox; labs and explicit legacy reviews
+// keep their existing opt-in GPU behavior. A failed GPU retains Canvas night fallback.
+function requestSharedGpuWorld(state, quality = 'mobile') {
+    if (!state.active || state.gpuWorld || state.gpuPending || state.gpuError) return;
+    state.gpuPending = true;
+    void import('./arena-gpu-world.js').then(({ HuntGpuWorld }) => {
+        if (state.active) state.gpuWorld = new HuntGpuWorld({ quality });
+    }).catch(error => { state.gpuError = String(error); })
+        .finally(() => { state.gpuPending = false; });
+}
+
 export function initializeArena(canvas, dotNetReference) {
     disposeArena(canvas);
     // Atlases stream in; until they decode, every layer uses its code-painted fallback.
@@ -62,9 +74,8 @@ export function initializeArena(canvas, dotNetReference) {
     state.detachInput = attachArenaInput(state);
     const params = new URLSearchParams(location.search);
     state.lighting01 = lighting01Requested(params);
-    // For G4 testing, remove authored ground paintings and procedural dressing.
-    // A uniform neutral receiver exposes actual lighting/shadow defects.
-    // Production and the ordinary Canvas game retain their existing terrain.
+    // Optional legacy review presets remain independent of the default greybox;
+    // the normal grey receiver will be illuminated by this same shared engine.
     state.g4FlatGround = shouldUseG4NeutralGround(params, params.get('arenaGpu') === '1');
     state.g4StageFrames = shouldStageHuntGpuReviewFrame(params, params.get('arenaGpu') === '1');
     if (params.get('g4Review') === '1') {
@@ -72,16 +83,8 @@ export function initializeArena(canvas, dotNetReference) {
         state.g4Review = mountG4DeviceReview(canvas, () => state.gpuWorld?.diagnostics(),
             gpuRequested ? 'gpu' : 'canvas', gpuRequested ? params.get('gpuQuality') ?? 'balanced' : null);
     }
-    if (params.get('arenaGpu') === '1') {
-        const quality = new URLSearchParams(location.search).get('gpuQuality') ?? 'balanced';
-        void import('./arena-gpu-world.js').then(({ HuntGpuWorld }) => {
-            if (!state.active) return;
-            state.gpuWorld = new HuntGpuWorld({ quality });
-            // The G4 GPU renderer owns the world and its authoritative C# light
-            // emitters. Fireball artwork stays in the existing directional
-            // 2D projectile pass until an oriented GPU cutout passes 360° QC.
-        }).catch(error => { state.gpuError = String(error); });
-    }
+    if (params.get('arenaGpu') === '1')
+        requestSharedGpuWorld(state, params.get('gpuQuality') ?? 'balanced');
     const now = performance.now();
     state.lastSimulationTimestamp = now;
     state.performanceWindowStarted = now;
@@ -138,6 +141,9 @@ export function readArenaDiagnostics(canvas) {
             : { error: state.gpuError ?? null },
         hollowFractureGpuEmitters: state.fractureGpuEmitters ?? [],
         greybox: state.latestSnapshot?.environment?.greybox ?? null,
+        greyboxLighting: state.latestSnapshot?.environment?.greybox
+            ? state.gpuWorld ? 'shared-gpu' : state.gpuError ? 'canvas-fallback' : 'starting'
+            : null,
         wetForestGround: state.latestSnapshot?.environment?.wetForest
             ? state.g4FlatGround
                 ? { status: 'flat-colors', source: 'C# recipe', variant: null }
@@ -267,6 +273,8 @@ function startSimulationFrame(state, timestamp, rect) {
             updatePlayerDanger(state.playerDanger, snapshot, performance.now());
             if (snapshot.paused) state.resetInput?.();
             state.latestSnapshot = snapshot;
+            if (snapshot.environment?.greybox && snapshot.lighting)
+                requestSharedGpuWorld(state, 'mobile');
             state.simulationFrameCount++;
             state.simulationMillisecondsTotal += snapshot.simulationMilliseconds ?? 0;
             state.bridgeMillisecondsTotal += performance.now() - bridgeStarted;
@@ -321,7 +329,7 @@ function drawWaiting(state, width, height) {
 
 function draw(state, snapshot, width, height) {
     const greybox = Boolean(snapshot.environment?.greybox);
-    let gpu = !greybox && snapshot.lighting && state.gpuWorld;
+    let gpu = snapshot.lighting && state.gpuWorld;
     // Safari already retains the WebGL source buffer through HuntGpuWorld.
     // The extra full-size Canvas stage adds expensive mobile memory bandwidth.
     // Retain it only as a diagnostic A/B switch; the default draws synchronously
@@ -363,8 +371,8 @@ function draw(state, snapshot, width, height) {
     ctx.save();
     ctx.translate(-camera.x, -camera.y);
     if (greybox) {
-        // A texture-free, level one-metre XYZ foundation. No terrain painter, walls,
-        // reflected scenery, authored surface atlas or Canvas/GPU night overlay.
+        // Level one-metre grey receiver. No material atlas or walls; the same
+        // authoritative C# lights shade it and its actors through HuntGpuWorld.
         drawGreyboxGround(ctx, snapshot.environment.greybox, worldWidth, worldHeight);
     } else {
         if (!drawArenaEnvironment(ctx, snapshot.environment, worldWidth, worldHeight, visualSeconds, null,
@@ -521,7 +529,7 @@ function draw(state, snapshot, width, height) {
     // AR0 authoring diagnostics must expose the actual C# material classes at mobile scale.
     // Skip only the PRESENTATION night veil for the explicit semantic debug mode. No new
     // light solver, no authority changes, and normal Hunts retain exactly the same night.
-    if (!greybox && !gpu && !(semanticSiteModeEnabled() && snapshot.environment?.geography?.version === 1)) {
+    if (!gpu && !(semanticSiteModeEnabled() && snapshot.environment?.geography?.version === 1)) {
         const realFires = createWetForestFirelightPlan(snapshot.environment, worldWidth, worldHeight);
         const nightSources = gothicNightLightSources(snapshot, spellLights, worldWidth, worldHeight, realFires);
         drawGothicNight(ctx, gothicNightPlan(snapshot.player, nightSources, lightViewport), state.nightMask);
