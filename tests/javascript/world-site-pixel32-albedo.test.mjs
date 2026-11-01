@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { PIXEL32_ATLAS, composeWorldSitePixel32Albedo } from
     '../../src/Wyrmforge.Presentation.Web/wwwroot/js/world-site-pixel32-albedo.js';
 
@@ -32,6 +34,29 @@ function atlas() {
 
 const pixel = (result, x, y) => [...result.data.slice((y * result.width + x) * 4,
     (y * result.width + x) * 4 + 4)];
+
+test('AR4-B source32 atlas has its exact #429 blob fingerprint, dimensions and original frame padding', () => {
+    const base = '../../src/Wyrmforge.Presentation.Web/wwwroot/art/terrain/wf32/prototype32/';
+    const png = readFileSync(new URL(base + 'atlas.png', import.meta.url));
+    const manifest = JSON.parse(readFileSync(new URL(base + 'manifest.json', import.meta.url), 'utf8'));
+    const gitSha = createHash('sha1').update(`blob ${png.length}\0`).update(png).digest('hex');
+    assert.equal(gitSha, '99924850581f7d5218a25ba0b59553aa438c866e');
+    assert.deepEqual([...png.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
+    assert.equal(png.readUInt32BE(16), PIXEL32_ATLAS.width);
+    assert.equal(png.readUInt32BE(20), PIXEL32_ATLAS.height,
+        'the bottom 1px atlas padding must not be trimmed');
+    assert.equal(manifest.version, 'wf-original-32.v2');
+    assert.equal(manifest.status, 'prototype-only');
+    assert.equal(manifest.tilePixels, 32);
+    assert.equal(Object.keys(manifest.frames).length, 22);
+    for (const frame of Object.values(manifest.frames)) {
+        assert.equal(frame.w, 32);
+        assert.equal(frame.h, 32);
+        assert.ok(frame.x >= 1 && frame.y >= 1);
+        assert.ok(frame.x + frame.w < PIXEL32_ATLAS.width);
+        assert.ok(frame.y + frame.h < PIXEL32_ATLAS.height);
+    }
+});
 
 test('AR4-B candidate uses exact original 32px source pixels at 1:1 world phase, without RGB blur', () => {
     for (const [material, red] of [['Soil', 30], ['Grass', 60], ['Mud', 90]]) {

@@ -4,7 +4,7 @@
 import { WORLD_SITE_MATERIALS, normalizeWorldSiteMaterialWeights,
     worldSiteSourceBindings } from './world-site-material-binding.js';
 
-export const PIXEL32_ATLAS = Object.freeze({ width: 232, height: 132, tile: 32, cluster: 4,
+export const PIXEL32_ATLAS = Object.freeze({ width: 232, height: 133, tile: 32, cluster: 4,
     revision: 'wf-original-32.v2.provisional-comparison' });
 
 // Exact frame positions from the source-art PR #429 manifest (1px padding in its atlas).
