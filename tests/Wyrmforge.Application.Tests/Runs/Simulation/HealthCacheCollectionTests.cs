@@ -16,6 +16,9 @@ public sealed class HealthCacheCollectionTests
     {
         var random = new FirstRandomSource();
         var simulation = new RunSimulation(new HashSet<string>(), new LevelChoiceService(random), random);
+        // Historical supply-collection behavior is exercised only in its explicit
+        // legacy preview; default Hunts intentionally have no environment caches.
+        simulation.EnableLegacyArenaPreview();
         Assert.IsTrue(simulation.ChooseMapNode(simulation.AvailableMapNodes.First(node => node.Type == WyrmrealmNodeType.Combat).Id));
         var arena = Field<ArenaEnvironmentState>(simulation, "arenaEnvironment");
         var player = Field<PlayerState>(simulation, "player");

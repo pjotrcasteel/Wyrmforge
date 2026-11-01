@@ -170,10 +170,10 @@ public sealed class BellWardenEncounterTests
         Invoke(simulation, "UpdateSpawn", 0.05d, 390d, 700d);
         Assert.IsTrue(simulation.PendingMapChoice || Field<bool>(simulation, "trailExitPending"), "The road opens once the Warden falls.");
         Assert.IsTrue(simulation.AvailableMapNodes.All(node => node.Type == WyrmrealmNodeType.Dragon) || Field<bool>(simulation, "trailExitPending"));
-        // Regression: the director never ran on this road, so the courtyard gates must open with the Warden's fall.
-        var barriers = simulation.CreateSnapshot().Environment?.Barriers ?? [];
-        Assert.IsNotEmpty(barriers.Where(barrier => barrier.Kind == "gate"));
-        Assert.IsTrue(barriers.Where(barrier => barrier.Kind == "gate").All(barrier => barrier.Open), "Every crossing opens toward the exit.");
+        // The default one-metre greybox has no courtyard walls at any encounter phase.
+        // The same Warden victory must still expose the real exit/route progression.
+        Assert.IsEmpty(simulation.CreateSnapshot().Environment?.Barriers ?? []);
+        Assert.IsTrue(simulation.PendingMapChoice || simulation.TrailExitPending);
     }
 
     [TestMethod]

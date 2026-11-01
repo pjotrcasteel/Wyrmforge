@@ -23,6 +23,7 @@ public sealed class ArenaEnvironmentState
     private readonly bool preLair;
     private readonly bool generatorPreview;
     private readonly bool worldFirstGeography;
+    private readonly bool greybox;
     private readonly HuntArenaGenerator.WetForestRecipe? wetForest;
     private WorldSiteGeography? geography;
     private EncounterPhase phase = EncounterPhase.Pressure;
@@ -48,18 +49,19 @@ public sealed class ArenaEnvironmentState
         public double Health { get; set; } = spec.Health;
     }
 
-    private ArenaEnvironmentState(int seed, string biome, string element, int stage, string landmark, string district, string habitat, bool preLair, bool generatorPreview, bool worldFirstGeography)
+    private ArenaEnvironmentState(int seed, string biome, string element, int stage, string landmark, string district, string habitat, bool preLair, bool generatorPreview, bool worldFirstGeography, bool greybox)
     {
         this.habitat = habitat;
         this.preLair = preLair;
         this.generatorPreview = generatorPreview;
-        this.worldFirstGeography = worldFirstGeography;
+        this.greybox = greybox;
+        this.worldFirstGeography = worldFirstGeography && !greybox;
         // Preserve the first Fire Hunt's Old Road identity and combat gates,
         // but give its floor the same original source-backed woodland materials
         // as later Wet Forest encounters. Old Road Lab previews are unchanged.
         var usesForestGround = habitat == nameof(WyrmrealmHabitat.WetForest) ||
             (habitat == nameof(WyrmrealmHabitat.Outskirts) && !generatorPreview);
-        wetForest = usesForestGround ? HuntArenaGenerator.GenerateWetForest(seed) : null;
+        wetForest = !greybox && usesForestGround ? HuntArenaGenerator.GenerateWetForest(seed) : null;
         this.seed = seed;
         this.biome = biome;
         this.element = element;
@@ -69,7 +71,7 @@ public sealed class ArenaEnvironmentState
     }
 
     public static ArenaEnvironmentState Create(int mapSeed, WyrmrealmMapNode node, bool generatorPreview = false, SpellSchool? regionSchool = null, bool worldFirstGeography = false,
-        IReadOnlySet<string>? claimedDiscoveries = null)
+        IReadOnlySet<string>? claimedDiscoveries = null, bool greybox = false)
     {
         ArgumentNullException.ThrowIfNull(node);
         var stage = node.Stage;
@@ -87,11 +89,13 @@ public sealed class ArenaEnvironmentState
         var districtIndex = ((mapSeed & int.MaxValue) % 3 + stage + node.Lane + (node.Site?.RoadIndex ?? 0)) % 3;
         var district = new[] { "causeway", "sanctuary", "rift" }[districtIndex];
         var habitat = node.Habitat.ToString();
-        var environment = new ArenaEnvironmentState(seed, biome, element, stage, landmark, district, habitat, node.PreLair, generatorPreview, worldFirstGeography)
+        var environment = new ArenaEnvironmentState(seed, biome, element, stage, landmark, district, habitat, node.PreLair, generatorPreview, worldFirstGeography, greybox)
         {
             geography = node.Geography,
         };
-        if (node.Type != WyrmrealmNodeType.Combat) return environment;
+        // The live one-metre greybox has no authored scenery, supplies, solid crossings,
+        // or gameplay colliders. Keep node identity and the separate trail-exit system intact.
+        if (greybox || node.Type != WyrmrealmNodeType.Combat) return environment;
 
         // The old fixed gated encounter remains part of current Hunts ONLY.
         // Arena Lab previews have natural continuous ground: no synthetic cross-walls or wave checkpoints.
@@ -191,6 +195,7 @@ public sealed class ArenaEnvironmentState
     {
         Corruption = HuntArenaGenerator.WyrmInfluence(stage, generatorPreview && preLair),
         GeneratorPreview = generatorPreview,
+        Greybox = greybox ? new ArenaGreyboxGridRenderSnapshot(1, 32, 8, 0, 1) : null,
         WetForest = wetForest,
         // The normal Hunt needs AR0 site identity and port topology, not dozens of
         // inactive geometry vertices serialized on every mobile render frame.

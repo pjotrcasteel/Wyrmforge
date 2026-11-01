@@ -8,6 +8,7 @@ import { attachArenaInput, getArenaMovement, getArenaAim, isArenaStickAim, getAr
 import { resolveTargetIndicator, presentTargetSigil, drawTargetIndicator, preloadTargetSigilArt, targetSelectionLightEmitter, targetSelectionCanvasLight, actorLightsWithoutSigilOverlay } from './arena-target-indicator.js?v=20261028-feet-centered-v3';
 import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, drawArenaCloisterElevation, semanticSiteModeEnabled } from './arena-environment.js?v=20261031-ar1-highlands-v1';
 import { drawAr1GeographyReview } from './arena-ar1-geography-review.js?v=20261031-ar1-site-detail-v1';
+import { drawGreyboxGround } from './arena-greybox-ground.js';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
 import { drawRecoveryGuide } from './arena-recovery.js';
@@ -37,6 +38,18 @@ import { drawBlackIce, drawSplinterBloom, drawIceLance, drawPlayerChill, drawAva
 
 const arenas = new WeakMap();
 
+// One shared engine for both authored scenes and the textureless default Hunt.
+// The actual C# snapshot identifies the greybox; labs and explicit legacy reviews
+// keep their existing opt-in GPU behavior. A failed GPU retains Canvas night fallback.
+function requestSharedGpuWorld(state, quality = 'mobile') {
+    if (!state.active || state.gpuWorld || state.gpuPending || state.gpuError) return;
+    state.gpuPending = true;
+    void import('./arena-gpu-world.js').then(({ HuntGpuWorld }) => {
+        if (state.active) state.gpuWorld = new HuntGpuWorld({ quality });
+    }).catch(error => { state.gpuError = String(error); })
+        .finally(() => { state.gpuPending = false; });
+}
+
 export function initializeArena(canvas, dotNetReference) {
     disposeArena(canvas);
     // Atlases stream in; until they decode, every layer uses its code-painted fallback.
@@ -61,9 +74,8 @@ export function initializeArena(canvas, dotNetReference) {
     state.detachInput = attachArenaInput(state);
     const params = new URLSearchParams(location.search);
     state.lighting01 = lighting01Requested(params);
-    // For G4 testing, remove authored ground paintings and procedural dressing.
-    // A uniform neutral receiver exposes actual lighting/shadow defects.
-    // Production and the ordinary Canvas game retain their existing terrain.
+    // Optional legacy review presets remain independent of the default greybox;
+    // the normal grey receiver will be illuminated by this same shared engine.
     state.g4FlatGround = shouldUseG4NeutralGround(params, params.get('arenaGpu') === '1');
     state.g4StageFrames = shouldStageHuntGpuReviewFrame(params, params.get('arenaGpu') === '1');
     if (params.get('g4Review') === '1') {
@@ -71,16 +83,8 @@ export function initializeArena(canvas, dotNetReference) {
         state.g4Review = mountG4DeviceReview(canvas, () => state.gpuWorld?.diagnostics(),
             gpuRequested ? 'gpu' : 'canvas', gpuRequested ? params.get('gpuQuality') ?? 'balanced' : null);
     }
-    if (params.get('arenaGpu') === '1') {
-        const quality = new URLSearchParams(location.search).get('gpuQuality') ?? 'balanced';
-        void import('./arena-gpu-world.js').then(({ HuntGpuWorld }) => {
-            if (!state.active) return;
-            state.gpuWorld = new HuntGpuWorld({ quality });
-            // The G4 GPU renderer owns the world and its authoritative C# light
-            // emitters. Fireball artwork stays in the existing directional
-            // 2D projectile pass until an oriented GPU cutout passes 360° QC.
-        }).catch(error => { state.gpuError = String(error); });
-    }
+    if (params.get('arenaGpu') === '1')
+        requestSharedGpuWorld(state, params.get('gpuQuality') ?? 'balanced');
     const now = performance.now();
     state.lastSimulationTimestamp = now;
     state.performanceWindowStarted = now;
@@ -136,11 +140,16 @@ export function readArenaDiagnostics(canvas) {
             ? { ...state.gpuWorld.diagnostics(), scratchPool: state.gpuScratchPool?.diagnostics() ?? null }
             : { error: state.gpuError ?? null },
         hollowFractureGpuEmitters: state.fractureGpuEmitters ?? [],
+        greybox: state.latestSnapshot?.environment?.greybox ?? null,
+        greyboxLighting: state.latestSnapshot?.environment?.greybox
+            ? state.gpuWorld ? 'shared-gpu' : state.gpuError ? 'canvas-fallback' : 'starting'
+            : null,
         wetForestGround: state.latestSnapshot?.environment?.wetForest
             ? state.g4FlatGround
                 ? { status: 'flat-colors', source: 'C# recipe', variant: null }
                 : liveWetForestMaterialDiagnostics(state.latestSnapshot.environment.seed) : null,
-        terrainPresentation: state.g4FlatGround ? 'neutral-grey' : 'painted',
+        terrainPresentation: state.latestSnapshot?.environment?.greybox
+            ? 'one-meter-greybox' : state.g4FlatGround ? 'neutral-grey' : 'painted',
         framePresentation: state.g4StageFrames ? 'staged' : 'direct',
         lighting: { mode: 'night', darkness: GOTHIC_NIGHT.darkness, source: 'authoritative-csharp-snapshot' },
     };
@@ -264,6 +273,8 @@ function startSimulationFrame(state, timestamp, rect) {
             updatePlayerDanger(state.playerDanger, snapshot, performance.now());
             if (snapshot.paused) state.resetInput?.();
             state.latestSnapshot = snapshot;
+            if (snapshot.environment?.greybox && snapshot.lighting)
+                requestSharedGpuWorld(state, 'mobile');
             state.simulationFrameCount++;
             state.simulationMillisecondsTotal += snapshot.simulationMilliseconds ?? 0;
             state.bridgeMillisecondsTotal += performance.now() - bridgeStarted;
@@ -317,6 +328,7 @@ function drawWaiting(state, width, height) {
 }
 
 function draw(state, snapshot, width, height) {
+    const greybox = Boolean(snapshot.environment?.greybox);
     let gpu = snapshot.lighting && state.gpuWorld;
     // Safari already retains the WebGL source buffer through HuntGpuWorld.
     // The extra full-size Canvas stage adds expensive mobile memory bandwidth.
@@ -358,18 +370,22 @@ function draw(state, snapshot, width, height) {
     ctx.clearRect(0, 0, width, height);
     ctx.save();
     ctx.translate(-camera.x, -camera.y);
-    if (!drawArenaEnvironment(ctx, snapshot.environment, worldWidth, worldHeight, visualSeconds, null,
-        gpu ? 'gpu' : 'canvas', state.g4FlatGround)) {
-        ctx.fillStyle = '#14111b';
-        ctx.fillRect(0, 0, worldWidth, worldHeight);
-        drawGrid(ctx, worldWidth, worldHeight);
+    if (greybox) {
+        // Level one-metre grey receiver. No material atlas or walls; the same
+        // authoritative C# lights shade it and its actors through HuntGpuWorld.
+        drawGreyboxGround(ctx, snapshot.environment.greybox, worldWidth, worldHeight);
+    } else {
+        if (!drawArenaEnvironment(ctx, snapshot.environment, worldWidth, worldHeight, visualSeconds, null,
+            gpu ? 'gpu' : 'canvas', state.g4FlatGround)) {
+            ctx.fillStyle = '#14111b';
+            ctx.fillRect(0, 0, worldWidth, worldHeight);
+            drawGrid(ctx, worldWidth, worldHeight);
+        }
+        if (snapshot.hunt && !state.g4FlatGround && !gpu) drawHuntArena(ctx, snapshot.hunt, worldWidth, worldHeight);
+        if (!gpu) drawSpellLightSpill(ctx, spellLights, lightViewport, 'terrain');
+        drawArenaCloisterReflections(ctx, snapshot.environment, worldWidth, worldHeight,
+            spellLights, visualSeconds, state.reducedMotion.matches, state.g4FlatGround, gpu);
     }
-    if (snapshot.hunt && !state.g4FlatGround && !gpu) drawHuntArena(ctx, snapshot.hunt, worldWidth, worldHeight);
-    // World-space diffuse spell spill reaches actual masonry, terrain and the ground fog.
-    if (!gpu) drawSpellLightSpill(ctx, spellLights, lightViewport, 'terrain');
-    // Actual spell sources streak across nearby cloister water, not unrelated UI bloom.
-    drawArenaCloisterReflections(ctx, snapshot.environment, worldWidth, worldHeight,
-        spellLights, visualSeconds, state.reducedMotion.matches, state.g4FlatGround, gpu);
     drawArenaExit(ctx, snapshot.exit, visualSeconds);
     // Same physical outgoing ports the C# simulation accepts after a cleared AR1 trail.
     for (const port of snapshot.exitPorts ?? []) drawArenaExit(ctx, port, visualSeconds);
@@ -426,7 +442,7 @@ function draw(state, snapshot, width, height) {
         ...(state.ashfang.death ? [{kind:'dragonDeath',depth:state.ashfang.death.y}] : []),
         ...snapshot.enemies.map(enemy => ({ kind: 'enemy', depth: enemy.y + (enemy.radius || 0), enemy })),
         { kind: 'mage', depth: snapshot.player.y + (snapshot.player.radius || 0) },
-        ...getArenaCloisterElevations(snapshot.environment, worldWidth, worldHeight, visualSeconds, null, state.g4FlatGround, gpu),
+        ...(greybox ? [] : getArenaCloisterElevations(snapshot.environment, worldWidth, worldHeight, visualSeconds, null, state.g4FlatGround, gpu)),
     ];
     if (gpu) gpu.begin(ctx, camera, width, height);
     state.lighting01FixtureCount = gpu && state.lighting01
@@ -584,7 +600,7 @@ function draw(state, snapshot, width, height) {
     // Draw navigation above the world but under the HUD. The arrow is not a touch target.
     drawExitGuide(ctx, snapshot.exit, camera, width, height);
     // Opt-in map context is presented on the real Hunt canvas. Default play is untouched.
-    if (location.search.includes('ar1Review=1') &&
+    if (!greybox && location.search.includes('ar1Review=1') &&
         drawAr1GeographyReview(ctx, snapshot.environment?.geography,
             snapshot.environment?.geographyActive === true, snapshot.player, camera, width, height)) {
         globalThis.__wyrmforgeAr1Review = {
