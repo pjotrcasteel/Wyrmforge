@@ -60,8 +60,13 @@ Known G5 limitations:
   per-pose native 32px materials and sprite/atlas parity remain G7/G9 work.
 - Provisional torch art lacks a dedicated emissive mask; WF32 will replace it
   with authored pixel albedo/emissive/normal/roughness channels.
-- Decorative fixture shadows are deliberately disabled to avoid a giant
-  inaccurate wedge. Full height-aware terrain and caster accuracy are G6/G7.
+- Decorative fixture shadows are deliberately disabled (`CastsShadows: false`) to avoid
+  a giant inaccurate wedge. **Owner feedback, 1 November 2026:** the fixed Wet Forest torch
+  visibly lights nearby scenery but makes no cast shadows. This is accepted only as a
+  Lighting 0.1 limitation, **not** as the target behavior. G6's first acceptance slice
+  requires fixed torch **and** moving Fireball shadows using the same height-aware
+  caster/receiver pipeline and visibly distinct emitter profiles; G7 refines per-pose,
+  foliage and full-scene caster fidelity. See the [G6 acceptance gate](canon/roadmap.md).
 - Accurate scenery reflections, physically coherent wetness and final mobile
   memory/thermal budgets are G8/G9. iOS/Android hardware proof and production
   default GPU adoption remain G10.
