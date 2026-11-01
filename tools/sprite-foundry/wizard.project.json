@@ -1,0 +1,11 @@
+{
+  "schema": "wyrmforge.sprite-foundry.v1",
+  "character": "grey-wizard",
+  "cell": [64, 80],
+  "feetAnchor": [32, 74],
+  "directions": ["S", "SE", "E", "NE", "N", "NW", "W", "SW"],
+  "clips": {
+    "idle": {"frames": 1, "fps": 8},
+    "walk": {"frames": 16, "fps": 16}
+  }
+}
