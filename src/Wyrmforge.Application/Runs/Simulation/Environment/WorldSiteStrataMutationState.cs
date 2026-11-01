@@ -19,11 +19,18 @@ public sealed record WorldSiteCellDelta(
     int RemainingIntegrity,
     long Revision);
 
-/// <summary>A versioned, seed/site-scoped snapshot of changes, not a serialized 3D world or JS state.</summary>
+/// <summary>
+/// A versioned, seed/site/grid-scale-scoped snapshot of changes, not a serialized 3D world or JS state.
+/// Prototype schema v2 prevents applying tombstones to a later resized XY/Z physical grid.
+/// </summary>
 public sealed record WorldSiteStrataMutationSave(
     int Version,
     int WorldSeed,
     string SiteId,
+    double CellWidthMeters,
+    double StratumHeightMeters,
+    int Columns,
+    int Rows,
     long Revision,
     IReadOnlyList<WorldSiteCellDelta> Changes);
 
@@ -34,7 +41,7 @@ public sealed record WorldSiteStrataMutationSave(
 /// </summary>
 public sealed class WorldSiteStrataMutationState
 {
-    public const int CurrentVersion = 1;
+    public const int CurrentVersion = 2;
 
     private readonly WorldSiteStrataGrid _baseGrid;
     private readonly Dictionary<WorldSiteCellKey, WorldSiteCellDelta> _changes = [];
@@ -127,12 +134,14 @@ public sealed class WorldSiteStrataMutationState
     public WorldSiteStrataMutationSave CaptureSave()
     {
         return new WorldSiteStrataMutationSave(CurrentVersion, _baseGrid.WorldSeed, _baseGrid.SiteId,
+            _baseGrid.CellWidthMeters, _baseGrid.StratumHeightMeters, _baseGrid.Columns, _baseGrid.Rows,
             _revision, _changes.Values.OrderBy(delta => delta.Revision).ToArray());
     }
 
     /// <summary>
     /// Restore a validated C# mutation snapshot against its exact immutable base site.
-    /// Reject foreign seeds/sites, duplicate cells, impossible integrity and corrupt revisions.
+    /// Reject foreign seeds/sites, mismatched physical cell scale, duplicate cells,
+    /// impossible integrity and corrupt revisions.
     /// </summary>
     public static WorldSiteStrataMutationState Restore(WorldSiteStrataGrid baseGrid,
         WorldSiteStrataMutationSave save)
@@ -142,6 +151,10 @@ public sealed class WorldSiteStrataMutationState
         if (save.Version != CurrentVersion ||
             save.WorldSeed != baseGrid.WorldSeed ||
             !string.Equals(save.SiteId, baseGrid.SiteId, StringComparison.Ordinal) ||
+            save.CellWidthMeters != baseGrid.CellWidthMeters ||
+            save.StratumHeightMeters != baseGrid.StratumHeightMeters ||
+            save.Columns != baseGrid.Columns ||
+            save.Rows != baseGrid.Rows ||
             save.Revision < 0 ||
             save.Changes is null)
         {

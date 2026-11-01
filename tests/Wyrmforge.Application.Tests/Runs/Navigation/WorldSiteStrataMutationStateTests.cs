@@ -112,6 +112,18 @@ public sealed class WorldSiteStrataMutationStateTests
         Assert.ThrowsExactly<ArgumentException>(() =>
             WorldSiteStrataMutationState.Restore(new WorldSiteStrataGrid(Forest(18)), save));
         Assert.ThrowsExactly<ArgumentException>(() =>
+            WorldSiteStrataMutationState.Restore(grid,
+                save with { CellWidthMeters = save.CellWidthMeters * 2 }));
+        Assert.ThrowsExactly<ArgumentException>(() =>
+            WorldSiteStrataMutationState.Restore(grid,
+                save with { StratumHeightMeters = save.StratumHeightMeters * 2 }));
+        Assert.ThrowsExactly<ArgumentException>(() =>
+            WorldSiteStrataMutationState.Restore(grid,
+                save with { Columns = save.Columns + 1 }));
+        Assert.ThrowsExactly<ArgumentException>(() =>
+            WorldSiteStrataMutationState.Restore(
+                new WorldSiteStrataGrid(Forest(17), cellWidthMeters: grid.CellWidthMeters * 2), save));
+        Assert.ThrowsExactly<ArgumentException>(() =>
             WorldSiteStrataMutationState.Restore(grid, save with { Version = save.Version + 1 }));
         Assert.ThrowsExactly<ArgumentException>(() =>
             WorldSiteStrataMutationState.Restore(grid, save with { Changes = [save.Changes[0], save.Changes[0]] }));
