@@ -16,6 +16,10 @@ Give Claude **one unambiguous working baseline**: approved assets and current ga
 6. **Character art is not available to replace the live defaults.** Wizard [draft #439](https://github.com/pjotrcasteel/Wyrmforge/pull/439) retains the approved Gothic/64×80 painted design direction; the owner's north-run and leg-motion critiques are unresolved, and no playable cutover is authorized. Hollowed [#391](https://github.com/pjotrcasteel/Wyrmforge/pull/391) and [#399](https://github.com/pjotrcasteel/Wyrmforge/pull/399) are separate unapproved source efforts. Protect Ashling, approved Hollowed variants and existing gameplay/animation.
 7. **Volume is not evidence of dead code.** GitHub tree inventories on the audit baseline found **7,072 blobs under `art/source`** and **823 blobs under the web project**, including **1,664** and **38** extra path entries, respectively, with identical Git blob SHAs. Multiple render frames in one clip can be identical; historical sources/proofs may require exact paths. These counts identify **candidates**, not safe deletions. The majority of the 7,072 are Ashfang, Ashling and Hollowed original/export/review records, which may be protected by provenance, source and attribution requirements.
 
+## Reversible PR backlog cleanup completed (1 November 2026)
+
+The four TownV2 audit slices [#301](https://github.com/pjotrcasteel/Wyrmforge/pull/301), [#304](https://github.com/pjotrcasteel/Wyrmforge/pull/304), [#308](https://github.com/pjotrcasteel/Wyrmforge/pull/308) and [#311](https://github.com/pjotrcasteel/Wyrmforge/pull/311) were **closed unmerged** because consolidated [#312](https://github.com/pjotrcasteel/Wyrmforge/pull/312) expressly supersedes them. Their branches and histories remain available/reopenable; no source file was deleted. **#312 remains open and unmerged**, and does not authorize restarting paused Town work or replacing the approved painted 2D Town. All other inspected art, lighting, AI and geography drafts were left untouched.
+
 ## Cleanup disposition / deletion queue
 
 | Path or family | Disposition | Required action and proof |
