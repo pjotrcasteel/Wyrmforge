@@ -72,3 +72,13 @@ Recover PNGs from the successful shard 1 logs (the GitHub job logs download endp
 ## End-state of previous chat
 
 AR4-A1/A2 mapped and native soft materials integrated, AR4-A3 browser proof tests green, genuine PNGs exist in CI, post-night-veil captures are readable but visually incomplete. **Crucial communication failure: no user-visible inline screenshots were successfully delivered.** The first job of the next chat is to fix that delivery and give Pjotr something real he can judge. Keep [PR #459](https://github.com/pjotrcasteel/Wyrmforge/pull/459) draft and G6+ untouched.
+
+## 2026-11-01 follow-up: source32d ground-only owner review (PR #459)
+
+The owner saw correctly embedded original CI PNGs and said **open forest is much better**, **road is still weak**, **mountain lacks texture**, and **monastery is worst**; then clarified **buildings are not part of this stage, focus on ground textures**. Preserve this distinction: forest-ground positive feedback is **not** AR4-B visual approval.
+
+New opt-in `?arenaTerrain=source32d` ground-material study is on draft PR #459 in code commit `50573e8a4b599d232e05b61b562f2b55b219d8a5`. It keeps the original 1024×2112 forest grass world source and composes four new **offline authored** world-coordinate sources for road, rock, cliff faces, and courtyard paving using only C# AR3 materials, obstacle, and terrain-patch outlines. Source generator: `tools/art/prototypes/ar4-wf32-stone-road-study.mjs`, asset folder `wwwroot/art/terrain/wf32/ar4b-stone/`. Architecture and roofs were deferred by owner request; C# monastery building placeholder polygons remain unchanged.
+
+Real Town → Chart → playable Hunt CI captures, with source mode confirmed and same C# site ID/seed/obstacle count, are stored in `docs/evidence/ar4-b-ground-study-2026-11-01/` from [Browser smoke run 41295956914](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/41295956914) shard 1. They were embedded as **verified local PNGs** in the owner chat, correcting prior missing-image delivery.
+
+Assessment: source32d improves mountain ground and visible cliff-face strata. Road still needs bank/shoulder and semantic contour definition; monastery paving is textured but too regular. It remains *provisional* and requires explicit owner approval. Keep source32c rollback/comparison, PR #429 unchanged, PR #459 draft/unmerged. Stop at AR4-B gate; do not merge on CI green alone.
