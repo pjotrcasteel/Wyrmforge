@@ -7,6 +7,7 @@ import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, 
 import { attachArenaInput, getArenaMovement, getArenaAim, isArenaStickAim, getArenaPropFocus } from './arena-input.js';
 import { resolveTargetIndicator, presentTargetSigil, drawTargetIndicator, preloadTargetSigilArt, targetSelectionLightEmitter, targetSelectionCanvasLight, actorLightsWithoutSigilOverlay } from './arena-target-indicator.js?v=20261028-feet-centered-v3';
 import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, drawArenaCloisterElevation, semanticSiteModeEnabled } from './arena-environment.js?v=20261031-ar1-highlands-v1';
+import { worldSiteMaterialModeEnabled } from './world-site-neutral-albedo.js';
 import { drawAr1GeographyReview } from './arena-ar1-geography-review.js?v=20261031-ar1-site-detail-v1';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
@@ -510,10 +511,12 @@ function draw(state, snapshot, width, height) {
     // physical scenery, enemies, mage and Wyrm. Real fire/elemental cast,
     // impacts, burning trees and Fire Wyrm breath cut light into all layers.
     // Keep high-priority attack tells and magical VFX ABOVE the veil.
-    // AR0 authoring diagnostics must expose the actual C# material classes at mobile scale.
-    // Skip only the PRESENTATION night veil for the explicit semantic debug mode. No new
-    // light solver, no authority changes, and normal Hunts retain exactly the same night.
-    if (!gpu && !(semanticSiteModeEnabled() && snapshot.environment?.geography?.version === 1)) {
+    // AR0/AR4 authoring diagnostics must show actual C# material classes and WF32
+    // unlit source albedo at mobile scale. Skip only the PRESENTATION night veil
+    // for these explicit review modes. Normal Hunts and the G5 GPU path are untouched.
+    const unlitWorldSiteReview = snapshot.environment?.geography?.version === 1 &&
+        (semanticSiteModeEnabled() || worldSiteMaterialModeEnabled());
+    if (!gpu && !unlitWorldSiteReview) {
         const realFires = createWetForestFirelightPlan(snapshot.environment, worldWidth, worldHeight);
         const nightSources = gothicNightLightSources(snapshot, spellLights, worldWidth, worldHeight, realFires);
         drawGothicNight(ctx, gothicNightPlan(snapshot.player, nightSources, lightViewport), state.nightMask);
