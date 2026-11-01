@@ -35,7 +35,10 @@ public sealed class WorldSiteStrataMutationStateTests
     [TestMethod]
     public void Xyz2_OneFiveByFiveRadialImpactRemovesFiveSoilCellsButPreservesDamagedNeighborsAndStone()
     {
-        var grid = new WorldSiteStrataGrid(Forest(4102));
+        // This test compares the historical full-frame *diagnostic* render pixels.
+        // It must not allocate a 190x310m world raster just to check one 5x5 impact.
+        var grid = new WorldSiteStrataGrid(Forest(4102),
+            cellWidthMeters: WorldSiteStrataGrid.PreviewCellWidthMeters);
         var state = new WorldSiteStrataMutationState(grid);
         var center = TopKey(grid, 14, 24);
         var diagonal = TopKey(grid, 15, 25);
@@ -80,7 +83,8 @@ public sealed class WorldSiteStrataMutationStateTests
 
         var saved = JsonSerializer.Deserialize<WorldSiteStrataMutationSave>(
             JsonSerializer.Serialize(state.CaptureSave()))!;
-        var replay = WorldSiteStrataMutationState.Restore(new WorldSiteStrataGrid(Forest(4102)), saved);
+        var replay = WorldSiteStrataMutationState.Restore(new WorldSiteStrataGrid(Forest(4102),
+            cellWidthMeters: WorldSiteStrataGrid.PreviewCellWidthMeters), saved);
         Assert.AreEqual(JsonSerializer.Serialize(projected),
             JsonSerializer.Serialize(WorldSiteStrataRenderSnapshot.FromMutations(replay)));
     }
