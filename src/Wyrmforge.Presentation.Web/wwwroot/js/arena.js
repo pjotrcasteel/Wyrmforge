@@ -13,6 +13,7 @@ import { TerrainCanvasCache, influenceBandIndex, blockInsetOverlayEnabled, drawB
 import { raisedActor } from './arena-projection.js';
 import { ambientParticles, drawAmbientParticles } from './arena-ambient-particles.js';
 import { readArenaDebugFlags, botMovement, createBotMemory, withDebugAmbient } from './arena-debug.js';
+import { createFrameSampler, readHeapMegabytes, perfReport, perfLines } from './arena-perf.js';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
 import { drawRecoveryGuide } from './arena-recovery.js';
@@ -157,6 +158,7 @@ export function readArenaDiagnostics(canvas) {
             ? 'one-meter-greybox' : state.g4FlatGround ? 'neutral-grey' : 'painted',
         framePresentation: state.g4StageFrames ? 'staged' : 'direct',
         debug: state.debug,
+        perfReport: arenaPerfReport(state),
         hunt1Terrain: state.latestSnapshot?.environment?.terrain
             ? { columns: state.latestSnapshot.environment.terrain.columns, rows: state.latestSnapshot.environment.terrain.rows,
                 snapshotRevision: state.latestSnapshot.environment.terrain.revision,
@@ -203,6 +205,8 @@ function createState(canvas, dotNetReference) {
         targetSigil: { key: null, activeMarker: null, lastOpacity: 0, enteredAt: 0, exitedAt: null, exitMarker: null },
         dotNetReference,
         debug: readArenaDebugFlags(),
+        frameSampler: createFrameSampler(),
+        lastRenderTimestamp: 0,
         botMemory: createBotMemory(),
         active: true,
         simulationBusy: false,
@@ -310,8 +314,9 @@ function requestTerrainFrame(state, snapshot) {
         .catch(error => console.error('Wyrmforge terrain frame failed.', error))
         .finally(() => state.terrainRequestBusy = false);
 }
-
 function recordRenderFrame(state, timestamp) {
+    if (state.lastRenderTimestamp) state.frameSampler.record(timestamp - state.lastRenderTimestamp);
+    state.lastRenderTimestamp = timestamp;
     state.renderFrameCount++;
     const seconds = (timestamp - state.performanceWindowStarted) / 1000;
     if (seconds < 0.75) return;
@@ -1085,20 +1090,29 @@ function drawExperiencePickup(ctx, pickup) {
     ctx.restore();
 }
 
+function arenaPerfReport(state) {
+    const snapshot = state.latestSnapshot;
+    return perfReport({ sampler: state.frameSampler, renderer: state.gpuWorld ? 'gpu' : 'canvas', quality: state.gpuWorld?.quality ?? null,
+        terrain: state.terrainCache, heapMb: readHeapMegabytes(), enemies: snapshot?.enemies?.length ?? 0,
+        projectiles: snapshot?.projectiles?.length ?? 0, devicePixelRatio: window.devicePixelRatio || 1 });
+}
+
 function drawPerformanceCounter(state, ctx, snapshot, width, height) {
     // A large performance readout obscured monsters in the iPhone combat viewport.
     // Keep diagnostics available to testers without making them part of the ordinary HUD.
     if (typeof window === 'undefined' || new URLSearchParams(window.location.search).get('perf') !== '1') return;
-    const panelWidth = Math.min(218, Math.max(160, width - 24));
-    const panelHeight = 68;
-    const x = Math.max(12, width - panelWidth - 14);
+    const report = arenaPerfReport(state);
+    // Testers can read the same numbers as JSON from the console on desktop or via remote inspection.
+    window.__wyrmforgePerf = report;
+    const lines = [`FPS ${state.displayFps}  •  SIM ${state.displaySimulationHz}/s  •  C# ${state.displaySimulationMilliseconds.toFixed(1)} ms  •  BRIDGE ${state.displayBridgeMilliseconds.toFixed(1)} ms`,
+        ...perfLines(report)];
+    const panelWidth = Math.max(160, width - 24);
+    const panelHeight = 14 + lines.length * 13;
+    const x = 12;
     const y = Math.max(12, height - panelHeight - 14);
-    const enemies = snapshot?.enemies?.length ?? 0;
-    const projectiles = snapshot?.projectiles?.length ?? 0;
-    const experienceShards = snapshot?.experienceShards?.length ?? 0;
 
     ctx.save();
-    ctx.fillStyle = 'rgba(8, 6, 12, 0.78)';
+    ctx.fillStyle = 'rgba(8, 6, 12, 0.82)';
     roundRect(ctx, x, y, panelWidth, panelHeight, 10);
     ctx.fill();
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
@@ -1106,17 +1120,13 @@ function drawPerformanceCounter(state, ctx, snapshot, width, height) {
     ctx.stroke();
 
     ctx.textAlign = 'left';
-    ctx.fillStyle = '#e8e0ef';
-    ctx.font = '800 11px system-ui, sans-serif';
-    ctx.fillText(`FPS ${state.displayFps}  •  SIM ${state.displaySimulationHz}/s`, x + 10, y + 18);
-    ctx.fillStyle = '#a99db3';
-    ctx.font = '700 10px system-ui, sans-serif';
-    ctx.fillText(`C# ${state.displaySimulationMilliseconds.toFixed(1)} ms  •  BRIDGE ${state.displayBridgeMilliseconds.toFixed(1)} ms`, x + 10, y + 37);
-    ctx.fillStyle = '#82768c';
-    ctx.fillText(`ENEMIES ${enemies}  •  PROJECTILES ${projectiles}  •  XP ${experienceShards}`, x + 10, y + 55);
+    ctx.font = '700 9px ui-monospace, Menlo, monospace';
+    lines.forEach((line, index) => {
+        ctx.fillStyle = index === 0 ? '#e8e0ef' : '#a99db3';
+        ctx.fillText(line, x + 8, y + 16 + index * 13, panelWidth - 16);
+    });
     ctx.restore();
 }
-
 function drawEnemy(ctx, enemy, lighting = null, walkPhase = 0, facing = 1, hollow = null, ashling = null) {
     if (!(ashling&&ashlingSprites.drawEnemy(ctx,enemy,ashling))&&!(hollow&&drawHollowEnemy(ctx,enemy,hollow))&&!drawPaintedEnemy(ctx, enemy, walkPhase, facing)) drawEnemyPixelArt(ctx, enemy, lighting, walkPhase, facing);
     drawRimeArmor(ctx, enemy);

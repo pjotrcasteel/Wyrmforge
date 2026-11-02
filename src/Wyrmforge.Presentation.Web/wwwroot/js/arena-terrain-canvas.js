@@ -313,11 +313,14 @@ export class TerrainCanvasCache {
         this.revision = null;
         this.band = null;
         this.repaints = 0;
+        this.totalRepaintMs = 0;
+        this.maxRepaintMs = 0;
     }
 
     update(frame, band) {
         if (!frame) return false;
         if (this.canvas && this.revision === frame.revision && this.band === band) return false;
+        const started = globalThis.performance?.now() ?? 0;
         const width = frame.columns * FACE_PIXELS;
         const height = frame.rows * FACE_PIXELS + TERRAIN_PAD_UNITS * 2;
         if (!this.canvas || this.canvas.width !== width || this.canvas.height !== height)
@@ -328,6 +331,9 @@ export class TerrainCanvasCache {
         this.revision = frame.revision;
         this.band = band;
         this.repaints++;
+        const elapsed = (globalThis.performance?.now() ?? 0) - started;
+        this.totalRepaintMs += elapsed;
+        this.maxRepaintMs = Math.max(this.maxRepaintMs, elapsed);
         return true;
     }
 

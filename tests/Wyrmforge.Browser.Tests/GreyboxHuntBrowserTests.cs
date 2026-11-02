@@ -98,6 +98,7 @@ public sealed class GreyboxHuntBrowserTests : PageTest
     [DataRow(320, 568, "&bright=1", "hunt1-terrain-bright")]
     [DataRow(390, 844, "&bright=1", "hunt1-terrain-bright")]
     [DataRow(390, 844, "&bright=1&blockInset=1", "hunt1-block-inset-bright")]
+    [DataRow(390, 844, "&perf=1&bright=1", "hunt1-perf")]
     public async Task Hunt1Terrain_StreamsTheCSharpHeightfieldAndPaintsItUnderSharedLighting(int width, int height, string extraQuery, string shot)
     {
         var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
@@ -148,9 +149,16 @@ public sealed class GreyboxHuntBrowserTests : PageTest
         var shotState = await Page.EvaluateAsync<string>(@"async () => {
             const m = await import('/js/arena-performance.js');
             const s = m.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
-            return JSON.stringify({ seconds: s.hud?.seconds, gpu: s.greyboxLighting, ambient: s.sharedLighting?.environment?.ambient, debug: s.debug, search: location.search, gpuError: s.gpuWorld?.error });
+            return JSON.stringify({ seconds: s.hud?.seconds, gpu: s.greyboxLighting, ambient: s.sharedLighting?.environment?.ambient, debug: s.debug, perf: s.perfReport, search: location.search, gpuError: s.gpuWorld?.error });
         }");
         await File.WriteAllTextAsync(Path.Combine(output, $"{shot}-{width}.json"), shotState);
+        if (shot == "hunt1-perf")
+        {
+            var perf = System.Text.Json.JsonDocument.Parse(shotState).RootElement.GetProperty("perf");
+            Assert.IsTrue(perf.GetProperty("samples").GetInt32() > 30, "the sampler must record real render frames: " + perf);
+            Assert.IsTrue(perf.GetProperty("terrainRepaints").GetInt32() >= 1, "terrain repaints are counted");
+            Assert.AreEqual("gpu", perf.GetProperty("renderer").GetString());
+        }
     }
 
     /// <summary>Hunt 1.0 H0.3: with the debug bot and accelerated time, the first trail clears and the real exit returns to the Chart.</summary>
