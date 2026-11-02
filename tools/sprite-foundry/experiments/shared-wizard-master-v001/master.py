@@ -284,7 +284,7 @@ def project(point,yaw):
     Z=-x*math.sin(a)+z*math.cos(a)
     return (FOOT_X+X*SCALE,FOOT_Y-y*SCALE+Z*2.7,Z)
 
-def render(direction, skin=None, robe_uv=None, upper_uv=None, head_uv=None, *, feature_map=False, presentation_pose=False):
+def render(direction, skin=None, robe_uv=None, upper_uv=None, head_uv=None, *, feature_map=False, presentation_pose=False, posed_faces=None):
     if skin is not None and (skin.size != (WIDTH,HEIGHT) or skin.mode != "RGBA"):
         raise ValueError("reference sprite must be a 64x80 RGBA image")
     if robe_uv is not None and (robe_uv.size != (96,128) or robe_uv.mode != "RGBA"):
@@ -294,7 +294,9 @@ def render(direction, skin=None, robe_uv=None, upper_uv=None, head_uv=None, *, f
     if head_uv is not None and (head_uv.size != (96,128) or head_uv.mode != "RGBA"):
         raise ValueError("head UV atlas must be a 96x128 RGBA image")
     yaw=DIRECTIONS[direction]
-    master=build_master()
+    if posed_faces is not None and presentation_pose:
+        raise ValueError("pose override and direction presentation pose cannot be combined")
+    master=build_master() if posed_faces is None else list(posed_faces)
     if presentation_pose:
         master=pose_right_hand_equipment(master,direction)
     pixels=Image.new("RGBA",(WIDTH,HEIGHT),(0,0,0,0))
