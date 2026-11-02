@@ -76,11 +76,54 @@ class WizardWalkStudyTests(unittest.TestCase):
             passing_3 = boot_center(3, side)
             if side == -1:
                 self.assertGreater(contact_0[2], contact_2[2])
-                self.assertGreater(passing_1[1], passing_3[1])
+                self.assertLess(passing_1[1], passing_3[1])
             else:
                 self.assertLess(contact_0[2], contact_2[2])
-                self.assertLess(passing_1[1], passing_3[1])
+                self.assertGreater(passing_1[1], passing_3[1])
             self.assertAlmostEqual(contact_0[1], contact_2[1], places=6)
+
+    def test_lifted_foot_always_sweeps_forward_not_backward(self):
+        # Regression: v008 raised the foot during its REARWARD sweep,
+        # creating exactly the backwards gait observed by the owner.
+        for side in (-1, 1):
+            for index in range(16):
+                phase = 2.0 * math.pi * index / 16
+                next_phase = 2.0 * math.pi * (index + 1) / 16
+                _, _, ankle = study.leg_joint_positions(side, phase)
+                _, _, next_ankle = study.leg_joint_positions(side, next_phase)
+                lift = ankle[1] - .25
+                next_lift = next_ankle[1] - .25
+                if lift > .01:
+                    self.assertGreater(
+                        next_ankle[2], ankle[2],
+                        f"side={side} frame={index}: lifted foot moved backward",
+                    )
+                if lift < 1e-7 and next_lift < 1e-7:
+                    self.assertLess(
+                        next_ankle[2], ankle[2],
+                        f"side={side} frame={index}: planted foot moved forward",
+                    )
+
+    def test_compass_direction_uses_correct_local_forward_axis(self):
+        # The master defines local +Z as forward. The right-hand staff and
+        # physical feet rotate with this camera, never screen-space flipped.
+        expected = {
+            "N": (0, -1), "NE": (1, -1), "E": (1, 0),
+            "SE": (1, 1), "S": (0, 1), "SW": (-1, 1),
+            "W": (-1, 0), "NW": (-1, -1),
+        }
+        for direction, (expected_x, expected_y) in expected.items():
+            yaw = study.master.DIRECTIONS[direction]
+            origin = study.master.project((0, 0, 0), yaw)
+            ahead = study.master.project((0, 0, 1), yaw)
+            delta = (ahead[0] - origin[0], ahead[1] - origin[1])
+            for axis, expected_sign in enumerate((expected_x, expected_y)):
+                if expected_sign == 0:
+                    self.assertAlmostEqual(0, delta[axis], places=6)
+                elif expected_sign > 0:
+                    self.assertGreater(delta[axis], 0, direction)
+                else:
+                    self.assertLess(delta[axis], 0, direction)
 
     def test_native_frames_are_distinct_reproducible_and_directional(self):
         for direction in ("N", "SE", "S", "W"):
