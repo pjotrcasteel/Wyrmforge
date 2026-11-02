@@ -1,13 +1,15 @@
 # Grey Wizard EAST profile correction v003 — visual study only
 
-**Unapproved artwork. Not a complete directional sheet, not a walk animation, and never a gameplay asset.**
+**REJECTED BY OWNER (2 November 2026). Not a directional source, not a walk animation, and never a gameplay asset.**
+
+The owner rejected this three-way comparison: the staff disappears in the profile and the wizard's robe geometry, holes, rips, seams and overall character proportions change arbitrarily between directions. The problem is structural: S, SE and E came from separate image-generation outputs, not one persistent character asset. Pixel dimensions and technical checks cannot repair missing artistic continuity. **Do not reuse this artwork as a baseline or generate further facings from it.**
 
 The [8× native-pixel comparison](s-se-e-comparison.png) juxtaposes:
 - S: the existing front source from rejected v001 (identity/perspective reference only);
 - SE: the existing [v002 study](../grey-wizard-se-v002/se-64x80.png), still awaiting artistic acceptance;
 - E: this v003 right-facing profile, with the staff held in the wizard's anatomical right hand on the far/back, screen-left side of the torso.
 
-The previous E profile put the staff on the screen-right/front side, creating an abrupt staff-side jump from SE to E. This v003 explores a physically more continuous position and does **not** establish that the three figures have fully matched anatomy, rig proportions, hat, clothing folds or walking geometry. An attempted additional near-profile SE edit was discarded because it no longer read as 45 degrees.
+The previous E profile put the staff on the screen-right/front side, creating an abrupt staff-side jump from SE to E. This v003 was intended to explore staff continuity, but it failed: the staff becomes obscured, and the figure's construction and clothing details visibly change between views. An attempted additional near-profile SE edit was discarded because it no longer read as 45 degrees.
 
 ## Provenance and processing
 
@@ -17,11 +19,11 @@ The previous E profile put the staff on the screen-right/front side, creating an
 - Crop uniformly resized by nearest neighbor to 26×68, centered on world foot anchor x=32 and baseline y=74, producing [native e-64x80.png](e-64x80.png). Alpha and unchanged canvas dimensions are preserved.
 - The comparison image shows **actual native 64×80 frames enlarged 8× with nearest-neighbor pixels**. The checker is review-only; it is not part of any sprite.
 
-## Acceptance still required
+## Rejected — replacement workflow required
 
-1. Owner inspects S → SE → E turning geometry, body anatomy, boot positions and **right-hand staff**.
-2. Confirm E v003 preserves the approved Wizard identity well enough to serve as an art candidate.
-3. Author all eight independently consistent facings only after this gate.
-4. Then create four authentic gait key poses per facing, complete 16-frame motion, and validate inside the actual Hunt.
+1. Establish **one shared master** for the entire character: stable body proportions, geometry, UV/material landmarks for every fixed robe tear and rip, and a single staff object anchored to the anatomical right hand.
+2. Show the master in S, SE and E from one consistent source/camera rig before any pixel-art animation. An orientation must not regenerate or redesign its outfit.
+3. Export 64×80 review sprites and check that the exact same robe features, staff and body identity persist across angles.
+4. Obtain owner approval of the actual three-direction visual output before authoring any additional views or walk frames.
 
 Do not import this study, replace v001, merge PR #471, or mark any art approved solely because the Foundry's automated checks pass.
