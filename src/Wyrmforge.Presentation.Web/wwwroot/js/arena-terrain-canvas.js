@@ -75,6 +75,45 @@ export function paintTerrain(ctx, frame, band, offsetY = TERRAIN_PAD_UNITS) {
     return painted;
 }
 
+export const BLOCK_INSET_COLOR = '#ff00ff';
+
+/** Debug toggle: `?blockInset=1`. Never part of the cache, art or physics. */
+export function blockInsetOverlayEnabled(search = globalThis.location?.search ?? '') {
+    return new URLSearchParams(search).get('blockInset') === '1';
+}
+
+/**
+ * One-source-pixel contrasting line inset inside every visible top and front face, to verify the 32x32 faces and the
+ * 4 px microcell grid. A world unit is one source pixel, so the line is one unit wide. Returns the faces outlined.
+ */
+export function drawBlockInsetOverlay(ctx, frame, view) {
+    const { columns, rows, surface } = frame;
+    const first = Math.max(0, Math.floor(view.x / FACE_PIXELS) - 1);
+    const last = Math.min(columns - 1, Math.floor((view.x + view.width) / FACE_PIXELS) + 1);
+    const firstRow = Math.max(0, Math.floor(view.y / FACE_PIXELS) - 1);
+    const lastRow = Math.min(rows - 1, Math.floor((view.y + view.height + 4 * FACE_PIXELS) / FACE_PIXELS) + 1);
+    let outlined = 0;
+    ctx.save();
+    ctx.strokeStyle = BLOCK_INSET_COLOR;
+    ctx.lineWidth = 1;
+    for (let row = firstRow; row <= lastRow; row++) {
+        for (let column = first; column <= last; column++) {
+            const index = row * columns + column;
+            const top = blockTopRect(column, row, surface[index]);
+            ctx.strokeRect(top.x + 0.5, top.y + 0.5, top.width - 1, top.height - 1);
+            outlined++;
+            const front = blockFrontRect(column, row, surface[index], row + 1 < rows ? surface[index + columns] : surface[index]);
+            if (!front) continue;
+            for (let offset = 0; offset < front.height; offset += FACE_PIXELS) {
+                ctx.strokeRect(front.x + 0.5, front.y + offset + 0.5, front.width - 1, Math.min(FACE_PIXELS, front.height - offset) - 1);
+                outlined++;
+            }
+        }
+    }
+    ctx.restore();
+    return outlined;
+}
+
 /**
  * Caches the painted heightfield in one offscreen surface and rebuilds it only when the C# terrain revision (or the
  * influence band) changes. Per frame the camera window is copied out, so excavation costs one repaint per impact.

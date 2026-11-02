@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-    TERRAIN_MATERIAL, TERRAIN_PAD_UNITS, TerrainCanvasCache, heightShade, influenceBandIndex, paintTerrain, terrainColors,
+    BLOCK_INSET_COLOR, TERRAIN_MATERIAL, TERRAIN_PAD_UNITS, TerrainCanvasCache, blockInsetOverlayEnabled, drawBlockInsetOverlay, heightShade, influenceBandIndex, paintTerrain, terrainColors,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-terrain-canvas.js';
 import { raisedActor } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-projection.js';
 
@@ -115,4 +115,20 @@ test('raisedActor lifts the draw copy by z and leaves the ground position alone'
     assert.equal(actor.y, 100, 'depth sorting keeps using the ground position');
     assert.equal(raisedActor({ x: 1, y: 2, z: 0 }).y, 2);
     assert.equal(raisedActor({ x: 1, y: 2 }).y, 2);
+});
+
+test('the block inset overlay is a debug toggle and off by default', () => {
+    assert.equal(blockInsetOverlayEnabled(''), false);
+    assert.equal(blockInsetOverlayEnabled('?hunt1=1'), false);
+    assert.equal(blockInsetOverlayEnabled('?hunt1=1&blockInset=1'), true);
+});
+
+test('the inset overlay draws one one-pixel line inside each 32x32 face and one per exposed metre', () => {
+    const ctx = Object.assign(recorder(), { strokeRect(x, y, w, h) { this.calls.push(['strokeRect', x, y, w, h, this.strokeStyle, this.lineWidth]); } });
+    const outlined = drawBlockInsetOverlay(ctx, frame(1, 2, [16, 0]), { x: 0, y: 0, width: 32, height: 64 });
+    const strokes = ctx.calls.filter(call => call[0] === 'strokeRect');
+    assert.equal(outlined, strokes.length);
+    assert.deepEqual(strokes[0].slice(1, 5), [0.5, -63.5, 31, 31], 'top face two metres up, inset by one pixel');
+    assert.deepEqual(strokes.slice(1, 3).map(call => call.slice(1, 5)), [[0.5, -31.5, 31, 31], [0.5, 0.5, 31, 31]], 'two metres of front face');
+    assert.ok(strokes.every(call => call[5] === BLOCK_INSET_COLOR && call[6] === 1));
 });

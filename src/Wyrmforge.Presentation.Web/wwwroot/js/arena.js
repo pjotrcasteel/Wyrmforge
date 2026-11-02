@@ -9,7 +9,7 @@ import { resolveTargetIndicator, presentTargetSigil, drawTargetIndicator, preloa
 import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, createDestructibleLayers, drawArenaCloisterElevation, semanticSiteModeEnabled } from './arena-environment.js?v=20261031-ar1-highlands-v1';
 import { drawAr1GeographyReview } from './arena-ar1-geography-review.js?v=20261031-ar1-site-detail-v1';
 import { drawGreyboxGround } from './arena-greybox-ground.js';
-import { TerrainCanvasCache, influenceBandIndex } from './arena-terrain-canvas.js';
+import { TerrainCanvasCache, influenceBandIndex, blockInsetOverlayEnabled, drawBlockInsetOverlay } from './arena-terrain-canvas.js';
 import { raisedActor } from './arena-projection.js';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
@@ -397,6 +397,8 @@ function draw(state, snapshot, width, height) {
             (state.terrainCache ??= new TerrainCanvasCache())
                 .update(state.terrainFrame, influenceBandIndex(snapshot.environment.corruption));
             state.terrainCache.draw(ctx, { x: camera.x, y: camera.y, width, height });
+            if (state.blockInset ??= blockInsetOverlayEnabled())
+                drawBlockInsetOverlay(ctx, state.terrainFrame, { x: camera.x, y: camera.y, width, height });
         } else {
             drawGreyboxGround(ctx, snapshot.environment.greybox, worldWidth, worldHeight);
         }
