@@ -197,7 +197,7 @@ class SharedMasterTests(unittest.TestCase):
             line for line in workflow.read_text(encoding="utf-8").splitlines()
             if "master.py" in line and "--robe-uv" in line
         ]
-        self.assertEqual(4, len(commands))
+        self.assertEqual(6, len(commands))
         for command in commands:
             self.assertNotIn("--reference-sprite", command)
         texture = Image.open(MODULE_FILE.parent / "robe-uv-v001.png").convert("RGBA")
@@ -241,6 +241,50 @@ class SharedMasterTests(unittest.TestCase):
         )
         with self.assertRaises(ValueError):
             wizard.render("S", upper_uv=Image.new("RGBA", (97, 128)))
+
+    def test_head_beard_and_rear_hair_share_one_material_space(self):
+        source = runpy.run_path(str(MODULE_FILE.parent / "head_uv.py"))
+        self.assertEqual({"beard": (0, 80), "skin": (80, 128)}, source["ZONES"])
+        head = source["make_head_uv"]()
+        guide = source["make_head_guide"]()
+        self.assertEqual((96, 128), head.size)
+        self.assertEqual((96, 128), guide.size)
+        self.assertEqual(head.tobytes(), source["make_head_uv"]().tobytes())
+        self.assertEqual(guide.tobytes(), source["make_head_guide"]().tobytes())
+        self.assertEqual(
+            head.tobytes(),
+            Image.open(MODULE_FILE.parent / "head-uv-v001.png").convert("RGBA").tobytes(),
+        )
+        self.assertEqual(
+            guide.tobytes(),
+            Image.open(MODULE_FILE.parent / "head-uv-guide-v001.png").convert("RGBA").tobytes(),
+        )
+        robe = Image.open(MODULE_FILE.parent / "robe-uv-v001.png").convert("RGBA")
+        upper = Image.open(MODULE_FILE.parent / "upper-cloth-uv-v001.png").convert("RGBA")
+        for direction in wizard.DIRECTIONS:
+            baseline = wizard.render(direction, robe_uv=robe, upper_uv=upper)
+            painted = wizard.render(direction, robe_uv=robe, upper_uv=upper, head_uv=head)
+            self.assertEqual(baseline.getchannel("A").tobytes(),
+                             painted.getchannel("A").tobytes(), direction)
+            self.assertNotEqual(baseline.tobytes(), painted.tobytes(), direction)
+            self.assertEqual(
+                painted.tobytes(),
+                wizard.render(direction, robe_uv=robe, upper_uv=upper, head_uv=head).tobytes(),
+            )
+        self.assertEqual(
+            wizard.contact_sheet(None, robe, upper, head)[0].tobytes(),
+            Image.open(MODULE_FILE.parent / "head-uv-S-SE-E-8x-NOT-APPROVED.png").convert("RGBA").tobytes(),
+        )
+        # Optional historic reference decal must still be handled as an Image,
+        # even when all three local-space material atlases are supplied.
+        reference = Image.new("RGBA", (64, 80), (118, 113, 108, 255))
+        with_decal = wizard.render("S", reference, robe, upper, head)
+        self.assertEqual(
+            wizard.render("S").getchannel("A").tobytes(),
+            with_decal.getchannel("A").tobytes(),
+        )
+        with self.assertRaises(ValueError):
+            wizard.render("S", head_uv=Image.new("RGBA", (95, 128)))
 
     def test_repeat_render_is_pixel_deterministic(self):
         self.assertEqual(wizard.render("SE").tobytes(), wizard.render("SE").tobytes())

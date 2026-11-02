@@ -47,6 +47,12 @@ jobs:
         run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --robe-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/robe-uv-v001.png --upper-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/upper-cloth-uv-v001.png --preview tools/sprite-foundry/output/full-garment-uv-S-SE-E.png
       - name: Render eight-way complete shared-garment comparison (not approved art)
         run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --robe-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/robe-uv-v001.png --upper-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/upper-cloth-uv-v001.png --comparison tools/sprite-foundry/output/full-garment-uv-8way.png
+      - name: Reproduce shared beard and face paint atlas (not approved art)
+        run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/head_uv.py --output tools/sprite-foundry/output/head-uv-generated.png --guide-output tools/sprite-foundry/output/head-uv-guide.png
+      - name: Render shared head and garment S/SE/E study (not approved art)
+        run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --robe-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/robe-uv-v001.png --upper-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/upper-cloth-uv-v001.png --head-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/head-uv-v001.png --preview tools/sprite-foundry/output/full-head-uv-S-SE-E.png
+      - name: Render eight-way shared head and garment continuity study (not approved art)
+        run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --robe-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/robe-uv-v001.png --upper-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/upper-cloth-uv-v001.png --head-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/head-uv-v001.png --comparison tools/sprite-foundry/output/full-head-uv-8way.png
       - name: Upload unapproved single-mesh studies
         uses: actions/upload-artifact@v4
         with:
@@ -63,4 +69,8 @@ jobs:
             tools/sprite-foundry/output/upper-cloth-uv-guide.png
             tools/sprite-foundry/output/full-garment-uv-S-SE-E.png
             tools/sprite-foundry/output/full-garment-uv-8way.png
+            tools/sprite-foundry/output/head-uv-generated.png
+            tools/sprite-foundry/output/head-uv-guide.png
+            tools/sprite-foundry/output/full-head-uv-S-SE-E.png
+            tools/sprite-foundry/output/full-head-uv-8way.png
           if-no-files-found: error

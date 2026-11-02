@@ -216,13 +216,15 @@ def project(point,yaw):
     Z=-x*math.sin(a)+z*math.cos(a)
     return (FOOT_X+X*SCALE,FOOT_Y-y*SCALE+Z*2.7,Z)
 
-def render(direction, skin=None, robe_uv=None, upper_uv=None):
+def render(direction, skin=None, robe_uv=None, upper_uv=None, head_uv=None):
     if skin is not None and (skin.size != (WIDTH,HEIGHT) or skin.mode != "RGBA"):
         raise ValueError("reference sprite must be a 64x80 RGBA image")
     if robe_uv is not None and (robe_uv.size != (96,128) or robe_uv.mode != "RGBA"):
         raise ValueError("robe UV atlas must be a 96x128 RGBA image")
     if upper_uv is not None and (upper_uv.size != (96,128) or upper_uv.mode != "RGBA"):
         raise ValueError("upper cloth UV atlas must be a 96x128 RGBA image")
+    if head_uv is not None and (head_uv.size != (96,128) or head_uv.mode != "RGBA"):
+        raise ValueError("head UV atlas must be a 96x128 RGBA image")
     yaw=DIRECTIONS[direction]
     master=build_master()
     pixels=Image.new("RGBA",(WIDTH,HEIGHT),(0,0,0,0))
@@ -325,6 +327,34 @@ def render(direction, skin=None, robe_uv=None, upper_uv=None):
                             ))
                             alpha_weight=weight*texel[3]/255
                             base=tuple(int(alpha_weight*texel[j]+(1-alpha_weight)*base[j]) for j in range(3))
+                    if head_uv is not None:
+                        # Shared 3D-local facial color; no camera-facing 2D head
+                        # stamp and no independently generated directional hair.
+                        if face.feature in {"beard-lock","moustache"}:
+                            tx=max(0.0,min(.999999,(wx+.31)/.62))
+                            ty=max(0.0,min(.999999,(2.99-wy)/1.06))
+                            texel=head_uv.getpixel((int(tx*96),int(ty*80)))
+                            blend=.77 if face.feature=="beard-lock" else .66
+                        elif face.feature=="face":
+                            tx=max(0.0,min(.999999,(wx+.32)/.64))
+                            ty=max(0.0,min(.999999,(3.28-wy)/.67))
+                            skin_texel=head_uv.getpixel((int(tx*96),80+min(47,int(ty*48))))
+                            hair=head_uv.getpixel((int(tx*96),min(79,int(ty*80))))
+                            # Rear scalp and side hair follow the same 3D head;
+                            # a smooth local-Z mask avoids a bald, tan back view.
+                            hair_mix=max(0.0,min(1.0,(.17-wz)/.23))
+                            texel=tuple(int(hair_mix*(.74*hair[j])+(1-hair_mix)*skin_texel[j]) for j in range(3))+(255,)
+                            blend=.83
+                        elif face.feature in {"nose","neck"}:
+                            tx=max(0.0,min(.999999,(wx+.32)/.64))
+                            ty=max(0.0,min(.999999,(3.28-wy)/.67))
+                            texel=head_uv.getpixel((int(tx*96),80+min(47,int(ty*48))))
+                            blend=.48
+                        else:
+                            texel=None
+                        if texel is not None:
+                            mix=blend*texel[3]/255
+                            base=tuple(int(mix*texel[j]+(1-mix)*base[j]) for j in range(3))
                     # EXPERIMENTAL PLANAR DECAL: only the forward hemisphere can receive
                     # colors from this rejected S study. It is NOT an authored UV atlas.
                     if skin is not None and face.feature in {
@@ -352,8 +382,8 @@ def render(direction, skin=None, robe_uv=None, upper_uv=None):
                     pixels.putpixel((px,py),color)
     return pixels
 
-def contact_sheet(skin=None, robe_uv=None, upper_uv=None):
-    frames=[render(d,skin,robe_uv,upper_uv) for d in ("S","SE","E")]
+def contact_sheet(skin=None, robe_uv=None, upper_uv=None, head_uv=None):
+    frames=[render(d,skin,robe_uv,upper_uv,head_uv) for d in ("S","SE","E")]
     scale=8
     canvas=Image.new("RGBA",(WIDTH*scale*3+64,HEIGHT*scale+100),(17,23,29,255))
     draw=ImageDraw.Draw(canvas)
@@ -366,13 +396,13 @@ def contact_sheet(skin=None, robe_uv=None, upper_uv=None):
                 draw.rectangle((x+xx,y+yy,x+xx+63,y+yy+63),fill=col)
         canvas.alpha_composite(frame.resize((WIDTH*scale,HEIGHT*scale),Image.Resampling.NEAREST),(x,y))
         draw.text((x,20),label,fill=(231,230,223,255))
-    footer="SHARED GARMENT UV STUDY - NOT APPROVED GAME ART" if upper_uv else ("SHARED ROBE UV MATERIAL STUDY - NOT APPROVED GAME ART" if robe_uv else "DETERMINISTIC MASTER GEOMETRY STUDY - NOT APPROVED GAME ART")
+    footer="SHARED GARMENT + HEAD UV STUDY - NOT APPROVED ART" if head_uv else ("SHARED GARMENT UV STUDY - NOT APPROVED GAME ART" if upper_uv else ("SHARED ROBE UV MATERIAL STUDY - NOT APPROVED GAME ART" if robe_uv else "DETERMINISTIC MASTER GEOMETRY STUDY - NOT APPROVED GAME ART"))
     draw.text((16,HEIGHT*scale+66),footer,fill=(241,186,107,255))
     return canvas,frames
 
-def comparison_sheet(skin, robe_uv=None, upper_uv=None):
+def comparison_sheet(skin, robe_uv=None, upper_uv=None, head_uv=None):
     """Side-by-side 8-way continuity audit, never an art approval sheet."""
-    if skin is None and robe_uv is None and upper_uv is None:
+    if skin is None and robe_uv is None and upper_uv is None and head_uv is None:
         raise ValueError("eight-way comparison requires a reference or robe UV")
     directions=("S","SE","E","NE","N","NW","W","SW")
     scale=3
@@ -381,14 +411,15 @@ def comparison_sheet(skin, robe_uv=None, upper_uv=None):
     row_height=HEIGHT*scale+64
     canvas=Image.new("RGBA",(len(directions)*stride+24,top+2*row_height+34),(26,29,33,255))
     draw=ImageDraw.Draw(canvas)
-    if robe_uv is None and upper_uv is None:
-        variants=((None,None,None),(skin,None,None))
+    if robe_uv is None and upper_uv is None and head_uv is None:
+        variants=((None,None,None,None),(skin,None,None,None))
         titles=("SINGLE MESH / BASE COLOR","SAME MESH / FRONT-ONLY COLOR DECAL")
     else:
-        variants=((skin,None,None),(skin,robe_uv,upper_uv))
+        variants=((skin,None,None,None),(skin,robe_uv,upper_uv,head_uv))
         titles=("PREVIOUS / FRONT DECAL ONLY" if skin else "PREVIOUS / BASE COLOR",
-                "SAME MESH / SHARED GARMENT UV + FRONT DECAL" if skin else "SAME MESH / SHARED GARMENT UV")
-    for row,(reference,texture,upper_texture) in enumerate(variants):
+                "SAME MESH / SHARED GARMENT + HEAD UV" if head_uv else
+                ("SAME MESH / SHARED GARMENT UV + FRONT DECAL" if skin else "SAME MESH / SHARED GARMENT UV"))
+    for row,(reference,texture,upper_texture,head_texture) in enumerate(variants):
         draw.text((12,top+row*row_height-23),titles[row],fill=(232,227,214,255))
         for index,direction in enumerate(directions):
             x=12+index*stride
@@ -397,7 +428,7 @@ def comparison_sheet(skin, robe_uv=None, upper_uv=None):
                 for i in range(0,WIDTH*scale,24):
                     checker=(i//24+j//24)%2
                     draw.rectangle((x+i,y+j,x+i+23,y+j+23),fill=(49,54,60,255) if checker else (40,45,51,255))
-            frame=render(direction,reference,texture,upper_texture)
+            frame=render(direction,reference,texture,upper_texture,head_texture)
             canvas.alpha_composite(frame.resize((WIDTH*scale,HEIGHT*scale),Image.Resampling.NEAREST),(x,y))
             draw.text((x+4,y+HEIGHT*scale+6),direction,fill=(232,227,214,255))
     draw.text((12,canvas.height-20),"UNAPPROVED MATERIAL STUDY / NOT GAME ART",fill=(255,180,95,255))
@@ -412,25 +443,27 @@ def main():
     p.add_argument("--reference-sprite",type=Path,help="Experimental front-hemisphere decal from a 64x80 RGBA S study")
     p.add_argument("--robe-uv",type=Path,help="Shared 96x128 cylindrical RGBA robe albedo atlas")
     p.add_argument("--upper-uv",type=Path,help="Shared 96x128 RGBA mantle, sleeves and hat atlas")
+    p.add_argument("--head-uv",type=Path,help="Shared 96x128 RGBA beard, face and neck atlas")
     p.add_argument("--comparison",type=Path,help="Save eight-way base/decal audit (requires reference)")
     args=p.parse_args()
     skin=Image.open(args.reference_sprite).convert("RGBA") if args.reference_sprite else None
     robe_uv=Image.open(args.robe_uv).convert("RGBA") if args.robe_uv else None
     upper_uv=Image.open(args.upper_uv).convert("RGBA") if args.upper_uv else None
+    head_uv=Image.open(args.head_uv).convert("RGBA") if args.head_uv else None
     if skin is not None and skin.size!=(WIDTH,HEIGHT):
         raise ValueError("reference sprite must be native 64x80")
     if args.frames:
         for direction in DIRECTIONS:
             target=args.frames / "idle" / direction / "00.albedo.png"
             target.parent.mkdir(parents=True,exist_ok=True)
-            render(direction,skin,robe_uv,upper_uv).save(target)
-    canvas=render(args.direction,skin,robe_uv,upper_uv) if args.direction else contact_sheet(skin,robe_uv,upper_uv)[0]
+            render(direction,skin,robe_uv,upper_uv,head_uv).save(target)
+    canvas=render(args.direction,skin,robe_uv,upper_uv,head_uv) if args.direction else contact_sheet(skin,robe_uv,upper_uv,head_uv)[0]
     if args.preview:
         args.preview.parent.mkdir(parents=True,exist_ok=True)
         canvas.save(args.preview)
     if args.comparison:
         args.comparison.parent.mkdir(parents=True,exist_ok=True)
-        comparison_sheet(skin,robe_uv,upper_uv).save(args.comparison)
+        comparison_sheet(skin,robe_uv,upper_uv,head_uv).save(args.comparison)
     if args.json_output:
         out=io.BytesIO()
         canvas.save(out,format="PNG")

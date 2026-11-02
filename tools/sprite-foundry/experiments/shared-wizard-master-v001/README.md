@@ -209,6 +209,36 @@ and [eight-way previous-vs-full-material comparison](full-garment-uv-8way-NOT-AP
 are unapproved visual studies, not production sprites. All original pose-locked
 mesh vertices and camera projection are unchanged.
 
+## Shared face, beard and rear-hair atlas v006 — unapproved
+
+The optional `head-uv-v001.png` adds a third **96×128 RGBA local-space
+paint map** to the same physically consistent Wizard model. Its upper
+80 rows contain the beard and moustache strands; the bottom 48 rows
+contain facial/neck skin. The face sphere blends toward grey hair at
+the rear, based only on **local Z**, not the camera angle. No independent
+front, side or rear head portraits are generated.
+
+An editable, transparent [head painting guide](head-uv-guide-v001.png)
+and [5× material layout](head-uv-layout-NOT-APPROVED.png) accompany the atlas.
+The [8× S / SE / E closeup](head-uv-S-SE-E-8x-NOT-APPROVED.png),
+[garment-only vs head-textured comparison](head-uv-before-after-NOT-APPROVED.png)
+and [eight-way continuity sheet](head-uv-8way-NOT-APPROVED.png) are
+direct PNGs for owner review, **not approved art**.
+
+Generate the material and guide from their deterministic source:
+
+    py tools/sprite-foundry/experiments/shared-wizard-master-v001/head_uv.py --output tools/sprite-foundry/output/head.png --guide-output tools/sprite-foundry/output/head-guide.png
+
+Render all three independent but locally anchored material maps:
+
+    py tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --robe-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/robe-uv-v001.png --upper-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/upper-cloth-uv-v001.png --head-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/head-uv-v001.png --preview tools/sprite-foundry/output/wizard-head-study.png
+
+This changes RGB material shading only; the owner's liked pose, same
+right-hand staff and all eight alpha silhouettes remain frozen.
+The head is still low-poly and does not yet reproduce the detailed
+owner-approved face/hair design. This is a UV authoring step, **not** an
+acceptance claim or game-asset promotion.
+
 ## Visual quality still missing
 
 The preview is a *mechanical continuity test*, not a visual acceptance candidate.
