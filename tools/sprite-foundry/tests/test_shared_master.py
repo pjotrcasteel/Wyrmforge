@@ -2,6 +2,7 @@
 import hashlib
 import importlib.util
 import json
+import runpy
 import sys
 import unittest
 from pathlib import Path
@@ -120,6 +121,33 @@ class SharedMasterTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             wizard.comparison_sheet(None)
         self.assertEqual((1656, 684), wizard.comparison_sheet(reference).size)
+
+    def test_shared_robe_uv_is_valid_and_cannot_change_pose_alpha(self):
+        texture_path = MODULE_FILE.parent / "robe-uv-v001.png"
+        robe_uv = Image.open(texture_path).convert("RGBA")
+        self.assertEqual((96, 128), robe_uv.size)
+        for direction in wizard.DIRECTIONS:
+            original = wizard.render(direction)
+            painted = wizard.render(direction, robe_uv=robe_uv)
+            self.assertEqual(
+                original.getchannel("A").tobytes(),
+                painted.getchannel("A").tobytes(),
+                direction,
+            )
+            self.assertNotEqual(original.tobytes(), painted.tobytes(), direction)
+            self.assertEqual(painted.tobytes(), wizard.render(direction, robe_uv=robe_uv).tobytes())
+        with self.assertRaises(ValueError):
+            wizard.render("S", robe_uv=Image.new("RGBA", (95, 128)))
+
+    def test_robe_uv_generator_repeats_and_matches_study_asset(self):
+        source = runpy.run_path(str(MODULE_FILE.parent / "robe_uv.py"))
+        generate = source["make_robe_uv"]
+        first = generate()
+        second = generate()
+        actual = Image.open(MODULE_FILE.parent / "robe-uv-v001.png").convert("RGBA")
+        self.assertEqual((96, 128), first.size)
+        self.assertEqual(first.tobytes(), second.tobytes())
+        self.assertEqual(first.tobytes(), actual.tobytes())
 
     def test_repeat_render_is_pixel_deterministic(self):
         self.assertEqual(wizard.render("SE").tobytes(), wizard.render("SE").tobytes())

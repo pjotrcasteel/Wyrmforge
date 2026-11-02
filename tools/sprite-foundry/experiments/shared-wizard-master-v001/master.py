@@ -205,9 +205,11 @@ def project(point,yaw):
     Z=-x*math.sin(a)+z*math.cos(a)
     return (FOOT_X+X*SCALE,FOOT_Y-y*SCALE+Z*2.7,Z)
 
-def render(direction, skin=None):
+def render(direction, skin=None, robe_uv=None):
     if skin is not None and (skin.size != (WIDTH,HEIGHT) or skin.mode != "RGBA"):
         raise ValueError("reference sprite must be a 64x80 RGBA image")
+    if robe_uv is not None and (robe_uv.size != (96,128) or robe_uv.mode != "RGBA"):
+        raise ValueError("robe UV atlas must be a 96x128 RGBA image")
     yaw=DIRECTIONS[direction]
     master=build_master()
     pixels=Image.new("RGBA",(WIDTH,HEIGHT),(0,0,0,0))
@@ -271,6 +273,14 @@ def render(direction, skin=None):
                         # Facial hair striations also belong to the source geometry.
                         detail=.95+.08*math.sin(wx*58+wy*7)
                     base=face.color
+                    if robe_uv is not None and face.feature=="outer-robe":
+                        # Cylindrical UVs are measured on the single source garment.
+                        # Front/side/back share one atlas; alpha is a paint mask only.
+                        u=(math.atan2(wz,wx)%(2*math.pi))/(2*math.pi)
+                        v=max(0.0,min(1.0,(2.38-wy)/2.18))
+                        sample=robe_uv.getpixel((int(u*96)%96,min(127,int(v*128))))
+                        weight=.78*sample[3]/255
+                        base=tuple(int(weight*sample[j]+(1-weight)*base[j]) for j in range(3))
                     # EXPERIMENTAL PLANAR DECAL: only the forward hemisphere can receive
                     # colors from this rejected S study. It is NOT an authored UV atlas.
                     if skin is not None and face.feature in {
@@ -298,8 +308,8 @@ def render(direction, skin=None):
                     pixels.putpixel((px,py),color)
     return pixels
 
-def contact_sheet(skin=None):
-    frames=[render(d,skin) for d in ("S","SE","E")]
+def contact_sheet(skin=None, robe_uv=None):
+    frames=[render(d,skin,robe_uv) for d in ("S","SE","E")]
     scale=8
     canvas=Image.new("RGBA",(WIDTH*scale*3+64,HEIGHT*scale+100),(17,23,29,255))
     draw=ImageDraw.Draw(canvas)
@@ -315,7 +325,7 @@ def contact_sheet(skin=None):
     draw.text((16,HEIGHT*scale+66),"DETERMINISTIC MASTER GEOMETRY STUDY - NOT APPROVED GAME ART",fill=(241,186,107,255))
     return canvas,frames
 
-def comparison_sheet(skin):
+def comparison_sheet(skin, robe_uv=None):
     """Side-by-side 8-way continuity audit, never an art approval sheet."""
     if skin is None:
         raise ValueError("eight-way comparison requires --reference-sprite")
@@ -336,7 +346,7 @@ def comparison_sheet(skin):
                 for i in range(0,WIDTH*scale,24):
                     checker=(i//24+j//24)%2
                     draw.rectangle((x+i,y+j,x+i+23,y+j+23),fill=(49,54,60,255) if checker else (40,45,51,255))
-            frame=render(direction,reference)
+            frame=render(direction,reference,robe_uv)
             canvas.alpha_composite(frame.resize((WIDTH*scale,HEIGHT*scale),Image.Resampling.NEAREST),(x,y))
             draw.text((x+4,y+HEIGHT*scale+6),direction,fill=(232,227,214,255))
     draw.text((12,canvas.height-20),"UNAPPROVED MATERIAL STUDY / NOT GAME ART",fill=(255,180,95,255))
@@ -349,23 +359,25 @@ def main():
     p.add_argument("--preview",type=Path,help="Save a checker contact sheet")
     p.add_argument("--frames",type=Path,help="Export unapproved RGBA frames for Foundry input")
     p.add_argument("--reference-sprite",type=Path,help="Experimental front-hemisphere decal from a 64x80 RGBA S study")
+    p.add_argument("--robe-uv",type=Path,help="Shared 96x128 cylindrical RGBA robe albedo atlas")
     p.add_argument("--comparison",type=Path,help="Save eight-way base/decal audit (requires reference)")
     args=p.parse_args()
     skin=Image.open(args.reference_sprite).convert("RGBA") if args.reference_sprite else None
+    robe_uv=Image.open(args.robe_uv).convert("RGBA") if args.robe_uv else None
     if skin is not None and skin.size!=(WIDTH,HEIGHT):
         raise ValueError("reference sprite must be native 64x80")
     if args.frames:
         for direction in DIRECTIONS:
             target=args.frames / "idle" / direction / "00.albedo.png"
             target.parent.mkdir(parents=True,exist_ok=True)
-            render(direction,skin).save(target)
-    canvas=render(args.direction,skin) if args.direction else contact_sheet(skin)[0]
+            render(direction,skin,robe_uv).save(target)
+    canvas=render(args.direction,skin,robe_uv) if args.direction else contact_sheet(skin,robe_uv)[0]
     if args.preview:
         args.preview.parent.mkdir(parents=True,exist_ok=True)
         canvas.save(args.preview)
     if args.comparison:
         args.comparison.parent.mkdir(parents=True,exist_ok=True)
-        comparison_sheet(skin).save(args.comparison)
+        comparison_sheet(skin,robe_uv).save(args.comparison)
     if args.json_output:
         out=io.BytesIO()
         canvas.save(out,format="PNG")

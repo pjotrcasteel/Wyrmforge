@@ -35,6 +35,10 @@ jobs:
         run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --reference-sprite tools/sprite-foundry/candidates/grey-wizard-idle-v001/source/idle/S/00.albedo.png --comparison tools/sprite-foundry/output/shared-master-front-decal.png
       - name: Render 8x S/SE/E garment close-up (not approved art)
         run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --reference-sprite tools/sprite-foundry/candidates/grey-wizard-idle-v001/source/idle/S/00.albedo.png --preview tools/sprite-foundry/output/garment-damage-closeup.png
+      - name: Render shared robe UV close-up (not approved art)
+        run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --reference-sprite tools/sprite-foundry/candidates/grey-wizard-idle-v001/source/idle/S/00.albedo.png --robe-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/robe-uv-v001.png --preview tools/sprite-foundry/output/robe-uv-S-SE-E.png
+      - name: Render eight-way shared robe UV comparison (not approved art)
+        run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --reference-sprite tools/sprite-foundry/candidates/grey-wizard-idle-v001/source/idle/S/00.albedo.png --robe-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/robe-uv-v001.png --comparison tools/sprite-foundry/output/robe-uv-8way.png
       - name: Upload unapproved single-mesh studies
         uses: actions/upload-artifact@v4
         with:
@@ -43,4 +47,6 @@ jobs:
             tools/sprite-foundry/output/shared-master-blockout.png
             tools/sprite-foundry/output/shared-master-front-decal.png
             tools/sprite-foundry/output/garment-damage-closeup.png
+            tools/sprite-foundry/output/robe-uv-S-SE-E.png
+            tools/sprite-foundry/output/robe-uv-8way.png
           if-no-files-found: error

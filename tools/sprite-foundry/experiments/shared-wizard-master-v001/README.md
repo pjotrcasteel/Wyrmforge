@@ -113,6 +113,33 @@ The temporary south-only color decal remains optional. A real UV texture
 painted against the accepted wizard identity is still required before
 this can be production art.
 
+## Shared cylindrical robe UV atlas v001 — editable source material
+
+The model can now optionally read a **single 96×128 RGBA robe texture**
+(`robe-uv-v001.png`) for all eight camera directions. Its cylindrical
+coordinates are computed from the same original 3D garment:
+`u = atan2(z,x) / 2π` around the robe; `v` runs from shoulder to hem.
+The alpha in this file is a paint blend mask, **never sprite transparency**.
+
+The first atlas is generated deterministically by
+[`robe_uv.py`](robe_uv.py), which places grayscale folds, three sewn seams,
+dirt and the existing scar landmarks at fixed local coordinates. The PNG
+is a normal image that can later be hand-painted in Krita, Aseprite or GIMP
+without changing the mesh, direction frames or the camera.
+
+To review the new study from the repository root:
+
+    py tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --reference-sprite tools/sprite-foundry/candidates/grey-wizard-idle-v001/source/idle/S/00.albedo.png --robe-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/robe-uv-v001.png --preview tools/sprite-foundry/output/robe-uv-S-SE-E.png
+
+For the eight-way comparison, replace `--preview` with `--comparison`
+and give an output PNG path. Both preview files also live in this experiment
+folder with `NOT-APPROVED` names. The texture is deliberately optional:
+the previous pose and color baseline remain reproducible.
+
+The newly painted robe is still a **rough material study**, not an accurate
+tracing of the owner's accepted Gothic robe. Named physical holes and the
+right-hand staff remain defined by the frozen geometry.
+
 ## Visual quality still missing
 
 The preview is a *mechanical continuity test*, not a visual acceptance candidate.
