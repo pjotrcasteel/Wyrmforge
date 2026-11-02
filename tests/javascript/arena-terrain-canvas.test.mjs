@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-    BLOCK_INSET_COLOR, BLOCK_TONE_STEP, blockTone, scaleHex, TERRAIN_MATERIAL, eraseTerrainOcclusion, occludingTerrainCells, repaintTerrainOcclusion, TERRAIN_PAD_UNITS, TerrainCanvasCache, blockInsetOverlayEnabled, drawBlockInsetOverlay, heightShade, influenceBandIndex, paintTerrain, terrainColors,
+    BLOCK_INSET_COLOR, BLOCK_TONE_STEP, DIRT_LOWER_FLOOR, DIRT_UPPER_FLOOR, GRASS_TOP, frontSegments, topFaceColor, blockTone, scaleHex, TERRAIN_MATERIAL, eraseTerrainOcclusion, occludingTerrainCells, repaintTerrainOcclusion, TERRAIN_PAD_UNITS, TerrainCanvasCache, blockInsetOverlayEnabled, drawBlockInsetOverlay, heightShade, influenceBandIndex, paintTerrain, terrainColors,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-terrain-canvas.js';
 import { raisedActor } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-projection.js';
 
@@ -88,8 +88,9 @@ test('a pit sinks its top face and the higher row behind it exposes the back wal
     paintTerrain(ctx, frame(1, 3, [0, -8, 0]), 0);
     const rects = ctx.calls.filter(call => call[0] === 'fillRect').map(call => call.slice(1, 5));
     assert.deepEqual(rects[0], [0, 0, 32, 32]);
-    assert.deepEqual(rects[1], [0, 32, 32, 32], 'back wall of the pit, one metre exposed');
-    assert.deepEqual(rects[2], [0, 64, 32, 32], 'pit floor sits a metre lower');
+    assert.deepEqual(rects[1], [0, 32, 32, 16], 'back wall of the pit: upper dirt band');
+    assert.deepEqual(rects[2], [0, 48, 32, 16], 'back wall of the pit: lower dirt band');
+    assert.deepEqual(rects[3], [0, 64, 32, 32], 'pit floor sits a metre lower');
 });
 
 test('painting is offset by the padding so raised ground above row zero stays on the surface', () => {
@@ -201,4 +202,36 @@ test('painted open ground uses more than one tone and every tone stays dark', ()
     paintTerrain(ctx, frame(12, 12, new Array(144).fill(0)), 0);
     const tops = new Set(ctx.calls.filter(call => call[0] === 'fillRect').map(call => call[5]));
     assert.equal(tops.size, 3);
+});
+
+test('undisturbed ground wears a grass cap in the green bands, and digging reveals dirt', () => {
+    assert.equal(topFaceColor(0, TERRAIN_MATERIAL.Soil, 0), GRASS_TOP[0]);
+    assert.equal(topFaceColor(1, TERRAIN_MATERIAL.Soil, 0), GRASS_TOP[1], 'scorched grass is dry');
+    assert.equal(topFaceColor(2, TERRAIN_MATERIAL.Soil, 0), terrainColors(2, TERRAIN_MATERIAL.Soil).top, 'no grass once the forest burns');
+    const dug = topFaceColor(0, TERRAIN_MATERIAL.Soil, -2);
+    assert.notEqual(dug, GRASS_TOP[0]);
+    assert.ok(parseInt(dug.slice(1, 3), 16) > parseInt(dug.slice(5, 7), 16) * 1.5, 'dirt is red-brown, not green');
+    assert.equal(topFaceColor(0, TERRAIN_MATERIAL.Ash, 0), terrainColors(0, TERRAIN_MATERIAL.Ash).top, 'ash patches stay ash');
+    assert.equal(topFaceColor(0, TERRAIN_MATERIAL.Stone, 0), terrainColors(0, TERRAIN_MATERIAL.Stone).top);
+});
+
+test('a dug wall shows two dirt bands then stone, in order, covering exactly the exposed height', () => {
+    const wall = frontSegments(0, TERRAIN_MATERIAL.Stone, 0, -16);
+    assert.deepEqual(wall.map(segment => [segment.from, segment.to]), [[0, DIRT_UPPER_FLOOR], [DIRT_UPPER_FLOOR, DIRT_LOWER_FLOOR], [DIRT_LOWER_FLOOR, -16]]);
+    assert.equal(new Set(wall.map(segment => segment.color)).size, 3, 'upper dirt, lower dirt and stone are three tones');
+    const luma = hex => parseInt(hex.slice(1, 3), 16) * 0.2126 + parseInt(hex.slice(3, 5), 16) * 0.7152 + parseInt(hex.slice(5, 7), 16) * 0.0722;
+    assert.ok(luma(wall[0].color) > luma(wall[1].color), 'the wall darkens with depth');
+});
+
+test('front segments tile the exposed span with no gap, whatever the heights', () => {
+    for (const [top, bottom] of [[8, 0], [24, 0], [3, -1], [0, -3], [0, -30], [10, -10], [-2, -6], [-6, -20]]) {
+        const segments = frontSegments(0, TERRAIN_MATERIAL.Soil, top, bottom);
+        assert.equal(segments[0].from, top, 'starts at the top for ' + top + '->' + bottom);
+        assert.equal(segments.at(-1).to, bottom, 'ends at the bottom for ' + top + '->' + bottom);
+        for (let i = 1; i < segments.length; i++) assert.equal(segments[i].from, segments[i - 1].to);
+    }
+    assert.deepEqual(frontSegments(0, TERRAIN_MATERIAL.Soil, 0, 0), []);
+    assert.deepEqual(frontSegments(0, TERRAIN_MATERIAL.Soil, -8, 0), [], 'a higher neighbour in front exposes nothing');
+    assert.equal(frontSegments(3, TERRAIN_MATERIAL.Lava, 0, -16).length, 1, 'lava is one band');
+    assert.equal(frontSegments(0, TERRAIN_MATERIAL.Stone, 24, 0).length, 1, 'a raised rock step keeps its own material');
 });

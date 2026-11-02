@@ -35,6 +35,55 @@ export function terrainColors(band, material) {
     return { top, front };
 }
 
+// Owner direction (2 Nov 2026): grass cap, dirt, stone, bedrock. Each excavation removes the cap first, then dirt, then stone.
+// Layer depths come from the C# grid (soil 1 m over stone, bedrock -4 m); colours are flat, dark and per influence band.
+export const GRASS_TOP = Object.freeze(['#47582f', '#5d5a31', null, null]);
+const DIRT = Object.freeze([
+    { top: '#7a4630', upper: '#52291b', lower: '#3d1f15' },
+    { top: '#6e4030', upper: '#4a2619', lower: '#381d14' },
+    { top: '#5a362a', upper: '#3d2117', lower: '#2d1811' },
+    { top: '#46302a', upper: '#2f1d17', lower: '#22130e' },
+]);
+const STONE_STRATA = Object.freeze(['#5c5348', '#554c42', '#4a423a', '#3a3430']);
+export const DIRT_UPPER_FLOOR = -4;
+export const DIRT_LOWER_FLOOR = -8;
+
+const bandIndex = band => Math.min(PALETTE.length - 1, Math.max(0, band | 0));
+
+/** Top-face colour for a column: grass on undisturbed ground, dirt once dug into, otherwise the material ramp. */
+export function topFaceColor(band, material, surfaceMicrocells) {
+    const index = bandIndex(band);
+    if (material === TERRAIN_MATERIAL.Soil) {
+        if (surfaceMicrocells < 0) return DIRT[index].top;
+        if (GRASS_TOP[index] && surfaceMicrocells === 0) return GRASS_TOP[index];
+    } else if (material === TERRAIN_MATERIAL.Ash && surfaceMicrocells < 0) {
+        return DIRT[index].top;
+    }
+    return terrainColors(band, material).top;
+}
+
+/**
+ * The visible front face as horizontal bands, top to bottom, in microcells: raised ground keeps its own material, then
+ * two dirt bands from the original surface down, then stone. Lava stays one band.
+ */
+export function frontSegments(band, material, topMicrocells, bottomMicrocells) {
+    const index = bandIndex(band);
+    const ownFront = terrainColors(band, material).front;
+    if (topMicrocells <= bottomMicrocells) return [];
+    if (material === TERRAIN_MATERIAL.Lava) return [{ from: topMicrocells, to: bottomMicrocells, color: ownFront }];
+    const segments = [];
+    let cursor = topMicrocells;
+    const take = (floor, color) => {
+        const end = Math.max(bottomMicrocells, floor);
+        if (cursor > end) { segments.push({ from: cursor, to: end, color }); cursor = end; }
+    };
+    if (cursor > 0) take(0, ownFront);
+    if (cursor > DIRT_UPPER_FLOOR) take(DIRT_UPPER_FLOOR, DIRT[index].upper);
+    if (cursor > DIRT_LOWER_FLOOR) take(DIRT_LOWER_FLOOR, DIRT[index].lower);
+    take(bottomMicrocells, STONE_STRATA[index]);
+    return segments;
+}
+
 /** Raised ground reads lighter and pits darker, in whole 1 m steps so shading never shimmers. */
 export function heightShade(hex, surfaceMicrocells) {
     const meters = Math.max(-2, Math.min(3, Math.round(surfaceMicrocells / 8)));
@@ -76,17 +125,16 @@ export function paintTerrainCell(ctx, frame, band, column, row) {
     const { columns, rows, surface, material } = frame;
     const index = row * columns + column;
     const height = surface[index];
-    const colors = terrainColors(band, material[index]);
     const top = blockTopRect(column, row, height);
     const tone = 1 + blockTone(column, row) * BLOCK_TONE_STEP;
-    ctx.fillStyle = scaleHex(heightShade(colors.top, height), tone);
+    ctx.fillStyle = scaleHex(heightShade(topFaceColor(band, material[index], height), height), tone);
     ctx.fillRect(top.x, top.y, top.width, top.height);
     let painted = 1;
     const frontHeight = row + 1 < rows ? surface[index + columns] : height;
-    const front = blockFrontRect(column, row, height, frontHeight);
-    if (front) {
-        ctx.fillStyle = colors.front;
-        ctx.fillRect(front.x, front.y, front.width, front.height);
+    for (const segment of frontSegments(band, material[index], height, frontHeight)) {
+        ctx.fillStyle = segment.color;
+        ctx.fillRect(column * FACE_PIXELS, (row + 1) * FACE_PIXELS - segment.from * MICROCELL_UNITS, FACE_PIXELS,
+            (segment.from - segment.to) * MICROCELL_UNITS);
         painted++;
     }
     return painted;

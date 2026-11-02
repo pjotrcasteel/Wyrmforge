@@ -1,15 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-    MAX_DEBUG_SPEED, botHuntDirection, flowDirection, botKiteDirection, botMovement, createBotMemory, readArenaDebugFlags,
+    DEBUG_BRIGHT_AMBIENT, MAX_DEBUG_SPEED, withDebugAmbient, botHuntDirection, flowDirection, botKiteDirection, botMovement, createBotMemory, readArenaDebugFlags,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-debug.js';
 
 const world = { width: 1024, height: 1920 };
 const at = (x, y, extra = {}) => ({ player: { x, y }, world, enemies: [], paused: false, ended: false, exit: null, ...extra });
 
 test('debug flags are off by default and clamp the speed', () => {
-    assert.deepEqual(readArenaDebugFlags(''), { speed: 1, god: false, bot: false });
-    assert.deepEqual(readArenaDebugFlags('?speed=8&god=1&bot=1'), { speed: 8, god: true, bot: true });
+    assert.deepEqual(readArenaDebugFlags(''), { speed: 1, god: false, bot: false, bright: false });
+    assert.deepEqual(readArenaDebugFlags('?speed=8&god=1&bot=1'), { speed: 8, god: true, bot: true, bright: false });
     assert.equal(readArenaDebugFlags('?speed=500').speed, MAX_DEBUG_SPEED);
     assert.equal(readArenaDebugFlags('?speed=0').speed, 1);
     assert.equal(readArenaDebugFlags('?speed=abc').speed, 1);
@@ -134,4 +134,19 @@ test('solid props block the flow field and the bot routes around them', () => {
     assert.equal(flowDirection(open, { x: 3 * 32 + 16, y: 6 * 32 + 16 }, { x: 3 * 32 + 16, y: 16 }, wall), null, 'a full row of props closes the way');
     const snapshot = at(3 * 32 + 16, 6 * 32 + 16, { exit: { x: 3 * 32 + 16, y: 16 }, environment: { props: [barrel] } });
     assert.ok(botMovement(snapshot, createBotMemory(), 0, open), 'the bot uses the props from the snapshot');
+});
+
+test('the bright inspection light only lifts the ambient term and only on request', () => {
+    const night = { lights: [{ id: 'a' }], environment: { ambient: 0.24, color: '#8c9cbb', exposure: 1 } };
+    assert.equal(withDebugAmbient(night, false), night, 'off: the very same frame');
+    const lit = withDebugAmbient(night, true);
+    assert.equal(lit.environment.ambient, DEBUG_BRIGHT_AMBIENT);
+    assert.equal(lit.environment.color, '#8c9cbb');
+    assert.equal(lit.lights, night.lights, 'lights are untouched');
+    assert.equal(night.environment.ambient, 0.24, 'the C# frame is never mutated');
+    const already = withDebugAmbient({ environment: { ambient: 9 } }, true);
+    assert.equal(already.environment.ambient, 9, 'never dims a brighter frame');
+    assert.equal(withDebugAmbient(null, true), null);
+    assert.equal(readArenaDebugFlags('?bright=1').bright, true);
+    assert.equal(readArenaDebugFlags('?bright=yes').bright, false);
 });

@@ -10,7 +10,17 @@ export function readArenaDebugFlags(search = globalThis.location?.search ?? '') 
         speed: Number.isFinite(speed) ? Math.min(MAX_DEBUG_SPEED, Math.max(1, speed)) : 1,
         god: params.get('god') === '1',
         bot: params.get('bot') === '1',
+        bright: params.get('bright') === '1',
     };
+}
+
+export const DEBUG_BRIGHT_AMBIENT = 10;
+export const DEBUG_BRIGHT_COLOR = '#e6ecff';
+
+/** Debug inspection light: raises only the ambient term of a lighting frame so terrain can be reviewed; never touches C# state. */
+export function withDebugAmbient(frame, bright) {
+    if (!bright || !frame?.environment) return frame;
+    return { ...frame, environment: { ...frame.environment, ambient: Math.max(frame.environment.ambient ?? 0, DEBUG_BRIGHT_AMBIENT), color: DEBUG_BRIGHT_COLOR } };
 }
 
 const KITE_RADIUS = 260;

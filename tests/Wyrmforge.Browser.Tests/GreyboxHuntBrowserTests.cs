@@ -95,6 +95,9 @@ public sealed class GreyboxHuntBrowserTests : PageTest
     [DataRow(320, 568, "", "hunt1-terrain")]
     [DataRow(390, 844, "", "hunt1-terrain")]
     [DataRow(390, 844, "&blockInset=1", "hunt1-block-inset")]
+    [DataRow(320, 568, "&bright=1", "hunt1-terrain-bright")]
+    [DataRow(390, 844, "&bright=1", "hunt1-terrain-bright")]
+    [DataRow(390, 844, "&bright=1&blockInset=1", "hunt1-block-inset-bright")]
     public async Task Hunt1Terrain_StreamsTheCSharpHeightfieldAndPaintsItUnderSharedLighting(int width, int height, string extraQuery, string shot)
     {
         var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
@@ -128,19 +131,26 @@ public sealed class GreyboxHuntBrowserTests : PageTest
         await Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^Enter (rare )?trail$") }).ClickAsync();
         await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
 
-        await Page.WaitForFunctionAsync(@"async () => {
-            const module = await import('/js/arena-performance.js');
-            const state = module.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
+        await ArenaBrowserWait.UntilAsync(Page, @"
             const terrain = state?.hunt1Terrain;
             return terrain?.columns === 32 && terrain?.rows === 60
                 && terrain.paintedRevision === terrain.snapshotRevision && terrain.repaints >= 1
-                && state?.greyboxLighting === 'shared-gpu' && state?.enemies?.length > 0 && !state?.renderingFailed;
-        }", null, new() { Timeout = 60000 });
+                && (state?.hud?.seconds ?? 0) >= 5
+                && state?.greyboxLighting === 'shared-gpu' && state?.enemies?.length > 0 && !state?.renderingFailed;", 60000,
+            "the Hunt 1.0 terrain painted under shared GPU lighting five seconds into the Hunt");
         Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
         // The painted Wet Forest ground banks must never come back through a hidden fallback.
         var legacyGround = requests.Where(url => Regex.IsMatch(url, @"art-candidates|wet-forest[^/]*\.(png|webp|jpe?g)|ground-(bank|texture)", RegexOptions.IgnoreCase)).ToList();
         Assert.AreEqual(0, legacyGround.Count, "legacy ground art requested: " + string.Join(", ", legacyGround));
         await Page.ScreenshotAsync(new() { Path = Path.Combine(output, $"{shot}-{width}.png"), FullPage = false });
+        var canvasData = await Page.EvaluateAsync<string>("() => document.querySelector('canvas.game-canvas').toDataURL('image/png')");
+        await File.WriteAllBytesAsync(Path.Combine(output, $"{shot}-{width}-canvas.png"), Convert.FromBase64String(canvasData[(canvasData.IndexOf(',') + 1)..]));
+        var shotState = await Page.EvaluateAsync<string>(@"async () => {
+            const m = await import('/js/arena-performance.js');
+            const s = m.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
+            return JSON.stringify({ seconds: s.hud?.seconds, gpu: s.greyboxLighting, ambient: s.sharedLighting?.environment?.ambient, debug: s.debug, search: location.search, gpuError: s.gpuWorld?.error });
+        }");
+        await File.WriteAllTextAsync(Path.Combine(output, $"{shot}-{width}.json"), shotState);
     }
 
     /// <summary>Hunt 1.0 H0.3: with the debug bot and accelerated time, the first trail clears and the real exit returns to the Chart.</summary>
@@ -271,6 +281,50 @@ public sealed class GreyboxHuntBrowserTests : PageTest
         Assert.IsTrue(huntSurvived, "the Hunt must reach its Hunt Survived summary");
         Assert.IsTrue(returnedToTown, $"the Hunt must end back in Town ({trailsCleared} trails cleared, last seen '{lastSeen}')");
         Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
+    }
+
+    /// <summary>Hunt 1.0 H6: Fireballs visibly dig layered craters in the live Hunt (grass cap, dirt, stone).</summary>
+    [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
+    public async Task Hunt1Terrain_FireballsDigCratersThatReachTheClient(int width, int height)
+    {
+        var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
+        var output = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
+        Directory.CreateDirectory(output);
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.AddInitScriptAsync("""
+            localStorage.setItem('wyrmforge.firstHunt.v1','3');
+            localStorage.setItem('wyrmforge.characterSchool.v1','Pyromancer');
+            """);
+        var errors = new List<string>();
+        Page.PageError += (_, error) => errors.Add(error);
+        await Page.GotoAsync(root + "/?hunt1=1&speed=6&god=1&bot=1&bright=1", new() { WaitUntil = WaitUntilState.NetworkIdle });
+        var start = Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^START GAME") });
+        await start.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 45000 });
+        await start.ClickAsync();
+        if (await Page.Locator(".character-creation").IsVisibleAsync())
+            await Page.GetByRole(AriaRole.Button, new() { Name = "Choose Pyromancer" }).ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Region, new() { Name = "Town square" })).ToBeVisibleAsync();
+        await Page.Locator(".refuge-town-spot--gate").ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Enter Free Play" }).ClickAsync();
+        await Page.Locator(".gate-action--primary").ClickAsync();
+        await Page.Locator(".gate-lineage--fire").ClickAsync();
+        await Page.Locator(".gate-tier--ready").First.ClickAsync();
+        await Page.Locator("button.route-node.available").First.ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^Enter (rare )?trail$") }).ClickAsync();
+        await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
+
+        await ArenaBrowserWait.UntilAsync(Page, @"
+            const terrain = state?.hunt1Terrain;
+            if (!terrain) return false;
+            window.__terrainRevisionAtStart ??= terrain.snapshotRevision;
+            return (state.hud?.kills ?? 0) >= 2 && (state.hud?.seconds ?? 0) >= 5
+                && terrain.snapshotRevision >= window.__terrainRevisionAtStart + 6
+                && terrain.paintedRevision === terrain.snapshotRevision;", 120000,
+            "Fireballs to have dug at least six terrain revisions that the client painted");
+        Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
+        await Page.ScreenshotAsync(new() { Path = Path.Combine(output, $"hunt1-craters-{width}.png"), FullPage = false });
     }
 
     /// <summary>Hunt 1.0 H8: the Chart paints the authoritative Wyrm Influence, rising from a Wet entrance to a Volcanic lair.</summary>

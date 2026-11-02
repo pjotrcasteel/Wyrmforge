@@ -12,7 +12,7 @@ import { drawGreyboxGround } from './arena-greybox-ground.js';
 import { TerrainCanvasCache, influenceBandIndex, blockInsetOverlayEnabled, drawBlockInsetOverlay, occludingTerrainCells, eraseTerrainOcclusion, repaintTerrainOcclusion } from './arena-terrain-canvas.js';
 import { raisedActor } from './arena-projection.js';
 import { ambientParticles, drawAmbientParticles } from './arena-ambient-particles.js';
-import { readArenaDebugFlags, botMovement, createBotMemory } from './arena-debug.js';
+import { readArenaDebugFlags, botMovement, createBotMemory, withDebugAmbient } from './arena-debug.js';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
 import { drawRecoveryGuide } from './arena-recovery.js';
@@ -385,8 +385,8 @@ function draw(state, snapshot, width, height) {
         snapshot.player?.activeSchool);
     state.fractureGpuEmitters = fractureEmitters;
     state.selectionGpuEmitter = selectionEmitter;
-    state.sharedLightingFrame = withHollowFractureLightingFrame(snapshot.lighting,
-        selectionEmitter ? [...fractureEmitters,selectionEmitter] : fractureEmitters);
+    state.sharedLightingFrame = withDebugAmbient(withHollowFractureLightingFrame(snapshot.lighting,
+        selectionEmitter ? [...fractureEmitters,selectionEmitter] : fractureEmitters), state.debug.bright);
     const spellLights = [
         ...buildSpellLights(snapshot, visualSeconds, state.reducedMotion.matches, lightViewport),
         ...hollowFractureCanvasLights(fractureEmitters,snapshot.lighting),
