@@ -142,6 +142,14 @@ class SharedMasterTests(unittest.TestCase):
 
     def test_robe_uv_generator_repeats_and_matches_study_asset(self):
         source = runpy.run_path(str(MODULE_FILE.parent / "robe_uv.py"))
+        self.assertEqual(
+            tuple(mark[1] for mark in wizard.ROBE_SEAMS),
+            source["SEAM_AZIMUTHS"],
+        )
+        self.assertEqual(
+            tuple((mark[1], mark[2], mark[3]) for mark in wizard.ROBE_SCARS),
+            source["SCAR_MARKS"],
+        )
         generate = source["make_robe_uv"]
         first = generate()
         second = generate()
