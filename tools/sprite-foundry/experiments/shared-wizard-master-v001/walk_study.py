@@ -175,17 +175,72 @@ def contact_sheet(frame_count=KEY_POSES):
     return result
 
 
+
+def animated_review_frames(frame_count=16, zoom=4, *, use_materials=True):
+    """Prepare a real native-pixel S/SE/E walk loop at nearest-neighbour zoom."""
+    if frame_count < KEY_POSES or frame_count % KEY_POSES:
+        raise ValueError("animation frames must be divisible by four")
+    if not 1 <= zoom <= 10:
+        raise ValueError("zoom must be between 1 and 10")
+    directions = ("S", "SE", "E")
+    tile_w, tile_h = master.WIDTH * zoom, master.HEIGHT * zoom
+    margin, top = 12, 30
+    width = margin + len(directions) * (tile_w + margin)
+    height = tile_h + top + margin
+    result = []
+    for index in range(frame_count):
+        canvas = Image.new("RGBA", (width, height), (23, 27, 34, 255))
+        painter = ImageDraw.Draw(canvas)
+        painter.text((margin, 7), "WIZARD WALK / NATIVE 64x80 / UNAPPROVED", fill=(220, 219, 206, 255))
+        for col, direction in enumerate(directions):
+            x = margin + col * (tile_w + margin)
+            painter.rectangle((x, top, x + tile_w - 1, top + tile_h - 1), fill=(45, 49, 54, 255))
+            actor = render_frame(direction, index, frame_count, use_materials=use_materials)
+            canvas.alpha_composite(actor.resize((tile_w, tile_h), Image.Resampling.NEAREST), (x, top))
+            painter.text((x + 4, top + 4), direction, fill=(227, 224, 211, 255))
+        result.append(canvas)
+    return result
+
+
+def save_animation_gif(path, frame_count=16, fps=12):
+    """Write an isolated looping review GIF. It is not a game sprite atlas."""
+    if not 1 <= fps <= 30:
+        raise ValueError("review fps must be between 1 and 30")
+    previews = animated_review_frames(frame_count)
+    reference = previews[0].convert("RGB").quantize(colors=128)
+    frames = [reference]
+    frames.extend(
+        image.convert("RGB").quantize(palette=reference, dither=Image.Dither.NONE)
+        for image in previews[1:]
+    )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    frames[0].save(
+        path,
+        format="GIF",
+        save_all=True,
+        append_images=frames[1:],
+        duration=round(1000 / fps),
+        loop=0,
+        disposal=2,
+        optimize=False,
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--preview", type=Path, help="Output a labelled review contact PNG")
     parser.add_argument("--frames", type=Path, help="Output individual native RGBA frames")
+    parser.add_argument("--gif", type=Path, help="Output a looping S/SE/E motion review GIF")
+    parser.add_argument("--gif-fps", type=int, default=12, help="Motion review playback FPS")
     parser.add_argument("--count", type=int, default=KEY_POSES, help="4 or 16 frames per direction")
     args = parser.parse_args()
-    if not args.preview and not args.frames:
-        parser.error("provide --preview or --frames")
+    if not args.preview and not args.frames and not args.gif:
+        parser.error("provide --preview, --frames or --gif")
     if args.preview:
         args.preview.parent.mkdir(parents=True, exist_ok=True)
         contact_sheet(args.count).save(args.preview)
+    if args.gif:
+        save_animation_gif(args.gif, 16, args.gif_fps)
     if args.frames:
         for direction in CANONICAL_DIRECTIONS:
             folder = args.frames / direction
