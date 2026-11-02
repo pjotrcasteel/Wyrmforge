@@ -126,6 +126,27 @@ Versioned Region/World state + Hunter Knowledge
 
 Testing, CI and agents must be able to drive and inspect a Hunt with as little scripting as possible, so the web client accepts opt-in URL switches. They never change authoritative rules and are inert unless present: `hunt1=1` (Hunt 1.0 terrain), `speed=N` (1–20 fixed C# ticks per frame, stopping at any choice, checkpoint or end), `god=1` (refill hunter health), `bot=1` (a built-in hunter that kites, hunts the last foes, paths over terrain and props, walks to the exit or extraction zone and picks the first offered upgrade, essence or relic), `bright=1` (raises only the ambient term of the lighting frame handed to the renderer so terrain can be inspected; the true night remains the reference look), `blockInset=1` (one-pixel inset debug overlay on every 1 m face). Browser captures must wait on real polled state (not an async `WaitForFunction`, which returns immediately) and record the diagnostics they were taken under. New debug aids follow the same rules: URL-gated, presentation-side or C# input-side only, covered by unit tests.
 
+## Metric oblique (shear) camera — scoped, awaiting owner decision GH-A (2 November 2026)
+
+**Status:** scoping only; nothing here is implemented. The owner asked for this to be scoped before any lighting-mapping change.
+
+**Today.** `arena-gpu-world.js` renders with a 45° orthographic Three.js camera and compensates in the *data*: ground Y is stretched by `GROUND_Y = √2`, heights by the same factor, and light directions/positions/occluder scales are pre-multiplied (`projected = [x, -y·GROUND_Y, z]`). Screen output matches the metric contract (`screenY = y − 32·z`, 32 × 32 top and front faces), but the three.js world is **not** metric: a 1 m cube is a stretched box, so normals, light directions, shadow-map depth and sprite billboards each carry a bespoke correction. Every new consumer (terrain faces, fracture debris, shadows for blocks) must remember the stretch.
+
+**Proposal.** Keep the world in true metres (1 : 1 : 1) and make the *projection* do the oblique mapping: an orthographic matrix sheared so that world `z` offsets screen Y by one block-face height per metre (`y' = y − k·z`, `k` chosen so a 1 m rise is 32 px), with depth taken from `y + z` for ordering. Normals, light vectors, `lightViewBounds`, occluder scales and terrain heights then use real metres and lose the `GROUND_Y` factors.
+
+| Area | Work |
+| --- | --- |
+| Camera | Replace `camera.position/lookAt` and projection with a sheared orthographic matrix (`camera.projectionMatrix` plus `projectionMatrixInverse`); one adapter owns the constants |
+| Lighting | `LightingEngine` consumes unstretched positions/directions; shadow cameras need the same shear so shadow-map texels still align with screen pixels; normal-map view vector becomes constant (the oblique direction) instead of derived from the stretched space |
+| Terrain | Block top/front quads become true unit quads; the 4 px microcell grid maps without rounding; occlusion/inset overlays use the same matrix |
+| Billboards | Sprite planes stand upright in world space (no `GROUND_Y` height factor); feet anchors unchanged |
+| Tests | Golden pixel tests: a unit cube at several positions projects to exactly 32 × 32 top plus 32 × 32 front; existing greybox browser captures at 320/390 px must be pixel-identical for unlit surfaces (the migration is a refactor, not a restyle); light-direction unit tests for every `GROUND_Y` call site |
+| Cost | No extra draw calls; one matrix and a few shader uniforms. Shadow-pass cost is unchanged. Must be re-measured on a real phone (H9) |
+
+**Risks.** (1) Depth precision/ordering for tall stacked blocks and actors standing behind tall terrain; (2) shadow-map bias when the shadow camera is sheared; (3) Canvas fallback and the GPU path must keep sharing `arena-projection.js`; (4) any three.js feature that assumes a symmetric frustum (culling, `Frustum`) needs a manual bounds override.
+
+**Sequence if approved.** (a) Introduce the shear adapter behind a flag with unlit golden tests; (b) migrate lighting and shadows call-site by call-site, removing `GROUND_Y`; (c) migrate terrain/billboards; (d) delete the stretch constants only after identical 320/390 px captures and phone measurements. It must not change Town (protected painted scene) and must not regress the opt-in Lighting 0.1 baseline.
+
 ## iOS / Android portability and delivery gates
 
 **Explicit product goal:** ship WyrmForge on **iOS (App Store)** and **Android (Google Play)** after evidence-backed browser gameplay has stabilized. This is not merely a responsive web page goal.
