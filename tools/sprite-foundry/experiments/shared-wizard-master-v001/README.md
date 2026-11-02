@@ -453,3 +453,12 @@ comparisons. **This is a geometry/motion review, not accepted game art.**
 Outstanding: check feet and robe overlap at gameplay scale, make sure actual
 player speed and animation FPS correspond, and get owner approval of Wizard
 appearance/locomotion. The draft PR is **not merged or imported into Hunt**.
+
+
+### Full compass review (all eight directions)
+
+[Animated 16-frame N/NE/E/SE/S/SW/W/NW contact review](walk-16-frame-all-eight-groundlocked-textured-NOT-APPROVED.gif)
+uses the same textured source geometry in every direction. Check each
+quarter-angle for consistent foot orientation, robe overlap, and staff on the
+physical right hand. This is only an authoring preview; no game assets were
+changed and it is **not approved**.
