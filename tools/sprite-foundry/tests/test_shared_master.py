@@ -197,7 +197,7 @@ class SharedMasterTests(unittest.TestCase):
             line for line in workflow.read_text(encoding="utf-8").splitlines()
             if "master.py" in line and "--robe-uv" in line
         ]
-        self.assertEqual(2, len(commands))
+        self.assertEqual(4, len(commands))
         for command in commands:
             self.assertNotIn("--reference-sprite", command)
         texture = Image.open(MODULE_FILE.parent / "robe-uv-v001.png").convert("RGBA")
@@ -205,6 +205,42 @@ class SharedMasterTests(unittest.TestCase):
             wizard.contact_sheet(None, texture)[0].tobytes(),
             Image.open(MODULE_FILE.parent / "robe-uv-S-SE-E-8x-NOT-APPROVED.png").convert("RGBA").tobytes(),
         )
+
+    def test_one_upper_cloth_atlas_covers_hat_mantle_cape_and_sleeves(self):
+        source = runpy.run_path(str(MODULE_FILE.parent / "upper_uv.py"))
+        self.assertEqual(
+            {"mantle": (0, 48), "sleeves": (48, 96), "hat": (96, 128)},
+            source["ZONES"],
+        )
+        upper = source["upper_cloth_uv"]()
+        guide = source["upper_cloth_guide"]()
+        self.assertEqual((96, 128), upper.size)
+        self.assertEqual((96, 128), guide.size)
+        self.assertEqual(upper.tobytes(), source["upper_cloth_uv"]().tobytes())
+        self.assertEqual(guide.tobytes(), source["upper_cloth_guide"]().tobytes())
+        self.assertEqual(
+            upper.tobytes(),
+            Image.open(MODULE_FILE.parent / "upper-cloth-uv-v001.png").convert("RGBA").tobytes(),
+        )
+        self.assertEqual(
+            guide.tobytes(),
+            Image.open(MODULE_FILE.parent / "upper-cloth-uv-guide-v001.png").convert("RGBA").tobytes(),
+        )
+        robe = Image.open(MODULE_FILE.parent / "robe-uv-v001.png").convert("RGBA")
+        for direction in wizard.DIRECTIONS:
+            baseline = wizard.render(direction, robe_uv=robe)
+            painted = wizard.render(direction, robe_uv=robe, upper_uv=upper)
+            self.assertEqual(baseline.getchannel("A").tobytes(),
+                             painted.getchannel("A").tobytes(), direction)
+            self.assertNotEqual(baseline.tobytes(), painted.tobytes(), direction)
+            self.assertEqual(painted.tobytes(),
+                             wizard.render(direction, robe_uv=robe, upper_uv=upper).tobytes())
+        self.assertEqual(
+            wizard.contact_sheet(None, robe, upper)[0].tobytes(),
+            Image.open(MODULE_FILE.parent / "full-garment-uv-S-SE-E-8x-NOT-APPROVED.png").convert("RGBA").tobytes(),
+        )
+        with self.assertRaises(ValueError):
+            wizard.render("S", upper_uv=Image.new("RGBA", (97, 128)))
 
     def test_repeat_render_is_pixel_deterministic(self):
         self.assertEqual(wizard.render("SE").tobytes(), wizard.render("SE").tobytes())

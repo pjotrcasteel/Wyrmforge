@@ -176,6 +176,39 @@ The guide draws red absent panels over overlapping scar guide marks.
 
 This second paint iteration strengthens fold depth, seam stitching and rip-edge wear in **one common atlas**. The UV receives a higher blend weight, while the rejected south-only decal has a lower weight. The frozen pose, alpha and staff anatomy are untouched. It is still a **rough material study**, not an accurate tracing of the owner's accepted Gothic robe. Named physical holes and the right-hand staff remain defined by the frozen geometry.
 
+## One additional upper-cloth paint atlas — shared material v004 (not approved)
+
+The 96×128 `upper-cloth-uv-v001.png` is an independent, **single source**
+for three parts that previously used only flat base colors:
+
+| Pixel rows | Shared part | World-local sampling |
+| --- | --- | --- |
+| 0–47 | Torso mantle and two shoulder cape panels | Cloth azimuth and garment height 1.35–2.75 |
+| 48–95 | Both sleeves | Cloth azimuth and sleeve height 1.40–2.60 |
+| 96–127 | Floppy hat | Hat azimuth and fixed crown height 3.17–3.67 |
+
+The texture has restrained warm-grey cloth folds, sewn shoulder seams, darker
+cuffs and a weathered hat brim. It is **never generated per facing**.
+It is editable PNG albedo, with a separate
+[1:1 zone guide](upper-cloth-uv-guide-v001.png) and a
+[5× zone layout image](upper-cloth-uv-layout-NOT-APPROVED.png).
+The hat band, hands, beard, belt, boots, physical staff and all pose geometry
+remain unchanged. Neither this texture nor the robe atlas controls transparency.
+
+`upper_uv.py` reproduces the texture and painting guide:
+
+    py tools/sprite-foundry/experiments/shared-wizard-master-v001/upper_uv.py --output tools/sprite-foundry/output/upper-cloth.png --guide-output tools/sprite-foundry/output/upper-cloth-guide.png
+
+Review both shared material atlases from the same pose master, **with no rejected
+south-only planar decal**:
+
+    py tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --robe-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/robe-uv-v001.png --upper-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/upper-cloth-uv-v001.png --preview tools/sprite-foundry/output/full-garment.png
+
+The resulting [native-pixel 8× S/SE/E sheet](full-garment-uv-S-SE-E-8x-NOT-APPROVED.png)
+and [eight-way previous-vs-full-material comparison](full-garment-uv-8way-NOT-APPROVED.png)
+are unapproved visual studies, not production sprites. All original pose-locked
+mesh vertices and camera projection are unchanged.
+
 ## Visual quality still missing
 
 The preview is a *mechanical continuity test*, not a visual acceptance candidate.

@@ -216,11 +216,13 @@ def project(point,yaw):
     Z=-x*math.sin(a)+z*math.cos(a)
     return (FOOT_X+X*SCALE,FOOT_Y-y*SCALE+Z*2.7,Z)
 
-def render(direction, skin=None, robe_uv=None):
+def render(direction, skin=None, robe_uv=None, upper_uv=None):
     if skin is not None and (skin.size != (WIDTH,HEIGHT) or skin.mode != "RGBA"):
         raise ValueError("reference sprite must be a 64x80 RGBA image")
     if robe_uv is not None and (robe_uv.size != (96,128) or robe_uv.mode != "RGBA"):
         raise ValueError("robe UV atlas must be a 96x128 RGBA image")
+    if upper_uv is not None and (upper_uv.size != (96,128) or upper_uv.mode != "RGBA"):
+        raise ValueError("upper cloth UV atlas must be a 96x128 RGBA image")
     yaw=DIRECTIONS[direction]
     master=build_master()
     pixels=Image.new("RGBA",(WIDTH,HEIGHT),(0,0,0,0))
@@ -303,6 +305,26 @@ def render(direction, skin=None, robe_uv=None):
                         sample=robe_uv.getpixel((int(u*96)%96,min(127,int(v*128))))
                         weight=.94*sample[3]/255
                         base=tuple(int(weight*sample[j]+(1-weight)*base[j]) for j in range(3))
+                    if upper_uv is not None:
+                        # Three distinct atlas zones share one paintable upper-cloth
+                        # source. Coordinates are world-local, never direction pixels.
+                        if face.feature in {"torso-mantle","cape-panel","cape-torn-edge"}:
+                            first,height_rows,v0,v1,weight = 0,48,2.75,1.35,.88
+                        elif face.feature in {"right-sleeve","left-sleeve"}:
+                            first,height_rows,v0,v1,weight = 48,48,2.60,1.40,.73
+                        elif face.feature=="floppy-hat":
+                            first,height_rows,v0,v1,weight = 96,32,3.67,3.17,.84
+                        else:
+                            first=None
+                        if first is not None:
+                            theta=(math.atan2(wz,wx)%(2*math.pi))/(2*math.pi)
+                            height_t=max(0.0,min(.999999,(v0-wy)/(v0-v1)))
+                            texel=upper_uv.getpixel((
+                                int(theta*96)%96,
+                                first+min(height_rows-1,int(height_t*height_rows))
+                            ))
+                            alpha_weight=weight*texel[3]/255
+                            base=tuple(int(alpha_weight*texel[j]+(1-alpha_weight)*base[j]) for j in range(3))
                     # EXPERIMENTAL PLANAR DECAL: only the forward hemisphere can receive
                     # colors from this rejected S study. It is NOT an authored UV atlas.
                     if skin is not None and face.feature in {
@@ -330,8 +352,8 @@ def render(direction, skin=None, robe_uv=None):
                     pixels.putpixel((px,py),color)
     return pixels
 
-def contact_sheet(skin=None, robe_uv=None):
-    frames=[render(d,skin,robe_uv) for d in ("S","SE","E")]
+def contact_sheet(skin=None, robe_uv=None, upper_uv=None):
+    frames=[render(d,skin,robe_uv,upper_uv) for d in ("S","SE","E")]
     scale=8
     canvas=Image.new("RGBA",(WIDTH*scale*3+64,HEIGHT*scale+100),(17,23,29,255))
     draw=ImageDraw.Draw(canvas)
@@ -344,13 +366,13 @@ def contact_sheet(skin=None, robe_uv=None):
                 draw.rectangle((x+xx,y+yy,x+xx+63,y+yy+63),fill=col)
         canvas.alpha_composite(frame.resize((WIDTH*scale,HEIGHT*scale),Image.Resampling.NEAREST),(x,y))
         draw.text((x,20),label,fill=(231,230,223,255))
-    footer="SHARED ROBE UV MATERIAL STUDY - NOT APPROVED GAME ART" if robe_uv else "DETERMINISTIC MASTER GEOMETRY STUDY - NOT APPROVED GAME ART"
+    footer="SHARED GARMENT UV STUDY - NOT APPROVED GAME ART" if upper_uv else ("SHARED ROBE UV MATERIAL STUDY - NOT APPROVED GAME ART" if robe_uv else "DETERMINISTIC MASTER GEOMETRY STUDY - NOT APPROVED GAME ART")
     draw.text((16,HEIGHT*scale+66),footer,fill=(241,186,107,255))
     return canvas,frames
 
-def comparison_sheet(skin, robe_uv=None):
+def comparison_sheet(skin, robe_uv=None, upper_uv=None):
     """Side-by-side 8-way continuity audit, never an art approval sheet."""
-    if skin is None and robe_uv is None:
+    if skin is None and robe_uv is None and upper_uv is None:
         raise ValueError("eight-way comparison requires a reference or robe UV")
     directions=("S","SE","E","NE","N","NW","W","SW")
     scale=3
@@ -359,14 +381,14 @@ def comparison_sheet(skin, robe_uv=None):
     row_height=HEIGHT*scale+64
     canvas=Image.new("RGBA",(len(directions)*stride+24,top+2*row_height+34),(26,29,33,255))
     draw=ImageDraw.Draw(canvas)
-    if robe_uv is None:
-        variants=((None,None),(skin,None))
+    if robe_uv is None and upper_uv is None:
+        variants=((None,None,None),(skin,None,None))
         titles=("SINGLE MESH / BASE COLOR","SAME MESH / FRONT-ONLY COLOR DECAL")
     else:
-        variants=((skin,None),(skin,robe_uv))
+        variants=((skin,None,None),(skin,robe_uv,upper_uv))
         titles=("PREVIOUS / FRONT DECAL ONLY" if skin else "PREVIOUS / BASE COLOR",
-                "SAME MESH / CYLINDRICAL ROBE UV + FRONT DECAL" if skin else "SAME MESH / CYLINDRICAL ROBE UV")
-    for row,(reference,texture) in enumerate(variants):
+                "SAME MESH / SHARED GARMENT UV + FRONT DECAL" if skin else "SAME MESH / SHARED GARMENT UV")
+    for row,(reference,texture,upper_texture) in enumerate(variants):
         draw.text((12,top+row*row_height-23),titles[row],fill=(232,227,214,255))
         for index,direction in enumerate(directions):
             x=12+index*stride
@@ -375,7 +397,7 @@ def comparison_sheet(skin, robe_uv=None):
                 for i in range(0,WIDTH*scale,24):
                     checker=(i//24+j//24)%2
                     draw.rectangle((x+i,y+j,x+i+23,y+j+23),fill=(49,54,60,255) if checker else (40,45,51,255))
-            frame=render(direction,reference,texture)
+            frame=render(direction,reference,texture,upper_texture)
             canvas.alpha_composite(frame.resize((WIDTH*scale,HEIGHT*scale),Image.Resampling.NEAREST),(x,y))
             draw.text((x+4,y+HEIGHT*scale+6),direction,fill=(232,227,214,255))
     draw.text((12,canvas.height-20),"UNAPPROVED MATERIAL STUDY / NOT GAME ART",fill=(255,180,95,255))
@@ -389,24 +411,26 @@ def main():
     p.add_argument("--frames",type=Path,help="Export unapproved RGBA frames for Foundry input")
     p.add_argument("--reference-sprite",type=Path,help="Experimental front-hemisphere decal from a 64x80 RGBA S study")
     p.add_argument("--robe-uv",type=Path,help="Shared 96x128 cylindrical RGBA robe albedo atlas")
+    p.add_argument("--upper-uv",type=Path,help="Shared 96x128 RGBA mantle, sleeves and hat atlas")
     p.add_argument("--comparison",type=Path,help="Save eight-way base/decal audit (requires reference)")
     args=p.parse_args()
     skin=Image.open(args.reference_sprite).convert("RGBA") if args.reference_sprite else None
     robe_uv=Image.open(args.robe_uv).convert("RGBA") if args.robe_uv else None
+    upper_uv=Image.open(args.upper_uv).convert("RGBA") if args.upper_uv else None
     if skin is not None and skin.size!=(WIDTH,HEIGHT):
         raise ValueError("reference sprite must be native 64x80")
     if args.frames:
         for direction in DIRECTIONS:
             target=args.frames / "idle" / direction / "00.albedo.png"
             target.parent.mkdir(parents=True,exist_ok=True)
-            render(direction,skin,robe_uv).save(target)
-    canvas=render(args.direction,skin,robe_uv) if args.direction else contact_sheet(skin,robe_uv)[0]
+            render(direction,skin,robe_uv,upper_uv).save(target)
+    canvas=render(args.direction,skin,robe_uv,upper_uv) if args.direction else contact_sheet(skin,robe_uv,upper_uv)[0]
     if args.preview:
         args.preview.parent.mkdir(parents=True,exist_ok=True)
         canvas.save(args.preview)
     if args.comparison:
         args.comparison.parent.mkdir(parents=True,exist_ok=True)
-        comparison_sheet(skin,robe_uv).save(args.comparison)
+        comparison_sheet(skin,robe_uv,upper_uv).save(args.comparison)
     if args.json_output:
         out=io.BytesIO()
         canvas.save(out,format="PNG")
