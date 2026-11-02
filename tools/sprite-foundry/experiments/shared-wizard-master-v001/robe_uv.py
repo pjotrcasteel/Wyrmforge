@@ -21,36 +21,67 @@ def angular_distance(theta: float, degrees: float) -> float:
     return abs(math.atan2(math.sin(theta - target), math.cos(theta - target)))
 
 
+OPEN_PANEL_CELLS = (
+    (0, 4), (0, 5), (0, 9), (0, 10), (0, 17),
+    (1, 4), (1, 9), (1, 17), (2, 3), (3, 2), (3, 3),
+)
+GARMENT_RINGS = (.20, .55, .90, 1.08, 1.32)
+
+
 def make_robe_uv() -> Image.Image:
-    """Generate one cylindrical material atlas; 0° and 360° meet at its seam."""
+    """Paint one repeatable Gothic robe material, including fixed physical tear edges."""
     image = Image.new("RGBA", (WIDTH, HEIGHT))
     for py in range(HEIGHT):
         height = 2.38 - 2.18 * (py + .5) / HEIGHT
         for px in range(WIDTH):
             theta = 2 * math.pi * (px + .5) / WIDTH
-            fold = math.sin(11 * theta + 1.1 * height)
-            fold += .5 * math.sin(18 * theta - 1.7 * height)
-            value = 112 + 17 * fold + 4 * math.sin(theta * 31 + .25 * height)
-            dirt = max(0.0, min(1.0, (.98 - height) / .78))
-            value -= 17 * dirt
+            fold = math.sin(11 * theta + .90 * height)
+            fold += .40 * math.sin(18 * theta - 1.5 * height)
+            tone = 110 + 30 * fold + 4 * math.sin(theta * 29 + height * .55)
+
+            # The hem is soil-stained without turning the whole garment brown.
+            dirt = max(0.0, min(1.0, (1.02 - height) / .82))
+            tone -= 23 * dirt
+
+            # Dark stitched panel seams and a narrow, irregular pale thread edge.
             for azimuth in SEAM_AZIMUTHS:
-                if angular_distance(theta, azimuth) < .07 and .64 < height < 2.38:
-                    value -= 23
-                    if int(height * 16) % 4 == 0:
-                        value += 17
+                wobble = 1.4 * math.sin(height * 2.7 + azimuth)
+                distance = angular_distance(theta, azimuth + wobble)
+                if .64 < height < 2.38:
+                    if distance < .056:
+                        tone -= 30
+                    elif distance < .11:
+                        tone += 12 if int(height * 19) % 4 == 0 else 4
+
+            # A frayed margin surrounds each fixed, physical missing panel.
+            for ring, sector in OPEN_PANEL_CELLS:
+                lower, upper = GARMENT_RINGS[ring:ring + 2]
+                if lower - .08 <= height <= upper + .08:
+                    centre = (sector + .5) * 15
+                    distance = angular_distance(theta, centre)
+                    width = math.radians(7.5)
+                    if width < distance < width + .095:
+                        tone += 17 if int(height * 23) % 3 == 0 else 7
+                    elif distance < width + .14:
+                        tone -= 8
+
+            # Surface damage is painted on the same garment positions as mesh scars.
             for azimuth, top, length in SCAR_MARKS:
                 vertical = (top - height) / length
                 if 0 < vertical < 1:
-                    width = .19 * (1 - vertical) + .045
+                    taper = .19 * (1 - vertical) + .045
                     distance = angular_distance(theta, azimuth)
-                    if distance < width:
-                        value -= 35
-                    elif distance < width + .06:
-                        value += 19
-            grain = 3.0 * math.sin(px * 2.4 + py * 1.3)
+                    if distance < taper:
+                        tone -= 33
+                    elif distance < taper + .07:
+                        tone += 23 if int(height * 28) % 3 != 0 else 8
+
+            # Sparse stable grain; avoid per-frame randomness or high-frequency static.
+            grain = 2.0 * math.sin(px * 2.4 + py * 1.3)
             grain *= math.cos(px * 1.4 - py * 1.8)
-            tone = max(43, min(174, int(value + grain)))
-            image.putpixel((px, py), (tone + 3, tone + 1, tone - 2, 255))
+            value = max(43, min(174, int(tone + grain)))
+            value = int(round(value / 3)) * 3
+            image.putpixel((px, py), (value + 3, value + 1, value - 2, 255))
     return image
 
 

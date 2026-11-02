@@ -121,9 +121,9 @@ coordinates are computed from the same original 3D garment:
 `u = atan2(z,x) / 2π` around the robe; `v` runs from shoulder to hem.
 The alpha in this file is a paint blend mask, **never sprite transparency**.
 
-The first atlas is generated deterministically by
-[`robe_uv.py`](robe_uv.py), which places grayscale folds, three sewn seams,
-dirt and the existing scar landmarks at fixed local coordinates. The PNG
+The atlas is generated deterministically by
+[`robe_uv.py`](robe_uv.py), which places pronounced grayscale folds, three stitched panel seams,
+hem soil, edge fraying around the 11 existing physical cutouts, and the same three scar landmarks at fixed local garment coordinates. The PNG
 is a normal image that can later be hand-painted in Krita, Aseprite or GIMP
 without changing the mesh, direction frames or the camera.
 
@@ -136,17 +136,15 @@ and give an output PNG path. Both preview files also live in this experiment
 folder with `NOT-APPROVED` names. The texture is deliberately optional:
 the previous pose and color baseline remain reproducible.
 
-The newly painted robe is still a **rough material study**, not an accurate
-tracing of the owner's accepted Gothic robe. Named physical holes and the
-right-hand staff remain defined by the frozen geometry.
+This second paint iteration strengthens fold depth, seam stitching and rip-edge wear in **one common atlas**. The UV receives a higher blend weight, while the rejected south-only decal has a lower weight. The frozen pose, alpha and staff anatomy are untouched. It is still a **rough material study**, not an accurate tracing of the owner's accepted Gothic robe. Named physical holes and the right-hand staff remain defined by the frozen geometry.
 
 ## Visual quality still missing
 
 The preview is a *mechanical continuity test*, not a visual acceptance candidate.
-Before this may become the real Wizard master, rebuild its geometry and material maps
-against the owner's approved reference from PR #439:
+Before this may become the real Wizard master, refine its character identity and material maps
+against the owner's approved reference from PR #439, while **preserving the pose the owner liked**. Any future pose or silhouette change must be separately approved:
 
-1. Correct actual anatomy, silhouette and robe tailoring (not cylinders/boxes).
+1. Improve actual anatomy, silhouette and robe tailoring without silently changing the locked pose.
 2. Model the established hat profile, hair, beard, belt, boots, hand and staff grip.
 3. Place the exact approved wear/tear pattern with fixed UV/material coordinates,
    and verify the pattern is visible from all three angles where physically exposed.

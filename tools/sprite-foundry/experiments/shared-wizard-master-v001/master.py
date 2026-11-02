@@ -279,7 +279,7 @@ def render(direction, skin=None, robe_uv=None):
                         u=(math.atan2(wz,wx)%(2*math.pi))/(2*math.pi)
                         v=max(0.0,min(1.0,(2.38-wy)/2.18))
                         sample=robe_uv.getpixel((int(u*96)%96,min(127,int(v*128))))
-                        weight=.78*sample[3]/255
+                        weight=.94*sample[3]/255
                         base=tuple(int(weight*sample[j]+(1-weight)*base[j]) for j in range(3))
                     # EXPERIMENTAL PLANAR DECAL: only the forward hemisphere can receive
                     # colors from this rejected S study. It is NOT an authored UV atlas.
@@ -301,7 +301,7 @@ def render(direction, skin=None, robe_uv=None):
                             front_weight=max(0.0,min(1.0,(frontness-.22)/.58))
                             front_weight=front_weight*front_weight*(3-2*front_weight)
                             if sample[3]>=160 and chroma<35 and 35<sum(sample[:3])/3<245:
-                                weight=.72*front_weight
+                                weight=.62*front_weight
                                 base=tuple(int(weight*sample[j]+(1-weight)*base[j]) for j in range(3))
                     color=tuple(min(255,max(0,int(channel*brightness*detail))) for channel in base)+(255,)
                     zbuffer[py][px]=depth
