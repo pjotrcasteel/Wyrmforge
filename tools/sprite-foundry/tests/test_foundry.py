@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, ImageOps
 
 MODULE_FILE = Path(__file__).resolve().parents[1] / "foundry.py"
 SPEC = importlib.util.spec_from_file_location("sprite_foundry", MODULE_FILE)
@@ -93,6 +93,42 @@ class FoundryTests(unittest.TestCase):
 
     def test_direction_order_matches_existing_sprite_lab(self):
         self.assertEqual(("N", "NE", "E", "SE", "S", "SW", "W", "NW"), foundry.DIRECTIONS)
+
+    def test_wizard_cannot_reuse_a_facing_for_another_direction(self):
+        self.seed()
+        project = sample_project()
+        project["directionRules"] = {"requireDistinctFacings": True}
+        report = foundry.build(project, self.source, self.out, False)
+        self.assertEqual("invalid", report["technicalStatus"])
+        self.assertTrue(any("identical N and NE" in issue for issue in report["errors"]))
+        self.assertEqual("NOT_APPROVED", report["artApproval"])
+
+    def test_mirrored_asymmetric_equipment_is_rejected(self):
+        self.seed()
+        north_path = self.source / "idle" / "N" / "00.albedo.png"
+        east_path = self.source / "idle" / "E" / "00.albedo.png"
+        with Image.open(north_path) as original:
+            north = original.convert("RGBA")
+        north.putpixel((18, 20), (255, 0, 0, 255))
+        north.save(north_path)
+        ImageOps.mirror(north).save(east_path)
+        project = sample_project()
+        project["directionRules"] = {"forbidMirroredFacings": True}
+        report = foundry.build(project, self.source, self.out, False)
+        self.assertEqual("invalid", report["technicalStatus"])
+        self.assertTrue(any("E exactly mirrors N" in issue for issue in report["errors"]))
+
+    def test_direction_rules_reject_unknown_or_non_boolean_values(self):
+        project = sample_project()
+        project["directionRules"] = {"requireDistinctFacings": "yes"}
+        path = self.root / "invalid-rules.json"
+        path.write_text(json.dumps(project), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "booleans"):
+            foundry.read_project(path)
+        project["directionRules"] = {"guessAnatomy": True}
+        path.write_text(json.dumps(project), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "unknown"):
+            foundry.read_project(path)
 
     def test_bad_manifest_rejected(self):
         project = sample_project()
