@@ -137,4 +137,48 @@ public sealed class GreyboxHuntBrowserTests : PageTest
         Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
         await Page.ScreenshotAsync(new() { Path = Path.Combine(output, $"{shot}-{width}.png"), FullPage = false });
     }
+
+    /// <summary>Hunt 1.0 H8: the Chart paints the authoritative Wyrm Influence, rising from a Wet entrance to a Volcanic lair.</summary>
+    [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
+    public async Task HuntChart_ShowsWyrmInfluenceBandsRisingTowardTheLair(int width, int height)
+    {
+        var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
+        var output = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS")
+            ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
+        Directory.CreateDirectory(output);
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.AddInitScriptAsync("""
+            localStorage.setItem('wyrmforge.firstHunt.v1','3');
+            localStorage.setItem('wyrmforge.characterSchool.v1','Pyromancer');
+            """);
+        await Page.GotoAsync(root + "/", new() { WaitUntil = WaitUntilState.NetworkIdle });
+        var start = Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^START GAME") });
+        await start.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 45000 });
+        await start.ClickAsync();
+        if (await Page.Locator(".character-creation").IsVisibleAsync())
+            await Page.GetByRole(AriaRole.Button, new() { Name = "Choose Pyromancer" }).ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Region, new() { Name = "Town square" })).ToBeVisibleAsync();
+        await Page.Locator(".refuge-town-spot--gate").ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Enter Free Play" }).ClickAsync();
+        await Page.Locator(".gate-action--primary").ClickAsync();
+        await Page.Locator(".gate-lineage--fire").ClickAsync();
+        await Page.Locator(".gate-tier--ready").First.ClickAsync();
+        await Expect(Page.GetByText("Choose your trail.", new() { Exact = true })).ToBeVisibleAsync();
+
+        var bands = await Page.EvaluateAsync<System.Text.Json.JsonElement>(@"() => [...document.querySelectorAll('button.route-node')]
+            .map(node => ({ stage: Number(node.dataset.stage), dragon: node.classList.contains('dragon'), band: node.dataset.influenceBand }))");
+        var order = new[] { "wet", "scorched", "burning", "volcanic" };
+        var nodes = bands.EnumerateArray().Select(node => (Stage: node.GetProperty("stage").GetInt32(),
+            Dragon: node.GetProperty("dragon").GetBoolean(), Band: Array.IndexOf(order, node.GetProperty("band").GetString()))).ToList();
+        Assert.IsTrue(nodes.All(node => node.Band >= 0), "every node carries a known influence band");
+        var lair = nodes.Single(node => node.Dragon).Band;
+        Assert.AreEqual(3, lair, "the lair sits in Volcanic Devastation");
+        Assert.AreEqual(0, nodes.Where(node => !node.Dragon).OrderBy(node => node.Stage).First().Band, "the first trail is Wet Forest");
+        var strongestByStage = nodes.Where(node => !node.Dragon).GroupBy(node => node.Stage).OrderBy(group => group.Key).Select(group => group.Max(node => node.Band)).ToList();
+        CollectionAssert.AreEqual(strongestByStage.OrderBy(band => band).ToList(), strongestByStage, "influence never falls toward the lair");
+        await Expect(Page.Locator(".influence-wash")).ToBeAttachedAsync();
+        await Page.ScreenshotAsync(new() { Path = Path.Combine(output, $"hunt1-chart-{width}.png"), FullPage = false });
+    }
 }

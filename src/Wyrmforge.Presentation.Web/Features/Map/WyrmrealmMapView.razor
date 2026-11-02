@@ -29,6 +29,10 @@
         <div class="hunt-chart">
         <div class="hunt-viewport" @ref="viewport" tabindex="0" aria-label="Scrollable hunt territory">
             <div class="realm-route @(Hunt?.HasWatchtower == true ? "realm-route--long" : "")" aria-label="Generated Wyrmrealm route map">
+                @if (Hunt is not null)
+                {
+                    <div class="influence-wash" style="@InfluenceWashStyle()" aria-hidden="true"></div>
+                }
                 <svg class="hunt-terrain" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
                     @if (Territory is { } land)
                     {
@@ -116,7 +120,7 @@
                 </svg>
                 @foreach (var node in Nodes.OrderBy(node => node.Stage).ThenBy(node => node.Lane))
                 {
-                    <button class="@NodeClass(node)" style="@NodeMapStyle(node)" data-road="@node.Site?.RoadId" data-site-id="@node.Geography?.SiteId" data-site-version="@node.Geography?.Version" data-site-ports="@node.Geography?.Ports.Count" data-site-kind="@node.Geography?.Landscape?.Kind" data-site-obstacles="@node.Geography?.Landscape?.Obstacles.Count" data-stage="@node.Stage" data-current="@(IsCurrent(node) ? "true" : "false")" aria-label="@NodeAriaLabel(node)" aria-pressed="@(selectedNode?.Id == node.Id)" @onclick="() => SelectNode(node)">
+                    <button class="@NodeClass(node)" style="@NodeMapStyle(node)" data-road="@node.Site?.RoadId" data-site-id="@node.Geography?.SiteId" data-site-version="@node.Geography?.Version" data-site-ports="@node.Geography?.Ports.Count" data-site-kind="@node.Geography?.Landscape?.Kind" data-site-obstacles="@node.Geography?.Landscape?.Obstacles.Count" data-stage="@node.Stage" data-influence-band="@InfluenceBandName(node)" data-current="@(IsCurrent(node) ? "true" : "false")" aria-label="@NodeAriaLabel(node)" aria-pressed="@(selectedNode?.Id == node.Id)" @onclick="() => SelectNode(node)">
                         @if (IsCurrent(node)) { <span class="current-marker">YOU</span> }
                         <span class="node-core">
                             <svg class="node-main-icon" viewBox="0 0 46 34" aria-hidden="true"><path d="@LandmarkPath(node)" /></svg>
@@ -153,6 +157,10 @@
                             <span class="sheet-road">@road.Length road · @road.Encounters fights @(road.BonusRelic ? "· Bonus relic" : "")</span>
                         }
                         <span class="sheet-encounter">@WyrmrealmHabitatCatalog.DisplayName(selected.Habitat) · @selected.EncounterName</span>
+                        @if (Hunt is not null)
+                        {
+                            <span class="sheet-influence influence-@InfluenceBandName(selected)">@WyrmInfluenceProfile.Fire.Name(selected.Influence)</span>
+                        }
                         @if (selected.Refuge)
                         {
                             <span class="sheet-refuge">⛨ Optional side quest · a harder hold</span>
@@ -261,6 +269,23 @@
     private void SelectNode(WyrmrealmMapNode node) => selectedNode = node;
     private void ClearSelection() => selectedNode = null;
     private Task ConfirmSelectedAsync() => selectedNode is { } node && IsAvailable(node) ? OnChoose.InvokeAsync(node.Id) : Task.CompletedTask;
+
+    private static readonly string[] InfluenceBandNames = ["wet", "scorched", "burning", "volcanic"];
+    private static readonly string[] InfluenceWashColors = ["#2c4a3a40", "#5a463052", "#7a2a1666", "#a3180a70"];
+
+    private static int InfluenceBandIndex(WyrmrealmMapNode node) => (int)WyrmInfluenceProfile.Fire.Band(node.Influence);
+    private static string InfluenceBandName(WyrmrealmMapNode node) => InfluenceBandNames[InfluenceBandIndex(node)];
+
+    // One authoritative influence value per node paints the land from the camp to the lair; the view never rolls its own.
+    private string InfluenceWashStyle()
+    {
+        var stops = Nodes.Where(node => node is { Refuge: false, Watchtower: false })
+            .Select(node => (Y: Math.Clamp(NodeY(node), 0, 100), Color: InfluenceWashColors[InfluenceBandIndex(node)]))
+            .OrderBy(stop => stop.Y).ToList();
+        if (stops.Count == 0) return string.Empty;
+        var css = string.Join(",", stops.Select(stop => FormattableString.Invariant($"{stop.Color} {stop.Y:0.#}%")));
+        return FormattableString.Invariant($"background:linear-gradient(180deg,{css});");
+    }
 
     private string NodeClass(WyrmrealmMapNode node)
     {
