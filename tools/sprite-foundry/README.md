@@ -27,6 +27,21 @@ Remove the --allow-incomplete argument for the full technical gate. The output/ 
 
 Atlas rows use the **existing Sprite Lab/runtime order:** N, NE, E, SE, S, SW, W, NW. This is distinct from the rejected first candidate's S-first presentation. A filename is not evidence that a sprite actually faces that direction: verify anatomy, staff side, boots and silhouette against the compass before approval. **The v001 Wizard directional study was rejected by the owner on 2 November for incorrect directions.**
 
+## Direction integrity checks
+
+The Wizard profile opts into `directionRules.requireDistinctFacings` and
+`directionRules.forbidMirroredFacings`. These checks fail an atlas when two
+direction slots have pixel-identical frames, or one is an exact horizontal flip
+of another. They prevent some misleading eight-way sheets from obtaining a
+technical pass, including accidentally duplicated files and flipped asymmetric
+equipment. Each offending clip/frame/direction is reported in `report.json`.
+
+The rules are opt-in so genuinely symmetrical creatures and props remain
+possible. They **cannot determine whether a non-identical sprite really faces
+SE**, whether a hand is anatomically correct, or whether staff placement
+changes abruptly through S→SE→E. Human comparison is still mandatory. Never
+infer approval from passing these checks.
+
 ## Input layout
 
 The project JSON states intended cell dimensions, eight canonical directions, foot anchor, frame counts and nominal preview FPS. Its initial **64×80 / 32×32-world** values are a proposed Wizard review format, not a redefinition of the runtime pixel/world scale or the native 160px source files on PR #439.
