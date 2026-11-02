@@ -385,8 +385,10 @@ function draw(state, snapshot, width, height) {
         snapshot.player?.activeSchool);
     state.fractureGpuEmitters = fractureEmitters;
     state.selectionGpuEmitter = selectionEmitter;
-    state.sharedLightingFrame = withDebugAmbient(withHollowFractureLightingFrame(snapshot.lighting,
-        selectionEmitter ? [...fractureEmitters,selectionEmitter] : fractureEmitters), state.debug.bright);
+    state.sharedLightingFrame = withHollowFractureLightingFrame(snapshot.lighting,
+        selectionEmitter ? [...fractureEmitters,selectionEmitter] : fractureEmitters);
+    // Debug inspection light (opt-in by URL): lifts only the ambient term of the frame handed to the renderer.
+    state.sharedLightingFrame = withDebugAmbient(state.sharedLightingFrame, state.debug.bright);
     const spellLights = [
         ...buildSpellLights(snapshot, visualSeconds, state.reducedMotion.matches, lightViewport),
         ...hollowFractureCanvasLights(fractureEmitters,snapshot.lighting),

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-    DEBUG_BRIGHT_AMBIENT, MAX_DEBUG_SPEED, withDebugAmbient, botHuntDirection, flowDirection, botKiteDirection, botMovement, createBotMemory, readArenaDebugFlags,
+    DEBUG_BRIGHT_AMBIENT, DEBUG_BRIGHT_COLOR, MAX_DEBUG_SPEED, withDebugAmbient, botHuntDirection, flowDirection, botKiteDirection, botMovement, createBotMemory, readArenaDebugFlags,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-debug.js';
 
 const world = { width: 1024, height: 1920 };
@@ -141,11 +141,11 @@ test('the bright inspection light only lifts the ambient term and only on reques
     assert.equal(withDebugAmbient(night, false), night, 'off: the very same frame');
     const lit = withDebugAmbient(night, true);
     assert.equal(lit.environment.ambient, DEBUG_BRIGHT_AMBIENT);
-    assert.equal(lit.environment.color, '#8c9cbb');
+    assert.equal(lit.environment.color, DEBUG_BRIGHT_COLOR, 'a neutral moon colour so ground hues stay readable');
     assert.equal(lit.lights, night.lights, 'lights are untouched');
     assert.equal(night.environment.ambient, 0.24, 'the C# frame is never mutated');
-    const already = withDebugAmbient({ environment: { ambient: 9 } }, true);
-    assert.equal(already.environment.ambient, 9, 'never dims a brighter frame');
+    const already = withDebugAmbient({ environment: { ambient: 50 } }, true);
+    assert.equal(already.environment.ambient, 50, 'never dims a brighter frame');
     assert.equal(withDebugAmbient(null, true), null);
     assert.equal(readArenaDebugFlags('?bright=1').bright, true);
     assert.equal(readArenaDebugFlags('?bright=yes').bright, false);
