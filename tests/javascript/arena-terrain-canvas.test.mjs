@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-    BLOCK_INSET_COLOR, TERRAIN_MATERIAL, TERRAIN_PAD_UNITS, TerrainCanvasCache, blockInsetOverlayEnabled, drawBlockInsetOverlay, heightShade, influenceBandIndex, paintTerrain, terrainColors,
+    BLOCK_INSET_COLOR, TERRAIN_MATERIAL, eraseTerrainOcclusion, occludingTerrainCells, repaintTerrainOcclusion, TERRAIN_PAD_UNITS, TerrainCanvasCache, blockInsetOverlayEnabled, drawBlockInsetOverlay, heightShade, influenceBandIndex, paintTerrain, terrainColors,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-terrain-canvas.js';
 import { raisedActor } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-projection.js';
 
@@ -148,4 +148,40 @@ test('the inset overlay draws one one-pixel line inside each 32x32 face and one 
     assert.deepEqual(strokes[0].slice(1, 5), [0.5, -63.5, 31, 31], 'top face two metres up, inset by one pixel');
     assert.deepEqual(strokes.slice(1, 3).map(call => call.slice(1, 5)), [[0.5, -31.5, 31, 31], [0.5, 0.5, 31, 31]], 'two metres of front face');
     assert.ok(strokes.every(call => call[5] === BLOCK_INSET_COLOR && call[6] === 1));
+});
+
+test('only terrain south of the actor that is higher than its feet occludes it', () => {
+    // 1 column x 6 rows: floor, floor, floor, 1 m rock, 1 m rock, floor.
+    const terrain = frame(1, 6, [0, 0, 0, 8, 8, 0]);
+    assert.deepEqual(occludingTerrainCells(terrain, 16, 40, 0, 12), [{ column: 0, row: 3 }, { column: 0, row: 4 }], 'rock in front of an actor on the floor');
+    assert.deepEqual(occludingTerrainCells(terrain, 16, 5 * 32 + 8, 0, 12), [], 'behind the rock nothing is in front');
+    assert.deepEqual(occludingTerrainCells(terrain, 16, 3 * 32 + 8, 32, 12), [], 'an actor standing on the rock is not hidden by it');
+    assert.deepEqual(occludingTerrainCells(null, 16, 40, 0, 12), []);
+    assert.deepEqual(occludingTerrainCells(terrain, Number.NaN, 40, 0, 12), []);
+});
+
+test('only a few rows ahead are considered and the actor width picks the columns', () => {
+    const terrain = frame(3, 10, new Array(30).fill(0).map((_, i) => (i >= 24 ? 8 : 0)));
+    assert.deepEqual(occludingTerrainCells(terrain, 48, 8, 0, 4), [], 'rock eight rows away is too far to hide the actor');
+    const wide = frame(3, 3, [0, 0, 0, 0, 0, 0, 8, 8, 8]);
+    assert.deepEqual(occludingTerrainCells(wide, 64, 40, 0, 20).map(cell => cell.column), [1, 2], 'x 64 +/- 20 spans columns 1 and 2');
+});
+
+test('the GPU path erases the covering faces and the Canvas path repaints them back to front', () => {
+    const terrain = frame(1, 3, [0, 8, 0]);
+    const cells = occludingTerrainCells(terrain, 16, 8, 0, 8);
+    assert.deepEqual(cells, [{ column: 0, row: 1 }]);
+    const erase = recorder();
+    erase.globalCompositeOperation = 'source-over';
+    const saved = [];
+    erase.save = () => saved.push(erase.globalCompositeOperation);
+    erase.restore = () => { erase.globalCompositeOperation = saved.pop(); };
+    assert.equal(eraseTerrainOcclusion(erase, terrain, cells), 1);
+    const rects = erase.calls.filter(call => call[0] === 'fillRect').map(call => call.slice(1, 5));
+    assert.deepEqual(rects, [[0, 0, 32, 32], [0, 32, 32, 32]], 'top face lifted a metre, then the front face down to the floor');
+    assert.equal(erase.globalCompositeOperation, 'source-over', 'the compositing mode is restored');
+    assert.equal(eraseTerrainOcclusion(recorder(), terrain, []), 0);
+    const repaint = recorder();
+    assert.equal(repaintTerrainOcclusion(repaint, terrain, 0, cells), 1);
+    assert.equal(repaint.calls.filter(call => call[0] === 'fillRect').length, 2);
 });

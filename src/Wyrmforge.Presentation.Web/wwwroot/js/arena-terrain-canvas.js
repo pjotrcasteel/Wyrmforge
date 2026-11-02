@@ -1,7 +1,7 @@
 // Hunt 1.0 terrain painter (H5.1). Draws the authoritative C# heightfield as flat colour ramps in the metric oblique
 // projection: a 32x32 top face and a 32x32 front face per 1 m block. No textures, no outlines (the one-pixel inset line is a
 // separate debug overlay). Presentation reads the grid; it never edits it.
-import { FACE_PIXELS, blockFrontRect, blockTopRect } from './arena-projection.js';
+import { FACE_PIXELS, MICROCELL_UNITS, blockFrontRect, blockTopRect } from './arena-projection.js';
 
 export const TERRAIN_MATERIAL = Object.freeze({ Soil: 0, Ash: 1, Stone: 2, Lava: 3 });
 // Same bounds as C# WyrmInfluenceProfile.Fire: Wet, Scorched, Burning, Volcanic.
@@ -50,30 +50,76 @@ export function heightShade(hex, surfaceMicrocells) {
  * draw above row 0 stay on the surface. Returns the number of rectangles painted.
  */
 export function paintTerrain(ctx, frame, band, offsetY = TERRAIN_PAD_UNITS) {
-    const { columns, rows, surface, material } = frame;
+    const { columns, rows } = frame;
     let painted = 0;
     ctx.save();
     ctx.translate(0, offsetY);
-    for (let row = 0; row < rows; row++) {
-        for (let column = 0; column < columns; column++) {
-            const index = row * columns + column;
-            const height = surface[index];
-            const colors = terrainColors(band, material[index]);
-            const top = blockTopRect(column, row, height);
-            ctx.fillStyle = heightShade(colors.top, height);
-            ctx.fillRect(top.x, top.y, top.width, top.height);
-            painted++;
-            const frontHeight = row + 1 < rows ? surface[index + columns] : height;
-            const front = blockFrontRect(column, row, height, frontHeight);
-            if (front) {
-                ctx.fillStyle = colors.front;
-                ctx.fillRect(front.x, front.y, front.width, front.height);
-                painted++;
-            }
-        }
-    }
+    for (let row = 0; row < rows; row++)
+        for (let column = 0; column < columns; column++) painted += paintTerrainCell(ctx, frame, band, column, row);
     ctx.restore();
     return painted;
+}
+
+/** Paints one column's top face and, where a lower neighbour is in front, its front face. Returns rectangles painted. */
+export function paintTerrainCell(ctx, frame, band, column, row) {
+    const { columns, rows, surface, material } = frame;
+    const index = row * columns + column;
+    const height = surface[index];
+    const colors = terrainColors(band, material[index]);
+    const top = blockTopRect(column, row, height);
+    ctx.fillStyle = heightShade(colors.top, height);
+    ctx.fillRect(top.x, top.y, top.width, top.height);
+    let painted = 1;
+    const frontHeight = row + 1 < rows ? surface[index + columns] : height;
+    const front = blockFrontRect(column, row, height, frontHeight);
+    if (front) {
+        ctx.fillStyle = colors.front;
+        ctx.fillRect(front.x, front.y, front.width, front.height);
+        painted++;
+    }
+    return painted;
+}
+
+const OCCLUSION_ROWS = 4;
+
+/**
+ * Terrain columns in front of (south of) an actor that stand higher than its feet: they hide part of it.
+ * Returned back to front so repainting them keeps the painter's order.
+ */
+export function occludingTerrainCells(frame, groundX, groundY, groundZ, halfWidth) {
+    if (!frame || !Number.isFinite(groundX) || !Number.isFinite(groundY)) return [];
+    const { columns, rows, surface } = frame;
+    const footRow = Math.floor(groundY / FACE_PIXELS);
+    const first = Math.max(0, Math.floor((groundX - halfWidth) / FACE_PIXELS));
+    const last = Math.min(columns - 1, Math.floor((groundX + halfWidth) / FACE_PIXELS));
+    const cells = [];
+    for (let row = Math.max(0, footRow + 1); row <= Math.min(rows - 1, footRow + OCCLUSION_ROWS); row++)
+        for (let column = first; column <= last; column++)
+            if (surface[row * columns + column] * MICROCELL_UNITS > groundZ + 1) cells.push({ column, row });
+    return cells;
+}
+
+/** GPU path: remove the covered pixels from an actor's scratch tile so the lit terrain beneath shows through. */
+export function eraseTerrainOcclusion(ctx, frame, cells) {
+    if (cells.length === 0) return 0;
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.fillStyle = '#000';
+    for (const { column, row } of cells) {
+        const height = frame.surface[row * frame.columns + column];
+        const top = blockTopRect(column, row, height);
+        ctx.fillRect(top.x, top.y, top.width, top.height);
+        const front = blockFrontRect(column, row, height, row + 1 < frame.rows ? frame.surface[(row + 1) * frame.columns + column] : height);
+        if (front) ctx.fillRect(front.x, front.y, front.width, front.height);
+    }
+    ctx.restore();
+    return cells.length;
+}
+
+/** Canvas path: paint the covering terrain over the actor in painter's order. */
+export function repaintTerrainOcclusion(ctx, frame, band, cells) {
+    for (const { column, row } of cells) paintTerrainCell(ctx, frame, band, column, row);
+    return cells.length;
 }
 
 export const BLOCK_INSET_COLOR = '#ff00ff';

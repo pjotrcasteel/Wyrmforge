@@ -9,7 +9,7 @@ import { resolveTargetIndicator, presentTargetSigil, drawTargetIndicator, preloa
 import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, createDestructibleLayers, drawArenaCloisterElevation, semanticSiteModeEnabled } from './arena-environment.js?v=20261031-ar1-highlands-v1';
 import { drawAr1GeographyReview } from './arena-ar1-geography-review.js?v=20261031-ar1-site-detail-v1';
 import { drawGreyboxGround } from './arena-greybox-ground.js';
-import { TerrainCanvasCache, influenceBandIndex, blockInsetOverlayEnabled, drawBlockInsetOverlay } from './arena-terrain-canvas.js';
+import { TerrainCanvasCache, influenceBandIndex, blockInsetOverlayEnabled, drawBlockInsetOverlay, occludingTerrainCells, eraseTerrainOcclusion, repaintTerrainOcclusion } from './arena-terrain-canvas.js';
 import { raisedActor } from './arena-projection.js';
 import { ambientParticles, drawAmbientParticles } from './arena-ambient-particles.js';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
@@ -519,6 +519,13 @@ function draw(state, snapshot, width, height) {
                     gpu ? null : sampleSpellLight(spellLights, snapshot.player.x, snapshot.player.y),
                     updateMageWalk(state.mageWalk, snapshot.player, visualSeconds, state.reducedMotion.matches),
                     state.mageWalk.facing);
+            }
+            if (state.terrainFrame && (layer.kind === 'enemy' || layer.kind === 'mage')) {
+                // Raised rock in front of the actor hides it: the covered pixels fall away (GPU) or the rock is repainted (Canvas).
+                const body = layer.enemy ?? layer.player;
+                const cells = occludingTerrainCells(state.terrainFrame, body.x, body.y + (body.z || 0), body.z || 0, (body.radius || 16) * 1.25);
+                if (gpu) eraseTerrainOcclusion(ctx, state.terrainFrame, cells);
+                else repaintTerrainOcclusion(ctx, state.terrainFrame, influenceBandIndex(snapshot.environment?.corruption), cells);
             }
         }
         if (gpu) {
