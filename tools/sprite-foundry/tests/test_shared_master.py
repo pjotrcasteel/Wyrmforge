@@ -197,9 +197,10 @@ class SharedMasterTests(unittest.TestCase):
             line for line in workflow.read_text(encoding="utf-8").splitlines()
             if "master.py" in line and "--robe-uv" in line
         ]
-        self.assertEqual(6, len(commands))
+        self.assertEqual(7, len(commands))
         for command in commands:
             self.assertNotIn("--reference-sprite", command)
+        self.assertEqual(1, sum("--staff-audit-json" in command for command in commands))
         texture = Image.open(MODULE_FILE.parent / "robe-uv-v001.png").convert("RGBA")
         self.assertEqual(
             wizard.contact_sheet(None, texture)[0].tobytes(),
