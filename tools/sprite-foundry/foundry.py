@@ -8,7 +8,7 @@ import re
 import sys
 from pathlib import Path
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageOps
 
 DIRECTIONS = ("N", "NE", "E", "SE", "S", "SW", "W", "NW")
 LAYERS = ("albedo", "normal", "roughness", "emission", "depth")
@@ -33,6 +33,12 @@ def read_project(path: Path) -> dict:
         raise ValueError("feetAnchor must be inside the cell")
     if data.get("directions") != list(DIRECTIONS):
         raise ValueError("directions must follow WyrmForge's canonical N,NE,E,SE,S,SW,W,NW order")
+    rules = data.get("directionRules", {})
+    allowed_rules = {"requireDistinctFacings", "forbidMirroredFacings"}
+    if not isinstance(rules, dict) or set(rules) - allowed_rules:
+        raise ValueError("directionRules contains unknown or invalid options")
+    if not all(isinstance(value, bool) for value in rules.values()):
+        raise ValueError("directionRules values must be booleans")
     clips = data.get("clips")
     if not isinstance(clips, dict) or not clips:
         raise ValueError("clips must be a non-empty object")
@@ -86,6 +92,8 @@ def build(project: dict, source: Path, out: Path, allow_incomplete: bool) -> dic
     errors: list[str] = []
     outputs: dict[str, dict] = {}
     missing_count = 0
+    direction_rules = project.get("directionRules", {})
+    direction_findings: list[str] = []
     out.mkdir(parents=True, exist_ok=True)
     for clip_name, config in project["clips"].items():
         count = config["frames"]
@@ -93,6 +101,7 @@ def build(project: dict, source: Path, out: Path, allow_incomplete: bool) -> dic
         seen_layers: dict[str, set[str]] = {layer: set() for layer in LAYERS[1:]}
         valid_sources: set[str] = set()
         identical_frames = 0
+        frames_by_index: dict[int, dict[str, tuple[bytes, bytes]]] = {}
         for row, direction in enumerate(DIRECTIONS):
             previous: bytes | None = None
             for index in range(count):
@@ -111,6 +120,7 @@ def build(project: dict, source: Path, out: Path, allow_incomplete: bool) -> dic
                     continue
                 valid_sources.add(key)
                 payload = image.tobytes()
+                frames_by_index.setdefault(index, {})[direction] = (payload, ImageOps.mirror(image).tobytes())
                 if count > 1 and payload == previous:
                     identical_frames += 1
                 previous = payload
@@ -129,6 +139,24 @@ def build(project: dict, source: Path, out: Path, allow_incomplete: bool) -> dic
                         seen_layers[layer].add(key)
                     except (OSError, ValueError) as exc:
                         errors.append(str(exc))
+        for index, views in frames_by_index.items():
+            seen: dict[bytes, str] = {}
+            for direction in DIRECTIONS:
+                if direction not in views:
+                    continue
+                pixels, flipped_pixels = views[direction]
+                if direction_rules.get("requireDistinctFacings") and pixels in seen:
+                    direction_findings.append(
+                        f"{clip_name}/frame {index:02d}: identical {seen[pixels]} and {direction} facings"
+                    )
+                seen.setdefault(pixels, direction)
+                if direction_rules.get("forbidMirroredFacings"):
+                    for earlier in DIRECTIONS[:DIRECTIONS.index(direction)]:
+                        if earlier in views and views[earlier][0] == flipped_pixels and earlier != seen.get(pixels):
+                            direction_findings.append(
+                                f"{clip_name}/frame {index:02d}: {direction} exactly mirrors {earlier}; "
+                                "asymmetric equipment must be authored, not flipped"
+                            )
         if identical_frames:
             warnings.append(f"{clip_name}: {identical_frames} neighboring frame pairs are identical")
         clip_outputs: dict[str, str] = {}
@@ -151,6 +179,7 @@ def build(project: dict, source: Path, out: Path, allow_incomplete: bool) -> dic
         review.alpha_composite(layers["albedo"])
         review.save(out / f"{clip_name}.checker-review.png")
 
+    errors.extend(direction_findings)
     if missing_count and not allow_incomplete:
         errors.append(f"{missing_count} missing source frame(s); use --allow-incomplete for a draft review")
     state = "invalid" if errors else "incomplete" if missing_count else "technical-pass"
@@ -162,6 +191,11 @@ def build(project: dict, source: Path, out: Path, allow_incomplete: bool) -> dic
         "directionArtworkApproval": {direction: "NOT_REVIEWED" for direction in DIRECTIONS},
         "source": str(source),
         "missingFrames": missing_count,
+        "directionChecks": {
+            "requireDistinctFacings": bool(direction_rules.get("requireDistinctFacings")),
+            "forbidMirroredFacings": bool(direction_rules.get("forbidMirroredFacings")),
+            "findings": direction_findings,
+        },
         "warnings": warnings,
         "errors": errors,
         "requiredVisualReview": [
