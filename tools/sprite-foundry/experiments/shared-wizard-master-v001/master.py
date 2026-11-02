@@ -122,6 +122,73 @@ def cape_panel(side,front=False):
          (.78*x,1.39,.04),(.18*x,1.63,.39 if front else -.18),"777773","cape-panel")
     tri((.61*x,2.44,.13),(.86*x,1.36,-.04),(.78*x,1.39,.04),"96938c","cape-torn-edge")
 
+# Camera-facing presentation rig: never alters the approved shared source mesh.
+# Only the near-invisible anatomical right sleeve/hand/staff are retargeted in
+# NW/W. All other facings remain byte-for-byte identical to the pose reference.
+RIGHT_HAND_PRESENTATION_OFFSETS = {
+    "NW": (0.0, -.70),
+    "W": (0.0, -.70),
+}
+
+
+def sleeve_tube_faces(a, b, r, color="777571", feature="right-sleeve", segments=10):
+    """Pure local tube for the folded right elbow; does not mutate master geometry."""
+    v=tuple(b[i]-a[i] for i in range(3))
+    length=math.sqrt(sum(x*x for x in v))
+    n=tuple(x/length for x in v)
+    c=(0,1,0) if abs(n[1])<.9 else (1,0,0)
+    cross=lambda u,w:(u[1]*w[2]-u[2]*w[1],u[2]*w[0]-u[0]*w[2],u[0]*w[1]-u[1]*w[0])
+    u=cross(n,c);u_len=math.sqrt(sum(x*x for x in u));u=tuple(x/u_len for x in u)
+    w=cross(n,u)
+    result=[]
+    for i in range(segments):
+        t=2*math.pi*i/segments; t1=2*math.pi*(i+1)/segments
+        offset=lambda t:tuple(r*(math.cos(t)*u[j]+math.sin(t)*w[j]) for j in range(3))
+        o=offset(t);o1=offset(t1)
+        p=tuple(a[j]+o[j] for j in range(3));p1=tuple(a[j]+o1[j] for j in range(3))
+        q=tuple(b[j]+o[j] for j in range(3));q1=tuple(b[j]+o1[j] for j in range(3))
+        result.extend((Face((p,p1,q1),rgb(color),feature),Face((p,q1,q),rgb(color),feature)))
+    return result
+
+
+ELBOW_Y, ELBOW_Z = 1.94, .08
+
+def pose_right_hand_equipment(master, direction):
+    """Move a complete hand/held-prop group without editing the source geometry."""
+    dx, dz = RIGHT_HAND_PRESENTATION_OFFSETS.get(direction, (0.0, 0.0))
+    if not (dx or dz):
+        return master
+
+    result = []
+    for face in master:
+        if face.feature == "right-sleeve":
+            continue
+        if face.feature not in {
+            "right-hand", "right-hand-staff",
+            "staff-flame-base", "staff-fire", "staff-flame-core",
+        }:
+            result.append(face)
+            continue
+
+        points = []
+        for x, y, z in face.points:
+            if face.feature == "right-hand":
+                weight = 1.0
+            elif face.feature == "right-hand-staff":
+                # Lower stick and palm move together. The head/flame stays
+                # fixed, so the staff doesn't teleport at adjacent facings.
+                weight = 1.0 if y <= 1.51 else max(0.0, min(1.0, (3.26 - y) / 1.75))
+            else:
+                weight = 0.0
+            points.append((x + dx * weight, y, z + dz * weight))
+        result.append(Face(tuple(points), face.color, face.feature))
+    elbow=(-.56,ELBOW_Y,ELBOW_Z)
+    cuff=(-.74+dx,1.57,.20+dz)
+    result.extend(sleeve_tube_faces((-.44,2.48,.04),elbow,.23))
+    result.extend(sleeve_tube_faces(elbow,cuff,.20))
+    return result
+
+
 def build_master():
     """One continuous mesh: holes, garment seams, and staff are defined once."""
     faces.clear()
@@ -217,7 +284,7 @@ def project(point,yaw):
     Z=-x*math.sin(a)+z*math.cos(a)
     return (FOOT_X+X*SCALE,FOOT_Y-y*SCALE+Z*2.7,Z)
 
-def render(direction, skin=None, robe_uv=None, upper_uv=None, head_uv=None, *, feature_map=False):
+def render(direction, skin=None, robe_uv=None, upper_uv=None, head_uv=None, *, feature_map=False, presentation_pose=False):
     if skin is not None and (skin.size != (WIDTH,HEIGHT) or skin.mode != "RGBA"):
         raise ValueError("reference sprite must be a 64x80 RGBA image")
     if robe_uv is not None and (robe_uv.size != (96,128) or robe_uv.mode != "RGBA"):
@@ -228,6 +295,8 @@ def render(direction, skin=None, robe_uv=None, upper_uv=None, head_uv=None, *, f
         raise ValueError("head UV atlas must be a 96x128 RGBA image")
     yaw=DIRECTIONS[direction]
     master=build_master()
+    if presentation_pose:
+        master=pose_right_hand_equipment(master,direction)
     pixels=Image.new("RGBA",(WIDTH,HEIGHT),(0,0,0,0))
     zbuffer=[[-1e9 for _ in range(WIDTH)] for _ in range(HEIGHT)]
     visible_features = [[None] * WIDTH for _ in range(HEIGHT)] if feature_map else None
@@ -438,19 +507,20 @@ def comparison_sheet(skin, robe_uv=None, upper_uv=None, head_uv=None):
     draw.text((12,canvas.height-20),"UNAPPROVED MATERIAL STUDY / NOT GAME ART",fill=(255,180,95,255))
     return canvas
 
-def staff_visibility_audit(skin=None, robe_uv=None, upper_uv=None, head_uv=None):
+def staff_visibility_audit(skin=None, robe_uv=None, upper_uv=None, head_uv=None, *, presentation_pose=False):
     """Inspect visible mesh features after occlusion, not just orange-looking RGB pixels."""
     results = {}
     for direction, yaw in DIRECTIONS.items():
-        _, labels = render(direction, skin, robe_uv, upper_uv, head_uv, feature_map=True)
+        _, labels = render(direction, skin, robe_uv, upper_uv, head_uv, feature_map=True, presentation_pose=presentation_pose)
         counts = Counter(label for row in labels for label in row if label)
         shaft = [(x, y) for y, row in enumerate(labels) for x, label in enumerate(row)
                  if label == "right-hand-staff"]
-        grip_x, grip_y, _ = project((-.74, 1.51, .20), yaw)
+        dx, dz = RIGHT_HAND_PRESENTATION_OFFSETS.get(direction, (0.0, 0.0)) if presentation_pose else (0.0, 0.0)
+        grip_x, grip_y, _ = project((-.74 + dx, 1.51, .20 + dz), yaw)
         nearest = min((math.hypot(x + .5 - grip_x, y + .5 - grip_y) for x, y in shaft), default=999.0)
         flame = counts["staff-fire"] + counts["staff-flame-core"] + counts["staff-flame-base"]
         checks = {
-            "staffShaftVisible": len(shaft) >= 4,
+            "staffShaftVisible": len(shaft) >= 30,
             "staffAttachedToRightHand": nearest <= 5.0,
             "staffFlameVisible": flame >= 6,
         }
@@ -464,16 +534,18 @@ def staff_visibility_audit(skin=None, robe_uv=None, upper_uv=None, head_uv=None)
         }
     return {
         "schema": "wyrmforge.sprite-foundry.staff-visibility.v1",
-        "source": "same pose-locked mesh and final per-pixel occlusion as the sprite render",
+        "source": ("frozen source mesh plus opt-in articulated NW/W sleeve and staff"
+                   if presentation_pose else "frozen shared mesh with final per-pixel occlusion"),
         "review": "STRUCTURAL ONLY / NOT APPROVED ART",
+        "presentationPoseCandidate": presentation_pose,
         "directions": results,
         "pass": all(result["pass"] for result in results.values()),
     }
 
 
-def staff_audit_sheet(skin=None, robe_uv=None, upper_uv=None, head_uv=None):
+def staff_audit_sheet(skin=None, robe_uv=None, upper_uv=None, head_uv=None, *, presentation_pose=False):
     """Visible right-hand staff/hand/flame highlighted on all eight rendered facings."""
-    audit = staff_visibility_audit(skin, robe_uv, upper_uv, head_uv)
+    audit = staff_visibility_audit(skin, robe_uv, upper_uv, head_uv, presentation_pose=presentation_pose)
     directions = ("S", "SE", "E", "NE", "N", "NW", "W", "SW")
     scale = 5
     stride_x, stride_y = WIDTH * scale + 18, HEIGHT * scale + 44
@@ -497,8 +569,27 @@ def staff_audit_sheet(skin=None, robe_uv=None, upper_uv=None, head_uv=None):
         draw.text((gx, gy - 19), f"{direction} / {'PASS' if result['pass'] else 'FAIL'}", fill=(160, 235, 184) if result["pass"] else (255, 115, 99))
         draw.text((gx, gy + HEIGHT * scale + 5), f"shaft:{result['shaftPixels']} grip:{result['nearestShaftToGripPx']}px", fill=(207, 215, 218))
     draw.text((12, canvas.height - 38), "Green: visible staff / Blue: right hand / Amber: staff flame", fill=(221, 226, 219))
-    draw.text((12, canvas.height - 20), "DIAGNOSTIC ONLY / SAME FROZEN MESH / NOT APPROVED ART", fill=(238, 172, 100))
+    subtitle = "NW/W BENT ELBOW CANDIDATE" if presentation_pose else "FROZEN BASELINE"
+    draw.text((12, canvas.height - 20), f"{subtitle} / STRUCTURAL DIAGNOSTIC ONLY / NOT APPROVED ART", fill=(238, 172, 100))
     return canvas, audit
+
+def pose_before_after_sheet(skin=None, robe_uv=None, upper_uv=None, head_uv=None):
+    """8x real native-pixel evidence of the two occluded directional revisions."""
+    pairs = (("NW", False), ("NW", True), ("W", False), ("W", True))
+    scale = 8
+    stride = WIDTH * scale + 16
+    canvas = Image.new("RGBA", (4 * stride + 8, HEIGHT * scale + 80), (20, 25, 31, 255))
+    draw = ImageDraw.Draw(canvas)
+    for index, (direction, adjusted) in enumerate(pairs):
+        x = 8 + index * stride
+        frame = render(direction, skin, robe_uv, upper_uv, head_uv, presentation_pose=adjusted)
+        canvas.alpha_composite(frame.resize((WIDTH * scale, HEIGHT * scale), Image.Resampling.NEAREST), (x, 34))
+        draw.text((x, 12), f"{direction} / {'REVIEW CANDIDATE' if adjusted else 'FROZEN BASELINE'}", fill=(240, 225, 195))
+    draw.text((8, canvas.height - 24),
+              "S, SE, E, NE, N, SW remain pixel-identical / NW-W REVIEW ONLY / NOT APPROVED ART",
+              fill=(244, 177, 107))
+    return canvas
+
 
 def main():
     p=argparse.ArgumentParser()
@@ -514,6 +605,8 @@ def main():
     p.add_argument("--staff-audit",type=Path,help="Save eight-direction visible-staff diagnostic PNG")
     p.add_argument("--staff-audit-json",type=Path,help="Save staff visibility checks as JSON")
     p.add_argument("--strict-staff-audit",action="store_true",help="Fail if any facing has inadequate visible staff coverage")
+    p.add_argument("--presentation-pose-review",action="store_true",help="Opt-in NW/W bent-elbow candidate; never approved art")
+    p.add_argument("--pose-comparison",type=Path,help="Save frozen NW/W vs presentation pose candidate at 8x")
     args=p.parse_args()
     skin=Image.open(args.reference_sprite).convert("RGBA") if args.reference_sprite else None
     robe_uv=Image.open(args.robe_uv).convert("RGBA") if args.robe_uv else None
@@ -521,20 +614,28 @@ def main():
     head_uv=Image.open(args.head_uv).convert("RGBA") if args.head_uv else None
     if skin is not None and skin.size!=(WIDTH,HEIGHT):
         raise ValueError("reference sprite must be native 64x80")
+    if args.frames and args.presentation_pose_review:
+        raise ValueError("review-only directional pose must not export source frames before owner approval")
     if args.frames:
         for direction in DIRECTIONS:
             target=args.frames / "idle" / direction / "00.albedo.png"
             target.parent.mkdir(parents=True,exist_ok=True)
             render(direction,skin,robe_uv,upper_uv,head_uv).save(target)
-    canvas=render(args.direction,skin,robe_uv,upper_uv,head_uv) if args.direction else contact_sheet(skin,robe_uv,upper_uv,head_uv)[0]
+    if args.direction:
+        canvas=render(args.direction,skin,robe_uv,upper_uv,head_uv,presentation_pose=args.presentation_pose_review)
+    else:
+        canvas=contact_sheet(skin,robe_uv,upper_uv,head_uv)[0]
     if args.preview:
         args.preview.parent.mkdir(parents=True,exist_ok=True)
         canvas.save(args.preview)
     if args.comparison:
         args.comparison.parent.mkdir(parents=True,exist_ok=True)
         comparison_sheet(skin,robe_uv,upper_uv,head_uv).save(args.comparison)
+    if args.pose_comparison:
+        args.pose_comparison.parent.mkdir(parents=True, exist_ok=True)
+        pose_before_after_sheet(skin, robe_uv, upper_uv, head_uv).save(args.pose_comparison)
     if args.staff_audit or args.staff_audit_json:
-        diagnostic, audit = staff_audit_sheet(skin, robe_uv, upper_uv, head_uv)
+        diagnostic, audit = staff_audit_sheet(skin, robe_uv, upper_uv, head_uv, presentation_pose=args.presentation_pose_review)
         if args.staff_audit:
             args.staff_audit.parent.mkdir(parents=True, exist_ok=True)
             diagnostic.save(args.staff_audit)
@@ -550,7 +651,7 @@ def main():
         out=io.BytesIO()
         canvas.save(out,format="PNG")
         print(json.dumps({"png":base64.b64encode(out.getvalue()).decode(),"size":list(canvas.size),"faces":len(faces)}))
-    elif not args.preview and not args.frames and not args.comparison and not args.staff_audit and not args.staff_audit_json:
+    elif not args.preview and not args.frames and not args.comparison and not args.staff_audit and not args.staff_audit_json and not args.pose_comparison:
         canvas.show()
 
 if __name__=="__main__":

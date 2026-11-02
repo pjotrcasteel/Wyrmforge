@@ -55,6 +55,10 @@ jobs:
         run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --robe-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/robe-uv-v001.png --upper-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/upper-cloth-uv-v001.png --head-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/head-uv-v001.png --comparison tools/sprite-foundry/output/full-head-uv-8way.png
       - name: Audit real staff occlusion in all eight directions (diagnostic, known W/NW review gap)
         run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --robe-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/robe-uv-v001.png --upper-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/upper-cloth-uv-v001.png --head-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/head-uv-v001.png --staff-audit tools/sprite-foundry/output/staff-visibility-8way-NOT-APPROVED.png --staff-audit-json tools/sprite-foundry/output/staff-visibility-report.json
+      - name: Render frozen NW/W versus compensated hand and staff (review only)
+        run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --robe-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/robe-uv-v001.png --upper-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/upper-cloth-uv-v001.png --head-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/head-uv-v001.png --pose-comparison tools/sprite-foundry/output/pose-NW-W-before-after-NOT-APPROVED.png
+      - name: Strict structural audit of the opt-in NW/W pose candidate (not art approval)
+        run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --robe-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/robe-uv-v001.png --upper-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/upper-cloth-uv-v001.png --head-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/head-uv-v001.png --presentation-pose-review --staff-audit tools/sprite-foundry/output/staff-visibility-8way-candidate-NOT-APPROVED.png --staff-audit-json tools/sprite-foundry/output/staff-visibility-candidate-report.json --strict-staff-audit
       - name: Upload unapproved single-mesh studies
         uses: actions/upload-artifact@v4
         with:
@@ -77,4 +81,7 @@ jobs:
             tools/sprite-foundry/output/full-head-uv-8way.png
             tools/sprite-foundry/output/staff-visibility-8way-NOT-APPROVED.png
             tools/sprite-foundry/output/staff-visibility-report.json
+            tools/sprite-foundry/output/pose-NW-W-before-after-NOT-APPROVED.png
+            tools/sprite-foundry/output/staff-visibility-8way-candidate-NOT-APPROVED.png
+            tools/sprite-foundry/output/staff-visibility-candidate-report.json
           if-no-files-found: error

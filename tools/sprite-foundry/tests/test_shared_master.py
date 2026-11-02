@@ -197,10 +197,11 @@ class SharedMasterTests(unittest.TestCase):
             line for line in workflow.read_text(encoding="utf-8").splitlines()
             if "master.py" in line and "--robe-uv" in line
         ]
-        self.assertEqual(7, len(commands))
+        self.assertEqual(9, len(commands))
         for command in commands:
             self.assertNotIn("--reference-sprite", command)
-        self.assertEqual(1, sum("--staff-audit-json" in command for command in commands))
+        self.assertEqual(2, sum("--staff-audit-json" in command for command in commands))
+        self.assertEqual(1, sum("--pose-comparison" in command for command in commands))
         texture = Image.open(MODULE_FILE.parent / "robe-uv-v001.png").convert("RGBA")
         self.assertEqual(
             wizard.contact_sheet(None, texture)[0].tobytes(),
@@ -308,6 +309,53 @@ class SharedMasterTests(unittest.TestCase):
         self.assertEqual((1372, 944), audit_image.size)
         self.assertEqual(result, repeated)
         self.assertEqual(audit_image.tobytes(), wizard.staff_audit_sheet()[0].tobytes())
+
+    def test_directional_hand_presentation_is_opt_in_and_keeps_six_frozen_facings(self):
+        reference = {direction: wizard.render(direction).tobytes() for direction in wizard.DIRECTIONS}
+        source_geometry = tuple((face.feature, face.points) for face in wizard.build_master())
+        baseline_audit = wizard.staff_visibility_audit()
+        candidate_audit = wizard.staff_visibility_audit(presentation_pose=True)
+        self.assertFalse(baseline_audit["pass"])
+        self.assertTrue(candidate_audit["pass"])
+        self.assertFalse(baseline_audit["presentationPoseCandidate"])
+        self.assertTrue(candidate_audit["presentationPoseCandidate"])
+        self.assertEqual({"NW", "W"}, set(wizard.RIGHT_HAND_PRESENTATION_OFFSETS))
+        for direction in wizard.DIRECTIONS:
+            candidate = wizard.render(direction, presentation_pose=True)
+            self.assertEqual((64, 80), candidate.size)
+            if direction in {"NW", "W"}:
+                self.assertNotEqual(reference[direction], candidate.tobytes(), direction)
+                self.assertGreaterEqual(candidate_audit["directions"][direction]["shaftPixels"], 30)
+                self.assertGreaterEqual(candidate_audit["directions"][direction]["rightHandPixels"], 2)
+                self.assertLess(candidate_audit["directions"][direction]["nearestShaftToGripPx"], 5)
+            else:
+                self.assertEqual(reference[direction], candidate.tobytes(), direction)
+            self.assertEqual(candidate.tobytes(), wizard.render(direction, presentation_pose=True).tobytes())
+        self.assertEqual(source_geometry, tuple((face.feature, face.points) for face in wizard.build_master()))
+
+    def test_nw_w_review_candidate_previews_are_reproducible_not_game_exports(self):
+        import subprocess
+        robe = Image.open(MODULE_FILE.parent / "robe-uv-v001.png").convert("RGBA")
+        upper = Image.open(MODULE_FILE.parent / "upper-cloth-uv-v001.png").convert("RGBA")
+        head = Image.open(MODULE_FILE.parent / "head-uv-v001.png").convert("RGBA")
+        contact = wizard.pose_before_after_sheet(None, robe, upper, head)
+        self.assertEqual((2120, 720), contact.size)
+        self.assertEqual(
+            contact.tobytes(),
+            Image.open(MODULE_FILE.parent / "pose-NW-W-before-after-NOT-APPROVED.png").convert("RGBA").tobytes(),
+        )
+        audit, report = wizard.staff_audit_sheet(None, robe, upper, head, presentation_pose=True)
+        self.assertTrue(report["pass"])
+        self.assertEqual(
+            audit.tobytes(),
+            Image.open(MODULE_FILE.parent / "staff-visibility-8way-candidate-NOT-APPROVED.png").convert("RGBA").tobytes(),
+        )
+        blocked = subprocess.run(
+            [sys.executable, str(MODULE_FILE), "--presentation-pose-review", "--frames", "forbidden"],
+            capture_output=True, text=True, check=False,
+        )
+        self.assertNotEqual(0, blocked.returncode)
+        self.assertIn("review-only directional pose", blocked.stderr)
 
     def test_repeat_render_is_pixel_deterministic(self):
         self.assertEqual(wizard.render("SE").tobytes(), wizard.render("SE").tobytes())

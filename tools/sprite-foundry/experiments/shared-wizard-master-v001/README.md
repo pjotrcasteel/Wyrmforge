@@ -292,3 +292,46 @@ owner-liked pose, not secretly altering a frozen camera or bone placement.
 This diagnostic is **Wizard-model specific**. The Foundry exporter,
 profile-driven review contract and source layout remain generic for other
 characters.
+
+## Opt-in right-arm presentation correction v008 — **visual review needed**
+
+A single rigid static pose puts the right hand on the far side of the Wizard
+during the NW/W rotation. The original audit correctly found the staff
+apparently disappearing. Moving the entire arm and staff in every direction
+would have changed the S/SE/E pose the owner liked, so that approach was
+discarded.
+
+Instead, `--presentation-pose-review` creates a **candidate only** for NW
+and W. This is a deterministic *articulated presentation pose* derived from
+the same anatomy and materials, not an independently generated portrait:
+
+- A fixed right-shoulder socket feeds a two-segment bent sleeve and its
+  right-hand grip. The hand and the lower shaft remain physically connected.
+- The right-hand wrist moves 0.70 world units toward local -Z for NW/W.
+  The staff head and flame keep their source-world coordinates; the shaft
+  changes its tilt between its fixed top and adjusted grip.
+- Robe, permanent tears, scar atlas, hat, face, boots, left arm, camera,
+  64x80 pixel canvas, staff materials and feet anchor are unchanged.
+- **Default render mode stays byte-identical in all eight directions.**
+  When the preview mode is enabled, S/SE/E/NE/N/SW also remain byte-identical;
+  only the two failing rear/side facings change.
+- NW visible staff increases from 42 to 104 pixels, with 13 right-hand
+  pixels visible. W improves from 14 to 35 shaft pixels and from 0 to 3
+  right-hand pixels. The same real depth buffer detects both, and the
+  stricter minimum shaft check now requires at least 30 pixels.
+
+Owner review: [NW/W original-versus-candidate at native 8x](pose-NW-W-before-after-NOT-APPROVED.png);
+[all eight directions highlighted](staff-visibility-8way-candidate-NOT-APPROVED.png).
+**A green structural audit is not approval of how the bent elbow looks.**
+The new two-segment NW elbow silhouette, in-between turns and animation
+need further visual work before this optional mode can become the default.
+
+Reproduce the two visual studies:
+
+    py tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --robe-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/robe-uv-v001.png --upper-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/upper-cloth-uv-v001.png --head-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/head-uv-v001.png --pose-comparison tools/sprite-foundry/output/pose-NW-W-before-after.png
+
+    py tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --robe-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/robe-uv-v001.png --upper-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/upper-cloth-uv-v001.png --head-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/head-uv-v001.png --presentation-pose-review --staff-audit tools/sprite-foundry/output/staff-visibility-candidate.png --strict-staff-audit
+
+Safety: `--presentation-pose-review --frames` intentionally exits with an
+error. The candidate cannot be exported into regular Foundry source frames
+or included in game assets before owner approval. No merge has been made.
