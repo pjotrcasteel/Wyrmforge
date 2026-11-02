@@ -112,6 +112,16 @@ class WizardWalkStudyTests(unittest.TestCase):
         self.assertLess(distance(first, last), distance(first, half))
         self.assertEqual(first, study.pose(0, 16))
 
+    def test_motion_review_is_native_nearest_neighbour_and_frame_complete(self):
+        images = study.animated_review_frames(4, zoom=2, use_materials=False)
+        self.assertEqual(4, len(images))
+        self.assertTrue(all(image.mode == "RGBA" and image.size == (432, 202) for image in images))
+        self.assertEqual(4, len({image.tobytes() for image in images}))
+        with self.assertRaises(ValueError):
+            study.animated_review_frames(5, use_materials=False)
+        with self.assertRaises(ValueError):
+            study.animated_review_frames(4, zoom=11, use_materials=False)
+
     def test_invalid_clip_requests_are_rejected(self):
         for frame, count in ((-1, 4), (4, 4), (0, 3), (0, 5)):
             with self.subTest(frame=frame, count=count), self.assertRaises(ValueError):
