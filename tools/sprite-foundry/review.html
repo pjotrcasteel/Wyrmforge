@@ -19,7 +19,14 @@ button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visi
 .stage.light{background:repeating-conic-gradient(#8b929b 0 25%,#b7bec5 0 50%) 50%/32px 32px}
 .stage.dark{background:repeating-conic-gradient(#1e262e 0 25%,#303943 0 50%) 50%/32px 32px}
 .stage span{position:absolute;top:8px;left:10px;background:#141a20b8;border-radius:5px;padding:3px 6px;font-size:.78rem}
-.stage canvas{image-rendering:pixelated;image-rendering:crisp-edges;max-width:100%}
+.stage canvas{image-rendering:pixelated;image-rendering:crisp-edges;max-width:none}
+.facing-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.facing-card{min-width:0;background:#18202a;border:1px solid #47576a;border-radius:10px;padding:10px}
+.facing-card.selected{border:2px solid #c291ff;background:#222331}
+.facing-card strong{display:block;margin-bottom:8px;color:#e4e7ea;font-size:1.15rem}
+.facing-viewport{overflow:auto;background:repeating-conic-gradient(#262e37 0 25%,#3b4651 0 50%) 50%/24px 24px;min-height:200px;text-align:center}
+.facing-viewport canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block;margin:auto;max-width:none}
+@media(max-width:680px){.facing-grid{grid-template-columns:1fr}.stage{width:100%}}
 #status{white-space:pre-wrap;color:#c8d2dc}#frame{min-width:240px}
 .small{font-size:.82rem}a{color:#b7d6ff}
 </style>
@@ -36,7 +43,7 @@ button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visi
     <label>Animation <select id="clip" disabled></select></label>
     <label>Direction <select id="direction" disabled></select></label>
     <label>Preview width <select id="viewport"><option value="320">320px mobile</option><option value="390">390px mobile</option></select></label>
-    <label>Pixel zoom <select id="zoom"><option value="2">2×</option><option value="3" selected>3×</option><option value="4">4×</option></select></label>
+    <label>Pixel zoom <select id="zoom"><option value="2">2×</option><option value="3" selected>3×</option><option value="4">4×</option><option value="6">6×</option><option value="8">8×</option><option value="10">10×</option></select></label>
     <label><input id="anchor" type="checkbox" checked>Show debug feet anchor</label>
   </div>
   <div class="controls">
@@ -62,6 +69,16 @@ button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visi
   </div>
   <p class="small">Debug feet cross is an overlay, never part of the exported image. Check staff side, feet, robe silhouette, and direction-change continuity. This is not a replacement for actual in-Hunt 320/390px captures.</p>
 </section>
+<section class="panel">
+  <h2>Direction continuity — previous / selected / next</h2>
+  <p class="small">All three are the same native frame at the same pixel zoom. Look for a believable turn in the head, torso, feet and **anatomical right-hand staff**. A label is not evidence of facing. Scroll inside each frame at 6–10× zoom; nothing here changes the exported pixels.</p>
+  <div class="facing-grid">
+    <div class="facing-card"><strong id="facing-prev-label">Previous</strong><div class="facing-viewport"><canvas id="facing-prev"></canvas></div></div>
+    <div class="facing-card selected"><strong id="facing-current-label">Selected</strong><div class="facing-viewport"><canvas id="facing-current"></canvas></div></div>
+    <div class="facing-card"><strong id="facing-next-label">Next</strong><div class="facing-viewport"><canvas id="facing-next"></canvas></div></div>
+  </div>
+  <p class="small">For SE, this compares E → SE → S in canonical compass order. Review S → SE → E in reverse if you are checking the front-to-profile turn. The standalone page does not claim a direction is artistically approved.</p>
+</section>
 <script>
 "use strict";
 const $ = id => document.getElementById(id);
@@ -81,20 +98,32 @@ function draw(){
   const img=state.images[config.atlases.albedo];
   if(!img)return;
   const [w,h]=state.manifest.cell;
-  const sourceX=state.frame*w,sourceY=directions.indexOf(direction)*h;
-  for(const id of ["light","dark"]){
+  const zoom=Number($("zoom").value);
+  function paint(id,face){
     const canvas=$(id);canvas.width=w;canvas.height=h;
-    canvas.style.width=(w*Number($("zoom").value))+"px";
-    canvas.style.height=(h*Number($("zoom").value))+"px";
+    canvas.style.width=(w*zoom)+"px";
+    canvas.style.height=(h*zoom)+"px";
     const context=canvas.getContext("2d");context.imageSmoothingEnabled=false;
     context.clearRect(0,0,w,h);
-    context.drawImage(img,sourceX,sourceY,w,h,0,0,w,h);
+    context.drawImage(img,state.frame*w,directions.indexOf(face)*h,w,h,0,0,w,h);
     if($("anchor").checked){
       const [x,y]=state.manifest.feetAnchor;
       context.strokeStyle="#f4db63";context.lineWidth=1;
       context.beginPath();context.moveTo(x-3,y+.5);context.lineTo(x+4,y+.5);
       context.moveTo(x+.5,y-3);context.lineTo(x+.5,y+4);context.stroke();
     }
+  }
+  paint("light",direction);
+  paint("dark",direction);
+  const index=directions.indexOf(direction);
+  const neighbors=[
+    ["facing-prev",directions[(index+7)%8],"Previous"],
+    ["facing-current",direction,"Selected"],
+    ["facing-next",directions[(index+1)%8],"Next"],
+  ];
+  for(const [id,face,label] of neighbors){
+    paint(id,face);
+    $(id+"-label").textContent=label+" · "+face+" "+directionArrows[face];
   }
   $("frame").value=String(state.frame);
   $("counter").textContent=clip+" / "+direction+" — "+(state.frame+1)+"/"+config.framesPerDirection;
