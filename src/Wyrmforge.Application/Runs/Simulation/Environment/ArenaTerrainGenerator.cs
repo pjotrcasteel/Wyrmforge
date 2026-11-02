@@ -5,7 +5,11 @@ public sealed record ArenaTerrainRecipe(
     ArenaTerrainGrid Grid,
     (int Column, int Row) Spawn,
     (int Column, int Row) Exit,
-    IReadOnlyList<(int Column, int Row)> ProtectedRoute);
+    IReadOnlyList<(int Column, int Row)> ProtectedRoute)
+{
+    /// <summary>Row-major mask of the route, spawn and exit clearings; excavation there is depth-limited.</summary>
+    public bool[] ProtectedCells { get; init; } = [];
+}
 
 /// <summary>
 /// Deterministic arena terrain from the node's seed and Wyrm influence. A protected route from spawn to exit is flat
@@ -41,7 +45,7 @@ public static class ArenaTerrainGenerator
                 if (protectedCells[row * columns + column])
                     grid.Set(column, row, 0, influence >= .25 && grid.Material(column, row) == ArenaTerrainMaterial.Ash
                         ? ArenaTerrainMaterial.Ash : ArenaTerrainMaterial.Soil);
-        return new ArenaTerrainRecipe(grid, spawn, exit, route);
+        return new ArenaTerrainRecipe(grid, spawn, exit, route) { ProtectedCells = protectedCells };
     }
 
     private static List<(int Column, int Row)> Rasterize(Random rng, int columns, int rows,

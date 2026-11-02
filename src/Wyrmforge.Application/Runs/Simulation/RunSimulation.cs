@@ -176,6 +176,7 @@ public sealed partial class RunSimulation
             return CreateSnapshot();
         }
         delta = Math.Clamp(delta, 0, 0.05);
+        terrainChangesThisTick.Clear();
         reactionBudget.BeginStep();
         BeginPlayerDamageFrame(delta);
         UpdateCombatFeedback(delta);

@@ -19,8 +19,11 @@ public sealed class ArenaTerrainGrid
     public const int ShotClearanceMicrocells = 10;
     /// <summary>Excavation never digs below this floor: -4 m.</summary>
     public const int BedrockMicrocells = -32;
+    /// <summary>Soil and ash lie one metre deep over stone, which only the heaviest impacts can dent.</summary>
+    public const int SoilDepthMicrocells = 8;
 
     private readonly short[] surface;
+    private readonly short[] stoneTop;
     private readonly ArenaTerrainMaterial[] materials;
 
     public ArenaTerrainGrid(int columns, int rows)
@@ -29,6 +32,8 @@ public sealed class ArenaTerrainGrid
         Columns = columns;
         Rows = rows;
         surface = new short[columns * rows];
+        stoneTop = new short[columns * rows];
+        Array.Fill(stoneTop, (short)-SoilDepthMicrocells);
         materials = new ArenaTerrainMaterial[columns * rows];
     }
 
@@ -45,9 +50,60 @@ public sealed class ArenaTerrainGrid
     public void Set(int column, int row, int surfaceMicrocells, ArenaTerrainMaterial material)
     {
         if (!Contains(column, row)) throw new ArgumentOutOfRangeException(nameof(column));
-        surface[row * Columns + column] = (short)Math.Clamp(surfaceMicrocells, BedrockMicrocells, short.MaxValue);
+        var clamped = (short)Math.Clamp(surfaceMicrocells, BedrockMicrocells, short.MaxValue);
+        surface[row * Columns + column] = clamped;
         materials[row * Columns + column] = material;
+        // Soil and ash cover stone one metre down; stone and lava columns are solid at their surface.
+        stoneTop[row * Columns + column] = (short)(material is ArenaTerrainMaterial.Soil or ArenaTerrainMaterial.Ash
+            ? Math.Max(BedrockMicrocells, clamped - SoilDepthMicrocells) : clamped);
         Revision++;
+    }
+
+    /// <summary>Height at which soil gives way to stone in this column.</summary>
+    public int StoneTop(int column, int row) => stoneTop[row * Columns + column];
+
+    public ArenaTerrainGrid Clone()
+    {
+        var copy = new ArenaTerrainGrid(Columns, Rows) { Revision = Revision };
+        surface.CopyTo(copy.surface, 0);
+        stoneTop.CopyTo(copy.stoneTop, 0);
+        materials.CopyTo(copy.materials, 0);
+        return copy;
+    }
+
+    /// <summary>
+    /// Lower a column by up to <paramref name="soil"/> microcells of soil and <paramref name="stone"/> of stone.
+    /// Soil that is dug through exposes stone; bedrock and lava never change. Returns the microcells actually removed.
+    /// </summary>
+    public int Excavate(int column, int row, int soil, int stone, int floor = BedrockMicrocells)
+    {
+        if (!Contains(column, row)) return 0;
+        var index = row * Columns + column;
+        if (materials[index] == ArenaTerrainMaterial.Lava) return 0;
+        int start = surface[index];
+        int current = start;
+        floor = Math.Max(floor, BedrockMicrocells);
+        if (materials[index] is ArenaTerrainMaterial.Soil or ArenaTerrainMaterial.Ash)
+        {
+            var dug = Math.Min(Math.Max(0, soil), Math.Max(0, current - Math.Max(stoneTop[index], floor)));
+            current -= dug;
+            if (current <= stoneTop[index]) materials[index] = ArenaTerrainMaterial.Stone;
+        }
+        if (materials[index] == ArenaTerrainMaterial.Stone && stone > 0 && current > floor)
+            current -= Math.Min(stone, current - floor);
+        if (current == start) return 0;
+        surface[index] = (short)current;
+        Revision++;
+        return start - current;
+    }
+
+    /// <summary>Restore a recorded column exactly; used by save and replay, never by gameplay.</summary>
+    public void Restore(int column, int row, int surfaceMicrocells, ArenaTerrainMaterial material)
+    {
+        var index = row * Columns + column;
+        var kept = stoneTop[index];
+        Set(column, row, surfaceMicrocells, material);
+        stoneTop[index] = kept;
     }
 
     public static (int Column, int Row) ColumnOf(Vector2D position) =>

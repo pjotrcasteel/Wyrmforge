@@ -28,6 +28,10 @@ public sealed class ArenaEnvironmentState
     private WorldSiteGeography? geography;
     private double? nodeInfluence;
     private ArenaTerrainGrid? terrain;
+    private ArenaTerrainGrid? terrainBaseline;
+    private bool[] terrainProtected = [];
+    private (int Column, int Row) terrainExit;
+    private readonly SortedSet<long> appliedImpactIds = [];
     private (int Revision, int Column, int Row, int Radius, bool[] Cells)? reachableCache;
     private Dictionary<int, int[]>? distanceFields;
     private int distanceFieldRevision;
@@ -109,8 +113,12 @@ public sealed class ArenaEnvironmentState
             // Hunt 1.0 terrain: the player starts at the arena centre and the exit sits at TrailExitPosition.
             var columns = (int)(ArenaMetricEnvelope.CombatWidth / ArenaTerrainGrid.CellUnits);
             var rows = (int)(ArenaMetricEnvelope.CombatHeight / ArenaTerrainGrid.CellUnits);
-            environment.terrain = ArenaTerrainGenerator.Generate(seed, node.Influence, columns, rows,
-                (columns / 2, rows / 2), (columns / 2, (int)(Math.Max(80, ArenaMetricEnvelope.CombatHeight * .11) / ArenaTerrainGrid.CellUnits))).Grid;
+            var recipe = ArenaTerrainGenerator.Generate(seed, node.Influence, columns, rows,
+                (columns / 2, rows / 2), (columns / 2, (int)(Math.Max(80, ArenaMetricEnvelope.CombatHeight * .11) / ArenaTerrainGrid.CellUnits)));
+            environment.terrain = recipe.Grid;
+            environment.terrainBaseline = recipe.Grid.Clone();
+            environment.terrainProtected = recipe.ProtectedCells;
+            environment.terrainExit = recipe.Exit;
         }
 
         // The old fixed gated encounter remains part of current Hunts ONLY.
@@ -241,6 +249,37 @@ public sealed class ArenaEnvironmentState
         Math.Abs(width - terrain.Columns * ArenaTerrainGrid.CellUnits) < 1 && Math.Abs(height - terrain.Rows * ArenaTerrainGrid.CellUnits) < 1;
 
     public ArenaTerrainGrid? Terrain => terrain;
+
+    /// <summary>
+    /// Apply one confirmed impact exactly once. A change that would cut the hunter off from the exit is undone,
+    /// so excavation can never trap the player. Returns the columns that changed.
+    /// </summary>
+    public IReadOnlyList<ArenaTerrainChange> ApplyTerrainImpact(ArenaTerrainImpact impact, Vector2D hunter, double hunterRadius,
+        double width, double height)
+    {
+        if (!TerrainActive(width, height) || !appliedImpactIds.Add(impact.Id)) return [];
+        var changes = ArenaTerrainMutation.Apply(terrain!, impact, terrainProtected);
+        if (changes.Count == 0) return changes;
+        var hunterCell = ArenaTerrainGrid.ColumnOf(hunter);
+        if (!terrain!.IsReachable(hunterCell, terrainExit, hunterRadius))
+        {
+            ArenaTerrainMutation.Revert(terrain, changes);
+            // Already cut off before this impact (it cannot have caused it): keep the damage.
+            if (!terrain.IsReachable(hunterCell, terrainExit, hunterRadius)) return ArenaTerrainMutation.Apply(terrain, impact, terrainProtected);
+            return [];
+        }
+        return changes;
+    }
+
+    public ArenaTerrainRecord? CaptureTerrainRecord(string siteKey) => terrain is null || terrainBaseline is null ? null
+        : ArenaTerrainRecord.Capture(siteKey, terrainBaseline, terrain, appliedImpactIds);
+
+    public void RestoreTerrainRecord(string siteKey, ArenaTerrainRecord record)
+    {
+        if (terrain is null) throw new InvalidOperationException("This arena has no terrain.");
+        record.Restore(siteKey, terrain);
+        foreach (var id in record.AppliedImpactIds) appliedImpactIds.Add(id);
+    }
 
     // One walking-cost field per radius, rebuilt only when the hunter changes column or the terrain changes.
     private Vector2D? TerrainWaypoint(Vector2D enemy, Vector2D hunter, double radius)
