@@ -13,9 +13,9 @@ export const TERRAIN_PAD_UNITS = 4 * FACE_PIXELS;
 // and saturation reserved for lava (fire, blood and lightning carry the colour). The front is always the darker tone.
 const PALETTE = Object.freeze([
     // Natural / wet: cold damp earth
-    [['#66634f', '#2f2e26'], ['#5c5a56', '#2e2c2a'], ['#82776b', '#2a2523'], ['#c9501a', '#7a1f0c']],
+    [['#6c6050', '#322c25'], ['#7a7773', '#2e2c2a'], ['#8a8580', '#2a2523'], ['#c9501a', '#7a1f0c']],
     // Scorched: dry ash-brown
-    [['#58504a', '#2a2420'], ['#5b5551', '#2c2826'], ['#7b6f66', '#292321'], ['#d65a16', '#82200c']],
+    [['#5e5149', '#2a2420'], ['#6a6460', '#2c2826'], ['#7f7872', '#292321'], ['#d65a16', '#82200c']],
     // Burning: charred, blood-red undertone
     [['#4b3f3a', '#231b19'], ['#4e4642', '#262120'], ['#6e6159', '#241e1c'], ['#e8641a', '#8c1f0a']],
     // Volcanic: near-black basalt
@@ -38,12 +38,23 @@ export function terrainColors(band, material) {
 /** Raised ground reads lighter and pits darker, in whole 1 m steps so shading never shimmers. */
 export function heightShade(hex, surfaceMicrocells) {
     const meters = Math.max(-2, Math.min(3, Math.round(surfaceMicrocells / 8)));
-    if (meters === 0) return hex;
-    const factor = 1 + meters * 0.08;
+    return meters === 0 ? hex : scaleHex(hex, 1 + meters * 0.12);
+}
+
+export function scaleHex(hex, factor) {
     const value = parseInt(hex.slice(1), 16);
     const channel = shift => Math.max(0, Math.min(255, Math.round(((value >> shift) & 255) * factor)));
     return `#${((channel(16) << 16) | (channel(8) << 8) | channel(0)).toString(16).padStart(6, '0')}`;
 }
+
+/** A deterministic flat tone step per 1 m block (-1, 0 or +1) so open ground reads as individual blocks without texture. */
+export function blockTone(column, row) {
+    let h = (Math.imul(column + 1, 0x9E3779B1) ^ Math.imul(row + 7, 0x85EBCA6B)) >>> 0;
+    h = Math.imul(h ^ (h >>> 15), 0x2C1B3C6D) >>> 0;
+    return ((h >>> 20) % 3) - 1;
+}
+
+export const BLOCK_TONE_STEP = 0.09;
 
 /**
  * Paints the whole grid back to front. Output coordinates are world units offset by (0, offsetY) so raised columns that
@@ -67,7 +78,8 @@ export function paintTerrainCell(ctx, frame, band, column, row) {
     const height = surface[index];
     const colors = terrainColors(band, material[index]);
     const top = blockTopRect(column, row, height);
-    ctx.fillStyle = heightShade(colors.top, height);
+    const tone = 1 + blockTone(column, row) * BLOCK_TONE_STEP;
+    ctx.fillStyle = scaleHex(heightShade(colors.top, height), tone);
     ctx.fillRect(top.x, top.y, top.width, top.height);
     let painted = 1;
     const frontHeight = row + 1 < rows ? surface[index + columns] : height;

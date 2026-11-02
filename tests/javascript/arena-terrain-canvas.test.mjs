@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-    BLOCK_INSET_COLOR, TERRAIN_MATERIAL, eraseTerrainOcclusion, occludingTerrainCells, repaintTerrainOcclusion, TERRAIN_PAD_UNITS, TerrainCanvasCache, blockInsetOverlayEnabled, drawBlockInsetOverlay, heightShade, influenceBandIndex, paintTerrain, terrainColors,
+    BLOCK_INSET_COLOR, BLOCK_TONE_STEP, blockTone, scaleHex, TERRAIN_MATERIAL, eraseTerrainOcclusion, occludingTerrainCells, repaintTerrainOcclusion, TERRAIN_PAD_UNITS, TerrainCanvasCache, blockInsetOverlayEnabled, drawBlockInsetOverlay, heightShade, influenceBandIndex, paintTerrain, terrainColors,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-terrain-canvas.js';
 import { raisedActor } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-projection.js';
 
@@ -184,4 +184,21 @@ test('the GPU path erases the covering faces and the Canvas path repaints them b
     const repaint = recorder();
     assert.equal(repaintTerrainOcclusion(repaint, terrain, 0, cells), 1);
     assert.equal(repaint.calls.filter(call => call[0] === 'fillRect').length, 2);
+});
+
+test('open ground varies per 1 m block in three deterministic flat tones', () => {
+    const tones = new Set();
+    for (let row = 0; row < 12; row++) for (let column = 0; column < 12; column++) tones.add(blockTone(column, row));
+    assert.deepEqual([...tones].sort(), [-1, 0, 1]);
+    assert.equal(blockTone(5, 9), blockTone(5, 9));
+    assert.equal(scaleHex('#808080', 1), '#808080');
+    assert.equal(scaleHex('#808080', 1 + BLOCK_TONE_STEP), '#8c8c8c');
+    assert.equal(scaleHex('#ffffff', 2), '#ffffff', 'channels clamp');
+});
+
+test('painted open ground uses more than one tone and every tone stays dark', () => {
+    const ctx = recorder();
+    paintTerrain(ctx, frame(12, 12, new Array(144).fill(0)), 0);
+    const tops = new Set(ctx.calls.filter(call => call[0] === 'fillRect').map(call => call[5]));
+    assert.equal(tops.size, 3);
 });

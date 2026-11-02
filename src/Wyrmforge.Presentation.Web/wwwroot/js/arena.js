@@ -12,6 +12,7 @@ import { drawGreyboxGround } from './arena-greybox-ground.js';
 import { TerrainCanvasCache, influenceBandIndex, blockInsetOverlayEnabled, drawBlockInsetOverlay, occludingTerrainCells, eraseTerrainOcclusion, repaintTerrainOcclusion } from './arena-terrain-canvas.js';
 import { raisedActor } from './arena-projection.js';
 import { ambientParticles, drawAmbientParticles } from './arena-ambient-particles.js';
+import { readArenaDebugFlags, botMovement, createBotMemory } from './arena-debug.js';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
 import { drawRecoveryGuide } from './arena-recovery.js';
@@ -121,6 +122,7 @@ export function readArenaDiagnostics(canvas) {
         player: state.latestSnapshot?.player ?? null,
         world: state.latestSnapshot?.world ?? null,
         exit: state.latestSnapshot?.exit ?? null,
+        extraction: state.latestSnapshot?.extraction ?? null,
         enemies: state.latestSnapshot?.enemies ?? [],
         deathBursts: state.latestSnapshot?.deathBursts ?? [],
         damageNumbers: state.latestSnapshot?.damageNumbers ?? [],
@@ -154,6 +156,7 @@ export function readArenaDiagnostics(canvas) {
         terrainPresentation: state.latestSnapshot?.environment?.greybox
             ? 'one-meter-greybox' : state.g4FlatGround ? 'neutral-grey' : 'painted',
         framePresentation: state.g4StageFrames ? 'staged' : 'direct',
+        debug: state.debug,
         hunt1Terrain: state.latestSnapshot?.environment?.terrain
             ? { columns: state.latestSnapshot.environment.terrain.columns, rows: state.latestSnapshot.environment.terrain.rows,
                 snapshotRevision: state.latestSnapshot.environment.terrain.revision,
@@ -199,6 +202,8 @@ function createState(canvas, dotNetReference) {
         damageNumberMode: loadDamageNumberMode(window.localStorage),
         targetSigil: { key: null, activeMarker: null, lastOpacity: 0, enteredAt: 0, exitedAt: null, exitMarker: null },
         dotNetReference,
+        debug: readArenaDebugFlags(),
+        botMemory: createBotMemory(),
         active: true,
         simulationBusy: false,
         latestSnapshot: null,
@@ -271,7 +276,7 @@ function startSimulationFrame(state, timestamp, rect) {
     state.simulationBusy = true;
     const delta = Math.min((timestamp - state.lastSimulationTimestamp) / 1000, 0.05);
     state.lastSimulationTimestamp = timestamp;
-    const movement = getArenaMovement(state);
+    const movement = state.debug.bot ? botMovement(state.latestSnapshot, state.botMemory, performance.now(), state.terrainFrame ?? null) : getArenaMovement(state);
     const aim = getArenaAim(state);
     const bridgeStarted = performance.now();
 
@@ -398,8 +403,6 @@ function draw(state, snapshot, width, height) {
             (state.terrainCache ??= new TerrainCanvasCache())
                 .update(state.terrainFrame, influenceBandIndex(snapshot.environment.corruption));
             state.terrainCache.draw(ctx, { x: camera.x, y: camera.y, width, height });
-            if (state.blockInset ??= blockInsetOverlayEnabled())
-                drawBlockInsetOverlay(ctx, state.terrainFrame, { x: camera.x, y: camera.y, width, height });
         } else {
             drawGreyboxGround(ctx, snapshot.environment.greybox, worldWidth, worldHeight);
         }
@@ -548,9 +551,13 @@ function draw(state, snapshot, width, height) {
     }
     drawReliquaryEmergence(ctx, snapshot.reliquary);
     drawBellWardenEntrance(ctx, snapshot.bellWarden);
-    if (state.terrainFrame && snapshot.environment?.terrain)
+    if (state.terrainFrame && snapshot.environment?.terrain) {
         drawAmbientParticles(ctx, ambientParticles(influenceBandIndex(snapshot.environment.corruption), visualSeconds,
             { width: worldWidth, height: worldHeight }, state.reducedMotion.matches), { x: camera.x, y: camera.y, width, height });
+        // The calibration overlay is drawn unlit over the composite so it is readable in any light.
+        if (state.blockInset ??= blockInsetOverlayEnabled())
+            drawBlockInsetOverlay(ctx, state.terrainFrame, { x: camera.x, y: camera.y, width, height });
+    }
     if (snapshot.powerBurst) {
         const pulse = snapshot.powerBurst;
         const radius = pulse.radius * (state.reducedMotion.matches ? 0.7 : 0.15 + 0.85 * pulse.progress);

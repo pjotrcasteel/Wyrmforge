@@ -143,6 +143,136 @@ public sealed class GreyboxHuntBrowserTests : PageTest
         await Page.ScreenshotAsync(new() { Path = Path.Combine(output, $"{shot}-{width}.png"), FullPage = false });
     }
 
+    /// <summary>Hunt 1.0 H0.3: with the debug bot and accelerated time, the first trail clears and the real exit returns to the Chart.</summary>
+    [TestMethod]
+    [DataRow("")]
+    [DataRow("&hunt1=1")]
+    public async Task FirstTrail_IsClearedAndLeftThroughTheRealExitBackToTheChart(string extraQuery)
+    {
+        var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.AddInitScriptAsync("""
+            localStorage.setItem('wyrmforge.firstHunt.v1','3');
+            localStorage.setItem('wyrmforge.characterSchool.v1','Pyromancer');
+            """);
+        var errors = new List<string>();
+        Page.PageError += (_, error) => errors.Add(error);
+        await Page.GotoAsync(root + "/?speed=10&god=1&bot=1" + extraQuery, new() { WaitUntil = WaitUntilState.NetworkIdle });
+        var start = Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^START GAME") });
+        await start.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 45000 });
+        await start.ClickAsync();
+        if (await Page.Locator(".character-creation").IsVisibleAsync())
+            await Page.GetByRole(AriaRole.Button, new() { Name = "Choose Pyromancer" }).ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Region, new() { Name = "Town square" })).ToBeVisibleAsync();
+        await Page.Locator(".refuge-town-spot--gate").ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Enter Free Play" }).ClickAsync();
+        await Page.Locator(".gate-action--primary").ClickAsync();
+        await Page.Locator(".gate-lineage--fire").ClickAsync();
+        await Page.Locator(".gate-tier--ready").First.ClickAsync();
+        await Page.Locator("button.route-node.available").First.ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^Enter (rare )?trail$") }).ClickAsync();
+        await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
+
+        // The debug bot kites and then walks to the real exit; the Chart must come back with the trail cleared.
+        try
+        {
+            await Page.GetByRole(AriaRole.Button, new() { Name = "Continue" }).ClickAsync(new() { Timeout = 150000 });
+            await Expect(Page.GetByText("Choose your trail.", new() { Exact = true })).ToBeVisibleAsync(new() { Timeout = 30000 });
+        }
+        catch
+        {
+            var output = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
+            Directory.CreateDirectory(output);
+            await Page.ScreenshotAsync(new() { Path = Path.Combine(output, "first-trail-stuck.png") });
+            var state = await Page.EvaluateAsync<string>(@"async () => {
+                const module = await import('/js/arena-performance.js');
+                const s = module.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
+                return JSON.stringify({ debug: s?.debug, hud: { kills: s?.hud?.kills, hp: s?.hud?.health, t: s?.hud?.seconds }, paused: s?.paused, ended: s?.ended, exit: s?.exit, p: s?.player && [Math.round(s.player.x), Math.round(s.player.y)], enemies: s?.enemies?.length });
+            }");
+            Assert.Fail("first trail did not return to the Chart: " + state);
+        }
+        await Expect(Page.Locator(".map-run-progress")).ToContainTextAsync("1 cleared");
+        Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
+    }
+
+    /// <summary>Hunt 1.0 H0.3: the whole Fire Tier-I loop in a real browser, driven only by the URL debug switches and visible buttons.</summary>
+    [TestMethod]
+    [DataRow("&hunt1=1")]
+    public async Task FullHunt_TownToWyrmAndBackToTown(string extraQuery)
+    {
+        if (Environment.GetEnvironmentVariable("WYRMFORGE_FULL_HUNT") != "1") Assert.Inconclusive("Opt-in soak test: set WYRMFORGE_FULL_HUNT=1 (it plays a whole Hunt and can take several minutes).");
+        var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
+        var output = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
+        Directory.CreateDirectory(output);
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.AddInitScriptAsync("""
+            localStorage.setItem('wyrmforge.firstHunt.v1','3');
+            localStorage.setItem('wyrmforge.characterSchool.v1','Pyromancer');
+            """);
+        var errors = new List<string>();
+        Page.PageError += (_, error) => errors.Add(error);
+        var consoleErrors = new List<string>();
+        Page.Console += (_, message) => { if (message.Type == "error") consoleErrors.Add(message.Text.Length > 300 ? message.Text[..300] : message.Text); };
+        await Page.GotoAsync(root + "/?speed=12&god=1&bot=1" + extraQuery, new() { WaitUntil = WaitUntilState.NetworkIdle });
+        var start = Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^START GAME") });
+        await start.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 45000 });
+        await start.ClickAsync();
+        if (await Page.Locator(".character-creation").IsVisibleAsync())
+            await Page.GetByRole(AriaRole.Button, new() { Name = "Choose Pyromancer" }).ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Region, new() { Name = "Town square" })).ToBeVisibleAsync();
+        await Page.Locator(".refuge-town-spot--gate").ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Enter Free Play" }).ClickAsync();
+        await Page.Locator(".gate-action--primary").ClickAsync();
+        await Page.Locator(".gate-lineage--fire").ClickAsync();
+        await Page.Locator(".gate-tier--ready").First.ClickAsync();
+
+        var deadline = DateTime.UtcNow.AddMinutes(14);
+        var lastChange = DateTime.UtcNow;
+        var lastSeen = "";
+        var returnedToTown = false;
+        var trailsCleared = 0;
+        var huntSurvived = false;
+        while (DateTime.UtcNow < deadline && !returnedToTown)
+        {
+            var seen = "";
+            if (await Page.GetByRole(AriaRole.Region, new() { Name = "Town square" }).IsVisibleAsync() && trailsCleared > 0) { returnedToTown = true; break; }
+            var enter = Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^(Enter (rare )?trail|Face the wyrm|Reclaim the refuge|Take the watchtower)$") });
+            if (await Page.GetByText("Choose your trail.", new() { Exact = true }).IsVisibleAsync())
+            {
+                seen = "chart";
+                var lair = Page.Locator("button.route-node.dragon.available");
+                var node = await lair.CountAsync() > 0 ? lair.First : Page.Locator("button.route-node.available").First;
+                if (await enter.IsEnabledAsync().ConfigureAwait(false) && await Page.Locator("button.route-node.selected").CountAsync() > 0) await enter.ClickAsync();
+                else await node.ClickAsync();
+            }
+            else
+            {
+                foreach (var label in new[] { "Continue", "Not now", "Return to Wyrmforge", "Leave the realm", "Extract", "Return to Town", "Return to the Refuge" })
+                {
+                    var button = Page.GetByRole(AriaRole.Button, new() { Name = label });
+                    if (await button.CountAsync() > 0 && await button.First.IsVisibleAsync()) { seen = label; if (label == "Continue") trailsCleared++; if (label == "Return to Wyrmforge") huntSurvived = await Page.GetByText("EXTRACTION SUCCESSFUL").IsVisibleAsync(); await button.First.ClickAsync(); break; }
+                }
+            }
+            if (seen != lastSeen || seen != "") { lastSeen = seen; lastChange = DateTime.UtcNow; }
+            if (DateTime.UtcNow - lastChange > TimeSpan.FromSeconds(60))
+            {
+                await Page.ScreenshotAsync(new() { Path = Path.Combine(output, "full-hunt-stuck.png") });
+                var state = await Page.EvaluateAsync<string>(@"async () => {
+                    const canvas = document.querySelector('canvas.game-canvas');
+                    if (!canvas) return 'no canvas; buttons: ' + [...document.querySelectorAll('button')].map(b => b.innerText.trim()).filter(Boolean).slice(0, 12).join(' | ');
+                    const module = await import('/js/arena-performance.js');
+                    const s = module.readArenaDiagnostics(canvas);
+                    return JSON.stringify({ hud: { kills: s?.hud?.kills, hp: s?.hud?.health, t: s?.hud?.seconds }, paused: s?.paused, ended: s?.ended, exit: s?.exit, extraction: s?.extraction, p: s?.player && [Math.round(s.player.x), Math.round(s.player.y)], dragon: s?.dragon && [Math.round(s.dragon.x), Math.round(s.dragon.y)], enemies: s?.enemies?.map(e => [Math.round(e.x), Math.round(e.y)]) });
+                }");
+                Assert.Fail($"full Hunt stalled after {trailsCleared} cleared trails: {state} | console errors: {string.Join(" || ", consoleErrors.Take(4))}");
+            }
+            await Page.WaitForTimeoutAsync(500);
+        }
+        Assert.IsTrue(huntSurvived, "the Hunt must reach its Hunt Survived summary");
+        Assert.IsTrue(returnedToTown, $"the Hunt must end back in Town ({trailsCleared} trails cleared, last seen '{lastSeen}')");
+        Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
+    }
+
     /// <summary>Hunt 1.0 H8: the Chart paints the authoritative Wyrm Influence, rising from a Wet entrance to a Volcanic lair.</summary>
     [TestMethod]
     [DataRow(320, 568)]
