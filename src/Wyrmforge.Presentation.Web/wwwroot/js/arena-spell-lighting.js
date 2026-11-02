@@ -71,6 +71,7 @@ export function buildSpellLights(snapshot, elapsed = 0, reducedMotion = false, v
         // Restrict this legacy Canvas bridge to sources not already projected as spell lights.
         if (!source.ownerId?.startsWith('ashfang:') &&
             !source.ownerId?.startsWith('ashfang-effect:') &&
+            !source.ownerId?.startsWith('terrain:lava:') &&
             !source.ownerId?.startsWith('actor:')) continue;
         if (!source.enabled || !/^#[0-9a-f]{6}$/i.test(source.color)) continue;
         const center = [1, 3, 5].map(i => parseInt(source.color.slice(i, i + 2), 16));
@@ -78,8 +79,10 @@ export function buildSpellLights(snapshot, elapsed = 0, reducedMotion = false, v
         // The universal GPU scene consumes the original XYZ emitter unchanged.
         const appearanceSource = source.ownerId.startsWith('actor:');
         const y = appearanceSource ? source.position?.[1] - source.position?.[2] : source.position?.[1];
+        // Terrain lava emitters use GPU-scale intensity (6-12); the Canvas spill expects a 0-1.4 strength.
+        const strength = source.ownerId.startsWith('terrain:lava:') ? Math.min(1.2, source.intensity / 10) : source.intensity;
         candidates.push({ x: source.position?.[0], y, radius: source.range,
-            strength: source.intensity, type: 'boss-source', surge: false,
+            strength, type: 'boss-source', surge: false,
             family: 'fire', center, edge: palette.fire.edge });
     }
     // Bound the worst-case cost when several projectiles and impacts overlap on mobile.

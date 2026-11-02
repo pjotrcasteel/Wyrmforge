@@ -277,6 +277,16 @@ export function drawBlockInsetOverlay(ctx, frame, view) {
     for (let row = firstRow; row <= lastRow; row++) {
         for (let column = first; column <= last; column++) {
             const index = row * columns + column;
+            if (frame.fine?.has(index)) {
+                // A dug block is outlined per 4 px microcolumn at its own height, not at the rounded whole-column height.
+                for (let my = 0; my < MICRO_PER_COLUMN; my++) for (let mx = 0; mx < MICRO_PER_COLUMN; mx++) {
+                    const height = microHeight(frame, column, row, mx, my);
+                    ctx.strokeRect(column * FACE_PIXELS + mx * MICRO_UNITS + 0.5, row * FACE_PIXELS + my * MICRO_UNITS - height * MICROCELL_UNITS + 0.5,
+                        MICRO_UNITS - 1, MICRO_UNITS - 1);
+                    outlined++;
+                }
+                continue;
+            }
             const top = blockTopRect(column, row, surface[index]);
             ctx.strokeRect(top.x + 0.5, top.y + 0.5, top.width - 1, top.height - 1);
             outlined++;

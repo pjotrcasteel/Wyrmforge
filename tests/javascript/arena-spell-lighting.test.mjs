@@ -82,3 +82,12 @@ test('boss adapter uses authoritative shared descriptors, filters invalid source
     assert.deepEqual(buildSpellLights({lighting:{lights:[{...source,intensity:NaN}]}}),[]);
     assert.deepEqual(buildSpellLights({dragon:{school:1,action:'breath',actionPhase:'strike',flightStage:'ground'}}),[]);
 });
+
+test('terrain lava emitters reach the Canvas fallback at ground height with a bounded strength', () => {
+    const lava = { id: 'terrain:lava:1:2', ownerId: 'terrain:lava:1:2', enabled: true, position: [300, 400, 40], range: 200, intensity: 12, color: '#ff5a14' };
+    const [light] = buildSpellLights({ lighting: { lights: [lava] } });
+    assert.equal(light.y, 400, 'lava sits on the ground, it is not lifted like an actor feature');
+    assert.equal(light.strength, 1.2);
+    assert.deepEqual(light.center, [255, 90, 20]);
+    assert.equal(buildSpellLights({ lighting: { lights: [{ ...lava, ownerId: 'terrain:rock:1' }] } }).length, 0);
+});

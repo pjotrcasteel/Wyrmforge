@@ -294,3 +294,15 @@ test('whole columns behind a subdivided one draw their front per microcolumn', (
     const frontsOfFirst = ctx.calls.filter(call => call[0] === 'fillRect' && call[2] === 32 && call[3] === 4 && call[4] === 16 && call[1] < 32);
     assert.equal(frontsOfFirst.length, 8, 'eight 4 px wide front slices, one per microcolumn, each 16 px tall');
 });
+
+test('the inset overlay outlines a dug block per microcolumn at that microcolumn height', () => {
+    const heights = new Array(64).fill(0); heights[0] = -3;
+    const ctx = Object.assign(recorder(), { strokeRect(x, y, w, h) { this.calls.push(['strokeRect', x, y, w, h]); } });
+    const terrain = { revision: 1, columns: 1, rows: 1, surface: [0], material: [0], fine: new Map([[0, { heights, topsoil: 0, stoneTop: -8 }]]) };
+    const outlined = drawBlockInsetOverlay(ctx, terrain, { x: 0, y: 0, width: 32, height: 32 });
+    const strokes = ctx.calls.filter(call => call[0] === 'strokeRect');
+    assert.equal(outlined, 64, 'one outline per microcolumn');
+    assert.equal(strokes.length, 64);
+    assert.deepEqual(strokes[0].slice(1), [0.5, 12.5, 3, 3], 'the dug corner sits 3 microcells (12 px) lower');
+    assert.deepEqual(strokes[1].slice(1), [4.5, 0.5, 3, 3]);
+});
