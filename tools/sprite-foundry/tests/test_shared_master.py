@@ -126,6 +126,7 @@ class SharedMasterTests(unittest.TestCase):
         texture_path = MODULE_FILE.parent / "robe-uv-v001.png"
         robe_uv = Image.open(texture_path).convert("RGBA")
         self.assertEqual((96, 128), robe_uv.size)
+        self.assertEqual((1656, 684), wizard.comparison_sheet(None, robe_uv).size)
         for direction in wizard.DIRECTIONS:
             original = wizard.render(direction)
             painted = wizard.render(direction, robe_uv=robe_uv)

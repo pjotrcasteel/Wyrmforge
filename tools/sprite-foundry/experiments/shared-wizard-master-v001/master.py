@@ -322,13 +322,14 @@ def contact_sheet(skin=None, robe_uv=None):
                 draw.rectangle((x+xx,y+yy,x+xx+63,y+yy+63),fill=col)
         canvas.alpha_composite(frame.resize((WIDTH*scale,HEIGHT*scale),Image.Resampling.NEAREST),(x,y))
         draw.text((x,20),label,fill=(231,230,223,255))
-    draw.text((16,HEIGHT*scale+66),"DETERMINISTIC MASTER GEOMETRY STUDY - NOT APPROVED GAME ART",fill=(241,186,107,255))
+    footer="SHARED ROBE UV MATERIAL STUDY - NOT APPROVED GAME ART" if robe_uv else "DETERMINISTIC MASTER GEOMETRY STUDY - NOT APPROVED GAME ART"
+    draw.text((16,HEIGHT*scale+66),footer,fill=(241,186,107,255))
     return canvas,frames
 
 def comparison_sheet(skin, robe_uv=None):
     """Side-by-side 8-way continuity audit, never an art approval sheet."""
-    if skin is None:
-        raise ValueError("eight-way comparison requires --reference-sprite")
+    if skin is None and robe_uv is None:
+        raise ValueError("eight-way comparison requires a reference or robe UV")
     directions=("S","SE","E","NE","N","NW","W","SW")
     scale=3
     stride=WIDTH*scale+12
@@ -336,9 +337,15 @@ def comparison_sheet(skin, robe_uv=None):
     row_height=HEIGHT*scale+64
     canvas=Image.new("RGBA",(len(directions)*stride+24,top+2*row_height+34),(26,29,33,255))
     draw=ImageDraw.Draw(canvas)
-    for row,reference in enumerate((None,skin)):
-        title="SINGLE MESH / BASE COLOR" if row==0 else "SAME MESH / FRONT-ONLY COLOR DECAL"
-        draw.text((12,top+row*row_height-23),title,fill=(232,227,214,255))
+    if robe_uv is None:
+        variants=((None,None),(skin,None))
+        titles=("SINGLE MESH / BASE COLOR","SAME MESH / FRONT-ONLY COLOR DECAL")
+    else:
+        variants=((skin,None),(skin,robe_uv))
+        titles=("PREVIOUS / FRONT DECAL ONLY" if skin else "PREVIOUS / BASE COLOR",
+                "SAME MESH / CYLINDRICAL ROBE UV + FRONT DECAL" if skin else "SAME MESH / CYLINDRICAL ROBE UV")
+    for row,(reference,texture) in enumerate(variants):
+        draw.text((12,top+row*row_height-23),titles[row],fill=(232,227,214,255))
         for index,direction in enumerate(directions):
             x=12+index*stride
             y=top+row*row_height
@@ -346,7 +353,7 @@ def comparison_sheet(skin, robe_uv=None):
                 for i in range(0,WIDTH*scale,24):
                     checker=(i//24+j//24)%2
                     draw.rectangle((x+i,y+j,x+i+23,y+j+23),fill=(49,54,60,255) if checker else (40,45,51,255))
-            frame=render(direction,reference,robe_uv)
+            frame=render(direction,reference,texture)
             canvas.alpha_composite(frame.resize((WIDTH*scale,HEIGHT*scale),Image.Resampling.NEAREST),(x,y))
             draw.text((x+4,y+HEIGHT*scale+6),direction,fill=(232,227,214,255))
     draw.text((12,canvas.height-20),"UNAPPROVED MATERIAL STUDY / NOT GAME ART",fill=(255,180,95,255))
