@@ -11,6 +11,8 @@ export function readArenaDebugFlags(search = globalThis.location?.search ?? '') 
         god: params.get('god') === '1',
         bot: params.get('bot') === '1',
         bright: params.get('bright') === '1',
+        // Metric oblique (shear) camera for the Hunt GPU world; the legacy stretched camera stays the default.
+        shear: params.get('shear') === '1',
     };
 }
 

@@ -99,6 +99,9 @@ public sealed class GreyboxHuntBrowserTests : PageTest
     [DataRow(390, 844, "&bright=1", "hunt1-terrain-bright")]
     [DataRow(390, 844, "&bright=1&blockInset=1", "hunt1-block-inset-bright")]
     [DataRow(390, 844, "&perf=1&bright=1", "hunt1-perf")]
+    [DataRow(320, 568, "&shear=1&bright=1", "hunt1-shear-bright")]
+    [DataRow(390, 844, "&shear=1&bright=1", "hunt1-shear-bright")]
+    [DataRow(390, 844, "&shear=1&bright=1&blockInset=1", "hunt1-shear-inset")]
     public async Task Hunt1Terrain_StreamsTheCSharpHeightfieldAndPaintsItUnderSharedLighting(int width, int height, string extraQuery, string shot)
     {
         var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
@@ -149,9 +152,11 @@ public sealed class GreyboxHuntBrowserTests : PageTest
         var shotState = await Page.EvaluateAsync<string>(@"async () => {
             const m = await import('/js/arena-performance.js');
             const s = m.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
-            return JSON.stringify({ seconds: s.hud?.seconds, gpu: s.greyboxLighting, ambient: s.sharedLighting?.environment?.ambient, debug: s.debug, perf: s.perfReport, search: location.search, gpuError: s.gpuWorld?.error });
+            return JSON.stringify({ seconds: s.hud?.seconds, gpu: s.greyboxLighting, ambient: s.sharedLighting?.environment?.ambient, debug: s.debug, perf: s.perfReport, projection: s.gpuWorld?.projection, gpuScene: s.gpuScene, hudSize: [document.querySelector('canvas.game-canvas').clientWidth, document.querySelector('canvas.game-canvas').clientHeight], player: s.player, world: s.world, search: location.search, gpuError: s.gpuWorld?.error });
         }");
         await File.WriteAllTextAsync(Path.Combine(output, $"{shot}-{width}.json"), shotState);
+        if (shot.StartsWith("hunt1-shear"))
+            Assert.AreEqual("metric", System.Text.Json.JsonDocument.Parse(shotState).RootElement.GetProperty("projection").GetString());
         if (shot == "hunt1-perf")
         {
             var perf = System.Text.Json.JsonDocument.Parse(shotState).RootElement.GetProperty("perf");

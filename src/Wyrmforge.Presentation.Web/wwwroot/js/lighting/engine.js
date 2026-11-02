@@ -87,6 +87,8 @@ export class LightingEngine {
         this.alive = true;
         this.debugView = 'lit';
         this.halfWidth = 5;
+        // Anisotropic screen scale for oblique projections; 1 keeps the symmetric orthographic view every other scene uses.
+        this.verticalScale = 1;
         this.inspection = new LightingInspection();
         this.materialBudget = { maps: 0, transmissive: 0, ao: 0 };
     }
@@ -295,7 +297,7 @@ float proofShadowVisibility() {
         // One world sample per CSS pixel at 390px, bounded regardless of device DPR.
         const w = Math.max(1, Math.min(390, Math.round(width))), h = Math.max(1, Math.round(height * w / width));
         if (this.canvas.width !== w || this.canvas.height !== h) this.renderer.setSize(w, h, false);
-        const halfHeight = this.halfWidth * h / w;
+        const halfHeight = this.halfWidth * h / w * this.verticalScale;
         synchronizeOrthographicProjection(this.camera, -this.halfWidth, this.halfWidth, halfHeight, -halfHeight);
         if (this.debugView === 'light-depth') {
             const source = this.selected?.find(l => l.shadow);

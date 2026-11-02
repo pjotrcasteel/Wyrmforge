@@ -50,7 +50,7 @@ function requestSharedGpuWorld(state, quality = 'mobile') {
     if (!state.active || state.gpuWorld || state.gpuPending || state.gpuError) return;
     state.gpuPending = true;
     void import('./arena-gpu-world.js').then(({ HuntGpuWorld }) => {
-        if (state.active) state.gpuWorld = new HuntGpuWorld({ quality });
+        if (state.active) state.gpuWorld = new HuntGpuWorld({ quality, projection: state.debug.shear ? 'metric' : 'legacy' });
     }).catch(error => { state.gpuError = String(error); })
         .finally(() => { state.gpuPending = false; });
 }
@@ -159,6 +159,7 @@ export function readArenaDiagnostics(canvas) {
         framePresentation: state.g4StageFrames ? 'staged' : 'direct',
         debug: state.debug,
         perfReport: arenaPerfReport(state),
+        gpuScene: state.debug.shear ? state.gpuWorld?.sceneReport?.() ?? null : null,
         hunt1Terrain: state.latestSnapshot?.environment?.terrain
             ? { columns: state.latestSnapshot.environment.terrain.columns, rows: state.latestSnapshot.environment.terrain.rows,
                 snapshotRevision: state.latestSnapshot.environment.terrain.revision,
