@@ -41,6 +41,16 @@ This status/sequence index resolves older, superseded "NEXT" and "active" labels
 
 **Wyrm Influence (Hunt 1.0, Fire first).** A single C# `WyrmInfluenceField` value per node, increasing monotonically toward the lair and changing by at most one band between neighbours, drives terrain, vegetation state, hazards, lighting emitters, enemy mix, fire-elite chance, realm-influence rules, ambient VFX/audio and the Chart wash. Fire bands (tunable): Wet < 0.25, Scorched < 0.55, Burning < 0.85, Volcanic ≥ 0.85. Other schools are added as data profiles on the same field, not as separate generators.
 
+**DRAFT PROPOSAL, not LOCKED, not implemented: influence-themed swarms (owner intent 3 November 2026: "themed but swarmy").** Research basis: *Vampire Survivors* keeps a per-stage roster, tops the screen up to a minimum alive count on a timer, caps total alive enemies (about 300 on desktop) and layers scripted, predictable swarm events (wall, circle, rush) on top; *Enter the Gungeon* gives each chamber a fixed roster of distinct roles (shooter, charger, buffer, summoner, exploder), scales enemy health per chamber (x1 up to x2.1) and trims enemy counts for newer players. WyrmForge already has the parts: habitat-weighted pack recipes (`EnemyPackRecipeCatalog`), a threat budget, and the `EncounterDirector` phases (Pressure, Escalation, Breathing room, Surge, Climax). The proposal only adds a per-band profile on top of them, as data on `WyrmInfluenceProfile`, never new spawn code per band:
+
+| Band | Pack recipes favoured (existing) | Pack size multiplier | Alive cap (mobile) | Surge event |
+| --- | --- | --- | --- | --- |
+| Wet | Wandering Dead, Hunting Pack | x1.0 | 14 | Hunting Pack |
+| Scorched | Ashling Mob, Hunting Pack | x1.15 | 18 | Ashling Mob |
+| Burning | Priest Warband, Bastion, Ashling Mob | x1.3 | 22 | Priest Warband |
+| Volcanic | Priest Warband, Last Stand | x1.5 | 26 | Last Stand |
+
+Numbers are starting values to be tuned by deterministic encounter simulations and phone captures; the cap must stay inside the lighting and frame budget measured by H9. Influence-themed enemy visuals (embers, scorched variants) wait for the enemy art gate. Owner decision needed before C#: accept, change or reject this table.
 | Milestone | Scope | Gate |
 |---|---|---|
 | **H0** | Canon update, full-loop C# test, full-loop browser test, baseline captures and performance counters | — |
