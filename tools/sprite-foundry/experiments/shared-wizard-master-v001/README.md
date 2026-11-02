@@ -387,3 +387,36 @@ rights must be confirmed before any direct adaptation.
 and shows weight transfer, but the long robe still hides some lower-body motion.
 Art fidelity, foot-slide review and in-game gameplay-scale acceptance remain
 open. The native pixel and topology tests alone do not approve the sprite.
+
+
+## Forward-swing correction v009 — backwards-walk regression fixed
+
+The owner spotted that the v008 animated study looked like the wizard was
+**walking backward**. The underlying issue was an inverted animation phase,
+not a mistaken N/NE/E compass label: the raised foot moved from front to rear
+rather than swinging from rear to front.
+
+With local **+Z = forward** for all eight cameras:
+
+- A *planted* foot moves from forward to rear relative to the moving actor.
+- The *raised* foot swings from rear to forward; it must never move backward
+  while lifted.
+- The right/left foot clearance phases must be opposite, at the correct
+  positions of the same 16-frame cycle.
+
+The old study violated the raised-foot-forward contract on **14 of the 32**
+sampled foot transitions (16 per anatomical side). After correcting both the
+articulated ankle targets and boot/robe clearance phase, the count is zero.
+Structural checks also verify the forward vector projected for every compass
+label, constant knee lengths, rigid staff/right-hand attachment and all
+source garment-damage feature counts.
+
+[Direct 16-frame corrected motion review](walk-16-frame-S-SE-E-forward-swing-NOT-APPROVED.gif)
+is generated from actual transparent **64×80** actor frames and enlarged only
+with nearest-neighbour sampling. Do not compare it to the *rejected v008*
+animation without noting that they have opposite swing-phase assignments.
+
+**Remaining visual review:** the robe still hides some knee/ankle motion,
+foot sliding cannot be ruled out until travel speed is matched to gait in
+the actual game, and Wizard appearance is still not owner-approved. Draft
+status remains; no runtime/game import or merge.
