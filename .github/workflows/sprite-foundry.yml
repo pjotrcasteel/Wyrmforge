@@ -59,12 +59,15 @@ jobs:
         run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --robe-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/robe-uv-v001.png --upper-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/upper-cloth-uv-v001.png --head-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/head-uv-v001.png --pose-comparison tools/sprite-foundry/output/pose-NW-W-before-after-NOT-APPROVED.png
       - name: Strict structural audit of the opt-in NW/W pose candidate (not art approval)
         run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --robe-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/robe-uv-v001.png --upper-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/upper-cloth-uv-v001.png --head-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/head-uv-v001.png --presentation-pose-review --staff-audit tools/sprite-foundry/output/staff-visibility-8way-candidate-NOT-APPROVED.png --staff-audit-json tools/sprite-foundry/output/staff-visibility-candidate-report.json --strict-staff-audit
+      - name: Render actual 64x80 four-key walk contact (unapproved animation)
+        run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/walk_study.py --preview tools/sprite-foundry/output/walk-four-key-8way-NOT-APPROVED.png
       - name: Upload unapproved single-mesh studies
         uses: actions/upload-artifact@v4
         with:
           name: shared-wizard-master-studies-NOT-APPROVED
           path: |
             tools/sprite-foundry/output/shared-master-blockout.png
+            tools/sprite-foundry/output/walk-four-key-8way-NOT-APPROVED.png
             tools/sprite-foundry/output/shared-master-front-decal.png
             tools/sprite-foundry/output/garment-damage-closeup.png
             tools/sprite-foundry/output/robe-uv-S-SE-E.png
