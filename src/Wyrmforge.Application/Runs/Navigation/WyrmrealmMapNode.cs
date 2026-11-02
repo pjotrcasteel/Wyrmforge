@@ -19,6 +19,8 @@ public sealed record WyrmrealmMapNode(
     public WorldSiteGenerationProfile? GenerationProfile { get; init; }
     /// <summary>A combat road that leads straight into a Wyrm's lair (route-graph semantics, not a stage number): the Bell Warden's road.</summary>
     public bool PreLair { get; init; }
+    /// <summary>Authoritative 0..1 Wyrm influence over this site: 0 at the entrance, 1 at the lair. See <see cref="WyrmInfluenceField"/>.</summary>
+    public double Influence { get; init; }
     /// <summary>An optional, harder hold. Once reclaimed, a fall later in the Hunt returns the hunter here instead of ending it.</summary>
     public bool Refuge { get; init; }
     /// <summary>An optional lookout detour. Clearing it confirms what really waits on the next fork's roads (earned scouting).</summary>

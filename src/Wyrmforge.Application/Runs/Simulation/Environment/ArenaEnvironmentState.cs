@@ -26,6 +26,7 @@ public sealed class ArenaEnvironmentState
     private readonly bool greybox;
     private readonly HuntArenaGenerator.WetForestRecipe? wetForest;
     private WorldSiteGeography? geography;
+    private double? nodeInfluence;
     private EncounterPhase phase = EncounterPhase.Pressure;
 
     /// <summary>Read-only C# fixture geometry for the optional shared G5 light projection.</summary>
@@ -92,6 +93,8 @@ public sealed class ArenaEnvironmentState
         var environment = new ArenaEnvironmentState(seed, biome, element, stage, landmark, district, habitat, node.PreLair, generatorPreview, worldFirstGeography, greybox)
         {
             geography = node.Geography,
+            // The Arena Lab keeps its stage-based preview value; real Hunts read the node's authoritative influence.
+            nodeInfluence = generatorPreview ? null : node.Influence,
         };
         // The one-metre greybox has no authored scenery, supplies, solid crossings or walls.
         // It keeps only the small breakable salvage props: they are the sole Charred Scrap source.
@@ -193,7 +196,7 @@ public sealed class ArenaEnvironmentState
         barriers.Select(barrier => new ArenaBarrierRenderSnapshot(barrier.X, barrier.Y, barrier.Width, barrier.Height,
             IsOpen(barrier), barrier.Kind)).ToArray(), district, habitat)
     {
-        Corruption = HuntArenaGenerator.WyrmInfluence(stage, generatorPreview && preLair),
+        Corruption = nodeInfluence ?? HuntArenaGenerator.WyrmInfluence(stage, generatorPreview && preLair),
         GeneratorPreview = generatorPreview,
         Greybox = greybox ? new ArenaGreyboxGridRenderSnapshot(1, 32, 8, 0, 1) : null,
         WetForest = wetForest,

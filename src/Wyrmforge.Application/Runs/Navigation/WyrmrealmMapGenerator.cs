@@ -169,7 +169,7 @@ public static class WyrmrealmMapGenerator
                     GenerationProfile = new WorldSiteGenerationProfile(landform, landmark),
                     PreLair = node.Type == WyrmrealmNodeType.Combat && lairRoads.Contains(node.Id) };
             }).ToArray();
-        return WorldSiteGeographyProjection.Attach(mapped, seed, region);
+        return WorldSiteGeographyProjection.Attach(WyrmInfluenceField.Assign(mapped), seed, region);
 
         void Add(string suffix, int stage, int lane, IReadOnlyList<string> previous, HuntPoint point, IReadOnlyList<HuntPoint> trail,
             string? roadId = null, int index = 0, bool bonus = false, SpellSchool? school = null, WyrmrealmHabitat habitat = WyrmrealmHabitat.Outskirts,
