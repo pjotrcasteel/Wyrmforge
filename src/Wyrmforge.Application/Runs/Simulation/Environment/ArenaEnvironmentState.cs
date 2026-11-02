@@ -93,13 +93,13 @@ public sealed class ArenaEnvironmentState
         {
             geography = node.Geography,
         };
-        // The live one-metre greybox has no authored scenery, supplies, solid crossings,
-        // or gameplay colliders. Keep node identity and the separate trail-exit system intact.
-        if (greybox || node.Type != WyrmrealmNodeType.Combat) return environment;
+        // The one-metre greybox has no authored scenery, supplies, solid crossings or walls.
+        // It keeps only the small breakable salvage props: they are the sole Charred Scrap source.
+        if (node.Type != WyrmrealmNodeType.Combat) return environment;
 
         // The old fixed gated encounter remains part of current Hunts ONLY.
         // Arena Lab previews have natural continuous ground: no synthetic cross-walls or wave checkpoints.
-        if (!generatorPreview)
+        if (!generatorPreview && !greybox)
         {
             // AR1 is an isolated full-run preview of graph-authored terrain; do not block
             // its mapped routes with the legacy horizontal checkpoint masonry.
@@ -127,14 +127,14 @@ public sealed class ArenaEnvironmentState
             var center = new Vector2D(prop.X * 950, prop.Y * 1550);
             if (environment.IsBlocked(center, 950, 1550, prop.Radius + 4)) continue;
             // Existing breakable props must not block a newly authored AR2 side approach.
-            if (worldFirstGeography && node.Geography?.Landscape?.LocalPaths.Any(path =>
+            if (environment.worldFirstGeography && node.Geography?.Landscape?.LocalPaths.Any(path =>
                 path.EdgeId.EndsWith(":access", StringComparison.Ordinal) && path.Points.Count == 2 &&
                 SegmentDistanceSquared(center, new Vector2D(path.Points[0].X * 950, path.Points[0].Y * 1550),
                     new Vector2D(path.Points[1].X * 950, path.Points[1].Y * 1550)) <
                 Math.Pow(prop.Radius + 22, 2)) == true) continue;
             environment.destructibles.Add(new DestructibleProp(prop));
         }
-        if (worldFirstGeography && node.Geography?.Landscape is { } landscape)
+        if (environment.worldFirstGeography && node.Geography?.Landscape is { } landscape)
         {
             foreach (var discovery in landscape.Discoveries)
             {

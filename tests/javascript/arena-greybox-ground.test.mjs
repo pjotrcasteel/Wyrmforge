@@ -28,3 +28,10 @@ test('an absent greybox cannot silently select archived texture fallback', () =>
     assert.equal(drawGreyboxGround(ctx, null, 950, 1550), false);
     assert.deepEqual(calls, []);
 });
+
+test('the greybox depth pass draws breakable salvage props and no masonry or story art', async () => {
+    const { readFileSync } = await import('node:fs');
+    const source = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena.js', import.meta.url), 'utf8');
+    assert.match(source, /greybox \? createDestructibleLayers\(snapshot\.environment, worldWidth, worldHeight, visualSeconds\)/);
+    assert.doesNotMatch(source, /greybox \? \[\] : getArenaCloisterElevations/);
+});
