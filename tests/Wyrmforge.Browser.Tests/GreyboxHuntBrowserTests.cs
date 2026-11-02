@@ -180,5 +180,7 @@ public sealed class GreyboxHuntBrowserTests : PageTest
         CollectionAssert.AreEqual(strongestByStage.OrderBy(band => band).ToList(), strongestByStage, "influence never falls toward the lair");
         await Expect(Page.Locator(".influence-wash")).ToBeAttachedAsync();
         await Page.ScreenshotAsync(new() { Path = Path.Combine(output, $"hunt1-chart-{width}.png"), FullPage = false });
+        await Page.Locator(".hunt-viewport").EvaluateAsync("element => { element.scrollTop = 0; }");
+        await Page.ScreenshotAsync(new() { Path = Path.Combine(output, $"hunt1-chart-lair-{width}.png"), FullPage = false });
     }
 }

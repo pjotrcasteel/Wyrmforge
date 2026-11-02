@@ -193,7 +193,7 @@
 .map-attention summary { color:var(--nx-muted); }.map-attention summary b { color:var(--nx-gold); }
 .resonance-panel { border-color:var(--nx-edge);background:#1b1417;box-shadow:var(--nx-bevel),0 12px 30px #08050ecc; }
 .realm-route { background:radial-gradient(ellipse at 75% 28%,#3a24213a,transparent 45%),linear-gradient(180deg,#1d1619,#130f13 65%,#1c1719); }
-.influence-wash { position:absolute;inset:0;z-index:0;pointer-events:none;mix-blend-mode:screen;opacity:.9; }
+.influence-wash { position:absolute;inset:0;z-index:0;pointer-events:none;mix-blend-mode:screen;opacity:.6; }
 .route-link { stroke:#baaa9c88; }.route-link.active { stroke:var(--nx-bone); }.route-link.selected { stroke:var(--nx-gold); }.route-link.traversed { stroke:var(--nx-gold); }
 .node-core { border-color:var(--nx-edge);background:#1d1518;box-shadow:var(--nx-bevel); }
 .route-node.selected .node-core { border-color:var(--nx-bone);box-shadow:0 0 0 3px #d4a4674d,0 0 20px #d4a46733; }
