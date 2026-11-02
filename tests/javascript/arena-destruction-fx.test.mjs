@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { craterEvents, createDestructionFx, observeTerrain, heatStrength, chipPosition, pruneDestructionFx, drawDestructionFx,
     fireZoneIntensity, drawFireZoneVignette, drawVeinGlow, FIRE_ZONE_EDGE_ALPHA, MAX_CHIPS, MAX_HEAT_SPOTS, HEAT_SECONDS } from
     '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-destruction-fx.js';
-import { mergeTerrainFrame, veinSegments, VEIN_CHANCE, paintTerrain, TERRAIN_MATERIAL } from
+import { mergeTerrainFrame, veinSegments, VEIN_CHANCE, paintTerrain, TERRAIN_MATERIAL, crackPixels, CRACK_DARK, CRACK_HOT } from
     '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-terrain-canvas.js';
 import { readArenaDebugFlags } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-debug.js';
 
@@ -154,4 +154,28 @@ test('the band debug flag accepts only 0 to 3', () => {
     assert.equal(readArenaDebugFlags('?band=0').band, 0);
     assert.equal(readArenaDebugFlags('?band=4').band, null);
     assert.equal(readArenaDebugFlags('?band=x').band, null);
+});
+
+test('crack stages grow with stone wear and stage 3 shows a hot ember pixel', () => {
+    assert.deepEqual(crackPixels(0), []);
+    assert.deepEqual(crackPixels(undefined), []);
+    assert.ok(crackPixels(1).length < crackPixels(2).length && crackPixels(2).length < crackPixels(3).length);
+    assert.ok(crackPixels(2).every(pixel => pixel.color === CRACK_DARK));
+    assert.ok(crackPixels(3).some(pixel => pixel.color === CRACK_HOT), 'about to break: it glows');
+    for (const pixel of crackPixels(3)) assert.ok(pixel.x >= 0 && pixel.y >= 0 && pixel.x + pixel.w <= 4 && pixel.y + pixel.h <= 4, 'inside one 4 px microcolumn');
+});
+
+test('worn stone microcolumns are painted cracked and the wear survives a merge', () => {
+    const heights = new Array(64).fill(0);
+    const wear = new Array(64).fill(0); wear[9] = 3; wear[10] = 1;
+    const merged = mergeTerrainFrame(null, { revision: 1, columns: 1, rows: 1, surface: [0], material: [2], fine: [{ index: 0, heights, topsoil: 2, stoneTop: -8, wear }] });
+    assert.deepEqual(merged.fine.get(0).wear, wear);
+    const ctx = Object.assign(recorder(), { translate() {} });
+    const plain = Object.assign(recorder(), { translate() {} });
+    const painted = paintTerrain(ctx, merged, 0, 0);
+    paintTerrain(plain, { ...merged, fine: new Map([[0, { ...merged.fine.get(0), wear: null }]]) }, 0, 0);
+    assert.equal(painted - plain.calls.length, crackPixels(3).length + crackPixels(1).length, 'exactly the cracked microcolumns add pixels');
+    const hot = ctx.calls.filter(call => call[0] === 'fillRect' && call[5] === CRACK_HOT);
+    assert.equal(hot.length, 1);
+    assert.equal(mergeTerrainFrame(null, { revision: 1, columns: 1, rows: 1, surface: [0], material: [0], fine: [{ index: 0, heights, topsoil: 0, stoneTop: -8 }] }).fine.get(0).wear, null);
 });

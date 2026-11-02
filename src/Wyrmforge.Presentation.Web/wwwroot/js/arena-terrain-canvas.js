@@ -143,7 +143,7 @@ export function mergeTerrainFrame(previous, incoming) {
     const fine = new Map(previous?.fine ?? []);
     for (const block of incoming.fine ?? []) {
         if (!block.heights?.length) fine.delete(block.index);
-        else fine.set(block.index, { heights: block.heights, topsoil: block.topsoil, stoneTop: block.stoneTop });
+        else fine.set(block.index, { heights: block.heights, topsoil: block.topsoil, stoneTop: block.stoneTop, wear: block.wear ?? null });
     }
     return { revision: incoming.revision, columns: incoming.columns, rows: incoming.rows,
         surface: incoming.surface, material: incoming.material, fine,
@@ -163,6 +163,21 @@ export function microMaterial(block, height) {
     return height <= block.stoneTop ? TERRAIN_MATERIAL.Stone : block.topsoil;
 }
 
+export const CRACK_DARK = '#17100d';
+export const CRACK_HOT = '#ff7a14';
+
+/**
+ * Terraria-style crack stages for worn stone inside one 4 x 4 px microcolumn top (local coordinates): stage 1 a pixel, 2 a short
+ * bend, 3 a longer bend with a glowing ember pixel because the next hit breaks it. Stage 0 or less draws nothing.
+ */
+export function crackPixels(stage) {
+    if (!(stage >= 1)) return [];
+    const pixels = [{ x: 1, y: 1, w: 1, h: 1, color: CRACK_DARK }];
+    if (stage >= 2) pixels.push({ x: 2, y: 1, w: 1, h: 1, color: CRACK_DARK }, { x: 2, y: 2, w: 1, h: 1, color: CRACK_DARK });
+    if (stage >= 3) pixels.push({ x: 3, y: 2, w: 1, h: 1, color: CRACK_DARK }, { x: 2, y: 3, w: 1, h: 1, color: CRACK_HOT });
+    return pixels;
+}
+
 /** Paints a subdivided column as 8 x 8 microcolumns, back to front: a 4 px top square each and 4 px wide strata fronts. */
 function paintFineCell(ctx, frame, band, column, row, block) {
     const { columns, rows } = frame;
@@ -177,6 +192,11 @@ function paintFineCell(ctx, frame, band, column, row, block) {
             ctx.fillStyle = scaleHex(heightShade(topFaceColor(band, material, height), height), tone);
             ctx.fillRect(x, y - height * MICROCELL_UNITS, MICRO_UNITS, MICRO_UNITS);
             painted++;
+            for (const crack of crackPixels(block.wear?.[microY * MICRO_PER_COLUMN + microX])) {
+                ctx.fillStyle = crack.color;
+                ctx.fillRect(x + crack.x, y - height * MICROCELL_UNITS + crack.y, crack.w, crack.h);
+                painted++;
+            }
             const southY = microY + 1 < MICRO_PER_COLUMN ? microY + 1 : 0;
             const southRow = microY + 1 < MICRO_PER_COLUMN ? row : row + 1;
             const south = southRow < rows ? microHeight(frame, column, southRow, microX, southY) : height;

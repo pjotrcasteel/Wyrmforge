@@ -150,33 +150,92 @@ public sealed class ArenaTerrainExcavationTests
     }
 
     [TestMethod]
-    public void RepeatedImpacts_DigThroughSoilExposeStoneAndOnlyHeavyOnesDentIt()
+    public void RepeatedImpacts_DigThroughSoilThenWearStoneAndNeverBreakBedrock()
     {
         var grid = FlatSoil();
         var centre = ArenaTerrainGrid.CenterOf(6, 6);
-        for (var hit = 0; hit < 20; hit++) ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(hit, centre, 1), null);
-        Assert.AreEqual(-ArenaTerrainGrid.SoilDepthMicrocells, grid.Surface(6, 6), "soil is one metre deep");
-        Assert.AreEqual(ArenaTerrainMaterial.Stone, grid.Material(6, 6), "dug-through soil exposes stone");
+        short Deepest() => grid.FineHeights(6, 6)!.Min();
+        for (var hit = 0; hit < 8; hit++) ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(hit, centre, 1), null);
+        Assert.AreEqual(-ArenaTerrainGrid.SoilDepthMicrocells, Deepest(), "eight ordinary hits dig the one-metre soil");
+        Assert.AreEqual(ArenaTerrainMaterial.Stone, grid.MicroMaterial(6, 6, 4, 4), "dug-through soil exposes stone");
+        for (var hit = 8; hit < 12; hit++) ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(hit, centre, 1), null);
+        Assert.AreEqual(-ArenaTerrainGrid.SoilDepthMicrocells - 1, Deepest(), "four more ordinary hits wear one microcell off the stone");
         for (var hit = 0; hit < 20; hit++) ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(100 + hit, centre, 2), null);
-        Assert.AreEqual(-ArenaTerrainGrid.SoilDepthMicrocells, grid.Surface(6, 6), "ordinary and splash impacts cannot dent stone");
-        for (var hit = 0; hit < 40; hit++) ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(200 + hit, centre, 3), null);
-        Assert.IsLessThan(-ArenaTerrainGrid.SoilDepthMicrocells, grid.Surface(6, 6), "Meteor Heart dents exposed stone");
-        Assert.IsGreaterThanOrEqualTo(ArenaTerrainGrid.BedrockMicrocells, grid.Surface(6, 6), "bedrock never breaks");
+        Assert.IsLessThan(-ArenaTerrainGrid.SoilDepthMicrocells - 5, Deepest(), "splash impacts wear stone much faster");
+        for (var hit = 0; hit < 60; hit++) ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(200 + hit, centre, 3), null);
+        Assert.AreEqual(ArenaTerrainGrid.BedrockMicrocells, Deepest(), "Meteor Heart reaches bedrock and bedrock never breaks");
     }
 
     [TestMethod]
-    public void RockStepsAndLava_AreNotChippedByOrdinaryImpacts()
+    public void RockWalls_WearAwayProgressivelyUnderEveryKindOfImpactAndLavaNeverChanges()
     {
         var grid = FlatSoil();
         grid.Set(6, 6, 16, ArenaTerrainMaterial.Stone);
         grid.Set(7, 6, -16, ArenaTerrainMaterial.Lava);
-        ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(1, ArenaTerrainGrid.CenterOf(6, 6), 2), null);
-        ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(2, ArenaTerrainGrid.CenterOf(7, 6), 3), null);
-        Assert.AreEqual(16, grid.Surface(6, 6));
+        var centre = ArenaTerrainGrid.CenterOf(6, 6);
+        ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(1, centre, 1), null);
+        Assert.AreEqual(16, grid.FineHeights(6, 6)!.Min(), "one ordinary hit only cracks the rock: wear is stored, nothing has fallen yet");
+        Assert.IsNotNull(grid.FineWear(6, 6), "the damage is authoritative state");
+        for (var hit = 2; hit <= 4; hit++) ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(hit, centre, 1), null);
+        Assert.AreEqual(15, grid.FineHeights(6, 6)!.Min(), "the fourth ordinary hit breaks the first 12.5 cm");
+        for (var hit = 10; hit < 40; hit++) ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(hit, centre, 1), null);
+        Assert.AreEqual(8, grid.FineHeights(6, 6)!.Min(), "thirty-four plain Fireballs take exactly one metre off the centre of a two metre wall");
+        ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(500, ArenaTerrainGrid.CenterOf(7, 6), 3), null);
         Assert.AreEqual(-16, grid.Surface(7, 6));
         Assert.AreEqual(ArenaTerrainMaterial.Lava, grid.Material(7, 6));
+        Assert.IsNull(grid.FineWear(7, 6), "lava takes no damage");
     }
 
+    [TestMethod]
+    public void StoneWear_CarriesOverBetweenHitsAndIsRevertedAndRecordedExactly()
+    {
+        var grid = FlatSoil();
+        grid.Set(6, 6, 16, ArenaTerrainMaterial.Stone);
+        var centre = ArenaTerrainGrid.CenterOf(6, 6);
+        ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(1, centre, 2), null);
+        var wearAfterOne = grid.FineWear(6, 6)!;
+        Assert.IsTrue(wearAfterOne.Max() is > 0 and < ArenaTerrainGrid.StoneWearPerMicrocell, "wear stays below the break threshold");
+        var before = grid.Clone();
+        var changes = ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(2, centre, 2), null);
+        Assert.IsTrue(changes.Any(change => change.OldWear is not null && change.NewWear is not null && !change.OldWear.AsSpan().SequenceEqual(change.NewWear)));
+        ArenaTerrainMutation.Revert(grid, changes);
+        CollectionAssert.AreEqual(before.FineWear(6, 6), grid.FineWear(6, 6), "reverting restores wear as well as height");
+        CollectionAssert.AreEqual(before.FineHeights(6, 6), grid.FineHeights(6, 6));
+    }
+
+    [TestMethod]
+    public void StoneWear_SurvivesTheSavedRecordAndRejectsMalformedCounters()
+    {
+        var arena = Arena(1204);
+        var hunter = new Vector2D(Width / 2, Height / 2);
+        for (var id = 1; id <= 60; id++)
+            arena.ApplyTerrainImpact(new ArenaTerrainImpact(id, new Vector2D(300, 700), 1), hunter, 12, Width, Height);
+        var record = arena.CaptureTerrainRecord("site-1")!;
+        Assert.IsTrue(record.Changed.Any(column => column.Wear is { Length: ArenaTerrainGrid.MicroCount }), "worn stone is part of the record");
+        var restored = Arena(1204);
+        restored.RestoreTerrainRecord("site-1", ArenaTerrainRecord.FromJson(record.ToJson()));
+        Assert.AreEqual(record.ToJson(), restored.CaptureTerrainRecord("site-1")!.ToJson(), "the JSON round trip keeps every wear counter");
+        var worn = record.Changed.First(column => column.Wear is not null);
+        Assert.ThrowsExactly<InvalidDataException>(() => Arena(1204).RestoreTerrainRecord("site-1", record with { Changed = [worn with { Wear = new byte[5] }] }));
+        Assert.ThrowsExactly<InvalidDataException>(() => Arena(1204).RestoreTerrainRecord("site-1",
+            record with { Changed = [worn with { Wear = Enumerable.Repeat((byte)200, ArenaTerrainGrid.MicroCount).ToArray() }] }));
+    }
+    [TestMethod]
+    public void ACrackAlone_IsAVisibleChangeAndTheClientFrameCarriesTheWearAsInts()
+    {
+        var grid = FlatSoil();
+        grid.Set(6, 6, 16, ArenaTerrainMaterial.Stone);
+        var known = grid.Revision;
+        ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(1, ArenaTerrainGrid.CenterOf(6, 6), 1), null);
+        Assert.AreEqual(16, grid.Surface(6, 6), "nothing has fallen yet");
+        Assert.IsGreaterThan(known, grid.Revision, "a crack alone is a visible change the client must pull");
+        var block = grid.ToFrame(known).Fine.Single(candidate => candidate.Index == 6 * grid.Columns + 6);
+        Assert.IsNotNull(block.Wear);
+        Assert.HasCount(ArenaTerrainGrid.MicroCount, block.Wear);
+        Assert.IsGreaterThan(0, block.Wear.Max());
+        Assert.IsLessThan(ArenaTerrainGrid.StoneWearPerMicrocell, block.Wear.Max());
+        Assert.IsNull(FlatSoil().ToFrame(-1).Fine.FirstOrDefault()?.Wear, "undamaged ground carries no wear");
+    }
     [TestMethod]
     public void ProtectedRoute_NeverDropsBelowHalfAMetre()
     {

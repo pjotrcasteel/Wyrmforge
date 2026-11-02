@@ -19,8 +19,10 @@ public sealed class ArenaTerrainGrid
     public const int ShotClearanceMicrocells = 10;
     /// <summary>Excavation never digs below this floor: -4 m.</summary>
     public const int BedrockMicrocells = -32;
-    /// <summary>Soil and ash lie one metre deep over stone, which only the heaviest impacts can dent.</summary>
+    /// <summary>Soil and ash lie one metre deep over stone, which wears away under repeated impacts instead of resisting them.</summary>
     public const int SoilDepthMicrocells = 8;
+    /// <summary>Impact points a microcolumn of stone absorbs before one 12.5 cm microcell breaks off. Proposed value: tune in playtests.</summary>
+    public const int StoneWearPerMicrocell = 4;
     /// <summary>Every metre column can be subdivided into 8 x 8 microcolumns of 4 units (12.5 cm) when damaged.</summary>
     public const int MicroPerColumn = 8;
     public const int MicroCount = MicroPerColumn * MicroPerColumn;
@@ -34,6 +36,8 @@ public sealed class ArenaTerrainGrid
     // Sparse fine overlay: only columns an impact has touched hold 64 microcolumn heights; the rest stay one value.
     private readonly Dictionary<int, short[]> fine = [];
     private readonly Dictionary<int, int> fineChangedAt = [];
+    // Accumulated impact points on stone per microcolumn (0 to StoneWearPerMicrocell - 1); part of the authoritative, saved state.
+    private readonly Dictionary<int, byte[]> wear = [];
 
     public ArenaTerrainGrid(int columns, int rows)
     {
@@ -69,6 +73,7 @@ public sealed class ArenaTerrainGrid
         stoneTop[index] = (short)(material is ArenaTerrainMaterial.Soil or ArenaTerrainMaterial.Ash
             ? Math.Max(BedrockMicrocells, clamped - SoilDepthMicrocells) : clamped);
         Revision++;
+        wear.Remove(index);
         if (fine.Remove(index)) fineChangedAt[index] = Revision;
     }
 
@@ -97,6 +102,10 @@ public sealed class ArenaTerrainGrid
     public short[]? FineHeights(int column, int row) =>
         fine.TryGetValue(row * Columns + column, out var heights) ? (short[])heights.Clone() : null;
 
+    /// <summary>A copy of a column's 64 stone wear counters, or null when the column has taken no stone damage.</summary>
+    public byte[]? FineWear(int column, int row) =>
+        wear.TryGetValue(row * Columns + column, out var counters) ? (byte[])counters.Clone() : null;
+
     /// <summary>Copy of the current heightfield for presentation; the caller cannot change the authoritative grid.</summary>
     public Wyrmforge.Application.Runs.Simulation.Snapshots.ArenaTerrainFrame ToFrame(int knownRevision = -1)
     {
@@ -106,7 +115,8 @@ public sealed class ArenaTerrainGrid
             if (fineChangedAt[index] <= knownRevision) continue;
             if (knownRevision < 0 && !fine.ContainsKey(index)) continue;
             blocks.Add(fine.TryGetValue(index, out var heights)
-                ? new(index, (short[])heights.Clone(), (int)topsoil[index], stoneTop[index])
+                ? new(index, (short[])heights.Clone(), (int)topsoil[index], stoneTop[index],
+                    wear.TryGetValue(index, out var counters) ? counters.Select(counter => (int)counter).ToArray() : null)
                 : new(index, [], (int)topsoil[index], stoneTop[index]));
         }
         return new(Revision, Columns, Rows, (short[])surface.Clone(), materials.Select(material => (int)material).ToArray(), blocks);
@@ -120,38 +130,70 @@ public sealed class ArenaTerrainGrid
         materials.CopyTo(copy.materials, 0);
         topsoil.CopyTo(copy.topsoil, 0);
         foreach (var (index, heights) in fine) copy.fine[index] = (short[])heights.Clone();
+        foreach (var (index, counters) in wear) copy.wear[index] = (byte[])counters.Clone();
         foreach (var (index, revision) in fineChangedAt) copy.fineChangedAt[index] = revision;
         return copy;
     }
 
     /// <summary>
-    /// Lower one 12.5 cm microcolumn: soil first down to the stone line, then stone down to the floor (bedrock at most).
-    /// The column is subdivided on its first hit. Returns the microcells removed from this microcolumn.
+    /// Lower one 12.5 cm microcolumn: soil first down to the stone line, then stone, which wears: every impact point left over
+    /// after the soil adds wear and each <see cref="StoneWearPerMicrocell"/> points break one microcell, down to the floor (bedrock at most).
+    /// Raised rock, cliffs and walls are stone columns and wear the same way. The column is subdivided on its first hit.
+    /// Returns the microcells removed from this microcolumn.
     /// </summary>
-    public int ExcavateMicro(int column, int row, int microX, int microY, int soil, int stone, int floor = BedrockMicrocells, bool deferRefresh = false)
+    public int ExcavateMicro(int column, int row, int microX, int microY, int impactDepth, int floor = BedrockMicrocells, bool deferRefresh = false)
     {
         if (!Contains(column, row) || microX is < 0 or >= MicroPerColumn || microY is < 0 or >= MicroPerColumn) return 0;
         var index = row * Columns + column;
         if (topsoil[index] == ArenaTerrainMaterial.Lava || materials[index] == ArenaTerrainMaterial.Lava) return 0;
         floor = Math.Max(floor, BedrockMicrocells);
+        var micro = microY * MicroPerColumn + microX;
         var heights = fine.TryGetValue(index, out var existing) ? existing : null;
-        int start = heights is null ? surface[index] : heights[microY * MicroPerColumn + microX];
+        int start = heights is null ? surface[index] : heights[micro];
         int current = start;
+        var points = Math.Max(0, impactDepth);
         if (topsoil[index] is ArenaTerrainMaterial.Soil or ArenaTerrainMaterial.Ash)
-            current -= Math.Min(Math.Max(0, soil), Math.Max(0, current - Math.Max(stoneTop[index], floor)));
-        if (current <= stoneTop[index] || topsoil[index] == ArenaTerrainMaterial.Stone)
         {
-            if (stone > 0 && current > floor) current -= Math.Min(stone, current - floor);
+            var soilRemoved = Math.Min(points, Math.Max(0, current - Math.Max(stoneTop[index], floor)));
+            current -= soilRemoved;
+            // Only the points the soil did not absorb reach the stone, and only once the stone line is exposed.
+            points = current <= stoneTop[index] ? points - soilRemoved : 0;
         }
-        if (current == start) return 0;
+        var wearChanged = false;
+        if (points > 0 && current > floor)
+        {
+            var counters = wear.TryGetValue(index, out var held) ? held : null;
+            var total = (counters?[micro] ?? 0) + points;
+            var broken = total / StoneWearPerMicrocell;
+            var dropped = Math.Min(broken, current - floor);
+            current -= dropped;
+            // Wear carries over until a microcell breaks; at the floor there is nothing left to wear.
+            var remaining = dropped < broken ? 0 : total % StoneWearPerMicrocell;
+            if (remaining != (counters?[micro] ?? 0))
+            {
+                if (counters is null) wear[index] = counters = new byte[MicroCount];
+                counters[micro] = (byte)remaining;
+                wearChanged = true;
+            }
+        }
+        if (current == start && !wearChanged) return 0;
         if (heights is null)
         {
             heights = new short[MicroCount];
             Array.Fill(heights, surface[index]);
             fine[index] = heights;
         }
-        heights[microY * MicroPerColumn + microX] = (short)current;
-        if (!deferRefresh) RefreshColumn(index);
+        heights[micro] = (short)current;
+        if (current != start)
+        {
+            if (!deferRefresh) RefreshColumn(index);
+        }
+        else
+        {
+            // Wear without a break still changes what the player should see (a crack), so presentation must pull it.
+            Revision++;
+            fineChangedAt[index] = Revision;
+        }
         return start - current;
     }
 
@@ -170,14 +212,16 @@ public sealed class ArenaTerrainGrid
     }
 
     /// <summary>Restore a recorded column exactly; used by save and replay, never by gameplay.</summary>
-    public void Restore(int column, int row, int surfaceMicrocells, ArenaTerrainMaterial material, short[]? fineHeights = null)
+    public void Restore(int column, int row, int surfaceMicrocells, ArenaTerrainMaterial material, short[]? fineHeights = null, byte[]? stoneWear = null)
     {
+        if (stoneWear is not null && stoneWear.Length != MicroCount) throw new ArgumentException("Stone wear has exactly 64 counters.", nameof(stoneWear));
         var index = row * Columns + column;
         var kept = stoneTop[index];
         var keptTopsoil = topsoil[index];
         Set(column, row, surfaceMicrocells, material);
         stoneTop[index] = kept;
         topsoil[index] = keptTopsoil;
+        if (stoneWear is not null) wear[index] = (byte[])stoneWear.Clone();
         if (fineHeights is null) return;
         if (fineHeights.Length != MicroCount) throw new ArgumentException("A subdivided column has exactly 64 microcolumns.", nameof(fineHeights));
         fine[index] = (short[])fineHeights.Clone();
