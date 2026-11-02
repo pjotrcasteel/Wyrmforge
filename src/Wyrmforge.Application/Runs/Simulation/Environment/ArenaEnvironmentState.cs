@@ -250,6 +250,10 @@ public sealed class ArenaEnvironmentState
 
     public ArenaTerrainGrid? Terrain => terrain;
 
+    /// <summary>Ground height in metres under a point, or null when this arena has no active terrain.</summary>
+    public double? GroundMetersAt(Vector2D position, double width, double height) =>
+        TerrainActive(width, height) ? terrain!.SurfaceMetersAt(position) : null;
+
     /// <summary>
     /// Apply one confirmed impact exactly once. A change that would cut the hunter off from the exit is undone,
     /// so excavation can never trap the player. Returns the columns that changed.

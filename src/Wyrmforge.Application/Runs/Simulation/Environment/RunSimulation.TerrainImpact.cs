@@ -10,6 +10,10 @@ public sealed partial class RunSimulation
 {
     private long nextTerrainImpactId;
 
+    /// <summary>Ground height in world units under a point; the oblique screen offset is applied by presentation.</summary>
+    private double GroundUnitsAt(Vector2D position) => arenaEnvironment?.GroundMetersAt(position, arenaWidth, arenaHeight) is { } meters
+        ? meters * ArenaMetricEnvelope.UnitsPerMeter : 0;
+
     /// <summary>Terrain columns changed in the latest tick, for presentation, audio and navigation consumers.</summary>
     public IReadOnlyList<ArenaTerrainChange> TerrainChangesThisTick => terrainChangesThisTick;
     private readonly List<ArenaTerrainChange> terrainChangesThisTick = [];

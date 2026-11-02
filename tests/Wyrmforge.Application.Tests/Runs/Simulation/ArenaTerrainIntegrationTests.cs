@@ -134,6 +134,37 @@ public sealed class ArenaTerrainIntegrationTests
     }
 
     [TestMethod]
+    public void Snapshots_PublishGroundHeightInWorldUnitsAndZeroWithoutTerrain()
+    {
+        foreach (var terrain in new[] { false, true })
+        {
+            var simulation = new RunSimulationFactory(new SeededRandomSource(42))
+                .Create(new HashSet<string>(), seed: 42, hunt: HuntSelection.FireTierOne);
+            if (terrain) simulation.EnableHunt1Terrain();
+            Assert.IsTrue(simulation.ChoosePrimary(Wyrmforge.Domain.Spells.SpellId.FireBolt));
+            simulation.Tick(0, default, 390, 700);
+            Assert.IsTrue(simulation.ChooseMapNode(simulation.AvailableMapNodes[0].Id));
+            var environment = (ArenaEnvironmentState)typeof(RunSimulation).GetField("arenaEnvironment",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(simulation)!;
+            var sawRaisedGround = false;
+            for (var tick = 0; tick < 20 * 40; tick++)
+            {
+                var snapshot = simulation.Tick(.05, default, 390, 700);
+                Assert.AreEqual(0d, snapshot.Player.Z % ArenaTerrainGrid.MicrocellUnits, "heights are whole four-unit microcells");
+                foreach (var enemy in snapshot.Enemies)
+                {
+                    Assert.AreEqual(0d, enemy.Z % ArenaTerrainGrid.MicrocellUnits);
+                    var expected = environment.GroundMetersAt(new Vector2D(enemy.X, enemy.Y), Width, Height) * 32 ?? 0;
+                    Assert.AreEqual(expected, enemy.Z, 1e-9);
+                    sawRaisedGround |= enemy.Z != 0;
+                    if (!terrain) Assert.AreEqual(0d, enemy.Z, "without terrain every actor stands at ground level");
+                }
+            }
+            Assert.IsFalse(!terrain && sawRaisedGround);
+        }
+    }
+
+    [TestMethod]
     public void Simulation_OptsIntoTerrainAndStillCompletesAFightRoute()
     {
         var simulation = new RunSimulationFactory(new FirstRandomSource())

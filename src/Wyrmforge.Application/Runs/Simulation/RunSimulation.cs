@@ -340,6 +340,7 @@ public sealed partial class RunSimulation
         return new RunRenderSnapshot(
             new PlayerRenderSnapshot(player.Position.X, player.Position.Y, player.Radius, player.Barrier || player.WinterShellGuardRemaining > 0)
             {
+                Z = GroundUnitsAt(player.Position),
                 AimAngle = Math.Atan2(effectiveAim.Y, effectiveAim.X),
                 ManualAim = manualAimEngaged,
                 AimTargetId = automaticTargetId,
@@ -355,6 +356,7 @@ public sealed partial class RunSimulation
                 Math.Clamp(enemy.Health / enemy.MaxHealth, 0, 1), hitFlashRemaining.ContainsKey(enemy.Id), CreateStatusSnapshots(enemy.Statuses), enemy.Kind, enemy.Id,
                 CreateEnemyTelegraph(enemy))
             {
+                Z = GroundUnitsAt(enemy.Position),
                 ShieldFacing = enemy.Penitent is { ShieldRaised: true } shield ? Math.Atan2(shield.Facing.Y, shield.Facing.X) : null,
                 Routed = enemy.RoutedRemaining > 0,
                 Revived = enemy.Revived,
