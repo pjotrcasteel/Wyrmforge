@@ -1,5 +1,7 @@
 """Shared-master structural checks. Passing these tests is not artistic approval."""
+import hashlib
 import importlib.util
+import json
 import sys
 import unittest
 from pathlib import Path
@@ -13,6 +15,33 @@ SPEC.loader.exec_module(wizard)
 
 
 class SharedMasterTests(unittest.TestCase):
+    def test_owner_liked_pose_is_unchanged_by_material_pass(self):
+        contract_file = MODULE_FILE.parent / "pose-lock.json"
+        contract = json.loads(contract_file.read_text(encoding="utf-8"))
+        source = MODULE_FILE.read_text(encoding="utf-8")
+        sections = {
+            "geometryGitBlobSha": source[source.index("def build_master():"):source.index("\ndef project(")],
+            "cameraGitBlobSha": source[source.index("def project("):source.index("\ndef render(")],
+        }
+        for key, section in sections.items():
+            data = section.encode("utf-8")
+            git_blob = b"blob " + str(len(data)).encode("ascii") + b"\0" + data
+            digest = hashlib.sha1(git_blob).hexdigest()
+            self.assertEqual(contract[key], digest, key)
+        self.assertEqual((wizard.WIDTH, wizard.HEIGHT), tuple(contract["dimensions"]))
+        self.assertEqual((wizard.FOOT_X, wizard.FOOT_Y), tuple(contract["feetAnchor"]))
+        self.assertEqual(wizard.SCALE, contract["worldScalePixelsPerUnit"])
+        self.assertEqual(wizard.DIRECTIONS, contract["directionYawDegrees"])
+        self.assertIn("appearance-not-approved", contract["status"])
+
+    def test_robe_seam_material_is_garment_local_and_named(self):
+        self.assertEqual(3, len(wizard.ROBE_SEAMS))
+        self.assertEqual(3, len({name for name, *_ in wizard.ROBE_SEAMS}))
+        for name, azimuth, start_y, end_y in wizard.ROBE_SEAMS:
+            self.assertLess(start_y, end_y, name)
+            self.assertGreaterEqual(azimuth, 0)
+            self.assertLess(azimuth, 360)
+
     def test_every_facing_uses_identical_unrotated_geometry(self):
         before = tuple((face.feature, face.points) for face in wizard.build_master())
         self.assertGreater(len(before), 2000)

@@ -25,6 +25,10 @@ ROBE_OPEN_SECTORS=frozenset({(0,4),(0,5),(0,9),(0,10),(0,17),
 ROBE_SCARS=(("front-right-thigh",35,1.33,.36,.18),
             ("front-left-lower-robe",138,.97,.32,.14),
             ("rear-side-thigh",260,1.37,.35,.14))
+# Material seam strokes are painted in the same garment coordinates, not camera pixels.
+ROBE_SEAMS=(("front-right",58,.64,2.38),
+            ("front-left",125,.64,2.38),
+            ("rear-side",259,.78,2.38))
 
 @dataclass(frozen=True)
 class Face:
@@ -243,9 +247,29 @@ def render(direction, skin=None):
                     detail=1.0
                     if cloth:
                         theta=math.atan2(wz,wx)
-                        folds=math.sin(10*theta+2.1*wy)+.55*math.sin(19*theta-4*wy)
+                        # Vertical folds follow fixed local-garment azimuths. Keep
+                        # the weave subtle so it does not turn into random pixels.
+                        folds=math.sin(10*theta+1.15*wy)+.38*math.sin(19*theta-1.6*wy)
                         weave=math.sin(wx*47+wy*23+wz*41)*math.sin(wy*43-wz*17)
-                        detail=.93+.095*folds+.035*weave
+                        detail=.95+.085*folds+.018*weave
+                        if face.feature=="outer-robe":
+                            # Permanent vertical stitched seams, not screen-space lines.
+                            for name,seam_deg,start_y,end_y in ROBE_SEAMS:
+                                d=math.atan2(math.sin(theta-math.radians(seam_deg)),
+                                             math.cos(theta-math.radians(seam_deg)))
+                                if start_y<=wy<=end_y and abs(d)<.105:
+                                    detail*=.80+.055*math.sin(wy*70)
+                            # Dust and fraying below the knee use true world height.
+                            hem_grime=max(0.0,min(1.0,(.92-wy)/.72))
+                            detail*=1.0-.12*hem_grime
+                            for name,scar_deg,scar_y,scar_length,scar_width in ROBE_SCARS:
+                                d=math.atan2(math.sin(theta-math.radians(scar_deg)),
+                                             math.cos(theta-math.radians(scar_deg)))
+                                if abs(d)<.24 and scar_y-scar_length-.12<wy<scar_y+.12:
+                                    detail*=.93
+                    elif face.feature=="beard-lock":
+                        # Facial hair striations also belong to the source geometry.
+                        detail=.95+.08*math.sin(wx*58+wy*7)
                     base=face.color
                     # EXPERIMENTAL PLANAR DECAL: only the forward hemisphere can receive
                     # colors from this rejected S study. It is NOT an authored UV atlas.

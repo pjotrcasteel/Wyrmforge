@@ -85,6 +85,34 @@ not a traced match for the owner's actual approved robe rips. The correct
 Gothic garment styling, detailed physical cloth edge work and proper UV
 painting are still needed before any sprite can be approved.
 
+## Owner pose feedback and geometry freeze (2 Nov 2026)
+
+The owner said **"The pose looks good!"** after inspecting the S/SE/E 8×
+and eight-direction comparison. This freezes the current shared pose as a
+working reference. It **does not** approve the robe/face/hat details, final
+directional art, animation, or import into the live game.
+
+[pose-lock.json](pose-lock.json) records the 64×80 dimensions, feet anchor,
+camera yaw, right-hand staff attachment, and Git-blob fingerprints of
+`build_master()` and `project()`. Tests fail if either geometry or camera
+code is changed without explicitly revisiting the pose lock. Subsequent
+changes should be restricted to **material painting** until the owner
+requests another geometry change.
+
+## Garment-space material refinement
+
+Three named vertical seam strokes, linked to local robe azimuths, now
+remain attached to the garment as it turns. The cloth shader also uses
+lower-frequency vertical folds, gentler weave, fixed lower-hem grime
+and subtle discoloration around the three shared rip landmarks. No
+geometry, hand grip, staff, camera, alpha geometry, or frame dimensions
+were modified in this material pass. The S / SE / E and eight-way CI
+images remain **unapproved color studies**.
+
+The temporary south-only color decal remains optional. A real UV texture
+painted against the accepted wizard identity is still required before
+this can be production art.
+
 ## Visual quality still missing
 
 The preview is a *mechanical continuity test*, not a visual acceptance candidate.
