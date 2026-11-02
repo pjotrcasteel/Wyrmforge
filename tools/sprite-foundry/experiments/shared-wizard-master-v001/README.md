@@ -335,3 +335,39 @@ Reproduce the two visual studies:
 Safety: `--presentation-pose-review --frames` intentionally exits with an
 error. The candidate cannot be exported into regular Foundry source frames
 or included in game assets before owner approval. No merge has been made.
+
+## Four-key walking feasibility study — NOT APPROVED (2 Nov 2026)
+
+The [walk study](walk_study.py) reuses the *existing, pose-locked* authoritative
+3D Wizard master. This is the first isolated test of a walking gait; it must not
+be confused with the finished game sprite or permission to change the accepted
+idle pose. No magic-school variant, runtime integration or game asset was added.
+
+- Front/back stride alternates between the **anatomical** right and left boots.
+- Four authored phase positions represent contact, right passing, opposite
+  contact and left passing; the same continuous motion can be sampled at 16
+  frames per direction for later timing review.
+- Feet and trousers move around fixed hips, and the lifted passing foot
+  clears the floor. The free left arm counter-swings slightly.
+- The staff, its flame and **right-hand grip remain exact copies** of the
+  original master in *every* frame. The robe's physical tears and scars are
+  transformed together, not regenerated per camera angle.
+- All eight camera facings use the same posed triangles and output
+  actual transparent **64×80 RGBA** frames. The review image shows them
+  enlarged with nearest-neighbour sampling; enlargement adds no fake pixels.
+- The existing idle-pose lock and unanimated render path remain untouched.
+
+Reproduce the review sheet:
+
+    py tools/sprite-foundry/experiments/shared-wizard-master-v001/walk_study.py --preview tools/sprite-foundry/output/walk-four-key-8way-NOT-APPROVED.png
+
+Or generate all sixteen frames of the full tentative gait cycle:
+
+    py tools/sprite-foundry/experiments/shared-wizard-master-v001/walk_study.py --count 16 --frames tools/sprite-foundry/output/wizard-walk-study
+
+**Approval gate remains closed.** This is a kinematic proof while the art
+master still lacks approved facial, beard, hat and fabric detailing. A true
+walk still requires human appraisal of joint motion, weight transfer,
+foot sliding and leg occlusion. The user-provided Dark Mage 64px reference
+is a quality/motion *reference*, not a redistributable source texture;
+rights must be confirmed before any direct adaptation.
