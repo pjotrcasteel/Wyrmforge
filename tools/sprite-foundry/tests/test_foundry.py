@@ -193,7 +193,7 @@ class FoundryTests(unittest.TestCase):
         self.assertEqual("keep", sentinel.read_text(encoding="utf-8"))
 
     def test_review_ui_is_character_agnostic(self):
-        page = (MODULE_FILE.parents[1] / "review.html").read_text(encoding="utf-8")
+        page = (MODULE_FILE.parent / "review.html").read_text(encoding="utf-8")
         self.assertNotIn("Wizard", page)
         self.assertNotIn("anatomical right-hand staff", page)
         self.assertIn("any asymmetric equipment", page)
@@ -205,7 +205,7 @@ class FoundryTests(unittest.TestCase):
         path.write_text(json.dumps(project), encoding="utf-8")
         with self.assertRaisesRegex(ValueError, "8-180"):
             foundry.read_project(path)
-        template_path = MODULE_FILE.parents[1] / "examples" / "actor-template.project.json"
+        template_path = MODULE_FILE.parent / "examples" / "actor-template.project.json"
         actor = foundry.read_project(template_path)
         self.assertEqual("example-actor", actor["character"])
         self.assertEqual(list(foundry.DIRECTIONS), actor["directions"])
