@@ -28,5 +28,9 @@
       "frames": 16,
       "fps": 16
     }
+  },
+  "directionRules": {
+    "requireDistinctFacings": true,
+    "forbidMirroredFacings": true
   }
 }
