@@ -39,8 +39,11 @@ def leg_joint_positions(side, phase):
     """Reach a grounded foot from a moving hip using two constant-length bones."""
     if side not in (-1, 1):
         raise ValueError("leg side must be -1 (right) or +1 (left)")
+    # The planted foot moves toward the rear (decreasing local Z);
+    # ONLY the foot swinging rear -> front may leave the ground.
+    # This phase relationship is essential: reversing it backpedals.
     stride = math.cos(phase) if side == -1 else -math.cos(phase)
-    lift = max(0.0, math.sin(phase) if side == -1 else -math.sin(phase))
+    lift = max(0.0, -math.sin(phase) if side == -1 else math.sin(phase))
     root_x, root_y, root_z = root_motion(phase)
     hip = (side * 0.31 + root_x, 1.22 + root_y, root_z)
     ankle = (side * 0.31, 0.25 + FOOT_LIFT_METRES * lift, GAIT_STEP_METRES * stride)
@@ -82,7 +85,7 @@ def transform_walk_face(face, phase):
     cx = sum(point[0] for point in face.points) / len(face.points)
     right_side = cx < 0
     stride = math.cos(phase) if right_side else -math.cos(phase)
-    lift = max(0.0, math.sin(phase) if right_side else -math.sin(phase))
+    lift = max(0.0, -math.sin(phase) if right_side else math.sin(phase))
 
     points = []
     for x, y, z in face.points:
