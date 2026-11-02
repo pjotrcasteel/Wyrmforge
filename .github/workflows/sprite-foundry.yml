@@ -29,3 +29,11 @@ jobs:
         run: |
           python -m py_compile tools/sprite-foundry/foundry.py
           python -m unittest discover -s tools/sprite-foundry/tests -v
+      - name: Render shared-master mechanical blockout (not approved art)
+        run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --preview tools/sprite-foundry/output/shared-master-blockout.png
+      - name: Upload isolated geometry study preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: shared-wizard-master-blockout-NOT-APPROVED
+          path: tools/sprite-foundry/output/shared-master-blockout.png
+          if-no-files-found: error
