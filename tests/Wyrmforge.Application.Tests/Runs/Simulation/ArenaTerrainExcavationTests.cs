@@ -189,6 +189,27 @@ public sealed class ArenaTerrainExcavationTests
     }
 
     [TestMethod]
+    public void TerrainFrame_IsServedOnlyWhenTheRevisionChangesAndIsACopy()
+    {
+        var simulation = new RunSimulationFactory(new SeededRandomSource(42))
+            .Create(new HashSet<string>(), seed: 42, hunt: HuntSelection.FireTierOne);
+        Assert.IsNull(simulation.TerrainFrame(-1), "no terrain until the Hunt 1.0 flag is on");
+        simulation.EnableHunt1Terrain();
+        Assert.IsTrue(simulation.ChoosePrimary(Wyrmforge.Domain.Spells.SpellId.FireBolt));
+        simulation.Tick(0, default, 390, 700);
+        Assert.IsTrue(simulation.ChooseMapNode(simulation.AvailableMapNodes[0].Id));
+        var snapshot = simulation.CreateSnapshot();
+        var terrain = snapshot.Environment!.Terrain!;
+        var frame = simulation.TerrainFrame(-1)!;
+        Assert.AreEqual(terrain.Revision, frame.Revision);
+        Assert.AreEqual(terrain.Columns * terrain.Rows, frame.Surface.Length);
+        Assert.AreEqual(frame.Surface.Length, frame.Material.Length);
+        Assert.IsNull(simulation.TerrainFrame(frame.Revision), "an unchanged revision sends nothing");
+        frame.Surface[0] = 999;
+        Assert.AreNotEqual(999, simulation.TerrainFrame(-1)!.Surface[0], "presentation can never edit the authoritative grid");
+    }
+
+    [TestMethod]
     public void LiveFireballs_ExcavateTheGroundDuringAFight()
     {
         var simulation = new RunSimulationFactory(new SeededRandomSource(42))

@@ -9,6 +9,8 @@ import { resolveTargetIndicator, presentTargetSigil, drawTargetIndicator, preloa
 import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, createDestructibleLayers, drawArenaCloisterElevation, semanticSiteModeEnabled } from './arena-environment.js?v=20261031-ar1-highlands-v1';
 import { drawAr1GeographyReview } from './arena-ar1-geography-review.js?v=20261031-ar1-site-detail-v1';
 import { drawGreyboxGround } from './arena-greybox-ground.js';
+import { TerrainCanvasCache, influenceBandIndex } from './arena-terrain-canvas.js';
+import { raisedActor } from './arena-projection.js';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
 import { drawRecoveryGuide } from './arena-recovery.js';
@@ -273,6 +275,7 @@ function startSimulationFrame(state, timestamp, rect) {
             updatePlayerDanger(state.playerDanger, snapshot, performance.now());
             if (snapshot.paused) state.resetInput?.();
             state.latestSnapshot = snapshot;
+            requestTerrainFrame(state, snapshot);
             if (snapshot.environment?.greybox && snapshot.lighting)
                 requestSharedGpuWorld(state, 'mobile');
             state.simulationFrameCount++;
@@ -284,6 +287,17 @@ function startSimulationFrame(state, timestamp, rect) {
             state.active = false;
         })
         .finally(() => state.simulationBusy = false);
+}
+
+// Hunt 1.0 terrain is pulled from C# only when its revision changes (one Fireball chip = one repaint).
+function requestTerrainFrame(state, snapshot) {
+    const terrain = snapshot.environment?.terrain;
+    if (!terrain || state.terrainRequestBusy || state.terrainFrame?.revision === terrain.revision) return;
+    state.terrainRequestBusy = true;
+    state.dotNetReference.invokeMethodAsync('TerrainFrame', state.terrainFrame?.revision ?? -1)
+        .then(frame => { if (frame) state.terrainFrame = frame; })
+        .catch(error => console.error('Wyrmforge terrain frame failed.', error))
+        .finally(() => state.terrainRequestBusy = false);
 }
 
 function recordRenderFrame(state, timestamp) {
@@ -373,7 +387,14 @@ function draw(state, snapshot, width, height) {
     if (greybox) {
         // Level one-metre grey receiver. No material atlas or walls; the same
         // authoritative C# lights shade it and its actors through HuntGpuWorld.
-        drawGreyboxGround(ctx, snapshot.environment.greybox, worldWidth, worldHeight);
+        if (state.terrainFrame && snapshot.environment.terrain) {
+            // Hunt 1.0: the C# heightfield as flat colour ramps in the metric oblique projection.
+            (state.terrainCache ??= new TerrainCanvasCache())
+                .update(state.terrainFrame, influenceBandIndex(snapshot.environment.corruption));
+            state.terrainCache.draw(ctx, { x: camera.x, y: camera.y, width, height });
+        } else {
+            drawGreyboxGround(ctx, snapshot.environment.greybox, worldWidth, worldHeight);
+        }
     } else {
         if (!drawArenaEnvironment(ctx, snapshot.environment, worldWidth, worldHeight, visualSeconds, null,
             gpu ? 'gpu' : 'canvas', state.g4FlatGround)) {
@@ -440,8 +461,9 @@ function draw(state, snapshot, width, height) {
     const depthLayers = [
         ...(snapshot.dragon && !entranceOmen ? [{kind: 'dragon', depth:state.ashfang.entity?.shadow?Number.NEGATIVE_INFINITY:snapshot.dragon.y, dragon:snapshot.dragon}] : []),
         ...(state.ashfang.death ? [{kind:'dragonDeath',depth:state.ashfang.death.y}] : []),
-        ...snapshot.enemies.map(enemy => ({ kind: 'enemy', depth: enemy.y + (enemy.radius || 0), enemy })),
-        { kind: 'mage', depth: snapshot.player.y + (snapshot.player.radius || 0) },
+        // Depth sorts by the ground-plane feet; the drawn actor rises by its terrain height (metric oblique contract).
+        ...snapshot.enemies.map(enemy => ({ kind: 'enemy', depth: enemy.y + (enemy.radius || 0), enemy: raisedActor(enemy) })),
+        { kind: 'mage', depth: snapshot.player.y + (snapshot.player.radius || 0), player: raisedActor(snapshot.player) },
         // The greybox keeps only the breakable salvage props (the Charred Scrap source), depth-sorted with actors.
         ...(greybox ? createDestructibleLayers(snapshot.environment, worldWidth, worldHeight, visualSeconds)
             : getArenaCloisterElevations(snapshot.environment, worldWidth, worldHeight, visualSeconds, null, state.g4FlatGround, gpu)),
@@ -454,7 +476,7 @@ function draw(state, snapshot, width, height) {
     for (const layer of sortSceneDepthLayers(depthLayers)) {
         let tile, tileX, tileY, tileSize, capture, revision, reuse = false;
         if (gpu) {
-            capture = huntLayerCapture(layer, snapshot.player, state.ashfang.death);
+            capture = huntLayerCapture(layer, layer.player ?? snapshot.player, state.ashfang.death);
             if (!capture) continue;
             ({ x: tileX, y: tileY, size: tileSize } = capture);
             if (tileX + tileSize < camera.x - 384 || tileY + tileSize < camera.y - 384 ||
@@ -485,7 +507,7 @@ function draw(state, snapshot, width, height) {
                 }
                 drawEliteCrest(ctx, enemy, visualSeconds, state.reducedMotion.matches);
             } else {
-                drawMage(ctx, snapshot.player, snapshot.castMotion, danger.hit, state.reducedMotion.matches,
+                drawMage(ctx, layer.player ?? snapshot.player, snapshot.castMotion, danger.hit, state.reducedMotion.matches,
                     gpu ? null : sampleSpellLight(spellLights, snapshot.player.x, snapshot.player.y),
                     updateMageWalk(state.mageWalk, snapshot.player, visualSeconds, state.reducedMotion.matches),
                     state.mageWalk.facing);

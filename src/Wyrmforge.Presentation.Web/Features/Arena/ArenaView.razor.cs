@@ -125,6 +125,7 @@ public partial class ArenaView : IAsyncDisposable
         simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, previewSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt, researchLead: ResearchLead, preparedMutations: PreparedMutations, fireballMutations: FireballMutations, contextualSpell: ContextualSpell, region: Region, regionOpening: RegionOpening, hunt: Hunt, amplifierAssignments: MutationAmplifierAssignments, fireballLevel: FireballLevel, agents: agentPreview ? new(true, true) : null);
         if (legacyArenaReview) simulation.EnableLegacyArenaPreview();
         if (geographyPreview) simulation.EnableWorldSiteGeography();
+        if (query.Any(value => string.Equals(value, "hunt1=1", StringComparison.OrdinalIgnoreCase))) simulation.EnableHunt1Terrain();
         if (lighting01) simulation.EnableLightingComposition01();
         if (RewardCache) simulation.OpenRewardCache();
     }
@@ -155,6 +156,10 @@ public partial class ArenaView : IAsyncDisposable
         dotNetReference = DotNetObjectReference.Create(this);
         await arenaModule.InvokeVoidAsync("initializeArena", CancellationToken.None, canvas, dotNetReference);
     }
+
+    [JSInvokable]
+    public Wyrmforge.Application.Runs.Simulation.Snapshots.ArenaTerrainFrame? TerrainFrame(int knownRevision) =>
+        simulation?.TerrainFrame(knownRevision);
 
     [JSInvokable]
     public async Task<RunRenderSnapshot> Frame(double delta, double width, double height, double movementX, double movementY, double aimX = 0, double aimY = 0, int? focusPropId = null, bool stickSnap = false)

@@ -8,6 +8,10 @@ namespace Wyrmforge.Application.Runs.Simulation;
 
 public sealed partial class RunSimulation
 {
+    /// <summary>Terrain for presentation when it differs from the revision the caller already holds; null otherwise.</summary>
+    public Wyrmforge.Application.Runs.Simulation.Snapshots.ArenaTerrainFrame? TerrainFrame(int knownRevision) =>
+        arenaEnvironment?.Terrain is { } grid && grid.Revision != knownRevision ? grid.ToFrame() : null;
+
     private long nextTerrainImpactId;
 
     /// <summary>Ground height in world units under a point; the oblique screen offset is applied by presentation.</summary>

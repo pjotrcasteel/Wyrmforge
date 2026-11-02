@@ -62,6 +62,10 @@ public sealed class ArenaTerrainGrid
     /// <summary>Height at which soil gives way to stone in this column.</summary>
     public int StoneTop(int column, int row) => stoneTop[row * Columns + column];
 
+    /// <summary>Copy of the current heightfield for presentation; the caller cannot change the authoritative grid.</summary>
+    public Wyrmforge.Application.Runs.Simulation.Snapshots.ArenaTerrainFrame ToFrame() =>
+        new(Revision, Columns, Rows, (short[])surface.Clone(), materials.Select(material => (int)material).ToArray());
+
     public ArenaTerrainGrid Clone()
     {
         var copy = new ArenaTerrainGrid(Columns, Rows) { Revision = Revision };

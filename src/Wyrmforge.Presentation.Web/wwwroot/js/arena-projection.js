@@ -74,3 +74,9 @@ export function visibleRowRange(cameraY, viewHeight, rows, tallestSurfaceMicroce
         last: Math.min(rows - 1, Math.floor((cameraY + viewHeight + lift) / FACE_PIXELS) + margin),
     };
 }
+
+/** The draw copy of an actor: raised by its C# terrain height. Ground position (and therefore depth) is unchanged on the original. */
+export function raisedActor(actor) {
+    const z = Number(actor?.z);
+    return Number.isFinite(z) && z !== 0 ? { ...actor, y: actor.y - z } : actor;
+}
