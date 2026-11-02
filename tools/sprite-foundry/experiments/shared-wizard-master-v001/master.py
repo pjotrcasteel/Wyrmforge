@@ -9,6 +9,7 @@ import math
 import random
 from pathlib import Path
 from dataclasses import dataclass
+from collections import Counter
 from PIL import Image, ImageDraw
 
 WIDTH, HEIGHT = 64, 80
@@ -216,7 +217,7 @@ def project(point,yaw):
     Z=-x*math.sin(a)+z*math.cos(a)
     return (FOOT_X+X*SCALE,FOOT_Y-y*SCALE+Z*2.7,Z)
 
-def render(direction, skin=None, robe_uv=None, upper_uv=None, head_uv=None):
+def render(direction, skin=None, robe_uv=None, upper_uv=None, head_uv=None, *, feature_map=False):
     if skin is not None and (skin.size != (WIDTH,HEIGHT) or skin.mode != "RGBA"):
         raise ValueError("reference sprite must be a 64x80 RGBA image")
     if robe_uv is not None and (robe_uv.size != (96,128) or robe_uv.mode != "RGBA"):
@@ -229,6 +230,7 @@ def render(direction, skin=None, robe_uv=None, upper_uv=None, head_uv=None):
     master=build_master()
     pixels=Image.new("RGBA",(WIDTH,HEIGHT),(0,0,0,0))
     zbuffer=[[-1e9 for _ in range(WIDTH)] for _ in range(HEIGHT)]
+    visible_features = [[None] * WIDTH for _ in range(HEIGHT)] if feature_map else None
     for face in master:
         projected=[project(p,yaw) for p in face.points]
         (x0,y0,z0),(x1,y1,z1),(x2,y2,z2)=projected
@@ -380,7 +382,9 @@ def render(direction, skin=None, robe_uv=None, upper_uv=None, head_uv=None):
                     color=tuple(min(255,max(0,int(channel*brightness*detail))) for channel in base)+(255,)
                     zbuffer[py][px]=depth
                     pixels.putpixel((px,py),color)
-    return pixels
+                    if visible_features is not None:
+                        visible_features[py][px] = face.feature
+    return (pixels, visible_features) if feature_map else pixels
 
 def contact_sheet(skin=None, robe_uv=None, upper_uv=None, head_uv=None):
     frames=[render(d,skin,robe_uv,upper_uv,head_uv) for d in ("S","SE","E")]
@@ -434,6 +438,68 @@ def comparison_sheet(skin, robe_uv=None, upper_uv=None, head_uv=None):
     draw.text((12,canvas.height-20),"UNAPPROVED MATERIAL STUDY / NOT GAME ART",fill=(255,180,95,255))
     return canvas
 
+def staff_visibility_audit(skin=None, robe_uv=None, upper_uv=None, head_uv=None):
+    """Inspect visible mesh features after occlusion, not just orange-looking RGB pixels."""
+    results = {}
+    for direction, yaw in DIRECTIONS.items():
+        _, labels = render(direction, skin, robe_uv, upper_uv, head_uv, feature_map=True)
+        counts = Counter(label for row in labels for label in row if label)
+        shaft = [(x, y) for y, row in enumerate(labels) for x, label in enumerate(row)
+                 if label == "right-hand-staff"]
+        grip_x, grip_y, _ = project((-.74, 1.51, .20), yaw)
+        nearest = min((math.hypot(x + .5 - grip_x, y + .5 - grip_y) for x, y in shaft), default=999.0)
+        flame = counts["staff-fire"] + counts["staff-flame-core"] + counts["staff-flame-base"]
+        checks = {
+            "staffShaftVisible": len(shaft) >= 4,
+            "staffAttachedToRightHand": nearest <= 5.0,
+            "staffFlameVisible": flame >= 6,
+        }
+        results[direction] = {
+            "shaftPixels": len(shaft),
+            "rightHandPixels": counts["right-hand"],
+            "flamePixels": flame,
+            "nearestShaftToGripPx": round(nearest, 2),
+            "checks": checks,
+            "pass": all(checks.values()),
+        }
+    return {
+        "schema": "wyrmforge.sprite-foundry.staff-visibility.v1",
+        "source": "same pose-locked mesh and final per-pixel occlusion as the sprite render",
+        "review": "STRUCTURAL ONLY / NOT APPROVED ART",
+        "directions": results,
+        "pass": all(result["pass"] for result in results.values()),
+    }
+
+
+def staff_audit_sheet(skin=None, robe_uv=None, upper_uv=None, head_uv=None):
+    """Visible right-hand staff/hand/flame highlighted on all eight rendered facings."""
+    audit = staff_visibility_audit(skin, robe_uv, upper_uv, head_uv)
+    directions = ("S", "SE", "E", "NE", "N", "NW", "W", "SW")
+    scale = 5
+    stride_x, stride_y = WIDTH * scale + 18, HEIGHT * scale + 44
+    canvas = Image.new("RGBA", (stride_x * 4 + 20, stride_y * 2 + 56), (21, 26, 32, 255))
+    draw = ImageDraw.Draw(canvas)
+    for index, direction in enumerate(directions):
+        frame, labels = render(direction, skin, robe_uv, upper_uv, head_uv, feature_map=True)
+        marked = frame.copy()
+        for y, row in enumerate(labels):
+            for x, label in enumerate(row):
+                if label == "right-hand-staff":
+                    marked.putpixel((x, y), (82, 237, 177, 255))
+                elif label == "right-hand":
+                    marked.putpixel((x, y), (86, 201, 251, 255))
+                elif label in {"staff-fire", "staff-flame-core", "staff-flame-base"}:
+                    marked.putpixel((x, y), (255, 184, 69, 255))
+        gx = 12 + (index % 4) * stride_x
+        gy = 34 + (index // 4) * stride_y
+        canvas.alpha_composite(marked.resize((WIDTH * scale, HEIGHT * scale), Image.Resampling.NEAREST), (gx, gy))
+        result = audit["directions"][direction]
+        draw.text((gx, gy - 19), f"{direction} / {'PASS' if result['pass'] else 'FAIL'}", fill=(160, 235, 184) if result["pass"] else (255, 115, 99))
+        draw.text((gx, gy + HEIGHT * scale + 5), f"shaft:{result['shaftPixels']} grip:{result['nearestShaftToGripPx']}px", fill=(207, 215, 218))
+    draw.text((12, canvas.height - 38), "Green: visible staff / Blue: right hand / Amber: staff flame", fill=(221, 226, 219))
+    draw.text((12, canvas.height - 20), "DIAGNOSTIC ONLY / SAME FROZEN MESH / NOT APPROVED ART", fill=(238, 172, 100))
+    return canvas, audit
+
 def main():
     p=argparse.ArgumentParser()
     p.add_argument("--direction",choices=tuple(DIRECTIONS))
@@ -445,6 +511,9 @@ def main():
     p.add_argument("--upper-uv",type=Path,help="Shared 96x128 RGBA mantle, sleeves and hat atlas")
     p.add_argument("--head-uv",type=Path,help="Shared 96x128 RGBA beard, face and neck atlas")
     p.add_argument("--comparison",type=Path,help="Save eight-way base/decal audit (requires reference)")
+    p.add_argument("--staff-audit",type=Path,help="Save eight-direction visible-staff diagnostic PNG")
+    p.add_argument("--staff-audit-json",type=Path,help="Save staff visibility checks as JSON")
+    p.add_argument("--strict-staff-audit",action="store_true",help="Fail if any facing has inadequate visible staff coverage")
     args=p.parse_args()
     skin=Image.open(args.reference_sprite).convert("RGBA") if args.reference_sprite else None
     robe_uv=Image.open(args.robe_uv).convert("RGBA") if args.robe_uv else None
@@ -464,11 +533,24 @@ def main():
     if args.comparison:
         args.comparison.parent.mkdir(parents=True,exist_ok=True)
         comparison_sheet(skin,robe_uv,upper_uv,head_uv).save(args.comparison)
+    if args.staff_audit or args.staff_audit_json:
+        diagnostic, audit = staff_audit_sheet(skin, robe_uv, upper_uv, head_uv)
+        if args.staff_audit:
+            args.staff_audit.parent.mkdir(parents=True, exist_ok=True)
+            diagnostic.save(args.staff_audit)
+        if args.staff_audit_json:
+            args.staff_audit_json.parent.mkdir(parents=True, exist_ok=True)
+            args.staff_audit_json.write_text(json.dumps(audit, indent=2) + "\n", encoding="utf-8")
+        if not audit["pass"]:
+            failed = [direction for direction, outcome in audit["directions"].items() if not outcome["pass"]]
+            print("UNAPPROVED STAFF OCCLUSION: weak grip visibility in " + ", ".join(failed))
+            if args.strict_staff_audit:
+                raise SystemExit("staff visibility audit failed; inspect diagnostics")
     if args.json_output:
         out=io.BytesIO()
         canvas.save(out,format="PNG")
         print(json.dumps({"png":base64.b64encode(out.getvalue()).decode(),"size":list(canvas.size),"faces":len(faces)}))
-    elif not args.preview and not args.frames and not args.comparison:
+    elif not args.preview and not args.frames and not args.comparison and not args.staff_audit and not args.staff_audit_json:
         canvas.show()
 
 if __name__=="__main__":

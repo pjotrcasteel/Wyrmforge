@@ -286,6 +286,28 @@ class SharedMasterTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             wizard.render("S", head_uv=Image.new("RGBA", (95, 128)))
 
+    def test_feature_aware_staff_audit_exposes_occluded_grip_without_moving_pose(self):
+        result = wizard.staff_visibility_audit()
+        self.assertEqual(set(wizard.DIRECTIONS), set(result["directions"]))
+        self.assertIn("NOT APPROVED ART", result["review"])
+        for direction, entry in result["directions"].items():
+            self.assertGreater(entry["shaftPixels"], 0, direction)
+            self.assertGreater(entry["flamePixels"], 0, direction)
+            self.assertEqual(entry["pass"], all(entry["checks"].values()), direction)
+            original = wizard.render(direction)
+            with_features, labels = wizard.render(direction, feature_map=True)
+            self.assertEqual(original.tobytes(), with_features.tobytes(), direction)
+            self.assertEqual((80, 64), (len(labels), len(labels[0])), direction)
+        # Known art-readability debt: genuine 3D occlusion hides the W grip.
+        # This must be corrected in an explicitly re-approved geometry pass.
+        self.assertFalse(result["directions"]["W"]["checks"]["staffAttachedToRightHand"])
+        self.assertLess(result["directions"]["W"]["shaftPixels"], 30)
+        self.assertFalse(result["pass"])
+        audit_image, repeated = wizard.staff_audit_sheet()
+        self.assertEqual((1372, 944), audit_image.size)
+        self.assertEqual(result, repeated)
+        self.assertEqual(audit_image.tobytes(), wizard.staff_audit_sheet()[0].tobytes())
+
     def test_repeat_render_is_pixel_deterministic(self):
         self.assertEqual(wizard.render("SE").tobytes(), wizard.render("SE").tobytes())
 
