@@ -420,3 +420,36 @@ animation without noting that they have opposite swing-phase assignments.
 foot sliding cannot be ruled out until travel speed is matched to gait in
 the actual game, and Wizard appearance is still not owner-approved. Draft
 status remains; no runtime/game import or merge.
+
+
+## Ground-locked forward walk v010 — constant-speed stance correction
+
+The v009 swing direction was fixed, but further diagnosis found a second
+independent defect: a cosine-shaped planted-foot trajectory skated by about
+**8 cm** in world space when a constant-speed actor moved over the loop.
+The animation now uses one shared anatomical foot trajectory for knee solving,
+boots, and robe clearance:
+
+- During stance, the planted foot moves **linearly backward in actor space**, 
+  canceling the actor's constant forward travel.
+- During swing, that same foot lifts and smoothly moves **forward** in actor
+  space, with no backwards motion in the air.
+- Left and right feet remain exactly half a gait cycle out of phase.
+
+The nominal travel is `4 × 0.40 = 1.60 metres per 16-frame cycle`. At the
+12 FPS review speed this corresponds to **1.20 m/s** actor movement; the runtime
+must use compatible playback/movement speed for the stance lock to hold.
+A dedicated regression test checks that **planted-foot world Z remains constant**
+through both stance halves; the other direction, skeleton and export tests
+remain intact. **12 focused tests passed**, and the Sprite Foundry scoped
+GitHub Actions workflow passed for commit `6256ef9667991d5eaf695ea99a852397c461cb49`.
+
+[Direct textured 16-frame ground-locked S/SE/E review GIF](walk-16-frame-S-SE-E-groundlocked-textured-NOT-APPROVED.gif)
+uses the same deterministic robe, upper-cloth and head UV generators, rendered
+from real native 64×80 RGBA frames and only enlarged with nearest-neighbour
+sampling for inspection. The previous v008/v009 GIFs remain available as
+comparisons. **This is a geometry/motion review, not accepted game art.**
+
+Outstanding: check feet and robe overlap at gameplay scale, make sure actual
+player speed and animation FPS correspond, and get owner approval of Wizard
+appearance/locomotion. The draft PR is **not merged or imported into Hunt**.
