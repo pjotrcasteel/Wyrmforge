@@ -92,9 +92,10 @@ public sealed class GreyboxHuntBrowserTests : PageTest
 
     /// <summary>Hunt 1.0 H5.1: the opt-in C# heightfield is streamed to the browser and painted under the shared GPU lighting.</summary>
     [TestMethod]
-    [DataRow(320, 568)]
-    [DataRow(390, 844)]
-    public async Task Hunt1Terrain_StreamsTheCSharpHeightfieldAndPaintsItUnderSharedLighting(int width, int height)
+    [DataRow(320, 568, "", "hunt1-terrain")]
+    [DataRow(390, 844, "", "hunt1-terrain")]
+    [DataRow(390, 844, "&blockInset=1", "hunt1-block-inset")]
+    public async Task Hunt1Terrain_StreamsTheCSharpHeightfieldAndPaintsItUnderSharedLighting(int width, int height, string extraQuery, string shot)
     {
         var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
         var output = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS")
@@ -107,7 +108,7 @@ public sealed class GreyboxHuntBrowserTests : PageTest
             """);
         var errors = new List<string>();
         Page.PageError += (_, error) => errors.Add(error);
-        await Page.GotoAsync(root + "/?hunt1=1", new() { WaitUntil = WaitUntilState.NetworkIdle });
+        await Page.GotoAsync(root + "/?hunt1=1" + extraQuery, new() { WaitUntil = WaitUntilState.NetworkIdle });
 
         var start = Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^START GAME") });
         await start.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 45000 });
@@ -134,6 +135,6 @@ public sealed class GreyboxHuntBrowserTests : PageTest
                 && state?.greyboxLighting === 'shared-gpu' && state?.enemies?.length > 0 && !state?.renderingFailed;
         }", null, new() { Timeout = 60000 });
         Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
-        await Page.ScreenshotAsync(new() { Path = Path.Combine(output, $"hunt1-terrain-{width}.png"), FullPage = false });
+        await Page.ScreenshotAsync(new() { Path = Path.Combine(output, $"{shot}-{width}.png"), FullPage = false });
     }
 }
