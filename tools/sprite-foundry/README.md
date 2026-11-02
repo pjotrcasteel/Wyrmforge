@@ -23,6 +23,45 @@ Run from the repo root:
 
 Remove the --allow-incomplete argument for the full technical gate. The output/ folder is generated and should not be mistaken for approved assets. Open tools/sprite-foundry/review.html locally; choose the generated manifest.json and all *.albedo.png atlases together.
 
+## Generic pipeline versus a character-specific master
+
+**Sprite Foundry is character-agnostic.** It understands a project profile,
+direction grid, source RGBA frames, optional aligned maps, preview FPS and
+quality/approval gates. It has no built-in Wizard anatomy or staff requirement.
+
+The reusable `export_rendered_source(project, destination, renderer)` entry
+point in `foundry.py` lets any deterministic model, hand-authored sprite
+generator or future rig provide frames through a small callback:
+
+- Input to the callback: `(clip_name, direction, frame_index)`.
+- Output: `{"albedo": RGBA_Image}` plus optional `normal`, `roughness`,
+  `emission` and `depth` RGBA maps.
+- Validation: exact profile cell size, transparent silhouette, aligned
+  material alpha, complete material-layer coverage and valid directions.
+- Safety: frames are first staged; incomplete/invalid output is discarded.
+  An existing source directory is **never overwritten**.
+
+The exported source layout feeds the existing packer and review UI.
+It is intentionally a separate step from game runtime integration.
+
+Start from [the actor profile template](examples/actor-template.project.json).
+Change `character`, `cell`, `feetAnchor`, `clips` and the review criteria.
+The template's 64×80 cell is an **example**, not the mandatory size for
+Hollowed, Ashlings, NPCs or other actors.
+
+The optional `visualReview` list is now owned by each character profile.
+The Wizard profile names his bent hat, beard, robe damage and anatomical
+right-hand staff. A non-Wizard receives neutral visual-review defaults:
+identity, contact/motion, anchor, readability and lighting. Passing a
+technical check **never approves appearance**.
+
+The **Wizard single-mesh experiment** in
+[shared-wizard-master-v001](experiments/shared-wizard-master-v001/README.md)
+is still character-specific. Its 3D shape, right-hand staff attachment and
+robe texture coordinates are not a universal skeleton or equipment system.
+Generalizing rigging and animation authoring is future work, after Wizard
+visual review, not a claim made by this generic export API.
+
 ## Direction contract
 
 Atlas rows use the **existing Sprite Lab/runtime order:** N, NE, E, SE, S, SW, W, NW. This is distinct from the rejected first candidate's S-first presentation. A filename is not evidence that a sprite actually faces that direction: verify anatomy, staff side, boots and silhouette against the compass before approval. **The v001 Wizard directional study was rejected by the owner on 2 November for incorrect directions.**

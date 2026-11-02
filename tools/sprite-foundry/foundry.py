@@ -5,13 +5,25 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import shutil
 import sys
+import tempfile
+from collections.abc import Callable, Mapping
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageOps
 
 DIRECTIONS = ("N", "NE", "E", "SE", "S", "SW", "W", "NW")
 LAYERS = ("albedo", "normal", "roughness", "emission", "depth")
+
+GENERIC_VISUAL_REVIEW = (
+    "Consistent character identity, proportions and equipment across all eight facings",
+    "Plausible motion, contacts and weight transfer for each authored clip",
+    "Stable ground or body anchor and continuous directional animation transitions",
+    "Readable silhouette at the intended mobile gameplay scale",
+    "Correct shared lighting, material maps, depth occlusion and real Hunt performance",
+)
+
 
 
 def read_project(path: Path) -> dict:
@@ -39,6 +51,15 @@ def read_project(path: Path) -> dict:
         raise ValueError("directionRules contains unknown or invalid options")
     if not all(isinstance(value, bool) for value in rules.values()):
         raise ValueError("directionRules values must be booleans")
+    review = data.get("visualReview")
+    if review is not None:
+        if not isinstance(review, list) or not 1 <= len(review) <= 12:
+            raise ValueError("visualReview must contain 1 to 12 criteria")
+        if not all(
+            isinstance(item, str) and item == item.strip() and 8 <= len(item) <= 180
+            for item in review
+        ) or len(set(review)) != len(review):
+            raise ValueError("visualReview criteria must be unique, trimmed 8-180 character strings")
     clips = data.get("clips")
     if not isinstance(clips, dict) or not clips:
         raise ValueError("clips must be a non-empty object")
@@ -83,6 +104,69 @@ def check_albedo(image: Image.Image, path: Path) -> list[str]:
     if limits[0] == 255:
         problems.append(f"{path}: no transparent pixels (likely painted background)")
     return problems
+
+
+def export_rendered_source(
+    project: dict,
+    destination: Path,
+    renderer: Callable[[str, str, int], Mapping[str, Image.Image]],
+) -> list[str]:
+    """Stage any character master's authored RGBA frames for generic Foundry QA.
+
+    The callback receives (clip, direction, frame index) and returns albedo
+    plus optional aligned material maps. No Wizard mesh or equipment assumption.
+    The destination must not already exist: previous user art is never overwritten.
+    """
+    destination = Path(destination)
+    if destination.exists() or destination.is_symlink():
+        raise FileExistsError(f"refusing to overwrite existing source: {destination}")
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    stage = Path(tempfile.mkdtemp(prefix=".foundry-render-", dir=destination.parent))
+    exported: list[str] = []
+    try:
+        w, h = project["cell"]
+        expected_cell = (w, h)
+        for clip, config in project["clips"].items():
+            if not isinstance(clip, str) or not re.fullmatch(r"[a-z][a-z0-9-]*", clip):
+                raise ValueError("invalid clip name in renderer project")
+            expected_layers: set[str] | None = None
+            for direction in DIRECTIONS:
+                for index in range(config["frames"]):
+                    maps = renderer(clip, direction, index)
+                    if not isinstance(maps, Mapping) or "albedo" not in maps:
+                        raise ValueError(f"{clip}/{direction}/{index:02d}: renderer must return albedo")
+                    keys = set(maps)
+                    if keys - set(LAYERS):
+                        raise ValueError(f"{clip}/{direction}/{index:02d}: unsupported material layer")
+                    if expected_layers is None:
+                        expected_layers = keys
+                    elif keys != expected_layers:
+                        raise ValueError(f"{clip}: material layers must exist for every frame")
+                    albedo = maps["albedo"]
+                    if not isinstance(albedo, Image.Image) or albedo.mode != "RGBA":
+                        raise ValueError(f"{clip}/{direction}/{index:02d}: albedo must be RGBA")
+                    if albedo.size != expected_cell:
+                        raise ValueError(f"{clip}/{direction}/{index:02d}: expected {expected_cell}")
+                    alpha = albedo.getchannel("A").tobytes()
+                    if check_albedo(albedo, Path(f"{clip}/{direction}/{index:02d}")):
+                        raise ValueError(f"{clip}/{direction}/{index:02d}: invalid alpha silhouette")
+                    for layer, image in maps.items():
+                        if not isinstance(image, Image.Image) or image.mode != "RGBA":
+                            raise ValueError(f"{clip}/{direction}/{index:02d}: {layer} must be RGBA")
+                        if image.size != expected_cell or image.getchannel("A").tobytes() != alpha:
+                            raise ValueError(f"{clip}/{direction}/{index:02d}: {layer} size/alpha mismatch")
+                        relative = Path(clip) / direction / f"{index:02d}.{layer}.png"
+                        target = stage / relative
+                        target.parent.mkdir(parents=True, exist_ok=True)
+                        image.save(target)
+                        exported.append(relative.as_posix())
+        if destination.exists() or destination.is_symlink():
+            raise FileExistsError(f"source appeared during export: {destination}")
+        stage.rename(destination)
+    finally:
+        if stage.exists():
+            shutil.rmtree(stage)
+    return exported
 
 
 def build(project: dict, source: Path, out: Path, allow_incomplete: bool) -> dict:
@@ -198,13 +282,7 @@ def build(project: dict, source: Path, out: Path, allow_incomplete: bool) -> dic
         },
         "warnings": warnings,
         "errors": errors,
-        "requiredVisualReview": [
-            "Eight independently authored views with consistent hat, hands and staff",
-            "Actual gait: planted feet, passing poses, natural weight transfer",
-            "Continuous directional turns and animation transitions",
-            "Gothic readability at 320px and 390px in the real Hunt",
-            "Shared G lighting/materials, foot-depth occlusion and mobile performance",
-        ],
+        "requiredVisualReview": list(project.get("visualReview", GENERIC_VISUAL_REVIEW)),
     }
     manifest = {
         "schema": "wyrmforge.sprite-foundry.atlas.v1",

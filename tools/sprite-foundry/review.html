@@ -57,9 +57,9 @@ button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visi
 </section>
 <section class="panel">
   <h2>Character identity reference</h2>
-  <p class="small">Select <code>references/approved-grey-wizard.png</code> to compare the animation against the approved character. The source image is a visual identity reference, not an animation frame.</p>
+  <p class="small">Select an approved identity-reference PNG for the current character. The reference is for comparing appearance, not an animation frame.</p>
   <input id="reference" type="file" accept="image/png">
-  <div style="margin-top:12px"><img id="referenceImage" alt="Approved Wizard reference" style="max-width:100%;max-height:320px;object-fit:contain;display:none"></div>
+  <div style="margin-top:12px"><img id="referenceImage" alt="Approved character identity reference" style="max-width:100%;max-height:320px;object-fit:contain;display:none"></div>
 </section>
 <section class="panel">
   <h2>Native-pixel review</h2>
@@ -67,11 +67,11 @@ button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visi
     <div class="stage light"><span>Light checker</span><canvas id="light"></canvas></div>
     <div class="stage dark"><span>Dark checker</span><canvas id="dark"></canvas></div>
   </div>
-  <p class="small">Debug feet cross is an overlay, never part of the exported image. Check staff side, feet, robe silhouette, and direction-change continuity. This is not a replacement for actual in-Hunt 320/390px captures.</p>
+  <p class="small">Debug feet cross is an overlay, never part of the exported image. Check anatomical side, equipment attachment, body silhouette, ground contact and direction-change continuity. This is not a replacement for actual in-Hunt 320/390px captures.</p>
 </section>
 <section class="panel">
   <h2>Direction continuity — previous / selected / next</h2>
-  <p class="small">All three are the same native frame at the same pixel zoom. Look for a believable turn in the head, torso, feet and <strong>anatomical right-hand staff</strong>. A label is not evidence of facing. Scroll inside each frame at 6–10× zoom; nothing here changes the exported pixels.</p>
+  <p class="small">All three are the same native frame at the same pixel zoom. Look for a believable turn in the body, limbs and any asymmetric equipment or markings. A label is not evidence of facing. Scroll inside each frame at 6–10× zoom; nothing here changes the exported pixels.</p>
   <div class="facing-grid">
     <div class="facing-card"><strong id="facing-prev-label">Previous</strong><div class="facing-viewport"><canvas id="facing-prev"></canvas></div></div>
     <div class="facing-card selected"><strong id="facing-current-label">Selected</strong><div class="facing-viewport"><canvas id="facing-current"></canvas></div></div>

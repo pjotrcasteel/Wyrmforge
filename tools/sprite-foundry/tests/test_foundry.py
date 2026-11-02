@@ -130,6 +130,87 @@ class FoundryTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "unknown"):
             foundry.read_project(path)
 
+    def test_non_wizard_renderer_uses_same_generic_export_and_qa(self):
+        project = sample_project()
+        project["character"] = "ashling"
+        project["directionRules"] = {"requireDistinctFacings": True, "forbidMirroredFacings": True}
+        project["visualReview"] = ["Ashling eyes, limbs and flame influence remain consistent across all views"]
+
+        def render(clip, direction, index):
+            self.assertEqual(("idle", 0), (clip, index))
+            number = foundry.DIRECTIONS.index(direction)
+            color = (85 + number * 16, 104, 75, 255)
+            frame = Image.new("RGBA", (64, 80), (0, 0, 0, 0))
+            for y in range(14, 75):
+                for x in range(25, 39):
+                    frame.putpixel((x, y), color)
+            normal = Image.new("RGBA", (64, 80), (0, 0, 0, 0))
+            normal.paste((128, 128, 255, 255), (25, 14, 39, 75))
+            return {"albedo": frame, "normal": normal}
+
+        paths = foundry.export_rendered_source(project, self.source, render)
+        self.assertEqual(16, len(paths))
+        self.assertTrue((self.source / "idle" / "S" / "00.albedo.png").is_file())
+        report = foundry.build(project, self.source, self.out, False)
+        self.assertEqual("technical-pass", report["technicalStatus"])
+        self.assertEqual(project["visualReview"], report["requiredVisualReview"])
+        self.assertTrue((self.out / "idle.normal.png").is_file())
+        with Image.open(self.out / "idle.albedo.png") as atlas:
+            self.assertEqual((64, 640), atlas.size)
+
+    def test_generic_review_defaults_are_character_neutral(self):
+        self.seed()
+        report = foundry.build(sample_project(), self.source, self.out, False)
+        criteria = " ".join(report["requiredVisualReview"]).lower()
+        self.assertNotIn("wizard", criteria)
+        self.assertNotIn("staff", criteria)
+        self.assertIn("character", criteria)
+
+    def test_export_rejects_invalid_or_partial_materials_without_leaving_source(self):
+        project = sample_project()
+
+        def broken(clip, direction, index):
+            frame = Image.new("RGBA", (64, 80), (0, 0, 0, 0))
+            frame.paste((90, 88, 80, 255), (25, 14, 39, 75))
+            if direction == "NE":
+                return {"albedo": frame}
+            return {"albedo": frame, "normal": frame.copy()}
+
+        with self.assertRaisesRegex(ValueError, "material layers"):
+            foundry.export_rendered_source(project, self.source, broken)
+        self.assertFalse(self.source.exists(), "invalid staging must not leave partial art")
+
+    def test_export_never_overwrites_existing_source_art(self):
+        self.source.mkdir()
+        sentinel = self.source / "artist-work.txt"
+        sentinel.write_text("keep", encoding="utf-8")
+        with self.assertRaises(FileExistsError):
+            foundry.export_rendered_source(
+                sample_project(),
+                self.source,
+                lambda clip, direction, index: {},
+            )
+        self.assertEqual("keep", sentinel.read_text(encoding="utf-8"))
+
+    def test_review_ui_is_character_agnostic(self):
+        page = (MODULE_FILE.parents[1] / "review.html").read_text(encoding="utf-8")
+        self.assertNotIn("Wizard", page)
+        self.assertNotIn("anatomical right-hand staff", page)
+        self.assertIn("any asymmetric equipment", page)
+
+    def test_visual_review_validation_and_reusable_actor_template(self):
+        project = sample_project()
+        project["visualReview"] = ["short"]
+        path = self.root / "bad-review.json"
+        path.write_text(json.dumps(project), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "8-180"):
+            foundry.read_project(path)
+        template_path = MODULE_FILE.parents[1] / "examples" / "actor-template.project.json"
+        actor = foundry.read_project(template_path)
+        self.assertEqual("example-actor", actor["character"])
+        self.assertEqual(list(foundry.DIRECTIONS), actor["directions"])
+        self.assertTrue(actor["visualReview"])
+
     def test_bad_manifest_rejected(self):
         project = sample_project()
         project["directions"][0] = "W"

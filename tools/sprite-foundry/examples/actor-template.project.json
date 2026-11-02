@@ -1,0 +1,38 @@
+{
+  "schema": "wyrmforge.sprite-foundry.v1",
+  "character": "example-actor",
+  "cell": [
+    64,
+    80
+  ],
+  "feetAnchor": [
+    32,
+    74
+  ],
+  "directions": [
+    "N",
+    "NE",
+    "E",
+    "SE",
+    "S",
+    "SW",
+    "W",
+    "NW"
+  ],
+  "clips": {
+    "idle": {
+      "frames": 1,
+      "fps": 8
+    }
+  },
+  "directionRules": {
+    "requireDistinctFacings": true,
+    "forbidMirroredFacings": false
+  },
+  "visualReview": [
+    "Character proportions and visual identity stay continuous across eight facings",
+    "Asymmetric limbs, markings and equipment retain the same anatomical ownership",
+    "Motion contacts, body anchor and transitions remain coherent when animated",
+    "Review actual game scale and lighting before approving source artwork"
+  ]
+}
