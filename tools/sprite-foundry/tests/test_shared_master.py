@@ -3,6 +3,7 @@ import importlib.util
 import sys
 import unittest
 from pathlib import Path
+from PIL import Image
 
 MODULE_FILE = Path(__file__).resolve().parents[1] / "experiments" / "shared-wizard-master-v001" / "master.py"
 SPEC = importlib.util.spec_from_file_location("wizard_shared_master", MODULE_FILE)
@@ -46,6 +47,34 @@ class SharedMasterTests(unittest.TestCase):
         x_e = wizard.project(nose, wizard.DIRECTIONS["E"])[0]
         self.assertLess(x_s, x_se)
         self.assertLess(x_se, x_e)
+
+    def test_right_hand_staff_flame_remains_visible_in_every_facing(self):
+        for direction in wizard.DIRECTIONS:
+            frame = wizard.render(direction)
+            raw = frame.tobytes()
+            flame_pixels = sum(
+                1 for i in range(0, len(raw), 4)
+                if raw[i+3] and raw[i] >= 170 and raw[i+1] >= 55 and raw[i+2] <= 90
+            )
+            self.assertGreaterEqual(flame_pixels, 10, direction)
+
+    def test_front_decal_cannot_move_holes_or_paint_unseen_back(self):
+        reference = Image.new("RGBA", (64, 80), (118, 113, 108, 255))
+        changed = {}
+        for direction in wizard.DIRECTIONS:
+            original = wizard.render(direction)
+            painted = wizard.render(direction, reference)
+            self.assertEqual(original.getchannel("A").tobytes(), painted.getchannel("A").tobytes())
+            self.assertEqual(painted.tobytes(), wizard.render(direction, reference).tobytes())
+            a, b = original.tobytes(), painted.tobytes()
+            changed[direction] = sum(a[i:i+3] != b[i:i+3] for i in range(0, len(a), 4))
+        self.assertGreater(changed["S"], 300)
+        self.assertLess(changed["N"], 20)
+        with self.assertRaises(ValueError):
+            wizard.render("S", Image.new("RGBA", (63, 80)))
+        with self.assertRaises(ValueError):
+            wizard.comparison_sheet(None)
+        self.assertEqual((1656, 684), wizard.comparison_sheet(reference).size)
 
     def test_repeat_render_is_pixel_deterministic(self):
         self.assertEqual(wizard.render("SE").tobytes(), wizard.render("SE").tobytes())

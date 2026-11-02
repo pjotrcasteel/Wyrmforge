@@ -31,9 +31,13 @@ jobs:
           python -m unittest discover -s tools/sprite-foundry/tests -v
       - name: Render shared-master mechanical blockout (not approved art)
         run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --preview tools/sprite-foundry/output/shared-master-blockout.png
-      - name: Upload isolated geometry study preview
+      - name: Render local-space front-decal comparison (not approved art)
+        run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --reference-sprite tools/sprite-foundry/candidates/grey-wizard-idle-v001/source/idle/S/00.albedo.png --comparison tools/sprite-foundry/output/shared-master-front-decal.png
+      - name: Upload unapproved single-mesh studies
         uses: actions/upload-artifact@v4
         with:
-          name: shared-wizard-master-blockout-NOT-APPROVED
-          path: tools/sprite-foundry/output/shared-master-blockout.png
+          name: shared-wizard-master-studies-NOT-APPROVED
+          path: |
+            tools/sprite-foundry/output/shared-master-blockout.png
+            tools/sprite-foundry/output/shared-master-front-decal.png
           if-no-files-found: error

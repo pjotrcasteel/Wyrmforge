@@ -169,7 +169,9 @@ def project(point,yaw):
     Z=-x*math.sin(a)+z*math.cos(a)
     return (FOOT_X+X*SCALE,FOOT_Y-y*SCALE+Z*2.7,Z)
 
-def render(direction):
+def render(direction, skin=None):
+    if skin is not None and (skin.size != (WIDTH,HEIGHT) or skin.mode != "RGBA"):
+        raise ValueError("reference sprite must be a 64x80 RGBA image")
     yaw=DIRECTIONS[direction]
     master=build_master()
     pixels=Image.new("RGBA",(WIDTH,HEIGHT),(0,0,0,0))
@@ -212,13 +214,36 @@ def render(direction):
                         folds=math.sin(10*theta+2.1*wy)+.55*math.sin(19*theta-4*wy)
                         weave=math.sin(wx*47+wy*23+wz*41)*math.sin(wy*43-wz*17)
                         detail=.93+.095*folds+.035*weave
-                    color=tuple(min(255,max(0,int(channel*brightness*detail))) for channel in face.color)+(255,)
+                    base=face.color
+                    # EXPERIMENTAL PLANAR DECAL: only the forward hemisphere can receive
+                    # colors from this rejected S study. It is NOT an authored UV atlas.
+                    if skin is not None and face.feature in {
+                        "outer-robe","torso-mantle","cape-panel","cape-torn-edge",
+                        "floppy-hat","robe-front-overlap","robe-right-lapel",
+                        "robe-torn-front-tip","beard-lock"
+                    }:
+                        sx=int(round(FOOT_X+wx*SCALE))
+                        sy=int(round(FOOT_Y-wy*SCALE))
+                        if 0<=sx<WIDTH and 0<=sy<HEIGHT:
+                            sample=skin.getpixel((sx,sy))
+                            chroma=max(sample[:3])-min(sample[:3])
+                            # A front view is not a complete texture atlas.  Limit the
+                            # projected albedo to physically front-facing surfaces; the
+                            # far side retains its own procedural cloth material.
+                            local_radius=math.hypot(wx,wz)
+                            frontness=wz/max(.001,local_radius)
+                            front_weight=max(0.0,min(1.0,(frontness-.22)/.58))
+                            front_weight=front_weight*front_weight*(3-2*front_weight)
+                            if sample[3]>=160 and chroma<35 and 35<sum(sample[:3])/3<245:
+                                weight=.72*front_weight
+                                base=tuple(int(weight*sample[j]+(1-weight)*base[j]) for j in range(3))
+                    color=tuple(min(255,max(0,int(channel*brightness*detail))) for channel in base)+(255,)
                     zbuffer[py][px]=depth
                     pixels.putpixel((px,py),color)
     return pixels
 
-def contact_sheet():
-    frames=[render(d) for d in ("S","SE","E")]
+def contact_sheet(skin=None):
+    frames=[render(d,skin) for d in ("S","SE","E")]
     scale=8
     canvas=Image.new("RGBA",(WIDTH*scale*3+64,HEIGHT*scale+100),(17,23,29,255))
     draw=ImageDraw.Draw(canvas)
@@ -234,27 +259,62 @@ def contact_sheet():
     draw.text((16,HEIGHT*scale+66),"DETERMINISTIC MASTER GEOMETRY STUDY - NOT APPROVED GAME ART",fill=(241,186,107,255))
     return canvas,frames
 
+def comparison_sheet(skin):
+    """Side-by-side 8-way continuity audit, never an art approval sheet."""
+    if skin is None:
+        raise ValueError("eight-way comparison requires --reference-sprite")
+    directions=("S","SE","E","NE","N","NW","W","SW")
+    scale=3
+    stride=WIDTH*scale+12
+    top=42
+    row_height=HEIGHT*scale+64
+    canvas=Image.new("RGBA",(len(directions)*stride+24,top+2*row_height+34),(26,29,33,255))
+    draw=ImageDraw.Draw(canvas)
+    for row,reference in enumerate((None,skin)):
+        title="SINGLE MESH / BASE COLOR" if row==0 else "SAME MESH / FRONT-ONLY COLOR DECAL"
+        draw.text((12,top+row*row_height-23),title,fill=(232,227,214,255))
+        for index,direction in enumerate(directions):
+            x=12+index*stride
+            y=top+row*row_height
+            for j in range(0,HEIGHT*scale,24):
+                for i in range(0,WIDTH*scale,24):
+                    checker=(i//24+j//24)%2
+                    draw.rectangle((x+i,y+j,x+i+23,y+j+23),fill=(49,54,60,255) if checker else (40,45,51,255))
+            frame=render(direction,reference)
+            canvas.alpha_composite(frame.resize((WIDTH*scale,HEIGHT*scale),Image.Resampling.NEAREST),(x,y))
+            draw.text((x+4,y+HEIGHT*scale+6),direction,fill=(232,227,214,255))
+    draw.text((12,canvas.height-20),"UNAPPROVED MATERIAL STUDY / NOT GAME ART",fill=(255,180,95,255))
+    return canvas
+
 def main():
     p=argparse.ArgumentParser()
     p.add_argument("--direction",choices=tuple(DIRECTIONS))
     p.add_argument("--json-output",action="store_true")
     p.add_argument("--preview",type=Path,help="Save a checker contact sheet")
     p.add_argument("--frames",type=Path,help="Export unapproved RGBA frames for Foundry input")
+    p.add_argument("--reference-sprite",type=Path,help="Experimental front-hemisphere decal from a 64x80 RGBA S study")
+    p.add_argument("--comparison",type=Path,help="Save eight-way base/decal audit (requires reference)")
     args=p.parse_args()
+    skin=Image.open(args.reference_sprite).convert("RGBA") if args.reference_sprite else None
+    if skin is not None and skin.size!=(WIDTH,HEIGHT):
+        raise ValueError("reference sprite must be native 64x80")
     if args.frames:
         for direction in DIRECTIONS:
             target=args.frames / "idle" / direction / "00.albedo.png"
             target.parent.mkdir(parents=True,exist_ok=True)
-            render(direction).save(target)
-    canvas=render(args.direction) if args.direction else contact_sheet()[0]
+            render(direction,skin).save(target)
+    canvas=render(args.direction,skin) if args.direction else contact_sheet(skin)[0]
     if args.preview:
         args.preview.parent.mkdir(parents=True,exist_ok=True)
         canvas.save(args.preview)
+    if args.comparison:
+        args.comparison.parent.mkdir(parents=True,exist_ok=True)
+        comparison_sheet(skin).save(args.comparison)
     if args.json_output:
         out=io.BytesIO()
         canvas.save(out,format="PNG")
         print(json.dumps({"png":base64.b64encode(out.getvalue()).decode(),"size":list(canvas.size),"faces":len(faces)}))
-    elif not args.preview and not args.frames:
+    elif not args.preview and not args.frames and not args.comparison:
         canvas.show()
 
 if __name__=="__main__":
