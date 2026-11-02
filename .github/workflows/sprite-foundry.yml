@@ -31,8 +31,10 @@ jobs:
           python -m unittest discover -s tools/sprite-foundry/tests -v
       - name: Render shared-master mechanical blockout (not approved art)
         run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --preview tools/sprite-foundry/output/shared-master-blockout.png
-      - name: Render local-space front-decal comparison (not approved art)
+      - name: Render shared-mesh damage and front-decal comparison (not approved art)
         run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --reference-sprite tools/sprite-foundry/candidates/grey-wizard-idle-v001/source/idle/S/00.albedo.png --comparison tools/sprite-foundry/output/shared-master-front-decal.png
+      - name: Render 8x S/SE/E garment close-up (not approved art)
+        run: python tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --reference-sprite tools/sprite-foundry/candidates/grey-wizard-idle-v001/source/idle/S/00.albedo.png --preview tools/sprite-foundry/output/garment-damage-closeup.png
       - name: Upload unapproved single-mesh studies
         uses: actions/upload-artifact@v4
         with:
@@ -40,4 +42,5 @@ jobs:
           path: |
             tools/sprite-foundry/output/shared-master-blockout.png
             tools/sprite-foundry/output/shared-master-front-decal.png
+            tools/sprite-foundry/output/garment-damage-closeup.png
           if-no-files-found: error

@@ -16,7 +16,7 @@ class SharedMasterTests(unittest.TestCase):
     def test_every_facing_uses_identical_unrotated_geometry(self):
         before = tuple((face.feature, face.points) for face in wizard.build_master())
         self.assertGreater(len(before), 2000)
-        for direction in ("S", "SE", "E"):
+        for direction in wizard.DIRECTIONS:
             wizard.render(direction)
             after = tuple((face.feature, face.points) for face in wizard.faces)
             self.assertEqual(before, after)
@@ -28,6 +28,22 @@ class SharedMasterTests(unittest.TestCase):
         self.assertGreater(labels.count("permanent-cloth-rip"), 0)
         self.assertGreater(labels.count("outer-robe"), 100)
         self.assertEqual(3, len(set(face.points for face in faces if face.feature == "permanent-cloth-rip")))
+        self.assertEqual(3, labels.count("frayed-rip-edge"))
+
+    def test_garment_damage_ledger_is_permanent_and_nonuniform(self):
+        self.assertEqual(24, len(wizard.ROBE_HEM_OFFSETS))
+        self.assertGreater(max(wizard.ROBE_HEM_OFFSETS) - min(wizard.ROBE_HEM_OFFSETS), .30)
+        self.assertEqual(11, len(wizard.ROBE_OPEN_SECTORS))
+        self.assertEqual(3, len(wizard.ROBE_SCARS))
+        self.assertEqual(3, len({mark[0] for mark in wizard.ROBE_SCARS}))
+        outer_vertices = {
+            round(point[1], 3)
+            for face in wizard.build_master() if face.feature == "outer-robe"
+            for point in face.points if point[1] < .5
+        }
+        self.assertGreater(len(outer_vertices), 10)
+        with self.assertRaises(ValueError):
+            wizard.revolve([(.1,.2,0,0),(.2,.2,0,0)], "555555", "invalid", 8, hem_offsets=[0]*7)
 
     def test_native_pixel_outputs_and_directional_differences(self):
         output = {}

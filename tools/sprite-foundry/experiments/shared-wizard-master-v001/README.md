@@ -59,6 +59,32 @@ back, and that a visible flame remains in all eight views. This proves only
 that front paint does not invent holes or make the staff disappear, **not** that
 the torn garment has been authored to match the approved identity.
 
+## Garment damage atlas v002 — deterministic cutouts
+
+The previous generator calculated a hem profile and silently discarded it.
+That bug is fixed. One immutable garment-space damage atlas now controls:
+
+- **24 hem sectors** around the waist-to-ground robe, with raised notches and
+  hanging points (15 degrees per sector; sector 6 is the front).
+- **11 omitted outer-robe mesh panels** at specific height/angle cells. These
+  are actual holes exposing the darker under-gown, not face-specific overlays.
+- **Three named frayed scars** anchored by a local angle, garment height,
+  length and width. Their 3D coordinates track the tapered gown surface.
+
+The damage atlas is in `ROBE_HEM_OFFSETS`, `ROBE_OPEN_SECTORS` and
+`ROBE_SCARS` near the top of `master.py`. The generator now uses additional
+height rings to give each tear a stable geometric boundary. No individual
+facing can alter these features: all eight are rendered from one built mesh.
+
+For an 8× S / SE / E close-up (from the repository root):
+
+    py tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --reference-sprite tools/sprite-foundry/candidates/grey-wizard-idle-v001/source/idle/S/00.albedo.png --preview tools/sprite-foundry/output/garment-damage-closeup.png
+
+**Remaining art gap:** these are exploratory authored placement landmarks,
+not a traced match for the owner's actual approved robe rips. The correct
+Gothic garment styling, detailed physical cloth edge work and proper UV
+painting are still needed before any sprite can be approved.
+
 ## Visual quality still missing
 
 The preview is a *mechanical continuity test*, not a visual acceptance candidate.

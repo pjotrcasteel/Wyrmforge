@@ -16,6 +16,16 @@ FOOT_X, FOOT_Y = 32, 74
 SCALE = 17.2
 DIRECTIONS = {"S": 0, "SE": 45, "E": 90, "NE": 135, "N": 180, "NW": 225, "W": 270, "SW": 315}
 
+# Immutable garment damage atlas: ring sector 0 faces +X, sector 6 faces +Z.
+# Every viewing direction rotates these same local-space vertices and scars.
+ROBE_HEM_OFFSETS=(.00,-.06,.01,.09,.27,.20,.04,-.04,.11,.25,.18,-.05,
+                  .01,.03,-.07,.05,.14,.27,.17,-.02,.04,-.05,.02,.06)
+ROBE_OPEN_SECTORS=frozenset({(0,4),(0,5),(0,9),(0,10),(0,17),
+                             (1,4),(1,9),(1,17),(2,3),(3,2),(3,3)})
+ROBE_SCARS=(("front-right-thigh",35,1.33,.36,.18),
+            ("front-left-lower-robe",138,.97,.32,.14),
+            ("rear-side-thigh",260,1.37,.35,.14))
+
 @dataclass(frozen=True)
 class Face:
     points: tuple
@@ -34,7 +44,9 @@ def quad(a,b,c,d,color,feature):
     tri(a,b,c,color,feature)
     tri(a,c,d,color,feature)
 
-def revolve(levels, color, feature, segments=24, seed=0, tear=None):
+def revolve(levels, color, feature, segments=24, seed=0, tear=None, hem_offsets=None):
+    if hem_offsets is not None and len(hem_offsets)!=segments:
+        raise ValueError("hem damage profile must match the garment's angular segments")
     rng=random.Random(seed)
     jitter=[rng.uniform(-0.04,0.04) for _ in range(segments)]
     for j in range(len(levels)-1):
@@ -47,8 +59,11 @@ def revolve(levels, color, feature, segments=24, seed=0, tear=None):
             if tear and tear(j,i): continue
             scale0=1+jitter[i]
             scale1=1+jitter[k]
-            p0=(ox0+r0*scale0*math.cos(a),y0,oz0+r0*scale0*math.sin(a))
-            p1=(ox0+r0*scale1*math.cos(b),y0,oz0+r0*scale1*math.sin(b))
+            # Hem cuts are local-to-garment vertices shared by every facing.
+            ya=y0+(hem_offsets[i] if hem_offsets is not None and j==0 else 0)
+            yb=y0+(hem_offsets[k] if hem_offsets is not None and j==0 else 0)
+            p0=(ox0+r0*scale0*math.cos(a),ya,oz0+r0*scale0*math.sin(a))
+            p1=(ox0+r0*scale1*math.cos(b),yb,oz0+r0*scale1*math.sin(b))
             p2=(ox1+r1*scale1*math.cos(b),y1,oz1+r1*scale1*math.sin(b))
             p3=(ox1+r1*scale0*math.cos(a),y1,oz1+r1*scale0*math.sin(a))
             quad(p0,p1,p2,p3,color if i%5 else "8a8984",feature)
@@ -98,18 +113,35 @@ def build_master():
     revolve([(.24,.58,0,0),(.53,.57,0,0),(1.7,.36,0,0),(2.48,.34,0,0)],
             "343337","under-robe",seed=19)
     # Outer gown, physical tears in two angular sectors of its lower hem.
-    hem=[.22+.08*math.sin(4*math.pi*i/24)+(.06 if i in (3,4,13) else 0) for i in range(24)]
-    sections=24
-    levels=[(.20,.73,0,0),(.55,.69,0,0),(1.08,.55,0,0),(1.72,.41,0,0),(2.38,.40,0,0)]
+    # A fixed 24-sector hem damage map, 15° per sector. The front is sector 6.
+    # Positive offsets cut higher into the cloth; negative offsets leave points.
+    sections=len(ROBE_HEM_OFFSETS)
+    levels=[(.20,.73,0,0),(.55,.69,0,0),(.90,.59,0,0),(1.08,.55,0,0),
+            (1.32,.50,0,0),(1.52,.45,0,0),(1.72,.41,0,0),(2.38,.40,0,0)]
+    # Outer mesh has permanent voids: the dark under-gown is visible below.
+    # They are genuine missing mesh faces, never 2D per-facing painted spots.
     def torn(j,i):
-        return (j==0 and i in (4,5,16)) or (j==1 and i in (5,16))
-    revolve(levels,"65635f","outer-robe",sections,seed=23,tear=torn)
-    # Fixed stitch/tear landmarks attached to local gown azimuth.
-    for angle_deg,y in ((35,1.04),(144,.79),(262,1.29)):
+        return (j,i) in ROBE_OPEN_SECTORS
+    revolve(levels,"65635f","outer-robe",sections,seed=23,tear=torn,hem_offsets=ROBE_HEM_OFFSETS)
+    # Named surface scars are attached to a fixed gown azimuth and height,
+    # with the actual tapered robe radius, so they cannot drift across turns.
+    def outer_radius(y):
+        for (low,rl,_,_),(high,rh,_,_) in zip(levels,levels[1:]):
+            if low<=y<=high:
+                t=(y-low)/(high-low)
+                return rl+(rh-rl)*t
+        return levels[0][1] if y<levels[0][0] else levels[-1][1]
+    def scar_point(angle_deg,y,side=0):
         t=math.radians(angle_deg)
-        r=.55 if y<1.1 else .48
-        x,z=r*math.cos(t),r*math.sin(t)
-        tri((x,y,z),(x+.035,y-.13,z+.012),(x-.015,y-.25,z+.02),"28292b","permanent-cloth-rip")
+        r=outer_radius(y)+.055
+        return (r*math.cos(t)-side*math.sin(t),y,r*math.sin(t)+side*math.cos(t))
+    for name,angle_deg,y,length,width in ROBE_SCARS:
+        left=scar_point(angle_deg,y,-width/2)
+        right=scar_point(angle_deg,y,width/2)
+        tip=scar_point(angle_deg,y-length,-width*.18)
+        tri(left,right,tip,"29282b","permanent-cloth-rip")
+        tri(scar_point(angle_deg,y,-width/2-.025),left,tip,
+            "a4a097","frayed-rip-edge")
     # Boots and trousers
     for side in (-1,1):
         x=side*.31
