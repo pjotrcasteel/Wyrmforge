@@ -41,6 +41,23 @@ test('every material has a distinct top and darker front colour in each band', (
         }
 });
 
+test('the palette is dark and gothic: earth is muted, fronts are deep, only lava is saturated', () => {
+    const channels = hex => [16, 8, 0].map(shift => (parseInt(hex.slice(1), 16) >> shift) & 255);
+    const luma = hex => { const [r, g, b] = channels(hex); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+    const saturation = hex => { const c = channels(hex); return (Math.max(...c) - Math.min(...c)) / Math.max(...c); };
+    for (let band = 0; band < 4; band++)
+        for (const material of Object.values(TERRAIN_MATERIAL)) {
+            const { top, front } = terrainColors(band, material);
+            assert.ok(luma(front) <= luma(top) * 0.62, `band ${band} material ${material}: front must read as a deep side face`);
+            assert.ok(luma(top) < 140 || material === TERRAIN_MATERIAL.Lava, `band ${band} material ${material}: no bright tops`);
+            if (material !== TERRAIN_MATERIAL.Lava) assert.ok(saturation(top) < 0.3, `band ${band} material ${material}: earth stays muted`);
+            else assert.ok(saturation(top) > 0.7, 'lava carries the colour');
+        }
+    // Each band is darker than the one before it for soil: the land is consumed toward the Wyrm.
+    for (let band = 1; band < 4; band++)
+        assert.ok(luma(terrainColors(band, TERRAIN_MATERIAL.Soil).top) < luma(terrainColors(band - 1, TERRAIN_MATERIAL.Soil).top));
+});
+
 test('height shading is stepped in whole metres and symmetric around the floor', () => {
     assert.equal(heightShade('#808080', 0), '#808080');
     assert.equal(heightShade('#808080', 3), '#808080', 'under half a metre does not shift');

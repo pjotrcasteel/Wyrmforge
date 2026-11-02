@@ -9,16 +9,17 @@ export const INFLUENCE_UPPER_BOUNDS = Object.freeze([0.25, 0.55, 0.85]);
 // Room above row 0 for columns that rise above the floor, and below for pits.
 export const TERRAIN_PAD_UNITS = 4 * FACE_PIXELS;
 
-// [top, front] per material for each influence band. Flat two-tone ramps; the front face is always the darker tone.
+// [top, front] per material for each influence band. Dark gothic flat ramps: muted earth, deep front faces for volume,
+// and saturation reserved for lava (fire, blood and lightning carry the colour). The front is always the darker tone.
 const PALETTE = Object.freeze([
-    // Natural / wet
-    [['#7d7a62', '#5a5846'], ['#7b7873', '#58544f'], ['#8d8d90', '#5f5f66'], ['#d2661c', '#8f3d12']],
-    // Scorched
-    [['#6d6455', '#4b4439'], ['#706a65', '#4b4642'], ['#85847f', '#585760'], ['#e0701a', '#97400f']],
-    // Burning
-    [['#5e5249', '#3f352f'], ['#625b57', '#403a37'], ['#7a7578', '#514d55'], ['#ee7a14', '#a8440c']],
-    // Volcanic
-    [['#463d3a', '#2d2625'], ['#4c4543', '#302b2a'], ['#615b60', '#3f3b43'], ['#ff8a10', '#b84a08']],
+    // Natural / wet: cold damp earth
+    [['#66634f', '#2f2e26'], ['#5c5a56', '#2e2c2a'], ['#6b6a6c', '#323137'], ['#c9501a', '#7a1f0c']],
+    // Scorched: dry ash-brown
+    [['#58504a', '#2a2420'], ['#5b5551', '#2c2826'], ['#68645f', '#312e2e'], ['#d65a16', '#82200c']],
+    // Burning: charred, blood-red undertone
+    [['#4b3f3a', '#231b19'], ['#4e4642', '#262120'], ['#5e5757', '#2c2727'], ['#e8641a', '#8c1f0a']],
+    // Volcanic: near-black basalt
+    [['#352d2c', '#171212'], ['#3a3331', '#1a1514'], ['#4a4446', '#1f1b1d'], ['#ff7a14', '#a01a08']],
 ]);
 
 export function influenceBandIndex(corruption) {
