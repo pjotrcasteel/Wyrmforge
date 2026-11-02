@@ -347,19 +347,30 @@ idle pose. No magic-school variant, runtime integration or game asset was added.
 - Four authored phase positions represent contact, right passing, opposite
   contact and left passing; the same continuous motion can be sampled at 16
   frames per direction for later timing review.
-- Feet and trousers move around fixed hips, and the lifted passing foot
-  clears the floor. The free left arm counter-swings slightly.
-- The staff, its flame and **right-hand grip remain exact copies** of the
-  original master in *every* frame. The robe's physical tears and scars are
+- Each leg is now an articulated two-bone hip–knee–ankle chain with **fixed
+  bone lengths** and forward knee bend. One foot can stay planted as the
+  opposite foot lifts in passing; the hips shift subtly over the support leg.
+  The free left arm counter-swings.
+- The staff, its flame and **right-hand grip remain one rigid attached
+  group**, translating together with the body through each step; their
+  relative geometry never changes. The robe's physical tears and scars are
   transformed together, not regenerated per camera angle.
 - All eight camera facings use the same posed triangles and output
   actual transparent **64×80 RGBA** frames. The review image shows them
   enlarged with nearest-neighbour sampling; enlargement adds no fake pixels.
 - The existing idle-pose lock and unanimated render path remain untouched.
 
-Reproduce the review sheet:
+Reproduce the eight-way contact sheet:
 
     py tools/sprite-foundry/experiments/shared-wizard-master-v001/walk_study.py --preview tools/sprite-foundry/output/walk-four-key-8way-NOT-APPROVED.png
+
+Or inspect actual temporal motion in a 16-frame 12-FPS animated review:
+
+    py tools/sprite-foundry/experiments/shared-wizard-master-v001/walk_study.py --gif tools/sprite-foundry/output/walk-16-frame-S-SE-E-NOT-APPROVED.gif
+
+The [direct untextured native-pixel GIF](walk-16-frame-S-SE-E-untextured-NOT-APPROVED.gif)
+can be viewed without downloading the CI ZIP. The CI-produced GIF additionally
+samples the shared garment/head UV textures.
 
 Or generate all sixteen frames of the full tentative gait cycle:
 
@@ -371,3 +382,8 @@ walk still requires human appraisal of joint motion, weight transfer,
 foot sliding and leg occlusion. The user-provided Dark Mage 64px reference
 is a quality/motion *reference*, not a redistributable source texture;
 rights must be confirmed before any direct adaptation.
+
+**Visual status after gait v008:** the loop now moves distinct feet and knees
+and shows weight transfer, but the long robe still hides some lower-body motion.
+Art fidelity, foot-slide review and in-game gameplay-scale acceptance remain
+open. The native pixel and topology tests alone do not approve the sprite.
