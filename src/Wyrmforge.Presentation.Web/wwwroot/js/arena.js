@@ -153,6 +153,11 @@ export function readArenaDiagnostics(canvas) {
         terrainPresentation: state.latestSnapshot?.environment?.greybox
             ? 'one-meter-greybox' : state.g4FlatGround ? 'neutral-grey' : 'painted',
         framePresentation: state.g4StageFrames ? 'staged' : 'direct',
+        hunt1Terrain: state.latestSnapshot?.environment?.terrain
+            ? { columns: state.latestSnapshot.environment.terrain.columns, rows: state.latestSnapshot.environment.terrain.rows,
+                snapshotRevision: state.latestSnapshot.environment.terrain.revision,
+                paintedRevision: state.terrainCache?.revision ?? null, repaints: state.terrainCache?.repaints ?? 0 }
+            : null,
         lighting: { mode: 'night', darkness: GOTHIC_NIGHT.darkness, source: 'authoritative-csharp-snapshot' },
     };
 }

@@ -89,4 +89,51 @@ public sealed class GreyboxHuntBrowserTests : PageTest
         Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
         await Page.ScreenshotAsync(new() { Path = Path.Combine(output, $"default-greybox-hunt-{width}.png"), FullPage = false });
     }
+
+    /// <summary>Hunt 1.0 H5.1: the opt-in C# heightfield is streamed to the browser and painted under the shared GPU lighting.</summary>
+    [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
+    public async Task Hunt1Terrain_StreamsTheCSharpHeightfieldAndPaintsItUnderSharedLighting(int width, int height)
+    {
+        var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
+        var output = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS")
+            ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
+        Directory.CreateDirectory(output);
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.AddInitScriptAsync("""
+            localStorage.setItem('wyrmforge.firstHunt.v1','3');
+            localStorage.setItem('wyrmforge.characterSchool.v1','Pyromancer');
+            """);
+        var errors = new List<string>();
+        Page.PageError += (_, error) => errors.Add(error);
+        await Page.GotoAsync(root + "/?hunt1=1", new() { WaitUntil = WaitUntilState.NetworkIdle });
+
+        var start = Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^START GAME") });
+        await start.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 45000 });
+        await start.ClickAsync();
+        if (await Page.Locator(".character-creation").IsVisibleAsync())
+            await Page.GetByRole(AriaRole.Button, new() { Name = "Choose Pyromancer" }).ClickAsync();
+
+        await Expect(Page.GetByRole(AriaRole.Region, new() { Name = "Town square" })).ToBeVisibleAsync();
+        await Page.Locator(".refuge-town-spot--gate").ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Enter Free Play" }).ClickAsync();
+        await Page.Locator(".gate-action--primary").ClickAsync();
+        await Page.Locator(".gate-lineage--fire").ClickAsync();
+        await Page.Locator(".gate-tier--ready").First.ClickAsync();
+        await Page.Locator("button.route-node.available").First.ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^Enter (rare )?trail$") }).ClickAsync();
+        await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
+
+        await Page.WaitForFunctionAsync(@"async () => {
+            const module = await import('/js/arena-performance.js');
+            const state = module.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
+            const terrain = state?.hunt1Terrain;
+            return terrain?.columns === 32 && terrain?.rows === 60
+                && terrain.paintedRevision === terrain.snapshotRevision && terrain.repaints >= 1
+                && state?.greyboxLighting === 'shared-gpu' && state?.enemies?.length > 0 && !state?.renderingFailed;
+        }", null, new() { Timeout = 60000 });
+        Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
+        await Page.ScreenshotAsync(new() { Path = Path.Combine(output, $"hunt1-terrain-{width}.png"), FullPage = false });
+    }
 }
