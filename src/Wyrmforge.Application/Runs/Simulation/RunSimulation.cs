@@ -150,8 +150,8 @@ public sealed partial class RunSimulation
         viewportWidth = width;
         viewportHeight = height;
         var roaming = arenaEnvironment is not null && (mapState.EncounterActive || trailExitPending);
-        arenaWidth = roaming ? Math.Max(width * 2.6, 950) : width;
-        arenaHeight = roaming ? Math.Max(height * 2.5, 1550) : height;
+        arenaWidth = roaming ? ArenaMetricEnvelope.CombatWidth : width;
+        arenaHeight = roaming ? ArenaMetricEnvelope.CombatHeight : height;
         width = arenaWidth;
         height = arenaHeight;
         EnsurePlayerPosition(width, height);
