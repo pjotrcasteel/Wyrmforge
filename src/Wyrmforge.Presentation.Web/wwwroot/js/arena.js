@@ -11,6 +11,7 @@ import { drawAr1GeographyReview } from './arena-ar1-geography-review.js?v=202610
 import { drawGreyboxGround } from './arena-greybox-ground.js';
 import { TerrainCanvasCache, influenceBandIndex, blockInsetOverlayEnabled, drawBlockInsetOverlay } from './arena-terrain-canvas.js';
 import { raisedActor } from './arena-projection.js';
+import { ambientParticles, drawAmbientParticles } from './arena-ambient-particles.js';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
 import { drawRecoveryGuide } from './arena-recovery.js';
@@ -540,6 +541,9 @@ function draw(state, snapshot, width, height) {
     }
     drawReliquaryEmergence(ctx, snapshot.reliquary);
     drawBellWardenEntrance(ctx, snapshot.bellWarden);
+    if (state.terrainFrame && snapshot.environment?.terrain)
+        drawAmbientParticles(ctx, ambientParticles(influenceBandIndex(snapshot.environment.corruption), visualSeconds,
+            { width: worldWidth, height: worldHeight }, state.reducedMotion.matches), { x: camera.x, y: camera.y, width, height });
     if (snapshot.powerBurst) {
         const pulse = snapshot.powerBurst;
         const radius = pulse.radius * (state.reducedMotion.matches ? 0.7 : 0.15 + 0.85 * pulse.progress);
