@@ -104,6 +104,26 @@ class WizardWalkStudyTests(unittest.TestCase):
                         f"side={side} frame={index}: planted foot moved forward",
                     )
 
+    def test_support_foot_does_not_skate_at_matching_world_speed(self):
+        # If the game's movement speed advances one full gait distance per
+        # cycle, the support foot's *world* Z must remain exactly planted.
+        frame_count = 16
+        distance_per_frame = study.travel_per_cycle_metres() / frame_count
+        self.assertAlmostEqual(1.6, study.travel_per_cycle_metres(), places=6)
+        for side, stance_start in ((-1, 0), (1, frame_count // 2)):
+            contact_z = None
+            for frame in range(stance_start, stance_start + frame_count // 2 + 1):
+                phase = 2.0 * math.pi * frame / frame_count
+                foot_z, lift = study.foot_trajectory(side, phase)
+                self.assertAlmostEqual(0.0, lift, places=6)
+                world_z = distance_per_frame * frame + foot_z
+                if contact_z is None:
+                    contact_z = world_z
+                self.assertAlmostEqual(
+                    contact_z, world_z, places=6,
+                    msg=f"skating foot {side} at frame {frame}",
+                )
+
     def test_compass_direction_uses_correct_local_forward_axis(self):
         # The master defines local +Z as forward. The right-hand staff and
         # physical feet rotate with this camera, never screen-space flipped.
