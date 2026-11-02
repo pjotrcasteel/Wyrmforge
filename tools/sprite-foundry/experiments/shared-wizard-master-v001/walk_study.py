@@ -35,18 +35,39 @@ def root_motion(phase):
     return (-0.10 * math.cos(phase), 0.095 * abs(math.sin(phase)), 0.045 * math.sin(phase))
 
 
+def foot_trajectory(side, phase):
+    """Local +Z stride: ground-locked stance, then a lifted forward swing.
+
+    A constant-speed actor moves 4*GAIT_STEP_METRES per full gait loop.
+    Each planted foot moves rearward by 2*GAIT_STEP_METRES over half a
+    cycle; the world-space contact is stationary when runtime speed and
+    animation FPS are synchronized. Swing eases back->front in the air.
+    """
+    if side not in (-1, 1):
+        raise ValueError("leg side must be -1 (right) or +1 (left)")
+    gait_phase = (phase + (math.pi if side == 1 else 0.0)) % (2.0 * math.pi)
+    if gait_phase <= math.pi:
+        return GAIT_STEP_METRES * (1.0 - 2.0 * gait_phase / math.pi), 0.0
+    t = (gait_phase - math.pi) / math.pi
+    eased = t * t * (3.0 - 2.0 * t)
+    forward_z = GAIT_STEP_METRES * (2.0 * eased - 1.0)
+    height = FOOT_LIFT_METRES * math.sin(math.pi * t)
+    return forward_z, height
+
+
+def travel_per_cycle_metres():
+    """Ideal level-ground translation for one gait cycle without foot skating."""
+    return 4.0 * GAIT_STEP_METRES
+
+
 def leg_joint_positions(side, phase):
     """Reach a grounded foot from a moving hip using two constant-length bones."""
     if side not in (-1, 1):
         raise ValueError("leg side must be -1 (right) or +1 (left)")
-    # The planted foot moves toward the rear (decreasing local Z);
-    # ONLY the foot swinging rear -> front may leave the ground.
-    # This phase relationship is essential: reversing it backpedals.
-    stride = math.cos(phase) if side == -1 else -math.cos(phase)
-    lift = max(0.0, -math.sin(phase) if side == -1 else math.sin(phase))
+    forward_z, foot_lift = foot_trajectory(side, phase)
     root_x, root_y, root_z = root_motion(phase)
     hip = (side * 0.31 + root_x, 1.22 + root_y, root_z)
-    ankle = (side * 0.31, 0.25 + FOOT_LIFT_METRES * lift, GAIT_STEP_METRES * stride)
+    ankle = (side * 0.31, 0.25 + foot_lift, forward_z)
     upper, lower = 0.56, 0.55
     dx, dy, dz = (ankle[i] - hip[i] for i in range(3))
     distance = math.sqrt(dx * dx + dy * dy + dz * dz)
@@ -84,22 +105,22 @@ def transform_walk_face(face, phase):
 
     cx = sum(point[0] for point in face.points) / len(face.points)
     right_side = cx < 0
-    stride = math.cos(phase) if right_side else -math.cos(phase)
-    lift = max(0.0, -math.sin(phase) if right_side else math.sin(phase))
+    forward_z, foot_lift = foot_trajectory(-1 if right_side else 1, phase)
+    relative_lift = foot_lift / FOOT_LIFT_METRES
 
     points = []
     for x, y, z in face.points:
         if feature in {"boots", "boot-toe", "boot-cuff"}:
-            z += GAIT_STEP_METRES * stride
-            y += FOOT_LIFT_METRES * lift
+            z += forward_z
+            y += foot_lift
         elif feature in GARMENT_FEATURES:
             # A physically shared hem drapes outward and briefly clears the
             # lifted leg. No garment faces, scars or mesh tears are added/removed.
             low = max(0.0, min(1.0, (1.20 - y) / 1.00))
             front = max(0.0, min(1.0, z / .50))
             z += GARMENT_SWAY_METRES * math.sin(phase + .5) * low
-            y += .12 * lift * low * front
-            x += (.055 if x >= 0 else -.055) * abs(stride) * low
+            y += .12 * relative_lift * low * front
+            x += (.055 if x >= 0 else -.055) * abs(forward_z / GAIT_STEP_METRES) * low
         else:
             # The staff is in the unchanged RIGHT hand; swing only left arm.
             weight = max(0.0, min(1.0, (2.48 - y) / 1.12))
