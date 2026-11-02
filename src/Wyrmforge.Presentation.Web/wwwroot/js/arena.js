@@ -9,7 +9,7 @@ import { resolveTargetIndicator, presentTargetSigil, drawTargetIndicator, preloa
 import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, createDestructibleLayers, drawArenaCloisterElevation, semanticSiteModeEnabled } from './arena-environment.js?v=20261031-ar1-highlands-v1';
 import { drawAr1GeographyReview } from './arena-ar1-geography-review.js?v=20261031-ar1-site-detail-v1';
 import { drawGreyboxGround } from './arena-greybox-ground.js';
-import { TerrainCanvasCache, influenceBandIndex, blockInsetOverlayEnabled, drawBlockInsetOverlay, occludingTerrainCells, eraseTerrainOcclusion, repaintTerrainOcclusion } from './arena-terrain-canvas.js';
+import { TerrainCanvasCache, influenceBandIndex, blockInsetOverlayEnabled, drawBlockInsetOverlay, occludingTerrainCells, eraseTerrainOcclusion, repaintTerrainOcclusion, mergeTerrainFrame } from './arena-terrain-canvas.js';
 import { raisedActor } from './arena-projection.js';
 import { ambientParticles, drawAmbientParticles } from './arena-ambient-particles.js';
 import { readArenaDebugFlags, botMovement, createBotMemory, withDebugAmbient } from './arena-debug.js';
@@ -306,7 +306,7 @@ function requestTerrainFrame(state, snapshot) {
     if (!terrain || state.terrainRequestBusy || state.terrainFrame?.revision === terrain.revision) return;
     state.terrainRequestBusy = true;
     state.dotNetReference.invokeMethodAsync('TerrainFrame', state.terrainFrame?.revision ?? -1)
-        .then(frame => { if (frame) state.terrainFrame = frame; })
+        .then(frame => { if (frame) state.terrainFrame = mergeTerrainFrame(state.terrainFrame, frame); })
         .catch(error => console.error('Wyrmforge terrain frame failed.', error))
         .finally(() => state.terrainRequestBusy = false);
 }

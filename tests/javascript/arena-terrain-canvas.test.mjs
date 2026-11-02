@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-    BLOCK_INSET_COLOR, BLOCK_TONE_STEP, DIRT_LOWER_FLOOR, DIRT_UPPER_FLOOR, GRASS_TOP, frontSegments, topFaceColor, blockTone, scaleHex, TERRAIN_MATERIAL, eraseTerrainOcclusion, occludingTerrainCells, repaintTerrainOcclusion, TERRAIN_PAD_UNITS, TerrainCanvasCache, blockInsetOverlayEnabled, drawBlockInsetOverlay, heightShade, influenceBandIndex, paintTerrain, terrainColors,
+    BLOCK_INSET_COLOR, BLOCK_TONE_STEP, MICRO_PER_COLUMN, mergeTerrainFrame, microHeight, microMaterial, DIRT_LOWER_FLOOR, DIRT_UPPER_FLOOR, GRASS_TOP, frontSegments, topFaceColor, blockTone, scaleHex, TERRAIN_MATERIAL, eraseTerrainOcclusion, occludingTerrainCells, repaintTerrainOcclusion, TERRAIN_PAD_UNITS, TerrainCanvasCache, blockInsetOverlayEnabled, drawBlockInsetOverlay, heightShade, influenceBandIndex, paintTerrain, terrainColors,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-terrain-canvas.js';
 import { raisedActor } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-projection.js';
 
@@ -234,4 +234,63 @@ test('front segments tile the exposed span with no gap, whatever the heights', (
     assert.deepEqual(frontSegments(0, TERRAIN_MATERIAL.Soil, -8, 0), [], 'a higher neighbour in front exposes nothing');
     assert.equal(frontSegments(3, TERRAIN_MATERIAL.Lava, 0, -16).length, 1, 'lava is one band');
     assert.equal(frontSegments(0, TERRAIN_MATERIAL.Stone, 24, 0).length, 1, 'a raised rock step keeps its own material');
+});
+
+const block = (heights, topsoil = 0, stoneTop = -8) => ({ heights, topsoil, stoneTop });
+
+test('merging a delta frame adds, replaces and drops subdivided columns without mutating the old frame', () => {
+    const first = mergeTerrainFrame(null, { revision: 5, columns: 2, rows: 2, surface: [0, 0, 0, 0], material: [0, 0, 0, 0],
+        fine: [{ index: 1, heights: new Array(64).fill(-2), topsoil: 0, stoneTop: -8 }] });
+    assert.equal(first.revision, 5);
+    assert.equal(first.fine.size, 1);
+    const second = mergeTerrainFrame(first, { revision: 9, columns: 2, rows: 2, surface: [0, -1, 0, 0], material: [0, 0, 0, 0],
+        fine: [{ index: 2, heights: new Array(64).fill(-1), topsoil: 0, stoneTop: -8 }, { index: 1, heights: [], topsoil: 0, stoneTop: -8 }] });
+    assert.deepEqual([...second.fine.keys()], [2], 'an empty block drops the overlay');
+    assert.deepEqual([...first.fine.keys()], [1], 'the previous frame is untouched');
+    assert.equal(second.revision, 9);
+    assert.equal(mergeTerrainFrame(first, null), first, 'no news keeps the old frame');
+    assert.equal(mergeTerrainFrame(undefined, null), null);
+});
+
+test('microcolumn height reads the overlay and falls back to the whole column', () => {
+    const heights = new Array(64).fill(0); heights[3 * 8 + 5] = -6;
+    const frame = { columns: 2, rows: 1, surface: [-2, 4], material: [0, 2], fine: new Map([[0, block(heights)]]) };
+    assert.equal(microHeight(frame, 0, 0, 5, 3), -6);
+    assert.equal(microHeight(frame, 0, 0, 0, 0), 0);
+    assert.equal(microHeight(frame, 1, 0, 7, 7), 4, 'a whole column answers with its single height');
+});
+
+test('a microcolumn is stone at or below the stone line, otherwise its topsoil; rock and lava never change', () => {
+    assert.equal(microMaterial(block([], 0, -8), 0), TERRAIN_MATERIAL.Soil);
+    assert.equal(microMaterial(block([], 0, -8), -8), TERRAIN_MATERIAL.Stone);
+    assert.equal(microMaterial(block([], 1, -8), -3), TERRAIN_MATERIAL.Ash);
+    assert.equal(microMaterial(block([], 2, 16), 16), TERRAIN_MATERIAL.Stone);
+    assert.equal(microMaterial(block([], 3, -8), -20), TERRAIN_MATERIAL.Lava);
+});
+
+test('a subdivided column paints 64 four-pixel microcolumn tops, round craters exposing dirt inside one block', () => {
+    const heights = new Array(64).fill(0);
+    for (let y = 2; y <= 5; y++) for (let x = 2; x <= 5; x++) heights[y * 8 + x] = -3;
+    const ctx = recorder();
+    const terrain = { revision: 1, columns: 1, rows: 1, surface: [0], material: [0], fine: new Map([[0, block(heights)]]) };
+    paintTerrain(ctx, terrain, 0, 0);
+    const rects = ctx.calls.filter(call => call[0] === 'fillRect');
+    const tops = rects.filter(call => call[3] === 4 && call[4] === 4);
+    assert.equal(tops.length, 64, 'one 4x4 top per microcolumn');
+    const pit = tops.find(call => call[1] === 2 * 4 && call[2] === 2 * 4 + 12);
+    assert.ok(pit, 'a dug microcolumn sits 3 microcells (12 px) lower');
+    const grass = tops.find(call => call[1] === 0 && call[2] === 0);
+    assert.notEqual(grass[5], pit[5], 'grass on the rim, dirt in the bowl');
+    const fronts = rects.filter(call => call[3] === 4 && call[4] !== 4);
+    assert.ok(fronts.length >= 4, 'the bowl exposes strata on its inner wall');
+});
+
+test('whole columns behind a subdivided one draw their front per microcolumn', () => {
+    const heights = new Array(64).fill(0);
+    for (let x = 0; x < 8; x++) heights[x] = -4;
+    const ctx = recorder();
+    const terrain = { revision: 1, columns: 1, rows: 2, surface: [0, -1], material: [0, 0], fine: new Map([[1, block(heights)]]) };
+    paintTerrain(ctx, terrain, 0, 0);
+    const frontsOfFirst = ctx.calls.filter(call => call[0] === 'fillRect' && call[2] === 32 && call[3] === 4 && call[4] === 16 && call[1] < 32);
+    assert.equal(frontsOfFirst.length, 8, 'eight 4 px wide front slices, one per microcolumn, each 16 px tall');
 });

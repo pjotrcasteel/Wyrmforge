@@ -105,6 +105,63 @@ export function blockTone(column, row) {
 
 export const BLOCK_TONE_STEP = 0.09;
 
+export const MICRO_PER_COLUMN = 8;
+export const MICRO_UNITS = FACE_PIXELS / MICRO_PER_COLUMN;
+
+/**
+ * Folds a C# terrain frame (coarse heights plus the subdivided columns that changed) into the client's previous frame.
+ * An empty `heights` array means the column is whole again. The result is a new object; the previous one is untouched.
+ */
+export function mergeTerrainFrame(previous, incoming) {
+    if (!incoming) return previous ?? null;
+    const fine = new Map(previous?.fine ?? []);
+    for (const block of incoming.fine ?? []) {
+        if (!block.heights?.length) fine.delete(block.index);
+        else fine.set(block.index, { heights: block.heights, topsoil: block.topsoil, stoneTop: block.stoneTop });
+    }
+    return { revision: incoming.revision, columns: incoming.columns, rows: incoming.rows,
+        surface: incoming.surface, material: incoming.material, fine };
+}
+
+/** Height of one 12.5 cm microcolumn; whole columns answer with their single coarse height. */
+export function microHeight(frame, column, row, microX, microY) {
+    const block = frame.fine?.get(row * frame.columns + column);
+    return block ? block.heights[microY * MICRO_PER_COLUMN + microX] : frame.surface[row * frame.columns + column];
+}
+
+/** What a microcolumn is made of: stone at or below the stone line, otherwise the column's original topsoil. */
+export function microMaterial(block, height) {
+    if (block.topsoil === TERRAIN_MATERIAL.Stone || block.topsoil === TERRAIN_MATERIAL.Lava) return block.topsoil;
+    return height <= block.stoneTop ? TERRAIN_MATERIAL.Stone : block.topsoil;
+}
+
+/** Paints a subdivided column as 8 x 8 microcolumns, back to front: a 4 px top square each and 4 px wide strata fronts. */
+function paintFineCell(ctx, frame, band, column, row, block) {
+    const { columns, rows } = frame;
+    const tone = 1 + blockTone(column, row) * BLOCK_TONE_STEP;
+    let painted = 0;
+    for (let microY = 0; microY < MICRO_PER_COLUMN; microY++) {
+        for (let microX = 0; microX < MICRO_PER_COLUMN; microX++) {
+            const height = block.heights[microY * MICRO_PER_COLUMN + microX];
+            const material = microMaterial(block, height);
+            const x = column * FACE_PIXELS + microX * MICRO_UNITS;
+            const y = row * FACE_PIXELS + microY * MICRO_UNITS;
+            ctx.fillStyle = scaleHex(heightShade(topFaceColor(band, material, height), height), tone);
+            ctx.fillRect(x, y - height * MICROCELL_UNITS, MICRO_UNITS, MICRO_UNITS);
+            painted++;
+            const southY = microY + 1 < MICRO_PER_COLUMN ? microY + 1 : 0;
+            const southRow = microY + 1 < MICRO_PER_COLUMN ? row : row + 1;
+            const south = southRow < rows ? microHeight(frame, column, southRow, microX, southY) : height;
+            for (const segment of frontSegments(band, block.topsoil, height, south)) {
+                ctx.fillStyle = segment.color;
+                ctx.fillRect(x, y + MICRO_UNITS - segment.from * MICROCELL_UNITS, MICRO_UNITS, (segment.from - segment.to) * MICROCELL_UNITS);
+                painted++;
+            }
+        }
+    }
+    return painted;
+}
+
 /**
  * Paints the whole grid back to front. Output coordinates are world units offset by (0, offsetY) so raised columns that
  * draw above row 0 stay on the surface. Returns the number of rectangles painted.
@@ -124,6 +181,8 @@ export function paintTerrain(ctx, frame, band, offsetY = TERRAIN_PAD_UNITS) {
 export function paintTerrainCell(ctx, frame, band, column, row) {
     const { columns, rows, surface, material } = frame;
     const index = row * columns + column;
+    const fineBlock = frame.fine?.get(index);
+    if (fineBlock) return paintFineCell(ctx, frame, band, column, row, fineBlock);
     const height = surface[index];
     const top = blockTopRect(column, row, height);
     const tone = 1 + blockTone(column, row) * BLOCK_TONE_STEP;
@@ -131,6 +190,18 @@ export function paintTerrainCell(ctx, frame, band, column, row) {
     ctx.fillRect(top.x, top.y, top.width, top.height);
     let painted = 1;
     const frontHeight = row + 1 < rows ? surface[index + columns] : height;
+    // A whole column standing behind a subdivided one meets its microcolumns, not their average.
+    if (row + 1 < rows && frame.fine?.has(index + columns)) {
+        for (let microX = 0; microX < MICRO_PER_COLUMN; microX++) {
+            for (const segment of frontSegments(band, material[index], height, microHeight(frame, column, row + 1, microX, 0))) {
+                ctx.fillStyle = segment.color;
+                ctx.fillRect(column * FACE_PIXELS + microX * MICRO_UNITS, (row + 1) * FACE_PIXELS - segment.from * MICROCELL_UNITS,
+                    MICRO_UNITS, (segment.from - segment.to) * MICROCELL_UNITS);
+                painted++;
+            }
+        }
+        return painted;
+    }
     for (const segment of frontSegments(band, material[index], height, frontHeight)) {
         ctx.fillStyle = segment.color;
         ctx.fillRect(column * FACE_PIXELS, (row + 1) * FACE_PIXELS - segment.from * MICROCELL_UNITS, FACE_PIXELS,
