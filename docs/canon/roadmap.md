@@ -53,6 +53,21 @@ This status/sequence index resolves older, superseded "NEXT" and "active" labels
 | **H8** | Hunter's Chart 1.0 (Nexus-consistent illustrated map) | GH-E Chart approval |
 | **H9** | Default for Fire Tier-I, performance hardening, real-device acceptance, final canon | GH-F Hunt 1.0 acceptance |
 
+**Hunt 1.0 implementation status (2 November 2026, draft PR #472; CI green on the branch).** "Implemented" means on the PR branch with automated tests. **Nothing here is merged, owner-approved or enabled by default**; terrain stays behind the `hunt1=1` flag and `EnableHunt1Terrain()`.
+
+| Milestone | Implemented on the branch | Not done |
+|---|---|---|
+| H0 | Canon; C# full-loop test (route to Ashfang, Essence, extraction) | Browser full loop (headless Chromium simulates ~13–22 Hz, far too slow; needs an owner-approved accelerated-time hook); baseline captures; loop required in CI |
+| H1 | Salvage props in greybox; fixed 1024×1920 combat world | Lair still sizes to the viewport |
+| H2 | Snapshot `Z`; shared oblique projection module; `blockInset=1` debug overlay with 320/390 px captures | GPU adapter metric mapping: it is a 45° orthographic camera with a √2 depth stretch, so screen positions are right but light heights and ground distances are not metric. A true mapping needs an oblique shear camera: **GH-A decision** |
+| H3 | `WyrmInfluenceField`, Fire profile, published as arena `Corruption` | Consolidating the older influence concepts |
+| H4 | Terrain grid, generator, walking/sight rules, reachable spawns, flow-field navigation | Lair terrain |
+| H5 | C# terrain streamed by revision to a cached flat-colour painter (dark gothic ramps); actors lifted by `Z`; raised rock hides actors behind it (GPU and Canvas); browser guard against the painted ground atlas | Terrain casting GPU shadows; authored 32 px vegetation (art gate); GH-B |
+| H6 | Progressive excavation, exactly-once impact IDs, never-trapped guard, per-visit record | Excavation is not yet visible in a live capture; GH-C |
+| H7 | Lava glow emitters (max 4, stable IDs); deterministic ash and embers by band | Burning-tree lights (need vegetation); influence-driven enemy mix (needs an owner balance decision; packs already follow habitat); GH-D |
+| H8 | Chart nodes, sheet and route wash carry the authoritative influence band; Nexus-token restyle block | Illustrated Nexus art pass; GH-E |
+| H9 | — | Default for Fire Tier-I, real-phone frame pacing, memory and thermals, GH-F |
+
 **Superseded by this direction.** The BF Wet Forest lane (#459/#429) is parked; XYZ0–XYZ2 are delivered inside H2/H4/H6 and XYZ3/XYZ4 move to Phase III; default non-Town GPU is no longer withheld from Hunt 1.0 arenas until G10; G7–G10 move to Phase III; ENG0–ENG4 start after GH-F instead of after Hollowed approval; neutral-grey-only greybox remains only as the fallback and for other tiers. Drafts #459, #429, #467 and the Hollowed/wizard drafts are preserved unchanged.
 
 ---
