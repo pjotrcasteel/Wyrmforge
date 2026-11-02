@@ -30,6 +30,17 @@ ROBE_SEAMS=(("front-right",58,.64,2.38),
             ("front-left",125,.64,2.38),
             ("rear-side",259,.78,2.38))
 
+# Ring boundaries are the same physical outer-gown panels as the editable UV.
+# No scar can be drawn over a panel that was actually removed from the gown.
+ROBE_DAMAGE_RINGS=(.20, .55, .90, 1.08, 1.32)
+
+def robe_panel_is_missing(theta, world_y):
+    sector=int((theta % (2*math.pi))/(2*math.pi)*24) % 24
+    for ring,(lower,upper) in enumerate(zip(ROBE_DAMAGE_RINGS, ROBE_DAMAGE_RINGS[1:])):
+        if lower <= world_y < upper:
+            return (ring,sector) in ROBE_OPEN_SECTORS
+    return False
+
 @dataclass(frozen=True)
 class Face:
     points: tuple
@@ -245,6 +256,15 @@ def render(direction, skin=None, robe_uv=None):
                     wx=a*p0[0]+b*p1[0]+c*p2[0]
                     wy=a*p0[1]+b*p1[1]+c*p2[1]
                     wz=a*p0[2]+b*p1[2]+c*p2[2]
+                    # If a pre-existing scar triangle crosses a genuinely missing
+                    # outer-gown panel, expose the under-gown instead of painting a
+                    # disconnected floating rip fragment across open air.
+                    masked_scar = (
+                        face.feature in {"permanent-cloth-rip","frayed-rip-edge"}
+                        and robe_panel_is_missing(math.atan2(wz,wx), wy)
+                    )
+                    if masked_scar and pixels.getpixel((px,py))[3]:
+                        continue
                     cloth=face.feature in {"outer-robe","torso-mantle","cape-panel","cape-torn-edge","floppy-hat"}
                     detail=1.0
                     if cloth:
@@ -272,7 +292,9 @@ def render(direction, skin=None, robe_uv=None):
                     elif face.feature=="beard-lock":
                         # Facial hair striations also belong to the source geometry.
                         detail=.95+.08*math.sin(wx*58+wy*7)
-                    base=face.color
+                    # Preserve an isolated silhouette pixel at a scar tip; otherwise
+                    # it would punch an accidental extra 1px hole in this pose.
+                    base=(52,51,55) if masked_scar else face.color
                     if robe_uv is not None and face.feature=="outer-robe":
                         # Cylindrical UVs are measured on the single source garment.
                         # Front/side/back share one atlas; alpha is a paint mask only.

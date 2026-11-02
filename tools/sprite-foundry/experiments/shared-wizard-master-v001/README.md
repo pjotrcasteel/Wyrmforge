@@ -129,12 +129,50 @@ without changing the mesh, direction frames or the camera.
 
 To review the new study from the repository root:
 
-    py tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --reference-sprite tools/sprite-foundry/candidates/grey-wizard-idle-v001/source/idle/S/00.albedo.png --robe-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/robe-uv-v001.png --preview tools/sprite-foundry/output/robe-uv-S-SE-E.png
+    py tools/sprite-foundry/experiments/shared-wizard-master-v001/master.py --robe-uv tools/sprite-foundry/experiments/shared-wizard-master-v001/robe-uv-v001.png --preview tools/sprite-foundry/output/robe-uv-S-SE-E.png
 
 For the eight-way comparison, replace `--preview` with `--comparison`
 and give an output PNG path. Both preview files also live in this experiment
 folder with `NOT-APPROVED` names. The texture is deliberately optional:
 the previous pose and color baseline remain reproducible.
+
+### Decal-free primary review and physical atlas guide
+
+**Primary review no longer applies the rejected south-only sprite decal.**
+S, SE, E, and the eight-direction atlas are now rendered directly from the
+same source geometry and the same editable robe UV material. This avoids a
+front-only color patch making the Wizard change appearance as he turns.
+The rejected decal remains usable through `--reference-sprite` only for
+isolated historical comparisons.
+
+`robe-uv-guide-v001.png` is a separate, transparent **96×128 artist overlay**
+generated from the same exact 11 physically open mesh cells, three seam
+azimuths, and three scar marks as `robe_uv.py`. Red indicates missing
+outer-gown panels (the under-gown is visible); cyan indicates sewn seams;
+amber indicates surface scar anchors; faint horizontal guides mark garment
+height rings. The guide is NOT a paint layer or extra garment texture.
+[View a 5× atlas / physical-landmark overlay comparison](robe-uv-atlas-guide-NOT-APPROVED.png).
+The white top tick is the front (+Z, 90°), lavender the rear (270°).
+The left/right edges meet around the cylinder.
+
+To reproduce both the editable material and its aligned guide:
+
+    py tools/sprite-foundry/experiments/shared-wizard-master-v001/robe_uv.py --output tools/sprite-foundry/output/robe-uv.png --guide-output tools/sprite-foundry/output/robe-uv-guide.png
+
+UV micrograin now uses only integer angular frequencies, so its
+left/right circumference wrap is stable and deterministic. The
+physical mesh, accepted pose, right-hand staff and transparency are unchanged.
+
+Two established surface-scar triangles crossed cells already missing from
+the outer gown (near 35°/1.20 and 138°/0.80). The **material renderer now
+masks scar pigment inside those physical voids**, so detached dark slash
+fragments no longer float over the under-gown. If a lone scar tip supplies
+a silhouette pixel, it remains dark instead of creating an accidental 1px
+transparency hole. The actual mesh and camera remain unchanged; all
+eight alpha silhouettes match the previous pass byte for byte.
+The guide draws red absent panels over overlapping scar guide marks.
+
+
 
 This second paint iteration strengthens fold depth, seam stitching and rip-edge wear in **one common atlas**. The UV receives a higher blend weight, while the rejected south-only decal has a lower weight. The frozen pose, alpha and staff anatomy are untouched. It is still a **rough material study**, not an accurate tracing of the owner's accepted Gothic robe. Named physical holes and the right-hand staff remain defined by the frozen geometry.
 

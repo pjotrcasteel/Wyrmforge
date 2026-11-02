@@ -146,7 +146,7 @@ class SharedMasterTests(unittest.TestCase):
             tuple(sorted(wizard.ROBE_OPEN_SECTORS)),
             tuple(sorted(source["OPEN_PANEL_CELLS"])),
         )
-        self.assertEqual((.20, .55, .90, 1.08, 1.32), source["GARMENT_RINGS"])
+        self.assertEqual(wizard.ROBE_DAMAGE_RINGS, source["GARMENT_RINGS"])
         self.assertEqual(
             tuple(mark[1] for mark in wizard.ROBE_SEAMS),
             source["SEAM_AZIMUTHS"],
@@ -162,6 +162,49 @@ class SharedMasterTests(unittest.TestCase):
         self.assertEqual((96, 128), first.size)
         self.assertEqual(first.tobytes(), second.tobytes())
         self.assertEqual(first.tobytes(), actual.tobytes())
+
+    def test_surface_scars_do_not_paint_across_missing_outer_cloth(self):
+        import math
+        self.assertTrue(wizard.robe_panel_is_missing(math.radians(35), 1.20))
+        self.assertTrue(wizard.robe_panel_is_missing(math.radians(138), .80))
+        self.assertFalse(wizard.robe_panel_is_missing(math.radians(260), 1.20))
+        self.assertFalse(wizard.robe_panel_is_missing(math.radians(35), 1.70))
+        for direction in wizard.DIRECTIONS:
+            base = wizard.render(direction)
+            atlas = Image.open(MODULE_FILE.parent / "robe-uv-v001.png").convert("RGBA")
+            painted = wizard.render(direction, robe_uv=atlas)
+            self.assertEqual(base.getchannel("A").tobytes(), painted.getchannel("A").tobytes())
+
+    def test_physical_robe_guide_matches_frozen_damage_geometry(self):
+        source = runpy.run_path(str(MODULE_FILE.parent / "robe_uv.py"))
+        generated = source["make_robe_guide"]()
+        committed = Image.open(MODULE_FILE.parent / "robe-uv-guide-v001.png").convert("RGBA")
+        self.assertEqual((96, 128), generated.size)
+        self.assertEqual(generated.tobytes(), committed.tobytes())
+        self.assertEqual(generated.tobytes(), source["make_robe_guide"]().tobytes())
+        for ring, sector in wizard.ROBE_OPEN_SECTORS:
+            lower, upper = source["GARMENT_RINGS"][ring:ring + 2]
+            y = round((2.38 - (lower + upper) / 2) * 128 / 2.18 - .5)
+            x = (sector * 4) + 2
+            red, green, blue, alpha = committed.getpixel((x, y))
+            self.assertGreater(red, green + 70, (ring, sector))
+            self.assertGreater(red, blue + 70, (ring, sector))
+            self.assertGreater(alpha, 100, (ring, sector))
+
+    def test_primary_robe_uv_ci_review_is_decal_free(self):
+        workflow = MODULE_FILE.parents[4] / ".github" / "workflows" / "sprite-foundry.yml"
+        commands = [
+            line for line in workflow.read_text(encoding="utf-8").splitlines()
+            if "master.py" in line and "--robe-uv" in line
+        ]
+        self.assertEqual(2, len(commands))
+        for command in commands:
+            self.assertNotIn("--reference-sprite", command)
+        texture = Image.open(MODULE_FILE.parent / "robe-uv-v001.png").convert("RGBA")
+        self.assertEqual(
+            wizard.contact_sheet(None, texture)[0].tobytes(),
+            Image.open(MODULE_FILE.parent / "robe-uv-S-SE-E-8x-NOT-APPROVED.png").convert("RGBA").tobytes(),
+        )
 
     def test_repeat_render_is_pixel_deterministic(self):
         self.assertEqual(wizard.render("SE").tobytes(), wizard.render("SE").tobytes())

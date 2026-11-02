@@ -9,7 +9,7 @@ import argparse
 import math
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, ImageDraw
 
 WIDTH, HEIGHT = 96, 128
 SEAM_AZIMUTHS = (58, 125, 259)
@@ -77,20 +77,70 @@ def make_robe_uv() -> Image.Image:
                         tone += 23 if int(height * 28) % 3 != 0 else 8
 
             # Sparse stable grain; avoid per-frame randomness or high-frequency static.
-            grain = 2.0 * math.sin(px * 2.4 + py * 1.3)
-            grain *= math.cos(px * 1.4 - py * 1.8)
+            grain = 2.0 * math.sin(7 * theta + height * 5.2)
+            grain *= math.cos(13 * theta - height * 3.8)
             value = max(43, min(174, int(tone + grain)))
             value = int(round(value / 3)) * 3
             image.putpixel((px, py), (value + 3, value + 1, value - 2, 255))
     return image
 
 
+
+def make_robe_guide() -> Image.Image:
+    """Transparent 1:1 atlas overlay from the frozen physical damage ledger.
+
+    Red cells are actual absent outer-gown faces, cyan marks are sewn seams,
+    amber marks are surface scars. The overlay is a painting GUIDE, never albedo.
+    """
+    guide = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(guide)
+    x_from_degrees = lambda degrees: int((degrees % 360) * WIDTH / 360) % WIDTH
+    y_from_height = lambda height: max(0, min(HEIGHT - 1, round(
+        (2.38 - height) * HEIGHT / 2.18 - .5)))
+
+    # Subtle guides for the same garment-height rings as the physical mesh.
+    for height in GARMENT_RINGS + (1.52, 1.72, 2.38):
+        y = y_from_height(height)
+        draw.line((0, y, WIDTH - 1, y), fill=(180, 191, 204, 60))
+
+    # Seam dashes indicate world-local stitch paths, not camera-space pixels.
+    for degrees in SEAM_AZIMUTHS:
+        x = x_from_degrees(degrees)
+        for y in range(0, y_from_height(.64) + 1, 5):
+            draw.line((x, y, x, min(y + 2, y_from_height(.64))),
+                      fill=(61, 220, 221, 205), width=1)
+
+    # Scar anchors follow the same azimuth, start height and vertical length.
+    for degrees, top, length in SCAR_MARKS:
+        x = x_from_degrees(degrees)
+        draw.line((x, y_from_height(top), x, y_from_height(top - length)),
+                  fill=(245, 181, 84, 235), width=2)
+
+    # Missing physical cloth takes priority over drawn surface marks.
+    # 24-sector mesh; each physical missing face maps to exactly four U pixels.
+    for ring, sector in OPEN_PANEL_CELLS:
+        low, high = GARMENT_RINGS[ring:ring + 2]
+        x0 = sector * WIDTH // 24
+        x1 = (sector + 1) * WIDTH // 24 - 1
+        draw.rectangle((x0, y_from_height(high), x1, y_from_height(low)),
+                       fill=(230, 62, 69, 175), outline=(255, 111, 118, 225))
+
+    # Orientation markers along the atlas top: front +Z at 90°, rear at 270°.
+    draw.point((x_from_degrees(90), 0), fill=(250, 250, 250, 255))
+    draw.point((x_from_degrees(270), 0), fill=(175, 174, 255, 255))
+    return guide
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--guide-output", type=Path, help="Save a transparent 1:1 physical landmark overlay")
     args = parser.parse_args()
     args.output.parent.mkdir(parents=True, exist_ok=True)
     make_robe_uv().save(args.output)
+    if args.guide_output:
+        args.guide_output.parent.mkdir(parents=True, exist_ok=True)
+        make_robe_guide().save(args.guide_output)
 
 
 if __name__ == "__main__":
