@@ -105,6 +105,32 @@ export function blockTone(column, row) {
 
 export const BLOCK_TONE_STEP = 0.09;
 
+// Share of undisturbed ground blocks that carry a glowing ember vein, per influence band: the land cracks open toward the Wyrm.
+export const VEIN_CHANCE = Object.freeze([0, 0, 0.09, 0.2]);
+const VEIN_COLORS = Object.freeze([null, null, ['#e8641a', '#ffb347'], ['#ff7a14', '#ffd27a']]);
+
+/** Deterministic staircase of ember pixels inside one 32 x 32 top face (cell-local coordinates), or none. */
+export function veinSegments(column, row, band) {
+    const index = bandIndex(band);
+    const chance = VEIN_CHANCE[index];
+    if (!chance) return [];
+    let h = (Math.imul(column + 11, 0x9E3779B1) ^ Math.imul(row + 3, 0xC2B2AE35)) >>> 0;
+    h = Math.imul(h ^ (h >>> 16), 0x85EBCA6B) >>> 0;
+    h = Math.imul(h ^ (h >>> 13), 0xC2B2AE35) >>> 0;
+    if ((h & 0xffff) / 65536 >= chance) return [];
+    const [core, spark] = VEIN_COLORS[index];
+    const dx = (h >>> 16) & 1 ? 3 : -3;
+    let x = 6 + ((h >>> 17) % 20), y = 5 + ((h >>> 22) % 20);
+    const segments = [];
+    for (let step = 0; step < 4 + ((h >>> 12) % 4); step++) {
+        if (x < 0 || x > FACE_PIXELS - 3 || y < 0 || y > FACE_PIXELS - 2) break;
+        segments.push({ x, y, w: 3, h: 2, color: core });
+        if (step % 2) segments.push({ x: x + 1, y, w: 1, h: 1, color: spark });
+        x += dx; y += step % 2 ? 2 : 1;
+    }
+    return segments;
+}
+
 export const MICRO_PER_COLUMN = 8;
 export const MICRO_UNITS = FACE_PIXELS / MICRO_PER_COLUMN;
 
@@ -120,7 +146,9 @@ export function mergeTerrainFrame(previous, incoming) {
         else fine.set(block.index, { heights: block.heights, topsoil: block.topsoil, stoneTop: block.stoneTop });
     }
     return { revision: incoming.revision, columns: incoming.columns, rows: incoming.rows,
-        surface: incoming.surface, material: incoming.material, fine };
+        surface: incoming.surface, material: incoming.material, fine,
+        // Which fine blocks this delta touched: cosmetic destruction cues are derived from exactly these.
+        changed: (incoming.fine ?? []).map(block => block.index) };
 }
 
 /** Height of one 12.5 cm microcolumn; whole columns answer with their single coarse height. */

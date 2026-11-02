@@ -298,9 +298,12 @@ public sealed class GreyboxHuntBrowserTests : PageTest
 
     /// <summary>Hunt 1.0 H6: Fireballs visibly dig layered craters in the live Hunt (grass cap, dirt, stone).</summary>
     [TestMethod]
-    [DataRow(320, 568)]
-    [DataRow(390, 844)]
-    public async Task Hunt1Terrain_FireballsDigCratersThatReachTheClient(int width, int height)
+    [DataRow(320, 568, -1, true)]
+    [DataRow(390, 844, -1, true)]
+    [DataRow(390, 844, 2, true)]
+    [DataRow(390, 844, 3, true)]
+    [DataRow(390, 844, 3, false)]
+    public async Task Hunt1Terrain_FireballsDigCratersThatReachTheClient(int width, int height, int band, bool bright)
     {
         var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
         var output = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
@@ -312,7 +315,7 @@ public sealed class GreyboxHuntBrowserTests : PageTest
             """);
         var errors = new List<string>();
         Page.PageError += (_, error) => errors.Add(error);
-        await Page.GotoAsync(root + "/?hunt1=1&speed=6&god=1&bot=1&bright=1", new() { WaitUntil = WaitUntilState.NetworkIdle });
+        await Page.GotoAsync(root + "/?hunt1=1&speed=6&god=1&bot=1" + (bright ? "&bright=1" : "") + (band >= 0 ? $"&band={band}" : ""), new() { WaitUntil = WaitUntilState.NetworkIdle });
         var start = Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^START GAME") });
         await start.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 45000 });
         await start.ClickAsync();
@@ -334,10 +337,12 @@ public sealed class GreyboxHuntBrowserTests : PageTest
             window.__terrainRevisionAtStart ??= terrain.snapshotRevision;
             return (state.hud?.kills ?? 0) >= 2 && (state.hud?.seconds ?? 0) >= 5
                 && terrain.snapshotRevision >= window.__terrainRevisionAtStart + 6
-                && terrain.paintedRevision === terrain.snapshotRevision;", 120000,
-            "Fireballs to have dug at least six terrain revisions that the client painted");
+                && terrain.paintedRevision === terrain.snapshotRevision
+                && (state.destructionFx?.craters ?? 0) >= 3 && state.destructionFx.heat > 0;", 120000,
+            "Fireballs to have dug at least six terrain revisions that the client painted, with live crater heat");
         Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
-        await Page.ScreenshotAsync(new() { Path = Path.Combine(output, $"hunt1-craters-{width}.png"), FullPage = false });
+        await File.WriteAllTextAsync(Path.Combine(output, $"craters-diag-{band}-{bright}-{width}.json"), await Page.EvaluateAsync<string>("async () => { const m = await import('/js/arena-performance.js'); const s = m.readArenaDiagnostics(document.querySelector('canvas.game-canvas')); return JSON.stringify({ veins: s.veinSeams, fx: s.destructionFx, debug: s.debug, corruption: s.hunt1Terrain }); }"));
+        await Page.ScreenshotAsync(new() { Path = Path.Combine(output, band >= 0 ? $"hunt1-craters-band{band}{(bright ? "" : "-night")}-{width}.png" : $"hunt1-craters-{width}.png"), FullPage = false });
     }
 
     /// <summary>Hunt 1.0 H8: the Chart paints the authoritative Wyrm Influence, rising from a Wet entrance to a Volcanic lair.</summary>

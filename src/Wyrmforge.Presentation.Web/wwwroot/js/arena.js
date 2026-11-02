@@ -14,6 +14,7 @@ import { raisedActor } from './arena-projection.js';
 import { ambientParticles, drawAmbientParticles } from './arena-ambient-particles.js';
 import { readArenaDebugFlags, botMovement, createBotMemory, withDebugAmbient } from './arena-debug.js';
 import { createFrameSampler, readHeapMegabytes, perfReport, perfLines } from './arena-perf.js';
+import { createDestructionFx, observeTerrain, drawDestructionFx, drawFireZoneVignette, drawVeinGlow } from './arena-destruction-fx.js';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
 import { drawRecoveryGuide } from './arena-recovery.js';
@@ -159,6 +160,9 @@ export function readArenaDiagnostics(canvas) {
         framePresentation: state.g4StageFrames ? 'staged' : 'direct',
         debug: state.debug,
         perfReport: arenaPerfReport(state),
+        veinSeams: state.veinSeams ?? null,
+        destructionFx: state.destructionFx
+            ? { craters: state.destructionFx.craters, heat: state.destructionFx.heat.length, chips: state.destructionFx.chips.length } : null,
         gpuScene: state.debug.shear ? state.gpuWorld?.sceneReport?.() ?? null : null,
         hunt1Terrain: state.latestSnapshot?.environment?.terrain
             ? { columns: state.latestSnapshot.environment.terrain.columns, rows: state.latestSnapshot.environment.terrain.rows,
@@ -311,10 +315,22 @@ function requestTerrainFrame(state, snapshot) {
     if (!terrain || state.terrainRequestBusy || state.terrainFrame?.revision === terrain.revision) return;
     state.terrainRequestBusy = true;
     state.dotNetReference.invokeMethodAsync('TerrainFrame', state.terrainFrame?.revision ?? -1)
-        .then(frame => { if (frame) state.terrainFrame = mergeTerrainFrame(state.terrainFrame, frame); })
+        .then(frame => {
+            if (!frame) return;
+            const previous = state.terrainFrame;
+            state.terrainFrame = mergeTerrainFrame(previous, frame);
+            // Revision -1 is the initial full load, not destruction.
+            if (previous) observeTerrain(state.destructionFx ??= createDestructionFx(), previous, state.terrainFrame,
+                performance.now() / 1000, state.reducedMotion.matches);
+        })
         .catch(error => console.error('Wyrmforge terrain frame failed.', error))
         .finally(() => state.terrainRequestBusy = false);
 }
+// Wyrm Influence band 0..3 for presentation; `?band=N` previews another band without touching C# state.
+function huntBand(state, snapshot) {
+    return state.debug.band ?? influenceBandIndex(snapshot.environment?.corruption);
+}
+
 function recordRenderFrame(state, timestamp) {
     if (state.lastRenderTimestamp) state.frameSampler.record(timestamp - state.lastRenderTimestamp);
     state.lastRenderTimestamp = timestamp;
@@ -409,7 +425,7 @@ function draw(state, snapshot, width, height) {
         if (state.terrainFrame && snapshot.environment.terrain) {
             // Hunt 1.0: the C# heightfield as flat colour ramps in the metric oblique projection.
             (state.terrainCache ??= new TerrainCanvasCache())
-                .update(state.terrainFrame, influenceBandIndex(snapshot.environment.corruption));
+                .update(state.terrainFrame, huntBand(state, snapshot));
             state.terrainCache.draw(ctx, { x: camera.x, y: camera.y, width, height });
         } else {
             drawGreyboxGround(ctx, snapshot.environment.greybox, worldWidth, worldHeight);
@@ -536,7 +552,7 @@ function draw(state, snapshot, width, height) {
                 const body = layer.enemy ?? layer.player;
                 const cells = occludingTerrainCells(state.terrainFrame, body.x, body.y + (body.z || 0), body.z || 0, (body.radius || 16) * 1.25);
                 if (gpu) eraseTerrainOcclusion(ctx, state.terrainFrame, cells);
-                else repaintTerrainOcclusion(ctx, state.terrainFrame, influenceBandIndex(snapshot.environment?.corruption), cells);
+                else repaintTerrainOcclusion(ctx, state.terrainFrame, huntBand(state, snapshot), cells);
             }
         }
         if (gpu) {
@@ -560,8 +576,16 @@ function draw(state, snapshot, width, height) {
     drawReliquaryEmergence(ctx, snapshot.reliquary);
     drawBellWardenEntrance(ctx, snapshot.bellWarden);
     if (state.terrainFrame && snapshot.environment?.terrain) {
-        drawAmbientParticles(ctx, ambientParticles(influenceBandIndex(snapshot.environment.corruption), visualSeconds,
+        drawAmbientParticles(ctx, ambientParticles(huntBand(state, snapshot), visualSeconds,
             { width: worldWidth, height: worldHeight }, state.reducedMotion.matches), { x: camera.x, y: camera.y, width, height });
+        const nowSeconds = performance.now() / 1000;
+        state.veinSeams = drawVeinGlow(ctx, state.terrainFrame, huntBand(state, snapshot), { x: camera.x, y: camera.y, width, height }, nowSeconds, state.reducedMotion.matches);
+        if (state.destructionFx) drawDestructionFx(ctx, state.destructionFx, nowSeconds, { x: camera.x, y: camera.y, width, height });
+        // The world is drawn translated by -camera here; the furnace glow belongs to the screen edges.
+        ctx.save();
+        ctx.translate(camera.x, camera.y);
+        drawFireZoneVignette(ctx, width, height, huntBand(state, snapshot), nowSeconds, state.reducedMotion.matches);
+        ctx.restore();
         // The calibration overlay is drawn unlit over the composite so it is readable in any light.
         if (state.blockInset ??= blockInsetOverlayEnabled())
             drawBlockInsetOverlay(ctx, state.terrainFrame, { x: camera.x, y: camera.y, width, height });

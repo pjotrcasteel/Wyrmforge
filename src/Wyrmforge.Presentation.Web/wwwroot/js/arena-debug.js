@@ -13,6 +13,8 @@ export function readArenaDebugFlags(search = globalThis.location?.search ?? '') 
         bright: params.get('bright') === '1',
         // Metric oblique (shear) camera for the Hunt GPU world; the legacy stretched camera stays the default.
         shear: params.get('shear') === '1',
+        // Presents the Hunt as if it lay in influence band 0..3 (Wet, Scorched, Burning, Volcanic); presentation only.
+        band: /^[0-3]$/.test(params.get('band') ?? '') ? Number(params.get('band')) : null,
     };
 }
 

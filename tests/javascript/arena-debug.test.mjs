@@ -8,8 +8,8 @@ const world = { width: 1024, height: 1920 };
 const at = (x, y, extra = {}) => ({ player: { x, y }, world, enemies: [], paused: false, ended: false, exit: null, ...extra });
 
 test('debug flags are off by default and clamp the speed', () => {
-    assert.deepEqual(readArenaDebugFlags(''), { speed: 1, god: false, bot: false, bright: false, shear: false });
-    assert.deepEqual(readArenaDebugFlags('?speed=8&god=1&bot=1'), { speed: 8, god: true, bot: true, bright: false, shear: false });
+    assert.deepEqual(readArenaDebugFlags(''), { speed: 1, god: false, bot: false, bright: false, shear: false, band: null });
+    assert.deepEqual(readArenaDebugFlags('?speed=8&god=1&bot=1'), { speed: 8, god: true, bot: true, bright: false, shear: false, band: null });
     assert.equal(readArenaDebugFlags('?speed=500').speed, MAX_DEBUG_SPEED);
     assert.equal(readArenaDebugFlags('?speed=0').speed, 1);
     assert.equal(readArenaDebugFlags('?speed=abc').speed, 1);

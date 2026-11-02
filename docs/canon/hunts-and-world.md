@@ -275,3 +275,28 @@ forest and its residents within one muted material/value system without burying 
 attack telegraphs or drops. The Arena Lab tests **Hollow (kind 0)** and **Ashling (kind 2)**,
 not the unrelated Mire Hound kind 1. Production roster ecology remains C# owned.
 See [art and animation](art-and-animation.md) for source references and QA gates.
+
+## Everything breaks, and the land burns toward the Wyrm — Hunt 1.0 presentation direction (2 November 2026, owner: "take creative freedom")
+
+**Owner intent.** The player must *notice* that ground, objects, walls, cliffs and hills can all be destroyed, and the closer the hunter gets to the Wyrm the more the map must feel like entering a fire-magic zone. **Status: the cues below marked implemented are presentation-only and not owner-approved; the C# destruction rows are not done.**
+
+**What comparable games do (design references, not copied assets).** *Noita* simulates every pixel, so materials look like what they are and fire spreads through wood and gas. *Terraria* and *Minecraft* show progressive crack stages so a player reads "this is being broken" before it breaks. *Magicka* lets elements react with the world and throws units with physics. *Diablo III* collapses pillars and walls with dust and debris, and boss arenas change as the fight goes on. *Divinity: Original Sin* turns the ground into the element cast on it. *Wizard of Legend* makes every prop burst into juicy debris. What they share: (1) the breakable thing looks different from the unbreakable one, (2) every hit answers within a tenth of a second, (3) the world keeps the scar, and (4) a spell leaves a lasting, readable mark.
+
+**WyrmForge language (all cosmetic, derived from authoritative C# state, reduced-motion aware):**
+
+| Cue | Rule | Status |
+| --- | --- | --- |
+| Fresh break glows hot | New crater microcolumns glow white-orange and cool to nothing over about 7 s (3 s with reduced motion): destruction reads from across the screen and the scar tells where fire just landed | Implemented (`arena-destruction-fx.js`) |
+| Debris answers every hit | Deterministic earth, stone and ember chips per crater (4 to 16, global cap 90), colours match the exposed strata | Implemented |
+| The scar stays | Craters persist (C# per-visit record) with grass cap, dirt and stone strata on the walls | Implemented earlier |
+| Fire domain escalates by Wyrm Influence band | Wet: none. Scorched: ash and embers, faint warm screen edge. Burning: ember veins in the ground, stronger edge heat. Volcanic: dense glowing veins, lava glow lights, furnace edge. Edge glow alphas 0, 0.05, 0.12, 0.22; veins in 0, 0, 9 %, 20 % of undisturbed blocks | Implemented; look is gate GH-B |
+| Unbreakable looks unbreakable | Bedrock reads smooth and near black with no cracks; breakable rock carries seams | Not done (needs art gate) |
+| Walls, cliffs, hills | Hills and cliffs are columns of the same heightfield, so excavation already lowers them; walls need their own C# columns with HP and impacts on vertical faces | **Not done: C# gap** |
+| Props and vegetation | Salvage props already break in C#; trees and large props need HP and burning, which waits for the vegetation art gate | Not done |
+| Crack stages before a break | Terraria-style progressive cracks on a block taking repeated damage (needs per-microcell HP in C#) | Not done |
+| Sound and haptics | Crunch on break, a rising low furnace drone by band, a short haptic tick on big breaks, through the shared semantic audio path | Not done |
+| Heat shimmer and horizon glow | Screen-space distortion and a sky/horizon tint per band, mobile budget permitting | Not done |
+
+**Debug preview.** `?band=0..3` presents the Hunt as another influence band without changing C# state; combine with `bright=1` to inspect and without it to judge the true night.
+
+**Open questions for the owner.** Should walls and cliffs be destroyed by Fireball impact on their face, or only from above? Should unbreakable bedrock and indestructible landmarks have a distinct look from the start? How hot should the Volcanic edge glow be before it hurts readability (current 22 % alpha is a starting value)?
