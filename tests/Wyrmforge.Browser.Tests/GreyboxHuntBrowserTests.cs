@@ -108,6 +108,8 @@ public sealed class GreyboxHuntBrowserTests : PageTest
             """);
         var errors = new List<string>();
         Page.PageError += (_, error) => errors.Add(error);
+        var requests = new List<string>();
+        Page.Request += (_, request) => requests.Add(request.Url);
         await Page.GotoAsync(root + "/?hunt1=1" + extraQuery, new() { WaitUntil = WaitUntilState.NetworkIdle });
 
         var start = Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^START GAME") });
@@ -135,6 +137,9 @@ public sealed class GreyboxHuntBrowserTests : PageTest
                 && state?.greyboxLighting === 'shared-gpu' && state?.enemies?.length > 0 && !state?.renderingFailed;
         }", null, new() { Timeout = 60000 });
         Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
+        // The painted Wet Forest ground banks must never come back through a hidden fallback.
+        var legacyGround = requests.Where(url => Regex.IsMatch(url, @"art-candidates|wet-forest[^/]*\.(png|webp|jpe?g)|ground-(bank|texture)", RegexOptions.IgnoreCase)).ToList();
+        Assert.AreEqual(0, legacyGround.Count, "legacy ground art requested: " + string.Join(", ", legacyGround));
         await Page.ScreenshotAsync(new() { Path = Path.Combine(output, $"{shot}-{width}.png"), FullPage = false });
     }
 
