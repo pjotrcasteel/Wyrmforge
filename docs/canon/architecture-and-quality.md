@@ -122,6 +122,10 @@ Versioned Region/World state + Hunter Knowledge
 
 ---
 
+## Debug and automation switches — LOCKED direction (2 November 2026)
+
+Testing, CI and agents must be able to drive and inspect a Hunt with as little scripting as possible, so the web client accepts opt-in URL switches. They never change authoritative rules and are inert unless present: `hunt1=1` (Hunt 1.0 terrain), `speed=N` (1–20 fixed C# ticks per frame, stopping at any choice, checkpoint or end), `god=1` (refill hunter health), `bot=1` (a built-in hunter that kites, hunts the last foes, paths over terrain and props, walks to the exit or extraction zone and picks the first offered upgrade, essence or relic), `bright=1` (raises only the ambient term of the lighting frame handed to the renderer so terrain can be inspected; the true night remains the reference look), `blockInset=1` (one-pixel inset debug overlay on every 1 m face). Browser captures must wait on real polled state (not an async `WaitForFunction`, which returns immediately) and record the diagnostics they were taken under. New debug aids follow the same rules: URL-gated, presentation-side or C# input-side only, covered by unit tests.
+
 ## iOS / Android portability and delivery gates
 
 **Explicit product goal:** ship WyrmForge on **iOS (App Store)** and **Android (Google Play)** after evidence-backed browser gameplay has stabilized. This is not merely a responsive web page goal.
