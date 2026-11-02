@@ -10,7 +10,6 @@ import argparse
 import importlib.util
 import math
 import sys
-from collections import Counter
 from pathlib import Path
 
 from PIL import Image, ImageDraw
@@ -22,59 +21,121 @@ sys.modules[_SPEC.name] = master
 _SPEC.loader.exec_module(master)
 
 KEY_POSES = 4
-GAIT_STEP_METRES = 0.34
+GAIT_STEP_METRES = 0.40
 FOOT_LIFT_METRES = 0.16
-LEFT_ARM_SWING_METRES = 0.10
-GARMENT_SWAY_METRES = 0.035
+LEFT_ARM_SWING_METRES = 0.14
+GARMENT_SWAY_METRES = 0.07
 CANONICAL_DIRECTIONS = ("N", "NE", "E", "SE", "S", "SW", "W", "NW")
 LEG_FEATURES = frozenset({"trouser", "boots", "boot-toe", "boot-cuff"})
 GARMENT_FEATURES = frozenset({"outer-robe", "under-robe", "permanent-cloth-rip", "frayed-rip-edge"})
 
 
+def root_motion(phase):
+    """Support-leg weight shift and lifted passing step (same local axes for 8 views)."""
+    return (-0.10 * math.cos(phase), 0.095 * abs(math.sin(phase)), 0.045 * math.sin(phase))
+
+
+def leg_joint_positions(side, phase):
+    """Reach a grounded foot from a moving hip using two constant-length bones."""
+    if side not in (-1, 1):
+        raise ValueError("leg side must be -1 (right) or +1 (left)")
+    stride = math.cos(phase) if side == -1 else -math.cos(phase)
+    lift = max(0.0, math.sin(phase) if side == -1 else -math.sin(phase))
+    root_x, root_y, root_z = root_motion(phase)
+    hip = (side * 0.31 + root_x, 1.22 + root_y, root_z)
+    ankle = (side * 0.31, 0.25 + FOOT_LIFT_METRES * lift, GAIT_STEP_METRES * stride)
+    upper, lower = 0.56, 0.55
+    dx, dy, dz = (ankle[i] - hip[i] for i in range(3))
+    distance = math.sqrt(dx * dx + dy * dy + dz * dz)
+    if not abs(upper - lower) < distance < upper + lower:
+        raise ValueError("foot placement is unreachable for the two-bone leg")
+    along = (upper * upper - lower * lower + distance * distance) / (2.0 * distance)
+    perpendicular = math.sqrt(max(0.0, upper * upper - along * along))
+    # The knee always bends toward the character's local forward direction.
+    sagittal = math.hypot(dy, dz)
+    bend_y, bend_z = (dz / sagittal, -dy / sagittal)
+    knee = (
+        hip[0] + along * dx / distance,
+        hip[1] + along * dy / distance + perpendicular * bend_y,
+        hip[2] + along * dz / distance + perpendicular * bend_z,
+    )
+    return hip, knee, ankle
+
+
+def articulated_leg_faces(side, phase):
+    """Build articulated upper/shin trouser segments without changing master."""
+    hip, knee, ankle = leg_joint_positions(side, phase)
+    return (
+        master.sleeve_tube_faces(hip, knee, .195, color="393437", feature="trouser")
+        + master.sleeve_tube_faces(knee, ankle, .172, color="393437", feature="trouser")
+    )
+
+
 def transform_walk_face(face, phase):
-    """Keep equipment, identity and topology fixed while posing two alternating legs."""
+    """Retarget free arm and worn cloth; all physical holes follow their mesh."""
     feature = face.feature
     if feature not in LEG_FEATURES | GARMENT_FEATURES | {"left-sleeve", "left-hand"}:
         return face
+    if feature == "trouser":
+        raise ValueError("trouser faces must be replaced by articulated leg bones")
 
-    # The Wizard's right leg is on local -X, as in the authoritative master.
-    # Determining the side from the *unrotated* mesh prevents left/right swaps
-    # when the camera turns; the same pose is used by all eight directions.
     cx = sum(point[0] for point in face.points) / len(face.points)
-    right_leg = cx < 0
-    stride = math.cos(phase) if right_leg else -math.cos(phase)
-    lift = max(0.0, math.sin(phase) if right_leg else -math.sin(phase))
+    right_side = cx < 0
+    stride = math.cos(phase) if right_side else -math.cos(phase)
+    lift = max(0.0, math.sin(phase) if right_side else -math.sin(phase))
 
     points = []
     for x, y, z in face.points:
-        if feature in LEG_FEATURES:
-            # The upper leg stays attached to the pelvis; lower-leg and boot
-            # positions follow a smooth stride, including foot clearance.
-            weight = max(0.0, min(1.0, (1.22 - y) / 1.06)) if feature == "trouser" else 1.0
-            z += GAIT_STEP_METRES * stride * weight
-            y += FOOT_LIFT_METRES * lift * weight
+        if feature in {"boots", "boot-toe", "boot-cuff"}:
+            z += GAIT_STEP_METRES * stride
+            y += FOOT_LIFT_METRES * lift
         elif feature in GARMENT_FEATURES:
-            # The same physical tears and scar triangles move with the cloth.
-            # This is intentionally subtle so they never swim between facings.
-            weight = max(0.0, min(1.0, (1.60 - y) / 1.40))
-            z += GARMENT_SWAY_METRES * math.sin(2.0 * phase) * weight
+            # A physically shared hem drapes outward and briefly clears the
+            # lifted leg. No garment faces, scars or mesh tears are added/removed.
+            low = max(0.0, min(1.0, (1.20 - y) / 1.00))
+            front = max(0.0, min(1.0, z / .50))
+            z += GARMENT_SWAY_METRES * math.sin(phase + .5) * low
+            y += .12 * lift * low * front
+            x += (.055 if x >= 0 else -.055) * abs(stride) * low
         else:
-            # Only the free *left* arm swings. Right hand, staff and flame are
-            # completely untouched so grip and equipment continuity are exact.
+            # The staff is in the unchanged RIGHT hand; swing only left arm.
             weight = max(0.0, min(1.0, (2.48 - y) / 1.12))
             z += LEFT_ARM_SWING_METRES * math.cos(phase) * weight
         points.append((x, y, z))
     return master.Face(tuple(points), face.color, feature)
 
 
+def apply_root_pose(face, phase):
+    """Carry the head, torso and entire held staff together during a step."""
+    if face.feature in LEG_FEATURES:
+        return face
+    dx, dy, dz = root_motion(phase)
+    if face.feature in GARMENT_FEATURES:
+        # Cloth follows the torso, but lower hem lags the body and foot contact.
+        points = []
+        for x, y, z in face.points:
+            weight = 0.55 + 0.45 * max(0.0, min(1.0, y / 1.60))
+            points.append((x + dx * weight, y + dy * weight, z + dz * weight))
+    else:
+        # Single rigid translation of staff, right grip, hair, hat and all
+        # attached body parts keeps their relative anatomy exactly preserved.
+        points = [(x + dx, y + dy, z + dz) for x, y, z in face.points]
+    return master.Face(tuple(points), face.color, face.feature)
+
+
 def pose(frame_index, frame_count=KEY_POSES):
-    """Return one reproducible 3D walk pose; does not mutate frozen idle geometry."""
+    """Build isolated physical gait frames without mutating the idle master."""
     if frame_count < KEY_POSES or frame_count % KEY_POSES:
         raise ValueError("walk frame count must be a multiple of four")
     if not 0 <= frame_index < frame_count:
         raise ValueError("walk frame index outside clip")
     phase = 2.0 * math.pi * frame_index / frame_count
-    return tuple(transform_walk_face(face, phase) for face in master.build_master())
+    original = master.build_master()
+    shared = [apply_root_pose(transform_walk_face(face, phase), phase)
+              for face in original if face.feature != "trouser"]
+    shared.extend(articulated_leg_faces(-1, phase))
+    shared.extend(articulated_leg_faces(1, phase))
+    return tuple(shared)
 
 
 def render_frame(direction, frame_index, frame_count=KEY_POSES, *, use_materials=True):
