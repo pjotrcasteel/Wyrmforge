@@ -13,13 +13,13 @@ export const TERRAIN_PAD_UNITS = 4 * FACE_PIXELS;
 // and saturation reserved for lava (fire, blood and lightning carry the colour). The front is always the darker tone.
 const PALETTE = Object.freeze([
     // Natural / wet: cold damp earth
-    [['#66634f', '#2f2e26'], ['#5c5a56', '#2e2c2a'], ['#6b6a6c', '#323137'], ['#c9501a', '#7a1f0c']],
+    [['#66634f', '#2f2e26'], ['#5c5a56', '#2e2c2a'], ['#82776b', '#2a2523'], ['#c9501a', '#7a1f0c']],
     // Scorched: dry ash-brown
-    [['#58504a', '#2a2420'], ['#5b5551', '#2c2826'], ['#68645f', '#312e2e'], ['#d65a16', '#82200c']],
+    [['#58504a', '#2a2420'], ['#5b5551', '#2c2826'], ['#7b6f66', '#292321'], ['#d65a16', '#82200c']],
     // Burning: charred, blood-red undertone
-    [['#4b3f3a', '#231b19'], ['#4e4642', '#262120'], ['#5e5757', '#2c2727'], ['#e8641a', '#8c1f0a']],
+    [['#4b3f3a', '#231b19'], ['#4e4642', '#262120'], ['#6e6159', '#241e1c'], ['#e8641a', '#8c1f0a']],
     // Volcanic: near-black basalt
-    [['#352d2c', '#171212'], ['#3a3331', '#1a1514'], ['#4a4446', '#1f1b1d'], ['#ff7a14', '#a01a08']],
+    [['#352d2c', '#171212'], ['#3a3331', '#1a1514'], ['#58494a', '#1a1415'], ['#ff7a14', '#a01a08']],
 ]);
 
 export function influenceBandIndex(corruption) {
