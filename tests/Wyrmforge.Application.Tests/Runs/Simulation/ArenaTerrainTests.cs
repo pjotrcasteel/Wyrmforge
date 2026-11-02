@@ -118,6 +118,85 @@ public sealed class ArenaTerrainTests
     }
 
     [TestMethod]
+    public void Sight_PassesOverPitsAndLowStepsButNotRockAboveAMetreAndAQuarter()
+    {
+        var grid = new ArenaTerrainGrid(12, 4);
+        grid.Set(3, 1, -24, ArenaTerrainMaterial.Stone);
+        grid.Set(5, 1, 8, ArenaTerrainMaterial.Stone);
+        grid.Set(8, 1, 16, ArenaTerrainMaterial.Stone);
+        var shooter = ArenaTerrainGrid.CenterOf(1, 1);
+        Assert.IsFalse(grid.BlocksSight(shooter, ArenaTerrainGrid.CenterOf(4, 1)), "a pit does not block a shot");
+        Assert.IsFalse(grid.BlocksSight(shooter, ArenaTerrainGrid.CenterOf(6, 1)), "a 1 m rock is below 1.25 m");
+        Assert.IsTrue(grid.BlocksSight(shooter, ArenaTerrainGrid.CenterOf(10, 1)), "a 2 m rock blocks sight");
+        Assert.IsFalse(grid.BlocksSight(ArenaTerrainGrid.CenterOf(8, 1), ArenaTerrainGrid.CenterOf(10, 1)),
+            "standing on the rock, ground one step lower does not block");
+    }
+
+    [TestMethod]
+    public void RandomWalks_NeverEndInsideAnUnstandableFootprint()
+    {
+        for (var seed = 0; seed < 40; seed++)
+        {
+            var recipe = Make(seed, .7 + seed % 4 * .1);
+            var grid = recipe.Grid;
+            var position = ArenaTerrainGrid.CenterOf(Spawn.Column, Spawn.Row);
+            var rng = new Random(seed);
+            for (var step = 0; step < 1500; step++)
+            {
+                var angle = rng.NextDouble() * Math.PI * 2;
+                var proposed = position + new Vector2D(Math.Cos(angle), Math.Sin(angle)) * 18;
+                position = grid.RestrictMovement(position, proposed, PlayerRadius);
+                Assert.IsTrue(grid.IsStandable(position, PlayerRadius), $"seed {seed} step {step}");
+            }
+        }
+    }
+
+    [TestMethod]
+    public void ReachableFrom_MatchesPointToPointReachability()
+    {
+        var recipe = Make(3, .7);
+        var reachable = recipe.Grid.ReachableFrom(Spawn, PlayerRadius);
+        Assert.IsTrue(reachable[Exit.Row * Columns + Exit.Column]);
+        Assert.IsTrue(reachable[Spawn.Row * Columns + Spawn.Column]);
+        for (var row = 0; row < Rows; row += 7)
+            for (var column = 0; column < Columns; column += 5)
+                Assert.AreEqual(reachable[row * Columns + column], recipe.Grid.IsReachable(Spawn, (column, row), PlayerRadius), $"{column},{row}");
+    }
+
+    [TestMethod]
+    public void DistanceField_RoutesAroundSheerRockAndNeverThroughIt()
+    {
+        var grid = new ArenaTerrainGrid(12, 8);
+        for (var row = 0; row < 6; row++) grid.Set(5, row, 24, ArenaTerrainMaterial.Stone);
+        var goal = (Column: 9, Row: 1);
+        var cost = grid.DistanceFrom(goal, PlayerRadius);
+        var start = ArenaTerrainGrid.CenterOf(2, 1);
+        Assert.IsTrue(grid.BlocksMovement(start, ArenaTerrainGrid.CenterOf(goal.Column, goal.Row), PlayerRadius), "the wall is in the way");
+        var position = start;
+        for (var step = 0; step < 60 && ArenaTerrainGrid.ColumnOf(position) != goal; step++)
+        {
+            var waypoint = grid.NextWaypoint(cost, position, PlayerRadius, 4);
+            Assert.IsNotNull(waypoint, $"step {step}");
+            var next = grid.RestrictMovement(position, position + (waypoint.Value - position).Normalized() * 10, PlayerRadius);
+            Assert.AreNotEqual(position, next, $"step {step}: a chaser following the field must keep moving");
+            position = next;
+        }
+        Assert.AreEqual(goal, ArenaTerrainGrid.ColumnOf(position));
+        Assert.AreEqual(ArenaTerrainGrid.Unreachable, grid.DistanceFrom((5, 2), PlayerRadius)[1 * 12 + 1], "a rock column is not a goal anyone can reach");
+    }
+
+    [TestMethod]
+    public void DistanceField_ClimbsRampsAndStopsAtPits()
+    {
+        var grid = new ArenaTerrainGrid(10, 3);
+        for (var column = 0; column < 10; column++) grid.Set(column, 1, Math.Min(column, 5) * 4, ArenaTerrainMaterial.Stone);
+        grid.Set(8, 0, -24, ArenaTerrainMaterial.Lava);
+        var cost = grid.DistanceFrom((9, 1), PlayerRadius);
+        Assert.AreNotEqual(ArenaTerrainGrid.Unreachable, cost[1 * 10 + 0], "a half-metre ramp can be climbed from the floor");
+        Assert.AreEqual(ArenaTerrainGrid.Unreachable, cost[0 * 10 + 8], "lava is never a route");
+    }
+
+    [TestMethod]
     public void Revision_AdvancesOnlyWhenTerrainChanges()
     {
         var grid = new ArenaTerrainGrid(4, 4);

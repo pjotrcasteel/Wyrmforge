@@ -27,6 +27,11 @@ public sealed class ArenaEnvironmentState
     private readonly HuntArenaGenerator.WetForestRecipe? wetForest;
     private WorldSiteGeography? geography;
     private double? nodeInfluence;
+    private ArenaTerrainGrid? terrain;
+    private (int Revision, int Column, int Row, int Radius, bool[] Cells)? reachableCache;
+    private Dictionary<int, int[]>? distanceFields;
+    private int distanceFieldRevision;
+    private (int Column, int Row) distanceFieldCell;
     private EncounterPhase phase = EncounterPhase.Pressure;
 
     /// <summary>Read-only C# fixture geometry for the optional shared G5 light projection.</summary>
@@ -72,7 +77,7 @@ public sealed class ArenaEnvironmentState
     }
 
     public static ArenaEnvironmentState Create(int mapSeed, WyrmrealmMapNode node, bool generatorPreview = false, SpellSchool? regionSchool = null, bool worldFirstGeography = false,
-        IReadOnlySet<string>? claimedDiscoveries = null, bool greybox = false)
+        IReadOnlySet<string>? claimedDiscoveries = null, bool greybox = false, bool terrain = false)
     {
         ArgumentNullException.ThrowIfNull(node);
         var stage = node.Stage;
@@ -99,6 +104,14 @@ public sealed class ArenaEnvironmentState
         // The one-metre greybox has no authored scenery, supplies, solid crossings or walls.
         // It keeps only the small breakable salvage props: they are the sole Charred Scrap source.
         if (node.Type != WyrmrealmNodeType.Combat) return environment;
+        if (terrain && greybox)
+        {
+            // Hunt 1.0 terrain: the player starts at the arena centre and the exit sits at TrailExitPosition.
+            var columns = (int)(ArenaMetricEnvelope.CombatWidth / ArenaTerrainGrid.CellUnits);
+            var rows = (int)(ArenaMetricEnvelope.CombatHeight / ArenaTerrainGrid.CellUnits);
+            environment.terrain = ArenaTerrainGenerator.Generate(seed, node.Influence, columns, rows,
+                (columns / 2, rows / 2), (columns / 2, (int)(Math.Max(80, ArenaMetricEnvelope.CombatHeight * .11) / ArenaTerrainGrid.CellUnits))).Grid;
+        }
 
         // The old fixed gated encounter remains part of current Hunts ONLY.
         // Arena Lab previews have natural continuous ground: no synthetic cross-walls or wave checkpoints.
@@ -129,6 +142,12 @@ public sealed class ArenaEnvironmentState
         {
             var center = new Vector2D(prop.X * 950, prop.Y * 1550);
             if (environment.IsBlocked(center, 950, 1550, prop.Radius + 4)) continue;
+            // Salvage props stand on flat, walkable ground; never on a rock step, lip or fissure.
+            if (environment.terrain is { } grid)
+            {
+                var ground = new Vector2D(prop.X * grid.Columns * ArenaTerrainGrid.CellUnits, prop.Y * grid.Rows * ArenaTerrainGrid.CellUnits);
+                if (!grid.IsStandable(ground, prop.Radius + 8) || grid.SurfaceMetersAt(ground) != 0) continue;
+            }
             // Existing breakable props must not block a newly authored AR2 side approach.
             if (environment.worldFirstGeography && node.Geography?.Landscape?.LocalPaths.Any(path =>
                 path.EdgeId.EndsWith(":access", StringComparison.Ordinal) && path.Points.Count == 2 &&
@@ -199,6 +218,7 @@ public sealed class ArenaEnvironmentState
         Corruption = nodeInfluence ?? HuntArenaGenerator.WyrmInfluence(stage, generatorPreview && preLair),
         GeneratorPreview = generatorPreview,
         Greybox = greybox ? new ArenaGreyboxGridRenderSnapshot(1, 32, 8, 0, 1) : null,
+        Terrain = terrain is null ? null : new ArenaTerrainRenderSnapshot(terrain.Columns, terrain.Rows, terrain.Revision),
         WetForest = wetForest,
         // The normal Hunt needs AR0 site identity and port topology, not dozens of
         // inactive geometry vertices serialized on every mobile render frame.
@@ -211,6 +231,52 @@ public sealed class ArenaEnvironmentState
     }
 
     public Vector2D RestrictMovement(Vector2D previous, Vector2D proposed, double width, double height, double radius = 0)
+    {
+        var resolved = RestrictMovementOnObstacles(previous, proposed, width, height, radius);
+        return TerrainActive(width, height) ? terrain!.RestrictMovement(previous, resolved, radius) : resolved;
+    }
+
+    /// <summary>Terrain applies only in the fixed metric arena it was generated for.</summary>
+    private bool TerrainActive(double width, double height) => terrain is not null &&
+        Math.Abs(width - terrain.Columns * ArenaTerrainGrid.CellUnits) < 1 && Math.Abs(height - terrain.Rows * ArenaTerrainGrid.CellUnits) < 1;
+
+    public ArenaTerrainGrid? Terrain => terrain;
+
+    // One walking-cost field per radius, rebuilt only when the hunter changes column or the terrain changes.
+    private Vector2D? TerrainWaypoint(Vector2D enemy, Vector2D hunter, double radius)
+    {
+        var grid = terrain!;
+        if (!grid.BlocksMovement(enemy, hunter, radius)) return null;
+        var hunterCell = ArenaTerrainGrid.ColumnOf(hunter);
+        if (distanceFields is null || distanceFieldRevision != grid.Revision || distanceFieldCell != hunterCell)
+        {
+            distanceFields = [];
+            distanceFieldRevision = grid.Revision;
+            distanceFieldCell = hunterCell;
+        }
+        var key = (int)Math.Ceiling(radius);
+        if (!distanceFields.TryGetValue(key, out var field))
+            distanceFields[key] = field = grid.DistanceFrom(hunterCell, key);
+        return grid.NextWaypoint(field, enemy, radius, 4);
+    }
+
+    // One breadth-first fill per hunter column and terrain revision, shared by every spawn in that window.
+    private bool IsReachableFrom(Vector2D hunter, Vector2D candidate, double radius)
+    {
+        var grid = terrain!;
+        var (hunterColumn, hunterRow) = ArenaTerrainGrid.ColumnOf(hunter);
+        var key = (int)Math.Ceiling(radius);
+        if (reachableCache is not { } cache || cache.Revision != grid.Revision || cache.Column != hunterColumn ||
+            cache.Row != hunterRow || cache.Radius != key)
+        {
+            cache = (grid.Revision, hunterColumn, hunterRow, key, grid.ReachableFrom((hunterColumn, hunterRow), key));
+            reachableCache = cache;
+        }
+        var (column, row) = ArenaTerrainGrid.ColumnOf(candidate);
+        return grid.Contains(column, row) && cache.Cells[row * grid.Columns + column];
+    }
+
+    private Vector2D RestrictMovementOnObstacles(Vector2D previous, Vector2D proposed, double width, double height, double radius)
     {
         if (!IsBlocked(proposed, width, height, radius) &&
             !(worldFirstGeography && geography is not null &&
@@ -237,6 +303,8 @@ public sealed class ArenaEnvironmentState
     public bool BlocksSegment(Vector2D from, Vector2D to, double width, double height, double radius = 0, int? ignoredPropId = null)
     {
         if (width <= 0 || height <= 0) return false;
+        // Shots and sight pass over pits and low steps but not over rock rising above 1.25 m.
+        if (TerrainActive(width, height) && terrain!.BlocksSight(from, to)) return true;
         if (worldFirstGeography && WorldSiteFootprintCollision.BlocksSegment(geography?.Landscape, from, to, width, height, radius))
             return true;
         foreach (var barrier in barriers)
@@ -320,6 +388,7 @@ public sealed class ArenaEnvironmentState
 
     public bool IsBlocked(Vector2D position, double width, double height, double radius = 0)
     {
+        if (TerrainActive(width, height) && !terrain!.IsStandable(position, radius)) return true;
         if (worldFirstGeography && geography is not null && width > 0 && height > 0 &&
             !WorldSiteElevationField.IsWalkable(geography, new HuntPoint(position.X / width, position.Y / height)))
             return true;
@@ -382,6 +451,8 @@ public sealed class ArenaEnvironmentState
                 if (candidate.X < minX || candidate.X > maxX || candidate.Y < minY || candidate.Y > maxY) continue;
                 if (Vector2D.Distance(candidate, hunter) < MinimumSpawnDistance + radius) continue;
                 if (IsBlocked(candidate, width, height, radius)) continue;
+                // Spawn only where the hunter can be reached on foot, so a clear-all objective stays possible.
+                if (TerrainActive(width, height) && !IsReachableFrom(hunter, candidate, radius)) continue;
                 // New cliffs and rooted forest masses are authoritative C# colliders.
                 // Don't materialize an enemy behind one without a navigable route.
                 // This preview safety rule does not alter the existing normal Hunt.
@@ -394,6 +465,9 @@ public sealed class ArenaEnvironmentState
 
     public Vector2D EnemyNavigationTarget(Vector2D enemy, Vector2D hunter, double width, double height, double radius)
     {
+        // Rock steps and pits are real terrain: route around them with the walking-cost field to the hunter.
+        if (TerrainActive(width, height) && TerrainWaypoint(enemy, hunter, radius) is { } waypoint)
+            return AvoidDestructible(enemy, waypoint, width, height, radius);
         // Cross the ruined choke at its known center rather than pursuing straight into the solid wing.
         // Only crossings already opened by the encounter director may be navigated.
         foreach (var gate in barriers.Where(barrier => barrier.Kind == "gate" && IsOpen(barrier)))

@@ -15,6 +15,8 @@ public sealed class ArenaTerrainGrid
     public const double MicrocellUnits = CellUnits / MicrocellsPerMeter;
     /// <summary>The tallest step an actor climbs or drops between neighbouring columns: 0.5 m.</summary>
     public const int MaxStepMicrocells = 4;
+    /// <summary>Line of sight and shots clear terrain up to 1.25 m above the shooter's ground.</summary>
+    public const int ShotClearanceMicrocells = 10;
     /// <summary>Excavation never digs below this floor: -4 m.</summary>
     public const int BedrockMicrocells = -32;
 
@@ -101,6 +103,130 @@ public sealed class ArenaTerrainGrid
         return false;
     }
 
+    /// <summary>
+    /// Sight and shots travel 1.25 m above the shooter's ground: any column on the way, other than the shooter's own,
+    /// that rises above that height blocks them. Pits and low steps never do.
+    /// </summary>
+    public bool BlocksSight(Vector2D from, Vector2D to)
+    {
+        var (fromColumn, fromRow) = ColumnOf(from);
+        if (!Contains(fromColumn, fromRow)) return false;
+        var ceiling = Surface(fromColumn, fromRow) + ShotClearanceMicrocells;
+        var steps = Math.Max(1, (int)Math.Ceiling(Vector2D.Distance(from, to) / 8));
+        for (var step = 1; step <= steps; step++)
+        {
+            var (column, row) = ColumnOf(from + (to - from) * (step / (double)steps));
+            if ((column == fromColumn && row == fromRow) || !Contains(column, row)) continue;
+            if (Surface(column, row) > ceiling) return true;
+        }
+        return false;
+    }
+
+    /// <summary>Every column an actor of this radius can walk to from the start, by the same rule as movement.</summary>
+    public bool[] ReachableFrom((int Column, int Row) start, double radius)
+    {
+        var seen = new bool[Columns * Rows];
+        if (!Contains(start.Column, start.Row)) return seen;
+        var queue = new Queue<(int Column, int Row)>();
+        queue.Enqueue(start);
+        seen[start.Row * Columns + start.Column] = true;
+        while (queue.Count > 0)
+        {
+            var (column, row) = queue.Dequeue();
+            for (var dy = -1; dy <= 1; dy++)
+                for (var dx = -1; dx <= 1; dx++)
+                {
+                    var (nc, nr) = (column + dx, row + dy);
+                    if ((dx == 0 && dy == 0) || !Contains(nc, nr) || seen[nr * Columns + nc]) continue;
+                    if (!CanWalk(column, row, nc, nr, radius)) continue;
+                    seen[nr * Columns + nc] = true;
+                    queue.Enqueue((nc, nr));
+                }
+        }
+        return seen;
+    }
+
+    /// <summary>
+    /// Walking cost from every column to the goal (Dijkstra, 8-neighbour, no corner cutting), using the same
+    /// standability and step rules as movement. Unreachable columns keep <see cref="Unreachable"/>.
+    /// </summary>
+    public int[] DistanceFrom((int Column, int Row) goal, double radius)
+    {
+        var cost = new int[Columns * Rows];
+        Array.Fill(cost, Unreachable);
+        if (!Contains(goal.Column, goal.Row)) return cost;
+        var open = new PriorityQueue<(int Column, int Row), int>();
+        cost[goal.Row * Columns + goal.Column] = 0;
+        open.Enqueue(goal, 0);
+        while (open.TryDequeue(out var cell, out var spent))
+        {
+            if (spent > cost[cell.Row * Columns + cell.Column]) continue;
+            for (var dy = -1; dy <= 1; dy++)
+                for (var dx = -1; dx <= 1; dx++)
+                {
+                    var (nc, nr) = (cell.Column + dx, cell.Row + dy);
+                    if ((dx == 0 && dy == 0) || !Contains(nc, nr) || !CanWalk(cell.Column, cell.Row, nc, nr, radius)) continue;
+                    var next = spent + (dx != 0 && dy != 0 ? 14 : 10);
+                    if (next >= cost[nr * Columns + nc]) continue;
+                    cost[nr * Columns + nc] = next;
+                    open.Enqueue((nc, nr), next);
+                }
+        }
+        return cost;
+    }
+
+    public const int Unreachable = int.MaxValue;
+
+    private bool CanWalk(int fromColumn, int fromRow, int column, int row, double radius)
+    {
+        if (!IsStandable(CenterOf(column, row), radius)) return false;
+        return CanStepBetween(fromColumn, fromRow, column, row);
+    }
+
+    // A diagonal passes the shared corner, so both corner columns must be climbable to and from both ends.
+    private bool CanStepBetween(int fromColumn, int fromRow, int column, int row)
+    {
+        if (Math.Abs(Surface(fromColumn, fromRow) - Surface(column, row)) > MaxStepMicrocells) return false;
+        if (column == fromColumn || row == fromRow) return true;
+        return Linked(fromColumn, fromRow, column, fromRow) && Linked(column, fromRow, column, row) &&
+            Linked(fromColumn, fromRow, fromColumn, row) && Linked(fromColumn, row, column, row);
+    }
+
+    private bool Linked(int fromColumn, int fromRow, int column, int row) =>
+        Math.Abs(Surface(fromColumn, fromRow) - Surface(column, row)) <= MaxStepMicrocells && Material(column, row) != ArenaTerrainMaterial.Lava;
+
+    /// <summary>
+    /// Along the downhill path of a distance field, the farthest column within <paramref name="lookahead"/> steps that can be
+    /// walked to in a straight line, so chasers cut no corners through rock; null when the field leads nowhere.
+    /// </summary>
+    public Vector2D? NextWaypoint(int[] cost, Vector2D from, double radius, int lookahead)
+    {
+        var (column, row) = ColumnOf(from);
+        if (!Contains(column, row) || cost[row * Columns + column] == Unreachable) return null;
+        Vector2D? first = null;
+        Vector2D? farthest = null;
+        for (var step = 0; step < lookahead; step++)
+        {
+            var here = cost[row * Columns + column];
+            if (here == 0) break;
+            var best = (Column: column, Row: row, Cost: here);
+            for (var dy = -1; dy <= 1; dy++)
+                for (var dx = -1; dx <= 1; dx++)
+                {
+                    var (nc, nr) = (column + dx, row + dy);
+                    if ((dx == 0 && dy == 0) || !Contains(nc, nr)) continue;
+                    var next = cost[nr * Columns + nc];
+                    if (next < best.Cost && CanStepBetween(column, row, nc, nr)) best = (nc, nr, next);
+                }
+            if (best.Cost == here) break;
+            (column, row) = (best.Column, best.Row);
+            var centre = CenterOf(column, row);
+            if (first is null) first = centre;
+            if (!BlocksMovement(from, centre, radius)) farthest = centre;
+        }
+        return farthest ?? first;
+    }
+
     /// <summary>Resolve a proposed move: the full move, a slide along one axis, or no move.</summary>
     public Vector2D RestrictMovement(Vector2D previous, Vector2D proposed, double radius)
     {
@@ -128,8 +254,7 @@ public sealed class ArenaTerrainGrid
                 {
                     var (nc, nr) = (column + dx, row + dy);
                     if ((dx == 0 && dy == 0) || !Contains(nc, nr) || seen[nr * Columns + nc]) continue;
-                    if (!IsStandable(CenterOf(nc, nr), radius)) continue;
-                    if (Math.Abs(Surface(column, row) - Surface(nc, nr)) > MaxStepMicrocells) continue;
+                    if (!CanWalk(column, row, nc, nr, radius)) continue;
                     seen[nr * Columns + nc] = true;
                     queue.Enqueue((nc, nr));
                 }

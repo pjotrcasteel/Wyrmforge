@@ -21,6 +21,9 @@ public sealed record ArenaGreyboxGridRenderSnapshot(
     public double MicrocellSizeMeters => CellSizeMeters / MicrocellsPerAxis;
 }
 
+/// <summary>Terrain identity only; heights are pulled per chunk by revision so the frame snapshot stays small.</summary>
+public sealed record ArenaTerrainRenderSnapshot(int Columns, int Rows, int Revision);
+
 public sealed record ArenaEnvironmentRenderSnapshot(
     int Seed,
     string Biome,
@@ -36,6 +39,7 @@ public sealed record ArenaEnvironmentRenderSnapshot(
     public bool GeneratorPreview { get; init; }
     /// <summary>Read-only flat XYZ ground contract; source-pixel density is not screen pixel size.</summary>
     public ArenaGreyboxGridRenderSnapshot? Greybox { get; init; }
+    public ArenaTerrainRenderSnapshot? Terrain { get; init; }
     public HuntArenaGenerator.WetForestRecipe? WetForest { get; init; }
     /// <summary>Versioned site/edge/material identity; presentation must not generate a second graph.</summary>
     public WorldSiteGeography? Geography { get; init; }

@@ -13,7 +13,11 @@ public sealed partial class RunSimulation
     private ArenaEnvironmentState? arenaEnvironment;
     private bool worldSiteGeographyEnabled;
     private bool legacyArenaPreview;
+    private bool hunt1TerrainEnabled;
     private string? walkedExitNodeId;
+
+    /// <summary>Opt in to Hunt 1.0 heightfield terrain in greybox combat arenas (the default for Fire Tier-I arrives with H9).</summary>
+    public void EnableHunt1Terrain() => hunt1TerrainEnabled = true;
 
     /// <summary>Opt in to the AR1 physical terrain preview for this run; normal Hunts keep their approved fallback.</summary>
     public void EnableWorldSiteGeography() => worldSiteGeographyEnabled = true;
@@ -86,7 +90,8 @@ public sealed partial class RunSimulation
         materialCargoState.BeginTrail();
         playerPositionInitialized = false;
         arenaEnvironment = ArenaEnvironmentState.Create(mapState.Seed, node, worldFirstGeography: worldSiteGeographyEnabled,
-            claimedDiscoveries: collectedSiteDiscoveryIds, greybox: !legacyArenaPreview && !worldSiteGeographyEnabled);
+            claimedDiscoveries: collectedSiteDiscoveryIds, greybox: !legacyArenaPreview && !worldSiteGeographyEnabled,
+            terrain: hunt1TerrainEnabled);
         PrepareBellWardenNode(node);
         PrepareReliquaryNode(node);
         RollNodeElite(node);
