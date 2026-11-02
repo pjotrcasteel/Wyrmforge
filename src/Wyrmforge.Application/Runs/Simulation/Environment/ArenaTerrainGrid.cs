@@ -21,10 +21,19 @@ public sealed class ArenaTerrainGrid
     public const int BedrockMicrocells = -32;
     /// <summary>Soil and ash lie one metre deep over stone, which only the heaviest impacts can dent.</summary>
     public const int SoilDepthMicrocells = 8;
+    /// <summary>Every metre column can be subdivided into 8 x 8 microcolumns of 4 units (12.5 cm) when damaged.</summary>
+    public const int MicroPerColumn = 8;
+    public const int MicroCount = MicroPerColumn * MicroPerColumn;
+    public const double MicroUnits = CellUnits / MicroPerColumn;
 
     private readonly short[] surface;
     private readonly short[] stoneTop;
     private readonly ArenaTerrainMaterial[] materials;
+    // The original soil or ash of a column, so dug-through ground can show dirt beside stone; stone and lava keep their own.
+    private readonly ArenaTerrainMaterial[] topsoil;
+    // Sparse fine overlay: only columns an impact has touched hold 64 microcolumn heights; the rest stay one value.
+    private readonly Dictionary<int, short[]> fine = [];
+    private readonly Dictionary<int, int> fineChangedAt = [];
 
     public ArenaTerrainGrid(int columns, int rows)
     {
@@ -35,6 +44,7 @@ public sealed class ArenaTerrainGrid
         stoneTop = new short[columns * rows];
         Array.Fill(stoneTop, (short)-SoilDepthMicrocells);
         materials = new ArenaTerrainMaterial[columns * rows];
+        topsoil = new ArenaTerrainMaterial[columns * rows];
     }
 
     public int Columns { get; }
@@ -50,21 +60,57 @@ public sealed class ArenaTerrainGrid
     public void Set(int column, int row, int surfaceMicrocells, ArenaTerrainMaterial material)
     {
         if (!Contains(column, row)) throw new ArgumentOutOfRangeException(nameof(column));
+        var index = row * Columns + column;
         var clamped = (short)Math.Clamp(surfaceMicrocells, BedrockMicrocells, short.MaxValue);
-        surface[row * Columns + column] = clamped;
-        materials[row * Columns + column] = material;
+        surface[index] = clamped;
+        materials[index] = material;
+        topsoil[index] = material;
         // Soil and ash cover stone one metre down; stone and lava columns are solid at their surface.
-        stoneTop[row * Columns + column] = (short)(material is ArenaTerrainMaterial.Soil or ArenaTerrainMaterial.Ash
+        stoneTop[index] = (short)(material is ArenaTerrainMaterial.Soil or ArenaTerrainMaterial.Ash
             ? Math.Max(BedrockMicrocells, clamped - SoilDepthMicrocells) : clamped);
         Revision++;
+        if (fine.Remove(index)) fineChangedAt[index] = Revision;
     }
 
     /// <summary>Height at which soil gives way to stone in this column.</summary>
     public int StoneTop(int column, int row) => stoneTop[row * Columns + column];
 
+    /// <summary>True when an impact has subdivided this column.</summary>
+    public bool IsSubdivided(int column, int row) => fine.ContainsKey(row * Columns + column);
+
+    /// <summary>Height of one 12.5 cm microcolumn (0-7 on each axis); a whole column reads as one value until it is damaged.</summary>
+    public int MicroSurface(int column, int row, int microX, int microY)
+    {
+        var index = row * Columns + column;
+        return fine.TryGetValue(index, out var heights) ? heights[microY * MicroPerColumn + microX] : surface[index];
+    }
+
+    /// <summary>The material of one microcolumn: stone at or below the stone line, otherwise the column's topsoil.</summary>
+    public ArenaTerrainMaterial MicroMaterial(int column, int row, int microX, int microY)
+    {
+        var index = row * Columns + column;
+        if (topsoil[index] is ArenaTerrainMaterial.Stone or ArenaTerrainMaterial.Lava) return topsoil[index];
+        return MicroSurface(column, row, microX, microY) <= stoneTop[index] ? ArenaTerrainMaterial.Stone : topsoil[index];
+    }
+
+    /// <summary>A copy of a column's 64 microcolumn heights, or null when it is not subdivided.</summary>
+    public short[]? FineHeights(int column, int row) =>
+        fine.TryGetValue(row * Columns + column, out var heights) ? (short[])heights.Clone() : null;
+
     /// <summary>Copy of the current heightfield for presentation; the caller cannot change the authoritative grid.</summary>
-    public Wyrmforge.Application.Runs.Simulation.Snapshots.ArenaTerrainFrame ToFrame() =>
-        new(Revision, Columns, Rows, (short[])surface.Clone(), materials.Select(material => (int)material).ToArray());
+    public Wyrmforge.Application.Runs.Simulation.Snapshots.ArenaTerrainFrame ToFrame(int knownRevision = -1)
+    {
+        var blocks = new List<Wyrmforge.Application.Runs.Simulation.Snapshots.ArenaTerrainFineBlock>();
+        foreach (var index in fineChangedAt.Keys.Order())
+        {
+            if (fineChangedAt[index] <= knownRevision) continue;
+            if (knownRevision < 0 && !fine.ContainsKey(index)) continue;
+            blocks.Add(fine.TryGetValue(index, out var heights)
+                ? new(index, (short[])heights.Clone(), (int)topsoil[index], stoneTop[index])
+                : new(index, [], (int)topsoil[index], stoneTop[index]));
+        }
+        return new(Revision, Columns, Rows, (short[])surface.Clone(), materials.Select(material => (int)material).ToArray(), blocks);
+    }
 
     public ArenaTerrainGrid Clone()
     {
@@ -72,42 +118,73 @@ public sealed class ArenaTerrainGrid
         surface.CopyTo(copy.surface, 0);
         stoneTop.CopyTo(copy.stoneTop, 0);
         materials.CopyTo(copy.materials, 0);
+        topsoil.CopyTo(copy.topsoil, 0);
+        foreach (var (index, heights) in fine) copy.fine[index] = (short[])heights.Clone();
+        foreach (var (index, revision) in fineChangedAt) copy.fineChangedAt[index] = revision;
         return copy;
     }
 
     /// <summary>
-    /// Lower a column by up to <paramref name="soil"/> microcells of soil and <paramref name="stone"/> of stone.
-    /// Soil that is dug through exposes stone; bedrock and lava never change. Returns the microcells actually removed.
+    /// Lower one 12.5 cm microcolumn: soil first down to the stone line, then stone down to the floor (bedrock at most).
+    /// The column is subdivided on its first hit. Returns the microcells removed from this microcolumn.
     /// </summary>
-    public int Excavate(int column, int row, int soil, int stone, int floor = BedrockMicrocells)
+    public int ExcavateMicro(int column, int row, int microX, int microY, int soil, int stone, int floor = BedrockMicrocells, bool deferRefresh = false)
     {
-        if (!Contains(column, row)) return 0;
+        if (!Contains(column, row) || microX is < 0 or >= MicroPerColumn || microY is < 0 or >= MicroPerColumn) return 0;
         var index = row * Columns + column;
-        if (materials[index] == ArenaTerrainMaterial.Lava) return 0;
-        int start = surface[index];
-        int current = start;
+        if (topsoil[index] == ArenaTerrainMaterial.Lava || materials[index] == ArenaTerrainMaterial.Lava) return 0;
         floor = Math.Max(floor, BedrockMicrocells);
-        if (materials[index] is ArenaTerrainMaterial.Soil or ArenaTerrainMaterial.Ash)
+        var heights = fine.TryGetValue(index, out var existing) ? existing : null;
+        int start = heights is null ? surface[index] : heights[microY * MicroPerColumn + microX];
+        int current = start;
+        if (topsoil[index] is ArenaTerrainMaterial.Soil or ArenaTerrainMaterial.Ash)
+            current -= Math.Min(Math.Max(0, soil), Math.Max(0, current - Math.Max(stoneTop[index], floor)));
+        if (current <= stoneTop[index] || topsoil[index] == ArenaTerrainMaterial.Stone)
         {
-            var dug = Math.Min(Math.Max(0, soil), Math.Max(0, current - Math.Max(stoneTop[index], floor)));
-            current -= dug;
-            if (current <= stoneTop[index]) materials[index] = ArenaTerrainMaterial.Stone;
+            if (stone > 0 && current > floor) current -= Math.Min(stone, current - floor);
         }
-        if (materials[index] == ArenaTerrainMaterial.Stone && stone > 0 && current > floor)
-            current -= Math.Min(stone, current - floor);
         if (current == start) return 0;
-        surface[index] = (short)current;
-        Revision++;
+        if (heights is null)
+        {
+            heights = new short[MicroCount];
+            Array.Fill(heights, surface[index]);
+            fine[index] = heights;
+        }
+        heights[microY * MicroPerColumn + microX] = (short)current;
+        if (!deferRefresh) RefreshColumn(index);
         return start - current;
     }
 
+    // The coarse height every gameplay query reads is the rounded mean of the 64 microcolumns, in exact integer arithmetic.
+    private void RefreshColumn(int index)
+    {
+        var heights = fine[index];
+        var sum = 0;
+        foreach (var height in heights) sum += height;
+        var mean = sum >= 0 ? (sum + MicroCount / 2) / MicroCount : -((-sum + MicroCount / 2) / MicroCount);
+        surface[index] = (short)mean;
+        if (topsoil[index] is ArenaTerrainMaterial.Soil or ArenaTerrainMaterial.Ash)
+            materials[index] = mean <= stoneTop[index] ? ArenaTerrainMaterial.Stone : topsoil[index];
+        Revision++;
+        fineChangedAt[index] = Revision;
+    }
+
     /// <summary>Restore a recorded column exactly; used by save and replay, never by gameplay.</summary>
-    public void Restore(int column, int row, int surfaceMicrocells, ArenaTerrainMaterial material)
+    public void Restore(int column, int row, int surfaceMicrocells, ArenaTerrainMaterial material, short[]? fineHeights = null)
     {
         var index = row * Columns + column;
         var kept = stoneTop[index];
+        var keptTopsoil = topsoil[index];
         Set(column, row, surfaceMicrocells, material);
         stoneTop[index] = kept;
+        topsoil[index] = keptTopsoil;
+        if (fineHeights is null) return;
+        if (fineHeights.Length != MicroCount) throw new ArgumentException("A subdivided column has exactly 64 microcolumns.", nameof(fineHeights));
+        fine[index] = (short[])fineHeights.Clone();
+        RefreshColumn(index);
+        // The recorded coarse values are authoritative; the mean must agree with them.
+        surface[index] = (short)surfaceMicrocells;
+        materials[index] = material;
     }
 
     public static (int Column, int Row) ColumnOf(Vector2D position) =>

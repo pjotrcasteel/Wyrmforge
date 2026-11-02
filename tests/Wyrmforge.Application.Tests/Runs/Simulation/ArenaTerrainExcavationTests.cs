@@ -26,15 +26,110 @@ public sealed class ArenaTerrainExcavationTests
     }
 
     [TestMethod]
-    public void OrdinaryImpact_ChipsSoilMostAtTheCentreAndNothingBeyondItsRadius()
+    public void OrdinaryImpact_DigsARoundBowlInsideAboutOneBlockAndNothingBeyondItsRadius()
     {
         var grid = FlatSoil();
         var centre = ArenaTerrainGrid.CenterOf(6, 6);
         var changes = ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(1, centre, 1), null);
-        Assert.AreEqual(-1, grid.Surface(6, 6));
-        Assert.AreEqual(1, changes.Count, "power 1 reaches only its own column");
-        Assert.AreEqual(0, grid.Surface(8, 6));
+        Assert.AreEqual(-1, grid.Surface(6, 6), "the whole block under the impact loses one microcell");
         Assert.AreEqual(ArenaTerrainMaterial.Soil, grid.Material(6, 6));
+        Assert.IsTrue(grid.IsSubdivided(6, 6));
+        Assert.IsLessThanOrEqualTo(5, changes.Count, "a 0.75 m bowl reaches at most the four neighbouring edges");
+        Assert.AreEqual(0, grid.Surface(8, 6));
+        Assert.IsFalse(grid.IsSubdivided(8, 6), "ground beyond the radius is never subdivided");
+        Assert.IsFalse(grid.IsSubdivided(2, 2));
+    }
+
+    [TestMethod]
+    public void AnImpactAtABlockCorner_DigsARoundCraterThatSpansFourBlocksAsMicrocolumns()
+    {
+        var grid = FlatSoil();
+        var corner = new Vector2D(6 * ArenaTerrainGrid.CellUnits, 6 * ArenaTerrainGrid.CellUnits);
+        ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(1, corner, 3), null);
+        foreach (var (column, row) in new[] { (5, 5), (6, 5), (5, 6), (6, 6) }) Assert.IsTrue(grid.IsSubdivided(column, row), $"block {column},{row}");
+        // The deepest microcolumns sit at the shared corner, mirrored across all four blocks.
+        var inner = grid.MicroSurface(6, 6, 0, 0);
+        Assert.AreEqual(inner, grid.MicroSurface(5, 6, 7, 0));
+        Assert.AreEqual(inner, grid.MicroSurface(6, 5, 0, 7));
+        Assert.AreEqual(inner, grid.MicroSurface(5, 5, 7, 7));
+        Assert.IsLessThan(grid.MicroSurface(6, 6, 7, 7), inner, "deeper in the middle than toward the rim");
+    }
+
+    [TestMethod]
+    public void ACraterStaysSymmetricAndTheCoarseHeightIsTheRoundedMeanOfItsMicrocolumns()
+    {
+        var grid = FlatSoil();
+        ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(1, new Vector2D(6 * 32 + 8, 6 * 32 + 8), 2), null);
+        for (var row = 5; row <= 7; row++)
+            for (var column = 5; column <= 7; column++)
+            {
+                if (!grid.IsSubdivided(column, row)) continue;
+                var sum = 0;
+                for (var y = 0; y < ArenaTerrainGrid.MicroPerColumn; y++)
+                    for (var x = 0; x < ArenaTerrainGrid.MicroPerColumn; x++) sum += grid.MicroSurface(column, row, x, y);
+                var expected = sum >= 0 ? (sum + 32) / 64 : -((-sum + 32) / 64);
+                Assert.AreEqual(expected, grid.Surface(column, row), $"coarse height of {column},{row}");
+            }
+    }
+
+    [TestMethod]
+    public void Craters_ExposeDirtFirstAndStoneOnlyWhereTheyDigDeepest()
+    {
+        var grid = FlatSoil();
+        var centre = ArenaTerrainGrid.CenterOf(6, 6);
+        for (var hit = 0; hit < 4; hit++) ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(hit, centre, 3), null);
+        var middle = grid.MicroSurface(6, 6, 4, 4);
+        Assert.IsLessThan(-ArenaTerrainGrid.SoilDepthMicrocells, middle, "the centre was dug through the soil and dented the stone");
+        Assert.AreEqual(ArenaTerrainMaterial.Stone, grid.MicroMaterial(6, 6, 4, 4));
+        var outer = grid.MicroSurface(8, 6, 0, 4);
+        Assert.IsGreaterThan(-ArenaTerrainGrid.SoilDepthMicrocells, outer, "the outer ring is only dug into the dirt");
+        Assert.AreEqual(ArenaTerrainMaterial.Soil, grid.MicroMaterial(8, 6, 0, 4));
+    }
+
+    [TestMethod]
+    public void RevertingAnImpact_PutsBackTheWholeColumnsAndTheirSubdivision()
+    {
+        var grid = FlatSoil();
+        ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(1, ArenaTerrainGrid.CenterOf(3, 3), 2), null);
+        var before = grid.Clone();
+        var changes = ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(2, new Vector2D(3 * 32 + 20, 3 * 32 + 10), 3), null);
+        Assert.IsNotEmpty(changes);
+        ArenaTerrainMutation.Revert(grid, changes);
+        for (var row = 0; row < grid.Rows; row++)
+            for (var column = 0; column < grid.Columns; column++)
+            {
+                Assert.AreEqual(before.Surface(column, row), grid.Surface(column, row));
+                Assert.AreEqual(before.IsSubdivided(column, row), grid.IsSubdivided(column, row));
+                CollectionAssert.AreEqual(before.FineHeights(column, row), grid.FineHeights(column, row));
+            }
+    }
+
+    [TestMethod]
+    public void TheClientFrame_CarriesOnlyTheSubdividedColumnsThatChangedSinceItsRevision()
+    {
+        var grid = FlatSoil();
+        Assert.IsEmpty(grid.ToFrame(-1).Fine, "an undamaged grid sends no fine blocks");
+        ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(1, ArenaTerrainGrid.CenterOf(2, 2), 1), null);
+        var first = grid.ToFrame(-1);
+        Assert.IsNotEmpty(first.Fine);
+        Assert.IsTrue(first.Fine.All(block => block.Heights.Length == ArenaTerrainGrid.MicroCount));
+        var known = first.Revision;
+        Assert.IsEmpty(grid.ToFrame(known).Fine, "nothing changed since the client's revision");
+        ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(2, ArenaTerrainGrid.CenterOf(9, 9), 1), null);
+        var delta = grid.ToFrame(known);
+        Assert.IsTrue(delta.Fine.All(block => block.Index % grid.Columns >= 8 && block.Index / grid.Columns >= 8), "only the new crater's blocks");
+        Assert.AreEqual(grid.Surface(2, 2), delta.Surface[2 * grid.Columns + 2], "the coarse heights always travel whole");
+    }
+
+    [TestMethod]
+    public void ARestoredWholeColumn_IsAnnouncedToTheClientAsAnEmptyBlock()
+    {
+        var grid = FlatSoil();
+        var changes = ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(1, ArenaTerrainGrid.CenterOf(4, 4), 1), null);
+        var known = grid.Revision;
+        ArenaTerrainMutation.Revert(grid, changes);
+        var delta = grid.ToFrame(known);
+        Assert.IsTrue(delta.Fine.Any(block => block.Index == 4 * grid.Columns + 4 && block.Heights.Length == 0));
     }
 
     [TestMethod]
@@ -207,6 +302,23 @@ public sealed class ArenaTerrainExcavationTests
         Assert.IsNull(simulation.TerrainFrame(frame.Revision), "an unchanged revision sends nothing");
         frame.Surface[0] = 999;
         Assert.AreNotEqual(999, simulation.TerrainFrame(-1)!.Surface[0], "presentation can never edit the authoritative grid");
+    }
+
+    [TestMethod]
+    public void Record_CarriesSubdividedColumnsAndRejectsMalformedFineData()
+    {
+        var arena = Arena(1204);
+        arena.ApplyTerrainImpact(new ArenaTerrainImpact(1, new Vector2D(300, 700), 3), new Vector2D(Width / 2, Height / 2), 12, Width, Height);
+        var record = arena.CaptureTerrainRecord("site-1")!;
+        Assert.IsTrue(record.Changed.Any(column => column.Fine is { Length: ArenaTerrainGrid.MicroCount }), "damaged columns carry their 64 microcolumns");
+        var restored = Arena(1204);
+        restored.RestoreTerrainRecord("site-1", ArenaTerrainRecord.FromJson(record.ToJson()));
+        Assert.AreEqual(record.ToJson(), restored.CaptureTerrainRecord("site-1")!.ToJson(), "the JSON round trip keeps every microcolumn");
+        var damaged = record.Changed.First(column => column.Fine is not null);
+        Assert.ThrowsExactly<InvalidDataException>(() => Arena(1204).RestoreTerrainRecord("site-1",
+            record with { Changed = [damaged with { Fine = new short[3] }] }));
+        Assert.ThrowsExactly<InvalidDataException>(() => Arena(1204).RestoreTerrainRecord("site-1",
+            record with { Changed = [damaged with { Fine = Enumerable.Repeat((short)-999, ArenaTerrainGrid.MicroCount).ToArray() }] }));
     }
 
     [TestMethod]
