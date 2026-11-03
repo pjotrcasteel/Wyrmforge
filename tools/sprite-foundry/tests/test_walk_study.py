@@ -39,10 +39,39 @@ class WizardWalkStudyTests(unittest.TestCase):
                 self.assertGreater(knee[2], min(hip[2], ankle[2]) - .01)
                 self.assertEqual(side, -1 if hip[0] < 0 else 1)
 
+    def test_walking_staff_shaft_is_nearly_straight_without_master_changes(self):
+        before = tuple(study.master.build_master())
+        changed = 0
+        for face in before:
+            posed_rest = study.straightened_walk_staff_face(face)
+            if face.feature not in study.RIGHT_STAFF_FEATURES or face.feature == "right-hand":
+                self.assertIs(face, posed_rest)
+                continue
+            self.assertEqual(face.feature, posed_rest.feature)
+            self.assertEqual(face.color, posed_rest.color)
+            self.assertEqual(len(face.points), len(posed_rest.points))
+            for original, point in zip(face.points, posed_rest.points):
+                self.assertAlmostEqual(original[1], point[1])
+                if original[1] <= study.RIGHT_GRIP[1]:
+                    self.assertEqual(original, point)
+                elif original[1] >= study.STAFF_CROOK_TOP_Y:
+                    changed += 1
+                    self.assertAlmostEqual(study.STAFF_CROOK_CORRECTION_X, point[0] - original[0])
+                    self.assertAlmostEqual(study.STAFF_CROOK_CORRECTION_Z, point[2] - original[2])
+        self.assertGreater(changed, 20)
+        upper = (-.91 + study.STAFF_CROOK_CORRECTION_X,
+                 3.26,
+                 -.34 + study.STAFF_CROOK_CORRECTION_Z)
+        horizontal_offset = math.hypot(upper[0] - study.RIGHT_GRIP[0],
+                                       upper[2] - study.RIGHT_GRIP[2])
+        self.assertLess(horizontal_offset / (upper[1] - study.RIGHT_GRIP[1]), 0.05)
+        self.assertEqual(before, tuple(study.master.build_master()))
+
     def test_staff_plants_lifts_and_remains_rigid_in_right_hand(self):
         tracked = {"right-hand", "right-hand-staff", "staff-flame-base",
                    "staff-fire", "staff-flame-core"}
-        original_faces = tuple(f for f in study.master.build_master() if f.feature in tracked)
+        original_faces = tuple(study.straightened_walk_staff_face(f)
+                               for f in study.master.build_master() if f.feature in tracked)
         original = [p for f in original_faces for p in f.points]
         self.assertGreater(len(original), 200)
         for frame in range(16):

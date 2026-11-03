@@ -29,10 +29,14 @@ SHOULDER_COUNTER_TWIST_RADIANS = 0.085
 STAFF_CONTACT_HEIGHT_METRES = 0.045
 STAFF_SWING_LIFT_METRES = 0.24
 STAFF_LOWER_SEGMENT_METRES = 1.41
-STAFF_HAND_X_OFFSET = -0.35
+STAFF_HAND_X_OFFSET = -0.60
 STAFF_HAND_SWING_METRES = 0.16
-STAFF_HAND_Z_OFFSET = -0.25
+STAFF_HAND_Z_OFFSET = -0.40
 RIGHT_GRIP = (-0.74, 1.51, 0.20)
+# Walking-study-only straightening: leave the pose-locked idle master untouched.
+STAFF_CROOK_CORRECTION_X = 0.14
+STAFF_CROOK_CORRECTION_Z = 0.48
+STAFF_CROOK_TOP_Y = 3.24
 RIGHT_STAFF_FEATURES = frozenset({
     "right-hand", "right-hand-staff", "staff-flame-base", "staff-fire", "staff-flame-core"
 })
@@ -49,6 +53,26 @@ HEAD_ASSEMBLY_FEATURES = frozenset({
 CANONICAL_DIRECTIONS = ("N", "NE", "E", "SE", "S", "SW", "W", "NW")
 LEG_FEATURES = frozenset({"trouser", "boots", "boot-toe", "boot-cuff"})
 GARMENT_FEATURES = frozenset({"outer-robe", "under-robe", "permanent-cloth-rip", "frayed-rip-edge"})
+
+
+def straightened_walk_staff_face(face):
+    """Remove the inherited backward kink without altering the locked master.
+
+    The original upper pole ends at (-.91, 3.26, -.34) above a grip at
+    (-.74, 1.51, .20). Shift its upper part to (-.77, 3.26, .14).
+    The correction grows continuously from zero at the hand, so the lower
+    pole and planted tip are unchanged. Flame geometry moves with the shaft.
+    """
+    if face.feature not in RIGHT_STAFF_FEATURES or face.feature == "right-hand":
+        return face
+    adjusted = []
+    for x, y, z in face.points:
+        factor = max(0.0, min(1.0,
+            (y - RIGHT_GRIP[1]) / (STAFF_CROOK_TOP_Y - RIGHT_GRIP[1])))
+        adjusted.append((x + STAFF_CROOK_CORRECTION_X * factor,
+                         y,
+                         z + STAFF_CROOK_CORRECTION_Z * factor))
+    return master.Face(tuple(adjusted), face.color, face.feature)
 
 
 def staff_support_weight(phase):
@@ -283,7 +307,7 @@ def pose(frame_index, frame_count=KEY_POSES):
         raise ValueError("walk frame index outside clip")
     phase = 2.0 * math.pi * frame_index / frame_count
     original = master.build_master()
-    shared = [apply_root_pose(transform_walk_face(face, phase), phase)
+    shared = [apply_root_pose(transform_walk_face(straightened_walk_staff_face(face), phase), phase)
               for face in original if face.feature != "trouser"]
     shared.extend(articulated_leg_faces(-1, phase))
     shared.extend(articulated_leg_faces(1, phase))

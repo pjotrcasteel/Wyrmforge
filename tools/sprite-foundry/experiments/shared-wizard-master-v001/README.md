@@ -555,3 +555,41 @@ staff/right hand, consistent physical character topology, and repeatable
 multi-direction GIF layouts. This is **not owner-approved art** and should
 not be imported into the Hunt until the motion looks correct in a genuine
 game-scale preview. The PR remains draft and unmerged.
+
+
+## v013 — straightened walking staff, without backward crook (3 Nov 2026)
+
+Owner review found that the v012 staff **still bent backward**. The cause was
+in the inherited mesh: above the hand, the upper wooden pole retreated from
+local Z=+0.20 m at the grip to Z=-0.34 m at its top (54 cm), even before
+animation tilted the staff. That is a kink in the object, not a gait error.
+
+This experiment now applies a **walking-study-only local rest-pose correction**
+to the same staff faces: its upper rod is moved 14 cm sideways and 48 cm
+forward, increasing smoothly from zero displacement at the right-hand grip.
+The original upper endpoint (-0.91, 3.26, -0.34) becomes approximately
+(-0.77, 3.26, +0.14). This leaves a gentle handcrafted irregularity but
+reduces the upper shaft's sideways/backward departure to under 5% of its
+height above the hand. The wooden staff and all flame faces then continue
+as one rigid pole through every animation frame.
+
+- The original `master.py`, its **pose-lock checksum**, default idle pose,
+  topology and separate material atlases are **unchanged**. The new look
+  lives only in `walk_study.py` until owner visual approval.
+- The pole still **plants, bears a little weight, lifts and swings** with
+  the walk; its lower tip and world-locked support timing are unchanged.
+- The right-hand grip position was adjusted in local space to keep the new
+  straight shaft visible in the W/SW/NW facings. No view-dependent redraws,
+  camera shifts, or replacement images were introduced.
+- [All-eight 16-frame straight-staff review GIF](walk-16-frame-all-eight-straight-walking-staff-NOT-APPROVED.gif)
+  and [close S/SE/E review](walk-16-frame-S-SE-E-straight-walking-staff-NOT-APPROVED.gif)
+  show native transparent 64×80 renders enlarged only by nearest-neighbour.
+- **19 focused tests** exercise the rest-pose straightening, original-master
+  immutability, rigid hand/staff/flame distances, grounded support,
+  direction, flame visibility, full 16-frame sprite bounds and deterministic
+  eight-direction animation preview.
+
+The new pole is straighter, **not mechanically vertical at all times**:
+its entire rigid shaft still tilts naturally during lifting and planting.
+This is owner-review art, **not approved game assets**. Do not merge or
+import it into Hunt before acceptance.
