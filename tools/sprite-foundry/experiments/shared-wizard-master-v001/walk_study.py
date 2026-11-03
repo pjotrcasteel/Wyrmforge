@@ -29,9 +29,9 @@ SHOULDER_COUNTER_TWIST_RADIANS = 0.085
 STAFF_CONTACT_HEIGHT_METRES = 0.045
 STAFF_SWING_LIFT_METRES = 0.24
 STAFF_LOWER_SEGMENT_METRES = 1.41
-STAFF_HAND_X_OFFSET = -0.60
-STAFF_HAND_SWING_METRES = 0.16
-STAFF_HAND_Z_OFFSET = -0.40
+STAFF_HAND_X_OFFSET = -0.55
+STAFF_HAND_SWING_METRES = 0.25
+STAFF_HAND_Z_OFFSET = 0.15
 RIGHT_GRIP = (-0.74, 1.51, 0.20)
 # Walking-study-only straightening: leave the pose-locked idle master untouched.
 STAFF_CROOK_CORRECTION_X = 0.14
@@ -41,6 +41,10 @@ RIGHT_STAFF_FEATURES = frozenset({
     "right-hand", "right-hand-staff", "staff-flame-base", "staff-fire", "staff-flame-core"
 })
 RIGHT_SHOULDER = (-0.44, 2.48, 0.04)
+RIGHT_ELBOW_FORWARD_METRES = 0.32
+RIGHT_ELBOW_INWARD_METRES = 0.22
+RIGHT_ELBOW_LIFT_METRES = 0.16
+RIGHT_SLEEVE_SEGMENTS = 10
 LEFT_SHOULDER = (0.44, 2.48, 0.04)
 LEFT_ARM_FEATURES = frozenset({"left-sleeve", "left-hand"})
 CLOTH_TRIM_FEATURES = frozenset({
@@ -147,6 +151,73 @@ def articulated_leg_faces(side, phase):
         master.sleeve_tube_faces(hip, knee, .195, color="393437", feature="trouser")
         + master.sleeve_tube_faces(knee, ankle, .172, color="393437", feature="trouser")
     )
+
+
+def right_arm_joints(phase):
+    """Pose a bent right arm: shoulder, forward elbow, staff-bound wrist."""
+    dx, dy, dz = root_motion(phase)
+    shoulder_local = upper_body_point(RIGHT_SHOULDER, phase)
+    shoulder = (shoulder_local[0] + dx, shoulder_local[1] + dy,
+                shoulder_local[2] + dz)
+    hand, _ = staff_grip_and_pitch(phase)
+    fraction = 0.58
+    elbow = tuple(shoulder[i] * (1.0 - fraction) + hand[i] * fraction
+                  for i in range(3))
+    elbow = (elbow[0] + RIGHT_ELBOW_INWARD_METRES,
+             elbow[1] + RIGHT_ELBOW_LIFT_METRES,
+             elbow[2] + RIGHT_ELBOW_FORWARD_METRES)
+    return shoulder, elbow, hand
+
+
+def articulated_right_sleeve_faces(phase):
+    """Single watertight two-segment cloth tube sharing its elbow ring.
+
+    Both sleeve sections have a common circular joint cross-section. Unlike
+    bending the old two-ring cylinder, this creates a real visible elbow
+    without detached sleeves, reversed limbs or view-specific artwork.
+    """
+    shoulder, elbow, hand = right_arm_joints(phase)
+    joints = (shoulder, elbow, hand)
+    radii = (0.23, 0.19, 0.15)
+
+    def normalized(vector):
+        length = math.sqrt(sum(component * component for component in vector))
+        if length <= 1e-6:
+            raise ValueError("right arm bone has degenerate length")
+        return tuple(component / length for component in vector)
+
+    def subtract(a, b):
+        return tuple(a[i] - b[i] for i in range(3))
+
+    def cross(a, b):
+        return (a[1]*b[2] - a[2]*b[1],
+                a[2]*b[0] - a[0]*b[2],
+                a[0]*b[1] - a[1]*b[0])
+
+    upper = normalized(subtract(elbow, shoulder))
+    forearm = normalized(subtract(hand, elbow))
+    elbow_tangent = normalized(tuple(upper[i] + forearm[i] for i in range(3)))
+    rings = []
+    for center, tangent, radius in zip(joints, (upper, elbow_tangent, forearm), radii):
+        reference = (0.0, 0.0, 1.0) if abs(tangent[2]) < 0.90 else (0.0, 1.0, 0.0)
+        u = normalized(cross(tangent, reference))
+        v = cross(tangent, u)
+        ring = []
+        for i in range(RIGHT_SLEEVE_SEGMENTS):
+            angle = 2.0 * math.pi * i / RIGHT_SLEEVE_SEGMENTS
+            ring.append(tuple(center[j] + radius * (
+                math.cos(angle) * u[j] + math.sin(angle) * v[j]) for j in range(3)))
+        rings.append(tuple(ring))
+
+    result = []
+    color = master.rgb("777571")
+    for section in range(2):
+        near, far = rings[section], rings[section + 1]
+        for i in range(RIGHT_SLEEVE_SEGMENTS):
+            j = (i + 1) % RIGHT_SLEEVE_SEGMENTS
+            result.append(master.Face((near[i], near[j], far[j]), color, "right-sleeve"))
+            result.append(master.Face((near[i], far[j], far[i]), color, "right-sleeve"))
+    return tuple(result)
 
 
 def transform_walk_face(face, phase):
@@ -308,9 +379,10 @@ def pose(frame_index, frame_count=KEY_POSES):
     phase = 2.0 * math.pi * frame_index / frame_count
     original = master.build_master()
     shared = [apply_root_pose(transform_walk_face(straightened_walk_staff_face(face), phase), phase)
-              for face in original if face.feature != "trouser"]
+              for face in original if face.feature not in {"trouser", "right-sleeve"}]
     shared.extend(articulated_leg_faces(-1, phase))
     shared.extend(articulated_leg_faces(1, phase))
+    shared.extend(articulated_right_sleeve_faces(phase))
     return tuple(shared)
 
 

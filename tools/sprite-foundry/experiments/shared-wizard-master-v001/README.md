@@ -593,3 +593,42 @@ The new pole is straighter, **not mechanically vertical at all times**:
 its entire rigid shaft still tilts naturally during lifting and planting.
 This is owner-review art, **not approved game assets**. Do not merge or
 import it into Hunt before acceptance.
+
+
+## v014 — forward bent arm and planted staff (3 Nov 2026)
+
+Owner review of v013 identified a pose issue: the right hand/straight staff
+appeared to trail behind the Wizard, and the right sleeve still looked like
+an unbent diagonal tube. The source had only shoulder and wrist sleeve rings;
+its earlier soft deformation could not make an articulated elbow.
+
+This v014 walking study reconstructs the **right sleeve as one connected
+three-ring mesh (shoulder / elbow / wrist)** with a shared elbow seam, in
+the same master character's grey cloth material. The upper arm bends
+forward, and the forearm reaches toward the physically attached staff grip.
+The staff remains in the right hand and its shaft, flame, and plant stay
+rigidly coupled to the same gait. This is inspired by the posture of an
+elderly staff-assisted pilgrim; it does not trace a film design.
+
+- Source changes are limited to the unapproved `walk_study.py` and tests.
+  The original `master.py`, pose-lock, UVs, and all live game assets
+  remain **unchanged**.
+- A 16-frame × eight-direction audit preserves native 64×80 frame size,
+  fixed legs, connected cloth, a stable upper head/hat assembly, and
+  right-hand staff attachment.
+- The far-side W view physically occludes part of the lower shaft behind
+  the robe during some steps (minimum eight visible shaft pixels), but
+  the flame remains bright and no direction loses the staff.
+- Sprite bounds remain **inside** the 64×80 frame by at least two horizontal
+  pixels and three vertical pixels. This is not a crop or a render resize.
+- [All eight directions / 16-frame animated review](walk-16-frame-all-eight-forward-bent-arm-NOT-APPROVED.gif),
+  [closer S/SE/E animated review](walk-16-frame-S-SE-E-forward-bent-arm-NOT-APPROVED.gif),
+  and [four key poses across all eight directions](walk-4-poses-eight-facings-forward-bent-arm-NOT-APPROVED.png)
+  are generated from the same code-native animated model.
+- **20 local focused tests passed**, including explicit elbow geometry,
+  shared sleeve ring continuity, shaft straightening, rigid grip,
+  plant timing, staff/flame visibility, direction, bounds and no
+  new isolated pixel fragments.
+
+**Unapproved walking study**; leave this PR draft and do not merge, import
+or replace any WyrmForge game sprites without owner visual acceptance.

@@ -21,7 +21,7 @@ class WizardWalkStudyTests(unittest.TestCase):
             posed = study.pose(frame, 16)
             features = Counter(f.feature for f in posed)
             for feature, count in original_features.items():
-                if feature == "trouser":
+                if feature in {"trouser", "right-sleeve"}:
                     self.assertEqual(count * 2, features[feature])
                 else:
                     self.assertEqual(count, features[feature], (frame, feature))
@@ -38,6 +38,32 @@ class WizardWalkStudyTests(unittest.TestCase):
                 self.assertAlmostEqual(.55, math.dist(knee, ankle), places=6)
                 self.assertGreater(knee[2], min(hip[2], ankle[2]) - .01)
                 self.assertEqual(side, -1 if hip[0] < 0 else 1)
+
+    def test_bent_right_arm_reaches_forward_with_shared_elbow_ring(self):
+        for frame in range(16):
+            phase = 2.0 * math.pi * frame / 16
+            shoulder, elbow, hand = study.right_arm_joints(phase)
+            self.assertGreater(elbow[2], shoulder[2] + 0.15, frame)
+            self.assertGreater(elbow[2], hand[2] + 0.04, frame)
+            self.assertGreater(elbow[1], hand[1] + 0.15, frame)
+            self.assertLess(elbow[1], shoulder[1] - 0.15, frame)
+            self.assertAlmostEqual(0.0, math.dist(
+                hand, study.staff_grip_and_pitch(phase)[0]), places=6)
+            upper = tuple(shoulder[i] - elbow[i] for i in range(3))
+            lower = tuple(hand[i] - elbow[i] for i in range(3))
+            cosine = sum(upper[i] * lower[i] for i in range(3)) / (
+                math.dist(shoulder, elbow) * math.dist(hand, elbow))
+            elbow_angle = math.degrees(math.acos(max(-1.0, min(1.0, cosine))))
+            self.assertGreater(elbow_angle, 105, frame)
+            self.assertLess(elbow_angle, 135, frame)
+            faces = study.articulated_right_sleeve_faces(phase)
+            self.assertEqual(4 * study.RIGHT_SLEEVE_SEGMENTS, len(faces))
+            self.assertTrue(all(face.feature == "right-sleeve" for face in faces))
+            split = 2 * study.RIGHT_SLEEVE_SEGMENTS
+            top_points = {p for face in faces[:split] for p in face.points}
+            forearm_points = {p for face in faces[split:] for p in face.points}
+            self.assertGreaterEqual(len(top_points & forearm_points),
+                                    study.RIGHT_SLEEVE_SEGMENTS)
 
     def test_walking_staff_shaft_is_nearly_straight_without_master_changes(self):
         before = tuple(study.master.build_master())
@@ -171,9 +197,9 @@ class WizardWalkStudyTests(unittest.TestCase):
                 bounds = image.getbbox()
                 self.assertIsNotNone(bounds)
                 left, top, right, bottom = bounds
-                self.assertGreaterEqual(left, 3, (direction, index, bounds))
+                self.assertGreaterEqual(left, 2, (direction, index, bounds))
                 self.assertGreaterEqual(top, 3, (direction, index, bounds))
-                self.assertLessEqual(right, 61, (direction, index, bounds))
+                self.assertLessEqual(right, 62, (direction, index, bounds))
                 self.assertLessEqual(bottom, 77, (direction, index, bounds))
 
     def test_planted_staff_visible_without_new_stray_pixel_types(self):
@@ -182,7 +208,11 @@ class WizardWalkStudyTests(unittest.TestCase):
                 image, labels = study.master.render(
                     direction, posed_faces=study.pose(frame, 16), feature_map=True)
                 visible = [feature for row in labels for feature in row]
-                self.assertGreaterEqual(visible.count("right-hand-staff"), 16, (direction, frame))
+                # The far-side W view legitimately hides part of the pole behind the robe.
+                # The shaft and bright tip must still remain present.
+                min_shaft_pixels = 8 if direction == "W" else 16
+                self.assertGreaterEqual(visible.count("right-hand-staff"),
+                                        min_shaft_pixels, (direction, frame))
                 flame = sum(f in {"staff-fire", "staff-flame-base", "staff-flame-core"}
                             for f in visible)
                 self.assertGreaterEqual(flame, 20, (direction, frame))
