@@ -160,15 +160,11 @@ def right_arm_joints(phase):
     shoulder = (shoulder_local[0] + dx, shoulder_local[1] + dy,
                 shoulder_local[2] + dz)
     hand, _ = staff_grip_and_pitch(phase)
-    fraction = 0.58
-    elbow = tuple(shoulder[i] * (1.0 - fraction) + hand[i] * fraction
-                  for i in range(3))
-    # Local +Z is walking-forward. The wrist must be AHEAD of the elbow,
-    # otherwise the forearm reaches backward even if the elbow itself
-    # has a positive Z offset. Bend at the actual joint, not just the mesh.
-    elbow = (elbow[0] + RIGHT_ELBOW_INWARD_METRES,
-             elbow[1] + RIGHT_ELBOW_LIFT_METRES,
-             shoulder[2] + (hand[2] - shoulder[2]) * RIGHT_ELBOW_FORWARD_FRACTION)
+    # Elbow hangs below the shoulder; the forearm reaches outward and
+    # forward to the staff grip. No artificial mid-arm bend offset.
+    elbow = (shoulder[0] - 0.07,
+             max(shoulder[1] - 0.82, hand[1] + 0.2),
+             shoulder[2] + (hand[2] - shoulder[2]) * 0.18)
     return shoulder, elbow, hand
 
 
