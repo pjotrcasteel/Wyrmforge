@@ -26,7 +26,12 @@ FOOT_LIFT_METRES = 0.16
 FREE_ARM_SWING_METRES = 0.18
 GARMENT_SWAY_METRES = 0.07
 SHOULDER_COUNTER_TWIST_RADIANS = 0.085
-CARRIED_STAFF_PITCH_RADIANS = -0.35
+STAFF_CONTACT_HEIGHT_METRES = 0.045
+STAFF_SWING_LIFT_METRES = 0.24
+STAFF_LOWER_SEGMENT_METRES = 1.41
+STAFF_HAND_X_OFFSET = -0.35
+STAFF_HAND_SWING_METRES = 0.16
+STAFF_HAND_Z_OFFSET = -0.25
 RIGHT_GRIP = (-0.74, 1.51, 0.20)
 RIGHT_STAFF_FEATURES = frozenset({
     "right-hand", "right-hand-staff", "staff-flame-base", "staff-fire", "staff-flame-core"
@@ -46,9 +51,18 @@ LEG_FEATURES = frozenset({"trouser", "boots", "boot-toe", "boot-cuff"})
 GARMENT_FEATURES = frozenset({"outer-robe", "under-robe", "permanent-cloth-rip", "frayed-rip-edge"})
 
 
+def staff_support_weight(phase):
+    """How much of the wizard's weight is braced by the planted right-hand staff."""
+    p = phase % (2.0 * math.pi)
+    return 0.0 if p <= math.pi else math.sin(p - math.pi)
+
+
 def root_motion(phase):
-    """Support-leg weight shift and lifted passing step (same local axes for 8 views)."""
-    return (-0.10 * math.cos(phase), 0.095 * abs(math.sin(phase)), 0.045 * math.sin(phase))
+    """Leg support sway plus a modest dip/lean onto the planted staff."""
+    support = staff_support_weight(phase)
+    return (-0.10 * math.cos(phase) - 0.06 * support,
+            0.095 * abs(math.sin(phase)) - 0.06 * support,
+            0.045 * math.sin(phase) + 0.025 * support)
 
 
 def foot_trajectory(side, phase):
@@ -145,7 +159,8 @@ def transform_walk_face(face, phase):
 
 def shoulder_twist_angle(phase):
     """Counter-rotate the shoulders gently against the leg stride."""
-    return -SHOULDER_COUNTER_TWIST_RADIANS * math.cos(phase)
+    return (-SHOULDER_COUNTER_TWIST_RADIANS * math.cos(phase)
+            + 0.035 * staff_support_weight(phase))
 
 
 def rotate_about_y(point, angle):
@@ -155,17 +170,40 @@ def rotate_about_y(point, angle):
 
 
 def rotate_about_grip_pitch(point, angle):
-    """Rigidly pitch a carried staff, without hinging it at a ground contact."""
+    """Pitch the walking staff as one rigid object about the wizard’s grip."""
     x, y, z = point
     dy, dz = y - RIGHT_GRIP[1], z - RIGHT_GRIP[2]
     c, s = math.cos(angle), math.sin(angle)
     return (x, RIGHT_GRIP[1] + dy * c - dz * s, RIGHT_GRIP[2] + dy * s + dz * c)
 
 
-def carried_grip_offset(phase):
-    """Staff-carrying right hand is bent and lifted; never planted on terrain."""
-    return (0.07, 0.38 + 0.015 * math.sin(phase),
-            0.08 - 0.06 * math.cos(phase))
+def staff_tip_trajectory(phase):
+    """Right-hand staff steps with the opposite (left) support leg.
+
+    Phase [pi, 2pi] is a planted, world-locked backward stance. During
+    [0, pi], the pole lifts and swings forward without dragging.
+    """
+    forward_z, foot_lift = foot_trajectory(1, phase)
+    return forward_z, STAFF_CONTACT_HEIGHT_METRES + (
+        STAFF_SWING_LIFT_METRES * foot_lift / FOOT_LIFT_METRES
+    )
+
+
+def staff_grip_and_pitch(phase):
+    """Solve rigid pole angle from a grounded tip and a moving right-hand grip."""
+    tip_z, tip_y = staff_tip_trajectory(phase)
+    hand_z = RIGHT_GRIP[2] - STAFF_HAND_SWING_METRES * math.cos(phase) + STAFF_HAND_Z_OFFSET
+    pitch = math.asin(max(-1.0, min(1.0,
+        (hand_z - tip_z) / STAFF_LOWER_SEGMENT_METRES)))
+    hand_y = tip_y + STAFF_LOWER_SEGMENT_METRES * math.cos(pitch)
+    hand_x = RIGHT_GRIP[0] + STAFF_HAND_X_OFFSET
+    return (hand_x, hand_y, hand_z), pitch
+
+
+def staff_grip_offset(phase):
+    """Move the right hand exactly with the planting/swinging staff."""
+    hand, _ = staff_grip_and_pitch(phase)
+    return tuple(hand[i] - RIGHT_GRIP[i] for i in range(3))
 
 
 def upper_body_point(point, phase):
@@ -184,7 +222,7 @@ def arm_pose_point(point, phase, *, carrying):
     rotated = upper_body_point(shoulder, phase)
     shoulder_delta = tuple(rotated[i] - shoulder[i] for i in range(3))
     if carrying:
-        wrist_delta = carried_grip_offset(phase)
+        wrist_delta = staff_grip_offset(phase)
         elbow_bend = 0.07 * math.sin(math.pi * weight)
         return (x + shoulder_delta[0] * (1.0 - weight) + wrist_delta[0] * weight - elbow_bend,
                 y + shoulder_delta[1] * (1.0 - weight) + wrist_delta[1] * weight,
@@ -197,7 +235,7 @@ def arm_pose_point(point, phase, *, carrying):
 
 
 def apply_root_pose(face, phase):
-    """Animate shoulders/arms while preserving the immutable staff and art mesh."""
+    """Coordinate ground-planted staff, animated arms, and shoulder weight shift."""
     feature = face.feature
     if feature in LEG_FEATURES:
         return face
@@ -206,25 +244,34 @@ def apply_root_pose(face, phase):
     for point in face.points:
         x, y, z = point
         if feature in RIGHT_STAFF_FEATURES:
-            x, y, z = rotate_about_grip_pitch(point, CARRIED_STAFF_PITCH_RADIANS +
-                                              0.020 * math.sin(phase))
-            sx, sy, sz = carried_grip_offset(phase)
-            x, y, z = x + sx, y + sy, z + sz
+            # Rigidly move staff and gripping hand together, but do not add
+            # torso bob to its planted tip: world contact must stay locked.
+            hand, pitch = staff_grip_and_pitch(phase)
+            x, y, z = rotate_about_grip_pitch(point, pitch)
+            x += hand[0] - RIGHT_GRIP[0]
+            y += hand[1] - RIGHT_GRIP[1]
+            z += hand[2] - RIGHT_GRIP[2]
+            root_weight = 0.0
         elif feature == "right-sleeve":
             x, y, z = arm_pose_point(point, phase, carrying=True)
+            # The shoulder follows torso sway; the planted wrist does not.
+            root_weight = max(0.0, min(1.0,
+                (point[1] - RIGHT_GRIP[1]) / (RIGHT_SHOULDER[1] - RIGHT_GRIP[1])))
         elif feature in LEFT_ARM_FEATURES:
             x, y, z = arm_pose_point(point, phase, carrying=False)
+            root_weight = 1.0
         elif feature in HEAD_ASSEMBLY_FEATURES:
-            # Stabilize head against shoulder twist; prevents extra E/W beard islands.
             x, y, z = point
+            root_weight = 1.0
         else:
             x, y, z = upper_body_point(point, phase)
-        if feature in GARMENT_FEATURES | CLOTH_TRIM_FEATURES:
-            # Hem lags shoulders, while physical tears remain unchanged.
-            weight = 0.55 + 0.45 * max(0.0, min(1.0, y / 1.60))
-        else:
-            weight = 1.0
-        points.append((x + dx * weight, y + dy * weight, z + dz * weight))
+            if feature in GARMENT_FEATURES | CLOTH_TRIM_FEATURES:
+                root_weight = 0.55 + 0.45 * max(0.0, min(1.0, y / 1.60))
+            else:
+                root_weight = 1.0
+        points.append((x + dx * root_weight,
+                       y + dy * root_weight,
+                       z + dz * root_weight))
     return master.Face(tuple(points), face.color, feature)
 
 
@@ -281,37 +328,46 @@ def contact_sheet(frame_count=KEY_POSES):
 
 
 
-def animated_review_frames(frame_count=16, zoom=4, *, use_materials=True):
-    """Prepare a real native-pixel S/SE/E walk loop at nearest-neighbour zoom."""
+def animated_review_frames(frame_count=16, zoom=4, *, use_materials=True,
+                           directions=("S", "SE", "E")):
+    """Render native-scale gait reviews from the same physical master, any facing."""
     if frame_count < KEY_POSES or frame_count % KEY_POSES:
         raise ValueError("animation frames must be divisible by four")
     if not 1 <= zoom <= 10:
         raise ValueError("zoom must be between 1 and 10")
-    directions = ("S", "SE", "E")
+    if not directions or any(direction not in CANONICAL_DIRECTIONS for direction in directions):
+        raise ValueError("animation review has unsupported facings")
+    if len(set(directions)) != len(directions):
+        raise ValueError("animation review facings must be distinct")
+    cols = min(4, len(directions))
+    rows = (len(directions) + cols - 1) // cols
     tile_w, tile_h = master.WIDTH * zoom, master.HEIGHT * zoom
     margin, top = 12, 30
-    width = margin + len(directions) * (tile_w + margin)
-    height = tile_h + top + margin
+    width = margin + cols * (tile_w + margin)
+    height = top + rows * (tile_h + margin)
     result = []
     for index in range(frame_count):
         canvas = Image.new("RGBA", (width, height), (23, 27, 34, 255))
         painter = ImageDraw.Draw(canvas)
         painter.text((margin, 7), "WIZARD WALK / NATIVE 64x80 / UNAPPROVED", fill=(220, 219, 206, 255))
-        for col, direction in enumerate(directions):
+        for position, direction in enumerate(directions):
+            col, row = position % cols, position // cols
             x = margin + col * (tile_w + margin)
-            painter.rectangle((x, top, x + tile_w - 1, top + tile_h - 1), fill=(45, 49, 54, 255))
+            y = top + row * (tile_h + margin)
+            painter.rectangle((x, y, x + tile_w - 1, y + tile_h - 1),
+                              fill=(45, 49, 54, 255))
             actor = render_frame(direction, index, frame_count, use_materials=use_materials)
-            canvas.alpha_composite(actor.resize((tile_w, tile_h), Image.Resampling.NEAREST), (x, top))
-            painter.text((x + 4, top + 4), direction, fill=(227, 224, 211, 255))
+            canvas.alpha_composite(actor.resize((tile_w, tile_h), Image.Resampling.NEAREST), (x, y))
+            painter.text((x + 4, y + 4), direction, fill=(227, 224, 211, 255))
         result.append(canvas)
     return result
 
 
-def save_animation_gif(path, frame_count=16, fps=12):
-    """Write an isolated looping review GIF. It is not a game sprite atlas."""
+def save_animation_gif(path, frame_count=16, fps=12, *, directions=("S", "SE", "E")):
+    """Write a repeatable offline GIF from native RGBA source animation frames."""
     if not 1 <= fps <= 30:
         raise ValueError("review fps must be between 1 and 30")
-    previews = animated_review_frames(frame_count)
+    previews = animated_review_frames(frame_count, directions=directions)
     reference = previews[0].convert("RGB").quantize(colors=128)
     frames = [reference]
     frames.extend(
@@ -336,16 +392,20 @@ def main():
     parser.add_argument("--preview", type=Path, help="Output a labelled review contact PNG")
     parser.add_argument("--frames", type=Path, help="Output individual native RGBA frames")
     parser.add_argument("--gif", type=Path, help="Output a looping S/SE/E motion review GIF")
+    parser.add_argument("--gif-all-eight", type=Path, help="Output the same loop for all eight real camera facings")
     parser.add_argument("--gif-fps", type=int, default=12, help="Motion review playback FPS")
     parser.add_argument("--count", type=int, default=KEY_POSES, help="4 or 16 frames per direction")
     args = parser.parse_args()
-    if not args.preview and not args.frames and not args.gif:
-        parser.error("provide --preview, --frames or --gif")
+    if not args.preview and not args.frames and not args.gif and not args.gif_all_eight:
+        parser.error("provide --preview, --frames, --gif or --gif-all-eight")
     if args.preview:
         args.preview.parent.mkdir(parents=True, exist_ok=True)
         contact_sheet(args.count).save(args.preview)
     if args.gif:
         save_animation_gif(args.gif, 16, args.gif_fps)
+    if args.gif_all_eight:
+        save_animation_gif(args.gif_all_eight, 16, args.gif_fps,
+                           directions=CANONICAL_DIRECTIONS)
     if args.frames:
         for direction in CANONICAL_DIRECTIONS:
             folder = args.frames / direction

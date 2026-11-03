@@ -39,25 +39,61 @@ class WizardWalkStudyTests(unittest.TestCase):
                 self.assertGreater(knee[2], min(hip[2], ankle[2]) - .01)
                 self.assertEqual(side, -1 if hip[0] < 0 else 1)
 
-    def test_staff_is_carried_clear_of_ground_and_attached_rigidly_to_right_hand(self):
+    def test_staff_plants_lifts_and_remains_rigid_in_right_hand(self):
         tracked = {"right-hand", "right-hand-staff", "staff-flame-base",
                    "staff-fire", "staff-flame-core"}
         original_faces = tuple(f for f in study.master.build_master() if f.feature in tracked)
-        reference = [p for face in original_faces for p in face.points]
-        self.assertGreater(len(reference), 200)
+        original = [p for f in original_faces for p in f.points]
+        self.assertGreater(len(original), 200)
         for frame in range(16):
-            moving_faces = tuple(f for f in study.pose(frame, 16) if f.feature in tracked)
-            moved = [p for face in moving_faces for p in face.points]
-            self.assertEqual(len(reference), len(moved))
+            phase = frame * 2.0 * math.pi / 16
+            current_faces = tuple(f for f in study.pose(frame, 16) if f.feature in tracked)
+            current = [p for f in current_faces for p in f.points]
+            self.assertEqual(len(original), len(current))
             self.assertEqual([f.feature for f in original_faces],
-                             [f.feature for f in moving_faces])
-            for anchor in (0, len(reference) // 2, len(reference) - 1):
-                for base, current in zip(reference, moved):
-                    self.assertAlmostEqual(math.dist(reference[anchor], base),
-                                           math.dist(moved[anchor], current), places=6)
-            staff_bottom = min(p[1] for f in moving_faces
-                               if f.feature == "right-hand-staff" for p in f.points)
-            self.assertGreater(staff_bottom, .50, f"grounded staff at frame {frame}")
+                             [f.feature for f in current_faces])
+            # Staff and right grip form one rigid instrument (no floating hand).
+            for anchor in (0, len(original) // 2, len(original) - 1):
+                for before, after in zip(original, current):
+                    self.assertAlmostEqual(math.dist(original[anchor], before),
+                                           math.dist(current[anchor], after), places=6)
+            tip_z, tip_y = study.staff_tip_trajectory(phase)
+            if 8 <= frame < 16:
+                self.assertAlmostEqual(study.STAFF_CONTACT_HEIGHT_METRES, tip_y, places=6)
+            else:
+                self.assertGreaterEqual(tip_y, study.STAFF_CONTACT_HEIGHT_METRES)
+            # Original lower pole center is (-.78,.10,.20) in immutable master.
+            grip, pitch = study.staff_grip_and_pitch(phase)
+            planted_y = grip[1] - study.STAFF_LOWER_SEGMENT_METRES * math.cos(pitch)
+            planted_z = grip[2] - study.STAFF_LOWER_SEGMENT_METRES * math.sin(pitch)
+            self.assertAlmostEqual(tip_y, planted_y, places=6)
+            self.assertAlmostEqual(tip_z, planted_z, places=6)
+
+    def test_planted_staff_tip_is_world_locked_until_next_swing(self):
+        # Exactly like planted feet: actor moves forward, staff tip must remain.
+        stride_per_frame = study.travel_per_cycle_metres() / 16
+        contact_world_z = None
+        for frame in range(8, 17):
+            phase = 2.0 * math.pi * frame / 16
+            tip_z, tip_y = study.staff_tip_trajectory(phase)
+            world_z = frame * stride_per_frame + tip_z
+            if contact_world_z is None:
+                contact_world_z = world_z
+            self.assertAlmostEqual(contact_world_z, world_z, places=6)
+            self.assertAlmostEqual(study.STAFF_CONTACT_HEIGHT_METRES, tip_y, places=6)
+        swing_start = study.staff_tip_trajectory(0.0)[1]
+        swing_peak = study.staff_tip_trajectory(math.pi / 2)[1]
+        swing_end = study.staff_tip_trajectory(math.pi)[1]
+        self.assertGreater(swing_peak - swing_start, 0.20)
+        self.assertAlmostEqual(swing_start, swing_end, places=6)
+
+    def test_wizard_leans_into_staff_during_support(self):
+        swing = study.root_motion(math.pi / 2)
+        supported = study.root_motion(3.0 * math.pi / 2)
+        self.assertLess(supported[0], swing[0])  # rightward shoulder/hip lean
+        self.assertLess(supported[1], swing[1])  # slight weight-bearing dip
+        self.assertGreater(study.staff_support_weight(3.0 * math.pi / 2), .99)
+        self.assertEqual(0.0, study.staff_support_weight(math.pi / 2))
 
     def test_head_beard_and_hat_remain_a_single_rigid_assembly(self):
         tracked = study.HEAD_ASSEMBLY_FEATURES
@@ -96,7 +132,8 @@ class WizardWalkStudyTests(unittest.TestCase):
         right_8 = hand_center(8, "right-hand")
         self.assertGreater(left_0[2], left_8[2])
         self.assertLess(right_0[2], right_8[2])
-        self.assertGreater(right_0[1], 1.80)
+        self.assertGreater(right_0[1], 1.30)
+        self.assertLess(right_0[1], 1.70)
 
     def test_no_image_edge_clipping_in_any_direction_or_gait_frame(self):
         for direction in study.CANONICAL_DIRECTIONS:
@@ -110,13 +147,13 @@ class WizardWalkStudyTests(unittest.TestCase):
                 self.assertLessEqual(right, 61, (direction, index, bounds))
                 self.assertLessEqual(bottom, 77, (direction, index, bounds))
 
-    def test_carried_staff_visible_without_new_stray_pixel_types(self):
+    def test_planted_staff_visible_without_new_stray_pixel_types(self):
         for direction in study.CANONICAL_DIRECTIONS:
             for frame in range(16):
                 image, labels = study.master.render(
                     direction, posed_faces=study.pose(frame, 16), feature_map=True)
                 visible = [feature for row in labels for feature in row]
-                self.assertGreaterEqual(visible.count("right-hand-staff"), 30, (direction, frame))
+                self.assertGreaterEqual(visible.count("right-hand-staff"), 16, (direction, frame))
                 flame = sum(f in {"staff-fire", "staff-flame-base", "staff-flame-core"}
                             for f in visible)
                 self.assertGreaterEqual(flame, 20, (direction, frame))
@@ -240,10 +277,10 @@ class WizardWalkStudyTests(unittest.TestCase):
             self.assertEqual(frames[0].tobytes(),
                              study.render_frame(direction, 0, use_materials=False).tobytes())
 
-    def test_fire_remains_visible_through_all_four_poses_and_eight_directions(self):
+    def test_fire_remains_visible_through_all_sixteen_frames_and_eight_directions(self):
         for direction in study.CANONICAL_DIRECTIONS:
-            for index in range(4):
-                frame = study.render_frame(direction, index, use_materials=False)
+            for index in range(16):
+                frame = study.render_frame(direction, index, 16, use_materials=False)
                 rgba = frame.tobytes()
                 fire_count = sum(
                     1 for offset in range(0, len(rgba), 4)
@@ -267,6 +304,14 @@ class WizardWalkStudyTests(unittest.TestCase):
         self.assertEqual(4, len(images))
         self.assertTrue(all(image.mode == "RGBA" and image.size == (432, 202) for image in images))
         self.assertEqual(4, len({image.tobytes() for image in images}))
+        all_eight = study.animated_review_frames(
+            16, zoom=2, use_materials=False,
+            directions=study.CANONICAL_DIRECTIONS)
+        self.assertEqual(16, len(all_eight))
+        self.assertTrue(all(image.size == (572, 374) for image in all_eight))
+        self.assertEqual(16, len({image.tobytes() for image in all_eight}))
+        with self.assertRaises(ValueError):
+            study.animated_review_frames(4, use_materials=False, directions=("S", "S"))
         with self.assertRaises(ValueError):
             study.animated_review_frames(5, use_materials=False)
         with self.assertRaises(ValueError):

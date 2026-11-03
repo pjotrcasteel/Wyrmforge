@@ -508,3 +508,50 @@ passed on the v011 code commit. This is still **unapproved character motion**.
 
 
 [Closer native-pixel S/SE/E v011 gait review](walk-16-frame-S-SE-E-carried-staff-close-NOT-APPROVED.gif) is available for inspecting the carried staff and shoulder/arm counter-swing.
+
+
+## v012 — staff-assisted walking (3 Nov 2026, unapproved)
+
+**Owner clarification:** the staff **is** a walking aid and should participate
+in the wizard's natural gait. This supersedes the v011 *raised/carry-only*
+direction above; the older animated proofs remain as historical comparisons.
+
+The shared native **64×80** 3D/2.5D wizard master now drives one coherent
+16-frame walk cycle:
+
+- The staff tip plants on the ground together with the opposite (left)
+  support leg. Across the planted half-cycle, its world-space forward
+  coordinate stays fixed when the actor advances at the prescribed
+  **1.60 m per loop**.
+- During the other half, the tip **lifts approximately 24 cm** and travels
+  forward for the next plant, without scraping the ground.
+- The right hand is rigidly coupled to the entire wooden shaft and its
+  flame throughout; the right sleeve bends smoothly from the rotating
+  shoulder to the grip. The hand follows the forward staff swing.
+- Shoulders counterrotate, the free left arm swings in opposition, and the
+  torso briefly leans/dips as the staff takes weight.
+- After visually rejecting over-tilted and occluded experimental staff
+  placements, the final pose keeps its unchanged upper crook, has at least
+  **3 px transparent clearance** from the image edges in all eight
+  directions and all 16 frames, and keeps its flame visible throughout.
+- The master model, torn-robe geometry, head/beard/hat assembly, editable
+  material UVs, default idle pose, and live gameplay assets are untouched.
+
+**Review only:** [all-eight-direction real 16-frame planted-staff GIF](walk-16-frame-all-eight-planted-staff-NOT-APPROVED.gif) and
+[closer S/SE/E planted-staff gait GIF](walk-16-frame-S-SE-E-planted-staff-close-NOT-APPROVED.gif).
+It is generated from actual 64×80 RGBA model renders, nearest-neighbour
+enlarged for inspection, not independently drawn sprites.
+
+To reproduce this review offline from this experiment folder:
+
+```sh
+python walk_study.py --gif-all-eight walk-review.gif --gif-fps 12
+```
+
+The focused structural suite covers 18 tests, including gait direction,
+constant-length knees, world-locked planted feet **and staff**, real
+16-frame flame visibility for all eight facings, non-clipping, attached
+staff/right hand, consistent physical character topology, and repeatable
+multi-direction GIF layouts. This is **not owner-approved art** and should
+not be imported into the Hunt until the motion looks correct in a genuine
+game-scale preview. The PR remains draft and unmerged.
