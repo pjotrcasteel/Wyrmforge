@@ -54,6 +54,8 @@ function dithered(ramp, value, x, y) {
     return ramp[Math.max(0, Math.min(ramp.length - 1, level))];
 }
 // Ramps are [deepest shadow ... highlight]. Dark gothic: muted, desaturated, light kept low; colour saturation belongs to fire.
+const liftHex = (hex, factor) => '#' + [1, 3, 5].map(i => Math.min(255, Math.round(parseInt(hex.slice(i, i + 2), 16) * factor)).toString(16).padStart(2, '0')).join('');
+const lifted = (ramp, factor) => Object.fromEntries(Object.entries(ramp).map(([key, value]) => [key, Array.isArray(value) ? value.map(hex => liftHex(hex, factor)) : liftHex(value, factor)]));
 const RAMPS = Object.freeze([
     { // Wet land: cold damp earth under dull green
         grass: ['#16200f', '#222f17', '#2f4020', '#3d5329', '#566d38'],
@@ -79,7 +81,7 @@ const RAMPS = Object.freeze([
         stone: ['#0f0c0d', '#1a1516', '#2a2324', '#3b3233', '#50464a'],
         moss: '#231c1c',
     },
-]);
+].map((ramp, band) => band === 2 ? lifted(ramp, 1.35) : band === 3 ? lifted(ramp, 1.55) : ramp));
 
 export const rampsForBand = band => RAMPS[Math.min(RAMPS.length - 1, Math.max(0, band | 0))];
 const hasGrass = band => band <= 1;
@@ -162,19 +164,19 @@ function plates(seed, count, stretch = 1) {
 }
 
 /** Flagstone top: rounded, bevelled plates lit from the upper left, dark joints, hairline cracks, lichen and, in the wet land, moss. */
-function stoneTop(band, seed, count = 6) {
+function stoneTop(band, seed, count = 3) {
     const ramps = rampsForBand(band), ramp = ramps.stone, tile = new Tile(), random = rng(seed);
     const field = plates(seed, count, 1.15), grain = wrapNoise(seed + 3, 16), moss = wrapNoise(seed + 4, 4);
     for (let y = 0; y < TILE; y++) for (let x = 0; x < TILE; x++) {
         const edge = field.edge(x, y), site = field.sites[field.id(x, y)];
         if (edge < 1.1) { tile.set(x, y, ramp[0]); continue; }
-        const value = site.tone * .55 + field.height(x, y) * .12 + field.lit(x, y) * .8 + (grain(x / TILE, y / TILE) - .5) * .14;
+        const value = .36 + (site.tone - .47) * .5 + field.height(x, y) * .1 + field.lit(x, y) * .42 + (grain(x / TILE, y / TILE) - .5) * .08;
         let color = dithered(ramp, value, x, y);
         if (band === 0 && moss(x / TILE, y / TILE) > .64 && field.height(x, y) < .9 && bayer(x, y) < .6) color = ramps.moss;
         tile.set(x, y, color);
     }
     for (let i = 0; i < 1; i++) crackLine(tile, random, Math.floor(random() * TILE), Math.floor(random() * TILE), 6 + Math.floor(random() * 8), ramp[1]);
-    for (let i = 0; i < 5; i++) tile.set(Math.floor(random() * TILE), Math.floor(random() * TILE), ramp[random() < .5 ? 1 : 4]);
+    for (let i = 0; i < 2; i++) tile.set(Math.floor(random() * TILE), Math.floor(random() * TILE), ramp[random() < .5 ? 1 : 4]);
     return tile;
 }
 /** Soil side: strata bands, hanging roots, embedded pebbles. Tiles vertically, so any height can be cut from it. */
@@ -216,7 +218,7 @@ function stoneSide(band, seed) {
     let cursor = 0;
     const layers = weights.map((weight, i) => {
         const start = cursor; cursor += weight / total * TILE;
-        return { start, tone: .2 + random() * .5, wave: wrapNoise(seed + 10 + i, 4), amplitude: 3 + random() * 4 };
+        return { start, tone: .3 + random() * .26, wave: wrapNoise(seed + 10 + i, 4), amplitude: 3 + random() * 4 };
     });
     const grain = wrapNoise(seed + 1, 16), wrapY = y => ((y % TILE) + TILE) % TILE;
     const boundary = (layer, x) => layer.start + (layer.wave(x / TILE, layer.start / TILE) - .5) * 2 * layer.amplitude;
@@ -228,19 +230,19 @@ function stoneSide(band, seed) {
             const layer = layers[index], below = y - wrapY(edges[index]), next = wrapY(edges[(index + 1) % layers.length]) - y;
             const wrappedBelow = below < 0 ? below + TILE : below, wrappedNext = next <= 0 ? next + TILE : next;
             let value = layer.tone + (grain(x / TILE * .6, y / TILE * 2.5) - .5) * .18;
-            if (wrappedBelow < 1.2) value += .16;                // lit upper edge of the layer
-            else if (wrappedNext < 2.2) value -= .16 + (2.2 - wrappedNext) * .04; // shadowed lower lip
+            if (wrappedBelow < 1.2) value += .1;                // lit upper edge of the layer
+            else if (wrappedNext < 2.2) value -= .1 + (2.2 - wrappedNext) * .03; // shadowed lower lip
             tile.set(x, y, dithered(ramp, value, x, y));
         }
     }
-    for (let i = 0; i < 2; i++) { // vertical fractures, a lit pixel on the lee side of each
+    for (let i = 0; i < 1; i++) { // a vertical fracture, a lit pixel on the lee side
         let x = Math.floor(random() * TILE), y = Math.floor(random() * TILE);
         for (let d = 0, length = 10 + Math.floor(random() * 14); d < length; d++) {
             tile.set(x, y + d, ramp[0]); tile.set(x - 1, y + d, ramp[3]);
             if (random() < .2) x += random() < .5 ? -1 : 1;
         }
     }
-    for (let i = 0; i < 3; i++) { const x = Math.floor(random() * TILE), y = Math.floor(random() * TILE); for (let dy = 0; dy < 2; dy++) for (let dx = 0; dx < 3; dx++) tile.set(x + dx, y + dy, ramp[dy ? 2 : 4]); }
+    for (let i = 0; i < 1; i++) { const x = Math.floor(random() * TILE), y = Math.floor(random() * TILE); for (let dy = 0; dy < 2; dy++) for (let dx = 0; dx < 3; dx++) tile.set(x + dx, y + dy, ramp[dy ? 2 : 4]); }
     if (band === 0) for (let i = 0; i < 12; i++) { const x = Math.floor(random() * TILE), y = Math.floor(random() * TILE); tile.set(x, y, ramps.moss); if (random() < .6) tile.set(x, y + 1, ramps.moss); }
     return tile;
 }
@@ -363,7 +365,7 @@ export function generateTileSet(band) {
     const make = (builder, base) => Array.from({ length: TILE_VARIANTS }, (_, i) => builder(band, base + i * 101));
     return {
         grassTop: make(grassTop, 11), dirtTop: make((b, s) => dirtTop(b, s), 23), ashTop: make((b, s) => dirtTop(b, s, true), 31), stoneTop: make(stoneTop, 41),
-        grassDryTop: make(dryGrassTop, 113), mudTop: make(mudTop, 127), rubbleTop: make((b, s) => stoneTop(b, s, 11), 139),
+        grassDryTop: make(dryGrassTop, 113), mudTop: make(mudTop, 127), rubbleTop: make((b, s) => stoneTop(b, s, 7), 139),
         grassSide: make((b, s) => dirtSide(b, s, true), 53), dirtSide: make((b, s) => dirtSide(b, s, false), 67), stoneSide: make(stoneSide, 71),
         lavaTop: make(lavaTop, 83), lavaSide: make(lavaSide, 97), woodTop: make(woodTop, 151), woodSide: make(woodSide, 163),
     };

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { collectTrees, treeLayers, canopyKindForBand, treeSpriteName, useForestKit, TREE_MIN_TRUNK_MICROCELLS } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-tree-art.js';
+import { collectTrees, collectBushes, treeLayers, canopyKindForBand, treeSpriteName, useForestKit, TREE_MIN_TRUNK_MICROCELLS } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-tree-art.js';
 import { TERRAIN_MATERIAL, mergeTerrainFrame, TRUNK_MOUND_MICROCELLS } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-terrain-canvas.js';
 
 const manifest = JSON.parse(readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/art/environment/forest/forest-kit.json', import.meta.url), 'utf8'));
@@ -51,11 +51,30 @@ test('only trees near the camera become depth layers, and none before the kit ha
     useForestKit(null);
     assert.equal(treeLayers(f, 0, { x: 0, y: 0 }, 390, 700).length, 0);
     useForestKit({ sprites: manifest.sprites, image: {} });
-    const near = treeLayers(f, 0, { x: 0, y: 0 }, 390, 700);
+    const near = treeLayers(f, 0, { x: 0, y: 0 }, 390, 700).filter(layer => /^(tree|stump)\./.test(layer.tree.name));
     assert.equal(near.length, 2);
     assert.equal(near[0].kind, 'tree');
     assert.ok([256, 384].includes(near[0].tree.captureSize));
     assert.equal(treeLayers(f, 0, { x: 5000, y: 5000 }, 390, 700).length, 0);
+});
+
+test('bushes are cosmetic undergrowth on open level ground, never on trunks, rock or dug columns, and denser near trees', () => {
+    const columns = 32, rows = 60, surface = new Array(columns * rows).fill(0), material = new Array(columns * rows).fill(0);
+    for (const c of [10, 11, 12]) { surface[30 * columns + c] = 20; material[30 * columns + c] = TERRAIN_MATERIAL.Wood; }
+    for (let c = 0; c < 8; c++) { surface[20 * columns + c] = 12; material[20 * columns + c] = TERRAIN_MATERIAL.Stone; }
+    const fine = new Map([[40 * columns + 5, { heights: new Array(64).fill(-4) }]]);
+    const f = { columns, rows, surface, material, fine, visualSeed: 9 };
+    const bushes = collectBushes(f, 0);
+    assert.ok(bushes.length > 15 && bushes.length < 140, `a few dozen bushes, got ${bushes.length}`);
+    for (const bush of bushes) {
+        const index = Number(bush.key.slice(1));
+        assert.equal(material[index], TERRAIN_MATERIAL.Soil);
+        assert.ok(!fine.has(index));
+        assert.match(bush.name, /^bush\.0\.[02]$/);
+        assert.ok(manifest.sprites[bush.name]);
+    }
+    for (const band of [1, 2, 3]) for (const bush of collectBushes({ ...f, bushList: null }, band)) assert.ok(manifest.sprites[bush.name], bush.name);
+    assert.equal(collectBushes(f, 0), collectBushes(f, 0), 'cached');
 });
 
 test('the terrain draws a tree as a low mound while the real trunk height stays available', () => {

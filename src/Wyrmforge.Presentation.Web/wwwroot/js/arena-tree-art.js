@@ -1,9 +1,13 @@
-// Hunt 1.0 trees. A tree is a column of C# terrain (material Wood) that blocks walking and shots and that fire wears away; the terrain
-// itself shows only a low root mound. This module draws the upright tree from the gothic forest kit (tools/art/build_gothic_forest_kit.py,
+// Hunt 1.0 trees and undergrowth. A tree is a column of C# terrain (material Wood) that blocks walking and shots and that fire wears away;
+// the terrain itself shows only a low root mound. This module draws the upright tree from the gothic forest kit (tools/art/build_gothic_forest_kit.py,
 // recoloured from the Pixel Crawler Free Pack by Anokolisa) as a depth layer, so actors pass behind it and the shared lighting engine
 // shadows it like any other upright sprite. The Wyrm Influence band picks live, dry, dead or charred art; a worn-down trunk becomes a stump.
+// Bushes are cosmetic undergrowth on open ground (nothing blocks), placed by a hash of the cell and cleared wherever the ground is dug.
 import { TERRAIN_MATERIAL } from './arena-terrain-canvas.js';
+import { forestKit, useForestKit } from './forest-kit.js';
+import { cellHash } from './arena-ground-decals.js';
 
+export { useForestKit };
 export const TREE_MIN_TRUNK_MICROCELLS = 8;
 const STUMP_MIN_MICROCELLS = 2;
 const MICROCELL_PX = 4;
@@ -14,29 +18,6 @@ const VARIANTS = Object.freeze({ conifer_l: 4, conifer_s: 4, oak_l: 2, oak_s: 2,
 
 /** The art kind for an influence band: living, dry, dead, charred. */
 export const canopyKindForBand = band => ['live', 'dry', 'dead', 'charred'][Math.min(3, Math.max(0, band | 0))];
-
-let kit = null;
-let kitRequested = false;
-/** Installs a kit (`{ sprites, image }`) directly; used by tests and by anything that already holds the atlas. */
-export function useForestKit(value) { kit = value; kitRequested = true; }
-
-async function loadForestKit() {
-    const base = new URL('../art/environment/forest/', import.meta.url);
-    const json = await (await fetch(new URL('forest-kit.json', base))).json();
-    const image = new Image();
-    image.src = new URL(json.atlas, base).href;
-    await image.decode();
-    return { sprites: json.sprites, image };
-}
-
-/** The loaded kit, or null while it is still downloading (trees simply appear once it is there). */
-export function forestKit() {
-    if (!kit && !kitRequested && typeof Image !== 'undefined' && typeof fetch !== 'undefined') {
-        kitRequested = true;
-        loadForestKit().then(loaded => { kit = loaded; }).catch(() => { });
-    }
-    return kit;
-}
 
 /** Sprite name for a tree: family, size and variant come from the cell's hash so a tree never changes shape while it burns. */
 export function treeSpriteName(kind, hash, standing = true) {
@@ -59,8 +40,7 @@ export function collectTrees(frame, band) {
         const trunk = frame.trunks?.get(index) ?? frame.surface[index];
         if (trunk < STUMP_MIN_MICROCELLS) continue;
         const column = index % frame.columns, row = Math.floor(index / frame.columns);
-        let h = (Math.imul(column + 3, 0x9E3779B1) ^ Math.imul(row + 5, 0x85EBCA6B)) >>> 0;
-        h = Math.imul(h ^ (h >>> 15), 0x2C1B3C6D) >>> 0;
+        const h = cellHash(column, row, 0, 3);
         const standing = trunk >= TREE_MIN_TRUNK_MICROCELLS;
         trees.push({ key: index, x: (column + .5) * FACE, footY: (row + .5) * FACE - FOOT_RAISE_PX, heightPx: trunk * MICROCELL_PX,
             standing, name: treeSpriteName(kind, h, standing), depth: (row + 1) * FACE });
@@ -69,7 +49,48 @@ export function collectTrees(frame, band) {
     return trees;
 }
 
-/** Draws one tree in world coordinates with its roots on the foot anchor. */
+/** Sprite name of a bush for a band, or null where the Wyrm has left no undergrowth worth drawing. */
+export function bushSpriteName(band, hash) {
+    const large = (hash >>> 5) & 1 ? 2 : 0;
+    if (band === 0) return `bush.0.${large}`;
+    if (band === 1) return `bush.${1 + ((hash >>> 6) % 3)}.${large}`;
+    return `shrub.${band === 2 ? 'dead' : 'charred'}.${(hash >>> 5) & 1}`;
+}
+
+const BUSH_DENSITY = [.022, .016, .012, .009];
+
+/** Cosmetic undergrowth on open, level ground (denser around trees), cached on the frame. Dug or chipped columns carry none. */
+export function collectBushes(frame, band) {
+    if (!frame?.material) return [];
+    if (frame.bushList && frame.bushBand === band) return frame.bushList;
+    const { columns, rows, surface, material } = frame;
+    const shaded = new Uint8Array(material.length);
+    for (let index = 0; index < material.length; index++) {
+        if (material[index] !== TERRAIN_MATERIAL.Wood) continue;
+        const c = index % columns, r = Math.floor(index / columns);
+        for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++)
+            if (c + dx >= 0 && c + dx < columns && r + dy >= 0 && r + dy < rows) shaded[(r + dy) * columns + c + dx] = 1;
+    }
+    const density = BUSH_DENSITY[Math.min(3, Math.max(0, band | 0))];
+    const bushes = [];
+    for (let index = 0; index < material.length; index++) {
+        const m = material[index], height = surface[index];
+        if ((m !== TERRAIN_MATERIAL.Soil && m !== TERRAIN_MATERIAL.Ash) || height < 0 || height > 8 || frame.fine?.has(index)) continue;
+        const column = index % columns, row = Math.floor(index / columns);
+        if (row < 1 || column < 1 || column >= columns - 1) continue;
+        const h = cellHash(column, row, frame.visualSeed ?? 0, 21);
+        if (h / 4294967296 >= density * (shaded[index] ? 3 : 1)) continue;
+        const flat = [index - 1, index + 1, index - columns, index + columns].every(n => Math.abs(surface[n] - height) <= 2 && material[n] !== TERRAIN_MATERIAL.Lava && !frame.fine?.has(n));
+        if (!flat) continue;
+        const jitter = (cellHash(column, row, frame.visualSeed ?? 0, 23) % 17) - 8;
+        bushes.push({ key: `b${index}`, x: (column + .5) * FACE + jitter, footY: (row + .5) * FACE + 8, heightPx: 0, standing: true,
+            name: bushSpriteName(Math.min(3, Math.max(0, band | 0)), cellHash(column, row, 0, 25)), depth: (row + 1) * FACE - 4 });
+    }
+    frame.bushList = bushes; frame.bushBand = band;
+    return bushes;
+}
+
+/** Draws one tree or bush in world coordinates with its roots on the foot anchor. */
 export function drawTree(ctx, tree) {
     const loaded = forestKit();
     const sprite = loaded?.sprites[tree.name];
@@ -78,12 +99,12 @@ export function drawTree(ctx, tree) {
     return true;
 }
 
-/** Depth layers for the trees inside (or just outside) the camera window; empty until the kit has loaded. */
+/** Depth layers for the trees and bushes inside (or just outside) the camera window; empty until the kit has loaded. */
 export function treeLayers(frame, band, camera, width, height) {
     const loaded = forestKit();
     if (!loaded) return [];
     const layers = [];
-    for (const tree of collectTrees(frame, band)) {
+    for (const tree of [...collectTrees(frame, band), ...collectBushes(frame, band)]) {
         const sprite = loaded.sprites[tree.name];
         if (!sprite) continue;
         if (tree.x < camera.x - sprite.w || tree.x > camera.x + width + sprite.w || tree.footY < camera.y - 32 || tree.footY - sprite.h > camera.y + height) continue;

@@ -168,10 +168,11 @@ public sealed class GreyboxHuntBrowserTests : PageTest
 
     /// <summary>Review captures: the debug bot walks the arena and a screenshot is saved every few seconds, so trees, rocks and ground can be judged along the route.</summary>
     [TestMethod]
-    [DataRow(0)]
-    [DataRow(2)]
-    [DataRow(3)]
-    public async Task Hunt1Forest_ReviewTourCapturesTheArenaAlongTheRoute(int band)
+    [DataRow(0, "", "n")]
+    [DataRow(0, "&ambient=0.9", "a09")]
+    [DataRow(0, "&ambient=1.4", "a14")]
+    [DataRow(2, "&ambient=1.0", "a10")]
+    public async Task Hunt1Forest_ReviewTourCapturesTheArenaAlongTheRoute(int band, string lighting, string tag)
     {
         var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
         var output = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
@@ -183,7 +184,7 @@ public sealed class GreyboxHuntBrowserTests : PageTest
             """);
         var errors = new List<string>();
         Page.PageError += (_, error) => errors.Add(error);
-        await Page.GotoAsync(root + $"/?hunt1=1&band={band}&bright=1&god=1&bot=1&speed=3", new() { WaitUntil = WaitUntilState.NetworkIdle });
+        await Page.GotoAsync(root + $"/?hunt1=1&band={band}{lighting}&god=1&bot=1&speed=3", new() { WaitUntil = WaitUntilState.NetworkIdle });
         var start = Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^START GAME") });
         await start.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 45000 });
         await start.ClickAsync();
@@ -203,7 +204,7 @@ public sealed class GreyboxHuntBrowserTests : PageTest
         {
             await Page.WaitForTimeoutAsync(3500);
             if (!await Page.Locator("canvas.game-canvas").IsVisibleAsync()) break;
-            await Page.Locator("canvas.game-canvas").ScreenshotAsync(new() { Path = Path.Combine(output, $"forest-b{band}-{shot}.png") });
+            await Page.Locator("canvas.game-canvas").ScreenshotAsync(new() { Path = Path.Combine(output, $"forest-b{band}-{tag}-{shot}.png") });
         }
         Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
     }

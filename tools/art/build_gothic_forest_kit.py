@@ -8,6 +8,7 @@ live -> dry -> dead -> charred. Output: one RGBA atlas plus a JSON manifest of r
     python tools/art/build_gothic_forest_kit.py <path-to-extracted-pack-root> [out-dir]
 """
 import colorsys, json, os, sys
+import cv2
 import numpy as np
 from PIL import Image
 
@@ -43,16 +44,16 @@ def is_foliage(h, s):
 
 def live(h, s, v):
     if is_foliage(h, s):
-        return 0.45 + (h - 0.40) * 0.35, min(0.42, s * 0.42), 0.06 + (v ** 1.4) * 0.46
-    return 0.07 + (h - 0.07) * 0.3, s * 0.42, v * 0.62
+        return 0.45 + (h - 0.40) * 0.35, min(0.42, s * 0.42), 0.09 + (v ** 1.25) * 0.58
+    return 0.07 + (h - 0.07) * 0.3, s * 0.42, v * 0.74
 
 def dry(h, s, v):
     if h < 0.14 or is_foliage(h, s):
-        return 0.095 + min(0.04, abs(h - 0.09) * 0.2), min(0.40, s * 0.38), 0.06 + (v ** 1.3) * 0.44
-    return 0.07, s * 0.40, v * 0.60
+        return 0.095 + min(0.04, abs(h - 0.09) * 0.2), min(0.40, s * 0.38), 0.08 + (v ** 1.2) * 0.55
+    return 0.07, s * 0.40, v * 0.70
 
 def dead(h, s, v):
-    return 0.07 + (h - 0.07) * 0.2, s * 0.26, v * 0.52
+    return 0.07 + (h - 0.07) * 0.2, s * 0.26, v * 0.62
 
 def charred_base(h, s, v):
     return 0.06, s * 0.12, v * 0.30
@@ -68,6 +69,32 @@ def ember_pass(img, share=0.035):
         if (x * 7 + y * 13 + x * y) % 3 == 0:
             a[y, x, :3] = (200, 78, 26) if (x + y) % 2 else (150, 44, 18)
     return Image.fromarray(a)
+
+def components(img, box, dilate=1, min_area=6, min_width=1):
+    """Trimmed sprites found inside box=(x, y, w, h) of a sheet, ordered by row then column."""
+    x0, y0, w0, h0 = box
+    region = np.array(img.crop((x0, y0, x0 + w0, y0 + h0)))
+    mask = (region[..., 3] > 0).astype(np.uint8)
+    grown = cv2.dilate(mask, np.ones((2 * dilate + 1, 2 * dilate + 1), np.uint8)) if dilate else mask
+    count, labels, stats, _ = cv2.connectedComponentsWithStats(grown, connectivity=8)
+    found = []
+    for i in range(1, count):
+        x, y, w, h, _ = stats[i]
+        sub = region[y:y + h, x:x + w].copy()
+        sub[labels[y:y + h, x:x + w] != i] = 0
+        if (sub[..., 3] > 0).sum() < min_area or w < min_width: continue
+        found.append(((y // 10, x), Image.fromarray(sub)))
+    found.sort(key=lambda f: f[0])
+    return [im.crop(im.getbbox()) for _, im in found]
+
+def flower(h, s, v):
+    # Violet blooms and pale petals stay the few quiet accents of the wet forest; stems and leaves follow the foliage ramp.
+    if 0.70 <= h <= 0.92 or s > 0.55 and not is_foliage(h, s):
+        return h, s * 0.62, 0.10 + v * 0.55
+    return live(h, s, v)
+
+def mushroom(h, s, v):
+    return h, s * 0.55, 0.08 + v * 0.50
 
 # --- source catalogue -------------------------------------------------------------------------------------------------------------
 M01_5, M01_4 = sheet(r'Trees\Model_01\Size_05.png'), sheet(r'Trees\Model_01\Size_04.png')
@@ -98,6 +125,32 @@ for model, (img, live_cells, dry_cells, bare_cell, stump_cell) in MODELS.items()
     stump = crop(img, *stump_cell)
     sprites.append((f'stump.{model}.live', remap(stump, dead)))
     sprites.append((f'stump.{model}.charred', ember_pass(remap(stump, charred_base), 0.08)))
+
+VEG = sheet('Vegetation.png')
+# Bushes: four colours across, four sizes down; green stays living, yellow/ochre/rust are the dry states.
+for column, (cx, tone) in enumerate([(0, live), (48, dry), (96, dry), (144, dry)]):
+    for size, im in enumerate(components(VEG, (cx, 0, 48, 146), dilate=0, min_area=80)):
+        sprites.append((f'bush.{column}.{size}', remap(im, tone)))
+for i, im in enumerate(components(VEG, (192, 60, 50, 36), dilate=1, min_area=80) + components(VEG, (192, 97, 50, 50), dilate=1, min_area=80)):
+    sprites.append((f'shrub.dead.{i}', remap(im, dead)))
+    sprites.append((f'shrub.charred.{i}', ember_pass(remap(im, charred_base), 0.05)))
+# Ground cover small enough to sit inside one 32 px terrain face.
+for i, im in enumerate(components(VEG, (240, 0, 160, 32), dilate=1, min_area=6)):
+    sprites.append((f'decal.twig.{i}', remap(im, dead)))
+for i, im in enumerate(components(VEG, (60, 346, 72, 28), dilate=0, min_area=6, min_width=4)):
+    sprites.append((f'decal.leaf.{i}', remap(im, dry)))
+for i, im in enumerate(components(VEG, (60, 160, 132, 36), dilate=0, min_area=8, min_width=4)):
+    sprites.append((f'decal.tuft.live.{i}', remap(im, live)))
+    sprites.append((f'decal.tuft.dry.{i}', remap(im, dry)))
+for i, im in enumerate(components(VEG, (192, 158, 50, 36), dilate=1, min_area=10)):
+    sprites.append((f'decal.foxglove.{i}', remap(im, flower)))
+for i, im in enumerate(components(VEG, (0, 334, 132, 18), dilate=1, min_area=6, min_width=3)):
+    sprites.append((f'decal.mushroom.{i}', remap(im, mushroom)))
+for i, im in enumerate(components(VEG, (0, 372, 222, 60), dilate=1, min_area=12, min_width=7)):
+    sprites.append((f'decal.flower.{i}', remap(im, flower)))
+
+# A decal must fit inside one terrain face.
+sprites = [s for s in sprites if not s[0].startswith('decal.') or max(s[1].size) <= 30]
 
 # --- atlas ------------------------------------------------------------------------------------------------------------------------
 sprites.sort(key=lambda s: -s[1].height)

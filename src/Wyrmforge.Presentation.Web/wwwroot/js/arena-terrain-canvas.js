@@ -3,6 +3,8 @@
 // separate debug overlay). Presentation reads the grid; it never edits it.
 import { FACE_PIXELS, MICROCELL_UNITS, blockFrontRect, blockTopRect } from './arena-projection.js';
 import { generateTileSet, variantFor, TILE, normalFromTile } from './arena-terrain-tiles.js';
+import { drawGroundDecals } from './arena-ground-decals.js';
+import { forestKit } from './forest-kit.js';
 
 export const TERRAIN_MATERIAL = Object.freeze({ Soil: 0, Ash: 1, Stone: 2, Lava: 3, Wood: 4 });
 // Same bounds as C# WyrmInfluenceProfile.Fire: Wet, Scorched, Burning, Volcanic.
@@ -722,6 +724,7 @@ export function paintTerrainCell(ctx, frame, band, column, row, grain = true) {
         if (tileKind !== 'lavaTop') painted += macroTint(ctx, frame, column, row, top.x, top.y);
         const tint = heightTint(height);
         if (tint) { ctx.fillStyle = tint; ctx.fillRect(top.x, top.y, top.width, top.height); painted++; }
+        if (tileKind !== 'lavaTop') painted += drawGroundDecals(ctx, frame, band, column, row, height, material[index], top);
     } else {
         ctx.fillStyle = baseColor;
         ctx.fillRect(top.x, top.y, top.width, top.height);
@@ -929,11 +932,13 @@ export class TerrainCanvasCache {
 
     update(frame, band) {
         if (!frame) return false;
-        if (this.canvas && this.revision === frame.revision && this.band === band) return false;
+        // The ground cover comes from the forest kit, which downloads after the first frame: one more full repaint once it is there.
+        const kitReady = Boolean(forestKit());
+        if (this.canvas && this.revision === frame.revision && this.band === band && this.kitReady === kitReady) return false;
         const started = globalThis.performance?.now() ?? 0;
         const width = frame.columns * FACE_PIXELS;
         const height = frame.rows * FACE_PIXELS + TERRAIN_PAD_UNITS * 2;
-        const full = !this.canvas || this.canvas.width !== width || this.canvas.height !== height || this.band !== band || this.revision === null;
+        const full = !this.canvas || this.canvas.width !== width || this.canvas.height !== height || this.band !== band || this.revision === null || this.kitReady !== kitReady;
         if (!this.canvas || this.canvas.width !== width || this.canvas.height !== height)
             this.canvas = this.createCanvas(width, height);
         if (this.withNormals && (!this.normalCanvas || this.normalCanvas.width !== width || this.normalCanvas.height !== height)) this.normalCanvas = this.createCanvas(width, height);
@@ -952,6 +957,7 @@ export class TerrainCanvasCache {
         }
         this.revision = frame.revision;
         this.band = band;
+        this.kitReady = kitReady;
         this.repaints++;
         const elapsed = (globalThis.performance?.now() ?? 0) - started;
         this.totalRepaintMs += elapsed;

@@ -428,12 +428,14 @@ public sealed partial class RunSimulation
 
     private GpuLightingFrame CreateLightingFrame()
     {
+        // The Hunt 1.0 terrain is lit like a moonlit forest: more ambient and an angled moon so relief and silhouettes read.
+        var moonlitTerrain = arenaEnvironment?.Terrain is not null;
         var snapshot = ProjectileLightingProjection.Capture(
             "hunt", lightingSnapshotTick++, projectiles, projectileLightIdentities,
-            new LightingEnvironment("gothic-night", "#8c9cbb", 0.24));
+            new LightingEnvironment("gothic-night", "#8c9cbb", moonlitTerrain ? 1.0 : 0.24));
         var combined = LightingSceneComposer.Compose(snapshot.SceneId, snapshot.SimulationTick,
             snapshot.Environment, snapshot.Emitters,
-            [NightSkyLightingProjection.Capture()],
+            [NightSkyLightingProjection.Capture(moonlitTerrain)],
             [HunterVisibilityLightingProjection.Capture(player.Position)],
             SpellEffectLightingProjection.Capture(CreateCastMotionSnapshot(),
                 elementalImpacts.Select(impact => new ElementalImpactRenderSnapshot(impact.Position.X, impact.Position.Y, impact.Spell, impact.Progress)),

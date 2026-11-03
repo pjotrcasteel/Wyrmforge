@@ -13,6 +13,8 @@ export function readArenaDebugFlags(search = globalThis.location?.search ?? '') 
         bright: params.get('bright') === '1',
         // Metric oblique (shear) camera for the Hunt GPU world; the legacy stretched camera stays the default.
         shear: params.get('shear') === '1',
+        // Review lighting: sets only the ambient term of the lighting frame (e.g. `?ambient=0.9`); never touches C# state.
+        ambient: Number.isFinite(Number.parseFloat(params.get('ambient') ?? '')) ? Number.parseFloat(params.get('ambient')) : null,
         // Presents the Hunt as if it lay in influence band 0..3 (Wet, Scorched, Burning, Volcanic); presentation only.
         band: /^[0-3]$/.test(params.get('band') ?? '') ? Number(params.get('band')) : null,
     };
@@ -22,7 +24,8 @@ export const DEBUG_BRIGHT_AMBIENT = 10;
 export const DEBUG_BRIGHT_COLOR = '#e6ecff';
 
 /** Debug inspection light: raises only the ambient term of a lighting frame so terrain can be reviewed; never touches C# state. */
-export function withDebugAmbient(frame, bright) {
+export function withDebugAmbient(frame, bright, ambient = null) {
+    if (ambient !== null && ambient !== undefined && !bright && frame?.environment) return { ...frame, environment: { ...frame.environment, ambient } };
     if (!bright || !frame?.environment) return frame;
     return { ...frame, environment: { ...frame.environment, ambient: Math.max(frame.environment.ambient ?? 0, DEBUG_BRIGHT_AMBIENT), color: DEBUG_BRIGHT_COLOR } };
 }
