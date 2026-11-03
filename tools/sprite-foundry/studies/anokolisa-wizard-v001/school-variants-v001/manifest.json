@@ -1,0 +1,38 @@
+{
+  "schema": "wyrmforge.wizard.school-overlays.v1",
+  "source": "Anokolisa Pixel Crawler Wizard - licensed commercial project use",
+  "approvedVisualFoundation": true,
+  "approvedForGame": false,
+  "schoolIds": [
+    "fire",
+    "frost",
+    "storm",
+    "arcane",
+    "necromancer",
+    "summoner"
+  ],
+  "cell": [
+    64,
+    80
+  ],
+  "feetAnchor": [
+    32,
+    74
+  ],
+  "directionStatus": "side-facing candidate only; not eight-way",
+  "sharedSource": [
+    "run-side-grey-6f-64x80.png",
+    "idle-side-grey-4f-64x80.png"
+  ],
+  "renderedModifiers": [
+    "school hat band",
+    "robe front hem trim"
+  ],
+  "reservedModifiers": [
+    "right-hand staff object",
+    "back symbol",
+    "spell glow",
+    "attachments"
+  ],
+  "ownerApproval": "shared grey pixel-art foundation; not school-specific poses or animation"
+}

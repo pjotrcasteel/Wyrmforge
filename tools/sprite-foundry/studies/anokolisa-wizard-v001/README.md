@@ -67,3 +67,55 @@ The creator's `Terms.txt` is supplied separately from `Entities.zip`.
 
 Neither the current procedural v015 gait experiment nor live game art is
 overwritten, and **PR #471 must remain draft** until approved.
+
+
+## Shared six-school Wizard foundation (owner-approved style, 3 Nov 2026)
+
+The owner approved the **hand-drawn Gothic-grey Anokolisa Wizard as the shared
+visual foundation**. This approves the *style and art-source direction* only:
+the side-facing run/idle are still studies, and the walking-staff gait,
+eight-way art and gameplay integration remain **unapproved**.
+
+All six schools derive from the **same** `run-side-grey-6f-64x80.png` and
+`idle-side-grey-4f-64x80.png` frames. Do not fork six character bodies,
+regenerate each direction independently, or substitute the earlier procedural
+Wizard's rough silhouette.
+
+The new `school_styles.json` owns the per-school visual modifiers. The
+`generate_schools.py` build applies them without modifying the original
+pixels, alpha, frames or feet anchor.
+
+| School | Initial hat band + hem accent | Reserved character details |
+| --- | --- | --- |
+| Fire | Ember orange | Ember staff, flame emblem |
+| Frost | Ice cyan | Crystal staff, frost emblem |
+| Storm | Electric gold | Forked-lightning staff, bolt emblem |
+| Arcane | Violet | Arcane-orb staff, rune emblem |
+| Necromancer | Sickly green | Soul-flame staff, skull emblem |
+| Summoner | Teal | Summoning-ring staff, conjuration emblem |
+
+The initial school pass changes only existing opaque hat-band and robe-hem
+pixels. Equipment, school symbols and casting glow are *named extension slots*
+but **are not drawn yet**. School accent tuning remains subject to artistic
+review at native/mobile size.
+
+Rebuild all six side-facing variants from the checked-in base (no original ZIP
+needed for this step):
+
+```powershell
+py tools/sprite-foundry/studies/anokolisa-wizard-v001/generate_schools.py --out "tools/sprite-foundry/output/wizard-six-schools"
+```
+
+The generator refuses to overwrite an existing review directory. Its output
+contains an idle atlas and run atlas for every school, a static six-school
+contact sheet, an animated six-school comparison and an explicit manifest.
+Tests prove that school variants retain the source alpha, frame dimensions,
+feet baseline and original base pixels. They also compare checked-in study
+atlases to regenerated output, so modifying the master cannot silently leave
+six stale copies.
+
+**Next visual gates:** approve school-specific shapes/details, author
+consistent N/NE/E/SE/S/SW/W/NW artist-sourced facings, then animate
+the right-hand staff's plant/push/recovery in all directions. School-specific
+lighting should be passed through WyrmForge's existing generic G lighting
+engine, not hand-painted into arbitrary walk frames.
