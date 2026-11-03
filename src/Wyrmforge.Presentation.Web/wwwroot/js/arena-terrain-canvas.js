@@ -180,6 +180,11 @@ export function microMaterial(block, height) {
 export const CRACK_DARK = '#17100d';
 export const CRACK_HOT = '#ff7a14';
 
+/** Impact points that break one stone microcell; mirrors `ArenaTerrainGrid.StoneWearPerMicrocell` in C#. */
+export const STONE_WEAR_PER_MICROCELL = 2;
+/** Maps a wear counter (1 to threshold - 1) onto crack stages 1 to 3, so the last stage always means the next hit breaks it. */
+export const wearStage = counter => counter > 0 ? Math.min(3, Math.ceil(counter * 3 / Math.max(1, STONE_WEAR_PER_MICROCELL - 1))) : 0;
+
 /**
  * Terraria-style crack stages for worn stone inside one 4 x 4 px microcolumn top (local coordinates): stage 1 a pixel, 2 a short
  * bend, 3 a longer bend with a glowing ember pixel because the next hit breaks it. Stage 0 or less draws nothing.
@@ -266,7 +271,7 @@ function paintFineCell(ctx, frame, band, column, row, block) {
             ctx.fillStyle = scaleHex(heightShade(topFaceColor(band, material, height), height), tone);
             ctx.fillRect(x, y - height * MICROCELL_UNITS, MICRO_UNITS, MICRO_UNITS);
             painted++;
-            for (const crack of crackPixels(block.wear?.[microY * MICRO_PER_COLUMN + microX])) {
+            for (const crack of crackPixels(wearStage(block.wear?.[microY * MICRO_PER_COLUMN + microX]))) {
                 ctx.fillStyle = crack.color;
                 ctx.fillRect(x + crack.x, y - height * MICROCELL_UNITS + crack.y, crack.w, crack.h);
                 painted++;

@@ -22,7 +22,7 @@ public sealed class ArenaTerrainGrid
     /// <summary>Soil and ash lie one metre deep over stone, which wears away under repeated impacts instead of resisting them.</summary>
     public const int SoilDepthMicrocells = 8;
     /// <summary>Impact points a microcolumn of stone absorbs before one 12.5 cm microcell breaks off. Proposed value: tune in playtests.</summary>
-    public const int StoneWearPerMicrocell = 4;
+    public const int StoneWearPerMicrocell = 2;
     /// <summary>Every metre column can be subdivided into 8 x 8 microcolumns of 4 units (12.5 cm) when damaged.</summary>
     public const int MicroPerColumn = 8;
     public const int MicroCount = MicroPerColumn * MicroPerColumn;
@@ -170,7 +170,6 @@ public sealed class ArenaTerrainGrid
     {
         if (!Contains(column, row) || microX is < 0 or >= MicroPerColumn || microY is < 0 or >= MicroPerColumn) return 0;
         var index = row * Columns + column;
-        if (topsoil[index] == ArenaTerrainMaterial.Lava || materials[index] == ArenaTerrainMaterial.Lava) return 0;
         floor = Math.Max(floor, BedrockMicrocells);
         var micro = microY * MicroPerColumn + microX;
         var heights = fine.TryGetValue(index, out var existing) ? existing : null;
@@ -230,7 +229,6 @@ public sealed class ArenaTerrainGrid
     {
         if (!Contains(column, row) || microX is < 0 or >= MicroPerColumn || microY is < 0 or >= MicroPerColumn) return 0;
         var index = row * Columns + column;
-        if (topsoil[index] == ArenaTerrainMaterial.Lava || materials[index] == ArenaTerrainMaterial.Lava) return 0;
         target = Math.Max(target, Math.Max(floor, BedrockMicrocells));
         var current = MicroSurface(column, row, microX, microY);
         if (target >= current) return 0;

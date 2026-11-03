@@ -158,8 +158,8 @@ public sealed class ArenaTerrainExcavationTests
         for (var hit = 0; hit < 8; hit++) ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(hit, centre, 1), null);
         Assert.AreEqual(-ArenaTerrainGrid.SoilDepthMicrocells, Deepest(), "eight ordinary hits dig the one-metre soil");
         Assert.AreEqual(ArenaTerrainMaterial.Stone, grid.MicroMaterial(6, 6, 4, 4), "dug-through soil exposes stone");
-        for (var hit = 8; hit < 12; hit++) ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(hit, centre, 1), null);
-        Assert.AreEqual(-ArenaTerrainGrid.SoilDepthMicrocells - 1, Deepest(), "four more ordinary hits wear one microcell off the stone");
+        for (var hit = 8; hit < 10; hit++) ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(hit, centre, 1), null);
+        Assert.AreEqual(-ArenaTerrainGrid.SoilDepthMicrocells - 1, Deepest(), "two more ordinary hits wear one microcell off the stone");
         for (var hit = 0; hit < 20; hit++) ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(100 + hit, centre, 2), null);
         Assert.IsLessThan(-ArenaTerrainGrid.SoilDepthMicrocells - 5, Deepest(), "splash impacts wear stone much faster");
         for (var hit = 0; hit < 60; hit++) ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(200 + hit, centre, 3), null);
@@ -167,7 +167,7 @@ public sealed class ArenaTerrainExcavationTests
     }
 
     [TestMethod]
-    public void RockWalls_WearAwayProgressivelyUnderEveryKindOfImpactAndLavaNeverChanges()
+    public void RockWalls_WearAwayProgressivelyUnderEveryKindOfImpactAndLavaWearsLikeStone()
     {
         var grid = FlatSoil();
         grid.Set(6, 6, 16, ArenaTerrainMaterial.Stone);
@@ -176,14 +176,13 @@ public sealed class ArenaTerrainExcavationTests
         ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(1, centre, 1), null);
         Assert.AreEqual(16, grid.FineHeights(6, 6)!.Min(), "one ordinary hit only cracks the rock: wear is stored, nothing has fallen yet");
         Assert.IsNotNull(grid.FineWear(6, 6), "the damage is authoritative state");
-        for (var hit = 2; hit <= 4; hit++) ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(hit, centre, 1), null);
-        Assert.AreEqual(15, grid.FineHeights(6, 6)!.Min(), "the fourth ordinary hit breaks the first 12.5 cm");
-        for (var hit = 10; hit < 40; hit++) ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(hit, centre, 1), null);
-        Assert.AreEqual(8, grid.FineHeights(6, 6)!.Min(), "thirty-four plain Fireballs take exactly one metre off the centre of a two metre wall");
+        for (var hit = 2; hit <= 2; hit++) ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(hit, centre, 1), null);
+        Assert.AreEqual(15, grid.FineHeights(6, 6)!.Min(), "the second ordinary hit breaks the first 12.5 cm");
+        for (var hit = 10; hit < 24; hit++) ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(hit, centre, 1), null);
+        Assert.AreEqual(8, grid.FineHeights(6, 6)!.Min(), "sixteen plain Fireballs take exactly one metre off the centre of a two metre wall");
         ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(500, ArenaTerrainGrid.CenterOf(7, 6), 3), null);
-        Assert.AreEqual(-16, grid.Surface(7, 6));
-        Assert.AreEqual(ArenaTerrainMaterial.Lava, grid.Material(7, 6));
-        Assert.IsNull(grid.FineWear(7, 6), "lava takes no damage");
+        Assert.IsLessThan(-16, grid.FineHeights(7, 6)!.Min(), "only bedrock and the route floor are unbreakable: a heavy blast digs into lava too");
+        Assert.AreEqual(ArenaTerrainMaterial.Lava, grid.Material(7, 6), "it stays lava until a freeze mechanic exists");
     }
 
     [TestMethod]
@@ -192,11 +191,11 @@ public sealed class ArenaTerrainExcavationTests
         var grid = FlatSoil();
         grid.Set(6, 6, 16, ArenaTerrainMaterial.Stone);
         var centre = ArenaTerrainGrid.CenterOf(6, 6);
-        ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(1, centre, 2), null);
+        ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(1, centre, 1), null);
         var wearAfterOne = grid.FineWear(6, 6)!;
         Assert.IsTrue(wearAfterOne.Max() is > 0 and < ArenaTerrainGrid.StoneWearPerMicrocell, "wear stays below the break threshold");
         var before = grid.Clone();
-        var changes = ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(2, centre, 2), null);
+        var changes = ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(2, centre, 1), null);
         Assert.IsTrue(changes.Any(change => change.OldWear is not null && change.NewWear is not null && !change.OldWear.AsSpan().SequenceEqual(change.NewWear)));
         ArenaTerrainMutation.Revert(grid, changes);
         CollectionAssert.AreEqual(before.FineWear(6, 6), grid.FineWear(6, 6), "reverting restores wear as well as height");
