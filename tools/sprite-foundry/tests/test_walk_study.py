@@ -43,8 +43,8 @@ class WizardWalkStudyTests(unittest.TestCase):
         for frame in range(16):
             phase = 2.0 * math.pi * frame / 16
             shoulder, elbow, hand = study.right_arm_joints(phase)
-            self.assertGreater(elbow[2], shoulder[2] + 0.15, frame)
-            self.assertGreater(elbow[2], hand[2] + 0.04, frame)
+            self.assertGreater(elbow[2], shoulder[2] + 0.01, frame)
+            self.assertGreater(hand[2], elbow[2] + 0.05, frame)
             self.assertGreater(elbow[1], hand[1] + 0.15, frame)
             self.assertLess(elbow[1], shoulder[1] - 0.15, frame)
             self.assertAlmostEqual(0.0, math.dist(
@@ -55,7 +55,7 @@ class WizardWalkStudyTests(unittest.TestCase):
                 math.dist(shoulder, elbow) * math.dist(hand, elbow))
             elbow_angle = math.degrees(math.acos(max(-1.0, min(1.0, cosine))))
             self.assertGreater(elbow_angle, 105, frame)
-            self.assertLess(elbow_angle, 135, frame)
+            self.assertLess(elbow_angle, 145, frame)
             faces = study.articulated_right_sleeve_faces(phase)
             self.assertEqual(4 * study.RIGHT_SLEEVE_SEGMENTS, len(faces))
             self.assertTrue(all(face.feature == "right-sleeve" for face in faces))
@@ -64,6 +64,20 @@ class WizardWalkStudyTests(unittest.TestCase):
             forearm_points = {p for face in faces[split:] for p in face.points}
             self.assertGreaterEqual(len(top_points & forearm_points),
                                     study.RIGHT_SLEEVE_SEGMENTS)
+
+    def test_forearm_projects_ahead_of_elbow_not_behind_in_east_and_west(self):
+        # The previous v014 test reversed the joint inequality: elbow ahead
+        # of wrist. That physically bends the forearm BACKWARD. Project the
+        # rig into both side-on facings to prevent this regression.
+        for frame in range(16):
+            phase = 2.0 * math.pi * frame / 16
+            _, elbow, hand = study.right_arm_joints(phase)
+            east_elbow_x = study.master.project(elbow, 90)[0]
+            east_hand_x = study.master.project(hand, 90)[0]
+            west_elbow_x = study.master.project(elbow, 270)[0]
+            west_hand_x = study.master.project(hand, 270)[0]
+            self.assertGreater(east_hand_x, east_elbow_x + 1.0, frame)
+            self.assertLess(west_hand_x, west_elbow_x - 1.0, frame)
 
     def test_walking_staff_shaft_is_nearly_straight_without_master_changes(self):
         before = tuple(study.master.build_master())

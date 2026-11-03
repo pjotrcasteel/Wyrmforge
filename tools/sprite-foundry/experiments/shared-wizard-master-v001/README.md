@@ -632,3 +632,35 @@ elderly staff-assisted pilgrim; it does not trace a film design.
 
 **Unapproved walking study**; leave this PR draft and do not merge, import
 or replace any WyrmForge game sprites without owner visual acceptance.
+
+
+## v015 — correct the backward-bending forearm (3 Nov 2026)
+
+Owner rejected the v014 arm because the elbow **bent backward**. The root
+cause is explicit: v014 deliberately placed the elbow's local +Z ahead of
+the grip, making the forearm point *backward* from the elbow to the wrist.
+Our test also asserted the wrong direction, so it gave false confidence.
+
+This revision keeps the genuine connected three-ring sleeve but changes
+the joint solving order:
+
+- Local +Z is the Wizard's walking-forward axis.
+- The shoulder is behind the elbow; **the staff-bound wrist is farther
+  forward than the elbow throughout all 16 frames**, including east- and
+  west-facing rendered projections.
+- The elbow sits close to the torso and higher than the hand, making an
+  intentional bend (approximately 129–141 degrees measured in 3D)
+  without bending the wooden staff or pulling the hand away from it.
+- A new test checks the side-view projected forearm direction, and
+  **fails against v014**. The other 20 tests continue to protect the
+  walking cycle, 64×80 frame bounds, cloth seams, hand/staff attachment,
+  flame visibility and in-place idle master.
+- [All eight directions × 16 frames — v015](walk-16-frame-eight-facings-forward-forearm-NOT-APPROVED.gif)
+  (2× nearest-neighbor enlargement),
+  [larger S/SE/E animation — v015](walk-16-frame-S-SE-E-forward-forearm-NOT-APPROVED.gif)
+  (4×), and [4 key poses × 8 compass views — v015](walk-4-poses-eight-facings-forward-forearm-NOT-APPROVED.png)
+  are native-frame offline renders of this exact updated rig.
+
+**21 focused tests passed locally**. Original master, default idle art,
+UV materials, all live game sprites, and gameplay remain untouched. This
+is an unapproved art iteration in a draft PR, not a merge or game import.

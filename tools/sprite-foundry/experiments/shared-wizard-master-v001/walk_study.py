@@ -41,9 +41,9 @@ RIGHT_STAFF_FEATURES = frozenset({
     "right-hand", "right-hand-staff", "staff-flame-base", "staff-fire", "staff-flame-core"
 })
 RIGHT_SHOULDER = (-0.44, 2.48, 0.04)
-RIGHT_ELBOW_FORWARD_METRES = 0.32
-RIGHT_ELBOW_INWARD_METRES = 0.22
-RIGHT_ELBOW_LIFT_METRES = 0.16
+RIGHT_ELBOW_FORWARD_FRACTION = 0.24
+RIGHT_ELBOW_INWARD_METRES = 0.42
+RIGHT_ELBOW_LIFT_METRES = 0.12
 RIGHT_SLEEVE_SEGMENTS = 10
 LEFT_SHOULDER = (0.44, 2.48, 0.04)
 LEFT_ARM_FEATURES = frozenset({"left-sleeve", "left-hand"})
@@ -163,9 +163,12 @@ def right_arm_joints(phase):
     fraction = 0.58
     elbow = tuple(shoulder[i] * (1.0 - fraction) + hand[i] * fraction
                   for i in range(3))
+    # Local +Z is walking-forward. The wrist must be AHEAD of the elbow,
+    # otherwise the forearm reaches backward even if the elbow itself
+    # has a positive Z offset. Bend at the actual joint, not just the mesh.
     elbow = (elbow[0] + RIGHT_ELBOW_INWARD_METRES,
              elbow[1] + RIGHT_ELBOW_LIFT_METRES,
-             elbow[2] + RIGHT_ELBOW_FORWARD_METRES)
+             shoulder[2] + (hand[2] - shoulder[2]) * RIGHT_ELBOW_FORWARD_FRACTION)
     return shoulder, elbow, hand
 
 
