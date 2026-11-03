@@ -17,8 +17,12 @@ public sealed record ArenaTerrainChange(int Column, int Row, int OldSurface, int
     public byte[]? NewWear { get; init; }
 }
 
-/// <summary>A confirmed C# impact with a stable identity. Power 1 ordinary, 2 splash or Detonation, 3 Meteor Heart.</summary>
-public sealed record ArenaTerrainImpact(long Id, Vector2D Position, int Power);
+/// <summary>
+/// A confirmed C# impact with a stable identity. Power 1 ordinary, 2 splash or Detonation, 3 Meteor Heart.
+/// Without a <paramref name="Direction"/> the blast lands on the ground and digs a crater from above. With one, a shot flying at
+/// <paramref name="FaceHeight"/> microcells struck a wall or cliff face travelling that way and bites into the face from the side.
+/// </summary>
+public sealed record ArenaTerrainImpact(long Id, Vector2D Position, int Power, Vector2D? Direction = null, int FaceHeight = 0);
 
 /// <summary>Progressive excavation rules. Proposed values: tune in playtests.</summary>
 public static class ArenaTerrainMutation
@@ -34,36 +38,33 @@ public static class ArenaTerrainMutation
         _ => 1.8,
     } * ArenaTerrainGrid.CellUnits;
 
+    /// <summary>
+    /// Radius in microcells of the half-sphere a side hit bites out of a face. It removes about the same volume as the cap of the
+    /// crater the same power digs from above (energy is conserved between the two directions): 37 cm, 62 cm and 1 m.
+    /// </summary>
+    public static int FaceBiteRadiusMicrocells(int power) => power switch { <= 1 => 3, 2 => 5, _ => 8 };
+
     public static IReadOnlyList<ArenaTerrainChange> Apply(ArenaTerrainGrid grid, ArenaTerrainImpact impact, bool[]? protectedCells)
     {
         ArgumentNullException.ThrowIfNull(grid);
         var power = Math.Clamp(impact.Power, 1, 3);
-        var radius = RadiusUnits(power);
-        var micro = ArenaTerrainGrid.MicroUnits;
+        var hits = impact.Direction is { } direction && direction.Length > 1e-9
+            ? FaceHits(grid, impact, direction.Normalized(), power)
+            : CraterHits(impact, power);
         var perColumn = ArenaTerrainGrid.MicroPerColumn;
-        var firstX = (int)Math.Floor((impact.Position.X - radius) / micro);
-        var lastX = (int)Math.Floor((impact.Position.X + radius) / micro);
-        var firstY = (int)Math.Floor((impact.Position.Y - radius) / micro);
-        var lastY = (int)Math.Floor((impact.Position.Y + radius) / micro);
         var touched = new List<(int Column, int Row, int Surface, ArenaTerrainMaterial Material, short[]? Fine, byte[]? Wear)>();
         var seen = new HashSet<int>();
-        for (var gy = firstY; gy <= lastY; gy++)
-            for (var gx = firstX; gx <= lastX; gx++)
-            {
-                var column = (int)Math.Floor(gx / (double)perColumn);
-                var row = (int)Math.Floor(gy / (double)perColumn);
-                if (!grid.Contains(column, row)) continue;
-                var distance = Vector2D.Distance(impact.Position, new Vector2D((gx + .5) * micro, (gy + .5) * micro));
-                if (distance >= radius) continue;
-                // A smooth bowl: deepest at the centre, steep near the rim.
-                var depth = (int)Math.Ceiling(power * (1 - distance * distance / (radius * radius)));
-                if (depth <= 0) continue;
-                if (seen.Add(row * grid.Columns + column))
-                    touched.Add((column, row, grid.Surface(column, row), grid.Material(column, row), grid.FineHeights(column, row), grid.FineWear(column, row)));
-                var floor = protectedCells is { Length: > 0 } && protectedCells[row * grid.Columns + column]
-                    ? RouteFloorMicrocells : ArenaTerrainGrid.BedrockMicrocells;
-                grid.ExcavateMicro(column, row, gx - column * perColumn, gy - row * perColumn, depth, floor);
-            }
+        foreach (var (gx, gy, depth) in hits)
+        {
+            var column = (int)Math.Floor(gx / (double)perColumn);
+            var row = (int)Math.Floor(gy / (double)perColumn);
+            if (!grid.Contains(column, row)) continue;
+            if (seen.Add(row * grid.Columns + column))
+                touched.Add((column, row, grid.Surface(column, row), grid.Material(column, row), grid.FineHeights(column, row), grid.FineWear(column, row)));
+            var floor = protectedCells is { Length: > 0 } && protectedCells[row * grid.Columns + column]
+                ? RouteFloorMicrocells : ArenaTerrainGrid.BedrockMicrocells;
+            grid.ExcavateMicro(column, row, gx - column * perColumn, gy - row * perColumn, depth, floor);
+        }
 
         var changes = new List<ArenaTerrainChange>();
         foreach (var (column, row, surface, material, fine, oldWear) in touched)
@@ -82,6 +83,56 @@ public static class ArenaTerrainMutation
             });
         }
         return changes;
+    }
+
+    // From above: a smooth bowl, deepest at the centre and steep near the rim.
+    private static IEnumerable<(int Gx, int Gy, int Depth)> CraterHits(ArenaTerrainImpact impact, int power)
+    {
+        var radius = RadiusUnits(power);
+        var micro = ArenaTerrainGrid.MicroUnits;
+        var firstX = (int)Math.Floor((impact.Position.X - radius) / micro);
+        var lastX = (int)Math.Floor((impact.Position.X + radius) / micro);
+        var firstY = (int)Math.Floor((impact.Position.Y - radius) / micro);
+        var lastY = (int)Math.Floor((impact.Position.Y + radius) / micro);
+        for (var gy = firstY; gy <= lastY; gy++)
+            for (var gx = firstX; gx <= lastX; gx++)
+            {
+                var distance = Vector2D.Distance(impact.Position, new Vector2D((gx + .5) * micro, (gy + .5) * micro));
+                if (distance >= radius) continue;
+                var depth = (int)Math.Ceiling(power * (1 - distance * distance / (radius * radius)));
+                if (depth > 0) yield return (gx, gy, depth);
+            }
+    }
+
+    /// <summary>
+    /// From the side: a half-sphere centred just inside the face at the height the shot flew at. Only microcolumns the sphere
+    /// actually reaches (their top is above the sphere's lower surface) are hit, so open ground in front of the wall is never
+    /// touched and the wall loses its exposed edge and top near the contact. Each hit microcolumn takes the same impact points
+    /// a crater would give it, and stone still wears rather than vanishing, so a face recedes progressively.
+    /// </summary>
+    private static IEnumerable<(int Gx, int Gy, int Depth)> FaceHits(ArenaTerrainGrid grid, ArenaTerrainImpact impact, Vector2D direction, int power)
+    {
+        var radius = FaceBiteRadiusMicrocells(power);
+        var micro = ArenaTerrainGrid.MicroUnits;
+        var perColumn = ArenaTerrainGrid.MicroPerColumn;
+        var centre = impact.Position + direction * (0.4 * radius * micro);
+        var reach = radius * micro;
+        var firstX = (int)Math.Floor((centre.X - reach) / micro);
+        var lastX = (int)Math.Floor((centre.X + reach) / micro);
+        var firstY = (int)Math.Floor((centre.Y - reach) / micro);
+        var lastY = (int)Math.Floor((centre.Y + reach) / micro);
+        for (var gy = firstY; gy <= lastY; gy++)
+            for (var gx = firstX; gx <= lastX; gx++)
+            {
+                var column = (int)Math.Floor(gx / (double)perColumn);
+                var row = (int)Math.Floor(gy / (double)perColumn);
+                if (!grid.Contains(column, row)) continue;
+                var distance = Vector2D.Distance(centre, new Vector2D((gx + .5) * micro, (gy + .5) * micro)) / micro;
+                if (distance >= radius) continue;
+                var sphereFloor = impact.FaceHeight - Math.Sqrt(radius * radius - distance * distance);
+                if (grid.MicroSurface(column, row, gx - column * perColumn, gy - row * perColumn) <= sphereFloor) continue;
+                yield return (gx, gy, Math.Max(1, (int)Math.Ceiling(power * (1 - distance * distance / (radius * radius)))));
+            }
     }
 
     /// <summary>Undo an applied impact exactly.</summary>

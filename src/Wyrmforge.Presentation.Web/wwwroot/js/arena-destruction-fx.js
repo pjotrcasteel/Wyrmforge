@@ -1,7 +1,7 @@
 // Cosmetic destruction and fire-zone cues for Hunt 1.0. Presentation only: every cue is derived from a C# terrain delta or the
-// C# influence band and never writes back. Crater heat and debris chips make fresh destruction unmistakable; the vignette makes
-// the land feel more like a fire domain the closer the hunter gets to the Wyrm.
-import { MICRO_PER_COLUMN, MICRO_UNITS, TERRAIN_MATERIAL, veinSegments } from './arena-terrain-canvas.js';
+// C# influence band and never writes back. Everything is built from the terrain's own 4 px microcells (the divided voxels): hot
+// craters, debris, glowing cracks and the bedrock hint are whole-microcell squares in stepped colour ramps, never smooth gradients.
+import { MICRO_PER_COLUMN, MICRO_UNITS, TERRAIN_MATERIAL, BEDROCK_MICROCELLS, veinCells, veinRamp } from './arena-terrain-canvas.js';
 import { FACE_PIXELS, MICROCELL_UNITS, blockTopRect } from './arena-projection.js';
 
 export const HEAT_SECONDS = 7;
@@ -9,9 +9,10 @@ export const HEAT_SECONDS_REDUCED = 3;
 export const CHIP_SECONDS = 0.8;
 export const MAX_CHIPS = 90;
 export const MAX_HEAT_SPOTS = 12;
+export const MAX_HEAT_CELLS = 160;
 const GRAVITY = 260;
 
-// Dirt and stone chips match the strata colours; the hot ones are embers kicked out of the crater.
+// Dirt and stone chips match the strata colours; the hot ones are embers kicked out of the crater. All are one whole microcell.
 const CHIP_COLORS = Object.freeze({ dirt: ['#7a4630', '#52291b', '#3d1f15'], stone: ['#8a8580', '#5c5348', '#4a423a'], ember: ['#ff7a14', '#ffb347'] });
 
 function mix(seed) {
@@ -25,8 +26,9 @@ function mix(seed) {
 export function seededUnit(seed, step) { return mix(seed * 31 + step) / 4294967296; }
 
 /**
- * Craters carved between two merged terrain frames: one per changed fine block, centred on the microcolumns that got lower.
- * Positions are screen-space world units (ground y minus height), the same space the painter uses.
+ * Craters carved between two merged terrain frames: one per changed fine block. `cells` are the microcolumns that got lower, as
+ * top-left corners of their 4 x 4 px top square in screen-space world units (ground y minus height, the painter's space), with
+ * their dug depth; `rim` are the untouched microcolumns beside them.
  */
 export function craterEvents(previous, next) {
     if (!next?.changed?.length) return [];
@@ -36,19 +38,35 @@ export function craterEvents(previous, next) {
         if (!block) continue;
         const before = previous?.fine?.get(index)?.heights;
         const wholeHeight = previous?.surface?.[index] ?? 0;
-        let count = 0, sumX = 0, sumY = 0, sumDepth = 0, deepest = 0;
+        const column = index % next.columns, row = Math.floor(index / next.columns);
+        const dugAt = new Map();
+        let sumX = 0, sumY = 0, sumDepth = 0, deepest = 0;
         for (let micro = 0; micro < MICRO_PER_COLUMN * MICRO_PER_COLUMN; micro++) {
             const dug = (before?.[micro] ?? wholeHeight) - block.heights[micro];
             if (dug <= 0) continue;
-            count++; sumDepth += dug;
+            dugAt.set(micro, dug);
+            sumDepth += dug; deepest = Math.min(deepest, block.heights[micro]);
             sumX += micro % MICRO_PER_COLUMN; sumY += Math.floor(micro / MICRO_PER_COLUMN);
-            deepest = Math.min(deepest, block.heights[micro]);
         }
+        const count = dugAt.size;
         if (count === 0) continue;
-        const column = index % next.columns, row = Math.floor(index / next.columns);
+        const cellAt = micro => {
+            const mx = micro % MICRO_PER_COLUMN, my = Math.floor(micro / MICRO_PER_COLUMN);
+            return { x: column * FACE_PIXELS + mx * MICRO_UNITS, y: row * FACE_PIXELS + my * MICRO_UNITS - block.heights[micro] * MICROCELL_UNITS };
+        };
+        const cells = [...dugAt].sort((a, b) => b[1] - a[1] || a[0] - b[0]).slice(0, MAX_HEAT_CELLS).map(([micro, depth]) => ({ ...cellAt(micro), depth }));
+        const rimSet = new Set();
+        for (const micro of dugAt.keys()) {
+            const mx = micro % MICRO_PER_COLUMN, my = Math.floor(micro / MICRO_PER_COLUMN);
+            for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+                const nx = mx + dx, ny = my + dy, neighbour = ny * MICRO_PER_COLUMN + nx;
+                if (nx >= 0 && nx < MICRO_PER_COLUMN && ny >= 0 && ny < MICRO_PER_COLUMN && !dugAt.has(neighbour)) rimSet.add(neighbour);
+            }
+        }
         const mx = sumX / count, my = sumY / count;
         const height = block.heights[Math.round(my) * MICRO_PER_COLUMN + Math.round(mx)];
-        events.push({ index, count, depth: sumDepth,
+        events.push({ index, count, depth: sumDepth, cells, rim: [...rimSet].slice(0, MAX_HEAT_CELLS).map(micro => cellAt(micro)),
+            maxDepth: Math.max(...dugAt.values()),
             x: column * FACE_PIXELS + (mx + .5) * MICRO_UNITS,
             y: row * FACE_PIXELS + (my + .5) * MICRO_UNITS - height * MICROCELL_UNITS,
             // Stone once the bowl reaches the stone line, dirt above it: the chips match the exposed strata.
@@ -65,7 +83,7 @@ export function observeTerrain(fx, previous, next, now, reducedMotion = false) {
     for (const event of events) {
         fx.craters++;
         fx.heat.push({ x: event.x, y: event.y, radius: 16 + Math.min(26, Math.sqrt(event.count) * 3.2), born: now,
-            life: reducedMotion ? HEAT_SECONDS_REDUCED : HEAT_SECONDS });
+            cells: event.cells, rim: event.rim, maxDepth: event.maxDepth, life: reducedMotion ? HEAT_SECONDS_REDUCED : HEAT_SECONDS });
         if (reducedMotion) continue;
         const total = Math.min(16, 4 + Math.floor(event.count / 3));
         for (let n = 0; n < total; n++) {
@@ -74,7 +92,7 @@ export function observeTerrain(fx, previous, next, now, reducedMotion = false) {
             const palette = n % 4 === 3 ? CHIP_COLORS.ember : event.stone && n % 2 ? CHIP_COLORS.stone : CHIP_COLORS.dirt;
             fx.chips.push({ x: event.x, y: event.y, vx: Math.cos(angle) * speed,
                 vy: -Math.abs(Math.sin(angle)) * speed * 1.3 - 30, born: now, life: CHIP_SECONDS * (.7 + seededUnit(event.seed, n * 3 + 2) * .5),
-                color: palette[n % palette.length], size: n % 3 === 0 ? 3 : 2, ember: palette === CHIP_COLORS.ember });
+                color: palette[n % palette.length], size: MICRO_UNITS, ember: palette === CHIP_COLORS.ember });
         }
     }
     if (fx.heat.length > MAX_HEAT_SPOTS) fx.heat.splice(0, fx.heat.length - MAX_HEAT_SPOTS);
@@ -88,9 +106,20 @@ export function heatStrength(age, life = HEAT_SECONDS) {
     return Math.pow(1 - age / life, 1.6);
 }
 
+/** The ember ramp: four whole colour steps from white-hot to dull red, nothing smooth in between. Null when it has gone out. */
+export function heatColor(strength) {
+    if (strength > .75) return '#ffe3a0';
+    if (strength > .5) return '#ffa63a';
+    if (strength > .3) return '#ff6a1a';
+    if (strength > .12) return '#b8300a';
+    return null;
+}
+
+/** A debris cube lands on the 4 px microcell grid like every other voxel. */
 export function chipPosition(chip, now) {
     const t = now - chip.born;
-    return { x: chip.x + chip.vx * t, y: chip.y + chip.vy * t + .5 * GRAVITY * t * t, age: t };
+    const snap = value => Math.floor(value / MICRO_UNITS) * MICRO_UNITS + 0;
+    return { x: snap(chip.x + chip.vx * t), y: snap(chip.y + chip.vy * t + .5 * GRAVITY * t * t), age: t };
 }
 
 /** Drops expired cues; returns whether anything is still alive so callers can skip drawing. */
@@ -100,7 +129,7 @@ export function pruneDestructionFx(fx, now) {
     return fx.heat.length + fx.chips.length > 0;
 }
 
-/** Draws hot crater glows (additive) and debris chips over the lit composite in world coordinates; iew only culls. */
+/** Draws hot crater microcells (additive) and debris cubes over the lit composite in world coordinates; `view` only culls. */
 export function drawDestructionFx(ctx, fx, now, view) {
     if (!pruneDestructionFx(fx, now)) return 0;
     let drawn = 0;
@@ -108,15 +137,22 @@ export function drawDestructionFx(ctx, fx, now, view) {
     ctx.globalCompositeOperation = 'lighter';
     for (const spot of fx.heat) {
         const strength = heatStrength(now - spot.born, spot.life);
-        const x = spot.x, y = spot.y;
-        if (strength <= 0.01 || x < view.x - spot.radius || y < view.y - spot.radius || x > view.x + view.width + spot.radius || y > view.y + view.height + spot.radius) continue;
-        const gradient = ctx.createRadialGradient(x, y, 1, x, y, spot.radius);
-        gradient.addColorStop(0, `rgba(255,190,90,${.62 * strength})`);
-        gradient.addColorStop(.45, `rgba(255,90,20,${.34 * strength})`);
-        gradient.addColorStop(1, 'rgba(120,20,5,0)');
-        ctx.fillStyle = gradient;
-        ctx.fillRect(x - spot.radius, y - spot.radius, spot.radius * 2, spot.radius * 2);
-        drawn++;
+        if (strength <= 0.01 || spot.x < view.x - spot.radius || spot.y < view.y - spot.radius
+            || spot.x > view.x + view.width + spot.radius || spot.y > view.y + view.height + spot.radius) continue;
+        // A faint outer glow: the untouched microcells beside the crater warm up first and cool first.
+        if (strength > .3) {
+            ctx.globalAlpha = .5;
+            ctx.fillStyle = '#7a1f0c';
+            for (const cell of spot.rim) { ctx.fillRect(cell.x, cell.y, MICRO_UNITS, MICRO_UNITS); drawn++; }
+        }
+        ctx.globalAlpha = .85;
+        for (const cell of spot.cells) {
+            const color = heatColor(strength * (.45 + .55 * cell.depth / spot.maxDepth));
+            if (!color) continue;
+            ctx.fillStyle = color;
+            ctx.fillRect(cell.x, cell.y, MICRO_UNITS, MICRO_UNITS);
+            drawn++;
+        }
     }
     ctx.globalCompositeOperation = 'source-over';
     for (const chip of fx.chips) {
@@ -125,7 +161,7 @@ export function drawDestructionFx(ctx, fx, now, view) {
         if (fade <= 0) continue;
         ctx.globalAlpha = Math.min(1, fade * 1.6);
         ctx.fillStyle = chip.color;
-        ctx.fillRect(Math.round(x), Math.round(y), chip.size, chip.size);
+        ctx.fillRect(x, y, chip.size, chip.size);
         drawn++;
     }
     ctx.restore();
@@ -134,6 +170,7 @@ export function drawDestructionFx(ctx, fx, now, view) {
 
 // Edge heat per Wyrm Influence band: none in the wet land, then rising to a furnace glow at the lair.
 export const FIRE_ZONE_EDGE_ALPHA = Object.freeze([0, .05, .12, .22]);
+const VIGNETTE_STEP = 2 * MICRO_UNITS;
 
 export function fireZoneIntensity(band, seconds, reducedMotion = false) {
     const base = FIRE_ZONE_EDGE_ALPHA[Math.min(FIRE_ZONE_EDGE_ALPHA.length - 1, Math.max(0, band | 0))] ?? 0;
@@ -142,29 +179,31 @@ export function fireZoneIntensity(band, seconds, reducedMotion = false) {
     return reducedMotion ? base : base * (1 + .16 * Math.sin(seconds * 1.7) + .06 * Math.sin(seconds * 4.3 + 1));
 }
 
-/** Warm ember vignette: the screen edges glow like looking into a furnace. Returns the edge alpha used (0 = nothing drawn). */
+/** Warm ember frame: three stepped rings, each two microcells wide, so the screen edges glow like a furnace without a smooth gradient. */
 export function drawFireZoneVignette(ctx, width, height, band, seconds, reducedMotion = false) {
     const alpha = fireZoneIntensity(band, seconds, reducedMotion);
     if (alpha <= 0.004) return 0;
-    const radius = Math.hypot(width, height) / 2;
-    const gradient = ctx.createRadialGradient(width / 2, height / 2, radius * .45, width / 2, height / 2, radius);
-    gradient.addColorStop(0, 'rgba(255,60,10,0)');
-    gradient.addColorStop(.7, `rgba(255,70,16,${alpha * .45})`);
-    gradient.addColorStop(1, `rgba(255,96,24,${alpha})`);
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, width, height);
+    for (let ring = 0; ring < 3; ring++) {
+        const inset = ring * VIGNETTE_STEP;
+        ctx.fillStyle = `rgba(255,90,22,${alpha * (1 - ring * .33)})`;
+        ctx.fillRect(inset, inset, width - 2 * inset, VIGNETTE_STEP);
+        ctx.fillRect(inset, height - inset - VIGNETTE_STEP, width - 2 * inset, VIGNETTE_STEP);
+        ctx.fillRect(inset, inset + VIGNETTE_STEP, VIGNETTE_STEP, height - 2 * inset - 2 * VIGNETTE_STEP);
+        ctx.fillRect(width - inset - VIGNETTE_STEP, inset + VIGNETTE_STEP, VIGNETTE_STEP, height - 2 * inset - 2 * VIGNETTE_STEP);
+    }
     ctx.restore();
     return alpha;
 }
 
 /**
- * Glowing ember cracks in undisturbed hot-band ground. They are drawn additively over the lit composite, not baked into the
- * lit ground, so they keep glowing in the dark like real magma seams. Returns the number of seams drawn.
+ * Glowing crack network in undisturbed hot-band ground, made of whole microcells (see `veinCells`). Drawn additively over the lit
+ * composite, not baked into the lit ground, so it keeps glowing in the dark like real magma seams. Returns the blocks drawn.
  */
 export function drawVeinGlow(ctx, frame, band, view, seconds, reducedMotion = false) {
-    if (!frame || !(band >= 2)) return 0;
+    const ramp = veinRamp(band);
+    if (!frame || !ramp) return 0;
     const first = Math.max(0, Math.floor(view.x / FACE_PIXELS) - 1);
     const last = Math.min(frame.columns - 1, Math.floor((view.x + view.width) / FACE_PIXELS) + 1);
     const firstRow = Math.max(0, Math.floor(view.y / FACE_PIXELS) - 1);
@@ -176,22 +215,56 @@ export function drawVeinGlow(ctx, frame, band, view, seconds, reducedMotion = fa
         for (let column = first; column <= last; column++) {
             const index = row * frame.columns + column;
             if (frame.fine?.has(index) || frame.material[index] === TERRAIN_MATERIAL.Lava) continue;
-            const seams = veinSegments(column, row, band);
-            if (seams.length === 0) continue;
+            const cells = veinCells(column, row, band);
+            if (cells.length === 0) continue;
             const top = blockTopRect(column, row, frame.surface[index]);
-            // Each seam pulses on its own phase, like heat moving through the rock.
+            // Each block pulses on its own phase, like heat moving through the rock.
             const pulse = reducedMotion ? .8 : .78 + .22 * Math.sin(seconds * 2.1 + column * 1.7 + row * 2.9);
-            for (const seam of seams) {
-                const x = Math.round(top.x + seam.x), y = Math.round(top.y + seam.y);
-                // A dim red bloom one pixel around the bright core makes the crack read as emitting light.
-                ctx.globalAlpha = pulse * .3;
-                ctx.fillStyle = '#b8300a';
-                ctx.fillRect(x - 1, y - 1, seam.w + 2, seam.h + 2);
-                ctx.globalAlpha = pulse;
-                ctx.fillStyle = seam.color;
-                ctx.fillRect(x, y, seam.w, seam.h);
+            for (const cell of cells) {
+                ctx.globalAlpha = cell.kind === 'core' ? pulse : pulse * .4;
+                ctx.fillStyle = cell.kind === 'core' ? ramp.core[cell.tone] : ramp.halo;
+                ctx.fillRect(top.x + cell.x * MICRO_UNITS, top.y + cell.y * MICRO_UNITS, MICRO_UNITS, MICRO_UNITS);
             }
             drawn++;
+        }
+    }
+    ctx.restore();
+    return drawn;
+}
+
+/**
+ * The unbreakable hint: microcells dug down to bedrock carry a faint cold-violet glow and their neighbours an even fainter one,
+ * a quiet "this one will not break" that never competes with fire. Returns the microcells lit.
+ */
+export function drawBedrockGlow(ctx, frame, view, seconds, reducedMotion = false) {
+    if (!frame?.fine?.size) return 0;
+    const pulse = reducedMotion ? 1 : .75 + .25 * Math.sin(seconds * 1.3);
+    let drawn = 0;
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.fillStyle = '#7a5cc8';
+    for (const [index, block] of frame.fine) {
+        const column = index % frame.columns, row = Math.floor(index / frame.columns);
+        const x0 = column * FACE_PIXELS, y0 = row * FACE_PIXELS;
+        if (x0 > view.x + view.width || x0 + FACE_PIXELS < view.x || y0 + 4 * FACE_PIXELS < view.y || y0 - 5 * FACE_PIXELS > view.y + view.height) continue;
+        const cellAt = (mx, my) => [x0 + mx * MICRO_UNITS, y0 + my * MICRO_UNITS - block.heights[my * MICRO_PER_COLUMN + mx] * MICROCELL_UNITS];
+        const lit = new Set();
+        for (let micro = 0; micro < block.heights.length; micro++) {
+            if (block.heights[micro] > BEDROCK_MICROCELLS) continue;
+            const mx = micro % MICRO_PER_COLUMN, my = Math.floor(micro / MICRO_PER_COLUMN);
+            ctx.globalAlpha = .16 * pulse;
+            const [x, y] = cellAt(mx, my);
+            ctx.fillRect(x, y, MICRO_UNITS, MICRO_UNITS);
+            drawn++;
+            for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+                const nx = mx + dx, ny = my + dy, key = ny * MICRO_PER_COLUMN + nx;
+                if (nx < 0 || nx >= MICRO_PER_COLUMN || ny < 0 || ny >= MICRO_PER_COLUMN || lit.has(key) || block.heights[key] <= BEDROCK_MICROCELLS) continue;
+                lit.add(key);
+                const [rx, ry] = cellAt(nx, ny);
+                ctx.globalAlpha = .07 * pulse;
+                ctx.fillRect(rx, ry, MICRO_UNITS, MICRO_UNITS);
+                drawn++;
+            }
         }
     }
     ctx.restore();

@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { craterEvents, createDestructionFx, observeTerrain, heatStrength, chipPosition, pruneDestructionFx, drawDestructionFx,
+import { craterEvents, createDestructionFx, observeTerrain, heatStrength, heatColor, chipPosition, pruneDestructionFx, drawDestructionFx, drawBedrockGlow,
     fireZoneIntensity, drawFireZoneVignette, drawVeinGlow, FIRE_ZONE_EDGE_ALPHA, MAX_CHIPS, MAX_HEAT_SPOTS, HEAT_SECONDS } from
     '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-destruction-fx.js';
-import { mergeTerrainFrame, veinSegments, VEIN_CHANCE, paintTerrain, TERRAIN_MATERIAL, crackPixels, CRACK_DARK, CRACK_HOT } from
+import { mergeTerrainFrame, veinCells, paintTerrain, TERRAIN_MATERIAL, crackPixels, CRACK_DARK, CRACK_HOT, topFaceColor, BEDROCK_MICROCELLS, BEDROCK_TOP } from
     '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-terrain-canvas.js';
 import { readArenaDebugFlags } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-debug.js';
 
@@ -79,29 +79,44 @@ test('heat is brightest at impact and fades monotonically to nothing', () => {
     assert.equal(heatStrength(-1), 0);
 });
 
-test('chips arc upward then fall under gravity', () => {
+test('chips arc upward then fall under gravity and always sit on the 4 px voxel grid', () => {
     const chip = { x: 0, y: 0, vx: 10, vy: -100, born: 0, life: 1 };
     assert.ok(chipPosition(chip, .1).y < 0, 'rising');
     assert.ok(chipPosition(chip, .9).y > chipPosition(chip, .4).y, 'falling later');
-    assert.equal(chipPosition(chip, .5).x, 5);
+    for (const time of [0, .13, .37, .5, .91]) {
+        const { x, y } = chipPosition(chip, time);
+        assert.equal(Math.abs(x % 4), 0); assert.equal(Math.abs(y % 4), 0);
+    }
 });
 
-test('drawing paints glow gradients and whole-pixel chips only for what is on screen', () => {
+test('the heat ramp has four whole colour steps and goes out', () => {
+    const steps = new Set([.9, .6, .4, .2].map(heatColor));
+    assert.equal(steps.size, 4, 'four distinct steps, nothing smooth in between');
+    assert.equal(heatColor(.05), null);
+    assert.equal(heatColor(.2), heatColor(.15), 'a step holds its colour across a range');
+});
+
+test('a crater is drawn as whole 4 px microcells with no gradient, only for what is on screen', () => {
     const previous = whole(2, 1);
     const next = mergeTerrainFrame(previous, { revision: 7, columns: 2, rows: 1, surface: [0, 0], material: [0, 0], fine: [bowl(3)] });
     const fx = createDestructionFx();
     observeTerrain(fx, previous, next, 0);
+    assert.equal(fx.heat[0].cells.length, 4, 'one hot cell per dug microcolumn');
+    assert.ok(fx.heat[0].rim.length >= 8, 'the neighbouring microcolumns form the faint outer glow');
     const ctx = recorder();
     const drawn = drawDestructionFx(ctx, fx, .1, { x: 0, y: 0, width: 390, height: 844 });
-    assert.ok(drawn > 1);
-    assert.equal(ctx.calls.filter(call => call[0] === 'gradient').length, 1);
-    for (const call of ctx.calls.filter(call => call[0] === 'fillRect' && call[3] <= 3)) assert.ok(Number.isInteger(call[1]) && Number.isInteger(call[2]), 'chips are pixel aligned');
-    const away = recorder();
-    drawDestructionFx(away, fx, .1, { x: 5000, y: 5000, width: 390, height: 844 });
-    assert.equal(away.calls.filter(call => call[0] === 'gradient').length, 0, 'off-screen craters draw no glow');
+    assert.ok(drawn > 4);
+    assert.equal(ctx.calls.filter(call => call[0] === 'gradient').length, 0, 'no smooth gradients');
+    const squares = ctx.calls.filter(call => call[0] === 'fillRect');
+    assert.ok(squares.length > 0);
+    for (const call of squares) {
+        assert.equal(call[3], 4); assert.equal(call[4], 4);
+        assert.equal(call[1] % 4, 0); assert.equal(call[2] % 4, 0);
+    }
+    const awayDrawn = drawDestructionFx(recorder(), fx, .1, { x: 5000, y: 5000, width: 390, height: 844 });
+    assert.equal(awayDrawn, fx.chips.length, 'off-screen craters draw no heat cells, only the airborne chips remain');
 });
-
-test('fire-zone heat rises with the Wyrm Influence band and is silent in the wet land', () => {
+test('fire-zone heat rises with the Wyrm Influence band, is silent in the wet land and is drawn as stepped rings', () => {
     assert.equal(fireZoneIntensity(0, 3), 0);
     for (let band = 1; band < 4; band++) assert.ok(FIRE_ZONE_EDGE_ALPHA[band] > FIRE_ZONE_EDGE_ALPHA[band - 1]);
     assert.ok(fireZoneIntensity(3, 1) > fireZoneIntensity(2, 1) && fireZoneIntensity(2, 1) > fireZoneIntensity(1, 1));
@@ -112,41 +127,88 @@ test('fire-zone heat rises with the Wyrm Influence band and is silent in the wet
     assert.equal(quiet.calls.length, 0);
     const hot = recorder();
     assert.ok(drawFireZoneVignette(hot, 390, 844, 3, 1) > 0);
-    assert.equal(hot.calls.filter(call => call[0] === 'fillRect').length, 1);
+    assert.equal(hot.calls.filter(call => call[0] === 'gradient').length, 0, 'no smooth gradient');
+    const strips = hot.calls.filter(call => call[0] === 'fillRect');
+    assert.equal(strips.length, 12, 'three rings of four strips');
+    for (const call of strips) assert.ok(call[3] === 8 || call[4] === 8, 'every ring is exactly two microcells (8 px) thick');
 });
 
-test('ember veins appear only in hot bands, are deterministic and stay inside the top face', () => {
-    assert.deepEqual(veinSegments(4, 5, 0), []);
-    assert.deepEqual(veinSegments(4, 5, 1), []);
+const hotCells = (column, row, band) => veinCells(column, row, band).filter(cell => cell.kind === 'core');
+
+test('crack networks use only whole microcells, appear only in hot bands and are deterministic', () => {
+    assert.deepEqual(veinCells(4, 5, 0), []);
+    assert.deepEqual(veinCells(4, 5, 1), []);
     let hot = 0, burning = 0;
     for (let row = 0; row < 40; row++) for (let column = 0; column < 32; column++) {
-        const volcanic = veinSegments(column, row, 3);
-        assert.deepEqual(volcanic, veinSegments(column, row, 3));
+        const volcanic = veinCells(column, row, 3);
+        assert.deepEqual(volcanic, veinCells(column, row, 3));
         if (volcanic.length) hot++;
-        if (veinSegments(column, row, 2).length) burning++;
-        for (const piece of volcanic) assert.ok(piece.x >= 0 && piece.y >= 0 && piece.x + piece.w <= 32 && piece.y + piece.h <= 32);
+        if (veinCells(column, row, 2).length) burning++;
+        for (const cell of volcanic) {
+            assert.ok(Number.isInteger(cell.x) && Number.isInteger(cell.y) && cell.x >= 0 && cell.x < 8 && cell.y >= 0 && cell.y < 8, 'a whole microcell inside the block');
+        }
     }
-    const cells = 40 * 32;
-    assert.ok(Math.abs(hot / cells - VEIN_CHANCE[3]) < .06, `volcanic share ${hot / cells}`);
-    assert.ok(Math.abs(burning / cells - VEIN_CHANCE[2]) < .05, `burning share ${burning / cells}`);
-    assert.ok(hot > burning);
+    assert.ok(hot > burning && burning > 0, `volcanic ${hot} > burning ${burning} > 0`);
 });
 
-test('vein glow is additive, only in hot bands, skips lava and dug blocks, and stays on screen', () => {
+test('a crack crossing a block edge continues in the neighbouring block at the same microcell', () => {
+    let crossings = 0;
+    for (let row = 0; row < 30; row++) for (let column = 0; column < 31; column++) {
+        const here = hotCells(column, row, 3), east = hotCells(column + 1, row, 3);
+        for (const cell of here.filter(cell => cell.x === 7)) {
+            crossings++;
+            assert.ok(east.some(other => other.x === 0 && other.y === cell.y), `block ${column},${row} east port continues`);
+        }
+        const south = hotCells(column, row + 1, 3);
+        for (const cell of here.filter(cell => cell.y === 7)) {
+            assert.ok(south.some(other => other.y === 0 && other.x === cell.x), `block ${column},${row} south port continues`);
+        }
+    }
+    assert.ok(crossings > 20, 'there are real cross-block cracks to check');
+});
+
+test('every halo microcell touches the glowing core and never overlaps it', () => {
+    for (let row = 0; row < 20; row++) for (let column = 0; column < 20; column++) {
+        const cells = veinCells(column, row, 3);
+        const core = new Set(cells.filter(cell => cell.kind === 'core').map(cell => cell.y * 8 + cell.x));
+        for (const halo of cells.filter(cell => cell.kind === 'halo')) {
+            assert.ok(!core.has(halo.y * 8 + halo.x));
+            assert.ok([[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => core.has((halo.y + dy) * 8 + halo.x + dx)));
+        }
+    }
+});
+
+test('crack glow is additive, only in hot bands, drawn as 4 px cells on the block grid, skipping lava and dug blocks', () => {
     const terrain = whole(8, 8);
     const view = { x: 0, y: 0, width: 256, height: 256 };
-    const draw = (band, frame = terrain) => { const ctx = Object.assign(recorder(), { globalCompositeOperation: 'source-over' }); return { ctx, seams: drawVeinGlow(ctx, frame, band, view, 1) }; };
-    assert.equal(draw(0).seams, 0);
-    assert.equal(draw(1).seams, 0);
+    const draw = (band, frame = terrain) => { const ctx = Object.assign(recorder(), { globalCompositeOperation: 'source-over' }); return { ctx, blocks: drawVeinGlow(ctx, frame, band, view, 1) }; };
+    assert.equal(draw(0).blocks, 0);
+    assert.equal(draw(1).blocks, 0);
     const hot = draw(3);
-    assert.ok(hot.seams > 0, 'volcanic ground glows');
-    assert.ok(draw(2).seams <= hot.seams + 8);
+    assert.ok(hot.blocks > 0, 'volcanic ground glows');
+    for (const call of hot.ctx.calls.filter(call => call[0] === 'fillRect')) {
+        assert.equal(call[3], 4); assert.equal(call[4], 4); assert.equal(call[1] % 4, 0); assert.equal(call[2] % 4, 0);
+    }
     const lava = { ...terrain, material: new Array(64).fill(TERRAIN_MATERIAL.Lava) };
-    assert.equal(draw(3, lava).seams, 0, 'lava is already a light source');
+    assert.equal(draw(3, lava).blocks, 0, 'lava is already a light source');
     const dug = { ...terrain, fine: new Map(Array.from({ length: 64 }, (_, index) => [index, { heights: new Array(64).fill(-1), topsoil: 0, stoneTop: -8 }])) };
-    assert.equal(draw(3, dug).seams, 0, 'dug blocks carry their own crater heat instead');
+    assert.equal(draw(3, dug).blocks, 0, 'dug blocks carry their own crater heat instead');
     assert.equal(drawVeinGlow(recorder(), null, 3, view, 1), 0);
-    for (const call of hot.ctx.calls.filter(call => call[0] === 'fillRect')) assert.ok(Number.isInteger(call[1]) && Number.isInteger(call[2]), 'pixel aligned');
+});
+
+test('bedrock reads smooth and dark and carries a faint voxel-aligned cold glow', () => {
+    assert.equal(topFaceColor(0, TERRAIN_MATERIAL.Soil, BEDROCK_MICROCELLS), BEDROCK_TOP);
+    assert.equal(topFaceColor(3, TERRAIN_MATERIAL.Stone, BEDROCK_MICROCELLS - 3), BEDROCK_TOP);
+    assert.notEqual(topFaceColor(0, TERRAIN_MATERIAL.Soil, BEDROCK_MICROCELLS + 1), BEDROCK_TOP);
+    const heights = new Array(64).fill(-10); heights[27] = BEDROCK_MICROCELLS;
+    const frame = { columns: 2, rows: 1, surface: [0, 0], material: [0, 0], fine: new Map([[1, { heights, topsoil: 0, stoneTop: -8 }]]) };
+    const ctx = Object.assign(recorder(), { globalCompositeOperation: 'source-over' });
+    const lit = drawBedrockGlow(ctx, frame, { x: 0, y: 0, width: 256, height: 400 }, 1);
+    assert.equal(lit, 5, 'the bedrock cell and its four neighbours');
+    const alphas = ctx.calls.filter(call => call[0] === 'fillRect').map(call => call[6]);
+    assert.ok(Math.max(...alphas) < .2, 'faint, never competing with fire');
+    for (const call of ctx.calls.filter(call => call[0] === 'fillRect')) { assert.equal(call[1] % 4, 0); assert.equal(call[2] % 4, 0); }
+    assert.equal(drawBedrockGlow(recorder(), { ...frame, fine: new Map([[1, { heights: new Array(64).fill(-10), topsoil: 0, stoneTop: -8 }]]) }, { x: 0, y: 0, width: 256, height: 400 }, 1), 0, 'no bedrock, no glow');
 });
 test('the band debug flag accepts only 0 to 3', () => {
     assert.equal(readArenaDebugFlags('').band, null);

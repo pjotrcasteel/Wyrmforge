@@ -26,7 +26,7 @@ public sealed partial class RunSimulation
                 // chain, splash, experience or reward can be fabricated by this branch.
                 arenaEnvironment.TryDamageProp(contact, width, height, projectile.Radius, projectile.Damage);
                 RegisterElementalImpact(contact, projectile.Spell, projectile.Rank, projectile.Combination, projectile.Surge);
-                ApplyFireballTerrainImpact(contact, projectile);
+                ApplyFireballTerrainImpact(contact, projectile, projectile.Position);
                 projectiles.RemoveAt(index);
                 continue;
             }

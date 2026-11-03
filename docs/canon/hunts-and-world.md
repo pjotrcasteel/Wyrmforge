@@ -300,3 +300,22 @@ See [art and animation](art-and-animation.md) for source references and QA gates
 **Debug preview.** `?band=0..3` presents the Hunt as another influence band without changing C# state; combine with `bright=1` to inspect and without it to judge the true night.
 
 **Open questions for the owner.** Should walls and cliffs be destroyed by Fireball impact on their face, or only from above? Should unbreakable bedrock and indestructible landmarks have a distinct look from the start? How hot should the Volcanic edge glow be before it hurts readability (current 22 % alpha is a starting value)?
+
+### Destruction physics, the voxel rule and the bedrock hint (owner decisions, 2 November 2026)
+
+**Owner decisions.** (1) Destruction follows real physics: flat ground is damaged from above, walls from the side and from above. (2) Unbreakable bedrock gets only a faint hint, a quiet outer glow, nothing loud. (3) **LOCKED: every destruction and heat effect is built from the divided voxels (the 4 px, 12.5 cm microcells); no smooth cheating.** The reference images the owner supplied (cooling-lava plate cracks, a glowing river between fractured basalt chunks, a pixel-art lava canyon) all read as chunky plates with glowing seams, so seams, heat, debris and glows are whole-microcell squares in stepped colour ramps. No radial or linear gradients, no freeform sub-voxel lines.
+
+**Physical model implemented in C# (`ArenaTerrainMutation`).** One authoritative rule per direction, both conserving roughly the same removed volume so a hit costs the same energy whichever way it lands:
+
+| Case | Rule |
+| --- | --- |
+| Ground, from above | A round bowl dug from the surface down (the crater), radius 0.75, 1.25 or 1.8 m by power |
+| Wall or cliff, from the side | A shot that stops because it met rock above the height it flew at (`FaceHitHeight`) bites a half-sphere of 37 cm, 62 cm or 1 m radius out of the face, centred just inside it at the flight height. Only microcolumns the sphere reaches are hit, so open ground in front of the wall is never touched and the wall loses its exposed edge and top near the contact |
+| Wall or cliff, from above | The same crater rule on its top surface |
+| Soil | Removed first, point for point |
+| Stone | Wears: each hit adds impact points, 4 points break one microcell; wear carries over, is saved, replayed and reverted exactly, and is drawn as crack stages |
+| Bedrock, lava, protected route | Never break |
+
+**What the physics engine still has to add (from the roadmap).** The heightfield is the interim representation and cannot hold overhangs, arches or rubble. Still to build, in order: (a) C# 3D occupancy of the 8 x 8 x 8 microcells (**XYZ1** sparse mutation, **XYZ2** excavation) so a side bite can leave a real overhang; (b) C# structural stability: material left unsupported falls, deposits rubble at the foot of the wall and re-checks routes, using the same impact event as everything else (**ENG** gameplay physics, authority stays in C#); (c) cosmetic debris, dust and falling rubble through the one shared FXP solver (**FXP2**, contact responses **FXP7 to FXP8**) consuming the typed C# impact event, never a terrain-only solver; (d) shared VFX, audio and lighting consumers of that event (**VFX1 to VFX4**, **AUD**, lighting emitters). Until then debris chips are a bounded cosmetic stand-in and carry no gameplay.
+
+**Visual language now implemented (presentation, not owner-approved).** Fresh craters glow in four stepped ember colours per microcell with a one-microcell faint rim that warms and cools first. Debris is whole 4 px cubes snapped to the grid. Hot bands carry a crack network that is built only from microcells: every block edge may carry a crack port at a hashed microcell, both blocks sharing the edge derive the same port, so cracks run unbroken across blocks like plate seams, with a one-cell halo. The furnace edge is three stepped rings two microcells thick. Bedrock is smooth near-black violet with a faint cold-violet glow on its microcell and a fainter one on its neighbours. **Known limitation:** these glows are drawn additively over the lit composite, so they can lie over a creature standing on them; the correct fix is to feed them to the lighting engine as an emissive ground map (G8 material response).

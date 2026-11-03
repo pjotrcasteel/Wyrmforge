@@ -22,13 +22,16 @@ public sealed partial class RunSimulation
     public IReadOnlyList<ArenaTerrainChange> TerrainChangesThisTick => terrainChangesThisTick;
     private readonly List<ArenaTerrainChange> terrainChangesThisTick = [];
 
-    // Every confirmed Fireball contact chips the ground; heavier Fireballs dig deeper.
-    private void ApplyFireballTerrainImpact(Vector2D at, ProjectileState projectile)
+    // Every confirmed Fireball contact chips the ground; heavier Fireballs dig deeper. A shot that stopped at a wall or cliff face
+    // (it was flying above the ground it started over and met taller rock) bites the face from the side instead of the ground from above.
+    private void ApplyFireballTerrainImpact(Vector2D at, ProjectileState projectile, Vector2D? from = null)
     {
-        if (arenaEnvironment?.Terrain is null || projectile.Spell != SpellId.FireBolt) return;
+        if (arenaEnvironment?.Terrain is not { } grid || projectile.Spell != SpellId.FireBolt) return;
         var power = HasFireballMutation(FireballMutationId.MeteorHeart) ? 3 : projectile.SplashRadius > 0 ? 2 : 1;
-        var changes = arenaEnvironment.ApplyTerrainImpact(new ArenaTerrainImpact(++nextTerrainImpactId, at, power),
-            player.Position, player.Radius, arenaWidth, arenaHeight);
+        ArenaTerrainImpact impact = new(++nextTerrainImpactId, at, power);
+        if (from is { } origin && (at - origin) is { Length: > 1e-9 } travel && grid.FaceHitHeight(origin, at, travel.Normalized()) is { } height)
+            impact = impact with { Direction = travel.Normalized(), FaceHeight = height };
+        var changes = arenaEnvironment.ApplyTerrainImpact(impact, player.Position, player.Radius, arenaWidth, arenaHeight);
         terrainChangesThisTick.AddRange(changes);
     }
 }

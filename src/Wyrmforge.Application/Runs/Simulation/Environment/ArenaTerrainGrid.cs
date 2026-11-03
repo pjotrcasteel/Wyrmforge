@@ -106,6 +106,25 @@ public sealed class ArenaTerrainGrid
     public byte[]? FineWear(int column, int row) =>
         wear.TryGetValue(row * Columns + column, out var counters) ? (byte[])counters.Clone() : null;
 
+    /// <summary>
+    /// When a shot stopped at <paramref name="contact"/> travelling along <paramref name="direction"/> because it met rock rising above
+    /// the height it flew at, returns that height in microcells (the shooter's ground plus the shot clearance); otherwise null.
+    /// That is a side hit on a wall or cliff face, as opposed to a hit from above on open ground.
+    /// </summary>
+    public int? FaceHitHeight(Vector2D from, Vector2D contact, Vector2D direction)
+    {
+        var (fromColumn, fromRow) = ColumnOf(from);
+        if (!Contains(fromColumn, fromRow) || direction.Length < 1e-9) return null;
+        var ceiling = Surface(fromColumn, fromRow) + ShotClearanceMicrocells;
+        foreach (var probe in new[] { contact, contact + direction * (CellUnits * .4) })
+        {
+            var (column, row) = ColumnOf(probe);
+            if ((column == fromColumn && row == fromRow) || !Contains(column, row)) continue;
+            if (Surface(column, row) > ceiling) return ceiling;
+        }
+        return null;
+    }
+
     /// <summary>Copy of the current heightfield for presentation; the caller cannot change the authoritative grid.</summary>
     public Wyrmforge.Application.Runs.Simulation.Snapshots.ArenaTerrainFrame ToFrame(int knownRevision = -1)
     {

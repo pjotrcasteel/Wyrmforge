@@ -236,6 +236,88 @@ public sealed class ArenaTerrainExcavationTests
         Assert.IsLessThan(ArenaTerrainGrid.StoneWearPerMicrocell, block.Wear.Max());
         Assert.IsNull(FlatSoil().ToFrame(-1).Fine.FirstOrDefault()?.Wear, "undamaged ground carries no wear");
     }
+    private static ArenaTerrainGrid WallEastOfColumnSix()
+    {
+        var grid = FlatSoil();
+        for (var row = 4; row <= 8; row++) grid.Set(6, row, 16, ArenaTerrainMaterial.Stone);
+        return grid;
+    }
+
+    private static ArenaTerrainImpact SideHit(long id, int power = 1) =>
+        new(id, new Vector2D(6 * ArenaTerrainGrid.CellUnits - 2, 6.5 * ArenaTerrainGrid.CellUnits), power, new Vector2D(1, 0), ArenaTerrainGrid.ShotClearanceMicrocells);
+
+    [TestMethod]
+    public void AShotThatStopsAtARockFace_IsASideHitAtTheHeightItFlew()
+    {
+        var grid = WallEastOfColumnSix();
+        var from = new Vector2D(4.5 * ArenaTerrainGrid.CellUnits, 6.5 * ArenaTerrainGrid.CellUnits);
+        var contact = new Vector2D(6 * ArenaTerrainGrid.CellUnits - 2, 6.5 * ArenaTerrainGrid.CellUnits);
+        Assert.AreEqual(ArenaTerrainGrid.ShotClearanceMicrocells, grid.FaceHitHeight(from, contact, new Vector2D(1, 0)));
+        Assert.IsNull(grid.FaceHitHeight(from, new Vector2D(5.2 * ArenaTerrainGrid.CellUnits, 6.5 * ArenaTerrainGrid.CellUnits), new Vector2D(1, 0)), "open ground is a hit from above");
+        Assert.IsNull(FlatSoil().FaceHitHeight(from, contact, new Vector2D(1, 0)), "no wall, no side hit");
+    }
+
+    [TestMethod]
+    public void ASideHit_BitesTheWallFaceAndNeverTheGroundInFrontOfIt()
+    {
+        var grid = WallEastOfColumnSix();
+        for (var hit = 0; hit < 24; hit++) ArenaTerrainMutation.Apply(grid, SideHit(hit), null);
+        Assert.IsFalse(grid.IsSubdivided(5, 6), "the floor in front of the wall is untouched");
+        Assert.IsFalse(grid.IsSubdivided(4, 6));
+        var wall = grid.FineHeights(6, 6)!;
+        Assert.IsLessThan(16, wall.Min(), "the face has been worn down");
+        // The bite reaches only a few microcells into the wall: the far side keeps its full height.
+        for (var microY = 0; microY < ArenaTerrainGrid.MicroPerColumn; microY++)
+            Assert.AreEqual(16, wall[microY * ArenaTerrainGrid.MicroPerColumn + 7], "the back of the wall is untouched");
+        var faceRows = Enumerable.Range(0, ArenaTerrainGrid.MicroPerColumn).Select(microY => wall[microY * ArenaTerrainGrid.MicroPerColumn]).ToArray();
+        Assert.IsLessThan(faceRows[0], faceRows[3], "deepest where the shot struck, shallower toward the ends");
+    }
+
+    [TestMethod]
+    public void ASideHit_IsDeterministicAndRevertsExactlyIncludingWear()
+    {
+        string Run()
+        {
+            var grid = WallEastOfColumnSix();
+            for (var hit = 0; hit < 10; hit++) ArenaTerrainMutation.Apply(grid, SideHit(hit, 1 + hit % 3), null);
+            return string.Join(',', grid.FineHeights(6, 6)!) + "|" + string.Join(',', grid.FineWear(6, 6)!);
+        }
+        Assert.AreEqual(Run(), Run());
+        var wall = WallEastOfColumnSix();
+        var before = wall.Clone();
+        var changes = ArenaTerrainMutation.Apply(wall, SideHit(1, 3), null);
+        Assert.IsNotEmpty(changes);
+        ArenaTerrainMutation.Revert(wall, changes);
+        CollectionAssert.AreEqual(before.FineHeights(6, 6), wall.FineHeights(6, 6));
+        CollectionAssert.AreEqual(before.FineWear(6, 6), wall.FineWear(6, 6));
+    }
+
+    [TestMethod]
+    public void BiggerBlasts_BiteDeeperIntoTheFaceAndTheBiteConservesAboutTheVolumeOfTheCrater()
+    {
+        var depths = new List<int>();
+        foreach (var power in new[] { 1, 2, 3 })
+        {
+            var grid = WallEastOfColumnSix();
+            for (var hit = 0; hit < 40; hit++) ArenaTerrainMutation.Apply(grid, SideHit(hit, power), null);
+            depths.Add(16 - grid.FineHeights(6, 6)!.Min());
+        }
+        Assert.IsLessThan(depths[1], depths[0]);
+        Assert.IsLessThan(depths[2], depths[1]);
+        Assert.IsLessThanOrEqualTo(ArenaTerrainMutation.FaceBiteRadiusMicrocells(3), ArenaTerrainMutation.FaceBiteRadiusMicrocells(3));
+        Assert.AreEqual(3, ArenaTerrainMutation.FaceBiteRadiusMicrocells(1));
+        Assert.AreEqual(8, ArenaTerrainMutation.FaceBiteRadiusMicrocells(3));
+    }
+
+    [TestMethod]
+    public void ATopDownHitOnAWall_StillDigsACraterIntoItsTop()
+    {
+        var grid = WallEastOfColumnSix();
+        for (var hit = 0; hit < 12; hit++) ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(hit, ArenaTerrainGrid.CenterOf(6, 6), 2), null);
+        var wall = grid.FineHeights(6, 6)!;
+        Assert.IsLessThan(16, wall[3 * ArenaTerrainGrid.MicroPerColumn + 3], "a hit from above craters the top of the wall");
+        Assert.IsFalse(grid.IsSubdivided(6, 8), "while wall beyond the blast radius stays whole");
+    }
     [TestMethod]
     public void ProtectedRoute_NeverDropsBelowHalfAMetre()
     {

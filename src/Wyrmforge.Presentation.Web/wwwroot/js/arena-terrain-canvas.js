@@ -47,11 +47,15 @@ const DIRT = Object.freeze([
 const STONE_STRATA = Object.freeze(['#5c5348', '#554c42', '#4a423a', '#3a3430']);
 export const DIRT_UPPER_FLOOR = -4;
 export const DIRT_LOWER_FLOOR = -8;
+// Unbreakable bedrock at the bottom of a deep crater: near-black violet with no cracks, so it reads as "this will not break".
+export const BEDROCK_MICROCELLS = -32;
+export const BEDROCK_TOP = '#1d1822';
 
 const bandIndex = band => Math.min(PALETTE.length - 1, Math.max(0, band | 0));
 
 /** Top-face colour for a column: grass on undisturbed ground, dirt once dug into, otherwise the material ramp. */
 export function topFaceColor(band, material, surfaceMicrocells) {
+    if (surfaceMicrocells <= BEDROCK_MICROCELLS) return BEDROCK_TOP;
     const index = bandIndex(band);
     if (material === TERRAIN_MATERIAL.Soil) {
         if (surfaceMicrocells < 0) return DIRT[index].top;
@@ -105,32 +109,64 @@ export function blockTone(column, row) {
 
 export const BLOCK_TONE_STEP = 0.09;
 
-// Share of undisturbed ground blocks that carry a glowing ember vein, per influence band: the land cracks open toward the Wyrm.
-export const VEIN_CHANCE = Object.freeze([0, 0, 0.09, 0.2]);
-const VEIN_COLORS = Object.freeze([null, null, ['#e8641a', '#ffb347'], ['#ff7a14', '#ffd27a']]);
+// Wyrm-heat crack network, built only from the 4 px microcells of each 1 m block (no freeform lines). Every block edge may carry a
+// "port" crack at a hashed microcell; both blocks that share the edge derive the same port, so cracks run unbroken from block to
+// block like the seams between plates of cooling lava. Inside a block each active port is joined to a hub by a staircase of whole
+// microcells, with a one-cell halo of cooler rock around the glowing core.
+export const PORT_CHANCE = Object.freeze([0, 0, 0.06, 0.15]);
+const VEIN_RAMP = Object.freeze([null, null, { core: ['#e8641a', '#ff9a2a'], halo: '#7a1f0c' }, { core: ['#ff7a14', '#ffd27a'], halo: '#a01a08' }]);
 
-/** Deterministic staircase of ember pixels inside one 32 x 32 top face (cell-local coordinates), or none. */
-export function veinSegments(column, row, band) {
-    const index = bandIndex(band);
-    const chance = VEIN_CHANCE[index];
-    if (!chance) return [];
-    let h = (Math.imul(column + 11, 0x9E3779B1) ^ Math.imul(row + 3, 0xC2B2AE35)) >>> 0;
+export function veinRamp(band) { return VEIN_RAMP[bandIndex(band)]; }
+
+function hash3(a, b, c) {
+    let h = (Math.imul(a + 11, 0x9E3779B1) ^ Math.imul(b + 3, 0xC2B2AE35) ^ Math.imul(c + 5, 0x27D4EB2F)) >>> 0;
     h = Math.imul(h ^ (h >>> 16), 0x85EBCA6B) >>> 0;
     h = Math.imul(h ^ (h >>> 13), 0xC2B2AE35) >>> 0;
-    if ((h & 0xffff) / 65536 >= chance) return [];
-    const [core, spark] = VEIN_COLORS[index];
-    const dx = (h >>> 16) & 1 ? 3 : -3;
-    let x = 6 + ((h >>> 17) % 20), y = 5 + ((h >>> 22) % 20);
-    const segments = [];
-    for (let step = 0; step < 4 + ((h >>> 12) % 4); step++) {
-        if (x < 0 || x > FACE_PIXELS - 3 || y < 0 || y > FACE_PIXELS - 2) break;
-        segments.push({ x, y, w: 3, h: 2, color: core });
-        if (step % 2) segments.push({ x: x + 1, y, w: 1, h: 1, color: spark });
-        x += dx; y += step % 2 ? 2 : 1;
-    }
-    return segments;
+    return (h ^ (h >>> 16)) >>> 0;
 }
 
+// kind 0: the vertical edge east of (column, row); kind 1: the horizontal edge south of it. Returns the port microcell (1-6) or null.
+function edgePort(kind, column, row, band) {
+    const chance = PORT_CHANCE[bandIndex(band)] ?? 0;
+    if (!chance) return null;
+    const h = hash3(column, row, kind);
+    return (h & 0xffff) / 65536 < chance ? 1 + ((h >>> 16) % 6) : null;
+}
+
+/** Microcells of one block's crack network: `{ x, y, kind: 'core' | 'halo', tone }` with x, y in 0-7. Empty when no edge has a port. */
+export function veinCells(column, row, band) {
+    const west = edgePort(0, column - 1, row, band), east = edgePort(0, column, row, band);
+    const north = edgePort(1, column, row - 1, band), south = edgePort(1, column, row, band);
+    if (west === null && east === null && north === null && south === null) return [];
+    const h = hash3(column, row, 2);
+    const hub = { x: 3 + (h & 1), y: 3 + ((h >>> 1) & 1) };
+    const core = new Map();
+    const add = (x, y) => core.set(y * MICRO_PER_COLUMN + x, { x, y, kind: 'core', tone: (x * 3 + y * 5 + h) & 1 });
+    const join = (startX, startY, startAxis) => {
+        let x = startX, y = startY, axis = startAxis, run = 0, limit = 1 + (hash3(column, row, startX * 8 + startY) % 3);
+        add(x, y);
+        while (x !== hub.x || y !== hub.y) {
+            if (axis === 0 && x === hub.x) axis = 1; else if (axis === 1 && y === hub.y) axis = 0;
+            if (axis === 0) x += Math.sign(hub.x - x); else y += Math.sign(hub.y - y);
+            add(x, y);
+            // Runs of one to three cells make the crack zig-zag like a fracture rather than an L.
+            if (++run >= limit) { axis ^= 1; run = 0; limit = 1 + (hash3(column, row, x * 8 + y) % 3); }
+        }
+    };
+    if (west !== null) join(0, west, 0);
+    if (east !== null) join(MICRO_PER_COLUMN - 1, east, 0);
+    if (north !== null) join(north, 0, 1);
+    if (south !== null) join(south, MICRO_PER_COLUMN - 1, 1);
+    const cells = [...core.values()];
+    const halo = new Map();
+    for (const { x, y } of cells)
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+            const nx = x + dx, ny = y + dy, key = ny * MICRO_PER_COLUMN + nx;
+            if (nx >= 0 && nx < MICRO_PER_COLUMN && ny >= 0 && ny < MICRO_PER_COLUMN && !core.has(key) && !halo.has(key))
+                halo.set(key, { x: nx, y: ny, kind: 'halo', tone: 0 });
+        }
+    return [...cells, ...halo.values()];
+}
 export const MICRO_PER_COLUMN = 8;
 export const MICRO_UNITS = FACE_PIXELS / MICRO_PER_COLUMN;
 
