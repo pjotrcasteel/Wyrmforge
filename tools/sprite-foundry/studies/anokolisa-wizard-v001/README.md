@@ -157,3 +157,20 @@ Reproducibility tests compare the committed editable layers, the merged
 composites and the source frames. This slice remains **side-view, draft-only**.
 The *staff-assisted walk* and *eight real authored directions* are not
 produced by copying or flipping these source frames.
+
+### Isolated staff-assisted contact study (3 Nov 2026)
+
+`staff-walk-side-v001/` adds an **unapproved 12-key side-facing timing
+study** over the exact six licensed Gothic-grey run frames. The added
+right elbow/hand and one rigid neutral staff are separate from the artist's
+original source. Keys 02–08 enforce an actually fixed planted staff tip in
+world space while the actor's root advances, and a one-shot preview shows
+the contact. It also includes a 4× key sheet, a native 64×80 atlas, a looping
+pose study, phase manifest, reproduction script and regression tests.
+
+**This does not finish the staff-assisted walk.** The foundation still needs
+authored leg/weight transfer and natural cloth movement, then owner review,
+8 authentic directional facings, school-specific equipment, shared lighting
+parity and a genuine mobile in-Hunt approval before any integration.
+
+See [the study and exact remaining risks](staff-walk-side-v001/README.md).
