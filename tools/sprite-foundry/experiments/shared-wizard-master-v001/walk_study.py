@@ -27,16 +27,16 @@ FREE_ARM_SWING_METRES = 0.18
 GARMENT_SWAY_METRES = 0.07
 SHOULDER_COUNTER_TWIST_RADIANS = 0.085
 STAFF_CONTACT_HEIGHT_METRES = 0.045
-STAFF_SWING_LIFT_METRES = 0.24
-STAFF_LOWER_SEGMENT_METRES = 1.41
-STAFF_HAND_X_OFFSET = -0.55
-STAFF_HAND_SWING_METRES = 0.25
-STAFF_HAND_Z_OFFSET = 0.15
-RIGHT_GRIP = (-0.74, 1.51, 0.20)
-# Walking-study-only straightening: leave the pose-locked idle master untouched.
-STAFF_CROOK_CORRECTION_X = 0.14
-STAFF_CROOK_CORRECTION_Z = 0.48
-STAFF_CROOK_TOP_Y = 3.24
+STAFF_SWING_LIFT_METRES = 0.10
+STAFF_LOWER_SEGMENT_METRES = 2.10
+STAFF_TOTAL_LENGTH_METRES = 3.35
+STAFF_RIGHT_X = -0.90
+STAFF_TIP_Z_OFFSET_METRES = 0.31
+STAFF_HAND_FORWARD_Z_METRES = 0.32
+STAFF_HAND_SWING_METRES = 0.05
+RIGHT_GRIP = (-0.74, 1.51, 0.20)  # Only the immutable master's source hand location
+
+
 RIGHT_STAFF_FEATURES = frozenset({
     "right-hand", "right-hand-staff", "staff-flame-base", "staff-fire", "staff-flame-core"
 })
@@ -59,24 +59,6 @@ LEG_FEATURES = frozenset({"trouser", "boots", "boot-toe", "boot-cuff"})
 GARMENT_FEATURES = frozenset({"outer-robe", "under-robe", "permanent-cloth-rip", "frayed-rip-edge"})
 
 
-def straightened_walk_staff_face(face):
-    """Remove the inherited backward kink without altering the locked master.
-
-    The original upper pole ends at (-.91, 3.26, -.34) above a grip at
-    (-.74, 1.51, .20). Shift its upper part to (-.77, 3.26, .14).
-    The correction grows continuously from zero at the hand, so the lower
-    pole and planted tip are unchanged. Flame geometry moves with the shaft.
-    """
-    if face.feature not in RIGHT_STAFF_FEATURES or face.feature == "right-hand":
-        return face
-    adjusted = []
-    for x, y, z in face.points:
-        factor = max(0.0, min(1.0,
-            (y - RIGHT_GRIP[1]) / (STAFF_CROOK_TOP_Y - RIGHT_GRIP[1])))
-        adjusted.append((x + STAFF_CROOK_CORRECTION_X * factor,
-                         y,
-                         z + STAFF_CROOK_CORRECTION_Z * factor))
-    return master.Face(tuple(adjusted), face.color, face.feature)
 
 
 def staff_support_weight(phase):
@@ -154,17 +136,15 @@ def articulated_leg_faces(side, phase):
 
 
 def right_arm_joints(phase):
-    """Pose a bent right arm: shoulder, forward elbow, staff-bound wrist."""
+    """Anatomical bent right arm: elbow behind and below chest-height hand."""
     dx, dy, dz = root_motion(phase)
     shoulder_local = upper_body_point(RIGHT_SHOULDER, phase)
     shoulder = (shoulder_local[0] + dx, shoulder_local[1] + dy,
                 shoulder_local[2] + dz)
     hand, _ = staff_grip_and_pitch(phase)
-    # Elbow hangs below the shoulder; the forearm reaches outward and
-    # forward to the staff grip. No artificial mid-arm bend offset.
-    elbow = (shoulder[0] - 0.07,
-             max(shoulder[1] - 0.82, hand[1] + 0.2),
-             shoulder[2] + (hand[2] - shoulder[2]) * 0.18)
+    elbow = (shoulder[0] - 0.075,
+             shoulder[1] - 0.71,
+             shoulder[2] + 0.10)
     return shoulder, elbow, hand
 
 
@@ -272,32 +252,66 @@ def rotate_about_grip_pitch(point, angle):
 
 
 def staff_tip_trajectory(phase):
-    """Right-hand staff steps with the opposite (left) support leg.
-
-    Phase [pi, 2pi] is a planted, world-locked backward stance. During
-    [0, pi], the pole lifts and swings forward without dragging.
-    """
+    """World-locked planted staff, then a forward airborne swing."""
     forward_z, foot_lift = foot_trajectory(1, phase)
-    return forward_z, STAFF_CONTACT_HEIGHT_METRES + (
-        STAFF_SWING_LIFT_METRES * foot_lift / FOOT_LIFT_METRES
-    )
+    return (forward_z + STAFF_TIP_Z_OFFSET_METRES,
+            STAFF_CONTACT_HEIGHT_METRES +
+            STAFF_SWING_LIFT_METRES * foot_lift / FOOT_LIFT_METRES)
 
 
 def staff_grip_and_pitch(phase):
-    """Solve rigid pole angle from a grounded tip and a moving right-hand grip."""
+    """Determine a chest-height grip on one rigid staff from its moving tip."""
     tip_z, tip_y = staff_tip_trajectory(phase)
-    hand_z = RIGHT_GRIP[2] - STAFF_HAND_SWING_METRES * math.cos(phase) + STAFF_HAND_Z_OFFSET
+    hand_z = STAFF_HAND_FORWARD_Z_METRES + STAFF_HAND_SWING_METRES * math.cos(phase)
     pitch = math.asin(max(-1.0, min(1.0,
         (hand_z - tip_z) / STAFF_LOWER_SEGMENT_METRES)))
     hand_y = tip_y + STAFF_LOWER_SEGMENT_METRES * math.cos(pitch)
-    hand_x = RIGHT_GRIP[0] + STAFF_HAND_X_OFFSET
-    return (hand_x, hand_y, hand_z), pitch
+    return (STAFF_RIGHT_X, hand_y, hand_z), pitch
+
+
+def staff_axes(phase):
+    """World tip, anatomical grip, top and rigid centreline direction."""
+    tip_z, tip_y = staff_tip_trajectory(phase)
+    hand, pitch = staff_grip_and_pitch(phase)
+    axis = (0.0, math.cos(pitch), math.sin(pitch))
+    tip = (STAFF_RIGHT_X, tip_y, tip_z)
+    top = tuple(tip[i] + STAFF_TOTAL_LENGTH_METRES * axis[i]
+                for i in range(3))
+    return tip, hand, top, axis
 
 
 def staff_grip_offset(phase):
     """Move the right hand exactly with the planting/swinging staff."""
     hand, _ = staff_grip_and_pitch(phase)
     return tuple(hand[i] - RIGHT_GRIP[i] for i in range(3))
+
+
+def staff_equipment_faces(phase, original_faces):
+    """Rigid single-piece shaft, chest-height right hand and attached flame."""
+    tip, hand, top, _ = staff_axes(phase)
+    pitch = staff_grip_and_pitch(phase)[1]
+    result = list(master.sleeve_tube_faces(
+        tip, top, .063, color="734222",
+        feature="right-hand-staff", segments=16))
+    source_flame_anchor = (-.91, 3.26, -.34)
+    for face in original_faces:
+        if face.feature == "right-hand":
+            points = tuple(tuple(
+                rotate_about_grip_pitch((x, y, z), pitch)[i]
+                + hand[i] - RIGHT_GRIP[i] for i in range(3))
+                for x, y, z in face.points)
+        elif face.feature in {"staff-flame-base", "staff-fire", "staff-flame-core"}:
+            points = []
+            for x, y, z in face.points:
+                rel_y, rel_z = y - source_flame_anchor[1], z - source_flame_anchor[2]
+                points.append((top[0] + x - source_flame_anchor[0],
+                               top[1] + rel_y * math.cos(pitch) - rel_z * math.sin(pitch),
+                               top[2] + rel_y * math.sin(pitch) + rel_z * math.cos(pitch)))
+            points = tuple(points)
+        else:
+            continue
+        result.append(master.Face(points, face.color, face.feature))
+    return tuple(result)
 
 
 def upper_body_point(point, phase):
@@ -377,8 +391,10 @@ def pose(frame_index, frame_count=KEY_POSES):
         raise ValueError("walk frame index outside clip")
     phase = 2.0 * math.pi * frame_index / frame_count
     original = master.build_master()
-    shared = [apply_root_pose(transform_walk_face(straightened_walk_staff_face(face), phase), phase)
-              for face in original if face.feature not in {"trouser", "right-sleeve"}]
+    shared = [apply_root_pose(transform_walk_face(face, phase), phase)
+              for face in original if face.feature not in {"trouser", "right-sleeve"}
+              and face.feature not in RIGHT_STAFF_FEATURES]
+    shared.extend(staff_equipment_faces(phase, original))
     shared.extend(articulated_leg_faces(-1, phase))
     shared.extend(articulated_leg_faces(1, phase))
     shared.extend(articulated_right_sleeve_faces(phase))
