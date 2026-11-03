@@ -150,6 +150,7 @@ class StaffContactStudyTests(unittest.TestCase):
             self.assertTrue((output / "staff-side-12-keys.gif").is_file())
             self.assertTrue((output / "staff-ground-contact-once.gif").is_file())
             self.assertTrue((output / "staff-motion-before-after.gif").is_file())
+            self.assertTrue((output / "selected-before-after.png").is_file())
             self.assertTrue((output / "staff-contact-12-keys.png").is_file())
             with self.assertRaises(FileExistsError):
                 staff.write_study(self.source_path, output)

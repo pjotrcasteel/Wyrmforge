@@ -189,8 +189,8 @@ def compare_motion(source_atlas: Image.Image) -> list[Image.Image]:
             new.resize((256, 320), Image.Resampling.NEAREST), (256, 30)
         )
         draw = ImageDraw.Draw(board)
-        draw.text((12, 8), "v001 - smaller", fill=(230, 230, 225))
-        draw.text((268, 8), "v002 - larger", fill=(230, 230, 225))
+        draw.text((12, 10), "v001 - smaller", fill=(230, 230, 225))
+        draw.text((268, 10), "v002 - larger", fill=(230, 230, 225))
         boards.append(board.convert("RGB"))
     return boards
 
@@ -234,6 +234,10 @@ def write_study(source: Path, output: Path) -> dict:
         save_all=True, append_images=comparison[1:],
         duration=105, loop=0, optimize=True
     )
+    selected = Image.new("RGB", (512, 4 * 350), (24, 25, 32))
+    for row, key in enumerate((1, 2, 7, 10)):
+        selected.paste(comparison[key], (0, row * 350))
+    selected.save(output / "selected-before-after.png")
     manifest = {
         "schema": "wyrmforge.wizard.staff-contact-study.v2",
         "status": "UNAPPROVED v002 larger reach; NOT a finished walk",

@@ -28,6 +28,7 @@ straight shaft** through the hand, not independently rotated segments.
 - `staff-motion-before-after.gif`: v001 left, v002 right, same 12 source
   timings and same original body sprites. This is the recommended review.
 - `staff-contact-12-keys.png`: all twelve v002 poses at 4×.
+- `selected-before-after.png`: four key side-by-side comparisons for mobile review.
 - `staff-side-12-keys.gif`: v002 pose loop at 4×.
 - `staff-ground-contact-once.gif`: single-pass root-space proof; the
   planted staff remains stationary while the character travels farther.
