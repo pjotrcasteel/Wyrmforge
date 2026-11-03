@@ -14,4 +14,4 @@ public sealed record ArenaTerrainFineBlock(int Index, short[] Heights, int Topso
 /// Presentation draws it; it never edits it.
 /// </summary>
 public sealed record ArenaTerrainFrame(int Revision, int Columns, int Rows, short[] Surface, int[] Material,
-    IReadOnlyList<ArenaTerrainFineBlock> Fine, IReadOnlyList<int[]>? Cracks = null);
+    IReadOnlyList<ArenaTerrainFineBlock> Fine, IReadOnlyList<int[]>? Cracks = null, int VisualSeed = 0);

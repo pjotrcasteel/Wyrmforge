@@ -6,16 +6,16 @@ import { generateTileSet, TILE, variantFor } from '../../src/Wyrmforge.Presentat
 const out = process.argv[2] ?? 'terrain-tiles.png';
 const scale = Number(process.argv[3] ?? 3);
 const bands = [0, 1, 2, 3];
-const kinds = ['grassTop', 'dirtTop', 'stoneTop', 'grassSide', 'dirtSide', 'stoneSide'];
+const kinds = ['grassTop', 'dirtTop', 'stoneTop', 'grassSide', 'dirtSide', 'stoneSide', 'lavaTop', 'lavaSide'];
 const gap = 4;
 const width = (TILE * 4 + gap * 5) * 1, height = bands.length * (kinds.length * 0 + (TILE + gap) * 6) ;
-const sheetW = (4 * (TILE + gap) + gap), sheetH = bands.length * (6 * (TILE + gap) + gap);
+const sheetW = (4 * (TILE + gap) + gap), sheetH = bands.length * (kinds.length * (TILE + gap) + gap);
 const pixels = new Uint8Array(sheetW * sheetH * 4).fill(0);
 for (let i = 0; i < pixels.length; i += 4) { pixels[i] = 12; pixels[i + 1] = 10; pixels[i + 2] = 14; pixels[i + 3] = 255; }
 bands.forEach((band, bandIndex) => {
     const set = generateTileSet(band);
     kinds.forEach((kind, kindIndex) => set[kind].forEach((tile, variant) => {
-        const ox = gap + variant * (TILE + gap), oy = gap + (bandIndex * 6 + kindIndex) * (TILE + gap);
+        const ox = gap + variant * (TILE + gap), oy = gap + (bandIndex * kinds.length + kindIndex) * (TILE + gap);
         for (let y = 0; y < TILE; y++) for (let x = 0; x < TILE; x++) {
             const s = (y * TILE + x) * 4, d = ((oy + y) * sheetW + ox + x) * 4;
             pixels.set(tile.data.subarray(s, s + 4), d);

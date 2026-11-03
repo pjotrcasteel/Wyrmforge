@@ -28,6 +28,7 @@ public static class ArenaTerrainGenerator
         influence = double.IsFinite(influence) ? Math.Clamp(influence, 0, 1) : 0;
         var rng = new Random(unchecked(seed * (int)0x9E3779B1 ^ 0x5EED7E44));
         var grid = new ArenaTerrainGrid(columns, rows);
+        grid.SetVisualSeed(seed);
         var route = Rasterize(rng, columns, rows, spawn, exit);
         var protectedCells = new bool[columns * rows];
         foreach (var (rc, rr) in route)
@@ -44,6 +45,7 @@ public static class ArenaTerrainGenerator
         CarveFissures(rng, grid, protectedCells, influence);
         ArenaTerrainRelief.Hills(rng, grid, routeDistance, influence);
         ArenaTerrainRelief.Weather(rng, grid, protectedCells);
+        ArenaTerrainMutation.SettleAll(grid, protectedCells);
         // Generation-time blasts use negative ids so they can never collide with a live impact.
         long scarId = -1;
         heatSources.AddRange(ArenaTerrainRelief.ScarCraters(rng, grid, protectedCells, routeDistance, influence, ref scarId));
@@ -102,51 +104,65 @@ public static class ArenaTerrainGenerator
         }
     }
 
-    // Rock steps of 1-3 m: sheer on three sides, one side an ascending ramp of half-metre steps.
+    // Rock steps of 1-3 m: lobed, irregular outcrops (never rectangles), sheer where they meet low ground, with one side an ascending ramp of half-metre steps.
     private static void PlaceRockSteps(Random rng, ArenaTerrainGrid grid, bool[] protectedCells, double influence)
     {
         var target = 4 + rng.Next(4) - (int)Math.Round(influence * 2);
         var heights = new[] { 8, 16, 24 };
-        for (var attempt = 0; attempt < 60 && target > 0; attempt++)
+        for (var attempt = 0; attempt < 80 && target > 0; attempt++)
         {
-            var (w, h) = (3 + rng.Next(5), 3 + rng.Next(5));
-            var (x, y) = (1 + rng.Next(Math.Max(1, grid.Columns - w - 2)), 1 + rng.Next(Math.Max(1, grid.Rows - h - 2)));
+            var (rx, ry) = (1.8 + rng.NextDouble() * 2.6, 1.8 + rng.NextDouble() * 2.6);
+            var centre = (X: 3 + rng.Next(Math.Max(1, grid.Columns - 6)), Y: 4 + rng.Next(Math.Max(1, grid.Rows - 8)));
+            var phases = new[] { rng.NextDouble() * 6.28, rng.NextDouble() * 6.28, rng.NextDouble() * 6.28 };
             var height = heights[rng.Next(heights.Length)];
             var rampSide = rng.Next(4);
-            if (!AllClear(grid, protectedCells, x - 1, y - 1, w + 2, h + 2, requireFlat: true)) continue;
+            var reach = (int)Math.Ceiling(Math.Max(rx, ry) * 1.5) + 1;
+            var cells = new List<(int Column, int Row)>();
+            var inside = new HashSet<(int, int)>();
+            for (var row = centre.Y - reach; row <= centre.Y + reach; row++)
+                for (var column = centre.X - reach; column <= centre.X + reach; column++)
+                {
+                    var (dx, dy) = (column - centre.X, row - centre.Y);
+                    var angle = Math.Atan2(dy, dx);
+                    var edge = Math.Sqrt(dx * dx / (rx * rx) + dy * dy / (ry * ry))
+                        + .22 * Math.Sin(2 * angle + phases[0]) + .17 * Math.Sin(3 * angle + phases[1]) + .1 * Math.Sin(5 * angle + phases[2]);
+                    if (edge >= 1) continue;
+                    cells.Add((column, row));
+                    inside.Add((column, row));
+                }
+            if (cells.Count < 5) continue;
             var rampLength = height / Step;
-            var (rx, ry, rw, rh) = rampSide switch
-            {
-                0 => (x, y - rampLength, w, rampLength),
-                1 => (x + w, y, rampLength, h),
-                2 => (x, y + h, w, rampLength),
-                _ => (x - rampLength, y, rampLength, h),
-            };
-            var rampClear = AllClear(grid, protectedCells, rx, ry, rw, rh, requireFlat: true);
-            for (var row = y; row < y + h; row++)
-                for (var column = x; column < x + w; column++)
+            var (rdx, rdy) = rampSide switch { 0 => (0, -1), 1 => (1, 0), 2 => (0, 1), _ => (-1, 0) };
+            // Ramp cells: those outside the outcrop from which marching toward it reaches it within the ramp length, at most four wide.
+            var ramp = new List<(int Column, int Row, int Steps)>();
+            var (lateralX, lateralY) = (rdy, rdx);
+            var middle = cells.OrderBy(cell => Math.Abs((cell.Column - centre.X) * lateralX + (cell.Row - centre.Y) * lateralY)).First();
+            for (var lateral = -1; lateral <= 1; lateral++)
+                for (var steps = 1; steps <= rampLength; steps++)
                 {
-                    // Corners are bitten off and the rim sags in places, so the outcrop has a grown outline rather than a rectangle's.
-                    var onCorner = (row == y || row == y + h - 1) && (column == x || column == x + w - 1);
-                    var onRim = row == y || row == y + h - 1 || column == x || column == x + w - 1;
-                    if (onCorner && rng.Next(5) < 3) continue;
-                    grid.Set(column, row, onRim && rng.Next(4) == 0 ? Math.Max(Step, height - Step) : height, ArenaTerrainMaterial.Stone);
+                    // Walk outward from the outcrop's edge along the ramp direction.
+                    var (c, r) = (middle.Column + lateralX * lateral, middle.Row + lateralY * lateral);
+                    while (inside.Contains((c, r))) (c, r) = (c + rdx, r + rdy);
+                    (c, r) = (c + rdx * (steps - 1), r + rdy * (steps - 1));
+                    ramp.Add((c, r, steps));
                 }
-            if (rampClear)
-                for (var k = 1; k <= rampLength; k++)
-                {
-                    var rampHeight = height - k * Step;
-                    if (rampHeight <= 0) break;
-                    for (var i = 0; i < (rampSide % 2 == 0 ? w : h); i++)
+            var footprint = cells.Concat(ramp.Select(cell => (cell.Column, cell.Row))).ToList();
+            var clear = true;
+            foreach (var (column, row) in footprint)
+                for (var dy = -1; dy <= 1 && clear; dy++)
+                    for (var dx = -1; dx <= 1 && clear; dx++)
                     {
-                        var (column, row) = rampSide switch
-                        {
-                            0 => (x + i, y - k), 1 => (x + w - 1 + k, y + i),
-                            2 => (x + i, y + h - 1 + k), _ => (x - k, y + i),
-                        };
-                        grid.Set(column, row, rampHeight, ArenaTerrainMaterial.Stone);
+                        var (c, r) = (column + dx, row + dy);
+                        if (inside.Contains((c, r))) continue;
+                        if (!grid.Contains(c, r) || protectedCells[r * grid.Columns + c] || grid.Surface(c, r) != 0) clear = false;
                     }
-                }
+            if (!clear) continue;
+            foreach (var (column, row) in cells) grid.Set(column, row, height, ArenaTerrainMaterial.Stone);
+            foreach (var (column, row, steps) in ramp)
+            {
+                var rampHeight = height - steps * Step;
+                if (rampHeight > 0 && !inside.Contains((column, row))) grid.Set(column, row, rampHeight, ArenaTerrainMaterial.Stone);
+            }
             target--;
         }
     }

@@ -79,9 +79,10 @@ internal static class ArenaTerrainRelief
     }
 
     /// <summary>
-    /// Makes the land look grown rather than built. Gentle ground is blended between column centres so slopes roll in 12.5 cm
-    /// voxel steps instead of one-metre terraces; cliff, ridge and rubble edges are chipped raggedly (at most three microcells, so no
-    /// fin is ever left standing). Everything stays whole voxels, authoritative heights, and never touches the protected route.
+    /// Makes the land look grown rather than built. Gentle ground is blended between column centres so slopes roll in 12.5 cm voxel steps.
+    /// Every cliff of 1.1 m or more meanders in plan (the edge recedes 0 to 62 cm along its length), steps down in ledges where it is tall,
+    /// and drops rubble at its foot; smaller rises are chipped raggedly. Features are driven by smoothed noise indexed in global microcells,
+    /// so a cliff continues unbroken from one column to the next, and a median filter removes one-cell fins. Never touches the route.
     /// </summary>
     public static void Weather(Random rng, ArenaTerrainGrid grid, bool[] protectedCells)
     {
@@ -96,6 +97,19 @@ internal static class ArenaTerrainRelief
             h = unchecked((h ^ (h >> 13)) * 0x5BD1E995u);
             return (h ^ (h >> 15)) / (double)uint.MaxValue;
         }
+        // Meander depth 0..5 microcells at a global position along an edge; the median of three keeps it free of one-cell spikes.
+        int Meander(int side, int along, int salt)
+        {
+            double Raw(int a) => Noise(seed + side * 31 + salt, a / 5.0, side * 7.0 + salt);
+            var values = new[] { Raw(along - 1), Raw(along), Raw(along + 1) };
+            Array.Sort(values);
+            return (int)Math.Round((values[1] + 1) / 2 * 5);
+        }
+        (int Mx, int My) Cell(int side, int along, int depth) => side switch
+        {
+            0 => (depth, along), 1 => (Micro - 1 - depth, along), 2 => (along, depth), _ => (along, Micro - 1 - depth),
+        };
+        var offsets = new[] { (-1, 0), (1, 0), (0, -1), (0, 1) };
         for (var row = 0; row < rows; row++)
             for (var column = 0; column < columns; column++)
             {
@@ -103,10 +117,17 @@ internal static class ArenaTerrainRelief
                 var material = grid.Material(column, row);
                 if (protectedCells[index] || material == ArenaTerrainMaterial.Lava) continue;
                 var own = whole[index];
+                var soft = Soft(column, row);
                 var heights = new short[ArenaTerrainGrid.MicroCount];
                 Array.Fill(heights, (short)own);
                 var changed = false;
-                if (Soft(column, row))
+                void Lower(int mx, int my, int target)
+                {
+                    var i = my * Micro + mx;
+                    if (target >= heights[i]) return;
+                    heights[i] = (short)target; changed = true;
+                }
+                if (soft)
                 {
                     // A neighbour joins the blend only when it is walkable ground within a step; a ledge stays sharp.
                     int Near(int c, int r) => Soft(c, r) && Math.Abs(whole[r * columns + c] - own) <= Step ? whole[r * columns + c] : own;
@@ -123,26 +144,48 @@ internal static class ArenaTerrainRelief
                             changed |= height != own;
                         }
                 }
-                else
+                for (var side = 0; side < 4; side++)
                 {
-                    var drops = new[] { (-1, 0), (1, 0), (0, -1), (0, 1) }
-                        .Select(side => grid.Contains(column + side.Item1, row + side.Item2) ? own - whole[(row + side.Item2) * columns + column + side.Item1] : 0).ToArray();
-                    if (drops.All(drop => drop < 3)) continue;
-                    for (var my = 0; my < Micro; my++)
-                        for (var mx = 0; mx < Micro; mx++)
+                    var (nc, nr) = (column + offsets[side].Item1, row + offsets[side].Item2);
+                    if (!grid.Contains(nc, nr)) continue;
+                    var neighbour = whole[nr * columns + nc];
+                    var drop = own - neighbour;
+                    for (var along = 0; along < Micro; along++)
+                    {
+                        var global = side < 2 ? row * Micro + along : column * Micro + along;
+                        if (drop >= 9)
                         {
-                            var bite = 0;
-                            var distances = new[] { mx, Micro - 1 - mx, my, Micro - 1 - my };
-                            for (var side = 0; side < 4; side++)
+                            var edge = Meander(side, global, 0);
+                            var recede = Math.Max(0, edge - 1 - (Meander(side, global, 5) >= 2 ? 1 : 0));
+                            var ledge = own - Math.Max(Step, drop / 2 / Step * Step);
+                            for (var depth = 0; depth < edge; depth++)
                             {
-                                if (drops[side] < 3 || distances[side] >= 3) continue;
-                                var chipped = (int)Math.Floor(Unit(column * Micro + mx, row * Micro + my) * (3 - distances[side]) * 1.0);
-                                bite = Math.Max(bite, Math.Min(chipped, drops[side] - 1));
+                                var (mx, my) = Cell(side, along, depth);
+                                Lower(mx, my, drop >= 12 && depth >= recede ? Math.Max(ledge, neighbour) : neighbour);
                             }
-                            if (bite == 0) continue;
-                            heights[my * Micro + mx] = (short)(own - bite);
-                            changed = true;
                         }
+                        else if (drop >= 3 && !soft)
+                        {
+                            for (var depth = 0; depth < 3; depth++)
+                            {
+                                var (mx, my) = Cell(side, along, depth);
+                                var chipped = (int)Math.Floor(Unit(column * Micro + mx, row * Micro + my) * (3 - depth));
+                                Lower(mx, my, own - Math.Min(chipped, drop - 1));
+                            }
+                        }
+                        else if (-drop >= 9)
+                        {
+                            // Rubble at the foot of a cliff: a one or two microcell apron that thins out from the wall.
+                            for (var depth = 0; depth < 2; depth++)
+                            {
+                                if (Unit(global * 7 + depth, side + 11 * (column + row)) < .35) continue;
+                                var (mx, my) = Cell(side, along, depth);
+                                var i = my * Micro + mx;
+                                var raised = (short)(own + 2 - depth);
+                                if (raised > heights[i]) { heights[i] = raised; changed = true; }
+                            }
+                        }
+                    }
                 }
                 if (changed) grid.ShapeFine(column, row, heights);
             }
@@ -221,37 +264,63 @@ internal static class ArenaTerrainRelief
         }
     }
 
-    /// <summary>Lava pools with a raised basalt lip, from the Burning band onward. Returns their centres in microcells.</summary>
+    /// <summary>
+    /// Lava pools with a raised basalt lip, from the Burning band onward: lobed, uneven outlines with inlets and bays, one or two satellite
+    /// puddles and the odd islet of rock, never an ellipse. Returns their centres in microcells.
+    /// </summary>
     public static List<(int X, int Y)> LavaPools(Random rng, ArenaTerrainGrid grid, int[] routeDistance, double influence)
     {
         var centres = new List<(int X, int Y)>();
         if (influence < .55) return centres;
         var count = 1 + (int)Math.Floor((influence - .55) / .15);
+        bool Stamp(int cx, int cy, double rx, double ry, double[] phases, double lobes)
+        {
+            var any = false;
+            var reach = (int)Math.Ceiling(Math.Max(rx, ry) * 1.6) + 2;
+            for (var row = cy - reach; row <= cy + reach; row++)
+                for (var column = cx - reach; column <= cx + reach; column++)
+                {
+                    if (!grid.Contains(column, row)) continue;
+                    var (dx, dy) = (column - cx, row - cy);
+                    var angle = Math.Atan2(dy, dx);
+                    var edge = Math.Sqrt(dx * dx / (rx * rx) + dy * dy / (ry * ry))
+                        + lobes * (.2 * Math.Sin(2 * angle + phases[2]) + .16 * Math.Sin(3 * angle + phases[0]) + .1 * Math.Sin(5 * angle + phases[1]) + .07 * Math.Sin(7 * angle + phases[3]));
+                    if (edge < 1)
+                    {
+                        if (grid.Material(column, row) == ArenaTerrainMaterial.Stone && grid.Surface(column, row) > Step && routeDistance[row * grid.Columns + column] < 2) continue;
+                        grid.Set(column, row, -8, ArenaTerrainMaterial.Lava);
+                        any = true;
+                    }
+                    else if (edge < 1.4 && Open(grid, column, row) && routeDistance[row * grid.Columns + column] >= 2)
+                        grid.Set(column, row, Step, ArenaTerrainMaterial.Stone);
+                }
+            return any;
+        }
+        double[] Phases() => [rng.NextDouble() * 6.28, rng.NextDouble() * 6.28, rng.NextDouble() * 6.28, rng.NextDouble() * 6.28];
         for (var pool = 0; pool < count; pool++)
         {
-            var (rx, ry) = (2.0 + rng.NextDouble() * 2.2, 2.0 + rng.NextDouble() * 2.2);
-            var (phase1, phase2) = (rng.NextDouble() * 6.28, rng.NextDouble() * 6.28);
+            var (rx, ry) = (2.2 + rng.NextDouble() * 2.2, 2.2 + rng.NextDouble() * 2.2);
+            var phases = Phases();
             for (var attempt = 0; attempt < 40; attempt++)
             {
                 var (cx, cy) = (3 + rng.Next(grid.Columns - 6), 5 + rng.Next(grid.Rows - 10));
-                if (routeDistance[cy * grid.Columns + cx] < Math.Max(rx, ry) + 3) continue;
-                var any = false;
-                for (var row = cy - 7; row <= cy + 7; row++)
-                    for (var column = cx - 7; column <= cx + 7; column++)
-                    {
-                        if (!grid.Contains(column, row)) continue;
-                        var (dx, dy) = (column - cx, row - cy);
-                        var angle = Math.Atan2(dy, dx);
-                        var edge = Math.Sqrt(dx * dx / (rx * rx) + dy * dy / (ry * ry)) + .12 * Math.Sin(3 * angle + phase1) + .08 * Math.Sin(5 * angle + phase2);
-                        if (edge < 1)
-                        {
-                            grid.Set(column, row, -8, ArenaTerrainMaterial.Lava);
-                            any = true;
-                        }
-                        else if (edge < 1.4 && Open(grid, column, row) && routeDistance[row * grid.Columns + column] >= 2)
-                            grid.Set(column, row, Step, ArenaTerrainMaterial.Stone);
-                    }
-                if (any) centres.Add((cx * Micro + Micro / 2, cy * Micro + Micro / 2));
+                if (routeDistance[cy * grid.Columns + cx] < Math.Max(rx, ry) * 1.3 + 3) continue;
+                if (!Stamp(cx, cy, rx, ry, phases, 1.0)) break;
+                // Satellite puddles bud off the shore, then an islet of rock stands in the main pool.
+                for (var puddle = 0; puddle < 1 + rng.Next(2); puddle++)
+                {
+                    var bearing = rng.NextDouble() * 6.28;
+                    var reach = Math.Max(rx, ry) * (1.15 + rng.NextDouble() * .5) + 1;
+                    var (px, py) = (cx + (int)Math.Round(Math.Cos(bearing) * reach), cy + (int)Math.Round(Math.Sin(bearing) * reach));
+                    if (!grid.Contains(px, py) || routeDistance[py * grid.Columns + px] < 4) continue;
+                    Stamp(px, py, 1.0 + rng.NextDouble() * .8, 1.0 + rng.NextDouble() * .8, Phases(), .8);
+                }
+                if (rx > 3 && ry > 3)
+                {
+                    var (ix, iy) = (cx + rng.Next(3) - 1, cy + rng.Next(3) - 1);
+                    if (grid.Material(ix, iy) == ArenaTerrainMaterial.Lava) grid.Set(ix, iy, 3 * Step, ArenaTerrainMaterial.Stone);
+                }
+                centres.Add((cx * Micro + Micro / 2, cy * Micro + Micro / 2));
                 break;
             }
         }

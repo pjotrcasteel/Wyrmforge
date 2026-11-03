@@ -227,6 +227,7 @@ export function mergeTerrainFrame(previous, incoming) {
     }
     return { revision: incoming.revision, columns: incoming.columns, rows: incoming.rows,
         surface: incoming.surface, material: incoming.material, fine,
+        visualSeed: incoming.visualSeed ?? previous?.visualSeed ?? 0,
         // Which fine blocks this delta touched: cosmetic destruction cues are derived from exactly these.
         changed: (incoming.fine ?? []).map(block => block.index),
         // The generated crack network travels once, with the first full load.
@@ -345,13 +346,159 @@ export function terrainAtlas(band) {
     return atlasCache.get(index);
 }
 
-function topTileKind(band, material, height) {
+/** Smooth 0..1 field over the arena, seeded per site: which patches are mud, dry grass or rubble. Purely visual. */
+function groundVariety(frame, column, row) {
+    const seed = (frame?.visualSeed | 0) & 0xffff;
+    return valueNoise(column, row, 5, 31 + seed) * .65 + valueNoise(column, row, 2, 57 + seed) * .35;
+}
+
+function topTileKind(band, material, height, frame, column, row) {
     if (height <= BEDROCK_MICROCELLS) return null;
     if (material === TERRAIN_MATERIAL.Lava) return 'lavaTop';
-    if (material === TERRAIN_MATERIAL.Stone) return 'stoneTop';
+    const variety = frame ? groundVariety(frame, column, row) : .5;
+    if (material === TERRAIN_MATERIAL.Stone) return variety < .3 ? 'rubbleTop' : 'stoneTop';
     if (height < 0) return 'dirtTop';
-    if (material === TERRAIN_MATERIAL.Soil && band <= 1) return 'grassTop';
+    if (material === TERRAIN_MATERIAL.Soil && band <= 1) return variety < .3 ? 'mudTop' : variety < .43 ? 'grassDryTop' : 'grassTop';
+    if (material === TERRAIN_MATERIAL.Soil) return variety < .4 ? 'mudTop' : 'ashTop';
     return 'ashTop';
+}
+const TOP_KINDS = Object.freeze(['grassTop', 'grassDryTop', 'mudTop', 'dirtTop', 'ashTop', 'stoneTop', 'rubbleTop', 'lavaTop']);
+const KIND_INDEX = Object.freeze(Object.fromEntries(TOP_KINDS.map((kind, index) => [kind, index])));
+let scratchCanvas = null, maskCanvas = null;
+
+function scratchContexts() {
+    if (typeof document === 'undefined') return null;
+    if (!scratchCanvas) {
+        scratchCanvas = document.createElement('canvas');
+        maskCanvas = document.createElement('canvas');
+        scratchCanvas.width = scratchCanvas.height = maskCanvas.width = maskCanvas.height = TILE;
+    }
+    return { g: scratchCanvas.getContext('2d'), m: maskCanvas.getContext('2d') };
+}
+
+// Allocation-free smooth value noise over world pixels, lattice spacing `spacing`, in 0..1.
+function pixelNoise(x, y, spacing, seed) {
+    const fx = x / spacing, fy = y / spacing, x0 = Math.floor(fx), y0 = Math.floor(fy);
+    let tx = fx - x0, ty = fy - y0;
+    tx = tx * tx * (3 - 2 * tx); ty = ty * ty * (3 - 2 * ty);
+    const at = (ix, iy) => {
+        let h = (Math.imul(ix + 11, 0x9E3779B1) ^ Math.imul(iy + 3, 0x85EBCA6B) ^ Math.imul(seed, 0xC2B2AE35)) >>> 0;
+        h = Math.imul(h ^ (h >>> 15), 0x2C1B3C6D) >>> 0;
+        return ((h ^ (h >>> 12)) >>> 0) / 4294967296;
+    };
+    return (at(x0, y0) * (1 - tx) + at(x0 + 1, y0) * tx) * (1 - ty) + (at(x0, y0 + 1) * (1 - tx) + at(x0 + 1, y0 + 1) * tx) * ty;
+}
+
+/**
+ * Splatting: which ground each pixel of a whole column's top face shows. The kinds of the 3 x 3 columns around it (a neighbour across a
+ * cliff or a dug block counts as this column's own ground) are blended bilinearly from their centres and perturbed by two octaves of
+ * noise, so a border between grass, mud, stone or lava is an irregular, lobed shoreline with islands and bays rather than a column edge.
+ * Returns null when all nine columns agree, otherwise 32 x 32 kind indices.
+ */
+function kindMap(frame, band, column, row, ownKind, height) {
+    const cache = frame.kindMaps ??= new Map();
+    const key = row * frame.columns + column;
+    if (cache.has(key)) return cache.get(key);
+    const own = KIND_INDEX[ownKind], around = new Int8Array(9);
+    let uniform = true;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const c = column + dx, r = row + dy, slot = (dy + 1) * 3 + dx + 1;
+        around[slot] = own;
+        if (c < 0 || r < 0 || c >= frame.columns || r >= frame.rows) continue;
+        const index = r * frame.columns + c;
+        if (frame.fine?.has(index)) continue;
+        const kind = topTileKind(band, frame.material[index], frame.surface[index], frame, c, r);
+        // Ground at a similar level blends; a lava column also shows the shore of any land around it, however high, as a beach on its own level.
+        if (kind && (Math.abs(frame.surface[index] - height) <= 3 || (ownKind === 'lavaTop' && kind !== 'lavaTop'))) around[slot] = KIND_INDEX[kind];
+        if (around[slot] !== own) uniform = false;
+    }
+    if (uniform) { cache.set(key, null); return null; }
+    const map = new Uint8Array(TILE * TILE), seed = (frame.visualSeed | 0) & 0xffff;
+    const weights = new Float32Array(TOP_KINDS.length);
+    for (let py = 0; py < TILE; py++) for (let px = 0; px < TILE; px++) {
+        const u = (px + .5) / TILE - .5, v = (py + .5) / TILE - .5, au = Math.abs(u), av = Math.abs(v);
+        const sx = u < 0 ? -1 : 1, sy = v < 0 ? -1 : 1;
+        weights.fill(0);
+        weights[around[4]] += (1 - au) * (1 - av);
+        weights[around[4 + sx]] += au * (1 - av);
+        weights[around[4 + sy * 3]] += (1 - au) * av;
+        weights[around[4 + sy * 3 + sx]] += au * av;
+        const wx = column * TILE + px, wy = row * TILE + py;
+        let best = own, bestScore = -1;
+        for (let kind = 0; kind < weights.length; kind++) {
+            if (weights[kind] <= 0) continue;
+            const wobble = (pixelNoise(wx, wy, 13, seed + kind * 7) - .5) * .8 + (pixelNoise(wx, wy, 5, seed + kind * 7 + 3) - .5) * .5;
+            const score = weights[kind] + wobble * .55;
+            if (score > bestScore) { bestScore = score; best = kind; }
+        }
+        map[py * TILE + px] = best;
+    }
+    cache.set(key, map);
+    return map;
+}
+
+/** Paints a column's top face from its kind map: the most common ground whole, every other ground through its own pixel mask. */
+function drawSplat(ctx, atlas, map, variant, x, y) {
+    const contexts = scratchContexts();
+    if (!contexts) return 0;
+    const { g, m } = contexts;
+    const counts = new Int16Array(TOP_KINDS.length);
+    for (const kind of map) counts[kind]++;
+    let main = 0;
+    for (let kind = 1; kind < counts.length; kind++) if (counts[kind] > counts[main]) main = kind;
+    ctx.drawImage(atlas[TOP_KINDS[main]][variant], x, y);
+    let painted = 1;
+    for (let kind = 0; kind < counts.length; kind++) {
+        if (kind === main || counts[kind] === 0) continue;
+        const mask = m.createImageData(TILE, TILE);
+        for (let i = 0; i < map.length; i++) if (map[i] === kind) mask.data[i * 4 + 3] = 255;
+        m.putImageData(mask, 0, 0);
+        g.globalCompositeOperation = 'source-over';
+        g.clearRect(0, 0, TILE, TILE);
+        g.drawImage(atlas[TOP_KINDS[kind]][variant], 0, 0);
+        g.globalCompositeOperation = 'destination-in';
+        g.drawImage(maskCanvas, 0, 0);
+        g.globalCompositeOperation = 'source-over';
+        ctx.drawImage(scratchCanvas, x, y);
+        painted++;
+    }
+    return painted;
+}
+
+/**
+ * Lava for the emissive ground map: exactly the pixels the splat paints as lava, so the glow follows the same irregular shoreline as the
+ * albedo and never fills the square of a column. Coordinates are world pixels; `view` only culls.
+ */
+export function paintLavaEmissive(ctx, frame, band, view) {
+    const atlas = frame?.material ? terrainAtlas(band) : null, contexts = atlas ? scratchContexts() : null;
+    if (!atlas || !contexts) return 0;
+    const { g, m } = contexts, lava = KIND_INDEX.lavaTop;
+    let drawn = 0;
+    for (let row = Math.max(0, Math.floor(view.y / FACE_PIXELS) - 2); row < frame.rows && row * FACE_PIXELS - 4 * FACE_PIXELS < view.y + view.height; row++)
+        for (let column = Math.max(0, Math.floor(view.x / FACE_PIXELS) - 1); column < frame.columns && column * FACE_PIXELS < view.x + view.width; column++) {
+            const index = row * frame.columns + column;
+            if (frame.fine?.has(index)) continue;
+            const height = frame.surface[index], x = column * FACE_PIXELS, y = row * FACE_PIXELS - height * MICROCELL_UNITS;
+            const own = topTileKind(band, frame.material[index], height, frame, column, row);
+            if (!own) continue;
+            const map = kindMap(frame, band, column, row, own, height);
+            const tile = atlas.lavaTop[variantFor(column, row)];
+            if (!map) { if (own === 'lavaTop') { ctx.drawImage(tile, x, y); drawn++; } continue; }
+            let any = false;
+            const mask = m.createImageData(TILE, TILE);
+            for (let i = 0; i < map.length; i++) if (map[i] === lava) { mask.data[i * 4 + 3] = 255; any = true; }
+            if (!any) continue;
+            m.putImageData(mask, 0, 0);
+            g.globalCompositeOperation = 'source-over';
+            g.clearRect(0, 0, TILE, TILE);
+            g.drawImage(tile, 0, 0);
+            g.globalCompositeOperation = 'destination-in';
+            g.drawImage(maskCanvas, 0, 0);
+            g.globalCompositeOperation = 'source-over';
+            ctx.drawImage(scratchCanvas, x, y);
+            drawn++;
+        }
+    return drawn;
 }
 
 // Whole-metre height steps tint the tile so raised ground reads lighter and pits darker without redrawing art.
@@ -410,7 +557,7 @@ function paintFineCell(ctx, frame, band, column, row, block, grain = true) {
             const material = microMaterial(block, height);
             const x = column * FACE_PIXELS + microX * MICRO_UNITS;
             const y = row * FACE_PIXELS + microY * MICRO_UNITS;
-            const tileKind = atlas ? topTileKind(band, material, height) : null;
+            const tileKind = atlas ? topTileKind(band, material, height, frame, column, row) : null;
             if (tileKind) {
                 ctx.drawImage(atlas[tileKind][variant], microX * MICRO_UNITS, microY * MICRO_UNITS, MICRO_UNITS, MICRO_UNITS,
                     x, y - height * MICROCELL_UNITS, MICRO_UNITS, MICRO_UNITS);
@@ -491,11 +638,13 @@ export function paintTerrainCell(ctx, frame, band, column, row, grain = true) {
     const top = blockTopRect(column, row, height);
     const atlas = grain ? terrainAtlas(band) : null;
     const variant = variantFor(column, row);
-    const tileKind = atlas ? topTileKind(band, material[index], height) : null;
+    const tileKind = atlas ? topTileKind(band, material[index], height, frame, column, row) : null;
     const baseColor = scaleHex(heightShade(topFaceColor(band, material[index], height), height), 1);
     let painted = 1;
     if (tileKind) {
-        ctx.drawImage(atlas[tileKind][variant], top.x, top.y, top.width, top.height);
+        const splat = kindMap(frame, band, column, row, tileKind, height);
+        if (splat) painted += drawSplat(ctx, atlas, splat, variant, top.x, top.y);
+        else ctx.drawImage(atlas[tileKind][variant], top.x, top.y, top.width, top.height);
         const tint = heightTint(height);
         if (tint) { ctx.fillStyle = tint; ctx.fillRect(top.x, top.y, top.width, top.height); painted++; }
     } else {

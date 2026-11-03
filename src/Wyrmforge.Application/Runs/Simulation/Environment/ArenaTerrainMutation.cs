@@ -102,11 +102,51 @@ public static class ArenaTerrainMutation
     /// </summary>
     private static void Settle(ArenaTerrainGrid grid, List<(int Gx, int Gy, int Depth)> hits, bool[]? protectedCells, Action<int, int> touch)
     {
-        var perColumn = ArenaTerrainGrid.MicroPerColumn;
         var region = new SortedSet<(int Gy, int Gx)>();
         foreach (var (gx, gy, _) in hits)
             for (var dy = -1; dy <= 1; dy++)
                 for (var dx = -1; dx <= 1; dx++) region.Add((gy + dy, gx + dx));
+        SettleRegion(grid, region, protectedCells, touch);
+    }
+
+    /// <summary>Generation-time stability: leaves no fin or spire anywhere among the subdivided columns, so the first impact never meets one.</summary>
+    internal static void SettleAll(ArenaTerrainGrid grid, bool[]? protectedCells)
+    {
+        // One flat array over the whole arena so the sweep is a few hundred thousand reads, not a sorted-set walk.
+        var per = ArenaTerrainGrid.MicroPerColumn;
+        var (width, height) = (grid.Columns * per, grid.Rows * per);
+        var heights = new int[width * height];
+        for (var gy = 0; gy < height; gy++)
+            for (var gx = 0; gx < width; gx++)
+                heights[gy * width + gx] = grid.MicroSurface(gx / per, gy / per, gx % per, gy % per);
+        var limit = UnsupportedLimitMicrocells;
+        for (var pass = 0; pass < 6; pass++)
+        {
+            var any = false;
+            for (var gy = 0; gy < height; gy++)
+                for (var gx = 0; gx < width; gx++)
+                {
+                    var (column, row) = (gx / per, gy / per);
+                    if (!grid.IsSubdivided(column, row) && !(gx % per == 0 || gx % per == per - 1 || gy % per == 0 || gy % per == per - 1)) continue;
+                    var own = heights[gy * width + gx];
+                    var west = gx > 0 ? heights[gy * width + gx - 1] : own; var east = gx < width - 1 ? heights[gy * width + gx + 1] : own;
+                    var north = gy > 0 ? heights[(gy - 1) * width + gx] : own; var south = gy < height - 1 ? heights[(gy + 1) * width + gx] : own;
+                    var thinX = own - west >= limit && own - east >= limit;
+                    var thinY = own - north >= limit && own - south >= limit;
+                    if (!thinX && !thinY) continue;
+                    if (protectedCells is { Length: > 0 } && protectedCells[row * grid.Columns + column]) continue;
+                    var support = thinX && thinY ? Math.Max(Math.Max(west, east), Math.Max(north, south))
+                        : thinX ? Math.Max(west, east) : Math.Max(north, south);
+                    if (grid.LowerMicroTo(column, row, gx % per, gy % per, support + 2) == 0) continue;
+                    heights[gy * width + gx] = grid.MicroSurface(column, row, gx % per, gy % per);
+                    any = true;
+                }
+            if (!any) break;
+        }
+    }
+    private static void SettleRegion(ArenaTerrainGrid grid, SortedSet<(int Gy, int Gx)> region, bool[]? protectedCells, Action<int, int> touch)
+    {
+        var perColumn = ArenaTerrainGrid.MicroPerColumn;
         int? Height(int gx, int gy)
         {
             var (column, row) = ((int)Math.Floor(gx / (double)perColumn), (int)Math.Floor(gy / (double)perColumn));
