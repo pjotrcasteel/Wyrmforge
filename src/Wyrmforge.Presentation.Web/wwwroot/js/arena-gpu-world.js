@@ -6,6 +6,8 @@ import { lightingQualityBudget } from './lighting/quality.js';
 const UNIT = 48;
 const GROUND_Y = Math.SQRT2;
 export const GROUND_EMISSIVE_ID = 'hunt-ground-emissive';
+export const GROUND_NORMAL_ID = 'hunt-ground-normal';
+const GROUND_NORMAL_SCALE = 1.1;
 const GROUND_EMISSION_INTENSITY = 1;
 
 /**
@@ -289,14 +291,19 @@ export class HuntGpuWorld {
                 s: [mesh.scale.x, mesh.scale.y, mesh.scale.z].map(round), visible: mesh.visible !== false };
         });
     }
-    begin(ctx, camera, width, height, groundEmissive = null) {
+    begin(ctx, camera, width, height, groundEmissive = null, groundNormal = null) {
         this.camera = camera; this.width = width; this.height = height;
         this.used.clear(); this.dirtyTextures.clear(); this.objects = []; this.materials = [];
         // The emissive map is a second viewport-sized layer over the same ground plane: black where nothing glows, so crack veins,
         // hot craters and the bedrock hint are lit surfaces that stay bright in the dark and sit beneath every actor.
         if (groundEmissive) this.uploadLayer(GROUND_EMISSIVE_ID, groundEmissive, width, height);
-        this.capture('hunt-ground', ctx.canvas, 0, 0, width, height, 0, false, groundEmissive
-            ? { material: { emissiveMap: GROUND_EMISSIVE_ID, emission: '#ffffff', emissionIntensity: GROUND_EMISSION_INTENSITY } } : {});
+        // Normals are data, not colour: no sRGB decode. Convention OpenGL / three.js tangent space (G toward the top of the image).
+        if (groundNormal) this.uploadLayer(GROUND_NORMAL_ID, groundNormal, width, height, undefined, false);
+        const material = {
+            ...(groundEmissive ? { emissiveMap: GROUND_EMISSIVE_ID, emission: '#ffffff', emissionIntensity: GROUND_EMISSION_INTENSITY } : {}),
+            ...(groundNormal ? { normal: GROUND_NORMAL_ID, normalScale: GROUND_NORMAL_SCALE } : {}),
+        };
+        this.capture('hunt-ground', ctx.canvas, 0, 0, width, height, 0, false, Object.keys(material).length ? { material } : {});
     }
     /** Callers may skip repaint only when their explicit visual revision is unchanged. */
     canReuseCapture(id, revision, width, height) {
@@ -306,7 +313,7 @@ export class HuntGpuWorld {
             layer.pixels.height === Math.max(1, Math.ceil(height));
     }
     /** Registers (once) and refreshes a Canvas-backed GPU texture; returns whether pixels were re-uploaded. */
-    uploadLayer(id, source, width, height, revision) {
+    uploadLayer(id, source, width, height, revision, colorData = true) {
         if (revision !== undefined && (typeof revision !== 'string' &&
             !(typeof revision === 'number' && Number.isFinite(revision))))
             throw new TypeError('Capture revision must be a stable string or finite number');
@@ -317,7 +324,7 @@ export class HuntGpuWorld {
             const pixels = document.createElement('canvas');
             pixels.width = Math.max(1, Math.ceil(width)); pixels.height = Math.max(1, Math.ceil(height));
             const texture = new T.CanvasTexture(pixels);
-            this.engine.registerTexture(id, texture);
+            this.engine.registerTexture(id, texture, colorData);
             layer = { pixels, texture }; this.layers.set(id, layer);
         }
         if (unchanged) return false;

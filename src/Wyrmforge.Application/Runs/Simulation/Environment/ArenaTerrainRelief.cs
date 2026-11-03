@@ -139,10 +139,11 @@ internal static class ArenaTerrainRelief
                             var (au, av) = (Math.Abs(u), Math.Abs(v));
                             var value = (1 - au) * (1 - av) * own + au * (1 - av) * Near(column + sx, row)
                                 + (1 - au) * av * Near(column, row + sy) + au * av * Near(column + sx, row + sy);
-                            var height = (int)Math.Round(value);
-                            heights[my * Micro + mx] = (short)height;
-                            changed |= height != own;
+                            heights[my * Micro + mx] = (short)Math.Round(value);
                         }
+                    // A slope that never leaves a 25 cm band is not worth 64 voxels: the column stays whole.
+                    changed = heights.Max() - heights.Min() > 2;
+                    if (!changed) Array.Fill(heights, (short)own);
                 }
                 for (var side = 0; side < 4; side++)
                 {

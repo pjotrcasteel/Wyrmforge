@@ -2,7 +2,7 @@
 // projection: a 32x32 top face and a 32x32 front face per 1 m block. No textures, no outlines (the one-pixel inset line is a
 // separate debug overlay). Presentation reads the grid; it never edits it.
 import { FACE_PIXELS, MICROCELL_UNITS, blockFrontRect, blockTopRect } from './arena-projection.js';
-import { generateTileSet, variantFor, TILE } from './arena-terrain-tiles.js';
+import { generateTileSet, variantFor, TILE, normalFromTile } from './arena-terrain-tiles.js';
 
 export const TERRAIN_MATERIAL = Object.freeze({ Soil: 0, Ash: 1, Stone: 2, Lava: 3 });
 // Same bounds as C# WyrmInfluenceProfile.Fire: Wet, Scorched, Burning, Volcanic.
@@ -339,6 +339,12 @@ export function terrainAtlas(band) {
                 const canvas = document.createElement('canvas');
                 canvas.width = canvas.height = TILE;
                 canvas.getContext('2d').putImageData(new ImageData(tile.data, TILE, TILE), 0, 0);
+                // Every tile carries its normal-map twin; walls lean toward the viewer.
+                const twin = document.createElement('canvas');
+                twin.width = twin.height = TILE;
+                const wall = kind.endsWith('Side');
+                twin.getContext('2d').putImageData(new ImageData(normalFromTile(tile, wall ? 2 : 2.4, wall ? .85 : 0), TILE, TILE), 0, 0);
+                canvas.normalTwin = twin;
                 return canvas;
             });
         atlasCache.set(index, atlas);
@@ -364,17 +370,39 @@ function topTileKind(band, material, height, frame, column, row) {
 }
 const TOP_KINDS = Object.freeze(['grassTop', 'grassDryTop', 'mudTop', 'dirtTop', 'ashTop', 'stoneTop', 'rubbleTop', 'lavaTop']);
 const KIND_INDEX = Object.freeze(Object.fromEntries(TOP_KINDS.map((kind, index) => [kind, index])));
-let scratchCanvas = null, maskCanvas = null;
+let scratchCanvas = null, maskCanvas = null, maskImage = null, scratchNormalCanvas = null;
 
 function scratchContexts() {
     if (typeof document === 'undefined') return null;
     if (!scratchCanvas) {
         scratchCanvas = document.createElement('canvas');
         maskCanvas = document.createElement('canvas');
-        scratchCanvas.width = scratchCanvas.height = maskCanvas.width = maskCanvas.height = TILE;
+        scratchNormalCanvas = document.createElement('canvas');
+        scratchCanvas.width = scratchCanvas.height = maskCanvas.width = maskCanvas.height = scratchNormalCanvas.width = scratchNormalCanvas.height = TILE;
     }
     return { g: scratchCanvas.getContext('2d'), m: maskCanvas.getContext('2d') };
 }
+
+// Tileable value-noise tables (128 x 128, lattice every 16 and 8 px) sampled by world pixel, so splatting is a couple of lookups per pixel.
+function buildNoiseTable(spacing, seed) {
+    const cells = 128 / spacing, table = new Float32Array(128 * 128);
+    const lattice = new Float32Array(cells * cells);
+    for (let i = 0; i < lattice.length; i++) {
+        let h = (Math.imul(i + 11, 0x9E3779B1) ^ Math.imul(seed, 0xC2B2AE35)) >>> 0;
+        h = Math.imul(h ^ (h >>> 15), 0x2C1B3C6D) >>> 0;
+        lattice[i] = ((h ^ (h >>> 12)) >>> 0) / 4294967296;
+    }
+    const at = (x, y) => lattice[(((y % cells) + cells) % cells) * cells + (((x % cells) + cells) % cells)];
+    for (let y = 0; y < 128; y++) for (let x = 0; x < 128; x++) {
+        const fx = x / spacing, fy = y / spacing, x0 = Math.floor(fx), y0 = Math.floor(fy);
+        let tx = fx - x0, ty = fy - y0;
+        tx = tx * tx * (3 - 2 * tx); ty = ty * ty * (3 - 2 * ty);
+        table[y * 128 + x] = (at(x0, y0) * (1 - tx) + at(x0 + 1, y0) * tx) * (1 - ty) + (at(x0, y0 + 1) * (1 - tx) + at(x0 + 1, y0 + 1) * tx) * ty;
+    }
+    return table;
+}
+const NOISE_BROAD = buildNoiseTable(16, 301);
+const NOISE_FINE = buildNoiseTable(8, 317);
 
 // Allocation-free smooth value noise over world pixels, lattice spacing `spacing`, in 0..1.
 function pixelNoise(x, y, spacing, seed) {
@@ -427,7 +455,8 @@ function kindMap(frame, band, column, row, ownKind, height) {
         let best = own, bestScore = -1;
         for (let kind = 0; kind < weights.length; kind++) {
             if (weights[kind] <= 0) continue;
-            const wobble = (pixelNoise(wx, wy, 13, seed + kind * 7) - .5) * .8 + (pixelNoise(wx, wy, 5, seed + kind * 7 + 3) - .5) * .5;
+            const shift = (seed + kind * 37) & 127;
+            const wobble = (NOISE_BROAD[((wy + shift * 3) & 127) * 128 + ((wx + shift) & 127)] - .5) * .8 + (NOISE_FINE[((wy + shift) & 127) * 128 + ((wx + shift * 5) & 127)] - .5) * .5;
             const score = weights[kind] + wobble * .55;
             if (score > bestScore) { bestScore = score; best = kind; }
         }
@@ -450,8 +479,8 @@ function drawSplat(ctx, atlas, map, variant, x, y) {
     let painted = 1;
     for (let kind = 0; kind < counts.length; kind++) {
         if (kind === main || counts[kind] === 0) continue;
-        const mask = m.createImageData(TILE, TILE);
-        for (let i = 0; i < map.length; i++) if (map[i] === kind) mask.data[i * 4 + 3] = 255;
+        const mask = maskImage ??= m.createImageData(TILE, TILE);
+        for (let i = 0; i < map.length; i++) mask.data[i * 4 + 3] = map[i] === kind ? 255 : 0;
         m.putImageData(mask, 0, 0);
         g.globalCompositeOperation = 'source-over';
         g.clearRect(0, 0, TILE, TILE);
@@ -460,6 +489,17 @@ function drawSplat(ctx, atlas, map, variant, x, y) {
         g.drawImage(maskCanvas, 0, 0);
         g.globalCompositeOperation = 'source-over';
         ctx.drawImage(scratchCanvas, x, y);
+        if (ctx.normalContext) {
+            // The same mask cuts the normal twin, so relief changes exactly where the ground does.
+            const n = scratchNormalCanvas.getContext('2d');
+            n.globalCompositeOperation = 'source-over';
+            n.clearRect(0, 0, TILE, TILE);
+            n.drawImage(atlas[TOP_KINDS[kind]][variant].normalTwin, 0, 0);
+            n.globalCompositeOperation = 'destination-in';
+            n.drawImage(maskCanvas, 0, 0);
+            n.globalCompositeOperation = 'source-over';
+            ctx.normalContext.drawImage(scratchNormalCanvas, x, y);
+        }
         painted++;
     }
     return painted;
@@ -485,8 +525,8 @@ export function paintLavaEmissive(ctx, frame, band, view) {
             const tile = atlas.lavaTop[variantFor(column, row)];
             if (!map) { if (own === 'lavaTop') { ctx.drawImage(tile, x, y); drawn++; } continue; }
             let any = false;
-            const mask = m.createImageData(TILE, TILE);
-            for (let i = 0; i < map.length; i++) if (map[i] === lava) { mask.data[i * 4 + 3] = 255; any = true; }
+            const mask = maskImage ??= m.createImageData(TILE, TILE);
+            for (let i = 0; i < map.length; i++) { const isLava = map[i] === lava; mask.data[i * 4 + 3] = isLava ? 255 : 0; any ||= isLava; }
             if (!any) continue;
             m.putImageData(mask, 0, 0);
             g.globalCompositeOperation = 'source-over';
@@ -499,6 +539,25 @@ export function paintLavaEmissive(ctx, frame, band, view) {
             drawn++;
         }
     return drawn;
+}
+
+/**
+ * Large-scale light and dark drifts laid over the tiles in 8 px blocks, so a tile never reads as a repeated stamp: ground brightens and
+ * darkens over metres, like weathering and damp, while the tile detail stays calm.
+ */
+function macroTint(ctx, frame, column, row, x, y) {
+    const seed = (frame.visualSeed | 0) & 0xffff;
+    let painted = 0;
+    for (let cy = 0; cy < 4; cy++) for (let cx = 0; cx < 4; cx++) {
+        const wx = column * TILE + cx * 8 + 4, wy = row * TILE + cy * 8 + 4;
+        const n = pixelNoise(wx, wy, 90, 211 + seed) - .5 + (pixelNoise(wx, wy, 28, 223 + seed) - .5) * .6;
+        const alpha = Math.min(.14, Math.abs(n) * .3);
+        if (alpha < .015) continue;
+        ctx.fillStyle = n < 0 ? `rgba(0,0,0,${alpha.toFixed(3)})` : `rgba(255,236,210,${(alpha * .6).toFixed(3)})`;
+        ctx.fillRect(x + cx * 8, y + cy * 8, 8, 8);
+        painted++;
+    }
+    return painted;
 }
 
 // Whole-metre height steps tint the tile so raised ground reads lighter and pits darker without redrawing art.
@@ -645,6 +704,7 @@ export function paintTerrainCell(ctx, frame, band, column, row, grain = true) {
         const splat = kindMap(frame, band, column, row, tileKind, height);
         if (splat) painted += drawSplat(ctx, atlas, splat, variant, top.x, top.y);
         else ctx.drawImage(atlas[tileKind][variant], top.x, top.y, top.width, top.height);
+        if (tileKind !== 'lavaTop') painted += macroTint(ctx, frame, column, row, top.x, top.y);
         const tint = heightTint(height);
         if (tint) { ctx.fillStyle = tint; ctx.fillRect(top.x, top.y, top.width, top.height); painted++; }
     } else {
@@ -774,13 +834,76 @@ export function drawBlockInsetOverlay(ctx, frame, view) {
     return outlined;
 }
 
+const FLAT_NORMAL = '#8080ff';
+
+/**
+ * Paints one scene into two surfaces at once. Tile images (which carry a normal twin) go to both; fills, tints and shadows, which are
+ * colour cues, go to the albedo only. Clearing resets the normal surface to a flat normal, never to the invalid vector (0, 0, 0).
+ */
+class DualContext {
+    constructor(albedo, normal) { this.albedo = albedo; this.normalContext = normal; }
+    get fillStyle() { return this.albedo.fillStyle; }
+    set fillStyle(value) { this.albedo.fillStyle = value; }
+    fillRect(...args) { this.albedo.fillRect(...args); }
+    drawImage(image, ...rest) {
+        this.albedo.drawImage(image, ...rest);
+        if (image.normalTwin) this.normalContext.drawImage(image.normalTwin, ...rest);
+    }
+    clearRect(x, y, width, height) {
+        this.albedo.clearRect(x, y, width, height);
+        const n = this.normalContext, style = n.fillStyle;
+        n.fillStyle = FLAT_NORMAL;
+        n.fillRect(x, y, width, height);
+        n.fillStyle = style;
+    }
+    save() { this.albedo.save(); this.normalContext.save(); }
+    restore() { this.albedo.restore(); this.normalContext.restore(); }
+    translate(x, y) { this.albedo.translate(x, y); this.normalContext.translate(x, y); }
+    beginPath() { this.albedo.beginPath(); this.normalContext.beginPath(); }
+    rect(...args) { this.albedo.rect(...args); this.normalContext.rect(...args); }
+    clip() { this.albedo.clip(); this.normalContext.clip(); }
+}
+
+/**
+ * Repaints only what a delta touched: the changed blocks and their neighbours, clipped to a rectangle that also covers the rows below
+ * that raised columns can overdraw, so painter's order is preserved. Everything else in the cached canvas stays as it was.
+ */
+export function paintTerrainRegion(ctx, frame, band, changed, offsetY = TERRAIN_PAD_UNITS) {
+    const { columns, rows } = frame;
+    let [minC, maxC, minR, maxR] = [columns, -1, rows, -1];
+    for (const index of changed) {
+        const c = index % columns, r = Math.floor(index / columns);
+        minC = Math.min(minC, c); maxC = Math.max(maxC, c); minR = Math.min(minR, r); maxR = Math.max(maxR, r);
+    }
+    if (maxC < 0) return 0;
+    const [c0, c1, r0, r1] = [Math.max(0, minC - 1), Math.min(columns - 1, maxC + 1), Math.max(0, minR - 1), Math.min(rows - 1, maxR + 1)];
+    for (let r = r0 - 1; r <= r1 + 1; r++) for (let c = c0 - 1; c <= c1 + 1; c++) frame.kindMaps?.delete(r * columns + c);
+    // Raised columns draw up to four rows above their cell and walls reach four rows below it, so the clip spans four rows beyond the
+    // changed blocks each way and every cell that can touch the clip is repainted (four rows further again).
+    const clipX = c0 * FACE_PIXELS, clipW = (c1 - c0 + 1) * FACE_PIXELS;
+    const clipY = offsetY + (r0 - 4) * FACE_PIXELS, clipH = (r1 - r0 + 9) * FACE_PIXELS;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(clipX, clipY, clipW, clipH);
+    ctx.clip();
+    ctx.clearRect(clipX, clipY, clipW, clipH);
+    ctx.translate(0, offsetY);
+    let painted = 0;
+    for (let row = Math.max(0, r0 - 8); row <= Math.min(rows - 1, r1 + 8); row++)
+        for (let column = Math.max(0, c0 - 1); column <= Math.min(columns - 1, c1 + 1); column++) painted += paintTerrainCell(ctx, frame, band, column, row);
+    ctx.restore();
+    return painted;
+}
+
 /**
  * Caches the painted heightfield in one offscreen surface and rebuilds it only when the C# terrain revision (or the
  * influence band) changes. Per frame the camera window is copied out, so excavation costs one repaint per impact.
  */
 export class TerrainCanvasCache {
-    constructor(createCanvas = (width, height) => Object.assign(document.createElement('canvas'), { width, height })) {
+    constructor(createCanvas = (width, height) => Object.assign(document.createElement('canvas'), { width, height }), withNormals = false) {
         this.createCanvas = createCanvas;
+        this.withNormals = withNormals;
+        this.normalCanvas = null;
         this.canvas = null;
         this.revision = null;
         this.band = null;
@@ -795,11 +918,23 @@ export class TerrainCanvasCache {
         const started = globalThis.performance?.now() ?? 0;
         const width = frame.columns * FACE_PIXELS;
         const height = frame.rows * FACE_PIXELS + TERRAIN_PAD_UNITS * 2;
+        const full = !this.canvas || this.canvas.width !== width || this.canvas.height !== height || this.band !== band || this.revision === null;
         if (!this.canvas || this.canvas.width !== width || this.canvas.height !== height)
             this.canvas = this.createCanvas(width, height);
-        const ctx = this.canvas.getContext('2d');
-        ctx.clearRect(0, 0, width, height);
-        paintTerrain(ctx, frame, band, TERRAIN_PAD_UNITS);
+        if (this.withNormals && (!this.normalCanvas || this.normalCanvas.width !== width || this.normalCanvas.height !== height)) this.normalCanvas = this.createCanvas(width, height);
+        const baseCtx = this.canvas.getContext('2d');
+        // With normals on, one painter drives both surfaces: tiles go to both, colour cues to the albedo only.
+        const ctx = this.withNormals ? new DualContext(baseCtx, this.normalCanvas.getContext('2d')) : baseCtx;
+        const changed = frame.changed;
+        const regional = full === false && Array.isArray(changed) && changed.length > 0 && changed.length <= 40;
+        // The splat maps survive between frames; only the neighbourhood of what changed is recomputed.
+        this.kindMaps = regional ? this.kindMaps : new Map();
+        frame.kindMaps = this.kindMaps;
+        if (regional) paintTerrainRegion(ctx, frame, band, changed, TERRAIN_PAD_UNITS);
+        else {
+            ctx.clearRect(0, 0, width, height);
+            paintTerrain(ctx, frame, band, TERRAIN_PAD_UNITS);
+        }
         this.revision = frame.revision;
         this.band = band;
         this.repaints++;
@@ -809,17 +944,34 @@ export class TerrainCanvasCache {
         return true;
     }
 
+    /** Turns normals on after construction (the GPU path can arrive after the first frame) and forces one repaint. */
+    enableNormals() {
+        if (this.withNormals) return;
+        this.withNormals = true;
+        this.revision = null;
+    }
+
+    /** Draws the visible window of the normal map into a context already translated by -camera. */
+    drawNormals(ctx, view) {
+        if (!this.normalCanvas) return false;
+        return this.blit(this.normalCanvas, ctx, view);
+    }
+
     /** Draws the cached terrain for the visible world window into a context already translated by -camera. */
     draw(ctx, view) {
         if (!this.canvas) return false;
-        const worldHeight = this.canvas.height - TERRAIN_PAD_UNITS * 2;
+        return this.blit(this.canvas, ctx, view);
+    }
+
+    blit(source, ctx, view) {
+        const worldHeight = source.height - TERRAIN_PAD_UNITS * 2;
         const x = Math.max(0, Math.floor(view.x));
         const y = Math.max(-TERRAIN_PAD_UNITS, Math.floor(view.y));
-        const width = Math.min(this.canvas.width, Math.ceil(view.x + view.width)) - x;
+        const width = Math.min(source.width, Math.ceil(view.x + view.width)) - x;
         const height = Math.min(worldHeight + TERRAIN_PAD_UNITS, Math.ceil(view.y + view.height)) - y;
         if (width <= 0 || height <= 0) return false;
         // The cache already holds screen-space output (raised columns lifted, pits sunk), offset by the pad.
-        ctx.drawImage(this.canvas, x, y + TERRAIN_PAD_UNITS, width, height, x, y, width, height);
+        ctx.drawImage(source, x, y + TERRAIN_PAD_UNITS, width, height, x, y, width, height);
         return true;
     }
 }

@@ -152,7 +152,7 @@ public sealed class GreyboxHuntBrowserTests : PageTest
         var shotState = await Page.EvaluateAsync<string>(@"async () => {
             const m = await import('/js/arena-performance.js');
             const s = m.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
-            return JSON.stringify({ seconds: s.hud?.seconds, gpu: s.greyboxLighting, ambient: s.sharedLighting?.environment?.ambient, debug: s.debug, perf: s.perfReport, projection: s.gpuWorld?.projection, gpuScene: s.gpuScene, hudSize: [document.querySelector('canvas.game-canvas').clientWidth, document.querySelector('canvas.game-canvas').clientHeight], player: s.player, world: s.world, search: location.search, gpuError: s.gpuWorld?.error });
+            return JSON.stringify({ seconds: s.hud?.seconds, gpu: s.greyboxLighting, ambient: s.sharedLighting?.environment?.ambient, debug: s.debug, perf: s.perfReport, projection: s.gpuWorld?.projection, gpuScene: s.gpuScene, hudSize: [document.querySelector('canvas.game-canvas').clientWidth, document.querySelector('canvas.game-canvas').clientHeight], player: s.player, world: s.world, search: location.search, gpuError: s.gpuWorld?.error, renderError: s.renderError });
         }");
         await File.WriteAllTextAsync(Path.Combine(output, $"{shot}-{width}.json"), shotState);
         if (shot.StartsWith("hunt1-shear"))
@@ -341,7 +341,7 @@ public sealed class GreyboxHuntBrowserTests : PageTest
                 && (state.destructionFx?.craters ?? 0) >= 3 && state.destructionFx.heat > 0;", 120000,
             "Fireballs to have dug at least six terrain revisions that the client painted, with live crater heat");
         Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
-        await File.WriteAllTextAsync(Path.Combine(output, $"craters-diag-{band}-{bright}-{width}.json"), await Page.EvaluateAsync<string>("async () => { const m = await import('/js/arena-performance.js'); const s = m.readArenaDiagnostics(document.querySelector('canvas.game-canvas')); return JSON.stringify({ veins: s.veinSeams, fx: s.destructionFx, debug: s.debug, corruption: s.hunt1Terrain }); }"));
+        await File.WriteAllTextAsync(Path.Combine(output, $"craters-diag-{band}-{bright}-{width}.json"), await Page.EvaluateAsync<string>("async () => { const m = await import('/js/arena-performance.js'); const s = m.readArenaDiagnostics(document.querySelector('canvas.game-canvas')); return JSON.stringify({ veins: s.veinSeams, fx: s.destructionFx, debug: s.debug, corruption: s.hunt1Terrain, renderError: s.renderError }); }"));
         await Page.ScreenshotAsync(new() { Path = Path.Combine(output, band >= 0 ? $"hunt1-craters-band{band}{(bright ? "" : "-night")}-{width}.png" : $"hunt1-craters-{width}.png"), FullPage = false });
     }
 

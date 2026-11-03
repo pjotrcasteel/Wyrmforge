@@ -143,6 +143,16 @@ public sealed class ArenaTerrainTests
         Assert.IsGreaterThan(20, forks, "forks share cells with the crack they leave");
     }
     [TestMethod]
+    public void GeneratedArenas_KeepSubdividedBlocksWithinTheClientBudget()
+    {
+        foreach (var (seed, influence) in new[] { (7, 0.1), (23, 0.4), (11, 0.7), (23, 0.95), (99, 0.55) })
+        {
+            var count = Make(seed, influence).Grid.ToFrame(-1).Fine.Count;
+            Assert.IsLessThan(600, count, $"seed {seed} influence {influence}: {count} subdivided blocks cost the client a long first paint");
+        }
+    }
+
+    [TestMethod]
     public void RockSteps_AreWholeHalfMetreMultiplesAndOnlyClimbableByRamp()
     {
         var recipe = Make(7, 0);

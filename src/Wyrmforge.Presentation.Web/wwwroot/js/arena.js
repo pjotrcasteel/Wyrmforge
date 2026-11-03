@@ -140,6 +140,7 @@ export function readArenaDiagnostics(canvas) {
         hunt: state.latestSnapshot?.hunt ?? null,
         performance: { fps:state.displayFps, simulationHz:state.displaySimulationHz, simulationMilliseconds:state.displaySimulationMilliseconds, bridgeMilliseconds:state.displayBridgeMilliseconds },
         renderingFailed: Boolean(state.renderingFailed),
+        renderError: state.renderError ?? null,
         renderingError: state.renderingError ?? null,
         sharedLighting: state.sharedLightingFrame ?? state.latestSnapshot?.lighting ?? null,
         lighting01: { enabled: Boolean(state.lighting01), fixedFixtures: state.lighting01FixtureCount ?? 0 },
@@ -257,6 +258,7 @@ function frame(state, timestamp) {
         state.renderingFailed = false;
         state.renderingError = null;
     } catch (error) {
+        state.renderError = String(error?.stack ?? error).slice(0, 600);
         if (!state.renderingFailed) console.error('Wyrmforge arena drawing failed; simulation continues.', error);
         state.renderingFailed = true;
         state.renderingError = error?.stack ?? String(error);
@@ -424,8 +426,9 @@ function draw(state, snapshot, width, height) {
         // authoritative C# lights shade it and its actors through HuntGpuWorld.
         if (state.terrainFrame && snapshot.environment.terrain) {
             // Hunt 1.0: the C# heightfield as flat colour ramps in the metric oblique projection.
-            (state.terrainCache ??= new TerrainCanvasCache())
-                .update(state.terrainFrame, huntBand(state, snapshot));
+            const terrainCache = state.terrainCache ??= new TerrainCanvasCache();
+            if (gpu) terrainCache.enableNormals();
+            terrainCache.update(state.terrainFrame, huntBand(state, snapshot));
             state.terrainCache.draw(ctx, { x: camera.x, y: camera.y, width, height });
         } else {
             drawGreyboxGround(ctx, snapshot.environment.greybox, worldWidth, worldHeight);
@@ -510,7 +513,8 @@ function draw(state, snapshot, width, height) {
         ? paintGroundEmissive(state, state.terrainFrame, state.destructionFx, huntBand(state, snapshot),
             view, performance.now() / 1000, state.reducedMotion.matches) : null;
     if (emissive) state.veinSeams = emissive.seams;
-    if (gpu) gpu.begin(ctx, camera, width, height, emissive?.canvas ?? null);
+    const normal = gpu && state.terrainCache?.normalCanvas ? groundNormalView(state, camera, width, height) : null;
+    if (gpu) gpu.begin(ctx, camera, width, height, emissive?.canvas ?? null, normal);
     state.lighting01FixtureCount = gpu && state.lighting01
         ? submitLighting01Fixtures(gpu, snapshot.environment, state.sharedLightingFrame,
             camera, worldWidth, worldHeight) : 0;
@@ -1658,4 +1662,18 @@ function drawAimRune(ctx, player) {
     ctx.moveTo(34, 0); ctx.lineTo(38, -3); ctx.lineTo(42, 0); ctx.lineTo(38, 3); ctx.closePath();
     ctx.stroke();
     ctx.restore();
+}
+
+/** The visible window of the terrain normal map, flat where nothing is painted, for the ground's lit material. */
+function groundNormalView(state, camera, width, height) {
+    const canvas = state.normalViewCanvas ??= document.createElement('canvas');
+    if (canvas.width !== width) canvas.width = width;
+    if (canvas.height !== height) canvas.height = height;
+    const g = canvas.getContext('2d');
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.fillStyle = '#8080ff';
+    g.fillRect(0, 0, width, height);
+    g.translate(-camera.x, -camera.y);
+    state.terrainCache.drawNormals(g, { x: camera.x, y: camera.y, width, height });
+    return canvas;
 }
