@@ -2,6 +2,7 @@
 // projection: a 32x32 top face and a 32x32 front face per 1 m block. No textures, no outlines (the one-pixel inset line is a
 // separate debug overlay). Presentation reads the grid; it never edits it.
 import { FACE_PIXELS, MICROCELL_UNITS, blockFrontRect, blockTopRect } from './arena-projection.js';
+import { generateTileSet, variantFor, TILE } from './arena-terrain-tiles.js';
 
 export const TERRAIN_MATERIAL = Object.freeze({ Soil: 0, Ash: 1, Stone: 2, Lava: 3 });
 // Same bounds as C# WyrmInfluenceProfile.Fire: Wet, Scorched, Burning, Volcanic.
@@ -13,9 +14,9 @@ export const TERRAIN_PAD_UNITS = 4 * FACE_PIXELS;
 // and saturation reserved for lava (fire, blood and lightning carry the colour). The front is always the darker tone.
 const PALETTE = Object.freeze([
     // Natural / wet: cold damp earth
-    [['#6c6050', '#322c25'], ['#7a7773', '#2e2c2a'], ['#8a8580', '#2a2523'], ['#c9501a', '#7a1f0c']],
+    [['#6c6050', '#322c25'], ['#7a7773', '#2e2c2a'], ['#6f6c68', '#2a2523'], ['#c9501a', '#7a1f0c']],
     // Scorched: dry ash-brown
-    [['#5e5149', '#2a2420'], ['#6a6460', '#2c2826'], ['#7f7872', '#292321'], ['#d65a16', '#82200c']],
+    [['#5e5149', '#2a2420'], ['#6a6460', '#2c2826'], ['#645f5a', '#292321'], ['#d65a16', '#82200c']],
     // Burning: charred, blood-red undertone
     [['#4b3f3a', '#231b19'], ['#4e4642', '#262120'], ['#6e6159', '#241e1c'], ['#e8641a', '#8c1f0a']],
     // Volcanic: near-black basalt
@@ -74,17 +75,17 @@ export function frontSegments(band, material, topMicrocells, bottomMicrocells) {
     const index = bandIndex(band);
     const ownFront = terrainColors(band, material).front;
     if (topMicrocells <= bottomMicrocells) return [];
-    if (material === TERRAIN_MATERIAL.Lava) return [{ from: topMicrocells, to: bottomMicrocells, color: ownFront }];
+    if (material === TERRAIN_MATERIAL.Lava) return [{ from: topMicrocells, to: bottomMicrocells, color: ownFront, kind: 'lava' }];
     const segments = [];
     let cursor = topMicrocells;
-    const take = (floor, color) => {
+    const take = (floor, color, kind) => {
         const end = Math.max(bottomMicrocells, floor);
-        if (cursor > end) { segments.push({ from: cursor, to: end, color }); cursor = end; }
+        if (cursor > end) { segments.push({ from: cursor, to: end, color, kind }); cursor = end; }
     };
-    if (cursor > 0) take(0, ownFront);
-    if (cursor > DIRT_UPPER_FLOOR) take(DIRT_UPPER_FLOOR, DIRT[index].upper);
-    if (cursor > DIRT_LOWER_FLOOR) take(DIRT_LOWER_FLOOR, DIRT[index].lower);
-    take(bottomMicrocells, STONE_STRATA[index]);
+    if (cursor > 0) take(0, ownFront, 'own');
+    if (cursor > DIRT_UPPER_FLOOR) take(DIRT_UPPER_FLOOR, DIRT[index].upper, 'dirtUpper');
+    if (cursor > DIRT_LOWER_FLOOR) take(DIRT_LOWER_FLOOR, DIRT[index].lower, 'dirtLower');
+    take(bottomMicrocells, STONE_STRATA[index], 'stone');
     return segments;
 }
 
@@ -108,6 +109,73 @@ export function blockTone(column, row) {
 }
 
 export const BLOCK_TONE_STEP = 0.09;
+
+// Ground grain: every top-face microcell takes one of five tone steps from two scales of noise (soft drifts about a metre across plus
+// the odd single-cell speck), bare earth patches break the grass, and rare pebbles sit on open ground. All whole 4 px cells, flat colours.
+const hash2 = (x, y, seed) => {
+    let h = (Math.imul(x + 11, 0x9E3779B1) ^ Math.imul(y + 3, 0x85EBCA6B) ^ Math.imul(seed, 0xC2B2AE35)) >>> 0;
+    h = Math.imul(h ^ (h >>> 15), 0x2C1B3C6D) >>> 0;
+    return (h ^ (h >>> 12)) >>> 0;
+};
+const unit = (x, y, seed) => hash2(x, y, seed) / 4294967296;
+function valueNoise(x, y, scale, seed) {
+    const [fx, fy] = [x / scale, y / scale];
+    const [x0, y0] = [Math.floor(fx), Math.floor(fy)];
+    const [tx, ty] = [fx - x0, fy - y0].map(t => t * t * (3 - 2 * t));
+    const top = unit(x0, y0, seed) * (1 - tx) + unit(x0 + 1, y0, seed) * tx;
+    const bottom = unit(x0, y0 + 1, seed) * (1 - tx) + unit(x0 + 1, y0 + 1, seed) * tx;
+    return top * (1 - ty) + bottom * ty;
+}
+export const GROUND_TONE_STEP = 0.05;
+/** Tone step -2..2 of one global microcell. */
+export function groundStep(gx, gy) {
+    const drift = valueNoise(gx, gy, 6, 1);
+    const speck = unit(gx, gy, 2);
+    return Math.max(-2, Math.min(2, (drift < .3 ? -1 : drift > .72 ? 1 : 0) + (speck < .09 ? -1 : speck > .93 ? 1 : 0)));
+}
+export const isBarePatch = (gx, gy) => valueNoise(gx, gy, 9, 7) > .72 && unit(gx, gy, 9) > .2;
+export const isPebble = (gx, gy) => unit(gx, gy, 5) > .985;
+
+// Damp, muted earth where the grass has worn through: darker and greyer than freshly dug dirt so it never reads as blood or rust.
+const BARE_EARTH = Object.freeze(['#4a4234', '#52443a', '#3f332e', '#342a27']);
+
+const scaled = new Map();
+const scaledHex = (hex, factor) => {
+    const key = `${hex}|${factor}`;
+    let value = scaled.get(key);
+    if (!value) { value = scaleHex(hex, factor); scaled.set(key, value); }
+    return value;
+};
+
+/**
+ * Chips and strata flecks on a wall face: some 4 px cells of a front-face band are a step darker or lighter, so cliffs read as rock
+ * built of voxels instead of a flat slab. `x` is the left edge of one microcolumn slice, `gx` its global microcolumn index.
+ */
+function frontGrain(ctx, segment, material, gx, x, yTop) {
+    if (material === TERRAIN_MATERIAL.Lava) return 0;
+    let painted = 0;
+    const cells = Math.round(segment.from - segment.to);
+    for (let k = 0; k < cells; k++) {
+        const roll = unit(gx, segment.from - k, 3);
+        const factor = roll < .13 ? .84 : roll > .9 ? 1.14 : 1;
+        if (factor === 1) continue;
+        ctx.fillStyle = scaledHex(segment.color, factor);
+        ctx.fillRect(x, yTop + k * MICROCELL_UNITS, MICRO_UNITS, MICROCELL_UNITS);
+        painted++;
+    }
+    return painted;
+}
+
+/** Top-face colour of one undisturbed or dug microcell with its grain; lava and bedrock stay flat. */
+export function groundTopColor(band, material, height, gx, gy) {
+    if (material === TERRAIN_MATERIAL.Lava || height <= BEDROCK_MICROCELLS) return topFaceColor(band, material, height);
+    const index = bandIndex(band);
+    let base;
+    if (material === TERRAIN_MATERIAL.Soil && height >= 0 && GRASS_TOP[index] && isBarePatch(gx, gy)) base = BARE_EARTH[index];
+    else if (material !== TERRAIN_MATERIAL.Stone && height >= 0 && isPebble(gx, gy)) base = terrainColors(band, TERRAIN_MATERIAL.Stone).top;
+    else base = topFaceColor(band, material, height);
+    return scaledHex(heightShade(base, height), 1 + groundStep(gx, gy) * GROUND_TONE_STEP);
+}
 
 // Heat cracks come from the C# arena generator as paths of 4-adjacent global microcells (x, y pairs): each runs from a lava pool or old
 // crater toward another, forks, and a fork either joins another source or ends in a fresh crater. The client only turns them into
@@ -257,10 +325,84 @@ function wholeDepthCues(ctx, frame, column, row, height, top) {
     return painted;
 }
 
+const atlasCache = new Map();
+
+/** The band's generated 32 px tiles as canvases, or null where there is no DOM (tests, workers) so callers fall back to flat colour. */
+export function terrainAtlas(band) {
+    if (typeof document === 'undefined' || typeof ImageData === 'undefined') return null;
+    const index = bandIndex(band);
+    if (!atlasCache.has(index)) {
+        const atlas = {};
+        for (const [kind, tiles] of Object.entries(generateTileSet(index)))
+            atlas[kind] = tiles.map(tile => {
+                const canvas = document.createElement('canvas');
+                canvas.width = canvas.height = TILE;
+                canvas.getContext('2d').putImageData(new ImageData(tile.data, TILE, TILE), 0, 0);
+                return canvas;
+            });
+        atlasCache.set(index, atlas);
+    }
+    return atlasCache.get(index);
+}
+
+function topTileKind(band, material, height) {
+    if (height <= BEDROCK_MICROCELLS) return null;
+    if (material === TERRAIN_MATERIAL.Lava) return 'lavaTop';
+    if (material === TERRAIN_MATERIAL.Stone) return 'stoneTop';
+    if (height < 0) return 'dirtTop';
+    if (material === TERRAIN_MATERIAL.Soil && band <= 1) return 'grassTop';
+    return 'ashTop';
+}
+
+// Whole-metre height steps tint the tile so raised ground reads lighter and pits darker without redrawing art.
+const heightTint = height => {
+    const metres = Math.max(-2, Math.min(3, Math.round(height / 8)));
+    return metres > 0 ? `rgba(255,240,220,${.05 * metres})` : metres < 0 ? `rgba(0,0,0,${.1 * -metres})` : null;
+};
+const WALL_SHADE = Object.freeze({ own: 'rgba(6,4,8,.28)', dirtUpper: 'rgba(6,4,8,.34)', dirtLower: 'rgba(6,4,8,.44)', stone: 'rgba(6,4,8,.4)' });
+
+/**
+ * Draws one wall (the front faces of a column or microcolumn) from the band's tiles: grass overhang on soil that is still topped by turf,
+ * then soil, then dressed stone, with the texture running continuously down the wall. `sx`/`width` pick the slice of the 32 px tile.
+ */
+function drawWall(ctx, atlas, band, material, segments, x, width, sx, baseY, variant) {
+    let painted = 0;
+    const wallTop = segments.length ? segments[0].from : 0;
+    for (const [i, segment] of segments.entries()) {
+        const y = baseY - segment.from * MICROCELL_UNITS, height = (segment.from - segment.to) * MICROCELL_UNITS;
+        if (segment.kind === 'lava') {
+            for (let drawn = 0; drawn < height;) {
+                const v = (wallTop - segment.from) * MICROCELL_UNITS + drawn, piece = Math.min(height - drawn, TILE - (v % TILE));
+                ctx.drawImage(atlas.lavaSide[variant], sx, v % TILE, width, piece, x, y + drawn, width, piece);
+                drawn += piece;
+                painted++;
+            }
+            continue;
+        }
+        const stone = segment.kind === 'stone' || material === TERRAIN_MATERIAL.Stone;
+        const turf = i === 0 && material === TERRAIN_MATERIAL.Soil && band <= 1;
+        const start = (wallTop - segment.from) * MICROCELL_UNITS;
+        for (let drawn = 0; drawn < height;) {
+            const v = start + drawn;
+            const lip = turf && v < TILE;
+            const piece = Math.min(height - drawn, TILE - (v % TILE));
+            const tiles = atlas[stone ? 'stoneSide' : lip ? 'grassSide' : 'dirtSide'];
+            ctx.drawImage(tiles[variant], sx, v % TILE, width, piece, x, y + drawn, width, piece);
+            drawn += piece;
+            painted++;
+        }
+        ctx.fillStyle = WALL_SHADE[segment.kind] ?? WALL_SHADE.own;
+        ctx.fillRect(x, y, width, height);
+        painted++;
+    }
+    return painted;
+}
+
 /** Paints a subdivided column as 8 x 8 microcolumns, back to front: a 4 px top square each and 4 px wide strata fronts. */
-function paintFineCell(ctx, frame, band, column, row, block) {
+function paintFineCell(ctx, frame, band, column, row, block, grain = true) {
     const { columns, rows } = frame;
-    const tone = 1 + blockTone(column, row) * BLOCK_TONE_STEP;
+    const atlas = grain ? terrainAtlas(band) : null;
+    const variant = variantFor(column, row);
     let painted = 0;
     for (let microY = 0; microY < MICRO_PER_COLUMN; microY++) {
         for (let microX = 0; microX < MICRO_PER_COLUMN; microX++) {
@@ -268,8 +410,17 @@ function paintFineCell(ctx, frame, band, column, row, block) {
             const material = microMaterial(block, height);
             const x = column * FACE_PIXELS + microX * MICRO_UNITS;
             const y = row * FACE_PIXELS + microY * MICRO_UNITS;
-            ctx.fillStyle = scaleHex(heightShade(topFaceColor(band, material, height), height), tone);
-            ctx.fillRect(x, y - height * MICROCELL_UNITS, MICRO_UNITS, MICRO_UNITS);
+            const tileKind = atlas ? topTileKind(band, material, height) : null;
+            if (tileKind) {
+                ctx.drawImage(atlas[tileKind][variant], microX * MICRO_UNITS, microY * MICRO_UNITS, MICRO_UNITS, MICRO_UNITS,
+                    x, y - height * MICROCELL_UNITS, MICRO_UNITS, MICRO_UNITS);
+                const tint = heightTint(height);
+                if (tint) { ctx.fillStyle = tint; ctx.fillRect(x, y - height * MICROCELL_UNITS, MICRO_UNITS, MICRO_UNITS); painted++; }
+            } else {
+                ctx.fillStyle = grain ? groundTopColor(band, material, height, column * MICRO_PER_COLUMN + microX, row * MICRO_PER_COLUMN + microY)
+                    : scaleHex(heightShade(topFaceColor(band, material, height), height), 1);
+                ctx.fillRect(x, y - height * MICROCELL_UNITS, MICRO_UNITS, MICRO_UNITS);
+            }
             painted++;
             for (const crack of crackPixels(wearStage(block.wear?.[microY * MICRO_PER_COLUMN + microX]))) {
                 ctx.fillStyle = crack.color;
@@ -280,10 +431,13 @@ function paintFineCell(ctx, frame, band, column, row, block) {
             const southY = microY + 1 < MICRO_PER_COLUMN ? microY + 1 : 0;
             const southRow = microY + 1 < MICRO_PER_COLUMN ? row : row + 1;
             const south = southRow < rows ? microHeight(frame, column, southRow, microX, southY) : height;
-            for (const segment of frontSegments(band, block.topsoil, height, south)) {
+            const wall = frontSegments(band, block.topsoil, height, south);
+            if (atlas) { painted += drawWall(ctx, atlas, band, block.topsoil, wall, x, MICRO_UNITS, microX * MICRO_UNITS, y + MICRO_UNITS, variant); continue; }
+            for (const segment of wall) {
                 ctx.fillStyle = segment.color;
                 ctx.fillRect(x, y + MICRO_UNITS - segment.from * MICROCELL_UNITS, MICRO_UNITS, (segment.from - segment.to) * MICROCELL_UNITS);
                 painted++;
+                if (grain) painted += frontGrain(ctx, segment, block.topsoil, column * MICRO_PER_COLUMN + microX, x, y + MICRO_UNITS - segment.from * MICROCELL_UNITS);
             }
         }
     }
@@ -294,34 +448,69 @@ function paintFineCell(ctx, frame, band, column, row, block) {
  * Paints the whole grid back to front. Output coordinates are world units offset by (0, offsetY) so raised columns that
  * draw above row 0 stay on the surface. Returns the number of rectangles painted.
  */
-export function paintTerrain(ctx, frame, band, offsetY = TERRAIN_PAD_UNITS) {
+export function paintTerrain(ctx, frame, band, offsetY = TERRAIN_PAD_UNITS, grain = true) {
     const { columns, rows } = frame;
     let painted = 0;
     ctx.save();
     ctx.translate(0, offsetY);
     for (let row = 0; row < rows; row++)
-        for (let column = 0; column < columns; column++) painted += paintTerrainCell(ctx, frame, band, column, row);
+        for (let column = 0; column < columns; column++) painted += paintTerrainCell(ctx, frame, band, column, row, grain);
     ctx.restore();
     return painted;
 }
 
+/** Paints the cells of a whole column's top face that differ from its base colour, as horizontal runs. Returns rectangles painted. */
+function paintGrain(ctx, band, material, height, column, row, top, baseColor) {
+    if (material === TERRAIN_MATERIAL.Lava || height <= BEDROCK_MICROCELLS) return 0;
+    let painted = 0;
+    for (let microY = 0; microY < MICRO_PER_COLUMN; microY++) {
+        let microX = 0;
+        while (microX < MICRO_PER_COLUMN) {
+            const gx = column * MICRO_PER_COLUMN + microX, gy = row * MICRO_PER_COLUMN + microY;
+            const color = groundTopColor(band, material, height, gx, gy);
+            let end = microX + 1;
+            while (end < MICRO_PER_COLUMN && groundTopColor(band, material, height, column * MICRO_PER_COLUMN + end, gy) === color) end++;
+            if (color !== baseColor) {
+                ctx.fillStyle = color;
+                ctx.fillRect(top.x + microX * MICRO_UNITS, top.y + microY * MICRO_UNITS, (end - microX) * MICRO_UNITS, MICRO_UNITS);
+                painted++;
+            }
+            microX = end;
+        }
+    }
+    return painted;
+}
+
 /** Paints one column's top face and, where a lower neighbour is in front, its front face. Returns rectangles painted. */
-export function paintTerrainCell(ctx, frame, band, column, row) {
+export function paintTerrainCell(ctx, frame, band, column, row, grain = true) {
     const { columns, rows, surface, material } = frame;
     const index = row * columns + column;
     const fineBlock = frame.fine?.get(index);
-    if (fineBlock) return paintFineCell(ctx, frame, band, column, row, fineBlock);
+    if (fineBlock) return paintFineCell(ctx, frame, band, column, row, fineBlock, grain);
     const height = surface[index];
     const top = blockTopRect(column, row, height);
-    const tone = 1 + blockTone(column, row) * BLOCK_TONE_STEP;
-    ctx.fillStyle = scaleHex(heightShade(topFaceColor(band, material[index], height), height), tone);
-    ctx.fillRect(top.x, top.y, top.width, top.height);
-    let painted = 1 + wholeDepthCues(ctx, frame, column, row, height, top);
+    const atlas = grain ? terrainAtlas(band) : null;
+    const variant = variantFor(column, row);
+    const tileKind = atlas ? topTileKind(band, material[index], height) : null;
+    const baseColor = scaleHex(heightShade(topFaceColor(band, material[index], height), height), 1);
+    let painted = 1;
+    if (tileKind) {
+        ctx.drawImage(atlas[tileKind][variant], top.x, top.y, top.width, top.height);
+        const tint = heightTint(height);
+        if (tint) { ctx.fillStyle = tint; ctx.fillRect(top.x, top.y, top.width, top.height); painted++; }
+    } else {
+        ctx.fillStyle = baseColor;
+        ctx.fillRect(top.x, top.y, top.width, top.height);
+        if (grain) painted += paintGrain(ctx, band, material[index], height, column, row, top, baseColor);
+    }
+    painted += wholeDepthCues(ctx, frame, column, row, height, top);
     const frontHeight = row + 1 < rows ? surface[index + columns] : height;
     // A whole column standing behind a subdivided one meets its microcolumns, not their average.
     if (row + 1 < rows && frame.fine?.has(index + columns)) {
         for (let microX = 0; microX < MICRO_PER_COLUMN; microX++) {
-            for (const segment of frontSegments(band, material[index], height, microHeight(frame, column, row + 1, microX, 0))) {
+            const wall = frontSegments(band, material[index], height, microHeight(frame, column, row + 1, microX, 0));
+            if (atlas) { painted += drawWall(ctx, atlas, band, material[index], wall, column * FACE_PIXELS + microX * MICRO_UNITS, MICRO_UNITS, microX * MICRO_UNITS, (row + 1) * FACE_PIXELS, variant); continue; }
+            for (const segment of wall) {
                 ctx.fillStyle = segment.color;
                 ctx.fillRect(column * FACE_PIXELS + microX * MICRO_UNITS, (row + 1) * FACE_PIXELS - segment.from * MICROCELL_UNITS,
                     MICRO_UNITS, (segment.from - segment.to) * MICROCELL_UNITS);
@@ -330,11 +519,17 @@ export function paintTerrainCell(ctx, frame, band, column, row) {
         }
         return painted;
     }
-    for (const segment of frontSegments(band, material[index], height, frontHeight)) {
+    const frontWall = frontSegments(band, material[index], height, frontHeight);
+    if (atlas) return painted + drawWall(ctx, atlas, band, material[index], frontWall, column * FACE_PIXELS, FACE_PIXELS, 0, (row + 1) * FACE_PIXELS, variant);
+    for (const segment of frontWall) {
         ctx.fillStyle = segment.color;
         ctx.fillRect(column * FACE_PIXELS, (row + 1) * FACE_PIXELS - segment.from * MICROCELL_UNITS, FACE_PIXELS,
             (segment.from - segment.to) * MICROCELL_UNITS);
         painted++;
+        if (!grain) continue;
+        for (let microX = 0; microX < MICRO_PER_COLUMN; microX++)
+            painted += frontGrain(ctx, segment, material[index], column * MICRO_PER_COLUMN + microX,
+                column * FACE_PIXELS + microX * MICRO_UNITS, (row + 1) * FACE_PIXELS - segment.from * MICROCELL_UNITS);
     }
     return painted;
 }
@@ -376,8 +571,8 @@ export function eraseTerrainOcclusion(ctx, frame, cells) {
 }
 
 /** Canvas path: paint the covering terrain over the actor in painter's order. */
-export function repaintTerrainOcclusion(ctx, frame, band, cells) {
-    for (const { column, row } of cells) paintTerrainCell(ctx, frame, band, column, row);
+export function repaintTerrainOcclusion(ctx, frame, band, cells, grain = true) {
+    for (const { column, row } of cells) paintTerrainCell(ctx, frame, band, column, row, grain);
     return cells.length;
 }
 

@@ -1,7 +1,8 @@
 // Cosmetic destruction and fire-zone cues for Hunt 1.0. Presentation only: every cue is derived from a C# terrain delta or the
 // C# influence band and never writes back. Everything is built from the terrain's own 4 px microcells (the divided voxels): hot
 // craters, debris, glowing cracks and the bedrock hint are whole-microcell squares in stepped colour ramps, never smooth gradients.
-import { MICRO_PER_COLUMN, MICRO_UNITS, TERRAIN_MATERIAL, BEDROCK_MICROCELLS, crackCells, veinRamp } from './arena-terrain-canvas.js';
+import { MICRO_PER_COLUMN, MICRO_UNITS, TERRAIN_MATERIAL, BEDROCK_MICROCELLS, crackCells, veinRamp, terrainAtlas } from './arena-terrain-canvas.js';
+import { variantFor } from './arena-terrain-tiles.js';
 import { FACE_PIXELS, MICROCELL_UNITS, blockTopRect } from './arena-projection.js';
 
 export const HEAT_SECONDS = 7;
@@ -177,6 +178,22 @@ export function drawDestructionFx(ctx, fx, now, view, parts = 'all') {
  * surface (bright in the dark, beneath every actor) instead of an additive layer drawn over creatures. Returns the canvas and the
  * vein seams drawn. `holder` keeps the reusable canvas between frames.
  */
+/** Lava pools emit their own molten tile, so they stay bright in the dark and light nothing but themselves. */
+function drawLavaEmission(ctx, frame, band, view) {
+    const atlas = frame?.material ? terrainAtlas(band) : null;
+    if (!atlas) return 0;
+    let drawn = 0;
+    const size = FACE_PIXELS;
+    for (let row = Math.max(0, Math.floor(view.y / size) - 2); row < frame.rows && row * size - 4 * size < view.y + view.height; row++)
+        for (let column = Math.max(0, Math.floor(view.x / size)); column < frame.columns && column * size < view.x + view.width; column++) {
+            const index = row * frame.columns + column;
+            if (frame.material[index] !== TERRAIN_MATERIAL.Lava) continue;
+            ctx.drawImage(atlas.lavaTop[variantFor(column, row)], column * size, row * size - frame.surface[index] * MICROCELL_UNITS);
+            drawn++;
+        }
+    return drawn;
+}
+
 export function paintGroundEmissive(holder, frame, fx, band, view, seconds, reducedMotion = false) {
     const width = Math.max(1, Math.ceil(view.width)), height = Math.max(1, Math.ceil(view.height));
     const canvas = holder.emissiveCanvas ??= document.createElement('canvas');
@@ -189,6 +206,7 @@ export function paintGroundEmissive(holder, frame, fx, band, view, seconds, redu
     ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, width, height);
     ctx.translate(-view.x, -view.y);
+    drawLavaEmission(ctx, frame, band, view);
     const seams = drawCrackGlow(ctx, frame, band, view, seconds, reducedMotion);
     drawBedrockGlow(ctx, frame, view, seconds, reducedMotion);
     if (fx) drawDestructionFx(ctx, fx, seconds, view, 'heat');

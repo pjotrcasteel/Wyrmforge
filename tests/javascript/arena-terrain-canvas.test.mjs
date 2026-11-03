@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-    BLOCK_INSET_COLOR, BLOCK_TONE_STEP, MICRO_PER_COLUMN, mergeTerrainFrame, microHeight, microMaterial, DIRT_LOWER_FLOOR, DIRT_UPPER_FLOOR, GRASS_TOP, frontSegments, topFaceColor, blockTone, scaleHex, TERRAIN_MATERIAL, eraseTerrainOcclusion, occludingTerrainCells, repaintTerrainOcclusion, TERRAIN_PAD_UNITS, TerrainCanvasCache, blockInsetOverlayEnabled, drawBlockInsetOverlay, heightShade, influenceBandIndex, paintTerrain, terrainColors,
+    BLOCK_INSET_COLOR, BLOCK_TONE_STEP, MICRO_PER_COLUMN, mergeTerrainFrame, microHeight, microMaterial, DIRT_LOWER_FLOOR, DIRT_UPPER_FLOOR, GRASS_TOP, frontSegments, topFaceColor, groundStep, isBarePatch, isPebble, scaleHex, TERRAIN_MATERIAL, eraseTerrainOcclusion, occludingTerrainCells, repaintTerrainOcclusion, TERRAIN_PAD_UNITS, TerrainCanvasCache, blockInsetOverlayEnabled, drawBlockInsetOverlay, heightShade, influenceBandIndex, paintTerrain, terrainColors,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-terrain-canvas.js';
 import { raisedActor } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-projection.js';
 
@@ -69,7 +69,7 @@ test('height shading is stepped in whole metres and symmetric around the floor',
 
 test('a flat grid paints only 32x32 top faces', () => {
     const ctx = recorder();
-    const painted = paintTerrain(ctx, frame(2, 2, [0, 0, 0, 0]), 0);
+    const painted = paintTerrain(ctx, frame(2, 2, [0, 0, 0, 0]), 0, undefined, false);
     assert.equal(painted, 4);
     const rects = ctx.calls.filter(call => call[0] === 'fillRect');
     assert.deepEqual(rects.map(call => call.slice(1, 5)), [[0, 0, 32, 32], [32, 0, 32, 32], [0, 32, 32, 32], [32, 32, 32, 32]]);
@@ -77,7 +77,7 @@ test('a flat grid paints only 32x32 top faces', () => {
 
 test('a raised column lifts 32 px per metre and hangs a front face down to the floor in front of it', () => {
     const ctx = recorder();
-    paintTerrain(ctx, frame(1, 2, [8, 0]), 0);
+    paintTerrain(ctx, frame(1, 2, [8, 0]), 0, undefined, false);
     const rects = ctx.calls.filter(call => call[0] === 'fillRect').map(call => call.slice(1, 5));
     assert.deepEqual(rects[0], [0, -32, 32, 32], 'top face one metre up');
     assert.deepEqual(rects[1], [0, 0, 32, 32], 'front face: a full metre exposed');
@@ -86,7 +86,7 @@ test('a raised column lifts 32 px per metre and hangs a front face down to the f
 
 test('a pit sinks its top face and the higher row behind it exposes the back wall', () => {
     const ctx = recorder();
-    paintTerrain(ctx, frame(1, 3, [0, -8, 0]), 0);
+    paintTerrain(ctx, frame(1, 3, [0, -8, 0]), 0, undefined, false);
     const rects = ctx.calls.filter(call => call[0] === 'fillRect').map(call => call.slice(1, 5));
     assert.deepEqual(rects[0], [0, 0, 32, 32]);
     assert.deepEqual(rects[1], [0, 32, 32, 16], 'back wall of the pit: upper dirt band');
@@ -96,7 +96,7 @@ test('a pit sinks its top face and the higher row behind it exposes the back wal
 
 test('painting is offset by the padding so raised ground above row zero stays on the surface', () => {
     const ctx = recorder();
-    paintTerrain(ctx, frame(1, 1, [8]), 0);
+    paintTerrain(ctx, frame(1, 1, [8]), 0, undefined, false);
     assert.deepEqual(ctx.calls[0], ['translate', 0, TERRAIN_PAD_UNITS]);
 });
 
@@ -184,25 +184,34 @@ test('the GPU path erases the covering faces and the Canvas path repaints them b
     assert.equal(erase.globalCompositeOperation, 'source-over', 'the compositing mode is restored');
     assert.equal(eraseTerrainOcclusion(recorder(), terrain, []), 0);
     const repaint = recorder();
-    assert.equal(repaintTerrainOcclusion(repaint, terrain, 0, cells), 1);
+    assert.equal(repaintTerrainOcclusion(repaint, terrain, 0, cells, false), 1);
     assert.equal(repaint.calls.filter(call => call[0] === 'fillRect').length, 2);
 });
 
-test('open ground varies per 1 m block in three deterministic flat tones', () => {
-    const tones = new Set();
-    for (let row = 0; row < 12; row++) for (let column = 0; column < 12; column++) tones.add(blockTone(column, row));
-    assert.deepEqual([...tones].sort(), [-1, 0, 1]);
-    assert.equal(blockTone(5, 9), blockTone(5, 9));
+test('ground grain is deterministic, mostly neutral, spans five tone steps and keeps bare patches and pebbles rare', () => {
+    const steps = new Map();
+    let bare = 0, pebbles = 0;
+    for (let gy = 0; gy < 60; gy++) for (let gx = 0; gx < 60; gx++) {
+        const step = groundStep(gx, gy);
+        steps.set(step, (steps.get(step) ?? 0) + 1);
+        assert.equal(step, groundStep(gx, gy));
+        if (isBarePatch(gx, gy)) bare++;
+        if (isPebble(gx, gy)) pebbles++;
+    }
+    assert.deepEqual([...steps.keys()].sort((a, b) => a - b), [-2, -1, 0, 1, 2]);
+    assert.ok(steps.get(0) > 3600 * .3, 'plain ground dominates');
+    assert.ok(bare > 0 && bare < 3600 * .3 && pebbles > 0 && pebbles < 3600 * .03);
     assert.equal(scaleHex('#808080', 1), '#808080');
     assert.equal(scaleHex('#808080', 1 + BLOCK_TONE_STEP), '#8c8c8c');
     assert.equal(scaleHex('#ffffff', 2), '#ffffff', 'channels clamp');
 });
 
-test('painted open ground uses more than one tone and every tone stays dark', () => {
+test('painted open ground uses several flat tones and every tone stays dark', () => {
     const ctx = recorder();
     paintTerrain(ctx, frame(12, 12, new Array(144).fill(0)), 0);
     const tops = new Set(ctx.calls.filter(call => call[0] === 'fillRect').map(call => call[5]));
-    assert.equal(tops.size, 3);
+    assert.ok(tops.size >= 4 && tops.size <= 16, `${tops.size} tones`);
+    for (const colour of tops) for (const shift of [16, 8, 0]) assert.ok(((parseInt(colour.slice(1), 16) >> shift) & 255) < 0xa0, colour);
 });
 
 test('undisturbed ground wears a grass cap in the green bands, and digging reveals dirt', () => {
@@ -274,7 +283,7 @@ test('a subdivided column paints 64 four-pixel microcolumn tops, round craters e
     for (let y = 2; y <= 5; y++) for (let x = 2; x <= 5; x++) heights[y * 8 + x] = -3;
     const ctx = recorder();
     const terrain = { revision: 1, columns: 1, rows: 1, surface: [0], material: [0], fine: new Map([[0, block(heights)]]) };
-    paintTerrain(ctx, terrain, 0, 0);
+    paintTerrain(ctx, terrain, 0, 0, false);
     const rects = ctx.calls.filter(call => call[0] === 'fillRect');
     const tops = rects.filter(call => call[3] === 4 && call[4] === 4);
     assert.equal(tops.length, 64, 'one 4x4 top per microcolumn');
@@ -291,7 +300,7 @@ test('whole columns behind a subdivided one draw their front per microcolumn', (
     for (let x = 0; x < 8; x++) heights[x] = -4;
     const ctx = recorder();
     const terrain = { revision: 1, columns: 1, rows: 2, surface: [0, -1], material: [0, 0], fine: new Map([[1, block(heights)]]) };
-    paintTerrain(ctx, terrain, 0, 0);
+    paintTerrain(ctx, terrain, 0, 0, false);
     const frontsOfFirst = ctx.calls.filter(call => call[0] === 'fillRect' && call[2] === 32 && call[3] === 4 && call[4] === 16 && call[1] < 32);
     assert.equal(frontsOfFirst.length, 8, 'eight 4 px wide front slices, one per microcolumn, each 16 px tall');
 });
@@ -310,7 +319,7 @@ test('the inset overlay outlines a dug block per microcolumn at that microcolumn
 
 test('depth cues: a contact shadow at the foot of a raised face and a lit lip along its top edge, in whole microcells', () => {
     const ctx = recorder();
-    paintTerrain(ctx, frame(1, 2, [8, 0]), 0);
+    paintTerrain(ctx, frame(1, 2, [8, 0]), 0, undefined, false);
     const shadows = ctx.cues.filter(call => call[5].includes('.34'));
     assert.equal(shadows.length, 1, 'a metre-tall face casts the strong contact shadow');
     assert.deepEqual(shadows[0].slice(1, 5), [0, 32, 32, 4], 'one microcell row at the foot of the face, the full width of the block');
@@ -329,7 +338,7 @@ test('depth cues work per microcolumn inside a dug block: crater walls are shado
     const heights = new Array(64).fill(0);
     for (let y = 2; y <= 5; y++) for (let x = 2; x <= 5; x++) heights[y * 8 + x] = -4;
     const ctx = recorder();
-    paintTerrain(ctx, { revision: 1, columns: 1, rows: 1, surface: [0], material: [0], fine: new Map([[0, block(heights)]]) }, 0, 0);
+    paintTerrain(ctx, { revision: 1, columns: 1, rows: 1, surface: [0], material: [0], fine: new Map([[0, block(heights)]]) }, 0, 0, false);
     const shadowed = ctx.cues.filter(call => call[5].includes('.2)') && call[3] === 4 && call[4] === 4);
     assert.ok(shadowed.length >= 4, 'the floor microcells under the far wall are shadowed');
     for (const call of ctx.cues) assert.ok(call[3] % 4 === 0 && call[4] % 4 === 0, 'cues are whole microcells');
