@@ -91,6 +91,100 @@ class SchoolVisualTests(unittest.TestCase):
                         visuals.Image.open(committed).convert("RGBA").tobytes()
                     )
 
+    def test_school_layers_reconstruct_every_frame_without_alpha_changes(self):
+        for school, style in self.styles["schools"].items():
+            for clip, frames in self.foundations.items():
+                for index, frame in enumerate(frames):
+                    appearance = visuals.apply_school_overlay(frame, style, clip)
+                    layer = visuals.extract_layer(frame, appearance)
+                    restored = visuals.compose_layer(frame, layer)
+                    with self.subTest(school=school, clip=clip, frame=index):
+                        self.assertEqual(restored.tobytes(), appearance.tobytes())
+                        self.assertEqual(layer.size, (64, 80))
+                        self.assertEqual(
+                            frame.getchannel("A").tobytes(),
+                            restored.getchannel("A").tobytes()
+                        )
+                        self.assertLess(
+                            sum(1 for pixel in layer.getdata() if pixel[3]), 64 * 80
+                        )
+
+    def test_committed_editable_school_layers_are_reproducible(self):
+        output = STUDY / "school-variants-v001"
+        layers, variants = visuals.build_layered_frames(
+            self.foundations, self.styles
+        )
+        for school in visuals.EXPECTED_SCHOOLS:
+            for clip, frames in self.foundations.items():
+                layer_path = output / school / "layers" / f"{clip}-side-64x80.png"
+                with self.subTest(school=school, clip=clip):
+                    self.assertTrue(layer_path.is_file())
+                    self.assertEqual(
+                        visuals.atlas_from_frames(layers[school][clip]).tobytes(),
+                        visuals.Image.open(layer_path).convert("RGBA").tobytes()
+                    )
+                    self.assertEqual(
+                        visuals.atlas_from_frames(variants[school][clip]).tobytes(),
+                        visuals.Image.open(
+                            output / school / f"{clip}-side-64x80.png"
+                        ).convert("RGBA").tobytes()
+                    )
+
+    def test_artist_layer_cannot_add_pixels_or_partial_opacity(self):
+        base = self.foundations["run"][0]
+        blank = visuals.Image.new("RGBA", (64, 80))
+        transparent_x, transparent_y = next(
+            (x, y) for y in range(80) for x in range(64)
+            if base.getpixel((x, y))[3] == 0
+        )
+        blank.putpixel((transparent_x, transparent_y), (255, 0, 0, 255))
+        with self.assertRaises(ValueError):
+            visuals.compose_layer(base, blank)
+        blank.putpixel((transparent_x, transparent_y), (0, 0, 0, 0))
+        solid_x, solid_y = next(
+            (x, y) for y in range(80) for x in range(64)
+            if base.getpixel((x, y))[3] > 0
+        )
+        blank.putpixel((solid_x, solid_y), (255, 0, 0, 128))
+        with self.assertRaises(ValueError):
+            visuals.compose_layer(base, blank)
+        blank.putpixel((solid_x, solid_y), (255, 0, 0, 255))
+        result = visuals.compose_layer(base, blank)
+        self.assertEqual(result.getpixel((solid_x, solid_y))[:3], (255, 0, 0))
+        self.assertEqual(result.getchannel("A").tobytes(),
+                         base.getchannel("A").tobytes())
+
+    def test_artist_custom_layers_reload_from_separate_source(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as root:
+            layer_source = Path(root) / "edit"
+            new_output = Path(root) / "custom"
+            visuals.generate(STUDY, STUDY / "school_styles.json", layer_source)
+            fire_path = layer_source / "fire" / "layers" / "run-side-64x80.png"
+            atlas = visuals.Image.open(fire_path).convert("RGBA")
+            first_frame = self.foundations["run"][0]
+            x, y = next(
+                (x, y) for y in range(80) for x in range(64)
+                if first_frame.getpixel((x, y))[3] > 0
+            )
+            atlas.putpixel((x, y), (247, 123, 12, 255))
+            atlas.save(fire_path)
+            visual = visuals.generate(
+                STUDY, STUDY / "school_styles.json",
+                new_output, layer_source
+            )
+            self.assertEqual(visual["layerSource"], "manual")
+            self.assertEqual(
+                visuals.Image.open(new_output / "fire" / "run-side-64x80.png")
+                .convert("RGBA").getpixel((x, y))[:3], (247, 123, 12)
+            )
+
+    def test_summoner_uses_approved_earth_and_bear_identity(self):
+        summoner = self.styles["schools"]["summoner"]
+        self.assertEqual(summoner["futureGlyph"], "bear")
+        self.assertEqual(summoner["futureStaff"], "carved-wood-antler")
+
     def test_rejects_invalid_color_and_incomplete_schools(self):
         with self.assertRaises(ValueError):
             visuals.parse_color("invalid")

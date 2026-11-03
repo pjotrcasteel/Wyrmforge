@@ -53,10 +53,10 @@
     },
     "summoner": {
       "name": "Summoner",
-      "accentLight": "#6DE0C1",
-      "accentDark": "#387C83",
-      "futureStaff": "summoning-ring",
-      "futureGlyph": "conjuration"
+      "accentLight": "#CDA465",
+      "accentDark": "#537044",
+      "futureStaff": "carved-wood-antler",
+      "futureGlyph": "bear"
     }
   },
   "status": {
@@ -64,6 +64,7 @@
     "robeHem": "rendered",
     "staff": "not authored",
     "backGlyph": "not authored",
-    "otherDirections": "not authored"
+    "otherDirections": "not authored",
+    "editableLayers": "rendered; school/ layers/*.png, opaque-body paint only"
   }
 }

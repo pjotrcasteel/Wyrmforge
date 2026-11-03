@@ -92,11 +92,13 @@ pixels, alpha, frames or feet anchor.
 | Storm | Electric gold | Forked-lightning staff, bolt emblem |
 | Arcane | Violet | Arcane-orb staff, rune emblem |
 | Necromancer | Sickly green | Soul-flame staff, skull emblem |
-| Summoner | Teal | Summoning-ring staff, conjuration emblem |
+| Summoner | Earthen amber/moss | Wood/antler staff, approved bear emblem |
 
 The initial school pass changes only existing opaque hat-band and robe-hem
 pixels. Equipment, school symbols and casting glow are *named extension slots*
-but **are not drawn yet**. School accent tuning remains subject to artistic
+but **are not drawn yet**. Summoner now follows the approved earthy/bear
+identity, not the earlier ungrounded teal draft. The approved Hunt-selection
+school emblems are the future symbol source; do not redraw those designs. School accent tuning remains subject to artistic
 review at native/mobile size.
 
 Rebuild all six side-facing variants from the checked-in base (no original ZIP
@@ -119,3 +121,39 @@ consistent N/NE/E/SE/S/SW/W/NW artist-sourced facings, then animate
 the right-hand staff's plant/push/recovery in all directions. School-specific
 lighting should be passed through WyrmForge's existing generic G lighting
 engine, not hand-painted into arbitrary walk frames.
+
+### Editable school layers (next foundation slice, 3 Nov 2026)
+
+Each generated school now owns **two independent, transparent, native-pixel
+overlay atlases**:
+
+- `school-variants-v001/<school>/layers/idle-side-64x80.png`
+- `school-variants-v001/<school>/layers/run-side-64x80.png`
+
+These are pixel-color edits **only**; they do not duplicate the shared
+body artwork. Layers use RGBA with transparent pixels where the school
+does not modify the base, and fully opaque color replacements where it does.
+This lets an artist paint school-specific garment details in Aseprite, Krita,
+or another nearest-neighbor pixel editor, without forking six sets of poses.
+
+The generator can then consume those edited layers directly:
+
+```powershell
+py tools/sprite-foundry/studies/anokolisa-wizard-v001/generate_schools.py `
+  --layer-source "tools/sprite-foundry/studies/anokolisa-wizard-v001/school-variants-v001" `
+  --out "tools/sprite-foundry/output/six-schools-manual-review"
+```
+
+All **six schools and both clips** must be present. Output directories must
+be new. Layer paint must remain entirely inside the source's opaque pixels,
+and replacement pixels must have 255 alpha; the compositor carries over
+the exact artist-drawn base alpha. Validation rejects additions outside the
+silhouette and partial-alpha changes. Robe/hat/glove/cloth color detailing is
+allowed, while new staff/attachment shapes need separate coordinated
+equipment art once the planted gait and grasp are approved. No artificial
+glow is baked into albedo layers.
+
+Reproducibility tests compare the committed editable layers, the merged
+composites and the source frames. This slice remains **side-view, draft-only**.
+The *staff-assisted walk* and *eight real authored directions* are not
+produced by copying or flipping these source frames.

@@ -110,6 +110,81 @@ def apply_school_overlay(
     return result
 
 
+
+def extract_layer(frame: Image.Image, appearance: Image.Image) -> Image.Image:
+    """Extract an editable opaque-pixel color layer without copying the body."""
+    if frame.size != CELL or appearance.size != CELL:
+        raise ValueError("Layer extraction expects shared native cells")
+    if frame.mode != "RGBA" or appearance.mode != "RGBA":
+        raise ValueError("Layer extraction expects RGBA")
+    if frame.getchannel("A").tobytes() != appearance.getchannel("A").tobytes():
+        raise ValueError("Appearance cannot change the shared silhouette")
+    layer = Image.new("RGBA", CELL)
+    for y in range(CELL[1]):
+        for x in range(CELL[0]):
+            before = frame.getpixel((x, y))
+            after = appearance.getpixel((x, y))
+            if before != after:
+                if not before[3]:
+                    raise ValueError("Cannot paint an invisible foundation pixel")
+                layer.putpixel((x, y), (*after[:3], 255))
+    return layer
+
+
+def compose_layer(frame: Image.Image, layer: Image.Image) -> Image.Image:
+    """Composite editable school color details while preserving source alpha."""
+    if frame.size != CELL or layer.size != CELL:
+        raise ValueError("School layer dimensions must be 64x80")
+    if frame.mode != "RGBA" or layer.mode != "RGBA":
+        raise ValueError("School layers must be RGBA")
+    result = frame.copy()
+    for y in range(CELL[1]):
+        for x in range(CELL[0]):
+            color = layer.getpixel((x, y))
+            if not color[3]:
+                continue
+            source = frame.getpixel((x, y))
+            if not source[3]:
+                raise ValueError(f"School layer extends outside body: {(x, y)}")
+            if color[3] != 255:
+                raise ValueError(f"School layer requires full-alpha paint: {(x, y)}")
+            result.putpixel((x, y), (*color[:3], source[3]))
+    return result
+
+
+def build_layered_frames(
+    foundation: dict, styles: dict, layer_source: Path | None = None
+) -> tuple[dict, dict]:
+    """Return editable color layers plus their composites for all six schools.
+
+    With layer_source, artists may repaint the exported transparent PNG atlases.
+    The shared source is still never changed, and painting outside its opaque
+    silhouette fails before any output file is created. Equipment is separate.
+    """
+    layers = {}
+    variants = {}
+    for school in EXPECTED_SCHOOLS:
+        style = styles["schools"][school]
+        layers[school] = {}
+        variants[school] = {}
+        for clip, base_frames in foundation.items():
+            if layer_source is None:
+                clip_layers = [
+                    extract_layer(frame, apply_school_overlay(frame, style, clip))
+                    for frame in base_frames
+                ]
+            else:
+                layer_path = (
+                    layer_source / school / "layers" / f"{clip}-side-64x80.png"
+                )
+                clip_layers = read_frames(layer_path, len(base_frames))
+            layers[school][clip] = clip_layers
+            variants[school][clip] = [
+                compose_layer(frame, layer)
+                for frame, layer in zip(base_frames, clip_layers, strict=True)
+            ]
+    return layers, variants
+
 def atlas_from_frames(frames: list[Image.Image]) -> Image.Image:
     if not frames or any(frame.size != CELL for frame in frames):
         raise ValueError("Cannot pack incomplete or non-native frames")
@@ -152,7 +227,10 @@ def school_lineup(styles: dict, runs: dict, index: int) -> Image.Image:
     return board
 
 
-def generate(base_dir: Path, style_path: Path, out_dir: Path) -> dict:
+def generate(
+    base_dir: Path, style_path: Path, out_dir: Path,
+    layer_source: Path | None = None
+) -> dict:
     """Never rewrite source sheets or overwrite a previous visual-review run."""
     if out_dir.exists():
         raise FileExistsError(f"Refusing to overwrite school art: {out_dir}")
@@ -161,18 +239,17 @@ def generate(base_dir: Path, style_path: Path, out_dir: Path) -> dict:
         clip: read_frames(base_dir / filename, count)
         for clip, (filename, count) in CLIPS.items()
     }
-    variants = {
-        school: {
-            clip: [apply_school_overlay(frame, style, clip) for frame in frames]
-            for clip, frames in foundation.items()
-        }
-        for school, style in styles["schools"].items()
-    }
+    layers, variants = build_layered_frames(foundation, styles, layer_source)
     out_dir.mkdir(parents=True)
     for school in EXPECTED_SCHOOLS:
         school_dir = out_dir / school
         school_dir.mkdir()
+        layer_dir = school_dir / "layers"
+        layer_dir.mkdir()
         for clip in CLIPS:
+            atlas_from_frames(layers[school][clip]).save(
+                layer_dir / f"{clip}-side-64x80.png"
+            )
             atlas_from_frames(variants[school][clip]).save(
                 school_dir / f"{clip}-side-64x80.png"
             )
@@ -186,7 +263,7 @@ def generate(base_dir: Path, style_path: Path, out_dir: Path) -> dict:
     loop[0].save(
         out_dir / "six-schools-run-loop.gif",
         format="GIF", save_all=True, append_images=loop[1:],
-        duration=125, loop=0, optimize=False
+        duration=125, loop=0, optimize=True
     )
     manifest = {
         "schema": styles["schema"],
@@ -197,6 +274,9 @@ def generate(base_dir: Path, style_path: Path, out_dir: Path) -> dict:
         "feetAnchor": list(FEET_ANCHOR),
         "directionStatus": "side-facing candidate only; not an eight-way sheet",
         "renderedModifiers": ["school hat band", "robe front hem trim"],
+        "editableSchoolLayers": "<school>/layers/<clip>-side-64x80.png",
+        "layerSource": "manual" if layer_source is not None else "generated",
+        "layerSafety": "opaque foundation pixels only; no silhouette edits",
         "reservedModifiers": ["staff object", "back symbol", "spell glow", "attachments"],
         "approvedForGame": False,
     }
@@ -211,8 +291,12 @@ def main() -> None:
     parser.add_argument("--base", type=Path, default=HERE)
     parser.add_argument("--styles", type=Path, default=HERE / "school_styles.json")
     parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument(
+        "--layer-source", type=Path, default=None,
+        help="Existing six-school output root with artist-edited layer PNGs"
+    )
     args = parser.parse_args()
-    generate(args.base, args.styles, args.out)
+    generate(args.base, args.styles, args.out, args.layer_source)
 
 
 if __name__ == "__main__":

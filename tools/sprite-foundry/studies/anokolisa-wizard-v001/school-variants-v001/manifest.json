@@ -1,8 +1,5 @@
 {
   "schema": "wyrmforge.wizard.school-overlays.v1",
-  "source": "Anokolisa Pixel Crawler Wizard - licensed commercial project use",
-  "approvedVisualFoundation": true,
-  "approvedForGame": false,
   "schoolIds": [
     "fire",
     "frost",
@@ -11,6 +8,8 @@
     "necromancer",
     "summoner"
   ],
+  "baseRun": "run-side-grey-6f-64x80.png",
+  "baseIdle": "idle-side-grey-4f-64x80.png",
   "cell": [
     64,
     80
@@ -19,20 +18,19 @@
     32,
     74
   ],
-  "directionStatus": "side-facing candidate only; not eight-way",
-  "sharedSource": [
-    "run-side-grey-6f-64x80.png",
-    "idle-side-grey-4f-64x80.png"
-  ],
+  "directionStatus": "side-facing candidate only; not an eight-way sheet",
   "renderedModifiers": [
     "school hat band",
     "robe front hem trim"
   ],
+  "editableSchoolLayers": "<school>/layers/<clip>-side-64x80.png",
+  "layerSource": "generated",
+  "layerSafety": "opaque foundation pixels only; no silhouette edits",
   "reservedModifiers": [
-    "right-hand staff object",
+    "staff object",
     "back symbol",
     "spell glow",
     "attachments"
   ],
-  "ownerApproval": "shared grey pixel-art foundation; not school-specific poses or animation"
+  "approvedForGame": false
 }
