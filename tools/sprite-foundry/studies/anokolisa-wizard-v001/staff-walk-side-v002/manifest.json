@@ -1,0 +1,359 @@
+{
+  "schema": "wyrmforge.wizard.staff-contact-study.v2",
+  "status": "UNAPPROVED v002 larger reach; NOT a finished walk",
+  "source": "run-side-grey-6f-64x80.png",
+  "cell": [
+    64,
+    80
+  ],
+  "feetAnchor": [
+    32,
+    74
+  ],
+  "direction": "one side-facing candidate only",
+  "sourceRunFrameCount": 6,
+  "contactStudyFrameCount": 12,
+  "groundY": 74,
+  "handedness": "right-hand staff",
+  "canonicalPlantWorldTipX": 60,
+  "comparedTo": "staff-walk-side-v001",
+  "events": [
+    {
+      "frame": 0,
+      "sourceRunFrame": 0,
+      "hand": [
+        43,
+        39
+      ],
+      "elbow": [
+        31,
+        50
+      ],
+      "shoulder": [
+        28,
+        42
+      ],
+      "tip": [
+        47,
+        56
+      ],
+      "top": [
+        36,
+        11
+      ],
+      "phase": "advance",
+      "tipGrounded": false,
+      "rootTravelPx": 0,
+      "worldTipX": 47
+    },
+    {
+      "frame": 1,
+      "sourceRunFrame": 0,
+      "hand": [
+        50,
+        39
+      ],
+      "elbow": [
+        33,
+        50
+      ],
+      "shoulder": [
+        28,
+        42
+      ],
+      "tip": [
+        56,
+        64
+      ],
+      "top": [
+        43,
+        11
+      ],
+      "phase": "advance",
+      "tipGrounded": false,
+      "rootTravelPx": 0,
+      "worldTipX": 56
+    },
+    {
+      "frame": 2,
+      "sourceRunFrame": 1,
+      "hand": [
+        53,
+        40
+      ],
+      "elbow": [
+        33,
+        50
+      ],
+      "shoulder": [
+        28,
+        42
+      ],
+      "tip": [
+        60,
+        74
+      ],
+      "top": [
+        47,
+        11
+      ],
+      "phase": "plant",
+      "tipGrounded": true,
+      "rootTravelPx": 0,
+      "worldTipX": 60
+    },
+    {
+      "frame": 3,
+      "sourceRunFrame": 1,
+      "hand": [
+        53,
+        42
+      ],
+      "elbow": [
+        33,
+        50
+      ],
+      "shoulder": [
+        28,
+        42
+      ],
+      "tip": [
+        59,
+        74
+      ],
+      "top": [
+        47,
+        11
+      ],
+      "phase": "plant",
+      "tipGrounded": true,
+      "rootTravelPx": 1,
+      "worldTipX": 60
+    },
+    {
+      "frame": 4,
+      "sourceRunFrame": 2,
+      "hand": [
+        51,
+        44
+      ],
+      "elbow": [
+        33,
+        51
+      ],
+      "shoulder": [
+        28,
+        42
+      ],
+      "tip": [
+        56,
+        74
+      ],
+      "top": [
+        46,
+        11
+      ],
+      "phase": "support",
+      "tipGrounded": true,
+      "rootTravelPx": 4,
+      "worldTipX": 60
+    },
+    {
+      "frame": 5,
+      "sourceRunFrame": 2,
+      "hand": [
+        49,
+        46
+      ],
+      "elbow": [
+        33,
+        53
+      ],
+      "shoulder": [
+        28,
+        42
+      ],
+      "tip": [
+        53,
+        74
+      ],
+      "top": [
+        44,
+        11
+      ],
+      "phase": "support",
+      "tipGrounded": true,
+      "rootTravelPx": 7,
+      "worldTipX": 60
+    },
+    {
+      "frame": 6,
+      "sourceRunFrame": 3,
+      "hand": [
+        46,
+        48
+      ],
+      "elbow": [
+        33,
+        55
+      ],
+      "shoulder": [
+        28,
+        42
+      ],
+      "tip": [
+        49,
+        74
+      ],
+      "top": [
+        42,
+        11
+      ],
+      "phase": "passing",
+      "tipGrounded": true,
+      "rootTravelPx": 11,
+      "worldTipX": 60
+    },
+    {
+      "frame": 7,
+      "sourceRunFrame": 3,
+      "hand": [
+        44,
+        47
+      ],
+      "elbow": [
+        31,
+        54
+      ],
+      "shoulder": [
+        28,
+        42
+      ],
+      "tip": [
+        45,
+        74
+      ],
+      "top": [
+        43,
+        11
+      ],
+      "phase": "passing",
+      "tipGrounded": true,
+      "rootTravelPx": 15,
+      "worldTipX": 60
+    },
+    {
+      "frame": 8,
+      "sourceRunFrame": 4,
+      "hand": [
+        41,
+        45
+      ],
+      "elbow": [
+        31,
+        52
+      ],
+      "shoulder": [
+        28,
+        42
+      ],
+      "tip": [
+        41,
+        74
+      ],
+      "top": [
+        41,
+        11
+      ],
+      "phase": "behind",
+      "tipGrounded": true,
+      "rootTravelPx": 19,
+      "worldTipX": 60
+    },
+    {
+      "frame": 9,
+      "sourceRunFrame": 4,
+      "hand": [
+        40,
+        41
+      ],
+      "elbow": [
+        31,
+        50
+      ],
+      "shoulder": [
+        28,
+        42
+      ],
+      "tip": [
+        39,
+        65
+      ],
+      "top": [
+        41,
+        11
+      ],
+      "phase": "release",
+      "tipGrounded": false,
+      "rootTravelPx": 20,
+      "worldTipX": 59
+    },
+    {
+      "frame": 10,
+      "sourceRunFrame": 5,
+      "hand": [
+        41,
+        39
+      ],
+      "elbow": [
+        31,
+        50
+      ],
+      "shoulder": [
+        28,
+        42
+      ],
+      "tip": [
+        43,
+        55
+      ],
+      "top": [
+        38,
+        11
+      ],
+      "phase": "advance",
+      "tipGrounded": false,
+      "rootTravelPx": 20,
+      "worldTipX": 63
+    },
+    {
+      "frame": 11,
+      "sourceRunFrame": 5,
+      "hand": [
+        44,
+        39
+      ],
+      "elbow": [
+        31,
+        50
+      ],
+      "shoulder": [
+        28,
+        42
+      ],
+      "tip": [
+        47,
+        56
+      ],
+      "top": [
+        39,
+        11
+      ],
+      "phase": "advance",
+      "tipGrounded": false,
+      "rootTravelPx": 20,
+      "worldTipX": 67
+    }
+  ],
+  "approvedForGame": false
+}

@@ -174,3 +174,14 @@ authored leg/weight transfer and natural cloth movement, then owner review,
 parity and a genuine mobile in-Hunt approval before any integration.
 
 See [the study and exact remaining risks](staff-walk-side-v001/README.md).
+
+### Larger staff movement — unapproved side-view v002 (4 Nov 2026)
+
+Following owner feedback that movement should be bigger, the separate
+`staff-walk-side-v002/` study increases hand travel (5→13px), staff-tip
+sweep (15→21px), lift (10→19px) and planted root travel (13→19px).
+It includes an actual side-by-side animated v001/v002 comparison and
+keeps the planted world-tip invariant. Neither study is approved as a
+complete walk: source legs are still six run poses, eight facings are
+missing, and no in-game sprites are touched. See
+[v002 evidence and remaining gates](staff-walk-side-v002/README.md).
