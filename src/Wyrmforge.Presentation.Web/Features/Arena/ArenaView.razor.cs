@@ -128,7 +128,9 @@ public partial class ArenaView : IAsyncDisposable
         simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, previewSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt, researchLead: ResearchLead, preparedMutations: PreparedMutations, fireballMutations: FireballMutations, contextualSpell: ContextualSpell, region: Region, regionOpening: RegionOpening, hunt: Hunt, amplifierAssignments: MutationAmplifierAssignments, fireballLevel: FireballLevel, agents: agentPreview ? new(true, true) : null);
         if (legacyArenaReview) simulation.EnableLegacyArenaPreview();
         if (geographyPreview) simulation.EnableWorldSiteGeography();
-        if (query.Any(value => string.Equals(value, "hunt1=1", StringComparison.OrdinalIgnoreCase))) simulation.EnableHunt1Terrain();
+        if (query.Any(value => string.Equals(value, "hunt1=1", StringComparison.OrdinalIgnoreCase)))
+            simulation.EnableHunt1Terrain(query.Select(value => value.StartsWith("influence=", StringComparison.OrdinalIgnoreCase)
+                && double.TryParse(value[10..], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var parsed) ? parsed : (double?)null).FirstOrDefault(value => value is not null));
         debugGod = query.Any(value => string.Equals(value, "god=1", StringComparison.OrdinalIgnoreCase));
         debugBot = query.Any(value => string.Equals(value, "bot=1", StringComparison.OrdinalIgnoreCase));
         var speedFlag = query.FirstOrDefault(value => value.StartsWith("speed=", StringComparison.OrdinalIgnoreCase))?.Split('=', 2).Last();

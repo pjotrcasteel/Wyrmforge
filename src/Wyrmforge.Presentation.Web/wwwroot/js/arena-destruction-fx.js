@@ -1,7 +1,7 @@
 // Cosmetic destruction and fire-zone cues for Hunt 1.0. Presentation only: every cue is derived from a C# terrain delta or the
 // C# influence band and never writes back. Everything is built from the terrain's own 4 px microcells (the divided voxels): hot
 // craters, debris, glowing cracks and the bedrock hint are whole-microcell squares in stepped colour ramps, never smooth gradients.
-import { MICRO_PER_COLUMN, MICRO_UNITS, TERRAIN_MATERIAL, BEDROCK_MICROCELLS, veinCells, veinRamp } from './arena-terrain-canvas.js';
+import { MICRO_PER_COLUMN, MICRO_UNITS, TERRAIN_MATERIAL, BEDROCK_MICROCELLS, crackCells, veinRamp } from './arena-terrain-canvas.js';
 import { FACE_PIXELS, MICROCELL_UNITS, blockTopRect } from './arena-projection.js';
 
 export const HEAT_SECONDS = 7;
@@ -198,35 +198,29 @@ export function drawFireZoneVignette(ctx, width, height, band, seconds, reducedM
 }
 
 /**
- * Glowing crack network in undisturbed hot-band ground, made of whole microcells (see `veinCells`). Drawn additively over the lit
- * composite, not baked into the lit ground, so it keeps glowing in the dark like real magma seams. Returns the blocks drawn.
+ * The generated heat-crack network (C# paths, see `crackCells`) glowing in whole 4 px cells with a one-cell halo, brighter and more
+ * yellow the nearer the Wyrm. A warm pulse travels along the cracks like heat moving through the rock. Drawn additively over the
+ * lit composite so it keeps glowing in the dark; skipped where the ground has been dug or is lava. Returns the cells drawn.
  */
-export function drawVeinGlow(ctx, frame, band, view, seconds, reducedMotion = false) {
+export function drawCrackGlow(ctx, frame, band, view, seconds, reducedMotion = false) {
     const ramp = veinRamp(band);
     if (!frame || !ramp) return 0;
-    const first = Math.max(0, Math.floor(view.x / FACE_PIXELS) - 1);
-    const last = Math.min(frame.columns - 1, Math.floor((view.x + view.width) / FACE_PIXELS) + 1);
-    const firstRow = Math.max(0, Math.floor(view.y / FACE_PIXELS) - 1);
-    const lastRow = Math.min(frame.rows - 1, Math.floor((view.y + view.height + 3 * FACE_PIXELS) / FACE_PIXELS) + 1);
+    const cells = crackCells(frame.cracks);
+    if (cells.length === 0) return 0;
+    const left = view.x / MICRO_UNITS - 2, right = (view.x + view.width) / MICRO_UNITS + 2;
+    const top = view.y / MICRO_UNITS - 2, bottom = (view.y + view.height) / MICRO_UNITS + 2 + 16;
     let drawn = 0;
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
-    for (let row = firstRow; row <= lastRow; row++) {
-        for (let column = first; column <= last; column++) {
-            const index = row * frame.columns + column;
-            if (frame.fine?.has(index) || frame.material[index] === TERRAIN_MATERIAL.Lava) continue;
-            const cells = veinCells(column, row, band);
-            if (cells.length === 0) continue;
-            const top = blockTopRect(column, row, frame.surface[index]);
-            // Each block pulses on its own phase, like heat moving through the rock.
-            const pulse = reducedMotion ? .8 : .78 + .22 * Math.sin(seconds * 2.1 + column * 1.7 + row * 2.9);
-            for (const cell of cells) {
-                ctx.globalAlpha = cell.kind === 'core' ? pulse : pulse * .4;
-                ctx.fillStyle = cell.kind === 'core' ? ramp.core[cell.tone] : ramp.halo;
-                ctx.fillRect(top.x + cell.x * MICRO_UNITS, top.y + cell.y * MICRO_UNITS, MICRO_UNITS, MICRO_UNITS);
-            }
-            drawn++;
-        }
+    for (const cell of cells) {
+        if (cell.x < left || cell.x > right || cell.y < top || cell.y > bottom) continue;
+        const column = cell.x >> 3, row = cell.y >> 3, index = row * frame.columns + column;
+        if (index < 0 || index >= frame.surface.length || frame.fine?.has(index) || frame.material[index] === TERRAIN_MATERIAL.Lava) continue;
+        const pulse = reducedMotion ? .8 : .72 + .28 * Math.sin(seconds * 2.2 - (cell.x + cell.y) * .35);
+        ctx.globalAlpha = cell.kind === 'core' ? pulse : pulse * .4;
+        ctx.fillStyle = cell.kind === 'core' ? ramp.core[cell.tone] : ramp.halo;
+        ctx.fillRect(cell.x * MICRO_UNITS, cell.y * MICRO_UNITS - frame.surface[index] * MICROCELL_UNITS, MICRO_UNITS, MICRO_UNITS);
+        drawn++;
     }
     ctx.restore();
     return drawn;

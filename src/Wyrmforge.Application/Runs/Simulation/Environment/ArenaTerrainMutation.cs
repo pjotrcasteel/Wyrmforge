@@ -151,13 +151,16 @@ public sealed record ArenaTerrainRecord(int Version, string SiteKey, int Columns
     public sealed record Column(int X, int Y, int Surface, ArenaTerrainMaterial Material, short[]? Fine = null, byte[]? Wear = null);
 
     /// <summary>Record only the columns that differ from the freshly generated baseline.</summary>
+    private static bool Same<T>(T[]? left, T[]? right) where T : IEquatable<T> =>
+        left is null ? right is null : right is not null && left.AsSpan().SequenceEqual(right);
     public static ArenaTerrainRecord Capture(string siteKey, ArenaTerrainGrid baseline, ArenaTerrainGrid current, IEnumerable<long> appliedImpactIds)
     {
         var changed = new List<Column>();
         for (var row = 0; row < current.Rows; row++)
             for (var column = 0; column < current.Columns; column++)
                 if (current.Surface(column, row) != baseline.Surface(column, row) || current.Material(column, row) != baseline.Material(column, row)
-                    || current.IsSubdivided(column, row))
+                    || !Same(current.FineHeights(column, row), baseline.FineHeights(column, row))
+                    || !Same(current.FineWear(column, row), baseline.FineWear(column, row)))
                     changed.Add(new Column(column, row, current.Surface(column, row), current.Material(column, row), current.FineHeights(column, row), current.FineWear(column, row)));
         return new ArenaTerrainRecord(CurrentVersion, siteKey, current.Columns, current.Rows, appliedImpactIds.Order().ToArray(), changed);
     }

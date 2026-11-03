@@ -59,7 +59,7 @@ export function topFaceColor(band, material, surfaceMicrocells) {
     const index = bandIndex(band);
     if (material === TERRAIN_MATERIAL.Soil) {
         if (surfaceMicrocells < 0) return DIRT[index].top;
-        if (GRASS_TOP[index] && surfaceMicrocells === 0) return GRASS_TOP[index];
+        if (GRASS_TOP[index] && surfaceMicrocells >= 0) return GRASS_TOP[index];
     } else if (material === TERRAIN_MATERIAL.Ash && surfaceMicrocells < 0) {
         return DIRT[index].top;
     }
@@ -109,63 +109,39 @@ export function blockTone(column, row) {
 
 export const BLOCK_TONE_STEP = 0.09;
 
-// Wyrm-heat crack network, built only from the 4 px microcells of each 1 m block (no freeform lines). Every block edge may carry a
-// "port" crack at a hashed microcell; both blocks that share the edge derive the same port, so cracks run unbroken from block to
-// block like the seams between plates of cooling lava. Inside a block each active port is joined to a hub by a staircase of whole
-// microcells, with a one-cell halo of cooler rock around the glowing core.
-export const PORT_CHANCE = Object.freeze([0, 0, 0.06, 0.15]);
-const VEIN_RAMP = Object.freeze([null, null, { core: ['#e8641a', '#ff9a2a'], halo: '#7a1f0c' }, { core: ['#ff7a14', '#ffd27a'], halo: '#a01a08' }]);
+// Heat cracks come from the C# arena generator as paths of 4-adjacent global microcells (x, y pairs): each runs from a lava pool or old
+// crater toward another, forks, and a fork either joins another source or ends in a fresh crater. The client only turns them into
+// whole 4 px cells with a one-cell halo of cooler rock; it never invents a crack of its own.
+const CRACK_RAMP = Object.freeze([null,
+    { core: ['#8a2a0c', '#b8400f'], halo: '#3a110a' },
+    { core: ['#e8641a', '#ff9a2a'], halo: '#7a1f0c' },
+    { core: ['#ff7a14', '#ffd27a'], halo: '#a01a08' }]);
 
-export function veinRamp(band) { return VEIN_RAMP[bandIndex(band)]; }
+/** Colours of the glowing cracks for an influence band; null in the wet land where the ground has not cracked. */
+export function veinRamp(band) { return CRACK_RAMP[bandIndex(band)]; }
 
-function hash3(a, b, c) {
-    let h = (Math.imul(a + 11, 0x9E3779B1) ^ Math.imul(b + 3, 0xC2B2AE35) ^ Math.imul(c + 5, 0x27D4EB2F)) >>> 0;
-    h = Math.imul(h ^ (h >>> 16), 0x85EBCA6B) >>> 0;
-    h = Math.imul(h ^ (h >>> 13), 0xC2B2AE35) >>> 0;
-    return (h ^ (h >>> 16)) >>> 0;
-}
+const crackCache = new WeakMap();
 
-// kind 0: the vertical edge east of (column, row); kind 1: the horizontal edge south of it. Returns the port microcell (1-6) or null.
-function edgePort(kind, column, row, band) {
-    const chance = PORT_CHANCE[bandIndex(band)] ?? 0;
-    if (!chance) return null;
-    const h = hash3(column, row, kind);
-    return (h & 0xffff) / 65536 < chance ? 1 + ((h >>> 16) % 6) : null;
-}
-
-/** Microcells of one block's crack network: `{ x, y, kind: 'core' | 'halo', tone }` with x, y in 0-7. Empty when no edge has a port. */
-export function veinCells(column, row, band) {
-    const west = edgePort(0, column - 1, row, band), east = edgePort(0, column, row, band);
-    const north = edgePort(1, column, row - 1, band), south = edgePort(1, column, row, band);
-    if (west === null && east === null && north === null && south === null) return [];
-    const h = hash3(column, row, 2);
-    const hub = { x: 3 + (h & 1), y: 3 + ((h >>> 1) & 1) };
+/** Every cell of the crack network in global microcell coordinates: `{ x, y, kind: 'core' | 'halo', tone }`, deduplicated and cached per network. */
+export function crackCells(cracks) {
+    if (!cracks?.length) return [];
+    const cached = crackCache.get(cracks);
+    if (cached) return cached;
     const core = new Map();
-    const add = (x, y) => core.set(y * MICRO_PER_COLUMN + x, { x, y, kind: 'core', tone: (x * 3 + y * 5 + h) & 1 });
-    const join = (startX, startY, startAxis) => {
-        let x = startX, y = startY, axis = startAxis, run = 0, limit = 1 + (hash3(column, row, startX * 8 + startY) % 3);
-        add(x, y);
-        while (x !== hub.x || y !== hub.y) {
-            if (axis === 0 && x === hub.x) axis = 1; else if (axis === 1 && y === hub.y) axis = 0;
-            if (axis === 0) x += Math.sign(hub.x - x); else y += Math.sign(hub.y - y);
-            add(x, y);
-            // Runs of one to three cells make the crack zig-zag like a fracture rather than an L.
-            if (++run >= limit) { axis ^= 1; run = 0; limit = 1 + (hash3(column, row, x * 8 + y) % 3); }
+    for (const path of cracks)
+        for (let i = 0; i + 1 < path.length; i += 2) {
+            const x = path[i], y = path[i + 1];
+            core.set(y * 4096 + x, { x, y, kind: 'core', tone: (x * 3 + y * 5) & 1 });
         }
-    };
-    if (west !== null) join(0, west, 0);
-    if (east !== null) join(MICRO_PER_COLUMN - 1, east, 0);
-    if (north !== null) join(north, 0, 1);
-    if (south !== null) join(south, MICRO_PER_COLUMN - 1, 1);
-    const cells = [...core.values()];
     const halo = new Map();
-    for (const { x, y } of cells)
+    for (const { x, y } of core.values())
         for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-            const nx = x + dx, ny = y + dy, key = ny * MICRO_PER_COLUMN + nx;
-            if (nx >= 0 && nx < MICRO_PER_COLUMN && ny >= 0 && ny < MICRO_PER_COLUMN && !core.has(key) && !halo.has(key))
-                halo.set(key, { x: nx, y: ny, kind: 'halo', tone: 0 });
+            const key = (y + dy) * 4096 + x + dx;
+            if (x + dx >= 0 && y + dy >= 0 && !core.has(key) && !halo.has(key)) halo.set(key, { x: x + dx, y: y + dy, kind: 'halo', tone: 0 });
         }
-    return [...cells, ...halo.values()];
+    const cells = [...core.values(), ...halo.values()];
+    crackCache.set(cracks, cells);
+    return cells;
 }
 export const MICRO_PER_COLUMN = 8;
 export const MICRO_UNITS = FACE_PIXELS / MICRO_PER_COLUMN;
@@ -184,7 +160,9 @@ export function mergeTerrainFrame(previous, incoming) {
     return { revision: incoming.revision, columns: incoming.columns, rows: incoming.rows,
         surface: incoming.surface, material: incoming.material, fine,
         // Which fine blocks this delta touched: cosmetic destruction cues are derived from exactly these.
-        changed: (incoming.fine ?? []).map(block => block.index) };
+        changed: (incoming.fine ?? []).map(block => block.index),
+        // The generated crack network travels once, with the first full load.
+        cracks: incoming.cracks?.length ? incoming.cracks : previous?.cracks ?? [] };
 }
 
 /** Height of one 12.5 cm microcolumn; whole columns answer with their single coarse height. */
@@ -214,6 +192,66 @@ export function crackPixels(stage) {
     return pixels;
 }
 
+// Depth cues built from the voxels themselves, nothing smooth: a contact shadow on the microcells at the foot of every raised face
+// (two steps, by how tall the face is) and a lit lip on the microcells along the top edge above a drop. Cheap, cached with the painter.
+const CONTACT_SHADOW = Object.freeze([null, 'rgba(8,4,10,.2)', 'rgba(8,4,10,.34)']);
+const LIP_LIGHT = 'rgba(255,236,208,.12)';
+const shadowStep = rise => rise >= 5 ? 2 : rise >= 2 ? 1 : 0;
+const heightOrSelf = (frame, column, row, microX, microY, own) =>
+    row < 0 || row >= frame.rows ? own : microHeight(frame, column, row, microX, microY);
+
+/** The height of the microcolumn north (away from the camera) and south (toward it) of one microcolumn. */
+function neighbourHeights(frame, column, row, microX, microY, own) {
+    const north = microY > 0 ? microHeight(frame, column, row, microX, microY - 1)
+        : heightOrSelf(frame, column, row - 1, microX, MICRO_PER_COLUMN - 1, own);
+    const south = microY < MICRO_PER_COLUMN - 1 ? microHeight(frame, column, row, microX, microY + 1)
+        : heightOrSelf(frame, column, row + 1, microX, 0, own);
+    return { north, south };
+}
+
+function microDepthCues(ctx, frame, column, row, microX, microY, height, x, y) {
+    const { north, south } = neighbourHeights(frame, column, row, microX, microY, height);
+    let painted = 0;
+    const step = shadowStep(north - height);
+    if (step) { ctx.fillStyle = CONTACT_SHADOW[step]; ctx.fillRect(x, y, MICRO_UNITS, MICRO_UNITS); painted++; }
+    if (height - south >= 3) { ctx.fillStyle = LIP_LIGHT; ctx.fillRect(x, y, MICRO_UNITS, MICRO_UNITS); painted++; }
+    return painted;
+}
+
+/** Whole columns get the same cues as 4 px bands across their top face, grouped into runs of equal steps. */
+function wholeDepthCues(ctx, frame, column, row, height, top) {
+    let painted = 0;
+    for (let microX = 0; microX < MICRO_PER_COLUMN;) {
+        const { north } = neighbourHeights(frame, column, row, microX, 0, height);
+        const step = shadowStep(north - height);
+        let end = microX + 1;
+        while (end < MICRO_PER_COLUMN && shadowStep(neighbourHeights(frame, column, row, end, 0, height).north - height) === step) end++;
+        if (step) {
+            ctx.fillStyle = CONTACT_SHADOW[step];
+            ctx.fillRect(top.x + microX * MICRO_UNITS, top.y, (end - microX) * MICRO_UNITS, MICRO_UNITS);
+            painted++;
+            if (step === 2) {
+                ctx.fillStyle = CONTACT_SHADOW[1];
+                ctx.fillRect(top.x + microX * MICRO_UNITS, top.y + MICRO_UNITS, (end - microX) * MICRO_UNITS, MICRO_UNITS);
+                painted++;
+            }
+        }
+        microX = end;
+    }
+    for (let microX = 0; microX < MICRO_PER_COLUMN;) {
+        const lip = height - neighbourHeights(frame, column, row, microX, MICRO_PER_COLUMN - 1, height).south >= 3;
+        let end = microX + 1;
+        while (end < MICRO_PER_COLUMN && (height - neighbourHeights(frame, column, row, end, MICRO_PER_COLUMN - 1, height).south >= 3) === lip) end++;
+        if (lip) {
+            ctx.fillStyle = LIP_LIGHT;
+            ctx.fillRect(top.x + microX * MICRO_UNITS, top.y + top.height - MICRO_UNITS, (end - microX) * MICRO_UNITS, MICRO_UNITS);
+            painted++;
+        }
+        microX = end;
+    }
+    return painted;
+}
+
 /** Paints a subdivided column as 8 x 8 microcolumns, back to front: a 4 px top square each and 4 px wide strata fronts. */
 function paintFineCell(ctx, frame, band, column, row, block) {
     const { columns, rows } = frame;
@@ -233,6 +271,7 @@ function paintFineCell(ctx, frame, band, column, row, block) {
                 ctx.fillRect(x + crack.x, y - height * MICROCELL_UNITS + crack.y, crack.w, crack.h);
                 painted++;
             }
+            painted += microDepthCues(ctx, frame, column, row, microX, microY, height, x, y - height * MICROCELL_UNITS);
             const southY = microY + 1 < MICRO_PER_COLUMN ? microY + 1 : 0;
             const southRow = microY + 1 < MICRO_PER_COLUMN ? row : row + 1;
             const south = southRow < rows ? microHeight(frame, column, southRow, microX, southY) : height;
@@ -272,7 +311,7 @@ export function paintTerrainCell(ctx, frame, band, column, row) {
     const tone = 1 + blockTone(column, row) * BLOCK_TONE_STEP;
     ctx.fillStyle = scaleHex(heightShade(topFaceColor(band, material[index], height), height), tone);
     ctx.fillRect(top.x, top.y, top.width, top.height);
-    let painted = 1;
+    let painted = 1 + wholeDepthCues(ctx, frame, column, row, height, top);
     const frontHeight = row + 1 < rows ? surface[index + columns] : height;
     // A whole column standing behind a subdivided one meets its microcolumns, not their average.
     if (row + 1 < rows && frame.fine?.has(index + columns)) {

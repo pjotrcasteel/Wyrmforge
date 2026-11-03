@@ -10,7 +10,8 @@ public sealed record ArenaTerrainFineBlock(int Index, short[] Heights, int Topso
 /// <summary>
 /// The terrain heightfield for presentation, pulled only when <see cref="Revision"/> changes: coarse heights per metre and
 /// material codes (row-major), plus the subdivided columns that changed since the client's known revision.
+/// <see cref="Cracks"/> (heat-crack paths as x, y microcell pairs) travel only with the first full load.
 /// Presentation draws it; it never edits it.
 /// </summary>
 public sealed record ArenaTerrainFrame(int Revision, int Columns, int Rows, short[] Surface, int[] Material,
-    IReadOnlyList<ArenaTerrainFineBlock> Fine);
+    IReadOnlyList<ArenaTerrainFineBlock> Fine, IReadOnlyList<int[]>? Cracks = null);

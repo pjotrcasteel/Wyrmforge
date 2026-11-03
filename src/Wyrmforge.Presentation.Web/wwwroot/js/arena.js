@@ -14,7 +14,7 @@ import { raisedActor } from './arena-projection.js';
 import { ambientParticles, drawAmbientParticles } from './arena-ambient-particles.js';
 import { readArenaDebugFlags, botMovement, createBotMemory, withDebugAmbient } from './arena-debug.js';
 import { createFrameSampler, readHeapMegabytes, perfReport, perfLines } from './arena-perf.js';
-import { createDestructionFx, observeTerrain, drawDestructionFx, drawFireZoneVignette, drawVeinGlow, drawBedrockGlow } from './arena-destruction-fx.js';
+import { createDestructionFx, observeTerrain, drawDestructionFx, drawFireZoneVignette, drawCrackGlow, drawBedrockGlow } from './arena-destruction-fx.js';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
 import { drawRecoveryGuide } from './arena-recovery.js';
@@ -579,7 +579,7 @@ function draw(state, snapshot, width, height) {
         drawAmbientParticles(ctx, ambientParticles(huntBand(state, snapshot), visualSeconds,
             { width: worldWidth, height: worldHeight }, state.reducedMotion.matches), { x: camera.x, y: camera.y, width, height });
         const nowSeconds = performance.now() / 1000;
-        state.veinSeams = drawVeinGlow(ctx, state.terrainFrame, huntBand(state, snapshot), { x: camera.x, y: camera.y, width, height }, nowSeconds, state.reducedMotion.matches);
+        state.veinSeams = drawCrackGlow(ctx, state.terrainFrame, huntBand(state, snapshot), { x: camera.x, y: camera.y, width, height }, nowSeconds, state.reducedMotion.matches);
         drawBedrockGlow(ctx, state.terrainFrame, { x: camera.x, y: camera.y, width, height }, nowSeconds, state.reducedMotion.matches);
         if (state.destructionFx) drawDestructionFx(ctx, state.destructionFx, nowSeconds, { x: camera.x, y: camera.y, width, height });
         // The world is drawn translated by -camera here; the furnace glow belongs to the screen edges.

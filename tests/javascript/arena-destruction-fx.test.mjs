@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { craterEvents, createDestructionFx, observeTerrain, heatStrength, heatColor, chipPosition, pruneDestructionFx, drawDestructionFx, drawBedrockGlow,
-    fireZoneIntensity, drawFireZoneVignette, drawVeinGlow, FIRE_ZONE_EDGE_ALPHA, MAX_CHIPS, MAX_HEAT_SPOTS, HEAT_SECONDS } from
+    fireZoneIntensity, drawFireZoneVignette, drawCrackGlow, FIRE_ZONE_EDGE_ALPHA, MAX_CHIPS, MAX_HEAT_SPOTS, HEAT_SECONDS } from
     '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-destruction-fx.js';
-import { mergeTerrainFrame, veinCells, paintTerrain, TERRAIN_MATERIAL, crackPixels, CRACK_DARK, CRACK_HOT, topFaceColor, BEDROCK_MICROCELLS, BEDROCK_TOP } from
+import { mergeTerrainFrame, crackCells, paintTerrain, TERRAIN_MATERIAL, crackPixels, CRACK_DARK, CRACK_HOT, topFaceColor, BEDROCK_MICROCELLS, BEDROCK_TOP } from
     '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-terrain-canvas.js';
 import { readArenaDebugFlags } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-debug.js';
 
@@ -133,69 +133,57 @@ test('fire-zone heat rises with the Wyrm Influence band, is silent in the wet la
     for (const call of strips) assert.ok(call[3] === 8 || call[4] === 8, 'every ring is exactly two microcells (8 px) thick');
 });
 
-const hotCells = (column, row, band) => veinCells(column, row, band).filter(cell => cell.kind === 'core');
+// A small network like the C# generator produces: a main crack with a fork, in global microcells.
+const network = () => [[10, 10, 11, 10, 12, 10, 12, 11, 12, 12, 13, 12, 14, 12], [12, 12, 12, 13, 12, 14]];
 
-test('crack networks use only whole microcells, appear only in hot bands and are deterministic', () => {
-    assert.deepEqual(veinCells(4, 5, 0), []);
-    assert.deepEqual(veinCells(4, 5, 1), []);
-    let hot = 0, burning = 0;
-    for (let row = 0; row < 40; row++) for (let column = 0; column < 32; column++) {
-        const volcanic = veinCells(column, row, 3);
-        assert.deepEqual(volcanic, veinCells(column, row, 3));
-        if (volcanic.length) hot++;
-        if (veinCells(column, row, 2).length) burning++;
-        for (const cell of volcanic) {
-            assert.ok(Number.isInteger(cell.x) && Number.isInteger(cell.y) && cell.x >= 0 && cell.x < 8 && cell.y >= 0 && cell.y < 8, 'a whole microcell inside the block');
-        }
+test('crack cells are whole microcells: each path cell is a core, every neighbour not on a crack is halo, shared cells are not doubled', () => {
+    const cells = crackCells(network());
+    const core = cells.filter(cell => cell.kind === 'core'), halo = cells.filter(cell => cell.kind === 'halo');
+    assert.equal(core.length, 9, 'the fork shares the cell where it leaves the main crack');
+    assert.equal(new Set(cells.map(cell => cell.y * 4096 + cell.x)).size, cells.length, 'no cell appears twice');
+    const coreKeys = new Set(core.map(cell => cell.y * 4096 + cell.x));
+    for (const cell of halo) {
+        assert.ok(!coreKeys.has(cell.y * 4096 + cell.x));
+        assert.ok([[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => coreKeys.has((cell.y + dy) * 4096 + cell.x + dx)), 'a halo touches the glowing core');
     }
-    assert.ok(hot > burning && burning > 0, `volcanic ${hot} > burning ${burning} > 0`);
+    assert.deepEqual(crackCells([]), []);
+    assert.deepEqual(crackCells(undefined), []);
+    const same = network();
+    assert.equal(crackCells(same), crackCells(same), 'cached per network');
 });
 
-test('a crack crossing a block edge continues in the neighbouring block at the same microcell', () => {
-    let crossings = 0;
-    for (let row = 0; row < 30; row++) for (let column = 0; column < 31; column++) {
-        const here = hotCells(column, row, 3), east = hotCells(column + 1, row, 3);
-        for (const cell of here.filter(cell => cell.x === 7)) {
-            crossings++;
-            assert.ok(east.some(other => other.x === 0 && other.y === cell.y), `block ${column},${row} east port continues`);
-        }
-        const south = hotCells(column, row + 1, 3);
-        for (const cell of here.filter(cell => cell.y === 7)) {
-            assert.ok(south.some(other => other.y === 0 && other.x === cell.x), `block ${column},${row} south port continues`);
-        }
-    }
-    assert.ok(crossings > 20, 'there are real cross-block cracks to check');
-});
-
-test('every halo microcell touches the glowing core and never overlaps it', () => {
-    for (let row = 0; row < 20; row++) for (let column = 0; column < 20; column++) {
-        const cells = veinCells(column, row, 3);
-        const core = new Set(cells.filter(cell => cell.kind === 'core').map(cell => cell.y * 8 + cell.x));
-        for (const halo of cells.filter(cell => cell.kind === 'halo')) {
-            assert.ok(!core.has(halo.y * 8 + halo.x));
-            assert.ok([[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => core.has((halo.y + dy) * 8 + halo.x + dx)));
-        }
-    }
-});
-
-test('crack glow is additive, only in hot bands, drawn as 4 px cells on the block grid, skipping lava and dug blocks', () => {
-    const terrain = whole(8, 8);
+test('crack glow is additive, only where the ground has cracked, drawn as 4 px cells on the block grid, skipping lava and dug blocks', () => {
+    const terrain = { ...whole(8, 8), cracks: network() };
     const view = { x: 0, y: 0, width: 256, height: 256 };
-    const draw = (band, frame = terrain) => { const ctx = Object.assign(recorder(), { globalCompositeOperation: 'source-over' }); return { ctx, blocks: drawVeinGlow(ctx, frame, band, view, 1) }; };
-    assert.equal(draw(0).blocks, 0);
-    assert.equal(draw(1).blocks, 0);
-    const hot = draw(3);
-    assert.ok(hot.blocks > 0, 'volcanic ground glows');
-    for (const call of hot.ctx.calls.filter(call => call[0] === 'fillRect')) {
+    const draw = (band, frame = terrain) => { const ctx = Object.assign(recorder(), { globalCompositeOperation: 'source-over' }); return { ctx, cells: drawCrackGlow(ctx, frame, band, view, 1) }; };
+    assert.equal(draw(0).cells, 0, 'no glow in the wet land');
+    const scorched = draw(1), burning = draw(2), volcanic = draw(3);
+    assert.ok(scorched.cells > 0 && burning.cells === scorched.cells);
+    const colours = ctx => new Set(ctx.calls.filter(call => call[0] === 'fillRect').map(call => call[5]));
+    assert.notDeepEqual([...colours(scorched.ctx)], [...colours(volcanic.ctx)], 'hotter bands glow in hotter colours');
+    for (const call of volcanic.ctx.calls.filter(call => call[0] === 'fillRect')) {
         assert.equal(call[3], 4); assert.equal(call[4], 4); assert.equal(call[1] % 4, 0); assert.equal(call[2] % 4, 0);
     }
     const lava = { ...terrain, material: new Array(64).fill(TERRAIN_MATERIAL.Lava) };
-    assert.equal(draw(3, lava).blocks, 0, 'lava is already a light source');
+    assert.equal(draw(3, lava).cells, 0, 'lava is already a light source');
     const dug = { ...terrain, fine: new Map(Array.from({ length: 64 }, (_, index) => [index, { heights: new Array(64).fill(-1), topsoil: 0, stoneTop: -8 }])) };
-    assert.equal(draw(3, dug).blocks, 0, 'dug blocks carry their own crater heat instead');
-    assert.equal(drawVeinGlow(recorder(), null, 3, view, 1), 0);
+    assert.equal(draw(3, dug).cells, 0, 'dug blocks carry their own crater heat instead');
+    assert.equal(drawCrackGlow(recorder(), { ...whole(8, 8), cracks: [] }, 3, view, 1), 0);
+    assert.equal(drawCrackGlow(recorder(), null, 3, view, 1), 0);
+    const far = Object.assign(recorder(), { globalCompositeOperation: 'source-over' });
+    assert.equal(drawCrackGlow(far, terrain, 3, { x: 5000, y: 5000, width: 100, height: 100 }, 1), 0, 'off-screen cracks draw nothing');
 });
 
+test('a crack network survives merges and is raised ground-aware', () => {
+    const first = mergeTerrainFrame(null, { revision: 1, columns: 2, rows: 2, surface: [0, 0, 0, 0], material: [0, 0, 0, 0], fine: [], cracks: network() });
+    assert.equal(first.cracks.length, 2);
+    const next = mergeTerrainFrame(first, { revision: 2, columns: 2, rows: 2, surface: [0, 0, 0, 0], material: [0, 0, 0, 0], fine: [] });
+    assert.equal(next.cracks, first.cracks, 'later deltas carry no network and keep the first');
+    const raised = { ...whole(8, 8, 8), cracks: network() };
+    const ctx = Object.assign(recorder(), { globalCompositeOperation: 'source-over' });
+    drawCrackGlow(ctx, raised, 3, { x: 0, y: 0, width: 256, height: 256 }, 1);
+    assert.ok(ctx.calls.filter(call => call[0] === 'fillRect').every(call => call[2] < 10 * 4 + 4 * 4 - 32 + 4 * 4 + 40), 'cells sit on the raised top face, 32 px higher than at ground level');
+});
 test('bedrock reads smooth and dark and carries a faint voxel-aligned cold glow', () => {
     assert.equal(topFaceColor(0, TERRAIN_MATERIAL.Soil, BEDROCK_MICROCELLS), BEDROCK_TOP);
     assert.equal(topFaceColor(3, TERRAIN_MATERIAL.Stone, BEDROCK_MICROCELLS - 3), BEDROCK_TOP);

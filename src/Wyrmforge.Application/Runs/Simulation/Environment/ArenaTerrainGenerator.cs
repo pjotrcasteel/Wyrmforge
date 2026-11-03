@@ -37,7 +37,16 @@ public static class ArenaTerrainGenerator
 
         PaintAshPatches(rng, grid, influence);
         PlaceRockSteps(rng, grid, protectedCells, influence);
+        var routeDistance = ArenaTerrainRelief.DistanceFromRoute(protectedCells, columns, rows);
+        ArenaTerrainRelief.Ridges(rng, grid, protectedCells, routeDistance, influence);
+        ArenaTerrainRelief.Pillars(rng, grid, routeDistance);
+        var heatSources = ArenaTerrainRelief.LavaPools(rng, grid, routeDistance, influence);
         CarveFissures(rng, grid, protectedCells, influence);
+        ArenaTerrainRelief.Hills(rng, grid, routeDistance, influence);
+        // Generation-time blasts use negative ids so they can never collide with a live impact.
+        long scarId = -1;
+        heatSources.AddRange(ArenaTerrainRelief.ScarCraters(rng, grid, protectedCells, routeDistance, influence, ref scarId));
+        grid.SetCracks(ArenaTerrainRelief.Cracks(rng, grid, protectedCells, routeDistance, heatSources, influence, ref scarId));
 
         // The protected route and its clearings are levelled last so nothing above can close them.
         for (var row = 0; row < rows; row++)
@@ -80,7 +89,8 @@ public static class ArenaTerrainGenerator
 
     private static void PaintAshPatches(Random rng, ArenaTerrainGrid grid, double influence)
     {
-        var patches = (int)Math.Round(influence * 14);
+        // Gravel patches break up even a natural arena; the Wyrm's ash spreads them as the land burns.
+        var patches = Math.Max(4, (int)Math.Round(influence * 14));
         for (var patch = 0; patch < patches; patch++)
         {
             var (cx, cy, radius) = (rng.Next(grid.Columns), rng.Next(grid.Rows), 2 + rng.Next(4));

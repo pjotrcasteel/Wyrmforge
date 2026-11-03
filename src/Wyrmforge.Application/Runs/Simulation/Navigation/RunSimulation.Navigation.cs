@@ -14,10 +14,16 @@ public sealed partial class RunSimulation
     private bool worldSiteGeographyEnabled;
     private bool legacyArenaPreview;
     private bool hunt1TerrainEnabled;
+    private double? hunt1InfluenceOverride;
     private string? walkedExitNodeId;
 
     /// <summary>Opt in to Hunt 1.0 heightfield terrain in greybox combat arenas (the default for Fire Tier-I arrives with H9).</summary>
-    public void EnableHunt1Terrain() => hunt1TerrainEnabled = true;
+    public void EnableHunt1Terrain(double? influenceOverride = null)
+    {
+        hunt1TerrainEnabled = true;
+        // Debug preview only (`?influence=`): generates and presents the arena as if it lay at this Wyrm Influence.
+        hunt1InfluenceOverride = influenceOverride is { } value && double.IsFinite(value) ? Math.Clamp(value, 0, 1) : null;
+    }
 
     /// <summary>Opt in to the AR1 physical terrain preview for this run; normal Hunts keep their approved fallback.</summary>
     public void EnableWorldSiteGeography() => worldSiteGeographyEnabled = true;
@@ -91,7 +97,7 @@ public sealed partial class RunSimulation
         playerPositionInitialized = false;
         arenaEnvironment = ArenaEnvironmentState.Create(mapState.Seed, node, worldFirstGeography: worldSiteGeographyEnabled,
             claimedDiscoveries: collectedSiteDiscoveryIds, greybox: !legacyArenaPreview && !worldSiteGeographyEnabled,
-            terrain: hunt1TerrainEnabled);
+            terrain: hunt1TerrainEnabled, terrainInfluence: hunt1InfluenceOverride);
         PrepareBellWardenNode(node);
         PrepareReliquaryNode(node);
         RollNodeElite(node);

@@ -81,7 +81,7 @@ public sealed class ArenaEnvironmentState
     }
 
     public static ArenaEnvironmentState Create(int mapSeed, WyrmrealmMapNode node, bool generatorPreview = false, SpellSchool? regionSchool = null, bool worldFirstGeography = false,
-        IReadOnlySet<string>? claimedDiscoveries = null, bool greybox = false, bool terrain = false)
+        IReadOnlySet<string>? claimedDiscoveries = null, bool greybox = false, bool terrain = false, double? terrainInfluence = null)
     {
         ArgumentNullException.ThrowIfNull(node);
         var stage = node.Stage;
@@ -103,7 +103,7 @@ public sealed class ArenaEnvironmentState
         {
             geography = node.Geography,
             // The Arena Lab keeps its stage-based preview value; real Hunts read the node's authoritative influence.
-            nodeInfluence = generatorPreview ? null : node.Influence,
+            nodeInfluence = generatorPreview ? null : terrainInfluence ?? node.Influence,
         };
         // The one-metre greybox has no authored scenery, supplies, solid crossings or walls.
         // It keeps only the small breakable salvage props: they are the sole Charred Scrap source.
@@ -113,7 +113,7 @@ public sealed class ArenaEnvironmentState
             // Hunt 1.0 terrain: the player starts at the arena centre and the exit sits at TrailExitPosition.
             var columns = (int)(ArenaMetricEnvelope.CombatWidth / ArenaTerrainGrid.CellUnits);
             var rows = (int)(ArenaMetricEnvelope.CombatHeight / ArenaTerrainGrid.CellUnits);
-            var recipe = ArenaTerrainGenerator.Generate(seed, node.Influence, columns, rows,
+            var recipe = ArenaTerrainGenerator.Generate(seed, terrainInfluence ?? node.Influence, columns, rows,
                 (columns / 2, rows / 2), (columns / 2, (int)(Math.Max(80, ArenaMetricEnvelope.CombatHeight * .11) / ArenaTerrainGrid.CellUnits)));
             environment.terrain = recipe.Grid;
             environment.terrainBaseline = recipe.Grid.Clone();

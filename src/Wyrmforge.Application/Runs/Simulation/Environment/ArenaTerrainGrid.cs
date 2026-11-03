@@ -53,6 +53,12 @@ public sealed class ArenaTerrainGrid
 
     public int Columns { get; }
     public int Rows { get; }
+    /// <summary>
+    /// The generated heat-crack network in global microcell coordinates: each path is x, y pairs of 4-adjacent cells. It is part of the
+    /// generated baseline, so it is not saved; presentation draws it and gameplay may later read it (Wyrm fissures).
+    /// </summary>
+    public IReadOnlyList<int[]> Cracks { get; private set; } = [];
+    public void SetCracks(IReadOnlyList<int[]> cracks) => Cracks = cracks;
     /// <summary>Increments on every change so presentation can pull only what moved.</summary>
     public int Revision { get; private set; }
 
@@ -138,12 +144,12 @@ public sealed class ArenaTerrainGrid
                     wear.TryGetValue(index, out var counters) ? counters.Select(counter => (int)counter).ToArray() : null)
                 : new(index, [], (int)topsoil[index], stoneTop[index]));
         }
-        return new(Revision, Columns, Rows, (short[])surface.Clone(), materials.Select(material => (int)material).ToArray(), blocks);
+        return new(Revision, Columns, Rows, (short[])surface.Clone(), materials.Select(material => (int)material).ToArray(), blocks, knownRevision < 0 ? Cracks : null);
     }
 
     public ArenaTerrainGrid Clone()
     {
-        var copy = new ArenaTerrainGrid(Columns, Rows) { Revision = Revision };
+        var copy = new ArenaTerrainGrid(Columns, Rows) { Revision = Revision, Cracks = Cracks };
         surface.CopyTo(copy.surface, 0);
         stoneTop.CopyTo(copy.stoneTop, 0);
         materials.CopyTo(copy.materials, 0);

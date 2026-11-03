@@ -58,25 +58,97 @@ public sealed class ArenaTerrainTests
     }
 
     [TestMethod]
-    public void Influence_ControlsFissuresAndLava()
+    public void Influence_ControlsScarsCracksFissuresAndLava()
     {
+        var cracked = 0;
         for (var seed = 0; seed < 200; seed++)
         {
-            Assert.IsFalse(Cells(Make(seed, .3).Grid).Any(cell => cell.Surface < 0), $"seed {seed}: no pits in a natural forest");
+            var natural = Make(seed, .1);
+            Assert.IsFalse(Cells(natural.Grid).Any(cell => cell.Surface < 0), $"seed {seed}: no pits in a natural forest");
+            Assert.IsFalse(Cells(natural.Grid).Any(cell => cell.Material == ArenaTerrainMaterial.Lava), $"seed {seed}");
+            Assert.IsEmpty(natural.Grid.Cracks, $"seed {seed}: the land only cracks once the Wyrm's heat reaches it");
+
+            var scorched = Make(seed, .3).Grid;
+            Assert.IsTrue(Cells(scorched).Any(cell => cell.Surface < 0), $"seed {seed}: scorched land carries old blast scars");
+            Assert.IsFalse(Cells(scorched).Any(cell => cell.Material == ArenaTerrainMaterial.Lava), $"seed {seed}: no lava before Burning");
+            if (scorched.Cracks.Count > 0) cracked++;
+
             var burning = Cells(Make(seed, .7).Grid).ToArray();
             Assert.IsTrue(burning.Any(cell => cell.Surface <= -16), $"seed {seed}: burning land is split by fissures");
-            Assert.IsFalse(burning.Any(cell => cell.Material == ArenaTerrainMaterial.Lava), $"seed {seed}: lava belongs to the domain");
             Assert.IsTrue(Cells(Make(seed, 1).Grid).Any(cell => cell.Material == ArenaTerrainMaterial.Lava), $"seed {seed}");
+        }
+        Assert.IsGreaterThan(180, cracked, "almost every scorched arena carries heat cracks");
+    }
+
+    [TestMethod]
+    public void BurningLand_HasLavaPoolsWithABasaltLipAwayFromTheRoute()
+    {
+        var withPools = 0;
+        for (var seed = 0; seed < 100; seed++)
+        {
+            var recipe = Make(seed, .7);
+            var grid = recipe.Grid;
+            var lava = Cells(grid).Where(cell => cell.Material == ArenaTerrainMaterial.Lava && cell.Surface == -8).ToArray();
+            if (lava.Length == 0) continue;
+            withPools++;
+            Assert.IsTrue(lava.Any(cell => new[] { (1, 0), (-1, 0), (0, 1), (0, -1) }.Any(offset =>
+                grid.Contains(cell.Column + offset.Item1, cell.Row + offset.Item2) && grid.Material(cell.Column + offset.Item1, cell.Row + offset.Item2) == ArenaTerrainMaterial.Stone
+                && grid.Surface(cell.Column + offset.Item1, cell.Row + offset.Item2) > 0)), $"seed {seed}: pools are ringed by a raised basalt lip");
+            foreach (var cell in lava)
+                Assert.IsFalse(recipe.ProtectedCells[cell.Row * Columns + cell.Column], $"seed {seed}: lava never reaches the route");
+        }
+        Assert.IsGreaterThan(80, withPools);
+    }
+
+    [TestMethod]
+    public void EveryArena_OffersReliefRidgesPillarsAndGentleWalkableHills()
+    {
+        for (var seed = 0; seed < 100; seed++)
+        {
+            var grid = Make(seed, 0).Grid;
+            Assert.IsTrue(Cells(grid).Any(cell => cell.Material == ArenaTerrainMaterial.Soil && cell.Surface > 0), $"seed {seed}: rolling ground");
+            Assert.IsGreaterThan(8, Cells(grid).Count(cell => cell.Material == ArenaTerrainMaterial.Stone && cell.Surface >= 12), $"seed {seed}: ridges and pillars give cover");
+            // Hills are walkable: soil never steps more than the climbable half metre from a soil neighbour.
+            foreach (var cell in Cells(grid).Where(cell => cell.Material == ArenaTerrainMaterial.Soil))
+                foreach (var offset in new[] { (1, 0), (0, 1) })
+                {
+                    var (column, row) = (cell.Column + offset.Item1, cell.Row + offset.Item2);
+                    if (grid.Contains(column, row) && grid.Material(column, row) == ArenaTerrainMaterial.Soil)
+                        Assert.IsLessThanOrEqualTo(ArenaTerrainGrid.MaxStepMicrocells, Math.Abs(cell.Surface - grid.Surface(column, row)), $"seed {seed} at {cell.Column},{cell.Row}");
+                }
         }
     }
 
+    [TestMethod]
+    public void HeatCracks_AreLongBranchingPathsOfAdjacentMicrocellsThatAvoidTheRoute()
+    {
+        var forks = 0;
+        for (var seed = 0; seed < 60; seed++)
+        {
+            var recipe = Make(seed, .8);
+            var cells = new HashSet<(int, int)>();
+            foreach (var path in recipe.Grid.Cracks)
+            {
+                Assert.IsGreaterThanOrEqualTo(16, path.Length, "a crack is at least eight cells long");
+                for (var i = 0; i < path.Length; i += 2)
+                {
+                    var (x, y) = (path[i], path[i + 1]);
+                    Assert.IsTrue(x >= 0 && y >= 0 && x < Columns * 8 && y < Rows * 8, $"seed {seed}: inside the arena");
+                    Assert.IsFalse(recipe.ProtectedCells[y / 8 * Columns + x / 8], $"seed {seed}: cracks never cross the route");
+                    if (i > 0) Assert.AreEqual(1, Math.Abs(x - path[i - 2]) + Math.Abs(y - path[i - 1]), $"seed {seed}: 4-adjacent steps");
+                    if (!cells.Add((x, y))) forks++;
+                }
+            }
+        }
+        Assert.IsGreaterThan(20, forks, "forks share cells with the crack they leave");
+    }
     [TestMethod]
     public void RockSteps_AreWholeHalfMetreMultiplesAndOnlyClimbableByRamp()
     {
         var recipe = Make(7, 0);
         var grid = recipe.Grid;
         Assert.IsTrue(Cells(grid).Any(cell => cell.Surface >= 8), "natural arenas offer raised cover");
-        Assert.IsTrue(Cells(grid).All(cell => cell.Surface % ArenaTerrainGrid.MaxStepMicrocells == 0));
+        Assert.IsTrue(Cells(grid).Where(cell => cell.Material == ArenaTerrainMaterial.Stone).All(cell => cell.Surface % ArenaTerrainGrid.MaxStepMicrocells == 0));
         var sheer = Cells(grid).First(cell => cell.Surface >= 8 && HasSheerNeighbour(grid, cell.Column, cell.Row));
         var lower = new[] { (1, 0), (-1, 0), (0, 1), (0, -1) }
             .Select(offset => (Column: sheer.Column + offset.Item1, Row: sheer.Row + offset.Item2))

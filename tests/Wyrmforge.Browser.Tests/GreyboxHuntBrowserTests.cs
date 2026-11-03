@@ -315,7 +315,7 @@ public sealed class GreyboxHuntBrowserTests : PageTest
             """);
         var errors = new List<string>();
         Page.PageError += (_, error) => errors.Add(error);
-        await Page.GotoAsync(root + "/?hunt1=1&speed=6&god=1&bot=1" + (bright ? "&bright=1" : "") + (band >= 0 ? $"&band={band}" : ""), new() { WaitUntil = WaitUntilState.NetworkIdle });
+        await Page.GotoAsync(root + "/?hunt1=1&speed=6&god=1&bot=1" + (bright ? "&bright=1" : "") + (band >= 0 ? $"&influence={new[] { 0.1, 0.4, 0.7, 0.95 }[band].ToString(System.Globalization.CultureInfo.InvariantCulture)}" : ""), new() { WaitUntil = WaitUntilState.NetworkIdle });
         var start = Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^START GAME") });
         await start.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 45000 });
         await start.ClickAsync();

@@ -319,3 +319,27 @@ See [art and animation](art-and-animation.md) for source references and QA gates
 **What the physics engine still has to add (from the roadmap).** The heightfield is the interim representation and cannot hold overhangs, arches or rubble. Still to build, in order: (a) C# 3D occupancy of the 8 x 8 x 8 microcells (**XYZ1** sparse mutation, **XYZ2** excavation) so a side bite can leave a real overhang; (b) C# structural stability: material left unsupported falls, deposits rubble at the foot of the wall and re-checks routes, using the same impact event as everything else (**ENG** gameplay physics, authority stays in C#); (c) cosmetic debris, dust and falling rubble through the one shared FXP solver (**FXP2**, contact responses **FXP7 to FXP8**) consuming the typed C# impact event, never a terrain-only solver; (d) shared VFX, audio and lighting consumers of that event (**VFX1 to VFX4**, **AUD**, lighting emitters). Until then debris chips are a bounded cosmetic stand-in and carry no gameplay.
 
 **Visual language now implemented (presentation, not owner-approved).** Fresh craters glow in four stepped ember colours per microcell with a one-microcell faint rim that warms and cools first. Debris is whole 4 px cubes snapped to the grid. Hot bands carry a crack network that is built only from microcells: every block edge may carry a crack port at a hashed microcell, both blocks sharing the edge derive the same port, so cracks run unbroken across blocks like plate seams, with a one-cell halo. The furnace edge is three stepped rings two microcells thick. Bedrock is smooth near-black violet with a faint cold-violet glow on its microcell and a fainter one on its neighbours. **Known limitation:** these glows are drawn additively over the lit composite, so they can lie over a creature standing on them; the correct fix is to feed them to the lighting engine as an emissive ground map (G8 material response).
+
+### Arena relief, features and depth (owner direction, 3 November 2026)
+
+**Owner direction.** Fewer cracks, but longer ones that branch into another crack or pool out in a crater; the map must feel deep, not flat; arenas need many interesting features because players spend most of the game fighting in them and it must never get boring. **Status: implemented in C# and the painter; not owner-approved (gate GH-B/GH-C).**
+
+**What the C# generator now makes** (`ArenaTerrainGenerator` plus `ArenaTerrainRelief`, deterministic, never touching the protected route; thousand-seed route tests still pass):
+
+| Feature | Rule | From |
+| --- | --- |
+| Rolling hills and, later, dells | Smooth two-octave noise, up to +/-1.1 m in half-metre-or-less steps so it stays walkable; faded to flat near the route; raised soil keeps its grass cap | Every arena (dells from Scorched) |
+| Gravel patches | Patches of ash-coloured ground | Every arena, more with influence |
+| Rock steps with ramps | Existing 1 to 3 m plateaus with an ascending ramp | Every arena |
+| Ridges | Two to four long stone ridges, two columns wide, 1.5 to 2 m high with a broken crest, anchored at an arena edge and wandering inward, with two or three passes | Every arena (one more from Burning) |
+| Pillars and boulder fields | 9 to 15 pillars (1.5 to 2.5 m, block shots, breakable) and low boulder fields to fight across | Every arena |
+| Old blast scars | Real round voxel craters dug with the Fireball rule, so they have strata and can be dug deeper | Scorched and up |
+| Heat cracks | Few, long, branching paths of microcells from pools and craters; a fork joins another source or dies out in a freshly blasted crater; never cross the route; authoritative data shipped once to the client | Scorched and up |
+| Lava pools | Irregular pools with a raised basalt lip, away from the route | Burning and up |
+| Fissures | Existing 2 to 3 column splits, lava-floored in the Volcanic band | Burning and up |
+
+**Depth cues, all from voxels.** A contact shadow of whole microcells at the foot of every raised face (two strengths by height) and a lit lip along the top edge above a drop; height tone steps; grass on raised soil; craters keep their strata. **Still flat, honestly:** no cast shadows from terrain (needs the shear camera and terrain shadows, GH-A) and no parallax; unlit overlay glows still sit over creatures until the emissive ground map exists.
+
+**Debug preview.** `?influence=0..1` (with `hunt1=1`) generates and presents the arena as if it lay at that Wyrm Influence, so every band can be reviewed without playing to it.
+
+**Gameplay promise to keep.** More relief changes fights: ridges and pillars give cover and break shots, passes funnel enemies, hills and dells are walkable, lava pools and fissures are hazards. Enemy spawns already skip unreachable ground. **Open for the owner:** how much cover is too much; whether ridges should be breakable only by heavy blasts; encounter pacing that uses the relief (flanking through passes, holding a ridge).

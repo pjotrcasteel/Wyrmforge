@@ -6,12 +6,13 @@ import {
 import { raisedActor } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-projection.js';
 
 function recorder() {
-    const calls = [];
+    const calls = [], cues = [];
     return {
-        calls,
+        calls, cues,
         fillStyle: '',
         save() {}, restore() {}, translate(x, y) { calls.push(['translate', x, y]); },
-        fillRect(x, y, w, h) { calls.push(['fillRect', x, y, w, h, this.fillStyle]); },
+        // Translucent contact shadows and lip light are depth cues; they are asserted separately from the opaque faces.
+        fillRect(x, y, w, h) { (String(this.fillStyle).startsWith('rgba(') ? cues : calls).push(['fillRect', x, y, w, h, this.fillStyle]); },
         clearRect() {},
         drawImage(...args) { calls.push(['drawImage', ...args.slice(1)]); },
     };
@@ -305,4 +306,37 @@ test('the inset overlay outlines a dug block per microcolumn at that microcolumn
     assert.equal(strokes.length, 64);
     assert.deepEqual(strokes[0].slice(1), [0.5, 12.5, 3, 3], 'the dug corner sits 3 microcells (12 px) lower');
     assert.deepEqual(strokes[1].slice(1), [4.5, 0.5, 3, 3]);
+});
+
+test('depth cues: a contact shadow at the foot of a raised face and a lit lip along its top edge, in whole microcells', () => {
+    const ctx = recorder();
+    paintTerrain(ctx, frame(1, 2, [8, 0]), 0);
+    const shadows = ctx.cues.filter(call => call[5].includes('.34'));
+    assert.equal(shadows.length, 1, 'a metre-tall face casts the strong contact shadow');
+    assert.deepEqual(shadows[0].slice(1, 5), [0, 32, 32, 4], 'one microcell row at the foot of the face, the full width of the block');
+    assert.ok(ctx.cues.some(call => call[5].includes('.2)') && call[2] === 36 && call[4] === 4), 'the second row is the softer step');
+    const lips = ctx.cues.filter(call => call[5].includes('.12'));
+    assert.deepEqual(lips.map(call => call.slice(1, 5)), [[0, -4, 32, 4]], 'the top edge above the drop is lit');
+    const flat = recorder();
+    paintTerrain(flat, frame(2, 2, [0, 0, 0, 0]), 0);
+    assert.equal(flat.cues.length, 0, 'flat ground carries no cues');
+    const gentle = recorder();
+    paintTerrain(gentle, frame(1, 2, [1, 0]), 0);
+    assert.equal(gentle.cues.length, 0, 'a one-step rise is too small to shade');
+});
+
+test('depth cues work per microcolumn inside a dug block: crater walls are shadowed where they rise', () => {
+    const heights = new Array(64).fill(0);
+    for (let y = 2; y <= 5; y++) for (let x = 2; x <= 5; x++) heights[y * 8 + x] = -4;
+    const ctx = recorder();
+    paintTerrain(ctx, { revision: 1, columns: 1, rows: 1, surface: [0], material: [0], fine: new Map([[0, block(heights)]]) }, 0, 0);
+    const shadowed = ctx.cues.filter(call => call[5].includes('.2)') && call[3] === 4 && call[4] === 4);
+    assert.ok(shadowed.length >= 4, 'the floor microcells under the far wall are shadowed');
+    for (const call of ctx.cues) assert.ok(call[3] % 4 === 0 && call[4] % 4 === 0, 'cues are whole microcells');
+});
+
+test('raised soil is grass-capped, not bare ground', () => {
+    assert.equal(topFaceColor(0, TERRAIN_MATERIAL.Soil, 5), GRASS_TOP[0]);
+    assert.equal(topFaceColor(0, TERRAIN_MATERIAL.Soil, 0), GRASS_TOP[0]);
+    assert.notEqual(topFaceColor(0, TERRAIN_MATERIAL.Soil, -1), GRASS_TOP[0]);
 });
