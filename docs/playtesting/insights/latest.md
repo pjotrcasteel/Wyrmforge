@@ -1,6 +1,6 @@
 # WyrmForge — anonymized playtest insights
 
-Updated: 2026-11-02 (UTC)
+Updated: 2026-11-03 (UTC)
 
 > **PUBLIC AGGREGATES ONLY.** Individual reports, text, seeds, report IDs,
 > device fingerprints and raw session evidence are never published here.
