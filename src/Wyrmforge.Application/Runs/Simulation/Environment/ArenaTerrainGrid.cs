@@ -170,6 +170,7 @@ public sealed class ArenaTerrainGrid
     {
         if (!Contains(column, row) || microX is < 0 or >= MicroPerColumn || microY is < 0 or >= MicroPerColumn) return 0;
         var index = row * Columns + column;
+        if (topsoil[index] == ArenaTerrainMaterial.Lava || materials[index] == ArenaTerrainMaterial.Lava) return 0;
         floor = Math.Max(floor, BedrockMicrocells);
         var micro = microY * MicroPerColumn + microX;
         var heights = fine.TryGetValue(index, out var existing) ? existing : null;
@@ -229,6 +230,7 @@ public sealed class ArenaTerrainGrid
     {
         if (!Contains(column, row) || microX is < 0 or >= MicroPerColumn || microY is < 0 or >= MicroPerColumn) return 0;
         var index = row * Columns + column;
+        if (topsoil[index] == ArenaTerrainMaterial.Lava || materials[index] == ArenaTerrainMaterial.Lava) return 0;
         target = Math.Max(target, Math.Max(floor, BedrockMicrocells));
         var current = MicroSurface(column, row, microX, microY);
         if (target >= current) return 0;

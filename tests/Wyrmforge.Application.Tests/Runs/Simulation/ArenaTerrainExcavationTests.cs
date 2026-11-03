@@ -167,7 +167,7 @@ public sealed class ArenaTerrainExcavationTests
     }
 
     [TestMethod]
-    public void RockWalls_WearAwayProgressivelyUnderEveryKindOfImpactAndLavaWearsLikeStone()
+    public void RockWalls_WearAwayProgressivelyUnderEveryKindOfImpactAndLavaNeverChanges()
     {
         var grid = FlatSoil();
         grid.Set(6, 6, 16, ArenaTerrainMaterial.Stone);
@@ -181,8 +181,9 @@ public sealed class ArenaTerrainExcavationTests
         for (var hit = 10; hit < 24; hit++) ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(hit, centre, 1), null);
         Assert.AreEqual(8, grid.FineHeights(6, 6)!.Min(), "sixteen plain Fireballs take exactly one metre off the centre of a two metre wall");
         ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(500, ArenaTerrainGrid.CenterOf(7, 6), 3), null);
-        Assert.IsLessThan(-16, grid.FineHeights(7, 6)!.Min(), "only bedrock and the route floor are unbreakable: a heavy blast digs into lava too");
-        Assert.AreEqual(ArenaTerrainMaterial.Lava, grid.Material(7, 6), "it stays lava until a freeze mechanic exists");
+        Assert.AreEqual(-16, grid.Surface(7, 6));
+        Assert.AreEqual(ArenaTerrainMaterial.Lava, grid.Material(7, 6));
+        Assert.IsNull(grid.FineWear(7, 6), "the lava surface takes no damage; only its stone rim breaks");
     }
 
     [TestMethod]

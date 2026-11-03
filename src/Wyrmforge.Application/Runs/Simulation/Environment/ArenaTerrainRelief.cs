@@ -136,7 +136,7 @@ internal static class ArenaTerrainRelief
                             for (var side = 0; side < 4; side++)
                             {
                                 if (drops[side] < 3 || distances[side] >= 3) continue;
-                                var chipped = (int)Math.Floor(Unit(column * Micro + mx, row * Micro + my) * (3 - distances[side]) * 1.3);
+                                var chipped = (int)Math.Floor(Unit(column * Micro + mx, row * Micro + my) * (3 - distances[side]) * 1.0);
                                 bite = Math.Max(bite, Math.Min(chipped, drops[side] - 1));
                             }
                             if (bite == 0) continue;
