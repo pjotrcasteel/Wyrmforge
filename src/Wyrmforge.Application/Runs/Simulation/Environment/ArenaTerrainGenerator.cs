@@ -43,6 +43,7 @@ public static class ArenaTerrainGenerator
         var heatSources = ArenaTerrainRelief.LavaPools(rng, grid, routeDistance, influence);
         CarveFissures(rng, grid, protectedCells, influence);
         ArenaTerrainRelief.Hills(rng, grid, routeDistance, influence);
+        ArenaTerrainRelief.Weather(rng, grid, protectedCells);
         // Generation-time blasts use negative ids so they can never collide with a live impact.
         long scarId = -1;
         heatSources.AddRange(ArenaTerrainRelief.ScarCraters(rng, grid, protectedCells, routeDistance, influence, ref scarId));
@@ -124,7 +125,13 @@ public static class ArenaTerrainGenerator
             var rampClear = AllClear(grid, protectedCells, rx, ry, rw, rh, requireFlat: true);
             for (var row = y; row < y + h; row++)
                 for (var column = x; column < x + w; column++)
-                    grid.Set(column, row, height, ArenaTerrainMaterial.Stone);
+                {
+                    // Corners are bitten off and the rim sags in places, so the outcrop has a grown outline rather than a rectangle's.
+                    var onCorner = (row == y || row == y + h - 1) && (column == x || column == x + w - 1);
+                    var onRim = row == y || row == y + h - 1 || column == x || column == x + w - 1;
+                    if (onCorner && rng.Next(5) < 3) continue;
+                    grid.Set(column, row, onRim && rng.Next(4) == 0 ? Math.Max(Step, height - Step) : height, ArenaTerrainMaterial.Stone);
+                }
             if (rampClear)
                 for (var k = 1; k <= rampLength; k++)
                 {

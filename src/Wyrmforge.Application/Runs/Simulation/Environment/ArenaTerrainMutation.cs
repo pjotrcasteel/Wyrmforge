@@ -35,36 +35,43 @@ public static class ArenaTerrainMutation
     {
         <= 1 => 0.75,
         2 => 1.25,
-        _ => 1.8,
+        3 => 1.8,
+        4 => 2.3,
+        _ => 2.8,
     } * ArenaTerrainGrid.CellUnits;
 
     /// <summary>
     /// Radius in microcells of the half-sphere a side hit bites out of a face. It removes about the same volume as the cap of the
     /// crater the same power digs from above (energy is conserved between the two directions): 37 cm, 62 cm and 1 m.
     /// </summary>
-    public static int FaceBiteRadiusMicrocells(int power) => power switch { <= 1 => 3, 2 => 5, _ => 8 };
+    public static int FaceBiteRadiusMicrocells(int power) => power switch { <= 1 => 3, 2 => 5, 3 => 8, 4 => 10, _ => 12 };
 
     public static IReadOnlyList<ArenaTerrainChange> Apply(ArenaTerrainGrid grid, ArenaTerrainImpact impact, bool[]? protectedCells)
     {
         ArgumentNullException.ThrowIfNull(grid);
-        var power = Math.Clamp(impact.Power, 1, 3);
-        var hits = impact.Direction is { } direction && direction.Length > 1e-9
+        var power = Math.Clamp(impact.Power, 1, 5);
+        var hits = (impact.Direction is { } direction && direction.Length > 1e-9
             ? FaceHits(grid, impact, direction.Normalized(), power)
-            : CraterHits(impact, power);
+            : CraterHits(impact, power)).ToList();
         var perColumn = ArenaTerrainGrid.MicroPerColumn;
         var touched = new List<(int Column, int Row, int Surface, ArenaTerrainMaterial Material, short[]? Fine, byte[]? Wear)>();
         var seen = new HashSet<int>();
+        void Touch(int column, int row)
+        {
+            if (seen.Add(row * grid.Columns + column))
+                touched.Add((column, row, grid.Surface(column, row), grid.Material(column, row), grid.FineHeights(column, row), grid.FineWear(column, row)));
+        }
         foreach (var (gx, gy, depth) in hits)
         {
             var column = (int)Math.Floor(gx / (double)perColumn);
             var row = (int)Math.Floor(gy / (double)perColumn);
             if (!grid.Contains(column, row)) continue;
-            if (seen.Add(row * grid.Columns + column))
-                touched.Add((column, row, grid.Surface(column, row), grid.Material(column, row), grid.FineHeights(column, row), grid.FineWear(column, row)));
+            Touch(column, row);
             var floor = protectedCells is { Length: > 0 } && protectedCells[row * grid.Columns + column]
                 ? RouteFloorMicrocells : ArenaTerrainGrid.BedrockMicrocells;
             grid.ExcavateMicro(column, row, gx - column * perColumn, gy - row * perColumn, depth, floor);
         }
+        Settle(grid, hits, protectedCells, Touch);
 
         var changes = new List<ArenaTerrainChange>();
         foreach (var (column, row, surface, material, fine, oldWear) in touched)
@@ -83,6 +90,52 @@ public static class ArenaTerrainMutation
             });
         }
         return changes;
+    }
+
+    /// <summary>The most a one-microcell-wide fin or spire may stand above what holds it up: 50 cm. Anything taller falls.</summary>
+    public const int UnsupportedLimitMicrocells = 4;
+
+    /// <summary>
+    /// No voxel is left floating: after an impact, microcolumns that stand on a sliver (both neighbours along an axis, or all four, are
+    /// at least <see cref="UnsupportedLimitMicrocells"/> lower) collapse to just above their highest support, rippling outward until stable.
+    /// A heightfield cannot hold an overhang, so a side bite that undercuts a wall brings the unsupported rock down instead of hanging it.
+    /// </summary>
+    private static void Settle(ArenaTerrainGrid grid, List<(int Gx, int Gy, int Depth)> hits, bool[]? protectedCells, Action<int, int> touch)
+    {
+        var perColumn = ArenaTerrainGrid.MicroPerColumn;
+        var region = new SortedSet<(int Gy, int Gx)>();
+        foreach (var (gx, gy, _) in hits)
+            for (var dy = -1; dy <= 1; dy++)
+                for (var dx = -1; dx <= 1; dx++) region.Add((gy + dy, gx + dx));
+        int? Height(int gx, int gy)
+        {
+            var (column, row) = ((int)Math.Floor(gx / (double)perColumn), (int)Math.Floor(gy / (double)perColumn));
+            return grid.Contains(column, row) ? grid.MicroSurface(column, row, gx - column * perColumn, gy - row * perColumn) : null;
+        }
+        for (var pass = 0; pass < 6 && region.Count > 0; pass++)
+        {
+            var next = new SortedSet<(int Gy, int Gx)>();
+            foreach (var (gy, gx) in region)
+            {
+                if (Height(gx, gy) is not { } own) continue;
+                var west = Height(gx - 1, gy) ?? own; var east = Height(gx + 1, gy) ?? own;
+                var north = Height(gx, gy - 1) ?? own; var south = Height(gx, gy + 1) ?? own;
+                var limit = UnsupportedLimitMicrocells;
+                var thinX = own - west >= limit && own - east >= limit;
+                var thinY = own - north >= limit && own - south >= limit;
+                if (!thinX && !thinY) continue;
+                var support = thinX && thinY ? Math.Max(Math.Max(west, east), Math.Max(north, south))
+                    : thinX ? Math.Max(west, east) : Math.Max(north, south);
+                var (column, row) = ((int)Math.Floor(gx / (double)perColumn), (int)Math.Floor(gy / (double)perColumn));
+                var floor = protectedCells is { Length: > 0 } && protectedCells[row * grid.Columns + column]
+                    ? RouteFloorMicrocells : ArenaTerrainGrid.BedrockMicrocells;
+                touch(column, row);
+                if (grid.LowerMicroTo(column, row, gx - column * perColumn, gy - row * perColumn, support + 2, floor) == 0) continue;
+                // What stood beside it may now be a fin in turn.
+                foreach (var (ox, oy) in new[] { (1, 0), (-1, 0), (0, 1), (0, -1) }) next.Add((gy + oy, gx + ox));
+            }
+            region = next;
+        }
     }
 
     // From above: a smooth bowl, deepest at the centre and steep near the rim.

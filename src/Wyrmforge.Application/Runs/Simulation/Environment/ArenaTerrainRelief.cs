@@ -79,6 +79,76 @@ internal static class ArenaTerrainRelief
     }
 
     /// <summary>
+    /// Makes the land look grown rather than built. Gentle ground is blended between column centres so slopes roll in 12.5 cm
+    /// voxel steps instead of one-metre terraces; cliff, ridge and rubble edges are chipped raggedly (at most three microcells, so no
+    /// fin is ever left standing). Everything stays whole voxels, authoritative heights, and never touches the protected route.
+    /// </summary>
+    public static void Weather(Random rng, ArenaTerrainGrid grid, bool[] protectedCells)
+    {
+        var seed = rng.Next();
+        var (columns, rows) = (grid.Columns, grid.Rows);
+        var whole = new int[columns * rows];
+        for (var index = 0; index < whole.Length; index++) whole[index] = grid.Surface(index % columns, index / columns);
+        bool Soft(int column, int row) => grid.Contains(column, row) && grid.Material(column, row) is ArenaTerrainMaterial.Soil or ArenaTerrainMaterial.Ash;
+        double Unit(int x, int y)
+        {
+            var h = unchecked((uint)(x * 73856093 ^ y * 19349663 ^ seed * 83492791));
+            h = unchecked((h ^ (h >> 13)) * 0x5BD1E995u);
+            return (h ^ (h >> 15)) / (double)uint.MaxValue;
+        }
+        for (var row = 0; row < rows; row++)
+            for (var column = 0; column < columns; column++)
+            {
+                var index = row * columns + column;
+                var material = grid.Material(column, row);
+                if (protectedCells[index] || material == ArenaTerrainMaterial.Lava) continue;
+                var own = whole[index];
+                var heights = new short[ArenaTerrainGrid.MicroCount];
+                Array.Fill(heights, (short)own);
+                var changed = false;
+                if (Soft(column, row))
+                {
+                    // A neighbour joins the blend only when it is walkable ground within a step; a ledge stays sharp.
+                    int Near(int c, int r) => Soft(c, r) && Math.Abs(whole[r * columns + c] - own) <= Step ? whole[r * columns + c] : own;
+                    for (var my = 0; my < Micro; my++)
+                        for (var mx = 0; mx < Micro; mx++)
+                        {
+                            var (u, v) = ((mx + .5 - Micro / 2.0) / Micro, (my + .5 - Micro / 2.0) / Micro);
+                            var (sx, sy) = (u < 0 ? -1 : 1, v < 0 ? -1 : 1);
+                            var (au, av) = (Math.Abs(u), Math.Abs(v));
+                            var value = (1 - au) * (1 - av) * own + au * (1 - av) * Near(column + sx, row)
+                                + (1 - au) * av * Near(column, row + sy) + au * av * Near(column + sx, row + sy);
+                            var height = (int)Math.Round(value);
+                            heights[my * Micro + mx] = (short)height;
+                            changed |= height != own;
+                        }
+                }
+                else
+                {
+                    var drops = new[] { (-1, 0), (1, 0), (0, -1), (0, 1) }
+                        .Select(side => grid.Contains(column + side.Item1, row + side.Item2) ? own - whole[(row + side.Item2) * columns + column + side.Item1] : 0).ToArray();
+                    if (drops.All(drop => drop < 3)) continue;
+                    for (var my = 0; my < Micro; my++)
+                        for (var mx = 0; mx < Micro; mx++)
+                        {
+                            var bite = 0;
+                            var distances = new[] { mx, Micro - 1 - mx, my, Micro - 1 - my };
+                            for (var side = 0; side < 4; side++)
+                            {
+                                if (drops[side] < 3 || distances[side] >= 3) continue;
+                                var chipped = (int)Math.Floor(Unit(column * Micro + mx, row * Micro + my) * (3 - distances[side]) * 1.3);
+                                bite = Math.Max(bite, Math.Min(chipped, drops[side] - 1));
+                            }
+                            if (bite == 0) continue;
+                            heights[my * Micro + mx] = (short)(own - bite);
+                            changed = true;
+                        }
+                }
+                if (changed) grid.ShapeFine(column, row, heights);
+            }
+    }
+
+    /// <summary>
     /// Long stone ridges, 1.5 to 2 m high and two columns wide, wandering across the arena with two or three passes each.
     /// They break wherever they meet the route and taper at both ends, so they shape the fight without caging it.
     /// </summary>
@@ -128,7 +198,15 @@ internal static class ArenaTerrainRelief
         {
             var (column, row) = (1 + rng.Next(grid.Columns - 2), 3 + rng.Next(grid.Rows - 6));
             if (!Open(grid, column, row) || routeDistance[row * grid.Columns + column] < 3) continue;
-            grid.Set(column, row, new[] { 12, 16, 20 }[rng.Next(3)], ArenaTerrainMaterial.Stone);
+            var top = new[] { 12, 16, 20 }[rng.Next(3)];
+            grid.Set(column, row, top, ArenaTerrainMaterial.Stone);
+            // An outcrop, not a post: lower stones lean against it, stepping down so each rises at most a step above the next.
+            for (var satellite = 0; satellite < rng.Next(4); satellite++)
+            {
+                var (sc, sr) = (column + rng.Next(3) - 1, row + rng.Next(3) - 1);
+                if ((sc == column && sr == row) || !Open(grid, sc, sr) || routeDistance[sr * grid.Columns + sc] < 3) continue;
+                grid.Set(sc, sr, Math.Max(Step, top - Step * (1 + rng.Next(3))), ArenaTerrainMaterial.Stone);
+            }
         }
         var fields = 3 + rng.Next(3);
         for (var field = 0; field < fields; field++)

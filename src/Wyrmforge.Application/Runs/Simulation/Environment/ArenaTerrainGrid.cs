@@ -222,6 +222,44 @@ public sealed class ArenaTerrainGrid
         return start - current;
     }
 
+    /// <summary>
+    /// Collapse one microcolumn straight down to <paramref name="target"/> (never below the floor, bedrock at most). Unlike an impact it takes
+    /// no wear: it is unsupported material falling away. Returns the microcells lost.
+    /// </summary>
+    public int LowerMicroTo(int column, int row, int microX, int microY, int target, int floor = BedrockMicrocells)
+    {
+        if (!Contains(column, row) || microX is < 0 or >= MicroPerColumn || microY is < 0 or >= MicroPerColumn) return 0;
+        var index = row * Columns + column;
+        if (topsoil[index] == ArenaTerrainMaterial.Lava || materials[index] == ArenaTerrainMaterial.Lava) return 0;
+        target = Math.Max(target, Math.Max(floor, BedrockMicrocells));
+        var current = MicroSurface(column, row, microX, microY);
+        if (target >= current) return 0;
+        if (!fine.TryGetValue(index, out var heights))
+        {
+            heights = new short[MicroCount];
+            Array.Fill(heights, surface[index]);
+            fine[index] = heights;
+        }
+        heights[microY * MicroPerColumn + microX] = (short)target;
+        RefreshColumn(index);
+        return current - target;
+    }
+
+    /// <summary>
+    /// Generation only: replaces a column's 64 microcolumn heights so slopes and cliff edges are shaped finer than one metre. The column keeps
+    /// its material and stone line; its coarse height becomes the mean of the new heights.
+    /// </summary>
+    public void ShapeFine(int column, int row, short[] heights)
+    {
+        if (!Contains(column, row)) throw new ArgumentOutOfRangeException(nameof(column));
+        if (heights.Length != MicroCount) throw new ArgumentException("A subdivided column has exactly 64 microcolumns.", nameof(heights));
+        var index = row * Columns + column;
+        if (materials[index] == ArenaTerrainMaterial.Lava) return;
+        var floor = (short)BedrockMicrocells;
+        fine[index] = heights.Select(height => Math.Max(height, floor)).Select(height => (short)height).ToArray();
+        RefreshColumn(index);
+    }
+
     // The coarse height every gameplay query reads is the rounded mean of the 64 microcolumns, in exact integer arithmetic.
     private void RefreshColumn(int index)
     {

@@ -16,7 +16,7 @@ test('Lighting 0.1 is opt-in only when the existing Hunt GPU backend is also sel
         assert.equal(lighting01Requested(new URLSearchParams(query)), false, query);
     const arena = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena.js', import.meta.url), 'utf8');
     assert.match(arena, /state\.lighting01 = lighting01Requested\(params\)/);
-    assert.match(arena, /if \(gpu\) gpu\.begin\(ctx, camera, width, height\)/);
+    assert.match(arena, /if \(gpu\) gpu\.begin\(ctx, camera, width, height, /);
     assert.match(arena, /submitLighting01Fixtures\(gpu, snapshot\.environment, state\.sharedLightingFrame/);
     assert.match(arena, /gpu\.render\(ctx, state\.sharedLightingFrame\)/);
 });

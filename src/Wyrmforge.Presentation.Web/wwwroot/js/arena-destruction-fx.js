@@ -129,13 +129,16 @@ export function pruneDestructionFx(fx, now) {
     return fx.heat.length + fx.chips.length > 0;
 }
 
-/** Draws hot crater microcells (additive) and debris cubes over the lit composite in world coordinates; `view` only culls. */
-export function drawDestructionFx(ctx, fx, now, view) {
+/**
+ * Draws hot crater microcells (additive) and debris cubes over the lit composite in world coordinates; `view` only culls.
+ * `parts` is 'all', 'heat' (the glow, which belongs on the emissive ground map) or 'chips' (flying debris, drawn unlit over the composite).
+ */
+export function drawDestructionFx(ctx, fx, now, view, parts = 'all') {
     if (!pruneDestructionFx(fx, now)) return 0;
     let drawn = 0;
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
-    for (const spot of fx.heat) {
+    for (const spot of parts === 'chips' ? [] : fx.heat) {
         const strength = heatStrength(now - spot.born, spot.life);
         if (strength <= 0.01 || spot.x < view.x - spot.radius || spot.y < view.y - spot.radius
             || spot.x > view.x + view.width + spot.radius || spot.y > view.y + view.height + spot.radius) continue;
@@ -155,7 +158,7 @@ export function drawDestructionFx(ctx, fx, now, view) {
         }
     }
     ctx.globalCompositeOperation = 'source-over';
-    for (const chip of fx.chips) {
+    for (const chip of parts === 'heat' ? [] : fx.chips) {
         const { x, y, age } = chipPosition(chip, now);
         const fade = 1 - age / chip.life;
         if (fade <= 0) continue;
@@ -166,6 +169,30 @@ export function drawDestructionFx(ctx, fx, now, view) {
     }
     ctx.restore();
     return drawn;
+}
+
+/**
+ * Paints every ground glow (heat-crack veins, hot crater cells, the bedrock hint) onto a black, viewport-sized canvas in the same
+ * whole 4 px cells the unlit overlays use. The GPU path uploads it as the ground's emissive map, so the glow is part of the lit
+ * surface (bright in the dark, beneath every actor) instead of an additive layer drawn over creatures. Returns the canvas and the
+ * vein seams drawn. `holder` keeps the reusable canvas between frames.
+ */
+export function paintGroundEmissive(holder, frame, fx, band, view, seconds, reducedMotion = false) {
+    const width = Math.max(1, Math.ceil(view.width)), height = Math.max(1, Math.ceil(view.height));
+    const canvas = holder.emissiveCanvas ??= document.createElement('canvas');
+    if (canvas.width !== width) canvas.width = width;
+    if (canvas.height !== height) canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, width, height);
+    ctx.translate(-view.x, -view.y);
+    const seams = drawCrackGlow(ctx, frame, band, view, seconds, reducedMotion);
+    drawBedrockGlow(ctx, frame, view, seconds, reducedMotion);
+    if (fx) drawDestructionFx(ctx, fx, seconds, view, 'heat');
+    return { canvas, seams };
 }
 
 // Edge heat per Wyrm Influence band: none in the wet land, then rising to a furnace glow at the lair.
@@ -215,11 +242,16 @@ export function drawCrackGlow(ctx, frame, band, view, seconds, reducedMotion = f
     for (const cell of cells) {
         if (cell.x < left || cell.x > right || cell.y < top || cell.y > bottom) continue;
         const column = cell.x >> 3, row = cell.y >> 3, index = row * frame.columns + column;
-        if (index < 0 || index >= frame.surface.length || frame.fine?.has(index) || frame.material[index] === TERRAIN_MATERIAL.Lava) continue;
+        if (index < 0 || index >= frame.surface.length || frame.material[index] === TERRAIN_MATERIAL.Lava) continue;
+        // Shaped or dug columns carry their own microcolumn heights: the vein sits on whatever rock is left at that cell, and is
+        // hidden once the cell has been dug down to bedrock.
+        const block = frame.fine?.get(index);
+        const height = block?.heights?.length ? block.heights[(cell.y & 7) * MICRO_PER_COLUMN + (cell.x & 7)] : frame.surface[index];
+        if (height <= BEDROCK_MICROCELLS) continue;
         const pulse = reducedMotion ? .8 : .72 + .28 * Math.sin(seconds * 2.2 - (cell.x + cell.y) * .35);
         ctx.globalAlpha = cell.kind === 'core' ? pulse : pulse * .4;
         ctx.fillStyle = cell.kind === 'core' ? ramp.core[cell.tone] : ramp.halo;
-        ctx.fillRect(cell.x * MICRO_UNITS, cell.y * MICRO_UNITS - frame.surface[index] * MICROCELL_UNITS, MICRO_UNITS, MICRO_UNITS);
+        ctx.fillRect(cell.x * MICRO_UNITS, cell.y * MICRO_UNITS - height * MICROCELL_UNITS, MICRO_UNITS, MICRO_UNITS);
         drawn++;
     }
     ctx.restore();

@@ -338,8 +338,23 @@ See [art and animation](art-and-animation.md) for source references and QA gates
 | Lava pools | Irregular pools with a raised basalt lip, away from the route | Burning and up |
 | Fissures | Existing 2 to 3 column splits, lava-floored in the Volcanic band | Burning and up |
 
-**Depth cues, all from voxels.** A contact shadow of whole microcells at the foot of every raised face (two strengths by height) and a lit lip along the top edge above a drop; height tone steps; grass on raised soil; craters keep their strata. **Still flat, honestly:** no cast shadows from terrain (needs the shear camera and terrain shadows, GH-A) and no parallax; unlit overlay glows still sit over creatures until the emissive ground map exists.
+**Depth cues, all from voxels.** A contact shadow of whole microcells at the foot of every raised face (two strengths by height) and a lit lip along the top edge above a drop; height tone steps; grass on raised soil; craters keep their strata. **Still flat, honestly:** no cast shadows from terrain (needs the shear camera and terrain shadows, GH-A) and no parallax.
 
 **Debug preview.** `?influence=0..1` (with `hunt1=1`) generates and presents the arena as if it lay at that Wyrm Influence, so every band can be reviewed without playing to it.
 
 **Gameplay promise to keep.** More relief changes fights: ridges and pillars give cover and break shots, passes funnel enemies, hills and dells are walkable, lava pools and fissures are hazards. Enemy spawns already skip unreachable ground. **Open for the owner:** how much cover is too much; whether ridges should be breakable only by heavy blasts; encounter pacing that uses the relief (flanking through passes, holding a ridge).
+
+### Spell tier, enemy magic, stability, natural shaping and the emissive ground (owner direction, 3 November 2026)
+
+**Owner direction.** (1) A more natural, not forced, look; everything destructible, preferably without floating voxels. (2) An emissive ground map. (3) A tier-1 Fireball with no mutators does little damage; a tier-5 Fireball with mutators does much more; enemies that wield magic also break terrain. **Status: implemented in C# and the painter; not owner-approved (GH-B/GH-C).**
+
+| Rule | Detail |
+| --- | --- |
+| Fireball terrain power | `(rank + 1) / 2` gives 1, 1, 2, 2, 3 for tiers 1 to 5; Detonation adds 1, Meteor Heart adds 2; clamped 1 to 5 |
+| Crater radius by power | 0.75, 1.25, 1.8, 2.3 and 2.8 m (side bite 37 cm, 62 cm, 1 m, 1.25 m, 1.5 m) |
+| Enemy and Wyrm magic | Uses the same blast rule through one `EnemyTerrainBlast` call: hostile spell shots 1 (Toll and Seal 2), Bell of Winter slam 3, Bell Warden smash 3, Wyrm hazards 2 (falling meteors 3), Wyrm burst attacks 3. The protected route and bedrock limits still apply |
+| No floating voxels | After every impact a C# settle pass collapses any microcolumn standing on a sliver (both neighbours along an axis, or all four, at least 50 cm lower) to just above its highest support, rippling outward until stable. A heightfield cannot hold an overhang, so an undercut wall comes down instead of hanging; true rubble and arches still wait for XYZ occupancy |
+| Natural shaping | Gentle ground is blended between column centres so slopes roll in 12.5 cm voxel steps; cliff, ridge and rubble edges are chipped raggedly (at most three microcells); rock steps lose corners and sag at the rim; pillars are outcrops with lower satellites |
+| Emissive ground map | On the GPU path crack veins, hot craters and the bedrock hint are painted on a black viewport canvas in whole 4 px cells and uploaded as the ground material's emissive map, so they are lit surfaces that stay bright at night and sit beneath creatures. Flying debris stays an unlit overlay. The Canvas fallback keeps the additive overlays |
+
+**Everything is breakable except** bedrock, lava and the protected route floor (depth limited). **Open for the owner:** should lava be coolable or breakable; should ridges need heavy blasts.

@@ -407,6 +407,7 @@ public sealed partial class RunSimulation
             if (!ember.Landed) continue;
             // Collision belongs to C#: the ember resolves once, exactly inside the mark the hunter was shown.
             RegisterElementalImpact(ember.Target, SpellId.FireBolt);
+            EnemyTerrainBlast(ember.Target, ember.Style is HostileProjectileStyle.Toll or HostileProjectileStyle.Seal ? 2 : 1);
             if (Vector2D.Distance(player.Position, ember.Target) <= ember.Radius) DamagePlayer(ember.Damage);
         }
         hostileProjectiles.RemoveAll(ember => ember.Landed);

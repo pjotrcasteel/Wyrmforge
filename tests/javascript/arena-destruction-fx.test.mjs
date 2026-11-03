@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { craterEvents, createDestructionFx, observeTerrain, heatStrength, heatColor, chipPosition, pruneDestructionFx, drawDestructionFx, drawBedrockGlow,
-    fireZoneIntensity, drawFireZoneVignette, drawCrackGlow, FIRE_ZONE_EDGE_ALPHA, MAX_CHIPS, MAX_HEAT_SPOTS, HEAT_SECONDS } from
+    fireZoneIntensity, drawFireZoneVignette, drawCrackGlow, paintGroundEmissive, FIRE_ZONE_EDGE_ALPHA, MAX_CHIPS, MAX_HEAT_SPOTS, HEAT_SECONDS } from
     '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-destruction-fx.js';
 import { mergeTerrainFrame, crackCells, paintTerrain, TERRAIN_MATERIAL, crackPixels, CRACK_DARK, CRACK_HOT, topFaceColor, BEDROCK_MICROCELLS, BEDROCK_TOP } from
     '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-terrain-canvas.js';
@@ -166,8 +166,10 @@ test('crack glow is additive, only where the ground has cracked, drawn as 4 px c
     }
     const lava = { ...terrain, material: new Array(64).fill(TERRAIN_MATERIAL.Lava) };
     assert.equal(draw(3, lava).cells, 0, 'lava is already a light source');
-    const dug = { ...terrain, fine: new Map(Array.from({ length: 64 }, (_, index) => [index, { heights: new Array(64).fill(-1), topsoil: 0, stoneTop: -8 }])) };
-    assert.equal(draw(3, dug).cells, 0, 'dug blocks carry their own crater heat instead');
+    const dug = { ...terrain, fine: new Map(Array.from({ length: 64 }, (_, index) => [index, { heights: new Array(64).fill(BEDROCK_MICROCELLS), topsoil: 0, stoneTop: -8 }])) };
+    assert.equal(draw(3, dug).cells, 0, 'cells dug down to bedrock lose their vein');
+    const shaped = { ...terrain, fine: new Map(Array.from({ length: 64 }, (_, index) => [index, { heights: new Array(64).fill(3), topsoil: 0, stoneTop: -8 }])) };
+    assert.ok(draw(3, shaped).cells > 0, 'shaped ground keeps its veins, drawn at the microcolumn height');
     assert.equal(drawCrackGlow(recorder(), { ...whole(8, 8), cracks: [] }, 3, view, 1), 0);
     assert.equal(drawCrackGlow(recorder(), null, 3, view, 1), 0);
     const far = Object.assign(recorder(), { globalCompositeOperation: 'source-over' });
@@ -228,4 +230,39 @@ test('worn stone microcolumns are painted cracked and the wear survives a merge'
     const hot = ctx.calls.filter(call => call[0] === 'fillRect' && call[5] === CRACK_HOT);
     assert.equal(hot.length, 1);
     assert.equal(mergeTerrainFrame(null, { revision: 1, columns: 1, rows: 1, surface: [0], material: [0], fine: [{ index: 0, heights, topsoil: 0, stoneTop: -8 }] }).fine.get(0).wear, null);
+});
+test('heat and debris can be drawn apart: the glow goes to the emissive map, the chips stay on the unlit overlay', () => {
+    const previous = whole(2, 1);
+    const next = mergeTerrainFrame(previous, { revision: 7, columns: 2, rows: 1, surface: [0, 0], material: [0, 0], fine: [bowl(3)] });
+    const fx = createDestructionFx();
+    observeTerrain(fx, previous, next, 0);
+    const view = { x: 0, y: 0, width: 390, height: 844 };
+    const heat = drawDestructionFx(recorder(), fx, .1, view, 'heat');
+    const chips = drawDestructionFx(recorder(), fx, .1, view, 'chips');
+    assert.ok(heat > 0 && chips > 0);
+    assert.equal(chips, fx.chips.length, 'only the airborne chips');
+    assert.equal(heat + chips, drawDestructionFx(recorder(), fx, .1, view, 'all'));
+});
+
+test('the ground emissive map is an opaque black canvas with the glows drawn in world coordinates', () => {
+    const created = [];
+    const calls = [];
+    globalThis.document = { createElement() {
+        const canvas = { width: 0, height: 0, getContext() { return {
+            setTransform: () => calls.push(['setTransform']), translate: (x, y) => calls.push(['translate', x, y]),
+            save() {}, restore() {}, fillRect(...a) { calls.push(['fillRect', ...a, this.fillStyle]); } }; } };
+        created.push(canvas); return canvas;
+    } };
+    try {
+        const holder = {};
+        const frame = { ...whole(8, 8), cracks: network() };
+        const view = { x: 16, y: 8, width: 120, height: 200 };
+        const first = paintGroundEmissive(holder, frame, null, 3, view, 1);
+        assert.equal(first.canvas.width, 120); assert.equal(first.canvas.height, 200);
+        assert.equal(calls.find(call => call[0] === 'fillRect')[5], '#000000', 'black background so only glowing cells are emissive');
+        assert.deepEqual(calls.find(call => call[0] === 'translate'), ['translate', -16, -8], 'world cells land at their camera-relative pixels');
+        assert.ok(first.seams > 0, 'the vein cells were drawn onto it');
+        assert.equal(paintGroundEmissive(holder, frame, null, 3, view, 2).canvas, first.canvas, 'the canvas is reused between frames');
+        assert.equal(created.length, 1);
+    } finally { delete globalThis.document; }
 });

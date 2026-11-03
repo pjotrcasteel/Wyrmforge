@@ -463,6 +463,84 @@ public sealed class ArenaTerrainExcavationTests
     }
 
     [TestMethod]
+    public void HigherPowers_DigWiderAndDeeperStillAndPowerIsClampedToFive()
+    {
+        var volumes = new List<int>();
+        foreach (var power in new[] { 1, 2, 3, 4, 5 })
+        {
+            var grid = FlatSoil();
+            ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(1, ArenaTerrainGrid.CenterOf(6, 6), power), null);
+            var volume = 0;
+            for (var row = 0; row < 12; row++)
+                for (var column = 0; column < 12; column++)
+                    for (var micro = 0; micro < ArenaTerrainGrid.MicroCount; micro++)
+                        volume -= grid.MicroSurface(column, row, micro % 8, micro / 8);
+            volumes.Add(volume);
+        }
+        for (var i = 1; i < volumes.Count; i++) Assert.IsGreaterThan(volumes[i - 1], volumes[i], $"power {i + 1} digs more than power {i}");
+        var clamped = FlatSoil();
+        ArenaTerrainMutation.Apply(clamped, new ArenaTerrainImpact(1, ArenaTerrainGrid.CenterOf(6, 6), 99), null);
+        Assert.AreEqual(ArenaTerrainMutation.RadiusUnits(5), ArenaTerrainMutation.RadiusUnits(99));
+    }
+
+    [TestMethod]
+    public void ASpireLeftBesideAnImpact_FallsInsteadOfFloating()
+    {
+        var grid = FlatSoil();
+        grid.Set(6, 6, 16, ArenaTerrainMaterial.Stone);
+        for (var micro = 0; micro < ArenaTerrainGrid.MicroCount; micro++)
+            if (micro != 3 * 8 + 3) grid.LowerMicroTo(6, 6, micro % 8, micro / 8, 0);
+        Assert.AreEqual(16, grid.MicroSurface(6, 6, 3, 3));
+        var at = ArenaTerrainGrid.CenterOf(6, 6) + new Vector2D(2 * ArenaTerrainGrid.MicroUnits, 0);
+        ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(1, at, 1), null);
+        Assert.IsLessThanOrEqualTo(3, grid.MicroSurface(6, 6, 3, 3), "a sliver of rock with nothing beside it collapses to just above its support");
+    }
+
+    [TestMethod]
+    public void AfterAnyImpact_NoFinOrSpireStandsInTheBlastZone()
+    {
+        var arena = Arena(11);
+        var grid = arena.Terrain!;
+        var random = new Random(7);
+        for (var hit = 0; hit < 80; hit++)
+        {
+            var at = new Vector2D(100 + random.NextDouble() * (Width - 200), 100 + random.NextDouble() * (Height - 200));
+            var power = 1 + random.Next(5);
+            ArenaTerrainMutation.Apply(grid, new ArenaTerrainImpact(10_000 + hit, at, power), null);
+            var reach = ArenaTerrainMutation.RadiusUnits(power) / ArenaTerrainGrid.MicroUnits - 2;
+            var (centreX, centreY) = ((int)(at.X / ArenaTerrainGrid.MicroUnits), (int)(at.Y / ArenaTerrainGrid.MicroUnits));
+            for (var gy = centreY - (int)reach; gy <= centreY + reach; gy++)
+                for (var gx = centreX - (int)reach; gx <= centreX + reach; gx++)
+                {
+                    int? H(int x, int y) => grid.Contains(x / 8, y / 8) && x >= 0 && y >= 0 ? grid.MicroSurface(x / 8, y / 8, x % 8, y % 8) : null;
+                    if (H(gx, gy) is not { } own || own <= ArenaTerrainGrid.BedrockMicrocells) continue;
+                    var (w, e, n, s) = (H(gx - 1, gy) ?? own, H(gx + 1, gy) ?? own, H(gx, gy - 1) ?? own, H(gx, gy + 1) ?? own);
+                    var limit = ArenaTerrainMutation.UnsupportedLimitMicrocells;
+                    Assert.IsFalse(own - w >= limit && own - e >= limit, $"fin along x at {gx},{gy} after hit {hit}");
+                    Assert.IsFalse(own - n >= limit && own - s >= limit, $"fin along y at {gx},{gy} after hit {hit}");
+                }
+        }
+    }
+
+    [TestMethod]
+    public void EnemyMagic_BreaksTheGroundByTheSameRule()
+    {
+        var simulation = new RunSimulationFactory(new SeededRandomSource(42))
+            .Create(new HashSet<string>(), seed: 42, hunt: HuntSelection.FireTierOne);
+        simulation.EnableHunt1Terrain();
+        Assert.IsTrue(simulation.ChoosePrimary(Wyrmforge.Domain.Spells.SpellId.FireBolt));
+        simulation.Tick(0, default, 390, 700);
+        Assert.IsTrue(simulation.ChooseMapNode(simulation.AvailableMapNodes[0].Id));
+        simulation.Tick(.05, default, 390, 700);
+        var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+        var blast = typeof(RunSimulation).GetMethod("EnemyTerrainBlast", flags)!;
+        var before = simulation.TerrainChangesThisTick.Count;
+        // Away from the route and the player: a power-3 enemy blast must dig.
+        blast.Invoke(simulation, [new Vector2D(60, Height * .5), 3]);
+        Assert.IsGreaterThan(before, simulation.TerrainChangesThisTick.Count, "enemy magic digs the ground");
+    }
+
+    [TestMethod]
     public void LiveFireballs_ExcavateTheGroundDuringAFight()
     {
         var simulation = new RunSimulationFactory(new SeededRandomSource(42))

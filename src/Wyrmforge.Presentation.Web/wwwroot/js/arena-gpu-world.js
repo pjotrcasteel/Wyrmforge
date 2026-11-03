@@ -5,6 +5,8 @@ import { lightsIntersectingView } from './lighting/registry.js';
 import { lightingQualityBudget } from './lighting/quality.js';
 const UNIT = 48;
 const GROUND_Y = Math.SQRT2;
+export const GROUND_EMISSIVE_ID = 'hunt-ground-emissive';
+const GROUND_EMISSION_INTENSITY = 1;
 
 /**
  * Legacy stretches world ground and light data by sqrt2 so a 45 degree orthographic camera lands one ground pixel on one
@@ -287,10 +289,14 @@ export class HuntGpuWorld {
                 s: [mesh.scale.x, mesh.scale.y, mesh.scale.z].map(round), visible: mesh.visible !== false };
         });
     }
-    begin(ctx, camera, width, height) {
+    begin(ctx, camera, width, height, groundEmissive = null) {
         this.camera = camera; this.width = width; this.height = height;
         this.used.clear(); this.dirtyTextures.clear(); this.objects = []; this.materials = [];
-        this.capture('hunt-ground', ctx.canvas, 0, 0, width, height, 0, false);
+        // The emissive map is a second viewport-sized layer over the same ground plane: black where nothing glows, so crack veins,
+        // hot craters and the bedrock hint are lit surfaces that stay bright in the dark and sit beneath every actor.
+        if (groundEmissive) this.uploadLayer(GROUND_EMISSIVE_ID, groundEmissive, width, height);
+        this.capture('hunt-ground', ctx.canvas, 0, 0, width, height, 0, false, groundEmissive
+            ? { material: { emissiveMap: GROUND_EMISSIVE_ID, emission: '#ffffff', emissionIntensity: GROUND_EMISSION_INTENSITY } } : {});
     }
     /** Callers may skip repaint only when their explicit visual revision is unchanged. */
     canReuseCapture(id, revision, width, height) {
@@ -299,36 +305,37 @@ export class HuntGpuWorld {
             layer.pixels.width === Math.max(1, Math.ceil(width)) &&
             layer.pixels.height === Math.max(1, Math.ceil(height));
     }
+    /** Registers (once) and refreshes a Canvas-backed GPU texture; returns whether pixels were re-uploaded. */
+    uploadLayer(id, source, width, height, revision) {
+        if (revision !== undefined && (typeof revision !== 'string' &&
+            !(typeof revision === 'number' && Number.isFinite(revision))))
+            throw new TypeError('Capture revision must be a stable string or finite number');
+        this.used.add(id);
+        let layer = this.layers.get(id);
+        const unchanged = this.canReuseCapture(id, revision, width, height);
+        if (!layer) {
+            const pixels = document.createElement('canvas');
+            pixels.width = Math.max(1, Math.ceil(width)); pixels.height = Math.max(1, Math.ceil(height));
+            const texture = new T.CanvasTexture(pixels);
+            this.engine.registerTexture(id, texture);
+            layer = { pixels, texture }; this.layers.set(id, layer);
+        }
+        if (unchanged) return false;
+        if (layer.pixels.width !== Math.ceil(width)) layer.pixels.width = Math.ceil(width);
+        if (layer.pixels.height !== Math.ceil(height)) layer.pixels.height = Math.ceil(height);
+        const ctx = layer.pixels.getContext('2d');
+        ctx.imageSmoothingEnabled = false;
+        ctx.clearRect(0, 0, layer.pixels.width, layer.pixels.height);
+        ctx.drawImage(source, 0, 0, layer.pixels.width, layer.pixels.height);
+        layer.texture.needsUpdate = true;
+        this.dirtyTextures.add(id);
+        layer.revision = revision;
+        return true;
+    }
     capture(id, source, x, y, width, height, elevation = 0, castsShadow = true, surface = {}) {
         // Existing Canvas layers remain a migration fallback. New renderables may instead
         // reference registered GPU texture IDs, authored geometry and surface channels.
-        if (source) {
-            const revision = surface.revision;
-            if (revision !== undefined && (typeof revision !== 'string' &&
-                !(typeof revision === 'number' && Number.isFinite(revision))))
-                throw new TypeError('Capture revision must be a stable string or finite number');
-            this.used.add(id);
-            let layer = this.layers.get(id);
-            const unchanged = this.canReuseCapture(id, revision, width, height);
-            if (!layer) {
-                const pixels = document.createElement('canvas');
-                pixels.width = Math.max(1, Math.ceil(width)); pixels.height = Math.max(1, Math.ceil(height));
-                const texture = new T.CanvasTexture(pixels);
-                this.engine.registerTexture(id, texture);
-                layer = { pixels, texture }; this.layers.set(id, layer);
-            }
-            if (!unchanged) {
-                if (layer.pixels.width !== Math.ceil(width)) layer.pixels.width = Math.ceil(width);
-                if (layer.pixels.height !== Math.ceil(height)) layer.pixels.height = Math.ceil(height);
-                const ctx = layer.pixels.getContext('2d');
-                ctx.imageSmoothingEnabled = false;
-                ctx.clearRect(0, 0, layer.pixels.width, layer.pixels.height);
-                ctx.drawImage(source, 0, 0, layer.pixels.width, layer.pixels.height);
-                layer.texture.needsUpdate = true;
-                this.dirtyTextures.add(id);
-                layer.revision = revision;
-            }
-        }
+        if (source) this.uploadLayer(id, source, width, height, surface.revision);
         // An explicit 2.5D/3D occluder always wins. Legacy Canvas captures
         // contribute their own alpha silhouette through the shared shadow maps.
         // Capture quads and C# lights are projected into the camera viewport.

@@ -148,7 +148,9 @@ public sealed class ArenaTerrainTests
         var recipe = Make(7, 0);
         var grid = recipe.Grid;
         Assert.IsTrue(Cells(grid).Any(cell => cell.Surface >= 8), "natural arenas offer raised cover");
-        Assert.IsTrue(Cells(grid).Where(cell => cell.Material == ArenaTerrainMaterial.Stone).All(cell => cell.Surface % ArenaTerrainGrid.MaxStepMicrocells == 0));
+        // Whole columns step in half-metre multiples; a rim that weathering chipped into microcolumns averages between them.
+        Assert.IsTrue(Cells(grid).Where(cell => cell.Material == ArenaTerrainMaterial.Stone && !grid.IsSubdivided(cell.Column, cell.Row))
+            .All(cell => cell.Surface % ArenaTerrainGrid.MaxStepMicrocells == 0));
         var sheer = Cells(grid).First(cell => cell.Surface >= 8 && HasSheerNeighbour(grid, cell.Column, cell.Row));
         var lower = new[] { (1, 0), (-1, 0), (0, 1), (0, -1) }
             .Select(offset => (Column: sheer.Column + offset.Item1, Row: sheer.Row + offset.Item2))

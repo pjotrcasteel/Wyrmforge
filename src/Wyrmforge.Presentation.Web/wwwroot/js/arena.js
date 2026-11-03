@@ -14,7 +14,7 @@ import { raisedActor } from './arena-projection.js';
 import { ambientParticles, drawAmbientParticles } from './arena-ambient-particles.js';
 import { readArenaDebugFlags, botMovement, createBotMemory, withDebugAmbient } from './arena-debug.js';
 import { createFrameSampler, readHeapMegabytes, perfReport, perfLines } from './arena-perf.js';
-import { createDestructionFx, observeTerrain, drawDestructionFx, drawFireZoneVignette, drawCrackGlow, drawBedrockGlow } from './arena-destruction-fx.js';
+import { createDestructionFx, observeTerrain, drawDestructionFx, drawFireZoneVignette, drawCrackGlow, drawBedrockGlow, paintGroundEmissive } from './arena-destruction-fx.js';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
 import { drawRecoveryGuide } from './arena-recovery.js';
@@ -503,7 +503,14 @@ function draw(state, snapshot, width, height) {
         ...(greybox ? createDestructibleLayers(snapshot.environment, worldWidth, worldHeight, visualSeconds)
             : getArenaCloisterElevations(snapshot.environment, worldWidth, worldHeight, visualSeconds, null, state.g4FlatGround, gpu)),
     ];
-    if (gpu) gpu.begin(ctx, camera, width, height);
+    // On the GPU path the ground glows (crack veins, hot craters, bedrock hint) ride the ground's emissive map and are lit surfaces
+    // under every actor; the additive overlay versions below remain for the Canvas fallback.
+    const view = { x: camera.x, y: camera.y, width, height };
+    const emissive = gpu && state.terrainFrame && snapshot.environment?.terrain
+        ? paintGroundEmissive(state, state.terrainFrame, state.destructionFx, huntBand(state, snapshot),
+            view, performance.now() / 1000, state.reducedMotion.matches) : null;
+    if (emissive) state.veinSeams = emissive.seams;
+    if (gpu) gpu.begin(ctx, camera, width, height, emissive?.canvas ?? null);
     state.lighting01FixtureCount = gpu && state.lighting01
         ? submitLighting01Fixtures(gpu, snapshot.environment, state.sharedLightingFrame,
             camera, worldWidth, worldHeight) : 0;
@@ -573,15 +580,18 @@ function draw(state, snapshot, width, height) {
             state.gpuError = String(error); gpu.dispose(); state.gpuWorld = null; gpu = null;
         }
     }
+    const glowOnGround = Boolean(emissive && gpu);
     drawReliquaryEmergence(ctx, snapshot.reliquary);
     drawBellWardenEntrance(ctx, snapshot.bellWarden);
     if (state.terrainFrame && snapshot.environment?.terrain) {
         drawAmbientParticles(ctx, ambientParticles(huntBand(state, snapshot), visualSeconds,
             { width: worldWidth, height: worldHeight }, state.reducedMotion.matches), { x: camera.x, y: camera.y, width, height });
         const nowSeconds = performance.now() / 1000;
-        state.veinSeams = drawCrackGlow(ctx, state.terrainFrame, huntBand(state, snapshot), { x: camera.x, y: camera.y, width, height }, nowSeconds, state.reducedMotion.matches);
-        drawBedrockGlow(ctx, state.terrainFrame, { x: camera.x, y: camera.y, width, height }, nowSeconds, state.reducedMotion.matches);
-        if (state.destructionFx) drawDestructionFx(ctx, state.destructionFx, nowSeconds, { x: camera.x, y: camera.y, width, height });
+        if (!glowOnGround) {
+            state.veinSeams = drawCrackGlow(ctx, state.terrainFrame, huntBand(state, snapshot), { x: camera.x, y: camera.y, width, height }, nowSeconds, state.reducedMotion.matches);
+            drawBedrockGlow(ctx, state.terrainFrame, { x: camera.x, y: camera.y, width, height }, nowSeconds, state.reducedMotion.matches);
+        }
+        if (state.destructionFx) drawDestructionFx(ctx, state.destructionFx, nowSeconds, { x: camera.x, y: camera.y, width, height }, glowOnGround ? 'chips' : 'all');
         // The world is drawn translated by -camera here; the furnace glow belongs to the screen edges.
         ctx.save();
         ctx.translate(camera.x, camera.y);

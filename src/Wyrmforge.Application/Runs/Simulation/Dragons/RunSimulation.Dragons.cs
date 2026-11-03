@@ -178,6 +178,7 @@ public sealed partial class RunSimulation
         if (dragon?.Definition.Id == DragonId.Ashfang)
             RegisterAshfangEffect(hazard.EffectKind ?? (hazard.FromAbove ? "meteor" : "cinder"), hazard.Position, hazard.Radius);
         else RegisterElementalImpact(hazard.Position, hazard.VisualSpell);
+        EnemyTerrainBlast(hazard.Position, hazard.FromAbove ? 3 : 2);
         if (Vector2D.Distance(player.Position, hazard.Position) <= hazard.Radius) DamagePlayer(hazard.Damage);
     }
 
@@ -330,6 +331,7 @@ public sealed partial class RunSimulation
     {
         var radius = attack.Geometry.Radius.For(activeDragon.Phase);
         RegisterElementalImpact(center, attack.VisualSpell);
+        EnemyTerrainBlast(center, 3);
         if (Vector2D.Distance(player.Position, center) <= radius) DamagePlayer(attack.Damage.For(activeDragon.Phase) * depthState.DragonDamageMultiplier);
     }
 
