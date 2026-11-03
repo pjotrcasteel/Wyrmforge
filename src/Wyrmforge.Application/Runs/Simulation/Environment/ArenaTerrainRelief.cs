@@ -115,7 +115,7 @@ internal static class ArenaTerrainRelief
             {
                 var index = row * columns + column;
                 var material = grid.Material(column, row);
-                if (protectedCells[index] || material is ArenaTerrainMaterial.Lava or ArenaTerrainMaterial.Wood) continue;
+                if (protectedCells[index] || material is ArenaTerrainMaterial.Lava or ArenaTerrainMaterial.Wood or ArenaTerrainMaterial.Boulder) continue;
                 var own = whole[index];
                 var soft = Soft(column, row);
                 var heights = new short[ArenaTerrainGrid.MicroCount];
@@ -273,7 +273,10 @@ internal static class ArenaTerrainRelief
             }
     }
 
-    /// <summary>Lone pillars (cover that blocks shots) and low boulder fields (rubble to fight across), all breakable.</summary>
+    /// <summary>
+    /// Boulders: lone pillars (cover that blocks shots) with smaller rocks leaning on them, and low boulder fields (rubble to fight across).
+    /// A boulder is stone for every gameplay rule and breaks like it; the client draws it as an upright rock that shrinks as it is worn down.
+    /// </summary>
     public static void Pillars(Random rng, ArenaTerrainGrid grid, int[] routeDistance)
     {
         var pillars = 9 + rng.Next(7);
@@ -282,13 +285,13 @@ internal static class ArenaTerrainRelief
             var (column, row) = (1 + rng.Next(grid.Columns - 2), 3 + rng.Next(grid.Rows - 6));
             if (!Open(grid, column, row) || routeDistance[row * grid.Columns + column] < 3) continue;
             var top = new[] { 12, 16, 20 }[rng.Next(3)];
-            grid.Set(column, row, top, ArenaTerrainMaterial.Stone);
+            grid.Set(column, row, top, ArenaTerrainMaterial.Boulder);
             // An outcrop, not a post: lower stones lean against it, stepping down so each rises at most a step above the next.
             for (var satellite = 0; satellite < rng.Next(4); satellite++)
             {
                 var (sc, sr) = (column + rng.Next(3) - 1, row + rng.Next(3) - 1);
                 if ((sc == column && sr == row) || !Open(grid, sc, sr) || routeDistance[sr * grid.Columns + sc] < 3) continue;
-                grid.Set(sc, sr, Math.Max(Step, top - Step * (1 + rng.Next(3))), ArenaTerrainMaterial.Stone);
+                grid.Set(sc, sr, Math.Max(Step, top - Step * (1 + rng.Next(3))), ArenaTerrainMaterial.Boulder);
             }
         }
         var fields = 3 + rng.Next(3);
@@ -299,7 +302,7 @@ internal static class ArenaTerrainRelief
             {
                 var (column, row) = (cx + rng.Next(5) - 2, cy + rng.Next(5) - 2);
                 if (!Open(grid, column, row) || routeDistance[row * grid.Columns + column] < 3) continue;
-                grid.Set(column, row, 4 * (1 + rng.Next(2)), ArenaTerrainMaterial.Stone);
+                grid.Set(column, row, 4 * (1 + rng.Next(2)), ArenaTerrainMaterial.Boulder);
             }
         }
     }

@@ -149,6 +149,20 @@ for i, im in enumerate(components(VEG, (0, 334, 132, 18), dilate=1, min_area=6, 
 for i, im in enumerate(components(VEG, (0, 372, 222, 60), dilate=1, min_area=12, min_width=7)):
     sprites.append((f'decal.flower.{i}', remap(im, flower)))
 
+# Boulders: the grey rocks of the pack, from tall outcrop down to pebbles, in three tones (grey, ash for the Burning band, char for Volcanic).
+ROCKS = sheet('Rocks.png')
+top_rocks = sorted(components(ROCKS, (96, 12, 100, 60), dilate=0, min_area=30), key=lambda im: -im.width * im.height)
+small_rocks = [im for im in components(ROCKS, (96, 60, 100, 130), dilate=0, min_area=10) if max(im.size) <= 18 and min(im.size) >= 3]
+rock_kinds = [('tall', top_rocks[0:1]), ('big', top_rocks[1:2]), ('lump', top_rocks[2:4]),
+              ('flat', [im for im in small_rocks if im.width >= 1.7 * im.height][:3]), ('pebble', [im for im in small_rocks if im.width < 1.7 * im.height][:5])]
+def rock_grey(h, s, v): return 0.08, s * 0.25, 0.07 + v * 0.50
+def rock_ash(h, s, v): return 0.05, s * 0.2, 0.06 + v * 0.40
+for kind, images in rock_kinds:
+    for i, im in enumerate(images):
+        sprites.append((f'rock.{kind}.{i}.grey', remap(im, rock_grey)))
+        sprites.append((f'rock.{kind}.{i}.ash', remap(im, rock_ash)))
+        sprites.append((f'rock.{kind}.{i}.char', ember_pass(remap(im, charred_base), 0.04)))
+
 # A decal must fit inside one terrain face.
 sprites = [s for s in sprites if not s[0].startswith('decal.') or max(s[1].size) <= 30]
 

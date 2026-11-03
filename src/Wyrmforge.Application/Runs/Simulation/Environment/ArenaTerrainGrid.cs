@@ -2,7 +2,7 @@ using Wyrmforge.Domain.Combat.Geometry;
 
 namespace Wyrmforge.Application.Runs.Simulation;
 
-public enum ArenaTerrainMaterial : byte { Soil, Ash, Stone, Lava, Wood }
+public enum ArenaTerrainMaterial : byte { Soil, Ash, Stone, Lava, Wood, Boulder }
 
 /// <summary>
 /// Authoritative arena heightfield: one column per metre (32 world units), heights in 12.5 cm microcells.
@@ -103,7 +103,7 @@ public sealed class ArenaTerrainGrid
     public ArenaTerrainMaterial MicroMaterial(int column, int row, int microX, int microY)
     {
         var index = row * Columns + column;
-        if (topsoil[index] is ArenaTerrainMaterial.Stone or ArenaTerrainMaterial.Lava or ArenaTerrainMaterial.Wood) return topsoil[index];
+        if (topsoil[index] is ArenaTerrainMaterial.Stone or ArenaTerrainMaterial.Lava or ArenaTerrainMaterial.Wood or ArenaTerrainMaterial.Boulder) return topsoil[index];
         return MicroSurface(column, row, microX, microY) <= stoneTop[index] ? ArenaTerrainMaterial.Stone : topsoil[index];
     }
 

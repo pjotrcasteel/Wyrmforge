@@ -90,12 +90,56 @@ export function collectBushes(frame, band) {
     return bushes;
 }
 
-/** Draws one tree or bush in world coordinates with its roots on the foot anchor. */
+const ROCK_TONES = ['grey', 'grey', 'ash', 'char'];
+
+/** The rock sprites for a boulder of a given height in microcells (taller ones are two rocks piled), or null once it is rubble. */
+export function boulderParts(band, height, hash) {
+    const tone = ROCK_TONES[Math.min(3, Math.max(0, band | 0))];
+    if (height >= 20) return { name: `rock.tall.0.${tone}`, extra: { name: `rock.big.0.${tone}`, dx: (hash >>> 21) & 1 ? 5 : -5, dy: -26 } };
+    if (height >= 14) return { name: `rock.tall.0.${tone}` };
+    if (height >= 8) return { name: `rock.big.0.${tone}` };
+    if (height >= 4) return { name: `rock.lump.${hash % 2}.${tone}` };
+    if (height >= 2) return { name: (hash >>> 20) & 1 ? `rock.flat.${hash % 3}.${tone}` : `rock.pebble.${hash % 5}.${tone}` };
+    return null;
+}
+
+/** Every boulder of a terrain frame as an upright rock that shrinks as C# wears its column down; cached on the frame. */
+export function collectBoulders(frame, band) {
+    if (!frame?.boulders) return [];
+    if (frame.boulderList && frame.boulderBand === band) return frame.boulderList;
+    const rocks = [];
+    for (const [index, height] of frame.boulders) {
+        const column = index % frame.columns, row = Math.floor(index / frame.columns);
+        const hash = cellHash(column, row, 0, 31);
+        const parts = boulderParts(band, height, hash);
+        if (!parts) continue;
+        rocks.push({ key: `r${index}`, x: (column + .5) * FACE, footY: (row + .5) * FACE - FOOT_RAISE_PX, heightPx: height * MICROCELL_PX, standing: true,
+            name: parts.name, extra: parts.extra, flip: ((hash >>> 22) & 1) === 1, depth: (row + 1) * FACE });
+    }
+    frame.boulderList = rocks; frame.boulderBand = band;
+    return rocks;
+}
+
+function drawPart(ctx, loaded, name, footX, footY, flip) {
+    const sprite = loaded.sprites[name];
+    if (!sprite) return false;
+    if (!flip) {
+        ctx.drawImage(loaded.image, sprite.x, sprite.y, sprite.w, sprite.h, Math.round(footX - sprite.ax), Math.round(footY - sprite.ay), sprite.w, sprite.h);
+        return true;
+    }
+    ctx.save();
+    ctx.translate(Math.round(footX), Math.round(footY - sprite.ay));
+    ctx.scale(-1, 1);
+    ctx.drawImage(loaded.image, sprite.x, sprite.y, sprite.w, sprite.h, -sprite.ax, 0, sprite.w, sprite.h);
+    ctx.restore();
+    return true;
+}
+
+/** Draws one tree, bush or boulder in world coordinates with its roots on the foot anchor. */
 export function drawTree(ctx, tree) {
     const loaded = forestKit();
-    const sprite = loaded?.sprites[tree.name];
-    if (!sprite) return false;
-    ctx.drawImage(loaded.image, sprite.x, sprite.y, sprite.w, sprite.h, Math.round(tree.x - sprite.ax), Math.round(tree.footY - sprite.ay), sprite.w, sprite.h);
+    if (!loaded || !drawPart(ctx, loaded, tree.name, tree.x, tree.footY, tree.flip)) return false;
+    if (tree.extra) drawPart(ctx, loaded, tree.extra.name, tree.x + (tree.flip ? -tree.extra.dx : tree.extra.dx), tree.footY + tree.extra.dy, tree.flip);
     return true;
 }
 
@@ -104,11 +148,12 @@ export function treeLayers(frame, band, camera, width, height) {
     const loaded = forestKit();
     if (!loaded) return [];
     const layers = [];
-    for (const tree of [...collectTrees(frame, band), ...collectBushes(frame, band)]) {
+    for (const tree of [...collectTrees(frame, band), ...collectBushes(frame, band), ...collectBoulders(frame, band)]) {
         const sprite = loaded.sprites[tree.name];
         if (!sprite) continue;
-        if (tree.x < camera.x - sprite.w || tree.x > camera.x + width + sprite.w || tree.footY < camera.y - 32 || tree.footY - sprite.h > camera.y + height) continue;
-        layers.push({ kind: 'tree', depth: tree.depth, tree: { ...tree, spriteHeight: sprite.h, captureSize: sprite.h <= 176 ? 256 : 384 } });
+        const spriteHeight = tree.extra ? Math.max(sprite.h, (loaded.sprites[tree.extra.name]?.h ?? 0) - tree.extra.dy) : sprite.h;
+        if (tree.x < camera.x - sprite.w || tree.x > camera.x + width + sprite.w || tree.footY < camera.y - 32 || tree.footY - spriteHeight > camera.y + height) continue;
+        layers.push({ kind: 'tree', depth: tree.depth, tree: { ...tree, spriteHeight, captureSize: spriteHeight <= 80 ? 160 : spriteHeight <= 176 ? 256 : 384 } });
     }
     return layers;
 }

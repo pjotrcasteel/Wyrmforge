@@ -169,7 +169,7 @@ public sealed class GreyboxHuntBrowserTests : PageTest
     /// <summary>Review captures: the debug bot walks the arena and a screenshot is saved every few seconds, so trees, rocks and ground can be judged along the route.</summary>
     [TestMethod]
     [DataRow(0, "", "n")]
-    [DataRow(0, "&ambient=0.9", "a09")]
+    [DataRow(0, "&bright=1", "bright")]
     [DataRow(0, "&ambient=1.4", "a14")]
     [DataRow(2, "&ambient=1.0", "a10")]
     public async Task Hunt1Forest_ReviewTourCapturesTheArenaAlongTheRoute(int band, string lighting, string tag)

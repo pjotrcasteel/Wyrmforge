@@ -107,7 +107,7 @@ public sealed class ArenaTerrainTests
         {
             var grid = Make(seed, 0).Grid;
             Assert.IsTrue(Cells(grid).Any(cell => cell.Material == ArenaTerrainMaterial.Soil && cell.Surface > 0), $"seed {seed}: rolling ground");
-            Assert.IsGreaterThan(8, Cells(grid).Count(cell => cell.Material == ArenaTerrainMaterial.Stone && cell.Surface >= 12), $"seed {seed}: ridges and pillars give cover");
+            Assert.IsGreaterThan(8, Cells(grid).Count(cell => cell.Material is ArenaTerrainMaterial.Stone or ArenaTerrainMaterial.Boulder && cell.Surface >= 12), $"seed {seed}: ridges and pillars give cover");
             // Hills are walkable: soil never steps more than the climbable half metre from a soil neighbour.
             foreach (var cell in Cells(grid).Where(cell => cell.Material == ArenaTerrainMaterial.Soil))
                 foreach (var offset in new[] { (1, 0), (0, 1) })
@@ -168,6 +168,25 @@ public sealed class ArenaTerrainTests
         for (var hit = 0; hit < 6; hit++) ArenaTerrainMutation.Apply(arena.Grid, new ArenaTerrainImpact(hit, ArenaTerrainGrid.CenterOf(tree.Column, tree.Row), 3), arena.ProtectedCells);
         Assert.IsLessThan(before, arena.Grid.MicroSurface(tree.Column, tree.Row, 3, 3), "fire burns a trunk down");
         Assert.AreEqual(ArenaTerrainMaterial.Wood, arena.Grid.MicroMaterial(tree.Column, tree.Row, 3, 3), "a worn trunk is still wood");
+    }
+
+    [TestMethod]
+    public void Boulders_AreBreakableStoneAwayFromTheRouteThatShrinkAsFireWearsThemDown()
+    {
+        foreach (var (seed, influence) in new[] { (7, 0.1), (23, 0.4), (11, 0.7), (23, 0.95) })
+        {
+            var recipe = Make(seed, influence);
+            var boulders = Cells(recipe.Grid).Where(cell => cell.Material == ArenaTerrainMaterial.Boulder).ToList();
+            Assert.IsGreaterThanOrEqualTo(5, boulders.Count, $"seed {seed}: every arena has boulders");
+            foreach (var boulder in boulders)
+                Assert.IsFalse(recipe.ProtectedCells[boulder.Row * Columns + boulder.Column], $"seed {seed}: a boulder never sits on the route");
+        }
+        var arena = Make(7, 0.1);
+        var rock = Cells(arena.Grid).First(cell => cell.Material == ArenaTerrainMaterial.Boulder && cell.Surface >= 12);
+        var before = arena.Grid.Surface(rock.Column, rock.Row);
+        for (var hit = 0; hit < 8; hit++) ArenaTerrainMutation.Apply(arena.Grid, new ArenaTerrainImpact(hit, ArenaTerrainGrid.CenterOf(rock.Column, rock.Row), 3), arena.ProtectedCells);
+        Assert.IsLessThan(before, arena.Grid.Surface(rock.Column, rock.Row), "fire breaks a boulder down");
+        Assert.AreEqual(ArenaTerrainMaterial.Boulder, arena.Grid.MicroMaterial(rock.Column, rock.Row, 3, 3), "a worn boulder is still rock");
     }
 
     [TestMethod]

@@ -6,7 +6,8 @@ import { generateTileSet, variantFor, TILE, normalFromTile } from './arena-terra
 import { drawGroundDecals } from './arena-ground-decals.js';
 import { forestKit } from './forest-kit.js';
 
-export const TERRAIN_MATERIAL = Object.freeze({ Soil: 0, Ash: 1, Stone: 2, Lava: 3, Wood: 4 });
+export const TERRAIN_MATERIAL = Object.freeze({ Soil: 0, Ash: 1, Stone: 2, Lava: 3, Wood: 4, Boulder: 5 });
+const isUprightProp = material => material === TERRAIN_MATERIAL.Wood || material === TERRAIN_MATERIAL.Boulder;
 // Same bounds as C# WyrmInfluenceProfile.Fire: Wet, Scorched, Burning, Volcanic.
 export const INFLUENCE_UPPER_BOUNDS = Object.freeze([0.25, 0.55, 0.85]);
 // Room above row 0 for columns that rise above the floor, and below for pits.
@@ -227,22 +228,27 @@ export function mergeTerrainFrame(previous, incoming) {
     const fine = new Map(previous?.fine ?? []);
     for (const block of incoming.fine ?? []) {
         if (!block.heights?.length) fine.delete(block.index);
-        else if (incoming.material?.[block.index] === TERRAIN_MATERIAL.Wood)
-            fine.set(block.index, { heights: block.heights.map(h => Math.min(h, TRUNK_MOUND_MICROCELLS)), trunk: Math.max(...block.heights),
-                topsoil: block.topsoil, stoneTop: block.stoneTop, wear: block.wear ?? null });
+        else if (isUprightProp(incoming.material?.[block.index]))
+            fine.set(block.index, { heights: block.heights.map(h => Math.min(h, TRUNK_MOUND_MICROCELLS)), topsoil: block.topsoil, stoneTop: block.stoneTop, wear: block.wear ?? null });
         else fine.set(block.index, { heights: block.heights, topsoil: block.topsoil, stoneTop: block.stoneTop, wear: block.wear ?? null });
     }
-    // A tree is drawn as an upright sprite; the terrain itself only shows a low root mound under it. The real trunk height stays in `trunks`.
-    const trunks = new Map();
-    let surface = incoming.surface;
+    // Trees and boulders are drawn as upright sprites; the terrain itself only shows a low mound under them. The real height (the coarse
+    // height C# collides with) stays in `trunks` / `boulders`, and a boulder paints as stone.
+    const trunks = new Map(), boulders = new Map();
+    let surface = incoming.surface, material = incoming.material;
     for (let index = 0; index < (incoming.material?.length ?? 0); index++) {
-        if (incoming.material[index] !== TERRAIN_MATERIAL.Wood) continue;
+        const kind = incoming.material[index];
+        if (!isUprightProp(kind)) continue;
         if (surface === incoming.surface) surface = Array.from(incoming.surface);
-        trunks.set(index, fine.get(index)?.trunk ?? incoming.surface[index]);
+        (kind === TERRAIN_MATERIAL.Wood ? trunks : boulders).set(index, incoming.surface[index]);
         surface[index] = Math.min(surface[index], TRUNK_MOUND_MICROCELLS);
+        if (kind === TERRAIN_MATERIAL.Boulder) {
+            if (material === incoming.material) material = Array.from(incoming.material);
+            material[index] = TERRAIN_MATERIAL.Stone;
+        }
     }
     return { revision: incoming.revision, columns: incoming.columns, rows: incoming.rows,
-        surface, material: incoming.material, fine, trunks,
+        surface, material, fine, trunks, boulders,
         visualSeed: incoming.visualSeed ?? previous?.visualSeed ?? 0,
         // Which fine blocks this delta touched: cosmetic destruction cues are derived from exactly these.
         changed: (incoming.fine ?? []).map(block => block.index),
@@ -258,7 +264,7 @@ export function microHeight(frame, column, row, microX, microY) {
 
 /** What a microcolumn is made of: stone at or below the stone line, otherwise the column's original topsoil. */
 export function microMaterial(block, height) {
-    if (block.topsoil === TERRAIN_MATERIAL.Stone || block.topsoil === TERRAIN_MATERIAL.Lava) return block.topsoil;
+    if (block.topsoil === TERRAIN_MATERIAL.Stone || block.topsoil === TERRAIN_MATERIAL.Lava || block.topsoil === TERRAIN_MATERIAL.Wood) return block.topsoil;
     return height <= block.stoneTop ? TERRAIN_MATERIAL.Stone : block.topsoil;
 }
 

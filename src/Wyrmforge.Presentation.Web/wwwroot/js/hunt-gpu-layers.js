@@ -73,7 +73,7 @@ export function huntLayerCapture(layer, player, dragonDeath = null) {
  */
 export function huntLayerRevision(layer, artAvailable = false, artRevision = 0) {
     // A canopy changes only when its trunk wears down or the band changes.
-    if (layer.kind === 'tree') return JSON.stringify(['tree-v2', layer.tree.key, layer.tree.name]);
+    if (layer.kind === 'tree') return JSON.stringify(['tree-v3', layer.tree.key, layer.tree.name, layer.tree.extra?.name, layer.tree.flip]);
     if (layer.kind !== 'masonry') return undefined;
     // Cloister walls are drawn solely from immutable world geometry and colors.
     // Avoid re-rasterizing and uploading four large, unchanged cutouts every frame.
