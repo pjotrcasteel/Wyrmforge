@@ -115,7 +115,7 @@ internal static class ArenaTerrainRelief
             {
                 var index = row * columns + column;
                 var material = grid.Material(column, row);
-                if (protectedCells[index] || material == ArenaTerrainMaterial.Lava) continue;
+                if (protectedCells[index] || material is ArenaTerrainMaterial.Lava or ArenaTerrainMaterial.Wood) continue;
                 var own = whole[index];
                 var soft = Soft(column, row);
                 var heights = new short[ArenaTerrainGrid.MicroCount];
@@ -234,6 +234,45 @@ internal static class ArenaTerrainRelief
             }
         }
     }
+    /// <summary>
+    /// Trees: single-block trunks (1.5 to 3.5 m, shorter and charred toward the Wyrm) in loose groves on open ground, never within three columns
+    /// of the route or beside lava. A trunk is ordinary terrain (material Wood): it blocks walking and shots, and fire wears it away like
+    /// rock, so the same C# rules decide when a tree falls. The canopy is presentation only.
+    /// </summary>
+    public static void Trees(Random rng, ArenaTerrainGrid grid, int[] routeDistance, double influence)
+    {
+        var target = influence < .25 ? 22 + rng.Next(8) : influence < .55 ? 16 + rng.Next(6) : influence < .85 ? 10 + rng.Next(5) : 6 + rng.Next(4);
+        var placed = new List<(int Column, int Row)>();
+        bool Clear(int column, int row)
+        {
+            if (!Open(grid, column, row) || routeDistance[row * grid.Columns + column] < 3) return false;
+            for (var dy = -2; dy <= 2; dy++)
+                for (var dx = -2; dx <= 2; dx++)
+                    if (grid.Contains(column + dx, row + dy) && grid.Material(column + dx, row + dy) is ArenaTerrainMaterial.Lava or ArenaTerrainMaterial.Wood && Math.Abs(dx) + Math.Abs(dy) <= 1) return false;
+            return true;
+        }
+        for (var attempt = 0; attempt < target * 14 && placed.Count < target; attempt++)
+        {
+            // Most trees stand near an earlier one, so they gather in groves instead of a regular scatter.
+            var (column, row) = placed.Count > 0 && rng.Next(10) < 7
+                ? (placed[rng.Next(placed.Count)].Column + rng.Next(7) - 3, placed[rng.Next(placed.Count)].Row + rng.Next(7) - 3)
+                : (2 + rng.Next(grid.Columns - 4), 4 + rng.Next(grid.Rows - 8));
+            if (!grid.Contains(column, row) || !Clear(column, row)) continue;
+            grid.Set(column, row, (influence >= .85 ? 8 : 16) + Step * rng.Next(4), ArenaTerrainMaterial.Wood);
+            placed.Add((column, row));
+        }
+        // A forest wall frames the arena's two long edges: trunks in the outer two columns, thinning toward the Wyrm. They stay clear of
+        // the route and of lava, and the tree line leaves gaps so the edge reads as woodland rather than a fence.
+        var wall = .7 - influence * .55;
+        for (var row = 2; row < grid.Rows - 2; row += 2)
+            foreach (var side in new[] { 0, grid.Columns - 2 })
+            {
+                var (column, y) = (side + rng.Next(2), row + rng.Next(2));
+                if (rng.NextDouble() >= wall || !grid.Contains(column, y) || !Open(grid, column, y) || routeDistance[y * grid.Columns + column] < 3) continue;
+                grid.Set(column, y, (influence >= .85 ? 8 : 16) + Step * rng.Next(4), ArenaTerrainMaterial.Wood);
+            }
+    }
+
     /// <summary>Lone pillars (cover that blocks shots) and low boulder fields (rubble to fight across), all breakable.</summary>
     public static void Pillars(Random rng, ArenaTerrainGrid grid, int[] routeDistance)
     {

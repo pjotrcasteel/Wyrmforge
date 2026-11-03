@@ -12,6 +12,11 @@ export function huntLayerCapture(layer, player, dragonDeath = null) {
         actor = { x: (b.x + b.width / 2) * layer.width, y: layer.depth + 6 };
         id = `wall:${b.kind}:${b.x}:${b.y}:${b.width}:${b.height}`;
         size = Math.max(160, b.width * layer.width + 64, b.height * layer.height + 96);
+    } else if (layer.kind === 'tree') {
+        // A tall upright crown: a larger capture so the canopy above the trunk fits, feet at the trunk base.
+        actor = { x: layer.tree.x, y: layer.tree.footY, radius: 26 };
+        id = `tree:${layer.tree.key}`;
+        size = layer.tree.captureSize ?? 320;
     } else {
         actor = layer.enemy ?? layer.dragon ?? (layer.kind === 'dragonDeath' ? dragonDeath : player);
         if (!actor) return null;
@@ -48,7 +53,9 @@ export function huntLayerCapture(layer, player, dragonDeath = null) {
     // the 4px pixel-art grid. This is generic raster-capture geometry, not a
     // creature-specific shadow or a moving-light-dependent impostor.
     // Explicit authored 2.5D meshes/heightfields always take precedence.
-    const occluderHeightPx = layer.kind === 'masonry' ? undefined : Math.max(4, Math.round(size * .6 / 4) * 4);
+    const occluderHeightPx = layer.kind === 'masonry' ? undefined
+        : layer.kind === 'tree' && layer.tree.spriteHeight ? Math.round(layer.tree.spriteHeight * .9 / 4) * 4
+            : Math.max(4, Math.round(size * .6 / 4) * 4);
     const physicalVolume = layer.kind === 'masonry' && layer.barrier && layer.physicalHeightPx > 0
         ? { x: layer.barrier.x * layer.width, y: layer.barrier.y * layer.height,
             width: layer.barrier.width * layer.width, depth: layer.barrier.height * layer.height,
@@ -65,6 +72,8 @@ export function huntLayerCapture(layer, player, dragonDeath = null) {
  * depends on these names; the generic GPU engine accepts opaque revision keys.
  */
 export function huntLayerRevision(layer, artAvailable = false, artRevision = 0) {
+    // A canopy changes only when its trunk wears down or the band changes.
+    if (layer.kind === 'tree') return JSON.stringify(['tree-v2', layer.tree.key, layer.tree.name]);
     if (layer.kind !== 'masonry') return undefined;
     // Cloister walls are drawn solely from immutable world geometry and colors.
     // Avoid re-rasterizing and uploading four large, unchanged cutouts every frame.

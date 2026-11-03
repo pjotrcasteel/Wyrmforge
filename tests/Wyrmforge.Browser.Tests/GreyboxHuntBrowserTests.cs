@@ -166,6 +166,48 @@ public sealed class GreyboxHuntBrowserTests : PageTest
         }
     }
 
+    /// <summary>Review captures: the debug bot walks the arena and a screenshot is saved every few seconds, so trees, rocks and ground can be judged along the route.</summary>
+    [TestMethod]
+    [DataRow(0)]
+    [DataRow(2)]
+    [DataRow(3)]
+    public async Task Hunt1Forest_ReviewTourCapturesTheArenaAlongTheRoute(int band)
+    {
+        var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
+        var output = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
+        Directory.CreateDirectory(output);
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.AddInitScriptAsync("""
+            localStorage.setItem('wyrmforge.firstHunt.v1','3');
+            localStorage.setItem('wyrmforge.characterSchool.v1','Pyromancer');
+            """);
+        var errors = new List<string>();
+        Page.PageError += (_, error) => errors.Add(error);
+        await Page.GotoAsync(root + $"/?hunt1=1&band={band}&bright=1&god=1&bot=1&speed=3", new() { WaitUntil = WaitUntilState.NetworkIdle });
+        var start = Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^START GAME") });
+        await start.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 45000 });
+        await start.ClickAsync();
+        if (await Page.Locator(".character-creation").IsVisibleAsync())
+            await Page.GetByRole(AriaRole.Button, new() { Name = "Choose Pyromancer" }).ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Region, new() { Name = "Town square" })).ToBeVisibleAsync();
+        await Page.Locator(".refuge-town-spot--gate").ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Enter Free Play" }).ClickAsync();
+        await Page.Locator(".gate-action--primary").ClickAsync();
+        await Page.Locator(".gate-lineage--fire").ClickAsync();
+        await Page.Locator(".gate-tier--ready").First.ClickAsync();
+        await Page.Locator("button.route-node.available").First.ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^Enter (rare )?trail$") }).ClickAsync();
+        await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
+        await ArenaBrowserWait.UntilAsync(Page, @"return state?.hunt1Terrain?.paintedRevision === state?.hunt1Terrain?.snapshotRevision && state?.greyboxLighting === 'shared-gpu' && !state?.renderingFailed;", 60000, "the terrain painted");
+        for (var shot = 0; shot < 8; shot++)
+        {
+            await Page.WaitForTimeoutAsync(3500);
+            if (!await Page.Locator("canvas.game-canvas").IsVisibleAsync()) break;
+            await Page.Locator("canvas.game-canvas").ScreenshotAsync(new() { Path = Path.Combine(output, $"forest-b{band}-{shot}.png") });
+        }
+        Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
+    }
+
     /// <summary>Hunt 1.0 H0.3: with the debug bot and accelerated time, the first trail clears and the real exit returns to the Chart.</summary>
     [TestMethod]
     [DataRow("")]

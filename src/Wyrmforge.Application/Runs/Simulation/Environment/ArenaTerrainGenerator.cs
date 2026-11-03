@@ -43,6 +43,7 @@ public static class ArenaTerrainGenerator
         ArenaTerrainRelief.Pillars(rng, grid, routeDistance);
         var heatSources = ArenaTerrainRelief.LavaPools(rng, grid, routeDistance, influence);
         CarveFissures(rng, grid, protectedCells, influence);
+        ArenaTerrainRelief.Trees(rng, grid, routeDistance, influence);
         ArenaTerrainRelief.Hills(rng, grid, routeDistance, influence);
         ArenaTerrainRelief.Weather(rng, grid, protectedCells);
         ArenaTerrainMutation.SettleAll(grid, protectedCells);

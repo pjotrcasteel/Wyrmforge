@@ -17,6 +17,7 @@ import { createFrameSampler, readHeapMegabytes, perfReport, perfLines } from './
 import { createDestructionFx, observeTerrain, drawDestructionFx, drawFireZoneVignette, drawCrackGlow, drawBedrockGlow, paintGroundEmissive } from './arena-destruction-fx.js';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
+import { drawTree, treeLayers } from './arena-tree-art.js';
 import { drawRecoveryGuide } from './arena-recovery.js';
 import { drawSpellCastMotion, drawSpellProjectile, drawSpellImpact } from './arena-spell-vfx.js';
 import { drawMage, updateMageWalk } from './arena-mage.js';
@@ -503,6 +504,9 @@ function draw(state, snapshot, width, height) {
         ...snapshot.enemies.map(enemy => ({ kind: 'enemy', depth: enemy.y + (enemy.radius || 0), enemy: raisedActor(enemy) })),
         { kind: 'mage', depth: snapshot.player.y + (snapshot.player.radius || 0), player: raisedActor(snapshot.player) },
         // The greybox keeps only the breakable salvage props (the Charred Scrap source), depth-sorted with actors.
+        // Hunt 1.0 trees: the C# trunk blocks are in the terrain; their canopies are depth-sorted layers.
+        ...(state.terrainFrame && snapshot.environment?.terrain
+            ? treeLayers(state.terrainFrame, huntBand(state, snapshot), camera, width, height) : []),
         ...(greybox ? createDestructibleLayers(snapshot.environment, worldWidth, worldHeight, visualSeconds)
             : getArenaCloisterElevations(snapshot.environment, worldWidth, worldHeight, visualSeconds, null, state.g4FlatGround, gpu)),
     ];
@@ -539,6 +543,8 @@ function draw(state, snapshot, width, height) {
                 drawArenaCloisterElevation(ctx, layer);
             } else if (layer.kind === 'dragon') {
                 drawDragon(ctx, layer.dragon, state.reducedMotion.matches, snapshot.dragonBreath, state.ashfang);
+            } else if (layer.kind === 'tree') {
+                drawTree(ctx, layer.tree);
             } else if (layer.kind === 'dragonDeath') {
                 drawAshfangDeath(ctx,state.ashfang);
             } else if (layer.kind === 'enemy') {

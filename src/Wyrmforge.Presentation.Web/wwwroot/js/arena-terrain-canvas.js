@@ -4,7 +4,7 @@
 import { FACE_PIXELS, MICROCELL_UNITS, blockFrontRect, blockTopRect } from './arena-projection.js';
 import { generateTileSet, variantFor, TILE, normalFromTile } from './arena-terrain-tiles.js';
 
-export const TERRAIN_MATERIAL = Object.freeze({ Soil: 0, Ash: 1, Stone: 2, Lava: 3 });
+export const TERRAIN_MATERIAL = Object.freeze({ Soil: 0, Ash: 1, Stone: 2, Lava: 3, Wood: 4 });
 // Same bounds as C# WyrmInfluenceProfile.Fire: Wet, Scorched, Burning, Volcanic.
 export const INFLUENCE_UPPER_BOUNDS = Object.freeze([0.25, 0.55, 0.85]);
 // Room above row 0 for columns that rise above the floor, and below for pits.
@@ -212,6 +212,8 @@ export function crackCells(cracks) {
     return cells;
 }
 export const MICRO_PER_COLUMN = 8;
+/** How high the terrain draws a tree's column: the sprite carries the trunk. */
+export const TRUNK_MOUND_MICROCELLS = 4;
 export const MICRO_UNITS = FACE_PIXELS / MICRO_PER_COLUMN;
 
 /**
@@ -223,10 +225,22 @@ export function mergeTerrainFrame(previous, incoming) {
     const fine = new Map(previous?.fine ?? []);
     for (const block of incoming.fine ?? []) {
         if (!block.heights?.length) fine.delete(block.index);
+        else if (incoming.material?.[block.index] === TERRAIN_MATERIAL.Wood)
+            fine.set(block.index, { heights: block.heights.map(h => Math.min(h, TRUNK_MOUND_MICROCELLS)), trunk: Math.max(...block.heights),
+                topsoil: block.topsoil, stoneTop: block.stoneTop, wear: block.wear ?? null });
         else fine.set(block.index, { heights: block.heights, topsoil: block.topsoil, stoneTop: block.stoneTop, wear: block.wear ?? null });
     }
+    // A tree is drawn as an upright sprite; the terrain itself only shows a low root mound under it. The real trunk height stays in `trunks`.
+    const trunks = new Map();
+    let surface = incoming.surface;
+    for (let index = 0; index < (incoming.material?.length ?? 0); index++) {
+        if (incoming.material[index] !== TERRAIN_MATERIAL.Wood) continue;
+        if (surface === incoming.surface) surface = Array.from(incoming.surface);
+        trunks.set(index, fine.get(index)?.trunk ?? incoming.surface[index]);
+        surface[index] = Math.min(surface[index], TRUNK_MOUND_MICROCELLS);
+    }
     return { revision: incoming.revision, columns: incoming.columns, rows: incoming.rows,
-        surface: incoming.surface, material: incoming.material, fine,
+        surface, material: incoming.material, fine, trunks,
         visualSeed: incoming.visualSeed ?? previous?.visualSeed ?? 0,
         // Which fine blocks this delta touched: cosmetic destruction cues are derived from exactly these.
         changed: (incoming.fine ?? []).map(block => block.index),
@@ -361,6 +375,7 @@ function groundVariety(frame, column, row) {
 function topTileKind(band, material, height, frame, column, row) {
     if (height <= BEDROCK_MICROCELLS) return null;
     if (material === TERRAIN_MATERIAL.Lava) return 'lavaTop';
+    if (material === TERRAIN_MATERIAL.Wood) return 'dirtTop';
     const variety = frame ? groundVariety(frame, column, row) : .5;
     if (material === TERRAIN_MATERIAL.Stone) return variety < .3 ? 'rubbleTop' : 'stoneTop';
     if (height < 0) return 'dirtTop';
@@ -368,7 +383,7 @@ function topTileKind(band, material, height, frame, column, row) {
     if (material === TERRAIN_MATERIAL.Soil) return variety < .4 ? 'mudTop' : 'ashTop';
     return 'ashTop';
 }
-const TOP_KINDS = Object.freeze(['grassTop', 'grassDryTop', 'mudTop', 'dirtTop', 'ashTop', 'stoneTop', 'rubbleTop', 'lavaTop']);
+const TOP_KINDS = Object.freeze(['grassTop', 'grassDryTop', 'mudTop', 'dirtTop', 'ashTop', 'stoneTop', 'rubbleTop', 'lavaTop', 'woodTop']);
 const KIND_INDEX = Object.freeze(Object.fromEntries(TOP_KINDS.map((kind, index) => [kind, index])));
 let scratchCanvas = null, maskCanvas = null, maskImage = null, scratchNormalCanvas = null;
 

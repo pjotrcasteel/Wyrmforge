@@ -143,12 +143,40 @@ public sealed class ArenaTerrainTests
         Assert.IsGreaterThan(20, forks, "forks share cells with the crack they leave");
     }
     [TestMethod]
+    public void Trees_AreWoodenTrunksAwayFromTheRouteThatFireWearsDown()
+    {
+        foreach (var (seed, influence) in new[] { (7, 0.1), (23, 0.4), (11, 0.7), (23, 0.95) })
+        {
+            var recipe = Make(seed, influence);
+            var grid = recipe.Grid;
+            var trunks = Cells(grid).Where(cell => cell.Material == ArenaTerrainMaterial.Wood).ToList();
+            Assert.IsGreaterThanOrEqualTo(3, trunks.Count, $"seed {seed} influence {influence}: every arena has trees");
+            foreach (var trunk in trunks)
+            {
+                Assert.IsGreaterThanOrEqualTo(influence >= .85 ? 8 : 16, trunk.Surface);
+                for (var dy = -2; dy <= 2; dy++)
+                    for (var dx = -2; dx <= 2; dx++)
+                    {
+                        var (c, r) = (trunk.Column + dx, trunk.Row + dy);
+                        if (grid.Contains(c, r)) Assert.IsFalse(recipe.ProtectedCells[r * grid.Columns + c], $"seed {seed}: a tree stands within two columns of the route");
+                    }
+            }
+        }
+        var arena = Make(7, 0.1);
+        var tree = Cells(arena.Grid).First(cell => cell.Material == ArenaTerrainMaterial.Wood);
+        var before = arena.Grid.MicroSurface(tree.Column, tree.Row, 3, 3);
+        for (var hit = 0; hit < 6; hit++) ArenaTerrainMutation.Apply(arena.Grid, new ArenaTerrainImpact(hit, ArenaTerrainGrid.CenterOf(tree.Column, tree.Row), 3), arena.ProtectedCells);
+        Assert.IsLessThan(before, arena.Grid.MicroSurface(tree.Column, tree.Row, 3, 3), "fire burns a trunk down");
+        Assert.AreEqual(ArenaTerrainMaterial.Wood, arena.Grid.MicroMaterial(tree.Column, tree.Row, 3, 3), "a worn trunk is still wood");
+    }
+
+    [TestMethod]
     public void GeneratedArenas_KeepSubdividedBlocksWithinTheClientBudget()
     {
         foreach (var (seed, influence) in new[] { (7, 0.1), (23, 0.4), (11, 0.7), (23, 0.95), (99, 0.55) })
         {
             var count = Make(seed, influence).Grid.ToFrame(-1).Fine.Count;
-            Assert.IsLessThan(600, count, $"seed {seed} influence {influence}: {count} subdivided blocks cost the client a long first paint");
+            Assert.IsLessThan(650, count, $"seed {seed} influence {influence}: {count} subdivided blocks cost the client a long first paint");
         }
     }
 

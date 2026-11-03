@@ -297,6 +297,40 @@ function mudTop(band, seed) {
     for (let i = 0; i < 5; i++) { const x = Math.floor(random() * TILE), y = Math.floor(random() * TILE); if (tile.get(x, y) === wet[0]) tile.set(x, y, ramps.stone[3]); }
     return tile;
 }
+/** End grain of a trunk: growth rings, a dark bark rim and radial checks. Charred in the burning bands. */
+function woodTop(band, seed) {
+    const ramps = rampsForBand(band), ramp = band >= 2 ? ramps.stone : ramps.dirt, tile = new Tile(), random = rng(seed);
+    const grain = wrapNoise(seed + 1, 8), cx = 15.5 + (random() - .5) * 3, cy = 15.5 + (random() - .5) * 3;
+    for (let y = 0; y < TILE; y++) for (let x = 0; x < TILE; x++) {
+        const d = Math.hypot(x - cx, y - cy);
+        if (d > 13.5) { tile.set(x, y, d > 14.8 ? ramp[0] : ramp[1]); continue; }
+        const ring = Math.sin(d * 1.25 + (grain(x / TILE, y / TILE) - .5) * 2.2);
+        tile.set(x, y, dithered(ramp, .42 + ring * .16 + (grain(x / TILE, y / TILE) - .5) * .2, x, y));
+    }
+    for (let i = 0; i < 3; i++) { // radial checks
+        const angle = random() * 6.28;
+        for (let r = 3; r < 12; r++) tile.set(cx + Math.cos(angle) * r, cy + Math.sin(angle) * r, ramp[0]);
+    }
+    if (band >= 2) for (let i = 0; i < 5; i++) tile.set(Math.floor(8 + random() * 16), Math.floor(8 + random() * 16), LAVA[random() < .5 ? 2 : 3]);
+    return tile;
+}
+
+/** Bark: deep vertical furrows with lit ridges, lichen in the wet land, glowing cracks in the burning bands. Tiles vertically. */
+function woodSide(band, seed) {
+    const ramps = rampsForBand(band), ramp = band >= 2 ? ramps.stone : ramps.dirt, tile = new Tile(), random = rng(seed);
+    const furrow = wrapNoise(seed + 1, 8), grain = wrapNoise(seed + 2, 16);
+    for (let y = 0; y < TILE; y++) for (let x = 0; x < TILE; x++) {
+        const ridge = furrow(x / TILE, y / TILE * .35);
+        const next = furrow((x + 1) / TILE, y / TILE * .35);
+        let value = .22 + ridge * .5 + (grain(x / TILE, y / TILE) - .5) * .12;
+        if (next < ridge - .03) value += .14; // lit edge on the left of a furrow
+        tile.set(x, y, dithered(ramp, value, x, y));
+    }
+    if (band === 0) for (let i = 0; i < 10; i++) { const x = Math.floor(random() * TILE), y = Math.floor(random() * TILE); tile.set(x, y, ramps.moss); if (random() < .5) tile.set(x, y + 1, ramps.moss); }
+    if (band >= 2) for (let i = 0; i < 4; i++) { const x = Math.floor(random() * TILE), y = Math.floor(random() * TILE), length = 4 + Math.floor(random() * 6); for (let d = 0; d < length; d++) tile.set(x, y + d, LAVA[d % 3 === 0 ? 3 : 2]); }
+    return tile;
+}
+
 /** One band's full set: variants of every tile kind. Index with `variantFor`. */
 /**
  * Tangent-space normal map for a tile, derived from its luminance as a height field (dark crevices low, lit edges high) with a Sobel
@@ -331,7 +365,7 @@ export function generateTileSet(band) {
         grassTop: make(grassTop, 11), dirtTop: make((b, s) => dirtTop(b, s), 23), ashTop: make((b, s) => dirtTop(b, s, true), 31), stoneTop: make(stoneTop, 41),
         grassDryTop: make(dryGrassTop, 113), mudTop: make(mudTop, 127), rubbleTop: make((b, s) => stoneTop(b, s, 11), 139),
         grassSide: make((b, s) => dirtSide(b, s, true), 53), dirtSide: make((b, s) => dirtSide(b, s, false), 67), stoneSide: make(stoneSide, 71),
-        lavaTop: make(lavaTop, 83), lavaSide: make(lavaSide, 97),
+        lavaTop: make(lavaTop, 83), lavaSide: make(lavaSide, 97), woodTop: make(woodTop, 151), woodSide: make(woodSide, 163),
     };
 }
 
