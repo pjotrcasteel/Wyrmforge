@@ -23,8 +23,24 @@ _SPEC.loader.exec_module(master)
 KEY_POSES = 4
 GAIT_STEP_METRES = 0.40
 FOOT_LIFT_METRES = 0.16
-LEFT_ARM_SWING_METRES = 0.14
+FREE_ARM_SWING_METRES = 0.18
 GARMENT_SWAY_METRES = 0.07
+SHOULDER_COUNTER_TWIST_RADIANS = 0.085
+CARRIED_STAFF_PITCH_RADIANS = -0.35
+RIGHT_GRIP = (-0.74, 1.51, 0.20)
+RIGHT_STAFF_FEATURES = frozenset({
+    "right-hand", "right-hand-staff", "staff-flame-base", "staff-fire", "staff-flame-core"
+})
+RIGHT_SHOULDER = (-0.44, 2.48, 0.04)
+LEFT_SHOULDER = (0.44, 2.48, 0.04)
+LEFT_ARM_FEATURES = frozenset({"left-sleeve", "left-hand"})
+CLOTH_TRIM_FEATURES = frozenset({
+    "robe-front-overlap", "robe-torn-front-tip", "robe-right-lapel"
+})
+HEAD_ASSEMBLY_FEATURES = frozenset({
+    "neck", "face", "nose", "eye", "moustache", "beard-lock",
+    "floppy-hat", "hat-band"
+})
 CANONICAL_DIRECTIONS = ("N", "NE", "E", "SE", "S", "SW", "W", "NW")
 LEG_FEATURES = frozenset({"trouser", "boots", "boot-toe", "boot-cuff"})
 GARMENT_FEATURES = frozenset({"outer-robe", "under-robe", "permanent-cloth-rip", "frayed-rip-edge"})
@@ -98,7 +114,7 @@ def articulated_leg_faces(side, phase):
 def transform_walk_face(face, phase):
     """Retarget free arm and worn cloth; all physical holes follow their mesh."""
     feature = face.feature
-    if feature not in LEG_FEATURES | GARMENT_FEATURES | {"left-sleeve", "left-hand"}:
+    if feature not in LEG_FEATURES | GARMENT_FEATURES:
         return face
     if feature == "trouser":
         raise ValueError("trouser faces must be replaced by articulated leg bones")
@@ -122,29 +138,94 @@ def transform_walk_face(face, phase):
             y += .12 * relative_lift * low * front
             x += (.055 if x >= 0 else -.055) * abs(forward_z / GAIT_STEP_METRES) * low
         else:
-            # The staff is in the unchanged RIGHT hand; swing only left arm.
-            weight = max(0.0, min(1.0, (2.48 - y) / 1.12))
-            z += LEFT_ARM_SWING_METRES * math.cos(phase) * weight
+            raise AssertionError("unrecognized walk-transform feature")
         points.append((x, y, z))
     return master.Face(tuple(points), face.color, feature)
 
 
+def shoulder_twist_angle(phase):
+    """Counter-rotate the shoulders gently against the leg stride."""
+    return -SHOULDER_COUNTER_TWIST_RADIANS * math.cos(phase)
+
+
+def rotate_about_y(point, angle):
+    x, y, z = point
+    c, s = math.cos(angle), math.sin(angle)
+    return (x * c + z * s, y, z * c - x * s)
+
+
+def rotate_about_grip_pitch(point, angle):
+    """Rigidly pitch a carried staff, without hinging it at a ground contact."""
+    x, y, z = point
+    dy, dz = y - RIGHT_GRIP[1], z - RIGHT_GRIP[2]
+    c, s = math.cos(angle), math.sin(angle)
+    return (x, RIGHT_GRIP[1] + dy * c - dz * s, RIGHT_GRIP[2] + dy * s + dz * c)
+
+
+def carried_grip_offset(phase):
+    """Staff-carrying right hand is bent and lifted; never planted on terrain."""
+    return (0.07, 0.38 + 0.015 * math.sin(phase),
+            0.08 - 0.06 * math.cos(phase))
+
+
+def upper_body_point(point, phase):
+    """Fade shoulder motion out at the waist; keep the head assembly rigid."""
+    y = point[1]
+    weight = max(0.0, min(1.0, (y - 1.80) / 0.68))
+    return rotate_about_y(point, shoulder_twist_angle(phase) * weight)
+
+
+def arm_pose_point(point, phase, *, carrying):
+    """Preserve sleeve topology while moving its shoulder and wrist coherently."""
+    x, y, z = point
+    shoulder = RIGHT_SHOULDER if carrying else LEFT_SHOULDER
+    wrist_y = 1.51 if carrying else 1.46
+    weight = max(0.0, min(1.0, (shoulder[1] - y) / (shoulder[1] - wrist_y)))
+    rotated = upper_body_point(shoulder, phase)
+    shoulder_delta = tuple(rotated[i] - shoulder[i] for i in range(3))
+    if carrying:
+        wrist_delta = carried_grip_offset(phase)
+        elbow_bend = 0.07 * math.sin(math.pi * weight)
+        return (x + shoulder_delta[0] * (1.0 - weight) + wrist_delta[0] * weight - elbow_bend,
+                y + shoulder_delta[1] * (1.0 - weight) + wrist_delta[1] * weight,
+                z + shoulder_delta[2] * (1.0 - weight) + wrist_delta[2] * weight)
+    # Left arm swings ahead when the right foot is stepping ahead.
+    wrist_z = FREE_ARM_SWING_METRES * math.cos(phase)
+    return (x + shoulder_delta[0] * (1.0 - weight),
+            y + shoulder_delta[1] * (1.0 - weight),
+            z + shoulder_delta[2] * (1.0 - weight) + wrist_z * weight)
+
+
 def apply_root_pose(face, phase):
-    """Carry the head, torso and entire held staff together during a step."""
-    if face.feature in LEG_FEATURES:
+    """Animate shoulders/arms while preserving the immutable staff and art mesh."""
+    feature = face.feature
+    if feature in LEG_FEATURES:
         return face
     dx, dy, dz = root_motion(phase)
-    if face.feature in GARMENT_FEATURES:
-        # Cloth follows the torso, but lower hem lags the body and foot contact.
-        points = []
-        for x, y, z in face.points:
+    points = []
+    for point in face.points:
+        x, y, z = point
+        if feature in RIGHT_STAFF_FEATURES:
+            x, y, z = rotate_about_grip_pitch(point, CARRIED_STAFF_PITCH_RADIANS +
+                                              0.020 * math.sin(phase))
+            sx, sy, sz = carried_grip_offset(phase)
+            x, y, z = x + sx, y + sy, z + sz
+        elif feature == "right-sleeve":
+            x, y, z = arm_pose_point(point, phase, carrying=True)
+        elif feature in LEFT_ARM_FEATURES:
+            x, y, z = arm_pose_point(point, phase, carrying=False)
+        elif feature in HEAD_ASSEMBLY_FEATURES:
+            # Stabilize head against shoulder twist; prevents extra E/W beard islands.
+            x, y, z = point
+        else:
+            x, y, z = upper_body_point(point, phase)
+        if feature in GARMENT_FEATURES | CLOTH_TRIM_FEATURES:
+            # Hem lags shoulders, while physical tears remain unchanged.
             weight = 0.55 + 0.45 * max(0.0, min(1.0, y / 1.60))
-            points.append((x + dx * weight, y + dy * weight, z + dz * weight))
-    else:
-        # Single rigid translation of staff, right grip, hair, hat and all
-        # attached body parts keeps their relative anatomy exactly preserved.
-        points = [(x + dx, y + dy, z + dz) for x, y, z in face.points]
-    return master.Face(tuple(points), face.color, face.feature)
+        else:
+            weight = 1.0
+        points.append((x + dx * weight, y + dy * weight, z + dz * weight))
+    return master.Face(tuple(points), face.color, feature)
 
 
 def pose(frame_index, frame_count=KEY_POSES):

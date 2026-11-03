@@ -39,23 +39,110 @@ class WizardWalkStudyTests(unittest.TestCase):
                 self.assertGreater(knee[2], min(hip[2], ankle[2]) - .01)
                 self.assertEqual(side, -1 if hip[0] < 0 else 1)
 
-    def test_staff_grip_head_hat_and_flame_use_one_rigid_root_motion(self):
-        fixed = {"right-hand", "right-hand-staff", "staff-flame-base",
-                 "staff-fire", "staff-flame-core", "floppy-hat",
-                 "beard-lock", "face", "nose"}
-        reference = tuple(f for f in study.master.build_master() if f.feature in fixed)
-        self.assertGreater(len(reference), 50)
+    def test_staff_is_carried_clear_of_ground_and_attached_rigidly_to_right_hand(self):
+        tracked = {"right-hand", "right-hand-staff", "staff-flame-base",
+                   "staff-fire", "staff-flame-core"}
+        original_faces = tuple(f for f in study.master.build_master() if f.feature in tracked)
+        reference = [p for face in original_faces for p in face.points]
+        self.assertGreater(len(reference), 200)
         for frame in range(16):
-            phase = 2.0 * math.pi * frame / 16
-            delta = study.root_motion(phase)
-            actual = tuple(f for f in study.pose(frame, 16) if f.feature in fixed)
-            self.assertEqual(len(reference), len(actual))
-            for base, moved in zip(reference, actual):
-                self.assertEqual(base.feature, moved.feature)
-                self.assertEqual(base.color, moved.color)
-                for a, b in zip(base.points, moved.points):
-                    for axis in range(3):
-                        self.assertAlmostEqual(delta[axis], b[axis] - a[axis], places=6)
+            moving_faces = tuple(f for f in study.pose(frame, 16) if f.feature in tracked)
+            moved = [p for face in moving_faces for p in face.points]
+            self.assertEqual(len(reference), len(moved))
+            self.assertEqual([f.feature for f in original_faces],
+                             [f.feature for f in moving_faces])
+            for anchor in (0, len(reference) // 2, len(reference) - 1):
+                for base, current in zip(reference, moved):
+                    self.assertAlmostEqual(math.dist(reference[anchor], base),
+                                           math.dist(moved[anchor], current), places=6)
+            staff_bottom = min(p[1] for f in moving_faces
+                               if f.feature == "right-hand-staff" for p in f.points)
+            self.assertGreater(staff_bottom, .50, f"grounded staff at frame {frame}")
+
+    def test_head_beard_and_hat_remain_a_single_rigid_assembly(self):
+        tracked = study.HEAD_ASSEMBLY_FEATURES
+        reference = [p for f in study.master.build_master()
+                     if f.feature in tracked for p in f.points]
+        self.assertGreater(len(reference), 100)
+        for frame in range(16):
+            moved = [p for f in study.pose(frame, 16)
+                     if f.feature in tracked for p in f.points]
+            self.assertEqual(len(reference), len(moved))
+            for index in (0, len(reference) // 2, len(reference) - 1):
+                self.assertAlmostEqual(
+                    math.dist(reference[0], reference[index]),
+                    math.dist(moved[0], moved[index]), places=6)
+
+    def test_shoulder_counterrotation_and_opposed_arm_swing(self):
+        left_shoulder = study.LEFT_SHOULDER
+        right_shoulder = study.RIGHT_SHOULDER
+        left_front = study.upper_body_point(left_shoulder, 0.0)
+        right_front = study.upper_body_point(right_shoulder, 0.0)
+        left_back = study.upper_body_point(left_shoulder, math.pi)
+        right_back = study.upper_body_point(right_shoulder, math.pi)
+        self.assertGreater(left_front[2], left_shoulder[2])
+        self.assertLess(right_front[2], right_shoulder[2])
+        self.assertLess(left_back[2], left_shoulder[2])
+        self.assertGreater(right_back[2], right_shoulder[2])
+
+        def hand_center(frame, feature):
+            points = [p for f in study.pose(frame, 16)
+                      if f.feature == feature for p in f.points]
+            return tuple(sum(p[axis] for p in points) / len(points) for axis in range(3))
+
+        left_0 = hand_center(0, "left-hand")
+        left_8 = hand_center(8, "left-hand")
+        right_0 = hand_center(0, "right-hand")
+        right_8 = hand_center(8, "right-hand")
+        self.assertGreater(left_0[2], left_8[2])
+        self.assertLess(right_0[2], right_8[2])
+        self.assertGreater(right_0[1], 1.80)
+
+    def test_no_image_edge_clipping_in_any_direction_or_gait_frame(self):
+        for direction in study.CANONICAL_DIRECTIONS:
+            for index in range(16):
+                image = study.render_frame(direction, index, 16, use_materials=False)
+                bounds = image.getbbox()
+                self.assertIsNotNone(bounds)
+                left, top, right, bottom = bounds
+                self.assertGreaterEqual(left, 3, (direction, index, bounds))
+                self.assertGreaterEqual(top, 3, (direction, index, bounds))
+                self.assertLessEqual(right, 61, (direction, index, bounds))
+                self.assertLessEqual(bottom, 77, (direction, index, bounds))
+
+    def test_carried_staff_visible_without_new_stray_pixel_types(self):
+        for direction in study.CANONICAL_DIRECTIONS:
+            for frame in range(16):
+                image, labels = study.master.render(
+                    direction, posed_faces=study.pose(frame, 16), feature_map=True)
+                visible = [feature for row in labels for feature in row]
+                self.assertGreaterEqual(visible.count("right-hand-staff"), 30, (direction, frame))
+                flame = sum(f in {"staff-fire", "staff-flame-base", "staff-flame-core"}
+                            for f in visible)
+                self.assertGreaterEqual(flame, 20, (direction, frame))
+                if direction not in {"E", "W"}:
+                    continue
+                rgba = image.load()
+                remaining = {(x, y) for y in range(image.height)
+                             for x in range(image.width) if rgba[x, y][3]}
+                tiny_fragments = 0
+                while remaining:
+                    stack = [remaining.pop()]
+                    component = []
+                    while stack:
+                        x, y = stack.pop()
+                        component.append((x, y))
+                        for dx in (-1, 0, 1):
+                            for dy in (-1, 0, 1):
+                                adjacent = (x + dx, y + dy)
+                                if adjacent in remaining:
+                                    remaining.remove(adjacent)
+                                    stack.append(adjacent)
+                    if len(component) <= 2:
+                        tiny_fragments += 1
+                        self.assertEqual({"beard-lock"}, {labels[y][x] for x, y in component},
+                                         (direction, frame, component))
+                self.assertLessEqual(tiny_fragments, 5, (direction, frame))
 
     def test_contact_and_passing_poses_alternate_without_leg_swap(self):
         poses = [study.pose(i) for i in range(4)]

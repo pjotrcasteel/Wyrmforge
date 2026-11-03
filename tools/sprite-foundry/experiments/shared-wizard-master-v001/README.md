@@ -462,3 +462,37 @@ uses the same textured source geometry in every direction. Check each
 quarter-angle for consistent foot orientation, robe overlap, and staff on the
 physical right hand. This is only an authoring preview; no game assets were
 changed and it is **not approved**.
+
+
+
+## v011 — carried staff and counter-swing (unapproved)
+
+The caster's staff is **a magical instrument, never a walking stick**.
+This isolated walk-pose iteration raises the right-hand grip and rigidly tilts
+the complete staff so its lower tip stays at least 0.50 m above ground.
+The shoulders gently counterrotate against the stride; the free left arm
+counter-swings while the right carrying arm remains controlled. The wizard's
+head, beard and hat stay stabilized against shoulder twist.
+
+This change touches only `walk_study.py` and its focused tests. The original
+64×80 source master, idle pose, beard/robe/hat geometry, physical scars,
+UV textures and runtime are **unchanged**.
+
+Safety investigation:
+
+- Rejected a forward-tilted staff pose when NW flame pixels clipped the
+  64×80 sprite boundary.
+- Rejected whole-head yaw after it introduced additional tiny isolated
+  beard pixels in the E/W side views.
+- Selected a backward-tilted carried staff and head-stabilized pose. Review
+  diagnostics showed at least 3px sprite-edge clearance for all 8 facings
+  and 16 frames, visible staff/flame in every frame, and no increased E/W
+  isolated-beard-pixel count relative to the previous baseline.
+- Retained v010 planted-foot locking and corrected forward swing; staff
+  and hand move as one rigid assembly, and all previous material topology
+  counts stay constant.
+
+Sixteen targeted tests cover gait, direction, carrying grip, shoulder
+counter-swing, staff visibility, sprite bounds and stray-pixel types.
+These tests are subject to CI verification. The output remains a **draft art
+study**; approval, in-game scale review and any merge are explicitly pending.
