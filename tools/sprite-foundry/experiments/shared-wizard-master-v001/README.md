@@ -505,3 +505,6 @@ It is rendered from the committed v011 pose generator and the same deterministic
 Wizard 64×80 master/UV sources, magnified only with nearest-neighbour scaling.
 Both the dedicated Sprite Foundry checks and overall WyrmForge validation
 passed on the v011 code commit. This is still **unapproved character motion**.
+
+
+[Closer native-pixel S/SE/E v011 gait review](walk-16-frame-S-SE-E-carried-staff-close-NOT-APPROVED.gif) is available for inspecting the carried staff and shoulder/arm counter-swing.
