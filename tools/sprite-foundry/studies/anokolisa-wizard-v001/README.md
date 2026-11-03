@@ -27,12 +27,17 @@ eight-direction poses by flipping a single facing.
 | `run-side-6f-64x80.png` | Original six source run poses, aligned at foot anchor (32,74) | One side-facing candidate only |
 | `idle-side-4f-64x80.png` | Original four idle poses, same cell and anchor | One side-facing candidate only |
 | `run-side-review.gif` | Six-frame 8 FPS zoomed preview of the actual pixels | Visual review |
+| `run-side-grey-6f-64x80.png` | Same six poses with four cloth colors mapped to Gothic grey | Optional art variant |
+| `idle-side-grey-4f-64x80.png` | Same four idle poses with matching grey garment | Optional art variant |
+| `run-side-grey-review.gif` | Animated comparison candidate in grey | Owner visual review |
 
 The only transformations are a fixed source crop, **2× nearest-neighbor**
 scale and fixed feet alignment inside a transparent **64×80** native cell.
-No painted source pixel is replaced with generated art, and no alpha anti-aliasing
-is introduced. These are faithful staging artifacts, not final WyrmForge
-Wizard costume, body rig or animation.
+The original-purple outputs preserve every painted source color. The optional
+Gothic-grey outputs replace **only four exact garment palette colors** while
+preserving the artist's pixel shapes, outlines, shading clusters and alpha.
+No AI repaint, interpolation or alpha anti-aliasing is introduced. These are
+faithful staging artifacts, not final WyrmForge Wizard body rig or animation.
 
 ## Reproduce
 
@@ -49,8 +54,9 @@ The creator's `Terms.txt` is supplied separately from `Entities.zip`.
 ## Missing before a production Wizard
 
 1. Confirm whether Anokolisa's figure is the new visual foundation for the
-   WyrmForge main Wizard. The current purple outfit is not the canonical
-   Gothic grey costume; any recolor should retain the actual artist's pixels.
+   WyrmForge main Wizard. The original purple outfit is not the canonical
+   Gothic grey costume; the optional four-color grey variant keeps the artist's
+   actual pixels and is not owner-approved yet.
 2. Author **genuine N, NE, E, SE, S, SW, W, NW** views; this source does not
    contain them. Do not mirror asymmetric gear or relabel an unsupported facing.
 3. Author a **right-hand, planted walking staff** cycle. The supplied source is

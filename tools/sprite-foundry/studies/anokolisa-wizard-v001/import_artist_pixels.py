@@ -26,6 +26,29 @@ EXPECTED = {
 }
 
 
+GREY_GARMENT_PALETTE = {
+    (147, 45, 139): (115, 112, 120),
+    (95, 46, 92): (75, 74, 82),
+    (38, 26, 38): (35, 36, 41),
+    (67, 35, 65): (52, 52, 60),
+}
+
+
+def recolor_garment(source: Image.Image) -> Image.Image:
+    """Optional Gandalf-grey cloth palette variant without redrawing pixels."""
+    result = source.copy()
+    pixels = result.load()
+    for y in range(result.height):
+        for x in range(result.width):
+            red, green, blue, alpha = pixels[x, y]
+            if alpha:
+                red, green, blue = GREY_GARMENT_PALETTE.get(
+                    (red, green, blue), (red, green, blue)
+                )
+                pixels[x, y] = (red, green, blue, alpha)
+    return result
+
+
 def read_source(pack: zipfile.ZipFile, member: str) -> Image.Image:
     data = pack.read(member)
     checksum, size = EXPECTED[member]
@@ -93,13 +116,20 @@ def main() -> None:
         parser.error("Output already exists; refusing to overwrite art")
 
     with zipfile.ZipFile(args.pack) as pack:
-        run = render_run_frames(read_source(pack, RUN_MEMBER))
-        idle = render_idle_frames(read_source(pack, IDLE_MEMBER))
+        run_source = read_source(pack, RUN_MEMBER)
+        idle_source = read_source(pack, IDLE_MEMBER)
+        run = render_run_frames(run_source)
+        idle = render_idle_frames(idle_source)
+        grey_run = render_run_frames(recolor_garment(run_source))
+        grey_idle = render_idle_frames(recolor_garment(idle_source))
 
     args.out.mkdir(parents=True)
     save_atlas(run, args.out / "run-side-6f-64x80.png")
     save_atlas(idle, args.out / "idle-side-4f-64x80.png")
     save_review(run, args.out / "run-side-review.gif")
+    save_atlas(grey_run, args.out / "run-side-grey-6f-64x80.png")
+    save_atlas(grey_idle, args.out / "idle-side-grey-4f-64x80.png")
+    save_review(grey_run, args.out / "run-side-grey-review.gif")
 
     manifest = {
         "author": "Anokolisa",
@@ -109,6 +139,7 @@ def main() -> None:
         "feetAnchor": list(FEET_ANCHOR),
         "actualArtistPixels": True,
         "transforms": ["fixed crop", "nearest-neighbor 2x", "feet alignment"],
+        "optionalGreyVariant": "exact four-color cloth palette swap; source output retained",
         "clips": {"idle": 4, "run": 6},
         "direction": "side-facing candidate only; compass not approved",
         "status": "isolated unapproved study; no walking staff or eight-way art",
