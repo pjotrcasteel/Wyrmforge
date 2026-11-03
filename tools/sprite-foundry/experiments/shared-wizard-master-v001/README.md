@@ -496,3 +496,12 @@ Sixteen targeted tests cover gait, direction, carrying grip, shoulder
 counter-swing, staff visibility, sprite bounds and stray-pixel types.
 These tests are subject to CI verification. The output remains a **draft art
 study**; approval, in-game scale review and any merge are explicitly pending.
+
+
+### Direct v011 motion review
+
+[Watch the textured 16-frame **all-eight-directions carried-staff** GIF](walk-16-frame-all-eight-carried-staff-balanced-NOT-APPROVED.gif).
+It is rendered from the committed v011 pose generator and the same deterministic
+Wizard 64×80 master/UV sources, magnified only with nearest-neighbour scaling.
+Both the dedicated Sprite Foundry checks and overall WyrmForge validation
+passed on the v011 code commit. This is still **unapproved character motion**.
