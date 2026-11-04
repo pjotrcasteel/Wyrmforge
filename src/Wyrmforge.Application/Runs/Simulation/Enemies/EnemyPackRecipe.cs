@@ -104,6 +104,15 @@ public static class EnemyPackRecipeCatalog
     public static double Weight(WyrmrealmHabitat habitat, EnemyPackRecipe recipe) =>
         Affinity.TryGetValue(habitat, out var row) && row.TryGetValue(recipe, out var weight) ? weight : 0;
 
+    /// <summary>The habitat's affinity shifted by the Wyrm Influence band of the site (Fire habitats only; null leaves it unchanged).</summary>
+    public static double Weight(WyrmrealmHabitat habitat, EnemyPackRecipe recipe, WyrmInfluenceBand? band) =>
+        Weight(habitat, recipe) * (band is { } themed && WyrmrealmHabitatCatalog.School(habitat) == Domain.Spells.SpellSchool.Fire ? WyrmInfluencePacks.Bias(themed, recipe) : 1);
+
+    /// <summary>The surge pack of a habitat at a Wyrm Influence band: the band's themed pack when this Fire habitat hosts it, else the habitat's own.</summary>
+    public static EnemyPackRecipe SurgeEvent(WyrmrealmHabitat habitat, WyrmInfluenceBand? band) =>
+        band is { } themed && WyrmrealmHabitatCatalog.School(habitat) == Domain.Spells.SpellSchool.Fire
+            && WyrmInfluencePacks.SurgeFor(themed) is { } pack && Weight(habitat, pack) > 0 ? pack : SurgeEvent(habitat);
+
     /// <summary>The pack a habitat's director sends when its surge begins (brief §6: phases trigger new events, not faster timers).</summary>
     public static EnemyPackRecipe SurgeEvent(WyrmrealmHabitat habitat) => habitat switch
     {
@@ -122,17 +131,18 @@ public static class EnemyPackRecipeCatalog
     };
 
     /// <summary>Picks a pack the habitat hosts and the budget affords, or null when only loose fillers fit.</summary>
-    public static (EnemyPackRecipe Recipe, IReadOnlyList<EnemyKind> Members)? Choose(WyrmrealmHabitat habitat, int budget, IRandomSource randomSource)
+    public static (EnemyPackRecipe Recipe, IReadOnlyList<EnemyKind> Members)? Choose(WyrmrealmHabitat habitat, int budget, IRandomSource randomSource,
+        WyrmInfluenceBand? band = null)
     {
-        var candidates = Enum.GetValues<EnemyPackRecipe>().Where(recipe => Weight(habitat, recipe) > 0).ToList();
+        var candidates = Enum.GetValues<EnemyPackRecipe>().Where(recipe => Weight(habitat, recipe, band) > 0).ToList();
         while (candidates.Count > 0)
         {
-            var total = candidates.Sum(recipe => Weight(habitat, recipe));
+            var total = candidates.Sum(recipe => Weight(habitat, recipe, band));
             var roll = randomSource.NextDouble() * total;
             var chosen = candidates[^1];
             foreach (var recipe in candidates)
             {
-                roll -= Weight(habitat, recipe);
+                roll -= Weight(habitat, recipe, band);
                 if (roll < 0) { chosen = recipe; break; }
             }
             if (Build(chosen, habitat, budget, randomSource) is { } members) return (chosen, members);

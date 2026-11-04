@@ -32,11 +32,11 @@ public static class EnemyEncounterComposition
         };
 
     public static EnemyCompositionPlan CreatePlan(EnemyEncounterPattern pattern, int depth, IRandomSource randomSource, double threatBudgetMultiplier = 1,
-        WyrmrealmHabitat? habitat = null)
+        WyrmrealmHabitat? habitat = null, WyrmInfluenceBand? band = null)
     {
         var profile = GetProfile(pattern);
         var budget = Math.Max(1, (int)Math.Round(profile.BaseThreatBudget * Math.Max(0.25, threatBudgetMultiplier)));
-        if (habitat is { } local) return CreateHabitatPlan(local, budget, randomSource, EnemyPackRecipeCatalog.Choose(local, budget, randomSource));
+        if (habitat is { } local) return CreateHabitatPlan(local, budget, randomSource, EnemyPackRecipeCatalog.Choose(local, budget, randomSource, band));
         var plan = new List<EnemyKind>();
         var spent = 0;
 

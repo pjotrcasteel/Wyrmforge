@@ -112,7 +112,8 @@ public sealed partial class RunSimulation
         encounterPattern = ToEnemyEncounterPattern(route.Encounter.Kind);
         encounterModifiers = ResolveEncounterModifiers(route);
         encounterHabitat = node.Habitat;
-        encounterDirector.Start(encounterPattern, depthState.Depth, node.Stage, node.Habitat);
+        encounterBand = hunt1TerrainEnabled ? WyrmInfluenceProfile.For(Region.DominantSchool).Band(hunt1InfluenceOverride ?? node.Influence) : null;
+        encounterDirector.Start(encounterPattern, depthState.Depth, node.Stage, node.Habitat, encounterBand);
         arenaEnvironment.SetPhase(encounterDirector.Phase);
         entryGraceRemaining = 2;
         encounterSeconds = 0;
@@ -198,6 +199,7 @@ public sealed partial class RunSimulation
         encounterPlan = null;
         encounterPlanIndex = 0;
         encounterHabitat = null;
+        encounterBand = null;
         encounterDirector.Reset();
         if (!preserveEnvironment) arenaEnvironment = null;
         encounterModifiers = WyrmrealmEncounterModifierSet.Empty;

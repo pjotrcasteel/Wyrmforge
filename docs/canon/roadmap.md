@@ -41,16 +41,16 @@ This status/sequence index resolves older, superseded "NEXT" and "active" labels
 
 **Wyrm Influence (Hunt 1.0, Fire first).** A single C# `WyrmInfluenceField` value per node, increasing monotonically toward the lair and changing by at most one band between neighbours, drives terrain, vegetation state, hazards, lighting emitters, enemy mix, fire-elite chance, realm-influence rules, ambient VFX/audio and the Chart wash. Fire bands (tunable): Wet < 0.25, Scorched < 0.55, Burning < 0.85, Volcanic ≥ 0.85. Other schools are added as data profiles on the same field, not as separate generators.
 
-**DRAFT PROPOSAL, not LOCKED, not implemented: influence-themed swarms (owner intent 3 November 2026: "themed but swarmy").** Research basis: *Vampire Survivors* keeps a per-stage roster, tops the screen up to a minimum alive count on a timer, caps total alive enemies (about 300 on desktop) and layers scripted, predictable swarm events (wall, circle, rush) on top; *Enter the Gungeon* gives each chamber a fixed roster of distinct roles (shooter, charger, buffer, summoner, exploder), scales enemy health per chamber (x1 up to x2.1) and trims enemy counts for newer players. WyrmForge already has the parts: habitat-weighted pack recipes (`EnemyPackRecipeCatalog`), a threat budget, and the `EncounterDirector` phases (Pressure, Escalation, Breathing room, Surge, Climax). The proposal only adds a per-band profile on top of them, as data on `WyrmInfluenceProfile`, never new spawn code per band:
+**Influence-themed packs (owner delegated the design to the agent, 4 November 2026; IMPLEMENTED as tunable starting values, not yet owner-approved or phone-measured).** Research basis: *Vampire Survivors* keeps a per-stage roster and layers predictable swarm events on top; *Enter the Gungeon* gives each chamber a fixed roster of distinct roles. WyrmForge already has the parts: habitat packs (`EnemyPackRecipeCatalog`), the threat budget, the `EncounterDirector` phases and `EnemyStagePressure`, which already ramps health, speed, spawn rate and the alive cap per encounter stage. The first draft proposed a per-band alive cap; that was dropped because it would fight the stage ramp. Influence now decides only **theme**: which of the habitat's packs are favoured, which pack the surge sends, and how generous the budget is. The habitat still decides who lives where (a band can never summon an unhosted pack) and Frost habitats ignore the Fire themes. Pure data in `WyrmInfluencePacks`; no spawn code is band-specific; applied only when Hunt 1.0 terrain is on (`encounterBand` is null otherwise, so every other Hunt is unchanged).
 
-| Band | Pack recipes favoured (existing) | Pack size multiplier | Alive cap (mobile) | Surge event |
-| --- | --- | --- | --- | --- |
-| Wet | Wandering Dead, Hunting Pack | x1.0 | 14 | Hunting Pack |
-| Scorched | Ashling Mob, Hunting Pack | x1.15 | 18 | Ashling Mob |
-| Burning | Priest Warband, Bastion, Ashling Mob | x1.3 | 22 | Priest Warband |
-| Volcanic | Priest Warband, Last Stand | x1.5 | 26 | Last Stand |
+| Band | Packs favoured (multiplier on habitat affinity) | Surge pack (where hosted) | Budget |
+| --- | --- | --- | --- |
+| Wet | Wandering Dead x1.5, Hunting Pack x1.5; Ashling Mob x0.4, Bastion x0.5, Priest Warband x0.2 | habitat's own | x1.0 |
+| Scorched | Ashling Mob x2, Priest Warband x1.2; Wandering Dead x0.6 | Ashling Mob | x1.1 |
+| Burning | Priest Warband x2, Bastion x1.8, Ashling Mob x1.2; Hunting Pack x0.6, Wandering Dead and Drowned Watch x0.3 | Priest Warband | x1.2 |
+| Volcanic | Priest Warband x2.5, Bastion x2, Ashling Mob x1; Wandering Dead, Drowned Watch, Hunting Pack x0.15 | Bastion | x1.3 |
 
-Numbers are starting values to be tuned by deterministic encounter simulations and phone captures; the cap must stay inside the lighting and frame budget measured by H9. Influence-themed enemy visuals (embers, scorched variants) wait for the enemy art gate. Owner decision needed before C#: accept, change or reject this table.
+Reading: wet land is shamblers and hounds slipping between trees; scorched land is Ashling rushes; burning land is priests and screening Penitents behind cover; the Wyrm's door is almost only its servants. Open items: tune by deterministic encounter simulations and phone captures against the H9 frame budget; influence-themed enemy visuals (embers, scorched variants) wait for the enemy art gate; owner to accept or change the values.
 | Milestone | Scope | Gate |
 |---|---|---|
 | **H0** | Canon update, full-loop C# test, full-loop browser test, baseline captures and performance counters | — |
