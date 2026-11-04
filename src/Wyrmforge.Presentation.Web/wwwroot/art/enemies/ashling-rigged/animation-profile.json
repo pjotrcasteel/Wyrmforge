@@ -18,7 +18,7 @@
   "locomotion": {
     "clip": "walk",
     "frames": 16,
-    "stride": 17.28
+    "stride": 20.33
   },
   "actions": {
     "attack": {

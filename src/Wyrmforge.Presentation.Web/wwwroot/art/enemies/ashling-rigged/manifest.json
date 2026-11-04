@@ -13,39 +13,42 @@
   "clips": {
     "walk": {
       "image": "walk.png",
-      "hash": "b81916287a5c",
+      "hash": "07591cc1320e",
       "frames": 16,
       "cell": 96,
       "anchor": [
         48,
         70
       ],
-      "worldSize": 81.6,
-      "sourceExport": "art\\source\\enemies\\ashling\\exports\\movement-fiery-eyes-v1"
+      "worldSize": 96,
+      "sourceExport": "art\\source\\enemies\\ashling\\exports\\movement-readable-v1",
+      "readabilityPass": "v1: lifted body ramp, ember rim, eye halo, glowing claws; drawn 1:1"
     },
     "attack": {
       "image": "attack.png",
-      "hash": "25eee4842479",
+      "hash": "0e95cc19a6db",
       "frames": 22,
       "cell": 128,
       "anchor": [
         64,
         86
       ],
-      "worldSize": 108.8,
-      "sourceExport": "art\\source\\enemies\\ashling\\exports\\attack-fiery-eyes-v1"
+      "worldSize": 128,
+      "sourceExport": "art\\source\\enemies\\ashling\\exports\\attack-readable-v1",
+      "readabilityPass": "v1: lifted body ramp, ember rim, eye halo, glowing claws; drawn 1:1"
     },
     "death": {
       "image": "death.png",
-      "hash": "95a3b3da7bbb",
+      "hash": "21d6a778c69a",
       "frames": 28,
       "cell": 128,
       "anchor": [
         64,
         86
       ],
-      "worldSize": 108.8,
-      "sourceExport": "art\\source\\enemies\\ashling\\exports\\death-fiery-eyes-v1"
+      "worldSize": 128,
+      "sourceExport": "art\\source\\enemies\\ashling\\exports\\death-readable-v1",
+      "readabilityPass": "v1: lifted body ramp, ember rim, eye halo, glowing claws; drawn 1:1"
     }
   },
   "emission": {
