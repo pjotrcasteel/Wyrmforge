@@ -45,7 +45,7 @@ public sealed class ArenaTerrainIntegrationTests
         {
             var arena = Arena(seed, terrain: true, nodeIndex: 1 + seed % 2);
             var grid = arena.Terrain!;
-            var position = new Vector2D(Width / 2, Height / 2);
+            var position = ArenaTerrainGrid.CenterOf(16, 52);
             var rng = new Random(seed);
             for (var step = 0; step < 800; step++)
             {
@@ -64,7 +64,7 @@ public sealed class ArenaTerrainIntegrationTests
         {
             var arena = Arena(seed, terrain: true, nodeIndex: 2);
             var grid = arena.Terrain!;
-            var hunter = new Vector2D(Width / 2, Height / 2);
+            var hunter = ArenaTerrainGrid.CenterOf(16, 52);
             var reachable = grid.ReachableFrom(ArenaTerrainGrid.ColumnOf(hunter), 12);
             var rng = new Random(seed);
             for (var attempt = 0; attempt < 60; attempt++)

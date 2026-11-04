@@ -16,6 +16,8 @@ public sealed class ArenaTerrainTests
     private static ArenaTerrainRecipe Make(int seed, double influence) =>
         ArenaTerrainGenerator.Generate(seed, influence, Columns, Rows, Spawn, Exit);
 
+    private static double Dist2(double x, double y) => x * x + y * y;
+
     private static string Fingerprint(ArenaTerrainGrid grid)
     {
         var hash = 17L;
@@ -200,6 +202,76 @@ public sealed class ArenaTerrainTests
     }
 
     [TestMethod]
+    public void Roads_RunThroughTwoOrThreeFlatOpenFields()
+    {
+        for (var seed = 0; seed < 60; seed++)
+        {
+            var recipe = Make(seed, 0.1);
+            Assert.IsInRange(2, 3, recipe.Fields.Count, $"seed {seed}");
+            foreach (var field in recipe.Fields)
+            {
+                Assert.IsTrue(recipe.OpenCells[field.Row * Columns + field.Column], $"seed {seed}: the field is centred on open ground");
+                var area = 0;
+                for (var row = 0; row < Rows; row++)
+                    for (var column = 0; column < Columns; column++)
+                    {
+                        if (!recipe.OpenCells[row * Columns + column]) continue;
+                        Assert.AreNotEqual(ArenaTerrainMaterial.Wood, recipe.Grid.Material(column, row), $"seed {seed}: no tree in a field");
+                        Assert.AreNotEqual(ArenaTerrainMaterial.Boulder, recipe.Grid.Material(column, row), $"seed {seed}: no rock in a field");
+                        if (Math.Sqrt(Dist2(column - field.Column, row - field.Row)) <= field.Radius * .8)
+                        {
+                            area++;
+                            Assert.AreEqual(0, recipe.Grid.Surface(column, row), $"seed {seed}: a field is flat");
+                        }
+                    }
+                Assert.IsGreaterThan(40, area, $"seed {seed}: room to fight and move");
+            }
+            // The road really passes through each field.
+            foreach (var field in recipe.Fields)
+                Assert.IsTrue(recipe.ProtectedRoute.Any(cell => Math.Sqrt(Dist2(cell.Column - field.Column, cell.Row - field.Row)) <= field.Radius), $"seed {seed}: the road meets its field");
+        }
+    }
+
+    [TestMethod]
+    public void Scenery_StandsWhereItsZoneSaysSoInsteadOfScatteredEverywhere()
+    {
+        int trees = 0, treesInForest = 0, cliffs = 0, cliffsInHighland = 0, hills = 0, hillsInMeadow = 0;
+        for (var seed = 0; seed < 40; seed++)
+        {
+            var recipe = Make(seed, 0.1);
+            foreach (var cell in Cells(recipe.Grid))
+            {
+                var zone = recipe.Zones[cell.Row * Columns + cell.Column];
+                if (cell.Material == ArenaTerrainMaterial.Wood) { trees++; if (zone == ArenaZone.Forest || cell.Column < 2 || cell.Column >= Columns - 2) treesInForest++; }
+                if (cell.Material == ArenaTerrainMaterial.Stone && cell.Surface >= 8) { cliffs++; if (zone == ArenaZone.Highland) cliffsInHighland++; }
+                if (cell.Material == ArenaTerrainMaterial.Soil && cell.Surface > 0) { hills++; if (zone == ArenaZone.Meadow) hillsInMeadow++; }
+            }
+        }
+        Assert.IsGreaterThan(40 * 20, trees, "woodland, not a handful of trees");
+        Assert.IsGreaterThan(trees * .9, treesInForest);
+        Assert.IsGreaterThan(40 * 30, cliffs);
+        Assert.IsGreaterThan(cliffs * .95, cliffsInHighland);
+        Assert.IsGreaterThan(hills * .75, hillsInMeadow, "rolling ground belongs to the meadows; the rest is slope blended off a cliff foot");
+    }
+
+    [TestMethod]
+    public void Woodland_GathersInMassesAroundGladesAndLeavesTheRoadSideOpen()
+    {
+        for (var seed = 0; seed < 30; seed++)
+        {
+            var recipe = Make(seed, 0.1);
+            var trunks = Cells(recipe.Grid).Where(cell => cell.Material == ArenaTerrainMaterial.Wood && recipe.Zones[cell.Row * Columns + cell.Column] == ArenaZone.Forest).ToList();
+            Assert.IsGreaterThanOrEqualTo(15, trunks.Count, $"seed {seed}");
+            // Masses: most trunks have another within three columns; a random scatter would leave many alone.
+            var gathered = trunks.Count(t => trunks.Any(o => o != t && Math.Abs(o.Column - t.Column) <= 3 && Math.Abs(o.Row - t.Row) <= 3));
+            Assert.IsGreaterThan(trunks.Count * .8, gathered, $"seed {seed}: trees stand in groves");
+            foreach (var t in trunks)
+                foreach (var o in new[] { (1, 0), (-1, 0), (0, 1), (0, -1) })
+                    if (recipe.Grid.Contains(t.Column + o.Item1, t.Row + o.Item2)) Assert.AreNotEqual(ArenaTerrainMaterial.Wood, recipe.Grid.Material(t.Column + o.Item1, t.Row + o.Item2), $"seed {seed}: trunks never touch, so a forest can be walked);
+        }
+    }
+
+    [TestMethod]
     public void RockSteps_AreWholeHalfMetreMultiplesAndOnlyClimbableByRamp()
     {
         var recipe = Make(7, 0);
@@ -208,7 +280,7 @@ public sealed class ArenaTerrainTests
         // Whole columns step in half-metre multiples; a rim that weathering chipped into microcolumns averages between them.
         Assert.IsTrue(Cells(grid).Where(cell => cell.Material == ArenaTerrainMaterial.Stone && !grid.IsSubdivided(cell.Column, cell.Row))
             .All(cell => cell.Surface % ArenaTerrainGrid.MaxStepMicrocells == 0));
-        var sheer = Cells(grid).First(cell => cell.Surface >= 8 && HasSheerNeighbour(grid, cell.Column, cell.Row));
+        var sheer = Cells(grid).First(cell => cell.Surface >= 8 && HasLowerSheerNeighbour(grid, cell.Column, cell.Row, cell.Surface));
         var lower = new[] { (1, 0), (-1, 0), (0, 1), (0, -1) }
             .Select(offset => (Column: sheer.Column + offset.Item1, Row: sheer.Row + offset.Item2))
             .First(cell => grid.Contains(cell.Column, cell.Row) && sheer.Surface - grid.Surface(cell.Column, cell.Row) > ArenaTerrainGrid.MaxStepMicrocells);
@@ -344,6 +416,11 @@ public sealed class ArenaTerrainTests
             for (var column = 0; column < grid.Columns; column++)
                 yield return (column, row, grid.Surface(column, row), grid.Material(column, row));
     }
+
+    private static bool HasLowerSheerNeighbour(ArenaTerrainGrid grid, int column, int row, int surface) =>
+        new[] { (1, 0), (-1, 0), (0, 1), (0, -1) }.Any(offset =>
+            grid.Contains(column + offset.Item1, row + offset.Item2) &&
+            surface - grid.Surface(column + offset.Item1, row + offset.Item2) > ArenaTerrainGrid.MaxStepMicrocells);
 
     private static bool HasSheerNeighbour(ArenaTerrainGrid grid, int column, int row) =>
         new[] { (1, 0), (-1, 0), (0, 1), (0, -1) }.Any(offset =>

@@ -12,6 +12,24 @@ public sealed record ArenaTerrainRecipe(
 
     /// <summary>Row-major mask of the route, spawn and exit clearings; excavation there is depth-limited.</summary>
     public bool[] ProtectedCells { get; init; } = [];
+
+    /// <summary>The open fields along the road (centre cell and mean radius in cells): flat, rock-free ground reserved for ambushes and set pieces.</summary>
+    public IReadOnlyList<ArenaField> Fields { get; init; } = [];
+
+    /// <summary>Row-major land use per cell (<see cref="ArenaZone"/>): which cells are woodland, highland or meadow.</summary>
+    public byte[] Zones { get; init; } = [];
+}
+
+/// <summary>An open field beside or on the road.</summary>
+public sealed record ArenaField(int Column, int Row, double Radius);
+
+/// <summary>What a stretch of land is for; every tree, cliff, boulder and hill is placed by the zone it stands in.</summary>
+public static class ArenaZone
+{
+    public const byte Wild = 0;
+    public const byte Forest = 1;
+    public const byte Highland = 2;
+    public const byte Meadow = 3;
 }
 
 /// <summary>
@@ -40,26 +58,28 @@ public static class ArenaTerrainGenerator
         Mark(protectedCells, columns, rows, spawn.Column, spawn.Row, SpawnClearCells);
         Mark(protectedCells, columns, rows, exit.Column, exit.Row, ExitClearCells);
 
-        // Open floors keep rock, trees and lava away, but stay destructible, so they are not part of the protected route.
-        var open = ArenaTerrainRelief.Clearings(rng, columns, rows, route, bossFloorMeters);
+        // Open fields keep rock, trees and lava away, but stay destructible, so they are not part of the protected route.
+        var (open, fields) = ArenaTerrainRelief.Clearings(rng, columns, rows, route, bossFloorMeters);
         var keepClear = new bool[protectedCells.Length];
         for (var index = 0; index < keepClear.Length; index++) keepClear[index] = protectedCells[index] || open[index];
 
         PaintAshPatches(rng, grid, influence);
-        PlaceRockSteps(rng, grid, keepClear, influence);
         var routeDistance = ArenaTerrainRelief.DistanceFromRoute(keepClear, columns, rows);
-        ArenaTerrainRelief.Ridges(rng, grid, keepClear, routeDistance, influence);
-        ArenaTerrainRelief.Pillars(rng, grid, routeDistance);
-        var heatSources = ArenaTerrainRelief.LavaPools(rng, grid, routeDistance, influence);
-        CarveFissures(rng, grid, keepClear, influence);
-        ArenaTerrainRelief.Trees(rng, grid, routeDistance, influence);
-        ArenaTerrainRelief.Hills(rng, grid, routeDistance, influence);
+        // Land use first: every tree, cliff, boulder and hill below is placed by the zone it stands in, so the map reads as woodland, highland and meadow.
+        var zones = ArenaTerrainRelief.Zones(rng, columns, rows, routeDistance, influence, fields);
+        ArenaTerrainRelief.Highlands(rng, grid, zones, routeDistance);
+        ArenaTerrainRelief.Boulders(rng, grid, zones, routeDistance);
+        var heatSources = ArenaTerrainRelief.LavaPools(rng, grid, routeDistance, zones, influence);
+        CarveFissures(rng, grid, keepClear, zones, influence);
+        ArenaTerrainRelief.Forests(rng, grid, zones, routeDistance, influence);
+        ArenaTerrainRelief.Hills(rng, grid, zones, routeDistance, influence);
         ArenaTerrainRelief.Weather(rng, grid, protectedCells);
         ArenaTerrainMutation.SettleAll(grid, protectedCells);
         // Generation-time blasts use negative ids so they can never collide with a live impact.
         long scarId = -1;
-        heatSources.AddRange(ArenaTerrainRelief.ScarCraters(rng, grid, keepClear, routeDistance, influence, ref scarId));
-        grid.SetCracks(ArenaTerrainRelief.Cracks(rng, grid, keepClear, routeDistance, heatSources, influence, ref scarId));
+        var roadDistance = ArenaTerrainRelief.DistanceFromRoute(protectedCells, columns, rows);
+        heatSources.AddRange(ArenaTerrainRelief.ScarCraters(rng, grid, protectedCells, open, roadDistance, influence, ref scarId));
+        grid.SetCracks(ArenaTerrainRelief.Cracks(rng, grid, protectedCells, roadDistance, heatSources, influence, ref scarId));
 
         // The protected route and its clearings are levelled last so nothing above can close them.
         for (var row = 0; row < rows; row++)
@@ -67,7 +87,7 @@ public static class ArenaTerrainGenerator
                 if (protectedCells[row * columns + column])
                     grid.Set(column, row, 0, influence >= .25 && grid.Material(column, row) == ArenaTerrainMaterial.Ash
                         ? ArenaTerrainMaterial.Ash : ArenaTerrainMaterial.Soil);
-        return new ArenaTerrainRecipe(grid, spawn, exit, route) { ProtectedCells = protectedCells, OpenCells = open };
+        return new ArenaTerrainRecipe(grid, spawn, exit, route) { ProtectedCells = protectedCells, OpenCells = open, Fields = fields, Zones = zones };
     }
 
     /// <summary>
@@ -126,83 +146,8 @@ public static class ArenaTerrainGenerator
         }
     }
 
-    // Rock steps of 1-3 m: lobed, irregular outcrops (never rectangles), sheer where they meet low ground, with one side an ascending ramp of half-metre steps.
-    private static void PlaceRockSteps(Random rng, ArenaTerrainGrid grid, bool[] protectedCells, double influence)
-    {
-        var target = 3 + rng.Next(3) - (int)Math.Round(influence * 2);
-        var heights = new[] { 8, 16, 24 };
-        for (var attempt = 0; attempt < 80 && target > 0; attempt++)
-        {
-            var (rx, ry) = (1.8 + rng.NextDouble() * 2.6, 1.8 + rng.NextDouble() * 2.6);
-            var centre = (X: 3 + rng.Next(Math.Max(1, grid.Columns - 6)), Y: 4 + rng.Next(Math.Max(1, grid.Rows - 8)));
-            var phases = new[] { rng.NextDouble() * 6.28, rng.NextDouble() * 6.28, rng.NextDouble() * 6.28 };
-            var height = heights[rng.Next(heights.Length)];
-            var rampSide = rng.Next(4);
-            var reach = (int)Math.Ceiling(Math.Max(rx, ry) * 1.5) + 1;
-            var cells = new List<(int Column, int Row)>();
-            var inside = new HashSet<(int, int)>();
-            for (var row = centre.Y - reach; row <= centre.Y + reach; row++)
-                for (var column = centre.X - reach; column <= centre.X + reach; column++)
-                {
-                    var (dx, dy) = (column - centre.X, row - centre.Y);
-                    var angle = Math.Atan2(dy, dx);
-                    var edge = Math.Sqrt(dx * dx / (rx * rx) + dy * dy / (ry * ry))
-                        + .22 * Math.Sin(2 * angle + phases[0]) + .17 * Math.Sin(3 * angle + phases[1]) + .1 * Math.Sin(5 * angle + phases[2]);
-                    if (edge >= 1) continue;
-                    cells.Add((column, row));
-                    inside.Add((column, row));
-                }
-            if (cells.Count < 5) continue;
-            var rampLength = height / Step;
-            var (rdx, rdy) = rampSide switch { 0 => (0, -1), 1 => (1, 0), 2 => (0, 1), _ => (-1, 0) };
-            // Ramp cells: those outside the outcrop from which marching toward it reaches it within the ramp length, at most four wide.
-            var ramp = new List<(int Column, int Row, int Steps)>();
-            var (lateralX, lateralY) = (rdy, rdx);
-            var middle = cells.OrderBy(cell => Math.Abs((cell.Column - centre.X) * lateralX + (cell.Row - centre.Y) * lateralY)).First();
-            for (var lateral = -1; lateral <= 1; lateral++)
-                for (var steps = 1; steps <= rampLength; steps++)
-                {
-                    // Walk outward from the outcrop's edge along the ramp direction.
-                    var (c, r) = (middle.Column + lateralX * lateral, middle.Row + lateralY * lateral);
-                    while (inside.Contains((c, r))) (c, r) = (c + rdx, r + rdy);
-                    (c, r) = (c + rdx * (steps - 1), r + rdy * (steps - 1));
-                    ramp.Add((c, r, steps));
-                }
-            var footprint = cells.Concat(ramp.Select(cell => (cell.Column, cell.Row))).ToList();
-            var clear = true;
-            foreach (var (column, row) in footprint)
-                for (var dy = -1; dy <= 1 && clear; dy++)
-                    for (var dx = -1; dx <= 1 && clear; dx++)
-                    {
-                        var (c, r) = (column + dx, row + dy);
-                        if (inside.Contains((c, r))) continue;
-                        if (!grid.Contains(c, r) || protectedCells[r * grid.Columns + c] || grid.Surface(c, r) != 0) clear = false;
-                    }
-            if (!clear) continue;
-            foreach (var (column, row) in cells) grid.Set(column, row, height, ArenaTerrainMaterial.Stone);
-            foreach (var (column, row, steps) in ramp)
-            {
-                var rampHeight = height - steps * Step;
-                if (rampHeight > 0 && !inside.Contains((column, row))) grid.Set(column, row, rampHeight, ArenaTerrainMaterial.Stone);
-            }
-            target--;
-        }
-    }
-
-    private static bool AllClear(ArenaTerrainGrid grid, bool[] protectedCells, int x, int y, int w, int h, bool requireFlat)
-    {
-        for (var row = y; row < y + h; row++)
-            for (var column = x; column < x + w; column++)
-            {
-                if (!grid.Contains(column, row)) return false;
-                if (protectedCells[row * grid.Columns + column]) return false;
-                if (requireFlat && grid.Surface(column, row) != 0) return false;
-            }
-        return true;
-    }
-
     // From Scorched onward the land splits: 2-3 cell wide fissures 2-4 m deep, lava-floored in the Wyrm's domain.
-    private static void CarveFissures(Random rng, ArenaTerrainGrid grid, bool[] protectedCells, double influence)
+    private static void CarveFissures(Random rng, ArenaTerrainGrid grid, bool[] protectedCells, byte[] zones, double influence)
     {
         if (influence < .55) return;
         var count = 1 + (int)Math.Floor((influence - .55) / .15);
@@ -213,6 +158,14 @@ public static class ArenaTerrainGenerator
             var row = 8 + rng.Next(Math.Max(1, grid.Rows - 16));
             var depth = -(16 + 8 * rng.Next(3));
             var column = rng.Next(2) == 0 ? 0 : grid.Columns - 1;
+            // Fissures open in the open land: look for an edge where the first cells are not woodland.
+            for (var attempt = 0; attempt < 24; attempt++)
+            {
+                var direction0 = column == 0 ? 1 : -1;
+                if (Enumerable.Range(0, 8).Count(s => zones[row * grid.Columns + Math.Clamp(column + direction0 * s, 0, grid.Columns - 1)] != ArenaZone.Forest) >= 6) break;
+                row = 8 + rng.Next(Math.Max(1, grid.Rows - 16));
+                column = rng.Next(2) == 0 ? 0 : grid.Columns - 1;
+            }
             var direction = column == 0 ? 1 : -1;
             var length = (int)(grid.Columns * (.6 + rng.NextDouble() * .4));
             for (var step = 0; step < length; step++)

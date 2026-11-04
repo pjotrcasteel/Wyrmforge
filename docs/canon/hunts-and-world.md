@@ -276,6 +276,14 @@ attack telegraphs or drops. The Arena Lab tests **Hollow (kind 0)** and **Ashlin
 not the unrelated Mire Hound kind 1. Production roster ecology remains C# owned.
 See [art and animation](art-and-animation.md) for source references and QA gates.
 
+## Purposeful arena layout — road, open fields and land zones (owner, 4 November 2026)
+
+**Owner direction.** Every Hunt 1.0 map has a **road** (portrait, south to north), and the road sometimes opens into **open fields**; those fields are reserved for ambushes and other set pieces later. Rocks, hills and trees must **not be scattered at random**; they are generated with purpose so the map makes sense. The authored horizontal example maps are inspiration only and are never copied. **Status: implemented in C#, not owner-approved.**
+- **Fields.** Two or three organic, never-round, flat, rock-free fields (about 10 to 13 m across) that the road runs through; `ArenaTerrainRecipe.Fields` lists them (centre cell, radius) so encounters can target them. Old blast scars (Scorched and up) are dug in the fields, where the fights were.
+- **Land zones** (`ArenaTerrainRecipe.Zones`). Seven noise-bordered regions grow from seeds spread away from the road (one wooded seed is drawn to the first field, so the road opens into a clearing in the trees). Each is **woodland**, **highland** or **meadow**; the share shifts toward highland as the Wyrm's influence rises. Every feature is placed by its zone: **woodland** holds the trees (clumps around glades, thickening away from the road so a tree line lines it, trunks never touching so a forest can be walked); **highland** holds the rock (half-metre foothills, then 1, 2 and 3 m terraces that follow noise contours so cliffs run in long lines, with two or three ramped passes, and fallen boulders at the cliff feet); **meadow** holds the gentle hills and a few standing stones. Lava pools and fissures avoid woodland.
+- **Not random any more:** the old random rock steps, ridges and scattered pillars are gone. Tests assert that trees, cliffs and hills sit in their zones, that forests are grouped, and that fields are flat and met by the road.
+- **Open:** performance of dense woodland (each tree is a depth layer) is unmeasured on a phone; a batched tree renderer may be needed before forests get denser.
+
 ## Everything breaks, and the land burns toward the Wyrm — Hunt 1.0 presentation direction (2 November 2026, owner: "take creative freedom")
 
 **Owner intent.** The player must *notice* that ground, objects, walls, cliffs and hills can all be destroyed, and the closer the hunter gets to the Wyrm the more the map must feel like entering a fire-magic zone. **Status: the cues below marked implemented are presentation-only and not owner-approved; the C# destruction rows are not done.**

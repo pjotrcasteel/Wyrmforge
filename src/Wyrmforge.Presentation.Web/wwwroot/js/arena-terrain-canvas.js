@@ -220,8 +220,8 @@ export function crackCells(cracks) {
     return cells;
 }
 export const MICRO_PER_COLUMN = 8;
-/** How high the terrain draws a tree's column: the sprite carries the trunk. */
-export const TRUNK_MOUND_MICROCELLS = 4;
+/** How high the terrain draws a tree's or boulder's column: none, because the sprite carries the whole object (a raised block shows as a square plinth). */
+export const TRUNK_MOUND_MICROCELLS = 0;
 export const MICRO_UNITS = FACE_PIXELS / MICRO_PER_COLUMN;
 
 /**
@@ -391,7 +391,7 @@ function groundVariety(frame, column, row) {
 function topTileKind(band, material, height, frame, column, row) {
     if (height <= BEDROCK_MICROCELLS) return null;
     if (material === TERRAIN_MATERIAL.Lava) return 'lavaTop';
-    if (material === TERRAIN_MATERIAL.Wood) return 'dirtTop';
+    if (material === TERRAIN_MATERIAL.Wood) return band <= 1 ? 'grassTop' : 'dirtTop';
     const variety = frame ? groundVariety(frame, column, row) : .5;
     if (material === TERRAIN_MATERIAL.Stone) return variety < .3 ? 'rubbleTop' : 'stoneTop';
     if (height < 0) return 'dirtTop';
@@ -738,7 +738,6 @@ export function paintTerrainCell(ctx, frame, band, column, row, grain = true) {
         const splat = kindMap(frame, band, column, row, tileKind, height);
         if (splat) painted += drawSplat(ctx, atlas, splat, variant, top.x, top.y);
         else ctx.drawImage(atlas[tileKind][variant], top.x, top.y, top.width, top.height);
-        if (tileKind !== 'lavaTop' && height <= 4) painted += macroTint(ctx, frame, column, row, top.x, top.y);
         const tint = heightTint(height);
         if (tint) { ctx.fillStyle = tint; ctx.fillRect(top.x, top.y, top.width, top.height); painted++; }
         if (tileKind !== 'lavaTop') painted += drawGroundDecals(ctx, frame, band, column, row, height, material[index], top);
