@@ -7,6 +7,9 @@ public sealed record ArenaTerrainRecipe(
     (int Column, int Row) Exit,
     IReadOnlyList<(int Column, int Row)> ProtectedRoute)
 {
+    /// <summary>Row-major mask of the organic open floors (combat clearings, or a boss floor): kept free of rock, trees and lava, but fully destructible.</summary>
+    public bool[] OpenCells { get; init; } = [];
+
     /// <summary>Row-major mask of the route, spawn and exit clearings; excavation there is depth-limited.</summary>
     public bool[] ProtectedCells { get; init; } = [];
 }
@@ -22,8 +25,9 @@ public static class ArenaTerrainGenerator
     public const int ExitClearCells = 4;
     private const int Step = ArenaTerrainGrid.MaxStepMicrocells;
 
+    /// <param name="bossFloorMeters">When above zero the arena is a boss arena: one organic, never-round open floor of about this diameter at its centre instead of the road clearings.</param>
     public static ArenaTerrainRecipe Generate(int seed, double influence, int columns, int rows,
-        (int Column, int Row) spawn, (int Column, int Row) exit)
+        (int Column, int Row) spawn, (int Column, int Row) exit, double bossFloorMeters = 0)
     {
         influence = double.IsFinite(influence) ? Math.Clamp(influence, 0, 1) : 0;
         var rng = new Random(unchecked(seed * (int)0x9E3779B1 ^ 0x5EED7E44));
@@ -36,21 +40,26 @@ public static class ArenaTerrainGenerator
         Mark(protectedCells, columns, rows, spawn.Column, spawn.Row, SpawnClearCells);
         Mark(protectedCells, columns, rows, exit.Column, exit.Row, ExitClearCells);
 
+        // Open floors keep rock, trees and lava away, but stay destructible, so they are not part of the protected route.
+        var open = ArenaTerrainRelief.Clearings(rng, columns, rows, route, bossFloorMeters);
+        var keepClear = new bool[protectedCells.Length];
+        for (var index = 0; index < keepClear.Length; index++) keepClear[index] = protectedCells[index] || open[index];
+
         PaintAshPatches(rng, grid, influence);
-        PlaceRockSteps(rng, grid, protectedCells, influence);
-        var routeDistance = ArenaTerrainRelief.DistanceFromRoute(protectedCells, columns, rows);
-        ArenaTerrainRelief.Ridges(rng, grid, protectedCells, routeDistance, influence);
+        PlaceRockSteps(rng, grid, keepClear, influence);
+        var routeDistance = ArenaTerrainRelief.DistanceFromRoute(keepClear, columns, rows);
+        ArenaTerrainRelief.Ridges(rng, grid, keepClear, routeDistance, influence);
         ArenaTerrainRelief.Pillars(rng, grid, routeDistance);
         var heatSources = ArenaTerrainRelief.LavaPools(rng, grid, routeDistance, influence);
-        CarveFissures(rng, grid, protectedCells, influence);
+        CarveFissures(rng, grid, keepClear, influence);
         ArenaTerrainRelief.Trees(rng, grid, routeDistance, influence);
         ArenaTerrainRelief.Hills(rng, grid, routeDistance, influence);
         ArenaTerrainRelief.Weather(rng, grid, protectedCells);
         ArenaTerrainMutation.SettleAll(grid, protectedCells);
         // Generation-time blasts use negative ids so they can never collide with a live impact.
         long scarId = -1;
-        heatSources.AddRange(ArenaTerrainRelief.ScarCraters(rng, grid, protectedCells, routeDistance, influence, ref scarId));
-        grid.SetCracks(ArenaTerrainRelief.Cracks(rng, grid, protectedCells, routeDistance, heatSources, influence, ref scarId));
+        heatSources.AddRange(ArenaTerrainRelief.ScarCraters(rng, grid, keepClear, routeDistance, influence, ref scarId));
+        grid.SetCracks(ArenaTerrainRelief.Cracks(rng, grid, keepClear, routeDistance, heatSources, influence, ref scarId));
 
         // The protected route and its clearings are levelled last so nothing above can close them.
         for (var row = 0; row < rows; row++)
@@ -58,28 +67,40 @@ public static class ArenaTerrainGenerator
                 if (protectedCells[row * columns + column])
                     grid.Set(column, row, 0, influence >= .25 && grid.Material(column, row) == ArenaTerrainMaterial.Ash
                         ? ArenaTerrainMaterial.Ash : ArenaTerrainMaterial.Soil);
-        return new ArenaTerrainRecipe(grid, spawn, exit, route) { ProtectedCells = protectedCells };
+        return new ArenaTerrainRecipe(grid, spawn, exit, route) { ProtectedCells = protectedCells, OpenCells = open };
     }
 
+    /// <summary>
+    /// The road: a smooth S-curve from the spawn at the south end to the exit at the north end (the arena is portrait; the authored horizontal
+    /// maps were turned to run bottom to top). Three bends alternate sides, 4 to 9 cells off the centre line, joined by a Catmull-Rom spline.
+    /// </summary>
     private static List<(int Column, int Row)> Rasterize(Random rng, int columns, int rows,
         (int Column, int Row) spawn, (int Column, int Row) exit)
     {
-        var bend = (rng.Next(2) * 2 - 1) * (3 + rng.Next(5));
-        var midColumn = Math.Clamp((spawn.Column + exit.Column) / 2 + bend, RouteHalfWidthCells + 1, columns - RouteHalfWidthCells - 2);
-        var mid = (Column: midColumn, Row: (spawn.Row + exit.Row) / 2);
-        var points = new[] { spawn, mid, exit };
-        var cells = new List<(int Column, int Row)>();
-        for (var leg = 0; leg < points.Length - 1; leg++)
+        var sign = rng.Next(2) * 2 - 1;
+        var low = Math.Min(RouteHalfWidthCells + 4, columns / 2);
+        var high = Math.Max(low, columns - RouteHalfWidthCells - 5);
+        var anchors = new List<(double X, double Y)> { (spawn.Column, spawn.Row) };
+        var centre = (spawn.Column + exit.Column) / 2.0;
+        for (var bend = 1; bend <= 3; bend++)
         {
-            var (a, b) = (points[leg], points[leg + 1]);
-            var steps = Math.Max(Math.Abs(b.Column - a.Column), Math.Abs(b.Row - a.Row));
-            for (var step = 0; step <= steps; step++)
+            var y = spawn.Row + (exit.Row - spawn.Row) * bend / 4.0;
+            anchors.Add((Math.Clamp(centre + sign * (4 + rng.Next(6)), low, high), y));
+            sign = -sign;
+        }
+        anchors.Add((exit.Column, exit.Row));
+        (double X, double Y) At(int index) => anchors[Math.Clamp(index, 0, anchors.Count - 1)];
+        var cells = new List<(int Column, int Row)>();
+        const int samplesPerSegment = 160;
+        for (var segment = 0; segment < anchors.Count - 1; segment++)
+            for (var sample = 0; sample <= samplesPerSegment; sample++)
             {
-                var t = steps == 0 ? 0 : step / (double)steps;
-                var cell = ((int)Math.Round(a.Column + (b.Column - a.Column) * t), (int)Math.Round(a.Row + (b.Row - a.Row) * t));
+                var t = sample / (double)samplesPerSegment;
+                double Spline(double p0, double p1, double p2, double p3) => .5 * (2 * p1 + (-p0 + p2) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t * t + (-p0 + 3 * p1 - 3 * p2 + p3) * t * t * t);
+                var (a, b, c, d) = (At(segment - 1), At(segment), At(segment + 1), At(segment + 2));
+                var cell = ((int)Math.Round(Math.Clamp(Spline(a.X, b.X, c.X, d.X), 0, columns - 1)), (int)Math.Round(Math.Clamp(Spline(a.Y, b.Y, c.Y, d.Y), 0, rows - 1)));
                 if (cells.Count == 0 || cells[^1] != cell) cells.Add(cell);
             }
-        }
         return cells;
     }
 
@@ -108,7 +129,7 @@ public static class ArenaTerrainGenerator
     // Rock steps of 1-3 m: lobed, irregular outcrops (never rectangles), sheer where they meet low ground, with one side an ascending ramp of half-metre steps.
     private static void PlaceRockSteps(Random rng, ArenaTerrainGrid grid, bool[] protectedCells, double influence)
     {
-        var target = 4 + rng.Next(4) - (int)Math.Round(influence * 2);
+        var target = 3 + rng.Next(3) - (int)Math.Round(influence * 2);
         var heights = new[] { 8, 16, 24 };
         for (var attempt = 0; attempt < 80 && target > 0; attempt++)
         {

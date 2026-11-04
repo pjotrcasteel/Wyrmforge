@@ -9,7 +9,7 @@ public sealed partial class RunSimulation
     private void EnsurePlayerPosition(double width, double height)
     {
         if (playerPositionInitialized) return;
-        player.Position = new Vector2D(width / 2, height / 2);
+        player.Position = arenaEnvironment?.TerrainSpawnPosition ?? new Vector2D(width / 2, height / 2);
         playerPositionInitialized = true;
     }
 

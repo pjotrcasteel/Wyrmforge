@@ -1,8 +1,12 @@
-// Oblique 2.5D metric contract (owner decision, 1 November 2026): one block is 1 m^3 with a 32x32 pixel top face
-// and a 32x32 pixel front face. 1 m of height moves 32 px up the screen. World units equal CSS pixels at 1x camera.
+// Oblique 2.5D metric contract. World units (32 per metre, equal to CSS pixels at 1x camera) are what C#, the camera and actors use.
+// Terrain art is authored at 64 native pixels per metre (owner decision, 4 November 2026, superseding the 1 November 32x32 faces):
+// one block is 1 m^3 with a 64x64 pixel top face and a 64x64 pixel front face, so one art pixel is half a world unit.
 // Heights come from the C# terrain as metres or 12.5 cm microcells; presentation never invents them.
 export const UNITS_PER_METER = 32;
 export const FACE_PIXELS = 32;
+/** Terrain art pixels per world unit; every terrain surface is painted at this multiple of the world grid. */
+export const TERRAIN_ART_SCALE = 2;
+export const ART_PIXELS_PER_METER = UNITS_PER_METER * TERRAIN_ART_SCALE;
 export const MICROCELLS_PER_METER = 8;
 export const MICROCELL_UNITS = UNITS_PER_METER / MICROCELLS_PER_METER;
 

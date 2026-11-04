@@ -10,7 +10,7 @@ import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getA
 import { drawAr1GeographyReview } from './arena-ar1-geography-review.js?v=20261031-ar1-site-detail-v1';
 import { drawGreyboxGround } from './arena-greybox-ground.js';
 import { TerrainCanvasCache, influenceBandIndex, blockInsetOverlayEnabled, drawBlockInsetOverlay, occludingTerrainCells, eraseTerrainOcclusion, repaintTerrainOcclusion, mergeTerrainFrame } from './arena-terrain-canvas.js';
-import { raisedActor } from './arena-projection.js';
+import { raisedActor, TERRAIN_ART_SCALE } from './arena-projection.js';
 import { ambientParticles, drawAmbientParticles } from './arena-ambient-particles.js';
 import { readArenaDebugFlags, botMovement, createBotMemory, withDebugAmbient } from './arena-debug.js';
 import { createFrameSampler, readHeapMegabytes, perfReport, perfLines } from './arena-perf.js';
@@ -422,6 +422,7 @@ function draw(state, snapshot, width, height) {
     ctx.clearRect(0, 0, width, height);
     ctx.save();
     ctx.translate(-camera.x, -camera.y);
+    let artScale = 1, groundAlbedo = null;
     if (greybox) {
         // Level one-metre grey receiver. No material atlas or walls; the same
         // authoritative C# lights shade it and its actors through HuntGpuWorld.
@@ -430,7 +431,10 @@ function draw(state, snapshot, width, height) {
             const terrainCache = state.terrainCache ??= new TerrainCanvasCache();
             if (gpu) terrainCache.enableNormals();
             terrainCache.update(state.terrainFrame, huntBand(state, snapshot));
-            state.terrainCache.draw(ctx, { x: camera.x, y: camera.y, width, height });
+            // 64 px/m terrain: the GPU ground is its own surface at artScale pixels per world unit, not the 1x visible canvas.
+            artScale = gpu ? Math.max(1, state.debug.renderScale ?? TERRAIN_ART_SCALE) : 1;
+            if (artScale > 1) groundAlbedo = groundAlbedoView(state, camera, width, height, artScale);
+            else state.terrainCache.draw(ctx, { x: camera.x, y: camera.y, width, height });
         } else {
             drawGreyboxGround(ctx, snapshot.environment.greybox, worldWidth, worldHeight);
         }
@@ -515,16 +519,18 @@ function draw(state, snapshot, width, height) {
     const view = { x: camera.x, y: camera.y, width, height };
     const emissive = gpu && state.terrainFrame && snapshot.environment?.terrain
         ? paintGroundEmissive(state, state.terrainFrame, state.destructionFx, huntBand(state, snapshot),
-            view, performance.now() / 1000, state.reducedMotion.matches) : null;
+            view, performance.now() / 1000, state.reducedMotion.matches, artScale) : null;
     if (emissive) state.veinSeams = emissive.seams;
-    const normal = gpu && state.terrainCache?.normalCanvas ? groundNormalView(state, camera, width, height) : null;
-    if (gpu) gpu.begin(ctx, camera, width, height, emissive?.canvas ?? null, normal);
+    const normal = gpu && state.terrainCache?.normalCanvas ? groundNormalView(state, camera, width, height, artScale) : null;
+    if (gpu) gpu.begin(ctx, camera, width, height, emissive?.canvas ?? null, normal, groundAlbedo ? { source: groundAlbedo, scale: artScale } : null);
     state.lighting01FixtureCount = gpu && state.lighting01
         ? submitLighting01Fixtures(gpu, snapshot.environment, state.sharedLightingFrame,
             camera, worldWidth, worldHeight) : 0;
     const worldContext = ctx;
     for (const layer of sortSceneDepthLayers(depthLayers)) {
         let tile, tileX, tileY, tileSize, capture, revision, reuse = false;
+        // Canopies are 64 px/m art like the terrain; actors keep their 1x sprites.
+        const pixelScale = layer.kind === 'tree' ? artScale : 1;
         if (gpu) {
             capture = huntLayerCapture(layer, layer.player ?? snapshot.player, state.ashfang.death);
             if (!capture) continue;
@@ -532,10 +538,10 @@ function draw(state, snapshot, width, height) {
             if (tileX + tileSize < camera.x - 384 || tileY + tileSize < camera.y - 384 ||
                 tileX > camera.x + width + 384 || tileY > camera.y + height + 384) continue;
             revision = huntLayerRevision(layer, artReady(), artGeneration());
-            reuse = gpu.canReuseCapture(capture.id, revision, tileSize, tileSize);
-            tile = (state.gpuScratchPool ??= new HuntGpuScratchPool(4)).acquire(tileSize);
+            reuse = gpu.canReuseCapture(capture.id, revision, tileSize, tileSize, pixelScale);
+            tile = (state.gpuScratchPool ??= new HuntGpuScratchPool(4)).acquire(Math.ceil(tileSize * pixelScale));
             if (!reuse) {
-                ctx = prepareHuntGpuScratch(tile, tileSize, tileX, tileY);
+                ctx = prepareHuntGpuScratch(tile, tileSize, tileX, tileY, pixelScale);
             }
         }
         if (!reuse) {
@@ -579,7 +585,8 @@ function draw(state, snapshot, width, height) {
                 .12 + Math.max(0, Math.min(1, layer.depth / worldHeight)) * .1,
                 true, { revision, footFraction: capture.footFraction,
                     occluderHeightPx: capture.occluderHeightPx,
-                    physicalVolume: capture.physicalVolume });
+                    physicalVolume: capture.physicalVolume,
+                    ...(pixelScale !== 1 ? { pixelScale } : {}) });
             ctx = worldContext;
         }
     }
@@ -1671,15 +1678,32 @@ function drawAimRune(ctx, player) {
 }
 
 /** The visible window of the terrain normal map, flat where nothing is painted, for the ground's lit material. */
-function groundNormalView(state, camera, width, height) {
+function groundNormalView(state, camera, width, height, scale = 1) {
     const canvas = state.normalViewCanvas ??= document.createElement('canvas');
-    if (canvas.width !== width) canvas.width = width;
-    if (canvas.height !== height) canvas.height = height;
+    const pixelWidth = Math.ceil(width * scale), pixelHeight = Math.ceil(height * scale);
+    if (canvas.width !== pixelWidth) canvas.width = pixelWidth;
+    if (canvas.height !== pixelHeight) canvas.height = pixelHeight;
     const g = canvas.getContext('2d');
     g.setTransform(1, 0, 0, 1, 0, 0);
+    g.imageSmoothingEnabled = false;
     g.fillStyle = '#8080ff';
-    g.fillRect(0, 0, width, height);
-    g.translate(-camera.x, -camera.y);
+    g.fillRect(0, 0, pixelWidth, pixelHeight);
+    g.setTransform(scale, 0, 0, scale, -camera.x * scale, -camera.y * scale);
     state.terrainCache.drawNormals(g, { x: camera.x, y: camera.y, width, height });
+    return canvas;
+}
+
+/** The visible window of the painted terrain at `scale` pixels per world unit: the GPU ground's albedo at 64 art px/m. */
+function groundAlbedoView(state, camera, width, height, scale) {
+    const canvas = state.groundViewCanvas ??= document.createElement('canvas');
+    const pixelWidth = Math.ceil(width * scale), pixelHeight = Math.ceil(height * scale);
+    if (canvas.width !== pixelWidth) canvas.width = pixelWidth;
+    if (canvas.height !== pixelHeight) canvas.height = pixelHeight;
+    const g = canvas.getContext('2d');
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.imageSmoothingEnabled = false;
+    g.clearRect(0, 0, pixelWidth, pixelHeight);
+    g.setTransform(scale, 0, 0, scale, -camera.x * scale, -camera.y * scale);
+    state.terrainCache.draw(g, { x: camera.x, y: camera.y, width, height });
     return canvas;
 }

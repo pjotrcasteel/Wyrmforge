@@ -10,7 +10,7 @@ function recorder() {
     return {
         calls, cues,
         fillStyle: '',
-        save() {}, restore() {}, translate(x, y) { calls.push(['translate', x, y]); },
+        save() {}, restore() {}, translate(x, y) { calls.push(['translate', x, y]); }, scale() {}, setTransform() {},
         // Translucent contact shadows and lip light are depth cues; they are asserted separately from the opaque faces.
         fillRect(x, y, w, h) { (String(this.fillStyle).startsWith('rgba(') ? cues : calls).push(['fillRect', x, y, w, h, this.fillStyle]); },
         clearRect() {},
@@ -123,7 +123,7 @@ test('cache draw copies the visible window from the padded surface into world sp
     cache.update(frame(4, 4, new Array(16).fill(0)), 0);
     const ctx = recorder();
     assert.equal(cache.draw(ctx, { x: 10, y: 20, width: 60, height: 50 }), true);
-    assert.deepEqual(ctx.calls[0], ['drawImage', 10, 20 + TERRAIN_PAD_UNITS, 60, 50, 10, 20, 60, 50]);
+    assert.deepEqual(ctx.calls[0], ['drawImage', 20, (20 + TERRAIN_PAD_UNITS) * 2, 120, 100, 10, 20, 60, 50]);
     assert.equal(cache.draw(ctx, { x: 9999, y: 0, width: 10, height: 10 }), false);
 });
 
@@ -142,14 +142,14 @@ test('the block inset overlay is a debug toggle and off by default', () => {
     assert.equal(blockInsetOverlayEnabled('?hunt1=1&blockInset=1'), true);
 });
 
-test('the inset overlay draws one one-pixel line inside each 32x32 face and one per exposed metre', () => {
+test('the inset overlay draws one one-art-pixel line inside each 64x64-pixel face and one per exposed metre', () => {
     const ctx = Object.assign(recorder(), { strokeRect(x, y, w, h) { this.calls.push(['strokeRect', x, y, w, h, this.strokeStyle, this.lineWidth]); } });
     const outlined = drawBlockInsetOverlay(ctx, frame(1, 2, [16, 0]), { x: 0, y: 0, width: 32, height: 64 });
     const strokes = ctx.calls.filter(call => call[0] === 'strokeRect');
     assert.equal(outlined, strokes.length);
-    assert.deepEqual(strokes[0].slice(1, 5), [0.5, -63.5, 31, 31], 'top face two metres up, inset by one pixel');
-    assert.deepEqual(strokes.slice(1, 3).map(call => call.slice(1, 5)), [[0.5, -31.5, 31, 31], [0.5, 0.5, 31, 31]], 'two metres of front face');
-    assert.ok(strokes.every(call => call[5] === BLOCK_INSET_COLOR && call[6] === 1));
+    assert.deepEqual(strokes[0].slice(1, 5), [0.25, -63.75, 31.5, 31.5], 'top face two metres up, inset by one art pixel');
+    assert.deepEqual(strokes.slice(1, 3).map(call => call.slice(1, 5)), [[0.25, -31.75, 31.5, 31.5], [0.25, 0.25, 31.5, 31.5]], 'two metres of front face');
+    assert.ok(strokes.every(call => call[5] === BLOCK_INSET_COLOR && call[6] === 0.5));
 });
 
 test('only terrain south of the actor that is higher than its feet occludes it', () => {
@@ -313,8 +313,8 @@ test('the inset overlay outlines a dug block per microcolumn at that microcolumn
     const strokes = ctx.calls.filter(call => call[0] === 'strokeRect');
     assert.equal(outlined, 64, 'one outline per microcolumn');
     assert.equal(strokes.length, 64);
-    assert.deepEqual(strokes[0].slice(1), [0.5, 12.5, 3, 3], 'the dug corner sits 3 microcells (12 px) lower');
-    assert.deepEqual(strokes[1].slice(1), [4.5, 0.5, 3, 3]);
+    assert.deepEqual(strokes[0].slice(1), [0.25, 12.25, 3.5, 3.5], 'the dug corner sits 3 microcells (12 world units) lower');
+    assert.deepEqual(strokes[1].slice(1), [4.25, 0.25, 3.5, 3.5]);
 });
 
 test('depth cues: a contact shadow at the foot of a raised face and a lit lip along its top edge, in whole microcells', () => {

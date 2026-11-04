@@ -17,6 +17,8 @@ export function readArenaDebugFlags(search = globalThis.location?.search ?? '') 
         ambient: Number.isFinite(Number.parseFloat(params.get('ambient') ?? '')) ? Number.parseFloat(params.get('ambient')) : null,
         // Presents the Hunt as if it lay in influence band 0..3 (Wet, Scorched, Burning, Volcanic); presentation only.
         band: /^[0-3]$/.test(params.get('band') ?? '') ? Number(params.get('band')) : null,
+        // Hunt 1.0 GPU surface density in pixels per world unit (`?renderScale=1` for the old 32 px/m look); null uses the terrain art scale.
+        renderScale: /^[12]$/.test(params.get('renderScale') ?? '') ? Number(params.get('renderScale')) : null,
     };
 }
 

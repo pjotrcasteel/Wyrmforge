@@ -126,11 +126,24 @@ public sealed class ArenaTerrainIntegrationTests
         for (var tick = 0; tick < 20 * 90 && simulation.TrailExitPending; tick++)
         {
             var here = new Vector2D(snapshot.Player!.X, snapshot.Player.Y);
-            var waypoint = environment.EnemyNavigationTarget(here, exit, Width, Height, 12);
+            // Steer to the centre of the exit's cell, not the cell border the gate marker sits on: a walker hugging a block's edge cannot slide past it.
+            var waypoint = environment.EnemyNavigationTarget(here, new Vector2D(exit.X + ArenaTerrainGrid.CellUnits / 2, exit.Y), Width, Height, 12);
             var heading = (waypoint - here).Normalized();
             snapshot = simulation.Tick(.05, new MovementInput(heading.X, heading.Y), 390, 700);
         }
-        Assert.IsFalse(simulation.TrailExitPending, $"seed {seed}: the exit gate must be walkable");
+        var dump = "";
+        if (simulation.TrailExitPending)
+        {
+            var grid = (ArenaTerrainGrid)typeof(ArenaEnvironmentState).GetField("terrain", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(environment)!;
+            var (pc, pr) = ArenaTerrainGrid.ColumnOf(new Vector2D(snapshot.Player!.X, snapshot.Player.Y));
+            for (var r = Math.Max(0, pr - 6); r <= Math.Min(grid.Rows - 1, pr + 4); r++)
+            {
+                dump += "\n" + r.ToString("00") + " ";
+                for (var c = 4; c < 28; c++)
+                    dump += (c == pc && r == pr ? "@" : grid.Material(c, r) switch { ArenaTerrainMaterial.Wood => 'T', ArenaTerrainMaterial.Boulder => 'B', ArenaTerrainMaterial.Stone => 'S', ArenaTerrainMaterial.Lava => 'L', _ => grid.Surface(c, r) == 0 ? '.' : grid.Surface(c, r) > 0 ? '^' : 'v' });
+            }
+        }
+        Assert.IsFalse(simulation.TrailExitPending, $"seed {seed}: the exit gate must be walkable (hunter at {snapshot.Player!.X:0},{snapshot.Player.Y:0}, exit at {exit.X:0},{exit.Y:0}){dump}");
     }
 
     [TestMethod]
@@ -176,6 +189,7 @@ public sealed class ArenaTerrainIntegrationTests
         var snapshot = simulation.Tick(.05, default, 390, 700);
         Assert.IsNotNull(snapshot.Environment?.Terrain);
         Assert.AreEqual(ArenaMetricEnvelope.CombatWidth, snapshot.World!.Width);
-        Assert.AreEqual(512, snapshot.Player.X, 1, "the hunter starts on the protected clearing");
+        Assert.AreEqual(528, snapshot.Player.X, 1, "the hunter enters at the south end of the road, on the protected clearing");
+        Assert.IsGreaterThan(snapshot.World!.Height * .85, snapshot.Player.Y, "the hunter enters at the south (bottom) end");
     }
 }

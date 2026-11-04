@@ -4,7 +4,7 @@
 // shadows it like any other upright sprite. The Wyrm Influence band picks live, dry, dead or charred art; a worn-down trunk becomes a stump.
 // Bushes are cosmetic undergrowth on open ground (nothing blocks), placed by a hash of the cell and cleared wherever the ground is dug.
 import { TERRAIN_MATERIAL } from './arena-terrain-canvas.js';
-import { forestKit, useForestKit } from './forest-kit.js';
+import { forestKit, useForestKit, spriteSource } from './forest-kit.js';
 import { cellHash } from './arena-ground-decals.js';
 
 export { useForestKit };
@@ -124,13 +124,13 @@ function drawPart(ctx, loaded, name, footX, footY, flip) {
     const sprite = loaded.sprites[name];
     if (!sprite) return false;
     if (!flip) {
-        ctx.drawImage(loaded.image, sprite.x, sprite.y, sprite.w, sprite.h, Math.round(footX - sprite.ax), Math.round(footY - sprite.ay), sprite.w, sprite.h);
+        ctx.drawImage(loaded.image, ...spriteSource(sprite), Math.round(footX - sprite.ax), Math.round(footY - sprite.ay), sprite.w, sprite.h);
         return true;
     }
     ctx.save();
     ctx.translate(Math.round(footX), Math.round(footY - sprite.ay));
     ctx.scale(-1, 1);
-    ctx.drawImage(loaded.image, sprite.x, sprite.y, sprite.w, sprite.h, -sprite.ax, 0, sprite.w, sprite.h);
+    ctx.drawImage(loaded.image, ...spriteSource(sprite), -sprite.ax, 0, sprite.w, sprite.h);
     ctx.restore();
     return true;
 }

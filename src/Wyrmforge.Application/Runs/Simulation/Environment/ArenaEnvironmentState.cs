@@ -31,6 +31,10 @@ public sealed class ArenaEnvironmentState
     private ArenaTerrainGrid? terrainBaseline;
     private bool[] terrainProtected = [];
     private (int Column, int Row) terrainExit;
+    private (int Column, int Row)? terrainSpawn;
+
+    /// <summary>Where the hunter enters a Hunt 1.0 terrain arena (the south end of the road), or null for the legacy centre start.</summary>
+    public Vector2D? TerrainSpawnPosition => terrainSpawn is { } spawn ? ArenaTerrainGrid.CenterOf(spawn.Column, spawn.Row) : null;
     private readonly SortedSet<long> appliedImpactIds = [];
     private (int Revision, int Column, int Row, int Radius, bool[] Cells)? reachableCache;
     private Dictionary<int, int[]>? distanceFields;
@@ -113,8 +117,10 @@ public sealed class ArenaEnvironmentState
             // Hunt 1.0 terrain: the player starts at the arena centre and the exit sits at TrailExitPosition.
             var columns = (int)(ArenaMetricEnvelope.CombatWidth / ArenaTerrainGrid.CellUnits);
             var rows = (int)(ArenaMetricEnvelope.CombatHeight / ArenaTerrainGrid.CellUnits);
+            // The hunter enters at the south end and the exit is at the north end: the arena is portrait, and the road runs between them.
             var recipe = ArenaTerrainGenerator.Generate(seed, terrainInfluence ?? node.Influence, columns, rows,
-                (columns / 2, rows / 2), (columns / 2, (int)(Math.Max(80, ArenaMetricEnvelope.CombatHeight * .11) / ArenaTerrainGrid.CellUnits)));
+                (columns / 2, rows - 8), (columns / 2, (int)(Math.Max(80, ArenaMetricEnvelope.CombatHeight * .11) / ArenaTerrainGrid.CellUnits)));
+            environment.terrainSpawn = recipe.Spawn;
             environment.terrain = recipe.Grid;
             environment.terrainBaseline = recipe.Grid.Clone();
             environment.terrainProtected = recipe.ProtectedCells;
@@ -601,6 +607,8 @@ public sealed class ArenaEnvironmentState
             var waypoint = position + towards * (distance * .55) + across * (side * distance * 1.7);
             if (waypoint.X < radius || waypoint.Y < radius || waypoint.X > width - radius || waypoint.Y > height - radius) continue;
             if (IsBlocked(waypoint, width, height, radius) || BlocksSegment(enemy, waypoint, width, height, radius)) continue;
+            // A detour that must cross a rock step is no detour: the terrain field routes around the prop instead.
+            if (TerrainActive(width, height) && terrain!.BlocksMovement(enemy, waypoint, radius)) continue;
             var score = Vector2D.Distance(enemy, waypoint) + Vector2D.Distance(waypoint, goal);
             if (score >= cost) continue;
             best = waypoint;

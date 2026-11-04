@@ -291,45 +291,51 @@ export class HuntGpuWorld {
                 s: [mesh.scale.x, mesh.scale.y, mesh.scale.z].map(round), visible: mesh.visible !== false };
         });
     }
-    begin(ctx, camera, width, height, groundEmissive = null, groundNormal = null) {
+    begin(ctx, camera, width, height, groundEmissive = null, groundNormal = null, ground = null) {
         this.camera = camera; this.width = width; this.height = height;
         this.used.clear(); this.dirtyTextures.clear(); this.objects = []; this.materials = [];
+        // `ground` ({ source, scale }) supplies the ground albedo painted at `scale` pixels per world unit (the 64 px/m terrain); the emissive and
+        // normal maps then share that density and the drawing buffer follows it. Without it the ground is the visible canvas at 1x as before.
+        const scale = ground?.scale ?? 1;
+        this.engine.renderScale = scale;
         // The emissive map is a second viewport-sized layer over the same ground plane: black where nothing glows, so crack veins,
         // hot craters and the bedrock hint are lit surfaces that stay bright in the dark and sit beneath every actor.
-        if (groundEmissive) this.uploadLayer(GROUND_EMISSIVE_ID, groundEmissive, width, height);
+        if (groundEmissive) this.uploadLayer(GROUND_EMISSIVE_ID, groundEmissive, width, height, undefined, true, scale);
         // Normals are data, not colour: no sRGB decode. Convention OpenGL / three.js tangent space (G toward the top of the image).
-        if (groundNormal) this.uploadLayer(GROUND_NORMAL_ID, groundNormal, width, height, undefined, false);
+        if (groundNormal) this.uploadLayer(GROUND_NORMAL_ID, groundNormal, width, height, undefined, false, scale);
         const material = {
             ...(groundEmissive ? { emissiveMap: GROUND_EMISSIVE_ID, emission: '#ffffff', emissionIntensity: GROUND_EMISSION_INTENSITY } : {}),
             ...(groundNormal ? { normal: GROUND_NORMAL_ID, normalScale: GROUND_NORMAL_SCALE } : {}),
         };
-        this.capture('hunt-ground', ctx.canvas, 0, 0, width, height, 0, false, Object.keys(material).length ? { material } : {});
+        this.capture('hunt-ground', ground?.source ?? ctx.canvas, 0, 0, width, height, 0, false,
+            { ...(Object.keys(material).length ? { material } : {}), ...(scale !== 1 ? { pixelScale: scale } : {}) });
     }
     /** Callers may skip repaint only when their explicit visual revision is unchanged. */
-    canReuseCapture(id, revision, width, height) {
+    canReuseCapture(id, revision, width, height, pixelScale = 1) {
         const layer = this.layers.get(id);
         return revision !== undefined && layer?.revision === revision &&
-            layer.pixels.width === Math.max(1, Math.ceil(width)) &&
-            layer.pixels.height === Math.max(1, Math.ceil(height));
+            layer.pixels.width === Math.max(1, Math.ceil(width * pixelScale)) &&
+            layer.pixels.height === Math.max(1, Math.ceil(height * pixelScale));
     }
     /** Registers (once) and refreshes a Canvas-backed GPU texture; returns whether pixels were re-uploaded. */
-    uploadLayer(id, source, width, height, revision, colorData = true) {
+    uploadLayer(id, source, width, height, revision, colorData = true, pixelScale = 1) {
         if (revision !== undefined && (typeof revision !== 'string' &&
             !(typeof revision === 'number' && Number.isFinite(revision))))
             throw new TypeError('Capture revision must be a stable string or finite number');
         this.used.add(id);
         let layer = this.layers.get(id);
-        const unchanged = this.canReuseCapture(id, revision, width, height);
+        const unchanged = this.canReuseCapture(id, revision, width, height, pixelScale);
+        const pixelWidth = Math.max(1, Math.ceil(width * pixelScale)), pixelHeight = Math.max(1, Math.ceil(height * pixelScale));
         if (!layer) {
             const pixels = document.createElement('canvas');
-            pixels.width = Math.max(1, Math.ceil(width)); pixels.height = Math.max(1, Math.ceil(height));
+            pixels.width = pixelWidth; pixels.height = pixelHeight;
             const texture = new T.CanvasTexture(pixels);
             this.engine.registerTexture(id, texture, colorData);
             layer = { pixels, texture }; this.layers.set(id, layer);
         }
         if (unchanged) return false;
-        if (layer.pixels.width !== Math.ceil(width)) layer.pixels.width = Math.ceil(width);
-        if (layer.pixels.height !== Math.ceil(height)) layer.pixels.height = Math.ceil(height);
+        if (layer.pixels.width !== pixelWidth) layer.pixels.width = pixelWidth;
+        if (layer.pixels.height !== pixelHeight) layer.pixels.height = pixelHeight;
         const ctx = layer.pixels.getContext('2d');
         ctx.imageSmoothingEnabled = false;
         ctx.clearRect(0, 0, layer.pixels.width, layer.pixels.height);
@@ -339,10 +345,12 @@ export class HuntGpuWorld {
         layer.revision = revision;
         return true;
     }
-    capture(id, source, x, y, width, height, elevation = 0, castsShadow = true, surface = {}) {
+    capture(id, source, x, y, width, height, elevation = 0, castsShadow = true, requested = {}) {
+        // `pixelScale` is upload density only; it never reaches the renderable, the shadow caster or the material.
+        const { pixelScale = 1, ...surface } = requested;
         // Existing Canvas layers remain a migration fallback. New renderables may instead
         // reference registered GPU texture IDs, authored geometry and surface channels.
-        if (source) this.uploadLayer(id, source, width, height, surface.revision);
+        if (source) this.uploadLayer(id, source, width, height, surface.revision, true, pixelScale);
         // An explicit 2.5D/3D occluder always wins. Legacy Canvas captures
         // contribute their own alpha silhouette through the shared shadow maps.
         // Capture quads and C# lights are projected into the camera viewport.

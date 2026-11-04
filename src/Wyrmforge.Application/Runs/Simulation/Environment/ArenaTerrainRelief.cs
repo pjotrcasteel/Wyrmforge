@@ -57,6 +57,46 @@ internal static class ArenaTerrainRelief
         return top * (1 - fy) + bottom * fy;
     }
 
+    /// <summary>
+    /// Organic open floors: two combat clearings beside the road (about 10 to 13 m across), or, for a boss arena, a single floor of the given
+    /// diameter at the arena centre. Never round: the outline swings between the lobes of a few sine terms and the blob is stretched along one axis.
+    /// </summary>
+    public static bool[] Clearings(Random rng, int columns, int rows, IReadOnlyList<(int Column, int Row)> route, double bossFloorMeters = 0)
+    {
+        var mask = new bool[columns * rows];
+        if (bossFloorMeters > 0)
+        {
+            Blob(mask, columns, rows, (columns / 2, rows / 2), bossFloorMeters / 2, rng);
+            return mask;
+        }
+        if (route.Count < 24) return mask;
+        foreach (var fraction in new[] { .34, .68 })
+        {
+            var anchor = route[(int)(route.Count * fraction)];
+            var side = rng.Next(2) * 2 - 1;
+            Blob(mask, columns, rows, (anchor.Column + side * (1 + rng.Next(3)), anchor.Row), 5.0 + rng.NextDouble() * 1.5, rng);
+        }
+        return mask;
+    }
+
+    /// <summary>Marks an irregular, slightly stretched blob of about the given mean radius (cells) on the mask.</summary>
+    public static void Blob(bool[] mask, int columns, int rows, (int X, int Y) centre, double radius, Random rng)
+    {
+        var phases = new[] { rng.NextDouble() * 6.28, rng.NextDouble() * 6.28, rng.NextDouble() * 6.28 };
+        var stretch = 1 + rng.NextDouble() * .3;
+        var alongX = rng.Next(2) == 0;
+        var reach = (int)Math.Ceiling(radius * 1.6) + 1;
+        for (var row = Math.Max(0, centre.Y - reach); row <= Math.Min(rows - 1, centre.Y + reach); row++)
+            for (var column = Math.Max(0, centre.X - reach); column <= Math.Min(columns - 1, centre.X + reach); column++)
+            {
+                double dx = column - centre.X, dy = row - centre.Y;
+                if (alongX) (dx, dy) = (dx / stretch, dy * stretch); else (dx, dy) = (dx * stretch, dy / stretch);
+                var angle = Math.Atan2(dy, dx);
+                var edge = radius * (1 + .17 * Math.Sin(2 * angle + phases[0]) + .1 * Math.Sin(3 * angle + phases[1]) + .06 * Math.Sin(5 * angle + phases[2]));
+                if (Math.Sqrt(dx * dx + dy * dy) <= edge) mask[row * columns + column] = true;
+            }
+    }
+
     /// <summary>Broad walkable rises and, from the Scorched band, shallow dells: voxel terraces of at most a couple of microcells per column.</summary>
     public static void Hills(Random rng, ArenaTerrainGrid grid, int[] routeDistance, double influence)
     {
@@ -241,7 +281,7 @@ internal static class ArenaTerrainRelief
     /// </summary>
     public static void Trees(Random rng, ArenaTerrainGrid grid, int[] routeDistance, double influence)
     {
-        var target = influence < .25 ? 22 + rng.Next(8) : influence < .55 ? 16 + rng.Next(6) : influence < .85 ? 10 + rng.Next(5) : 6 + rng.Next(4);
+        var target = influence < .25 ? 16 + rng.Next(6) : influence < .55 ? 12 + rng.Next(5) : influence < .85 ? 8 + rng.Next(4) : 5 + rng.Next(3);
         var placed = new List<(int Column, int Row)>();
         bool Clear(int column, int row)
         {
@@ -279,13 +319,14 @@ internal static class ArenaTerrainRelief
     /// </summary>
     public static void Pillars(Random rng, ArenaTerrainGrid grid, int[] routeDistance)
     {
-        var pillars = 9 + rng.Next(7);
-        for (var placed = 0; placed < pillars; placed++)
+        var pillars = 5 + rng.Next(4);
+        for (int placed = 0, attempt = 0; placed < pillars && attempt < pillars * 10; attempt++)
         {
             var (column, row) = (1 + rng.Next(grid.Columns - 2), 3 + rng.Next(grid.Rows - 6));
             if (!Open(grid, column, row) || routeDistance[row * grid.Columns + column] < 3) continue;
             var top = new[] { 12, 16, 20 }[rng.Next(3)];
             grid.Set(column, row, top, ArenaTerrainMaterial.Boulder);
+            placed++;
             // An outcrop, not a post: lower stones lean against it, stepping down so each rises at most a step above the next.
             for (var satellite = 0; satellite < rng.Next(4); satellite++)
             {
@@ -294,7 +335,7 @@ internal static class ArenaTerrainRelief
                 grid.Set(sc, sr, Math.Max(Step, top - Step * (1 + rng.Next(3))), ArenaTerrainMaterial.Boulder);
             }
         }
-        var fields = 3 + rng.Next(3);
+        var fields = 1 + rng.Next(2);
         for (var field = 0; field < fields; field++)
         {
             var (cx, cy) = (2 + rng.Next(grid.Columns - 4), 4 + rng.Next(grid.Rows - 8));
@@ -347,7 +388,7 @@ internal static class ArenaTerrainRelief
             for (var attempt = 0; attempt < 40; attempt++)
             {
                 var (cx, cy) = (3 + rng.Next(grid.Columns - 6), 5 + rng.Next(grid.Rows - 10));
-                if (routeDistance[cy * grid.Columns + cx] < Math.Max(rx, ry) * 1.3 + 3) continue;
+                if (routeDistance[cy * grid.Columns + cx] < Math.Max(rx, ry) * 1.1 + 2) continue;
                 if (!Stamp(cx, cy, rx, ry, phases, 1.0)) break;
                 // Satellite puddles bud off the shore, then an islet of rock stands in the main pool.
                 for (var puddle = 0; puddle < 1 + rng.Next(2); puddle++)
@@ -403,9 +444,16 @@ internal static class ArenaTerrainRelief
         var width = grid.Columns * Micro;
         var height = grid.Rows * Micro;
         var all = sources.ToList();
-        for (var vent = 0; vent < 2; vent++) all.Add((Micro + rng.Next(width - 2 * Micro), 3 * Micro + rng.Next(height - 6 * Micro)));
-        var count = 1 + (int)Math.Floor(influence * 2.5);
         bool Free(int x, int y) => x >= 0 && y >= 0 && x < width && y < height && !protectedCells[y / Micro * grid.Columns + x / Micro] && routeDistance[y / Micro * grid.Columns + x / Micro] >= 1;
+        for (var vent = 0; vent < 2; vent++)
+            for (var attempt = 0; attempt < 30; attempt++)
+            {
+                var candidate = (Micro + rng.Next(width - 2 * Micro), 3 * Micro + rng.Next(height - 6 * Micro));
+                if (!Free(candidate.Item1, candidate.Item2)) continue;
+                all.Add(candidate);
+                break;
+            }
+        var count = 1 + (int)Math.Floor(influence * 2.5);
 
         List<(int X, int Y)> Walk((int X, int Y) from, (int X, int Y) to, int maxSteps)
         {

@@ -1,7 +1,7 @@
 // Ground cover baked into the terrain painting: twigs, leaf litter, grass tufts, flowers and mushrooms, chosen from the gothic forest kit
 // by a hash of the cell and the Wyrm Influence band. Purely cosmetic: it is skipped on subdivided (dug or chipped) columns, below ground
 // level and on rock, so excavation clears it exactly where the terrain changed. Every sprite fits inside one 32 px face.
-import { forestKit, kitNames } from './forest-kit.js';
+import { forestKit, kitNames, spriteSource } from './forest-kit.js';
 
 const SOIL = 0, ASH = 1;
 const FACE = 32;
@@ -22,8 +22,8 @@ export function groundDecal(names, band, material, height, column, row, seed) {
     const pick = (list, hash) => list[hash % list.length];
     const place = (name, salt) => ({ name, u: unit(cellHash(column, row, seed, salt)), v: unit(cellHash(column, row, seed, salt + 1)) });
     // One decal per cell keeps the ground calm; the rolls partition 0..1 so densities add up.
-    const tuft = [.14, .14, .04, 0][band], twig = [.06, .06, .07, .08][band], leaf = [.03, .08, .03, 0][band];
-    const flower = [.025, .008, 0, 0][band], fox = [.008, 0, 0, 0][band], mushroom = [.008, .006, 0, 0][band];
+    const tuft = [.08, .08, .03, 0][band], twig = [.04, .04, .05, .05][band], leaf = [.02, .05, .02, 0][band];
+    const flower = [.012, .004, 0, 0][band], fox = [.004, 0, 0, 0][band], mushroom = [.004, .003, 0, 0][band];
     let edge = tuft;
     if (roll < edge) return place(pick(band === 0 ? names.tuftLive : names.tuftDry, cellHash(column, row, seed, 3)), 4);
     if (roll < (edge += twig)) return place(pick(names.twig, cellHash(column, row, seed, 5)), 6);
@@ -50,6 +50,6 @@ export function drawGroundDecals(ctx, frame, band, column, row, height, material
     const sprite = decal && loaded.sprites[decal.name];
     if (!sprite) return 0;
     const x = top.x + Math.floor(decal.u * Math.max(1, FACE - sprite.w)), y = top.y + Math.floor(decal.v * Math.max(1, FACE - sprite.h));
-    ctx.drawImage(loaded.image, sprite.x, sprite.y, sprite.w, sprite.h, x, y, sprite.w, sprite.h);
+    ctx.drawImage(loaded.image, ...spriteSource(sprite), x, y, sprite.w, sprite.h);
     return 1;
 }

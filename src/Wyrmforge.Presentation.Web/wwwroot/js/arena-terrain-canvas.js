@@ -1,8 +1,13 @@
-// Hunt 1.0 terrain painter (H5.1). Draws the authoritative C# heightfield as flat colour ramps in the metric oblique
-// projection: a 32x32 top face and a 32x32 front face per 1 m block. No textures, no outlines (the one-pixel inset line is a
-// separate debug overlay). Presentation reads the grid; it never edits it.
-import { FACE_PIXELS, MICROCELL_UNITS, blockFrontRect, blockTopRect } from './arena-projection.js';
+// Hunt 1.0 terrain painter (H5.1). Draws the authoritative C# heightfield in the metric oblique projection: a 64x64 art-pixel top face and
+// a 64x64 art-pixel front face per 1 m block. All geometry below is in world units (32 per metre, what C# and the camera use); the cached
+// surface is TERRAIN_ART_SCALE times denser, and the cache applies that scale to the context so a 64 px tile lands on one canvas pixel per
+// tile pixel. No outlines (the one-pixel inset line is a separate debug overlay). Presentation reads the grid; it never edits it.
+import { FACE_PIXELS, MICROCELL_UNITS, TERRAIN_ART_SCALE, blockFrontRect, blockTopRect } from './arena-projection.js';
 import { generateTileSet, variantFor, TILE, normalFromTile } from './arena-terrain-tiles.js';
+
+// A tile is TILE art pixels for FACE_PIXELS world units; the canvas is TERRAIN_ART_SCALE pixels per unit. They must agree.
+const ART = TILE / FACE_PIXELS;
+if (ART !== TERRAIN_ART_SCALE) throw new Error('Terrain tiles and the terrain canvas must share one art scale.');
 import { drawGroundDecals } from './arena-ground-decals.js';
 import { forestKit } from './forest-kit.js';
 
@@ -277,14 +282,17 @@ export const STONE_WEAR_PER_MICROCELL = 2;
 export const wearStage = counter => counter > 0 ? Math.min(3, Math.ceil(counter * 3 / Math.max(1, STONE_WEAR_PER_MICROCELL - 1))) : 0;
 
 /**
- * Terraria-style crack stages for worn stone inside one 4 x 4 px microcolumn top (local coordinates): stage 1 a pixel, 2 a short
- * bend, 3 a longer bend with a glowing ember pixel because the next hit breaks it. Stage 0 or less draws nothing.
+ * Terraria-style crack stages for worn stone inside one microcolumn top (local world-unit coordinates, 0 to 4; each pixel is one art pixel,
+ * an 8 x 8 grid): stage 1 a short split, 2 a bend, 3 a longer bend with a glowing ember because the next hit breaks it. Stage 0 or
+ * less draws nothing.
  */
 export function crackPixels(stage) {
     if (!(stage >= 1)) return [];
-    const pixels = [{ x: 1, y: 1, w: 1, h: 1, color: CRACK_DARK }];
-    if (stage >= 2) pixels.push({ x: 2, y: 1, w: 1, h: 1, color: CRACK_DARK }, { x: 2, y: 2, w: 1, h: 1, color: CRACK_DARK });
-    if (stage >= 3) pixels.push({ x: 3, y: 2, w: 1, h: 1, color: CRACK_DARK }, { x: 2, y: 3, w: 1, h: 1, color: CRACK_HOT });
+    const unit = 1 / ART;
+    const pixel = (x, y, color = CRACK_DARK) => ({ x: x * unit, y: y * unit, w: unit, h: unit, color });
+    const pixels = [pixel(2, 1), pixel(2, 2)];
+    if (stage >= 2) pixels.push(pixel(3, 3), pixel(3, 4), pixel(4, 4), pixel(5, 5));
+    if (stage >= 3) pixels.push(pixel(1, 3), pixel(5, 6), pixel(6, 6), pixel(4, 5, CRACK_HOT));
     return pixels;
 }
 
@@ -350,7 +358,7 @@ function wholeDepthCues(ctx, frame, column, row, height, top) {
 
 const atlasCache = new Map();
 
-/** The band's generated 32 px tiles as canvases, or null where there is no DOM (tests, workers) so callers fall back to flat colour. */
+/** The band's generated 64 px tiles as canvases, or null where there is no DOM (tests, workers) so callers fall back to flat colour. */
 export function terrainAtlas(band) {
     if (typeof document === 'undefined' || typeof ImageData === 'undefined') return null;
     const index = bandIndex(band);
@@ -406,9 +414,11 @@ function scratchContexts() {
     return { g: scratchCanvas.getContext('2d'), m: maskCanvas.getContext('2d') };
 }
 
-// Tileable value-noise tables (128 x 128, lattice every 16 and 8 px) sampled by world pixel, so splatting is a couple of lookups per pixel.
+// Tileable value-noise tables (NOISE_SIZE squared, lattice every 16 and 8 world units) sampled by art pixel, so splatting is a couple of
+// lookups per pixel.
+const NOISE_SIZE = 128 * ART, NOISE_MASK = NOISE_SIZE - 1;
 function buildNoiseTable(spacing, seed) {
-    const cells = 128 / spacing, table = new Float32Array(128 * 128);
+    const cells = NOISE_SIZE / spacing, table = new Float32Array(NOISE_SIZE * NOISE_SIZE);
     const lattice = new Float32Array(cells * cells);
     for (let i = 0; i < lattice.length; i++) {
         let h = (Math.imul(i + 11, 0x9E3779B1) ^ Math.imul(seed, 0xC2B2AE35)) >>> 0;
@@ -416,16 +426,16 @@ function buildNoiseTable(spacing, seed) {
         lattice[i] = ((h ^ (h >>> 12)) >>> 0) / 4294967296;
     }
     const at = (x, y) => lattice[(((y % cells) + cells) % cells) * cells + (((x % cells) + cells) % cells)];
-    for (let y = 0; y < 128; y++) for (let x = 0; x < 128; x++) {
+    for (let y = 0; y < NOISE_SIZE; y++) for (let x = 0; x < NOISE_SIZE; x++) {
         const fx = x / spacing, fy = y / spacing, x0 = Math.floor(fx), y0 = Math.floor(fy);
         let tx = fx - x0, ty = fy - y0;
         tx = tx * tx * (3 - 2 * tx); ty = ty * ty * (3 - 2 * ty);
-        table[y * 128 + x] = (at(x0, y0) * (1 - tx) + at(x0 + 1, y0) * tx) * (1 - ty) + (at(x0, y0 + 1) * (1 - tx) + at(x0 + 1, y0 + 1) * tx) * ty;
+        table[y * NOISE_SIZE + x] = (at(x0, y0) * (1 - tx) + at(x0 + 1, y0) * tx) * (1 - ty) + (at(x0, y0 + 1) * (1 - tx) + at(x0 + 1, y0 + 1) * tx) * ty;
     }
     return table;
 }
-const NOISE_BROAD = buildNoiseTable(16, 301);
-const NOISE_FINE = buildNoiseTable(8, 317);
+const NOISE_BROAD = buildNoiseTable(16 * ART, 301);
+const NOISE_FINE = buildNoiseTable(8 * ART, 317);
 
 // Allocation-free smooth value noise over world pixels, lattice spacing `spacing`, in 0..1.
 function pixelNoise(x, y, spacing, seed) {
@@ -444,7 +454,7 @@ function pixelNoise(x, y, spacing, seed) {
  * Splatting: which ground each pixel of a whole column's top face shows. The kinds of the 3 x 3 columns around it (a neighbour across a
  * cliff or a dug block counts as this column's own ground) are blended bilinearly from their centres and perturbed by two octaves of
  * noise, so a border between grass, mud, stone or lava is an irregular, lobed shoreline with islands and bays rather than a column edge.
- * Returns null when all nine columns agree, otherwise 32 x 32 kind indices.
+ * Returns null when all nine columns agree, otherwise 64 x 64 kind indices (one per art pixel).
  */
 function kindMap(frame, band, column, row, ownKind, height) {
     const cache = frame.kindMaps ??= new Map();
@@ -478,8 +488,8 @@ function kindMap(frame, band, column, row, ownKind, height) {
         let best = own, bestScore = -1;
         for (let kind = 0; kind < weights.length; kind++) {
             if (weights[kind] <= 0) continue;
-            const shift = (seed + kind * 37) & 127;
-            const wobble = (NOISE_BROAD[((wy + shift * 3) & 127) * 128 + ((wx + shift) & 127)] - .5) * .8 + (NOISE_FINE[((wy + shift) & 127) * 128 + ((wx + shift * 5) & 127)] - .5) * .5;
+            const shift = ((seed + kind * 37) & 127) * ART;
+            const wobble = (NOISE_BROAD[((wy + shift * 3) & NOISE_MASK) * NOISE_SIZE + ((wx + shift) & NOISE_MASK)] - .5) * .8 + (NOISE_FINE[((wy + shift) & NOISE_MASK) * NOISE_SIZE + ((wx + shift * 5) & NOISE_MASK)] - .5) * .5;
             const score = weights[kind] + wobble * .55;
             if (score > bestScore) { bestScore = score; best = kind; }
         }
@@ -498,7 +508,7 @@ function drawSplat(ctx, atlas, map, variant, x, y) {
     for (const kind of map) counts[kind]++;
     let main = 0;
     for (let kind = 1; kind < counts.length; kind++) if (counts[kind] > counts[main]) main = kind;
-    ctx.drawImage(atlas[TOP_KINDS[main]][variant], x, y);
+    ctx.drawImage(atlas[TOP_KINDS[main]][variant], x, y, FACE_PIXELS, FACE_PIXELS);
     let painted = 1;
     for (let kind = 0; kind < counts.length; kind++) {
         if (kind === main || counts[kind] === 0) continue;
@@ -511,7 +521,7 @@ function drawSplat(ctx, atlas, map, variant, x, y) {
         g.globalCompositeOperation = 'destination-in';
         g.drawImage(maskCanvas, 0, 0);
         g.globalCompositeOperation = 'source-over';
-        ctx.drawImage(scratchCanvas, x, y);
+        ctx.drawImage(scratchCanvas, x, y, FACE_PIXELS, FACE_PIXELS);
         if (ctx.normalContext) {
             // The same mask cuts the normal twin, so relief changes exactly where the ground does.
             const n = scratchNormalCanvas.getContext('2d');
@@ -521,7 +531,7 @@ function drawSplat(ctx, atlas, map, variant, x, y) {
             n.globalCompositeOperation = 'destination-in';
             n.drawImage(maskCanvas, 0, 0);
             n.globalCompositeOperation = 'source-over';
-            ctx.normalContext.drawImage(scratchNormalCanvas, x, y);
+            ctx.normalContext.drawImage(scratchNormalCanvas, x, y, FACE_PIXELS, FACE_PIXELS);
         }
         painted++;
     }
@@ -546,7 +556,7 @@ export function paintLavaEmissive(ctx, frame, band, view) {
             if (!own) continue;
             const map = kindMap(frame, band, column, row, own, height);
             const tile = atlas.lavaTop[variantFor(column, row)];
-            if (!map) { if (own === 'lavaTop') { ctx.drawImage(tile, x, y); drawn++; } continue; }
+            if (!map) { if (own === 'lavaTop') { ctx.drawImage(tile, x, y, FACE_PIXELS, FACE_PIXELS); drawn++; } continue; }
             let any = false;
             const mask = maskImage ??= m.createImageData(TILE, TILE);
             for (let i = 0; i < map.length; i++) { const isLava = map[i] === lava; mask.data[i * 4 + 3] = isLava ? 255 : 0; any ||= isLava; }
@@ -558,7 +568,7 @@ export function paintLavaEmissive(ctx, frame, band, view) {
             g.globalCompositeOperation = 'destination-in';
             g.drawImage(maskCanvas, 0, 0);
             g.globalCompositeOperation = 'source-over';
-            ctx.drawImage(scratchCanvas, x, y);
+            ctx.drawImage(scratchCanvas, x, y, FACE_PIXELS, FACE_PIXELS);
             drawn++;
         }
     return drawn;
@@ -572,7 +582,7 @@ function macroTint(ctx, frame, column, row, x, y) {
     const seed = (frame.visualSeed | 0) & 0xffff;
     let painted = 0;
     for (let cy = 0; cy < 4; cy++) for (let cx = 0; cx < 4; cx++) {
-        const wx = column * TILE + cx * 8 + 4, wy = row * TILE + cy * 8 + 4;
+        const wx = column * FACE_PIXELS + cx * 8 + 4, wy = row * FACE_PIXELS + cy * 8 + 4;
         const n = pixelNoise(wx, wy, 90, 211 + seed) - .5 + (pixelNoise(wx, wy, 28, 223 + seed) - .5) * .6;
         const alpha = Math.min(.14, Math.abs(n) * .3);
         if (alpha < .015) continue;
@@ -592,7 +602,7 @@ const WALL_SHADE = Object.freeze({ own: 'rgba(6,4,8,.28)', dirtUpper: 'rgba(6,4,
 
 /**
  * Draws one wall (the front faces of a column or microcolumn) from the band's tiles: grass overhang on soil that is still topped by turf,
- * then soil, then dressed stone, with the texture running continuously down the wall. `sx`/`width` pick the slice of the 32 px tile.
+ * then soil, then dressed stone, with the texture running continuously down the wall. `sx`/`width` pick the slice of the tile in world units.
  */
 function drawWall(ctx, atlas, band, material, segments, x, width, sx, baseY, variant) {
     let painted = 0;
@@ -601,8 +611,8 @@ function drawWall(ctx, atlas, band, material, segments, x, width, sx, baseY, var
         const y = baseY - segment.from * MICROCELL_UNITS, height = (segment.from - segment.to) * MICROCELL_UNITS;
         if (segment.kind === 'lava') {
             for (let drawn = 0; drawn < height;) {
-                const v = (wallTop - segment.from) * MICROCELL_UNITS + drawn, piece = Math.min(height - drawn, TILE - (v % TILE));
-                ctx.drawImage(atlas.lavaSide[variant], sx, v % TILE, width, piece, x, y + drawn, width, piece);
+                const v = (wallTop - segment.from) * MICROCELL_UNITS + drawn, piece = Math.min(height - drawn, FACE_PIXELS - (v % FACE_PIXELS));
+                ctx.drawImage(atlas.lavaSide[variant], sx * ART, (v % FACE_PIXELS) * ART, width * ART, piece * ART, x, y + drawn, width, piece);
                 drawn += piece;
                 painted++;
             }
@@ -613,11 +623,11 @@ function drawWall(ctx, atlas, band, material, segments, x, width, sx, baseY, var
         const start = (wallTop - segment.from) * MICROCELL_UNITS;
         for (let drawn = 0; drawn < height;) {
             const v = start + drawn;
-            const lip = turf && v < TILE;
-            const crest = stone && i === 0 && material === TERRAIN_MATERIAL.Stone && v < TILE;
-            const piece = Math.min(height - drawn, TILE - (v % TILE));
+            const lip = turf && v < FACE_PIXELS;
+            const crest = stone && i === 0 && material === TERRAIN_MATERIAL.Stone && v < FACE_PIXELS;
+            const piece = Math.min(height - drawn, FACE_PIXELS - (v % FACE_PIXELS));
             const tiles = atlas[crest ? 'stoneLipSide' : stone ? 'stoneSide' : lip ? 'grassSide' : 'dirtSide'];
-            ctx.drawImage(tiles[variant], sx, v % TILE, width, piece, x, y + drawn, width, piece);
+            ctx.drawImage(tiles[variant], sx * ART, (v % FACE_PIXELS) * ART, width * ART, piece * ART, x, y + drawn, width, piece);
             drawn += piece;
             painted++;
         }
@@ -642,7 +652,7 @@ function paintFineCell(ctx, frame, band, column, row, block, grain = true) {
             const y = row * FACE_PIXELS + microY * MICRO_UNITS;
             const tileKind = atlas ? topTileKind(band, material, height, frame, column, row) : null;
             if (tileKind) {
-                ctx.drawImage(atlas[tileKind][variant], microX * MICRO_UNITS, microY * MICRO_UNITS, MICRO_UNITS, MICRO_UNITS,
+                ctx.drawImage(atlas[tileKind][variant], microX * MICRO_UNITS * ART, microY * MICRO_UNITS * ART, MICRO_UNITS * ART, MICRO_UNITS * ART,
                     x, y - height * MICROCELL_UNITS, MICRO_UNITS, MICRO_UNITS);
                 const tint = heightTint(height);
                 if (tint) { ctx.fillStyle = tint; ctx.fillRect(x, y - height * MICROCELL_UNITS, MICRO_UNITS, MICRO_UNITS); painted++; }
@@ -728,7 +738,7 @@ export function paintTerrainCell(ctx, frame, band, column, row, grain = true) {
         const splat = kindMap(frame, band, column, row, tileKind, height);
         if (splat) painted += drawSplat(ctx, atlas, splat, variant, top.x, top.y);
         else ctx.drawImage(atlas[tileKind][variant], top.x, top.y, top.width, top.height);
-        if (tileKind !== 'lavaTop') painted += macroTint(ctx, frame, column, row, top.x, top.y);
+        if (tileKind !== 'lavaTop' && height <= 4) painted += macroTint(ctx, frame, column, row, top.x, top.y);
         const tint = heightTint(height);
         if (tint) { ctx.fillStyle = tint; ctx.fillRect(top.x, top.y, top.width, top.height); painted++; }
         if (tileKind !== 'lavaTop') painted += drawGroundDecals(ctx, frame, band, column, row, height, material[index], top);
@@ -818,8 +828,8 @@ export function blockInsetOverlayEnabled(search = globalThis.location?.search ??
 }
 
 /**
- * One-source-pixel contrasting line inset inside every visible top and front face, to verify the 32x32 faces and the
- * 4 px microcell grid. A world unit is one source pixel, so the line is one unit wide. Returns the faces outlined.
+ * One-source-pixel contrasting line inset inside every visible top and front face, to verify the 64x64 art-pixel faces and the
+ * 8 px microcell grid. A source pixel is 1/ART of a world unit, so the line is that wide. Returns the faces outlined.
  */
 export function drawBlockInsetOverlay(ctx, frame, view) {
     const { columns, rows, surface } = frame;
@@ -829,28 +839,29 @@ export function drawBlockInsetOverlay(ctx, frame, view) {
     const lastRow = Math.min(rows - 1, Math.floor((view.y + view.height + 4 * FACE_PIXELS) / FACE_PIXELS) + 1);
     let outlined = 0;
     ctx.save();
+    const line = 1 / ART, half = line / 2;
     ctx.strokeStyle = BLOCK_INSET_COLOR;
-    ctx.lineWidth = 1;
+    ctx.lineWidth = line;
     for (let row = firstRow; row <= lastRow; row++) {
         for (let column = first; column <= last; column++) {
             const index = row * columns + column;
             if (frame.fine?.has(index)) {
-                // A dug block is outlined per 4 px microcolumn at its own height, not at the rounded whole-column height.
+                // A dug block is outlined per microcolumn at its own height, not at the rounded whole-column height.
                 for (let my = 0; my < MICRO_PER_COLUMN; my++) for (let mx = 0; mx < MICRO_PER_COLUMN; mx++) {
                     const height = microHeight(frame, column, row, mx, my);
-                    ctx.strokeRect(column * FACE_PIXELS + mx * MICRO_UNITS + 0.5, row * FACE_PIXELS + my * MICRO_UNITS - height * MICROCELL_UNITS + 0.5,
-                        MICRO_UNITS - 1, MICRO_UNITS - 1);
+                    ctx.strokeRect(column * FACE_PIXELS + mx * MICRO_UNITS + half, row * FACE_PIXELS + my * MICRO_UNITS - height * MICROCELL_UNITS + half,
+                        MICRO_UNITS - line, MICRO_UNITS - line);
                     outlined++;
                 }
                 continue;
             }
             const top = blockTopRect(column, row, surface[index]);
-            ctx.strokeRect(top.x + 0.5, top.y + 0.5, top.width - 1, top.height - 1);
+            ctx.strokeRect(top.x + half, top.y + half, top.width - line, top.height - line);
             outlined++;
             const front = blockFrontRect(column, row, surface[index], row + 1 < rows ? surface[index + columns] : surface[index]);
             if (!front) continue;
             for (let offset = 0; offset < front.height; offset += FACE_PIXELS) {
-                ctx.strokeRect(front.x + 0.5, front.y + offset + 0.5, front.width - 1, Math.min(FACE_PIXELS, front.height - offset) - 1);
+                ctx.strokeRect(front.x + half, front.y + offset + half, front.width - line, Math.min(FACE_PIXELS, front.height - offset) - line);
                 outlined++;
             }
         }
@@ -884,6 +895,8 @@ class DualContext {
     save() { this.albedo.save(); this.normalContext.save(); }
     restore() { this.albedo.restore(); this.normalContext.restore(); }
     translate(x, y) { this.albedo.translate(x, y); this.normalContext.translate(x, y); }
+    scale(x, y) { this.albedo.scale(x, y); this.normalContext.scale(x, y); }
+    setTransform(...args) { this.albedo.setTransform(...args); this.normalContext.setTransform(...args); }
     beginPath() { this.albedo.beginPath(); this.normalContext.beginPath(); }
     rect(...args) { this.albedo.rect(...args); this.normalContext.rect(...args); }
     clip() { this.albedo.clip(); this.normalContext.clip(); }
@@ -943,14 +956,17 @@ export class TerrainCanvasCache {
         const kitReady = Boolean(forestKit());
         if (this.canvas && this.revision === frame.revision && this.band === band && this.kitReady === kitReady) return false;
         const started = globalThis.performance?.now() ?? 0;
-        const width = frame.columns * FACE_PIXELS;
-        const height = frame.rows * FACE_PIXELS + TERRAIN_PAD_UNITS * 2;
+        const width = frame.columns * FACE_PIXELS * ART;
+        const height = (frame.rows * FACE_PIXELS + TERRAIN_PAD_UNITS * 2) * ART;
         const full = !this.canvas || this.canvas.width !== width || this.canvas.height !== height || this.band !== band || this.revision === null || this.kitReady !== kitReady;
         if (!this.canvas || this.canvas.width !== width || this.canvas.height !== height)
             this.canvas = this.createCanvas(width, height);
         if (this.withNormals && (!this.normalCanvas || this.normalCanvas.width !== width || this.normalCanvas.height !== height)) this.normalCanvas = this.createCanvas(width, height);
         const baseCtx = this.canvas.getContext('2d');
         // With normals on, one painter drives both surfaces: tiles go to both, colour cues to the albedo only.
+        // The painter works in world units; this scale makes every unit ART canvas pixels, so each tile pixel is one canvas pixel.
+        baseCtx.setTransform(ART, 0, 0, ART, 0, 0);
+        if (this.withNormals) this.normalCanvas.getContext('2d').setTransform(ART, 0, 0, ART, 0, 0);
         const ctx = this.withNormals ? new DualContext(baseCtx, this.normalCanvas.getContext('2d')) : baseCtx;
         const changed = frame.changed;
         const regional = full === false && Array.isArray(changed) && changed.length > 0 && changed.length <= 40;
@@ -959,7 +975,7 @@ export class TerrainCanvasCache {
         frame.kindMaps = this.kindMaps;
         if (regional) paintTerrainRegion(ctx, frame, band, changed, TERRAIN_PAD_UNITS);
         else {
-            ctx.clearRect(0, 0, width, height);
+            ctx.clearRect(0, 0, width / ART, height / ART);
             paintTerrain(ctx, frame, band, TERRAIN_PAD_UNITS);
         }
         this.revision = frame.revision;
@@ -985,21 +1001,21 @@ export class TerrainCanvasCache {
         return this.blit(this.normalCanvas, ctx, view);
     }
 
-    /** Draws the cached terrain for the visible world window into a context already translated by -camera. */
+    /** Draws the cached terrain for the visible world window into a context already translated by -camera (world units). */
     draw(ctx, view) {
         if (!this.canvas) return false;
         return this.blit(this.canvas, ctx, view);
     }
 
     blit(source, ctx, view) {
-        const worldHeight = source.height - TERRAIN_PAD_UNITS * 2;
+        const worldWidth = source.width / ART, worldHeight = source.height / ART - TERRAIN_PAD_UNITS * 2;
         const x = Math.max(0, Math.floor(view.x));
         const y = Math.max(-TERRAIN_PAD_UNITS, Math.floor(view.y));
-        const width = Math.min(source.width, Math.ceil(view.x + view.width)) - x;
+        const width = Math.min(worldWidth, Math.ceil(view.x + view.width)) - x;
         const height = Math.min(worldHeight + TERRAIN_PAD_UNITS, Math.ceil(view.y + view.height)) - y;
         if (width <= 0 || height <= 0) return false;
-        // The cache already holds screen-space output (raised columns lifted, pits sunk), offset by the pad.
-        ctx.drawImage(source, x, y + TERRAIN_PAD_UNITS, width, height, x, y, width, height);
+        // The cache already holds screen-space output (raised columns lifted, pits sunk), offset by the pad. Source pixels are art pixels.
+        ctx.drawImage(source, x * ART, (y + TERRAIN_PAD_UNITS) * ART, width * ART, height * ART, x, y, width, height);
         return true;
     }
 }

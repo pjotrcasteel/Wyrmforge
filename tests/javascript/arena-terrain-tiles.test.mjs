@@ -4,7 +4,7 @@ import { generateTileSet, TILE, TILE_VARIANTS, variantFor } from '../../src/Wyrm
 
 const KINDS = ['grassTop', 'dirtTop', 'ashTop', 'stoneTop', 'grassSide', 'dirtSide', 'stoneSide', 'lavaTop', 'lavaSide', 'grassDryTop', 'mudTop', 'rubbleTop', 'woodTop', 'woodSide', 'stoneLipSide'];
 
-test('every band makes every tile kind, 32 x 32, fully opaque, in several variants', () => {
+test('every band makes every tile kind, 64 x 64, fully opaque, in several variants', () => {
     for (let band = 0; band < 4; band++) {
         const set = generateTileSet(band);
         for (const kind of KINDS) {

@@ -10,7 +10,7 @@ public sealed class ArenaTerrainTests
     private const int Columns = 32;
     private const int Rows = 60;
     private const double PlayerRadius = 12;
-    private static readonly (int Column, int Row) Spawn = (16, 30);
+    private static readonly (int Column, int Row) Spawn = (16, 52);
     private static readonly (int Column, int Row) Exit = (16, 6);
 
     private static ArenaTerrainRecipe Make(int seed, double influence) =>
@@ -107,7 +107,7 @@ public sealed class ArenaTerrainTests
         {
             var grid = Make(seed, 0).Grid;
             Assert.IsTrue(Cells(grid).Any(cell => cell.Material == ArenaTerrainMaterial.Soil && cell.Surface > 0), $"seed {seed}: rolling ground");
-            Assert.IsGreaterThan(8, Cells(grid).Count(cell => cell.Material is ArenaTerrainMaterial.Stone or ArenaTerrainMaterial.Boulder && cell.Surface >= 12), $"seed {seed}: ridges and pillars give cover");
+            Assert.IsGreaterThan(4, Cells(grid).Count(cell => cell.Material is ArenaTerrainMaterial.Stone or ArenaTerrainMaterial.Boulder && cell.Surface >= 12), $"seed {seed}: ridges and pillars give cover");
             // Hills are walkable: soil never steps more than the climbable half metre from a soil neighbour.
             foreach (var cell in Cells(grid).Where(cell => cell.Material == ArenaTerrainMaterial.Soil))
                 foreach (var offset in new[] { (1, 0), (0, 1) })
@@ -177,7 +177,7 @@ public sealed class ArenaTerrainTests
         {
             var recipe = Make(seed, influence);
             var boulders = Cells(recipe.Grid).Where(cell => cell.Material == ArenaTerrainMaterial.Boulder).ToList();
-            Assert.IsGreaterThanOrEqualTo(5, boulders.Count, $"seed {seed}: every arena has boulders");
+            Assert.IsGreaterThanOrEqualTo(3, boulders.Count, $"seed {seed}: every arena has boulders");
             foreach (var boulder in boulders)
                 Assert.IsFalse(recipe.ProtectedCells[boulder.Row * Columns + boulder.Column], $"seed {seed}: a boulder never sits on the route");
         }

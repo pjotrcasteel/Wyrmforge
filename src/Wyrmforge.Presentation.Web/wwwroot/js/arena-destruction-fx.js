@@ -177,8 +177,9 @@ export function drawDestructionFx(ctx, fx, now, view, parts = 'all') {
  * surface (bright in the dark, beneath every actor) instead of an additive layer drawn over creatures. Returns the canvas and the
  * vein seams drawn. `holder` keeps the reusable canvas between frames.
  */
-export function paintGroundEmissive(holder, frame, fx, band, view, seconds, reducedMotion = false) {
-    const width = Math.max(1, Math.ceil(view.width)), height = Math.max(1, Math.ceil(view.height));
+export function paintGroundEmissive(holder, frame, fx, band, view, seconds, reducedMotion = false, scale = 1) {
+    // `scale` is canvas pixels per world unit, matching the ground albedo so lava glow follows the same fine shoreline.
+    const width = Math.max(1, Math.ceil(view.width * scale)), height = Math.max(1, Math.ceil(view.height * scale));
     const canvas = holder.emissiveCanvas ??= document.createElement('canvas');
     if (canvas.width !== width) canvas.width = width;
     if (canvas.height !== height) canvas.height = height;
@@ -188,6 +189,7 @@ export function paintGroundEmissive(holder, frame, fx, band, view, seconds, redu
     ctx.globalAlpha = 1;
     ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, width, height);
+    if (scale !== 1) ctx.scale(scale, scale);
     ctx.translate(-view.x, -view.y);
     paintLavaEmissive(ctx, frame, band, view);
     const seams = drawCrackGlow(ctx, frame, band, view, seconds, reducedMotion);

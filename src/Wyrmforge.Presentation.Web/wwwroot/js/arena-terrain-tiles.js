@@ -1,10 +1,20 @@
-// Hunt 1.0 terrain tiles: original 32 x 32 native-pixel art for the top and front face of one 1 m block, generated from rules (ramps,
-// ordered dither, blade tufts, pebbles, slab cracks) so every pixel is placed on purpose. Not copied from any pack: the owner's
-// reference folder only informed the principles (hand-placed highlights, scalloped grass lip, slab edges, 4-step ramps, dark gothic).
-// Pure pixel buffers, so the same code runs in the browser and in the Node preview tool. Top tiles wrap, so neighbours never seam.
-export const TILE = 32;
+// Hunt 1.0 terrain tiles: original 64 x 64 native-pixel art for the top and front face of one 1 m block (64 art pixels per metre, owner
+// decision 4 November 2026), generated from rules (ramps, ordered dither, blade tufts, rounded pebbles, slab cracks) so every pixel is placed
+// on purpose. Not copied from any pack: the owner's reference folder only informed the principles (hand-placed highlights, scalloped grass lip,
+// slab edges, 5-step ramps, dark gothic). Pure pixel buffers, so the same code runs in the browser and in the Node preview tool.
+// Top tiles wrap, so neighbours never seam. Feature sizes are written in the old 32 px grid and multiplied by K, so the art keeps its
+// world scale while every edge, highlight and crack now has twice the resolution.
+export const TILE = 64;
+const K = TILE / 32;
+/** A length or count authored on the 32 px grid, on this tile's grid. */
+const S = value => Math.round(value * K);
 
-const hexRgb = hex => { const v = parseInt(hex.slice(1), 16); return [(v >> 16) & 255, (v >> 8) & 255, v & 255]; };
+const rgbCache = new Map();
+const hexRgb = hex => {
+    let rgb = rgbCache.get(hex);
+    if (!rgb) { const v = parseInt(hex.slice(1), 16); rgb = [(v >> 16) & 255, (v >> 8) & 255, v & 255]; rgbCache.set(hex, rgb); }
+    return rgb;
+};
 
 function rng(seed) {
     let a = seed >>> 0;
@@ -19,13 +29,13 @@ function rng(seed) {
 class Tile {
     constructor() { this.data = new Uint8ClampedArray(TILE * TILE * 4); }
     set(x, y, hex) {
-        const px = ((x % TILE) + TILE) % TILE, py = ((y % TILE) + TILE) % TILE, i = (py * TILE + px) * 4;
+        const px = ((Math.round(x) % TILE) + TILE) % TILE, py = ((Math.round(y) % TILE) + TILE) % TILE, i = (py * TILE + px) * 4;
         const [r, g, b] = hexRgb(hex);
         this.data[i] = r; this.data[i + 1] = g; this.data[i + 2] = b; this.data[i + 3] = 255;
     }
     setClipped(x, y, hex) { if (x >= 0 && x < TILE && y >= 0 && y < TILE) this.set(x, y, hex); }
     get(x, y) {
-        const px = ((x % TILE) + TILE) % TILE, py = ((y % TILE) + TILE) % TILE, i = (py * TILE + px) * 4;
+        const px = ((Math.round(x) % TILE) + TILE) % TILE, py = ((Math.round(y) % TILE) + TILE) % TILE, i = (py * TILE + px) * 4;
         return `#${((this.data[i] << 16) | (this.data[i + 1] << 8) | this.data[i + 2]).toString(16).padStart(6, '0')}`;
     }
 }
@@ -33,7 +43,7 @@ class Tile {
 const BAYER = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]];
 const bayer = (x, y) => (BAYER[((y % 4) + 4) % 4][((x % 4) + 4) % 4] + .5) / 16;
 
-// Tileable value noise: the lattice wraps every `period` cells so a 32 px tile repeats without a seam.
+// Tileable value noise: the lattice wraps every `period` cells so a tile repeats without a seam.
 function wrapNoise(seed, period) {
     const random = rng(seed);
     const lattice = Array.from({ length: period * period }, random);
@@ -86,9 +96,21 @@ const RAMPS = Object.freeze([
 export const rampsForBand = band => RAMPS[Math.min(RAMPS.length - 1, Math.max(0, band | 0))];
 const hasGrass = band => band <= 1;
 
+/** A rounded stone: lit upper-left, shadowed lower-right, and a one-pixel cast shadow on the ground beside it. */
 function pebble(tile, x, y, ramp, size) {
-    for (let dy = 0; dy < size; dy++) for (let dx = 0; dx < size; dx++) tile.set(x + dx, y + dy, ramp[dx === 0 && dy === 0 ? 4 : 3]);
-    for (let d = 0; d <= size; d++) { tile.set(x + size, y + d, ramp[0]); tile.set(x + d, y + size, ramp[1]); }
+    const w = S(size) + 1, h = S(size);
+    const inside = (dx, dy) => {
+        if (dx < 0 || dy < 0 || dx >= w || dy >= h) return false;
+        const nx = (dx + .5) / w * 2 - 1, ny = (dy + .5) / h * 2 - 1;
+        return nx * nx + ny * ny <= 1.08;
+    };
+    for (let dy = 0; dy < h; dy++) for (let dx = 0; dx < w; dx++) {
+        if (!inside(dx, dy)) continue;
+        const nx = (dx + .5) / w * 2 - 1, ny = (dy + .5) / h * 2 - 1, lit = -(nx + ny) * .5;
+        tile.set(x + dx, y + dy, ramp[lit > .42 ? 4 : lit > .05 ? 3 : lit > -.35 ? 2 : 1]);
+    }
+    for (let dy = 0; dy <= h; dy++) for (let dx = 0; dx <= w; dx++)
+        if (!inside(dx, dy) && (inside(dx - 1, dy) || inside(dx, dy - 1)) && !inside(dx - 1, dy - 1)) tile.set(x + dx, y + dy, ramp[0]);
 }
 
 function crackLine(tile, random, x, y, length, hex) {
@@ -100,44 +122,46 @@ function crackLine(tile, random, x, y, length, hex) {
     }
 }
 
-function blade(tile, x, y, lean, ramp) {
-    tile.set(x, y, ramp[1]); // shadow at the root
-    tile.set(x, y - 1, ramp[2]);
-    tile.set(x + lean, y - 2, ramp[3]);
-    tile.set(x + lean, y - 3, ramp[4]); // lit tip
+/** A curved blade: dark at the root, brightening to a lit tip, leaning more toward the top. */
+function blade(tile, x, y, lean, ramp, height = S(4)) {
+    for (let i = 0; i < height; i++) {
+        const t = i / (height - 1);
+        tile.set(x + Math.round(lean * t * t * 2), y - i, ramp[i === 0 ? 1 : t < .35 ? 2 : t < .8 ? 3 : 4]);
+    }
 }
 
 /** Grass top: mottled green with hand-placed blade tufts, a few bare flecks and pebbles. */
 function grassTop(band, seed, ramps = rampsForBand(band)) {
     const tile = new Tile(), random = rng(seed);
-    const broad = wrapNoise(seed + 1, 4), fine = wrapNoise(seed + 2, 8);
+    const broad = wrapNoise(seed + 1, 4), mid = wrapNoise(seed + 2, 8), fine = wrapNoise(seed + 3, 16);
     for (let y = 0; y < TILE; y++) for (let x = 0; x < TILE; x++) {
-        const value = .3 + broad(x / TILE, y / TILE) * .3 + (fine(x / TILE, y / TILE) - .5) * .14;
-        tile.set(x, y, dithered(ramps.grass, value, x, y));
+        const value = .3 + broad(x / TILE, y / TILE) * .3 + (mid(x / TILE, y / TILE) - .5) * .14 + (fine(x / TILE, y / TILE) - .5) * .08;
+        tile.set(x, y, dithered(ramps.grass, value, x, y, .34));
     }
     for (let i = 0; i < 3; i++) { // darker clover-like clumps give the lawn depth
         const cx = Math.floor(random() * TILE), cy = Math.floor(random() * TILE);
-        for (const [dx, dy] of [[0, 0], [1, 0], [0, 1], [-1, 0], [0, -1], [1, 1]]) tile.set(cx + dx, cy + dy, ramps.grass[1]);
-        tile.set(cx, cy - 1, ramps.grass[3]);
+        for (let dy = -S(1); dy <= S(1); dy++) for (let dx = -S(1.4); dx <= S(1.4); dx++)
+            if ((dx / S(1.4)) ** 2 + (dy / S(1)) ** 2 <= 1.05) tile.set(cx + dx, cy + dy, ramps.grass[1]);
+        for (let dx = -S(1); dx <= S(1); dx++) tile.set(cx + dx, cy - S(1) - 1, ramps.grass[3]);
     }
-    for (let i = 0; i < 11; i++) blade(tile, Math.floor(random() * TILE), 3 + Math.floor(random() * (TILE - 3)), random() < .5 ? -1 : 1, ramps.grass);
-    for (let i = 0; i < 2; i++) tile.set(Math.floor(random() * TILE), Math.floor(random() * TILE), ramps.dirt[3]);
-    if (random() < .3) pebble(tile, Math.floor(random() * (TILE - 3)), Math.floor(random() * (TILE - 3)), ramps.stone, 2);
+    for (let i = 0; i < 24; i++) blade(tile, Math.floor(random() * TILE), S(3) + Math.floor(random() * (TILE - S(3))), random() < .5 ? -1 : 1, ramps.grass, S(3) + Math.floor(random() * S(2)));
+    for (let i = 0; i < 5; i++) tile.set(Math.floor(random() * TILE), Math.floor(random() * TILE), ramps.dirt[3]);
+    if (random() < .3) pebble(tile, Math.floor(random() * (TILE - S(3))), Math.floor(random() * (TILE - S(3))), ramps.stone, 2);
     return tile;
 }
 
 /** Packed earth top: grain, pebbles with a lit corner and a cast shadow, a few hairline cracks. */
 function dirtTop(band, seed, ash = false, ramps = rampsForBand(band)) {
     const ramp = ash ? ramps.stone : ramps.dirt, tile = new Tile(), random = rng(seed);
-    const broad = wrapNoise(seed + 1, 4), fine = wrapNoise(seed + 2, 16);
+    const broad = wrapNoise(seed + 1, 4), fine = wrapNoise(seed + 2, 32);
     for (let y = 0; y < TILE; y++) for (let x = 0; x < TILE; x++) {
         const value = .3 + broad(x / TILE, y / TILE) * .3 + (fine(x / TILE, y / TILE) - .5) * .2;
         tile.set(x, y, dithered(ramp, value, x, y));
     }
-    for (let i = 0; i < 5; i++) tile.set(Math.floor(random() * TILE), Math.floor(random() * TILE), ramp[4]);
-    for (let i = 0; i < 6; i++) tile.set(Math.floor(random() * TILE), Math.floor(random() * TILE), ramp[0]);
-    for (let i = 0; i < 2; i++) pebble(tile, Math.floor(random() * TILE), Math.floor(random() * TILE), ramps.stone, random() < .4 ? 3 : 2);
-    for (let i = 0; i < 1; i++) crackLine(tile, random, Math.floor(random() * TILE), Math.floor(random() * TILE), 8 + Math.floor(random() * 8), ramp[0]);
+    for (let i = 0; i < 12; i++) tile.set(Math.floor(random() * TILE), Math.floor(random() * TILE), ramp[4]);
+    for (let i = 0; i < 14; i++) tile.set(Math.floor(random() * TILE), Math.floor(random() * TILE), ramp[0]);
+    for (let i = 0; i < 3; i++) pebble(tile, Math.floor(random() * TILE), Math.floor(random() * TILE), ramps.stone, random() < .4 ? 3 : 2);
+    crackLine(tile, random, Math.floor(random() * TILE), Math.floor(random() * TILE), S(8) + Math.floor(random() * S(8)), ramp[0]);
     return tile;
 }
 
@@ -157,53 +181,56 @@ function plates(seed, count, stretch = 1) {
     }
     const wrap = v => ((v % TILE) + TILE) % TILE;
     const edge = (x, y) => edges[wrap(y) * TILE + wrap(x)];
-    const height = (x, y) => Math.min(1, edge(x, y) / 5);
+    const height = (x, y) => Math.min(1, edge(x, y) / (5 * K));
     return { sites, id: (x, y) => ids[wrap(y) * TILE + wrap(x)], edge, height,
         /** Positive where the surface faces the upper-left light. */
-        lit: (x, y) => height(x + 1, y + 1) - height(x - 1, y - 1) };
+        lit: (x, y) => (height(x + 1, y + 1) - height(x - 1, y - 1)) * K };
 }
 
 /** Flagstone top: rounded, bevelled plates lit from the upper left, dark joints, hairline cracks, lichen and, in the wet land, moss. */
 function stoneTop(band, seed, count = 3) {
     const ramps = rampsForBand(band), ramp = ramps.stone, tile = new Tile(), random = rng(seed);
-    const field = plates(seed, count, 1.15), grain = wrapNoise(seed + 3, 16), moss = wrapNoise(seed + 4, 4);
+    const field = plates(seed, count, 1.15), grain = wrapNoise(seed + 3, 32), moss = wrapNoise(seed + 4, 4);
     for (let y = 0; y < TILE; y++) for (let x = 0; x < TILE; x++) {
         const edge = field.edge(x, y), site = field.sites[field.id(x, y)];
-        if (edge < 1.1) { tile.set(x, y, ramp[0]); continue; }
-        const value = .36 + (site.tone - .47) * .5 + field.height(x, y) * .1 + field.lit(x, y) * .42 + (grain(x / TILE, y / TILE) - .5) * .08;
-        let color = dithered(ramp, value, x, y, .15);
+        if (edge < 1.1 * K) { tile.set(x, y, ramp[0]); continue; }
+        const value = .42 + (site.tone - .47) * .26 + field.height(x, y) * .08 + field.lit(x, y) * .3 + (grain(x / TILE, y / TILE) - .5) * .05;
+        let color = dithered(ramp, value, x, y, .1);
         if (band === 0 && moss(x / TILE, y / TILE) > .64 && field.height(x, y) < .9 && bayer(x, y) < .6) color = ramps.moss;
         tile.set(x, y, color);
     }
-    for (let i = 0; i < 1; i++) crackLine(tile, random, Math.floor(random() * TILE), Math.floor(random() * TILE), 6 + Math.floor(random() * 8), ramp[1]);
+    crackLine(tile, random, Math.floor(random() * TILE), Math.floor(random() * TILE), S(6) + Math.floor(random() * S(8)), ramp[1]);
     for (let i = 0; i < 2; i++) tile.set(Math.floor(random() * TILE), Math.floor(random() * TILE), ramp[random() < .5 ? 1 : 4]);
     return tile;
 }
 /** Soil side: strata bands, hanging roots, embedded pebbles. Tiles vertically, so any height can be cut from it. */
 function dirtSide(band, seed, withLip) {
     const ramps = rampsForBand(band), ramp = ramps.dirt, tile = new Tile(), random = rng(seed);
-    const strata = wrapNoise(seed + 1, 4), fine = wrapNoise(seed + 2, 16);
+    const strata = wrapNoise(seed + 1, 4), fine = wrapNoise(seed + 2, 32);
     for (let y = 0; y < TILE; y++) for (let x = 0; x < TILE; x++) {
         const band4 = strata(x / TILE * .5, y / TILE * 2) * .5;
         const value = .12 + band4 + (fine(x / TILE, y / TILE) - .5) * .35;
         tile.set(x, y, dithered(ramp.map((_, i) => ramp[Math.max(0, i - 1)]), value, x, y));
     }
-    for (let i = 0; i < 5; i++) pebble(tile, Math.floor(random() * (TILE - 3)), Math.floor(random() * TILE), ramps.stone, random() < .5 ? 2 : 1);
-    for (let i = 0; i < 3; i++) { // roots hang as thin darker-lighter pairs
-        const x = Math.floor(random() * TILE), y = Math.floor(random() * 20), length = 4 + Math.floor(random() * 6);
-        for (let d = 0; d < length; d++) { tile.set(x + (d > 3 ? 1 : 0), y + d, ramp[1]); tile.set(x + 1 + (d > 3 ? 1 : 0), y + d, ramp[3]); }
+    for (let i = 0; i < 9; i++) pebble(tile, Math.floor(random() * (TILE - S(3))), Math.floor(random() * TILE), ramps.stone, random() < .5 ? 2 : 1);
+    for (let i = 0; i < 5; i++) { // roots hang as thin darker-lighter pairs
+        const x = Math.floor(random() * TILE), y = Math.floor(random() * S(20)), length = S(4) + Math.floor(random() * S(6));
+        for (let d = 0; d < length; d++) { tile.set(x + (d > S(4) ? 1 : 0), y + d, ramp[1]); tile.set(x + 1 + (d > S(4) ? 1 : 0), y + d, ramp[3]); }
     }
     if (withLip && hasGrass(band)) {
-        // The grass overhang: a scalloped lip hangs over the soil, with a dark contact shadow under it.
-        const depth = Array.from({ length: TILE }, () => 5 + Math.floor(random() * 4));
+        // The grass overhang: a scalloped lip hangs over the soil, with a dark contact shadow under it. Depths are drawn per 32 px column
+        // and interpolated, so the scallops are smooth curves at the finer grid.
+        const cells = Array.from({ length: 32 }, () => 5 + random() * 3.6);
+        const depthAt = x => { const f = x / K, i = Math.floor(f), t = f - i; return S((cells[i % 32] * (1 - t) + cells[(i + 1) % 32] * t + cells[(i + 31) % 32] * .6) / 1.6); };
         for (let x = 0; x < TILE; x++) {
-            const smooth = Math.round((depth[x] + depth[(x + 1) % TILE] + depth[(x + TILE - 1) % TILE]) / 3);
-            for (let y = 0; y < smooth; y++) tile.set(x, y, y === 0 ? ramps.grass[3] : y >= smooth - 1 ? ramps.grass[1] : dithered(ramps.grass, .3 + random() * .3, x, y));
+            const smooth = depthAt(x);
+            for (let y = 0; y < smooth; y++) tile.set(x, y, y <= 1 ? ramps.grass[3] : y >= smooth - 2 ? ramps.grass[1] : dithered(ramps.grass, .3 + random() * .3, x, y));
             tile.set(x, smooth, ramp[0]);
-            tile.set(x, smooth + 1, ramp[1]);
-            if (random() < .22) { tile.set(x, smooth + 1, ramps.grass[2]); tile.set(x, smooth + 2, ramps.grass[1]); }
+            tile.set(x, smooth + 1, ramp[0]);
+            tile.set(x, smooth + 2, ramp[1]);
+            if (random() < .2) { tile.set(x, smooth + 2, ramps.grass[2]); tile.set(x, smooth + 3, ramps.grass[1]); tile.set(x, smooth + 4, ramps.grass[1]); }
         }
-        for (let i = 0; i < 6; i++) tile.set(Math.floor(random() * TILE), 0, ramps.grass[4]);
+        for (let i = 0; i < 14; i++) tile.set(Math.floor(random() * TILE), Math.floor(random() * 2), ramps.grass[4]);
     }
     return tile;
 }
@@ -218,9 +245,9 @@ function stoneSide(band, seed) {
     let cursor = 0;
     const layers = weights.map((weight, i) => {
         const start = cursor; cursor += weight / total * TILE;
-        return { start, tone: .3 + random() * .26, wave: wrapNoise(seed + 10 + i, 4), amplitude: 3 + random() * 4 };
+        return { start, tone: .3 + random() * .26, wave: wrapNoise(seed + 10 + i, 4), amplitude: (3 + random() * 4) * K };
     });
-    const grain = wrapNoise(seed + 1, 16), wrapY = y => ((y % TILE) + TILE) % TILE;
+    const grain = wrapNoise(seed + 1, 32), wrapY = y => ((y % TILE) + TILE) % TILE;
     const boundary = (layer, x) => layer.start + (layer.wave(x / TILE, layer.start / TILE) - .5) * 2 * layer.amplitude;
     for (let x = 0; x < TILE; x++) {
         const edges = layers.map(layer => boundary(layer, x));
@@ -230,38 +257,37 @@ function stoneSide(band, seed) {
             const layer = layers[index], below = y - wrapY(edges[index]), next = wrapY(edges[(index + 1) % layers.length]) - y;
             const wrappedBelow = below < 0 ? below + TILE : below, wrappedNext = next <= 0 ? next + TILE : next;
             let value = layer.tone + (grain(x / TILE * .6, y / TILE * 2.5) - .5) * .18;
-            if (wrappedBelow < 1.2) value += .1;                // lit upper edge of the layer
-            else if (wrappedNext < 2.2) value -= .1 + (2.2 - wrappedNext) * .03; // shadowed lower lip
+            if (wrappedBelow < 1.4 * K) value += .14;                // lit upper edge of the layer
+            else if (wrappedNext < 2.6 * K) value -= .12 + (2.6 * K - wrappedNext) * .035 / K; // shadowed lower lip
             tile.set(x, y, dithered(ramp, value, x, y, .08));
         }
     }
-    for (let i = 0; i < 1; i++) { // a vertical fracture, a lit pixel on the lee side
+    { // a vertical fracture, a lit pixel on the lee side
         let x = Math.floor(random() * TILE), y = Math.floor(random() * TILE);
-        for (let d = 0, length = 10 + Math.floor(random() * 14); d < length; d++) {
+        for (let d = 0, length = S(10) + Math.floor(random() * S(14)); d < length; d++) {
             tile.set(x, y + d, ramp[0]); tile.set(x - 1, y + d, ramp[3]);
             if (random() < .2) x += random() < .5 ? -1 : 1;
         }
     }
-    for (let i = 0; i < 1; i++) { const x = Math.floor(random() * TILE), y = Math.floor(random() * TILE); for (let dy = 0; dy < 2; dy++) for (let dx = 0; dx < 3; dx++) tile.set(x + dx, y + dy, ramp[dy ? 2 : 4]); }
-    if (band === 0) for (let i = 0; i < 12; i++) { const x = Math.floor(random() * TILE), y = Math.floor(random() * TILE); tile.set(x, y, ramps.moss); if (random() < .6) tile.set(x, y + 1, ramps.moss); }
+    for (let i = 0; i < 2; i++) { const x = Math.floor(random() * TILE), y = Math.floor(random() * TILE); for (let dy = 0; dy < S(2); dy++) for (let dx = 0; dx < S(3); dx++) tile.set(x + dx, y + dy, ramp[dy < S(1) ? 4 : 2]); }
+    if (band === 0) for (let i = 0; i < 24; i++) { const x = Math.floor(random() * TILE), y = Math.floor(random() * TILE); tile.set(x, y, ramps.moss); if (random() < .6) tile.set(x, y + 1, ramps.moss); if (random() < .4) tile.set(x, y + 2, ramps.moss); }
     return tile;
 }
 /** Rock face with a scalloped crest: three rounded lobes of lit rock bulge over the strata; both edges share one baseline, so tiles join. */
 function stoneLip(band, seed) {
     const ramp = rampsForBand(band).stone, tile = stoneSide(band, seed), random = rng(seed + 977);
-    const depth = new Int8Array(TILE).fill(3);
+    const depth = new Int16Array(TILE).fill(S(3));
     for (let lobe = 0; lobe < 3; lobe++) {
-        const centre = 8 + lobe * 8 + Math.floor(random() * 3), radius = 3 + Math.floor(random() * 2), amplitude = 2 + Math.floor(random() * 3);
+        const centre = S(8 + lobe * 8) + Math.floor(random() * S(3)), radius = S(3) + Math.floor(random() * S(2)), amplitude = S(2) + Math.floor(random() * S(3));
         for (let x = 0; x < TILE; x++) {
             const d = (x - centre) / radius;
-            if (Math.abs(d) < 1) depth[x] = Math.max(depth[x], 3 + Math.round(amplitude * Math.sqrt(1 - d * d)));
+            if (Math.abs(d) < 1) depth[x] = Math.max(depth[x], S(3) + Math.round(amplitude * Math.sqrt(1 - d * d)));
         }
     }
     for (let x = 0; x < TILE; x++) {
         const d = depth[x];
-        for (let y = 0; y < d; y++) tile.set(x, y, y === 0 ? ramp[4] : y < d - 1 ? ramp[3] : ramp[2]);
-        tile.set(x, d, ramp[0]);
-        tile.set(x, d + 1, ramp[1]);
+        for (let y = 0; y < d; y++) tile.set(x, y, y < K ? ramp[4] : y < d - K ? ramp[3] : ramp[2]);
+        for (let y = 0; y < K; y++) { tile.set(x, d + y, ramp[0]); tile.set(x, d + K + y, ramp[1]); }
     }
     return tile;
 }
@@ -269,16 +295,16 @@ function stoneLip(band, seed) {
 const LAVA = Object.freeze(['#1f0a07', '#4a150b', '#8f2a0d', '#d9561a', '#ffb347']);
 
 function lavaTop(band, seed) {
-    const tile = new Tile(), random = rng(seed), grain = wrapNoise(seed + 1, 16), pool = wrapNoise(seed + 2, 4), heat = wrapNoise(seed + 5, 4);
+    const tile = new Tile(), random = rng(seed), grain = wrapNoise(seed + 1, 32), pool = wrapNoise(seed + 2, 4), heat = wrapNoise(seed + 5, 4);
     const field = plates(seed, 6, 1);
     for (let y = 0; y < TILE; y++) for (let x = 0; x < TILE; x++) {
         const edge = field.edge(x, y), hot = heat(x / TILE, y / TILE);
         let color;
-        if (edge < 1.1) color = hot > .66 ? LAVA[random() < .12 ? 4 : 3] : LAVA[0];
-        else if (edge < 2 && hot > .72) color = LAVA[2];
+        if (edge < 1.1 * K) color = hot > .66 ? LAVA[random() < .12 ? 4 : 3] : LAVA[0];
+        else if (edge < 2 * K && hot > .72) color = LAVA[2];
         else color = dithered(LAVA.slice(0, 3), .12 + field.height(x, y) * .12 + field.lit(x, y) * 1.1 + (grain(x / TILE, y / TILE) - .5) * .3, x, y);
         const molten = pool(x / TILE, y / TILE);
-        if (molten > .86 && edge > 1.1) color = LAVA[molten > .93 ? 4 : 3];
+        if (molten > .86 && edge > 1.1 * K) color = LAVA[molten > .93 ? 4 : 3];
         tile.set(x, y, color);
     }
     void band;
@@ -286,12 +312,12 @@ function lavaTop(band, seed) {
 }
 
 function lavaSide(band, seed) {
-    const tile = new Tile(), random = rng(seed), grain = wrapNoise(seed + 1, 16);
+    const tile = new Tile(), random = rng(seed), grain = wrapNoise(seed + 1, 32);
     for (let y = 0; y < TILE; y++) for (let x = 0; x < TILE; x++) tile.set(x, y, dithered(LAVA, .08 + (grain(x / TILE, y / TILE) - .5) * .3, x, y));
-    for (let i = 0; i < 6; i++) {
-        const x = Math.floor(random() * TILE), y = Math.floor(random() * TILE), length = 6 + Math.floor(random() * 14);
-        for (let d = 0; d < length; d++) tile.set(x, y + d, LAVA[d < 2 || d > length - 3 ? 3 : 4]);
-        for (let d = 1; d < length - 1; d++) tile.set(x + 1, y + d, LAVA[2]);
+    for (let i = 0; i < 8; i++) {
+        const x = Math.floor(random() * TILE), y = Math.floor(random() * TILE), length = S(6) + Math.floor(random() * S(14));
+        for (let d = 0; d < length; d++) { tile.set(x, y + d, LAVA[d < 3 || d > length - 4 ? 3 : 4]); tile.set(x + 1, y + d, LAVA[d < 3 || d > length - 4 ? 2 : 3]); }
+        for (let d = 2; d < length - 2; d++) tile.set(x + 2, y + d, LAVA[2]);
     }
     void band;
     return tile;
@@ -315,44 +341,43 @@ function mudTop(band, seed) {
         const value = puddle(x / TILE, y / TILE);
         if (value > .7) tile.set(x, y, value > .78 ? wet[0] : wet[1]);
     }
-    for (let i = 0; i < 5; i++) { const x = Math.floor(random() * TILE), y = Math.floor(random() * TILE); if (tile.get(x, y) === wet[0]) tile.set(x, y, ramps.stone[3]); }
+    for (let i = 0; i < 10; i++) { const x = Math.floor(random() * TILE), y = Math.floor(random() * TILE); if (tile.get(x, y) === wet[0]) tile.set(x, y, ramps.stone[3]); }
     return tile;
 }
 /** End grain of a trunk: growth rings, a dark bark rim and radial checks. Charred in the burning bands. */
 function woodTop(band, seed) {
     const ramps = rampsForBand(band), ramp = band >= 2 ? ramps.stone : ramps.dirt, tile = new Tile(), random = rng(seed);
-    const grain = wrapNoise(seed + 1, 8), cx = 15.5 + (random() - .5) * 3, cy = 15.5 + (random() - .5) * 3;
+    const grain = wrapNoise(seed + 1, 16), cx = TILE / 2 - .5 + (random() - .5) * S(3), cy = TILE / 2 - .5 + (random() - .5) * S(3);
     for (let y = 0; y < TILE; y++) for (let x = 0; x < TILE; x++) {
         const d = Math.hypot(x - cx, y - cy);
-        if (d > 13.5) { tile.set(x, y, d > 14.8 ? ramp[0] : ramp[1]); continue; }
-        const ring = Math.sin(d * 1.25 + (grain(x / TILE, y / TILE) - .5) * 2.2);
+        if (d > S(13.5)) { tile.set(x, y, d > S(14.8) ? ramp[0] : ramp[1]); continue; }
+        const ring = Math.sin(d * 1.25 / K + (grain(x / TILE, y / TILE) - .5) * 2.2);
         tile.set(x, y, dithered(ramp, .42 + ring * .16 + (grain(x / TILE, y / TILE) - .5) * .2, x, y));
     }
     for (let i = 0; i < 3; i++) { // radial checks
         const angle = random() * 6.28;
-        for (let r = 3; r < 12; r++) tile.set(cx + Math.cos(angle) * r, cy + Math.sin(angle) * r, ramp[0]);
+        for (let r = S(3); r < S(12); r++) tile.set(cx + Math.cos(angle) * r, cy + Math.sin(angle) * r, ramp[0]);
     }
-    if (band >= 2) for (let i = 0; i < 5; i++) tile.set(Math.floor(8 + random() * 16), Math.floor(8 + random() * 16), LAVA[random() < .5 ? 2 : 3]);
+    if (band >= 2) for (let i = 0; i < 12; i++) tile.set(Math.floor(S(8) + random() * S(16)), Math.floor(S(8) + random() * S(16)), LAVA[random() < .5 ? 2 : 3]);
     return tile;
 }
 
 /** Bark: deep vertical furrows with lit ridges, lichen in the wet land, glowing cracks in the burning bands. Tiles vertically. */
 function woodSide(band, seed) {
     const ramps = rampsForBand(band), ramp = band >= 2 ? ramps.stone : ramps.dirt, tile = new Tile(), random = rng(seed);
-    const furrow = wrapNoise(seed + 1, 8), grain = wrapNoise(seed + 2, 16);
+    const furrow = wrapNoise(seed + 1, 8), grain = wrapNoise(seed + 2, 32);
     for (let y = 0; y < TILE; y++) for (let x = 0; x < TILE; x++) {
         const ridge = furrow(x / TILE, y / TILE * .35);
         const next = furrow((x + 1) / TILE, y / TILE * .35);
         let value = .22 + ridge * .5 + (grain(x / TILE, y / TILE) - .5) * .12;
-        if (next < ridge - .03) value += .14; // lit edge on the left of a furrow
+        if (next < ridge - .015) value += .14; // lit edge on the left of a furrow
         tile.set(x, y, dithered(ramp, value, x, y));
     }
-    if (band === 0) for (let i = 0; i < 10; i++) { const x = Math.floor(random() * TILE), y = Math.floor(random() * TILE); tile.set(x, y, ramps.moss); if (random() < .5) tile.set(x, y + 1, ramps.moss); }
-    if (band >= 2) for (let i = 0; i < 4; i++) { const x = Math.floor(random() * TILE), y = Math.floor(random() * TILE), length = 4 + Math.floor(random() * 6); for (let d = 0; d < length; d++) tile.set(x, y + d, LAVA[d % 3 === 0 ? 3 : 2]); }
+    if (band === 0) for (let i = 0; i < 20; i++) { const x = Math.floor(random() * TILE), y = Math.floor(random() * TILE); tile.set(x, y, ramps.moss); if (random() < .5) tile.set(x, y + 1, ramps.moss); }
+    if (band >= 2) for (let i = 0; i < 6; i++) { const x = Math.floor(random() * TILE), y = Math.floor(random() * TILE), length = S(4) + Math.floor(random() * S(6)); for (let d = 0; d < length; d++) tile.set(x, y + d, LAVA[d % 3 === 0 ? 3 : 2]); }
     return tile;
 }
 
-/** One band's full set: variants of every tile kind. Index with `variantFor`. */
 /**
  * Tangent-space normal map for a tile, derived from its luminance as a height field (dark crevices low, lit edges high) with a Sobel
  * filter over the wrapping tile. Convention: OpenGL / three.js, R = +x to the right, G = +y toward the top of the image, B = out of the
@@ -380,6 +405,7 @@ export function normalFromTile(tile, strength = 2.4, tilt = 0) {
 }
 
 export const TILE_VARIANTS = 8;
+/** One band's full set: variants of every tile kind. Index with `variantFor`. */
 export function generateTileSet(band) {
     const make = (builder, base) => Array.from({ length: TILE_VARIANTS }, (_, i) => builder(band, base + i * 101));
     return {

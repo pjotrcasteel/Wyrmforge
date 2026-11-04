@@ -97,10 +97,11 @@ export function huntLayerRevision(layer, artAvailable = false, artRevision = 0) 
  * allocating its bitmap again for every actor. State is isolated by save/restore
  * in the caller, while per-layer pixels are cleared before repaint.
  */
-export function prepareHuntGpuScratch(canvas, size, worldX, worldY) {
-    if (![size, worldX, worldY].every(Number.isFinite) || size <= 0)
+export function prepareHuntGpuScratch(canvas, size, worldX, worldY, pixelScale = 1) {
+    if (![size, worldX, worldY, pixelScale].every(Number.isFinite) || size <= 0 || pixelScale <= 0)
         throw new RangeError('Invalid GPU fallback layer bounds');
-    const pixels = Math.ceil(size);
+    // `size` is the layer's world size; `pixelScale` is canvas pixels per world unit (1 for legacy art, 2 for 64 px/m art).
+    const pixels = Math.ceil(size * pixelScale);
     if (canvas.width !== pixels) canvas.width = pixels;
     if (canvas.height !== pixels) canvas.height = pixels;
     const ctx = canvas.getContext('2d');
@@ -109,6 +110,7 @@ export function prepareHuntGpuScratch(canvas, size, worldX, worldY) {
     ctx.clearRect(0, 0, pixels, pixels);
     ctx.imageSmoothingEnabled = false;
     ctx.save();
+    if (pixelScale !== 1) ctx.scale(pixelScale, pixelScale);
     ctx.translate(-worldX, -worldY);
     return ctx;
 }

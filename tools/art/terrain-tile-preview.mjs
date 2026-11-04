@@ -1,20 +1,21 @@
-// Renders the generated terrain tiles to a PNG sheet for review: node tools/art/terrain-tile-preview.mjs <out.png> [scale]
+// Renders the generated terrain tiles to a PNG sheet for review: node tools/art/terrain-tile-preview.mjs <out.png> [scale] [bands e.g. 0,1] [variants per kind]
 import { writeFileSync } from 'node:fs';
 import { deflateSync } from 'node:zlib';
 import { generateTileSet, TILE, variantFor } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-terrain-tiles.js';
 
 const out = process.argv[2] ?? 'terrain-tiles.png';
 const scale = Number(process.argv[3] ?? 3);
-const bands = [0, 1, 2, 3];
+const bands = (process.argv[4] ?? '0,1,2,3').split(',').map(Number);
+const variantCount = Number(process.argv[5] ?? 8);
 const kinds = ['grassTop', 'dirtTop', 'stoneTop', 'grassSide', 'dirtSide', 'stoneSide', 'lavaTop', 'lavaSide'];
 const gap = 4;
 const width = (TILE * 4 + gap * 5) * 1, height = bands.length * (kinds.length * 0 + (TILE + gap) * 6) ;
-const sheetW = (4 * (TILE + gap) + gap), sheetH = bands.length * (kinds.length * (TILE + gap) + gap);
+const sheetW = (variantCount * (TILE + gap) + gap), sheetH = bands.length * (kinds.length * (TILE + gap) + gap);
 const pixels = new Uint8Array(sheetW * sheetH * 4).fill(0);
 for (let i = 0; i < pixels.length; i += 4) { pixels[i] = 12; pixels[i + 1] = 10; pixels[i + 2] = 14; pixels[i + 3] = 255; }
 bands.forEach((band, bandIndex) => {
     const set = generateTileSet(band);
-    kinds.forEach((kind, kindIndex) => set[kind].forEach((tile, variant) => {
+    kinds.forEach((kind, kindIndex) => set[kind].slice(0, variantCount).forEach((tile, variant) => {
         const ox = gap + variant * (TILE + gap), oy = gap + (bandIndex * kinds.length + kindIndex) * (TILE + gap);
         for (let y = 0; y < TILE; y++) for (let x = 0; x < TILE; x++) {
             const s = (y * TILE + x) * 4, d = ((oy + y) * sheetW + ox + x) * 4;
