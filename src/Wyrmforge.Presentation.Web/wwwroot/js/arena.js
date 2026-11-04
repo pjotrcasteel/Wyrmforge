@@ -9,15 +9,15 @@ import { resolveTargetIndicator, presentTargetSigil, drawTargetIndicator, preloa
 import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, createDestructibleLayers, drawArenaCloisterElevation, semanticSiteModeEnabled } from './arena-environment.js?v=20261031-ar1-highlands-v1';
 import { drawAr1GeographyReview } from './arena-ar1-geography-review.js?v=20261031-ar1-site-detail-v1';
 import { drawGreyboxGround } from './arena-greybox-ground.js';
-import { TerrainCanvasCache, influenceBandIndex, blockInsetOverlayEnabled, drawBlockInsetOverlay, occludingTerrainCells, eraseTerrainOcclusion, repaintTerrainOcclusion, mergeTerrainFrame } from './arena-terrain-canvas.js';
-import { raisedActor, TERRAIN_ART_SCALE } from './arena-projection.js';
+import { TerrainCanvasCache, influenceBandIndex, blockInsetOverlayEnabled, drawBlockInsetOverlay, occludingTerrainCells, eraseTerrainOcclusion, repaintTerrainOcclusion, mergeTerrainFrame, TERRAIN_PAD_UNITS } from './arena-terrain-canvas.js';
+import { raisedActor, TERRAIN_ART_SCALE, FACE_PIXELS } from './arena-projection.js';
 import { ambientParticles, drawAmbientParticles } from './arena-ambient-particles.js';
 import { readArenaDebugFlags, botMovement, createBotMemory, withDebugAmbient } from './arena-debug.js';
 import { createFrameSampler, readHeapMegabytes, perfReport, perfLines } from './arena-perf.js';
 import { createDestructionFx, observeTerrain, drawDestructionFx, drawFireZoneVignette, drawCrackGlow, drawBedrockGlow, paintGroundEmissive } from './arena-destruction-fx.js';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
-import { drawTree, treeLayers } from './arena-tree-art.js';
+import { drawTree, treeLayers, collectTrees, collectBushes, collectBoulders } from './arena-tree-art.js';
 import { drawRecoveryGuide } from './arena-recovery.js';
 import { drawSpellCastMotion, drawSpellProjectile, drawSpellImpact } from './arena-spell-vfx.js';
 import { drawMage, updateMageWalk } from './arena-mage.js';
@@ -96,6 +96,21 @@ export function initializeArena(canvas, dotNetReference) {
     state.lastSimulationTimestamp = now;
     state.performanceWindowStarted = now;
     state.animationFrame = requestAnimationFrame(timestamp => frame(state, timestamp));
+}
+
+/** Browser-only design review: the whole Hunt 1.0 arena, painted terrain plus trees, bushes and boulders, as one unlit PNG at art density. Read-only. */
+export function renderArenaMapOverview(canvas) {
+    const state = arenas.get(canvas), frame = state?.terrainFrame, cache = state?.terrainCache;
+    if (!frame || !cache?.canvas) return null;
+    const band = huntBand(state, state.latestSnapshot);
+    const out = document.createElement('canvas');
+    out.width = cache.canvas.width; out.height = cache.canvas.height;
+    const g = out.getContext('2d');
+    g.imageSmoothingEnabled = false;
+    g.drawImage(cache.canvas, 0, 0);
+    g.setTransform(TERRAIN_ART_SCALE, 0, 0, TERRAIN_ART_SCALE, 0, TERRAIN_PAD_UNITS * TERRAIN_ART_SCALE);
+    for (const prop of [...collectTrees(frame, band), ...collectBushes(frame, band), ...collectBoulders(frame, band)].sort((a, b) => a.depth - b.depth)) drawTree(g, prop);
+    return { png: out.toDataURL('image/png'), columns: frame.columns, rows: frame.rows, face: FACE_PIXELS, band };
 }
 
 // Read-only diagnostics allow browser smoke to verify actual movement, not merely visible canvas pixels.
