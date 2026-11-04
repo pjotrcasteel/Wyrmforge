@@ -1,0 +1,120 @@
+"""Test deterministic source-backed Trampled Earth segment bank and archive protection."""
+import hashlib
+import importlib.util
+import json
+import tempfile
+import unittest
+from pathlib import Path
+
+import numpy as np
+from PIL import Image
+
+location = Path(__file__).resolve().parents[1] / "build_trampled_segment_art_bank.py"
+spec = importlib.util.spec_from_file_location("segment_art_bank", location)
+tool = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(tool)
+
+
+class SegmentBankTests(unittest.TestCase):
+    def test_three_segments_have_exact_overlap_and_tampering_fails(self):
+        with tempfile.TemporaryDirectory() as directory:
+            home = Path(directory)
+            directories = []
+            for family in ("grass-moss", "trampled-earth", "wet-mud"):
+                folder = home / family
+                folder.mkdir()
+                rows = []
+                for i in range(1, 7):
+                    name = (f"grass-moss-ART-CANDIDATE-{i:02d}.png" if family=="grass-moss"
+                            else f"{family}-INDEPENDENT-ART-CANDIDATE-{i:02d}.png")
+                    yy, xx = np.indices((128,128))
+                    pixels = np.stack(((xx+12*i)%256,(yy+23*i)%256,(xx+yy+9*i)%256),axis=-1).astype("uint8")
+                    Image.fromarray(pixels).save(folder / name)
+                    ref = {"file": name, "sha256": hashlib.sha256((folder/name).read_bytes()).hexdigest()}
+                    rows.append({**ref,"approval":"unreviewed","productionUse":False} if family=="grass-moss"
+                                else {"approved":False,"independent":ref})
+                if family == "grass-moss":
+                    report = {"stage":"editable-reproducible-grass-moss-art-candidates",
+                              "sourceFamily":family,"ownerApproved":False,"runtimeUse":False,"variants":rows}
+                    report_name="grass-moss-candidate-report.json"
+                else:
+                    report={"status":"unapproved-artwork","family":family,"runtimeUse":False,"variants":rows}
+                    report_name=f"{family}-art-candidates.json"
+                (folder/report_name).write_text(json.dumps(report))
+                directories.append(folder)
+            snapshots={p:p.read_bytes() for folder in directories for p in folder.iterdir()}
+            receipt=tool.build(*directories,home/"output",side=128,height=320,overlap=32)
+            self.assertEqual(len(receipt["variants"]),6)
+            self.assertFalse(receipt["runtimeUse"])
+            for entry in receipt["variants"]:
+                a,b,c=(np.asarray(Image.open(home/"output"/name)) for name in entry["segmentFiles"])
+                self.assertEqual(a.shape,(128,128,3))
+                self.assertTrue(np.array_equal(a[-32:],b[:32]))
+                self.assertTrue(np.array_equal(b[-32:],c[:32]))
+                self.assertFalse(entry["approved"])
+                self.assertFalse(entry["gameIntegration"])
+            self.assertTrue(all(p.read_bytes()==raw for p,raw in snapshots.items()))
+            # Outside the two narrow organic source-selection joins the
+            # generator must preserve the RGB of the selected source exactly.
+            sample = tool._sample([Image.open(directories[0] / f"grass-moss-ART-CANDIDATE-{i:02d}.png")
+                                  for i in range(1,7)], 0, 128, 320, 2)
+            source = np.asarray(Image.open(directories[0] / "grass-moss-ART-CANDIDATE-01.png"))
+            y, x = 12, 43
+            self.assertTrue(np.array_equal(sample[y,x].astype("uint8"),
+                                            source[(y+128//3+2*13)%128,(x+2*17)%128]))
+            # The final section uses a different integer-aligned source crop
+            # and remains pixel-exact away from the narrow organic seam.
+            final_source = np.asarray(Image.open(directories[0] / "grass-moss-ART-CANDIDATE-05.png"))
+            y, x = 315, 43
+            uy = (y + 128//3 + 2*13 + 128*61//100) % 128
+            vx = (x + 2*17 + 128*13//100) % 128
+            self.assertTrue(np.array_equal(sample[y,x].astype("uint8"), final_source[uy,vx]))
+            # A controlled palette proves muddy wear actually selects Wet Mud
+            # pixels and is materially distinct from the heavy-wear silhouette.
+            dry_green = [Image.new("RGB", (128,128), (25,80,28)) for _ in range(6)]
+            dry_soil = [Image.new("RGB", (128,128), (149,99,63)) for _ in range(6)]
+            wet_mud = [Image.new("RGB", (128,128), (53,41,37)) for _ in range(6)]
+            heavy = np.asarray(tool._make_strip(dry_green,dry_soil,wet_mud,1,128,320))
+            muddy = np.asarray(tool._make_strip(dry_green,dry_soil,wet_mud,3,128,320))
+            inside = slice(25,103)
+            heavy_wet_fraction = np.mean((heavy[:,inside,0] < 100) & (heavy[:,inside,1] < 70))
+            muddy_wet_fraction = np.mean((muddy[:,inside,0] < 100) & (muddy[:,inside,1] < 70))
+            self.assertGreater(muddy_wet_fraction, heavy_wet_fraction + .18)
+
+            with self.assertRaises(ValueError):
+                tool.build(*directories,directories[1]/"illegal",side=128,height=320,overlap=32)
+            (directories[1]/"trampled-earth-INDEPENDENT-ART-CANDIDATE-01.png").write_bytes(b"tampered")
+            with self.assertRaises(ValueError):
+                tool.build(*directories,home/"bad",side=128,height=320,overlap=32)
+
+
+
+    def test_content_aware_join_avoids_unmatched_painted_strip(self):
+        first = np.full((320,128,3), 30, dtype=np.float32)
+        second = np.full((320,128,3), 210, dtype=np.float32)
+        second[149:155] = first[149:155]
+        seam = tool._content_aware_join(first, second, 160, 128)
+        self.assertEqual(seam.shape, (128,))
+        self.assertTrue(np.all(seam >= 146))
+        self.assertTrue(np.all(seam <= 175))
+        self.assertLess(np.max(np.abs(np.diff(seam))), 1.01)
+        yy = np.rint(seam).astype(int)
+        mismatch = np.abs(first[yy, np.arange(128)] - second[yy, np.arange(128)]).mean()
+        self.assertEqual(mismatch, 0)
+        self.assertTrue(np.array_equal(seam, tool._content_aware_join(first, second, 160, 128)))
+
+    def test_organic_painted_edges_retain_original_rgb_for_all_six_roles(self):
+        green = (25,80,28)
+        soil = (149,99,63)
+        wet = (53,41,37)
+        g = [Image.new("RGB", (128,128), green) for _ in range(6)]
+        e = [Image.new("RGB", (128,128), soil) for _ in range(6)]
+        w = [Image.new("RGB", (128,128), wet) for _ in range(6)]
+        palette = np.array([green, soil, wet])
+        for role in range(6):
+            art = np.asarray(tool._make_strip(g, e, w, role, 128, 320))
+            exact = np.any(np.all(art[:,:,None,:] == palette[None,None,:,:], axis=-1), axis=-1)
+            self.assertGreater(np.mean(exact), .97, f"Role {tool.ROLES[role]} over-blended its sources")
+
+if __name__ == "__main__":
+    unittest.main()
