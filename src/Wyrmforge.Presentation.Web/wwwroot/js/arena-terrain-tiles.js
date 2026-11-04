@@ -46,11 +46,11 @@ function wrapNoise(seed, period) {
 }
 
 /** A tone from a ramp chosen by a 0..1 value; a per-pixel jitter breaks the contours into the ragged speckle of hand-placed pixels. */
-function dithered(ramp, value, x, y) {
+function dithered(ramp, value, x, y, amount = .4) {
     let h = (Math.imul(x + 17, 0x9E3779B1) ^ Math.imul(y + 29, 0x85EBCA6B)) >>> 0;
     h = Math.imul(h ^ (h >>> 15), 0x2C1B3C6D) >>> 0;
     const jitter = ((h ^ (h >>> 13)) >>> 0) / 4294967296 - .5;
-    const level = Math.round(Math.max(0, Math.min(1, value)) * (ramp.length - 1) + jitter * .4);
+    const level = Math.round(Math.max(0, Math.min(1, value)) * (ramp.length - 1) + jitter * amount);
     return ramp[Math.max(0, Math.min(ramp.length - 1, level))];
 }
 // Ramps are [deepest shadow ... highlight]. Dark gothic: muted, desaturated, light kept low; colour saturation belongs to fire.
@@ -81,7 +81,7 @@ const RAMPS = Object.freeze([
         stone: ['#0f0c0d', '#1a1516', '#2a2324', '#3b3233', '#50464a'],
         moss: '#231c1c',
     },
-].map((ramp, band) => band === 2 ? lifted(ramp, 1.35) : band === 3 ? lifted(ramp, 1.55) : ramp));
+].map((ramp, band) => band === 2 ? lifted(ramp, 1.35) : band === 3 ? lifted(ramp, 1.55) : { ...ramp, stone: ramp.stone.map(hex => liftHex(hex, 1.2)) }));
 
 export const rampsForBand = band => RAMPS[Math.min(RAMPS.length - 1, Math.max(0, band | 0))];
 const hasGrass = band => band <= 1;
@@ -171,7 +171,7 @@ function stoneTop(band, seed, count = 3) {
         const edge = field.edge(x, y), site = field.sites[field.id(x, y)];
         if (edge < 1.1) { tile.set(x, y, ramp[0]); continue; }
         const value = .36 + (site.tone - .47) * .5 + field.height(x, y) * .1 + field.lit(x, y) * .42 + (grain(x / TILE, y / TILE) - .5) * .08;
-        let color = dithered(ramp, value, x, y);
+        let color = dithered(ramp, value, x, y, .15);
         if (band === 0 && moss(x / TILE, y / TILE) > .64 && field.height(x, y) < .9 && bayer(x, y) < .6) color = ramps.moss;
         tile.set(x, y, color);
     }
@@ -232,7 +232,7 @@ function stoneSide(band, seed) {
             let value = layer.tone + (grain(x / TILE * .6, y / TILE * 2.5) - .5) * .18;
             if (wrappedBelow < 1.2) value += .1;                // lit upper edge of the layer
             else if (wrappedNext < 2.2) value -= .1 + (2.2 - wrappedNext) * .03; // shadowed lower lip
-            tile.set(x, y, dithered(ramp, value, x, y));
+            tile.set(x, y, dithered(ramp, value, x, y, .08));
         }
     }
     for (let i = 0; i < 1; i++) { // a vertical fracture, a lit pixel on the lee side
@@ -244,6 +244,25 @@ function stoneSide(band, seed) {
     }
     for (let i = 0; i < 1; i++) { const x = Math.floor(random() * TILE), y = Math.floor(random() * TILE); for (let dy = 0; dy < 2; dy++) for (let dx = 0; dx < 3; dx++) tile.set(x + dx, y + dy, ramp[dy ? 2 : 4]); }
     if (band === 0) for (let i = 0; i < 12; i++) { const x = Math.floor(random() * TILE), y = Math.floor(random() * TILE); tile.set(x, y, ramps.moss); if (random() < .6) tile.set(x, y + 1, ramps.moss); }
+    return tile;
+}
+/** Rock face with a scalloped crest: three rounded lobes of lit rock bulge over the strata; both edges share one baseline, so tiles join. */
+function stoneLip(band, seed) {
+    const ramp = rampsForBand(band).stone, tile = stoneSide(band, seed), random = rng(seed + 977);
+    const depth = new Int8Array(TILE).fill(3);
+    for (let lobe = 0; lobe < 3; lobe++) {
+        const centre = 8 + lobe * 8 + Math.floor(random() * 3), radius = 3 + Math.floor(random() * 2), amplitude = 2 + Math.floor(random() * 3);
+        for (let x = 0; x < TILE; x++) {
+            const d = (x - centre) / radius;
+            if (Math.abs(d) < 1) depth[x] = Math.max(depth[x], 3 + Math.round(amplitude * Math.sqrt(1 - d * d)));
+        }
+    }
+    for (let x = 0; x < TILE; x++) {
+        const d = depth[x];
+        for (let y = 0; y < d; y++) tile.set(x, y, y === 0 ? ramp[4] : y < d - 1 ? ramp[3] : ramp[2]);
+        tile.set(x, d, ramp[0]);
+        tile.set(x, d + 1, ramp[1]);
+    }
     return tile;
 }
 // Molten rock: the one place saturation is allowed. Dark bevelled crust plates, thin glowing cracks of uneven heat and a few molten pools.
@@ -366,7 +385,7 @@ export function generateTileSet(band) {
     return {
         grassTop: make(grassTop, 11), dirtTop: make((b, s) => dirtTop(b, s), 23), ashTop: make((b, s) => dirtTop(b, s, true), 31), stoneTop: make(stoneTop, 41),
         grassDryTop: make(dryGrassTop, 113), mudTop: make(mudTop, 127), rubbleTop: make((b, s) => stoneTop(b, s, 7), 139),
-        grassSide: make((b, s) => dirtSide(b, s, true), 53), dirtSide: make((b, s) => dirtSide(b, s, false), 67), stoneSide: make(stoneSide, 71),
+        stoneLipSide: make(stoneLip, 181), grassSide: make((b, s) => dirtSide(b, s, true), 53), dirtSide: make((b, s) => dirtSide(b, s, false), 67), stoneSide: make(stoneSide, 71),
         lavaTop: make(lavaTop, 83), lavaSide: make(lavaSide, 97), woodTop: make(woodTop, 151), woodSide: make(woodSide, 163),
     };
 }

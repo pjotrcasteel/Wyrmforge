@@ -614,8 +614,9 @@ function drawWall(ctx, atlas, band, material, segments, x, width, sx, baseY, var
         for (let drawn = 0; drawn < height;) {
             const v = start + drawn;
             const lip = turf && v < TILE;
+            const crest = stone && i === 0 && material === TERRAIN_MATERIAL.Stone && v < TILE;
             const piece = Math.min(height - drawn, TILE - (v % TILE));
-            const tiles = atlas[stone ? 'stoneSide' : lip ? 'grassSide' : 'dirtSide'];
+            const tiles = atlas[crest ? 'stoneLipSide' : stone ? 'stoneSide' : lip ? 'grassSide' : 'dirtSide'];
             ctx.drawImage(tiles[variant], sx, v % TILE, width, piece, x, y + drawn, width, piece);
             drawn += piece;
             painted++;

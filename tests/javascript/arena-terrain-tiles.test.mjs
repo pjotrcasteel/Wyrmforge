@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { generateTileSet, TILE, TILE_VARIANTS, variantFor } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-terrain-tiles.js';
 
-const KINDS = ['grassTop', 'dirtTop', 'ashTop', 'stoneTop', 'grassSide', 'dirtSide', 'stoneSide', 'lavaTop', 'lavaSide', 'grassDryTop', 'mudTop', 'rubbleTop', 'woodTop', 'woodSide'];
+const KINDS = ['grassTop', 'dirtTop', 'ashTop', 'stoneTop', 'grassSide', 'dirtSide', 'stoneSide', 'lavaTop', 'lavaSide', 'grassDryTop', 'mudTop', 'rubbleTop', 'woodTop', 'woodSide', 'stoneLipSide'];
 
 test('every band makes every tile kind, 32 x 32, fully opaque, in several variants', () => {
     for (let band = 0; band < 4; band++) {
