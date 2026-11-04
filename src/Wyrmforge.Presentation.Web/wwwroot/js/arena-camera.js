@@ -11,6 +11,28 @@ export function resolveArenaCamera(world, player, viewWidth, viewHeight) {
     };
 }
 
+/**
+ * Opt-in spectator camera for a genuine C# monastery footprint.
+ * Presentation only: no player teleport, collision, world generation or target authority.
+ */
+export function resolveMonasteryArtReviewCamera(world, geography, viewWidth, viewHeight) {
+    if (!(world?.width > 0 && world?.height > 0) ||
+        geography?.landscape?.kind !== 'mountain-monastery') return null;
+    const buildings = geography.landscape.obstacles?.filter(obstacle =>
+        obstacle.kind?.startsWith('monastery-') && Array.isArray(obstacle.outline) &&
+        obstacle.outline.length >= 3 && obstacle.outline.every(point =>
+            Number.isFinite(point.x) && Number.isFinite(point.y) &&
+            point.x >= 0 && point.x <= 1 && point.y >= 0 && point.y <= 1)) ?? [];
+    if (!buildings.length) return null;
+    const points = buildings.flatMap(building => building.outline);
+    const focusX = (Math.min(...points.map(point => point.x)) +
+        Math.max(...points.map(point => point.x))) * world.width * .5;
+    const focusY = (Math.min(...points.map(point => point.y)) +
+        Math.max(...points.map(point => point.y))) * world.height * .5;
+    return { ...resolveArenaCamera(world, { x: focusX, y: focusY }, viewWidth, viewHeight),
+        landmarkCount: buildings.length, focusX, focusY };
+}
+
 export function exitGuidePosition(exit, camera, viewWidth, viewHeight) {
     if (!exit) return null;
     const screenX = exit.x - camera.x;

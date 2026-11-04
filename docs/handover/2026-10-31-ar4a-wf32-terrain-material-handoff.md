@@ -1,0 +1,154 @@
+# AR4-A — WF32 terrain material binding after AR3 acceptance (31 October 2026)
+
+Status: **AR4-A1 mapping, AR4-A2 WF32 P1i native soft-albedo bank, and AR4-A3 actual Town→Chart→Hunt evidence are implemented in draft PR #459. Three viewport/site browser cases passed (320 forest; 390 mountain pass and monastery), with five genuine screenshots. AR4-B owner art acceptance remains open; the tall 390px world is only partly covered by authored source. AR4-C shared G lighting is deferred.**
+Start from merged GitHub `main` at/after [AR3 PR #458](https://github.com/pjotrcasteel/Wyrmforge/pull/458). Preserve the independent original source-art [WF32 draft PR #429](https://github.com/pjotrcasteel/Wyrmforge/pull/429) and all active [shared G4/G5 work](https://github.com/pjotrcasteel/Wyrmforge/pull/381).
+
+## 1 November 2026 — G5 merge and AR4-A3 evidence checkpoint
+
+- **G4 and G5 are now merged into `main`**. G5 [PR #463](https://github.com/pjotrcasteel/Wyrmforge/pull/463) merged as `5ab1f00a8ff21e211367254e107db89a16f1dc23`; its `Validate Wyrmforge` workflow passed. This is the **opt-in Lighting Engine 0.1 composition baseline**, not default GPU cutover or G6–G10 Lighting 1.0 acceptance. The WF32 AR4-A neutral albedo adapter remains an independent opt-in existing-Hunt review. AR4-C must use G materials/occluders after owner material acceptance.
+- Added `Ar4WorldSiteMaterialsBrowserTests.cs` to draft [PR #459](https://github.com/pjotrcasteel/Wyrmforge/pull/459). It enters through actual Town → Free Play → Chart → Hunt; captures 320px forest fork and 390px mountain pass/monastery in **semantic vs native authored WF32 albedo** on the identical C# site; then captures player traversal. It asserts unchanged C# site/seed/obstacle identity, seven source bindings, C# grade data, material load and absence of browser page exceptions. **Screenshots, CI and owner review remain pending; writing tests is not proof of their execution.**
+- **G4/G5 integration conflict resolved:** PR #459 now contains a two-parent reconciliation commit `d21990eaafcedb13877f9137fd4ce87f00dd137f` preserving the newer G5/G6 shared lighting, Hunt paths, and canonical documents. The later AR0 assertion adjustment passed the complete `Validate Wyrmforge` workflow; continue with independent browser and GPU verification. Keep PR draft through the AR4-B visual gate.
+- **Tall-world source coverage is explicit:** The approved P1i source is **1024×1568 native pixels**. At 320×568, the C# Hunt world is 950×1550 and is fully covered. At 390×844, the C# world expands to approximately 1014×2110, so only ~74.3% of the authored height exists. AR4-A3 now preserves the native site-space source without repeating or scaling it, labels the larger review `partial-albedo`, and paints the un-authored lower world in the declared material diagnostic colors. This is not acceptance of a complete 390px-world art bank. Additional WF32 source authoring is required for full tall-world coverage; the page may show genuinely authored pixels at the player/camera position meanwhile.
+
+## Ownership and nonnegotiable boundaries
+
+- **C# geography and physics are authoritative.** `WorldSiteElevationField.Sample(WorldSiteGeography, HuntPoint)` exposes `WorldSiteElevationSample`: physical `HeightMeters`, `Grade`, typed `Material`, seven normalized `SoilWeight`/`GrassWeight`/`RoadWeight`/`MudWeight`/`RockWeight`/`WaterWeight`/`IceWeight`, `Moisture`, and `Walkable`. `WorldSiteElevationPreview` carries `Columns`, `Rows` and samples for opt-in display. Never calculate or override C# height, collision, paths, barriers, routes, ecology authority or loot from bitmap color.
+- **Existing presentation adapter only.** `src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js` already defines `semanticSiteModeEnabled()`, `drawWorldSiteElevation()`, `drawWorldSiteTopography()` and `drawArenaEnvironment()`. Build a bounded opt-in **neutral material/albedo** review atop the same arena geography and camera, with unchanged solid-color A/B and untouched normal Hunts. No competing renderer, independent JS terrain generator, per-frame texture authoring or Canvas-lighting replacement.
+- **Original art source.** WF32 #429 supplies world-anchored source texture grammar, native 32px material transitions, 12 owner-approved grass/rock appearances and H4 deterministic native source package (six hard pairs × five maps and original stone-ID masks). The owner approved P1i transition *appearance* and P1j grass/rock source variants, **not** H3 wear extremes or full 2.5D scene. Preserve them. Resolve how source files reach the integration branch without merging unapproved art or overwriting existing `wwwroot` assets; do not duplicate source painters in a new engine.
+- **Only shared G owns light and shadow.** AR4-A may show albedo in the existing Hunt presentation layer while G4/G5 is under repair. AR4-C must later register matching albedo/normal/roughness and *actual C#-aligned geometry/occluder inputs* with the shared G registry. Source grayscale height/alpha does not automatically cast a shadow. Never add fake dark cast-shadow paint or a second shader/lighting solution.
+
+## Implementation slices
+
+1. **AR4-A1 — stable data seam (implemented in draft #459).** Verify current merged AR3 samples, actual arena/world pixel transform and existing asset registry. Define an explicit presentation mapping for `Soil`, `Grass`, `Road`, `Mud`, `Rock`, `ShallowWater`, `GlacialIce` to available approved/authored source families and documented fallbacks. These are cosmetic selectors, never gameplay material IDs. Retain the same C# weights, screen/site origin and cache identity across camera movement and replay. Verify field weights sum to one; handle missing/malformed source gracefully.
+2. **AR4-A2 — native albedo assets and bounded caching.** Prepare original source material tiles/atlases at the *actual* game-pixel/world scale, with stable source seed, valid 32px phase, padding/sampling and no mirrored 252px stamped repeat. Bind to the existing opt-in world-first view; reuse asset/cache lifecycle and avoid CPU regeneration every frame. No G shader edits.
+3. **AR4-A3 — in-Hunt technical review.** Show the *same C# site/seed* in flat material IDs and neutral albedo, with moving camera and genuine playable Town→Chart→Hunt path at 320px and 390px widths. Forest fork, mountain pass and monastery must retain destinations, 1–3m blocking cliffs and C# traversal, even when art is absent. Keep normal Hunt fallback unchanged.
+4. **AR4-B — owner material look gate.** Inspect original blending, medium/tall grass and rock scale as separate objects, soil/mud/road distributions and original stone silhouettes in genuine in-Hunt screenshots, not mockups. Include mage/Ashling/Hollowed at the correct *review* scale; Hollowed's intended ~2× Ashling height is not automatically approved. Stop for owner approval before AR5 production dressing.
+5. **AR4-C — deferred shared G lighting acceptance.** Only when G4/G5 is stable, test actual dynamic Fireball/torch occlusion, surface height/caster registrations, lit normals/roughness, zero-light, proper shadow direction and physical iOS/Android performance. AR4-A/B cannot close these gates.
+
+## Required verification
+
+- Deterministic seed/replay and sample-to-source mapping; no camera-relative texel drift or seams across adjacent 32px world windows. Preserve owner-approved P1i and P1j source fingerprints.
+- Explicit controls comparing AR3 semantic and AR4 neutral material previews for the same world seed and site. No change to C# gameplay collision, navigation, movement grade, rewards or extraction.
+- Tests for missing source assets, zero/invalid normalized weights and all seven semantic surface classes. Performance checks ensure bounded asset count and no frame-loop rebuilds.
+- Normal Hunts, painted 2D Town and active G4/G5, AN and FXP branches untouched.
+- Genuine mobile-sized **running-game** screenshots/video and link to the exact tested deployment before requesting human acceptance; distinguish source-only reviews and live captures clearly.
+
+**Stop rule:** Only AR4-A technical implementation is unblocked by AR3. AR4-B requires an owner material review; AR4-C and final AR4 approval require shared G lighting and shadow acceptance. Keep PR draft and do not merge unapproved art or invent sign-off.
+
+## Implementation trace (31 October 2026)
+
+- `world-site-material-binding.js` is the only AR4 presentation-side mapping of C# enum names/ordinals and seven normalized weights. It bilinearly samples the server-owned preview in site coordinates for visuals only and handles malformed source weights with safe semantic fallbacks.
+- `arena-environment.js` now consumes that shared mapping in the existing opt-in AR3 diagnostic, preserving its existing seven-color palette, native Hunts and geometry ownership. Debug snapshots expose which WF32 families have source-only or pending review gates.
+- Six focused Node tests pass for enum/weight fidelity, deterministic interpolation, invalid data, withheld rock/water/ice textures, monastery whole-stone boundary gating and site-anchored caching.
+- `world-site-neutral-albedo.js` implements an opt-in `?arenaTerrain=materials` adapter in the **existing** Hunt canvas. It composes C# weight blends against decoded *offline* WF32 soft albedo pixels in one cached site-space raster; the render loop never runs source generation. Truncated/undersized source banks are rejected; an otherwise complete original 1568px-tall bank may be reviewed on a taller C# world with explicit lower-world diagnostic fallback and a partial-coverage flag (never stamped, stretched or claimed as fully authored). Only 1 decoded site raster is retained. Missing files fall back to the existing AR3 semantic visualization. The standard Hunt path remains untouched.
+- Six original plus one tall-world-coverage Node tests are present for blend math, world-anchored deterministic output, original-family gating, no synthetic rock/ice/water/shadows, missing/undersized sources, two-band seam continuity and opt-in isolation: **13 focused tests total**.
+- The **original** WF32 `worldSoftPixel` source from #429 generated six continuous (top 1024×800, bottom 1024×768) native-32px PNGs for soil, grass and mud at absolute source coordinates, seed 1387. These are served under `wwwroot/art/terrain/wf32/p1i/`, stitched once into 1024×1568 banks, and tracked in `source-manifest.json`. All six Git blob SHAs were independently recomputed from the original source and matched exactly. Nothing is generated in the Hunt render loop.
+- **Still missing:** completed real in-Hunt 320/390 screenshot CI and individual owner-reviewable captures, moving-camera and weighted seam checks, proper stone/rock/water/ice surface source authoring, multiple source-bank variation seeds, owner AR4-B appearance approval and any AR4-C shadow claims. A one-time Node 950×1550 neutral composite benchmark took ~623 ms (desktop runtime); this is **not** a mobile performance acceptance and requires device profiling.
+
+- A dedicated CI-facing source integrity test verifies the committed manifest, PNG dimensions, 32px band origins and exact Git blob SHA for all six source files. These four file-integrity test cases are **pending normal PR CI**; do not conflate them with the 12 already executed in-memory unit tests.
+
+## 1 November 2026 — AR4-A3 CI and tall-world acceptance boundary
+
+- The merged G5/G6 integration branch passed `Validate Wyrmforge` and WebKit compatibility after updating a legacy AR0 assertion to respect neutral albedo. The first browser run demonstrated an actual 320×568 forest-fork semantic→native capture but timed out on both 390×844 mountain captures due to the 1024×1568 source world limit, not C# collision or road changes.
+- Commit `1f32dd85e4acfc4e8ecb5422d29d795642e65f4b` handles the taller world as **partial native coverage**, with explicit `sourceCoverage` diagnostics, normal C# terrain identity and semantic fallback colors outside original source pixels. It adds a deterministic boundary test. The new CI attempt and user visual review are still required.
+- **Acceptance remains blocked** until the true screenshots can be inspected individually at 320px and 390px. A partial-coverage screenshot demonstrates integration only; it cannot sign off the missing lower terrain or replace the WF32 source-art gate.
+
+## 1 November 2026 — AR4 neutral-review visibility correction
+
+- First genuine 320×568 and 390×844 Playwright captures passed all three AR4-A3 site/seed/movement assertions, but showed an almost-black albedo scene. The existing semantic debug mode skips the **presentation-only** Gothic night overlay; the equivalent opt-in WF32 neutral albedo mode did not. This is a review-mode consistency defect, not an invitation to change G5/G6 lighting.
+- The same bypass now applies to both explicitly requested site authoring views inside `arena.js`, while ordinary Hunts retain their existing Gothic night pass, and G GPU rendering is untouched. Repeat the actual browser screenshots and inspect them at both widths before requesting owner AR4-B approval.
+
+## 1 November 2026 — real-Hunt evidence reviewed (commit `adabc7bd9019a51a4aa3f00d6530450dcd2e781a`)
+
+- [Browser smoke run 41282177259](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/41282177259), shard 1: **50/50 passed**, including `forest-fork` at 320×568 and `mountain-pass` / `mountain-monastery` at 390×844. The C# site, seed, colliders and grade remain identical when switching semantic→WF32 neutral rendering and when moving the player/camera. Five genuine CI PNGs are captured individually: `ar4-forest-fork-semantic-320.png`, `ar4-forest-fork-native-wf32-320.png`, `ar4-mountain-pass-native-wf32-390.png`, `ar4-mountain-monastery-native-wf32-390.png`, and `ar4-mountain-pass-moving-camera-390.png`.
+- **Visibility is repaired in the opt-in neutral review** and no longer hidden by the Gothic-night presentation veil. The live captures now show original P1i soft source colors, blended roads, C# actor/camera and preview rock silhouettes at mobile resolutions. The Gothic night/Fireball comparison, WebKit compatibility, and full Validate Wyrmforge pipeline passed for this commit; the ordinary Hunt lighting path remains unchanged.
+- **Visual-owner assessment is still required:** the terrain is extremely soft/noisy at phone scale, hard rock/cliff content remains flat diagnostic polygons, the monastery is not within the starting camera crop, and the 390px world's lower ~26% has no original source coverage. These captures prove the technical seam, **not** production-ready 32px pixel-art composition or an approved mountain/monastery scene. Do not mark AR4-B, AR5, WF32 P1j or G6 shadow acceptance complete, and do not merge #459 until the explicit owner gate.
+
+## 1 November 2026 — new-chat evidence delivery and monastery camera correction
+
+- The five authentic PNGs from source run [41282177259](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/41282177259) were recovered from CI logs, PNG signatures/dimensions checked, and committed as individual files under `docs/evidence/ar4-a3-2026-11-01/` in `8bf8f2ad9c09b84ba5959ba450d9182e4018c60e`. GitHub-raw Markdown embeds did **not** display in the owner's iPhone chat; the assistant subsequently reconstructed local PNG attachments and embedded those directly. Actual owner visual approval has **not** been given.
+- A bounded, opt-in `ar4ReviewFocus=monastery` spectator camera was added in `29c393fbbea7ee277aa38ac2d5243e34a3490150`: it centers on the real C# monastery obstacle outlines, not a synthetic monastery or player teleport. It is available only in the neutral materials review, visibly labeled `AR4 SPECTATOR · C# MONASTERY`. Normal Hunt camera/input and C# route/collision authority are untouched. A Node camera regression and Playwright post-movement screenshot with site/seed/obstacle checks were added.
+- Genuine sixth in-Hunt PNG `ar4-mountain-monastery-csharp-focus-390.png` from [browser run 41283929513](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/41283929513) (shard 1 success; source commit `29c393fb...`) finally shows the monastery. **Honest result:** flat grey/taupe polygon footprint with outlines rather than an authored 2.5D monastery, while road and soft ground still read blurred/noisy. The result is review evidence, not finished art.
+- No C# geography, WF32 P1i/P1j source art, G4/G5 light, G6–G10, normal Hunt default, AR5 or alternate engine was modified. The 390px original source remains ~74.3% covered; no source pixels were stretched or cloned.
+
+**Mandatory AR4-B stop:** hold PR #459 as **draft/unmerged** pending focused owner feedback on crisp native pixels, road distribution/edges, cliff/stone height and monastery scale/composition. Do not promote technical CI success to visual approval or merge.
+
+## 1 November 2026 — native 32px source-frame comparison after visual rejection
+
+- The owner rejected the actual AR4-A3 captures as **not yet a convincing 32px game** and supplied a crisp pixel-art town reference. The P1i 1024×1568 underpaint and its per-pixel seven-weight RGB averaging are still retained *unaltered* as `?arenaTerrain=materials` for a legitimate A/B baseline. Passing AR4-A3 CI never meant art acceptance.
+- A separate `?arenaTerrain=source32` **prototype-only** path now uses the exact original #429 `wf-original-32.v2` 232×133 atlas (22 native 32×32 source frames, each with atlas padding; source Git blob `99924850581f7d5218a25ba0b59553aa438c866e`). It takes the same C# seven-surface preview, chooses the dominant material at stable 4px visual clusters, and copies individual authored source pixels into a one-time world-space raster. It does **not** interpolate RGB between surface types, bilinear-filter sprites, stretch source pixels, make fake light/shadows, change C# geometry, or replace G materials.
+- Grass/soil/mud use the original frames; **ordinary Road only borrows soil as a clearly provisional comparison**, while monastery whole-stone paving, rocks/cliffs, water and ice retain named diagnostic colors. Original grass/soil/mud edge frames, continuously keyed masonry, P1j grass/rock props, scale/occlusion, road wear and cliff faces still require source-authoring and owner review. This early candidate is explicitly *not* a finished transition/landmark composition; 32px terrain tiles repeat across the world, unlike the separate continuous P1i bank. Diagnostics expose `prototypeOnly`/`repeatedTiles`, and no source-approval flags were promoted.
+- The source32 atlas is read once, cached into the existing single-site raster path, and never generated per render frame. A numeric lattice of immutable C# sample weights removed costly per-cluster allocations: a synthetic Node composition of 950×1550 and 1014×2110 pixels took approximately **26/25 ms** on this desktop, respectively (not phone profiling). All **19 focused Node tests** passed, including an exact atlas Git-blob fingerprint/PNG IHDR/frame-padding test, and the browser test now requests *additional* true-Hunt 320/390px captures **after** the original P1i captures without modifying their provenance. CI and actual owner visual judgment must follow the commit.
+- Art research: [Tiled terrain sets](https://doc.mapeditor.org/en/stable/manual/terrain/) document explicit edge/corner combinations; [Unity Pixel Perfect Camera](https://docs.unity3d.com/Packages/com.unity.2d.pixel-perfect@latest/) and [Godot 2D pixel art](https://docs.godotengine.org/en/stable/tutorials/rendering/multiple_resolutions.html) explain native pixel sampling and integer scaling. These are design principles only; no reference pixel files were copied.
+
+**Gate remains closed:** PR #459 stays a draft. The new atlas candidate is comparative evidence, not an AR4-B approval, source-art #429 merge, full 390px continuous-bank extension, P1j stone/vegetation acceptance, AR5 dressing, AR4-C shadows, or production deployment.
+
+### First source32 CI defect and correction
+
+- First source32 CI run [41287641491](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/41287641491) preserved the previous P1i captures but timed out in all three *new* source32 browser cases (47/50 tests in shard 1 passed). The actual asset request returned HTTP 200; inspection of original blob `999248...` proved its IHDR is **232×133**, not the incorrectly assumed 232×132. Its final pixel row is atlas padding. The loader rejected the legitimate source image for that single-pixel dimension mismatch. No world/lighting/C# data was involved.
+- Corrected the loader contract to 232×133, and added a CI-facing integrity regression test for the exact original Git blob, PNG dimensions, 22 native frames and their 1px outer padding. **Fresh true-Hunt browser capture is required before declaring the defect fixed.**
+
+### Corrected 32px review evidence — actual gameplay, not visual acceptance
+
+- Corrected source commit `981b317fa6bda202a20431211861bdd0323f200c` passed [browser run 41288858516](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/41288858516), **50/50 browser shard 1**, including all three new real-Hunt source32 captures. PNGs are retained individually under `docs/evidence/ar4-b-source32-2026-11-01/` alongside their exact run/commit provenance.
+- The forest screenshot at **320×568** now contains actual crisp 32px authored pixel clusters. Its repeating grass tiles and 4px-blocky, insufficiently authored road transitions are still visually obvious. Do **not** confuse crisp sampling with polished terrain art.
+- The mountain pass and C# monastery focus at **390×844** expose important unfinished art: cliffs/rocks are still flat diagnostic polygons; monastery structures are taupe/tan outline blocks, not authored 2.5D roofs, walls or stone; roads are unconvincing. This is not an acceptable AR4-B target yet.
+- The next source-gated art pass requires non-repetitive grass/soil cluster composition, a full road boundary/corner/intersection grammar and genuine stone/architecture/height-matched props. The original P1i/P1j appearance gates and all C#/G engine boundaries remain mandatory. **Do not merge or mark AR4-B approved.**
+
+## 2026-11-01 AR4-B quiet-grass/road study checkpoint — visual approval still pending
+
+- The owner answered **“Yes” to the native 32px pixel density/crispness**, not to the
+  material artwork, terrain composition, mountains, monastery, or AR4-B gate.
+- Prototype code commit [`164d7ec`](https://github.com/pjotrcasteel/Wyrmforge/commit/164d7ec75679b0014d5bb47e591a09b5f7b46afc)
+  introduced the independent offline-authored quiet-grass/compacted-road atlas, with
+  four directional edges and four corners. It adds `?arenaTerrain=source32b` and
+  leaves `source32`, P1i materials, normal Hunts, all C# AR3 movement/geography,
+  G4/G5 shared lighting, and original WF32 #429 artwork untouched.
+- Follow-up code commit [`fa14eb1`](https://github.com/pjotrcasteel/Wyrmforge/commit/fa14eb1c3de96bebe6bbfe1553bac65b8b8b533c)
+  increases the bank to **12 quiet grass tiles, six road interiors, four directional
+  seams and four corners (26 32px frames)** and darkens authored earth/grass joins.
+  The independent atlas lives at `wwwroot/art/terrain/wf32/ar4b-quiet/atlas.png`;
+  its editable source is `tools/art/prototypes/ar4-wf32-quiet-road-study.mjs`.
+  Its provenance, PNG bytes and frame rectangles are tested.
+- All screenshots in `docs/evidence/ar4-b-quiet-road-2026-11-01/` are **genuine
+  CI Playwright Town→Chart→Hunt captures on `fa14eb1`**. [Browser run
+  41292452400](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/41292452400)
+  records the 320×568 Wet Forest Hunt, 390×844 mountain pass and monastery
+  spectator view individually. They are evidence of a technical presentation
+  experiment, not an art approval.
+- **Unresolved visual defects:** distinct square moss patterns persist despite
+  reduced grass density; the road still follows aliased C# winner contours and
+  needs a complete authored mixed edge/corner grammar; cliffs are large flat
+  slate-blue diagnostic polygons without WF32 authored faces or height cues;
+  monastery paving/building remain diagnostic and visually inadequate. 2.5D
+  scene composition, vegetation silhouettes, seed variety, mobile perf and
+  stonework are **not approved**.
+- Preserve these captures, keep PR #459 **draft**, and stop at **AR4-B owner visual
+  gate**. Do not merge, run AR4-C, claim stone source approval or conflate a green
+  browser suite with acceptable visual art.
+
+## 2026-11-01 AR4-B world-continuous pixel source checkpoint — pending visual gate
+
+- Review-only code commit [`1859074`](https://github.com/pjotrcasteel/Wyrmforge/commit/185907464358a0b051d54c0eee246e630dfe2a3b)
+  adds `?arenaTerrain=source32c`: offline-authored, truly world-aligned
+  **1024×2112 single-pixel grass and road source windows** with no 32px/256px
+  stamp repetition. Follow-up [`e1c43b7`](https://github.com/pjotrcasteel/Wyrmforge/commit/e1c43b79e098b5b1e63930a0962753b7959a3300)
+  prevents wasteful loading of the unrelated P1i banks in this mode.
+  Previous `materials`, `source32` and `source32b` modes remain unchanged.
+- This is **code-authored source-only pixel art** reusing the original WF32
+  palette/shape vocabulary, not a replacement for #429, not a runtime
+  texture or C# geography engine, and not an accepted material.
+  The editable painter source and native banks are under
+  `tools/art/prototypes/ar4-wf32-forest-world-study.mjs` and
+  `wwwroot/art/terrain/wf32/ar4b-world/`. Tests independently reproduce
+  both exact PNG byte sequences from source.
+- New real browser snapshots captured via [run
+  41294058530](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/41294058530)
+  on e1c43b7, archived individually in
+  `docs/evidence/ar4-b-world-source-2026-11-01/`. At 320×568 the forest
+  **no longer displays a regular 32px material-tile grid**, but the art
+  is sparse, the C# road seam still needs authored organic transitions,
+  and mountain/monastery stone and 2.5D height remain flat diagnostics.
+- Owner `Yes` was pixel crispness ONLY. No AR4-B material/scene acceptance,
+  no stone approvals, no AR4-C, no merge. Pause for explicit owner visual
+  review and targeted source art direction before production promotion.

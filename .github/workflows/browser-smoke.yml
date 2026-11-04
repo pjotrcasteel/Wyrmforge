@@ -125,6 +125,44 @@ jobs:
           --logger "console;verbosity=normal"
           --blame-hang-timeout 7m --blame-hang-dump-type none
 
+      # AR4 owner gate: real PNGs from this Playwright session, readable individually
+      # even on mobile without downloading an artifact ZIP. PR-only diagnostic output.
+      - name: Expose AR4 in-Hunt review images for owner inspection
+        if: ${{ always() && matrix.shard == 1 && startsWith(github.head_ref, 'feat/ar4-wf32-material-binding-') }}
+        run: |
+          evidence_dir="artifacts/browser/shard-1"
+          for proof_file in \
+            "$evidence_dir/ar4-forest-fork-semantic-320.png" \
+            "$evidence_dir/ar4-forest-fork-native-wf32-320.png" \
+            "$evidence_dir/ar4-mountain-pass-native-wf32-390.png" \
+            "$evidence_dir/ar4-mountain-monastery-native-wf32-390.png" \
+            "$evidence_dir/ar4-mountain-monastery-csharp-focus-390.png" \
+            "$evidence_dir/ar4-mountain-pass-moving-camera-390.png" \
+            "$evidence_dir/ar4-forest-fork-source32-prototype-320.png" \
+            "$evidence_dir/ar4-mountain-pass-source32-prototype-390.png" \
+            "$evidence_dir/ar4-mountain-monastery-source32-prototype-390.png" \
+            "$evidence_dir/ar4-forest-fork-quiet-road-study-320.png" \
+            "$evidence_dir/ar4-mountain-pass-quiet-road-study-390.png" \
+            "$evidence_dir/ar4-mountain-monastery-quiet-road-study-390.png" \
+            "$evidence_dir/ar4-forest-fork-world-source-320.png" \
+            "$evidence_dir/ar4-mountain-pass-world-source-390.png" \
+            "$evidence_dir/ar4-mountain-monastery-world-source-390.png" \
+            "$evidence_dir/ar4-forest-fork-stone-ground-study-320.png" \
+            "$evidence_dir/ar4-mountain-pass-stone-ground-study-390.png" \
+            "$evidence_dir/ar4-mountain-monastery-stone-ground-study-390.png" \
+            "$evidence_dir/ar4-forest-fork-wang-road-study-320.png" \
+            "$evidence_dir/ar4-forest-fork-wang-road-v2-moving-320.png" \
+            "$evidence_dir/ar4-forest-fork-wang-world-core-320.png" \
+            "$evidence_dir/ar4-forest-fork-wang-world-core-moving-320.png" \
+            "$evidence_dir/ar4-mountain-pass-wang-road-study-390.png" \
+            "$evidence_dir/ar4-mountain-monastery-wang-road-study-390.png"; do
+            if [ -s "$proof_file" ]; then
+              printf 'AR4_IMAGE_BEGIN %s\n' "$(basename "$proof_file")"
+              base64 -w 32768 "$proof_file"
+              printf '\nAR4_IMAGE_END\n'
+            fi
+          done
+
       - name: Preserve shard evidence
         if: always()
         uses: actions/upload-artifact@v4

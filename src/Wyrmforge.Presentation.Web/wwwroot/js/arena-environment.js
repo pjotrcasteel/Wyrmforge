@@ -6,6 +6,10 @@ import { drawCloisterWall, drawCloisterMist, drawCloisterReflections, drawCloist
 import { artReady, artGeneration, artTilePattern, drawArtFrame } from './art-atlas.js';
 import { createTerritoryWallLayers, drawTerritoryWall, drawOpenedGateRubble } from './arena-territory-walls.js';
 import { liveWetForestArtworkGeneration } from './arena-live-wet-forest-materials.js';
+import { WORLD_SITE_MATERIALS, worldSiteMaterialName, normalizeWorldSiteMaterialWeights,
+    worldSiteMaterialCacheKey, worldSiteSourceBindings } from './world-site-material-binding.js';
+import { worldSiteMaterialModeEnabled, worldSitePixel32ModeEnabled, worldSiteQuietPixelModeEnabled, worldSiteWorldPixelModeEnabled, worldSiteStoneGroundModeEnabled, worldSiteAuthoredWangModeEnabled, worldSiteWangCoreModeEnabled, drawWorldSiteNeutralAlbedo,
+    worldSiteNeutralSourceCoverage } from './world-site-neutral-albedo.js';
 
 // The world is projected from canonical C# terrain state. Drawing never changes simulation outcomes.
 const textures = new Map();
@@ -493,14 +497,14 @@ const siteSurfaceColors = Object.freeze({
     ShallowWater: '#387f9d',
     GlacialIce: '#a5bbc8',
 });
-const siteSurfaceNames = Object.freeze(['Soil', 'Grass', 'Road', 'Mud', 'Rock', 'ShallowWater', 'GlacialIce']);
+const siteSurfaceNames = Object.freeze(WORLD_SITE_MATERIALS.map(spec => spec.name));
 
 export function semanticSiteModeEnabled() {
     return new URLSearchParams(globalThis.location?.search ?? '').get('arenaTerrain') === 'semantic';
 }
 
 function semanticMaterialName(material) {
-    return typeof material === 'number' ? siteSurfaceNames[material] : material;
+    return worldSiteMaterialName(material);
 }
 
 // Visualize the exact C# polygon used by movement, sight and projectile collision.
@@ -516,7 +520,7 @@ export function drawWorldSiteElevation(ctx, geography, width, height) {
         preview.samples?.length !== preview.columns * preview.rows ||
         typeof document === 'undefined') return false;
 
-    const cacheKey = `${geography.siteId ?? ''}:${geography.worldSeed ?? ''}:${preview.columns}x${preview.rows}`;
+    const cacheKey = worldSiteMaterialCacheKey(geography, preview.columns, preview.rows, 'semantic-ar3');
     let canvas = elevationImages.get(cacheKey);
     if (!canvas) {
         canvas = document.createElement('canvas');
@@ -534,8 +538,6 @@ export function drawWorldSiteElevation(ctx, geography, width, height) {
             [75, 112, 124], // shallow water
             [171, 190, 202],// glacial ice
         ];
-        const weights = ['soilWeight', 'grassWeight', 'roadWeight', 'mudWeight', 'rockWeight',
-            'waterWeight', 'iceWeight'];
         let highest = 0;
         for (const sample of preview.samples)
             highest = Math.max(highest, Number(sample.heightMeters) || 0);
@@ -543,13 +545,14 @@ export function drawWorldSiteElevation(ctx, geography, width, height) {
 
         for (let index = 0; index < preview.samples.length; index++) {
             const sample = preview.samples[index];
-            const elevation = Math.max(0, Math.min(1, sample.heightMeters / maxHeight));
-            const grade = Math.max(0, Math.min(1, sample.grade));
+            const normalized = normalizeWorldSiteMaterialWeights(sample);
+            const elevation = Math.max(0, Math.min(1, (Number(sample.heightMeters) || 0) / maxHeight));
+            const grade = Math.max(0, Math.min(1, Number(sample.grade) || 0));
             const shade = .82 + elevation * .18 - grade * .16;
             for (let channel = 0; channel < 3; channel++) {
                 let tone = 0;
                 for (let material = 0; material < palette.length; material++)
-                    tone += palette[material][channel] * Math.max(0, sample[weights[material]] ?? 0);
+                    tone += palette[material][channel] * normalized[siteSurfaceNames[material]];
                 image.data[index * 4 + channel] = Math.max(0, Math.min(255, Math.round(tone * shade)));
             }
             image.data[index * 4 + 3] = 255;
@@ -617,7 +620,7 @@ function drawWorldSitePaths(ctx, paths, width, height) {
     }
 }
 
-export function drawWorldSiteLandscape(ctx, geography, width, height) {
+export function drawWorldSiteLandscape(ctx, geography, width, height, sourceStoneGround = false) {
     const landscape = geography?.landscape;
     if (!landscape || !Array.isArray(landscape.obstacles)) return false;
     const palette = {
@@ -648,7 +651,11 @@ export function drawWorldSiteLandscape(ctx, geography, width, height) {
             else ctx.lineTo(point.x * width, point.y * height);
         }
         ctx.closePath();
-        ctx.fill();
+        const sourceCliff = sourceStoneGround && (obstacle.kind === 'cliff' ||
+            obstacle.kind === 'cliff-face');
+        // Source32d already clipped the authored rock-face pixels to this exact
+        // C# footprint in the one-time albedo. Do not cover them with flat paint.
+        if (!sourceCliff) ctx.fill();
         if (obstacle.kind.endsWith('cliff-face')) {
             // A 1–3 m escarpment reads as a continuous weathered rock lip,
             // not as outlined blocks or a man-made wall. Geometry is C# owned.
@@ -663,6 +670,7 @@ export function drawWorldSiteLandscape(ctx, geography, width, height) {
         } else {
             ctx.stroke();
         }
+        if (sourceCliff) continue;
         // Show an unobtrusive landmark *inside* the precise C# footprint.
         // This is diagnostic hatching, not added collision, illumination or a
         // second procedural decorator. Nothing extends beyond the authored shape.
@@ -765,26 +773,47 @@ export function drawSemanticSiteFloor(ctx, geography, width, height, geographyAc
 export function drawArenaEnvironment(ctx, environment, width, height, elapsedSeconds = 0,
     approvedAtlas = null, lightingMode = 'canvas', flatColorsOnly = false) {
     if (!environment) return false;
-    const semantic = semanticSiteModeEnabled() && drawSemanticSiteFloor(ctx, environment.geography, width, height, environment.geographyActive === true);
+    // AR4's native WF32 neutral view is opt-in and shares the already authoritative C# geography.
+    // The G5 GPU material/caster pipeline remains separate until AR4-C owner acceptance.
+    const neutral = lightingMode !== 'gpu' && environment.geographyActive === true &&
+        drawWorldSiteNeutralAlbedo(ctx, environment.geography, width, height);
+    const semantic = !neutral && (semanticSiteModeEnabled() || worldSiteMaterialModeEnabled()) &&
+        drawSemanticSiteFloor(ctx, environment.geography, width, height, environment.geographyActive === true);
     // GPU receivers sample source albedo, not already painted directional shadows.
     // Use one terrain mode for the floor, reflections and elevations to avoid
     // allocating a second world-sized atlas on a portrait device.
     let cloister = null;
-    if (!semantic) {
+    if (!semantic && !neutral) {
         const texture = terrainTexture(environment, width, height, approvedAtlas, flatColorsOnly, lightingMode === 'gpu');
         ctx.drawImage(texture.image, 0, 0, width, height);
         cloister = texture.cloister;
     }
     // On the AR1 run-wide geometry preview, painted and semantic palettes display
     // the same C# colliders. The default Hunt never activates these new obstacles.
-    if (!semantic && environment.geographyActive) {
+    if (!semantic && !neutral && environment.geographyActive) {
         drawWorldSiteTopography(ctx, environment.geography, width, height);
         drawWorldSitePaths(ctx, environment.geography?.landscape?.localPaths, width, height);
         drawWorldSiteLandscape(ctx, environment.geography, width, height);
         drawWorldSiteDiscoveries(ctx, environment.geography, width, height);
     }
-    if (semantic) {
+    if (neutral) {
+        // The source albedo encodes C# material weights; C# obstacles and discoveries still sit above it.
+        drawWorldSiteLandscape(ctx, environment.geography, width, height,
+            worldSiteStoneGroundModeEnabled());
+        drawWorldSiteDiscoveries(ctx, environment.geography, width, height);
+    }
+    if (semantic || neutral) {
+        const sourceCoverage = neutral ? worldSiteNeutralSourceCoverage(width, height) : null;
         globalThis.__wyrmforgeAr0Geography = {
+            materialView: neutral ? worldSiteWangCoreModeEnabled() ? 'source32-wang-core-study'
+                : worldSiteAuthoredWangModeEnabled() ? 'source32-wang-study'
+                : worldSiteStoneGroundModeEnabled() ? 'source32-ground-study'
+                : worldSiteWorldPixelModeEnabled() ? 'source32-world-study'
+                : worldSiteQuietPixelModeEnabled() ? 'source32-quiet-study'
+                : worldSitePixel32ModeEnabled() ? 'source32-prototype'
+                : (sourceCoverage?.complete ? 'albedo' : 'partial-albedo')
+                : worldSiteMaterialModeEnabled() ? 'missing-source-fallback' : 'semantic',
+            sourceCoverage,
             siteId: environment.geography.siteId,
             regionId: environment.geography.regionId,
             seed: environment.geography.worldSeed,
@@ -808,16 +837,20 @@ export function drawArenaEnvironment(ctx, environment, width, height, elapsedSec
             monasteryStructureCount: environment.geography.landscape?.obstacles?.filter(
                 obstacle => obstacle.kind?.startsWith('monastery-')).length ?? 0,
             geographyActive: environment.geographyActive === true,
+            materialSources: worldSiteSourceBindings(environment.geography).map(source => ({
+                material: source.material, family: source.sourceFamily,
+                gate: source.sourceGate, sourceApproved: source.sourceApproved,
+            })),
         };
     }
     // Render low-angle shadows from CURRENT physical props, never frozen floor art:
     // destroyed trees and ruins lose their shadows in the same C# simulation frame.
-    if (!semantic && lightingMode !== 'gpu' && environment.habitat === 'WetForest' && environment.wetForest) {
+    if (!semantic && !neutral && lightingMode !== 'gpu' && environment.habitat === 'WetForest' && environment.wetForest) {
         drawWetForestCastShadows(ctx, environment.seed, environment.props ?? [], width, height);
         drawWetForestFirelight(ctx, environment, width, height, elapsedSeconds);
     }
     // With the atlas loaded, closed territory walls are depth-sorted layers (getArenaCloisterElevations).
-    const spriteWalls = !semantic && !cloister && artReady();
+    const spriteWalls = !semantic && !neutral && !cloister && artReady();
     for (const barrier of environment.barriers ?? []) {
         if (spriteWalls) {
             if (barrier.open && barrier.kind === 'gate') drawOpenedGateRubble(ctx, barrier, width, height);
@@ -827,7 +860,7 @@ export function drawArenaEnvironment(ctx, environment, width, height, elapsedSec
             drawTerritoryBarrier(ctx, barrier, environment.element, width, height, elapsedSeconds);
     }
     for (const supply of environment.supplies ?? []) drawSupply(ctx, supply, width, height, elapsedSeconds);
-    if (!semantic && !flatColorsOnly) {
+    if (!semantic && !neutral && !flatColorsOnly) {
         drawTerritoryMotes(ctx, environment, width, height, elapsedSeconds);
         drawCloisterMist(ctx, cloister, elapsedSeconds);
     }
