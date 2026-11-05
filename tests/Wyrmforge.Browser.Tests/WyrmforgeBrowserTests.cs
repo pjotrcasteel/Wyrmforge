@@ -2840,7 +2840,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
 
         await OpenAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "More options" }).ClickAsync();
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Hunt preparation", Exact = true }).ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Rites & offerings", Exact = true }).ClickAsync();
         var rite = Page.GetByRole(AriaRole.Button, new() { Name = "INVOKE ASCENDANT RITE" });
         await Expect(rite).ToBeVisibleAsync();
         await rite.ClickAsync();
@@ -2849,7 +2849,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         var overflow = await Page.EvaluateAsync<double>("() => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - innerWidth");
         Assert.IsLessThanOrEqualTo(1, overflow, "Ascendant rite should not overflow portrait width.");
 
-        await EnterFirstTrailAsync();
+        await EnterSelectedRiteTrailAsync();
         await Expect(Page.GetByLabel("Current encounter objective")).ToBeVisibleAsync();
     }
 
@@ -2867,7 +2867,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
 
         await OpenAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "More options" }).ClickAsync();
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Hunt preparation", Exact = true }).ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Rites & offerings", Exact = true }).ClickAsync();
         var fire = Page.Locator("section.ascendant-rite-card:not(.storm) button.ascendant-rite-action");
         var storm = Page.Locator("section.ascendant-rite-card.storm button.ascendant-rite-action");
         await Expect(fire).ToBeVisibleAsync();
@@ -2883,7 +2883,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await ScreenshotAsync("mobile-two-ascendant-rites.png");
         var overflow = await Page.EvaluateAsync<double>("() => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - innerWidth");
         Assert.IsLessThanOrEqualTo(1, overflow);
-        await EnterFirstTrailAsync();
+        await EnterSelectedRiteTrailAsync();
         await Expect(Page.GetByLabel("Current encounter objective")).ToBeVisibleAsync();
     }
 
@@ -3919,6 +3919,15 @@ public sealed class WyrmforgeBrowserTests : PageTest
         // A normal (non-review) page never displays the testing consent screen.
         await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/", new() { WaitUntil = WaitUntilState.NetworkIdle });
         Assert.AreEqual(0, await Page.Locator("[data-g4-preflight]").CountAsync());
+    }
+
+    private async Task EnterSelectedRiteTrailAsync()
+    {
+        await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN ASCENDANT RITE", Exact = true }).ClickAsync();
+        await Expect(Page.GetByText("Choose your trail.", new() { Exact = true })).ToBeVisibleAsync();
+        await Page.Locator("button.route-node.available").First.ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^Enter (rare )?trail$") }).ClickAsync();
+        await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
     }
 
     private async Task EnterFirstTrailAsync(string gateLabel = "BEGIN HUNT")

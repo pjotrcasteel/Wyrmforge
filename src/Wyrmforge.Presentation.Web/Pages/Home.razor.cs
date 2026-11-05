@@ -169,11 +169,25 @@ public partial class Home
     private void SelectAscendant(DragonId? selected) =>
         selectedAscendant = selected is { } wyrm && AscendantRiteCatalog.IsAvailable(wyrm) && greatHunt.IsSealed(wyrm, spellMastery) ? selected : null;
 
-    private Task StartRunAsync() => BeginRunAsync(
-        CurrentRegion.Id == Wyrmforge.Application.World.RegionCatalog.CinderFrontierId && selectedAscendant is null
-            ? Wyrmforge.Application.Runs.Hunts.HuntSelection.FireTierOne : null);
+    // The World Gate's Frost path remains untiered until its own ladder is authored.
+    // It must never inherit an Ascendant rite selected on the separate preparation screen.
+    private Task StartLegacyExplorationAsync() => CurrentRegion.Id == Wyrmforge.Application.World.RegionCatalog.FrostRegionId
+        ? BeginRunAsync(null)
+        : Task.CompletedTask;
 
-    private async Task BeginRunAsync(Wyrmforge.Application.Runs.Hunts.HuntSelection? hunt)
+    private async Task StartAscendantRiteAsync()
+    {
+        if (selectedAscendant is not { } wyrm || !AscendantRiteCatalog.IsAvailable(wyrm)
+            || !greatHunt.IsSealed(wyrm, spellMastery)) return;
+
+        // A saved Frost region does not contain Ashfang. Move to the starting region
+        // so the explicitly selected rite cannot silently turn into a normal Hunt.
+        if (CurrentRegion.InfluenceOf(wyrm) == Wyrmforge.Application.World.WyrmInfluence.Absent)
+            await SelectRegionAsync(Wyrmforge.Application.World.RegionCatalog.CinderFrontierId);
+        await BeginRunAsync(null, wyrm);
+    }
+
+    private async Task BeginRunAsync(Wyrmforge.Application.Runs.Hunts.HuntSelection? hunt, DragonId? rite = null)
     {
         // Character creation owns magical affinity; Hunts never prompt for a new primary.
         if (characterSchool is null || preferredPrimary is null) return;
@@ -186,7 +200,8 @@ public partial class Home
         newlyConqueredAscendants = [];
         bestiaryDiscoveries = null;
         activeHunt = hunt;
-        activeAscendant = hunt is null && selectedAscendant is { } wyrm && greatHunt.IsSealed(wyrm, spellMastery) ? wyrm : null;
+        activeAscendant = hunt is null && rite is { } wyrm && AscendantRiteCatalog.IsAvailable(wyrm)
+            && greatHunt.IsSealed(wyrm, spellMastery) ? wyrm : null;
         summary = null;
         // The character's signature is committed automatically before combat begins.
         // No consumables or discoveries are charged until Arena confirms that commitment.

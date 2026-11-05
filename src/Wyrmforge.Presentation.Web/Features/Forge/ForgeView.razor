@@ -176,10 +176,10 @@
                 <CodexView Codex="Codex" Bestiary="Bestiary" Progression="Progression" Masteries="Masteries" Hunt="Hunt" />
                 break;
             case ShellSection.Prepare:
-                <RunHubView RewardCaches="RewardCaches" AtlasUnlocked="Progress.AtlasUnlocked" Selection="Selection" Vault="Vault" Progression="Progression" Masteries="Masteries" Hunt="Hunt" SelectedOffering="SelectedOffering" BestScore="BestScore" AscendantSelected="AscendantSelected" OnAscendantChanged="OnAscendantChanged" OnStart="StartAsync" OnFeedback="OnFeedback" LeaderboardUnlocked="Progress.LeaderboardUnlocked" OnLeaderboard="OnLeaderboard" OnEditBuild="() => NavigateAsync(ShellSection.Build)" Laboratory="@(SpellcraftOpen ? Laboratory : null)" Hunter="Hunter" Region="Region" World="World" OnEditForge="() => NavigateAsync(ShellSection.Forge)" ForgeUnlocked="ForgeUnlocked" />
+                <RunHubView RewardCaches="RewardCaches" AtlasUnlocked="Progress.AtlasUnlocked" Selection="Selection" Vault="Vault" Progression="Progression" Masteries="Masteries" Hunt="Hunt" SelectedOffering="SelectedOffering" BestScore="BestScore" AscendantSelected="AscendantSelected" OnAscendantChanged="OnAscendantChanged" OnStart="StartAsync" OnOpenWorldGate="() => NavigateAsync(ShellSection.Gate)" OnFeedback="OnFeedback" LeaderboardUnlocked="Progress.LeaderboardUnlocked" OnLeaderboard="OnLeaderboard" OnEditBuild="() => NavigateAsync(ShellSection.Build)" Laboratory="@(SpellcraftOpen ? Laboratory : null)" Hunter="Hunter" Region="Region" World="World" OnEditForge="() => NavigateAsync(ShellSection.Forge)" ForgeUnlocked="ForgeUnlocked" />
                 break;
             case ShellSection.Gate:
-                <Wyrmforge.Presentation.Web.Features.WorldGate.WorldGateView Region="Region" World="World" Advancement="Advancement" Access="RegionAccess" OnRegionChanged="OnRegionChanged" OnExplore="StartAsync" OnStartHunt="OnStartHunt" FireClearedTier="FireClearedTier" />
+                <Wyrmforge.Presentation.Web.Features.WorldGate.WorldGateView Region="Region" World="World" Advancement="Advancement" Access="RegionAccess" OnRegionChanged="OnRegionChanged" OnExplore="ExploreAsync" OnStartHunt="OnStartHunt" FireClearedTier="FireClearedTier" />
                 break;
             case ShellSection.Options:
                 <div class="menu-options settings-screen" aria-label="Settings">
@@ -191,7 +191,7 @@
                         <h3>Other</h3>
                         @if (!Progress.TutorialRun)
                         {
-                            <button @onclick="() => Navigate(ShellSection.Prepare)">Hunt preparation</button>
+                            <button @onclick="() => Navigate(ShellSection.Prepare)">Rites &amp; offerings</button>
                             <button @onclick="() => OnQuests.InvokeAsync()">Quests@(QuestRewards > 0 ? $" · {QuestRewards}" : string.Empty)</button>
                             <button @onclick="() => Navigate(ShellSection.Gate)">World Gate and regions</button>
                         }
@@ -231,6 +231,7 @@
     [Parameter] public EventCallback<DragonEssenceId> OnOfferingChanged { get; set; }
     [Parameter] public EventCallback<ForgeMasteryId> OnForgeMastery { get; set; }
     [Parameter] public EventCallback OnStart { get; set; }
+    [Parameter] public EventCallback OnExplore { get; set; }
     [Parameter] public EventCallback<Wyrmforge.Application.Runs.Hunts.HuntSelection> OnStartHunt { get; set; }
     [Parameter] public int FireClearedTier { get; set; }
     [Parameter] public EventCallback OnFeedback { get; set; }
@@ -309,7 +310,7 @@
             : DivineArchetypeCatalog.Get(school).Name
         : "Signature";
 
-    private string SectionTitle => section == ShellSection.Prepare ? "Hunt preparation" : section == ShellSection.Options ? "Settings" : Navigation.Single(item => item.Section == section).Label;
+    private string SectionTitle => section == ShellSection.Prepare ? "Rites & offerings" : section == ShellSection.Options ? "Settings" : Navigation.Single(item => item.Section == section).Label;
     private bool IsUnlocked(ShellSection value) => value switch
     {
         ShellSection.Run or ShellSection.Prepare or ShellSection.Options => true,
@@ -349,6 +350,7 @@
     private Task SelectOfferingAsync(DragonEssenceId id) => OnOfferingChanged.InvokeAsync(id);
     private Task ForgeAsync(ForgeMasteryId id) => OnForgeMastery.InvokeAsync(id);
     private Task StartAsync() => OnStart.InvokeAsync();
+    private Task ExploreAsync() => OnExplore.InvokeAsync();
     private Task ActivateTownLocationAsync(ShellSection destination)
     {
         if (!IsUnlocked(destination))
