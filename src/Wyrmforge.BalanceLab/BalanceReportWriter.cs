@@ -86,6 +86,8 @@ internal static class BalanceReportWriter
         builder.AppendLine();
         builder.AppendLine($"Generated: {report.GeneratedAtUtc:O}");
         builder.AppendLine();
+        builder.AppendLine($"Scenario: **{report.Scenario}**");
+        builder.AppendLine();
         builder.AppendLine($"Runs: **{report.TotalRuns:N0}** ({report.RunsPerCombination} per build/agent combination)");
         builder.AppendLine();
         builder.AppendLine("| Cohort | Build | Pts | Agent | Extract | Defeat | Wyrm reach | Wyrm win | Evolve | Evo count | First Wyrm | Climaxes | Timeout | Decision fail | Median depth | P90 depth | Kills/min | XP/min | XP collected | Min HP | Peak enemies | Level | Essence | Synergy |");
@@ -144,6 +146,9 @@ internal static class BalanceReportWriter
         builder.AppendLine();
         builder.AppendLine("## Interpretation guardrails");
         builder.AppendLine();
+        builder.AppendLine("- Generic free-play runs do not select a tiered Hunt. They must not be used to judge Fire Tier-I route, Ashfang, Essence, or extraction outcomes.");
+        builder.AppendLine("- Selected Fire Tier-I runs use the actual Hunt selection, first-hunt tutorial rules, a fresh Fire oath, " +
+            "and damageable self-play; agent failures are not automatically gameplay failures.");
         builder.AppendLine("- Compare builds only inside the same cohort and agent; cohorts intentionally use different Arcane budgets.");
         builder.AppendLine("- KeystoneRoute builds use one complete Keystone route; FullBuild builds use two-school 20-point plans.");
         builder.AppendLine("- Treat TimeLimit or DecisionFailure as agent/instrumentation problems before interpreting balance.");

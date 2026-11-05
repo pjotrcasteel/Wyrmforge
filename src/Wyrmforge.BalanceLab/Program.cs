@@ -3,6 +3,7 @@ using Wyrmforge.Domain.Spells;
 using Wyrmforge.Application.Abstractions.Randomness;
 using Wyrmforge.Application.Runs.SelfPlay;
 using Wyrmforge.Application.Runs.Simulation;
+using Wyrmforge.Application.Runs.Hunts;
 using Wyrmforge.BalanceLab;
 
 var options = BalanceLabOptions.Parse(args);
@@ -22,12 +23,25 @@ var driver = new RunSelfPlayDriver();
 var factory = new RunSimulationFactory(new SeededRandomSource(1));
 var personalities = Enum.GetValues<RunAgentPersonality>();
 
-var builds = options.FreshHunter
-    ? Enum.GetValues<SpellSchool>().Select(school => new SelfPlayBuildDefinition(
-        $"Fresh {school}", SelfPlayBuildCohort.FullBuild, school, new HashSet<string>(), Array.Empty<string>(), 0)).ToArray()
-    : SelfPlayBuildCatalog.All;
+IReadOnlyList<SelfPlayBuildDefinition> builds;
+if (options.SelectedHunt is not null)
+{
+    builds = [new SelfPlayBuildDefinition("Fresh Fire • selected Tier I", SelfPlayBuildCohort.FullBuild, SpellSchool.Fire,
+        new HashSet<string>(), Array.Empty<string>(), 0)];
+}
+else if (options.FreshHunter)
+{
+    builds = Enum.GetValues<SpellSchool>().Select(school => new SelfPlayBuildDefinition(
+        $"Fresh {school}", SelfPlayBuildCohort.FullBuild, school, new HashSet<string>(), Array.Empty<string>(), 0)).ToArray();
+}
+else
+{
+    builds = SelfPlayBuildCatalog.All;
+}
 
-Console.WriteLine($"Arena: {options.ArenaWidth} × {options.ArenaHeight}; fresh hunter: {options.FreshHunter}; contextual: {options.Contextual}");
+var scenario = options.SelectedHunt == HuntSelection.FireTierOne ? "selected-fire-tier-1" : "legacy-generic-free-play";
+Console.WriteLine($"Scenario: {scenario}; arena: {options.ArenaWidth} × {options.ArenaHeight}; " +
+    $"fresh hunter: {options.FreshHunter}; contextual: {options.Contextual}");
 
 foreach (var build in builds)
 {
@@ -37,7 +51,7 @@ foreach (var build in builds)
         {
             var seed = options.SeedStart + index;
             var simulation = factory.Create(build.SelectedNodes, seed: seed, progression: options.FreshHunter ? new ForgeProgressionState() : null,
-                contextualSpell: options.Contextual);
+                contextualSpell: options.Contextual, hunt: options.SelectedHunt, firstHunt: options.SelectedHunt is not null);
             var agent = new HeuristicRunAgent(personality, seed, build.PreferredSchool);
             var metrics = driver.Play(
                 build,
@@ -80,7 +94,11 @@ var control = aggregates
     .Select(row => ControlAggregate.Create(row.Build, row.Agent, results.Where(run => run.Build == row.Build && run.Agent == row.Agent).ToArray()))
     .ToArray();
 
-var report = new BalanceReport(DateTimeOffset.UtcNow, options.RunsPerCombination, results.Count, aggregates, wyrms, evolutions, draftSchools, control, results);
+var report = new BalanceReport(DateTimeOffset.UtcNow, options.RunsPerCombination, results.Count,
+    aggregates, wyrms, evolutions, draftSchools, control, results)
+{
+    Scenario = scenario,
+};
 await BalanceReportWriter.WriteAsync(report, options.OutputDirectory);
 
 Console.WriteLine($"Balance report written to {Path.GetFullPath(options.OutputDirectory)}");
