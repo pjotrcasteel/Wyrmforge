@@ -138,11 +138,11 @@ public sealed partial class RunSimulation
     }
 
     /// <summary>Elite payout: one larger shard, recorded once. Called only on a first death, so it can never pay twice.</summary>
-    private int ResolveEliteDefeat(EnemyState enemy, int baseExperience)
+    private int ResolveEliteDefeat(EnemyState enemy, int baseExperience, bool creditReward)
     {
         if (!enemy.IsElite) return baseExperience;
         var experience = (int)Math.Round(baseExperience * EliteAffixCatalog.ExperienceMultiplier);
-        if (CanEarnEncounterRewards) defeatedElites.Add(new EliteDefeat(enemy.Kind, enemy.Elite, experience));
+        if (creditReward) defeatedElites.Add(new EliteDefeat(enemy.Kind, enemy.Elite, experience));
         if (enemy.Elite == EliteAffix.Gravebound)
             hostileProjectiles.Add(new HostileProjectileState(enemy.Position, enemy.Position, GraveboundDelaySeconds, GraveboundRadius,
                 GraveboundDamage * EliteImpact(enemy), 0) { Style = HostileProjectileStyle.Grave });

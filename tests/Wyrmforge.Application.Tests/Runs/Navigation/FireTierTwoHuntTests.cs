@@ -206,6 +206,71 @@ public sealed class FireTierTwoHuntTests
             FallBackToRefuge(simulation);
         }
         Assert.AreEqual(3, simulation.RefugeReturns);
+
+        // The second real kill on a new attempt has never been rewarded before. It must still pay.
+        Assert.IsTrue(simulation.ChooseMapNode(firstRoad.Id));
+        KillHollowAndCollectExperience(simulation, 700);
+        KillHollowAndCollectExperience(simulation, 701);
+        var twoKills = simulation.CreateEvaluationSummary();
+        Assert.IsGreaterThan(firstAward.ExperienceEarned, twoKills.ExperienceEarned);
+        Assert.AreEqual(2, twoKills.Kills);
+        FallBackToRefuge(simulation);
+        Assert.IsTrue(simulation.ChooseMapNode(firstRoad.Id));
+        KillHollowAndCollectExperience(simulation, 702);
+        KillHollowAndCollectExperience(simulation, 703);
+        Assert.AreEqual(twoKills.ExperienceEarned, simulation.CreateEvaluationSummary().ExperienceEarned);
+        Assert.AreEqual(twoKills.Score, simulation.CreateEvaluationSummary().Score);
+        Assert.AreEqual(twoKills.Kills, simulation.CreateEvaluationSummary().Kills);
+    }
+
+    [TestMethod]
+    public void FallingBeforeTheWyrmDefeat_CannotConsumeHisFirstVictoryReward()
+    {
+        var simulation = Create(HuntSelection.FireTierTwo);
+        var map = Field<WyrmrealmMapState>(simulation, "mapState");
+        WalkToRefuge(map);
+        var refuge = map.AvailableNodes.Single(node => node.Refuge);
+        Complete(map, refuge);
+        Invoke(simulation, "CompleteTrail", refuge);
+        Resolve(simulation);
+        SetField(simulation, "trailExitPending", false);
+
+        while (!map.AvailableNodes.Any(node => node.Type == WyrmrealmNodeType.Dragon)) Complete(map, map.AvailableNodes[0]);
+        var wyrm = map.AvailableNodes.Single(node => node.Type == WyrmrealmNodeType.Dragon);
+        Assert.IsTrue(simulation.ChooseMapNode(wyrm.Id));
+        FallBackToRefuge(simulation);
+        Assert.AreEqual(0, simulation.CreateEvaluationSummary().DragonsSlain);
+
+        while (!map.AvailableNodes.Any(node => node.Type == WyrmrealmNodeType.Dragon)) Complete(map, map.AvailableNodes[0]);
+        Assert.IsTrue(simulation.ChooseMapNode(wyrm.Id));
+        Invoke(simulation, "SpawnDragon", DragonCatalog.Get(DragonId.Ashfang), 390d, 700d);
+        Invoke(simulation, "DefeatDragon", Field<DragonState>(simulation, "dragon"));
+        Assert.IsGreaterThan(0, simulation.CreateEvaluationSummary().ExperienceEarned);
+        Assert.AreEqual(1, simulation.CreateEvaluationSummary().DragonsSlain);
+    }
+
+    [TestMethod]
+    public void ExperienceCaches_PayEachDistinctCacheOnceAcrossRefugeRetries()
+    {
+        var simulation = Create(HuntSelection.FireTierTwo);
+        var map = Field<WyrmrealmMapState>(simulation, "mapState");
+        WalkToRefuge(map);
+        var refuge = map.AvailableNodes.Single(node => node.Refuge);
+        Complete(map, refuge);
+        Invoke(simulation, "CompleteTrail", refuge);
+        Resolve(simulation);
+        SetField(simulation, "trailExitPending", false);
+
+        var road = map.AvailableNodes[0];
+        Assert.IsTrue(simulation.ChooseMapNode(road.Id));
+        Assert.IsTrue(CreditExperienceCache(simulation, 0.25, 0.45));
+        Assert.IsTrue(CreditExperienceCache(simulation, 0.65, 0.45), "Two distinct supply caches must both pay.");
+        Assert.IsFalse(CreditExperienceCache(simulation, 0.25, 0.45));
+        FallBackToRefuge(simulation);
+        Assert.IsTrue(simulation.ChooseMapNode(road.Id));
+        Assert.IsFalse(CreditExperienceCache(simulation, 0.25, 0.45));
+        Assert.IsFalse(CreditExperienceCache(simulation, 0.65, 0.45));
+        Assert.IsTrue(CreditExperienceCache(simulation, 0.4, 0.6), "A newly discovered cache should still pay.");
     }
 
     [TestMethod]
@@ -252,6 +317,10 @@ public sealed class FireTierTwoHuntTests
         Invoke(simulation, "DamageTarget", hollow, hollow.Health + 1, null!, null!);
         Invoke(simulation, "CollectLooseExperienceShards");
     }
+
+    private static bool CreditExperienceCache(RunSimulation simulation, double x, double y) =>
+        (bool)typeof(RunSimulation).GetMethod("CreditEncounterExperienceCache", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .Invoke(simulation, [x, y])!;
 
     [TestMethod]
     public void FallBeforeTheRefugeIsReclaimed_EndsTheHuntNormally()

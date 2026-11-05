@@ -22,7 +22,6 @@ public sealed partial class RunSimulation
 
     private void GainExperience(int amount)
     {
-        if (!CanEarnEncounterRewards) return;
         experienceEarned += amount;
         experience += amount;
         TryLevelUp();
