@@ -23,11 +23,17 @@ public static class HuntQuestCatalog
         new("wyrm-4", "Know your prey", "Defeat all 4 Wyrms", HuntQuestMetric.Wyrms, 4, 60),
         new("essence-1", "Bring it home", "Secure 1 type of Essence", HuntQuestMetric.SecuredEssences, 1, 30),
         new("essence-4", "Essence hunter", "Secure 4 types of Essence", HuntQuestMetric.SecuredEssences, 4, 60),
-        new("depth-2", "Beyond Refuge", "Reach Depth II", HuntQuestMetric.Depth, 2, 30),
-        new("depth-3", "Into the deep", "Reach Depth III", HuntQuestMetric.Depth, 3, 30),
+        new("depth-2", "Beyond Refuge", "Reach Run Depth II in an untiered Frost Hunt", HuntQuestMetric.Depth, 2, 30),
+        new("depth-3", "Into the deep", "Reach Run Depth III in an untiered Frost Hunt", HuntQuestMetric.Depth, 3, 30),
         new("synergy-1", "Two become one", "Bind a synergy", HuntQuestMetric.Synergies, 1, 30),
         new("evolution-1", "A new form", "Evolve a spell", HuntQuestMetric.Evolutions, 1, 30),
     ];
 
     public static HuntQuest Get(string id) => All.Single(quest => quest.Id == id);
+
+    /// <summary>
+    /// Old evolution drafts cannot be earned through the current Hunt reward pool.
+    /// Keep the quest in All for previous save files and already earned or claimed credit.
+    /// </summary>
+    public static bool IsCurrentlyOffered(HuntQuest quest) => quest.Metric != HuntQuestMetric.Evolutions;
 }

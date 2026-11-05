@@ -10,7 +10,16 @@
 @using Wyrmforge.Domain.World
 
 <section class="run-hub">
-    <button class="enter-realm" @onclick="StartAsync">BEGIN HUNT</button>
+    @if (HasSelectedRite)
+    {
+        <button type="button" class="enter-realm" @onclick="StartAsync">BEGIN ASCENDANT RITE</button>
+        <p class="run-hub-hint">This Great Hunt rite uses run depths, separate from the World Gate's Wyrm tiers.</p>
+    }
+    else
+    {
+        <button type="button" class="enter-realm" @onclick="OpenWorldGateAsync">CHOOSE HUNT AT WORLD GATE</button>
+        <p class="run-hub-hint">Choose a lineage and Wyrm tier at the World Gate. Offerings prepared here carry into that Hunt.</p>
+    }
     @if (RewardCaches > 0)
     {
         <div class="quest-cache-ready">◆ @RewardCaches relic cache@(RewardCaches == 1 ? string.Empty : "s") · choose one relic when the next hunt begins</div>
@@ -133,6 +142,7 @@
     [Parameter] public DragonId? AscendantSelected { get; set; }
     [Parameter] public EventCallback<DragonId?> OnAscendantChanged { get; set; }
     [Parameter] public EventCallback OnStart { get; set; }
+    [Parameter] public EventCallback OnOpenWorldGate { get; set; }
     [Parameter] public EventCallback OnFeedback { get; set; }
     [Parameter] public EventCallback OnEditBuild { get; set; }
     [Parameter] public LaboratoryState? Laboratory { get; set; }
@@ -143,9 +153,11 @@
     private string BuildTitle => Selection.SpentPoints == 0 ? "Unshaped mage" : SelectedKeystones.Count > 0 ? SelectedKeystones[0].Name : "Arcane path prepared";
     private string OfferingTitle => SelectedOffering is { } offering ? DragonEssenceCatalog.Get(offering).Name : "No offering selected";
     private string OfferingLabel => SelectedOffering is { } offering ? $"Offering: {DragonEssenceCatalog.Get(offering).Name}" : "No offering";
+    private bool HasSelectedRite => AscendantSelected is { } wyrm && AscendantRiteCatalog.IsAvailable(wyrm) && Hunt.IsSealed(wyrm, Masteries);
 
     private int SchoolPoints(PassiveSchool school) => Selection.Selected.Where(id => PassiveTreeCatalog.Get(id).School == school).Sum(id => PassiveTreeCatalog.Get(id).Cost);
     private Task StartAsync() => OnStart.InvokeAsync();
+    private Task OpenWorldGateAsync() => OnOpenWorldGate.InvokeAsync();
     private Task ToggleAscendantAsync(DragonId wyrm) => OnAscendantChanged.InvokeAsync(AscendantSelected == wyrm ? null : wyrm);
     private Task EditBuildAsync() => OnEditBuild.InvokeAsync();
     private Task EditForgeAsync() => OnEditForge.InvokeAsync();

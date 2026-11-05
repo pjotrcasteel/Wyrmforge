@@ -1,4 +1,5 @@
 .run-hub { display: grid; gap: 18px; min-height: 100%; }
+.run-hub-hint { max-width: 52ch; margin: 0; color: #bda9ad; font-size: .78rem; line-height: 1.5; }
 .run-hero { position: relative; display: grid; grid-template-columns: minmax(0,1.25fr) minmax(260px,.75fr); min-height: 430px; overflow: hidden; border: 1px solid #31283c; border-radius: 24px; background: radial-gradient(circle at 80% 46%, rgba(184,135,255,.16), transparent 28%), linear-gradient(145deg, #1c1624, #100d15 62%); box-shadow: 0 24px 70px rgba(0,0,0,.32); }
 .run-hero-copy { position: relative; z-index: 2; display: flex; justify-content: center; align-items: flex-start; flex-direction: column; padding: clamp(28px,5vw,62px); }
 .section-kicker { color: #9e78ce; font-size: .66rem; font-weight: 900; letter-spacing: .18em; }

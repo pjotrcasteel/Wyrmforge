@@ -61,4 +61,22 @@ public sealed class HuntQuestStateTests
         Assert.AreEqual(0, state.Caches);
         Assert.AreEqual(0, state.Progress(HuntQuestCatalog.Get("wyrm-1")));
     }
+
+    [TestMethod]
+    public void Catalog_ObsoleteEvolutionQuest_RemainsSaveCompatibleButIsNotNewlyOffered()
+    {
+        var evolution = HuntQuestCatalog.Get("evolution-1");
+        Assert.IsFalse(HuntQuestCatalog.IsCurrentlyOffered(evolution));
+        Assert.IsTrue(HuntQuestCatalog.IsCurrentlyOffered(HuntQuestCatalog.Get("depth-2")));
+
+        var legacy = new HuntQuestState();
+        legacy.Restore(new HuntQuestSave(0, 0, 1, [], [], false, true, [], 0));
+        Assert.IsTrue(legacy.CanClaim(evolution));
+        Assert.AreEqual("evolution-1", legacy.Claim(evolution.Id)?.Id);
+
+        var restored = new HuntQuestState();
+        restored.Restore(legacy.Snapshot());
+        Assert.IsTrue(restored.IsClaimed(evolution.Id));
+        Assert.IsFalse(restored.CanClaim(evolution));
+    }
 }

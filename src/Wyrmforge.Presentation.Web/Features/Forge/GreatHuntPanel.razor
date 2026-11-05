@@ -45,7 +45,7 @@
                     @if (AscendantRiteCatalog.IsAvailable(ActiveOath.Wyrm))
                     {
                         var rite = AscendantRiteCatalog.Get(ActiveOath.Wyrm);
-                        <small>@(Entry.AscendantDefeated ? $"✦ {rite.Trophy} earned. The Ascendant is conquered and replayable." : $"Ascendant {ActiveOath.Wyrm} unlocked! Invoke the rite in your Run Hub and reach Depth II.")</small>
+                        <small>@(Entry.AscendantDefeated ? $"✦ {rite.Trophy} earned. The Ascendant is conquered and replayable." : $"Ascendant {ActiveOath.Wyrm} rite unlocked! Open Settings → Rites & offerings, invoke the rite, then reach Run Depth II. This is separate from Wyrm Tier II.")</small>
                     }
                     else
                     {

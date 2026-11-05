@@ -49,6 +49,8 @@
     [Parameter] public EventCallback OnClose { get; set; }
     private bool completed;
     private IEnumerable<HuntQuest> VisibleQuests => completed ? HuntQuestCatalog.All.Where(quest => State.IsClaimed(quest.Id))
-        : HuntQuestCatalog.All.Where(quest => !State.IsClaimed(quest.Id)).GroupBy(quest => quest.Metric).Select(group => group.First())
+        : HuntQuestCatalog.All.Where(quest => !State.IsClaimed(quest.Id)
+            && (HuntQuestCatalog.IsCurrentlyOffered(quest) || State.CanClaim(quest)))
+            .GroupBy(quest => quest.Metric).Select(group => group.First())
             .OrderByDescending(State.CanClaim).ThenBy(quest => Array.IndexOf(HuntQuestCatalog.All.ToArray(), quest));
 }
