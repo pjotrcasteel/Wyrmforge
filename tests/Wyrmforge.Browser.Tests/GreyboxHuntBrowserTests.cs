@@ -9,6 +9,42 @@ namespace Wyrmforge.Browser.Tests;
 [TestClass]
 public sealed class GreyboxHuntBrowserTests : PageTest
 {
+    /// <summary>Fresh browser storage must lead from character creation through the real World Gate into a damageable Fire Hunt.</summary>
+    [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
+    public async Task FreshSave_CreatesFireMageAndEntersDamageableTierOneHunt(int width, int height)
+    {
+        var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
+        var output = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS")
+            ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
+        Directory.CreateDirectory(output);
+        await Page.SetViewportSizeAsync(width, height);
+        var errors = new List<string>();
+        Page.PageError += (_, error) => errors.Add(error);
+
+        // PageTest creates a clean context. Do not seed tutorial completion, a school, a save or debug god/bot flags.
+        await Page.GotoAsync(root + "/", new() { WaitUntil = WaitUntilState.NetworkIdle });
+        Assert.IsNull(await Page.EvaluateAsync<string?>("() => localStorage.getItem('wyrmforge.characterSchool.v1')"));
+        await Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^START GAME") }).ClickAsync();
+        await Expect(Page.Locator(".character-creation")).ToBeVisibleAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Choose Pyromancer" }).ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Region, new() { Name = "Town square" })).ToBeVisibleAsync();
+        await Page.Locator(".refuge-town-spot--gate").ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Enter Free Play" }).ClickAsync();
+        await Page.Locator(".gate-action--primary").ClickAsync();
+        await Page.Locator(".gate-lineage--fire").ClickAsync();
+        await Page.Locator(".gate-tier--ready").First.ClickAsync();
+        await Page.Locator("button.route-node.available").First.ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^Enter (rare )?trail$") }).ClickAsync();
+        await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
+        await ArenaBrowserWait.UntilAsync(Page, "return state?.worldReady === true && state?.hud?.maxHealth > 0 && !state?.renderingFailed;",
+            60000, "a real first Fire Hunt canvas and damageable mage on fresh storage");
+
+        Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
+        await Page.ScreenshotAsync(new() { Path = Path.Combine(output, $"fresh-damageable-fire-hunt-{width}.png"), FullPage = false });
+    }
+
     [TestMethod]
     [DataRow(320, 568)]
     [DataRow(390, 844)]
