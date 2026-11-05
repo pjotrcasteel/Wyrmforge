@@ -10,6 +10,10 @@ namespace Wyrmforge.Application.Runs.Simulation;
 public sealed partial class RunSimulation
 {
     private readonly HashSet<string> rewardedRouteNodeIds = new(StringComparer.Ordinal);
+    // Encounter identities remain spent when a reclaimed refuge rewinds its roads. This includes an interrupted fight:
+    // XP, kill records and combat score already retained by the hunter must not be earned again on each recovery.
+    private readonly HashSet<string> spentRefugeEncounterIds = new(StringComparer.Ordinal);
+    private string? rewardEncounterNodeId;
     private RefugeMark? refuge;
 
     // Owner playtest 2026-10-25: Tier-I bosses need meaningful time alive, not higher damage.
@@ -24,6 +28,13 @@ public sealed partial class RunSimulation
     public int RefugeReturns { get; private set; }
     /// <summary>Unsecured Essences and salvage lost by the most recent return to the refuge.</summary>
     public int LastRefugeLoss { get; private set; }
+
+    private bool CanEarnEncounterRewards => rewardEncounterNodeId is null || !spentRefugeEncounterIds.Contains(rewardEncounterNodeId);
+
+    private void AwardEncounterScore(int amount)
+    {
+        if (CanEarnEncounterRewards) score += amount;
+    }
 
     internal void SelectHunt(HuntSelection? hunt)
     {
@@ -60,7 +71,13 @@ public sealed partial class RunSimulation
     /// </summary>
     private bool TryReturnToRefuge()
     {
-        if (refuge is not { } mark || !mapState.ReturnToRefuge(mark.NodeId)) return false;
+        if (refuge is not { } mark) return false;
+        // Capture the consumed encounters before ReturnToRefuge removes their map history. New roads remain rewarding.
+        var replayedNodeIds = mapState.CompletedNodes.Skip(mark.CompletedRouteNodes).Select(node => node.Id).ToArray();
+        var interruptedNodeId = mapState.CurrentNode?.Id;
+        if (!mapState.ReturnToRefuge(mark.NodeId)) return false;
+        spentRefugeEncounterIds.UnionWith(replayedNodeIds);
+        if (interruptedNodeId is not null) spentRefugeEncounterIds.Add(interruptedNodeId);
         LastRefugeLoss = materialCargoState.LosePendingAfter(mark.PendingMaterials) + essenceCargoState.LosePendingAfter(mark.PendingEssences);
         foreach (var essence in build.DragonEssences.Selected.Where(id => !mark.Essences.Contains(id))) build.DragonEssences.Remove(essence);
         pendingDragonEssenceChoices = [];
@@ -81,6 +98,7 @@ public sealed partial class RunSimulation
         walkedExitNodeId = null;
         mapEncounterCleanupPending = false;
         ClearMapEncounterField();
+        rewardEncounterNodeId = null;
         RefreshDragonEssenceModifiers();
         player.Health = player.MaxHealth;
         playerPositionInitialized = false;

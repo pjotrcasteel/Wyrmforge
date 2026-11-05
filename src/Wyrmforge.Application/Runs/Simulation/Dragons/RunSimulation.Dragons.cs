@@ -348,7 +348,7 @@ public sealed partial class RunSimulation
         foreach (var spell in SpellLineageCatalog.FeatsEarnedAtDefeat(definition.Id, build.Spells)) qualifiedWyrmFeats.Add(spell);
         var reward = definition.Combat.Reward;
         var dragonScore = reward.BaseScore + (int)(elapsed * reward.ScorePerElapsedSecond);
-        score += (int)((dragonScore + DragonTierScore(defeatedDragon.Tier)) * depthState.ScoreMultiplier);
+        AwardEncounterScore((int)((dragonScore + DragonTierScore(defeatedDragon.Tier)) * depthState.ScoreMultiplier));
         dragon = null;
         dragonHuntHazards.Clear();
         dragonHuntState.Reset();

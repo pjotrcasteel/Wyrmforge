@@ -184,15 +184,18 @@ public sealed partial class RunSimulation
                 ResolveBellWardenDeath(warden);
                 break;
             case EnemyState defeatedEnemy:
-                RecordControlledKill(defeatedEnemy);
+                if (CanEarnEncounterRewards) RecordControlledKill(defeatedEnemy);
                 RegisterEnemyDeath(defeatedEnemy);
                 RegisterSupportDeath(defeatedEnemy);
                 RegisterFrostDeath(defeatedEnemy);
-                kills++;
-                RecordEnemyKill(defeatedEnemy.Kind);
+                if (CanEarnEncounterRewards)
+                {
+                    kills++;
+                    RecordEnemyKill(defeatedEnemy.Kind);
+                }
                 QueueRelicDefeatBursts(defeatedEnemy);
                 var baseScore = 100 + (int)(elapsed * 2);
-                score += (int)(baseScore * depthState.ScoreMultiplier);
+                AwardEncounterScore((int)(baseScore * depthState.ScoreMultiplier));
                 // A raised Ashling already paid out and counted toward the node; its second death is worth nothing extra.
                 if (defeatedEnemy.Revived) break;
                 // Normal Fire-region foes occasionally leave physical minor crafting loot.
@@ -206,7 +209,8 @@ public sealed partial class RunSimulation
                 // From Fire Tier 3 an elite also carries Epic Wyrmcinder; the watchtower shows which roads hide one.
                 if (mapState.EncounterActive && defeatedEnemy.IsElite && HuntDrops(Wyrmforge.Domain.Progression.Loot.LootRarity.Epic))
                     arenaEnvironment?.SpawnMaterialPickup(defeatedEnemy.Position + new Vector2D(14, 6), arenaWidth, arenaHeight, "Wyrmcinder");
-                experienceShards.Drop(defeatedEnemy.Position, ResolveEliteDefeat(defeatedEnemy, EnemyCatalog.Get(defeatedEnemy.Kind).ThreatCost));
+                var enemyExperience = ResolveEliteDefeat(defeatedEnemy, EnemyCatalog.Get(defeatedEnemy.Kind).ThreatCost);
+                if (CanEarnEncounterRewards) experienceShards.Drop(defeatedEnemy.Position, enemyExperience);
                 RegisterMapEncounterKill();
                 RegisterDepthTrialKill();
                 break;

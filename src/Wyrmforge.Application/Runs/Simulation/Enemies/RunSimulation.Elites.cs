@@ -142,7 +142,7 @@ public sealed partial class RunSimulation
     {
         if (!enemy.IsElite) return baseExperience;
         var experience = (int)Math.Round(baseExperience * EliteAffixCatalog.ExperienceMultiplier);
-        defeatedElites.Add(new EliteDefeat(enemy.Kind, enemy.Elite, experience));
+        if (CanEarnEncounterRewards) defeatedElites.Add(new EliteDefeat(enemy.Kind, enemy.Elite, experience));
         if (enemy.Elite == EliteAffix.Gravebound)
             hostileProjectiles.Add(new HostileProjectileState(enemy.Position, enemy.Position, GraveboundDelaySeconds, GraveboundRadius,
                 GraveboundDamage * EliteImpact(enemy), 0) { Style = HostileProjectileStyle.Grave });

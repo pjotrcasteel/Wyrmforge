@@ -275,11 +275,14 @@ public sealed partial class RunSimulation
             crystalWards.RemoveAll(pylon => pylon.Ward == enemy);
             return;
         }
-        kills++;
-        RecordEnemyKill(enemy.Kind);
-        score += (int)((100 + (int)(elapsed * 2)) * 10 * depthState.ScoreMultiplier);
+        if (CanEarnEncounterRewards)
+        {
+            kills++;
+            RecordEnemyKill(enemy.Kind);
+        }
+        AwardEncounterScore((int)((100 + (int)(elapsed * 2)) * 10 * depthState.ScoreMultiplier));
         ReliquaryDefeat = new ReliquaryDefeat(ReliquaryExperience);
-        experienceShards.Drop(enemy.Position, ReliquaryExperience);
+        if (CanEarnEncounterRewards) experienceShards.Drop(enemy.Position, ReliquaryExperience);
         ReliquaryStage = ReliquaryStage.Slain;
         EndReliquaryRites();
     }
