@@ -161,9 +161,18 @@
                 {
                     var evolution = SpellEvolutionCatalog.Get(evolutionId);
                     <h3><GameIcon Glyph="@(evolution.Icon)" Size="sm" /> @evolution.Name</h3>
-                    <p>@evolution.Description</p>
+                    @if (evolutionId == SpellEvolutionId.Wyrmfire)
+                    {
+                        <p>Your Fireball mastery is recorded. Visit the Great Hunt altar to claim your oath's next step; Wyrmfire's signature transformation is still being forged.</p>
+                    }
+                    else
+                    {
+                        <p>@evolution.Description</p>
+                    }
                 }
-                <strong>NEW EVOLUTION AVAILABLE IN FUTURE HUNTS</strong>
+                <strong>@(NewLineages.All(id => id == SpellEvolutionId.Wyrmfire)
+                    ? "FIREBALL MASTERY EARNED • GREAT HUNT AWAITS"
+                    : "NEW LINEAGE DISCOVERED • INSPECT YOUR CODEX")</strong>
             </section>
         }
 
