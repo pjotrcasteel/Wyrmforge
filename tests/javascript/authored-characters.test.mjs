@@ -244,3 +244,16 @@ test('Ashfang swings its left claw when the target stands to its left', () => {
     assert.equal(at(100, 80), 'claw_right', 'facing east, a target to the south is on its right');
     assert.equal(at(100, -80), 'claw_left');
 });
+test('a boss in the exposed gap after its big move plays the authored stagger and holds it; the molten form has none and keeps its idle', () => {
+    const state = createAuthoredState();
+    const boss = over => ({ kind: 9, entityId: 31, x: 200, y: 200, radius: 30, recovering: true, ...over });
+    const run = (enemy, seconds) => { updateAuthoredEnemies(state, snap([enemy], { bellWarden: { variant: 'fire', cracked: false }, hud: { seconds } }), manifests, seconds); return state.enemies.get(31); };
+    run(boss(), 1);
+    let pose = run(boss(), 1.05);
+    assert.equal(pose.action, 'stagger');
+    for (let s = 1.1; s <= 3; s += .1) pose = run(boss(), s);
+    assert.equal(pose.action, 'stagger');
+    assert.equal(pose.frame, manifests.get('Bell-Warden-normal').actions.stagger.framesPerDirection - 1, 'it holds the last frame');
+    pose = run(boss({ recovering: false }), 3.2);
+    assert.notEqual(pose.action, 'stagger');
+});

@@ -35,6 +35,7 @@ import { preloadAshfang, createAshfangState, updateAshfang, drawAshfang, drawAsh
 import { drawAshfangWarning, drawAshfangGroundEffects, drawAshfangAirEffects, ashfangVfxDiagnostics } from './ashfang-vfx.js';
 import { ashlingSprites } from './ashling-sprites.js';
 import { drawFieldAmbushTell } from './arena-field-ambush-vfx.js';
+import { drawTransformations } from './arena-transformation-vfx.js';
 import { drawEnemyTelegraph, drawHostileProjectileGround, drawHostileProjectileEmber, drawShieldGuard, drawAshRemains, drawWraithRipple } from './arena-enemy-telegraphs.js';
 import { drawReliquaryGround, drawReliquaryEmergence, drawReliquaryHushVeil, drawReliquaryBar } from './arena-reliquary-vfx.js';
 import { drawBellWardenGround, drawBellWardenEntrance, drawBellWardenBar } from './arena-bellwarden-vfx.js';
@@ -439,8 +440,8 @@ function draw(state, snapshot, width, height) {
     const targetId = snapshot.player?.aimPropId ?? snapshot.player?.aimTargetId;
     const targetIndicator = presentTargetSigil(state.targetSigil, selectedTarget, targetId,
         visualSeconds, state.reducedMotion.matches);
-    // Hunt 1.0 plays the authored characters; any set that is not loaded yet keeps drawing its old art.
-    const authoredOn = state.authoredCharacters && Boolean(snapshot.environment?.terrain);
+    // The authored characters play in every Hunt; a set that is still downloading draws nothing rather than the old art.
+    const authoredOn = state.authoredCharacters;
     const authoredManifests = authoredOn ? loadedManifests() : new Map();
     if (authoredOn) {
         updateAuthoredEnemies(state.authored, snapshot, authoredManifests, visualSeconds, state.reducedMotion.matches);
@@ -714,6 +715,7 @@ function draw(state, snapshot, width, height) {
         else drawHuntHazard(ctx,hazard);
     }
     for (const enemy of snapshot.enemies) drawEnemyTelegraph(ctx, enemy);
+    drawTransformations(ctx, snapshot, visualSeconds, state.reducedMotion.matches);
     drawFieldAmbushTell(ctx, snapshot.fieldAmbush, visualSeconds, state.reducedMotion.matches);
     if (snapshot.dragonBreath) drawDragonBreath(ctx, snapshot.dragonBreath,
         snapshot.dragon?.school ?? snapshot.hunt?.school, snapshot.dragon);

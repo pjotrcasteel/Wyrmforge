@@ -7,6 +7,7 @@
 // the facing changes.
 export const DIRECTIONS = ['E', 'SE', 'S', 'SW', 'W', 'NW', 'N', 'NE'];
 import { drawEmergeParticles } from './arena-field-ambush-vfx.js';
+import { drawFootprint, drawCastShadow, footDrop } from './authored-grounding.js';
 
 /** C# EnemyKind numbers that have an authored set, and the strip of each one's primary attack. */
 export const ENEMY_CHARACTERS = new Map([
@@ -186,6 +187,11 @@ export function updateAuthoredEnemies(state, snapshot, manifests, seconds, reduc
             }
             chosen = { action: primary, frame };
         }
+        // The exposed gap after a boss's big commitment (C# `recovering`): it reels in the authored stagger and holds its last frame.
+        if (enemy.recovering && !pose.attack && durationsOf(manifest, 'stagger')) {
+            if (pose.recoverStart == null) pose.recoverStart = state.clock;
+            chosen = { action: 'stagger', frame: frameAtTime(durationsOf(manifest, 'stagger'), (state.clock - pose.recoverStart) * 1000).index };
+        } else pose.recoverStart = null;
         pose.action = chosen.action; pose.frame = chosen.frame;
     }
     // Corpses: only a C# death burst with an identity leaves one.
@@ -283,7 +289,7 @@ export function updateAuthoredWizard(state, snapshot, manifest, clock, reducedMo
 
 // ---------------------------------------------------------------- loading
 
-const loaded = new Map(), requested = new Set();
+const loaded = new Map(), requested = new Set(), failed = new Set();
 const base = typeof import.meta !== 'undefined' ? new URL('../art/characters/', import.meta.url) : null;
 
 async function load(name) {
@@ -307,9 +313,12 @@ async function load(name) {
 export function preloadAuthoredCharacter(name) {
     if (!requested.has(name) && typeof Image !== 'undefined' && typeof fetch !== 'undefined' && base) {
         requested.add(name);
-        load(name).then(set => loaded.set(name, set)).catch(() => { });
+        load(name).then(set => loaded.set(name, set)).catch(() => failed.add(name));
     }
 }
+
+/** True while a set is still downloading: the caller draws nothing for it rather than the old art it replaces. */
+export const authoredPending = name => requested.has(name) && !loaded.has(name) && !failed.has(name);
 
 export const authoredCharacter = name => loaded.get(name) ?? null;
 
@@ -330,6 +339,21 @@ export function drawAuthoredCell(ctx, name, actionName, direction, frame, x, y, 
     ctx.drawImage(strip, column * width, row * height, width, height, Math.round(x) - rootX * scale, Math.round(y) - rootY * scale, width * scale, height * scale);
     if (alpha < 1) ctx.restore();
     return true;
+}
+
+/**
+ * Draws one cell grounded: the footprint ellipse under the body, the silhouette cast flat across the ground, then the sprite with its front foot
+ * planted `footDrop(radius)` below the C# position. `radius` is the body's collision radius. Returns false when the set is not loaded.
+ */
+export function drawGrounded(ctx, name, actionName, direction, frame, x, y, { alpha = 1, scale = 1, radius = 11 } = {}) {
+    const set = loaded.get(name), strip = set?.strips.get(actionName);
+    if (!strip) return false;
+    const feetY = y + footDrop(radius);
+    drawFootprint(ctx, x, y + footDrop(radius) * .4, radius, alpha);
+    const [width, height] = set.manifest.canvas, [rootX, rootY] = set.manifest.root, spec = set.manifest.actions[actionName];
+    const row = Math.max(0, set.manifest.directions.indexOf(direction)), column = Math.max(0, Math.min(spec.framesPerDirection - 1, frame));
+    drawCastShadow(ctx, strip, { x: column * width, y: row * height, width, height }, rootX, rootY, x, feetY, scale, alpha);
+    return drawAuthoredCell(ctx, name, actionName, direction, frame, x, feetY, alpha, scale);
 }
 
 // ---------------------------------------------------------------- crawl out of the ground
@@ -367,14 +391,6 @@ function drawCrawlOut(ctx, x, y, clipIndex, frame) {
     ctx.drawImage(crawlOut.image, (index % columns) * width, Math.floor(index / columns) * height, width, height, Math.round(x) - rootX, Math.round(y) - rootY, width, height);
 }
 
-/** Soft contact shadow under the feet, so a sprite that casts none of its own does not float. */
-function contactShadow(ctx, x, y, radius) {
-    ctx.fillStyle = 'rgba(7, 9, 14, 0.2)';
-    ctx.beginPath();
-    ctx.ellipse(x, y, radius, radius * .36, 0, 0, Math.PI * 2);
-    ctx.fill();
-}
-
 /**
  * An enemy climbing out of the ground: the Hollowed plays the owner's crawl-out clip (south-east art, so it is not turned), everything else rises
  * out of the ground behind a clip line at its feet, facing the hunter. Dirt and chips fly from its root either way.
@@ -395,11 +411,17 @@ function drawEmerging(ctx, enemy, pose) {
 /** Draws an enemy from its authored pose; false when it has none (the caller then draws the old art). */
 export function drawAuthoredEnemy(ctx, enemy, state) {
     const pose = state.enemies.get(enemy.entityId);
-    if (!pose) return false;
+    if (!pose) return pendingKind(enemy.kind);
     if (pose.emerge) return drawEmerging(ctx, enemy, pose);
     const opacity = Number.isFinite(enemy.opacity) ? enemy.opacity : 1;
-    contactShadow(ctx, enemy.x, enemy.y, Math.max(6, (Number(enemy.radius) || 11) * .7));
-    return drawAuthoredCell(ctx, pose.name, pose.action, pose.direction, pose.frame, enemy.x, enemy.y, opacity);
+    return drawGrounded(ctx, pose.name, pose.action, pose.direction, pose.frame, enemy.x, enemy.y, { alpha: opacity, radius: Number(enemy.radius) || 11 });
+}
+
+/** A kind whose set (or either boss form) is still downloading is skipped, not drawn in the old art. */
+function pendingKind(kind) {
+    const name = ENEMY_CHARACTERS.get(Number(kind));
+    if (!name) return false;
+    return authoredPending(name) || (Number(kind) === 7 && authoredPending('Reliquary-awakened')) || (Number(kind) === 9 && authoredPending('Bell-Warden-molten'));
 }
 
 export function drawAuthoredCorpses(ctx, state) {
@@ -407,8 +429,7 @@ export function drawAuthoredCorpses(ctx, state) {
         const manifest = loaded.get(corpse.name)?.manifest;
         if (!manifest) continue;
         const pose = corpsePose(state, corpse, manifest);
-        contactShadow(ctx, corpse.x, corpse.y, 8);
-        drawAuthoredCell(ctx, corpse.name, pose.action, corpse.direction, pose.frame, corpse.x, corpse.y, pose.alpha);
+        drawGrounded(ctx, corpse.name, pose.action, corpse.direction, pose.frame, corpse.x, corpse.y, { alpha: pose.alpha, radius: 11 });
     }
 }
 
@@ -416,12 +437,11 @@ export function drawAuthoredCorpses(ctx, state) {
 export const WIZARD_FEET_OFFSET = 12;
 
 export function drawAuthoredWizard(ctx, player, state, hit = false) {
-    const wizard = state.wizard, feetY = player.y + WIZARD_FEET_OFFSET;
-    contactShadow(ctx, player.x, feetY, 8);
+    const wizard = state.wizard, radius = Number(player.radius) || 12, feetY = player.y + WIZARD_FEET_OFFSET;
     // A hit reddens the whole figure for its short flash; the cast and walk poses stay untouched.
     ctx.save();
     if (hit) ctx.filter = 'sepia(1) saturate(3.2) hue-rotate(-35deg) brightness(1.05)';
-    const drawn = drawAuthoredCell(ctx, 'Wizard', wizard.action, wizard.direction, wizard.frame, player.x, feetY);
+    const drawn = drawGrounded(ctx, 'Wizard', wizard.action, wizard.direction, wizard.frame, player.x, feetY - footDrop(radius), { radius });
     ctx.restore();
     // Warding Barrier: two pale seams at the shoulders, as the old mage showed it.
     if (player.barrier) {
@@ -441,6 +461,8 @@ export function drawAuthoredWizard(ctx, player, state, hit = false) {
  */
 export const ASHFANG_SCALE = 2;
 const ASHFANG_ALIAS = { land: 'landing', run_start: 'walk_start', run_stop: 'walk_stop' };
+// The enraged form lacks a few strips the normal form has; each falls back to the nearest authored pose.
+const FALLBACK = { stagger: ['hit', 'roar'], breath_sweep: ['fire_breath'], claw_combo: ['claw_right'], tail_left: ['claw_left'], tail_right: ['claw_right'] };
 
 /** The set, strip and frame for the old graph's `entity`; `shadow` means only the moving ground shadow shows (overhead flight). */
 export function ashfangPose(entity, dragon, clock, manifests) {
@@ -461,8 +483,8 @@ export function ashfangPose(entity, dragon, clock, manifests) {
         actionName = 'fire_breath';
         frame = entity.clip === 'breath_start' ? Math.min(1, Math.floor((entity.progress ?? 0) * 2)) : entity.clip === 'breath_loop' ? 2 + Math.floor(age * 8) % 2 : 4;
     }
-    const spec = action(manifest, actionName) ?? action(manifest, 'idle');
-    if (!action(manifest, actionName)) actionName = 'idle';
+    const spec = action(manifest, actionName) ?? FALLBACK[actionName]?.map(name => action(manifest, name)).find(Boolean) ?? action(manifest, 'idle');
+    if (!action(manifest, actionName)) actionName = FALLBACK[actionName]?.find(name => action(manifest, name)) ?? 'idle';
     if (frame == null) {
         const durations = spec.durationsMs;
         frame = entity.progress != null ? Math.floor(Math.max(0, Math.min(.999, entity.progress)) * durations.length)
@@ -471,11 +493,12 @@ export function ashfangPose(entity, dragon, clock, manifests) {
     return { name, action: actionName, frame: Math.min(frame, spec.framesPerDirection - 1), direction: entity.direction };
 }
 
-/** Draws the live dragon from its old motion graph; false when the authored set is not loaded (the old atlas then draws). */
+/** Draws the live dragon from its old motion graph; true while its set is still downloading (nothing draws), false when it has none (the old atlas then draws). */
 export function drawAuthoredAshfang(ctx, ashfang, dragon) {
     const p = ashfang?.entity;
     const pose = p ? ashfangPose(p, dragon, ashfang.clock, loadedManifests()) : null;
-    if (!pose || (!pose.hidden && !pose.shadow && !authoredCharacter(pose.name))) return false;
+    if (!pose) return authoredPending('Ashfang-normal') || authoredPending('Ashfang-enraged');
+    if (!pose.hidden && !pose.shadow && !authoredCharacter(pose.name)) return authoredPending(pose.name);
     ashfang.authoredForm = pose.name;
     if (pose.hidden) return true;
     ctx.save();
@@ -485,10 +508,9 @@ export function drawAuthoredAshfang(ctx, ashfang, dragon) {
         ctx.restore();
         return true;
     }
-    contactShadow(ctx, p.x, p.y + 2, p.radius * .6);
     if (p.frozen) ctx.filter = 'sepia(1) saturate(1.6) hue-rotate(135deg)';
     else if (p.hitFlash) ctx.filter = 'brightness(1.25) saturate(.75)';
-    drawAuthoredCell(ctx, pose.name, pose.action, pose.direction, pose.frame, p.x, p.y, 1, ASHFANG_SCALE);
+    drawGrounded(ctx, pose.name, pose.action, pose.direction, pose.frame, p.x, p.y, { scale: ASHFANG_SCALE, radius: p.radius });
     ctx.restore();
     return true;
 }

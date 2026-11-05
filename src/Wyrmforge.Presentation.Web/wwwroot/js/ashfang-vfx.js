@@ -10,9 +10,9 @@ function ring(ctx,x,y,r,color,alpha=1,segments=40){ctx.fillStyle=color;const old
 
 export function ashfangFirePlan(snapshot,sockets){
  const d=snapshot?.dragon;if(Number(d?.school)!==1||d.flightStage&&d.flightStage!=='ground'||d.frozen||!sockets?.mouth)return null;
- if(d.action!=='breath'||!['windup','strike','recover'].includes(d.actionPhase))return null;
- const dx=Number(d.directionX)||0,dy=Number(d.directionY)||0;
- return {stage:d.actionPhase,progress:clamp(d.actionProgress),mouth:sockets.mouth,root:{x:d.x,y:d.y},end:{x:d.x+dx*340,y:d.y+dy*340},direction:{x:dx,y:dy},halfAngle:.4,range:340};
+ if(!['breath','breath_sweep'].includes(d.action)||!['windup','strike','recover'].includes(d.actionPhase))return null;
+ const dx=Number(d.directionX)||0,dy=Number(d.directionY)||0,sweep=d.action==='breath_sweep',range=sweep?360:340;
+ return {stage:d.actionPhase,progress:clamp(d.actionProgress),mouth:sockets.mouth,root:{x:d.x,y:d.y},end:{x:d.x+dx*range,y:d.y+dy*range},direction:{x:dx,y:dy},halfAngle:sweep?.3:.4,range};
 }
 export function ashfangVfxDiagnostics(snapshot,sockets){const fire=ashfangFirePlan(snapshot,sockets);return {fireStage:fire?.stage??null,effects:(snapshot?.ashfangEffects??[]).length,rainWarnings:(snapshot?.huntHazards??[]).filter(h=>h.fromAbove&&h.armed!==false).length,landingWarnings:(snapshot?.huntHazards??[]).filter(h=>h.effectKind==='landing').length};}
 
@@ -42,7 +42,7 @@ export function drawAshfangGroundEffects(ctx,snapshot,reducedMotion=false){
    ctx.globalAlpha=.38*life;
    for(let i=0;i<12;i++){const a=rand(e.id*41+i)*TAU,reach=r*(.2+rand(i+e.id)*.5);ctx.fillStyle=i%3?P.red:P.ember;block(ctx,e.x+Math.cos(a)*reach,e.y+Math.sin(a)*reach,2+(i%2));}
   }
-  if(e.kind==='landing'||e.kind==='pounce'||e.kind==='roar'){
+  if(e.kind==='landing'||e.kind==='pounce'||e.kind==='roar'||e.kind==='takeoff'||e.kind==='stagger'){
    ring(ctx,e.x,e.y,r*(.25+.75*p),P.bone,(1-p)*.55,reducedMotion?20:45);
    ctx.globalAlpha=(1-p)*.28;disc(ctx,e.x,e.y,r*(.3+.35*p),P.coal);
   }
@@ -126,12 +126,31 @@ function impact(ctx,e,reducedMotion){
    ctx.globalAlpha=fade*.75;disc(ctx,e.x,e.y,r*.22,P.core);
   }
   if(p<.52)for(let i=0;i<(reducedMotion?2:6);i++)smoke(ctx,e.x+(rand(i+e.id)-.5)*e.radius,e.y-p*70-i*4,6+p*17,clamp(1-p/.52)*.3,e.id+i);
- }else if(e.kind==='claw_right'){
-  const a=Math.atan2(e.directionY,e.directionX)+Math.PI*.28;
+ }else if(e.kind==='claw_right'||e.kind==='claw_combo'){
+  const a=Math.atan2(e.directionY,e.directionX)+Math.PI*(e.kind==='claw_combo'&&e.id%2?-.28:.28);
   for(let i=0;i<3;i++){
    const offset=(i-1)*8,len=20+50*clamp(p/.6);ctx.strokeStyle=i===1?P.bone:P.ember;ctx.lineWidth=2;ctx.globalAlpha=1-p;
    ctx.beginPath();ctx.moveTo(Math.round(e.x-Math.cos(a)*len-Math.sin(a)*offset),Math.round(e.y-Math.sin(a)*len+Math.cos(a)*offset-10));ctx.lineTo(Math.round(e.x+Math.cos(a)*len*.5-Math.sin(a)*offset),Math.round(e.y+Math.sin(a)*len*.5+Math.cos(a)*offset));ctx.stroke();
   }
+ }else if(e.kind==='tail_left'||e.kind==='tail_right'){
+  // The tail comes round as a broad crescent of dust and chips low along the ground.
+  const base=Math.atan2(e.directionY,e.directionX),side=e.kind==='tail_left'?-1:1,count=reducedMotion?10:28;
+  for(let i=0;i<count;i++){
+   const t=i/count,a=base+side*(-1.3+2.6*Math.min(1,p*1.6)*t),reach=e.radius*(.55+.45*rand(e.id+i));
+   ctx.globalAlpha=(1-p)*.8;ctx.fillStyle=i%5===0?P.bone:i%2?P.ash:P.ember;block(ctx,e.x+Math.cos(a)*reach-Math.cos(base)*e.radius*.65,e.y+Math.sin(a)*reach*.6-Math.sin(base)*e.radius*.65*.6-(i%3)*2,3+i%3,2+i%2);
+  }
+ }else if(e.kind==='takeoff'){
+  // The launch: a wind blast throws a ring of dirt and burning chips outward and up, then the dust column hangs.
+  const burst=clamp(p/.35),count=reducedMotion?14:44;
+  for(let i=0;i<count;i++){
+   const a=i/count*TAU+rand(e.id+i)*.4,reach=e.radius*(.2+burst*.95)*(.6+rand(i+e.id*3)*.6),lift=Math.sin(Math.PI*burst)*(10+rand(i+e.id)*34);
+   ctx.globalAlpha=(1-p)*.85;ctx.fillStyle=i%6===0?P.hot:i%3===0?P.ember:i%2?P.ash:P.smoke;block(ctx,e.x+Math.cos(a)*reach,e.y+Math.sin(a)*reach*.6-lift,2+i%4,2+i%3);
+  }
+  for(let i=0;i<(reducedMotion?3:9);i++)smoke(ctx,e.x+(rand(i+e.id)-.5)*e.radius*.8,e.y-p*90-i*6,8+p*22,(1-p)*.34,e.id+i);
+ }else if(e.kind==='stagger'){
+  // Reeling: a white shock ring and sparks knocked off the hide; the window the hunter should read.
+  ring(ctx,e.x,e.y-14,e.radius*(.3+p*.7),P.core,(1-p)*.9,reducedMotion?18:36);
+  for(let i=0;i<(reducedMotion?6:16);i++){const a=i/16*TAU,reach=e.radius*(.3+p*.8);ctx.globalAlpha=(1-p);ctx.fillStyle=i%2?P.hot:P.core;block(ctx,e.x+Math.cos(a)*reach,e.y-14+Math.sin(a)*reach*.6,2,2);}
  }else if(e.kind==='bite'){
   for(let i=0;i<8;i++){const a=i/8*TAU,d=5+p*22;ctx.globalAlpha=1-p;ctx.fillStyle=i%2?P.bone:P.ash;block(ctx,e.x+Math.cos(a)*d,e.y+Math.sin(a)*d,3);}
  }else{
