@@ -271,6 +271,34 @@ public sealed class FireTierTwoHuntTests
     }
 
     [TestMethod]
+    public void ReturningToRefuge_DoesNotDuplicateMaterialDropsFromPreviouslyRewardedKills()
+    {
+        var simulation = Create(HuntSelection.FireTierTwo);
+        var map = Field<WyrmrealmMapState>(simulation, "mapState");
+        WalkToRefuge(map);
+        var refuge = map.AvailableNodes.Single(node => node.Refuge);
+        Complete(map, refuge);
+        Invoke(simulation, "CompleteTrail", refuge);
+        FinishRefugeExit(simulation);
+
+        var road = map.AvailableNodes[0];
+        Assert.IsTrue(simulation.ChooseMapNode(road.Id));
+        var before = LooseEmberResidue(simulation);
+        KillAshling(simulation, 600);
+        Assert.AreEqual(before + 1, LooseEmberResidue(simulation), "A first kill earns its normal crafting drop.");
+
+        FallBackToRefuge(simulation);
+        Assert.IsTrue(simulation.ChooseMapNode(road.Id));
+        var replayBefore = LooseEmberResidue(simulation);
+        KillAshling(simulation, 603);
+        Assert.AreEqual(replayBefore, LooseEmberResidue(simulation), "Re-killing the same ordinal must not respawn materials.");
+
+        KillAshling(simulation, 606);
+        Assert.AreEqual(replayBefore + 1, LooseEmberResidue(simulation),
+            "A genuinely new kill in the interrupted encounter can still earn crafting materials.");
+    }
+
+    [TestMethod]
     public void ReturningToRefuge_StillRewardsAPreviouslyUnvisitedForkAndPreventsReplayedRouteRewards()
     {
         var simulation = Create(HuntSelection.FireTierTwo);
@@ -328,6 +356,17 @@ public sealed class FireTierTwoHuntTests
         Invoke(simulation, "DamageTarget", hollow, hollow.Health + 1, null!, null!);
         Invoke(simulation, "CollectLooseExperienceShards");
     }
+
+    private static void KillAshling(RunSimulation simulation, int id)
+    {
+        var position = Field<PlayerState>(simulation, "player").Position + new Vector2D(75, 0);
+        var ashling = new EnemyState(id, position, 11, 1, 0, EnemyKind.Ashling);
+        Field<List<EnemyState>>(simulation, "enemies").Add(ashling);
+        Invoke(simulation, "DamageTarget", ashling, ashling.Health + 1, null!, null!);
+    }
+
+    private static int LooseEmberResidue(RunSimulation simulation) =>
+        Field<ArenaEnvironmentState>(simulation, "arenaEnvironment").Snapshot().Supplies.Count(supply => supply.Kind == "material:EmberResidue");
 
     private static bool CreditExperienceCache(RunSimulation simulation, double x, double y) =>
         (bool)typeof(RunSimulation).GetMethod("CreditEncounterExperienceCache", BindingFlags.Instance | BindingFlags.NonPublic)!
