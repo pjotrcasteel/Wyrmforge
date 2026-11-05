@@ -1,3 +1,4 @@
+using Wyrmforge.Application.Runs.Hunts;
 using Wyrmforge.Domain.Combat.Geometry;
 using Wyrmforge.Domain.Progression.Signature;
 using Wyrmforge.Application.Runs.Navigation;
@@ -44,7 +45,7 @@ public sealed record WorldSiteLandscapeRecipe(
 public static class WorldSiteLandscapeGenerator
 {
     /// <summary>Creates seeded place geometry while reserving mapped exit clearance and local scenic trails.</summary>
-    public static WorldSiteLandscapeRecipe Generate(WyrmrealmMapNode node, WorldSiteGeography geography)
+    public static WorldSiteLandscapeRecipe Generate(WyrmrealmMapNode node, WorldSiteGeography geography, HuntSelection? hunt = null)
     {
         ArgumentNullException.ThrowIfNull(node);
         ArgumentNullException.ThrowIfNull(geography);
@@ -138,7 +139,7 @@ public static class WorldSiteLandscapeGenerator
 
         // Small seeded side sites share the same C# collision footprints and legal roads.
         // A trace is not a guaranteed reward: some places have already been picked clean.
-        var discoveries = AddOptionalDiscoveries(geography, kind, random, obstacles, localPaths);
+        var discoveries = AddOptionalDiscoveries(geography, kind, random, obstacles, localPaths, HuntLootCatalog.For(hunt));
         return new WorldSiteLandscapeRecipe(kind, obstacles)
         {
             TerrainPatches = terrainPatches,
@@ -149,7 +150,7 @@ public static class WorldSiteLandscapeGenerator
 
     private static IReadOnlyList<WorldSiteDiscovery> AddOptionalDiscoveries(
         WorldSiteGeography site, string kind, Random random, IReadOnlyList<WorldSiteObstacle> obstacles,
-        List<WorldSiteCorridor> localPaths)
+        List<WorldSiteCorridor> localPaths, HuntLootTable loot)
     {
         if (kind != "forest-fork" && random.NextDouble() >= .68) return [];
 
@@ -181,8 +182,9 @@ public static class WorldSiteLandscapeGenerator
 
             var id = $"{site.SiteId}:trace";
             localPaths.Add(new WorldSiteCorridor($"{id}:access", WorldSiteSurfaceId.Road, .028, [origin, pocket]));
-            // Common salvage only: a site detour cannot bypass Hunt-tier rarity eligibility.
-            var material = random.NextDouble() < .43 ? HuntMaterialId.CharredScrap : (HuntMaterialId?)null;
+            // Preserve the existing seeded draw and site geometry while the Hunt table owns the actual reward.
+            var candidates = loot.MaterialsFor(HuntLootSource.OptionalCache, siteRoll: random.NextDouble());
+            var material = candidates.Count > 0 ? candidates[0] : (HuntMaterialId?)null;
             return [new WorldSiteDiscovery(id, traceKind, pocket, material)];
         }
 

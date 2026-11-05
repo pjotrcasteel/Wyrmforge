@@ -238,7 +238,7 @@ public sealed class FireTierTwoHuntTests
     }
 
     private static bool Drops(RunSimulation simulation, LootRarity rarity) =>
-        (bool)typeof(RunSimulation).GetMethod("HuntDrops", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(simulation, [rarity])!;
+        HuntLootCatalog.For(simulation.SelectedHunt).CanDrop(rarity);
 
     [TestMethod]
     public void AscendantRite_StillRecordsTheCrownVictory()

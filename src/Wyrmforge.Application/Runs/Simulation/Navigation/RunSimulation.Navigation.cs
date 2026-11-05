@@ -43,7 +43,8 @@ public sealed partial class RunSimulation
         if (monastery.GenerationProfile is not
             { Landform: WorldSiteLandform.Mountain, Landmark: WorldSiteLandmark.Monastery }) return false;
         arenaEnvironment = ArenaEnvironmentState.Create(mapState.Seed, monastery, worldFirstGeography: true,
-            claimedDiscoveries: collectedSiteDiscoveryIds, greybox: !legacyArenaPreview && !worldSiteGeographyEnabled);
+            claimedDiscoveries: collectedSiteDiscoveryIds, greybox: !legacyArenaPreview && !worldSiteGeographyEnabled,
+            hunt: SelectedHunt);
         playerPositionInitialized = false;
         return true;
     }
@@ -97,7 +98,7 @@ public sealed partial class RunSimulation
         playerPositionInitialized = false;
         arenaEnvironment = ArenaEnvironmentState.Create(mapState.Seed, node, worldFirstGeography: worldSiteGeographyEnabled,
             claimedDiscoveries: collectedSiteDiscoveryIds, greybox: !legacyArenaPreview && !worldSiteGeographyEnabled,
-            terrain: hunt1TerrainEnabled, terrainInfluence: hunt1InfluenceOverride);
+            terrain: hunt1TerrainEnabled, terrainInfluence: hunt1InfluenceOverride, hunt: SelectedHunt);
         PrepareBellWardenNode(node);
         PrepareReliquaryNode(node);
         RollNodeElite(node);
