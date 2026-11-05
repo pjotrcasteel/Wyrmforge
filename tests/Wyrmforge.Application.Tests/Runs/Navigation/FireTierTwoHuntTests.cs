@@ -303,10 +303,15 @@ public sealed class FireTierTwoHuntTests
 
     private static void FallBackToRefuge(RunSimulation simulation)
     {
+        // The refuge's attunement reward may open a draft when the next XP shard is collected.
+        // Combat ticks pause at a pending choice, so resolve it before simulating a fatal hit.
+        Resolve(simulation);
+        var returnsBeforeDeath = simulation.RefugeReturns;
         Field<PlayerState>(simulation, "player").Health = 0;
         simulation.Tick(.05, default, 390, 700);
         Assert.IsFalse(simulation.IsEnded);
         Assert.IsNotNull(simulation.RefugeNodeId);
+        Assert.AreEqual(returnsBeforeDeath + 1, simulation.RefugeReturns, "A paused choice must never masquerade as a refuge return.");
     }
 
     private static void KillHollowAndCollectExperience(RunSimulation simulation, int id)
