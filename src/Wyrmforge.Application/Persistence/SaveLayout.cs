@@ -23,12 +23,14 @@ public enum SaveDomain
 /// <summary>The single map from every browser storage key to its state domain. A new key must be classified here.</summary>
 public static class SaveLayout
 {
+    public const string HunterSave = "wyrmforge.hunterSave.v1";
     public const string World = "wyrmforge.world.v1";
     public const string Chronicles = "wyrmforge.chronicles.v1";
     public const string LegacyGrants = "wyrmforge.legacyGrants.v1";
 
     public static IReadOnlyDictionary<string, SaveDomain> Keys { get; } = new Dictionary<string, SaveDomain>(StringComparer.Ordinal)
     {
+        [HunterSave] = SaveDomain.PlayerLegacy,
         ["wyrmforge.firstHunt.v1"] = SaveDomain.Onboarding,
         ["wyrmforge.arcaneBuild.v1"] = SaveDomain.PlayerLegacy,
         ["wyrmforge.characterSchool.v1"] = SaveDomain.PlayerLegacy,
@@ -40,7 +42,7 @@ public static class SaveLayout
         ["wyrmforge.forgeMastery"] = SaveDomain.PlayerLegacy,
         ["wyrmforge.spellMastery.v1"] = SaveDomain.PlayerLegacy,
         ["wyrmforge.laboratory.v1"] = SaveDomain.PlayerLegacy,
-            ["wyrmforge.fireballCore.v1"] = SaveDomain.PlayerLegacy,
+        ["wyrmforge.fireballCore.v1"] = SaveDomain.PlayerLegacy,
         ["wyrmforge.loadouts.v1"] = SaveDomain.PlayerLegacy,
         ["wyrmforge.bestiary.v1"] = SaveDomain.PlayerLegacy,
         [LegacyGrants] = SaveDomain.PlayerLegacy,
@@ -50,7 +52,7 @@ public static class SaveLayout
         ["wyrmforge.bestScore"] = SaveDomain.Endgame,
         ["wyrmforge.hall-of-fame.local.v1"] = SaveDomain.Endgame,
         ["wyrmforge.hall-of-fame.pending.v1"] = SaveDomain.Endgame,
-        ["wyrmforge.preferredPrimary.v1"] = SaveDomain.Preferences,
+        ["wyrmforge.preferredPrimary.v1"] = SaveDomain.PlayerLegacy,
         ["wyrmforge.townLighting.v1"] = SaveDomain.Preferences,
         ["wyrmforge.damage-numbers.v1"] = SaveDomain.Preferences,
         ["wyrmforge.reviewPrompt.v1"] = SaveDomain.Preferences,
@@ -71,6 +73,12 @@ public static class SaveLayout
         ["wyrmforge.g4.lastReceipt.v1"] = SaveDomain.Telemetry,
         ["wyrmforge.g4.autoSendConsent.v1"] = SaveDomain.Preferences,
     };
+
+    public static string[] HunterKeys { get; } = Keys
+        .Where(entry => entry.Key != HunterSave && (entry.Value is SaveDomain.Onboarding or SaveDomain.PlayerLegacy or SaveDomain.World or
+            SaveDomain.Chronicle || entry.Key is "wyrmforge.greatHunt.v1" or "wyrmforge.bestScore"))
+        .Select(entry => entry.Key)
+        .ToArray();
 
     public static SaveDomain? DomainOf(string key) => Keys.TryGetValue(key, out var domain) ? domain : null;
 }
