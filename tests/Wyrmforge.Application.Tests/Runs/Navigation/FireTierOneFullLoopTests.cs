@@ -22,6 +22,8 @@ public sealed class FireTierOneFullLoopTests
     private const int PhoneWidth = 390;
     private const int PhoneHeight = 700;
 
+    public TestContext TestContext { get; set; } = null!;
+
     [TestMethod]
     [DataRow(42)]
     [DataRow(1204)]
@@ -53,22 +55,42 @@ public sealed class FireTierOneFullLoopTests
         CollectionAssert.AreEqual(first.Decisions.ToArray(), second.Decisions.ToArray());
     }
 
-    private static (RunSelfPlayMetrics Metrics, RunSimulation Simulation) PlayFullHunt(int seed)
+    [TestMethod]
+    [DataRow(42)]
+    [DataRow(1204)]
+    public void FullHunt_DamageableAgent_ReachesAnHonestNaturalOutcome(int seed)
+    {
+        var result = PlayFullHunt(seed, damageable: true);
+        TestContext.WriteLine($"seed={seed} outcome={result.Metrics.Outcome} stop={result.Metrics.StopReason} " +
+            $"healthMin={result.Metrics.MinimumHealthRatio:F3} damageTaken={result.Metrics.DamageTaken:F1} " +
+            $"routes={result.Metrics.CompletedRouteNodes} boss={result.Metrics.WyrmsReached} " +
+            $"victories={result.Metrics.DragonsSlain} essenceSecured={result.Metrics.EssenceSecured} " +
+            $"rituals={result.Metrics.ExtractionRitualsCompleted} seconds={result.Metrics.SimulatedSeconds:F1}");
+
+        Assert.AreEqual(RunSelfPlayStopReason.NaturalEnd, result.Metrics.StopReason,
+            "The damageable agent must reach a natural death or extraction rather than time out or abandon.");
+        Assert.IsTrue(result.Metrics.Outcome is RunOutcome.Defeated or RunOutcome.Extracted,
+            "A genuine defeat is valid evidence, not proof of a successful extraction.");
+        Assert.IsGreaterThan(0, result.Metrics.DamageTaken, "This trial must expose the mage to real combat damage.");
+        Assert.IsLessThan(1, result.Metrics.MinimumHealthRatio, "Health must not be silently reset by the agent.");
+    }
+
+    private static (RunSelfPlayMetrics Metrics, RunSimulation Simulation) PlayFullHunt(int seed, bool damageable = false)
     {
         var simulation = new RunSimulationFactory(new SeededRandomSource(seed))
             .Create(new HashSet<string>(), seed: seed, hunt: HuntSelection.FireTierOne);
         var build = SelfPlayBuildCatalog.Get("Fire • Inferno");
-        var agent = new InvulnerableAgent(new HeuristicRunAgent(RunAgentPersonality.BuildFocused, seed, build.PreferredSchool), simulation);
+        var heuristic = new HeuristicRunAgent(RunAgentPersonality.BuildFocused, seed, build.PreferredSchool);
+        IRunAgent agent = damageable ? new ExitPathAssistAgent(heuristic) : new InvulnerableAgent(heuristic, simulation);
         var metrics = new RunSelfPlayDriver().Play(build, seed, simulation, agent,
             new RunSelfPlayOptions(ArenaWidth: PhoneWidth, ArenaHeight: PhoneHeight, MaximumSimulatedSeconds: 3600));
         return (metrics, simulation);
     }
 
-    // Combat skill is not under test; the loop is. Health is restored so a balance-dependent death cannot hide a loop regression.
-    // Spells pause during the walk to the exit, so a pinned agent sidesteps the blocking prop as a player would.
-    private sealed class InvulnerableAgent(IRunAgent inner, RunSimulation simulation) : IRunAgent
+    // Spells pause during the walk to the exit, so both agents sidestep a blocking prop as a player would.
+    // This adapter only returns controller input. It never changes player health, position, damage or rewards.
+    private class ExitPathAssistAgent(IRunAgent inner) : IRunAgent
     {
-        private static readonly FieldInfo PlayerField = typeof(RunSimulation).GetField("player", BindingFlags.Instance | BindingFlags.NonPublic)!;
         private (double X, double Y) anchor;
         private int stalledTicks;
         private int sidestepTicksLeft;
@@ -77,10 +99,8 @@ public sealed class FireTierOneFullLoopTests
 
         public string Name => inner.Name;
 
-        public MovementInput ChooseMovement(RunAgentObservation observation)
+        public virtual MovementInput ChooseMovement(RunAgentObservation observation)
         {
-            var player = (PlayerState)PlayerField.GetValue(simulation)!;
-            player.Health = simulation.MaxHealth;
             var movement = inner.ChooseMovement(observation);
             var position = observation.Snapshot.Player is { } snapshotPlayer ? (snapshotPlayer.X, snapshotPlayer.Y) : anchor;
             var moved = Math.Abs(position.Item1 - anchor.X) + Math.Abs(position.Item2 - anchor.Y) > 4;
@@ -115,5 +135,19 @@ public sealed class FireTierOneFullLoopTests
         public RelicId ChooseRelic(RunAgentObservation observation) => inner.ChooseRelic(observation);
         public DragonEssenceId ChooseEssence(RunAgentObservation observation) => inner.ChooseEssence(observation);
         public RunCheckpointActionId ChooseCheckpointAction(RunAgentObservation observation) => inner.ChooseCheckpointAction(observation);
+    }
+
+    // Structural smoke only: health is restored so balance-dependent death cannot hide a navigation regression.
+    // The separate damageable-agent test above must never use this subclass.
+    private sealed class InvulnerableAgent(IRunAgent inner, RunSimulation simulation) : ExitPathAssistAgent(inner)
+    {
+        private static readonly FieldInfo PlayerField = typeof(RunSimulation).GetField("player", BindingFlags.Instance | BindingFlags.NonPublic)!;
+
+        public override MovementInput ChooseMovement(RunAgentObservation observation)
+        {
+            var player = (PlayerState)PlayerField.GetValue(simulation)!;
+            player.Health = simulation.MaxHealth;
+            return base.ChooseMovement(observation);
+        }
     }
 }
