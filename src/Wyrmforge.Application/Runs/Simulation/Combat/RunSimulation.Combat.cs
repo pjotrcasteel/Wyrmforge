@@ -199,13 +199,13 @@ public sealed partial class RunSimulation
                 if (mapState.EncounterActive && arenaEnvironment is { } environment)
                 {
                     var loot = HuntLootCatalog.For(SelectedHunt);
-                    var source = defeatedEnemy.Kind switch
+                    var lootSource = defeatedEnemy.Kind switch
                     {
                         EnemyKind.Ashling => HuntLootSource.Ashling,
                         EnemyKind.AshSlinger => HuntLootSource.AshSlinger,
                         _ => (HuntLootSource?)null,
                     };
-                    if (source is { } ordinarySource)
+                    if (lootSource is { } ordinarySource)
                         foreach (var material in loot.MaterialsFor(ordinarySource, defeatedEnemy.Id))
                             environment.SpawnMaterialPickup(defeatedEnemy.Position, arenaWidth, arenaHeight, material.ToString());
 
