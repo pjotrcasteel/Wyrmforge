@@ -150,6 +150,7 @@ export function readArenaDiagnostics(canvas) {
         player: state.latestSnapshot?.player ?? null,
         world: state.latestSnapshot?.world ?? null,
         exit: state.latestSnapshot?.exit ?? null,
+        exitPorts: state.latestSnapshot?.exitPorts ?? [],
         extraction: state.latestSnapshot?.extraction ?? null,
         enemies: state.latestSnapshot?.enemies ?? [],
         deathBursts: state.latestSnapshot?.deathBursts ?? [],

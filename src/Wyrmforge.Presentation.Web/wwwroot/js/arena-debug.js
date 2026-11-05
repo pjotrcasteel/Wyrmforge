@@ -170,11 +170,21 @@ function unstuckHuntDirection(player, heading, memory, now) {
     return now < memory.detourUntil ? memory.detour : heading;
 }
 
+/** Forked world sites expose exitPorts, not the legacy single exit; follow the closest real portal. */
+function nearestExitPort(player, ports) {
+    let nearest = null, bestDistance = Number.POSITIVE_INFINITY;
+    for (const port of ports ?? []) {
+        const distance = Math.hypot(port.x - player.x, port.y - player.y);
+        if (distance < bestDistance) { nearest = port; bestDistance = distance; }
+    }
+    return nearest;
+}
+
 /** Kite until the exit opens, then walk to it, sidestepping when props or rock pin the straight line. */
 export function botMovement(snapshot, memory, now, frame = null) {
     const player = snapshot?.player;
     if (!player || snapshot.paused || snapshot.ended) return { x: 0, y: 0 };
-    const exit = snapshot.exit ?? snapshot.extraction;
+    const exit = snapshot.exit ?? snapshot.extraction ?? nearestExitPort(player, snapshot.exitPorts);
     if (!exit) {
         memory.bestDistance = Number.POSITIVE_INFINITY;
         // Once an enemy survives sustained fire, keep pursuing it instead of alternating between a brief step and another hold.

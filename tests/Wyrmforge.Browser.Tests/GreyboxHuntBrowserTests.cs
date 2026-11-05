@@ -299,7 +299,10 @@ public sealed class GreyboxHuntBrowserTests : PageTest
             var state = await Page.EvaluateAsync<string>(@"async () => {
                 const module = await import('/js/arena-performance.js');
                 const s = module.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
-                return JSON.stringify({ debug: s?.debug, hud: { kills: s?.hud?.kills, hp: s?.hud?.health, t: s?.hud?.seconds }, paused: s?.paused, ended: s?.ended, exit: s?.exit, p: s?.player && [Math.round(s.player.x), Math.round(s.player.y)], enemies: s?.enemies?.length });
+                return JSON.stringify({ debug: s?.debug, hud: { kills: s?.hud?.kills, hp: s?.hud?.health, t: s?.hud?.seconds },
+                    paused: s?.paused, ended: s?.ended, exit: s?.exit, exitPorts: s?.exitPorts,
+                    p: s?.player && [Math.round(s.player.x), Math.round(s.player.y)], enemies: s?.enemies?.length,
+                    overlays: [...document.querySelectorAll('[role="dialog"]')].map(e => e.getAttribute('aria-label')) });
             }");
             Assert.Fail("first trail did not return to the Chart: " + state);
         }

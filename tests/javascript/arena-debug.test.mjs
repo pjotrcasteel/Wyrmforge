@@ -42,6 +42,17 @@ test('once the exit opens the bot walks straight to it', () => {
     assert.deepEqual(botMovement(at(100, 203, { exit: { x: 100, y: 200 } }), memory, 10), { x: 0, y: 0 }, 'inside the dead zone it stops');
 });
 
+test('a world-site fork uses its real exit ports rather than kiting after the trail is vanquished', () => {
+    const memory = createBotMemory();
+    const exits = [{ x: 80, y: 240, radius: 37 }, { x: 900, y: 1600, radius: 37 }];
+    const snapshot = at(96, 680, { exitPorts: exits });
+    assert.deepEqual(botMovement(snapshot, memory, 0), botMovement(at(96, 680, { exit: exits[0] }), createBotMemory(), 0));
+    assert.deepEqual(botMovement(at(900, 1300, { exitPorts: exits }), memory, 100), { x: 0, y: 1 },
+        'after moving near the other branch the bot pursues that reachable portal');
+    assert.deepEqual(botMovement(at(900, 1599, { exitPorts: exits }), memory, 200), { x: 0, y: 0 },
+        'the bot stops inside the selected portal radius');
+});
+
 test('a pinned bot sidesteps perpendicular to the exit for a moment, then resumes', () => {
     const memory = createBotMemory();
     const stuck = at(100, 900, { exit: { x: 100, y: 200 } });
