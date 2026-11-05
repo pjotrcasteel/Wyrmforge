@@ -93,4 +93,12 @@ public sealed class HuntLootCatalogTests
         Assert.Throws<ArgumentException>(() => HuntLootCatalog.For(new HuntSelection(fire, WyrmTier.Divine)));
         Assert.IsFalse(HuntLootCatalog.FireTierThree.Rules.Any(rule => HuntMaterialCatalog.Rarity(rule.Material) == LootRarity.Legendary));
     }
+
+    [TestMethod]
+    public void InvalidSourceOdds_CannotEnterAnAuthoredTable()
+    {
+        var invalidRule = new HuntLootRule(HuntLootSource.OptionalCache, HuntMaterialId.CharredScrap,
+            HuntLootRollKind.ExistingSiteSeedRoll, Chance: double.NaN);
+        Assert.Throws<ArgumentException>(() => new HuntLootTable(HuntSelection.FireTierOne, invalidRule));
+    }
 }

@@ -52,7 +52,7 @@ public sealed class HuntLootTable
     {
         Hunt = hunt;
         Rules = Array.AsReadOnly(rules);
-        if (rules.Any(rule => !CanDrop(rule.Material) || rule.Interval <= 0 || rule.Chance is < 0 or > 1) ||
+        if (rules.Any(rule => !CanDrop(rule.Material) || rule.Interval <= 0 || !double.IsFinite(rule.Chance) || rule.Chance is < 0 or > 1) ||
             rules.Select(rule => (rule.Source, rule.Material)).Distinct().Count() != rules.Length)
             throw new ArgumentException("Hunt loot rules must be valid, unique and within the tier rarity ceiling.");
     }
