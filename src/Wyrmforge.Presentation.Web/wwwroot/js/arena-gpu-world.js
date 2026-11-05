@@ -5,6 +5,23 @@ import { lightsIntersectingView } from './lighting/registry.js';
 import { lightingQualityBudget } from './lighting/quality.js';
 const UNIT = 48;
 const GROUND_Y = Math.SQRT2;
+export const GROUND_EMISSIVE_ID = 'hunt-ground-emissive';
+export const GROUND_NORMAL_ID = 'hunt-ground-normal';
+const GROUND_NORMAL_SCALE = 1.1;
+const GROUND_EMISSION_INTENSITY = 1;
+
+/**
+ * Legacy stretches world ground and light data by sqrt2 so a 45 degree orthographic camera lands one ground pixel on one
+ * screen pixel. Metric keeps the world 1:1:1 and squeezes the camera's vertical frustum by 1/sqrt2 instead: projecting
+ * along (0,1,-1) onto the ground plane is the same orthographic view with an anisotropic screen scale, so screenY = y - z
+ * holds while normals, light vectors and shadow maps stay in real units. Opt-in via the `shear=1` debug flag.
+ */
+export const HUNT_PROJECTIONS = Object.freeze({
+    legacy: Object.freeze({ name: 'legacy', groundY: GROUND_Y, verticalScale: 1, uprightBillboards: false }),
+    metric: Object.freeze({ name: 'metric', groundY: 1, verticalScale: Math.SQRT1_2, uprightBillboards: true }),
+});
+// The billboard plane lies in XY with its art growing along +Y; a quarter turn about X stands it upright facing the viewer (-Y).
+const UPRIGHT_BILLBOARD = new T.Euler(Math.PI / 2, 0, 0);
 
 /** The live Hunt consumes its WebGL frame immediately in a 2D canvas.
  * Keep diagnostic/lab retention unchanged, but avoid preserving the mobile GPU
@@ -35,21 +52,21 @@ export function compositeHuntGpuFrame(ctx, source) {
         ctx.restore();
     }
 }
-function projectLightDirection(direction) {
-    const projected = [direction[0], -direction[1] * GROUND_Y, direction[2]];
+function projectLightDirection(direction, groundY = GROUND_Y) {
+    const projected = [direction[0], -direction[1] * groundY, direction[2]];
     const length = Math.hypot(...projected);
     // Point emitters may have a zero direction; never introduce NaN there.
     return length === 0 ? projected : projected.map(value => value / length);
 }
-export function huntLightFrame(frame, camera, viewport = null) {
+export function huntLightFrame(frame, camera, viewport = null, profile = HUNT_PROJECTIONS.legacy) {
     if (!frame) throw new TypeError('Missing authoritative Hunt lighting');
     const visible = viewport ? lightsIntersectingView(frame.lights, {
         left: camera.x, top: camera.y,
         right: camera.x + viewport.width, bottom: camera.y + viewport.height,
     }) : frame.lights;
     return { ...frame, lights: visible.map(light => ({ ...light,
-        position: [(light.position[0] - camera.x) / UNIT, -(light.position[1] - camera.y) * GROUND_Y / UNIT, light.position[2] / UNIT],
-        direction: projectLightDirection(light.direction),
+        position: [(light.position[0] - camera.x) / UNIT, -(light.position[1] - camera.y) * profile.groundY / UNIT, light.position[2] / UNIT],
+        direction: projectLightDirection(light.direction, profile.groundY),
         range: light.range / UNIT, intensity: light.intensity,
     })) };
 }
@@ -70,14 +87,15 @@ const material = id => ({ id, albedo: id, color: '#ffffff', roughness: .95, meta
  * sin(45 degrees). The reciprocal is the existing GROUND_Y screen/world scale.
  * Transparent padding stays transparent; it cannot become a rectangle shadow.
  */
-export function huntCaptureSilhouetteCaster(x, y, width, height, footFraction = .75, occluderHeightPx = height * GROUND_Y) {
+export function huntCaptureSilhouetteCaster(x, y, width, height, footFraction = .75, occluderHeightPx = undefined, profile = HUNT_PROJECTIONS.legacy) {
+    occluderHeightPx ??= height * profile.groundY;
     if (!(width > 0 && height > 0) || !Number.isFinite(footFraction) || footFraction <= 0 || footFraction > 1 ||
         !Number.isFinite(occluderHeightPx) || occluderHeightPx <= 0)
         throw new RangeError('Invalid silhouette dimensions, physical height or foot anchor');
     const verticalHeight = occluderHeightPx / UNIT;
     return { occluderGeometry: 'hunt-shadow-silhouette',
         occluderPosition: [(x + width / 2) / UNIT,
-            -(y + height * footFraction) * GROUND_Y / UNIT,
+            -(y + height * footFraction) * profile.groundY / UNIT,
             -(1 - footFraction) * verticalHeight],
         occluderRotation: [Math.PI / 2, 0, 0],
         occluderScale: [width / UNIT, verticalHeight, 1],
@@ -86,16 +104,16 @@ export function huntCaptureSilhouetteCaster(x, y, width, height, footFraction = 
 /** A source-authored solid volume uses its real ground footprint and height.
  * Its opaque geometry is independent of any padded 2D presentation capture.
  */
-export function huntSolidVolumeCaster({ x, y, width, depth, height }) {
+export function huntSolidVolumeCaster({ x, y, width, depth, height }, profile = HUNT_PROJECTIONS.legacy) {
     if (![x, y, width, depth, height].every(Number.isFinite) || width <= 0 || depth <= 0 || height <= 0)
         throw new RangeError('Invalid physical caster volume');
     return { occluderGeometry: 'hunt-solid-volume', occluderAlphaSource: false,
-        occluderPosition: [(x + width / 2) / UNIT, -(y + depth / 2) * GROUND_Y / UNIT, height / (2 * UNIT)],
+        occluderPosition: [(x + width / 2) / UNIT, -(y + depth / 2) * profile.groundY / UNIT, height / (2 * UNIT)],
         occluderRotation: [0, 0, 0],
-        occluderScale: [width / UNIT, depth * GROUND_Y / UNIT, height / UNIT] };
+        occluderScale: [width / UNIT, depth * profile.groundY / UNIT, height / UNIT] };
 }
 
-export function huntSurfaceRenderable(id, x, y, width, height, castsShadow, surface = {}) {
+export function huntSurfaceRenderable(id, x, y, width, height, castsShadow, surface = {}, profile = HUNT_PROJECTIONS.legacy) {
     const geometry = surface.geometry ?? (castsShadow ? 'hunt-billboard' : 'hunt-plane');
     const standing = surface.standing ?? geometry === 'hunt-billboard';
     const footFraction = standing ? surface.footFraction ?? .75 : 1;
@@ -114,9 +132,9 @@ export function huntSurfaceRenderable(id, x, y, width, height, castsShadow, surf
     return {
         id, ownerId: surface.ownerId ?? id, geometry, material: id,
         position: surface.position ?? [(x + width / 2) / UNIT,
-            -(y + height * (standing ? 1 : .5)) * GROUND_Y / UNIT, standing ? .001 : 0],
+            -(y + height * (standing ? 1 : .5)) * profile.groundY / UNIT, standing ? .001 : 0],
         rotation: surface.rotation ?? [0, 0, 0],
-        scale: surface.scale ?? [width / UNIT, height * (standing ? 1 : GROUND_Y) / UNIT, 1],
+        scale: surface.scale ?? [width / UNIT, height * (standing ? 1 : profile.groundY) / UNIT, 1],
         castsShadow: surface.castsShadow ?? castsShadow,
         receivesShadow: surface.receivesShadow ?? true,
         receivesLight: surface.receivesLight ?? true,
@@ -180,10 +198,14 @@ export function huntCrossedShadowGeometry() {
  * occluders retain the authored world rotation and exact foot anchor.
  * Neither pose height nor shadow geometry depends on active light selection.
  */
-export function alignHuntActorBillboards(objects, engine) {
+export function alignHuntActorBillboards(objects, engine, upright = false) {
     for (const descriptor of objects) {
         if (descriptor.geometry !== 'hunt-billboard') continue;
-        engine.objects.get(descriptor.id)?.mesh.quaternion.copy(engine.camera.quaternion);
+        const mesh = engine.objects.get(descriptor.id)?.mesh;
+        if (!mesh) continue;
+        // Metric projection: a vertical quad already lands one world unit on one screen pixel.
+        if (upright) mesh.quaternion.setFromEuler(UPRIGHT_BILLBOARD);
+        else mesh.quaternion.copy(engine.camera.quaternion);
     }
 }
 /** Reveal which authoritative emitters actually received scarce point-shadow views.
@@ -208,12 +230,15 @@ export function huntShadowAllocationReport(lights = [], selected = [], capacity 
 }
 
 export class HuntGpuWorld {
-    constructor({ quality = 'balanced' } = {}) {
+    constructor({ quality = 'balanced', projection = 'legacy' } = {}) {
+        this.projection = HUNT_PROJECTIONS[projection];
+        if (!this.projection) throw new RangeError(`Unknown Hunt projection: ${projection}`);
         this.canvas = document.createElement('canvas');
         this.quality = quality;
         const device = typeof navigator === 'undefined' ? null : navigator;
         this.engine = new LightingEngine(this.canvas, huntGpuRendererBudget(quality,
             needsRetainedHuntBuffer(device?.userAgent, device?.maxTouchPoints)));
+        this.engine.verticalScale = this.projection.verticalScale;
         this.engine.registerGeometry('hunt-plane', new T.PlaneGeometry(1, 1));
         this.engine.registerGeometry('hunt-billboard', huntActorGeometry());
         // G1-style alpha-cutout sprite silhouettes retain source-pixel scale
@@ -248,7 +273,7 @@ export class HuntGpuWorld {
         this.objects.push(renderable);
     }
     diagnostics() {
-        return { ...this.engine.diagnostics(), quality: this.quality,
+        return { ...this.engine.diagnostics(), quality: this.quality, projection: this.projection.name,
             shadowAllocation: huntShadowAllocationReport(this.engine.snapshot?.lights ?? [],
                 this.engine.selected ?? [], this.engine.shadowViews),
             textureUploads: this.lastFrameUploads,
@@ -257,48 +282,75 @@ export class HuntGpuWorld {
             // CPU submission only. True GPU time, thermals and battery need physical devices.
             submissionCpu: this.submissionCpu ?? { frames: 0, lastMs: 0, meanMs: 0, peakMs: 0 } };
     }
-    begin(ctx, camera, width, height) {
+    /** Diagnostic: where every submitted mesh sits in renderer units (x right, y ground depth, z up). */
+    sceneReport(limit = 60) {
+        const round = value => Math.round(value * 100) / 100;
+        return [...this.engine.objects].slice(0, limit).map(([id, entry]) => {
+            const mesh = entry.mesh;
+            return { id, p: [mesh.position.x, mesh.position.y, mesh.position.z].map(round),
+                s: [mesh.scale.x, mesh.scale.y, mesh.scale.z].map(round), visible: mesh.visible !== false };
+        });
+    }
+    begin(ctx, camera, width, height, groundEmissive = null, groundNormal = null, ground = null) {
         this.camera = camera; this.width = width; this.height = height;
         this.used.clear(); this.dirtyTextures.clear(); this.objects = []; this.materials = [];
-        this.capture('hunt-ground', ctx.canvas, 0, 0, width, height, 0, false);
+        // `ground` ({ source, scale }) supplies the ground albedo painted at `scale` pixels per world unit (the 64 px/m terrain); the emissive and
+        // normal maps then share that density and the drawing buffer follows it. Without it the ground is the visible canvas at 1x as before.
+        const scale = ground?.scale ?? 1;
+        this.engine.renderScale = scale;
+        // The emissive map is a second viewport-sized layer over the same ground plane: black where nothing glows, so crack veins,
+        // hot craters and the bedrock hint are lit surfaces that stay bright in the dark and sit beneath every actor.
+        if (groundEmissive) this.uploadLayer(GROUND_EMISSIVE_ID, groundEmissive, width, height, undefined, true, scale);
+        // Normals are data, not colour: no sRGB decode. Convention OpenGL / three.js tangent space (G toward the top of the image).
+        if (groundNormal) this.uploadLayer(GROUND_NORMAL_ID, groundNormal, width, height, undefined, false, scale);
+        const material = {
+            ...(groundEmissive ? { emissiveMap: GROUND_EMISSIVE_ID, emission: '#ffffff', emissionIntensity: GROUND_EMISSION_INTENSITY } : {}),
+            ...(groundNormal ? { normal: GROUND_NORMAL_ID, normalScale: GROUND_NORMAL_SCALE } : {}),
+        };
+        this.capture('hunt-ground', ground?.source ?? ctx.canvas, 0, 0, width, height, 0, false,
+            { ...(Object.keys(material).length ? { material } : {}), ...(scale !== 1 ? { pixelScale: scale } : {}) });
     }
     /** Callers may skip repaint only when their explicit visual revision is unchanged. */
-    canReuseCapture(id, revision, width, height) {
+    canReuseCapture(id, revision, width, height, pixelScale = 1) {
         const layer = this.layers.get(id);
         return revision !== undefined && layer?.revision === revision &&
-            layer.pixels.width === Math.max(1, Math.ceil(width)) &&
-            layer.pixels.height === Math.max(1, Math.ceil(height));
+            layer.pixels.width === Math.max(1, Math.ceil(width * pixelScale)) &&
+            layer.pixels.height === Math.max(1, Math.ceil(height * pixelScale));
     }
-    capture(id, source, x, y, width, height, elevation = 0, castsShadow = true, surface = {}) {
+    /** Registers (once) and refreshes a Canvas-backed GPU texture; returns whether pixels were re-uploaded. */
+    uploadLayer(id, source, width, height, revision, colorData = true, pixelScale = 1) {
+        if (revision !== undefined && (typeof revision !== 'string' &&
+            !(typeof revision === 'number' && Number.isFinite(revision))))
+            throw new TypeError('Capture revision must be a stable string or finite number');
+        this.used.add(id);
+        let layer = this.layers.get(id);
+        const unchanged = this.canReuseCapture(id, revision, width, height, pixelScale);
+        const pixelWidth = Math.max(1, Math.ceil(width * pixelScale)), pixelHeight = Math.max(1, Math.ceil(height * pixelScale));
+        if (!layer) {
+            const pixels = document.createElement('canvas');
+            pixels.width = pixelWidth; pixels.height = pixelHeight;
+            const texture = new T.CanvasTexture(pixels);
+            this.engine.registerTexture(id, texture, colorData);
+            layer = { pixels, texture }; this.layers.set(id, layer);
+        }
+        if (unchanged) return false;
+        if (layer.pixels.width !== pixelWidth) layer.pixels.width = pixelWidth;
+        if (layer.pixels.height !== pixelHeight) layer.pixels.height = pixelHeight;
+        const ctx = layer.pixels.getContext('2d');
+        ctx.imageSmoothingEnabled = false;
+        ctx.clearRect(0, 0, layer.pixels.width, layer.pixels.height);
+        ctx.drawImage(source, 0, 0, layer.pixels.width, layer.pixels.height);
+        layer.texture.needsUpdate = true;
+        this.dirtyTextures.add(id);
+        layer.revision = revision;
+        return true;
+    }
+    capture(id, source, x, y, width, height, elevation = 0, castsShadow = true, requested = {}) {
+        // `pixelScale` is upload density only; it never reaches the renderable, the shadow caster or the material.
+        const { pixelScale = 1, ...surface } = requested;
         // Existing Canvas layers remain a migration fallback. New renderables may instead
         // reference registered GPU texture IDs, authored geometry and surface channels.
-        if (source) {
-            const revision = surface.revision;
-            if (revision !== undefined && (typeof revision !== 'string' &&
-                !(typeof revision === 'number' && Number.isFinite(revision))))
-                throw new TypeError('Capture revision must be a stable string or finite number');
-            this.used.add(id);
-            let layer = this.layers.get(id);
-            const unchanged = this.canReuseCapture(id, revision, width, height);
-            if (!layer) {
-                const pixels = document.createElement('canvas');
-                pixels.width = Math.max(1, Math.ceil(width)); pixels.height = Math.max(1, Math.ceil(height));
-                const texture = new T.CanvasTexture(pixels);
-                this.engine.registerTexture(id, texture);
-                layer = { pixels, texture }; this.layers.set(id, layer);
-            }
-            if (!unchanged) {
-                if (layer.pixels.width !== Math.ceil(width)) layer.pixels.width = Math.ceil(width);
-                if (layer.pixels.height !== Math.ceil(height)) layer.pixels.height = Math.ceil(height);
-                const ctx = layer.pixels.getContext('2d');
-                ctx.imageSmoothingEnabled = false;
-                ctx.clearRect(0, 0, layer.pixels.width, layer.pixels.height);
-                ctx.drawImage(source, 0, 0, layer.pixels.width, layer.pixels.height);
-                layer.texture.needsUpdate = true;
-                this.dirtyTextures.add(id);
-                layer.revision = revision;
-            }
-        }
+        if (source) this.uploadLayer(id, source, width, height, surface.revision, true, pixelScale);
         // An explicit 2.5D/3D occluder always wins. Legacy Canvas captures
         // contribute their own alpha silhouette through the shared shadow maps.
         // Capture quads and C# lights are projected into the camera viewport.
@@ -309,12 +361,12 @@ export class HuntGpuWorld {
                 ...surface.physicalVolume,
                 x: surface.physicalVolume.x - this.camera.x,
                 y: surface.physicalVolume.y - this.camera.y,
-            }) } : surface;
+            }, this.projection ?? HUNT_PROJECTIONS.legacy) } : surface;
         const capturedSurface = castsShadow && !authoredSurface.geometry && !authoredSurface.occluderGeometry
             ? { ...authoredSurface, ...huntCaptureSilhouetteCaster(x, y, width, height, authoredSurface.footFraction ?? .75,
-                authoredSurface.occluderHeightPx ?? height * GROUND_Y) }
+                authoredSurface.occluderHeightPx ?? height * (this.projection ?? HUNT_PROJECTIONS.legacy).groundY, this.projection ?? HUNT_PROJECTIONS.legacy) }
             : authoredSurface;
-        this.submitSurface(huntSurfaceRenderable(id, x, y, width, height, castsShadow, capturedSurface),
+        this.submitSurface(huntSurfaceRenderable(id, x, y, width, height, castsShadow, capturedSurface, this.projection ?? HUNT_PROJECTIONS.legacy),
             huntSurfaceMaterial(id, surface.material, Boolean(source)));
     }
     render(ctx, frame) {
@@ -323,8 +375,8 @@ export class HuntGpuWorld {
         // In renderer coordinates (Z up): derive relevance from the actual camera
         // window, not source IDs or assumptions about creatures/spell schools.
         engine.lightViewBounds = { minX: 0, maxX: this.width / UNIT,
-            minY: -this.height * GROUND_Y / UNIT, maxY: 0 };
-        engine.apply({ ...huntLightFrame(frame, this.camera, { width: this.width, height: this.height }), materials: this.materials, objects: this.objects });
+            minY: -this.height * (this.projection ?? HUNT_PROJECTIONS.legacy).groundY / UNIT, maxY: 0 };
+        engine.apply({ ...huntLightFrame(frame, this.camera, { width: this.width, height: this.height }, this.projection ?? HUNT_PROJECTIONS.legacy), materials: this.materials, objects: this.objects });
         // Only repainted Canvas sources need a new upload. Static authored textures and
         // atlas frames retain their GPU allocations across Hunt frames.
         const byMaterial = new Map(this.materials.map(value => [value.id, value]));
@@ -355,10 +407,10 @@ export class HuntGpuWorld {
         this.dirtyTextures.clear();
         engine.halfWidth = this.width / UNIT / 2;
         engine.camera.up.set(0, 0, 1);
-        const centerY = -this.height * GROUND_Y / UNIT / 2;
+        const centerY = -this.height * (this.projection ?? HUNT_PROJECTIONS.legacy).groundY / UNIT / 2;
         engine.camera.position.set(this.width / UNIT / 2, centerY - 30, 30);
         engine.camera.lookAt(this.width / UNIT / 2, centerY, 0);
-        alignHuntActorBillboards(this.objects, engine);
+        alignHuntActorBillboards(this.objects, engine, (this.projection ?? HUNT_PROJECTIONS.legacy).uprightBillboards);
         engine.render(this.width, this.height);
         compositeHuntGpuFrame(ctx, this.canvas);
         for (const [id, layer] of this.layers) if (!this.used.has(id)) {

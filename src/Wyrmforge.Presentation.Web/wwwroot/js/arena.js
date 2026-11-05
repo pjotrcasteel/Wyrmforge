@@ -6,11 +6,19 @@ import { preloadFireballV5 } from './arena-fireball-v5.js';
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
 import { attachArenaInput, getArenaMovement, getArenaAim, isArenaStickAim, getArenaPropFocus } from './arena-input.js';
 import { resolveTargetIndicator, presentTargetSigil, drawTargetIndicator, preloadTargetSigilArt, targetSelectionLightEmitter, targetSelectionCanvasLight, actorLightsWithoutSigilOverlay } from './arena-target-indicator.js?v=20261028-feet-centered-v3';
-import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, drawArenaCloisterElevation, semanticSiteModeEnabled } from './arena-environment.js?v=20261031-ar1-highlands-v1';
+import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, createDestructibleLayers, drawArenaCloisterElevation, semanticSiteModeEnabled } from './arena-environment.js?v=20261031-ar1-highlands-v1';
 import { drawAr1GeographyReview } from './arena-ar1-geography-review.js?v=20261031-ar1-site-detail-v1';
 import { drawGreyboxGround } from './arena-greybox-ground.js';
+import { TerrainCanvasCache, influenceBandIndex, blockInsetOverlayEnabled, drawBlockInsetOverlay, occludingTerrainCells, eraseTerrainOcclusion, repaintTerrainOcclusion, mergeTerrainFrame, TERRAIN_PAD_UNITS } from './arena-terrain-canvas.js';
+import { raisedActor, TERRAIN_ART_SCALE, FACE_PIXELS } from './arena-projection.js';
+import { ambientParticles, drawAmbientParticles } from './arena-ambient-particles.js';
+import { readArenaDebugFlags, botMovement, createBotMemory, withDebugAmbient, withMoonShadows } from './arena-debug.js';
+import { createFrameSampler, readHeapMegabytes, perfReport, perfLines } from './arena-perf.js';
+import { createDestructionFx, observeTerrain, drawDestructionFx, drawFireZoneVignette, drawCrackGlow, drawBedrockGlow, paintGroundEmissive } from './arena-destruction-fx.js';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
+import { drawTree, treeLayers, collectTrees, collectBushes, collectBoulders } from './arena-tree-art.js';
+import { drawTorch, torchLayers, collectTorches } from './arena-torch-art.js';
 import { drawRecoveryGuide } from './arena-recovery.js';
 import { drawSpellCastMotion, drawSpellProjectile, drawSpellImpact } from './arena-spell-vfx.js';
 import { drawMage, updateMageWalk } from './arena-mage.js';
@@ -45,7 +53,7 @@ function requestSharedGpuWorld(state, quality = 'mobile') {
     if (!state.active || state.gpuWorld || state.gpuPending || state.gpuError) return;
     state.gpuPending = true;
     void import('./arena-gpu-world.js').then(({ HuntGpuWorld }) => {
-        if (state.active) state.gpuWorld = new HuntGpuWorld({ quality });
+        if (state.active) state.gpuWorld = new HuntGpuWorld({ quality, projection: state.debug.shear ? 'metric' : 'legacy' });
     }).catch(error => { state.gpuError = String(error); })
         .finally(() => { state.gpuPending = false; });
 }
@@ -91,6 +99,30 @@ export function initializeArena(canvas, dotNetReference) {
     state.animationFrame = requestAnimationFrame(timestamp => frame(state, timestamp));
 }
 
+/** Browser-only design review: the whole Hunt 1.0 arena, painted terrain plus trees, bushes and boulders, as one unlit PNG at art density. Read-only. */
+export function renderArenaMapOverview(canvas) {
+    const state = arenas.get(canvas), frame = state?.terrainFrame, cache = state?.terrainCache;
+    if (!frame || !cache?.canvas) return null;
+    const band = huntBand(state, state.latestSnapshot);
+    const out = document.createElement('canvas');
+    out.width = cache.canvas.width; out.height = cache.canvas.height;
+    const g = out.getContext('2d');
+    g.imageSmoothingEnabled = false;
+    g.drawImage(cache.canvas, 0, 0);
+    g.setTransform(TERRAIN_ART_SCALE, 0, 0, TERRAIN_ART_SCALE, 0, TERRAIN_PAD_UNITS * TERRAIN_ART_SCALE);
+    const props = [...collectTrees(frame, band), ...collectBushes(frame, band), ...collectBoulders(frame, band),
+        ...collectTorches(frame).map(torch => ({ torch, depth: torch.y + 2 }))].sort((a, b) => a.depth - b.depth);
+    for (const prop of props) { if (prop.torch) drawTorch(g, prop.torch, 0); else drawTree(g, prop); }
+    return { png: out.toDataURL('image/png'), columns: frame.columns, rows: frame.rows, face: FACE_PIXELS, band, pad: TERRAIN_PAD_UNITS, scale: TERRAIN_ART_SCALE,
+        dug: [...frame.fine.keys()], stoneExposed: stoneExposedBlocks(frame) };
+}
+
+/** Indices of soil-topped blocks that have been dug down to their rock: evidence that excavation reached the strata. Read-only. */
+function stoneExposedBlocks(frame) {
+    if (!frame?.fine) return [];
+    return [...frame.fine].filter(([, block]) => block.topsoil <= 1 && block.heights.some(height => height <= block.stoneTop)).map(([index]) => index);
+}
+
 // Read-only diagnostics allow browser smoke to verify actual movement, not merely visible canvas pixels.
 export function readArenaDiagnostics(canvas) {
     const state = arenas.get(canvas);
@@ -118,6 +150,8 @@ export function readArenaDiagnostics(canvas) {
         player: state.latestSnapshot?.player ?? null,
         world: state.latestSnapshot?.world ?? null,
         exit: state.latestSnapshot?.exit ?? null,
+        exitPorts: state.latestSnapshot?.exitPorts ?? [],
+        extraction: state.latestSnapshot?.extraction ?? null,
         enemies: state.latestSnapshot?.enemies ?? [],
         deathBursts: state.latestSnapshot?.deathBursts ?? [],
         damageNumbers: state.latestSnapshot?.damageNumbers ?? [],
@@ -133,6 +167,7 @@ export function readArenaDiagnostics(canvas) {
         hunt: state.latestSnapshot?.hunt ?? null,
         performance: { fps:state.displayFps, simulationHz:state.displaySimulationHz, simulationMilliseconds:state.displaySimulationMilliseconds, bridgeMilliseconds:state.displayBridgeMilliseconds },
         renderingFailed: Boolean(state.renderingFailed),
+        renderError: state.renderError ?? null,
         renderingError: state.renderingError ?? null,
         sharedLighting: state.sharedLightingFrame ?? state.latestSnapshot?.lighting ?? null,
         lighting01: { enabled: Boolean(state.lighting01), fixedFixtures: state.lighting01FixtureCount ?? 0 },
@@ -151,6 +186,18 @@ export function readArenaDiagnostics(canvas) {
         terrainPresentation: state.latestSnapshot?.environment?.greybox
             ? 'one-meter-greybox' : state.g4FlatGround ? 'neutral-grey' : 'painted',
         framePresentation: state.g4StageFrames ? 'staged' : 'direct',
+        debug: state.debug,
+        perfReport: arenaPerfReport(state),
+        veinSeams: state.veinSeams ?? null,
+        destructionFx: state.destructionFx
+            ? { craters: state.destructionFx.craters, heat: state.destructionFx.heat.length, chips: state.destructionFx.chips.length } : null,
+        gpuScene: state.debug.shear ? state.gpuWorld?.sceneReport?.() ?? null : null,
+        hunt1Terrain: state.latestSnapshot?.environment?.terrain
+            ? { columns: state.latestSnapshot.environment.terrain.columns, rows: state.latestSnapshot.environment.terrain.rows,
+                snapshotRevision: state.latestSnapshot.environment.terrain.revision,
+                paintedRevision: state.terrainCache?.revision ?? null, repaints: state.terrainCache?.repaints ?? 0,
+                dugBlocks: state.terrainFrame?.fine?.size ?? 0, stoneExposed: stoneExposedBlocks(state.terrainFrame).length }
+            : null,
         lighting: { mode: 'night', darkness: GOTHIC_NIGHT.darkness, source: 'authoritative-csharp-snapshot' },
     };
 }
@@ -191,6 +238,10 @@ function createState(canvas, dotNetReference) {
         damageNumberMode: loadDamageNumberMode(window.localStorage),
         targetSigil: { key: null, activeMarker: null, lastOpacity: 0, enteredAt: 0, exitedAt: null, exitMarker: null },
         dotNetReference,
+        debug: readArenaDebugFlags(),
+        frameSampler: createFrameSampler(),
+        lastRenderTimestamp: 0,
+        botMemory: createBotMemory(),
         active: true,
         simulationBusy: false,
         latestSnapshot: null,
@@ -235,6 +286,7 @@ function frame(state, timestamp) {
         state.renderingFailed = false;
         state.renderingError = null;
     } catch (error) {
+        state.renderError = String(error?.stack ?? error).slice(0, 600);
         if (!state.renderingFailed) console.error('Wyrmforge arena drawing failed; simulation continues.', error);
         state.renderingFailed = true;
         state.renderingError = error?.stack ?? String(error);
@@ -263,7 +315,7 @@ function startSimulationFrame(state, timestamp, rect) {
     state.simulationBusy = true;
     const delta = Math.min((timestamp - state.lastSimulationTimestamp) / 1000, 0.05);
     state.lastSimulationTimestamp = timestamp;
-    const movement = getArenaMovement(state);
+    const movement = state.debug.bot ? botMovement(state.latestSnapshot, state.botMemory, performance.now(), state.terrainFrame ?? null) : getArenaMovement(state);
     const aim = getArenaAim(state);
     const bridgeStarted = performance.now();
 
@@ -273,6 +325,7 @@ function startSimulationFrame(state, timestamp, rect) {
             updatePlayerDanger(state.playerDanger, snapshot, performance.now());
             if (snapshot.paused) state.resetInput?.();
             state.latestSnapshot = snapshot;
+            requestTerrainFrame(state, snapshot);
             if (snapshot.environment?.greybox && snapshot.lighting)
                 requestSharedGpuWorld(state, 'mobile');
             state.simulationFrameCount++;
@@ -286,7 +339,31 @@ function startSimulationFrame(state, timestamp, rect) {
         .finally(() => state.simulationBusy = false);
 }
 
+// Hunt 1.0 terrain is pulled from C# only when its revision changes (one Fireball chip = one repaint).
+function requestTerrainFrame(state, snapshot) {
+    const terrain = snapshot.environment?.terrain;
+    if (!terrain || state.terrainRequestBusy || state.terrainFrame?.revision === terrain.revision) return;
+    state.terrainRequestBusy = true;
+    state.dotNetReference.invokeMethodAsync('TerrainFrame', state.terrainFrame?.revision ?? -1)
+        .then(frame => {
+            if (!frame) return;
+            const previous = state.terrainFrame;
+            state.terrainFrame = mergeTerrainFrame(previous, frame);
+            // Revision -1 is the initial full load, not destruction.
+            if (previous) observeTerrain(state.destructionFx ??= createDestructionFx(), previous, state.terrainFrame,
+                performance.now() / 1000, state.reducedMotion.matches);
+        })
+        .catch(error => console.error('Wyrmforge terrain frame failed.', error))
+        .finally(() => state.terrainRequestBusy = false);
+}
+// Wyrm Influence band 0..3 for presentation; `?band=N` previews another band without touching C# state.
+function huntBand(state, snapshot) {
+    return state.debug.band ?? influenceBandIndex(snapshot.environment?.corruption);
+}
+
 function recordRenderFrame(state, timestamp) {
+    if (state.lastRenderTimestamp) state.frameSampler.record(timestamp - state.lastRenderTimestamp);
+    state.lastRenderTimestamp = timestamp;
     state.renderFrameCount++;
     const seconds = (timestamp - state.performanceWindowStarted) / 1000;
     if (seconds < 0.75) return;
@@ -362,6 +439,9 @@ function draw(state, snapshot, width, height) {
     state.selectionGpuEmitter = selectionEmitter;
     state.sharedLightingFrame = withHollowFractureLightingFrame(snapshot.lighting,
         selectionEmitter ? [...fractureEmitters,selectionEmitter] : fractureEmitters);
+    // Debug inspection light (opt-in by URL): lifts only the ambient term of the frame handed to the renderer.
+    state.sharedLightingFrame = withDebugAmbient(state.sharedLightingFrame, state.debug.bright, state.debug.ambient);
+    state.sharedLightingFrame = withMoonShadows(state.sharedLightingFrame, state.debug.moonShadows);
     const spellLights = [
         ...buildSpellLights(snapshot, visualSeconds, state.reducedMotion.matches, lightViewport),
         ...hollowFractureCanvasLights(fractureEmitters,snapshot.lighting),
@@ -370,10 +450,22 @@ function draw(state, snapshot, width, height) {
     ctx.clearRect(0, 0, width, height);
     ctx.save();
     ctx.translate(-camera.x, -camera.y);
+    let artScale = 1, groundAlbedo = null;
     if (greybox) {
         // Level one-metre grey receiver. No material atlas or walls; the same
         // authoritative C# lights shade it and its actors through HuntGpuWorld.
-        drawGreyboxGround(ctx, snapshot.environment.greybox, worldWidth, worldHeight);
+        if (state.terrainFrame && snapshot.environment.terrain) {
+            // Hunt 1.0: the C# heightfield as flat colour ramps in the metric oblique projection.
+            const terrainCache = state.terrainCache ??= new TerrainCanvasCache();
+            if (gpu) terrainCache.enableNormals();
+            terrainCache.update(state.terrainFrame, huntBand(state, snapshot));
+            // 64 px/m terrain: the GPU ground is its own surface at artScale pixels per world unit, not the 1x visible canvas.
+            artScale = gpu ? Math.max(1, state.debug.renderScale ?? TERRAIN_ART_SCALE) : 1;
+            if (artScale > 1) groundAlbedo = groundAlbedoView(state, camera, width, height, artScale);
+            else state.terrainCache.draw(ctx, { x: camera.x, y: camera.y, width, height });
+        } else {
+            drawGreyboxGround(ctx, snapshot.environment.greybox, worldWidth, worldHeight);
+        }
     } else {
         if (!drawArenaEnvironment(ctx, snapshot.environment, worldWidth, worldHeight, visualSeconds, null,
             gpu ? 'gpu' : 'canvas', state.g4FlatGround)) {
@@ -440,28 +532,45 @@ function draw(state, snapshot, width, height) {
     const depthLayers = [
         ...(snapshot.dragon && !entranceOmen ? [{kind: 'dragon', depth:state.ashfang.entity?.shadow?Number.NEGATIVE_INFINITY:snapshot.dragon.y, dragon:snapshot.dragon}] : []),
         ...(state.ashfang.death ? [{kind:'dragonDeath',depth:state.ashfang.death.y}] : []),
-        ...snapshot.enemies.map(enemy => ({ kind: 'enemy', depth: enemy.y + (enemy.radius || 0), enemy })),
-        { kind: 'mage', depth: snapshot.player.y + (snapshot.player.radius || 0) },
-        ...(greybox ? [] : getArenaCloisterElevations(snapshot.environment, worldWidth, worldHeight, visualSeconds, null, state.g4FlatGround, gpu)),
+        // Depth sorts by the ground-plane feet; the drawn actor rises by its terrain height (metric oblique contract).
+        ...snapshot.enemies.map(enemy => ({ kind: 'enemy', depth: enemy.y + (enemy.radius || 0), enemy: raisedActor(enemy) })),
+        { kind: 'mage', depth: snapshot.player.y + (snapshot.player.radius || 0), player: raisedActor(snapshot.player) },
+        // The greybox keeps only the breakable salvage props (the Charred Scrap source), depth-sorted with actors.
+        // Hunt 1.0 trees: the C# trunk blocks are in the terrain; their canopies are depth-sorted layers.
+        ...(state.terrainFrame && snapshot.environment?.terrain
+            ? [...treeLayers(state.terrainFrame, huntBand(state, snapshot), camera, width, height), ...torchLayers(state.terrainFrame, camera, width, height)] : []),
+        ...(greybox ? createDestructibleLayers(snapshot.environment, worldWidth, worldHeight, visualSeconds)
+            : getArenaCloisterElevations(snapshot.environment, worldWidth, worldHeight, visualSeconds, null, state.g4FlatGround, gpu)),
     ];
-    if (gpu) gpu.begin(ctx, camera, width, height);
+    // On the GPU path the ground glows (crack veins, hot craters, bedrock hint) ride the ground's emissive map and are lit surfaces
+    // under every actor; the additive overlay versions below remain for the Canvas fallback.
+    const view = { x: camera.x, y: camera.y, width, height };
+    const emissive = gpu && state.terrainFrame && snapshot.environment?.terrain
+        ? paintGroundEmissive(state, state.terrainFrame, state.destructionFx, huntBand(state, snapshot),
+            view, performance.now() / 1000, state.reducedMotion.matches, artScale) : null;
+    if (emissive) state.veinSeams = emissive.seams;
+    const normal = gpu && state.terrainCache?.normalCanvas ? groundNormalView(state, camera, width, height, artScale) : null;
+    if (gpu) gpu.begin(ctx, camera, width, height, emissive?.canvas ?? null, normal, groundAlbedo ? { source: groundAlbedo, scale: artScale } : null);
     state.lighting01FixtureCount = gpu && state.lighting01
         ? submitLighting01Fixtures(gpu, snapshot.environment, state.sharedLightingFrame,
             camera, worldWidth, worldHeight) : 0;
     const worldContext = ctx;
     for (const layer of sortSceneDepthLayers(depthLayers)) {
         let tile, tileX, tileY, tileSize, capture, revision, reuse = false;
+        // Canopies are 64 px/m art like the terrain; actors keep their 1x sprites.
+        const pixelScale = layer.kind === 'tree' || layer.kind === 'torch' || layer.kind === 'torchFlame' ? artScale : 1;
         if (gpu) {
-            capture = huntLayerCapture(layer, snapshot.player, state.ashfang.death);
+            capture = huntLayerCapture(layer, layer.player ?? snapshot.player, state.ashfang.death);
             if (!capture) continue;
             ({ x: tileX, y: tileY, size: tileSize } = capture);
             if (tileX + tileSize < camera.x - 384 || tileY + tileSize < camera.y - 384 ||
                 tileX > camera.x + width + 384 || tileY > camera.y + height + 384) continue;
             revision = huntLayerRevision(layer, artReady(), artGeneration());
-            reuse = gpu.canReuseCapture(capture.id, revision, tileSize, tileSize);
-            tile = (state.gpuScratchPool ??= new HuntGpuScratchPool(4)).acquire(tileSize);
+            reuse = gpu.canReuseCapture(capture.id, revision, tileSize, tileSize, pixelScale);
+            // A reused capture never repaints, so it only needs a stand-in source; real scratch canvases are for layers that redraw.
+            tile = reuse ? (state.gpuReuseStub ??= document.createElement('canvas')) : (state.gpuScratchPool ??= new HuntGpuScratchPool(8)).acquire(Math.ceil(tileSize * pixelScale));
             if (!reuse) {
-                ctx = prepareHuntGpuScratch(tile, tileSize, tileX, tileY);
+                ctx = prepareHuntGpuScratch(tile, tileSize, tileX, tileY, pixelScale);
             }
         }
         if (!reuse) {
@@ -469,6 +578,10 @@ function draw(state, snapshot, width, height) {
                 drawArenaCloisterElevation(ctx, layer);
             } else if (layer.kind === 'dragon') {
                 drawDragon(ctx, layer.dragon, state.reducedMotion.matches, snapshot.dragonBreath, state.ashfang);
+            } else if (layer.kind === 'tree') {
+                drawTree(ctx, layer.tree);
+            } else if (layer.kind === 'torch' || layer.kind === 'torchFlame') {
+                drawTorch(ctx, layer.torch, visualSeconds, layer.kind === 'torch' ? 'post' : 'flame');
             } else if (layer.kind === 'dragonDeath') {
                 drawAshfangDeath(ctx,state.ashfang);
             } else if (layer.kind === 'enemy') {
@@ -483,10 +596,17 @@ function draw(state, snapshot, width, height) {
                 }
                 drawEliteCrest(ctx, enemy, visualSeconds, state.reducedMotion.matches);
             } else {
-                drawMage(ctx, snapshot.player, snapshot.castMotion, danger.hit, state.reducedMotion.matches,
+                drawMage(ctx, layer.player ?? snapshot.player, snapshot.castMotion, danger.hit, state.reducedMotion.matches,
                     gpu ? null : sampleSpellLight(spellLights, snapshot.player.x, snapshot.player.y),
                     updateMageWalk(state.mageWalk, snapshot.player, visualSeconds, state.reducedMotion.matches),
                     state.mageWalk.facing);
+            }
+            if (state.terrainFrame && (layer.kind === 'enemy' || layer.kind === 'mage')) {
+                // Raised rock in front of the actor hides it: the covered pixels fall away (GPU) or the rock is repainted (Canvas).
+                const body = layer.enemy ?? layer.player;
+                const cells = occludingTerrainCells(state.terrainFrame, body.x, body.y + (body.z || 0), body.z || 0, (body.radius || 16) * 1.25);
+                if (gpu) eraseTerrainOcclusion(ctx, state.terrainFrame, cells);
+                else repaintTerrainOcclusion(ctx, state.terrainFrame, huntBand(state, snapshot), cells);
             }
         }
         if (gpu) {
@@ -494,9 +614,12 @@ function draw(state, snapshot, width, height) {
             gpu.capture(capture.id,
                 tile, tileX - camera.x, tileY - camera.y, tileSize, tileSize,
                 .12 + Math.max(0, Math.min(1, layer.depth / worldHeight)) * .1,
-                true, { revision, footFraction: capture.footFraction,
+                layer.kind !== 'torchFlame', { revision, footFraction: capture.footFraction,
                     occluderHeightPx: capture.occluderHeightPx,
-                    physicalVolume: capture.physicalVolume });
+                    physicalVolume: capture.physicalVolume,
+                    // Only the flame glows (its light is the C# emitter, not this); the post is an ordinary lit surface.
+                    ...(layer.kind === 'torchFlame' ? { material: { roughness: .85, emission: '#ff8a30', emissionIntensity: .35 } } : {}),
+                    ...(pixelScale !== 1 ? { pixelScale } : {}) });
             ctx = worldContext;
         }
     }
@@ -507,8 +630,27 @@ function draw(state, snapshot, width, height) {
             state.gpuError = String(error); gpu.dispose(); state.gpuWorld = null; gpu = null;
         }
     }
+    const glowOnGround = Boolean(emissive && gpu);
     drawReliquaryEmergence(ctx, snapshot.reliquary);
     drawBellWardenEntrance(ctx, snapshot.bellWarden);
+    if (state.terrainFrame && snapshot.environment?.terrain) {
+        drawAmbientParticles(ctx, ambientParticles(huntBand(state, snapshot), visualSeconds,
+            { width: worldWidth, height: worldHeight }, state.reducedMotion.matches), { x: camera.x, y: camera.y, width, height });
+        const nowSeconds = performance.now() / 1000;
+        if (!glowOnGround) {
+            state.veinSeams = drawCrackGlow(ctx, state.terrainFrame, huntBand(state, snapshot), { x: camera.x, y: camera.y, width, height }, nowSeconds, state.reducedMotion.matches);
+            drawBedrockGlow(ctx, state.terrainFrame, { x: camera.x, y: camera.y, width, height }, nowSeconds, state.reducedMotion.matches);
+        }
+        if (state.destructionFx) drawDestructionFx(ctx, state.destructionFx, nowSeconds, { x: camera.x, y: camera.y, width, height }, glowOnGround ? 'chips' : 'all');
+        // The world is drawn translated by -camera here; the furnace glow belongs to the screen edges.
+        ctx.save();
+        ctx.translate(camera.x, camera.y);
+        drawFireZoneVignette(ctx, width, height, huntBand(state, snapshot), nowSeconds, state.reducedMotion.matches);
+        ctx.restore();
+        // The calibration overlay is drawn unlit over the composite so it is readable in any light.
+        if (state.blockInset ??= blockInsetOverlayEnabled())
+            drawBlockInsetOverlay(ctx, state.terrainFrame, { x: camera.x, y: camera.y, width, height });
+    }
     if (snapshot.powerBurst) {
         const pulse = snapshot.powerBurst;
         const radius = pulse.radius * (state.reducedMotion.matches ? 0.7 : 0.15 + 0.85 * pulse.progress);
@@ -1034,20 +1176,29 @@ function drawExperiencePickup(ctx, pickup) {
     ctx.restore();
 }
 
+function arenaPerfReport(state) {
+    const snapshot = state.latestSnapshot;
+    return perfReport({ sampler: state.frameSampler, renderer: state.gpuWorld ? 'gpu' : 'canvas', quality: state.gpuWorld?.quality ?? null,
+        terrain: state.terrainCache, heapMb: readHeapMegabytes(), enemies: snapshot?.enemies?.length ?? 0,
+        projectiles: snapshot?.projectiles?.length ?? 0, devicePixelRatio: window.devicePixelRatio || 1 });
+}
+
 function drawPerformanceCounter(state, ctx, snapshot, width, height) {
     // A large performance readout obscured monsters in the iPhone combat viewport.
     // Keep diagnostics available to testers without making them part of the ordinary HUD.
     if (typeof window === 'undefined' || new URLSearchParams(window.location.search).get('perf') !== '1') return;
-    const panelWidth = Math.min(218, Math.max(160, width - 24));
-    const panelHeight = 68;
-    const x = Math.max(12, width - panelWidth - 14);
+    const report = arenaPerfReport(state);
+    // Testers can read the same numbers as JSON from the console on desktop or via remote inspection.
+    window.__wyrmforgePerf = report;
+    const lines = [`FPS ${state.displayFps}  •  SIM ${state.displaySimulationHz}/s  •  C# ${state.displaySimulationMilliseconds.toFixed(1)} ms  •  BRIDGE ${state.displayBridgeMilliseconds.toFixed(1)} ms`,
+        ...perfLines(report)];
+    const panelWidth = Math.max(160, width - 24);
+    const panelHeight = 14 + lines.length * 13;
+    const x = 12;
     const y = Math.max(12, height - panelHeight - 14);
-    const enemies = snapshot?.enemies?.length ?? 0;
-    const projectiles = snapshot?.projectiles?.length ?? 0;
-    const experienceShards = snapshot?.experienceShards?.length ?? 0;
 
     ctx.save();
-    ctx.fillStyle = 'rgba(8, 6, 12, 0.78)';
+    ctx.fillStyle = 'rgba(8, 6, 12, 0.82)';
     roundRect(ctx, x, y, panelWidth, panelHeight, 10);
     ctx.fill();
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
@@ -1055,17 +1206,13 @@ function drawPerformanceCounter(state, ctx, snapshot, width, height) {
     ctx.stroke();
 
     ctx.textAlign = 'left';
-    ctx.fillStyle = '#e8e0ef';
-    ctx.font = '800 11px system-ui, sans-serif';
-    ctx.fillText(`FPS ${state.displayFps}  •  SIM ${state.displaySimulationHz}/s`, x + 10, y + 18);
-    ctx.fillStyle = '#a99db3';
-    ctx.font = '700 10px system-ui, sans-serif';
-    ctx.fillText(`C# ${state.displaySimulationMilliseconds.toFixed(1)} ms  •  BRIDGE ${state.displayBridgeMilliseconds.toFixed(1)} ms`, x + 10, y + 37);
-    ctx.fillStyle = '#82768c';
-    ctx.fillText(`ENEMIES ${enemies}  •  PROJECTILES ${projectiles}  •  XP ${experienceShards}`, x + 10, y + 55);
+    ctx.font = '700 9px ui-monospace, Menlo, monospace';
+    lines.forEach((line, index) => {
+        ctx.fillStyle = index === 0 ? '#e8e0ef' : '#a99db3';
+        ctx.fillText(line, x + 8, y + 16 + index * 13, panelWidth - 16);
+    });
     ctx.restore();
 }
-
 function drawEnemy(ctx, enemy, lighting = null, walkPhase = 0, facing = 1, hollow = null, ashling = null) {
     if (!(ashling&&ashlingSprites.drawEnemy(ctx,enemy,ashling))&&!(hollow&&drawHollowEnemy(ctx,enemy,hollow))&&!drawPaintedEnemy(ctx, enemy, walkPhase, facing)) drawEnemyPixelArt(ctx, enemy, lighting, walkPhase, facing);
     drawRimeArmor(ctx, enemy);
@@ -1561,4 +1708,35 @@ function drawAimRune(ctx, player) {
     ctx.moveTo(34, 0); ctx.lineTo(38, -3); ctx.lineTo(42, 0); ctx.lineTo(38, 3); ctx.closePath();
     ctx.stroke();
     ctx.restore();
+}
+
+/** The visible window of the terrain normal map, flat where nothing is painted, for the ground's lit material. */
+function groundNormalView(state, camera, width, height, scale = 1) {
+    const canvas = state.normalViewCanvas ??= document.createElement('canvas');
+    const pixelWidth = Math.ceil(width * scale), pixelHeight = Math.ceil(height * scale);
+    if (canvas.width !== pixelWidth) canvas.width = pixelWidth;
+    if (canvas.height !== pixelHeight) canvas.height = pixelHeight;
+    const g = canvas.getContext('2d');
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.imageSmoothingEnabled = false;
+    g.fillStyle = '#8080ff';
+    g.fillRect(0, 0, pixelWidth, pixelHeight);
+    g.setTransform(scale, 0, 0, scale, -camera.x * scale, -camera.y * scale);
+    state.terrainCache.drawNormals(g, { x: camera.x, y: camera.y, width, height });
+    return canvas;
+}
+
+/** The visible window of the painted terrain at `scale` pixels per world unit: the GPU ground's albedo at 64 art px/m. */
+function groundAlbedoView(state, camera, width, height, scale) {
+    const canvas = state.groundViewCanvas ??= document.createElement('canvas');
+    const pixelWidth = Math.ceil(width * scale), pixelHeight = Math.ceil(height * scale);
+    if (canvas.width !== pixelWidth) canvas.width = pixelWidth;
+    if (canvas.height !== pixelHeight) canvas.height = pixelHeight;
+    const g = canvas.getContext('2d');
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.imageSmoothingEnabled = false;
+    g.clearRect(0, 0, pixelWidth, pixelHeight);
+    g.setTransform(scale, 0, 0, scale, -camera.x * scale, -camera.y * scale);
+    state.terrainCache.draw(g, { x: camera.x, y: camera.y, width, height });
+    return canvas;
 }

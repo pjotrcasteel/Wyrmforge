@@ -12,7 +12,7 @@ function fakeCapture() {
         camera: { x: 0, y: 0 },
         layers: new Map([['prop', layer]]), used: new Set(), dirtyTextures: new Set(),
         materials: [], objects: [],
-        canReuseCapture: HuntGpuWorld.prototype.canReuseCapture,
+        canReuseCapture: HuntGpuWorld.prototype.canReuseCapture, uploadLayer: HuntGpuWorld.prototype.uploadLayer,
         submitSurface: HuntGpuWorld.prototype.submitSurface,
     };
     const capture = (revision, width = 64, height = 64) => {

@@ -40,7 +40,7 @@ test('runtime atlases preserve approved bytes and consistent native scale with d
  for(const[name,c]of Object.entries(m.clips)){
   const bytes=readFileSync(new URL('art/enemies/ashling-rigged/'+c.image,root));assert.equal(createHash('sha256').update(bytes).digest('hex').slice(0,12),c.hash);
   const animation=name==='walk'?'movement':name;assert.deepEqual(bytes,readFileSync(new URL(`../../${c.sourceExport}/ashling-${animation}.png`,import.meta.url)));
-  assert.equal(bytes.readUInt32BE(16),c.cell*c.frames);assert.equal(bytes.readUInt32BE(20),c.cell*8);assert.equal(c.worldSize/c.cell,.85);
+  assert.equal(bytes.readUInt32BE(16),c.cell*c.frames);assert.equal(bytes.readUInt32BE(20),c.cell*8);assert.equal(c.worldSize/c.cell,1);
   assert.equal(c.anchor[0]-m.clips.walk.anchor[0],(c.cell-96)/2);assert.equal(c.anchor[1]-m.clips.walk.anchor[1],(c.cell-96)/2);
  }
 });

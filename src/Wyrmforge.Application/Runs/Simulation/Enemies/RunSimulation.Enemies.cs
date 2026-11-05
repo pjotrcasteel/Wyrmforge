@@ -13,6 +13,11 @@ public sealed partial class RunSimulation
     private EnemyCompositionPlan? encounterPlan;
     private int encounterPlanIndex;
     private WyrmrealmHabitat? encounterHabitat;
+    // Wyrm Influence band of the current Hunt 1.0 node; null leaves every encounter exactly as before.
+    private WyrmInfluenceBand? encounterBand;
+
+    private double InfluenceBudget(WyrmrealmHabitat? habitat) =>
+        encounterBand is { } band && habitat is { } local && WyrmrealmHabitatCatalog.School(local) == Domain.Spells.SpellSchool.Fire ? WyrmInfluencePacks.BudgetMultiplier(band) : 1;
     private readonly List<HostileProjectileState> hostileProjectiles = [];
     private readonly EnemyCollisionSolver enemyCollisions = new();
     private double encounterSeconds;
@@ -73,7 +78,7 @@ public sealed partial class RunSimulation
         if (mapEncounter && encounterHabitat is { } habitat && encounterDirector.TryTakeRecipe(out var recipe))
         {
             encounterPlan = EnemyEncounterComposition.CreateRecipePlan(recipe, habitat, encounterPattern, randomSource,
-                depthState.ThreatBudgetMultiplier * encounterModifiers.ThreatBudgetMultiplier);
+                depthState.ThreatBudgetMultiplier * encounterModifiers.ThreatBudgetMultiplier * InfluenceBudget(habitat));
             encounterPlanIndex = 0;
         }
         if (mapEncounter && HostileCount < activeCap && encounterDirector.TryTakeInsert(out var insert))
@@ -122,7 +127,7 @@ public sealed partial class RunSimulation
         var habitat = mapEncounter ? encounterHabitat
             : Region.DominantSchool == Domain.Spells.SpellSchool.Fire ? null
             : WyrmrealmHabitatCatalog.ForSchool(WyrmrealmHabitat.Lair, Region.DominantSchool);
-        encounterPlan = EnemyEncounterComposition.CreatePlan(encounterPattern, depthState.Depth, randomSource, threatBudget, habitat);
+        encounterPlan = EnemyEncounterComposition.CreatePlan(encounterPattern, depthState.Depth, randomSource, threatBudget * InfluenceBudget(habitat), habitat, mapEncounter ? encounterBand : null);
         encounterPlanIndex = 0;
     }
 
@@ -407,6 +412,7 @@ public sealed partial class RunSimulation
             if (!ember.Landed) continue;
             // Collision belongs to C#: the ember resolves once, exactly inside the mark the hunter was shown.
             RegisterElementalImpact(ember.Target, SpellId.FireBolt);
+            EnemyTerrainBlast(ember.Target, ember.Style is HostileProjectileStyle.Toll or HostileProjectileStyle.Seal ? 2 : 1);
             if (Vector2D.Distance(player.Position, ember.Target) <= ember.Radius) DamagePlayer(ember.Damage);
         }
         hostileProjectiles.RemoveAll(ember => ember.Landed);

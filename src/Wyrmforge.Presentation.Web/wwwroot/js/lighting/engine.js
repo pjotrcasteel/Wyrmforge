@@ -87,6 +87,10 @@ export class LightingEngine {
         this.alive = true;
         this.debugView = 'lit';
         this.halfWidth = 5;
+        // Drawing-buffer samples per world sample; 1 keeps every existing scene exactly as it was.
+        this.renderScale = 1;
+        // Anisotropic screen scale for oblique projections; 1 keeps the symmetric orthographic view every other scene uses.
+        this.verticalScale = 1;
         this.inspection = new LightingInspection();
         this.materialBudget = { maps: 0, transmissive: 0, ao: 0 };
     }
@@ -292,10 +296,12 @@ float proofShadowVisibility() {
     }
     render(width = this.canvas.clientWidth, height = this.canvas.clientHeight) {
         if (!this.alive) return;
-        // One world sample per CSS pixel at 390px, bounded regardless of device DPR.
-        const w = Math.max(1, Math.min(390, Math.round(width))), h = Math.max(1, Math.round(height * w / width));
+        // One world sample per CSS pixel at 390px, bounded regardless of device DPR. `renderScale` (default 1) raises that density for scenes
+        // whose surfaces carry finer art, such as the Hunt 1.0 terrain at 64 art pixels per metre; the world camera bounds do not change.
+        const scale = this.renderScale || 1;
+        const w = Math.max(1, Math.min(390 * scale, Math.round(width * scale))), h = Math.max(1, Math.round(height * w / width));
         if (this.canvas.width !== w || this.canvas.height !== h) this.renderer.setSize(w, h, false);
-        const halfHeight = this.halfWidth * h / w;
+        const halfHeight = this.halfWidth * h / w * this.verticalScale;
         synchronizeOrthographicProjection(this.camera, -this.halfWidth, this.halfWidth, halfHeight, -halfHeight);
         if (this.debugView === 'light-depth') {
             const source = this.selected?.find(l => l.shadow);

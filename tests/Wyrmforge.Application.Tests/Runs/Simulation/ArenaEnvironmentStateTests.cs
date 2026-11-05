@@ -10,7 +10,7 @@ namespace Wyrmforge.Application.Tests.Runs.Simulation;
 public sealed class ArenaEnvironmentStateTests
 {
     [TestMethod]
-    public void Create_Greybox_ExposesOneMetreEightCubedGridWithoutObstaclesOrSupplies()
+    public void Create_Greybox_ExposesOneMetreEightCubedGridWithOnlyBreakableSalvageProps()
     {
         var map = new WyrmrealmMapState(seed: 1204);
         var terrain = ArenaEnvironmentState.Create(map.Seed, map.AvailableNodes[0],
@@ -26,10 +26,19 @@ public sealed class ArenaEnvironmentStateTests
         Assert.AreEqual(1d, snapshot.Greybox.GroundTopMeters);
         Assert.IsFalse(snapshot.GeographyActive);
         Assert.AreEqual(0, snapshot.Barriers.Count);
-        Assert.AreEqual(0, snapshot.Props.Count);
         Assert.AreEqual(0, snapshot.Supplies.Count);
         Assert.IsNull(snapshot.WetForest);
 
+        // Barrels and crates are the only Charred Scrap source, so the greybox keeps them and nothing else.
+        Assert.IsInRange(1, 6, snapshot.Props.Count);
+        Assert.IsTrue(snapshot.Props.All(prop => prop.Kind is "barrel" or "crate"));
+        var salvage = snapshot.Props[0];
+        Assert.IsGreaterThan(0, terrain.DamagePropsInRadius(new Vector2D(salvage.X * 950, salvage.Y * 1550), 950, 1550, 8, 500));
+        Assert.AreEqual(1, terrain.Snapshot().Supplies.Count(supply => supply.Kind == "material:CharredScrap"));
+
+        foreach (var prop in terrain.Snapshot().Props)
+            terrain.DamagePropsInRadius(new Vector2D(prop.X * 950, prop.Y * 1550), 950, 1550, 8, 500);
+        Assert.AreEqual(0, terrain.Snapshot().Props.Count);
         var start = new Vector2D(475, 800);
         var destination = new Vector2D(475, 200);
         Assert.IsFalse(terrain.BlocksSegment(start, destination, 950, 1550));

@@ -51,6 +51,7 @@ public sealed partial class RunSimulation
         {
             case BellOfWinterEvent.Slammed:
                 RegisterElementalImpact(bell.Target, SpellId.FrostShard);
+                EnemyTerrainBlast(bell.Target, 3);
                 if (Vector2D.Distance(player.Position, bell.Target) <= WinterSlamRadius + player.Radius * 0.5)
                 {
                     DamagePlayer(WinterSlamDamage);

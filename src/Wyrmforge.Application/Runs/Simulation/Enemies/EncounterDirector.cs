@@ -13,6 +13,7 @@ public sealed class EncounterDirector
     private int depth;
     private int stage;
     private WyrmrealmHabitat? habitat;
+    private WyrmInfluenceBand? band;
     private double progress;
     private double phaseElapsed;
 
@@ -25,10 +26,12 @@ public sealed class EncounterDirector
     public EncounterPhase Phase { get; private set; } = EncounterPhase.Pressure;
     public EncounterDirective Directive => ResolveDirective();
 
-    public void Start(EnemyEncounterPattern encounterPattern, int encounterDepth, int encounterStage = 1, WyrmrealmHabitat? encounterHabitat = null)
+    public void Start(EnemyEncounterPattern encounterPattern, int encounterDepth, int encounterStage = 1, WyrmrealmHabitat? encounterHabitat = null,
+        WyrmInfluenceBand? influenceBand = null)
     {
         Active = true;
         habitat = encounterHabitat;
+        band = influenceBand;
         pattern = encounterPattern;
         depth = Math.Max(1, encounterDepth);
         stage = WyrmrealmStageCatalog.PressureStage(encounterStage);
@@ -94,6 +97,7 @@ public sealed class EncounterDirector
         phaseElapsed = 0;
         pendingInserts.Clear();
         habitat = null;
+        band = null;
     }
 
     // A habitat never receives a resident it does not host; its signature monster arrives instead.
@@ -129,7 +133,7 @@ public sealed class EncounterDirector
         // Habitat events (brief §6): the surge is the habitat's signature pack; the final approach's climax is a Last Stand.
         if (habitat is { } local && !WyrmrealmHabitatCatalog.IsOpening(local))
         {
-            if (phase == EncounterPhase.Surge) pendingRecipe = EnemyPackRecipeCatalog.SurgeEvent(local);
+            if (phase == EncounterPhase.Surge) pendingRecipe = EnemyPackRecipeCatalog.SurgeEvent(local, band);
             else if (phase == EncounterPhase.Climax && WyrmrealmHabitatCatalog.IsFinalApproach(local)) pendingRecipe = EnemyPackRecipeCatalog.LastStandFor(local);
         }
 

@@ -2,6 +2,8 @@ namespace Wyrmforge.Application.Runs.Simulation.Snapshots;
 
 public sealed record PlayerRenderSnapshot(double X, double Y, double Radius, bool Barrier)
 {
+    /// <summary>Ground height under the feet in world units (32 per metre); 0 on flat ground and without terrain.</summary>
+    public double Z { get; init; }
     public double AimAngle { get; init; }
     public bool ManualAim { get; init; }
     public int? AimTargetId { get; init; }

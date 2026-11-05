@@ -165,6 +165,7 @@ public sealed partial class RunSimulation
         {
             case BellWardenEvent.Smashed:
                 RegisterElementalImpact(bell.Target, Domain.Spells.SpellId.FireBolt);
+                EnemyTerrainBlast(bell.Target, 3);
                 if (Vector2D.Distance(player.Position, bell.Target) <= BellSmashRadius + player.Radius * 0.5) DamagePlayer(BellSmashDamage);
                 bellShockwaves.Add(new BellShockwaveState(bell.Target));
                 break;

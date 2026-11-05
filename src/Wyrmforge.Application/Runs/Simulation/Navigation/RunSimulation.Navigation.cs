@@ -13,7 +13,17 @@ public sealed partial class RunSimulation
     private ArenaEnvironmentState? arenaEnvironment;
     private bool worldSiteGeographyEnabled;
     private bool legacyArenaPreview;
+    private bool hunt1TerrainEnabled;
+    private double? hunt1InfluenceOverride;
     private string? walkedExitNodeId;
+
+    /// <summary>Opt in to Hunt 1.0 heightfield terrain in greybox combat arenas (the default for Fire Tier-I arrives with H9).</summary>
+    public void EnableHunt1Terrain(double? influenceOverride = null)
+    {
+        hunt1TerrainEnabled = true;
+        // Debug preview only (`?influence=`): generates and presents the arena as if it lay at this Wyrm Influence.
+        hunt1InfluenceOverride = influenceOverride is { } value && double.IsFinite(value) ? Math.Clamp(value, 0, 1) : null;
+    }
 
     /// <summary>Opt in to the AR1 physical terrain preview for this run; normal Hunts keep their approved fallback.</summary>
     public void EnableWorldSiteGeography() => worldSiteGeographyEnabled = true;
@@ -86,7 +96,8 @@ public sealed partial class RunSimulation
         materialCargoState.BeginTrail();
         playerPositionInitialized = false;
         arenaEnvironment = ArenaEnvironmentState.Create(mapState.Seed, node, worldFirstGeography: worldSiteGeographyEnabled,
-            claimedDiscoveries: collectedSiteDiscoveryIds, greybox: !legacyArenaPreview && !worldSiteGeographyEnabled);
+            claimedDiscoveries: collectedSiteDiscoveryIds, greybox: !legacyArenaPreview && !worldSiteGeographyEnabled,
+            terrain: hunt1TerrainEnabled, terrainInfluence: hunt1InfluenceOverride);
         PrepareBellWardenNode(node);
         PrepareReliquaryNode(node);
         RollNodeElite(node);
@@ -101,7 +112,8 @@ public sealed partial class RunSimulation
         encounterPattern = ToEnemyEncounterPattern(route.Encounter.Kind);
         encounterModifiers = ResolveEncounterModifiers(route);
         encounterHabitat = node.Habitat;
-        encounterDirector.Start(encounterPattern, depthState.Depth, node.Stage, node.Habitat);
+        encounterBand = hunt1TerrainEnabled ? WyrmInfluenceProfile.For(Region.DominantSchool).Band(hunt1InfluenceOverride ?? node.Influence) : null;
+        encounterDirector.Start(encounterPattern, depthState.Depth, node.Stage, node.Habitat, encounterBand);
         arenaEnvironment.SetPhase(encounterDirector.Phase);
         entryGraceRemaining = 2;
         encounterSeconds = 0;
@@ -187,6 +199,7 @@ public sealed partial class RunSimulation
         encounterPlan = null;
         encounterPlanIndex = 0;
         encounterHabitat = null;
+        encounterBand = null;
         encounterDirector.Reset();
         if (!preserveEnvironment) arenaEnvironment = null;
         encounterModifiers = WyrmrealmEncounterModifierSet.Empty;

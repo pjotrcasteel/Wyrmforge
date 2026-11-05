@@ -28,6 +28,9 @@ public partial class ArenaView : IAsyncDisposable
 {
     private ElementReference canvas;
     private RunSimulation? simulation;
+    private int debugSpeed = 1;
+    private bool debugGod;
+    private bool debugBot;
     private IJSObjectReference? arenaModule;
     private DotNetObjectReference<ArenaView>? dotNetReference;
     private bool gameOverSent;
@@ -125,6 +128,13 @@ public partial class ArenaView : IAsyncDisposable
         simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, previewSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt, researchLead: ResearchLead, preparedMutations: PreparedMutations, fireballMutations: FireballMutations, contextualSpell: ContextualSpell, region: Region, regionOpening: RegionOpening, hunt: Hunt, amplifierAssignments: MutationAmplifierAssignments, fireballLevel: FireballLevel, agents: agentPreview ? new(true, true) : null);
         if (legacyArenaReview) simulation.EnableLegacyArenaPreview();
         if (geographyPreview) simulation.EnableWorldSiteGeography();
+        if (query.Any(value => string.Equals(value, "hunt1=1", StringComparison.OrdinalIgnoreCase)))
+            simulation.EnableHunt1Terrain(query.Select(value => value.StartsWith("influence=", StringComparison.OrdinalIgnoreCase)
+                && double.TryParse(value[10..], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var parsed) ? parsed : (double?)null).FirstOrDefault(value => value is not null));
+        debugGod = query.Any(value => string.Equals(value, "god=1", StringComparison.OrdinalIgnoreCase));
+        debugBot = query.Any(value => string.Equals(value, "bot=1", StringComparison.OrdinalIgnoreCase));
+        var speedFlag = query.FirstOrDefault(value => value.StartsWith("speed=", StringComparison.OrdinalIgnoreCase))?.Split('=', 2).Last();
+        debugSpeed = int.TryParse(speedFlag, out var parsedSpeed) ? Math.Clamp(parsedSpeed, 1, 20) : 1;
         if (lighting01) simulation.EnableLightingComposition01();
         if (RewardCache) simulation.OpenRewardCache();
     }
@@ -157,11 +167,22 @@ public partial class ArenaView : IAsyncDisposable
     }
 
     [JSInvokable]
+    public Wyrmforge.Application.Runs.Simulation.Snapshots.ArenaTerrainFrame? TerrainFrame(int knownRevision) =>
+        simulation?.TerrainFrame(knownRevision);
+
+    [JSInvokable]
     public async Task<RunRenderSnapshot> Frame(double delta, double width, double height, double movementX, double movementY, double aimX = 0, double aimY = 0, int? focusPropId = null, bool stickSnap = false)
     {
         var frameStarted = Stopwatch.GetTimestamp();
         var current = simulation ?? throw new InvalidOperationException("Arena simulation has not been initialized.");
         if (ChoosingPrimary) return current.CreateSnapshot() with { SimulationMilliseconds = Stopwatch.GetElapsedTime(frameStarted).TotalMilliseconds };
+        // Debug bot (opt-in by URL): take the first offered upgrade or essence through the same paths the UI uses.
+        if (debugBot)
+        {
+            if (current.PendingChoices.Count > 0) await ChooseAsync(current.PendingChoices[0].Id);
+            else if (current.PendingDragonEssenceChoices.Count > 0) await ChooseEssenceAsync(current.PendingDragonEssenceChoices[0].Id);
+            else if (current.PendingRelicChoices.Count > 0) await ChooseRelicAsync(new RelicSelection(current.PendingRelicChoices[0].Id));
+        }
         var hadChoices = current.PendingChoices.Count > 0;
         var hadEssenceChoices = current.PendingDragonEssenceChoices.Count > 0;
         var hadRelicChoices = current.PendingRelicChoices.Count > 0;
@@ -184,7 +205,17 @@ public partial class ArenaView : IAsyncDisposable
         var previousWinterRimes = current.WinterBellRimes;
         var bellWardenWasSlain = current.BellWardenDefeat is not null;
         var previousRefugeReturns = current.RefugeReturns;
-        var snapshot = current.Tick(delta, new MovementInput(movementX, movementY, aimX, aimY, focusPropId, stickSnap), width, height);
+        var input = new MovementInput(movementX, movementY, aimX, aimY, focusPropId, stickSnap);
+        var snapshot = current.Tick(delta, input, width, height);
+        // Debug/automation (opt-in by URL): extra fixed ticks per frame stop at any choice, checkpoint or end so the UI still gets its turn.
+        for (var extra = 1; extra < debugSpeed && !snapshot.Ended && !snapshot.Paused && !current.AtCheckpoint
+            && current.PendingChoices.Count == 0 && current.PendingDragonEssenceChoices.Count == 0
+            && current.PendingRelicChoices.Count == 0 && !current.PendingMapChoice; extra++)
+        {
+            if (debugGod) current.DebugRestoreHealth();
+            snapshot = current.Tick(delta, input, width, height);
+        }
+        if (debugGod) current.DebugRestoreHealth();
         var simulationMilliseconds = Stopwatch.GetElapsedTime(frameStarted).TotalMilliseconds;
         var stateChanged = hadChoices != current.PendingChoices.Count > 0
             || hadEssenceChoices != current.PendingDragonEssenceChoices.Count > 0

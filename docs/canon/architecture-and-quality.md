@@ -122,6 +122,31 @@ Versioned Region/World state + Hunter Knowledge
 
 ---
 
+## Debug and automation switches — LOCKED direction (2 November 2026)
+
+Testing, CI and agents must be able to drive and inspect a Hunt with as little scripting as possible, so the web client accepts opt-in URL switches. They never change authoritative rules and are inert unless present: `hunt1=1` (Hunt 1.0 terrain), `speed=N` (1–20 fixed C# ticks per frame, stopping at any choice, checkpoint or end), `god=1` (refill hunter health), `bot=1` (a built-in hunter that kites, hunts the last foes, paths over terrain and props, walks to the exit or extraction zone and picks the first offered upgrade, essence or relic), `bright=1` (raises only the ambient term of the lighting frame handed to the renderer so terrain can be inspected; the true night remains the reference look), `blockInset=1` (one-pixel inset debug overlay on every 1 m face; dug blocks are outlined per 4 px microcolumn), `shear=1` (opt-in metric oblique camera for the Hunt GPU world; see the shear-camera section), `perf=1` (H9 real-device readout: FPS, frame p50/p95/p99/max, frames over 33 ms, renderer and quality, terrain repaint count and cost, JS heap where the browser exposes it, enemy/projectile counts; the same numbers are in `window.__wyrmforgePerf` and the arena diagnostics). **Phone procedure:** open the deployed or PR build with `?hunt1=1&perf=1`, play or add `&bot=1&god=1&speed=1` for a hands-off run, fight at least 60 s including Fireball craters, then screenshot the panel at 320 and 390 px portrait with the device model, OS and browser noted. Browser captures must wait on real polled state (not an async `WaitForFunction`, which returns immediately) and record the diagnostics they were taken under. New debug aids follow the same rules: URL-gated, presentation-side or C# input-side only, covered by unit tests.
+
+## Metric oblique (shear) camera — scoped, awaiting owner decision GH-A (2 November 2026)
+
+**Status:** owner approved building this behind a flag (2 November 2026). **Step (a) is implemented and opt-in** with `?shear=1`: `HUNT_PROJECTIONS` in `arena-gpu-world.js` holds a `legacy` profile (the default, unchanged) and a `metric` profile (world 1 : 1 : 1, camera frustum squeezed by 1/sqrt2, billboards upright); `LightingEngine.verticalScale` is the only shared-engine change. Golden tests (`hunt-projection.test.mjs`) prove both profiles put geometry at `screenX = x, screenY = y - z` and a 1 m block as 32 x 32 top plus 32 x 32 front, and that metric lights land at the same pixel as the geometry they light (the legacy light height is off, the known defect). Real-browser captures at 320 and 390 px render under shear. Steps (b) to (d) (migrating the remaining `GROUND_Y` consumers such as the dormant GPU fireball sheet, shadow-camera shear verification, removing the stretch) and owner visual approval are **not done**; legacy stays the default.
+
+**Today.** `arena-gpu-world.js` renders with a 45° orthographic Three.js camera and compensates in the *data*: ground Y is stretched by `GROUND_Y = √2`, heights by the same factor, and light directions/positions/occluder scales are pre-multiplied (`projected = [x, -y·GROUND_Y, z]`). Screen output matches the metric contract (`screenY = y − 32·z`, 32 × 32 top and front faces), but the three.js world is **not** metric: a 1 m cube is a stretched box, so normals, light directions, shadow-map depth and sprite billboards each carry a bespoke correction. Every new consumer (terrain faces, fracture debris, shadows for blocks) must remember the stretch.
+
+**Proposal.** Keep the world in true metres (1 : 1 : 1) and make the *projection* do the oblique mapping: an orthographic matrix sheared so that world `z` offsets screen Y by one block-face height per metre (`y' = y − k·z`, `k` chosen so a 1 m rise is 32 px), with depth taken from `y + z` for ordering. Normals, light vectors, `lightViewBounds`, occluder scales and terrain heights then use real metres and lose the `GROUND_Y` factors.
+
+| Area | Work |
+| --- | --- |
+| Camera | Replace `camera.position/lookAt` and projection with a sheared orthographic matrix (`camera.projectionMatrix` plus `projectionMatrixInverse`); one adapter owns the constants |
+| Lighting | `LightingEngine` consumes unstretched positions/directions; shadow cameras need the same shear so shadow-map texels still align with screen pixels; normal-map view vector becomes constant (the oblique direction) instead of derived from the stretched space |
+| Terrain | Block top/front quads become true unit quads; the 4 px microcell grid maps without rounding; occlusion/inset overlays use the same matrix |
+| Billboards | Sprite planes stand upright in world space (no `GROUND_Y` height factor); feet anchors unchanged |
+| Tests | Golden pixel tests: a unit cube at several positions projects to exactly 32 × 32 top plus 32 × 32 front; existing greybox browser captures at 320/390 px must be pixel-identical for unlit surfaces (the migration is a refactor, not a restyle); light-direction unit tests for every `GROUND_Y` call site |
+| Cost | No extra draw calls; one matrix and a few shader uniforms. Shadow-pass cost is unchanged. Must be re-measured on a real phone (H9) |
+
+**Risks.** (1) Depth precision/ordering for tall stacked blocks and actors standing behind tall terrain; (2) shadow-map bias when the shadow camera is sheared; (3) Canvas fallback and the GPU path must keep sharing `arena-projection.js`; (4) any three.js feature that assumes a symmetric frustum (culling, `Frustum`) needs a manual bounds override.
+
+**Sequence if approved.** (a) Introduce the shear adapter behind a flag with unlit golden tests; (b) migrate lighting and shadows call-site by call-site, removing `GROUND_Y`; (c) migrate terrain/billboards; (d) delete the stretch constants only after identical 320/390 px captures and phone measurements. It must not change Town (protected painted scene) and must not regress the opt-in Lighting 0.1 baseline.
+
 ## iOS / Android portability and delivery gates
 
 **Explicit product goal:** ship WyrmForge on **iOS (App Store)** and **Android (Google Play)** after evidence-backed browser gameplay has stabilized. This is not merely a responsive web page goal.

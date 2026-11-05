@@ -182,3 +182,31 @@
 @media(max-width:360px) { .realm-route.realm-route--long { height:calc(var(--hunt-step) * 15); } }
 .route-node .node-tower { color:#e2c48c; }.route-node .node-scouted { color:#b8c4cf; }.route-node .node-scouted.elite { color:#ef9a7c; }
 .sheet-tower { display:block;color:#e8d3a6;font-size:.68rem;line-height:1.3; }.sheet-scouted { display:block;color:#cbd6df;font-size:.68rem;line-height:1.3; }
+/* Hunt 1.0 H8: Nexus-consistent chart. Values mirror the Nexus tokens in wwwroot/css/nexus.css (scoped to the menu shell, so not inherited here).
+   Colour is reserved for magic: node schools and the Wyrm Influence wash; chrome stays bone, brass and timber. */
+.realm-map-card { --nx-gold:#d4a467;--nx-edge:#8b5d43;--nx-line:#60463b;--nx-bone:#f0dbc2;--nx-muted:#baaa9c;--nx-bevel:inset 0 0 0 2px #21141c,inset 0 0 0 4px #624439;color:var(--nx-bone);background:linear-gradient(180deg,#21191c,#110e16); }
+.realm-map-overlay { background:#0d0a0f; }
+.map-header { border-bottom:1px solid var(--nx-line); }
+.map-header .eyebrow { color:var(--nx-gold); }
+.map-header h2 { font-family:Georgia,'Times New Roman',serif;font-weight:600;letter-spacing:.02em;color:var(--nx-bone); }
+.map-run-progress { color:var(--nx-gold); }
+.map-attention summary { color:var(--nx-muted); }.map-attention summary b { color:var(--nx-gold); }
+.resonance-panel { border-color:var(--nx-edge);background:#1b1417;box-shadow:var(--nx-bevel),0 12px 30px #08050ecc; }
+.realm-route { background:radial-gradient(ellipse at 75% 28%,#3a24213a,transparent 45%),linear-gradient(180deg,#1d1619,#130f13 65%,#1c1719); }
+.influence-wash { position:absolute;inset:0;z-index:0;pointer-events:none;mix-blend-mode:screen;opacity:.6; }
+.route-link { stroke:#baaa9c88; }.route-link.active { stroke:var(--nx-bone); }.route-link.selected { stroke:var(--nx-gold); }.route-link.traversed { stroke:var(--nx-gold); }
+.node-core { border-color:var(--nx-edge);background:#1d1518;box-shadow:var(--nx-bevel); }
+.route-node.selected .node-core { border-color:var(--nx-bone);box-shadow:0 0 0 3px #d4a4674d,0 0 20px #d4a46733; }
+.route-node.completed .node-core { border-color:var(--nx-gold);color:var(--nx-gold); }
+.node-check { border-color:var(--nx-gold);background:#2a1d18;color:var(--nx-bone); }
+.road-label { background:#1d1518;border-color:var(--nx-edge);color:var(--nx-muted); }
+.node-sheet { border-top:1px solid var(--nx-edge);background:#1a1317f2;box-shadow:0 -10px 25px #08050c44,var(--nx-bevel); }
+.sheet-heading h3 { font-family:Georgia,'Times New Roman',serif;color:var(--nx-bone); }
+.sheet-status.reachable { color:var(--nx-gold); }.sheet-traits { color:var(--nx-muted); }.sheet-guarantee { color:var(--nx-bone); }
+.sheet-close { color:var(--nx-muted); }
+.sheet-influence { font-weight:700;letter-spacing:.06em;text-transform:uppercase; }
+.sheet-influence.influence-wet { color:#8fb59a; }.sheet-influence.influence-scorched { color:#c7a26b; }
+.sheet-influence.influence-burning { color:#e0733f; }.sheet-influence.influence-volcanic { color:#ff5a28; }
+.enter-trail { border:1px solid var(--nx-gold);background:linear-gradient(180deg,#7a4a2f,#4a2a1f);color:var(--nx-bone);box-shadow:var(--nx-bevel); }
+.enter-trail:disabled { color:#8a7c70;border-color:var(--nx-line);background:#251b1a;box-shadow:none; }
+.route-node:focus-visible { outline-color:var(--nx-gold); }

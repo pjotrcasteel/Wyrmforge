@@ -150,8 +150,8 @@ public sealed partial class RunSimulation
         viewportWidth = width;
         viewportHeight = height;
         var roaming = arenaEnvironment is not null && (mapState.EncounterActive || trailExitPending);
-        arenaWidth = roaming ? Math.Max(width * 2.6, 950) : width;
-        arenaHeight = roaming ? Math.Max(height * 2.5, 1550) : height;
+        arenaWidth = roaming ? ArenaMetricEnvelope.CombatWidth : width;
+        arenaHeight = roaming ? ArenaMetricEnvelope.CombatHeight : height;
         width = arenaWidth;
         height = arenaHeight;
         EnsurePlayerPosition(width, height);
@@ -176,6 +176,7 @@ public sealed partial class RunSimulation
             return CreateSnapshot();
         }
         delta = Math.Clamp(delta, 0, 0.05);
+        terrainChangesThisTick.Clear();
         reactionBudget.BeginStep();
         BeginPlayerDamageFrame(delta);
         UpdateCombatFeedback(delta);
@@ -339,6 +340,7 @@ public sealed partial class RunSimulation
         return new RunRenderSnapshot(
             new PlayerRenderSnapshot(player.Position.X, player.Position.Y, player.Radius, player.Barrier || player.WinterShellGuardRemaining > 0)
             {
+                Z = GroundUnitsAt(player.Position),
                 AimAngle = Math.Atan2(effectiveAim.Y, effectiveAim.X),
                 ManualAim = manualAimEngaged,
                 AimTargetId = automaticTargetId,
@@ -354,6 +356,7 @@ public sealed partial class RunSimulation
                 Math.Clamp(enemy.Health / enemy.MaxHealth, 0, 1), hitFlashRemaining.ContainsKey(enemy.Id), CreateStatusSnapshots(enemy.Statuses), enemy.Kind, enemy.Id,
                 CreateEnemyTelegraph(enemy))
             {
+                Z = GroundUnitsAt(enemy.Position),
                 ShieldFacing = enemy.Penitent is { ShieldRaised: true } shield ? Math.Atan2(shield.Facing.Y, shield.Facing.X) : null,
                 Routed = enemy.RoutedRemaining > 0,
                 Revived = enemy.Revived,
@@ -425,12 +428,14 @@ public sealed partial class RunSimulation
 
     private GpuLightingFrame CreateLightingFrame()
     {
+        // The Hunt 1.0 terrain is lit like a moonlit forest: more ambient and an angled moon so relief and silhouettes read.
+        var moonlitTerrain = arenaEnvironment?.Terrain is not null;
         var snapshot = ProjectileLightingProjection.Capture(
             "hunt", lightingSnapshotTick++, projectiles, projectileLightIdentities,
-            new LightingEnvironment("gothic-night", "#8c9cbb", 0.24));
+            new LightingEnvironment("gothic-night", "#8c9cbb", moonlitTerrain ? 1.0 : 0.24));
         var combined = LightingSceneComposer.Compose(snapshot.SceneId, snapshot.SimulationTick,
             snapshot.Environment, snapshot.Emitters,
-            [NightSkyLightingProjection.Capture()],
+            [NightSkyLightingProjection.Capture(moonlitTerrain)],
             [HunterVisibilityLightingProjection.Capture(player.Position)],
             SpellEffectLightingProjection.Capture(CreateCastMotionSnapshot(),
                 elementalImpacts.Select(impact => new ElementalImpactRenderSnapshot(impact.Position.X, impact.Position.Y, impact.Spell, impact.Progress)),
@@ -438,7 +443,8 @@ public sealed partial class RunSimulation
             AshfangLightingProjection.Capture(CreateDragonSnapshot(), CreateAshfangEffects()),
             ActorAppearanceLightingProjection.Capture(enemies, player.Position.X, player.Position.Y),
             lightingComposition01Enabled ? HuntFixtureLightingProjection.Capture(
-                arenaEnvironment?.LightingRecipe, arenaWidth, arenaHeight) : []);
+                arenaEnvironment?.LightingRecipe, arenaWidth, arenaHeight) : [],
+            TerrainLightingProjection.Capture(arenaEnvironment?.Terrain, player.Position));
         return GpuLightingFrameProjection.FromSnapshot(combined, elapsed);
     }
 
