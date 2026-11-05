@@ -573,8 +573,16 @@ internal static class ArenaTerrainRelief
         {
             var cell = cells[rng.Next(cells.Count)];
             var (column, row) = (cell % grid.Columns, cell / grid.Columns);
-            Blast(grid, protectedCells, (column + .5) * ArenaTerrainGrid.CellUnits, (row + .5) * ArenaTerrainGrid.CellUnits, 3, ref impactId);
-            Blast(grid, protectedCells, (column + .5) * ArenaTerrainGrid.CellUnits, (row + .5) * ArenaTerrainGrid.CellUnits, 2, ref impactId);
+            // A scar is a cluster of overlapping blasts, not one bowl: a big first impact, then two or three more of different power a few
+            // tens of centimetres off, so the outline and the strata steps are irregular rather than concentric rings.
+            var (cx, cy) = ((column + .5) * ArenaTerrainGrid.CellUnits, (row + .5) * ArenaTerrainGrid.CellUnits);
+            Blast(grid, protectedCells, cx, cy, 3, ref impactId);
+            for (var extra = 0; extra < 2 + rng.Next(2); extra++)
+            {
+                var angle = rng.NextDouble() * Math.PI * 2;
+                var reach = (.35 + rng.NextDouble() * .75) * ArenaTerrainGrid.CellUnits;
+                Blast(grid, protectedCells, cx + Math.Cos(angle) * reach, cy + Math.Sin(angle) * reach, 1 + rng.Next(3), ref impactId);
+            }
             centres.Add((column * Micro + Micro / 2, row * Micro + Micro / 2));
         }
         return centres;

@@ -216,7 +216,9 @@ public sealed class GreyboxHuntBrowserTests : PageTest
     /// <summary>Design review: the whole arena (terrain, trees, bushes, boulders) as one unlit image at art density, to zoom into and mark up.</summary>
     [TestMethod]
     [DataRow(0)]
+    [DataRow(1)]
     [DataRow(2)]
+    [DataRow(3)]
     public async Task Hunt1Forest_MapOverviewCapturesTheWholeArena(int band)
     {
         var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
@@ -229,7 +231,8 @@ public sealed class GreyboxHuntBrowserTests : PageTest
             """);
         var errors = new List<string>();
         Page.PageError += (_, error) => errors.Add(error);
-        await Page.GotoAsync(root + $"/?hunt1=1&band={band}&god=1", new() { WaitUntil = WaitUntilState.NetworkIdle });
+        // The band is chosen by the C# Wyrm Influence (the generator adds lava, fissures and scars from the Burning band), not just the palette.
+        await Page.GotoAsync(root + $"/?hunt1=1&influence={new[] { 0.1, 0.4, 0.7, 0.95 }[band].ToString(System.Globalization.CultureInfo.InvariantCulture)}&god=1", new() { WaitUntil = WaitUntilState.NetworkIdle });
         var start = Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^START GAME") });
         await start.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 45000 });
         await start.ClickAsync();

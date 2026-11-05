@@ -578,7 +578,7 @@ function kindMap(frame, band, column, row, ownKind, height) {
                 if (rockCap && patch(PATCH_BIG, wx, wy, shift + 97) * .7 + patch(PATCH_MID, wx, wy, shift + 131) * .3 + jitter > .7) best = KIND_INDEX.slabTop;
                 else if (field < .34) best = KIND_INDEX.grassDryTop;
             } else if (best === KIND_INDEX.ashTop) {
-                if (field < .3) best = KIND_INDEX.mudTop;
+                if (field < .2) best = KIND_INDEX.mudTop;
             } else if (field < .08) best = KIND_INDEX.rubbleTop;
             else if (field < .2) best = KIND_INDEX.stoneTop;
         }

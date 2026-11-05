@@ -222,17 +222,23 @@ public static class ArenaTerrainGenerator
             }
             var direction = column == 0 ? 1 : -1;
             var length = (int)(grid.Columns * (.6 + rng.NextDouble() * .4));
+            // The crack wanders on a slowly changing heading and swells and pinches along its length, tapering to a point at both ends,
+            // so it reads as a split in the ground and not as a ruled trench.
+            double rowF = row, drift = 0, phase = rng.NextDouble() * Math.PI * 2;
             for (var step = 0; step < length; step++)
             {
-                for (var w = 0; w < width; w++)
+                var taper = Math.Min(1.0, Math.Min(step + 1, length - step) / 5.0);
+                var span = Math.Max(1, (int)Math.Round((width + Math.Sin(step * .4 + phase) * .9) * (.5 + taper * .5)));
+                for (var w = 0; w < span; w++)
                 {
-                    var r = row + w;
+                    var r = (int)Math.Round(rowF) + w;
                     if (!grid.Contains(column, r) || protectedCells[r * grid.Columns + column]) continue;
                     grid.Set(column, r, depth, lava ? ArenaTerrainMaterial.Lava : ArenaTerrainMaterial.Stone);
                 }
                 column += direction;
-                if (!grid.Contains(column, row)) break;
-                if (rng.Next(3) == 0) row = Math.Clamp(row + rng.Next(3) - 1, 6, grid.Rows - 8);
+                if (!grid.Contains(column, (int)Math.Round(rowF))) break;
+                drift = Math.Clamp(drift + (rng.NextDouble() - .5) * .45, -.7, .7);
+                rowF = Math.Clamp(rowF + drift, 6, grid.Rows - 8);
             }
         }
     }
