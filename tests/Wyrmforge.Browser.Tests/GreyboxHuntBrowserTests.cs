@@ -173,6 +173,7 @@ public sealed class GreyboxHuntBrowserTests : PageTest
     [DataRow(0, "", "n")]
     [DataRow(0, "&bright=1", "bright")]
     [DataRow(0, "&ambient=1.4", "a14")]
+    [DataRow(0, "&moonShadows=1", "moon")]
     [DataRow(2, "&ambient=1.0", "a10")]
     public async Task Hunt1Forest_ReviewTourCapturesTheArenaAlongTheRoute(int band, string lighting, string tag)
     {
@@ -208,6 +209,7 @@ public sealed class GreyboxHuntBrowserTests : PageTest
             if (!await Page.Locator("canvas.game-canvas").IsVisibleAsync()) break;
             await Page.Locator("canvas.game-canvas").ScreenshotAsync(new() { Path = Path.Combine(output, $"forest-b{band}-{tag}-{shot}.png") });
         }
+        await File.WriteAllTextAsync(Path.Combine(output, $"forest-b{band}-{tag}-diag.json"), await Page.EvaluateAsync<string>("async () => { const m = await import('/js/arena-performance.js'); const s = m.readArenaDiagnostics(document.querySelector('canvas.game-canvas')); return JSON.stringify({ performance: s.performance, gpu: s.gpuWorld, renderError: s.renderError }); }"));
         Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
     }
 

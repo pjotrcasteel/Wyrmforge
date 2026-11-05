@@ -17,6 +17,8 @@ export function readArenaDebugFlags(search = globalThis.location?.search ?? '') 
         ambient: Number.isFinite(Number.parseFloat(params.get('ambient') ?? '')) ? Number.parseFloat(params.get('ambient')) : null,
         // Presents the Hunt as if it lay in influence band 0..3 (Wet, Scorched, Burning, Volcanic); presentation only.
         band: /^[0-3]$/.test(params.get('band') ?? '') ? Number(params.get('band')) : null,
+        // Review switch for the moon-shadow decision (?moonShadows=1): the directional moon casts GPU shadows in the lighting frame; presentation only.
+        moonShadows: params.get('moonShadows') === '1',
         // Hunt 1.0 GPU surface density in pixels per world unit (`?renderScale=1` for the old 32 px/m look); null uses the terrain art scale.
         renderScale: /^[12]$/.test(params.get('renderScale') ?? '') ? Number(params.get('renderScale')) : null,
     };
@@ -30,6 +32,12 @@ export function withDebugAmbient(frame, bright, ambient = null) {
     if (ambient !== null && ambient !== undefined && !bright && frame?.environment) return { ...frame, environment: { ...frame.environment, ambient } };
     if (!bright || !frame?.environment) return frame;
     return { ...frame, environment: { ...frame.environment, ambient: Math.max(frame.environment.ambient ?? 0, DEBUG_BRIGHT_AMBIENT), color: DEBUG_BRIGHT_COLOR } };
+}
+
+/** Review lighting: lets the moon's directional light cast GPU shadows (it does not by default, see NightSkyLightingProjection); never touches C# state. */
+export function withMoonShadows(frame, enabled) {
+    if (!enabled || !Array.isArray(frame?.lights)) return frame;
+    return { ...frame, lights: frame.lights.map(light => light.id === 'sky:moon' ? { ...light, castsShadow: true } : light) };
 }
 
 const KITE_RADIUS = 260;

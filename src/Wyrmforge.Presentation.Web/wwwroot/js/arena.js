@@ -12,7 +12,7 @@ import { drawGreyboxGround } from './arena-greybox-ground.js';
 import { TerrainCanvasCache, influenceBandIndex, blockInsetOverlayEnabled, drawBlockInsetOverlay, occludingTerrainCells, eraseTerrainOcclusion, repaintTerrainOcclusion, mergeTerrainFrame, TERRAIN_PAD_UNITS } from './arena-terrain-canvas.js';
 import { raisedActor, TERRAIN_ART_SCALE, FACE_PIXELS } from './arena-projection.js';
 import { ambientParticles, drawAmbientParticles } from './arena-ambient-particles.js';
-import { readArenaDebugFlags, botMovement, createBotMemory, withDebugAmbient } from './arena-debug.js';
+import { readArenaDebugFlags, botMovement, createBotMemory, withDebugAmbient, withMoonShadows } from './arena-debug.js';
 import { createFrameSampler, readHeapMegabytes, perfReport, perfLines } from './arena-perf.js';
 import { createDestructionFx, observeTerrain, drawDestructionFx, drawFireZoneVignette, drawCrackGlow, drawBedrockGlow, paintGroundEmissive } from './arena-destruction-fx.js';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
@@ -441,6 +441,7 @@ function draw(state, snapshot, width, height) {
         selectionEmitter ? [...fractureEmitters,selectionEmitter] : fractureEmitters);
     // Debug inspection light (opt-in by URL): lifts only the ambient term of the frame handed to the renderer.
     state.sharedLightingFrame = withDebugAmbient(state.sharedLightingFrame, state.debug.bright, state.debug.ambient);
+    state.sharedLightingFrame = withMoonShadows(state.sharedLightingFrame, state.debug.moonShadows);
     const spellLights = [
         ...buildSpellLights(snapshot, visualSeconds, state.reducedMotion.matches, lightViewport),
         ...hollowFractureCanvasLights(fractureEmitters,snapshot.lighting),
@@ -566,7 +567,8 @@ function draw(state, snapshot, width, height) {
                 tileX > camera.x + width + 384 || tileY > camera.y + height + 384) continue;
             revision = huntLayerRevision(layer, artReady(), artGeneration());
             reuse = gpu.canReuseCapture(capture.id, revision, tileSize, tileSize, pixelScale);
-            tile = (state.gpuScratchPool ??= new HuntGpuScratchPool(4)).acquire(Math.ceil(tileSize * pixelScale));
+            // A reused capture never repaints, so it only needs a stand-in source; real scratch canvases are for layers that redraw.
+            tile = reuse ? (state.gpuReuseStub ??= document.createElement('canvas')) : (state.gpuScratchPool ??= new HuntGpuScratchPool(8)).acquire(Math.ceil(tileSize * pixelScale));
             if (!reuse) {
                 ctx = prepareHuntGpuScratch(tile, tileSize, tileX, tileY, pixelScale);
             }
