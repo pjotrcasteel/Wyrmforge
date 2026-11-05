@@ -43,7 +43,7 @@ public static class SpellMasteryGoalPlanner
     private static string FireballObjective(SpellMasteryEntry progress, int requiredRuns)
     {
         if (progress.MeaningfulRuns < requiredRuns)
-            return $"Equip a mutator on Fireball Lv.2+ and extract from {requiredRuns - progress.MeaningfulRuns} more Hunts.";
+            return $"Equip a mutator on Fireball Lv.2+, clear at least 3 trails, and extract from {requiredRuns - progress.MeaningfulRuns} more Hunts.";
 
         return progress.WyrmFeat ? "The Wyrmfire lineage is awakened."
             : "Defeat Ascendant or Elder Ashfang with Fireball Lv.3+ and two equipped mutators.";

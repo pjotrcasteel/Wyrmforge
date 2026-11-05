@@ -51,6 +51,7 @@ public sealed class SpellMasteryState
             if (spell is null) continue;
             var legacyRankQualified = spell.Rank >= 2;
             var signatureQualified = lineage.Spell == SpellId.FireBolt && spell.Rank > 0 && evidence.Extracted
+                && evidence.CompletedRoutes >= FireSignatureMasteryCriteria.MeaningfulRunRoutes
                 && evidence.ActiveSpell == SpellId.FireBolt
                 && FireSignatureMasteryCriteria.QualifiesMeaningfulRun(evidence.FireballLevel, evidence.FireballMutations);
             if (!legacyRankQualified && !signatureQualified) continue;

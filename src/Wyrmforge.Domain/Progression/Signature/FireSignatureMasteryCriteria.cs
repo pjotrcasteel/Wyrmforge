@@ -6,6 +6,7 @@ namespace Wyrmforge.Domain.Progression.Signature;
 /// </summary>
 public static class FireSignatureMasteryCriteria
 {
+    public const int MeaningfulRunRoutes = 3;
     public const int MeaningfulRunLevel = 2;
     public const int MeaningfulRunMutations = 1;
     public const int EmpoweredDuelLevel = 3;

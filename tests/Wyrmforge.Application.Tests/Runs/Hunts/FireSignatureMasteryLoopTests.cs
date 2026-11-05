@@ -61,7 +61,7 @@ public sealed class FireSignatureMasteryLoopTests
     }
 
     private static MasteryRunEvidence MeaningfulHunt(FireballCoreState core) =>
-        new(2, 1, false, new HashSet<SpellId>(), [new MasteryRunSpell(SpellId.FireBolt, 1)])
+        new(3, 1, false, new HashSet<SpellId>(), [new MasteryRunSpell(SpellId.FireBolt, 1)])
         {
             ActiveSpell = SpellId.FireBolt,
             Extracted = true,
