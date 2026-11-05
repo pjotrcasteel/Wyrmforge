@@ -1,3 +1,4 @@
+using Wyrmforge.Application.Runs.Hunts;
 using Wyrmforge.Domain.Spells;
 
 namespace Wyrmforge.Application.Runs.Navigation;
@@ -80,7 +81,7 @@ public static class WorldSiteGeographyProjection
 {
     /// <summary>Attaches immutable site descriptors without consuming the Hunt, encounter or reward RNG.</summary>
     public static IReadOnlyList<WyrmrealmMapNode> Attach(
-        IReadOnlyList<WyrmrealmMapNode> nodes, int worldSeed, SpellSchool region)
+        IReadOnlyList<WyrmrealmMapNode> nodes, int worldSeed, SpellSchool region, HuntSelection? hunt = null)
     {
         ArgumentNullException.ThrowIfNull(nodes);
         var byId = nodes.ToDictionary(node => node.Id, StringComparer.Ordinal);
@@ -153,7 +154,7 @@ public static class WorldSiteGeographyProjection
                 GenerationProfile = profile,
                 ScenicPaths = CreateScenicPaths(worldSeed, geography.SiteId, profile, geography.Ports),
             };
-            var landscape = WorldSiteLandscapeGenerator.Generate(node, geography);
+            var landscape = WorldSiteLandscapeGenerator.Generate(node, geography, hunt);
             var localSurface = landscape.Kind switch
             {
                 "forest-fork" or "forest-trail" => substrate with

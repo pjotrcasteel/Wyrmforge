@@ -1,3 +1,4 @@
+using Wyrmforge.Application.Runs.Hunts;
 using Wyrmforge.Domain.Spells;
 using Wyrmforge.Domain.Combat.Dragons;
 
@@ -169,7 +170,14 @@ public static class WyrmrealmMapGenerator
                     GenerationProfile = new WorldSiteGenerationProfile(landform, landmark),
                     PreLair = node.Type == WyrmrealmNodeType.Combat && lairRoads.Contains(node.Id) };
             }).ToArray();
-        return WorldSiteGeographyProjection.Attach(WyrmInfluenceField.Assign(mapped), seed, region);
+        var selectedHunt = shape switch
+        {
+            HuntShape.FireTierOne => HuntSelection.FireTierOne,
+            HuntShape.FireTierTwo => HuntSelection.FireTierTwo,
+            HuntShape.FireTierThree => HuntSelection.FireTierThree,
+            _ => null,
+        };
+        return WorldSiteGeographyProjection.Attach(WyrmInfluenceField.Assign(mapped), seed, region, selectedHunt);
 
         void Add(string suffix, int stage, int lane, IReadOnlyList<string> previous, HuntPoint point, IReadOnlyList<HuntPoint> trail,
             string? roadId = null, int index = 0, bool bonus = false, SpellSchool? school = null, WyrmrealmHabitat habitat = WyrmrealmHabitat.Outskirts,
