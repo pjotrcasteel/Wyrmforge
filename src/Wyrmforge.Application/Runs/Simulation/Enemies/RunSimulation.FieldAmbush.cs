@@ -13,8 +13,10 @@ namespace Wyrmforge.Application.Runs.Simulation;
 /// </summary>
 public sealed partial class RunSimulation
 {
-    /// <summary>The marks show for this long before the ring springs: enough to read "everything around me", not enough to run.</summary>
-    public const double FieldAmbushTellSeconds = 1.15;
+    /// <summary>The ground cracks and shudders for this long before the ring breaks out; the crawl-out that follows is the rest of the warning.</summary>
+    public const double FieldAmbushTellSeconds = .7;
+    /// <summary>The two authored Hollowed crawl-out clips (pull: 1.06 s, scramble: .685 s); an emerging enemy cannot act until its clip ends.</summary>
+    public const double CrawlOutPullSeconds = 1.06, CrawlOutScrambleSeconds = .685;
     /// <summary>The hunter must reach this fraction of a field's radius from its centre to spring it.</summary>
     public const double FieldAmbushTriggerFraction = .75;
     public const int FieldAmbushMinimumEnemies = 8;
@@ -30,6 +32,21 @@ public sealed partial class RunSimulation
         public double TellRemaining { get; set; }
         public List<(Vector2D Position, EnemyKind Kind)> Marks { get; } = [];
         public bool Telling => Marks.Count > 0;
+        public int FissureStage { get; set; }
+    }
+
+    // The cleft opens in three steps across the tell: tell progress where each starts, and the reach in microcells (12.5 cm) it grows to.
+    private static readonly double[] FissureStageStarts = [0, .35, .7];
+    private static readonly int[] FissureStageReach = [6, 11, 16];
+
+    private void CarveFieldAmbushFissures(FieldAmbushRuntime ambush)
+    {
+        var progress = 1 - ambush.TellRemaining / FieldAmbushTellSeconds;
+        while (ambush.FissureStage < FissureStageStarts.Length && progress >= FissureStageStarts[ambush.FissureStage])
+        {
+            foreach (var (position, _) in ambush.Marks) ApplyTerrainFissure(position, FissureStageReach[ambush.FissureStage]);
+            ambush.FissureStage++;
+        }
     }
 
     private FieldAmbushRuntime? fieldAmbush;
@@ -51,7 +68,7 @@ public sealed partial class RunSimulation
         if (ambush.Telling)
         {
             ambush.TellRemaining -= delta;
-            if (ambush.TellRemaining > 0) return true;
+            if (ambush.TellRemaining > 0) { CarveFieldAmbushFissures(ambush); return true; }
             SpringFieldAmbush(ambush, width, height);
             return false;
         }
@@ -98,6 +115,7 @@ public sealed partial class RunSimulation
         }
         if (ambush.Marks.Count < FieldAmbushMinimumEnemies) { ambush.Marks.Clear(); return; }
         ambush.TellRemaining = FieldAmbushTellSeconds;
+        ambush.FissureStage = 0;
     }
 
     private void SpringFieldAmbush(FieldAmbushRuntime ambush, double width, double height)
@@ -106,7 +124,9 @@ public sealed partial class RunSimulation
         {
             // The hunter may have moved onto a mark: re-validate against where they stand now, and skip a mark with no legal ground left.
             if (arenaEnvironment!.AdjustSpawnPosition(position, player.Position, width, height, EnemyCatalog.Get(kind).Radius) is not { } safe) continue;
-            AddEnemyAt(kind, safe);
+            // The ground gives way a little where each one climbs out; the crater is real terrain, so it shows in collision, cover and the next fireball.
+            if (arenaEnvironment.Terrain is not null) EnemyTerrainBlast(safe, 1);
+            AddEnemyAt(kind, safe, enemyId % 2 == 0 ? CrawlOutPullSeconds : CrawlOutScrambleSeconds);
         }
         ambush.Marks.Clear();
         // The ordinary director waits for the ring to be fought before it adds more.

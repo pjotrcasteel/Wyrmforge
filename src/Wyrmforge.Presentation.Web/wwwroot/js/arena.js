@@ -21,7 +21,7 @@ import { drawTree, treeLayers, collectTrees, collectBushes, collectBoulders } fr
 import { drawTorch, torchLayers, collectTorches } from './arena-torch-art.js';
 import { torchSprites } from './arena-torch-sprites.js';
 import {
-    ENEMY_CHARACTERS, AUTHORED_SETS, createAuthoredState, preloadAuthoredCharacter, loadedManifests, authoredCharacter, updateAuthoredEnemies, updateAuthoredWizard,
+    ENEMY_CHARACTERS, AUTHORED_SETS, createAuthoredState, preloadAuthoredCharacter, preloadCrawlOut, loadedManifests, authoredCharacter, updateAuthoredEnemies, updateAuthoredWizard,
     drawAuthoredEnemy, drawAuthoredCorpses, drawAuthoredWizard, drawAuthoredAshfang, drawAuthoredAshfangDeath, authoredDiagnostics,
 } from './authored-characters.js';
 import { drawRecoveryGuide } from './arena-recovery.js';
@@ -73,6 +73,7 @@ export function initializeArena(canvas, dotNetReference) {
     preloadHollowSprites();
     ashlingSprites.preload();
     for (const name of AUTHORED_SETS) preloadAuthoredCharacter(name);
+    preloadCrawlOut();
     preloadAshfang();
     const state = createState(canvas, dotNetReference);
     const settings = canvas.closest('.game-screen')?.querySelector('[data-damage-numbers]');
@@ -628,7 +629,7 @@ function draw(state, snapshot, width, height) {
                     state.mageWalk.facing,
                     // The authored wizard replaces the old art once its set has loaded.
                     authoredOn && authoredCharacter('Wizard')
-                        ? surface => drawAuthoredWizard(surface, layer.player ?? snapshot.player, state.authored) : null);
+                        ? surface => drawAuthoredWizard(surface, layer.player ?? snapshot.player, state.authored, danger.hit) : null);
             }
             if (state.terrainFrame && (layer.kind === 'enemy' || layer.kind === 'mage')) {
                 // Raised rock in front of the actor hides it: the covered pixels fall away (GPU) or the rock is repainted (Canvas).

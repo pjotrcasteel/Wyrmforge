@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
-    DIRECTIONS, ENEMY_CHARACTERS, AUTHORED_SETS, resolveCharacter, ashfangPose, CAST_RELEASE_AT, pickDirection, pickDirectionFromAngle, frameAtTime, frameAtPhase, clipDuration,
+    DIRECTIONS, ENEMY_CHARACTERS, AUTHORED_SETS, crawlOutFrame, resolveCharacter, ashfangPose, CAST_RELEASE_AT, pickDirection, pickDirectionFromAngle, frameAtTime, frameAtPhase, clipDuration,
     createAuthoredState, updateAuthoredEnemies, updateAuthoredWizard, corpsePose, CORPSE_SECONDS,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/authored-characters.js';
 
@@ -221,4 +221,26 @@ test('Ashfang: the old motion graph maps onto the authored strips, overhead flig
     assert.equal(pose({ clip: 'bite', progress: .45 }).frame, 2, 'the bite reaches its contact frame mid-strike');
     assert.equal(pose({ clip: 'idle' }, enraged).name, 'Ashfang-enraged');
     assert.equal(pose({ clip: 'something_unknown' }).action, 'idle', 'an unmapped clip falls back to idle rather than a missing strip');
+});
+test('an enemy C# reports as crawling out stays put, faces the hunter and plays the buried frames; the Hollowed uses the crawl-out art once loaded', () => {
+    const state = createAuthoredState();
+    const rising = (kind, progress) => ({ kind, entityId: 12, x: 100, y: 100, radius: 11, emergeProgress: progress, emergeClip: 0 });
+    updateAuthoredEnemies(state, snap([rising(0, .2)], { player: { x: 100, y: 300, radius: 12 } }), manifests, 0);
+    updateAuthoredEnemies(state, snap([rising(0, .5)], { player: { x: 100, y: 300, radius: 12 } }), manifests, .05);
+    let pose = state.enemies.get(12);
+    assert.equal(pose.emerge, true);
+    assert.equal(pose.direction, 'S', 'it faces the hunter');
+    assert.equal(pose.action, 'rise', 'before the crawl-out atlas has loaded, the common rise-from-the-ground draw stands in');
+    updateAuthoredEnemies(state, snap([{ kind: 0, entityId: 12, x: 100, y: 100, radius: 11 }], { player: { x: 100, y: 300, radius: 12 } }), manifests, .1);
+    pose = state.enemies.get(12);
+    assert.equal(pose.emerge, false);
+    assert.equal(pose.action, 'idle', 'once C# says it is out it is an ordinary enemy');
+    assert.equal(crawlOutFrame(0, 0), 0);
+});
+
+test('Ashfang swings its left claw when the target stands to its left', () => {
+    const entity = { clip: 'claw_right', direction: 'E', progress: .5, at: 0 };
+    const at = (x, y) => ashfangPose(entity, { phase: 1, x: 0, y: 0, attackTargetX: x, attackTargetY: y }, 1, manifests).action;
+    assert.equal(at(100, 80), 'claw_right', 'facing east, a target to the south is on its right');
+    assert.equal(at(100, -80), 'claw_left');
 });

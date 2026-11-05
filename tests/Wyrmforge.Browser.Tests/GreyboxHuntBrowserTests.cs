@@ -520,19 +520,20 @@ public sealed class GreyboxHuntBrowserTests : PageTest
             async () => {
                 const module = await import('/js/arena-performance.js');
                 const canvas = document.querySelector('canvas.game-canvas');
-                window.__ambush = { tell: null, burst: null, burstFrames: 0 };
+                window.__ambush = { tell: null, crawl: null, burst: null, burstFrames: 0 };
                 const tick = () => {
                     const state = module.readArenaDiagnostics(canvas), shots = window.__ambush;
                     const ambush = state?.fieldAmbush;
                     if (ambush && ambush.marks.length >= 8 && ambush.progress >= .5 && !shots.tell) shots.tell = canvas.toDataURL('image/png');
                     if (shots.tell && !ambush && !shots.burst && ++shots.burstFrames >= 6) shots.burst = canvas.toDataURL('image/png');
+                    if (shots.tell && !shots.crawl && (state?.enemies ?? []).filter(e => e.emergeProgress > .4 && e.emergeProgress < .6).length >= 4) shots.crawl = canvas.toDataURL('image/png');
                     requestAnimationFrame(tick);
                 };
                 tick();
             }
             """);
-        await ArenaBrowserWait.UntilAsync(Page, "return Boolean(window.__ambush?.burst);", 150000, "the bot to walk into a field, the ambush tell to show and the ring to burst out", 500);
-        foreach (var (name, key) in new[] { ("field-ambush-tell.png", "tell"), ("field-ambush-burst.png", "burst") })
+        await ArenaBrowserWait.UntilAsync(Page, "return Boolean(window.__ambush?.burst && window.__ambush?.crawl);", 150000, "the bot to walk into a field, the ambush tell to show and the ring to burst out", 500);
+        foreach (var (name, key) in new[] { ("field-ambush-tell.png", "tell"), ("field-ambush-crawl.png", "crawl"), ("field-ambush-burst.png", "burst") })
         {
             var url = await Page.EvaluateAsync<string>($"() => window.__ambush.{key}");
             await File.WriteAllBytesAsync(Path.Combine(output, name), Convert.FromBase64String(url[(url.IndexOf(',') + 1)..]));

@@ -6,6 +6,7 @@
 // neighbour, never mirrored, never cross-faded. Pose changes are discrete; the facing keeps its hysteresis and the walk keeps its phase when
 // the facing changes.
 export const DIRECTIONS = ['E', 'SE', 'S', 'SW', 'W', 'NW', 'N', 'NE'];
+import { drawEmergeParticles } from './arena-field-ambush-vfx.js';
 
 /** C# EnemyKind numbers that have an authored set, and the strip of each one's primary attack. */
 export const ENEMY_CHARACTERS = new Map([
@@ -119,6 +120,18 @@ export function updateAuthoredEnemies(state, snapshot, manifests, seconds, reduc
             state.enemies.set(id, pose);
         }
         pose.name = name;
+        // Crawling out of the ground (a field ambush): C# holds it still and reports 0 to 1; it faces the hunter and plays the buried frames.
+        if (enemy.emergeProgress != null) {
+            const player = snapshot.player;
+            if (player) pose.direction = pickDirection(player.x - enemy.x, player.y - enemy.y, pose.direction);
+            pose.attack = null; pose.hit = null; pose.emerge = true;
+            pose.emergeProgress = enemy.emergeProgress; pose.x = enemy.x; pose.y = enemy.y; pose.lastMove = -1;
+            pose.action = name === 'Hollowed' && crawlOutReady() ? 'crawl_out' : 'rise';
+            pose.frame = crawlOutFrame(enemy.emergeClip, enemy.emergeProgress);
+            pose.emergeClip = enemy.emergeClip;
+            continue;
+        }
+        pose.emerge = false;
         const advancing = !paused && !enemy.frozen;
         const dx = enemy.x - pose.x, dy = enemy.y - pose.y, distance = Math.hypot(dx, dy);
         if (distance >= 64) { pose.lastMove = -1; pose.attack = null; }
@@ -319,6 +332,41 @@ export function drawAuthoredCell(ctx, name, actionName, direction, frame, x, y, 
     return true;
 }
 
+// ---------------------------------------------------------------- crawl out of the ground
+
+let crawlOut = null, crawlOutRequested = false;
+
+/** The two authored Hollowed crawl-out clips (south-east only; the pack's atlas is 8 cells across, one clip per row). */
+export function preloadCrawlOut() {
+    if (crawlOutRequested || typeof Image === 'undefined' || typeof fetch === 'undefined' || !base) return;
+    crawlOutRequested = true;
+    (async () => {
+        const folder = new URL('Hollowed-Crawl-Out/', base);
+        const manifest = await (await fetch(new URL('manifest.json', folder))).json();
+        const image = new Image();
+        image.src = new URL(manifest.atlas, folder).href;
+        await image.decode();
+        if (image.naturalWidth !== manifest.atlasSize[0] || image.naturalHeight !== manifest.atlasSize[1]) throw new Error('crawl-out atlas has the wrong size');
+        crawlOut = { manifest, image };
+    })().catch(() => { });
+}
+
+export const crawlOutReady = () => crawlOut !== null;
+
+/** The frame (0 to 7) of clip 0 (the long pull) or 1 (the short scramble) at C#'s 0 to 1 progress, weighted by the authored frame times. */
+export function crawlOutFrame(clipIndex, progress) {
+    const clip = Object.values(crawlOut?.manifest.clips ?? {})[clipIndex === 1 ? 1 : 0];
+    if (!clip) return 0;
+    return frameAtTime(clip.durationsMs, Math.max(0, Math.min(1, progress)) * clipDuration(clip.durationsMs)).index;
+}
+
+function drawCrawlOut(ctx, x, y, clipIndex, frame) {
+    const clip = Object.values(crawlOut.manifest.clips)[clipIndex === 1 ? 1 : 0];
+    const [width, height] = crawlOut.manifest.canvas, [rootX, rootY] = crawlOut.manifest.root;
+    const index = clip.fromFrame + Math.min(frame, clip.toFrame - clip.fromFrame), columns = crawlOut.manifest.atlasSize[0] / width;
+    ctx.drawImage(crawlOut.image, (index % columns) * width, Math.floor(index / columns) * height, width, height, Math.round(x) - rootX, Math.round(y) - rootY, width, height);
+}
+
 /** Soft contact shadow under the feet, so a sprite that casts none of its own does not float. */
 function contactShadow(ctx, x, y, radius) {
     ctx.fillStyle = 'rgba(7, 9, 14, 0.2)';
@@ -327,10 +375,28 @@ function contactShadow(ctx, x, y, radius) {
     ctx.fill();
 }
 
+/**
+ * An enemy climbing out of the ground: the Hollowed plays the owner's crawl-out clip (south-east art, so it is not turned), everything else rises
+ * out of the ground behind a clip line at its feet, facing the hunter. Dirt and chips fly from its root either way.
+ */
+function drawEmerging(ctx, enemy, pose) {
+    const progress = Math.max(0, Math.min(1, pose.emergeProgress));
+    if (pose.action === 'crawl_out') drawCrawlOut(ctx, enemy.x, enemy.y, pose.emergeClip, pose.frame);
+    else {
+        ctx.save();
+        ctx.beginPath(); ctx.rect(enemy.x - 70, enemy.y - 120, 140, 122); ctx.clip();
+        drawAuthoredCell(ctx, pose.name, 'idle', pose.direction, 0, enemy.x, enemy.y + (1 - progress) * 56);
+        ctx.restore();
+    }
+    drawEmergeParticles(ctx, enemy.x, enemy.y, enemy.entityId, progress);
+    return true;
+}
+
 /** Draws an enemy from its authored pose; false when it has none (the caller then draws the old art). */
 export function drawAuthoredEnemy(ctx, enemy, state) {
     const pose = state.enemies.get(enemy.entityId);
     if (!pose) return false;
+    if (pose.emerge) return drawEmerging(ctx, enemy, pose);
     const opacity = Number.isFinite(enemy.opacity) ? enemy.opacity : 1;
     contactShadow(ctx, enemy.x, enemy.y, Math.max(6, (Number(enemy.radius) || 11) * .7));
     return drawAuthoredCell(ctx, pose.name, pose.action, pose.direction, pose.frame, enemy.x, enemy.y, opacity);
@@ -349,10 +415,21 @@ export function drawAuthoredCorpses(ctx, state) {
 /** The mage's feet sit this far below the C# position, which is the middle of the body (the old art's convention, kept so shadows line up). */
 export const WIZARD_FEET_OFFSET = 12;
 
-export function drawAuthoredWizard(ctx, player, state) {
-    const wizard = state.wizard;
-    contactShadow(ctx, player.x, player.y + WIZARD_FEET_OFFSET, 8);
-    return drawAuthoredCell(ctx, 'Wizard', wizard.action, wizard.direction, wizard.frame, player.x, player.y + WIZARD_FEET_OFFSET);
+export function drawAuthoredWizard(ctx, player, state, hit = false) {
+    const wizard = state.wizard, feetY = player.y + WIZARD_FEET_OFFSET;
+    contactShadow(ctx, player.x, feetY, 8);
+    // A hit reddens the whole figure for its short flash; the cast and walk poses stay untouched.
+    ctx.save();
+    if (hit) ctx.filter = 'sepia(1) saturate(3.2) hue-rotate(-35deg) brightness(1.05)';
+    const drawn = drawAuthoredCell(ctx, 'Wizard', wizard.action, wizard.direction, wizard.frame, player.x, feetY);
+    ctx.restore();
+    // Warding Barrier: two pale seams at the shoulders, as the old mage showed it.
+    if (player.barrier) {
+        ctx.fillStyle = '#a9c8d3';
+        ctx.fillRect(Math.round(player.x) - 11, feetY - 26, 3, 8);
+        ctx.fillRect(Math.round(player.x) + 8, feetY - 26, 3, 8);
+    }
+    return drawn;
 }
 
 // ---------------------------------------------------------------- Ashfang
@@ -373,6 +450,12 @@ export function ashfangPose(entity, dragon, clock, manifests) {
     if (entity.clip === 'fly' || entity.shadow) return { name, shadow: true };
     const age = Math.max(0, clock - (entity.at ?? clock));
     let actionName = ASHFANG_ALIAS[entity.clip] ?? entity.clip, frame;
+    // C# has one claw; the authored left and right claws are chosen by which side of its facing the target stands on.
+    if (entity.clip === 'claw_right' && Number.isFinite(dragon?.attackTargetX) && Number.isFinite(dragon?.x)) {
+        const angle = DIRECTIONS.indexOf(entity.direction) * Math.PI / 4;
+        const cross = Math.cos(angle) * (dragon.attackTargetY - dragon.y) - Math.sin(angle) * (dragon.attackTargetX - dragon.x);
+        if (cross < 0) actionName = 'claw_left';
+    }
     if (entity.clip === 'breath_start' || entity.clip === 'breath_loop' || entity.clip === 'breath_end') {
         // Windup frames, a two-frame loop while the flame is out, then the recovery frame.
         actionName = 'fire_breath';

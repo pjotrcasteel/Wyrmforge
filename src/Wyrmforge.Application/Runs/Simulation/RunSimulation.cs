@@ -364,6 +364,8 @@ public sealed partial class RunSimulation
                 RimeArmor = RimeArmorRatio(enemy),
                 Elite = enemy.IsElite ? enemy.Elite.ToString() : null,
                 Empowered = IsWardEmpowered(enemy),
+                EmergeProgress = enemy.EmergeRemaining > 0 && enemy.EmergeTotal > 0 ? 1 - enemy.EmergeRemaining / enemy.EmergeTotal : null,
+                EmergeClip = enemy.EmergeTotal >= CrawlOutPullSeconds - .001 ? 0 : 1,
             }).ToArray(),
             CreateDragonSnapshot(),
             CreateDragonBreathSnapshot(),

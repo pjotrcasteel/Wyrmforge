@@ -173,6 +173,66 @@ public sealed class FieldAmbushTests
     }
 
     [TestMethod]
+    public void TheGroundSplitsInTheTerrainItselfWhileTheTellRunsAndTheSameSeedSplitsTheSameWay()
+    {
+        var revisions = new List<int>();
+        var cleft = new List<string>();
+        foreach (var run in new[] { 0, 1 })
+        {
+            var (simulation, player, environment) = Start(42);
+            Quiet(simulation, player, 6);
+            var field = environment.AmbushFields[0];
+            ClearHostiles(simulation);
+            player.Position = ArenaTerrainGrid.CenterOf(field.Column, field.Row);
+            var snapshot = Quiet(simulation, player, .1);
+            var terrain = environment.Terrain!;
+            var mark = snapshot.FieldAmbush!.Marks[0];
+            var (column, row) = ArenaTerrainGrid.ColumnOf(new Vector2D(mark.X, mark.Y));
+            var firstRevision = terrain.Revision;
+            Quiet(simulation, player, RunSimulation.FieldAmbushTellSeconds - .25);
+            Assert.IsNotNull(simulation.CreateSnapshot().FieldAmbush, "still telling");
+            Assert.IsGreaterThan(firstRevision, terrain.Revision, "the cleft lengthens in later stages");
+            revisions.Add(terrain.Revision);
+            cleft.Add(string.Join(',', terrain.FineHeights(column, row) ?? []));
+            Assert.IsTrue(terrain.FineHeights(column, row) is not null || terrain.Revision > 0, "the ground under a mark is subdivided into the cleft");
+        }
+        Assert.AreEqual(cleft[0], cleft[1], "replays split the ground the same way");
+        Assert.AreEqual(revisions[0], revisions[1]);
+    }
+
+    [TestMethod]
+    public void TheRingCrawlsOutOfTheGroundBeforeItActsAndLeavesCratersWhereItClimbed()
+    {
+        var (simulation, player, environment) = Start(42);
+        Quiet(simulation, player, 6);
+        var field = environment.AmbushFields[0];
+        ClearHostiles(simulation);
+        player.Position = ArenaTerrainGrid.CenterOf(field.Column, field.Row);
+        Quiet(simulation, player, .1);
+        var revision = environment.Terrain!.Revision;
+        var snapshot = Quiet(simulation, player, RunSimulation.FieldAmbushTellSeconds);
+        var emerging = snapshot.Enemies.Where(enemy => enemy.EmergeProgress is not null).ToArray();
+        Assert.IsGreaterThanOrEqualTo(RunSimulation.FieldAmbushMinimumEnemies - 2, emerging.Length, "the whole ring is crawling out");
+        Assert.IsGreaterThan(revision, environment.Terrain.Revision, "each spawn point lost a little ground");
+        Assert.IsTrue(emerging.Select(enemy => enemy.EmergeClip).Distinct().Count() == 2, "both authored clips are used");
+        var before = emerging.ToDictionary(enemy => enemy.EntityId, enemy => (enemy.X, enemy.Y));
+
+        // Half a second in, the long pull is still going: nobody has moved and the hunter is untouched.
+        player.Health = simulation.MaxHealth;
+        snapshot = Quiet(simulation, player, .45);
+        foreach (var enemy in snapshot.Enemies.Where(enemy => before.ContainsKey(enemy.EntityId) && enemy.EmergeProgress is not null))
+        {
+            var (x, y) = before[enemy.EntityId];
+            Assert.IsLessThan(2.5, Math.Sqrt((enemy.X - x) * (enemy.X - x) + (enemy.Y - y) * (enemy.Y - y)), "an emerging enemy does not walk");
+        }
+        Assert.IsTrue(snapshot.Enemies.Any(enemy => enemy.EmergeProgress is > 0 and < 1));
+
+        // Once both clips are over they are ordinary enemies.
+        snapshot = Quiet(simulation, player, RunSimulation.CrawlOutPullSeconds);
+        Assert.IsTrue(snapshot.Enemies.All(enemy => enemy.EmergeProgress is null));
+    }
+
+    [TestMethod]
     public void NoAmbushInTheFirstSecondsOrWhileTheTrailIsAlreadyMetOrOffTerrain()
     {
         var (simulation, player, environment) = Start(42);
