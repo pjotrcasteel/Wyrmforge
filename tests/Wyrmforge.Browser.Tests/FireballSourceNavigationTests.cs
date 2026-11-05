@@ -66,6 +66,28 @@ public sealed class FireballSourceNavigationTests : PageTest
     }
 
     [TestMethod]
+    public async Task FireballRareSource_OffersDirectTierTwoOnlyAfterItsOwnLineageClear()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.AddInitScriptAsync(@"localStorage.setItem('wyrmforge.firstHunt.v1','3');
+            localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:8,Nodes:[]}));
+            localStorage.setItem('wyrmforge.fireballCore.v1',JSON.stringify({Level:3,Discovered:[],Slots:[]}));
+            localStorage.setItem('wyrmforge.world.v1',JSON.stringify({
+                Discovered:['cinder-frontier'], Selected:'cinder-frontier',
+                CompletedTierOneHunts:['cinder-frontier'], ClearedHuntTiers:{'cinder-frontier':1}
+            }));");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await OpenArcaneNexusAsync();
+
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Find Emberglass" }).ClickAsync();
+        var guide = Page.GetByRole(AriaRole.Region, new() { Name = "Where to find Emberglass" });
+        await Expect(guide).ToContainTextAsync("Fire tiers 2, 3");
+        await Expect(guide.GetByRole(AriaRole.Button, new() { Name = "Open World Gate" })).ToHaveCountAsync(0);
+        await guide.GetByRole(AriaRole.Button, new() { Name = "Hunt Fire Tier 2 now" }).ClickAsync();
+        await Expect(Page.GetByText("FIRE · TIER 2", new() { Exact = true })).ToBeVisibleAsync();
+    }
+
+    [TestMethod]
     public async Task FireballFirstUpgrade_EssenceSourceStartsTierOneInTwoTaps()
     {
         await Page.SetViewportSizeAsync(390, 844);
