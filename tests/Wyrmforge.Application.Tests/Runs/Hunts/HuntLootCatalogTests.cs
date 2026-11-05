@@ -101,4 +101,22 @@ public sealed class HuntLootCatalogTests
             HuntLootRollKind.ExistingSiteSeedRoll, Chance: double.NaN);
         Assert.Throws<ArgumentException>(() => new HuntLootTable(HuntSelection.FireTierOne, invalidRule));
     }
+
+    [TestMethod]
+    public void MaterialSourceDiscovery_ListsOnlyRealAuthoredSourcesInAccessibleTiers()
+    {
+        foreach (var material in HuntMaterialCatalog.All)
+        {
+            var locations = HuntLootCatalog.LocationsFor(material);
+            Assert.IsTrue(locations.Count > 0);
+            Assert.IsTrue(locations.All(location => HuntLootCatalog.For(location.Hunt).Rules.Any(rule =>
+                rule.Material == material && rule.Source == location.Source && rule.Roll == location.Roll)));
+        }
+
+        Assert.AreEqual(1, HuntLootCatalog.LocationsFor(HuntMaterialId.EmberResidue).Min(location => location.Hunt.TierNumber));
+        Assert.AreEqual(1, HuntLootCatalog.LocationsFor(HuntMaterialId.CharredScrap).Min(location => location.Hunt.TierNumber));
+        Assert.AreEqual(2, HuntLootCatalog.LocationsFor(HuntMaterialId.Emberglass).Min(location => location.Hunt.TierNumber));
+        Assert.AreEqual(3, HuntLootCatalog.LocationsFor(HuntMaterialId.Wyrmcinder).Min(location => location.Hunt.TierNumber));
+        Assert.IsTrue(HuntLootCatalog.LocationsFor(HuntMaterialId.Wyrmcinder).All(location => location.Source == HuntLootSource.EliteEnemy));
+    }
 }
