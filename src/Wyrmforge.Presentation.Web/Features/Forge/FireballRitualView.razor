@@ -1,7 +1,7 @@
 @using Wyrmforge.Domain.Progression.Signature
 @using Wyrmforge.Domain.Progression.DragonEssences
 
-<section class="fireball-ritual" aria-label="Fireball spellcraft">
+<section class="fireball-ritual @(firstSocketJustAwakened ? "awakened" : "")" aria-label="Fireball spellcraft">
     <header class="fireball-heading">
         <h2>Fireball <span>Lv @Core.Level</span></h2>
         <div class="fireball-level-pips" role="img" aria-label="Fireball level @Core.Level of 5">
@@ -61,6 +61,15 @@
     </div>
 
     <section class="fireball-context" aria-live="polite" aria-label="Fireball actions" tabindex="-1" @ref="contextElement">
+        @if (firstSocketJustAwakened && Core.Level >= 2)
+        {
+            <div class="fireball-awakening" role="status">
+                <span class="fireball-awakening-kicker">First awakening</span>
+                <strong>Your Fireball has changed.</strong>
+                <p>+8% base damage. Your first mutator socket is now open, ready for a researched mutation.</p>
+                <button type="button" class="fireball-awakening-action" @onclick="() => SelectSlot(0)">Choose your first mutator</button>
+            </div>
+        }
         @if (selectedSlot is null)
         {
             <div class="fireball-panel-heading">
@@ -249,6 +258,7 @@
     private int? selectedSlot;
     private int? inspectedLockedSlot;
     private string? notice;
+    private bool firstSocketJustAwakened;
     private ElementReference contextElement;
     private bool focusContext;
 
@@ -345,6 +355,7 @@
     private void SelectSlot(int slot)
     {
         notice = null;
+        firstSocketJustAwakened = false;
         focusContext = true;
         if (slot < Core.SocketCapacity) { selectedSlot = slot; inspectedLockedSlot = null; }
         else { selectedSlot = null; inspectedLockedSlot = slot; }
@@ -359,9 +370,11 @@
     private async Task UpgradeAsync()
     {
         if (OnUpgrade is null || !await OnUpgrade()) { notice = "Fireball cannot be upgraded yet."; return; }
+        firstSocketJustAwakened = Core.Level == 2;
+        focusContext = firstSocketJustAwakened;
         notice = Core.Level switch
         {
-            2 => "Fireball awakened to level 2! Your first mutator socket is open. Equip a researched mutation to transform your spell.",
+            2 => null,
             5 => "Fireball reached level 5! Both final mutation sockets are open.",
             _ => $"Fireball strengthened to level {Core.Level}. A new socket is open.",
         };

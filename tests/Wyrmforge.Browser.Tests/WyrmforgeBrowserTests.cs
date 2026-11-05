@@ -1697,8 +1697,12 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".fireball-heading h2")).ToContainTextAsync("Lv 2");
         await Expect(Page.Locator(".fireball-socket.sealed")).ToHaveCountAsync(4);
         await Expect(Page.Locator(".fireball-damage-growth")).ToContainTextAsync("Base damage: +8%");
+        await Expect(Page.Locator(".fireball-awakening")).ToBeVisibleAsync();
+        await Expect(Page.Locator(".fireball-awakening")).ToContainTextAsync("Your Fireball has changed");
+        await Expect(Page.Locator(".fireball-awakening")).ToContainTextAsync("+8% base damage");
 
-        await Page.Locator(".fireball-socket--1").ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Choose your first mutator" }).ClickAsync();
+        await Expect(Page.Locator(".fireball-awakening")).ToHaveCountAsync(0);
         await Expect(Page.Locator(".fireball-context h3")).ToContainTextAsync("Select a mutator");
         await Expect(Page.Locator(".fireball-mutator")).ToHaveCountAsync(10);
         Assert.AreEqual(3, await Page.Locator(".fireball-mutator img.fireball-mutation-art").CountAsync(),

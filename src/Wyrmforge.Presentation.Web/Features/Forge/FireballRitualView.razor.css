@@ -217,3 +217,53 @@
     font:600 .87rem/1.4 Georgia,serif;
     text-align:center;
 }
+
+/* A one-time, bounded presentation reward for the first permanent spell upgrade.
+   The animation changes no combat state and never covers the Nexus controls. */
+.fireball-awakening {
+    display:grid;
+    gap:7px;
+    padding:13px;
+    border:2px solid #e8a560;
+    background:linear-gradient(130deg,#4f281b,#27151b 67%,#171018);
+    box-shadow:inset 0 0 0 2px #28161a,0 0 12px #df713d55;
+}
+.fireball-awakening-kicker {
+    color:#ffd397;
+    font:700 .72rem/1.3 system-ui,sans-serif;
+    letter-spacing:.11em;
+    text-transform:uppercase;
+}
+.fireball-awakening strong {
+    color:#ffe5b6;
+    font:700 1.12rem/1.2 Georgia,serif;
+}
+.fireball-context .fireball-awakening p {
+    color:#eac9aa;
+    font:.84rem/1.4 system-ui,sans-serif;
+}
+.fireball-awakening-action {
+    width:100%;
+    min-height:48px;
+    padding:10px 12px;
+    border:2px solid #f4c080;
+    background:#814125;
+    color:#fff0c9;
+    font:700 .94rem/1.2 Georgia,serif;
+    cursor:pointer;
+}
+@media(prefers-reduced-motion:no-preference) {
+    .fireball-ritual.awakened .fireball-socket--1::before {
+        animation:fireball-socket-awaken 1.3s ease-out both;
+    }
+    .fireball-awakening { animation:fireball-rite-reveal .5s ease-out both; }
+}
+@keyframes fireball-socket-awaken {
+    0% { filter:brightness(2.4);box-shadow:0 0 26px #ffc774; }
+    50% { filter:brightness(1.5);box-shadow:0 0 18px #ff9d4d; }
+    100% { filter:brightness(1);box-shadow:0 0 7px #f4803a88; }
+}
+@keyframes fireball-rite-reveal {
+    from { opacity:.4;filter:brightness(1.35); }
+    to { opacity:1;filter:brightness(1); }
+}
