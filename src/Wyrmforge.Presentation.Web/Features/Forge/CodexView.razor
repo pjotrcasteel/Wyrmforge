@@ -38,7 +38,11 @@
             <span class="section-kicker">WYRMFORGED SPELL LINEAGES</span>
             <small>@Masteries.UnlockedCount / @SpellLineageCatalog.All.Count awakened</small>
         </div>
-        <p class="lineage-codex-guide">Fireball mastery: equip a mutator on Lv.2+, clear at least three trails and extract from four Hunts, then overcome Ascendant or Elder Ashfang using Lv.3+ with two mutators. Other spell lineages retain their legacy rank requirements.</p>
+        <p class="lineage-codex-guide">
+            Fireball mastery: equip a mutator on Lv.2+, clear at least three trails and extract from four Hunts,
+            then overcome Ascendant or Elder Ashfang using Lv.3+ with two mutators.
+            Other spell lineages retain their legacy rank requirements.
+        </p>
         <div class="codex-grid lineage-codex-grid">
             @foreach (var lineage in SpellLineageCatalog.All)
             {
@@ -66,7 +70,8 @@
                         }
                         else
                         {
-                            <small class="lineage-reward">REWARD • @(lineage.Spell == SpellId.FireBolt ? "Wyrmfire lineage and Great Hunt progress" : "undiscovered evolution")</small>
+                            <small class="lineage-reward">REWARD • @(lineage.Spell == SpellId.FireBolt
+                                ? "Wyrmfire lineage and Great Hunt progress" : "undiscovered evolution")</small>
                         }
                     </div>
                 </article>
@@ -96,7 +101,8 @@
                         }
                         else
                         {
-                            <small>Rank III → @string.Join(" / ", evolutions.Select(evolution => evolution.RequiresForgeUnlock && !Progression.UnlocksEvolution(evolution.Id) ? "🔒 Forge blueprint"
+                            <small>Rank III → @string.Join(" / ", evolutions.Select(evolution =>
+                                evolution.RequiresForgeUnlock && !Progression.UnlocksEvolution(evolution.Id) ? "🔒 Forge blueprint"
                                 : evolution.RequiresMasteryUnlock && !Masteries.Unlocks(evolution.Id) ? "◇ Hidden lineage"
                                 : $"{evolution.Icon} {evolution.Name}"))</small>
                         }
