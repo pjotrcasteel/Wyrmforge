@@ -176,8 +176,7 @@ public sealed class FireTierTwoHuntTests
         var refuge = map.AvailableNodes.Single(node => node.Refuge);
         Complete(map, refuge);
         Invoke(simulation, "CompleteTrail", refuge);
-        Resolve(simulation);
-        SetField(simulation, "trailExitPending", false);
+        FinishRefugeExit(simulation);
 
         var firstRoad = map.AvailableNodes[0];
         Assert.IsTrue(simulation.ChooseMapNode(firstRoad.Id));
@@ -232,8 +231,7 @@ public sealed class FireTierTwoHuntTests
         var refuge = map.AvailableNodes.Single(node => node.Refuge);
         Complete(map, refuge);
         Invoke(simulation, "CompleteTrail", refuge);
-        Resolve(simulation);
-        SetField(simulation, "trailExitPending", false);
+        FinishRefugeExit(simulation);
 
         while (!map.AvailableNodes.Any(node => node.Type == WyrmrealmNodeType.Dragon)) Complete(map, map.AvailableNodes[0]);
         var wyrm = map.AvailableNodes.Single(node => node.Type == WyrmrealmNodeType.Dragon);
@@ -258,8 +256,7 @@ public sealed class FireTierTwoHuntTests
         var refuge = map.AvailableNodes.Single(node => node.Refuge);
         Complete(map, refuge);
         Invoke(simulation, "CompleteTrail", refuge);
-        Resolve(simulation);
-        SetField(simulation, "trailExitPending", false);
+        FinishRefugeExit(simulation);
 
         var road = map.AvailableNodes[0];
         Assert.IsTrue(simulation.ChooseMapNode(road.Id));
@@ -282,8 +279,7 @@ public sealed class FireTierTwoHuntTests
         var refuge = map.AvailableNodes.Single(node => node.Refuge);
         Complete(map, refuge);
         Invoke(simulation, "CompleteTrail", refuge);
-        Resolve(simulation);
-        SetField(simulation, "trailExitPending", false);
+        FinishRefugeExit(simulation);
 
         var choices = map.AvailableNodes.ToArray();
         Assert.IsTrue(choices.Length >= 2, "The harder refuge rejoins at a real route choice.");
@@ -312,6 +308,16 @@ public sealed class FireTierTwoHuntTests
         Assert.IsFalse(simulation.IsEnded);
         Assert.IsNotNull(simulation.RefugeNodeId);
         Assert.AreEqual(returnsBeforeDeath + 1, simulation.RefugeReturns, "A paused choice must never masquerade as a refuge return.");
+    }
+
+    private static void FinishRefugeExit(RunSimulation simulation)
+    {
+        Resolve(simulation);
+        SetField(simulation, "trailExitPending", false);
+        // These tests deliberately complete the map directly, bypassing the physical exit walk.
+        // Drain its deferred cleanup before creating drops, or the first tick would bank loose XP.
+        Invoke(simulation, "CompleteMapEncounterCleanup");
+        Resolve(simulation);
     }
 
     private static void KillHollowAndCollectExperience(RunSimulation simulation, int id)
