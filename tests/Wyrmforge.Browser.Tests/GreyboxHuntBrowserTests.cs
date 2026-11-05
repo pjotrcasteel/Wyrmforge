@@ -306,7 +306,7 @@ public sealed class GreyboxHuntBrowserTests : PageTest
                 const s = module.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
                 return JSON.stringify({ debug: s?.debug, hud: { kills: s?.hud?.kills, hp: s?.hud?.health, t: s?.hud?.seconds },
                     paused: s?.paused, ended: s?.ended, exit: s?.exit, exitPorts: s?.exitPorts,
-                    p: s?.player && [Math.round(s.player.x), Math.round(s.player.y)], enemies: s?.enemies?.length,
+                    p: s?.player && [Math.round(s.player.x), Math.round(s.player.y)], enemies: s?.enemies?.length, shots: s?.projectiles?.length, aim: [s?.player?.aimTargetId, s?.player?.manualAim], cast: s?.castMotion?.progress, foes: s?.enemies?.map(e => [e.kind, Math.round(e.x), Math.round(e.y), Math.round(e.healthRatio * 100)]),
                     overlays: [...document.querySelectorAll('[role=dialog]')].map(e => e.getAttribute('aria-label')) });
             }");
             Assert.Fail("first trail did not return to the Chart: " + state);
@@ -592,6 +592,69 @@ public sealed class GreyboxHuntBrowserTests : PageTest
         await ArenaBrowserWait.UntilAsync(Page, "return Boolean(window.__torch?.shot);", 150000, "the hunter to walk past a torch whose authored sprites have loaded", 500);
         var url = await Page.EvaluateAsync<string>("() => window.__torch.shot");
         await File.WriteAllBytesAsync(Path.Combine(output, $"road-torch-{width}.png"), Convert.FromBase64String(url[(url.IndexOf(',') + 1)..]));
+        Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
+    }
+
+    /// <summary>Hunt 1.0: the authored eight-direction wizard and enemies play in the live Hunt (walk, cast, claw, hit, death), from the C# snapshot.</summary>
+    [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
+    public async Task Hunt1Terrain_AuthoredCharactersWalkCastClawGetHitAndDie(int width, int height)
+    {
+        var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
+        var output = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
+        Directory.CreateDirectory(output);
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.AddInitScriptAsync("""
+            localStorage.setItem('wyrmforge.firstHunt.v1','3');
+            localStorage.setItem('wyrmforge.characterSchool.v1','Pyromancer');
+            """);
+        var errors = new List<string>();
+        Page.PageError += (_, error) => errors.Add(error);
+        await Page.GotoAsync(root + "/?hunt1=1&god=1&bot=1&speed=2", new() { WaitUntil = WaitUntilState.NetworkIdle });
+        var start = Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^START GAME") });
+        await start.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 45000 });
+        await start.ClickAsync();
+        if (await Page.Locator(".character-creation").IsVisibleAsync())
+            await Page.GetByRole(AriaRole.Button, new() { Name = "Choose Pyromancer" }).ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Region, new() { Name = "Town square" })).ToBeVisibleAsync();
+        await Page.Locator(".refuge-town-spot--gate").ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Enter Free Play" }).ClickAsync();
+        await Page.Locator(".gate-action--primary").ClickAsync();
+        await Page.Locator(".gate-lineage--fire").ClickAsync();
+        await Page.Locator(".gate-tier--ready").First.ClickAsync();
+        await Page.Locator("button.route-node.available").First.ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^Enter (rare )?trail$") }).ClickAsync();
+        await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
+
+        // The first frame of each state, grabbed inside the page's animation frame.
+        await Page.EvaluateAsync("""
+            async () => {
+                const module = await import('/js/arena-performance.js');
+                const canvas = document.querySelector('canvas.game-canvas');
+                window.__authored = { shots: {} };
+                const tick = () => {
+                    const state = module.readArenaDiagnostics(canvas), a = state?.authored, shots = window.__authored.shots;
+                    if (a && a.loaded.length) {
+                        const take = (key, when) => { if (when && !shots[key]) shots[key] = canvas.toDataURL('image/png'); };
+                        take('wizard-walk', a.wizard.action === 'walk');
+                        take('wizard-cast', a.wizard.action === 'cast');
+                        take('enemy-walk', a.enemyPoses.some(p => p.action === 'walk'));
+                        take('enemy-attack', a.enemyPoses.some(p => !['idle', 'walk', 'hit', 'death'].includes(p.action)));
+                        take('enemy-hit', a.enemyPoses.some(p => p.action === 'hit'));
+                        take('corpse', a.corpses > 0);
+                    }
+                    requestAnimationFrame(tick);
+                };
+                tick();
+            }
+            """);
+        await ArenaBrowserWait.UntilAsync(Page, "const s = window.__authored.shots; return ['wizard-walk','wizard-cast','enemy-walk','enemy-attack','enemy-hit','corpse'].every(key => s[key]);",
+            170000, "the wizard to walk and cast and the enemies to walk, attack, take a hit and die", 400);
+        var shots = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(await Page.EvaluateAsync<string>("() => JSON.stringify(window.__authored.shots)"))!;
+        Assert.HasCount(6, shots, "one frame for each state");
+        foreach (var (key, url) in shots)
+            await File.WriteAllBytesAsync(Path.Combine(output, $"authored-{key}-{width}.png"), Convert.FromBase64String(url[(url.IndexOf(',') + 1)..]));
         Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
     }
 

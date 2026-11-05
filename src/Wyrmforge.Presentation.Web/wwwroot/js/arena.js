@@ -20,6 +20,10 @@ import { sortSceneDepthLayers } from './arena-cloister-art.js';
 import { drawTree, treeLayers, collectTrees, collectBushes, collectBoulders } from './arena-tree-art.js';
 import { drawTorch, torchLayers, collectTorches } from './arena-torch-art.js';
 import { torchSprites } from './arena-torch-sprites.js';
+import {
+    ENEMY_CHARACTERS, createAuthoredState, preloadAuthoredCharacter, loadedManifests, authoredCharacter, updateAuthoredEnemies, updateAuthoredWizard,
+    drawAuthoredEnemy, drawAuthoredCorpses, drawAuthoredWizard, authoredDiagnostics,
+} from './authored-characters.js';
 import { drawRecoveryGuide } from './arena-recovery.js';
 import { drawSpellCastMotion, drawSpellProjectile, drawSpellImpact } from './arena-spell-vfx.js';
 import { drawMage, updateMageWalk } from './arena-mage.js';
@@ -68,6 +72,7 @@ export function initializeArena(canvas, dotNetReference) {
     preloadPaintedEnemies();
     preloadHollowSprites();
     ashlingSprites.preload();
+    for (const name of ['Wizard', ...ENEMY_CHARACTERS.values()]) preloadAuthoredCharacter(name);
     preloadAshfang();
     const state = createState(canvas, dotNetReference);
     const settings = canvas.closest('.game-screen')?.querySelector('[data-damage-numbers]');
@@ -160,6 +165,7 @@ export function readArenaDiagnostics(canvas) {
         damageNumberMode: state.damageNumberMode,
         hollow: hollowDiagnostics(state.hollow),
         ashling: ashlingSprites.diagnostics(state.ashling),
+        authored: authoredDiagnostics(state.authored),
         ashfang: ashfangDiagnostics(state.ashfang),
         ashfangVfx: ashfangVfxDiagnostics(state.latestSnapshot??{},ashfangSockets(state.ashfang)),
         ashfangEffects: state.latestSnapshot?.ashfangEffects??[],
@@ -255,6 +261,9 @@ function createState(canvas, dotNetReference) {
         paintedCorpses: {},
         hollow: createHollowState(),
         ashling: ashlingSprites.createState(),
+        // The owner's authored eight-direction characters; ?authored=0 returns to the old art for comparison.
+        authored: createAuthoredState(),
+        authoredCharacters: new URLSearchParams(location.search).get('authored') !== '0',
         ashfang: createAshfangState(),
         reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)'),
         keys: new Set(),
@@ -429,6 +438,15 @@ function draw(state, snapshot, width, height) {
     const targetId = snapshot.player?.aimPropId ?? snapshot.player?.aimTargetId;
     const targetIndicator = presentTargetSigil(state.targetSigil, selectedTarget, targetId,
         visualSeconds, state.reducedMotion.matches);
+    // Hunt 1.0 plays the authored characters; any set that is not loaded yet keeps drawing its old art.
+    const authoredOn = state.authoredCharacters && Boolean(snapshot.environment?.terrain);
+    const authoredManifests = authoredOn ? loadedManifests() : new Map();
+    if (authoredOn) {
+        updateAuthoredEnemies(state.authored, snapshot, authoredManifests, visualSeconds, state.reducedMotion.matches);
+        updateAuthoredWizard(state.authored, snapshot, authoredManifests.get('Wizard'), state.authored.clock, state.reducedMotion.matches);
+        // Their corpses replace the old ones, including the old Hollowed's 3D fracture and its light.
+        if (authoredManifests.has('Hollowed')) state.hollow.corpses.clear();
+    }
     const worldWidth = camera.width;
     const worldHeight = camera.height;
     const lightViewport = { x: camera.x, y: camera.y, width, height };
@@ -522,13 +540,16 @@ function draw(state, snapshot, width, height) {
     const enemyPoses = updateEnemyMotions(state.enemyMotion, snapshot.enemies, visualSeconds, state.reducedMotion.matches);
     ashlingSprites.update(state.ashling,snapshot,visualSeconds,state.reducedMotion.matches);
     updateAshfang(state.ashfang,snapshot,visualSeconds,state.reducedMotion.matches);
-    drawPaintedCorpses(ctx, state.paintedCorpses, visualSeconds,hollowSpritesReady(),ashlingSprites.ready());
+    // Kinds with a loaded authored set draw their own corpses, so the old ones are skipped.
+    const authoredKinds = new Set([...ENEMY_CHARACTERS].filter(([, name]) => authoredManifests.has(name)).map(([kind]) => kind));
+    drawPaintedCorpses(ctx, state.paintedCorpses, visualSeconds,hollowSpritesReady(),ashlingSprites.ready(), authoredKinds);
     drawHollowCorpses(ctx,state.hollow,state.reducedMotion.matches);
-    ashlingSprites.drawCorpses(ctx,state.ashling,state.reducedMotion.matches);
+    if (!authoredKinds.has(2)) ashlingSprites.drawCorpses(ctx,state.ashling,state.reducedMotion.matches);
+    if (authoredOn) drawAuthoredCorpses(ctx, state.authored);
     // The Mire Hound now uses authored pixel poses, including a real collapse.
     // Only C# identity-bearing death bursts create these bodies.
     for (const corpse of state.paintedCorpses.corpses?.values() ?? [])
-        if (Number(corpse.kind) === 1 && mireHoundPixelPreviewEnabled())
+        if (Number(corpse.kind) === 1 && mireHoundPixelPreviewEnabled() && !authoredKinds.has(1))
             drawEnemyPixelArt(ctx, { ...corpse, opacity: Math.max(0, 1 - (visualSeconds - corpse.at) / .8) },
                 null, 7, corpse.facing);
     // Correct 2.5D ordering by WORLD foot position. A mage/enemy walking north of
@@ -593,10 +614,10 @@ function draw(state, snapshot, width, height) {
                 const enemy = layer.enemy;
                 if (gpu) {
                     drawEnemy(ctx, enemy, null,
-                        enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId),state.hollow,state.ashling);
+                        enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId),state.hollow,state.ashling, authoredOn ? state.authored : null);
                 } else {
                     const paintEnemy = surface => drawEnemy(surface, enemy, sampleSpellLight(spellLights, enemy.x, enemy.y),
-                        enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId),state.hollow,state.ashling);
+                        enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId),state.hollow,state.ashling, authoredOn ? state.authored : null);
                     drawActorWithEmitter(ctx, state.actorLightBuffer, enemy, selectionEmitter, paintEnemy);
                 }
                 drawEliteCrest(ctx, enemy, visualSeconds, state.reducedMotion.matches);
@@ -604,7 +625,10 @@ function draw(state, snapshot, width, height) {
                 drawMage(ctx, layer.player ?? snapshot.player, snapshot.castMotion, danger.hit, state.reducedMotion.matches,
                     gpu ? null : sampleSpellLight(spellLights, snapshot.player.x, snapshot.player.y),
                     updateMageWalk(state.mageWalk, snapshot.player, visualSeconds, state.reducedMotion.matches),
-                    state.mageWalk.facing);
+                    state.mageWalk.facing,
+                    // The authored wizard replaces the old art once its set has loaded.
+                    authoredOn && authoredCharacter('Wizard')
+                        ? surface => drawAuthoredWizard(surface, layer.player ?? snapshot.player, state.authored) : null);
             }
             if (state.terrainFrame && (layer.kind === 'enemy' || layer.kind === 'mage')) {
                 // Raised rock in front of the actor hides it: the covered pixels fall away (GPU) or the rock is repainted (Canvas).
@@ -1219,7 +1243,8 @@ function drawPerformanceCounter(state, ctx, snapshot, width, height) {
     });
     ctx.restore();
 }
-function drawEnemy(ctx, enemy, lighting = null, walkPhase = 0, facing = 1, hollow = null, ashling = null) {
+function drawEnemy(ctx, enemy, lighting = null, walkPhase = 0, facing = 1, hollow = null, ashling = null, authored = null) {
+    if (authored && drawAuthoredEnemy(ctx, enemy, authored)) return;
     if (!(ashling&&ashlingSprites.drawEnemy(ctx,enemy,ashling))&&!(hollow&&drawHollowEnemy(ctx,enemy,hollow))&&!drawPaintedEnemy(ctx, enemy, walkPhase, facing)) drawEnemyPixelArt(ctx, enemy, lighting, walkPhase, facing);
     drawRimeArmor(ctx, enemy);
     if (enemy.frozen || enemy.hitFlash || enemy.healthRatio >= 0.72) return;
