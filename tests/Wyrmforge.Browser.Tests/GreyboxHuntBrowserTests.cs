@@ -302,7 +302,7 @@ public sealed class GreyboxHuntBrowserTests : PageTest
                 return JSON.stringify({ debug: s?.debug, hud: { kills: s?.hud?.kills, hp: s?.hud?.health, t: s?.hud?.seconds },
                     paused: s?.paused, ended: s?.ended, exit: s?.exit, exitPorts: s?.exitPorts,
                     p: s?.player && [Math.round(s.player.x), Math.round(s.player.y)], enemies: s?.enemies?.length,
-                    overlays: [...document.querySelectorAll('[role="dialog"]')].map(e => e.getAttribute('aria-label')) });
+                    overlays: [...document.querySelectorAll('[role=dialog]')].map(e => e.getAttribute('aria-label')) });
             }");
             Assert.Fail("first trail did not return to the Chart: " + state);
         }
