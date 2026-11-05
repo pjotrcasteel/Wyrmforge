@@ -10,7 +10,7 @@ const TOWARD_X = -.6, TOWARD_Y = -.8;
 const SLOPE = .9;
 const REACH = 24;
 /** Alpha of the three shadow levels. */
-export const SHADOW_ALPHA = Object.freeze([0, .12, .22, .32]);
+export const SHADOW_ALPHA = Object.freeze([0, .1, .18, .26]);
 /** Samples per column along each axis: half a microcell (2 world units, one 4 px art block). */
 export const SHADOW_SAMPLES = 16;
 

@@ -301,7 +301,7 @@ export function crackPixels(stage) {
 
 // Depth cues built from the voxels themselves, nothing smooth: a contact shadow on the microcells at the foot of every raised face
 // (two steps, by how tall the face is) and a lit lip on the microcells along the top edge above a drop. Cheap, cached with the painter.
-const CONTACT_SHADOW = Object.freeze([null, 'rgba(8,4,10,.2)', 'rgba(8,4,10,.34)']);
+const CONTACT_SHADOW = Object.freeze([null, 'rgba(8,4,10,.15)', 'rgba(8,4,10,.26)']);
 const LIP_LIGHT = 'rgba(255,236,208,.12)';
 const shadowStep = rise => rise >= 5 ? 2 : rise >= 2 ? 1 : 0;
 const heightOrSelf = (frame, column, row, microX, microY, own) =>
@@ -706,7 +706,7 @@ const heightTint = height => {
     const metres = Math.max(-2, Math.min(3, Math.round(height / 8)));
     return metres > 0 ? `rgba(255,240,220,${.05 * metres})` : metres < 0 ? `rgba(0,0,0,${.1 * -metres})` : null;
 };
-const WALL_SHADE = Object.freeze({ own: 'rgba(6,4,8,.28)', dirtUpper: 'rgba(6,4,8,.34)', dirtLower: 'rgba(6,4,8,.44)', stone: 'rgba(6,4,8,.4)' });
+const WALL_SHADE = Object.freeze({ own: 'rgba(6,4,8,.2)', dirtUpper: 'rgba(6,4,8,.24)', dirtLower: 'rgba(6,4,8,.32)', stone: 'rgba(6,4,8,.3)' });
 
 /**
  * Draws one wall (the front faces of a column or microcolumn) from the band's wrapping textures: a turf cap hangs a grass overhang over soil
@@ -717,6 +717,14 @@ function drawWall(ctx, atlas, band, material, segments, x, width, sx, baseY, col
     let painted = 0;
     const wallTop = segments.length ? segments[0].from : 0;
     const source = texX(column) + sx * ART;
+    // A step of a couple of microcells is a slope in the ground, not a wall: it carries the ground's own texture without a dark face, so
+    // rolling hills have no straight lines across them.
+    if (segments.length === 1 && segments[0].kind === 'own' && wallTop - segments[0].to <= 2 && (material === TERRAIN_MATERIAL.Soil || material === TERRAIN_MATERIAL.Ash)) {
+        const kind = topTileKind(band, material, 1, null, 0, 0), y = baseY - wallTop * MICROCELL_UNITS, height = (wallTop - segments[0].to) * MICROCELL_UNITS;
+        const piece = Math.min(height, TEXTURE_UNITS);
+        ctx.drawImage(atlas[kind][0], source, TEXTURE_UNITS * ART - piece * ART - 1, width * ART, piece * ART, x, y, width, piece);
+        return 1;
+    }
     for (const [i, segment] of segments.entries()) {
         const y = baseY - segment.from * MICROCELL_UNITS, height = (segment.from - segment.to) * MICROCELL_UNITS;
         const start = (wallTop - segment.from) * MICROCELL_UNITS;
@@ -730,7 +738,7 @@ function drawWall(ctx, atlas, band, material, segments, x, width, sx, baseY, col
             continue;
         }
         const stone = segment.kind === 'stone' || material === TERRAIN_MATERIAL.Stone;
-        const turf = i === 0 && material === TERRAIN_MATERIAL.Soil && band <= 1;
+        const turf = i === 0 && segment.kind === 'own' && material === TERRAIN_MATERIAL.Soil && band <= 1;
         const rockCrest = stone && i === 0 && material === TERRAIN_MATERIAL.Stone;
         for (let drawn = 0; drawn < height;) {
             const v = start + drawn;
@@ -806,7 +814,9 @@ function paintFineCell(ctx, frame, band, column, row, block, grain = true) {
                     painted++;
                 }
             }
-            for (const crack of crackPixels(wearStage(block.wear?.[microY * MICRO_PER_COLUMN + microX]))) {
+            // Worn rock shows a crack on about two microcolumns in five (by position), not on every one: a rock floor is not a mesh.
+            const worn = ((Math.imul(column * MICRO_PER_COLUMN + microX, 73856093) ^ Math.imul(row * MICRO_PER_COLUMN + microY, 19349663)) >>> 0) % 5 < 2;
+            for (const crack of worn ? crackPixels(wearStage(block.wear?.[microY * MICRO_PER_COLUMN + microX])) : []) {
                 ctx.fillStyle = crack.color;
                 ctx.fillRect(x + crack.x, y - height * MICROCELL_UNITS + crack.y, crack.w, crack.h);
                 painted++;

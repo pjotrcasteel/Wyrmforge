@@ -434,6 +434,50 @@ public sealed class GreyboxHuntBrowserTests : PageTest
         await Page.ScreenshotAsync(new() { Path = Path.Combine(output, band >= 0 ? $"hunt1-craters-band{band}{(bright ? "" : "-night")}-{width}.png" : $"hunt1-craters-{width}.png"), FullPage = false });
     }
 
+    /// <summary>
+    /// Hunt 1.0 H6 evidence: the client painter drawing authoritative C# excavation stages (ArenaTerrainExcavationEvidenceTests exports them when
+    /// WYRMFORGE_EVIDENCE_DIR is set): grass cap, soil, rock strata, a Meteor Heart bowl and a bitten cliff face. One PNG per stage.
+    /// </summary>
+    [TestMethod]
+    public async Task Hunt1Terrain_ExcavationStagesRenderAsGrassSoilAndRock()
+    {
+        var evidence = Environment.GetEnvironmentVariable("WYRMFORGE_EVIDENCE_DIR");
+        if (string.IsNullOrWhiteSpace(evidence) || !File.Exists(Path.Combine(evidence, "dig-stages.json"))) Assert.Inconclusive("Run ArenaTerrainExcavationEvidenceTests with WYRMFORGE_EVIDENCE_DIR first.");
+        var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
+        var output = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
+        Directory.CreateDirectory(output);
+        var errors = new List<string>();
+        Page.PageError += (_, error) => errors.Add(error);
+        await Page.GotoAsync(root + "/", new() { WaitUntil = WaitUntilState.NetworkIdle });
+        var json = await File.ReadAllTextAsync(Path.Combine(evidence, "dig-stages.json"));
+        var stages = await Page.EvaluateAsync<System.Text.Json.JsonElement>(@"async (json) => {
+            const m = await import('/js/arena-terrain-canvas.js');
+            const { sites, stages } = JSON.parse(json);
+            const results = [];
+            for (const stage of stages) {
+                const site = stage.site === 'soil-ordinary' ? sites.soil : stage.site === 'soil-meteor' ? sites.meteor : sites.cliff;
+                if (!site) continue;
+                const cache = new m.TerrainCanvasCache();
+                cache.update(m.mergeTerrainFrame(null, stage.frame), 0);
+                const out = document.createElement('canvas');
+                out.width = 448; out.height = 512;
+                const g = out.getContext('2d');
+                g.imageSmoothingEnabled = false;
+                g.fillStyle = '#101010'; g.fillRect(0, 0, 448, 512);
+                g.drawImage(cache.canvas, (site.column - 3) * 64, (m.TERRAIN_PAD_UNITS + (site.row - 5) * 32) * 2, 448, 512, 0, 0, 448, 512);
+                results.push({ name: `dig-${stage.site}-${String(stage.hits).padStart(2, '0')}`, stone: stage.stoneMicrocolumns, png: out.toDataURL('image/png') });
+            }
+            return results;
+        }", json);
+        Assert.IsGreaterThanOrEqualTo(7, stages.GetArrayLength(), "every soil and Meteor Heart stage is rendered");
+        foreach (var stage in stages.EnumerateArray())
+        {
+            var data = stage.GetProperty("png").GetString()!;
+            await File.WriteAllBytesAsync(Path.Combine(output, stage.GetProperty("name").GetString() + ".png"), Convert.FromBase64String(data[(data.IndexOf(',') + 1)..]));
+        }
+        Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
+    }
+
     /// <summary>Hunt 1.0 H8: the Chart paints the authoritative Wyrm Influence, rising from a Wet entrance to a Volcanic lair.</summary>
     [TestMethod]
     [DataRow(320, 568)]

@@ -15,8 +15,8 @@ test('torches are the C# posts converted from 1/16 cells to world units, cached 
 
 test('only torches in or near the camera window become depth layers, sorted by their ground position', () => {
     const layers = torchLayers(frame, { x: 0, y: 200 }, 390, 400);
-    assert.equal(layers.length, 1);
-    assert.equal(layers[0].kind, 'torch');
+    assert.equal(layers.length, 2, 'a post and its flame');
+    assert.deepEqual(layers.map(layer => layer.kind), ['torch', 'torchFlame']);
     assert.equal(layers[0].depth, 10.5 * 32 + 2);
 });
 

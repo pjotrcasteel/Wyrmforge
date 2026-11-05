@@ -219,16 +219,17 @@ test('crack stages grow with stone wear and stage 3 shows a hot ember pixel', ()
 
 test('worn stone microcolumns are painted cracked and the wear survives a merge', () => {
     const heights = new Array(64).fill(0);
-    const wear = new Array(64).fill(0); wear[9] = 1; wear[10] = 1;
+    const wear = new Array(64).fill(1);
     const merged = mergeTerrainFrame(null, { revision: 1, columns: 1, rows: 1, surface: [0], material: [2], fine: [{ index: 0, heights, topsoil: 2, stoneTop: -8, wear }] });
     assert.deepEqual(merged.fine.get(0).wear, wear);
     const ctx = Object.assign(recorder(), { translate() {} });
     const plain = Object.assign(recorder(), { translate() {} });
     const painted = paintTerrain(ctx, merged, 0, 0);
     paintTerrain(plain, { ...merged, fine: new Map([[0, { ...merged.fine.get(0), wear: null }]]) }, 0, 0);
-    assert.equal(painted - plain.calls.length, crackPixels(3).length * 2, 'exactly the cracked microcolumns add pixels; one point of wear means the next hit breaks it');
+    const cracked = (painted - plain.calls.length) / crackPixels(3).length;
+    assert.ok(Number.isInteger(cracked) && cracked >= 16 && cracked <= 40, `cracks show on about two worn microcolumns in five, not on every one: ${cracked} of 64`);
     const hot = ctx.calls.filter(call => call[0] === 'fillRect' && call[5] === CRACK_HOT);
-    assert.equal(hot.length, 2);
+    assert.equal(hot.length, cracked, 'one point of wear means the next hit breaks it, so every shown crack carries its ember');
     assert.equal(mergeTerrainFrame(null, { revision: 1, columns: 1, rows: 1, surface: [0], material: [0], fine: [{ index: 0, heights, topsoil: 0, stoneTop: -8 }] }).fine.get(0).wear, null);
 });
 test('heat and debris can be drawn apart: the glow goes to the emissive map, the chips stay on the unlit overlay', () => {

@@ -320,10 +320,10 @@ test('the inset overlay outlines a dug block per microcolumn at that microcolumn
 test('depth cues: a contact shadow at the foot of a raised face and a lit lip along its top edge, in whole microcells', () => {
     const ctx = recorder();
     paintTerrain(ctx, frame(1, 2, [8, 0]), 0, undefined, false);
-    const shadows = ctx.cues.filter(call => call[5].includes('.34'));
+    const shadows = ctx.cues.filter(call => call[5].includes('.26'));
     assert.equal(shadows.length, 1, 'a metre-tall face casts the strong contact shadow');
     assert.deepEqual(shadows[0].slice(1, 5), [0, 32, 32, 4], 'one microcell row at the foot of the face, the full width of the block');
-    assert.ok(ctx.cues.some(call => call[5].includes('.2)') && call[2] === 36 && call[4] === 4), 'the second row is the softer step');
+    assert.ok(ctx.cues.some(call => call[5].includes('.15)') && call[2] === 36 && call[4] === 4), 'the second row is the softer step');
     const lips = ctx.cues.filter(call => call[5].includes('.12'));
     assert.deepEqual(lips.map(call => call.slice(1, 5)), [[0, -4, 32, 4]], 'the top edge above the drop is lit');
     const flat = recorder();
@@ -339,7 +339,7 @@ test('depth cues work per microcolumn inside a dug block: crater walls are shado
     for (let y = 2; y <= 5; y++) for (let x = 2; x <= 5; x++) heights[y * 8 + x] = -4;
     const ctx = recorder();
     paintTerrain(ctx, { revision: 1, columns: 1, rows: 1, surface: [0], material: [0], fine: new Map([[0, block(heights)]]) }, 0, 0, false);
-    const shadowed = ctx.cues.filter(call => call[5].includes('.2)') && call[3] === 4 && call[4] === 4);
+    const shadowed = ctx.cues.filter(call => call[5].includes('.15)') && call[3] === 4 && call[4] === 4);
     assert.ok(shadowed.length >= 4, 'the floor microcells under the far wall are shadowed');
     for (const call of ctx.cues) assert.ok(call[3] % 4 === 0 && call[4] % 4 === 0, 'cues are whole microcells');
 });

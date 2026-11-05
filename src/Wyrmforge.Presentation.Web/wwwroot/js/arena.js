@@ -113,7 +113,14 @@ export function renderArenaMapOverview(canvas) {
     const props = [...collectTrees(frame, band), ...collectBushes(frame, band), ...collectBoulders(frame, band),
         ...collectTorches(frame).map(torch => ({ torch, depth: torch.y + 2 }))].sort((a, b) => a.depth - b.depth);
     for (const prop of props) { if (prop.torch) drawTorch(g, prop.torch, 0); else drawTree(g, prop); }
-    return { png: out.toDataURL('image/png'), columns: frame.columns, rows: frame.rows, face: FACE_PIXELS, band };
+    return { png: out.toDataURL('image/png'), columns: frame.columns, rows: frame.rows, face: FACE_PIXELS, band, pad: TERRAIN_PAD_UNITS, scale: TERRAIN_ART_SCALE,
+        dug: [...frame.fine.keys()], stoneExposed: stoneExposedBlocks(frame) };
+}
+
+/** Indices of soil-topped blocks that have been dug down to their rock: evidence that excavation reached the strata. Read-only. */
+function stoneExposedBlocks(frame) {
+    if (!frame?.fine) return [];
+    return [...frame.fine].filter(([, block]) => block.topsoil <= 1 && block.heights.some(height => height <= block.stoneTop)).map(([index]) => index);
 }
 
 // Read-only diagnostics allow browser smoke to verify actual movement, not merely visible canvas pixels.
@@ -187,7 +194,8 @@ export function readArenaDiagnostics(canvas) {
         hunt1Terrain: state.latestSnapshot?.environment?.terrain
             ? { columns: state.latestSnapshot.environment.terrain.columns, rows: state.latestSnapshot.environment.terrain.rows,
                 snapshotRevision: state.latestSnapshot.environment.terrain.revision,
-                paintedRevision: state.terrainCache?.revision ?? null, repaints: state.terrainCache?.repaints ?? 0 }
+                paintedRevision: state.terrainCache?.revision ?? null, repaints: state.terrainCache?.repaints ?? 0,
+                dugBlocks: state.terrainFrame?.fine?.size ?? 0, stoneExposed: stoneExposedBlocks(state.terrainFrame).length }
             : null,
         lighting: { mode: 'night', darkness: GOTHIC_NIGHT.darkness, source: 'authoritative-csharp-snapshot' },
     };
@@ -548,7 +556,7 @@ function draw(state, snapshot, width, height) {
     for (const layer of sortSceneDepthLayers(depthLayers)) {
         let tile, tileX, tileY, tileSize, capture, revision, reuse = false;
         // Canopies are 64 px/m art like the terrain; actors keep their 1x sprites.
-        const pixelScale = layer.kind === 'tree' || layer.kind === 'torch' ? artScale : 1;
+        const pixelScale = layer.kind === 'tree' || layer.kind === 'torch' || layer.kind === 'torchFlame' ? artScale : 1;
         if (gpu) {
             capture = huntLayerCapture(layer, layer.player ?? snapshot.player, state.ashfang.death);
             if (!capture) continue;
@@ -569,8 +577,8 @@ function draw(state, snapshot, width, height) {
                 drawDragon(ctx, layer.dragon, state.reducedMotion.matches, snapshot.dragonBreath, state.ashfang);
             } else if (layer.kind === 'tree') {
                 drawTree(ctx, layer.tree);
-            } else if (layer.kind === 'torch') {
-                drawTorch(ctx, layer.torch, visualSeconds);
+            } else if (layer.kind === 'torch' || layer.kind === 'torchFlame') {
+                drawTorch(ctx, layer.torch, visualSeconds, layer.kind === 'torch' ? 'post' : 'flame');
             } else if (layer.kind === 'dragonDeath') {
                 drawAshfangDeath(ctx,state.ashfang);
             } else if (layer.kind === 'enemy') {
@@ -603,11 +611,11 @@ function draw(state, snapshot, width, height) {
             gpu.capture(capture.id,
                 tile, tileX - camera.x, tileY - camera.y, tileSize, tileSize,
                 .12 + Math.max(0, Math.min(1, layer.depth / worldHeight)) * .1,
-                true, { revision, footFraction: capture.footFraction,
+                layer.kind !== 'torchFlame', { revision, footFraction: capture.footFraction,
                     occluderHeightPx: capture.occluderHeightPx,
                     physicalVolume: capture.physicalVolume,
-                    // The torch post glows a little (its own light is the C# emitter, not this).
-                    ...(layer.kind === 'torch' ? { material: { roughness: .85, emission: '#ff9a3c', emissionIntensity: .5 } } : {}),
+                    // Only the flame glows (its light is the C# emitter, not this); the post is an ordinary lit surface.
+                    ...(layer.kind === 'torchFlame' ? { material: { roughness: .85, emission: '#ff8a30', emissionIntensity: .35 } } : {}),
                     ...(pixelScale !== 1 ? { pixelScale } : {}) });
             ctx = worldContext;
         }

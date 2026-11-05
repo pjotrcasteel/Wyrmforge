@@ -21,7 +21,7 @@ export function torchLayers(frame, camera, width, height) {
     const layers = [];
     for (const torch of collectTorches(frame)) {
         if (torch.x < camera.x - 64 || torch.x > camera.x + width + 64 || torch.y < camera.y - 32 || torch.y - 64 > camera.y + height) continue;
-        layers.push({ kind: 'torch', depth: torch.y + 2, torch });
+        layers.push({ kind: 'torch', depth: torch.y + 2, torch }, { kind: 'torchFlame', depth: torch.y + 2.5, torch });
     }
     return layers;
 }
@@ -42,8 +42,13 @@ function flameFallback(ctx, x, baseY, frame) {
  * A road torch: a stone-footed timber post with iron bands that carries a pitch-wrapped iron cup. The flame is the Pixel Crawler pack's own animated
  * fire (kit sprites `torch.flame.0..3`, four frames at about nine a second); `seconds` only animates it.
  */
-export function drawTorch(ctx, torch, seconds = 0) {
+export function drawTorch(ctx, torch, seconds = 0, part = 'all') {
     const { x, y } = torch;
+    if (part !== 'flame') drawPost(ctx, x, y);
+    if (part !== 'post') drawFlame(ctx, torch, seconds);
+}
+
+function drawPost(ctx, x, y) {
     // A small cairn at the foot.
     rect(ctx, '#1c1a18', x - 6, y - .5, 12, 2);
     rect(ctx, '#2f2c29', x - 5, y - 2, 10, 2);
@@ -61,6 +66,10 @@ export function drawTorch(ctx, torch, seconds = 0) {
     rect(ctx, '#3a3941', x - 5, y - 29, 10, 1.5);
     rect(ctx, '#18161a', x - 4, y - 30.5, 8, 1.5);
     rect(ctx, '#8f2a0d', x - 3, y - 30.5, 6, .5);
+}
+
+function drawFlame(ctx, torch, seconds) {
+    const { x, y } = torch;
     const index = Math.floor(seconds * 9 + torch.phase) % 4;
     const loaded = forestKit(), sprite = loaded?.sprites[`torch.flame.${index}`];
     if (!sprite) { flameFallback(ctx, x, y - 30, index); return; }
