@@ -156,6 +156,7 @@ public sealed class MutationWebCombatTests
         var simulation = new RunSimulation(nodes.ToHashSet(), new LevelChoiceService(random), random);
         Field<List<EnemyState>>(simulation, "enemies").Add(new EnemyState(1, new Vector2D(80, 80), 10, 1000, 0));
         Invoke(simulation, "RebuildCombatSpatialIndex");
+        simulation.PrepareFireballCoreLevel(5);
         simulation.PrepareFireballMutations(mutations);
         simulation.PrepareMutationAmplifiers(assignments ?? []);
         Assert.IsTrue(simulation.ChoosePrimary(SpellId.FireBolt));

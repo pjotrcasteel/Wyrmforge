@@ -38,6 +38,9 @@ public sealed class FireSignatureMasteryLoopTests
         Assert.IsFalse(mastery.Unlocks(SpellEvolutionId.Wyrmfire));
 
         vault.Store(DragonEssenceId.MoltenFang);
+        vault.Store(DragonEssenceId.AshenWing);
+        materials.Restore([HuntMaterialId.EmberResidue, HuntMaterialId.EmberResidue,
+            HuntMaterialId.CharredScrap, HuntMaterialId.CharredScrap]);
         Assert.IsTrue(core.DiscoverSecured([DragonEssenceId.MoltenFang]));
         Assert.IsTrue(core.Upgrade(vault, materials));
         Assert.AreEqual(3, core.Level);
