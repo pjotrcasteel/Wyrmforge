@@ -240,6 +240,7 @@ public partial class Home
             value.SpellLoadout.Select(spell => new MasteryRunSpell(spell.Id, spell.Rank)).ToArray())
         {
             ActiveSpell = value.ActiveSpell,
+            Extracted = value.Outcome == RunOutcome.Extracted,
             FireballLevel = value.PreparedFireballLevel,
             FireballMutations = value.PreparedFireballMutations,
         });

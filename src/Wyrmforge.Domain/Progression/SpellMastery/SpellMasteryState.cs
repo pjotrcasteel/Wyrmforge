@@ -16,6 +16,7 @@ public sealed record MasteryRunEvidence(int CompletedRoutes, int Depth, bool Aba
     IReadOnlySet<SpellId> QualifiedWyrmFeats, IReadOnlyList<MasteryRunSpell> Spells)
 {
     public SpellId? ActiveSpell { get; init; }
+    public bool Extracted { get; init; }
     public int FireballLevel { get; init; } = 1;
     public IReadOnlyList<FireballMutationId> FireballMutations { get; init; } = [];
 }
@@ -49,7 +50,8 @@ public sealed class SpellMasteryState
             var spell = evidence.Spells.FirstOrDefault(candidate => candidate.Spell == lineage.Spell);
             if (spell is null) continue;
             var legacyRankQualified = spell.Rank >= 2;
-            var signatureQualified = lineage.Spell == SpellId.FireBolt && spell.Rank > 0 && evidence.ActiveSpell == SpellId.FireBolt
+            var signatureQualified = lineage.Spell == SpellId.FireBolt && spell.Rank > 0 && evidence.Extracted
+                && evidence.ActiveSpell == SpellId.FireBolt
                 && FireSignatureMasteryCriteria.QualifiesMeaningfulRun(evidence.FireballLevel, evidence.FireballMutations);
             if (!legacyRankQualified && !signatureQualified) continue;
 

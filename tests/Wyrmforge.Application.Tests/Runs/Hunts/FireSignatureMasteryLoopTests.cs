@@ -64,6 +64,7 @@ public sealed class FireSignatureMasteryLoopTests
         new(2, 1, false, new HashSet<SpellId>(), [new MasteryRunSpell(SpellId.FireBolt, 1)])
         {
             ActiveSpell = SpellId.FireBolt,
+            Extracted = true,
             FireballLevel = core.Level,
             FireballMutations = core.Equipped,
         };

@@ -39,6 +39,7 @@ public sealed class SpellMasteryStateTests
         state.RecordRun(SignatureEvidence(5, FireballMutationId.Detonation) with { ActiveSpell = SpellId.FrostShard });
         state.RecordRun(SignatureEvidence(5, FireballMutationId.Detonation) with { Abandoned = true });
         state.RecordRun(SignatureEvidence(5, FireballMutationId.Detonation) with { CompletedRoutes = 0 });
+        state.RecordRun(SignatureEvidence(5, FireballMutationId.Detonation) with { Extracted = false });
 
         Assert.AreEqual(0, state.Get(SpellId.FireBolt).MeaningfulRuns);
     }
@@ -121,6 +122,7 @@ public sealed class SpellMasteryStateTests
         new(1, 1, false, new HashSet<SpellId>(), [new MasteryRunSpell(SpellId.FireBolt, 1)])
         {
             ActiveSpell = SpellId.FireBolt,
+            Extracted = true,
             FireballLevel = level,
             FireballMutations = equipped,
         };
