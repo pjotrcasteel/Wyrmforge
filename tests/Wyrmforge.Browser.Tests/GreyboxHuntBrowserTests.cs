@@ -290,10 +290,19 @@ public sealed class GreyboxHuntBrowserTests : PageTest
         await Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^Enter (rare )?trail$") }).ClickAsync();
         await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
 
-        // The debug bot kites and then walks to the real exit; the Chart must come back with the trail cleared.
+        // The bot can walk through the exit and return to the Chart automatically; some builds also present
+        // Continue first. Both are successful transitions, so do not wait for a button after the Chart is back.
         try
         {
-            await Page.GetByRole(AriaRole.Button, new() { Name = "Continue" }).ClickAsync(new() { Timeout = 150000 });
+            await Page.WaitForFunctionAsync(@"() => {
+                const progress = document.querySelector('.map-run-progress');
+                const chartReturned = progress?.getClientRects().length > 0 && progress.textContent?.includes('1 cleared');
+                const continueVisible = [...document.querySelectorAll('button')].some(button =>
+                    button.textContent?.trim() === 'Continue' && button.getClientRects().length > 0);
+                return chartReturned || continueVisible;
+            }", null, new() { Timeout = 150000 });
+            if (!await Page.Locator(".map-run-progress").IsVisibleAsync())
+                await Page.GetByRole(AriaRole.Button, new() { Name = "Continue" }).ClickAsync();
             await Expect(Page.GetByText("Choose your trail.", new() { Exact = true })).ToBeVisibleAsync(new() { Timeout = 30000 });
         }
         catch
