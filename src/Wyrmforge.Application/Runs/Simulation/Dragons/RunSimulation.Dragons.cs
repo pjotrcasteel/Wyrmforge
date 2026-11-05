@@ -348,7 +348,7 @@ public sealed partial class RunSimulation
         foreach (var spell in SpellLineageCatalog.FeatsEarnedAtDefeat(definition.Id, build.Spells)) qualifiedWyrmFeats.Add(spell);
         var reward = definition.Combat.Reward;
         var dragonScore = reward.BaseScore + (int)(elapsed * reward.ScorePerElapsedSecond);
-        score += (int)((dragonScore + DragonTierScore(defeatedDragon.Tier)) * depthState.ScoreMultiplier);
+        if (CanEarnEncounterRewards) AwardEncounterScore((int)((dragonScore + DragonTierScore(defeatedDragon.Tier)) * depthState.ScoreMultiplier));
         dragon = null;
         dragonHuntHazards.Clear();
         dragonHuntState.Reset();
@@ -365,7 +365,7 @@ public sealed partial class RunSimulation
             return;
         }
         pendingDragonEssenceChoices = DragonEssenceCatalog.ChoicesFor(definition.Id).Where(choice => !build.DragonEssences.Contains(choice.Id)).ToArray();
-        GainExperience(reward.Experience);
+        if (CanEarnEncounterRewards) GainExperience(reward.Experience);
         if (pendingDragonEssenceChoices.Count == 0 && !extractionState.Start(player.Position)) checkpointState.Enter();
     }
 

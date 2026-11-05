@@ -92,6 +92,8 @@ public sealed partial class RunSimulation
         if (node is null) return false;
         walkedExitNodeId = null;
         ClearMapEncounterField();
+        rewardEncounterNodeId = node.Id;
+        currentEncounterKillOrdinal = 0;
         trailExperienceAtEntry = experienceEarned;
         materialCargoState.BeginTrail();
         playerPositionInitialized = false;

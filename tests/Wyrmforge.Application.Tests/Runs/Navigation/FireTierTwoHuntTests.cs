@@ -9,6 +9,8 @@ using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Application.Tests.TestDoubles;
 using Wyrmforge.Application.World;
 using Wyrmforge.Domain.Combat.Dragons;
+using Wyrmforge.Domain.Combat.Enemies;
+using Wyrmforge.Domain.Combat.Geometry;
 using Wyrmforge.Domain.Combat.Player;
 using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Progression.Loot;
@@ -164,6 +166,211 @@ public sealed class FireTierTwoHuntTests
         Assert.AreEqual(2, simulation.RefugeReturns);
         Assert.AreEqual(2, simulation.CreateEvaluationSummary().RefugeReturns);
     }
+
+    [TestMethod]
+    public void ReturningToRefuge_DoesNotRepayInterruptedEncounterXpOrScoreOnRepeatedDeaths()
+    {
+        var simulation = Create(HuntSelection.FireTierTwo);
+        var map = Field<WyrmrealmMapState>(simulation, "mapState");
+        WalkToRefuge(map);
+        var refuge = map.AvailableNodes.Single(node => node.Refuge);
+        Complete(map, refuge);
+        Invoke(simulation, "CompleteTrail", refuge);
+        FinishRefugeExit(simulation);
+
+        var firstRoad = map.AvailableNodes[0];
+        Assert.IsTrue(simulation.ChooseMapNode(firstRoad.Id));
+        var shards = Field<ExperienceShardField>(simulation, "experienceShards");
+        KillHollowAndCollectExperience(simulation, 600);
+        var firstAward = simulation.CreateEvaluationSummary();
+        Assert.IsGreaterThan(0, firstAward.ExperienceEarned);
+        Assert.AreEqual(1, firstAward.Kills);
+        Assert.AreEqual(1, firstAward.EnemyRecords.Single(record => record.Kind == EnemyKind.Hollow).Kills);
+
+        // A shard still loose at death is not banked, either. Only XP already collected survives.
+        shards.Drop(new Vector2D(-1000, -1000), 2);
+        FallBackToRefuge(simulation);
+        Assert.AreEqual(firstAward.ExperienceEarned, simulation.CreateEvaluationSummary().ExperienceEarned);
+        Assert.AreEqual(0, shards.TotalValue);
+
+        for (var attempt = 0; attempt < 2; attempt++)
+        {
+            Assert.IsTrue(simulation.ChooseMapNode(firstRoad.Id));
+            KillHollowAndCollectExperience(simulation, 601 + attempt);
+            var replay = simulation.CreateEvaluationSummary();
+            Assert.AreEqual(firstAward.ExperienceEarned, replay.ExperienceEarned, "Replayed fights cannot farm Hunter or Hunt XP.");
+            Assert.AreEqual(firstAward.Score, replay.Score, "Replayed fights cannot farm cumulative combat score.");
+            Assert.AreEqual(firstAward.Kills, replay.Kills, "Replayed kills cannot advance accumulated kill milestones.");
+            Assert.AreEqual(1, replay.EnemyRecords.Single(record => record.Kind == EnemyKind.Hollow).Kills);
+            FallBackToRefuge(simulation);
+        }
+        Assert.AreEqual(3, simulation.RefugeReturns);
+
+        // The second real kill on a new attempt has never been rewarded before. It must still pay.
+        Assert.IsTrue(simulation.ChooseMapNode(firstRoad.Id));
+        KillHollowAndCollectExperience(simulation, 700);
+        KillHollowAndCollectExperience(simulation, 701);
+        var twoKills = simulation.CreateEvaluationSummary();
+        Assert.IsGreaterThan(firstAward.ExperienceEarned, twoKills.ExperienceEarned);
+        Assert.AreEqual(2, twoKills.Kills);
+        FallBackToRefuge(simulation);
+        Assert.IsTrue(simulation.ChooseMapNode(firstRoad.Id));
+        KillHollowAndCollectExperience(simulation, 702);
+        KillHollowAndCollectExperience(simulation, 703);
+        Assert.AreEqual(twoKills.ExperienceEarned, simulation.CreateEvaluationSummary().ExperienceEarned);
+        Assert.AreEqual(twoKills.Score, simulation.CreateEvaluationSummary().Score);
+        Assert.AreEqual(twoKills.Kills, simulation.CreateEvaluationSummary().Kills);
+    }
+
+    [TestMethod]
+    public void FallingBeforeTheWyrmDefeat_CannotConsumeHisFirstVictoryReward()
+    {
+        var simulation = Create(HuntSelection.FireTierTwo);
+        var map = Field<WyrmrealmMapState>(simulation, "mapState");
+        WalkToRefuge(map);
+        var refuge = map.AvailableNodes.Single(node => node.Refuge);
+        Complete(map, refuge);
+        Invoke(simulation, "CompleteTrail", refuge);
+        FinishRefugeExit(simulation);
+
+        while (!map.AvailableNodes.Any(node => node.Type == WyrmrealmNodeType.Dragon)) Complete(map, map.AvailableNodes[0]);
+        var wyrm = map.AvailableNodes.Single(node => node.Type == WyrmrealmNodeType.Dragon);
+        Assert.IsTrue(simulation.ChooseMapNode(wyrm.Id));
+        FallBackToRefuge(simulation);
+        Assert.AreEqual(0, simulation.CreateEvaluationSummary().DragonsSlain);
+
+        while (!map.AvailableNodes.Any(node => node.Type == WyrmrealmNodeType.Dragon)) Complete(map, map.AvailableNodes[0]);
+        Assert.IsTrue(simulation.ChooseMapNode(wyrm.Id));
+        Invoke(simulation, "SpawnDragon", DragonCatalog.Get(DragonId.Ashfang), 390d, 700d);
+        Invoke(simulation, "DefeatDragon", Field<DragonState>(simulation, "dragon"));
+        Assert.IsGreaterThan(0, simulation.CreateEvaluationSummary().ExperienceEarned);
+        Assert.AreEqual(1, simulation.CreateEvaluationSummary().DragonsSlain);
+    }
+
+    [TestMethod]
+    public void ExperienceCaches_PayEachDistinctCacheOnceAcrossRefugeRetries()
+    {
+        var simulation = Create(HuntSelection.FireTierTwo);
+        var map = Field<WyrmrealmMapState>(simulation, "mapState");
+        WalkToRefuge(map);
+        var refuge = map.AvailableNodes.Single(node => node.Refuge);
+        Complete(map, refuge);
+        Invoke(simulation, "CompleteTrail", refuge);
+        FinishRefugeExit(simulation);
+
+        var road = map.AvailableNodes[0];
+        Assert.IsTrue(simulation.ChooseMapNode(road.Id));
+        Assert.IsTrue(CreditExperienceCache(simulation, 0.25, 0.45));
+        Assert.IsTrue(CreditExperienceCache(simulation, 0.65, 0.45), "Two distinct supply caches must both pay.");
+        Assert.IsFalse(CreditExperienceCache(simulation, 0.25, 0.45));
+        FallBackToRefuge(simulation);
+        Assert.IsTrue(simulation.ChooseMapNode(road.Id));
+        Assert.IsFalse(CreditExperienceCache(simulation, 0.25, 0.45));
+        Assert.IsFalse(CreditExperienceCache(simulation, 0.65, 0.45));
+        Assert.IsTrue(CreditExperienceCache(simulation, 0.4, 0.6), "A newly discovered cache should still pay.");
+    }
+
+    [TestMethod]
+    public void ReturningToRefuge_DoesNotDuplicateMaterialDropsFromPreviouslyRewardedKills()
+    {
+        var simulation = Create(HuntSelection.FireTierTwo);
+        var map = Field<WyrmrealmMapState>(simulation, "mapState");
+        WalkToRefuge(map);
+        var refuge = map.AvailableNodes.Single(node => node.Refuge);
+        Complete(map, refuge);
+        Invoke(simulation, "CompleteTrail", refuge);
+        FinishRefugeExit(simulation);
+
+        var road = map.AvailableNodes[0];
+        Assert.IsTrue(simulation.ChooseMapNode(road.Id));
+        var before = LooseEmberResidue(simulation);
+        KillAshling(simulation, 600);
+        Assert.AreEqual(before + 1, LooseEmberResidue(simulation), "A first kill earns its normal crafting drop.");
+
+        FallBackToRefuge(simulation);
+        Assert.IsTrue(simulation.ChooseMapNode(road.Id));
+        var replayBefore = LooseEmberResidue(simulation);
+        KillAshling(simulation, 603);
+        Assert.AreEqual(replayBefore, LooseEmberResidue(simulation), "Re-killing the same ordinal must not respawn materials.");
+
+        KillAshling(simulation, 606);
+        Assert.AreEqual(replayBefore + 1, LooseEmberResidue(simulation),
+            "A genuinely new kill in the interrupted encounter can still earn crafting materials.");
+    }
+
+    [TestMethod]
+    public void ReturningToRefuge_StillRewardsAPreviouslyUnvisitedForkAndPreventsReplayedRouteRewards()
+    {
+        var simulation = Create(HuntSelection.FireTierTwo);
+        var map = Field<WyrmrealmMapState>(simulation, "mapState");
+        WalkToRefuge(map);
+        var refuge = map.AvailableNodes.Single(node => node.Refuge);
+        Complete(map, refuge);
+        Invoke(simulation, "CompleteTrail", refuge);
+        FinishRefugeExit(simulation);
+
+        var choices = map.AvailableNodes.ToArray();
+        Assert.IsTrue(choices.Length >= 2, "The harder refuge rejoins at a real route choice.");
+        var scoreAtRefuge = simulation.CreateEvaluationSummary().Score;
+        Assert.IsTrue(simulation.ChooseMapNode(choices[0].Id));
+        Invoke(simulation, "GainExperience", 2);
+        Invoke(simulation, "AwardEncounterScore", 50);
+        FallBackToRefuge(simulation);
+
+        Assert.IsTrue(simulation.ChooseMapNode(choices[1].Id));
+        Invoke(simulation, "GainExperience", 2);
+        Invoke(simulation, "AwardEncounterScore", 50);
+        Assert.AreEqual(4, simulation.CreateEvaluationSummary().ExperienceEarned, "A genuinely new route still grants XP.");
+        Assert.AreEqual(scoreAtRefuge + 100, simulation.CreateEvaluationSummary().Score,
+            "Combat score from a fresh route remains eligible after a refuge return.");
+    }
+
+    private static void FallBackToRefuge(RunSimulation simulation)
+    {
+        // The refuge's attunement reward may open a draft when the next XP shard is collected.
+        // Combat ticks pause at a pending choice, so resolve it before simulating a fatal hit.
+        Resolve(simulation);
+        var returnsBeforeDeath = simulation.RefugeReturns;
+        Field<PlayerState>(simulation, "player").Health = 0;
+        simulation.Tick(.05, default, 390, 700);
+        Assert.IsFalse(simulation.IsEnded);
+        Assert.IsNotNull(simulation.RefugeNodeId);
+        Assert.AreEqual(returnsBeforeDeath + 1, simulation.RefugeReturns, "A paused choice must never masquerade as a refuge return.");
+    }
+
+    private static void FinishRefugeExit(RunSimulation simulation)
+    {
+        Resolve(simulation);
+        SetField(simulation, "trailExitPending", false);
+        // These tests deliberately complete the map directly, bypassing the physical exit walk.
+        // Drain its deferred cleanup before creating drops, or the first tick would bank loose XP.
+        Invoke(simulation, "CompleteMapEncounterCleanup");
+        Resolve(simulation);
+    }
+
+    private static void KillHollowAndCollectExperience(RunSimulation simulation, int id)
+    {
+        var position = Field<PlayerState>(simulation, "player").Position + new Vector2D(75, 0);
+        var hollow = new EnemyState(id, position, 11, 1, 0, EnemyKind.Hollow);
+        Field<List<EnemyState>>(simulation, "enemies").Add(hollow);
+        Invoke(simulation, "DamageTarget", hollow, hollow.Health + 1, null!, null!);
+        Invoke(simulation, "CollectLooseExperienceShards");
+    }
+
+    private static void KillAshling(RunSimulation simulation, int id)
+    {
+        var position = Field<PlayerState>(simulation, "player").Position + new Vector2D(75, 0);
+        var ashling = new EnemyState(id, position, 11, 1, 0, EnemyKind.Ashling);
+        Field<List<EnemyState>>(simulation, "enemies").Add(ashling);
+        Invoke(simulation, "DamageTarget", ashling, ashling.Health + 1, null!, null!);
+    }
+
+    private static int LooseEmberResidue(RunSimulation simulation) =>
+        Field<ArenaEnvironmentState>(simulation, "arenaEnvironment").Snapshot().Supplies.Count(supply => supply.Kind == "material:EmberResidue");
+
+    private static bool CreditExperienceCache(RunSimulation simulation, double x, double y) =>
+        (bool)typeof(RunSimulation).GetMethod("CreditEncounterExperienceCache", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .Invoke(simulation, [x, y])!;
 
     [TestMethod]
     public void FallBeforeTheRefugeIsReclaimed_EndsTheHuntNormally()
