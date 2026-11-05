@@ -1,5 +1,6 @@
 @using Wyrmforge.Domain.Progression.Signature
 @using Wyrmforge.Domain.Progression.DragonEssences
+@using Wyrmforge.Application.Runs.Hunts
 
 <section class="fireball-ritual @(firstSocketJustAwakened ? "awakened" : "")" aria-label="Fireball spellcraft">
     <header class="fireball-heading">
@@ -115,6 +116,8 @@
                             <small>@UpgradeEssenceAvailableCount / @UpgradeEssenceRequiredCount · any combination of Cinder Heart, Molten Fang or Ashen Wing</small>
                             <small class="fireball-material-source">@UpgradeEssenceSpending</small>
                         </span>
+                        <button type="button" class="fireball-material-find" aria-expanded="@inspectingEssences"
+                                aria-label="Find Ashfang Essences" @onclick="InspectEssences">Find source</button>
                     </div>
                     @foreach (var need in FireballCoreCatalog.UpgradeMaterialsTo(Core.Level + 1))
                     {
@@ -122,10 +125,48 @@
                         var rarity = HuntMaterialCatalog.Rarity(need.Material);
                         <div class="fireball-material @(owned >= need.Required ? "ready" : "missing") @LootRarityPresentation.Class(rarity)">
                             <i class="px-icon px-lg px-crystal" aria-hidden="true"></i>
-                            <span><b>@HuntMaterialCatalog.Name(need.Material)</b><small><span class="loot-rarity-label">@LootRarityPresentation.Label(rarity)</span> · @owned / @need.Required</small><small class="fireball-material-source">@HuntMaterialCatalog.Source(need.Material)</small></span>
+                            <span><b>@HuntMaterialCatalog.Name(need.Material)</b><small><span class="loot-rarity-label">@LootRarityPresentation.Label(rarity)</span> · @owned / @need.Required</small></span>
+                            <button type="button" class="fireball-material-find" aria-expanded="@(inspectedMaterial == need.Material)"
+                                    aria-label="Find @HuntMaterialCatalog.Name(need.Material)" @onclick="() => InspectMaterial(need.Material)">Find source</button>
                         </div>
                     }
                 </div>
+                @if (inspectingEssences)
+                {
+                    <section class="fireball-material-guide" aria-label="Where to find Ashfang Essences" role="region">
+                        <strong>Secured Ashfang Essences · Fire Tier 1 and above</strong>
+                        <p>Defeat Ashfang in a Fire Hunt, select the Essence you want from the boss reward, then extract to secure it.</p>
+                        <small>Cinder Heart, Molten Fang and Ashen Wing are alternative Essence choices, not three guaranteed drops.</small>
+                        <button type="button" class="fireball-material-hunt" disabled="@startingMaterialHunt"
+                                @onclick="() => StartMaterialHuntAsync(HuntSelection.FireTierOne)">Hunt Fire Tier 1 now</button>
+                    </section>
+                }
+                @if (inspectedMaterial is { } inspected && HuntLootCatalog.LocationsFor(inspected) is { Count: > 0 } locations)
+                {
+                    var firstHunt = locations.OrderBy(location => location.Hunt.TierNumber).First().Hunt;
+                    var unlocked = HuntLadder.IsUnlocked(firstHunt.Region, firstHunt.Tier, FireClearedTier);
+                    var eligibleTiers = string.Join(", ", locations.Select(location => location.Hunt.TierNumber).Distinct());
+                    <section class="fireball-material-guide" aria-label="Where to find @HuntMaterialCatalog.Name(inspected)" role="region">
+                        <strong>@HuntMaterialCatalog.Name(inspected) · Fire tiers @eligibleTiers</strong>
+                        <ul>
+                            @foreach (var source in locations.Select(LocationDescription).Distinct())
+                            {
+                                <li>@source</li>
+                            }
+                        </ul>
+                        <small>Earn these from real enemies, scenery or sites. Collect the find and extract to secure it.</small>
+                        @if (unlocked)
+                        {
+                            <button type="button" class="fireball-material-hunt" disabled="@startingMaterialHunt"
+                                    @onclick="() => StartMaterialHuntAsync(firstHunt)">Hunt Fire Tier @firstHunt.TierNumber now</button>
+                        }
+                        else
+                        {
+                            <small>Unlock Tier @firstHunt.TierNumber by extracting a Tier @(firstHunt.TierNumber - 1) victory first.</small>
+                            <button type="button" class="fireball-material-hunt" @onclick="() => OnOpenWorldGate.InvokeAsync()">Open World Gate</button>
+                        }
+                    </section>
+                }
                 <button type="button" class="fireball-action" disabled="@(!Core.CanUpgrade(Vault, Materials))" @onclick="UpgradeAsync">
                     Upgrade to Lv @(Core.Level + 1)
                 </button>
@@ -254,8 +295,13 @@
     [Parameter] public Func<Task<bool>>? OnUpgrade { get; set; }
     [Parameter] public Func<int, FireballMutationId?, Task<bool>>? OnEquip { get; set; }
     [Parameter] public EventCallback OnOpenWorldGate { get; set; }
+    [Parameter] public EventCallback<HuntSelection> OnStartHunt { get; set; }
+    [Parameter] public int FireClearedTier { get; set; }
 
     private int? selectedSlot;
+    private HuntMaterialId? inspectedMaterial;
+    private bool inspectingEssences;
+    private bool startingMaterialHunt;
     private int? inspectedLockedSlot;
     private string? notice;
     private bool firstSocketJustAwakened;
@@ -263,6 +309,55 @@
     private bool focusContext;
 
     private bool Has(FireballMutationId mutation) => Core.Equipped.Contains(mutation);
+
+    private void InspectMaterial(HuntMaterialId material)
+    {
+        inspectedMaterial = inspectedMaterial == material ? null : material;
+        inspectingEssences = false;
+    }
+
+    private void InspectEssences()
+    {
+        inspectingEssences = !inspectingEssences;
+        inspectedMaterial = null;
+    }
+
+    private static string LocationDescription(HuntLootLocation location)
+    {
+        var name = location.Source switch
+        {
+            HuntLootSource.Ashling => "Ashlings",
+            HuntLootSource.AshSlinger => "Ash Slingers",
+            HuntLootSource.EliteEnemy => "Elite enemies",
+            HuntLootSource.Barrel => "Breakable barrels",
+            HuntLootSource.Crate => "Breakable crates",
+            HuntLootSource.OptionalCache => "Optional caches",
+            HuntLootSource.ReclaimedRefuge => "Reclaimed refuge",
+            _ => "Unidentified source",
+        };
+        var availability = location.Roll switch
+        {
+            HuntLootRollKind.Guaranteed => "earned source reward",
+            HuntLootRollKind.StableEnemyInterval => "occasional enemy drop",
+            HuntLootRollKind.ExistingSiteSeedRoll => "possible hidden find",
+            _ => "source-dependent",
+        };
+        return $"{name} · {availability}";
+    }
+
+    private async Task StartMaterialHuntAsync(HuntSelection hunt)
+    {
+        if (startingMaterialHunt || !HuntLadder.IsUnlocked(hunt.Region, hunt.Tier, FireClearedTier)) return;
+        startingMaterialHunt = true;
+        try
+        {
+            await OnStartHunt.InvokeAsync(hunt);
+        }
+        finally
+        {
+            startingMaterialHunt = false;
+        }
+    }
 
     private string CoreUpgradeDescription => Core.Level switch
     {

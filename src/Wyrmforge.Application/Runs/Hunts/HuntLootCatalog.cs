@@ -37,6 +37,9 @@ public sealed record HuntLootRule(
     };
 }
 
+/// <summary>An authored source and its Hunt, without exposing a rolled or guaranteed reward for a particular encounter.</summary>
+public sealed record HuntLootLocation(HuntSelection Hunt, HuntLootSource Source, HuntLootRollKind Roll);
+
 /// <summary>Authoritative material eligibility for one authored lineage and tier.</summary>
 public sealed class HuntLootTable
 {
@@ -92,6 +95,14 @@ public static class HuntLootCatalog
 
     public static HuntLootTable FireTierThree { get; } = new(HuntSelection.FireTierThree,
         AshlingResidue, SlingerResidue, BarrelScrap, CrateScrap, CacheScrap, EliteEmberglass, EliteWyrmcinder, RefugeEmberglass);
+
+    private static readonly IReadOnlyList<HuntLootTable> AuthoredFireTables = [FireTierOne, FireTierTwo, FireTierThree];
+
+    /// <summary>Find real eligible sources for a material without rolling loot or changing a Hunt's random streams.</summary>
+    public static IReadOnlyList<HuntLootLocation> LocationsFor(HuntMaterialId material) =>
+        AuthoredFireTables.SelectMany(table => table.Rules
+            .Where(rule => rule.Material == material)
+            .Select(rule => new HuntLootLocation(table.Hunt, rule.Source, rule.Roll))).ToArray();
 
     /// <summary>Untiered historical Hunts retain Common Fire salvage, without receiving Tier-II+ sources.</summary>
     public static HuntLootTable For(HuntSelection? hunt)
