@@ -595,6 +595,42 @@ public sealed class GreyboxHuntBrowserTests : PageTest
         Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
     }
 
+    /// <summary>Every authored set (mage, enemies, both boss forms, both Ashfang forms) downloads, decodes at its manifest size and draws; the sheet is the visual proof.</summary>
+    [TestMethod]
+    public async Task AuthoredCharacters_EverySetLoadsAndDrawsOnASheet()
+    {
+        var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
+        var output = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
+        Directory.CreateDirectory(output);
+        await Page.GotoAsync(root + "/", new() { WaitUntil = WaitUntilState.NetworkIdle });
+        var result = await Page.EvaluateAsync<string>("""
+            async () => {
+                const m = await import('/js/authored-characters.js');
+                for (const name of m.AUTHORED_SETS) m.preloadAuthoredCharacter(name);
+                const started = performance.now();
+                while (m.AUTHORED_SETS.some(name => !m.authoredCharacter(name)) && performance.now() - started < 30000) await new Promise(r => setTimeout(r, 100));
+                const missing = m.AUTHORED_SETS.filter(name => !m.authoredCharacter(name));
+                const canvas = document.createElement('canvas');
+                canvas.width = 8 * 96; canvas.height = m.AUTHORED_SETS.length * 100;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#343c38'; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.imageSmoothingEnabled = false;
+                m.AUTHORED_SETS.forEach((name, row) => {
+                    if (!m.authoredCharacter(name)) return;
+                    m.DIRECTIONS.forEach((direction, column) => {
+                        const scale = name.startsWith('Ashfang') ? 1 : 1;
+                        m.drawAuthoredCell(ctx, name, 'idle', direction, 0, column * 96 + 48, row * 100 + 80, 1, scale);
+                    });
+                });
+                window.__sheet = canvas.toDataURL('image/png');
+                return JSON.stringify({ missing });
+            }
+            """);
+        var missing = System.Text.Json.JsonDocument.Parse(result).RootElement.GetProperty("missing").GetArrayLength();
+        var url = await Page.EvaluateAsync<string>("() => window.__sheet");
+        await File.WriteAllBytesAsync(Path.Combine(output, "authored-sets-sheet.png"), Convert.FromBase64String(url[(url.IndexOf(',') + 1)..]));
+        Assert.AreEqual(0, missing, "every authored set must download and decode at its manifest size");
+    }
+
     /// <summary>Hunt 1.0: the authored eight-direction wizard and enemies play in the live Hunt (walk, cast, claw, hit, death), from the C# snapshot.</summary>
     [TestMethod]
     [DataRow(320, 568)]

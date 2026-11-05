@@ -10,10 +10,20 @@ export const DIRECTIONS = ['E', 'SE', 'S', 'SW', 'W', 'NW', 'N', 'NE'];
 /** C# EnemyKind numbers that have an authored set, and the strip of each one's primary attack. */
 export const ENEMY_CHARACTERS = new Map([
     [0, 'Hollowed'], [1, 'Mire-Hound'], [2, 'Ashling'], [3, 'Penitent'], [4, 'Ash-Slinger'], [5, 'Ash-Priest'], [6, 'Drowned-Wraith'],
+    // The two Fire bosses start in their first form; resolveCharacter picks the second from the C# phase.
+    [7, 'Reliquary-normal'], [9, 'Bell-Warden-normal'],
 ]);
+/** Every authored set the Hunt can ask for, the mage and the second boss forms included. */
+export const AUTHORED_SETS = ['Wizard', ...ENEMY_CHARACTERS.values(), 'Bell-Warden-molten', 'Reliquary-awakened', 'Ashfang-normal', 'Ashfang-enraged'];
 const PRIMARY_ACTION = {
     'Hollowed': 'claw_swipe', 'Mire-Hound': 'lunging_bite', 'Ashling': 'pounce_rake', 'Penitent': 'shield_bash',
     'Ash-Slinger': 'ember_throw', 'Ash-Priest': 'heal_resurrection', 'Drowned-Wraith': 'emerge_strike_retreat',
+    'Reliquary-normal': 'ward', 'Reliquary-awakened': 'ward', 'Bell-Warden-normal': 'smash', 'Bell-Warden-molten': 'smash',
+};
+/** The C# telegraph kinds of the bosses name their strip; a form change plays the old form's phase_change over the whole telegraph. */
+const TELEGRAPH_ACTION = {
+    'bell-smash': 'smash', 'bell-toll': 'toll', 'bell-toll-fan': 'toll', 'bell-rally': 'rally', 'bell-crack': 'phase_change',
+    'rite-ward': 'ward', 'rite-seal': 'seal', 'rite-corruption': 'corruption', 'rite-shift': 'phase_change',
 };
 /** These hit by touching; every other enemy attacks through a C# telegraph. */
 const TOUCH_ATTACKERS = new Set(['Hollowed', 'Ashling']);
@@ -52,7 +62,9 @@ export const frameAtPhase = (durations, phase) => frameAtTime(durations, (phase 
 
 const action = (manifest, name) => manifest?.actions?.[name] ?? null;
 const durationsOf = (manifest, name) => action(manifest, name)?.durationsMs ?? null;
-const releaseFrame = (manifest, name) => action(manifest, name)?.directions?.S?.events?.[0]?.localFrame ?? 2;
+// A phase change is all windup (the form flips when it ends); an action without a marked contact frame reaches contact on its third frame.
+const releaseFrame = (manifest, name) => name === 'phase_change' ? action(manifest, name)?.framesPerDirection ?? 4
+    : action(manifest, name)?.directions?.S?.events?.[0]?.localFrame ?? 2;
 
 // ---------------------------------------------------------------- enemies
 
@@ -62,6 +74,23 @@ export function createAuthoredState() {
 
 /** The authored name of an enemy snapshot, or null when it still uses its old art. */
 export const enemyCharacter = enemy => ENEMY_CHARACTERS.get(Number(enemy?.kind)) ?? null;
+
+/**
+ * The set an enemy plays right now. The Fire bosses change form with their C# phase (Bell Warden cracked, Reliquary shifted); during the
+ * crack or shift telegraph they still wear the first form so its phase_change clip can play. Frost variants keep their old art.
+ */
+export function resolveCharacter(enemy, snapshot) {
+    const kind = Number(enemy?.kind), telegraph = enemy?.telegraph?.kind;
+    if (kind === 9) {
+        if ((snapshot?.bellWarden?.variant ?? 'fire') !== 'fire') return null;
+        return snapshot?.bellWarden?.cracked && telegraph !== 'bell-crack' ? 'Bell-Warden-molten' : 'Bell-Warden-normal';
+    }
+    if (kind === 7) {
+        if ((snapshot?.reliquary?.variant ?? 'fire') !== 'fire') return null;
+        return snapshot?.reliquary?.shifted && telegraph !== 'rite-shift' ? 'Reliquary-awakened' : 'Reliquary-normal';
+    }
+    return enemyCharacter(enemy);
+}
 
 /**
  * Advances every enemy's pose from the snapshot. `manifests` maps a character name to its loaded manifest (a missing one is skipped, so the
@@ -79,7 +108,7 @@ export function updateAuthoredEnemies(state, snapshot, manifests, seconds, reduc
 
     const present = new Set();
     for (const enemy of snapshot.enemies ?? []) {
-        const name = enemyCharacter(enemy), manifest = name ? manifests.get(name) : null;
+        const name = resolveCharacter(enemy, snapshot), manifest = name ? manifests.get(name) : null;
         if (!manifest) continue;
         const id = enemy.entityId;
         present.add(id);
@@ -89,6 +118,7 @@ export function updateAuthoredEnemies(state, snapshot, manifests, seconds, reduc
                 hit: null, hitFlash: false, action: 'idle', frame: 0, offset: ((id * 40503) >>> 0) % 600 };
             state.enemies.set(id, pose);
         }
+        pose.name = name;
         const advancing = !paused && !enemy.frozen;
         const dx = enemy.x - pose.x, dy = enemy.y - pose.y, distance = Math.hypot(dx, dy);
         if (distance >= 64) { pose.lastMove = -1; pose.attack = null; }
@@ -98,10 +128,12 @@ export function updateAuthoredEnemies(state, snapshot, manifests, seconds, reduc
         const walkClip = durationsOf(manifest, 'walk');
         if (advancing && walking && walkClip) pose.phase = (pose.phase + dt * 1000 / clipDuration(walkClip)) % 1;
 
-        const primary = PRIMARY_ACTION[name], attackClip = durationsOf(manifest, primary), contact = releaseFrame(manifest, primary);
         const telegraph = enemy.telegraph;
+        // A running telegraph names its strip (bosses); one that has ended keeps the strip it started with.
+        const primary = pose.attack?.action && !telegraph ? pose.attack.action : TELEGRAPH_ACTION[telegraph?.kind] ?? PRIMARY_ACTION[name];
+        const attackClip = durationsOf(manifest, primary), contact = releaseFrame(manifest, primary);
         if (advancing && telegraph && attackClip) {
-            if (pose.attack?.mode !== 'telegraph') pose.attack = { mode: 'telegraph', progress: 0, released: null };
+            if (pose.attack?.mode !== 'telegraph' || pose.attack.action !== primary) pose.attack = { mode: 'telegraph', action: primary, progress: 0, released: null };
             pose.attack.progress = Number(telegraph.progress) || 0;
             if (Number.isFinite(telegraph.targetX) && Math.hypot(telegraph.targetX - enemy.x, telegraph.targetY - enemy.y) > 1)
                 pose.direction = pickDirection(telegraph.targetX - enemy.x, telegraph.targetY - enemy.y, pose.direction);
@@ -111,7 +143,7 @@ export function updateAuthoredEnemies(state, snapshot, manifests, seconds, reduc
         const player = snapshot.player;
         const touching = player && Math.hypot(enemy.x - player.x, enemy.y - player.y) <= (Number(enemy.radius) || 11) + (Number(player.radius) || 0) + 2;
         if (advancing && !pose.attack && TOUCH_ATTACKERS.has(name) && attackClip && touching && state.clock - pose.attackEnded > .6) {
-            pose.attack = { mode: 'contact', started: state.clock };
+            pose.attack = { mode: 'contact', action: primary, started: state.clock };
             pose.direction = pickDirection(player.x - enemy.x, player.y - enemy.y, pose.direction);
         }
         if (advancing && pose.attack && player && pose.attack.mode === 'contact')
@@ -135,28 +167,30 @@ export function updateAuthoredEnemies(state, snapshot, manifests, seconds, reduc
                 frame = Math.min(contact - 1, Math.floor(Math.max(0, Math.min(.999, pose.attack.progress)) * contact));
             } else {
                 const tail = attackClip.slice(contact);
-                const sample = frameAtTime(tail, (state.clock - pose.attack.released) * 1000);
-                frame = contact + sample.index;
+                const sample = tail.length ? frameAtTime(tail, (state.clock - pose.attack.released) * 1000) : { index: -1, done: true };
+                frame = Math.min(attackClip.length - 1, contact + Math.max(0, sample.index));
                 if (sample.done) { pose.attack = null; pose.attackEnded = state.clock; }
             }
             chosen = { action: primary, frame };
         }
         pose.action = chosen.action; pose.frame = chosen.frame;
     }
-    for (const id of state.enemies.keys()) if (!present.has(id)) state.enemies.delete(id);
-
     // Corpses: only a C# death burst with an identity leaves one.
     const current = new Set();
     for (const death of snapshot.deathBursts ?? []) {
-        const name = ENEMY_CHARACTERS.get(Number(death.kind));
-        if (!name || !Number.isSafeInteger(death.entityId) || !manifests.get(name)) continue;
+        if (!ENEMY_CHARACTERS.has(Number(death.kind)) || !Number.isSafeInteger(death.entityId)) continue;
+        const old = state.enemies.get(death.entityId);
+        // A boss dies in the form it was last seen in.
+        const name = old?.name ?? ENEMY_CHARACTERS.get(Number(death.kind));
+        if (!manifests.get(name)) continue;
         const key = `${death.entityId}:${death.kind}`;
         current.add(key);
         if (state.seen.has(key)) continue;
-        const old = state.enemies.get(death.entityId);
         state.corpses.set(key, { name, x: death.x, y: death.y, direction: old?.direction ?? 'S', started: state.clock });
     }
     state.seen = current;
+    // The pose that just vanished is where a dying enemy's facing and form came from, so it goes only after its corpse is made.
+    for (const id of state.enemies.keys()) if (!present.has(id)) state.enemies.delete(id);
     for (const [key, corpse] of state.corpses) if (state.clock - corpse.started > CORPSE_SECONDS) state.corpses.delete(key);
     while (state.corpses.size > 48) state.corpses.delete(state.corpses.keys().next().value);
 }
@@ -272,7 +306,7 @@ export function loadedManifests() {
 }
 
 /** Draws one cell with its feet on (x, y), in whole world units. Returns false when the set is not loaded. */
-export function drawAuthoredCell(ctx, name, actionName, direction, frame, x, y, alpha = 1) {
+export function drawAuthoredCell(ctx, name, actionName, direction, frame, x, y, alpha = 1, scale = 1) {
     const set = loaded.get(name), strip = set?.strips.get(actionName);
     if (!strip) return false;
     const [width, height] = set.manifest.canvas, [rootX, rootY] = set.manifest.root;
@@ -280,7 +314,7 @@ export function drawAuthoredCell(ctx, name, actionName, direction, frame, x, y, 
     const spec = set.manifest.actions[actionName];
     const column = Math.max(0, Math.min(spec.framesPerDirection - 1, frame));
     if (alpha < 1) { ctx.save(); ctx.globalAlpha = Math.max(0, alpha); }
-    ctx.drawImage(strip, column * width, row * height, width, height, Math.round(x) - rootX, Math.round(y) - rootY, width, height);
+    ctx.drawImage(strip, column * width, row * height, width, height, Math.round(x) - rootX * scale, Math.round(y) - rootY * scale, width * scale, height * scale);
     if (alpha < 1) ctx.restore();
     return true;
 }
@@ -319,6 +353,70 @@ export function drawAuthoredWizard(ctx, player, state) {
     const wizard = state.wizard;
     contactShadow(ctx, player.x, player.y + WIZARD_FEET_OFFSET, 8);
     return drawAuthoredCell(ctx, 'Wizard', wizard.action, wizard.direction, wizard.frame, player.x, player.y + WIZARD_FEET_OFFSET);
+}
+
+// ---------------------------------------------------------------- Ashfang
+
+/**
+ * Ashfang is the C# dragon, not an enemy. The old motion graph (ashfang-sprites.js) already turns the snapshot into a clip name, a facing and a
+ * progress; this only maps those onto the authored strips. The authored cells are 80 px for a 60-unit-radius dragon, drawn at a whole 2x so
+ * the pixels stay square and the body fills its collision circle.
+ */
+export const ASHFANG_SCALE = 2;
+const ASHFANG_ALIAS = { land: 'landing', run_start: 'walk_start', run_stop: 'walk_stop' };
+
+/** The set, strip and frame for the old graph's `entity`; `shadow` means only the moving ground shadow shows (overhead flight). */
+export function ashfangPose(entity, dragon, clock, manifests) {
+    const name = Number(dragon?.phase) === 2 ? 'Ashfang-enraged' : 'Ashfang-normal', manifest = manifests.get(name);
+    if (!manifest || !entity) return null;
+    if (entity.hidden) return { name, hidden: true };
+    if (entity.clip === 'fly' || entity.shadow) return { name, shadow: true };
+    const age = Math.max(0, clock - (entity.at ?? clock));
+    let actionName = ASHFANG_ALIAS[entity.clip] ?? entity.clip, frame;
+    if (entity.clip === 'breath_start' || entity.clip === 'breath_loop' || entity.clip === 'breath_end') {
+        // Windup frames, a two-frame loop while the flame is out, then the recovery frame.
+        actionName = 'fire_breath';
+        frame = entity.clip === 'breath_start' ? Math.min(1, Math.floor((entity.progress ?? 0) * 2)) : entity.clip === 'breath_loop' ? 2 + Math.floor(age * 8) % 2 : 4;
+    }
+    const spec = action(manifest, actionName) ?? action(manifest, 'idle');
+    if (!action(manifest, actionName)) actionName = 'idle';
+    if (frame == null) {
+        const durations = spec.durationsMs;
+        frame = entity.progress != null ? Math.floor(Math.max(0, Math.min(.999, entity.progress)) * durations.length)
+            : frameAtTime(durations, age * 1000, Boolean(spec.loop)).index;
+    }
+    return { name, action: actionName, frame: Math.min(frame, spec.framesPerDirection - 1), direction: entity.direction };
+}
+
+/** Draws the live dragon from its old motion graph; false when the authored set is not loaded (the old atlas then draws). */
+export function drawAuthoredAshfang(ctx, ashfang, dragon) {
+    const p = ashfang?.entity;
+    const pose = p ? ashfangPose(p, dragon, ashfang.clock, loadedManifests()) : null;
+    if (!pose || (!pose.hidden && !pose.shadow && !authoredCharacter(pose.name))) return false;
+    ashfang.authoredForm = pose.name;
+    if (pose.hidden) return true;
+    ctx.save();
+    if (pose.shadow) {
+        ctx.fillStyle = 'rgba(4,6,9,.27)';
+        ctx.beginPath(); ctx.ellipse(p.x, p.y, p.radius * .55, p.radius * .2, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+        return true;
+    }
+    contactShadow(ctx, p.x, p.y + 2, p.radius * .6);
+    if (p.frozen) ctx.filter = 'sepia(1) saturate(1.6) hue-rotate(135deg)';
+    else if (p.hitFlash) ctx.filter = 'brightness(1.25) saturate(.75)';
+    drawAuthoredCell(ctx, pose.name, pose.action, pose.direction, pose.frame, p.x, p.y, 1, ASHFANG_SCALE);
+    ctx.restore();
+    return true;
+}
+
+/** The collapse: the death clip once, then its last frame, fading after eight seconds like the old one. */
+export function drawAuthoredAshfangDeath(ctx, ashfang) {
+    const death = ashfang?.death, name = ashfang?.authoredForm;
+    const manifest = name ? loaded.get(name)?.manifest : null;
+    if (!death || !manifest) return false;
+    const frame = frameAtTime(durationsOf(manifest, 'death'), death.age * 1000).index;
+    return drawAuthoredCell(ctx, name, 'death', death.direction ?? 'SE', frame, death.x, death.y, Math.max(0, Math.min(1, 8 - death.age)), ASHFANG_SCALE);
 }
 
 export function authoredDiagnostics(state) {

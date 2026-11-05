@@ -21,8 +21,8 @@ import { drawTree, treeLayers, collectTrees, collectBushes, collectBoulders } fr
 import { drawTorch, torchLayers, collectTorches } from './arena-torch-art.js';
 import { torchSprites } from './arena-torch-sprites.js';
 import {
-    ENEMY_CHARACTERS, createAuthoredState, preloadAuthoredCharacter, loadedManifests, authoredCharacter, updateAuthoredEnemies, updateAuthoredWizard,
-    drawAuthoredEnemy, drawAuthoredCorpses, drawAuthoredWizard, authoredDiagnostics,
+    ENEMY_CHARACTERS, AUTHORED_SETS, createAuthoredState, preloadAuthoredCharacter, loadedManifests, authoredCharacter, updateAuthoredEnemies, updateAuthoredWizard,
+    drawAuthoredEnemy, drawAuthoredCorpses, drawAuthoredWizard, drawAuthoredAshfang, drawAuthoredAshfangDeath, authoredDiagnostics,
 } from './authored-characters.js';
 import { drawRecoveryGuide } from './arena-recovery.js';
 import { drawSpellCastMotion, drawSpellProjectile, drawSpellImpact } from './arena-spell-vfx.js';
@@ -72,7 +72,7 @@ export function initializeArena(canvas, dotNetReference) {
     preloadPaintedEnemies();
     preloadHollowSprites();
     ashlingSprites.preload();
-    for (const name of ['Wizard', ...ENEMY_CHARACTERS.values()]) preloadAuthoredCharacter(name);
+    for (const name of AUTHORED_SETS) preloadAuthoredCharacter(name);
     preloadAshfang();
     const state = createState(canvas, dotNetReference);
     const settings = canvas.closest('.game-screen')?.querySelector('[data-damage-numbers]');
@@ -603,13 +603,13 @@ function draw(state, snapshot, width, height) {
             if (layer.kind === 'masonry') {
                 drawArenaCloisterElevation(ctx, layer);
             } else if (layer.kind === 'dragon') {
-                drawDragon(ctx, layer.dragon, state.reducedMotion.matches, snapshot.dragonBreath, state.ashfang);
+                drawDragon(ctx, layer.dragon, state.reducedMotion.matches, snapshot.dragonBreath, state.ashfang, authoredOn);
             } else if (layer.kind === 'tree') {
                 drawTree(ctx, layer.tree);
             } else if (layer.kind === 'torch' || layer.kind === 'torchFlame') {
                 drawTorch(ctx, layer.torch, visualSeconds, layer.kind === 'torch' ? 'post' : 'flame');
             } else if (layer.kind === 'dragonDeath') {
-                drawAshfangDeath(ctx,state.ashfang);
+                if (!(authoredOn && drawAuthoredAshfangDeath(ctx, state.ashfang))) drawAshfangDeath(ctx,state.ashfang);
             } else if (layer.kind === 'enemy') {
                 const enemy = layer.enemy;
                 if (gpu) {
@@ -1465,7 +1465,8 @@ function drawDragonBreath(ctx, breath, school, dragon = null) {
     ctx.stroke();
 }
 
-function drawDragon(ctx, dragon, reducedMotion = false, breath = null, ashfang = null) {
+function drawDragon(ctx, dragon, reducedMotion = false, breath = null, ashfang = null, authored = false) {
+    if (authored && ashfang && drawAuthoredAshfang(ctx, ashfang, dragon)) return;
     if (ashfang && drawAshfang(ctx,ashfang)) return;
     const palette = schoolPalette(dragon.school);
     ctx.save();

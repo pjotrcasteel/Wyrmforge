@@ -2,12 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
-    DIRECTIONS, ENEMY_CHARACTERS, CAST_RELEASE_AT, pickDirection, pickDirectionFromAngle, frameAtTime, frameAtPhase, clipDuration,
+    DIRECTIONS, ENEMY_CHARACTERS, AUTHORED_SETS, resolveCharacter, ashfangPose, CAST_RELEASE_AT, pickDirection, pickDirectionFromAngle, frameAtTime, frameAtPhase, clipDuration,
     createAuthoredState, updateAuthoredEnemies, updateAuthoredWizard, corpsePose, CORPSE_SECONDS,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/authored-characters.js';
 
 const manifestOf = name => JSON.parse(readFileSync(new URL(`../../src/Wyrmforge.Presentation.Web/wwwroot/art/characters/${name}/manifest.json`, import.meta.url), 'utf8'));
-const manifests = new Map(['Hollowed', 'Mire-Hound', 'Wizard'].map(name => [name, manifestOf(name)]));
+const manifests = new Map(AUTHORED_SETS.map(name => [name, manifestOf(name)]));
 
 test('every shipped strip matches its manifest: cell width times frames, eight direction rows, in the documented order', () => {
     const sizeOf = png => ({ width: png.readUInt32BE(16), height: png.readUInt32BE(20) });
@@ -23,8 +23,8 @@ test('every shipped strip matches its manifest: cell width times frames, eight d
     }
 });
 
-test('the C# enemy kinds with authored sets are the first seven, each with its primary strip', () => {
-    assert.deepEqual([...ENEMY_CHARACTERS.keys()], [0, 1, 2, 3, 4, 5, 6]);
+test('the C# enemy kinds with authored sets: the first seven, the Reliquary and the Bell Warden', () => {
+    assert.deepEqual([...ENEMY_CHARACTERS.keys()], [0, 1, 2, 3, 4, 5, 6, 7, 9]);
     assert.equal(ENEMY_CHARACTERS.get(0), 'Hollowed');
 });
 
@@ -169,4 +169,56 @@ test('the wizard: idle, walk start, walk, walk stop, and a cast that reaches its
     assert.equal(state.wizard.frame, release, 'the release pose lands on the C# release');
     t += .05; updateAuthoredWizard(state, frame(cast(.99)), manifest, t);
     assert.equal(state.wizard.frame, manifest.actions.cast.framesPerDirection - 1);
+});
+test('the Fire bosses change form with the C# phase, and a Frost variant keeps its old art', () => {
+    const warden = telegraph => ({ kind: 9, entityId: 1, x: 0, y: 0, telegraph });
+    assert.equal(resolveCharacter(warden(null), { bellWarden: { variant: 'fire', cracked: false } }), 'Bell-Warden-normal');
+    assert.equal(resolveCharacter(warden(null), { bellWarden: { variant: 'fire', cracked: true } }), 'Bell-Warden-molten');
+    assert.equal(resolveCharacter(warden({ kind: 'bell-crack' }), { bellWarden: { variant: 'fire', cracked: true } }), 'Bell-Warden-normal', 'it wears the first form while it cracks');
+    assert.equal(resolveCharacter(warden(null), { bellWarden: { variant: 'ice', cracked: false } }), null);
+    assert.equal(resolveCharacter({ kind: 7 }, { reliquary: { variant: 'fire', shifted: true } }), 'Reliquary-awakened');
+    assert.equal(resolveCharacter({ kind: 7 }, { reliquary: { variant: 'glass', shifted: false } }), null);
+    assert.equal(resolveCharacter({ kind: 0 }, {}), 'Hollowed');
+});
+
+test('boss telegraph kinds pick their strips; a crack plays the whole phase_change before the form flips', () => {
+    const state = createAuthoredState();
+    const warden = (telegraph, cracked = false) => ({ kind: 9, entityId: 3, x: 100, y: 100, radius: 24, telegraph });
+    const snapshot = (telegraph, cracked) => snap([warden(telegraph)], { bellWarden: { variant: 'fire', cracked } });
+    const run = (telegraph, cracked, seconds) => updateAuthoredEnemies(state, snapshot(telegraph, cracked), manifests, seconds);
+    run(null, false, 0);
+    run({ kind: 'bell-toll', progress: .5, targetX: 300, targetY: 100, radius: 50 }, false, .05);
+    assert.equal(state.enemies.get(3).action, 'toll');
+    run(null, false, .1);
+    run({ kind: 'bell-smash', progress: .1, targetX: 300, targetY: 100, radius: 50 }, false, .15);
+    assert.equal(state.enemies.get(3).action, 'smash');
+    run({ kind: 'bell-crack', progress: .6, targetX: 0, targetY: 0, radius: 40 }, true, .2);
+    let pose = state.enemies.get(3);
+    assert.equal(pose.name, 'Bell-Warden-normal');
+    assert.equal(pose.action, 'phase_change');
+    assert.equal(pose.frame, 2, 'scrubbed across all four frames');
+    run(null, true, .25);
+    run(null, true, .3);
+    pose = state.enemies.get(3);
+    assert.equal(pose.name, 'Bell-Warden-molten', 'the form flips once the crack telegraph is over');
+    assert.notEqual(pose.action, 'phase_change');
+    // A boss that dies in its second form leaves that form's corpse.
+    updateAuthoredEnemies(state, snap([], { deathBursts: [{ x: 100, y: 100, kind: 9, entityId: 3, bodyRadius: 24, progress: 0 }], bellWarden: { variant: 'fire', cracked: true } }), manifests, .35);
+    assert.equal([...state.corpses.values()][0].name, 'Bell-Warden-molten');
+});
+
+test('Ashfang: the old motion graph maps onto the authored strips, overhead flight is only a shadow, the breath is one strip', () => {
+    const dragon = { phase: 1 }, enraged = { phase: 2 };
+    const pose = (entity, d = dragon) => ashfangPose({ at: 0, direction: 'SE', progress: null, ...entity }, d, 1, manifests);
+    assert.equal(pose({ clip: 'idle' }).action, 'idle');
+    assert.equal(pose({ clip: 'walk', progress: .6 }).action, 'walk');
+    assert.equal(pose({ clip: 'land', progress: .5 }).action, 'landing');
+    assert.equal(pose({ clip: 'run_start', progress: 0 }).action, 'walk_start');
+    assert.equal(pose({ clip: 'fly', shadow: true }).shadow, true);
+    assert.equal(pose({ clip: 'idle', hidden: true }).hidden, true);
+    assert.deepEqual([pose({ clip: 'breath_start', progress: .1 }), pose({ clip: 'breath_end' })].map(p => [p.action, p.frame]), [['fire_breath', 0], ['fire_breath', 4]]);
+    assert.ok([2, 3].includes(pose({ clip: 'breath_loop' }).frame));
+    assert.equal(pose({ clip: 'bite', progress: .45 }).frame, 2, 'the bite reaches its contact frame mid-strike');
+    assert.equal(pose({ clip: 'idle' }, enraged).name, 'Ashfang-enraged');
+    assert.equal(pose({ clip: 'something_unknown' }).action, 'idle', 'an unmapped clip falls back to idle rather than a missing strip');
 });
