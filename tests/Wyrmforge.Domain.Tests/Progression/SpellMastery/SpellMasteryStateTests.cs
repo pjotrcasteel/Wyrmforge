@@ -1,6 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Progression.SpellMastery;
+using Wyrmforge.Domain.Progression.Signature;
 using Wyrmforge.Domain.Spells;
 using Wyrmforge.Domain.Spells.Evolutions;
 
@@ -9,6 +10,39 @@ namespace Wyrmforge.Domain.Tests.Progression.SpellMastery;
 [TestClass]
 public sealed class SpellMasteryStateTests
 {
+    [TestMethod]
+    public void RecordRun_PreparedFireballLvTwoWithMutator_ProgressesWithoutLegacyRankCards()
+    {
+        var state = new SpellMasteryState();
+        var evidence = SignatureEvidence(2, FireballMutationId.Detonation);
+
+        for (var run = 0; run < 4; run++) state.RecordRun(evidence);
+
+        Assert.AreEqual(4, state.Get(SpellId.FireBolt).MeaningfulRuns);
+        Assert.IsFalse(state.Get(SpellId.FireBolt).WyrmFeat);
+        Assert.IsFalse(state.Unlocks(SpellEvolutionId.Wyrmfire));
+
+        var rewarded = state.RecordRun(SignatureEvidence(3, FireballMutationId.Detonation, FireballMutationId.CinderNeedle)
+            with { QualifiedWyrmFeats = new HashSet<SpellId> { SpellId.FireBolt } });
+
+        CollectionAssert.AreEqual(new[] { SpellEvolutionId.Wyrmfire }, rewarded.NewlyUnlocked.ToArray());
+        Assert.IsTrue(state.Unlocks(SpellEvolutionId.Wyrmfire));
+        Assert.AreEqual(0, state.RecordRun(evidence).NewlyUnlocked.Count);
+    }
+
+    [TestMethod]
+    public void RecordRun_FireballPreparationCannotCreditInactiveOrUnupgradedSignature()
+    {
+        var state = new SpellMasteryState();
+        state.RecordRun(SignatureEvidence(1, FireballMutationId.Detonation));
+        state.RecordRun(SignatureEvidence(2));
+        state.RecordRun(SignatureEvidence(5, FireballMutationId.Detonation) with { ActiveSpell = SpellId.FrostShard });
+        state.RecordRun(SignatureEvidence(5, FireballMutationId.Detonation) with { Abandoned = true });
+        state.RecordRun(SignatureEvidence(5, FireballMutationId.Detonation) with { CompletedRoutes = 0 });
+
+        Assert.AreEqual(0, state.Get(SpellId.FireBolt).MeaningfulRuns);
+    }
+
     [TestMethod]
     public void RecordRun_AbandonedOrNoClearedTrail_DoesNotAdvance()
     {
@@ -82,6 +116,14 @@ public sealed class SpellMasteryStateTests
         => new(1, 2, false,
             rank >= 3 && wyrms.Contains(SpellLineageCatalog.Get(spell).Wyrm) ? new HashSet<SpellId> { spell } : new HashSet<SpellId>(),
             [new MasteryRunSpell(spell, rank)]);
+
+    private static MasteryRunEvidence SignatureEvidence(int level, params FireballMutationId[] equipped) =>
+        new(1, 1, false, new HashSet<SpellId>(), [new MasteryRunSpell(SpellId.FireBolt, 1)])
+        {
+            ActiveSpell = SpellId.FireBolt,
+            FireballLevel = level,
+            FireballMutations = equipped,
+        };
 }
 
 [TestClass]
@@ -94,7 +136,8 @@ public sealed class SpellMasteryGoalPlannerTests
 
         Assert.AreEqual(3, goals.Count);
         Assert.AreEqual(3, goals.Select(goal => goal.Spell).Distinct().Count());
-        Assert.IsTrue(goals.All(goal => goal.Objective.Contains("Rank II", StringComparison.Ordinal)));
+        Assert.IsTrue(goals.All(goal => goal.Objective.Contains("Rank II", StringComparison.Ordinal)
+            || goal.Objective.Contains("Fireball Lv.2+", StringComparison.Ordinal)));
     }
 
     [TestMethod]

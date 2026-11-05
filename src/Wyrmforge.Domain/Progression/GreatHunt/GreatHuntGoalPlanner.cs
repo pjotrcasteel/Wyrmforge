@@ -28,9 +28,12 @@ public static class GreatHuntGoalPlanner
 
                 var lineage = mastery.Get(oath.LineageSpell).Unlocked;
                 var wyrm = DragonCatalog.Get(oath.Wyrm).Name;
+                var duelObjective = oath.Wyrm == DragonId.Ashfang
+                    ? "Defeat Ascendant or Elder Ashfang with Fireball Lv.3+ and two equipped mutators."
+                    : $"Defeat {wyrm} at Depth II+ with an evolved {DragonCatalog.Get(oath.Wyrm).School} spell already active.";
                 var next = !entry.Slain ? $"Defeat {wyrm} to mark the first oath."
                     : !entry.EssenceSecured ? $"Secure any {wyrm} Essence at the Forge or Refuge."
-                    : !entry.DeepEvolvedDuel ? $"Defeat {wyrm} at Depth II+ with an evolved {DragonCatalog.Get(oath.Wyrm).School} spell already active."
+                    : !entry.DeepEvolvedDuel ? duelObjective
                     : $"Awaken {SpellCatalog.Get(oath.LineageSpell).Name}'s Wyrmforged lineage.";
                 return new GreatHuntGoal(oath.Wyrm, oath.Name, next, "Permanent Great Hunt seal • future Ascendant path",
                     entry.Feats + (lineage ? 1 : 0), 4);

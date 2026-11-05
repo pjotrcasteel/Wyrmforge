@@ -1,5 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Application.Runs.Simulation;
+using Wyrmforge.Application.Runs.Hunts;
 using Wyrmforge.Application.Tests.TestDoubles;
 using Wyrmforge.Domain.Progression.Signature;
 using Wyrmforge.Domain.Spells;
@@ -33,5 +34,22 @@ public sealed class FireballHuntPreparationTests
         simulation.PrepareFireballMutations([FireballMutationId.MeteorHeart]);
         Assert.IsTrue(simulation.PreparedFireballMutations.Contains(FireballMutationId.ScorchedEarth));
         Assert.IsFalse(simulation.PreparedFireballMutations.Contains(FireballMutationId.MeteorHeart));
+    }
+
+    [TestMethod]
+    public void EvaluationSummary_PreservesPreparedSignatureAndHuntTierForMasteryAttribution()
+    {
+        var simulation = new RunSimulationFactory(new FirstRandomSource()).Create(new HashSet<string>(), seed: 2403,
+            fireballLevel: 3, fireballMutations: [FireballMutationId.Detonation, FireballMutationId.CinderNeedle],
+            hunt: HuntSelection.FireTierTwo);
+        Assert.IsTrue(simulation.ChoosePrimary(SpellId.FireBolt));
+
+        var summary = simulation.CreateEvaluationSummary();
+
+        Assert.AreEqual(SpellId.FireBolt, summary.ActiveSpell);
+        Assert.AreEqual(3, summary.PreparedFireballLevel);
+        Assert.AreEqual(HuntSelection.FireTierTwo, summary.Hunt);
+        CollectionAssert.AreEquivalent(new[] { FireballMutationId.Detonation, FireballMutationId.CinderNeedle },
+            summary.PreparedFireballMutations.ToArray());
     }
 }
