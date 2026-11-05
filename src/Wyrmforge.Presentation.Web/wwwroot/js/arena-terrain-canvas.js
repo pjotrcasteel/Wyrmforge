@@ -403,6 +403,8 @@ function topTileKind(band, material, height, frame, column, row, capped = true) 
     if (material === TERRAIN_MATERIAL.Stone) return capped && band <= 1 && height > 0 ? 'grassTop' : 'slabTop';
     if (height < 0) return 'dirtTop';
     if (material === TERRAIN_MATERIAL.Soil && band <= 1) return 'grassTop';
+    // Gravel patches in the wet land are drifts of dry grass: a dark flat patch read as a smudge.
+    if (material === TERRAIN_MATERIAL.Ash && band === 0) return 'grassDryTop';
     return 'ashTop';
 }
 const TOP_KINDS = Object.freeze(['grassTop', 'grassDryTop', 'mudTop', 'dirtTop', 'ashTop', 'stoneTop', 'rubbleTop', 'lavaTop', 'slabTop', 'pathTop']);
@@ -443,6 +445,30 @@ function buildNoiseTable(spacing, seed) {
 }
 const NOISE_BROAD = buildNoiseTable(16 * ART, 301);
 const NOISE_FINE = buildNoiseTable(8 * ART, 317);
+
+// Patches of mud, dry grass and bare rock are metres across, not the half-metre blobs of the shoreline noise: smooth value noise with a
+// 4 m and a 2 m lattice over a 16 m wrapping table (8 bits per sample), so they read as puddles and drifts, never as a scatter of smudges.
+const PATCH_SIZE = 1024 * 1, PATCH_MASK = PATCH_SIZE - 1;
+function buildPatchTable(spacing, seed) {
+    const cells = PATCH_SIZE / spacing, lattice = new Float32Array(cells * cells), table = new Uint8Array(PATCH_SIZE * PATCH_SIZE);
+    for (let i = 0; i < lattice.length; i++) {
+        let h = (Math.imul(i + 29, 0x9E3779B1) ^ Math.imul(seed, 0xC2B2AE35)) >>> 0;
+        h = Math.imul(h ^ (h >>> 15), 0x2C1B3C6D) >>> 0;
+        lattice[i] = ((h ^ (h >>> 12)) >>> 0) / 4294967296;
+    }
+    const at = (x, y) => lattice[(((y % cells) + cells) % cells) * cells + (((x % cells) + cells) % cells)];
+    for (let y = 0; y < PATCH_SIZE; y++) for (let x = 0; x < PATCH_SIZE; x++) {
+        const fx = x / spacing, fy = y / spacing, x0 = Math.floor(fx), y0 = Math.floor(fy);
+        let tx = fx - x0, ty = fy - y0;
+        tx = tx * tx * (3 - 2 * tx); ty = ty * ty * (3 - 2 * ty);
+        table[y * PATCH_SIZE + x] = Math.round(((at(x0, y0) * (1 - tx) + at(x0 + 1, y0) * tx) * (1 - ty) + (at(x0, y0 + 1) * (1 - tx) + at(x0 + 1, y0 + 1) * tx) * ty) * 255);
+    }
+    return table;
+}
+// Built on first use: a few milliseconds on a desktop, and only the painter needs them.
+let patchTables = null;
+const getPatchTables = () => patchTables ??= [buildPatchTable(256, 401), buildPatchTable(128, 419)];
+const patch = (table, x, y, shift) => table[((y + shift * 3) & PATCH_MASK) * PATCH_SIZE + ((x + shift) & PATCH_MASK)] / 255;
 
 // Allocation-free smooth value noise over world pixels, lattice spacing `spacing`, in 0..1.
 function pixelNoise(x, y, spacing, seed) {
@@ -520,6 +546,7 @@ function kindMap(frame, band, column, row, ownKind, height) {
     const segments = ownKind === 'lavaTop' || ownKind === 'dirtTop' ? null : roadSegmentsFor(frame, column, row);
     if (uniform && !patchy && !segments) { cache.set(key, null); return null; }
     const map = new Uint8Array(TILE * TILE), seed = (frame.visualSeed | 0) & 0xffff;
+    const [PATCH_BIG, PATCH_MID] = patchy ? getPatchTables() : [null, null];
     const weights = new Float32Array(TOP_KINDS.length);
     const sample = (table, wx, wy, shift) => table[((wy + shift * 3) & NOISE_MASK) * NOISE_SIZE + ((wx + shift) & NOISE_MASK)];
     for (let py = 0; py < TILE; py++) for (let px = 0; px < TILE; px++) {
@@ -546,11 +573,10 @@ function kindMap(frame, band, column, row, ownKind, height) {
             const shift = (seed & 127) * ART;
             const hash = (Math.imul(wx, 73856093) ^ Math.imul(wy, 19349663)) >>> 0;
             const jitter = ((hash % 1000) / 1000 - .5) * .05;
-            const field = sample(NOISE_BROAD, wx, wy, shift + 41) * .65 + sample(NOISE_FINE, wx, wy, shift + 83) * .35 + jitter;
+            const field = patch(PATCH_BIG, wx, wy, shift + 41) * .65 + patch(PATCH_MID, wx, wy, shift + 83) * .35 + jitter;
             if (best === KIND_INDEX.grassTop) {
-                if (rockCap && sample(NOISE_BROAD, wx, wy, shift + 97) * .7 + sample(NOISE_FINE, wx, wy, shift + 131) * .3 + jitter > .72) best = KIND_INDEX.slabTop;
-                else if (field < .27) best = KIND_INDEX.mudTop;
-                else if (field < .37) best = KIND_INDEX.grassDryTop;
+                if (rockCap && patch(PATCH_BIG, wx, wy, shift + 97) * .7 + patch(PATCH_MID, wx, wy, shift + 131) * .3 + jitter > .7) best = KIND_INDEX.slabTop;
+                else if (field < .34) best = KIND_INDEX.grassDryTop;
             } else if (best === KIND_INDEX.ashTop) {
                 if (field < .3) best = KIND_INDEX.mudTop;
             } else if (field < .08) best = KIND_INDEX.rubbleTop;

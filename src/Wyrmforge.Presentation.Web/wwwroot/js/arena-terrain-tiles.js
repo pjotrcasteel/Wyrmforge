@@ -397,15 +397,15 @@ function dryGrassTop(band, seed) {
     return grassTop(band, seed, { ...ramps, grass: ramps.grass.map((color, i) => mixHex(color, ramps.dirt[Math.min(4, i + 1)], .55)) });
 }
 
-/** Damp, dark earth with glossy puddle blotches where the ground has never drained. */
+/** Damp earth, a shade darker than the soil around it, with a few soft puddle sheens where the ground has never drained. */
 function mudTop(band, seed) {
-    const ramps = rampsForBand(band), wet = ramps.dirt.map(color => mixHex(color, '#0a0807', .38));
-    const tile = dirtTop(band, seed, false, { ...ramps, dirt: wet }, C(.4)), puddle = wrapNoise(seed + 9, P(4)), random = rng(seed + 3);
+    const ramps = rampsForBand(band), wet = ramps.dirt.map(color => mixHex(color, '#0a0807', .14));
+    const tile = dirtTop(band, seed, false, { ...ramps, dirt: wet }, C(.12)), puddle = wrapNoise(seed + 9, P(2)), random = rng(seed + 3);
     for (let y = 0; y < SIZE; y++) for (let x = 0; x < SIZE; x++) {
         const value = puddle(x / SIZE, y / SIZE);
-        if (value > .7) tile.set(x, y, value > .78 ? wet[0] : wet[1]);
+        if (value > .74 && bayer(x, y) < .7) tile.set(x, y, wet[1]);
     }
-    for (let i = 0; i < C(10); i++) { const x = rand(random), y = rand(random); if (tile.get(x, y) === wet[0]) tile.set(x, y, ramps.stone[3]); }
+    for (let i = 0; i < C(6); i++) tile.set(rand(random), rand(random), ramps.stone[3]);
     return tile;
 }
 

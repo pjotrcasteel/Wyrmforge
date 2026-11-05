@@ -163,6 +163,17 @@ for kind, images in rock_kinds:
         sprites.append((f'rock.{kind}.{i}.ash', remap(im, rock_ash)))
         sprites.append((f'rock.{kind}.{i}.char', ember_pass(remap(im, charred_base), 0.04)))
 
+# Torch flame: the pack's big animated flame (Bonfire/Fire_01, four 32 x 48 frames), cropped to one shared box so the frames stay aligned, in the
+# pack's own fire colours (fire is a light source, not scenery to recolour).
+FIRE = Image.open(os.path.join(PACK, 'Environment', 'Structures', 'Stations', 'Bonfire', 'Fire_01-Sheet.png')).convert('RGBA')
+fire_frames = [FIRE.crop((i * 32, 0, i * 32 + 32, 48)) for i in range(4)]
+fire_box = (min(f.getbbox()[0] for f in fire_frames), min(f.getbbox()[1] for f in fire_frames),
+            max(f.getbbox()[2] for f in fire_frames), max(f.getbbox()[3] for f in fire_frames))
+# The frames carry a few stray embers well below the flame body; the body ends 26 rows under the top, so the sprite stops there and its anchor is the flame's base.
+fire_box = (fire_box[0], fire_box[1], fire_box[2], fire_box[1] + 26)
+for i, frame in enumerate(fire_frames):
+    sprites.append((f'torch.flame.{i}', frame.crop(fire_box)))
+
 # A decal must fit inside one terrain face.
 sprites = [s for s in sprites if not s[0].startswith('decal.') or max(s[1].size) <= 30]
 
@@ -184,6 +195,7 @@ for name, im, px, py in placed:
     a = np.array(im)
     bottom = np.nonzero(a[-3:, :, 3] > 0)[1]
     anchor_x = int(round(bottom.mean())) if bottom.size else im.width // 2
+    if name.startswith('torch.'): anchor_x = im.width // 2  # animation frames share one anchor
     manifest[name] = {'x': px, 'y': py, 'w': im.width, 'h': im.height, 'ax': anchor_x, 'ay': im.height - 1}
 
 os.makedirs(OUT, exist_ok=True)
