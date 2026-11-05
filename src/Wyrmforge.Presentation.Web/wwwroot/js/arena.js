@@ -19,6 +19,7 @@ import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materi
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
 import { drawTree, treeLayers, collectTrees, collectBushes, collectBoulders } from './arena-tree-art.js';
 import { drawTorch, torchLayers, collectTorches } from './arena-torch-art.js';
+import { torchSprites } from './arena-torch-sprites.js';
 import { drawRecoveryGuide } from './arena-recovery.js';
 import { drawSpellCastMotion, drawSpellProjectile, drawSpellImpact } from './arena-spell-vfx.js';
 import { drawMage, updateMageWalk } from './arena-mage.js';
@@ -198,7 +199,8 @@ export function readArenaDiagnostics(canvas) {
             ? { columns: state.latestSnapshot.environment.terrain.columns, rows: state.latestSnapshot.environment.terrain.rows,
                 snapshotRevision: state.latestSnapshot.environment.terrain.revision,
                 paintedRevision: state.terrainCache?.revision ?? null, repaints: state.terrainCache?.repaints ?? 0,
-                dugBlocks: state.terrainFrame?.fine?.size ?? 0, stoneExposed: stoneExposedBlocks(state.terrainFrame).length }
+                dugBlocks: state.terrainFrame?.fine?.size ?? 0, stoneExposed: stoneExposedBlocks(state.terrainFrame).length,
+                torches: collectTorches(state.terrainFrame).map(torch => ({ x: torch.x, y: torch.y, variant: torch.variant, art: torchSprites(torch.variant) !== null })) }
             : null,
         lighting: { mode: 'night', darkness: GOTHIC_NIGHT.darkness, source: 'authoritative-csharp-snapshot' },
     };

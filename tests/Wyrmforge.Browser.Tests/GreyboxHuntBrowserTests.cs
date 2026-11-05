@@ -540,6 +540,61 @@ public sealed class GreyboxHuntBrowserTests : PageTest
         Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
     }
 
+    /// <summary>Hunt 1.0: the roadside torches are the authored fixtures (post plus burn-loop flame), not the code-drawn stand-in.</summary>
+    [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
+    public async Task Hunt1Terrain_RoadTorchesUseTheAuthoredSprites(int width, int height)
+    {
+        var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
+        var output = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
+        Directory.CreateDirectory(output);
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.AddInitScriptAsync("""
+            localStorage.setItem('wyrmforge.firstHunt.v1','3');
+            localStorage.setItem('wyrmforge.characterSchool.v1','Pyromancer');
+            """);
+        var errors = new List<string>();
+        Page.PageError += (_, error) => errors.Add(error);
+        await Page.GotoAsync(root + "/?hunt1=1&god=1&bot=road&speed=3", new() { WaitUntil = WaitUntilState.NetworkIdle });
+        var start = Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^START GAME") });
+        await start.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 45000 });
+        await start.ClickAsync();
+        if (await Page.Locator(".character-creation").IsVisibleAsync())
+            await Page.GetByRole(AriaRole.Button, new() { Name = "Choose Pyromancer" }).ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Region, new() { Name = "Town square" })).ToBeVisibleAsync();
+        await Page.Locator(".refuge-town-spot--gate").ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Enter Free Play" }).ClickAsync();
+        await Page.Locator(".gate-action--primary").ClickAsync();
+        await Page.Locator(".gate-lineage--fire").ClickAsync();
+        await Page.Locator(".gate-tier--ready").First.ClickAsync();
+        await Page.Locator("button.route-node.available").First.ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^Enter (rare )?trail$") }).ClickAsync();
+        await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
+
+        // A torch close to the hunter, with its sprites loaded, is grabbed from inside the page's own animation frame.
+        await Page.EvaluateAsync("""
+            async () => {
+                const module = await import('/js/arena-performance.js');
+                const canvas = document.querySelector('canvas.game-canvas');
+                window.__torch = { shot: null, variants: [] };
+                const tick = () => {
+                    const state = module.readArenaDiagnostics(canvas), shots = window.__torch;
+                    const torches = state?.hunt1Terrain?.torches ?? [];
+                    shots.variants = [...new Set(torches.filter(t => t.art).map(t => t.variant))];
+                    const near = torches.find(t => t.art && state.player && Math.abs(t.x - state.player.x) < 70 && t.y < state.player.y && state.player.y - t.y < 110);
+                    if (near && !shots.shot) shots.shot = canvas.toDataURL('image/png');
+                    requestAnimationFrame(tick);
+                };
+                tick();
+            }
+            """);
+        await ArenaBrowserWait.UntilAsync(Page, "return Boolean(window.__torch?.shot);", 150000, "the hunter to walk past a torch whose authored sprites have loaded", 500);
+        var url = await Page.EvaluateAsync<string>("() => window.__torch.shot");
+        await File.WriteAllBytesAsync(Path.Combine(output, $"road-torch-{width}.png"), Convert.FromBase64String(url[(url.IndexOf(',') + 1)..]));
+        Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
+    }
+
     /// <summary>Hunt 1.0 H8: the Chart paints the authoritative Wyrm Influence, rising from a Wet entrance to a Volcanic lair.</summary>
     [TestMethod]
     [DataRow(320, 568)]
