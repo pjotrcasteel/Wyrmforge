@@ -1,3 +1,5 @@
+using Wyrmforge.Application.Runs.Hunts;
+
 namespace Wyrmforge.BalanceLab;
 
 internal sealed record BalanceLabOptions(
@@ -10,7 +12,8 @@ internal sealed record BalanceLabOptions(
     bool FreshHunter,
     bool Laboratory = false,
     bool Contextual = false,
-    bool FireProgression = false)
+    bool FireProgression = false,
+    HuntSelection? SelectedHunt = null)
 {
     public static BalanceLabOptions Parse(string[] args)
     {
@@ -22,6 +25,17 @@ internal sealed record BalanceLabOptions(
                 item => item.index + 1 < args.Length && !args[item.index + 1].StartsWith("--", StringComparison.Ordinal) ? args[item.index + 1] : "true",
                 StringComparer.OrdinalIgnoreCase);
 
+        var selectedHunt = values.GetValueOrDefault("--hunt")?.ToLowerInvariant() switch
+        {
+            null => null,
+            "fire-tier-1" => HuntSelection.FireTierOne,
+            var unsupported => throw new ArgumentException($"Unknown Hunt '{unsupported}'. Use --hunt fire-tier-1."),
+        };
+        if (selectedHunt is not null && !values.ContainsKey("--fresh-hunter"))
+        {
+            throw new ArgumentException("A selected Hunt balance sample requires --fresh-hunter.");
+        }
+
         return new BalanceLabOptions(
             ParseInt(values, "--runs-per-combination", 25, 1, 10_000),
             ParseInt(values, "--seed-start", 10_000, 0, int.MaxValue - 10_000),
@@ -32,7 +46,8 @@ internal sealed record BalanceLabOptions(
             values.ContainsKey("--fresh-hunter"),
             values.ContainsKey("--laboratory"),
             values.ContainsKey("--contextual"),
-            values.ContainsKey("--fire-progression"));
+            values.ContainsKey("--fire-progression"),
+            selectedHunt);
     }
 
     private static int ParseInt(IReadOnlyDictionary<string, string> values, string key, int fallback, int minimum, int maximum) =>

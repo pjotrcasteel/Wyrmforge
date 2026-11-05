@@ -14,7 +14,10 @@ internal sealed record BalanceReport(
     IReadOnlyList<EvolutionAggregate> Evolutions,
     IReadOnlyList<DraftSchoolAggregate> DraftSchools,
     IReadOnlyList<ControlAggregate> Control,
-    IReadOnlyList<RunSelfPlayMetrics> Runs);
+    IReadOnlyList<RunSelfPlayMetrics> Runs)
+{
+    public string Scenario { get; init; } = "legacy-generic-free-play";
+}
 
 internal sealed record EvolutionAggregate(
     SpellEvolutionId Evolution,
