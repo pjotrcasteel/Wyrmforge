@@ -20,15 +20,6 @@ public static class HuntMaterialCatalog
         _ => throw new ArgumentOutOfRangeException(nameof(id)),
     };
 
-    public static string Source(HuntMaterialId id) => id switch
-    {
-        HuntMaterialId.EmberResidue => "Ashlings and Ash Slingers",
-        HuntMaterialId.CharredScrap => "Break barrels and crates in Hunts",
-        HuntMaterialId.Emberglass => "Elite Fire foes and reclaimed refuges, Fire Tier 2 and up",
-        HuntMaterialId.Wyrmcinder => "Elite Fire foes, Fire Tier 3 and up",
-        _ => throw new ArgumentOutOfRangeException(nameof(id)),
-    };
-
     public static LootRarity Rarity(HuntMaterialId id) => id switch
     {
         HuntMaterialId.EmberResidue or HuntMaterialId.CharredScrap => LootRarity.Common,
