@@ -61,8 +61,10 @@ export function botKiteDirection(snapshot) {
 
 export const HUNT_REMAINING = 3;
 const HUNT_RANGE = 200;
-const CLOSE_RANGE = 60;
 const HOLD_BEFORE_CLOSING_MS = 4000;
+const HUNT_STUCK_MS = 1200;
+const HUNT_DETOUR_MS = 700;
+const HUNT_PROGRESS_UNITS = 8;
 const CELL = 32;
 const MAX_STEP_MICROCELLS = 4;
 const LAVA = 3;
@@ -148,7 +150,24 @@ export function botHuntDirection(snapshot, frame = null, range = HUNT_RANGE) {
 }
 
 export function createBotMemory() {
-    return { bestDistance: Number.POSITIVE_INFINITY, progressAt: 0, detourUntil: 0, detour: { x: 0, y: 0 }, holdSince: null };
+    return {
+        bestDistance: Number.POSITIVE_INFINITY, progressAt: 0, detourUntil: 0, detour: { x: 0, y: 0 }, holdSince: null,
+        huntClosing: false, huntPosition: null, huntProgressAt: 0,
+    };
+}
+
+/** The CI bot must not stay pinned against cover while the last enemy remains alive. */
+function unstuckHuntDirection(player, heading, memory, now) {
+    if (!memory.huntPosition || Math.hypot(player.x - memory.huntPosition.x, player.y - memory.huntPosition.y) >= HUNT_PROGRESS_UNITS) {
+        memory.huntPosition = { x: player.x, y: player.y };
+        memory.huntProgressAt = now;
+    } else if (now - memory.huntProgressAt >= HUNT_STUCK_MS && now >= memory.detourUntil) {
+        const side = memory.detour.x * -heading.y + memory.detour.y * heading.x < 0 ? 1 : -1;
+        memory.detour = normalized(-heading.y * side, heading.x * side, 0);
+        memory.detourUntil = now + HUNT_DETOUR_MS;
+        memory.huntProgressAt = now;
+    }
+    return now < memory.detourUntil ? memory.detour : heading;
 }
 
 /** Kite until the exit opens, then walk to it, sidestepping when props or rock pin the straight line. */
@@ -158,12 +177,34 @@ export function botMovement(snapshot, memory, now, frame = null) {
     const exit = snapshot.exit ?? snapshot.extraction;
     if (!exit) {
         memory.bestDistance = Number.POSITIVE_INFINITY;
-        // A foe that survives a few seconds in range is probably behind cover: keep closing until it is in the open.
-        const hold = memory.holdSince != null && now - memory.holdSince > HOLD_BEFORE_CLOSING_MS;
-        const hunt = botHuntDirection(snapshot, frame, hold ? CLOSE_RANGE : HUNT_RANGE);
-        memory.holdSince = hunt && hunt.x === 0 && hunt.y === 0 ? (memory.holdSince ?? now) : null;
-        return hunt ?? botKiteDirection(snapshot);
+        // Once an enemy survives sustained fire, keep pursuing it instead of alternating between a brief step and another hold.
+        // A zero-range pursuit also handles cover inside the old 60-unit stopping distance.
+        let hunt = botHuntDirection(snapshot, frame, memory.huntClosing ? 0 : HUNT_RANGE);
+        if (!hunt) {
+            memory.huntClosing = false;
+            memory.huntPosition = null;
+            memory.holdSince = null;
+            return botKiteDirection(snapshot);
+        }
+        if (hunt.x === 0 && hunt.y === 0 && !memory.huntClosing) {
+            memory.holdSince ??= now;
+            if (now - memory.holdSince >= HOLD_BEFORE_CLOSING_MS) {
+                memory.huntClosing = true;
+                hunt = botHuntDirection(snapshot, frame, 0);
+            }
+        } else {
+            memory.holdSince = null;
+        }
+        if (!memory.huntClosing || (hunt.x === 0 && hunt.y === 0)) return hunt;
+        return unstuckHuntDirection(player, hunt, memory, now);
     }
+    if (memory.huntClosing) {
+        memory.detourUntil = 0;
+        memory.detour = { x: 0, y: 0 };
+    }
+    memory.huntClosing = false;
+    memory.huntPosition = null;
+    memory.holdSince = null;
     const dx = exit.x - player.x, dy = exit.y - player.y, distance = Math.hypot(dx, dy);
     const flow = frame ? flowDirection(frame, player, exit, snapshot.environment?.props) : null;
     const heading = flow && distance >= 40 ? flow : normalized(dx, dy, 6);

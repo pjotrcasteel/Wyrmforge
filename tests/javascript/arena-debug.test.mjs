@@ -119,8 +119,41 @@ test('a foe that survives in range for a few seconds makes the bot close in', ()
     assert.deepEqual(botMovement(covered, memory, 0), { x: 0, y: 0 }, 'in range: hold and shoot');
     assert.deepEqual(botMovement(covered, memory, 3000), { x: 0, y: 0 }, 'still holding');
     assert.deepEqual(botMovement(covered, memory, 4500), { x: 0, y: -1 }, 'after four seconds close the gap');
-    assert.deepEqual(botMovement(at(512, 960), memory, 4600), botKiteDirection(at(512, 960)), 'no foe: the hold timer resets');
+    assert.deepEqual(botMovement(at(512, 940, { enemies: [{ x: 512, y: 860 }] }), memory, 4600), { x: 0, y: -1 },
+        'continue closing after moving inside the old firing range');
+    assert.deepEqual(botMovement(at(512, 850, { enemies: [{ x: 512, y: 860 }] }), memory, 4700), { x: 0, y: 1 },
+        'cover inside 60 units cannot leave the bot permanently stationary');
+    assert.deepEqual(botMovement(at(512, 960), memory, 4800), botKiteDirection(at(512, 960)), 'no foe: the hold timer resets');
     assert.equal(memory.holdSince, null);
+    assert.equal(memory.huntClosing, false);
+});
+
+test('the closing bot sidesteps if collision keeps it pinned while pursuing the final enemy', () => {
+    const memory = createBotMemory();
+    const enemy = [{ x: 512, y: 300 }];
+    const pinned = at(512, 960, { enemies: enemy });
+    // A ranged target starts outside the holding distance; test the cover-triggered closing path first.
+    botMovement(at(512, 960, { enemies: [{ x: 512, y: 860 }] }), memory, 0);
+    botMovement(at(512, 960, { enemies: [{ x: 512, y: 860 }] }), memory, 4500);
+    assert.deepEqual(botMovement(pinned, memory, 4600), { x: 0, y: -1 });
+    const detour = botMovement(pinned, memory, 5800);
+    assert.equal(Math.abs(detour.x), 1, 'after no progress, try walking across the obstruction');
+    assert.equal(Math.abs(detour.y), 0);
+    assert.deepEqual(botMovement(pinned, memory, 6300), detour, 'hold the sidestep long enough to escape cover');
+    assert.deepEqual(botMovement(pinned, memory, 6600), { x: 0, y: -1 }, 'then resume the terrain route');
+});
+
+test('the opened exit clears hunt pursuit and its detour before extraction begins', () => {
+    const memory = createBotMemory();
+    const covered = at(512, 960, { enemies: [{ x: 512, y: 860 }] });
+    botMovement(covered, memory, 0);
+    botMovement(covered, memory, 4500);
+    botMovement(covered, memory, 5800);
+    assert.equal(memory.huntClosing, true);
+    assert.ok(memory.detourUntil > 5800);
+    assert.deepEqual(botMovement(at(512, 960, { exit: { x: 512, y: 300 } }), memory, 5900), { x: 0, y: -1 });
+    assert.equal(memory.huntClosing, false);
+    assert.equal(memory.detourUntil, 0);
 });
 
 test('solid props block the flow field and the bot routes around them', () => {
