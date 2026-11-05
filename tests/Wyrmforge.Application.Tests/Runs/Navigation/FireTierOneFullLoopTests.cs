@@ -83,7 +83,9 @@ public sealed class FireTierOneFullLoopTests
         var heuristic = new HeuristicRunAgent(RunAgentPersonality.BuildFocused, seed, build.PreferredSchool);
         IRunAgent agent = damageable ? new ExitPathAssistAgent(heuristic) : new InvulnerableAgent(heuristic, simulation);
         var metrics = new RunSelfPlayDriver().Play(build, seed, simulation, agent,
-            new RunSelfPlayOptions(ArenaWidth: PhoneWidth, ArenaHeight: PhoneHeight, MaximumSimulatedSeconds: 3600));
+            new RunSelfPlayOptions(ArenaWidth: PhoneWidth, ArenaHeight: PhoneHeight,
+                MaximumSimulatedSeconds: damageable ? 900 : 3600,
+                MaximumWallClockSeconds: damageable ? 60 : double.PositiveInfinity));
         return (metrics, simulation);
     }
 

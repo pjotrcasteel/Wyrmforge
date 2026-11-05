@@ -1,4 +1,5 @@
-﻿using Wyrmforge.Application.Runs.Checkpoint;
+﻿using System.Diagnostics;
+using Wyrmforge.Application.Runs.Checkpoint;
 using Wyrmforge.Application.Runs.EndRun;
 using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
@@ -29,10 +30,12 @@ public sealed class RunSelfPlayDriver
         recorder.Observe(snapshot, 0, simulation.CurrentEncounterPhase);
 
         var simulatedSeconds = 0d;
+        var wallClockStarted = Stopwatch.GetTimestamp();
         var decisionFailures = 0;
         var stopReason = RunSelfPlayStopReason.NaturalEnd;
 
-        while (!simulation.IsEnded && simulatedSeconds < options.MaximumSimulatedSeconds)
+        while (!simulation.IsEnded && simulatedSeconds < options.MaximumSimulatedSeconds &&
+               Stopwatch.GetElapsedTime(wallClockStarted).TotalSeconds < options.MaximumWallClockSeconds)
         {
             var observation = CreateObservation(simulation, snapshot);
 

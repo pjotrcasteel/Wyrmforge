@@ -20,6 +20,7 @@
 - Separately instruments real, *damageable* attempts without changing runtime health, damage, position, progression or rewards. The only movement helper sidesteps static props when it gets stuck walking to the exit, equivalent to player direction input.
 - Adds a real browser test of first-time Pyromancer character creation through the World Gate and into the opening Fire Hunt with **no seeded save state or invulnerability URL switches**, capturing both mobile widths. It checks entry only, not victory.
 - Allows a legitimate defeat as trial evidence. A defeat is **not** counted as a successful Hunt-to-Nexus loop. Tests log their exact outcome and fail on a time-out, abandoned run or no observed combat damage.
+- Caps diagnostic damageable attempts at 900 simulated seconds or 60 real seconds (whichever occurs first). A stalled run fails with an explicit time-limit result instead of hanging CI; the structural smoke remains unrestricted by this wall-clock cap.
 - Adds no balance changes. Hunt success and device feel will be judged from actual runs after the proof harness is stable.
 
 ## Next acceptance work
