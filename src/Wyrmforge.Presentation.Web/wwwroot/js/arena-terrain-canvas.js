@@ -9,6 +9,7 @@ import { generateTileSet, TILE, MEGA, normalFromTile } from './arena-terrain-til
 const ART = TILE / FACE_PIXELS;
 if (ART !== TERRAIN_ART_SCALE) throw new Error('Terrain tiles and the terrain canvas must share one art scale.');
 import { drawGroundDecals } from './arena-ground-decals.js';
+import { cellShadow, shadowStyle, SHADOW_SAMPLES } from './arena-terrain-shadows.js';
 import { forestKit } from './forest-kit.js';
 
 export const TERRAIN_MATERIAL = Object.freeze({ Soil: 0, Ash: 1, Stone: 2, Lava: 3, Wood: 4, Boulder: 5 });
@@ -721,10 +722,28 @@ function drawWall(ctx, atlas, band, material, segments, x, width, sx, baseY, col
     return painted;
 }
 
+/** Paints the stepped moon shadow of a whole column's top face (`levels` from cellShadow) as horizontal runs of 2-unit samples. */
+function paintShadow(ctx, levels, x, y) {
+    if (!levels) return 0;
+    let painted = 0;
+    for (let sy = 0; sy < SHADOW_SAMPLES; sy++) {
+        let sx = 0;
+        while (sx < SHADOW_SAMPLES) {
+            const level = levels[sy * SHADOW_SAMPLES + sx];
+            let end = sx + 1;
+            while (end < SHADOW_SAMPLES && levels[sy * SHADOW_SAMPLES + end] === level) end++;
+            if (level) { ctx.fillStyle = shadowStyle(level); ctx.fillRect(x + sx * 2, y + sy * 2, (end - sx) * 2, 2); painted++; }
+            sx = end;
+        }
+    }
+    return painted;
+}
+
 /** Paints a subdivided column as 8 x 8 microcolumns, back to front: a 4 px top square each and 4 px wide strata fronts. */
 function paintFineCell(ctx, frame, band, column, row, block, grain = true) {
     const { columns, rows } = frame;
     const atlas = grain ? terrainAtlas(band) : null;
+    const shade = atlas ? cellShadow(frame, column, row, block.heights) : null;
     // The column's whole-block ground (with its patches and road) is the reference for its undisturbed microcolumns, so chipped ground still matches its neighbours.
     const coarseHeight = frame.surface[row * columns + column];
     const baseKind = atlas ? topTileKind(band, frame.material[row * columns + column], coarseHeight, frame, column, row) : null;
@@ -752,6 +771,15 @@ function paintFineCell(ctx, frame, band, column, row, block, grain = true) {
                 ctx.fillRect(x, y - height * MICROCELL_UNITS, MICRO_UNITS, MICRO_UNITS);
             }
             painted++;
+            if (shade && material !== TERRAIN_MATERIAL.Lava) {
+                for (let j = 0; j < 2; j++) for (let i = 0; i < 2; i++) {
+                    const level = shade[(microY * 2 + j) * SHADOW_SAMPLES + microX * 2 + i];
+                    if (!level) continue;
+                    ctx.fillStyle = shadowStyle(level);
+                    ctx.fillRect(x + i * 2, y - height * MICROCELL_UNITS + j * 2, 2, 2);
+                    painted++;
+                }
+            }
             for (const crack of crackPixels(wearStage(block.wear?.[microY * MICRO_PER_COLUMN + microX]))) {
                 ctx.fillStyle = crack.color;
                 ctx.fillRect(x + crack.x, y - height * MICROCELL_UNITS + crack.y, crack.w, crack.h);
@@ -829,7 +857,10 @@ export function paintTerrainCell(ctx, frame, band, column, row, grain = true) {
         else ctx.drawImage(atlas[tileKind][0], texX(column), texY(row), TILE, TILE, top.x, top.y, top.width, top.height);
         const tint = heightTint(height);
         if (tint) { ctx.fillStyle = tint; ctx.fillRect(top.x, top.y, top.width, top.height); painted++; }
-        if (tileKind !== 'lavaTop') painted += drawGroundDecals(ctx, frame, band, column, row, height, material[index], top);
+        if (tileKind !== 'lavaTop') {
+            painted += drawGroundDecals(ctx, frame, band, column, row, height, material[index], top);
+            painted += paintShadow(ctx, cellShadow(frame, column, row, height), top.x, top.y);
+        }
         if (material[index] === TERRAIN_MATERIAL.Wood) painted += drawTrunkFoot(ctx, column, row, top);
     } else {
         ctx.fillStyle = baseColor;
@@ -1003,7 +1034,8 @@ export function paintTerrainRegion(ctx, frame, band, changed, offsetY = TERRAIN_
         minC = Math.min(minC, c); maxC = Math.max(maxC, c); minR = Math.min(minR, r); maxR = Math.max(maxR, r);
     }
     if (maxC < 0) return 0;
-    const [c0, c1, r0, r1] = [Math.max(0, minC - 1), Math.min(columns - 1, maxC + 1), Math.max(0, minR - 1), Math.min(rows - 1, maxR + 1)];
+    // Moon shadows fall up to three columns east and south of what stands, so the repaint reaches that far that way.
+    const [c0, c1, r0, r1] = [Math.max(0, minC - 1), Math.min(columns - 1, maxC + 4), Math.max(0, minR - 1), Math.min(rows - 1, maxR + 4)];
     for (let r = r0 - 1; r <= r1 + 1; r++) for (let c = c0 - 1; c <= c1 + 1; c++) frame.kindMaps?.delete(r * columns + c);
     // Raised columns draw up to four rows above their cell and walls reach four rows below it, so the clip spans four rows beyond the
     // changed blocks each way and every cell that can touch the clip is repainted (four rows further again).

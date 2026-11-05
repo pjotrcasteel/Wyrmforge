@@ -26,27 +26,46 @@ export function torchLayers(frame, camera, width, height) {
 
 const rect = (ctx, color, x, y, w, h) => { ctx.fillStyle = color; ctx.fillRect(x, y, w, h); };
 
-/** An iron-bound post with a cup and a flickering flame; `seconds` only animates the flame. */
+/** One flame frame: a tapering, swaying tongue in four stepped layers (dark red, orange, yellow, white-hot core) rising from `baseY`. */
+function flame(ctx, x, baseY, frame, phase) {
+    const rise = [12, 14, 11][frame], sway = [0, .8, -.8][frame];
+    const layers = [['#b8421e', 4.6, 1], ['#ff9b39', 3.5, .82], ['#ffc65a', 2.3, .6], ['#fff0b0', 1.2, .36]];
+    for (const [color, base, reach] of layers)
+        for (let i = 0; i < rise * reach; i++) {
+            const t = i / (rise * reach);
+            const half = Math.max(.5, base * (1 - t) ** .85) + (i < 2 ? .5 : 0);
+            rect(ctx, color, x - half + sway * t * t * 2, baseY - i - 1, half * 2, 1);
+        }
+    // A side tongue licking out of the basket and a rising spark or two.
+    rect(ctx, '#ff9b39', x + (frame === 1 ? 3.5 : -4) , baseY - 3.5 - frame, 1, 2.5);
+    rect(ctx, '#ffd37a', x + sway * 2.5 + (phase > .5 ? 1.5 : -1.5), baseY - rise - 1.5 - frame * 1.5, .5, .5);
+}
+
+/** A road torch: a stone-footed timber post with iron bands that carries a barred fire basket full of burning pitch; `seconds` only animates the flame. */
 export function drawTorch(ctx, torch, seconds = 0) {
     const { x, y } = torch;
     // Stones piled at the foot.
-    rect(ctx, '#26231f', x - 5, y - 1, 10, 2.5);
-    rect(ctx, '#3b3733', x - 4.5, y - 2, 9, 2);
-    rect(ctx, '#57514a', x - 3, y - 2.5, 3, 1);
-    rect(ctx, '#4a3426', x - 1.5, y - 30, 3, 28);
-    rect(ctx, '#6a4c37', x - 1.5, y - 30, 1, 28);
-    rect(ctx, '#2e2118', x + .5, y - 28, 1, 26);
-    // Iron collar and cup.
-    rect(ctx, '#2b2a2e', x - 3.5, y - 32, 7, 2);
-    rect(ctx, '#45434a', x - 3.5, y - 32, 7, .5);
-    rect(ctx, '#34302f', x - 3, y - 34.5, 6, 2.5);
-    // Flame: three frames, swaying and breathing.
-    const frame = Math.floor((seconds * 9 + torch.phase) % 3);
-    const sway = frame === 1 ? .5 : frame === 2 ? -.5 : 0;
-    const lift = frame === 1 ? 1.5 : 0;
-    rect(ctx, '#b8421e', x - 2.5 + sway, y - 40 - lift, 5, 6);
-    rect(ctx, '#d65427', x - 2 + sway, y - 42.5 - lift, 4, 4);
-    rect(ctx, '#ff9b39', x - 1.5 + sway, y - 40 - lift, 3, 5);
-    rect(ctx, '#ffd37a', x - 1 + sway, y - 38.5 - lift, 2, 3);
-    rect(ctx, '#ff9b39', x - .5 + sway * 2, y - 44.5 - lift, 1, 2.5);
+    rect(ctx, '#26231f', x - 6, y - 1, 12, 2.5);
+    rect(ctx, '#3b3733', x - 5, y - 2.5, 10, 2);
+    rect(ctx, '#57514a', x - 4, y - 3, 3, 1);
+    rect(ctx, '#48433c', x + 1, y - 3, 3, 1);
+    // Timber post, a little thicker at the foot, with two iron bands.
+    rect(ctx, '#4a3426', x - 2, y - 28, 4, 26);
+    rect(ctx, '#6a4c37', x - 2, y - 28, 1, 26);
+    rect(ctx, '#2e2118', x + 1, y - 28, 1, 26);
+    rect(ctx, '#2b2a2e', x - 2.5, y - 9, 5, 1.5);
+    rect(ctx, '#2b2a2e', x - 2.5, y - 20, 5, 1.5);
+    // Iron brackets and the basket: wider at the rim than at the base, with glowing gaps between the bars.
+    rect(ctx, '#2b2a2e', x - 3.5, y - 28.5, 7, 1.5);
+    for (const [row, half] of [[30, 3.5], [32, 4.5], [34, 5.5], [36, 6]])
+        rect(ctx, '#1f1e22', x - half, y - row, half * 2, 2);
+    for (const [row, half] of [[30, 3], [32, 4], [34, 5], [36, 5.5]]) {
+        rect(ctx, '#8f2a0d', x - half + .5, y - row, half * 2 - 1, 2);
+        for (let bar = -half + 1; bar < half; bar += 2) rect(ctx, '#34323a', x + bar - .5, y - row, 1, 2);
+    }
+    rect(ctx, '#45434a', x - 6.5, y - 36.5, 13, 1);
+    // Burning pitch heaped above the rim.
+    rect(ctx, '#d9561a', x - 5, y - 37.5, 10, 1.5);
+    rect(ctx, '#ffb347', x - 3.5, y - 38, 7, 1);
+    flame(ctx, x, y - 38, Math.floor((seconds * 9 + torch.phase) % 3), (torch.phase * 7) % 1);
 }

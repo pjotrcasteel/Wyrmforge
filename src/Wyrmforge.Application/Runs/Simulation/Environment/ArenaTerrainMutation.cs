@@ -178,7 +178,8 @@ public static class ArenaTerrainMutation
         }
     }
 
-    // From above: a smooth bowl, deepest at the centre and steep near the rim.
+    // From above: a bowl, deepest near the centre and steep near the rim. The outline wanders between lobes and the rim and floor are ragged,
+    // all from the impact's own identity, so a blast is never a perfect disc and replays dig the same hole.
     private static IEnumerable<(int Gx, int Gy, int Depth)> CraterHits(ArenaTerrainImpact impact, int power)
     {
         var radius = RadiusUnits(power);
@@ -187,16 +188,30 @@ public static class ArenaTerrainMutation
         var lastX = (int)Math.Floor((impact.Position.X + radius) / micro);
         var firstY = (int)Math.Floor((impact.Position.Y - radius) / micro);
         var lastY = (int)Math.Floor((impact.Position.Y + radius) / micro);
+        var seed = unchecked((uint)(impact.Id * 2654435761L) ^ (uint)(impact.Id >> 32) * 0x85EBCA6Bu);
+        double Unit(uint salt, int a = 0, int b = 0)
+        {
+            var h = unchecked(seed ^ salt * 0x9E3779B1u ^ (uint)a * 73856093u ^ (uint)b * 19349663u);
+            h = unchecked((h ^ (h >> 15)) * 0x2C1B3C6Du);
+            h = unchecked((h ^ (h >> 12)) * 0x297A2D39u);
+            return (h ^ (h >> 15)) / (double)uint.MaxValue;
+        }
+        var phases = new[] { Unit(1) * 6.2832, Unit(2) * 6.2832, Unit(3) * 6.2832 };
         for (var gy = firstY; gy <= lastY; gy++)
             for (var gx = firstX; gx <= lastX; gx++)
             {
-                var distance = Vector2D.Distance(impact.Position, new Vector2D((gx + .5) * micro, (gy + .5) * micro));
-                if (distance >= radius) continue;
-                var depth = (int)Math.Ceiling(power * (1 - distance * distance / (radius * radius)));
+                var dx = (gx + .5) * micro - impact.Position.X;
+                var dy = (gy + .5) * micro - impact.Position.Y;
+                var distance = Math.Sqrt(dx * dx + dy * dy);
+                var angle = Math.Atan2(dy, dx);
+                // The reach swings between 78% and 100% of the nominal radius, so the average crater is a little smaller than a disc of that radius.
+                var lobes = .5 * Math.Sin(2 * angle + phases[0]) + .3 * Math.Sin(3 * angle + phases[1]) + .2 * Math.Sin(5 * angle + phases[2]);
+                var reach = radius * (.89 + .11 * lobes);
+                if (distance >= reach) continue;
+                var depth = (int)Math.Ceiling(power * (1 - distance * distance / (reach * reach)));
                 if (depth > 0) yield return (gx, gy, depth);
             }
     }
-
     /// <summary>
     /// From the side: a half-sphere centred just inside the face at the height the shot flew at. Only microcolumns the sphere
     /// actually reaches (their top is above the sphere's lower surface) are hit, so open ground in front of the wall is never

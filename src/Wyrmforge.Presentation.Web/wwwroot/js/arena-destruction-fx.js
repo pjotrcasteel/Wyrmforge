@@ -4,7 +4,7 @@
 import { MICRO_PER_COLUMN, MICRO_UNITS, TERRAIN_MATERIAL, BEDROCK_MICROCELLS, crackCells, veinRamp, paintLavaEmissive } from './arena-terrain-canvas.js';
 import { FACE_PIXELS, MICROCELL_UNITS, blockTopRect } from './arena-projection.js';
 
-export const HEAT_SECONDS = 7;
+export const HEAT_SECONDS = 5;
 export const HEAT_SECONDS_REDUCED = 3;
 export const CHIP_SECONDS = 0.8;
 export const MAX_CHIPS = 90;
@@ -103,16 +103,24 @@ export function observeTerrain(fx, previous, next, now, reducedMotion = false) {
 /** Fresh rock glows white-orange, cools to a deep red and goes out; the curve is steep first so impact reads instantly. */
 export function heatStrength(age, life = HEAT_SECONDS) {
     if (!(age >= 0) || age >= life) return 0;
-    return Math.pow(1 - age / life, 1.6);
+    return Math.pow(1 - age / life, 2);
 }
 
-/** The ember ramp: four whole colour steps from white-hot to dull red, nothing smooth in between. Null when it has gone out. */
+/**
+ * The ember ramp: four whole colour steps from a brief amber flash to a dull red, nothing smooth in between and no yellow disc. The
+ * white-hot top is reached only in the first instant and only by the deepest cells.
+ */
 export function heatColor(strength) {
-    if (strength > .75) return '#ffe3a0';
-    if (strength > .5) return '#ffa63a';
-    if (strength > .3) return '#ff6a1a';
-    if (strength > .12) return '#b8300a';
+    if (strength > .75) return '#f2a14a';
+    if (strength > .5) return '#d9632a';
+    if (strength > .3) return '#a8401a';
+    if (strength > .12) return '#5e1d0e';
     return null;
+}
+
+/** Stable 0..1 scatter per microcell, so a crater cools unevenly (embers in a bed of ash) instead of as one flat disc. */
+export function heatScatter(x, y) {
+    return mix(Math.round(x / MICRO_UNITS) * 7919 + Math.round(y / MICRO_UNITS) * 104729) / 4294967296;
 }
 
 /** A debris cube lands on the 4 px microcell grid like every other voxel. */
@@ -142,15 +150,18 @@ export function drawDestructionFx(ctx, fx, now, view, parts = 'all') {
         const strength = heatStrength(now - spot.born, spot.life);
         if (strength <= 0.01 || spot.x < view.x - spot.radius || spot.y < view.y - spot.radius
             || spot.x > view.x + view.width + spot.radius || spot.y > view.y + view.height + spot.radius) continue;
-        // A faint outer glow: the untouched microcells beside the crater warm up first and cool first.
+        // A few scorched microcells beside the crater warm up first and cool first; most of the rim stays dark.
         if (strength > .3) {
-            ctx.globalAlpha = .5;
-            ctx.fillStyle = '#7a1f0c';
-            for (const cell of spot.rim) { ctx.fillRect(cell.x, cell.y, MICRO_UNITS, MICRO_UNITS); drawn++; }
+            ctx.globalAlpha = .4;
+            ctx.fillStyle = '#5e1d0e';
+            for (const cell of spot.rim) {
+                if (heatScatter(cell.x, cell.y) > .45) continue;
+                ctx.fillRect(cell.x, cell.y, MICRO_UNITS, MICRO_UNITS); drawn++;
+            }
         }
-        ctx.globalAlpha = .85;
+        ctx.globalAlpha = .7;
         for (const cell of spot.cells) {
-            const color = heatColor(strength * (.45 + .55 * cell.depth / spot.maxDepth));
+            const color = heatColor(strength * (.3 + .5 * cell.depth / spot.maxDepth) * (.55 + .45 * heatScatter(cell.x, cell.y)));
             if (!color) continue;
             ctx.fillStyle = color;
             ctx.fillRect(cell.x, cell.y, MICRO_UNITS, MICRO_UNITS);

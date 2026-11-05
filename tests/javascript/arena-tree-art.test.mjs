@@ -65,7 +65,11 @@ test('bushes are cosmetic undergrowth on open level ground, never on trunks, roc
     const fine = new Map([[40 * columns + 5, { heights: new Array(64).fill(-4) }]]);
     const f = { columns, rows, surface, material, fine, visualSeed: 9 };
     const bushes = collectBushes(f, 0);
-    assert.ok(bushes.length > 15 && bushes.length < 140, `a few dozen bushes, got ${bushes.length}`);
+    assert.ok(bushes.length > 5 && bushes.length < 140, `a few dozen bushes, got ${bushes.length}`);
+    const dist = i => Math.hypot((i % columns) - 11, Math.floor(i / columns) - 30);
+    const nearTrunks = bush => dist(Number(bush.key.slice(1))) <= 4;
+    const nearCells = [...Array(columns * rows).keys()].filter(i => dist(i) <= 4).length;
+    assert.ok(bushes.filter(nearTrunks).length / nearCells > 3 * (bushes.filter(b => !nearTrunks(b)).length / (columns * rows - nearCells)), 'scrub gathers beside the trees and thins into the open');
     for (const bush of bushes) {
         const index = Number(bush.key.slice(1));
         assert.equal(material[index], TERRAIN_MATERIAL.Soil);

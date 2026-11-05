@@ -258,9 +258,10 @@ internal static class ArenaTerrainRelief
                     for (var along = 0; along < Micro; along++)
                     {
                         var global = side < 2 ? row * Micro + along : column * Micro + along;
-                        if (drop >= 9)
+                        // Any ledge taller than a step meanders: the 1 m terraces as well as the tall cliffs, so no wall runs as a straight line.
+                        if (drop > Step)
                         {
-                            var edge = Meander(side, global, 0);
+                            var edge = Math.Min(Meander(side, global, 0), drop >= 9 ? 5 : 3);
                             var recede = Math.Max(0, edge - 1 - (Meander(side, global, 5) >= 2 ? 1 : 0));
                             var ledge = own - Math.Max(Step, drop / 2 / Step * Step);
                             for (var depth = 0; depth < edge; depth++)

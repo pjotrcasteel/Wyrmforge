@@ -6,6 +6,7 @@
 import { TERRAIN_MATERIAL } from './arena-terrain-canvas.js';
 import { forestKit, useForestKit, spriteSource } from './forest-kit.js';
 import { cellHash } from './arena-ground-decals.js';
+import { undergrowthField } from './arena-undergrowth.js';
 
 export { useForestKit };
 export const TREE_MIN_TRUNK_MICROCELLS = 8;
@@ -51,35 +52,30 @@ export function collectTrees(frame, band) {
 
 /** Sprite name of a bush for a band, or null where the Wyrm has left no undergrowth worth drawing. */
 export function bushSpriteName(band, hash) {
-    const large = (hash >>> 5) & 1 ? 2 : 0;
+    const large = ((hash >>> 5) & 3) === 0 ? 2 : 0;
     if (band === 0) return `bush.0.${large}`;
     if (band === 1) return `bush.${1 + ((hash >>> 6) % 3)}.${large}`;
     return `shrub.${band === 2 ? 'dead' : 'charred'}.${(hash >>> 5) & 1}`;
 }
 
-const BUSH_DENSITY = [.022, .016, .012, .009];
+// Chance per fully covered cell (see arena-undergrowth.js): scrub is thick at the woods' edge, thins into the meadow and stays off the road.
+const BUSH_DENSITY = [.2, .15, .1, .06];
 
-/** Cosmetic undergrowth on open, level ground (denser around trees), cached on the frame. Dug or chipped columns carry none. */
+/** Cosmetic undergrowth on open, level ground where the undergrowth field says it grows, cached on the frame. Dug or chipped columns carry none. */
 export function collectBushes(frame, band) {
     if (!frame?.material) return [];
     if (frame.bushList && frame.bushBand === band) return frame.bushList;
     const { columns, rows, surface, material } = frame;
-    const shaded = new Uint8Array(material.length);
-    for (let index = 0; index < material.length; index++) {
-        if (material[index] !== TERRAIN_MATERIAL.Wood) continue;
-        const c = index % columns, r = Math.floor(index / columns);
-        for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++)
-            if (c + dx >= 0 && c + dx < columns && r + dy >= 0 && r + dy < rows) shaded[(r + dy) * columns + c + dx] = 1;
-    }
+    const cover = undergrowthField(frame);
     const density = BUSH_DENSITY[Math.min(3, Math.max(0, band | 0))];
     const bushes = [];
     for (let index = 0; index < material.length; index++) {
         const m = material[index], height = surface[index];
-        if ((m !== TERRAIN_MATERIAL.Soil && m !== TERRAIN_MATERIAL.Ash) || height < 0 || height > 8 || frame.fine?.has(index)) continue;
+        if ((m !== TERRAIN_MATERIAL.Soil && m !== TERRAIN_MATERIAL.Ash) || height < 0 || height > 8 || frame.fine?.has(index) || cover[index] <= 0) continue;
         const column = index % columns, row = Math.floor(index / columns);
         if (row < 1 || column < 1 || column >= columns - 1) continue;
         const h = cellHash(column, row, frame.visualSeed ?? 0, 21);
-        if (h / 4294967296 >= density * (shaded[index] ? 3 : 1)) continue;
+        if (h / 4294967296 >= density * cover[index]) continue;
         const flat = [index - 1, index + 1, index - columns, index + columns].every(n => Math.abs(surface[n] - height) <= 2 && material[n] !== TERRAIN_MATERIAL.Lava && !frame.fine?.has(n));
         if (!flat) continue;
         const jitter = (cellHash(column, row, frame.visualSeed ?? 0, 23) % 17) - 8;
@@ -89,7 +85,6 @@ export function collectBushes(frame, band) {
     frame.bushList = bushes; frame.bushBand = band;
     return bushes;
 }
-
 const ROCK_TONES = ['grey', 'grey', 'ash', 'char'];
 
 /** The rock sprites for a boulder of a given height in microcells (taller ones are two rocks piled), or null once it is rubble. */

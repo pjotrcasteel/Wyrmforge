@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { groundDecal, drawGroundDecals, cellHash } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-ground-decals.js';
+import { groundDecal, groundStones, drawGroundDecals, cellHash } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-ground-decals.js';
 import { useForestKit, kitNames } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/forest-kit.js';
 
 const manifest = JSON.parse(readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/art/environment/forest/forest-kit.json', import.meta.url), 'utf8'));
@@ -22,7 +22,7 @@ test('decals are deterministic, sparse, and absent on rock, lava, trunks, pits a
     const count = (band, material = 0, height = 0) => {
         let n = 0;
         for (let r = 0; r < 60; r++) for (let c = 0; c < 32; c++) {
-            const a = groundDecal(names, band, material, height, c, r, 5), b = groundDecal(names, band, material, height, c, r, 5);
+            const a = groundDecal(names, band, material, height, c, r, 5, .5), b = groundDecal(names, band, material, height, c, r, 5, .5);
             assert.deepEqual(a, b);
             if (a) { n++; assert.ok(manifest.sprites[a.name], a.name); assert.ok(a.u >= 0 && a.u < 1 && a.v >= 0 && a.v < 1); }
         }
@@ -39,16 +39,18 @@ test('decals are deterministic, sparse, and absent on rock, lava, trunks, pits a
     assert.ok(count(0) > count(3), 'the Wyrm has burned the ground cover away');
 });
 
+const meadow = { visualSeed: 5, columns: 32, rows: 60, material: new Array(1920).fill(0), surface: new Array(1920).fill(0), coverField: new Float32Array(1920).fill(.5), rockNear: new Float32Array(1920).fill(99), roadNear: new Float32Array(1920).fill(99) };
+
 test('decals are drawn into the face of their own column and only once the kit has loaded', () => {
     const calls = [];
     const ctx = { drawImage: (...args) => calls.push(args) };
     const top = { x: 64, y: 96, width: 32, height: 32 };
     useForestKit(null);
     let drawn = 0;
-    for (let r = 0; r < 60; r++) for (let c = 0; c < 32; c++) drawn += drawGroundDecals(ctx, { visualSeed: 5 }, 0, c, r, 0, 0, top);
+    for (let r = 0; r < 60; r++) for (let c = 0; c < 32; c++) drawn += drawGroundDecals(ctx, meadow, 0, c, r, 0, 0, top);
     assert.equal(drawn, 0);
     useForestKit(kit);
-    for (let r = 0; r < 60; r++) for (let c = 0; c < 32; c++) drawn += drawGroundDecals(ctx, { visualSeed: 5 }, 0, c, r, 0, 0, top);
+    for (let r = 0; r < 60; r++) for (let c = 0; c < 32; c++) drawn += drawGroundDecals(ctx, meadow, 0, c, r, 0, 0, top);
     assert.equal(drawn, calls.length);
     assert.ok(drawn > 100);
     for (const [image, , , sw, sh, dx, dy, dw, dh] of calls) {
@@ -63,4 +65,27 @@ test('cell hashes are well mixed', () => {
     const seen = new Set();
     for (let r = 0; r < 60; r++) for (let c = 0; c < 32; c++) seen.add(cellHash(c, r, 7, 1));
     assert.ok(seen.size > 1900);
+});
+
+test('open meadow and the road stay bare: decals only grow where the undergrowth cover says so', () => {
+    for (let r = 0; r < 60; r++) for (let c = 0; c < 32; c++) assert.equal(groundDecal(names, 0, 0, 0, c, r, 5, 0), null);
+    let thin = 0, thick = 0;
+    for (let r = 0; r < 60; r++) for (let c = 0; c < 32; c++) { if (groundDecal(names, 0, 0, 0, c, r, 5, .02)) thin++; if (groundDecal(names, 0, 0, 0, c, r, 5, 1)) thick++; }
+    assert.ok(thin < 120 && thick > 400 && thick > thin * 5, `thin ${thin}, thick ${thick}`);
+});
+
+test('loose stones gather at the foot of rock and only on open ground', () => {
+    const stones = ['rock.pebble.0.grey', 'rock.flat.0.grey'];
+    let near = 0, far = 0;
+    for (let r = 0; r < 60; r++) for (let c = 0; c < 32; c++) {
+        near += groundStones(stones, 0, 0, c, r, 5, .5).length > 0 ? 1 : 0;
+        far += groundStones(stones, 0, 0, c, r, 5, 0).length;
+    }
+    assert.ok(near > 700 && near < 1200, String(near));
+    assert.equal(far, 0);
+    assert.deepEqual(groundStones(stones, 2, 0, 3, 3, 5, 1), [], 'none on rock');
+    assert.deepEqual(groundStones(stones, 0, -4, 3, 3, 5, 1), [], 'none in a pit');
+    const cell = groundStones(stones, 0, 0, 7, 7, 5, 1);
+    assert.ok(cell.length >= 1 && cell.length <= 3);
+    assert.deepEqual(cell, groundStones(stones, 0, 0, 7, 7, 5, 1));
 });
