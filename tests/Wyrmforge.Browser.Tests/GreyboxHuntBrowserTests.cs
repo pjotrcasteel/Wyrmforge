@@ -486,6 +486,60 @@ public sealed class GreyboxHuntBrowserTests : PageTest
         Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
     }
 
+    /// <summary>Hunt 1.0 field ambush: walking into an open field marks the ground on every side, then a ring of enemies bursts out together.</summary>
+    [TestMethod]
+    public async Task Hunt1Terrain_FieldAmbushMarksTheGroundAllAroundThenBurstsOut()
+    {
+        var root = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
+        var output = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
+        Directory.CreateDirectory(output);
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.AddInitScriptAsync("""
+            localStorage.setItem('wyrmforge.firstHunt.v1','3');
+            localStorage.setItem('wyrmforge.characterSchool.v1','Pyromancer');
+            """);
+        var errors = new List<string>();
+        Page.PageError += (_, error) => errors.Add(error);
+        await Page.GotoAsync(root + "/?hunt1=1&god=1&bot=road", new() { WaitUntil = WaitUntilState.NetworkIdle });
+        var start = Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^START GAME") });
+        await start.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 45000 });
+        await start.ClickAsync();
+        if (await Page.Locator(".character-creation").IsVisibleAsync())
+            await Page.GetByRole(AriaRole.Button, new() { Name = "Choose Pyromancer" }).ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Region, new() { Name = "Town square" })).ToBeVisibleAsync();
+        await Page.Locator(".refuge-town-spot--gate").ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Enter Free Play" }).ClickAsync();
+        await Page.Locator(".gate-action--primary").ClickAsync();
+        await Page.Locator(".gate-lineage--fire").ClickAsync();
+        await Page.Locator(".gate-tier--ready").First.ClickAsync();
+        await Page.Locator("button.route-node.available").First.ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^Enter (rare )?trail$") }).ClickAsync();
+        await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
+        // The tell lasts about a second, so the frames are grabbed inside the page's own animation frame rather than by a slow screenshot call.
+        await Page.EvaluateAsync("""
+            async () => {
+                const module = await import('/js/arena-performance.js');
+                const canvas = document.querySelector('canvas.game-canvas');
+                window.__ambush = { tell: null, burst: null, burstFrames: 0 };
+                const tick = () => {
+                    const state = module.readArenaDiagnostics(canvas), shots = window.__ambush;
+                    const ambush = state?.fieldAmbush;
+                    if (ambush && ambush.marks.length >= 8 && ambush.progress >= .5 && !shots.tell) shots.tell = canvas.toDataURL('image/png');
+                    if (shots.tell && !ambush && !shots.burst && ++shots.burstFrames >= 6) shots.burst = canvas.toDataURL('image/png');
+                    requestAnimationFrame(tick);
+                };
+                tick();
+            }
+            """);
+        await ArenaBrowserWait.UntilAsync(Page, "return Boolean(window.__ambush?.burst);", 150000, "the bot to walk into a field, the ambush tell to show and the ring to burst out", 500);
+        foreach (var (name, key) in new[] { ("field-ambush-tell.png", "tell"), ("field-ambush-burst.png", "burst") })
+        {
+            var url = await Page.EvaluateAsync<string>($"() => window.__ambush.{key}");
+            await File.WriteAllBytesAsync(Path.Combine(output, name), Convert.FromBase64String(url[(url.IndexOf(',') + 1)..]));
+        }
+        Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));
+    }
+
     /// <summary>Hunt 1.0 H8: the Chart paints the authoritative Wyrm Influence, rising from a Wet entrance to a Volcanic lair.</summary>
     [TestMethod]
     [DataRow(320, 568)]

@@ -406,6 +406,7 @@ public sealed partial class RunSimulation
             HostileProjectiles = CreateHostileProjectileSnapshots(),
             AshRemains = CreateAshRemainsSnapshots(),
             WraithRipples = CreateWraithRippleSnapshots(),
+            FieldAmbush = CreateFieldAmbushSnapshot(),
             Reliquary = CreateReliquarySnapshot(),
             ReliquaryFields = CreateReliquaryFieldSnapshots(),
             BellWarden = CreateBellWardenSnapshot(),

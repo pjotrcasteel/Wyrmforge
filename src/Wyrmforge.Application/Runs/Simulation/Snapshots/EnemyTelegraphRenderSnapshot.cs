@@ -20,3 +20,9 @@ public sealed record AshRemainsRenderSnapshot(double X, double Y, double Life);
 /// with Progress running 0→1 over the 0.8s tell. Radius is the body it will surface with.
 /// </summary>
 public sealed record WraithRippleRenderSnapshot(double X, double Y, bool Emerging, double Progress, double Radius);
+
+/// <summary>One mark of a field ambush's tell: the exact spot an enemy with this body Radius will burst out of.</summary>
+public sealed record FieldAmbushMarkRenderSnapshot(double X, double Y, double Radius);
+
+/// <summary>A field ambush about to spring: marks on every side of the hunter; Progress runs 0 to 1 over the tell.</summary>
+public sealed record FieldAmbushRenderSnapshot(double Progress, IReadOnlyList<FieldAmbushMarkRenderSnapshot> Marks);

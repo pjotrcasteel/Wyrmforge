@@ -117,6 +117,7 @@ public sealed partial class RunSimulation
         arenaEnvironment.SetPhase(encounterDirector.Phase);
         entryGraceRemaining = 2;
         encounterSeconds = 0;
+        fieldAmbush = null;
         ClearSupportState();
         spawnTimer = 0.15;
         return true;

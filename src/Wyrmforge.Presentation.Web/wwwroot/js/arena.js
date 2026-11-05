@@ -12,7 +12,7 @@ import { drawGreyboxGround } from './arena-greybox-ground.js';
 import { TerrainCanvasCache, influenceBandIndex, blockInsetOverlayEnabled, drawBlockInsetOverlay, occludingTerrainCells, eraseTerrainOcclusion, repaintTerrainOcclusion, mergeTerrainFrame, TERRAIN_PAD_UNITS } from './arena-terrain-canvas.js';
 import { raisedActor, TERRAIN_ART_SCALE, FACE_PIXELS } from './arena-projection.js';
 import { ambientParticles, drawAmbientParticles } from './arena-ambient-particles.js';
-import { readArenaDebugFlags, botMovement, createBotMemory, withDebugAmbient, withMoonShadows } from './arena-debug.js';
+import { readArenaDebugFlags, botMovement, roadWalkDirection, createBotMemory, withDebugAmbient, withMoonShadows } from './arena-debug.js';
 import { createFrameSampler, readHeapMegabytes, perfReport, perfLines } from './arena-perf.js';
 import { createDestructionFx, observeTerrain, drawDestructionFx, drawFireZoneVignette, drawCrackGlow, drawBedrockGlow, paintGroundEmissive } from './arena-destruction-fx.js';
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
@@ -29,6 +29,7 @@ import { hollowFractureEmitters, hollowFractureCanvasLights, withHollowFractureL
 import { preloadAshfang, createAshfangState, updateAshfang, drawAshfang, drawAshfangDeath, ashfangSockets, ashfangDiagnostics } from './ashfang-sprites.js';
 import { drawAshfangWarning, drawAshfangGroundEffects, drawAshfangAirEffects, ashfangVfxDiagnostics } from './ashfang-vfx.js';
 import { ashlingSprites } from './ashling-sprites.js';
+import { drawFieldAmbushTell } from './arena-field-ambush-vfx.js';
 import { drawEnemyTelegraph, drawHostileProjectileGround, drawHostileProjectileEmber, drawShieldGuard, drawAshRemains, drawWraithRipple } from './arena-enemy-telegraphs.js';
 import { drawReliquaryGround, drawReliquaryEmergence, drawReliquaryHushVeil, drawReliquaryBar } from './arena-reliquary-vfx.js';
 import { drawBellWardenGround, drawBellWardenEntrance, drawBellWardenBar } from './arena-bellwarden-vfx.js';
@@ -189,6 +190,7 @@ export function readArenaDiagnostics(canvas) {
         debug: state.debug,
         perfReport: arenaPerfReport(state),
         veinSeams: state.veinSeams ?? null,
+        fieldAmbush: state.latestSnapshot?.fieldAmbush ?? null,
         destructionFx: state.destructionFx
             ? { craters: state.destructionFx.craters, heat: state.destructionFx.heat.length, chips: state.destructionFx.chips.length } : null,
         gpuScene: state.debug.shear ? state.gpuWorld?.sceneReport?.() ?? null : null,
@@ -315,7 +317,8 @@ function startSimulationFrame(state, timestamp, rect) {
     state.simulationBusy = true;
     const delta = Math.min((timestamp - state.lastSimulationTimestamp) / 1000, 0.05);
     state.lastSimulationTimestamp = timestamp;
-    const movement = state.debug.bot ? botMovement(state.latestSnapshot, state.botMemory, performance.now(), state.terrainFrame ?? null) : getArenaMovement(state);
+    const movement = state.debug.botRoad ? (roadWalkDirection(state.latestSnapshot, state.terrainFrame) ?? { x: 0, y: 0 })
+        : state.debug.bot ? botMovement(state.latestSnapshot, state.botMemory, performance.now(), state.terrainFrame ?? null) : getArenaMovement(state);
     const aim = getArenaAim(state);
     const bridgeStarted = performance.now();
 
@@ -684,6 +687,7 @@ function draw(state, snapshot, width, height) {
         else drawHuntHazard(ctx,hazard);
     }
     for (const enemy of snapshot.enemies) drawEnemyTelegraph(ctx, enemy);
+    drawFieldAmbushTell(ctx, snapshot.fieldAmbush, visualSeconds, state.reducedMotion.matches);
     if (snapshot.dragonBreath) drawDragonBreath(ctx, snapshot.dragonBreath,
         snapshot.dragon?.school ?? snapshot.hunt?.school, snapshot.dragon);
     // A second weaker pass colors nearby silhouettes without whitening shadows.
