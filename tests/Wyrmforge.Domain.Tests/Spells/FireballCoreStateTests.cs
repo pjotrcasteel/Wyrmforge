@@ -21,7 +21,7 @@ public sealed class FireballCoreStateTests
         Assert.IsFalse(core.Equip(0, FireballMutationId.Detonation));
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(1, 0)]
     [DataRow(2, 1)]
     [DataRow(3, 2)]
@@ -41,7 +41,7 @@ public sealed class FireballCoreStateTests
         }
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(DragonEssenceId.CinderHeart)]
     [DataRow(DragonEssenceId.MoltenFang)]
     [DataRow(DragonEssenceId.AshenWing)]
