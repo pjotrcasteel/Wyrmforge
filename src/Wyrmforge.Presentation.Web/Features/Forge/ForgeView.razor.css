@@ -466,11 +466,11 @@
 .settings-screen { box-sizing:border-box; display:grid; gap:18px; width:min(560px,100%);
   margin:0 auto 30px; padding:14px; color:#e8dbea; }
 .settings-screen > h2 { margin:0; color:#eee1c9; font:500 1.65rem Georgia,serif; }
-.settings-screen section { padding:15px; border:1px solid #4a3a52; border-radius:8px;
+.settings-screen ::deep section { padding:15px; border:1px solid #4a3a52; border-radius:8px;
   background:linear-gradient(150deg,#241c2b,#14121b); }
-.settings-screen h3 { margin:0 0 12px; color:#d7b68a; letter-spacing:.10em; font:700 .75rem system-ui,sans-serif; }
-.settings-screen .settings-support { display:grid; gap:7px; }
-.settings-screen .settings-support button,.settings-screen .settings-support a {
+.settings-screen ::deep h3 { margin:0 0 12px; color:#d7b68a; letter-spacing:.10em; font:700 .75rem system-ui,sans-serif; }
+.settings-screen ::deep .settings-support { display:grid; gap:7px; }
+.settings-screen ::deep .settings-support button,.settings-screen ::deep .settings-support a {
   width:100%; min-height:44px; padding:10px 12px; border:1px solid #584762;
   border-radius:5px; background:#201927; color:#e4d7e9; font:600 .82rem system-ui,sans-serif;
   text-decoration:none; text-align:left; cursor:pointer; }

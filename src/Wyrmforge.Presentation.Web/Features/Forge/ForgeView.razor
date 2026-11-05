@@ -187,6 +187,7 @@
                         <h3>Audio</h3>
                         <div class="settings-audio-slot" id="wyrmforge-audio-settings" aria-label="Sound settings"></div>
                     </section>
+                    <HunterBackup SaveUnavailable="HunterSaveUnavailable" />
                     <section class="settings-support">
                         <h3>Other</h3>
                         @if (!Progress.TutorialRun)
@@ -206,6 +207,7 @@
 </main>
 
 @code {
+    [Parameter] public bool HunterSaveUnavailable { get; set; }
     [Parameter] public string PlayerName { get; set; } = "Wyrm Wanderer";
     [Parameter] public DivineArchetype? CharacterSchool { get; set; }
     [Parameter] public EventCallback<DivineArchetype> OnChooseSchool { get; set; }
