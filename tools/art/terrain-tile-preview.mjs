@@ -1,29 +1,27 @@
-// Renders the generated terrain tiles to a PNG sheet for review: node tools/art/terrain-tile-preview.mjs <out.png> [scale] [bands e.g. 0,1] [variants per kind]
+// Renders the generated terrain textures to a PNG sheet for review: node tools/art/terrain-tile-preview.mjs <out.png> [scale] [band] [kinds comma list]
+// Each texture is 256 px (4 m) and wraps; the sheet also tiles the first kind twice across so seams are visible.
 import { writeFileSync } from 'node:fs';
 import { deflateSync } from 'node:zlib';
-import { generateTileSet, TILE, variantFor } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-terrain-tiles.js';
+import { generateTileSet, TEXTURE } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-terrain-tiles.js';
 
 const out = process.argv[2] ?? 'terrain-tiles.png';
-const scale = Number(process.argv[3] ?? 3);
-const bands = (process.argv[4] ?? '0,1,2,3').split(',').map(Number);
-const variantCount = Number(process.argv[5] ?? 8);
-const kinds = ['grassTop', 'dirtTop', 'stoneTop', 'grassSide', 'dirtSide', 'stoneSide', 'lavaTop', 'lavaSide'];
-const gap = 4;
-const width = (TILE * 4 + gap * 5) * 1, height = bands.length * (kinds.length * 0 + (TILE + gap) * 6) ;
-const sheetW = (variantCount * (TILE + gap) + gap), sheetH = bands.length * (kinds.length * (TILE + gap) + gap);
-const pixels = new Uint8Array(sheetW * sheetH * 4).fill(0);
+const scale = Number(process.argv[3] ?? 1);
+const band = Number(process.argv[4] ?? 0);
+const kinds = (process.argv[5] ?? 'grassTop,slabTop,stoneTop,pathTop,mudTop,stoneSide,stoneGrassSide,grassSide').split(',');
+const set = generateTileSet(band);
+const gap = 4, perRow = 4, rows = Math.ceil(kinds.length / perRow);
+const sheetW = perRow * (TEXTURE * 2 + gap) + gap, sheetH = rows * (TEXTURE * 2 + gap) + gap;
+const pixels = new Uint8Array(sheetW * sheetH * 4);
 for (let i = 0; i < pixels.length; i += 4) { pixels[i] = 12; pixels[i + 1] = 10; pixels[i + 2] = 14; pixels[i + 3] = 255; }
-bands.forEach((band, bandIndex) => {
-    const set = generateTileSet(band);
-    kinds.forEach((kind, kindIndex) => set[kind].slice(0, variantCount).forEach((tile, variant) => {
-        const ox = gap + variant * (TILE + gap), oy = gap + (bandIndex * kinds.length + kindIndex) * (TILE + gap);
-        for (let y = 0; y < TILE; y++) for (let x = 0; x < TILE; x++) {
-            const s = (y * TILE + x) * 4, d = ((oy + y) * sheetW + ox + x) * 4;
-            pixels.set(tile.data.subarray(s, s + 4), d);
-        }
-    }));
+kinds.forEach((kind, index) => {
+    const tile = set[kind][0];
+    const ox = gap + (index % perRow) * (TEXTURE * 2 + gap), oy = gap + Math.floor(index / perRow) * (TEXTURE * 2 + gap);
+    // The texture repeated 2 x 2 so a seam would show as a line.
+    for (let y = 0; y < TEXTURE * 2; y++) for (let x = 0; x < TEXTURE * 2; x++) {
+        const s = ((y % TEXTURE) * TEXTURE + (x % TEXTURE)) * 4, d = ((oy + y) * sheetW + ox + x) * 4;
+        pixels.set(tile.data.subarray(s, s + 4), d);
+    }
 });
-void variantFor; void width; void height;
 function crc32(buf) { let c, crc = 0xFFFFFFFF; for (let n = 0; n < buf.length; n++) { c = (crc ^ buf[n]) & 0xFF; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; crc = (crc >>> 8) ^ c; } return (crc ^ 0xFFFFFFFF) >>> 0; }
 function chunk(type, data) {
     const length = Buffer.alloc(4); length.writeUInt32BE(data.length);

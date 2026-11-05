@@ -138,9 +138,28 @@ function drawPart(ctx, loaded, name, footX, footY, flip) {
 /** Draws one tree, bush or boulder in world coordinates with its roots on the foot anchor. */
 export function drawTree(ctx, tree) {
     const loaded = forestKit();
-    if (!loaded || !drawPart(ctx, loaded, tree.name, tree.x, tree.footY, tree.flip)) return false;
+    if (!loaded || !loaded.sprites[tree.name]) return false;
+    drawContactShadow(ctx, tree.name, loaded.sprites[tree.name], tree.x, tree.footY);
+    if (!drawPart(ctx, loaded, tree.name, tree.x, tree.footY, tree.flip)) return false;
     if (tree.extra) drawPart(ctx, loaded, tree.extra.name, tree.x + (tree.flip ? -tree.extra.dx : tree.extra.dx), tree.footY + tree.extra.dy, tree.flip);
     return true;
+}
+
+/**
+ * A soft, stepped shadow pooled under the foot of an upright sprite, so it sits in the ground instead of hovering over it. Radii follow the
+ * kind of object (a trunk base is narrow, a boulder as wide as its rock). Built from half-unit steps like the rest of the art.
+ */
+function drawContactShadow(ctx, name, sprite, x, y) {
+    if (typeof ctx.fillRect !== 'function') return;
+    const rx = name.startsWith('tree.') ? 12 : name.startsWith('stump.') ? 8 : name.startsWith('rock.') ? Math.max(5, sprite.w * .46) : Math.min(11, sprite.w * .44);
+    const ry = rx * (name.startsWith('rock.') ? .36 : .4);
+    for (const [scale, alpha] of [[1, .18], [.72, .22], [.44, .26]]) {
+        ctx.fillStyle = `rgba(8,5,8,${alpha})`;
+        for (let dy = -ry * scale; dy < ry * scale; dy += .5) {
+            const half = Math.round(rx * scale * Math.sqrt(Math.max(0, 1 - ((dy + .25) / (ry * scale)) ** 2)) * 2) / 2;
+            if (half > 0) ctx.fillRect(x - half, y + 1 + dy, half * 2, .5);
+        }
+    }
 }
 
 /** Depth layers for the trees and bushes inside (or just outside) the camera window; empty until the kit has loaded. */

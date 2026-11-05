@@ -3,7 +3,7 @@
 // surface is TERRAIN_ART_SCALE times denser, and the cache applies that scale to the context so a 64 px tile lands on one canvas pixel per
 // tile pixel. No outlines (the one-pixel inset line is a separate debug overlay). Presentation reads the grid; it never edits it.
 import { FACE_PIXELS, MICROCELL_UNITS, TERRAIN_ART_SCALE, blockFrontRect, blockTopRect } from './arena-projection.js';
-import { generateTileSet, variantFor, TILE, normalFromTile } from './arena-terrain-tiles.js';
+import { generateTileSet, TILE, MEGA, normalFromTile } from './arena-terrain-tiles.js';
 
 // A tile is TILE art pixels for FACE_PIXELS world units; the canvas is TERRAIN_ART_SCALE pixels per unit. They must agree.
 const ART = TILE / FACE_PIXELS;
@@ -257,8 +257,10 @@ export function mergeTerrainFrame(previous, incoming) {
         visualSeed: incoming.visualSeed ?? previous?.visualSeed ?? 0,
         // Which fine blocks this delta touched: cosmetic destruction cues are derived from exactly these.
         changed: (incoming.fine ?? []).map(block => block.index),
-        // The generated crack network travels once, with the first full load.
-        cracks: incoming.cracks?.length ? incoming.cracks : previous?.cracks ?? [] };
+        // The generated crack network travels once, with the first full load; so do the road (1/16 cell polyline) and the torches.
+        cracks: incoming.cracks?.length ? incoming.cracks : previous?.cracks ?? [],
+        road: incoming.road?.length ? incoming.road : previous?.road ?? [],
+        torches: incoming.torches?.length ? incoming.torches : previous?.torches ?? [] };
 }
 
 /** Height of one 12.5 cm microcolumn; whole columns answer with their single coarse height. */
@@ -358,7 +360,7 @@ function wholeDepthCues(ctx, frame, column, row, height, top) {
 
 const atlasCache = new Map();
 
-/** The band's generated 64 px tiles as canvases, or null where there is no DOM (tests, workers) so callers fall back to flat colour. */
+/** The band's generated textures as canvases (each wraps over MEGA x MEGA blocks), or null where there is no DOM (tests, workers) so callers fall back to flat colour. */
 export function terrainAtlas(band) {
     if (typeof document === 'undefined' || typeof ImageData === 'undefined') return null;
     const index = bandIndex(band);
@@ -367,13 +369,13 @@ export function terrainAtlas(band) {
         for (const [kind, tiles] of Object.entries(generateTileSet(index)))
             atlas[kind] = tiles.map(tile => {
                 const canvas = document.createElement('canvas');
-                canvas.width = canvas.height = TILE;
-                canvas.getContext('2d').putImageData(new ImageData(tile.data, TILE, TILE), 0, 0);
-                // Every tile carries its normal-map twin; walls lean toward the viewer.
+                canvas.width = tile.width; canvas.height = tile.height;
+                canvas.getContext('2d').putImageData(new ImageData(tile.data, tile.width, tile.height), 0, 0);
+                // Every texture carries its normal-map twin; walls lean toward the viewer.
                 const twin = document.createElement('canvas');
-                twin.width = twin.height = TILE;
+                twin.width = tile.width; twin.height = tile.height;
                 const wall = kind.endsWith('Side');
-                twin.getContext('2d').putImageData(new ImageData(normalFromTile(tile, wall ? 2 : 2.4, wall ? .85 : 0), TILE, TILE), 0, 0);
+                twin.getContext('2d').putImageData(new ImageData(normalFromTile(tile, wall ? 2 : 2.4, wall ? .85 : 0), tile.width, tile.height), 0, 0);
                 canvas.normalTwin = twin;
                 return canvas;
             });
@@ -382,25 +384,29 @@ export function terrainAtlas(band) {
     return atlasCache.get(index);
 }
 
-/** Smooth 0..1 field over the arena, seeded per site: which patches are mud, dry grass or rubble. Purely visual. */
-function groundVariety(frame, column, row) {
-    const seed = (frame?.visualSeed | 0) & 0xffff;
-    return valueNoise(column, row, 5, 31 + seed) * .65 + valueNoise(column, row, 2, 57 + seed) * .35;
-}
+/** Art-pixel offset of a block inside a wrapping texture: textures are indexed by global block position, so joints and strata continue across blocks. */
+const texX = column => (column % MEGA) * TILE;
+const texY = row => (row % MEGA) * TILE;
+const TEXTURE_UNITS = MEGA * FACE_PIXELS;
 
-function topTileKind(band, material, height, frame, column, row) {
+/**
+ * The base ground of a whole column. Patches inside it (mud, dry grass, bare rock, flagstone) and the road are laid per art pixel by
+ * `kindMap`. A stone column above ground level carries a turf cap in the living bands (a grassy hill with rock faces) unless it is `capped = false`
+ * (a chipped or dug microcolumn, which shows the bare rock).
+ */
+function topTileKind(band, material, height, frame, column, row, capped = true) {
+    void frame; void column; void row;
     if (height <= BEDROCK_MICROCELLS) return null;
     if (material === TERRAIN_MATERIAL.Lava) return 'lavaTop';
     if (material === TERRAIN_MATERIAL.Wood) return band <= 1 ? 'grassTop' : 'dirtTop';
-    const variety = frame ? groundVariety(frame, column, row) : .5;
-    if (material === TERRAIN_MATERIAL.Stone) return variety < .3 ? 'rubbleTop' : 'stoneTop';
+    if (material === TERRAIN_MATERIAL.Stone) return capped && band <= 1 && height > 0 ? 'grassTop' : 'slabTop';
     if (height < 0) return 'dirtTop';
-    if (material === TERRAIN_MATERIAL.Soil && band <= 1) return variety < .3 ? 'mudTop' : variety < .43 ? 'grassDryTop' : 'grassTop';
-    if (material === TERRAIN_MATERIAL.Soil) return variety < .4 ? 'mudTop' : 'ashTop';
+    if (material === TERRAIN_MATERIAL.Soil && band <= 1) return 'grassTop';
     return 'ashTop';
 }
-const TOP_KINDS = Object.freeze(['grassTop', 'grassDryTop', 'mudTop', 'dirtTop', 'ashTop', 'stoneTop', 'rubbleTop', 'lavaTop', 'woodTop']);
+const TOP_KINDS = Object.freeze(['grassTop', 'grassDryTop', 'mudTop', 'dirtTop', 'ashTop', 'stoneTop', 'rubbleTop', 'lavaTop', 'slabTop', 'pathTop']);
 const KIND_INDEX = Object.freeze(Object.fromEntries(TOP_KINDS.map((kind, index) => [kind, index])));
+
 let scratchCanvas = null, maskCanvas = null, maskImage = null, scratchNormalCanvas = null;
 
 function scratchContexts() {
@@ -450,11 +456,46 @@ function pixelNoise(x, y, spacing, seed) {
     return (at(x0, y0) * (1 - tx) + at(x0 + 1, y0) * tx) * (1 - ty) + (at(x0, y0 + 1) * (1 - tx) + at(x0 + 1, y0 + 1) * tx) * ty;
 }
 
+// The road is a polyline from C# (1/16 cell units). Each column keeps the segments that can reach it, in art pixels.
+function buildRoadIndex(frame) {
+    const map = new Map(), road = frame.road, scale = TILE / 16;
+    for (let i = 0; i + 3 < road.length; i += 2) {
+        const segment = [road[i] * scale, road[i + 1] * scale, road[i + 2] * scale, road[i + 3] * scale];
+        const [c0, c1] = [Math.floor(Math.min(road[i], road[i + 2]) / 16) - 2, Math.floor(Math.max(road[i], road[i + 2]) / 16) + 2];
+        const [r0, r1] = [Math.floor(Math.min(road[i + 1], road[i + 3]) / 16) - 2, Math.floor(Math.max(road[i + 1], road[i + 3]) / 16) + 2];
+        for (let r = Math.max(0, r0); r <= Math.min(frame.rows - 1, r1); r++)
+            for (let c = Math.max(0, c0); c <= Math.min(frame.columns - 1, c1); c++) {
+                const key = r * frame.columns + c;
+                if (!map.has(key)) map.set(key, []);
+                map.get(key).push(segment);
+            }
+    }
+    return map;
+}
+
+function roadSegmentsFor(frame, column, row) {
+    if (!frame.road?.length) return null;
+    return (frame.roadIndex ??= buildRoadIndex(frame)).get(row * frame.columns + column) ?? null;
+}
+
+function segmentDistance(px, py, [x0, y0, x1, y1]) {
+    const dx = x1 - x0, dy = y1 - y0, length = dx * dx + dy * dy;
+    const t = length === 0 ? 0 : Math.max(0, Math.min(1, ((px - x0) * dx + (py - y0) * dy) / length));
+    return Math.hypot(px - (x0 + dx * t), py - (y0 + dy * t));
+}
+
+/** Half the width of the worn road in art pixels (about 1.2 m); the edge wanders with noise. */
+const ROAD_HALF_WIDTH = 76;
+
 /**
- * Splatting: which ground each pixel of a whole column's top face shows. The kinds of the 3 x 3 columns around it (a neighbour across a
- * cliff or a dug block counts as this column's own ground) are blended bilinearly from their centres and perturbed by two octaves of
- * noise, so a border between grass, mud, stone or lava is an irregular, lobed shoreline with islands and bays rather than a column edge.
- * Returns null when all nine columns agree, otherwise 64 x 64 kind indices (one per art pixel).
+ * Splatting: which ground each art pixel of a whole column's top face shows, decided from *global* pixel position so patches are continuous
+ * across blocks and never follow the 1 m grid. In layers:
+ * 1. the base ground: the kinds of the 3 x 3 columns around it blended bilinearly from their centres and perturbed by noise, so grass, rock
+ *    and lava meet in lobed shorelines (a neighbour across a cliff or a dug block counts as this column's own ground);
+ * 2. patches inside a ground, from two octaves of smooth noise: mud and dry grass in grass, mud in ash, bare calm rock in a turf-capped hill,
+ *    flagstone and rubble in rock, their edges dithered by a pixel hash;
+ * 3. the road: a worn dirt strip along the C# route with a ragged, noisy edge.
+ * Returns null when nothing varies (lava, dug soil), otherwise one kind index per art pixel.
  */
 function kindMap(frame, band, column, row, ownKind, height) {
     const cache = frame.kindMaps ??= new Map();
@@ -473,25 +514,52 @@ function kindMap(frame, band, column, row, ownKind, height) {
         if (kind && (Math.abs(frame.surface[index] - height) <= 3 || (ownKind === 'lavaTop' && kind !== 'lavaTop'))) around[slot] = KIND_INDEX[kind];
         if (around[slot] !== own) uniform = false;
     }
-    if (uniform) { cache.set(key, null); return null; }
+    const rockCap = ownKind === 'grassTop' && frame.material[key] === TERRAIN_MATERIAL.Stone;
+    const patchy = ownKind === 'grassTop' || ownKind === 'ashTop' || ownKind === 'slabTop';
+    const segments = ownKind === 'lavaTop' || ownKind === 'dirtTop' ? null : roadSegmentsFor(frame, column, row);
+    if (uniform && !patchy && !segments) { cache.set(key, null); return null; }
     const map = new Uint8Array(TILE * TILE), seed = (frame.visualSeed | 0) & 0xffff;
     const weights = new Float32Array(TOP_KINDS.length);
+    const sample = (table, wx, wy, shift) => table[((wy + shift * 3) & NOISE_MASK) * NOISE_SIZE + ((wx + shift) & NOISE_MASK)];
     for (let py = 0; py < TILE; py++) for (let px = 0; px < TILE; px++) {
-        const u = (px + .5) / TILE - .5, v = (py + .5) / TILE - .5, au = Math.abs(u), av = Math.abs(v);
-        const sx = u < 0 ? -1 : 1, sy = v < 0 ? -1 : 1;
-        weights.fill(0);
-        weights[around[4]] += (1 - au) * (1 - av);
-        weights[around[4 + sx]] += au * (1 - av);
-        weights[around[4 + sy * 3]] += (1 - au) * av;
-        weights[around[4 + sy * 3 + sx]] += au * av;
         const wx = column * TILE + px, wy = row * TILE + py;
-        let best = own, bestScore = -1;
-        for (let kind = 0; kind < weights.length; kind++) {
-            if (weights[kind] <= 0) continue;
-            const shift = ((seed + kind * 37) & 127) * ART;
-            const wobble = (NOISE_BROAD[((wy + shift * 3) & NOISE_MASK) * NOISE_SIZE + ((wx + shift) & NOISE_MASK)] - .5) * .8 + (NOISE_FINE[((wy + shift) & NOISE_MASK) * NOISE_SIZE + ((wx + shift * 5) & NOISE_MASK)] - .5) * .5;
-            const score = weights[kind] + wobble * .55;
-            if (score > bestScore) { bestScore = score; best = kind; }
+        let best = own;
+        if (!uniform) {
+            const u = (px + .5) / TILE - .5, v = (py + .5) / TILE - .5, au = Math.abs(u), av = Math.abs(v);
+            const sx = u < 0 ? -1 : 1, sy = v < 0 ? -1 : 1;
+            weights.fill(0);
+            weights[around[4]] += (1 - au) * (1 - av);
+            weights[around[4 + sx]] += au * (1 - av);
+            weights[around[4 + sy * 3]] += (1 - au) * av;
+            weights[around[4 + sy * 3 + sx]] += au * av;
+            let bestScore = -1;
+            for (let kind = 0; kind < weights.length; kind++) {
+                if (weights[kind] <= 0) continue;
+                const shift = ((seed + kind * 37) & 127) * ART;
+                const wobble = (sample(NOISE_BROAD, wx, wy, shift) - .5) * .8 + (sample(NOISE_FINE, wx, wy, shift * 5 / 3) - .5) * .5;
+                const score = weights[kind] + wobble * .55;
+                if (score > bestScore) { bestScore = score; best = kind; }
+            }
+        }
+        if (patchy && (best === KIND_INDEX.grassTop || best === KIND_INDEX.ashTop || best === KIND_INDEX.slabTop)) {
+            const shift = (seed & 127) * ART;
+            const hash = (Math.imul(wx, 73856093) ^ Math.imul(wy, 19349663)) >>> 0;
+            const jitter = ((hash % 1000) / 1000 - .5) * .05;
+            const field = sample(NOISE_BROAD, wx, wy, shift + 41) * .65 + sample(NOISE_FINE, wx, wy, shift + 83) * .35 + jitter;
+            if (best === KIND_INDEX.grassTop) {
+                if (rockCap && sample(NOISE_BROAD, wx, wy, shift + 97) * .7 + sample(NOISE_FINE, wx, wy, shift + 131) * .3 + jitter > .72) best = KIND_INDEX.slabTop;
+                else if (field < .27) best = KIND_INDEX.mudTop;
+                else if (field < .37) best = KIND_INDEX.grassDryTop;
+            } else if (best === KIND_INDEX.ashTop) {
+                if (field < .3) best = KIND_INDEX.mudTop;
+            } else if (field < .08) best = KIND_INDEX.rubbleTop;
+            else if (field < .2) best = KIND_INDEX.stoneTop;
+        }
+        if (segments) {
+            let nearest = Infinity;
+            for (const segment of segments) nearest = Math.min(nearest, segmentDistance(wx, wy, segment));
+            const edge = ROAD_HALF_WIDTH + (sample(NOISE_BROAD, wx, wy, 59 * ART) - .5) * 52 + (sample(NOISE_FINE, wx, wy, 23 * ART) - .5) * 16;
+            if (nearest < edge && best !== KIND_INDEX.lavaTop) best = KIND_INDEX.pathTop;
         }
         map[py * TILE + px] = best;
     }
@@ -500,24 +568,25 @@ function kindMap(frame, band, column, row, ownKind, height) {
 }
 
 /** Paints a column's top face from its kind map: the most common ground whole, every other ground through its own pixel mask. */
-function drawSplat(ctx, atlas, map, variant, x, y) {
+function drawSplat(ctx, atlas, map, column, row, x, y) {
     const contexts = scratchContexts();
     if (!contexts) return 0;
     const { g, m } = contexts;
+    const [ox, oy] = [texX(column), texY(row)];
     const counts = new Int16Array(TOP_KINDS.length);
     for (const kind of map) counts[kind]++;
     let main = 0;
     for (let kind = 1; kind < counts.length; kind++) if (counts[kind] > counts[main]) main = kind;
-    ctx.drawImage(atlas[TOP_KINDS[main]][variant], x, y, FACE_PIXELS, FACE_PIXELS);
+    ctx.drawImage(atlas[TOP_KINDS[main]][0], ox, oy, TILE, TILE, x, y, FACE_PIXELS, FACE_PIXELS);
     let painted = 1;
     for (let kind = 0; kind < counts.length; kind++) {
-        if (kind === main || counts[kind] === 0) continue;
+        if (kind === main || counts[kind] < 12) continue; // a handful of stray pixels is not worth a mask pass
         const mask = maskImage ??= m.createImageData(TILE, TILE);
         for (let i = 0; i < map.length; i++) mask.data[i * 4 + 3] = map[i] === kind ? 255 : 0;
         m.putImageData(mask, 0, 0);
         g.globalCompositeOperation = 'source-over';
         g.clearRect(0, 0, TILE, TILE);
-        g.drawImage(atlas[TOP_KINDS[kind]][variant], 0, 0);
+        g.drawImage(atlas[TOP_KINDS[kind]][0], ox, oy, TILE, TILE, 0, 0, TILE, TILE);
         g.globalCompositeOperation = 'destination-in';
         g.drawImage(maskCanvas, 0, 0);
         g.globalCompositeOperation = 'source-over';
@@ -527,7 +596,7 @@ function drawSplat(ctx, atlas, map, variant, x, y) {
             const n = scratchNormalCanvas.getContext('2d');
             n.globalCompositeOperation = 'source-over';
             n.clearRect(0, 0, TILE, TILE);
-            n.drawImage(atlas[TOP_KINDS[kind]][variant].normalTwin, 0, 0);
+            n.drawImage(atlas[TOP_KINDS[kind]][0].normalTwin, ox, oy, TILE, TILE, 0, 0, TILE, TILE);
             n.globalCompositeOperation = 'destination-in';
             n.drawImage(maskCanvas, 0, 0);
             n.globalCompositeOperation = 'source-over';
@@ -540,7 +609,7 @@ function drawSplat(ctx, atlas, map, variant, x, y) {
 
 /**
  * Lava for the emissive ground map: exactly the pixels the splat paints as lava, so the glow follows the same irregular shoreline as the
- * albedo and never fills the square of a column. Coordinates are world pixels; `view` only culls.
+ * albedo and never fills the square of a column. Coordinates are world units; `view` only culls.
  */
 export function paintLavaEmissive(ctx, frame, band, view) {
     const atlas = frame?.material ? terrainAtlas(band) : null, contexts = atlas ? scratchContexts() : null;
@@ -555,8 +624,8 @@ export function paintLavaEmissive(ctx, frame, band, view) {
             const own = topTileKind(band, frame.material[index], height, frame, column, row);
             if (!own) continue;
             const map = kindMap(frame, band, column, row, own, height);
-            const tile = atlas.lavaTop[variantFor(column, row)];
-            if (!map) { if (own === 'lavaTop') { ctx.drawImage(tile, x, y, FACE_PIXELS, FACE_PIXELS); drawn++; } continue; }
+            const tile = atlas.lavaTop[0], [ox, oy] = [texX(column), texY(row)];
+            if (!map) { if (own === 'lavaTop') { ctx.drawImage(tile, ox, oy, TILE, TILE, x, y, FACE_PIXELS, FACE_PIXELS); drawn++; } continue; }
             let any = false;
             const mask = maskImage ??= m.createImageData(TILE, TILE);
             for (let i = 0; i < map.length; i++) { const isLava = map[i] === lava; mask.data[i * 4 + 3] = isLava ? 255 : 0; any ||= isLava; }
@@ -564,7 +633,7 @@ export function paintLavaEmissive(ctx, frame, band, view) {
             m.putImageData(mask, 0, 0);
             g.globalCompositeOperation = 'source-over';
             g.clearRect(0, 0, TILE, TILE);
-            g.drawImage(tile, 0, 0);
+            g.drawImage(tile, ox, oy, TILE, TILE, 0, 0, TILE, TILE);
             g.globalCompositeOperation = 'destination-in';
             g.drawImage(maskCanvas, 0, 0);
             g.globalCompositeOperation = 'source-over';
@@ -574,23 +643,35 @@ export function paintLavaEmissive(ctx, frame, band, view) {
     return drawn;
 }
 
-/**
- * Large-scale light and dark drifts laid over the tiles in 8 px blocks, so a tile never reads as a repeated stamp: ground brightens and
- * darkens over metres, like weathering and damp, while the tile detail stays calm.
- */
-function macroTint(ctx, frame, column, row, x, y) {
-    const seed = (frame.visualSeed | 0) & 0xffff;
-    let painted = 0;
-    for (let cy = 0; cy < 4; cy++) for (let cx = 0; cx < 4; cx++) {
-        const wx = column * FACE_PIXELS + cx * 8 + 4, wy = row * FACE_PIXELS + cy * 8 + 4;
-        const n = pixelNoise(wx, wy, 90, 211 + seed) - .5 + (pixelNoise(wx, wy, 28, 223 + seed) - .5) * .6;
-        const alpha = Math.min(.14, Math.abs(n) * .3);
-        if (alpha < .015) continue;
-        ctx.fillStyle = n < 0 ? `rgba(0,0,0,${alpha.toFixed(3)})` : `rgba(255,236,210,${(alpha * .6).toFixed(3)})`;
-        ctx.fillRect(x + cx * 8, y + cy * 8, 8, 8);
-        painted++;
+/** One row-by-row ellipse of half-unit steps, so the patch is built from the same art pixels as everything else. */
+function steppedEllipse(ctx, cx, cy, rx, ry, color) {
+    ctx.fillStyle = color;
+    for (let dy = -ry; dy < ry; dy += .5) {
+        const half = Math.round(rx * Math.sqrt(Math.max(0, 1 - ((dy + .25) / ry) ** 2)) * 2) / 2;
+        if (half > 0) ctx.fillRect(cx - half, cy + dy, half * 2, .5);
     }
-    return painted;
+}
+
+/**
+ * The ground around a trunk: a dark trodden patch, a few roots and a scatter of leaf litter, so the tree grows out of the earth instead of
+ * standing on it. Cosmetic and baked into the terrain; the upright sprite carries the trunk and adds its own contact shadow.
+ */
+function drawTrunkFoot(ctx, column, row, top) {
+    const cx = top.x + FACE_PIXELS / 2, cy = top.y + 9;
+    steppedEllipse(ctx, cx, cy, 14, 6, 'rgba(10,6,8,.14)');
+    steppedEllipse(ctx, cx, cy, 10, 4.5, 'rgba(10,6,8,.3)');
+    let h = (Math.imul(column + 5, 0x9E3779B1) ^ Math.imul(row + 9, 0x85EBCA6B)) >>> 0;
+    const next = () => { h = Math.imul(h ^ (h >>> 15), 0x2C1B3C6D) >>> 0; return (h >>> 8) / 16777216; };
+    ctx.fillStyle = 'rgba(58,40,28,.85)';
+    for (let root = 0; root < 5; root++) {
+        const angle = next() * Math.PI * 2, length = 5 + next() * 4;
+        for (let step = 2; step < length; step += .5) ctx.fillRect(Math.round((cx + Math.cos(angle) * step) * 2) / 2, Math.round((cy + Math.sin(angle) * step * .45) * 2) / 2, .5, .5);
+    }
+    for (let leaf = 0; leaf < 9; leaf++) {
+        ctx.fillStyle = next() < .5 ? 'rgba(92,70,40,.8)' : 'rgba(70,52,34,.8)';
+        ctx.fillRect(Math.round((cx + (next() - .5) * 22) * 2) / 2, Math.round((cy + (next() - .5) * 8) * 2) / 2, .5, .5);
+    }
+    return 1;
 }
 
 // Whole-metre height steps tint the tile so raised ground reads lighter and pits darker without redrawing art.
@@ -601,18 +682,21 @@ const heightTint = height => {
 const WALL_SHADE = Object.freeze({ own: 'rgba(6,4,8,.28)', dirtUpper: 'rgba(6,4,8,.34)', dirtLower: 'rgba(6,4,8,.44)', stone: 'rgba(6,4,8,.4)' });
 
 /**
- * Draws one wall (the front faces of a column or microcolumn) from the band's tiles: grass overhang on soil that is still topped by turf,
- * then soil, then dressed stone, with the texture running continuously down the wall. `sx`/`width` pick the slice of the tile in world units.
+ * Draws one wall (the front faces of a column or microcolumn) from the band's wrapping textures: a turf cap hangs a grass overhang over soil
+ * and, in the living bands, over rock too (a hill is grass above and stone below); then soil, then dressed stone, the texture running
+ * continuously down the wall. `sx`/`width` pick the slice of the block in world units; `column` places it inside the wrapping texture.
  */
-function drawWall(ctx, atlas, band, material, segments, x, width, sx, baseY, variant) {
+function drawWall(ctx, atlas, band, material, segments, x, width, sx, baseY, column) {
     let painted = 0;
     const wallTop = segments.length ? segments[0].from : 0;
+    const source = texX(column) + sx * ART;
     for (const [i, segment] of segments.entries()) {
         const y = baseY - segment.from * MICROCELL_UNITS, height = (segment.from - segment.to) * MICROCELL_UNITS;
+        const start = (wallTop - segment.from) * MICROCELL_UNITS;
         if (segment.kind === 'lava') {
             for (let drawn = 0; drawn < height;) {
-                const v = (wallTop - segment.from) * MICROCELL_UNITS + drawn, piece = Math.min(height - drawn, FACE_PIXELS - (v % FACE_PIXELS));
-                ctx.drawImage(atlas.lavaSide[variant], sx * ART, (v % FACE_PIXELS) * ART, width * ART, piece * ART, x, y + drawn, width, piece);
+                const v = start + drawn, piece = Math.min(height - drawn, TEXTURE_UNITS - (v % TEXTURE_UNITS));
+                ctx.drawImage(atlas.lavaSide[0], source, (v % TEXTURE_UNITS) * ART, width * ART, piece * ART, x, y + drawn, width, piece);
                 drawn += piece;
                 painted++;
             }
@@ -620,14 +704,13 @@ function drawWall(ctx, atlas, band, material, segments, x, width, sx, baseY, var
         }
         const stone = segment.kind === 'stone' || material === TERRAIN_MATERIAL.Stone;
         const turf = i === 0 && material === TERRAIN_MATERIAL.Soil && band <= 1;
-        const start = (wallTop - segment.from) * MICROCELL_UNITS;
+        const rockCrest = stone && i === 0 && material === TERRAIN_MATERIAL.Stone;
         for (let drawn = 0; drawn < height;) {
             const v = start + drawn;
-            const lip = turf && v < FACE_PIXELS;
-            const crest = stone && i === 0 && material === TERRAIN_MATERIAL.Stone && v < FACE_PIXELS;
-            const piece = Math.min(height - drawn, FACE_PIXELS - (v % FACE_PIXELS));
-            const tiles = atlas[crest ? 'stoneLipSide' : stone ? 'stoneSide' : lip ? 'grassSide' : 'dirtSide'];
-            ctx.drawImage(tiles[variant], sx * ART, (v % FACE_PIXELS) * ART, width * ART, piece * ART, x, y + drawn, width, piece);
+            const crest = v < FACE_PIXELS;
+            const name = stone ? (rockCrest && crest ? (band <= 1 ? 'stoneGrassSide' : 'stoneLipSide') : 'stoneSide') : turf && crest ? 'grassSide' : 'dirtSide';
+            const piece = Math.min(height - drawn, (rockCrest || turf) && crest ? FACE_PIXELS - v : TEXTURE_UNITS - (v % TEXTURE_UNITS));
+            ctx.drawImage(atlas[name][0], source, (v % TEXTURE_UNITS) * ART, width * ART, piece * ART, x, y + drawn, width, piece);
             drawn += piece;
             painted++;
         }
@@ -642,7 +725,11 @@ function drawWall(ctx, atlas, band, material, segments, x, width, sx, baseY, var
 function paintFineCell(ctx, frame, band, column, row, block, grain = true) {
     const { columns, rows } = frame;
     const atlas = grain ? terrainAtlas(band) : null;
-    const variant = variantFor(column, row);
+    // The column's whole-block ground (with its patches and road) is the reference for its undisturbed microcolumns, so chipped ground still matches its neighbours.
+    const coarseHeight = frame.surface[row * columns + column];
+    const baseKind = atlas ? topTileKind(band, frame.material[row * columns + column], coarseHeight, frame, column, row) : null;
+    const baseMap = baseKind ? kindMap(frame, band, column, row, baseKind, coarseHeight) : null;
+    const microArt = TILE / MICRO_PER_COLUMN;
     let painted = 0;
     for (let microY = 0; microY < MICRO_PER_COLUMN; microY++) {
         for (let microX = 0; microX < MICRO_PER_COLUMN; microX++) {
@@ -650,9 +737,12 @@ function paintFineCell(ctx, frame, band, column, row, block, grain = true) {
             const material = microMaterial(block, height);
             const x = column * FACE_PIXELS + microX * MICRO_UNITS;
             const y = row * FACE_PIXELS + microY * MICRO_UNITS;
-            const tileKind = atlas ? topTileKind(band, material, height, frame, column, row) : null;
+            // Undisturbed ground keeps the whole block's kind; rock cut below its turf cap, and soil dug below ground level, show bare material.
+            const undisturbed = baseKind && (material === TERRAIN_MATERIAL.Stone ? block.topsoil === TERRAIN_MATERIAL.Stone && height >= coarseHeight - 1 : material === block.topsoil && height >= 0);
+            const tileKind = !atlas ? null : undisturbed ? (baseMap ? TOP_KINDS[baseMap[(microY * microArt + microArt / 2) * TILE + microX * microArt + microArt / 2]] : baseKind)
+                : topTileKind(band, material, height, frame, column, row, false);
             if (tileKind) {
-                ctx.drawImage(atlas[tileKind][variant], microX * MICRO_UNITS * ART, microY * MICRO_UNITS * ART, MICRO_UNITS * ART, MICRO_UNITS * ART,
+                ctx.drawImage(atlas[tileKind][0], texX(column) + microX * microArt, texY(row) + microY * microArt, microArt, microArt,
                     x, y - height * MICROCELL_UNITS, MICRO_UNITS, MICRO_UNITS);
                 const tint = heightTint(height);
                 if (tint) { ctx.fillStyle = tint; ctx.fillRect(x, y - height * MICROCELL_UNITS, MICRO_UNITS, MICRO_UNITS); painted++; }
@@ -672,7 +762,7 @@ function paintFineCell(ctx, frame, band, column, row, block, grain = true) {
             const southRow = microY + 1 < MICRO_PER_COLUMN ? row : row + 1;
             const south = southRow < rows ? microHeight(frame, column, southRow, microX, southY) : height;
             const wall = frontSegments(band, block.topsoil, height, south);
-            if (atlas) { painted += drawWall(ctx, atlas, band, block.topsoil, wall, x, MICRO_UNITS, microX * MICRO_UNITS, y + MICRO_UNITS, variant); continue; }
+            if (atlas) { painted += drawWall(ctx, atlas, band, block.topsoil, wall, x, MICRO_UNITS, microX * MICRO_UNITS, y + MICRO_UNITS, column); continue; }
             for (const segment of wall) {
                 ctx.fillStyle = segment.color;
                 ctx.fillRect(x, y + MICRO_UNITS - segment.from * MICROCELL_UNITS, MICRO_UNITS, (segment.from - segment.to) * MICROCELL_UNITS);
@@ -730,17 +820,17 @@ export function paintTerrainCell(ctx, frame, band, column, row, grain = true) {
     const height = surface[index];
     const top = blockTopRect(column, row, height);
     const atlas = grain ? terrainAtlas(band) : null;
-    const variant = variantFor(column, row);
     const tileKind = atlas ? topTileKind(band, material[index], height, frame, column, row) : null;
     const baseColor = scaleHex(heightShade(topFaceColor(band, material[index], height), height), 1);
     let painted = 1;
     if (tileKind) {
         const splat = kindMap(frame, band, column, row, tileKind, height);
-        if (splat) painted += drawSplat(ctx, atlas, splat, variant, top.x, top.y);
-        else ctx.drawImage(atlas[tileKind][variant], top.x, top.y, top.width, top.height);
+        if (splat) painted += drawSplat(ctx, atlas, splat, column, row, top.x, top.y);
+        else ctx.drawImage(atlas[tileKind][0], texX(column), texY(row), TILE, TILE, top.x, top.y, top.width, top.height);
         const tint = heightTint(height);
         if (tint) { ctx.fillStyle = tint; ctx.fillRect(top.x, top.y, top.width, top.height); painted++; }
         if (tileKind !== 'lavaTop') painted += drawGroundDecals(ctx, frame, band, column, row, height, material[index], top);
+        if (material[index] === TERRAIN_MATERIAL.Wood) painted += drawTrunkFoot(ctx, column, row, top);
     } else {
         ctx.fillStyle = baseColor;
         ctx.fillRect(top.x, top.y, top.width, top.height);
@@ -752,7 +842,7 @@ export function paintTerrainCell(ctx, frame, band, column, row, grain = true) {
     if (row + 1 < rows && frame.fine?.has(index + columns)) {
         for (let microX = 0; microX < MICRO_PER_COLUMN; microX++) {
             const wall = frontSegments(band, material[index], height, microHeight(frame, column, row + 1, microX, 0));
-            if (atlas) { painted += drawWall(ctx, atlas, band, material[index], wall, column * FACE_PIXELS + microX * MICRO_UNITS, MICRO_UNITS, microX * MICRO_UNITS, (row + 1) * FACE_PIXELS, variant); continue; }
+            if (atlas) { painted += drawWall(ctx, atlas, band, material[index], wall, column * FACE_PIXELS + microX * MICRO_UNITS, MICRO_UNITS, microX * MICRO_UNITS, (row + 1) * FACE_PIXELS, column); continue; }
             for (const segment of wall) {
                 ctx.fillStyle = segment.color;
                 ctx.fillRect(column * FACE_PIXELS + microX * MICRO_UNITS, (row + 1) * FACE_PIXELS - segment.from * MICROCELL_UNITS,
@@ -763,7 +853,7 @@ export function paintTerrainCell(ctx, frame, band, column, row, grain = true) {
         return painted;
     }
     const frontWall = frontSegments(band, material[index], height, frontHeight);
-    if (atlas) return painted + drawWall(ctx, atlas, band, material[index], frontWall, column * FACE_PIXELS, FACE_PIXELS, 0, (row + 1) * FACE_PIXELS, variant);
+    if (atlas) return painted + drawWall(ctx, atlas, band, material[index], frontWall, column * FACE_PIXELS, FACE_PIXELS, 0, (row + 1) * FACE_PIXELS, column);
     for (const segment of frontWall) {
         ctx.fillStyle = segment.color;
         ctx.fillRect(column * FACE_PIXELS, (row + 1) * FACE_PIXELS - segment.from * MICROCELL_UNITS, FACE_PIXELS,
@@ -969,8 +1059,9 @@ export class TerrainCanvasCache {
         const ctx = this.withNormals ? new DualContext(baseCtx, this.normalCanvas.getContext('2d')) : baseCtx;
         const changed = frame.changed;
         const regional = full === false && Array.isArray(changed) && changed.length > 0 && changed.length <= 40;
-        // The splat maps survive between frames; only the neighbourhood of what changed is recomputed.
-        this.kindMaps = regional ? this.kindMaps : new Map();
+        // The splat maps survive between frames; only the neighbourhood of what changed is recomputed. A repaint for the late forest kit alone reuses them all.
+        const kitOnly = this.canvas && this.revision === frame.revision && this.band === band && this.kitReady !== kitReady;
+        this.kindMaps = regional || kitOnly ? this.kindMaps : new Map();
         frame.kindMaps = this.kindMaps;
         if (regional) paintTerrainRegion(ctx, frame, band, changed, TERRAIN_PAD_UNITS);
         else {

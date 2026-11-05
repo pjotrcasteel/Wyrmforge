@@ -12,6 +12,10 @@ export function huntLayerCapture(layer, player, dragonDeath = null) {
         actor = { x: (b.x + b.width / 2) * layer.width, y: layer.depth + 6 };
         id = `wall:${b.kind}:${b.x}:${b.y}:${b.width}:${b.height}`;
         size = Math.max(160, b.width * layer.width + 64, b.height * layer.height + 96);
+    } else if (layer.kind === 'torch') {
+        actor = { x: layer.torch.x, y: layer.torch.y, radius: 6 };
+        id = `torch:${layer.torch.key}`;
+        size = 96;
     } else if (layer.kind === 'tree') {
         // A tall upright crown: a larger capture so the canopy above the trunk fits, feet at the trunk base.
         actor = { x: layer.tree.x, y: layer.tree.footY, radius: 26 };
@@ -54,6 +58,7 @@ export function huntLayerCapture(layer, player, dragonDeath = null) {
     // creature-specific shadow or a moving-light-dependent impostor.
     // Explicit authored 2.5D meshes/heightfields always take precedence.
     const occluderHeightPx = layer.kind === 'masonry' ? undefined
+        : layer.kind === 'torch' ? 44
         : layer.kind === 'tree' && layer.tree.spriteHeight ? Math.round(layer.tree.spriteHeight * .9 / 4) * 4
             : Math.max(4, Math.round(size * .6 / 4) * 4);
     const physicalVolume = layer.kind === 'masonry' && layer.barrier && layer.physicalHeightPx > 0

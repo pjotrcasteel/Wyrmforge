@@ -18,6 +18,7 @@ import { createDestructionFx, observeTerrain, drawDestructionFx, drawFireZoneVig
 import { liveWetForestMaterialDiagnostics } from './arena-live-wet-forest-materials.js';
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
 import { drawTree, treeLayers, collectTrees, collectBushes, collectBoulders } from './arena-tree-art.js';
+import { drawTorch, torchLayers, collectTorches } from './arena-torch-art.js';
 import { drawRecoveryGuide } from './arena-recovery.js';
 import { drawSpellCastMotion, drawSpellProjectile, drawSpellImpact } from './arena-spell-vfx.js';
 import { drawMage, updateMageWalk } from './arena-mage.js';
@@ -109,7 +110,9 @@ export function renderArenaMapOverview(canvas) {
     g.imageSmoothingEnabled = false;
     g.drawImage(cache.canvas, 0, 0);
     g.setTransform(TERRAIN_ART_SCALE, 0, 0, TERRAIN_ART_SCALE, 0, TERRAIN_PAD_UNITS * TERRAIN_ART_SCALE);
-    for (const prop of [...collectTrees(frame, band), ...collectBushes(frame, band), ...collectBoulders(frame, band)].sort((a, b) => a.depth - b.depth)) drawTree(g, prop);
+    const props = [...collectTrees(frame, band), ...collectBushes(frame, band), ...collectBoulders(frame, band),
+        ...collectTorches(frame).map(torch => ({ torch, depth: torch.y + 2 }))].sort((a, b) => a.depth - b.depth);
+    for (const prop of props) { if (prop.torch) drawTorch(g, prop.torch, 0); else drawTree(g, prop); }
     return { png: out.toDataURL('image/png'), columns: frame.columns, rows: frame.rows, face: FACE_PIXELS, band };
 }
 
@@ -525,7 +528,7 @@ function draw(state, snapshot, width, height) {
         // The greybox keeps only the breakable salvage props (the Charred Scrap source), depth-sorted with actors.
         // Hunt 1.0 trees: the C# trunk blocks are in the terrain; their canopies are depth-sorted layers.
         ...(state.terrainFrame && snapshot.environment?.terrain
-            ? treeLayers(state.terrainFrame, huntBand(state, snapshot), camera, width, height) : []),
+            ? [...treeLayers(state.terrainFrame, huntBand(state, snapshot), camera, width, height), ...torchLayers(state.terrainFrame, camera, width, height)] : []),
         ...(greybox ? createDestructibleLayers(snapshot.environment, worldWidth, worldHeight, visualSeconds)
             : getArenaCloisterElevations(snapshot.environment, worldWidth, worldHeight, visualSeconds, null, state.g4FlatGround, gpu)),
     ];
@@ -545,7 +548,7 @@ function draw(state, snapshot, width, height) {
     for (const layer of sortSceneDepthLayers(depthLayers)) {
         let tile, tileX, tileY, tileSize, capture, revision, reuse = false;
         // Canopies are 64 px/m art like the terrain; actors keep their 1x sprites.
-        const pixelScale = layer.kind === 'tree' ? artScale : 1;
+        const pixelScale = layer.kind === 'tree' || layer.kind === 'torch' ? artScale : 1;
         if (gpu) {
             capture = huntLayerCapture(layer, layer.player ?? snapshot.player, state.ashfang.death);
             if (!capture) continue;
@@ -566,6 +569,8 @@ function draw(state, snapshot, width, height) {
                 drawDragon(ctx, layer.dragon, state.reducedMotion.matches, snapshot.dragonBreath, state.ashfang);
             } else if (layer.kind === 'tree') {
                 drawTree(ctx, layer.tree);
+            } else if (layer.kind === 'torch') {
+                drawTorch(ctx, layer.torch, visualSeconds);
             } else if (layer.kind === 'dragonDeath') {
                 drawAshfangDeath(ctx,state.ashfang);
             } else if (layer.kind === 'enemy') {
@@ -601,6 +606,8 @@ function draw(state, snapshot, width, height) {
                 true, { revision, footFraction: capture.footFraction,
                     occluderHeightPx: capture.occluderHeightPx,
                     physicalVolume: capture.physicalVolume,
+                    // The torch post glows a little (its own light is the C# emitter, not this).
+                    ...(layer.kind === 'torch' ? { material: { roughness: .85, emission: '#ff9a3c', emissionIntensity: .5 } } : {}),
                     ...(pixelScale !== 1 ? { pixelScale } : {}) });
             ctx = worldContext;
         }

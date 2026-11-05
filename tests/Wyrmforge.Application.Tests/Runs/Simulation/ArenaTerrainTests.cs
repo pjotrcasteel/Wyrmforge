@@ -243,7 +243,7 @@ public sealed class ArenaTerrainTests
             {
                 var zone = recipe.Zones[cell.Row * Columns + cell.Column];
                 if (cell.Material == ArenaTerrainMaterial.Wood) { trees++; if (zone == ArenaZone.Forest || cell.Column < 2 || cell.Column >= Columns - 2) treesInForest++; }
-                if (cell.Material == ArenaTerrainMaterial.Stone && cell.Surface >= 8) { cliffs++; if (zone == ArenaZone.Highland) cliffsInHighland++; }
+                if (cell.Material == ArenaTerrainMaterial.Stone && cell.Surface >= 8) { cliffs++; if (zone is ArenaZone.Highland or ArenaZone.Meadow) cliffsInHighland++; }
                 if (cell.Material == ArenaTerrainMaterial.Soil && cell.Surface > 0) { hills++; if (zone == ArenaZone.Meadow) hillsInMeadow++; }
             }
         }
@@ -267,8 +267,64 @@ public sealed class ArenaTerrainTests
             Assert.IsGreaterThan(trunks.Count * .8, gathered, $"seed {seed}: trees stand in groves");
             foreach (var t in trunks)
                 foreach (var o in new[] { (1, 0), (-1, 0), (0, 1), (0, -1) })
-                    if (recipe.Grid.Contains(t.Column + o.Item1, t.Row + o.Item2)) Assert.AreNotEqual(ArenaTerrainMaterial.Wood, recipe.Grid.Material(t.Column + o.Item1, t.Row + o.Item2), $"seed {seed}: trunks never touch, so a forest can be walked);
+                    if (recipe.Grid.Contains(t.Column + o.Item1, t.Row + o.Item2)) Assert.AreNotEqual(ArenaTerrainMaterial.Wood, recipe.Grid.Material(t.Column + o.Item1, t.Row + o.Item2), $"seed {seed}: trunks never touch, so a forest can be walked");
         }
+    }
+
+    [TestMethod]
+    public void TheRoad_HasACentreLineFromSpawnToExitAndTorchesBesideIt()
+    {
+        for (var seed = 0; seed < 30; seed++)
+        {
+            var recipe = Make(seed, 0.1);
+            var road = recipe.Grid.Road;
+            Assert.IsGreaterThanOrEqualTo(80, road.Count, $"seed {seed}: a smooth centre line");
+            Assert.IsLessThan(3.0, Math.Sqrt(Dist2(road[0] / 16.0 - 16.5, road[1] / 16.0 - 52.5)), $"seed {seed}: starts at the spawn");
+            Assert.IsLessThan(3.0, Math.Sqrt(Dist2(road[^2] / 16.0 - 16.5, road[^1] / 16.0 - 6.5)), $"seed {seed}: ends at the exit");
+            var torches = recipe.Grid.Torches;
+            Assert.IsGreaterThanOrEqualTo(8, torches.Count, $"seed {seed}: at least four torches");
+            for (var i = 0; i < torches.Count; i += 2)
+            {
+                var (column, row) = (torches[i] / 16, torches[i + 1] / 16);
+                Assert.IsFalse(recipe.ProtectedCells[row * Columns + column], $"seed {seed}: a torch never stands on the road corridor");
+                Assert.AreEqual(0, recipe.Grid.Surface(column, row), $"seed {seed}: on level ground");
+                Assert.AreNotEqual(ArenaTerrainMaterial.Wood, recipe.Grid.Material(column, row));
+                var nearest = Enumerable.Range(0, road.Count / 2).Min(p => Math.Sqrt(Dist2(road[p * 2] / 16.0 - torches[i] / 16.0, road[p * 2 + 1] / 16.0 - torches[i + 1] / 16.0)));
+                Assert.IsInRange(2.4, 6.5, nearest, $"seed {seed}: beside the road, not on it and not far from it");
+            }
+        }
+    }
+
+    [TestMethod]
+    public void Torches_LightTheNearestStretchOfRoadAndTravelOnlyWithTheFirstFrame()
+    {
+        var grid = Make(7, 0.1).Grid;
+        var first = new Vector2D(grid.Torches[0] / 16.0 * ArenaTerrainGrid.CellUnits, grid.Torches[1] / 16.0 * ArenaTerrainGrid.CellUnits);
+        var lights = Wyrmforge.Application.Runs.Simulation.Lighting.TerrainLightingProjection.Capture(grid, first)
+            .Where(light => light.Id.StartsWith("terrain:torch:", StringComparison.Ordinal)).ToList();
+        Assert.HasCount(3, lights, "only the nearest few torches are emitted, inside the mobile light budget");
+        Assert.IsTrue(lights.Any(light => light.Id == "terrain:torch:0"), "the torch beside the hunter is lit");
+        Assert.IsTrue(lights.All(light => !light.CastsShadows));
+        Assert.IsNotNull(grid.ToFrame(-1).Road);
+        Assert.IsNotNull(grid.ToFrame(-1).Torches);
+        Assert.IsNull(grid.ToFrame(3).Road, "later frames never resend the road");
+    }
+
+    [TestMethod]
+    public void Knolls_AreGrassCappedStoneHillsWithARampOnOneSide()
+    {
+        var withKnoll = 0;
+        for (var seed = 0; seed < 40; seed++)
+        {
+            var recipe = Make(seed, 0.1);
+            var rock = Cells(recipe.Grid).Where(cell => cell.Material == ArenaTerrainMaterial.Stone && cell.Surface >= 8 && recipe.Zones[cell.Row * Columns + cell.Column] == ArenaZone.Meadow).ToList();
+            if (rock.Count == 0) continue;
+            withKnoll++;
+            Assert.IsTrue(rock.Any(cell => new[] { (1, 0), (-1, 0), (0, 1), (0, -1) }.Any(o => recipe.Grid.Contains(cell.Column + o.Item1, cell.Row + o.Item2)
+                && recipe.Grid.Material(cell.Column + o.Item1, cell.Row + o.Item2) == ArenaTerrainMaterial.Stone && recipe.Grid.Surface(cell.Column + o.Item1, cell.Row + o.Item2) is > 0 and <= ArenaTerrainGrid.MaxStepMicrocells)),
+                $"seed {seed}: a knoll has a ramp foot a hunter can climb from");
+        }
+        Assert.IsGreaterThan(20, withKnoll, "most meadows hold a knoll");
     }
 
     [TestMethod]

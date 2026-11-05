@@ -326,6 +326,27 @@ internal static class ArenaTerrainRelief
                 queue.Enqueue(r * columns + c);
             }
         }
+        // Terraces follow the contours of broad noise. A cell that disagrees with most of its neighbours is pulled to theirs, twice over, so
+        // there are no one-cell steps or chimneys: cliffs are long, rounded lines.
+        var tiers = new int[columns * rows];
+        for (var index = 0; index < tiers.Length; index++)
+        {
+            var contour = Noise(seed, index % columns / 5.0, index / columns / 5.0);
+            tiers[index] = contour > .3 ? 24 : contour > -.2 ? 16 : 8;
+        }
+        for (var round = 0; round < 2; round++)
+        {
+            var smoothed = (int[])tiers.Clone();
+            for (var index = 0; index < tiers.Length; index++)
+            {
+                if (zone[index] != ArenaZone.Highland) continue;
+                var (column, row) = (index % columns, index / columns);
+                var same = offsets.Where(o => grid.Contains(column + o.Item1, row + o.Item2)).Select(o => tiers[(row + o.Item2) * columns + column + o.Item1])
+                    .GroupBy(tier => tier).OrderByDescending(group => group.Count()).First();
+                if (same.Key != tiers[index] && same.Count() >= 3) smoothed[index] = same.Key;
+            }
+            tiers = smoothed;
+        }
         // Passes: from a cell on the foothill edge, inland one step deeper each time, so the height ramps by a half metre per cell.
         var pass = new int[columns * rows];
         var starts = Enumerable.Range(0, depth.Length).Where(i => depth[i] == 1 && routeDistance[i] >= 3).ToList();
@@ -346,11 +367,48 @@ internal static class ArenaTerrainRelief
         {
             var (column, row) = (index % columns, index / columns);
             if (zone[index] != ArenaZone.Highland || routeDistance[index] < 3 || !Open(grid, column, row)) continue;
-            var contour = Noise(seed, column / 5.0, row / 5.0);
-            var tier = contour > .3 ? 24 : contour > -.2 ? 16 : 8;
+            var tier = tiers[index];
             var height = depth[index] <= 1 ? Step : depth[index] == 2 ? 2 * Step : tier;
             if (pass[index] > 0) height = Math.Min(height, pass[index] * Step);
             grid.Set(column, row, height, ArenaTerrainMaterial.Stone);
+        }
+    }
+
+    /// <summary>
+    /// Knolls: two or three grassy hills in the meadow with sheer rock faces on three sides and a ramp of half-metre steps up the fourth, 1 or 2 m
+    /// high. They are stone for every gameplay rule (the client draws the turf cap and the stone faces), so Fireballs can dig through the cap
+    /// into the rock. Each is a lobed blob, never a rectangle or a circle.
+    /// </summary>
+    public static void Knolls(Random rng, ArenaTerrainGrid grid, byte[] zone, int[] routeDistance)
+    {
+        var (columns, rows) = (grid.Columns, grid.Rows);
+        var count = 2 + rng.Next(2);
+        for (int made = 0, attempt = 0; made < count && attempt < 400; attempt++)
+        {
+            var centre = (X: 4 + rng.Next(columns - 8), Y: 6 + rng.Next(rows - 12));
+            var (rx, ry) = (2.6 + rng.NextDouble() * 1.6, 2.6 + rng.NextDouble() * 1.6);
+            var phases = new[] { rng.NextDouble() * 6.28, rng.NextDouble() * 6.28, rng.NextDouble() * 6.28 };
+            var height = rng.Next(2) == 0 ? 8 : 16;
+            var (rdx, rdy) = rng.Next(4) switch { 0 => (0, -1), 1 => (1, 0), 2 => (0, 1), _ => (-1, 0) };
+            var inside = new HashSet<(int, int)>();
+            for (var row = centre.Y - 7; row <= centre.Y + 7; row++)
+                for (var column = centre.X - 7; column <= centre.X + 7; column++)
+                {
+                    var (dx, dy) = (column - centre.X, row - centre.Y);
+                    var angle = Math.Atan2(dy, dx);
+                    var edge = Math.Sqrt(dx * dx / (rx * rx) + dy * dy / (ry * ry)) + .2 * Math.Sin(2 * angle + phases[0]) + .14 * Math.Sin(3 * angle + phases[1]) + .08 * Math.Sin(5 * angle + phases[2]);
+                    if (edge < 1) inside.Add((column, row));
+                }
+            if (inside.Count < 12 || inside.Any(cell => !grid.Contains(cell.Item1, cell.Item2) || zone[cell.Item2 * columns + cell.Item1] == ArenaZone.Forest
+                || routeDistance[cell.Item2 * columns + cell.Item1] < 3 || !Open(grid, cell.Item1, cell.Item2))) continue;
+            foreach (var (column, row) in inside)
+            {
+                // Steps from the ramp-side edge: 1 on the lowest cell, so the height climbs a half metre per cell.
+                var steps = 1;
+                for (var (c, r) = (column + rdx, row + rdy); inside.Contains((c, r)); (c, r) = (c + rdx, r + rdy)) steps++;
+                grid.Set(column, row, Math.Min(height, steps * Step), ArenaTerrainMaterial.Stone);
+            }
+            made++;
         }
     }
 
@@ -375,10 +433,10 @@ internal static class ArenaTerrainRelief
         foreach (var (column, row, cliff) in feet)
             if (rng.NextDouble() < .2) grid.Set(column, row, cliff >= 20 ? 8 : 4, ArenaTerrainMaterial.Boulder);
         var standing = 2 + rng.Next(2);
-        for (int placed = 0, attempt = 0; placed < standing && attempt < 80; attempt++)
+        for (int placed = 0, attempt = 0; placed < standing && attempt < 300; attempt++)
         {
             var (column, row) = (2 + rng.Next(columns - 4), 4 + rng.Next(rows - 8));
-            if (zone[row * columns + column] != ArenaZone.Meadow || routeDistance[row * columns + column] < 4 || !Open(grid, column, row)) continue;
+            if (zone[row * columns + column] == ArenaZone.Forest || routeDistance[row * columns + column] < 4 || !Open(grid, column, row)) continue;
             var top = new[] { 12, 16, 20 }[rng.Next(3)];
             grid.Set(column, row, top, ArenaTerrainMaterial.Boulder);
             placed++;
@@ -418,6 +476,12 @@ internal static class ArenaTerrainRelief
                 var clump = Math.Clamp(((Noise(seed, column / 4.0, row / 4.0) + 1) / 2 - .25) / .4, 0, 1);
                 if (clump < .12) continue; // a glade
                 var fade = Math.Min(1.0, (routeDistance[index] - 2) / 3.0);
+                // The wood thins out toward the edge of its zone (a ragged tree line, not a wall of trunks along a border).
+                var border = 5;
+                for (var dy = -4; dy <= 4; dy++)
+                    for (var dx = -4; dx <= 4; dx++)
+                        if (grid.Contains(column + dx, row + dy) && zone[(row + dy) * columns + column + dx] != ArenaZone.Forest) border = Math.Min(border, Math.Max(Math.Abs(dx), Math.Abs(dy)));
+                fade *= Math.Min(1.0, (border + 1) / 5.0);
                 if (rng.NextDouble() >= density * 4.5 * clump * clump * fade || !Free(column, row)) continue;
                 grid.Set(column, row, TrunkHeight(), ArenaTerrainMaterial.Wood);
             }

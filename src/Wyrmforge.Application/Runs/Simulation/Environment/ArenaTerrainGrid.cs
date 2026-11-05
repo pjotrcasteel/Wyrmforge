@@ -62,6 +62,11 @@ public sealed class ArenaTerrainGrid
     public int VisualSeed { get; private set; }
     public void SetVisualSeed(int seed) => VisualSeed = seed;
     public void SetCracks(IReadOnlyList<int[]> cracks) => Cracks = cracks;
+    /// <summary>The road's centre line as x, y pairs in 1/16 cell units (a smooth curve, from the generator); presentation paints the dirt road along it.</summary>
+    public IReadOnlyList<int> Road { get; private set; } = [];
+    /// <summary>Roadside torch posts as x, y pairs in 1/16 cell units: static, non-colliding, each a warm point light in the lighting snapshot.</summary>
+    public IReadOnlyList<int> Torches { get; private set; } = [];
+    public void SetRoad(IReadOnlyList<int> road, IReadOnlyList<int> torches) { Road = road; Torches = torches; }
     /// <summary>Increments on every change so presentation can pull only what moved.</summary>
     public int Revision { get; private set; }
 
@@ -147,12 +152,13 @@ public sealed class ArenaTerrainGrid
                     wear.TryGetValue(index, out var counters) ? counters.Select(counter => (int)counter).ToArray() : null)
                 : new(index, [], (int)topsoil[index], stoneTop[index]));
         }
-        return new(Revision, Columns, Rows, (short[])surface.Clone(), materials.Select(material => (int)material).ToArray(), blocks, knownRevision < 0 ? Cracks : null, VisualSeed);
+        return new(Revision, Columns, Rows, (short[])surface.Clone(), materials.Select(material => (int)material).ToArray(), blocks, knownRevision < 0 ? Cracks : null, VisualSeed,
+            knownRevision < 0 ? Road.ToArray() : null, knownRevision < 0 ? Torches.ToArray() : null);
     }
 
     public ArenaTerrainGrid Clone()
     {
-        var copy = new ArenaTerrainGrid(Columns, Rows) { Revision = Revision, Cracks = Cracks, VisualSeed = VisualSeed };
+        var copy = new ArenaTerrainGrid(Columns, Rows) { Revision = Revision, Cracks = Cracks, VisualSeed = VisualSeed, Road = Road, Torches = Torches };
         surface.CopyTo(copy.surface, 0);
         stoneTop.CopyTo(copy.stoneTop, 0);
         materials.CopyTo(copy.materials, 0);

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { FACE_PIXELS, TERRAIN_ART_SCALE, ART_PIXELS_PER_METER, UNITS_PER_METER } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-projection.js';
-import { TILE, generateTileSet } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-terrain-tiles.js';
+import { TILE, TEXTURE, generateTileSet } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-terrain-tiles.js';
 import { scale2x, scaleManifest, spriteSource } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/forest-kit.js';
 import { prepareHuntGpuScratch } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/hunt-gpu-layers.js';
 import { HuntGpuWorld } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js';
@@ -12,7 +12,7 @@ test('terrain art is 64 native pixels per metre: tiles, world grid and art scale
     assert.equal(ART_PIXELS_PER_METER, 64);
     assert.equal(TILE, FACE_PIXELS * TERRAIN_ART_SCALE, 'a tile is one block face at the art scale');
     const tile = generateTileSet(0).stoneTop[0];
-    assert.equal(tile.data.length, 64 * 64 * 4);
+    assert.equal(tile.data.length, TEXTURE * TEXTURE * 4);
 });
 
 const rgba = values => { const data = new Uint8ClampedArray(values.length * 4); values.forEach((v, i) => { data[i * 4] = v; data[i * 4 + 3] = 255; }); return data; };

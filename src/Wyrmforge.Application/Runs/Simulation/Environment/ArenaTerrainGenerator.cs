@@ -51,7 +51,7 @@ public static class ArenaTerrainGenerator
         var rng = new Random(unchecked(seed * (int)0x9E3779B1 ^ 0x5EED7E44));
         var grid = new ArenaTerrainGrid(columns, rows);
         grid.SetVisualSeed(seed);
-        var route = Rasterize(rng, columns, rows, spawn, exit);
+        var (route, roadLine) = Rasterize(rng, columns, rows, spawn, exit);
         var protectedCells = new bool[columns * rows];
         foreach (var (rc, rr) in route)
             Mark(protectedCells, columns, rows, rc, rr, RouteHalfWidthCells);
@@ -68,6 +68,7 @@ public static class ArenaTerrainGenerator
         // Land use first: every tree, cliff, boulder and hill below is placed by the zone it stands in, so the map reads as woodland, highland and meadow.
         var zones = ArenaTerrainRelief.Zones(rng, columns, rows, routeDistance, influence, fields);
         ArenaTerrainRelief.Highlands(rng, grid, zones, routeDistance);
+        ArenaTerrainRelief.Knolls(rng, grid, zones, routeDistance);
         ArenaTerrainRelief.Boulders(rng, grid, zones, routeDistance);
         var heatSources = ArenaTerrainRelief.LavaPools(rng, grid, routeDistance, zones, influence);
         CarveFissures(rng, grid, keepClear, zones, influence);
@@ -87,14 +88,17 @@ public static class ArenaTerrainGenerator
                 if (protectedCells[row * columns + column])
                     grid.Set(column, row, 0, influence >= .25 && grid.Material(column, row) == ArenaTerrainMaterial.Ash
                         ? ArenaTerrainMaterial.Ash : ArenaTerrainMaterial.Soil);
+        grid.SetRoad(roadLine.SelectMany(point => new[] { (int)Math.Round((point.X + .5) * 16), (int)Math.Round((point.Y + .5) * 16) }).ToArray(),
+            PlaceTorches(grid, roadLine, protectedCells));
         return new ArenaTerrainRecipe(grid, spawn, exit, route) { ProtectedCells = protectedCells, OpenCells = open, Fields = fields, Zones = zones };
     }
 
     /// <summary>
     /// The road: a smooth S-curve from the spawn at the south end to the exit at the north end (the arena is portrait; the authored horizontal
     /// maps were turned to run bottom to top). Three bends alternate sides, 4 to 9 cells off the centre line, joined by a Catmull-Rom spline.
+    /// Returns the cells it crosses and the smooth centre line (cell units, about one point per cell) that presentation paints the road along.
     /// </summary>
-    private static List<(int Column, int Row)> Rasterize(Random rng, int columns, int rows,
+    private static (List<(int Column, int Row)> Cells, List<(double X, double Y)> Line) Rasterize(Random rng, int columns, int rows,
         (int Column, int Row) spawn, (int Column, int Row) exit)
     {
         var sign = rng.Next(2) * 2 - 1;
@@ -111,6 +115,7 @@ public static class ArenaTerrainGenerator
         anchors.Add((exit.Column, exit.Row));
         (double X, double Y) At(int index) => anchors[Math.Clamp(index, 0, anchors.Count - 1)];
         var cells = new List<(int Column, int Row)>();
+        var line = new List<(double X, double Y)>();
         const int samplesPerSegment = 160;
         for (var segment = 0; segment < anchors.Count - 1; segment++)
             for (var sample = 0; sample <= samplesPerSegment; sample++)
@@ -118,10 +123,59 @@ public static class ArenaTerrainGenerator
                 var t = sample / (double)samplesPerSegment;
                 double Spline(double p0, double p1, double p2, double p3) => .5 * (2 * p1 + (-p0 + p2) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t * t + (-p0 + 3 * p1 - 3 * p2 + p3) * t * t * t);
                 var (a, b, c, d) = (At(segment - 1), At(segment), At(segment + 1), At(segment + 2));
-                var cell = ((int)Math.Round(Math.Clamp(Spline(a.X, b.X, c.X, d.X), 0, columns - 1)), (int)Math.Round(Math.Clamp(Spline(a.Y, b.Y, c.Y, d.Y), 0, rows - 1)));
+                var (px, py) = (Math.Clamp(Spline(a.X, b.X, c.X, d.X), 0, columns - 1), Math.Clamp(Spline(a.Y, b.Y, c.Y, d.Y), 0, rows - 1));
+                var cell = ((int)Math.Round(px), (int)Math.Round(py));
                 if (cells.Count == 0 || cells[^1] != cell) cells.Add(cell);
+                if (sample % 10 == 0) line.Add((px, py));
             }
-        return cells;
+        return (cells, line);
+    }
+
+    /// <summary>
+    /// Torch posts along the road, one about every nine cells on alternating sides, three to five cells from its centre line (outside the flat
+    /// protected corridor), on open level ground with no tree or boulder beside it. Static and non-colliding: a light and a post for the dark road.
+    /// Returns x, y pairs in 1/16 cell units.
+    /// </summary>
+    private static int[] PlaceTorches(ArenaTerrainGrid grid, List<(double X, double Y)> line, bool[] protectedCells)
+    {
+        var torches = new List<int>();
+        double travelled = 0, next = 5;
+        var side = 1;
+        for (var i = 1; i < line.Count; i++)
+        {
+            var (a, b) = (line[i - 1], line[i]);
+            var length = Math.Sqrt((b.X - a.X) * (b.X - a.X) + (b.Y - a.Y) * (b.Y - a.Y));
+            if (length < 1e-6) continue;
+            travelled += length;
+            if (travelled < next) continue;
+            var (nx, ny) = (-(b.Y - a.Y) / length, (b.X - a.X) / length);
+            var placed = false;
+            for (var attempt = 0; attempt < 6 && !placed; attempt++)
+            {
+                var offset = 3.2 + attempt / 2 * .9;
+                var sign = attempt % 2 == 0 ? side : -side;
+                var (column, row) = ((int)Math.Floor(b.X + .5 + nx * offset * sign), (int)Math.Floor(b.Y + .5 + ny * offset * sign));
+                if (!TorchSpot(grid, protectedCells, column, row)) continue;
+                torches.Add(column * 16 + 8); torches.Add(row * 16 + 8);
+                placed = true;
+            }
+            next = travelled + 9;
+            side = -side;
+        }
+        return torches.ToArray();
+    }
+
+    private static bool TorchSpot(ArenaTerrainGrid grid, bool[] protectedCells, int column, int row)
+    {
+        if (!grid.Contains(column, row) || column < 2 || column >= grid.Columns - 2 || protectedCells[row * grid.Columns + column]) return false;
+        for (var dy = -1; dy <= 1; dy++)
+            for (var dx = -1; dx <= 1; dx++)
+            {
+                if (!grid.Contains(column + dx, row + dy)) return false;
+                if (grid.Material(column + dx, row + dy) is ArenaTerrainMaterial.Wood or ArenaTerrainMaterial.Boulder or ArenaTerrainMaterial.Lava) return false;
+                if (grid.Surface(column + dx, row + dy) != 0) return false;
+            }
+        return true;
     }
 
     private static void Mark(bool[] mask, int columns, int rows, int centreColumn, int centreRow, int radius)
