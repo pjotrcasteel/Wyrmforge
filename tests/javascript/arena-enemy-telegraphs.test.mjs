@@ -1,7 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { drawEnemyTelegraph, drawHostileProjectileGround, drawHostileProjectileEmber, drawShieldGuard, drawAshRemains, drawWraithRipple, SHIELD_HALF_ANGLE } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-enemy-telegraphs.js';
-
 import { enemyGroundDecorationVisible } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-elite-vfx.js';
 
 test('only local elite and shield decorations are culled, without clipping large edge markers', () => {
