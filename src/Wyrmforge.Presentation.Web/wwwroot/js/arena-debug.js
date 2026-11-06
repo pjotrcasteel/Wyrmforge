@@ -10,6 +10,8 @@ export function readArenaDebugFlags(search = globalThis.location?.search ?? '') 
         speed: Number.isFinite(speed) ? Math.min(MAX_DEBUG_SPEED, Math.max(1, speed)) : 1,
         god: params.get('god') === '1',
         bot: params.get('bot') === '1',
+        // ?bot=road walks the road from the spawn to the exit instead of kiting: the review bot for the field ambushes.
+        botRoad: params.get('bot') === 'road',
         bright: params.get('bright') === '1',
         // Metric oblique (shear) camera for the Hunt GPU world; the legacy stretched camera stays the default.
         shear: params.get('shear') === '1',
@@ -186,6 +188,21 @@ function nearestExitPort(player, ports) {
         if (distance < bestDistance) { nearest = port; bestDistance = distance; }
     }
     return nearest;
+}
+
+/** Heading along the C# road centre line (a few points ahead of the nearest one), or null when the frame carries no road. */
+export function roadWalkDirection(snapshot, frame) {
+    const player = snapshot?.player, road = frame?.road;
+    if (!player || !road?.length) return null;
+    const at = index => ({ x: road[index] / 16 * CELL, y: road[index + 1] / 16 * CELL });
+    let nearest = 0, best = Number.POSITIVE_INFINITY;
+    for (let i = 0; i + 1 < road.length; i += 2) {
+        const point = at(i), distance = Math.hypot(point.x - player.x, point.y - player.y);
+        if (distance < best) { best = distance; nearest = i; }
+    }
+    // The centre line runs from the spawn to the exit, so walking its order walks the road.
+    const ahead = at(Math.min(road.length - 2, nearest + 8));
+    return normalized(ahead.x - player.x, ahead.y - player.y, 6);
 }
 
 /** Kite until the exit opens, then walk to it, sidestepping when props or rock pin the straight line. */

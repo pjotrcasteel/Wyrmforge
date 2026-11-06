@@ -94,8 +94,8 @@ export function updatePaintedCorpses(state, bursts, motion, seconds) {
         if (seconds-corpse.at >= .8 || seconds < corpse.at) state.corpses.delete(key);
     return state.corpses;
 }
-export function drawPaintedCorpses(ctx, state, seconds, skipHollow = false, skipAshling = false) {
+export function drawPaintedCorpses(ctx, state, seconds, skipHollow = false, skipAshling = false, skipKinds = null) {
     for (const corpse of state.corpses?.values() ?? [])
-        if((!skipHollow||Number(corpse.kind)!==0)&&(!skipAshling||Number(corpse.kind)!==2))
+        if((!skipHollow||Number(corpse.kind)!==0)&&(!skipAshling||Number(corpse.kind)!==2)&&!skipKinds?.has(Number(corpse.kind)))
         drawPaintedEnemy(ctx,{...corpse,opacity:Math.max(0,1-(seconds-corpse.at)/.8)},0,corpse.facing);
 }

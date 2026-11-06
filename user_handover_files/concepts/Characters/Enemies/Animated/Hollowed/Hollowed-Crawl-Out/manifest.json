@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "source": "Hollowed-Crawl-Out.aseprite",
+  "canvas": [
+    80,
+    80
+  ],
+  "root": [
+    40,
+    76
+  ],
+  "atlas": "diffuse.png",
+  "atlasSize": [
+    640,
+    160
+  ],
+  "frameIndexBase": 0,
+  "directions": [
+    "SE"
+  ],
+  "clips": {
+    "crawl_out_pull_SE": {
+      "fromFrame": 0,
+      "toFrame": 7,
+      "durationsMs": [
+        150,
+        140,
+        130,
+        130,
+        150,
+        150,
+        110,
+        100
+      ],
+      "loop": false,
+      "holdLast": false,
+      "events": []
+    },
+    "crawl_out_scramble_SE": {
+      "fromFrame": 8,
+      "toFrame": 15,
+      "durationsMs": [
+        70,
+        75,
+        85,
+        85,
+        95,
+        90,
+        85,
+        100
+      ],
+      "loop": false,
+      "holdLast": false,
+      "events": []
+    }
+  }
+}

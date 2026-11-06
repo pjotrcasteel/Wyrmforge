@@ -136,6 +136,9 @@ public sealed class BellOfWinterEncounterTests
         Assert.AreEqual("winter-rime", simulation.CreateSnapshot().Enemies.Single().Telegraph!.Kind);
 
         Invoke(simulation, "AddPermafrostScar", bell.Position, new Vector2D(0, 1));
+        Invoke(simulation, "DamageTarget", bell, 1d, null, null);
+        Assert.AreEqual(bell.MaxHealth * BellOfWinterBehaviorState.RimeHealthFraction, bell.Health, 1e-9, "The rimed bell cannot be hurt while it changes.");
+        for (var time = 0d; time < BellOfWinterBehaviorState.RimeSeconds + .1 && bell.WinterBell.Phase == BellOfWinterPhase.Rime; time += .05) Step(simulation, .05);
         Invoke(simulation, "DamageTarget", bell, bell.Health * 10 + 1, null, null);
         Assert.IsNotNull(simulation.BellWardenDefeat);
         Assert.IsEmpty(simulation.CreateSnapshot().PermafrostScars, "Its winter thaws with it.");

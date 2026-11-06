@@ -1,0 +1,80 @@
+[
+  {
+    "name": "Ash-Priest",
+    "frames": 144,
+    "clips": 40,
+    "directions": 8
+  },
+  {
+    "name": "Ash-Slinger",
+    "frames": 144,
+    "clips": 40,
+    "directions": 8
+  },
+  {
+    "name": "Ashfang-enraged",
+    "frames": 744,
+    "clips": 168,
+    "directions": 8
+  },
+  {
+    "name": "Ashfang-normal",
+    "frames": 816,
+    "clips": 184,
+    "directions": 8
+  },
+  {
+    "name": "Ashling",
+    "frames": 144,
+    "clips": 40,
+    "directions": 8
+  },
+  {
+    "name": "Bell-Warden-molten",
+    "frames": 224,
+    "clips": 56,
+    "directions": 8
+  },
+  {
+    "name": "Bell-Warden-normal",
+    "frames": 296,
+    "clips": 72,
+    "directions": 8
+  },
+  {
+    "name": "Drowned-Wraith",
+    "frames": 144,
+    "clips": 40,
+    "directions": 8
+  },
+  {
+    "name": "Hollowed",
+    "frames": 144,
+    "clips": 40,
+    "directions": 8
+  },
+  {
+    "name": "Mire-Hound",
+    "frames": 144,
+    "clips": 40,
+    "directions": 8
+  },
+  {
+    "name": "Penitent",
+    "frames": 144,
+    "clips": 40,
+    "directions": 8
+  },
+  {
+    "name": "Reliquary-awakened",
+    "frames": 224,
+    "clips": 56,
+    "directions": 8
+  },
+  {
+    "name": "Reliquary-normal",
+    "frames": 296,
+    "clips": 72,
+    "directions": 8
+  }
+]

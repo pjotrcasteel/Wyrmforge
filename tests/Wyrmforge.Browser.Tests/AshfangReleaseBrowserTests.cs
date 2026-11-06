@@ -25,17 +25,16 @@ public sealed class AshfangReleaseBrowserTests : PageTest
         await Page.WaitForFunctionAsync("""
             () => {
                 const d = window.releaseArena.readArenaDiagnostics(document.querySelector('.hunt-lab canvas'));
-                return d?.hud?.seconds >= 8 && d?.ashfang?.lastDraw;
+                return d?.hud?.seconds >= 8 && d?.authored?.loaded?.includes('Ashfang-normal') && d?.authored?.loaded?.includes('Ashfang-enraged');
             }
             """, null, new() { Timeout = 45000 });
         Assert.IsTrue(await Page.EvaluateAsync<bool>("""
             () => {
                 const d = window.releaseArena.readArenaDiagnostics(document.querySelector('.hunt-lab canvas'));
-                return d.ashfang.ready && !d.renderingFailed && !d.ashfang.errors.length &&
-                    d.dragon.health > 550 && d.hud.spells.some(s => s.isActive && s.rank === 1 && !s.evolutionName) &&
-                    Math.abs(d.ashfang.lastDraw.worldCell - 448.53076140099125) < .001 && d.sharedLighting.version === 1;
+                return !d.renderingFailed && d.authored.loaded.includes('Ashfang-normal') && d.authored.loaded.includes('Ashfang-enraged') &&
+                    d.dragon.health > 550 && d.hud.spells.some(s => s.isActive && s.rank === 1 && !s.evolutionName) && d.sharedLighting.version === 1;
             }
-            """), "Actual published native atlases, normal loadout, baseline scale and shared C# lighting must be usable.");
+            """), "The authored Ashfang sets (both forms), the normal loadout and shared C# lighting must be usable.");
         await Page.GetByRole(AriaRole.Button, new() { Name = "Ⅱ Pause", Exact = true }).ClickAsync();
         await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "▶ Resume", Exact = true })).ToBeVisibleAsync();
         await Page.Locator(".hunt-lab-options summary").ClickAsync();

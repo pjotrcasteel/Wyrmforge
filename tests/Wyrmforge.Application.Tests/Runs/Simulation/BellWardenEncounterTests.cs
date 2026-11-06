@@ -148,7 +148,13 @@ public sealed class BellWardenEncounterTests
         Assert.AreEqual(BellWardenPhase.Crack, warden.BellWarden!.Phase);
         Assert.AreEqual(cracks + 1, simulation.BellWardenCracks);
         Invoke(simulation, "DamageTarget", warden, 1d, null, null);
-        Assert.IsLessThan(warden.MaxHealth * BellWardenBehaviorState.CrackHealthFraction, warden.Health, "The stagger is a damage window.");
+        Assert.AreEqual(warden.MaxHealth * BellWardenBehaviorState.CrackHealthFraction, warden.Health, 1e-9, "The bell is untouchable while it changes form.");
+        Assert.IsTrue(simulation.CreateSnapshot().Enemies.Single(enemy => enemy.EntityId == warden.Id).Invulnerable);
+        Assert.HasCount(1, simulation.CreateSnapshot().BellShockwaves, "The crack throws a shockwave out of the bell.");
+        for (var time = 0d; time < BellWardenBehaviorState.CrackSeconds + .1; time += .05) Step(simulation, .05);
+        Assert.AreEqual(BellWardenPhase.Advance, warden.BellWarden.Phase);
+        Invoke(simulation, "DamageTarget", warden, 1d, null, null);
+        Assert.IsLessThan(warden.MaxHealth * BellWardenBehaviorState.CrackHealthFraction, warden.Health, "Once it has changed, the molten bell can be hurt again.");
     }
 
     [TestMethod]
@@ -246,8 +252,9 @@ public sealed class BellWardenEncounterTests
 
     private static void Kill(RunSimulation simulation, EnemyState enemy)
     {
-        // The first blow stops at the half-health gate and starts the crack; the second lands in the stagger.
+        // The first blow stops at the half-health gate and starts the crack; the bell is untouchable until it has changed, then the second lands.
         Invoke(simulation, "DamageTarget", enemy, enemy.Health * 10 + 1, null, null);
+        for (var time = 0d; time < 3 && enemy.BellWarden?.Phase == BellWardenPhase.Crack; time += .05) Step(simulation, .05);
         Invoke(simulation, "DamageTarget", enemy, enemy.Health * 10 + 1, null, null);
     }
 

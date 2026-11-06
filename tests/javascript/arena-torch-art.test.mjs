@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { collectTorches, torchLayers, drawTorch } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-torch-art.js';
+import { TORCH_VARIANTS, BURN_LOOP, torchVariant, burnFrame, splitFlameFrame } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-torch-sprites.js';
 import { mergeTerrainFrame } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-terrain-canvas.js';
 
 const frame = { torches: [16 * 3 + 8, 16 * 10 + 8, 16 * 20 + 8, 16 * 40 + 8] };
@@ -40,4 +41,16 @@ test('the road line and torches arrive once and survive later terrain deltas', (
     const later = mergeTerrainFrame(first, { revision: 2, columns: 2, rows: 2, surface: [0, 0, 0, 0], material: [0, 0, 0, 0], fine: [] });
     assert.deepEqual(later.road, [8, 8, 24, 40]);
     assert.deepEqual(later.torches, [40, 40]);
+});
+test('the authored torch set: a stable fixture per post, a 16-frame burn loop, and the flame is exactly what differs from the unlit frame', () => {
+    const variants = new Set(Array.from({ length: 40 }, (_, index) => torchVariant(index)));
+    assert.deepEqual([...variants].sort(), [...TORCH_VARIANTS].sort(), 'all three fixtures appear along a road');
+    assert.equal(torchVariant(7), torchVariant(7), 'deterministic');
+    assert.equal(burnFrame(0, 0), 0);
+    assert.equal(burnFrame(BURN_LOOP.milliseconds / 1000, 0), 1);
+    assert.equal(burnFrame(BURN_LOOP.frames * BURN_LOOP.milliseconds / 1000, 0), 0, 'the loop wraps');
+    assert.notEqual(burnFrame(0, 0), burnFrame(0, 3), 'neighbouring torches are out of step');
+    const unlit = new Uint8ClampedArray([10, 20, 30, 255, 40, 50, 60, 255, 0, 0, 0, 0]);
+    const lit = new Uint8ClampedArray([10, 20, 30, 255, 255, 140, 40, 255, 255, 220, 120, 200]);
+    assert.deepEqual([...splitFlameFrame(unlit, lit)], [0, 0, 0, 0, 255, 140, 40, 255, 255, 220, 120, 200], 'unchanged hardware drops out, changed pixels keep their colour');
 });

@@ -5,7 +5,7 @@ namespace Wyrmforge.Application.Runs.Simulation;
 public sealed partial class RunSimulation
 {
     private readonly AshfangFlightState ashfangFlight = new();
-    private double ashfangRainRemaining;
+    private double ashfangRainRemaining, ashfangTrailRemaining;
     private bool CanTargetActiveDragon => dragonHuntState.CanTargetDragon && (dragon?.Definition.Id != DragonId.Ashfang || ashfangFlight.Targetable);
 
     private bool UpdateAshfangFlight(DragonState active,double delta)
@@ -19,7 +19,11 @@ public sealed partial class RunSimulation
             var margin=active.Radius+24;
             var landing=new Vector2D(Math.Clamp(observedTarget.X,margin,Math.Max(margin,arenaWidth-margin)),Math.Clamp(observedTarget.Y-150,margin,Math.Max(margin,arenaHeight-margin)));
             if(arenaEnvironment is not null)landing=arenaEnvironment.RestrictMovement(active.Position,landing,arenaWidth,arenaHeight,active.Radius);
-            ashfangFlight.Begin(active.Position,landing);ashfangBehavior.Interrupt();active.TelegraphRemaining=0;dragonHuntHazards.Clear();ashfangRainRemaining=.25;
+            ashfangFlight.Begin(active.Position,landing);ashfangBehavior.Interrupt();active.TelegraphRemaining=0;dragonHuntHazards.Clear();ashfangRainRemaining=.25;ashfangTrailRemaining=.6;
+            // The launch: wingbeats blow the ground apart under it.
+            RegisterAshfangEffect("takeoff",active.Position,active.Radius*1.9);
+            EnemyTerrainBlast(active.Position,3);
+            ApplyTerrainFissure(active.Position,12);
             return true;
         }
         if(completed)
@@ -46,6 +50,14 @@ public sealed partial class RunSimulation
             active.Position=ashfangFlight.Origin+(ashfangFlight.Landing-ashfangFlight.Origin)*progress
                 +new Vector2D(Math.Sin(progress*Math.PI*2)*arenaWidth*.55,Math.Sin(progress*Math.PI)*90);
             ashfangRainRemaining-=delta;
+            // A bomb run: it drops fire on the ground it crosses, so the whole flight line is a marked, cratering danger.
+            ashfangTrailRemaining-=delta;
+            if(ashfangTrailRemaining<=0)
+            {
+                ashfangTrailRemaining=.4;
+                var trail=dragonHuntState.Profile!.Pressure;
+                dragonHuntHazards.Add(new DragonHuntHazardState(active.Position,Math.Min(40,trail.Radius.For(active.Phase)*.45),trail.Damage.For(active.Phase)*.8*depthState.DragonDamageMultiplier,.9,0,SpellId.FireBolt,active.Definition.School,null,true));
+            }
             if(ashfangRainRemaining<=0)
             {
                 ashfangRainRemaining=active.Phase==2?.65:.85;

@@ -22,7 +22,13 @@ public sealed record ArenaTerrainChange(int Column, int Row, int OldSurface, int
 /// Without a <paramref name="Direction"/> the blast lands on the ground and digs a crater from above. With one, a shot flying at
 /// <paramref name="FaceHeight"/> microcells struck a wall or cliff face travelling that way and bites into the face from the side.
 /// </summary>
-public sealed record ArenaTerrainImpact(long Id, Vector2D Position, int Power, Vector2D? Direction = null, int FaceHeight = 0);
+public sealed record ArenaTerrainImpact(long Id, Vector2D Position, int Power, Vector2D? Direction = null, int FaceHeight = 0)
+{
+    /// <summary>Above zero, the impact is not a bowl but a cleft: jagged one-microcell trenches radiating this many microcells from <see cref="Position"/>.</summary>
+    public int FissureReach { get; init; }
+    /// <summary>Gives every stage of one cleft the same arms, so it only lengthens as it is re-applied.</summary>
+    public long FissureSeed { get; init; }
+}
 
 /// <summary>Progressive excavation rules. Proposed values: tune in playtests.</summary>
 public static class ArenaTerrainMutation
@@ -50,7 +56,8 @@ public static class ArenaTerrainMutation
     {
         ArgumentNullException.ThrowIfNull(grid);
         var power = Math.Clamp(impact.Power, 1, 5);
-        var hits = (impact.Direction is { } direction && direction.Length > 1e-9
+        var hits = (impact.FissureReach > 0 ? FissureHits(impact)
+            : impact.Direction is { } direction && direction.Length > 1e-9
             ? FaceHits(grid, impact, direction.Normalized(), power)
             : CraterHits(impact, power)).ToList();
         var perColumn = ArenaTerrainGrid.MicroPerColumn;
@@ -175,6 +182,48 @@ public static class ArenaTerrainMutation
                 foreach (var (ox, oy) in new[] { (1, 0), (-1, 0), (0, 1), (0, -1) }) next.Add((gy + oy, gx + ox));
             }
             region = next;
+        }
+    }
+
+    // A cleft: a broken slab at the root and four to six blocky arms that zig-zag outward, two microcells wide for most of their length. Each application
+    // digs a microcell deeper, so re-applying a longer reach lengthens and deepens the same cracks. Everything comes from the seed, so replays split alike.
+    private static IEnumerable<(int Gx, int Gy, int Depth)> FissureHits(ArenaTerrainImpact impact)
+    {
+        var seed = unchecked((uint)(impact.FissureSeed * 2654435761L) ^ (uint)(impact.FissureSeed >> 32) * 0x85EBCA6Bu);
+        double Unit(uint salt)
+        {
+            var h = unchecked(seed ^ salt * 0x9E3779B1u);
+            h = unchecked((h ^ (h >> 15)) * 0x2C1B3C6Du);
+            h = unchecked((h ^ (h >> 12)) * 0x297A2D39u);
+            return (h ^ (h >> 15)) / (double)uint.MaxValue;
+        }
+        var (originX, originY) = (impact.Position.X / ArenaTerrainGrid.MicroUnits, impact.Position.Y / ArenaTerrainGrid.MicroUnits);
+        var seen = new HashSet<(int, int)>();
+        for (var dy = -2; dy <= 2; dy++)
+            for (var dx = -2; dx <= 2; dx++)
+                if (dx * dx + dy * dy <= 5 + (int)(Unit((uint)(300 + dx * 5 + dy)) * 2) && seen.Add(((int)Math.Floor(originX) + dx, (int)Math.Floor(originY) + dy)))
+                    yield return ((int)Math.Floor(originX) + dx, (int)Math.Floor(originY) + dy, 1);
+        var arms = 4 + (int)(Unit(1) * 3);
+        var turn = Unit(2) * Math.PI;
+        for (var arm = 0; arm < arms; arm++)
+        {
+            var baseAngle = turn + arm * Math.PI * 2 / arms + (Unit((uint)(10 + arm)) - .5) * 1.1;
+            var length = (int)Math.Round(impact.FissureReach * (.55 + Unit((uint)(30 + arm)) * .6));
+            var swerve = 0.0;
+            double x = originX, y = originY;
+            for (var step = 0; step <= length; step++)
+            {
+                if (step % 3 == 0) swerve = Math.Clamp(swerve + (Unit((uint)(100 + arm * 40 + step / 3)) - .5) * 1.2, -.8, .8);
+                var heading = baseAngle + swerve;
+                var (gx, gy) = ((int)Math.Floor(x), (int)Math.Floor(y));
+                if (seen.Add((gx, gy))) yield return (gx, gy, 1);
+                if (step < length * .6)
+                {
+                    var (sx, sy) = Math.Abs(Math.Cos(heading)) < Math.Abs(Math.Sin(heading)) ? (1, 0) : (0, 1);
+                    if (seen.Add((gx + sx, gy + sy))) yield return (gx + sx, gy + sy, 1);
+                }
+                x += Math.Cos(heading); y += Math.Sin(heading);
+            }
         }
     }
 

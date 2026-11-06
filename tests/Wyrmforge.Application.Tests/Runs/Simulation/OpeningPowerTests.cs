@@ -55,6 +55,21 @@ public sealed class OpeningPowerTests
     }
 
     [TestMethod]
+    public void UpgradeChoice_NeverShovesAnEnemyThroughTheWorldEdge()
+    {
+        var simulation = Create();
+        simulation.ChooseMapNode(simulation.AvailableMapNodes.OrderBy(n => n.Site!.RoadId is null ? 0 : n.Territory!.Roads.Single(r => r.Id == n.Site.RoadId).Encounters).First().Id);
+        simulation.Tick(0, default, 390, 700);
+        var player = Field<Wyrmforge.Domain.Combat.Player.PlayerState>(simulation, "player");
+        player.Position = new Vector2D(40, 300);
+        var enemy = new EnemyState(1, new Vector2D(14, 300), 10, 100, 0);
+        Field<List<EnemyState>>(simulation, "enemies").Add(enemy);
+        Invoke(simulation, "GainExperience", 100);
+        Assert.IsTrue(simulation.ApplyChoice(simulation.PendingChoices[0].Id));
+        Assert.IsGreaterThanOrEqualTo(enemy.Radius, enemy.Position.X, "an enemy pushed out of the world could never be reached or targeted again");
+    }
+
+    [TestMethod]
     public void OpeningTrails_SpawnCapsGrowGraduallyAndReachNormalPressureAtStageEight()
     {
         var simulation = Create();

@@ -4,6 +4,8 @@ const base=new URL('../art/ashfang/runtime-001/',import.meta.url);
 let manifest,loading;const textures=new Map(),errors=new Set();const MAX_TEXTURES=8;
 export function createAshfangState(){return {entity:null,death:null,last:null,lastHud:0,clock:0};}
 export function isAshfang(dragon){return Number(dragon?.school)===1;}
+// Where in each authored strip the blow lands and where the follow-through ends: [contact, release]. Stagger plays straight through its recovery.
+export const ACTION_TIMING={pounce:[.3,.68],bite:[.45,.6],claw_combo:[.3,.78],tail_left:[.4,.7],tail_right:[.4,.7],breath_sweep:[.28,.82]};
 function texture(clip,direction){
  const spec=manifest?.clips[clip]?.facings[direction];if(!spec)return null;
  const key=clip+'/'+direction;
@@ -34,7 +36,12 @@ export function selectAshfangMotion(snapshot,previous,dt){
   direction=spriteDirection(dragon.directionX,dragon.directionY,direction);
   const phase=dragon.actionProgress;
   if(dragon.action==='breath'){clip=dragon.actionPhase==='windup'?'breath_start':dragon.actionPhase==='strike'?'breath_loop':'breath_end';progress=phase;}
-  else {clip=dragon.action;const hit=clip==='pounce'?.3:clip==='bite'?.45:.48,end=clip==='pounce'?.68:.6;progress=dragon.actionPhase==='windup'?phase*hit:dragon.actionPhase==='strike'?hit+phase*(end-hit):end+phase*(1-end);}
+  else {
+   clip=dragon.action;const [hit,end]=ACTION_TIMING[clip]??[.48,.6];
+   progress=clip==='stagger'?phase:dragon.actionPhase==='windup'?phase*hit:dragon.actionPhase==='strike'?hit+phase*(end-hit):end+phase*(1-end);
+   // A sweeping beam turns the aim, not the body: the head swings through the authored strip, the stance stays on the first aim.
+   if(clip==='breath_sweep'&&Number.isFinite(dragon.attackTargetX))direction=spriteDirection(dragon.attackTargetX-dragon.x,dragon.attackTargetY-dragon.y,direction);
+  }
  }
  else if(breath){clip='breath_start';progress=dragon.telegraphProgress;direction=spriteDirection(breath.directionX,breath.directionY,direction);}
  else if(dragon.attackElapsed>=0&&dragon.attackElapsed<.22){clip='breath_loop';direction=spriteDirection(dragon.directionX,dragon.directionY,direction);progress=null;}

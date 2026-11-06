@@ -32,6 +32,10 @@ public sealed class ArenaEnvironmentState
     private bool[] terrainProtected = [];
     private (int Column, int Row) terrainExit;
     private (int Column, int Row)? terrainSpawn;
+    private IReadOnlyList<ArenaField> terrainFields = [];
+
+    /// <summary>The open fields along the Hunt 1.0 road: flat, rock-free ground where the field ambush can spring. Empty without terrain.</summary>
+    public IReadOnlyList<ArenaField> AmbushFields => terrainFields;
 
     /// <summary>Where the hunter enters a Hunt 1.0 terrain arena (the south end of the road), or null for the legacy centre start.</summary>
     public Vector2D? TerrainSpawnPosition => terrainSpawn is { } spawn ? ArenaTerrainGrid.CenterOf(spawn.Column, spawn.Row) : null;
@@ -121,6 +125,7 @@ public sealed class ArenaEnvironmentState
             var recipe = ArenaTerrainGenerator.Generate(seed, terrainInfluence ?? node.Influence, columns, rows,
                 (columns / 2, rows - 8), (columns / 2, (int)(Math.Max(80, ArenaMetricEnvelope.CombatHeight * .11) / ArenaTerrainGrid.CellUnits)));
             environment.terrainSpawn = recipe.Spawn;
+            environment.terrainFields = recipe.Fields;
             environment.terrain = recipe.Grid;
             environment.terrainBaseline = recipe.Grid.Clone();
             environment.terrainProtected = recipe.ProtectedCells;

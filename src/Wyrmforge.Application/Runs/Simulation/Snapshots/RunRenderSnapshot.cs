@@ -46,6 +46,9 @@ public sealed record RunRenderSnapshot(
 
     public IReadOnlyList<WraithRippleRenderSnapshot> WraithRipples { get; init; } = [];
 
+    /// <summary>The tell of a Hunt 1.0 field ambush while it runs (marks on all sides), else null.</summary>
+    public FieldAmbushRenderSnapshot? FieldAmbush { get; init; }
+
     public ReliquaryRenderSnapshot? Reliquary { get; init; }
 
     public IReadOnlyList<ReliquaryFieldRenderSnapshot> ReliquaryFields { get; init; } = [];

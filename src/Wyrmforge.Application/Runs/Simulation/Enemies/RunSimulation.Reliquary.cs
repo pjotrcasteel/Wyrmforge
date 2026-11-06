@@ -184,8 +184,11 @@ public sealed partial class RunSimulation
                 break;
             case ReliquaryEvent.ShiftStarted:
                 ReliquaryShifts++;
+                hostileProjectiles.RemoveAll(blast => blast.Style is HostileProjectileStyle.Seal or HostileProjectileStyle.Ward);
+                TransformationBurst(enemy.Position, 3, 12);
                 break;
             case ReliquaryEvent.ShiftCompleted:
+                TransformationBurst(enemy.Position, 5, 18);
                 while (CanPlantWard) PlantWard(enemy);
                 break;
         }

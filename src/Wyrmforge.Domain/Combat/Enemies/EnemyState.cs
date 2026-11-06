@@ -63,6 +63,12 @@ public sealed class EnemyState(int id, Vector2D position, double radius, double 
 
     public PenitentBehaviorState? Penitent { get; } = kind == EnemyKind.Penitent ? new PenitentBehaviorState(new Vector2D(1, 0)) : null;
 
+    /// <summary>Seconds left of crawling out of the ground (a field ambush): it neither moves, attacks nor touches the hunter until this runs out.</summary>
+    public double EmergeRemaining { get; set; }
+
+    /// <summary>The whole length of that emergence, so presentation can turn <see cref="EmergeRemaining"/> into progress.</summary>
+    public double EmergeTotal { get; set; }
+
     /// <summary>Roster step 5 elite power; <see cref="EliteAffix.None"/> for an ordinary enemy.</summary>
     public EliteAffix Elite
     {
