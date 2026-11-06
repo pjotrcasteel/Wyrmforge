@@ -50,7 +50,8 @@ public sealed partial class RunSimulation
     // opens it through Exit; this landmark never grants passage or bypasses the kill quota.
     private ArenaExitRenderSnapshot? CreateTrailExitLandmarkSnapshot()
     {
-        if (arenaEnvironment?.Terrain is null || (!mapState.EncounterActive && !trailExitPending)) return null;
+        if (arenaEnvironment?.Terrain is null || mapState.CurrentNode?.Type == WyrmrealmNodeType.Dragon ||
+            (!mapState.EncounterActive && !trailExitPending)) return null;
         var exit = TrailExitPosition;
         return new ArenaExitRenderSnapshot(exit.X, exit.Y, ExitRadius);
     }
