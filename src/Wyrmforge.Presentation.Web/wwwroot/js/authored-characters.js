@@ -306,7 +306,42 @@ async function load(name) {
             throw new Error(`${name} ${key} strip has the wrong size`);
         strips.set(key, image);
     }));
-    return { manifest, strips };
+    // The emissive strips (built from the strips' own hot pixels, so registered with them) are optional: a set without them simply does not glow.
+    const emissive = new Map();
+    await Promise.all((manifest.emissive ?? []).map(async key => {
+        try {
+            const image = new Image(), spec = manifest.actions[key];
+            image.src = new URL(`${name}/emissive/${key}.png`, base).href;
+            await image.decode();
+            const [width, height] = manifest.canvas;
+            if (spec && image.naturalWidth === width * spec.framesPerDirection && image.naturalHeight === height * manifest.directions.length) emissive.set(key, image);
+        } catch { /* a missing emissive strip only means no glow for that action */ }
+    }));
+    return { manifest, strips, emissive };
+}
+
+/**
+ * What a draw call paints: `overlay` (Canvas fallback) the sprite with its glow added on top; `albedo` (GPU) the sprite and its shadows only,
+ * because the glow goes to a separate emissive texture; `emissive` (GPU) only the glowing pixels, on a transparent tile.
+ */
+let renderMode = 'overlay';
+export function setAuthoredRenderMode(mode) { renderMode = mode; }
+export const authoredRenderMode = () => renderMode;
+
+/** Test hook: registers an already decoded set under a name. */
+export function injectAuthoredSet(name, set) { loaded.set(name, set); requested.add(name); }
+
+/** True when the set has a glow strip for this action. */
+export const hasEmissive = (name, actionName) => Boolean(loaded.get(name)?.emissive?.has(actionName));
+
+/**
+ * How hard a set's glow burns: the second forms (enraged, molten, awakened) are fire-infused and burn harder, and a boss in the middle of a
+ * transformation (C# `invulnerable`, progress from its telegraph) swells to its peak as it breaks open.
+ */
+export function emissionIntensity(name, changeProgress = null) {
+    const secondForm = /enraged|molten|awakened/i.test(name ?? '');
+    const base = secondForm ? 1.8 : 1;
+    return changeProgress == null ? base : base + 1.4 * Math.max(0, Math.min(1, changeProgress));
 }
 
 /** Starts downloading a character set; safe to call every frame. */
@@ -349,11 +384,27 @@ export function drawGrounded(ctx, name, actionName, direction, frame, x, y, { al
     const set = loaded.get(name), strip = set?.strips.get(actionName);
     if (!strip) return false;
     const feetY = y + footDrop(radius);
-    drawFootprint(ctx, x, y + footDrop(radius) * .4, radius, alpha);
     const [width, height] = set.manifest.canvas, [rootX, rootY] = set.manifest.root, spec = set.manifest.actions[actionName];
     const row = Math.max(0, set.manifest.directions.indexOf(direction)), column = Math.max(0, Math.min(spec.framesPerDirection - 1, frame));
+    const glow = set.emissive?.get(actionName);
+    const drawGlow = (mode, glowAlpha) => {
+        ctx.save();
+        if (mode === 'overlay') ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = Math.max(0, glowAlpha);
+        ctx.drawImage(glow, column * width, row * height, width, height, Math.round(x) - rootX * scale, Math.round(feetY) - rootY * scale, width * scale, height * scale);
+        ctx.restore();
+    };
+    // The GPU's emissive tile holds only the glowing pixels, in the same place as the sprite.
+    if (renderMode === 'emissive') {
+        if (!glow) return false;
+        drawGlow('emissive', alpha);
+        return true;
+    }
+    drawFootprint(ctx, x, y + footDrop(radius) * .4, radius, alpha);
     drawCastShadow(ctx, strip, { x: column * width, y: row * height, width, height }, rootX, rootY, x, feetY, scale, alpha);
-    return drawAuthoredCell(ctx, name, actionName, direction, frame, x, feetY, alpha, scale);
+    const drawn = drawAuthoredCell(ctx, name, actionName, direction, frame, x, feetY, alpha, scale);
+    if (renderMode === 'overlay' && glow) drawGlow('overlay', alpha * .9);
+    return drawn;
 }
 
 // ---------------------------------------------------------------- crawl out of the ground
@@ -411,8 +462,9 @@ function drawEmerging(ctx, enemy, pose) {
 /** Draws an enemy from its authored pose; false when it has none (the caller then draws the old art). */
 export function drawAuthoredEnemy(ctx, enemy, state) {
     const pose = state.enemies.get(enemy.entityId);
-    if (!pose) return pendingKind(enemy.kind);
-    if (pose.emerge) return drawEmerging(ctx, enemy, pose);
+    const glowPass = renderMode === 'emissive';
+    if (!pose) return glowPass ? false : pendingKind(enemy.kind);
+    if (pose.emerge) return glowPass ? false : drawEmerging(ctx, enemy, pose);
     const opacity = Number.isFinite(enemy.opacity) ? enemy.opacity : 1;
     return drawGrounded(ctx, pose.name, pose.action, pose.direction, pose.frame, enemy.x, enemy.y, { alpha: opacity, radius: Number(enemy.radius) || 11 });
 }
@@ -438,6 +490,7 @@ export const WIZARD_FEET_OFFSET = 12;
 
 export function drawAuthoredWizard(ctx, player, state, hit = false) {
     const wizard = state.wizard, radius = Number(player.radius) || 12, feetY = player.y + WIZARD_FEET_OFFSET;
+    if (renderMode === 'emissive') return drawGrounded(ctx, 'Wizard', wizard.action, wizard.direction, wizard.frame, player.x, feetY - footDrop(radius), { radius });
     // A hit reddens the whole figure for its short flash; the cast and walk poses stay untouched.
     ctx.save();
     if (hit) ctx.filter = 'sepia(1) saturate(3.2) hue-rotate(-35deg) brightness(1.05)';
@@ -500,19 +553,23 @@ export function drawAuthoredAshfang(ctx, ashfang, dragon) {
     if (!pose) return authoredPending('Ashfang-normal') || authoredPending('Ashfang-enraged');
     if (!pose.hidden && !pose.shadow && !authoredCharacter(pose.name)) return authoredPending(pose.name);
     ashfang.authoredForm = pose.name;
-    if (pose.hidden) return true;
+    if (pose.hidden) return renderMode !== 'emissive';
     ctx.save();
     if (pose.shadow) {
-        ctx.fillStyle = 'rgba(4,6,9,.27)';
-        ctx.beginPath(); ctx.ellipse(p.x, p.y, p.radius * .55, p.radius * .2, 0, 0, Math.PI * 2); ctx.fill();
+        if (renderMode !== 'emissive') {
+            ctx.fillStyle = 'rgba(4,6,9,.27)';
+            ctx.beginPath(); ctx.ellipse(p.x, p.y, p.radius * .55, p.radius * .2, 0, 0, Math.PI * 2); ctx.fill();
+        }
         ctx.restore();
-        return true;
+        return renderMode !== 'emissive';
     }
-    if (p.frozen) ctx.filter = 'sepia(1) saturate(1.6) hue-rotate(135deg)';
-    else if (p.hitFlash) ctx.filter = 'brightness(1.25) saturate(.75)';
-    drawGrounded(ctx, pose.name, pose.action, pose.direction, pose.frame, p.x, p.y, { scale: ASHFANG_SCALE, radius: p.radius });
+    if (renderMode !== 'emissive') {
+        if (p.frozen) ctx.filter = 'sepia(1) saturate(1.6) hue-rotate(135deg)';
+        else if (p.hitFlash) ctx.filter = 'brightness(1.25) saturate(.75)';
+    }
+    const drawn = drawGrounded(ctx, pose.name, pose.action, pose.direction, pose.frame, p.x, p.y, { scale: ASHFANG_SCALE, radius: p.radius });
     ctx.restore();
-    return true;
+    return renderMode === 'emissive' ? drawn : true;
 }
 
 /** The collapse: the death clip once, then its last frame, fading after eight seconds like the old one. */

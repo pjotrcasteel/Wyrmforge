@@ -4,6 +4,7 @@ using Wyrmforge.Application.Abstractions.Randomness;
 using Wyrmforge.Application.Runs.Development;
 using Wyrmforge.Application.Runs.Hunts;
 using Wyrmforge.Application.Runs.Simulation;
+using Wyrmforge.Application.Runs.Simulation.Lighting;
 using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Combat.Enemies;
 using Wyrmforge.Domain.Combat.Geometry;
@@ -95,5 +96,46 @@ public sealed class BossSpectacleTests
         brain.Begin("claw_right", dragon.Position, dragon.Position + new Vector2D(100, 0), .8);
         Invoke(run, "DamageTarget", dragon, dragon.MaxHealth * .2, null, null);
         Assert.AreEqual("claw_right", brain.Action, "it cannot be locked down: the next stagger waits for the lockout");
+    }
+
+    [TestMethod]
+    public void TheFireBossesGlowAndBurnHotterWiderAndBrighterInTheirSecondForm()
+    {
+        var run = new RunSimulationFactory(new SeededRandomSource(1)).CreateDevelopmentHunt(new HashSet<string>(),
+            new DevelopmentHuntSetup(DragonId.Ashfang, false, 1, SpellId.FireBolt, 42, 402, 874, true));
+        var dragon = Field<DragonState>(run, "dragon");
+        var glow = () => run.CreateSnapshot().Lighting!.Lights.Where(light => light.OwnerId.StartsWith("boss:ashfang:", StringComparison.Ordinal)).ToArray();
+        var first = glow();
+        Assert.HasCount(1, first, "one body glow in the first form");
+        Assert.IsFalse(first[0].CastsShadow);
+        dragon.Health = dragon.MaxHealth * .4;
+        var second = glow();
+        Assert.HasCount(2, second, "the enraged Wyrm adds a white-hot core");
+        var body = second.Single(light => !light.Id.EndsWith(":core", StringComparison.Ordinal));
+        Assert.IsGreaterThan(first[0].Intensity, body.Intensity);
+        Assert.IsGreaterThan(first[0].Range, body.Range);
+        Assert.AreNotEqual(first[0].Color, body.Color);
+
+        var player = new PlayerState();
+        foreach (var (kind, firstReach) in new[] { (EnemyKind.BellWarden, 5d), (EnemyKind.Reliquary, 4.5d) })
+        {
+            var boss = new EnemyState(5, Vector2D.Zero, EnemyCatalog.Get(kind).Radius, 100, 0, kind);
+            var calm = BossGlowLightingProjection.Capture(null, [boss]).Single();
+            Assert.AreEqual(boss.Radius * firstReach, calm.Radius, 1e-9);
+            // Half health starts the change; the glow climbs while it lasts and is brightest as it breaks open.
+            boss.Health = 45;
+            var changing = false;
+            for (var time = 0d; time < 2.5 && !changing; time += .05) changing = kind == EnemyKind.BellWarden
+                ? boss.BellWarden!.Tick(.05, boss.Position, boss.Health, boss.MaxHealth, player.Position, true) == BellWardenEvent.CrackStarted
+                : boss.Reliquary!.Tick(.05, boss.Health, boss.MaxHealth, player.Position, true) == ReliquaryEvent.ShiftStarted;
+            Assert.IsTrue(changing);
+            var early = BossGlowLightingProjection.Capture(null, [boss]).Single().Intensity;
+            for (var time = 0d; time < 1.6; time += .05)
+                if (kind == EnemyKind.BellWarden) boss.BellWarden!.Tick(.05, boss.Position, boss.Health, boss.MaxHealth, player.Position, true);
+                else boss.Reliquary!.Tick(.05, boss.Health, boss.MaxHealth, player.Position, false);
+            var late = BossGlowLightingProjection.Capture(null, [boss]).Single().Intensity;
+            Assert.IsGreaterThan(calm.Intensity, early);
+            Assert.IsGreaterThan(early, late, "the glow swells as the change nears its end");
+        }
     }
 }

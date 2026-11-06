@@ -888,5 +888,14 @@
         }
       }
     }
-  }
+  },
+  "emissive": [
+    "corruption",
+    "death",
+    "hit",
+    "idle",
+    "seal",
+    "walk",
+    "ward"
+  ]
 }

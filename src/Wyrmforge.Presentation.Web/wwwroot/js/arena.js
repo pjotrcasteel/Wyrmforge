@@ -23,6 +23,7 @@ import { torchSprites } from './arena-torch-sprites.js';
 import {
     ENEMY_CHARACTERS, AUTHORED_SETS, createAuthoredState, preloadAuthoredCharacter, preloadCrawlOut, loadedManifests, authoredCharacter, updateAuthoredEnemies, updateAuthoredWizard,
     drawAuthoredEnemy, drawAuthoredCorpses, drawAuthoredWizard, drawAuthoredAshfang, drawAuthoredAshfangDeath, authoredDiagnostics,
+    setAuthoredRenderMode, emissionIntensity,
 } from './authored-characters.js';
 import { drawRecoveryGuide } from './arena-recovery.js';
 import { drawSpellCastMotion, drawSpellProjectile, drawSpellImpact } from './arena-spell-vfx.js';
@@ -442,6 +443,8 @@ function draw(state, snapshot, width, height) {
         visualSeconds, state.reducedMotion.matches);
     // The authored characters play in every Hunt; a set that is still downloading draws nothing rather than the old art.
     const authoredOn = state.authoredCharacters;
+    // GPU: sprites paint their albedo and a separate emissive tile; Canvas: the glow is added over the sprite.
+    setAuthoredRenderMode(gpu ? 'albedo' : 'overlay');
     const authoredManifests = authoredOn ? loadedManifests() : new Map();
     if (authoredOn) {
         updateAuthoredEnemies(state.authored, snapshot, authoredManifests, visualSeconds, state.reducedMotion.matches);
@@ -641,6 +644,9 @@ function draw(state, snapshot, width, height) {
             }
         }
         if (gpu) {
+            // The glowing pixels of an authored actor go up as its emissive map, so they stay bright in the dark and light the ground around them.
+            const emissiveMaterial = !reuse && authoredOn && (layer.kind === 'enemy' || layer.kind === 'mage' || layer.kind === 'dragon')
+                ? paintAuthoredEmissive(state, gpu, layer, snapshot, capture.id, tileX, tileY, tileSize, pixelScale) : null;
             if (!reuse) ctx.restore();
             gpu.capture(capture.id,
                 tile, tileX - camera.x, tileY - camera.y, tileSize, tileSize,
@@ -650,6 +656,7 @@ function draw(state, snapshot, width, height) {
                     physicalVolume: capture.physicalVolume,
                     // Only the flame glows (its light is the C# emitter, not this); the post is an ordinary lit surface.
                     ...(layer.kind === 'torchFlame' ? { material: { roughness: .85, emission: '#ff8a30', emissionIntensity: .35 } } : {}),
+                    ...(emissiveMaterial ? { material: { roughness: .85, ...emissiveMaterial } } : {}),
                     ...(pixelScale !== 1 ? { pixelScale } : {}) });
             ctx = worldContext;
         }
@@ -1466,6 +1473,40 @@ function drawDragonBreath(ctx, breath, school, dragon = null) {
     ctx.strokeStyle = `rgba(${palette.rgb}, ${breath.active?.4:.65})`;
     ctx.lineWidth = 2;
     ctx.stroke();
+}
+
+/**
+ * Paints the glowing pixels of one authored actor on a transparent tile the size of its capture and uploads it as that capture's emissive texture.
+ * Returns the material for the capture, or null when the actor has nothing that glows this frame.
+ */
+function paintAuthoredEmissive(state, gpu, layer, snapshot, captureId, tileX, tileY, tileSize, pixelScale) {
+    const tile = (state.gpuEmissivePool ??= new HuntGpuScratchPool(8)).acquire(Math.ceil(tileSize * pixelScale));
+    const surface = prepareHuntGpuScratch(tile, tileSize, tileX, tileY, pixelScale);
+    let drawn = false, set = null, change = null;
+    setAuthoredRenderMode('emissive');
+    try {
+        if (layer.kind === 'enemy') {
+            drawn = drawAuthoredEnemy(surface, layer.enemy, state.authored);
+            set = state.authored.enemies.get(layer.enemy.entityId)?.name;
+            if (layer.enemy.invulnerable) change = layer.enemy.telegraph?.progress ?? .5;
+        } else if (layer.kind === 'dragon') {
+            drawn = drawAuthoredAshfang(surface, state.ashfang, layer.dragon);
+            set = state.ashfang.authoredForm;
+        } else {
+            drawn = drawAuthoredWizard(surface, layer.player ?? snapshot.player, state.authored);
+            set = 'Wizard';
+        }
+        const body = layer.enemy ?? layer.player;
+        if (drawn && body && state.terrainFrame && layer.kind !== 'dragon')
+            eraseTerrainOcclusion(surface, state.terrainFrame, occludingTerrainCells(state.terrainFrame, body.x, body.y + (body.z || 0), body.z || 0, (body.radius || 16) * 1.25));
+    } finally {
+        setAuthoredRenderMode('albedo');
+        surface.restore();
+    }
+    if (!drawn) return null;
+    const id = `${captureId}:emissive`;
+    gpu.uploadLayer(id, tile, tileSize, tileSize, undefined, true, pixelScale);
+    return { emissiveMap: id, emission: '#ffffff', emissionIntensity: emissionIntensity(set, change) };
 }
 
 function drawDragon(ctx, dragon, reducedMotion = false, breath = null, ashfang = null, authored = false) {

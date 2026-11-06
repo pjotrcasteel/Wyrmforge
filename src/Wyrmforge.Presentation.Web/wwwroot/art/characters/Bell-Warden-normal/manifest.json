@@ -1147,5 +1147,16 @@
         }
       }
     }
-  }
+  },
+  "emissive": [
+    "death",
+    "hit",
+    "idle",
+    "phase_change",
+    "rally",
+    "smash",
+    "stagger",
+    "toll",
+    "walk"
+  ]
 }

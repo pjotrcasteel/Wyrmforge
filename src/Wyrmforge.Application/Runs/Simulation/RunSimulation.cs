@@ -447,6 +447,7 @@ public sealed partial class RunSimulation
                 CreateFieryAreaSnapshots()),
             AshfangLightingProjection.Capture(CreateDragonSnapshot(), CreateAshfangEffects()),
             ActorAppearanceLightingProjection.Capture(enemies, player.Position.X, player.Position.Y),
+            BossGlowLightingProjection.Capture(CreateDragonSnapshot(), enemies),
             lightingComposition01Enabled ? HuntFixtureLightingProjection.Capture(
                 arenaEnvironment?.LightingRecipe, arenaWidth, arenaHeight) : [],
             TerrainLightingProjection.Capture(arenaEnvironment?.Terrain, player.Position));

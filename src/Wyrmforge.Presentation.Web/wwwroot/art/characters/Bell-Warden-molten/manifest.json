@@ -888,5 +888,14 @@
         }
       }
     }
-  }
+  },
+  "emissive": [
+    "death",
+    "hit",
+    "idle",
+    "rally",
+    "smash",
+    "toll",
+    "walk"
+  ]
 }

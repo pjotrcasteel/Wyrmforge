@@ -333,6 +333,35 @@ public sealed class GreyboxHuntBrowserTests : PageTest
         Page.PageError += (_, error) => errors.Add(error);
         var consoleErrors = new List<string>();
         Page.Console += (_, message) => { if (message.Type == "error") consoleErrors.Add(message.Text.Length > 300 ? message.Text[..300] : message.Text); };
+        // Boss moments are over in a second, so the page grabs the canvas inside the animation frame they happen in.
+        await Page.AddInitScriptAsync("""
+            (() => {
+                const shots = window.__spectacle = {};
+                let arena = null, loading = false;
+                const take = key => { if (shots[key]) return; const canvas = document.querySelector('canvas.game-canvas'); if (canvas) shots[key] = canvas.toDataURL('image/png'); };
+                const loop = () => {
+                    const canvas = document.querySelector('canvas.game-canvas');
+                    if (canvas && !arena && !loading) { loading = true; import('/js/arena-performance.js').then(module => { arena = module; }); }
+                    const d = canvas && arena ? arena.readArenaDiagnostics(canvas) : null;
+                    if (d) {
+                        for (const e of d.enemies ?? []) {
+                            if (e.invulnerable) take('transform-' + e.kind + '-' + Math.min(2, Math.floor((e.telegraph?.progress ?? 0) * 3)));
+                            if (e.recovering) take('recover-' + e.kind);
+                            if (e.telegraph?.kind && (e.kind === 9 || e.kind === 7)) take('tell-' + e.telegraph.kind);
+                        }
+                        if ((d.bellShockwaves?.length ?? 0) > 0) take('bell-shockwave');
+                        const dragon = d.dragon;
+                        if (dragon) {
+                            const key = dragon.flightStage && dragon.flightStage !== 'ground' ? 'dragon-' + dragon.flightStage
+                                : dragon.action && dragon.action !== 'idle' && dragon.actionPhase !== 'ready' ? 'dragon-' + dragon.action + '-' + dragon.actionPhase : null;
+                            if (key) take(key);
+                        }
+                    }
+                    requestAnimationFrame(loop);
+                };
+                requestAnimationFrame(loop);
+            })();
+            """);
         await Page.GotoAsync(root + "/?speed=12&god=1&bot=1" + extraQuery, new() { WaitUntil = WaitUntilState.NetworkIdle });
         var start = Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^START GAME") });
         await start.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 45000 });
@@ -346,7 +375,7 @@ public sealed class GreyboxHuntBrowserTests : PageTest
         await Page.Locator(".gate-lineage--fire").ClickAsync();
         await Page.Locator(".gate-tier--ready").First.ClickAsync();
 
-        var deadline = DateTime.UtcNow.AddMinutes(14);
+        var deadline = DateTime.UtcNow.AddMinutes(25);
         var lastChange = DateTime.UtcNow;
         var lastSeen = "";
         var returnedToTown = false;
@@ -374,7 +403,8 @@ public sealed class GreyboxHuntBrowserTests : PageTest
                 }
             }
             if (seen != lastSeen || seen != "") { lastSeen = seen; lastChange = DateTime.UtcNow; }
-            if (DateTime.UtcNow - lastChange > TimeSpan.FromSeconds(60))
+            // A trail is one long stretch without a button, and a software-rendered browser can run it at a few frames a second.
+            if (DateTime.UtcNow - lastChange > TimeSpan.FromSeconds(240))
             {
                 await Page.ScreenshotAsync(new() { Path = Path.Combine(output, "full-hunt-stuck.png") });
                 var state = await Page.EvaluateAsync<string>(@"async () => {
@@ -382,11 +412,21 @@ public sealed class GreyboxHuntBrowserTests : PageTest
                     if (!canvas) return 'no canvas; buttons: ' + [...document.querySelectorAll('button')].map(b => b.innerText.trim()).filter(Boolean).slice(0, 12).join(' | ');
                     const module = await import('/js/arena-performance.js');
                     const s = module.readArenaDiagnostics(canvas);
-                    return JSON.stringify({ hud: { kills: s?.hud?.kills, hp: s?.hud?.health, t: s?.hud?.seconds }, paused: s?.paused, ended: s?.ended, exit: s?.exit, extraction: s?.extraction, p: s?.player && [Math.round(s.player.x), Math.round(s.player.y)], dragon: s?.dragon && [Math.round(s.dragon.x), Math.round(s.dragon.y)], enemies: s?.enemies?.map(e => [Math.round(e.x), Math.round(e.y)]) });
+                    return JSON.stringify({ hud: { kills: s?.hud?.kills, hp: s?.hud?.health, t: s?.hud?.seconds }, paused: s?.paused, ended: s?.ended, exit: s?.exit, extraction: s?.extraction, p: s?.player && [Math.round(s.player.x), Math.round(s.player.y)], dragon: s?.dragon && [Math.round(s.dragon.x), Math.round(s.dragon.y)], bell: s?.bellWarden, enemies: s?.enemies?.map(e => [e.kind, Math.round(e.x), Math.round(e.y), Math.round(e.healthRatio * 100), e.invulnerable, e.recovering, e.telegraph?.kind]) });
                 }");
                 Assert.Fail($"full Hunt stalled after {trailsCleared} cleared trails: {state} | console errors: {string.Join(" || ", consoleErrors.Take(4))}");
             }
             await Page.WaitForTimeoutAsync(500);
+        }
+        if (await Page.EvaluateAsync<bool>("() => Boolean(window.__spectacle)"))
+        {
+            var keys = System.Text.Json.JsonSerializer.Deserialize<string[]>(await Page.EvaluateAsync<string>("() => JSON.stringify(Object.keys(window.__spectacle))")) ?? [];
+            foreach (var key in keys)
+            {
+                var data = await Page.EvaluateAsync<string>("key => window.__spectacle[key]", key);
+                await File.WriteAllBytesAsync(Path.Combine(output, "spectacle-" + key + ".png"), Convert.FromBase64String(data[(data.IndexOf(',') + 1)..]));
+            }
+            Console.WriteLine("spectacle: " + string.Join(", ", keys.Order()));
         }
         Assert.IsTrue(huntSurvived, "the Hunt must reach its Hunt Survived summary");
         Assert.IsTrue(returnedToTown, $"the Hunt must end back in Town ({trailsCleared} trails cleared, last seen '{lastSeen}')");

@@ -2607,5 +2607,28 @@
         }
       }
     }
-  }
+  },
+  "emissive": [
+    "alert",
+    "bite",
+    "breath_sweep",
+    "claw_combo",
+    "claw_left",
+    "claw_right",
+    "death",
+    "fire_breath",
+    "hit",
+    "idle",
+    "landing",
+    "pounce",
+    "roar",
+    "run",
+    "tail_left",
+    "tail_right",
+    "takeoff",
+    "turn",
+    "walk",
+    "walk_start",
+    "walk_stop"
+  ]
 }

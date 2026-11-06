@@ -1147,5 +1147,16 @@
         }
       }
     }
-  }
+  },
+  "emissive": [
+    "corruption",
+    "death",
+    "hit",
+    "idle",
+    "phase_change",
+    "seal",
+    "stagger",
+    "walk",
+    "ward"
+  ]
 }
