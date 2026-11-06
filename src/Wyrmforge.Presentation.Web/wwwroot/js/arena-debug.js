@@ -80,6 +80,7 @@ const HUNT_STALLED_MAX_FOES = 8;
 const CELL = 32;
 const MAX_STEP_MICROCELLS = 4;
 const LAVA = 3;
+const HUNTER_RADIUS = 14;
 
 function cellIndex(frame, x, y) {
     const column = Math.min(frame.columns - 1, Math.max(0, Math.floor(x / CELL)));
@@ -147,6 +148,14 @@ export function flowDirection(frame, from, target, props = []) {
             best = { index: next, column: nc, row: nr };
     }
     if (!best) return null;
+    // The hunter has a 14-unit footprint in a 32-unit terrain column. Before stepping across a row boundary,
+    // centre horizontally (and vice versa) so the C# collision check does not also overlap a high side column.
+    const centreX = (start.column + 0.5) * CELL, centreY = (start.row + 0.5) * CELL;
+    const safeOffset = CELL / 2 - HUNTER_RADIUS;
+    if (best.row !== start.row && Math.abs(from.x - centreX) > safeOffset)
+        return normalized(centreX - from.x, 0, 0);
+    if (best.column !== start.column && Math.abs(from.y - centreY) > safeOffset)
+        return normalized(0, centreY - from.y, 0);
     return normalized((best.column + 0.5) * CELL - from.x, (best.row + 0.5) * CELL - from.y, 0);
 }
 
@@ -207,7 +216,12 @@ export function roadWalkDirection(snapshot, frame) {
     }
     // The centre line runs from the spawn to the exit, so walking its order walks the road.
     const ahead = at(Math.min(road.length - 2, nearest + 8));
-    return flowDirection(frame, player, ahead, snapshot.environment?.props) ?? normalized(ahead.x - player.x, ahead.y - player.y, 6);
+    for (let step = 8; step >= 2; step -= 2) {
+        const target = at(Math.min(road.length - 2, nearest + step));
+        const heading = flowDirection(frame, player, target, snapshot.environment?.props);
+        if (heading && (heading.x !== 0 || heading.y !== 0)) return heading;
+    }
+    return normalized(ahead.x - player.x, ahead.y - player.y, 6);
 }
 
 /** Kite until the exit opens, then walk to it, sidestepping when props or rock pin the straight line. */

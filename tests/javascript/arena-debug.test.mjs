@@ -133,6 +133,17 @@ test('flow direction respects the full physical heights of visually lowered tree
     assert.ok(first.x > 0.9, 'the bot walks around the physical trunks instead of crossing the renderer-only lowered ground');
 });
 
+test('flow direction aligns the full hunter footprint before passing narrow cliff columns', () => {
+    const terrain = grid(5, 7, (column, row) => (row === 3 && column === 3 ? 16 : 0));
+    const offset = flowDirection(terrain, { x: 2 * 32 + 25, y: 5 * 32 + 16 }, { x: 2 * 32 + 16, y: 16 });
+    assert.deepEqual(offset, { x: -1, y: 0 }, 'align inside the current column before moving north past the cliff');
+    const aligned = flowDirection(terrain, { x: 2 * 32 + 16, y: 5 * 32 + 16 }, { x: 2 * 32 + 16, y: 16 });
+    assert.deepEqual(aligned, { x: 0, y: -1 }, 'resume north after alignment');
+
+    const east = flowDirection(grid(7, 5), { x: 48, y: 2 * 32 + 25 }, { x: 6 * 32 + 16, y: 2 * 32 + 16 });
+    assert.deepEqual(east, { x: 0, y: -1 }, 'align vertically before stepping east across a cell boundary');
+});
+
 test('the road review bot navigates around terrain instead of repeatedly walking into a wall', () => {
     const terrain = grid(7, 7, (column, row) => (row === 3 && column !== 6 ? 16 : 0));
     terrain.road = Array.from({ length: 7 }, (_, row) => [8, (6 - row) * 16 + 8]).flat();
