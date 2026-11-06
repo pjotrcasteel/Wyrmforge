@@ -1127,6 +1127,11 @@ export class TerrainCanvasCache {
         this.maxRepaintMs = 0;
     }
 
+    /** Stable only while the painted terrain and its exact camera crop stay the same; used by the GPU texture cache. */
+    viewportRevision(camera, width, height, scale) {
+        return `${this.repaints}:${camera.x}:${camera.y}:${width}:${height}:${scale}`;
+    }
+
     update(frame, band) {
         if (!frame) return false;
         // The ground cover comes from the forest kit, which downloads after the first frame: one more full repaint once it is there.

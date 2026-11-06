@@ -118,6 +118,21 @@ test('the cache repaints only when the revision or influence band changes', () =
     assert.equal(cache.update(null, 0), false);
 });
 
+test('GPU camera captures reuse terrain textures only while pixels and viewport are identical', () => {
+    const ctx = { ...recorder(), beginPath() {}, rect() {}, clip() {} };
+    const cache = new TerrainCanvasCache((width, height) => ({ width, height, getContext: () => ctx }));
+    const terrain = frame(4, 4, new Array(16).fill(0));
+    cache.update(terrain, 0);
+    const view = { x: 4, y: 8 }, revision = cache.viewportRevision(view, 320, 390, 2);
+    assert.equal(cache.viewportRevision({ ...view }, 320, 390, 2), revision);
+    cache.update(terrain, 0);
+    assert.equal(cache.viewportRevision(view, 320, 390, 2), revision, 'unchanged terrain must not trigger a GPU upload');
+    assert.notEqual(cache.viewportRevision({ x: 5, y: 8 }, 320, 390, 2), revision, 'camera movement changes the crop');
+    assert.notEqual(cache.viewportRevision(view, 320, 390, 1), revision, 'different output resolution changes the texture');
+    cache.update({ ...terrain, revision: terrain.revision + 1, changed: [5] }, 0);
+    assert.notEqual(cache.viewportRevision(view, 320, 390, 2), revision, 'one damaged voxel invalidates the capture');
+});
+
 test('distant destruction events retain separate local repaint clips', () => {
     const regions = terrainDirtyRegions(32, 60, [0, 32 * 60 - 1, 0, -1, 32 * 60]);
     assert.deepEqual(regions, [

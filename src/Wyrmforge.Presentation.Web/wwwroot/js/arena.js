@@ -587,7 +587,8 @@ function draw(state, snapshot, width, height) {
             view, performance.now() / 1000, state.reducedMotion.matches, artScale) : null;
     if (emissive) state.veinSeams = emissive.seams;
     const normal = gpu && state.terrainCache?.normalCanvas ? groundNormalView(state, camera, width, height, artScale) : null;
-    if (gpu) gpu.begin(ctx, camera, width, height, emissive?.canvas ?? null, normal, groundAlbedo ? { source: groundAlbedo, scale: artScale } : null);
+    if (gpu) gpu.begin(ctx, camera, width, height, emissive?.canvas ?? null, normal,
+        groundAlbedo ? { source: groundAlbedo, scale: artScale, revision: terrainViewRevision(state, camera, width, height, artScale) } : null);
     state.lighting01FixtureCount = gpu && state.lighting01
         ? submitLighting01Fixtures(gpu, snapshot.environment, state.sharedLightingFrame,
             camera, worldWidth, worldHeight) : 0;
@@ -1795,12 +1796,20 @@ function drawAimRune(ctx, player) {
     ctx.restore();
 }
 
+/** An immutable terrain capture only changes when its painted revision, camera window or output resolution changes. */
+function terrainViewRevision(state, camera, width, height, scale) {
+    return state.terrainCache.viewportRevision(camera, width, height, scale);
+}
+
 /** The visible window of the terrain normal map, flat where nothing is painted, for the ground's lit material. */
 function groundNormalView(state, camera, width, height, scale = 1) {
     const canvas = state.normalViewCanvas ??= document.createElement('canvas');
     const pixelWidth = Math.ceil(width * scale), pixelHeight = Math.ceil(height * scale);
     if (canvas.width !== pixelWidth) canvas.width = pixelWidth;
     if (canvas.height !== pixelHeight) canvas.height = pixelHeight;
+    const revision = terrainViewRevision(state, camera, width, height, scale);
+    if (state.normalViewRevision === revision) return canvas;
+    state.normalViewRevision = revision;
     const g = canvas.getContext('2d');
     g.setTransform(1, 0, 0, 1, 0, 0);
     g.imageSmoothingEnabled = false;
@@ -1817,6 +1826,9 @@ function groundAlbedoView(state, camera, width, height, scale) {
     const pixelWidth = Math.ceil(width * scale), pixelHeight = Math.ceil(height * scale);
     if (canvas.width !== pixelWidth) canvas.width = pixelWidth;
     if (canvas.height !== pixelHeight) canvas.height = pixelHeight;
+    const revision = terrainViewRevision(state, camera, width, height, scale);
+    if (state.groundViewRevision === revision) return canvas;
+    state.groundViewRevision = revision;
     const g = canvas.getContext('2d');
     g.setTransform(1, 0, 0, 1, 0, 0);
     g.imageSmoothingEnabled = false;
