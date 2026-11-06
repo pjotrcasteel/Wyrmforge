@@ -358,12 +358,13 @@ public sealed class GreyboxHuntBrowserTests : PageTest
             await Page.WaitForFunctionAsync(@"() => {
                 const progress = document.querySelector('.map-run-progress');
                 const chartReturned = progress?.getClientRects().length > 0 && progress.textContent?.includes('1 cleared');
-                const continueVisible = [...document.querySelectorAll('button')].some(button =>
-                    button.textContent?.trim() === 'Continue' && button.getClientRects().length > 0);
+                const continueVisible = [...document.querySelectorAll('[aria-label="Trail cleared"] button')].some(button =>
+                    button.textContent?.trim().toLowerCase() === 'continue' && button.getClientRects().length > 0);
                 return chartReturned || continueVisible;
             }", null, new() { Timeout = 150000 });
             if (!await Page.Locator(".map-run-progress").IsVisibleAsync())
-                await Page.GetByRole(AriaRole.Button, new() { Name = "Continue" }).ClickAsync();
+                await Page.GetByRole(AriaRole.Dialog, new() { Name = "Trail cleared" })
+                    .GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^continue$", RegexOptions.IgnoreCase) }).ClickAsync();
             await Expect(Page.GetByText("Choose your trail.", new() { Exact = true })).ToBeVisibleAsync(new() { Timeout = 30000 });
         }
         catch
