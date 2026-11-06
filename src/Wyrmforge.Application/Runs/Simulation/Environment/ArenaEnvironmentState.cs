@@ -115,7 +115,9 @@ public sealed class ArenaEnvironmentState
         };
         // The one-metre greybox has no authored scenery, supplies, solid crossings or walls.
         // It keeps only the small breakable salvage props: they are the sole Charred Scrap source.
-        if (node.Type != WyrmrealmNodeType.Combat) return environment;
+        // The Wyrm's lair gets the same terrain as the trails, so the duel is fought on real, destructible ground and not on the old painted arena.
+        var terrainLair = terrain && greybox && node.Type == WyrmrealmNodeType.Dragon;
+        if (node.Type != WyrmrealmNodeType.Combat && !terrainLair) return environment;
         if (terrain && greybox)
         {
             // Hunt 1.0 terrain: the player starts at the arena centre and the exit sits at TrailExitPosition.
@@ -131,6 +133,8 @@ public sealed class ArenaEnvironmentState
             environment.terrainProtected = recipe.ProtectedCells;
             environment.terrainExit = recipe.Exit;
         }
+        // A lair holds the duel only: no salvage props, crossings or supplies.
+        if (terrainLair) return environment;
 
         // The old fixed gated encounter remains part of current Hunts ONLY.
         // Arena Lab previews have natural continuous ground: no synthetic cross-walls or wave checkpoints.

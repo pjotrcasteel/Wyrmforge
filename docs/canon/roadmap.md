@@ -70,6 +70,8 @@ Reading: wet land is shamblers and hounds slipping between trees; scorched land 
 
 **6 November owner override — terrain default:** The owner verified the playable `?hunt1=1` terrain and explicitly requested it as the ordinary Hunt default. Enable this existing C# terrain path for normal Hunts without a query string; `?hunt1=0` remains a neutral-grey diagnostic fallback, and historical AR/GPU review URLs retain their scenes. Show a sealed north-road waystone before the trail is cleared; its open/usable state still requires the authoritative kill/encounter objective. This **does not** approve GH-F or complete the outstanding mobile, material and 3D XYZ gates. The 2 November table below remains the historical milestone snapshot.
 
+**Same-day addition from `hunt1/h0-canon-direction` (commit `f52c668b`):** The Wyrm's lair uses the same generated terrain as combat trails, without trail props or supplies; the dragon's normal movement is constrained by that environment. Integrate this narrowly over main so older experimental bot navigation and visual test versions do not replace already merged fixes. Browser movement and mobile acceptance remain part of validation.
+
 | Milestone | Implemented on the branch | Not done |
 |---|---|---|
 | H0 | Canon; C# full-loop test (route to Ashfang, Essence, extraction) | Browser full loop (headless Chromium simulates ~13–22 Hz, far too slow; needs an owner-approved accelerated-time hook); baseline captures; loop required in CI |
