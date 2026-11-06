@@ -93,6 +93,18 @@ test('after a dry spell the review bot closes on a stranded small pack instead o
     assert.deepEqual(botMovement(snapshot, memory, 11000), botKiteDirection(snapshot), 'a kill resumes normal kiting');
 });
 
+test('after holding in firing range of five stalled foes the bot keeps closing without losing its pursuit target', () => {
+    const memory = createBotMemory();
+    const enemies = Array.from({ length: 5 }, (_, index) => ({ x: 512 + index * 4, y: 860 }));
+    const snapshot = at(512, 960, { enemies, hud: { kills: 6 } });
+    botMovement(snapshot, memory, 0);
+    assert.deepEqual(botMovement(snapshot, memory, 9000), { x: 0, y: 0 }, 'hold the first moments inside firing range');
+    const pursuit = botMovement(snapshot, memory, 14000);
+    assert.ok(pursuit.y < -.9, 'after the hold, pursue a foe even if more than three enemies remain');
+    assert.equal(memory.huntClosing, true);
+    assert.ok(botMovement(snapshot, memory, 15000).y < -.9, 'the next frame still has a valid pursuit direction');
+});
+
 const grid = (columns, rows, height = () => 0, material = () => 0) => ({
     columns, rows,
     surface: Array.from({ length: columns * rows }, (_, i) => height(i % columns, Math.floor(i / columns))),

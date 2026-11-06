@@ -225,10 +225,10 @@ export function botMovement(snapshot, memory, now, frame = null) {
             memory.lastKillAt = now;
         }
         const stalled = now - memory.lastKillAt >= HUNT_STALLED_MS;
+        const maxFoes = stalled || memory.huntClosing ? HUNT_STALLED_MAX_FOES : HUNT_REMAINING;
         // Once an enemy survives sustained fire, keep pursuing it instead of alternating between a brief step and another hold.
         // A zero-range pursuit also handles cover inside the old 60-unit stopping distance.
-        let hunt = botHuntDirection(snapshot, frame, memory.huntClosing ? 0 : HUNT_RANGE,
-            stalled ? HUNT_STALLED_MAX_FOES : HUNT_REMAINING);
+        let hunt = botHuntDirection(snapshot, frame, memory.huntClosing ? 0 : HUNT_RANGE, maxFoes);
         if (!hunt) {
             memory.huntClosing = false;
             memory.huntPosition = null;
@@ -239,7 +239,7 @@ export function botMovement(snapshot, memory, now, frame = null) {
             memory.holdSince ??= now;
             if (now - memory.holdSince >= HOLD_BEFORE_CLOSING_MS) {
                 memory.huntClosing = true;
-                hunt = botHuntDirection(snapshot, frame, 0);
+                hunt = botHuntDirection(snapshot, frame, 0, maxFoes);
             }
         } else {
             memory.holdSince = null;
