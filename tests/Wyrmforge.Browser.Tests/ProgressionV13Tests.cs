@@ -74,12 +74,13 @@ public sealed class ProgressionV13Tests : BrowserTest
         await page.GotoAsync(url.TrimEnd('/') + "/hunt-lab?wyrm=Ashfang&ascendant=false&loadout=fire-evolution&invulnerable=false&seed=1337");
         await Expect(page.Locator(".hunt-lab-canvas")).ToBeVisibleAsync();
         await Expect(page.GetByText("DEVELOPER FIXTURE", new() { Exact = false })).ToBeVisibleAsync();
-        await page.WaitForFunctionAsync(@"async () => {
+        await page.EvaluateAsync(@"async () => {
             const canvas = document.querySelector('.hunt-lab-canvas');
-            const path = canvas?.dataset.arenaModule;
-            if (!path) return false;
-            const runtime = await import(path);
-            const diagnostics = runtime.readArenaDiagnostics(canvas);
+            window.progressionRuntime = await import(canvas.dataset.arenaModule);
+        }");
+        await page.WaitForFunctionAsync(@"() => {
+            const canvas = document.querySelector('.hunt-lab-canvas');
+            const diagnostics = window.progressionRuntime.readArenaDiagnostics(canvas);
             window.progressionEvidence ??= { sawProjectile: false, sawField: false, samples: [] };
             const evidence = window.progressionEvidence;
             evidence.sawProjectile ||= diagnostics?.projectiles?.length > 0;

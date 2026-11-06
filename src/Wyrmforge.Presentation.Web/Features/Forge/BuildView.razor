@@ -48,6 +48,9 @@
                         @foreach (var school in ArcaneSchoolCatalog.All)
                         {
                             var point = ArcaneWheelLayout.Anchor(school.Id, ActiveSchool);
+                            <div class="web-school-atmosphere atmosphere-@school.Icon" aria-hidden="true"
+                                 data-atmosphere-school="@school.Id" data-invested-points="@SchoolInvestment(school.Id)"
+                                 style="@AtmosphereStyle(school.Id)"></div>
                             <button class="wheel-school-badge @(school.Id == ActiveSchool ? "current" : string.Empty) @(!school.Authored ? "future" : string.Empty)"
                                     style="@PointStyle(point)" data-school="@school.Id" data-active="@(school.Id == ActiveSchool ? "true" : "false")"
                                     aria-label="@($"Inspect {school.Name} sector")" @onclick="() => FocusSchoolAsync(school.Id)">

@@ -33,6 +33,18 @@ public partial class BuildView : IAsyncDisposable
 
     private PassiveSchool ActiveSchool => ArcaneSchoolCatalog.For(CharacterSchool);
 
+    private int SchoolInvestment(PassiveSchool school) => Selection.Selected.Select(PassiveTreeCatalog.Get)
+        .Where(node => ArcaneSchoolCatalog.Owner(node) == school).Sum(node => node.Cost);
+
+    private string AtmosphereStyle(PassiveSchool school)
+    {
+        var invested = SchoolInvestment(school);
+        var opacity = .12 + .28 * invested / (invested + 12d);
+        var point = ArcaneWheelLayout.Anchor(school, ActiveSchool, 930);
+        return PointStyle(point) + FormattableString.Invariant($"opacity:{opacity:0.###};");
+    }
+
+
     protected override void OnParametersSet()
     {
         Selection.SetActiveSchool(ActiveSchool);
