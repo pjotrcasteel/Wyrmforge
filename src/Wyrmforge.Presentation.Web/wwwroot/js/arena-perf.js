@@ -29,7 +29,8 @@ export function readHeapMegabytes(perf = globalThis.performance) {
     return Number.isFinite(used) ? used / 1048576 : null;
 }
 
-export function perfReport({ sampler, renderer, quality, terrain, heapMb, enemies = 0, projectiles = 0, devicePixelRatio = 1 }) {
+export function perfReport({ sampler, renderer, quality, terrain, heapMb, enemies = 0, projectiles = 0,
+    gpuVisibleEnemies = null, gpuUploads = null, devicePixelRatio = 1 }) {
     const frames = sampler.summary();
     return {
         renderer, quality, devicePixelRatio,
@@ -38,6 +39,8 @@ export function perfReport({ sampler, renderer, quality, terrain, heapMb, enemie
         terrainRepaints: terrain?.repaints ?? 0, terrainRepaintMaxMs: round(terrain?.maxRepaintMs ?? 0),
         terrainRepaintAvgMs: round(terrain?.repaints ? terrain.totalRepaintMs / terrain.repaints : 0),
         heapMb: heapMb === null ? null : round(heapMb), enemies, projectiles,
+        gpuVisibleEnemies, gpuUploadTextures: gpuUploads?.dynamicTextures ?? null,
+        gpuUploadPixels: gpuUploads?.dynamicPixels ?? null,
     };
 }
 
@@ -47,6 +50,7 @@ export function perfLines(report) {
         `>33ms ${report.longFrames}/${report.samples}  ${report.renderer}/${report.quality ?? '-'}  dpr ${report.devicePixelRatio}`,
         `terrain ${report.terrainRepaints} repaints  avg ${report.terrainRepaintAvgMs}  max ${report.terrainRepaintMaxMs} ms`,
         `heap ${report.heapMb === null ? 'n/a' : `${report.heapMb} MB`}  foes ${report.enemies}  shots ${report.projectiles}`,
+        `GPU ${report.gpuUploadTextures ?? '-'} tex  ${report.gpuUploadPixels ?? '-'} px  visible ${report.gpuVisibleEnemies ?? '-'}/${report.enemies}`,
     ];
 }
 
