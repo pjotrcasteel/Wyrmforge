@@ -169,7 +169,7 @@ public sealed class FireTierOneFullLoopTests
             $"healthMin={metrics.MinimumHealthRatio:F3} damageTaken={metrics.DamageTaken:F1} " +
             $"routes={metrics.CompletedRouteNodes} boss={metrics.WyrmsReached} victories={metrics.DragonsSlain} " +
             $"essenceSecured={metrics.EssenceSecured} rituals={metrics.ExtractionRitualsCompleted} " +
-            $"seconds={metrics.SimulatedSeconds:F1} evolutions={string.Join(",", metrics.Evolutions)}");
+            $"seconds={metrics.SimulatedSeconds:F1} evolutions={string.Join(",", metrics.EvolutionIds)}");
 
         Assert.AreEqual(RunSelfPlayStopReason.NaturalEnd, metrics.StopReason,
             "A damageable agent must reach a natural death or extraction rather than time out.");
