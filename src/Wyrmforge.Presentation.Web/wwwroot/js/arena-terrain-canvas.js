@@ -1088,10 +1088,11 @@ export function terrainDirtyRegions(columns, rows, changed) {
         const c = index % columns, r = Math.floor(index / columns);
         let region = { c0: Math.max(0, c - 1), c1: Math.min(columns - 1, c + 4),
             r0: Math.max(0, r - 1), r1: Math.min(rows - 1, r + 4) };
-        // Merge overlapping paint clips, including the height overdraw (four rows north and south), to avoid painting a shared area twice.
+        // Merge genuinely adjoining dirty cells only. Joining clips through their large height-overdraw margins
+        // can transitively repaint nearly an entire arena when an ambush creates several separated craters.
         for (let i = 0; i < regions.length;) {
             const other = regions[i];
-            if (region.c0 > other.c1 || other.c0 > region.c1 || region.r0 > other.r1 + 9 || other.r0 > region.r1 + 9) {
+            if (region.c0 > other.c1 || other.c0 > region.c1 || region.r0 > other.r1 || other.r0 > region.r1) {
                 i++;
                 continue;
             }
