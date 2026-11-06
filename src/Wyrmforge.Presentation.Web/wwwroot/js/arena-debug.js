@@ -76,7 +76,7 @@ const HUNT_STUCK_MS = 1200;
 const HUNT_DETOUR_MS = 700;
 const HUNT_PROGRESS_UNITS = 8;
 const HUNT_STALLED_MS = 8000;
-const HUNT_STALLED_MAX_FOES = 8;
+const HUNT_STALLED_MAX_FOES = 20;
 const CELL = 32;
 const MAX_STEP_MICROCELLS = 4;
 const LAVA = 3;
@@ -148,15 +148,33 @@ export function flowDirection(frame, from, target, props = []) {
             best = { index: next, column: nc, row: nr };
     }
     if (!best) return null;
-    // The hunter has a 14-unit footprint in a 32-unit terrain column. Before stepping across a row boundary,
-    // centre horizontally (and vice versa) so the C# collision check does not also overlap a high side column.
-    const centreX = (start.column + 0.5) * CELL, centreY = (start.row + 0.5) * CELL;
-    const safeOffset = CELL / 2 - HUNTER_RADIUS;
-    if (best.row !== start.row && Math.abs(from.x - centreX) > safeOffset)
-        return normalized(centreX - from.x, 0, 0);
-    if (best.column !== start.column && Math.abs(from.y - centreY) > safeOffset)
-        return normalized(0, centreY - from.y, 0);
     return normalized((best.column + 0.5) * CELL - from.x, (best.row + 0.5) * CELL - from.y, 0);
+}
+
+/** A real hunter-sized walk, sampled at the same eight-world-unit spacing as C# ArenaTerrainGrid.BlocksMovement. */
+export function walkableSegment(frame, from, target, props = []) {
+    if (!frame) return true;
+    const distance = Math.hypot(target.x - from.x, target.y - from.y);
+    const steps = Math.max(1, Math.ceil(distance / 8));
+    let previous = cellIndex(frame, from.x, from.y);
+    for (let step = 1; step <= steps; step++) {
+        const progress = step / steps;
+        const x = from.x + (target.x - from.x) * progress, y = from.y + (target.y - from.y) * progress;
+        const current = cellIndex(frame, x, y);
+        const firstColumn = Math.floor((x - HUNTER_RADIUS) / CELL), lastColumn = Math.floor((x + HUNTER_RADIUS) / CELL);
+        const firstRow = Math.floor((y - HUNTER_RADIUS) / CELL), lastRow = Math.floor((y + HUNTER_RADIUS) / CELL);
+        if (firstColumn < 0 || firstRow < 0 || lastColumn >= frame.columns || lastRow >= frame.rows) return false;
+        for (let row = firstRow; row <= lastRow; row++) {
+            for (let column = firstColumn; column <= lastColumn; column++) {
+                const index = row * frame.columns + column;
+                if (frame.material[index] === LAVA || !canStep(frame, current.index, index)) return false;
+            }
+        }
+        if (!canStep(frame, previous.index, current.index)) return false;
+        if (props.some(prop => Math.hypot(prop.x - x, prop.y - y) <= (prop.radius ?? 16) + HUNTER_RADIUS)) return false;
+        previous = current;
+    }
+    return true;
 }
 
 /** With only a few enemies (or a Wyrm) left, close to firing range instead of fleeing so the encounter can finish. */
@@ -204,7 +222,7 @@ function nearestExitPort(player, ports) {
     return nearest;
 }
 
-/** Walk the C# road, routing around actual terrain and props instead of repeatedly walking into an obstruction. */
+/** Walk short segments of the C# road; a safe centreline avoids cutting corners through adjacent cliffs. */
 export function roadWalkDirection(snapshot, frame) {
     const player = snapshot?.player, road = frame?.road;
     if (!player || !road?.length) return null;
@@ -214,13 +232,28 @@ export function roadWalkDirection(snapshot, frame) {
         const point = at(i), distance = Math.hypot(point.x - player.x, point.y - player.y);
         if (distance < best) { best = distance; nearest = i; }
     }
-    // The centre line runs from the spawn to the exit, so walking its order walks the road.
-    const ahead = at(Math.min(road.length - 2, nearest + 8));
-    for (let step = 8; step >= 2; step -= 2) {
+    if (best > CELL * 2) {
+        const nearestPoint = at(nearest);
+        const flow = flowDirection(frame, player, nearestPoint, snapshot.environment?.props);
+        if (flow && (flow.x !== 0 || flow.y !== 0)) return flow;
+        if (walkableSegment(frame, player, nearestPoint, snapshot.environment?.props))
+            return normalized(nearestPoint.x - player.x, nearestPoint.y - player.y, 0);
+        // A displaced hunter should at least head back into the interior instead of following the end of the road
+        // through an unreachable cliff. Once it is back in range, the short centreline segments take over.
+        return normalized((snapshot.world?.width ?? frame.columns * CELL) / 2 - player.x,
+            (snapshot.world?.height ?? frame.rows * CELL) / 2 - player.y, 0);
+    }
+    // The route is already protected by the C# generator. Prefer its nearby centreline to a shortest-path shortcut
+    // across a cliff, and use the flow field only where a real obstructing prop prevents a straight segment.
+    for (const step of [2, 4, 6, 8]) {
         const target = at(Math.min(road.length - 2, nearest + step));
+        if (Math.hypot(target.x - player.x, target.y - player.y) < 6) continue;
+        if (walkableSegment(frame, player, target, snapshot.environment?.props))
+            return normalized(target.x - player.x, target.y - player.y, 0);
         const heading = flowDirection(frame, player, target, snapshot.environment?.props);
         if (heading && (heading.x !== 0 || heading.y !== 0)) return heading;
     }
+    const ahead = at(Math.min(road.length - 2, nearest + 8));
     return normalized(ahead.x - player.x, ahead.y - player.y, 6);
 }
 
@@ -269,6 +302,12 @@ export function botMovement(snapshot, memory, now, frame = null) {
     memory.huntPosition = null;
     memory.holdSince = null;
     const dx = exit.x - player.x, dy = exit.y - player.y, distance = Math.hypot(dx, dy);
+    // On the single-exit terrain trail, the protected authored road leads to that exit. A direct goal flow can
+    // instead send the bot across a cliff and trap it at the far boundary of the map.
+    if (snapshot.exit && frame?.road?.length && distance >= 40) {
+        const road = roadWalkDirection(snapshot, frame);
+        if (road && (road.x !== 0 || road.y !== 0)) return road;
+    }
     const flow = frame ? flowDirection(frame, player, exit, snapshot.environment?.props) : null;
     const heading = flow && distance >= 40 ? flow : normalized(dx, dy, 6);
     if (distance < memory.bestDistance - 2) { memory.bestDistance = distance; memory.progressAt = now; }

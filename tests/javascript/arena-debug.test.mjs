@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
     DEBUG_BRIGHT_AMBIENT, DEBUG_BRIGHT_COLOR, MAX_DEBUG_SPEED, withDebugAmbient, botHuntDirection, flowDirection, botKiteDirection, botMovement, createBotMemory,
-    readArenaDebugFlags, roadWalkDirection,
+    readArenaDebugFlags, roadWalkDirection, walkableSegment,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-debug.js';
 
 const world = { width: 1024, height: 1920 };
@@ -93,6 +93,14 @@ test('after a dry spell the review bot closes on a stranded small pack instead o
     assert.deepEqual(botMovement(snapshot, memory, 11000), botKiteDirection(snapshot), 'a kill resumes normal kiting');
 });
 
+test('an ambush-size crowd cannot pin the invulnerable review bot against the arena edge indefinitely', () => {
+    const memory = createBotMemory();
+    const enemies = Array.from({ length: 15 }, (_, index) => ({ x: 500 + index * 3, y: 800 }));
+    const snapshot = at(512, 1700, { enemies, hud: { kills: 0 } });
+    assert.deepEqual(botMovement(snapshot, memory, 0), botKiteDirection(snapshot), 'briefly kite while fighting the wave');
+    assert.ok(botMovement(snapshot, memory, 9000).y < -.9, 'after no kills, walk back toward the pack');
+});
+
 test('after holding in firing range of five stalled foes the bot keeps closing without losing its pursuit target', () => {
     const memory = createBotMemory();
     const enemies = Array.from({ length: 5 }, (_, index) => ({ x: 512 + index * 4, y: 860 }));
@@ -133,15 +141,12 @@ test('flow direction respects the full physical heights of visually lowered tree
     assert.ok(first.x > 0.9, 'the bot walks around the physical trunks instead of crossing the renderer-only lowered ground');
 });
 
-test('flow direction aligns the full hunter footprint before passing narrow cliff columns', () => {
+test('a short road segment checks the full hunter footprint near cliff columns', () => {
     const terrain = grid(5, 7, (column, row) => (row === 3 && column === 3 ? 16 : 0));
-    const offset = flowDirection(terrain, { x: 2 * 32 + 25, y: 5 * 32 + 16 }, { x: 2 * 32 + 16, y: 16 });
-    assert.deepEqual(offset, { x: -1, y: 0 }, 'align inside the current column before moving north past the cliff');
-    const aligned = flowDirection(terrain, { x: 2 * 32 + 16, y: 5 * 32 + 16 }, { x: 2 * 32 + 16, y: 16 });
-    assert.deepEqual(aligned, { x: 0, y: -1 }, 'resume north after alignment');
-
-    const east = flowDirection(grid(7, 5), { x: 48, y: 2 * 32 + 25 }, { x: 6 * 32 + 16, y: 2 * 32 + 16 });
-    assert.deepEqual(east, { x: 0, y: -1 }, 'align vertically before stepping east across a cell boundary');
+    assert.equal(walkableSegment(terrain, { x: 2 * 32 + 25, y: 5 * 32 + 16 }, { x: 2 * 32 + 25, y: 16 }), false,
+        'the hunter would clip the cliff in the adjacent column');
+    assert.equal(walkableSegment(terrain, { x: 2 * 32 + 16, y: 5 * 32 + 16 }, { x: 2 * 32 + 16, y: 16 }), true,
+        'walking down the protected centreline clears the same cliff');
 });
 
 test('the road review bot navigates around terrain instead of repeatedly walking into a wall', () => {
@@ -149,9 +154,19 @@ test('the road review bot navigates around terrain instead of repeatedly walking
     terrain.road = Array.from({ length: 7 }, (_, row) => [8, (6 - row) * 16 + 8]).flat();
     const snapshot = at(16, 5 * 32 + 16);
     const heading = roadWalkDirection(snapshot, terrain);
-    assert.ok(heading.x > 0.9, 'the bot first walks toward the gap instead of pressing against the ridge');
+    assert.ok(heading.y < -0.9, 'follow the short protected road segment while it is clear');
+    const detour = roadWalkDirection(at(16, 4 * 32 + 16), terrain);
+    assert.ok(detour.x > 0.9, 'at the ridge, route sideways toward the gap instead of pressing against the wall');
     assert.deepEqual(roadWalkDirection(snapshot, { ...grid(7, 7), road: terrain.road }), { x: 0, y: -1 },
         'on open ground the same road keeps its northbound heading');
+});
+
+test('a hunter far outside the road corridor first returns to the accessible centreline', () => {
+    const terrain = grid(20, 60);
+    terrain.road = Array.from({ length: 50 }, (_, row) => [10 * 16 + 8, (59 - row) * 16 + 8]).flat();
+    const displaced = at(19 * 32 - 16, 58 * 32 + 16);
+    const heading = roadWalkDirection(displaced, terrain);
+    assert.ok(heading.x < -.9, 'return toward the road before attempting the next northern segment');
 });
 
 test('flow direction refuses lava and steep steps and reports an unreachable target', () => {
