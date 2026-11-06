@@ -12,7 +12,7 @@ public static class GameIconMap
         ["✦"] = "arcane", ["◈"] = "arcane", ["⋈"] = "arcane",
         ["◇"] = "crystal", ["◆"] = "crystal", ["♢"] = "crystal", ["⬙"] = "crystal", ["❖"] = "crystal",
         ["✧"] = "star", ["⋆"] = "star", ["✹"] = "star", ["✺"] = "star", ["✵"] = "star", ["⊛"] = "star", ["✨"] = "star",
-        ["🔥"] = "fire", ["♨"] = "fire", ["🜂"] = "fire", ["☄"] = "fire",
+        ["🔥"] = "fire", ["♨"] = "fire", ["🜂"] = "fire", ["☄"] = "fire", ["☀"] = "fire",
         ["❄"] = "frost", ["❆"] = "frost", ["❅"] = "frost",
         ["⚡"] = "storm", ["ϟ"] = "storm", ["↯"] = "storm", ["⌁"] = "storm",
         ["♥"] = "heart", ["💙"] = "heart",
