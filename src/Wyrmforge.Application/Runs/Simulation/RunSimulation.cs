@@ -28,7 +28,8 @@ public sealed partial class RunSimulation
 {
     private readonly LevelChoiceService levelChoiceService;
     private readonly IRandomSource randomSource;
-    private readonly PassiveCombatProfile passiveProfile;
+    private PassiveCombatProfile passiveProfile;
+    private Wyrmforge.Domain.Progression.PassiveTree.PassiveSchool? activePassiveSchool;
     private WyrmrealmMapState mapState;
     private readonly List<WyrmrealmMapNode> completedRouteNodes = [];
     private readonly RunBuildState build = new();
@@ -106,6 +107,11 @@ public sealed partial class RunSimulation
         if (!availablePrimarySpells.Contains(id) || elapsed > 0 || mapState.EncounterActive || completedRouteNodes.Count > 0 || IsEnded)
             return false;
         if (!build.Spells.TryChoosePrimary(id)) return false;
+        activePassiveSchool = Wyrmforge.Domain.Progression.PassiveTree.ArcaneSchoolCatalog.For(DivineArchetypeCatalog.FromExistingSchool(SpellCatalog.Get(id).School).Id);
+        passiveProfile = PassiveCombatProfile.Create(learnedPassiveNodeIds, activePassiveSchool);
+        player.Barrier = passiveProfile.WinterShell;
+        InitializeResonance(ActivePassiveNodes());
+        RebuildFireballAmplification();
         ApplyPreparedLaboratoryMutation();
         RefreshBuildModifiers();
         RefreshBuildHud();

@@ -51,7 +51,7 @@ public sealed partial class RunSimulation
             if (MutationAmplifierCatalog.ForFireball(id) is not { } descriptor) continue;
             foreach (var capability in descriptor.Capabilities)
             {
-                var factor = mutationAmplifiers.FactorFor(descriptor, capability, learnedPassiveNodeIds, equipped);
+                var factor = mutationAmplifiers.FactorFor(descriptor, capability, ActivePassiveNodes(), equipped);
                 if (factor > 1) fireballAmplification[(id, capability)] = factor;
             }
         }

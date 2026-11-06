@@ -14,6 +14,18 @@ public partial class BuildView : IAsyncDisposable
 {
     [Parameter, EditorRequired] public PassiveTreeSelection Selection { get; set; } = null!;
     [Parameter] public DivineArchetype CharacterSchool { get; set; } = DivineArchetype.Pyromancer;
+    [Parameter] public EventCallback<DivineArchetype> OnSwitchSchool { get; set; }
+    private PassiveSchool? inspectedSchool;
+
+    private async Task SwitchInspectedSchoolAsync()
+    {
+        if (inspectedSchool is not { } school || !ArcaneSchoolCatalog.Get(school).Authored) return;
+        await OnSwitchSchool.InvokeAsync(ArcaneSchoolCatalog.Get(school).Archetype);
+        inspectedSchool = null;
+        inspectorOpen = false;
+        await ResetViewAsync();
+    }
+
     [Parameter] public FireballCoreState? FireballCore { get; set; }
     [Parameter] public MutationAmplifierSockets MutationAmplifiers { get; set; } = MutationAmplifierCatalog.CreateSockets();
     [Parameter] public Func<string, FireballMutationId?, Task<bool>> OnAssignFireballAmplifier { get; set; } = (_, _) => Task.FromResult(false);
@@ -291,6 +303,7 @@ public partial class BuildView : IAsyncDisposable
 
     private async Task FocusSchoolAsync(PassiveSchool school)
     {
+        inspectedSchool = school;
         var point = ArcaneWheelLayout.Anchor(school, ActiveSchool, 740);
         inspectorOpen = false;
         await JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.focusSchool", viewport, point.X, point.Y);

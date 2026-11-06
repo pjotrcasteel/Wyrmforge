@@ -1865,3 +1865,8 @@
         min-width: 0;
     }
 }
+
+.school-switch-panel { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; padding: .65rem; background: #181b20; color: #e1d5bc; }
+.school-switch-panel span { flex: 1 1 180px; font-size: .85rem; }
+.school-switch-panel button { min-height: 44px; padding: .5rem 1rem; color: #f0deb5; background: #302b24; border: 1px solid #78664b; }
+.dormant-effect { color: #aebed3; font-size: .85rem; }

@@ -34,6 +34,25 @@ public static class FireballCoreCatalog
     // Research adds possible mutations; Web investment augments the effects of equipped mutations.
     public static double DamageMultiplier(int level) => 1 + 0.08 * (Math.Clamp(level, 1, 5) - 1);
 
+    // Same capacity schedule as the existing progression draft #481; tunable.
+    public static int SocketCapacityForLevel(int level) => Math.Clamp(level, 1, 5) switch
+    {
+        1 => 0,
+        2 => 1,
+        3 => 2,
+        4 => 3,
+        _ => 5,
+    };
+
+    public static int UnlockLevelForSocket(int index) => index switch
+    {
+        0 => 2,
+        1 => 3,
+        2 => 4,
+        3 or 4 => 5,
+        _ => throw new ArgumentOutOfRangeException(nameof(index)),
+    };
+
     // Initial recipe tuning, using real secured Ashfang materials. No fictional wallet or resources.
     public static IReadOnlyList<FireballUpgradeNeed> UpgradeTo(int nextLevel) => nextLevel switch
     {
@@ -59,9 +78,10 @@ public sealed class FireballCoreState
     private readonly FireballMutationId?[] slots = new FireballMutationId?[5];
 
     public int Level { get; private set; } = 1;
+    public int SocketCapacity => FireballCoreCatalog.SocketCapacityForLevel(Level);
     public IReadOnlySet<FireballMutationId> Discovered => new HashSet<FireballMutationId>(discovered);
     public IReadOnlyList<FireballMutationId?> Slots => slots.ToArray();
-    public IReadOnlyList<FireballMutationId> Equipped => slots.Take(Level).OfType<FireballMutationId>().ToArray();
+    public IReadOnlyList<FireballMutationId> Equipped => slots.Take(SocketCapacity).OfType<FireballMutationId>().ToArray();
     public bool CanUpgrade(DragonEssenceVault vault, HuntMaterialSatchel materials) =>
         Level < 5 && FireballCoreCatalog.UpgradeTo(Level + 1).All(need => vault.Count(need.Material) >= need.Required)
         && FireballCoreCatalog.UpgradeMaterialsTo(Level + 1).All(need => materials.Count(need.Material) >= need.Required);
@@ -90,7 +110,7 @@ public sealed class FireballCoreState
 
     public bool Equip(int index, FireballMutationId? mutation)
     {
-        if (index < 0 || index >= Level) return false;
+        if (index < 0 || index >= SocketCapacity) return false;
         if (mutation is { } id)
         {
             if (!discovered.Contains(id) || !FireballCoreCatalog.Mutations.Any(entry => entry.Id == id && entry.Playable)) return false;

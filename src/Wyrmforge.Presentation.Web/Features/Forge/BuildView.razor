@@ -5,6 +5,21 @@
 @inject IJSRuntime JavaScript
 
 <section class="build-view school-wheel-view">
+    @if (inspectedSchool is { } sector && sector != ActiveSchool)
+    {
+        <div class="school-switch-panel" role="status">
+            <strong>@ArcaneSchoolCatalog.Get(sector).Name</strong>
+            @if (ArcaneSchoolCatalog.Get(sector).Authored)
+            {
+                <span>Keep every allocation. Other schools provide dormant bonuses.</span>
+                <button @onclick="SwitchInspectedSchoolAsync">Activate school</button>
+            }
+            else
+            {
+                <span>This school's signature and paths are not yet playable.</span>
+            }
+        </div>
+    }
     <div class="web-layout @(inspectorOpen ? "inspecting" : string.Empty)">
         <div class="atlas-stage">
             @* Keep progression visible without spending a full row above the map. The counter opens Hunter XP. *@
@@ -147,6 +162,7 @@
 
             @if (FocusedNode.Kind != PassiveNodeKind.Origin)
             {
+                <p class="dormant-effect">@PassiveDormancy.Description(FocusedNode)</p>
                 <div class="inspector-cost"><strong>@FocusedNode.Cost</strong><span>node cost</span></div>
             }
 

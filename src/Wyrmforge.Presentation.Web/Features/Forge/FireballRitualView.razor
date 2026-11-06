@@ -27,7 +27,7 @@
             @for (var i = 0; i < 5; i++)
             {
                 var slot = i;
-                var unlocked = slot < Core.Level;
+                var unlocked = slot < Core.SocketCapacity;
                 var mutation = Core.Slots[slot];
                 <button type="button" class="fireball-socket fireball-socket--@(slot + 1) @(selectedSlot == slot ? "selected" : "") @(inspectedLockedSlot == slot ? "inspected" : "") @(!unlocked ? "sealed" : mutation is null ? "empty" : "filled")"
                         aria-label="@SlotLabel(slot)"
@@ -75,7 +75,7 @@
             {
                 <div class="fireball-locked-explainer" role="status">
                     <strong>Socket @(sealedSlot + 1) is sealed</strong>
-                    <span>Unlocks at Fireball Lv @(sealedSlot + 1). Upgrade the core one level at a time, then equip a researched mutator.</span>
+                    <span>Unlocks at Fireball Lv @FireballCoreCatalog.UnlockLevelForSocket(sealedSlot). Upgrade the core one level at a time, then equip a researched mutator.</span>
                 </div>
             }
             @if (Core.Level == 5)
@@ -318,10 +318,10 @@
         FireballMutationId.EmberRecall => "px-cycle",
         _ => "px-fire",
     };
-    private string SlotCaption(int slot) => slot >= Core.Level ? $"Lv {slot + 1}"
+    private string SlotCaption(int slot) => slot >= Core.SocketCapacity ? $"Lv {FireballCoreCatalog.UnlockLevelForSocket(slot)}"
         : Core.Slots[slot] is { } mutation ? FireballCoreCatalog.Get(mutation).Name : "Empty";
 
-    private string SlotLabel(int slot) => slot >= Core.Level ? $"Slot {slot + 1}: locked until Fireball level {slot + 1}"
+    private string SlotLabel(int slot) => slot >= Core.SocketCapacity ? $"Slot {slot + 1}: locked until Fireball level {FireballCoreCatalog.UnlockLevelForSocket(slot)}"
         : Core.Slots[slot] is { } mutation ? $"Slot {slot + 1}: {FireballCoreCatalog.Get(mutation).Name}"
         : $"Slot {slot + 1}: empty, choose mutator";
 
@@ -330,7 +330,7 @@
     {
         notice = null;
         focusContext = true;
-        if (slot < Core.Level) { selectedSlot = slot; inspectedLockedSlot = null; }
+        if (slot < Core.SocketCapacity) { selectedSlot = slot; inspectedLockedSlot = null; }
         else { selectedSlot = null; inspectedLockedSlot = slot; }
     }
     protected override async Task OnAfterRenderAsync(bool firstRender)
