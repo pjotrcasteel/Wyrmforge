@@ -89,7 +89,8 @@ public sealed class DamageableAshfangExtractionTests
                 $"bossWindups={agent.BossWindups} stalledExits={agent.ExitSidesteps} " +
                 $"hitByAttack={agent.DamageByAttack} " +
                 $"dragonsSlain={metrics.DragonsSlain} essence={metrics.EssenceSecured} " +
-                $"rituals={metrics.ExtractionRitualsCompleted} seconds={metrics.SimulatedSeconds:F1} " +
+                $"rituals={metrics.ExtractionRitualsCompleted} deathsInRitual={metrics.DeathsDuringExtraction} " +
+                $"ritualFrames={agent.ExtractionFrames} seconds={metrics.SimulatedSeconds:F1} " +
                 $"evolutions={string.Join(",", metrics.EvolutionIds)}";
             evidence.Add(row);
             TestContext.WriteLine(row);
@@ -161,19 +162,21 @@ public sealed class DamageableAshfangExtractionTests
         public int BossFrames { get; private set; }
         public int BossWindups { get; private set; }
         public int ExitSidesteps { get; private set; }
+        public int ExtractionFrames { get; private set; }
 
         public MovementInput ChooseMovement(RunAgentObservation observation)
         {
             var frame = observation.Snapshot;
             if (!double.IsNaN(lastHealth) && frame.Hud.Health < lastHealth)
             {
-                var action = frame.Dragon is { } damageWyrm
+                var action = frame.Extraction is not null ? "extraction" : frame.Dragon is { } damageWyrm
                     ? $"{damageWyrm.Action ?? "idle"}/{damageWyrm.ActionPhase ?? "unknown"}" : "pre-boss";
                 damageByAttack[action] = damageByAttack.GetValueOrDefault(action) + lastHealth - frame.Hud.Health;
             }
             lastHealth = frame.Hud.Health;
             if (frame.Exit is not null) return ChooseExitMovement(observation);
-            if (frame.Extraction is not null || frame.Dragon is not { Targetable: true } wyrm)
+            if (frame.Extraction is not null) return ChooseExtractionMovement(observation);
+            if (frame.Dragon is not { Targetable: true } wyrm)
                 return inner.ChooseMovement(observation);
 
             BossFrames++;
@@ -251,6 +254,51 @@ public sealed class DamageableAshfangExtractionTests
             var radial = distance < 205 ? 1.6 : distance > 255 ? -0.9 : 0;
             return AimAtBoss(Move(-dy / distance + dx / distance * radial, dx / distance + dy / distance * radial),
                 player.X, player.Y, wyrm.X, wyrm.Y);
+        }
+
+        // Defend the actual ten-second ritual by moving around its interior.
+        // Never leave the circle, change its countdown, or suppress its waves.
+        private MovementInput ChooseExtractionMovement(RunAgentObservation observation)
+        {
+            ExtractionFrames++;
+            var frame = observation.Snapshot;
+            var ritual = frame.Extraction!;
+            var px = frame.Player.X;
+            var py = frame.Player.Y;
+            var dx = px - ritual.X;
+            var dy = py - ritual.Y;
+            var distance = Length(dx, dy);
+            var ux = distance > .001 ? dx / distance : 1;
+            var uy = distance > .001 ? dy / distance : 0;
+            var ring = ritual.Radius * 0.65;
+
+            // Running in a small circle keeps spawned attackers moving rather
+            // than allowing several to converge on a stationary hunter.
+            var radial = distance > ring + 8 ? -1.8 : distance < ring - 8 ? 0.9 : 0;
+            var mx = -uy + ux * radial;
+            var my = ux + uy * radial;
+
+            var closest = frame.Enemies.OrderBy(enemy => Length(px - enemy.X, py - enemy.Y)).FirstOrDefault();
+            if (closest is not null)
+            {
+                var enemyDistance = Length(px - closest.X, py - closest.Y);
+                if (enemyDistance < 95)
+                {
+                    var avoidance = (95 - enemyDistance) / 95 * 1.4;
+                    mx += (px - closest.X) / Math.Max(1, enemyDistance) * avoidance;
+                    my += (py - closest.Y) / Math.Max(1, enemyDistance) * avoidance;
+                }
+            }
+
+            // Hard return to the ritual interior if enemy avoidance starts
+            // pushing the mage toward the boundary.
+            if (distance > ritual.Radius * .80)
+            {
+                mx = -ux * 2 - uy * .4;
+                my = -uy * 2 + ux * .4;
+            }
+            var move = Move(mx, my);
+            return closest is null ? move : AimAtBoss(move, px, py, closest.X, closest.Y);
         }
 
         private MovementInput ChooseExitMovement(RunAgentObservation observation)
