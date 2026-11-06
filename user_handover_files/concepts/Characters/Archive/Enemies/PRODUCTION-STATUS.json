@@ -1,0 +1,70 @@
+{
+  "Hollowed": {
+    "aseprite": "single-frame layered source study",
+    "animation": "unsliced reference",
+    "materials": "turnaround drafts, except normal Warden Smash sheet; alignment pending",
+    "runtime_ready": false
+  },
+  "Ashling": {
+    "aseprite": "single-frame layered source study",
+    "animation": "unsliced reference",
+    "materials": "turnaround drafts, except normal Warden Smash sheet; alignment pending",
+    "runtime_ready": false
+  },
+  "Ash-Priest": {
+    "aseprite": "single-frame layered source study",
+    "animation": "unsliced reference",
+    "materials": "turnaround drafts, except normal Warden Smash sheet; alignment pending",
+    "runtime_ready": false
+  },
+  "Ash-Slinger": {
+    "aseprite": "single-frame layered source study",
+    "animation": "unsliced reference",
+    "materials": "turnaround drafts, except normal Warden Smash sheet; alignment pending",
+    "runtime_ready": false
+  },
+  "Mire-Hound": {
+    "aseprite": "single-frame layered source study",
+    "animation": "unsliced reference",
+    "materials": "turnaround drafts, except normal Warden Smash sheet; alignment pending",
+    "runtime_ready": false
+  },
+  "Penitent": {
+    "aseprite": "single-frame layered source study",
+    "animation": "unsliced reference",
+    "materials": "height draft; emission explicitly off",
+    "runtime_ready": false
+  },
+  "Bell-Warden": {
+    "aseprite": "single-frame layered source study",
+    "animation": "unsliced reference",
+    "materials": "turnaround drafts, except normal Warden Smash sheet; alignment pending",
+    "runtime_ready": false
+  },
+  "Drowned-Wraith": {
+    "aseprite": "single-frame layered source study",
+    "animation": "unsliced reference",
+    "materials": "turnaround drafts, except normal Warden Smash sheet; alignment pending",
+    "runtime_ready": false
+  },
+  "Reliquary": {
+    "aseprite": "single-frame layered both-form source study, 14 layers",
+    "animation": "six casts and transformation, unsliced reference sheets",
+    "materials": "normal and awakened turnaround height/emissive drafts; alignment pending",
+    "runtime_ready": false
+  },
+  "Ashfang": {
+    "art": "Approved normal half-size and enraged designs. Draft turnarounds registered to one canvas and pivot.",
+    "aseprite": "72x48, six tagged turnaround frames, four aligned layers. Structural readback verified.",
+    "animation": "Unsliced motion source art for both forms. Native animation authoring and validation assigned to Claude.",
+    "materials": "Aligned albedo, geometry-based height and selective emissive drafts for six turnaround frames. Separate dorsal vent VFX layer.",
+    "runtime_ready": false,
+    "attacks": "Unsliced three-view breath/sweep, claws/combo, bite, pounce and left/right tail sources for both forms.",
+    "vfx": "separate six-stage right-facing breath source; mouth sockets and integration assigned to Claude",
+    "aerial": "both-form vertical takeoff eight poses/view plus revised braking-flap landing eight/view; shadow-only overhead contract; hazy silhouette reference only; runtime/clean shadow proxy pending",
+    "aerial_fire_rain": "Separate six-pose falling cinder and ground impact source sheets. Existing hazard and flight mapping documented. Claude integration and validation pending.",
+    "roar_and_phase_break": "Three-view roar and normal-to-enraged phase break pose studies. Native authoring and integration assigned to Claude.",
+    "hit_stagger_defeat": "Three-view hit and stagger reference and eight-beat defeat/cooling reference. Native animation, material alignment and validation pending with Claude.",
+    "grounded_transitions": "Alert, left/right turn and three-view locomotion start/stop references. Native animation, material alignment and validation pending with Claude."
+  }
+}

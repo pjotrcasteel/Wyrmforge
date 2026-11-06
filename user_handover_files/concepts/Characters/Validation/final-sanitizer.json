@@ -1,0 +1,270 @@
+{
+  "structuralPass": true,
+  "asepriteFiles": 37,
+  "primaryMasters": 14,
+  "masterFrames": 3800,
+  "masterClips": 928,
+  "pngFilesDecoded": 346,
+  "emptyFrames": [],
+  "edgeTouchFrames": [],
+  "originalSourceHashesVerified": 221,
+  "allEditorOpen": true,
+  "files": [
+    {
+      "file": "Archive/Enemies/Ash-Priest/aseprite/Ash-Priest-source-study.aseprite",
+      "frames": 1,
+      "sha256": "aa1f7815ec64044a23d3d21781892eb873f933effc22b011a525e007ef708fee",
+      "editorOpen": true
+    },
+    {
+      "file": "Archive/Enemies/Ash-Slinger/aseprite/Ash-Slinger-source-study.aseprite",
+      "frames": 1,
+      "sha256": "9ebf0a05a86c9660d001e6e107a2fd6517563c4797fb6374cd20469ce3eab97c",
+      "editorOpen": true
+    },
+    {
+      "file": "Archive/Enemies/Ashfang/aseprite/Ashfang-Tier-I.aseprite",
+      "frames": 6,
+      "sha256": "83bb58d62fe0958eb506775f2e29f21515b5cc2adfb041f5045da7e50b19b517",
+      "editorOpen": true
+    },
+    {
+      "file": "Archive/Enemies/Ashling/aseprite/Ashling-source-study.aseprite",
+      "frames": 1,
+      "sha256": "9d73f6d3f1f990a2c4aafb00752767d9e0b1e1e2f3e01216dd32bf6b22478831",
+      "editorOpen": true
+    },
+    {
+      "file": "Archive/Enemies/Bell-Warden/aseprite/Bell-Warden-both-forms-source-study.aseprite",
+      "frames": 1,
+      "sha256": "25f6f222b7c1d758f0c3743a6ca5af0afa6c1f44f339154bbf397f7493265e3e",
+      "editorOpen": true
+    },
+    {
+      "file": "Archive/Enemies/Drowned-Wraith/aseprite/Drowned-Wraith-source-study.aseprite",
+      "frames": 1,
+      "sha256": "1ba1d9b271a1c0ac55cbd1a527c71a98c1c3b7d788e1db62c99d04c0998d278e",
+      "editorOpen": true
+    },
+    {
+      "file": "Archive/Enemies/Hollowed/aseprite/Hollowed-material-study.aseprite",
+      "frames": 1,
+      "sha256": "35c4e02236884deafe64bdcf2da75a89c79b3e893c1cd0617d5fcf36d787defb",
+      "editorOpen": true
+    },
+    {
+      "file": "Archive/Enemies/Mire-Hound/aseprite/Mire-Hound-source-study.aseprite",
+      "frames": 1,
+      "sha256": "3b8df73967dd7a9f2cc4763149ccaefaf18365dd502b234d4f9933cac5a490c9",
+      "editorOpen": true
+    },
+    {
+      "file": "Archive/Enemies/Penitent/aseprite/Penitent-source-study.aseprite",
+      "frames": 1,
+      "sha256": "89086e3fc39d56d3379e8fe45769a4e46aa0214aab6ee3e8b024c6203536fed7",
+      "editorOpen": true
+    },
+    {
+      "file": "Archive/Enemies/Reliquary/aseprite/Reliquary-both-forms-source-study.aseprite",
+      "frames": 1,
+      "sha256": "6f72b6e8dcbd6d536c19a419a0ad0cc69c3997f452b47a0b6658a090d5b565a8",
+      "editorOpen": true
+    },
+    {
+      "file": "Archive/Wizard/Animations/Front-Back/Fire-Mage-Front-Back-Walk.aseprite",
+      "frames": 8,
+      "sha256": "f9d9e9254cad792264558b67eb0b5e593a0f342a291271fe3756183823cff302",
+      "editorOpen": true
+    },
+    {
+      "file": "Archive/Wizard/Animations/Right/Fire-Mage-Right-Aligned.aseprite",
+      "frames": 22,
+      "sha256": "de9701031b0816acb0d199921f495250c23315672c824f47dedf1f0ef472c01b",
+      "editorOpen": true
+    },
+    {
+      "file": "Archive/Wizard/Animations/Right/Fire-Mage-Right-Idle-Cast.aseprite",
+      "frames": 8,
+      "sha256": "829273eee31bd88cf3ae3bb9a1d6d5e6dc6ee2893c3fad56ec028446f708085b",
+      "editorOpen": true
+    },
+    {
+      "file": "Archive/Wizard/Walk/Rigid-Staff/Fire-Mage-Right-Walk.aseprite",
+      "frames": 8,
+      "sha256": "d701dec5299a508ac859a6291dd8dcf55f04759bf4d2c925b152da717ca5883f",
+      "editorOpen": true
+    },
+    {
+      "file": "Archive/Wizard/Wyrmforge-Fire-Mage.aseprite",
+      "frames": 3,
+      "sha256": "edbd85f9444e684645b635634ddea134564159387c3dfb32bd1069d8521e785c",
+      "editorOpen": true
+    },
+    {
+      "file": "Enemies/Animated/Ash-Priest/Ash-Priest.aseprite",
+      "frames": 144,
+      "sha256": "6ed574ce2d2c4df11b02faa665da82305b55f821f1602706ccc4ebfe6b141bed",
+      "editorOpen": true,
+      "tags": 40,
+      "maxEditorRgbDelta": 0
+    },
+    {
+      "file": "Enemies/Animated/Ash-Slinger/Ash-Slinger.aseprite",
+      "frames": 144,
+      "sha256": "7c0663c32147002232471843d24ef639940f931a201c21cd4e5d2e1a026238cb",
+      "editorOpen": true,
+      "tags": 40,
+      "maxEditorRgbDelta": 0
+    },
+    {
+      "file": "Enemies/Animated/Ashfang-enraged/Ashfang-enraged.aseprite",
+      "frames": 744,
+      "sha256": "7ed90121d19529f379c7f35140e7760f683d986b35320216d9540c2c3f8fdecd",
+      "editorOpen": true,
+      "tags": 168,
+      "maxEditorRgbDelta": 0
+    },
+    {
+      "file": "Enemies/Animated/Ashfang-normal/Ashfang-normal.aseprite",
+      "frames": 816,
+      "sha256": "8f387c6cfb4e5e0d0321a5154a54b8e2a3487cc7ac4dc8d23038bf9da68c1b0f",
+      "editorOpen": true,
+      "tags": 184,
+      "maxEditorRgbDelta": 0
+    },
+    {
+      "file": "Enemies/Animated/Ashling/Ashling.aseprite",
+      "frames": 144,
+      "sha256": "1a5c43ca03bb25bf7026614d79e3b90cd5b510a45b0b953e53aa86787fc96d49",
+      "editorOpen": true,
+      "tags": 40,
+      "maxEditorRgbDelta": 0
+    },
+    {
+      "file": "Enemies/Animated/Bell-Warden-molten/Bell-Warden-molten.aseprite",
+      "frames": 224,
+      "sha256": "ce5714b25cde0d688f23009d22bd6f949796e589215e91956276761cb676686d",
+      "editorOpen": true,
+      "tags": 56,
+      "maxEditorRgbDelta": 0
+    },
+    {
+      "file": "Enemies/Animated/Bell-Warden-normal/Bell-Warden-normal.aseprite",
+      "frames": 296,
+      "sha256": "ee7213f0369173a853f6e25461a96597d4aaa9fd8ae022b24dfb75fc0035ae7a",
+      "editorOpen": true,
+      "tags": 72,
+      "maxEditorRgbDelta": 0
+    },
+    {
+      "file": "Enemies/Animated/Drowned-Wraith/Drowned-Wraith.aseprite",
+      "frames": 144,
+      "sha256": "64c5bb1364df3bf40c58b60a53f2aacffd521acf07dfd80a5d694209011339af",
+      "editorOpen": true,
+      "tags": 40,
+      "maxEditorRgbDelta": 0
+    },
+    {
+      "file": "Enemies/Animated/Hollowed/Hollowed.aseprite",
+      "frames": 144,
+      "sha256": "d0ce10487c7f640d9849ead2c5a3f4c493a61fa0921b4e14f05ec4310fd5df4c",
+      "editorOpen": true,
+      "tags": 40,
+      "maxEditorRgbDelta": 0
+    },
+    {
+      "file": "Enemies/Animated/Mire-Hound/Mire-Hound.aseprite",
+      "frames": 144,
+      "sha256": "ce58a9260888d0dba4e24b9582071cc191d68792a11b8a4291a83f2a97594f6a",
+      "editorOpen": true,
+      "tags": 40,
+      "maxEditorRgbDelta": 0
+    },
+    {
+      "file": "Enemies/Animated/Penitent/Penitent.aseprite",
+      "frames": 144,
+      "sha256": "a57f367ebaabf602158107cbf5a7c4f324a82ba2cb3da7983474392e0f58c28e",
+      "editorOpen": true,
+      "tags": 40,
+      "maxEditorRgbDelta": 0
+    },
+    {
+      "file": "Enemies/Animated/Reliquary-awakened/Reliquary-awakened.aseprite",
+      "frames": 224,
+      "sha256": "f8d2cb659b284357f6c1e61923dc5a13f4715790efea70d616835807794345c6",
+      "editorOpen": true,
+      "tags": 56,
+      "maxEditorRgbDelta": 0
+    },
+    {
+      "file": "Enemies/Animated/Reliquary-normal/Reliquary-normal.aseprite",
+      "frames": 296,
+      "sha256": "e9f207f0ec9fc5cab7d702629e0a88879b6ed1d254fc81d0870833f83c2d267f",
+      "editorOpen": true,
+      "tags": 72,
+      "maxEditorRgbDelta": 0
+    },
+    {
+      "file": "Wizard/Animated/Fire-Mage-Eight-Directions.aseprite",
+      "frames": 192,
+      "sha256": "5488658427998edb828509f2d26c11501cb836a4c97edbf1e774d112bf7a0969",
+      "editorOpen": true,
+      "tags": 40,
+      "maxEditorRgbDelta": 1
+    },
+    {
+      "file": "Wizard/Animated/back.aseprite",
+      "frames": 24,
+      "sha256": "fd4997e9394e63850b537e6a69982be7785b80823552f59f932539fd26b92c6d",
+      "editorOpen": true
+    },
+    {
+      "file": "Wizard/Animated/back_left.aseprite",
+      "frames": 24,
+      "sha256": "ca5532fb4b213a876630e560f96d5987f70b952db7d77b4e61da57b3eec6fd5a",
+      "editorOpen": true
+    },
+    {
+      "file": "Wizard/Animated/back_right.aseprite",
+      "frames": 24,
+      "sha256": "7047d6e6ff0264b16c2729f6e6d757baa294bb87abc6b6810484e5e5c2e4f3e8",
+      "editorOpen": true
+    },
+    {
+      "file": "Wizard/Animated/front.aseprite",
+      "frames": 24,
+      "sha256": "170b13a6a5744f4d38c5488b010d5a8cbc4aa596de2aa1576e1a9fd1435096ce",
+      "editorOpen": true
+    },
+    {
+      "file": "Wizard/Animated/front_left.aseprite",
+      "frames": 24,
+      "sha256": "618bdcbfa96b2640bd4438cdc83f608dfbef1eeff8a77d12bc8c3a6fae6bace0",
+      "editorOpen": true
+    },
+    {
+      "file": "Wizard/Animated/front_right.aseprite",
+      "frames": 24,
+      "sha256": "391a188354c007308dad7bb617ba590eae176460babe0471c5da3c8e0f1de0d7",
+      "editorOpen": true
+    },
+    {
+      "file": "Wizard/Animated/left.aseprite",
+      "frames": 24,
+      "sha256": "33bacb984ede59af7d86d42a692009aca9b415d01762d314553c9666d4581626",
+      "editorOpen": true
+    },
+    {
+      "file": "Wizard/Animated/right.aseprite",
+      "frames": 24,
+      "sha256": "eb0362098cc62cfd5394287e7ba5b33b37f28ccbbead7a1ccce71dc920a28087",
+      "editorOpen": true
+    }
+  ],
+  "limitations": [
+    "Not in-game validation",
+    "Does not automatically certify anatomical or directional drawing quality",
+    "Standalone browser launch unavailable in the execution environment; viewer data and image references were checked"
+  ],
+  "previewJavaScriptSyntax": "pass"
+}

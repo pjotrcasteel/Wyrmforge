@@ -47,6 +47,39 @@ public sealed class AshfangSpectacleBrowserTests : PageTest
         await File.WriteAllBytesAsync(Path.Combine(output, "boss-transformation-sheet.png"), Convert.FromBase64String(data[(data.IndexOf(',') + 1)..]));
     }
 
+    /// <summary>The Drowned Wraith at four body opacities (C# lowers it only while it submerges or emerges), drawn by the shipped module over water.</summary>
+    [TestMethod]
+    public async Task DrownedWraith_SinksBehindTheWaterlineInsteadOfFading()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        var baseUrl = Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/";
+        await Page.GotoAsync(baseUrl.TrimEnd('/') + "/hunt-lab?wyrm=Ashfang&play=false&cast=false");
+        var data = await Page.EvaluateAsync<string>("""
+            async () => {
+                const authored = await import(location.origin + '/js/authored-characters.js');
+                authored.preloadAuthoredCharacter('Drowned-Wraith');
+                for (let wait = 0; wait < 80 && !authored.loadedManifests().get('Drowned-Wraith'); wait++) await new Promise(r => setTimeout(r, 100));
+                const canvas = document.createElement('canvas');
+                canvas.width = 4 * 160; canvas.height = 200;
+                const ctx = canvas.getContext('2d');
+                ctx.imageSmoothingEnabled = false;
+                ctx.fillStyle = '#16262c'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                [1, .7, .4, .12].forEach((opacity, column) => {
+                    const state = authored.createAuthoredState();
+                    const enemy = { kind: 6, entityId: 7, x: column * 160 + 80, y: 130, radius: 12, opacity, telegraph: null };
+                    const snapshot = { enemies: [enemy], player: { x: column * 160 + 80, y: 400, radius: 12 }, deathBursts: [], hud: { seconds: 1 } };
+                    authored.updateAuthoredEnemies(state, snapshot, authored.loadedManifests(), 1);
+                    authored.updateAuthoredEnemies(state, snapshot, authored.loadedManifests(), 1.05);
+                    authored.drawAuthoredEnemy(ctx, enemy, state);
+                });
+                return canvas.toDataURL('image/png');
+            }
+            """);
+        var output = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
+        Directory.CreateDirectory(output);
+        await File.WriteAllBytesAsync(Path.Combine(output, "wraith-sink-sheet.png"), Convert.FromBase64String(data[(data.IndexOf(',') + 1)..]));
+    }
+
     /// <summary>The enraged Ashfang fights on the real simulation; every new attack, the takeoff and the landing are grabbed from the canvas inside the animation frame they happen in.</summary>
     [TestMethod]
     public async Task EnragedAshfang_ShowsItsNewAttacksFlightAndLandingLive()

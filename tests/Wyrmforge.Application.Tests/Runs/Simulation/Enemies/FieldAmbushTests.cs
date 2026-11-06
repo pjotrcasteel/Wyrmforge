@@ -249,4 +249,56 @@ public sealed class FieldAmbushTests
         for (var tick = 0; tick < 20 * 20; tick++) Assert.IsNull(plain.Tick(.05, default, Width, Height).FieldAmbush);
         Assert.AreEqual(0, plain.FieldAmbushesSprung);
     }
+
+    [TestMethod]
+    public void NoAmbushEnemyIsLeftStuckWhereItClimbedOut()
+    {
+        var stuck = new List<string>();
+        for (var seed = 1; seed <= 12; seed++)
+        {
+            var (simulation, player, environment) = Start(seed);
+            Quiet(simulation, player, 6);
+            var field = environment.AmbushFields[0];
+            ClearHostiles(simulation);
+            player.Position = ArenaTerrainGrid.CenterOf(field.Column, field.Row);
+            Quiet(simulation, player, RunSimulation.FieldAmbushTellSeconds + 4);
+            var home = player.Position;
+            // The hunter holds still (never attacks); every enemy that lives must keep coming, none may sit in the pit it dug.
+            var before = new Dictionary<int, Vector2D>();
+            Quiet(simulation, player, 25);
+            foreach (var enemy in simulation.CreateSnapshot().Enemies) before[enemy.EntityId] = new Vector2D(enemy.X, enemy.Y);
+            player.Position = home;
+            var after = Quiet(simulation, player, 8);
+            foreach (var enemy in after.Enemies.Where(enemy => before.ContainsKey(enemy.EntityId)))
+            {
+                var moved = Vector2D.Distance(before[enemy.EntityId], new Vector2D(enemy.X, enemy.Y));
+                var distance = Vector2D.Distance(home, new Vector2D(enemy.X, enemy.Y));
+                if (moved < 3 && distance > 120) stuck.Add($"seed {seed} enemy {enemy.EntityId} kind {enemy.Kind} at {enemy.X:0},{enemy.Y:0} is {distance:0} from the hunter");
+            }
+        }
+        Assert.IsEmpty(stuck, string.Join("; ", stuck.Take(8)));
+    }
+
+    [TestMethod]
+    public void NoEnemyOfAPlainTrailIsLeftStuckFarFromAStillHunter()
+    {
+        var stuck = new List<string>();
+        for (var seed = 1; seed <= 30; seed++)
+        {
+            var (simulation, player, environment) = Start(seed);
+            var home = player.Position;
+            Quiet(simulation, player, 45);
+            var before = simulation.CreateSnapshot().Enemies.ToDictionary(enemy => enemy.EntityId, enemy => new Vector2D(enemy.X, enemy.Y));
+            player.Position = home;
+            var after = Quiet(simulation, player, 10);
+            foreach (var enemy in after.Enemies.Where(enemy => before.ContainsKey(enemy.EntityId) && enemy.EmergeProgress is null))
+            {
+                var moved = Vector2D.Distance(before[enemy.EntityId], new Vector2D(enemy.X, enemy.Y));
+                var distance = Vector2D.Distance(player.Position, new Vector2D(enemy.X, enemy.Y));
+                if (moved < 3 && distance > 160)
+                    stuck.Add($"seed {seed} kind {enemy.Kind} #{enemy.EntityId} at {enemy.X:0},{enemy.Y:0} z{enemy.Z:0} is {distance:0} from the hunter at {player.Position.X:0},{player.Position.Y:0}");
+            }
+        }
+        Assert.IsEmpty(stuck, string.Join("; ", stuck.Take(10)));
+    }
 }

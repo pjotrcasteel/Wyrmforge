@@ -1,0 +1,1 @@
+Approved turnaround and ambush animation draft. Attack: 3 rows front/side/back, 6 columns emerge, windup, lunge, contact, exposed recovery, retreat. Engine handles opacity and water effects. Requires frame segmentation, alpha cleanup, anchor alignment and playback verification before production.
