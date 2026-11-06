@@ -207,7 +207,11 @@ public sealed class GreyboxHuntBrowserTests : PageTest
         {
             await Page.WaitForTimeoutAsync(3500);
             if (!await Page.Locator("canvas.game-canvas").IsVisibleAsync()) break;
-            await Page.Locator("canvas.game-canvas").ScreenshotAsync(new() { Path = Path.Combine(output, $"forest-b{band}-{tag}-{shot}.png") });
+            // Snapshot the actual game canvas directly: Playwright's element screenshot can block for 30 seconds
+            // waiting for unrelated web fonts while the high-speed Hunt is running.
+            var imageUrl = await Page.EvaluateAsync<string>("() => document.querySelector('canvas.game-canvas').toDataURL('image/png')");
+            await File.WriteAllBytesAsync(Path.Combine(output, $"forest-b{band}-{tag}-{shot}.png"),
+                Convert.FromBase64String(imageUrl[(imageUrl.IndexOf(',') + 1)..]));
         }
         await File.WriteAllTextAsync(Path.Combine(output, $"forest-b{band}-{tag}-diag.json"), await Page.EvaluateAsync<string>("async () => { const m = await import('/js/arena-performance.js'); const s = m.readArenaDiagnostics(document.querySelector('canvas.game-canvas')); return JSON.stringify({ performance: s.performance, gpu: s.gpuWorld, renderError: s.renderError }); }"));
         Assert.AreEqual(0, errors.Count, string.Join(Environment.NewLine, errors));

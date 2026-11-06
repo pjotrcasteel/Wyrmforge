@@ -161,6 +161,26 @@ test('the road review bot navigates around terrain instead of repeatedly walking
         'on open ground the same road keeps its northbound heading');
 });
 
+test('road review bot looks far enough ahead to avoid bouncing around spline samples', () => {
+    const terrain = grid(20, 20);
+    terrain.road = [[8, 15], [8, 14], [8, 13], [9, 12], [10, 11]]
+        .flatMap(([column, row]) => [(column + .5) * 16, (row + .5) * 16]);
+    const heading = roadWalkDirection(at(8 * 32 + 16, 15 * 32 + 16), terrain);
+    assert.ok(heading.x > .2 && heading.y < -.8, 'use a reachable forward point through the bend, not the first tiny spline step');
+});
+
+test('road review bot sidesteps after sustained collision and then resumes its route', () => {
+    const terrain = grid(20, 20);
+    terrain.road = Array.from({ length: 15 }, (_, row) => [8 * 16 + 8, (19 - row) * 16 + 8]).flat();
+    const snapshot = at(8 * 32 + 16, 15 * 32 + 16);
+    const memory = createBotMemory();
+    assert.deepEqual(roadWalkDirection(snapshot, terrain, memory, 0), { x: 0, y: -1 });
+    const detour = roadWalkDirection(snapshot, terrain, memory, 1300);
+    assert.equal(Math.abs(detour.x), 1, 'after no movement, try crossing the obstruction');
+    assert.deepEqual(roadWalkDirection(snapshot, terrain, memory, 1800), detour, 'keep the detour long enough to clear cover');
+    assert.deepEqual(roadWalkDirection(snapshot, terrain, memory, 2400), { x: 0, y: -1 }, 'then resume the C# road');
+});
+
 test('a hunter far outside the road corridor first returns to the accessible centreline', () => {
     const terrain = grid(20, 60);
     terrain.road = Array.from({ length: 50 }, (_, row) => [10 * 16 + 8, (59 - row) * 16 + 8]).flat();

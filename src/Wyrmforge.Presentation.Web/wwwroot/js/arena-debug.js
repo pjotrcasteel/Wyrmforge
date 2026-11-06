@@ -195,6 +195,7 @@ export function createBotMemory() {
     return {
         bestDistance: Number.POSITIVE_INFINITY, progressAt: 0, detourUntil: 0, detour: { x: 0, y: 0 }, holdSince: null,
         huntClosing: false, huntPosition: null, huntProgressAt: 0, lastKillCount: null, lastKillAt: null,
+        roadPosition: null, roadProgressAt: 0, roadDetourUntil: 0, roadDetour: { x: 0, y: 0 }, roadDetourSide: 1,
     };
 }
 
@@ -222,10 +223,38 @@ function nearestExitPort(player, ports) {
     return nearest;
 }
 
-/** Walk short segments of the C# road; a safe centreline avoids cutting corners through adjacent cliffs. */
-export function roadWalkDirection(snapshot, frame) {
+/** Road movement has to escape incidental collision (supply caches, barriers) that the terrain frame cannot describe. */
+function roadUnstuckDirection(snapshot, frame, heading, memory, now) {
+    if (!memory || (heading.x === 0 && heading.y === 0)) return heading;
+    const player = snapshot.player;
+    if (now < memory.roadDetourUntil) return memory.roadDetour;
+    if (memory.roadDetourUntil > 0) {
+        memory.roadDetourUntil = 0;
+        memory.roadPosition = { x: player.x, y: player.y };
+        memory.roadProgressAt = now;
+    }
+    if (!memory.roadPosition || Math.hypot(player.x - memory.roadPosition.x, player.y - memory.roadPosition.y) >= 10) {
+        memory.roadPosition = { x: player.x, y: player.y };
+        memory.roadProgressAt = now;
+        return heading;
+    }
+    if (now - memory.roadProgressAt < 1200) return heading;
+    const side = memory.roadDetourSide;
+    memory.roadDetourSide = -side;
+    const across = { x: -heading.y * side, y: heading.x * side };
+    const alternatives = [across, { x: -across.x, y: -across.y }, { x: -heading.x, y: -heading.y }];
+    const props = snapshot.environment?.props ?? [];
+    memory.roadDetour = alternatives.find(direction => walkableSegment(frame, player,
+        { x: player.x + direction.x * 36, y: player.y + direction.y * 36 }, props)) ?? alternatives[0];
+    memory.roadDetourUntil = now + 900;
+    return memory.roadDetour;
+}
+
+/** Walk sight-checked segments of the C# road; a safe centreline avoids cutting corners through adjacent cliffs. */
+export function roadWalkDirection(snapshot, frame, memory = null, now = 0) {
     const player = snapshot?.player, road = frame?.road;
     if (!player || !road?.length) return null;
+    const steer = heading => roadUnstuckDirection(snapshot, frame, heading, memory, now);
     const at = index => ({ x: road[index] / 16 * CELL, y: road[index + 1] / 16 * CELL });
     let nearest = 0, best = Number.POSITIVE_INFINITY;
     for (let i = 0; i + 1 < road.length; i += 2) {
@@ -235,26 +264,31 @@ export function roadWalkDirection(snapshot, frame) {
     if (best > CELL * 2) {
         const nearestPoint = at(nearest);
         const flow = flowDirection(frame, player, nearestPoint, snapshot.environment?.props);
-        if (flow && (flow.x !== 0 || flow.y !== 0)) return flow;
+        if (flow && (flow.x !== 0 || flow.y !== 0)) return steer(flow);
         if (walkableSegment(frame, player, nearestPoint, snapshot.environment?.props))
-            return normalized(nearestPoint.x - player.x, nearestPoint.y - player.y, 0);
+            return steer(normalized(nearestPoint.x - player.x, nearestPoint.y - player.y, 0));
         // A displaced hunter should at least head back into the interior instead of following the end of the road
         // through an unreachable cliff. Once it is back in range, the short centreline segments take over.
-        return normalized((snapshot.world?.width ?? frame.columns * CELL) / 2 - player.x,
-            (snapshot.world?.height ?? frame.rows * CELL) / 2 - player.y, 0);
+        return steer(normalized((snapshot.world?.width ?? frame.columns * CELL) / 2 - player.x,
+            (snapshot.world?.height ?? frame.rows * CELL) / 2 - player.y, 0));
     }
-    // The route is already protected by the C# generator. Prefer its nearby centreline to a shortest-path shortcut
-    // across a cliff, and use the flow field only where a real obstructing prop prevents a straight segment.
-    for (const step of [2, 4, 6, 8]) {
+    // The bot can move farther than two spline samples per rendered frame (especially at ?speed=3).
+    // Aim ahead first, so it cannot oscillate around a near point. Sight-check each candidate against the
+    // actual hunter footprint; only when no centreline segment is clear ask the terrain flow for a detour.
+    const lookahead = [32, 24, 16, 8, 4, 2];
+    for (const step of lookahead) {
         const target = at(Math.min(road.length - 2, nearest + step));
         if (Math.hypot(target.x - player.x, target.y - player.y) < 6) continue;
         if (walkableSegment(frame, player, target, snapshot.environment?.props))
-            return normalized(target.x - player.x, target.y - player.y, 0);
-        const heading = flowDirection(frame, player, target, snapshot.environment?.props);
-        if (heading && (heading.x !== 0 || heading.y !== 0)) return heading;
+            return steer(normalized(target.x - player.x, target.y - player.y, 0));
     }
-    const ahead = at(Math.min(road.length - 2, nearest + 8));
-    return normalized(ahead.x - player.x, ahead.y - player.y, 6);
+    for (const step of lookahead) {
+        const target = at(Math.min(road.length - 2, nearest + step));
+        const heading = flowDirection(frame, player, target, snapshot.environment?.props);
+        if (heading && (heading.x !== 0 || heading.y !== 0)) return steer(heading);
+    }
+    const ahead = at(Math.min(road.length - 2, nearest + 32));
+    return steer(normalized(ahead.x - player.x, ahead.y - player.y, 6));
 }
 
 /** Kite until the exit opens, then walk to it, sidestepping when props or rock pin the straight line. */
@@ -305,7 +339,7 @@ export function botMovement(snapshot, memory, now, frame = null) {
     // On the single-exit terrain trail, the protected authored road leads to that exit. A direct goal flow can
     // instead send the bot across a cliff and trap it at the far boundary of the map.
     if (snapshot.exit && frame?.road?.length && distance >= 40) {
-        const road = roadWalkDirection(snapshot, frame);
+        const road = roadWalkDirection(snapshot, frame, memory, now);
         if (road && (road.x !== 0 || road.y !== 0)) return road;
     }
     const flow = frame ? flowDirection(frame, player, exit, snapshot.environment?.props) : null;

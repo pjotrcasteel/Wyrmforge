@@ -331,7 +331,7 @@ function startSimulationFrame(state, timestamp, rect) {
     state.simulationBusy = true;
     const delta = Math.min((timestamp - state.lastSimulationTimestamp) / 1000, 0.05);
     state.lastSimulationTimestamp = timestamp;
-    const movement = state.debug.botRoad ? (roadWalkDirection(state.latestSnapshot, state.terrainFrame) ?? { x: 0, y: 0 })
+    const movement = state.debug.botRoad ? (roadWalkDirection(state.latestSnapshot, state.terrainFrame, state.botMemory, performance.now()) ?? { x: 0, y: 0 })
         : state.debug.bot ? botMovement(state.latestSnapshot, state.botMemory, performance.now(), state.terrainFrame ?? null) : getArenaMovement(state);
     const aim = getArenaAim(state);
     const bridgeStarted = performance.now();
