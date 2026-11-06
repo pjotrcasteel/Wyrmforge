@@ -75,6 +75,8 @@ const HOLD_BEFORE_CLOSING_MS = 4000;
 const HUNT_STUCK_MS = 1200;
 const HUNT_DETOUR_MS = 700;
 const HUNT_PROGRESS_UNITS = 8;
+const HUNT_STALLED_MS = 8000;
+const HUNT_STALLED_MAX_FOES = 8;
 const CELL = 32;
 const MAX_STEP_MICROCELLS = 4;
 const LAVA = 3;
@@ -86,7 +88,10 @@ function cellIndex(frame, x, y) {
 }
 
 function canStep(frame, from, to) {
-    return frame.material[to] !== LAVA && Math.abs(frame.surface[from] - frame.surface[to]) <= MAX_STEP_MICROCELLS;
+    // The renderer lowers the visible ground beneath 3D trunks and boulders. Navigation must use their original
+    // authoritative column heights; otherwise the review bots walk straight into an apparently flat but solid tree.
+    const height = index => frame.trunks?.get(index) ?? frame.boulders?.get(index) ?? frame.surface[index];
+    return frame.material[to] !== LAVA && Math.abs(height(from) - height(to)) <= MAX_STEP_MICROCELLS;
 }
 
 const PLAYER_CLEARANCE = 20;
@@ -146,10 +151,10 @@ export function flowDirection(frame, from, target, props = []) {
 }
 
 /** With only a few enemies (or a Wyrm) left, close to firing range instead of fleeing so the encounter can finish. */
-export function botHuntDirection(snapshot, frame = null, range = HUNT_RANGE) {
+export function botHuntDirection(snapshot, frame = null, range = HUNT_RANGE, maxFoes = HUNT_REMAINING) {
     const player = snapshot?.player;
     const foes = [...(snapshot?.enemies ?? []), ...(snapshot?.dragon ? [snapshot.dragon] : [])];
-    if (!player || foes.length === 0 || foes.length > HUNT_REMAINING) return null;
+    if (!player || foes.length === 0 || foes.length > maxFoes) return null;
     let nearest = null, best = Number.POSITIVE_INFINITY;
     for (const foe of foes) {
         const distance = Math.hypot(foe.x - player.x, foe.y - player.y);
@@ -162,7 +167,7 @@ export function botHuntDirection(snapshot, frame = null, range = HUNT_RANGE) {
 export function createBotMemory() {
     return {
         bestDistance: Number.POSITIVE_INFINITY, progressAt: 0, detourUntil: 0, detour: { x: 0, y: 0 }, holdSince: null,
-        huntClosing: false, huntPosition: null, huntProgressAt: 0,
+        huntClosing: false, huntPosition: null, huntProgressAt: 0, lastKillCount: null, lastKillAt: null,
     };
 }
 
@@ -190,7 +195,7 @@ function nearestExitPort(player, ports) {
     return nearest;
 }
 
-/** Heading along the C# road centre line (a few points ahead of the nearest one), or null when the frame carries no road. */
+/** Walk the C# road, routing around actual terrain and props instead of repeatedly walking into an obstruction. */
 export function roadWalkDirection(snapshot, frame) {
     const player = snapshot?.player, road = frame?.road;
     if (!player || !road?.length) return null;
@@ -202,7 +207,7 @@ export function roadWalkDirection(snapshot, frame) {
     }
     // The centre line runs from the spawn to the exit, so walking its order walks the road.
     const ahead = at(Math.min(road.length - 2, nearest + 8));
-    return normalized(ahead.x - player.x, ahead.y - player.y, 6);
+    return flowDirection(frame, player, ahead, snapshot.environment?.props) ?? normalized(ahead.x - player.x, ahead.y - player.y, 6);
 }
 
 /** Kite until the exit opens, then walk to it, sidestepping when props or rock pin the straight line. */
@@ -212,9 +217,18 @@ export function botMovement(snapshot, memory, now, frame = null) {
     const exit = snapshot.exit ?? snapshot.extraction ?? nearestExitPort(player, snapshot.exitPorts);
     if (!exit) {
         memory.bestDistance = Number.POSITIVE_INFINITY;
+        // In terrain Hunts the last few enemies can be stranded across a ridge or clearing while a pure kiting bot
+        // circles forever. After real combat stops producing kills, switch to terrain-aware pursuit for a small pack.
+        const kills = Number(snapshot.hud?.kills ?? 0);
+        if (memory.lastKillCount !== kills || memory.lastKillAt == null) {
+            memory.lastKillCount = kills;
+            memory.lastKillAt = now;
+        }
+        const stalled = now - memory.lastKillAt >= HUNT_STALLED_MS;
         // Once an enemy survives sustained fire, keep pursuing it instead of alternating between a brief step and another hold.
         // A zero-range pursuit also handles cover inside the old 60-unit stopping distance.
-        let hunt = botHuntDirection(snapshot, frame, memory.huntClosing ? 0 : HUNT_RANGE);
+        let hunt = botHuntDirection(snapshot, frame, memory.huntClosing ? 0 : HUNT_RANGE,
+            stalled ? HUNT_STALLED_MAX_FOES : HUNT_REMAINING);
         if (!hunt) {
             memory.huntClosing = false;
             memory.huntPosition = null;

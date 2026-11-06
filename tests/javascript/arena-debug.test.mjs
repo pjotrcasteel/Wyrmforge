@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-    DEBUG_BRIGHT_AMBIENT, DEBUG_BRIGHT_COLOR, MAX_DEBUG_SPEED, withDebugAmbient, botHuntDirection, flowDirection, botKiteDirection, botMovement, createBotMemory, readArenaDebugFlags,
+    DEBUG_BRIGHT_AMBIENT, DEBUG_BRIGHT_COLOR, MAX_DEBUG_SPEED, withDebugAmbient, botHuntDirection, flowDirection, botKiteDirection, botMovement, createBotMemory,
+    readArenaDebugFlags, roadWalkDirection,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-debug.js';
 
 const world = { width: 1024, height: 1920 };
@@ -82,6 +83,16 @@ test('with only a few foes left the bot closes to firing range and holds there',
     assert.deepEqual(botMovement(at(512, 960, { enemies: [{ x: 512, y: 300 }] }), createBotMemory(), 0), { x: 0, y: -1 });
 });
 
+test('after a dry spell the review bot closes on a stranded small pack instead of kiting forever', () => {
+    const memory = createBotMemory();
+    const foes = Array.from({ length: 5 }, (_, index) => ({ x: 512 + index * 10, y: 100 }));
+    const snapshot = at(512, 960, { enemies: foes, hud: { kills: 6 } });
+    assert.deepEqual(botMovement(snapshot, memory, 1000), botKiteDirection(snapshot), 'initially kite a pack');
+    assert.deepEqual(botMovement(snapshot, memory, 10000), { x: 0, y: -1 }, 'pursue after no progress');
+    snapshot.hud.kills = 7;
+    assert.deepEqual(botMovement(snapshot, memory, 11000), botKiteDirection(snapshot), 'a kill resumes normal kiting');
+});
+
 const grid = (columns, rows, height = () => 0, material = () => 0) => ({
     columns, rows,
     surface: Array.from({ length: columns * rows }, (_, i) => height(i % columns, Math.floor(i / columns))),
@@ -100,6 +111,24 @@ test('flow direction routes around a rock wall through its gap', () => {
     assert.ok(first.x > 0.9, 'the straight line is blocked, so it first walks sideways toward the gap');
     const atGap = flowDirection(terrain, { x: 4 * 32 + 16, y: 5 * 32 + 16 }, { x: 16, y: 16 });
     assert.ok(atGap.y < -0.9, 'under the gap it walks north');
+});
+
+test('flow direction respects the full physical heights of visually lowered trees and boulders', () => {
+    const terrain = grid(5, 7);
+    terrain.trunks = new Map([1, 2, 3].map(column => [3 * 5 + column, 16]));
+    terrain.boulders = new Map([[3 * 5, 16]]);
+    const first = flowDirection(terrain, { x: 16, y: 5 * 32 + 16 }, { x: 16, y: 16 });
+    assert.ok(first.x > 0.9, 'the bot walks around the physical trunks instead of crossing the renderer-only lowered ground');
+});
+
+test('the road review bot navigates around terrain instead of repeatedly walking into a wall', () => {
+    const terrain = grid(7, 7, (column, row) => (row === 3 && column !== 6 ? 16 : 0));
+    terrain.road = Array.from({ length: 7 }, (_, row) => [8, (6 - row) * 16 + 8]).flat();
+    const snapshot = at(16, 5 * 32 + 16);
+    const heading = roadWalkDirection(snapshot, terrain);
+    assert.ok(heading.x > 0.9, 'the bot first walks toward the gap instead of pressing against the ridge');
+    assert.deepEqual(roadWalkDirection(snapshot, { ...grid(7, 7), road: terrain.road }), { x: 0, y: -1 },
+        'on open ground the same road keeps its northbound heading');
 });
 
 test('flow direction refuses lava and steep steps and reports an unreachable target', () => {

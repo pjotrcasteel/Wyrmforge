@@ -632,6 +632,13 @@ export function drawAuthoredAshfangDeath(ctx, ashfang) {
 export function authoredDiagnostics(state) {
     return {
         loaded: [...loaded.keys()], enemies: state.enemies.size, corpses: state.corpses.size,
+        corpsePoses: [...state.corpses.values()].map(corpse => {
+            const manifest = loaded.get(corpse.name)?.manifest;
+            if (!manifest) return null;
+            const death = durationsOf(manifest, 'death');
+            return { name: corpse.name, age: state.clock - corpse.started, frame: corpsePose(state, corpse, manifest).frame,
+                finalFrame: death.length - 1 };
+        }).filter(Boolean),
         enemyPoses: [...state.enemies.values()].map(pose => ({ name: pose.name, action: pose.action, frame: pose.frame, direction: pose.direction })),
         wizard: { action: state.wizard.action, frame: state.wizard.frame, direction: state.wizard.direction },
     };
