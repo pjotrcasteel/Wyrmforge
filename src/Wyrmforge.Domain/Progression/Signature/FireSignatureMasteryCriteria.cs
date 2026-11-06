@@ -21,6 +21,14 @@ public static class FireSignatureMasteryCriteria
     private static bool HasPreparedBuild(int level, IEnumerable<FireballMutationId> equipped, int requiredLevel, int requiredMutations)
     {
         ArgumentNullException.ThrowIfNull(equipped);
-        return level is >= 1 and <= 5 && level >= requiredLevel && equipped.Distinct().Count() >= requiredMutations;
+        var active = equipped.ToArray();
+        var available = FireballCoreCatalog.Mutations.Where(mutation => mutation.Playable).Select(mutation => mutation.Id).ToHashSet();
+
+        return level is >= 1 and <= 5
+            && level >= requiredLevel
+            && active.Length >= requiredMutations
+            && active.Length <= FireballCoreCatalog.SocketCapacityForLevel(level)
+            && active.Distinct().Count() == active.Length
+            && active.All(available.Contains);
     }
 }
