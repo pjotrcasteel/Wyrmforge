@@ -23,7 +23,7 @@ import { torchSprites } from './arena-torch-sprites.js';
 import {
     ENEMY_CHARACTERS, AUTHORED_SETS, createAuthoredState, preloadAuthoredCharacter, preloadCrawlOut, loadedManifests, authoredCharacter, updateAuthoredEnemies, updateAuthoredWizard,
     drawAuthoredEnemy, drawAuthoredCorpses, drawAuthoredWizard, drawAuthoredAshfang, drawAuthoredAshfangDeath, authoredDiagnostics,
-    setAuthoredRenderMode, emissionIntensity,
+    setAuthoredRenderMode, enemyHasEmissivePose, emissionIntensity,
 } from './authored-characters.js';
 import { drawRecoveryGuide } from './arena-recovery.js';
 import { drawSpellCastMotion, drawSpellProjectile, drawSpellImpact } from './arena-spell-vfx.js';
@@ -1499,6 +1499,9 @@ function drawDragonBreath(ctx, breath, school, dragon = null) {
  * Returns the material for the capture, or null when the actor has nothing that glows this frame.
  */
 function paintAuthoredEmissive(state, gpu, layer, snapshot, captureId, tileX, tileY, tileSize, pixelScale) {
+    // The Fire Tier I enemy strips do not currently emit light. No secondary 160px+ tile needs allocating or clearing.
+    // Evaluate the currently loaded action, not the enemy kind, so newly authored glow strips work without code changes.
+    if (layer.kind === 'enemy' && !enemyHasEmissivePose(state.authored, layer.enemy.entityId)) return null;
     const tile = (state.gpuEmissivePool ??= new HuntGpuScratchPool(8)).acquire(Math.ceil(tileSize * pixelScale));
     const surface = prepareHuntGpuScratch(tile, tileSize, tileX, tileY, pixelScale);
     let drawn = false, set = null, change = null;
