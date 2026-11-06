@@ -358,7 +358,7 @@ public sealed class GreyboxHuntBrowserTests : PageTest
             await Page.WaitForFunctionAsync(@"() => {
                 const progress = document.querySelector('.map-run-progress');
                 const chartReturned = progress?.getClientRects().length > 0 && progress.textContent?.includes('1 cleared');
-                const continueVisible = [...document.querySelectorAll('[aria-label="Trail cleared"] button')].some(button =>
+                const continueVisible = [...document.querySelectorAll('.trail-clear-transition button')].some(button =>
                     button.textContent?.trim().toLowerCase() === 'continue' && button.getClientRects().length > 0);
                 return chartReturned || continueVisible;
             }", null, new() { Timeout = 150000 });
