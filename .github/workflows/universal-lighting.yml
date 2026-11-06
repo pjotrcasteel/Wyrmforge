@@ -55,8 +55,26 @@ jobs:
       - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '10.0.x'
-      - name: Registry and sprite binding regression tests
-        run: node --test tests/javascript/arena-wet-forest-art.test.mjs tests/javascript/arena-environment.test.mjs tests/javascript/universal-lighting.test.mjs tests/javascript/sprite-emission.test.mjs tests/javascript/arena-gpu-world.test.mjs tests/javascript/g5-world-composition.test.mjs tests/javascript/hunt-gpu-surface-contract.test.mjs tests/javascript/hunt-gpu-capture-revision.test.mjs tests/javascript/hunt-gpu-evidence-report.test.mjs tests/javascript/arena-gpu-fireball.test.mjs tests/javascript/arena-fireball-v5.test.mjs tests/javascript/g4-device-review.test.mjs tests/javascript/g4-consent-gate.test.mjs
+      - name: Registry, sprite and horde regression tests
+        run: >-
+          node --test
+          tests/javascript/arena-wet-forest-art.test.mjs
+          tests/javascript/arena-environment.test.mjs
+          tests/javascript/universal-lighting.test.mjs
+          tests/javascript/sprite-emission.test.mjs
+          tests/javascript/arena-gpu-world.test.mjs
+          tests/javascript/g5-world-composition.test.mjs
+          tests/javascript/hunt-gpu-surface-contract.test.mjs
+          tests/javascript/hunt-gpu-capture-revision.test.mjs
+          tests/javascript/hunt-gpu-evidence-report.test.mjs
+          tests/javascript/arena-gpu-fireball.test.mjs
+          tests/javascript/arena-fireball-v5.test.mjs
+          tests/javascript/g4-device-review.test.mjs
+          tests/javascript/g4-consent-gate.test.mjs
+          tests/javascript/arena-perf.test.mjs
+          tests/javascript/authored-emissive.test.mjs
+          tests/javascript/arena-enemy-telegraphs.test.mjs
+          tests/javascript/authored-characters.test.mjs
       - name: Build tests and publish actual application
         run: |
           dotnet test tests/Wyrmforge.Application.Tests -c Release --filter 'FullyQualifiedName~GpuLightingFrameProjectionTests|FullyQualifiedName~ActorAppearanceLightingProjectionTests'
