@@ -27,22 +27,24 @@ public sealed class DamageableAshfangExtractionTests
     [TestMethod]
     public void EarnedFireWeb_DamageableVictorySecuresEssenceAndUpgradesNextHunt()
     {
-        // A reachable fourth-attempt starting state: the introductory Hunt grants the first
-        // point; two more non-abandoned Hunts award one point each, even on defeat.
-        // The earlier attempts are not replayed here; #490 separately covers genuine
+        // A later, legitimately earnable Web build: one point is available at the
+        // first Hunt; nine further non-abandoned Hunts earn the ten-point route.
+        // Earlier defeats are not simulated here. #490 separately exercises real
         // damageable retries and their JSON Web save/reload boundary.
+        // Reaching Ashfang around attempts 3-4 is distinct from beating him.
         var progress = new FirstHuntProgress();
         var web = new PassiveTreeSelection(1);
         web.SetActiveSchool(PassiveSchool.Fire);
-        for (var completed = 0; completed < 3; completed++)
+        for (var completed = 0; completed < 10; completed++)
         {
             var tutorial = progress.TutorialRun;
             Assert.IsTrue(progress.CompleteRun(abandoned: false));
             if (progress.AwardsArcanePoint(tutorial, abandoned: false)) web.GrantPoints(1);
         }
 
-        Assert.AreEqual(3, web.PointBudget);
-        Assert.IsTrue(web.SelectPath(["fire-start", "fire-1", "fire-2"]));
+        Assert.AreEqual(10, web.PointBudget);
+        Assert.IsTrue(web.SelectPath(["fire-start", "fire-1", "fire-2",
+            "fire-major", "wildfire", "inferno"]), "Ten earned Web points must unlock Dragon's Inferno.");
 
         // Preserve earned Web power across a real JSON serialization boundary before combat.
         var savedWeb = JsonSerializer.Serialize(new WebSave(progress.CompletedRuns, web.PointBudget, web.Selected.ToArray()));
@@ -74,15 +76,8 @@ public sealed class DamageableAshfangExtractionTests
                 hunt: HuntSelection.FireTierOne, firstHunt: restoredProgress.TutorialRun);
             var build = new SelfPlayBuildDefinition("Earned Fire Web", SelfPlayBuildCohort.KeystoneRoute,
                 SpellSchool.Fire, restored.Selected, [], restored.SpentPoints);
-            var preferredRange = personality switch
-            {
-                RunAgentPersonality.Kiter => 310d,
-                RunAgentPersonality.BuildFocused => 270d,
-                RunAgentPersonality.Greedy => 230d,
-                _ => 290d,
-            };
             var agent = new AshfangTelegraphAgent(
-                new HeuristicRunAgent(personality, seed, SpellSchool.Fire), preferredRange);
+                new HeuristicRunAgent(personality, seed, SpellSchool.Fire));
             var metrics = new RunSelfPlayDriver().Play(build, seed, simulation, agent,
                 new RunSelfPlayOptions(ArenaWidth: width, ArenaHeight: height,
                     MaximumSimulatedSeconds: 900, MaximumWallClockSeconds: 60));
@@ -91,7 +86,7 @@ public sealed class DamageableAshfangExtractionTests
                 $"damage={metrics.DamageTaken:F0} healthMin={metrics.MinimumHealthRatio:F2} " +
                 $"routes={metrics.CompletedRouteNodes} wyrmReached={metrics.WyrmsReached} " +
                 $"bossMinHP={agent.LowestBossHealthRatio:F2} bossFrames={agent.BossFrames} " +
-                $"bossWindups={agent.BossWindups} range={preferredRange:F0} stalledExits={agent.ExitSidesteps} " +
+                $"bossWindups={agent.BossWindups} stalledExits={agent.ExitSidesteps} " +
                 $"hitByAttack={agent.DamageByAttack} " +
                 $"dragonsSlain={metrics.DragonsSlain} essence={metrics.EssenceSecured} " +
                 $"rituals={metrics.ExtractionRitualsCompleted} seconds={metrics.SimulatedSeconds:F1} " +
@@ -147,7 +142,7 @@ public sealed class DamageableAshfangExtractionTests
 
     // Only returns legitimate player movement and menu decisions from public snapshots.
     // Does not modify HP, damage, timers, enemies, boss state, RNG, rewards or simulation fields.
-    private sealed class AshfangTelegraphAgent(IRunAgent inner, double preferredRange) : IRunAgent
+    private sealed class AshfangTelegraphAgent(IRunAgent inner) : IRunAgent
     {
         private (double X, double Y) exitAnchor;
         private int exitStalledTicks;
@@ -193,17 +188,10 @@ public sealed class DamageableAshfangExtractionTests
                 return AimAtBoss(escape, player.X, player.Y, wyrm.X, wyrm.Y);
             }
 
-            // Ashfang commits to a warned attack. A close claw/tail must be
-            // backed away from; a sweeping breath or pounce needs a sidestep.
+            // Ashfang commits to warned attack directions. Sidestep a breath
+            // cone or pounce without altering the real combat rules.
             if (wyrm.ActionPhase is "windup" or "strike")
             {
-                var isMelee = wyrm.Action is "claw_right" or "claw_combo" or "bite" or "tail_left" or "tail_right";
-                if (isMelee && Length(player.X - wyrm.X, player.Y - wyrm.Y) < 225)
-                {
-                    return AimAtBoss(Move(player.X - wyrm.X, player.Y - wyrm.Y),
-                        player.X, player.Y, wyrm.X, wyrm.Y);
-                }
-
                 var isBreath = wyrm.Action is "breath" or "breath_sweep";
                 var isPounce = wyrm.Action == "pounce";
                 var x = player.X - wyrm.AttackTargetX;
@@ -236,8 +224,7 @@ public sealed class DamageableAshfangExtractionTests
             var distance = Math.Max(1, Length(dx, dy));
             // Stay close enough for legitimate Fire Bolt casts without walking
             // into Ashfang's 125-unit tail and 175-unit bite ranges.
-            var radial = distance < preferredRange - 25 ? 1.6
-                : distance > preferredRange + 25 ? -0.9 : 0;
+            var radial = distance < 205 ? 1.6 : distance > 255 ? -0.9 : 0;
             return AimAtBoss(Move(-dy / distance + dx / distance * radial, dx / distance + dy / distance * radial),
                 player.X, player.Y, wyrm.X, wyrm.Y);
         }
