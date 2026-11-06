@@ -1178,10 +1178,6 @@ export function paintTerrainRegion(ctx, frame, band, regions, offsetY = TERRAIN_
 }
 
 /**
- * Caches the painted heightfield in one offscreen surface and rebuilds it only when the C# terrain revision (or the
- * influence band) changes. Per frame the camera window is copied out, so excavation costs one repaint per impact.
- */
-/**
  * Hold a slightly larger painted window while the camera moves. Refresh only after a 64-world-unit grid crossing,
  * rather than uploading albedo and normal textures every animation frame. The margin keeps every viewport pixel covered.
  */
@@ -1191,6 +1187,10 @@ export function terrainCaptureWindow(camera, width, height) {
         width: width + step + 2 * margin, height: height + step + 2 * margin };
 }
 
+/**
+ * Caches the painted heightfield in one offscreen surface and rebuilds it only when the C# terrain revision (or the
+ * influence band) changes. The buffered camera window copies this static surface without repainting it.
+ */
 export class TerrainCanvasCache {
     constructor(createCanvas = (width, height) => Object.assign(document.createElement('canvas'), { width, height }), withNormals = false) {
         this.createCanvas = createCanvas;
