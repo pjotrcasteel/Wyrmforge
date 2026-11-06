@@ -293,8 +293,7 @@ public sealed class GreyboxHuntBrowserTests : PageTest
         // The debug bot kites and then walks to the real exit; the Chart must come back with the trail cleared.
         try
         {
-            // The headless browser renders about 6 frames a second, so game time per second varies with machine load: a slow run needs the longer allowance, a stuck bot still fails.
-            await Page.GetByRole(AriaRole.Button, new() { Name = "Continue" }).ClickAsync(new() { Timeout = 400000 });
+            await Page.GetByRole(AriaRole.Button, new() { Name = "Continue" }).ClickAsync(new() { Timeout = 150000 });
             await Expect(Page.GetByText("Choose your trail.", new() { Exact = true })).ToBeVisibleAsync(new() { Timeout = 30000 });
         }
         catch
