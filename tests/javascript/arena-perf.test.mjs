@@ -43,7 +43,21 @@ test('the report and panel lines carry the renderer, terrain repaint cost and an
     assert.equal(report.terrainRepaintMaxMs, 9.3);
     assert.equal(report.heapMb, null);
     const lines = perfLines(report);
-    assert.equal(lines.length, 4);
+    assert.equal(lines.length, 5);
+    assert.match(lines[4], /GPU - tex/);
     assert.match(lines[1], /gpu\/mobile/);
     assert.match(lines[3], /heap n\/a/);
+});
+
+test('performance readout shows GPU upload cost separately from the authoritative enemy count', () => {
+    const sampler = createFrameSampler();
+    sampler.record(20);
+    const report = perfReport({ sampler, renderer: 'gpu', quality: 'mobile', heapMb: null,
+        terrain: null, enemies: 600, projectiles: 2, gpuVisibleEnemies: 48,
+        gpuUploads: { dynamicTextures: 50, dynamicPixels: 1320000 } });
+    assert.equal(report.enemies, 600, 'the authoritative simulation still owns every enemy');
+    assert.equal(report.gpuVisibleEnemies, 48, 'visible GPU captures are counted separately');
+    assert.equal(report.gpuUploadTextures, 50);
+    assert.equal(report.gpuUploadPixels, 1320000);
+    assert.ok(perfLines(report)[4].includes('GPU 50 tex  1320000 px  visible 48/600'));
 });

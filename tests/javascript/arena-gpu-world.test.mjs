@@ -2,6 +2,40 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { huntLightFrame, HuntGpuWorld } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-gpu-world.js';
 
+test('GPU enemy culling preserves visible sprites, raised terrain and partially visible large enemies', async () => {
+    const { visibleHuntEnemyLayers, huntLayerCapture } =
+        await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/hunt-gpu-layers.js');
+    const camera = { x: 100, y: 100 }, width = 390, height = 700;
+    const enemies = [
+        { entityId: 1, kind: 0, x: 150, y: 200, radius: 11 },
+        { entityId: 2, kind: 0, x: -39, y: 200, radius: 11 },
+        { entityId: 3, kind: 0, x: -100, y: 200, radius: 11 },
+        { entityId: 4, kind: 0, x: 850, y: 200, radius: 11 },
+        { entityId: 5, kind: 9, x: 790, y: 500, radius: 54 },
+        { entityId: 6, kind: 0, x: 200, y: 750, z: 96, radius: 11 },
+    ];
+    const layers = visibleHuntEnemyLayers(enemies, camera, width, height);
+    assert.deepEqual(layers.map(layer => layer.enemy.entityId), [1, 2, 5, 6]);
+    for (const layer of layers) {
+        assert.equal(layer.depth, enemies[layer.enemy.entityId - 1].y +
+            (enemies[layer.enemy.entityId - 1].radius || 0), 'depth sorting uses ground feet, not elevation');
+        assert.deepEqual(layer.capture, huntLayerCapture(layer, null),
+            'the culling rectangle is exactly the actual GPU capture rectangle');
+    }
+    assert.equal(layers[3].enemy.y, 654, 'C# terrain elevation lifts sprites visually');
+    assert.equal(enemies[5].y, 750, 'GPU culling cannot mutate the authoritative snapshot');
+});
+
+test('hundreds of offscreen enemies remain in the snapshot but create no GPU captures', async () => {
+    const { visibleHuntEnemyLayers } = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/hunt-gpu-layers.js');
+    const enemies = Array.from({ length: 600 }, (_, i) => ({ entityId: i + 1, kind: 0, x: 5000 + i * 2, y: 6000, radius: 11 }));
+    enemies[300] = { ...enemies[300], x: 160, y: 200 };
+    const layers = visibleHuntEnemyLayers(enemies, { x: 0, y: 0 }, 390, 700);
+    assert.equal(enemies.length, 600, 'no enemies are despawned or removed from simulation');
+    assert.deepEqual(layers.map(layer => layer.enemy.entityId), [301], 'only visible enemies need a GPU capture');
+    assert.deepEqual(visibleHuntEnemyLayers([], { x: 0, y: 0 }, 390, 700), []);
+});
+
 test('terrain albedo and normal maps share a stable capture revision; animated emissive remains live', () => {
     const uploads = [], captures = [];
     const world = { used: new Set(), dirtyTextures: new Set(), engine: {},

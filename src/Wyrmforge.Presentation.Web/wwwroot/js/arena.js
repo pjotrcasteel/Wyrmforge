@@ -1,4 +1,4 @@
-import { huntLayerCapture, huntLayerRevision, prepareHuntGpuScratch, HuntGpuScratchPool,
+import { huntLayerCapture, huntLayerRevision, visibleHuntEnemyLayers, prepareHuntGpuScratch, HuntGpuScratchPool,
     prepareHuntGpuPresentation, presentCompletedHuntGpuFrame, shouldStageHuntGpuReviewFrame, shouldUseG4NeutralGround } from './hunt-gpu-layers.js?v=20261106-default-hunt1-gate-v1';
 import { mountG4DeviceReview } from './lighting/g4-device-review.js';
 import { lighting01Requested, submitLighting01Fixtures } from './lighting/g5-world-composition.js';
@@ -568,12 +568,15 @@ function draw(state, snapshot, width, height) {
     // Correct 2.5D ordering by WORLD foot position. A mage/enemy walking north of
     // a ruined wall goes behind its facade; walking south brings it forward.
     const entranceOmen = snapshot.hunt?.stage === 1 && snapshot.hunt?.entranceBeat === 1;
+    const visibleGpuEnemyLayers = gpu ? visibleHuntEnemyLayers(snapshot.enemies, camera, width, height) : null;
+    state.visibleGpuEnemyCount = visibleGpuEnemyLayers?.length ?? null;
     const depthLayers = [
         ...exitLayers.map(layer => ({ ...layer, depth: layer.exit.y + layer.exit.radius })),
         ...(snapshot.dragon && !entranceOmen ? [{kind: 'dragon', depth:state.ashfang.entity?.shadow?Number.NEGATIVE_INFINITY:snapshot.dragon.y, dragon:snapshot.dragon}] : []),
         ...(state.ashfang.death ? [{kind:'dragonDeath',depth:state.ashfang.death.y}] : []),
         // Depth sorts by the ground-plane feet; the drawn actor rises by its terrain height (metric oblique contract).
-        ...snapshot.enemies.map(enemy => ({ kind: 'enemy', depth: enemy.y + (enemy.radius || 0), enemy: raisedActor(enemy) })),
+        ...(visibleGpuEnemyLayers ?? snapshot.enemies.map(enemy =>
+            ({ kind: 'enemy', depth: enemy.y + (enemy.radius || 0), enemy: raisedActor(enemy) }))),
         { kind: 'mage', depth: snapshot.player.y + (snapshot.player.radius || 0), player: raisedActor(snapshot.player) },
         // The greybox keeps only the breakable salvage props (the Charred Scrap source), depth-sorted with actors.
         // Hunt 1.0 trees: the C# trunk blocks are in the terrain; their canopies are depth-sorted layers.
@@ -602,7 +605,7 @@ function draw(state, snapshot, width, height) {
         // Canopies are 64 px/m art like the terrain; actors keep their 1x sprites.
         const pixelScale = layer.kind === 'tree' || layer.kind === 'torch' || layer.kind === 'torchFlame' ? artScale : 1;
         if (gpu) {
-            capture = huntLayerCapture(layer, layer.player ?? snapshot.player, state.ashfang.death);
+            capture = layer.capture ?? huntLayerCapture(layer, layer.player ?? snapshot.player, state.ashfang.death);
             if (!capture) continue;
             ({ x: tileX, y: tileY, size: tileSize } = capture);
             if (tileX + tileSize < camera.x - 384 || tileY + tileSize < camera.y - 384 ||
@@ -1234,6 +1237,8 @@ function arenaPerfReport(state) {
     const snapshot = state.latestSnapshot;
     return perfReport({ sampler: state.frameSampler, renderer: state.gpuWorld ? 'gpu' : 'canvas', quality: state.gpuWorld?.quality ?? null,
         terrain: state.terrainCache, heapMb: readHeapMegabytes(), enemies: snapshot?.enemies?.length ?? 0,
+        gpuVisibleEnemies: state.gpuWorld ? state.visibleGpuEnemyCount : null,
+        gpuUploads: state.gpuWorld?.lastFrameUploads ?? null,
         projectiles: snapshot?.projectiles?.length ?? 0, devicePixelRatio: window.devicePixelRatio || 1 });
 }
 
