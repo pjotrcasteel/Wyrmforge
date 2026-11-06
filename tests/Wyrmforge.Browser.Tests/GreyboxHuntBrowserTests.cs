@@ -299,12 +299,14 @@ public sealed class GreyboxHuntBrowserTests : PageTest
         var initialState = default(System.Text.Json.JsonElement);
         for (var attempt = 0; attempt < 24; attempt++)
         {
-            initialState = await Page.EvaluateAsync<System.Text.Json.JsonElement>("""async () => {
-                const { readArenaDiagnostics } = await import('/js/arena-performance.js');
-                const state = readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
-                return { ready: Boolean(state?.worldReady), terrain: Boolean(state?.hunt1Terrain),
-                    landmark: Boolean(state?.exitLandmark), exitOpen: Boolean(state?.exit) };
-            }""");
+            initialState = await Page.EvaluateAsync<System.Text.Json.JsonElement>("""
+                async () => {
+                    const { readArenaDiagnostics } = await import('/js/arena-performance.js');
+                    const state = readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
+                    return { ready: Boolean(state?.worldReady), terrain: Boolean(state?.hunt1Terrain),
+                        landmark: Boolean(state?.exitLandmark), exitOpen: Boolean(state?.exit) };
+                }
+                """);
             if (initialState.GetProperty("ready").GetBoolean()) break;
             await Task.Delay(250);
         }
