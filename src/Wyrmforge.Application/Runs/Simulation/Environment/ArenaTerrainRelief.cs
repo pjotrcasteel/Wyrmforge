@@ -103,7 +103,8 @@ internal static class ArenaTerrainRelief
         // Chart landform first, encounter habitat second. The wet forest, exposed field and mountain must not share the same land-use template.
         var biomes = landform switch
         {
-            WorldSiteLandform.Mountain => new[] { ArenaZone.Forest, ArenaZone.Highland, ArenaZone.Highland, ArenaZone.Meadow, ArenaZone.Highland, ArenaZone.Highland, ArenaZone.Highland },
+            WorldSiteLandform.Mountain => new[] { ArenaZone.Forest, ArenaZone.Highland, ArenaZone.Highland, ArenaZone.Meadow,
+                ArenaZone.Highland, ArenaZone.Highland, ArenaZone.Highland },
             WorldSiteLandform.Wetland => new[] { ArenaZone.Forest, ArenaZone.Forest, ArenaZone.Meadow, ArenaZone.Forest, ArenaZone.Forest, ArenaZone.Meadow, ArenaZone.Highland },
             _ => habitat switch
             {

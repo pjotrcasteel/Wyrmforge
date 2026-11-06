@@ -132,10 +132,14 @@ public sealed class ArenaEnvironmentState
             var columns = (int)(ArenaMetricEnvelope.CombatWidth / ArenaTerrainGrid.CellUnits);
             var rows = (int)(ArenaMetricEnvelope.CombatHeight / ArenaTerrainGrid.CellUnits);
             // The hunter enters at the south end and the exit is at the north end: the arena is portrait, and the road runs between them.
-            var siteTerrainSeed = unchecked(seed ^ StableSiteSeed(node.Geography?.SiteId ?? node.Id));
+            // Keep the well-tested opening road unchanged; later sites acquire unique, persistent terrain identities.
+            var openingRoad = node.Stage == 1 && node.Lane == 0;
+            var siteTerrainSeed = openingRoad
+                ? seed : unchecked(seed ^ StableSiteSeed(node.Geography?.SiteId ?? node.Id));
             var recipe = ArenaTerrainGenerator.Generate(siteTerrainSeed, terrainInfluence ?? node.Influence, columns, rows,
                 (columns / 2, rows - 8), (columns / 2, (int)(Math.Max(80, ArenaMetricEnvelope.CombatHeight * .11) / ArenaTerrainGrid.CellUnits)),
-                siteProfile: node.GenerationProfile ?? node.Geography?.GenerationProfile, habitat: node.Habitat);
+                siteProfile: openingRoad ? null : node.GenerationProfile ?? node.Geography?.GenerationProfile,
+                habitat: openingRoad ? null : node.Habitat);
             environment.terrainSpawn = recipe.Spawn;
             environment.terrainFields = recipe.Fields;
             environment.terrain = recipe.Grid;

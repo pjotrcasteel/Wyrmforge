@@ -33,7 +33,7 @@ public sealed class ArenaTerrainIntegrationTests
     [TestMethod]
     public void EachHuntSite_GetsAStableDistinctTerrainEvenWhenStageAndLaneMatch()
     {
-        var node = WyrmrealmMapGenerator.GenerateFireTierOne(1204).First(candidate => candidate.Type == WyrmrealmNodeType.Combat);
+        var node = WyrmrealmMapGenerator.GenerateFireTierOne(1204).Where(candidate => candidate.Type == WyrmrealmNodeType.Combat).ElementAt(1);
         var otherSite = node with { Id = node.Id + ":next-site", Geography = null };
         var first = ArenaEnvironmentState.Create(1204, node with { Geography = null }, greybox: true, terrain: true).Terrain!;
         var repeat = ArenaEnvironmentState.Create(1204, node with { Geography = null }, greybox: true, terrain: true).Terrain!;
